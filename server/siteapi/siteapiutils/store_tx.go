@@ -6,6 +6,7 @@ import (
 
 	"nighttroop.t1d.nz/utils/apiutils"
 
+	"nighttroop.t1d.nz/data/events/sitemodels"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -20,6 +21,7 @@ type StoreTx struct {
 	siteContext *httputils.SiteContext
 	controlTx   *sql.Tx
 	siteTx      *sql.Tx
+	changes     []sitemodels.Event // published once committed
 }
 
 func NewStoreTx(ctx context.Context, siteContext *httputils.SiteContext) *StoreTx {
@@ -68,7 +70,28 @@ func (t *StoreTx) Finish(herr *apiutils.HTTPError) *apiutils.HTTPError {
 	if err != nil {
 		return apiutils.ErrInternalServerError
 	}
+	for _, change := range t.changes {
+		t.siteContext.PublishModelChange(change.Action, change.Model)
+	}
 	return nil
+}
+
+// Created records a site model the store created, the sitedb row, to publish once committed
+func (t *StoreTx) Created(model any) { t.changed(sitemodels.Created, model) }
+
+// Updated records a site model the store changed, to publish once committed
+func (t *StoreTx) Updated(model any) { t.changed(sitemodels.Updated, model) }
+
+// Deleted records a site model the store is deleting, read just before, to publish once committed;
+// it takes the read's error too, and records nothing when the read failed
+func (t *StoreTx) Deleted(model any, err error) {
+	if err == nil {
+		t.changed(sitemodels.Deleted, model)
+	}
+}
+
+func (t *StoreTx) changed(action sitemodels.Action, model any) {
+	t.changes = append(t.changes, sitemodels.Event{Action: action, Model: model})
 }
 
 // Rollback undoes anything not yet committed. It is safe to defer: after Finish it does nothing.

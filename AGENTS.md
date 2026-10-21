@@ -16,6 +16,7 @@ A file for [guiding coding agents](https://agents.md/).
 - `background`: background jobs running with golang Cron and LiteQ-ish framework
 - `clients`: third party client integration
 - `data`: everything SQLite using SQLc generated code
+- `data/events`: a publish and subscribe bus; `data/events/sitemodels` is `config.SiteModelEvents`, which every committed change to a site's models is published on by site ID, for live updates and alarms
 - `docs`: posts and docs
 - `models`: models for the various inputs, including converters built with goverter
 - `scripts`: necessary scripts for generating the initial key bundle and other functions

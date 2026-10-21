@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"log/slog"
 
+	"nighttroop.t1d.nz/data/events/sitemodels"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
@@ -53,6 +54,19 @@ type CollectionTypeDeleter interface {
 	HardDeleteType(q *sitedb.Queries, ctx context.Context, typeString string) (sql.Result, error)
 }
 
+// All is each Nightscout collection's store
+func All() map[nsutils.Collection]CollectionStore {
+	return map[nsutils.Collection]CollectionStore{
+		nsutils.Entries:      NewEntriesCollection(),
+		nsutils.Treatments:   NewTreatmentCollection(),
+		nsutils.Devicestatus: NewDeviceStatusCollection(),
+		nsutils.Profile:      NewProfileCollection(),
+		nsutils.Food:         NewFoodCollection(),
+		nsutils.Settings:     NewSettingsCollection(),
+		nsutils.Activity:     NewActivityCollection(),
+	}
+}
+
 // Collection is the CollectionStore for a CollectionDB
 type Collection[NS SharedNSFields, DM SharedDBFields] struct {
 	db CollectionDB[NS, DM]
@@ -80,6 +94,15 @@ type SharedDBFields interface {
 	GetCreatedByIdentityName() string
 	GetUtcOffsetMinutes() *int64
 	GetID() string
+}
+
+// Record is a database model as this collection's record, and false when the model is not this collection's
+func (c Collection[NS, DM]) Record(model any, siteContext *httputils.SiteContext) (nsutils.Record, bool) {
+	dbModel, ok := model.(*DM)
+	if !ok || dbModel == nil {
+		return nsutils.Record{}, false
+	}
+	return c.db.Convert(dbModel, siteContext, false), true
 }
 
 func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
@@ -143,6 +166,7 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 		return nil, false, nsutils.ErrInternal
 	}
 
+	siteContext.PublishModelChange(sitemodels.Created, dbModel)
 	return ptr(m.Convert(dbModel, siteContext, raw)), false, nil
 }
 
@@ -180,6 +204,8 @@ func (c Collection[NS, DM]) Delete(ctx context.Context, siteContext *httputils.S
 	defer tx.Rollback()
 	q := siteContext.SiteDB.Queries.WithTx(tx)
 
+	// Read first, so the change can say what was deleted
+	deleted, _ := m.GetModel(q, ctx, identifier, false)
 	deleteFunc, label := m.SoftDelete, "Soft"
 	if permanent {
 		deleteFunc, label = m.HardDelete, "Hard"
@@ -206,6 +232,9 @@ func (c Collection[NS, DM]) Delete(ctx context.Context, siteContext *httputils.S
 	if err := tx.Commit(); err != nil {
 		slog.Error("failed to delete in database", "error", err, "collection", m.Name())
 		return nsutils.ErrInternal
+	}
+	if deleted != nil {
+		siteContext.PublishModelChange(sitemodels.Deleted, deleted)
 	}
 	return nil
 }
@@ -322,6 +351,11 @@ func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.
 		return nil, false, nsutils.ErrInternal
 	}
 
+	if creatingNewRecord {
+		siteContext.PublishModelChange(sitemodels.Created, dbCreateModel)
+	} else {
+		siteContext.PublishModelChange(sitemodels.Updated, dbCreateModel)
+	}
 	return ptr(m.Convert(dbCreateModel, siteContext, raw)), creatingNewRecord, nil
 
 }
@@ -394,6 +428,7 @@ func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.Si
 		return nil, nsutils.ErrInternal
 	}
 
+	siteContext.PublishModelChange(sitemodels.Updated, dbModel)
 	return ptr(m.Convert(dbModel, siteContext, raw)), nil
 }
 

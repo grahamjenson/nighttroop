@@ -47,6 +47,7 @@ func (s *FoodIntakesStore) CreateModel(ctx context.Context, tx *siteapiutils.Sto
 	if err != nil {
 		return false, apiutils.WriteError(err, "food intake")
 	}
+	tx.Created(created)
 	*model = *sitemodels.FoodIntakeFromDB(created)
 	return true, nil
 }
@@ -76,6 +77,7 @@ func (s *FoodIntakesStore) UpdateModel(ctx context.Context, tx *siteapiutils.Sto
 	if err != nil {
 		return apiutils.WriteError(err, "food intake")
 	}
+	tx.Updated(updated)
 	*model = *sitemodels.FoodIntakeFromDB(updated)
 	return nil
 }
@@ -128,6 +130,7 @@ func (s *FoodIntakesStore) DeleteModel(ctx context.Context, tx *siteapiutils.Sto
 	if err != nil {
 		return apiutils.ErrInternalServerError
 	}
+	tx.Deleted(q.GetFoodIntake(ctx, sitedb.GetFoodIntakeParams{ID: model.ID}))
 	_, err = q.SoftDeleteFoodIntake(ctx, sitedb.SoftDeleteFoodIntakeParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
 		ID:                    model.ID,

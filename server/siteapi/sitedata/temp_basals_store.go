@@ -47,6 +47,7 @@ func (s *TempBasalsStore) CreateModel(ctx context.Context, tx *siteapiutils.Stor
 	if err != nil {
 		return false, apiutils.WriteError(err, "temp basal")
 	}
+	tx.Created(created)
 	*model = *sitemodels.TempBasalFromDB(created)
 	return true, nil
 }
@@ -84,6 +85,7 @@ func (s *TempBasalsStore) UpdateModel(ctx context.Context, tx *siteapiutils.Stor
 	if err != nil {
 		return apiutils.WriteError(err, "temp basal")
 	}
+	tx.Updated(updated)
 	*model = *sitemodels.TempBasalFromDB(updated)
 	return nil
 }
@@ -136,6 +138,7 @@ func (s *TempBasalsStore) DeleteModel(ctx context.Context, tx *siteapiutils.Stor
 	if err != nil {
 		return apiutils.ErrInternalServerError
 	}
+	tx.Deleted(q.GetTempBasal(ctx, sitedb.GetTempBasalParams{ID: model.ID}))
 	_, err = q.SoftDeleteTempBasal(ctx, sitedb.SoftDeleteTempBasalParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
 		ID:                    model.ID,

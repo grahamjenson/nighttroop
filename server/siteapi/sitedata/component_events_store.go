@@ -42,6 +42,7 @@ func (s *ComponentEventsStore) CreateModel(ctx context.Context, tx *siteapiutils
 	if err != nil {
 		return false, apiutils.WriteError(err, "component event")
 	}
+	tx.Created(created)
 	*model = *sitemodels.ComponentEventFromDB(created)
 	return true, nil
 }
@@ -73,6 +74,7 @@ func (s *ComponentEventsStore) UpdateModel(ctx context.Context, tx *siteapiutils
 	if err != nil {
 		return apiutils.WriteError(err, "component event")
 	}
+	tx.Updated(updated)
 	*model = *sitemodels.ComponentEventFromDB(updated)
 	return nil
 }
@@ -125,6 +127,7 @@ func (s *ComponentEventsStore) DeleteModel(ctx context.Context, tx *siteapiutils
 	if err != nil {
 		return apiutils.ErrInternalServerError
 	}
+	tx.Deleted(q.GetComponentEvent(ctx, sitedb.GetComponentEventParams{ID: model.ID}))
 	_, err = q.SoftDeleteComponentEvent(ctx, sitedb.SoftDeleteComponentEventParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
 		ID:                    model.ID,

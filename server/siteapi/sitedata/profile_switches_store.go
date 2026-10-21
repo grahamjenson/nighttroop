@@ -44,6 +44,7 @@ func (s *ProfileSwitchesStore) CreateModel(ctx context.Context, tx *siteapiutils
 	if err != nil {
 		return false, apiutils.WriteError(err, "profile switch")
 	}
+	tx.Created(created)
 	*model = *sitemodels.ProfileSwitchFromDB(created)
 	return true, nil
 }
@@ -73,6 +74,7 @@ func (s *ProfileSwitchesStore) UpdateModel(ctx context.Context, tx *siteapiutils
 	if err != nil {
 		return apiutils.WriteError(err, "profile switch")
 	}
+	tx.Updated(updated)
 	*model = *sitemodels.ProfileSwitchFromDB(updated)
 	return nil
 }
@@ -125,6 +127,7 @@ func (s *ProfileSwitchesStore) DeleteModel(ctx context.Context, tx *siteapiutils
 	if err != nil {
 		return apiutils.ErrInternalServerError
 	}
+	tx.Deleted(q.GetProfileSwitch(ctx, sitedb.GetProfileSwitchParams{ID: model.ID}))
 	_, err = q.SoftDeleteProfileSwitch(ctx, sitedb.SoftDeleteProfileSwitchParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
 		ID:                    model.ID,

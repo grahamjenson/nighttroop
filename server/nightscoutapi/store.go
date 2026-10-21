@@ -17,25 +17,13 @@ type NightTroopAPIStore struct {
 	config    *config.ServerConfig
 
 	stores map[nsutils.Collection]collections.CollectionStore
-
-	// onChange is told of each record created, changed (action "update") or deleted (action "remove"), for live updates
-	onChange func(ctx context.Context, collection nsutils.Collection, record nsutils.Record, action string)
 }
 
 func NewNightTroopAPIStore(controlDB *db.ControlDB, config *config.ServerConfig) *NightTroopAPIStore {
 	return &NightTroopAPIStore{
 		controlDB: controlDB,
 		config:    config,
-		stores: map[nsutils.Collection]collections.CollectionStore{
-			nsutils.Entries:      collections.NewEntriesCollection(),
-			nsutils.Treatments:   collections.NewTreatmentCollection(),
-			nsutils.Devicestatus: collections.NewDeviceStatusCollection(),
-			nsutils.Profile:      collections.NewProfileCollection(),
-			nsutils.Food:         collections.NewFoodCollection(),
-			nsutils.Settings:     collections.NewSettingsCollection(),
-			nsutils.Activity:     collections.NewActivityCollection(),
-			// Add more collections as needed
-		},
+		stores:    collections.All(),
 	}
 }
 
@@ -80,17 +68,7 @@ func (nts *NightTroopAPIStore) Create(ctx context.Context, collection nsutils.Co
 	if err != nil {
 		return nsutils.Record{}, false, err
 	}
-	record, duplicate, err := foundAnd(collectionsStore.Create(ctx, siteContext, data, raw))
-	if err == nil && !duplicate {
-		nts.changed(ctx, collection, record, "")
-	}
-	return record, duplicate, err
-}
-
-func (nts *NightTroopAPIStore) changed(ctx context.Context, collection nsutils.Collection, record nsutils.Record, action string) {
-	if nts.onChange != nil {
-		nts.onChange(ctx, collection, record, action)
-	}
+	return foundAnd(collectionsStore.Create(ctx, siteContext, data, raw))
 }
 
 func (nts *NightTroopAPIStore) Get(ctx context.Context, collection nsutils.Collection, identifier string, query nsquery.Query) (nsutils.Record, *nsutils.HTTPError) {
@@ -114,11 +92,7 @@ func (nts *NightTroopAPIStore) Replace(ctx context.Context, collection nsutils.C
 	if err != nil {
 		return nsutils.Record{}, false, err
 	}
-	record, created, err := foundAnd(collectionsStore.Replace(ctx, siteContext, identifier, patch, canCreate, raw))
-	if err == nil {
-		nts.changed(ctx, collection, record, "update")
-	}
-	return record, created, err
+	return foundAnd(collectionsStore.Replace(ctx, siteContext, identifier, patch, canCreate, raw))
 }
 
 func (nts *NightTroopAPIStore) Patch(ctx context.Context, collection nsutils.Collection, identifier string, patch map[string]any, raw bool) (nsutils.Record, *nsutils.HTTPError) {
@@ -126,11 +100,7 @@ func (nts *NightTroopAPIStore) Patch(ctx context.Context, collection nsutils.Col
 	if err != nil {
 		return nsutils.Record{}, err
 	}
-	record, err := found(collectionsStore.Patch(ctx, siteContext, identifier, patch, raw))
-	if err == nil {
-		nts.changed(ctx, collection, record, "update")
-	}
-	return record, err
+	return found(collectionsStore.Patch(ctx, siteContext, identifier, patch, raw))
 }
 
 func (nts *NightTroopAPIStore) Delete(ctx context.Context, collection nsutils.Collection, identifier string, permanent bool) *nsutils.HTTPError {
@@ -138,15 +108,7 @@ func (nts *NightTroopAPIStore) Delete(ctx context.Context, collection nsutils.Co
 	if err != nil {
 		return err
 	}
-	// The record is read first, so live updates can say which was removed
-	record, _ := found(collectionsStore.Get(ctx, siteContext, identifier, nsquery.Query{}))
-	if err := collectionsStore.Delete(ctx, siteContext, identifier, permanent); err != nil {
-		return err
-	}
-	if record.ID != "" {
-		nts.changed(ctx, collection, record, "remove")
-	}
-	return nil
+	return collectionsStore.Delete(ctx, siteContext, identifier, permanent)
 }
 
 func (nts *NightTroopAPIStore) DeleteType(ctx context.Context, collection nsutils.Collection, typeString string, permanent bool) (int, *nsutils.HTTPError) {

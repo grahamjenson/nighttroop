@@ -11,6 +11,9 @@ import (
 	"sync"
 	"time"
 
+	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/data/events/sitemodels"
+	"nighttroop.t1d.nz/server/nightscoutapi/collections"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/socketio"
@@ -36,19 +39,19 @@ const (
 )
 
 // Websocket is Nightscout's live updates over Socket.IO at /socket.io/. A client emits authorize with its token
-// or API secret; one that can read joins DataReceivers, gets a dataUpdate with recent data, then one for each write.
+// or API secret; one that can read joins DataReceivers, gets a dataUpdate with recent data, then one for each
+// change to the site's models, however it was written.
 type Websocket struct {
-	config *config.ServerConfig
-	store  *NightTroopAPIStore
+	config      *config.ServerConfig
+	controlDB   *db.ControlDB
+	collections map[nsutils.Collection]collections.CollectionStore
 
 	mu      sync.Mutex
 	servers map[string]*socketio.Server // one per site, so sites share no sessions or rooms
 }
 
-func NewWebsocket(config *config.ServerConfig, store *NightTroopAPIStore) *Websocket {
-	ws := &Websocket{config: config, store: store, servers: map[string]*socketio.Server{}}
-	store.onChange = ws.changed
-	return ws
+func NewWebsocket(controlDB *db.ControlDB, config *config.ServerConfig) *Websocket {
+	return &Websocket{config: config, controlDB: controlDB, collections: collections.All(), servers: map[string]*socketio.Server{}}
 }
 
 func (ws *Websocket) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -65,6 +68,7 @@ func (ws *Websocket) server(subdomain string, create bool) *socketio.Server {
 	server := socketio.NewServer(engineio.Config{MaxSessions: maxSocketsPerSite})
 	main := server.Of(socketio.DefaultNamespace)
 	main.OnConnection(func(socket *socketio.Socket) { ws.connected(main, socket) })
+	ws.config.SiteModelEvents.Subscribe(subdomain, func(event sitemodels.Event) { ws.changed(main, event) })
 	ws.servers[subdomain] = server
 	return server
 }
@@ -139,7 +143,7 @@ var dbCollections = []nsutils.Collection{nsutils.Treatments, nsutils.Entries, ns
 
 func result(message string) map[string]string { return map[string]string{"result": message} }
 
-// dbWrite checks a write as Nightscout does, answering why it is refused, then writes it through the store
+// dbWrite checks a write as Nightscout does, answering why it is refused, then writes it through the collection
 // like the REST API, so it is validated, deduplicated and sent on as a dataUpdate the same way
 func (ws *Websocket) dbWrite(event string, args []json.RawMessage, auth *authorization, ctx context.Context, write dbWriter) any {
 	var message dbMessage
@@ -187,8 +191,8 @@ func (ws *Websocket) dbAdd(ctx context.Context, collection nsutils.Collection, _
 		if _, ok := document["created_at"]; !ok {
 			document["created_at"] = time.Now().UTC().Format(time.RFC3339Nano)
 		}
-		record, _, err := ws.store.Create(ctx, collection, document, false)
-		if err != nil {
+		record, _, err := ws.collections[collection].Create(ctx, httputils.GetSiteContext(ctx), document, false)
+		if err != nil || record == nil {
 			slog.Info("Websocket dbAdd refused", "collection", collection, "error", err)
 			continue
 		}
@@ -203,7 +207,7 @@ func (ws *Websocket) dbUpdate(ctx context.Context, collection nsutils.Collection
 	if json.Unmarshal(data, &fields) != nil || fields == nil {
 		return result("Invalid data")
 	}
-	if _, err := ws.store.Patch(ctx, collection, id, fields, false); err != nil {
+	if record, err := ws.collections[collection].Patch(ctx, httputils.GetSiteContext(ctx), id, fields, false); err != nil || record == nil {
 		slog.Info("Websocket dbUpdate refused", "collection", collection, "error", err)
 		return result("Unable to process update")
 	}
@@ -212,7 +216,7 @@ func (ws *Websocket) dbUpdate(ctx context.Context, collection nsutils.Collection
 
 // dbRemove deletes a record, softly as the site does
 func (ws *Websocket) dbRemove(ctx context.Context, collection nsutils.Collection, id string, _ json.RawMessage) any {
-	if err := ws.store.Delete(ctx, collection, id, false); err != nil {
+	if err := ws.collections[collection].Delete(ctx, httputils.GetSiteContext(ctx), id, false); err != nil {
 		return result("Unable to process removal")
 	}
 	return result("success")
@@ -264,7 +268,7 @@ func (ws *Websocket) recentData(ctx context.Context, history time.Duration) map[
 		data[key] = []map[string]any{}
 	}
 	for collection, query := range queries {
-		records, err := ws.store.Search(ctx, collection, query)
+		records, err := ws.collections[collection].Search(ctx, httputils.GetSiteContext(ctx), query)
 		if err != nil {
 			slog.Error("Websocket failed to load recent data", "collection", collection, "error", err)
 			continue
@@ -279,21 +283,45 @@ func (ws *Websocket) recentData(ctx context.Context, history time.Duration) map[
 	return data
 }
 
-// changed sends a written record to the site's DataReceivers as a delta dataUpdate. As in Nightscout, a treatment
-// says whether it was updated or removed, and other removals are not sent.
-func (ws *Websocket) changed(ctx context.Context, collection nsutils.Collection, record nsutils.Record, action string) {
-	server := ws.server(httputils.GetSiteContext(ctx).Subdomain, false)
-	key, value, ok := clientData(collection, record)
-	if server == nil || !ok || (action == "remove" && collection != nsutils.Treatments) {
+// recorder is a collection that can show a site's model as its record
+type recorder interface {
+	Record(model any, siteContext *httputils.SiteContext) (nsutils.Record, bool)
+}
+
+// changed sends a changed model of the site to its DataReceivers as a delta dataUpdate, when it is a Nightscout
+// record. As in Nightscout, a treatment says whether it was updated or removed, and other removals are not sent.
+func (ws *Websocket) changed(main *socketio.Namespace, event sitemodels.Event) {
+	siteDB, siteModel, err := ws.controlDB.GetSite(event.SiteID)
+	if err != nil {
 		return
 	}
-	if collection == nsutils.Treatments && action != "" {
-		if action == "remove" {
-			value = pick(value, "_id", "mills")
+	siteContext := httputils.GetSiteContext(httputils.CreateSiteContext(context.Background(), ws.config, ws.controlDB, siteDB, siteModel, event.SiteID, "", httputils.HTTPActionRead, httputils.AcceptTypeJSON, httputils.ContentTypeJSON))
+	for collection, store := range ws.collections {
+		r, ok := store.(recorder)
+		if !ok {
+			continue
 		}
-		value["action"] = action
+		if record, ok := r.Record(event.Model, siteContext); ok {
+			ws.send(main, collection, record, event.Action)
+			return
+		}
 	}
-	server.Of(socketio.DefaultNamespace).EmitTo(dataReceivers, "dataUpdate", map[string]any{
+}
+
+func (ws *Websocket) send(main *socketio.Namespace, collection nsutils.Collection, record nsutils.Record, action sitemodels.Action) {
+	key, value, ok := clientData(collection, record)
+	if !ok || (action == sitemodels.Deleted && collection != nsutils.Treatments) {
+		return
+	}
+	if collection == nsutils.Treatments && action != sitemodels.Created {
+		if action == sitemodels.Deleted {
+			value = pick(value, "_id", "mills")
+			value["action"] = "remove"
+		} else {
+			value["action"] = "update"
+		}
+	}
+	main.EmitTo(dataReceivers, "dataUpdate", map[string]any{
 		"delta":       true,
 		"lastUpdated": time.Now().UnixMilli(),
 		key:           []map[string]any{value},

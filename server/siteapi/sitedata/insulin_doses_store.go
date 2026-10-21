@@ -44,6 +44,7 @@ func (s *InsulinDosesStore) CreateModel(ctx context.Context, tx *siteapiutils.St
 	if err != nil {
 		return false, apiutils.WriteError(err, "insulin dose")
 	}
+	tx.Created(created)
 	*model = *sitemodels.InsulinDoseFromDB(created)
 	return true, nil
 }
@@ -75,6 +76,7 @@ func (s *InsulinDosesStore) UpdateModel(ctx context.Context, tx *siteapiutils.St
 	if err != nil {
 		return apiutils.WriteError(err, "insulin dose")
 	}
+	tx.Updated(updated)
 	*model = *sitemodels.InsulinDoseFromDB(updated)
 	return nil
 }
@@ -127,6 +129,7 @@ func (s *InsulinDosesStore) DeleteModel(ctx context.Context, tx *siteapiutils.St
 	if err != nil {
 		return apiutils.ErrInternalServerError
 	}
+	tx.Deleted(q.GetInsulinDose(ctx, sitedb.GetInsulinDoseParams{ID: model.ID}))
 	_, err = q.SoftDeleteInsulinDose(ctx, sitedb.SoftDeleteInsulinDoseParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
 		ID:                    model.ID,
