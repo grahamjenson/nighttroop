@@ -26,6 +26,8 @@ import (
 var embeddedFiles embed.FS
 
 func TestNS(t *testing.T) {
+	// A new site can create 5 identities at once, so identities_max.http reaches the identity limit within that burst
+	t.Setenv("MAX_IDENTITIES_PER_USER", "8")
 
 	config, controlDB, siteInformation, err := testutils.GetConfigControlDBAndSiteDBForTest()
 

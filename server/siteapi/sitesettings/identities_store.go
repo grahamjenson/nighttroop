@@ -58,6 +58,10 @@ func (s *IdentitiesStore) CreateModel(ctx context.Context, tx *siteapiutils.Stor
 	if maxIdentities := siteContext.Config.MaxIdentitiesPerSite; count >= int64(maxIdentities) {
 		return false, apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("a site can have at most %d users and devices", maxIdentities))
 	}
+	// Each create hashes a password with bcrypt, so stop creating and deleting from using up the CPU
+	if allowed, seconds := httputils.IdentityCreateWithinRateLimit(siteContext); !allowed {
+		return false, apiutils.ErrRateLimitExceeded(seconds)
+	}
 
 	values, err := siteContext.ControlDB.CreateSiteIdentity(ctx, q, siteContext.Subdomain, model.Name, role)
 	if err != nil {
