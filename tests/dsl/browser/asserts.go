@@ -66,6 +66,7 @@ type AssertTextVisible struct {
 }
 
 func (r *AssertTextVisible) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
+	waitForVisible(page.GetByText(r.Text, playwright.PageGetByTextOptions{Exact: playwright.Bool(false)}))
 	html, err := page.Content()
 	if err != nil {
 		return err
@@ -120,6 +121,16 @@ type AssertVisible struct {
 	TestLine int
 }
 
+// visibleWait is how long a visibility assert waits for the page to show what it checks, as after a
+// click the browser may still be loading or swapping in the next page
+const visibleWait = 5000
+
+// waitForVisible waits until the first element the locator finds is visible, or visibleWait passes.
+// It never fails: the assert after it checks, and fails with the page it found.
+func waitForVisible(locator playwright.Locator) {
+	_ = locator.First().WaitFor(playwright.LocatorWaitForOptions{State: playwright.WaitForSelectorStateVisible, Timeout: playwright.Float(visibleWait)})
+}
+
 // clickableScript scrolls the page, as a user would, to bring the element into the window, but not
 // boxes that scroll inside the page, then checks the element is what a click at its centre would hit
 const clickableScript = `el => {
@@ -134,6 +145,10 @@ const clickableScript = `el => {
 }`
 
 func (r *AssertVisible) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
+	locator := getLocator(r.Locator, page)
+	if locator != nil {
+		waitForVisible(locator)
+	}
 	html, err := page.Content()
 	if err != nil {
 		return err
@@ -141,7 +156,6 @@ func (r *AssertVisible) Execute(t *testing.T, ctx map[string]any, page playwrigh
 
 	prettyOutput := PrettifyHTML(html)
 
-	locator := getLocator(r.Locator, page)
 	if locator == nil {
 		t.Fatalf("\n\n%s\n getLocator returned nil for rawLocator: %v\n\n%s\n\n", r.ToErrorLine(), r.Locator, prettyOutput)
 	}
