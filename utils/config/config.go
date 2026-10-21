@@ -72,6 +72,10 @@ type ServerConfig struct {
 	SiteUpdateSyncPerMinuteLimit int
 	SiteUpdateSyncPerMinuteBurst int
 
+	// Each identity create hashes a password with bcrypt
+	SiteIdentityCreatePerMinuteLimit int
+	SiteIdentityCreatePerMinuteBurst int
+
 	//
 	// Site Create Rate Limits
 	SiteCreateGlobalPerMinuteLimit int
@@ -187,6 +191,9 @@ func NewServerConfig() (*ServerConfig, error) {
 		SitePOSTPerMinuteBurst:       configIntSelect(dotenv, "SITE_POST_PER_MINUTE_BURST", SITE_POST_LIMIT*4),
 		SiteUpdateSyncPerMinuteLimit: configIntSelect(dotenv, "SITE_UPDATE_SYNC_PER_MINUTE_LIMIT", 1), // Stop sites from updating sync settings too much
 		SiteUpdateSyncPerMinuteBurst: configIntSelect(dotenv, "SITE_UPDATE_SYNC_PER_MINUTE_BURST", 4),
+
+		SiteIdentityCreatePerMinuteLimit: configIntSelect(dotenv, "SITE_IDENTITY_CREATE_PER_MINUTE_LIMIT", 1), // Stop creating and deleting identities using up the CPU with bcrypt
+		SiteIdentityCreatePerMinuteBurst: configIntSelect(dotenv, "SITE_IDENTITY_CREATE_PER_MINUTE_BURST", 5),
 
 		//
 		// Site Limits
