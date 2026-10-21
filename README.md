@@ -2,17 +2,14 @@
 
 ## Before Alpha Testing
 
-1. Define Nighttroop models, work on converters to DB params, and use those models to build json and htmx and html. Then can test all this across any form
-
 -- Errors
 1. Come up with an actual logging and error framework that makes sense (SQLite DB for search?)
 1. Force all returned errors to be of type
 1. Optional error reporting with sentry (if a given key is present)
 
-1. make sync settings report endpoints
+
 1. make archiving and truncation a manual job, i.e. show unused users and select all and archive.  I think this will remove a lot of logic that can be shaky later on we can look at automating, if it gets really bad
-1. Display users in control
-1. Display job and cron stats in control
+
 1. Sync
     1. Check Sync Creds before save/enable -- e.g. check nightscout is a real endpoint and auth works
     1. Sync treatments and entries using v3 API
@@ -23,8 +20,6 @@
     1. Table of users with DB sizes, status...
     1. enable disable, users (show screen on disable), archive, and truncate buttons
     1. Some kind of usage metrics to see
-
-1. Deleting an identity should soft delete but hard remove passwords (names should be unique per user)
 
 1. Site UI
     1. Show real data (dont bother with graph, just tables for now)

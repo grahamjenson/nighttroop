@@ -1,0 +1,202 @@
+package control_job_stats_templ
+
+import (
+	"fmt"
+	"math"
+	"strings"
+	"time"
+
+	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/table"
+)
+
+// dayQueueJob splits the stats' YYYY-MM-DD::queue::job key into its parts
+func dayQueueJob(stats *controlmodels.JobStatsDaily) (string, string, string) {
+	parts := strings.SplitN(stats.DayQueueJob, "::", 3)
+	for len(parts) < 3 {
+		parts = append(parts, "-")
+	}
+	return parts[0], parts[1], parts[2]
+}
+
+// meanDuration is the jobs' mean time from being fetched to finishing, in ms
+func meanDuration(stats *controlmodels.JobStatsDaily) string {
+	if stats.TotalJobs == 0 {
+		return "-"
+	}
+	return fmt.Sprintf("%.0f ms", stats.DurationSum/float64(stats.TotalJobs))
+}
+
+// stdDevDuration is how much the jobs' durations spread around their mean, in ms
+func stdDevDuration(stats *controlmodels.JobStatsDaily) string {
+	if stats.TotalJobs == 0 {
+		return "-"
+	}
+	n := float64(stats.TotalJobs)
+	mean := stats.DurationSum / n
+	return fmt.Sprintf("%.0f ms", math.Sqrt(max(stats.DurationSquaredSum/n-mean*mean, 0)))
+}
+
+func formatDate(ms int64) string {
+	return time.UnixMilli(ms).Format("2006-01-02 15:04:05")
+}
+
+// JobStatsTable shows one page of daily job totals, newest day first, with buttons to the pages either side
+templ JobStatsTable(stats []*controlmodels.JobStatsDaily, skip int64, limit int64) {
+	<div id="job_stats_table" class="mx-auto max-w-5xl space-y-6">
+		<div>
+			<h1 class="text-2xl font-bold">Job Stats</h1>
+			<p class="mt-1 text-gray-500">Each day's totals for every queue's jobs, newest day first. Click a row to see its errors.</p>
+		</div>
+		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
+			@table.Table(table.Props{ID: "controlJobStatsTable", Class: "rounded-lg border border-gray-200"}) {
+				@table.Header() {
+					@table.Row() {
+						@table.Head() {
+							Day
+						}
+						@table.Head() {
+							Queue
+						}
+						@table.Head() {
+							Job
+						}
+						@table.Head() {
+							Jobs
+						}
+						@table.Head() {
+							Succeeded
+						}
+						@table.Head() {
+							Failed
+						}
+						@table.Head() {
+							Mean Duration
+						}
+					}
+				}
+				@table.Body() {
+					if len(stats) == 0 {
+						<tr><td colspan="7" class="p-4 text-sm text-gray-500">No job stats here.</td></tr>
+					}
+					for _, s := range stats {
+						@jobStatsRow(s)
+					}
+				}
+			}
+			<div class="mt-4 flex items-center justify-between text-sm text-gray-500">
+				if len(stats) > 0 {
+					<span>{ fmt.Sprintf("Showing %d to %d", skip+1, skip+int64(len(stats))) }</span>
+				} else {
+					<span></span>
+				}
+				<div class="flex gap-2">
+					if skip > 0 {
+						@jobStatsPageButton("control--job-stats--previous", "Previous", max(skip-limit, 0), limit)
+					}
+					if int64(len(stats)) == limit {
+						@jobStatsPageButton("control--job-stats--next", "Next", skip+limit, limit)
+					}
+				</div>
+			</div>
+		</section>
+		<div id="modal-container"></div>
+	</div>
+}
+
+templ jobStatsPageButton(id string, label string, skip int64, limit int64) {
+	@button.Button(button.Props{
+		ID:      id,
+		Variant: button.VariantOutline,
+		Attributes: templ.Attributes{
+			"hx-get":      fmt.Sprintf("/job-stats?skip=%d&limit=%d", skip, limit),
+			"hx-target":   "#main-content",
+			"hx-push-url": "true",
+			"hx-swap":     "innerHTML",
+		},
+	}) {
+		{ label }
+	}
+}
+
+templ jobStatsRow(stats *controlmodels.JobStatsDaily) {
+	{{ day, queue, job := dayQueueJob(stats) }}
+	@table.Row(table.RowProps{
+		Class: "cursor-pointer",
+		Attributes: templ.Attributes{
+			"hx-get":    "/job-stats/" + stats.DayQueueJob,
+			"hx-target": "#modal-container",
+			"hx-swap":   "innerHTML",
+		},
+	}) {
+		@table.Cell() {
+			{ day }
+		}
+		@table.Cell() {
+			{ queue }
+		}
+		@table.Cell() {
+			{ job }
+		}
+		@table.Cell() {
+			{ fmt.Sprint(stats.TotalJobs) }
+		}
+		@table.Cell() {
+			{ fmt.Sprint(stats.TotalSuccess) }
+		}
+		@table.Cell() {
+			{ fmt.Sprint(stats.TotalFailed) }
+		}
+		@table.Cell() {
+			{ meanDuration(stats) }
+		}
+	}
+}
+
+// JobStatsModal shows a day's totals for a job and the distinct errors its failures had
+templ JobStatsModal(stats *controlmodels.JobStatsDaily) {
+	{{ day, queue, job := dayQueueJob(stats) }}
+	<div id="control--job-stats--details" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+		<div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-lg">
+			<h2 class="text-lg font-semibold">{ queue } / { job }</h2>
+			<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+				@jobStatsDetail("Day", day)
+				@jobStatsDetail("Jobs", fmt.Sprint(stats.TotalJobs))
+				@jobStatsDetail("Succeeded", fmt.Sprint(stats.TotalSuccess))
+				@jobStatsDetail("Failed", fmt.Sprint(stats.TotalFailed))
+				@jobStatsDetail("Mean Duration", meanDuration(stats))
+				@jobStatsDetail("Std Dev Duration", stdDevDuration(stats))
+				@jobStatsDetail("Updated", formatDate(stats.UpdatedAt))
+			</dl>
+			<h3 class="mt-4 text-sm font-semibold">Errors</h3>
+			if len(stats.Errors) == 0 {
+				<p class="mt-1 text-sm text-gray-500">No errors.</p>
+			} else {
+				<ul id="control--job-stats--errors" class="mt-1 max-h-48 list-disc space-y-1 overflow-y-auto pl-5 text-sm text-red-700">
+					for _, e := range stats.Errors {
+						<li class="break-all">{ e }</li>
+					}
+				</ul>
+			}
+			<div class="mt-4 flex justify-end">
+				@button.Button(button.Props{
+					ID:      "control--job-stats--details--close",
+					Variant: button.VariantOutline,
+					Attributes: templ.Attributes{
+						"hx-get":    "/empty",
+						"hx-target": "#modal-container",
+						"hx-swap":   "innerHTML",
+					},
+				}) {
+					Close
+				}
+			</div>
+		</div>
+	</div>
+}
+
+templ jobStatsDetail(label string, value string) {
+	<dt class="text-gray-500">{ label }</dt>
+	<dd class="break-all">{ value }</dd>
+}

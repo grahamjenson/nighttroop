@@ -84,6 +84,10 @@ func UserUpdateSyncWithinRateLimit(siteContext *SiteContext) (bool, int) {
 	return WithinRateLimitAll(writeLimiter)
 }
 
+func IdentityCreateWithinRateLimit(siteContext *SiteContext) (bool, int) {
+	return WithinRateLimitAll(siteContext.Config.RateLimiters.SiteIdentityCreateLimiter(siteContext.Subdomain))
+}
+
 // //
 // Utils Methods
 // //
