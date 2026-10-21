@@ -152,6 +152,26 @@ type SiteConverter interface {
 	ActivityToUpdate(source *SiteActivity, siteContext *httputils.SiteContext) sitedb.UpdateActivityParams
 
 	///////
+	// COMPONENT EVENTS
+	///////
+
+	ComponentEventFromDB(source *sitedb.ComponentEvent) *SiteComponentEvent
+
+	// goverter:context siteContext
+	// goverter:map ID | NewSiteDataID
+	// goverter:map OccurredAt | OccurredAtOrNow
+	// goverter:map CreatedByIdentityID | ContextIdentityID
+	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
+	ComponentEventToCreate(source *SiteComponentEvent, siteContext *httputils.SiteContext) sitedb.CreateComponentEventParams
+
+	// goverter:context siteContext
+	// goverter:map EventType | StringOrNil
+	// goverter:map UpdatedByIdentityID | ContextIdentityID
+	// goverter:map UpdatedByIdentityName | ContextIdentityName
+	// goverter:ignore RawJsonData
+	ComponentEventToUpdate(source *SiteComponentEvent, siteContext *httputils.SiteContext) sitedb.UpdateComponentEventParams
+
+	///////
 	// INSULIN DOSES
 	///////
 

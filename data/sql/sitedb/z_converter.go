@@ -132,22 +132,30 @@ func ComponentEventToCreate(source ComponentEvent) CreateComponentEventParams {
 		xstring5 := *source.PumpType
 		sitedbCreateComponentEventParams.PumpType = &xstring5
 	}
+	if source.Notes != nil {
+		xstring6 := *source.Notes
+		sitedbCreateComponentEventParams.Notes = &xstring6
+	}
+	if source.Reason != nil {
+		xstring7 := *source.Reason
+		sitedbCreateComponentEventParams.Reason = &xstring7
+	}
 	if source.UtcOffsetMinutes != nil {
 		xint64 := *source.UtcOffsetMinutes
 		sitedbCreateComponentEventParams.UtcOffsetMinutes = &xint64
 	}
 	sitedbCreateComponentEventParams.OccurredAt = source.OccurredAt
 	if source.RawJsonData != nil {
-		xstring6 := *source.RawJsonData
-		sitedbCreateComponentEventParams.RawJsonData = &xstring6
+		xstring8 := *source.RawJsonData
+		sitedbCreateComponentEventParams.RawJsonData = &xstring8
 	}
 	if source.CreatedByAppName != nil {
-		xstring7 := *source.CreatedByAppName
-		sitedbCreateComponentEventParams.CreatedByAppName = &xstring7
+		xstring9 := *source.CreatedByAppName
+		sitedbCreateComponentEventParams.CreatedByAppName = &xstring9
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring8 := *source.CreatedByDeviceName
-		sitedbCreateComponentEventParams.CreatedByDeviceName = &xstring8
+		xstring10 := *source.CreatedByDeviceName
+		sitedbCreateComponentEventParams.CreatedByDeviceName = &xstring10
 	}
 	sitedbCreateComponentEventParams.CreatedByIdentityName = source.CreatedByIdentityName
 	if source.CreatedByIdentityID != nil {
@@ -158,25 +166,35 @@ func ComponentEventToCreate(source ComponentEvent) CreateComponentEventParams {
 }
 func ComponentEventToUpdate(source ComponentEvent) UpdateComponentEventParams {
 	var sitedbUpdateComponentEventParams UpdateComponentEventParams
+	pString := source.EventType
+	sitedbUpdateComponentEventParams.EventType = &pString
+	if source.SensorCode != nil {
+		xstring := *source.SensorCode
+		sitedbUpdateComponentEventParams.SensorCode = &xstring
+	}
+	if source.TransmitterID != nil {
+		xstring2 := *source.TransmitterID
+		sitedbUpdateComponentEventParams.TransmitterID = &xstring2
+	}
 	if source.Notes != nil {
-		xstring := *source.Notes
-		sitedbUpdateComponentEventParams.Notes = &xstring
+		xstring3 := *source.Notes
+		sitedbUpdateComponentEventParams.Notes = &xstring3
 	}
 	if source.Reason != nil {
-		xstring2 := *source.Reason
-		sitedbUpdateComponentEventParams.Reason = &xstring2
+		xstring4 := *source.Reason
+		sitedbUpdateComponentEventParams.Reason = &xstring4
 	}
 	if source.RawJsonData != nil {
-		xstring3 := *source.RawJsonData
-		sitedbUpdateComponentEventParams.RawJsonData = &xstring3
+		xstring5 := *source.RawJsonData
+		sitedbUpdateComponentEventParams.RawJsonData = &xstring5
 	}
 	if source.UpdatedByIdentityID != nil {
 		xint64 := *source.UpdatedByIdentityID
 		sitedbUpdateComponentEventParams.UpdatedByIdentityID = &xint64
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring4 := *source.UpdatedByIdentityName
-		sitedbUpdateComponentEventParams.UpdatedByIdentityName = &xstring4
+		xstring6 := *source.UpdatedByIdentityName
+		sitedbUpdateComponentEventParams.UpdatedByIdentityName = &xstring6
 	}
 	sitedbUpdateComponentEventParams.ID = source.ID
 	return sitedbUpdateComponentEventParams
