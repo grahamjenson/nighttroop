@@ -29,6 +29,50 @@ B {"app":"","date":1787481585647, "type": "bad", "dateString": "notARealTime"}
 ASSERT_STATUS 400
 ASSERT_CONTAINS "date string" "@message"
 
+// Glucose far outside real use is refused, as the site API does
+NAME create_bad_entry_sgv_too_high_v1
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [{"type":"sgv","sgv":5000,"date":{{ itime 0 }}}]
+ASSERT_STATUS 400
+ASSERT_CONTAINS "at most 1000 mg/dL" "@message"
+
+NAME create_bad_entry_mbg_too_high_v1
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B {"type":"mbg","mbg":1001,"date":{{ itime 1 }}}
+ASSERT_STATUS 400
+
+// Checked in mg/dL, so 60 mmol/L is over 1000 mg/dL
+NAME create_bad_entry_mmol_too_high_v1
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B {"type":"sgv","sgv":60,"units":"mmol/L","date":{{ itime 2 }}}
+ASSERT_STATUS 400
+
+NAME create_bad_entry_sgv_zero_v1
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B {"type":"sgv","sgv":0,"date":{{ itime 3 }}}
+ASSERT_STATUS 400
+
+NAME create_bad_entry_sgv_negative_v1
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B {"type":"sgv","sgv":-5,"date":{{ itime 4 }}}
+ASSERT_STATUS 400
+
+NAME create_bad_entry_no_glucose_v1
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B {"type":"sgv","date":{{ itime 5 }}}
+ASSERT_STATUS 400
+
+NAME create_entry_at_max_v1
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B {"type":"sgv","sgv":1000,"date":{{ itime 6 }}}
+ASSERT_STATUS 200
+ASSERT_EQUALS 1000 "@0.sgv"
+
+NAME bad_entries_not_stored_v1
+GET http://{{ site }}/api/v1/entries?token={{ token }}&find[date][$gte]={{ itime 7 }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+
 /////
 // Read
 /////
@@ -65,6 +109,12 @@ PUT http://{{ site }}/api/v1/entries?token={{ token }}
 B { "_id": "{{ dig "create_entry_for_bad_tests_v1.0._id" }}", "device": "my-device", "app": "my-app", "dateString": "2024-06-05T12:00:00+12:00", "direction": "thisstringislongerthanisallowedsoIthinkitshouldcorrectlyerror", "sgv": 104, "type": "sgv" }
 ASSERT_STATUS 400
 ASSERT_CONTAINS "length(direction) <= 16" "@message"
+
+NAME bad_update_sgv_too_high_v1
+PUT http://{{ site }}/api/v1/entries?token={{ token }}
+B { "_id": "{{ dig "create_entry_for_bad_tests_v1.0._id" }}", "device": "my-device", "app": "my-app", "dateString": "2024-06-05T12:00:00+12:00", "sgv": 5000, "type": "sgv" }
+ASSERT_STATUS 400
+ASSERT_CONTAINS "at most 1000 mg/dL" "@message"
 
 NAME bad_update_but_change_app_v1
 PUT http://{{ site }}/api/v1/entries?token={{ token }}

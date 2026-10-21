@@ -9,6 +9,7 @@ import (
 	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -33,6 +34,31 @@ func (c EntriesCollection) Convert(dr *sitedb.GlucoseReading, siteContext *httpu
 // Cannot change properties
 
 func (c EntriesCollection) Validate(nsModel nightscoutmodels.Entry, dbModel *sitedb.GlucoseReading) *nsutils.HTTPError {
+	if err := validateEntryMgdl(nsModel); err != nil {
+		return err
+	}
+	return validateEntryType(nsModel, dbModel)
+}
+
+// A patch without sgv or mbg leaves the reading as it is
+func (c EntriesCollection) ValidatePatch(nsModel nightscoutmodels.Entry, dbModel *sitedb.GlucoseReading) *nsutils.HTTPError {
+	if nsModel.SGV != nil || nsModel.MBG != nil {
+		if err := validateEntryMgdl(nsModel); err != nil {
+			return err
+		}
+	}
+	return validateEntryType(nsModel, dbModel)
+}
+
+// Refuse glucose far outside real use, checked in mg/dL as it is stored
+func validateEntryMgdl(nsModel nightscoutmodels.Entry) *nsutils.HTTPError {
+	if nsModel.Mgdl == nil || *nsModel.Mgdl <= 0 || *nsModel.Mgdl > consts.MaxGlucoseMgdl {
+		return nsutils.BadGlucoseError
+	}
+	return nil
+}
+
+func validateEntryType(nsModel nightscoutmodels.Entry, dbModel *sitedb.GlucoseReading) *nsutils.HTTPError {
 	if dbModel == nil {
 		return nil
 	}
@@ -44,10 +70,6 @@ func (c EntriesCollection) Validate(nsModel nightscoutmodels.Entry, dbModel *sit
 
 	return nil
 
-}
-
-func (c EntriesCollection) ValidatePatch(nsModel nightscoutmodels.Entry, dbModel *sitedb.GlucoseReading) *nsutils.HTTPError {
-	return c.Validate(nsModel, dbModel)
 }
 
 func (c EntriesCollection) CreateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Entry, cc nightscoutmodels.ConverterContext, overrideIdentifier *string) (*sitedb.GlucoseReading, error) {

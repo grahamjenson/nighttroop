@@ -160,8 +160,8 @@ func (s *TempTargetsStore) DeleteHTMXResponse(model *sitemodels.SiteTempTarget) 
 // The targets are in the settings' units.
 func checkTempTarget(model *sitemodels.SiteTempTarget, siteContext *httputils.SiteContext) *apiutils.HTTPError {
 	units := sitemodels.ContextUnits(siteContext)
-	if model.LowTarget <= 0 || units.ToMGDL(model.HighTarget) > maxGlucoseMgdl || model.LowTarget > model.HighTarget {
-		return apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("targets must be more than 0, at most %v %s, and low must be at most high", consts.Round(units.FromMGDL(maxGlucoseMgdl), 1), *units))
+	if model.LowTarget <= 0 || units.ToMGDL(model.HighTarget) > consts.MaxGlucoseMgdl || model.LowTarget > model.HighTarget {
+		return apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("targets must be more than 0, at most %v %s, and low must be at most high", consts.Round(units.FromMGDL(consts.MaxGlucoseMgdl), 1), *units))
 	}
 	if model.DurationMinutes <= 0 || model.DurationMinutes > maxTempTargetMinutes {
 		return apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("duration must be more than 0 and at most %d minutes", maxTempTargetMinutes))

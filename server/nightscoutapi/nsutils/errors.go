@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 
+	"nighttroop.t1d.nz/utils/consts"
 	utilerrors "nighttroop.t1d.nz/utils/errors"
 )
 
@@ -88,6 +89,7 @@ var (
 	BadBoolFieldError = func(field string) *HTTPError {
 		return &HTTPError{Status: http.StatusBadRequest, Message: fmt.Sprintf("Bad or missing bool field %s", field)}
 	}
+	BadGlucoseError = &HTTPError{Status: http.StatusBadRequest, Message: fmt.Sprintf("Bad or missing glucose: sgv or mbg must be more than 0 and at most %v mg/dL", consts.MaxGlucoseMgdl)}
 )
 
 // Bad Updates
