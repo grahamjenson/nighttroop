@@ -13,13 +13,13 @@ import (
 const allComponentEvents = `-- name: AllComponentEvents :many
 
 SELECT id, event_type, sensor_code, transmitter_id, pump_id, pump_serial, pump_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name FROM component_events
-WHERE (CAST(?1 AS BOOL) IS NULL OR deleted_at IS NULL)
+WHERE (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT ?3 OFFSET ?2
 `
 
 type AllComponentEventsParams struct {
-	IncludeDeleted *bool
+	IncludeDeleted bool
 	Skip           int64
 	Limit          int64
 }
@@ -81,6 +81,8 @@ INSERT INTO component_events (
     pump_id,
     pump_serial,
     pump_type,
+    notes,
+    reason,
 
     utc_offset_minutes,
     occurred_at,
@@ -90,7 +92,7 @@ INSERT INTO component_events (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING id, event_type, sensor_code, transmitter_id, pump_id, pump_serial, pump_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name
 `
 
@@ -102,6 +104,8 @@ type CreateComponentEventParams struct {
 	PumpID                *string
 	PumpSerial            *string
 	PumpType              *string
+	Notes                 *string
+	Reason                *string
 	UtcOffsetMinutes      *int64
 	OccurredAt            int64
 	RawJsonData           *string
@@ -123,6 +127,8 @@ func (q *Queries) CreateComponentEvent(ctx context.Context, arg CreateComponentE
 		arg.PumpID,
 		arg.PumpSerial,
 		arg.PumpType,
+		arg.Notes,
+		arg.Reason,
 		arg.UtcOffsetMinutes,
 		arg.OccurredAt,
 		arg.RawJsonData,
@@ -159,15 +165,16 @@ func (q *Queries) CreateComponentEvent(ctx context.Context, arg CreateComponentE
 }
 
 const getComponentEvent = `-- name: GetComponentEvent :one
-SELECT id, event_type, sensor_code, transmitter_id, pump_id, pump_serial, pump_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name FROM component_events WHERE id = ?
+SELECT id, event_type, sensor_code, transmitter_id, pump_id, pump_serial, pump_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name FROM component_events WHERE id = ? AND (CAST(?2 AS BOOL) = TRUE OR deleted_at IS NULL)
 `
 
 type GetComponentEventParams struct {
-	ID string
+	ID             string
+	IncludeDeleted bool
 }
 
 func (q *Queries) GetComponentEvent(ctx context.Context, arg GetComponentEventParams) (*ComponentEvent, error) {
-	row := q.queryRow(ctx, q.getComponentEventStmt, getComponentEvent, arg.ID)
+	row := q.queryRow(ctx, q.getComponentEventStmt, getComponentEvent, arg.ID, arg.IncludeDeleted)
 	var i ComponentEvent
 	err := row.Scan(
 		&i.ID,
@@ -404,21 +411,27 @@ func (q *Queries) SoftDeleteComponentEvent(ctx context.Context, arg SoftDeleteCo
 const updateComponentEvent = `-- name: UpdateComponentEvent :one
 
 UPDATE component_events SET
-    notes = COALESCE(?1, notes),
-    reason = COALESCE(?2, reason),
+    event_type = COALESCE(?1, event_type),
+    sensor_code = COALESCE(?2, sensor_code),
+    transmitter_id = COALESCE(?3, transmitter_id),
+    notes = COALESCE(?4, notes),
+    reason = COALESCE(?5, reason),
 
     raw_json_data = json_patch(
         COALESCE(raw_json_data, '{}'),
-        COALESCE(CAST(?3 AS TEXT), '{}')
+        COALESCE(CAST(?6 AS TEXT), '{}')
     ),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_id = ?4,
-    updated_by_identity_name = ?5
-WHERE id = ?6 AND deleted_at IS NULL
+    updated_by_identity_id = ?7,
+    updated_by_identity_name = ?8
+WHERE id = ?9 AND deleted_at IS NULL
 RETURNING id, event_type, sensor_code, transmitter_id, pump_id, pump_serial, pump_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name
 `
 
 type UpdateComponentEventParams struct {
+	EventType             *string
+	SensorCode            *string
+	TransmitterID         *string
 	Notes                 *string
 	Reason                *string
 	RawJsonData           *string
@@ -432,6 +445,9 @@ type UpdateComponentEventParams struct {
 // ------
 func (q *Queries) UpdateComponentEvent(ctx context.Context, arg UpdateComponentEventParams) (*ComponentEvent, error) {
 	row := q.queryRow(ctx, q.updateComponentEventStmt, updateComponentEvent,
+		arg.EventType,
+		arg.SensorCode,
+		arg.TransmitterID,
 		arg.Notes,
 		arg.Reason,
 		arg.RawJsonData,

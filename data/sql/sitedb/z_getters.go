@@ -6366,6 +6366,26 @@ func (m *CreateComponentEventParams) SetPumpType(v *string) {
 	m.PumpType = v
 }
 
+// GetNotes returns the Notes value.
+func (m CreateComponentEventParams) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated CreateComponentEventParams.
+func (m *CreateComponentEventParams) SetNotes(v *string) {
+	m.Notes = v
+}
+
+// GetReason returns the Reason value.
+func (m CreateComponentEventParams) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated CreateComponentEventParams.
+func (m *CreateComponentEventParams) SetReason(v *string) {
+	m.Reason = v
+}
+
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
 func (m CreateComponentEventParams) GetUtcOffsetMinutes() *int64 {
 	return m.UtcOffsetMinutes
@@ -6437,12 +6457,12 @@ func (m *CreateComponentEventParams) SetCreatedByIdentityID(v *int64) {
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
-func (m AllComponentEventsParams) GetIncludeDeleted() *bool {
+func (m AllComponentEventsParams) GetIncludeDeleted() bool {
 	return m.IncludeDeleted
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllComponentEventsParams.
-func (m *AllComponentEventsParams) SetIncludeDeleted(v *bool) {
+func (m *AllComponentEventsParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
 }
 
@@ -6474,6 +6494,16 @@ func (m GetComponentEventParams) GetID() string {
 // SetID sets the ID value and returns the updated GetComponentEventParams.
 func (m *GetComponentEventParams) SetID(v string) {
 	m.ID = v
+}
+
+// GetIncludeDeleted returns the IncludeDeleted value.
+func (m GetComponentEventParams) GetIncludeDeleted() bool {
+	return m.IncludeDeleted
+}
+
+// SetIncludeDeleted sets the IncludeDeleted value and returns the updated GetComponentEventParams.
+func (m *GetComponentEventParams) SetIncludeDeleted(v bool) {
+	m.IncludeDeleted = v
 }
 
 // GetDateGTE returns the DateGTE value.
@@ -6724,6 +6754,36 @@ func (m GetComponentEventByTypeParams) GetEventType() string {
 // SetEventType sets the EventType value and returns the updated GetComponentEventByTypeParams.
 func (m *GetComponentEventByTypeParams) SetEventType(v string) {
 	m.EventType = v
+}
+
+// GetEventType returns the EventType value.
+func (m UpdateComponentEventParams) GetEventType() *string {
+	return m.EventType
+}
+
+// SetEventType sets the EventType value and returns the updated UpdateComponentEventParams.
+func (m *UpdateComponentEventParams) SetEventType(v *string) {
+	m.EventType = v
+}
+
+// GetSensorCode returns the SensorCode value.
+func (m UpdateComponentEventParams) GetSensorCode() *string {
+	return m.SensorCode
+}
+
+// SetSensorCode sets the SensorCode value and returns the updated UpdateComponentEventParams.
+func (m *UpdateComponentEventParams) SetSensorCode(v *string) {
+	m.SensorCode = v
+}
+
+// GetTransmitterID returns the TransmitterID value.
+func (m UpdateComponentEventParams) GetTransmitterID() *string {
+	return m.TransmitterID
+}
+
+// SetTransmitterID sets the TransmitterID value and returns the updated UpdateComponentEventParams.
+func (m *UpdateComponentEventParams) SetTransmitterID(v *string) {
+	m.TransmitterID = v
 }
 
 // GetNotes returns the Notes value.

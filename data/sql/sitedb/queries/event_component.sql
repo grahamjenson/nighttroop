@@ -10,6 +10,8 @@ INSERT INTO component_events (
     pump_id,
     pump_serial,
     pump_type,
+    notes,
+    reason,
 
     utc_offset_minutes,
     occurred_at,
@@ -19,7 +21,7 @@ INSERT INTO component_events (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -28,13 +30,13 @@ RETURNING *;
 
 -- name: AllComponentEvents :many
 SELECT * FROM component_events
-WHERE (CAST(sqlc.narg('IncludeDeleted') AS BOOL) IS NULL OR deleted_at IS NULL)
+WHERE (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 
 -- name: GetComponentEvent :one
-SELECT * FROM component_events WHERE id = ?;
+SELECT * FROM component_events WHERE id = ? AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL);
 
 -- name: SearchComponentEvents :many
 SELECT * FROM component_events
@@ -87,6 +89,9 @@ LIMIT 1;
 
 -- name: UpdateComponentEvent :one
 UPDATE component_events SET
+    event_type = COALESCE(sqlc.narg('EventType'), event_type),
+    sensor_code = COALESCE(sqlc.narg('SensorCode'), sensor_code),
+    transmitter_id = COALESCE(sqlc.narg('TransmitterID'), transmitter_id),
     notes = COALESCE(sqlc.narg('Notes'), notes),
     reason = COALESCE(sqlc.narg('Reason'), reason),
 

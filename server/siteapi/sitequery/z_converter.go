@@ -16,6 +16,14 @@ func QueryToAllActivities(source *apiquery.Query) sitedb.AllActivitiesParams {
 	}
 	return sitedbAllActivitiesParams
 }
+func QueryToAllComponentEvents(source *apiquery.Query) sitedb.AllComponentEventsParams {
+	var sitedbAllComponentEventsParams sitedb.AllComponentEventsParams
+	if source != nil {
+		sitedbAllComponentEventsParams.Skip = (*source).Skip
+		sitedbAllComponentEventsParams.Limit = (*source).Limit
+	}
+	return sitedbAllComponentEventsParams
+}
 func QueryToAllFoodIntakes(source *apiquery.Query) sitedb.AllFoodIntakesParams {
 	var sitedbAllFoodIntakesParams sitedb.AllFoodIntakesParams
 	if source != nil {
