@@ -10,6 +10,8 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/label"
 	"nighttroop.t1d.nz/server/components/ui/selectbox"
 	"nighttroop.t1d.nz/server/components/ui/toast"
+	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 templ ControlBase() {
@@ -37,6 +39,9 @@ templ ControlBase() {
 		<body class="min-h-screen flex flex-col">
 			<div id="toaster" class="mb-3"></div>
 			@Header()
+			if controlContext := httputils.GetControlContext(ctx); controlContext != nil && controlContext.IdentityModel != nil {
+				@StatusBanner(controlContext.ServerStatus)
+			}
 			<div
 				id="main-content"
 				class="flex-1 container center-container d-flex align-items-center justify-content-center py-4 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
@@ -47,6 +52,22 @@ templ ControlBase() {
 			@Footer()
 		</body>
 	</html>
+}
+
+// StatusBanner warns control admins about optional services that are not working
+templ StatusBanner(status config.ServerStatus) {
+	if !status.S3Working || !status.SentryWorking {
+		<div id="control--status-banner" class="bg-amber-500/10 border-b border-amber-500/20 text-amber-800 text-sm" role="alert">
+			<div class="mx-auto max-w-7xl px-4 py-2 sm:px-6 lg:px-8">
+				if !status.S3Working {
+					<p id="control--status-banner--s3"><strong>S3 not connected:</strong> backups are not being stored.</p>
+				}
+				if !status.SentryWorking {
+					<p id="control--status-banner--sentry"><strong>Sentry not connected:</strong> errors are not being reported.</p>
+				}
+			</div>
+		</div>
+	}
 }
 
 templ FullPage(content templ.Component) {
