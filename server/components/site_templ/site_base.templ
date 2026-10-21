@@ -63,24 +63,6 @@ func identityName(ctx context.Context) string {
 	return ""
 }
 
-templ settingsMenuItem(id string, path string, label string) {
-	@dropdown.Item(dropdown.ItemProps{
-		ID:   id,
-		Href: "#",
-		Attributes: templ.Attributes{
-			"hx-get":      path,
-			"hx-target":   "#main-content",
-			"hx-push-url": "true",
-			"hx-swap":     "innerHTML",
-		},
-	}) {
-		<span class="flex items-center">
-			@icon.SlidersHorizontal(icon.Props{Class: "size-4 mr-2"})
-			{ label }
-		</span>
-	}
-}
-
 templ dataMenuItem(id string, path string, label string, itemIcon templ.Component) {
 	@dropdown.Item(dropdown.ItemProps{
 		ID:   id,
@@ -150,37 +132,9 @@ templ Header() {
 						Settings
 					}
 					@dropdown.Group() {
-						@settingsMenuItem("site--settings--settings-button", "/settings", "Settings")
-						@dropdown.Item(dropdown.ItemProps{
-							ID:   "site--settings--identities-button",
-							Href: "#",
-							Attributes: templ.Attributes{
-								"hx-get":      "/settings/identities",
-								"hx-target":   "#main-content",
-								"hx-push-url": "true",
-								"hx-swap":     "innerHTML",
-							},
-						}) {
-							<span class="flex items-center">
-								@icon.Users(icon.Props{Class: "size-4 mr-2"})
-								Users & Devices
-							</span>
-						}
-						@dropdown.Item(dropdown.ItemProps{
-							ID:   "site--settings--sync-button",
-							Href: "#",
-							Attributes: templ.Attributes{
-								"hx-get":      "/settings/sync",
-								"hx-target":   "#main-content",
-								"hx-push-url": "true",
-								"hx-swap":     "innerHTML",
-							},
-						}) {
-							<span class="flex items-center">
-								@icon.FolderSync(icon.Props{Class: "size-4 mr-2"})
-								Sync Settings
-							</span>
-						}
+						@dataMenuItem("site--settings--settings-button", "/settings", "Settings", icon.SlidersHorizontal(icon.Props{Class: "size-4 mr-2"}))
+						@dataMenuItem("site--settings--identities-button", "/settings/identities", "Users & Devices", icon.Users(icon.Props{Class: "size-4 mr-2"}))
+						@dataMenuItem("site--settings--sync-button", "/settings/sync", "Sync Settings", icon.FolderSync(icon.Props{Class: "size-4 mr-2"}))
 					}
 					@dropdown.Separator()
 					@dropdown.Item(dropdown.ItemProps{
