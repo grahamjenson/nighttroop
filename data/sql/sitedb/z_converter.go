@@ -108,6 +108,20 @@ func ActivityToUpdate(source Activity) UpdateActivityParams {
 	sitedbUpdateActivityParams.ID = source.ID
 	return sitedbUpdateActivityParams
 }
+func AllEventGroupToGetEventGroup(source AllEventGroupsRow) GetEventGroupRow {
+	var sitedbGetEventGroupRow GetEventGroupRow
+	sitedbGetEventGroupRow.EventGroup = sitedbEventGroupToSitedbEventGroup(source.EventGroup)
+	sitedbGetEventGroupRow.GlucoseReadingsVw = sitedbGlucoseReadingsVwToSitedbGlucoseReadingsVw(source.GlucoseReadingsVw)
+	sitedbGetEventGroupRow.InsulinDosesVw = sitedbInsulinDosesVwToSitedbInsulinDosesVw(source.InsulinDosesVw)
+	sitedbGetEventGroupRow.FoodIntakesVw = sitedbFoodIntakesVwToSitedbFoodIntakesVw(source.FoodIntakesVw)
+	sitedbGetEventGroupRow.TempBasalsVw = sitedbTempBasalsVwToSitedbTempBasalsVw(source.TempBasalsVw)
+	sitedbGetEventGroupRow.TempTargetsVw = sitedbTempTargetsVwToSitedbTempTargetsVw(source.TempTargetsVw)
+	sitedbGetEventGroupRow.ProfileSwitchesVw = sitedbProfileSwitchesVwToSitedbProfileSwitchesVw(source.ProfileSwitchesVw)
+	sitedbGetEventGroupRow.ComponentEventsVw = sitedbComponentEventsVwToSitedbComponentEventsVw(source.ComponentEventsVw)
+	sitedbGetEventGroupRow.ActivitiesVw = sitedbActivitiesVwToSitedbActivitiesVw(source.ActivitiesVw)
+	sitedbGetEventGroupRow.NotificationEventsVw = sitedbNotificationEventsVwToSitedbNotificationEventsVw(source.NotificationEventsVw)
+	return sitedbGetEventGroupRow
+}
 func ComponentEventToCreate(source ComponentEvent) CreateComponentEventParams {
 	var sitedbCreateComponentEventParams CreateComponentEventParams
 	sitedbCreateComponentEventParams.ID = source.ID
