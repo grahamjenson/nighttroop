@@ -1,0 +1,30 @@
+// Running the jobs twice finishes some, then summarises them into the day's stats
+RUN_BACKGROUND_JOBS
+RUN_BACKGROUND_JOBS
+
+GOTO {{ .control_url }}/login
+ASSERT_STATUS 200
+INPUT #name admin
+INPUT #password password
+INPUT #control--login--otp-1 123123
+CLICK #control--login-button
+ASSERT_TEXT_VISIBLE Welcome to the NightTroop Control Dashboard
+
+// The control site shows each day's job stats, newest day first
+CLICK #control--menu
+CLICK #control--job-stats-button
+ASSERT_STATUS 200
+ASSERT_PATH /job-stats
+ASSERT_VISIBLE #controlJobStatsTable
+ASSERT_TEXT_VISIBLE Showing 1 to
+ASSERT_TEXT_VISIBLE TruncateJobManager
+SCREENSHOT job_stats
+
+// Clicking a row shows the day's totals and errors
+CLICK #controlJobStatsTable tbody tr >> nth=0
+ASSERT_VISIBLE #control--job-stats--details
+ASSERT_TEXT_VISIBLE Std Dev Duration
+SCREENSHOT job_stats_details
+
+CLICK #control--job-stats--details--close
+ASSERT_NOT_VISIBLE #control--job-stats--details

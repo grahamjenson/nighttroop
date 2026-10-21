@@ -14,6 +14,8 @@ import (
 func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Router {
 	r := chi.NewRouter()
 	sitesStore := &controlapi.SitesStore{}
+	jobStatsStore := &controlapi.JobStatsStore{}
+	jobsStore := &controlapi.JobsStore{}
 	syncSourcesStore := &controlapi.SyncSourcesStore{}
 	httputils.AddStandardMiddleware(r, config)
 
@@ -32,6 +34,12 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 		r.Get("/sites", controlapiutils.SearchHandler(controlDB, config, sitesStore))
 		r.Get("/sites/{id}", controlapiutils.GetHandler(controlDB, config, sitesStore))
 		r.Post("/sites/{id}", controlapiutils.UpdateHandler(controlDB, config, sitesStore))
+
+		// Jobs
+		r.Get("/job-stats", controlapiutils.SearchHandler(controlDB, config, jobStatsStore))
+		r.Get("/job-stats/{id}", controlapiutils.GetHandler(controlDB, config, jobStatsStore))
+		r.Get("/jobs", controlapiutils.SearchHandler(controlDB, config, jobsStore))
+		r.Get("/jobs/{id}", controlapiutils.GetHandler(controlDB, config, jobsStore))
 
 		// Sync Sources
 		r.Get("/sync-sources", controlapiutils.SearchHandler(controlDB, config, syncSourcesStore))

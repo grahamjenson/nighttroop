@@ -2,6 +2,7 @@ package controlmodels
 
 import (
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/data/sql/jobsdb"
 	"nighttroop.t1d.nz/utils/apiutils/apiquery"
 )
 
@@ -15,6 +16,16 @@ type ControlConverter interface {
 
 	// goverter:useZeroValueOnPointerInconsistency
 	QueryToSearchSites(source *apiquery.Query) controldb.SearchSitesParams
+
+	JobStatsDailyFromDB(source *jobsdb.JobStatsDaily) *JobStatsDaily
+
+	// goverter:useZeroValueOnPointerInconsistency
+	QueryToSearchJobStatsDaily(source *apiquery.Query) jobsdb.SearchJobStatsDailyParams
+
+	JobFromDB(source *jobsdb.Job) *Job
+
+	// goverter:useZeroValueOnPointerInconsistency
+	QueryToSearchJobs(source *apiquery.Query) jobsdb.SearchJobsParams
 
 	// goverter:enum no
 	SyncSourceFromDB(source *controldb.SiteSyncSource) *SyncSource
