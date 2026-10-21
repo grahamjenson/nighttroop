@@ -1,0 +1,63 @@
+# What a socket gets depends on what its token may do
+
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET read_token {{ .create_new_site.read_only_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+# A read only token reads, but cannot write
+NAME connect_read_only
+CONNECT http://{{ site }}/socket.io/?EIO=3
+
+NAME authorize_read_only
+EMIT authorize
+B {"client":"follower","secret":"{{ read_token }}"}
+ACK
+ASSERT_EQUALS true "@read"
+ASSERT_EQUALS false "@write"
+ASSERT_EQUALS false "@write_treatment"
+
+NAME read_only_data
+WAIT dataUpdate
+ASSERT_LENGTH 0 "@sgvs"
+
+# A wrong secret is still answered and connected, but joins no data
+NAME connect_wrong
+CONNECT http://{{ site }}/socket.io/?EIO=3
+
+NAME authorize_wrong
+EMIT authorize
+B {"client":"xDrip+","secret":"not the secret"}
+ACK
+ASSERT_EQUALS false "@read"
+ASSERT_EQUALS false "@write"
+ASSERT_EQUALS false "@write_treatment"
+
+NAME wrong_connected
+WAIT connected
+
+NAME post_entry
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [{"type":"sgv","sgv":120,"date":{{ itime 0 }}}]
+ASSERT_STATUS 200
+
+NAME wrong_gets_nothing
+COLLECT dataUpdate
+T 500ms
+ASSERT_LENGTH 0 "@"
+
+# Without authorize nothing comes either
+NAME connect_silent
+CONNECT http://{{ site }}/socket.io/?EIO=4
+
+NAME post_another_entry
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [{"type":"sgv","sgv":125,"date":{{ itime 0 }}}]
+ASSERT_STATUS 200
+
+NAME silent_gets_nothing
+COLLECT dataUpdate
+T 500ms
+ASSERT_LENGTH 0 "@"
