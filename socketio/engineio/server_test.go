@@ -70,8 +70,8 @@ func TestHandshake(t *testing.T) {
 	var open map[string]any
 	require.NoError(t, json.Unmarshal([]byte(body[1:]), &open))
 	require.NotEmpty(t, open["sid"])
-	// Only polling, so there is nothing to upgrade to
-	require.Equal(t, []any{}, open["upgrades"])
+	// A polling session can upgrade to a websocket
+	require.Equal(t, []any{"websocket"}, open["upgrades"])
 	require.EqualValues(t, 25000, open["pingInterval"])
 	require.EqualValues(t, 20000, open["pingTimeout"])
 	require.EqualValues(t, 100000, open["maxPayload"])
@@ -85,29 +85,51 @@ func TestHandshake(t *testing.T) {
 	require.NotContains(t, packet, "maxPayload")
 }
 
+var transports = []string{"polling", "websocket", "upgrade"}
+
+// dial connects a client over polling, over a websocket, or over polling then upgraded to a websocket
+func dial(t *testing.T, url string, version int, transport string, onMessage func(string)) *Client {
+	if transport == "websocket" {
+		client, err := DialOverWebSocket(context.Background(), url, version, onMessage)
+		require.NoError(t, err)
+		return client
+	}
+	client, err := Dial(context.Background(), url, version, nil, onMessage)
+	require.NoError(t, err)
+	if transport == "upgrade" {
+		require.NoError(t, client.Upgrade(context.Background()))
+	}
+	return client
+}
+
 func TestClientRoundTrip(t *testing.T) {
 	for _, version := range []int{V3, V4} {
-		t.Run("v"+string(rune('0'+version)), func(t *testing.T) {
-			_, ts, closed := echoServer(t, testConfig)
-			received := make(chan string, 10)
-			client, err := Dial(context.Background(), ts.URL+"/socket.io/", version, nil, func(data string) { received <- data })
-			require.NoError(t, err)
-
-			for _, msg := range []string{"hello", "€ and 😀", `{"json":true}`} {
-				require.NoError(t, client.Send(msg))
-				require.Equal(t, msg, <-received)
-			}
-
-			// The heartbeat keeps the session open well past several ping intervals
-			time.Sleep(300 * time.Millisecond)
-			require.NoError(t, client.Send("still here"))
-			require.Equal(t, "still here", <-received)
-
-			require.NoError(t, client.Close())
-			require.Equal(t, "client close", <-closed)
-			<-client.Done()
-		})
+		for _, transport := range transports {
+			t.Run("v"+string(rune('0'+version))+" "+transport, func(t *testing.T) {
+				testRoundTrip(t, version, transport)
+			})
+		}
 	}
+}
+
+func testRoundTrip(t *testing.T, version int, transport string) {
+	_, ts, closed := echoServer(t, testConfig)
+	received := make(chan string, 10)
+	client := dial(t, ts.URL+"/socket.io/", version, transport, func(data string) { received <- data })
+
+	for _, msg := range []string{"hello", "€ and 😀", `{"json":true}`} {
+		require.NoError(t, client.Send(msg))
+		require.Equal(t, msg, <-received)
+	}
+
+	// The heartbeat keeps the session open well past several ping intervals
+	time.Sleep(300 * time.Millisecond)
+	require.NoError(t, client.Send("still here"))
+	require.Equal(t, "still here", <-received)
+
+	require.NoError(t, client.Close())
+	require.Equal(t, "client close", <-closed)
+	<-client.Done()
 }
 
 func TestSessionClosesWithoutHeartbeat(t *testing.T) {
@@ -148,7 +170,9 @@ func TestRequestErrors(t *testing.T) {
 	}{
 		{"no version", "GET", "transport=polling", 400, errUnsupportedVersion},
 		{"unknown version", "GET", "EIO=5&transport=polling", 400, errUnsupportedVersion},
-		{"websocket", "GET", "EIO=4&transport=websocket", 400, errTransportUnknown},
+		{"unknown transport", "GET", "EIO=4&transport=flashsocket", 400, errTransportUnknown},
+		{"upgrade with unknown sid", "GET", "EIO=4&transport=websocket&sid=nope", 400, errSessionUnknown},
+		{"upgrade with wrong version for sid", "GET", "EIO=3&transport=websocket&sid=" + sid, 400, errSessionUnknown},
 		{"post handshake", "POST", "EIO=4&transport=polling", 400, errBadHandshakeMethod},
 		{"unknown sid", "GET", "EIO=4&transport=polling&sid=nope", 400, errSessionUnknown},
 		{"wrong version for sid", "GET", "EIO=3&transport=polling&sid=" + sid, 400, errSessionUnknown},
@@ -236,10 +260,97 @@ func TestSlowClientIsClosedWhenItsBufferFills(t *testing.T) {
 }
 
 func TestServerCloseEndsClients(t *testing.T) {
-	server, ts, _ := echoServer(t, testConfig)
-	client, err := Dial(context.Background(), ts.URL, V4, nil, nil)
+	for _, transport := range transports {
+		t.Run(transport, func(t *testing.T) {
+			server, ts, _ := echoServer(t, testConfig)
+			client := dial(t, ts.URL, V4, transport, nil)
+			server.Close()
+			<-client.Done()
+			require.ErrorIs(t, client.Send("x"), ErrClosed)
+		})
+	}
+}
+
+// upgrade probes and upgrades the session sid by hand
+func upgrade(t *testing.T, base string, version int, sid string) *WebSocket {
+	ws, err := DialWebSocket(context.Background(), base, version, sid)
 	require.NoError(t, err)
-	server.Close()
-	<-client.Done()
-	require.ErrorIs(t, client.Send("x"), ErrClosed)
+	t.Cleanup(func() { ws.Close() })
+	require.NoError(t, ws.WritePacket(Packet{Type: Ping, Data: "probe"}))
+	p, err := ws.ReadPacket()
+	require.NoError(t, err)
+	require.Equal(t, Packet{Type: Pong, Data: "probe"}, p)
+	require.NoError(t, ws.WritePacket(Packet{Type: Upgrade}))
+	return ws
+}
+
+func TestUpgradeEndsTheWaitingPoll(t *testing.T) {
+	_, ts, _ := echoServer(t, Config{})
+	sid := handshake(t, ts.URL, "4")
+	url := ts.URL + "/?EIO=4&transport=polling&sid=" + sid
+
+	polled := make(chan string)
+	go func() {
+		_, body := get(t, url)
+		polled <- body
+	}()
+	time.Sleep(50 * time.Millisecond)
+	start := time.Now()
+	ws := upgrade(t, ts.URL, V4, sid)
+	// The waiting poll gets a noop at once, not after pingInterval
+	require.Equal(t, "6", <-polled)
+	require.Less(t, time.Since(start), time.Second)
+
+	// Polling is over, and the websocket carries the messages
+	status, _ := get(t, url)
+	require.Equal(t, http.StatusBadRequest, status)
+	require.NoError(t, ws.WritePacket(Packet{Type: Message, Data: "hello"}))
+	p, err := ws.ReadPacket()
+	require.NoError(t, err)
+	require.Equal(t, Packet{Type: Message, Data: "hello"}, p)
+
+	// A session upgrades once
+	_, err = DialWebSocket(context.Background(), ts.URL, V4, sid)
+	require.ErrorContains(t, err, "400")
+}
+
+func TestBadProbeKeepsPolling(t *testing.T) {
+	_, ts, _ := echoServer(t, Config{})
+	sid := handshake(t, ts.URL, "4")
+	ws, err := DialWebSocket(context.Background(), ts.URL, V4, sid)
+	require.NoError(t, err)
+	defer ws.Close()
+	require.NoError(t, ws.WritePacket(Packet{Type: Message, Data: "not a probe"}))
+	_, err = ws.ReadPacket()
+	require.Error(t, err)
+
+	url := ts.URL + "/?EIO=4&transport=polling&sid=" + sid
+	status, _ := post(t, url, "4still polling")
+	require.Equal(t, http.StatusOK, status)
+	_, body := get(t, url)
+	require.Equal(t, "4still polling", body)
+}
+
+func TestWebSocketSessionClosesWithoutHeartbeat(t *testing.T) {
+	for _, version := range []int{V3, V4} {
+		t.Run("v"+string(rune('0'+version)), func(t *testing.T) {
+			server, ts, closed := echoServer(t, testConfig)
+			// A client that opens a session and never pings (v3) or answers pings (v4)
+			ws, err := DialWebSocket(context.Background(), ts.URL, version, "")
+			require.NoError(t, err)
+			defer ws.Close()
+			p, err := ws.ReadPacket()
+			require.NoError(t, err)
+			require.Equal(t, Open, p.Type)
+			require.Equal(t, "ping timeout", <-closed)
+			require.Equal(t, 0, server.Count())
+		})
+	}
+}
+
+func TestMaxSessionsOverWebSocket(t *testing.T) {
+	_, ts, _ := echoServer(t, Config{MaxSessions: 1})
+	handshake(t, ts.URL, "4")
+	_, err := DialWebSocket(context.Background(), ts.URL, V4, "")
+	require.ErrorContains(t, err, "429")
 }

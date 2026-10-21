@@ -20,6 +20,8 @@ type Config struct {
 	MaxPayload   int           // the largest POST body in bytes, 100KB by default
 	MaxSessions  int           // how many sessions can be open at once, 10,000 by default
 	MaxBuffered  int           // how many packets can wait for a session's next poll before it is closed, 1,000 by default
+	// CheckOrigin decides which browser origins may open a websocket; nil allows only the server's own origin, and clients that send none
+	CheckOrigin func(*http.Request) bool
 }
 
 func (c Config) withDefaults() Config {
@@ -41,7 +43,8 @@ func (c Config) withDefaults() Config {
 	return c
 }
 
-// Server is an Engine.IO server over HTTP long-polling, mounted at a path like /socket.io/
+// Server is an Engine.IO server over HTTP long-polling and websockets, mounted at a path like /socket.io/.
+// A client can connect over either, and upgrade a polling session to a websocket.
 type Server struct {
 	config       Config
 	onConnection func(*Session)
@@ -50,7 +53,7 @@ type Server struct {
 	sessions map[string]*Session
 }
 
-// NewServer calls onConnection with each new session, before its handshake is answered
+// NewServer calls onConnection with each new session; anything it sends goes after the open packet
 func NewServer(config Config, onConnection func(*Session)) *Server {
 	return &Server{config: config.withDefaults(), onConnection: onConnection, sessions: map[string]*Session{}}
 }
@@ -94,11 +97,16 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, errUnsupportedVersion)
 		return
 	}
-	if query.Get("transport") != "polling" {
+	transport := query.Get("transport")
+	if transport != "polling" && transport != "websocket" {
 		writeError(w, http.StatusBadRequest, errTransportUnknown)
 		return
 	}
 	sid := query.Get("sid")
+	if transport == "websocket" {
+		s.serveWebSocket(w, r, version, sid)
+		return
+	}
 	if sid == "" {
 		if r.Method != http.MethodGet {
 			writeError(w, http.StatusBadRequest, errBadHandshakeMethod)
@@ -125,12 +133,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) handshake(w http.ResponseWriter, r *http.Request, version int) {
+// open starts a session and makes its open packet; a polling session can upgrade to a websocket
+func (s *Server) open(r *http.Request, version int, upgrades []string) (*Session, Packet, bool) {
 	s.mu.Lock()
 	if len(s.sessions) >= s.config.MaxSessions {
 		s.mu.Unlock()
-		http.Error(w, "Too many sessions", http.StatusTooManyRequests)
-		return
+		return nil, Packet{}, false
 	}
 	session := newSession(s, r, version)
 	s.sessions[session.id] = session
@@ -138,7 +146,7 @@ func (s *Server) handshake(w http.ResponseWriter, r *http.Request, version int) 
 
 	open := openPayload{
 		SID:          session.id,
-		Upgrades:     []string{},
+		Upgrades:     upgrades,
 		PingInterval: s.config.PingInterval.Milliseconds(),
 		PingTimeout:  s.config.PingTimeout.Milliseconds(),
 	}
@@ -146,11 +154,67 @@ func (s *Server) handshake(w http.ResponseWriter, r *http.Request, version int) 
 		open.MaxPayload = s.config.MaxPayload
 	}
 	data, _ := json.Marshal(open)
+	return session, Packet{Type: Open, Data: string(data)}, true
+}
+
+// started runs once a session's open packet is sent
+func (s *Server) started(session *Session) {
 	if s.onConnection != nil {
 		s.onConnection(session)
 	}
 	go session.heartbeat()
-	writePayload(w, []Packet{{Type: Open, Data: string(data)}}, version)
+}
+
+func (s *Server) handshake(w http.ResponseWriter, r *http.Request, version int) {
+	session, open, ok := s.open(r, version, []string{"websocket"})
+	if !ok {
+		http.Error(w, "Too many sessions", http.StatusTooManyRequests)
+		return
+	}
+	writePayload(w, []Packet{open}, version)
+	s.started(session)
+}
+
+// serveWebSocket opens a session over a websocket, or with a sid upgrades that polling session to one
+func (s *Server) serveWebSocket(w http.ResponseWriter, r *http.Request, version int, sid string) {
+	var session *Session
+	if sid != "" {
+		s.mu.Lock()
+		session = s.sessions[sid]
+		s.mu.Unlock()
+		if session == nil || session.version != version || session.webSocket() != nil {
+			writeError(w, http.StatusBadRequest, errSessionUnknown)
+			return
+		}
+	} else if s.Count() >= s.config.MaxSessions {
+		http.Error(w, "Too many sessions", http.StatusTooManyRequests)
+		return
+	}
+
+	ws, err := UpgradeWebSocket(w, r, s.config.MaxPayload, s.config.CheckOrigin)
+	if err != nil {
+		// The upgrader has already answered the request
+		return
+	}
+	if session != nil {
+		if !session.probe(ws) {
+			ws.Close()
+			return
+		}
+		session.runWebSocket(ws)
+		return
+	}
+
+	session, open, ok := s.open(r, version, []string{})
+	if !ok || ws.WritePacket(open) != nil {
+		ws.Close()
+		if session != nil {
+			session.Close("transport error")
+		}
+		return
+	}
+	s.started(session)
+	session.runWebSocket(ws)
 }
 
 // Close closes every session
@@ -195,13 +259,15 @@ type Session struct {
 	request *http.Request
 
 	mu        sync.Mutex
+	ws        *WebSocket // set once the session is on a websocket
 	queue     []Packet
 	polling   bool
 	posting   bool
 	closed    bool
 	onMessage func(data string)
 	onClose   func(reason string)
-	notify    chan struct{} // wakes the waiting poll
+	notify    chan struct{} // wakes the waiting poll, or the websocket writer
+	upgrade   chan struct{} // closed once the session is on a websocket
 	alive     chan struct{} // a pong (v4) or ping (v3) came
 	done      chan struct{}
 }
@@ -215,6 +281,7 @@ func newSession(server *Server, r *http.Request, version int) *Session {
 		server:  server,
 		request: r.Clone(context.Background()),
 		notify:  make(chan struct{}, 1),
+		upgrade: make(chan struct{}),
 		alive:   make(chan struct{}, 1),
 		done:    make(chan struct{}),
 	}
@@ -245,7 +312,7 @@ func (s *Session) OnClose(handler func(reason string)) {
 // Done is closed when the session closes
 func (s *Session) Done() <-chan struct{} { return s.done }
 
-// Send queues a message for the client's next poll; a client too slow to collect them is closed
+// Send queues a message for the client; a client too slow to collect them is closed
 func (s *Session) Send(data string) error {
 	return s.enqueue(Packet{Type: Message, Data: data})
 }
@@ -275,11 +342,14 @@ func (s *Session) Close(reason string) {
 		return
 	}
 	s.closed = true
-	onClose := s.onClose
+	onClose, ws := s.onClose, s.ws
 	s.mu.Unlock()
 
 	s.server.remove(s.id)
 	close(s.done)
+	if ws != nil {
+		ws.Close()
+	}
 	if onClose != nil {
 		onClose(reason)
 	}
@@ -336,6 +406,11 @@ func sleep(d time.Duration, done <-chan struct{}) bool {
 // poll answers a GET with the queued packets, waiting up to pingInterval for some
 func (s *Session) poll(w http.ResponseWriter, r *http.Request) {
 	s.mu.Lock()
+	if s.ws != nil {
+		s.mu.Unlock()
+		writeError(w, http.StatusBadRequest, errBadRequest)
+		return
+	}
 	if s.polling {
 		s.mu.Unlock()
 		s.Close("concurrent poll")
@@ -354,11 +429,19 @@ func (s *Session) poll(w http.ResponseWriter, r *http.Request) {
 	defer timer.Stop()
 	for {
 		s.mu.Lock()
-		packets := s.queue
-		s.queue = nil
+		upgraded := s.ws != nil
+		var packets []Packet
+		if !upgraded {
+			packets, s.queue = s.queue, nil
+		}
 		closed := s.closed
 		s.mu.Unlock()
 		switch {
+		case upgraded:
+			// The upgrade ends the waiting poll; the websocket sends from now on, so pass on any wake this poll took
+			signal(s.notify)
+			writePayload(w, []Packet{{Type: Noop}}, s.version)
+			return
 		case len(packets) > 0:
 			writePayload(w, packets, s.version)
 			return
@@ -368,6 +451,7 @@ func (s *Session) poll(w http.ResponseWriter, r *http.Request) {
 		}
 		select {
 		case <-s.notify:
+		case <-s.upgrade:
 		case <-s.done:
 		case <-timer.C:
 			writePayload(w, []Packet{{Type: Noop}}, s.version)
@@ -440,5 +524,69 @@ func (s *Session) handle(p Packet) {
 		}
 	case Close:
 		s.Close("client close")
+	}
+}
+
+func (s *Session) webSocket() *WebSocket {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.ws
+}
+
+// probe is the start of an upgrade: the client pings "probe" over the websocket, the server answers,
+// then the client sends upgrade. It is false if the client sends anything else, or takes longer than pingTimeout.
+func (s *Session) probe(ws *WebSocket) bool {
+	ws.conn.SetReadDeadline(time.Now().Add(s.server.config.PingTimeout))
+	defer ws.conn.SetReadDeadline(time.Time{})
+	p, err := ws.ReadPacket()
+	if err != nil || p.Type != Ping || p.Data != "probe" || ws.WritePacket(Packet{Type: Pong, Data: "probe"}) != nil {
+		return false
+	}
+	p, err = ws.ReadPacket()
+	return err == nil && p.Type == Upgrade
+}
+
+// runWebSocket moves the session onto the websocket: a waiting poll is ended with a noop, queued packets are sent
+// over the websocket from now on, and the client's packets are read from it until it closes
+func (s *Session) runWebSocket(ws *WebSocket) {
+	s.mu.Lock()
+	if s.closed || s.ws != nil {
+		s.mu.Unlock()
+		ws.Close()
+		return
+	}
+	s.ws = ws
+	close(s.upgrade)
+	s.mu.Unlock()
+
+	go s.writeWebSocket(ws)
+	for {
+		p, err := ws.ReadPacket()
+		if err != nil {
+			s.Close("transport close")
+			return
+		}
+		s.handle(p)
+	}
+}
+
+// writeWebSocket sends queued packets as they come, until the session closes
+func (s *Session) writeWebSocket(ws *WebSocket) {
+	for {
+		s.mu.Lock()
+		packets := s.queue
+		s.queue = nil
+		s.mu.Unlock()
+		for _, p := range packets {
+			if ws.WritePacket(p) != nil {
+				s.Close("transport error")
+				return
+			}
+		}
+		select {
+		case <-s.notify:
+		case <-s.done:
+			return
+		}
 	}
 }
