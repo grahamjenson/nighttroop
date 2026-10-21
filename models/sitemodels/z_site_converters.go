@@ -13,6 +13,161 @@ import (
 	settings "nighttroop.t1d.nz/utils/settings"
 )
 
+func ActivityFromDB(source *sitedb.Activity) *SiteActivity {
+	var pSitemodelsSiteActivity *SiteActivity
+	if source != nil {
+		var sitemodelsSiteActivity SiteActivity
+		sitemodelsSiteActivity.ID = (*source).ID
+		sitemodelsSiteActivity.ActivityType = (*source).ActivityType
+		if (*source).Name != nil {
+			xstring := *(*source).Name
+			sitemodelsSiteActivity.Name = &xstring
+		}
+		if (*source).DurationMinutes != nil {
+			xint64 := *(*source).DurationMinutes
+			sitemodelsSiteActivity.DurationMinutes = &xint64
+		}
+		if (*source).Calories != nil {
+			xint642 := *(*source).Calories
+			sitemodelsSiteActivity.Calories = &xint642
+		}
+		if (*source).Steps != nil {
+			xint643 := *(*source).Steps
+			sitemodelsSiteActivity.Steps = &xint643
+		}
+		if (*source).HeartRate != nil {
+			xint644 := *(*source).HeartRate
+			sitemodelsSiteActivity.HeartRate = &xint644
+		}
+		if (*source).Notes != nil {
+			xstring2 := *(*source).Notes
+			sitemodelsSiteActivity.Notes = &xstring2
+		}
+		if (*source).Reason != nil {
+			xstring3 := *(*source).Reason
+			sitemodelsSiteActivity.Reason = &xstring3
+		}
+		if (*source).RawJsonData != nil {
+			xstring4 := *(*source).RawJsonData
+			sitemodelsSiteActivity.RawJsonData = &xstring4
+		}
+		if (*source).UtcOffsetMinutes != nil {
+			xint645 := *(*source).UtcOffsetMinutes
+			sitemodelsSiteActivity.UtcOffsetMinutes = &xint645
+		}
+		sitemodelsSiteActivity.OccurredAt = (*source).OccurredAt
+		sitemodelsSiteActivity.CreatedAt = (*source).CreatedAt
+		sitemodelsSiteActivity.UpdatedAt = (*source).UpdatedAt
+		if (*source).CreatedByAppName != nil {
+			xstring5 := *(*source).CreatedByAppName
+			sitemodelsSiteActivity.CreatedByAppName = &xstring5
+		}
+		if (*source).CreatedByDeviceName != nil {
+			xstring6 := *(*source).CreatedByDeviceName
+			sitemodelsSiteActivity.CreatedByDeviceName = &xstring6
+		}
+		sitemodelsSiteActivity.CreatedByIdentityName = (*source).CreatedByIdentityName
+		if (*source).UpdatedByIdentityName != nil {
+			xstring7 := *(*source).UpdatedByIdentityName
+			sitemodelsSiteActivity.UpdatedByIdentityName = &xstring7
+		}
+		pSitemodelsSiteActivity = &sitemodelsSiteActivity
+	}
+	return pSitemodelsSiteActivity
+}
+func ActivityToCreate(source *SiteActivity, context *httputils.SiteContext) sitedb.CreateActivityParams {
+	var sitedbCreateActivityParams sitedb.CreateActivityParams
+	if source != nil {
+		sitedbCreateActivityParams.ID = NewSiteDataID()
+		if (*source).Name != nil {
+			xstring := *(*source).Name
+			sitedbCreateActivityParams.Name = &xstring
+		}
+		sitedbCreateActivityParams.ActivityType = (*source).ActivityType
+		if (*source).DurationMinutes != nil {
+			xint64 := *(*source).DurationMinutes
+			sitedbCreateActivityParams.DurationMinutes = &xint64
+		}
+		if (*source).Calories != nil {
+			xint642 := *(*source).Calories
+			sitedbCreateActivityParams.Calories = &xint642
+		}
+		if (*source).Steps != nil {
+			xint643 := *(*source).Steps
+			sitedbCreateActivityParams.Steps = &xint643
+		}
+		if (*source).HeartRate != nil {
+			xint644 := *(*source).HeartRate
+			sitedbCreateActivityParams.HeartRate = &xint644
+		}
+		if (*source).Notes != nil {
+			xstring2 := *(*source).Notes
+			sitedbCreateActivityParams.Notes = &xstring2
+		}
+		if (*source).Reason != nil {
+			xstring3 := *(*source).Reason
+			sitedbCreateActivityParams.Reason = &xstring3
+		}
+		sitedbCreateActivityParams.OccurredAt = OccurredAtOrNow((*source).OccurredAt)
+		if (*source).UtcOffsetMinutes != nil {
+			xint645 := *(*source).UtcOffsetMinutes
+			sitedbCreateActivityParams.UtcOffsetMinutes = &xint645
+		}
+		if (*source).RawJsonData != nil {
+			xstring4 := *(*source).RawJsonData
+			sitedbCreateActivityParams.RawJsonData = &xstring4
+		}
+		if (*source).CreatedByAppName != nil {
+			xstring5 := *(*source).CreatedByAppName
+			sitedbCreateActivityParams.CreatedByAppName = &xstring5
+		}
+		if (*source).CreatedByDeviceName != nil {
+			xstring6 := *(*source).CreatedByDeviceName
+			sitedbCreateActivityParams.CreatedByDeviceName = &xstring6
+		}
+		sitedbCreateActivityParams.CreatedByIdentityName = ContextIdentityNameValue(context)
+		sitedbCreateActivityParams.CreatedByIdentityID = ContextIdentityID(context)
+	}
+	return sitedbCreateActivityParams
+}
+func ActivityToUpdate(source *SiteActivity, context *httputils.SiteContext) sitedb.UpdateActivityParams {
+	var sitedbUpdateActivityParams sitedb.UpdateActivityParams
+	if source != nil {
+		if (*source).Name != nil {
+			xstring := *(*source).Name
+			sitedbUpdateActivityParams.Name = &xstring
+		}
+		sitedbUpdateActivityParams.ActivityType = StringOrNil((*source).ActivityType)
+		if (*source).DurationMinutes != nil {
+			xint64 := *(*source).DurationMinutes
+			sitedbUpdateActivityParams.DurationMinutes = &xint64
+		}
+		if (*source).Calories != nil {
+			xint642 := *(*source).Calories
+			sitedbUpdateActivityParams.Calories = &xint642
+		}
+		if (*source).Steps != nil {
+			xint643 := *(*source).Steps
+			sitedbUpdateActivityParams.Steps = &xint643
+		}
+		if (*source).HeartRate != nil {
+			xint644 := *(*source).HeartRate
+			sitedbUpdateActivityParams.HeartRate = &xint644
+		}
+		if (*source).Notes != nil {
+			xstring2 := *(*source).Notes
+			sitedbUpdateActivityParams.Notes = &xstring2
+		}
+		if (*source).Reason != nil {
+			xstring3 := *(*source).Reason
+			sitedbUpdateActivityParams.Reason = &xstring3
+		}
+		sitedbUpdateActivityParams.UpdatedByIdentityID = ContextIdentityID(context)
+		sitedbUpdateActivityParams.UpdatedByIdentityName = ContextIdentityName(context)
+		sitedbUpdateActivityParams.ID = (*source).ID
+	}
+	return sitedbUpdateActivityParams
+}
 func ComponentEventFromDB(source *sitedb.ComponentEvent) *SiteComponentEvent {
 	var pSitemodelsSiteComponentEvent *SiteComponentEvent
 	if source != nil {

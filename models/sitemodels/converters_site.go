@@ -132,6 +132,26 @@ type SiteConverter interface {
 	TempBasalToUpdate(source *SiteTempBasal, siteContext *httputils.SiteContext) sitedb.UpdateTempBasalParams
 
 	///////
+	// ACTIVITIES
+	///////
+
+	ActivityFromDB(source *sitedb.Activity) *SiteActivity
+
+	// goverter:context siteContext
+	// goverter:map ID | NewSiteDataID
+	// goverter:map OccurredAt | OccurredAtOrNow
+	// goverter:map CreatedByIdentityID | ContextIdentityID
+	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
+	ActivityToCreate(source *SiteActivity, siteContext *httputils.SiteContext) sitedb.CreateActivityParams
+
+	// goverter:context siteContext
+	// goverter:map ActivityType | StringOrNil
+	// goverter:map UpdatedByIdentityID | ContextIdentityID
+	// goverter:map UpdatedByIdentityName | ContextIdentityName
+	// goverter:ignore RawJsonData
+	ActivityToUpdate(source *SiteActivity, siteContext *httputils.SiteContext) sitedb.UpdateActivityParams
+
+	///////
 	// COMPONENT EVENTS
 	///////
 
