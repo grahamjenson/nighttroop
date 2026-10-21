@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/server/components/control_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/table"
 )
@@ -180,23 +181,10 @@ templ JobStatsModal(stats *controlmodels.JobStatsDaily) {
 				</ul>
 			}
 			<div class="mt-4 flex justify-end">
-				@button.Button(button.Props{
-					ID:      "control--job-stats--details--close",
-					Variant: button.VariantOutline,
-					Attributes: templ.Attributes{
-						"hx-get":    "/empty",
-						"hx-target": "#modal-container",
-						"hx-swap":   "innerHTML",
-					},
-				}) {
-					Close
-				}
+				@control_templ.CloseButton("control--job-stats--details--close")
 			</div>
 		</div>
 	</div>
 }
 
-templ jobStatsDetail(label string, value string) {
-	<dt class="text-gray-500">{ label }</dt>
-	<dd class="break-all">{ value }</dd>
-}
+var jobStatsDetail = control_templ.Detail

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/server/components/control_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/server/components/ui/toast"
@@ -150,26 +151,13 @@ templ SiteModal(site *controlmodels.Site) {
 						}
 					</form>
 				}
-				@button.Button(button.Props{
-					ID:      "control--site--details--close",
-					Variant: button.VariantOutline,
-					Attributes: templ.Attributes{
-						"hx-get":    "/empty",
-						"hx-target": "#modal-container",
-						"hx-swap":   "innerHTML",
-					},
-				}) {
-					Close
-				}
+				@control_templ.CloseButton("control--site--details--close")
 			</div>
 		</div>
 	</div>
 }
 
-templ siteDetail(label string, value string) {
-	<dt class="text-gray-500">{ label }</dt>
-	<dd class="break-all">{ value }</dd>
-}
+var siteDetail = control_templ.Detail
 
 func orDash(value *int64) string {
 	if value == nil {
