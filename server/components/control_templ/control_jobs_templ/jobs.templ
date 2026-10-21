@@ -1,0 +1,189 @@
+package control_jobs_templ
+
+import (
+	"fmt"
+	"time"
+
+	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/table"
+)
+
+// formatDate shows a time in ms, or a dash for the 0 a job has before it is fetched or finished
+func formatDate(ms int64) string {
+	if ms == 0 {
+		return "-"
+	}
+	return time.UnixMilli(ms).Format("2006-01-02 15:04:05")
+}
+
+// duration is how long the job took from being fetched to finishing
+func duration(job *controlmodels.Job) string {
+	if job.ConsumerFetchedAt == 0 || job.FinishedAt == 0 {
+		return "-"
+	}
+	return fmt.Sprintf("%d ms", job.FinishedAt-job.ConsumerFetchedAt)
+}
+
+// statusClass shows failed jobs as errors
+func statusClass(job *controlmodels.Job) string {
+	if job.JobStatus == "failed" {
+		return "font-medium text-red-700"
+	}
+	return ""
+}
+
+// JobsTable shows one page of jobs, newest first, with buttons to the pages either side
+templ JobsTable(jobs []*controlmodels.Job, skip int64, limit int64) {
+	<div id="jobs_table" class="mx-auto max-w-5xl space-y-6">
+		<div>
+			<h1 class="text-2xl font-bold">Jobs</h1>
+			<p class="mt-1 text-gray-500">Background jobs not yet summarised into the job stats, newest first. Click a job to see its details.</p>
+		</div>
+		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
+			@table.Table(table.Props{ID: "controlJobsTable", Class: "rounded-lg border border-gray-200"}) {
+				@table.Header() {
+					@table.Row() {
+						@table.Head() {
+							ID
+						}
+						@table.Head() {
+							Queue
+						}
+						@table.Head() {
+							Job
+						}
+						@table.Head() {
+							Status
+						}
+						@table.Head() {
+							Created
+						}
+						@table.Head() {
+							Duration
+						}
+					}
+				}
+				@table.Body() {
+					if len(jobs) == 0 {
+						<tr><td colspan="6" class="p-4 text-sm text-gray-500">No jobs here.</td></tr>
+					}
+					for _, job := range jobs {
+						@jobRow(job)
+					}
+				}
+			}
+			<div class="mt-4 flex items-center justify-between text-sm text-gray-500">
+				if len(jobs) > 0 {
+					<span>{ fmt.Sprintf("Showing %d to %d", skip+1, skip+int64(len(jobs))) }</span>
+				} else {
+					<span></span>
+				}
+				<div class="flex gap-2">
+					if skip > 0 {
+						@jobsPageButton("control--jobs--previous", "Previous", max(skip-limit, 0), limit)
+					}
+					if int64(len(jobs)) == limit {
+						@jobsPageButton("control--jobs--next", "Next", skip+limit, limit)
+					}
+				</div>
+			</div>
+		</section>
+		<div id="modal-container"></div>
+	</div>
+}
+
+templ jobsPageButton(id string, label string, skip int64, limit int64) {
+	@button.Button(button.Props{
+		ID:      id,
+		Variant: button.VariantOutline,
+		Attributes: templ.Attributes{
+			"hx-get":      fmt.Sprintf("/jobs?skip=%d&limit=%d", skip, limit),
+			"hx-target":   "#main-content",
+			"hx-push-url": "true",
+			"hx-swap":     "innerHTML",
+		},
+	}) {
+		{ label }
+	}
+}
+
+templ jobRow(job *controlmodels.Job) {
+	@table.Row(table.RowProps{
+		ID:    fmt.Sprintf("control--job--%d", job.ID),
+		Class: "cursor-pointer",
+		Attributes: templ.Attributes{
+			"hx-get":    fmt.Sprintf("/jobs/%d", job.ID),
+			"hx-target": "#modal-container",
+			"hx-swap":   "innerHTML",
+		},
+	}) {
+		@table.Cell() {
+			{ fmt.Sprint(job.ID) }
+		}
+		@table.Cell() {
+			{ job.Queue }
+		}
+		@table.Cell() {
+			<span class="block max-w-xs truncate">{ job.Job }</span>
+		}
+		@table.Cell() {
+			<span class={ statusClass(job) }>{ job.JobStatus }</span>
+		}
+		@table.Cell() {
+			{ formatDate(job.CreatedAt) }
+		}
+		@table.Cell() {
+			{ duration(job) }
+		}
+	}
+}
+
+// JobModal shows all of a job's details and the errors its attempts had
+templ JobModal(job *controlmodels.Job) {
+	<div id="control--job--details" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+		<div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-lg">
+			<h2 class="text-lg font-semibold">{ fmt.Sprintf("Job %d", job.ID) }</h2>
+			<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+				@jobDetail("Queue", job.Queue)
+				@jobDetail("Job", job.Job)
+				@jobDetail("Status", job.JobStatus)
+				@jobDetail("Remaining Attempts", fmt.Sprint(job.RemainingAttempts))
+				@jobDetail("Deduping Key", job.DedupingKey)
+				@jobDetail("Created", formatDate(job.CreatedAt))
+				@jobDetail("Execute After", formatDate(job.ExecuteAfter))
+				@jobDetail("Fetched", formatDate(job.ConsumerFetchedAt))
+				@jobDetail("Finished", formatDate(job.FinishedAt))
+				@jobDetail("Duration", duration(job))
+			</dl>
+			<h3 class="mt-4 text-sm font-semibold">Errors</h3>
+			if len(job.Errors) == 0 {
+				<p class="mt-1 text-sm text-gray-500">No errors.</p>
+			} else {
+				<ul id="control--job--errors" class="mt-1 max-h-48 list-disc space-y-1 overflow-y-auto pl-5 text-sm text-red-700">
+					for _, e := range job.Errors {
+						<li class="break-all">{ e }</li>
+					}
+				</ul>
+			}
+			<div class="mt-4 flex justify-end">
+				@button.Button(button.Props{
+					ID:      "control--job--details--close",
+					Variant: button.VariantOutline,
+					Attributes: templ.Attributes{
+						"hx-get":    "/empty",
+						"hx-target": "#modal-container",
+						"hx-swap":   "innerHTML",
+					},
+				}) {
+					Close
+				}
+			</div>
+		</div>
+	</div>
+}
+
+templ jobDetail(label string, value string) {
+	<dt class="text-gray-500">{ label }</dt>
+	<dd class="break-all">{ value }</dd>
+}

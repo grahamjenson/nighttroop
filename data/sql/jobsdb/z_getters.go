@@ -506,6 +506,26 @@ func (m *ResetJobsParams) SetConsumerFetchedAt(v int64) {
 	m.ConsumerFetchedAt = v
 }
 
+// GetSkip returns the Skip value.
+func (m SearchJobsParams) GetSkip() int64 {
+	return m.Skip
+}
+
+// SetSkip sets the Skip value and returns the updated SearchJobsParams.
+func (m *SearchJobsParams) SetSkip(v int64) {
+	m.Skip = v
+}
+
+// GetLimit returns the Limit value.
+func (m SearchJobsParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated SearchJobsParams.
+func (m *SearchJobsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
 // GetID returns the ID value.
 func (m FindJobParams) GetID() int64 {
 	return m.ID

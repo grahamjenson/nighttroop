@@ -147,6 +147,11 @@ WHERE
     AND queue = ?
     AND consumer_fetched_at < ?;
 
+-- name: SearchJobs :many
+SELECT * FROM jobs
+ORDER BY id DESC
+LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+
 -- name: FindJob :one
 SELECT
     *

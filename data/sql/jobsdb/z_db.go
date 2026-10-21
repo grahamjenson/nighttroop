@@ -69,6 +69,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.searchJobStatsDailyStmt, err = db.PrepareContext(ctx, searchJobStatsDaily); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchJobStatsDaily: %w", err)
 	}
+	if q.searchJobsStmt, err = db.PrepareContext(ctx, searchJobs); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchJobs: %w", err)
+	}
 	if q.updateJobStatsDailyStmt, err = db.PrepareContext(ctx, updateJobStatsDaily); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateJobStatsDaily: %w", err)
 	}
@@ -152,6 +155,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing searchJobStatsDailyStmt: %w", cerr)
 		}
 	}
+	if q.searchJobsStmt != nil {
+		if cerr := q.searchJobsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchJobsStmt: %w", cerr)
+		}
+	}
 	if q.updateJobStatsDailyStmt != nil {
 		if cerr := q.updateJobStatsDailyStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateJobStatsDailyStmt: %w", cerr)
@@ -211,6 +219,7 @@ type Queries struct {
 	queueJobReplaceDupeStmt         *sql.Stmt
 	resetJobsStmt                   *sql.Stmt
 	searchJobStatsDailyStmt         *sql.Stmt
+	searchJobsStmt                  *sql.Stmt
 	updateJobStatsDailyStmt         *sql.Stmt
 }
 
@@ -233,6 +242,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		queueJobReplaceDupeStmt:         q.queueJobReplaceDupeStmt,
 		resetJobsStmt:                   q.resetJobsStmt,
 		searchJobStatsDailyStmt:         q.searchJobStatsDailyStmt,
+		searchJobsStmt:                  q.searchJobsStmt,
 		updateJobStatsDailyStmt:         q.updateJobStatsDailyStmt,
 	}
 }
