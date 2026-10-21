@@ -1197,6 +1197,10 @@ func ProfileSwitchToUpdate(source ProfileSwitch) UpdateProfileSwitchParams {
 		xfloat64 := *source.Percent
 		sitedbUpdateProfileSwitchParams.Percent = &xfloat64
 	}
+	if source.Timeshift != nil {
+		xint64 := *source.Timeshift
+		sitedbUpdateProfileSwitchParams.Timeshift = &xint64
+	}
 	if source.Notes != nil {
 		xstring := *source.Notes
 		sitedbUpdateProfileSwitchParams.Notes = &xstring
@@ -1210,8 +1214,8 @@ func ProfileSwitchToUpdate(source ProfileSwitch) UpdateProfileSwitchParams {
 		sitedbUpdateProfileSwitchParams.RawJsonData = &xstring3
 	}
 	if source.UpdatedByIdentityID != nil {
-		xint64 := *source.UpdatedByIdentityID
-		sitedbUpdateProfileSwitchParams.UpdatedByIdentityID = &xint64
+		xint642 := *source.UpdatedByIdentityID
+		sitedbUpdateProfileSwitchParams.UpdatedByIdentityID = &xint642
 	}
 	if source.UpdatedByIdentityName != nil {
 		xstring4 := *source.UpdatedByIdentityName

@@ -27,6 +27,7 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 	activitiesStore := &sitedata.ActivitiesStore{}
 	componentEventsStore := &sitedata.ComponentEventsStore{}
 	notificationEventsStore := &sitedata.NotificationEventsStore{}
+	profileSwitchesStore := &sitedata.ProfileSwitchesStore{}
 	eventGroupsStore := &sitedata.EventGroupsStore{}
 	insulinDosesStore := &sitedata.InsulinDosesStore{}
 	foodIntakesStore := &sitedata.FoodIntakesStore{}
@@ -100,6 +101,13 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Post("/data/notifications", siteapiutils.CreateHandler(controlDB, config, notificationEventsStore))
 		r.Post("/data/notifications/{id}", siteapiutils.UpdateHandler(controlDB, config, notificationEventsStore))
 		r.Delete("/data/notifications/{id}", siteapiutils.DeleteHandler(controlDB, config, notificationEventsStore))
+
+		// Data Profile Switches
+		r.Get("/data/profile-switches", siteapiutils.SearchHandler(controlDB, config, profileSwitchesStore))
+		r.Get("/data/profile-switches/{id}", siteapiutils.GetHandler(controlDB, config, profileSwitchesStore))
+		r.Post("/data/profile-switches", siteapiutils.CreateHandler(controlDB, config, profileSwitchesStore))
+		r.Post("/data/profile-switches/{id}", siteapiutils.UpdateHandler(controlDB, config, profileSwitchesStore))
+		r.Delete("/data/profile-switches/{id}", siteapiutils.DeleteHandler(controlDB, config, profileSwitchesStore))
 
 		// Data Event Groups, which the Nightscout treatments API creates and changes
 		r.Get("/data/event-groups", siteapiutils.SearchHandler(controlDB, config, eventGroupsStore))

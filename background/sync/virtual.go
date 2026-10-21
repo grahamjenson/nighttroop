@@ -2,6 +2,7 @@ package sync
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"slices"
@@ -49,14 +50,17 @@ func VirtualDocuments(end time.Time, span time.Duration) []virtualDoc {
 	block := func(value float64) []map[string]any {
 		return []map[string]any{{"time": "00:00", "timeAsSeconds": 0, "value": value}}
 	}
+	profile := map[string]any{
+		"dia": 5, "units": "mg/dL", "timezone": "UTC", "carbs_hr": 20,
+		"basal": block(0.8), "sens": block(50), "carbratio": block(10), "target_low": block(100), "target_high": block(120),
+	}
+	// The profile switch carries the profile it switched to, as AAPS sends it
+	profileJSON, _ := json.Marshal(profile)
 	docs := []virtualDoc{
 		{nsutils.Treatments, map[string]any{"eventType": "Temp Basal", "rate": 0.85, "absolute": 0.85, "duration": 30, "date": startMs, "device": VirtualDevice}},
 		{nsutils.Treatments, map[string]any{"eventType": "Temporary Target", "targetBottom": 100, "targetTop": 120, "units": "mg/dL", "duration": 30, "reason": "Virtual", "date": startMs, "device": VirtualDevice}},
-		{nsutils.Treatments, map[string]any{"eventType": "Profile Switch", "profile": "Virtual", "percentage": 100, "duration": 0, "date": startMs, "device": VirtualDevice}},
-		{nsutils.Profile, map[string]any{"defaultProfile": "Virtual", "date": startMs, "device": VirtualDevice, "store": map[string]any{"Virtual": map[string]any{
-			"dia": 5, "units": "mg/dL", "timezone": "UTC", "carbs_hr": 20,
-			"basal": block(0.8), "sens": block(50), "carbratio": block(10), "target_low": block(100), "target_high": block(120),
-		}}}},
+		{nsutils.Treatments, map[string]any{"eventType": "Profile Switch", "profile": "Virtual", "percentage": 100, "duration": 0, "profileJson": string(profileJSON), "date": startMs, "device": VirtualDevice}},
+		{nsutils.Profile, map[string]any{"defaultProfile": "Virtual", "date": startMs, "device": VirtualDevice, "store": map[string]any{"Virtual": profile}}},
 	}
 	for t := start; !t.After(end); t = t.Add(virtualSlot) {
 		idx := int(t.Unix()/int64(virtualSlot.Seconds())) % len(virtualGlucose)

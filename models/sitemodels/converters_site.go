@@ -194,6 +194,27 @@ type SiteConverter interface {
 	NotificationEventToUpdate(source *SiteNotificationEvent, siteContext *httputils.SiteContext) sitedb.UpdateNotificationEventParams
 
 	///////
+	// PROFILE SWITCHES
+	///////
+
+	ProfileSwitchFromDB(source *sitedb.ProfileSwitch) *SiteProfileSwitch
+
+	// goverter:context siteContext
+	// goverter:map ID | NewSiteDataID
+	// goverter:map OccurredAt | OccurredAtOrNow
+	// goverter:map CreatedByIdentityID | ContextIdentityID
+	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
+	// goverter:ignore Dia Units Timezone CarbsHr Delay CarbRatiosJson InsulinSensitivitiesJson BasalRatesJson TargetsHighJson TargetsLowJson
+	ProfileSwitchToCreate(source *SiteProfileSwitch, siteContext *httputils.SiteContext) sitedb.CreateProfileSwitchParams
+
+	// goverter:context siteContext
+	// goverter:map Name | StringOrNil
+	// goverter:map UpdatedByIdentityID | ContextIdentityID
+	// goverter:map UpdatedByIdentityName | ContextIdentityName
+	// goverter:ignore RawJsonData
+	ProfileSwitchToUpdate(source *SiteProfileSwitch, siteContext *httputils.SiteContext) sitedb.UpdateProfileSwitchParams
+
+	///////
 	// EVENT GROUPS
 	///////
 
