@@ -1,0 +1,87 @@
+GOTO {{ server_url}}/
+ASSERT_STATUS 200
+
+CLICK "Create Site"
+ASSERT_STATUS 200
+
+CLICK #public--login-button
+ASSERT_NEW_PAGE
+
+INPUT #site--login--name admin
+INPUT #site--login--password password
+
+CLICK #site--login-button
+ASSERT_STATUS 200
+
+ASSERT_VISIBLE #site--login--otp-1
+INPUT #site--login--otp-1 123123
+
+CLICK #site--login-totp-button
+ASSERT_NEW_URL
+ASSERT_VISIBLE "Nighttroop"
+
+// A new site has no site or sensor changes
+CLICK #site--settings-menu
+ASSERT_VISIBLE #site--data--component-events-button
+CLICK #site--data--component-events-button
+ASSERT_STATUS 200
+ASSERT_PATH /data/component-events
+ASSERT_VISIBLE #site--component-event--empty
+SCREENSHOT component_events_empty
+
+// A change typed in happens now, added to the top of the table
+INPUT #site--component-event--create--event-type Sensor Change
+INPUT #site--component-event--create--sensor-code 1234
+INPUT #site--component-event--create--notes Left arm
+CLICK #site--component-event--create--submit
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE Left arm
+ASSERT_NOT_VISIBLE #site--component-event--empty
+INPUT #site--component-event--create--event-type Site Change
+INPUT #site--component-event--create--notes New pod
+CLICK #site--component-event--create--submit
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE New pod
+SCREENSHOT component_events
+
+// Clicking a change shows all its details, which can be edited
+CLICK #componentEventsTable tbody tr >> nth=1
+ASSERT_VISIBLE #site--component-event--details
+ASSERT_TEXT_VISIBLE Sensor Change
+SCREENSHOT component_event_details
+INPUT #site--component-event--edit--transmitter-id 8G1234
+INPUT #site--component-event--edit--notes Right arm
+CLICK #site--component-event--edit--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Change Updated
+ASSERT_NOT_VISIBLE #site--component-event--details
+ASSERT_TEXT_VISIBLE Right arm
+SCREENSHOT component_event_updated
+
+// A page of one change pages through them, newest first
+GOTO /data/component-events?limit=1
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+ASSERT_TEXT_VISIBLE New pod
+CLICK #site--component-event--next
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 2 to 2
+ASSERT_TEXT_VISIBLE Right arm
+CLICK #site--component-event--previous
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+
+// Deleting asks first (the test accepts), then removes the row without opening its details
+CLICK #site--settings-menu
+CLICK #site--data--component-events-button
+ASSERT_STATUS 200
+CLICK #componentEventsTable tbody tr >> nth=0 >> button[title=Delete]
+ASSERT_TEXT_VISIBLE Change Deleted
+ASSERT_NOT_VISIBLE #site--component-event--details
+SCREENSHOT component_event_deleted
+
+// The deleted change stays gone after a reload
+CLICK #site--settings-menu
+CLICK #site--data--component-events-button
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
