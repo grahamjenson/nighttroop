@@ -96,12 +96,7 @@ func (s *TempBasalsStore) UpdateHTMXResponse(model *sitemodels.SiteTempBasal) te
 // Get Model
 // /////
 func (s *TempBasalsStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext) (*sitemodels.SiteTempBasal, *apiutils.HTTPError) {
-	q, err := tx.Site()
-	if err != nil {
-		return nil, apiutils.ErrInternalServerError
-	}
-	tempBasal, err := q.GetTempBasal(ctx, sitedb.GetTempBasalParams{ID: id})
-	return apiutils.Found(tempBasal, err, "temp basal", sitemodels.TempBasalFromDB)
+	return getModel(ctx, tx, (*sitedb.Queries).GetTempBasal, sitedb.GetTempBasalParams{ID: id}, "temp basal", sitemodels.TempBasalFromDB)
 }
 
 // GetHTMXResponse is the temp basal's details, shown in a modal

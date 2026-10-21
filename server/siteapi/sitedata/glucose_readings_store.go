@@ -90,12 +90,7 @@ func (s *GlucoseReadingsStore) UpdateHTMXResponse(model *sitemodels.SiteGlucoseR
 // Get Model
 // /////
 func (s *GlucoseReadingsStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext) (*sitemodels.SiteGlucoseReading, *apiutils.HTTPError) {
-	q, err := tx.Site()
-	if err != nil {
-		return nil, apiutils.ErrInternalServerError
-	}
-	reading, err := q.GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: id})
-	return apiutils.Found(reading, err, "glucose reading", apiutils.WithContext(sitemodels.GlucoseReadingFromDB, siteContext))
+	return getModel(ctx, tx, (*sitedb.Queries).GetGlucoseReading, sitedb.GetGlucoseReadingParams{ID: id}, "glucose reading", apiutils.WithContext(sitemodels.GlucoseReadingFromDB, siteContext))
 }
 
 // GetHTMXResponse is the reading's details, shown in a modal

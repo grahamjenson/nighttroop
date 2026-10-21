@@ -88,12 +88,7 @@ func (s *ActivitiesStore) UpdateHTMXResponse(model *sitemodels.SiteActivity) tem
 // Get Model
 // /////
 func (s *ActivitiesStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext) (*sitemodels.SiteActivity, *apiutils.HTTPError) {
-	q, err := tx.Site()
-	if err != nil {
-		return nil, apiutils.ErrInternalServerError
-	}
-	activity, err := q.GetActivity(ctx, sitedb.GetActivityParams{ID: id})
-	return apiutils.Found(activity, err, "activity", sitemodels.ActivityFromDB)
+	return getModel(ctx, tx, (*sitedb.Queries).GetActivity, sitedb.GetActivityParams{ID: id}, "activity", sitemodels.ActivityFromDB)
 }
 
 // GetHTMXResponse is the activity's details, shown in a modal

@@ -88,12 +88,7 @@ func (s *FoodIntakesStore) UpdateHTMXResponse(model *sitemodels.SiteFoodIntake) 
 // Get Model
 // /////
 func (s *FoodIntakesStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext) (*sitemodels.SiteFoodIntake, *apiutils.HTTPError) {
-	q, err := tx.Site()
-	if err != nil {
-		return nil, apiutils.ErrInternalServerError
-	}
-	foodIntake, err := q.GetFoodIntake(ctx, sitedb.GetFoodIntakeParams{ID: id})
-	return apiutils.Found(foodIntake, err, "food intake", sitemodels.FoodIntakeFromDB)
+	return getModel(ctx, tx, (*sitedb.Queries).GetFoodIntake, sitedb.GetFoodIntakeParams{ID: id}, "food intake", sitemodels.FoodIntakeFromDB)
 }
 
 // GetHTMXResponse is the food intake's details, shown in a modal

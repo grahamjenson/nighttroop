@@ -39,12 +39,7 @@ func eventGroupFromRow(siteContext *httputils.SiteContext) func(*sitedb.GetEvent
 // Get Model
 // /////
 func (s *EventGroupsStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext) (*sitemodels.SiteEventGroup, *apiutils.HTTPError) {
-	q, err := tx.Site()
-	if err != nil {
-		return nil, apiutils.ErrInternalServerError
-	}
-	eventGroup, err := q.GetEventGroup(ctx, sitedb.GetEventGroupParams{ID: id})
-	return apiutils.Found(eventGroup, err, "event group", eventGroupFromRow(siteContext))
+	return getModel(ctx, tx, (*sitedb.Queries).GetEventGroup, sitedb.GetEventGroupParams{ID: id}, "event group", eventGroupFromRow(siteContext))
 }
 
 // GetHTMXResponse is the group's details and events, shown in a modal

@@ -85,12 +85,7 @@ func (s *ComponentEventsStore) UpdateHTMXResponse(model *sitemodels.SiteComponen
 // Get Model
 // /////
 func (s *ComponentEventsStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext) (*sitemodels.SiteComponentEvent, *apiutils.HTTPError) {
-	q, err := tx.Site()
-	if err != nil {
-		return nil, apiutils.ErrInternalServerError
-	}
-	event, err := q.GetComponentEvent(ctx, sitedb.GetComponentEventParams{ID: id})
-	return apiutils.Found(event, err, "component event", sitemodels.ComponentEventFromDB)
+	return getModel(ctx, tx, (*sitedb.Queries).GetComponentEvent, sitedb.GetComponentEventParams{ID: id}, "component event", sitemodels.ComponentEventFromDB)
 }
 
 // GetHTMXResponse is the component event's details, shown in a modal

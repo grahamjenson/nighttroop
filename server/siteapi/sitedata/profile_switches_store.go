@@ -85,12 +85,7 @@ func (s *ProfileSwitchesStore) UpdateHTMXResponse(model *sitemodels.SiteProfileS
 // Get Model
 // /////
 func (s *ProfileSwitchesStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext) (*sitemodels.SiteProfileSwitch, *apiutils.HTTPError) {
-	q, err := tx.Site()
-	if err != nil {
-		return nil, apiutils.ErrInternalServerError
-	}
-	profileSwitch, err := q.GetProfileSwitch(ctx, sitedb.GetProfileSwitchParams{ID: id})
-	return apiutils.Found(profileSwitch, err, "profile switch", sitemodels.ProfileSwitchFromDB)
+	return getModel(ctx, tx, (*sitedb.Queries).GetProfileSwitch, sitedb.GetProfileSwitchParams{ID: id}, "profile switch", sitemodels.ProfileSwitchFromDB)
 }
 
 // GetHTMXResponse is the profile switch's details, shown in a modal

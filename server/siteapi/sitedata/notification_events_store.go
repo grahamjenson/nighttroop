@@ -90,12 +90,7 @@ func (s *NotificationEventsStore) UpdateHTMXResponse(model *sitemodels.SiteNotif
 // Get Model
 // /////
 func (s *NotificationEventsStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext) (*sitemodels.SiteNotificationEvent, *apiutils.HTTPError) {
-	q, err := tx.Site()
-	if err != nil {
-		return nil, apiutils.ErrInternalServerError
-	}
-	event, err := q.GetNotificationEvent(ctx, sitedb.GetNotificationEventParams{ID: id})
-	return apiutils.Found(event, err, "notification", sitemodels.NotificationEventFromDB)
+	return getModel(ctx, tx, (*sitedb.Queries).GetNotificationEvent, sitedb.GetNotificationEventParams{ID: id}, "notification", sitemodels.NotificationEventFromDB)
 }
 
 // GetHTMXResponse is the notification's details, shown in a modal

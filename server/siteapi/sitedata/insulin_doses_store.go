@@ -87,12 +87,7 @@ func (s *InsulinDosesStore) UpdateHTMXResponse(model *sitemodels.SiteInsulinDose
 // Get Model
 // /////
 func (s *InsulinDosesStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext) (*sitemodels.SiteInsulinDose, *apiutils.HTTPError) {
-	q, err := tx.Site()
-	if err != nil {
-		return nil, apiutils.ErrInternalServerError
-	}
-	insulinDose, err := q.GetInsulinDose(ctx, sitedb.GetInsulinDoseParams{ID: id})
-	return apiutils.Found(insulinDose, err, "insulin dose", sitemodels.InsulinDoseFromDB)
+	return getModel(ctx, tx, (*sitedb.Queries).GetInsulinDose, sitedb.GetInsulinDoseParams{ID: id}, "insulin dose", sitemodels.InsulinDoseFromDB)
 }
 
 // GetHTMXResponse is the insulin dose's details, shown in a modal

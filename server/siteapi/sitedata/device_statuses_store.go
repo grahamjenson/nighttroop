@@ -37,12 +37,7 @@ func (s *DeviceStatusesStore) GetName() string {
 // Get Model
 // /////
 func (s *DeviceStatusesStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext) (*sitemodels.SiteDeviceStatus, *apiutils.HTTPError) {
-	q, err := tx.Site()
-	if err != nil {
-		return nil, apiutils.ErrInternalServerError
-	}
-	report, err := q.GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: id})
-	return apiutils.Found(report, err, "device status", sitemodels.DeviceStatusFromDB)
+	return getModel(ctx, tx, (*sitedb.Queries).GetDeviceReport, sitedb.GetDeviceReportParams{ID: id}, "device status", sitemodels.DeviceStatusFromDB)
 }
 
 // GetHTMXResponse is the status's details, shown in a modal

@@ -97,12 +97,7 @@ func (s *TempTargetsStore) UpdateHTMXResponse(model *sitemodels.SiteTempTarget) 
 // Get Model
 // /////
 func (s *TempTargetsStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext) (*sitemodels.SiteTempTarget, *apiutils.HTTPError) {
-	q, err := tx.Site()
-	if err != nil {
-		return nil, apiutils.ErrInternalServerError
-	}
-	tempTarget, err := q.GetTempTarget(ctx, sitedb.GetTempTargetParams{ID: id})
-	return apiutils.Found(tempTarget, err, "temp target", apiutils.WithContext(sitemodels.TempTargetFromDB, siteContext))
+	return getModel(ctx, tx, (*sitedb.Queries).GetTempTarget, sitedb.GetTempTargetParams{ID: id}, "temp target", apiutils.WithContext(sitemodels.TempTargetFromDB, siteContext))
 }
 
 // GetHTMXResponse is the temp target's details, shown in a modal
