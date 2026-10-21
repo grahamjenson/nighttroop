@@ -32,6 +32,14 @@ func QueryToAllInsulinDoses(source *apiquery.Query) sitedb.AllInsulinDosesParams
 	}
 	return sitedbAllInsulinDosesParams
 }
+func QueryToAllNotificationEvents(source *apiquery.Query) sitedb.AllNotificationEventsParams {
+	var sitedbAllNotificationEventsParams sitedb.AllNotificationEventsParams
+	if source != nil {
+		sitedbAllNotificationEventsParams.Skip = (*source).Skip
+		sitedbAllNotificationEventsParams.Limit = (*source).Limit
+	}
+	return sitedbAllNotificationEventsParams
+}
 func QueryToAllTempBasals(source *apiquery.Query) sitedb.AllTempBasalsParams {
 	var sitedbAllTempBasalsParams sitedb.AllTempBasalsParams
 	if source != nil {

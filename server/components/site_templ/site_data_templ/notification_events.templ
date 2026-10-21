@@ -1,0 +1,252 @@
+package site_data_templ
+
+import (
+	"fmt"
+
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/icon"
+	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/server/components/ui/table"
+)
+
+// NotificationEventsTable shows one page of notifications, newest first, with buttons to the pages either side
+templ NotificationEventsTable(events []*sitemodels.SiteNotificationEvent, skip int64, limit int64) {
+	<div id="notification_events_table" class="mx-auto max-w-5xl space-y-6">
+		<div>
+			<h1 class="text-2xl font-bold">Notifications</h1>
+			<p class="mt-1 text-gray-500">
+				Newest first. Click a notification to see all its details.
+			</p>
+		</div>
+		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
+			@notificationEventCreateForm()
+			@table.Table(table.Props{
+				ID:    "notificationEventsTable",
+				Class: "rounded-lg border border-gray-200",
+			}) {
+				@table.Header() {
+					@table.Row() {
+						@table.Head() {
+							Time
+						}
+						@table.Head() {
+							Type
+						}
+						@table.Head() {
+							Title
+						}
+						@table.Head() {
+							Severity
+						}
+						@table.Head() {
+							Device
+						}
+						@table.Head() {
+							<span class="sr-only">Actions</span>
+						}
+					}
+				}
+				@table.Body() {
+					if len(events) == 0 {
+						<tr id="site--notification--empty"><td colspan="6" class="p-4 text-sm text-gray-500">No notifications here.</td></tr>
+					}
+					for _, event := range events {
+						@notificationEventRow(event)
+					}
+				}
+			}
+			<div class="mt-4 flex items-center justify-between text-sm text-gray-500">
+				if len(events) > 0 {
+					<span id="site--notification--showing">{ fmt.Sprintf("Showing %d to %d", skip+1, skip+int64(len(events))) }</span>
+				} else {
+					<span></span>
+				}
+				<div class="flex gap-2">
+					if skip > 0 {
+						@notificationEventPageButton("site--notification--previous", "Previous", max(skip-limit, 0), limit)
+					}
+					if int64(len(events)) == limit {
+						@notificationEventPageButton("site--notification--next", "Next", skip+limit, limit)
+					}
+				</div>
+			</div>
+		</section>
+		<div id="modal-container"></div>
+	</div>
+}
+
+templ notificationEventPageButton(id string, label string, skip int64, limit int64) {
+	@button.Button(button.Props{
+		ID:      id,
+		Variant: button.VariantOutline,
+		Attributes: templ.Attributes{
+			"hx-get":      fmt.Sprintf("/data/notifications?skip=%d&limit=%d", skip, limit),
+			"hx-target":   "#main-content",
+			"hx-push-url": "true",
+			"hx-swap":     "innerHTML",
+		},
+	}) {
+		{ label }
+	}
+}
+
+// notificationEventCreateForm adds a notification happening now, putting its row at the top of the table
+templ notificationEventCreateForm() {
+	<form
+		id="site--notification--create"
+		class="mb-4 flex items-center justify-end gap-2"
+		hx-post="/data/notifications"
+		hx-target="#notificationEventsTable tbody"
+		hx-swap="afterbegin"
+		hx-status:4xx="target:#toaster swap:beforeend"
+		hx-status:5xx="target:#toaster swap:beforeend"
+		hx-on::after:request="if (ctx.response.status < 400) { this.reset(); document.getElementById('site--notification--empty')?.remove() }"
+	>
+		@notificationEventInputs("site--notification--create", "", "", "")
+		@button.Button(button.Props{ID: "site--notification--create--submit", Type: button.TypeSubmit}) {
+			Add Notification
+		}
+	</form>
+}
+
+templ notificationEventInputs(id string, title string, severity string, notes string) {
+	<div class="w-48">
+		@input.Input(input.Props{ID: id + "--title", Name: "title", Placeholder: "Title", Value: title, Required: true, Attributes: templ.Attributes{"maxlength": "128"}})
+	</div>
+	<div class="w-28">
+		@input.Input(input.Props{
+			ID:          id + "--severity",
+			Type:        input.TypeNumber,
+			Name:        "severity",
+			Placeholder: "Severity",
+			Value:       severity,
+			Attributes:  templ.Attributes{"step": "1", "min": "0", "max": "5"},
+		})
+	</div>
+	<div class="w-64">
+		@input.Input(input.Props{ID: id + "--notes", Name: "notes", Placeholder: "Notes", Value: notes})
+	</div>
+}
+
+// notificationEventRow opens the notification's details when clicked. The delete button stops its click reaching the row.
+templ notificationEventRow(event *sitemodels.SiteNotificationEvent) {
+	{{ id := "site--notification--" + event.ID }}
+	@table.Row(table.RowProps{
+		ID:    id,
+		Class: "cursor-pointer",
+		Attributes: templ.Attributes{
+			"hx-get":    "/data/notifications/" + event.ID,
+			"hx-target": "#modal-container",
+			"hx-swap":   "innerHTML",
+		},
+	}) {
+		@table.Cell() {
+			{ formatReadingDate(event.OccurredAt) }
+		}
+		@table.Cell() {
+			{ event.NotificationType }
+		}
+		@table.Cell() {
+			{ event.Title }
+		}
+		@table.Cell() {
+			{ fmt.Sprint(event.Severity) }
+		}
+		@table.Cell() {
+			{ orDash(event.CreatedByDeviceName) }
+		}
+		@table.Cell() {
+			<div class="flex justify-end">
+				@button.Button(button.Props{
+					ID:      id + "--delete",
+					Variant: button.VariantGhost,
+					Size:    button.SizeIcon,
+					Attributes: templ.Attributes{
+						"title":                "Delete",
+						"onclick":              "event.stopPropagation()",
+						"hx-delete":            "/data/notifications/" + event.ID,
+						"hx-confirm":           "Delete this notification?",
+						"hx-target":            "#toaster",
+						"hx-swap":              "beforeend",
+						"hx-on::after:request": "if (ctx.response.status < 400) this.closest('tr').remove()",
+						"hx-status:4xx":        "target:#toaster swap:beforeend",
+						"hx-status:5xx":        "target:#toaster swap:beforeend",
+					},
+				}) {
+					@icon.Trash2(icon.Props{Class: "size-4 text-red-600"})
+				}
+			</div>
+		}
+	}
+}
+
+templ NotificationEventModal(event *sitemodels.SiteNotificationEvent) {
+	<div id="site--notification--details" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+		<div class="w-full max-w-2xl rounded-lg bg-white p-6 shadow-lg">
+			<h2 class="text-lg font-semibold">{ fmt.Sprintf("%s: %s", event.NotificationType, event.Title) }</h2>
+			<p class="text-sm text-gray-500">{ formatReadingDate(event.OccurredAt) }</p>
+			<form
+				id="site--notification--edit"
+				class="mt-4 flex items-center gap-2"
+				hx-post={ "/data/notifications/" + event.ID }
+				hx-target={ "#site--notification--" + event.ID }
+				hx-swap="outerHTML"
+				hx-status:4xx="target:#toaster swap:beforeend"
+				hx-status:5xx="target:#toaster swap:beforeend"
+			>
+				@notificationEventInputs("site--notification--edit", event.Title, fmt.Sprint(event.Severity), orEmpty(event.Notes))
+				@button.Button(button.Props{ID: "site--notification--edit--submit", Type: button.TypeSubmit}) {
+					Save
+				}
+			</form>
+			<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+				@readingDetail("ID", event.ID)
+				@readingDetail("Severity", fmt.Sprint(event.Severity))
+				@readingDetail("Content", orDash(event.Content))
+				@readingDetail("Notes", orDash(event.Notes))
+				@readingDetail("Reason", orDash(event.Reason))
+				@readingDetail("UTC Offset (minutes)", orDash(event.UtcOffsetMinutes))
+				@readingDetail("App", orDash(event.CreatedByAppName))
+				@readingDetail("Device", orDash(event.CreatedByDeviceName))
+				@readingDetail("Created By", event.CreatedByIdentityName)
+				@readingDetail("Created", formatReadingDate(event.CreatedAt))
+				@readingDetail("Updated", formatReadingDate(event.UpdatedAt))
+				@readingDetail("Updated By", orDash(event.UpdatedByIdentityName))
+			</dl>
+			if event.RawJsonData != nil {
+				<pre class="mt-4 max-h-48 overflow-auto rounded bg-gray-50 p-2 text-xs">{ *event.RawJsonData }</pre>
+			}
+			<div class="mt-4 flex justify-end">
+				@button.Button(button.Props{
+					ID:      "site--notification--details--close",
+					Variant: button.VariantOutline,
+					Attributes: templ.Attributes{
+						"hx-get":    "/empty",
+						"hx-target": "#modal-container",
+						"hx-swap":   "innerHTML",
+					},
+				}) {
+					Close
+				}
+			</div>
+		</div>
+	</div>
+}
+
+templ NotificationEventCreated(event *sitemodels.SiteNotificationEvent) {
+	@notificationEventRow(event)
+}
+
+// NotificationEventUpdated replaces the notification's row, closes its details and shows a toast
+templ NotificationEventUpdated(event *sitemodels.SiteNotificationEvent) {
+	@notificationEventRow(event)
+	<div id="modal-container" hx-swap-oob="innerHTML"></div>
+	<div hx-swap-oob="beforeend:#toaster">
+		@glucoseToast("Notification Updated")
+	</div>
+}
+
+templ NotificationEventDeleted() {
+	@glucoseToast("Notification Deleted")
+}

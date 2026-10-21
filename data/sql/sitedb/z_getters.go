@@ -10007,12 +10007,12 @@ func (m *CreateNotificationEventParams) SetCreatedByIdentityID(v *int64) {
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
-func (m AllNotificationEventsParams) GetIncludeDeleted() *bool {
+func (m AllNotificationEventsParams) GetIncludeDeleted() bool {
 	return m.IncludeDeleted
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllNotificationEventsParams.
-func (m *AllNotificationEventsParams) SetIncludeDeleted(v *bool) {
+func (m *AllNotificationEventsParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
 }
 
@@ -10044,6 +10044,16 @@ func (m GetNotificationEventParams) GetID() string {
 // SetID sets the ID value and returns the updated GetNotificationEventParams.
 func (m *GetNotificationEventParams) SetID(v string) {
 	m.ID = v
+}
+
+// GetIncludeDeleted returns the IncludeDeleted value.
+func (m GetNotificationEventParams) GetIncludeDeleted() bool {
+	return m.IncludeDeleted
+}
+
+// SetIncludeDeleted sets the IncludeDeleted value and returns the updated GetNotificationEventParams.
+func (m *GetNotificationEventParams) SetIncludeDeleted(v bool) {
+	m.IncludeDeleted = v
 }
 
 // GetDateGTE returns the DateGTE value.

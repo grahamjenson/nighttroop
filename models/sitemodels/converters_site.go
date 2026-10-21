@@ -132,6 +132,28 @@ type SiteConverter interface {
 	TempBasalToUpdate(source *SiteTempBasal, siteContext *httputils.SiteContext) sitedb.UpdateTempBasalParams
 
 	///////
+	// NOTIFICATION EVENTS
+	///////
+
+	NotificationEventFromDB(source *sitedb.NotificationEvent) *SiteNotificationEvent
+
+	// goverter:context siteContext
+	// goverter:map ID | NewSiteDataID
+	// goverter:map OccurredAt | OccurredAtOrNow
+	// goverter:map CreatedByIdentityID | ContextIdentityID
+	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
+	NotificationEventToCreate(source *SiteNotificationEvent, siteContext *httputils.SiteContext) sitedb.CreateNotificationEventParams
+
+	// goverter:context siteContext
+	// goverter:map NotificationType | StringOrNil
+	// goverter:map Title | StringOrNil
+	// goverter:map Severity | Int64OrNil
+	// goverter:map UpdatedByIdentityID | ContextIdentityID
+	// goverter:map UpdatedByIdentityName | ContextIdentityName
+	// goverter:ignore RawJsonData
+	NotificationEventToUpdate(source *SiteNotificationEvent, siteContext *httputils.SiteContext) sitedb.UpdateNotificationEventParams
+
+	///////
 	// INSULIN DOSES
 	///////
 
@@ -273,6 +295,14 @@ func Float64OrNil(value float64) *float64 {
 // Int64OrNil leaves a value as it is when an update does not send one
 func Int64OrNil(value int64) *int64 {
 	if value == 0 {
+		return nil
+	}
+	return &value
+}
+
+// StringOrNil leaves a value as it is when an update does not send one
+func StringOrNil(value string) *string {
+	if value == "" {
 		return nil
 	}
 	return &value
