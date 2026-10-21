@@ -33,6 +33,10 @@ type QueryConverter interface {
 
 	// goverter:useZeroValueOnPointerInconsistency
 	// goverter:ignore IncludeDeleted
+	QueryToAllActivities(source *apiquery.Query) sitedb.AllActivitiesParams
+
+	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore IncludeDeleted
 	QueryToAllEventGroups(source *apiquery.Query) sitedb.AllEventGroupsParams
 
 	// goverter:useZeroValueOnPointerInconsistency
