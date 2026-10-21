@@ -76,6 +76,24 @@ templ FullPage(content templ.Component) {
 	}
 }
 
+templ menuItem(id string, path string, label string, itemIcon func(...icon.Props) templ.Component) {
+	@dropdown.Item(dropdown.ItemProps{
+		ID:   id,
+		Href: "#",
+		Attributes: templ.Attributes{
+			"hx-get":      path,
+			"hx-target":   "#main-content",
+			"hx-push-url": "true",
+			"hx-swap":     "innerHTML",
+		},
+	}) {
+		<span class="flex items-center">
+			@itemIcon(icon.Props{Class: "size-4 mr-2"})
+			{ label }
+		</span>
+	}
+}
+
 templ Header() {
 	<nav class="bg-brand-night border-b border-white/10 shadow-sm">
 		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -115,72 +133,16 @@ templ Header() {
 								Users
 							}
 							@dropdown.Group() {
-								@dropdown.Item(dropdown.ItemProps{
-									ID:   "control--sites-button",
-									Href: "#",
-									Attributes: templ.Attributes{
-										"hx-get":      "/sites",
-										"hx-target":   "#main-content",
-										"hx-push-url": "true",
-										"hx-swap":     "innerHTML",
-									},
-								}) {
-									<span class="flex items-center">
-										@icon.Users(icon.Props{Class: "size-4 mr-2"})
-										Sites
-									</span>
-								}
-								@dropdown.Item(dropdown.ItemProps{
-									ID:   "control--sync-sources-button",
-									Href: "#",
-									Attributes: templ.Attributes{
-										"hx-get":      "/sync-sources",
-										"hx-target":   "#main-content",
-										"hx-push-url": "true",
-										"hx-swap":     "innerHTML",
-									},
-								}) {
-									<span class="flex items-center">
-										@icon.RefreshCw(icon.Props{Class: "size-4 mr-2"})
-										Sync Sources
-									</span>
-								}
+								@menuItem("control--sites-button", "/sites", "Sites", icon.Users)
+								@menuItem("control--sync-sources-button", "/sync-sources", "Sync Sources", icon.RefreshCw)
 							}
 							@dropdown.Separator()
 							@dropdown.Label() {
 								Jobs
 							}
 							@dropdown.Group() {
-								@dropdown.Item(dropdown.ItemProps{
-									ID:   "control--job-stats-button",
-									Href: "#",
-									Attributes: templ.Attributes{
-										"hx-get":      "/job-stats",
-										"hx-target":   "#main-content",
-										"hx-push-url": "true",
-										"hx-swap":     "innerHTML",
-									},
-								}) {
-									<span class="flex items-center">
-										@icon.ChartColumn(icon.Props{Class: "size-4 mr-2"})
-										Job Stats
-									</span>
-								}
-								@dropdown.Item(dropdown.ItemProps{
-									ID:   "control--jobs-button",
-									Href: "#",
-									Attributes: templ.Attributes{
-										"hx-get":      "/jobs",
-										"hx-target":   "#main-content",
-										"hx-push-url": "true",
-										"hx-swap":     "innerHTML",
-									},
-								}) {
-									<span class="flex items-center">
-										@icon.ListChecks(icon.Props{Class: "size-4 mr-2"})
-										Jobs
-									</span>
-								}
+								@menuItem("control--job-stats-button", "/job-stats", "Job Stats", icon.ChartColumn)
+								@menuItem("control--jobs-button", "/jobs", "Jobs", icon.ListChecks)
 								@dropdown.Separator()
 								@dropdown.Item(dropdown.ItemProps{
 									Href: "#",
