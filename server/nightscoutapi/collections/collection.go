@@ -377,6 +377,10 @@ func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.Si
 	)
 
 	if err != nil {
+		// Bad data is the client's error, as it is for create and replace
+		if sqlTranslatedError := nsutils.GetSQLTranslatedError(err); sqlTranslatedError != nil {
+			return nil, sqlTranslatedError
+		}
 		slog.Error("failed to patch in database", "error", err, "collection", m.Name(), "identifier", identifier, "params", data)
 		return nil, nsutils.ErrInternal
 	}
