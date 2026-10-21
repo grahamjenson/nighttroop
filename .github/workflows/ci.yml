@@ -59,17 +59,25 @@ jobs:
       - name: Install playwright browser
         run: go run github.com/mxschmitt/playwright-go/cmd/playwright@v0.6201.1 install --with-deps chromium
 
-      # Regenerates tests/screenshots from the browser suite. Differences from
-      # the committed files are reported as a warning, never a failure.
-      - name: Generate screenshots
-        run: ./scripts/screenshots/generateScreenshots.sh
+      # -count=1 so integration tests always run instead of replaying cached results.
+      # The browser suite in it saves its SCREENSHOT steps to .test/savedScreenshots.
+      - name: Test
+        run: go test -count=1 ./...
 
-      - name: Upload generated screenshots
+      # Replaces tests/screenshots with the ones the tests just took. Differences from
+      # the committed files are reported as a warning, never a failure.
+      - name: Collect screenshots
+        if: always()
+        run: |
+          rm -rf tests/screenshots
+          mkdir -p tests/screenshots
+          cp -R .test/savedScreenshots/. tests/screenshots/ || true
+          git add -N tests/screenshots
+          git diff --quiet -- tests/screenshots || echo "::warning::screenshots differ from the committed ones; see the screenshots artifact"
+
+      - name: Upload screenshots
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: screenshots
           path: tests/screenshots
-
-      # -count=1 so integration tests always run instead of replaying cached results.
-      - name: Test
-        run: go test -count=1 ./...

@@ -1,8 +1,9 @@
 #!/bin/sh
 # Deletes tests/screenshots and regenerates it from the SCREENSHOT steps of
-# the browser suite. CI runs this directly and then fails if the result
-# differs from what is committed. On a Mac run scripts/screenshots/screenshots.sh
-# instead, which runs this inside a Linux container so the files match CI.
+# the browser suite. CI copies the screenshots its full test run takes
+# instead, so the browser suite runs once there. On a Mac run
+# scripts/screenshots/screenshots.sh instead, which runs this inside a
+# Linux container so the files match CI.
 set -e
 cd "$(dirname "$0")/../.."
 rm -rf .test/savedScreenshots tests/screenshots
