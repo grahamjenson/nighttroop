@@ -90,6 +90,73 @@ func DeviceStatusFromDB(source *sitedb.DeviceReport) *SiteDeviceStatus {
 	}
 	return pSitemodelsSiteDeviceStatus
 }
+func EventGroupFromDB(source *sitedb.EventGroupsBundle, context *httputils.SiteContext) *SiteEventGroup {
+	var pSitemodelsSiteEventGroup *SiteEventGroup
+	if source != nil {
+		var sitemodelsSiteEventGroup SiteEventGroup
+		sitemodelsSiteEventGroup.ID = (*source).EventGroup.ID
+		sitemodelsSiteEventGroup.GroupType = (*source).EventGroup.GroupType
+		if (*source).EventGroup.DurationMinutes != nil {
+			xint64 := *(*source).EventGroup.DurationMinutes
+			sitemodelsSiteEventGroup.DurationMinutes = &xint64
+		}
+		if (*source).EventGroup.Notes != nil {
+			xstring := *(*source).EventGroup.Notes
+			sitemodelsSiteEventGroup.Notes = &xstring
+		}
+		if (*source).EventGroup.Reason != nil {
+			xstring2 := *(*source).EventGroup.Reason
+			sitemodelsSiteEventGroup.Reason = &xstring2
+		}
+		if (*source).EventGroup.RawJsonData != nil {
+			xstring3 := *(*source).EventGroup.RawJsonData
+			sitemodelsSiteEventGroup.RawJsonData = &xstring3
+		}
+		if (*source).EventGroup.UtcOffsetMinutes != nil {
+			xint642 := *(*source).EventGroup.UtcOffsetMinutes
+			sitemodelsSiteEventGroup.UtcOffsetMinutes = &xint642
+		}
+		sitemodelsSiteEventGroup.OccurredAt = (*source).EventGroup.OccurredAt
+		sitemodelsSiteEventGroup.CreatedAt = (*source).EventGroup.CreatedAt
+		sitemodelsSiteEventGroup.UpdatedAt = (*source).EventGroup.UpdatedAt
+		if (*source).EventGroup.CreatedByAppName != nil {
+			xstring4 := *(*source).EventGroup.CreatedByAppName
+			sitemodelsSiteEventGroup.CreatedByAppName = &xstring4
+		}
+		if (*source).EventGroup.CreatedByDeviceName != nil {
+			xstring5 := *(*source).EventGroup.CreatedByDeviceName
+			sitemodelsSiteEventGroup.CreatedByDeviceName = &xstring5
+		}
+		sitemodelsSiteEventGroup.CreatedByIdentityName = (*source).EventGroup.CreatedByIdentityName
+		if (*source).EventGroup.UpdatedByIdentityName != nil {
+			xstring6 := *(*source).EventGroup.UpdatedByIdentityName
+			sitemodelsSiteEventGroup.UpdatedByIdentityName = &xstring6
+		}
+		sitemodelsSiteEventGroup.GlucoseReading = GlucoseReadingFromDB((*source).GlucoseReading, context)
+		sitemodelsSiteEventGroup.InsulinDose = InsulinDoseFromDB((*source).InsulinDose)
+		sitemodelsSiteEventGroup.FoodIntake = FoodIntakeFromDB((*source).FoodIntake)
+		sitemodelsSiteEventGroup.TempBasal = TempBasalFromDB((*source).TempBasal)
+		sitemodelsSiteEventGroup.TempTarget = TempTargetFromDB((*source).TempTarget, context)
+		if (*source).EventGroup.ProfileSwitchID != nil {
+			xstring7 := *(*source).EventGroup.ProfileSwitchID
+			sitemodelsSiteEventGroup.ProfileSwitchID = &xstring7
+		}
+		if (*source).EventGroup.ComponentEventID != nil {
+			xstring8 := *(*source).EventGroup.ComponentEventID
+			sitemodelsSiteEventGroup.ComponentEventID = &xstring8
+		}
+		if (*source).EventGroup.ActivityID != nil {
+			xstring9 := *(*source).EventGroup.ActivityID
+			sitemodelsSiteEventGroup.ActivityID = &xstring9
+		}
+		if (*source).EventGroup.NotificationEventID != nil {
+			xstring10 := *(*source).EventGroup.NotificationEventID
+			sitemodelsSiteEventGroup.NotificationEventID = &xstring10
+		}
+		pSitemodelsSiteEventGroup = &sitemodelsSiteEventGroup
+	}
+	return pSitemodelsSiteEventGroup
+}
 func FoodIntakeFromDB(source *sitedb.FoodIntake) *SiteFoodIntake {
 	var pSitemodelsSiteFoodIntake *SiteFoodIntake
 	if source != nil {

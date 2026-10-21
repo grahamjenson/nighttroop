@@ -584,72 +584,10 @@ func hardDeleteEventGroup(ctx context.Context, q *sitedb.Queries, identifier str
 }
 
 func softDeleteEventGroup(ctx context.Context, q *sitedb.Queries, identifier string) (sql.Result, error) {
-	eventGroup, err := q.SoftDeleteEventGroup(ctx, sitedb.SoftDeleteEventGroupParams{ID: identifier})
-	if err != nil {
-		slog.Error("failed to soft delete eventGroup event group by ID", "error", err)
+	if err := sitedb.SoftDeleteEventGroupAndEvents(ctx, q, identifier, nil); err != nil {
+		slog.Error("failed to soft delete event group by ID", "error", err, "identifier", identifier)
 		return nil, err
 	}
-
-	if eventGroup == nil {
-		slog.Error("failed to soft delete eventGroup event group by ID, eventGroup is nil", "identifier", identifier)
-		return nsutils.SQLResultCustomResult{LastInsertIdInt: 0, RowsAffectedInt: 0, Err: nil}, sql.ErrNoRows
-	}
-
-	if eventGroup.GlucoseReadingID != nil {
-		if res, err := q.SoftDeleteGlucoseReading(ctx, sitedb.SoftDeleteGlucoseReadingParams{ID: *eventGroup.GlucoseReadingID}); err != nil {
-			slog.Error("failed to soft delete glucose reading by ID", "error", err, "glucoseReadingID", *eventGroup.GlucoseReadingID, "result", res)
-			return nil, err
-		}
-	}
-	if eventGroup.InsulinDoseID != nil {
-		if res, err := q.SoftDeleteInsulinDose(ctx, sitedb.SoftDeleteInsulinDoseParams{ID: *eventGroup.InsulinDoseID}); err != nil {
-			slog.Error("failed to soft delete insulin dose by ID", "error", err, "insulinDoseID", *eventGroup.InsulinDoseID, "result", res)
-			return nil, err
-		}
-	}
-	if eventGroup.FoodIntakeID != nil {
-		if res, err := q.SoftDeleteFoodIntake(ctx, sitedb.SoftDeleteFoodIntakeParams{ID: *eventGroup.FoodIntakeID}); err != nil {
-			slog.Error("failed to soft delete food intake by ID", "error", err, "foodIntakeID", *eventGroup.FoodIntakeID, "result", res)
-			return nil, err
-		}
-	}
-	if eventGroup.TempBasalID != nil {
-		if res, err := q.SoftDeleteTempBasal(ctx, sitedb.SoftDeleteTempBasalParams{ID: *eventGroup.TempBasalID}); err != nil {
-			slog.Error("failed to soft delete temp basal by ID", "error", err, "tempBasalID", *eventGroup.TempBasalID, "result", res)
-			return nil, err
-		}
-	}
-	if eventGroup.TempTargetID != nil {
-		if res, err := q.SoftDeleteTempTarget(ctx, sitedb.SoftDeleteTempTargetParams{ID: *eventGroup.TempTargetID}); err != nil {
-			slog.Error("failed to soft delete temp target by ID", "error", err, "tempTargetID", *eventGroup.TempTargetID, "result", res)
-			return nil, err
-		}
-	}
-	if eventGroup.ProfileSwitchID != nil {
-		if res, err := q.SoftDeleteProfileSwitch(ctx, sitedb.SoftDeleteProfileSwitchParams{ID: *eventGroup.ProfileSwitchID}); err != nil {
-			slog.Error("failed to soft delete profile switch by ID", "error", err, "profileSwitchID", *eventGroup.ProfileSwitchID, "result", res)
-			return nil, err
-		}
-	}
-	if eventGroup.ComponentEventID != nil {
-		if res, err := q.SoftDeleteComponentEvent(ctx, sitedb.SoftDeleteComponentEventParams{ID: *eventGroup.ComponentEventID}); err != nil {
-			slog.Error("failed to soft delete component event by ID", "error", err, "componentEventID", *eventGroup.ComponentEventID, "result", res)
-			return nil, err
-		}
-	}
-	if eventGroup.ActivityID != nil {
-		if res, err := q.SoftDeleteActivity(ctx, sitedb.SoftDeleteActivityParams{ID: *eventGroup.ActivityID}); err != nil {
-			slog.Error("failed to soft delete activity by ID", "error", err, "activityID", *eventGroup.ActivityID, "result", res)
-			return nil, err
-		}
-	}
-	if eventGroup.NotificationEventID != nil {
-		if res, err := q.SoftDeleteNotificationEvent(ctx, sitedb.SoftDeleteNotificationEventParams{ID: *eventGroup.NotificationEventID}); err != nil {
-			slog.Error("failed to soft delete notification event by ID", "error", err, "notificationEventID", *eventGroup.NotificationEventID, "result", res)
-			return nil, err
-		}
-	}
-
 	return nsutils.SQLResultCustomResult{LastInsertIdInt: 0, RowsAffectedInt: 1, Err: nil}, nil
 }
 

@@ -132,6 +132,18 @@ type SiteConverter interface {
 	TempBasalToUpdate(source *SiteTempBasal, siteContext *httputils.SiteContext) sitedb.UpdateTempBasalParams
 
 	///////
+	// EVENT GROUPS
+	///////
+
+	// goverter:context siteContext
+	// goverter:autoMap EventGroup
+	// goverter:map EventGroup.ProfileSwitchID ProfileSwitchID
+	// goverter:map EventGroup.ComponentEventID ComponentEventID
+	// goverter:map EventGroup.ActivityID ActivityID
+	// goverter:map EventGroup.NotificationEventID NotificationEventID
+	EventGroupFromDB(source *sitedb.EventGroupsBundle, siteContext *httputils.SiteContext) *SiteEventGroup
+
+	///////
 	// INSULIN DOSES
 	///////
 
