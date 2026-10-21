@@ -20,6 +20,7 @@ A file for [guiding coding agents](https://agents.md/).
 - `models`: models for the various inputs, including converters built with goverter
 - `scripts`: necessary scripts for generating the initial key bundle and other functions
 - `server`: primary routers and controllers for the requests
+- `socketio`: Socket.IO and Engine.IO (long-polling) server and client, for Nightscout live updates
 - `tests`: integration tests across the site
 - `utils`: all the useful stateless functions
 
