@@ -49,6 +49,7 @@ type ToCreateParams interface {
 	EventGroupToUpdate(source EventGroup) UpdateEventGroupParams
 
 	SearchEventGroupToGetEventGroup(source SearchEventGroupsRow) GetEventGroupRow
+	AllEventGroupToGetEventGroup(source AllEventGroupsRow) GetEventGroupRow
 
 	//goverter:map . EventGroup
 	//goverter:ignore GlucoseReading InsulinDose FoodIntake TempBasal TempTarget ProfileSwitch ComponentEvent Activity NotificationEvent

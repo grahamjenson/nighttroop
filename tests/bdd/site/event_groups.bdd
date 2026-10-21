@@ -1,0 +1,74 @@
+GOTO {{ server_url}}/
+ASSERT_STATUS 200
+
+CLICK "Create Site"
+ASSERT_STATUS 200
+
+CLICK #public--login-button
+ASSERT_NEW_PAGE
+
+INPUT #site--login--name admin
+INPUT #site--login--password password
+
+CLICK #site--login-button
+ASSERT_STATUS 200
+
+ASSERT_VISIBLE #site--login--otp-1
+INPUT #site--login--otp-1 123123
+
+CLICK #site--login-totp-button
+ASSERT_NEW_URL
+ASSERT_VISIBLE "Nighttroop"
+
+// A new site has no event groups
+CLICK #site--settings-menu
+ASSERT_VISIBLE #site--data--event-groups-button
+CLICK #site--data--event-groups-button
+ASSERT_STATUS 200
+ASSERT_PATH /data/event-groups
+ASSERT_VISIBLE #site--event-group--empty
+SCREENSHOT event_groups_empty
+
+// Virtual sync sends treatments through the Nightscout API, each an event group
+CLICK #site--settings-menu
+CLICK #site--settings--sync-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-sync--enable
+CLICK #site--settings--virtual-sync--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Sync Updated
+RUN_BACKGROUND_JOBS
+
+CLICK #site--settings-menu
+CLICK #site--data--event-groups-button
+ASSERT_STATUS 200
+ASSERT_VISIBLE #eventGroupsTable >> text="Temp Basal"
+ASSERT_VISIBLE #eventGroupsTable >> text=0.85 U/hr temp basal for 30 min
+ASSERT_VISIBLE #eventGroupsTable >> text="Profile Switch"
+SCREENSHOT event_groups
+
+// Clicking a group lists its events and all its details
+CLICK #eventGroupsTable tbody tr:has(td:text-is("Temp Basal"))
+ASSERT_VISIBLE #site--event-group--details
+ASSERT_VISIBLE #site--event-group--events >> text=0.85 U/hr temp basal for 30 min
+ASSERT_TEXT_VISIBLE virtual_sync
+SCREENSHOT event_group_details
+CLICK #site--event-group--details--close
+ASSERT_NOT_VISIBLE #site--event-group--details
+
+// Deleting asks first (the test accepts), then removes the group and its events
+CLICK #eventGroupsTable tbody tr:has(td:text-is("Temp Basal")) >> button[title=Delete]
+ASSERT_TEXT_VISIBLE Event Group Deleted
+ASSERT_NOT_VISIBLE #site--event-group--details
+ASSERT_NOT_VISIBLE #eventGroupsTable >> text="Temp Basal"
+SCREENSHOT event_group_deleted
+
+// The deleted group and its temp basal stay gone after a reload
+CLICK #site--settings-menu
+CLICK #site--data--event-groups-button
+ASSERT_STATUS 200
+ASSERT_NOT_VISIBLE #eventGroupsTable >> text="Temp Basal"
+CLICK #site--settings-menu
+CLICK #site--data--temp-basals-button
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--temp-basal--empty

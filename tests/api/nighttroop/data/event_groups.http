@@ -1,0 +1,114 @@
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.localhost
+SET ns_site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME jwtauth
+GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ token }}
+ASSERT_STATUS 200
+SET jwt {{ .jwtauth.token }}
+
+NAME no_event_groups
+GET http://{{ site }}/data/event-groups
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
+
+// Treatments from the Nightscout API are event groups, each with its events
+NAME create_meal_bolus
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B { "eventType": "Meal Bolus", "created_at": "{{ time 10 }}", "carbs": 40, "insulin": 4, "notes": "Lunch" }
+ASSERT_STATUS 200
+
+NAME create_temp_basal
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B { "eventType": "Temp Basal", "created_at": "{{ time 5 }}", "absolute": 0.85, "rate": 0.85, "duration": 60 }
+ASSERT_STATUS 200
+
+NAME list_event_groups
+GET http://{{ site }}/data/event-groups
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result"
+ASSERT_EQUALS "Temp Basal" "@result.0.group_type"
+ASSERT_EQUALS 0.85 "@result.0.temp_basal.absolute"
+ASSERT_EQUALS "Meal Bolus" "@result.1.group_type"
+ASSERT_EQUALS 4 "@result.1.insulin_dose.dose"
+ASSERT_EQUALS 40 "@result.1.food_intake.carbs"
+ASSERT_EQUALS "Lunch" "@result.1.notes"
+SET meal_id {{ dig "list_event_groups.result.1.id" }}
+
+NAME page_event_groups
+GET http://{{ site }}/data/event-groups?limit=1&skip=1
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS "Meal Bolus" "@result.0.group_type"
+
+NAME get_event_group
+GET http://{{ site }}/data/event-groups/{{ .meal_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "Meal Bolus" "@result.group_type"
+ASSERT_EQUALS 4 "@result.insulin_dose.dose"
+
+NAME get_unknown_event_group
+GET http://{{ site }}/data/event-groups/not-a-group
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+//////
+// DELETE
+//////
+
+// Deleting a group deletes its events too, so none are left behind
+NAME delete_event_group
+DELETE http://{{ site }}/data/event-groups/{{ .meal_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME deleted_event_group_not_found
+GET http://{{ site }}/data/event-groups/{{ .meal_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME deleted_event_group_not_listed
+GET http://{{ site }}/data/event-groups
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+
+NAME deleted_insulin_not_listed
+GET http://{{ site }}/data/insulin
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
+
+NAME deleted_food_not_listed
+GET http://{{ site }}/data/food
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
+
+NAME deleted_treatment_gone_from_nightscout
+GET http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+
+NAME delete_unknown_event_group
+DELETE http://{{ site }}/data/event-groups/not-a-group
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404

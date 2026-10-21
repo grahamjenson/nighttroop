@@ -1,0 +1,219 @@
+package site_data_templ
+
+import (
+	"fmt"
+	"strings"
+
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/icon"
+	"nighttroop.t1d.nz/server/components/ui/table"
+)
+
+// eventGroupEvents are the group's events in words, like "4 U insulin" and "40 g carbs"
+func eventGroupEvents(group *sitemodels.SiteEventGroup) []string {
+	events := []string{}
+	if r := group.GlucoseReading; r != nil {
+		events = append(events, fmt.Sprintf("%s %s glucose", formatGlucose(r.Reading, r.Units), orDash(r.Units)))
+	}
+	if d := group.InsulinDose; d != nil {
+		events = append(events, fmt.Sprintf("%g U insulin", d.Dose))
+	}
+	if f := group.FoodIntake; f != nil {
+		events = append(events, fmt.Sprintf("%s g carbs", orDash(f.Carbs)))
+	}
+	if b := group.TempBasal; b != nil {
+		events = append(events, fmt.Sprintf("%s U/hr temp basal for %d min", orDash(b.Absolute), b.DurationMinutes))
+	}
+	if t := group.TempTarget; t != nil {
+		events = append(events, fmt.Sprintf("%s–%s temp target for %d min", formatGlucose(t.LowTarget, t.Units), formatGlucose(t.HighTarget, t.Units), t.DurationMinutes))
+	}
+	for _, other := range []struct {
+		id   *string
+		name string
+	}{{group.ProfileSwitchID, "profile switch"}, {group.ComponentEventID, "site or sensor change"}, {group.ActivityID, "activity"}, {group.NotificationEventID, "notification"}} {
+		if other.id != nil {
+			events = append(events, other.name)
+		}
+	}
+	return events
+}
+
+// EventGroupsTable shows one page of event groups, newest first, with buttons to the pages either side
+templ EventGroupsTable(eventGroups []*sitemodels.SiteEventGroup, skip int64, limit int64) {
+	<div id="event_groups_table" class="mx-auto max-w-5xl space-y-6">
+		<div>
+			<h1 class="text-2xl font-bold">Event Groups</h1>
+			<p class="mt-1 text-gray-500">
+				Events recorded together, like a meal bolus's food and insulin: Nightscout's treatments. Newest first. Click one to see all its details.
+			</p>
+		</div>
+		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
+			@table.Table(table.Props{
+				ID:    "eventGroupsTable",
+				Class: "rounded-lg border border-gray-200",
+			}) {
+				@table.Header() {
+					@table.Row() {
+						@table.Head() {
+							Time
+						}
+						@table.Head() {
+							Type
+						}
+						@table.Head() {
+							Events
+						}
+						@table.Head() {
+							Notes
+						}
+						@table.Head() {
+							Device
+						}
+						@table.Head() {
+							<span class="sr-only">Actions</span>
+						}
+					}
+				}
+				@table.Body() {
+					if len(eventGroups) == 0 {
+						<tr id="site--event-group--empty"><td colspan="6" class="p-4 text-sm text-gray-500">No event groups here.</td></tr>
+					}
+					for _, eventGroup := range eventGroups {
+						@eventGroupRow(eventGroup)
+					}
+				}
+			}
+			<div class="mt-4 flex items-center justify-between text-sm text-gray-500">
+				if len(eventGroups) > 0 {
+					<span id="site--event-group--showing">{ fmt.Sprintf("Showing %d to %d", skip+1, skip+int64(len(eventGroups))) }</span>
+				} else {
+					<span></span>
+				}
+				<div class="flex gap-2">
+					if skip > 0 {
+						@eventGroupPageButton("site--event-group--previous", "Previous", max(skip-limit, 0), limit)
+					}
+					if int64(len(eventGroups)) == limit {
+						@eventGroupPageButton("site--event-group--next", "Next", skip+limit, limit)
+					}
+				</div>
+			</div>
+		</section>
+		<div id="modal-container"></div>
+	</div>
+}
+
+templ eventGroupPageButton(id string, label string, skip int64, limit int64) {
+	@button.Button(button.Props{
+		ID:      id,
+		Variant: button.VariantOutline,
+		Attributes: templ.Attributes{
+			"hx-get":      fmt.Sprintf("/data/event-groups?skip=%d&limit=%d", skip, limit),
+			"hx-target":   "#main-content",
+			"hx-push-url": "true",
+			"hx-swap":     "innerHTML",
+		},
+	}) {
+		{ label }
+	}
+}
+
+// eventGroupRow opens the group's details when clicked. The delete button stops its click reaching the row.
+templ eventGroupRow(eventGroup *sitemodels.SiteEventGroup) {
+	{{ id := "site--event-group--" + eventGroup.ID }}
+	@table.Row(table.RowProps{
+		ID:    id,
+		Class: "cursor-pointer",
+		Attributes: templ.Attributes{
+			"hx-get":    "/data/event-groups/" + eventGroup.ID,
+			"hx-target": "#modal-container",
+			"hx-swap":   "innerHTML",
+		},
+	}) {
+		@table.Cell() {
+			{ formatReadingDate(eventGroup.OccurredAt) }
+		}
+		@table.Cell() {
+			{ eventGroup.GroupType }
+		}
+		@table.Cell() {
+			{ strings.Join(eventGroupEvents(eventGroup), ", ") }
+		}
+		@table.Cell() {
+			{ orDash(eventGroup.Notes) }
+		}
+		@table.Cell() {
+			{ orDash(eventGroup.CreatedByDeviceName) }
+		}
+		@table.Cell() {
+			<div class="flex justify-end">
+				@button.Button(button.Props{
+					ID:      id + "--delete",
+					Variant: button.VariantGhost,
+					Size:    button.SizeIcon,
+					Attributes: templ.Attributes{
+						"title":                "Delete",
+						"onclick":              "event.stopPropagation()",
+						"hx-delete":            "/data/event-groups/" + eventGroup.ID,
+						"hx-confirm":           "Delete this event group and all its events?",
+						"hx-target":            "#toaster",
+						"hx-swap":              "beforeend",
+						"hx-on::after:request": "if (ctx.response.status < 400) this.closest('tr').remove()",
+						"hx-status:4xx":        "target:#toaster swap:beforeend",
+						"hx-status:5xx":        "target:#toaster swap:beforeend",
+					},
+				}) {
+					@icon.Trash2(icon.Props{Class: "size-4 text-red-600"})
+				}
+			</div>
+		}
+	}
+}
+
+templ EventGroupModal(eventGroup *sitemodels.SiteEventGroup) {
+	<div id="site--event-group--details" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+		<div class="w-full max-w-2xl rounded-lg bg-white p-6 shadow-lg">
+			<h2 class="text-lg font-semibold">{ eventGroup.GroupType }</h2>
+			<p class="text-sm text-gray-500">{ formatReadingDate(eventGroup.OccurredAt) }</p>
+			<ul id="site--event-group--events" class="mt-4 list-inside list-disc text-sm">
+				for _, event := range eventGroupEvents(eventGroup) {
+					<li>{ event }</li>
+				}
+			</ul>
+			<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+				@readingDetail("ID", eventGroup.ID)
+				@readingDetail("Minutes", orDash(eventGroup.DurationMinutes))
+				@readingDetail("Notes", orDash(eventGroup.Notes))
+				@readingDetail("Reason", orDash(eventGroup.Reason))
+				@readingDetail("UTC Offset (minutes)", orDash(eventGroup.UtcOffsetMinutes))
+				@readingDetail("App", orDash(eventGroup.CreatedByAppName))
+				@readingDetail("Device", orDash(eventGroup.CreatedByDeviceName))
+				@readingDetail("Created By", eventGroup.CreatedByIdentityName)
+				@readingDetail("Created", formatReadingDate(eventGroup.CreatedAt))
+				@readingDetail("Updated", formatReadingDate(eventGroup.UpdatedAt))
+				@readingDetail("Updated By", orDash(eventGroup.UpdatedByIdentityName))
+			</dl>
+			if eventGroup.RawJsonData != nil {
+				<pre class="mt-4 max-h-48 overflow-auto rounded bg-gray-50 p-2 text-xs">{ *eventGroup.RawJsonData }</pre>
+			}
+			<div class="mt-4 flex justify-end">
+				@button.Button(button.Props{
+					ID:      "site--event-group--details--close",
+					Variant: button.VariantOutline,
+					Attributes: templ.Attributes{
+						"hx-get":    "/empty",
+						"hx-target": "#modal-container",
+						"hx-swap":   "innerHTML",
+					},
+				}) {
+					Close
+				}
+			</div>
+		</div>
+	</div>
+}
+
+templ EventGroupDeleted() {
+	@glucoseToast("Event Group Deleted")
+}

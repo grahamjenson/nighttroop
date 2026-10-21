@@ -215,6 +215,18 @@ type SiteConverter interface {
 	ProfileSwitchToUpdate(source *SiteProfileSwitch, siteContext *httputils.SiteContext) sitedb.UpdateProfileSwitchParams
 
 	///////
+	// EVENT GROUPS
+	///////
+
+	// goverter:context siteContext
+	// goverter:autoMap EventGroup
+	// goverter:map EventGroup.ProfileSwitchID ProfileSwitchID
+	// goverter:map EventGroup.ComponentEventID ComponentEventID
+	// goverter:map EventGroup.ActivityID ActivityID
+	// goverter:map EventGroup.NotificationEventID NotificationEventID
+	EventGroupFromDB(source *sitedb.EventGroupsBundle, siteContext *httputils.SiteContext) *SiteEventGroup
+
+	///////
 	// INSULIN DOSES
 	///////
 

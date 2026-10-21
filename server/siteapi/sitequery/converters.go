@@ -48,5 +48,9 @@ type QueryConverter interface {
 	QueryToAllProfileSwitches(source *apiquery.Query) sitedb.AllProfileSwitchesParams
 
 	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:ignore IncludeDeleted
+	QueryToAllEventGroups(source *apiquery.Query) sitedb.AllEventGroupsParams
+
+	// goverter:useZeroValueOnPointerInconsistency
 	QueryToDeviceReportsForDevice(source *apiquery.Query) sitedb.DeviceReportsForDeviceParams
 }
