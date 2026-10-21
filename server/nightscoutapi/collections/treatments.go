@@ -19,15 +19,11 @@ type TreatmentCollection struct {
 	converter func(c *sitedb.EventGroupsBundle, siteContext *httputils.SiteContext, raw bool) nsutils.Record
 }
 
-func NewTreatmentCollection() TreatmentCollection {
-	return TreatmentCollection{
+func NewTreatmentCollection() CollectionStore {
+	return NewCollection[nightscoutmodels.Treatment, sitedb.EventGroupsBundle](TreatmentCollection{
 		converter: nsutils.DBModelToRecord(nsutils.Treatments, DBModelToTreatment),
-	}
+	})
 }
-
-// ///
-// FUNCTIONS USED BY META COLLECTIONS
-// ///
 
 func (c TreatmentCollection) Name() string {
 	return "treatments"
@@ -69,7 +65,7 @@ func (c TreatmentCollection) ValidatePatch(nsModel nightscoutmodels.Treatment, d
 	return nil
 }
 
-func (c TreatmentCollection) CreateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Treatment, cc nightscoutmodels.ConverterContext, overrideIdentifier *string) (*sitedb.EventGroupsBundle, error) {
+func (c TreatmentCollection) CreateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Treatment, cc nightscoutmodels.ConverterContext, overrideIdentifier *string) (*sitedb.EventGroupsBundle, error) {
 
 	tebg := TreatmentEventGroupBundle(ctx, nsModel)
 	err := createUpdateEventGroup(ctx, q, &tebg, cc)
@@ -98,7 +94,7 @@ func (c TreatmentCollection) CreateDBFunc(q *sitedb.Queries, ctx context.Context
 	return &tebg, nil
 }
 
-func (c TreatmentCollection) GetDuplicateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Treatment) (*sitedb.EventGroupsBundle, error) {
+func (c TreatmentCollection) GetDuplicate(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Treatment) (*sitedb.EventGroupsBundle, error) {
 	// Without a date every filter below is empty and would match the newest row
 	if nsModel.Date == nil {
 		return nil, nil
@@ -119,7 +115,7 @@ func (c TreatmentCollection) GetDuplicateDBFunc(q *sitedb.Queries, ctx context.C
 	return nil, nil
 }
 
-func (c TreatmentCollection) GetDBFunc(q *sitedb.Queries, ctx context.Context, identifier string, includeDeleted bool) (*sitedb.EventGroupsBundle, error) {
+func (c TreatmentCollection) GetModel(q *sitedb.Queries, ctx context.Context, identifier string, includeDeleted bool) (*sitedb.EventGroupsBundle, error) {
 	dbModel, err := q.GetEventGroup(ctx, sitedb.GetEventGroupParams{ID: identifier, IncludeDeleted: includeDeleted})
 	if err != nil {
 		return nil, err
@@ -130,7 +126,7 @@ func (c TreatmentCollection) GetDBFunc(q *sitedb.Queries, ctx context.Context, i
 	return &egb, nil
 }
 
-func (c TreatmentCollection) PatchDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Treatment, identifier string, dbModel *sitedb.EventGroupsBundle, cc nightscoutmodels.ConverterContext) (*sitedb.EventGroupsBundle, error) {
+func (c TreatmentCollection) UpdateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Treatment, identifier string, dbModel *sitedb.EventGroupsBundle, cc nightscoutmodels.ConverterContext) (*sitedb.EventGroupsBundle, error) {
 	// This will be a partial update
 
 	nsModel.EventType = ptr(nightscoutmodels.TreatmentEventType(dbModel.EventGroup.GroupType)) // Ensure the event type is set to the existing value
@@ -163,15 +159,15 @@ func (c TreatmentCollection) PatchDBFunc(q *sitedb.Queries, ctx context.Context,
 	return dbModel, nil
 }
 
-func (c TreatmentCollection) HardDeleteDBFunc(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
+func (c TreatmentCollection) HardDelete(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
 	return hardDeleteEventGroup(ctx, q, identifier)
 }
 
-func (c TreatmentCollection) SoftDeleteDBFunc(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
+func (c TreatmentCollection) SoftDelete(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
 	return softDeleteEventGroup(ctx, q, identifier)
 }
 
-func (c TreatmentCollection) HardDeleteTypeDBFunc(q *sitedb.Queries, ctx context.Context, typeString string) (sql.Result, error) {
+func (c TreatmentCollection) HardDeleteType(q *sitedb.Queries, ctx context.Context, typeString string) (sql.Result, error) {
 
 	eventGroups, err := q.GetEventGroupOfTypeWithoutJoins(ctx, sitedb.GetEventGroupOfTypeWithoutJoinsParams{GroupType: typeString, IncludeDeleted: true})
 	if err != nil {
@@ -189,7 +185,7 @@ func (c TreatmentCollection) HardDeleteTypeDBFunc(q *sitedb.Queries, ctx context
 	return nsutils.SQLResultCustomResult{LastInsertIdInt: 0, RowsAffectedInt: int64(len(eventGroups)), Err: nil}, nil
 }
 
-func (c TreatmentCollection) SoftDeleteTypeDBFunc(q *sitedb.Queries, ctx context.Context, typeString string) (sql.Result, error) {
+func (c TreatmentCollection) SoftDeleteType(q *sitedb.Queries, ctx context.Context, typeString string) (sql.Result, error) {
 	eventGroups, err := q.GetEventGroupOfTypeWithoutJoins(ctx, sitedb.GetEventGroupOfTypeWithoutJoinsParams{GroupType: typeString})
 	if err != nil {
 		return nil, err
@@ -206,52 +202,11 @@ func (c TreatmentCollection) SoftDeleteTypeDBFunc(q *sitedb.Queries, ctx context
 	return nsutils.SQLResultCustomResult{LastInsertIdInt: 0, RowsAffectedInt: int64(len(eventGroups)), Err: nil}, nil
 }
 
-// ///
-// END OF FUNCTIONS USED BY META COLLECTIONS
-// ///
-
-func (c TreatmentCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
-	return MetaCreate(c, ctx, siteContext, data, raw)
-}
-
-func (c TreatmentCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (*nsutils.Record, *nsutils.HTTPError) {
-	return MetaGet(c, ctx, siteContext, identifier, query.Raw, query.IncludeDeleted)
-}
-
-func (c TreatmentCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
-	treatments, rerr := EventGroupSearch(ctx, siteContext, query)
-	if rerr != nil {
-		return nil, rerr
+func (c TreatmentCollection) SearchModels(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]*sitedb.EventGroupsBundle, error) {
+	eventGroups, err := q.SearchEventGroups(ctx, nsquery.EventGroupSearch(query))
+	if err != nil {
+		return nil, err
 	}
-
-	return nsutils.CreateRecordSlice(treatments, c.converter, siteContext, query.Raw), nil
-}
-
-func (c TreatmentCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
-	return MetaDelete(c, ctx, siteContext, identifier, permanent)
-}
-
-func (c TreatmentCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
-	return MetaDeleteType(c, ctx, siteContext, typeString, permanent)
-}
-
-// Replace will replace (delete, then insert) if it exists, or create it if it doesnt
-func (c TreatmentCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
-	return MetaReplace(c, ctx, siteContext, identifier, patch, canCreate, raw)
-}
-
-func (c TreatmentCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
-	// We will always repalce because it is way harder otherwise
-	return MetaPatch(c, ctx, siteContext, identifier, patch, raw)
-}
-
-func EventGroupSearch(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]*sitedb.EventGroupsBundle, *nsutils.HTTPError) {
-	eventGroups, rerr := siteContext.SiteDB.Queries.SearchEventGroups(ctx, nsquery.EventGroupSearch(query))
-	if rerr != nil {
-		slog.Error("failed to query event groups from database", "error", rerr)
-		return nil, nsutils.ErrInternal
-	}
-
 	res := []*sitedb.EventGroupsBundle{}
 	for _, eg := range eventGroups {
 		if eg != nil {
@@ -259,9 +214,7 @@ func EventGroupSearch(ctx context.Context, siteContext *httputils.SiteContext, q
 			res = append(res, &egb)
 		}
 	}
-
 	return res, nil
-
 }
 
 // //////////////////////

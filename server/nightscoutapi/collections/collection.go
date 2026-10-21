@@ -7,52 +7,59 @@ import (
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/nightscoutmodels"
+	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-type MetaCreateCollection[NS, DM any] interface {
+// CollectionStore is what the Nightscout API does with a collection
+type CollectionStore interface {
+	Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError)
+	Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (*nsutils.Record, *nsutils.HTTPError)
+	Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError)
+	Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError)
+	Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError)
+	Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError
+	DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError)
+}
+
+// CollectionDB is a collection kept in the site's tables, like a siteapi store: NS is its Nightscout model and DM
+// its database model. Collection does each Nightscout operation the same way with it.
+type CollectionDB[NS, DM any] interface {
 	Name() string
 	Convert(*DM, *httputils.SiteContext, bool) nsutils.Record
-	Validate(NS, *DM) *nsutils.HTTPError
-	GetDuplicateDBFunc(*sitedb.Queries, context.Context, NS) (*DM, error)
-	CreateDBFunc(*sitedb.Queries, context.Context, NS, nightscoutmodels.ConverterContext, *string) (*DM, error)
+	// Validate checks a model being created, when old is nil, or replacing old
+	Validate(nsModel NS, old *DM) *nsutils.HTTPError
+	GetModel(q *sitedb.Queries, ctx context.Context, identifier string, includeDeleted bool) (*DM, error)
+	// GetDuplicate is a model already stored that the new one repeats, or nil
+	GetDuplicate(q *sitedb.Queries, ctx context.Context, nsModel NS) (*DM, error)
+	// CreateModel stores the model, with the identifier given when it is replacing one
+	CreateModel(q *sitedb.Queries, ctx context.Context, nsModel NS, cc nightscoutmodels.ConverterContext, identifier *string) (*DM, error)
+	SearchModels(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]*DM, error)
+	SoftDelete(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error)
+	HardDelete(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error)
 }
 
-type MetaPatchCollection[NS, DM any] interface {
-	Name() string
-	ValidatePatch(NS, *DM) *nsutils.HTTPError
-	Convert(*DM, *httputils.SiteContext, bool) nsutils.Record
-	GetDBFunc(*sitedb.Queries, context.Context, string, bool) (*DM, error)
-	PatchDBFunc(*sitedb.Queries, context.Context, NS, string, *DM, nightscoutmodels.ConverterContext) (*DM, error)
+// CollectionPatcher is a CollectionDB that can change a model in place; without it a patch is not implemented
+type CollectionPatcher[NS, DM any] interface {
+	ValidatePatch(nsModel NS, old *DM) *nsutils.HTTPError
+	UpdateModel(q *sitedb.Queries, ctx context.Context, nsModel NS, identifier string, old *DM, cc nightscoutmodels.ConverterContext) (*DM, error)
 }
 
-type MetaGetCollection[DM any] interface {
-	Name() string
-	Convert(*DM, *httputils.SiteContext, bool) nsutils.Record
-	GetDBFunc(*sitedb.Queries, context.Context, string, bool) (*DM, error)
+// CollectionTypeDeleter is a CollectionDB that can delete everything of one type; without it that is not implemented
+type CollectionTypeDeleter interface {
+	SoftDeleteType(q *sitedb.Queries, ctx context.Context, typeString string) (sql.Result, error)
+	HardDeleteType(q *sitedb.Queries, ctx context.Context, typeString string) (sql.Result, error)
 }
 
-type MetaDeleteCollection interface {
-	Name() string
-	HardDeleteDBFunc(*sitedb.Queries, context.Context, string) (sql.Result, error)
-	SoftDeleteDBFunc(*sitedb.Queries, context.Context, string) (sql.Result, error)
+// Collection is the CollectionStore for a CollectionDB
+type Collection[NS SharedNSFields, DM SharedDBFields] struct {
+	db CollectionDB[NS, DM]
 }
 
-type MetaDeleteTypeCollection interface {
-	Name() string
-	HardDeleteTypeDBFunc(*sitedb.Queries, context.Context, string) (sql.Result, error)
-	SoftDeleteTypeDBFunc(*sitedb.Queries, context.Context, string) (sql.Result, error)
-}
-
-type MetaReplaceCollection[NS, DM any] interface {
-	Name() string
-	Convert(*DM, *httputils.SiteContext, bool) nsutils.Record
-	Validate(NS, *DM) *nsutils.HTTPError
-	GetDBFunc(*sitedb.Queries, context.Context, string, bool) (*DM, error)
-	HardDeleteDBFunc(*sitedb.Queries, context.Context, string) (sql.Result, error)
-	CreateDBFunc(*sitedb.Queries, context.Context, NS, nightscoutmodels.ConverterContext, *string) (*DM, error)
+func NewCollection[NS SharedNSFields, DM SharedDBFields](db CollectionDB[NS, DM]) Collection[NS, DM] {
+	return Collection[NS, DM]{db: db}
 }
 
 // SharedNSFields are the fields every Nightscout model has, which a replace or patch must not change
@@ -75,17 +82,8 @@ type SharedDBFields interface {
 	GetID() string
 }
 
-// //
-// Fns
-// //
-func MetaCreate[NS, DM any](
-	m MetaCreateCollection[NS, DM],
-	ctx context.Context,
-	siteContext *httputils.SiteContext,
-	data map[string]any,
-	raw bool,
-
-) (*nsutils.Record, bool, *nsutils.HTTPError) {
+func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
+	m := c.db
 	var nsModel NS
 	err := utils.FromMap(data, &nsModel)
 	if err != nil {
@@ -109,7 +107,7 @@ func MetaCreate[NS, DM any](
 
 	q := siteContext.SiteDB.Queries.WithTx(tx)
 
-	duplicateDBModel, err := m.GetDuplicateDBFunc(q, ctx, nsModel)
+	duplicateDBModel, err := m.GetDuplicate(q, ctx, nsModel)
 	if err != nil {
 		slog.Error("failed to check for duplicate in database", "error", err, "collection", m.Name())
 		return nil, false, nsutils.ErrInternal
@@ -118,7 +116,7 @@ func MetaCreate[NS, DM any](
 		return ptr(m.Convert(duplicateDBModel, siteContext, raw)), true, nil
 	}
 
-	dbModel, err := m.CreateDBFunc(
+	dbModel, err := m.CreateModel(
 		q,
 		ctx,
 		nsModel,
@@ -148,15 +146,9 @@ func MetaCreate[NS, DM any](
 	return ptr(m.Convert(dbModel, siteContext, raw)), false, nil
 }
 
-func MetaGet[DM any](
-	m MetaGetCollection[DM],
-	ctx context.Context,
-	siteContext *httputils.SiteContext,
-	identifier string,
-	raw bool,
-	includeDeleted bool,
-) (*nsutils.Record, *nsutils.HTTPError) {
-	dbModel, err := m.GetDBFunc(siteContext.SiteDB.Queries, ctx, identifier, includeDeleted)
+func (c Collection[NS, DM]) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (*nsutils.Record, *nsutils.HTTPError) {
+	m := c.db
+	dbModel, err := m.GetModel(siteContext.SiteDB.Queries, ctx, identifier, query.IncludeDeleted)
 	if err == sql.ErrNoRows {
 		return nil, nsutils.ErrNotFound
 	}
@@ -167,16 +159,20 @@ func MetaGet[DM any](
 	if dbModel == nil {
 		return nil, nsutils.ErrNotFound
 	}
-	return ptr(m.Convert(dbModel, siteContext, raw)), nil
+	return ptr(m.Convert(dbModel, siteContext, query.Raw)), nil
 }
 
-func MetaDelete(
-	m MetaDeleteCollection,
-	ctx context.Context,
-	siteContext *httputils.SiteContext,
-	identifier string,
-	permanent bool,
-) *nsutils.HTTPError {
+func (c Collection[NS, DM]) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
+	models, err := c.db.SearchModels(siteContext.SiteDB.Queries, ctx, query)
+	if err != nil {
+		slog.Error("failed to search the database", "error", err, "collection", c.db.Name())
+		return nil, nsutils.ErrInternal
+	}
+	return nsutils.CreateRecordSlice(models, c.db.Convert, siteContext, query.Raw), nil
+}
+
+func (c Collection[NS, DM]) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
+	m := c.db
 	tx, err := siteContext.SiteDB.SQLiteDB.BeginTx(ctx, nil)
 	if err != nil {
 		return nsutils.ErrInternal
@@ -184,9 +180,9 @@ func MetaDelete(
 	defer tx.Rollback()
 	q := siteContext.SiteDB.Queries.WithTx(tx)
 
-	deleteFunc, label := m.SoftDeleteDBFunc, "Soft"
+	deleteFunc, label := m.SoftDelete, "Soft"
 	if permanent {
-		deleteFunc, label = m.HardDeleteDBFunc, "Hard"
+		deleteFunc, label = m.HardDelete, "Hard"
 	}
 	res, err := deleteFunc(q, ctx, identifier)
 	// Treatments delete with RETURNING, so a missing ID is no rows rather than 0 rows affected
@@ -214,13 +210,11 @@ func MetaDelete(
 	return nil
 }
 
-func MetaDeleteType(
-	m MetaDeleteTypeCollection,
-	ctx context.Context,
-	siteContext *httputils.SiteContext,
-	typeString string,
-	permanent bool,
-) (int, *nsutils.HTTPError) {
+func (c Collection[NS, DM]) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
+	m, ok := any(c.db).(CollectionTypeDeleter)
+	if !ok {
+		return 0, nsutils.ErrNotImplemented
+	}
 	tx, err := siteContext.SiteDB.SQLiteDB.BeginTx(ctx, nil)
 	if err != nil {
 		return 0, nsutils.ErrInternal
@@ -228,41 +222,34 @@ func MetaDeleteType(
 	defer tx.Rollback()
 	q := siteContext.SiteDB.Queries.WithTx(tx)
 
-	deleteFunc := m.SoftDeleteTypeDBFunc
+	deleteFunc := m.SoftDeleteType
 	if permanent {
-		deleteFunc = m.HardDeleteTypeDBFunc
+		deleteFunc = m.HardDeleteType
 	}
 	res, err := deleteFunc(q, ctx, typeString)
 	if err == sql.ErrNoRows {
 		return 0, nsutils.ErrNotFound
 	}
 	if err != nil {
-		slog.Error("failed to delete by type", "error", err, "collection", m.Name(), "permanent", permanent)
+		slog.Error("failed to delete by type", "error", err, "collection", c.db.Name(), "permanent", permanent)
 		return 0, nsutils.ErrInternal
 	}
 	rowsAffected, err := res.RowsAffected()
 	if err != nil {
-		slog.Error("failed to get rows affected for delete", "error", err, "collection", m.Name())
+		slog.Error("failed to get rows affected for delete", "error", err, "collection", c.db.Name())
 		return 0, nsutils.ErrInternal
 	}
 
 	if err := tx.Commit(); err != nil {
-		slog.Error("failed to delete in database", "error", err, "collection", m.Name())
+		slog.Error("failed to delete in database", "error", err, "collection", c.db.Name())
 		return 0, nsutils.ErrInternal
 	}
 
 	return int(rowsAffected), nil
 }
 
-func MetaReplace[NS SharedNSFields, DM SharedDBFields](
-	m MetaReplaceCollection[NS, DM],
-	ctx context.Context,
-	siteContext *httputils.SiteContext,
-	identifier string,
-	data map[string]any,
-	canCreate bool,
-	raw bool,
-) (*nsutils.Record, bool, *nsutils.HTTPError) {
+func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, data map[string]any, canCreate bool, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
+	m := c.db
 	var nsModel NS
 	err := utils.FromMap(data, &nsModel)
 	if err != nil {
@@ -282,7 +269,7 @@ func MetaReplace[NS SharedNSFields, DM SharedDBFields](
 	creatingNewRecord := false
 
 	// GET
-	replacingModel, err := m.GetDBFunc(q, ctx, identifier, true)
+	replacingModel, err := m.GetModel(q, ctx, identifier, true)
 	if err == sql.ErrNoRows {
 		// Check no Record exists
 		if !canCreate {
@@ -297,7 +284,7 @@ func MetaReplace[NS SharedNSFields, DM SharedDBFields](
 
 	// DELETE record if we are not creating a new record
 	if !creatingNewRecord {
-		_, err := m.HardDeleteDBFunc(q, ctx, identifier)
+		_, err := m.HardDelete(q, ctx, identifier)
 		if err != nil {
 			slog.Error("failed to hard delete in database", "error", err, "collection", m.Name(), "identifier", identifier)
 			return nil, false, nsutils.ErrInternal
@@ -315,7 +302,7 @@ func MetaReplace[NS SharedNSFields, DM SharedDBFields](
 	}
 
 	// CREATE
-	dbCreateModel, err := m.CreateDBFunc(q, ctx, nsModel, cc, &identifier)
+	dbCreateModel, err := m.CreateModel(q, ctx, nsModel, cc, &identifier)
 	if err != nil {
 		// Bad data is the client's error, as it is for create
 		if sqlTranslatedError := nsutils.GetSQLTranslatedError(err); sqlTranslatedError != nil {
@@ -339,14 +326,12 @@ func MetaReplace[NS SharedNSFields, DM SharedDBFields](
 
 }
 
-func MetaPatch[NS SharedNSFields, DM SharedDBFields](
-	m MetaPatchCollection[NS, DM],
-	ctx context.Context,
-	siteContext *httputils.SiteContext,
-	identifier string,
-	data map[string]any,
-	raw bool,
-) (*nsutils.Record, *nsutils.HTTPError) {
+func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, data map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
+	m := c.db
+	patcher, ok := any(m).(CollectionPatcher[NS, DM])
+	if !ok {
+		return nil, nsutils.ErrNotImplemented
+	}
 	var nsModel NS
 	err := utils.FromMap(data, &nsModel)
 	if err != nil {
@@ -362,7 +347,7 @@ func MetaPatch[NS SharedNSFields, DM SharedDBFields](
 
 	q := siteContext.SiteDB.Queries.WithTx(tx)
 
-	updateingModel, err := m.GetDBFunc(q, ctx, identifier, true)
+	updateingModel, err := m.GetModel(q, ctx, identifier, true)
 
 	if err == sql.ErrNoRows {
 		// Check no Record exists
@@ -377,12 +362,12 @@ func MetaPatch[NS SharedNSFields, DM SharedDBFields](
 		return nil, err
 	}
 
-	if err := m.ValidatePatch(nsModel, updateingModel); err != nil {
+	if err := patcher.ValidatePatch(nsModel, updateingModel); err != nil {
 		slog.Error("validation failed for patching model", "error", err, "collection", m.Name())
 		return nil, err
 	}
 
-	dbModel, err := m.PatchDBFunc(
+	dbModel, err := patcher.UpdateModel(
 		q,
 		ctx,
 		nsModel,

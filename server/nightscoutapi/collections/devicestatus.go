@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"log/slog"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/nightscoutmodels"
@@ -18,15 +17,12 @@ type DeviceStatusCollection struct {
 	converter func(c *sitedb.DeviceReport, siteContext *httputils.SiteContext, raw bool) nsutils.Record
 }
 
-func NewDeviceStatusCollection() DeviceStatusCollection {
-	return DeviceStatusCollection{
+func NewDeviceStatusCollection() CollectionStore {
+	return NewCollection[nightscoutmodels.DeviceStatus, sitedb.DeviceReport](DeviceStatusCollection{
 		converter: nsutils.DBModelToRecord(nsutils.Devicestatus, DBToNightscoutDeviceStatus),
-	}
+	})
 }
 
-// ///
-// FUNCTIONS USED BY META COLLECTIONS
-// ///
 func (c DeviceStatusCollection) Name() string {
 	return "devicestatus"
 }
@@ -46,7 +42,7 @@ func (c DeviceStatusCollection) ValidatePatch(nsModel nightscoutmodels.DeviceSta
 	return nil
 }
 
-func (c DeviceStatusCollection) CreateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.DeviceStatus, cc nightscoutmodels.ConverterContext, overrideIdentifier *string) (*sitedb.DeviceReport, error) {
+func (c DeviceStatusCollection) CreateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.DeviceStatus, cc nightscoutmodels.ConverterContext, overrideIdentifier *string) (*sitedb.DeviceReport, error) {
 	createParams := NightscoutToDBCreateDeviceReport(nsModel, cc)
 
 	if overrideIdentifier != nil {
@@ -56,7 +52,7 @@ func (c DeviceStatusCollection) CreateDBFunc(q *sitedb.Queries, ctx context.Cont
 	return q.CreateDeviceReport(ctx, createParams)
 }
 
-func (c DeviceStatusCollection) GetDuplicateDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.DeviceStatus) (*sitedb.DeviceReport, error) {
+func (c DeviceStatusCollection) GetDuplicate(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.DeviceStatus) (*sitedb.DeviceReport, error) {
 	// Without a date every filter below is empty and would match the newest row
 	if nsModel.Date == nil {
 		return nil, nil
@@ -75,70 +71,29 @@ func (c DeviceStatusCollection) GetDuplicateDBFunc(q *sitedb.Queries, ctx contex
 	return nil, nil
 }
 
-func (c DeviceStatusCollection) GetDBFunc(q *sitedb.Queries, ctx context.Context, identifier string, includeDeleted bool) (*sitedb.DeviceReport, error) {
+func (c DeviceStatusCollection) GetModel(q *sitedb.Queries, ctx context.Context, identifier string, includeDeleted bool) (*sitedb.DeviceReport, error) {
 	return q.GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: identifier, IncludeDeleted: includeDeleted})
 }
 
-func (c DeviceStatusCollection) HardDeleteDBFunc(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
+func (c DeviceStatusCollection) HardDelete(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
 	return q.HardDeleteDeviceReport(ctx, sitedb.HardDeleteDeviceReportParams{ID: identifier})
 }
 
-func (c DeviceStatusCollection) SoftDeleteDBFunc(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
+func (c DeviceStatusCollection) SoftDelete(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
 	return q.SoftDeleteDeviceReport(ctx, sitedb.SoftDeleteDeviceReportParams{ID: identifier})
 }
 
-func (c DeviceStatusCollection) PatchDBFunc(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.DeviceStatus, identifier string, dbModel *sitedb.DeviceReport, uc nightscoutmodels.ConverterContext) (*sitedb.DeviceReport, error) {
+func (c DeviceStatusCollection) UpdateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.DeviceStatus, identifier string, dbModel *sitedb.DeviceReport, uc nightscoutmodels.ConverterContext) (*sitedb.DeviceReport, error) {
 	updateParams := nightscoutmodels.DeviceStatusToUpdateDeviceReport(nsModel, uc)
 	updateParams.ID = identifier
 	return q.UpdateDeviceReport(ctx, updateParams)
 }
 
-/////
-// END OF FUNCTIONS USED BY META COLLECTIONS
-/////
-
-func (c DeviceStatusCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
-	return MetaCreate(c, ctx, siteContext, data, raw)
-}
-
-func (c DeviceStatusCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (*nsutils.Record, *nsutils.HTTPError) {
-	return MetaGet(c, ctx, siteContext, identifier, query.Raw, query.IncludeDeleted)
-}
-
-func (c DeviceStatusCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
-	var deviceStatuses []*sitedb.DeviceReport
-	var rerr error
-
-	// There are three options,
+func (c DeviceStatusCollection) SearchModels(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]*sitedb.DeviceReport, error) {
 	if !query.HasFilters {
-		deviceStatuses, rerr = siteContext.SiteDB.Queries.AllDeviceReports(ctx, nsquery.DeviceReportAll(query))
-	} else {
-		deviceStatuses, rerr = siteContext.SiteDB.Queries.SearchDeviceReports(ctx, nsquery.DeviceReportSearch(query))
+		return q.AllDeviceReports(ctx, nsquery.DeviceReportAll(query))
 	}
-
-	if rerr != nil {
-		slog.Error("failed to query device statuss from database", "error", rerr)
-		return nil, nsutils.ErrInternal
-	}
-
-	return nsutils.CreateRecordSlice(deviceStatuses, c.converter, siteContext, query.Raw), nil
-}
-
-func (c DeviceStatusCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
-	return MetaDelete(c, ctx, siteContext, identifier, permanent)
-}
-
-func (c DeviceStatusCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
-	return 0, nsutils.ErrNotImplemented
-}
-
-func (c DeviceStatusCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
-	return MetaPatch(c, ctx, siteContext, identifier, patch, raw)
-}
-
-// Replace will delete then create the record again, BUT it will not
-func (c DeviceStatusCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
-	return MetaReplace(c, ctx, siteContext, identifier, patch, canCreate, raw)
+	return q.SearchDeviceReports(ctx, nsquery.DeviceReportSearch(query))
 }
 
 /////
