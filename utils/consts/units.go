@@ -88,20 +88,6 @@ func (u *Units) ToMGDL(unitValue float64) float64 {
 	return Round(unitValue*MMOL_L_TO_MG_DL, 3)
 }
 
-func (u *Units) ToMGDLMultiplier() float64 {
-	if u == nil {
-		return 1.0
-	}
-	switch *u {
-	case UnitsMGDL:
-		return 1.0
-	case UnitsMMOLL:
-		return MMOL_L_TO_MG_DL
-	default:
-		return 1.0
-	}
-}
-
 func Round(value float64, dp int) float64 {
 	m := math.Pow10(dp)
 	return math.Round(value*m) / m

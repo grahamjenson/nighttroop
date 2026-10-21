@@ -3,7 +3,6 @@ package utils
 import (
 	"fmt"
 	"io"
-	"log/slog"
 	"os"
 	"path/filepath"
 )
@@ -51,20 +50,6 @@ func DeleteFiles(paths []string) error {
 		}
 	}
 	return nil
-}
-
-func RelPathBetween(newBasePath string, targetPath string) string {
-
-	absFile, _ := filepath.Abs(targetPath)
-	absBase, _ := filepath.Abs(newBasePath)
-
-	relPath, err := filepath.Rel(absBase, absFile)
-	if err != nil {
-		slog.Error("Error calculating relative path", "base", absBase, "file", absFile, "error", err)
-		return absFile
-	}
-
-	return relPath
 }
 
 type CountingWriter struct {
