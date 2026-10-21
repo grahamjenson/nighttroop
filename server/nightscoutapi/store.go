@@ -17,6 +17,9 @@ type NightTroopAPIStore struct {
 	config    *config.ServerConfig
 
 	stores map[nsutils.Collection]collections.CollectionStore
+
+	// onChange is told of each record created or changed, for live updates
+	onChange func(ctx context.Context, collection nsutils.Collection, record nsutils.Record)
 }
 
 func NewNightTroopAPIStore(controlDB *db.ControlDB, config *config.ServerConfig) *NightTroopAPIStore {
@@ -77,7 +80,17 @@ func (nts *NightTroopAPIStore) Create(ctx context.Context, collection nsutils.Co
 	if err != nil {
 		return nsutils.Record{}, false, err
 	}
-	return foundAnd(collectionsStore.Create(ctx, siteContext, data, raw))
+	record, duplicate, err := foundAnd(collectionsStore.Create(ctx, siteContext, data, raw))
+	if err == nil && !duplicate {
+		nts.changed(ctx, collection, record)
+	}
+	return record, duplicate, err
+}
+
+func (nts *NightTroopAPIStore) changed(ctx context.Context, collection nsutils.Collection, record nsutils.Record) {
+	if nts.onChange != nil {
+		nts.onChange(ctx, collection, record)
+	}
 }
 
 func (nts *NightTroopAPIStore) Get(ctx context.Context, collection nsutils.Collection, identifier string, query nsquery.Query) (nsutils.Record, *nsutils.HTTPError) {
@@ -101,7 +114,11 @@ func (nts *NightTroopAPIStore) Replace(ctx context.Context, collection nsutils.C
 	if err != nil {
 		return nsutils.Record{}, false, err
 	}
-	return foundAnd(collectionsStore.Replace(ctx, siteContext, identifier, patch, canCreate, raw))
+	record, created, err := foundAnd(collectionsStore.Replace(ctx, siteContext, identifier, patch, canCreate, raw))
+	if err == nil {
+		nts.changed(ctx, collection, record)
+	}
+	return record, created, err
 }
 
 func (nts *NightTroopAPIStore) Patch(ctx context.Context, collection nsutils.Collection, identifier string, patch map[string]any, raw bool) (nsutils.Record, *nsutils.HTTPError) {
@@ -109,7 +126,11 @@ func (nts *NightTroopAPIStore) Patch(ctx context.Context, collection nsutils.Col
 	if err != nil {
 		return nsutils.Record{}, err
 	}
-	return found(collectionsStore.Patch(ctx, siteContext, identifier, patch, raw))
+	record, err := found(collectionsStore.Patch(ctx, siteContext, identifier, patch, raw))
+	if err == nil {
+		nts.changed(ctx, collection, record)
+	}
+	return record, err
 }
 
 func (nts *NightTroopAPIStore) Delete(ctx context.Context, collection nsutils.Collection, identifier string, permanent bool) *nsutils.HTTPError {

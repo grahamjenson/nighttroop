@@ -58,17 +58,8 @@ func tryAuthWithJWTToken(config *config.ServerConfig, r *http.Request) (*control
 	authHeader := r.Header.Get("Authorization")
 	hasBearer := strings.HasPrefix(strings.ToLower(authHeader), strings.ToLower(BearerPrefix))
 	if hasBearer {
-		jwttokenStr := authHeader[len(BearerPrefix):]
-		subdomain, identityName, role, err := config.Security.VerifyUserJWTToken(jwttokenStr)
-		if err != nil {
-			return nil, false, fmt.Errorf("bad JWT token: %w", err)
-		}
-		identity, err := GetSiteIdentity(r.Context(), subdomain, identityName, consts.IdentityRole(role))
-		if err != nil {
-			slog.Error("Bad JWT token cant find identity", "error", err)
-			return nil, false, fmt.Errorf("identity not found: %w", err)
-		}
-		return identity, false, nil
+		identity, err := jwtIdentity(config, r.Context(), authHeader[len(BearerPrefix):])
+		return identity, false, err
 	}
 
 	if authHeader != "" {
@@ -93,11 +84,30 @@ func tryAuthWithLegacyToken(config *config.ServerConfig, r *http.Request) (*cont
 		}
 	}
 
+	return legacyTokenIdentity(config, r.Context(), tokenParam)
+}
+
+// jwtIdentity is the site identity a JWT is for
+func jwtIdentity(config *config.ServerConfig, ctx context.Context, jwttokenStr string) (*controldb.SiteIdentity, error) {
+	subdomain, identityName, role, err := config.Security.VerifyUserJWTToken(jwttokenStr)
+	if err != nil {
+		return nil, fmt.Errorf("bad JWT token: %w", err)
+	}
+	identity, err := GetSiteIdentity(ctx, subdomain, identityName, consts.IdentityRole(role))
+	if err != nil {
+		slog.Error("Bad JWT token cant find identity", "error", err)
+		return nil, fmt.Errorf("identity not found: %w", err)
+	}
+	return identity, nil
+}
+
+// legacyTokenIdentity is the site identity a Nightscout token (or API secret) is for
+func legacyTokenIdentity(config *config.ServerConfig, ctx context.Context, tokenParam string) (*controldb.SiteIdentity, error) {
 	if tokenParam == "" {
 		return nil, fmt.Errorf("no token provided")
 	}
 
-	siteContext := httputils.GetSiteContext(r.Context())
+	siteContext := httputils.GetSiteContext(ctx)
 
 	tokenParamSubdomain, tokenParamName, tokenRole, tokenParamPassword, err := config.Security.SplitNightscoutTokenForIdentity(tokenParam)
 	if err != nil {
@@ -108,7 +118,7 @@ func tryAuthWithLegacyToken(config *config.ServerConfig, r *http.Request) (*cont
 		return nil, fmt.Errorf("token subdomain does not match user context subdomain")
 	}
 
-	identity, err := GetSiteIdentity(r.Context(), tokenParamSubdomain, tokenParamName, consts.IdentityRole(tokenRole))
+	identity, err := GetSiteIdentity(ctx, tokenParamSubdomain, tokenParamName, consts.IdentityRole(tokenRole))
 	if err != nil {
 		return nil, fmt.Errorf("identity not found: %w", err)
 	}

@@ -160,7 +160,7 @@ func (s *Socket) ID() string { return s.id }
 
 func (s *Socket) Namespace() *Namespace { return s.namespace }
 
-// Request is the Engine.IO handshake request, for its headers, query and remote address
+// Request is the Engine.IO handshake request, for its headers, query, remote address and context values
 func (s *Socket) Request() *http.Request { return s.conn.session.Request() }
 
 // On sets the handler for an event from the client; handlers run in order, one at a time

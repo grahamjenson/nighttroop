@@ -17,8 +17,10 @@ import (
 )
 
 func NewNightscoutRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Router {
+	store := NewNightTroopAPIStore(controlDB, config)
+	websocket := NewWebsocket(config, store)
 	ntDeps := nsutils.Dependencies{
-		Store: NewNightTroopAPIStore(controlDB, config),
+		Store: store,
 
 		Auth: &NightTroopAPIAuth{
 			controlDB: controlDB,
@@ -30,6 +32,10 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config *config.ServerConfig) c
 	httputils.AddStandardMiddleware(r, config)
 	// make sure to continue rate limiting
 	r.Use(httputils.SiteRateLimitMiddleware(config))
+
+	// Socket.IO clients authorize with an event, not on each request
+	r.Handle("/socket.io/", websocket)
+
 	// make sure to check auth for JWT/token param/token URL param
 
 	r.Group(func(r chi.Router) {
