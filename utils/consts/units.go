@@ -15,6 +15,9 @@ const (
 )
 const MMOL_L_TO_MG_DL = 18.018
 
+// MaxGlucoseMgdl is far above any real reading, so a typo or a made up value is refused
+const MaxGlucoseMgdl = 1000
+
 var unitAliases = map[string]Units{
 	// mg/dL
 	"mg":      UnitsMGDL,

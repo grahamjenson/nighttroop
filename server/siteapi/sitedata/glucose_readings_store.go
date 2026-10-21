@@ -18,9 +18,6 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-// maxGlucoseMgdl is far above any real reading, so a typo or a made up value is refused
-const maxGlucoseMgdl = 1000
-
 type GlucoseReadingsStore struct{}
 
 // ////
@@ -150,9 +147,9 @@ func (s *GlucoseReadingsStore) DeleteHTMXResponse(model *sitemodels.SiteGlucoseR
 ////////
 
 func checkGlucoseMgdl(mgdl float64, siteContext *httputils.SiteContext) *apiutils.HTTPError {
-	if mgdl <= 0 || mgdl > maxGlucoseMgdl {
+	if mgdl <= 0 || mgdl > consts.MaxGlucoseMgdl {
 		units := sitemodels.ContextUnits(siteContext)
-		return apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("reading must be more than 0 and at most %v %s", consts.Round(units.FromMGDL(maxGlucoseMgdl), 1), *units))
+		return apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("reading must be more than 0 and at most %v %s", consts.Round(units.FromMGDL(consts.MaxGlucoseMgdl), 1), *units))
 	}
 	return nil
 }

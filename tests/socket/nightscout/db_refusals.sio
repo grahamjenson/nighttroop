@@ -94,3 +94,9 @@ EMIT dbAdd
 B {"collection":"entries","data":{"type":"bad","date":{{ itime 0 }}}}
 ACK
 ASSERT_LENGTH 0 "@"
+
+NAME add_entry_too_high
+EMIT dbAdd
+B {"collection":"entries","data":{"type":"sgv","sgv":5000,"date":{{ itime 0 }}}}
+ACK
+ASSERT_LENGTH 0 "@"
