@@ -58,6 +58,19 @@ ASSERT_VISIBLE #site--summary--graph .site--summary--graph--reading >> nth=5
 ASSERT_NOT_VISIBLE #site--summary--graph .site--summary--graph--reading >> nth=6
 ASSERT_VISIBLE #site--summary--graph--basal
 
+// The range buttons show the summary over 6 hours to a week, and back returns to the range before
+CLICK #site--summary--range-6
+ASSERT_STATUS 200
+ASSERT_TEXT_EQUALS #site--summary--hours Last 6 hours
+ASSERT_VISIBLE #site--summary--graph .site--summary--graph--reading >> nth=5
+SCREENSHOT summary_6_hours
+CLICK #site--summary--range-168
+ASSERT_STATUS 200
+ASSERT_TEXT_EQUALS #site--summary--hours Last 168 hours
+CLICK_BACK
+ASSERT_STATUS 200
+ASSERT_TEXT_EQUALS #site--summary--hours Last 6 hours
+
 // A device opens its latest status's details
 CLICK #site--summary--devices >> text=virtual://nighttroop
 ASSERT_VISIBLE #site--device-status--details
