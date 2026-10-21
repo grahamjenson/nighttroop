@@ -78,55 +78,56 @@ func FuzzRequestFiles(f *testing.F) {
 	testutils.UseLogHandler(f, slog.DiscardHandler)
 	router := server.GetMainHandler(controlDB, config)
 
-	f.Add(int64(100), 0)
-	f.Fuzz(func(t *testing.T, seed int64, modifications int) {
+	if len(bodies) == 0 {
+		f.Fatalf("no request bodies found")
+	}
+	for i := range bodies {
+		f.Add(int64(100), 0, i)
+	}
+	// Each input sends one body, so an input stays well under the fuzzer's 10s hang limit
+	f.Fuzz(func(t *testing.T, seed int64, modifications int, bodyIndex int) {
 		rrr := rand.New(rand.NewSource(seed))
 
-		for _, body := range bodies {
-			if modifications != 0 {
-				body = mutateBody(body, rrr, modifications)
-			}
-			mutatedBodyBytes, err := json.Marshal(body)
-			if err != nil {
-				t.Skipf("failed to marshal mutated body: %v", err)
-			}
-			newBody := string(mutatedBodyBytes)
-			runFuzzTest(t, "CreateEntryV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/entries?token=%s", subdomain, token), newBody)
-
-			runFuzzTest(t, "CreateEntryV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/entries?token=%s", subdomain, token), newBody)
-
-			// Entries
-			runFuzzTest(t, "CreateEntryV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/entries?token=%s", subdomain, token), newBody)
-
-			runFuzzTest(t, "CreateEntryV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/entries?token=%s", subdomain, token), newBody)
-
-			// Treatments
-			runFuzzTest(t, "CreateTreatmentV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/treatments?token=%s", subdomain, token), newBody)
-
-			runFuzzTest(t, "CreateTreatmentV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/treatments?token=%s", subdomain, token), newBody)
-
-			// Device Status
-			runFuzzTest(t, "CreateDeviceStatusV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/devicestatus?token=%s", subdomain, token), newBody)
-
-			runFuzzTest(t, "CreateDeviceStatusV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/devicestatus?token=%s", subdomain, token), newBody)
-
-			// profile
-			runFuzzTest(t, "CreateProfileV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/profile?token=%s", subdomain, token), newBody)
-
-			runFuzzTest(t, "CreateProfileV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/profile?token=%s", subdomain, token), newBody)
-
-			// food
-			runFuzzTest(t, "CreateFoodV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/food?token=%s", subdomain, token), newBody)
-
-			runFuzzTest(t, "CreateFoodV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/food?token=%s", subdomain, token), newBody)
-
-			// settings
-			runFuzzTest(t, "CreateSettingsV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/settings?token=%s", subdomain, token), newBody)
-
-			// activities
-			runFuzzTest(t, "CreateActivitiesV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/activities?token=%s", subdomain, token), newBody)
+		body := bodies[(bodyIndex%len(bodies)+len(bodies))%len(bodies)]
+		if modifications != 0 {
+			body = mutateBody(body, rrr, modifications)
 		}
+		mutatedBodyBytes, err := json.Marshal(body)
+		if err != nil {
+			t.Skipf("failed to marshal mutated body: %v", err)
+		}
+		newBody := string(mutatedBodyBytes)
 
+		// Entries
+		runFuzzTest(t, "CreateEntryV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/entries?token=%s", subdomain, token), newBody)
+
+		runFuzzTest(t, "CreateEntryV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/entries?token=%s", subdomain, token), newBody)
+
+		// Treatments
+		runFuzzTest(t, "CreateTreatmentV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/treatments?token=%s", subdomain, token), newBody)
+
+		runFuzzTest(t, "CreateTreatmentV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/treatments?token=%s", subdomain, token), newBody)
+
+		// Device Status
+		runFuzzTest(t, "CreateDeviceStatusV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/devicestatus?token=%s", subdomain, token), newBody)
+
+		runFuzzTest(t, "CreateDeviceStatusV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/devicestatus?token=%s", subdomain, token), newBody)
+
+		// profile
+		runFuzzTest(t, "CreateProfileV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/profile?token=%s", subdomain, token), newBody)
+
+		runFuzzTest(t, "CreateProfileV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/profile?token=%s", subdomain, token), newBody)
+
+		// food
+		runFuzzTest(t, "CreateFoodV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/food?token=%s", subdomain, token), newBody)
+
+		runFuzzTest(t, "CreateFoodV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/food?token=%s", subdomain, token), newBody)
+
+		// settings
+		runFuzzTest(t, "CreateSettingsV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/settings?token=%s", subdomain, token), newBody)
+
+		// activities
+		runFuzzTest(t, "CreateActivitiesV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/activities?token=%s", subdomain, token), newBody)
 	})
 }
 
@@ -140,7 +141,7 @@ func runFuzzTest(t *testing.T, name string, router http.Handler, path, body stri
 		router.ServeHTTP(rr, req)
 
 		if rr.Code == 404 {
-			t.Errorf("rate limited: %d", rr.Code)
+			t.Errorf("not found: %d", rr.Code)
 		}
 
 		if rr.Code >= 500 {
