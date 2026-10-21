@@ -3,12 +3,18 @@ package types_test
 import (
 	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/utils/types"
 )
 
 func TestDateStringUnmarshalNumbers(t *testing.T) {
+	// A number has no time zone, so it must not take the machine's; run as if in New Zealand to show it
+	local := time.Local
+	time.Local = time.FixedZone("NZST", 12*60*60)
+	t.Cleanup(func() { time.Local = local })
+
 	tests := []struct {
 		json string
 		want string
