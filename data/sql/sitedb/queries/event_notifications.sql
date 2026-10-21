@@ -28,13 +28,13 @@ RETURNING *;
 
 -- name: AllNotificationEvents :many
 SELECT * FROM notification_events
-WHERE (CAST(sqlc.narg('IncludeDeleted') AS BOOL) IS NULL OR deleted_at IS NULL)
+WHERE (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 
 -- name: GetNotificationEvent :one
-SELECT * FROM notification_events WHERE id = ?;
+SELECT * FROM notification_events WHERE id = ? AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL);
 
 -- name: SearchNotificationEvents :many
 SELECT * FROM notification_events

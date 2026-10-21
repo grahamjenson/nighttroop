@@ -956,6 +956,119 @@ func InsulinDoseToUpdate(source *SiteInsulinDose, context *httputils.SiteContext
 	}
 	return sitedbUpdateInsulinDoseParams
 }
+func NotificationEventFromDB(source *sitedb.NotificationEvent) *SiteNotificationEvent {
+	var pSitemodelsSiteNotificationEvent *SiteNotificationEvent
+	if source != nil {
+		var sitemodelsSiteNotificationEvent SiteNotificationEvent
+		sitemodelsSiteNotificationEvent.ID = (*source).ID
+		sitemodelsSiteNotificationEvent.NotificationType = (*source).NotificationType
+		sitemodelsSiteNotificationEvent.Title = (*source).Title
+		sitemodelsSiteNotificationEvent.Severity = (*source).Severity
+		if (*source).Content != nil {
+			xstring := *(*source).Content
+			sitemodelsSiteNotificationEvent.Content = &xstring
+		}
+		if (*source).Notes != nil {
+			xstring2 := *(*source).Notes
+			sitemodelsSiteNotificationEvent.Notes = &xstring2
+		}
+		if (*source).Reason != nil {
+			xstring3 := *(*source).Reason
+			sitemodelsSiteNotificationEvent.Reason = &xstring3
+		}
+		if (*source).RawJsonData != nil {
+			xstring4 := *(*source).RawJsonData
+			sitemodelsSiteNotificationEvent.RawJsonData = &xstring4
+		}
+		if (*source).UtcOffsetMinutes != nil {
+			xint64 := *(*source).UtcOffsetMinutes
+			sitemodelsSiteNotificationEvent.UtcOffsetMinutes = &xint64
+		}
+		sitemodelsSiteNotificationEvent.OccurredAt = (*source).OccurredAt
+		sitemodelsSiteNotificationEvent.CreatedAt = (*source).CreatedAt
+		sitemodelsSiteNotificationEvent.UpdatedAt = (*source).UpdatedAt
+		if (*source).CreatedByAppName != nil {
+			xstring5 := *(*source).CreatedByAppName
+			sitemodelsSiteNotificationEvent.CreatedByAppName = &xstring5
+		}
+		if (*source).CreatedByDeviceName != nil {
+			xstring6 := *(*source).CreatedByDeviceName
+			sitemodelsSiteNotificationEvent.CreatedByDeviceName = &xstring6
+		}
+		sitemodelsSiteNotificationEvent.CreatedByIdentityName = (*source).CreatedByIdentityName
+		if (*source).UpdatedByIdentityName != nil {
+			xstring7 := *(*source).UpdatedByIdentityName
+			sitemodelsSiteNotificationEvent.UpdatedByIdentityName = &xstring7
+		}
+		pSitemodelsSiteNotificationEvent = &sitemodelsSiteNotificationEvent
+	}
+	return pSitemodelsSiteNotificationEvent
+}
+func NotificationEventToCreate(source *SiteNotificationEvent, context *httputils.SiteContext) sitedb.CreateNotificationEventParams {
+	var sitedbCreateNotificationEventParams sitedb.CreateNotificationEventParams
+	if source != nil {
+		sitedbCreateNotificationEventParams.ID = NewSiteDataID()
+		sitedbCreateNotificationEventParams.Title = (*source).Title
+		sitedbCreateNotificationEventParams.Severity = (*source).Severity
+		if (*source).Content != nil {
+			xstring := *(*source).Content
+			sitedbCreateNotificationEventParams.Content = &xstring
+		}
+		sitedbCreateNotificationEventParams.NotificationType = (*source).NotificationType
+		if (*source).Notes != nil {
+			xstring2 := *(*source).Notes
+			sitedbCreateNotificationEventParams.Notes = &xstring2
+		}
+		if (*source).Reason != nil {
+			xstring3 := *(*source).Reason
+			sitedbCreateNotificationEventParams.Reason = &xstring3
+		}
+		if (*source).UtcOffsetMinutes != nil {
+			xint64 := *(*source).UtcOffsetMinutes
+			sitedbCreateNotificationEventParams.UtcOffsetMinutes = &xint64
+		}
+		sitedbCreateNotificationEventParams.OccurredAt = OccurredAtOrNow((*source).OccurredAt)
+		if (*source).RawJsonData != nil {
+			xstring4 := *(*source).RawJsonData
+			sitedbCreateNotificationEventParams.RawJsonData = &xstring4
+		}
+		if (*source).CreatedByAppName != nil {
+			xstring5 := *(*source).CreatedByAppName
+			sitedbCreateNotificationEventParams.CreatedByAppName = &xstring5
+		}
+		if (*source).CreatedByDeviceName != nil {
+			xstring6 := *(*source).CreatedByDeviceName
+			sitedbCreateNotificationEventParams.CreatedByDeviceName = &xstring6
+		}
+		sitedbCreateNotificationEventParams.CreatedByIdentityName = ContextIdentityNameValue(context)
+		sitedbCreateNotificationEventParams.CreatedByIdentityID = ContextIdentityID(context)
+	}
+	return sitedbCreateNotificationEventParams
+}
+func NotificationEventToUpdate(source *SiteNotificationEvent, context *httputils.SiteContext) sitedb.UpdateNotificationEventParams {
+	var sitedbUpdateNotificationEventParams sitedb.UpdateNotificationEventParams
+	if source != nil {
+		sitedbUpdateNotificationEventParams.Title = StringOrNil((*source).Title)
+		sitedbUpdateNotificationEventParams.Severity = Int64OrNil((*source).Severity)
+		sitedbUpdateNotificationEventParams.NotificationType = StringOrNil((*source).NotificationType)
+		if (*source).Content != nil {
+			xstring := *(*source).Content
+			sitedbUpdateNotificationEventParams.Content = &xstring
+		}
+		if (*source).Notes != nil {
+			xstring2 := *(*source).Notes
+			sitedbUpdateNotificationEventParams.Notes = &xstring2
+		}
+		if (*source).Reason != nil {
+			xstring3 := *(*source).Reason
+			sitedbUpdateNotificationEventParams.Reason = &xstring3
+		}
+		sitedbUpdateNotificationEventParams.UpdatedByIdentityID = ContextIdentityID(context)
+		sitedbUpdateNotificationEventParams.UpdatedByIdentityName = ContextIdentityName(context)
+		sitedbUpdateNotificationEventParams.ID = (*source).ID
+	}
+	return sitedbUpdateNotificationEventParams
+}
 func ProfileSwitchFromDB(source *sitedb.ProfileSwitch) *SiteProfileSwitch {
 	var pSitemodelsSiteProfileSwitch *SiteProfileSwitch
 	if source != nil {

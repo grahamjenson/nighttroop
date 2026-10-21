@@ -26,6 +26,7 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 	tempBasalsStore := &sitedata.TempBasalsStore{}
 	activitiesStore := &sitedata.ActivitiesStore{}
 	componentEventsStore := &sitedata.ComponentEventsStore{}
+	notificationEventsStore := &sitedata.NotificationEventsStore{}
 	profileSwitchesStore := &sitedata.ProfileSwitchesStore{}
 	insulinDosesStore := &sitedata.InsulinDosesStore{}
 	foodIntakesStore := &sitedata.FoodIntakesStore{}
@@ -92,6 +93,13 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Post("/data/component-events", siteapiutils.CreateHandler(controlDB, config, componentEventsStore))
 		r.Post("/data/component-events/{id}", siteapiutils.UpdateHandler(controlDB, config, componentEventsStore))
 		r.Delete("/data/component-events/{id}", siteapiutils.DeleteHandler(controlDB, config, componentEventsStore))
+
+		// Data Notifications
+		r.Get("/data/notifications", siteapiutils.SearchHandler(controlDB, config, notificationEventsStore))
+		r.Get("/data/notifications/{id}", siteapiutils.GetHandler(controlDB, config, notificationEventsStore))
+		r.Post("/data/notifications", siteapiutils.CreateHandler(controlDB, config, notificationEventsStore))
+		r.Post("/data/notifications/{id}", siteapiutils.UpdateHandler(controlDB, config, notificationEventsStore))
+		r.Delete("/data/notifications/{id}", siteapiutils.DeleteHandler(controlDB, config, notificationEventsStore))
 
 		// Data Profile Switches
 		r.Get("/data/profile-switches", siteapiutils.SearchHandler(controlDB, config, profileSwitchesStore))

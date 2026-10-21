@@ -23,3 +23,19 @@ func TestFormToMap(t *testing.T) {
 		t.Fatalf("dotted name did not nest: %v", doc)
 	}
 }
+
+// A number input left blank is not sent, so a JSON decode of it does not fail and an update leaves it as it is
+func TestFormToMapBlankNumber(t *testing.T) {
+	type model struct {
+		Minutes *int64   `json:"minutes"`
+		Rate    *float64 `json:"rate"`
+		Notes   *string  `json:"notes"`
+	}
+	doc := apiutils.FormToMap[model](url.Values{"minutes": {""}, "rate": {"1.5"}, "notes": {""}})
+	if _, sent := doc["minutes"]; sent {
+		t.Fatalf("blank number was sent: %v", doc)
+	}
+	if doc["rate"] != 1.5 || doc["notes"] != "" {
+		t.Fatalf("unexpected conversion: %v", doc)
+	}
+}
