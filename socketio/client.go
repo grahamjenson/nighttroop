@@ -10,7 +10,7 @@ import (
 	"nighttroop.t1d.nz/socketio/engineio"
 )
 
-// Client is a Socket.IO client over long-polling, used to test the server
+// Client is a Socket.IO client over long-polling or a websocket, used to test the server
 type Client struct {
 	engine *engineio.Client
 
@@ -26,13 +26,7 @@ type Client struct {
 // Dial opens a connection to the server at rawURL (e.g. http://host/socket.io/); call Connect before emitting.
 // version is the Engine.IO version: engineio.V4 for Socket.IO v5, engineio.V3 for Socket.IO v2 clients.
 func Dial(ctx context.Context, rawURL string, version int, httpClient *http.Client) (*Client, error) {
-	c := &Client{
-		version:   version,
-		handlers:  map[string]map[string]func([]json.RawMessage){},
-		connected: map[string]bool{},
-		waiting:   map[string]chan error{},
-		acks:      map[int64]chan []json.RawMessage{},
-	}
+	c := newClient(version)
 	engine, err := engineio.Dial(ctx, rawURL, version, httpClient, c.onMessage)
 	if err != nil {
 		return nil, err
@@ -40,6 +34,30 @@ func Dial(ctx context.Context, rawURL string, version int, httpClient *http.Clie
 	c.engine = engine
 	return c, nil
 }
+
+// DialOverWebSocket is Dial over a websocket from the start
+func DialOverWebSocket(ctx context.Context, rawURL string, version int) (*Client, error) {
+	c := newClient(version)
+	engine, err := engineio.DialOverWebSocket(ctx, rawURL, version, c.onMessage)
+	if err != nil {
+		return nil, err
+	}
+	c.engine = engine
+	return c, nil
+}
+
+func newClient(version int) *Client {
+	return &Client{
+		version:   version,
+		handlers:  map[string]map[string]func([]json.RawMessage){},
+		connected: map[string]bool{},
+		waiting:   map[string]chan error{},
+		acks:      map[int64]chan []json.RawMessage{},
+	}
+}
+
+// Upgrade moves a polling client onto a websocket, as browsers do after connecting
+func (c *Client) Upgrade(ctx context.Context) error { return c.engine.Upgrade(ctx) }
 
 // Connect joins a namespace, sending auth (if any) with v5, and waits for the server's answer.
 // A Socket.IO v2 server connects the default namespace itself, so Connect only waits for it.
