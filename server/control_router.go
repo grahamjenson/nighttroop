@@ -14,6 +14,7 @@ import (
 func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Router {
 	r := chi.NewRouter()
 	sitesStore := &controlapi.SitesStore{}
+	jobStatsStore := &controlapi.JobStatsStore{}
 	httputils.AddStandardMiddleware(r, config)
 
 	static.AddStaticRoutes(r)
@@ -31,6 +32,10 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 		r.Get("/sites", controlapiutils.SearchHandler(controlDB, config, sitesStore))
 		r.Get("/sites/{id}", controlapiutils.GetHandler(controlDB, config, sitesStore))
 		r.Post("/sites/{id}", controlapiutils.UpdateHandler(controlDB, config, sitesStore))
+
+		// Jobs
+		r.Get("/job-stats", controlapiutils.SearchHandler(controlDB, config, jobStatsStore))
+		r.Get("/job-stats/{id}", controlapiutils.GetHandler(controlDB, config, jobStatsStore))
 
 		//// TODO
 		// Get User details including db size , last seen, API usage per device, list devices and last seen at, list DB table sizes

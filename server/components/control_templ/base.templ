@@ -109,6 +109,27 @@ templ Header() {
 										Sites
 									</span>
 								}
+							}
+							@dropdown.Separator()
+							@dropdown.Label() {
+								Jobs
+							}
+							@dropdown.Group() {
+								@dropdown.Item(dropdown.ItemProps{
+									ID:   "control--job-stats-button",
+									Href: "#",
+									Attributes: templ.Attributes{
+										"hx-get":      "/job-stats",
+										"hx-target":   "#main-content",
+										"hx-push-url": "true",
+										"hx-swap":     "innerHTML",
+									},
+								}) {
+									<span class="flex items-center">
+										@icon.ChartColumn(icon.Props{Class: "size-4 mr-2"})
+										Job Stats
+									</span>
+								}
 								@dropdown.Separator()
 								@dropdown.Item(dropdown.ItemProps{
 									Href: "#",

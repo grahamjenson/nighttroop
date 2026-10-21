@@ -1,6 +1,6 @@
 -- name: EnsureJobStatsDailyForGroup :one
-INSERT INTO job_stats_daily (day_queue_job, errors, updated_at)
-VALUES (?, '[]', CAST(unixepoch('subsec') * 1000 AS INTEGER))
+INSERT INTO job_stats_daily (day_queue_job, errors, created_at, updated_at)
+VALUES (?, '[]', CAST(unixepoch('subsec') * 1000 AS INTEGER), CAST(unixepoch('subsec') * 1000 AS INTEGER))
 ON CONFLICT(day_queue_job) DO UPDATE SET
     day_queue_job = day_queue_job -- Forces NOOP assignment to return conflicting row
 RETURNING *;
@@ -30,3 +30,12 @@ WHERE
 -- name: AllJobStatsDaily :many
 SELECT * FROM job_stats_daily;
 
+
+-- name: SearchJobStatsDaily :many
+SELECT * FROM job_stats_daily
+ORDER BY day_queue_job DESC
+LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+
+-- name: GetJobStatsDaily :one
+SELECT * FROM job_stats_daily
+WHERE day_queue_job = sqlc.arg('DayQueueJob');
