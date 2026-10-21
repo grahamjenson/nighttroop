@@ -10,8 +10,7 @@ import (
 
 func ActivityAll(source Query) sitedb.AllActivitiesParams {
 	var sitedbAllActivitiesParams sitedb.AllActivitiesParams
-	pBool := source.IncludeDeleted
-	sitedbAllActivitiesParams.IncludeDeleted = &pBool
+	sitedbAllActivitiesParams.IncludeDeleted = source.IncludeDeleted
 	sitedbAllActivitiesParams.Skip = source.Skip
 	sitedbAllActivitiesParams.Limit = source.Limit
 	return sitedbAllActivitiesParams
