@@ -1,0 +1,111 @@
+GOTO {{ server_url}}/
+ASSERT_STATUS 200
+
+CLICK "Create Site"
+ASSERT_STATUS 200
+
+CLICK #public--login-button
+ASSERT_NEW_PAGE
+
+INPUT #site--login--name admin
+INPUT #site--login--password password
+
+CLICK #site--login-button
+ASSERT_STATUS 200
+
+ASSERT_VISIBLE #site--login--otp-1
+INPUT #site--login--otp-1 123123
+
+CLICK #site--login-totp-button
+ASSERT_NEW_URL
+ASSERT_VISIBLE "Nighttroop"
+
+// A new site has no profile switches
+CLICK #site--settings-menu
+ASSERT_VISIBLE #site--data--profile-switches-button
+CLICK #site--data--profile-switches-button
+ASSERT_STATUS 200
+ASSERT_PATH /data/profile-switches
+ASSERT_VISIBLE #site--profile-switch--empty
+SCREENSHOT profile_switches_empty
+
+// Virtual sync writes a profile switch, with its profile, on its first run
+CLICK #site--settings-menu
+CLICK #site--settings--sync-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-sync--enable
+CLICK #site--settings--virtual-sync--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Sync Updated
+RUN_BACKGROUND_JOBS
+
+CLICK #site--settings-menu
+CLICK #site--data--profile-switches-button
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+ASSERT_TEXT_VISIBLE virtual://nighttroop
+
+// A profile switch typed in happens now, added to the top of the table
+INPUT #site--profile-switch--create--name Sick Day
+INPUT #site--profile-switch--create--percent 120
+INPUT #site--profile-switch--create--notes Flu
+CLICK #site--profile-switch--create--submit
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE Sick Day
+SCREENSHOT profile_switches
+
+// Clicking the virtual profile switch shows all its details, its schedules only to read
+CLICK #profileSwitchesTable tbody tr >> nth=1
+ASSERT_VISIBLE #site--profile-switch--details
+ASSERT_TEXT_VISIBLE Virtual at 100%
+ASSERT_VISIBLE #site--profile-switch--details--basal-rates
+ASSERT_VISIBLE #site--profile-switch--details--targets-high
+ASSERT_TEXT_VISIBLE virtual_sync
+SCREENSHOT profile_switch_details
+
+// The name, percent, shift, minutes and notes can be edited
+INPUT #site--profile-switch--edit--percent 80
+INPUT #site--profile-switch--edit--timeshift 60
+INPUT #site--profile-switch--edit--duration 120
+INPUT #site--profile-switch--edit--notes Exercise
+CLICK #site--profile-switch--edit--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Profile Switch Updated
+ASSERT_NOT_VISIBLE #site--profile-switch--details
+SCREENSHOT profile_switch_updated
+
+CLICK #profileSwitchesTable tbody tr >> nth=1
+ASSERT_VISIBLE #site--profile-switch--details
+ASSERT_TEXT_VISIBLE Virtual at 80%
+ASSERT_TEXT_VISIBLE Exercise
+CLICK #site--profile-switch--details--close
+ASSERT_NOT_VISIBLE #site--profile-switch--details
+
+// A page of one profile switch pages through them, newest first
+GOTO /data/profile-switches?limit=1
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+ASSERT_TEXT_VISIBLE Sick Day
+CLICK #site--profile-switch--next
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 2 to 2
+ASSERT_TEXT_VISIBLE Virtual
+CLICK #site--profile-switch--previous
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+
+// Deleting asks first (the test accepts), then removes the row without opening its details
+CLICK #site--settings-menu
+CLICK #site--data--profile-switches-button
+ASSERT_STATUS 200
+CLICK #profileSwitchesTable tbody tr >> nth=0 >> button[title=Delete]
+ASSERT_TEXT_VISIBLE Profile Switch Deleted
+ASSERT_NOT_VISIBLE #site--profile-switch--details
+SCREENSHOT profile_switch_deleted
+
+// The deleted profile switch stays gone after a reload
+CLICK #site--settings-menu
+CLICK #site--data--profile-switches-button
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+ASSERT_TEXT_VISIBLE Virtual

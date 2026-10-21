@@ -41,13 +41,13 @@ RETURNING *;
 
 -- name: AllProfileSwitches :many
 SELECT * FROM profile_switches
-WHERE (CAST(sqlc.narg('IncludeDeleted') AS BOOL) IS NULL OR deleted_at IS NULL)
+WHERE (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 
 -- name: GetProfileSwitch :one
-SELECT * FROM profile_switches WHERE id = ?;
+SELECT * FROM profile_switches WHERE id = ? AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL);
 
 -- name: SearchProfileSwitches :many
 SELECT * FROM profile_switches
@@ -95,6 +95,7 @@ UPDATE profile_switches SET
     name = COALESCE(sqlc.narg('Name'), name),
     duration_minutes = COALESCE(sqlc.narg('DurationMinutes'), duration_minutes),
     percent = COALESCE(sqlc.narg('Percent'), percent),
+    timeshift = COALESCE(sqlc.narg('Timeshift'), timeshift),
     notes = COALESCE(sqlc.narg('Notes'), notes),
     reason = COALESCE(sqlc.narg('Reason'), reason),
 

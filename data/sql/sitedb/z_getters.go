@@ -10627,12 +10627,12 @@ func (m *CreateProfileSwitchParams) SetCreatedByIdentityID(v *int64) {
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
-func (m AllProfileSwitchesParams) GetIncludeDeleted() *bool {
+func (m AllProfileSwitchesParams) GetIncludeDeleted() bool {
 	return m.IncludeDeleted
 }
 
 // SetIncludeDeleted sets the IncludeDeleted value and returns the updated AllProfileSwitchesParams.
-func (m *AllProfileSwitchesParams) SetIncludeDeleted(v *bool) {
+func (m *AllProfileSwitchesParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
 }
 
@@ -10664,6 +10664,16 @@ func (m GetProfileSwitchParams) GetID() string {
 // SetID sets the ID value and returns the updated GetProfileSwitchParams.
 func (m *GetProfileSwitchParams) SetID(v string) {
 	m.ID = v
+}
+
+// GetIncludeDeleted returns the IncludeDeleted value.
+func (m GetProfileSwitchParams) GetIncludeDeleted() bool {
+	return m.IncludeDeleted
+}
+
+// SetIncludeDeleted sets the IncludeDeleted value and returns the updated GetProfileSwitchParams.
+func (m *GetProfileSwitchParams) SetIncludeDeleted(v bool) {
+	m.IncludeDeleted = v
 }
 
 // GetDateGTE returns the DateGTE value.
@@ -10954,6 +10964,16 @@ func (m UpdateProfileSwitchParams) GetPercent() *float64 {
 // SetPercent sets the Percent value and returns the updated UpdateProfileSwitchParams.
 func (m *UpdateProfileSwitchParams) SetPercent(v *float64) {
 	m.Percent = v
+}
+
+// GetTimeshift returns the Timeshift value.
+func (m UpdateProfileSwitchParams) GetTimeshift() *int64 {
+	return m.Timeshift
+}
+
+// SetTimeshift sets the Timeshift value and returns the updated UpdateProfileSwitchParams.
+func (m *UpdateProfileSwitchParams) SetTimeshift(v *int64) {
+	m.Timeshift = v
 }
 
 // GetNotes returns the Notes value.

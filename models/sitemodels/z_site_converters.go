@@ -658,6 +658,174 @@ func InsulinDoseToUpdate(source *SiteInsulinDose, context *httputils.SiteContext
 	}
 	return sitedbUpdateInsulinDoseParams
 }
+func ProfileSwitchFromDB(source *sitedb.ProfileSwitch) *SiteProfileSwitch {
+	var pSitemodelsSiteProfileSwitch *SiteProfileSwitch
+	if source != nil {
+		var sitemodelsSiteProfileSwitch SiteProfileSwitch
+		sitemodelsSiteProfileSwitch.ID = (*source).ID
+		sitemodelsSiteProfileSwitch.Name = (*source).Name
+		pInt64 := (*source).DurationMinutes
+		sitemodelsSiteProfileSwitch.DurationMinutes = &pInt64
+		if (*source).Percent != nil {
+			xfloat64 := *(*source).Percent
+			sitemodelsSiteProfileSwitch.Percent = &xfloat64
+		}
+		if (*source).Timeshift != nil {
+			xint64 := *(*source).Timeshift
+			sitemodelsSiteProfileSwitch.Timeshift = &xint64
+		}
+		if (*source).Dia != nil {
+			xfloat642 := *(*source).Dia
+			sitemodelsSiteProfileSwitch.Dia = &xfloat642
+		}
+		if (*source).Units != nil {
+			constsUnits := constsUnitsToConstsUnits(*(*source).Units)
+			sitemodelsSiteProfileSwitch.Units = &constsUnits
+		}
+		if (*source).Timezone != nil {
+			xstring := *(*source).Timezone
+			sitemodelsSiteProfileSwitch.Timezone = &xstring
+		}
+		if (*source).CarbsHr != nil {
+			xfloat643 := *(*source).CarbsHr
+			sitemodelsSiteProfileSwitch.CarbsHr = &xfloat643
+		}
+		if (*source).Delay != nil {
+			xfloat644 := *(*source).Delay
+			sitemodelsSiteProfileSwitch.Delay = &xfloat644
+		}
+		if (*source).CarbRatiosJson != nil {
+			xstring2 := *(*source).CarbRatiosJson
+			sitemodelsSiteProfileSwitch.CarbRatiosJson = &xstring2
+		}
+		if (*source).InsulinSensitivitiesJson != nil {
+			xstring3 := *(*source).InsulinSensitivitiesJson
+			sitemodelsSiteProfileSwitch.InsulinSensitivitiesJson = &xstring3
+		}
+		if (*source).BasalRatesJson != nil {
+			xstring4 := *(*source).BasalRatesJson
+			sitemodelsSiteProfileSwitch.BasalRatesJson = &xstring4
+		}
+		if (*source).TargetsHighJson != nil {
+			xstring5 := *(*source).TargetsHighJson
+			sitemodelsSiteProfileSwitch.TargetsHighJson = &xstring5
+		}
+		if (*source).TargetsLowJson != nil {
+			xstring6 := *(*source).TargetsLowJson
+			sitemodelsSiteProfileSwitch.TargetsLowJson = &xstring6
+		}
+		if (*source).Notes != nil {
+			xstring7 := *(*source).Notes
+			sitemodelsSiteProfileSwitch.Notes = &xstring7
+		}
+		if (*source).Reason != nil {
+			xstring8 := *(*source).Reason
+			sitemodelsSiteProfileSwitch.Reason = &xstring8
+		}
+		if (*source).RawJsonData != nil {
+			xstring9 := *(*source).RawJsonData
+			sitemodelsSiteProfileSwitch.RawJsonData = &xstring9
+		}
+		if (*source).UtcOffsetMinutes != nil {
+			xint642 := *(*source).UtcOffsetMinutes
+			sitemodelsSiteProfileSwitch.UtcOffsetMinutes = &xint642
+		}
+		sitemodelsSiteProfileSwitch.OccurredAt = (*source).OccurredAt
+		sitemodelsSiteProfileSwitch.CreatedAt = (*source).CreatedAt
+		sitemodelsSiteProfileSwitch.UpdatedAt = (*source).UpdatedAt
+		if (*source).CreatedByAppName != nil {
+			xstring10 := *(*source).CreatedByAppName
+			sitemodelsSiteProfileSwitch.CreatedByAppName = &xstring10
+		}
+		if (*source).CreatedByDeviceName != nil {
+			xstring11 := *(*source).CreatedByDeviceName
+			sitemodelsSiteProfileSwitch.CreatedByDeviceName = &xstring11
+		}
+		sitemodelsSiteProfileSwitch.CreatedByIdentityName = (*source).CreatedByIdentityName
+		if (*source).UpdatedByIdentityName != nil {
+			xstring12 := *(*source).UpdatedByIdentityName
+			sitemodelsSiteProfileSwitch.UpdatedByIdentityName = &xstring12
+		}
+		pSitemodelsSiteProfileSwitch = &sitemodelsSiteProfileSwitch
+	}
+	return pSitemodelsSiteProfileSwitch
+}
+func ProfileSwitchToCreate(source *SiteProfileSwitch, context *httputils.SiteContext) sitedb.CreateProfileSwitchParams {
+	var sitedbCreateProfileSwitchParams sitedb.CreateProfileSwitchParams
+	if source != nil {
+		sitedbCreateProfileSwitchParams.ID = NewSiteDataID()
+		sitedbCreateProfileSwitchParams.Name = (*source).Name
+		if (*source).DurationMinutes != nil {
+			sitedbCreateProfileSwitchParams.DurationMinutes = *(*source).DurationMinutes
+		}
+		if (*source).Percent != nil {
+			xfloat64 := *(*source).Percent
+			sitedbCreateProfileSwitchParams.Percent = &xfloat64
+		}
+		if (*source).Timeshift != nil {
+			xint64 := *(*source).Timeshift
+			sitedbCreateProfileSwitchParams.Timeshift = &xint64
+		}
+		if (*source).Notes != nil {
+			xstring := *(*source).Notes
+			sitedbCreateProfileSwitchParams.Notes = &xstring
+		}
+		if (*source).Reason != nil {
+			xstring2 := *(*source).Reason
+			sitedbCreateProfileSwitchParams.Reason = &xstring2
+		}
+		if (*source).UtcOffsetMinutes != nil {
+			xint642 := *(*source).UtcOffsetMinutes
+			sitedbCreateProfileSwitchParams.UtcOffsetMinutes = &xint642
+		}
+		sitedbCreateProfileSwitchParams.OccurredAt = OccurredAtOrNow((*source).OccurredAt)
+		if (*source).RawJsonData != nil {
+			xstring3 := *(*source).RawJsonData
+			sitedbCreateProfileSwitchParams.RawJsonData = &xstring3
+		}
+		if (*source).CreatedByAppName != nil {
+			xstring4 := *(*source).CreatedByAppName
+			sitedbCreateProfileSwitchParams.CreatedByAppName = &xstring4
+		}
+		if (*source).CreatedByDeviceName != nil {
+			xstring5 := *(*source).CreatedByDeviceName
+			sitedbCreateProfileSwitchParams.CreatedByDeviceName = &xstring5
+		}
+		sitedbCreateProfileSwitchParams.CreatedByIdentityName = ContextIdentityNameValue(context)
+		sitedbCreateProfileSwitchParams.CreatedByIdentityID = ContextIdentityID(context)
+	}
+	return sitedbCreateProfileSwitchParams
+}
+func ProfileSwitchToUpdate(source *SiteProfileSwitch, context *httputils.SiteContext) sitedb.UpdateProfileSwitchParams {
+	var sitedbUpdateProfileSwitchParams sitedb.UpdateProfileSwitchParams
+	if source != nil {
+		sitedbUpdateProfileSwitchParams.Name = StringOrNil((*source).Name)
+		if (*source).DurationMinutes != nil {
+			xint64 := *(*source).DurationMinutes
+			sitedbUpdateProfileSwitchParams.DurationMinutes = &xint64
+		}
+		if (*source).Percent != nil {
+			xfloat64 := *(*source).Percent
+			sitedbUpdateProfileSwitchParams.Percent = &xfloat64
+		}
+		if (*source).Timeshift != nil {
+			xint642 := *(*source).Timeshift
+			sitedbUpdateProfileSwitchParams.Timeshift = &xint642
+		}
+		if (*source).Notes != nil {
+			xstring := *(*source).Notes
+			sitedbUpdateProfileSwitchParams.Notes = &xstring
+		}
+		if (*source).Reason != nil {
+			xstring2 := *(*source).Reason
+			sitedbUpdateProfileSwitchParams.Reason = &xstring2
+		}
+		sitedbUpdateProfileSwitchParams.UpdatedByIdentityID = ContextIdentityID(context)
+		sitedbUpdateProfileSwitchParams.UpdatedByIdentityName = ContextIdentityName(context)
+		sitedbUpdateProfileSwitchParams.ID = (*source).ID
+	}
+	return sitedbUpdateProfileSwitchParams
+}
 func SettingsFromMap(source *settings.SettingMap) *Settings {
 	var pSitemodelsSettings *Settings
 	if source != nil {

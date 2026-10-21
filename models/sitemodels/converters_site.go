@@ -132,6 +132,27 @@ type SiteConverter interface {
 	TempBasalToUpdate(source *SiteTempBasal, siteContext *httputils.SiteContext) sitedb.UpdateTempBasalParams
 
 	///////
+	// PROFILE SWITCHES
+	///////
+
+	ProfileSwitchFromDB(source *sitedb.ProfileSwitch) *SiteProfileSwitch
+
+	// goverter:context siteContext
+	// goverter:map ID | NewSiteDataID
+	// goverter:map OccurredAt | OccurredAtOrNow
+	// goverter:map CreatedByIdentityID | ContextIdentityID
+	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
+	// goverter:ignore Dia Units Timezone CarbsHr Delay CarbRatiosJson InsulinSensitivitiesJson BasalRatesJson TargetsHighJson TargetsLowJson
+	ProfileSwitchToCreate(source *SiteProfileSwitch, siteContext *httputils.SiteContext) sitedb.CreateProfileSwitchParams
+
+	// goverter:context siteContext
+	// goverter:map Name | StringOrNil
+	// goverter:map UpdatedByIdentityID | ContextIdentityID
+	// goverter:map UpdatedByIdentityName | ContextIdentityName
+	// goverter:ignore RawJsonData
+	ProfileSwitchToUpdate(source *SiteProfileSwitch, siteContext *httputils.SiteContext) sitedb.UpdateProfileSwitchParams
+
+	///////
 	// INSULIN DOSES
 	///////
 
@@ -273,6 +294,14 @@ func Float64OrNil(value float64) *float64 {
 // Int64OrNil leaves a value as it is when an update does not send one
 func Int64OrNil(value int64) *int64 {
 	if value == 0 {
+		return nil
+	}
+	return &value
+}
+
+// StringOrNil leaves a value as it is when an update does not send one
+func StringOrNil(value string) *string {
+	if value == "" {
 		return nil
 	}
 	return &value

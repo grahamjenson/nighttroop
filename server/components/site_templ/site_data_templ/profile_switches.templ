@@ -1,0 +1,313 @@
+package site_data_templ
+
+import (
+	"fmt"
+
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/icon"
+	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/server/components/ui/table"
+)
+
+// numberOr is an optional number for an input, or what not setting it means
+func numberOr[T any](value *T, unset string) string {
+	if value == nil {
+		return unset
+	}
+	return fmt.Sprint(*value)
+}
+
+// ProfileSwitchesTable shows one page of profile switches, newest first, with buttons to the pages either side
+templ ProfileSwitchesTable(profileSwitches []*sitemodels.SiteProfileSwitch, skip int64, limit int64) {
+	<div id="profile_switches_table" class="mx-auto max-w-5xl space-y-6">
+		<div>
+			<h1 class="text-2xl font-bold">Profile Switches</h1>
+			<p class="mt-1 text-gray-500">
+				Newest first. Click a profile switch to see all its details.
+			</p>
+		</div>
+		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
+			@profileSwitchCreateForm()
+			@table.Table(table.Props{
+				ID:    "profileSwitchesTable",
+				Class: "rounded-lg border border-gray-200",
+			}) {
+				@table.Header() {
+					@table.Row() {
+						@table.Head() {
+							Time
+						}
+						@table.Head() {
+							Name
+						}
+						@table.Head() {
+							Percent
+						}
+						@table.Head() {
+							Shift
+						}
+						@table.Head() {
+							Minutes
+						}
+						@table.Head() {
+							Device
+						}
+						@table.Head() {
+							<span class="sr-only">Actions</span>
+						}
+					}
+				}
+				@table.Body() {
+					if len(profileSwitches) == 0 {
+						<tr id="site--profile-switch--empty"><td colspan="7" class="p-4 text-sm text-gray-500">No profile switches here.</td></tr>
+					}
+					for _, profileSwitch := range profileSwitches {
+						@profileSwitchRow(profileSwitch)
+					}
+				}
+			}
+			<div class="mt-4 flex items-center justify-between text-sm text-gray-500">
+				if len(profileSwitches) > 0 {
+					<span id="site--profile-switch--showing">{ fmt.Sprintf("Showing %d to %d", skip+1, skip+int64(len(profileSwitches))) }</span>
+				} else {
+					<span></span>
+				}
+				<div class="flex gap-2">
+					if skip > 0 {
+						@profileSwitchPageButton("site--profile-switch--previous", "Previous", max(skip-limit, 0), limit)
+					}
+					if int64(len(profileSwitches)) == limit {
+						@profileSwitchPageButton("site--profile-switch--next", "Next", skip+limit, limit)
+					}
+				</div>
+			</div>
+		</section>
+		<div id="modal-container"></div>
+	</div>
+}
+
+templ profileSwitchPageButton(id string, label string, skip int64, limit int64) {
+	@button.Button(button.Props{
+		ID:      id,
+		Variant: button.VariantOutline,
+		Attributes: templ.Attributes{
+			"hx-get":      fmt.Sprintf("/data/profile-switches?skip=%d&limit=%d", skip, limit),
+			"hx-target":   "#main-content",
+			"hx-push-url": "true",
+			"hx-swap":     "innerHTML",
+		},
+	}) {
+		{ label }
+	}
+}
+
+// profileSwitchCreateForm adds a profile switch happening now, putting its row at the top of the table
+templ profileSwitchCreateForm() {
+	<form
+		id="site--profile-switch--create"
+		class="mb-4 flex items-center justify-end gap-2"
+		hx-post="/data/profile-switches"
+		hx-target="#profileSwitchesTable tbody"
+		hx-swap="afterbegin"
+		hx-status:4xx="target:#toaster swap:beforeend"
+		hx-status:5xx="target:#toaster swap:beforeend"
+		hx-on::after:request="if (ctx.response.status < 400) { this.reset(); document.getElementById('site--profile-switch--empty')?.remove() }"
+	>
+		@profileSwitchInputs("site--profile-switch--create", "", "100", "0", "0", "")
+		@button.Button(button.Props{ID: "site--profile-switch--create--submit", Type: button.TypeSubmit}) {
+			Add Profile Switch
+		}
+	</form>
+}
+
+// profileSwitchInputs always send a percent, shift and minutes, as an empty number is not one
+templ profileSwitchInputs(id string, name string, percent string, timeshift string, duration string, notes string) {
+	<div class="w-40">
+		@input.Input(input.Props{ID: id + "--name", Name: "name", Placeholder: "Name", Value: name, Required: true, Attributes: templ.Attributes{"maxlength": "64"}})
+	</div>
+	<div class="w-24">
+		@input.Input(input.Props{
+			ID:          id + "--percent",
+			Type:        input.TypeNumber,
+			Name:        "percent",
+			Placeholder: "Percent",
+			Value:       percent,
+			Required:    true,
+			Attributes:  templ.Attributes{"title": "Percent", "step": "1", "min": "10", "max": "500"},
+		})
+	</div>
+	<div class="w-24">
+		@input.Input(input.Props{
+			ID:          id + "--timeshift",
+			Type:        input.TypeNumber,
+			Name:        "timeshift",
+			Placeholder: "Shift",
+			Value:       timeshift,
+			Required:    true,
+			Attributes:  templ.Attributes{"title": "Shift (minutes)", "step": "1", "min": "-1440", "max": "1440"},
+		})
+	</div>
+	<div class="w-24">
+		@input.Input(input.Props{
+			ID:          id + "--duration",
+			Type:        input.TypeNumber,
+			Name:        "duration_minutes",
+			Placeholder: "Minutes",
+			Value:       duration,
+			Required:    true,
+			Attributes:  templ.Attributes{"title": "Minutes, 0 is until the next switch", "step": "1", "min": "0", "max": "10080"},
+		})
+	</div>
+	<div class="w-40">
+		@input.Input(input.Props{ID: id + "--notes", Name: "notes", Placeholder: "Notes", Value: notes})
+	</div>
+}
+
+// profileSwitchRow opens the profile switch's details when clicked. The delete button stops its click reaching the row.
+templ profileSwitchRow(profileSwitch *sitemodels.SiteProfileSwitch) {
+	{{ id := "site--profile-switch--" + profileSwitch.ID }}
+	@table.Row(table.RowProps{
+		ID:    id,
+		Class: "cursor-pointer",
+		Attributes: templ.Attributes{
+			"hx-get":    "/data/profile-switches/" + profileSwitch.ID,
+			"hx-target": "#modal-container",
+			"hx-swap":   "innerHTML",
+		},
+	}) {
+		@table.Cell() {
+			{ formatReadingDate(profileSwitch.OccurredAt) }
+		}
+		@table.Cell() {
+			{ profileSwitch.Name }
+		}
+		@table.Cell() {
+			{ orDash(profileSwitch.Percent) }
+		}
+		@table.Cell() {
+			{ orDash(profileSwitch.Timeshift) }
+		}
+		@table.Cell() {
+			{ orDash(profileSwitch.DurationMinutes) }
+		}
+		@table.Cell() {
+			{ orDash(profileSwitch.CreatedByDeviceName) }
+		}
+		@table.Cell() {
+			<div class="flex justify-end">
+				@button.Button(button.Props{
+					ID:      id + "--delete",
+					Variant: button.VariantGhost,
+					Size:    button.SizeIcon,
+					Attributes: templ.Attributes{
+						"title":                "Delete",
+						"onclick":              "event.stopPropagation()",
+						"hx-delete":            "/data/profile-switches/" + profileSwitch.ID,
+						"hx-confirm":           "Delete this profile switch?",
+						"hx-target":            "#toaster",
+						"hx-swap":              "beforeend",
+						"hx-on::after:request": "if (ctx.response.status < 400) this.closest('tr').remove()",
+						"hx-status:4xx":        "target:#toaster swap:beforeend",
+						"hx-status:5xx":        "target:#toaster swap:beforeend",
+					},
+				}) {
+					@icon.Trash2(icon.Props{Class: "size-4 text-red-600"})
+				}
+			</div>
+		}
+	}
+}
+
+// profileSwitchSchedule shows one of the profile's schedules, when it has it
+templ profileSwitchSchedule(id string, label string, schedule *string) {
+	if schedule != nil {
+		<div>
+			<h3 class="text-sm text-gray-500">{ label }</h3>
+			<pre id={ "site--profile-switch--details--" + id } class="mt-1 max-h-24 overflow-auto whitespace-pre-wrap break-all rounded bg-gray-50 p-2 text-xs">{ *schedule }</pre>
+		</div>
+	}
+}
+
+templ ProfileSwitchModal(profileSwitch *sitemodels.SiteProfileSwitch) {
+	<div id="site--profile-switch--details" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+		<div class="max-h-screen w-full max-w-3xl overflow-auto rounded-lg bg-white p-6 shadow-lg">
+			<h2 class="text-lg font-semibold">{ fmt.Sprintf("%s at %s%%", profileSwitch.Name, orDash(profileSwitch.Percent)) }</h2>
+			<p class="text-sm text-gray-500">{ formatReadingDate(profileSwitch.OccurredAt) }</p>
+			<form
+				id="site--profile-switch--edit"
+				class="mt-4 flex items-center gap-2"
+				hx-post={ "/data/profile-switches/" + profileSwitch.ID }
+				hx-target={ "#site--profile-switch--" + profileSwitch.ID }
+				hx-swap="outerHTML"
+				hx-status:4xx="target:#toaster swap:beforeend"
+				hx-status:5xx="target:#toaster swap:beforeend"
+			>
+				@profileSwitchInputs("site--profile-switch--edit", profileSwitch.Name, numberOr(profileSwitch.Percent, "100"), numberOr(profileSwitch.Timeshift, "0"), numberOr(profileSwitch.DurationMinutes, "0"), orEmpty(profileSwitch.Notes))
+				@button.Button(button.Props{ID: "site--profile-switch--edit--submit", Type: button.TypeSubmit}) {
+					Save
+				}
+			</form>
+			<dl class="mt-4 grid grid-cols-4 gap-x-4 gap-y-1 text-sm">
+				@readingDetail("ID", profileSwitch.ID)
+				@readingDetail("Percent", orDash(profileSwitch.Percent))
+				@readingDetail("Shift (minutes)", orDash(profileSwitch.Timeshift))
+				@readingDetail("Minutes", orDash(profileSwitch.DurationMinutes))
+				@readingDetail("DIA (hours)", orDash(profileSwitch.Dia))
+				@readingDetail("Units", orDash(profileSwitch.Units))
+				@readingDetail("Timezone", orDash(profileSwitch.Timezone))
+				@readingDetail("Carbs per Hour", orDash(profileSwitch.CarbsHr))
+				@readingDetail("Delay", orDash(profileSwitch.Delay))
+				@readingDetail("Notes", orDash(profileSwitch.Notes))
+				@readingDetail("Reason", orDash(profileSwitch.Reason))
+				@readingDetail("UTC Offset (minutes)", orDash(profileSwitch.UtcOffsetMinutes))
+				@readingDetail("App", orDash(profileSwitch.CreatedByAppName))
+				@readingDetail("Device", orDash(profileSwitch.CreatedByDeviceName))
+				@readingDetail("Created By", profileSwitch.CreatedByIdentityName)
+				@readingDetail("Created", formatReadingDate(profileSwitch.CreatedAt))
+				@readingDetail("Updated", formatReadingDate(profileSwitch.UpdatedAt))
+				@readingDetail("Updated By", orDash(profileSwitch.UpdatedByIdentityName))
+			</dl>
+			<div class="mt-4 grid grid-cols-3 gap-2">
+				@profileSwitchSchedule("basal-rates", "Basal Rates", profileSwitch.BasalRatesJson)
+				@profileSwitchSchedule("carb-ratios", "Carb Ratios", profileSwitch.CarbRatiosJson)
+				@profileSwitchSchedule("insulin-sensitivities", "Insulin Sensitivities", profileSwitch.InsulinSensitivitiesJson)
+				@profileSwitchSchedule("targets-low", "Low Targets", profileSwitch.TargetsLowJson)
+				@profileSwitchSchedule("targets-high", "High Targets", profileSwitch.TargetsHighJson)
+			</div>
+			if profileSwitch.RawJsonData != nil {
+				<pre class="mt-4 max-h-24 overflow-auto whitespace-pre-wrap break-all rounded bg-gray-50 p-2 text-xs">{ *profileSwitch.RawJsonData }</pre>
+			}
+			<div class="mt-4 flex justify-end">
+				@button.Button(button.Props{
+					ID:      "site--profile-switch--details--close",
+					Variant: button.VariantOutline,
+					Attributes: templ.Attributes{
+						"hx-get":    "/empty",
+						"hx-target": "#modal-container",
+						"hx-swap":   "innerHTML",
+					},
+				}) {
+					Close
+				}
+			</div>
+		</div>
+	</div>
+}
+
+templ ProfileSwitchCreated(profileSwitch *sitemodels.SiteProfileSwitch) {
+	@profileSwitchRow(profileSwitch)
+}
+
+// ProfileSwitchUpdated replaces the profile switch's row, closes its details and shows a toast
+templ ProfileSwitchUpdated(profileSwitch *sitemodels.SiteProfileSwitch) {
+	@profileSwitchRow(profileSwitch)
+	<div id="modal-container" hx-swap-oob="innerHTML"></div>
+	<div hx-swap-oob="beforeend:#toaster">
+		@glucoseToast("Profile Switch Updated")
+	</div>
+}
+
+templ ProfileSwitchDeleted() {
+	@glucoseToast("Profile Switch Deleted")
+}
