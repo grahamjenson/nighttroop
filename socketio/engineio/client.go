@@ -14,8 +14,10 @@ import (
 	"time"
 )
 
-// Client is an Engine.IO client over HTTP long-polling
+// Client is an Engine.IO client over HTTP long-polling, which can upgrade to a websocket, or over a websocket from the start
 type Client struct {
+	baseURL      string
+	sid          string
 	url          string
 	version      int
 	http         *http.Client
@@ -23,21 +25,39 @@ type Client struct {
 	pingInterval time.Duration
 	pingTimeout  time.Duration
 
-	post  sync.Mutex // one POST at a time keeps packets in order
-	pong  chan struct{}
-	done  chan struct{}
-	once  sync.Once
-	mu    sync.Mutex
-	cause error
+	post     sync.Mutex // one POST at a time keeps packets in order
+	pong     chan struct{}
+	done     chan struct{}
+	pollDone chan struct{} // closed when polling stops
+	once     sync.Once
+	mu       sync.Mutex
+	ws       *WebSocket // set once the client is on a websocket
+	cause    error
+}
+
+func newClient(rawURL string, version int, httpClient *http.Client, onMessage func(data string)) *Client {
+	if httpClient == nil {
+		httpClient = http.DefaultClient
+	}
+	return &Client{baseURL: rawURL, version: version, http: httpClient, onMessage: onMessage, pong: make(chan struct{}, 1), done: make(chan struct{}), pollDone: make(chan struct{})}
+}
+
+// opened reads the session from the server's open packet
+func (c *Client) opened(p Packet) error {
+	var open openPayload
+	if p.Type != Open || json.Unmarshal([]byte(p.Data), &open) != nil || open.SID == "" {
+		return fmt.Errorf("%w: bad open packet", ErrBadPacket)
+	}
+	c.sid = open.SID
+	c.pingInterval = time.Duration(open.PingInterval) * time.Millisecond
+	c.pingTimeout = time.Duration(open.PingTimeout) * time.Millisecond
+	return nil
 }
 
 // Dial makes the handshake with the server at rawURL (e.g. http://host/socket.io/) and starts polling.
 // onMessage gets the server's messages in order, one at a time, on the polling goroutine.
 func Dial(ctx context.Context, rawURL string, version int, httpClient *http.Client, onMessage func(data string)) (*Client, error) {
-	if httpClient == nil {
-		httpClient = http.DefaultClient
-	}
-	c := &Client{version: version, http: httpClient, onMessage: onMessage, pong: make(chan struct{}, 1), done: make(chan struct{})}
+	c := newClient(rawURL, version, httpClient, onMessage)
 	u, err := url.Parse(rawURL)
 	if err != nil {
 		return nil, err
@@ -51,18 +71,15 @@ func Dial(ctx context.Context, rawURL string, version int, httpClient *http.Clie
 	if err != nil {
 		return nil, err
 	}
-	if len(packets) == 0 || packets[0].Type != Open {
+	if len(packets) == 0 {
 		return nil, fmt.Errorf("%w: handshake did not open", ErrBadPacket)
 	}
-	var open openPayload
-	if err := json.Unmarshal([]byte(packets[0].Data), &open); err != nil || open.SID == "" {
-		return nil, fmt.Errorf("%w: bad open packet", ErrBadPacket)
+	if err := c.opened(packets[0]); err != nil {
+		return nil, err
 	}
-	query.Set("sid", open.SID)
+	query.Set("sid", c.sid)
 	u.RawQuery = query.Encode()
 	c.url = u.String()
-	c.pingInterval = time.Duration(open.PingInterval) * time.Millisecond
-	c.pingTimeout = time.Duration(open.PingTimeout) * time.Millisecond
 
 	// A v3 server can send messages with its open packet
 	c.handle(packets[1:])
@@ -71,6 +88,97 @@ func Dial(ctx context.Context, rawURL string, version int, httpClient *http.Clie
 		go c.pingLoop()
 	}
 	return c, nil
+}
+
+// DialOverWebSocket opens a session over a websocket, without polling first.
+// onMessage gets the server's messages in order, one at a time, on the reading goroutine.
+func DialOverWebSocket(ctx context.Context, rawURL string, version int, onMessage func(data string)) (*Client, error) {
+	c := newClient(rawURL, version, nil, onMessage)
+	close(c.pollDone)
+	ws, err := DialWebSocket(ctx, rawURL, version, "")
+	if err != nil {
+		return nil, err
+	}
+	p, err := readPacket(ctx, ws)
+	if err == nil {
+		err = c.opened(p)
+	}
+	if err != nil {
+		ws.Close()
+		return nil, err
+	}
+	c.ws = ws
+	go c.readLoop(ws)
+	if version == V3 {
+		go c.pingLoop()
+	}
+	return c, nil
+}
+
+// Upgrade moves a polling client onto a websocket: it probes the websocket, then sends upgrade,
+// and messages arrive over it once the waiting poll ends
+func (c *Client) Upgrade(ctx context.Context) error {
+	ws, err := DialWebSocket(ctx, c.baseURL, c.version, c.sid)
+	if err != nil {
+		return err
+	}
+	if err := ws.WritePacket(Packet{Type: Ping, Data: "probe"}); err != nil {
+		ws.Close()
+		return err
+	}
+	p, err := readPacket(ctx, ws)
+	if err != nil || p.Type != Pong || p.Data != "probe" {
+		ws.Close()
+		return fmt.Errorf("%w: bad probe answer", ErrBadPacket)
+	}
+
+	// Holding post waits out a POST in flight, so packets stay in order
+	c.post.Lock()
+	c.mu.Lock()
+	if c.cause != nil || c.ws != nil {
+		c.mu.Unlock()
+		c.post.Unlock()
+		ws.Close()
+		return ErrClosed
+	}
+	c.ws = ws
+	c.mu.Unlock()
+	err = ws.WritePacket(Packet{Type: Upgrade})
+	c.post.Unlock()
+	if err != nil {
+		c.stop(err)
+		return err
+	}
+	// Reading starts once polling stops, so messages are handled in order
+	<-c.pollDone
+	go c.readLoop(ws)
+	return nil
+}
+
+// readPacket reads one packet, giving up at ctx's deadline
+func readPacket(ctx context.Context, ws *WebSocket) (Packet, error) {
+	if deadline, ok := ctx.Deadline(); ok {
+		ws.conn.SetReadDeadline(deadline)
+		defer ws.conn.SetReadDeadline(time.Time{})
+	}
+	return ws.ReadPacket()
+}
+
+func (c *Client) readLoop(ws *WebSocket) {
+	for {
+		p, err := ws.ReadPacket()
+		if err != nil {
+			c.stop(err)
+			return
+		}
+		c.handle([]Packet{p})
+	}
+}
+
+func (c *Client) webSocket() *WebSocket {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.ws
 }
 
 // Done is closed when the client closes; Err then says why
@@ -82,12 +190,12 @@ func (c *Client) Err() error {
 	return c.cause
 }
 
-// Send posts a message to the server
+// Send sends a message to the server
 func (c *Client) Send(data string) error {
 	return c.send(Packet{Type: Message, Data: data})
 }
 
-// Close tells the server the client is going, then stops polling
+// Close tells the server the client is going, then stops
 func (c *Client) Close() error {
 	err := c.send(Packet{Type: Close})
 	c.stop(ErrClosed)
@@ -102,6 +210,15 @@ func (c *Client) send(packets ...Packet) error {
 	}
 	c.post.Lock()
 	defer c.post.Unlock()
+	if ws := c.webSocket(); ws != nil {
+		for _, p := range packets {
+			if err := ws.WritePacket(p); err != nil {
+				c.stop(err)
+				return err
+			}
+		}
+		return nil
+	}
 	resp, err := c.http.Post(c.url, "text/plain;charset=UTF-8", strings.NewReader(EncodePayload(packets, c.version)))
 	if err != nil {
 		return err
@@ -136,7 +253,9 @@ func (c *Client) get(ctx context.Context, rawURL string) ([]Packet, error) {
 	return DecodePayload(string(body), c.version)
 }
 
+// pollLoop polls until the client closes, or upgrades
 func (c *Client) pollLoop() {
+	defer close(c.pollDone)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	go func() {
@@ -145,6 +264,13 @@ func (c *Client) pollLoop() {
 	}()
 	for {
 		packets, err := c.get(ctx, c.url)
+		if c.webSocket() != nil {
+			// The upgrade ended this poll, or refused it if it came after
+			if err == nil {
+				c.handle(packets)
+			}
+			return
+		}
 		if err != nil {
 			c.stop(err)
 			return
@@ -201,7 +327,11 @@ func (c *Client) stop(cause error) {
 	c.once.Do(func() {
 		c.mu.Lock()
 		c.cause = cause
+		ws := c.ws
 		c.mu.Unlock()
 		close(c.done)
+		if ws != nil {
+			ws.Close()
+		}
 	})
 }
