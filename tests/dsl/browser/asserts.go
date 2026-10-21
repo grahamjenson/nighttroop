@@ -27,6 +27,8 @@ func ScreenshotPage(page playwright.Page, foldername string, testPath string, na
 		FullPage:   playwright.Bool(true),
 		Animations: playwright.ScreenshotAnimationsDisabled,
 		Caret:      playwright.ScreenshotCaretHide,
+		// A full page screenshot can take longer than the 1s default on a busy CI runner
+		Timeout: playwright.Float(screenshotWait),
 	})
 	return filepath.Join(dir, name+".png"), err
 }
@@ -124,6 +126,9 @@ type AssertVisible struct {
 // visibleWait is how long a visibility assert waits for the page to show what it checks, as after a
 // click the browser may still be loading or swapping in the next page
 const visibleWait = 5000
+
+// screenshotWait is how long a screenshot may take, in ms
+const screenshotWait = 10000
 
 // waitForVisible waits until the first element the locator finds is visible, or visibleWait passes.
 // It never fails: the assert after it checks, and fails with the page it found.
