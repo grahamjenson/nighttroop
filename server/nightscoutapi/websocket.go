@@ -14,8 +14,8 @@ import (
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/events/sitemodels"
-	"nighttroop.t1d.nz/server/nightscoutapi/collections"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsapi/nsv1"
+	"nighttroop.t1d.nz/server/nightscoutapi/nscollections"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/socketio"
@@ -46,14 +46,14 @@ const (
 type Websocket struct {
 	config      *config.ServerConfig
 	controlDB   *db.ControlDB
-	collections map[nsutils.Collection]collections.CollectionStore
+	collections map[nsutils.Collection]nscollections.CollectionStore
 
 	mu      sync.Mutex
 	servers map[string]*socketio.Server // one per site, so sites share no sessions or rooms
 }
 
 func NewWebsocket(controlDB *db.ControlDB, config *config.ServerConfig) *Websocket {
-	return &Websocket{config: config, controlDB: controlDB, collections: collections.All(), servers: map[string]*socketio.Server{}}
+	return &Websocket{config: config, controlDB: controlDB, collections: nscollections.All(), servers: map[string]*socketio.Server{}}
 }
 
 func (ws *Websocket) ServeHTTP(w http.ResponseWriter, r *http.Request) {

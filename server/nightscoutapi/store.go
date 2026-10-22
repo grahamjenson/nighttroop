@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/server/nightscoutapi/collections"
+	"nighttroop.t1d.nz/server/nightscoutapi/nscollections"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 
@@ -16,24 +16,24 @@ type NightTroopAPIStore struct {
 	controlDB *db.ControlDB
 	config    *config.ServerConfig
 
-	stores map[nsutils.Collection]collections.CollectionStore
+	stores map[nsutils.Collection]nscollections.CollectionStore
 }
 
 func NewNightTroopAPIStore(controlDB *db.ControlDB, config *config.ServerConfig) *NightTroopAPIStore {
 	return &NightTroopAPIStore{
 		controlDB: controlDB,
 		config:    config,
-		stores:    collections.All(),
+		stores:    nscollections.All(),
 	}
 }
 
-func (nts *NightTroopAPIStore) GetStore(collection nsutils.Collection) (collections.CollectionStore, bool) {
+func (nts *NightTroopAPIStore) GetStore(collection nsutils.Collection) (nscollections.CollectionStore, bool) {
 	collectionsStore, ok := nts.stores[collection]
 	return collectionsStore, ok
 }
 
 // collectionFor is the collection's store and the request's site, or the error when either is missing
-func (nts *NightTroopAPIStore) collectionFor(ctx context.Context, collection nsutils.Collection) (collections.CollectionStore, *httputils.SiteContext, *nsutils.HTTPError) {
+func (nts *NightTroopAPIStore) collectionFor(ctx context.Context, collection nsutils.Collection) (nscollections.CollectionStore, *httputils.SiteContext, *nsutils.HTTPError) {
 	collectionsStore, ok := nts.GetStore(collection)
 	if !ok {
 		return nil, nil, nsutils.ErrInvalidCollection
