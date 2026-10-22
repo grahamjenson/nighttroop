@@ -82,6 +82,9 @@ var TypeLookupMap = map[string]map[string]string{
 	"DeleteJobsByIdsParams": {
 		"Ids": "[]int64",
 	},
+	"UpdateJobStatsDailyParams": {
+		"Errors": "errors.ErrorList",
+	},
 	"UpdateSyncSourceReportsFailureParams": {
 		"ErrorMessages": "errors.ErrorList",
 		"Type":          "consts.SyncSourceType",

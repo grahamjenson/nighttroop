@@ -8,30 +8,42 @@ import (
 
 type ErrorList []string
 
-func (e ErrorList) AddAll(errs ErrorList) ErrorList {
-	seen := make(map[string]struct{}, len(e)+len(errs))
+// Stored errors are shown to people, not parsed, so they are bounded to keep every
+// errors column under its CHECK whatever an upstream service put in the message.
+// A list of MaxErrors messages of MaxErrorLength runes fits 51200 characters even
+// when JSON escapes every rune.
+const (
+	MaxErrorLength = 512
+	MaxErrors      = 16
+)
 
-	for _, err := range e {
-		seen[err] = struct{}{}
+// Truncate cuts an error message to MaxErrorLength runes, marking the cut with an ellipsis
+func Truncate(msg string) string {
+	r := []rune(msg)
+	if len(r) <= MaxErrorLength {
+		return msg
 	}
+	return string(r[:MaxErrorLength]) + "…"
+}
 
+func (e ErrorList) AddAll(errs ErrorList) ErrorList {
 	for _, err := range errs {
-		if _, exists := seen[err]; exists {
-			continue
-		}
-
-		seen[err] = struct{}{}
-		e = append(e, err)
+		e = e.Add(err)
 	}
 
 	return e
 }
 
+// Add appends a distinct, truncated error; once the list is full later errors are dropped
 func (e ErrorList) Add(err string) ErrorList {
+	err = Truncate(err)
 	for _, existing := range e {
 		if existing == err {
 			return e
 		}
+	}
+	if len(e) >= MaxErrors {
+		return e
 	}
 
 	e = append(e, err)
