@@ -1,4 +1,4 @@
-package v3
+package nsv3
 
 import (
 	"log/slog"

@@ -1,4 +1,4 @@
-package v1
+package nsv1
 
 import (
 	"net/http"
