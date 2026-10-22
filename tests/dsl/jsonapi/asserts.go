@@ -88,7 +88,8 @@ func (a AssertContains) Execute(t *testing.T, name string, statusCode int, outpu
 }
 
 // parseAssertArgs splits `<expected> <actual>`: expected is a quoted string,
-// number, true or false, and actual is a quoted lookup like "@result.id".
+// number, true, false or null (for a value that is null or missing), and actual
+// is a quoted lookup like "@result.id".
 func parseAssertArgs(s string) (any, string, error) {
 	s = strings.TrimSpace(s)
 	var expected any
@@ -104,10 +105,12 @@ func parseAssertArgs(s string) (any, string, error) {
 		s = rest
 		if raw == "true" || raw == "false" {
 			expected = raw == "true"
+		} else if raw == "null" {
+			expected = nil
 		} else if f, err := strconv.ParseFloat(raw, 64); err == nil {
 			expected = f
 		} else {
-			return nil, "", fmt.Errorf("expected value %q must be quoted, a number, true or false", raw)
+			return nil, "", fmt.Errorf("expected value %q must be quoted, a number, true, false or null", raw)
 		}
 	}
 	actual, err := strconv.Unquote(strings.TrimSpace(s))
