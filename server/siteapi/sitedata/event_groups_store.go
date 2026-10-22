@@ -82,6 +82,11 @@ func (s *EventGroupsStore) DeleteModel(ctx context.Context, tx *siteapiutils.Sto
 	if err != nil {
 		return apiutils.ErrInternalServerError
 	}
+	// Published as the bundle the Nightscout treatments show it as
+	if row, err := q.GetEventGroup(ctx, sitedb.GetEventGroupParams{ID: model.ID}); err == nil {
+		bundle := sitedb.GetEventGroupToEventGroupsBundle(*row)
+		tx.Deleted(&bundle, nil)
+	}
 	err = sitedb.SoftDeleteEventGroupAndEvents(ctx, q, model.ID, &siteContext.IdentityModel.Name)
 	if err == sql.ErrNoRows {
 		return apiutils.ErrNotFound

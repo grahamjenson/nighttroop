@@ -17,10 +17,9 @@ import (
 )
 
 func NewNightscoutRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Router {
-	store := NewNightTroopAPIStore(controlDB, config)
-	websocket := NewWebsocket(config, store)
+	websocket := NewWebsocket(controlDB, config)
 	ntDeps := nsutils.Dependencies{
-		Store: store,
+		Store: NewNightTroopAPIStore(controlDB, config),
 
 		Auth: &NightTroopAPIAuth{
 			controlDB: controlDB,

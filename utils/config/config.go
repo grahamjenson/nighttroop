@@ -13,6 +13,7 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
+	"nighttroop.t1d.nz/data/events/sitemodels"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/security"
@@ -104,6 +105,9 @@ type ServerConfig struct {
 	MaxControlDBSizeKB        int
 
 	RateLimiters *RateLimiters
+
+	// SiteModelEvents is told of every change to a site's models, for live updates and alarms
+	SiteModelEvents *sitemodels.Bus
 
 	// These keys are used to encrypt secrets in the DB and S3 at rest
 	// This has the option to add additional keys
@@ -243,6 +247,7 @@ func NewServerConfig() (*ServerConfig, error) {
 	serverConfig.HostURLWithPort = fmt.Sprintf("%s://%s:%d", serverConfig.HostProtocol, serverConfig.HostName, serverConfig.HostPort)
 
 	serverConfig.RateLimiters = newRateLimiters(serverConfig)
+	serverConfig.SiteModelEvents = sitemodels.NewBus()
 
 	serverConfig.Security = security.NewSecurityConfig(serverConfig.RawKeySets, serverConfig.Mode, serverConfig.HostName, serverConfig.IsHTTPS())
 

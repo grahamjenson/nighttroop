@@ -101,6 +101,7 @@ func (s *DeviceStatusesStore) DeleteModel(ctx context.Context, tx *siteapiutils.
 	if err != nil {
 		return apiutils.ErrInternalServerError
 	}
+	tx.Deleted(q.GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: model.ID}))
 	_, err = q.SoftDeleteDeviceReport(ctx, sitedb.SoftDeleteDeviceReportParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
 		ID:                    model.ID,

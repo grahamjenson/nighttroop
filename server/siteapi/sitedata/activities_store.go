@@ -47,6 +47,7 @@ func (s *ActivitiesStore) CreateModel(ctx context.Context, tx *siteapiutils.Stor
 	if err != nil {
 		return false, apiutils.WriteError(err, "activity")
 	}
+	tx.Created(created)
 	*model = *sitemodels.ActivityFromDB(created)
 	return true, nil
 }
@@ -76,6 +77,7 @@ func (s *ActivitiesStore) UpdateModel(ctx context.Context, tx *siteapiutils.Stor
 	if err != nil {
 		return apiutils.WriteError(err, "activity")
 	}
+	tx.Updated(updated)
 	*model = *sitemodels.ActivityFromDB(updated)
 	return nil
 }
@@ -128,6 +130,7 @@ func (s *ActivitiesStore) DeleteModel(ctx context.Context, tx *siteapiutils.Stor
 	if err != nil {
 		return apiutils.ErrInternalServerError
 	}
+	tx.Deleted(q.GetActivity(ctx, sitedb.GetActivityParams{ID: model.ID}))
 	_, err = q.SoftDeleteActivity(ctx, sitedb.SoftDeleteActivityParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
 		ID:                    model.ID,

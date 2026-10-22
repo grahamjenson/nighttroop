@@ -43,6 +43,7 @@ func (s *GlucoseReadingsStore) CreateModel(ctx context.Context, tx *siteapiutils
 	if err != nil {
 		return false, apiutils.WriteError(err, "glucose reading")
 	}
+	tx.Created(created)
 	*model = *sitemodels.GlucoseReadingFromDB(created, siteContext)
 	return true, nil
 }
@@ -75,6 +76,7 @@ func (s *GlucoseReadingsStore) UpdateModel(ctx context.Context, tx *siteapiutils
 	if err != nil {
 		return apiutils.WriteError(err, "glucose reading")
 	}
+	tx.Updated(updated)
 	*model = *sitemodels.GlucoseReadingFromDB(updated, siteContext)
 	return nil
 }
@@ -127,6 +129,7 @@ func (s *GlucoseReadingsStore) DeleteModel(ctx context.Context, tx *siteapiutils
 	if err != nil {
 		return apiutils.ErrInternalServerError
 	}
+	tx.Deleted(q.GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: model.ID}))
 	_, err = q.SoftDeleteGlucoseReading(ctx, sitedb.SoftDeleteGlucoseReadingParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
 		ID:                    model.ID,

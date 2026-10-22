@@ -2,11 +2,13 @@ package siteapiutils_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"nighttroop.t1d.nz/utils/apiutils"
 
 	"github.com/stretchr/testify/require"
+	"nighttroop.t1d.nz/data/events/sitemodels"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/consts"
@@ -30,19 +32,35 @@ func TestStoreTx(t *testing.T) {
 		}))
 	}
 
-	// An error rolls back the writes
+	var published []sitemodels.Event
+	unsubscribe := cfg.SiteModelEvents.Subscribe(siteContext.Subdomain, func(event sitemodels.Event) { published = append(published, event) })
+	defer unsubscribe()
+
+	// An error rolls back the writes, and publishes none of its changes
 	tx := siteapiutils.NewStoreTx(ctx, siteContext)
 	write(tx)
+	tx.Created("rolled back")
 	require.Equal(t, apiutils.ErrBadBody, tx.Finish(apiutils.ErrBadBody))
 	_, err = controlDB.Queries.GetSyncSource(ctx, virtual)
 	require.Error(t, err, "rolled back write should not exist")
+	require.Empty(t, published)
 
-	// Success commits the writes
+	// Success commits the writes, then publishes the changes in order; a delete whose read failed is left out
 	tx = siteapiutils.NewStoreTx(ctx, siteContext)
 	write(tx)
+	tx.Created("created")
+	tx.Updated("updated")
+	tx.Deleted("not read", errors.New("no rows"))
+	tx.Deleted("deleted", nil)
+	require.Empty(t, published, "nothing is published before the commit")
 	require.Nil(t, tx.Finish(nil))
 	_, err = controlDB.Queries.GetSyncSource(ctx, virtual)
 	require.NoError(t, err, "committed write should exist")
+	require.Equal(t, []sitemodels.Event{
+		{SiteID: siteContext.Subdomain, Action: sitemodels.Created, Model: "created"},
+		{SiteID: siteContext.Subdomain, Action: sitemodels.Updated, Model: "updated"},
+		{SiteID: siteContext.Subdomain, Action: sitemodels.Deleted, Model: "deleted"},
+	}, published)
 
 	// A transaction that is never used opens nothing and finishes cleanly
 	require.Nil(t, siteapiutils.NewStoreTx(ctx, siteContext).Finish(nil))

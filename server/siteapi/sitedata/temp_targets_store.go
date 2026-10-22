@@ -45,6 +45,7 @@ func (s *TempTargetsStore) CreateModel(ctx context.Context, tx *siteapiutils.Sto
 	if err != nil {
 		return false, apiutils.WriteError(err, "temp target")
 	}
+	tx.Created(created)
 	*model = *sitemodels.TempTargetFromDB(created, siteContext)
 	return true, nil
 }
@@ -85,6 +86,7 @@ func (s *TempTargetsStore) UpdateModel(ctx context.Context, tx *siteapiutils.Sto
 	if err != nil {
 		return apiutils.WriteError(err, "temp target")
 	}
+	tx.Updated(updated)
 	*model = *sitemodels.TempTargetFromDB(updated, siteContext)
 	return nil
 }
@@ -137,6 +139,7 @@ func (s *TempTargetsStore) DeleteModel(ctx context.Context, tx *siteapiutils.Sto
 	if err != nil {
 		return apiutils.ErrInternalServerError
 	}
+	tx.Deleted(q.GetTempTarget(ctx, sitedb.GetTempTargetParams{ID: model.ID}))
 	_, err = q.SoftDeleteTempTarget(ctx, sitedb.SoftDeleteTempTargetParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
 		ID:                    model.ID,

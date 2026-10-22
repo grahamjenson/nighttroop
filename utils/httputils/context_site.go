@@ -5,6 +5,7 @@ import (
 	"log/slog"
 
 	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/data/events/sitemodels"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/settings"
@@ -58,6 +59,13 @@ func CreateSiteContext(ctx context.Context, config *config.ServerConfig, control
 	siteContext.ContentType = contentType
 
 	return context.WithValue(ctx, siteContextKey, siteContext)
+}
+
+// PublishModelChange tells the site's model events of a committed change to one of its models, the sitedb row
+func (s *SiteContext) PublishModelChange(action sitemodels.Action, model any) {
+	if s.Config != nil && s.Config.SiteModelEvents != nil {
+		s.Config.SiteModelEvents.Publish(s.Subdomain, sitemodels.Event{SiteID: s.Subdomain, Action: action, Model: model})
+	}
 }
 
 // //

@@ -49,6 +49,7 @@ func (s *NotificationEventsStore) CreateModel(ctx context.Context, tx *siteapiut
 	if err != nil {
 		return false, apiutils.WriteError(err, "notification")
 	}
+	tx.Created(created)
 	*model = *sitemodels.NotificationEventFromDB(created)
 	return true, nil
 }
@@ -78,6 +79,7 @@ func (s *NotificationEventsStore) UpdateModel(ctx context.Context, tx *siteapiut
 	if err != nil {
 		return apiutils.WriteError(err, "notification")
 	}
+	tx.Updated(updated)
 	*model = *sitemodels.NotificationEventFromDB(updated)
 	return nil
 }
@@ -130,6 +132,7 @@ func (s *NotificationEventsStore) DeleteModel(ctx context.Context, tx *siteapiut
 	if err != nil {
 		return apiutils.ErrInternalServerError
 	}
+	tx.Deleted(q.GetNotificationEvent(ctx, sitedb.GetNotificationEventParams{ID: model.ID}))
 	_, err = q.SoftDeleteNotificationEvent(ctx, sitedb.SoftDeleteNotificationEventParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
 		ID:                    model.ID,
