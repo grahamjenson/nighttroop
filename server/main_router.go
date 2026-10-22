@@ -23,6 +23,12 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 	public := NewPublicRouter(controlDB, config)
 	nightscoutRouter := nightscoutapi.NewNightscoutRouter(controlDB, config)
 
+	// Only the configured host is served; loopback names are for local runs only
+	validHostnames := []string{config.HostName}
+	if config.IsDevOrTest() {
+		validHostnames = append(validHostnames, "localhost", "127.0.0.1")
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
@@ -46,7 +52,7 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 		if err != nil {
 			host = r.Host
 		}
-		routeTarget, siteSubdomain, err := GetRouteTargetFromSubdomain(host, []string{config.HostName, "localhost", "t1d.nz", "127.0.0.1"})
+		routeTarget, siteSubdomain, err := GetRouteTargetFromSubdomain(host, validHostnames)
 		if err != nil {
 			slog.Error("Main router 404 for host header", "host", host, "error", err)
 			http.NotFound(w, r)
@@ -105,9 +111,11 @@ const (
 
 func GetRouteTargetFromSubdomain(host_header string, validHostnames []string) (RouteTarget, string, error) {
 
+	// A fully qualified host ends with a dot; match only on whole labels
+	host_header = strings.TrimSuffix(host_header, ".")
 	allowedHost := false
 	for _, hostname := range validHostnames {
-		if strings.HasSuffix(host_header, hostname) {
+		if host_header == hostname || strings.HasSuffix(host_header, "."+hostname) {
 			allowedHost = true
 			break
 		}

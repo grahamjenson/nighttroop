@@ -7,6 +7,7 @@ import (
 
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/errors"
 )
 
 // This is a background job runner that loops over users and syncs some data (initially just entries) from Nighscout and/or Dexcom.
@@ -61,20 +62,8 @@ func (b *SyncJobManager) SyncUserData(syncInfo *SyncJobInfo) error {
 	elapsedTimeMS := time.Since(startTime).Milliseconds()
 
 	if err != nil {
-		errMsg := err.Error()
-		if syncInfo.firstSync {
-			errMsg = "The first sync failed, so syncing has been turned off. Check the details and save to try again. " + errMsg
-		}
 		slog.Error("error syncing user data", "site_id", syncInfo.SiteID, "sync_type", syncInfo.Type, "error", err)
-		updateError := b.controlDB.Queries.UpdateSyncSourceReportsFailure(context.TODO(), controldb.UpdateSyncSourceReportsFailureParams{
-			ErrorMessages: []string{errMsg},
-			ElapsedMs:     &elapsedTimeMS,
-			Type:          syncInfo.Type,
-			SiteID:        syncInfo.SiteID,
-		})
-		if updateError != nil {
-			slog.Error("error updating sync source report with failure", "site_id", syncInfo.SiteID, "sync_type", syncInfo.Type, "error", updateError)
-		}
+		b.recordSyncFailure(syncInfo, err, elapsedTimeMS)
 		return err
 	}
 
@@ -92,4 +81,22 @@ func (b *SyncJobManager) SyncUserData(syncInfo *SyncJobInfo) error {
 	return nil
 	// TODO this is where we will sync data from the user DB to the control DB, and also do any processing needed
 	// This will be called on a schedule, and also on demand when a user logs in or something like that
+}
+
+// recordSyncFailure stores the failure so the source backs off. The message is truncated
+// first: an oversized one would fail the row's CHECK and leave the source retrying every tick.
+func (b *SyncJobManager) recordSyncFailure(syncInfo *SyncJobInfo, err error, elapsedTimeMS int64) {
+	errMsg := errors.Truncate(err.Error())
+	if syncInfo.firstSync {
+		errMsg = "The first sync failed, so syncing has been turned off. Check the details and save to try again. " + errMsg
+	}
+	updateError := b.controlDB.Queries.UpdateSyncSourceReportsFailure(context.TODO(), controldb.UpdateSyncSourceReportsFailureParams{
+		ErrorMessages: errors.ErrorList{errMsg},
+		ElapsedMs:     &elapsedTimeMS,
+		Type:          syncInfo.Type,
+		SiteID:        syncInfo.SiteID,
+	})
+	if updateError != nil {
+		slog.Error("error updating sync source report with failure", "site_id", syncInfo.SiteID, "sync_type", syncInfo.Type, "error", updateError)
+	}
 }

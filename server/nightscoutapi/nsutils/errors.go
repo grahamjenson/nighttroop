@@ -92,6 +92,12 @@ var (
 	BadGlucoseError = &HTTPError{Status: http.StatusBadRequest, Message: fmt.Sprintf("Bad or missing glucose: sgv or mbg must be more than 0 and at most %v mg/dL", consts.MaxGlucoseMgdl)}
 )
 
+// Too Many Rows Errors
+var (
+	ErrTooManyRecords  = &HTTPError{Status: http.StatusBadRequest, Message: fmt.Sprintf("Too many records: at most %d per request", consts.MaxBatchRecords)}
+	ErrTooManyProfiles = &HTTPError{Status: http.StatusBadRequest, Message: fmt.Sprintf("Too many profiles: at most %d in a store", consts.MaxProfilesPerStore)}
+)
+
 // Bad Updates
 var (
 	ErrCannotChangeApp        = &HTTPError{Status: http.StatusBadRequest, Message: "Field app cannot be modified by the client"}

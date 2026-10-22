@@ -277,12 +277,12 @@ func (m *UpdateJobStatsDailyParams) SetDurationSquaredSum(v float64) {
 }
 
 // GetErrors returns the Errors value.
-func (m UpdateJobStatsDailyParams) GetErrors() interface{} {
+func (m UpdateJobStatsDailyParams) GetErrors() errors.ErrorList {
 	return m.Errors
 }
 
 // SetErrors sets the Errors value and returns the updated UpdateJobStatsDailyParams.
-func (m *UpdateJobStatsDailyParams) SetErrors(v interface{}) {
+func (m *UpdateJobStatsDailyParams) SetErrors(v errors.ErrorList) {
 	m.Errors = v
 }
 

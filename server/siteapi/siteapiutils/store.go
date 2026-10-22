@@ -20,7 +20,7 @@ import (
 ///////
 
 func CreateHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerConfig, store *Rows[R, M, Q]) http.HandlerFunc {
-	creator := as[RowCreator[R, M, Q]](store, "create")
+	creator := storeCan[RowCreator[R, M, Q]](store, "create")
 	return func(w http.ResponseWriter, r *http.Request) {
 		siteContext := SiteContextFor(w, r, store.GetName(), ActionCreate)
 		if siteContext == nil {
@@ -50,7 +50,7 @@ func CreateHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerCo
 ///////
 
 func UpdateHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerConfig, store *Rows[R, M, Q]) http.HandlerFunc {
-	updater := as[RowUpdater[R, M, Q]](store, "update")
+	updater := storeCan[RowUpdater[R, M, Q]](store, "update")
 	return func(w http.ResponseWriter, r *http.Request) {
 		siteContext := SiteContextFor(w, r, store.GetName(), ActionUpdate)
 		if siteContext == nil {
@@ -91,8 +91,8 @@ func UpdateHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerCo
 
 // UpsertHandler creates the model with the URL's id, or updates it when there is one
 func UpsertHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerConfig, store *Rows[R, M, Q]) http.HandlerFunc {
-	creator := as[RowCreator[R, M, Q]](store, "create")
-	updater := as[RowUpdater[R, M, Q]](store, "update")
+	creator := storeCan[RowCreator[R, M, Q]](store, "create")
+	updater := storeCan[RowUpdater[R, M, Q]](store, "update")
 	return func(w http.ResponseWriter, r *http.Request) {
 		siteContext := SiteContextFor(w, r, store.GetName(), ActionCreate, ActionUpdate)
 		if siteContext == nil {
@@ -133,7 +133,7 @@ func UpsertHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerCo
 /////
 
 func SearchHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerConfig, store *Rows[R, M, Q]) http.HandlerFunc {
-	searcher := as[RowSearcher[R, M, Q]](store, "search")
+	searcher := storeCan[RowSearcher[R, M, Q]](store, "search")
 	return func(w http.ResponseWriter, r *http.Request) {
 		siteContext := SiteContextFor(w, r, store.GetName(), ActionSearch)
 		if siteContext == nil {
@@ -158,7 +158,7 @@ func SearchHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerCo
 }
 
 func GetHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerConfig, store *Rows[R, M, Q]) http.HandlerFunc {
-	getter := as[RowGetter[M]](store, "get")
+	getter := storeCan[RowGetter[M]](store, "get")
 	return func(w http.ResponseWriter, r *http.Request) {
 		siteContext := SiteContextFor(w, r, store.GetName(), ActionGet)
 		if siteContext == nil {
@@ -186,7 +186,7 @@ func GetHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerConfi
 // ////
 
 func DeleteHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerConfig, store *Rows[R, M, Q]) http.HandlerFunc {
-	deleter := as[RowDeleter[R, M, Q]](store, "delete")
+	deleter := storeCan[RowDeleter[R, M, Q]](store, "delete")
 	return func(w http.ResponseWriter, r *http.Request) {
 		siteContext := SiteContextFor(w, r, store.GetName(), ActionDelete)
 		if siteContext == nil {

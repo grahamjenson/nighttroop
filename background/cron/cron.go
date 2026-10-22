@@ -61,7 +61,7 @@ func (c *ACron) RawAddFunc(name string, spec string, cmd func() error) (cron.Ent
 				c.jobsDB.Queries.InsertFailedCronJob(context.TODO(), jobsdb.InsertFailedCronJobParams{
 					Job:               name,
 					ConsumerFetchedAt: startedAt,
-					Errors:            errors.ErrorList{err.Error()},
+					Errors:            errors.ErrorList{}.Add(err.Error()),
 				})
 			}
 		}()
@@ -75,7 +75,7 @@ func (c *ACron) RawAddFunc(name string, spec string, cmd func() error) (cron.Ent
 				c.jobsDB.Queries.InsertFailedCronJob(context.TODO(), jobsdb.InsertFailedCronJobParams{
 					Job:               name,
 					ConsumerFetchedAt: startedAt,
-					Errors:            errors.ErrorList{err.Error()},
+					Errors:            errors.ErrorList{}.Add(err.Error()),
 				})
 			} else {
 				c.jobsDB.Queries.InsertSuccessfulCronJob(context.TODO(), jobsdb.InsertSuccessfulCronJobParams{

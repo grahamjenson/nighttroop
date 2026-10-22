@@ -37,7 +37,7 @@ func TestStoreTx(t *testing.T) {
 	// An error rolls back the writes, and publishes none of its changes
 	tx := NewStoreTx(ctx, siteContext)
 	write(tx)
-	tx.changed(sitemodels.Created, "rolled back")
+	tx.reportChange(sitemodels.Created, "rolled back")
 	require.Equal(t, apiutils.ErrBadBody, tx.Finish(apiutils.ErrBadBody))
 	_, err = controlDB.Queries.GetSyncSource(ctx, virtual)
 	require.Error(t, err, "rolled back write should not exist")
@@ -46,9 +46,9 @@ func TestStoreTx(t *testing.T) {
 	// Success commits the writes, then publishes the changes in order
 	tx = NewStoreTx(ctx, siteContext)
 	write(tx)
-	tx.changed(sitemodels.Created, "created")
-	tx.changed(sitemodels.Updated, "updated")
-	tx.changed(sitemodels.Deleted, "deleted")
+	tx.reportChange(sitemodels.Created, "created")
+	tx.reportChange(sitemodels.Updated, "updated")
+	tx.reportChange(sitemodels.Deleted, "deleted")
 	require.Empty(t, published, "nothing is published before the commit")
 	require.Nil(t, tx.Finish(nil))
 	_, err = controlDB.Queries.GetSyncSource(ctx, virtual)
