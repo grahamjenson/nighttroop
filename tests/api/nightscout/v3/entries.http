@@ -36,6 +36,13 @@ ASSERT_EXISTS "@result.utcOffset"
 ASSERT_EXISTS "@result.srvCreated"
 ASSERT_EXISTS "@result.srvModified"
 
+// A create still needs sgv or mbg
+NAME create_entry_without_glucose_v3
+POST http://{{ site }}/api/v3/entries
+H Authorization: Bearer {{ jwt }}
+B { "type": "sgv", "direction": "Flat" }
+ASSERT_STATUS 400
+
 
 //////
 // READ
@@ -91,6 +98,19 @@ H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT_EQUALS 103 "@result.sgv"
 ASSERT_EQUALS "sgv" "@result.type"
+
+// A patch without sgv or mbg leaves the reading as it is
+NAME patch_entry_direction_only_v3
+PATCH http://{{ site }}/api/v3/entries/{{ dig "create_entry_v3.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+B { "direction": "Flat" }
+ASSERT_STATUS 200
+
+NAME check_patch_entry_direction_only_v3
+GET http://{{ site }}/api/v3/entries/{{ dig "create_entry_v3.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 103 "@result.sgv"
 
 NAME update_entries_force_create_v3
 PUT http://{{ site }}/api/v3/entries/AnotherFunID
