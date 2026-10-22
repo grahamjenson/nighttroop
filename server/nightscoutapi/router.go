@@ -8,9 +8,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
-	v1 "nighttroop.t1d.nz/server/nightscoutapi/api/v1"
-	v2 "nighttroop.t1d.nz/server/nightscoutapi/api/v2"
-	v3 "nighttroop.t1d.nz/server/nightscoutapi/api/v3"
+	"nighttroop.t1d.nz/server/nightscoutapi/nsapi/nsv1"
+	"nighttroop.t1d.nz/server/nightscoutapi/nsapi/nsv2"
+	"nighttroop.t1d.nz/server/nightscoutapi/nsapi/nsv3"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -48,9 +48,9 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config *config.ServerConfig) c
 		r.Get("/api/v3/authorization/request/token={token}", NightscoutAuthRoute(controlDB, config))
 		r.Get("/api/v3/authorization/request/{token}", NightscoutAuthRoute(controlDB, config))
 
-		v1Router := v1.NewNightscoutV1Router(ntDeps)
-		v2Router := v2.NewNightscoutV2Router(ntDeps)
-		v3Router := v3.NewNightscoutV3Router(ntDeps)
+		v1Router := nsv1.NewNightscoutV1Router(ntDeps)
+		v2Router := nsv2.NewNightscoutV2Router(ntDeps)
+		v3Router := nsv3.NewNightscoutV3Router(ntDeps)
 
 		r.Mount("/api/v1", v1Router)
 		r.Mount("/api/v2", v2Router)

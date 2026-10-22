@@ -1,4 +1,4 @@
-package v2
+package nsv2
 
 import (
 	"fmt"

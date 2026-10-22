@@ -14,8 +14,8 @@ import (
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/events/sitemodels"
-	v1 "nighttroop.t1d.nz/server/nightscoutapi/api/v1"
 	"nighttroop.t1d.nz/server/nightscoutapi/collections"
+	"nighttroop.t1d.nz/server/nightscoutapi/nsapi/nsv1"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/socketio"
@@ -119,7 +119,7 @@ func (ws *Websocket) connected(main *socketio.Namespace, socket *socketio.Socket
 			}
 			data := ws.recentData(ctx, time.Duration(hours*float64(time.Hour)))
 			if message.Status {
-				data["status"] = v1.Status()
+				data["status"] = nsv1.Status()
 			}
 			socket.Emit("dataUpdate", data)
 		}
