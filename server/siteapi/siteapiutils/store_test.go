@@ -7,8 +7,11 @@ import (
 	"testing"
 
 	"github.com/a-h/templ"
+	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/sql/sitedb"
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/siteapi/sitedata"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -45,4 +48,29 @@ func TestHandlerForWhatTheStoreCannotDo(t *testing.T) {
 	require.NotPanics(t, func() { siteapiutils.SearchHandler(nil, nil, store) })
 	require.PanicsWithValue(t, "the glucose_readings store cannot create", func() { siteapiutils.CreateHandler(nil, nil, store) })
 	require.PanicsWithValue(t, "the glucose_readings store cannot delete", func() { siteapiutils.DeleteHandler(nil, nil, store) })
+}
+
+// routes are the method and pattern of each route on the router
+func routes(t *testing.T, r chi.Router) []string {
+	var found []string
+	require.NoError(t, chi.Walk(r, func(method, route string, _ http.Handler, _ ...func(http.Handler) http.Handler) error {
+		found = append(found, method+" "+route)
+		return nil
+	}))
+	return found
+}
+
+// Routes registers a route for each thing the store can do, and none for what it cannot
+func TestRoutes(t *testing.T) {
+	r := chi.NewRouter()
+	siteapiutils.Routes(r, "/data/glucose", nil, nil, siteapiutils.SiteRows[sitedb.GlucoseReading, sitemodels.SiteGlucoseReading](&sitedata.GlucoseReadingsStore{}))
+	require.ElementsMatch(t, []string{"GET /data/glucose", "POST /data/glucose", "GET /data/glucose/{id}", "POST /data/glucose/{id}", "DELETE /data/glucose/{id}"}, routes(t, r))
+
+	r = chi.NewRouter()
+	siteapiutils.Routes(r, "/data/event-groups", nil, nil, siteapiutils.SiteRows[sitedb.EventGroupsBundle, sitemodels.SiteEventGroup](&sitedata.EventGroupsStore{}))
+	require.ElementsMatch(t, []string{"GET /data/event-groups", "GET /data/event-groups/{id}", "DELETE /data/event-groups/{id}"}, routes(t, r))
+
+	r = chi.NewRouter()
+	siteapiutils.Routes(r, "/data/glucose", nil, nil, siteapiutils.SiteRows[struct{}, struct{}](noSiteStore{}))
+	require.Equal(t, []string{"GET /data/glucose"}, routes(t, r))
 }

@@ -232,6 +232,30 @@ func DeleteHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerCo
 }
 
 // ////
+// ROUTES
+// ////
+
+// Routes registers the routes for what the store can do: search and create at path, and get, update and delete
+// at path/{id}
+func Routes[R, M, Q any](r chi.Router, path string, controlDB *db.ControlDB, config *config.ServerConfig, store *Rows[R, M, Q]) {
+	if _, ok := store.store.(RowSearcher[R, M, Q]); ok {
+		r.Get(path, SearchHandler(controlDB, config, store))
+	}
+	if _, ok := store.store.(RowCreator[R, M, Q]); ok {
+		r.Post(path, CreateHandler(controlDB, config, store))
+	}
+	if _, ok := store.store.(RowGetter[M]); ok {
+		r.Get(path+"/{id}", GetHandler(controlDB, config, store))
+	}
+	if _, ok := store.store.(RowUpdater[R, M, Q]); ok {
+		r.Post(path+"/{id}", UpdateHandler(controlDB, config, store))
+	}
+	if _, ok := store.store.(RowDeleter[R, M, Q]); ok {
+		r.Delete(path+"/{id}", DeleteHandler(controlDB, config, store))
+	}
+}
+
+// ////
 // UTILS
 // ////
 

@@ -63,77 +63,37 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Get("/summary", sitesummary.GetSummaryHandler(controlDB, config))
 
 		// Data Glucose Readings
-		r.Get("/data/glucose", siteapiutils.SearchHandler(controlDB, config, glucoseReadingsStore))
-		r.Get("/data/glucose/{id}", siteapiutils.GetHandler(controlDB, config, glucoseReadingsStore))
-		r.Post("/data/glucose", siteapiutils.CreateHandler(controlDB, config, glucoseReadingsStore))
-		r.Post("/data/glucose/{id}", siteapiutils.UpdateHandler(controlDB, config, glucoseReadingsStore))
-		r.Delete("/data/glucose/{id}", siteapiutils.DeleteHandler(controlDB, config, glucoseReadingsStore))
+		siteapiutils.Routes(r, "/data/glucose", controlDB, config, glucoseReadingsStore)
 
 		// Data Temp Targets
-		r.Get("/data/temp-targets", siteapiutils.SearchHandler(controlDB, config, tempTargetsStore))
-		r.Get("/data/temp-targets/{id}", siteapiutils.GetHandler(controlDB, config, tempTargetsStore))
-		r.Post("/data/temp-targets", siteapiutils.CreateHandler(controlDB, config, tempTargetsStore))
-		r.Post("/data/temp-targets/{id}", siteapiutils.UpdateHandler(controlDB, config, tempTargetsStore))
-		r.Delete("/data/temp-targets/{id}", siteapiutils.DeleteHandler(controlDB, config, tempTargetsStore))
+		siteapiutils.Routes(r, "/data/temp-targets", controlDB, config, tempTargetsStore)
 
 		// Data Temp Basals
-		r.Get("/data/temp-basals", siteapiutils.SearchHandler(controlDB, config, tempBasalsStore))
-		r.Get("/data/temp-basals/{id}", siteapiutils.GetHandler(controlDB, config, tempBasalsStore))
-		r.Post("/data/temp-basals", siteapiutils.CreateHandler(controlDB, config, tempBasalsStore))
-		r.Post("/data/temp-basals/{id}", siteapiutils.UpdateHandler(controlDB, config, tempBasalsStore))
-		r.Delete("/data/temp-basals/{id}", siteapiutils.DeleteHandler(controlDB, config, tempBasalsStore))
+		siteapiutils.Routes(r, "/data/temp-basals", controlDB, config, tempBasalsStore)
 
 		// Data Activities
-		r.Get("/data/activities", siteapiutils.SearchHandler(controlDB, config, activitiesStore))
-		r.Get("/data/activities/{id}", siteapiutils.GetHandler(controlDB, config, activitiesStore))
-		r.Post("/data/activities", siteapiutils.CreateHandler(controlDB, config, activitiesStore))
-		r.Post("/data/activities/{id}", siteapiutils.UpdateHandler(controlDB, config, activitiesStore))
-		r.Delete("/data/activities/{id}", siteapiutils.DeleteHandler(controlDB, config, activitiesStore))
+		siteapiutils.Routes(r, "/data/activities", controlDB, config, activitiesStore)
 
 		// Data Component Events
-		r.Get("/data/component-events", siteapiutils.SearchHandler(controlDB, config, componentEventsStore))
-		r.Get("/data/component-events/{id}", siteapiutils.GetHandler(controlDB, config, componentEventsStore))
-		r.Post("/data/component-events", siteapiutils.CreateHandler(controlDB, config, componentEventsStore))
-		r.Post("/data/component-events/{id}", siteapiutils.UpdateHandler(controlDB, config, componentEventsStore))
-		r.Delete("/data/component-events/{id}", siteapiutils.DeleteHandler(controlDB, config, componentEventsStore))
+		siteapiutils.Routes(r, "/data/component-events", controlDB, config, componentEventsStore)
 
 		// Data Notifications
-		r.Get("/data/notifications", siteapiutils.SearchHandler(controlDB, config, notificationEventsStore))
-		r.Get("/data/notifications/{id}", siteapiutils.GetHandler(controlDB, config, notificationEventsStore))
-		r.Post("/data/notifications", siteapiutils.CreateHandler(controlDB, config, notificationEventsStore))
-		r.Post("/data/notifications/{id}", siteapiutils.UpdateHandler(controlDB, config, notificationEventsStore))
-		r.Delete("/data/notifications/{id}", siteapiutils.DeleteHandler(controlDB, config, notificationEventsStore))
+		siteapiutils.Routes(r, "/data/notifications", controlDB, config, notificationEventsStore)
 
 		// Data Profile Switches
-		r.Get("/data/profile-switches", siteapiutils.SearchHandler(controlDB, config, profileSwitchesStore))
-		r.Get("/data/profile-switches/{id}", siteapiutils.GetHandler(controlDB, config, profileSwitchesStore))
-		r.Post("/data/profile-switches", siteapiutils.CreateHandler(controlDB, config, profileSwitchesStore))
-		r.Post("/data/profile-switches/{id}", siteapiutils.UpdateHandler(controlDB, config, profileSwitchesStore))
-		r.Delete("/data/profile-switches/{id}", siteapiutils.DeleteHandler(controlDB, config, profileSwitchesStore))
+		siteapiutils.Routes(r, "/data/profile-switches", controlDB, config, profileSwitchesStore)
 
 		// Data Event Groups, which the Nightscout treatments API creates and changes
-		r.Get("/data/event-groups", siteapiutils.SearchHandler(controlDB, config, eventGroupsStore))
-		r.Get("/data/event-groups/{id}", siteapiutils.GetHandler(controlDB, config, eventGroupsStore))
-		r.Delete("/data/event-groups/{id}", siteapiutils.DeleteHandler(controlDB, config, eventGroupsStore))
+		siteapiutils.Routes(r, "/data/event-groups", controlDB, config, eventGroupsStore)
 
 		// Data Insulin Doses
-		r.Get("/data/insulin", siteapiutils.SearchHandler(controlDB, config, insulinDosesStore))
-		r.Get("/data/insulin/{id}", siteapiutils.GetHandler(controlDB, config, insulinDosesStore))
-		r.Post("/data/insulin", siteapiutils.CreateHandler(controlDB, config, insulinDosesStore))
-		r.Post("/data/insulin/{id}", siteapiutils.UpdateHandler(controlDB, config, insulinDosesStore))
-		r.Delete("/data/insulin/{id}", siteapiutils.DeleteHandler(controlDB, config, insulinDosesStore))
+		siteapiutils.Routes(r, "/data/insulin", controlDB, config, insulinDosesStore)
 
 		// Data Food Intakes
-		r.Get("/data/food", siteapiutils.SearchHandler(controlDB, config, foodIntakesStore))
-		r.Get("/data/food/{id}", siteapiutils.GetHandler(controlDB, config, foodIntakesStore))
-		r.Post("/data/food", siteapiutils.CreateHandler(controlDB, config, foodIntakesStore))
-		r.Post("/data/food/{id}", siteapiutils.UpdateHandler(controlDB, config, foodIntakesStore))
-		r.Delete("/data/food/{id}", siteapiutils.DeleteHandler(controlDB, config, foodIntakesStore))
+		siteapiutils.Routes(r, "/data/food", controlDB, config, foodIntakesStore)
 
 		// Data Device Statuses
-		r.Get("/data/device-status", siteapiutils.SearchHandler(controlDB, config, deviceStatusesStore))
-		r.Get("/data/device-status/{id}", siteapiutils.GetHandler(controlDB, config, deviceStatusesStore))
-		r.Delete("/data/device-status/{id}", siteapiutils.DeleteHandler(controlDB, config, deviceStatusesStore))
+		siteapiutils.Routes(r, "/data/device-status", controlDB, config, deviceStatusesStore)
 
 		// Settings Sync
 		r.Get("/settings/sync", siteapiutils.SearchHandler(controlDB, config, syncSettingsStore))
@@ -141,11 +101,7 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Delete("/settings/sync/{id}", siteapiutils.DeleteHandler(controlDB, config, syncSettingsStore))
 
 		// Settings Identities
-		r.Get("/settings/identities", siteapiutils.SearchHandler(controlDB, config, identitiesStore))
-		r.Get("/settings/identities/{id}", siteapiutils.GetHandler(controlDB, config, identitiesStore))
-		r.Post("/settings/identities", siteapiutils.CreateHandler(controlDB, config, identitiesStore))
-		r.Post("/settings/identities/{id}", siteapiutils.UpdateHandler(controlDB, config, identitiesStore))
-		r.Delete("/settings/identities/{id}", siteapiutils.DeleteHandler(controlDB, config, identitiesStore))
+		siteapiutils.Routes(r, "/settings/identities", controlDB, config, identitiesStore)
 
 		// Settings for the site (admins only) and the signed in identity
 		// One page shows the site's settings beside an admin's own, or just the identity's
