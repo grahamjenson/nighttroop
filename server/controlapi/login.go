@@ -7,11 +7,13 @@ import (
 	"log/slog"
 	"net/http"
 	"time"
+	"unicode/utf8"
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/server/components/control_templ/control_login_templ"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -81,6 +83,12 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 			totpToken = r.FormValue("totp")
 		default:
 			errors.GenericAdminLoginError(w, r, fmt.Errorf("unsupported Content-Type: %s", string(contentType)))
+			return
+		}
+
+		// Reject names no identity can have before they reach the rate limiter, which keys on them
+		if utf8.RuneCountInString(username) > consts.MAX_IDENTITY_NAME_LENGTH {
+			errors.GenericAdminLoginError(w, r, fmt.Errorf("username longer than %d characters", consts.MAX_IDENTITY_NAME_LENGTH))
 			return
 		}
 
