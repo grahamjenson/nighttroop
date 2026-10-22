@@ -73,17 +73,17 @@ func (t *Entry) UnmarshalJSON(data []byte) error {
 		t.Identifier = aux.ID
 	}
 
-	// Setting the value
+	// Setting the value, only when sgv or mbg is given so a patch without them leaves it as it is
 	if t.Mgdl == nil {
-		var res types.FlexibleFloat64
-		if t.SGV != nil {
-			res = *t.SGV
-		} else if t.MBG != nil {
-			res = *t.MBG
+		value := t.SGV
+		if value == nil {
+			value = t.MBG
 		}
 
-		res = types.FlexibleFloat64(t.Units.ToMGDL(res.Float64()))
-		t.Mgdl = &res
+		if value != nil {
+			res := types.FlexibleFloat64(t.Units.ToMGDL(value.Float64()))
+			t.Mgdl = &res
+		}
 	}
 
 	// We Just need Date and UtcOffset to be populated
