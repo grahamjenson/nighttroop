@@ -23,14 +23,14 @@ var (
 )
 
 type readDeleteRows[R, M any] interface {
-	siteapiutils.RowStore[R, M, *sitedb.Queries]
-	siteapiutils.RowGetter[M]
-	siteapiutils.RowSearcher[R, M, *sitedb.Queries]
-	siteapiutils.RowDeleter[R, M, *sitedb.Queries]
+	siteapiutils.Store[R, M, *sitedb.Queries]
+	siteapiutils.Getter[M]
+	siteapiutils.Searcher[R, M, *sitedb.Queries]
+	siteapiutils.Deleter[R, M, *sitedb.Queries]
 }
 
 type readWriteRows[R, M any] interface {
 	readDeleteRows[R, M]
-	siteapiutils.RowCreator[R, M, *sitedb.Queries]
-	siteapiutils.RowUpdater[R, M, *sitedb.Queries]
+	siteapiutils.Creator[R, M, *sitedb.Queries]
+	siteapiutils.Updater[R, M, *sitedb.Queries]
 }

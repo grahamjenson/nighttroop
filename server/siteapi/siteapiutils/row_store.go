@@ -14,57 +14,57 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-// RowStore is a site store. Its methods read and write rows (R) with the queries (Q) of the database they are in,
+// Store is a site store. Its methods read and write rows (R) with the queries (Q) of the database they are in,
 // and return the database's errors; Rows is the store the handlers use, which shows rows as site models (M),
 // answers errors, and publishes each change to the site's own rows. A store without rows of its own, such as
 // settings, uses its model as its row.
-type RowStore[R, M, Q any] interface {
+type Store[R, M, Q any] interface {
 	GetName() string
 	ToModel(row *R, siteContext *httputils.SiteContext) *M
 	GetRow(ctx context.Context, q Q, id string, siteContext *httputils.SiteContext) (*R, error)
 }
 
-// RowGetter, RowSearcher, RowCreator, RowUpdater and RowDeleter are what a RowStore can do, each with its HTMX
-// response. An *apiutils.HTTPError their methods return, such as a value out of range, is answered as it is.
-type RowGetter[M any] interface {
+// Getter, Searcher, Creator, Updater and Deleter are what a Store can do, each with its HTMX response. An
+// *apiutils.HTTPError their methods return, such as a value out of range, is answered as it is.
+type Getter[M any] interface {
 	GetHTMXResponse(model *M) templ.Component
 }
 
-type RowSearcher[R, M, Q any] interface {
+type Searcher[R, M, Q any] interface {
 	SearchRows(ctx context.Context, q Q, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*R, error)
 	SearchHTMXResponse(models []*M, query *apiutils.Query) templ.Component
 }
 
-// RowCreator's id is the one chosen by an upsert, and nil for a create
-type RowCreator[R, M, Q any] interface {
+// Creator's id is the one chosen by an upsert, and nil for a create
+type Creator[R, M, Q any] interface {
 	CreateRow(ctx context.Context, q Q, id *string, siteContext *httputils.SiteContext, model *M) (*R, error)
 	CreateHTMXResponse(model *M) templ.Component
 }
 
-type RowUpdater[R, M, Q any] interface {
+type Updater[R, M, Q any] interface {
 	UpdateRow(ctx context.Context, q Q, siteContext *httputils.SiteContext, oldModel *M, model *M) (*R, error)
 	UpdateHTMXResponse(model *M) templ.Component
 }
 
-type RowDeleter[R, M, Q any] interface {
+type Deleter[R, M, Q any] interface {
 	DeleteRow(ctx context.Context, q Q, id string, siteContext *httputils.SiteContext) error
 	DeleteHTMXResponse(model *M) templ.Component
 }
 
 // Rows is the store the handlers use
 type Rows[R, M, Q any] struct {
-	store          RowStore[R, M, Q]
+	store          Store[R, M, Q]
 	queries        func(*StoreTx) (Q, error)
 	reportsChanges bool // changes to the site's own rows are reported, to be published on its model events
 }
 
 // SiteRows is a store of the site's own rows, whose changes are published
-func SiteRows[R, M any](store RowStore[R, M, *sitedb.Queries]) *Rows[R, M, *sitedb.Queries] {
+func SiteRows[R, M any](store Store[R, M, *sitedb.Queries]) *Rows[R, M, *sitedb.Queries] {
 	return &Rows[R, M, *sitedb.Queries]{store: store, queries: (*StoreTx).Site, reportsChanges: true}
 }
 
 // ControlRows is a store of the site's rows in the control database, such as its identities
-func ControlRows[R, M any](store RowStore[R, M, *controldb.Queries]) *Rows[R, M, *controldb.Queries] {
+func ControlRows[R, M any](store Store[R, M, *controldb.Queries]) *Rows[R, M, *controldb.Queries] {
 	return &Rows[R, M, *controldb.Queries]{store: store, queries: (*StoreTx).Control}
 }
 
@@ -95,7 +95,7 @@ func (s *Rows[R, M, Q]) get(ctx context.Context, tx *StoreTx, id string, siteCon
 	return s.store.ToModel(row, siteContext), row, nil
 }
 
-func (s *Rows[R, M, Q]) search(ctx context.Context, tx *StoreTx, searcher RowSearcher[R, M, Q], query *apiutils.Query, siteContext *httputils.SiteContext) ([]*M, *apiutils.HTTPError) {
+func (s *Rows[R, M, Q]) search(ctx context.Context, tx *StoreTx, searcher Searcher[R, M, Q], query *apiutils.Query, siteContext *httputils.SiteContext) ([]*M, *apiutils.HTTPError) {
 	q, err := s.queries(tx)
 	if err != nil {
 		return nil, apiutils.ErrInternalServerError
@@ -111,7 +111,7 @@ func (s *Rows[R, M, Q]) search(ctx context.Context, tx *StoreTx, searcher RowSea
 	return models, nil
 }
 
-func (s *Rows[R, M, Q]) create(ctx context.Context, tx *StoreTx, creator RowCreator[R, M, Q], id *string, siteContext *httputils.SiteContext, model *M) *apiutils.HTTPError {
+func (s *Rows[R, M, Q]) create(ctx context.Context, tx *StoreTx, creator Creator[R, M, Q], id *string, siteContext *httputils.SiteContext, model *M) *apiutils.HTTPError {
 	q, err := s.queries(tx)
 	if err != nil {
 		return apiutils.ErrInternalServerError
@@ -125,7 +125,7 @@ func (s *Rows[R, M, Q]) create(ctx context.Context, tx *StoreTx, creator RowCrea
 	return nil
 }
 
-func (s *Rows[R, M, Q]) update(ctx context.Context, tx *StoreTx, updater RowUpdater[R, M, Q], siteContext *httputils.SiteContext, oldModel *M, model *M) *apiutils.HTTPError {
+func (s *Rows[R, M, Q]) update(ctx context.Context, tx *StoreTx, updater Updater[R, M, Q], siteContext *httputils.SiteContext, oldModel *M, model *M) *apiutils.HTTPError {
 	q, err := s.queries(tx)
 	if err != nil {
 		return apiutils.ErrInternalServerError
@@ -140,7 +140,7 @@ func (s *Rows[R, M, Q]) update(ctx context.Context, tx *StoreTx, updater RowUpda
 }
 
 // delete deletes the row read as the model, so the change can say what was deleted
-func (s *Rows[R, M, Q]) delete(ctx context.Context, tx *StoreTx, deleter RowDeleter[R, M, Q], id string, row *R, siteContext *httputils.SiteContext) *apiutils.HTTPError {
+func (s *Rows[R, M, Q]) delete(ctx context.Context, tx *StoreTx, deleter Deleter[R, M, Q], id string, row *R, siteContext *httputils.SiteContext) *apiutils.HTTPError {
 	q, err := s.queries(tx)
 	if err != nil {
 		return apiutils.ErrInternalServerError

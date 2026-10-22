@@ -18,7 +18,7 @@ import (
 ///////
 
 func CreateHandler[R, M, Q any](store *Rows[R, M, Q]) http.HandlerFunc {
-	creator := storeCan[RowCreator[R, M, Q]](store, "create")
+	creator := storeCan[Creator[R, M, Q]](store, "create")
 	return func(w http.ResponseWriter, r *http.Request) {
 		siteContext := SiteContextFor(w, r, store.GetName(), ActionCreate)
 		if siteContext == nil {
@@ -48,7 +48,7 @@ func CreateHandler[R, M, Q any](store *Rows[R, M, Q]) http.HandlerFunc {
 ///////
 
 func UpdateHandler[R, M, Q any](store *Rows[R, M, Q]) http.HandlerFunc {
-	updater := storeCan[RowUpdater[R, M, Q]](store, "update")
+	updater := storeCan[Updater[R, M, Q]](store, "update")
 	return func(w http.ResponseWriter, r *http.Request) {
 		siteContext := SiteContextFor(w, r, store.GetName(), ActionUpdate)
 		if siteContext == nil {
@@ -89,8 +89,8 @@ func UpdateHandler[R, M, Q any](store *Rows[R, M, Q]) http.HandlerFunc {
 
 // UpsertHandler creates the model with the URL's id, or updates it when there is one
 func UpsertHandler[R, M, Q any](store *Rows[R, M, Q]) http.HandlerFunc {
-	creator := storeCan[RowCreator[R, M, Q]](store, "create")
-	updater := storeCan[RowUpdater[R, M, Q]](store, "update")
+	creator := storeCan[Creator[R, M, Q]](store, "create")
+	updater := storeCan[Updater[R, M, Q]](store, "update")
 	return func(w http.ResponseWriter, r *http.Request) {
 		siteContext := SiteContextFor(w, r, store.GetName(), ActionCreate, ActionUpdate)
 		if siteContext == nil {
@@ -131,7 +131,7 @@ func UpsertHandler[R, M, Q any](store *Rows[R, M, Q]) http.HandlerFunc {
 /////
 
 func SearchHandler[R, M, Q any](store *Rows[R, M, Q]) http.HandlerFunc {
-	searcher := storeCan[RowSearcher[R, M, Q]](store, "search")
+	searcher := storeCan[Searcher[R, M, Q]](store, "search")
 	return func(w http.ResponseWriter, r *http.Request) {
 		siteContext := SiteContextFor(w, r, store.GetName(), ActionSearch)
 		if siteContext == nil {
@@ -156,7 +156,7 @@ func SearchHandler[R, M, Q any](store *Rows[R, M, Q]) http.HandlerFunc {
 }
 
 func GetHandler[R, M, Q any](store *Rows[R, M, Q]) http.HandlerFunc {
-	getter := storeCan[RowGetter[M]](store, "get")
+	getter := storeCan[Getter[M]](store, "get")
 	return func(w http.ResponseWriter, r *http.Request) {
 		siteContext := SiteContextFor(w, r, store.GetName(), ActionGet)
 		if siteContext == nil {
@@ -184,7 +184,7 @@ func GetHandler[R, M, Q any](store *Rows[R, M, Q]) http.HandlerFunc {
 // ////
 
 func DeleteHandler[R, M, Q any](store *Rows[R, M, Q]) http.HandlerFunc {
-	deleter := storeCan[RowDeleter[R, M, Q]](store, "delete")
+	deleter := storeCan[Deleter[R, M, Q]](store, "delete")
 	return func(w http.ResponseWriter, r *http.Request) {
 		siteContext := SiteContextFor(w, r, store.GetName(), ActionDelete)
 		if siteContext == nil {
@@ -236,19 +236,19 @@ func DeleteHandler[R, M, Q any](store *Rows[R, M, Q]) http.HandlerFunc {
 // Routes registers the routes for what the store can do: search and create at path, and get, update and delete
 // at path/{id}
 func Routes[R, M, Q any](r chi.Router, path string, store *Rows[R, M, Q]) {
-	if _, ok := store.store.(RowSearcher[R, M, Q]); ok {
+	if _, ok := store.store.(Searcher[R, M, Q]); ok {
 		r.Get(path, SearchHandler(store))
 	}
-	if _, ok := store.store.(RowCreator[R, M, Q]); ok {
+	if _, ok := store.store.(Creator[R, M, Q]); ok {
 		r.Post(path, CreateHandler(store))
 	}
-	if _, ok := store.store.(RowGetter[M]); ok {
+	if _, ok := store.store.(Getter[M]); ok {
 		r.Get(path+"/{id}", GetHandler(store))
 	}
-	if _, ok := store.store.(RowUpdater[R, M, Q]); ok {
+	if _, ok := store.store.(Updater[R, M, Q]); ok {
 		r.Post(path+"/{id}", UpdateHandler(store))
 	}
-	if _, ok := store.store.(RowDeleter[R, M, Q]); ok {
+	if _, ok := store.store.(Deleter[R, M, Q]); ok {
 		r.Delete(path+"/{id}", DeleteHandler(store))
 	}
 }

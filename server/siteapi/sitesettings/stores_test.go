@@ -9,23 +9,23 @@ import (
 // The handlers check a store can do what its routes need when the router is made; this checks it as it compiles
 var (
 	_ interface {
-		siteapiutils.RowStore[sitemodels.UserIdentity, sitemodels.UserIdentity, *controldb.Queries]
-		siteapiutils.RowGetter[sitemodels.UserIdentity]
-		siteapiutils.RowSearcher[sitemodels.UserIdentity, sitemodels.UserIdentity, *controldb.Queries]
-		siteapiutils.RowCreator[sitemodels.UserIdentity, sitemodels.UserIdentity, *controldb.Queries]
-		siteapiutils.RowUpdater[sitemodels.UserIdentity, sitemodels.UserIdentity, *controldb.Queries]
-		siteapiutils.RowDeleter[sitemodels.UserIdentity, sitemodels.UserIdentity, *controldb.Queries]
+		siteapiutils.Store[sitemodels.UserIdentity, sitemodels.UserIdentity, *controldb.Queries]
+		siteapiutils.Getter[sitemodels.UserIdentity]
+		siteapiutils.Searcher[sitemodels.UserIdentity, sitemodels.UserIdentity, *controldb.Queries]
+		siteapiutils.Creator[sitemodels.UserIdentity, sitemodels.UserIdentity, *controldb.Queries]
+		siteapiutils.Updater[sitemodels.UserIdentity, sitemodels.UserIdentity, *controldb.Queries]
+		siteapiutils.Deleter[sitemodels.UserIdentity, sitemodels.UserIdentity, *controldb.Queries]
 	} = &IdentitiesStore{}
 	_ interface {
-		siteapiutils.RowStore[sitemodels.SyncSource, sitemodels.SyncSource, *controldb.Queries]
-		siteapiutils.RowSearcher[sitemodels.SyncSource, sitemodels.SyncSource, *controldb.Queries]
-		siteapiutils.RowCreator[sitemodels.SyncSource, sitemodels.SyncSource, *controldb.Queries]
-		siteapiutils.RowUpdater[sitemodels.SyncSource, sitemodels.SyncSource, *controldb.Queries]
-		siteapiutils.RowDeleter[sitemodels.SyncSource, sitemodels.SyncSource, *controldb.Queries]
+		siteapiutils.Store[sitemodels.SyncSource, sitemodels.SyncSource, *controldb.Queries]
+		siteapiutils.Searcher[sitemodels.SyncSource, sitemodels.SyncSource, *controldb.Queries]
+		siteapiutils.Creator[sitemodels.SyncSource, sitemodels.SyncSource, *controldb.Queries]
+		siteapiutils.Updater[sitemodels.SyncSource, sitemodels.SyncSource, *controldb.Queries]
+		siteapiutils.Deleter[sitemodels.SyncSource, sitemodels.SyncSource, *controldb.Queries]
 	} = &SyncSettingsStore{}
 	_ interface {
-		siteapiutils.RowStore[sitemodels.Settings, sitemodels.Settings, *controldb.Queries]
-		siteapiutils.RowGetter[sitemodels.Settings]
-		siteapiutils.RowUpdater[sitemodels.Settings, sitemodels.Settings, *controldb.Queries]
+		siteapiutils.Store[sitemodels.Settings, sitemodels.Settings, *controldb.Queries]
+		siteapiutils.Getter[sitemodels.Settings]
+		siteapiutils.Updater[sitemodels.Settings, sitemodels.Settings, *controldb.Queries]
 	} = &SettingsStore{}
 )
