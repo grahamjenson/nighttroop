@@ -28,6 +28,7 @@ func TestMain(m *testing.M) {
 	os.Setenv("SITE_POST_PER_MINUTE_BURST", "3")
 	os.Setenv("SITE_GET_PER_MINUTE_LIMIT", "1")
 	os.Setenv("SITE_GET_PER_MINUTE_BURST", "3")
+	os.Setenv("SOCKET_MAX_SESSIONS_PER_SITE", "2")
 	cfg, err := config.NewServerConfig()
 	if err != nil {
 		panic(err)
@@ -62,6 +63,35 @@ func TestSocketWritesAreRateLimited(t *testing.T) {
 	require.Equal(t, 3, writes)
 }
 
+// siteSocketServer serves a site's Socket.IO server, as the router would, with every request in its site context
+func siteSocketServer(t *testing.T, cfg *config.ServerConfig, siteCtx context.Context) *httptest.Server {
+	ws := &Websocket{config: cfg, servers: map[string]*socketio.Server{}}
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ws.ServeHTTP(w, r.WithContext(siteCtx))
+	}))
+	t.Cleanup(func() {
+		ws.server(httputils.GetSiteContext(siteCtx).Subdomain, false).Close()
+		ts.Close()
+	})
+	return ts
+}
+
+// The session limits come from the server config: here two sessions a site
+func TestSocketLimitsComeFromConfig(t *testing.T) {
+	cfg := testConfig
+	require.Equal(t, engineio.Config{PingInterval: 25 * time.Second, PingTimeout: 20 * time.Second, MaxPayload: 100000, MaxSessions: 2, MaxBuffered: 1000, MaxBufferedBytes: 2000000, MaxPacketRate: 20}, (&Websocket{config: cfg}).engineConfig())
+
+	run := runs.Add(1)
+	siteCtx := httputils.CreateSiteContext(context.Background(), cfg, nil, nil, nil, fmt.Sprint("site", run), "127.0.0.1", httputils.HTTPActionRead, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
+	ts := siteSocketServer(t, cfg, siteCtx)
+	for _, status := range []int{http.StatusOK, http.StatusOK, http.StatusTooManyRequests} {
+		resp, err := http.Get(ts.URL + "/socket.io/?EIO=4&transport=polling")
+		require.NoError(t, err)
+		resp.Body.Close()
+		require.Equal(t, status, resp.StatusCode)
+	}
+}
+
 // An authorize checks a token then reads the recent data, so the site's GET limit counts them, however many sockets
 // a client spreads them over; the per-socket attempt limit alone starts again on each reconnect
 func TestSocketAuthorizeIsRateLimited(t *testing.T) {
@@ -69,17 +99,7 @@ func TestSocketAuthorizeIsRateLimited(t *testing.T) {
 	run := runs.Add(1)
 	siteCtx := httputils.CreateSiteContext(context.Background(), cfg, nil, nil, nil, fmt.Sprint("site", run), "127.0.0.1", httputils.HTTPActionRead, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
 
-	ws := &Websocket{config: cfg}
-	server := socketio.NewServer(engineio.Config{})
-	main := server.Of(socketio.DefaultNamespace)
-	main.OnConnection(func(socket *socketio.Socket) { ws.connected(main, socket) })
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		server.ServeHTTP(w, r.WithContext(siteCtx))
-	}))
-	t.Cleanup(func() {
-		server.Close()
-		ts.Close()
-	})
+	ts := siteSocketServer(t, cfg, siteCtx)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
