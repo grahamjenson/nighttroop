@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/models/dexcommodels"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 // TestValidUsername is the only Dexcom username that logs in under go test,
@@ -38,6 +39,9 @@ const (
 	usBaseURL        = "https://share2.dexcom.com"
 	outsideUSBaseURL = "https://shareous1.dexcom.com"
 	applicationID    = "d8665ade-9673-4e27-9ff6-92db4ce13d13"
+
+	maxResponseBytes = 1 << 20 // a Dexcom response body larger than this is refused
+	maxEGVs          = 1000    // Dexcom returns at most a few hundred EGVs
 )
 
 // Client is a Dexcom Share API client.
@@ -124,7 +128,7 @@ func (c *Client) authenticate(ctx context.Context) (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
+		body, _ := httputils.ReadLimitedBody(resp.Body, maxResponseBytes)
 		return "", fmt.Errorf(
 			"authenticate failed: status=%d body=%s",
 			resp.StatusCode,
@@ -132,7 +136,7 @@ func (c *Client) authenticate(ctx context.Context) (string, error) {
 		)
 	}
 
-	accountIDBytes, err := io.ReadAll(resp.Body)
+	accountIDBytes, err := httputils.ReadLimitedBody(resp.Body, maxResponseBytes)
 	if err != nil {
 		return "", err
 	}
@@ -177,7 +181,7 @@ func (c *Client) loginByAccountID(ctx context.Context, accountID string) (string
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
+		body, _ := httputils.ReadLimitedBody(resp.Body, maxResponseBytes)
 		return "", fmt.Errorf(
 			"login failed: status=%d body=%s",
 			resp.StatusCode,
@@ -185,7 +189,7 @@ func (c *Client) loginByAccountID(ctx context.Context, accountID string) (string
 		)
 	}
 
-	sessionIDBytes, err := io.ReadAll(resp.Body)
+	sessionIDBytes, err := httputils.ReadLimitedBody(resp.Body, maxResponseBytes)
 	if err != nil {
 		return "", err
 	}
@@ -236,7 +240,7 @@ func (c *Client) FetchEGVs(ctx context.Context, minutes int) ([]dexcommodels.EGV
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
+		body, _ := httputils.ReadLimitedBody(resp.Body, maxResponseBytes)
 		return nil, fmt.Errorf(
 			"dexcom fetch failed: status=%d body=%s",
 			resp.StatusCode,
@@ -244,10 +248,22 @@ func (c *Client) FetchEGVs(ctx context.Context, minutes int) ([]dexcommodels.EGV
 		)
 	}
 
-	var items []json.RawMessage
+	return decodeEGVs(resp.Body)
+}
 
-	if err := json.NewDecoder(resp.Body).Decode(&items); err != nil {
+// decodeEGVs decodes the EGV array in a Dexcom response body of at most
+// maxResponseBytes, refusing more than maxEGVs.
+func decodeEGVs(body io.Reader) ([]dexcommodels.EGV, error) {
+	data, err := httputils.ReadLimitedBody(body, maxResponseBytes)
+	if err != nil {
+		return nil, fmt.Errorf("error reading Dexcom response: %w", err)
+	}
+	var items []json.RawMessage
+	if err := json.Unmarshal(data, &items); err != nil {
 		return nil, fmt.Errorf("error decoding Dexcom response: %w", err)
+	}
+	if len(items) > maxEGVs {
+		return nil, fmt.Errorf("dexcom returned %d EGVs, more than %d", len(items), maxEGVs)
 	}
 
 	out := make([]dexcommodels.EGV, 0, len(items))

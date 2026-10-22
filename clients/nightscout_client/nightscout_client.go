@@ -15,16 +15,24 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"strings"
 	"testing"
 	"time"
+
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 // TestValidURL is the only Nightscout URL that authenticates under go test, which
 // never makes HTTP calls; any other URL fails as if the host does not exist.
 const TestValidURL = "http://valid.nightscout.test"
+
+const (
+	maxResponseBytes = 1 << 20 // a Nightscout response body larger than this is refused
+	maxResultItems   = 1000    // the sync only ever asks for a handful of entries
+)
 
 type Client struct {
 	baseURL    string
@@ -112,12 +120,19 @@ func (c *Client) doRequest(
 		)
 	}
 
-	// Parse into a map
-	var result map[string]any
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+	return parseResult(resp.Body)
+}
+
+// parseResult decodes a Nightscout response body of at most maxResponseBytes into a map.
+func parseResult(body io.Reader) (map[string]any, error) {
+	data, err := httputils.ReadLimitedBody(body, maxResponseBytes)
+	if err != nil {
 		return nil, err
 	}
-
+	var result map[string]any
+	if err := json.Unmarshal(data, &result); err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
@@ -171,8 +186,12 @@ func (c *Client) refreshJWT() error {
 		return fmt.Errorf("%w: HTTP %d", ErrJWTServer, resp.StatusCode)
 	}
 
+	body, err := httputils.ReadLimitedBody(resp.Body, maxResponseBytes)
+	if err != nil {
+		return ErrJWTInvalidResponse
+	}
 	var jwtResp JWTAuthResponse
-	if err := json.NewDecoder(resp.Body).Decode(&jwtResp); err != nil {
+	if err := json.Unmarshal(body, &jwtResp); err != nil {
 		return ErrJWTInvalidResponse
 	}
 
@@ -200,16 +219,24 @@ func (c *Client) GetEntries(
 	}
 
 	if result, ok := resp["result"].([]any); ok {
-		// Convert each item to a map[string]any
-		converted := []map[string]any{}
-		for _, item := range result {
-			if m, ok := item.(map[string]any); ok {
-				converted = append(converted, m)
-			}
-		}
-		return converted, nil
+		return entriesFromResult(result)
 	}
 
 	return nil, fmt.Errorf("NSClient Get Entries Error: %s %s", c.baseURL, resp)
 
+}
+
+// entriesFromResult converts each item of the result array to a map[string]any,
+// refusing more than maxResultItems.
+func entriesFromResult(result []any) ([]map[string]any, error) {
+	if len(result) > maxResultItems {
+		return nil, fmt.Errorf("NSClient Get Entries Error: %d results is more than %d", len(result), maxResultItems)
+	}
+	converted := []map[string]any{}
+	for _, item := range result {
+		if m, ok := item.(map[string]any); ok {
+			converted = append(converted, m)
+		}
+	}
+	return converted, nil
 }
