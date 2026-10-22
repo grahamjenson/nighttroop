@@ -204,8 +204,16 @@ func (c Collection[NS, DM]) Delete(ctx context.Context, siteContext *httputils.S
 	defer tx.Rollback()
 	q := siteContext.SiteDB.Queries.WithTx(tx)
 
-	// Read first, so the change can say what was deleted
-	deleted, _ := m.GetModel(q, ctx, identifier, false)
+	// Read first, so a missing record is not found and the change can say what was deleted.
+	// A permanent delete can remove a record already soft deleted.
+	deleted, err := m.GetModel(q, ctx, identifier, permanent)
+	if err == sql.ErrNoRows || (err == nil && deleted == nil) {
+		return nsutils.ErrNotFound
+	}
+	if err != nil {
+		slog.Error("failed to get "+m.Name()+" to delete", "error", err)
+		return nsutils.ErrInternal
+	}
 	deleteFunc, label := m.SoftDelete, "Soft"
 	if permanent {
 		deleteFunc, label = m.HardDelete, "Hard"
@@ -233,9 +241,7 @@ func (c Collection[NS, DM]) Delete(ctx context.Context, siteContext *httputils.S
 		slog.Error("failed to delete in database", "error", err, "collection", m.Name())
 		return nsutils.ErrInternal
 	}
-	if deleted != nil {
-		siteContext.PublishModelChange(sitemodels.Deleted, deleted)
-	}
+	siteContext.PublishModelChange(sitemodels.Deleted, deleted)
 	return nil
 }
 
