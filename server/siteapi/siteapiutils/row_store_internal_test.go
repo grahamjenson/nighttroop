@@ -9,7 +9,7 @@ import (
 	"nighttroop.t1d.nz/utils/apiutils"
 )
 
-func TestWriteError(t *testing.T) {
+func TestAnswer(t *testing.T) {
 	tests := []struct {
 		name string
 		err  error
@@ -23,7 +23,7 @@ func TestWriteError(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			require.Equal(t, test.want, writeError(test.err, "test rows"))
+			require.Equal(t, test.want, answer(test.err, "test rows"))
 		})
 	}
 }
