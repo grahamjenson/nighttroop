@@ -34,10 +34,11 @@ type Runner struct {
 	// RunBackgroundJobs runs every background job, for RUN_BACKGROUND_JOBS
 	RunBackgroundJobs func()
 
-	client   *socket.Client
-	mu       sync.Mutex
-	received map[string][]any // events not yet waited for or collected
-	arrived  chan struct{}
+	client    *socket.Client
+	namespace string // the namespace CONNECT joined, which EMIT and the events use
+	mu        sync.Mutex
+	received  map[string][]any // events not yet waited for or collected
+	arrived   chan struct{}
 }
 
 // Run runs the file, failing the test at the first step that cannot finish
@@ -103,11 +104,11 @@ func (r *Runner) run(t *testing.T, file *File, step *Step, ctx map[string]any) (
 			return nil, err
 		}
 		if !step.Ack {
-			return nil, r.client.Emit(socket.DefaultNamespace, event, args...)
+			return nil, r.client.Emit(r.namespace, event, args...)
 		}
 		ackCtx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
-		reply, err := r.client.EmitWithAck(ackCtx, socket.DefaultNamespace, event, args...)
+		reply, err := r.client.EmitWithAck(ackCtx, r.namespace, event, args...)
 		if err != nil {
 			return nil, fmt.Errorf("no ACK within %s: %w", timeout, err)
 		}
@@ -157,10 +158,14 @@ func (r *Runner) connect(ctx map[string]any, events []string, step *Step, timeou
 	}}}
 	dialCtx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
+	r.namespace = socket.DefaultNamespace
+	if step.NS != "" {
+		r.namespace = step.NS
+	}
 	client := socket.NewClient(version)
 	r.received, r.arrived = map[string][]any{}, make(chan struct{}, 1)
 	for _, event := range events {
-		client.On(socket.DefaultNamespace, event, func(args []json.RawMessage) {
+		client.On(r.namespace, event, func(args []json.RawMessage) {
 			r.mu.Lock()
 			r.received[event] = append(r.received[event], value(args))
 			r.mu.Unlock()
@@ -178,7 +183,7 @@ func (r *Runner) connect(ctx map[string]any, events []string, step *Step, timeou
 	if len(auth) > 0 {
 		connectAuth = auth[0]
 	}
-	return client.Connect(dialCtx, socket.DefaultNamespace, connectAuth)
+	return client.Connect(dialCtx, r.namespace, connectAuth)
 }
 
 func (r *Runner) disconnect() {

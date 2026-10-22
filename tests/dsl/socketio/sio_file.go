@@ -1,6 +1,7 @@
 // Package socketio runs .sio files: Socket.IO tests written like .http ones. Each NAME starts a step, which is
 // one of the verbs CONNECT <url>, EMIT <event> (with ACK to wait for its acknowledgement), WAIT <event>,
 // COLLECT <event>, DISCONNECT, an HTTP request (GET <url> and so on) or RUN_BACKGROUND_JOBS.
+// NS is the namespace CONNECT joins (/ by default), which the steps after it use.
 // B is the step's body (CONNECT's auth, EMIT's argument, a request's JSON), T how long it may take (e.g. 5s),
 // and SET and ASSERT_* work on what the step got as they do in .http files.
 package socketio
@@ -28,6 +29,7 @@ type Step struct {
 	Line    int
 	Verb    string // CONNECT, EMIT, WAIT, COLLECT, DISCONNECT, RUN_BACKGROUND_JOBS or an HTTP method
 	Target  string // the URL for CONNECT and HTTP, the event for EMIT, WAIT and COLLECT
+	NS      string // the namespace CONNECT joins
 	Body    *string
 	Headers http.Header
 	Ack     bool
@@ -99,6 +101,11 @@ func ParseFile(contents string, path string) (*File, error) {
 			current.Verb, current.Target = first, second
 		case first == "ACK":
 			current.Ack = true
+		case first == "NS":
+			if !strings.HasPrefix(second, "/") {
+				return nil, fail("NS %q must start with /", second)
+			}
+			current.NS = second
 		case first == "T":
 			timeout, err := time.ParseDuration(second)
 			if err != nil || timeout <= 0 {
@@ -134,6 +141,9 @@ func ParseFile(contents string, path string) (*File, error) {
 		if step.Ack && step.Verb != "EMIT" {
 			return nil, fmt.Errorf("%s:%d: ACK is only for EMIT", path, step.Line)
 		}
+		if step.NS != "" && step.Verb != "CONNECT" {
+			return nil, fmt.Errorf("%s:%d: NS is only for CONNECT", path, step.Line)
+		}
 	}
 	return file, nil
 }
@@ -142,5 +152,5 @@ func ParseFile(contents string, path string) (*File, error) {
 func isKeyword(first string) bool {
 	_, isAssert, _ := jsonapi.ParseAssert(first, "", "", 0)
 	return isAssert || slices.Contains(socketVerbs, first) || slices.Contains(httpVerbs, first) ||
-		slices.Contains([]string{"NAME", "RUN_BACKGROUND_JOBS", "ACK", "T", "B", "H", "SET"}, first)
+		slices.Contains([]string{"NAME", "RUN_BACKGROUND_JOBS", "ACK", "NS", "T", "B", "H", "SET"}, first)
 }
