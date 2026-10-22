@@ -130,6 +130,22 @@ func (ws *Websocket) connected(main *socketio.Namespace, socket *socketio.Socket
 			}
 		})
 	}
+
+	// loadRetro is the web app asking for the device statuses its retro view shows, which come as a retroUpdate
+	socket.On("loadRetro", func(args []json.RawMessage, ack func(...any)) {
+		reply := result("success")
+		if auth == nil || !auth.Read {
+			reply = result("Not permitted")
+		} else if !ws.withinReadLimit(authCtx) {
+			reply = result("Too many requests")
+		}
+		if ack != nil {
+			ack(reply)
+		}
+		if reply["result"] == "success" {
+			socket.Emit("retroUpdate", map[string]any{"devicestatus": ws.retroDeviceStatuses(authCtx)})
+		}
+	})
 }
 
 // withinReadLimit counts an authorize against the site's GET limit, as a request would: it checks a token
@@ -301,6 +317,23 @@ func (ws *Websocket) recentData(ctx context.Context, history time.Duration) map[
 		}
 	}
 	return data
+}
+
+// retroDeviceStatuses are the device statuses over Nightscout's two days, oldest first and capped like a search
+func (ws *Websocket) retroDeviceStatuses(ctx context.Context) []map[string]any {
+	since := time.Now().Add(-maxHistoryHours * time.Hour).UnixMilli()
+	query := nsquery.Query{DateGTE: &since, HasFilters: true, Limit: maxRecords, SortOrder: &nsquery.SortOccurredAtDesc}
+	records, err := ws.collections[nsutils.Devicestatus].Search(ctx, httputils.GetSiteContext(ctx), query)
+	if err != nil {
+		slog.Error("Websocket failed to load retro device statuses", "error", err)
+	}
+	slices.Reverse(records)
+	statuses := make([]map[string]any, 0, len(records))
+	for _, record := range records {
+		_, status, _ := clientData(nsutils.Devicestatus, record)
+		statuses = append(statuses, status)
+	}
+	return statuses
 }
 
 // recorder is a collection that can show a site's model as its record

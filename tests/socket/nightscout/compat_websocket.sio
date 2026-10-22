@@ -2,7 +2,7 @@
 # https://github.com/grahamjenson/nightscout_compatibility_test
 # Each assert is what Nightscout answered there, from its results/nightscout/socket_v1_websocket,
 # numbered as those files are. Where nighttroop differs it is left out:
-#   - loadRetro/retroUpdate (005, 006) and dbUpdateUnset (023, 024) are not handled
+#   - dbUpdateUnset (023, 024) is not handled
 #   - enteredBy is the identity that wrote the treatment, not what the client sent
 #   - treatments are sent without the glucose at their time (mgdl), and sgvs without scaled
 
@@ -49,6 +49,19 @@ ASSERT_LENGTH 0 "@treatments"
 ASSERT_EXISTS "@devicestatus"
 ASSERT_EXISTS "@profiles"
 ASSERT_EXISTS "@food"
+
+# 005 and 006: loadRetro acks success, then the device statuses come as a retroUpdate
+NAME ws_load_retro
+EMIT loadRetro
+B {}
+ACK
+ASSERT_EQUALS "success" "@result"
+ASSERT_LENGTH 1 "@"
+
+NAME ws_retro_update
+WAIT retroUpdate
+ASSERT_LENGTH 1 "@"
+ASSERT_EXISTS "@devicestatus"
 
 # 008.ws_data_update_after_create_entry: a REST entry is sent as a delta sgv
 NAME ws_create_entry_v1
