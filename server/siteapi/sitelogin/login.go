@@ -333,6 +333,11 @@ func loginTheUserAPI(controlDB *db.ControlDB, subdomain string, cfg *config.Serv
 		return nil, err
 	}
 
+	// The API gives the same site token as the website, so only the roles that may sign in to the website get one
+	if !can.LoginToWebsite(device.Role) {
+		return nil, fmt.Errorf("identity with role %s cannot login to website", device.Role)
+	}
+
 	// An Identity only requires a TOTP secret if the role is admin
 	if can.MustLoginWithTotp(device.Role, device.TotpSecretEnc != "") {
 		if totpToken == "" {
