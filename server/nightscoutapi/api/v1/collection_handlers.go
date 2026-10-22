@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
+	"nighttroop.t1d.nz/utils/consts"
 )
 
 func Search(dep nsutils.Dependencies) http.HandlerFunc {
@@ -72,6 +73,12 @@ func Create(dep nsutils.Dependencies) http.HandlerFunc {
 		default:
 			slog.Error("Collection Create JSON type error", "type", typed)
 			nsutils.WriteError(w, nsutils.BadDataBodyError)
+			return
+		}
+
+		// Each record costs a duplicate check, a transaction and a fan-out, so cap a batch before storing any of it
+		if len(arrayOfModels) > consts.MaxBatchRecords {
+			nsutils.WriteError(w, nsutils.ErrTooManyRecords)
 			return
 		}
 
