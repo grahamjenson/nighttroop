@@ -43,7 +43,7 @@ func (s *GlucoseReadingsStore) CreateHTMXResponse(model *sitemodels.SiteGlucoseR
 // UPDATE
 // ////
 
-// UpdateRow changes a reading's value, notes or reason; anything not sent stays as it is
+// UpdateRow changes a reading's value, CGM fields (delta, direction, noise, filtered, unfiltered, rssi), notes or reason; anything not sent stays as it is
 func (s *GlucoseReadingsStore) UpdateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteGlucoseReading, model *sitemodels.SiteGlucoseReading) (*sitedb.GlucoseReading, error) {
 	model.ID = oldModel.ID
 	params := sitemodels.GlucoseReadingToUpdate(model, siteContext)

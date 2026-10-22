@@ -61,6 +61,30 @@ func EntryToUpdate(source Entry, context ConverterContext) sitedb.UpdateGlucoseR
 		xfloat64 := FlexibleFloat64ToFloat64(*source.Mgdl)
 		sitedbUpdateGlucoseReadingParams.Mgdl = &xfloat64
 	}
+	if source.Trend != nil {
+		xfloat642 := FlexibleFloat64ToFloat64(*source.Trend)
+		sitedbUpdateGlucoseReadingParams.Delta = &xfloat642
+	}
+	if source.Direction != nil {
+		xstring := *source.Direction
+		sitedbUpdateGlucoseReadingParams.Direction = &xstring
+	}
+	if source.Noise != nil {
+		xfloat643 := FlexibleFloat64ToFloat64(*source.Noise)
+		sitedbUpdateGlucoseReadingParams.Noise = &xfloat643
+	}
+	if source.Filtered != nil {
+		xfloat644 := FlexibleFloat64ToFloat64(*source.Filtered)
+		sitedbUpdateGlucoseReadingParams.Filtered = &xfloat644
+	}
+	if source.Unfiltered != nil {
+		xfloat645 := FlexibleFloat64ToFloat64(*source.Unfiltered)
+		sitedbUpdateGlucoseReadingParams.Unfiltered = &xfloat645
+	}
+	if source.RSSI != nil {
+		xfloat646 := FlexibleFloat64ToFloat64(*source.RSSI)
+		sitedbUpdateGlucoseReadingParams.Rssi = &xfloat646
+	}
 	pString := source.RawJsonData
 	sitedbUpdateGlucoseReadingParams.RawJsonData = &pString
 	sitedbUpdateGlucoseReadingParams.UpdatedByIdentityID = AssignUpdatedByID(context)
