@@ -2,8 +2,6 @@ package sitedata
 
 import (
 	"context"
-	"database/sql"
-	"log/slog"
 
 	"nighttroop.t1d.nz/utils/apiutils"
 
@@ -11,7 +9,6 @@ import (
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
-	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/server/siteapi/sitequery"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -31,27 +28,17 @@ func (s *NotificationEventsStore) GetName() string {
 // ////
 // CREATE
 // ////
-func (s *NotificationEventsStore) CreateModel(ctx context.Context, tx *siteapiutils.StoreTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteNotificationEvent) (bool, *apiutils.HTTPError) {
+func (s *NotificationEventsStore) CreateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, model *sitemodels.SiteNotificationEvent) (*sitedb.NotificationEvent, error) {
 	if model.NotificationType == "" {
 		model.NotificationType = defaultNotificationType
 	}
 	if model.Title == "" {
-		return false, apiutils.ErrConstraintCheckFailedWithHint("title is required")
+		return nil, apiutils.ErrConstraintCheckFailedWithHint("title is required")
 	}
 	if herr := checkNotificationEvent(model); herr != nil {
-		return false, herr
+		return nil, herr
 	}
-	q, err := tx.Site()
-	if err != nil {
-		return false, apiutils.ErrInternalServerError
-	}
-	created, err := q.CreateNotificationEvent(ctx, sitemodels.NotificationEventToCreate(model, siteContext))
-	if err != nil {
-		return false, apiutils.WriteError(err, "notification")
-	}
-	tx.Created(created)
-	*model = *sitemodels.NotificationEventFromDB(created)
-	return true, nil
+	return q.CreateNotificationEvent(ctx, sitemodels.NotificationEventToCreate(model, siteContext))
 }
 
 func (s *NotificationEventsStore) CreateHTMXResponse(model *sitemodels.SiteNotificationEvent) templ.Component {
@@ -62,26 +49,13 @@ func (s *NotificationEventsStore) CreateHTMXResponse(model *sitemodels.SiteNotif
 // UPDATE
 // ////
 
-// UpdateModel changes the fields sent; anything not sent stays as it is
-func (s *NotificationEventsStore) UpdateModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteNotificationEvent, model *sitemodels.SiteNotificationEvent) *apiutils.HTTPError {
+// UpdateRow changes the fields sent; anything not sent stays as it is
+func (s *NotificationEventsStore) UpdateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteNotificationEvent, model *sitemodels.SiteNotificationEvent) (*sitedb.NotificationEvent, error) {
 	if herr := checkNotificationEvent(model); herr != nil {
-		return herr
-	}
-	q, err := tx.Site()
-	if err != nil {
-		return apiutils.ErrInternalServerError
+		return nil, herr
 	}
 	model.ID = oldModel.ID
-	updated, err := q.UpdateNotificationEvent(ctx, sitemodels.NotificationEventToUpdate(model, siteContext))
-	if err == sql.ErrNoRows {
-		return apiutils.ErrNotFound
-	}
-	if err != nil {
-		return apiutils.WriteError(err, "notification")
-	}
-	tx.Updated(updated)
-	*model = *sitemodels.NotificationEventFromDB(updated)
-	return nil
+	return q.UpdateNotificationEvent(ctx, sitemodels.NotificationEventToUpdate(model, siteContext))
 }
 
 func (s *NotificationEventsStore) UpdateHTMXResponse(model *sitemodels.SiteNotificationEvent) templ.Component {
@@ -91,13 +65,13 @@ func (s *NotificationEventsStore) UpdateHTMXResponse(model *sitemodels.SiteNotif
 // ////
 // Get Model
 // /////
-func (s *NotificationEventsStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext) (*sitemodels.SiteNotificationEvent, *apiutils.HTTPError) {
-	q, err := tx.Site()
-	if err != nil {
-		return nil, apiutils.ErrInternalServerError
-	}
-	event, err := q.GetNotificationEvent(ctx, sitedb.GetNotificationEventParams{ID: id})
-	return apiutils.Found(event, err, "notification", sitemodels.NotificationEventFromDB)
+func (s *NotificationEventsStore) GetRow(ctx context.Context, q *sitedb.Queries, id string) (*sitedb.NotificationEvent, error) {
+	return q.GetNotificationEvent(ctx, sitedb.GetNotificationEventParams{ID: id})
+}
+
+// ToModel is the site model of a row
+func (s *NotificationEventsStore) ToModel(row *sitedb.NotificationEvent, siteContext *httputils.SiteContext) *sitemodels.SiteNotificationEvent {
+	return sitemodels.NotificationEventFromDB(row)
 }
 
 // GetHTMXResponse is the notification's details, shown in a modal
@@ -109,13 +83,8 @@ func (s *NotificationEventsStore) GetHTMXResponse(model *sitemodels.SiteNotifica
 // Search Models
 // ///
 
-func (s *NotificationEventsStore) SearchModels(ctx context.Context, tx *siteapiutils.StoreTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.SiteNotificationEvent, *apiutils.HTTPError) {
-	q, err := tx.Site()
-	if err != nil {
-		return nil, apiutils.ErrInternalServerError
-	}
-	events, err := q.AllNotificationEvents(ctx, sitequery.QueryToAllNotificationEvents(query))
-	return apiutils.Searched(events, err, "notifications", sitemodels.NotificationEventFromDB)
+func (s *NotificationEventsStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query) ([]*sitedb.NotificationEvent, error) {
+	return q.AllNotificationEvents(ctx, sitequery.QueryToAllNotificationEvents(query))
 }
 
 func (s *NotificationEventsStore) SearchHTMXResponse(models []*sitemodels.SiteNotificationEvent, query *apiutils.Query) templ.Component {
@@ -126,22 +95,13 @@ func (s *NotificationEventsStore) SearchHTMXResponse(models []*sitemodels.SiteNo
 // Delete
 // ///
 
-// DeleteModel soft deletes, like the Nightscout API, so syncing clients see the delete
-func (s *NotificationEventsStore) DeleteModel(ctx context.Context, tx *siteapiutils.StoreTx, model *sitemodels.SiteNotificationEvent, siteContext *httputils.SiteContext) *apiutils.HTTPError {
-	q, err := tx.Site()
-	if err != nil {
-		return apiutils.ErrInternalServerError
-	}
-	tx.Deleted(q.GetNotificationEvent(ctx, sitedb.GetNotificationEventParams{ID: model.ID}))
-	_, err = q.SoftDeleteNotificationEvent(ctx, sitedb.SoftDeleteNotificationEventParams{
+// DeleteRow soft deletes, like the Nightscout API, so syncing clients see the delete
+func (s *NotificationEventsStore) DeleteRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) error {
+	_, err := q.SoftDeleteNotificationEvent(ctx, sitedb.SoftDeleteNotificationEventParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
-		ID:                    model.ID,
+		ID:                    id,
 	})
-	if err != nil {
-		slog.Error("Error deleting notification", "error", err)
-		return apiutils.ErrInternalServerError
-	}
-	return nil
+	return err
 }
 
 func (s *NotificationEventsStore) DeleteHTMXResponse(model *sitemodels.SiteNotificationEvent) templ.Component {

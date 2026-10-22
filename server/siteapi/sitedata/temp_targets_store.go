@@ -2,9 +2,7 @@ package sitedata
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
-	"log/slog"
 
 	"nighttroop.t1d.nz/utils/apiutils"
 
@@ -12,7 +10,6 @@ import (
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
-	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/server/siteapi/sitequery"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -33,21 +30,11 @@ func (s *TempTargetsStore) GetName() string {
 // ////
 // CREATE
 // ////
-func (s *TempTargetsStore) CreateModel(ctx context.Context, tx *siteapiutils.StoreTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteTempTarget) (bool, *apiutils.HTTPError) {
+func (s *TempTargetsStore) CreateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, model *sitemodels.SiteTempTarget) (*sitedb.TempTarget, error) {
 	if herr := checkTempTarget(model, siteContext); herr != nil {
-		return false, herr
+		return nil, herr
 	}
-	q, err := tx.Site()
-	if err != nil {
-		return false, apiutils.ErrInternalServerError
-	}
-	created, err := q.CreateTempTarget(ctx, sitemodels.TempTargetToCreate(model, siteContext))
-	if err != nil {
-		return false, apiutils.WriteError(err, "temp target")
-	}
-	tx.Created(created)
-	*model = *sitemodels.TempTargetFromDB(created, siteContext)
-	return true, nil
+	return q.CreateTempTarget(ctx, sitemodels.TempTargetToCreate(model, siteContext))
 }
 
 func (s *TempTargetsStore) CreateHTMXResponse(model *sitemodels.SiteTempTarget) templ.Component {
@@ -58,8 +45,8 @@ func (s *TempTargetsStore) CreateHTMXResponse(model *sitemodels.SiteTempTarget) 
 // UPDATE
 // ////
 
-// UpdateModel changes a temp target's targets, duration, notes or reason; anything not sent stays as it is
-func (s *TempTargetsStore) UpdateModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteTempTarget, model *sitemodels.SiteTempTarget) *apiutils.HTTPError {
+// UpdateRow changes a temp target's targets, duration, notes or reason; anything not sent stays as it is
+func (s *TempTargetsStore) UpdateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteTempTarget, model *sitemodels.SiteTempTarget) (*sitedb.TempTarget, error) {
 	// Check the temp target as it will be once the fields sent are changed
 	merged := *oldModel
 	if model.DurationMinutes != 0 {
@@ -72,23 +59,10 @@ func (s *TempTargetsStore) UpdateModel(ctx context.Context, tx *siteapiutils.Sto
 		merged.HighTarget = model.HighTarget
 	}
 	if herr := checkTempTarget(&merged, siteContext); herr != nil {
-		return herr
-	}
-	q, err := tx.Site()
-	if err != nil {
-		return apiutils.ErrInternalServerError
+		return nil, herr
 	}
 	model.ID = oldModel.ID
-	updated, err := q.UpdateTempTarget(ctx, sitemodels.TempTargetToUpdate(model, siteContext))
-	if err == sql.ErrNoRows {
-		return apiutils.ErrNotFound
-	}
-	if err != nil {
-		return apiutils.WriteError(err, "temp target")
-	}
-	tx.Updated(updated)
-	*model = *sitemodels.TempTargetFromDB(updated, siteContext)
-	return nil
+	return q.UpdateTempTarget(ctx, sitemodels.TempTargetToUpdate(model, siteContext))
 }
 
 func (s *TempTargetsStore) UpdateHTMXResponse(model *sitemodels.SiteTempTarget) templ.Component {
@@ -98,13 +72,13 @@ func (s *TempTargetsStore) UpdateHTMXResponse(model *sitemodels.SiteTempTarget) 
 // ////
 // Get Model
 // /////
-func (s *TempTargetsStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext) (*sitemodels.SiteTempTarget, *apiutils.HTTPError) {
-	q, err := tx.Site()
-	if err != nil {
-		return nil, apiutils.ErrInternalServerError
-	}
-	tempTarget, err := q.GetTempTarget(ctx, sitedb.GetTempTargetParams{ID: id})
-	return apiutils.Found(tempTarget, err, "temp target", apiutils.WithContext(sitemodels.TempTargetFromDB, siteContext))
+func (s *TempTargetsStore) GetRow(ctx context.Context, q *sitedb.Queries, id string) (*sitedb.TempTarget, error) {
+	return q.GetTempTarget(ctx, sitedb.GetTempTargetParams{ID: id})
+}
+
+// ToModel is the site model of a row
+func (s *TempTargetsStore) ToModel(row *sitedb.TempTarget, siteContext *httputils.SiteContext) *sitemodels.SiteTempTarget {
+	return sitemodels.TempTargetFromDB(row, siteContext)
 }
 
 // GetHTMXResponse is the temp target's details, shown in a modal
@@ -116,13 +90,8 @@ func (s *TempTargetsStore) GetHTMXResponse(model *sitemodels.SiteTempTarget) tem
 // Search Models
 // ///
 
-func (s *TempTargetsStore) SearchModels(ctx context.Context, tx *siteapiutils.StoreTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.SiteTempTarget, *apiutils.HTTPError) {
-	q, err := tx.Site()
-	if err != nil {
-		return nil, apiutils.ErrInternalServerError
-	}
-	tempTargets, err := q.AllTempTargets(ctx, sitequery.QueryToAllTempTargets(query))
-	return apiutils.Searched(tempTargets, err, "temp targets", apiutils.WithContext(sitemodels.TempTargetFromDB, siteContext))
+func (s *TempTargetsStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query) ([]*sitedb.TempTarget, error) {
+	return q.AllTempTargets(ctx, sitequery.QueryToAllTempTargets(query))
 }
 
 func (s *TempTargetsStore) SearchHTMXResponse(models []*sitemodels.SiteTempTarget, query *apiutils.Query) templ.Component {
@@ -133,22 +102,13 @@ func (s *TempTargetsStore) SearchHTMXResponse(models []*sitemodels.SiteTempTarge
 // Delete
 // ///
 
-// DeleteModel soft deletes, like the Nightscout API, so syncing clients see the delete
-func (s *TempTargetsStore) DeleteModel(ctx context.Context, tx *siteapiutils.StoreTx, model *sitemodels.SiteTempTarget, siteContext *httputils.SiteContext) *apiutils.HTTPError {
-	q, err := tx.Site()
-	if err != nil {
-		return apiutils.ErrInternalServerError
-	}
-	tx.Deleted(q.GetTempTarget(ctx, sitedb.GetTempTargetParams{ID: model.ID}))
-	_, err = q.SoftDeleteTempTarget(ctx, sitedb.SoftDeleteTempTargetParams{
+// DeleteRow soft deletes, like the Nightscout API, so syncing clients see the delete
+func (s *TempTargetsStore) DeleteRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) error {
+	_, err := q.SoftDeleteTempTarget(ctx, sitedb.SoftDeleteTempTargetParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
-		ID:                    model.ID,
+		ID:                    id,
 	})
-	if err != nil {
-		slog.Error("Error deleting temp target", "error", err)
-		return apiutils.ErrInternalServerError
-	}
-	return nil
+	return err
 }
 
 func (s *TempTargetsStore) DeleteHTMXResponse(model *sitemodels.SiteTempTarget) templ.Component {

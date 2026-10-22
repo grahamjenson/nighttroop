@@ -2,7 +2,6 @@ package siteapiutils_test
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	"nighttroop.t1d.nz/utils/apiutils"
@@ -45,13 +44,12 @@ func TestStoreTx(t *testing.T) {
 	require.Error(t, err, "rolled back write should not exist")
 	require.Empty(t, published)
 
-	// Success commits the writes, then publishes the changes in order; a delete whose read failed is left out
+	// Success commits the writes, then publishes the changes in order
 	tx = siteapiutils.NewStoreTx(ctx, siteContext)
 	write(tx)
 	tx.Created("created")
 	tx.Updated("updated")
-	tx.Deleted("not read", errors.New("no rows"))
-	tx.Deleted("deleted", nil)
+	tx.Deleted("deleted")
 	require.Empty(t, published, "nothing is published before the commit")
 	require.Nil(t, tx.Finish(nil))
 	_, err = controlDB.Queries.GetSyncSource(ctx, virtual)

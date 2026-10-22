@@ -2,9 +2,7 @@ package sitedata
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
-	"log/slog"
 
 	"nighttroop.t1d.nz/utils/apiutils"
 
@@ -12,7 +10,6 @@ import (
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
-	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/server/siteapi/sitequery"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -32,24 +29,14 @@ func (s *ActivitiesStore) GetName() string {
 // ////
 // CREATE
 // ////
-func (s *ActivitiesStore) CreateModel(ctx context.Context, tx *siteapiutils.StoreTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteActivity) (bool, *apiutils.HTTPError) {
+func (s *ActivitiesStore) CreateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, model *sitemodels.SiteActivity) (*sitedb.Activity, error) {
 	if model.ActivityType == "" {
 		model.ActivityType = defaultActivityType
 	}
 	if herr := checkActivity(model); herr != nil {
-		return false, herr
+		return nil, herr
 	}
-	q, err := tx.Site()
-	if err != nil {
-		return false, apiutils.ErrInternalServerError
-	}
-	created, err := q.CreateActivity(ctx, sitemodels.ActivityToCreate(model, siteContext))
-	if err != nil {
-		return false, apiutils.WriteError(err, "activity")
-	}
-	tx.Created(created)
-	*model = *sitemodels.ActivityFromDB(created)
-	return true, nil
+	return q.CreateActivity(ctx, sitemodels.ActivityToCreate(model, siteContext))
 }
 
 func (s *ActivitiesStore) CreateHTMXResponse(model *sitemodels.SiteActivity) templ.Component {
@@ -60,26 +47,13 @@ func (s *ActivitiesStore) CreateHTMXResponse(model *sitemodels.SiteActivity) tem
 // UPDATE
 // ////
 
-// UpdateModel changes the fields sent; anything not sent stays as it is
-func (s *ActivitiesStore) UpdateModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteActivity, model *sitemodels.SiteActivity) *apiutils.HTTPError {
+// UpdateRow changes the fields sent; anything not sent stays as it is
+func (s *ActivitiesStore) UpdateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteActivity, model *sitemodels.SiteActivity) (*sitedb.Activity, error) {
 	if herr := checkActivity(model); herr != nil {
-		return herr
-	}
-	q, err := tx.Site()
-	if err != nil {
-		return apiutils.ErrInternalServerError
+		return nil, herr
 	}
 	model.ID = oldModel.ID
-	updated, err := q.UpdateActivity(ctx, sitemodels.ActivityToUpdate(model, siteContext))
-	if err == sql.ErrNoRows {
-		return apiutils.ErrNotFound
-	}
-	if err != nil {
-		return apiutils.WriteError(err, "activity")
-	}
-	tx.Updated(updated)
-	*model = *sitemodels.ActivityFromDB(updated)
-	return nil
+	return q.UpdateActivity(ctx, sitemodels.ActivityToUpdate(model, siteContext))
 }
 
 func (s *ActivitiesStore) UpdateHTMXResponse(model *sitemodels.SiteActivity) templ.Component {
@@ -89,13 +63,13 @@ func (s *ActivitiesStore) UpdateHTMXResponse(model *sitemodels.SiteActivity) tem
 // ////
 // Get Model
 // /////
-func (s *ActivitiesStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext) (*sitemodels.SiteActivity, *apiutils.HTTPError) {
-	q, err := tx.Site()
-	if err != nil {
-		return nil, apiutils.ErrInternalServerError
-	}
-	activity, err := q.GetActivity(ctx, sitedb.GetActivityParams{ID: id})
-	return apiutils.Found(activity, err, "activity", sitemodels.ActivityFromDB)
+func (s *ActivitiesStore) GetRow(ctx context.Context, q *sitedb.Queries, id string) (*sitedb.Activity, error) {
+	return q.GetActivity(ctx, sitedb.GetActivityParams{ID: id})
+}
+
+// ToModel is the site model of a row
+func (s *ActivitiesStore) ToModel(row *sitedb.Activity, siteContext *httputils.SiteContext) *sitemodels.SiteActivity {
+	return sitemodels.ActivityFromDB(row)
 }
 
 // GetHTMXResponse is the activity's details, shown in a modal
@@ -107,13 +81,8 @@ func (s *ActivitiesStore) GetHTMXResponse(model *sitemodels.SiteActivity) templ.
 // Search Models
 // ///
 
-func (s *ActivitiesStore) SearchModels(ctx context.Context, tx *siteapiutils.StoreTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.SiteActivity, *apiutils.HTTPError) {
-	q, err := tx.Site()
-	if err != nil {
-		return nil, apiutils.ErrInternalServerError
-	}
-	activities, err := q.AllActivities(ctx, sitequery.QueryToAllActivities(query))
-	return apiutils.Searched(activities, err, "activities", sitemodels.ActivityFromDB)
+func (s *ActivitiesStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query) ([]*sitedb.Activity, error) {
+	return q.AllActivities(ctx, sitequery.QueryToAllActivities(query))
 }
 
 func (s *ActivitiesStore) SearchHTMXResponse(models []*sitemodels.SiteActivity, query *apiutils.Query) templ.Component {
@@ -124,22 +93,13 @@ func (s *ActivitiesStore) SearchHTMXResponse(models []*sitemodels.SiteActivity, 
 // Delete
 // ///
 
-// DeleteModel soft deletes, like the Nightscout API, so syncing clients see the delete
-func (s *ActivitiesStore) DeleteModel(ctx context.Context, tx *siteapiutils.StoreTx, model *sitemodels.SiteActivity, siteContext *httputils.SiteContext) *apiutils.HTTPError {
-	q, err := tx.Site()
-	if err != nil {
-		return apiutils.ErrInternalServerError
-	}
-	tx.Deleted(q.GetActivity(ctx, sitedb.GetActivityParams{ID: model.ID}))
-	_, err = q.SoftDeleteActivity(ctx, sitedb.SoftDeleteActivityParams{
+// DeleteRow soft deletes, like the Nightscout API, so syncing clients see the delete
+func (s *ActivitiesStore) DeleteRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) error {
+	_, err := q.SoftDeleteActivity(ctx, sitedb.SoftDeleteActivityParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
-		ID:                    model.ID,
+		ID:                    id,
 	})
-	if err != nil {
-		slog.Error("Error deleting activity", "error", err)
-		return apiutils.ErrInternalServerError
-	}
-	return nil
+	return err
 }
 
 func (s *ActivitiesStore) DeleteHTMXResponse(model *sitemodels.SiteActivity) templ.Component {

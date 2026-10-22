@@ -3,6 +3,7 @@ package server
 // User router enables user specific router, and can route to NS router if endpoint hits that layer.
 
 import (
+	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/assets/static"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/server/siteapi/sitedata"
@@ -15,23 +16,24 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/data/sql/sitedb"
 )
 
 func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Router {
 	//STORES
 	syncSettingsStore := &sitesettings.SyncSettingsStore{}
 	identitiesStore := &sitesettings.IdentitiesStore{}
-	glucoseReadingsStore := &sitedata.GlucoseReadingsStore{}
-	tempTargetsStore := &sitedata.TempTargetsStore{}
-	tempBasalsStore := &sitedata.TempBasalsStore{}
-	activitiesStore := &sitedata.ActivitiesStore{}
-	componentEventsStore := &sitedata.ComponentEventsStore{}
-	notificationEventsStore := &sitedata.NotificationEventsStore{}
-	profileSwitchesStore := &sitedata.ProfileSwitchesStore{}
-	eventGroupsStore := &sitedata.EventGroupsStore{}
-	insulinDosesStore := &sitedata.InsulinDosesStore{}
-	foodIntakesStore := &sitedata.FoodIntakesStore{}
-	deviceStatusesStore := &sitedata.DeviceStatusesStore{}
+	glucoseReadingsStore := siteapiutils.Rows[sitedb.GlucoseReading, sitemodels.SiteGlucoseReading](&sitedata.GlucoseReadingsStore{})
+	tempTargetsStore := siteapiutils.Rows[sitedb.TempTarget, sitemodels.SiteTempTarget](&sitedata.TempTargetsStore{})
+	tempBasalsStore := siteapiutils.Rows[sitedb.TempBasal, sitemodels.SiteTempBasal](&sitedata.TempBasalsStore{})
+	activitiesStore := siteapiutils.Rows[sitedb.Activity, sitemodels.SiteActivity](&sitedata.ActivitiesStore{})
+	componentEventsStore := siteapiutils.Rows[sitedb.ComponentEvent, sitemodels.SiteComponentEvent](&sitedata.ComponentEventsStore{})
+	notificationEventsStore := siteapiutils.Rows[sitedb.NotificationEvent, sitemodels.SiteNotificationEvent](&sitedata.NotificationEventsStore{})
+	profileSwitchesStore := siteapiutils.Rows[sitedb.ProfileSwitch, sitemodels.SiteProfileSwitch](&sitedata.ProfileSwitchesStore{})
+	eventGroupsStore := siteapiutils.Rows[sitedb.EventGroupsBundle, sitemodels.SiteEventGroup](&sitedata.EventGroupsStore{})
+	insulinDosesStore := siteapiutils.Rows[sitedb.InsulinDose, sitemodels.SiteInsulinDose](&sitedata.InsulinDosesStore{})
+	foodIntakesStore := siteapiutils.Rows[sitedb.FoodIntake, sitemodels.SiteFoodIntake](&sitedata.FoodIntakesStore{})
+	deviceStatusesStore := siteapiutils.Rows[sitedb.DeviceReport, sitemodels.SiteDeviceStatus](&sitedata.DeviceStatusesStore{})
 	siteSettingsStore := &sitesettings.SettingsStore{Site: true}
 	identitySettingsStore := &sitesettings.SettingsStore{}
 
