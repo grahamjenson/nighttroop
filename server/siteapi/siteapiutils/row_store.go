@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"log/slog"
 
 	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/events/sitemodels"
@@ -54,14 +53,14 @@ type RowDeleter[R, M, Q any] interface {
 
 // Rows is the store the handlers use
 type Rows[R, M, Q any] struct {
-	store   RowStore[R, M, Q]
-	queries func(*StoreTx) (Q, error)
-	publish bool // a change to the site's own rows is published on its model events
+	store          RowStore[R, M, Q]
+	queries        func(*StoreTx) (Q, error)
+	reportsChanges bool // changes to the site's own rows are reported, to be published on its model events
 }
 
 // SiteRows is a store of the site's own rows, whose changes are published
 func SiteRows[R, M any](store RowStore[R, M, *sitedb.Queries]) *Rows[R, M, *sitedb.Queries] {
-	return &Rows[R, M, *sitedb.Queries]{store: store, queries: (*StoreTx).Site, publish: true}
+	return &Rows[R, M, *sitedb.Queries]{store: store, queries: (*StoreTx).Site, reportsChanges: true}
 }
 
 // ControlRows is a store of the site's rows in the control database, such as its identities
@@ -71,8 +70,8 @@ func ControlRows[R, M any](store RowStore[R, M, *controldb.Queries]) *Rows[R, M,
 
 func (s *Rows[R, M, Q]) GetName() string { return s.store.GetName() }
 
-// as is the store as what a handler needs it to do; a store routed to a handler it cannot do fails at start up
-func as[I, R, M, Q any](s *Rows[R, M, Q], does string) I {
+// storeCan is the store as what a handler needs it to do; a store routed to a handler it cannot do fails at start up
+func storeCan[I, R, M, Q any](s *Rows[R, M, Q], does string) I {
 	i, ok := s.store.(I)
 	if !ok {
 		panic(fmt.Sprintf("the %s store cannot %s", s.GetName(), does))
@@ -90,7 +89,7 @@ func (s *Rows[R, M, Q]) get(ctx context.Context, tx *StoreTx, id string, siteCon
 	if errors.Is(err, sql.ErrNoRows) || (err == nil && row == nil) {
 		return nil, nil, nil
 	}
-	if herr := s.readError(err); herr != nil {
+	if herr := answer(err, s.GetName()); herr != nil {
 		return nil, nil, herr
 	}
 	return s.store.ToModel(row, siteContext), row, nil
@@ -102,7 +101,7 @@ func (s *Rows[R, M, Q]) search(ctx context.Context, tx *StoreTx, searcher RowSea
 		return nil, apiutils.ErrInternalServerError
 	}
 	rows, err := searcher.SearchRows(ctx, q, query, siteContext)
-	if herr := s.readError(err); herr != nil {
+	if herr := answer(err, s.GetName()); herr != nil {
 		return nil, herr
 	}
 	models := make([]*M, 0, len(rows))
@@ -118,10 +117,10 @@ func (s *Rows[R, M, Q]) create(ctx context.Context, tx *StoreTx, creator RowCrea
 		return apiutils.ErrInternalServerError
 	}
 	row, err := creator.CreateRow(ctx, q, id, siteContext, model)
-	if herr := writeError(err, s.GetName()); herr != nil {
+	if herr := answer(err, s.GetName()); herr != nil {
 		return herr
 	}
-	s.changed(tx, sitemodels.Created, row)
+	s.reportChange(tx, sitemodels.Created, row)
 	*model = *s.store.ToModel(row, siteContext)
 	return nil
 }
@@ -132,10 +131,10 @@ func (s *Rows[R, M, Q]) update(ctx context.Context, tx *StoreTx, updater RowUpda
 		return apiutils.ErrInternalServerError
 	}
 	row, err := updater.UpdateRow(ctx, q, siteContext, oldModel, model)
-	if herr := writeError(err, s.GetName()); herr != nil {
+	if herr := answer(err, s.GetName()); herr != nil {
 		return herr
 	}
-	s.changed(tx, sitemodels.Updated, row)
+	s.reportChange(tx, sitemodels.Updated, row)
 	*model = *s.store.ToModel(row, siteContext)
 	return nil
 }
@@ -146,34 +145,22 @@ func (s *Rows[R, M, Q]) delete(ctx context.Context, tx *StoreTx, deleter RowDele
 	if err != nil {
 		return apiutils.ErrInternalServerError
 	}
-	if herr := writeError(deleter.DeleteRow(ctx, q, id, siteContext), s.GetName()); herr != nil {
+	if herr := answer(deleter.DeleteRow(ctx, q, id, siteContext), s.GetName()); herr != nil {
 		return herr
 	}
-	s.changed(tx, sitemodels.Deleted, row)
+	s.reportChange(tx, sitemodels.Deleted, row)
 	return nil
 }
 
-func (s *Rows[R, M, Q]) changed(tx *StoreTx, action sitemodels.Action, row *R) {
-	if s.publish {
-		tx.changed(action, row)
+// reportChange reports a change to the site's own rows, to be published once the transaction commits
+func (s *Rows[R, M, Q]) reportChange(tx *StoreTx, action sitemodels.Action, row *R) {
+	if s.reportsChanges {
+		tx.reportChange(action, row)
 	}
 }
 
-// readError is the answer to a read's error: the store's own, or the database's
-func (s *Rows[R, M, Q]) readError(err error) *apiutils.HTTPError {
-	var herr *apiutils.HTTPError
-	switch {
-	case err == nil:
-		return nil
-	case errors.As(err, &herr):
-		return herr
-	}
-	slog.Error("Error reading "+s.GetName(), "error", err)
-	return apiutils.ErrInternalServerError
-}
-
-// writeError is the answer to a write's error: the store's own, not found for a missing row, or the database's
-func writeError(err error, what string) *apiutils.HTTPError {
+// answer is the response to a store's error: its own, not found for a missing row, or the database's
+func answer(err error, what string) *apiutils.HTTPError {
 	var herr *apiutils.HTTPError
 	switch {
 	case err == nil:

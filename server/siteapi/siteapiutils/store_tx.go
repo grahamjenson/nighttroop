@@ -21,7 +21,8 @@ type StoreTx struct {
 	siteContext *httputils.SiteContext
 	controlTx   *sql.Tx
 	siteTx      *sql.Tx
-	changes     []sitemodels.Event // published once committed
+	// reportedChanges are the changes to the site's models made in the transaction, published once it commits
+	reportedChanges []sitemodels.Event
 }
 
 func NewStoreTx(ctx context.Context, siteContext *httputils.SiteContext) *StoreTx {
@@ -70,15 +71,15 @@ func (t *StoreTx) Finish(herr *apiutils.HTTPError) *apiutils.HTTPError {
 	if err != nil {
 		return apiutils.ErrInternalServerError
 	}
-	for _, change := range t.changes {
+	for _, change := range t.reportedChanges {
 		t.siteContext.PublishModelChange(change.Action, change.Model)
 	}
 	return nil
 }
 
-// changed records a change to one of the site's models, the sitedb row, to publish once committed
-func (t *StoreTx) changed(action sitemodels.Action, model any) {
-	t.changes = append(t.changes, sitemodels.Event{Action: action, Model: model})
+// reportChange reports a change to one of the site's models, its sitedb row, to be published once committed
+func (t *StoreTx) reportChange(action sitemodels.Action, row any) {
+	t.reportedChanges = append(t.reportedChanges, sitemodels.Event{Action: action, Model: row})
 }
 
 // Rollback undoes anything not yet committed. It is safe to defer: after Finish it does nothing.
