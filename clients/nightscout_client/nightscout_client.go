@@ -60,6 +60,9 @@ func NewClient(baseURL, token string) *Client {
 		token:   token,
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
+			// Never follow redirects: the sync URL is only checked when saved, so a
+			// redirect could point at an internal host. The 3xx is handled as a failure.
+			CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
 		},
 	}
 }
@@ -75,7 +78,8 @@ func (c *Client) doRequest(
 			return nil, fmt.Errorf("error refreshing JWT: %w", err)
 		}
 	}
-	if testing.Testing() {
+	// Only TestValidURL is faked: a test that sets a JWT and an httptest URL goes over HTTP.
+	if testing.Testing() && c.baseURL == TestValidURL {
 		return map[string]any{"result": []any{}}, nil
 	}
 
@@ -210,6 +214,7 @@ func (c *Client) GetEntries(
 		return converted, nil
 	}
 
-	return nil, fmt.Errorf("NSClient Get Entries Error: %s %s", c.baseURL, resp)
+	// The body is never put in the error: it is stored and shown as a sync error.
+	return nil, fmt.Errorf("NSClient Get Entries Error: %s returned no result array", c.baseURL)
 
 }
