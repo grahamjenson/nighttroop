@@ -9,40 +9,39 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 )
 
-// The graph is drawn in a 1000 wide viewBox: glucose on top, then insulin and carbs, then temp basals, then the time axis
+// The graph is drawn in a 1000 wide viewBox: glucose on top, then a row of insulin and one of carbs, then temp basals, then the time axis
 const (
 	graphWidth   = 1000.0
 	graphLeft    = 60.0
-	graphRight   = 990.0
+	graphRight   = 960.0
 	glucoseTop   = 10.0
-	glucoseBase  = 230.0
-	insulinTop   = 245.0
-	insulinBase  = 290.0
-	basalTop     = 300.0
+	glucoseBase  = 250.0
+	insulinRow   = 268.0
+	carbsRow     = 290.0
+	basalTop     = 324.0
 	basalBase    = 340.0
 	graphHeight  = 362.0
 	rangeLowMgdl = 70.0
 	rangeTopMgdl = 180.0
 	// The glucose axis always shows up to at least this, so a flat day is not stretched
 	minAxisMgdl = 270.0
+	// The glucose axis starts here, as readings below it are rare
+	axisStartMgdl = 40.0
 )
 
 // graph maps times and values in a summary to points on the SVG
 type graph struct {
 	since, until int64
 	units        *consts.Units
+	glucoseMin   float64
 	glucoseMax   float64
-	insulinMax   float64
 	basalMax     float64
 }
 
 func newGraph(s *sitemodels.Summary, now int64) graph {
-	g := graph{since: s.Since, until: now, units: s.Units, glucoseMax: s.Units.FromMGDL(minAxisMgdl), insulinMax: 1, basalMax: 1}
+	g := graph{since: s.Since, until: now, units: s.Units, glucoseMin: s.Units.FromMGDL(axisStartMgdl), glucoseMax: s.Units.FromMGDL(minAxisMgdl), basalMax: 1}
 	for _, r := range s.GlucoseReadings {
 		g.glucoseMax = max(g.glucoseMax, r.Reading)
-	}
-	for _, d := range s.InsulinDoses {
-		g.insulinMax = max(g.insulinMax, d.Dose)
 	}
 	for _, b := range s.TempBasals {
 		if b.Absolute != nil {
@@ -57,14 +56,16 @@ func (g graph) x(ms int64) float64 {
 	return graphLeft + float64(ms-g.since)/float64(g.until-g.since)*(graphRight-graphLeft)
 }
 
-// scale maps 0 to base and top value to top
+// scale maps 0 to base and top value to top, keeping values outside them on the edges
 func scale(v, maxV, top, base float64) float64 {
-	return base - min(v/maxV, 1)*(base-top)
+	return base - min(max(v/maxV, 0), 1)*(base-top)
 }
 
-func (g graph) glucoseY(v float64) float64 { return scale(v, g.glucoseMax, glucoseTop, glucoseBase) }
-func (g graph) insulinY(v float64) float64 { return scale(v, g.insulinMax, insulinTop, insulinBase) }
-func (g graph) basalY(v float64) float64   { return scale(v, g.basalMax, basalTop, basalBase) }
+func (g graph) glucoseY(v float64) float64 {
+	return scale(v-g.glucoseMin, g.glucoseMax-g.glucoseMin, glucoseTop, glucoseBase)
+}
+
+func (g graph) basalY(v float64) float64 { return scale(v, g.basalMax, basalTop, basalBase) }
 
 func (g graph) rangeLow() float64 { return g.units.FromMGDL(rangeLowMgdl) }
 func (g graph) rangeTop() float64 { return g.units.FromMGDL(rangeTopMgdl) }
@@ -85,16 +86,25 @@ func (g graph) endOf(start, durationMinutes int64) int64 {
 	return min(start+durationMinutes*60_000, g.until)
 }
 
-// basalPath is a filled step for each temp basal, as high as its rate, for as long as it runs
+// basalPath is a step line along the bottom for each temp basal, as high as its rate, for as long as it runs
 func (g graph) basalPath(basals []*sitemodels.SiteTempBasal) string {
 	var path strings.Builder
 	for _, b := range basals {
 		if b.Absolute == nil {
 			continue
 		}
-		fmt.Fprintf(&path, "M%s %s V%s H%s V%s Z ", f(g.x(b.OccurredAt)), f(basalBase), f(g.basalY(*b.Absolute)), f(g.x(g.endOf(b.OccurredAt, b.DurationMinutes))), f(basalBase))
+		fmt.Fprintf(&path, "M%s %s V%s H%s V%s ", f(g.x(b.OccurredAt)), f(basalBase), f(g.basalY(*b.Absolute)), f(g.x(g.endOf(b.OccurredAt, b.DurationMinutes))), f(basalBase))
 	}
 	return strings.TrimSpace(path.String())
+}
+
+// triangle is a small marker centred on x and y, pointing up or down
+func triangle(x, y float64, up bool) string {
+	tip, side := y-5, y+4
+	if !up {
+		tip, side = y+5, y-4
+	}
+	return fmt.Sprintf("M%s %s L%s %s L%s %s Z", f(x), f(tip), f(x+5), f(side), f(x-5), f(side))
 }
 
 type tick struct {
