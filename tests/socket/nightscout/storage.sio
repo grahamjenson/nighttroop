@@ -1,0 +1,110 @@
+# AAPS's NSClient v3 follows API v3's /storage namespace: it subscribes with its access token to the collections
+# it wants, then gets each create, update and delete in them
+
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME connect
+CONNECT http://{{ site }}/socket.io/?EIO=4
+NS /storage
+T 5s
+
+NAME bad_token
+EMIT subscribe
+B {"accessToken":"nope-0123456789abcdef"}
+ACK
+ASSERT_EQUALS false "@success"
+ASSERT_EQUALS "Missing or bad accessToken" "@message"
+
+# Only the collections API v3 serves are subscribed to, once each
+NAME subscribe
+EMIT subscribe
+B {"accessToken":"{{ token }}","collections":["treatments","entries","treatments","nope"]}
+ACK
+ASSERT_EQUALS true "@success"
+ASSERT_LENGTH 2 "@collections"
+ASSERT_EQUALS "treatments" "@collections.0"
+ASSERT_EQUALS "entries" "@collections.1"
+
+NAME post_treatment
+POST http://{{ site }}/api/v3/treatments?token={{ token }}
+B {"eventType":"Correction Bolus","insulin":1.5,"date":{{ itime 0 }},"app":"AAPS"}
+ASSERT_STATUS 201
+SET identifier {{ dig "post_treatment.identifier" }}
+
+NAME created
+WAIT create
+T 5s
+ASSERT_EQUALS "treatments" "@colName"
+ASSERT_EQUALS ".identifier" "@doc.identifier"
+ASSERT_EQUALS "Correction Bolus" "@doc.eventType"
+ASSERT_EQUALS 1.5 "@doc.insulin"
+ASSERT_EQUALS true "@doc.isValid"
+ASSERT_EXISTS "@doc.srvModified"
+
+NAME patch_treatment
+PATCH http://{{ site }}/api/v3/treatments/{{ .identifier }}?token={{ token }}
+B {"insulin":2}
+ASSERT_STATUS 200
+
+NAME updated
+WAIT update
+T 5s
+ASSERT_EQUALS "treatments" "@colName"
+ASSERT_EQUALS ".identifier" "@doc.identifier"
+ASSERT_EQUALS 2 "@doc.insulin"
+
+NAME delete_treatment
+DELETE http://{{ site }}/api/v3/treatments/{{ .identifier }}?token={{ token }}
+ASSERT_STATUS 200
+
+NAME deleted
+WAIT delete
+T 5s
+ASSERT_EQUALS "treatments" "@colName"
+ASSERT_EQUALS ".identifier" "@identifier"
+
+# Not subscribed to devicestatus, so its changes are not sent
+NAME post_devicestatus
+POST http://{{ site }}/api/v1/devicestatus?token={{ token }}
+B {"device":"openaps://phone","uploaderBattery":80}
+ASSERT_STATUS 200
+
+NAME no_devicestatus
+COLLECT create
+T 500ms
+ASSERT_LENGTH 0 "@"
+
+NAME bye
+DISCONNECT
+
+# A Socket.IO v2 client subscribes the same way, to every collection when it names none
+NAME connect_v2
+CONNECT http://{{ site }}/socket.io/?EIO=3
+NS /storage
+T 5s
+
+NAME subscribe_all
+EMIT subscribe
+B {"accessToken":"{{ token }}"}
+ACK
+ASSERT_EQUALS true "@success"
+ASSERT_LENGTH 6 "@collections"
+
+NAME post_entry
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [{"type":"sgv","sgv":120,"date":{{ itime 0 }}}]
+ASSERT_STATUS 200
+
+NAME entry_created
+WAIT create
+T 5s
+ASSERT_EQUALS "entries" "@colName"
+ASSERT_EQUALS "sgv" "@doc.type"
+ASSERT_EQUALS ".post_entry.0._id" "@doc.identifier"
+
+NAME bye_v2
+DISCONNECT
