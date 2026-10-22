@@ -63,53 +63,53 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Get("/summary", sitesummary.GetSummaryHandler(controlDB, config))
 
 		// Data Glucose Readings
-		siteapiutils.Routes(r, "/data/glucose", controlDB, config, glucoseReadingsStore)
+		siteapiutils.Routes(r, "/data/glucose", glucoseReadingsStore)
 
 		// Data Temp Targets
-		siteapiutils.Routes(r, "/data/temp-targets", controlDB, config, tempTargetsStore)
+		siteapiutils.Routes(r, "/data/temp-targets", tempTargetsStore)
 
 		// Data Temp Basals
-		siteapiutils.Routes(r, "/data/temp-basals", controlDB, config, tempBasalsStore)
+		siteapiutils.Routes(r, "/data/temp-basals", tempBasalsStore)
 
 		// Data Activities
-		siteapiutils.Routes(r, "/data/activities", controlDB, config, activitiesStore)
+		siteapiutils.Routes(r, "/data/activities", activitiesStore)
 
 		// Data Component Events
-		siteapiutils.Routes(r, "/data/component-events", controlDB, config, componentEventsStore)
+		siteapiutils.Routes(r, "/data/component-events", componentEventsStore)
 
 		// Data Notifications
-		siteapiutils.Routes(r, "/data/notifications", controlDB, config, notificationEventsStore)
+		siteapiutils.Routes(r, "/data/notifications", notificationEventsStore)
 
 		// Data Profile Switches
-		siteapiutils.Routes(r, "/data/profile-switches", controlDB, config, profileSwitchesStore)
+		siteapiutils.Routes(r, "/data/profile-switches", profileSwitchesStore)
 
 		// Data Event Groups, which the Nightscout treatments API creates and changes
-		siteapiutils.Routes(r, "/data/event-groups", controlDB, config, eventGroupsStore)
+		siteapiutils.Routes(r, "/data/event-groups", eventGroupsStore)
 
 		// Data Insulin Doses
-		siteapiutils.Routes(r, "/data/insulin", controlDB, config, insulinDosesStore)
+		siteapiutils.Routes(r, "/data/insulin", insulinDosesStore)
 
 		// Data Food Intakes
-		siteapiutils.Routes(r, "/data/food", controlDB, config, foodIntakesStore)
+		siteapiutils.Routes(r, "/data/food", foodIntakesStore)
 
 		// Data Device Statuses
-		siteapiutils.Routes(r, "/data/device-status", controlDB, config, deviceStatusesStore)
+		siteapiutils.Routes(r, "/data/device-status", deviceStatusesStore)
 
 		// Settings Sync
-		r.Get("/settings/sync", siteapiutils.SearchHandler(controlDB, config, syncSettingsStore))
-		r.Post("/settings/sync/{id}", siteapiutils.UpsertHandler(controlDB, config, syncSettingsStore))
-		r.Delete("/settings/sync/{id}", siteapiutils.DeleteHandler(controlDB, config, syncSettingsStore))
+		r.Get("/settings/sync", siteapiutils.SearchHandler(syncSettingsStore))
+		r.Post("/settings/sync/{id}", siteapiutils.UpsertHandler(syncSettingsStore))
+		r.Delete("/settings/sync/{id}", siteapiutils.DeleteHandler(syncSettingsStore))
 
 		// Settings Identities
-		siteapiutils.Routes(r, "/settings/identities", controlDB, config, identitiesStore)
+		siteapiutils.Routes(r, "/settings/identities", identitiesStore)
 
 		// Settings for the site (admins only) and the signed in identity
 		// One page shows the site's settings beside an admin's own, or just the identity's
-		r.Get("/settings", siteapiutils.GetHandler(controlDB, config, identitySettingsStore))
-		r.Get("/settings/site", siteapiutils.GetHandler(controlDB, config, siteSettingsStore))
-		r.Post("/settings/site", siteapiutils.UpdateHandler(controlDB, config, siteSettingsStore))
-		r.Get("/settings/identity", siteapiutils.GetHandler(controlDB, config, identitySettingsStore))
-		r.Post("/settings/identity", siteapiutils.UpdateHandler(controlDB, config, identitySettingsStore))
+		r.Get("/settings", siteapiutils.GetHandler(identitySettingsStore))
+		r.Get("/settings/site", siteapiutils.GetHandler(siteSettingsStore))
+		r.Post("/settings/site", siteapiutils.UpdateHandler(siteSettingsStore))
+		r.Get("/settings/identity", siteapiutils.GetHandler(identitySettingsStore))
+		r.Post("/settings/identity", siteapiutils.UpdateHandler(identitySettingsStore))
 
 		// Settings Settings
 		r.Get("/settings/config", sitesettings.GETConfigSettingsHandler(controlDB, config))

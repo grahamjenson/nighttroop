@@ -8,10 +8,8 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
-	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server/components/site_templ"
 
-	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -19,7 +17,7 @@ import (
 // CREATE
 ///////
 
-func CreateHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerConfig, store *Rows[R, M, Q]) http.HandlerFunc {
+func CreateHandler[R, M, Q any](store *Rows[R, M, Q]) http.HandlerFunc {
 	creator := storeCan[RowCreator[R, M, Q]](store, "create")
 	return func(w http.ResponseWriter, r *http.Request) {
 		siteContext := SiteContextFor(w, r, store.GetName(), ActionCreate)
@@ -49,7 +47,7 @@ func CreateHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerCo
 // UPDATE
 ///////
 
-func UpdateHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerConfig, store *Rows[R, M, Q]) http.HandlerFunc {
+func UpdateHandler[R, M, Q any](store *Rows[R, M, Q]) http.HandlerFunc {
 	updater := storeCan[RowUpdater[R, M, Q]](store, "update")
 	return func(w http.ResponseWriter, r *http.Request) {
 		siteContext := SiteContextFor(w, r, store.GetName(), ActionUpdate)
@@ -90,7 +88,7 @@ func UpdateHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerCo
 /////
 
 // UpsertHandler creates the model with the URL's id, or updates it when there is one
-func UpsertHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerConfig, store *Rows[R, M, Q]) http.HandlerFunc {
+func UpsertHandler[R, M, Q any](store *Rows[R, M, Q]) http.HandlerFunc {
 	creator := storeCan[RowCreator[R, M, Q]](store, "create")
 	updater := storeCan[RowUpdater[R, M, Q]](store, "update")
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -132,7 +130,7 @@ func UpsertHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerCo
 // READ
 /////
 
-func SearchHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerConfig, store *Rows[R, M, Q]) http.HandlerFunc {
+func SearchHandler[R, M, Q any](store *Rows[R, M, Q]) http.HandlerFunc {
 	searcher := storeCan[RowSearcher[R, M, Q]](store, "search")
 	return func(w http.ResponseWriter, r *http.Request) {
 		siteContext := SiteContextFor(w, r, store.GetName(), ActionSearch)
@@ -157,7 +155,7 @@ func SearchHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerCo
 	}
 }
 
-func GetHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerConfig, store *Rows[R, M, Q]) http.HandlerFunc {
+func GetHandler[R, M, Q any](store *Rows[R, M, Q]) http.HandlerFunc {
 	getter := storeCan[RowGetter[M]](store, "get")
 	return func(w http.ResponseWriter, r *http.Request) {
 		siteContext := SiteContextFor(w, r, store.GetName(), ActionGet)
@@ -185,7 +183,7 @@ func GetHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerConfi
 // DELETE
 // ////
 
-func DeleteHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerConfig, store *Rows[R, M, Q]) http.HandlerFunc {
+func DeleteHandler[R, M, Q any](store *Rows[R, M, Q]) http.HandlerFunc {
 	deleter := storeCan[RowDeleter[R, M, Q]](store, "delete")
 	return func(w http.ResponseWriter, r *http.Request) {
 		siteContext := SiteContextFor(w, r, store.GetName(), ActionDelete)
@@ -237,21 +235,21 @@ func DeleteHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerCo
 
 // Routes registers the routes for what the store can do: search and create at path, and get, update and delete
 // at path/{id}
-func Routes[R, M, Q any](r chi.Router, path string, controlDB *db.ControlDB, config *config.ServerConfig, store *Rows[R, M, Q]) {
+func Routes[R, M, Q any](r chi.Router, path string, store *Rows[R, M, Q]) {
 	if _, ok := store.store.(RowSearcher[R, M, Q]); ok {
-		r.Get(path, SearchHandler(controlDB, config, store))
+		r.Get(path, SearchHandler(store))
 	}
 	if _, ok := store.store.(RowCreator[R, M, Q]); ok {
-		r.Post(path, CreateHandler(controlDB, config, store))
+		r.Post(path, CreateHandler(store))
 	}
 	if _, ok := store.store.(RowGetter[M]); ok {
-		r.Get(path+"/{id}", GetHandler(controlDB, config, store))
+		r.Get(path+"/{id}", GetHandler(store))
 	}
 	if _, ok := store.store.(RowUpdater[R, M, Q]); ok {
-		r.Post(path+"/{id}", UpdateHandler(controlDB, config, store))
+		r.Post(path+"/{id}", UpdateHandler(store))
 	}
 	if _, ok := store.store.(RowDeleter[R, M, Q]); ok {
-		r.Delete(path+"/{id}", DeleteHandler(controlDB, config, store))
+		r.Delete(path+"/{id}", DeleteHandler(store))
 	}
 }
 
