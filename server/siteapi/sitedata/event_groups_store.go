@@ -33,7 +33,7 @@ func (s *EventGroupsStore) ToModel(row *sitedb.EventGroupsBundle, siteContext *h
 // ////
 // Get Model
 // /////
-func (s *EventGroupsStore) GetRow(ctx context.Context, q *sitedb.Queries, id string) (*sitedb.EventGroupsBundle, error) {
+func (s *EventGroupsStore) GetRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) (*sitedb.EventGroupsBundle, error) {
 	row, err := q.GetEventGroup(ctx, sitedb.GetEventGroupParams{ID: id})
 	if err != nil {
 		return nil, err
@@ -51,7 +51,7 @@ func (s *EventGroupsStore) GetHTMXResponse(model *sitemodels.SiteEventGroup) tem
 // Search Models
 // ///
 
-func (s *EventGroupsStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query) ([]*sitedb.EventGroupsBundle, error) {
+func (s *EventGroupsStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.EventGroupsBundle, error) {
 	rows, err := q.AllEventGroups(ctx, sitequery.QueryToAllEventGroups(query))
 	if err != nil {
 		return nil, err

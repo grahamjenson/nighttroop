@@ -21,21 +21,21 @@ import (
 
 func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Router {
 	//STORES
-	syncSettingsStore := &sitesettings.SyncSettingsStore{}
-	identitiesStore := &sitesettings.IdentitiesStore{}
-	glucoseReadingsStore := siteapiutils.Rows[sitedb.GlucoseReading, sitemodels.SiteGlucoseReading](&sitedata.GlucoseReadingsStore{})
-	tempTargetsStore := siteapiutils.Rows[sitedb.TempTarget, sitemodels.SiteTempTarget](&sitedata.TempTargetsStore{})
-	tempBasalsStore := siteapiutils.Rows[sitedb.TempBasal, sitemodels.SiteTempBasal](&sitedata.TempBasalsStore{})
-	activitiesStore := siteapiutils.Rows[sitedb.Activity, sitemodels.SiteActivity](&sitedata.ActivitiesStore{})
-	componentEventsStore := siteapiutils.Rows[sitedb.ComponentEvent, sitemodels.SiteComponentEvent](&sitedata.ComponentEventsStore{})
-	notificationEventsStore := siteapiutils.Rows[sitedb.NotificationEvent, sitemodels.SiteNotificationEvent](&sitedata.NotificationEventsStore{})
-	profileSwitchesStore := siteapiutils.Rows[sitedb.ProfileSwitch, sitemodels.SiteProfileSwitch](&sitedata.ProfileSwitchesStore{})
-	eventGroupsStore := siteapiutils.Rows[sitedb.EventGroupsBundle, sitemodels.SiteEventGroup](&sitedata.EventGroupsStore{})
-	insulinDosesStore := siteapiutils.Rows[sitedb.InsulinDose, sitemodels.SiteInsulinDose](&sitedata.InsulinDosesStore{})
-	foodIntakesStore := siteapiutils.Rows[sitedb.FoodIntake, sitemodels.SiteFoodIntake](&sitedata.FoodIntakesStore{})
-	deviceStatusesStore := siteapiutils.Rows[sitedb.DeviceReport, sitemodels.SiteDeviceStatus](&sitedata.DeviceStatusesStore{})
-	siteSettingsStore := &sitesettings.SettingsStore{Site: true}
-	identitySettingsStore := &sitesettings.SettingsStore{}
+	syncSettingsStore := siteapiutils.ControlRows[sitemodels.SyncSource, sitemodels.SyncSource](&sitesettings.SyncSettingsStore{})
+	identitiesStore := siteapiutils.ControlRows[sitemodels.UserIdentity, sitemodels.UserIdentity](&sitesettings.IdentitiesStore{})
+	glucoseReadingsStore := siteapiutils.SiteRows[sitedb.GlucoseReading, sitemodels.SiteGlucoseReading](&sitedata.GlucoseReadingsStore{})
+	tempTargetsStore := siteapiutils.SiteRows[sitedb.TempTarget, sitemodels.SiteTempTarget](&sitedata.TempTargetsStore{})
+	tempBasalsStore := siteapiutils.SiteRows[sitedb.TempBasal, sitemodels.SiteTempBasal](&sitedata.TempBasalsStore{})
+	activitiesStore := siteapiutils.SiteRows[sitedb.Activity, sitemodels.SiteActivity](&sitedata.ActivitiesStore{})
+	componentEventsStore := siteapiutils.SiteRows[sitedb.ComponentEvent, sitemodels.SiteComponentEvent](&sitedata.ComponentEventsStore{})
+	notificationEventsStore := siteapiutils.SiteRows[sitedb.NotificationEvent, sitemodels.SiteNotificationEvent](&sitedata.NotificationEventsStore{})
+	profileSwitchesStore := siteapiutils.SiteRows[sitedb.ProfileSwitch, sitemodels.SiteProfileSwitch](&sitedata.ProfileSwitchesStore{})
+	eventGroupsStore := siteapiutils.SiteRows[sitedb.EventGroupsBundle, sitemodels.SiteEventGroup](&sitedata.EventGroupsStore{})
+	insulinDosesStore := siteapiutils.SiteRows[sitedb.InsulinDose, sitemodels.SiteInsulinDose](&sitedata.InsulinDosesStore{})
+	foodIntakesStore := siteapiutils.SiteRows[sitedb.FoodIntake, sitemodels.SiteFoodIntake](&sitedata.FoodIntakesStore{})
+	deviceStatusesStore := siteapiutils.SiteRows[sitedb.DeviceReport, sitemodels.SiteDeviceStatus](&sitedata.DeviceStatusesStore{})
+	siteSettingsStore := siteapiutils.ControlRows[sitemodels.Settings, sitemodels.Settings](&sitesettings.SettingsStore{Site: true})
+	identitySettingsStore := siteapiutils.ControlRows[sitemodels.Settings, sitemodels.Settings](&sitesettings.SettingsStore{})
 
 	r := chi.NewRouter()
 	httputils.AddStandardMiddleware(r, config)

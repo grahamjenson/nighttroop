@@ -14,7 +14,6 @@ import (
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
-	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -37,46 +36,42 @@ func (s *IdentitiesStore) GetName() string {
 // ////
 // CREATE
 // ////
-func (s *IdentitiesStore) CreateModel(ctx context.Context, tx *siteapiutils.StoreTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.UserIdentity) (bool, *apiutils.HTTPError) {
+func (s *IdentitiesStore) CreateRow(ctx context.Context, q *controldb.Queries, id *string, siteContext *httputils.SiteContext, model *sitemodels.UserIdentity) (*sitemodels.UserIdentity, error) {
 	if model.Name == "" || model.Role == "" {
-		return false, apiutils.ErrMissingRequiredFieldWithHint("name and role")
+		return nil, apiutils.ErrMissingRequiredFieldWithHint("name and role")
 	}
 	role := consts.IdentityRole(model.Role)
 	if !slices.Contains(identityRoles, role) {
-		return false, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Unknown role: %s", model.Role))
+		return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Unknown role: %s", model.Role))
 	}
 
-	q, err := tx.Control()
-	if err != nil {
-		return false, apiutils.ErrInternalServerError
-	}
 	// Counted inside the transaction, so two creates at once cannot both pass the limit
 	count, err := q.CountSiteIdentities(ctx, controldb.CountSiteIdentitiesParams{SiteID: siteContext.Subdomain})
 	if err != nil {
-		return false, apiutils.ErrInternalServerError
+		return nil, err
 	}
 	if maxIdentities := siteContext.Config.MaxIdentitiesPerSite; count >= int64(maxIdentities) {
-		return false, apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("a site can have at most %d users and devices", maxIdentities))
+		return nil, apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("a site can have at most %d users and devices", maxIdentities))
 	}
 	// Each create hashes a password with bcrypt, so stop creating and deleting from using up the CPU
 	if allowed, seconds := httputils.IdentityCreateWithinRateLimit(siteContext); !allowed {
-		return false, apiutils.ErrRateLimitExceeded(seconds)
+		return nil, apiutils.ErrRateLimitExceeded(seconds)
 	}
 
 	values, err := siteContext.ControlDB.CreateSiteIdentity(ctx, q, siteContext.Subdomain, model.Name, role)
 	if err != nil {
 		// Names are unique per site
-		return false, apiutils.WriteError(err, "identity")
+		return nil, err
 	}
 
 	created, herr := getIdentityByName(ctx, q, siteContext, model.Name)
 	if herr != nil {
-		return false, herr
+		return nil, herr
 	}
-	*model = *created
-	model.Password, model.TotpSecret, model.NSToken = values.Password, values.TotpSecret, values.NSToken
-	model.SiteURL = siteContext.SiteDB.URL()
-	return true, nil
+	// Shown this once
+	created.Password, created.TotpSecret, created.NSToken = values.Password, values.TotpSecret, values.NSToken
+	created.SiteURL = siteContext.SiteDB.URL()
+	return created, nil
 }
 
 func (s *IdentitiesStore) CreateHTMXResponse(model *sitemodels.UserIdentity) templ.Component {
@@ -87,15 +82,11 @@ func (s *IdentitiesStore) CreateHTMXResponse(model *sitemodels.UserIdentity) tem
 // Update
 // ///
 
-// UpdateModel only turns an identity on or off
-func (s *IdentitiesStore) UpdateModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext, oldModel *sitemodels.UserIdentity, model *sitemodels.UserIdentity) *apiutils.HTTPError {
-	q, err := tx.Control()
-	if err != nil {
-		return apiutils.ErrInternalServerError
-	}
+// UpdateRow only turns an identity on or off
+func (s *IdentitiesStore) UpdateRow(ctx context.Context, q *controldb.Queries, siteContext *httputils.SiteContext, oldModel *sitemodels.UserIdentity, model *sitemodels.UserIdentity) (*sitemodels.UserIdentity, error) {
 	if !model.Enabled {
 		if herr := checkCanRemoveIdentity(ctx, q, siteContext, oldModel); herr != nil {
-			return herr
+			return nil, herr
 		}
 	}
 
@@ -104,12 +95,7 @@ func (s *IdentitiesStore) UpdateModel(ctx context.Context, tx *siteapiutils.Stor
 	*model = *oldModel
 	model.Enabled = enabled
 
-	err = q.UpdateSiteIdentityEnabled(ctx, sitemodels.IdentityToUpdate(model, siteContext))
-	if err != nil {
-		slog.Error("Error updating identity", "error", err)
-		return apiutils.ErrInternalServerError
-	}
-	return nil
+	return model, q.UpdateSiteIdentityEnabled(ctx, sitemodels.IdentityToUpdate(model, siteContext))
 }
 
 func (s *IdentitiesStore) UpdateHTMXResponse(model *sitemodels.UserIdentity) templ.Component {
@@ -119,18 +105,21 @@ func (s *IdentitiesStore) UpdateHTMXResponse(model *sitemodels.UserIdentity) tem
 // ////
 // Get Model
 // /////
-func (s *IdentitiesStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext) (*sitemodels.UserIdentity, *apiutils.HTTPError) {
+func (s *IdentitiesStore) GetRow(ctx context.Context, q *controldb.Queries, id string, siteContext *httputils.SiteContext) (*sitemodels.UserIdentity, error) {
 	identityID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Invalid identity id: %s", id))
 	}
-
-	q, err := tx.Control()
-	if err != nil {
-		return nil, apiutils.ErrInternalServerError
-	}
 	identity, err := q.GetSiteIdentityByID(ctx, controldb.GetSiteIdentityByIDParams{SiteID: siteContext.Subdomain, ID: identityID})
-	return apiutils.Found(identity, err, "identity", apiutils.WithContext(sitemodels.IdentityFromDB, siteContext))
+	if err != nil {
+		return nil, err
+	}
+	return sitemodels.IdentityFromDB(identity, siteContext), nil
+}
+
+// ToModel is the identity: it is converted as it is read, so its row is its model
+func (s *IdentitiesStore) ToModel(row *sitemodels.UserIdentity, _ *httputils.SiteContext) *sitemodels.UserIdentity {
+	return row
 }
 
 func (s *IdentitiesStore) GetHTMXResponse(model *sitemodels.UserIdentity) templ.Component {
@@ -141,13 +130,16 @@ func (s *IdentitiesStore) GetHTMXResponse(model *sitemodels.UserIdentity) templ.
 // Search Models
 // ///
 
-func (s *IdentitiesStore) SearchModels(ctx context.Context, tx *siteapiutils.StoreTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.UserIdentity, *apiutils.HTTPError) {
-	q, err := tx.Control()
-	if err != nil {
-		return nil, apiutils.ErrInternalServerError
-	}
+func (s *IdentitiesStore) SearchRows(ctx context.Context, q *controldb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.UserIdentity, error) {
 	identities, err := q.AllSiteIdentities(ctx, controldb.AllSiteIdentitiesParams{SiteID: siteContext.Subdomain})
-	return apiutils.Searched(identities, err, "identities", apiutils.WithContext(sitemodels.IdentityFromDB, siteContext))
+	if err != nil {
+		return nil, err
+	}
+	models := make([]*sitemodels.UserIdentity, 0, len(identities))
+	for _, identity := range identities {
+		models = append(models, sitemodels.IdentityFromDB(identity, siteContext))
+	}
+	return models, nil
 }
 
 func (s *IdentitiesStore) SearchHTMXResponse(models []*sitemodels.UserIdentity, query *apiutils.Query) templ.Component {
@@ -170,22 +162,16 @@ func (s *IdentitiesStore) SearchHTMXResponse(models []*sitemodels.UserIdentity, 
 // Delete
 // ///
 
-// DeleteModel removes the identity, so its password and tokens stop working
-func (s *IdentitiesStore) DeleteModel(ctx context.Context, tx *siteapiutils.StoreTx, _ string, model *sitemodels.UserIdentity, siteContext *httputils.SiteContext) *apiutils.HTTPError {
-	q, err := tx.Control()
+// DeleteRow removes the identity, so its password and tokens stop working
+func (s *IdentitiesStore) DeleteRow(ctx context.Context, q *controldb.Queries, id string, siteContext *httputils.SiteContext) error {
+	model, err := s.GetRow(ctx, q, id, siteContext)
 	if err != nil {
-		return apiutils.ErrInternalServerError
+		return err
 	}
 	if herr := checkCanRemoveIdentity(ctx, q, siteContext, model); herr != nil {
 		return herr
 	}
-
-	err = q.DeleteSiteIdentity(ctx, sitemodels.IdentityToDelete(model, siteContext))
-	if err != nil {
-		slog.Error("Error deleting identity", "error", err)
-		return apiutils.ErrInternalServerError
-	}
-	return nil
+	return q.DeleteSiteIdentity(ctx, sitemodels.IdentityToDelete(model, siteContext))
 }
 
 func (s *IdentitiesStore) DeleteHTMXResponse(model *sitemodels.UserIdentity) templ.Component {

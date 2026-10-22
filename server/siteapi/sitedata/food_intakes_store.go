@@ -29,7 +29,7 @@ func (s *FoodIntakesStore) GetName() string {
 // ////
 // CREATE
 // ////
-func (s *FoodIntakesStore) CreateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, model *sitemodels.SiteFoodIntake) (*sitedb.FoodIntake, error) {
+func (s *FoodIntakesStore) CreateRow(ctx context.Context, q *sitedb.Queries, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteFoodIntake) (*sitedb.FoodIntake, error) {
 	if model.Carbs == nil {
 		return nil, apiutils.ErrMissingRequiredFieldWithHint("carbs")
 	}
@@ -63,7 +63,7 @@ func (s *FoodIntakesStore) UpdateHTMXResponse(model *sitemodels.SiteFoodIntake) 
 // ////
 // Get Model
 // /////
-func (s *FoodIntakesStore) GetRow(ctx context.Context, q *sitedb.Queries, id string) (*sitedb.FoodIntake, error) {
+func (s *FoodIntakesStore) GetRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) (*sitedb.FoodIntake, error) {
 	return q.GetFoodIntake(ctx, sitedb.GetFoodIntakeParams{ID: id})
 }
 
@@ -81,7 +81,7 @@ func (s *FoodIntakesStore) GetHTMXResponse(model *sitemodels.SiteFoodIntake) tem
 // Search Models
 // ///
 
-func (s *FoodIntakesStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query) ([]*sitedb.FoodIntake, error) {
+func (s *FoodIntakesStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.FoodIntake, error) {
 	return q.AllFoodIntakes(ctx, sitequery.QueryToAllFoodIntakes(query))
 }
 

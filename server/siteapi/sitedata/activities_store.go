@@ -29,7 +29,7 @@ func (s *ActivitiesStore) GetName() string {
 // ////
 // CREATE
 // ////
-func (s *ActivitiesStore) CreateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, model *sitemodels.SiteActivity) (*sitedb.Activity, error) {
+func (s *ActivitiesStore) CreateRow(ctx context.Context, q *sitedb.Queries, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteActivity) (*sitedb.Activity, error) {
 	if model.ActivityType == "" {
 		model.ActivityType = defaultActivityType
 	}
@@ -63,7 +63,7 @@ func (s *ActivitiesStore) UpdateHTMXResponse(model *sitemodels.SiteActivity) tem
 // ////
 // Get Model
 // /////
-func (s *ActivitiesStore) GetRow(ctx context.Context, q *sitedb.Queries, id string) (*sitedb.Activity, error) {
+func (s *ActivitiesStore) GetRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) (*sitedb.Activity, error) {
 	return q.GetActivity(ctx, sitedb.GetActivityParams{ID: id})
 }
 
@@ -81,7 +81,7 @@ func (s *ActivitiesStore) GetHTMXResponse(model *sitemodels.SiteActivity) templ.
 // Search Models
 // ///
 
-func (s *ActivitiesStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query) ([]*sitedb.Activity, error) {
+func (s *ActivitiesStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.Activity, error) {
 	return q.AllActivities(ctx, sitequery.QueryToAllActivities(query))
 }
 

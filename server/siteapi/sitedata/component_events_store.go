@@ -27,7 +27,7 @@ func (s *ComponentEventsStore) GetName() string {
 // ////
 // CREATE
 // ////
-func (s *ComponentEventsStore) CreateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, model *sitemodels.SiteComponentEvent) (*sitedb.ComponentEvent, error) {
+func (s *ComponentEventsStore) CreateRow(ctx context.Context, q *sitedb.Queries, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteComponentEvent) (*sitedb.ComponentEvent, error) {
 	if herr := checkComponentEventType(model.EventType); herr != nil {
 		return nil, herr
 	}
@@ -60,7 +60,7 @@ func (s *ComponentEventsStore) UpdateHTMXResponse(model *sitemodels.SiteComponen
 // ////
 // Get Model
 // /////
-func (s *ComponentEventsStore) GetRow(ctx context.Context, q *sitedb.Queries, id string) (*sitedb.ComponentEvent, error) {
+func (s *ComponentEventsStore) GetRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) (*sitedb.ComponentEvent, error) {
 	return q.GetComponentEvent(ctx, sitedb.GetComponentEventParams{ID: id})
 }
 
@@ -78,7 +78,7 @@ func (s *ComponentEventsStore) GetHTMXResponse(model *sitemodels.SiteComponentEv
 // Search Models
 // ///
 
-func (s *ComponentEventsStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query) ([]*sitedb.ComponentEvent, error) {
+func (s *ComponentEventsStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.ComponentEvent, error) {
 	return q.AllComponentEvents(ctx, sitequery.QueryToAllComponentEvents(query))
 }
 

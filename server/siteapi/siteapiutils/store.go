@@ -1,7 +1,6 @@
 package siteapiutils
 
 import (
-	"context"
 	"log/slog"
 	"net/http"
 
@@ -20,20 +19,15 @@ import (
 // CREATE
 ///////
 
-type CreateHandlerInterface[T any] interface {
-	CreateModel(ctx context.Context, tx *StoreTx, id *string, siteContext *httputils.SiteContext, model *T) (bool, *apiutils.HTTPError)
-	CreateHTMXResponse(model *T) templ.Component
-	GetName() string
-}
-
-func CreateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, store CreateHandlerInterface[T]) http.HandlerFunc {
+func CreateHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerConfig, store *Rows[R, M, Q]) http.HandlerFunc {
+	creator := as[RowCreator[R, M, Q]](store, "create")
 	return func(w http.ResponseWriter, r *http.Request) {
 		siteContext := SiteContextFor(w, r, store.GetName(), ActionCreate)
 		if siteContext == nil {
 			return
 		}
 
-		requestModel, herr := apiutils.ExtractModelFromRequest[T](siteContext.ContentType, r)
+		requestModel, herr := apiutils.ExtractModelFromRequest[M](siteContext.ContentType, r)
 		if herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return
@@ -41,17 +35,13 @@ func CreateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 
 		tx := NewStoreTx(r.Context(), siteContext)
 		defer tx.Rollback()
-		created, herr := store.CreateModel(r.Context(), tx, nil, siteContext, requestModel)
+		herr = store.create(r.Context(), tx, creator, nil, siteContext, requestModel)
 		if herr = tx.Finish(herr); herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return
 		}
 
-		status := http.StatusOK
-		if created {
-			status = http.StatusCreated
-		}
-		WriteResponse(w, r, siteContext, status, requestModel, store.CreateHTMXResponse(requestModel), false)
+		WriteResponse(w, r, siteContext, http.StatusCreated, requestModel, creator.CreateHTMXResponse(requestModel), false)
 	}
 }
 
@@ -59,16 +49,8 @@ func CreateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 // UPDATE
 ///////
 
-type UpdateHandlerInterface[T any] interface {
-	UpdateModel(ctx context.Context, tx *StoreTx, id string, siteContext *httputils.SiteContext, oldModel *T, model *T) *apiutils.HTTPError
-
-	UpdateHTMXResponse(model *T) templ.Component
-
-	GetModel(ctx context.Context, tx *StoreTx, id string, siteContext *httputils.SiteContext) (*T, *apiutils.HTTPError)
-	GetName() string
-}
-
-func UpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, store UpdateHandlerInterface[T]) http.HandlerFunc {
+func UpdateHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerConfig, store *Rows[R, M, Q]) http.HandlerFunc {
+	updater := as[RowUpdater[R, M, Q]](store, "update")
 	return func(w http.ResponseWriter, r *http.Request) {
 		siteContext := SiteContextFor(w, r, store.GetName(), ActionUpdate)
 		if siteContext == nil {
@@ -76,7 +58,7 @@ func UpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		}
 		id := chi.URLParam(r, "id")
 
-		requestModel, herr := apiutils.ExtractModelFromRequest[T](siteContext.ContentType, r)
+		requestModel, herr := apiutils.ExtractModelFromRequest[M](siteContext.ContentType, r)
 		if herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return
@@ -84,7 +66,7 @@ func UpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 
 		tx := NewStoreTx(r.Context(), siteContext)
 		defer tx.Rollback()
-		oldModel, herr := store.GetModel(r.Context(), tx, id, siteContext)
+		oldModel, _, herr := store.get(r.Context(), tx, id, siteContext)
 		if herr == nil && oldModel == nil {
 			herr = apiutils.ErrNotFound
 		}
@@ -93,13 +75,13 @@ func UpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 			return
 		}
 
-		herr = store.UpdateModel(r.Context(), tx, id, siteContext, oldModel, requestModel)
+		herr = store.update(r.Context(), tx, updater, siteContext, oldModel, requestModel)
 		if herr = tx.Finish(herr); herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return
 		}
 
-		WriteResponse(w, r, siteContext, http.StatusOK, requestModel, store.UpdateHTMXResponse(requestModel), false)
+		WriteResponse(w, r, siteContext, http.StatusOK, requestModel, updater.UpdateHTMXResponse(requestModel), false)
 	}
 }
 
@@ -107,18 +89,10 @@ func UpdateHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 // UPSERT HANDLER
 /////
 
-type UpsertInterface[T any] interface {
-	CreateModel(ctx context.Context, tx *StoreTx, id *string, siteContext *httputils.SiteContext, model *T) (bool, *apiutils.HTTPError)
-
-	UpdateModel(ctx context.Context, tx *StoreTx, id string, siteContext *httputils.SiteContext, oldModel *T, model *T) *apiutils.HTTPError
-
-	UpdateHTMXResponse(model *T) templ.Component
-
-	GetModel(ctx context.Context, tx *StoreTx, id string, siteContext *httputils.SiteContext) (*T, *apiutils.HTTPError)
-	GetName() string
-}
-
-func UpsertHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, store UpsertInterface[T]) http.HandlerFunc {
+// UpsertHandler creates the model with the URL's id, or updates it when there is one
+func UpsertHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerConfig, store *Rows[R, M, Q]) http.HandlerFunc {
+	creator := as[RowCreator[R, M, Q]](store, "create")
+	updater := as[RowUpdater[R, M, Q]](store, "update")
 	return func(w http.ResponseWriter, r *http.Request) {
 		siteContext := SiteContextFor(w, r, store.GetName(), ActionCreate, ActionUpdate)
 		if siteContext == nil {
@@ -126,7 +100,7 @@ func UpsertHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		}
 		id := chi.URLParam(r, "id")
 
-		requestModel, herr := apiutils.ExtractModelFromRequest[T](siteContext.ContentType, r)
+		requestModel, herr := apiutils.ExtractModelFromRequest[M](siteContext.ContentType, r)
 		if herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return
@@ -134,23 +108,23 @@ func UpsertHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 
 		tx := NewStoreTx(r.Context(), siteContext)
 		defer tx.Rollback()
-		oldModel, herr := store.GetModel(r.Context(), tx, id, siteContext)
+		oldModel, _, herr := store.get(r.Context(), tx, id, siteContext)
 		if herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return
 		}
 
 		if oldModel == nil {
-			_, herr = store.CreateModel(r.Context(), tx, &id, siteContext, requestModel)
+			herr = store.create(r.Context(), tx, creator, &id, siteContext, requestModel)
 		} else {
-			herr = store.UpdateModel(r.Context(), tx, id, siteContext, oldModel, requestModel)
+			herr = store.update(r.Context(), tx, updater, siteContext, oldModel, requestModel)
 		}
 		if herr = tx.Finish(herr); herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return
 		}
 
-		WriteResponse(w, r, siteContext, http.StatusOK, requestModel, store.UpdateHTMXResponse(requestModel), false)
+		WriteResponse(w, r, siteContext, http.StatusOK, requestModel, updater.UpdateHTMXResponse(requestModel), false)
 	}
 }
 
@@ -158,13 +132,8 @@ func UpsertHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 // READ
 /////
 
-type SearchInterface[T any] interface {
-	SearchModels(ctx context.Context, tx *StoreTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*T, *apiutils.HTTPError)
-	SearchHTMXResponse(models []*T, query *apiutils.Query) templ.Component
-	GetName() string
-}
-
-func SearchHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, store SearchInterface[T]) http.HandlerFunc {
+func SearchHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerConfig, store *Rows[R, M, Q]) http.HandlerFunc {
+	searcher := as[RowSearcher[R, M, Q]](store, "search")
 	return func(w http.ResponseWriter, r *http.Request) {
 		siteContext := SiteContextFor(w, r, store.GetName(), ActionSearch)
 		if siteContext == nil {
@@ -178,23 +147,18 @@ func SearchHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 		}
 		tx := NewStoreTx(r.Context(), siteContext)
 		defer tx.Rollback()
-		models, herr := store.SearchModels(r.Context(), tx, query, siteContext)
+		models, herr := store.search(r.Context(), tx, searcher, query, siteContext)
 		if herr = tx.Finish(herr); herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return
 		}
 
-		WriteResponse(w, r, siteContext, http.StatusOK, models, store.SearchHTMXResponse(models, query), true)
+		WriteResponse(w, r, siteContext, http.StatusOK, models, searcher.SearchHTMXResponse(models, query), true)
 	}
 }
 
-type GetInterface[T any] interface {
-	GetModel(ctx context.Context, tx *StoreTx, id string, siteContext *httputils.SiteContext) (*T, *apiutils.HTTPError)
-	GetHTMXResponse(model *T) templ.Component
-	GetName() string
-}
-
-func GetHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, store GetInterface[T]) http.HandlerFunc {
+func GetHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerConfig, store *Rows[R, M, Q]) http.HandlerFunc {
+	getter := as[RowGetter[M]](store, "get")
 	return func(w http.ResponseWriter, r *http.Request) {
 		siteContext := SiteContextFor(w, r, store.GetName(), ActionGet)
 		if siteContext == nil {
@@ -204,7 +168,7 @@ func GetHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, sto
 		id := chi.URLParam(r, "id")
 		tx := NewStoreTx(r.Context(), siteContext)
 		defer tx.Rollback()
-		model, herr := store.GetModel(r.Context(), tx, id, siteContext)
+		model, _, herr := store.get(r.Context(), tx, id, siteContext)
 		if herr == nil && model == nil {
 			herr = apiutils.ErrNotFound
 		}
@@ -213,7 +177,7 @@ func GetHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, sto
 			return
 		}
 
-		WriteResponse(w, r, siteContext, http.StatusOK, model, store.GetHTMXResponse(model), true)
+		WriteResponse(w, r, siteContext, http.StatusOK, model, getter.GetHTMXResponse(model), true)
 	}
 }
 
@@ -221,14 +185,8 @@ func GetHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, sto
 // DELETE
 // ////
 
-type DeleteInterface[T any] interface {
-	GetModel(ctx context.Context, tx *StoreTx, id string, siteContext *httputils.SiteContext) (*T, *apiutils.HTTPError)
-	DeleteModel(ctx context.Context, tx *StoreTx, id string, model *T, siteContext *httputils.SiteContext) *apiutils.HTTPError
-	DeleteHTMXResponse(model *T) templ.Component
-	GetName() string
-}
-
-func DeleteHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, store DeleteInterface[T]) http.HandlerFunc {
+func DeleteHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerConfig, store *Rows[R, M, Q]) http.HandlerFunc {
+	deleter := as[RowDeleter[R, M, Q]](store, "delete")
 	return func(w http.ResponseWriter, r *http.Request) {
 		siteContext := SiteContextFor(w, r, store.GetName(), ActionDelete)
 		if siteContext == nil {
@@ -243,13 +201,13 @@ func DeleteHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 
 		tx := NewStoreTx(r.Context(), siteContext)
 		defer tx.Rollback()
-		model, err := store.GetModel(r.Context(), tx, id, siteContext)
-		if err != nil || model == nil {
+		model, row, herr := store.get(r.Context(), tx, id, siteContext)
+		if herr != nil || model == nil {
 			apiutils.ErrNotFound.Write(siteContext.AcceptType, w)
 			return
 		}
 
-		herr := tx.Finish(store.DeleteModel(r.Context(), tx, id, model, siteContext))
+		herr = tx.Finish(store.delete(r.Context(), tx, deleter, id, row, siteContext))
 		if herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return
@@ -266,7 +224,7 @@ func DeleteHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 
 		switch siteContext.AcceptType {
 		case httputils.AcceptTypeHTMX:
-			store.DeleteHTMXResponse(model).Render(r.Context(), w)
+			deleter.DeleteHTMXResponse(model).Render(r.Context(), w)
 		default:
 			w.Write([]byte(`{"status":"deleted"}`))
 		}

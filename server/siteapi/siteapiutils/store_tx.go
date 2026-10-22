@@ -76,15 +76,7 @@ func (t *StoreTx) Finish(herr *apiutils.HTTPError) *apiutils.HTTPError {
 	return nil
 }
 
-// Created records a site model the store created, the sitedb row, to publish once committed
-func (t *StoreTx) Created(model any) { t.changed(sitemodels.Created, model) }
-
-// Updated records a site model the store changed, to publish once committed
-func (t *StoreTx) Updated(model any) { t.changed(sitemodels.Updated, model) }
-
-// Deleted records a site model the store is deleting, read just before, to publish once committed
-func (t *StoreTx) Deleted(model any) { t.changed(sitemodels.Deleted, model) }
-
+// changed records a change to one of the site's models, the sitedb row, to publish once committed
 func (t *StoreTx) changed(action sitemodels.Action, model any) {
 	t.changes = append(t.changes, sitemodels.Event{Action: action, Model: model})
 }

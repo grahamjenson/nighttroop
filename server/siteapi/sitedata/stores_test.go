@@ -6,7 +6,7 @@ import (
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 )
 
-// The handlers reach a store's writes through siteapiutils.Rows, so each store must have the ones its routes use
+// The handlers check a store can do what its routes need when the router is made; this checks it as it compiles
 var (
 	_ readWriteRows[sitedb.Activity, sitemodels.SiteActivity]                   = &ActivitiesStore{}
 	_ readWriteRows[sitedb.ComponentEvent, sitemodels.SiteComponentEvent]       = &ComponentEventsStore{}
@@ -23,12 +23,14 @@ var (
 )
 
 type readDeleteRows[R, M any] interface {
-	siteapiutils.RowStore[R, M]
-	siteapiutils.RowDeleter[R, M]
+	siteapiutils.RowStore[R, M, *sitedb.Queries]
+	siteapiutils.RowGetter[M]
+	siteapiutils.RowSearcher[R, M, *sitedb.Queries]
+	siteapiutils.RowDeleter[R, M, *sitedb.Queries]
 }
 
 type readWriteRows[R, M any] interface {
 	readDeleteRows[R, M]
-	siteapiutils.RowCreator[R, M]
-	siteapiutils.RowUpdater[R, M]
+	siteapiutils.RowCreator[R, M, *sitedb.Queries]
+	siteapiutils.RowUpdater[R, M, *sitedb.Queries]
 }

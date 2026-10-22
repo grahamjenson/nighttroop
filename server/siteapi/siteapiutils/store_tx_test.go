@@ -1,4 +1,4 @@
-package siteapiutils_test
+package siteapiutils
 
 import (
 	"context"
@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/events/sitemodels"
 	"nighttroop.t1d.nz/data/sql/controldb"
-	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/testutils"
@@ -22,7 +21,7 @@ func TestStoreTx(t *testing.T) {
 	ctx := context.Background()
 	virtual := controldb.GetSyncSourceParams{Type: consts.SyncSourceTypeVirtual, SiteID: siteContext.Subdomain}
 
-	write := func(tx *siteapiutils.StoreTx) {
+	write := func(tx *StoreTx) {
 		q, err := tx.Control()
 		require.NoError(t, err)
 		require.NoError(t, q.CreateSyncSource(ctx, controldb.CreateSyncSourceParams{
@@ -36,20 +35,20 @@ func TestStoreTx(t *testing.T) {
 	defer unsubscribe()
 
 	// An error rolls back the writes, and publishes none of its changes
-	tx := siteapiutils.NewStoreTx(ctx, siteContext)
+	tx := NewStoreTx(ctx, siteContext)
 	write(tx)
-	tx.Created("rolled back")
+	tx.changed(sitemodels.Created, "rolled back")
 	require.Equal(t, apiutils.ErrBadBody, tx.Finish(apiutils.ErrBadBody))
 	_, err = controlDB.Queries.GetSyncSource(ctx, virtual)
 	require.Error(t, err, "rolled back write should not exist")
 	require.Empty(t, published)
 
 	// Success commits the writes, then publishes the changes in order
-	tx = siteapiutils.NewStoreTx(ctx, siteContext)
+	tx = NewStoreTx(ctx, siteContext)
 	write(tx)
-	tx.Created("created")
-	tx.Updated("updated")
-	tx.Deleted("deleted")
+	tx.changed(sitemodels.Created, "created")
+	tx.changed(sitemodels.Updated, "updated")
+	tx.changed(sitemodels.Deleted, "deleted")
 	require.Empty(t, published, "nothing is published before the commit")
 	require.Nil(t, tx.Finish(nil))
 	_, err = controlDB.Queries.GetSyncSource(ctx, virtual)
@@ -61,7 +60,7 @@ func TestStoreTx(t *testing.T) {
 	}, published)
 
 	// A transaction that is never used opens nothing and finishes cleanly
-	require.Nil(t, siteapiutils.NewStoreTx(ctx, siteContext).Finish(nil))
+	require.Nil(t, NewStoreTx(ctx, siteContext).Finish(nil))
 }
 
 func ptr[T any](v T) *T { return &v }
