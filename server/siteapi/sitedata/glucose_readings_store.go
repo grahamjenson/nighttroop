@@ -2,9 +2,7 @@ package sitedata
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
-	"log/slog"
 
 	"nighttroop.t1d.nz/utils/apiutils"
 
@@ -12,7 +10,6 @@ import (
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
-	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/server/siteapi/sitequery"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -30,22 +27,12 @@ func (s *GlucoseReadingsStore) GetName() string {
 // ////
 // CREATE
 // ////
-func (s *GlucoseReadingsStore) CreateModel(ctx context.Context, tx *siteapiutils.StoreTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteGlucoseReading) (bool, *apiutils.HTTPError) {
+func (s *GlucoseReadingsStore) CreateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, model *sitemodels.SiteGlucoseReading) (*sitedb.GlucoseReading, error) {
 	params := sitemodels.GlucoseReadingToCreate(model, siteContext)
 	if herr := checkGlucoseMgdl(params.Mgdl, siteContext); herr != nil {
-		return false, herr
+		return nil, herr
 	}
-	q, err := tx.Site()
-	if err != nil {
-		return false, apiutils.ErrInternalServerError
-	}
-	created, err := q.CreateGlucoseReading(ctx, params)
-	if err != nil {
-		return false, apiutils.WriteError(err, "glucose reading")
-	}
-	tx.Created(created)
-	*model = *sitemodels.GlucoseReadingFromDB(created, siteContext)
-	return true, nil
+	return q.CreateGlucoseReading(ctx, params)
 }
 
 func (s *GlucoseReadingsStore) CreateHTMXResponse(model *sitemodels.SiteGlucoseReading) templ.Component {
@@ -56,29 +43,16 @@ func (s *GlucoseReadingsStore) CreateHTMXResponse(model *sitemodels.SiteGlucoseR
 // UPDATE
 // ////
 
-// UpdateModel changes a reading's value, notes or reason; anything not sent stays as it is
-func (s *GlucoseReadingsStore) UpdateModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteGlucoseReading, model *sitemodels.SiteGlucoseReading) *apiutils.HTTPError {
+// UpdateRow changes a reading's value, notes or reason; anything not sent stays as it is
+func (s *GlucoseReadingsStore) UpdateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteGlucoseReading, model *sitemodels.SiteGlucoseReading) (*sitedb.GlucoseReading, error) {
 	model.ID = oldModel.ID
 	params := sitemodels.GlucoseReadingToUpdate(model, siteContext)
 	if params.Mgdl != nil {
 		if herr := checkGlucoseMgdl(*params.Mgdl, siteContext); herr != nil {
-			return herr
+			return nil, herr
 		}
 	}
-	q, err := tx.Site()
-	if err != nil {
-		return apiutils.ErrInternalServerError
-	}
-	updated, err := q.UpdateGlucoseReading(ctx, params)
-	if err == sql.ErrNoRows {
-		return apiutils.ErrNotFound
-	}
-	if err != nil {
-		return apiutils.WriteError(err, "glucose reading")
-	}
-	tx.Updated(updated)
-	*model = *sitemodels.GlucoseReadingFromDB(updated, siteContext)
-	return nil
+	return q.UpdateGlucoseReading(ctx, params)
 }
 
 func (s *GlucoseReadingsStore) UpdateHTMXResponse(model *sitemodels.SiteGlucoseReading) templ.Component {
@@ -88,13 +62,13 @@ func (s *GlucoseReadingsStore) UpdateHTMXResponse(model *sitemodels.SiteGlucoseR
 // ////
 // Get Model
 // /////
-func (s *GlucoseReadingsStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext) (*sitemodels.SiteGlucoseReading, *apiutils.HTTPError) {
-	q, err := tx.Site()
-	if err != nil {
-		return nil, apiutils.ErrInternalServerError
-	}
-	reading, err := q.GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: id})
-	return apiutils.Found(reading, err, "glucose reading", apiutils.WithContext(sitemodels.GlucoseReadingFromDB, siteContext))
+func (s *GlucoseReadingsStore) GetRow(ctx context.Context, q *sitedb.Queries, id string) (*sitedb.GlucoseReading, error) {
+	return q.GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: id})
+}
+
+// ToModel is the site model of a row
+func (s *GlucoseReadingsStore) ToModel(row *sitedb.GlucoseReading, siteContext *httputils.SiteContext) *sitemodels.SiteGlucoseReading {
+	return sitemodels.GlucoseReadingFromDB(row, siteContext)
 }
 
 // GetHTMXResponse is the reading's details, shown in a modal
@@ -106,13 +80,8 @@ func (s *GlucoseReadingsStore) GetHTMXResponse(model *sitemodels.SiteGlucoseRead
 // Search Models
 // ///
 
-func (s *GlucoseReadingsStore) SearchModels(ctx context.Context, tx *siteapiutils.StoreTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.SiteGlucoseReading, *apiutils.HTTPError) {
-	q, err := tx.Site()
-	if err != nil {
-		return nil, apiutils.ErrInternalServerError
-	}
-	readings, err := q.AllGlucoseReadings(ctx, sitequery.QueryToAllGlucoseReadings(query))
-	return apiutils.Searched(readings, err, "glucose readings", apiutils.WithContext(sitemodels.GlucoseReadingFromDB, siteContext))
+func (s *GlucoseReadingsStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query) ([]*sitedb.GlucoseReading, error) {
+	return q.AllGlucoseReadings(ctx, sitequery.QueryToAllGlucoseReadings(query))
 }
 
 func (s *GlucoseReadingsStore) SearchHTMXResponse(models []*sitemodels.SiteGlucoseReading, query *apiutils.Query) templ.Component {
@@ -123,22 +92,13 @@ func (s *GlucoseReadingsStore) SearchHTMXResponse(models []*sitemodels.SiteGluco
 // Delete
 // ///
 
-// DeleteModel soft deletes, like the Nightscout API, so syncing clients see the delete
-func (s *GlucoseReadingsStore) DeleteModel(ctx context.Context, tx *siteapiutils.StoreTx, model *sitemodels.SiteGlucoseReading, siteContext *httputils.SiteContext) *apiutils.HTTPError {
-	q, err := tx.Site()
-	if err != nil {
-		return apiutils.ErrInternalServerError
-	}
-	tx.Deleted(q.GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: model.ID}))
-	_, err = q.SoftDeleteGlucoseReading(ctx, sitedb.SoftDeleteGlucoseReadingParams{
+// DeleteRow soft deletes, like the Nightscout API, so syncing clients see the delete
+func (s *GlucoseReadingsStore) DeleteRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) error {
+	_, err := q.SoftDeleteGlucoseReading(ctx, sitedb.SoftDeleteGlucoseReadingParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
-		ID:                    model.ID,
+		ID:                    id,
 	})
-	if err != nil {
-		slog.Error("Error deleting glucose reading", "error", err)
-		return apiutils.ErrInternalServerError
-	}
-	return nil
+	return err
 }
 
 func (s *GlucoseReadingsStore) DeleteHTMXResponse(model *sitemodels.SiteGlucoseReading) templ.Component {

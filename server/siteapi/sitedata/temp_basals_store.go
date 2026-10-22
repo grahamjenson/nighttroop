@@ -2,9 +2,7 @@ package sitedata
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
-	"log/slog"
 
 	"nighttroop.t1d.nz/utils/apiutils"
 
@@ -12,7 +10,6 @@ import (
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
-	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/server/siteapi/sitequery"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -35,21 +32,11 @@ func (s *TempBasalsStore) GetName() string {
 // ////
 // CREATE
 // ////
-func (s *TempBasalsStore) CreateModel(ctx context.Context, tx *siteapiutils.StoreTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteTempBasal) (bool, *apiutils.HTTPError) {
+func (s *TempBasalsStore) CreateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, model *sitemodels.SiteTempBasal) (*sitedb.TempBasal, error) {
 	if herr := checkTempBasal(model); herr != nil {
-		return false, herr
+		return nil, herr
 	}
-	q, err := tx.Site()
-	if err != nil {
-		return false, apiutils.ErrInternalServerError
-	}
-	created, err := q.CreateTempBasal(ctx, sitemodels.TempBasalToCreate(model, siteContext))
-	if err != nil {
-		return false, apiutils.WriteError(err, "temp basal")
-	}
-	tx.Created(created)
-	*model = *sitemodels.TempBasalFromDB(created)
-	return true, nil
+	return q.CreateTempBasal(ctx, sitemodels.TempBasalToCreate(model, siteContext))
 }
 
 func (s *TempBasalsStore) CreateHTMXResponse(model *sitemodels.SiteTempBasal) templ.Component {
@@ -60,8 +47,8 @@ func (s *TempBasalsStore) CreateHTMXResponse(model *sitemodels.SiteTempBasal) te
 // UPDATE
 // ////
 
-// UpdateModel changes a temp basal's rate, duration, notes or reason; anything not sent stays as it is
-func (s *TempBasalsStore) UpdateModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteTempBasal, model *sitemodels.SiteTempBasal) *apiutils.HTTPError {
+// UpdateRow changes a temp basal's rate, duration, notes or reason; anything not sent stays as it is
+func (s *TempBasalsStore) UpdateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteTempBasal, model *sitemodels.SiteTempBasal) (*sitedb.TempBasal, error) {
 	// Check the temp basal as it will be once the fields sent are changed
 	merged := *oldModel
 	if model.DurationMinutes != 0 {
@@ -71,23 +58,10 @@ func (s *TempBasalsStore) UpdateModel(ctx context.Context, tx *siteapiutils.Stor
 		merged.Absolute = model.Absolute
 	}
 	if herr := checkTempBasal(&merged); herr != nil {
-		return herr
-	}
-	q, err := tx.Site()
-	if err != nil {
-		return apiutils.ErrInternalServerError
+		return nil, herr
 	}
 	model.ID = oldModel.ID
-	updated, err := q.UpdateTempBasal(ctx, sitemodels.TempBasalToUpdate(model, siteContext))
-	if err == sql.ErrNoRows {
-		return apiutils.ErrNotFound
-	}
-	if err != nil {
-		return apiutils.WriteError(err, "temp basal")
-	}
-	tx.Updated(updated)
-	*model = *sitemodels.TempBasalFromDB(updated)
-	return nil
+	return q.UpdateTempBasal(ctx, sitemodels.TempBasalToUpdate(model, siteContext))
 }
 
 func (s *TempBasalsStore) UpdateHTMXResponse(model *sitemodels.SiteTempBasal) templ.Component {
@@ -97,13 +71,13 @@ func (s *TempBasalsStore) UpdateHTMXResponse(model *sitemodels.SiteTempBasal) te
 // ////
 // Get Model
 // /////
-func (s *TempBasalsStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext) (*sitemodels.SiteTempBasal, *apiutils.HTTPError) {
-	q, err := tx.Site()
-	if err != nil {
-		return nil, apiutils.ErrInternalServerError
-	}
-	tempBasal, err := q.GetTempBasal(ctx, sitedb.GetTempBasalParams{ID: id})
-	return apiutils.Found(tempBasal, err, "temp basal", sitemodels.TempBasalFromDB)
+func (s *TempBasalsStore) GetRow(ctx context.Context, q *sitedb.Queries, id string) (*sitedb.TempBasal, error) {
+	return q.GetTempBasal(ctx, sitedb.GetTempBasalParams{ID: id})
+}
+
+// ToModel is the site model of a row
+func (s *TempBasalsStore) ToModel(row *sitedb.TempBasal, siteContext *httputils.SiteContext) *sitemodels.SiteTempBasal {
+	return sitemodels.TempBasalFromDB(row)
 }
 
 // GetHTMXResponse is the temp basal's details, shown in a modal
@@ -115,13 +89,8 @@ func (s *TempBasalsStore) GetHTMXResponse(model *sitemodels.SiteTempBasal) templ
 // Search Models
 // ///
 
-func (s *TempBasalsStore) SearchModels(ctx context.Context, tx *siteapiutils.StoreTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.SiteTempBasal, *apiutils.HTTPError) {
-	q, err := tx.Site()
-	if err != nil {
-		return nil, apiutils.ErrInternalServerError
-	}
-	tempBasals, err := q.AllTempBasals(ctx, sitequery.QueryToAllTempBasals(query))
-	return apiutils.Searched(tempBasals, err, "temp basals", sitemodels.TempBasalFromDB)
+func (s *TempBasalsStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query) ([]*sitedb.TempBasal, error) {
+	return q.AllTempBasals(ctx, sitequery.QueryToAllTempBasals(query))
 }
 
 func (s *TempBasalsStore) SearchHTMXResponse(models []*sitemodels.SiteTempBasal, query *apiutils.Query) templ.Component {
@@ -132,22 +101,13 @@ func (s *TempBasalsStore) SearchHTMXResponse(models []*sitemodels.SiteTempBasal,
 // Delete
 // ///
 
-// DeleteModel soft deletes, like the Nightscout API, so syncing clients see the delete
-func (s *TempBasalsStore) DeleteModel(ctx context.Context, tx *siteapiutils.StoreTx, model *sitemodels.SiteTempBasal, siteContext *httputils.SiteContext) *apiutils.HTTPError {
-	q, err := tx.Site()
-	if err != nil {
-		return apiutils.ErrInternalServerError
-	}
-	tx.Deleted(q.GetTempBasal(ctx, sitedb.GetTempBasalParams{ID: model.ID}))
-	_, err = q.SoftDeleteTempBasal(ctx, sitedb.SoftDeleteTempBasalParams{
+// DeleteRow soft deletes, like the Nightscout API, so syncing clients see the delete
+func (s *TempBasalsStore) DeleteRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) error {
+	_, err := q.SoftDeleteTempBasal(ctx, sitedb.SoftDeleteTempBasalParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
-		ID:                    model.ID,
+		ID:                    id,
 	})
-	if err != nil {
-		slog.Error("Error deleting temp basal", "error", err)
-		return apiutils.ErrInternalServerError
-	}
-	return nil
+	return err
 }
 
 func (s *TempBasalsStore) DeleteHTMXResponse(model *sitemodels.SiteTempBasal) templ.Component {

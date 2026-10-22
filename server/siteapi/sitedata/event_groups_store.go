@@ -2,8 +2,6 @@ package sitedata
 
 import (
 	"context"
-	"database/sql"
-	"log/slog"
 
 	"nighttroop.t1d.nz/utils/apiutils"
 
@@ -11,7 +9,6 @@ import (
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
-	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/server/siteapi/sitequery"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -27,24 +24,22 @@ func (s *EventGroupsStore) GetName() string {
 	return "event_groups"
 }
 
-// eventGroupFromRow is the site model of a group and its events, read with GetEventGroup
-func eventGroupFromRow(siteContext *httputils.SiteContext) func(*sitedb.GetEventGroupRow) *sitemodels.SiteEventGroup {
-	return func(row *sitedb.GetEventGroupRow) *sitemodels.SiteEventGroup {
-		bundle := sitedb.GetEventGroupToEventGroupsBundle(*row)
-		return sitemodels.EventGroupFromDB(&bundle, siteContext)
-	}
+// ToModel is the site model of a group and its events. The rows are bundles, as the Nightscout treatments show them,
+// so a change is published as one.
+func (s *EventGroupsStore) ToModel(row *sitedb.EventGroupsBundle, siteContext *httputils.SiteContext) *sitemodels.SiteEventGroup {
+	return sitemodels.EventGroupFromDB(row, siteContext)
 }
 
 // ////
 // Get Model
 // /////
-func (s *EventGroupsStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext) (*sitemodels.SiteEventGroup, *apiutils.HTTPError) {
-	q, err := tx.Site()
+func (s *EventGroupsStore) GetRow(ctx context.Context, q *sitedb.Queries, id string) (*sitedb.EventGroupsBundle, error) {
+	row, err := q.GetEventGroup(ctx, sitedb.GetEventGroupParams{ID: id})
 	if err != nil {
-		return nil, apiutils.ErrInternalServerError
+		return nil, err
 	}
-	eventGroup, err := q.GetEventGroup(ctx, sitedb.GetEventGroupParams{ID: id})
-	return apiutils.Found(eventGroup, err, "event group", eventGroupFromRow(siteContext))
+	bundle := sitedb.GetEventGroupToEventGroupsBundle(*row)
+	return &bundle, nil
 }
 
 // GetHTMXResponse is the group's details and events, shown in a modal
@@ -56,16 +51,17 @@ func (s *EventGroupsStore) GetHTMXResponse(model *sitemodels.SiteEventGroup) tem
 // Search Models
 // ///
 
-func (s *EventGroupsStore) SearchModels(ctx context.Context, tx *siteapiutils.StoreTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.SiteEventGroup, *apiutils.HTTPError) {
-	q, err := tx.Site()
-	if err != nil {
-		return nil, apiutils.ErrInternalServerError
-	}
+func (s *EventGroupsStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query) ([]*sitedb.EventGroupsBundle, error) {
 	rows, err := q.AllEventGroups(ctx, sitequery.QueryToAllEventGroups(query))
-	return apiutils.Searched(rows, err, "event groups", func(row *sitedb.AllEventGroupsRow) *sitemodels.SiteEventGroup {
-		getRow := sitedb.AllEventGroupToGetEventGroup(*row)
-		return eventGroupFromRow(siteContext)(&getRow)
-	})
+	if err != nil {
+		return nil, err
+	}
+	bundles := make([]*sitedb.EventGroupsBundle, 0, len(rows))
+	for _, row := range rows {
+		bundle := sitedb.GetEventGroupToEventGroupsBundle(sitedb.AllEventGroupToGetEventGroup(*row))
+		bundles = append(bundles, &bundle)
+	}
+	return bundles, nil
 }
 
 func (s *EventGroupsStore) SearchHTMXResponse(models []*sitemodels.SiteEventGroup, query *apiutils.Query) templ.Component {
@@ -76,26 +72,9 @@ func (s *EventGroupsStore) SearchHTMXResponse(models []*sitemodels.SiteEventGrou
 // Delete
 // ///
 
-// DeleteModel soft deletes the group and its events, as the Nightscout API does, so syncing clients see the delete
-func (s *EventGroupsStore) DeleteModel(ctx context.Context, tx *siteapiutils.StoreTx, model *sitemodels.SiteEventGroup, siteContext *httputils.SiteContext) *apiutils.HTTPError {
-	q, err := tx.Site()
-	if err != nil {
-		return apiutils.ErrInternalServerError
-	}
-	// Published as the bundle the Nightscout treatments show it as
-	if row, err := q.GetEventGroup(ctx, sitedb.GetEventGroupParams{ID: model.ID}); err == nil {
-		bundle := sitedb.GetEventGroupToEventGroupsBundle(*row)
-		tx.Deleted(&bundle, nil)
-	}
-	err = sitedb.SoftDeleteEventGroupAndEvents(ctx, q, model.ID, &siteContext.IdentityModel.Name)
-	if err == sql.ErrNoRows {
-		return apiutils.ErrNotFound
-	}
-	if err != nil {
-		slog.Error("Error deleting event group", "error", err)
-		return apiutils.ErrInternalServerError
-	}
-	return nil
+// DeleteRow soft deletes the group and its events, as the Nightscout API does, so syncing clients see the delete
+func (s *EventGroupsStore) DeleteRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) error {
+	return sitedb.SoftDeleteEventGroupAndEvents(ctx, q, id, &siteContext.IdentityModel.Name)
 }
 
 func (s *EventGroupsStore) DeleteHTMXResponse(model *sitemodels.SiteEventGroup) templ.Component {

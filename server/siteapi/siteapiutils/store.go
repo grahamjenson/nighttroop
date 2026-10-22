@@ -223,7 +223,7 @@ func GetHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, sto
 
 type DeleteInterface[T any] interface {
 	GetModel(ctx context.Context, tx *StoreTx, id string, siteContext *httputils.SiteContext) (*T, *apiutils.HTTPError)
-	DeleteModel(ctx context.Context, tx *StoreTx, model *T, siteContext *httputils.SiteContext) *apiutils.HTTPError
+	DeleteModel(ctx context.Context, tx *StoreTx, id string, model *T, siteContext *httputils.SiteContext) *apiutils.HTTPError
 	DeleteHTMXResponse(model *T) templ.Component
 	GetName() string
 }
@@ -249,7 +249,7 @@ func DeleteHandler[T any](controlDB *db.ControlDB, config *config.ServerConfig, 
 			return
 		}
 
-		herr := tx.Finish(store.DeleteModel(r.Context(), tx, model, siteContext))
+		herr := tx.Finish(store.DeleteModel(r.Context(), tx, id, model, siteContext))
 		if herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return

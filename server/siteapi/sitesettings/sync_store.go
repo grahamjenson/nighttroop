@@ -270,7 +270,7 @@ func (s *SyncSettingsStore) SearchHTMXResponse(models []*sitemodels.SyncSource, 
 // Delete
 // ///
 
-func (s *SyncSettingsStore) DeleteModel(ctx context.Context, tx *siteapiutils.StoreTx, model *sitemodels.SyncSource, siteContext *httputils.SiteContext) *apiutils.HTTPError {
+func (s *SyncSettingsStore) DeleteModel(ctx context.Context, tx *siteapiutils.StoreTx, _ string, model *sitemodels.SyncSource, siteContext *httputils.SiteContext) *apiutils.HTTPError {
 	q, err := tx.Control()
 	if err != nil {
 		return apiutils.ErrInternalServerError

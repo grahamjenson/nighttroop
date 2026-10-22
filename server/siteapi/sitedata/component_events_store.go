@@ -2,8 +2,6 @@ package sitedata
 
 import (
 	"context"
-	"database/sql"
-	"log/slog"
 	"slices"
 	"strings"
 
@@ -13,7 +11,6 @@ import (
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
-	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/server/siteapi/sitequery"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -30,21 +27,11 @@ func (s *ComponentEventsStore) GetName() string {
 // ////
 // CREATE
 // ////
-func (s *ComponentEventsStore) CreateModel(ctx context.Context, tx *siteapiutils.StoreTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteComponentEvent) (bool, *apiutils.HTTPError) {
+func (s *ComponentEventsStore) CreateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, model *sitemodels.SiteComponentEvent) (*sitedb.ComponentEvent, error) {
 	if herr := checkComponentEventType(model.EventType); herr != nil {
-		return false, herr
+		return nil, herr
 	}
-	q, err := tx.Site()
-	if err != nil {
-		return false, apiutils.ErrInternalServerError
-	}
-	created, err := q.CreateComponentEvent(ctx, sitemodels.ComponentEventToCreate(model, siteContext))
-	if err != nil {
-		return false, apiutils.WriteError(err, "component event")
-	}
-	tx.Created(created)
-	*model = *sitemodels.ComponentEventFromDB(created)
-	return true, nil
+	return q.CreateComponentEvent(ctx, sitemodels.ComponentEventToCreate(model, siteContext))
 }
 
 func (s *ComponentEventsStore) CreateHTMXResponse(model *sitemodels.SiteComponentEvent) templ.Component {
@@ -55,28 +42,15 @@ func (s *ComponentEventsStore) CreateHTMXResponse(model *sitemodels.SiteComponen
 // UPDATE
 // ////
 
-// UpdateModel changes the fields sent; anything not sent stays as it is
-func (s *ComponentEventsStore) UpdateModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteComponentEvent, model *sitemodels.SiteComponentEvent) *apiutils.HTTPError {
+// UpdateRow changes the fields sent; anything not sent stays as it is
+func (s *ComponentEventsStore) UpdateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteComponentEvent, model *sitemodels.SiteComponentEvent) (*sitedb.ComponentEvent, error) {
 	if model.EventType != "" {
 		if herr := checkComponentEventType(model.EventType); herr != nil {
-			return herr
+			return nil, herr
 		}
 	}
-	q, err := tx.Site()
-	if err != nil {
-		return apiutils.ErrInternalServerError
-	}
 	model.ID = oldModel.ID
-	updated, err := q.UpdateComponentEvent(ctx, sitemodels.ComponentEventToUpdate(model, siteContext))
-	if err == sql.ErrNoRows {
-		return apiutils.ErrNotFound
-	}
-	if err != nil {
-		return apiutils.WriteError(err, "component event")
-	}
-	tx.Updated(updated)
-	*model = *sitemodels.ComponentEventFromDB(updated)
-	return nil
+	return q.UpdateComponentEvent(ctx, sitemodels.ComponentEventToUpdate(model, siteContext))
 }
 
 func (s *ComponentEventsStore) UpdateHTMXResponse(model *sitemodels.SiteComponentEvent) templ.Component {
@@ -86,13 +60,13 @@ func (s *ComponentEventsStore) UpdateHTMXResponse(model *sitemodels.SiteComponen
 // ////
 // Get Model
 // /////
-func (s *ComponentEventsStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext) (*sitemodels.SiteComponentEvent, *apiutils.HTTPError) {
-	q, err := tx.Site()
-	if err != nil {
-		return nil, apiutils.ErrInternalServerError
-	}
-	event, err := q.GetComponentEvent(ctx, sitedb.GetComponentEventParams{ID: id})
-	return apiutils.Found(event, err, "component event", sitemodels.ComponentEventFromDB)
+func (s *ComponentEventsStore) GetRow(ctx context.Context, q *sitedb.Queries, id string) (*sitedb.ComponentEvent, error) {
+	return q.GetComponentEvent(ctx, sitedb.GetComponentEventParams{ID: id})
+}
+
+// ToModel is the site model of a row
+func (s *ComponentEventsStore) ToModel(row *sitedb.ComponentEvent, siteContext *httputils.SiteContext) *sitemodels.SiteComponentEvent {
+	return sitemodels.ComponentEventFromDB(row)
 }
 
 // GetHTMXResponse is the component event's details, shown in a modal
@@ -104,13 +78,8 @@ func (s *ComponentEventsStore) GetHTMXResponse(model *sitemodels.SiteComponentEv
 // Search Models
 // ///
 
-func (s *ComponentEventsStore) SearchModels(ctx context.Context, tx *siteapiutils.StoreTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.SiteComponentEvent, *apiutils.HTTPError) {
-	q, err := tx.Site()
-	if err != nil {
-		return nil, apiutils.ErrInternalServerError
-	}
-	events, err := q.AllComponentEvents(ctx, sitequery.QueryToAllComponentEvents(query))
-	return apiutils.Searched(events, err, "component events", sitemodels.ComponentEventFromDB)
+func (s *ComponentEventsStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query) ([]*sitedb.ComponentEvent, error) {
+	return q.AllComponentEvents(ctx, sitequery.QueryToAllComponentEvents(query))
 }
 
 func (s *ComponentEventsStore) SearchHTMXResponse(models []*sitemodels.SiteComponentEvent, query *apiutils.Query) templ.Component {
@@ -121,22 +90,13 @@ func (s *ComponentEventsStore) SearchHTMXResponse(models []*sitemodels.SiteCompo
 // Delete
 // ///
 
-// DeleteModel soft deletes, like the Nightscout API, so syncing clients see the delete
-func (s *ComponentEventsStore) DeleteModel(ctx context.Context, tx *siteapiutils.StoreTx, model *sitemodels.SiteComponentEvent, siteContext *httputils.SiteContext) *apiutils.HTTPError {
-	q, err := tx.Site()
-	if err != nil {
-		return apiutils.ErrInternalServerError
-	}
-	tx.Deleted(q.GetComponentEvent(ctx, sitedb.GetComponentEventParams{ID: model.ID}))
-	_, err = q.SoftDeleteComponentEvent(ctx, sitedb.SoftDeleteComponentEventParams{
+// DeleteRow soft deletes, like the Nightscout API, so syncing clients see the delete
+func (s *ComponentEventsStore) DeleteRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) error {
+	_, err := q.SoftDeleteComponentEvent(ctx, sitedb.SoftDeleteComponentEventParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
-		ID:                    model.ID,
+		ID:                    id,
 	})
-	if err != nil {
-		slog.Error("Error deleting component event", "error", err)
-		return apiutils.ErrInternalServerError
-	}
-	return nil
+	return err
 }
 
 func (s *ComponentEventsStore) DeleteHTMXResponse(model *sitemodels.SiteComponentEvent) templ.Component {

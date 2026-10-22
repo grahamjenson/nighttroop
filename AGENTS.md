@@ -48,6 +48,7 @@ Use code generators where possible, especially for building models and params fo
 - Model fields have their real names and types, which are also the JSON API: times are `int64` milliseconds, nullable fields are pointers, and JSON tags are snake_case.
 - Glucose is stored in mg/dL. The site API returns and accepts it in the units from the settings (identity, then site, then default), with unit-neutral names (`reading`, `low_target`) and a `units` field.
 - Searches page with `limit` and `skip` (at most 1000), newest first, and leave out soft-deleted rows. Deletes from the site are soft deletes.
+- A site data store implements `siteapiutils.RowStore` and its writers on `sitedb` rows, returning the database's errors; `siteapiutils.Rows` wraps it for the handlers, converting rows with `ToModel`, answering errors and publishing each change.
 
 
 ## Issue and PR Guidelines

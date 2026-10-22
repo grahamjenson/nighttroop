@@ -171,7 +171,7 @@ func (s *IdentitiesStore) SearchHTMXResponse(models []*sitemodels.UserIdentity, 
 // ///
 
 // DeleteModel removes the identity, so its password and tokens stop working
-func (s *IdentitiesStore) DeleteModel(ctx context.Context, tx *siteapiutils.StoreTx, model *sitemodels.UserIdentity, siteContext *httputils.SiteContext) *apiutils.HTTPError {
+func (s *IdentitiesStore) DeleteModel(ctx context.Context, tx *siteapiutils.StoreTx, _ string, model *sitemodels.UserIdentity, siteContext *httputils.SiteContext) *apiutils.HTTPError {
 	q, err := tx.Control()
 	if err != nil {
 		return apiutils.ErrInternalServerError
