@@ -1,9 +1,24 @@
 package httputils
 
 import (
+	"fmt"
+	"io"
 	"net/http"
 	"strings"
 )
+
+// ReadLimitedBody reads an upstream response body of at most max bytes and fails
+// when it is longer, so a large (or gzip-inflated) body cannot exhaust memory.
+func ReadLimitedBody(r io.Reader, max int64) ([]byte, error) {
+	body, err := io.ReadAll(io.LimitReader(r, max+1))
+	if err != nil {
+		return nil, err
+	}
+	if int64(len(body)) > max {
+		return nil, fmt.Errorf("response body is larger than %d bytes", max)
+	}
+	return body, nil
+}
 
 // ////
 // Accept Type
