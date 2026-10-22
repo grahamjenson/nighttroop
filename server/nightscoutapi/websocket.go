@@ -1,6 +1,7 @@
 package nightscoutapi
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -70,6 +71,7 @@ func (ws *Websocket) server(subdomain string, create bool) *socketio.Server {
 	main.OnConnection(func(socket *socketio.Socket) { ws.connected(main, socket) })
 	storage := server.Of("/storage")
 	storage.OnConnection(ws.storageConnected)
+	server.Of("/alarm").OnConnection(ws.alarmConnected)
 	ws.config.SiteModelEvents.Subscribe(subdomain, func(event sitemodels.Event) { ws.changed(main, storage, event) })
 	ws.servers[subdomain] = server
 	return server
@@ -466,4 +468,56 @@ func sendToStorage(storage *socketio.Namespace, collection nsutils.Collection, r
 		event = map[string]any{"colName": collection, "identifier": record.Identifier()}
 	}
 	storage.EmitTo(string(collection), storageEvents[action], event)
+}
+
+// alarmReceivers is the room of /alarm sockets that can read, which the site's alarms will go to
+const alarmReceivers = "AlarmReceivers"
+
+// alarmConnected is API v3's alarms on /alarm: a socket subscribes with its access token, or as the web app does
+// with its API secret or JWT, and joins AlarmReceivers when it can read. The site has no alarms to send yet.
+func (ws *Websocket) alarmConnected(socket *socketio.Socket) {
+	attempts := 0
+	socket.On("subscribe", func(args []json.RawMessage, ack func(...any)) {
+		attempts++
+		if attempts > maxAuthorizeAttempts || !ws.withinReadLimit(socket.Request().Context()) {
+			socket.Disconnect()
+			return
+		}
+		var message struct {
+			AccessToken string `json:"accessToken"`
+			JWTToken    string `json:"jwtToken"`
+			Secret      string `json:"secret"`
+		}
+		if len(args) > 0 {
+			json.Unmarshal(args[0], &message)
+		}
+		reply := ws.subscribeToAlarms(socket, message.AccessToken, message.JWTToken, message.Secret)
+		if ack != nil {
+			ack(reply)
+		}
+	})
+}
+
+// subscribeToAlarms answers as Nightscout does: any credential given must be good, and the web app, which may
+// have none yet, is told what it may do. Acks are ignored until the site has alarms.
+func (ws *Websocket) subscribeToAlarms(socket *socketio.Socket, accessToken, jwtToken, secret string) map[string]any {
+	token := cmp.Or(accessToken, jwtToken)
+	if secret == "null" {
+		secret = ""
+	}
+	_, identity := ws.identity(socket.Request().Context(), token, secret)
+	if identity == nil && token+secret != "" {
+		return map[string]any{"success": false, "message": "Missing or bad accessToken"}
+	}
+	read := identity != nil && (&NightTroopAPIAuth{}).HasPermission(*identity, "api:*:read")
+	if read {
+		socket.Join(alarmReceivers)
+	} else {
+		socket.Leave(alarmReceivers)
+	}
+	reply := map[string]any{"success": true, "message": "Subscribed for alarms"}
+	if accessToken == "" {
+		reply["read"], reply["ack"] = read, false
+	}
+	return reply
 }

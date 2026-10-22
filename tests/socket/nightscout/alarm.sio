@@ -1,0 +1,61 @@
+# AAPS and the Nightscout web app subscribe to API v3's /alarm namespace for alarms, AAPS with its access token
+# and the web app with its API secret or JWT, which it may not have yet
+
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME connect_web
+CONNECT http://{{ site }}/socket.io/?EIO=4
+NS /alarm
+T 5s
+
+# The web app before anyone signs in, which may read nothing
+NAME no_credentials
+EMIT subscribe
+B {"secret":null}
+ACK
+ASSERT_EQUALS true "@success"
+ASSERT_EQUALS false "@read"
+
+NAME bad_secret
+EMIT subscribe
+B {"secret":"nope-0123456789abcdef"}
+ACK
+ASSERT_EQUALS false "@success"
+ASSERT_EQUALS "Missing or bad accessToken" "@message"
+
+NAME good_secret
+EMIT subscribe
+B {"secret":"{{ token }}"}
+ACK
+ASSERT_EQUALS true "@success"
+ASSERT_EQUALS "Subscribed for alarms" "@message"
+ASSERT_EQUALS true "@read"
+
+NAME bye_web
+DISCONNECT
+
+# AAPS's NSClient v3 is a Socket.IO v2 client in some versions, with an access token
+NAME connect_native
+CONNECT http://{{ site }}/socket.io/?EIO=3
+NS /alarm
+T 5s
+
+NAME bad_access_token
+EMIT subscribe
+B {"accessToken":"nope-0123456789abcdef"}
+ACK
+ASSERT_EQUALS false "@success"
+
+NAME access_token
+EMIT subscribe
+B {"accessToken":"{{ token }}"}
+ACK
+ASSERT_EQUALS true "@success"
+ASSERT_EQUALS "Subscribed for alarms" "@message"
+
+NAME bye_native
+DISCONNECT
