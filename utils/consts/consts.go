@@ -140,3 +140,9 @@ func NewSyncSourceTypeFromString(s string) (SyncSourceType, error) {
 const PASSWORD_GARBAGE_VALUE = "********"
 
 const DEFAULT_RATE_LIMITING_IDENTITY_NAME = "defaultIdentity"
+
+// MaxBatchRecords caps the records in one Nightscout batch POST, matching the uploaders' batch sizes
+const MaxBatchRecords = 100
+
+// MaxProfilesPerStore caps the profiles in one profile store, far above any real set of presets
+const MaxProfilesPerStore = 20

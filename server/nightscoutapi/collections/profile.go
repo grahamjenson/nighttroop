@@ -12,6 +12,7 @@ import (
 	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -32,6 +33,10 @@ func (c ProfileCollection) Convert(dr *sitedb.ProfilePresetBundle, siteContext *
 }
 
 func (c ProfileCollection) Validate(nsModel nightscoutmodels.ProfileStore, dbModel *sitedb.ProfilePresetBundle) *nsutils.HTTPError {
+	// Every profile in the store becomes a profile_presets row, so cap the store before any are inserted
+	if len(nsModel.Store) > consts.MaxProfilesPerStore {
+		return nsutils.ErrTooManyProfiles
+	}
 	if dbModel == nil {
 		return nil
 	}
