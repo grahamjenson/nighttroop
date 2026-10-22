@@ -28,6 +28,8 @@ func TestMain(m *testing.M) {
 	os.Setenv("SITE_POST_PER_MINUTE_BURST", "3")
 	os.Setenv("SITE_GET_PER_MINUTE_LIMIT", "1")
 	os.Setenv("SITE_GET_PER_MINUTE_BURST", "3")
+	os.Setenv("SITE_UNAUTH_PER_MINUTE_LIMIT", "1")
+	os.Setenv("SITE_UNAUTH_PER_MINUTE_BURST", "2")
 	cfg, err := config.NewServerConfig()
 	if err != nil {
 		panic(err)

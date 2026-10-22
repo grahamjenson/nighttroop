@@ -17,6 +17,8 @@ type RateLimiters struct {
 	userLoginRateLimiters *lru.Cache[string, *rate.Limiter]
 	ipLoginRateLimiters   *lru.Cache[string, *rate.Limiter]
 
+	siteUnauthRateLimiters *lru.Cache[string, *rate.Limiter]
+
 	identityGETRateLimiters *lru.Cache[string, *rate.Limiter]
 	siteGETRateLimiters     *lru.Cache[string, *rate.Limiter]
 
@@ -43,6 +45,8 @@ func newRateLimiters(config ServerConfig) *RateLimiters {
 
 		userLoginRateLimiters: lruMust(maxSites * maxIdentities * wiggle),
 		ipLoginRateLimiters:   lruMust(maxSites * maxIdentities * wiggle * 2),
+
+		siteUnauthRateLimiters: lruMust(maxSites * maxIdentities * wiggle * 2),
 
 		identityGETRateLimiters: lruMust(maxSites * maxIdentities * wiggle),
 		siteGETRateLimiters:     lruMust(maxSites * wiggle),
@@ -117,6 +121,11 @@ func (r *RateLimiters) SiteUpdateSyncLimiter(subdomain string) *rate.Limiter {
 
 func (r *RateLimiters) SiteIdentityCreateLimiter(subdomain string) *rate.Limiter {
 	return r.getOrCreateLimiter(r.siteIdentityCreateRateLimiters, subdomain, float64(r.serverConfig.SiteIdentityCreatePerMinuteLimit), r.serverConfig.SiteIdentityCreatePerMinuteBurst)
+}
+
+// SiteUnauthLimiter is one IP's budget on a site before it authenticates: 401s and Socket.IO handshakes spend it, not the site's own limit
+func (r *RateLimiters) SiteUnauthLimiter(subdomain string, ip string) *rate.Limiter {
+	return r.getOrCreateLimiter(r.siteUnauthRateLimiters, subdomain+":"+ip, float64(r.serverConfig.SiteUnauthPerMinuteLimit), r.serverConfig.SiteUnauthPerMinuteBurst)
 }
 
 func (r *RateLimiters) SiteLoginAllow(subdomain string, ip string) (bool, int) {

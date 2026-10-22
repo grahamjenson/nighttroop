@@ -34,6 +34,11 @@ func SiteLoginAttemptsWithinRateLimit(serverConfig *config.ServerConfig, r *http
 	return serverConfig.RateLimiters.SiteLoginAllow(fmt.Sprintf("%s:%s", subdomain, username), GetIPFromHTTPContext(r.Context()))
 }
 
+func SiteUnauthWithinRateLimit(serverConfig *config.ServerConfig, r *http.Request) (bool, int) {
+	siteContext := GetSiteContext(r.Context())
+	return WithinRateLimitAll(serverConfig.RateLimiters.SiteUnauthLimiter(siteContext.Subdomain, siteContext.IPAddress))
+}
+
 // //////
 // Once We know Who the user is then we can apply user-specific rate limiting
 // //////

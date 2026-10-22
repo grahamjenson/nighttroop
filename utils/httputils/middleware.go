@@ -48,6 +48,23 @@ func SiteRateLimitMiddleware(config *config.ServerConfig) func(http.Handler) htt
 	}
 }
 
+// SiteUnauthRateLimitMiddleware runs before auth, so it limits an IP on a site rather than the site itself
+func SiteUnauthRateLimitMiddleware(config *config.ServerConfig) func(http.Handler) http.Handler {
+
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			allowed, remainingTime := SiteUnauthWithinRateLimit(config, r)
+			if !allowed {
+				w.WriteHeader(http.StatusTooManyRequests)
+				slog.Info("Site unauthenticated rate limit exceeded", "remainingTime", remainingTime)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
 func SiteIdentityRateLimitMiddleware(config *config.ServerConfig) func(http.Handler) http.Handler {
 
 	return func(next http.Handler) http.Handler {
