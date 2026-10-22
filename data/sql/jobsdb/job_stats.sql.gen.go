@@ -7,6 +7,8 @@ package jobsdb
 
 import (
 	"context"
+
+	"nighttroop.t1d.nz/utils/errors"
 )
 
 const allJobStatsDaily = `-- name: AllJobStatsDaily :many
@@ -157,14 +159,7 @@ SET
     duration_squared_sum = duration_squared_sum + ?5,
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
 
-    errors = (
-        SELECT json_group_array(DISTINCT value)
-        FROM (
-            SELECT value FROM json_each(COALESCE(errors, '[]'))
-            UNION ALL
-            SELECT value FROM json_each(?6)
-        )
-    )
+    errors = ?6
 WHERE
     day_queue_job = ?7
 `
@@ -175,7 +170,7 @@ type UpdateJobStatsDailyParams struct {
 	TotalFailed        int64
 	DurationSum        float64
 	DurationSquaredSum float64
-	Errors             interface{}
+	Errors             errors.ErrorList
 	DayQueueJob        string
 }
 

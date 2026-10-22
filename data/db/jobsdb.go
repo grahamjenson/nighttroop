@@ -45,7 +45,6 @@ func (j *JobsDB) BuildDailyReports(ctx context.Context, secondsAgo int64) error 
 
 		stats, ok := dayQueueJobMap[j.DayQueueJob()]
 		if ok {
-			stats.Errors = append(stats.Errors, j.Errors...)
 			stats.TotalJobs += 1
 			stats.TotalSuccess += j.TotalSuccess()
 			stats.TotalFailed += j.TotalFailed()
@@ -66,14 +65,16 @@ func (j *JobsDB) BuildDailyReports(ctx context.Context, secondsAgo int64) error 
 		}
 	}
 
-	for k := range dayQueueJobMap {
-		_, err := q.EnsureJobStatsDailyForGroup(ctx, jobsdb.EnsureJobStatsDailyForGroupParams{
+	for k, stats := range dayQueueJobMap {
+		existing, err := q.EnsureJobStatsDailyForGroup(ctx, jobsdb.EnsureJobStatsDailyForGroupParams{
 			DayQueueJob: k,
 		})
 		if err != nil {
 			return fmt.Errorf("Error ensuring job stats daily for group: %w", err)
 		}
-
+		// Merged here, not in SQL, so the stored list stays bounded and the update cannot fail its CHECK
+		stats.Errors = existing.Errors.AddAll(stats.Errors)
+		dayQueueJobMap[k] = stats
 	}
 
 	tx, err := j.SQLiteDB.BeginTx(ctx, nil)
