@@ -26,7 +26,7 @@ func (s *ProfileSwitchesStore) GetName() string {
 // ////
 // CREATE
 // ////
-func (s *ProfileSwitchesStore) CreateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, model *sitemodels.SiteProfileSwitch) (*sitedb.ProfileSwitch, error) {
+func (s *ProfileSwitchesStore) CreateRow(ctx context.Context, q *sitedb.Queries, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteProfileSwitch) (*sitedb.ProfileSwitch, error) {
 	if model.Name == "" {
 		return nil, apiutils.ErrConstraintCheckFailedWithHint("name is required")
 	}
@@ -60,7 +60,7 @@ func (s *ProfileSwitchesStore) UpdateHTMXResponse(model *sitemodels.SiteProfileS
 // ////
 // Get Model
 // /////
-func (s *ProfileSwitchesStore) GetRow(ctx context.Context, q *sitedb.Queries, id string) (*sitedb.ProfileSwitch, error) {
+func (s *ProfileSwitchesStore) GetRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) (*sitedb.ProfileSwitch, error) {
 	return q.GetProfileSwitch(ctx, sitedb.GetProfileSwitchParams{ID: id})
 }
 
@@ -78,7 +78,7 @@ func (s *ProfileSwitchesStore) GetHTMXResponse(model *sitemodels.SiteProfileSwit
 // Search Models
 // ///
 
-func (s *ProfileSwitchesStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query) ([]*sitedb.ProfileSwitch, error) {
+func (s *ProfileSwitchesStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.ProfileSwitch, error) {
 	return q.AllProfileSwitches(ctx, sitequery.QueryToAllProfileSwitches(query))
 }
 

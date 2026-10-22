@@ -16,8 +16,6 @@ import (
 
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
 
-	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
-
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/errors"
@@ -36,18 +34,18 @@ func (s *SyncSettingsStore) GetName() string {
 // ////
 // CREATE
 // ////
-func (s *SyncSettingsStore) CreateModel(ctx context.Context, tx *siteapiutils.StoreTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SyncSource) (bool, *apiutils.HTTPError) {
+func (s *SyncSettingsStore) CreateRow(ctx context.Context, q *controldb.Queries, id *string, siteContext *httputils.SiteContext, model *sitemodels.SyncSource) (*sitemodels.SyncSource, error) {
 	var err error
 	params := sitemodels.SyncSourceToCreate(model)
 	// DO NOT ALLOW THE CLIENT TO SET SITEID OR TYPE
 	params.SiteID = siteContext.Subdomain
 	if id == nil {
-		return false, apiutils.ErrMissingRequiredFieldWithHint("id/type")
+		return nil, apiutils.ErrMissingRequiredFieldWithHint("id/type")
 	}
 
 	sstype, err := consts.NewSyncSourceTypeFromString(*id)
 	if err != nil {
-		return false, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Invalid sync source type: %s", *id))
+		return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Invalid sync source type: %s", *id))
 	}
 	params.Type = sstype
 
@@ -57,7 +55,7 @@ func (s *SyncSettingsStore) CreateModel(ctx context.Context, tx *siteapiutils.St
 	}
 
 	if params.UrlOrUsernameEnc == nil || strings.TrimSpace(*params.UrlOrUsernameEnc) == "" {
-		return false, apiutils.ErrMissingRequiredFieldWithHint("Url Or Username")
+		return nil, apiutils.ErrMissingRequiredFieldWithHint("Url Or Username")
 	}
 	params.UrlOrUsernameEnc = ptr(strings.TrimSpace(*params.UrlOrUsernameEnc))
 
@@ -68,46 +66,42 @@ func (s *SyncSettingsStore) CreateModel(ctx context.Context, tx *siteapiutils.St
 		normalized, err := nsURLNormalizeValidate(params.UrlOrUsernameEnc, siteContext.Config)
 		if err != nil {
 			slog.Error("Failed to normalize and validate Nightscout URL", "error", err, "url", *params.UrlOrUsernameEnc)
-			return false, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Nightscout URL '%s' is not a valid URL. %s", *params.UrlOrUsernameEnc, err))
+			return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Nightscout URL '%s' is not a valid URL. %s", *params.UrlOrUsernameEnc, err))
 		}
 		params.UrlOrUsernameEnc = normalized
 	}
 
 	if params.PasswordEnc == nil || *params.PasswordEnc == "" {
-		return false, apiutils.ErrMissingRequiredFieldWithHint("password")
+		return nil, apiutils.ErrMissingRequiredFieldWithHint("password")
 	}
 
 	encPassword, err := security.Encrypt(*params.PasswordEnc)
 	if err != nil {
-		return false, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Failed to encrypt Nightscout password: %s", err))
+		return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Failed to encrypt Nightscout password: %s", err))
 	}
 	params.PasswordEnc = &encPassword
 
 	encUrlOrUsername, err := security.Encrypt(*params.UrlOrUsernameEnc)
 	if err != nil {
-		return false, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Failed to encrypt Nightscout URL: %s", err))
+		return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Failed to encrypt Nightscout URL: %s", err))
 	}
 	params.UrlOrUsernameEnc = &encUrlOrUsername
 
-	q, err := tx.Control()
-	if err != nil {
-		return false, apiutils.ErrInternalServerError
-	}
 	err = q.CreateSyncSource(ctx, params)
 	if err != nil {
 		if errors.IsSQLUniqueViolationError(err) {
-			return false, apiutils.ErrUniqueConstraintViolation
+			return nil, apiutils.ErrUniqueConstraintViolation
 		}
 		if errors.IsSQLConstraintNotNull(err) {
-			return false, apiutils.ErrMissingRequiredField
+			return nil, apiutils.ErrMissingRequiredField
 		}
 		if errors.IsSQLConstraintCheck(err) {
-			return false, apiutils.ErrConstraintCheckFailedWithHint(err.Error())
+			return nil, apiutils.ErrConstraintCheckFailedWithHint(err.Error())
 		}
-		return false, apiutils.ErrBadBody
+		return nil, apiutils.ErrBadBody
 	}
 
-	return true, nil
+	return model, nil
 }
 
 func (s *SyncSettingsStore) CreateHTMXResponse(model *sitemodels.SyncSource) templ.Component {
@@ -118,9 +112,9 @@ func (s *SyncSettingsStore) CreateHTMXResponse(model *sitemodels.SyncSource) tem
 // Update
 // ///
 
-func (s *SyncSettingsStore) UpdateModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext, oldModel *sitemodels.SyncSource, model *sitemodels.SyncSource) *apiutils.HTTPError {
+func (s *SyncSettingsStore) UpdateRow(ctx context.Context, q *controldb.Queries, siteContext *httputils.SiteContext, oldModel *sitemodels.SyncSource, model *sitemodels.SyncSource) (*sitemodels.SyncSource, error) {
 	if allowed, seconds := httputils.UserUpdateSyncWithinRateLimit(siteContext); !allowed {
-		return apiutils.ErrRateLimitExceeded(seconds)
+		return nil, apiutils.ErrRateLimitExceeded(seconds)
 	}
 
 	params := sitemodels.SyncSourceToUpdate(model)
@@ -132,7 +126,7 @@ func (s *SyncSettingsStore) UpdateModel(ctx context.Context, tx *siteapiutils.St
 
 	if params.UrlOrUsernameEnc != nil {
 		if strings.TrimSpace(*params.UrlOrUsernameEnc) == "" {
-			return apiutils.ErrMissingRequiredFieldWithHint("Url Or Username")
+			return nil, apiutils.ErrMissingRequiredFieldWithHint("Url Or Username")
 		}
 		// Trim like create does, so pasted spaces do not make the URL invalid
 		params.UrlOrUsernameEnc = ptr(strings.TrimSpace(*params.UrlOrUsernameEnc))
@@ -146,15 +140,10 @@ func (s *SyncSettingsStore) UpdateModel(ctx context.Context, tx *siteapiutils.St
 			normalized, err := nsURLNormalizeValidate(params.UrlOrUsernameEnc, siteContext.Config)
 			if err != nil {
 				slog.Error("Failed to normalize and validate Nightscout URL", "error", err, "url", *params.UrlOrUsernameEnc)
-				return apiutils.ErrBadBodyWithHint(fmt.Sprintf("Nightscout URL '%s' is not a valid URL. %s", *params.UrlOrUsernameEnc, err))
+				return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Nightscout URL '%s' is not a valid URL. %s", *params.UrlOrUsernameEnc, err))
 			}
 			params.UrlOrUsernameEnc = normalized
 		}
-	}
-
-	q, err := tx.Control()
-	if err != nil {
-		return apiutils.ErrInternalServerError
 	}
 
 	if params.PasswordEnc != nil {
@@ -163,7 +152,7 @@ func (s *SyncSettingsStore) UpdateModel(ctx context.Context, tx *siteapiutils.St
 		} else {
 			*params.PasswordEnc, err = security.Encrypt(*params.PasswordEnc)
 			if err != nil {
-				return apiutils.ErrBadBodyWithHint(fmt.Sprintf("Failed to encrypt Password: %s", err))
+				return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Failed to encrypt Password: %s", err))
 			}
 
 		}
@@ -172,25 +161,25 @@ func (s *SyncSettingsStore) UpdateModel(ctx context.Context, tx *siteapiutils.St
 	if params.UrlOrUsernameEnc != nil {
 		*params.UrlOrUsernameEnc, err = security.Encrypt(*params.UrlOrUsernameEnc)
 		if err != nil {
-			return apiutils.ErrBadBodyWithHint(fmt.Sprintf("Failed to encrypt URL Or Username: %s", err))
+			return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Failed to encrypt URL Or Username: %s", err))
 		}
 	}
 
 	err = q.UpdateSyncSource(ctx, params)
 	if err != nil {
 		if errors.IsSQLUniqueViolationError(err) {
-			return apiutils.ErrUniqueConstraintViolation
+			return nil, apiutils.ErrUniqueConstraintViolation
 		}
 		if errors.IsSQLConstraintNotNull(err) {
-			return apiutils.ErrMissingRequiredField
+			return nil, apiutils.ErrMissingRequiredField
 		}
 		if errors.IsSQLConstraintCheck(err) {
-			return apiutils.ErrConstraintCheckFailed
+			return nil, apiutils.ErrConstraintCheckFailed
 		}
-		return apiutils.ErrBadBody
+		return nil, apiutils.ErrBadBody
 	}
 
-	return nil
+	return model, nil
 }
 
 func (s *SyncSettingsStore) UpdateHTMXResponse(model *sitemodels.SyncSource) templ.Component {
@@ -200,16 +189,12 @@ func (s *SyncSettingsStore) UpdateHTMXResponse(model *sitemodels.SyncSource) tem
 // ////
 // Get Model
 // /////
-func (s *SyncSettingsStore) GetModel(ctx context.Context, tx *siteapiutils.StoreTx, id string, siteContext *httputils.SiteContext) (*sitemodels.SyncSource, *apiutils.HTTPError) {
+func (s *SyncSettingsStore) GetRow(ctx context.Context, q *controldb.Queries, id string, siteContext *httputils.SiteContext) (*sitemodels.SyncSource, error) {
 	sstype, err := consts.NewSyncSourceTypeFromString(id)
 	if err != nil {
 		return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Invalid sync source type: %s", id))
 	}
 
-	q, err := tx.Control()
-	if err != nil {
-		return nil, apiutils.ErrInternalServerError
-	}
 	model, err := q.GetSyncSource(ctx, controldb.GetSyncSourceParams{
 		Type:   sstype,
 		SiteID: siteContext.Subdomain,
@@ -233,15 +218,16 @@ func (s *SyncSettingsStore) GetModel(ctx context.Context, tx *siteapiutils.Store
 	return respMode, nil
 }
 
+// ToModel is the sync source: it is decrypted as it is read, so its row is its model
+func (s *SyncSettingsStore) ToModel(row *sitemodels.SyncSource, _ *httputils.SiteContext) *sitemodels.SyncSource {
+	return row
+}
+
 // ///
 // Search Models
 // ///
 
-func (s *SyncSettingsStore) SearchModels(ctx context.Context, tx *siteapiutils.StoreTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.SyncSource, *apiutils.HTTPError) {
-	q, err := tx.Control()
-	if err != nil {
-		return nil, apiutils.ErrInternalServerError
-	}
+func (s *SyncSettingsStore) SearchRows(ctx context.Context, q *controldb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.SyncSource, error) {
 	dbSyncSources, err := q.GetAllSyncSourcesForSite(ctx, controldb.GetAllSyncSourcesForSiteParams{
 		SiteID: siteContext.Subdomain,
 	})
@@ -270,20 +256,13 @@ func (s *SyncSettingsStore) SearchHTMXResponse(models []*sitemodels.SyncSource, 
 // Delete
 // ///
 
-func (s *SyncSettingsStore) DeleteModel(ctx context.Context, tx *siteapiutils.StoreTx, _ string, model *sitemodels.SyncSource, siteContext *httputils.SiteContext) *apiutils.HTTPError {
-	q, err := tx.Control()
+// DeleteRow removes the site's sync source of the type in the id
+func (s *SyncSettingsStore) DeleteRow(ctx context.Context, q *controldb.Queries, id string, siteContext *httputils.SiteContext) error {
+	sstype, err := consts.NewSyncSourceTypeFromString(id)
 	if err != nil {
-		return apiutils.ErrInternalServerError
+		return apiutils.ErrBadBodyWithHint(fmt.Sprintf("Invalid sync source type: %s", id))
 	}
-	err = q.DeleteSyncSource(ctx, controldb.DeleteSyncSourceParams{
-		Type:   model.Type,
-		SiteID: model.SiteID,
-	})
-	if err != nil {
-		slog.Error("Error deleting sync source", "error", err)
-		return apiutils.ErrInternalServerError
-	}
-	return nil
+	return q.DeleteSyncSource(ctx, controldb.DeleteSyncSourceParams{Type: sstype, SiteID: siteContext.Subdomain})
 }
 
 func (s *SyncSettingsStore) DeleteHTMXResponse(model *sitemodels.SyncSource) templ.Component {

@@ -34,7 +34,7 @@ func (s *DeviceStatusesStore) GetName() string {
 // ////
 // Get Model
 // /////
-func (s *DeviceStatusesStore) GetRow(ctx context.Context, q *sitedb.Queries, id string) (*sitedb.DeviceReport, error) {
+func (s *DeviceStatusesStore) GetRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) (*sitedb.DeviceReport, error) {
 	return q.GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: id})
 }
 
@@ -54,7 +54,7 @@ func (s *DeviceStatusesStore) GetHTMXResponse(model *sitemodels.SiteDeviceStatus
 
 // SearchRows pages through one device's statuses when the query names a device,
 // otherwise it returns the latest few statuses of each device that reported recently, grouped by device
-func (s *DeviceStatusesStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query) ([]*sitedb.DeviceReport, error) {
+func (s *DeviceStatusesStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.DeviceReport, error) {
 	if query.Device != nil {
 		return q.DeviceReportsForDevice(ctx, sitequery.QueryToDeviceReportsForDevice(query))
 	}

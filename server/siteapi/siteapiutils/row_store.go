@@ -4,136 +4,172 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+	"log/slog"
 
 	"github.com/a-h/templ"
+	"nighttroop.t1d.nz/data/events/sitemodels"
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-// RowStore is a store of one table in the site's database. Its methods read and write the table's sitedb rows (R)
-// and return the database's errors; Rows makes it a store for the handlers, which shows rows as site models (M),
-// answers errors, and publishes each change on the site's model events.
-type RowStore[R, M any] interface {
+// RowStore is a site store. Its methods read and write rows (R) with the queries (Q) of the database they are in,
+// and return the database's errors; Rows is the store the handlers use, which shows rows as site models (M),
+// answers errors, and publishes each change to the site's own rows. A store without rows of its own, such as
+// settings, uses its model as its row.
+type RowStore[R, M, Q any] interface {
 	GetName() string
 	ToModel(row *R, siteContext *httputils.SiteContext) *M
-	GetRow(ctx context.Context, q *sitedb.Queries, id string) (*R, error)
-	SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query) ([]*R, error)
+	GetRow(ctx context.Context, q Q, id string, siteContext *httputils.SiteContext) (*R, error)
+}
+
+// RowGetter, RowSearcher, RowCreator, RowUpdater and RowDeleter are what a RowStore can do, each with its HTMX
+// response. An *apiutils.HTTPError their methods return, such as a value out of range, is answered as it is.
+type RowGetter[M any] interface {
 	GetHTMXResponse(model *M) templ.Component
+}
+
+type RowSearcher[R, M, Q any] interface {
+	SearchRows(ctx context.Context, q Q, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*R, error)
 	SearchHTMXResponse(models []*M, query *apiutils.Query) templ.Component
 }
 
-// RowCreator, RowUpdater and RowDeleter are the writes a RowStore can do. An *apiutils.HTTPError they return,
-// such as a value out of range, is answered as it is.
-type RowCreator[R, M any] interface {
-	CreateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, model *M) (*R, error)
+// RowCreator's id is the one chosen by an upsert, and nil for a create
+type RowCreator[R, M, Q any] interface {
+	CreateRow(ctx context.Context, q Q, id *string, siteContext *httputils.SiteContext, model *M) (*R, error)
 	CreateHTMXResponse(model *M) templ.Component
 }
 
-type RowUpdater[R, M any] interface {
-	UpdateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, oldModel *M, model *M) (*R, error)
+type RowUpdater[R, M, Q any] interface {
+	UpdateRow(ctx context.Context, q Q, siteContext *httputils.SiteContext, oldModel *M, model *M) (*R, error)
 	UpdateHTMXResponse(model *M) templ.Component
 }
 
-type RowDeleter[R, M any] interface {
-	DeleteRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) error
+type RowDeleter[R, M, Q any] interface {
+	DeleteRow(ctx context.Context, q Q, id string, siteContext *httputils.SiteContext) error
 	DeleteHTMXResponse(model *M) templ.Component
 }
 
-// Rows is the handlers' store for a RowStore
-func Rows[R, M any](store RowStore[R, M]) *RowsStore[R, M] {
-	return &RowsStore[R, M]{store: store}
+// Rows is the store the handlers use
+type Rows[R, M, Q any] struct {
+	store   RowStore[R, M, Q]
+	queries func(*StoreTx) (Q, error)
+	publish bool // a change to the site's own rows is published on its model events
 }
 
-type RowsStore[R, M any] struct {
-	store RowStore[R, M]
+// SiteRows is a store of the site's own rows, whose changes are published
+func SiteRows[R, M any](store RowStore[R, M, *sitedb.Queries]) *Rows[R, M, *sitedb.Queries] {
+	return &Rows[R, M, *sitedb.Queries]{store: store, queries: (*StoreTx).Site, publish: true}
 }
 
-func (s *RowsStore[R, M]) GetName() string { return s.store.GetName() }
-
-func (s *RowsStore[R, M]) toModel(siteContext *httputils.SiteContext) func(*R) *M {
-	return func(row *R) *M { return s.store.ToModel(row, siteContext) }
+// ControlRows is a store of the site's rows in the control database, such as its identities
+func ControlRows[R, M any](store RowStore[R, M, *controldb.Queries]) *Rows[R, M, *controldb.Queries] {
+	return &Rows[R, M, *controldb.Queries]{store: store, queries: (*StoreTx).Control}
 }
 
-func (s *RowsStore[R, M]) GetModel(ctx context.Context, tx *StoreTx, id string, siteContext *httputils.SiteContext) (*M, *apiutils.HTTPError) {
-	q, err := tx.Site()
+func (s *Rows[R, M, Q]) GetName() string { return s.store.GetName() }
+
+// as is the store as what a handler needs it to do; a store routed to a handler it cannot do fails at start up
+func as[I, R, M, Q any](s *Rows[R, M, Q], does string) I {
+	i, ok := s.store.(I)
+	if !ok {
+		panic(fmt.Sprintf("the %s store cannot %s", s.GetName(), does))
+	}
+	return i
+}
+
+// get is the model, or nil when there is none
+func (s *Rows[R, M, Q]) get(ctx context.Context, tx *StoreTx, id string, siteContext *httputils.SiteContext) (*M, *R, *apiutils.HTTPError) {
+	q, err := s.queries(tx)
+	if err != nil {
+		return nil, nil, apiutils.ErrInternalServerError
+	}
+	row, err := s.store.GetRow(ctx, q, id, siteContext)
+	if errors.Is(err, sql.ErrNoRows) || (err == nil && row == nil) {
+		return nil, nil, nil
+	}
+	if herr := s.readError(err); herr != nil {
+		return nil, nil, herr
+	}
+	return s.store.ToModel(row, siteContext), row, nil
+}
+
+func (s *Rows[R, M, Q]) search(ctx context.Context, tx *StoreTx, searcher RowSearcher[R, M, Q], query *apiutils.Query, siteContext *httputils.SiteContext) ([]*M, *apiutils.HTTPError) {
+	q, err := s.queries(tx)
 	if err != nil {
 		return nil, apiutils.ErrInternalServerError
 	}
-	row, err := s.store.GetRow(ctx, q, id)
-	return apiutils.Found(row, err, s.GetName(), s.toModel(siteContext))
+	rows, err := searcher.SearchRows(ctx, q, query, siteContext)
+	if herr := s.readError(err); herr != nil {
+		return nil, herr
+	}
+	models := make([]*M, 0, len(rows))
+	for _, row := range rows {
+		models = append(models, s.store.ToModel(row, siteContext))
+	}
+	return models, nil
 }
 
-func (s *RowsStore[R, M]) SearchModels(ctx context.Context, tx *StoreTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*M, *apiutils.HTTPError) {
-	q, err := tx.Site()
-	if err != nil {
-		return nil, apiutils.ErrInternalServerError
-	}
-	rows, err := s.store.SearchRows(ctx, q, query)
-	return apiutils.Searched(rows, err, s.GetName(), s.toModel(siteContext))
-}
-
-func (s *RowsStore[R, M]) CreateModel(ctx context.Context, tx *StoreTx, id *string, siteContext *httputils.SiteContext, model *M) (bool, *apiutils.HTTPError) {
-	q, err := tx.Site()
-	if err != nil {
-		return false, apiutils.ErrInternalServerError
-	}
-	row, err := s.store.(RowCreator[R, M]).CreateRow(ctx, q, siteContext, model)
-	if herr := writeError(err, s.GetName()); herr != nil {
-		return false, herr
-	}
-	tx.Created(row)
-	*model = *s.store.ToModel(row, siteContext)
-	return true, nil
-}
-
-func (s *RowsStore[R, M]) UpdateModel(ctx context.Context, tx *StoreTx, id string, siteContext *httputils.SiteContext, oldModel *M, model *M) *apiutils.HTTPError {
-	q, err := tx.Site()
+func (s *Rows[R, M, Q]) create(ctx context.Context, tx *StoreTx, creator RowCreator[R, M, Q], id *string, siteContext *httputils.SiteContext, model *M) *apiutils.HTTPError {
+	q, err := s.queries(tx)
 	if err != nil {
 		return apiutils.ErrInternalServerError
 	}
-	row, err := s.store.(RowUpdater[R, M]).UpdateRow(ctx, q, siteContext, oldModel, model)
+	row, err := creator.CreateRow(ctx, q, id, siteContext, model)
 	if herr := writeError(err, s.GetName()); herr != nil {
 		return herr
 	}
-	tx.Updated(row)
+	s.changed(tx, sitemodels.Created, row)
 	*model = *s.store.ToModel(row, siteContext)
 	return nil
 }
 
-func (s *RowsStore[R, M]) DeleteModel(ctx context.Context, tx *StoreTx, id string, model *M, siteContext *httputils.SiteContext) *apiutils.HTTPError {
-	q, err := tx.Site()
+func (s *Rows[R, M, Q]) update(ctx context.Context, tx *StoreTx, updater RowUpdater[R, M, Q], siteContext *httputils.SiteContext, oldModel *M, model *M) *apiutils.HTTPError {
+	q, err := s.queries(tx)
 	if err != nil {
 		return apiutils.ErrInternalServerError
 	}
-	// Read first, so the change can say what was deleted
-	row, err := s.store.GetRow(ctx, q, id)
+	row, err := updater.UpdateRow(ctx, q, siteContext, oldModel, model)
 	if herr := writeError(err, s.GetName()); herr != nil {
 		return herr
 	}
-	if herr := writeError(s.store.(RowDeleter[R, M]).DeleteRow(ctx, q, id, siteContext), s.GetName()); herr != nil {
-		return herr
-	}
-	tx.Deleted(row)
+	s.changed(tx, sitemodels.Updated, row)
+	*model = *s.store.ToModel(row, siteContext)
 	return nil
 }
 
-func (s *RowsStore[R, M]) CreateHTMXResponse(model *M) templ.Component {
-	return s.store.(RowCreator[R, M]).CreateHTMXResponse(model)
+// delete deletes the row read as the model, so the change can say what was deleted
+func (s *Rows[R, M, Q]) delete(ctx context.Context, tx *StoreTx, deleter RowDeleter[R, M, Q], id string, row *R, siteContext *httputils.SiteContext) *apiutils.HTTPError {
+	q, err := s.queries(tx)
+	if err != nil {
+		return apiutils.ErrInternalServerError
+	}
+	if herr := writeError(deleter.DeleteRow(ctx, q, id, siteContext), s.GetName()); herr != nil {
+		return herr
+	}
+	s.changed(tx, sitemodels.Deleted, row)
+	return nil
 }
 
-func (s *RowsStore[R, M]) UpdateHTMXResponse(model *M) templ.Component {
-	return s.store.(RowUpdater[R, M]).UpdateHTMXResponse(model)
+func (s *Rows[R, M, Q]) changed(tx *StoreTx, action sitemodels.Action, row *R) {
+	if s.publish {
+		tx.changed(action, row)
+	}
 }
 
-func (s *RowsStore[R, M]) DeleteHTMXResponse(model *M) templ.Component {
-	return s.store.(RowDeleter[R, M]).DeleteHTMXResponse(model)
-}
-
-func (s *RowsStore[R, M]) GetHTMXResponse(model *M) templ.Component { return s.store.GetHTMXResponse(model) }
-
-func (s *RowsStore[R, M]) SearchHTMXResponse(models []*M, query *apiutils.Query) templ.Component {
-	return s.store.SearchHTMXResponse(models, query)
+// readError is the answer to a read's error: the store's own, or the database's
+func (s *Rows[R, M, Q]) readError(err error) *apiutils.HTTPError {
+	var herr *apiutils.HTTPError
+	switch {
+	case err == nil:
+		return nil
+	case errors.As(err, &herr):
+		return herr
+	}
+	slog.Error("Error reading "+s.GetName(), "error", err)
+	return apiutils.ErrInternalServerError
 }
 
 // writeError is the answer to a write's error: the store's own, not found for a missing row, or the database's

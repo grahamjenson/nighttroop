@@ -27,7 +27,7 @@ func (s *GlucoseReadingsStore) GetName() string {
 // ////
 // CREATE
 // ////
-func (s *GlucoseReadingsStore) CreateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, model *sitemodels.SiteGlucoseReading) (*sitedb.GlucoseReading, error) {
+func (s *GlucoseReadingsStore) CreateRow(ctx context.Context, q *sitedb.Queries, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteGlucoseReading) (*sitedb.GlucoseReading, error) {
 	params := sitemodels.GlucoseReadingToCreate(model, siteContext)
 	if herr := checkGlucoseMgdl(params.Mgdl, siteContext); herr != nil {
 		return nil, herr
@@ -62,7 +62,7 @@ func (s *GlucoseReadingsStore) UpdateHTMXResponse(model *sitemodels.SiteGlucoseR
 // ////
 // Get Model
 // /////
-func (s *GlucoseReadingsStore) GetRow(ctx context.Context, q *sitedb.Queries, id string) (*sitedb.GlucoseReading, error) {
+func (s *GlucoseReadingsStore) GetRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) (*sitedb.GlucoseReading, error) {
 	return q.GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: id})
 }
 
@@ -80,7 +80,7 @@ func (s *GlucoseReadingsStore) GetHTMXResponse(model *sitemodels.SiteGlucoseRead
 // Search Models
 // ///
 
-func (s *GlucoseReadingsStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query) ([]*sitedb.GlucoseReading, error) {
+func (s *GlucoseReadingsStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.GlucoseReading, error) {
 	return q.AllGlucoseReadings(ctx, sitequery.QueryToAllGlucoseReadings(query))
 }
 

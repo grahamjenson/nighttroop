@@ -28,7 +28,7 @@ func (s *NotificationEventsStore) GetName() string {
 // ////
 // CREATE
 // ////
-func (s *NotificationEventsStore) CreateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, model *sitemodels.SiteNotificationEvent) (*sitedb.NotificationEvent, error) {
+func (s *NotificationEventsStore) CreateRow(ctx context.Context, q *sitedb.Queries, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteNotificationEvent) (*sitedb.NotificationEvent, error) {
 	if model.NotificationType == "" {
 		model.NotificationType = defaultNotificationType
 	}
@@ -65,7 +65,7 @@ func (s *NotificationEventsStore) UpdateHTMXResponse(model *sitemodels.SiteNotif
 // ////
 // Get Model
 // /////
-func (s *NotificationEventsStore) GetRow(ctx context.Context, q *sitedb.Queries, id string) (*sitedb.NotificationEvent, error) {
+func (s *NotificationEventsStore) GetRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) (*sitedb.NotificationEvent, error) {
 	return q.GetNotificationEvent(ctx, sitedb.GetNotificationEventParams{ID: id})
 }
 
@@ -83,7 +83,7 @@ func (s *NotificationEventsStore) GetHTMXResponse(model *sitemodels.SiteNotifica
 // Search Models
 // ///
 
-func (s *NotificationEventsStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query) ([]*sitedb.NotificationEvent, error) {
+func (s *NotificationEventsStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.NotificationEvent, error) {
 	return q.AllNotificationEvents(ctx, sitequery.QueryToAllNotificationEvents(query))
 }
 

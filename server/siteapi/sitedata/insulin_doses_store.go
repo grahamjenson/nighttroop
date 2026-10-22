@@ -29,7 +29,7 @@ func (s *InsulinDosesStore) GetName() string {
 // ////
 // CREATE
 // ////
-func (s *InsulinDosesStore) CreateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, model *sitemodels.SiteInsulinDose) (*sitedb.InsulinDose, error) {
+func (s *InsulinDosesStore) CreateRow(ctx context.Context, q *sitedb.Queries, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteInsulinDose) (*sitedb.InsulinDose, error) {
 	if herr := checkInsulinDose(model); herr != nil {
 		return nil, herr
 	}
@@ -62,7 +62,7 @@ func (s *InsulinDosesStore) UpdateHTMXResponse(model *sitemodels.SiteInsulinDose
 // ////
 // Get Model
 // /////
-func (s *InsulinDosesStore) GetRow(ctx context.Context, q *sitedb.Queries, id string) (*sitedb.InsulinDose, error) {
+func (s *InsulinDosesStore) GetRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) (*sitedb.InsulinDose, error) {
 	return q.GetInsulinDose(ctx, sitedb.GetInsulinDoseParams{ID: id})
 }
 
@@ -80,7 +80,7 @@ func (s *InsulinDosesStore) GetHTMXResponse(model *sitemodels.SiteInsulinDose) t
 // Search Models
 // ///
 
-func (s *InsulinDosesStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query) ([]*sitedb.InsulinDose, error) {
+func (s *InsulinDosesStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.InsulinDose, error) {
 	return q.AllInsulinDoses(ctx, sitequery.QueryToAllInsulinDoses(query))
 }
 

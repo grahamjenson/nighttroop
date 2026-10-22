@@ -32,7 +32,7 @@ func (s *TempBasalsStore) GetName() string {
 // ////
 // CREATE
 // ////
-func (s *TempBasalsStore) CreateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, model *sitemodels.SiteTempBasal) (*sitedb.TempBasal, error) {
+func (s *TempBasalsStore) CreateRow(ctx context.Context, q *sitedb.Queries, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteTempBasal) (*sitedb.TempBasal, error) {
 	if herr := checkTempBasal(model); herr != nil {
 		return nil, herr
 	}
@@ -71,7 +71,7 @@ func (s *TempBasalsStore) UpdateHTMXResponse(model *sitemodels.SiteTempBasal) te
 // ////
 // Get Model
 // /////
-func (s *TempBasalsStore) GetRow(ctx context.Context, q *sitedb.Queries, id string) (*sitedb.TempBasal, error) {
+func (s *TempBasalsStore) GetRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) (*sitedb.TempBasal, error) {
 	return q.GetTempBasal(ctx, sitedb.GetTempBasalParams{ID: id})
 }
 
@@ -89,7 +89,7 @@ func (s *TempBasalsStore) GetHTMXResponse(model *sitemodels.SiteTempBasal) templ
 // Search Models
 // ///
 
-func (s *TempBasalsStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query) ([]*sitedb.TempBasal, error) {
+func (s *TempBasalsStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.TempBasal, error) {
 	return q.AllTempBasals(ctx, sitequery.QueryToAllTempBasals(query))
 }
 

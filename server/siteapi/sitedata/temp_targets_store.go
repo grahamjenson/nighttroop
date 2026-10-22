@@ -30,7 +30,7 @@ func (s *TempTargetsStore) GetName() string {
 // ////
 // CREATE
 // ////
-func (s *TempTargetsStore) CreateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, model *sitemodels.SiteTempTarget) (*sitedb.TempTarget, error) {
+func (s *TempTargetsStore) CreateRow(ctx context.Context, q *sitedb.Queries, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteTempTarget) (*sitedb.TempTarget, error) {
 	if herr := checkTempTarget(model, siteContext); herr != nil {
 		return nil, herr
 	}
@@ -72,7 +72,7 @@ func (s *TempTargetsStore) UpdateHTMXResponse(model *sitemodels.SiteTempTarget) 
 // ////
 // Get Model
 // /////
-func (s *TempTargetsStore) GetRow(ctx context.Context, q *sitedb.Queries, id string) (*sitedb.TempTarget, error) {
+func (s *TempTargetsStore) GetRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) (*sitedb.TempTarget, error) {
 	return q.GetTempTarget(ctx, sitedb.GetTempTargetParams{ID: id})
 }
 
@@ -90,7 +90,7 @@ func (s *TempTargetsStore) GetHTMXResponse(model *sitemodels.SiteTempTarget) tem
 // Search Models
 // ///
 
-func (s *TempTargetsStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query) ([]*sitedb.TempTarget, error) {
+func (s *TempTargetsStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.TempTarget, error) {
 	return q.AllTempTargets(ctx, sitequery.QueryToAllTempTargets(query))
 }
 
