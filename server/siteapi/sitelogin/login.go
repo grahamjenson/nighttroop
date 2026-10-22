@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"nighttroop.t1d.nz/data/db"
 
@@ -16,6 +17,7 @@ import (
 	"nighttroop.t1d.nz/server/components/site_templ/site_login_templ"
 	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/security"
@@ -82,6 +84,12 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 
 		formName := r.FormValue("name")
 		formPassword := r.FormValue("password")
+
+		// Reject names no identity can have before they reach the rate limiter, which keys on them
+		if utf8.RuneCountInString(formName) > consts.MAX_IDENTITY_NAME_LENGTH {
+			identityLoginErrorHTMX(w, r, "Invalid username or password.", fmt.Errorf("username longer than %d characters", consts.MAX_IDENTITY_NAME_LENGTH))
+			return
+		}
 
 		// Rate Limit login attempts by user and IP
 		allowedToAttempt, _ := httputils.SiteLoginAttemptsWithinRateLimit(config, r, subdomain, formName)
@@ -291,6 +299,12 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config *config.ServerConfig, r *h
 	var creds LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
 		identityLoginErrorAPI(w, r, "Invalid login attempt", fmt.Errorf("invalid login attempt: %w", err))
+		return
+	}
+
+	// Reject names no identity can have before they reach the rate limiter, which keys on them
+	if utf8.RuneCountInString(creds.Name) > consts.MAX_IDENTITY_NAME_LENGTH {
+		identityLoginErrorAPI(w, r, "Invalid login attempt", fmt.Errorf("username longer than %d characters", consts.MAX_IDENTITY_NAME_LENGTH))
 		return
 	}
 

@@ -1,6 +1,8 @@
 package config
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"math"
 	"strconv"
 
@@ -72,6 +74,9 @@ func lruMust(maxEntries int) *lru.Cache[string, *rate.Limiter] {
 }
 
 func (r *RateLimiters) getOrCreateLimiter(limiters *lru.Cache[string, *rate.Limiter], key string, rps float64, burst int) *rate.Limiter {
+	// Keys come from user input (e.g. a login name), so hash them to keep every entry a fixed size
+	sum := sha256.Sum256([]byte(key))
+	key = hex.EncodeToString(sum[:])
 	limiter, exists := limiters.Get(key)
 	if !exists {
 		limiter = rate.NewLimiter(rate.Limit(rps/60.0), burst)
