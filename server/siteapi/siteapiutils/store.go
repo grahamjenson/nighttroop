@@ -79,15 +79,15 @@ func storeCan[I, R, M, Q any](s *Rows[R, M, Q], does string) I {
 	return i
 }
 
-// get is the model, or nil when there is none
+// get is the model and its row, or not found when there is none
 func (s *Rows[R, M, Q]) get(ctx context.Context, tx *StoreTx, id string, siteContext *httputils.SiteContext) (*M, *R, *apiutils.HTTPError) {
 	q, err := s.queries(tx)
 	if err != nil {
 		return nil, nil, apiutils.ErrInternalServerError
 	}
 	row, err := s.store.GetRow(ctx, q, id, siteContext)
-	if errors.Is(err, sql.ErrNoRows) || (err == nil && row == nil) {
-		return nil, nil, nil
+	if err == nil && row == nil {
+		return nil, nil, apiutils.ErrNotFound
 	}
 	if herr := answer(err, s.GetName()); herr != nil {
 		return nil, nil, herr

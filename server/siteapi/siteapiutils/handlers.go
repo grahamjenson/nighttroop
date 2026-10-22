@@ -65,15 +65,9 @@ func UpdateHandler[R, M, Q any](store *Rows[R, M, Q]) http.HandlerFunc {
 		tx := NewStoreTx(r.Context(), siteContext)
 		defer tx.Rollback()
 		oldModel, _, herr := store.get(r.Context(), tx, id, siteContext)
-		if herr == nil && oldModel == nil {
-			herr = apiutils.ErrNotFound
+		if herr == nil {
+			herr = store.update(r.Context(), tx, updater, siteContext, oldModel, requestModel)
 		}
-		if herr != nil {
-			herr.Write(siteContext.AcceptType, w)
-			return
-		}
-
-		herr = store.update(r.Context(), tx, updater, siteContext, oldModel, requestModel)
 		if herr = tx.Finish(herr); herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return
@@ -107,15 +101,11 @@ func UpsertHandler[R, M, Q any](store *Rows[R, M, Q]) http.HandlerFunc {
 		tx := NewStoreTx(r.Context(), siteContext)
 		defer tx.Rollback()
 		oldModel, _, herr := store.get(r.Context(), tx, id, siteContext)
-		if herr != nil {
-			herr.Write(siteContext.AcceptType, w)
-			return
-		}
-
-		if oldModel == nil {
-			herr = store.create(r.Context(), tx, creator, &id, siteContext, requestModel)
-		} else {
+		switch herr {
+		case nil:
 			herr = store.update(r.Context(), tx, updater, siteContext, oldModel, requestModel)
+		case apiutils.ErrNotFound:
+			herr = store.create(r.Context(), tx, creator, &id, siteContext, requestModel)
 		}
 		if herr = tx.Finish(herr); herr != nil {
 			herr.Write(siteContext.AcceptType, w)
@@ -167,9 +157,6 @@ func GetHandler[R, M, Q any](store *Rows[R, M, Q]) http.HandlerFunc {
 		tx := NewStoreTx(r.Context(), siteContext)
 		defer tx.Rollback()
 		model, _, herr := store.get(r.Context(), tx, id, siteContext)
-		if herr == nil && model == nil {
-			herr = apiutils.ErrNotFound
-		}
 		if herr = tx.Finish(herr); herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return
@@ -192,21 +179,13 @@ func DeleteHandler[R, M, Q any](store *Rows[R, M, Q]) http.HandlerFunc {
 		}
 
 		id := chi.URLParam(r, "id")
-		if id == "" {
-			apiutils.ErrBadRequest.Write(siteContext.AcceptType, w)
-			return
-		}
-
 		tx := NewStoreTx(r.Context(), siteContext)
 		defer tx.Rollback()
 		model, row, herr := store.get(r.Context(), tx, id, siteContext)
-		if herr != nil || model == nil {
-			apiutils.ErrNotFound.Write(siteContext.AcceptType, w)
-			return
+		if herr == nil {
+			herr = store.delete(r.Context(), tx, deleter, id, row, siteContext)
 		}
-
-		herr = tx.Finish(store.delete(r.Context(), tx, deleter, id, row, siteContext))
-		if herr != nil {
+		if herr = tx.Finish(herr); herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return
 		}
