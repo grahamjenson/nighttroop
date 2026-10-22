@@ -822,25 +822,49 @@ func GlucoseReadingToUpdate(source GlucoseReading) UpdateGlucoseReadingParams {
 	var sitedbUpdateGlucoseReadingParams UpdateGlucoseReadingParams
 	pFloat64 := source.Mgdl
 	sitedbUpdateGlucoseReadingParams.Mgdl = &pFloat64
+	if source.Delta != nil {
+		xfloat64 := *source.Delta
+		sitedbUpdateGlucoseReadingParams.Delta = &xfloat64
+	}
+	if source.Direction != nil {
+		xstring := *source.Direction
+		sitedbUpdateGlucoseReadingParams.Direction = &xstring
+	}
+	if source.Noise != nil {
+		xfloat642 := *source.Noise
+		sitedbUpdateGlucoseReadingParams.Noise = &xfloat642
+	}
+	if source.Filtered != nil {
+		xfloat643 := *source.Filtered
+		sitedbUpdateGlucoseReadingParams.Filtered = &xfloat643
+	}
+	if source.Unfiltered != nil {
+		xfloat644 := *source.Unfiltered
+		sitedbUpdateGlucoseReadingParams.Unfiltered = &xfloat644
+	}
+	if source.Rssi != nil {
+		xfloat645 := *source.Rssi
+		sitedbUpdateGlucoseReadingParams.Rssi = &xfloat645
+	}
 	if source.Notes != nil {
-		xstring := *source.Notes
-		sitedbUpdateGlucoseReadingParams.Notes = &xstring
+		xstring2 := *source.Notes
+		sitedbUpdateGlucoseReadingParams.Notes = &xstring2
 	}
 	if source.Reason != nil {
-		xstring2 := *source.Reason
-		sitedbUpdateGlucoseReadingParams.Reason = &xstring2
+		xstring3 := *source.Reason
+		sitedbUpdateGlucoseReadingParams.Reason = &xstring3
 	}
 	if source.RawJsonData != nil {
-		xstring3 := *source.RawJsonData
-		sitedbUpdateGlucoseReadingParams.RawJsonData = &xstring3
+		xstring4 := *source.RawJsonData
+		sitedbUpdateGlucoseReadingParams.RawJsonData = &xstring4
 	}
 	if source.UpdatedByIdentityID != nil {
 		xint64 := *source.UpdatedByIdentityID
 		sitedbUpdateGlucoseReadingParams.UpdatedByIdentityID = &xint64
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring4 := *source.UpdatedByIdentityName
-		sitedbUpdateGlucoseReadingParams.UpdatedByIdentityName = &xstring4
+		xstring5 := *source.UpdatedByIdentityName
+		sitedbUpdateGlucoseReadingParams.UpdatedByIdentityName = &xstring5
 	}
 	sitedbUpdateGlucoseReadingParams.ID = source.ID
 	return sitedbUpdateGlucoseReadingParams

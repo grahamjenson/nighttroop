@@ -478,23 +478,36 @@ const updateGlucoseReading = `-- name: UpdateGlucoseReading :one
 UPDATE glucose_readings SET
     mgdl = COALESCE(?1, mgdl),
 
-    notes = COALESCE(?2, notes),
-    reason = COALESCE(?3, reason),
+    delta = COALESCE(?2, delta),
+    direction = COALESCE(?3, direction),
+    noise = COALESCE(?4, noise),
+    filtered = COALESCE(?5, filtered),
+    unfiltered = COALESCE(?6, unfiltered),
+    rssi = COALESCE(?7, rssi),
+
+    notes = COALESCE(?8, notes),
+    reason = COALESCE(?9, reason),
 
 
     raw_json_data = json_patch(
         COALESCE(raw_json_data, '{}'),
-        COALESCE(CAST(?4 AS TEXT), '{}')
+        COALESCE(CAST(?10 AS TEXT), '{}')
     ),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_id = ?5,
-    updated_by_identity_name = ?6
-WHERE id = ?7 AND deleted_at IS NULL
+    updated_by_identity_id = ?11,
+    updated_by_identity_name = ?12
+WHERE id = ?13 AND deleted_at IS NULL
 RETURNING id, mgdl, reading_type, units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type UpdateGlucoseReadingParams struct {
 	Mgdl                  *float64
+	Delta                 *float64
+	Direction             *string
+	Noise                 *float64
+	Filtered              *float64
+	Unfiltered            *float64
+	Rssi                  *float64
 	Notes                 *string
 	Reason                *string
 	RawJsonData           *string
@@ -509,6 +522,12 @@ type UpdateGlucoseReadingParams struct {
 func (q *Queries) UpdateGlucoseReading(ctx context.Context, arg UpdateGlucoseReadingParams) (*GlucoseReading, error) {
 	row := q.queryRow(ctx, q.updateGlucoseReadingStmt, updateGlucoseReading,
 		arg.Mgdl,
+		arg.Delta,
+		arg.Direction,
+		arg.Noise,
+		arg.Filtered,
+		arg.Unfiltered,
+		arg.Rssi,
 		arg.Notes,
 		arg.Reason,
 		arg.RawJsonData,

@@ -111,6 +111,7 @@ GET http://{{ site }}/api/v3/entries/{{ dig "create_entry_v3.result.identifier" 
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT_EQUALS 103 "@result.sgv"
+ASSERT_EQUALS "Flat" "@result.direction"
 
 NAME update_entries_force_create_v3
 PUT http://{{ site }}/api/v3/entries/AnotherFunID

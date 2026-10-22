@@ -127,6 +127,13 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 UPDATE glucose_readings SET
     mgdl = COALESCE(sqlc.narg('Mgdl'), mgdl),
 
+    delta = COALESCE(sqlc.narg('Delta'), delta),
+    direction = COALESCE(sqlc.narg('Direction'), direction),
+    noise = COALESCE(sqlc.narg('Noise'), noise),
+    filtered = COALESCE(sqlc.narg('Filtered'), filtered),
+    unfiltered = COALESCE(sqlc.narg('Unfiltered'), unfiltered),
+    rssi = COALESCE(sqlc.narg('Rssi'), rssi),
+
     notes = COALESCE(sqlc.narg('Notes'), notes),
     reason = COALESCE(sqlc.narg('Reason'), reason),
 
