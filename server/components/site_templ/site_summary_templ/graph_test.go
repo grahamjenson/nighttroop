@@ -1,6 +1,8 @@
 package site_summary_templ
 
 import (
+	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -56,4 +58,21 @@ func TestGraph(t *testing.T) {
 	ticks := g.ticks()
 	require.Len(t, ticks, 7)
 	require.Equal(t, "18:00", ticks[0].Label)
+}
+
+// Treatments a moment apart overlap on a long graph, so the latest is drawn last, on top where it can be read
+func TestGraphDrawsTheLatestTreatmentOnTop(t *testing.T) {
+	mgdl := consts.UnitsMGDL
+	now := time.Now().UnixMilli()
+	older, newer := 15.0, 40.0
+	// Searches give the newest first
+	summary := &sitemodels.Summary{
+		Since: now - 48*time.Hour.Milliseconds(), Units: &mgdl,
+		InsulinDoses: []*sitemodels.SiteInsulinDose{{Dose: 2.5, OccurredAt: now}, {Dose: 1, OccurredAt: now - time.Minute.Milliseconds()}},
+		FoodIntakes:  []*sitemodels.SiteFoodIntake{{Carbs: &newer, OccurredAt: now}, {Carbs: &older, OccurredAt: now - time.Minute.Milliseconds()}},
+	}
+	var svg strings.Builder
+	require.NoError(t, Graph(summary).Render(context.Background(), &svg))
+	require.Greater(t, strings.Index(svg.String(), ">2.5U<"), strings.Index(svg.String(), ">1U<"))
+	require.Greater(t, strings.Index(svg.String(), ">40g<"), strings.Index(svg.String(), ">15g<"))
 }

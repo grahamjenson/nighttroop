@@ -2,6 +2,7 @@ package site_summary_templ
 
 import (
 	"fmt"
+	"slices"
 	"time"
 
 	"nighttroop.t1d.nz/models/sitemodels"
@@ -10,7 +11,8 @@ import (
 
 // Graph draws the summary on one time axis, built on the server so it needs no script:
 // glucose dots over the target range with temp targets as shaded lines, insulin as
-// triangles pointing down and carbs as triangles pointing up under it, and temp basals as a line at the bottom
+// triangles pointing down and carbs as triangles pointing up under it, and temp basals as a line at the bottom.
+// Treatments are drawn oldest first, so the latest is on top where markers close together overlap.
 templ Graph(summary *sitemodels.Summary) {
 	{{ g := newGraph(summary, time.Now().UnixMilli()) }}
 	<svg
@@ -46,14 +48,14 @@ templ Graph(summary *sitemodels.Summary) {
 			<circle cx={ f(g.x(r.OccurredAt)) } cy={ f(g.glucoseY(r.Reading)) } r="3" class={ "site--summary--graph--reading", g.glucoseColour(r.Reading) }></circle>
 		}
 		@axisLabel(graphLeft-6, insulinRow, "Insulin")
-		for _, d := range summary.InsulinDoses {
+		for _, d := range slices.Backward(summary.InsulinDoses) {
 			<g class="site--summary--graph--insulin">
 				<path d={ triangle(g.x(d.OccurredAt), insulinRow, false) } class="fill-primary"></path>
 				<text x={ f(g.x(d.OccurredAt) + 8) } y={ f(insulinRow + 4) } class="fill-gray-700">{ value(&d.Dose, "U") }</text>
 			</g>
 		}
 		@axisLabel(graphLeft-6, carbsRow, "Carbs")
-		for _, food := range summary.FoodIntakes {
+		for _, food := range slices.Backward(summary.FoodIntakes) {
 			if food.Carbs != nil {
 				<g class="site--summary--graph--carbs">
 					<path d={ triangle(g.x(food.OccurredAt), carbsRow, true) } class="fill-amber-500"></path>
