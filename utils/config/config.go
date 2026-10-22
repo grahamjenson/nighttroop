@@ -113,6 +113,15 @@ type ServerConfig struct {
 	// LogsDBMaxRowsPerTable is how many of the newest logs, events and errors are kept in each of their tables
 	LogsDBMaxRowsPerTable int
 
+	// Socket.IO Config, what one site's live update sessions may hold and send
+	SocketPingIntervalInSeconds int
+	SocketPingTimeoutInSeconds  int
+	SocketMaxPayloadBytes       int
+	SocketMaxSessionsPerSite    int
+	SocketMaxBufferedPackets    int
+	SocketMaxBufferedBytes      int
+	SocketMaxPacketsPerSecond   float64
+
 	RateLimiters *RateLimiters
 
 	// SiteModelEvents is told of every change to a site's models, for live updates and alarms
@@ -234,6 +243,15 @@ func NewServerConfig() (*ServerConfig, error) {
 		// Sync Config
 		BackgroundSyncWorkers: configIntSelect(dotenv, "BACKGROUND_SYNC_WORKERS", 5),
 		SyncIntervalInSeconds: configIntSelect(dotenv, "SYNC_INTERVAL_IN_SECONDS", 5), // check syncs every 5 seconds
+
+		// Socket.IO Config
+		SocketPingIntervalInSeconds: configIntSelect(dotenv, "SOCKET_PING_INTERVAL_IN_SECONDS", 25), // Nightscout's, which v2 clients expect
+		SocketPingTimeoutInSeconds:  configIntSelect(dotenv, "SOCKET_PING_TIMEOUT_IN_SECONDS", 20),
+		SocketMaxPayloadBytes:       configIntSelect(dotenv, "SOCKET_MAX_PAYLOAD_BYTES", 100000),  // The largest POST body or websocket message
+		SocketMaxSessionsPerSite:    configIntSelect(dotenv, "SOCKET_MAX_SESSIONS_PER_SITE", 100), // Stop one site holding every connection
+		SocketMaxBufferedPackets:    configIntSelect(dotenv, "SOCKET_MAX_BUFFERED_PACKETS", 1000), // A client too slow to collect its packets is closed
+		SocketMaxBufferedBytes:      configIntSelect(dotenv, "SOCKET_MAX_BUFFERED_BYTES", 2000000),
+		SocketMaxPacketsPerSecond:   configFloatSelect(dotenv, "SOCKET_MAX_PACKETS_PER_SECOND", 20), // A client sending faster, past a burst of 5 seconds' worth, is closed
 
 		// Dexcom Config
 		DexcomClientID:     configStringSelect(dotenv, "DEXCOM_CLIENT_ID", ""),
@@ -503,6 +521,9 @@ func printServerConfig(config ServerConfig) {
 		"LogsDBMaxRowsPerTable", config.LogsDBMaxRowsPerTable,
 		"ControlBackupIntervalInSeconds", config.ControlBackupIntervalInSeconds,
 		"BatchBackupIntervalInSeconds", config.BatchBackupIntervalInSeconds,
+		"SocketMaxSessionsPerSite", config.SocketMaxSessionsPerSite,
+		"SocketMaxBufferedBytes", config.SocketMaxBufferedBytes,
+		"SocketMaxPacketsPerSecond", config.SocketMaxPacketsPerSecond,
 	)
 }
 

@@ -29,8 +29,6 @@ import (
 const (
 	// dataReceivers is the room of sockets that can read, which get every dataUpdate
 	dataReceivers = "DataReceivers"
-	// maxSocketsPerSite stops one site holding every connection
-	maxSocketsPerSite = 100
 	// maxAuthorizeAttempts bounds the token checks one socket can make; clients authorize once
 	maxAuthorizeAttempts = 3
 	// maxHistoryHours is how far back the first dataUpdate goes, Nightscout's two days
@@ -69,7 +67,7 @@ func (ws *Websocket) server(subdomain string, create bool) *socketio.Server {
 	if server := ws.servers[subdomain]; server != nil || !create {
 		return server
 	}
-	server := socketio.NewServer(engineio.Config{MaxSessions: maxSocketsPerSite})
+	server := socketio.NewServer(ws.engineConfig())
 	main := server.Of(socketio.DefaultNamespace)
 	main.OnConnection(func(socket *socketio.Socket) { ws.connected(main, socket) })
 	server.Of("/storage").OnConnection(ws.storageConnected)
@@ -77,6 +75,19 @@ func (ws *Websocket) server(subdomain string, create bool) *socketio.Server {
 	ws.config.SiteModelEvents.Subscribe(subdomain, func(event sitemodels.Event) { ws.changed(main, event) })
 	ws.servers[subdomain] = server
 	return server
+}
+
+// engineConfig is the server config's limits on one site's sessions
+func (ws *Websocket) engineConfig() engineio.Config {
+	return engineio.Config{
+		PingInterval:     time.Duration(ws.config.SocketPingIntervalInSeconds) * time.Second,
+		PingTimeout:      time.Duration(ws.config.SocketPingTimeoutInSeconds) * time.Second,
+		MaxPayload:       ws.config.SocketMaxPayloadBytes,
+		MaxSessions:      ws.config.SocketMaxSessionsPerSite,
+		MaxBuffered:      ws.config.SocketMaxBufferedPackets,
+		MaxBufferedBytes: ws.config.SocketMaxBufferedBytes,
+		MaxPacketRate:    ws.config.SocketMaxPacketsPerSecond,
+	}
 }
 
 // authorization is what authorize answers, as Nightscout does
