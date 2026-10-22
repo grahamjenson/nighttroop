@@ -23,6 +23,22 @@ NAME read_only_data
 WAIT dataUpdate
 ASSERT_LENGTH 0 "@sgvs"
 
+# Asking for status, as Nightscout follower apps do, puts the server's status in the first dataUpdate
+NAME connect_status
+CONNECT http://{{ site }}/socket.io/?EIO=4
+
+NAME authorize_status
+EMIT authorize
+B {"client":"follower","secret":"{{ read_token }}","status":true}
+ACK
+ASSERT_EQUALS true "@read"
+
+NAME status_data
+WAIT dataUpdate
+ASSERT_EQUALS "ok" "@status.status"
+ASSERT_EQUALS true "@status.apiEnabled"
+ASSERT_EXISTS "@status.settings"
+
 # A wrong secret is still answered and connected, but joins no data
 NAME connect_wrong
 CONNECT http://{{ site }}/socket.io/?EIO=3

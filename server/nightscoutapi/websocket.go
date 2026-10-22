@@ -13,6 +13,7 @@ import (
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/events/sitemodels"
+	v1 "nighttroop.t1d.nz/server/nightscoutapi/api/v1"
 	"nighttroop.t1d.nz/server/nightscoutapi/collections"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
@@ -97,6 +98,7 @@ func (ws *Websocket) connected(main *socketio.Namespace, socket *socketio.Socket
 			Secret  string   `json:"secret"`
 			Token   string   `json:"token"`
 			History *float64 `json:"history"`
+			Status  bool     `json:"status"`
 		}
 		if len(args) > 0 {
 			json.Unmarshal(args[0], &message)
@@ -111,7 +113,11 @@ func (ws *Websocket) connected(main *socketio.Namespace, socket *socketio.Socket
 			if message.History != nil && *message.History > 0 && *message.History < hours {
 				hours = *message.History
 			}
-			socket.Emit("dataUpdate", ws.recentData(ctx, time.Duration(hours*float64(time.Hour))))
+			data := ws.recentData(ctx, time.Duration(hours*float64(time.Hour)))
+			if message.Status {
+				data["status"] = v1.Status()
+			}
+			socket.Emit("dataUpdate", data)
 		}
 		if ack != nil {
 			ack(auth)

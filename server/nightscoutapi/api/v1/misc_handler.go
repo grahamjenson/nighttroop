@@ -44,13 +44,18 @@ func VerifyAuth(dep nsutils.Dependencies) http.HandlerFunc {
 // StatusJSON serves the v1 JSON status payload.
 func StatusJSON(dep nsutils.Dependencies) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		nsutils.WriteJSON(w, http.StatusOK, map[string]any{
-			"status":            "ok",
-			"apiEnabled":        true,
-			"careportalEnabled": true,
-			"settings": map[string]any{
-				"enable": false,
-			},
-		})
+		nsutils.WriteJSON(w, http.StatusOK, Status())
+	}
+}
+
+// Status is the v1 status payload, which a websocket authorize asking for status gets too
+func Status() map[string]any {
+	return map[string]any{
+		"status":            "ok",
+		"apiEnabled":        true,
+		"careportalEnabled": true,
+		"settings": map[string]any{
+			"enable": false,
+		},
 	}
 }
