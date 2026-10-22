@@ -118,7 +118,7 @@ func (ws *Websocket) connected(main *socketio.Namespace, socket *socketio.Socket
 		}
 	})
 
-	for event, write := range map[string]dbWriter{"dbAdd": ws.dbAdd, "dbUpdate": ws.dbUpdate, "dbRemove": ws.dbRemove} {
+	for event, write := range map[string]dbWriter{"dbAdd": ws.dbAdd, "dbUpdate": ws.dbUpdate, "dbUpdateUnset": ws.dbUpdateUnset, "dbRemove": ws.dbRemove} {
 		socket.On(event, func(args []json.RawMessage, ack func(...any)) {
 			reply := ws.dbWrite(event, args, auth, authCtx, write)
 			if ack != nil {
@@ -135,7 +135,7 @@ func (ws *Websocket) withinReadLimit(ctx context.Context) bool {
 	return allowed
 }
 
-// dbMessage is a dbAdd, dbUpdate or dbRemove: the collection, the record's _id and the data to write
+// dbMessage is a dbAdd, dbUpdate, dbUpdateUnset or dbRemove: the collection, the record's _id and the data to write
 type dbMessage struct {
 	Collection string          `json:"collection"`
 	ID         json.RawMessage `json:"_id"`
@@ -216,6 +216,28 @@ func (ws *Websocket) dbUpdate(ctx context.Context, collection nsutils.Collection
 	}
 	if record, err := ws.collections[collection].Patch(ctx, httputils.GetSiteContext(ctx), id, fields, false); err != nil || record == nil {
 		slog.Info("Websocket dbUpdate refused", "collection", collection, "error", err)
+		return result("Unable to process update")
+	}
+	return result("success")
+}
+
+// dbUpdateUnset removes the given fields from a record, by replacing it with what it is without them
+func (ws *Websocket) dbUpdateUnset(ctx context.Context, collection nsutils.Collection, id string, data json.RawMessage) any {
+	var fields map[string]any
+	if json.Unmarshal(data, &fields) != nil || fields == nil {
+		return result("Invalid data")
+	}
+	siteContext := httputils.GetSiteContext(ctx)
+	record, err := ws.collections[collection].Get(ctx, siteContext, id, nsquery.Query{})
+	if err == nil && record != nil {
+		document := record.ToMap(false)
+		for field := range fields {
+			delete(document, field)
+		}
+		_, _, err = ws.collections[collection].Replace(ctx, siteContext, id, document, false, false)
+	}
+	if err != nil || record == nil {
+		slog.Info("Websocket dbUpdateUnset refused", "collection", collection, "error", err)
 		return result("Unable to process update")
 	}
 	return result("success")
