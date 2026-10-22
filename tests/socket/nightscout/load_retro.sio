@@ -1,0 +1,71 @@
+# The Nightscout web app's retro view asks for the device statuses over the history with loadRetro, which come
+# as a retroUpdate: the first dataUpdate only has the latest few
+
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+# Twelve over the last hour, and one older than Nightscout's two days
+NAME post_devicestatus
+POST http://{{ site }}/api/v1/devicestatus?token={{ token }}
+B [
+  {"device":"openaps://AAPS","created_at":"{{ time 5 }}","uploaderBattery":51},
+  {"device":"openaps://AAPS","created_at":"{{ time 10 }}","uploaderBattery":52},
+  {"device":"openaps://AAPS","created_at":"{{ time 15 }}","uploaderBattery":53},
+  {"device":"openaps://AAPS","created_at":"{{ time 20 }}","uploaderBattery":54},
+  {"device":"openaps://AAPS","created_at":"{{ time 25 }}","uploaderBattery":55},
+  {"device":"openaps://AAPS","created_at":"{{ time 30 }}","uploaderBattery":56},
+  {"device":"openaps://AAPS","created_at":"{{ time 35 }}","uploaderBattery":57},
+  {"device":"openaps://AAPS","created_at":"{{ time 40 }}","uploaderBattery":58},
+  {"device":"openaps://AAPS","created_at":"{{ time 45 }}","uploaderBattery":59},
+  {"device":"openaps://AAPS","created_at":"{{ time 50 }}","uploaderBattery":60},
+  {"device":"openaps://AAPS","created_at":"{{ time 55 }}","uploaderBattery":61},
+  {"device":"openaps://AAPS","created_at":"{{ time 60 }}","uploaderBattery":62},
+  {"device":"openaps://AAPS","created_at":"{{ time 3000 }}","uploaderBattery":10}
+]
+ASSERT_STATUS 200
+
+NAME connect
+CONNECT http://{{ site }}/socket.io/?EIO=4
+T 5s
+
+NAME not_authorized
+EMIT loadRetro
+B {}
+ACK
+ASSERT_EQUALS "Not permitted" "@result"
+
+NAME no_retro_update
+COLLECT retroUpdate
+T 500ms
+ASSERT_LENGTH 0 "@"
+
+NAME authorize
+EMIT authorize
+B {"client":"web","token":"{{ token }}"}
+ACK
+ASSERT_EQUALS true "@read"
+
+NAME first_data
+WAIT dataUpdate
+T 5s
+ASSERT_LENGTH 10 "@devicestatus"
+
+NAME load_retro
+EMIT loadRetro
+B {"loadedMills":{{ itime 0 }}}
+ACK
+ASSERT_EQUALS "success" "@result"
+
+NAME retro_update
+WAIT retroUpdate
+T 5s
+ASSERT_LENGTH 12 "@devicestatus"
+ASSERT_EQUALS 62 "@devicestatus.0.uploaderBattery"
+ASSERT_EQUALS 51 "@devicestatus.11.uploaderBattery"
+ASSERT_EXISTS "@devicestatus.0.mills"
+
+NAME bye
+DISCONNECT
