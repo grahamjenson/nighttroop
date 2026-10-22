@@ -112,29 +112,24 @@ func (s *Rows[R, M, Q]) search(ctx context.Context, tx *StoreTx, searcher Search
 }
 
 func (s *Rows[R, M, Q]) create(ctx context.Context, tx *StoreTx, creator Creator[R, M, Q], id *string, siteContext *httputils.SiteContext, model *M) *apiutils.HTTPError {
-	q, err := s.queries(tx)
-	if err != nil {
-		return apiutils.ErrInternalServerError
-	}
-	row, err := creator.CreateRow(ctx, q, id, siteContext, model)
-	if herr := answer(err, s.GetName()); herr != nil {
-		return herr
-	}
-	s.reportChange(tx, sitemodels.Created, row)
-	*model = *s.store.ToModel(row, siteContext)
-	return nil
+	return s.write(tx, sitemodels.Created, siteContext, model, func(q Q) (*R, error) { return creator.CreateRow(ctx, q, id, siteContext, model) })
 }
 
 func (s *Rows[R, M, Q]) update(ctx context.Context, tx *StoreTx, updater Updater[R, M, Q], siteContext *httputils.SiteContext, oldModel *M, model *M) *apiutils.HTTPError {
+	return s.write(tx, sitemodels.Updated, siteContext, model, func(q Q) (*R, error) { return updater.UpdateRow(ctx, q, siteContext, oldModel, model) })
+}
+
+// write is a create or update: it writes the row, reports the change, and makes the model the row as written
+func (s *Rows[R, M, Q]) write(tx *StoreTx, action sitemodels.Action, siteContext *httputils.SiteContext, model *M, write func(Q) (*R, error)) *apiutils.HTTPError {
 	q, err := s.queries(tx)
 	if err != nil {
 		return apiutils.ErrInternalServerError
 	}
-	row, err := updater.UpdateRow(ctx, q, siteContext, oldModel, model)
+	row, err := write(q)
 	if herr := answer(err, s.GetName()); herr != nil {
 		return herr
 	}
-	s.reportChange(tx, sitemodels.Updated, row)
+	s.reportChange(tx, action, row)
 	*model = *s.store.ToModel(row, siteContext)
 	return nil
 }
