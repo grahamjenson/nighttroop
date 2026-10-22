@@ -35,6 +35,9 @@ import (
 // which never makes HTTP calls; any other username is rejected.
 const TestValidUsername = "valid-dexcom-user"
 
+// testSessionID is the session a test login gives; any other session goes over HTTP.
+const testSessionID = "test-session"
+
 const (
 	usBaseURL        = "https://share2.dexcom.com"
 	outsideUSBaseURL = "https://shareous1.dexcom.com"
@@ -67,11 +70,23 @@ func NewClient(username, password string, outsideUS bool) *Client {
 	return &Client{
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
+			// Never follow redirects, which could point at an internal host; the 3xx is a failure.
+			CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
 		},
 		baseURL:  baseURL,
 		username: username,
 		password: password,
 	}
+}
+
+// responseError describes a non-200 response. The error is stored and shown as a
+// sync error, so a refused redirect gives only its status and other bodies are cut short.
+func responseError(what string, resp *http.Response) error {
+	if resp.StatusCode >= 300 && resp.StatusCode < 400 {
+		return fmt.Errorf("%s failed: upstream redirected, status=%d", what, resp.StatusCode)
+	}
+	body, _ := io.ReadAll(io.LimitReader(resp.Body, 100))
+	return fmt.Errorf("%s failed: status=%d body=%q", what, resp.StatusCode, body)
 }
 
 // Login authenticates and stores the Dexcom session ID.
@@ -80,7 +95,7 @@ func (c *Client) Login(ctx context.Context) error {
 		if c.username != TestValidUsername {
 			return fmt.Errorf("dexcom authentication failed: invalid username or password")
 		}
-		c.sessionID = "test-session"
+		c.sessionID = testSessionID
 		return nil
 	}
 	accountID, err := c.authenticate(ctx)
@@ -128,12 +143,7 @@ func (c *Client) authenticate(ctx context.Context) (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := httputils.ReadLimitedBody(resp.Body, maxResponseBytes)
-		return "", fmt.Errorf(
-			"authenticate failed: status=%d body=%s",
-			resp.StatusCode,
-			string(body),
-		)
+		return "", responseError("authenticate", resp)
 	}
 
 	accountIDBytes, err := httputils.ReadLimitedBody(resp.Body, maxResponseBytes)
@@ -181,12 +191,7 @@ func (c *Client) loginByAccountID(ctx context.Context, accountID string) (string
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := httputils.ReadLimitedBody(resp.Body, maxResponseBytes)
-		return "", fmt.Errorf(
-			"login failed: status=%d body=%s",
-			resp.StatusCode,
-			string(body),
-		)
+		return "", responseError("login", resp)
 	}
 
 	sessionIDBytes, err := httputils.ReadLimitedBody(resp.Body, maxResponseBytes)
@@ -210,7 +215,7 @@ func (c *Client) FetchEGVs(ctx context.Context, minutes int) ([]dexcommodels.EGV
 			return nil, fmt.Errorf("Dexcom Login Error: %w", err)
 		}
 	}
-	if testing.Testing() {
+	if testing.Testing() && c.sessionID == testSessionID {
 		return nil, nil
 	}
 
@@ -240,12 +245,7 @@ func (c *Client) FetchEGVs(ctx context.Context, minutes int) ([]dexcommodels.EGV
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := httputils.ReadLimitedBody(resp.Body, maxResponseBytes)
-		return nil, fmt.Errorf(
-			"dexcom fetch failed: status=%d body=%s",
-			resp.StatusCode,
-			string(body),
-		)
+		return nil, responseError("dexcom fetch", resp)
 	}
 
 	return decodeEGVs(resp.Body)
