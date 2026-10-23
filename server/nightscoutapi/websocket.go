@@ -53,7 +53,7 @@ type Websocket struct {
 }
 
 func NewWebsocket(controlDB *db.ControlDB, config *config.ServerConfig) *Websocket {
-	return &Websocket{config: config, controlDB: controlDB, collections: nscollections.All(), servers: map[string]*socketio.Server{}}
+	return &Websocket{config: config, controlDB: controlDB, collections: AllCollections(), servers: map[string]*socketio.Server{}}
 }
 
 func (ws *Websocket) ServeHTTP(w http.ResponseWriter, r *http.Request) {

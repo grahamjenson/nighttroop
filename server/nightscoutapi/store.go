@@ -23,7 +23,19 @@ func NewNightTroopAPIStore(controlDB *db.ControlDB, config *config.ServerConfig)
 	return &NightTroopAPIStore{
 		controlDB: controlDB,
 		config:    config,
-		stores:    nscollections.All(),
+		stores:    AllCollections(),
+	}
+}
+
+func AllCollections() map[nsutils.Collection]nscollections.CollectionStore {
+	return map[nsutils.Collection]nscollections.CollectionStore{
+		nsutils.Entries:      nscollections.NewEntriesCollection(),
+		nsutils.Treatments:   nscollections.NewTreatmentCollection(),
+		nsutils.Devicestatus: nscollections.NewDeviceStatusCollection(),
+		nsutils.Profile:      nscollections.NewProfileCollection(),
+		nsutils.Food:         nscollections.NewFoodCollection(),
+		nsutils.Settings:     nscollections.NewSettingsCollection(),
+		nsutils.Activity:     nscollections.NewActivityCollection(),
 	}
 }
 
