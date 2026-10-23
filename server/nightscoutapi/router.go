@@ -18,14 +18,7 @@ import (
 
 func NewNightscoutRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Router {
 	websocket := NewWebsocket(controlDB, config)
-	ntDeps := nsutils.Dependencies{
-		Store: NewNightTroopAPIStore(controlDB, config),
-
-		Auth: &NightTroopAPIAuth{
-			controlDB: controlDB,
-			config:    config,
-		},
-	}
+	store := NewNightTroopAPIStore(controlDB, config)
 
 	r := chi.NewRouter()
 	httputils.AddStandardMiddleware(r, config)
@@ -48,9 +41,9 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config *config.ServerConfig) c
 		r.Get("/api/v3/authorization/request/token={token}", NightscoutAuthRoute(controlDB, config))
 		r.Get("/api/v3/authorization/request/{token}", NightscoutAuthRoute(controlDB, config))
 
-		v1Router := nsv1.NewNightscoutV1Router(ntDeps)
-		v2Router := nsv2.NewNightscoutV2Router(ntDeps)
-		v3Router := nsv3.NewNightscoutV3Router(ntDeps)
+		v1Router := nsv1.NewNightscoutV1Router(store)
+		v2Router := nsv2.NewNightscoutV2Router(store)
+		v3Router := nsv3.NewNightscoutV3Router(store)
 
 		r.Mount("/api/v1", v1Router)
 		r.Mount("/api/v2", v2Router)
@@ -83,7 +76,7 @@ func NightscoutAuthRoute(controlDB *db.ControlDB, config *config.ServerConfig) h
 			return
 		}
 
-		nsIdentity, err := NighttroopIdentityToNightscoutIdentity(siteContext.IdentityModel.Name, siteContext.IdentityModel.Role)
+		nsIdentity, err := nsutils.NighttroopIdentityToNightscoutIdentity(siteContext.IdentityModel.Name, siteContext.IdentityModel.Role)
 		if err != nil {
 			http.Error(w, "Internal Server Error: Failed to convert identity", http.StatusInternalServerError)
 			return

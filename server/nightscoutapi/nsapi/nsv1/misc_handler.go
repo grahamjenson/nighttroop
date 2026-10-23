@@ -18,9 +18,9 @@ func Versions() http.HandlerFunc {
 }
 
 // VerifyAuth implements the v1 verifyauth endpoint.
-func VerifyAuth(dep nsutils.Dependencies) http.HandlerFunc {
+func VerifyAuth(dep nsutils.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		identity, err := dep.Auth.AuthenticateExplicit(r)
+		identity, err := nsutils.AuthenticateExplicit(r)
 		if err != nil {
 			nsutils.WriteJSON(w, http.StatusOK, map[string]any{
 				"status": "ok",
@@ -35,14 +35,14 @@ func VerifyAuth(dep nsutils.Dependencies) http.HandlerFunc {
 			"status": "ok",
 			"message": map[string]any{
 				"message": "OK",
-				"isAdmin": dep.Auth.HasPermission(*identity, "api:*:admin") || dep.Auth.HasPermission(*identity, "api:entries:create"),
+				"isAdmin": nsutils.HasPermission(*identity, "api:*:admin") || nsutils.HasPermission(*identity, "api:entries:create"),
 			},
 		})
 	}
 }
 
 // StatusJSON serves the v1 JSON status payload.
-func StatusJSON(dep nsutils.Dependencies) http.HandlerFunc {
+func StatusJSON(store nsutils.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		nsutils.WriteJSON(w, http.StatusOK, Status())
 	}

@@ -10,7 +10,7 @@ import (
 )
 
 // Version reports the application and API version metadata for API v3.
-func Version(dep nsutils.Dependencies) http.HandlerFunc {
+func Version(store nsutils.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		nsutils.WriteJSON(w, http.StatusOK, map[string]any{
@@ -46,7 +46,7 @@ func Version(dep nsutils.Dependencies) http.HandlerFunc {
 //	}
 //
 // Status returns a lightweight authenticated health payload for API v3.
-func Status(_ nsutils.Dependencies) func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
+func Status(_ nsutils.Store) func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
 	return func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
 		nsutils.WriteJSON(w, http.StatusOK, map[string]any{
 			"status": http.StatusOK,
@@ -72,7 +72,7 @@ func Status(_ nsutils.Dependencies) func(http.ResponseWriter, *http.Request, *ns
 }
 
 // Test is a minimal authenticated endpoint used for API v3 connectivity checks.
-func Test(_ nsutils.Dependencies) func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
+func Test(_ nsutils.Store) func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
 	return func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
 		nsutils.WriteJSON(w, http.StatusOK, map[string]any{"status": http.StatusOK, "result": "ok"})
 	}
@@ -80,7 +80,7 @@ func Test(_ nsutils.Dependencies) func(http.ResponseWriter, *http.Request, *nsut
 
 // LastModified returns the newest modification timestamp for each known
 // collection.
-func LastModified(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
+func LastModified(store nsutils.Store) func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
 	return func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
 
 		siteContext := httputils.GetSiteContext(r.Context())

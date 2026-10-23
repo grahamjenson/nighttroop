@@ -10,12 +10,12 @@ import (
 
 // NewNightscoutV1Router constructs a router that serves the supported
 // Nightscout API v1 endpoints.
-func NewNightscoutV1Router(dep nsutils.Dependencies) *chi.Mux {
+func NewNightscoutV1Router(store nsutils.Store) *chi.Mux {
 	r := chi.NewRouter()
 
-	registerMiscRoutes(r, dep)
+	registerMiscRoutes(r, store)
 
-	registerCollectionRoutes(r, dep)
+	registerCollectionRoutes(r, store)
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		slog.Info("Nightscout router 404 for path", "path", r.URL.Path)
@@ -24,54 +24,54 @@ func NewNightscoutV1Router(dep nsutils.Dependencies) *chi.Mux {
 	return r
 }
 
-func registerMiscRoutes(r *chi.Mux, dep nsutils.Dependencies) {
-	r.Get("/status", StatusJSON(dep))
-	r.Get("/status.json", StatusJSON(dep))
+func registerMiscRoutes(r *chi.Mux, store nsutils.Store) {
+	r.Get("/status", StatusJSON(store))
+	r.Get("/status.json", StatusJSON(store))
 	r.Get("/versions", Versions())
 	r.Get("/versions.json", Versions())
-	r.Get("/verifyauth", VerifyAuth(dep))
+	r.Get("/verifyauth", VerifyAuth(store))
 }
 
-func registerCollectionRoutes(r *chi.Mux, dep nsutils.Dependencies) {
+func registerCollectionRoutes(r *chi.Mux, store nsutils.Store) {
 	// Get And Search
-	r.Get("/{collection}", Search(dep))
-	r.Get("/{collection}/", Search(dep))
-	r.Get("/{collection}.json", Search(dep))
-	r.Get("/{collection}/{identifier_or_type}", Search(dep))
-	r.Get("/{collection}/{identifier_or_type}.json", Search(dep))
-	r.Get("/{collection}/current", Current(dep))
-	r.Get("/{collection}/current.json", Current(dep))
+	r.Get("/{collection}", Search(store))
+	r.Get("/{collection}/", Search(store))
+	r.Get("/{collection}.json", Search(store))
+	r.Get("/{collection}/{identifier_or_type}", Search(store))
+	r.Get("/{collection}/{identifier_or_type}.json", Search(store))
+	r.Get("/{collection}/current", Current(store))
+	r.Get("/{collection}/current.json", Current(store))
 
 	// Post Create
-	r.Post("/{collection}", Create(dep))
-	r.Post("/{collection}.json", Create(dep))
-	r.Post("/{collection}/", Create(dep))
+	r.Post("/{collection}", Create(store))
+	r.Post("/{collection}.json", Create(store))
+	r.Post("/{collection}/", Create(store))
 
 	// Put/Patch Update
-	r.Put("/{collection}", Replace(dep))
-	r.Put("/{collection}.json", Replace(dep))
-	r.Put("/{collection}/", Replace(dep))
-	r.Put("/{collection}/{identifier}", Replace(dep))
-	r.Put("/{collection}/{identifier}.json", Replace(dep))
+	r.Put("/{collection}", Replace(store))
+	r.Put("/{collection}.json", Replace(store))
+	r.Put("/{collection}/", Replace(store))
+	r.Put("/{collection}/{identifier}", Replace(store))
+	r.Put("/{collection}/{identifier}.json", Replace(store))
 
 	// DELETE
-	r.Delete("/{collection}/{identifier_or_type}", Delete(dep))
-	r.Delete("/{collection}/{identifier_or_type}.json", Delete(dep))
+	r.Delete("/{collection}/{identifier_or_type}", Delete(store))
+	r.Delete("/{collection}/{identifier_or_type}.json", Delete(store))
 
 	// Weird V1 Ones
 	// No optional query params in chi
 	// We are not doing user submitted Regexs (that is pain)
 
 	// Slice
-	r.Get("/slice/{collection}/{field}/{type}/{prefix}", Slice(dep))
+	r.Get("/slice/{collection}/{field}/{type}/{prefix}", Slice(store))
 
 	// Count
-	r.Get("/count/{collection}/where", Count(dep))
+	r.Get("/count/{collection}/where", Count(store))
 
 	//Times - return entries with {prefix} dateString
-	r.Get("/times/{prefix}", Times(dep))
+	r.Get("/times/{prefix}", Times(store))
 
 	// Echo
-	r.Get("/echo/{collection}", Echo(dep))
-	r.Get("/echo/{collection}/{identifier_or_type}", Echo(dep))
+	r.Get("/echo/{collection}", Echo(store))
+	r.Get("/echo/{collection}/{identifier_or_type}", Echo(store))
 }

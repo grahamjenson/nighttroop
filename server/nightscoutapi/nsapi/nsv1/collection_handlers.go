@@ -9,9 +9,9 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 )
 
-func Search(dep nsutils.Dependencies) http.HandlerFunc {
+func Search(store nsutils.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		collection, query, ok := nsutils.ReadCollectionAndQuery(dep, w, r)
+		collection, query, ok := nsutils.ReadCollectionAndQuery(w, r)
 		if !ok {
 			return
 		}
@@ -28,7 +28,7 @@ func Search(dep nsutils.Dependencies) http.HandlerFunc {
 		}
 		records := []nsutils.Record{}
 		if query.IDEq != nil {
-			record, err := dep.Store.Get(r.Context(), collection, *query.IDEq, query)
+			record, err := store.Get(r.Context(), collection, *query.IDEq, query)
 			if err != nil {
 				nsutils.WriteError(w, err)
 				return
@@ -36,7 +36,7 @@ func Search(dep nsutils.Dependencies) http.HandlerFunc {
 			records = append(records, record)
 		} else {
 			var err *nsutils.HTTPError
-			records, err = dep.Store.Search(r.Context(), collection, query)
+			records, err = store.Search(r.Context(), collection, query)
 			if err != nil {
 				nsutils.WriteError(w, err)
 				return
@@ -47,9 +47,9 @@ func Search(dep nsutils.Dependencies) http.HandlerFunc {
 	}
 }
 
-func Create(dep nsutils.Dependencies) http.HandlerFunc {
+func Create(store nsutils.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		collection, _, err := nsutils.GetCollectionAndEnsurePermission(dep, r, nsutils.CollectionActionCreate)
+		collection, _, err := nsutils.GetCollectionAndEnsurePermission(r, nsutils.CollectionActionCreate)
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
@@ -91,7 +91,7 @@ func Create(dep nsutils.Dependencies) http.HandlerFunc {
 				return
 			}
 
-			record, _, err := dep.Store.Create(r.Context(), collection, doc, nsutils.RawParam(r))
+			record, _, err := store.Create(r.Context(), collection, doc, nsutils.RawParam(r))
 			if err != nil {
 				nsutils.WriteError(w, err)
 				return
@@ -103,9 +103,9 @@ func Create(dep nsutils.Dependencies) http.HandlerFunc {
 	}
 }
 
-func Current(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
+func Current(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		collection, query, ok := nsutils.ReadCollectionAndQuery(dep, w, r)
+		collection, query, ok := nsutils.ReadCollectionAndQuery(w, r)
 		if !ok {
 			return
 		}
@@ -113,7 +113,7 @@ func Current(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) 
 		query.Limit = 1
 		query.SortOrder = nil
 
-		records, err := dep.Store.Search(r.Context(), collection, query)
+		records, err := store.Search(r.Context(), collection, query)
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
@@ -123,9 +123,9 @@ func Current(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) 
 
 }
 
-func Delete(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
+func Delete(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		collection, _, err := nsutils.GetCollectionAndEnsurePermission(dep, r, nsutils.CollectionActionDelete)
+		collection, _, err := nsutils.GetCollectionAndEnsurePermission(r, nsutils.CollectionActionDelete)
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
@@ -137,10 +137,10 @@ func Delete(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 			// IGNORE ANY ERROR AND JUST RETURN 0 DELETED COUNT
 			deleted := 0
 			if collection.IsTypeString(identifierOrType) {
-				if amount, err := dep.Store.DeleteType(r.Context(), collection, identifierOrType, permanent); err == nil {
+				if amount, err := store.DeleteType(r.Context(), collection, identifierOrType, permanent); err == nil {
 					deleted = amount
 				}
-			} else if err := dep.Store.Delete(r.Context(), collection, identifierOrType, permanent); err == nil {
+			} else if err := store.Delete(r.Context(), collection, identifierOrType, permanent); err == nil {
 				deleted = 1
 			}
 			nsutils.WriteJSON(w, http.StatusOK, map[string]any{
@@ -152,14 +152,14 @@ func Delete(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 }
 
 // Replace If not found will return 404
-func Replace(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
+func Replace(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		collection, identity, err := nsutils.GetCollectionAndEnsurePermission(dep, r, nsutils.CollectionActionCreate)
+		collection, identity, err := nsutils.GetCollectionAndEnsurePermission(r, nsutils.CollectionActionCreate)
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
 		}
-		canCreate := nsutils.HasPermission(dep, collection, identity, nsutils.CollectionActionCreate)
+		canCreate := nsutils.CollectionActionHasPermission(collection, identity, nsutils.CollectionActionCreate)
 
 		var body map[string]any
 		if err := nsutils.ReadJSON(r, &body); err != nil {
@@ -185,7 +185,7 @@ func Replace(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) 
 			return
 		}
 
-		updated, _, herr := dep.Store.Replace(r.Context(), collection, identifier, body, canCreate, nsutils.RawParam(r))
+		updated, _, herr := store.Replace(r.Context(), collection, identifier, body, canCreate, nsutils.RawParam(r))
 		if herr != nil {
 			nsutils.WriteError(w, herr)
 			return

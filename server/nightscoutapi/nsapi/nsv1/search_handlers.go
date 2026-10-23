@@ -12,13 +12,13 @@ func ptr[T any](v T) *T {
 	return &v
 }
 
-func Count(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
+func Count(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		collection, query, ok := nsutils.ReadCollectionAndQuery(dep, w, r)
+		collection, query, ok := nsutils.ReadCollectionAndQuery(w, r)
 		if !ok {
 			return
 		}
-		records, err := dep.Store.Search(r.Context(), collection, query)
+		records, err := store.Search(r.Context(), collection, query)
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
@@ -28,10 +28,10 @@ func Count(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 
 }
 
-func Slice(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
+func Slice(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// collection/field/type/prefix
-		collection, q, ok := nsutils.ReadCollectionAndQuery(dep, w, r)
+		collection, q, ok := nsutils.ReadCollectionAndQuery(w, r)
 		if !ok {
 			return
 		}
@@ -46,7 +46,7 @@ func Slice(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 		prefix := chi.URLParam(r, "prefix")
 		field := chi.URLParam(r, "field")
 
-		records, err := dep.Store.Search(r.Context(), collection, q)
+		records, err := store.Search(r.Context(), collection, q)
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
@@ -71,10 +71,10 @@ func Slice(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 	}
 }
 
-func Times(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
+func Times(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// TODO this just lists everything at this point
-		collection, _, err := nsutils.GetCollectionFromStringAndEnsurePermission(dep, "entries", r, nsutils.CollectionActionRead)
+		collection, _, err := nsutils.GetCollectionFromStringAndEnsurePermission("entries", r, nsutils.CollectionActionRead)
 		if err != nil {
 			http.NotFound(w, r)
 			return
@@ -86,7 +86,7 @@ func Times(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 			nsutils.WriteError(w, err)
 			return
 		}
-		records, err := dep.Store.Search(r.Context(), collection, q)
+		records, err := store.Search(r.Context(), collection, q)
 		if err != nil {
 			nsutils.WriteJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
 			return
@@ -102,9 +102,9 @@ func Times(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
 
 }
 
-func Echo(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request) {
+func Echo(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		collection, _, err := nsutils.GetCollectionAndEnsurePermission(dep, r, nsutils.CollectionActionRead)
+		collection, _, err := nsutils.GetCollectionAndEnsurePermission(r, nsutils.CollectionActionRead)
 		if err != nil {
 			http.NotFound(w, r)
 			return

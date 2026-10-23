@@ -10,22 +10,22 @@ import (
 
 // NewNightscoutV3Router constructs a router that serves the supported
 // Nightscout API v3 endpoints.
-func NewNightscoutV3Router(dep nsutils.Dependencies) http.Handler {
+func NewNightscoutV3Router(store nsutils.Store) http.Handler {
 	r := chi.NewRouter()
 
-	r.Get("/version", Version(dep))
-	r.Get("/status", dep.Auth.Require("api:entries:read", false, Status(dep)))
-	r.Get("/test", dep.Auth.Require("api:entries:read", false, Test(dep)))
-	r.Get("/lastmodified", dep.Auth.Require("api:entries:read", false, LastModified(dep)))
-	r.Get("/lastModified", dep.Auth.Require("api:entries:read", false, LastModified(dep)))
+	r.Get("/version", Version(store))
+	r.Get("/status", nsutils.Require("api:entries:read", false, Status(store)))
+	r.Get("/test", nsutils.Require("api:entries:read", false, Test(store)))
+	r.Get("/lastmodified", nsutils.Require("api:entries:read", false, LastModified(store)))
+	r.Get("/lastModified", nsutils.Require("api:entries:read", false, LastModified(store)))
 
-	r.Get("/{collection}/history/{since}", History(dep))
-	r.Get("/{collection}/{identifier}", Read(dep))
-	r.Put("/{collection}/{identifier}", Replace(dep))
-	r.Patch("/{collection}/{identifier}", Patch(dep))
-	r.Delete("/{collection}/{identifier}", Remove(dep))
-	r.Get("/{collection}", Search(dep))
-	r.Post("/{collection}", Create(dep))
+	r.Get("/{collection}/history/{since}", History(store))
+	r.Get("/{collection}/{identifier}", Read(store))
+	r.Put("/{collection}/{identifier}", Replace(store))
+	r.Patch("/{collection}/{identifier}", Patch(store))
+	r.Delete("/{collection}/{identifier}", Remove(store))
+	r.Get("/{collection}", Search(store))
+	r.Post("/{collection}", Create(store))
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		slog.Info("Nightscout router 404 for path", "path", r.URL.Path)

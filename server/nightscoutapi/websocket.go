@@ -283,11 +283,11 @@ func (ws *Websocket) authorize(ctx context.Context, token, secret string) (conte
 	if nsIdentity == nil {
 		return ctx, authorization{}
 	}
-	auth := &NightTroopAPIAuth{}
+
 	return ctx, authorization{
-		Read:           auth.HasPermission(*nsIdentity, "api:*:read"),
-		Write:          auth.HasPermission(*nsIdentity, "api:*:create"),
-		WriteTreatment: auth.HasPermission(*nsIdentity, "api:treatments:create"),
+		Read:           nsutils.HasPermission(*nsIdentity, "api:*:read"),
+		Write:          nsutils.HasPermission(*nsIdentity, "api:*:create"),
+		WriteTreatment: nsutils.HasPermission(*nsIdentity, "api:treatments:create"),
 	}
 }
 
@@ -304,7 +304,7 @@ func (ws *Websocket) identity(ctx context.Context, token, secret string) (contex
 		slog.Info("Websocket authorization failed", "error", err)
 		return ctx, nil
 	}
-	nsIdentity, err := NighttroopIdentityToNightscoutIdentity(identity.Name, consts.IdentityRole(identity.Role))
+	nsIdentity, err := nsutils.NighttroopIdentityToNightscoutIdentity(identity.Name, consts.IdentityRole(identity.Role))
 	if err != nil {
 		return ctx, nil
 	}
@@ -507,7 +507,7 @@ func (ws *Websocket) subscribe(socket *socketio.Socket, accessToken string, coll
 		if collection == nsutils.Settings {
 			permission = "api:settings:admin"
 		}
-		if slices.Contains(storageCollections, collection) && !slices.Contains(subscribed, collection) && (&NightTroopAPIAuth{}).HasPermission(*identity, permission) {
+		if slices.Contains(storageCollections, collection) && !slices.Contains(subscribed, collection) && nsutils.HasPermission(*identity, permission) {
 			socket.Join(string(collection))
 			subscribed = append(subscribed, collection)
 		}
@@ -570,7 +570,7 @@ func (ws *Websocket) subscribeToAlarms(socket *socketio.Socket, accessToken, jwt
 	if identity == nil && token+secret != "" {
 		return map[string]any{"success": false, "message": "Missing or bad accessToken"}
 	}
-	read := identity != nil && (&NightTroopAPIAuth{}).HasPermission(*identity, "api:*:read")
+	read := identity != nil && nsutils.HasPermission(*identity, "api:*:read")
 	if read {
 		socket.Join(alarmReceivers)
 	} else {

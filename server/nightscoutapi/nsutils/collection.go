@@ -143,33 +143,33 @@ const (
 	CollectionActionDelete CollectionAction = "delete"
 )
 
-func GetCollectionAndEnsurePermission(dep Dependencies, r *http.Request, action CollectionAction) (Collection, *Identity, *HTTPError) {
-	return GetCollectionFromStringAndEnsurePermission(dep, chi.URLParam(r, "collection"), r, action)
+func GetCollectionAndEnsurePermission(r *http.Request, action CollectionAction) (Collection, *Identity, *HTTPError) {
+	return GetCollectionFromStringAndEnsurePermission(chi.URLParam(r, "collection"), r, action)
 }
 
-func GetCollectionFromStringAndEnsurePermission(dep Dependencies, collectionString string, r *http.Request, action CollectionAction) (Collection, *Identity, *HTTPError) {
+func GetCollectionFromStringAndEnsurePermission(collectionString string, r *http.Request, action CollectionAction) (Collection, *Identity, *HTTPError) {
 	collection, err := ParseCollection(collectionString)
 	if err != nil {
 		return "", nil, ErrInvalidCollection
 	}
 
-	identity, errr := dep.Auth.AuthenticateExplicit(r)
+	identity, errr := AuthenticateExplicit(r)
 	if errr != nil {
 		return "", nil, ErrMissingCredentials
 	}
 
 	permission := fmt.Sprintf("api:%s:%s", collection, action)
-	if !dep.Auth.HasPermission(*identity, permission) {
+	if !HasPermission(*identity, permission) {
 		return "", nil, ErrMissingPermission(permission)
 	}
 
 	return collection, identity, nil
 }
 
-func HasPermission(dep Dependencies, collection Collection, identity *Identity, action CollectionAction) bool {
+func CollectionActionHasPermission(collection Collection, identity *Identity, action CollectionAction) bool {
 	if identity == nil {
 		return false
 	}
 	permission := fmt.Sprintf("api:%s:%s", collection, action)
-	return dep.Auth.HasPermission(*identity, permission)
+	return HasPermission(*identity, permission)
 }

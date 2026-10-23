@@ -10,21 +10,10 @@ import (
 	"nighttroop.t1d.nz/utils/types"
 )
 
-type Dependencies struct {
-	Auth  AuthManager
-	Store Store
-}
-
 // Identity is the resolved authorization context for a request.
 type Identity struct {
 	Name        string
 	Permissions []string
-}
-
-type AuthManager interface {
-	Require(permission string, allowDefault bool, next func(http.ResponseWriter, *http.Request, *Identity)) http.HandlerFunc
-	HasPermission(identity Identity, permission string) bool
-	AuthenticateExplicit(r *http.Request) (*Identity, *HTTPError)
 }
 
 // Store abstracts persistence for Nightscout collections.
@@ -73,8 +62,8 @@ func ParseQuery(values url.Values) (nsquery.Query, *HTTPError) {
 
 // ReadCollectionAndQuery is the request's collection, which its identity must be able to read, and its query.
 // When either is bad it writes the error and ok is false.
-func ReadCollectionAndQuery(dep Dependencies, w http.ResponseWriter, r *http.Request) (collection Collection, query nsquery.Query, ok bool) {
-	collection, _, err := GetCollectionAndEnsurePermission(dep, r, CollectionActionRead)
+func ReadCollectionAndQuery(w http.ResponseWriter, r *http.Request) (collection Collection, query nsquery.Query, ok bool) {
+	collection, _, err := GetCollectionAndEnsurePermission(r, CollectionActionRead)
 	if err == nil {
 		if query, err = ParseQuery(r.URL.Query()); err == nil {
 			return collection, query, true

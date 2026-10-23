@@ -10,10 +10,10 @@ import (
 
 // NewNightscoutV2Router constructs a router that serves the supported
 // Nightscout API v2 endpoints.
-func NewNightscoutV2Router(dep nsutils.Dependencies) http.Handler {
+func NewNightscoutV2Router(store nsutils.Store) http.Handler {
 	r := chi.NewRouter()
 
-	registerPropertiesRoutes(r, dep)
+	registerPropertiesRoutes(r, store)
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		slog.Info("Nightscout router 404 for path", "path", r.URL.Path)
@@ -23,10 +23,10 @@ func NewNightscoutV2Router(dep nsutils.Dependencies) http.Handler {
 	return r
 }
 
-func registerPropertiesRoutes(r *chi.Mux, dep nsutils.Dependencies) {
-	r.Get("/properties", dep.Auth.Require("api:properties:read", true, PropertiesList(dep)))
-	r.Get("/properties.json", dep.Auth.Require("api:properties:read", true, PropertiesList(dep)))
+func registerPropertiesRoutes(r *chi.Mux, store nsutils.Store) {
+	r.Get("/properties", nsutils.Require("api:properties:read", true, PropertiesList(store)))
+	r.Get("/properties.json", nsutils.Require("api:properties:read", true, PropertiesList(store)))
 
-	r.Get("/summary", dep.Auth.Require("api:summary:read", true, Summary(dep)))
-	r.Get("/summary.json", dep.Auth.Require("api:summary:read", true, Summary(dep)))
+	r.Get("/summary", nsutils.Require("api:summary:read", true, Summary(store)))
+	r.Get("/summary.json", nsutils.Require("api:summary:read", true, Summary(store)))
 }

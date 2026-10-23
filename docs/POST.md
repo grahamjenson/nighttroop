@@ -1,21 +1,21 @@
 # $0.01 Per-User Per-Year: NightTroop
 
-Nightscout is a self-hosted, open-source observability server used to collect real-time diabetic data, such as Blood Glucose Levels (BGL), and share it with apps and devices for monitoring, alerting and analysis. We have a Nightscout server for my T1D son that his phone uploads his BGL and treatment data to. Then our family and his caregivers can download and see on his current state on our phones, watches and other devices. We also upload information to Nightscout that syncs down to his phone to control his insulin delivery, via setting target BGLs or adding carbs. **Nightscout is an integral part of my sons T1D management.**
+Nightscout is a self-hosted, open-source observability server used to collect real-time diabetic data, such as Blood Glucose Levels (BGL), and share it with apps and devices for monitoring, alerting and analysis. We have a Nightscout server for my T1D son that his phone uploads his BGL and treatment data to. Our family and his caregivers can then get his current numbers on phones, watches and other devices. We have set it up so that if we upload some kinds of information (e.g. what he is eating) to Nightscout, his phone will syncs that info down and use an algorithm to control his insulin delivery. The point here is that **Nightscout is an integral part of my sons T1D management.**
 
-Self-hosting Nightscout is difficult and requires a lot of technical knowledge that you don't magically get when you're diagnosed with diabetes. This has lead to third parties popping up to host Nightscout, but they can cost as much as $12 per month. 
+Here is the shit part: self-hosting Nightscout is difficult and requires a lot of technical knowledge that you don't magically get when you're diagnosed with diabetes. This has lead to third parties popping up to host Nightscout, but they can cost as much as $12 per month, which you also don't get magically when diagnosed with diabetes.
 
 To help people out and let them save a buck or two I tried hosting my own and other people Nightscout instances, but...
 
 1. Nightscout can only host one persons data per server instance, so you have to run multiple instances of the server and database!
-2. Configuration of Nightscout is all over the place, environment variables, dot files, plugins, file flags, DB... Config is annoying, water is also wet; but with nightscout each user has their own config (e.g. timezone) and changing anything requires restarting the server, so the difficulty has layers.
+2. Configuration of Nightscout is all over the place, environment variables, dot files, plugins, file flags, DB... Config is annoying, water is also wet; but with nightscout each user has their own config (e.g. timezone) and changing anything requires restarting the server, so the difficulty has depth.
 3. Nightscout uses socket.io for real-time communication with its default endpoint at `/socket.io`. So, to support websockets each server needs its own domain, e.g. `host1.example.com/socket.io`, `host2.example.com/socket.io`, making TLS cert, DNS, proxying and routing a more difficult.
 
-I want to make an API compatible (including socket.io) rewrite of Nightscout to be multi-user, I am calling it "NightTroop" (because a group of scouts is a troop).
+This irked me. It made me itchy. I want to make an API compatible (including socket.io) rewrite of Nightscout to be multi-user, I am calling it "NightTroop" (because a group of scouts is a troop).
 What makes NightTroop (or probably any nightscout rewrite) different from a typical company or product is that:
 
-1. it would be a wild success if it had 10k users world wide, so no need to worry about hockey-stick hyper-scaling technologies.
+1. it would be a wild success if it had 10k users world wide, so no need to worry about hockey-stick hyper-scaling technologies, e.g. k8s...
 1. charging money is a shitty thing to do, and can come off as exploitative to a community already that may have little or no choice.
-1. collecting and hosting Personally Identifiable Information (PII) from users can run you amok of HIPPA laws, especially if you charge for the service.
+1. collecting and hosting Personally Identifiable Information (PII) from users can run you amok of laws and morality
 1. users will want it to be open source and self host. The idea of not sharing code that your life may rely on, as well as let them do what they want with it is a good idea.
 1. putting hurdles in front of it to sign up for and use, like requiring email, or login can stop some people using it.
 

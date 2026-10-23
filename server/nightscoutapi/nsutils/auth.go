@@ -1,41 +1,31 @@
-package nightscoutapi
+package nsutils
 
 import (
 	"fmt"
 	"net/http"
 	"strings"
 
-	"nighttroop.t1d.nz/data/db"
-
-	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
-	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-type NightTroopAPIAuth struct {
-	controlDB *db.ControlDB
-	config    *config.ServerConfig
-}
-
-func (m *NightTroopAPIAuth) Require(permission string, allowDefault bool, next func(http.ResponseWriter, *http.Request, *nsutils.Identity)) http.HandlerFunc {
-
+func Require(permission string, allowDefault bool, next func(http.ResponseWriter, *http.Request, *Identity)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		identity, err := m.AuthenticateExplicit(r)
+		identity, err := AuthenticateExplicit(r)
 		if err != nil {
-			nsutils.WriteError(w, err)
+			WriteError(w, err)
 			return
 		}
 
-		if !m.HasPermission(*identity, permission) {
-			nsutils.WriteError(w, nsutils.ErrMissingPermission(permission))
+		if !HasPermission(*identity, permission) {
+			WriteError(w, ErrMissingPermission(permission))
 			return
 		}
 		next(w, r, identity)
 	}
 }
 
-func (m *NightTroopAPIAuth) HasPermission(identity nsutils.Identity, permission string) bool {
+func HasPermission(identity Identity, permission string) bool {
 	for _, granted := range identity.Permissions {
 		if permissionMatch(granted, permission) {
 			return true
@@ -44,15 +34,15 @@ func (m *NightTroopAPIAuth) HasPermission(identity nsutils.Identity, permission 
 	return false
 }
 
-func (m *NightTroopAPIAuth) AuthenticateExplicit(r *http.Request) (*nsutils.Identity, *nsutils.HTTPError) {
+func AuthenticateExplicit(r *http.Request) (*Identity, *HTTPError) {
 	siteContext := httputils.GetSiteContext(r.Context())
 	if siteContext == nil {
-		return nil, nsutils.ErrMissingCredentials
+		return nil, ErrMissingCredentials
 	}
 
 	ntIdentity, err := NighttroopIdentityToNightscoutIdentity(siteContext.IdentityModel.Name, siteContext.IdentityModel.Role)
 	if err != nil {
-		return nil, nsutils.ErrMissingCredentials
+		return nil, ErrMissingCredentials
 	}
 	return ntIdentity, nil
 }
@@ -77,7 +67,7 @@ func permissionMatch(granted, wanted string) bool {
 	return true
 }
 
-func NighttroopIdentityToNightscoutIdentity(identityName string, ntid consts.IdentityRole) (*nsutils.Identity, error) {
+func NighttroopIdentityToNightscoutIdentity(identityName string, ntid consts.IdentityRole) (*Identity, error) {
 	// Collections
 	// 'entries'
 	// 'treatments'
@@ -119,7 +109,7 @@ func NighttroopIdentityToNightscoutIdentity(identityName string, ntid consts.Ide
 	default:
 		return nil, fmt.Errorf("unknown identity role: %s", ntid)
 	}
-	return &nsutils.Identity{
+	return &Identity{
 		Name:        identityName,
 		Permissions: permissions,
 	}, nil

@@ -10,9 +10,9 @@ import (
 )
 
 // Read returns a single document from an API v3 collection.
-func Read(dep nsutils.Dependencies) http.HandlerFunc {
+func Read(store nsutils.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		collection, _, err := nsutils.GetCollectionAndEnsurePermission(dep, r, nsutils.CollectionActionRead)
+		collection, _, err := nsutils.GetCollectionAndEnsurePermission(r, nsutils.CollectionActionRead)
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
@@ -25,7 +25,7 @@ func Read(dep nsutils.Dependencies) http.HandlerFunc {
 
 		query, _ := nsutils.ParseQuery(r.URL.Query())
 
-		record, err := dep.Store.Get(r.Context(), collection, identifier, query)
+		record, err := store.Get(r.Context(), collection, identifier, query)
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
@@ -36,14 +36,14 @@ func Read(dep nsutils.Dependencies) http.HandlerFunc {
 }
 
 // Search implements collection search for API v3.
-func Search(dep nsutils.Dependencies) http.HandlerFunc {
+func Search(store nsutils.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		collection, query, ok := nsutils.ReadCollectionAndQuery(dep, w, r)
+		collection, query, ok := nsutils.ReadCollectionAndQuery(w, r)
 		if !ok {
 			return
 		}
 
-		records, err := dep.Store.Search(r.Context(), collection, query)
+		records, err := store.Search(r.Context(), collection, query)
 		if err != nil {
 			nsutils.WriteJSON(w, http.StatusInternalServerError, map[string]any{"status": http.StatusInternalServerError, "message": err.Error()})
 			return
@@ -53,9 +53,9 @@ func Search(dep nsutils.Dependencies) http.HandlerFunc {
 }
 
 // Create creates a document in an API v3 collection.
-func Create(dep nsutils.Dependencies) http.HandlerFunc {
+func Create(store nsutils.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		collection, _, err := nsutils.GetCollectionAndEnsurePermission(dep, r, nsutils.CollectionActionCreate)
+		collection, _, err := nsutils.GetCollectionAndEnsurePermission(r, nsutils.CollectionActionCreate)
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
@@ -68,7 +68,7 @@ func Create(dep nsutils.Dependencies) http.HandlerFunc {
 			return
 		}
 
-		record, duplicate, err := dep.Store.Create(r.Context(), collection, doc, nsutils.RawParam(r))
+		record, duplicate, err := store.Create(r.Context(), collection, doc, nsutils.RawParam(r))
 		if err != nil {
 			nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 			return
@@ -85,9 +85,9 @@ func Create(dep nsutils.Dependencies) http.HandlerFunc {
 }
 
 // Remove soft-deletes or permanently deletes an API v3 document.
-func Remove(dep nsutils.Dependencies) http.HandlerFunc {
+func Remove(store nsutils.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		collection, _, err := nsutils.GetCollectionAndEnsurePermission(dep, r, nsutils.CollectionActionDelete)
+		collection, _, err := nsutils.GetCollectionAndEnsurePermission(r, nsutils.CollectionActionDelete)
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
@@ -99,7 +99,7 @@ func Remove(dep nsutils.Dependencies) http.HandlerFunc {
 			nsutils.WriteError(w, err)
 			return
 		}
-		err = dep.Store.Delete(r.Context(), collection, identifier, permanent)
+		err = store.Delete(r.Context(), collection, identifier, permanent)
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
@@ -110,9 +110,9 @@ func Remove(dep nsutils.Dependencies) http.HandlerFunc {
 }
 
 // History returns document revisions modified since the supplied timestamp.
-func History(dep nsutils.Dependencies) http.HandlerFunc {
+func History(store nsutils.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		collection, query, ok := nsutils.ReadCollectionAndQuery(dep, w, r)
+		collection, query, ok := nsutils.ReadCollectionAndQuery(w, r)
 		if !ok {
 			return
 		}
@@ -127,7 +127,7 @@ func History(dep nsutils.Dependencies) http.HandlerFunc {
 		// HasFilters was worked out when the query was parsed, so it must be set for a filter added after
 		query.HasFilters = true
 
-		records, err := dep.Store.Search(r.Context(), collection, query)
+		records, err := store.Search(r.Context(), collection, query)
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
@@ -138,14 +138,14 @@ func History(dep nsutils.Dependencies) http.HandlerFunc {
 }
 
 // Replace will replace (delete, then insert) if it exists, or create it if it doesnt
-func Replace(dep nsutils.Dependencies) http.HandlerFunc {
+func Replace(store nsutils.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		collection, identity, err := nsutils.GetCollectionAndEnsurePermission(dep, r, nsutils.CollectionActionUpdate)
+		collection, identity, err := nsutils.GetCollectionAndEnsurePermission(r, nsutils.CollectionActionUpdate)
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
 		}
-		canCreate := nsutils.HasPermission(dep, collection, identity, nsutils.CollectionActionCreate)
+		canCreate := nsutils.CollectionActionHasPermission(collection, identity, nsutils.CollectionActionCreate)
 
 		identifier := chi.URLParam(r, "identifier")
 		if err := nsutils.ValidateIdentifierIsntBad(identifier); err != nil {
@@ -159,7 +159,7 @@ func Replace(dep nsutils.Dependencies) http.HandlerFunc {
 			return
 		}
 		// TODO put If-Unmodified-Since into the update query to make it atomic
-		record, created, err := dep.Store.Replace(r.Context(), collection, identifier, doc, canCreate, nsutils.RawParam(r))
+		record, created, err := store.Replace(r.Context(), collection, identifier, doc, canCreate, nsutils.RawParam(r))
 
 		if err != nil {
 			nsutils.WriteError(w, err)
@@ -175,9 +175,9 @@ func Replace(dep nsutils.Dependencies) http.HandlerFunc {
 }
 
 // Patch applies a partial update to an API v3 document.
-func Patch(dep nsutils.Dependencies) http.HandlerFunc {
+func Patch(store nsutils.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		collection, _, err := nsutils.GetCollectionAndEnsurePermission(dep, r, nsutils.CollectionActionUpdate)
+		collection, _, err := nsutils.GetCollectionAndEnsurePermission(r, nsutils.CollectionActionUpdate)
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
@@ -196,7 +196,7 @@ func Patch(dep nsutils.Dependencies) http.HandlerFunc {
 		}
 		// TODO put If-Unmodified-Since into the update query to make it atomic
 
-		record, err := dep.Store.Patch(r.Context(), collection, identifier, doc, nsutils.RawParam(r))
+		record, err := store.Patch(r.Context(), collection, identifier, doc, nsutils.RawParam(r))
 
 		if err != nil {
 			nsutils.WriteError(w, err)

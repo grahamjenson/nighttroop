@@ -9,7 +9,7 @@ import (
 )
 
 // PropertiesList lists properties using the Nightscout v1 query format.
-func Summary(dep nsutils.Dependencies) func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
+func Summary(store nsutils.Store) func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
 	return func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
 		siteContext := httputils.GetSiteContext(r.Context())
 
