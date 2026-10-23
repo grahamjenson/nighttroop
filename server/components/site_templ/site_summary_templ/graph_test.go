@@ -1,6 +1,8 @@
 package site_summary_templ
 
 import (
+	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -27,7 +29,7 @@ func TestGraph(t *testing.T) {
 	require.Equal(t, (graphLeft+graphRight)/2, g.x(since+24*time.Hour.Milliseconds()))
 	require.Equal(t, graphLeft, g.x(since-time.Hour.Milliseconds()))
 
-	// The glucose axis grows to the highest reading, and values above it are kept on top
+	// The glucose axis runs from 2.2 mmol/L (40 mg/dL) to the highest reading, and values outside it are kept on its edges
 	require.Equal(t, glucoseTop, g.glucoseY(20))
 	require.Equal(t, glucoseBase, g.glucoseY(0))
 	require.Equal(t, glucoseTop, g.glucoseY(30))
@@ -45,12 +47,32 @@ func TestGraph(t *testing.T) {
 		require.Equal(t, test.colour, g.glucoseColour(test.reading), test.reading)
 	}
 
-	// The biggest dose and rate fill their strips, and a temp basal running past now ends at the graph's edge
-	require.Equal(t, insulinTop, g.insulinY(4))
-	require.Equal(t, "M970.6 340.0 V300.0 H990.0 V340.0 Z", g.basalPath([]*sitemodels.SiteTempBasal{{Absolute: &rate, OccurredAt: now - time.Hour.Milliseconds(), DurationMinutes: 120}}))
+	// The biggest rate fills its strip, and a temp basal running past now ends at the graph's edge
+	require.Equal(t, "M941.2 340.0 V324.0 H960.0 V340.0", g.basalPath([]*sitemodels.SiteTempBasal{{Absolute: &rate, OccurredAt: now - time.Hour.Milliseconds(), DurationMinutes: 120}}))
+
+	// Carbs are marked by triangles pointing up and insulin by triangles pointing down
+	require.Equal(t, "M100.0 45.0 L105.0 54.0 L95.0 54.0 Z", triangle(100, 50, true))
+	require.Equal(t, "M100.0 55.0 L105.0 46.0 L95.0 46.0 Z", triangle(100, 50, false))
 
 	// 48 hours is labelled every 6 hours
 	ticks := g.ticks()
 	require.Len(t, ticks, 7)
 	require.Equal(t, "18:00", ticks[0].Label)
+}
+
+// Treatments a moment apart overlap on a long graph, so the latest is drawn last, on top where it can be read
+func TestGraphDrawsTheLatestTreatmentOnTop(t *testing.T) {
+	mgdl := consts.UnitsMGDL
+	now := time.Now().UnixMilli()
+	older, newer := 15.0, 40.0
+	// Searches give the newest first
+	summary := &sitemodels.Summary{
+		Since: now - 48*time.Hour.Milliseconds(), Units: &mgdl,
+		InsulinDoses: []*sitemodels.SiteInsulinDose{{Dose: 2.5, OccurredAt: now}, {Dose: 1, OccurredAt: now - time.Minute.Milliseconds()}},
+		FoodIntakes:  []*sitemodels.SiteFoodIntake{{Carbs: &newer, OccurredAt: now}, {Carbs: &older, OccurredAt: now - time.Minute.Milliseconds()}},
+	}
+	var svg strings.Builder
+	require.NoError(t, Graph(summary).Render(context.Background(), &svg))
+	require.Greater(t, strings.Index(svg.String(), ">2.5U<"), strings.Index(svg.String(), ">1U<"))
+	require.Greater(t, strings.Index(svg.String(), ">40g<"), strings.Index(svg.String(), ">15g<"))
 }

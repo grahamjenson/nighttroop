@@ -38,6 +38,20 @@ ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Sync Updated
 RUN_BACKGROUND_JOBS
 
+// A snack and a dose given now, for the graph to mark
+CLICK #site--settings-menu
+CLICK #site--data--food-button
+ASSERT_STATUS 200
+INPUT #site--food--create--carbs 15
+CLICK #site--food--create--submit
+ASSERT_STATUS 201
+CLICK #site--settings-menu
+CLICK #site--data--insulin-button
+ASSERT_STATUS 200
+INPUT #site--insulin--create--dose 2.5
+CLICK #site--insulin--create--submit
+ASSERT_STATUS 201
+
 // The summary shows the latest glucose, the loop's IOB and COB, every treatment and each device's latest status
 CLICK #site--nav--home
 ASSERT_NEW_URL
@@ -52,10 +66,13 @@ ASSERT_VISIBLE #site--summary--readings tbody tr >> nth=5
 ASSERT_VISIBLE #site--summary--devices >> text=virtual://nighttroop
 ASSERT_VISIBLE #site--summary--devices >> text=virtual://carer-phone
 
-// The graph draws every reading and the temp basal on one time axis (the temp target shades the band under the readings)
+// The graph draws every reading, the temp target as a shaded line, carbs and insulin as triangles and the temp basal as a line on one time axis
 ASSERT_VISIBLE #site--summary--graph
 ASSERT_VISIBLE #site--summary--graph .site--summary--graph--reading >> nth=5
 ASSERT_NOT_VISIBLE #site--summary--graph .site--summary--graph--reading >> nth=6
+ASSERT_VISIBLE #site--summary--graph .site--summary--graph--temp-target
+ASSERT_VISIBLE #site--summary--graph .site--summary--graph--carbs >> text=15g
+ASSERT_VISIBLE #site--summary--graph .site--summary--graph--insulin >> text=2.5U
 ASSERT_VISIBLE #site--summary--graph--basal
 
 // The range buttons show the summary over 6 hours to a week, and back returns to the range before
