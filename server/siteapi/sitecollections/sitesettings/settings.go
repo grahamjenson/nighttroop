@@ -15,9 +15,9 @@ import (
 	"nighttroop.t1d.nz/utils/settings"
 )
 
-// SettingsStore is a level of settings: the site's, which only admins can change,
+// SettingsCollection is a level of settings: the site's, which only admins can change,
 // or the signed in identity's own, which override the site's
-type SettingsStore struct {
+type SettingsCollection struct {
 	Site bool
 }
 
@@ -27,14 +27,14 @@ var settingNames = []string{"units", "timezone", "language", "date_format", "tim
 // ////
 // Shared
 // ////
-func (s *SettingsStore) GetName() string {
+func (s *SettingsCollection) GetName() string {
 	if s.Site {
 		return "site_settings"
 	}
 	return "identity_settings"
 }
 
-func (s *SettingsStore) level(siteContext *httputils.SiteContext) *settings.SettingMap {
+func (s *SettingsCollection) level(siteContext *httputils.SiteContext) *settings.SettingMap {
 	if s.Site {
 		return siteContext.GetSettings().SiteSettingsMap
 	}
@@ -45,7 +45,7 @@ func (s *SettingsStore) level(siteContext *httputils.SiteContext) *settings.Sett
 // Get Model
 // /////
 // GetRow is the level's settings, with those it inherits; settings are not rows, so the model is its own row
-func (s *SettingsStore) GetRow(ctx context.Context, q *controldb.Queries, id string, siteContext *httputils.SiteContext) (*sitemodels.Settings, error) {
+func (s *SettingsCollection) GetRow(ctx context.Context, q *controldb.Queries, id string, siteContext *httputils.SiteContext) (*sitemodels.Settings, error) {
 	if s.Site && siteContext.IdentityModel.Role != consts.IdentityRoleAdmin {
 		return nil, apiutils.ErrForbidden
 	}
@@ -61,7 +61,7 @@ func (s *SettingsStore) GetRow(ctx context.Context, q *controldb.Queries, id str
 	}
 	// An admin's settings page shows the site's settings beside their own
 	if !s.Site && siteContext.IdentityModel.Role == consts.IdentityRoleAdmin {
-		site, err := (&SettingsStore{Site: true}).GetRow(ctx, q, id, siteContext)
+		site, err := (&SettingsCollection{Site: true}).GetRow(ctx, q, id, siteContext)
 		if err != nil {
 			return nil, err
 		}
@@ -70,11 +70,11 @@ func (s *SettingsStore) GetRow(ctx context.Context, q *controldb.Queries, id str
 	return model, nil
 }
 
-func (s *SettingsStore) ToModel(row *sitemodels.Settings, _ *httputils.SiteContext) *sitemodels.Settings {
+func (s *SettingsCollection) ToModel(row *sitemodels.Settings, _ *httputils.SiteContext) *sitemodels.Settings {
 	return row
 }
 
-func (s *SettingsStore) GetHTMXResponse(model *sitemodels.Settings) templ.Component {
+func (s *SettingsCollection) GetHTMXResponse(model *sitemodels.Settings) templ.Component {
 	if s.Site {
 		return site_settings_templ.SettingsPage(model, nil)
 	}
@@ -86,7 +86,7 @@ func (s *SettingsStore) GetHTMXResponse(model *sitemodels.Settings) templ.Compon
 // ///
 
 // UpdateRow sets the values sent. An empty value clears it, so the level above applies; one not sent is left as it is.
-func (s *SettingsStore) UpdateRow(ctx context.Context, q *controldb.Queries, siteContext *httputils.SiteContext, oldModel *sitemodels.Settings, model *sitemodels.Settings) (*sitemodels.Settings, error) {
+func (s *SettingsCollection) UpdateRow(ctx context.Context, q *controldb.Queries, siteContext *httputils.SiteContext, oldModel *sitemodels.Settings, model *sitemodels.Settings) (*sitemodels.Settings, error) {
 	level, subject := s.level(siteContext), ptr("identity")
 	if s.Site {
 		subject = ptr("site")
@@ -125,6 +125,6 @@ func (s *SettingsStore) UpdateRow(ctx context.Context, q *controldb.Queries, sit
 	return s.GetRow(ctx, q, "", siteContext)
 }
 
-func (s *SettingsStore) UpdateHTMXResponse(model *sitemodels.Settings) templ.Component {
+func (s *SettingsCollection) UpdateHTMXResponse(model *sitemodels.Settings) templ.Component {
 	return site_settings_templ.SettingsSaved()
 }

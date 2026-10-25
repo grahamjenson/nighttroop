@@ -10,23 +10,23 @@ import (
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
-	"nighttroop.t1d.nz/server/siteapi/sitequery"
+	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-type ProfileSwitchesStore struct{}
+type ProfileSwitchesCollection struct{}
 
 // ////
 // Shared
 // ////
-func (s *ProfileSwitchesStore) GetName() string {
+func (s *ProfileSwitchesCollection) GetName() string {
 	return "profile_switches"
 }
 
 // ////
 // CREATE
 // ////
-func (s *ProfileSwitchesStore) CreateRow(ctx context.Context, q *sitedb.Queries, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteProfileSwitch) (*sitedb.ProfileSwitch, error) {
+func (s *ProfileSwitchesCollection) CreateRow(ctx context.Context, q *sitedb.Queries, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteProfileSwitch) (*sitedb.ProfileSwitch, error) {
 	if model.Name == "" {
 		return nil, apiutils.ErrConstraintCheckFailedWithHint("name is required")
 	}
@@ -36,7 +36,7 @@ func (s *ProfileSwitchesStore) CreateRow(ctx context.Context, q *sitedb.Queries,
 	return q.CreateProfileSwitch(ctx, sitemodels.ProfileSwitchToCreate(model, siteContext))
 }
 
-func (s *ProfileSwitchesStore) CreateHTMXResponse(model *sitemodels.SiteProfileSwitch) templ.Component {
+func (s *ProfileSwitchesCollection) CreateHTMXResponse(model *sitemodels.SiteProfileSwitch) templ.Component {
 	return site_data_templ.ProfileSwitchCreated(model)
 }
 
@@ -45,7 +45,7 @@ func (s *ProfileSwitchesStore) CreateHTMXResponse(model *sitemodels.SiteProfileS
 // ////
 
 // UpdateRow changes the fields sent; anything not sent stays as it is
-func (s *ProfileSwitchesStore) UpdateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteProfileSwitch, model *sitemodels.SiteProfileSwitch) (*sitedb.ProfileSwitch, error) {
+func (s *ProfileSwitchesCollection) UpdateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteProfileSwitch, model *sitemodels.SiteProfileSwitch) (*sitedb.ProfileSwitch, error) {
 	if herr := checkProfileSwitch(model); herr != nil {
 		return nil, herr
 	}
@@ -53,24 +53,24 @@ func (s *ProfileSwitchesStore) UpdateRow(ctx context.Context, q *sitedb.Queries,
 	return q.UpdateProfileSwitch(ctx, sitemodels.ProfileSwitchToUpdate(model, siteContext))
 }
 
-func (s *ProfileSwitchesStore) UpdateHTMXResponse(model *sitemodels.SiteProfileSwitch) templ.Component {
+func (s *ProfileSwitchesCollection) UpdateHTMXResponse(model *sitemodels.SiteProfileSwitch) templ.Component {
 	return site_data_templ.ProfileSwitchUpdated(model)
 }
 
 // ////
 // Get Model
 // /////
-func (s *ProfileSwitchesStore) GetRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) (*sitedb.ProfileSwitch, error) {
+func (s *ProfileSwitchesCollection) GetRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) (*sitedb.ProfileSwitch, error) {
 	return q.GetProfileSwitch(ctx, sitedb.GetProfileSwitchParams{ID: id})
 }
 
 // ToModel is the site model of a row
-func (s *ProfileSwitchesStore) ToModel(row *sitedb.ProfileSwitch, siteContext *httputils.SiteContext) *sitemodels.SiteProfileSwitch {
+func (s *ProfileSwitchesCollection) ToModel(row *sitedb.ProfileSwitch, siteContext *httputils.SiteContext) *sitemodels.SiteProfileSwitch {
 	return sitemodels.ProfileSwitchFromDB(row)
 }
 
 // GetHTMXResponse is the profile switch's details, shown in a modal
-func (s *ProfileSwitchesStore) GetHTMXResponse(model *sitemodels.SiteProfileSwitch) templ.Component {
+func (s *ProfileSwitchesCollection) GetHTMXResponse(model *sitemodels.SiteProfileSwitch) templ.Component {
 	return site_data_templ.ProfileSwitchModal(model)
 }
 
@@ -78,11 +78,11 @@ func (s *ProfileSwitchesStore) GetHTMXResponse(model *sitemodels.SiteProfileSwit
 // Search Models
 // ///
 
-func (s *ProfileSwitchesStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.ProfileSwitch, error) {
-	return q.AllProfileSwitches(ctx, sitequery.QueryToAllProfileSwitches(query))
+func (s *ProfileSwitchesCollection) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.ProfileSwitch, error) {
+	return q.AllProfileSwitches(ctx, siteapiutils.QueryToAllProfileSwitches(query))
 }
 
-func (s *ProfileSwitchesStore) SearchHTMXResponse(models []*sitemodels.SiteProfileSwitch, query *apiutils.Query) templ.Component {
+func (s *ProfileSwitchesCollection) SearchHTMXResponse(models []*sitemodels.SiteProfileSwitch, query *apiutils.Query) templ.Component {
 	return site_data_templ.ProfileSwitchesTable(models, query.Skip, query.Limit)
 }
 
@@ -91,7 +91,7 @@ func (s *ProfileSwitchesStore) SearchHTMXResponse(models []*sitemodels.SiteProfi
 // ///
 
 // DeleteRow soft deletes, like the Nightscout API, so syncing clients see the delete
-func (s *ProfileSwitchesStore) DeleteRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) error {
+func (s *ProfileSwitchesCollection) DeleteRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) error {
 	_, err := q.SoftDeleteProfileSwitch(ctx, sitedb.SoftDeleteProfileSwitchParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
 		ID:                    id,
@@ -99,7 +99,7 @@ func (s *ProfileSwitchesStore) DeleteRow(ctx context.Context, q *sitedb.Queries,
 	return err
 }
 
-func (s *ProfileSwitchesStore) DeleteHTMXResponse(model *sitemodels.SiteProfileSwitch) templ.Component {
+func (s *ProfileSwitchesCollection) DeleteHTMXResponse(model *sitemodels.SiteProfileSwitch) templ.Component {
 	return site_data_templ.ProfileSwitchDeleted()
 }
 

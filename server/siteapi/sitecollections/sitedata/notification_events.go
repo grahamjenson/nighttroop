@@ -9,26 +9,26 @@ import (
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
-	"nighttroop.t1d.nz/server/siteapi/sitequery"
+	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
 // defaultNotificationType is the type of a notification sent without one
 const defaultNotificationType = "announcement"
 
-type NotificationEventsStore struct{}
+type NotificationEventsCollection struct{}
 
 // ////
 // Shared
 // ////
-func (s *NotificationEventsStore) GetName() string {
+func (s *NotificationEventsCollection) GetName() string {
 	return "notification_events"
 }
 
 // ////
 // CREATE
 // ////
-func (s *NotificationEventsStore) CreateRow(ctx context.Context, q *sitedb.Queries, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteNotificationEvent) (*sitedb.NotificationEvent, error) {
+func (s *NotificationEventsCollection) CreateRow(ctx context.Context, q *sitedb.Queries, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteNotificationEvent) (*sitedb.NotificationEvent, error) {
 	if model.NotificationType == "" {
 		model.NotificationType = defaultNotificationType
 	}
@@ -41,7 +41,7 @@ func (s *NotificationEventsStore) CreateRow(ctx context.Context, q *sitedb.Queri
 	return q.CreateNotificationEvent(ctx, sitemodels.NotificationEventToCreate(model, siteContext))
 }
 
-func (s *NotificationEventsStore) CreateHTMXResponse(model *sitemodels.SiteNotificationEvent) templ.Component {
+func (s *NotificationEventsCollection) CreateHTMXResponse(model *sitemodels.SiteNotificationEvent) templ.Component {
 	return site_data_templ.NotificationEventCreated(model)
 }
 
@@ -50,7 +50,7 @@ func (s *NotificationEventsStore) CreateHTMXResponse(model *sitemodels.SiteNotif
 // ////
 
 // UpdateRow changes the fields sent; anything not sent stays as it is
-func (s *NotificationEventsStore) UpdateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteNotificationEvent, model *sitemodels.SiteNotificationEvent) (*sitedb.NotificationEvent, error) {
+func (s *NotificationEventsCollection) UpdateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteNotificationEvent, model *sitemodels.SiteNotificationEvent) (*sitedb.NotificationEvent, error) {
 	if herr := checkNotificationEvent(model); herr != nil {
 		return nil, herr
 	}
@@ -58,24 +58,24 @@ func (s *NotificationEventsStore) UpdateRow(ctx context.Context, q *sitedb.Queri
 	return q.UpdateNotificationEvent(ctx, sitemodels.NotificationEventToUpdate(model, siteContext))
 }
 
-func (s *NotificationEventsStore) UpdateHTMXResponse(model *sitemodels.SiteNotificationEvent) templ.Component {
+func (s *NotificationEventsCollection) UpdateHTMXResponse(model *sitemodels.SiteNotificationEvent) templ.Component {
 	return site_data_templ.NotificationEventUpdated(model)
 }
 
 // ////
 // Get Model
 // /////
-func (s *NotificationEventsStore) GetRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) (*sitedb.NotificationEvent, error) {
+func (s *NotificationEventsCollection) GetRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) (*sitedb.NotificationEvent, error) {
 	return q.GetNotificationEvent(ctx, sitedb.GetNotificationEventParams{ID: id})
 }
 
 // ToModel is the site model of a row
-func (s *NotificationEventsStore) ToModel(row *sitedb.NotificationEvent, siteContext *httputils.SiteContext) *sitemodels.SiteNotificationEvent {
+func (s *NotificationEventsCollection) ToModel(row *sitedb.NotificationEvent, siteContext *httputils.SiteContext) *sitemodels.SiteNotificationEvent {
 	return sitemodels.NotificationEventFromDB(row)
 }
 
 // GetHTMXResponse is the notification's details, shown in a modal
-func (s *NotificationEventsStore) GetHTMXResponse(model *sitemodels.SiteNotificationEvent) templ.Component {
+func (s *NotificationEventsCollection) GetHTMXResponse(model *sitemodels.SiteNotificationEvent) templ.Component {
 	return site_data_templ.NotificationEventModal(model)
 }
 
@@ -83,11 +83,11 @@ func (s *NotificationEventsStore) GetHTMXResponse(model *sitemodels.SiteNotifica
 // Search Models
 // ///
 
-func (s *NotificationEventsStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.NotificationEvent, error) {
-	return q.AllNotificationEvents(ctx, sitequery.QueryToAllNotificationEvents(query))
+func (s *NotificationEventsCollection) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.NotificationEvent, error) {
+	return q.AllNotificationEvents(ctx, siteapiutils.QueryToAllNotificationEvents(query))
 }
 
-func (s *NotificationEventsStore) SearchHTMXResponse(models []*sitemodels.SiteNotificationEvent, query *apiutils.Query) templ.Component {
+func (s *NotificationEventsCollection) SearchHTMXResponse(models []*sitemodels.SiteNotificationEvent, query *apiutils.Query) templ.Component {
 	return site_data_templ.NotificationEventsTable(models, query.Skip, query.Limit)
 }
 
@@ -96,7 +96,7 @@ func (s *NotificationEventsStore) SearchHTMXResponse(models []*sitemodels.SiteNo
 // ///
 
 // DeleteRow soft deletes, like the Nightscout API, so syncing clients see the delete
-func (s *NotificationEventsStore) DeleteRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) error {
+func (s *NotificationEventsCollection) DeleteRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) error {
 	_, err := q.SoftDeleteNotificationEvent(ctx, sitedb.SoftDeleteNotificationEventParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
 		ID:                    id,
@@ -104,7 +104,7 @@ func (s *NotificationEventsStore) DeleteRow(ctx context.Context, q *sitedb.Queri
 	return err
 }
 
-func (s *NotificationEventsStore) DeleteHTMXResponse(model *sitemodels.SiteNotificationEvent) templ.Component {
+func (s *NotificationEventsCollection) DeleteHTMXResponse(model *sitemodels.SiteNotificationEvent) templ.Component {
 	return site_data_templ.NotificationEventDeleted()
 }
 

@@ -1,23 +1,17 @@
-package siteapiutils
+package siteapi
 
 import (
 	"log/slog"
 	"net/http"
 
-	"nighttroop.t1d.nz/utils/apiutils"
-
 	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server/components/site_templ"
-
+	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
 )
-
-//////
-// CREATE
-///////
 
 func CreateHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerConfig, store *Rows[R, M, Q]) http.HandlerFunc {
 	creator := storeCan[RowCreator[R, M, Q]](store, "create")
@@ -33,7 +27,7 @@ func CreateHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerCo
 			return
 		}
 
-		tx := NewStoreTx(r.Context(), siteContext)
+		tx := NewCollectionTx(r.Context(), siteContext)
 		defer tx.Rollback()
 		herr = store.create(r.Context(), tx, creator, nil, siteContext, requestModel)
 		if herr = tx.Finish(herr); herr != nil {
@@ -64,7 +58,7 @@ func UpdateHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerCo
 			return
 		}
 
-		tx := NewStoreTx(r.Context(), siteContext)
+		tx := NewCollectionTx(r.Context(), siteContext)
 		defer tx.Rollback()
 		oldModel, _, herr := store.get(r.Context(), tx, id, siteContext)
 		if herr == nil && oldModel == nil {
@@ -106,7 +100,7 @@ func UpsertHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerCo
 			return
 		}
 
-		tx := NewStoreTx(r.Context(), siteContext)
+		tx := NewCollectionTx(r.Context(), siteContext)
 		defer tx.Rollback()
 		oldModel, _, herr := store.get(r.Context(), tx, id, siteContext)
 		if herr != nil {
@@ -145,7 +139,7 @@ func SearchHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerCo
 			herr.Write(siteContext.AcceptType, w)
 			return
 		}
-		tx := NewStoreTx(r.Context(), siteContext)
+		tx := NewCollectionTx(r.Context(), siteContext)
 		defer tx.Rollback()
 		models, herr := store.search(r.Context(), tx, searcher, query, siteContext)
 		if herr = tx.Finish(herr); herr != nil {
@@ -166,7 +160,7 @@ func GetHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerConfi
 		}
 
 		id := chi.URLParam(r, "id")
-		tx := NewStoreTx(r.Context(), siteContext)
+		tx := NewCollectionTx(r.Context(), siteContext)
 		defer tx.Rollback()
 		model, _, herr := store.get(r.Context(), tx, id, siteContext)
 		if herr == nil && model == nil {
@@ -199,7 +193,7 @@ func DeleteHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerCo
 			return
 		}
 
-		tx := NewStoreTx(r.Context(), siteContext)
+		tx := NewCollectionTx(r.Context(), siteContext)
 		defer tx.Rollback()
 		model, row, herr := store.get(r.Context(), tx, id, siteContext)
 		if herr != nil || model == nil {
@@ -236,7 +230,7 @@ func DeleteHandler[R, M, Q any](controlDB *db.ControlDB, config *config.ServerCo
 // ////
 
 // SiteContextFor is the request's site context when its identity can do every action on the store; otherwise it writes the error and is nil
-func SiteContextFor(w http.ResponseWriter, r *http.Request, storeName string, actions ...Action) *httputils.SiteContext {
+func SiteContextFor(w http.ResponseWriter, r *http.Request, collectionName string, actions ...Action) *httputils.SiteContext {
 	siteContext := httputils.GetSiteContext(r.Context())
 	if siteContext == nil {
 		slog.Error("site context is nil")
@@ -244,7 +238,7 @@ func SiteContextFor(w http.ResponseWriter, r *http.Request, storeName string, ac
 		return nil
 	}
 	for _, action := range actions {
-		if !HasPermission(storeName, action, siteContext.IdentityModel) {
+		if !HasPermission(collectionName, action, siteContext.IdentityModel) {
 			apiutils.ErrForbidden.Write(siteContext.AcceptType, w)
 			return nil
 		}

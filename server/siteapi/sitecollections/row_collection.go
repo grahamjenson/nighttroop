@@ -1,4 +1,4 @@
-package siteapiutils
+package sitecollections
 
 import (
 	"context"

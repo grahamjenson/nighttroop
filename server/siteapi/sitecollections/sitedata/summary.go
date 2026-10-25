@@ -1,4 +1,4 @@
-package sitesummary
+package sitedata
 
 import (
 	"context"
@@ -42,7 +42,7 @@ func GetSummaryHandler(controlDB *db.ControlDB, config *config.ServerConfig) htt
 			hours = *query.Hours
 		}
 
-		tx := siteapiutils.NewStoreTx(r.Context(), siteContext)
+		tx := siteapiutils.NewCollectionTx(r.Context(), siteContext)
 		defer tx.Rollback()
 		summary, herr := getSummary(r.Context(), tx, hours, siteContext)
 		if herr = tx.Finish(herr); herr != nil {
@@ -53,7 +53,7 @@ func GetSummaryHandler(controlDB *db.ControlDB, config *config.ServerConfig) htt
 	}
 }
 
-func getSummary(ctx context.Context, tx *siteapiutils.StoreTx, hours int64, siteContext *httputils.SiteContext) (*sitemodels.Summary, *apiutils.HTTPError) {
+func getSummary(ctx context.Context, tx *siteapiutils.CollectionTx, hours int64, siteContext *httputils.SiteContext) (*sitemodels.Summary, *apiutils.HTTPError) {
 	q, err := tx.Site()
 	if err != nil {
 		return nil, apiutils.ErrInternalServerError

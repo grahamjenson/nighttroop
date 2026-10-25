@@ -11,30 +11,30 @@ import (
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
-	"nighttroop.t1d.nz/server/siteapi/sitequery"
+	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-type ComponentEventsStore struct{}
+type ComponentEventsCollection struct{}
 
 // ////
 // Shared
 // ////
-func (s *ComponentEventsStore) GetName() string {
+func (s *ComponentEventsCollection) GetName() string {
 	return "component_events"
 }
 
 // ////
 // CREATE
 // ////
-func (s *ComponentEventsStore) CreateRow(ctx context.Context, q *sitedb.Queries, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteComponentEvent) (*sitedb.ComponentEvent, error) {
+func (s *ComponentEventsCollection) CreateRow(ctx context.Context, q *sitedb.Queries, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteComponentEvent) (*sitedb.ComponentEvent, error) {
 	if herr := checkComponentEventType(model.EventType); herr != nil {
 		return nil, herr
 	}
 	return q.CreateComponentEvent(ctx, sitemodels.ComponentEventToCreate(model, siteContext))
 }
 
-func (s *ComponentEventsStore) CreateHTMXResponse(model *sitemodels.SiteComponentEvent) templ.Component {
+func (s *ComponentEventsCollection) CreateHTMXResponse(model *sitemodels.SiteComponentEvent) templ.Component {
 	return site_data_templ.ComponentEventCreated(model)
 }
 
@@ -43,7 +43,7 @@ func (s *ComponentEventsStore) CreateHTMXResponse(model *sitemodels.SiteComponen
 // ////
 
 // UpdateRow changes the fields sent; anything not sent stays as it is
-func (s *ComponentEventsStore) UpdateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteComponentEvent, model *sitemodels.SiteComponentEvent) (*sitedb.ComponentEvent, error) {
+func (s *ComponentEventsCollection) UpdateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteComponentEvent, model *sitemodels.SiteComponentEvent) (*sitedb.ComponentEvent, error) {
 	if model.EventType != "" {
 		if herr := checkComponentEventType(model.EventType); herr != nil {
 			return nil, herr
@@ -53,24 +53,24 @@ func (s *ComponentEventsStore) UpdateRow(ctx context.Context, q *sitedb.Queries,
 	return q.UpdateComponentEvent(ctx, sitemodels.ComponentEventToUpdate(model, siteContext))
 }
 
-func (s *ComponentEventsStore) UpdateHTMXResponse(model *sitemodels.SiteComponentEvent) templ.Component {
+func (s *ComponentEventsCollection) UpdateHTMXResponse(model *sitemodels.SiteComponentEvent) templ.Component {
 	return site_data_templ.ComponentEventUpdated(model)
 }
 
 // ////
 // Get Model
 // /////
-func (s *ComponentEventsStore) GetRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) (*sitedb.ComponentEvent, error) {
+func (s *ComponentEventsCollection) GetRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) (*sitedb.ComponentEvent, error) {
 	return q.GetComponentEvent(ctx, sitedb.GetComponentEventParams{ID: id})
 }
 
 // ToModel is the site model of a row
-func (s *ComponentEventsStore) ToModel(row *sitedb.ComponentEvent, siteContext *httputils.SiteContext) *sitemodels.SiteComponentEvent {
+func (s *ComponentEventsCollection) ToModel(row *sitedb.ComponentEvent, siteContext *httputils.SiteContext) *sitemodels.SiteComponentEvent {
 	return sitemodels.ComponentEventFromDB(row)
 }
 
 // GetHTMXResponse is the component event's details, shown in a modal
-func (s *ComponentEventsStore) GetHTMXResponse(model *sitemodels.SiteComponentEvent) templ.Component {
+func (s *ComponentEventsCollection) GetHTMXResponse(model *sitemodels.SiteComponentEvent) templ.Component {
 	return site_data_templ.ComponentEventModal(model)
 }
 
@@ -78,11 +78,11 @@ func (s *ComponentEventsStore) GetHTMXResponse(model *sitemodels.SiteComponentEv
 // Search Models
 // ///
 
-func (s *ComponentEventsStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.ComponentEvent, error) {
-	return q.AllComponentEvents(ctx, sitequery.QueryToAllComponentEvents(query))
+func (s *ComponentEventsCollection) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.ComponentEvent, error) {
+	return q.AllComponentEvents(ctx, siteapiutils.QueryToAllComponentEvents(query))
 }
 
-func (s *ComponentEventsStore) SearchHTMXResponse(models []*sitemodels.SiteComponentEvent, query *apiutils.Query) templ.Component {
+func (s *ComponentEventsCollection) SearchHTMXResponse(models []*sitemodels.SiteComponentEvent, query *apiutils.Query) templ.Component {
 	return site_data_templ.ComponentEventsTable(models, query.Skip, query.Limit)
 }
 
@@ -91,7 +91,7 @@ func (s *ComponentEventsStore) SearchHTMXResponse(models []*sitemodels.SiteCompo
 // ///
 
 // DeleteRow soft deletes, like the Nightscout API, so syncing clients see the delete
-func (s *ComponentEventsStore) DeleteRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) error {
+func (s *ComponentEventsCollection) DeleteRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) error {
 	_, err := q.SoftDeleteComponentEvent(ctx, sitedb.SoftDeleteComponentEventParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
 		ID:                    id,
@@ -99,7 +99,7 @@ func (s *ComponentEventsStore) DeleteRow(ctx context.Context, q *sitedb.Queries,
 	return err
 }
 
-func (s *ComponentEventsStore) DeleteHTMXResponse(model *sitemodels.SiteComponentEvent) templ.Component {
+func (s *ComponentEventsCollection) DeleteHTMXResponse(model *sitemodels.SiteComponentEvent) templ.Component {
 	return site_data_templ.ComponentEventDeleted()
 }
 
