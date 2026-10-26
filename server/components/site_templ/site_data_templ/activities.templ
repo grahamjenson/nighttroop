@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/field"
+	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
@@ -78,7 +80,7 @@ templ ActivitiesTable(activities []*sitemodels.SiteActivity, skip int64, limit i
 templ activityCreateForm() {
 	<form
 		id="site--activity--create"
-		class="mb-4 flex items-center justify-end gap-2"
+		class="mb-4 flex items-end justify-end gap-2"
 		hx-post="/data/activities"
 		hx-target="#activitiesTable tbody"
 		hx-swap="afterbegin"
@@ -94,10 +96,10 @@ templ activityCreateForm() {
 }
 
 templ activityInputs(id string, name string, duration string, notes string) {
-	<div class="w-40">
+	@field.Field(id+"--name", "Name", "w-40") {
 		@input.Input(input.Props{ID: id + "--name", Name: "name", Placeholder: "Name", Value: name, Required: true, Attributes: templ.Attributes{"maxlength": "64"}})
-	</div>
-	<div class="w-28">
+	}
+	@field.Field(id+"--duration", "Duration (min)", "w-28") {
 		@input.Input(input.Props{
 			ID:          id + "--duration",
 			Type:        input.TypeNumber,
@@ -106,10 +108,10 @@ templ activityInputs(id string, name string, duration string, notes string) {
 			Value:       duration,
 			Attributes:  templ.Attributes{"step": "1", "min": "1", "max": "1440"},
 		})
-	</div>
-	<div class="w-64">
+	}
+	@field.Field(id+"--notes", "Notes", "w-64") {
 		@input.Input(input.Props{ID: id + "--notes", Name: "notes", Placeholder: "Notes", Value: notes})
-	</div>
+	}
 }
 
 // activityRow opens the activity's details when clicked. The delete button stops its click reaching the row.
@@ -168,58 +170,40 @@ templ activityRow(activity *sitemodels.SiteActivity) {
 }
 
 templ ActivityModal(activity *sitemodels.SiteActivity) {
-	<div id="site--activity--details" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-		<div class="w-full max-w-2xl rounded-lg bg-white p-6 shadow-lg">
-			<h2 class="text-lg font-semibold">{ fmt.Sprintf("%s: %s", activity.ActivityType, orDash(activity.Name)) }</h2>
-			<p class="text-sm text-gray-500">{ formatReadingDate(activity.OccurredAt) }</p>
-			<form
-				id="site--activity--edit"
-				class="mt-4 flex items-center gap-2"
-				hx-post={ "/data/activities/" + activity.ID }
-				hx-target={ "#site--activity--" + activity.ID }
-				hx-swap="outerHTML"
-				hx-status:4xx="target:#toaster swap:beforeend"
-				hx-status:5xx="target:#toaster swap:beforeend"
-			>
-				@activityInputs("site--activity--edit", orEmpty(activity.Name), numberOrEmpty(activity.DurationMinutes), orEmpty(activity.Notes))
-				@button.Button(button.Props{ID: "site--activity--edit--submit", Type: button.TypeSubmit}) {
-					Save
-				}
-			</form>
-			<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-				@readingDetail("ID", activity.ID)
-				@readingDetail("Minutes", orDash(activity.DurationMinutes))
-				@readingDetail("Calories", orDash(activity.Calories))
-				@readingDetail("Steps", orDash(activity.Steps))
-				@readingDetail("Heart Rate", orDash(activity.HeartRate))
-				@readingDetail("Notes", orDash(activity.Notes))
-				@readingDetail("Reason", orDash(activity.Reason))
-				@readingDetail("UTC Offset (minutes)", orDash(activity.UtcOffsetMinutes))
-				@readingDetail("App", orDash(activity.CreatedByAppName))
-				@readingDetail("Device", orDash(activity.CreatedByDeviceName))
-				@readingDetail("Created By", activity.CreatedByIdentityName)
-				@readingDetail("Created", formatReadingDate(activity.CreatedAt))
-				@readingDetail("Updated", formatReadingDate(activity.UpdatedAt))
-				@readingDetail("Updated By", orDash(activity.UpdatedByIdentityName))
-			</dl>
-			if activity.RawJsonData != nil {
-				<pre class="mt-4 max-h-48 overflow-auto rounded bg-gray-50 p-2 text-xs">{ *activity.RawJsonData }</pre>
+	@modal.Modal(modal.Props{ID: "site--activity--details", Title: fmt.Sprintf("%s: %s", activity.ActivityType, orDash(activity.Name)), Subtitle: formatReadingDate(activity.OccurredAt)}) {
+		<form
+			id="site--activity--edit"
+			class="mt-4 flex items-end gap-2"
+			hx-post={ "/data/activities/" + activity.ID }
+			hx-target={ "#site--activity--" + activity.ID }
+			hx-swap="outerHTML"
+			hx-status:4xx="target:#toaster swap:beforeend"
+			hx-status:5xx="target:#toaster swap:beforeend"
+		>
+			@activityInputs("site--activity--edit", orEmpty(activity.Name), numberOrEmpty(activity.DurationMinutes), orEmpty(activity.Notes))
+			@button.Button(button.Props{ID: "site--activity--edit--submit", Type: button.TypeSubmit}) {
+				Save
 			}
-			<div class="mt-4 flex justify-end">
-				@button.Button(button.Props{
-					ID:      "site--activity--details--close",
-					Variant: button.VariantOutline,
-					Attributes: templ.Attributes{
-						"hx-get":    "/empty",
-						"hx-target": "#modal-container",
-						"hx-swap":   "innerHTML",
-					},
-				}) {
-					Close
-				}
-			</div>
-		</div>
-	</div>
+		</form>
+		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+			@readingDetail("Minutes", orDash(activity.DurationMinutes))
+			@readingDetail("Calories", orDash(activity.Calories))
+			@readingDetail("Steps", orDash(activity.Steps))
+			@readingDetail("Heart Rate", orDash(activity.HeartRate))
+			@readingDetail("Notes", orDash(activity.Notes))
+			@readingDetail("Reason", orDash(activity.Reason))
+			@modal.Section("Record")
+			@readingDetail("ID", activity.ID)
+			@readingDetail("UTC Offset (minutes)", orDash(activity.UtcOffsetMinutes))
+			@readingDetail("App", orDash(activity.CreatedByAppName))
+			@readingDetail("Device", orDash(activity.CreatedByDeviceName))
+			@readingDetail("Created By", activity.CreatedByIdentityName)
+			@readingDetail("Created", formatReadingDate(activity.CreatedAt))
+			@readingDetail("Updated", formatReadingDate(activity.UpdatedAt))
+			@readingDetail("Updated By", orDash(activity.UpdatedByIdentityName))
+		</dl>
+		@modal.RawJSON("site--activity--details--raw", activity.RawJsonData)
+	}
 }
 
 templ ActivityCreated(activity *sitemodels.SiteActivity) {

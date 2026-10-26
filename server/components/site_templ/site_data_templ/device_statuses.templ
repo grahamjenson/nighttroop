@@ -5,6 +5,7 @@ import (
 	"net/url"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
@@ -211,47 +212,29 @@ templ deviceStatusRow(status *sitemodels.SiteDeviceStatus) {
 }
 
 templ DeviceStatusModal(status *sitemodels.SiteDeviceStatus) {
-	<div id="site--device-status--details" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-		<div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-lg">
-			<h2 class="text-lg font-semibold">{ orDash(status.CreatedByDeviceName) }</h2>
-			<p class="text-sm text-gray-500">{ formatReadingDate(status.OccurredAt) }</p>
-			<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-				@readingDetail("ID", status.ID)
-				@readingDetail("Phone Battery", withUnit(status.DeviceBatteryPercent, "%"))
-				@readingDetail("Phone Charging", orDash(status.IsDeviceCharging))
-				@readingDetail("Pump State", orDash(status.PumpState))
-				@readingDetail("Pump Reservoir", withUnit(status.PumpReservoir, " U"))
-				@readingDetail("Pump Battery", withUnit(status.PumpBatteryPercent, "%"))
-				@readingDetail("Pump Charging", orDash(status.PumpChargingState))
-				@readingDetail("Loop", orDash(status.LoopName))
-				@readingDetail("IOB", withUnit(status.LoopIob, " U"))
-				@readingDetail("Basal IOB", withUnit(status.LoopIobBasal, " U"))
-				@readingDetail("Bolus IOB", withUnit(status.LoopIobTreatment, " U"))
-				@readingDetail("COB", withUnit(status.LoopCob, " g"))
-				@readingDetail("UTC Offset (minutes)", orDash(status.UtcOffsetMinutes))
-				@readingDetail("App", orDash(status.CreatedByAppName))
-				@readingDetail("Created By", status.CreatedByIdentityName)
-				@readingDetail("Created", formatReadingDate(status.CreatedAt))
-				@readingDetail("Updated", formatReadingDate(status.UpdatedAt))
-			</dl>
-			if status.RawJsonData != nil {
-				<pre class="mt-4 max-h-48 overflow-auto rounded bg-gray-50 p-2 text-xs">{ *status.RawJsonData }</pre>
-			}
-			<div class="mt-4 flex justify-end">
-				@button.Button(button.Props{
-					ID:      "site--device-status--details--close",
-					Variant: button.VariantOutline,
-					Attributes: templ.Attributes{
-						"hx-get":    "/empty",
-						"hx-target": "#modal-container",
-						"hx-swap":   "innerHTML",
-					},
-				}) {
-					Close
-				}
-			</div>
-		</div>
-	</div>
+	@modal.Modal(modal.Props{ID: "site--device-status--details", Title: orDash(status.CreatedByDeviceName), Subtitle: formatReadingDate(status.OccurredAt)}) {
+		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+			@readingDetail("Phone Battery", withUnit(status.DeviceBatteryPercent, "%"))
+			@readingDetail("Phone Charging", orDash(status.IsDeviceCharging))
+			@readingDetail("Pump State", orDash(status.PumpState))
+			@readingDetail("Pump Reservoir", withUnit(status.PumpReservoir, " U"))
+			@readingDetail("Pump Battery", withUnit(status.PumpBatteryPercent, "%"))
+			@readingDetail("Pump Charging", orDash(status.PumpChargingState))
+			@readingDetail("Loop", orDash(status.LoopName))
+			@readingDetail("IOB", withUnit(status.LoopIob, " U"))
+			@readingDetail("Basal IOB", withUnit(status.LoopIobBasal, " U"))
+			@readingDetail("Bolus IOB", withUnit(status.LoopIobTreatment, " U"))
+			@readingDetail("COB", withUnit(status.LoopCob, " g"))
+			@modal.Section("Record")
+			@readingDetail("ID", status.ID)
+			@readingDetail("UTC Offset (minutes)", orDash(status.UtcOffsetMinutes))
+			@readingDetail("App", orDash(status.CreatedByAppName))
+			@readingDetail("Created By", status.CreatedByIdentityName)
+			@readingDetail("Created", formatReadingDate(status.CreatedAt))
+			@readingDetail("Updated", formatReadingDate(status.UpdatedAt))
+		</dl>
+		@modal.RawJSON("site--device-status--details--raw", status.RawJsonData)
+	}
 }
 
 templ DeviceStatusDeleted() {

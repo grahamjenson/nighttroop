@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
@@ -135,61 +136,45 @@ templ profilePresetRow(profile *sitemodels.SiteProfilePreset) {
 
 templ ProfilePresetModal(profile *sitemodels.SiteProfilePreset) {
 	{{ units := orEmpty(profile.Units) }}
-	<div id="presets--profiles--details" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-		<div class="max-h-[90vh] w-full max-w-3xl overflow-auto rounded-lg bg-white p-6 shadow-lg">
-			<h2 class="text-lg font-semibold">{ orDash(profile.Name) }</h2>
-			<p class="text-sm text-gray-500">{ formatDate(profile.OccurredAt) }</p>
-			<form
-				id="presets--profiles--edit"
-				class="mt-4 flex items-center gap-2"
-				hx-post={ "/presets/profiles/" + profile.ID }
-				hx-target={ "#presets--profiles--" + profile.ID }
-				hx-swap="outerHTML"
-				hx-status:4xx="target:#toaster swap:beforeend"
-				hx-status:5xx="target:#toaster swap:beforeend"
-			>
-				<div class="w-64">
-					@input.Input(input.Props{ID: "presets--profiles--edit--name", Name: "name", Placeholder: "Name", Value: orEmpty(profile.Name), Required: true, Attributes: templ.Attributes{"maxlength": "64"}})
-				</div>
-				@button.Button(button.Props{ID: "presets--profiles--edit--submit", Type: button.TypeSubmit}) {
-					Rename
-				}
-			</form>
-			<div id="presets--profiles--schedules" class="mt-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-5">
-				@profileSchedule("Basal (U/h)", profile.BasalRates, scheduleValue)
-				@profileSchedule("Carb Ratio (g/U)", profile.CarbRatios, scheduleValue)
-				@profileSchedule("Sensitivity ("+units+"/U)", profile.Sensitivities, glucoseValue(profile.Units))
-				@profileSchedule("Low Target ("+units+")", profile.LowTargets, glucoseValue(profile.Units))
-				@profileSchedule("High Target ("+units+")", profile.HighTargets, glucoseValue(profile.Units))
+	@modal.Modal(modal.Props{ID: "presets--profiles--details", Title: orDash(profile.Name), Subtitle: formatDate(profile.OccurredAt)}) {
+		<form
+			id="presets--profiles--edit"
+			class="mt-4 flex items-center gap-2"
+			hx-post={ "/presets/profiles/" + profile.ID }
+			hx-target={ "#presets--profiles--" + profile.ID }
+			hx-swap="outerHTML"
+			hx-status:4xx="target:#toaster swap:beforeend"
+			hx-status:5xx="target:#toaster swap:beforeend"
+		>
+			<div class="w-64">
+				@input.Input(input.Props{ID: "presets--profiles--edit--name", Name: "name", Placeholder: "Name", Value: orEmpty(profile.Name), Required: true, Attributes: templ.Attributes{"maxlength": "64"}})
 			</div>
-			<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-				@presetDetail("ID", profile.ID)
-				@presetDetail("Profile Store", profile.ProfileStoreID)
-				@presetDetail("DIA (hours)", orDash(profile.Dia))
-				@presetDetail("Carbs per Hour", orDash(profile.CarbsHr))
-				@presetDetail("Delay", orDash(profile.Delay))
-				@presetDetail("Timezone", orDash(profile.Timezone))
-				@presetDetail("App", orDash(profile.CreatedByAppName))
-				@presetDetail("Device", orDash(profile.CreatedByDeviceName))
-				@presetDetail("Created By", profile.CreatedByIdentityName)
-				@presetDetail("Updated", formatDate(profile.UpdatedAt))
-				@presetDetail("Updated By", orDash(profile.UpdatedByIdentityName))
-			</dl>
-			<div class="mt-4 flex justify-end">
-				@button.Button(button.Props{
-					ID:      "presets--profiles--details--close",
-					Variant: button.VariantOutline,
-					Attributes: templ.Attributes{
-						"hx-get":    "/empty",
-						"hx-target": "#modal-container",
-						"hx-swap":   "innerHTML",
-					},
-				}) {
-					Close
-				}
-			</div>
+			@button.Button(button.Props{ID: "presets--profiles--edit--submit", Type: button.TypeSubmit}) {
+				Rename
+			}
+		</form>
+		<div id="presets--profiles--schedules" class="mt-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-5">
+			@profileSchedule("Basal (U/h)", profile.BasalRates, scheduleValue)
+			@profileSchedule("Carb Ratio (g/U)", profile.CarbRatios, scheduleValue)
+			@profileSchedule("Sensitivity ("+units+"/U)", profile.Sensitivities, glucoseValue(profile.Units))
+			@profileSchedule("Low Target ("+units+")", profile.LowTargets, glucoseValue(profile.Units))
+			@profileSchedule("High Target ("+units+")", profile.HighTargets, glucoseValue(profile.Units))
 		</div>
-	</div>
+		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+			@presetDetail("Profile Store", profile.ProfileStoreID)
+			@presetDetail("DIA (hours)", orDash(profile.Dia))
+			@presetDetail("Carbs per Hour", orDash(profile.CarbsHr))
+			@presetDetail("Delay", orDash(profile.Delay))
+			@presetDetail("Timezone", orDash(profile.Timezone))
+			@modal.Section("Record")
+			@presetDetail("ID", profile.ID)
+			@presetDetail("App", orDash(profile.CreatedByAppName))
+			@presetDetail("Device", orDash(profile.CreatedByDeviceName))
+			@presetDetail("Created By", profile.CreatedByIdentityName)
+			@presetDetail("Updated", formatDate(profile.UpdatedAt))
+			@presetDetail("Updated By", orDash(profile.UpdatedByIdentityName))
+		</dl>
+	}
 }
 
 // profileSchedule lists a schedule's values from each time of day

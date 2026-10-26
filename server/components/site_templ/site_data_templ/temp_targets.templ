@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/field"
+	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
@@ -70,7 +72,7 @@ templ TempTargetsTable(tempTargets []*sitemodels.SiteTempTarget, skip int64, lim
 templ tempTargetCreateForm() {
 	<form
 		id="site--temp-target--create"
-		class="mb-4 flex items-center justify-end gap-2"
+		class="mb-4 flex items-end justify-end gap-2"
 		hx-post="/data/temp-targets"
 		hx-target="#tempTargetsTable tbody"
 		hx-swap="afterbegin"
@@ -86,7 +88,7 @@ templ tempTargetCreateForm() {
 }
 
 templ tempTargetInputs(id string, low string, high string, duration string, notes string) {
-	<div class="w-32">
+	@field.Field(id+"--low", "Low ("+string(*glucoseUnits(ctx))+")", "w-32") {
 		@input.Input(input.Props{
 			ID:          id + "--low",
 			Type:        input.TypeNumber,
@@ -96,8 +98,8 @@ templ tempTargetInputs(id string, low string, high string, duration string, note
 			Required:    true,
 			Attributes:  glucoseInputAttributes(ctx),
 		})
-	</div>
-	<div class="w-32">
+	}
+	@field.Field(id+"--high", "High ("+string(*glucoseUnits(ctx))+")", "w-32") {
 		@input.Input(input.Props{
 			ID:          id + "--high",
 			Type:        input.TypeNumber,
@@ -107,8 +109,8 @@ templ tempTargetInputs(id string, low string, high string, duration string, note
 			Required:    true,
 			Attributes:  glucoseInputAttributes(ctx),
 		})
-	</div>
-	<div class="w-28">
+	}
+	@field.Field(id+"--duration", "Duration (min)", "w-28") {
 		@input.Input(input.Props{
 			ID:          id + "--duration",
 			Type:        input.TypeNumber,
@@ -118,10 +120,10 @@ templ tempTargetInputs(id string, low string, high string, duration string, note
 			Required:    true,
 			Attributes:  templ.Attributes{"step": "1", "min": "1", "max": "10080"},
 		})
-	</div>
-	<div class="w-64">
+	}
+	@field.Field(id+"--notes", "Notes", "w-64") {
 		@input.Input(input.Props{ID: id + "--notes", Name: "notes", Placeholder: "Notes", Value: notes})
-	</div>
+	}
 }
 
 // tempTargetRow opens the temp target's details when clicked. The delete button stops its click reaching the row.
@@ -180,55 +182,37 @@ templ tempTargetRow(tempTarget *sitemodels.SiteTempTarget) {
 }
 
 templ TempTargetModal(tempTarget *sitemodels.SiteTempTarget) {
-	<div id="site--temp-target--details" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-		<div class="w-full max-w-2xl rounded-lg bg-white p-6 shadow-lg">
-			<h2 class="text-lg font-semibold">{ fmt.Sprintf("%s to %s %s for %d minutes", formatGlucose(tempTarget.LowTarget, tempTarget.Units), formatGlucose(tempTarget.HighTarget, tempTarget.Units), orDash(tempTarget.Units), tempTarget.DurationMinutes) }</h2>
-			<p class="text-sm text-gray-500">{ formatReadingDate(tempTarget.OccurredAt) }</p>
-			<form
-				id="site--temp-target--edit"
-				class="mt-4 flex items-center gap-2"
-				hx-post={ "/data/temp-targets/" + tempTarget.ID }
-				hx-target={ "#site--temp-target--" + tempTarget.ID }
-				hx-swap="outerHTML"
-				hx-status:4xx="target:#toaster swap:beforeend"
-				hx-status:5xx="target:#toaster swap:beforeend"
-			>
-				@tempTargetInputs("site--temp-target--edit", fmt.Sprint(tempTarget.LowTarget), fmt.Sprint(tempTarget.HighTarget), fmt.Sprint(tempTarget.DurationMinutes), orEmpty(tempTarget.Notes))
-				@button.Button(button.Props{ID: "site--temp-target--edit--submit", Type: button.TypeSubmit}) {
-					Save
-				}
-			</form>
-			<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-				@readingDetail("ID", tempTarget.ID)
-				@readingDetail("Insulin Needs Scale Factor", orDash(tempTarget.InsulinNeedsScaleFactor))
-				@readingDetail("Notes", orDash(tempTarget.Notes))
-				@readingDetail("Reason", orDash(tempTarget.Reason))
-				@readingDetail("UTC Offset (minutes)", orDash(tempTarget.UtcOffsetMinutes))
-				@readingDetail("App", orDash(tempTarget.CreatedByAppName))
-				@readingDetail("Device", orDash(tempTarget.CreatedByDeviceName))
-				@readingDetail("Created By", tempTarget.CreatedByIdentityName)
-				@readingDetail("Created", formatReadingDate(tempTarget.CreatedAt))
-				@readingDetail("Updated", formatReadingDate(tempTarget.UpdatedAt))
-				@readingDetail("Updated By", orDash(tempTarget.UpdatedByIdentityName))
-			</dl>
-			if tempTarget.RawJsonData != nil {
-				<pre class="mt-4 max-h-48 overflow-auto rounded bg-gray-50 p-2 text-xs">{ *tempTarget.RawJsonData }</pre>
+	@modal.Modal(modal.Props{ID: "site--temp-target--details", Title: fmt.Sprintf("%s to %s %s for %d minutes", formatGlucose(tempTarget.LowTarget, tempTarget.Units), formatGlucose(tempTarget.HighTarget, tempTarget.Units), orDash(tempTarget.Units), tempTarget.DurationMinutes), Subtitle: formatReadingDate(tempTarget.OccurredAt)}) {
+		<form
+			id="site--temp-target--edit"
+			class="mt-4 flex items-end gap-2"
+			hx-post={ "/data/temp-targets/" + tempTarget.ID }
+			hx-target={ "#site--temp-target--" + tempTarget.ID }
+			hx-swap="outerHTML"
+			hx-status:4xx="target:#toaster swap:beforeend"
+			hx-status:5xx="target:#toaster swap:beforeend"
+		>
+			@tempTargetInputs("site--temp-target--edit", fmt.Sprint(tempTarget.LowTarget), fmt.Sprint(tempTarget.HighTarget), fmt.Sprint(tempTarget.DurationMinutes), orEmpty(tempTarget.Notes))
+			@button.Button(button.Props{ID: "site--temp-target--edit--submit", Type: button.TypeSubmit}) {
+				Save
 			}
-			<div class="mt-4 flex justify-end">
-				@button.Button(button.Props{
-					ID:      "site--temp-target--details--close",
-					Variant: button.VariantOutline,
-					Attributes: templ.Attributes{
-						"hx-get":    "/empty",
-						"hx-target": "#modal-container",
-						"hx-swap":   "innerHTML",
-					},
-				}) {
-					Close
-				}
-			</div>
-		</div>
-	</div>
+		</form>
+		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+			@readingDetail("Insulin Needs Scale Factor", orDash(tempTarget.InsulinNeedsScaleFactor))
+			@readingDetail("Notes", orDash(tempTarget.Notes))
+			@readingDetail("Reason", orDash(tempTarget.Reason))
+			@modal.Section("Record")
+			@readingDetail("ID", tempTarget.ID)
+			@readingDetail("UTC Offset (minutes)", orDash(tempTarget.UtcOffsetMinutes))
+			@readingDetail("App", orDash(tempTarget.CreatedByAppName))
+			@readingDetail("Device", orDash(tempTarget.CreatedByDeviceName))
+			@readingDetail("Created By", tempTarget.CreatedByIdentityName)
+			@readingDetail("Created", formatReadingDate(tempTarget.CreatedAt))
+			@readingDetail("Updated", formatReadingDate(tempTarget.UpdatedAt))
+			@readingDetail("Updated By", orDash(tempTarget.UpdatedByIdentityName))
+		</dl>
+		@modal.RawJSON("site--temp-target--details--raw", tempTarget.RawJsonData)
+	}
 }
 
 templ TempTargetCreated(tempTarget *sitemodels.SiteTempTarget) {
