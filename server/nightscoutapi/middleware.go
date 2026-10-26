@@ -95,7 +95,7 @@ func jwtIdentity(config *config.ServerConfig, ctx context.Context, jwttokenStr s
 	}
 	identity, err := GetSiteIdentity(ctx, subdomain, identityName, consts.IdentityRole(role))
 	if err != nil {
-		slog.Error("Bad JWT token cant find identity", "error", err)
+		slog.Warn("Bad JWT token cant find identity", "error", err)
 		return nil, fmt.Errorf("identity not found: %w", err)
 	}
 	return identity, nil

@@ -71,7 +71,7 @@ func Create(store nsutils.Store) http.HandlerFunc {
 		case []any:
 			arrayOfModels = typed
 		default:
-			slog.Error("Collection Create JSON type error", "type", typed)
+			slog.Info("Collection Create JSON type error", "type", typed)
 			nsutils.WriteError(w, nsutils.BadDataBodyError)
 			return
 		}
