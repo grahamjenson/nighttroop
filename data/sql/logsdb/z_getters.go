@@ -72,6 +72,16 @@ func (m *Event) SetSiteID(v *string) {
 	m.SiteID = v
 }
 
+// GetBatch returns the Batch value.
+func (m Event) GetBatch() *string {
+	return m.Batch
+}
+
+// SetBatch sets the Batch value and returns the updated Event.
+func (m *Event) SetBatch(v *string) {
+	m.Batch = v
+}
+
 // GetName returns the Name value.
 func (m Event) GetName() string {
 	return m.Name
@@ -220,6 +230,16 @@ func (m InsertEventParams) GetSiteID() *string {
 // SetSiteID sets the SiteID value and returns the updated InsertEventParams.
 func (m *InsertEventParams) SetSiteID(v *string) {
 	m.SiteID = v
+}
+
+// GetBatch returns the Batch value.
+func (m InsertEventParams) GetBatch() *string {
+	return m.Batch
+}
+
+// SetBatch sets the Batch value and returns the updated InsertEventParams.
+func (m *InsertEventParams) SetBatch(v *string) {
+	m.Batch = v
 }
 
 // GetName returns the Name value.
@@ -380,6 +400,116 @@ func (m SearchErrorsParams) GetLimit() int64 {
 // SetLimit sets the Limit value and returns the updated SearchErrorsParams.
 func (m *SearchErrorsParams) SetLimit(v int64) {
 	m.Limit = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m SearchSiteEventsParams) GetSiteID() *string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated SearchSiteEventsParams.
+func (m *SearchSiteEventsParams) SetSiteID(v *string) {
+	m.SiteID = v
+}
+
+// GetBatch returns the Batch value.
+func (m SearchSiteEventsParams) GetBatch() *string {
+	return m.Batch
+}
+
+// SetBatch sets the Batch value and returns the updated SearchSiteEventsParams.
+func (m *SearchSiteEventsParams) SetBatch(v *string) {
+	m.Batch = v
+}
+
+// GetSkip returns the Skip value.
+func (m SearchSiteEventsParams) GetSkip() int64 {
+	return m.Skip
+}
+
+// SetSkip sets the Skip value and returns the updated SearchSiteEventsParams.
+func (m *SearchSiteEventsParams) SetSkip(v int64) {
+	m.Skip = v
+}
+
+// GetLimit returns the Limit value.
+func (m SearchSiteEventsParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated SearchSiteEventsParams.
+func (m *SearchSiteEventsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
+// GetID returns the ID value.
+func (m GetSiteEventParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated GetSiteEventParams.
+func (m *GetSiteEventParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m GetSiteEventParams) GetSiteID() *string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated GetSiteEventParams.
+func (m *GetSiteEventParams) SetSiteID(v *string) {
+	m.SiteID = v
+}
+
+// GetBatch returns the Batch value.
+func (m GetSiteEventParams) GetBatch() *string {
+	return m.Batch
+}
+
+// SetBatch sets the Batch value and returns the updated GetSiteEventParams.
+func (m *GetSiteEventParams) SetBatch(v *string) {
+	m.Batch = v
+}
+
+// GetID returns the ID value.
+func (m GetSiteLogParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated GetSiteLogParams.
+func (m *GetSiteLogParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m GetSiteLogParams) GetSiteID() *string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated GetSiteLogParams.
+func (m *GetSiteLogParams) SetSiteID(v *string) {
+	m.SiteID = v
+}
+
+// GetID returns the ID value.
+func (m GetSiteErrorParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated GetSiteErrorParams.
+func (m *GetSiteErrorParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m GetSiteErrorParams) GetSiteID() *string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated GetSiteErrorParams.
+func (m *GetSiteErrorParams) SetSiteID(v *string) {
+	m.SiteID = v
 }
 
 // GetKeep returns the Keep value.

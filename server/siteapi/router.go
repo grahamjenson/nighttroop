@@ -46,8 +46,8 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 			r.Post("/settings/"+route, store.Collection("settings", route).Update)
 		}
 
-		// The site's collections, each at its route in its section: data, settings or presets
-		for _, section := range []string{"data", "settings", "presets"} {
+		// The site's collections, each at its route in its section: data, settings, presets or logs
+		for _, section := range []string{"data", "settings", "presets", "logs"} {
 			routes := store.Section(section)
 			r.Get("/"+section+"/{collection}", routes.Search)
 			r.Get("/"+section+"/{collection}/{id}", routes.Get)

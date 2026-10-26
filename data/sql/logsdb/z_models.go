@@ -15,6 +15,7 @@ type Error struct {
 type Event struct {
 	ID         int64
 	SiteID     *string
+	Batch      *string
 	Name       string
 	Attributes *string
 	StartedAt  int64

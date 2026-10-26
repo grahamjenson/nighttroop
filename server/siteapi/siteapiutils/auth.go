@@ -16,8 +16,12 @@ const (
 	ActionDelete Action = "delete"
 )
 
-// adminStores change who can use the site and where its data comes from, so only admins touch them
-var adminStores = map[string]bool{"identities": true, "sync_settings": true, "site_settings": true}
+// adminStores change who can use the site and where its data comes from, or show how the server is running it, so
+// only admins touch them
+var adminStores = map[string]bool{
+	"identities": true, "sync_settings": true, "site_settings": true,
+	"site_events": true, "site_errors": true, "site_logs": true,
+}
 
 // ownSettingsStore is the signed in identity's own settings, which any identity may read and change
 const ownSettingsStore = "identity_settings"

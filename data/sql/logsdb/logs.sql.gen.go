@@ -10,6 +10,77 @@ import (
 	"database/sql"
 )
 
+const getSiteError = `-- name: GetSiteError :one
+SELECT id, site_id, message, attributes, created_at FROM errors WHERE id = ?1 AND site_id = ?2
+`
+
+type GetSiteErrorParams struct {
+	ID     int64
+	SiteID *string
+}
+
+func (q *Queries) GetSiteError(ctx context.Context, arg GetSiteErrorParams) (*Error, error) {
+	row := q.queryRow(ctx, q.getSiteErrorStmt, getSiteError, arg.ID, arg.SiteID)
+	var i Error
+	err := row.Scan(
+		&i.ID,
+		&i.SiteID,
+		&i.Message,
+		&i.Attributes,
+		&i.CreatedAt,
+	)
+	return &i, err
+}
+
+const getSiteEvent = `-- name: GetSiteEvent :one
+SELECT id, site_id, batch, name, attributes, started_at, finished_at FROM events
+WHERE id = ?1 AND (site_id = ?2 OR (site_id IS NULL AND batch = ?3))
+`
+
+type GetSiteEventParams struct {
+	ID     int64
+	SiteID *string
+	Batch  *string
+}
+
+func (q *Queries) GetSiteEvent(ctx context.Context, arg GetSiteEventParams) (*Event, error) {
+	row := q.queryRow(ctx, q.getSiteEventStmt, getSiteEvent, arg.ID, arg.SiteID, arg.Batch)
+	var i Event
+	err := row.Scan(
+		&i.ID,
+		&i.SiteID,
+		&i.Batch,
+		&i.Name,
+		&i.Attributes,
+		&i.StartedAt,
+		&i.FinishedAt,
+	)
+	return &i, err
+}
+
+const getSiteLog = `-- name: GetSiteLog :one
+SELECT id, site_id, level, message, attributes, created_at FROM logs WHERE id = ?1 AND site_id = ?2
+`
+
+type GetSiteLogParams struct {
+	ID     int64
+	SiteID *string
+}
+
+func (q *Queries) GetSiteLog(ctx context.Context, arg GetSiteLogParams) (*Log, error) {
+	row := q.queryRow(ctx, q.getSiteLogStmt, getSiteLog, arg.ID, arg.SiteID)
+	var i Log
+	err := row.Scan(
+		&i.ID,
+		&i.SiteID,
+		&i.Level,
+		&i.Message,
+		&i.Attributes,
+		&i.CreatedAt,
+	)
+	return &i, err
+}
+
 const insertError = `-- name: InsertError :exec
 INSERT INTO errors (site_id, message, attributes) VALUES (?, ?, ?)
 `
@@ -26,11 +97,12 @@ func (q *Queries) InsertError(ctx context.Context, arg InsertErrorParams) error 
 }
 
 const insertEvent = `-- name: InsertEvent :exec
-INSERT INTO events (site_id, name, attributes, started_at, finished_at) VALUES (?, ?, ?, ?, ?)
+INSERT INTO events (site_id, batch, name, attributes, started_at, finished_at) VALUES (?, ?, ?, ?, ?, ?)
 `
 
 type InsertEventParams struct {
 	SiteID     *string
+	Batch      *string
 	Name       string
 	Attributes *string
 	StartedAt  int64
@@ -40,6 +112,7 @@ type InsertEventParams struct {
 func (q *Queries) InsertEvent(ctx context.Context, arg InsertEventParams) error {
 	_, err := q.exec(ctx, q.insertEventStmt, insertEvent,
 		arg.SiteID,
+		arg.Batch,
 		arg.Name,
 		arg.Attributes,
 		arg.StartedAt,
@@ -117,7 +190,7 @@ func (q *Queries) SearchErrors(ctx context.Context, arg SearchErrorsParams) ([]*
 }
 
 const searchEvents = `-- name: SearchEvents :many
-SELECT id, site_id, name, attributes, started_at, finished_at FROM events
+SELECT id, site_id, batch, name, attributes, started_at, finished_at FROM events
 WHERE CAST(?1 AS TEXT) IS NULL OR site_id = ?1
 ORDER BY id DESC
 LIMIT ?3 OFFSET ?2
@@ -142,6 +215,7 @@ func (q *Queries) SearchEvents(ctx context.Context, arg SearchEventsParams) ([]*
 		if err := rows.Scan(
 			&i.ID,
 			&i.SiteID,
+			&i.Batch,
 			&i.Name,
 			&i.Attributes,
 			&i.StartedAt,
@@ -194,6 +268,57 @@ func (q *Queries) SearchLogs(ctx context.Context, arg SearchLogsParams) ([]*Log,
 			&i.Message,
 			&i.Attributes,
 			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const searchSiteEvents = `-- name: SearchSiteEvents :many
+SELECT id, site_id, batch, name, attributes, started_at, finished_at FROM events
+WHERE site_id = ?1 OR (site_id IS NULL AND batch = ?2)
+ORDER BY id DESC
+LIMIT ?4 OFFSET ?3
+`
+
+type SearchSiteEventsParams struct {
+	SiteID *string
+	Batch  *string
+	Skip   int64
+	Limit  int64
+}
+
+// Newest first, the site's own events and its batch's, which is all a site may see
+func (q *Queries) SearchSiteEvents(ctx context.Context, arg SearchSiteEventsParams) ([]*Event, error) {
+	rows, err := q.query(ctx, q.searchSiteEventsStmt, searchSiteEvents,
+		arg.SiteID,
+		arg.Batch,
+		arg.Skip,
+		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*Event
+	for rows.Next() {
+		var i Event
+		if err := rows.Scan(
+			&i.ID,
+			&i.SiteID,
+			&i.Batch,
+			&i.Name,
+			&i.Attributes,
+			&i.StartedAt,
+			&i.FinishedAt,
 		); err != nil {
 			return nil, err
 		}

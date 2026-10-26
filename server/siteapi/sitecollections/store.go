@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/server/components/site_templ"
 	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitedata"
+	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitelogs"
 	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitepresets"
 	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitesettings"
 	"nighttroop.t1d.nz/utils/apiutils"
@@ -55,6 +56,11 @@ func NewSiteStore() *SiteStore {
 	siteStore.registerCollection("settings", &sitesettings.IdentitiesCollection{})
 	siteStore.registerCollection("settings", &sitesettings.SettingsCollection{Site: true})
 	siteStore.registerCollection("settings", &sitesettings.SettingsCollection{Site: false})
+
+	// Logs collections, the site's own rows of the logs DB
+	siteStore.registerCollection("logs", &sitelogs.EventsCollection{})
+	siteStore.registerCollection("logs", &sitelogs.ErrorsCollection{})
+	siteStore.registerCollection("logs", &sitelogs.LogsCollection{})
 
 	return siteStore
 }

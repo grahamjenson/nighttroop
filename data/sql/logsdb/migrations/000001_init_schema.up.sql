@@ -12,10 +12,12 @@ CREATE TABLE logs (
 
 CREATE INDEX logs_site ON logs (site_id, id);
 
--- An event started at started_at, and took until finished_at when it has one, so how long it took is known
+-- An event started at started_at, and took until finished_at when it has one, so how long it took is known. An
+-- event for a batch of sites, rather than one site, has the batch, so each site in it can see the event.
 CREATE TABLE events (
     id INTEGER PRIMARY KEY,
     site_id TEXT CHECK(length(site_id) <= 32),
+    batch TEXT CHECK(length(batch) <= 32),
     name TEXT NOT NULL CHECK(length(name) <= 64),
     attributes TEXT CHECK(length(attributes) <= 4096 AND json_valid(attributes)),
     started_at INTEGER NOT NULL,
@@ -23,6 +25,7 @@ CREATE TABLE events (
 ) STRICT;
 
 CREATE INDEX events_site ON events (site_id, id);
+CREATE INDEX events_batch ON events (batch, id);
 
 CREATE TABLE errors (
     id INTEGER PRIMARY KEY,
