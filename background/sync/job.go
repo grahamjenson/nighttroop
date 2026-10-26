@@ -13,7 +13,6 @@ import (
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/jobsdb"
 	"nighttroop.t1d.nz/server/nightscoutapi"
-	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/security"
@@ -50,8 +49,6 @@ type SyncJobInfo struct {
 	region          consts.DexcomRegion
 	// firstSync is true until a sync has worked since the source was saved; a failure then disables it
 	firstSync bool
-	// lastModified is Nightscout's lastModified for each collection when it was last read
-	lastModified map[nsutils.Collection]*int64
 }
 
 type SyncUserInfo struct {
@@ -143,12 +140,6 @@ func (b *SyncJobManager) SyncSource(ctx context.Context, syncJob SyncJobParams) 
 		password:        password,
 		region:          region,
 		firstSync:       syncSource.FirstSuccessfulSyncTime == nil,
-
-		lastModified: map[nsutils.Collection]*int64{
-			nsutils.Entries:      syncSource.EntriesLastModified,
-			nsutils.Treatments:   syncSource.TreatmentsLastModified,
-			nsutils.Devicestatus: syncSource.DevicestatusLastModified,
-		},
 	}
 	return b.SyncUserData(syncInfo)
 }

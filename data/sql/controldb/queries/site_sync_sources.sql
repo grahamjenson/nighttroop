@@ -39,9 +39,6 @@ UPDATE site_sync_sources SET
     -- New settings get a fresh first sync, and old errors no longer apply
     first_successful_sync_time = NULL,
     previous_sync_errors = NULL,
-    entries_last_modified = NULL,
-    treatments_last_modified = NULL,
-    devicestatus_last_modified = NULL,
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) 
 WHERE type = sqlc.arg('Type') AND site_id = sqlc.arg('SiteID');
 
@@ -56,9 +53,6 @@ UPDATE site_sync_sources SET
     password_enc = NULL,
     previous_sync_errors = NULL,
     first_successful_sync_time = NULL,
-    entries_last_modified = NULL,
-    treatments_last_modified = NULL,
-    devicestatus_last_modified = NULL,
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
 WHERE type = ? AND site_id = ?;
 
@@ -87,13 +81,6 @@ WHERE us.enabled = 1
   );
 
 ------ Updates to the Sync Reporting -----
-
--- name: UpdateSyncSourceLastModified :exec
-UPDATE site_sync_sources SET
-    entries_last_modified = COALESCE(sqlc.narg('EntriesLastModified'), entries_last_modified),
-    treatments_last_modified = COALESCE(sqlc.narg('TreatmentsLastModified'), treatments_last_modified),
-    devicestatus_last_modified = COALESCE(sqlc.narg('DevicestatusLastModified'), devicestatus_last_modified)
-WHERE type = sqlc.arg('Type') AND site_id = sqlc.arg('SiteID');
 
 -- name: UpdateSyncReportAttempt :exec
 UPDATE site_sync_sources

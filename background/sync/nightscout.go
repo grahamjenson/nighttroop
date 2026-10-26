@@ -21,6 +21,8 @@ type nightscoutClient struct {
 	gosync.Mutex
 	url, token string
 	*nightscout_client.Client
+	// lastModified is Nightscout's lastModified for each collection when it was last read; a new client reads them all
+	lastModified map[nsutils.Collection]int64
 }
 
 // nightscoutClientFor returns the site's kept client, or a new one when there is none or its URL or token has changed.
@@ -30,7 +32,7 @@ func (b *SyncJobManager) nightscoutClientFor(syncInfo *SyncJobInfo) *nightscoutC
 	defer b.nightscoutClientsLock.Unlock()
 	c := b.nightscoutClients[syncInfo.SiteID]
 	if c == nil || c.url != syncInfo.urlOrUsername || c.token != syncInfo.password {
-		c = &nightscoutClient{url: syncInfo.urlOrUsername, token: syncInfo.password, Client: nightscout_client.NewClient(syncInfo.urlOrUsername, syncInfo.password)}
+		c = &nightscoutClient{url: syncInfo.urlOrUsername, token: syncInfo.password, Client: nightscout_client.NewClient(syncInfo.urlOrUsername, syncInfo.password), lastModified: map[nsutils.Collection]int64{}}
 		b.nightscoutClients[syncInfo.SiteID] = c
 	}
 	return c
@@ -54,27 +56,17 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 		return fmt.Errorf("NightscoutSync Error: %w", err)
 	}
 
-	read := map[nsutils.Collection]*int64{}
 	for _, c := range nightscoutCollections {
 		modified := lastModified[string(c.collection)]
-		if !changedSince(syncInfo.lastModified[c.collection], modified) {
+		if !changedSince(nsc.lastModified[c.collection], modified) {
 			continue
 		}
 		if err := b.syncNightscoutCollection(ctx, nsc, syncInfo, c.collection, c.limit); err != nil {
 			return err
 		}
-		read[c.collection] = &modified
+		nsc.lastModified[c.collection] = modified
 	}
-	if len(read) == 0 {
-		return nil
-	}
-	return b.controlDB.Queries.UpdateSyncSourceLastModified(ctx, controldb.UpdateSyncSourceLastModifiedParams{
-		EntriesLastModified:      read[nsutils.Entries],
-		TreatmentsLastModified:   read[nsutils.Treatments],
-		DevicestatusLastModified: read[nsutils.Devicestatus],
-		Type:                     syncInfo.Type,
-		SiteID:                   syncInfo.SiteID,
-	})
+	return nil
 }
 
 // nightscoutCollections are what a Nightscout sync reads, and at most how many of each one's newest documents
@@ -141,8 +133,8 @@ func (b *SyncJobManager) syncNightscoutCollection(ctx context.Context, nsc *nigh
 	return nil
 }
 
-// changedSince is whether a collection may have changed since it was last read. A Nightscout
-// that does not say when it changed (0) has it read every sync.
-func changedSince(lastRead *int64, modified int64) bool {
-	return modified == 0 || lastRead == nil || *lastRead != modified
+// changedSince is whether a collection may have changed since it was last read (0 when it never was).
+// A Nightscout that does not say when it changed (0) has it read every sync.
+func changedSince(lastRead, modified int64) bool {
+	return modified == 0 || lastRead != modified
 }
