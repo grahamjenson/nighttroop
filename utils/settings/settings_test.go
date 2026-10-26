@@ -41,3 +41,33 @@ func TestCombinedSettingsUnits(t *testing.T) {
 		})
 	}
 }
+
+func TestCombinedSettingsTimezone(t *testing.T) {
+	auckland, london, notAZone := "Pacific/Auckland", "Europe/London", "Not/A_Zone"
+	tests := []struct {
+		name     string
+		site     *string
+		identity *string
+		want     string
+	}{
+		{name: "nothing set is UTC", want: "UTC"},
+		{name: "site set", site: &auckland, want: auckland},
+		{name: "identity set", identity: &london, want: london},
+		{name: "identity overrides site", site: &auckland, identity: &london, want: london},
+		{name: "a zone that cannot be loaded is UTC", identity: &notAZone, want: "UTC"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			site, identity := &settings.SettingMap{}, &settings.SettingMap{}
+			site.SetTimezone(test.site)
+			identity.SetTimezone(test.identity)
+			combined := &settings.CombinedSettingsMap{
+				SiteSettingsMap:     site,
+				IdentitySettingsMap: identity,
+				DefaultSettingsMap:  settings.DefaultSettingsMap,
+			}
+
+			require.Equal(t, test.want, combined.Location().String())
+		})
+	}
+}

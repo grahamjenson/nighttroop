@@ -235,7 +235,7 @@ templ treatmentsTable(list []treatment) {
 			for _, t := range list {
 				@table.Row() {
 					@table.Cell() {
-						<span class="whitespace-nowrap">{ site_data_templ.FormatDate(t.At) }</span>
+						<span class="whitespace-nowrap">{ site_data_templ.FormatDate(ctx, t.At) }</span>
 					}
 					@table.Cell() {
 						<span class="whitespace-nowrap font-medium">{ t.Kind }</span>
@@ -261,7 +261,7 @@ templ readingsTable(readings []*sitemodels.SiteGlucoseReading) {
 			for _, r := range readings {
 				@table.Row() {
 					@table.Cell() {
-						<span class="whitespace-nowrap">{ site_data_templ.FormatDate(r.OccurredAt) }</span>
+						<span class="whitespace-nowrap">{ site_data_templ.FormatDate(ctx, r.OccurredAt) }</span>
 					}
 					@table.Cell() {
 						<span class="font-medium tabular-nums">{ site_data_templ.FormatGlucose(r.Reading, r.Units) }</span> { arrow(r.Direction) }

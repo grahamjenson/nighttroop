@@ -128,7 +128,7 @@ templ tempBasalRow(tempBasal *sitemodels.SiteTempBasal) {
 		},
 	}) {
 		@table.Cell() {
-			{ formatReadingDate(tempBasal.OccurredAt) }
+			{ formatReadingDate(ctx, tempBasal.OccurredAt) }
 		}
 		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ orDash(tempBasal.Absolute) }
@@ -171,7 +171,7 @@ templ tempBasalRow(tempBasal *sitemodels.SiteTempBasal) {
 }
 
 templ TempBasalModal(tempBasal *sitemodels.SiteTempBasal) {
-	@modal.Modal(modal.Props{ID: "site--temp-basal--details", Title: fmt.Sprintf("%s U/hr for %d minutes", orDash(tempBasal.Absolute), tempBasal.DurationMinutes), Subtitle: formatReadingDate(tempBasal.OccurredAt)}) {
+	@modal.Modal(modal.Props{ID: "site--temp-basal--details", Title: fmt.Sprintf("%s U/hr for %d minutes", orDash(tempBasal.Absolute), tempBasal.DurationMinutes), Subtitle: formatReadingDate(ctx, tempBasal.OccurredAt)}) {
 		<form
 			id="site--temp-basal--edit"
 			class="mt-4 flex items-end gap-2"
@@ -196,8 +196,8 @@ templ TempBasalModal(tempBasal *sitemodels.SiteTempBasal) {
 			@readingDetail("App", orDash(tempBasal.CreatedByAppName))
 			@readingDetail("Device", orDash(tempBasal.CreatedByDeviceName))
 			@readingDetail("Created By", tempBasal.CreatedByIdentityName)
-			@readingDetail("Created", formatReadingDate(tempBasal.CreatedAt))
-			@readingDetail("Updated", formatReadingDate(tempBasal.UpdatedAt))
+			@readingDetail("Created", formatReadingDate(ctx, tempBasal.CreatedAt))
+			@readingDetail("Updated", formatReadingDate(ctx, tempBasal.UpdatedAt))
 			@readingDetail("Updated By", orDash(tempBasal.UpdatedByIdentityName))
 		</dl>
 		@modal.RawJSON("site--temp-basal--details--raw", tempBasal.RawJsonData)

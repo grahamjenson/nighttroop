@@ -185,8 +185,8 @@ templ FoodPresetModal(foodPreset *sitemodels.SiteFoodPreset) {
 			@presetDetail("App", orDash(foodPreset.CreatedByAppName))
 			@presetDetail("Device", orDash(foodPreset.CreatedByDeviceName))
 			@presetDetail("Created By", foodPreset.CreatedByIdentityName)
-			@presetDetail("Created", formatDate(foodPreset.CreatedAt))
-			@presetDetail("Updated", formatDate(foodPreset.UpdatedAt))
+			@presetDetail("Created", formatDate(ctx, foodPreset.CreatedAt))
+			@presetDetail("Updated", formatDate(ctx, foodPreset.UpdatedAt))
 			@presetDetail("Updated By", orDash(foodPreset.UpdatedByIdentityName))
 		</dl>
 		@modal.RawJSON("presets--food--details--raw", foodPreset.RawJsonData)

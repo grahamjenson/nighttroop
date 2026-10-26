@@ -114,7 +114,7 @@ templ insulinDoseRow(insulinDose *sitemodels.SiteInsulinDose) {
 		},
 	}) {
 		@table.Cell() {
-			{ formatReadingDate(insulinDose.OccurredAt) }
+			{ formatReadingDate(ctx, insulinDose.OccurredAt) }
 		}
 		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ fmt.Sprint(insulinDose.Dose) }
@@ -154,7 +154,7 @@ templ insulinDoseRow(insulinDose *sitemodels.SiteInsulinDose) {
 }
 
 templ InsulinDoseModal(insulinDose *sitemodels.SiteInsulinDose) {
-	@modal.Modal(modal.Props{ID: "site--insulin--details", Title: fmt.Sprintf("%v units", insulinDose.Dose), Subtitle: formatReadingDate(insulinDose.OccurredAt)}) {
+	@modal.Modal(modal.Props{ID: "site--insulin--details", Title: fmt.Sprintf("%v units", insulinDose.Dose), Subtitle: formatReadingDate(ctx, insulinDose.OccurredAt)}) {
 		<form
 			id="site--insulin--edit"
 			class="mt-4 flex items-end gap-2"
@@ -181,8 +181,8 @@ templ InsulinDoseModal(insulinDose *sitemodels.SiteInsulinDose) {
 			@readingDetail("App", orDash(insulinDose.CreatedByAppName))
 			@readingDetail("Device", orDash(insulinDose.CreatedByDeviceName))
 			@readingDetail("Created By", insulinDose.CreatedByIdentityName)
-			@readingDetail("Created", formatReadingDate(insulinDose.CreatedAt))
-			@readingDetail("Updated", formatReadingDate(insulinDose.UpdatedAt))
+			@readingDetail("Created", formatReadingDate(ctx, insulinDose.CreatedAt))
+			@readingDetail("Updated", formatReadingDate(ctx, insulinDose.UpdatedAt))
 			@readingDetail("Updated By", orDash(insulinDose.UpdatedByIdentityName))
 		</dl>
 		@modal.RawJSON("site--insulin--details--raw", insulinDose.RawJsonData)

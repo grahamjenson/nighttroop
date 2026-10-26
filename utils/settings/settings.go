@@ -2,6 +2,8 @@ package settings
 
 import (
 	"fmt"
+	"sync"
+	"time"
 
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/consts"
@@ -63,4 +65,33 @@ func (m *CombinedSettingsMap) GetUnits() *consts.Units {
 		m.SiteSettingsMap.GetUnits(),
 		m.DefaultSettingsMap.GetUnits(),
 	)
+}
+
+// GetTimezone is the identity's timezone, then the site's, then the default UTC
+func (m *CombinedSettingsMap) GetTimezone() *string {
+	return first(
+		m.IdentitySettingsMap.GetTimezone(),
+		m.SiteSettingsMap.GetTimezone(),
+		m.DefaultSettingsMap.GetTimezone(),
+	)
+}
+
+// locations are the timezones loaded, by name, as a page shows many times in one
+var locations sync.Map
+
+// Location is the timezone times are shown in, or UTC if it cannot be loaded
+func (m *CombinedSettingsMap) Location() *time.Location {
+	name := m.GetTimezone()
+	if name == nil {
+		return time.UTC
+	}
+	if location, ok := locations.Load(*name); ok {
+		return location.(*time.Location)
+	}
+	location, err := time.LoadLocation(*name)
+	if err != nil {
+		return time.UTC
+	}
+	locations.Store(*name, location)
+	return location
 }

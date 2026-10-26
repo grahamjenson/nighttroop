@@ -65,3 +65,27 @@ INPUT #site--settings--identity--timezone Mars/Olympus
 CLICK #site--settings--identity--save
 ASSERT_STATUS 400
 ASSERT_TEXT_VISIBLE invalid timezone
+
+// Times are shown in the site's timezone, as the admin has none of their own
+CLICK #site--settings-menu
+CLICK #site--data--glucose-button
+ASSERT_STATUS 200
+INPUT #site--glucose--create--reading 120
+CLICK #site--glucose--create--submit
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE {{ now "Pacific/Auckland" "2006-01-02 15:" }}
+SCREENSHOT glucose_in_site_timezone
+
+// The admin's own timezone is used over the site's
+CLICK #site--settings-menu
+CLICK #site--settings--settings-button
+ASSERT_STATUS 200
+INPUT #site--settings--identity--timezone Asia/Kathmandu
+CLICK #site--settings--identity--save
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Settings Saved
+CLICK #site--settings-menu
+CLICK #site--data--glucose-button
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE {{ now "Asia/Kathmandu" "2006-01-02 15:" }}
+SCREENSHOT glucose_in_identity_timezone
