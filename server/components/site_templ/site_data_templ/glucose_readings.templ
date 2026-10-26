@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/field"
+	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
@@ -107,7 +109,7 @@ templ GlucoseReadingsTable(readings []*sitemodels.SiteGlucoseReading, skip int64
 templ glucoseCreateForm() {
 	<form
 		id="site--glucose--create"
-		class="mb-4 flex items-center justify-end gap-2"
+		class="mb-4 flex items-end justify-end gap-2"
 		hx-post="/data/glucose"
 		hx-target="#glucoseReadingsTable tbody"
 		hx-swap="afterbegin"
@@ -123,7 +125,7 @@ templ glucoseCreateForm() {
 }
 
 templ glucoseInputs(id string, value string, notes string) {
-	<div class="w-28">
+	@field.Field(id+"--reading", "Reading ("+string(*glucoseUnits(ctx))+")", "w-28") {
 		@input.Input(input.Props{
 			ID:          id + "--reading",
 			Type:        input.TypeNumber,
@@ -133,10 +135,10 @@ templ glucoseInputs(id string, value string, notes string) {
 			Required:    true,
 			Attributes:  glucoseInputAttributes(ctx),
 		})
-	</div>
-	<div class="w-64">
+	}
+	@field.Field(id+"--notes", "Notes", "w-64") {
 		@input.Input(input.Props{ID: id + "--notes", Name: "notes", Placeholder: "Notes", Value: notes})
-	</div>
+	}
 }
 
 // glucoseReadingRow opens the reading's details when clicked. The delete button stops its click reaching the row.
@@ -192,69 +194,48 @@ templ glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) {
 }
 
 templ GlucoseReadingModal(reading *sitemodels.SiteGlucoseReading) {
-	<div id="site--glucose--details" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-		<div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-lg">
-			<h2 class="text-lg font-semibold">{ formatGlucose(reading.Reading, reading.Units) } { orDash(reading.Units) }</h2>
-			<p class="text-sm text-gray-500">{ formatReadingDate(reading.OccurredAt) }</p>
-			<form
-				id="site--glucose--edit"
-				class="mt-4 flex items-center gap-2"
-				hx-post={ "/data/glucose/" + reading.ID }
-				hx-target={ "#site--glucose--" + reading.ID }
-				hx-swap="outerHTML"
-				hx-status:4xx="target:#toaster swap:beforeend"
-				hx-status:5xx="target:#toaster swap:beforeend"
-			>
-				@glucoseInputs("site--glucose--edit", fmt.Sprint(reading.Reading), orEmpty(reading.Notes))
-				@button.Button(button.Props{ID: "site--glucose--edit--submit", Type: button.TypeSubmit}) {
-					Save
-				}
-			</form>
-			<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-				@readingDetail("ID", reading.ID)
-				@readingDetail("Type", reading.ReadingType)
-				@readingDetail("Original Units", orDash(reading.OriginalUnits))
-				@readingDetail("Measurement Method", orDash(reading.MeasurementMethod))
-				@readingDetail("Direction", orDash(reading.Direction))
-				@readingDetail("Delta", orDash(reading.Delta))
-				@readingDetail("Noise", orDash(reading.Noise))
-				@readingDetail("Filtered", orDash(reading.Filtered))
-				@readingDetail("Unfiltered", orDash(reading.Unfiltered))
-				@readingDetail("RSSI", orDash(reading.Rssi))
-				@readingDetail("Notes", orDash(reading.Notes))
-				@readingDetail("Reason", orDash(reading.Reason))
-				@readingDetail("UTC Offset (minutes)", orDash(reading.UtcOffsetMinutes))
-				@readingDetail("App", orDash(reading.CreatedByAppName))
-				@readingDetail("Device", orDash(reading.CreatedByDeviceName))
-				@readingDetail("Created By", reading.CreatedByIdentityName)
-				@readingDetail("Created", formatReadingDate(reading.CreatedAt))
-				@readingDetail("Updated", formatReadingDate(reading.UpdatedAt))
-				@readingDetail("Updated By", orDash(reading.UpdatedByIdentityName))
-			</dl>
-			if reading.RawJsonData != nil {
-				<pre class="mt-4 max-h-48 overflow-auto rounded bg-gray-50 p-2 text-xs">{ *reading.RawJsonData }</pre>
+	@modal.Modal(modal.Props{ID: "site--glucose--details", Title: formatGlucose(reading.Reading, reading.Units) + " " + orDash(reading.Units), Subtitle: formatReadingDate(reading.OccurredAt)}) {
+		<form
+			id="site--glucose--edit"
+			class="mt-4 flex items-end gap-2"
+			hx-post={ "/data/glucose/" + reading.ID }
+			hx-target={ "#site--glucose--" + reading.ID }
+			hx-swap="outerHTML"
+			hx-status:4xx="target:#toaster swap:beforeend"
+			hx-status:5xx="target:#toaster swap:beforeend"
+		>
+			@glucoseInputs("site--glucose--edit", fmt.Sprint(reading.Reading), orEmpty(reading.Notes))
+			@button.Button(button.Props{ID: "site--glucose--edit--submit", Type: button.TypeSubmit}) {
+				Save
 			}
-			<div class="mt-4 flex justify-end">
-				@button.Button(button.Props{
-					ID:      "site--glucose--details--close",
-					Variant: button.VariantOutline,
-					Attributes: templ.Attributes{
-						"hx-get":    "/empty",
-						"hx-target": "#modal-container",
-						"hx-swap":   "innerHTML",
-					},
-				}) {
-					Close
-				}
-			</div>
-		</div>
-	</div>
+		</form>
+		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+			@readingDetail("Type", reading.ReadingType)
+			@readingDetail("Original Units", orDash(reading.OriginalUnits))
+			@readingDetail("Measurement Method", orDash(reading.MeasurementMethod))
+			@readingDetail("Direction", orDash(reading.Direction))
+			@readingDetail("Delta", orDash(reading.Delta))
+			@readingDetail("Noise", orDash(reading.Noise))
+			@readingDetail("Filtered", orDash(reading.Filtered))
+			@readingDetail("Unfiltered", orDash(reading.Unfiltered))
+			@readingDetail("RSSI", orDash(reading.Rssi))
+			@readingDetail("Notes", orDash(reading.Notes))
+			@readingDetail("Reason", orDash(reading.Reason))
+			@modal.Section("Record")
+			@readingDetail("ID", reading.ID)
+			@readingDetail("UTC Offset (minutes)", orDash(reading.UtcOffsetMinutes))
+			@readingDetail("App", orDash(reading.CreatedByAppName))
+			@readingDetail("Device", orDash(reading.CreatedByDeviceName))
+			@readingDetail("Created By", reading.CreatedByIdentityName)
+			@readingDetail("Created", formatReadingDate(reading.CreatedAt))
+			@readingDetail("Updated", formatReadingDate(reading.UpdatedAt))
+			@readingDetail("Updated By", orDash(reading.UpdatedByIdentityName))
+		</dl>
+		@modal.RawJSON("site--glucose--details--raw", reading.RawJsonData)
+	}
 }
 
-templ readingDetail(label string, value string) {
-	<dt class="text-gray-500">{ label }</dt>
-	<dd class="break-all">{ value }</dd>
-}
+var readingDetail = modal.DetailIfSet
 
 func orEmpty(value *string) string {
 	if value == nil {

@@ -95,6 +95,8 @@ CLICK #site--data--glucose-button
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE mg/dL
 ASSERT_TEXT_VISIBLE 155
+// The new reading's label says which units to type it in
+ASSERT_TEXT_VISIBLE Reading (mg/dL)
 SCREENSHOT glucose_readings_mgdl
 
 // A page of one reading pages through them, newest first
