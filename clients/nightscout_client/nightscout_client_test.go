@@ -103,3 +103,32 @@ func TestEntriesFromResultRefusesTooManyEntries(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, entries)
 }
+
+func TestGetLastModified(t *testing.T) {
+	tests := []struct {
+		name string
+		body string
+		want map[string]int64
+	}{
+		{"collections", `{"status":200,"result":{"srvDate":1700000000500,"collections":{"entries":1700000000000,"treatments":1690000000000,"settings":0}}}`, map[string]int64{"entries": 1700000000000, "treatments": 1690000000000, "settings": 0}},
+		{"no collections", `{"status":200,"result":{"srvDate":1700000000500}}`, nil},
+		{"no result", `{"status":200}`, nil},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				require.Equal(t, "/api/v3/lastModified", r.URL.Path)
+				_, _ = w.Write([]byte(tt.body))
+			}))
+			defer srv.Close()
+
+			lastModified, err := liveClient(srv.URL).GetLastModified(context.Background())
+			if tt.want == nil {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			require.Equal(t, tt.want, lastModified)
+		})
+	}
+}
