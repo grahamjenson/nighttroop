@@ -93,6 +93,8 @@ type ServerConfig struct {
 	MaxIdentitiesPerSite int
 
 	DeleteAfterInactivityMins int
+	// DisableAfterInactivityDays is how long a site goes unwritten or unseen before the control plane can disable it
+	DisableAfterInactivityDays int
 
 	// Backup Config
 	ControlBackupIntervalInSeconds int
@@ -219,7 +221,8 @@ func NewServerConfig() (*ServerConfig, error) {
 		LogsDBMaxRowsPerTable:     configIntSelect(dotenv, "LOGS_DB_MAX_ROWS_PER_TABLE", 100000),
 
 		// Archiving limits
-		DeleteAfterInactivityMins: configIntSelect(dotenv, "DELETE_AFTER_INACTIVITY_MINS", 60*24*7), // 1 week
+		DeleteAfterInactivityMins:  configIntSelect(dotenv, "DELETE_AFTER_INACTIVITY_MINS", 60*24*7), // 1 week
+		DisableAfterInactivityDays: configIntSelect(dotenv, "DISABLE_AFTER_INACTIVITY_DAYS", 7),
 
 		// Backup Config
 		ControlBackupIntervalInSeconds: configIntSelect(dotenv, "CONTROL_BACKUP_INTERVAL_IN_SECONDS", 30),
@@ -491,6 +494,7 @@ func printServerConfig(config ServerConfig) {
 		"MaxSites", config.MaxSites,
 		"MaxIdentitiesPerSite", config.MaxIdentitiesPerSite,
 		"DeleteAfterInactivityMins", config.DeleteAfterInactivityMins,
+		"DisableAfterInactivityDays", config.DisableAfterInactivityDays,
 		"MaxSiteDBSizeKB", config.MaxSiteDBSizeKB,
 		"LogsDBMaxRowsPerTable", config.LogsDBMaxRowsPerTable,
 		"ControlBackupIntervalInSeconds", config.ControlBackupIntervalInSeconds,

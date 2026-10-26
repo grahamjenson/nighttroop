@@ -8,7 +8,7 @@ INPUT #name admin
 INPUT #password password
 INPUT #control--login--otp-1 123123
 CLICK #control--login-button
-ASSERT_TEXT_VISIBLE Welcome to the NightTroop Control Dashboard
+ASSERT_VISIBLE #controlSitesTable
 ASSERT_VISIBLE #control--status-banner
 ASSERT_VISIBLE #control--status-banner--s3
 ASSERT_TEXT_VISIBLE backups are not being stored
