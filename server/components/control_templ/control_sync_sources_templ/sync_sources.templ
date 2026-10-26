@@ -6,7 +6,7 @@ import (
 
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/server/components/modal"
-	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/display"
 )
@@ -91,39 +91,10 @@ templ SyncSourcesTable(sources []*controlmodels.SyncSource, skip int64, limit in
 					}
 				}
 			}
-			<div class="mt-4 flex items-center justify-between text-sm text-gray-500">
-				if len(sources) > 0 {
-					<span>{ fmt.Sprintf("Showing %d to %d", skip+1, skip+int64(len(sources))) }</span>
-				} else {
-					<span></span>
-				}
-				<div class="flex gap-2">
-					if skip > 0 {
-						@syncSourcesPageButton("control--sync-sources--previous", "Previous", max(skip-limit, 0), limit)
-					}
-					if int64(len(sources)) == limit {
-						@syncSourcesPageButton("control--sync-sources--next", "Next", skip+limit, limit)
-					}
-				</div>
-			</div>
+			@pager.Pager(pager.Props{ID: "control--sync-sources", Path: "/sync-sources", Count: len(sources), Skip: skip, Limit: limit})
 		</section>
 		<div id="modal-container"></div>
 	</div>
-}
-
-templ syncSourcesPageButton(id string, label string, skip int64, limit int64) {
-	@button.Button(button.Props{
-		ID:      id,
-		Variant: button.VariantOutline,
-		Attributes: templ.Attributes{
-			"hx-get":      fmt.Sprintf("/sync-sources?skip=%d&limit=%d", skip, limit),
-			"hx-target":   "#main-content",
-			"hx-push-url": "true",
-			"hx-swap":     "innerHTML",
-		},
-	}) {
-		{ label }
-	}
 }
 
 templ syncSourceRow(source *controlmodels.SyncSource) {

@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
@@ -72,39 +73,10 @@ templ ProfilePresetsTable(profiles []*sitemodels.SiteProfilePreset, skip int64, 
 					}
 				}
 			}
-			<div class="mt-4 flex items-center justify-between text-sm text-gray-500">
-				if len(profiles) > 0 {
-					<span id="presets--profiles--showing">{ fmt.Sprintf("Showing %d to %d", skip+1, skip+int64(len(profiles))) }</span>
-				} else {
-					<span></span>
-				}
-				<div class="flex gap-2">
-					if skip > 0 {
-						@profilePresetPageButton("presets--profiles--previous", "Previous", max(skip-limit, 0), limit)
-					}
-					if int64(len(profiles)) == limit {
-						@profilePresetPageButton("presets--profiles--next", "Next", skip+limit, limit)
-					}
-				</div>
-			</div>
+			@pager.Pager(pager.Props{ID: "presets--profiles", Path: "/presets/profiles", Count: len(profiles), Skip: skip, Limit: limit})
 		</section>
 		<div id="modal-container"></div>
 	</div>
-}
-
-templ profilePresetPageButton(id string, label string, skip int64, limit int64) {
-	@button.Button(button.Props{
-		ID:      id,
-		Variant: button.VariantOutline,
-		Attributes: templ.Attributes{
-			"hx-get":      fmt.Sprintf("/presets/profiles?skip=%d&limit=%d", skip, limit),
-			"hx-target":   "#main-content",
-			"hx-push-url": "true",
-			"hx-swap":     "innerHTML",
-		},
-	}) {
-		{ label }
-	}
 }
 
 // profilePresetRow opens the profile's details when clicked. The delete button stops its click reaching the row.
