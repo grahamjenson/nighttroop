@@ -17,7 +17,7 @@ func TestRequestLogsRedactCredentials(t *testing.T) {
 	var logs bytes.Buffer
 	router := chi.NewRouter()
 	testutils.UseLogHandler(t, slog.NewTextHandler(&logs, nil))
-	AddStandardMiddleware(router, &config.ServerConfig{})
+	AddStandardMiddleware(router, &config.ServerConfig{}, nil)
 	router.Get("/api/v2/authorization/request/{token}", func(w http.ResponseWriter, r *http.Request) {})
 
 	r := httptest.NewRequest(http.MethodGet, "/api/v2/authorization/request/pathtoken123?token=querytoken456&count=10", nil)

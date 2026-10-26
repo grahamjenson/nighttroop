@@ -122,6 +122,7 @@ func (b *SyncJobManager) SyncSource(ctx context.Context, syncJob SyncJobParams) 
 	username, password, region, err := b.getUsernamePasswordRegion(syncSource)
 	if err != nil {
 		slog.Error("Error getting username, password, and region", "error", err, "site_id", syncJob.SiteID, "sync_type", syncJob.Type)
+		b.controlDB.Logs.Error(ctx, &syncJob.SiteID, err, map[string]any{"sync_type": syncJob.Type})
 		return nil
 	}
 
@@ -134,11 +135,7 @@ func (b *SyncJobManager) SyncSource(ctx context.Context, syncJob SyncJobParams) 
 		region:          region,
 		firstSync:       syncSource.FirstSuccessfulSyncTime == nil,
 	}
-	err = b.SyncUserData(syncInfo)
-	if err != nil {
-		b.controlDB.Logs.Error(ctx, &syncJob.SiteID, err, map[string]any{"sync_type": syncJob.Type})
-	}
-	return err
+	return b.SyncUserData(syncInfo)
 }
 
 func (b *SyncJobManager) getUsernamePasswordRegion(syncSource *controldb.SiteSyncSource) (string, string, consts.DexcomRegion, error) {

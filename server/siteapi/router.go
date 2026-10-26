@@ -13,7 +13,7 @@ import (
 
 func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Router {
 	r := chi.NewRouter()
-	httputils.AddStandardMiddleware(r, config)
+	httputils.AddStandardMiddleware(r, config, controlDB.Logs)
 
 	// Rate Limiter is before auth because auth can be expencive
 	r.Use(httputils.SiteRateLimitMiddleware(config))
