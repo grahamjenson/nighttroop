@@ -82,6 +82,19 @@ func parseFile(r io.Reader, path string) ([]Action, error) {
 				Locator:  second,
 				Asserts:  []Assert{},
 			}
+		case "CLICK_CORNER", "PRESS":
+			flush()
+
+			if second == "" {
+				return nil, fmt.Errorf("%s needs a value", first)
+			}
+			click := &Click{TestPath: path, TestLine: lineNumber, Asserts: []Assert{}}
+			if first == "PRESS" {
+				click.Key = second
+			} else {
+				click.Locator, click.Corner = second, true
+			}
+			current = click
 		case "CLICK_BACK", "CLICK_FORWARD":
 			flush()
 
