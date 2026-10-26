@@ -30,6 +30,7 @@ type ControlDB struct {
 	createSiteLock sync.Mutex
 
 	Jobs *JobsDB
+	Logs *LogsDB
 }
 
 func NewControlDB(ctx context.Context, serverConfig *config.ServerConfig) (*ControlDB, error) {
@@ -44,10 +45,16 @@ func NewControlDB(ctx context.Context, serverConfig *config.ServerConfig) (*Cont
 		return nil, fmt.Errorf("cannot open jobs db: %w", err)
 	}
 
+	logs, err := NewLogsDB(ctx, serverConfig)
+	if err != nil {
+		return nil, err
+	}
+
 	// Create a new control db
 	controlDB := &ControlDB{
 		DB:    rawDB,
 		Jobs:  jobs,
+		Logs:  logs,
 		sites: make(map[string]*SiteDB),
 	}
 
@@ -188,6 +195,7 @@ func (db *ControlDB) CreateSite() (*SiteCreateResult, error) {
 	}
 
 	db.sites[subdomain] = siteDB
+	db.Logs.Event(context.TODO(), &subdomain, "site_created", nil)
 
 	return &SiteCreateResult{
 		SiteDB:          siteDB,
@@ -365,6 +373,10 @@ func (db *ControlDB) Close() error {
 	err := db.Jobs.Close()
 	if err != nil {
 		slog.Error("Failed to close jobs db", "error", err)
+	}
+
+	if err := db.Logs.Close(); err != nil {
+		slog.Error("Failed to close logs db", "error", err)
 	}
 
 	return db.SQLiteDB.Close()

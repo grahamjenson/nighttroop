@@ -106,6 +106,8 @@ type ServerConfig struct {
 	TruncateIntervalInSeconds int
 	MaxSiteDBSizeKB           int
 	MaxControlDBSizeKB        int
+	// LogsDBMaxRowsPerTable is how many of the newest logs, events and errors are kept in each of their tables
+	LogsDBMaxRowsPerTable int
 
 	RateLimiters *RateLimiters
 
@@ -214,6 +216,7 @@ func NewServerConfig() (*ServerConfig, error) {
 		MaxSiteDBSizeKB:           configIntSelect(dotenv, "MAX_SITE_DB_SIZE_KB", 3000),
 		MaxControlDBSizeKB:        configIntSelect(dotenv, "MAX_CONTROL_DB_SIZE_KB", 5000),
 		TruncateIntervalInSeconds: configIntSelect(dotenv, "TRUNCATE_INTERVAL_IN_SECONDS", 60),
+		LogsDBMaxRowsPerTable:     configIntSelect(dotenv, "LOGS_DB_MAX_ROWS_PER_TABLE", 100000),
 
 		// Archiving limits
 		DeleteAfterInactivityMins: configIntSelect(dotenv, "DELETE_AFTER_INACTIVITY_MINS", 60*24*7), // 1 week
@@ -489,6 +492,7 @@ func printServerConfig(config ServerConfig) {
 		"MaxIdentitiesPerSite", config.MaxIdentitiesPerSite,
 		"DeleteAfterInactivityMins", config.DeleteAfterInactivityMins,
 		"MaxSiteDBSizeKB", config.MaxSiteDBSizeKB,
+		"LogsDBMaxRowsPerTable", config.LogsDBMaxRowsPerTable,
 		"ControlBackupIntervalInSeconds", config.ControlBackupIntervalInSeconds,
 		"BatchBackupIntervalInSeconds", config.BatchBackupIntervalInSeconds,
 	)

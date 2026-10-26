@@ -16,6 +16,7 @@ A file for [guiding coding agents](https://agents.md/).
 - `background`: background jobs running with golang Cron and LiteQ-ish framework
 - `clients`: third party client integration
 - `data`: everything SQLite using SQLc generated code
+- `data/sql/logsdb`: logs, events and errors, each optionally about a site; write them with `controlDB.Logs.Log`, `Event` and `Error`. It is not backed up, and a cron job keeps each table's newest `LOGS_DB_MAX_ROWS_PER_TABLE` rows
 - `data/events`: a publish and subscribe bus; `data/events/sitemodels` is `config.SiteModelEvents`, which every committed change to a site's models is published on by site ID, for live updates and alarms
 - `docs`: posts and docs
 - `models`: models for the various inputs, including converters built with goverter

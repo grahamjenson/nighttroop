@@ -134,7 +134,11 @@ func (b *SyncJobManager) SyncSource(ctx context.Context, syncJob SyncJobParams) 
 		region:          region,
 		firstSync:       syncSource.FirstSuccessfulSyncTime == nil,
 	}
-	return b.SyncUserData(syncInfo)
+	err = b.SyncUserData(syncInfo)
+	if err != nil {
+		b.controlDB.Logs.Error(ctx, &syncJob.SiteID, err, map[string]any{"sync_type": syncJob.Type})
+	}
+	return err
 }
 
 func (b *SyncJobManager) getUsernamePasswordRegion(syncSource *controldb.SiteSyncSource) (string, string, consts.DexcomRegion, error) {
