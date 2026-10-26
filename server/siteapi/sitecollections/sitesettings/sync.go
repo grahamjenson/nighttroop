@@ -37,6 +37,9 @@ func (s *SyncSettingsCollection) GetRoute() string {
 	return "sync"
 }
 
+// Upserts makes an update of a type of sync source the site has not got yet create it
+func (s *SyncSettingsCollection) Upserts() {}
+
 // ////
 // CREATE
 // ////

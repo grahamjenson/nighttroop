@@ -33,7 +33,7 @@ func (s *DeviceStatusesCollection) GetName() string {
 
 // GetRoute is where the collection is in its URL
 func (s *DeviceStatusesCollection) GetRoute() string {
-	return "device_statuses"
+	return "device-status"
 }
 
 // ////

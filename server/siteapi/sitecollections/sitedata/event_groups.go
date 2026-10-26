@@ -26,7 +26,7 @@ func (s *EventGroupsCollection) GetName() string {
 
 // GetRoute is where the collection is in its URL
 func (s *EventGroupsCollection) GetRoute() string {
-	return "event_groups"
+	return "event-groups"
 }
 
 // ToModel is the site model of a group and its events. The rows are bundles, as the Nightscout treatments show them,

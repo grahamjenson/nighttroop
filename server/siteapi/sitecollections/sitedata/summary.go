@@ -46,7 +46,11 @@ func (s *SummaryCollection) ToModel(row *sitemodels.Summary, siteContext *httput
 
 func (s *SummaryCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.Summary, error) {
 
-	summary, err := getSummary(ctx, collectionTx, defaultHours, siteContext)
+	hours := int64(defaultHours)
+	if query.Hours != nil {
+		hours = *query.Hours
+	}
+	summary, err := getSummary(ctx, collectionTx, hours, siteContext)
 	if err != nil {
 		return nil, err
 	}
