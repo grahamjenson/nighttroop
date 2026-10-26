@@ -52,7 +52,7 @@ func (b *BackupControlJobManager) BackupToS3() (err error) {
 	started := time.Now()
 	defer func() {
 		if err != nil {
-			b.controlDB.Logs.Error(context.TODO(), nil, err, nil)
+			b.controlDB.Logs.ControlBackupError(context.TODO(), err)
 		}
 	}()
 
@@ -67,8 +67,6 @@ func (b *BackupControlJobManager) BackupToS3() (err error) {
 	if err != nil {
 		return fmt.Errorf("cannot sync control db: %w", err)
 	}
-	b.controlDB.Logs.Event(context.TODO(), nil, "control_backed_up", map[string]any{
-		"duration_ms": time.Since(started).Milliseconds(), "uploaded": b.ServerConfig.Status.S3Working,
-	})
+	b.controlDB.Logs.ControlBackedUpEvent(context.TODO(), time.Since(started), b.ServerConfig.Status.S3Working)
 	return nil
 }

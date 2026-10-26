@@ -122,7 +122,7 @@ func (b *SyncJobManager) SyncSource(ctx context.Context, syncJob SyncJobParams) 
 	username, password, region, err := b.getUsernamePasswordRegion(syncSource)
 	if err != nil {
 		slog.Error("Error getting username, password, and region", "error", err, "site_id", syncJob.SiteID, "sync_type", syncJob.Type)
-		b.controlDB.Logs.Error(ctx, &syncJob.SiteID, err, map[string]any{"sync_type": syncJob.Type})
+		b.controlDB.Logs.SyncError(ctx, syncJob.SiteID, syncJob.Type, err)
 		return nil
 	}
 

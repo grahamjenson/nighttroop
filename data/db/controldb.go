@@ -195,7 +195,7 @@ func (db *ControlDB) CreateSite() (*SiteCreateResult, error) {
 	}
 
 	db.sites[subdomain] = siteDB
-	db.Logs.Event(context.TODO(), &subdomain, "site_created", nil)
+	db.Logs.SiteCreatedEvent(context.TODO(), subdomain)
 
 	return &SiteCreateResult{
 		SiteDB:          siteDB,

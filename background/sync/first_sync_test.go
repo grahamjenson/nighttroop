@@ -59,7 +59,7 @@ func TestFailedFirstSyncDisablesTheSource(t *testing.T) {
 	syncErrors, err := controlDB.Logs.Queries.SearchErrors(ctx, logsdb.SearchErrorsParams{SiteID: &siteID, Limit: 10})
 	require.NoError(t, err)
 	require.Len(t, syncErrors, 1)
-	require.Equal(t, `{"sync_type":"dexcom"}`, *syncErrors[0].Attributes)
+	require.Equal(t, `{"kind":"sync","sync_type":"dexcom"}`, *syncErrors[0].Attributes)
 	events, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &siteID, Limit: 10})
 	require.NoError(t, err)
 	require.Equal(t, "sync_turned_off", events[0].Name)

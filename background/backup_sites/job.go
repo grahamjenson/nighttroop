@@ -99,7 +99,7 @@ func (b *BackupSiteJobManager) DeleteUnusedSites(batch string) error {
 		return err
 	}
 	for _, siteID := range deleteList {
-		b.controlDB.Logs.Event(context.TODO(), &siteID, "site_deleted", map[string]any{"reason": "unused"})
+		b.controlDB.Logs.SiteDeletedEvent(context.TODO(), siteID, "unused")
 	}
 	return nil
 }
@@ -155,7 +155,7 @@ func (b *BackupSiteJobManager) BackupSiteBatch(char string) (err error) {
 	ctx := context.TODO()
 	defer func() {
 		if err != nil {
-			b.controlDB.Logs.Error(ctx, nil, err, map[string]any{"batch": char})
+			b.controlDB.Logs.SiteBatchBackupError(ctx, char, err)
 		}
 	}()
 
@@ -192,9 +192,7 @@ func (b *BackupSiteJobManager) BackupSiteBatch(char string) (err error) {
 	if err != nil {
 		return fmt.Errorf("cannot sync site pool %s: %w", string(char), err)
 	}
-	b.controlDB.Logs.Event(ctx, nil, "site_batch_backed_up", map[string]any{
-		"batch": char, "site_count": len(paths), "duration_ms": time.Since(started).Milliseconds(), "uploaded": b.ServerConfig.Status.S3Working,
-	})
+	b.controlDB.Logs.SiteBatchBackedUpEvent(ctx, char, len(paths), time.Since(started), b.ServerConfig.Status.S3Working)
 
 	// Copy the control db to the backup location
 	return nil

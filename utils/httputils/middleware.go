@@ -2,7 +2,6 @@ package httputils
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"time"
@@ -53,9 +52,7 @@ func RecordServerErrors(logs *db.LogsDB) func(http.Handler) http.Handler {
 			if routeContext := chi.RouteContext(r.Context()); routeContext != nil {
 				route = routeContext.RoutePattern()
 			}
-			logs.Error(context.WithoutCancel(r.Context()), siteID, fmt.Errorf("%d %s", ww.Status(), http.StatusText(ww.Status())), map[string]any{
-				"method": r.Method, "route": route, "request_id": middleware.GetReqID(r.Context()),
-			})
+			logs.ServerError(context.WithoutCancel(r.Context()), siteID, ww.Status(), r.Method, route, middleware.GetReqID(r.Context()))
 		})
 	}
 }

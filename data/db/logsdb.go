@@ -17,14 +17,6 @@ type LogsDB struct {
 	*logsdb.DB
 }
 
-// The levels a log can be
-const (
-	LogLevelDebug = "debug"
-	LogLevelInfo  = "info"
-	LogLevelWarn  = "warn"
-	LogLevelError = "error"
-)
-
 // maxMessageLength and maxAttributesLength are the longest message and attributes JSON the tables keep
 const (
 	maxMessageLength    = 1024
@@ -40,20 +32,22 @@ func NewLogsDB(ctx context.Context, cfg *config.ServerConfig) (*LogsDB, error) {
 }
 
 // Recording is best effort: a log, event or error that cannot be written is only logged with slog, so recording
-// never fails what is being recorded. The site ID must come from the site context, never from a request.
+// never fails what is being recorded. Events and errors are recorded with their own methods, in logs_records.go.
 
-// Log records a message at a level, e.g. LogLevelInfo
-func (l *LogsDB) Log(ctx context.Context, siteID *string, level string, message string, attributes map[string]any) {
-	l.record("log", l.Queries.InsertLog(ctx, logsdb.InsertLogParams{SiteID: siteID, Level: level, Message: truncate(message), Attributes: attributesJSON(attributes)}))
+// Log records a message at a level, with any attributes
+func (l *LogsDB) Log(ctx context.Context, siteID *string, level LogLevel, message string, attributes map[string]any) {
+	var attrs any
+	if len(attributes) > 0 {
+		attrs = attributes
+	}
+	l.record("log", l.Queries.InsertLog(ctx, logsdb.InsertLogParams{SiteID: siteID, Level: string(level), Message: truncate(message), Attributes: attributesJSON(attrs)}))
 }
 
-// Event records something that happened, e.g. site_created
-func (l *LogsDB) Event(ctx context.Context, siteID *string, name string, attributes map[string]any) {
-	l.record("event", l.Queries.InsertEvent(ctx, logsdb.InsertEventParams{SiteID: siteID, Name: name, Attributes: attributesJSON(attributes)}))
+func (l *LogsDB) event(ctx context.Context, siteID *string, name EventName, attributes any) {
+	l.record("event", l.Queries.InsertEvent(ctx, logsdb.InsertEventParams{SiteID: siteID, Name: string(name), Attributes: attributesJSON(attributes)}))
 }
 
-// Error records an error
-func (l *LogsDB) Error(ctx context.Context, siteID *string, err error, attributes map[string]any) {
+func (l *LogsDB) error(ctx context.Context, siteID *string, err error, attributes any) {
 	l.record("error", l.Queries.InsertError(ctx, logsdb.InsertErrorParams{SiteID: siteID, Message: truncate(err.Error()), Attributes: attributesJSON(attributes)}))
 }
 
@@ -86,8 +80,8 @@ func truncate(message string) string {
 }
 
 // attributesJSON is the attributes as JSON, nil when there are none, or a note when they are too long to keep
-func attributesJSON(attributes map[string]any) *string {
-	if len(attributes) == 0 {
+func attributesJSON(attributes any) *string {
+	if attributes == nil {
 		return nil
 	}
 	raw, err := json.Marshal(attributes)

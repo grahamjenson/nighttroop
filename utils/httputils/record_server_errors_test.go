@@ -54,6 +54,7 @@ func TestRecordServerErrors(t *testing.T) {
 			require.Len(t, recorded, 1)
 			require.Equal(t, test.message, recorded[0].Message)
 			// The route's pattern is recorded, not the path with its token
+			require.Contains(t, *recorded[0].Attributes, `"kind":"server"`)
 			require.Contains(t, *recorded[0].Attributes, `"route":"/api/v2/authorization/request/{token}"`)
 			require.NotContains(t, *recorded[0].Attributes, "pathtoken123")
 			if test.site {
