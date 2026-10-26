@@ -24,6 +24,11 @@ func (s *GlucoseReadingsCollection) GetName() string {
 	return "glucose"
 }
 
+// GetRoute is where the collection is in its URL
+func (s *GlucoseReadingsCollection) GetRoute() string {
+	return "glucose"
+}
+
 // ////
 // CREATE
 // ////

@@ -26,6 +26,11 @@ func (s *InsulinDosesCollection) GetName() string {
 	return "insulin_doses"
 }
 
+// GetRoute is where the collection is in its URL
+func (s *InsulinDosesCollection) GetRoute() string {
+	return "insulin_doses"
+}
+
 // ////
 // CREATE
 // ////

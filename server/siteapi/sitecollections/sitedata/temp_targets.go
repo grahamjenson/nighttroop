@@ -27,6 +27,11 @@ func (s *TempTargetsCollection) GetName() string {
 	return "temp_targets"
 }
 
+// GetRoute is where the collection is in its URL
+func (s *TempTargetsCollection) GetRoute() string {
+	return "temp_targets"
+}
+
 // ////
 // CREATE
 // ////

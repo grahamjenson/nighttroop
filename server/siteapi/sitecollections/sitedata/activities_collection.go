@@ -26,6 +26,11 @@ func (s *ActivitiesCollection) GetName() string {
 	return "activities"
 }
 
+// GetRoute is where the collection is in its URL
+func (s *ActivitiesCollection) GetRoute() string {
+	return "activities"
+}
+
 // ////
 // CREATE
 // ////

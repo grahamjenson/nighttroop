@@ -29,6 +29,11 @@ type SyncSettingsCollection struct{}
 // Shared
 // ////
 func (s *SyncSettingsCollection) GetName() string {
+	return "sync_settings"
+}
+
+// GetRoute is where the collection is in its URL
+func (s *SyncSettingsCollection) GetRoute() string {
 	return "sync"
 }
 

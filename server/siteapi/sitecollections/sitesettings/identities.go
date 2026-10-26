@@ -34,6 +34,11 @@ func (s *IdentitiesCollection) GetName() string {
 	return "identities"
 }
 
+// GetRoute is where the collection is in its URL
+func (s *IdentitiesCollection) GetRoute() string {
+	return "identities"
+}
+
 // ////
 // CREATE
 // ////
