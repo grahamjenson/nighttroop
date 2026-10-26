@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/models/controlmodels"
-	"nighttroop.t1d.nz/server/components/control_templ"
+	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/table"
 )
@@ -47,12 +47,12 @@ func stateClass(source *controlmodels.SyncSource) string {
 	return ""
 }
 
-// SyncSourcesTable shows one page of sync sources, most recently attempted first, with buttons to the pages either side
+// SyncSourcesTable shows one page of sync sources, the most recently failed first, with buttons to the pages either side
 templ SyncSourcesTable(sources []*controlmodels.SyncSource, skip int64, limit int64) {
 	<div id="sync_sources_table" class="mx-auto max-w-5xl space-y-6">
 		<div>
 			<h1 class="text-2xl font-bold">Sync Sources</h1>
-			<p class="mt-1 text-gray-500">Every site's sync sources, most recently attempted first. Click a source to see its reports.</p>
+			<p class="mt-1 text-gray-500">Every site's sync sources, the most recently failed first. Click a source to see its reports.</p>
 		</div>
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			@table.Table(table.Props{ID: "controlSyncSourcesTable", Class: "rounded-lg border border-gray-200"}) {
@@ -131,46 +131,40 @@ templ syncSourceRow(source *controlmodels.SyncSource) {
 
 // SyncSourceModal shows a sync source's reports: when it synced, how often, how long it took and its recent errors
 templ SyncSourceModal(source *controlmodels.SyncSource) {
-	<div id="control--sync-source--details" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-		<div class="max-h-full w-full max-w-lg overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
-			<h2 class="text-lg font-semibold">{ source.SiteID } / { string(source.Type) }</h2>
-			<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-				@syncSourceDetail("State", state(source))
-				if source.Region != nil {
-					@syncSourceDetail("Region", *source.Region)
-				}
-				@syncSourceDetail("Created", formatDate(&source.CreatedAt))
-				@syncSourceDetail("Updated", formatDate(&source.UpdatedAt))
-				@syncSourceDetail("First Successful Sync", formatDate(source.FirstSuccessfulSyncTime))
-				@syncSourceDetail("Sync Interval", fmt.Sprintf("%ds (%s)", source.SyncIntervalSeconds, source.SyncIntervalSecondsReason))
-				@syncSourceDetail("Last Attempted", formatDate(source.LastAttemptedSync))
-				@syncSourceDetail("Last Success", formatDate(source.LastSuccessfulSync))
-				@syncSourceDetail("Last Failure", formatDate(source.LastFailedSync))
-				@syncSourceDetail("Total Syncs", orDash(source.TotalSyncs))
-				@syncSourceDetail("Succeeded", orDash(source.TotalSuccessfulSyncs))
-				@syncSourceDetail("Failed", orDash(source.TotalFailedSyncs))
-				@syncSourceDetail("Successes In A Row", orDash(source.ConsecutiveSuccessfulSyncs))
-				@syncSourceDetail("Failures In A Row", orDash(source.ConsecutiveFailedSyncs))
-				@syncSourceDetail("Last Sync Duration (ms)", orDash(source.LastSyncDuration))
-				@syncSourceDetail("Total EMA", orDash(source.TotalEma))
-				@syncSourceDetail("Success EMA", orDash(source.SuccessEma))
-				@syncSourceDetail("Failure EMA", orDash(source.FailureEma))
-			</dl>
-			<h3 class="mt-4 text-sm font-semibold">Previous Errors</h3>
-			if len(source.PreviousSyncErrors) == 0 {
-				<p class="mt-1 text-sm text-gray-500">No errors.</p>
-			} else {
-				<ul id="control--sync-source--errors" class="mt-1 max-h-48 list-disc space-y-1 overflow-y-auto pl-5 text-sm text-red-700">
-					for _, e := range source.PreviousSyncErrors {
-						<li class="break-all">{ e }</li>
-					}
-				</ul>
+	@modal.Modal(modal.Props{ID: "control--sync-source--details", Title: source.SiteID + " / " + string(source.Type)}) {
+		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+			@syncSourceDetail("State", state(source))
+			if source.Region != nil {
+				@syncSourceDetail("Region", *source.Region)
 			}
-			<div class="mt-4 flex justify-end">
-				@control_templ.CloseButton("control--sync-source--details--close")
-			</div>
-		</div>
-	</div>
+			@syncSourceDetail("Created", formatDate(&source.CreatedAt))
+			@syncSourceDetail("Updated", formatDate(&source.UpdatedAt))
+			@syncSourceDetail("First Successful Sync", formatDate(source.FirstSuccessfulSyncTime))
+			@syncSourceDetail("Sync Interval", fmt.Sprintf("%ds (%s)", source.SyncIntervalSeconds, source.SyncIntervalSecondsReason))
+			@syncSourceDetail("Last Attempted", formatDate(source.LastAttemptedSync))
+			@syncSourceDetail("Last Success", formatDate(source.LastSuccessfulSync))
+			@syncSourceDetail("Last Failure", formatDate(source.LastFailedSync))
+			@syncSourceDetail("Total Syncs", orDash(source.TotalSyncs))
+			@syncSourceDetail("Succeeded", orDash(source.TotalSuccessfulSyncs))
+			@syncSourceDetail("Failed", orDash(source.TotalFailedSyncs))
+			@syncSourceDetail("Successes In A Row", orDash(source.ConsecutiveSuccessfulSyncs))
+			@syncSourceDetail("Failures In A Row", orDash(source.ConsecutiveFailedSyncs))
+			@syncSourceDetail("Last Sync Duration (ms)", orDash(source.LastSyncDuration))
+			@syncSourceDetail("Total EMA", orDash(source.TotalEma))
+			@syncSourceDetail("Success EMA", orDash(source.SuccessEma))
+			@syncSourceDetail("Failure EMA", orDash(source.FailureEma))
+		</dl>
+		<h3 class="mt-4 text-sm font-semibold">Previous Errors</h3>
+		if len(source.PreviousSyncErrors) == 0 {
+			<p class="mt-1 text-sm text-gray-500">No errors.</p>
+		} else {
+			<ul id="control--sync-source--errors" class="mt-1 max-h-48 list-disc space-y-1 overflow-y-auto pl-5 text-sm text-red-700">
+				for _, e := range source.PreviousSyncErrors {
+					<li class="break-all">{ e }</li>
+				}
+			</ul>
+		}
+	}
 }
 
-var syncSourceDetail = control_templ.Detail
+var syncSourceDetail = modal.Detail

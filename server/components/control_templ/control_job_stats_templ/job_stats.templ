@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/models/controlmodels"
-	"nighttroop.t1d.nz/server/components/control_templ"
+	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/table"
 )
@@ -129,33 +129,27 @@ templ jobStatsRow(stats *controlmodels.JobStatsDaily) {
 // JobStatsModal shows a day's totals for a job and the distinct errors its failures had
 templ JobStatsModal(stats *controlmodels.JobStatsDaily) {
 	{{ day, queue, job := dayQueueJob(stats) }}
-	<div id="control--job-stats--details" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-		<div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-lg">
-			<h2 class="text-lg font-semibold">{ queue } / { job }</h2>
-			<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-				@jobStatsDetail("Day", day)
-				@jobStatsDetail("Jobs", fmt.Sprint(stats.TotalJobs))
-				@jobStatsDetail("Succeeded", fmt.Sprint(stats.TotalSuccess))
-				@jobStatsDetail("Failed", fmt.Sprint(stats.TotalFailed))
-				@jobStatsDetail("Mean Duration", meanDuration(stats))
-				@jobStatsDetail("Std Dev Duration", stdDevDuration(stats))
-				@jobStatsDetail("Updated", formatDate(stats.UpdatedAt))
-			</dl>
-			<h3 class="mt-4 text-sm font-semibold">Errors</h3>
-			if len(stats.Errors) == 0 {
-				<p class="mt-1 text-sm text-gray-500">No errors.</p>
-			} else {
-				<ul id="control--job-stats--errors" class="mt-1 max-h-48 list-disc space-y-1 overflow-y-auto pl-5 text-sm text-red-700">
-					for _, e := range stats.Errors {
-						<li class="break-all">{ e }</li>
-					}
-				</ul>
-			}
-			<div class="mt-4 flex justify-end">
-				@control_templ.CloseButton("control--job-stats--details--close")
-			</div>
-		</div>
-	</div>
+	@modal.Modal(modal.Props{ID: "control--job-stats--details", Title: queue + " / " + job}) {
+		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+			@jobStatsDetail("Day", day)
+			@jobStatsDetail("Jobs", fmt.Sprint(stats.TotalJobs))
+			@jobStatsDetail("Succeeded", fmt.Sprint(stats.TotalSuccess))
+			@jobStatsDetail("Failed", fmt.Sprint(stats.TotalFailed))
+			@jobStatsDetail("Mean Duration", meanDuration(stats))
+			@jobStatsDetail("Std Dev Duration", stdDevDuration(stats))
+			@jobStatsDetail("Updated", formatDate(stats.UpdatedAt))
+		</dl>
+		<h3 class="mt-4 text-sm font-semibold">Errors</h3>
+		if len(stats.Errors) == 0 {
+			<p class="mt-1 text-sm text-gray-500">No errors.</p>
+		} else {
+			<ul id="control--job-stats--errors" class="mt-1 max-h-48 list-disc space-y-1 overflow-y-auto pl-5 text-sm text-red-700">
+				for _, e := range stats.Errors {
+					<li class="break-all">{ e }</li>
+				}
+			</ul>
+		}
+	}
 }
 
-var jobStatsDetail = control_templ.Detail
+var jobStatsDetail = modal.Detail

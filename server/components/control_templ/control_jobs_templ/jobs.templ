@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/models/controlmodels"
-	"nighttroop.t1d.nz/server/components/control_templ"
+	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/table"
 )
@@ -113,36 +113,30 @@ templ jobRow(job *controlmodels.Job) {
 
 // JobModal shows all of a job's details and the errors its attempts had
 templ JobModal(job *controlmodels.Job) {
-	<div id="control--job--details" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-		<div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-lg">
-			<h2 class="text-lg font-semibold">{ fmt.Sprintf("Job %d", job.ID) }</h2>
-			<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-				@jobDetail("Queue", job.Queue)
-				@jobDetail("Job", job.Job)
-				@jobDetail("Status", job.JobStatus)
-				@jobDetail("Remaining Attempts", fmt.Sprint(job.RemainingAttempts))
-				@jobDetail("Deduping Key", job.DedupingKey)
-				@jobDetail("Created", formatDate(job.CreatedAt))
-				@jobDetail("Execute After", formatDate(job.ExecuteAfter))
-				@jobDetail("Fetched", formatDate(job.ConsumerFetchedAt))
-				@jobDetail("Finished", formatDate(job.FinishedAt))
-				@jobDetail("Duration", duration(job))
-			</dl>
-			<h3 class="mt-4 text-sm font-semibold">Errors</h3>
-			if len(job.Errors) == 0 {
-				<p class="mt-1 text-sm text-gray-500">No errors.</p>
-			} else {
-				<ul id="control--job--errors" class="mt-1 max-h-48 list-disc space-y-1 overflow-y-auto pl-5 text-sm text-red-700">
-					for _, e := range job.Errors {
-						<li class="break-all">{ e }</li>
-					}
-				</ul>
-			}
-			<div class="mt-4 flex justify-end">
-				@control_templ.CloseButton("control--job--details--close")
-			</div>
-		</div>
-	</div>
+	@modal.Modal(modal.Props{ID: "control--job--details", Title: fmt.Sprintf("Job %d", job.ID)}) {
+		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+			@jobDetail("Queue", job.Queue)
+			@jobDetail("Job", job.Job)
+			@jobDetail("Status", job.JobStatus)
+			@jobDetail("Remaining Attempts", fmt.Sprint(job.RemainingAttempts))
+			@jobDetail("Deduping Key", job.DedupingKey)
+			@jobDetail("Created", formatDate(job.CreatedAt))
+			@jobDetail("Execute After", formatDate(job.ExecuteAfter))
+			@jobDetail("Fetched", formatDate(job.ConsumerFetchedAt))
+			@jobDetail("Finished", formatDate(job.FinishedAt))
+			@jobDetail("Duration", duration(job))
+		</dl>
+		<h3 class="mt-4 text-sm font-semibold">Errors</h3>
+		if len(job.Errors) == 0 {
+			<p class="mt-1 text-sm text-gray-500">No errors.</p>
+		} else {
+			<ul id="control--job--errors" class="mt-1 max-h-48 list-disc space-y-1 overflow-y-auto pl-5 text-sm text-red-700">
+				for _, e := range job.Errors {
+					<li class="break-all">{ e }</li>
+				}
+			</ul>
+		}
+	}
 }
 
-var jobDetail = control_templ.Detail
+var jobDetail = modal.Detail

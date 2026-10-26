@@ -11,6 +11,8 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
+	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -100,3 +102,30 @@ func TestSearchSitesOrders(t *testing.T) {
 }
 
 func ptr(v int64) *int64 { return &v }
+
+func TestSearchSyncSourcesFailedFirst(t *testing.T) {
+	_, controlDB, err := testutils.GetConfigControlDBForTest()
+	require.NoError(t, err)
+	ctx, q := context.TODO(), controlDB.Queries
+	site, err := controlDB.CreateSite()
+	require.NoError(t, err)
+	siteID := site.SiteDB.Subdomain
+
+	// Nightscout failed first and Dexcom failed last; Virtual never fails, and was synced most recently
+	for _, sourceType := range []consts.SyncSourceType{consts.SyncSourceTypeVirtual, consts.SyncSourceTypeNightscout, consts.SyncSourceTypeDexcom} {
+		require.NoError(t, q.CreateSyncSource(ctx, controldb.CreateSyncSourceParams{SiteID: siteID, Type: sourceType, Enabled: true}))
+	}
+	for _, sourceType := range []consts.SyncSourceType{consts.SyncSourceTypeNightscout, consts.SyncSourceTypeDexcom} {
+		require.NoError(t, q.UpdateSyncSourceReportsFailure(ctx, controldb.UpdateSyncSourceReportsFailureParams{SiteID: siteID, Type: sourceType, ErrorMessages: errors.ErrorList{"failed"}}))
+		time.Sleep(2 * time.Millisecond)
+	}
+	require.NoError(t, q.UpdateSyncSourceReportsSuccess(ctx, controldb.UpdateSyncSourceReportsSuccessParams{SiteID: siteID, Type: consts.SyncSourceTypeVirtual}))
+
+	sources, err := q.SearchSyncSources(ctx, controldb.SearchSyncSourcesParams{Limit: 10})
+	require.NoError(t, err)
+	types := []consts.SyncSourceType{}
+	for _, source := range sources {
+		types = append(types, source.Type)
+	}
+	require.Equal(t, []consts.SyncSourceType{consts.SyncSourceTypeDexcom, consts.SyncSourceTypeNightscout, consts.SyncSourceTypeVirtual}, types)
+}
