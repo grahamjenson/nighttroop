@@ -81,7 +81,3 @@ func RawParam(r *http.Request) bool {
 	}
 	return raw.Bool()
 }
-
-func ptr[T any](v T) *T {
-	return &v
-}

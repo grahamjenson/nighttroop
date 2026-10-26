@@ -43,16 +43,6 @@ type Client struct {
 	jwtExpire *time.Time
 }
 
-func lastModifiedEndpoint(nsURL string) string { return fmt.Sprintf("%s/api/v3/lastModified", nsURL) }
-func currentProfileEndpoint(nsURL string) string {
-	return fmt.Sprintf("%s/api/v3/profile?sort$desc=date&limit=1", nsURL)
-}
-func deviceStatusEndpoint(nsURL string) string {
-	return fmt.Sprintf("%s/api/v3/devicestatus?sort$desc=date&limit=1", nsURL)
-}
-func treatmentsHistoryEndpoint(nsURL string, createdAt int, limit int) string {
-	return fmt.Sprintf("%s/api/v3/treatments?sort$desc=created_at&created_at$gte=%d&limit=%d", nsURL, createdAt, limit)
-}
 func entryHistoryEndpoint(nsURL string, gteCreatedAt int, limit int) string {
 	return fmt.Sprintf("%s/api/v3/entries?sort$desc=date&date$gte=%d&limit=%d", nsURL, gteCreatedAt, limit)
 }

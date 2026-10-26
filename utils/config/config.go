@@ -499,10 +499,6 @@ func (config *ServerConfig) IsHTTPS() bool {
 	return config.HostProtocol == "https"
 }
 
-func ptr[T any](v T) *T {
-	return &v
-}
-
 func MergeMaps(a, b map[string]string) map[string]string {
 	result := make(map[string]string, len(a)+len(b))
 

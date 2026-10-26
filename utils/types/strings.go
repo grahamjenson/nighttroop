@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -63,8 +62,6 @@ func (s *SanitizedString) Stringp() *string {
 	str := string(*s)
 	return &str
 }
-
-var tagRe = regexp.MustCompile(`<[^>]*>`)
 
 func StripAllTags(input string) string {
 	doc, err := html.Parse(strings.NewReader(input))
