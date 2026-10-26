@@ -62,7 +62,7 @@ func TryAuthWithJWTToken(config *config.ServerConfig, r *http.Request) (*control
 		}
 		identity, err := GetSiteIdentity(r.Context(), subdomain, identityName, consts.IdentityRole(role))
 		if err != nil {
-			slog.Error("Bad JWT token cant find identity", "error", err)
+			slog.Warn("Bad JWT token cant find identity", "error", err)
 			return nil, fmt.Errorf("identity not found: %w", err)
 		}
 		return identity, nil
@@ -78,12 +78,12 @@ func TryAuthWithJWTToken(config *config.ServerConfig, r *http.Request) (*control
 		jwttokenStr := cookieToken
 		subdomain, identityName, role, err := config.Security.VerifyUserJWTToken(jwttokenStr)
 		if err != nil {
-			slog.Error("Bad Cookie JWT token", "error", err)
+			slog.Info("Bad Cookie JWT token", "error", err)
 			return nil, fmt.Errorf("Bad Cookie JWT token: %w", err)
 		}
 		identity, err := GetSiteIdentity(r.Context(), subdomain, identityName, consts.IdentityRole(role))
 		if err != nil {
-			slog.Error("Bad Cookie JWT token cant find identity", "error", err)
+			slog.Warn("Bad Cookie JWT token cant find identity", "error", err)
 			return nil, fmt.Errorf("Bad Cookie JWT token: %w", err)
 		}
 		return identity, nil
