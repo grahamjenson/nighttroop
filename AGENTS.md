@@ -44,6 +44,7 @@ Use code generators where possible, especially for building models and params fo
 
 - Only ever use prepared statements: add a named query to `data/sql/*/queries` and call the generated sqlc method.
 - Never run raw SQL strings (e.g. `ExecContext`, `QueryContext`), including in tests.
+- A column holding JSON is named with `json` (or is a list of `errors` or `attributes`) and CHECKs `json_valid` on its line; `go generate` fails otherwise.
 - The one exception is generated upkeep sqlc cannot express, such as each DB's `Vacuum`, in `data/sql/gen/db.go`.
 
 ## Models and the JSON API
