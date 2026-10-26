@@ -847,6 +847,16 @@ func (m *SiteSyncSource) SetFirstSuccessfulSyncTime(v *int64) {
 	m.FirstSuccessfulSyncTime = v
 }
 
+// GetEntriesLastModified returns the EntriesLastModified value.
+func (m SiteSyncSource) GetEntriesLastModified() *int64 {
+	return m.EntriesLastModified
+}
+
+// SetEntriesLastModified sets the EntriesLastModified value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetEntriesLastModified(v *int64) {
+	m.EntriesLastModified = v
+}
+
 // GetSyncIntervalSecondsReason returns the SyncIntervalSecondsReason value.
 func (m SiteSyncSource) GetSyncIntervalSecondsReason() string {
 	return m.SyncIntervalSecondsReason
@@ -2944,6 +2954,36 @@ func (m DeleteSyncSourceParams) GetSiteID() string {
 
 // SetSiteID sets the SiteID value and returns the updated DeleteSyncSourceParams.
 func (m *DeleteSyncSourceParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetEntriesLastModified returns the EntriesLastModified value.
+func (m UpdateSyncSourceEntriesLastModifiedParams) GetEntriesLastModified() *int64 {
+	return m.EntriesLastModified
+}
+
+// SetEntriesLastModified sets the EntriesLastModified value and returns the updated UpdateSyncSourceEntriesLastModifiedParams.
+func (m *UpdateSyncSourceEntriesLastModifiedParams) SetEntriesLastModified(v *int64) {
+	m.EntriesLastModified = v
+}
+
+// GetType returns the Type value.
+func (m UpdateSyncSourceEntriesLastModifiedParams) GetType() consts.SyncSourceType {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated UpdateSyncSourceEntriesLastModifiedParams.
+func (m *UpdateSyncSourceEntriesLastModifiedParams) SetType(v consts.SyncSourceType) {
+	m.Type = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m UpdateSyncSourceEntriesLastModifiedParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated UpdateSyncSourceEntriesLastModifiedParams.
+func (m *UpdateSyncSourceEntriesLastModifiedParams) SetSiteID(v string) {
 	m.SiteID = v
 }
 

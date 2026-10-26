@@ -44,6 +44,8 @@ type SyncJobInfo struct {
 	region          consts.DexcomRegion
 	// firstSync is true until a sync has worked since the source was saved; a failure then disables it
 	firstSync bool
+	// entriesLastModified is Nightscout's lastModified for entries when they were last read
+	entriesLastModified *int64
 }
 
 type SyncUserInfo struct {
@@ -134,6 +136,8 @@ func (b *SyncJobManager) SyncSource(ctx context.Context, syncJob SyncJobParams) 
 		password:        password,
 		region:          region,
 		firstSync:       syncSource.FirstSuccessfulSyncTime == nil,
+
+		entriesLastModified: syncSource.EntriesLastModified,
 	}
 	return b.SyncUserData(syncInfo)
 }
