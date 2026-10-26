@@ -26,14 +26,14 @@ type nightscoutClient struct {
 }
 
 // nightscoutClientFor returns the site's kept client, or a new one when there is none or its URL or token has changed.
-// There is at most one per site, so saving new details many times does not grow them.
+// There is at most one per site, so saving new details many times does not grow them, and at most maxNightscoutClients.
 func (b *SyncJobManager) nightscoutClientFor(syncInfo *SyncJobInfo) *nightscoutClient {
 	b.nightscoutClientsLock.Lock()
 	defer b.nightscoutClientsLock.Unlock()
-	c := b.nightscoutClients[syncInfo.SiteID]
+	c, _ := b.nightscoutClients.Get(syncInfo.SiteID)
 	if c == nil || c.url != syncInfo.urlOrUsername || c.token != syncInfo.password {
 		c = &nightscoutClient{url: syncInfo.urlOrUsername, token: syncInfo.password, Client: nightscout_client.NewClient(syncInfo.urlOrUsername, syncInfo.password), lastModified: map[nsutils.Collection]int64{}}
-		b.nightscoutClients[syncInfo.SiteID] = c
+		b.nightscoutClients.Add(syncInfo.SiteID, c)
 	}
 	return c
 }

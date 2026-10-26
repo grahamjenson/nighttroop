@@ -2,6 +2,7 @@ package sync
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -48,7 +49,8 @@ func TestNightscoutSyncRemembersWhenCollectionsWereModified(t *testing.T) {
 	}
 	runSync := func() map[nsutils.Collection]int64 {
 		require.NoError(t, jobs.SyncSource(ctx, SyncJobParams{SiteID: siteID, Type: typ}))
-		return jobs.nightscoutClients[siteID].lastModified
+		client, _ := jobs.nightscoutClients.Get(siteID)
+		return client.lastModified
 	}
 
 	// A sync reads entries, treatments and device statuses and its client remembers when Nightscout says each was last modified
@@ -60,9 +62,10 @@ func TestNightscoutSyncRemembersWhenCollectionsWereModified(t *testing.T) {
 
 	// New details may be another Nightscout, so their new client reads everything again
 	require.NoError(t, q.UpdateSyncSource(ctx, controldb.UpdateSyncSourceParams{SiteID: siteID, Type: typ, PasswordEnc: enc("new-token"), Enabled: true}))
-	first := jobs.nightscoutClients[siteID]
+	first, _ := jobs.nightscoutClients.Get(siteID)
 	require.Equal(t, all(nightscout_client.TestLastModified), runSync())
-	require.NotSame(t, first, jobs.nightscoutClients[siteID])
+	second, _ := jobs.nightscoutClients.Get(siteID)
+	require.NotSame(t, first, second)
 }
 
 func TestNightscoutClientIsKeptBetweenSyncs(t *testing.T) {
@@ -77,7 +80,8 @@ func TestNightscoutClientIsKeptBetweenSyncs(t *testing.T) {
 	}
 	runSync := func() *nightscoutClient {
 		require.NoError(t, jobs.SyncSource(ctx, SyncJobParams{SiteID: siteID, Type: typ}))
-		return jobs.nightscoutClients[siteID]
+		client, _ := jobs.nightscoutClients.Get(siteID)
+		return client
 	}
 
 	// The second sync uses the first's client, and so its JWT
@@ -91,7 +95,27 @@ func TestNightscoutClientIsKeptBetweenSyncs(t *testing.T) {
 	second := runSync()
 	require.NotSame(t, first, second)
 	require.Equal(t, "new-token", second.token)
-	require.Len(t, jobs.nightscoutClients, 1)
+	require.Equal(t, 1, jobs.nightscoutClients.Len())
+}
+
+func TestNightscoutClientsAreBounded(t *testing.T) {
+	cfg, controlDB, _, err := testutils.GetConfigControlDBAndSiteDBForTest()
+	require.NoError(t, err)
+	jobs := SetupSyncJobManager(cfg, controlDB)
+	clientFor := func(i int) *nightscoutClient {
+		return jobs.nightscoutClientFor(&SyncJobInfo{SiteID: fmt.Sprintf("site-%d", i), urlOrUsername: nightscout_client.TestValidURL, password: "token"})
+	}
+
+	// Once there are too many, the least recently used site's client is dropped
+	first := clientFor(0)
+	for i := 1; i < maxNightscoutClients; i++ {
+		clientFor(i)
+	}
+	require.Same(t, first, clientFor(0), "using it makes site-1 the least recently used")
+	clientFor(maxNightscoutClients)
+	require.Equal(t, maxNightscoutClients, jobs.nightscoutClients.Len())
+	require.True(t, jobs.nightscoutClients.Contains("site-0"))
+	require.False(t, jobs.nightscoutClients.Contains("site-1"))
 }
 
 func TestNightscoutSyncCopiesEntriesTreatmentsAndDeviceStatuses(t *testing.T) {
