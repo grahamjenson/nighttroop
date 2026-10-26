@@ -8,6 +8,7 @@ import (
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/display"
 )
 
 // formatDate shows an optional time in ms, or a dash when it is not set
@@ -115,10 +116,10 @@ templ syncSourceRow(source *controlmodels.SyncSource) {
 			<span class={ stateClass(source) }>{ state(source) }</span>
 		}
 		@table.Cell() {
-			{ formatDate(source.LastAttemptedSync) }
+			<span title={ formatDate(source.LastAttemptedSync) }>{ display.Ago(source.LastAttemptedSync, time.Now()) }</span>
 		}
 		@table.Cell() {
-			{ formatDate(source.LastSuccessfulSync) }
+			<span title={ formatDate(source.LastSuccessfulSync) }>{ display.Ago(source.LastSuccessfulSync, time.Now()) }</span>
 		}
 		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ orDash(source.TotalSuccessfulSyncs) }
