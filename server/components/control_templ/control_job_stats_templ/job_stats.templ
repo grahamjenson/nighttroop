@@ -63,16 +63,16 @@ templ JobStatsTable(stats []*controlmodels.JobStatsDaily, skip int64, limit int6
 						@table.Head() {
 							Job
 						}
-						@table.Head() {
+						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
 							Jobs
 						}
-						@table.Head() {
+						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
 							Succeeded
 						}
-						@table.Head() {
+						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
 							Failed
 						}
-						@table.Head() {
+						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
 							Mean Duration
 						}
 					}
@@ -140,16 +140,16 @@ templ jobStatsRow(stats *controlmodels.JobStatsDaily) {
 		@table.Cell() {
 			{ job }
 		}
-		@table.Cell() {
+		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ fmt.Sprint(stats.TotalJobs) }
 		}
-		@table.Cell() {
+		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ fmt.Sprint(stats.TotalSuccess) }
 		}
-		@table.Cell() {
+		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ fmt.Sprint(stats.TotalFailed) }
 		}
-		@table.Cell() {
+		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ meanDuration(stats) }
 		}
 	}

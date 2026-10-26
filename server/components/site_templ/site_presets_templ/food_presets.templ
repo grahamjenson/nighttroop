@@ -30,10 +30,10 @@ templ FoodPresetsTable(foodPresets []*sitemodels.SiteFoodPreset, skip int64, lim
 						@table.Head() {
 							Name
 						}
-						@table.Head() {
+						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
 							Carbs g
 						}
-						@table.Head() {
+						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
 							Absorption (minutes)
 						}
 						@table.Head() {
@@ -148,10 +148,10 @@ templ foodPresetRow(foodPreset *sitemodels.SiteFoodPreset) {
 		@table.Cell() {
 			{ orDash(foodPreset.Name) }
 		}
-		@table.Cell() {
+		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ orDash(foodPreset.Carbs) }
 		}
-		@table.Cell() {
+		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ orDash(foodPreset.AbsorptionTimeMinutes) }
 		}
 		@table.Cell() {

@@ -41,13 +41,13 @@ templ ProfileSwitchesTable(profileSwitches []*sitemodels.SiteProfileSwitch, skip
 						@table.Head() {
 							Name
 						}
-						@table.Head() {
+						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
 							Percent
 						}
-						@table.Head() {
+						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
 							Shift
 						}
-						@table.Head() {
+						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
 							Minutes
 						}
 						@table.Head() {
@@ -182,13 +182,13 @@ templ profileSwitchRow(profileSwitch *sitemodels.SiteProfileSwitch) {
 		@table.Cell() {
 			{ profileSwitch.Name }
 		}
-		@table.Cell() {
+		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ orDash(profileSwitch.Percent) }
 		}
-		@table.Cell() {
+		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ orDash(profileSwitch.Timeshift) }
 		}
-		@table.Cell() {
+		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ orDash(profileSwitch.DurationMinutes) }
 		}
 		@table.Cell() {

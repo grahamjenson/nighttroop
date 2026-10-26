@@ -45,7 +45,7 @@ templ JobsTable(jobs []*controlmodels.Job, skip int64, limit int64) {
 			@table.Table(table.Props{ID: "controlJobsTable", Class: "rounded-lg border border-gray-200"}) {
 				@table.Header() {
 					@table.Row() {
-						@table.Head() {
+						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
 							ID
 						}
 						@table.Head() {
@@ -60,7 +60,7 @@ templ JobsTable(jobs []*controlmodels.Job, skip int64, limit int64) {
 						@table.Head() {
 							Created
 						}
-						@table.Head() {
+						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
 							Duration
 						}
 					}
@@ -119,7 +119,7 @@ templ jobRow(job *controlmodels.Job) {
 			"hx-swap":   "innerHTML",
 		},
 	}) {
-		@table.Cell() {
+		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ fmt.Sprint(job.ID) }
 		}
 		@table.Cell() {
@@ -134,7 +134,7 @@ templ jobRow(job *controlmodels.Job) {
 		@table.Cell() {
 			{ formatDate(job.CreatedAt) }
 		}
-		@table.Cell() {
+		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ duration(job) }
 		}
 	}
