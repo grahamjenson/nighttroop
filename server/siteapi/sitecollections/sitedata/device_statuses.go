@@ -34,7 +34,11 @@ func (s *DeviceStatusesCollection) GetName() string {
 // ////
 // Get Model
 // /////
-func (s *DeviceStatusesCollection) GetRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) (*sitedb.DeviceReport, error) {
+func (s *DeviceStatusesCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.DeviceReport, error) {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
 	return q.GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: id})
 }
 
@@ -54,7 +58,11 @@ func (s *DeviceStatusesCollection) GetHTMXResponse(model *sitemodels.SiteDeviceS
 
 // SearchRows pages through one device's statuses when the query names a device,
 // otherwise it returns the latest few statuses of each device that reported recently, grouped by device
-func (s *DeviceStatusesCollection) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.DeviceReport, error) {
+func (s *DeviceStatusesCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.DeviceReport, error) {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
 	if query.Device != nil {
 		return q.DeviceReportsForDevice(ctx, siteapiutils.QueryToDeviceReportsForDevice(query))
 	}
@@ -89,8 +97,12 @@ func (s *DeviceStatusesCollection) SearchHTMXResponse(models []*sitemodels.SiteD
 // ///
 
 // DeleteRow soft deletes, like the Nightscout API, so syncing clients see the delete
-func (s *DeviceStatusesCollection) DeleteRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) error {
-	_, err := q.SoftDeleteDeviceReport(ctx, sitedb.SoftDeleteDeviceReportParams{
+func (s *DeviceStatusesCollection) DeleteRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) error {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return err
+	}
+	_, err = q.SoftDeleteDeviceReport(ctx, sitedb.SoftDeleteDeviceReportParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
 		ID:                    id,
 	})

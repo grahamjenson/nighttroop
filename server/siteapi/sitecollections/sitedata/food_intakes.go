@@ -29,12 +29,16 @@ func (s *FoodIntakesCollection) GetName() string {
 // ////
 // CREATE
 // ////
-func (s *FoodIntakesCollection) CreateRow(ctx context.Context, q *sitedb.Queries, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteFoodIntake) (*sitedb.FoodIntake, error) {
+func (s *FoodIntakesCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteFoodIntake) (*sitedb.FoodIntake, error) {
 	if model.Carbs == nil {
 		return nil, apiutils.ErrMissingRequiredFieldWithHint("carbs")
 	}
 	if herr := checkFoodIntake(model); herr != nil {
 		return nil, herr
+	}
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
 	}
 	return q.CreateFoodIntake(ctx, sitemodels.FoodIntakeToCreate(model, siteContext))
 }
@@ -48,11 +52,15 @@ func (s *FoodIntakesCollection) CreateHTMXResponse(model *sitemodels.SiteFoodInt
 // ////
 
 // UpdateRow changes a food intake's name, nutrients, notes or reason; anything not sent stays as it is
-func (s *FoodIntakesCollection) UpdateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteFoodIntake, model *sitemodels.SiteFoodIntake) (*sitedb.FoodIntake, error) {
+func (s *FoodIntakesCollection) UpdateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteFoodIntake, model *sitemodels.SiteFoodIntake) (*sitedb.FoodIntake, error) {
 	if herr := checkFoodIntake(model); herr != nil {
 		return nil, herr
 	}
 	model.ID = oldModel.ID
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
 	return q.UpdateFoodIntake(ctx, sitemodels.FoodIntakeToUpdate(model, siteContext))
 }
 
@@ -63,7 +71,11 @@ func (s *FoodIntakesCollection) UpdateHTMXResponse(model *sitemodels.SiteFoodInt
 // ////
 // Get Model
 // /////
-func (s *FoodIntakesCollection) GetRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) (*sitedb.FoodIntake, error) {
+func (s *FoodIntakesCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.FoodIntake, error) {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
 	return q.GetFoodIntake(ctx, sitedb.GetFoodIntakeParams{ID: id})
 }
 
@@ -81,7 +93,11 @@ func (s *FoodIntakesCollection) GetHTMXResponse(model *sitemodels.SiteFoodIntake
 // Search Models
 // ///
 
-func (s *FoodIntakesCollection) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.FoodIntake, error) {
+func (s *FoodIntakesCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.FoodIntake, error) {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
 	return q.AllFoodIntakes(ctx, siteapiutils.QueryToAllFoodIntakes(query))
 }
 
@@ -94,8 +110,12 @@ func (s *FoodIntakesCollection) SearchHTMXResponse(models []*sitemodels.SiteFood
 // ///
 
 // DeleteRow soft deletes, like the Nightscout API, so syncing clients see the delete
-func (s *FoodIntakesCollection) DeleteRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) error {
-	_, err := q.SoftDeleteFoodIntake(ctx, sitedb.SoftDeleteFoodIntakeParams{
+func (s *FoodIntakesCollection) DeleteRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) error {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return err
+	}
+	_, err = q.SoftDeleteFoodIntake(ctx, sitedb.SoftDeleteFoodIntakeParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
 		ID:                    id,
 	})

@@ -1,4 +1,4 @@
-package siteapi
+package siteapiutils
 
 import (
 	"context"
@@ -77,7 +77,7 @@ func (t *CollectionTx) Finish(herr *apiutils.HTTPError) *apiutils.HTTPError {
 }
 
 // reportChange reports a change to one of the site's models, its sitedb row, to be published once committed
-func (t *CollectionTx) reportChange(action sitemodels.Action, row any) {
+func (t *CollectionTx) ReportChange(action sitemodels.Action, row any) {
 	t.reportedChanges = append(t.reportedChanges, sitemodels.Event{Action: action, Model: row})
 }
 

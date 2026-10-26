@@ -15,6 +15,7 @@ import (
 	"nighttroop.t1d.nz/models/sitemodels"
 
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
+	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
@@ -34,7 +35,7 @@ func (s *SyncSettingsCollection) GetName() string {
 // ////
 // CREATE
 // ////
-func (s *SyncSettingsCollection) CreateRow(ctx context.Context, q *controldb.Queries, id *string, siteContext *httputils.SiteContext, model *sitemodels.SyncSource) (*sitemodels.SyncSource, error) {
+func (s *SyncSettingsCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SyncSource) (*sitemodels.SyncSource, error) {
 	var err error
 	params := sitemodels.SyncSourceToCreate(model)
 	// DO NOT ALLOW THE CLIENT TO SET SITEID OR TYPE
@@ -87,6 +88,11 @@ func (s *SyncSettingsCollection) CreateRow(ctx context.Context, q *controldb.Que
 	}
 	params.UrlOrUsernameEnc = &encUrlOrUsername
 
+	q, err := collectionTx.Control()
+	if err != nil {
+		return nil, err
+	}
+
 	err = q.CreateSyncSource(ctx, params)
 	if err != nil {
 		if errors.IsSQLUniqueViolationError(err) {
@@ -112,7 +118,7 @@ func (s *SyncSettingsCollection) CreateHTMXResponse(model *sitemodels.SyncSource
 // Update
 // ///
 
-func (s *SyncSettingsCollection) UpdateRow(ctx context.Context, q *controldb.Queries, siteContext *httputils.SiteContext, oldModel *sitemodels.SyncSource, model *sitemodels.SyncSource) (*sitemodels.SyncSource, error) {
+func (s *SyncSettingsCollection) UpdateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, oldModel *sitemodels.SyncSource, model *sitemodels.SyncSource) (*sitemodels.SyncSource, error) {
 	if allowed, seconds := httputils.UserUpdateSyncWithinRateLimit(siteContext); !allowed {
 		return nil, apiutils.ErrRateLimitExceeded(seconds)
 	}
@@ -165,6 +171,11 @@ func (s *SyncSettingsCollection) UpdateRow(ctx context.Context, q *controldb.Que
 		}
 	}
 
+	q, err := collectionTx.Control()
+	if err != nil {
+		return nil, err
+	}
+
 	err = q.UpdateSyncSource(ctx, params)
 	if err != nil {
 		if errors.IsSQLUniqueViolationError(err) {
@@ -189,10 +200,15 @@ func (s *SyncSettingsCollection) UpdateHTMXResponse(model *sitemodels.SyncSource
 // ////
 // Get Model
 // /////
-func (s *SyncSettingsCollection) GetRow(ctx context.Context, q *controldb.Queries, id string, siteContext *httputils.SiteContext) (*sitemodels.SyncSource, error) {
+func (s *SyncSettingsCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitemodels.SyncSource, error) {
 	sstype, err := consts.NewSyncSourceTypeFromString(id)
 	if err != nil {
 		return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Invalid sync source type: %s", id))
+	}
+
+	q, err := collectionTx.Control()
+	if err != nil {
+		return nil, err
 	}
 
 	model, err := q.GetSyncSource(ctx, controldb.GetSyncSourceParams{
@@ -227,7 +243,12 @@ func (s *SyncSettingsCollection) ToModel(row *sitemodels.SyncSource, _ *httputil
 // Search Models
 // ///
 
-func (s *SyncSettingsCollection) SearchRows(ctx context.Context, q *controldb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.SyncSource, error) {
+func (s *SyncSettingsCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.SyncSource, error) {
+	q, err := collectionTx.Control()
+	if err != nil {
+		return nil, err
+	}
+
 	dbSyncSources, err := q.GetAllSyncSourcesForSite(ctx, controldb.GetAllSyncSourcesForSiteParams{
 		SiteID: siteContext.Subdomain,
 	})
@@ -257,11 +278,16 @@ func (s *SyncSettingsCollection) SearchHTMXResponse(models []*sitemodels.SyncSou
 // ///
 
 // DeleteRow removes the site's sync source of the type in the id
-func (s *SyncSettingsCollection) DeleteRow(ctx context.Context, q *controldb.Queries, id string, siteContext *httputils.SiteContext) error {
+func (s *SyncSettingsCollection) DeleteRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) error {
 	sstype, err := consts.NewSyncSourceTypeFromString(id)
 	if err != nil {
 		return apiutils.ErrBadBodyWithHint(fmt.Sprintf("Invalid sync source type: %s", id))
 	}
+	q, err := collectionTx.Control()
+	if err != nil {
+		return err
+	}
+
 	return q.DeleteSyncSource(ctx, controldb.DeleteSyncSourceParams{Type: sstype, SiteID: siteContext.Subdomain})
 }
 

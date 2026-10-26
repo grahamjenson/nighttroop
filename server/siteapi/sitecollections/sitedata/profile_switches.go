@@ -26,12 +26,16 @@ func (s *ProfileSwitchesCollection) GetName() string {
 // ////
 // CREATE
 // ////
-func (s *ProfileSwitchesCollection) CreateRow(ctx context.Context, q *sitedb.Queries, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteProfileSwitch) (*sitedb.ProfileSwitch, error) {
+func (s *ProfileSwitchesCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteProfileSwitch) (*sitedb.ProfileSwitch, error) {
 	if model.Name == "" {
 		return nil, apiutils.ErrConstraintCheckFailedWithHint("name is required")
 	}
 	if herr := checkProfileSwitch(model); herr != nil {
 		return nil, herr
+	}
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
 	}
 	return q.CreateProfileSwitch(ctx, sitemodels.ProfileSwitchToCreate(model, siteContext))
 }
@@ -45,11 +49,15 @@ func (s *ProfileSwitchesCollection) CreateHTMXResponse(model *sitemodels.SitePro
 // ////
 
 // UpdateRow changes the fields sent; anything not sent stays as it is
-func (s *ProfileSwitchesCollection) UpdateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteProfileSwitch, model *sitemodels.SiteProfileSwitch) (*sitedb.ProfileSwitch, error) {
+func (s *ProfileSwitchesCollection) UpdateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteProfileSwitch, model *sitemodels.SiteProfileSwitch) (*sitedb.ProfileSwitch, error) {
 	if herr := checkProfileSwitch(model); herr != nil {
 		return nil, herr
 	}
 	model.ID = oldModel.ID
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
 	return q.UpdateProfileSwitch(ctx, sitemodels.ProfileSwitchToUpdate(model, siteContext))
 }
 
@@ -60,7 +68,11 @@ func (s *ProfileSwitchesCollection) UpdateHTMXResponse(model *sitemodels.SitePro
 // ////
 // Get Model
 // /////
-func (s *ProfileSwitchesCollection) GetRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) (*sitedb.ProfileSwitch, error) {
+func (s *ProfileSwitchesCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.ProfileSwitch, error) {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
 	return q.GetProfileSwitch(ctx, sitedb.GetProfileSwitchParams{ID: id})
 }
 
@@ -78,7 +90,11 @@ func (s *ProfileSwitchesCollection) GetHTMXResponse(model *sitemodels.SiteProfil
 // Search Models
 // ///
 
-func (s *ProfileSwitchesCollection) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.ProfileSwitch, error) {
+func (s *ProfileSwitchesCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.ProfileSwitch, error) {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
 	return q.AllProfileSwitches(ctx, siteapiutils.QueryToAllProfileSwitches(query))
 }
 
@@ -91,8 +107,12 @@ func (s *ProfileSwitchesCollection) SearchHTMXResponse(models []*sitemodels.Site
 // ///
 
 // DeleteRow soft deletes, like the Nightscout API, so syncing clients see the delete
-func (s *ProfileSwitchesCollection) DeleteRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) error {
-	_, err := q.SoftDeleteProfileSwitch(ctx, sitedb.SoftDeleteProfileSwitchParams{
+func (s *ProfileSwitchesCollection) DeleteRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) error {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return err
+	}
+	_, err = q.SoftDeleteProfileSwitch(ctx, sitedb.SoftDeleteProfileSwitchParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
 		ID:                    id,
 	})

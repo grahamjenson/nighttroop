@@ -27,10 +27,14 @@ func (s *GlucoseReadingsCollection) GetName() string {
 // ////
 // CREATE
 // ////
-func (s *GlucoseReadingsCollection) CreateRow(ctx context.Context, q *sitedb.Queries, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteGlucoseReading) (*sitedb.GlucoseReading, error) {
+func (s *GlucoseReadingsCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteGlucoseReading) (*sitedb.GlucoseReading, error) {
 	params := sitemodels.GlucoseReadingToCreate(model, siteContext)
 	if herr := checkGlucoseMgdl(params.Mgdl, siteContext); herr != nil {
 		return nil, herr
+	}
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
 	}
 	return q.CreateGlucoseReading(ctx, params)
 }
@@ -44,13 +48,17 @@ func (s *GlucoseReadingsCollection) CreateHTMXResponse(model *sitemodels.SiteGlu
 // ////
 
 // UpdateRow changes a reading's value, CGM fields (delta, direction, noise, filtered, unfiltered, rssi), notes or reason; anything not sent stays as it is
-func (s *GlucoseReadingsCollection) UpdateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteGlucoseReading, model *sitemodels.SiteGlucoseReading) (*sitedb.GlucoseReading, error) {
+func (s *GlucoseReadingsCollection) UpdateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteGlucoseReading, model *sitemodels.SiteGlucoseReading) (*sitedb.GlucoseReading, error) {
 	model.ID = oldModel.ID
 	params := sitemodels.GlucoseReadingToUpdate(model, siteContext)
 	if params.Mgdl != nil {
 		if herr := checkGlucoseMgdl(*params.Mgdl, siteContext); herr != nil {
 			return nil, herr
 		}
+	}
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
 	}
 	return q.UpdateGlucoseReading(ctx, params)
 }
@@ -62,7 +70,11 @@ func (s *GlucoseReadingsCollection) UpdateHTMXResponse(model *sitemodels.SiteGlu
 // ////
 // Get Model
 // /////
-func (s *GlucoseReadingsCollection) GetRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) (*sitedb.GlucoseReading, error) {
+func (s *GlucoseReadingsCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.GlucoseReading, error) {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
 	return q.GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: id})
 }
 
@@ -80,7 +92,11 @@ func (s *GlucoseReadingsCollection) GetHTMXResponse(model *sitemodels.SiteGlucos
 // Search Models
 // ///
 
-func (s *GlucoseReadingsCollection) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.GlucoseReading, error) {
+func (s *GlucoseReadingsCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.GlucoseReading, error) {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
 	return q.AllGlucoseReadings(ctx, siteapiutils.QueryToAllGlucoseReadings(query))
 }
 
@@ -93,8 +109,12 @@ func (s *GlucoseReadingsCollection) SearchHTMXResponse(models []*sitemodels.Site
 // ///
 
 // DeleteRow soft deletes, like the Nightscout API, so syncing clients see the delete
-func (s *GlucoseReadingsCollection) DeleteRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) error {
-	_, err := q.SoftDeleteGlucoseReading(ctx, sitedb.SoftDeleteGlucoseReadingParams{
+func (s *GlucoseReadingsCollection) DeleteRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) error {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return err
+	}
+	_, err = q.SoftDeleteGlucoseReading(ctx, sitedb.SoftDeleteGlucoseReadingParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
 		ID:                    id,
 	})

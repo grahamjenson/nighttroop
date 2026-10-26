@@ -27,9 +27,13 @@ func (s *ComponentEventsCollection) GetName() string {
 // ////
 // CREATE
 // ////
-func (s *ComponentEventsCollection) CreateRow(ctx context.Context, q *sitedb.Queries, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteComponentEvent) (*sitedb.ComponentEvent, error) {
+func (s *ComponentEventsCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteComponentEvent) (*sitedb.ComponentEvent, error) {
 	if herr := checkComponentEventType(model.EventType); herr != nil {
 		return nil, herr
+	}
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
 	}
 	return q.CreateComponentEvent(ctx, sitemodels.ComponentEventToCreate(model, siteContext))
 }
@@ -43,13 +47,17 @@ func (s *ComponentEventsCollection) CreateHTMXResponse(model *sitemodels.SiteCom
 // ////
 
 // UpdateRow changes the fields sent; anything not sent stays as it is
-func (s *ComponentEventsCollection) UpdateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteComponentEvent, model *sitemodels.SiteComponentEvent) (*sitedb.ComponentEvent, error) {
+func (s *ComponentEventsCollection) UpdateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteComponentEvent, model *sitemodels.SiteComponentEvent) (*sitedb.ComponentEvent, error) {
 	if model.EventType != "" {
 		if herr := checkComponentEventType(model.EventType); herr != nil {
 			return nil, herr
 		}
 	}
 	model.ID = oldModel.ID
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
 	return q.UpdateComponentEvent(ctx, sitemodels.ComponentEventToUpdate(model, siteContext))
 }
 
@@ -60,7 +68,11 @@ func (s *ComponentEventsCollection) UpdateHTMXResponse(model *sitemodels.SiteCom
 // ////
 // Get Model
 // /////
-func (s *ComponentEventsCollection) GetRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) (*sitedb.ComponentEvent, error) {
+func (s *ComponentEventsCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.ComponentEvent, error) {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
 	return q.GetComponentEvent(ctx, sitedb.GetComponentEventParams{ID: id})
 }
 
@@ -78,7 +90,11 @@ func (s *ComponentEventsCollection) GetHTMXResponse(model *sitemodels.SiteCompon
 // Search Models
 // ///
 
-func (s *ComponentEventsCollection) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.ComponentEvent, error) {
+func (s *ComponentEventsCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.ComponentEvent, error) {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
 	return q.AllComponentEvents(ctx, siteapiutils.QueryToAllComponentEvents(query))
 }
 
@@ -91,8 +107,13 @@ func (s *ComponentEventsCollection) SearchHTMXResponse(models []*sitemodels.Site
 // ///
 
 // DeleteRow soft deletes, like the Nightscout API, so syncing clients see the delete
-func (s *ComponentEventsCollection) DeleteRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) error {
-	_, err := q.SoftDeleteComponentEvent(ctx, sitedb.SoftDeleteComponentEventParams{
+func (s *ComponentEventsCollection) DeleteRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) error {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return err
+	}
+
+	_, err = q.SoftDeleteComponentEvent(ctx, sitedb.SoftDeleteComponentEventParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
 		ID:                    id,
 	})

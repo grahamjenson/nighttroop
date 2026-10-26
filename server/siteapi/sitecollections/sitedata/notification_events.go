@@ -28,7 +28,7 @@ func (s *NotificationEventsCollection) GetName() string {
 // ////
 // CREATE
 // ////
-func (s *NotificationEventsCollection) CreateRow(ctx context.Context, q *sitedb.Queries, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteNotificationEvent) (*sitedb.NotificationEvent, error) {
+func (s *NotificationEventsCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteNotificationEvent) (*sitedb.NotificationEvent, error) {
 	if model.NotificationType == "" {
 		model.NotificationType = defaultNotificationType
 	}
@@ -37,6 +37,10 @@ func (s *NotificationEventsCollection) CreateRow(ctx context.Context, q *sitedb.
 	}
 	if herr := checkNotificationEvent(model); herr != nil {
 		return nil, herr
+	}
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
 	}
 	return q.CreateNotificationEvent(ctx, sitemodels.NotificationEventToCreate(model, siteContext))
 }
@@ -50,11 +54,15 @@ func (s *NotificationEventsCollection) CreateHTMXResponse(model *sitemodels.Site
 // ////
 
 // UpdateRow changes the fields sent; anything not sent stays as it is
-func (s *NotificationEventsCollection) UpdateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteNotificationEvent, model *sitemodels.SiteNotificationEvent) (*sitedb.NotificationEvent, error) {
+func (s *NotificationEventsCollection) UpdateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteNotificationEvent, model *sitemodels.SiteNotificationEvent) (*sitedb.NotificationEvent, error) {
 	if herr := checkNotificationEvent(model); herr != nil {
 		return nil, herr
 	}
 	model.ID = oldModel.ID
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
 	return q.UpdateNotificationEvent(ctx, sitemodels.NotificationEventToUpdate(model, siteContext))
 }
 
@@ -65,7 +73,11 @@ func (s *NotificationEventsCollection) UpdateHTMXResponse(model *sitemodels.Site
 // ////
 // Get Model
 // /////
-func (s *NotificationEventsCollection) GetRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) (*sitedb.NotificationEvent, error) {
+func (s *NotificationEventsCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.NotificationEvent, error) {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
 	return q.GetNotificationEvent(ctx, sitedb.GetNotificationEventParams{ID: id})
 }
 
@@ -83,7 +95,11 @@ func (s *NotificationEventsCollection) GetHTMXResponse(model *sitemodels.SiteNot
 // Search Models
 // ///
 
-func (s *NotificationEventsCollection) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.NotificationEvent, error) {
+func (s *NotificationEventsCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.NotificationEvent, error) {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
 	return q.AllNotificationEvents(ctx, siteapiutils.QueryToAllNotificationEvents(query))
 }
 
@@ -96,8 +112,12 @@ func (s *NotificationEventsCollection) SearchHTMXResponse(models []*sitemodels.S
 // ///
 
 // DeleteRow soft deletes, like the Nightscout API, so syncing clients see the delete
-func (s *NotificationEventsCollection) DeleteRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) error {
-	_, err := q.SoftDeleteNotificationEvent(ctx, sitedb.SoftDeleteNotificationEventParams{
+func (s *NotificationEventsCollection) DeleteRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) error {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return err
+	}
+	_, err = q.SoftDeleteNotificationEvent(ctx, sitedb.SoftDeleteNotificationEventParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
 		ID:                    id,
 	})

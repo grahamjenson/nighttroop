@@ -7,6 +7,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server/assets/static"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
+	"nighttroop.t1d.nz/server/siteapi/sitecollections"
 	"nighttroop.t1d.nz/server/siteapi/sitelogin"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -23,7 +24,7 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 
 	static.AddStaticRoutes(r)
 
-	store := sitecollections.NewStore()
+	store := sitecollections.NewSiteStore()
 
 	// Publically available (if the person knows the subdomain) endpoints
 	r.Group(func(r chi.Router) {
@@ -44,11 +45,18 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		}))
 
 		// Data Glucose Readings
-		r.Get("/data/{collection}", SearchHandler(controlDB, config, store))
-		r.Get("/data/{collection}/{id}", GetHandler(controlDB, config, store))
-		r.Post("/data/{collection}", CreateHandler(controlDB, config, store))
-		r.Post("/data/{collection}/{id}", UpdateHandler(controlDB, config, store))
-		r.Delete("/data/{collection}/{id}", DeleteHandler(controlDB, config, store))
+
+		r.Get("/data/{collection}", store.CollectionSearchHandler)
+		r.Get("/data/{collection}/{id}", store.CollectionGetHandler)
+		r.Post("/data/{collection}", store.CollectionCreateHandler)
+		r.Post("/data/{collection}/{id}", store.CollectionUpdateHandler)
+		r.Delete("/data/{collection}/{id}", store.CollectionDeleteHandler)
+
+		r.Get("/settings/{collection}", store.CollectionSearchHandler)
+		r.Get("/settings/{collection}/{id}", store.CollectionGetHandler)
+		r.Post("/settings/{collection}", store.CollectionCreateHandler)
+		r.Post("/settings/{collection}/{id}", store.CollectionUpdateHandler)
+		r.Delete("/settings/{collection}/{id}", store.CollectionDeleteHandler)
 
 		// Actions
 		r.Post("/logout", sitelogin.POSTLogoutHandler(config))

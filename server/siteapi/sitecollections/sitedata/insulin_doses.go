@@ -29,9 +29,13 @@ func (s *InsulinDosesCollection) GetName() string {
 // ////
 // CREATE
 // ////
-func (s *InsulinDosesCollection) CreateRow(ctx context.Context, q *sitedb.Queries, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteInsulinDose) (*sitedb.InsulinDose, error) {
+func (s *InsulinDosesCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteInsulinDose) (*sitedb.InsulinDose, error) {
 	if herr := checkInsulinDose(model); herr != nil {
 		return nil, herr
+	}
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
 	}
 	return q.CreateInsulinDose(ctx, sitemodels.InsulinDoseToCreate(model, siteContext))
 }
@@ -45,13 +49,17 @@ func (s *InsulinDosesCollection) CreateHTMXResponse(model *sitemodels.SiteInsuli
 // ////
 
 // UpdateRow changes a dose's units, type, notes or reason; anything not sent stays as it is
-func (s *InsulinDosesCollection) UpdateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteInsulinDose, model *sitemodels.SiteInsulinDose) (*sitedb.InsulinDose, error) {
+func (s *InsulinDosesCollection) UpdateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteInsulinDose, model *sitemodels.SiteInsulinDose) (*sitedb.InsulinDose, error) {
 	if model.Dose != 0 {
 		if herr := checkInsulinDose(model); herr != nil {
 			return nil, herr
 		}
 	}
 	model.ID = oldModel.ID
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
 	return q.UpdateInsulinDose(ctx, sitemodels.InsulinDoseToUpdate(model, siteContext))
 }
 
@@ -62,7 +70,11 @@ func (s *InsulinDosesCollection) UpdateHTMXResponse(model *sitemodels.SiteInsuli
 // ////
 // Get Model
 // /////
-func (s *InsulinDosesCollection) GetRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) (*sitedb.InsulinDose, error) {
+func (s *InsulinDosesCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.InsulinDose, error) {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
 	return q.GetInsulinDose(ctx, sitedb.GetInsulinDoseParams{ID: id})
 }
 
@@ -80,7 +92,11 @@ func (s *InsulinDosesCollection) GetHTMXResponse(model *sitemodels.SiteInsulinDo
 // Search Models
 // ///
 
-func (s *InsulinDosesCollection) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.InsulinDose, error) {
+func (s *InsulinDosesCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.InsulinDose, error) {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
 	return q.AllInsulinDoses(ctx, siteapiutils.QueryToAllInsulinDoses(query))
 }
 
@@ -93,8 +109,12 @@ func (s *InsulinDosesCollection) SearchHTMXResponse(models []*sitemodels.SiteIns
 // ///
 
 // DeleteRow soft deletes, like the Nightscout API, so syncing clients see the delete
-func (s *InsulinDosesCollection) DeleteRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) error {
-	_, err := q.SoftDeleteInsulinDose(ctx, sitedb.SoftDeleteInsulinDoseParams{
+func (s *InsulinDosesCollection) DeleteRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) error {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return err
+	}
+	_, err = q.SoftDeleteInsulinDose(ctx, sitedb.SoftDeleteInsulinDoseParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
 		ID:                    id,
 	})

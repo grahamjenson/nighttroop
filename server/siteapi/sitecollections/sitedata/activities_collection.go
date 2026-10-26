@@ -29,13 +29,18 @@ func (s *ActivitiesCollection) GetName() string {
 // ////
 // CREATE
 // ////
-func (s *ActivitiesCollection) CreateRow(ctx context.Context, q *sitedb.Queries, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteActivity) (*sitedb.Activity, error) {
+func (s *ActivitiesCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteActivity) (*sitedb.Activity, error) {
 	if model.ActivityType == "" {
 		model.ActivityType = defaultActivityType
 	}
 	if herr := checkActivity(model); herr != nil {
 		return nil, herr
 	}
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
+
 	return q.CreateActivity(ctx, sitemodels.ActivityToCreate(model, siteContext))
 }
 
@@ -48,11 +53,15 @@ func (s *ActivitiesCollection) CreateHTMXResponse(model *sitemodels.SiteActivity
 // ////
 
 // UpdateRow changes the fields sent; anything not sent stays as it is
-func (s *ActivitiesCollection) UpdateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteActivity, model *sitemodels.SiteActivity) (*sitedb.Activity, error) {
+func (s *ActivitiesCollection) UpdateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteActivity, model *sitemodels.SiteActivity) (*sitedb.Activity, error) {
 	if herr := checkActivity(model); herr != nil {
 		return nil, herr
 	}
 	model.ID = oldModel.ID
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
 	return q.UpdateActivity(ctx, sitemodels.ActivityToUpdate(model, siteContext))
 }
 
@@ -63,7 +72,11 @@ func (s *ActivitiesCollection) UpdateHTMXResponse(model *sitemodels.SiteActivity
 // ////
 // Get Model
 // /////
-func (s *ActivitiesCollection) GetRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) (*sitedb.Activity, error) {
+func (s *ActivitiesCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.Activity, error) {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
 	return q.GetActivity(ctx, sitedb.GetActivityParams{ID: id})
 }
 
@@ -81,7 +94,11 @@ func (s *ActivitiesCollection) GetHTMXResponse(model *sitemodels.SiteActivity) t
 // Search Models
 // ///
 
-func (s *ActivitiesCollection) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.Activity, error) {
+func (s *ActivitiesCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.Activity, error) {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
 	return q.AllActivities(ctx, siteapiutils.QueryToAllActivities(query))
 }
 
@@ -94,8 +111,12 @@ func (s *ActivitiesCollection) SearchHTMXResponse(models []*sitemodels.SiteActiv
 // ///
 
 // DeleteRow soft deletes, like the Nightscout API, so syncing clients see the delete
-func (s *ActivitiesCollection) DeleteRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) error {
-	_, err := q.SoftDeleteActivity(ctx, sitedb.SoftDeleteActivityParams{
+func (s *ActivitiesCollection) DeleteRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) error {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return err
+	}
+	_, err = q.SoftDeleteActivity(ctx, sitedb.SoftDeleteActivityParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
 		ID:                    id,
 	})

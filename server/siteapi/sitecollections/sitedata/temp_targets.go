@@ -30,9 +30,13 @@ func (s *TempTargetsCollection) GetName() string {
 // ////
 // CREATE
 // ////
-func (s *TempTargetsCollection) CreateRow(ctx context.Context, q *sitedb.Queries, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteTempTarget) (*sitedb.TempTarget, error) {
+func (s *TempTargetsCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteTempTarget) (*sitedb.TempTarget, error) {
 	if herr := checkTempTarget(model, siteContext); herr != nil {
 		return nil, herr
+	}
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
 	}
 	return q.CreateTempTarget(ctx, sitemodels.TempTargetToCreate(model, siteContext))
 }
@@ -46,7 +50,7 @@ func (s *TempTargetsCollection) CreateHTMXResponse(model *sitemodels.SiteTempTar
 // ////
 
 // UpdateRow changes a temp target's targets, duration, notes or reason; anything not sent stays as it is
-func (s *TempTargetsCollection) UpdateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteTempTarget, model *sitemodels.SiteTempTarget) (*sitedb.TempTarget, error) {
+func (s *TempTargetsCollection) UpdateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteTempTarget, model *sitemodels.SiteTempTarget) (*sitedb.TempTarget, error) {
 	// Check the temp target as it will be once the fields sent are changed
 	merged := *oldModel
 	if model.DurationMinutes != 0 {
@@ -62,6 +66,10 @@ func (s *TempTargetsCollection) UpdateRow(ctx context.Context, q *sitedb.Queries
 		return nil, herr
 	}
 	model.ID = oldModel.ID
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
 	return q.UpdateTempTarget(ctx, sitemodels.TempTargetToUpdate(model, siteContext))
 }
 
@@ -72,7 +80,11 @@ func (s *TempTargetsCollection) UpdateHTMXResponse(model *sitemodels.SiteTempTar
 // ////
 // Get Model
 // /////
-func (s *TempTargetsCollection) GetRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) (*sitedb.TempTarget, error) {
+func (s *TempTargetsCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.TempTarget, error) {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
 	return q.GetTempTarget(ctx, sitedb.GetTempTargetParams{ID: id})
 }
 
@@ -90,7 +102,11 @@ func (s *TempTargetsCollection) GetHTMXResponse(model *sitemodels.SiteTempTarget
 // Search Models
 // ///
 
-func (s *TempTargetsCollection) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.TempTarget, error) {
+func (s *TempTargetsCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.TempTarget, error) {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
 	return q.AllTempTargets(ctx, siteapiutils.QueryToAllTempTargets(query))
 }
 
@@ -103,8 +119,12 @@ func (s *TempTargetsCollection) SearchHTMXResponse(models []*sitemodels.SiteTemp
 // ///
 
 // DeleteRow soft deletes, like the Nightscout API, so syncing clients see the delete
-func (s *TempTargetsCollection) DeleteRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) error {
-	_, err := q.SoftDeleteTempTarget(ctx, sitedb.SoftDeleteTempTargetParams{
+func (s *TempTargetsCollection) DeleteRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) error {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return err
+	}
+	_, err = q.SoftDeleteTempTarget(ctx, sitedb.SoftDeleteTempTargetParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
 		ID:                    id,
 	})

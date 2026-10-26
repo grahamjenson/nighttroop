@@ -10,6 +10,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
+	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/settings"
@@ -45,7 +46,7 @@ func (s *SettingsCollection) level(siteContext *httputils.SiteContext) *settings
 // Get Model
 // /////
 // GetRow is the level's settings, with those it inherits; settings are not rows, so the model is its own row
-func (s *SettingsCollection) GetRow(ctx context.Context, q *controldb.Queries, id string, siteContext *httputils.SiteContext) (*sitemodels.Settings, error) {
+func (s *SettingsCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitemodels.Settings, error) {
 	if s.Site && siteContext.IdentityModel.Role != consts.IdentityRoleAdmin {
 		return nil, apiutils.ErrForbidden
 	}
@@ -59,9 +60,10 @@ func (s *SettingsCollection) GetRow(ctx context.Context, q *controldb.Queries, i
 		}
 		model.Inherited[name] = fmt.Sprint(inherited.Value)
 	}
+
 	// An admin's settings page shows the site's settings beside their own
 	if !s.Site && siteContext.IdentityModel.Role == consts.IdentityRoleAdmin {
-		site, err := (&SettingsCollection{Site: true}).GetRow(ctx, q, id, siteContext)
+		site, err := (&SettingsCollection{Site: true}).GetRow(ctx, collectionTx, id, siteContext)
 		if err != nil {
 			return nil, err
 		}
@@ -86,7 +88,7 @@ func (s *SettingsCollection) GetHTMXResponse(model *sitemodels.Settings) templ.C
 // ///
 
 // UpdateRow sets the values sent. An empty value clears it, so the level above applies; one not sent is left as it is.
-func (s *SettingsCollection) UpdateRow(ctx context.Context, q *controldb.Queries, siteContext *httputils.SiteContext, oldModel *sitemodels.Settings, model *sitemodels.Settings) (*sitemodels.Settings, error) {
+func (s *SettingsCollection) UpdateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, oldModel *sitemodels.Settings, model *sitemodels.Settings) (*sitemodels.Settings, error) {
 	level, subject := s.level(siteContext), ptr("identity")
 	if s.Site {
 		subject = ptr("site")
@@ -108,8 +110,12 @@ func (s *SettingsCollection) UpdateRow(ctx context.Context, q *controldb.Queries
 		}
 	}
 
+	q, err := collectionTx.Control()
+	if err != nil {
+		return nil, err
+	}
+
 	// Every setting is written, so the ones not on the page keep their values
-	var err error
 	if s.Site {
 		params := &controldb.UpdateSitesSettingsParams{ID: siteContext.SiteModel.ID}
 		settings.SetSettings(params, level)
@@ -122,7 +128,7 @@ func (s *SettingsCollection) UpdateRow(ctx context.Context, q *controldb.Queries
 	if err != nil {
 		return nil, err
 	}
-	return s.GetRow(ctx, q, "", siteContext)
+	return s.GetRow(ctx, collectionTx, "", siteContext)
 }
 
 func (s *SettingsCollection) UpdateHTMXResponse(model *sitemodels.Settings) templ.Component {

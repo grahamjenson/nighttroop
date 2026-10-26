@@ -14,6 +14,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
+	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -36,13 +37,18 @@ func (s *IdentitiesCollection) GetName() string {
 // ////
 // CREATE
 // ////
-func (s *IdentitiesCollection) CreateRow(ctx context.Context, q *controldb.Queries, id *string, siteContext *httputils.SiteContext, model *sitemodels.UserIdentity) (*sitemodels.UserIdentity, error) {
+func (s *IdentitiesCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.UserIdentity) (*sitemodels.UserIdentity, error) {
 	if model.Name == "" || model.Role == "" {
 		return nil, apiutils.ErrMissingRequiredFieldWithHint("name and role")
 	}
 	role := consts.IdentityRole(model.Role)
 	if !slices.Contains(identityRoles, role) {
 		return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Unknown role: %s", model.Role))
+	}
+
+	q, err := collectionTx.Control()
+	if err != nil {
+		return nil, err
 	}
 
 	// Counted inside the transaction, so two creates at once cannot both pass the limit
@@ -83,7 +89,12 @@ func (s *IdentitiesCollection) CreateHTMXResponse(model *sitemodels.UserIdentity
 // ///
 
 // UpdateRow only turns an identity on or off
-func (s *IdentitiesCollection) UpdateRow(ctx context.Context, q *controldb.Queries, siteContext *httputils.SiteContext, oldModel *sitemodels.UserIdentity, model *sitemodels.UserIdentity) (*sitemodels.UserIdentity, error) {
+func (s *IdentitiesCollection) UpdateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, oldModel *sitemodels.UserIdentity, model *sitemodels.UserIdentity) (*sitemodels.UserIdentity, error) {
+	q, err := collectionTx.Control()
+	if err != nil {
+		return nil, err
+	}
+
 	if !model.Enabled {
 		if herr := checkCanRemoveIdentity(ctx, q, siteContext, oldModel); herr != nil {
 			return nil, herr
@@ -105,10 +116,14 @@ func (s *IdentitiesCollection) UpdateHTMXResponse(model *sitemodels.UserIdentity
 // ////
 // Get Model
 // /////
-func (s *IdentitiesCollection) GetRow(ctx context.Context, q *controldb.Queries, id string, siteContext *httputils.SiteContext) (*sitemodels.UserIdentity, error) {
+func (s *IdentitiesCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitemodels.UserIdentity, error) {
 	identityID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Invalid identity id: %s", id))
+	}
+	q, err := collectionTx.Control()
+	if err != nil {
+		return nil, err
 	}
 	identity, err := q.GetSiteIdentityByID(ctx, controldb.GetSiteIdentityByIDParams{SiteID: siteContext.Subdomain, ID: identityID})
 	if err != nil {
@@ -130,7 +145,11 @@ func (s *IdentitiesCollection) GetHTMXResponse(model *sitemodels.UserIdentity) t
 // Search Models
 // ///
 
-func (s *IdentitiesCollection) SearchRows(ctx context.Context, q *controldb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.UserIdentity, error) {
+func (s *IdentitiesCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.UserIdentity, error) {
+	q, err := collectionTx.Control()
+	if err != nil {
+		return nil, err
+	}
 	identities, err := q.AllSiteIdentities(ctx, controldb.AllSiteIdentitiesParams{SiteID: siteContext.Subdomain})
 	if err != nil {
 		return nil, err
@@ -163,11 +182,17 @@ func (s *IdentitiesCollection) SearchHTMXResponse(models []*sitemodels.UserIdent
 // ///
 
 // DeleteRow removes the identity, so its password and tokens stop working
-func (s *IdentitiesCollection) DeleteRow(ctx context.Context, q *controldb.Queries, id string, siteContext *httputils.SiteContext) error {
-	model, err := s.GetRow(ctx, q, id, siteContext)
+func (s *IdentitiesCollection) DeleteRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) error {
+
+	model, err := s.GetRow(ctx, collectionTx, id, siteContext)
 	if err != nil {
 		return err
 	}
+	q, err := collectionTx.Control()
+	if err != nil {
+		return err
+	}
+
 	if herr := checkCanRemoveIdentity(ctx, q, siteContext, model); herr != nil {
 		return herr
 	}

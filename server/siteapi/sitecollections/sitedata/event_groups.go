@@ -33,7 +33,11 @@ func (s *EventGroupsCollection) ToModel(row *sitedb.EventGroupsBundle, siteConte
 // ////
 // Get Model
 // /////
-func (s *EventGroupsCollection) GetRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) (*sitedb.EventGroupsBundle, error) {
+func (s *EventGroupsCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.EventGroupsBundle, error) {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
 	row, err := q.GetEventGroup(ctx, sitedb.GetEventGroupParams{ID: id})
 	if err != nil {
 		return nil, err
@@ -51,7 +55,11 @@ func (s *EventGroupsCollection) GetHTMXResponse(model *sitemodels.SiteEventGroup
 // Search Models
 // ///
 
-func (s *EventGroupsCollection) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.EventGroupsBundle, error) {
+func (s *EventGroupsCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.EventGroupsBundle, error) {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
 	rows, err := q.AllEventGroups(ctx, siteapiutils.QueryToAllEventGroups(query))
 	if err != nil {
 		return nil, err
@@ -73,7 +81,11 @@ func (s *EventGroupsCollection) SearchHTMXResponse(models []*sitemodels.SiteEven
 // ///
 
 // DeleteRow soft deletes the group and its events, as the Nightscout API does, so syncing clients see the delete
-func (s *EventGroupsCollection) DeleteRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) error {
+func (s *EventGroupsCollection) DeleteRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) error {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return err
+	}
 	return sitedb.SoftDeleteEventGroupAndEvents(ctx, q, id, &siteContext.IdentityModel.Name)
 }
 
