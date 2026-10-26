@@ -21,7 +21,7 @@ func liveClient(baseURL string) *Client {
 	return c
 }
 
-func TestGetEntriesRefusesRedirect(t *testing.T) {
+func TestGetDocumentsRefusesRedirect(t *testing.T) {
 	secretHits := 0
 	secret := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		secretHits++
@@ -34,21 +34,21 @@ func TestGetEntriesRefusesRedirect(t *testing.T) {
 	}))
 	defer redirector.Close()
 
-	_, err := liveClient(redirector.URL).GetEntries(context.Background(), time.Now(), 10)
+	_, err := liveClient(redirector.URL).GetDocuments(context.Background(), "entries", time.Now(), 10)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "302")
 	require.NotContains(t, err.Error(), "xyz")
 	require.Equal(t, 0, secretHits, "redirect target must never be requested")
 }
 
-func TestGetEntriesErrorOmitsBody(t *testing.T) {
+func TestGetDocumentsErrorOmitsBody(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"secret":"xyz"}`))
 	}))
 	defer srv.Close()
 
-	_, err := liveClient(srv.URL).GetEntries(context.Background(), time.Now(), 10)
+	_, err := liveClient(srv.URL).GetDocuments(context.Background(), "entries", time.Now(), 10)
 	require.Error(t, err)
 	require.NotContains(t, err.Error(), "xyz")
 }
@@ -90,16 +90,16 @@ func TestParseResultRefusesLargeBodies(t *testing.T) {
 	}
 }
 
-func TestEntriesFromResultRefusesTooManyEntries(t *testing.T) {
+func TestDocumentsFromResultRefusesTooManyDocuments(t *testing.T) {
 	result := make([]any, 0, maxResultItems+1)
 	for i := 0; i < maxResultItems; i++ {
 		result = append(result, map[string]any{"sgv": 100})
 	}
-	entries, err := entriesFromResult(result)
+	entries, err := documentsFromResult(result)
 	require.NoError(t, err)
 	require.Len(t, entries, maxResultItems)
 
-	entries, err = entriesFromResult(append(result, map[string]any{"sgv": 100}))
+	entries, err = documentsFromResult(append(result, map[string]any{"sgv": 100}))
 	require.Error(t, err)
 	require.Nil(t, entries)
 }
@@ -129,6 +129,41 @@ func TestGetLastModified(t *testing.T) {
 			}
 			require.NoError(t, err)
 			require.Equal(t, tt.want, lastModified)
+		})
+	}
+}
+
+func TestRequestsRefreshAJWTCloseToExpiring(t *testing.T) {
+	tests := []struct {
+		name      string
+		expiresIn time.Duration
+		refreshed bool
+	}{
+		{"an hour left", time.Hour, false},
+		{"seconds left", 30 * time.Second, true},
+		{"expired", -time.Minute, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			hits := 0
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				hits++
+				_, _ = w.Write([]byte(`{"result":{"collections":{"entries":1}}}`))
+			}))
+			defer srv.Close()
+			c := liveClient(srv.URL)
+			expire := time.Now().Add(tt.expiresIn)
+			c.jwtExpire = &expire
+
+			// Under go test a refresh only works for TestValidURL, so refreshing this server's JWT fails before any request
+			_, err := c.GetLastModified(context.Background())
+			if tt.refreshed {
+				require.ErrorIs(t, err, ErrJWTNoHost)
+				require.Equal(t, 0, hits)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, 1, hits)
+			}
 		})
 	}
 }
