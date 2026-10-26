@@ -39,6 +39,9 @@ func TestLogsDBRecordsBySite(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, string(db.EventSiteDisabled), events[0].Name)
 	require.Equal(t, `{"by":"admin"}`, *events[0].Attributes)
+	// Disabling is over as soon as it happens, so it has a start but no finish
+	require.NotZero(t, events[0].StartedAt)
+	require.Nil(t, events[0].FinishedAt)
 
 	siteErrors, err := logs.Queries.SearchErrors(ctx, logsdb.SearchErrorsParams{SiteID: &site, Limit: 10})
 	require.NoError(t, err)

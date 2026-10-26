@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
+	"time"
 
 	"nighttroop.t1d.nz/data/sql/logsdb"
 	"nighttroop.t1d.nz/utils/config"
@@ -43,8 +44,15 @@ func (l *LogsDB) Log(ctx context.Context, siteID *string, level LogLevel, messag
 	l.record("log", l.Queries.InsertLog(ctx, logsdb.InsertLogParams{SiteID: siteID, Level: string(level), Message: truncate(message), Attributes: attributesJSON(attrs)}))
 }
 
+// event records an event that happened now, with no finish time
 func (l *LogsDB) event(ctx context.Context, siteID *string, name EventName, attributes any) {
-	l.record("event", l.Queries.InsertEvent(ctx, logsdb.InsertEventParams{SiteID: siteID, Name: string(name), Attributes: attributesJSON(attributes)}))
+	l.record("event", l.Queries.InsertEvent(ctx, logsdb.InsertEventParams{SiteID: siteID, Name: string(name), Attributes: attributesJSON(attributes), StartedAt: time.Now().UnixMilli()}))
+}
+
+// finishedEvent records an event that started at started and finishes now, so it can be written in a defer
+func (l *LogsDB) finishedEvent(ctx context.Context, siteID *string, name EventName, started time.Time, attributes any) {
+	finished := time.Now().UnixMilli()
+	l.record("event", l.Queries.InsertEvent(ctx, logsdb.InsertEventParams{SiteID: siteID, Name: string(name), Attributes: attributesJSON(attributes), StartedAt: started.UnixMilli(), FinishedAt: &finished}))
 }
 
 func (l *LogsDB) error(ctx context.Context, siteID *string, err error, attributes any) {

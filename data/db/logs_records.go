@@ -10,7 +10,8 @@ import (
 )
 
 // Every event and error the server records has its own method here, with typed attributes, so what is in the logs
-// DB is known. A site ID must come from the site context, never from a request.
+// DB is known. A site ID must come from the site context, never from a request. An event that takes time is recorded
+// with when it started, and finishes when it is recorded, so it can be written in a defer.
 
 // EventName is what happened in an event
 type EventName string
@@ -67,9 +68,9 @@ type SiteArchivedAttributes struct {
 	By string `json:"by"`
 }
 
-// SiteArchivedEvent records a control identity archiving a site
-func (l *LogsDB) SiteArchivedEvent(ctx context.Context, siteID string, by string) {
-	l.event(ctx, &siteID, EventSiteArchived, SiteArchivedAttributes{By: by})
+// SiteArchivedEvent records a control identity archiving a site, which started at started
+func (l *LogsDB) SiteArchivedEvent(ctx context.Context, siteID string, by string, started time.Time) {
+	l.finishedEvent(ctx, &siteID, EventSiteArchived, started, SiteArchivedAttributes{By: by})
 }
 
 type SiteTruncatedAttributes struct {
@@ -78,9 +79,10 @@ type SiteTruncatedAttributes struct {
 	AfterSizeKB  *int64 `json:"after_size_kb"`
 }
 
-// SiteTruncatedEvent records a control identity truncating a site's DB, and its size before and after
-func (l *LogsDB) SiteTruncatedEvent(ctx context.Context, siteID string, by string, beforeSizeKB *int64, afterSizeKB *int64) {
-	l.event(ctx, &siteID, EventSiteTruncated, SiteTruncatedAttributes{By: by, BeforeSizeKB: beforeSizeKB, AfterSizeKB: afterSizeKB})
+// SiteTruncatedEvent records a control identity truncating a site's DB, which started at started, and its size before
+// and after
+func (l *LogsDB) SiteTruncatedEvent(ctx context.Context, siteID string, by string, started time.Time, beforeSizeKB *int64, afterSizeKB *int64) {
+	l.finishedEvent(ctx, &siteID, EventSiteTruncated, started, SiteTruncatedAttributes{By: by, BeforeSizeKB: beforeSizeKB, AfterSizeKB: afterSizeKB})
 }
 
 type SiteDeletedAttributes struct {
@@ -92,24 +94,24 @@ func (l *LogsDB) SiteDeletedEvent(ctx context.Context, siteID string, reason str
 }
 
 type SiteBatchBackedUpAttributes struct {
-	Batch      string `json:"batch"`
-	SiteCount  int    `json:"site_count"`
-	DurationMs int64  `json:"duration_ms"`
-	Uploaded   bool   `json:"uploaded"`
+	Batch     string `json:"batch"`
+	SiteCount int    `json:"site_count"`
+	Uploaded  bool   `json:"uploaded"`
 }
 
-// SiteBatchBackedUpEvent records the sites whose IDs start with batch being backed up, and uploaded when S3 works
-func (l *LogsDB) SiteBatchBackedUpEvent(ctx context.Context, batch string, siteCount int, duration time.Duration, uploaded bool) {
-	l.event(ctx, nil, EventSiteBatchBackedUp, SiteBatchBackedUpAttributes{Batch: batch, SiteCount: siteCount, DurationMs: duration.Milliseconds(), Uploaded: uploaded})
+// SiteBatchBackedUpEvent records the sites whose IDs start with batch being backed up from started, and uploaded when
+// S3 works
+func (l *LogsDB) SiteBatchBackedUpEvent(ctx context.Context, batch string, siteCount int, started time.Time, uploaded bool) {
+	l.finishedEvent(ctx, nil, EventSiteBatchBackedUp, started, SiteBatchBackedUpAttributes{Batch: batch, SiteCount: siteCount, Uploaded: uploaded})
 }
 
 type ControlBackedUpAttributes struct {
-	DurationMs int64 `json:"duration_ms"`
-	Uploaded   bool  `json:"uploaded"`
+	Uploaded bool `json:"uploaded"`
 }
 
-func (l *LogsDB) ControlBackedUpEvent(ctx context.Context, duration time.Duration, uploaded bool) {
-	l.event(ctx, nil, EventControlBackedUp, ControlBackedUpAttributes{DurationMs: duration.Milliseconds(), Uploaded: uploaded})
+// ControlBackedUpEvent records the control DB being backed up from started, and uploaded when S3 works
+func (l *LogsDB) ControlBackedUpEvent(ctx context.Context, started time.Time, uploaded bool) {
+	l.finishedEvent(ctx, nil, EventControlBackedUp, started, ControlBackedUpAttributes{Uploaded: uploaded})
 }
 
 type SyncTurnedOffAttributes struct {

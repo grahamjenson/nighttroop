@@ -17,7 +17,8 @@ type Event struct {
 	SiteID     *string
 	Name       string
 	Attributes *string
-	CreatedAt  int64
+	StartedAt  int64
+	FinishedAt *int64
 }
 
 type Log struct {

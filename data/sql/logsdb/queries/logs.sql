@@ -6,7 +6,7 @@
 INSERT INTO logs (site_id, level, message, attributes) VALUES (?, ?, ?, ?);
 
 -- name: InsertEvent :exec
-INSERT INTO events (site_id, name, attributes) VALUES (?, ?, ?);
+INSERT INTO events (site_id, name, attributes, started_at, finished_at) VALUES (?, ?, ?, ?, ?);
 
 -- name: InsertError :exec
 INSERT INTO errors (site_id, message, attributes) VALUES (?, ?, ?);
