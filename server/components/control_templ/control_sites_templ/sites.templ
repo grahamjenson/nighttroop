@@ -71,7 +71,7 @@ templ SitesTable(sites []*controlmodels.Site, skip int64, limit int64, order str
 						@table.Head() {
 							Last Write
 						}
-						@table.Head() {
+						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
 							DB Size (KB)
 						}
 					}
@@ -151,7 +151,7 @@ templ siteRow(site *controlmodels.Site) {
 		@table.Cell() {
 			<span title={ formatDate(site.LastWriteAt) }>{ display.Ago(site.LastWriteAt, time.Now()) }</span>
 		}
-		@table.Cell() {
+		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ orDash(site.EstimatedDbSizeKb) }
 		}
 	}

@@ -31,13 +31,13 @@ templ TempBasalsTable(tempBasals []*sitemodels.SiteTempBasal, skip int64, limit 
 						@table.Head() {
 							Time
 						}
-						@table.Head() {
+						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
 							U/hr
 						}
-						@table.Head() {
+						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
 							Percent
 						}
-						@table.Head() {
+						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
 							Minutes
 						}
 						@table.Head() {
@@ -128,13 +128,13 @@ templ tempBasalRow(tempBasal *sitemodels.SiteTempBasal) {
 		@table.Cell() {
 			{ formatReadingDate(tempBasal.OccurredAt) }
 		}
-		@table.Cell() {
+		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ orDash(tempBasal.Absolute) }
 		}
-		@table.Cell() {
+		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ orDash(tempBasal.Percent) }
 		}
-		@table.Cell() {
+		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ fmt.Sprint(tempBasal.DurationMinutes) }
 		}
 		@table.Cell() {
