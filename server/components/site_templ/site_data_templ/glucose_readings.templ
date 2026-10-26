@@ -70,7 +70,7 @@ templ GlucoseReadingsTable(readings []*sitemodels.SiteGlucoseReading, skip int64
 						@table.Head() {
 							Time
 						}
-						@table.Head() {
+						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
 							{ string(*glucoseUnits(ctx)) }
 						}
 						@table.Head() {
@@ -153,7 +153,7 @@ templ glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) {
 		@table.Cell() {
 			{ formatReadingDate(reading.OccurredAt) }
 		}
-		@table.Cell() {
+		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ formatGlucose(reading.Reading, reading.Units) }
 		}
 		@table.Cell() {

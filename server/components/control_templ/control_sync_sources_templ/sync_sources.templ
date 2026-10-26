@@ -73,10 +73,10 @@ templ SyncSourcesTable(sources []*controlmodels.SyncSource, skip int64, limit in
 						@table.Head() {
 							Last Success
 						}
-						@table.Head() {
+						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
 							Succeeded
 						}
-						@table.Head() {
+						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
 							Failed
 						}
 					}
@@ -120,10 +120,10 @@ templ syncSourceRow(source *controlmodels.SyncSource) {
 		@table.Cell() {
 			{ formatDate(source.LastSuccessfulSync) }
 		}
-		@table.Cell() {
+		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ orDash(source.TotalSuccessfulSyncs) }
 		}
-		@table.Cell() {
+		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ orDash(source.TotalFailedSyncs) }
 		}
 	}
