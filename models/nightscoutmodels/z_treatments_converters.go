@@ -1120,10 +1120,10 @@ func PartialTreatmentToTempTarget(source Treatment) sitedb.TempTarget {
 		sitedbTempTarget.DurationMinutes = FlexibleInt64ToInt64(*source.DurationMinutes)
 	}
 	if source.HighTarget != nil {
-		sitedbTempTarget.HighTarget = FlexibleFloat64ToFloat64(*source.HighTarget)
+		sitedbTempTarget.HighTargetMgdl = FlexibleFloat64ToFloat64(*source.HighTarget)
 	}
 	if source.LowTarget != nil {
-		sitedbTempTarget.LowTarget = FlexibleFloat64ToFloat64(*source.LowTarget)
+		sitedbTempTarget.LowTargetMgdl = FlexibleFloat64ToFloat64(*source.LowTarget)
 	}
 	if source.InsulinNeedsScaleFactor != nil {
 		xfloat64 := FlexibleFloat64ToFloat64(*source.InsulinNeedsScaleFactor)
@@ -1346,8 +1346,8 @@ func TempTargetCreate(source sitedb.TempTarget, context ConverterContext) sitedb
 	var sitedbCreateTempTargetParams sitedb.CreateTempTargetParams
 	sitedbCreateTempTargetParams.ID = AssignID()
 	sitedbCreateTempTargetParams.DurationMinutes = source.DurationMinutes
-	sitedbCreateTempTargetParams.HighTarget = source.HighTarget
-	sitedbCreateTempTargetParams.LowTarget = source.LowTarget
+	sitedbCreateTempTargetParams.HighTargetMgdl = source.HighTargetMgdl
+	sitedbCreateTempTargetParams.LowTargetMgdl = source.LowTargetMgdl
 	if source.InsulinNeedsScaleFactor != nil {
 		xfloat64 := *source.InsulinNeedsScaleFactor
 		sitedbCreateTempTargetParams.InsulinNeedsScaleFactor = &xfloat64
@@ -1385,10 +1385,10 @@ func TempTargetUpdate(source sitedb.TempTarget, context ConverterContext) sitedb
 	var sitedbUpdateTempTargetParams sitedb.UpdateTempTargetParams
 	pInt64 := source.DurationMinutes
 	sitedbUpdateTempTargetParams.DurationMinutes = &pInt64
-	pFloat64 := source.HighTarget
-	sitedbUpdateTempTargetParams.HighTarget = &pFloat64
-	pFloat642 := source.LowTarget
-	sitedbUpdateTempTargetParams.LowTarget = &pFloat642
+	pFloat64 := source.HighTargetMgdl
+	sitedbUpdateTempTargetParams.HighTargetMgdl = &pFloat64
+	pFloat642 := source.LowTargetMgdl
+	sitedbUpdateTempTargetParams.LowTargetMgdl = &pFloat642
 	if source.Notes != nil {
 		xstring := *source.Notes
 		sitedbUpdateTempTargetParams.Notes = &xstring
@@ -1740,9 +1740,9 @@ func UpdateTempTargetToTreatment(source *sitedb.TempTarget, target *Treatment) {
 		pTypesFlexibleInt64 := types.FlexibleInt64(source.DurationMinutes)
 		target.DurationMinutes = &pTypesFlexibleInt64
 		target.DurationInMilliseconds = MinutesToMilliseconds(source.DurationMinutes)
-		pTypesFlexibleFloat64 := types.FlexibleFloat64(source.HighTarget)
+		pTypesFlexibleFloat64 := types.FlexibleFloat64(source.HighTargetMgdl)
 		target.HighTarget = &pTypesFlexibleFloat64
-		pTypesFlexibleFloat642 := types.FlexibleFloat64(source.LowTarget)
+		pTypesFlexibleFloat642 := types.FlexibleFloat64(source.LowTargetMgdl)
 		target.LowTarget = &pTypesFlexibleFloat642
 		target.CorrectionRange = ToCorrectionRange(source)
 		if source.InsulinNeedsScaleFactor != nil {
@@ -2434,8 +2434,8 @@ func UpdateToTempBasal(source *sitedb.TempBasal, target *sitedb.TempBasal) {
 func UpdateToTempTarget(source *sitedb.TempTarget, target *sitedb.TempTarget) {
 	if source != nil {
 		target.DurationMinutes = source.DurationMinutes
-		target.HighTarget = source.HighTarget
-		target.LowTarget = source.LowTarget
+		target.HighTargetMgdl = source.HighTargetMgdl
+		target.LowTargetMgdl = source.LowTargetMgdl
 		if source.InsulinNeedsScaleFactor != nil {
 			xfloat64 := *source.InsulinNeedsScaleFactor
 			target.InsulinNeedsScaleFactor = &xfloat64

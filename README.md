@@ -2,35 +2,11 @@
 
 ## Before Alpha Testing
 
--- Errors
-1. Come up with an actual logging and error framework that makes sense (SQLite DB for search?)
-1. Force all returned errors to be of type
-1. Optional error reporting with sentry (if a given key is present)
-
-
-1. make archiving and truncation a manual job, i.e. show unused users and select all and archive.  I think this will remove a lot of logic that can be shaky later on we can look at automating, if it gets really bad
-
-1. Sync
-    1. Check Sync Creds before save/enable -- e.g. check nightscout is a real endpoint and auth works
-    1. Sync treatments and entries using v3 API
-    1. Use v3 last_modified nightscout sync, and existing nightscoutapi to write the values to the DB
-
-1. create_identity check limits, max identities
-1. Control UI
-    1. Table of users with DB sizes, status...
-    1. enable disable, users (show screen on disable), archive, and truncate buttons
-    1. Some kind of usage metrics to see
-
-1. Site UI
-    1. Show real data (dont bother with graph, just tables for now)
-    1. Improve identity creation. Make it easier to encourage each device and app to get its own identity
-
 1. Deploy to a fly.io dev/staging environment
 
 ## Before Beta Testing
 
 1. Backfill button on sync page for Dexcom, NS (one off creds would be cool, so I can pull data from multiple sources )
-1. archivied_at in the user table in control.db
 
 1. Reports/Derived Values:
     1. AGP

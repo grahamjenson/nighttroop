@@ -258,6 +258,8 @@ type TreatmentsEvenetConverter interface {
 	//
 	// goverter:map . CorrectionRange | ToCorrectionRange
 	// goverter:map DurationMinutes DurationInMilliseconds | MinutesToMilliseconds
+	// goverter:map HighTargetMgdl HighTarget
+	// goverter:map LowTargetMgdl LowTarget
 	UpdateTempTargetToTreatment(source *sitedb.TempTarget, target *Treatment)
 
 	// goverter:update target
@@ -389,6 +391,8 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map Date OccurredAt | OrNow
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
+	// goverter:map HighTarget HighTargetMgdl
+	// goverter:map LowTarget LowTargetMgdl
 	PartialTreatmentToTempTarget(source Treatment) sitedb.TempTarget
 
 	// goverter:ignore ID DeletedAt CreatedAt CreatedByIdentityName CreatedByIdentityID UpdatedAt UpdatedByIdentityName UpdatedByIdentityID
@@ -476,13 +480,13 @@ func ToProfileJSON(source interface {
 }
 
 func ToCorrectionRange(source interface {
-	GetLowTarget() float64
-	GetHighTarget() float64
+	GetLowTargetMgdl() float64
+	GetHighTargetMgdl() float64
 }) []*types.FlexibleFloat64 {
 
 	correctionRange := []*types.FlexibleFloat64{
-		ptr(types.FlexibleFloat64(source.GetLowTarget())),
-		ptr(types.FlexibleFloat64(source.GetHighTarget())),
+		ptr(types.FlexibleFloat64(source.GetLowTargetMgdl())),
+		ptr(types.FlexibleFloat64(source.GetHighTargetMgdl())),
 	}
 	return correctionRange
 }

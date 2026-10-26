@@ -88,15 +88,15 @@ type SiteConverter interface {
 	///////
 
 	// goverter:context siteContext
-	// goverter:map HighTarget HighTarget | MgdlToSettingsUnits
-	// goverter:map LowTarget LowTarget | MgdlToSettingsUnits
+	// goverter:map HighTargetMgdl HighTarget | MgdlToSettingsUnits
+	// goverter:map LowTargetMgdl LowTarget | MgdlToSettingsUnits
 	// goverter:map . Units | ContextUnits
 	TempTargetFromDB(source *sitedb.TempTarget, siteContext *httputils.SiteContext) *SiteTempTarget
 
 	// goverter:context siteContext
 	// goverter:map ID | NewSiteDataID
-	// goverter:map HighTarget HighTarget | SettingsUnitsToMgdl
-	// goverter:map LowTarget LowTarget | SettingsUnitsToMgdl
+	// goverter:map HighTarget HighTargetMgdl | SettingsUnitsToMgdl
+	// goverter:map LowTarget LowTargetMgdl | SettingsUnitsToMgdl
 	// goverter:map OccurredAt | OccurredAtOrNow
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
@@ -104,8 +104,8 @@ type SiteConverter interface {
 
 	// goverter:context siteContext
 	// goverter:map DurationMinutes | Int64OrNil
-	// goverter:map HighTarget HighTarget | SettingsUnitsToMgdlOrNil
-	// goverter:map LowTarget LowTarget | SettingsUnitsToMgdlOrNil
+	// goverter:map HighTarget HighTargetMgdl | SettingsUnitsToMgdlOrNil
+	// goverter:map LowTarget LowTargetMgdl | SettingsUnitsToMgdlOrNil
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
 	// goverter:ignore RawJsonData
