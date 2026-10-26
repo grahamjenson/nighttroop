@@ -4,8 +4,11 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"nighttroop.t1d.nz/server/components/site_templ"
 	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitedata"
 	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitesettings"
+	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 type SiteCollectionRoutes struct {
@@ -57,12 +60,15 @@ func (store *SiteStore) registerCollection[R, M any](collection CollectionBase[R
 		panic("collection route already registered: " + route)
 	}
 
+	cannot := func(what string) http.HandlerFunc {
+		return answerNotFound(http.StatusMethodNotAllowed, route+" cannot be "+what+" here")
+	}
 	routes := &SiteCollectionRoutes{
-		Search: notFoundHandler,
-		Get:    notFoundHandler,
-		Create: notFoundHandler,
-		Update: notFoundHandler,
-		Delete: notFoundHandler,
+		Search: cannot("searched"),
+		Get:    cannot("read"),
+		Create: cannot("created"),
+		Update: cannot("updated"),
+		Delete: cannot("deleted"),
 	}
 
 	added := false
@@ -107,12 +113,25 @@ func (s *SiteStore) Collection(route string) *SiteCollectionRoutes {
 	return routes
 }
 
-func notFoundHandler(w http.ResponseWriter, r *http.Request) {
-	http.Error(w, "collection method not found", http.StatusNotFound)
+// answerNotFound answers as the site does its other errors: a page in a browser, a toast to HTMX and JSON to the API
+func answerNotFound(status int, message string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch acceptType := httputils.GetAcceptType(r); acceptType {
+		case httputils.AcceptTypeHTML, httputils.AcceptTypeHTMX:
+			page := site_templ.SiteError(message)
+			if acceptType == httputils.AcceptTypeHTML {
+				page = site_templ.FullPage(site_templ.NotFound(message))
+			}
+			apiutils.WriteStatus(w, acceptType, status)
+			page.Render(r.Context(), w)
+		default:
+			(&apiutils.HTTPError{Status: status, Message: message}).Write(acceptType, w)
+		}
+	}
 }
 
 func notFoundHandlerCollection(w http.ResponseWriter, r *http.Request, name string) {
-	http.Error(w, "collection method not found: "+name, http.StatusNotFound)
+	answerNotFound(http.StatusNotFound, "There is no "+name+" here")(w, r)
 }
 
 func (s *SiteStore) CollectionSearchHandler(w http.ResponseWriter, r *http.Request) {
