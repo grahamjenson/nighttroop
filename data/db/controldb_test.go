@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/sql/controldb"
@@ -106,8 +107,10 @@ func TestTruncateSite(t *testing.T) {
 	reading, err := q.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "reading", Mgdl: 120, ReadingType: "sgv", OccurredAt: 1, RawJsonData: &raw, CreatedByIdentityName: "phone"})
 	require.NoError(t, err)
 	require.NotNil(t, reading.RawJsonData)
+	recent, err := q.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "recent", Mgdl: 130, ReadingType: "sgv", OccurredAt: time.Now().AddDate(0, 0, -controlDB.ServerConfig.TruncateRecordsAfterDays+1).UnixMilli(), RawJsonData: &raw, CreatedByIdentityName: "phone"})
+	require.NoError(t, err)
 
-	// The raw JSON is cleared and the DB shrunk; an in-memory DB has no size to record
+	// The old reading's raw JSON is cleared and the DB shrunk; an in-memory DB has no size to record
 	sizeKB, err := controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
 	require.NoError(t, err)
 	require.Nil(t, sizeKB)
@@ -115,6 +118,9 @@ func TestTruncateSite(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, reading.RawJsonData)
 	require.Equal(t, float64(120), reading.Mgdl, "the reading itself is kept")
+	recent, err = q.GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: recent.ID})
+	require.NoError(t, err)
+	require.Equal(t, raw, *recent.RawJsonData, "a reading newer than TruncateRecordsAfterDays keeps its raw JSON")
 
 	_, err = controlDB.TruncateSite(ctx, "not-a-site")
 	require.ErrorContains(t, err, "is not open")
