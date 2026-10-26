@@ -12,6 +12,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.79.1
 	github.com/getsentry/sentry-go v0.46.1
 	github.com/go-chi/chi/v5 v5.2.3
+	github.com/go-echarts/go-echarts/v2 v2.7.3
 	github.com/golang-migrate/migrate/v4 v4.19.1
 	github.com/gorilla/websocket v1.5.3
 	github.com/hashicorp/golang-lru/v2 v2.0.7
