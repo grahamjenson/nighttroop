@@ -36,28 +36,25 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Use(httputils.SiteIdentitySeenFlagsUpdateMiddleware(controlDB)) // Updates user/identity flags
 
 		// The summary is the home page
-		r.Get("/", store.Collection("summary").Search)
-		r.Get("/summary", store.Collection("summary").Search)
+		r.Get("/", store.Collection("data", "summary").Search)
+		r.Get("/summary", store.Collection("data", "summary").Search)
 
 		// The settings page shows the identity's own settings, and the site's to an admin
-		r.Get("/settings", store.Collection("identity").Get)
+		r.Get("/settings", store.Collection("settings", "identity").Get)
 		for _, route := range []string{"site", "identity"} {
-			r.Get("/settings/"+route, store.Collection(route).Get)
-			r.Post("/settings/"+route, store.Collection(route).Update)
+			r.Get("/settings/"+route, store.Collection("settings", route).Get)
+			r.Post("/settings/"+route, store.Collection("settings", route).Update)
 		}
 
-		// The site's collections, each at its route under data or settings
-		r.Get("/data/{collection}", store.CollectionSearchHandler)
-		r.Get("/data/{collection}/{id}", store.CollectionGetHandler)
-		r.Post("/data/{collection}", store.CollectionCreateHandler)
-		r.Post("/data/{collection}/{id}", store.CollectionUpdateHandler)
-		r.Delete("/data/{collection}/{id}", store.CollectionDeleteHandler)
-
-		r.Get("/settings/{collection}", store.CollectionSearchHandler)
-		r.Get("/settings/{collection}/{id}", store.CollectionGetHandler)
-		r.Post("/settings/{collection}", store.CollectionCreateHandler)
-		r.Post("/settings/{collection}/{id}", store.CollectionUpdateHandler)
-		r.Delete("/settings/{collection}/{id}", store.CollectionDeleteHandler)
+		// The site's collections, each at its route in its section: data, settings or presets
+		for _, section := range []string{"data", "settings", "presets"} {
+			routes := store.Section(section)
+			r.Get("/"+section+"/{collection}", routes.Search)
+			r.Get("/"+section+"/{collection}/{id}", routes.Get)
+			r.Post("/"+section+"/{collection}", routes.Create)
+			r.Post("/"+section+"/{collection}/{id}", routes.Update)
+			r.Delete("/"+section+"/{collection}/{id}", routes.Delete)
+		}
 
 		// Actions
 		r.Post("/logout", sitelogin.POSTLogoutHandler(config))

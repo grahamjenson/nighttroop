@@ -1,0 +1,44 @@
+package site_presets_templ
+
+import (
+	"fmt"
+
+	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
+	"nighttroop.t1d.nz/server/components/ui/toast"
+)
+
+// formatDate shows times as the data pages do
+var formatDate = site_data_templ.FormatDate
+
+// orDash shows an optional value, or a dash when it is not set
+func orDash[T any](value *T) string {
+	if value == nil {
+		return "-"
+	}
+	return fmt.Sprint(*value)
+}
+
+func orEmpty[T any](value *T) string {
+	if value == nil {
+		return ""
+	}
+	return fmt.Sprint(*value)
+}
+
+templ presetDetail(label string, value string) {
+	<dt class="text-gray-500">{ label }</dt>
+	<dd class="break-all">{ value }</dd>
+}
+
+templ presetToast(description string) {
+	@toast.Toast(toast.Props{
+		Title:         "Success",
+		Description:   description,
+		Variant:       toast.VariantSuccess,
+		Position:      toast.PositionTopCenter,
+		Duration:      5000,
+		Dismissible:   true,
+		Icon:          true,
+		ShowIndicator: true,
+	})
+}

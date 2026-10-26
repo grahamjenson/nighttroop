@@ -266,6 +266,25 @@ type SiteConverter interface {
 	FoodIntakeToUpdate(source *SiteFoodIntake, siteContext *httputils.SiteContext) sitedb.UpdateFoodIntakeParams
 
 	///////
+	// FOOD PRESETS
+	///////
+
+	FoodPresetFromDB(source *sitedb.FoodPreset) *SiteFoodPreset
+
+	// goverter:context siteContext
+	// goverter:map ID | NewSiteDataID
+	// goverter:map CreatedByIdentityID | ContextIdentityID
+	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
+	// goverter:ignore RawJsonData
+	FoodPresetToCreate(source *SiteFoodPreset, siteContext *httputils.SiteContext) sitedb.CreateFoodPresetParams
+
+	// goverter:context siteContext
+	// goverter:map UpdatedByIdentityID | ContextIdentityID
+	// goverter:map UpdatedByIdentityName | ContextIdentityName
+	// goverter:ignore RawJsonData
+	FoodPresetToUpdate(source *SiteFoodPreset, siteContext *httputils.SiteContext) sitedb.UpdateFoodPresetParams
+
+	///////
 	// DEVICE STATUSES
 	///////
 
