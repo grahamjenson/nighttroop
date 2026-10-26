@@ -11,6 +11,7 @@ import (
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server/nightscoutapi"
+	"nighttroop.t1d.nz/server/siteapi"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -19,7 +20,7 @@ import (
 func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.Handler {
 
 	controlRouter := NewControlRouter(controlDB, config)
-	siteRouter := NewSiteRouter(controlDB, config)
+	siteRouter := siteapi.NewSiteRouter(controlDB, config)
 	public := NewPublicRouter(controlDB, config)
 	nightscoutRouter := nightscoutapi.NewNightscoutRouter(controlDB, config)
 

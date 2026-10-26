@@ -13,13 +13,6 @@ var ControlAudience = "control"
 var UserAudience = "user"
 var PreAuthAudience = "preauth"
 
-type JWTStuff struct {
-	jwtMac              jwt.MAC
-	jwtControlValidator *jwt.Validator
-	jwtUserValidator    *jwt.Validator
-	jwtPreAuthValidator *jwt.Validator
-}
-
 // //
 // Creating the primitives
 // //

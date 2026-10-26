@@ -32,14 +32,14 @@ var readWriteRoles = map[consts.IdentityRole]bool{
 }
 
 // HasPermission is whether the identity may do the action on the store; every other store is the site's data
-func HasPermission(storeName string, action Action, identity *controldb.SiteIdentity) bool {
+func HasPermission(collectionName string, action Action, identity *controldb.SiteIdentity) bool {
 	if identity == nil {
 		return false
 	}
-	if adminStores[storeName] {
+	if adminStores[collectionName] {
 		return identity.Role == consts.IdentityRoleAdmin
 	}
-	if storeName == ownSettingsStore {
+	if collectionName == ownSettingsStore {
 		return readOnlyRoles[identity.Role] || readWriteRoles[identity.Role]
 	}
 	if readOnlyRoles[identity.Role] {

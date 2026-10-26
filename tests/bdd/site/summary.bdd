@@ -67,7 +67,7 @@ ASSERT_VISIBLE #site--summary--devices >> text=virtual://nighttroop
 ASSERT_VISIBLE #site--summary--devices >> text=virtual://carer-phone
 
 // ECharts draws the graph as an SVG in the browser: carbs and insulin are labelled by their markers, with the rows named down the side
-ASSERT_VISIBLE #site--summary--graph svg
+ASSERT_DRAWN #site--summary--graph svg
 ASSERT_VISIBLE #site--summary--graph >> text=15g
 ASSERT_VISIBLE #site--summary--graph >> text=2.5U
 ASSERT_VISIBLE #site--summary--graph >> text=Carbs

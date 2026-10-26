@@ -78,6 +78,7 @@ Keep every change as small as possible.
 - Give every input an ID unique to its page (e.g. `site--glucose--create--reading`), so typed values do not carry between pages; BDD tests use these IDs.
 - With htmx: errors go to `#toaster` with `hx-status:4xx`, success toasts go out-of-band with `<div hx-swap-oob="beforeend:#toaster">`
 - Check items in a menu or scrolling box with `ASSERT_IN_VIEW`; `ASSERT_VISIBLE` passes for clipped elements.
+- Check a mark in a graph, which other marks may be drawn over, with `ASSERT_DRAWN`; `ASSERT_VISIBLE` also needs it to be what a click at its centre would hit.
 
 ## Tests
 

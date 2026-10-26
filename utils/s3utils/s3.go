@@ -23,7 +23,6 @@ import (
 	"nighttroop.t1d.nz/utils/config"
 
 	"github.com/pierrec/lz4/v4"
-	"github.com/tink-crypto/tink-go/v2/keyset"
 )
 
 ////
@@ -49,7 +48,6 @@ type S3Client struct {
 
 	// Common Config Varaibles Used In Paths
 	HostName string
-	kh       *keyset.Handle
 }
 
 // MaxKeys is the number of keys S3 can operate on per batch.

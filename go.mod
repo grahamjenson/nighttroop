@@ -1,6 +1,6 @@
 module nighttroop.t1d.nz
 
-go 1.26.0
+go 1.27.0
 
 require (
 	github.com/Oudwins/tailwind-merge-go v0.2.1

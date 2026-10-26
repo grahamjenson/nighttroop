@@ -54,19 +54,6 @@ type CollectionTypeDeleter interface {
 	HardDeleteType(q *sitedb.Queries, ctx context.Context, typeString string) (sql.Result, error)
 }
 
-// All is each Nightscout collection's store
-func All() map[nsutils.Collection]CollectionStore {
-	return map[nsutils.Collection]CollectionStore{
-		nsutils.Entries:      NewEntriesCollection(),
-		nsutils.Treatments:   NewTreatmentCollection(),
-		nsutils.Devicestatus: NewDeviceStatusCollection(),
-		nsutils.Profile:      NewProfileCollection(),
-		nsutils.Food:         NewFoodCollection(),
-		nsutils.Settings:     NewSettingsCollection(),
-		nsutils.Activity:     NewActivityCollection(),
-	}
-}
-
 // Collection is the CollectionStore for a CollectionDB
 type Collection[NS SharedNSFields, DM SharedDBFields] struct {
 	db CollectionDB[NS, DM]

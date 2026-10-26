@@ -691,6 +691,201 @@ func FoodIntakeToUpdate(source *SiteFoodIntake, context *httputils.SiteContext) 
 	}
 	return sitedbUpdateFoodIntakeParams
 }
+func FoodPresetFromDB(source *sitedb.FoodPreset) *SiteFoodPreset {
+	var pSitemodelsSiteFoodPreset *SiteFoodPreset
+	if source != nil {
+		var sitemodelsSiteFoodPreset SiteFoodPreset
+		sitemodelsSiteFoodPreset.ID = (*source).ID
+		pString := (*source).Name
+		sitemodelsSiteFoodPreset.Name = &pString
+		if (*source).FoodType != nil {
+			xstring := *(*source).FoodType
+			sitemodelsSiteFoodPreset.FoodType = &xstring
+		}
+		if (*source).Category != nil {
+			xstring2 := *(*source).Category
+			sitemodelsSiteFoodPreset.Category = &xstring2
+		}
+		if (*source).Subcategory != nil {
+			xstring3 := *(*source).Subcategory
+			sitemodelsSiteFoodPreset.Subcategory = &xstring3
+		}
+		if (*source).AbsorptionTimeMinutes != nil {
+			xint64 := *(*source).AbsorptionTimeMinutes
+			sitemodelsSiteFoodPreset.AbsorptionTimeMinutes = &xint64
+		}
+		if (*source).PreBolus != nil {
+			xfloat64 := *(*source).PreBolus
+			sitemodelsSiteFoodPreset.PreBolus = &xfloat64
+		}
+		if (*source).Carbs != nil {
+			xfloat642 := *(*source).Carbs
+			sitemodelsSiteFoodPreset.Carbs = &xfloat642
+		}
+		if (*source).Fat != nil {
+			xfloat643 := *(*source).Fat
+			sitemodelsSiteFoodPreset.Fat = &xfloat643
+		}
+		if (*source).Protein != nil {
+			xfloat644 := *(*source).Protein
+			sitemodelsSiteFoodPreset.Protein = &xfloat644
+		}
+		if (*source).Fibre != nil {
+			xfloat645 := *(*source).Fibre
+			sitemodelsSiteFoodPreset.Fibre = &xfloat645
+		}
+		if (*source).Energy != nil {
+			xfloat646 := *(*source).Energy
+			sitemodelsSiteFoodPreset.Energy = &xfloat646
+		}
+		if (*source).Portions != nil {
+			xfloat647 := *(*source).Portions
+			sitemodelsSiteFoodPreset.Portions = &xfloat647
+		}
+		if (*source).RawJsonData != nil {
+			xstring4 := *(*source).RawJsonData
+			sitemodelsSiteFoodPreset.RawJsonData = &xstring4
+		}
+		sitemodelsSiteFoodPreset.CreatedAt = (*source).CreatedAt
+		sitemodelsSiteFoodPreset.UpdatedAt = (*source).UpdatedAt
+		if (*source).CreatedByAppName != nil {
+			xstring5 := *(*source).CreatedByAppName
+			sitemodelsSiteFoodPreset.CreatedByAppName = &xstring5
+		}
+		if (*source).CreatedByDeviceName != nil {
+			xstring6 := *(*source).CreatedByDeviceName
+			sitemodelsSiteFoodPreset.CreatedByDeviceName = &xstring6
+		}
+		sitemodelsSiteFoodPreset.CreatedByIdentityName = (*source).CreatedByIdentityName
+		if (*source).UpdatedByIdentityName != nil {
+			xstring7 := *(*source).UpdatedByIdentityName
+			sitemodelsSiteFoodPreset.UpdatedByIdentityName = &xstring7
+		}
+		pSitemodelsSiteFoodPreset = &sitemodelsSiteFoodPreset
+	}
+	return pSitemodelsSiteFoodPreset
+}
+func FoodPresetToCreate(source *SiteFoodPreset, context *httputils.SiteContext) sitedb.CreateFoodPresetParams {
+	var sitedbCreateFoodPresetParams sitedb.CreateFoodPresetParams
+	if source != nil {
+		sitedbCreateFoodPresetParams.ID = NewSiteDataID()
+		if (*source).Name != nil {
+			sitedbCreateFoodPresetParams.Name = *(*source).Name
+		}
+		if (*source).FoodType != nil {
+			xstring := *(*source).FoodType
+			sitedbCreateFoodPresetParams.FoodType = &xstring
+		}
+		if (*source).Category != nil {
+			xstring2 := *(*source).Category
+			sitedbCreateFoodPresetParams.Category = &xstring2
+		}
+		if (*source).Subcategory != nil {
+			xstring3 := *(*source).Subcategory
+			sitedbCreateFoodPresetParams.Subcategory = &xstring3
+		}
+		if (*source).AbsorptionTimeMinutes != nil {
+			xint64 := *(*source).AbsorptionTimeMinutes
+			sitedbCreateFoodPresetParams.AbsorptionTimeMinutes = &xint64
+		}
+		if (*source).PreBolus != nil {
+			xfloat64 := *(*source).PreBolus
+			sitedbCreateFoodPresetParams.PreBolus = &xfloat64
+		}
+		if (*source).Portions != nil {
+			xfloat642 := *(*source).Portions
+			sitedbCreateFoodPresetParams.Portions = &xfloat642
+		}
+		if (*source).Carbs != nil {
+			xfloat643 := *(*source).Carbs
+			sitedbCreateFoodPresetParams.Carbs = &xfloat643
+		}
+		if (*source).Fat != nil {
+			xfloat644 := *(*source).Fat
+			sitedbCreateFoodPresetParams.Fat = &xfloat644
+		}
+		if (*source).Protein != nil {
+			xfloat645 := *(*source).Protein
+			sitedbCreateFoodPresetParams.Protein = &xfloat645
+		}
+		if (*source).Fibre != nil {
+			xfloat646 := *(*source).Fibre
+			sitedbCreateFoodPresetParams.Fibre = &xfloat646
+		}
+		if (*source).Energy != nil {
+			xfloat647 := *(*source).Energy
+			sitedbCreateFoodPresetParams.Energy = &xfloat647
+		}
+		if (*source).CreatedByAppName != nil {
+			xstring4 := *(*source).CreatedByAppName
+			sitedbCreateFoodPresetParams.CreatedByAppName = &xstring4
+		}
+		if (*source).CreatedByDeviceName != nil {
+			xstring5 := *(*source).CreatedByDeviceName
+			sitedbCreateFoodPresetParams.CreatedByDeviceName = &xstring5
+		}
+		sitedbCreateFoodPresetParams.CreatedByIdentityName = ContextIdentityNameValue(context)
+		sitedbCreateFoodPresetParams.CreatedByIdentityID = ContextIdentityID(context)
+	}
+	return sitedbCreateFoodPresetParams
+}
+func FoodPresetToUpdate(source *SiteFoodPreset, context *httputils.SiteContext) sitedb.UpdateFoodPresetParams {
+	var sitedbUpdateFoodPresetParams sitedb.UpdateFoodPresetParams
+	if source != nil {
+		if (*source).Name != nil {
+			xstring := *(*source).Name
+			sitedbUpdateFoodPresetParams.Name = &xstring
+		}
+		if (*source).FoodType != nil {
+			xstring2 := *(*source).FoodType
+			sitedbUpdateFoodPresetParams.FoodType = &xstring2
+		}
+		if (*source).Category != nil {
+			xstring3 := *(*source).Category
+			sitedbUpdateFoodPresetParams.Category = &xstring3
+		}
+		if (*source).Subcategory != nil {
+			xstring4 := *(*source).Subcategory
+			sitedbUpdateFoodPresetParams.Subcategory = &xstring4
+		}
+		if (*source).AbsorptionTimeMinutes != nil {
+			xint64 := *(*source).AbsorptionTimeMinutes
+			sitedbUpdateFoodPresetParams.AbsorptionTimeMinutes = &xint64
+		}
+		if (*source).PreBolus != nil {
+			xfloat64 := *(*source).PreBolus
+			sitedbUpdateFoodPresetParams.PreBolus = &xfloat64
+		}
+		if (*source).Portions != nil {
+			xfloat642 := *(*source).Portions
+			sitedbUpdateFoodPresetParams.Portions = &xfloat642
+		}
+		if (*source).Carbs != nil {
+			xfloat643 := *(*source).Carbs
+			sitedbUpdateFoodPresetParams.Carbs = &xfloat643
+		}
+		if (*source).Fat != nil {
+			xfloat644 := *(*source).Fat
+			sitedbUpdateFoodPresetParams.Fat = &xfloat644
+		}
+		if (*source).Protein != nil {
+			xfloat645 := *(*source).Protein
+			sitedbUpdateFoodPresetParams.Protein = &xfloat645
+		}
+		if (*source).Fibre != nil {
+			xfloat646 := *(*source).Fibre
+			sitedbUpdateFoodPresetParams.Fibre = &xfloat646
+		}
+		if (*source).Energy != nil {
+			xfloat647 := *(*source).Energy
+			sitedbUpdateFoodPresetParams.Energy = &xfloat647
+		}
+		sitedbUpdateFoodPresetParams.UpdatedByIdentityID = ContextIdentityID(context)
+		sitedbUpdateFoodPresetParams.UpdatedByIdentityName = ContextIdentityName(context)
+		sitedbUpdateFoodPresetParams.ID = (*source).ID
+	}
+	return sitedbUpdateFoodPresetParams
+}
 func GlucoseReadingFromDB(source *sitedb.GlucoseReading, context *httputils.SiteContext) *SiteGlucoseReading {
 	var pSitemodelsSiteGlucoseReading *SiteGlucoseReading
 	if source != nil {
@@ -1159,6 +1354,78 @@ func NotificationEventToUpdate(source *SiteNotificationEvent, context *httputils
 		sitedbUpdateNotificationEventParams.ID = (*source).ID
 	}
 	return sitedbUpdateNotificationEventParams
+}
+func ProfilePresetFromDB(source *sitedb.ProfilePreset, context *httputils.SiteContext) *SiteProfilePreset {
+	var pSitemodelsSiteProfilePreset *SiteProfilePreset
+	if source != nil {
+		var sitemodelsSiteProfilePreset SiteProfilePreset
+		sitemodelsSiteProfilePreset.ID = (*source).ID
+		pString := (*source).Name
+		sitemodelsSiteProfilePreset.Name = &pString
+		sitemodelsSiteProfilePreset.ProfileStoreID = (*source).ProfileStoreID
+		sitemodelsSiteProfilePreset.IsDefault = (*source).IsDefault
+		if (*source).Dia != nil {
+			xfloat64 := *(*source).Dia
+			sitemodelsSiteProfilePreset.Dia = &xfloat64
+		}
+		if (*source).Timezone != nil {
+			xstring := *(*source).Timezone
+			sitemodelsSiteProfilePreset.Timezone = &xstring
+		}
+		if (*source).CarbsHr != nil {
+			xfloat642 := *(*source).CarbsHr
+			sitemodelsSiteProfilePreset.CarbsHr = &xfloat642
+		}
+		if (*source).Delay != nil {
+			xfloat643 := *(*source).Delay
+			sitemodelsSiteProfilePreset.Delay = &xfloat643
+		}
+		sitemodelsSiteProfilePreset.Units = ContextUnits(context)
+		sitemodelsSiteProfilePreset.CarbRatios = ScheduleFromJSON((*source).CarbRatiosJson)
+		sitemodelsSiteProfilePreset.Sensitivities = ProfileSensitivities(source, context)
+		sitemodelsSiteProfilePreset.BasalRates = ScheduleFromJSON((*source).BasalRatesJson)
+		sitemodelsSiteProfilePreset.LowTargets = GlucoseScheduleFromJSON((*source).TargetsLowJson, context)
+		sitemodelsSiteProfilePreset.HighTargets = GlucoseScheduleFromJSON((*source).TargetsHighJson, context)
+		if (*source).RawJsonData != nil {
+			xstring2 := *(*source).RawJsonData
+			sitemodelsSiteProfilePreset.RawJsonData = &xstring2
+		}
+		if (*source).UtcOffsetMinutes != nil {
+			xint64 := *(*source).UtcOffsetMinutes
+			sitemodelsSiteProfilePreset.UtcOffsetMinutes = &xint64
+		}
+		sitemodelsSiteProfilePreset.OccurredAt = (*source).OccurredAt
+		sitemodelsSiteProfilePreset.CreatedAt = (*source).CreatedAt
+		sitemodelsSiteProfilePreset.UpdatedAt = (*source).UpdatedAt
+		if (*source).CreatedByAppName != nil {
+			xstring3 := *(*source).CreatedByAppName
+			sitemodelsSiteProfilePreset.CreatedByAppName = &xstring3
+		}
+		if (*source).CreatedByDeviceName != nil {
+			xstring4 := *(*source).CreatedByDeviceName
+			sitemodelsSiteProfilePreset.CreatedByDeviceName = &xstring4
+		}
+		sitemodelsSiteProfilePreset.CreatedByIdentityName = (*source).CreatedByIdentityName
+		if (*source).UpdatedByIdentityName != nil {
+			xstring5 := *(*source).UpdatedByIdentityName
+			sitemodelsSiteProfilePreset.UpdatedByIdentityName = &xstring5
+		}
+		pSitemodelsSiteProfilePreset = &sitemodelsSiteProfilePreset
+	}
+	return pSitemodelsSiteProfilePreset
+}
+func ProfilePresetToUpdate(source *SiteProfilePreset, context *httputils.SiteContext) sitedb.UpdateProfilePresetParams {
+	var sitedbUpdateProfilePresetParams sitedb.UpdateProfilePresetParams
+	if source != nil {
+		if (*source).Name != nil {
+			xstring := *(*source).Name
+			sitedbUpdateProfilePresetParams.Name = &xstring
+		}
+		sitedbUpdateProfilePresetParams.UpdatedByIdentityID = ContextIdentityID(context)
+		sitedbUpdateProfilePresetParams.UpdatedByIdentityName = ContextIdentityName(context)
+		sitedbUpdateProfilePresetParams.ID = (*source).ID
+	}
+	return sitedbUpdateProfilePresetParams
 }
 func ProfileSwitchFromDB(source *sitedb.ProfileSwitch) *SiteProfileSwitch {
 	var pSitemodelsSiteProfileSwitch *SiteProfileSwitch

@@ -118,6 +118,9 @@ func (r *AssertTextVisible) ToErrorLine() string {
 // click at its centre would hit, so one clipped by a scrolling box or covered by another element fails
 type AssertVisible struct {
 	Locator string
+	// Drawn is ASSERT_DRAWN, for a mark in a graph that others may be drawn over: it is shown, but need not be
+	// what a click at its centre would hit
+	Drawn bool
 
 	TestPath string
 	TestLine int
@@ -174,6 +177,9 @@ func (r *AssertVisible) Execute(t *testing.T, ctx map[string]any, page playwrigh
 	}
 	if !visible {
 		t.Fatalf("\n\n%s\n assertVisible failed: expected value to be visible for locator: %s\n\n%s\n\n", r.ToErrorLine(), r.Locator, prettyOutput)
+	}
+	if r.Drawn {
+		return nil
 	}
 	clickable, err := locator.Evaluate(clickableScript, nil)
 	if err != nil {
