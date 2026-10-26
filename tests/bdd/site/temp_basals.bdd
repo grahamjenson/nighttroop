@@ -44,7 +44,16 @@ SCREENSHOT temp_basals
 CLICK #tempBasalsTable tbody tr >> nth=0
 ASSERT_VISIBLE #site--temp-basal--details
 ASSERT_TEXT_VISIBLE virtual_sync
+// Only what it has is listed: virtual sync sets an absolute rate, not a percent
+ASSERT_VISIBLE #site--temp-basal--details dt:text-is("Device")
+ASSERT_NOT_VISIBLE #site--temp-basal--details dt:text-is("Percent")
+// Its raw data is folded away until asked for
+ASSERT_VISIBLE #site--temp-basal--details--raw
+ASSERT_NOT_VISIBLE #site--temp-basal--details--raw pre
 SCREENSHOT temp_basal_details
+CLICK #site--temp-basal--details--raw summary
+ASSERT_VISIBLE #site--temp-basal--details--raw pre
+SCREENSHOT temp_basal_raw_data
 
 CLICK #site--temp-basal--details--close
 ASSERT_NOT_VISIBLE #site--temp-basal--details
