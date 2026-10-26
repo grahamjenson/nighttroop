@@ -6,6 +6,7 @@ import (
 
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/server/components/control_templ"
+	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/server/components/ui/toast"
@@ -72,21 +73,7 @@ templ SitesTable(sites []*controlmodels.Site, skip int64, limit int64, order str
 					}
 				}
 			}
-			<div class="mt-4 flex items-center justify-between text-sm text-gray-500">
-				if len(sites) > 0 {
-					<span>{ fmt.Sprintf("Showing %d to %d", skip+1, skip+int64(len(sites))) }</span>
-				} else {
-					<span></span>
-				}
-				<div class="flex gap-2">
-					if skip > 0 {
-						@sitesPageButton("control--sites--previous", "Previous", max(skip-limit, 0), limit, order, true)
-					}
-					if int64(len(sites)) == limit {
-						@sitesPageButton("control--sites--next", "Next", skip+limit, limit, order, true)
-					}
-				</div>
-			</div>
+			@pager.Pager(pager.Props{ID: "control--sites", Path: "/sites?order=" + order, Count: len(sites), Skip: skip, Limit: limit})
 		</section>
 		<div id="modal-container"></div>
 	</div>

@@ -8,7 +8,7 @@ import (
 
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/server/components/control_templ"
-	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/table"
 )
 
@@ -86,39 +86,10 @@ templ JobStatsTable(stats []*controlmodels.JobStatsDaily, skip int64, limit int6
 					}
 				}
 			}
-			<div class="mt-4 flex items-center justify-between text-sm text-gray-500">
-				if len(stats) > 0 {
-					<span>{ fmt.Sprintf("Showing %d to %d", skip+1, skip+int64(len(stats))) }</span>
-				} else {
-					<span></span>
-				}
-				<div class="flex gap-2">
-					if skip > 0 {
-						@jobStatsPageButton("control--job-stats--previous", "Previous", max(skip-limit, 0), limit)
-					}
-					if int64(len(stats)) == limit {
-						@jobStatsPageButton("control--job-stats--next", "Next", skip+limit, limit)
-					}
-				</div>
-			</div>
+			@pager.Pager(pager.Props{ID: "control--job-stats", Path: "/job-stats", Count: len(stats), Skip: skip, Limit: limit})
 		</section>
 		<div id="modal-container"></div>
 	</div>
-}
-
-templ jobStatsPageButton(id string, label string, skip int64, limit int64) {
-	@button.Button(button.Props{
-		ID:      id,
-		Variant: button.VariantOutline,
-		Attributes: templ.Attributes{
-			"hx-get":      fmt.Sprintf("/job-stats?skip=%d&limit=%d", skip, limit),
-			"hx-target":   "#main-content",
-			"hx-push-url": "true",
-			"hx-swap":     "innerHTML",
-		},
-	}) {
-		{ label }
-	}
 }
 
 templ jobStatsRow(stats *controlmodels.JobStatsDaily) {

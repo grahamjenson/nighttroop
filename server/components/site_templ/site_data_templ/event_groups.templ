@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/table"
@@ -84,39 +85,10 @@ templ EventGroupsTable(eventGroups []*sitemodels.SiteEventGroup, skip int64, lim
 					}
 				}
 			}
-			<div class="mt-4 flex items-center justify-between text-sm text-gray-500">
-				if len(eventGroups) > 0 {
-					<span id="site--event-group--showing">{ fmt.Sprintf("Showing %d to %d", skip+1, skip+int64(len(eventGroups))) }</span>
-				} else {
-					<span></span>
-				}
-				<div class="flex gap-2">
-					if skip > 0 {
-						@eventGroupPageButton("site--event-group--previous", "Previous", max(skip-limit, 0), limit)
-					}
-					if int64(len(eventGroups)) == limit {
-						@eventGroupPageButton("site--event-group--next", "Next", skip+limit, limit)
-					}
-				</div>
-			</div>
+			@pager.Pager(pager.Props{ID: "site--event-group", Path: "/data/event-groups", Count: len(eventGroups), Skip: skip, Limit: limit})
 		</section>
 		<div id="modal-container"></div>
 	</div>
-}
-
-templ eventGroupPageButton(id string, label string, skip int64, limit int64) {
-	@button.Button(button.Props{
-		ID:      id,
-		Variant: button.VariantOutline,
-		Attributes: templ.Attributes{
-			"hx-get":      fmt.Sprintf("/data/event-groups?skip=%d&limit=%d", skip, limit),
-			"hx-target":   "#main-content",
-			"hx-push-url": "true",
-			"hx-swap":     "innerHTML",
-		},
-	}) {
-		{ label }
-	}
 }
 
 // eventGroupRow opens the group's details when clicked. The delete button stops its click reaching the row.
