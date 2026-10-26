@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/models/controlmodels"
-	"nighttroop.t1d.nz/server/components/control_templ"
+	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/table"
 )
@@ -709,110 +709,103 @@ func JobModal(job *controlmodels.Job) templ.Component {
 			templ_7745c5c3_Var32 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "<div id=\"control--job--details\" class=\"fixed inset-0 z-50 flex items-center justify-center bg-black/50\"><div class=\"w-full max-w-lg rounded-lg bg-white p-6 shadow-lg\"><h2 class=\"text-lg font-semibold\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var33 string
-		templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("Job %d", job.ID))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_jobs_templ/jobs.templ`, Line: 147, Col: 68}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "</h2><dl class=\"mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = jobDetail("Queue", job.Queue).Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = jobDetail("Job", job.Job).Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = jobDetail("Status", job.JobStatus).Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = jobDetail("Remaining Attempts", fmt.Sprint(job.RemainingAttempts)).Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = jobDetail("Deduping Key", job.DedupingKey).Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = jobDetail("Created", formatDate(job.CreatedAt)).Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = jobDetail("Execute After", formatDate(job.ExecuteAfter)).Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = jobDetail("Fetched", formatDate(job.ConsumerFetchedAt)).Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = jobDetail("Finished", formatDate(job.FinishedAt)).Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = jobDetail("Duration", duration(job)).Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "</dl><h3 class=\"mt-4 text-sm font-semibold\">Errors</h3>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		if len(job.Errors) == 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "<p class=\"mt-1 text-sm text-gray-500\">No errors.</p>")
+		templ_7745c5c3_Var33 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+			if !templ_7745c5c3_IsBuffer {
+				defer func() {
+					templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+					if templ_7745c5c3_Err == nil {
+						templ_7745c5c3_Err = templ_7745c5c3_BufErr
+					}
+				}()
+			}
+			ctx = templ.InitializeContext(ctx)
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "<dl class=\"mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "<ul id=\"control--job--errors\" class=\"mt-1 max-h-48 list-disc space-y-1 overflow-y-auto pl-5 text-sm text-red-700\">")
+			templ_7745c5c3_Err = jobDetail("Queue", job.Queue).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			for _, e := range job.Errors {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "<li class=\"break-all\">")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var34 string
-				templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(e)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_jobs_templ/jobs.templ`, Line: 166, Col: 31}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "</li>")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "</ul>")
+			templ_7745c5c3_Err = jobDetail("Job", job.Job).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "<div class=\"mt-4 flex justify-end\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = control_templ.CloseButton("control--job--details--close").Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "</div></div></div>")
+			templ_7745c5c3_Err = jobDetail("Status", job.JobStatus).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = jobDetail("Remaining Attempts", fmt.Sprint(job.RemainingAttempts)).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = jobDetail("Deduping Key", job.DedupingKey).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = jobDetail("Created", formatDate(job.CreatedAt)).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = jobDetail("Execute After", formatDate(job.ExecuteAfter)).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = jobDetail("Fetched", formatDate(job.ConsumerFetchedAt)).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = jobDetail("Finished", formatDate(job.FinishedAt)).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = jobDetail("Duration", duration(job)).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "</dl><h3 class=\"mt-4 text-sm font-semibold\">Errors</h3>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			if len(job.Errors) == 0 {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "<p class=\"mt-1 text-sm text-gray-500\">No errors.</p>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			} else {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "<ul id=\"control--job--errors\" class=\"mt-1 max-h-48 list-disc space-y-1 overflow-y-auto pl-5 text-sm text-red-700\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				for _, e := range job.Errors {
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "<li class=\"break-all\">")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var34 string
+					templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(e)
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_jobs_templ/jobs.templ`, Line: 164, Col: 30}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "</li>")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "</ul>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			return nil
+		})
+		templ_7745c5c3_Err = modal.Modal(modal.Props{ID: "control--job--details", Title: fmt.Sprintf("Job %d", job.ID)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var33), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -820,6 +813,6 @@ func JobModal(job *controlmodels.Job) templ.Component {
 	})
 }
 
-var jobDetail = control_templ.Detail
+var jobDetail = modal.Detail
 
 var _ = templruntime.GeneratedTemplate
