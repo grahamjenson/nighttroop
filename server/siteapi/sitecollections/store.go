@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/server/components/site_templ"
 	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitedata"
+	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitepresets"
 	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitesettings"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -20,44 +21,51 @@ type SiteCollectionRoutes struct {
 }
 
 type SiteStore struct {
-	collectionRoutes map[string]*SiteCollectionRoutes
+	// collectionRoutes are each section's collections by route, e.g. data then glucose for /data/glucose
+	collectionRoutes map[string]map[string]*SiteCollectionRoutes
 }
 
 func NewSiteStore() *SiteStore {
 
 	siteStore := &SiteStore{
 
-		collectionRoutes: make(map[string]*SiteCollectionRoutes),
+		collectionRoutes: make(map[string]map[string]*SiteCollectionRoutes),
 	}
 
 	// Data collections
-	siteStore.registerCollection(&sitedata.SummaryCollection{})
-	siteStore.registerCollection(&sitedata.GlucoseReadingsCollection{})
-	siteStore.registerCollection(&sitedata.TempTargetsCollection{})
-	siteStore.registerCollection(&sitedata.TempBasalsCollection{})
-	siteStore.registerCollection(&sitedata.ActivitiesCollection{})
-	siteStore.registerCollection(&sitedata.ComponentEventsCollection{})
-	siteStore.registerCollection(&sitedata.NotificationEventsCollection{})
-	siteStore.registerCollection(&sitedata.ProfileSwitchesCollection{})
-	siteStore.registerCollection(&sitedata.EventGroupsCollection{})
-	siteStore.registerCollection(&sitedata.InsulinDosesCollection{})
-	siteStore.registerCollection(&sitedata.FoodIntakesCollection{})
-	siteStore.registerCollection(&sitedata.DeviceStatusesCollection{})
+	siteStore.registerCollection("data", &sitedata.SummaryCollection{})
+	siteStore.registerCollection("data", &sitedata.GlucoseReadingsCollection{})
+	siteStore.registerCollection("data", &sitedata.TempTargetsCollection{})
+	siteStore.registerCollection("data", &sitedata.TempBasalsCollection{})
+	siteStore.registerCollection("data", &sitedata.ActivitiesCollection{})
+	siteStore.registerCollection("data", &sitedata.ComponentEventsCollection{})
+	siteStore.registerCollection("data", &sitedata.NotificationEventsCollection{})
+	siteStore.registerCollection("data", &sitedata.ProfileSwitchesCollection{})
+	siteStore.registerCollection("data", &sitedata.EventGroupsCollection{})
+	siteStore.registerCollection("data", &sitedata.InsulinDosesCollection{})
+	siteStore.registerCollection("data", &sitedata.FoodIntakesCollection{})
+	siteStore.registerCollection("data", &sitedata.DeviceStatusesCollection{})
+
+	// Presets collections
+	siteStore.registerCollection("presets", &sitepresets.FoodPresetsCollection{})
 
 	// Settings collections
-	siteStore.registerCollection(&sitesettings.SyncSettingsCollection{})
-	siteStore.registerCollection(&sitesettings.IdentitiesCollection{})
-	siteStore.registerCollection(&sitesettings.SettingsCollection{Site: true})
-	siteStore.registerCollection(&sitesettings.SettingsCollection{Site: false})
+	siteStore.registerCollection("settings", &sitesettings.SyncSettingsCollection{})
+	siteStore.registerCollection("settings", &sitesettings.IdentitiesCollection{})
+	siteStore.registerCollection("settings", &sitesettings.SettingsCollection{Site: true})
+	siteStore.registerCollection("settings", &sitesettings.SettingsCollection{Site: false})
 
 	return siteStore
 }
 
-func (store *SiteStore) registerCollection[R, M any](collection CollectionBase[R, M]) {
+func (store *SiteStore) registerCollection[R, M any](section string, collection CollectionBase[R, M]) {
 	name := collection.GetName()
 	route := collection.GetRoute()
-	if _, exists := store.collectionRoutes[route]; exists {
-		panic("collection route already registered: " + route)
+	if store.collectionRoutes[section] == nil {
+		store.collectionRoutes[section] = make(map[string]*SiteCollectionRoutes)
+	}
+	if _, exists := store.collectionRoutes[section][route]; exists {
+		panic("collection route already registered: " + section + "/" + route)
 	}
 
 	cannot := func(what string) http.HandlerFunc {
@@ -100,15 +108,15 @@ func (store *SiteStore) registerCollection[R, M any](collection CollectionBase[R
 		panic("collection does not implement any known interfaces: " + name)
 	}
 
-	store.collectionRoutes[route] = routes
+	store.collectionRoutes[section][route] = routes
 
 }
 
-// Collection is the routes of the collection at route, for a route of its own like the summary at /
-func (s *SiteStore) Collection(route string) *SiteCollectionRoutes {
-	routes, exists := s.collectionRoutes[route]
+// Collection is the routes of the collection at route in a section, for a route of its own like the summary at /
+func (s *SiteStore) Collection(section string, route string) *SiteCollectionRoutes {
+	routes, exists := s.collectionRoutes[section][route]
 	if !exists {
-		panic("no collection at route: " + route)
+		panic("no collection at route: " + section + "/" + route)
 	}
 	return routes
 }
@@ -130,28 +138,23 @@ func answerNotFound(status int, message string) http.HandlerFunc {
 	}
 }
 
-// routes are those of the collection the request names, or ones answering that there is no such collection
-func (s *SiteStore) routes(r *http.Request) *SiteCollectionRoutes {
+// routes are those of the collection the request names in a section, or ones answering that there is no such collection
+func (s *SiteStore) routes(section string, r *http.Request) *SiteCollectionRoutes {
 	name := chi.URLParam(r, "collection")
-	if routes, exists := s.collectionRoutes[name]; exists {
+	if routes, exists := s.collectionRoutes[section][name]; exists {
 		return routes
 	}
 	missing := answerNotFound(http.StatusNotFound, "There is no "+name+" here")
 	return &SiteCollectionRoutes{Search: missing, Get: missing, Create: missing, Update: missing, Delete: missing}
 }
 
-func (s *SiteStore) CollectionSearchHandler(w http.ResponseWriter, r *http.Request) {
-	s.routes(r).Search(w, r)
-}
-func (s *SiteStore) CollectionGetHandler(w http.ResponseWriter, r *http.Request) {
-	s.routes(r).Get(w, r)
-}
-func (s *SiteStore) CollectionCreateHandler(w http.ResponseWriter, r *http.Request) {
-	s.routes(r).Create(w, r)
-}
-func (s *SiteStore) CollectionUpdateHandler(w http.ResponseWriter, r *http.Request) {
-	s.routes(r).Update(w, r)
-}
-func (s *SiteStore) CollectionDeleteHandler(w http.ResponseWriter, r *http.Request) {
-	s.routes(r).Delete(w, r)
+// Section is the routes of whichever collection in the section a request names, e.g. glucose for /data/glucose
+func (s *SiteStore) Section(section string) *SiteCollectionRoutes {
+	return &SiteCollectionRoutes{
+		Search: func(w http.ResponseWriter, r *http.Request) { s.routes(section, r).Search(w, r) },
+		Get:    func(w http.ResponseWriter, r *http.Request) { s.routes(section, r).Get(w, r) },
+		Create: func(w http.ResponseWriter, r *http.Request) { s.routes(section, r).Create(w, r) },
+		Update: func(w http.ResponseWriter, r *http.Request) { s.routes(section, r).Update(w, r) },
+		Delete: func(w http.ResponseWriter, r *http.Request) { s.routes(section, r).Delete(w, r) },
+	}
 }

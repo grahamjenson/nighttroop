@@ -103,7 +103,7 @@ templ Header() {
 					</button>
 				}
 				@dropdown.Content(dropdown.ContentProps{
-					Class: "w-56 max-h-[calc(100vh-5rem)]",
+					Class: "w-56 sm:w-[30rem] sm:max-w-[calc(100vw-2rem)] max-h-[calc(100vh-5rem)]",
 				}) {
 					if name := identityName(ctx); name != "" {
 						<div class="px-2 py-1.5 text-sm text-gray-500">
@@ -111,46 +111,60 @@ templ Header() {
 						</div>
 						@dropdown.Separator()
 					}
-					@dropdown.Label() {
-						Data
-					}
-					@dropdown.Group() {
-						@dataMenuItem("site--data--glucose-button", "/data/glucose", "Glucose Readings", icon.Droplet(icon.Props{Class: "size-4 mr-2"}))
-						@dataMenuItem("site--data--insulin-button", "/data/insulin", "Insulin Doses", icon.Syringe(icon.Props{Class: "size-4 mr-2"}))
-						@dataMenuItem("site--data--food-button", "/data/food", "Food Intakes", icon.Utensils(icon.Props{Class: "size-4 mr-2"}))
-						@dataMenuItem("site--data--temp-targets-button", "/data/temp-targets", "Temp Targets", icon.Target(icon.Props{Class: "size-4 mr-2"}))
-						@dataMenuItem("site--data--temp-basals-button", "/data/temp-basals", "Temp Basals", icon.Gauge(icon.Props{Class: "size-4 mr-2"}))
-						@dataMenuItem("site--data--activities-button", "/data/activities", "Activities", icon.Activity(icon.Props{Class: "size-4 mr-2"}))
-						@dataMenuItem("site--data--component-events-button", "/data/component-events", "Site & Sensor Changes", icon.Wrench(icon.Props{Class: "size-4 mr-2"}))
-						@dataMenuItem("site--data--notifications-button", "/data/notifications", "Notifications", icon.Bell(icon.Props{Class: "size-4 mr-2"}))
-						@dataMenuItem("site--data--profile-switches-button", "/data/profile-switches", "Profile Switches", icon.Repeat(icon.Props{Class: "size-4 mr-2"}))
-						@dataMenuItem("site--data--event-groups-button", "/data/event-groups", "Event Groups", icon.Layers(icon.Props{Class: "size-4 mr-2"}))
-						@dataMenuItem("site--data--device-status-button", "/data/device-status", "Device Status", icon.Smartphone(icon.Props{Class: "size-4 mr-2"}))
-					}
-					@dropdown.Separator()
-					@dropdown.Label() {
-						Settings
-					}
-					@dropdown.Group() {
-						@dataMenuItem("site--settings--settings-button", "/settings", "Settings", icon.SlidersHorizontal(icon.Props{Class: "size-4 mr-2"}))
-						@dataMenuItem("site--settings--identities-button", "/settings/identities", "Users & Devices", icon.Users(icon.Props{Class: "size-4 mr-2"}))
-						@dataMenuItem("site--settings--sync-button", "/settings/sync", "Sync Settings", icon.FolderSync(icon.Props{Class: "size-4 mr-2"}))
-					}
-					@dropdown.Separator()
-					@dropdown.Item(dropdown.ItemProps{
-						ID:   "site--settings--logout-button",
-						Href: "#",
-						Attributes: templ.Attributes{
-							"hx-post":   "/logout",
-							"hx-target": "body",
-							"hx-swap":   "outerHTML",
-						},
-					}) {
-						<span class="flex items-center">
-							@icon.LogOut(icon.Props{Class: "size-4 mr-2"})
-							Logout
-						</span>
-					}
+					// Data on the left, and presets, settings and logout on the right, so every item fits in the window
+					<div class="sm:grid sm:grid-cols-2 sm:gap-x-1">
+						<div>
+							@dropdown.Label() {
+								Data
+							}
+							@dropdown.Group() {
+								@dataMenuItem("site--data--glucose-button", "/data/glucose", "Glucose Readings", icon.Droplet(icon.Props{Class: "size-4 mr-2"}))
+								@dataMenuItem("site--data--insulin-button", "/data/insulin", "Insulin Doses", icon.Syringe(icon.Props{Class: "size-4 mr-2"}))
+								@dataMenuItem("site--data--food-button", "/data/food", "Food Intakes", icon.Utensils(icon.Props{Class: "size-4 mr-2"}))
+								@dataMenuItem("site--data--temp-targets-button", "/data/temp-targets", "Temp Targets", icon.Target(icon.Props{Class: "size-4 mr-2"}))
+								@dataMenuItem("site--data--temp-basals-button", "/data/temp-basals", "Temp Basals", icon.Gauge(icon.Props{Class: "size-4 mr-2"}))
+								@dataMenuItem("site--data--activities-button", "/data/activities", "Activities", icon.Activity(icon.Props{Class: "size-4 mr-2"}))
+								@dataMenuItem("site--data--component-events-button", "/data/component-events", "Site & Sensor Changes", icon.Wrench(icon.Props{Class: "size-4 mr-2"}))
+								@dataMenuItem("site--data--notifications-button", "/data/notifications", "Notifications", icon.Bell(icon.Props{Class: "size-4 mr-2"}))
+								@dataMenuItem("site--data--profile-switches-button", "/data/profile-switches", "Profile Switches", icon.Repeat(icon.Props{Class: "size-4 mr-2"}))
+								@dataMenuItem("site--data--event-groups-button", "/data/event-groups", "Event Groups", icon.Layers(icon.Props{Class: "size-4 mr-2"}))
+								@dataMenuItem("site--data--device-status-button", "/data/device-status", "Device Status", icon.Smartphone(icon.Props{Class: "size-4 mr-2"}))
+							}
+						</div>
+						<div>
+							@dropdown.Separator(dropdown.SeparatorProps{Class: "sm:hidden"})
+							@dropdown.Label() {
+								Presets
+							}
+							@dropdown.Group() {
+								@dataMenuItem("site--presets--food-button", "/presets/food", "Food Presets", icon.Utensils(icon.Props{Class: "size-4 mr-2"}))
+							}
+							@dropdown.Separator()
+							@dropdown.Label() {
+								Settings
+							}
+							@dropdown.Group() {
+								@dataMenuItem("site--settings--settings-button", "/settings", "Settings", icon.SlidersHorizontal(icon.Props{Class: "size-4 mr-2"}))
+								@dataMenuItem("site--settings--identities-button", "/settings/identities", "Users & Devices", icon.Users(icon.Props{Class: "size-4 mr-2"}))
+								@dataMenuItem("site--settings--sync-button", "/settings/sync", "Sync Settings", icon.FolderSync(icon.Props{Class: "size-4 mr-2"}))
+							}
+							@dropdown.Separator()
+							@dropdown.Item(dropdown.ItemProps{
+								ID:   "site--settings--logout-button",
+								Href: "#",
+								Attributes: templ.Attributes{
+									"hx-post":   "/logout",
+									"hx-target": "body",
+									"hx-swap":   "outerHTML",
+								},
+							}) {
+								<span class="flex items-center">
+									@icon.LogOut(icon.Props{Class: "size-4 mr-2"})
+									Logout
+								</span>
+							}
+						</div>
+					</div>
 				}
 			}
 		</div>

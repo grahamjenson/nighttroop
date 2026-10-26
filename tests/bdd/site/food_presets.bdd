@@ -1,0 +1,102 @@
+GOTO {{ server_url}}/
+ASSERT_STATUS 200
+
+CLICK "Create Site"
+ASSERT_STATUS 200
+
+CLICK #public--login-button
+ASSERT_NEW_PAGE
+
+INPUT #site--login--name admin
+INPUT #site--login--password password
+
+CLICK #site--login-button
+ASSERT_STATUS 200
+
+ASSERT_VISIBLE #site--login--otp-1
+INPUT #site--login--otp-1 123123
+
+CLICK #site--login-totp-button
+ASSERT_NEW_URL
+ASSERT_VISIBLE "Nighttroop"
+
+// Food presets are in the menu under Presets, and a new site has none
+CLICK #site--settings-menu
+ASSERT_VISIBLE #site--presets--food-button
+SCREENSHOT presets_menu
+CLICK #site--presets--food-button
+ASSERT_STATUS 200
+ASSERT_PATH /presets/food
+ASSERT_VISIBLE #foodPresetsTable
+ASSERT_TEXT_VISIBLE No food presets here.
+ASSERT_NOT_VISIBLE #presets--food--next
+SCREENSHOT food_presets_empty
+
+// A food preset typed in goes to the top of the table
+INPUT #presets--food--create--name Apple
+INPUT #presets--food--create--carbs 15
+CLICK #presets--food--create--submit
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE Apple
+ASSERT_NOT_VISIBLE #presets--food--empty
+
+INPUT #presets--food--create--name Toast
+INPUT #presets--food--create--carbs 20
+INPUT #presets--food--create--absorption 90
+CLICK #presets--food--create--submit
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE Toast
+SCREENSHOT food_preset_created
+
+// Clicking a food preset shows all its details, and they can be edited, which updates its row
+CLICK #foodPresetsTable tbody tr >> nth=0
+ASSERT_VISIBLE #presets--food--details
+ASSERT_TEXT_VISIBLE admin
+SCREENSHOT food_preset_edit
+INPUT #presets--food--edit--name Brown toast
+INPUT #presets--food--edit--carbs 25
+CLICK #presets--food--edit--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Food Preset Updated
+ASSERT_NOT_VISIBLE #presets--food--details
+ASSERT_TEXT_VISIBLE Brown toast
+SCREENSHOT food_preset_updated
+
+// The edit is saved
+CLICK #foodPresetsTable tbody tr >> nth=0
+ASSERT_TEXT_VISIBLE Brown toast
+CLICK #presets--food--details--close
+ASSERT_NOT_VISIBLE #presets--food--details
+
+// A page of one food preset pages through them, newest first
+GOTO /presets/food?limit=1
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+ASSERT_TEXT_VISIBLE Brown toast
+ASSERT_NOT_VISIBLE #presets--food--previous
+
+CLICK #presets--food--next
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 2 to 2
+ASSERT_TEXT_VISIBLE Apple
+
+CLICK #presets--food--previous
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+
+// Deleting asks first (the test accepts), then removes the row without opening its details
+CLICK #site--settings-menu
+CLICK #site--presets--food-button
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 2
+CLICK #foodPresetsTable tbody tr >> nth=0 >> button[title=Delete]
+ASSERT_TEXT_VISIBLE Food Preset Deleted
+ASSERT_NOT_VISIBLE #presets--food--details
+SCREENSHOT food_preset_deleted
+
+// The deleted food preset stays gone after a reload
+CLICK #site--settings-menu
+CLICK #site--presets--food-button
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+ASSERT_TEXT_VISIBLE Apple

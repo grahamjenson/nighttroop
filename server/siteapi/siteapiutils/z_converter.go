@@ -40,6 +40,14 @@ func QueryToAllFoodIntakes(source *apiquery.Query) sitedb.AllFoodIntakesParams {
 	}
 	return sitedbAllFoodIntakesParams
 }
+func QueryToAllFoodPresets(source *apiquery.Query) sitedb.AllFoodPresetsParams {
+	var sitedbAllFoodPresetsParams sitedb.AllFoodPresetsParams
+	if source != nil {
+		sitedbAllFoodPresetsParams.Skip = (*source).Skip
+		sitedbAllFoodPresetsParams.Limit = (*source).Limit
+	}
+	return sitedbAllFoodPresetsParams
+}
 func QueryToAllGlucoseReadings(source *apiquery.Query) sitedb.AllGlucoseReadingsParams {
 	var sitedbAllGlucoseReadingsParams sitedb.AllGlucoseReadingsParams
 	if source != nil {
