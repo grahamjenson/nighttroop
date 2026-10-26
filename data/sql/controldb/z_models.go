@@ -164,6 +164,14 @@ type SiteSyncSource struct {
 	EntriesLastModified        *int64
 	TreatmentsLastModified     *int64
 	DevicestatusLastModified   *int64
+	BackfillStartedAt          *int64
+	LastBackfillFrom           *int64
+	LastBackfillTo             *int64
+	LastBackfillFinishedAt     *int64
+	LastBackfillDuration       *int64
+	LastBackfillRecords        *int64
+	LastBackfillError          *string
+	TotalBackfills             int64
 	SyncIntervalSecondsReason  string
 	SyncIntervalSeconds        int64
 	LastAttemptedSync          *int64

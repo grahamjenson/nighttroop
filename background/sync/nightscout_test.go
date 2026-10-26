@@ -146,6 +146,6 @@ func TestNightscoutSyncCopiesEntriesTreatmentsAndDeviceStatuses(t *testing.T) {
 	logs, err := controlDB.Logs.Queries.SearchLogs(ctx, logsdb.SearchLogsParams{SiteID: &siteID, Limit: 10})
 	require.NoError(t, err)
 	require.Len(t, logs, 1)
-	require.Equal(t, "skipped a Nightscout document the site refused", logs[0].Message)
+	require.Equal(t, "skipped Nightscout documents the site refused", logs[0].Message)
 	require.Contains(t, *logs[0].Attributes, `"collection":"treatments"`)
 }

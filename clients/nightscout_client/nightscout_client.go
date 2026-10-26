@@ -51,8 +51,12 @@ type Client struct {
 	jwtExpire *time.Time
 }
 
-func documentsEndpoint(nsURL string, collection string, gteDate int, limit int) string {
-	return fmt.Sprintf("%s/api/v3/%s?sort$desc=date&date$gte=%d&limit=%d", nsURL, collection, gteDate, limit)
+func documentsEndpoint(nsURL string, collection string, gteDate int64, lteDate int64, limit int) string {
+	endpoint := fmt.Sprintf("%s/api/v3/%s?sort$desc=date&date$gte=%d&limit=%d", nsURL, collection, gteDate, limit)
+	if lteDate > 0 {
+		endpoint += fmt.Sprintf("&date$lte=%d", lteDate)
+	}
+	return endpoint
 }
 func lastModifiedEndpoint(nsURL string) string {
 	return fmt.Sprintf("%s/api/v3/lastModified", nsURL)
@@ -240,14 +244,20 @@ func (c *Client) GetLastModified(ctx context.Context) (map[string]int64, error) 
 // DOCUMENTS
 //
 
-// GetDocuments returns up to count of a collection's newest documents dated from afterTime, such as entries or treatments
+// GetDocuments returns up to count of a collection's newest documents, such as entries or treatments, dated from
+// afterTime, and up to beforeTime unless it is zero
 func (c *Client) GetDocuments(
 	ctx context.Context,
 	collection string,
 	afterTime time.Time,
+	beforeTime time.Time,
 	count int,
 ) ([]map[string]any, error) {
-	reqURL := documentsEndpoint(c.baseURL, collection, int(afterTime.UnixMilli()), count)
+	before := int64(0)
+	if !beforeTime.IsZero() {
+		before = beforeTime.UnixMilli()
+	}
+	reqURL := documentsEndpoint(c.baseURL, collection, afterTime.UnixMilli(), before, count)
 	resp, err := c.doRequest(ctx, http.MethodGet, reqURL)
 
 	if err != nil {
