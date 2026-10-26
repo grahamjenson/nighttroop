@@ -1,0 +1,80 @@
+GOTO {{ server_url}}/
+ASSERT_STATUS 200
+
+CLICK "Create Site"
+ASSERT_STATUS 200
+
+CLICK #public--login-button
+ASSERT_NEW_PAGE
+
+INPUT #site--login--name admin
+INPUT #site--login--password password
+
+CLICK #site--login-button
+ASSERT_STATUS 200
+
+ASSERT_VISIBLE #site--login--otp-1
+INPUT #site--login--otp-1 123123
+
+CLICK #site--login-totp-button
+ASSERT_NEW_URL
+ASSERT_VISIBLE "Nighttroop"
+
+// Profiles are in the menu under Presets, and a new site has none
+CLICK #site--settings-menu
+ASSERT_VISIBLE #site--presets--profiles-button
+CLICK #site--presets--profiles-button
+ASSERT_STATUS 200
+ASSERT_PATH /presets/profiles
+ASSERT_VISIBLE #presets--profiles--empty
+SCREENSHOT profiles_empty
+
+// Virtual sync uploads a profile store, as a loop does
+CLICK #site--settings-menu
+CLICK #site--settings--sync-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-sync--enable
+CLICK #site--settings--virtual-sync--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Sync Updated
+RUN_BACKGROUND_JOBS
+
+CLICK #site--settings-menu
+CLICK #site--presets--profiles-button
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+ASSERT_TEXT_VISIBLE Virtual
+ASSERT_TEXT_VISIBLE Default
+SCREENSHOT profiles
+
+// Clicking a profile shows its schedules, only to read, and it can be renamed
+CLICK #profilePresetsTable tbody tr >> nth=0
+ASSERT_VISIBLE #presets--profiles--details
+ASSERT_VISIBLE #presets--profiles--schedules
+ASSERT_TEXT_VISIBLE Basal (U/h)
+ASSERT_TEXT_VISIBLE Low Target (mmol/L)
+SCREENSHOT profile_details
+INPUT #presets--profiles--edit--name Everyday
+CLICK #presets--profiles--edit--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Profile Renamed
+ASSERT_NOT_VISIBLE #presets--profiles--details
+ASSERT_TEXT_VISIBLE Everyday
+
+// The new name is saved
+CLICK #site--settings-menu
+CLICK #site--presets--profiles-button
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Everyday
+
+// Deleting asks first (the test accepts), then removes the row without opening its details
+CLICK #profilePresetsTable tbody tr >> nth=0 >> button[title=Delete]
+ASSERT_TEXT_VISIBLE Profile Deleted
+ASSERT_NOT_VISIBLE #presets--profiles--details
+SCREENSHOT profile_deleted
+
+// The deleted profile stays gone after a reload
+CLICK #site--settings-menu
+CLICK #site--presets--profiles-button
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE No profiles here.

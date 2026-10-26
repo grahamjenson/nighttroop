@@ -35,6 +35,9 @@ type QueryConverter interface {
 	QueryToAllFoodPresets(source *apiquery.Query) sitedb.AllFoodPresetsParams
 
 	// goverter:useZeroValueOnPointerInconsistency
+	QueryToAllProfilePresets(source *apiquery.Query) sitedb.AllProfilePresetsParams
+
+	// goverter:useZeroValueOnPointerInconsistency
 	// goverter:ignore IncludeDeleted
 	QueryToAllActivities(source *apiquery.Query) sitedb.AllActivitiesParams
 

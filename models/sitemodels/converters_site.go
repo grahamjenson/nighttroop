@@ -285,6 +285,25 @@ type SiteConverter interface {
 	FoodPresetToUpdate(source *SiteFoodPreset, siteContext *httputils.SiteContext) sitedb.UpdateFoodPresetParams
 
 	///////
+	// PROFILE PRESETS
+	///////
+
+	// goverter:context siteContext
+	// goverter:map CarbRatiosJson CarbRatios | ScheduleFromJSON
+	// goverter:map BasalRatesJson BasalRates | ScheduleFromJSON
+	// goverter:map . Sensitivities | ProfileSensitivities
+	// goverter:map TargetsLowJson LowTargets | GlucoseScheduleFromJSON
+	// goverter:map TargetsHighJson HighTargets | GlucoseScheduleFromJSON
+	// goverter:map . Units | ContextUnits
+	ProfilePresetFromDB(source *sitedb.ProfilePreset, siteContext *httputils.SiteContext) *SiteProfilePreset
+
+	// goverter:context siteContext
+	// goverter:map UpdatedByIdentityID | ContextIdentityID
+	// goverter:map UpdatedByIdentityName | ContextIdentityName
+	// goverter:ignore RawJsonData
+	ProfilePresetToUpdate(source *SiteProfilePreset, siteContext *httputils.SiteContext) sitedb.UpdateProfilePresetParams
+
+	///////
 	// DEVICE STATUSES
 	///////
 
