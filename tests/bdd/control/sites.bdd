@@ -60,7 +60,11 @@ ASSERT_NOT_VISIBLE #control--site--details
 ASSERT_TEXT_VISIBLE disabled
 SCREENSHOT site_disabled
 
-// A disabled site cannot be disabled again
+// A disabled site cannot be disabled again, but can be archived, which needs S3 (not connected in tests)
 CLICK #controlSitesTable tbody tr >> nth=0
 ASSERT_VISIBLE #control--site--details
 ASSERT_NOT_VISIBLE #control--site--disable
+ASSERT_VISIBLE #control--site--archive
+SCREENSHOT site_archive
+CLICK #control--site--archive
+ASSERT_TEXT_VISIBLE a site can only be archived when S3 is connected

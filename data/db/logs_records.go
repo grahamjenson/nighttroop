@@ -19,6 +19,7 @@ const (
 	EventSiteCreated       EventName = "site_created"
 	EventSiteDisabled      EventName = "site_disabled"
 	EventSiteDeleted       EventName = "site_deleted"
+	EventSiteArchived      EventName = "site_archived"
 	EventSiteBatchBackedUp EventName = "site_batch_backed_up"
 	EventControlBackedUp   EventName = "control_backed_up"
 	EventSyncTurnedOff     EventName = "sync_turned_off"
@@ -59,6 +60,15 @@ type SiteDisabledAttributes struct {
 // SiteDisabledEvent records a control identity disabling a site
 func (l *LogsDB) SiteDisabledEvent(ctx context.Context, siteID string, by string) {
 	l.event(ctx, &siteID, EventSiteDisabled, SiteDisabledAttributes{By: by})
+}
+
+type SiteArchivedAttributes struct {
+	By string `json:"by"`
+}
+
+// SiteArchivedEvent records a control identity archiving a site
+func (l *LogsDB) SiteArchivedEvent(ctx context.Context, siteID string, by string) {
+	l.event(ctx, &siteID, EventSiteArchived, SiteArchivedAttributes{By: by})
 }
 
 type SiteDeletedAttributes struct {

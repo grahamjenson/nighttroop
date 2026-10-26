@@ -169,7 +169,8 @@ templ siteRow(site *controlmodels.Site) {
 	}
 }
 
-// SiteModal shows a site's details, and lets an admin disable it while it is live and inactive
+// SiteModal shows a site's details, and lets an admin disable it while it is live and inactive, and archive it once
+// it is disabled
 templ SiteModal(site *controlmodels.Site) {
 	<div id="control--site--details" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
 		<div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-lg">
@@ -202,6 +203,21 @@ templ SiteModal(site *controlmodels.Site) {
 						}
 					</form>
 				}
+				if site.State == "disabled" {
+					<form
+						hx-post={ "/sites/" + site.ID }
+						hx-target={ "#control--site--" + site.ID }
+						hx-swap="outerHTML"
+						hx-confirm="Archive this site? Its data is uploaded to S3 and deleted here."
+						hx-status:4xx="target:#toaster swap:beforeend"
+						hx-status:5xx="target:#toaster swap:beforeend"
+					>
+						<input type="hidden" name="state" value="archived"/>
+						@button.Button(button.Props{ID: "control--site--archive", Type: button.TypeSubmit, Variant: button.VariantDestructive}) {
+							Archive
+						}
+					</form>
+				}
 				@control_templ.CloseButton("control--site--details--close")
 			</div>
 		</div>
@@ -217,14 +233,14 @@ func orDash(value *int64) string {
 	return fmt.Sprint(*value)
 }
 
-// SiteDisabled replaces the site's row, closes its details and shows a toast
-templ SiteDisabled(site *controlmodels.Site) {
+// SiteUpdated replaces the site's row, closes its details and shows a toast saying it is disabled or archived
+templ SiteUpdated(site *controlmodels.Site) {
 	@siteRow(site)
 	<div id="modal-container" hx-swap-oob="innerHTML"></div>
 	<div hx-swap-oob="beforeend:#toaster">
 		@toast.Toast(toast.Props{
 			Title:       "Success",
-			Description: "Site Disabled",
+			Description: map[string]string{"disabled": "Site Disabled", "archived": "Site Archived"}[site.State],
 			Variant:     toast.VariantSuccess,
 			Position:    toast.PositionTopCenter,
 			Duration:    5000,

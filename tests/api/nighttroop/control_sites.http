@@ -84,8 +84,17 @@ NAME change_site_to_other_state
 POST http://control.localhost/sites/{{ .site_id }}
 H Authorization: Bearer {{ .control_jwt }}
 H Accept: application/json
+B {"state": "deleted"}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "can only be changed to disabled or archived" "@message"
+
+NAME archive_live_site
+POST http://control.localhost/sites/{{ .site_id }}
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
 B {"state": "archived"}
 ASSERT_STATUS 400
+ASSERT_CONTAINS "only a disabled site can be archived" "@message"
 
 NAME site_served_before_disable
 GET http://{{ .site_id }}.ns.localhost/api/v1/status.json?token={{ token }}
@@ -119,6 +128,26 @@ H Accept: application/json
 B {"state": "disabled"}
 ASSERT_STATUS 400
 ASSERT_CONTAINS "only a live site can be disabled" "@message"
+
+//////
+// ARCHIVE
+//////
+
+// Archiving uploads the site to S3 before deleting it here, so without S3 it is refused and the site is kept
+NAME archive_site_without_s3
+POST http://control.localhost/sites/{{ .site_id }}
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+B {"state": "archived"}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "a site can only be archived when S3 is connected" "@message"
+
+NAME site_kept_without_s3
+GET http://control.localhost/sites/{{ .site_id }}
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "disabled" "@result.state"
 
 NAME disable_unknown_site
 POST http://control.localhost/sites/not-a-site
