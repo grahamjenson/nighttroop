@@ -2846,24 +2846,24 @@ func (m *TempTarget) SetDurationMinutes(v int64) {
 	m.DurationMinutes = v
 }
 
-// GetHighTarget returns the HighTarget value.
-func (m TempTarget) GetHighTarget() float64 {
-	return m.HighTarget
+// GetHighTargetMgdl returns the HighTargetMgdl value.
+func (m TempTarget) GetHighTargetMgdl() float64 {
+	return m.HighTargetMgdl
 }
 
-// SetHighTarget sets the HighTarget value and returns the updated TempTarget.
-func (m *TempTarget) SetHighTarget(v float64) {
-	m.HighTarget = v
+// SetHighTargetMgdl sets the HighTargetMgdl value and returns the updated TempTarget.
+func (m *TempTarget) SetHighTargetMgdl(v float64) {
+	m.HighTargetMgdl = v
 }
 
-// GetLowTarget returns the LowTarget value.
-func (m TempTarget) GetLowTarget() float64 {
-	return m.LowTarget
+// GetLowTargetMgdl returns the LowTargetMgdl value.
+func (m TempTarget) GetLowTargetMgdl() float64 {
+	return m.LowTargetMgdl
 }
 
-// SetLowTarget sets the LowTarget value and returns the updated TempTarget.
-func (m *TempTarget) SetLowTarget(v float64) {
-	m.LowTarget = v
+// SetLowTargetMgdl sets the LowTargetMgdl value and returns the updated TempTarget.
+func (m *TempTarget) SetLowTargetMgdl(v float64) {
+	m.LowTargetMgdl = v
 }
 
 // GetInsulinNeedsScaleFactor returns the InsulinNeedsScaleFactor value.
@@ -4826,24 +4826,24 @@ func (m *TempTargetsVw) SetDurationMinutes(v *int64) {
 	m.DurationMinutes = v
 }
 
-// GetHighTarget returns the HighTarget value.
-func (m TempTargetsVw) GetHighTarget() *float64 {
-	return m.HighTarget
+// GetHighTargetMgdl returns the HighTargetMgdl value.
+func (m TempTargetsVw) GetHighTargetMgdl() *float64 {
+	return m.HighTargetMgdl
 }
 
-// SetHighTarget sets the HighTarget value and returns the updated TempTargetsVw.
-func (m *TempTargetsVw) SetHighTarget(v *float64) {
-	m.HighTarget = v
+// SetHighTargetMgdl sets the HighTargetMgdl value and returns the updated TempTargetsVw.
+func (m *TempTargetsVw) SetHighTargetMgdl(v *float64) {
+	m.HighTargetMgdl = v
 }
 
-// GetLowTarget returns the LowTarget value.
-func (m TempTargetsVw) GetLowTarget() *float64 {
-	return m.LowTarget
+// GetLowTargetMgdl returns the LowTargetMgdl value.
+func (m TempTargetsVw) GetLowTargetMgdl() *float64 {
+	return m.LowTargetMgdl
 }
 
-// SetLowTarget sets the LowTarget value and returns the updated TempTargetsVw.
-func (m *TempTargetsVw) SetLowTarget(v *float64) {
-	m.LowTarget = v
+// SetLowTargetMgdl sets the LowTargetMgdl value and returns the updated TempTargetsVw.
+func (m *TempTargetsVw) SetLowTargetMgdl(v *float64) {
+	m.LowTargetMgdl = v
 }
 
 // GetInsulinNeedsScaleFactor returns the InsulinNeedsScaleFactor value.
@@ -11766,24 +11766,24 @@ func (m *CreateTempTargetParams) SetDurationMinutes(v int64) {
 	m.DurationMinutes = v
 }
 
-// GetHighTarget returns the HighTarget value.
-func (m CreateTempTargetParams) GetHighTarget() float64 {
-	return m.HighTarget
+// GetHighTargetMgdl returns the HighTargetMgdl value.
+func (m CreateTempTargetParams) GetHighTargetMgdl() float64 {
+	return m.HighTargetMgdl
 }
 
-// SetHighTarget sets the HighTarget value and returns the updated CreateTempTargetParams.
-func (m *CreateTempTargetParams) SetHighTarget(v float64) {
-	m.HighTarget = v
+// SetHighTargetMgdl sets the HighTargetMgdl value and returns the updated CreateTempTargetParams.
+func (m *CreateTempTargetParams) SetHighTargetMgdl(v float64) {
+	m.HighTargetMgdl = v
 }
 
-// GetLowTarget returns the LowTarget value.
-func (m CreateTempTargetParams) GetLowTarget() float64 {
-	return m.LowTarget
+// GetLowTargetMgdl returns the LowTargetMgdl value.
+func (m CreateTempTargetParams) GetLowTargetMgdl() float64 {
+	return m.LowTargetMgdl
 }
 
-// SetLowTarget sets the LowTarget value and returns the updated CreateTempTargetParams.
-func (m *CreateTempTargetParams) SetLowTarget(v float64) {
-	m.LowTarget = v
+// SetLowTargetMgdl sets the LowTargetMgdl value and returns the updated CreateTempTargetParams.
+func (m *CreateTempTargetParams) SetLowTargetMgdl(v float64) {
+	m.LowTargetMgdl = v
 }
 
 // GetInsulinNeedsScaleFactor returns the InsulinNeedsScaleFactor value.
@@ -12196,24 +12196,24 @@ func (m *UpdateTempTargetParams) SetDurationMinutes(v *int64) {
 	m.DurationMinutes = v
 }
 
-// GetHighTarget returns the HighTarget value.
-func (m UpdateTempTargetParams) GetHighTarget() *float64 {
-	return m.HighTarget
+// GetHighTargetMgdl returns the HighTargetMgdl value.
+func (m UpdateTempTargetParams) GetHighTargetMgdl() *float64 {
+	return m.HighTargetMgdl
 }
 
-// SetHighTarget sets the HighTarget value and returns the updated UpdateTempTargetParams.
-func (m *UpdateTempTargetParams) SetHighTarget(v *float64) {
-	m.HighTarget = v
+// SetHighTargetMgdl sets the HighTargetMgdl value and returns the updated UpdateTempTargetParams.
+func (m *UpdateTempTargetParams) SetHighTargetMgdl(v *float64) {
+	m.HighTargetMgdl = v
 }
 
-// GetLowTarget returns the LowTarget value.
-func (m UpdateTempTargetParams) GetLowTarget() *float64 {
-	return m.LowTarget
+// GetLowTargetMgdl returns the LowTargetMgdl value.
+func (m UpdateTempTargetParams) GetLowTargetMgdl() *float64 {
+	return m.LowTargetMgdl
 }
 
-// SetLowTarget sets the LowTarget value and returns the updated UpdateTempTargetParams.
-func (m *UpdateTempTargetParams) SetLowTarget(v *float64) {
-	m.LowTarget = v
+// SetLowTargetMgdl sets the LowTargetMgdl value and returns the updated UpdateTempTargetParams.
+func (m *UpdateTempTargetParams) SetLowTargetMgdl(v *float64) {
+	m.LowTargetMgdl = v
 }
 
 // GetNotes returns the Notes value.

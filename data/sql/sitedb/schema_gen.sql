@@ -462,8 +462,8 @@ CREATE TABLE temp_targets (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
 
     duration_minutes INTEGER NOT NULL,
-    high_target REAL NOT NULL,
-    low_target REAL NOT NULL,
+    high_target_mgdl REAL NOT NULL,
+    low_target_mgdl REAL NOT NULL,
     insulin_needs_scale_factor REAL,
 
     -- Default Stuff

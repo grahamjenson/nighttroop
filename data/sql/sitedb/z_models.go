@@ -532,8 +532,8 @@ type TempBasalsVw struct {
 type TempTarget struct {
 	ID                      string
 	DurationMinutes         int64
-	HighTarget              float64
-	LowTarget               float64
+	HighTargetMgdl          float64
+	LowTargetMgdl           float64
 	InsulinNeedsScaleFactor *float64
 	Notes                   *string
 	Reason                  *string
@@ -554,8 +554,8 @@ type TempTarget struct {
 type TempTargetsVw struct {
 	ID                      *string
 	DurationMinutes         *int64
-	HighTarget              *float64
-	LowTarget               *float64
+	HighTargetMgdl          *float64
+	LowTargetMgdl           *float64
 	InsulinNeedsScaleFactor *float64
 	Notes                   *string
 	Reason                  *string

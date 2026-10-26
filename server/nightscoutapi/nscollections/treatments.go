@@ -931,17 +931,17 @@ func TreatmentToTempTarget(source nightscoutmodels.Treatment) *sitedb.TempTarget
 	target := nightscoutmodels.PartialTreatmentToTempTarget(source)
 
 	if source.HighTarget != nil {
-		target.HighTarget = source.HighTarget.Float64()
+		target.HighTargetMgdl = source.HighTarget.Float64()
 	} else if source.LowTarget != nil {
 		// If Target Top is missing then we assume both targets are the same
-		target.HighTarget = source.LowTarget.Float64()
+		target.HighTargetMgdl = source.LowTarget.Float64()
 	}
 
 	if source.LowTarget != nil {
-		target.LowTarget = source.LowTarget.Float64()
+		target.LowTargetMgdl = source.LowTarget.Float64()
 	} else if source.HighTarget != nil {
 		// If Target Bottom is missing then we assume both targets are the same
-		target.LowTarget = source.HighTarget.Float64()
+		target.LowTargetMgdl = source.HighTarget.Float64()
 	}
 
 	if isAssigned(source.HighTarget, source.LowTarget, source.DurationMinutes) {
