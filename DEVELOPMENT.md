@@ -27,7 +27,7 @@ echo 'export PATH=$PATH:$(go env GOPATH)/bin' >> ~/.zshrc
 
 ```
 brew install docker colima docker-compose golang-migrate tailwindcss go-air templ sqlc
-go install github.com/jmattheis/goverter/cmd/goverter@v1.10.0
+go install github.com/jmattheis/goverter/cmd/goverter@v1.11.1
 go install github.com/mickamy/slog-pretty/cmd/spretty@latest
 
 
