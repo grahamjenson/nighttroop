@@ -20,6 +20,14 @@ H Accept: application/json
 B {"enabled": true}
 ASSERT_STATUS 200
 
+// A Dexcom source whose first sync fails, as only the test's valid username logs in
+NAME create_failing_dexcom_sync
+POST http://{{ site }}/settings/sync/dexcom
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"url_or_username": "dex-user", "password": "dex-pass", "region": "US", "enabled": true}
+ASSERT_STATUS 200
+
 RUN_BACKGROUND_JOBS
 
 NAME control_login
@@ -29,7 +37,7 @@ B {"name": "admin", "password": "password", "totp": "123123"}
 ASSERT_STATUS 200
 SET control_jwt {{ .control_login.token }}
 
-// The control API sees every site's sync sources, most recently attempted first
+// The control API sees every site's sync sources, the most recently failed first
 NAME list_sync_sources
 GET http://control.localhost/sync-sources
 H Authorization: Bearer {{ .control_jwt }}
@@ -38,6 +46,7 @@ ASSERT_STATUS 200
 ASSERT_EXISTS "@result.0.site_id"
 ASSERT_EXISTS "@result.0.type"
 ASSERT_EXISTS "@result.0.last_attempted_sync"
+ASSERT_EXISTS "@result.0.last_failed_sync"
 
 NAME list_sync_sources_paged
 GET http://control.localhost/sync-sources?limit=1
@@ -64,8 +73,18 @@ ASSERT_EQUALS 1 "@result.total_syncs"
 ASSERT_EQUALS 1 "@result.total_successful_syncs"
 ASSERT_EXISTS "@result.last_successful_sync"
 
-NAME get_unknown_sync_source
+// The Dexcom source's first sync failed, which turned it off
+NAME get_failed_sync_source
 GET http://control.localhost/sync-sources/{{ .site_id }}::dexcom
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS false "@result.enabled"
+ASSERT_EQUALS 1 "@result.total_failed_syncs"
+ASSERT_EXISTS "@result.last_failed_sync"
+
+NAME get_unknown_sync_source
+GET http://control.localhost/sync-sources/{{ .site_id }}::nightscout
 H Authorization: Bearer {{ .control_jwt }}
 H Accept: application/json
 ASSERT_STATUS 404
