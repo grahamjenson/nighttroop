@@ -112,10 +112,11 @@ func (s *SitesCollection) archive(ctx context.Context, controlContext *httputils
 	if !config.Status.S3Working {
 		return apiutils.ErrConstraintCheckFailedWithHint("a site can only be archived when S3 is connected")
 	}
+	started := time.Now()
 	if err := controlContext.ControlDB.ArchiveSite(ctx, oldModel.ID, s3utils.NewS3Client(config).UploadFilesToS3); err != nil {
 		return err
 	}
-	controlContext.ControlDB.Logs.SiteArchivedEvent(ctx, oldModel.ID, controlContext.IdentityModel.Name)
+	controlContext.ControlDB.Logs.SiteArchivedEvent(ctx, oldModel.ID, controlContext.IdentityModel.Name, started)
 	return nil
 }
 
@@ -138,9 +139,10 @@ func (s *SitesCollection) TruncateHandler(w http.ResponseWriter, r *http.Request
 		herr = apiutils.ErrConstraintCheckFailedWithHint("only a site over its DB size limit can be truncated")
 	}
 	if herr == nil {
+		started := time.Now()
 		sizeKB, err := controlContext.ControlDB.TruncateSite(r.Context(), site.ID)
 		if herr = answer(err, s.GetName()); herr == nil {
-			controlContext.ControlDB.Logs.SiteTruncatedEvent(r.Context(), site.ID, controlContext.IdentityModel.Name, site.EstimatedDbSizeKb, sizeKB)
+			controlContext.ControlDB.Logs.SiteTruncatedEvent(r.Context(), site.ID, controlContext.IdentityModel.Name, started, site.EstimatedDbSizeKb, sizeKB)
 			site, herr = get(r.Context(), s, site.ID, controlContext)
 		}
 	}

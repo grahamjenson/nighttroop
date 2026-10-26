@@ -12,12 +12,14 @@ CREATE TABLE logs (
 
 CREATE INDEX logs_site ON logs (site_id, id);
 
+-- An event started at started_at, and took until finished_at when it has one, so how long it took is known
 CREATE TABLE events (
     id INTEGER PRIMARY KEY,
     site_id TEXT CHECK(length(site_id) <= 32),
     name TEXT NOT NULL CHECK(length(name) <= 64),
     attributes TEXT CHECK(length(attributes) <= 4096 AND json_valid(attributes)),
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
+    started_at INTEGER NOT NULL,
+    finished_at INTEGER CHECK(finished_at >= started_at)
 ) STRICT;
 
 CREATE INDEX events_site ON events (site_id, id);

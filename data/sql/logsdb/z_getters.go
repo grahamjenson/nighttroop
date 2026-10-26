@@ -92,14 +92,24 @@ func (m *Event) SetAttributes(v *string) {
 	m.Attributes = v
 }
 
-// GetCreatedAt returns the CreatedAt value.
-func (m Event) GetCreatedAt() int64 {
-	return m.CreatedAt
+// GetStartedAt returns the StartedAt value.
+func (m Event) GetStartedAt() int64 {
+	return m.StartedAt
 }
 
-// SetCreatedAt sets the CreatedAt value and returns the updated Event.
-func (m *Event) SetCreatedAt(v int64) {
-	m.CreatedAt = v
+// SetStartedAt sets the StartedAt value and returns the updated Event.
+func (m *Event) SetStartedAt(v int64) {
+	m.StartedAt = v
+}
+
+// GetFinishedAt returns the FinishedAt value.
+func (m Event) GetFinishedAt() *int64 {
+	return m.FinishedAt
+}
+
+// SetFinishedAt sets the FinishedAt value and returns the updated Event.
+func (m *Event) SetFinishedAt(v *int64) {
+	m.FinishedAt = v
 }
 
 // GetID returns the ID value.
@@ -230,6 +240,26 @@ func (m InsertEventParams) GetAttributes() *string {
 // SetAttributes sets the Attributes value and returns the updated InsertEventParams.
 func (m *InsertEventParams) SetAttributes(v *string) {
 	m.Attributes = v
+}
+
+// GetStartedAt returns the StartedAt value.
+func (m InsertEventParams) GetStartedAt() int64 {
+	return m.StartedAt
+}
+
+// SetStartedAt sets the StartedAt value and returns the updated InsertEventParams.
+func (m *InsertEventParams) SetStartedAt(v int64) {
+	m.StartedAt = v
+}
+
+// GetFinishedAt returns the FinishedAt value.
+func (m InsertEventParams) GetFinishedAt() *int64 {
+	return m.FinishedAt
+}
+
+// SetFinishedAt sets the FinishedAt value and returns the updated InsertEventParams.
+func (m *InsertEventParams) SetFinishedAt(v *int64) {
+	m.FinishedAt = v
 }
 
 // GetSiteID returns the SiteID value.

@@ -17,7 +17,8 @@ CREATE TABLE events (
     site_id TEXT CHECK(length(site_id) <= 32),
     name TEXT NOT NULL CHECK(length(name) <= 64),
     attributes TEXT CHECK(length(attributes) <= 4096 AND json_valid(attributes)),
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
+    started_at INTEGER NOT NULL,
+    finished_at INTEGER CHECK(finished_at >= started_at)
 ) STRICT;
 
 CREATE TABLE logs (

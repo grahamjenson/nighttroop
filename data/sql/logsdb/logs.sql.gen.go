@@ -26,17 +26,25 @@ func (q *Queries) InsertError(ctx context.Context, arg InsertErrorParams) error 
 }
 
 const insertEvent = `-- name: InsertEvent :exec
-INSERT INTO events (site_id, name, attributes) VALUES (?, ?, ?)
+INSERT INTO events (site_id, name, attributes, started_at, finished_at) VALUES (?, ?, ?, ?, ?)
 `
 
 type InsertEventParams struct {
 	SiteID     *string
 	Name       string
 	Attributes *string
+	StartedAt  int64
+	FinishedAt *int64
 }
 
 func (q *Queries) InsertEvent(ctx context.Context, arg InsertEventParams) error {
-	_, err := q.exec(ctx, q.insertEventStmt, insertEvent, arg.SiteID, arg.Name, arg.Attributes)
+	_, err := q.exec(ctx, q.insertEventStmt, insertEvent,
+		arg.SiteID,
+		arg.Name,
+		arg.Attributes,
+		arg.StartedAt,
+		arg.FinishedAt,
+	)
 	return err
 }
 
@@ -109,7 +117,7 @@ func (q *Queries) SearchErrors(ctx context.Context, arg SearchErrorsParams) ([]*
 }
 
 const searchEvents = `-- name: SearchEvents :many
-SELECT id, site_id, name, attributes, created_at FROM events
+SELECT id, site_id, name, attributes, started_at, finished_at FROM events
 WHERE CAST(?1 AS TEXT) IS NULL OR site_id = ?1
 ORDER BY id DESC
 LIMIT ?3 OFFSET ?2
@@ -136,7 +144,8 @@ func (q *Queries) SearchEvents(ctx context.Context, arg SearchEventsParams) ([]*
 			&i.SiteID,
 			&i.Name,
 			&i.Attributes,
-			&i.CreatedAt,
+			&i.StartedAt,
+			&i.FinishedAt,
 		); err != nil {
 			return nil, err
 		}

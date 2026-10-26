@@ -192,7 +192,7 @@ func (b *BackupSiteJobManager) BackupSiteBatch(char string) (err error) {
 	if err != nil {
 		return fmt.Errorf("cannot sync site pool %s: %w", string(char), err)
 	}
-	b.controlDB.Logs.SiteBatchBackedUpEvent(ctx, char, len(paths), time.Since(started), b.ServerConfig.Status.S3Working)
+	b.controlDB.Logs.SiteBatchBackedUpEvent(ctx, char, len(paths), started, b.ServerConfig.Status.S3Working)
 
 	// Copy the control db to the backup location
 	return nil

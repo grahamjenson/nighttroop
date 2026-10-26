@@ -19,6 +19,7 @@ func TestBackupSiteBatchRecordsEvent(t *testing.T) {
 	ctx, batch := context.TODO(), site.SiteDB.Subdomain[:1]
 	jobs := backup_sites.SetupBackupSiteJob(ctx, controlDB, cfg, &s3utils.S3Client{ServerConfig: cfg})
 
+	started := time.Now().UnixMilli()
 	require.NoError(t, jobs.BackupSiteBatch(batch))
 
 	events, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{Limit: 10})
@@ -31,7 +32,10 @@ func TestBackupSiteBatchRecordsEvent(t *testing.T) {
 	require.Equal(t, float64(1), attributes["site_count"])
 	// S3 is not connected in tests, so the batch was backed up but not uploaded
 	require.Equal(t, false, attributes["uploaded"])
-	require.Contains(t, attributes, "duration_ms")
+	// It started when the backup did, and finished when it was recorded
+	require.GreaterOrEqual(t, events[0].StartedAt, started)
+	require.NotNil(t, events[0].FinishedAt)
+	require.GreaterOrEqual(t, *events[0].FinishedAt, events[0].StartedAt)
 }
 
 func TestDeleteUnusedSitesRecordsEvent(t *testing.T) {
