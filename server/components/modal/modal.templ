@@ -1,0 +1,57 @@
+package modal
+
+import "nighttroop.t1d.nz/server/components/ui/button"
+
+type Props struct {
+	// ID is the modal's, and with "--close" its Close button's
+	ID       string
+	Title    string
+	Subtitle string
+	// Actions are shown before the Close button
+	Actions templ.Component
+}
+
+// Modal shows its children over the page in #modal-container. Close, Escape or pressing beside it empties the container.
+// Its body scrolls when it is taller than the window, keeping its actions and Close in view.
+templ Modal(p Props) {
+	<div
+		id={ p.ID }
+		class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+		hx-get="/empty"
+		hx-target="#modal-container"
+		hx-swap="innerHTML"
+		hx-trigger="mousedown from:self, keyup[key=='Escape'] from:body"
+	>
+		<div class="flex max-h-full w-full max-w-2xl flex-col rounded-lg bg-white shadow-lg">
+			<div class="overflow-y-auto px-6 pt-6">
+				<h2 class="text-lg font-semibold">{ p.Title }</h2>
+				if p.Subtitle != "" {
+					<p class="text-sm text-gray-500">{ p.Subtitle }</p>
+				}
+				{ children... }
+			</div>
+			<div class="flex justify-end gap-2 px-6 py-4">
+				if p.Actions != nil {
+					@p.Actions
+				}
+				@button.Button(button.Props{
+					ID:      p.ID + "--close",
+					Variant: button.VariantOutline,
+					Attributes: templ.Attributes{
+						"hx-get":    "/empty",
+						"hx-target": "#modal-container",
+						"hx-swap":   "innerHTML",
+					},
+				}) {
+					Close
+				}
+			</div>
+		</div>
+	</div>
+}
+
+// Detail is one label and value pair in a modal's details list
+templ Detail(label string, value string) {
+	<dt class="text-gray-500">{ label }</dt>
+	<dd class="break-all">{ value }</dd>
+}
