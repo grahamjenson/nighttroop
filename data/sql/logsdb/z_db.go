@@ -33,6 +33,15 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getLogStmt, err = db.PrepareContext(ctx, getLog); err != nil {
 		return nil, fmt.Errorf("error preparing query GetLog: %w", err)
 	}
+	if q.getSiteErrorStmt, err = db.PrepareContext(ctx, getSiteError); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSiteError: %w", err)
+	}
+	if q.getSiteEventStmt, err = db.PrepareContext(ctx, getSiteEvent); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSiteEvent: %w", err)
+	}
+	if q.getSiteLogStmt, err = db.PrepareContext(ctx, getSiteLog); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSiteLog: %w", err)
+	}
 	if q.insertErrorStmt, err = db.PrepareContext(ctx, insertError); err != nil {
 		return nil, fmt.Errorf("error preparing query InsertError: %w", err)
 	}
@@ -50,6 +59,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.searchLogsStmt, err = db.PrepareContext(ctx, searchLogs); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchLogs: %w", err)
+	}
+	if q.searchSiteEventsStmt, err = db.PrepareContext(ctx, searchSiteEvents); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchSiteEvents: %w", err)
 	}
 	if q.trimErrorsStmt, err = db.PrepareContext(ctx, trimErrors); err != nil {
 		return nil, fmt.Errorf("error preparing query TrimErrors: %w", err)
@@ -80,6 +92,21 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getLogStmt: %w", cerr)
 		}
 	}
+	if q.getSiteErrorStmt != nil {
+		if cerr := q.getSiteErrorStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSiteErrorStmt: %w", cerr)
+		}
+	}
+	if q.getSiteEventStmt != nil {
+		if cerr := q.getSiteEventStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSiteEventStmt: %w", cerr)
+		}
+	}
+	if q.getSiteLogStmt != nil {
+		if cerr := q.getSiteLogStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSiteLogStmt: %w", cerr)
+		}
+	}
 	if q.insertErrorStmt != nil {
 		if cerr := q.insertErrorStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing insertErrorStmt: %w", cerr)
@@ -108,6 +135,11 @@ func (q *Queries) Close() error {
 	if q.searchLogsStmt != nil {
 		if cerr := q.searchLogsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing searchLogsStmt: %w", cerr)
+		}
+	}
+	if q.searchSiteEventsStmt != nil {
+		if cerr := q.searchSiteEventsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchSiteEventsStmt: %w", cerr)
 		}
 	}
 	if q.trimErrorsStmt != nil {
@@ -162,37 +194,45 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db               DBTX
-	tx               *sql.Tx
-	getErrorStmt     *sql.Stmt
-	getEventStmt     *sql.Stmt
-	getLogStmt       *sql.Stmt
-	insertErrorStmt  *sql.Stmt
-	insertEventStmt  *sql.Stmt
-	insertLogStmt    *sql.Stmt
-	searchErrorsStmt *sql.Stmt
-	searchEventsStmt *sql.Stmt
-	searchLogsStmt   *sql.Stmt
-	trimErrorsStmt   *sql.Stmt
-	trimEventsStmt   *sql.Stmt
-	trimLogsStmt     *sql.Stmt
+	db                   DBTX
+	tx                   *sql.Tx
+	getErrorStmt         *sql.Stmt
+	getEventStmt         *sql.Stmt
+	getLogStmt           *sql.Stmt
+	getSiteErrorStmt     *sql.Stmt
+	getSiteEventStmt     *sql.Stmt
+	getSiteLogStmt       *sql.Stmt
+	insertErrorStmt      *sql.Stmt
+	insertEventStmt      *sql.Stmt
+	insertLogStmt        *sql.Stmt
+	searchErrorsStmt     *sql.Stmt
+	searchEventsStmt     *sql.Stmt
+	searchLogsStmt       *sql.Stmt
+	searchSiteEventsStmt *sql.Stmt
+	trimErrorsStmt       *sql.Stmt
+	trimEventsStmt       *sql.Stmt
+	trimLogsStmt         *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:               tx,
-		tx:               tx,
-		getErrorStmt:     q.getErrorStmt,
-		getEventStmt:     q.getEventStmt,
-		getLogStmt:       q.getLogStmt,
-		insertErrorStmt:  q.insertErrorStmt,
-		insertEventStmt:  q.insertEventStmt,
-		insertLogStmt:    q.insertLogStmt,
-		searchErrorsStmt: q.searchErrorsStmt,
-		searchEventsStmt: q.searchEventsStmt,
-		searchLogsStmt:   q.searchLogsStmt,
-		trimErrorsStmt:   q.trimErrorsStmt,
-		trimEventsStmt:   q.trimEventsStmt,
-		trimLogsStmt:     q.trimLogsStmt,
+		db:                   tx,
+		tx:                   tx,
+		getErrorStmt:         q.getErrorStmt,
+		getEventStmt:         q.getEventStmt,
+		getLogStmt:           q.getLogStmt,
+		getSiteErrorStmt:     q.getSiteErrorStmt,
+		getSiteEventStmt:     q.getSiteEventStmt,
+		getSiteLogStmt:       q.getSiteLogStmt,
+		insertErrorStmt:      q.insertErrorStmt,
+		insertEventStmt:      q.insertEventStmt,
+		insertLogStmt:        q.insertLogStmt,
+		searchErrorsStmt:     q.searchErrorsStmt,
+		searchEventsStmt:     q.searchEventsStmt,
+		searchLogsStmt:       q.searchLogsStmt,
+		searchSiteEventsStmt: q.searchSiteEventsStmt,
+		trimErrorsStmt:       q.trimErrorsStmt,
+		trimEventsStmt:       q.trimEventsStmt,
+		trimLogsStmt:         q.trimLogsStmt,
 	}
 }

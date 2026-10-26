@@ -49,10 +49,11 @@ func (l *LogsDB) event(ctx context.Context, siteID *string, name EventName, attr
 	l.record("event", l.Queries.InsertEvent(ctx, logsdb.InsertEventParams{SiteID: siteID, Name: string(name), Attributes: attributesJSON(attributes), StartedAt: time.Now().UnixMilli()}))
 }
 
-// finishedEvent records an event that started at started and finishes now, so it can be written in a defer
-func (l *LogsDB) finishedEvent(ctx context.Context, siteID *string, name EventName, started time.Time, attributes any) {
+// finishedEvent records an event, about a site or a batch of sites or neither, that started at started and finishes
+// now, so it can be written in a defer
+func (l *LogsDB) finishedEvent(ctx context.Context, siteID *string, batch *string, name EventName, started time.Time, attributes any) {
 	finished := time.Now().UnixMilli()
-	l.record("event", l.Queries.InsertEvent(ctx, logsdb.InsertEventParams{SiteID: siteID, Name: string(name), Attributes: attributesJSON(attributes), StartedAt: started.UnixMilli(), FinishedAt: &finished}))
+	l.record("event", l.Queries.InsertEvent(ctx, logsdb.InsertEventParams{SiteID: siteID, Batch: batch, Name: string(name), Attributes: attributesJSON(attributes), StartedAt: started.UnixMilli(), FinishedAt: &finished}))
 }
 
 func (l *LogsDB) error(ctx context.Context, siteID *string, err error, attributes any) {

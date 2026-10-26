@@ -6,7 +6,7 @@
 INSERT INTO logs (site_id, level, message, attributes) VALUES (?, ?, ?, ?);
 
 -- name: InsertEvent :exec
-INSERT INTO events (site_id, name, attributes, started_at, finished_at) VALUES (?, ?, ?, ?, ?);
+INSERT INTO events (site_id, batch, name, attributes, started_at, finished_at) VALUES (?, ?, ?, ?, ?, ?);
 
 -- name: InsertError :exec
 INSERT INTO errors (site_id, message, attributes) VALUES (?, ?, ?);
@@ -44,6 +44,23 @@ SELECT * FROM events WHERE id = sqlc.arg('ID');
 
 -- name: GetError :one
 SELECT * FROM errors WHERE id = sqlc.arg('ID');
+
+-- name: SearchSiteEvents :many
+-- Newest first, the site's own events and its batch's, which is all a site may see
+SELECT * FROM events
+WHERE site_id = sqlc.arg('SiteID') OR (site_id IS NULL AND batch = sqlc.arg('Batch'))
+ORDER BY id DESC
+LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+
+-- name: GetSiteEvent :one
+SELECT * FROM events
+WHERE id = sqlc.arg('ID') AND (site_id = sqlc.arg('SiteID') OR (site_id IS NULL AND batch = sqlc.arg('Batch')));
+
+-- name: GetSiteLog :one
+SELECT * FROM logs WHERE id = sqlc.arg('ID') AND site_id = sqlc.arg('SiteID');
+
+-- name: GetSiteError :one
+SELECT * FROM errors WHERE id = sqlc.arg('ID') AND site_id = sqlc.arg('SiteID');
 
 -------
 -- DELETE

@@ -26,6 +26,7 @@ func TestBackupSiteBatchRecordsEvent(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "site_batch_backed_up", events[0].Name)
 	require.Nil(t, events[0].SiteID)
+	require.Equal(t, batch, *events[0].Batch, "so each site in the batch can see it")
 	var attributes map[string]any
 	require.NoError(t, json.Unmarshal([]byte(*events[0].Attributes), &attributes))
 	require.Equal(t, batch, attributes["batch"])

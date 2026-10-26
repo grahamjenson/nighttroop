@@ -2,9 +2,11 @@ package db_test
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/db"
@@ -116,4 +118,55 @@ func TestCreateSiteRecordsEvent(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, events, 1)
 	require.Equal(t, "site_created", events[0].Name)
+}
+
+// TestSiteSeesOnlyItsOwnLogs checks a site sees its own logs, errors and events, and its batch's events, but nothing
+// of another site, another batch or the server
+func TestSiteSeesOnlyItsOwnLogs(t *testing.T) {
+	_, controlDB, err := testutils.GetConfigControlDBForTest()
+	require.NoError(t, err)
+	ctx, logs, q := context.TODO(), controlDB.Logs, controlDB.Logs.Queries
+	site, other, batch, otherBatch := "qownsite", "qothersite", "q", "r"
+
+	logs.SiteDisabledEvent(ctx, site, "admin")
+	logs.SiteDisabledEvent(ctx, other, "admin")
+	logs.SiteBatchBackedUpEvent(ctx, batch, 2, time.Now(), false)
+	logs.SiteBatchBackedUpEvent(ctx, otherBatch, 3, time.Now(), false)
+	logs.ControlBackedUpEvent(ctx, time.Now(), false)
+	logs.SyncError(ctx, other, consts.SyncSourceTypeDexcom, errors.New("other failed"))
+	logs.SiteBatchBackupError(ctx, batch, errors.New("batch failed"))
+	logs.Log(ctx, &other, db.LogLevelInfo, "other synced", nil)
+
+	events, err := q.SearchSiteEvents(ctx, logsdb.SearchSiteEventsParams{SiteID: &site, Batch: &batch, Limit: 100})
+	require.NoError(t, err)
+	require.Len(t, events, 2)
+	require.Equal(t, string(db.EventSiteBatchBackedUp), events[0].Name)
+	require.Equal(t, batch, *events[0].Batch)
+	require.Equal(t, site, *events[1].SiteID)
+
+	// Another site's or batch's event, or the server's, cannot be read by its ID either
+	allEvents, err := q.SearchEvents(ctx, logsdb.SearchEventsParams{Limit: 100})
+	require.NoError(t, err)
+	for _, event := range allEvents {
+		_, err := q.GetSiteEvent(ctx, logsdb.GetSiteEventParams{ID: event.ID, SiteID: &site, Batch: &batch})
+		if event.ID == events[0].ID || event.ID == events[1].ID {
+			require.NoError(t, err)
+		} else {
+			require.ErrorIs(t, err, sql.ErrNoRows, event.Name)
+		}
+	}
+
+	// A batch's errors can name its other sites, so a site sees only its own
+	siteErrors, err := q.SearchErrors(ctx, logsdb.SearchErrorsParams{SiteID: &site, Limit: 100})
+	require.NoError(t, err)
+	require.Empty(t, siteErrors)
+	otherErrors, err := q.SearchErrors(ctx, logsdb.SearchErrorsParams{SiteID: &other, Limit: 100})
+	require.NoError(t, err)
+	_, err = q.GetSiteError(ctx, logsdb.GetSiteErrorParams{ID: otherErrors[0].ID, SiteID: &site})
+	require.ErrorIs(t, err, sql.ErrNoRows)
+
+	otherLogs, err := q.SearchLogs(ctx, logsdb.SearchLogsParams{SiteID: &other, Limit: 100})
+	require.NoError(t, err)
+	_, err = q.GetSiteLog(ctx, logsdb.GetSiteLogParams{ID: otherLogs[0].ID, SiteID: &site})
+	require.ErrorIs(t, err, sql.ErrNoRows)
 }
