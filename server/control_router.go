@@ -6,17 +6,14 @@ import (
 	"nighttroop.t1d.nz/server/assets/static"
 
 	"nighttroop.t1d.nz/server/controlapi"
-	"nighttroop.t1d.nz/server/controlapi/controlapiutils"
+	"nighttroop.t1d.nz/server/controlapi/controlcollections"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
 func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Router {
 	r := chi.NewRouter()
-	sitesStore := &controlapi.SitesStore{}
-	jobStatsStore := &controlapi.JobStatsStore{}
-	jobsStore := &controlapi.JobsStore{}
-	syncSourcesStore := &controlapi.SyncSourcesStore{}
+	store := controlcollections.NewControlStore()
 	httputils.AddStandardMiddleware(r, config)
 
 	static.AddStaticRoutes(r)
@@ -30,20 +27,8 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 		r.Get("/", controlapi.GetDashboardHandler(controlDB, config))
 		r.Post("/logout", controlapi.POSTLogoutHandler(config))
 
-		// Sites
-		r.Get("/sites", controlapiutils.SearchHandler(controlDB, config, sitesStore))
-		r.Get("/sites/{id}", controlapiutils.GetHandler(controlDB, config, sitesStore))
-		r.Post("/sites/{id}", controlapiutils.UpdateHandler(controlDB, config, sitesStore))
-
-		// Jobs
-		r.Get("/job-stats", controlapiutils.SearchHandler(controlDB, config, jobStatsStore))
-		r.Get("/job-stats/{id}", controlapiutils.GetHandler(controlDB, config, jobStatsStore))
-		r.Get("/jobs", controlapiutils.SearchHandler(controlDB, config, jobsStore))
-		r.Get("/jobs/{id}", controlapiutils.GetHandler(controlDB, config, jobsStore))
-
-		// Sync Sources
-		r.Get("/sync-sources", controlapiutils.SearchHandler(controlDB, config, syncSourcesStore))
-		r.Get("/sync-sources/{id}", controlapiutils.GetHandler(controlDB, config, syncSourcesStore))
+		// The control plane's collections, each at its route: sites, jobs, job stats and sync sources
+		store.Routes(r)
 
 		//// TODO
 		// Get User details including db size , last seen, API usage per device, list devices and last seen at, list DB table sizes
