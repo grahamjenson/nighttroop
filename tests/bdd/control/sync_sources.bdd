@@ -46,6 +46,8 @@ CLICK #controlSyncSourcesTable tbody tr >> nth=0
 ASSERT_VISIBLE #control--sync-source--details
 ASSERT_TEXT_VISIBLE Successes In A Row
 ASSERT_TEXT_VISIBLE Success EMA
+// The longest details still leave Close where it can be clicked
+ASSERT_VISIBLE #control--sync-source--details--close
 SCREENSHOT sync_source_details
 
 CLICK #control--sync-source--details--close
