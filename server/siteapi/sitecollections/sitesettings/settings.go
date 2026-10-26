@@ -35,6 +35,14 @@ func (s *SettingsCollection) GetName() string {
 	return "identity_settings"
 }
 
+// GetRoute is where the collection is in its URL
+func (s *SettingsCollection) GetRoute() string {
+	if s.Site {
+		return "site"
+	}
+	return "identity"
+}
+
 func (s *SettingsCollection) level(siteContext *httputils.SiteContext) *settings.SettingMap {
 	if s.Site {
 		return siteContext.GetSettings().SiteSettingsMap

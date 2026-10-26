@@ -52,8 +52,9 @@ func NewSiteStore() *SiteStore {
 
 func (store *SiteStore) registerCollection[R, M any](collection CollectionBase[R, M]) {
 	name := collection.GetName()
-	if _, exists := store.collectionRoutes[name]; exists {
-		panic("collection already registered: " + name)
+	route := collection.GetRoute()
+	if _, exists := store.collectionRoutes[route]; exists {
+		panic("collection route already registered: " + route)
 	}
 
 	routes := &SiteCollectionRoutes{
@@ -90,7 +91,7 @@ func (store *SiteStore) registerCollection[R, M any](collection CollectionBase[R
 		panic("collection does not implement any known interfaces: " + name)
 	}
 
-	store.collectionRoutes[name] = routes
+	store.collectionRoutes[route] = routes
 
 }
 

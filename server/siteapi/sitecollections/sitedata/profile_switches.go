@@ -23,6 +23,11 @@ func (s *ProfileSwitchesCollection) GetName() string {
 	return "profile_switches"
 }
 
+// GetRoute is where the collection is in its URL
+func (s *ProfileSwitchesCollection) GetRoute() string {
+	return "profile_switches"
+}
+
 // ////
 // CREATE
 // ////

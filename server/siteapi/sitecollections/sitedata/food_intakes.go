@@ -26,6 +26,11 @@ func (s *FoodIntakesCollection) GetName() string {
 	return "food"
 }
 
+// GetRoute is where the collection is in its URL
+func (s *FoodIntakesCollection) GetRoute() string {
+	return "food"
+}
+
 // ////
 // CREATE
 // ////

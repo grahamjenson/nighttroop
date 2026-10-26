@@ -18,7 +18,10 @@ import (
 )
 
 type CollectionBase[R, M any] interface {
+	// GetName is what the collection is called, which its permissions and errors use
 	GetName() string
+	// GetRoute is where the collection is in its URL, e.g. sync for /settings/sync
+	GetRoute() string
 	ToModel(row *R, siteContext *httputils.SiteContext) *M
 	GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*R, error)
 }

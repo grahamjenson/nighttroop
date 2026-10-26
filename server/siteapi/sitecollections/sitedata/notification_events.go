@@ -25,6 +25,11 @@ func (s *NotificationEventsCollection) GetName() string {
 	return "notification_events"
 }
 
+// GetRoute is where the collection is in its URL
+func (s *NotificationEventsCollection) GetRoute() string {
+	return "notification_events"
+}
+
 // ////
 // CREATE
 // ////

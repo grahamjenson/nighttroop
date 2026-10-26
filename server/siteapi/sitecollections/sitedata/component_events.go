@@ -24,6 +24,11 @@ func (s *ComponentEventsCollection) GetName() string {
 	return "component_events"
 }
 
+// GetRoute is where the collection is in its URL
+func (s *ComponentEventsCollection) GetRoute() string {
+	return "component_events"
+}
+
 // ////
 // CREATE
 // ////

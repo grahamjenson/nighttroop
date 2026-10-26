@@ -31,6 +31,11 @@ func (s *DeviceStatusesCollection) GetName() string {
 	return "device_statuses"
 }
 
+// GetRoute is where the collection is in its URL
+func (s *DeviceStatusesCollection) GetRoute() string {
+	return "device_statuses"
+}
+
 // ////
 // Get Model
 // /////

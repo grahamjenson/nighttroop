@@ -23,6 +23,11 @@ func (s *SummaryCollection) GetName() string {
 	return "summary"
 }
 
+// GetRoute is where the collection is in its URL
+func (s *SummaryCollection) GetRoute() string {
+	return "summary"
+}
+
 // defaultHours is how far back the summary goes when the request does not say
 const defaultHours = 48
 
