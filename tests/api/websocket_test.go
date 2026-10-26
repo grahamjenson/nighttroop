@@ -39,10 +39,14 @@ func dialWebsocket(t *testing.T, ts *httptest.Server, subdomain string, version 
 			if len(args) > 0 {
 				arg = args[0]
 			}
-			events <- arg
+			// A server sending more than the test reads must not block the client's reads, which would hang the test
+			select {
+			case events <- arg:
+			default:
+			}
 		})
 	}
-	require.NoError(t, client.Open(context.Background(), "http://"+subdomain+".ns.localhost/socket.io/", httpClient))
+	require.NoError(t, client.Open(wsTimeout(t), "http://"+subdomain+".ns.localhost/socket.io/", httpClient))
 	t.Cleanup(func() { client.Close() })
 	require.NoError(t, client.Connect(wsTimeout(t), socketio.DefaultNamespace, nil))
 	return c

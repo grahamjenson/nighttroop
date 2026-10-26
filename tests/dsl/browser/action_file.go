@@ -183,7 +183,7 @@ func parseFile(r io.Reader, path string) ([]Action, error) {
 				Code:     statusCode,
 			})
 
-		case "ASSERT_VISIBLE":
+		case "ASSERT_VISIBLE", "ASSERT_DRAWN":
 			if current == nil {
 				return nil, fmt.Errorf("assert_visible before action")
 			}
@@ -193,6 +193,7 @@ func parseFile(r io.Reader, path string) ([]Action, error) {
 			}
 			assertable.AddAssert(&AssertVisible{
 				Locator:  second,
+				Drawn:    first == "ASSERT_DRAWN",
 				TestPath: path,
 				TestLine: lineNumber,
 			})

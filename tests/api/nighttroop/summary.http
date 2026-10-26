@@ -24,10 +24,10 @@ GET http://{{ site }}/summary
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS 48 "@result.hours"
-ASSERT_EQUALS "mmol/L" "@result.units"
-ASSERT_LENGTH 0 "@result.glucose_readings"
-ASSERT_LENGTH 0 "@result.device_statuses"
+ASSERT_EQUALS 48 "@result.0.hours"
+ASSERT_EQUALS "mmol/L" "@result.0.units"
+ASSERT_LENGTH 0 "@result.0.glucose_readings"
+ASSERT_LENGTH 0 "@result.0.device_statuses"
 
 NAME create_reading_for_summary
 POST http://{{ site }}/data/glucose
@@ -41,9 +41,9 @@ GET http://{{ site }}/summary?hours=6
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS 6 "@result.hours"
-ASSERT_LENGTH 1 "@result.glucose_readings"
-ASSERT_EQUALS 6.5 "@result.glucose_readings.0.reading"
+ASSERT_EQUALS 6 "@result.0.hours"
+ASSERT_LENGTH 1 "@result.0.glucose_readings"
+ASSERT_EQUALS 6.5 "@result.0.glucose_readings.0.reading"
 
 // A summary goes back at most a week
 NAME summary_at_most_a_week
@@ -51,7 +51,7 @@ GET http://{{ site }}/summary?hours=1000
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS 168 "@result.hours"
+ASSERT_EQUALS 168 "@result.0.hours"
 
 NAME summary_bad_hours
 GET http://{{ site }}/summary?hours=lots
