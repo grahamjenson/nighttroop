@@ -37,7 +37,7 @@ templ NotificationEventsTable(events []*sitemodels.SiteNotificationEvent, skip i
 						@table.Head() {
 							Title
 						}
-						@table.Head() {
+						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
 							Severity
 						}
 						@table.Head() {
@@ -122,7 +122,7 @@ templ notificationEventRow(event *sitemodels.SiteNotificationEvent) {
 		@table.Cell() {
 			{ event.Title }
 		}
-		@table.Cell() {
+		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ fmt.Sprint(event.Severity) }
 		}
 		@table.Cell() {
