@@ -112,8 +112,9 @@ templ Header() {
 								@icon.Settings(icon.Props{Class: "size-6 text-white"})
 							</button>
 						}
+						// As tall as the window allows, as the site's menu is, so every page in it shows without scrolling it
 						@dropdown.Content(dropdown.ContentProps{
-							Class: "w-56",
+							Class: "w-56 max-h-[calc(100vh-5rem)]",
 						}) {
 							@dropdown.Label() {
 								Security
