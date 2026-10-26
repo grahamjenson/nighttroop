@@ -2,13 +2,17 @@ package controlcollections
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/logsdb"
 	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/testutils"
@@ -45,4 +49,33 @@ func TestDisablingActiveSiteRefused(t *testing.T) {
 	row, err := controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: siteID})
 	require.NoError(t, err)
 	require.Equal(t, "live", row.State)
+}
+
+func TestTruncateHandler(t *testing.T) {
+	_, controlDB, site, err := testutils.GetConfigControlDBAndSiteDBForTest()
+	require.NoError(t, err)
+	ctx, siteID := context.TODO(), site.SiteDB.Subdomain
+	router := chi.NewRouter()
+	router.Post("/sites/{id}/truncate", (&SitesCollection{}).TruncateHandler)
+	truncate := func(role consts.ControlRole) *httptest.ResponseRecorder {
+		r := httptest.NewRequest(http.MethodPost, "/sites/"+siteID+"/truncate", nil)
+		r.Header.Set("Accept", "application/json")
+		rctx := httputils.CreateControlContext(r.Context(), controlDB, "", httputils.HTTPActionWrite)
+		rctx = httputils.SetAdminControlContext(rctx, &controldb.ControlIdentity{Name: "admin", Role: role}, config.ServerStatus{})
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, r.WithContext(rctx))
+		return w
+	}
+
+	require.Equal(t, http.StatusBadRequest, truncate(consts.ControlRoleAdmin).Code, "a site within its limit is not truncated")
+
+	oversize := int64(5000)
+	require.NoError(t, controlDB.Queries.UpdateSiteDateFlags(ctx, controldb.UpdateSiteDateFlagsParams{EstimatedDbSizeKb: &oversize, ID: siteID}))
+	require.Equal(t, http.StatusForbidden, truncate(consts.ControlRoleRead).Code)
+	require.Equal(t, http.StatusOK, truncate(consts.ControlRoleAdmin).Code)
+
+	events, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &siteID, Limit: 10})
+	require.NoError(t, err)
+	require.Equal(t, "site_truncated", events[0].Name)
+	require.Equal(t, `{"by":"admin","before_size_kb":5000,"after_size_kb":null}`, *events[0].Attributes)
 }

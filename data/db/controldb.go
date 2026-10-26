@@ -252,6 +252,63 @@ func (db *ControlDB) DeleteSites(subdomains []string) error {
 	return nil
 }
 
+// ArchiveSite backs up a site's DB and uploads it, with upload, to its archive path, then marks the site archived and
+// deletes its local files, so it is no longer served or backed up but can be restored from the archive
+func (db *ControlDB) ArchiveSite(ctx context.Context, subdomain string, upload func(key string, paths []string) error) error {
+	db.sitesRWLock.RLock()
+	site, ok := db.sites[subdomain]
+	db.sitesRWLock.RUnlock()
+	if !ok {
+		return fmt.Errorf("site %s is not open", subdomain)
+	}
+	if err := site.Backup(ctx); err != nil {
+		return fmt.Errorf("cannot back up site %s: %w", subdomain, err)
+	}
+	if err := upload(sitedb.GetS3ArchivePath(subdomain, db.ServerConfig), []string{site.BackupPath}); err != nil {
+		return fmt.Errorf("cannot upload the archive of site %s: %w", subdomain, err)
+	}
+	bytes, _ := json.Marshal([]string{subdomain})
+	if _, err := db.Queries.ArchiveSites(ctx, controldb.ArchiveSitesParams{JsonEach: string(bytes)}); err != nil {
+		return fmt.Errorf("cannot archive site %s: %w", subdomain, err)
+	}
+
+	db.sitesRWLock.Lock()
+	delete(db.sites, subdomain)
+	db.sitesRWLock.Unlock()
+	site.Close()
+	if err := utils.DeleteFiles([]string{site.Path, site.BackupPath}); err != nil {
+		slog.Error("Failed to delete archived site db files", "subdomain", subdomain, "error", err)
+	}
+	return nil
+}
+
+// TruncateSite clears the raw JSON a site's DB keeps of what each row was sent, keeping all its data, then shrinks the
+// DB and records its new size, which it returns
+func (db *ControlDB) TruncateSite(ctx context.Context, subdomain string) (*int64, error) {
+	db.sitesRWLock.RLock()
+	site, ok := db.sites[subdomain]
+	db.sitesRWLock.RUnlock()
+	if !ok {
+		return nil, fmt.Errorf("site %s is not open", subdomain)
+	}
+	q := site.Queries
+	for _, clear := range []func(context.Context) error{
+		q.ClearActivitiesRawJSON, q.ClearComponentEventsRawJSON, q.ClearDeviceReportsRawJSON, q.ClearEventGroupsRawJSON,
+		q.ClearFoodIntakesRawJSON, q.ClearFoodPresetsRawJSON, q.ClearGlucoseReadingsRawJSON, q.ClearInsulinDosesRawJSON,
+		q.ClearNotificationEventsRawJSON, q.ClearProfilePresetsRawJSON, q.ClearProfileSwitchesRawJSON,
+		q.ClearTempBasalsRawJSON, q.ClearTempTargetsRawJSON,
+	} {
+		if err := clear(ctx); err != nil {
+			return nil, fmt.Errorf("cannot clear raw json of site %s: %w", subdomain, err)
+		}
+	}
+	if err := site.Vacuum(ctx); err != nil {
+		return nil, fmt.Errorf("cannot vacuum site %s: %w", subdomain, err)
+	}
+	sizeKB := site.EstimatedSizeKB()
+	return sizeKB, db.Queries.UpdateSiteDateFlags(ctx, controldb.UpdateSiteDateFlagsParams{EstimatedDbSizeKb: sizeKB, ID: subdomain})
+}
+
 ////
 // END OF DELETE USER METHODS
 ////
