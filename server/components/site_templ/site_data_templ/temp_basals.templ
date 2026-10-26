@@ -214,10 +214,11 @@ templ TempBasalModal(tempBasal *sitemodels.SiteTempBasal) {
 			}
 		</form>
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-			@readingDetail("ID", tempBasal.ID)
 			@readingDetail("Percent", orDash(tempBasal.Percent))
 			@readingDetail("Notes", orDash(tempBasal.Notes))
 			@readingDetail("Reason", orDash(tempBasal.Reason))
+			@modal.Section("Record")
+			@readingDetail("ID", tempBasal.ID)
 			@readingDetail("UTC Offset (minutes)", orDash(tempBasal.UtcOffsetMinutes))
 			@readingDetail("App", orDash(tempBasal.CreatedByAppName))
 			@readingDetail("Device", orDash(tempBasal.CreatedByDeviceName))
@@ -226,9 +227,7 @@ templ TempBasalModal(tempBasal *sitemodels.SiteTempBasal) {
 			@readingDetail("Updated", formatReadingDate(tempBasal.UpdatedAt))
 			@readingDetail("Updated By", orDash(tempBasal.UpdatedByIdentityName))
 		</dl>
-		if tempBasal.RawJsonData != nil {
-			<pre class="mt-4 max-h-48 overflow-auto rounded bg-gray-50 p-2 text-xs">{ *tempBasal.RawJsonData }</pre>
-		}
+		@modal.RawJSON("site--temp-basal--details--raw", tempBasal.RawJsonData)
 	}
 }
 

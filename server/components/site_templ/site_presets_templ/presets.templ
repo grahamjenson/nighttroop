@@ -26,7 +26,7 @@ func orEmpty[T any](value *T) string {
 	return fmt.Sprint(*value)
 }
 
-var presetDetail = modal.Detail
+var presetDetail = modal.DetailIfSet
 
 templ presetToast(description string) {
 	@toast.Toast(toast.Props{

@@ -199,11 +199,12 @@ templ NotificationEventModal(event *sitemodels.SiteNotificationEvent) {
 			}
 		</form>
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-			@readingDetail("ID", event.ID)
 			@readingDetail("Severity", fmt.Sprint(event.Severity))
 			@readingDetail("Content", orDash(event.Content))
 			@readingDetail("Notes", orDash(event.Notes))
 			@readingDetail("Reason", orDash(event.Reason))
+			@modal.Section("Record")
+			@readingDetail("ID", event.ID)
 			@readingDetail("UTC Offset (minutes)", orDash(event.UtcOffsetMinutes))
 			@readingDetail("App", orDash(event.CreatedByAppName))
 			@readingDetail("Device", orDash(event.CreatedByDeviceName))
@@ -212,9 +213,7 @@ templ NotificationEventModal(event *sitemodels.SiteNotificationEvent) {
 			@readingDetail("Updated", formatReadingDate(event.UpdatedAt))
 			@readingDetail("Updated By", orDash(event.UpdatedByIdentityName))
 		</dl>
-		if event.RawJsonData != nil {
-			<pre class="mt-4 max-h-48 overflow-auto rounded bg-gray-50 p-2 text-xs">{ *event.RawJsonData }</pre>
-		}
+		@modal.RawJSON("site--notification--details--raw", event.RawJsonData)
 	}
 }
 

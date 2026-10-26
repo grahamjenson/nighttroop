@@ -247,7 +247,6 @@ templ ProfileSwitchModal(profileSwitch *sitemodels.SiteProfileSwitch) {
 			}
 		</form>
 		<dl class="mt-4 grid grid-cols-4 gap-x-4 gap-y-1 text-sm">
-			@readingDetail("ID", profileSwitch.ID)
 			@readingDetail("Percent", orDash(profileSwitch.Percent))
 			@readingDetail("Shift (minutes)", orDash(profileSwitch.Timeshift))
 			@readingDetail("Minutes", orDash(profileSwitch.DurationMinutes))
@@ -258,6 +257,8 @@ templ ProfileSwitchModal(profileSwitch *sitemodels.SiteProfileSwitch) {
 			@readingDetail("Delay", orDash(profileSwitch.Delay))
 			@readingDetail("Notes", orDash(profileSwitch.Notes))
 			@readingDetail("Reason", orDash(profileSwitch.Reason))
+			@modal.Section("Record")
+			@readingDetail("ID", profileSwitch.ID)
 			@readingDetail("UTC Offset (minutes)", orDash(profileSwitch.UtcOffsetMinutes))
 			@readingDetail("App", orDash(profileSwitch.CreatedByAppName))
 			@readingDetail("Device", orDash(profileSwitch.CreatedByDeviceName))
@@ -273,9 +274,7 @@ templ ProfileSwitchModal(profileSwitch *sitemodels.SiteProfileSwitch) {
 			@profileSwitchSchedule("targets-low", "Low Targets", profileSwitch.TargetsLowJson)
 			@profileSwitchSchedule("targets-high", "High Targets", profileSwitch.TargetsHighJson)
 		</div>
-		if profileSwitch.RawJsonData != nil {
-			<pre class="mt-4 max-h-24 overflow-auto whitespace-pre-wrap break-all rounded bg-gray-50 p-2 text-xs">{ *profileSwitch.RawJsonData }</pre>
-		}
+		@modal.RawJSON("site--profile-switch--details--raw", profileSwitch.RawJsonData)
 	}
 }
 

@@ -242,7 +242,6 @@ templ deviceStatusRow(status *sitemodels.SiteDeviceStatus) {
 templ DeviceStatusModal(status *sitemodels.SiteDeviceStatus) {
 	@modal.Modal(modal.Props{ID: "site--device-status--details", Title: orDash(status.CreatedByDeviceName), Subtitle: formatReadingDate(status.OccurredAt)}) {
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-			@readingDetail("ID", status.ID)
 			@readingDetail("Phone Battery", withUnit(status.DeviceBatteryPercent, "%"))
 			@readingDetail("Phone Charging", orDash(status.IsDeviceCharging))
 			@readingDetail("Pump State", orDash(status.PumpState))
@@ -254,15 +253,15 @@ templ DeviceStatusModal(status *sitemodels.SiteDeviceStatus) {
 			@readingDetail("Basal IOB", withUnit(status.LoopIobBasal, " U"))
 			@readingDetail("Bolus IOB", withUnit(status.LoopIobTreatment, " U"))
 			@readingDetail("COB", withUnit(status.LoopCob, " g"))
+			@modal.Section("Record")
+			@readingDetail("ID", status.ID)
 			@readingDetail("UTC Offset (minutes)", orDash(status.UtcOffsetMinutes))
 			@readingDetail("App", orDash(status.CreatedByAppName))
 			@readingDetail("Created By", status.CreatedByIdentityName)
 			@readingDetail("Created", formatReadingDate(status.CreatedAt))
 			@readingDetail("Updated", formatReadingDate(status.UpdatedAt))
 		</dl>
-		if status.RawJsonData != nil {
-			<pre class="mt-4 max-h-48 overflow-auto rounded bg-gray-50 p-2 text-xs">{ *status.RawJsonData }</pre>
-		}
+		@modal.RawJSON("site--device-status--details--raw", status.RawJsonData)
 	}
 }
 

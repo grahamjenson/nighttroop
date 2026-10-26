@@ -180,10 +180,11 @@ templ EventGroupModal(eventGroup *sitemodels.SiteEventGroup) {
 			}
 		</ul>
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-			@readingDetail("ID", eventGroup.ID)
 			@readingDetail("Minutes", orDash(eventGroup.DurationMinutes))
 			@readingDetail("Notes", orDash(eventGroup.Notes))
 			@readingDetail("Reason", orDash(eventGroup.Reason))
+			@modal.Section("Record")
+			@readingDetail("ID", eventGroup.ID)
 			@readingDetail("UTC Offset (minutes)", orDash(eventGroup.UtcOffsetMinutes))
 			@readingDetail("App", orDash(eventGroup.CreatedByAppName))
 			@readingDetail("Device", orDash(eventGroup.CreatedByDeviceName))
@@ -192,9 +193,7 @@ templ EventGroupModal(eventGroup *sitemodels.SiteEventGroup) {
 			@readingDetail("Updated", formatReadingDate(eventGroup.UpdatedAt))
 			@readingDetail("Updated By", orDash(eventGroup.UpdatedByIdentityName))
 		</dl>
-		if eventGroup.RawJsonData != nil {
-			<pre class="mt-4 max-h-48 overflow-auto rounded bg-gray-50 p-2 text-xs">{ *eventGroup.RawJsonData }</pre>
-		}
+		@modal.RawJSON("site--event-group--details--raw", eventGroup.RawJsonData)
 	}
 }
 

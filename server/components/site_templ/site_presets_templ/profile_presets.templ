@@ -189,12 +189,13 @@ templ ProfilePresetModal(profile *sitemodels.SiteProfilePreset) {
 			@profileSchedule("High Target ("+units+")", profile.HighTargets, glucoseValue(profile.Units))
 		</div>
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-			@presetDetail("ID", profile.ID)
 			@presetDetail("Profile Store", profile.ProfileStoreID)
 			@presetDetail("DIA (hours)", orDash(profile.Dia))
 			@presetDetail("Carbs per Hour", orDash(profile.CarbsHr))
 			@presetDetail("Delay", orDash(profile.Delay))
 			@presetDetail("Timezone", orDash(profile.Timezone))
+			@modal.Section("Record")
+			@presetDetail("ID", profile.ID)
 			@presetDetail("App", orDash(profile.CreatedByAppName))
 			@presetDetail("Device", orDash(profile.CreatedByDeviceName))
 			@presetDetail("Created By", profile.CreatedByIdentityName)

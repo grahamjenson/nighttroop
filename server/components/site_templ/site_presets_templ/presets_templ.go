@@ -33,7 +33,7 @@ func orEmpty[T any](value *T) string {
 	return fmt.Sprint(*value)
 }
 
-var presetDetail = modal.Detail
+var presetDetail = modal.DetailIfSet
 
 func presetToast(description string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
