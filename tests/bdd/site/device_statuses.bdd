@@ -48,12 +48,18 @@ ASSERT_VISIBLE #deviceStatusTable-0 tbody tr >> nth=2
 ASSERT_NOT_VISIBLE #deviceStatusTable-0 tbody tr >> nth=3
 SCREENSHOT device_statuses
 
-// Clicking a status shows all its details
-CLICK #deviceStatusTable-0 tbody tr >> nth=0
+// Clicking a status shows all its details: the loop's phone (listed after the carer's, by name) reports the pump
+CLICK #deviceStatusTable-1 tbody tr >> nth=0
 ASSERT_VISIBLE #site--device-status--details
 ASSERT_TEXT_VISIBLE Pump Reservoir
 SCREENSHOT device_status_details
 CLICK #site--device-status--details--close
+ASSERT_NOT_VISIBLE #site--device-status--details
+
+// Escape closes them too
+CLICK #deviceStatusTable-0 tbody tr >> nth=0
+ASSERT_VISIBLE #site--device-status--details
+PRESS Escape
 ASSERT_NOT_VISIBLE #site--device-status--details
 
 // Show all pages through every status the device sent

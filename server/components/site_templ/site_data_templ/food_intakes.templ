@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/field"
+	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
@@ -67,7 +69,7 @@ templ FoodIntakesTable(foodIntakes []*sitemodels.SiteFoodIntake, skip int64, lim
 templ foodIntakeCreateForm() {
 	<form
 		id="site--food--create"
-		class="mb-4 flex items-center justify-end gap-2"
+		class="mb-4 flex items-end justify-end gap-2"
 		hx-post="/data/food"
 		hx-target="#foodIntakesTable tbody"
 		hx-swap="afterbegin"
@@ -83,7 +85,7 @@ templ foodIntakeCreateForm() {
 }
 
 templ foodIntakeInputs(id string, carbs string, name string, notes string) {
-	<div class="w-28">
+	@field.Field(id+"--carbs", "Carbs (g)", "w-28") {
 		@input.Input(input.Props{
 			ID:          id + "--carbs",
 			Type:        input.TypeNumber,
@@ -93,13 +95,13 @@ templ foodIntakeInputs(id string, carbs string, name string, notes string) {
 			Required:    true,
 			Attributes:  templ.Attributes{"step": "any", "min": "0", "max": "1000"},
 		})
-	</div>
-	<div class="w-40">
+	}
+	@field.Field(id+"--name", "Name", "w-40") {
 		@input.Input(input.Props{ID: id + "--name", Name: "name", Placeholder: "Name", Value: name})
-	</div>
-	<div class="w-64">
+	}
+	@field.Field(id+"--notes", "Notes", "w-64") {
 		@input.Input(input.Props{ID: id + "--notes", Name: "notes", Placeholder: "Notes", Value: notes})
-	</div>
+	}
 }
 
 // foodIntakeRow opens the food intake's details when clicked. The delete button stops its click reaching the row.
@@ -155,65 +157,47 @@ templ foodIntakeRow(foodIntake *sitemodels.SiteFoodIntake) {
 }
 
 templ FoodIntakeModal(foodIntake *sitemodels.SiteFoodIntake) {
-	<div id="site--food--details" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-		<div class="w-full max-w-2xl rounded-lg bg-white p-6 shadow-lg">
-			<h2 class="text-lg font-semibold">{ fmt.Sprintf("%s g carbs", orDash(foodIntake.Carbs)) }</h2>
-			<p class="text-sm text-gray-500">{ formatReadingDate(foodIntake.OccurredAt) }</p>
-			<form
-				id="site--food--edit"
-				class="mt-4 flex items-center gap-2"
-				hx-post={ "/data/food/" + foodIntake.ID }
-				hx-target={ "#site--food--" + foodIntake.ID }
-				hx-swap="outerHTML"
-				hx-status:4xx="target:#toaster swap:beforeend"
-				hx-status:5xx="target:#toaster swap:beforeend"
-			>
-				@foodIntakeInputs("site--food--edit", orDash(foodIntake.Carbs), orEmpty(foodIntake.Name), orEmpty(foodIntake.Notes))
-				@button.Button(button.Props{ID: "site--food--edit--submit", Type: button.TypeSubmit}) {
-					Save
-				}
-			</form>
-			<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-				@readingDetail("ID", foodIntake.ID)
-				@readingDetail("Name", orDash(foodIntake.Name))
-				@readingDetail("Food Type", orDash(foodIntake.FoodType))
-				@readingDetail("Category", orDash(foodIntake.Category))
-				@readingDetail("Subcategory", orDash(foodIntake.Subcategory))
-				@readingDetail("Fat g", orDash(foodIntake.Fat))
-				@readingDetail("Protein g", orDash(foodIntake.Protein))
-				@readingDetail("Fibre g", orDash(foodIntake.Fibre))
-				@readingDetail("Energy", orDash(foodIntake.Energy))
-				@readingDetail("Portions", orDash(foodIntake.Portions))
-				@readingDetail("Absorption Time (minutes)", orDash(foodIntake.AbsorptionTimeMinutes))
-				@readingDetail("Pre Bolus (minutes)", orDash(foodIntake.PreBolus))
-				@readingDetail("Notes", orDash(foodIntake.Notes))
-				@readingDetail("Reason", orDash(foodIntake.Reason))
-				@readingDetail("UTC Offset (minutes)", orDash(foodIntake.UtcOffsetMinutes))
-				@readingDetail("App", orDash(foodIntake.CreatedByAppName))
-				@readingDetail("Device", orDash(foodIntake.CreatedByDeviceName))
-				@readingDetail("Created By", foodIntake.CreatedByIdentityName)
-				@readingDetail("Created", formatReadingDate(foodIntake.CreatedAt))
-				@readingDetail("Updated", formatReadingDate(foodIntake.UpdatedAt))
-				@readingDetail("Updated By", orDash(foodIntake.UpdatedByIdentityName))
-			</dl>
-			if foodIntake.RawJsonData != nil {
-				<pre class="mt-4 max-h-48 overflow-auto rounded bg-gray-50 p-2 text-xs">{ *foodIntake.RawJsonData }</pre>
+	@modal.Modal(modal.Props{ID: "site--food--details", Title: fmt.Sprintf("%s g carbs", orDash(foodIntake.Carbs)), Subtitle: formatReadingDate(foodIntake.OccurredAt)}) {
+		<form
+			id="site--food--edit"
+			class="mt-4 flex items-end gap-2"
+			hx-post={ "/data/food/" + foodIntake.ID }
+			hx-target={ "#site--food--" + foodIntake.ID }
+			hx-swap="outerHTML"
+			hx-status:4xx="target:#toaster swap:beforeend"
+			hx-status:5xx="target:#toaster swap:beforeend"
+		>
+			@foodIntakeInputs("site--food--edit", orDash(foodIntake.Carbs), orEmpty(foodIntake.Name), orEmpty(foodIntake.Notes))
+			@button.Button(button.Props{ID: "site--food--edit--submit", Type: button.TypeSubmit}) {
+				Save
 			}
-			<div class="mt-4 flex justify-end">
-				@button.Button(button.Props{
-					ID:      "site--food--details--close",
-					Variant: button.VariantOutline,
-					Attributes: templ.Attributes{
-						"hx-get":    "/empty",
-						"hx-target": "#modal-container",
-						"hx-swap":   "innerHTML",
-					},
-				}) {
-					Close
-				}
-			</div>
-		</div>
-	</div>
+		</form>
+		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+			@readingDetail("Name", orDash(foodIntake.Name))
+			@readingDetail("Food Type", orDash(foodIntake.FoodType))
+			@readingDetail("Category", orDash(foodIntake.Category))
+			@readingDetail("Subcategory", orDash(foodIntake.Subcategory))
+			@readingDetail("Fat g", orDash(foodIntake.Fat))
+			@readingDetail("Protein g", orDash(foodIntake.Protein))
+			@readingDetail("Fibre g", orDash(foodIntake.Fibre))
+			@readingDetail("Energy", orDash(foodIntake.Energy))
+			@readingDetail("Portions", orDash(foodIntake.Portions))
+			@readingDetail("Absorption Time (minutes)", orDash(foodIntake.AbsorptionTimeMinutes))
+			@readingDetail("Pre Bolus (minutes)", orDash(foodIntake.PreBolus))
+			@readingDetail("Notes", orDash(foodIntake.Notes))
+			@readingDetail("Reason", orDash(foodIntake.Reason))
+			@modal.Section("Record")
+			@readingDetail("ID", foodIntake.ID)
+			@readingDetail("UTC Offset (minutes)", orDash(foodIntake.UtcOffsetMinutes))
+			@readingDetail("App", orDash(foodIntake.CreatedByAppName))
+			@readingDetail("Device", orDash(foodIntake.CreatedByDeviceName))
+			@readingDetail("Created By", foodIntake.CreatedByIdentityName)
+			@readingDetail("Created", formatReadingDate(foodIntake.CreatedAt))
+			@readingDetail("Updated", formatReadingDate(foodIntake.UpdatedAt))
+			@readingDetail("Updated By", orDash(foodIntake.UpdatedByIdentityName))
+		</dl>
+		@modal.RawJSON("site--food--details--raw", foodIntake.RawJsonData)
+	}
 }
 
 templ FoodIntakeCreated(foodIntake *sitemodels.SiteFoodIntake) {

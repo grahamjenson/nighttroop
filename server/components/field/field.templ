@@ -1,0 +1,9 @@
+package field
+
+// Field labels the input with ID inputID above it, in a box of the given width class, e.g. w-28
+templ Field(inputID string, label string, width string) {
+	<div class={ width }>
+		<label for={ inputID } class="mb-1 block text-xs font-medium text-gray-600">{ label }</label>
+		{ children... }
+	</div>
+}

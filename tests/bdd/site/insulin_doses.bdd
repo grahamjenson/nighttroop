@@ -30,6 +30,10 @@ ASSERT_TEXT_VISIBLE No insulin doses here.
 ASSERT_NOT_VISIBLE #site--insulin--next
 SCREENSHOT insulin_doses_empty
 
+// Each input is labelled with what it takes and in what units
+ASSERT_VISIBLE #site--insulin--create label[for="site--insulin--create--dose"]
+ASSERT_TEXT_VISIBLE Dose (U)
+
 // A dose typed in is given now, added to the top of the table
 INPUT #site--insulin--create--dose 2.5
 INPUT #site--insulin--create--notes Correction
@@ -50,6 +54,7 @@ CLICK #insulinDosesTable tbody tr >> nth=0
 ASSERT_VISIBLE #site--insulin--details
 ASSERT_TEXT_VISIBLE 4 units
 ASSERT_TEXT_VISIBLE admin
+ASSERT_VISIBLE #site--insulin--edit label[for="site--insulin--edit--dose"]
 SCREENSHOT insulin_dose_edit
 INPUT #site--insulin--edit--dose 4.5
 INPUT #site--insulin--edit--notes Big lunch
