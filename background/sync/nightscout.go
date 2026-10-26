@@ -22,6 +22,16 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
+	// One small call says whether entries have changed, so unchanged entries are not read every sync
+	lastModified, err := nsc.GetLastModified(ctx)
+	if err != nil {
+		return fmt.Errorf("NightscoutSync Error: %w", err)
+	}
+	entriesModified := lastModified[string(nsutils.Entries)]
+	if !entriesChanged(syncInfo.entriesLastModified, entriesModified) {
+		return nil
+	}
+
 	afterTime := time.Now().Add(-time.Duration(20) * time.Minute)
 	egvs, err := nsc.GetEntries(ctx, afterTime, 3)
 	if err != nil {
@@ -75,5 +85,15 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 		}
 	}
 
-	return nil
+	return b.controlDB.Queries.UpdateSyncSourceEntriesLastModified(ctx, controldb.UpdateSyncSourceEntriesLastModifiedParams{
+		EntriesLastModified: &entriesModified,
+		Type:                syncInfo.Type,
+		SiteID:              syncInfo.SiteID,
+	})
+}
+
+// entriesChanged is whether entries may have changed since they were last read. A Nightscout
+// that does not say when its entries changed (0) has them read every sync, as before.
+func entriesChanged(lastRead *int64, modified int64) bool {
+	return modified == 0 || lastRead == nil || *lastRead != modified
 }

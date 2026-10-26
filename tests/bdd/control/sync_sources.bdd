@@ -28,7 +28,7 @@ INPUT #name admin
 INPUT #password password
 INPUT #control--login--otp-1 123123
 CLICK #control--login-button
-ASSERT_TEXT_VISIBLE Welcome to the NightTroop Control Dashboard
+ASSERT_VISIBLE #controlSitesTable
 
 // The control site shows every site's sync sources, most recently attempted first
 CLICK #control--menu
