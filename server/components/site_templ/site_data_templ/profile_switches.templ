@@ -6,6 +6,7 @@ import (
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/modal"
+	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/input"
@@ -69,39 +70,10 @@ templ ProfileSwitchesTable(profileSwitches []*sitemodels.SiteProfileSwitch, skip
 					}
 				}
 			}
-			<div class="mt-4 flex items-center justify-between text-sm text-gray-500">
-				if len(profileSwitches) > 0 {
-					<span id="site--profile-switch--showing">{ fmt.Sprintf("Showing %d to %d", skip+1, skip+int64(len(profileSwitches))) }</span>
-				} else {
-					<span></span>
-				}
-				<div class="flex gap-2">
-					if skip > 0 {
-						@profileSwitchPageButton("site--profile-switch--previous", "Previous", max(skip-limit, 0), limit)
-					}
-					if int64(len(profileSwitches)) == limit {
-						@profileSwitchPageButton("site--profile-switch--next", "Next", skip+limit, limit)
-					}
-				</div>
-			</div>
+			@pager.Pager(pager.Props{ID: "site--profile-switch", Path: "/data/profile-switches", Count: len(profileSwitches), Skip: skip, Limit: limit})
 		</section>
 		<div id="modal-container"></div>
 	</div>
-}
-
-templ profileSwitchPageButton(id string, label string, skip int64, limit int64) {
-	@button.Button(button.Props{
-		ID:      id,
-		Variant: button.VariantOutline,
-		Attributes: templ.Attributes{
-			"hx-get":      fmt.Sprintf("/data/profile-switches?skip=%d&limit=%d", skip, limit),
-			"hx-target":   "#main-content",
-			"hx-push-url": "true",
-			"hx-swap":     "innerHTML",
-		},
-	}) {
-		{ label }
-	}
 }
 
 // profileSwitchCreateForm adds a profile switch happening now, putting its row at the top of the table

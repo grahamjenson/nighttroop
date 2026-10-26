@@ -6,6 +6,7 @@ import (
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/modal"
+	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/input"
@@ -58,39 +59,10 @@ templ NotificationEventsTable(events []*sitemodels.SiteNotificationEvent, skip i
 					}
 				}
 			}
-			<div class="mt-4 flex items-center justify-between text-sm text-gray-500">
-				if len(events) > 0 {
-					<span id="site--notification--showing">{ fmt.Sprintf("Showing %d to %d", skip+1, skip+int64(len(events))) }</span>
-				} else {
-					<span></span>
-				}
-				<div class="flex gap-2">
-					if skip > 0 {
-						@notificationEventPageButton("site--notification--previous", "Previous", max(skip-limit, 0), limit)
-					}
-					if int64(len(events)) == limit {
-						@notificationEventPageButton("site--notification--next", "Next", skip+limit, limit)
-					}
-				</div>
-			</div>
+			@pager.Pager(pager.Props{ID: "site--notification", Path: "/data/notifications", Count: len(events), Skip: skip, Limit: limit})
 		</section>
 		<div id="modal-container"></div>
 	</div>
-}
-
-templ notificationEventPageButton(id string, label string, skip int64, limit int64) {
-	@button.Button(button.Props{
-		ID:      id,
-		Variant: button.VariantOutline,
-		Attributes: templ.Attributes{
-			"hx-get":      fmt.Sprintf("/data/notifications?skip=%d&limit=%d", skip, limit),
-			"hx-target":   "#main-content",
-			"hx-push-url": "true",
-			"hx-swap":     "innerHTML",
-		},
-	}) {
-		{ label }
-	}
 }
 
 // notificationEventCreateForm adds a notification happening now, putting its row at the top of the table

@@ -1,11 +1,10 @@
 package site_presets_templ
 
 import (
-	"fmt"
-
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/modal"
+	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/input"
@@ -55,39 +54,10 @@ templ FoodPresetsTable(foodPresets []*sitemodels.SiteFoodPreset, skip int64, lim
 					}
 				}
 			}
-			<div class="mt-4 flex items-center justify-between text-sm text-gray-500">
-				if len(foodPresets) > 0 {
-					<span id="presets--food--showing">{ fmt.Sprintf("Showing %d to %d", skip+1, skip+int64(len(foodPresets))) }</span>
-				} else {
-					<span></span>
-				}
-				<div class="flex gap-2">
-					if skip > 0 {
-						@foodPresetPageButton("presets--food--previous", "Previous", max(skip-limit, 0), limit)
-					}
-					if int64(len(foodPresets)) == limit {
-						@foodPresetPageButton("presets--food--next", "Next", skip+limit, limit)
-					}
-				</div>
-			</div>
+			@pager.Pager(pager.Props{ID: "presets--food", Path: "/presets/food", Count: len(foodPresets), Skip: skip, Limit: limit})
 		</section>
 		<div id="modal-container"></div>
 	</div>
-}
-
-templ foodPresetPageButton(id string, label string, skip int64, limit int64) {
-	@button.Button(button.Props{
-		ID:      id,
-		Variant: button.VariantOutline,
-		Attributes: templ.Attributes{
-			"hx-get":      fmt.Sprintf("/presets/food?skip=%d&limit=%d", skip, limit),
-			"hx-target":   "#main-content",
-			"hx-push-url": "true",
-			"hx-swap":     "innerHTML",
-		},
-	}) {
-		{ label }
-	}
 }
 
 // foodPresetCreateForm adds a food preset, putting its row at the top of the table
