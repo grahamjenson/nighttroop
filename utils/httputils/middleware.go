@@ -32,6 +32,8 @@ func AddStandardMiddleware(router chi.Router, config *config.ServerConfig, contr
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.RequestSize(500 * 1024)) // 500KB max body size, should be enough for any request and prevents abuse
 	router.Use(middleware.Timeout(30 * time.Second))
+	// Gzip text responses, like the pages, styles, scripts and JSON, for clients that accept it
+	router.Use(middleware.Compress(5))
 }
 
 // RecordServerErrors records each response with a 5xx status in the logs DB's errors, with its site when it has one.
