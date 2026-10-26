@@ -5,8 +5,8 @@
 INSERT INTO temp_targets (
     id,
     duration_minutes,
-    high_target,
-    low_target,
+    high_target_mgdl,
+    low_target_mgdl,
     insulin_needs_scale_factor,
     notes,
     reason,
@@ -77,8 +77,8 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 -- name: UpdateTempTarget :one
 UPDATE temp_targets SET
     duration_minutes = COALESCE(sqlc.narg('DurationMinutes'), duration_minutes),
-    high_target = COALESCE(sqlc.narg('HighTarget'), high_target),
-    low_target = COALESCE(sqlc.narg('LowTarget'), low_target),
+    high_target_mgdl = COALESCE(sqlc.narg('HighTargetMgdl'), high_target_mgdl),
+    low_target_mgdl = COALESCE(sqlc.narg('LowTargetMgdl'), low_target_mgdl),
 
     notes = COALESCE(sqlc.narg('Notes'), notes),
     reason = COALESCE(sqlc.narg('Reason'), reason),

@@ -1340,8 +1340,8 @@ func TempTargetToCreate(source TempTarget) CreateTempTargetParams {
 	var sitedbCreateTempTargetParams CreateTempTargetParams
 	sitedbCreateTempTargetParams.ID = source.ID
 	sitedbCreateTempTargetParams.DurationMinutes = source.DurationMinutes
-	sitedbCreateTempTargetParams.HighTarget = source.HighTarget
-	sitedbCreateTempTargetParams.LowTarget = source.LowTarget
+	sitedbCreateTempTargetParams.HighTargetMgdl = source.HighTargetMgdl
+	sitedbCreateTempTargetParams.LowTargetMgdl = source.LowTargetMgdl
 	if source.InsulinNeedsScaleFactor != nil {
 		xfloat64 := *source.InsulinNeedsScaleFactor
 		sitedbCreateTempTargetParams.InsulinNeedsScaleFactor = &xfloat64
@@ -1382,10 +1382,10 @@ func TempTargetToUpdate(source TempTarget) UpdateTempTargetParams {
 	var sitedbUpdateTempTargetParams UpdateTempTargetParams
 	pInt64 := source.DurationMinutes
 	sitedbUpdateTempTargetParams.DurationMinutes = &pInt64
-	pFloat64 := source.HighTarget
-	sitedbUpdateTempTargetParams.HighTarget = &pFloat64
-	pFloat642 := source.LowTarget
-	sitedbUpdateTempTargetParams.LowTarget = &pFloat642
+	pFloat64 := source.HighTargetMgdl
+	sitedbUpdateTempTargetParams.HighTargetMgdl = &pFloat64
+	pFloat642 := source.LowTargetMgdl
+	sitedbUpdateTempTargetParams.LowTargetMgdl = &pFloat642
 	if source.Notes != nil {
 		xstring := *source.Notes
 		sitedbUpdateTempTargetParams.Notes = &xstring
@@ -2268,13 +2268,13 @@ func sitedbTempTargetsVwToSitedbTempTargetsVw(source TempTargetsVw) TempTargetsV
 		xint64 := *source.DurationMinutes
 		sitedbTempTargetsVw.DurationMinutes = &xint64
 	}
-	if source.HighTarget != nil {
-		xfloat64 := *source.HighTarget
-		sitedbTempTargetsVw.HighTarget = &xfloat64
+	if source.HighTargetMgdl != nil {
+		xfloat64 := *source.HighTargetMgdl
+		sitedbTempTargetsVw.HighTargetMgdl = &xfloat64
 	}
-	if source.LowTarget != nil {
-		xfloat642 := *source.LowTarget
-		sitedbTempTargetsVw.LowTarget = &xfloat642
+	if source.LowTargetMgdl != nil {
+		xfloat642 := *source.LowTargetMgdl
+		sitedbTempTargetsVw.LowTargetMgdl = &xfloat642
 	}
 	if source.InsulinNeedsScaleFactor != nil {
 		xfloat643 := *source.InsulinNeedsScaleFactor
