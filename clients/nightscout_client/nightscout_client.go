@@ -29,6 +29,9 @@ import (
 // never makes HTTP calls; any other URL fails as if the host does not exist.
 const TestValidURL = "http://valid.nightscout.test"
 
+// TestEntriesLastModified is when TestValidURL says its entries were last modified
+const TestEntriesLastModified int64 = 1_700_000_000_000
+
 const (
 	maxResponseBytes = 1 << 20 // a Nightscout response body larger than this is refused
 	maxResultItems   = 1000    // the sync only ever asks for a handful of entries
@@ -45,6 +48,9 @@ type Client struct {
 
 func entryHistoryEndpoint(nsURL string, gteCreatedAt int, limit int) string {
 	return fmt.Sprintf("%s/api/v3/entries?sort$desc=date&date$gte=%d&limit=%d", nsURL, gteCreatedAt, limit)
+}
+func lastModifiedEndpoint(nsURL string) string {
+	return fmt.Sprintf("%s/api/v3/lastModified", nsURL)
 }
 func jwtEndpoint(nsURL, token string) string {
 	return fmt.Sprintf("%s/api/v2/authorization/request/token=%s", nsURL, token)
@@ -78,6 +84,9 @@ func (c *Client) doRequest(
 	}
 	// Only TestValidURL is faked: a test that sets a JWT and an httptest URL goes over HTTP.
 	if testing.Testing() && c.baseURL == TestValidURL {
+		if url == lastModifiedEndpoint(c.baseURL) {
+			return map[string]any{"result": map[string]any{"collections": map[string]any{"entries": float64(TestEntriesLastModified)}}}, nil
+		}
 		return map[string]any{"result": []any{}}, nil
 	}
 
@@ -194,6 +203,31 @@ func (c *Client) refreshJWT() error {
 	c.jwtExpire = &expire
 
 	return nil
+}
+
+//
+// LAST MODIFIED
+//
+
+// GetLastModified returns when each collection was last modified on the Nightscout, in
+// milliseconds, so a sync only reads the collections that have changed since it last did.
+func (c *Client) GetLastModified(ctx context.Context) (map[string]int64, error) {
+	resp, err := c.doRequest(ctx, http.MethodGet, lastModifiedEndpoint(c.baseURL))
+	if err != nil {
+		return nil, fmt.Errorf("NSClient Get Last Modified Error %s: %w", c.baseURL, err)
+	}
+	result, _ := resp["result"].(map[string]any)
+	collections, ok := result["collections"].(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("NSClient Get Last Modified Error: %s returned no collections", c.baseURL)
+	}
+	lastModified := map[string]int64{}
+	for collection, modified := range collections {
+		if ms, ok := modified.(float64); ok {
+			lastModified[collection] = int64(ms)
+		}
+	}
+	return lastModified, nil
 }
 
 //

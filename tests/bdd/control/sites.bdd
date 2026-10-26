@@ -10,8 +10,14 @@ INPUT #name admin
 INPUT #password password
 INPUT #control--login--otp-1 123123
 CLICK #control--login-button
-ASSERT_TEXT_VISIBLE Welcome to the NightTroop Control Dashboard
 ASSERT_VISIBLE #control--nav--logo
+
+// The dashboard is the list of sites. A site not written to or seen in DISABLE_AFTER_INACTIVITY_DAYS, 0 in tests, is
+// marked inactive and can be disabled
+ASSERT_PATH /
+ASSERT_VISIBLE #controlSitesTable
+ASSERT_TEXT_VISIBLE inactive
+SCREENSHOT dashboard
 
 // The control site sees every site, newest first
 CLICK #control--menu

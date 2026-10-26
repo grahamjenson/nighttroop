@@ -2,7 +2,9 @@ package controlcollections
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"time"
 
 	"nighttroop.t1d.nz/utils/apiutils"
 
@@ -65,10 +67,14 @@ func (s *SitesCollection) GetHTMXResponse(model *controlmodels.Site) templ.Compo
 	return control_sites_templ.SiteModal(model)
 }
 
-// UpdateRow can only disable a live site, which stops it being served until it is archived
+// UpdateRow can only disable a live, inactive site, which stops it being served until it is archived
 func (s *SitesCollection) UpdateRow(ctx context.Context, controlContext *httputils.ControlContext, oldModel *controlmodels.Site, model *controlmodels.Site) (*controldb.Site, error) {
 	if model.State != "disabled" {
 		return nil, apiutils.ErrBadBodyWithHint("a site's state can only be changed to disabled")
+	}
+	days := controlContext.ControlDB.ServerConfig.DisableAfterInactivityDays
+	if !oldModel.Inactive(days, time.Now()) {
+		return nil, apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("only a site not written to or seen in %d days can be disabled", days))
 	}
 	result, err := controlContext.ControlDB.Queries.DisableSite(ctx, controldb.DisableSiteParams{ID: oldModel.ID})
 	if err != nil {
