@@ -167,6 +167,15 @@ templ SiteError(message string) {
 	})
 }
 
+// NotFound is the page for an address the site has nothing at, or for something a collection cannot do
+templ NotFound(message string) {
+	<div id="site--not-found" class="mx-auto max-w-xl space-y-4 py-16 text-center">
+		<h1 class="text-2xl font-semibold text-brand-night">Not found</h1>
+		<p id="site--not-found--message" class="text-gray-600">{ message }</p>
+		<a id="site--not-found--home" href="/" class="text-primary underline">Back to the summary</a>
+	</div>
+}
+
 templ FullPage(content templ.Component) {
 	@SiteBase() {
 		@content

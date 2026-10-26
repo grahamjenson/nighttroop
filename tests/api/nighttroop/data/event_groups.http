@@ -112,3 +112,19 @@ DELETE http://{{ site }}/data/event-groups/not-a-group
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 404
+
+// Event groups are made by the Nightscout treatments API, so the site cannot create them
+NAME create_event_group
+POST http://{{ site }}/data/event-groups
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"group_type": "Meal Bolus"}
+ASSERT_STATUS 405
+ASSERT_EQUALS "event-groups cannot be created here" "@message"
+
+NAME unknown_collection
+GET http://{{ site }}/data/nope
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+ASSERT_EQUALS "There is no nope here" "@message"
