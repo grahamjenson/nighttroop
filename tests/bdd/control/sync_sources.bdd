@@ -36,6 +36,7 @@ CLICK #control--sync-sources-button
 ASSERT_STATUS 200
 ASSERT_PATH /sync-sources
 ASSERT_VISIBLE #controlSyncSourcesTable
+ASSERT_TEXT_VISIBLE the most recently failed first
 ASSERT_TEXT_VISIBLE Showing 1 to
 ASSERT_TEXT_VISIBLE virtual
 SCREENSHOT sync_sources
