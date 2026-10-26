@@ -20,13 +20,16 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-// formatReadingDate shows a time in the timezone of the identity's, site's or default settings
-func formatReadingDate(ctx context.Context, ms int64) string {
-	location := time.UTC
+// Location is the timezone of the identity's, site's or default settings, which times are shown in
+func Location(ctx context.Context) *time.Location {
 	if siteContext := httputils.GetSiteContext(ctx); siteContext != nil {
-		location = siteContext.GetSettings().Location()
+		return siteContext.GetSettings().Location()
 	}
-	return time.UnixMilli(ms).In(location).Format("2006-01-02 15:04:05")
+	return time.UTC
+}
+
+func formatReadingDate(ctx context.Context, ms int64) string {
+	return time.UnixMilli(ms).In(Location(ctx)).Format("2006-01-02 15:04:05")
 }
 
 // FormatGlucose and FormatDate show glucose and times the same way on other pages

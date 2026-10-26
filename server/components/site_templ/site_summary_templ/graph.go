@@ -3,6 +3,7 @@ package site_summary_templ
 import (
 	"math"
 	"slices"
+	"time"
 
 	"github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/opts"
@@ -34,7 +35,14 @@ const (
 // temp targets as shaded lines, insulin as triangles pointing down and carbs as triangles pointing up
 // under it, and temp basals as a line at the bottom. Treatments are added oldest first, so the latest
 // is drawn on top where markers close together overlap.
-func graph(s *sitemodels.Summary, now int64) *charts.Scatter {
+//
+// ECharts shows times in the browser's timezone, or in UTC, so each time is moved by the location's offset
+// from UTC at that time, and drawn in UTC: the axis and tooltips then show the location's time.
+func graph(s *sitemodels.Summary, now int64, location *time.Location) *charts.Scatter {
+	at := func(ms int64) int64 {
+		_, offset := time.UnixMilli(ms).In(location).Zone()
+		return ms + int64(offset)*1000
+	}
 	glucoseMax, basalMax := s.Units.FromMGDL(minAxisMgdl), 1.0
 	for _, r := range s.GlucoseReadings {
 		glucoseMax = max(glucoseMax, r.Reading)
@@ -60,10 +68,11 @@ func graph(s *sitemodels.Summary, now int64) *charts.Scatter {
 			opts.Grid{Left: "60", Right: "30", Top: "64%", Height: "14%"},
 			opts.Grid{Left: "60", Right: "30", Top: "82%", Height: "8%"},
 		),
-		charts.WithXAxisOpts(timeAxis(glucoseX, s.Since, now, false)),
+		charts.WithXAxisOpts(timeAxis(glucoseX, at(s.Since), at(now), false)),
 		charts.WithYAxisOpts(opts.YAxis{Type: "value", Min: glucoseMin, Max: glucoseMax, SplitLine: &opts.SplitLine{Show: opts.Bool(false)}, AxisLabel: &opts.AxisLabel{ShowMinLabel: opts.Bool(false)}}),
 	)
-	chart.ExtendXAxis(timeAxis(treatmentX, s.Since, now, false), timeAxis(basalX, s.Since, now, true))
+	chart.AddJSFuncStrs("%MY_ECHARTS%.setOption({useUTC: true});")
+	chart.ExtendXAxis(timeAxis(treatmentX, at(s.Since), at(now), false), timeAxis(basalX, at(s.Since), at(now), true))
 	chart.ExtendYAxis(
 		opts.YAxis{Type: "category", Data: []string{"Carbs", "Insulin"}, GridIndex: treatmentX, AxisLine: &opts.AxisLine{Show: opts.Bool(false)}},
 		opts.YAxis{Type: "category", Data: []string{"Basal"}, GridIndex: basalX, AxisLine: &opts.AxisLine{Show: opts.Bool(false)}},
@@ -74,7 +83,7 @@ func graph(s *sitemodels.Summary, now int64) *charts.Scatter {
 	// behind them, with its bounds as dashed lines, and each temp target is a blue line over its shaded range
 	var lows, highs, inRange []opts.ScatterData
 	for _, r := range s.GlucoseReadings {
-		point := opts.ScatterData{Value: []any{r.OccurredAt, r.Reading}}
+		point := opts.ScatterData{Value: []any{at(r.OccurredAt), r.Reading}}
 		switch {
 		case r.Reading < low:
 			lows = append(lows, point)
@@ -84,11 +93,11 @@ func graph(s *sitemodels.Summary, now int64) *charts.Scatter {
 			inRange = append(inRange, point)
 		}
 	}
-	targets := []charts.SeriesOpts{charts.WithMarkAreaStyleOpts(opts.MarkAreaStyle{Label: &opts.Label{Show: opts.Bool(false)}}), charts.WithMarkAreaNameCoordItemOpts(opts.MarkAreaNameCoordItem{Name: "Target range", Coordinate0: []any{s.Since, top}, Coordinate1: []any{now, low}, ItemStyle: &opts.ItemStyle{Color: gray100}})}
+	targets := []charts.SeriesOpts{charts.WithMarkAreaStyleOpts(opts.MarkAreaStyle{Label: &opts.Label{Show: opts.Bool(false)}}), charts.WithMarkAreaNameCoordItemOpts(opts.MarkAreaNameCoordItem{Name: "Target range", Coordinate0: []any{at(s.Since), top}, Coordinate1: []any{at(now), low}, ItemStyle: &opts.ItemStyle{Color: gray100}})}
 	for _, t := range s.TempTargets {
 		targets = append(targets,
-			charts.WithMarkAreaNameCoordItemOpts(opts.MarkAreaNameCoordItem{Name: "Temp target", Coordinate0: []any{t.OccurredAt, t.HighTarget}, Coordinate1: []any{endOf(t.OccurredAt, t.DurationMinutes), t.LowTarget}, ItemStyle: &opts.ItemStyle{Color: blue500, Opacity: opts.Float(0.15)}}),
-			charts.WithMarkLineNameCoordItemOpts(opts.MarkLineNameCoordItem{Name: "Temp target", Coordinate0: []any{t.OccurredAt, (t.LowTarget + t.HighTarget) / 2}, Coordinate1: []any{endOf(t.OccurredAt, t.DurationMinutes), (t.LowTarget + t.HighTarget) / 2}}),
+			charts.WithMarkAreaNameCoordItemOpts(opts.MarkAreaNameCoordItem{Name: "Temp target", Coordinate0: []any{at(t.OccurredAt), t.HighTarget}, Coordinate1: []any{at(endOf(t.OccurredAt, t.DurationMinutes)), t.LowTarget}, ItemStyle: &opts.ItemStyle{Color: blue500, Opacity: opts.Float(0.15)}}),
+			charts.WithMarkLineNameCoordItemOpts(opts.MarkLineNameCoordItem{Name: "Temp target", Coordinate0: []any{at(t.OccurredAt), (t.LowTarget + t.HighTarget) / 2}, Coordinate1: []any{at(endOf(t.OccurredAt, t.DurationMinutes)), (t.LowTarget + t.HighTarget) / 2}}),
 		)
 	}
 	dashed := func(colour string) charts.SeriesOpts {
@@ -108,11 +117,11 @@ func graph(s *sitemodels.Summary, now int64) *charts.Scatter {
 	}
 	var insulin, carbs []opts.ScatterData
 	for _, d := range slices.Backward(s.InsulinDoses) {
-		insulin = append(insulin, opts.ScatterData{Name: value(&d.Dose, "U"), Value: []any{d.OccurredAt, "Insulin"}, SymbolRotate: 180})
+		insulin = append(insulin, opts.ScatterData{Name: value(&d.Dose, "U"), Value: []any{at(d.OccurredAt), "Insulin"}, SymbolRotate: 180})
 	}
 	for _, f := range slices.Backward(s.FoodIntakes) {
 		if f.Carbs != nil {
-			carbs = append(carbs, opts.ScatterData{Name: value(f.Carbs, "g"), Value: []any{f.OccurredAt, "Carbs"}})
+			carbs = append(carbs, opts.ScatterData{Name: value(f.Carbs, "g"), Value: []any{at(f.OccurredAt), "Carbs"}})
 		}
 	}
 	chart.AddSeries("Insulin", insulin, marker(brandNight)...)
@@ -125,7 +134,7 @@ func graph(s *sitemodels.Summary, now int64) *charts.Scatter {
 			continue
 		}
 		end := endOf(b.OccurredAt, b.DurationMinutes)
-		basals = append(basals, opts.LineData{Value: []any{b.OccurredAt, 0}}, opts.LineData{Value: []any{b.OccurredAt, *b.Absolute}}, opts.LineData{Value: []any{end, *b.Absolute}}, opts.LineData{Value: []any{end, 0}})
+		basals = append(basals, opts.LineData{Value: []any{at(b.OccurredAt), 0}}, opts.LineData{Value: []any{at(b.OccurredAt), *b.Absolute}}, opts.LineData{Value: []any{at(end), *b.Absolute}}, opts.LineData{Value: []any{at(end), 0}})
 	}
 	basal := charts.NewLine()
 	basal.AddSeries("Temp basal", basals,
@@ -150,8 +159,8 @@ func timeAxis(gridIndex int, since, until int64, labelled bool) opts.XAxis {
 	}
 }
 
-// tooltip shows what a reading or treatment is and when it was, in the browser's time
+// tooltip shows what a reading or treatment is and when it was, in the location's time as the tables show it
 const tooltip = `function (p) {
-	var at = new Date(p.value[0]).toLocaleString();
+	var at = new Date(p.value[0]).toISOString().slice(0, 19).replace('T', ' ');
 	return p.seriesName + ': ' + (p.name || p.value[1]) + '<br/>' + at;
 }`
