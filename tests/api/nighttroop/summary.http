@@ -28,6 +28,10 @@ ASSERT_EQUALS 48 "@result.0.hours"
 ASSERT_EQUALS "mmol/L" "@result.0.units"
 ASSERT_LENGTH 0 "@result.0.glucose_readings"
 ASSERT_LENGTH 0 "@result.0.device_statuses"
+// Its minutes cover the 48 hours, each null as no profile, temp target or temp basal is in force
+ASSERT_LENGTH 2881 "@result.0.minutes"
+ASSERT_EQUALS null "@result.0.minutes.0.low_target"
+ASSERT_EQUALS null "@result.0.minutes.2880.basal"
 
 NAME create_reading_for_summary
 POST http://{{ site }}/data/glucose
@@ -44,6 +48,24 @@ ASSERT_STATUS 200
 ASSERT_EQUALS 6 "@result.0.hours"
 ASSERT_LENGTH 1 "@result.0.glucose_readings"
 ASSERT_EQUALS 6.5 "@result.0.glucose_readings.0.reading"
+
+// A temp target is in force in the summary's latest minute, in the settings' units
+NAME create_temp_target_for_summary
+POST http://{{ site }}/data/temp-targets
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"low_target": 5, "high_target": 6, "duration_minutes": 30}
+ASSERT_STATUS 201
+
+NAME summary_has_temp_target_minutes
+GET http://{{ site }}/summary?hours=6
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 361 "@result.0.minutes"
+ASSERT_EQUALS null "@result.0.minutes.0.low_target"
+ASSERT_EQUALS 5 "@result.0.minutes.360.low_target"
+ASSERT_EQUALS 6 "@result.0.minutes.360.high_target"
 
 // A summary goes back at most a week
 NAME summary_at_most_a_week

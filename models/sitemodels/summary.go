@@ -19,4 +19,7 @@ type Summary struct {
 	DeviceStatuses []*SiteDeviceStatus `json:"device_statuses"`
 	// Loop is the latest status from the PWD's phone with loop information, for its IOB and COB
 	Loop *SiteDeviceStatus `json:"loop"`
+
+	// Minutes are the targets and basal in force each minute from Since, the first at Since and each a minute after
+	Minutes []SummaryMinute `json:"minutes"`
 }

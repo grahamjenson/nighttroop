@@ -121,3 +121,11 @@ WHERE id = sqlc.arg('ID') AND deleted_at IS NULL;
 
 -- name: HardDeleteProfileSwitch :execresult
 DELETE FROM profile_switches WHERE id = ?;
+-- name: SearchSummaryProfileSwitches :many
+-- The profile switches in force from Since to Until, newest first: those since the last switch by Since that lasts
+-- until the next, or since Earliest when there is none
+SELECT * FROM profile_switches
+WHERE profile_switches.deleted_at IS NULL AND profile_switches.occurred_at <= sqlc.arg('Until')
+    AND profile_switches.occurred_at >= COALESCE((SELECT MAX(before.occurred_at) FROM profile_switches AS before WHERE before.deleted_at IS NULL AND before.duration_minutes = 0 AND before.occurred_at <= sqlc.arg('Since')), sqlc.arg('Earliest'))
+ORDER BY profile_switches.occurred_at DESC
+LIMIT sqlc.arg('Limit');

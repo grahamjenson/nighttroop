@@ -414,6 +414,81 @@ func (q *Queries) SearchProfileSwitches(ctx context.Context, arg SearchProfileSw
 	return items, nil
 }
 
+const searchSummaryProfileSwitches = `-- name: SearchSummaryProfileSwitches :many
+SELECT id, name, duration_minutes, percent, timeshift, dia, units, timezone, carbs_hr, delay, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM profile_switches
+WHERE profile_switches.deleted_at IS NULL AND profile_switches.occurred_at <= ?1
+    AND profile_switches.occurred_at >= COALESCE((SELECT MAX(before.occurred_at) FROM profile_switches AS before WHERE before.deleted_at IS NULL AND before.duration_minutes = 0 AND before.occurred_at <= ?2), ?3)
+ORDER BY profile_switches.occurred_at DESC
+LIMIT ?4
+`
+
+type SearchSummaryProfileSwitchesParams struct {
+	Until    int64
+	Since    int64
+	Earliest int64
+	Limit    int64
+}
+
+// The profile switches in force from Since to Until, newest first: those since the last switch by Since that lasts
+// until the next, or since Earliest when there is none
+func (q *Queries) SearchSummaryProfileSwitches(ctx context.Context, arg SearchSummaryProfileSwitchesParams) ([]*ProfileSwitch, error) {
+	rows, err := q.query(ctx, q.searchSummaryProfileSwitchesStmt, searchSummaryProfileSwitches,
+		arg.Until,
+		arg.Since,
+		arg.Earliest,
+		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*ProfileSwitch
+	for rows.Next() {
+		var i ProfileSwitch
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.DurationMinutes,
+			&i.Percent,
+			&i.Timeshift,
+			&i.Dia,
+			&i.Units,
+			&i.Timezone,
+			&i.CarbsHr,
+			&i.Delay,
+			&i.CarbRatiosJson,
+			&i.InsulinSensitivitiesJson,
+			&i.BasalRatesJson,
+			&i.TargetsHighJson,
+			&i.TargetsLowJson,
+			&i.Notes,
+			&i.Reason,
+			&i.RawJsonData,
+			&i.DeletedAt,
+			&i.UtcOffsetMinutes,
+			&i.OccurredAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedByAppName,
+			&i.CreatedByDeviceName,
+			&i.UpdatedByIdentityID,
+			&i.UpdatedByIdentityName,
+			&i.CreatedByIdentityID,
+			&i.CreatedByIdentityName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const softDeleteProfileSwitch = `-- name: SoftDeleteProfileSwitch :execresult
 
 UPDATE profile_switches SET

@@ -297,6 +297,12 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.searchProfileSwitchesStmt, err = db.PrepareContext(ctx, searchProfileSwitches); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchProfileSwitches: %w", err)
 	}
+	if q.searchSummaryDefaultProfilesStmt, err = db.PrepareContext(ctx, searchSummaryDefaultProfiles); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchSummaryDefaultProfiles: %w", err)
+	}
+	if q.searchSummaryProfileSwitchesStmt, err = db.PrepareContext(ctx, searchSummaryProfileSwitches); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchSummaryProfileSwitches: %w", err)
+	}
 	if q.searchTempBasalsStmt, err = db.PrepareContext(ctx, searchTempBasals); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchTempBasals: %w", err)
 	}
@@ -847,6 +853,16 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing searchProfileSwitchesStmt: %w", cerr)
 		}
 	}
+	if q.searchSummaryDefaultProfilesStmt != nil {
+		if cerr := q.searchSummaryDefaultProfilesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchSummaryDefaultProfilesStmt: %w", cerr)
+		}
+	}
+	if q.searchSummaryProfileSwitchesStmt != nil {
+		if cerr := q.searchSummaryProfileSwitchesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchSummaryProfileSwitchesStmt: %w", cerr)
+		}
+	}
 	if q.searchTempBasalsStmt != nil {
 		if cerr := q.searchTempBasalsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing searchTempBasalsStmt: %w", cerr)
@@ -1127,6 +1143,8 @@ type Queries struct {
 	searchNotificationEventsStmt                *sql.Stmt
 	searchProfileStoresStmt                     *sql.Stmt
 	searchProfileSwitchesStmt                   *sql.Stmt
+	searchSummaryDefaultProfilesStmt            *sql.Stmt
+	searchSummaryProfileSwitchesStmt            *sql.Stmt
 	searchTempBasalsStmt                        *sql.Stmt
 	searchTempTargetsStmt                       *sql.Stmt
 	softDeleteActivitiesByTypeStmt              *sql.Stmt
@@ -1254,6 +1272,8 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		searchNotificationEventsStmt:                q.searchNotificationEventsStmt,
 		searchProfileStoresStmt:                     q.searchProfileStoresStmt,
 		searchProfileSwitchesStmt:                   q.searchProfileSwitchesStmt,
+		searchSummaryDefaultProfilesStmt:            q.searchSummaryDefaultProfilesStmt,
+		searchSummaryProfileSwitchesStmt:            q.searchSummaryProfileSwitchesStmt,
 		searchTempBasalsStmt:                        q.searchTempBasalsStmt,
 		searchTempTargetsStmt:                       q.searchTempTargetsStmt,
 		softDeleteActivitiesByTypeStmt:              q.softDeleteActivitiesByTypeStmt,

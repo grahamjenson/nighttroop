@@ -3,6 +3,7 @@ package sitedata
 import (
 	"context"
 	"log/slog"
+	"slices"
 	"time"
 
 	"github.com/a-h/templ"
@@ -36,6 +37,9 @@ const maxRows = 7 * 24 * 12
 
 // maxDevices caps how many devices' latest statuses are shown
 const maxDevices = 20
+
+// maxSwitchMinutes is how long before the summary a profile switch with a duration is looked for, as one still in force
+const maxSwitchMinutes = 7 * 24 * 60
 
 func (s *SummaryCollection) ToModel(row *sitemodels.Summary, siteContext *httputils.SiteContext) *sitemodels.Summary {
 	if row == nil {
@@ -123,5 +127,40 @@ func getSummary(ctx context.Context, tx *siteapiutils.CollectionTx, hours int64,
 	if summary.Loop, herr = apiutils.Found(loop, err, "summary loop status", sitemodels.DeviceStatusFromDB); herr != nil {
 		return nil, herr
 	}
+	if herr = addMinutes(ctx, q, summary, siteContext); herr != nil {
+		return nil, herr
+	}
 	return summary, nil
+}
+
+// addMinutes works out the targets and basal in force each minute of the summary, from the profiles, profile switches,
+// temp targets and temp basals in force through it, including those that started before it
+func addMinutes(ctx context.Context, q *sitedb.Queries, summary *sitemodels.Summary, siteContext *httputils.SiteContext) *apiutils.HTTPError {
+	since, now, excludeDeleted := summary.Since, time.Now().UnixMilli(), false
+	defaults, err := q.SearchSummaryDefaultProfiles(ctx, sitedb.SearchSummaryDefaultProfilesParams{Since: since, Until: now, Limit: maxRows})
+	if err != nil {
+		slog.Error("Error searching summary profiles", "error", err)
+		return apiutils.ErrInternalServerError
+	}
+	switches, err := q.SearchSummaryProfileSwitches(ctx, sitedb.SearchSummaryProfileSwitchesParams{Since: since, Until: now, Earliest: since - maxSwitchMinutes*60_000, Limit: maxRows})
+	if err != nil {
+		slog.Error("Error searching summary profile switches", "error", err)
+		return apiutils.ErrInternalServerError
+	}
+	targetsSince, basalsSince, before := since-maxTempTargetMinutes*60_000, since-maxTempBasalMinutes*60_000, since-1
+	earlierTargets, err := q.SearchTempTargets(ctx, sitedb.SearchTempTargetsParams{DateGTE: &targetsSince, DateLTE: &before, IncludeDeleted: &excludeDeleted, Limit: maxRows})
+	targets, herr := apiutils.Searched(earlierTargets, err, "summary temp targets", apiutils.WithContext(sitemodels.TempTargetFromDB, siteContext))
+	if herr != nil {
+		return herr
+	}
+	earlierBasals, err := q.SearchTempBasals(ctx, sitedb.SearchTempBasalsParams{DateGTE: &basalsSince, DateLTE: &before, IncludeDeleted: &excludeDeleted, Limit: maxRows})
+	basals, herr := apiutils.Searched(earlierBasals, err, "summary temp basals", sitemodels.TempBasalFromDB)
+	if herr != nil {
+		return herr
+	}
+	slices.Reverse(defaults)
+	slices.Reverse(switches)
+	summary.Minutes = sitemodels.SummaryMinutes(since, now, summary.Units, siteContext.GetSettings().Location(), defaults, switches,
+		append(targets, summary.TempTargets...), append(basals, summary.TempBasals...))
+	return nil
 }
