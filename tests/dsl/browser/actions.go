@@ -104,6 +104,11 @@ type Click struct {
 	Locator string
 	// History is "back" or "forward" for CLICK_BACK and CLICK_FORWARD, the browser's buttons, instead of clicking Locator
 	History string
+	// Key is pressed instead of clicking, for PRESS
+	Key string
+	// Corner clicks just inside Locator's top left corner instead of its centre, for CLICK_CORNER,
+	// e.g. a modal's backdrop beside the dialog over its centre
+	Corner bool
 
 	Asserts []Assert
 
@@ -114,6 +119,12 @@ type Click struct {
 func (r *Click) ToFlatString() string {
 	if r.History != "" {
 		return "CLICK_" + strings.ToUpper(r.History)
+	}
+	if r.Key != "" {
+		return "PRESS " + r.Key
+	}
+	if r.Corner {
+		return "CLICK_CORNER " + r.Locator
 	}
 	return fmt.Sprintf("CLICK %s", r.Locator)
 }
@@ -168,7 +179,7 @@ func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 	prettyOutput := PrettifyHTML(html)
 
 	var locator playwright.Locator
-	if r.History == "" {
+	if r.History == "" && r.Key == "" {
 		if locator = getLocator(r.Locator, page); locator == nil {
 			t.Fatalf("Failed to get locator for %s\n\n%s\n\n", r.Locator, prettyOutput)
 		}
@@ -191,11 +202,15 @@ func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 	})
 
 	oldURL := page.URL()
-	switch r.History {
-	case "back":
+	switch {
+	case r.History == "back":
 		_, err = page.GoBack()
-	case "forward":
+	case r.History == "forward":
 		_, err = page.GoForward()
+	case r.Key != "":
+		err = page.Keyboard().Press(r.Key)
+	case r.Corner:
+		err = locator.Click(playwright.LocatorClickOptions{Timeout: playwright.Float(actionWait), Position: &playwright.Position{X: 2, Y: 2}})
 	default:
 		err = locator.Click(playwright.LocatorClickOptions{Timeout: playwright.Float(actionWait)})
 	}

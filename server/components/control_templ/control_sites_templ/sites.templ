@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/models/controlmodels"
-	"nighttroop.t1d.nz/server/components/control_templ"
+	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/server/components/ui/toast"
@@ -172,44 +172,42 @@ templ siteRow(site *controlmodels.Site) {
 
 // SiteModal shows a site's details, and lets an admin disable it while it is live and inactive
 templ SiteModal(site *controlmodels.Site) {
-	<div id="control--site--details" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-		<div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-lg">
-			<h2 class="text-lg font-semibold">{ site.ID }</h2>
-			<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-				@siteDetail("State", site.State)
-				@siteDetail("Batch", site.Batch)
-				@siteDetail("DB Size Limit (KB)", orDash(site.MaxDbSizeKbLimit))
-				@siteDetail("DB Size (KB)", orDash(site.EstimatedDbSizeKb))
-				@siteDetail("Created", formatDate(&site.CreatedAt))
-				@siteDetail("Last Seen", formatDate(site.LastSeenAt))
-				@siteDetail("Last Write", formatDate(site.LastWriteAt))
-				@siteDetail("Disabled", formatDate(site.DisabledAt))
-				@siteDetail("Archived", formatDate(site.ArchivedAt))
-				@siteDetail("Deleted", formatDate(site.DeletedAt))
-			</dl>
-			<div class="mt-4 flex justify-end gap-2">
-				if inactive(ctx, site) {
-					<form
-						hx-post={ "/sites/" + site.ID }
-						hx-target={ "#control--site--" + site.ID }
-						hx-swap="outerHTML"
-						hx-confirm="Disable this site? It will stop being served."
-						hx-status:4xx="target:#toaster swap:beforeend"
-						hx-status:5xx="target:#toaster swap:beforeend"
-					>
-						<input type="hidden" name="state" value="disabled"/>
-						@button.Button(button.Props{ID: "control--site--disable", Type: button.TypeSubmit, Variant: button.VariantDestructive}) {
-							Disable
-						}
-					</form>
-				}
-				@control_templ.CloseButton("control--site--details--close")
-			</div>
-		</div>
-	</div>
+	@modal.Modal(modal.Props{ID: "control--site--details", Title: site.ID, Actions: siteDisable(site)}) {
+		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+			@siteDetail("State", site.State)
+			@siteDetail("Batch", site.Batch)
+			@siteDetail("DB Size Limit (KB)", orDash(site.MaxDbSizeKbLimit))
+			@siteDetail("DB Size (KB)", orDash(site.EstimatedDbSizeKb))
+			@siteDetail("Created", formatDate(&site.CreatedAt))
+			@siteDetail("Last Seen", formatDate(site.LastSeenAt))
+			@siteDetail("Last Write", formatDate(site.LastWriteAt))
+			@siteDetail("Disabled", formatDate(site.DisabledAt))
+			@siteDetail("Archived", formatDate(site.ArchivedAt))
+			@siteDetail("Deleted", formatDate(site.DeletedAt))
+		</dl>
+	}
 }
 
-var siteDetail = control_templ.Detail
+// siteDisable is the Disable button for a site no one has used for a while
+templ siteDisable(site *controlmodels.Site) {
+	if inactive(ctx, site) {
+		<form
+			hx-post={ "/sites/" + site.ID }
+			hx-target={ "#control--site--" + site.ID }
+			hx-swap="outerHTML"
+			hx-confirm="Disable this site? It will stop being served."
+			hx-status:4xx="target:#toaster swap:beforeend"
+			hx-status:5xx="target:#toaster swap:beforeend"
+		>
+			<input type="hidden" name="state" value="disabled"/>
+			@button.Button(button.Props{ID: "control--site--disable", Type: button.TypeSubmit, Variant: button.VariantDestructive}) {
+				Disable
+			}
+		</form>
+	}
+}
+
+var siteDetail = modal.Detail
 
 func orDash(value *int64) string {
 	if value == nil {

@@ -253,7 +253,7 @@ func (q *Queries) GetSyncSource(ctx context.Context, arg GetSyncSourceParams) (*
 
 const searchSyncSources = `-- name: SearchSyncSources :many
 SELECT site_id, type, url_or_username_enc, password_enc, region, created_at, updated_at, enabled, first_successful_sync_time, entries_last_modified, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_errors, total_ema, success_ema, failure_ema, last_sync_duration FROM site_sync_sources
-ORDER BY last_attempted_sync DESC, site_id, type
+ORDER BY last_failed_sync IS NULL, last_failed_sync DESC, last_attempted_sync DESC, site_id, type
 LIMIT ?2 OFFSET ?1
 `
 
@@ -262,6 +262,7 @@ type SearchSyncSourcesParams struct {
 	Limit int64
 }
 
+// The most recently failed first, then those that never failed, most recently attempted first
 func (q *Queries) SearchSyncSources(ctx context.Context, arg SearchSyncSourcesParams) ([]*SiteSyncSource, error) {
 	rows, err := q.query(ctx, q.searchSyncSourcesStmt, searchSyncSources, arg.Skip, arg.Limit)
 	if err != nil {
