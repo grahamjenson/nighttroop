@@ -9,6 +9,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/server/components/ui/toast"
+	"nighttroop.t1d.nz/utils/display"
 )
 
 // formatDate shows an optional time in ms, or a dash when it is not set
@@ -144,10 +145,10 @@ templ siteRow(site *controlmodels.Site) {
 			{ formatDate(&site.CreatedAt) }
 		}
 		@table.Cell() {
-			{ formatDate(site.LastSeenAt) }
+			<span title={ formatDate(site.LastSeenAt) }>{ display.Ago(site.LastSeenAt, time.Now()) }</span>
 		}
 		@table.Cell() {
-			{ formatDate(site.LastWriteAt) }
+			<span title={ formatDate(site.LastWriteAt) }>{ display.Ago(site.LastWriteAt, time.Now()) }</span>
 		}
 		@table.Cell() {
 			{ orDash(site.EstimatedDbSizeKb) }

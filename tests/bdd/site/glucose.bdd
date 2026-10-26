@@ -56,11 +56,14 @@ INPUT #site--glucose--create--reading 7.9
 INPUT #site--glucose--create--notes Finger prick
 CLICK #site--glucose--create--submit
 ASSERT_STATUS 201
-ASSERT_TEXT_VISIBLE mbg
+// It is shown as from a meter, beside the sensor's readings with their trend arrows
+ASSERT_TEXT_VISIBLE Meter
+ASSERT_TEXT_VISIBLE Sensor
+ASSERT_VISIBLE #glucoseReadingsTable span[title]:not([title="-"]) >> nth=0
 SCREENSHOT glucose_reading_created
 
 // Its details can be edited, which updates its row
-CLICK "mbg"
+CLICK "Meter"
 ASSERT_VISIBLE #site--glucose--details
 ASSERT_TEXT_VISIBLE Finger prick
 SCREENSHOT glucose_reading_edit
@@ -74,7 +77,7 @@ ASSERT_TEXT_VISIBLE 8.6
 SCREENSHOT glucose_reading_updated
 
 // The edit is saved
-CLICK "mbg"
+CLICK "Meter"
 ASSERT_TEXT_VISIBLE 8.6 mmol/L
 ASSERT_TEXT_VISIBLE Rechecked
 CLICK #site--glucose--details--close

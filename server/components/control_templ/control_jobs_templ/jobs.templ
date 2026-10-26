@@ -8,6 +8,7 @@ import (
 	"nighttroop.t1d.nz/server/components/control_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/display"
 )
 
 // formatDate shows a time in ms, or a dash for the 0 a job has before it is fetched or finished
@@ -132,7 +133,7 @@ templ jobRow(job *controlmodels.Job) {
 			<span class={ statusClass(job) }>{ job.JobStatus }</span>
 		}
 		@table.Cell() {
-			{ formatDate(job.CreatedAt) }
+			<span title={ formatDate(job.CreatedAt) }>{ display.Ago(&job.CreatedAt, time.Now()) }</span>
 		}
 		@table.Cell() {
 			{ duration(job) }
