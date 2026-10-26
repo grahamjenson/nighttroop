@@ -30,3 +30,9 @@ func (s *Site) Inactive(days int, now time.Time) bool {
 	}
 	return lastWrite <= cutoff || lastSeen <= cutoff
 }
+
+// Oversized is whether the site's DB, while it is kept here, is over its size limit, so it can be truncated
+func (s *Site) Oversized() bool {
+	kept := s.State == "live" || s.State == "disabled"
+	return kept && s.EstimatedDbSizeKb != nil && s.MaxDbSizeKbLimit != nil && *s.EstimatedDbSizeKb > *s.MaxDbSizeKbLimit
+}

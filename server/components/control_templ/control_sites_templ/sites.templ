@@ -153,13 +153,17 @@ templ siteRow(site *controlmodels.Site) {
 		}
 		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ orDash(site.EstimatedDbSizeKb) }
+			if site.Oversized() {
+				<span class="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-800">over limit</span>
+			}
 		}
 	}
 }
 
-// SiteModal shows a site's details, and lets an admin disable it while it is live and inactive
+// SiteModal shows a site's details, and lets an admin disable it while it is live and inactive, and archive it once
+// it is disabled
 templ SiteModal(site *controlmodels.Site) {
-	@modal.Modal(modal.Props{ID: "control--site--details", Title: site.ID, Actions: siteDisable(site)}) {
+	@modal.Modal(modal.Props{ID: "control--site--details", Title: site.ID, Actions: siteActions(site)}) {
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@siteDetail("State", site.State)
 			@siteDetail("Batch", site.Batch)
@@ -175,8 +179,9 @@ templ SiteModal(site *controlmodels.Site) {
 	}
 }
 
-// siteDisable is the Disable button for a site no one has used for a while
-templ siteDisable(site *controlmodels.Site) {
+// siteActions are the buttons for what an admin can do to a site: disable it once no one has used it for a while,
+// truncate it while it is over its DB size limit, and archive it once it is disabled
+templ siteActions(site *controlmodels.Site) {
 	if inactive(ctx, site) {
 		<form
 			hx-post={ "/sites/" + site.ID }
@@ -192,6 +197,35 @@ templ siteDisable(site *controlmodels.Site) {
 			}
 		</form>
 	}
+	if site.Oversized() {
+		<form
+			hx-post={ "/sites/" + site.ID + "/truncate" }
+			hx-target={ "#control--site--" + site.ID }
+			hx-swap="outerHTML"
+			hx-confirm="Truncate this site? The raw JSON kept of what it was sent is cleared, but all its data is kept."
+			hx-status:4xx="target:#toaster swap:beforeend"
+			hx-status:5xx="target:#toaster swap:beforeend"
+		>
+			@button.Button(button.Props{ID: "control--site--truncate", Type: button.TypeSubmit, Variant: button.VariantDestructive}) {
+				Truncate
+			}
+		</form>
+	}
+	if site.State == "disabled" {
+		<form
+			hx-post={ "/sites/" + site.ID }
+			hx-target={ "#control--site--" + site.ID }
+			hx-swap="outerHTML"
+			hx-confirm="Archive this site? Its data is uploaded to S3 and deleted here."
+			hx-status:4xx="target:#toaster swap:beforeend"
+			hx-status:5xx="target:#toaster swap:beforeend"
+		>
+			<input type="hidden" name="state" value="archived"/>
+			@button.Button(button.Props{ID: "control--site--archive", Type: button.TypeSubmit, Variant: button.VariantDestructive}) {
+				Archive
+			}
+		</form>
+	}
 }
 
 var siteDetail = modal.Detail
@@ -203,14 +237,22 @@ func orDash(value *int64) string {
 	return fmt.Sprint(*value)
 }
 
-// SiteDisabled replaces the site's row, closes its details and shows a toast
-templ SiteDisabled(site *controlmodels.Site) {
+// SiteUpdated replaces the site's row, closes its details and shows a toast saying it is disabled or archived
+templ SiteUpdated(site *controlmodels.Site) {
+	@siteChanged(site, map[string]string{"disabled": "Site Disabled", "archived": "Site Archived"}[site.State])
+}
+
+templ SiteTruncated(site *controlmodels.Site) {
+	@siteChanged(site, "Site Truncated")
+}
+
+templ siteChanged(site *controlmodels.Site, description string) {
 	@siteRow(site)
 	<div id="modal-container" hx-swap-oob="innerHTML"></div>
 	<div hx-swap-oob="beforeend:#toaster">
 		@toast.Toast(toast.Props{
 			Title:       "Success",
-			Description: "Site Disabled",
+			Description: description,
 			Variant:     toast.VariantSuccess,
 			Position:    toast.PositionTopCenter,
 			Duration:    5000,

@@ -34,3 +34,26 @@ func TestSiteInactive(t *testing.T) {
 		})
 	}
 }
+
+func TestSiteOversized(t *testing.T) {
+	size := func(kb int64) *int64 { return &kb }
+	tests := []struct {
+		name     string
+		state    string
+		sizeKB   *int64
+		limitKB  *int64
+		oversize bool
+	}{
+		{"over its limit", "live", size(4000), size(3000), true},
+		{"disabled and over its limit", "disabled", size(4000), size(3000), true},
+		{"at its limit", "live", size(3000), size(3000), false},
+		{"not yet measured", "live", nil, size(3000), false},
+		{"archived, so not kept here", "archived", size(4000), size(3000), false},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			site := &Site{State: test.state, EstimatedDbSizeKb: test.sizeKB, MaxDbSizeKbLimit: test.limitKB}
+			require.Equal(t, test.oversize, site.Oversized())
+		})
+	}
+}

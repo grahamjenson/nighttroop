@@ -9,13 +9,16 @@ import (
 	"nighttroop.t1d.nz/utils/apiutils"
 
 	"github.com/a-h/templ"
+	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/server/components/control_templ/control_sites_templ"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/s3utils"
 )
 
-// SitesCollection lets control identities see every site, whatever its state, and admins disable live ones
+// SitesCollection lets control identities see every site, whatever its state, and admins disable and archive them
 type SitesCollection struct{}
 
 func (s *SitesCollection) GetName() string {
@@ -67,26 +70,83 @@ func (s *SitesCollection) GetHTMXResponse(model *controlmodels.Site) templ.Compo
 	return control_sites_templ.SiteModal(model)
 }
 
-// UpdateRow can only disable a live, inactive site, which stops it being served until it is archived
+// UpdateRow disables a live, inactive site, which stops it being served, or archives a disabled one
 func (s *SitesCollection) UpdateRow(ctx context.Context, controlContext *httputils.ControlContext, oldModel *controlmodels.Site, model *controlmodels.Site) (*controldb.Site, error) {
-	if model.State != "disabled" {
-		return nil, apiutils.ErrBadBodyWithHint("a site's state can only be changed to disabled")
+	var err error
+	switch model.State {
+	case "disabled":
+		err = s.disable(ctx, controlContext, oldModel)
+	case "archived":
+		err = s.archive(ctx, controlContext, oldModel)
+	default:
+		err = apiutils.ErrBadBodyWithHint("a site's state can only be changed to disabled or archived")
 	}
-	days := controlContext.ControlDB.ServerConfig.DisableAfterInactivityDays
-	if !oldModel.Inactive(days, time.Now()) {
-		return nil, apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("only a site not written to or seen in %d days can be disabled", days))
-	}
-	result, err := controlContext.ControlDB.Queries.DisableSite(ctx, controldb.DisableSiteParams{ID: oldModel.ID})
 	if err != nil {
 		return nil, err
 	}
-	if rows, _ := result.RowsAffected(); rows == 0 {
-		return nil, apiutils.ErrConstraintCheckFailedWithHint("only a live site can be disabled")
-	}
-	controlContext.ControlDB.Logs.SiteDisabledEvent(ctx, oldModel.ID, controlContext.IdentityModel.Name)
 	return s.GetRow(ctx, oldModel.ID, controlContext)
 }
 
+func (s *SitesCollection) disable(ctx context.Context, controlContext *httputils.ControlContext, oldModel *controlmodels.Site) error {
+	days := controlContext.ControlDB.ServerConfig.DisableAfterInactivityDays
+	if !oldModel.Inactive(days, time.Now()) {
+		return apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("only a site not written to or seen in %d days can be disabled", days))
+	}
+	result, err := controlContext.ControlDB.Queries.DisableSite(ctx, controldb.DisableSiteParams{ID: oldModel.ID})
+	if err != nil {
+		return err
+	}
+	if rows, _ := result.RowsAffected(); rows == 0 {
+		return apiutils.ErrConstraintCheckFailedWithHint("only a live site can be disabled")
+	}
+	controlContext.ControlDB.Logs.SiteDisabledEvent(ctx, oldModel.ID, controlContext.IdentityModel.Name)
+	return nil
+}
+
+// archive uploads a disabled site's DB to its archive in S3 and deletes it here, so without S3 it is refused
+func (s *SitesCollection) archive(ctx context.Context, controlContext *httputils.ControlContext, oldModel *controlmodels.Site) error {
+	config := controlContext.ControlDB.ServerConfig
+	if oldModel.State != "disabled" {
+		return apiutils.ErrConstraintCheckFailedWithHint("only a disabled site can be archived")
+	}
+	if !config.Status.S3Working {
+		return apiutils.ErrConstraintCheckFailedWithHint("a site can only be archived when S3 is connected")
+	}
+	if err := controlContext.ControlDB.ArchiveSite(ctx, oldModel.ID, s3utils.NewS3Client(config).UploadFilesToS3); err != nil {
+		return err
+	}
+	controlContext.ControlDB.Logs.SiteArchivedEvent(ctx, oldModel.ID, controlContext.IdentityModel.Name)
+	return nil
+}
+
 func (s *SitesCollection) UpdateHTMXResponse(model *controlmodels.Site) templ.Component {
-	return control_sites_templ.SiteDisabled(model)
+	return control_sites_templ.SiteUpdated(model)
+}
+
+// TruncateHandler clears the raw JSON a site over its DB size limit keeps, then shrinks its DB. Only admins can.
+func (s *SitesCollection) TruncateHandler(w http.ResponseWriter, r *http.Request) {
+	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
+	if controlContext.IdentityModel.Role != consts.ControlRoleAdmin {
+		apiutils.ErrForbidden.Write(acceptType, w)
+		return
+	}
+	site, herr := get(r.Context(), s, chi.URLParam(r, "id"), controlContext)
+	if herr == nil && site == nil {
+		herr = apiutils.ErrNotFound
+	}
+	if herr == nil && !site.Oversized() {
+		herr = apiutils.ErrConstraintCheckFailedWithHint("only a site over its DB size limit can be truncated")
+	}
+	if herr == nil {
+		sizeKB, err := controlContext.ControlDB.TruncateSite(r.Context(), site.ID)
+		if herr = answer(err, s.GetName()); herr == nil {
+			controlContext.ControlDB.Logs.SiteTruncatedEvent(r.Context(), site.ID, controlContext.IdentityModel.Name, site.EstimatedDbSizeKb, sizeKB)
+			site, herr = get(r.Context(), s, site.ID, controlContext)
+		}
+	}
+	if herr != nil {
+		herr.Write(acceptType, w)
+		return
+	}
+	WriteResponse(w, r, acceptType, http.StatusOK, site, control_sites_templ.SiteTruncated(site))
 }

@@ -115,6 +115,16 @@ func (db *DB) Backup(ctx context.Context) error {
 	return backup.SqliteBackup(ctx, db.SQLiteDB, db.BackupPath)
 }
 
+// Vacuum rebuilds the DB without its free pages, then checkpoints the write-ahead log, so the file shrinks to the data
+// it keeps. sqlc cannot generate VACUUM, so it is run here, generated with the rest of the DB's upkeep.
+func (db *DB) Vacuum(ctx context.Context) error {
+	if _, err := db.SQLiteDB.ExecContext(ctx, "VACUUM"); err != nil {
+		return err
+	}
+	_, err := db.SQLiteDB.ExecContext(ctx, "PRAGMA wal_checkpoint(TRUNCATE)")
+	return err
+}
+
 /////
 // File paths
 /////
