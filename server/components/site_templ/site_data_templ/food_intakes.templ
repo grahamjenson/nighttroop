@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
@@ -96,7 +97,7 @@ templ foodIntakePageButton(id string, label string, skip int64, limit int64) {
 templ foodIntakeCreateForm() {
 	<form
 		id="site--food--create"
-		class="mb-4 flex items-center justify-end gap-2"
+		class="mb-4 flex items-end justify-end gap-2"
 		hx-post="/data/food"
 		hx-target="#foodIntakesTable tbody"
 		hx-swap="afterbegin"
@@ -112,7 +113,7 @@ templ foodIntakeCreateForm() {
 }
 
 templ foodIntakeInputs(id string, carbs string, name string, notes string) {
-	<div class="w-28">
+	@field.Field(id+"--carbs", "Carbs (g)", "w-28") {
 		@input.Input(input.Props{
 			ID:          id + "--carbs",
 			Type:        input.TypeNumber,
@@ -122,13 +123,13 @@ templ foodIntakeInputs(id string, carbs string, name string, notes string) {
 			Required:    true,
 			Attributes:  templ.Attributes{"step": "any", "min": "0", "max": "1000"},
 		})
-	</div>
-	<div class="w-40">
+	}
+	@field.Field(id+"--name", "Name", "w-40") {
 		@input.Input(input.Props{ID: id + "--name", Name: "name", Placeholder: "Name", Value: name})
-	</div>
-	<div class="w-64">
+	}
+	@field.Field(id+"--notes", "Notes", "w-64") {
 		@input.Input(input.Props{ID: id + "--notes", Name: "notes", Placeholder: "Notes", Value: notes})
-	</div>
+	}
 }
 
 // foodIntakeRow opens the food intake's details when clicked. The delete button stops its click reaching the row.
@@ -187,7 +188,7 @@ templ FoodIntakeModal(foodIntake *sitemodels.SiteFoodIntake) {
 	@modal.Modal(modal.Props{ID: "site--food--details", Title: fmt.Sprintf("%s g carbs", orDash(foodIntake.Carbs)), Subtitle: formatReadingDate(foodIntake.OccurredAt)}) {
 		<form
 			id="site--food--edit"
-			class="mt-4 flex items-center gap-2"
+			class="mt-4 flex items-end gap-2"
 			hx-post={ "/data/food/" + foodIntake.ID }
 			hx-target={ "#site--food--" + foodIntake.ID }
 			hx-swap="outerHTML"

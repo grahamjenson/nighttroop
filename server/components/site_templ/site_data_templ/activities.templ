@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
@@ -107,7 +108,7 @@ templ activityPageButton(id string, label string, skip int64, limit int64) {
 templ activityCreateForm() {
 	<form
 		id="site--activity--create"
-		class="mb-4 flex items-center justify-end gap-2"
+		class="mb-4 flex items-end justify-end gap-2"
 		hx-post="/data/activities"
 		hx-target="#activitiesTable tbody"
 		hx-swap="afterbegin"
@@ -123,10 +124,10 @@ templ activityCreateForm() {
 }
 
 templ activityInputs(id string, name string, duration string, notes string) {
-	<div class="w-40">
+	@field.Field(id+"--name", "Name", "w-40") {
 		@input.Input(input.Props{ID: id + "--name", Name: "name", Placeholder: "Name", Value: name, Required: true, Attributes: templ.Attributes{"maxlength": "64"}})
-	</div>
-	<div class="w-28">
+	}
+	@field.Field(id+"--duration", "Duration (min)", "w-28") {
 		@input.Input(input.Props{
 			ID:          id + "--duration",
 			Type:        input.TypeNumber,
@@ -135,10 +136,10 @@ templ activityInputs(id string, name string, duration string, notes string) {
 			Value:       duration,
 			Attributes:  templ.Attributes{"step": "1", "min": "1", "max": "1440"},
 		})
-	</div>
-	<div class="w-64">
+	}
+	@field.Field(id+"--notes", "Notes", "w-64") {
 		@input.Input(input.Props{ID: id + "--notes", Name: "notes", Placeholder: "Notes", Value: notes})
-	</div>
+	}
 }
 
 // activityRow opens the activity's details when clicked. The delete button stops its click reaching the row.
@@ -200,7 +201,7 @@ templ ActivityModal(activity *sitemodels.SiteActivity) {
 	@modal.Modal(modal.Props{ID: "site--activity--details", Title: fmt.Sprintf("%s: %s", activity.ActivityType, orDash(activity.Name)), Subtitle: formatReadingDate(activity.OccurredAt)}) {
 		<form
 			id="site--activity--edit"
-			class="mt-4 flex items-center gap-2"
+			class="mt-4 flex items-end gap-2"
 			hx-post={ "/data/activities/" + activity.ID }
 			hx-target={ "#site--activity--" + activity.ID }
 			hx-swap="outerHTML"

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
@@ -96,7 +97,7 @@ templ insulinDosePageButton(id string, label string, skip int64, limit int64) {
 templ insulinDoseCreateForm() {
 	<form
 		id="site--insulin--create"
-		class="mb-4 flex items-center justify-end gap-2"
+		class="mb-4 flex items-end justify-end gap-2"
 		hx-post="/data/insulin"
 		hx-target="#insulinDosesTable tbody"
 		hx-swap="afterbegin"
@@ -112,7 +113,7 @@ templ insulinDoseCreateForm() {
 }
 
 templ insulinDoseInputs(id string, dose string, notes string) {
-	<div class="w-28">
+	@field.Field(id+"--dose", "Dose (U)", "w-28") {
 		@input.Input(input.Props{
 			ID:          id + "--dose",
 			Type:        input.TypeNumber,
@@ -122,10 +123,10 @@ templ insulinDoseInputs(id string, dose string, notes string) {
 			Required:    true,
 			Attributes:  templ.Attributes{"step": "any", "min": "0.01", "max": "100"},
 		})
-	</div>
-	<div class="w-64">
+	}
+	@field.Field(id+"--notes", "Notes", "w-64") {
 		@input.Input(input.Props{ID: id + "--notes", Name: "notes", Placeholder: "Notes", Value: notes})
-	</div>
+	}
 }
 
 // insulinDoseRow opens the insulin dose's details when clicked. The delete button stops its click reaching the row.
@@ -184,7 +185,7 @@ templ InsulinDoseModal(insulinDose *sitemodels.SiteInsulinDose) {
 	@modal.Modal(modal.Props{ID: "site--insulin--details", Title: fmt.Sprintf("%v units", insulinDose.Dose), Subtitle: formatReadingDate(insulinDose.OccurredAt)}) {
 		<form
 			id="site--insulin--edit"
-			class="mt-4 flex items-center gap-2"
+			class="mt-4 flex items-end gap-2"
 			hx-post={ "/data/insulin/" + insulinDose.ID }
 			hx-target={ "#site--insulin--" + insulinDose.ID }
 			hx-swap="outerHTML"

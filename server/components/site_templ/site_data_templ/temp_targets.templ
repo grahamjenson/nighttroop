@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
@@ -99,7 +100,7 @@ templ tempTargetPageButton(id string, label string, skip int64, limit int64) {
 templ tempTargetCreateForm() {
 	<form
 		id="site--temp-target--create"
-		class="mb-4 flex items-center justify-end gap-2"
+		class="mb-4 flex items-end justify-end gap-2"
 		hx-post="/data/temp-targets"
 		hx-target="#tempTargetsTable tbody"
 		hx-swap="afterbegin"
@@ -115,7 +116,7 @@ templ tempTargetCreateForm() {
 }
 
 templ tempTargetInputs(id string, low string, high string, duration string, notes string) {
-	<div class="w-32">
+	@field.Field(id+"--low", "Low ("+string(*glucoseUnits(ctx))+")", "w-32") {
 		@input.Input(input.Props{
 			ID:          id + "--low",
 			Type:        input.TypeNumber,
@@ -125,8 +126,8 @@ templ tempTargetInputs(id string, low string, high string, duration string, note
 			Required:    true,
 			Attributes:  glucoseInputAttributes(ctx),
 		})
-	</div>
-	<div class="w-32">
+	}
+	@field.Field(id+"--high", "High ("+string(*glucoseUnits(ctx))+")", "w-32") {
 		@input.Input(input.Props{
 			ID:          id + "--high",
 			Type:        input.TypeNumber,
@@ -136,8 +137,8 @@ templ tempTargetInputs(id string, low string, high string, duration string, note
 			Required:    true,
 			Attributes:  glucoseInputAttributes(ctx),
 		})
-	</div>
-	<div class="w-28">
+	}
+	@field.Field(id+"--duration", "Duration (min)", "w-28") {
 		@input.Input(input.Props{
 			ID:          id + "--duration",
 			Type:        input.TypeNumber,
@@ -147,10 +148,10 @@ templ tempTargetInputs(id string, low string, high string, duration string, note
 			Required:    true,
 			Attributes:  templ.Attributes{"step": "1", "min": "1", "max": "10080"},
 		})
-	</div>
-	<div class="w-64">
+	}
+	@field.Field(id+"--notes", "Notes", "w-64") {
 		@input.Input(input.Props{ID: id + "--notes", Name: "notes", Placeholder: "Notes", Value: notes})
-	</div>
+	}
 }
 
 // tempTargetRow opens the temp target's details when clicked. The delete button stops its click reaching the row.
@@ -212,7 +213,7 @@ templ TempTargetModal(tempTarget *sitemodels.SiteTempTarget) {
 	@modal.Modal(modal.Props{ID: "site--temp-target--details", Title: fmt.Sprintf("%s to %s %s for %d minutes", formatGlucose(tempTarget.LowTarget, tempTarget.Units), formatGlucose(tempTarget.HighTarget, tempTarget.Units), orDash(tempTarget.Units), tempTarget.DurationMinutes), Subtitle: formatReadingDate(tempTarget.OccurredAt)}) {
 		<form
 			id="site--temp-target--edit"
-			class="mt-4 flex items-center gap-2"
+			class="mt-4 flex items-end gap-2"
 			hx-post={ "/data/temp-targets/" + tempTarget.ID }
 			hx-target={ "#site--temp-target--" + tempTarget.ID }
 			hx-swap="outerHTML"
