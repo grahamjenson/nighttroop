@@ -402,6 +402,36 @@ func (m *SearchErrorsParams) SetLimit(v int64) {
 	m.Limit = v
 }
 
+// GetID returns the ID value.
+func (m GetLogParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated GetLogParams.
+func (m *GetLogParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetID returns the ID value.
+func (m GetEventParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated GetEventParams.
+func (m *GetEventParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetID returns the ID value.
+func (m GetErrorParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated GetErrorParams.
+func (m *GetErrorParams) SetID(v int64) {
+	m.ID = v
+}
+
 // GetSiteID returns the SiteID value.
 func (m SearchSiteEventsParams) GetSiteID() *string {
 	return m.SiteID

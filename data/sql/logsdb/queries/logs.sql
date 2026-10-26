@@ -36,6 +36,15 @@ WHERE CAST(sqlc.narg('SiteID') AS TEXT) IS NULL OR site_id = sqlc.narg('SiteID')
 ORDER BY id DESC
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
+-- name: GetLog :one
+SELECT * FROM logs WHERE id = sqlc.arg('ID');
+
+-- name: GetEvent :one
+SELECT * FROM events WHERE id = sqlc.arg('ID');
+
+-- name: GetError :one
+SELECT * FROM errors WHERE id = sqlc.arg('ID');
+
 -- name: SearchSiteEvents :many
 -- Newest first, the site's own events and its batch's, which is all a site may see
 SELECT * FROM events

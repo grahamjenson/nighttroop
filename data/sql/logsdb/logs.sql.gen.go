@@ -10,6 +10,72 @@ import (
 	"database/sql"
 )
 
+const getError = `-- name: GetError :one
+SELECT id, site_id, message, attributes, created_at FROM errors WHERE id = ?1
+`
+
+type GetErrorParams struct {
+	ID int64
+}
+
+func (q *Queries) GetError(ctx context.Context, arg GetErrorParams) (*Error, error) {
+	row := q.queryRow(ctx, q.getErrorStmt, getError, arg.ID)
+	var i Error
+	err := row.Scan(
+		&i.ID,
+		&i.SiteID,
+		&i.Message,
+		&i.Attributes,
+		&i.CreatedAt,
+	)
+	return &i, err
+}
+
+const getEvent = `-- name: GetEvent :one
+SELECT id, site_id, batch, name, attributes, started_at, finished_at FROM events WHERE id = ?1
+`
+
+type GetEventParams struct {
+	ID int64
+}
+
+func (q *Queries) GetEvent(ctx context.Context, arg GetEventParams) (*Event, error) {
+	row := q.queryRow(ctx, q.getEventStmt, getEvent, arg.ID)
+	var i Event
+	err := row.Scan(
+		&i.ID,
+		&i.SiteID,
+		&i.Batch,
+		&i.Name,
+		&i.Attributes,
+		&i.StartedAt,
+		&i.FinishedAt,
+	)
+	return &i, err
+}
+
+const getLog = `-- name: GetLog :one
+SELECT id, site_id, level, message, attributes, created_at FROM logs WHERE id = ?1
+`
+
+type GetLogParams struct {
+	ID int64
+}
+
+func (q *Queries) GetLog(ctx context.Context, arg GetLogParams) (*Log, error) {
+	row := q.queryRow(ctx, q.getLogStmt, getLog, arg.ID)
+	var i Log
+	err := row.Scan(
+		&i.ID,
+		&i.SiteID,
+		&i.Level,
+		&i.Message,
+		&i.Attributes,
+		&i.CreatedAt,
+	)
+	return &i, err
+}
+
 const getSiteError = `-- name: GetSiteError :one
 SELECT id, site_id, message, attributes, created_at FROM errors WHERE id = ?1 AND site_id = ?2
 `

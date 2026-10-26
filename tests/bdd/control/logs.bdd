@@ -1,0 +1,44 @@
+// A new site, so there is a site_created event to see
+GOTO {{ server_url}}/
+ASSERT_STATUS 200
+CLICK "Create Site"
+ASSERT_STATUS 200
+RUN_BACKGROUND_JOBS
+
+GOTO {{ .control_url }}/login
+ASSERT_STATUS 200
+INPUT #name admin
+INPUT #password password
+INPUT #control--login--otp-1 123123
+CLICK #control--login-button
+ASSERT_VISIBLE #controlSitesTable
+
+// The control site shows every site's and the server's events, newest first
+CLICK #control--menu
+CLICK #control--events-button
+ASSERT_STATUS 200
+ASSERT_PATH /events
+ASSERT_VISIBLE #controlEventsTable
+ASSERT_TEXT_VISIBLE site_created
+SCREENSHOT events
+
+// Clicking an event shows when it started and how long it took
+CLICK #controlEventsTable tbody tr >> nth=0
+ASSERT_VISIBLE #control--event--details
+ASSERT_TEXT_VISIBLE Started
+ASSERT_TEXT_VISIBLE Duration
+SCREENSHOT event_details
+CLICK #control--event--details--close
+ASSERT_NOT_VISIBLE #control--event--details
+
+// Errors and logs have pages of their own
+CLICK #control--menu
+CLICK #control--errors-button
+ASSERT_PATH /errors
+ASSERT_VISIBLE #controlErrorsTable
+SCREENSHOT errors
+
+CLICK #control--menu
+CLICK #control--logs-button
+ASSERT_PATH /logs
+ASSERT_VISIBLE #controlLogsTable
