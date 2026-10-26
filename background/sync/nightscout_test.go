@@ -2,6 +2,7 @@ package sync
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -85,7 +86,8 @@ func TestNightscoutClientIsKeptBetweenSyncs(t *testing.T) {
 	}
 	runSync := func() *nightscoutClient {
 		require.NoError(t, jobs.SyncSource(ctx, SyncJobParams{SiteID: siteID, Type: typ}))
-		return jobs.nightscoutClients[siteID]
+		client, _ := jobs.nightscoutClients.Get(siteID)
+		return client
 	}
 
 	// The second sync uses the first's client, and so its JWT
@@ -99,7 +101,27 @@ func TestNightscoutClientIsKeptBetweenSyncs(t *testing.T) {
 	second := runSync()
 	require.NotSame(t, first, second)
 	require.Equal(t, "new-token", second.token)
-	require.Len(t, jobs.nightscoutClients, 1)
+	require.Equal(t, 1, jobs.nightscoutClients.Len())
+}
+
+func TestNightscoutClientsAreBounded(t *testing.T) {
+	cfg, controlDB, _, err := testutils.GetConfigControlDBAndSiteDBForTest()
+	require.NoError(t, err)
+	jobs := SetupSyncJobManager(cfg, controlDB)
+	clientFor := func(i int) *nightscoutClient {
+		return jobs.nightscoutClientFor(&SyncJobInfo{SiteID: fmt.Sprintf("site-%d", i), urlOrUsername: nightscout_client.TestValidURL, password: "token"})
+	}
+
+	// Once there are too many, the least recently used site's client is dropped
+	first := clientFor(0)
+	for i := 1; i < maxNightscoutClients; i++ {
+		clientFor(i)
+	}
+	require.Same(t, first, clientFor(0), "using it makes site-1 the least recently used")
+	clientFor(maxNightscoutClients)
+	require.Equal(t, maxNightscoutClients, jobs.nightscoutClients.Len())
+	require.True(t, jobs.nightscoutClients.Contains("site-0"))
+	require.False(t, jobs.nightscoutClients.Contains("site-1"))
 }
 
 func TestNightscoutSyncCopiesEntriesTreatmentsAndDeviceStatuses(t *testing.T) {
