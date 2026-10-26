@@ -82,8 +82,6 @@ type ScheduleValue struct {
 }
 
 func (t *ScheduleValue) UnmarshalJSON(data []byte) error {
-	type Alias ScheduleValue
-
 	aux := struct {
 		Time          *ScheduleTime        `json:"time,omitempty"`
 		TimeAsSeconds *types.FlexibleInt64 `json:"timeAsSeconds,omitempty"`
