@@ -12,8 +12,6 @@ import (
 )
 
 func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Router {
-	//STORES
-
 	r := chi.NewRouter()
 	httputils.AddStandardMiddleware(r, config)
 
@@ -48,8 +46,7 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 			r.Post("/settings/"+route, store.Collection(route).Update)
 		}
 
-		// Data Glucose Readings
-
+		// The site's collections, each at its route under data or settings
 		r.Get("/data/{collection}", store.CollectionSearchHandler)
 		r.Get("/data/{collection}/{id}", store.CollectionGetHandler)
 		r.Post("/data/{collection}", store.CollectionCreateHandler)

@@ -130,47 +130,28 @@ func answerNotFound(status int, message string) http.HandlerFunc {
 	}
 }
 
-func notFoundHandlerCollection(w http.ResponseWriter, r *http.Request, name string) {
-	answerNotFound(http.StatusNotFound, "There is no "+name+" here")(w, r)
+// routes are those of the collection the request names, or ones answering that there is no such collection
+func (s *SiteStore) routes(r *http.Request) *SiteCollectionRoutes {
+	name := chi.URLParam(r, "collection")
+	if routes, exists := s.collectionRoutes[name]; exists {
+		return routes
+	}
+	missing := answerNotFound(http.StatusNotFound, "There is no "+name+" here")
+	return &SiteCollectionRoutes{Search: missing, Get: missing, Create: missing, Update: missing, Delete: missing}
 }
 
 func (s *SiteStore) CollectionSearchHandler(w http.ResponseWriter, r *http.Request) {
-	name := chi.URLParam(r, "collection")
-	if routes, exists := s.collectionRoutes[name]; exists {
-		routes.Search(w, r)
-		return
-	}
-	notFoundHandlerCollection(w, r, name)
+	s.routes(r).Search(w, r)
 }
 func (s *SiteStore) CollectionGetHandler(w http.ResponseWriter, r *http.Request) {
-	name := chi.URLParam(r, "collection")
-	if routes, exists := s.collectionRoutes[name]; exists {
-		routes.Get(w, r)
-		return
-	}
-	notFoundHandlerCollection(w, r, name)
+	s.routes(r).Get(w, r)
 }
 func (s *SiteStore) CollectionCreateHandler(w http.ResponseWriter, r *http.Request) {
-	name := chi.URLParam(r, "collection")
-	if routes, exists := s.collectionRoutes[name]; exists {
-		routes.Create(w, r)
-		return
-	}
-	notFoundHandlerCollection(w, r, name)
+	s.routes(r).Create(w, r)
 }
 func (s *SiteStore) CollectionUpdateHandler(w http.ResponseWriter, r *http.Request) {
-	name := chi.URLParam(r, "collection")
-	if routes, exists := s.collectionRoutes[name]; exists {
-		routes.Update(w, r)
-		return
-	}
-	notFoundHandlerCollection(w, r, name)
+	s.routes(r).Update(w, r)
 }
 func (s *SiteStore) CollectionDeleteHandler(w http.ResponseWriter, r *http.Request) {
-	name := chi.URLParam(r, "collection")
-	if routes, exists := s.collectionRoutes[name]; exists {
-		routes.Delete(w, r)
-		return
-	}
-	notFoundHandlerCollection(w, r, name)
+	s.routes(r).Delete(w, r)
 }
