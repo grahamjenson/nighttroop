@@ -9,9 +9,11 @@ import (
 	"nighttroop.t1d.nz/utils/apiutils"
 
 	"github.com/a-h/templ"
+	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/server/components/control_templ/control_sites_templ"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/s3utils"
 )
@@ -119,4 +121,32 @@ func (s *SitesCollection) archive(ctx context.Context, controlContext *httputils
 
 func (s *SitesCollection) UpdateHTMXResponse(model *controlmodels.Site) templ.Component {
 	return control_sites_templ.SiteUpdated(model)
+}
+
+// TruncateHandler clears the raw JSON a site over its DB size limit keeps, then shrinks its DB. Only admins can.
+func (s *SitesCollection) TruncateHandler(w http.ResponseWriter, r *http.Request) {
+	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
+	if controlContext.IdentityModel.Role != consts.ControlRoleAdmin {
+		apiutils.ErrForbidden.Write(acceptType, w)
+		return
+	}
+	site, herr := get(r.Context(), s, chi.URLParam(r, "id"), controlContext)
+	if herr == nil && site == nil {
+		herr = apiutils.ErrNotFound
+	}
+	if herr == nil && !site.Oversized() {
+		herr = apiutils.ErrConstraintCheckFailedWithHint("only a site over its DB size limit can be truncated")
+	}
+	if herr == nil {
+		sizeKB, err := controlContext.ControlDB.TruncateSite(r.Context(), site.ID)
+		if herr = answer(err, s.GetName()); herr == nil {
+			controlContext.ControlDB.Logs.SiteTruncatedEvent(r.Context(), site.ID, controlContext.IdentityModel.Name, site.EstimatedDbSizeKb, sizeKB)
+			site, herr = get(r.Context(), s, site.ID, controlContext)
+		}
+	}
+	if herr != nil {
+		herr.Write(acceptType, w)
+		return
+	}
+	WriteResponse(w, r, acceptType, http.StatusOK, site, control_sites_templ.SiteTruncated(site))
 }

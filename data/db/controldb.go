@@ -282,6 +282,33 @@ func (db *ControlDB) ArchiveSite(ctx context.Context, subdomain string, upload f
 	return nil
 }
 
+// TruncateSite clears the raw JSON a site's DB keeps of what each row was sent, keeping all its data, then shrinks the
+// DB and records its new size, which it returns
+func (db *ControlDB) TruncateSite(ctx context.Context, subdomain string) (*int64, error) {
+	db.sitesRWLock.RLock()
+	site, ok := db.sites[subdomain]
+	db.sitesRWLock.RUnlock()
+	if !ok {
+		return nil, fmt.Errorf("site %s is not open", subdomain)
+	}
+	q := site.Queries
+	for _, clear := range []func(context.Context) error{
+		q.ClearActivitiesRawJSON, q.ClearComponentEventsRawJSON, q.ClearDeviceReportsRawJSON, q.ClearEventGroupsRawJSON,
+		q.ClearFoodIntakesRawJSON, q.ClearFoodPresetsRawJSON, q.ClearGlucoseReadingsRawJSON, q.ClearInsulinDosesRawJSON,
+		q.ClearNotificationEventsRawJSON, q.ClearProfilePresetsRawJSON, q.ClearProfileSwitchesRawJSON,
+		q.ClearTempBasalsRawJSON, q.ClearTempTargetsRawJSON,
+	} {
+		if err := clear(ctx); err != nil {
+			return nil, fmt.Errorf("cannot clear raw json of site %s: %w", subdomain, err)
+		}
+	}
+	if err := site.Vacuum(ctx); err != nil {
+		return nil, fmt.Errorf("cannot vacuum site %s: %w", subdomain, err)
+	}
+	sizeKB := site.EstimatedSizeKB()
+	return sizeKB, db.Queries.UpdateSiteDateFlags(ctx, controldb.UpdateSiteDateFlagsParams{EstimatedDbSizeKb: sizeKB, ID: subdomain})
+}
+
 ////
 // END OF DELETE USER METHODS
 ////

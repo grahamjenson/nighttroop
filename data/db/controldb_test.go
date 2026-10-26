@@ -97,3 +97,25 @@ func TestArchiveSite(t *testing.T) {
 	// It is no longer open, so it cannot be archived again
 	require.ErrorContains(t, controlDB.ArchiveSite(ctx, siteID, func(string, []string) error { return nil }), "is not open")
 }
+
+func TestTruncateSite(t *testing.T) {
+	_, controlDB, site, err := testutils.GetConfigControlDBAndSiteDBForTest()
+	require.NoError(t, err)
+	ctx, q := context.TODO(), site.SiteDB.Queries
+	raw := `{"sgv":120,"device":"phone"}`
+	reading, err := q.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "reading", Mgdl: 120, ReadingType: "sgv", OccurredAt: 1, RawJsonData: &raw, CreatedByIdentityName: "phone"})
+	require.NoError(t, err)
+	require.NotNil(t, reading.RawJsonData)
+
+	// The raw JSON is cleared and the DB shrunk; an in-memory DB has no size to record
+	sizeKB, err := controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
+	require.NoError(t, err)
+	require.Nil(t, sizeKB)
+	reading, err = q.GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: "reading"})
+	require.NoError(t, err)
+	require.Nil(t, reading.RawJsonData)
+	require.Equal(t, float64(120), reading.Mgdl, "the reading itself is kept")
+
+	_, err = controlDB.TruncateSite(ctx, "not-a-site")
+	require.ErrorContains(t, err, "is not open")
+}

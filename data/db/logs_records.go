@@ -20,6 +20,7 @@ const (
 	EventSiteDisabled      EventName = "site_disabled"
 	EventSiteDeleted       EventName = "site_deleted"
 	EventSiteArchived      EventName = "site_archived"
+	EventSiteTruncated     EventName = "site_truncated"
 	EventSiteBatchBackedUp EventName = "site_batch_backed_up"
 	EventControlBackedUp   EventName = "control_backed_up"
 	EventSyncTurnedOff     EventName = "sync_turned_off"
@@ -69,6 +70,17 @@ type SiteArchivedAttributes struct {
 // SiteArchivedEvent records a control identity archiving a site
 func (l *LogsDB) SiteArchivedEvent(ctx context.Context, siteID string, by string) {
 	l.event(ctx, &siteID, EventSiteArchived, SiteArchivedAttributes{By: by})
+}
+
+type SiteTruncatedAttributes struct {
+	By           string `json:"by"`
+	BeforeSizeKB *int64 `json:"before_size_kb"`
+	AfterSizeKB  *int64 `json:"after_size_kb"`
+}
+
+// SiteTruncatedEvent records a control identity truncating a site's DB, and its size before and after
+func (l *LogsDB) SiteTruncatedEvent(ctx context.Context, siteID string, by string, beforeSizeKB *int64, afterSizeKB *int64) {
+	l.event(ctx, &siteID, EventSiteTruncated, SiteTruncatedAttributes{By: by, BeforeSizeKB: beforeSizeKB, AfterSizeKB: afterSizeKB})
 }
 
 type SiteDeletedAttributes struct {
