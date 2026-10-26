@@ -5,6 +5,7 @@ import (
 	"io"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/mxschmitt/playwright-go"
 	"golang.org/x/net/html"
@@ -105,6 +106,14 @@ func renderTemplate(input string, ctx map[string]any) (string, error) {
 					return ctx["site"].(string)
 				}
 				return ctx["default_site"].(string)
+			},
+			// now is the time in a timezone, e.g. {{ now "Pacific/Auckland" "2006-01-02 15:" }}
+			"now": func(zone string, layout string) (string, error) {
+				location, err := time.LoadLocation(zone)
+				if err != nil {
+					return "", err
+				}
+				return time.Now().In(location).Format(layout), nil
 			},
 			"jwt": func() string {
 				if v, ok := ctx["jwt"]; ok && v != nil {

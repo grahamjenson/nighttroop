@@ -127,7 +127,7 @@ templ activityRow(activity *sitemodels.SiteActivity) {
 		},
 	}) {
 		@table.Cell() {
-			{ formatReadingDate(activity.OccurredAt) }
+			{ formatReadingDate(ctx, activity.OccurredAt) }
 		}
 		@table.Cell() {
 			{ activity.ActivityType }
@@ -170,7 +170,7 @@ templ activityRow(activity *sitemodels.SiteActivity) {
 }
 
 templ ActivityModal(activity *sitemodels.SiteActivity) {
-	@modal.Modal(modal.Props{ID: "site--activity--details", Title: fmt.Sprintf("%s: %s", activity.ActivityType, orDash(activity.Name)), Subtitle: formatReadingDate(activity.OccurredAt)}) {
+	@modal.Modal(modal.Props{ID: "site--activity--details", Title: fmt.Sprintf("%s: %s", activity.ActivityType, orDash(activity.Name)), Subtitle: formatReadingDate(ctx, activity.OccurredAt)}) {
 		<form
 			id="site--activity--edit"
 			class="mt-4 flex items-end gap-2"
@@ -198,8 +198,8 @@ templ ActivityModal(activity *sitemodels.SiteActivity) {
 			@readingDetail("App", orDash(activity.CreatedByAppName))
 			@readingDetail("Device", orDash(activity.CreatedByDeviceName))
 			@readingDetail("Created By", activity.CreatedByIdentityName)
-			@readingDetail("Created", formatReadingDate(activity.CreatedAt))
-			@readingDetail("Updated", formatReadingDate(activity.UpdatedAt))
+			@readingDetail("Created", formatReadingDate(ctx, activity.CreatedAt))
+			@readingDetail("Updated", formatReadingDate(ctx, activity.UpdatedAt))
 			@readingDetail("Updated By", orDash(activity.UpdatedByIdentityName))
 		</dl>
 		@modal.RawJSON("site--activity--details--raw", activity.RawJsonData)

@@ -20,8 +20,13 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-func formatReadingDate(ms int64) string {
-	return time.UnixMilli(ms).Format("2006-01-02 15:04:05")
+// formatReadingDate shows a time in the timezone of the identity's, site's or default settings
+func formatReadingDate(ctx context.Context, ms int64) string {
+	location := time.UTC
+	if siteContext := httputils.GetSiteContext(ctx); siteContext != nil {
+		location = siteContext.GetSettings().Location()
+	}
+	return time.UnixMilli(ms).In(location).Format("2006-01-02 15:04:05")
 }
 
 // FormatGlucose and FormatDate show glucose and times the same way on other pages
@@ -154,7 +159,7 @@ templ glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) {
 		},
 	}) {
 		@table.Cell() {
-			{ formatReadingDate(reading.OccurredAt) }
+			{ formatReadingDate(ctx, reading.OccurredAt) }
 		}
 		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ formatGlucose(reading.Reading, reading.Units) }
@@ -194,7 +199,7 @@ templ glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) {
 }
 
 templ GlucoseReadingModal(reading *sitemodels.SiteGlucoseReading) {
-	@modal.Modal(modal.Props{ID: "site--glucose--details", Title: formatGlucose(reading.Reading, reading.Units) + " " + orDash(reading.Units), Subtitle: formatReadingDate(reading.OccurredAt)}) {
+	@modal.Modal(modal.Props{ID: "site--glucose--details", Title: formatGlucose(reading.Reading, reading.Units) + " " + orDash(reading.Units), Subtitle: formatReadingDate(ctx, reading.OccurredAt)}) {
 		<form
 			id="site--glucose--edit"
 			class="mt-4 flex items-end gap-2"
@@ -227,8 +232,8 @@ templ GlucoseReadingModal(reading *sitemodels.SiteGlucoseReading) {
 			@readingDetail("App", orDash(reading.CreatedByAppName))
 			@readingDetail("Device", orDash(reading.CreatedByDeviceName))
 			@readingDetail("Created By", reading.CreatedByIdentityName)
-			@readingDetail("Created", formatReadingDate(reading.CreatedAt))
-			@readingDetail("Updated", formatReadingDate(reading.UpdatedAt))
+			@readingDetail("Created", formatReadingDate(ctx, reading.CreatedAt))
+			@readingDetail("Updated", formatReadingDate(ctx, reading.UpdatedAt))
 			@readingDetail("Updated By", orDash(reading.UpdatedByIdentityName))
 		</dl>
 		@modal.RawJSON("site--glucose--details--raw", reading.RawJsonData)

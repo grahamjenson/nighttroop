@@ -139,7 +139,7 @@ templ tempTargetRow(tempTarget *sitemodels.SiteTempTarget) {
 		},
 	}) {
 		@table.Cell() {
-			{ formatReadingDate(tempTarget.OccurredAt) }
+			{ formatReadingDate(ctx, tempTarget.OccurredAt) }
 		}
 		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ formatGlucose(tempTarget.LowTarget, tempTarget.Units) }
@@ -182,7 +182,7 @@ templ tempTargetRow(tempTarget *sitemodels.SiteTempTarget) {
 }
 
 templ TempTargetModal(tempTarget *sitemodels.SiteTempTarget) {
-	@modal.Modal(modal.Props{ID: "site--temp-target--details", Title: fmt.Sprintf("%s to %s %s for %d minutes", formatGlucose(tempTarget.LowTarget, tempTarget.Units), formatGlucose(tempTarget.HighTarget, tempTarget.Units), orDash(tempTarget.Units), tempTarget.DurationMinutes), Subtitle: formatReadingDate(tempTarget.OccurredAt)}) {
+	@modal.Modal(modal.Props{ID: "site--temp-target--details", Title: fmt.Sprintf("%s to %s %s for %d minutes", formatGlucose(tempTarget.LowTarget, tempTarget.Units), formatGlucose(tempTarget.HighTarget, tempTarget.Units), orDash(tempTarget.Units), tempTarget.DurationMinutes), Subtitle: formatReadingDate(ctx, tempTarget.OccurredAt)}) {
 		<form
 			id="site--temp-target--edit"
 			class="mt-4 flex items-end gap-2"
@@ -207,8 +207,8 @@ templ TempTargetModal(tempTarget *sitemodels.SiteTempTarget) {
 			@readingDetail("App", orDash(tempTarget.CreatedByAppName))
 			@readingDetail("Device", orDash(tempTarget.CreatedByDeviceName))
 			@readingDetail("Created By", tempTarget.CreatedByIdentityName)
-			@readingDetail("Created", formatReadingDate(tempTarget.CreatedAt))
-			@readingDetail("Updated", formatReadingDate(tempTarget.UpdatedAt))
+			@readingDetail("Created", formatReadingDate(ctx, tempTarget.CreatedAt))
+			@readingDetail("Updated", formatReadingDate(ctx, tempTarget.UpdatedAt))
 			@readingDetail("Updated By", orDash(tempTarget.UpdatedByIdentityName))
 		</dl>
 		@modal.RawJSON("site--temp-target--details--raw", tempTarget.RawJsonData)
