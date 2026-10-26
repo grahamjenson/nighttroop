@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	gosync "sync"
 
 	"nighttroop.t1d.nz/background/cron"
 	"nighttroop.t1d.nz/background/liteq"
@@ -28,6 +29,10 @@ type SyncJobManager struct {
 
 	// For Nightscout API
 	nightscoutStore *nightscoutapi.NightTroopAPIStore
+
+	// Each site's Nightscout client, kept between syncs
+	nightscoutClientsLock gosync.Mutex
+	nightscoutClients     map[string]*nightscoutClient
 }
 
 type SyncJobParams struct {
@@ -62,6 +67,7 @@ func SetupSyncJobManager(config *config.ServerConfig, controlDB *db.ControlDB) *
 		SyncIntervalInSeconds: config.SyncIntervalInSeconds,
 		BackgroundSyncWorkers: config.BackgroundSyncWorkers,
 		nightscoutStore:       nightscoutapi.NewNightTroopAPIStore(controlDB, config),
+		nightscoutClients:     map[string]*nightscoutClient{},
 	}
 
 	return jobs

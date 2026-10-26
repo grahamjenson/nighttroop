@@ -67,3 +67,32 @@ func TestNightscoutSyncRemembersWhenEntriesWereModified(t *testing.T) {
 	require.NoError(t, q.DeleteSyncSource(ctx, controldb.DeleteSyncSourceParams{SiteID: siteID, Type: typ}))
 	require.Nil(t, lastModified())
 }
+
+func TestNightscoutClientIsKeptBetweenSyncs(t *testing.T) {
+	cfg, controlDB, site, err := testutils.GetConfigControlDBAndSiteDBForTest()
+	require.NoError(t, err)
+	q, ctx, siteID, typ := controlDB.Queries, context.TODO(), site.SiteDB.Subdomain, consts.SyncSourceTypeNightscout
+	jobs := SetupSyncJobManager(cfg, controlDB)
+	enc := func(s string) *string {
+		v, err := cfg.Security.Encrypt(s)
+		require.NoError(t, err)
+		return &v
+	}
+	runSync := func() *nightscoutClient {
+		require.NoError(t, jobs.SyncSource(ctx, SyncJobParams{SiteID: siteID, Type: typ}))
+		return jobs.nightscoutClients[siteID]
+	}
+
+	// The second sync uses the first's client, and so its JWT
+	require.NoError(t, q.CreateSyncSource(ctx, controldb.CreateSyncSourceParams{SiteID: siteID, Type: typ, UrlOrUsernameEnc: enc(nightscout_client.TestValidURL), PasswordEnc: enc("token"), Enabled: true}))
+	first := runSync()
+	require.NotNil(t, first)
+	require.Same(t, first, runSync())
+
+	// A new token gets a new client, which replaces the old one
+	require.NoError(t, q.UpdateSyncSource(ctx, controldb.UpdateSyncSourceParams{SiteID: siteID, Type: typ, PasswordEnc: enc("new-token"), Enabled: true}))
+	second := runSync()
+	require.NotSame(t, first, second)
+	require.Equal(t, "new-token", second.token)
+	require.Len(t, jobs.nightscoutClients, 1)
+}

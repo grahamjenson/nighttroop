@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	gosync "sync"
 	"time"
 
 	"nighttroop.t1d.nz/clients/nightscout_client"
@@ -12,12 +13,35 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
+// nightscoutClient is a site's Nightscout client, kept between syncs so its JWT is reused
+// until it expires rather than requested every sync. Its lock stops two syncs using it at once.
+type nightscoutClient struct {
+	gosync.Mutex
+	url, token string
+	*nightscout_client.Client
+}
+
+// nightscoutClientFor returns the site's kept client, or a new one when there is none or its URL or token has changed.
+// There is at most one per site, so saving new details many times does not grow them.
+func (b *SyncJobManager) nightscoutClientFor(syncInfo *SyncJobInfo) *nightscoutClient {
+	b.nightscoutClientsLock.Lock()
+	defer b.nightscoutClientsLock.Unlock()
+	c := b.nightscoutClients[syncInfo.SiteID]
+	if c == nil || c.url != syncInfo.urlOrUsername || c.token != syncInfo.password {
+		c = &nightscoutClient{url: syncInfo.urlOrUsername, token: syncInfo.password, Client: nightscout_client.NewClient(syncInfo.urlOrUsername, syncInfo.password)}
+		b.nightscoutClients[syncInfo.SiteID] = c
+	}
+	return c
+}
+
 func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 	if len(syncInfo.UserSyncSources) == 0 {
 		return fmt.Errorf("Nightscout: No user sync sources found for site_id %s type %s", syncInfo.SiteID, syncInfo.Type)
 	}
 
-	nsc := nightscout_client.NewClient(syncInfo.urlOrUsername, syncInfo.password)
+	nsc := b.nightscoutClientFor(syncInfo)
+	nsc.Lock()
+	defer nsc.Unlock()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()

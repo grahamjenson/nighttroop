@@ -132,3 +132,38 @@ func TestGetLastModified(t *testing.T) {
 		})
 	}
 }
+
+func TestRequestsRefreshAJWTCloseToExpiring(t *testing.T) {
+	tests := []struct {
+		name      string
+		expiresIn time.Duration
+		refreshed bool
+	}{
+		{"an hour left", time.Hour, false},
+		{"seconds left", 30 * time.Second, true},
+		{"expired", -time.Minute, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			hits := 0
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				hits++
+				_, _ = w.Write([]byte(`{"result":{"collections":{"entries":1}}}`))
+			}))
+			defer srv.Close()
+			c := liveClient(srv.URL)
+			expire := time.Now().Add(tt.expiresIn)
+			c.jwtExpire = &expire
+
+			// Under go test a refresh only works for TestValidURL, so refreshing this server's JWT fails before any request
+			_, err := c.GetLastModified(context.Background())
+			if tt.refreshed {
+				require.ErrorIs(t, err, ErrJWTNoHost)
+				require.Equal(t, 0, hits)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, 1, hits)
+			}
+		})
+	}
+}

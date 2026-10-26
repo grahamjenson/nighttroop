@@ -35,6 +35,8 @@ const TestEntriesLastModified int64 = 1_700_000_000_000
 const (
 	maxResponseBytes = 1 << 20 // a Nightscout response body larger than this is refused
 	maxResultItems   = 1000    // the sync only ever asks for a handful of entries
+	// A JWT this close to expiring is refreshed first, so a kept client never sends an expired one
+	jwtRefreshMargin = time.Minute
 )
 
 type Client struct {
@@ -76,7 +78,7 @@ func (c *Client) doRequest(
 	method string,
 	url string,
 ) (map[string]any, error) {
-	if c.jwt == nil || c.jwtExpire == nil || time.Now().After(*c.jwtExpire) {
+	if c.jwt == nil || c.jwtExpire == nil || time.Now().Add(jwtRefreshMargin).After(*c.jwtExpire) {
 		err := c.refreshJWT()
 		if err != nil {
 			return nil, fmt.Errorf("error refreshing JWT: %w", err)
