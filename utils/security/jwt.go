@@ -157,7 +157,7 @@ func (config *SecurityConfig) VerifyUserJWTToken(tokenStr string) (string, strin
 
 	verifiedJWT, err := config.jwtMac.VerifyMACAndDecode(tokenStr, config.jwtUserValidator)
 	if err != nil {
-		slog.Error("Failed to VerifyMACAndDecode user JWT token ", "error", err)
+		slog.Info("Failed to VerifyMACAndDecode user JWT token ", "error", err)
 		return "", "", "", err
 	}
 

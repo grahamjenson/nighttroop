@@ -108,7 +108,7 @@ func ExtractModelFromRequest[T any](contentType httputils.ContentType, r *http.R
 	switch contentType {
 	case httputils.ContentTypeJSON:
 		if err := ReadJSON(r, &doc); err != nil || len(doc) == 0 {
-			slog.Error("failed to read JSON body", "error", err)
+			slog.Info("failed to read JSON body", "error", err)
 			return nil, ErrBadBody
 
 		}
@@ -126,7 +126,7 @@ func ExtractModelFromRequest[T any](contentType httputils.ContentType, r *http.R
 	model := new(T)
 	err := utils.FromMap(doc, model)
 	if err != nil {
-		slog.Error("failed to convert doc to model", "error", err)
+		slog.Info("failed to convert doc to model", "error", err)
 		return nil, ErrBadBody
 	}
 	return model, nil
