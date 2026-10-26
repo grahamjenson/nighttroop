@@ -14,12 +14,12 @@ import (
 	"nighttroop.t1d.nz/utils/config"
 )
 
-// AddStandardMiddleware adds what every router has, recording its server errors in logs when it is set
-func AddStandardMiddleware(router chi.Router, config *config.ServerConfig, logs *db.LogsDB) {
+// AddStandardMiddleware adds what every router has, recording its server errors in the logs DB when there is one
+func AddStandardMiddleware(router chi.Router, config *config.ServerConfig, controlDB *db.ControlDB) {
 	router.Use(middleware.RequestID)
-	if logs != nil {
+	if controlDB != nil {
 		// Before the recoverer, so a panic's 500 is recorded too
-		router.Use(RecordServerErrors(logs))
+		router.Use(RecordServerErrors(controlDB.Logs))
 	}
 
 	if config.SentryDSN != "" {

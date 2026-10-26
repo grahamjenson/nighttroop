@@ -21,7 +21,7 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config *config.ServerConfig) c
 	store := NewNightTroopAPIStore(controlDB, config)
 
 	r := chi.NewRouter()
-	httputils.AddStandardMiddleware(r, config, controlDB.Logs)
+	httputils.AddStandardMiddleware(r, config, controlDB)
 	// Before auth only the IP is known, so an IP spamming bad tokens cannot spend the site's own limit
 	r.Use(httputils.SiteUnauthRateLimitMiddleware(config))
 

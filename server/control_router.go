@@ -14,7 +14,7 @@ import (
 func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Router {
 	r := chi.NewRouter()
 	store := controlcollections.NewControlStore()
-	httputils.AddStandardMiddleware(r, config, controlDB.Logs)
+	httputils.AddStandardMiddleware(r, config, controlDB)
 
 	static.AddStaticRoutes(r)
 

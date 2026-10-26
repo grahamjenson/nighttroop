@@ -31,7 +31,7 @@ func TestRecordServerErrors(t *testing.T) {
 			cfg, controlDB, err := testutils.GetConfigControlDBForTest()
 			require.NoError(t, err)
 			router := chi.NewRouter()
-			AddStandardMiddleware(router, cfg, controlDB.Logs)
+			AddStandardMiddleware(router, cfg, controlDB)
 			router.Get("/api/v2/authorization/request/{token}", func(w http.ResponseWriter, r *http.Request) {
 				if test.panics {
 					panic("broken")
