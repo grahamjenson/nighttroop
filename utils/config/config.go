@@ -95,6 +95,8 @@ type ServerConfig struct {
 	DeleteAfterInactivityMins int
 	// DisableAfterInactivityDays is how long a site goes unwritten or unseen before the control plane can disable it
 	DisableAfterInactivityDays int
+	// TruncateRecordsAfterDays is how old a site's records are before truncating it clears their raw JSON
+	TruncateRecordsAfterDays int
 
 	// Backup Config
 	ControlBackupIntervalInSeconds int
@@ -223,6 +225,7 @@ func NewServerConfig() (*ServerConfig, error) {
 		// Archiving limits
 		DeleteAfterInactivityMins:  configIntSelect(dotenv, "DELETE_AFTER_INACTIVITY_MINS", 60*24*7), // 1 week
 		DisableAfterInactivityDays: configIntSelect(dotenv, "DISABLE_AFTER_INACTIVITY_DAYS", 7),
+		TruncateRecordsAfterDays:   configIntSelect(dotenv, "TRUNCATE_RECORDS_AFTER_DAYS", 30),
 
 		// Backup Config
 		ControlBackupIntervalInSeconds: configIntSelect(dotenv, "CONTROL_BACKUP_INTERVAL_IN_SECONDS", 30),
@@ -495,6 +498,7 @@ func printServerConfig(config ServerConfig) {
 		"MaxIdentitiesPerSite", config.MaxIdentitiesPerSite,
 		"DeleteAfterInactivityMins", config.DeleteAfterInactivityMins,
 		"DisableAfterInactivityDays", config.DisableAfterInactivityDays,
+		"TruncateRecordsAfterDays", config.TruncateRecordsAfterDays,
 		"MaxSiteDBSizeKB", config.MaxSiteDBSizeKB,
 		"LogsDBMaxRowsPerTable", config.LogsDBMaxRowsPerTable,
 		"ControlBackupIntervalInSeconds", config.ControlBackupIntervalInSeconds,

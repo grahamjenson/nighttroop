@@ -11,122 +11,175 @@ import (
 
 const clearActivitiesRawJSON = `-- name: ClearActivitiesRawJSON :exec
 
-UPDATE activities SET raw_json_data = NULL WHERE raw_json_data IS NOT NULL
+UPDATE activities SET raw_json_data = NULL WHERE raw_json_data IS NOT NULL AND occurred_at < ?1
 `
+
+type ClearActivitiesRawJSONParams struct {
+	Before int64
+}
 
 // -----
 // TRUNCATE
 // Clearing the raw JSON kept of what each row was sent, the largest part of a site's DB, keeps all its data
+// Only rows from before @before are cleared, by when they occurred, or for food presets when they were last updated
 // ------
-func (q *Queries) ClearActivitiesRawJSON(ctx context.Context) error {
-	_, err := q.exec(ctx, q.clearActivitiesRawJSONStmt, clearActivitiesRawJSON)
+func (q *Queries) ClearActivitiesRawJSON(ctx context.Context, arg ClearActivitiesRawJSONParams) error {
+	_, err := q.exec(ctx, q.clearActivitiesRawJSONStmt, clearActivitiesRawJSON, arg.Before)
 	return err
 }
 
 const clearComponentEventsRawJSON = `-- name: ClearComponentEventsRawJSON :exec
-UPDATE component_events SET raw_json_data = NULL WHERE raw_json_data IS NOT NULL
+UPDATE component_events SET raw_json_data = NULL WHERE raw_json_data IS NOT NULL AND occurred_at < ?1
 `
 
-func (q *Queries) ClearComponentEventsRawJSON(ctx context.Context) error {
-	_, err := q.exec(ctx, q.clearComponentEventsRawJSONStmt, clearComponentEventsRawJSON)
+type ClearComponentEventsRawJSONParams struct {
+	Before int64
+}
+
+func (q *Queries) ClearComponentEventsRawJSON(ctx context.Context, arg ClearComponentEventsRawJSONParams) error {
+	_, err := q.exec(ctx, q.clearComponentEventsRawJSONStmt, clearComponentEventsRawJSON, arg.Before)
 	return err
 }
 
 const clearDeviceReportsRawJSON = `-- name: ClearDeviceReportsRawJSON :exec
-UPDATE device_reports SET raw_json_data = NULL WHERE raw_json_data IS NOT NULL
+UPDATE device_reports SET raw_json_data = NULL WHERE raw_json_data IS NOT NULL AND occurred_at < ?1
 `
 
-func (q *Queries) ClearDeviceReportsRawJSON(ctx context.Context) error {
-	_, err := q.exec(ctx, q.clearDeviceReportsRawJSONStmt, clearDeviceReportsRawJSON)
+type ClearDeviceReportsRawJSONParams struct {
+	Before int64
+}
+
+func (q *Queries) ClearDeviceReportsRawJSON(ctx context.Context, arg ClearDeviceReportsRawJSONParams) error {
+	_, err := q.exec(ctx, q.clearDeviceReportsRawJSONStmt, clearDeviceReportsRawJSON, arg.Before)
 	return err
 }
 
 const clearEventGroupsRawJSON = `-- name: ClearEventGroupsRawJSON :exec
-UPDATE event_groups SET raw_json_data = NULL WHERE raw_json_data IS NOT NULL
+UPDATE event_groups SET raw_json_data = NULL WHERE raw_json_data IS NOT NULL AND occurred_at < ?1
 `
 
-func (q *Queries) ClearEventGroupsRawJSON(ctx context.Context) error {
-	_, err := q.exec(ctx, q.clearEventGroupsRawJSONStmt, clearEventGroupsRawJSON)
+type ClearEventGroupsRawJSONParams struct {
+	Before int64
+}
+
+func (q *Queries) ClearEventGroupsRawJSON(ctx context.Context, arg ClearEventGroupsRawJSONParams) error {
+	_, err := q.exec(ctx, q.clearEventGroupsRawJSONStmt, clearEventGroupsRawJSON, arg.Before)
 	return err
 }
 
 const clearFoodIntakesRawJSON = `-- name: ClearFoodIntakesRawJSON :exec
-UPDATE food_intakes SET raw_json_data = NULL WHERE raw_json_data IS NOT NULL
+UPDATE food_intakes SET raw_json_data = NULL WHERE raw_json_data IS NOT NULL AND occurred_at < ?1
 `
 
-func (q *Queries) ClearFoodIntakesRawJSON(ctx context.Context) error {
-	_, err := q.exec(ctx, q.clearFoodIntakesRawJSONStmt, clearFoodIntakesRawJSON)
+type ClearFoodIntakesRawJSONParams struct {
+	Before int64
+}
+
+func (q *Queries) ClearFoodIntakesRawJSON(ctx context.Context, arg ClearFoodIntakesRawJSONParams) error {
+	_, err := q.exec(ctx, q.clearFoodIntakesRawJSONStmt, clearFoodIntakesRawJSON, arg.Before)
 	return err
 }
 
 const clearFoodPresetsRawJSON = `-- name: ClearFoodPresetsRawJSON :exec
-UPDATE food_presets SET raw_json_data = NULL WHERE raw_json_data IS NOT NULL
+UPDATE food_presets SET raw_json_data = NULL WHERE raw_json_data IS NOT NULL AND updated_at < ?1
 `
 
-func (q *Queries) ClearFoodPresetsRawJSON(ctx context.Context) error {
-	_, err := q.exec(ctx, q.clearFoodPresetsRawJSONStmt, clearFoodPresetsRawJSON)
+type ClearFoodPresetsRawJSONParams struct {
+	Before int64
+}
+
+func (q *Queries) ClearFoodPresetsRawJSON(ctx context.Context, arg ClearFoodPresetsRawJSONParams) error {
+	_, err := q.exec(ctx, q.clearFoodPresetsRawJSONStmt, clearFoodPresetsRawJSON, arg.Before)
 	return err
 }
 
 const clearGlucoseReadingsRawJSON = `-- name: ClearGlucoseReadingsRawJSON :exec
-UPDATE glucose_readings SET raw_json_data = NULL WHERE raw_json_data IS NOT NULL
+UPDATE glucose_readings SET raw_json_data = NULL WHERE raw_json_data IS NOT NULL AND occurred_at < ?1
 `
 
-func (q *Queries) ClearGlucoseReadingsRawJSON(ctx context.Context) error {
-	_, err := q.exec(ctx, q.clearGlucoseReadingsRawJSONStmt, clearGlucoseReadingsRawJSON)
+type ClearGlucoseReadingsRawJSONParams struct {
+	Before int64
+}
+
+func (q *Queries) ClearGlucoseReadingsRawJSON(ctx context.Context, arg ClearGlucoseReadingsRawJSONParams) error {
+	_, err := q.exec(ctx, q.clearGlucoseReadingsRawJSONStmt, clearGlucoseReadingsRawJSON, arg.Before)
 	return err
 }
 
 const clearInsulinDosesRawJSON = `-- name: ClearInsulinDosesRawJSON :exec
-UPDATE insulin_doses SET raw_json_data = NULL WHERE raw_json_data IS NOT NULL
+UPDATE insulin_doses SET raw_json_data = NULL WHERE raw_json_data IS NOT NULL AND occurred_at < ?1
 `
 
-func (q *Queries) ClearInsulinDosesRawJSON(ctx context.Context) error {
-	_, err := q.exec(ctx, q.clearInsulinDosesRawJSONStmt, clearInsulinDosesRawJSON)
+type ClearInsulinDosesRawJSONParams struct {
+	Before int64
+}
+
+func (q *Queries) ClearInsulinDosesRawJSON(ctx context.Context, arg ClearInsulinDosesRawJSONParams) error {
+	_, err := q.exec(ctx, q.clearInsulinDosesRawJSONStmt, clearInsulinDosesRawJSON, arg.Before)
 	return err
 }
 
 const clearNotificationEventsRawJSON = `-- name: ClearNotificationEventsRawJSON :exec
-UPDATE notification_events SET raw_json_data = NULL WHERE raw_json_data IS NOT NULL
+UPDATE notification_events SET raw_json_data = NULL WHERE raw_json_data IS NOT NULL AND occurred_at < ?1
 `
 
-func (q *Queries) ClearNotificationEventsRawJSON(ctx context.Context) error {
-	_, err := q.exec(ctx, q.clearNotificationEventsRawJSONStmt, clearNotificationEventsRawJSON)
+type ClearNotificationEventsRawJSONParams struct {
+	Before int64
+}
+
+func (q *Queries) ClearNotificationEventsRawJSON(ctx context.Context, arg ClearNotificationEventsRawJSONParams) error {
+	_, err := q.exec(ctx, q.clearNotificationEventsRawJSONStmt, clearNotificationEventsRawJSON, arg.Before)
 	return err
 }
 
 const clearProfilePresetsRawJSON = `-- name: ClearProfilePresetsRawJSON :exec
-UPDATE profile_presets SET raw_json_data = NULL WHERE raw_json_data IS NOT NULL
+UPDATE profile_presets SET raw_json_data = NULL WHERE raw_json_data IS NOT NULL AND occurred_at < ?1
 `
 
-func (q *Queries) ClearProfilePresetsRawJSON(ctx context.Context) error {
-	_, err := q.exec(ctx, q.clearProfilePresetsRawJSONStmt, clearProfilePresetsRawJSON)
+type ClearProfilePresetsRawJSONParams struct {
+	Before int64
+}
+
+func (q *Queries) ClearProfilePresetsRawJSON(ctx context.Context, arg ClearProfilePresetsRawJSONParams) error {
+	_, err := q.exec(ctx, q.clearProfilePresetsRawJSONStmt, clearProfilePresetsRawJSON, arg.Before)
 	return err
 }
 
 const clearProfileSwitchesRawJSON = `-- name: ClearProfileSwitchesRawJSON :exec
-UPDATE profile_switches SET raw_json_data = NULL WHERE raw_json_data IS NOT NULL
+UPDATE profile_switches SET raw_json_data = NULL WHERE raw_json_data IS NOT NULL AND occurred_at < ?1
 `
 
-func (q *Queries) ClearProfileSwitchesRawJSON(ctx context.Context) error {
-	_, err := q.exec(ctx, q.clearProfileSwitchesRawJSONStmt, clearProfileSwitchesRawJSON)
+type ClearProfileSwitchesRawJSONParams struct {
+	Before int64
+}
+
+func (q *Queries) ClearProfileSwitchesRawJSON(ctx context.Context, arg ClearProfileSwitchesRawJSONParams) error {
+	_, err := q.exec(ctx, q.clearProfileSwitchesRawJSONStmt, clearProfileSwitchesRawJSON, arg.Before)
 	return err
 }
 
 const clearTempBasalsRawJSON = `-- name: ClearTempBasalsRawJSON :exec
-UPDATE temp_basals SET raw_json_data = NULL WHERE raw_json_data IS NOT NULL
+UPDATE temp_basals SET raw_json_data = NULL WHERE raw_json_data IS NOT NULL AND occurred_at < ?1
 `
 
-func (q *Queries) ClearTempBasalsRawJSON(ctx context.Context) error {
-	_, err := q.exec(ctx, q.clearTempBasalsRawJSONStmt, clearTempBasalsRawJSON)
+type ClearTempBasalsRawJSONParams struct {
+	Before int64
+}
+
+func (q *Queries) ClearTempBasalsRawJSON(ctx context.Context, arg ClearTempBasalsRawJSONParams) error {
+	_, err := q.exec(ctx, q.clearTempBasalsRawJSONStmt, clearTempBasalsRawJSON, arg.Before)
 	return err
 }
 
 const clearTempTargetsRawJSON = `-- name: ClearTempTargetsRawJSON :exec
-UPDATE temp_targets SET raw_json_data = NULL WHERE raw_json_data IS NOT NULL
+UPDATE temp_targets SET raw_json_data = NULL WHERE raw_json_data IS NOT NULL AND occurred_at < ?1
 `
 
-func (q *Queries) ClearTempTargetsRawJSON(ctx context.Context) error {
-	_, err := q.exec(ctx, q.clearTempTargetsRawJSONStmt, clearTempTargetsRawJSON)
+type ClearTempTargetsRawJSONParams struct {
+	Before int64
+}
+
+func (q *Queries) ClearTempTargetsRawJSON(ctx context.Context, arg ClearTempTargetsRawJSONParams) error {
+	_, err := q.exec(ctx, q.clearTempTargetsRawJSONStmt, clearTempTargetsRawJSON, arg.Before)
 	return err
 }

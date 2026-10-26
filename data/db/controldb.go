@@ -282,8 +282,8 @@ func (db *ControlDB) ArchiveSite(ctx context.Context, subdomain string, upload f
 	return nil
 }
 
-// TruncateSite clears the raw JSON a site's DB keeps of what each row was sent, keeping all its data, then shrinks the
-// DB and records its new size, which it returns
+// TruncateSite clears the raw JSON a site's DB keeps of what each row older than TruncateRecordsAfterDays was sent,
+// keeping all its data, then shrinks the DB and records its new size, which it returns
 func (db *ControlDB) TruncateSite(ctx context.Context, subdomain string) (*int64, error) {
 	db.sitesRWLock.RLock()
 	site, ok := db.sites[subdomain]
@@ -291,14 +291,23 @@ func (db *ControlDB) TruncateSite(ctx context.Context, subdomain string) (*int64
 	if !ok {
 		return nil, fmt.Errorf("site %s is not open", subdomain)
 	}
-	q := site.Queries
-	for _, clear := range []func(context.Context) error{
-		q.ClearActivitiesRawJSON, q.ClearComponentEventsRawJSON, q.ClearDeviceReportsRawJSON, q.ClearEventGroupsRawJSON,
-		q.ClearFoodIntakesRawJSON, q.ClearFoodPresetsRawJSON, q.ClearGlucoseReadingsRawJSON, q.ClearInsulinDosesRawJSON,
-		q.ClearNotificationEventsRawJSON, q.ClearProfilePresetsRawJSON, q.ClearProfileSwitchesRawJSON,
-		q.ClearTempBasalsRawJSON, q.ClearTempTargetsRawJSON,
+	q, before := site.Queries, time.Now().AddDate(0, 0, -db.ServerConfig.TruncateRecordsAfterDays).UnixMilli()
+	for _, clear := range []func(context.Context, int64) error{
+		clearBefore(q.ClearActivitiesRawJSON),
+		clearBefore(q.ClearComponentEventsRawJSON),
+		clearBefore(q.ClearDeviceReportsRawJSON),
+		clearBefore(q.ClearEventGroupsRawJSON),
+		clearBefore(q.ClearFoodIntakesRawJSON),
+		clearBefore(q.ClearFoodPresetsRawJSON),
+		clearBefore(q.ClearGlucoseReadingsRawJSON),
+		clearBefore(q.ClearInsulinDosesRawJSON),
+		clearBefore(q.ClearNotificationEventsRawJSON),
+		clearBefore(q.ClearProfilePresetsRawJSON),
+		clearBefore(q.ClearProfileSwitchesRawJSON),
+		clearBefore(q.ClearTempBasalsRawJSON),
+		clearBefore(q.ClearTempTargetsRawJSON),
 	} {
-		if err := clear(ctx); err != nil {
+		if err := clear(ctx, before); err != nil {
 			return nil, fmt.Errorf("cannot clear raw json of site %s: %w", subdomain, err)
 		}
 	}
@@ -307,6 +316,13 @@ func (db *ControlDB) TruncateSite(ctx context.Context, subdomain string) (*int64
 	}
 	sizeKB := site.EstimatedSizeKB()
 	return sizeKB, db.Queries.UpdateSiteDateFlags(ctx, controldb.UpdateSiteDateFlagsParams{EstimatedDbSizeKb: sizeKB, ID: subdomain})
+}
+
+// clearBefore calls a query clearing raw JSON with its params, which sqlc makes a type of their own for each query
+func clearBefore[P ~struct{ Before int64 }](clear func(context.Context, P) error) func(context.Context, int64) error {
+	return func(ctx context.Context, before int64) error {
+		return clear(ctx, P(struct{ Before int64 }{before}))
+	}
 }
 
 ////

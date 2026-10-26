@@ -13516,3 +13516,133 @@ func (m *HardDeleteProfileStoreParams) SetProfileStoreID(v string) {
 	m.ProfileStoreID = v
 }
 
+// GetBefore returns the Before value.
+func (m ClearActivitiesRawJSONParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated ClearActivitiesRawJSONParams.
+func (m *ClearActivitiesRawJSONParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
+func (m ClearComponentEventsRawJSONParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated ClearComponentEventsRawJSONParams.
+func (m *ClearComponentEventsRawJSONParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
+func (m ClearDeviceReportsRawJSONParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated ClearDeviceReportsRawJSONParams.
+func (m *ClearDeviceReportsRawJSONParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
+func (m ClearEventGroupsRawJSONParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated ClearEventGroupsRawJSONParams.
+func (m *ClearEventGroupsRawJSONParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
+func (m ClearFoodIntakesRawJSONParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated ClearFoodIntakesRawJSONParams.
+func (m *ClearFoodIntakesRawJSONParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
+func (m ClearFoodPresetsRawJSONParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated ClearFoodPresetsRawJSONParams.
+func (m *ClearFoodPresetsRawJSONParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
+func (m ClearGlucoseReadingsRawJSONParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated ClearGlucoseReadingsRawJSONParams.
+func (m *ClearGlucoseReadingsRawJSONParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
+func (m ClearInsulinDosesRawJSONParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated ClearInsulinDosesRawJSONParams.
+func (m *ClearInsulinDosesRawJSONParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
+func (m ClearNotificationEventsRawJSONParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated ClearNotificationEventsRawJSONParams.
+func (m *ClearNotificationEventsRawJSONParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
+func (m ClearProfilePresetsRawJSONParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated ClearProfilePresetsRawJSONParams.
+func (m *ClearProfilePresetsRawJSONParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
+func (m ClearProfileSwitchesRawJSONParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated ClearProfileSwitchesRawJSONParams.
+func (m *ClearProfileSwitchesRawJSONParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
+func (m ClearTempBasalsRawJSONParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated ClearTempBasalsRawJSONParams.
+func (m *ClearTempBasalsRawJSONParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
+func (m ClearTempTargetsRawJSONParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated ClearTempTargetsRawJSONParams.
+func (m *ClearTempTargetsRawJSONParams) SetBefore(v int64) {
+	m.Before = v
+}
+
