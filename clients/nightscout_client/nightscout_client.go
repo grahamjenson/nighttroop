@@ -90,7 +90,7 @@ func (c *Client) doRequest(
 	// Only TestValidURL is faked: a test that sets a JWT and an httptest URL goes over HTTP.
 	if testing.Testing() && c.baseURL == TestValidURL {
 		if url == lastModifiedEndpoint(c.baseURL) {
-			return map[string]any{"result": map[string]any{"collections": map[string]any{"entries": float64(TestLastModified), "treatments": float64(TestLastModified)}}}, nil
+			return map[string]any{"result": map[string]any{"collections": map[string]any{"entries": float64(TestLastModified), "treatments": float64(TestLastModified), "devicestatus": float64(TestLastModified)}}}, nil
 		}
 		collection, _, _ := strings.Cut(strings.TrimPrefix(url, c.baseURL+"/api/v3/"), "?")
 		return map[string]any{"result": append([]any{}, TestDocuments[collection]...)}, nil

@@ -265,6 +265,7 @@ CREATE TABLE site_sync_sources (
     first_successful_sync_time INTEGER, -- when a sync first worked since the last save; while NULL a failed sync disables the source
     entries_last_modified INTEGER, -- Nightscout's v3 lastModified for entries when they were last read; entries are only read again once it changes
     treatments_last_modified INTEGER, -- the same for treatments
+    devicestatus_last_modified INTEGER, -- and device statuses
 
     -- REPORTING
 

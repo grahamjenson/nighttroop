@@ -69,21 +69,23 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 		return nil
 	}
 	return b.controlDB.Queries.UpdateSyncSourceLastModified(ctx, controldb.UpdateSyncSourceLastModifiedParams{
-		EntriesLastModified:    read[nsutils.Entries],
-		TreatmentsLastModified: read[nsutils.Treatments],
-		Type:                   syncInfo.Type,
-		SiteID:                 syncInfo.SiteID,
+		EntriesLastModified:      read[nsutils.Entries],
+		TreatmentsLastModified:   read[nsutils.Treatments],
+		DevicestatusLastModified: read[nsutils.Devicestatus],
+		Type:                     syncInfo.Type,
+		SiteID:                   syncInfo.SiteID,
 	})
 }
 
 // nightscoutCollections are what a Nightscout sync reads, and at most how many of each one's newest documents
-// from the last 20 minutes: a few readings, or a meal, its boluses and a loop's SMBs and temp basals
+// from the last 20 minutes: a few readings, a meal, its boluses and a loop's SMBs and temp basals, or each uploader's statuses
 var nightscoutCollections = []struct {
 	collection nsutils.Collection
 	limit      int
 }{
 	{nsutils.Entries, 3},
 	{nsutils.Treatments, 20},
+	{nsutils.Devicestatus, 10},
 }
 
 // syncNightscoutCollection copies a collection's newest documents into each site. A document the site
