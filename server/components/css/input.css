@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* ECharts is a megabyte of minified code with no classes in it, so it is not scanned for them */
+@source not "../assets/static/echarts.min.js";
 
 @theme inline {
     --breakpoint-3xl: 1600px;

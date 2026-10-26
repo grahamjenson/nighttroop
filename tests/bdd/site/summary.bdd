@@ -66,20 +66,19 @@ ASSERT_VISIBLE #site--summary--readings tbody tr >> nth=5
 ASSERT_VISIBLE #site--summary--devices >> text=virtual://nighttroop
 ASSERT_VISIBLE #site--summary--devices >> text=virtual://carer-phone
 
-// The graph draws every reading, the temp target as a shaded line, carbs and insulin as triangles and the temp basal as a line on one time axis
-ASSERT_VISIBLE #site--summary--graph
-ASSERT_VISIBLE #site--summary--graph .site--summary--graph--reading >> nth=5
-ASSERT_NOT_VISIBLE #site--summary--graph .site--summary--graph--reading >> nth=6
-ASSERT_VISIBLE #site--summary--graph .site--summary--graph--temp-target
-ASSERT_VISIBLE #site--summary--graph .site--summary--graph--carbs >> text=15g
-ASSERT_VISIBLE #site--summary--graph .site--summary--graph--insulin >> text=2.5U
-ASSERT_VISIBLE #site--summary--graph--basal
+// ECharts draws the graph as an SVG in the browser: carbs and insulin are labelled by their markers, with the rows named down the side
+ASSERT_VISIBLE #site--summary--graph svg
+ASSERT_VISIBLE #site--summary--graph >> text=15g
+ASSERT_VISIBLE #site--summary--graph >> text=2.5U
+ASSERT_VISIBLE #site--summary--graph >> text=Carbs
+ASSERT_VISIBLE #site--summary--graph >> text=Insulin
+ASSERT_VISIBLE #site--summary--graph >> text=Basal
 
 // The range buttons show the summary over 6 hours to a week, and back returns to the range before
 CLICK #site--summary--range-6
 ASSERT_STATUS 200
 ASSERT_TEXT_EQUALS #site--summary--hours Last 6 hours
-ASSERT_VISIBLE #site--summary--graph .site--summary--graph--reading >> nth=5
+ASSERT_VISIBLE #site--summary--graph >> text=2.5U
 SCREENSHOT summary_6_hours
 CLICK #site--summary--range-168
 ASSERT_STATUS 200

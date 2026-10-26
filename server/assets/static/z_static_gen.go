@@ -36,6 +36,10 @@ var StaticDropdownJsETag = generateETag([]byte(StaticDropdownJs))
 var StaticDropdownMinJs []byte
 var StaticDropdownMinJsETag = generateETag([]byte(StaticDropdownMinJs))
 
+//go:embed echarts.min.js
+var StaticEchartsMinJs []byte
+var StaticEchartsMinJsETag = generateETag([]byte(StaticEchartsMinJs))
+
 //go:embed empty
 var StaticEmpty []byte
 var StaticEmptyETag = generateETag([]byte(StaticEmpty))
@@ -223,6 +227,22 @@ func AddStaticRoutes(r chi.Router) error {
 		_, err := w.Write([]byte(StaticDropdownMinJs))
 		if err != nil {
 			slog.Error("Failed to write response for dropdown.min.js", "error", err)
+		}
+	})
+	r.Get("/echarts.min.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+
+		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+		w.Header().Set("Cache-Control", "no-cache")
+		w.Header().Set("ETag", StaticEchartsMinJsETag)
+		if r.Header.Get("If-None-Match") == StaticEchartsMinJsETag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
+
+		_, err := w.Write([]byte(StaticEchartsMinJs))
+		if err != nil {
+			slog.Error("Failed to write response for echarts.min.js", "error", err)
 		}
 	})
 	r.Get("/empty", func(w http.ResponseWriter, r *http.Request) {
