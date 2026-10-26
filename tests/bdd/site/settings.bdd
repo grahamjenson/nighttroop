@@ -66,6 +66,10 @@ CLICK #site--settings--identity--save
 ASSERT_STATUS 400
 ASSERT_TEXT_VISIBLE invalid timezone
 
+// It is shown as an error toast, not as bare text
+ASSERT_VISIBLE #toaster [data-tui-toast][data-variant="error"]:has-text("invalid timezone")
+SCREENSHOT invalid_timezone_toast
+
 // Times are shown in the site's timezone, as the admin has none of their own
 CLICK #site--settings-menu
 CLICK #site--data--glucose-button

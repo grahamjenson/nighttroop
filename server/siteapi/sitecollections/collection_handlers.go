@@ -79,7 +79,7 @@ func CreateHandler[R, M any](collection CollectionCreate[R, M]) http.HandlerFunc
 
 		requestModel, herr := apiutils.ExtractModelFromRequest[M](siteContext.ContentType, r)
 		if herr != nil {
-			herr.Write(siteContext.AcceptType, w)
+			writeError(w, r, siteContext.AcceptType, herr)
 			return
 		}
 
@@ -87,7 +87,7 @@ func CreateHandler[R, M any](collection CollectionCreate[R, M]) http.HandlerFunc
 		defer tx.Rollback()
 		herr = create(r.Context(), tx, collection, nil, siteContext, requestModel)
 		if herr = tx.Finish(herr); herr != nil {
-			herr.Write(siteContext.AcceptType, w)
+			writeError(w, r, siteContext.AcceptType, herr)
 			return
 		}
 
@@ -111,7 +111,7 @@ func UpdateHandler[R, M any](collection CollectionUpdate[R, M]) http.HandlerFunc
 
 		requestModel, herr := apiutils.ExtractModelFromRequest[M](siteContext.ContentType, r)
 		if herr != nil {
-			herr.Write(siteContext.AcceptType, w)
+			writeError(w, r, siteContext.AcceptType, herr)
 			return
 		}
 
@@ -122,13 +122,13 @@ func UpdateHandler[R, M any](collection CollectionUpdate[R, M]) http.HandlerFunc
 			herr = apiutils.ErrNotFound
 		}
 		if herr != nil {
-			herr.Write(siteContext.AcceptType, w)
+			writeError(w, r, siteContext.AcceptType, herr)
 			return
 		}
 
 		herr = update(r.Context(), tx, collection, siteContext, oldModel, requestModel)
 		if herr = tx.Finish(herr); herr != nil {
-			herr.Write(siteContext.AcceptType, w)
+			writeError(w, r, siteContext.AcceptType, herr)
 			return
 		}
 
@@ -154,7 +154,7 @@ func UpsertHandler[R, M any](collection CollectionUpsert[R, M]) http.HandlerFunc
 
 		requestModel, herr := apiutils.ExtractModelFromRequest[M](siteContext.ContentType, r)
 		if herr != nil {
-			herr.Write(siteContext.AcceptType, w)
+			writeError(w, r, siteContext.AcceptType, herr)
 			return
 		}
 
@@ -162,7 +162,7 @@ func UpsertHandler[R, M any](collection CollectionUpsert[R, M]) http.HandlerFunc
 		defer tx.Rollback()
 		oldModel, _, herr := get(r.Context(), tx, collection, id, siteContext)
 		if herr != nil {
-			herr.Write(siteContext.AcceptType, w)
+			writeError(w, r, siteContext.AcceptType, herr)
 			return
 		}
 
@@ -172,7 +172,7 @@ func UpsertHandler[R, M any](collection CollectionUpsert[R, M]) http.HandlerFunc
 			herr = update(r.Context(), tx, collection, siteContext, oldModel, requestModel)
 		}
 		if herr = tx.Finish(herr); herr != nil {
-			herr.Write(siteContext.AcceptType, w)
+			writeError(w, r, siteContext.AcceptType, herr)
 			return
 		}
 
@@ -195,7 +195,7 @@ func SearchHandler[R, M any](collection CollectionSearch[R, M]) http.HandlerFunc
 
 		query, herr := apiutils.QueryFromParams(r.URL.Query())
 		if herr != nil {
-			herr.Write(siteContext.AcceptType, w)
+			writeError(w, r, siteContext.AcceptType, herr)
 			return
 		}
 		if query == nil {
@@ -205,7 +205,7 @@ func SearchHandler[R, M any](collection CollectionSearch[R, M]) http.HandlerFunc
 		defer tx.Rollback()
 		models, herr := search(r.Context(), tx, collection, query, siteContext)
 		if herr = tx.Finish(herr); herr != nil {
-			herr.Write(siteContext.AcceptType, w)
+			writeError(w, r, siteContext.AcceptType, herr)
 			return
 		}
 
@@ -230,7 +230,7 @@ func GetHandler[R, M any](collection CollectionGet[R, M]) http.HandlerFunc {
 			herr = apiutils.ErrNotFound
 		}
 		if herr = tx.Finish(herr); herr != nil {
-			herr.Write(siteContext.AcceptType, w)
+			writeError(w, r, siteContext.AcceptType, herr)
 			return
 		}
 
@@ -253,7 +253,7 @@ func DeleteHandler[R, M any](collection CollectionDelete[R, M]) http.HandlerFunc
 
 		id := chi.URLParam(r, "id")
 		if id == "" {
-			apiutils.ErrBadRequest.Write(siteContext.AcceptType, w)
+			writeError(w, r, siteContext.AcceptType, apiutils.ErrBadRequest)
 			return
 		}
 
@@ -261,13 +261,13 @@ func DeleteHandler[R, M any](collection CollectionDelete[R, M]) http.HandlerFunc
 		defer tx.Rollback()
 		model, row, herr := get(r.Context(), tx, collection, id, siteContext)
 		if herr != nil || model == nil {
-			apiutils.ErrNotFound.Write(siteContext.AcceptType, w)
+			writeError(w, r, siteContext.AcceptType, apiutils.ErrNotFound)
 			return
 		}
 
 		herr = tx.Finish(delete(r.Context(), siteContext, tx, collection, id, row))
 		if herr != nil {
-			herr.Write(siteContext.AcceptType, w)
+			writeError(w, r, siteContext.AcceptType, herr)
 			return
 		}
 
@@ -298,12 +298,12 @@ func SiteContextFor(w http.ResponseWriter, r *http.Request, collectionName strin
 	siteContext := httputils.GetSiteContext(r.Context())
 	if siteContext == nil {
 		slog.Error("site context is nil")
-		apiutils.ErrNotFound.Write(httputils.GetAcceptType(r), w)
+		writeError(w, r, httputils.GetAcceptType(r), apiutils.ErrNotFound)
 		return nil
 	}
 	for _, action := range actions {
 		if !siteapiutils.HasPermission(collectionName, siteapiutils.Action(action), siteContext.IdentityModel) {
-			apiutils.ErrForbidden.Write(siteContext.AcceptType, w)
+			writeError(w, r, siteContext.AcceptType, apiutils.ErrForbidden)
 			return nil
 		}
 	}
@@ -324,6 +324,16 @@ func WriteResponse(w http.ResponseWriter, r *http.Request, siteContext *httputil
 	default:
 		apiutils.WriteModelJSON(w, status, model)
 	}
+}
+
+// writeError sends HTMX the error as a toast, which forms add to #toaster, and anything else the error as it writes itself
+func writeError(w http.ResponseWriter, r *http.Request, acceptType httputils.AcceptType, herr *apiutils.HTTPError) {
+	if acceptType != httputils.AcceptTypeHTMX {
+		herr.Write(acceptType, w)
+		return
+	}
+	apiutils.WriteStatus(w, acceptType, herr.Status)
+	site_templ.SiteError(herr.Message).Render(r.Context(), w)
 }
 
 // get is the model, or nil when there is none
