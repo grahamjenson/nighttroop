@@ -1,6 +1,7 @@
 package control_sites_templ
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -9,7 +10,17 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/server/components/ui/toast"
+	"nighttroop.t1d.nz/utils/httputils"
 )
+
+// inactive is whether a live site has not been written to or seen in the configured days, so it can be disabled
+func inactive(ctx context.Context, site *controlmodels.Site) bool {
+	controlContext := httputils.GetControlContext(ctx)
+	if site.State != "live" || controlContext == nil || controlContext.ControlDB == nil {
+		return false
+	}
+	return site.Inactive(controlContext.ControlDB.ServerConfig.DisableAfterInactivityDays, time.Now())
+}
 
 // formatDate shows an optional time in ms, or a dash when it is not set
 func formatDate(ms *int64) string {
@@ -139,6 +150,9 @@ templ siteRow(site *controlmodels.Site) {
 		}
 		@table.Cell() {
 			{ site.State }
+			if inactive(ctx, site) {
+				<span id={ "control--site--" + site.ID + "--inactive" } class="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800">inactive</span>
+			}
 		}
 		@table.Cell() {
 			{ formatDate(&site.CreatedAt) }
@@ -155,7 +169,7 @@ templ siteRow(site *controlmodels.Site) {
 	}
 }
 
-// SiteModal shows a site's details, and lets an admin disable it while it is live
+// SiteModal shows a site's details, and lets an admin disable it while it is live and inactive
 templ SiteModal(site *controlmodels.Site) {
 	@modal.Modal(modal.Props{ID: "control--site--details", Title: site.ID, Actions: siteDisable(site)}) {
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
@@ -173,9 +187,9 @@ templ SiteModal(site *controlmodels.Site) {
 	}
 }
 
-// siteDisable is the Disable button for a live site
+// siteDisable is the Disable button for a site no one has used for a while
 templ siteDisable(site *controlmodels.Site) {
-	if site.State == "live" {
+	if inactive(ctx, site) {
 		<form
 			hx-post={ "/sites/" + site.ID }
 			hx-target={ "#control--site--" + site.ID }
