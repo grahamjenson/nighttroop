@@ -66,13 +66,15 @@ ASSERT_VISIBLE #site--summary--readings tbody tr >> nth=5
 ASSERT_VISIBLE #site--summary--devices >> text=virtual://nighttroop
 ASSERT_VISIBLE #site--summary--devices >> text=virtual://carer-phone
 
-// ECharts draws the graph as an SVG in the browser: carbs and insulin are labelled by their markers, with the rows named down the side
+// ECharts draws the graph as an SVG in the browser: carbs and insulin are labelled by their markers, with the rows named down the side.
+// These are checked as drawn, as labels can be drawn over each other (virtual sync's meal can be at nearly the same time as
+// the one added here), and the sticky header can cover them once the page scrolls.
 ASSERT_DRAWN #site--summary--graph svg
-ASSERT_VISIBLE #site--summary--graph >> text=15g
-ASSERT_VISIBLE #site--summary--graph >> text=2.5U
-ASSERT_VISIBLE #site--summary--graph >> text=Carbs
-ASSERT_VISIBLE #site--summary--graph >> text=Insulin
-ASSERT_VISIBLE #site--summary--graph >> text=Basal
+ASSERT_DRAWN #site--summary--graph >> text=15g
+ASSERT_DRAWN #site--summary--graph >> text=2.5U
+ASSERT_DRAWN #site--summary--graph >> text=Carbs
+ASSERT_DRAWN #site--summary--graph >> text=Insulin
+ASSERT_DRAWN #site--summary--graph >> text=Basal
 
 // The range buttons show the summary over 6 hours to a week, and back returns to the range before
 CLICK #site--summary--range-6
