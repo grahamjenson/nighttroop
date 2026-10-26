@@ -80,6 +80,9 @@ func main() {
 		if err := assertAllTablesStrict(dbi.GetRawDB()); err != nil {
 			log.Fatalf("%s%s DB: %v %s", topwrapper, dbi.Name(), err, bottomwrapper)
 		}
+		if err := assertJSONColumnsValid(dbi.GetRawDB()); err != nil {
+			log.Fatalf("%s%s DB: %v %s", topwrapper, dbi.Name(), err, bottomwrapper)
+		}
 	}
 
 	////////
@@ -149,6 +152,50 @@ func assertAllTablesStrict(db *sql.DB) error {
 
 	if len(notStrict) > 0 {
 		return fmt.Errorf("tables must be created STRICT: %v", notStrict)
+	}
+	return nil
+}
+
+// assertJSONColumnsValid fails if a column holding JSON (named with json, a list of errors, or
+// attributes) does not CHECK json_valid on its own line, so invalid JSON is refused when written
+// rather than failing when read.
+func assertJSONColumnsValid(db *sql.DB) error {
+	rows, err := db.Query(`
+		SELECT name, sql
+		FROM sqlite_master
+		WHERE type = 'table'
+		  AND name NOT LIKE 'sqlite_%'
+		  AND name <> 'schema_migrations'
+	`)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	var missing []string
+	for rows.Next() {
+		var name, createSQL string
+		if err := rows.Scan(&name, &createSQL); err != nil {
+			return err
+		}
+		for _, line := range strings.Split(createSQL, "\n") {
+			fields := strings.Fields(line)
+			if len(fields) < 2 || !strings.EqualFold(fields[1], "TEXT") {
+				continue
+			}
+			column := fields[0]
+			isJSON := strings.Contains(column, "json") || strings.HasSuffix(column, "errors") || column == "attributes"
+			if isJSON && !strings.Contains(line, "json_valid("+column+")") {
+				missing = append(missing, name+"."+column)
+			}
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return err
+	}
+
+	if len(missing) > 0 {
+		return fmt.Errorf("JSON columns must CHECK json_valid: %v", missing)
 	}
 	return nil
 }

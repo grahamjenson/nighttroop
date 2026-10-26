@@ -7,6 +7,7 @@ import (
 	"github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/opts"
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/css"
 )
 
 const (
@@ -16,18 +17,21 @@ const (
 	minAxisMgdl = 270.0
 	// The glucose axis starts here, as readings below it are rare
 	axisStartMgdl = 40.0
-	// ECharts draws with these, as it cannot use the Tailwind classes; brand night is `primary` in css/input.css
-	brandNight = "#10203F"
-	red600     = "#dc2626"
-	amber500   = "#f59e0b"
-	blue500    = "#3b82f6"
-	gray100    = "#f3f4f6"
-	gray200    = "#e5e7eb"
-	gray700    = "#374151"
 	// The axes of the three grids: glucose on top, then a row each of carbs and insulin, then temp basals
 	glucoseX               = 0
 	treatmentX, treatmentY = 1, 1
 	basalX, basalRate      = 2, 3
+)
+
+// ECharts draws with these colours from css/theme.css, as it cannot use the Tailwind classes
+var (
+	brandNight = css.Colour("brand-night")
+	red600     = css.Colour("red-600")
+	amber500   = css.Colour("amber-500")
+	blue500    = css.Colour("blue-500")
+	gray100    = css.Colour("gray-100")
+	gray200    = css.Colour("gray-200")
+	gray700    = css.Colour("gray-700")
 )
 
 // graph is the summary as a go-echarts chart on one time axis: glucose dots over the target range with

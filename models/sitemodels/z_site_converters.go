@@ -1813,8 +1813,8 @@ func TempTargetFromDB(source *sitedb.TempTarget, context *httputils.SiteContext)
 		var sitemodelsSiteTempTarget SiteTempTarget
 		sitemodelsSiteTempTarget.ID = (*source).ID
 		sitemodelsSiteTempTarget.DurationMinutes = (*source).DurationMinutes
-		sitemodelsSiteTempTarget.HighTarget = MgdlToSettingsUnits((*source).HighTarget, context)
-		sitemodelsSiteTempTarget.LowTarget = MgdlToSettingsUnits((*source).LowTarget, context)
+		sitemodelsSiteTempTarget.HighTarget = MgdlToSettingsUnits((*source).HighTargetMgdl, context)
+		sitemodelsSiteTempTarget.LowTarget = MgdlToSettingsUnits((*source).LowTargetMgdl, context)
 		sitemodelsSiteTempTarget.Units = ContextUnits(context)
 		if (*source).InsulinNeedsScaleFactor != nil {
 			xfloat64 := *(*source).InsulinNeedsScaleFactor
@@ -1861,8 +1861,8 @@ func TempTargetToCreate(source *SiteTempTarget, context *httputils.SiteContext) 
 	if source != nil {
 		sitedbCreateTempTargetParams.ID = NewSiteDataID()
 		sitedbCreateTempTargetParams.DurationMinutes = (*source).DurationMinutes
-		sitedbCreateTempTargetParams.HighTarget = SettingsUnitsToMgdl((*source).HighTarget, context)
-		sitedbCreateTempTargetParams.LowTarget = SettingsUnitsToMgdl((*source).LowTarget, context)
+		sitedbCreateTempTargetParams.HighTargetMgdl = SettingsUnitsToMgdl((*source).HighTarget, context)
+		sitedbCreateTempTargetParams.LowTargetMgdl = SettingsUnitsToMgdl((*source).LowTarget, context)
 		if (*source).InsulinNeedsScaleFactor != nil {
 			xfloat64 := *(*source).InsulinNeedsScaleFactor
 			sitedbCreateTempTargetParams.InsulinNeedsScaleFactor = &xfloat64
@@ -1901,8 +1901,8 @@ func TempTargetToUpdate(source *SiteTempTarget, context *httputils.SiteContext) 
 	var sitedbUpdateTempTargetParams sitedb.UpdateTempTargetParams
 	if source != nil {
 		sitedbUpdateTempTargetParams.DurationMinutes = Int64OrNil((*source).DurationMinutes)
-		sitedbUpdateTempTargetParams.HighTarget = SettingsUnitsToMgdlOrNil((*source).HighTarget, context)
-		sitedbUpdateTempTargetParams.LowTarget = SettingsUnitsToMgdlOrNil((*source).LowTarget, context)
+		sitedbUpdateTempTargetParams.HighTargetMgdl = SettingsUnitsToMgdlOrNil((*source).HighTarget, context)
+		sitedbUpdateTempTargetParams.LowTargetMgdl = SettingsUnitsToMgdlOrNil((*source).LowTarget, context)
 		if (*source).Notes != nil {
 			xstring := *(*source).Notes
 			sitedbUpdateTempTargetParams.Notes = &xstring
