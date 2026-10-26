@@ -22,6 +22,8 @@ func GetTestServerConfig() *config.ServerConfig {
 	}
 	// Force Test Mode
 	cfg.Mode = consts.Test
+	// Any site can be disabled, as a test cannot wait days for one to be inactive
+	cfg.DisableAfterInactivityDays = 0
 
 	storedServerConfig = cfg
 	return storedServerConfig

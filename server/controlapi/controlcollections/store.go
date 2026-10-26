@@ -64,6 +64,15 @@ func (store *ControlStore) registerCollection[R, M any](collection CollectionBas
 	store.collectionRoutes[route] = routes
 }
 
+// Collection is the routes of the collection at route, for a route of its own like the sites at /
+func (store *ControlStore) Collection(route string) *ControlCollectionRoutes {
+	routes, exists := store.collectionRoutes[route]
+	if !exists {
+		panic("no collection at route: " + route)
+	}
+	return routes
+}
+
 // Routes adds each collection's routes at its own path, e.g. /sites and /sites/{id}
 func (store *ControlStore) Routes(r chi.Router) {
 	for route, routes := range store.collectionRoutes {
