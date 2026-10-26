@@ -39,6 +39,8 @@ type SyncJobManager struct {
 type SyncJobParams struct {
 	SiteID string
 	Type   consts.SyncSourceType
+	// Backfill is set for a backfill rather than a sync
+	Backfill *BackfillParams `json:",omitempty"`
 }
 
 type SyncJobInfo struct {
@@ -149,6 +151,9 @@ func (b *SyncJobManager) SyncSource(ctx context.Context, syncJob SyncJobParams) 
 			nsutils.Treatments:   syncSource.TreatmentsLastModified,
 			nsutils.Devicestatus: syncSource.DevicestatusLastModified,
 		},
+	}
+	if syncJob.Backfill != nil {
+		return b.backfill(syncInfo, *syncJob.Backfill)
 	}
 	return b.SyncUserData(syncInfo)
 }

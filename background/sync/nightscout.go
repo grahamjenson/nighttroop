@@ -78,25 +78,31 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 }
 
 // nightscoutCollections are what a Nightscout sync reads, and at most how many of each one's newest documents
-// from the last 20 minutes: a few readings, a meal, its boluses and a loop's SMBs and temp basals, or each uploader's statuses
+// from the last 20 minutes: a few readings, a meal, its boluses and a loop's SMBs and temp basals, or each uploader's
+// statuses. A backfill reads them a page at a time, small enough to stay under the client's response size limit.
 var nightscoutCollections = []struct {
-	collection nsutils.Collection
-	limit      int
+	collection   nsutils.Collection
+	limit        int
+	backfillPage int
 }{
-	{nsutils.Entries, 3},
-	{nsutils.Treatments, 20},
-	{nsutils.Devicestatus, 10},
+	{nsutils.Entries, 3, 500},
+	{nsutils.Treatments, 20, 200},
+	{nsutils.Devicestatus, 10, 50},
 }
 
-// syncNightscoutCollection copies a collection's newest documents into each site. A document the site
-// refuses, such as a treatment with an eventType it does not know, is logged and skipped, so it does
-// not fail every sync until it is 20 minutes old.
+// syncNightscoutCollection copies a collection's newest documents into each site
 func (b *SyncJobManager) syncNightscoutCollection(ctx context.Context, nsc *nightscoutClient, syncInfo *SyncJobInfo, collection nsutils.Collection, limit int) error {
-	docs, err := nsc.GetDocuments(ctx, string(collection), time.Now().Add(-20*time.Minute), limit)
+	docs, err := nsc.GetDocuments(ctx, string(collection), time.Now().Add(-20*time.Minute), time.Time{}, limit)
 	if err != nil {
 		return fmt.Errorf("NightscoutSync Error: %w", err)
 	}
+	_, err = b.createNightscoutDocuments(ctx, syncInfo, collection, docs)
+	return err
+}
 
+// createNightscoutDocuments copies documents into each site, returning how many were new. Documents a site refuses,
+// such as a treatment with an eventType it does not know, are skipped and logged once, so they do not fail every sync.
+func (b *SyncJobManager) createNightscoutDocuments(ctx context.Context, syncInfo *SyncJobInfo, collection nsutils.Collection, docs []map[string]any) (int, error) {
 	// REMOVE WRITE ONLY COLUMNS
 	for _, doc := range docs {
 		delete(doc, "srvCreated")
@@ -106,8 +112,9 @@ func (b *SyncJobManager) syncNightscoutCollection(ctx context.Context, nsc *nigh
 
 	collectionStore, ok := b.nightscoutStore.GetStore(collection)
 	if !ok {
-		return fmt.Errorf("Nightscout: %s collection not found", collection)
+		return 0, fmt.Errorf("Nightscout: %s collection not found", collection)
 	}
+	added := 0
 	for _, userSyncSource := range syncInfo.UserSyncSources {
 		siteContext := &httputils.SiteContext{
 			Subdomain: userSyncSource.SiteModel.ID,
@@ -120,25 +127,28 @@ func (b *SyncJobManager) syncNightscoutCollection(ctx context.Context, nsc *nigh
 			HTTPAction: httputils.HTTPActionWrite,
 		}
 
-		added := 0
+		skipped, reason := 0, ""
 		for _, doc := range docs {
 			_, duplicateFound, herr := collectionStore.Create(ctx, siteContext, doc, false)
 			if herr != nil && herr.Status < http.StatusInternalServerError {
-				b.controlDB.Logs.Log(ctx, &syncInfo.SiteID, db.LogLevelWarn, "skipped a Nightscout document the site refused", map[string]any{"collection": collection, "error": herr.Message})
+				skipped, reason = skipped+1, herr.Message
 				continue
 			}
 			if herr != nil {
-				return fmt.Errorf("Nightscout: Failed to create %s: %w", collection, herr)
+				return added, fmt.Errorf("Nightscout: Failed to create %s: %w", collection, herr)
 			}
 			if !duplicateFound {
 				added++
 			}
 		}
-		if added > 0 {
-			slog.Info("Added new Nightscout documents for site", "subdomain", userSyncSource.SiteModel.ID, "collection", collection, "added", added)
+		if skipped > 0 {
+			b.controlDB.Logs.Log(ctx, &syncInfo.SiteID, db.LogLevelWarn, "skipped Nightscout documents the site refused", map[string]any{"collection": collection, "skipped": skipped, "error": reason})
 		}
 	}
-	return nil
+	if added > 0 {
+		slog.Info("Added new Nightscout documents for site", "site_id", syncInfo.SiteID, "collection", collection, "added", added)
+	}
+	return added, nil
 }
 
 // changedSince is whether a collection may have changed since it was last read. A Nightscout

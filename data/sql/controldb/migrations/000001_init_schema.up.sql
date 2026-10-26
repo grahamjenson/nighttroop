@@ -267,6 +267,16 @@ CREATE TABLE site_sync_sources (
     treatments_last_modified INTEGER, -- the same for treatments
     devicestatus_last_modified INTEGER, -- and device statuses
 
+    -- BACKFILL, never reset so a source that backfills too much can be slowed or blocked
+    backfill_started_at INTEGER, -- set while a backfill is queued or running; another is refused until it finishes or an hour passes
+    last_backfill_from INTEGER, -- the oldest time the last backfill fetched from
+    last_backfill_to INTEGER, -- and the time it fetched up to
+    last_backfill_finished_at INTEGER,
+    last_backfill_duration INTEGER, -- in ms
+    last_backfill_records INTEGER, -- new records it added
+    last_backfill_error TEXT CHECK(length(last_backfill_error) <= 1024),
+    total_backfills INTEGER NOT NULL DEFAULT 0,
+
     -- REPORTING
 
     -- Frequency of syncs used to punish bad servers or behaviour

@@ -101,6 +101,12 @@ var TypeLookupMap = map[string]map[string]string{
 	"UpdateSyncSourceLastModifiedParams": {
 		"Type": "consts.SyncSourceType",
 	},
+	"StartSyncSourceBackfillParams": {
+		"Type": "consts.SyncSourceType",
+	},
+	"FinishSyncSourceBackfillParams": {
+		"Type": "consts.SyncSourceType",
+	},
 	"ProfilePreset": {
 		"IsDefault": "bool",
 	},
