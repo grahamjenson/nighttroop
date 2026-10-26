@@ -162,6 +162,8 @@ type SiteSyncSource struct {
 	Enabled                    bool
 	FirstSuccessfulSyncTime    *int64
 	EntriesLastModified        *int64
+	TreatmentsLastModified     *int64
+	DevicestatusLastModified   *int64
 	SyncIntervalSecondsReason  string
 	SyncIntervalSeconds        int64
 	LastAttemptedSync          *int64
