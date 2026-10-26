@@ -19,14 +19,27 @@ func formatDate(ms *int64) string {
 	return time.UnixMilli(*ms).Format("2006-01-02 15:04:05")
 }
 
-// SitesTable shows one page of sites, newest first, with buttons to the pages either side
-templ SitesTable(sites []*controlmodels.Site, skip int64, limit int64) {
+// siteOrders are the ways the sites can be ordered, by their order query value
+var siteOrders = []struct{ order, label string }{
+	{"", "Newest"},
+	{"last_write", "Longest Since Written"},
+	{"db_size", "Largest DB"},
+}
+
+// SitesTable shows one page of sites in order, newest first by default, with buttons to reorder them and to the
+// pages either side
+templ SitesTable(sites []*controlmodels.Site, skip int64, limit int64, order string) {
 	<div id="sites_table" class="mx-auto max-w-5xl space-y-6">
 		<div>
 			<h1 class="text-2xl font-bold">Sites</h1>
-			<p class="mt-1 text-gray-500">Every site, newest first. Click a site to see its details.</p>
+			<p class="mt-1 text-gray-500">Every site. Click a site to see its details.</p>
 		</div>
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
+			<div id="control--sites--order" class="mb-4 flex justify-end gap-2">
+				for _, siteOrder := range siteOrders {
+					@sitesPageButton("control--sites--order-"+orDefault(siteOrder.order), siteOrder.label, 0, limit, siteOrder.order, siteOrder.order != order)
+				}
+			</div>
 			@table.Table(table.Props{ID: "controlSitesTable", Class: "rounded-lg border border-gray-200"}) {
 				@table.Header() {
 					@table.Row() {
@@ -45,11 +58,14 @@ templ SitesTable(sites []*controlmodels.Site, skip int64, limit int64) {
 						@table.Head() {
 							Last Write
 						}
+						@table.Head() {
+							DB Size (KB)
+						}
 					}
 				}
 				@table.Body() {
 					if len(sites) == 0 {
-						<tr><td colspan="5" class="p-4 text-sm text-gray-500">No sites here.</td></tr>
+						<tr><td colspan="6" class="p-4 text-sm text-gray-500">No sites here.</td></tr>
 					}
 					for _, site := range sites {
 						@siteRow(site)
@@ -64,10 +80,10 @@ templ SitesTable(sites []*controlmodels.Site, skip int64, limit int64) {
 				}
 				<div class="flex gap-2">
 					if skip > 0 {
-						@sitesPageButton("control--sites--previous", "Previous", max(skip-limit, 0), limit)
+						@sitesPageButton("control--sites--previous", "Previous", max(skip-limit, 0), limit, order, true)
 					}
 					if int64(len(sites)) == limit {
-						@sitesPageButton("control--sites--next", "Next", skip+limit, limit)
+						@sitesPageButton("control--sites--next", "Next", skip+limit, limit, order, true)
 					}
 				</div>
 			</div>
@@ -76,12 +92,29 @@ templ SitesTable(sites []*controlmodels.Site, skip int64, limit int64) {
 	</div>
 }
 
-templ sitesPageButton(id string, label string, skip int64, limit int64) {
+// orDefault names the default order, which has no order query value
+func orDefault(order string) string {
+	if order == "" {
+		return "created"
+	}
+	return order
+}
+
+// sitesPageButton goes to a page of the sites in an order, outlined unless it is the order shown
+templ sitesPageButton(id string, label string, skip int64, limit int64, order string, outline bool) {
+	{{ variant := button.VariantDefault }}
+	if outline {
+		{{ variant = button.VariantOutline }}
+	}
+	{{ path := fmt.Sprintf("/sites?skip=%d&limit=%d", skip, limit) }}
+	if order != "" {
+		{{ path += "&order=" + order }}
+	}
 	@button.Button(button.Props{
 		ID:      id,
-		Variant: button.VariantOutline,
+		Variant: variant,
 		Attributes: templ.Attributes{
-			"hx-get":      fmt.Sprintf("/sites?skip=%d&limit=%d", skip, limit),
+			"hx-get":      path,
 			"hx-target":   "#main-content",
 			"hx-push-url": "true",
 			"hx-swap":     "innerHTML",
@@ -116,6 +149,9 @@ templ siteRow(site *controlmodels.Site) {
 		@table.Cell() {
 			{ formatDate(site.LastWriteAt) }
 		}
+		@table.Cell() {
+			{ orDash(site.EstimatedDbSizeKb) }
+		}
 	}
 }
 
@@ -128,6 +164,7 @@ templ SiteModal(site *controlmodels.Site) {
 				@siteDetail("State", site.State)
 				@siteDetail("Batch", site.Batch)
 				@siteDetail("DB Size Limit (KB)", orDash(site.MaxDbSizeKbLimit))
+				@siteDetail("DB Size (KB)", orDash(site.EstimatedDbSizeKb))
 				@siteDetail("Created", formatDate(&site.CreatedAt))
 				@siteDetail("Last Seen", formatDate(site.LastSeenAt))
 				@siteDetail("Last Write", formatDate(site.LastWriteAt))

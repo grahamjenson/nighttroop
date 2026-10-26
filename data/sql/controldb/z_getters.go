@@ -1047,6 +1047,16 @@ func (m *Site) SetMaxDbSizeKbLimit(v *int64) {
 	m.MaxDbSizeKbLimit = v
 }
 
+// GetEstimatedDbSizeKb returns the EstimatedDbSizeKb value.
+func (m Site) GetEstimatedDbSizeKb() *int64 {
+	return m.EstimatedDbSizeKb
+}
+
+// SetEstimatedDbSizeKb sets the EstimatedDbSizeKb value and returns the updated Site.
+func (m *Site) SetEstimatedDbSizeKb(v *int64) {
+	m.EstimatedDbSizeKb = v
+}
+
 // GetLastSeenAt returns the LastSeenAt value.
 func (m Site) GetLastSeenAt() *int64 {
 	return m.LastSeenAt
@@ -3087,6 +3097,46 @@ func (m *SearchSitesParams) SetLimit(v int64) {
 	m.Limit = v
 }
 
+// GetSkip returns the Skip value.
+func (m SearchSitesByLastWriteParams) GetSkip() int64 {
+	return m.Skip
+}
+
+// SetSkip sets the Skip value and returns the updated SearchSitesByLastWriteParams.
+func (m *SearchSitesByLastWriteParams) SetSkip(v int64) {
+	m.Skip = v
+}
+
+// GetLimit returns the Limit value.
+func (m SearchSitesByLastWriteParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated SearchSitesByLastWriteParams.
+func (m *SearchSitesByLastWriteParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
+// GetSkip returns the Skip value.
+func (m SearchSitesByDBSizeParams) GetSkip() int64 {
+	return m.Skip
+}
+
+// SetSkip sets the Skip value and returns the updated SearchSitesByDBSizeParams.
+func (m *SearchSitesByDBSizeParams) SetSkip(v int64) {
+	m.Skip = v
+}
+
+// GetLimit returns the Limit value.
+func (m SearchSitesByDBSizeParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated SearchSitesByDBSizeParams.
+func (m *SearchSitesByDBSizeParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
 // GetID returns the ID value.
 func (m GetSiteInAnyStateParams) GetID() string {
 	return m.ID
@@ -3155,6 +3205,16 @@ func (m UpdateSiteDateFlagsParams) GetLastWriteAt() *int64 {
 // SetLastWriteAt sets the LastWriteAt value and returns the updated UpdateSiteDateFlagsParams.
 func (m *UpdateSiteDateFlagsParams) SetLastWriteAt(v *int64) {
 	m.LastWriteAt = v
+}
+
+// GetEstimatedDbSizeKb returns the EstimatedDbSizeKb value.
+func (m UpdateSiteDateFlagsParams) GetEstimatedDbSizeKb() *int64 {
+	return m.EstimatedDbSizeKb
+}
+
+// SetEstimatedDbSizeKb sets the EstimatedDbSizeKb value and returns the updated UpdateSiteDateFlagsParams.
+func (m *UpdateSiteDateFlagsParams) SetEstimatedDbSizeKb(v *int64) {
+	m.EstimatedDbSizeKb = v
 }
 
 // GetID returns the ID value.

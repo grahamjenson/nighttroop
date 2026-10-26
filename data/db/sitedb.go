@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
 
@@ -36,6 +37,21 @@ func NewSiteDB(ctx context.Context, subdomain string, cfg *config.ServerConfig) 
 	}
 
 	return siteDB, nil
+}
+
+// EstimatedSizeKB is the site DB's size on disk in KB, its file and write-ahead log, or nil for one in memory
+func (db *SiteDB) EstimatedSizeKB() *int64 {
+	if db.InMemory {
+		return nil
+	}
+	var size int64
+	for _, path := range []string{db.Path, db.Path + "-wal"} {
+		if info, err := os.Stat(path); err == nil {
+			size += info.Size()
+		}
+	}
+	kb := size / 1024
+	return &kb
 }
 
 // WARNING THIS IS A BEST TRY FUNCTION ALL ERRORS ARE SWALLOWED

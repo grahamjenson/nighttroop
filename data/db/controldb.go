@@ -281,7 +281,9 @@ func (db *ControlDB) SubdomainUsed(subdomain string) bool {
 	return exists
 }
 
-func (db *ControlDB) UpdateSiteAndIdentityDateFlags(siteModel *controldb.Site, identityModel *controldb.SiteIdentity, updateLastSeen bool, updateLastWrite bool) error {
+// UpdateSiteAndIdentityDateFlags records when the site and identity were last seen and written to, at most every
+// 10 minutes, and the site DB's size with its last write
+func (db *ControlDB) UpdateSiteAndIdentityDateFlags(siteModel *controldb.Site, siteDB *SiteDB, identityModel *controldb.SiteIdentity, updateLastSeen bool, updateLastWrite bool) error {
 	subdomain := siteModel.ID
 
 	// Only update if not seen in 10 minutes
@@ -291,16 +293,19 @@ func (db *ControlDB) UpdateSiteAndIdentityDateFlags(siteModel *controldb.Site, i
 	now := time.Now().UnixMilli()
 	var lastSeenAt *int64
 	var lastWriteAt *int64
+	var estimatedDBSizeKB *int64
 	if updateLastSeen && lastSeenMoreThan10MinutesAgo {
 		lastSeenAt = &now
 	}
 	if updateLastWrite && lastWriteMoreThan10MinutesAgo {
 		lastWriteAt = &now
+		estimatedDBSizeKB = siteDB.EstimatedSizeKB()
 	}
 	db.Queries.UpdateSiteDateFlags(context.TODO(), controldb.UpdateSiteDateFlagsParams{
-		LastSeenAt:  lastSeenAt,
-		LastWriteAt: lastWriteAt,
-		ID:          subdomain,
+		LastSeenAt:        lastSeenAt,
+		LastWriteAt:       lastWriteAt,
+		EstimatedDbSizeKb: estimatedDBSizeKB,
+		ID:                subdomain,
 	})
 
 	db.Queries.UpdateSiteIdentityDateFlags(context.TODO(), controldb.UpdateSiteIdentityDateFlagsParams{

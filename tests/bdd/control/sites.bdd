@@ -20,7 +20,22 @@ ASSERT_STATUS 200
 ASSERT_PATH /sites
 ASSERT_VISIBLE #controlSitesTable
 ASSERT_TEXT_VISIBLE Showing 1 to
+ASSERT_TEXT_VISIBLE DB Size (KB)
 SCREENSHOT sites
+
+// The sites can be ordered by how long since they were written to, the first to archive, or by DB size
+CLICK #control--sites--order-last_write
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to
+SCREENSHOT sites_by_last_write
+
+CLICK #control--sites--order-db_size
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to
+
+CLICK #control--sites--order-created
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to
 
 // Clicking a site shows its details
 CLICK #controlSitesTable tbody tr >> nth=0

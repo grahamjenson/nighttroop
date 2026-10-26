@@ -2,6 +2,7 @@ package controlcollections
 
 import (
 	"context"
+	"net/http"
 
 	"nighttroop.t1d.nz/utils/apiutils"
 
@@ -28,12 +29,31 @@ func (s *SitesCollection) ToModel(row *controldb.Site) *controlmodels.Site {
 	return controlmodels.SiteFromDB(row)
 }
 
+// SearchRows is the sites newest first, or by order last_write the longest since written to first, or by order
+// db_size the largest site DB first
 func (s *SitesCollection) SearchRows(ctx context.Context, query *apiutils.Query, controlContext *httputils.ControlContext) ([]*controldb.Site, error) {
-	return controlContext.ControlDB.Queries.SearchSites(ctx, controlmodels.QueryToSearchSites(query))
+	params := controlmodels.QueryToSearchSites(query)
+	switch orderOf(query) {
+	case "":
+		return controlContext.ControlDB.Queries.SearchSites(ctx, params)
+	case "last_write":
+		return controlContext.ControlDB.Queries.SearchSitesByLastWrite(ctx, controldb.SearchSitesByLastWriteParams(params))
+	case "db_size":
+		return controlContext.ControlDB.Queries.SearchSitesByDBSize(ctx, controldb.SearchSitesByDBSizeParams(params))
+	}
+	return nil, &apiutils.HTTPError{Status: http.StatusBadRequest, Message: "sites can be ordered by last_write or db_size"}
 }
 
 func (s *SitesCollection) SearchHTMXResponse(models []*controlmodels.Site, query *apiutils.Query) templ.Component {
-	return control_sites_templ.SitesTable(models, query.Skip, query.Limit)
+	return control_sites_templ.SitesTable(models, query.Skip, query.Limit, orderOf(query))
+}
+
+// orderOf is what a query orders by, or empty for the default
+func orderOf(query *apiutils.Query) string {
+	if query.Order == nil {
+		return ""
+	}
+	return *query.Order
 }
 
 func (s *SitesCollection) GetRow(ctx context.Context, id string, controlContext *httputils.ControlContext) (*controldb.Site, error) {
