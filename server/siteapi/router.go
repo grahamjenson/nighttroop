@@ -41,7 +41,7 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 
 		// Redirect home to Summary page
 		r.Get("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			http.Redirect(w, r, "/v1/summary", http.StatusSeeOther)
+			http.Redirect(w, r, "/data/summary", http.StatusSeeOther)
 		}))
 
 		// Data Glucose Readings

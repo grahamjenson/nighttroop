@@ -21,7 +21,7 @@ type GlucoseReadingsCollection struct{}
 // Shared
 // ////
 func (s *GlucoseReadingsCollection) GetName() string {
-	return "glucose_readings"
+	return "glucose"
 }
 
 // ////

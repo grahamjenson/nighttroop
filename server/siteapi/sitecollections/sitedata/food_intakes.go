@@ -23,7 +23,7 @@ type FoodIntakesCollection struct{}
 // Shared
 // ////
 func (s *FoodIntakesCollection) GetName() string {
-	return "food_intakes"
+	return "food"
 }
 
 // ////

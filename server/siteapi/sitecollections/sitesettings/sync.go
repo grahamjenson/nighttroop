@@ -29,7 +29,7 @@ type SyncSettingsCollection struct{}
 // Shared
 // ////
 func (s *SyncSettingsCollection) GetName() string {
-	return "sync_settings"
+	return "sync"
 }
 
 // ////

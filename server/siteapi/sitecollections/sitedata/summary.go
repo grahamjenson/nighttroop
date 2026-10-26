@@ -5,8 +5,10 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/site_templ/site_summary_templ"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -37,8 +39,29 @@ func (s *SummaryCollection) ToModel(row *sitemodels.Summary, siteContext *httput
 	return row
 }
 
+func (s *SummaryCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.Summary, error) {
+
+	summary, err := getSummary(ctx, collectionTx, defaultHours, siteContext)
+	if err != nil {
+		return nil, err
+	}
+	return []*sitemodels.Summary{summary}, nil
+}
+
+func (s *SummaryCollection) SearchHTMXResponse(models []*sitemodels.Summary, query *apiutils.Query) templ.Component {
+	if len(models) == 0 {
+		return nil
+	}
+	model := models[0]
+	return site_summary_templ.Summary(model)
+}
+
 func (s *SummaryCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitemodels.Summary, error) {
 	return getSummary(ctx, collectionTx, defaultHours, siteContext)
+}
+
+func (s *SummaryCollection) GetHTMXResponse(model *sitemodels.Summary) templ.Component {
+	return site_summary_templ.Summary(model)
 }
 
 func getSummary(ctx context.Context, tx *siteapiutils.CollectionTx, hours int64, siteContext *httputils.SiteContext) (*sitemodels.Summary, *apiutils.HTTPError) {
