@@ -1,0 +1,60 @@
+package pager
+
+import (
+	"fmt"
+	"strings"
+
+	"nighttroop.t1d.nz/server/components/ui/button"
+)
+
+type Props struct {
+	// ID names the parts: ID--showing, ID--previous and ID--next
+	ID string
+	// Path is the page's URL without skip and limit, which may have a query of its own
+	Path  string
+	Count int
+	Skip  int64
+	Limit int64
+}
+
+// Pager is under a table of one page of rows: which rows it shows, and buttons to the pages either side
+templ Pager(p Props) {
+	<div class="mt-4 flex items-center justify-between text-sm text-gray-500">
+		if p.Count > 0 {
+			<span id={ p.ID + "--showing" }>{ fmt.Sprintf("Showing %d to %d", p.Skip+1, p.Skip+int64(p.Count)) }</span>
+		} else {
+			<span></span>
+		}
+		<div class="flex gap-2">
+			if p.Skip > 0 {
+				@pageButton(p.ID+"--previous", "Previous", pageURL(p.Path, max(p.Skip-p.Limit, 0), p.Limit))
+			}
+			if int64(p.Count) == p.Limit {
+				@pageButton(p.ID+"--next", "Next", pageURL(p.Path, p.Skip+p.Limit, p.Limit))
+			}
+		</div>
+	</div>
+}
+
+templ pageButton(id string, label string, url string) {
+	@button.Button(button.Props{
+		ID:      id,
+		Variant: button.VariantOutline,
+		Attributes: templ.Attributes{
+			"hx-get":      url,
+			"hx-target":   "#main-content",
+			"hx-push-url": "true",
+			"hx-swap":     "innerHTML",
+		},
+	}) {
+		{ label }
+	}
+}
+
+func pageURL(path string, skip int64, limit int64) string {
+	separator := "?"
+	if strings.Contains(path, "?") {
+		separator = "&"
+	}
+	return fmt.Sprintf("%s%sskip=%d&limit=%d", path, separator, skip, limit)
+}
