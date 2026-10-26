@@ -10,6 +10,7 @@ import (
 	"nighttroop.t1d.nz/background/liteq"
 	"nighttroop.t1d.nz/background/summarise_jobs"
 	ntsync "nighttroop.t1d.nz/background/sync"
+	"nighttroop.t1d.nz/background/trim_logs"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/s3utils"
@@ -48,6 +49,9 @@ func NewBackGroundManager(ctx context.Context, controlDB *db.ControlDB, config *
 
 	// Summarise Jobs
 	summariseManager.SetupCron(cron)
+
+	// Trim the logs DB's tables to their newest rows
+	trim_logs.SetupCron(cron, config, controlDB.Logs)
 
 	// Sync Jobs
 	syncjobManager.SetupCron(cron, queue)

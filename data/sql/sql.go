@@ -9,6 +9,7 @@ package sql
 //go:generate go run ./gen/gensql.go  -folder controldb
 //go:generate go run ./gen/gensql.go  -folder sitedb
 //go:generate go run ./gen/gensql.go  -folder jobsdb
+//go:generate go run ./gen/gensql.go  -folder logsdb
 
 //go:generate goverter gen ./controldb
 //go:generate goverter gen ./sitedb
