@@ -1355,6 +1355,78 @@ func NotificationEventToUpdate(source *SiteNotificationEvent, context *httputils
 	}
 	return sitedbUpdateNotificationEventParams
 }
+func ProfilePresetFromDB(source *sitedb.ProfilePreset, context *httputils.SiteContext) *SiteProfilePreset {
+	var pSitemodelsSiteProfilePreset *SiteProfilePreset
+	if source != nil {
+		var sitemodelsSiteProfilePreset SiteProfilePreset
+		sitemodelsSiteProfilePreset.ID = (*source).ID
+		pString := (*source).Name
+		sitemodelsSiteProfilePreset.Name = &pString
+		sitemodelsSiteProfilePreset.ProfileStoreID = (*source).ProfileStoreID
+		sitemodelsSiteProfilePreset.IsDefault = (*source).IsDefault
+		if (*source).Dia != nil {
+			xfloat64 := *(*source).Dia
+			sitemodelsSiteProfilePreset.Dia = &xfloat64
+		}
+		if (*source).Timezone != nil {
+			xstring := *(*source).Timezone
+			sitemodelsSiteProfilePreset.Timezone = &xstring
+		}
+		if (*source).CarbsHr != nil {
+			xfloat642 := *(*source).CarbsHr
+			sitemodelsSiteProfilePreset.CarbsHr = &xfloat642
+		}
+		if (*source).Delay != nil {
+			xfloat643 := *(*source).Delay
+			sitemodelsSiteProfilePreset.Delay = &xfloat643
+		}
+		sitemodelsSiteProfilePreset.Units = ContextUnits(context)
+		sitemodelsSiteProfilePreset.CarbRatios = ScheduleFromJSON((*source).CarbRatiosJson)
+		sitemodelsSiteProfilePreset.Sensitivities = ProfileSensitivities(source, context)
+		sitemodelsSiteProfilePreset.BasalRates = ScheduleFromJSON((*source).BasalRatesJson)
+		sitemodelsSiteProfilePreset.LowTargets = GlucoseScheduleFromJSON((*source).TargetsLowJson, context)
+		sitemodelsSiteProfilePreset.HighTargets = GlucoseScheduleFromJSON((*source).TargetsHighJson, context)
+		if (*source).RawJsonData != nil {
+			xstring2 := *(*source).RawJsonData
+			sitemodelsSiteProfilePreset.RawJsonData = &xstring2
+		}
+		if (*source).UtcOffsetMinutes != nil {
+			xint64 := *(*source).UtcOffsetMinutes
+			sitemodelsSiteProfilePreset.UtcOffsetMinutes = &xint64
+		}
+		sitemodelsSiteProfilePreset.OccurredAt = (*source).OccurredAt
+		sitemodelsSiteProfilePreset.CreatedAt = (*source).CreatedAt
+		sitemodelsSiteProfilePreset.UpdatedAt = (*source).UpdatedAt
+		if (*source).CreatedByAppName != nil {
+			xstring3 := *(*source).CreatedByAppName
+			sitemodelsSiteProfilePreset.CreatedByAppName = &xstring3
+		}
+		if (*source).CreatedByDeviceName != nil {
+			xstring4 := *(*source).CreatedByDeviceName
+			sitemodelsSiteProfilePreset.CreatedByDeviceName = &xstring4
+		}
+		sitemodelsSiteProfilePreset.CreatedByIdentityName = (*source).CreatedByIdentityName
+		if (*source).UpdatedByIdentityName != nil {
+			xstring5 := *(*source).UpdatedByIdentityName
+			sitemodelsSiteProfilePreset.UpdatedByIdentityName = &xstring5
+		}
+		pSitemodelsSiteProfilePreset = &sitemodelsSiteProfilePreset
+	}
+	return pSitemodelsSiteProfilePreset
+}
+func ProfilePresetToUpdate(source *SiteProfilePreset, context *httputils.SiteContext) sitedb.UpdateProfilePresetParams {
+	var sitedbUpdateProfilePresetParams sitedb.UpdateProfilePresetParams
+	if source != nil {
+		if (*source).Name != nil {
+			xstring := *(*source).Name
+			sitedbUpdateProfilePresetParams.Name = &xstring
+		}
+		sitedbUpdateProfilePresetParams.UpdatedByIdentityID = ContextIdentityID(context)
+		sitedbUpdateProfilePresetParams.UpdatedByIdentityName = ContextIdentityName(context)
+		sitedbUpdateProfilePresetParams.ID = (*source).ID
+	}
+	return sitedbUpdateProfilePresetParams
+}
 func ProfileSwitchFromDB(source *sitedb.ProfileSwitch) *SiteProfileSwitch {
 	var pSitemodelsSiteProfileSwitch *SiteProfileSwitch
 	if source != nil {

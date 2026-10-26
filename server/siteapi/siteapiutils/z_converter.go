@@ -72,6 +72,14 @@ func QueryToAllNotificationEvents(source *apiquery.Query) sitedb.AllNotification
 	}
 	return sitedbAllNotificationEventsParams
 }
+func QueryToAllProfilePresets(source *apiquery.Query) sitedb.AllProfilePresetsParams {
+	var sitedbAllProfilePresetsParams sitedb.AllProfilePresetsParams
+	if source != nil {
+		sitedbAllProfilePresetsParams.Skip = (*source).Skip
+		sitedbAllProfilePresetsParams.Limit = (*source).Limit
+	}
+	return sitedbAllProfilePresetsParams
+}
 func QueryToAllProfileSwitches(source *apiquery.Query) sitedb.AllProfileSwitchesParams {
 	var sitedbAllProfileSwitchesParams sitedb.AllProfileSwitchesParams
 	if source != nil {

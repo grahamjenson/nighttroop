@@ -1,0 +1,250 @@
+package site_presets_templ
+
+import (
+	"fmt"
+	"strconv"
+
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/icon"
+	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/consts"
+)
+
+// scheduleTime shows seconds from midnight as a time of day
+func scheduleTime(seconds int64) string {
+	return fmt.Sprintf("%02d:%02d", seconds/3600, seconds%3600/60)
+}
+
+func scheduleValue(value float64) string {
+	return strconv.FormatFloat(value, 'f', -1, 64)
+}
+
+// glucoseValue shows a sensitivity or target as glucose is shown elsewhere in units
+func glucoseValue(units *consts.Units) func(float64) string {
+	return func(value float64) string { return site_data_templ.FormatGlucose(value, units) }
+}
+
+// ProfilePresetsTable shows one page of profiles, newest first, with buttons to the pages either side
+templ ProfilePresetsTable(profiles []*sitemodels.SiteProfilePreset, skip int64, limit int64) {
+	<div id="profile_presets_table" class="mx-auto max-w-5xl space-y-6">
+		<div>
+			<h1 class="text-2xl font-bold">Profiles</h1>
+			<p class="mt-1 text-gray-500">
+				The profiles your loop uploaded, with their schedules. Click one to see it or rename it.
+			</p>
+		</div>
+		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
+			@table.Table(table.Props{
+				ID:    "profilePresetsTable",
+				Class: "rounded-lg border border-gray-200",
+			}) {
+				@table.Header() {
+					@table.Row() {
+						@table.Head() {
+							Name
+						}
+						@table.Head() {
+							Default
+						}
+						@table.Head() {
+							DIA (hours)
+						}
+						@table.Head() {
+							Device
+						}
+						@table.Head() {
+							Uploaded
+						}
+						@table.Head() {
+							<span class="sr-only">Actions</span>
+						}
+					}
+				}
+				@table.Body() {
+					if len(profiles) == 0 {
+						<tr id="presets--profiles--empty"><td colspan="6" class="p-4 text-sm text-gray-500">No profiles here.</td></tr>
+					}
+					for _, profile := range profiles {
+						@profilePresetRow(profile)
+					}
+				}
+			}
+			<div class="mt-4 flex items-center justify-between text-sm text-gray-500">
+				if len(profiles) > 0 {
+					<span id="presets--profiles--showing">{ fmt.Sprintf("Showing %d to %d", skip+1, skip+int64(len(profiles))) }</span>
+				} else {
+					<span></span>
+				}
+				<div class="flex gap-2">
+					if skip > 0 {
+						@profilePresetPageButton("presets--profiles--previous", "Previous", max(skip-limit, 0), limit)
+					}
+					if int64(len(profiles)) == limit {
+						@profilePresetPageButton("presets--profiles--next", "Next", skip+limit, limit)
+					}
+				</div>
+			</div>
+		</section>
+		<div id="modal-container"></div>
+	</div>
+}
+
+templ profilePresetPageButton(id string, label string, skip int64, limit int64) {
+	@button.Button(button.Props{
+		ID:      id,
+		Variant: button.VariantOutline,
+		Attributes: templ.Attributes{
+			"hx-get":      fmt.Sprintf("/presets/profiles?skip=%d&limit=%d", skip, limit),
+			"hx-target":   "#main-content",
+			"hx-push-url": "true",
+			"hx-swap":     "innerHTML",
+		},
+	}) {
+		{ label }
+	}
+}
+
+// profilePresetRow opens the profile's details when clicked. The delete button stops its click reaching the row.
+templ profilePresetRow(profile *sitemodels.SiteProfilePreset) {
+	{{ id := "presets--profiles--" + profile.ID }}
+	@table.Row(table.RowProps{
+		ID:    id,
+		Class: "cursor-pointer",
+		Attributes: templ.Attributes{
+			"hx-get":    "/presets/profiles/" + profile.ID,
+			"hx-target": "#modal-container",
+			"hx-swap":   "innerHTML",
+		},
+	}) {
+		@table.Cell() {
+			{ orDash(profile.Name) }
+		}
+		@table.Cell() {
+			if profile.IsDefault {
+				<span class="rounded-full bg-brand-gold px-2 py-0.5 text-xs font-semibold text-brand-night">Default</span>
+			}
+		}
+		@table.Cell() {
+			{ orDash(profile.Dia) }
+		}
+		@table.Cell() {
+			{ orDash(profile.CreatedByDeviceName) }
+		}
+		@table.Cell() {
+			{ formatDate(profile.OccurredAt) }
+		}
+		@table.Cell() {
+			<div class="flex justify-end">
+				@button.Button(button.Props{
+					ID:      id + "--delete",
+					Variant: button.VariantGhost,
+					Size:    button.SizeIcon,
+					Attributes: templ.Attributes{
+						"title":                "Delete",
+						"onclick":              "event.stopPropagation()",
+						"hx-delete":            "/presets/profiles/" + profile.ID,
+						"hx-confirm":           "Delete this profile?",
+						"hx-target":            "#toaster",
+						"hx-swap":              "beforeend",
+						"hx-on::after:request": "if (ctx.response.status < 400) this.closest('tr').remove()",
+						"hx-status:4xx":        "target:#toaster swap:beforeend",
+						"hx-status:5xx":        "target:#toaster swap:beforeend",
+					},
+				}) {
+					@icon.Trash2(icon.Props{Class: "size-4 text-red-600"})
+				}
+			</div>
+		}
+	}
+}
+
+templ ProfilePresetModal(profile *sitemodels.SiteProfilePreset) {
+	{{ units := orEmpty(profile.Units) }}
+	<div id="presets--profiles--details" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+		<div class="max-h-[90vh] w-full max-w-3xl overflow-auto rounded-lg bg-white p-6 shadow-lg">
+			<h2 class="text-lg font-semibold">{ orDash(profile.Name) }</h2>
+			<p class="text-sm text-gray-500">{ formatDate(profile.OccurredAt) }</p>
+			<form
+				id="presets--profiles--edit"
+				class="mt-4 flex items-center gap-2"
+				hx-post={ "/presets/profiles/" + profile.ID }
+				hx-target={ "#presets--profiles--" + profile.ID }
+				hx-swap="outerHTML"
+				hx-status:4xx="target:#toaster swap:beforeend"
+				hx-status:5xx="target:#toaster swap:beforeend"
+			>
+				<div class="w-64">
+					@input.Input(input.Props{ID: "presets--profiles--edit--name", Name: "name", Placeholder: "Name", Value: orEmpty(profile.Name), Required: true, Attributes: templ.Attributes{"maxlength": "64"}})
+				</div>
+				@button.Button(button.Props{ID: "presets--profiles--edit--submit", Type: button.TypeSubmit}) {
+					Rename
+				}
+			</form>
+			<div id="presets--profiles--schedules" class="mt-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-5">
+				@profileSchedule("Basal (U/h)", profile.BasalRates, scheduleValue)
+				@profileSchedule("Carb Ratio (g/U)", profile.CarbRatios, scheduleValue)
+				@profileSchedule("Sensitivity ("+units+"/U)", profile.Sensitivities, glucoseValue(profile.Units))
+				@profileSchedule("Low Target ("+units+")", profile.LowTargets, glucoseValue(profile.Units))
+				@profileSchedule("High Target ("+units+")", profile.HighTargets, glucoseValue(profile.Units))
+			</div>
+			<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+				@presetDetail("ID", profile.ID)
+				@presetDetail("Profile Store", profile.ProfileStoreID)
+				@presetDetail("DIA (hours)", orDash(profile.Dia))
+				@presetDetail("Carbs per Hour", orDash(profile.CarbsHr))
+				@presetDetail("Delay", orDash(profile.Delay))
+				@presetDetail("Timezone", orDash(profile.Timezone))
+				@presetDetail("App", orDash(profile.CreatedByAppName))
+				@presetDetail("Device", orDash(profile.CreatedByDeviceName))
+				@presetDetail("Created By", profile.CreatedByIdentityName)
+				@presetDetail("Updated", formatDate(profile.UpdatedAt))
+				@presetDetail("Updated By", orDash(profile.UpdatedByIdentityName))
+			</dl>
+			<div class="mt-4 flex justify-end">
+				@button.Button(button.Props{
+					ID:      "presets--profiles--details--close",
+					Variant: button.VariantOutline,
+					Attributes: templ.Attributes{
+						"hx-get":    "/empty",
+						"hx-target": "#modal-container",
+						"hx-swap":   "innerHTML",
+					},
+				}) {
+					Close
+				}
+			</div>
+		</div>
+	</div>
+}
+
+// profileSchedule lists a schedule's values from each time of day
+templ profileSchedule(title string, schedule []*sitemodels.SiteScheduleValue, format func(float64) string) {
+	<div>
+		<h3 class="mb-1 font-semibold">{ title }</h3>
+		if len(schedule) == 0 {
+			<p class="text-gray-500">-</p>
+		}
+		<dl class="grid grid-cols-2 gap-x-2">
+			for _, value := range schedule {
+				<dt class="text-gray-500">{ scheduleTime(value.Seconds) }</dt>
+				<dd>{ format(value.Value) }</dd>
+			}
+		</dl>
+	</div>
+}
+
+// ProfilePresetUpdated replaces the profile's row, closes its details and shows a toast
+templ ProfilePresetUpdated(profile *sitemodels.SiteProfilePreset) {
+	@profilePresetRow(profile)
+	<div id="modal-container" hx-swap-oob="innerHTML"></div>
+	<div hx-swap-oob="beforeend:#toaster">
+		@presetToast("Profile Renamed")
+	</div>
+}
+
+templ ProfilePresetDeleted() {
+	@presetToast("Profile Deleted")
+}

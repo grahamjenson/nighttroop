@@ -48,6 +48,7 @@ func NewSiteStore() *SiteStore {
 
 	// Presets collections
 	siteStore.registerCollection("presets", &sitepresets.FoodPresetsCollection{})
+	siteStore.registerCollection("presets", &sitepresets.ProfilePresetsCollection{})
 
 	// Settings collections
 	siteStore.registerCollection("settings", &sitesettings.SyncSettingsCollection{})
