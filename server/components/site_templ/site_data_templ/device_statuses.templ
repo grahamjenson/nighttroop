@@ -5,6 +5,7 @@ import (
 	"net/url"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/table"
@@ -107,39 +108,10 @@ templ DeviceStatusHistory(device string, statuses []*sitemodels.SiteDeviceStatus
 		</div>
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			@deviceStatusTable("deviceStatusTable", statuses)
-			<div class="mt-4 flex items-center justify-between text-sm text-gray-500">
-				if len(statuses) > 0 {
-					<span>{ fmt.Sprintf("Showing %d to %d", skip+1, skip+int64(len(statuses))) }</span>
-				} else {
-					<span></span>
-				}
-				<div class="flex gap-2">
-					if skip > 0 {
-						@deviceStatusPageButton("site--device-status--previous", "Previous", deviceHistoryURL(device, max(skip-limit, 0), limit))
-					}
-					if int64(len(statuses)) == limit {
-						@deviceStatusPageButton("site--device-status--next", "Next", deviceHistoryURL(device, skip+limit, limit))
-					}
-				</div>
-			</div>
+			@pager.Pager(pager.Props{ID: "site--device-status", Path: "/data/device-status?device=" + url.QueryEscape(device), Count: len(statuses), Skip: skip, Limit: limit})
 		</section>
 		<div id="modal-container"></div>
 	</div>
-}
-
-templ deviceStatusPageButton(id string, label string, path string) {
-	@button.Button(button.Props{
-		ID:      id,
-		Variant: button.VariantOutline,
-		Attributes: templ.Attributes{
-			"hx-get":      path,
-			"hx-target":   "#main-content",
-			"hx-push-url": "true",
-			"hx-swap":     "innerHTML",
-		},
-	}) {
-		{ label }
-	}
 }
 
 templ deviceStatusTable(id string, statuses []*sitemodels.SiteDeviceStatus) {
