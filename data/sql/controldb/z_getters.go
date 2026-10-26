@@ -867,6 +867,16 @@ func (m *SiteSyncSource) SetTreatmentsLastModified(v *int64) {
 	m.TreatmentsLastModified = v
 }
 
+// GetDevicestatusLastModified returns the DevicestatusLastModified value.
+func (m SiteSyncSource) GetDevicestatusLastModified() *int64 {
+	return m.DevicestatusLastModified
+}
+
+// SetDevicestatusLastModified sets the DevicestatusLastModified value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetDevicestatusLastModified(v *int64) {
+	m.DevicestatusLastModified = v
+}
+
 // GetSyncIntervalSecondsReason returns the SyncIntervalSecondsReason value.
 func (m SiteSyncSource) GetSyncIntervalSecondsReason() string {
 	return m.SyncIntervalSecondsReason
@@ -2985,6 +2995,16 @@ func (m UpdateSyncSourceLastModifiedParams) GetTreatmentsLastModified() *int64 {
 // SetTreatmentsLastModified sets the TreatmentsLastModified value and returns the updated UpdateSyncSourceLastModifiedParams.
 func (m *UpdateSyncSourceLastModifiedParams) SetTreatmentsLastModified(v *int64) {
 	m.TreatmentsLastModified = v
+}
+
+// GetDevicestatusLastModified returns the DevicestatusLastModified value.
+func (m UpdateSyncSourceLastModifiedParams) GetDevicestatusLastModified() *int64 {
+	return m.DevicestatusLastModified
+}
+
+// SetDevicestatusLastModified sets the DevicestatusLastModified value and returns the updated UpdateSyncSourceLastModifiedParams.
+func (m *UpdateSyncSourceLastModifiedParams) SetDevicestatusLastModified(v *int64) {
+	m.DevicestatusLastModified = v
 }
 
 // GetType returns the Type value.

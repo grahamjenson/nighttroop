@@ -46,12 +46,13 @@ func TestNightscoutSyncRemembersWhenCollectionsWereModified(t *testing.T) {
 	lastModified := func() *int64 {
 		s, err := q.GetSyncSource(ctx, controldb.GetSyncSourceParams{SiteID: siteID, Type: typ})
 		require.NoError(t, err)
-		require.Equal(t, s.EntriesLastModified, s.TreatmentsLastModified, "the fake Nightscout modified both at the same time")
+		require.Equal(t, s.EntriesLastModified, s.TreatmentsLastModified, "the fake Nightscout modified each at the same time")
+		require.Equal(t, s.EntriesLastModified, s.DevicestatusLastModified, "the fake Nightscout modified each at the same time")
 		return s.EntriesLastModified
 	}
 	runSync := func() error { return jobs.SyncSource(ctx, SyncJobParams{SiteID: siteID, Type: typ}) }
 
-	// A sync reads entries and treatments and remembers when Nightscout says each was last modified
+	// A sync reads entries, treatments and device statuses and remembers when Nightscout says each was last modified
 	require.NoError(t, q.CreateSyncSource(ctx, controldb.CreateSyncSourceParams{SiteID: siteID, Type: typ, UrlOrUsernameEnc: enc(nightscout_client.TestValidURL), PasswordEnc: enc("token"), Enabled: true}))
 	require.Nil(t, lastModified())
 	require.NoError(t, runSync())
@@ -101,7 +102,7 @@ func TestNightscoutClientIsKeptBetweenSyncs(t *testing.T) {
 	require.Len(t, jobs.nightscoutClients, 1)
 }
 
-func TestNightscoutSyncCopiesEntriesAndTreatments(t *testing.T) {
+func TestNightscoutSyncCopiesEntriesTreatmentsAndDeviceStatuses(t *testing.T) {
 	cfg, controlDB, site, err := testutils.GetConfigControlDBAndSiteDBForTest()
 	require.NoError(t, err)
 	q, ctx, siteID, typ := controlDB.Queries, context.TODO(), site.SiteDB.Subdomain, consts.SyncSourceTypeNightscout
@@ -118,10 +119,11 @@ func TestNightscoutSyncCopiesEntriesAndTreatments(t *testing.T) {
 			map[string]any{"eventType": "Meal Bolus", "carbs": 40, "insulin": 4, "date": now, "srvCreated": now},
 			map[string]any{"eventType": "Something Custom", "date": now},
 		},
+		"devicestatus": {map[string]any{"device": "openaps://phone", "date": now, "uploaderBattery": 80}},
 	}
 	t.Cleanup(func() { nightscout_client.TestDocuments = map[string][]any{} })
 
-	// The reading and the meal are copied, and the treatment the site does not know is skipped, not failing the sync
+	// The reading, the meal and the status are copied, and the treatment the site does not know is skipped, not failing the sync
 	require.NoError(t, q.CreateSyncSource(ctx, controldb.CreateSyncSourceParams{SiteID: siteID, Type: typ, UrlOrUsernameEnc: enc(nightscout_client.TestValidURL), PasswordEnc: enc("token"), Enabled: true}))
 	require.NoError(t, jobs.SyncSource(ctx, SyncJobParams{SiteID: siteID, Type: typ}))
 	readings, err := site.SiteDB.Queries.AllGlucoseReadings(ctx, sitedb.AllGlucoseReadingsParams{Limit: 10})
@@ -135,6 +137,10 @@ func TestNightscoutSyncCopiesEntriesAndTreatments(t *testing.T) {
 	food, err := site.SiteDB.Queries.AllFoodIntakes(ctx, sitedb.AllFoodIntakesParams{Limit: 10})
 	require.NoError(t, err)
 	require.Len(t, food, 1)
+	reports, err := site.SiteDB.Queries.AllDeviceReports(ctx, sitedb.AllDeviceReportsParams{Limit: 10})
+	require.NoError(t, err)
+	require.Len(t, reports, 1)
+	require.Equal(t, "openaps://phone", *reports[0].CreatedByDeviceName)
 
 	// The skipped treatment is in the site's logs
 	logs, err := controlDB.Logs.Queries.SearchLogs(ctx, logsdb.SearchLogsParams{SiteID: &siteID, Limit: 10})

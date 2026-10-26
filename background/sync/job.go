@@ -145,8 +145,9 @@ func (b *SyncJobManager) SyncSource(ctx context.Context, syncJob SyncJobParams) 
 		firstSync:       syncSource.FirstSuccessfulSyncTime == nil,
 
 		lastModified: map[nsutils.Collection]*int64{
-			nsutils.Entries:    syncSource.EntriesLastModified,
-			nsutils.Treatments: syncSource.TreatmentsLastModified,
+			nsutils.Entries:      syncSource.EntriesLastModified,
+			nsutils.Treatments:   syncSource.TreatmentsLastModified,
+			nsutils.Devicestatus: syncSource.DevicestatusLastModified,
 		},
 	}
 	return b.SyncUserData(syncInfo)
