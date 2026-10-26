@@ -70,7 +70,7 @@ ASSERT_VISIBLE #site--summary--devices >> text=virtual://carer-phone
 ASSERT_VISIBLE #site--summary--graph
 ASSERT_VISIBLE #site--summary--graph .site--summary--graph--reading >> nth=5
 ASSERT_NOT_VISIBLE #site--summary--graph .site--summary--graph--reading >> nth=6
-ASSERT_VISIBLE #site--summary--graph .site--summary--graph--temp-target
+ASSERT_DRAWN #site--summary--graph .site--summary--graph--temp-target
 ASSERT_VISIBLE #site--summary--graph .site--summary--graph--carbs >> text=15g
 ASSERT_VISIBLE #site--summary--graph .site--summary--graph--insulin >> text=2.5U
 ASSERT_VISIBLE #site--summary--graph--basal
