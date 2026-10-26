@@ -16,6 +16,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/server/components/ui/toast"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -159,10 +160,10 @@ templ glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) {
 			{ formatGlucose(reading.Reading, reading.Units) }
 		}
 		@table.Cell() {
-			{ reading.ReadingType }
+			{ display.ReadingType(reading.ReadingType) }
 		}
 		@table.Cell() {
-			{ orDash(reading.Direction) }
+			<span title={ orDash(reading.Direction) }>{ display.Direction(reading.Direction) }</span>
 		}
 		@table.Cell() {
 			{ orDash(reading.CreatedByDeviceName) }

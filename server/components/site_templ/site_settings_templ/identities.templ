@@ -14,6 +14,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/server/components/ui/toast"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/display"
 )
 
 // roleLabels match the role names in the create forms
@@ -120,10 +121,10 @@ templ IdentityRow(identity *sitemodels.UserIdentity) {
 			{ formatIdentityDate(&identity.CreatedAt) }
 		}
 		@table.Cell() {
-			{ formatIdentityDate(identity.LastSeenAt) }
+			<span title={ formatIdentityDate(identity.LastSeenAt) }>{ display.Ago(identity.LastSeenAt, time.Now()) }</span>
 		}
 		@table.Cell() {
-			{ formatIdentityDate(identity.LastWriteAt) }
+			<span title={ formatIdentityDate(identity.LastWriteAt) }>{ display.Ago(identity.LastWriteAt, time.Now()) }</span>
 		}
 		@table.Cell() {
 			@identityActions(identity)
@@ -160,14 +161,14 @@ templ identityActions(identity *sitemodels.UserIdentity) {
 			Size:     button.SizeIcon,
 			Disabled: identity.CurrentIdentity,
 			Attributes: templ.Attributes{
-				"title":         "Delete",
-				"hx-delete":     "/settings/identities/" + strconv.FormatInt(identity.ID, 10),
-				"hx-confirm":    "Delete " + identity.Name + "? Its password and tokens will stop working.",
-				"hx-target":     "#toaster",
-				"hx-swap":       "beforeend",
+				"title":                "Delete",
+				"hx-delete":            "/settings/identities/" + strconv.FormatInt(identity.ID, 10),
+				"hx-confirm":           "Delete " + identity.Name + "? Its password and tokens will stop working.",
+				"hx-target":            "#toaster",
+				"hx-swap":              "beforeend",
 				"hx-on::after:request": "if (ctx.response.status < 400) this.closest('tr').remove()",
-				"hx-status:4xx": "target:#toaster swap:beforeend",
-				"hx-status:5xx": "target:#toaster swap:beforeend",
+				"hx-status:4xx":        "target:#toaster swap:beforeend",
+				"hx-status:5xx":        "target:#toaster swap:beforeend",
 			},
 		}) {
 			@icon.Trash2(icon.Props{Class: "size-4 text-red-600"})
@@ -322,11 +323,11 @@ templ createdUserInfo(url string, username string, password string, totpSecret *
 								text: "{{ totpSecret }}",
 								width: 128,
 								height: 128,
-								colorDark : "#000000",
-								colorLight : "#ffffff",
-								correctLevel : QRCode.CorrectLevel.H
+								colorDark: "#000000",
+								colorLight: "#ffffff",
+								correctLevel: QRCode.CorrectLevel.H,
 							});
-							</script>
+						</script>
 					</div>
 				}
 			</div>

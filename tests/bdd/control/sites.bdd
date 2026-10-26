@@ -27,6 +27,8 @@ ASSERT_PATH /sites
 ASSERT_VISIBLE #controlSitesTable
 ASSERT_TEXT_VISIBLE Showing 1 to
 ASSERT_TEXT_VISIBLE DB Size (KB)
+// A site no one has used yet was never seen or written to
+ASSERT_TEXT_VISIBLE Never
 SCREENSHOT sites
 
 // The sites can be ordered by how long since they were written to, the first to archive, or by DB size
