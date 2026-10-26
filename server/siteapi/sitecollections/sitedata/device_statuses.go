@@ -8,7 +8,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
-	"nighttroop.t1d.nz/server/siteapi/sitequery"
+	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -22,29 +22,33 @@ const (
 	recentDeviceWindow = 7 * 24 * time.Hour
 )
 
-type DeviceStatusesStore struct{}
+type DeviceStatusesCollection struct{}
 
 // ////
 // Shared
 // ////
-func (s *DeviceStatusesStore) GetName() string {
+func (s *DeviceStatusesCollection) GetName() string {
 	return "device_statuses"
 }
 
 // ////
 // Get Model
 // /////
-func (s *DeviceStatusesStore) GetRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) (*sitedb.DeviceReport, error) {
+func (s *DeviceStatusesCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.DeviceReport, error) {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
 	return q.GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: id})
 }
 
 // ToModel is the site model of a row
-func (s *DeviceStatusesStore) ToModel(row *sitedb.DeviceReport, siteContext *httputils.SiteContext) *sitemodels.SiteDeviceStatus {
+func (s *DeviceStatusesCollection) ToModel(row *sitedb.DeviceReport, siteContext *httputils.SiteContext) *sitemodels.SiteDeviceStatus {
 	return sitemodels.DeviceStatusFromDB(row)
 }
 
 // GetHTMXResponse is the status's details, shown in a modal
-func (s *DeviceStatusesStore) GetHTMXResponse(model *sitemodels.SiteDeviceStatus) templ.Component {
+func (s *DeviceStatusesCollection) GetHTMXResponse(model *sitemodels.SiteDeviceStatus) templ.Component {
 	return site_data_templ.DeviceStatusModal(model)
 }
 
@@ -54,9 +58,13 @@ func (s *DeviceStatusesStore) GetHTMXResponse(model *sitemodels.SiteDeviceStatus
 
 // SearchRows pages through one device's statuses when the query names a device,
 // otherwise it returns the latest few statuses of each device that reported recently, grouped by device
-func (s *DeviceStatusesStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.DeviceReport, error) {
+func (s *DeviceStatusesCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.DeviceReport, error) {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
 	if query.Device != nil {
-		return q.DeviceReportsForDevice(ctx, sitequery.QueryToDeviceReportsForDevice(query))
+		return q.DeviceReportsForDevice(ctx, siteapiutils.QueryToDeviceReportsForDevice(query))
 	}
 
 	devices, err := q.RecentDeviceNames(ctx, sitedb.RecentDeviceNamesParams{
@@ -77,7 +85,7 @@ func (s *DeviceStatusesStore) SearchRows(ctx context.Context, q *sitedb.Queries,
 	return rows, nil
 }
 
-func (s *DeviceStatusesStore) SearchHTMXResponse(models []*sitemodels.SiteDeviceStatus, query *apiutils.Query) templ.Component {
+func (s *DeviceStatusesCollection) SearchHTMXResponse(models []*sitemodels.SiteDeviceStatus, query *apiutils.Query) templ.Component {
 	if query.Device != nil {
 		return site_data_templ.DeviceStatusHistory(*query.Device, models, query.Skip, query.Limit)
 	}
@@ -89,15 +97,19 @@ func (s *DeviceStatusesStore) SearchHTMXResponse(models []*sitemodels.SiteDevice
 // ///
 
 // DeleteRow soft deletes, like the Nightscout API, so syncing clients see the delete
-func (s *DeviceStatusesStore) DeleteRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) error {
-	_, err := q.SoftDeleteDeviceReport(ctx, sitedb.SoftDeleteDeviceReportParams{
+func (s *DeviceStatusesCollection) DeleteRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) error {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return err
+	}
+	_, err = q.SoftDeleteDeviceReport(ctx, sitedb.SoftDeleteDeviceReportParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
 		ID:                    id,
 	})
 	return err
 }
 
-func (s *DeviceStatusesStore) DeleteHTMXResponse(model *sitemodels.SiteDeviceStatus) templ.Component {
+func (s *DeviceStatusesCollection) DeleteHTMXResponse(model *sitemodels.SiteDeviceStatus) templ.Component {
 	return site_data_templ.DeviceStatusDeleted()
 }
 

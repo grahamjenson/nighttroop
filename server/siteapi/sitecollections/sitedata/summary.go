@@ -1,20 +1,27 @@
-package sitesummary
+package sitedata
 
 import (
 	"context"
 	"log/slog"
-	"net/http"
 	"time"
 
-	"nighttroop.t1d.nz/data/db"
+	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_summary_templ"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/apiutils"
-	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
 )
+
+type SummaryCollection struct{}
+
+// ////
+// Shared
+// ////
+func (s *SummaryCollection) GetName() string {
+	return "summary"
+}
 
 // defaultHours is how far back the summary goes when the request does not say
 const defaultHours = 48
@@ -25,35 +32,39 @@ const maxRows = 7 * 24 * 12
 // maxDevices caps how many devices' latest statuses are shown
 const maxDevices = 20
 
-// GetSummaryHandler is the site's home page: everything from the last hours (48 unless asked), and each device's latest status
-func GetSummaryHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		siteContext := siteapiutils.SiteContextFor(w, r, "summary", siteapiutils.ActionGet)
-		if siteContext == nil {
-			return
-		}
-		query, herr := apiutils.QueryFromParams(r.URL.Query())
-		if herr != nil {
-			herr.Write(siteContext.AcceptType, w)
-			return
-		}
-		hours := int64(defaultHours)
-		if query.Hours != nil {
-			hours = *query.Hours
-		}
-
-		tx := siteapiutils.NewStoreTx(r.Context(), siteContext)
-		defer tx.Rollback()
-		summary, herr := getSummary(r.Context(), tx, hours, siteContext)
-		if herr = tx.Finish(herr); herr != nil {
-			herr.Write(siteContext.AcceptType, w)
-			return
-		}
-		siteapiutils.WriteResponse(w, r, siteContext, http.StatusOK, summary, site_summary_templ.Summary(summary), true)
+func (s *SummaryCollection) ToModel(row *sitemodels.Summary, siteContext *httputils.SiteContext) *sitemodels.Summary {
+	if row == nil {
+		return nil
 	}
+	return row
 }
 
-func getSummary(ctx context.Context, tx *siteapiutils.StoreTx, hours int64, siteContext *httputils.SiteContext) (*sitemodels.Summary, *apiutils.HTTPError) {
+func (s *SummaryCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.Summary, error) {
+
+	summary, err := getSummary(ctx, collectionTx, defaultHours, siteContext)
+	if err != nil {
+		return nil, err
+	}
+	return []*sitemodels.Summary{summary}, nil
+}
+
+func (s *SummaryCollection) SearchHTMXResponse(models []*sitemodels.Summary, query *apiutils.Query) templ.Component {
+	if len(models) == 0 {
+		return nil
+	}
+	model := models[0]
+	return site_summary_templ.Summary(model)
+}
+
+func (s *SummaryCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitemodels.Summary, error) {
+	return getSummary(ctx, collectionTx, defaultHours, siteContext)
+}
+
+func (s *SummaryCollection) GetHTMXResponse(model *sitemodels.Summary) templ.Component {
+	return site_summary_templ.Summary(model)
+}
+
+func getSummary(ctx context.Context, tx *siteapiutils.CollectionTx, hours int64, siteContext *httputils.SiteContext) (*sitemodels.Summary, *apiutils.HTTPError) {
 	q, err := tx.Site()
 	if err != nil {
 		return nil, apiutils.ErrInternalServerError

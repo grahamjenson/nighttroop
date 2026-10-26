@@ -10,7 +10,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
-	"nighttroop.t1d.nz/server/siteapi/sitequery"
+	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -18,26 +18,30 @@ import (
 // maxTempTargetMinutes is a week, far longer than any temp target is set for
 const maxTempTargetMinutes = 7 * 24 * 60
 
-type TempTargetsStore struct{}
+type TempTargetsCollection struct{}
 
 // ////
 // Shared
 // ////
-func (s *TempTargetsStore) GetName() string {
+func (s *TempTargetsCollection) GetName() string {
 	return "temp_targets"
 }
 
 // ////
 // CREATE
 // ////
-func (s *TempTargetsStore) CreateRow(ctx context.Context, q *sitedb.Queries, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteTempTarget) (*sitedb.TempTarget, error) {
+func (s *TempTargetsCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteTempTarget) (*sitedb.TempTarget, error) {
 	if herr := checkTempTarget(model, siteContext); herr != nil {
 		return nil, herr
+	}
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
 	}
 	return q.CreateTempTarget(ctx, sitemodels.TempTargetToCreate(model, siteContext))
 }
 
-func (s *TempTargetsStore) CreateHTMXResponse(model *sitemodels.SiteTempTarget) templ.Component {
+func (s *TempTargetsCollection) CreateHTMXResponse(model *sitemodels.SiteTempTarget) templ.Component {
 	return site_data_templ.TempTargetCreated(model)
 }
 
@@ -46,7 +50,7 @@ func (s *TempTargetsStore) CreateHTMXResponse(model *sitemodels.SiteTempTarget) 
 // ////
 
 // UpdateRow changes a temp target's targets, duration, notes or reason; anything not sent stays as it is
-func (s *TempTargetsStore) UpdateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteTempTarget, model *sitemodels.SiteTempTarget) (*sitedb.TempTarget, error) {
+func (s *TempTargetsCollection) UpdateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteTempTarget, model *sitemodels.SiteTempTarget) (*sitedb.TempTarget, error) {
 	// Check the temp target as it will be once the fields sent are changed
 	merged := *oldModel
 	if model.DurationMinutes != 0 {
@@ -62,27 +66,35 @@ func (s *TempTargetsStore) UpdateRow(ctx context.Context, q *sitedb.Queries, sit
 		return nil, herr
 	}
 	model.ID = oldModel.ID
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
 	return q.UpdateTempTarget(ctx, sitemodels.TempTargetToUpdate(model, siteContext))
 }
 
-func (s *TempTargetsStore) UpdateHTMXResponse(model *sitemodels.SiteTempTarget) templ.Component {
+func (s *TempTargetsCollection) UpdateHTMXResponse(model *sitemodels.SiteTempTarget) templ.Component {
 	return site_data_templ.TempTargetUpdated(model)
 }
 
 // ////
 // Get Model
 // /////
-func (s *TempTargetsStore) GetRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) (*sitedb.TempTarget, error) {
+func (s *TempTargetsCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.TempTarget, error) {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
 	return q.GetTempTarget(ctx, sitedb.GetTempTargetParams{ID: id})
 }
 
 // ToModel is the site model of a row
-func (s *TempTargetsStore) ToModel(row *sitedb.TempTarget, siteContext *httputils.SiteContext) *sitemodels.SiteTempTarget {
+func (s *TempTargetsCollection) ToModel(row *sitedb.TempTarget, siteContext *httputils.SiteContext) *sitemodels.SiteTempTarget {
 	return sitemodels.TempTargetFromDB(row, siteContext)
 }
 
 // GetHTMXResponse is the temp target's details, shown in a modal
-func (s *TempTargetsStore) GetHTMXResponse(model *sitemodels.SiteTempTarget) templ.Component {
+func (s *TempTargetsCollection) GetHTMXResponse(model *sitemodels.SiteTempTarget) templ.Component {
 	return site_data_templ.TempTargetModal(model)
 }
 
@@ -90,11 +102,15 @@ func (s *TempTargetsStore) GetHTMXResponse(model *sitemodels.SiteTempTarget) tem
 // Search Models
 // ///
 
-func (s *TempTargetsStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.TempTarget, error) {
-	return q.AllTempTargets(ctx, sitequery.QueryToAllTempTargets(query))
+func (s *TempTargetsCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.TempTarget, error) {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
+	return q.AllTempTargets(ctx, siteapiutils.QueryToAllTempTargets(query))
 }
 
-func (s *TempTargetsStore) SearchHTMXResponse(models []*sitemodels.SiteTempTarget, query *apiutils.Query) templ.Component {
+func (s *TempTargetsCollection) SearchHTMXResponse(models []*sitemodels.SiteTempTarget, query *apiutils.Query) templ.Component {
 	return site_data_templ.TempTargetsTable(models, query.Skip, query.Limit)
 }
 
@@ -103,15 +119,19 @@ func (s *TempTargetsStore) SearchHTMXResponse(models []*sitemodels.SiteTempTarge
 // ///
 
 // DeleteRow soft deletes, like the Nightscout API, so syncing clients see the delete
-func (s *TempTargetsStore) DeleteRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) error {
-	_, err := q.SoftDeleteTempTarget(ctx, sitedb.SoftDeleteTempTargetParams{
+func (s *TempTargetsCollection) DeleteRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) error {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return err
+	}
+	_, err = q.SoftDeleteTempTarget(ctx, sitedb.SoftDeleteTempTargetParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
 		ID:                    id,
 	})
 	return err
 }
 
-func (s *TempTargetsStore) DeleteHTMXResponse(model *sitemodels.SiteTempTarget) templ.Component {
+func (s *TempTargetsCollection) DeleteHTMXResponse(model *sitemodels.SiteTempTarget) templ.Component {
 	return site_data_templ.TempTargetDeleted()
 }
 

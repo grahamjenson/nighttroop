@@ -10,7 +10,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
-	"nighttroop.t1d.nz/server/siteapi/sitequery"
+	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -20,26 +20,30 @@ const maxTempBasalMinutes = 24 * 60
 // maxTempBasalUnitsPerHour is far above any pump's maximum basal rate
 const maxTempBasalUnitsPerHour = 50
 
-type TempBasalsStore struct{}
+type TempBasalsCollection struct{}
 
 // ////
 // Shared
 // ////
-func (s *TempBasalsStore) GetName() string {
+func (s *TempBasalsCollection) GetName() string {
 	return "temp_basals"
 }
 
 // ////
 // CREATE
 // ////
-func (s *TempBasalsStore) CreateRow(ctx context.Context, q *sitedb.Queries, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteTempBasal) (*sitedb.TempBasal, error) {
+func (s *TempBasalsCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteTempBasal) (*sitedb.TempBasal, error) {
 	if herr := checkTempBasal(model); herr != nil {
 		return nil, herr
+	}
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
 	}
 	return q.CreateTempBasal(ctx, sitemodels.TempBasalToCreate(model, siteContext))
 }
 
-func (s *TempBasalsStore) CreateHTMXResponse(model *sitemodels.SiteTempBasal) templ.Component {
+func (s *TempBasalsCollection) CreateHTMXResponse(model *sitemodels.SiteTempBasal) templ.Component {
 	return site_data_templ.TempBasalCreated(model)
 }
 
@@ -48,7 +52,7 @@ func (s *TempBasalsStore) CreateHTMXResponse(model *sitemodels.SiteTempBasal) te
 // ////
 
 // UpdateRow changes a temp basal's rate, duration, notes or reason; anything not sent stays as it is
-func (s *TempBasalsStore) UpdateRow(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteTempBasal, model *sitemodels.SiteTempBasal) (*sitedb.TempBasal, error) {
+func (s *TempBasalsCollection) UpdateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteTempBasal, model *sitemodels.SiteTempBasal) (*sitedb.TempBasal, error) {
 	// Check the temp basal as it will be once the fields sent are changed
 	merged := *oldModel
 	if model.DurationMinutes != 0 {
@@ -61,27 +65,35 @@ func (s *TempBasalsStore) UpdateRow(ctx context.Context, q *sitedb.Queries, site
 		return nil, herr
 	}
 	model.ID = oldModel.ID
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
 	return q.UpdateTempBasal(ctx, sitemodels.TempBasalToUpdate(model, siteContext))
 }
 
-func (s *TempBasalsStore) UpdateHTMXResponse(model *sitemodels.SiteTempBasal) templ.Component {
+func (s *TempBasalsCollection) UpdateHTMXResponse(model *sitemodels.SiteTempBasal) templ.Component {
 	return site_data_templ.TempBasalUpdated(model)
 }
 
 // ////
 // Get Model
 // /////
-func (s *TempBasalsStore) GetRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) (*sitedb.TempBasal, error) {
+func (s *TempBasalsCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.TempBasal, error) {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
 	return q.GetTempBasal(ctx, sitedb.GetTempBasalParams{ID: id})
 }
 
 // ToModel is the site model of a row
-func (s *TempBasalsStore) ToModel(row *sitedb.TempBasal, siteContext *httputils.SiteContext) *sitemodels.SiteTempBasal {
+func (s *TempBasalsCollection) ToModel(row *sitedb.TempBasal, siteContext *httputils.SiteContext) *sitemodels.SiteTempBasal {
 	return sitemodels.TempBasalFromDB(row)
 }
 
 // GetHTMXResponse is the temp basal's details, shown in a modal
-func (s *TempBasalsStore) GetHTMXResponse(model *sitemodels.SiteTempBasal) templ.Component {
+func (s *TempBasalsCollection) GetHTMXResponse(model *sitemodels.SiteTempBasal) templ.Component {
 	return site_data_templ.TempBasalModal(model)
 }
 
@@ -89,11 +101,15 @@ func (s *TempBasalsStore) GetHTMXResponse(model *sitemodels.SiteTempBasal) templ
 // Search Models
 // ///
 
-func (s *TempBasalsStore) SearchRows(ctx context.Context, q *sitedb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.TempBasal, error) {
-	return q.AllTempBasals(ctx, sitequery.QueryToAllTempBasals(query))
+func (s *TempBasalsCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.TempBasal, error) {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
+	return q.AllTempBasals(ctx, siteapiutils.QueryToAllTempBasals(query))
 }
 
-func (s *TempBasalsStore) SearchHTMXResponse(models []*sitemodels.SiteTempBasal, query *apiutils.Query) templ.Component {
+func (s *TempBasalsCollection) SearchHTMXResponse(models []*sitemodels.SiteTempBasal, query *apiutils.Query) templ.Component {
 	return site_data_templ.TempBasalsTable(models, query.Skip, query.Limit)
 }
 
@@ -102,15 +118,19 @@ func (s *TempBasalsStore) SearchHTMXResponse(models []*sitemodels.SiteTempBasal,
 // ///
 
 // DeleteRow soft deletes, like the Nightscout API, so syncing clients see the delete
-func (s *TempBasalsStore) DeleteRow(ctx context.Context, q *sitedb.Queries, id string, siteContext *httputils.SiteContext) error {
-	_, err := q.SoftDeleteTempBasal(ctx, sitedb.SoftDeleteTempBasalParams{
+func (s *TempBasalsCollection) DeleteRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) error {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return err
+	}
+	_, err = q.SoftDeleteTempBasal(ctx, sitedb.SoftDeleteTempBasalParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
 		ID:                    id,
 	})
 	return err
 }
 
-func (s *TempBasalsStore) DeleteHTMXResponse(model *sitemodels.SiteTempBasal) templ.Component {
+func (s *TempBasalsCollection) DeleteHTMXResponse(model *sitemodels.SiteTempBasal) templ.Component {
 	return site_data_templ.TempBasalDeleted()
 }
 

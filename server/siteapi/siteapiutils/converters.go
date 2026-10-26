@@ -1,4 +1,4 @@
-package sitequery
+package siteapiutils
 
 import (
 	"nighttroop.t1d.nz/data/sql/sitedb"

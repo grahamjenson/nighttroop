@@ -14,12 +14,13 @@ import (
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
+	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-type IdentitiesStore struct{}
+type IdentitiesCollection struct{}
 
 var identityRoles = []consts.IdentityRole{
 	consts.IdentityRoleAdmin, consts.IdentityRoleUser, consts.IdentityRoleUserReadOnly,
@@ -29,20 +30,25 @@ var identityRoles = []consts.IdentityRole{
 // ////
 // Shared
 // ////
-func (s *IdentitiesStore) GetName() string {
+func (s *IdentitiesCollection) GetName() string {
 	return "identities"
 }
 
 // ////
 // CREATE
 // ////
-func (s *IdentitiesStore) CreateRow(ctx context.Context, q *controldb.Queries, id *string, siteContext *httputils.SiteContext, model *sitemodels.UserIdentity) (*sitemodels.UserIdentity, error) {
+func (s *IdentitiesCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.UserIdentity) (*sitemodels.UserIdentity, error) {
 	if model.Name == "" || model.Role == "" {
 		return nil, apiutils.ErrMissingRequiredFieldWithHint("name and role")
 	}
 	role := consts.IdentityRole(model.Role)
 	if !slices.Contains(identityRoles, role) {
 		return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Unknown role: %s", model.Role))
+	}
+
+	q, err := collectionTx.Control()
+	if err != nil {
+		return nil, err
 	}
 
 	// Counted inside the transaction, so two creates at once cannot both pass the limit
@@ -74,7 +80,7 @@ func (s *IdentitiesStore) CreateRow(ctx context.Context, q *controldb.Queries, i
 	return created, nil
 }
 
-func (s *IdentitiesStore) CreateHTMXResponse(model *sitemodels.UserIdentity) templ.Component {
+func (s *IdentitiesCollection) CreateHTMXResponse(model *sitemodels.UserIdentity) templ.Component {
 	return site_settings_templ.CreateIdentityResponse(model.SiteURL, model, model.Password, model.TotpSecret, model.NSToken)
 }
 
@@ -83,7 +89,12 @@ func (s *IdentitiesStore) CreateHTMXResponse(model *sitemodels.UserIdentity) tem
 // ///
 
 // UpdateRow only turns an identity on or off
-func (s *IdentitiesStore) UpdateRow(ctx context.Context, q *controldb.Queries, siteContext *httputils.SiteContext, oldModel *sitemodels.UserIdentity, model *sitemodels.UserIdentity) (*sitemodels.UserIdentity, error) {
+func (s *IdentitiesCollection) UpdateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, oldModel *sitemodels.UserIdentity, model *sitemodels.UserIdentity) (*sitemodels.UserIdentity, error) {
+	q, err := collectionTx.Control()
+	if err != nil {
+		return nil, err
+	}
+
 	if !model.Enabled {
 		if herr := checkCanRemoveIdentity(ctx, q, siteContext, oldModel); herr != nil {
 			return nil, herr
@@ -98,17 +109,21 @@ func (s *IdentitiesStore) UpdateRow(ctx context.Context, q *controldb.Queries, s
 	return model, q.UpdateSiteIdentityEnabled(ctx, sitemodels.IdentityToUpdate(model, siteContext))
 }
 
-func (s *IdentitiesStore) UpdateHTMXResponse(model *sitemodels.UserIdentity) templ.Component {
+func (s *IdentitiesCollection) UpdateHTMXResponse(model *sitemodels.UserIdentity) templ.Component {
 	return site_settings_templ.IdentityUpdated(model)
 }
 
 // ////
 // Get Model
 // /////
-func (s *IdentitiesStore) GetRow(ctx context.Context, q *controldb.Queries, id string, siteContext *httputils.SiteContext) (*sitemodels.UserIdentity, error) {
+func (s *IdentitiesCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitemodels.UserIdentity, error) {
 	identityID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Invalid identity id: %s", id))
+	}
+	q, err := collectionTx.Control()
+	if err != nil {
+		return nil, err
 	}
 	identity, err := q.GetSiteIdentityByID(ctx, controldb.GetSiteIdentityByIDParams{SiteID: siteContext.Subdomain, ID: identityID})
 	if err != nil {
@@ -118,11 +133,11 @@ func (s *IdentitiesStore) GetRow(ctx context.Context, q *controldb.Queries, id s
 }
 
 // ToModel is the identity: it is converted as it is read, so its row is its model
-func (s *IdentitiesStore) ToModel(row *sitemodels.UserIdentity, _ *httputils.SiteContext) *sitemodels.UserIdentity {
+func (s *IdentitiesCollection) ToModel(row *sitemodels.UserIdentity, _ *httputils.SiteContext) *sitemodels.UserIdentity {
 	return row
 }
 
-func (s *IdentitiesStore) GetHTMXResponse(model *sitemodels.UserIdentity) templ.Component {
+func (s *IdentitiesCollection) GetHTMXResponse(model *sitemodels.UserIdentity) templ.Component {
 	return site_settings_templ.IdentityRow(model)
 }
 
@@ -130,7 +145,11 @@ func (s *IdentitiesStore) GetHTMXResponse(model *sitemodels.UserIdentity) templ.
 // Search Models
 // ///
 
-func (s *IdentitiesStore) SearchRows(ctx context.Context, q *controldb.Queries, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.UserIdentity, error) {
+func (s *IdentitiesCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.UserIdentity, error) {
+	q, err := collectionTx.Control()
+	if err != nil {
+		return nil, err
+	}
 	identities, err := q.AllSiteIdentities(ctx, controldb.AllSiteIdentitiesParams{SiteID: siteContext.Subdomain})
 	if err != nil {
 		return nil, err
@@ -142,7 +161,7 @@ func (s *IdentitiesStore) SearchRows(ctx context.Context, q *controldb.Queries, 
 	return models, nil
 }
 
-func (s *IdentitiesStore) SearchHTMXResponse(models []*sitemodels.UserIdentity, query *apiutils.Query) templ.Component {
+func (s *IdentitiesCollection) SearchHTMXResponse(models []*sitemodels.UserIdentity, query *apiutils.Query) templ.Component {
 	users, devices := []*sitemodels.UserIdentity{}, []*sitemodels.UserIdentity{}
 	for _, model := range models {
 		switch consts.IdentityRole(model.Role).GetType() {
@@ -163,18 +182,24 @@ func (s *IdentitiesStore) SearchHTMXResponse(models []*sitemodels.UserIdentity, 
 // ///
 
 // DeleteRow removes the identity, so its password and tokens stop working
-func (s *IdentitiesStore) DeleteRow(ctx context.Context, q *controldb.Queries, id string, siteContext *httputils.SiteContext) error {
-	model, err := s.GetRow(ctx, q, id, siteContext)
+func (s *IdentitiesCollection) DeleteRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) error {
+
+	model, err := s.GetRow(ctx, collectionTx, id, siteContext)
 	if err != nil {
 		return err
 	}
+	q, err := collectionTx.Control()
+	if err != nil {
+		return err
+	}
+
 	if herr := checkCanRemoveIdentity(ctx, q, siteContext, model); herr != nil {
 		return herr
 	}
 	return q.DeleteSiteIdentity(ctx, sitemodels.IdentityToDelete(model, siteContext))
 }
 
-func (s *IdentitiesStore) DeleteHTMXResponse(model *sitemodels.UserIdentity) templ.Component {
+func (s *IdentitiesCollection) DeleteHTMXResponse(model *sitemodels.UserIdentity) templ.Component {
 	return site_settings_templ.IdentityDeleted()
 }
 
