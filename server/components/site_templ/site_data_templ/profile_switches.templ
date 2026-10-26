@@ -151,7 +151,7 @@ templ profileSwitchRow(profileSwitch *sitemodels.SiteProfileSwitch) {
 		},
 	}) {
 		@table.Cell() {
-			{ formatReadingDate(profileSwitch.OccurredAt) }
+			{ formatReadingDate(ctx, profileSwitch.OccurredAt) }
 		}
 		@table.Cell() {
 			{ profileSwitch.Name }
@@ -204,7 +204,7 @@ templ profileSwitchSchedule(id string, label string, schedule *string) {
 }
 
 templ ProfileSwitchModal(profileSwitch *sitemodels.SiteProfileSwitch) {
-	@modal.Modal(modal.Props{ID: "site--profile-switch--details", Title: fmt.Sprintf("%s at %s%%", profileSwitch.Name, orDash(profileSwitch.Percent)), Subtitle: formatReadingDate(profileSwitch.OccurredAt)}) {
+	@modal.Modal(modal.Props{ID: "site--profile-switch--details", Title: fmt.Sprintf("%s at %s%%", profileSwitch.Name, orDash(profileSwitch.Percent)), Subtitle: formatReadingDate(ctx, profileSwitch.OccurredAt)}) {
 		<form
 			id="site--profile-switch--edit"
 			class="mt-4 flex items-end gap-2"
@@ -236,8 +236,8 @@ templ ProfileSwitchModal(profileSwitch *sitemodels.SiteProfileSwitch) {
 			@readingDetail("App", orDash(profileSwitch.CreatedByAppName))
 			@readingDetail("Device", orDash(profileSwitch.CreatedByDeviceName))
 			@readingDetail("Created By", profileSwitch.CreatedByIdentityName)
-			@readingDetail("Created", formatReadingDate(profileSwitch.CreatedAt))
-			@readingDetail("Updated", formatReadingDate(profileSwitch.UpdatedAt))
+			@readingDetail("Created", formatReadingDate(ctx, profileSwitch.CreatedAt))
+			@readingDetail("Updated", formatReadingDate(ctx, profileSwitch.UpdatedAt))
 			@readingDetail("Updated By", orDash(profileSwitch.UpdatedByIdentityName))
 		</dl>
 		<div class="mt-4 grid grid-cols-3 gap-2">

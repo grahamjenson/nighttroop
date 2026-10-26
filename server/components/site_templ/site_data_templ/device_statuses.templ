@@ -169,7 +169,7 @@ templ deviceStatusRow(status *sitemodels.SiteDeviceStatus) {
 		},
 	}) {
 		@table.Cell() {
-			{ formatReadingDate(status.OccurredAt) }
+			{ formatReadingDate(ctx, status.OccurredAt) }
 		}
 		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ withUnit(status.DeviceBatteryPercent, "%") }
@@ -212,7 +212,7 @@ templ deviceStatusRow(status *sitemodels.SiteDeviceStatus) {
 }
 
 templ DeviceStatusModal(status *sitemodels.SiteDeviceStatus) {
-	@modal.Modal(modal.Props{ID: "site--device-status--details", Title: orDash(status.CreatedByDeviceName), Subtitle: formatReadingDate(status.OccurredAt)}) {
+	@modal.Modal(modal.Props{ID: "site--device-status--details", Title: orDash(status.CreatedByDeviceName), Subtitle: formatReadingDate(ctx, status.OccurredAt)}) {
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@readingDetail("Phone Battery", withUnit(status.DeviceBatteryPercent, "%"))
 			@readingDetail("Phone Charging", orDash(status.IsDeviceCharging))
@@ -230,8 +230,8 @@ templ DeviceStatusModal(status *sitemodels.SiteDeviceStatus) {
 			@readingDetail("UTC Offset (minutes)", orDash(status.UtcOffsetMinutes))
 			@readingDetail("App", orDash(status.CreatedByAppName))
 			@readingDetail("Created By", status.CreatedByIdentityName)
-			@readingDetail("Created", formatReadingDate(status.CreatedAt))
-			@readingDetail("Updated", formatReadingDate(status.UpdatedAt))
+			@readingDetail("Created", formatReadingDate(ctx, status.CreatedAt))
+			@readingDetail("Updated", formatReadingDate(ctx, status.UpdatedAt))
 		</dl>
 		@modal.RawJSON("site--device-status--details--raw", status.RawJsonData)
 	}

@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-echarts/go-echarts/v2/types"
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/utils/consts"
@@ -14,7 +15,7 @@ import (
 
 // option is the chart as ECharts gets it, so the test reads what the browser would draw
 func option(t *testing.T, s *sitemodels.Summary, now int64) map[string]any {
-	chart := graph(s, now)
+	chart := graph(s, now, time.UTC)
 	chart.Validate()
 	var option map[string]any
 	require.NoError(t, json.Unmarshal([]byte(chart.JSONNotEscaped()), &option))
@@ -130,4 +131,29 @@ func TestGraphDrawsTheLatestTreatmentOnTop(t *testing.T) {
 	require.Contains(t, html.String(), `id="site--summary--graph"`)
 	require.Contains(t, html.String(), "echarts.init(document.getElementById(")
 	require.Contains(t, html.String(), `"name":"2.5U"`)
+}
+
+// TestGraphInTheLocationsTime checks each time is moved by the location's offset at that time, which ECharts,
+// drawing in UTC, shows as the location's time
+func TestGraphInTheLocationsTime(t *testing.T) {
+	auckland, err := time.LoadLocation("Pacific/Auckland")
+	require.NoError(t, err)
+	mmol := consts.UnitsMMOLL
+	// New Zealand's daylight saving starts at 2am on 27 September 2026, from +12 to +13
+	since := time.Date(2026, 9, 26, 12, 0, 0, 0, time.UTC).UnixMilli()
+	now := since + 24*time.Hour.Milliseconds()
+	chart := graph(&sitemodels.Summary{
+		Since: since, Units: &mmol,
+		GlucoseReadings: []*sitemodels.SiteGlucoseReading{{Reading: 6, Units: &mmol, OccurredAt: now}},
+	}, now, auckland)
+	chart.Validate()
+	var option map[string]any
+	require.NoError(t, json.Unmarshal([]byte(chart.JSONNotEscaped()), &option))
+
+	axis := option["xAxis"].([]any)[0].(map[string]any)
+	require.EqualValues(t, since+12*time.Hour.Milliseconds(), axis["min"])
+	require.EqualValues(t, now+13*time.Hour.Milliseconds(), axis["max"])
+	point := series(option, "In range")["data"].([]any)[0].(map[string]any)["value"].([]any)
+	require.EqualValues(t, now+13*time.Hour.Milliseconds(), point[0])
+	require.Contains(t, chart.JSFunctions.Fns, types.FuncStr("%MY_ECHARTS%.setOption({useUTC: true});"))
 }

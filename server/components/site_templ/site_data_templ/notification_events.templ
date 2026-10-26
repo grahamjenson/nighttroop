@@ -116,7 +116,7 @@ templ notificationEventRow(event *sitemodels.SiteNotificationEvent) {
 		},
 	}) {
 		@table.Cell() {
-			{ formatReadingDate(event.OccurredAt) }
+			{ formatReadingDate(ctx, event.OccurredAt) }
 		}
 		@table.Cell() {
 			{ event.NotificationType }
@@ -156,7 +156,7 @@ templ notificationEventRow(event *sitemodels.SiteNotificationEvent) {
 }
 
 templ NotificationEventModal(event *sitemodels.SiteNotificationEvent) {
-	@modal.Modal(modal.Props{ID: "site--notification--details", Title: fmt.Sprintf("%s: %s", event.NotificationType, event.Title), Subtitle: formatReadingDate(event.OccurredAt)}) {
+	@modal.Modal(modal.Props{ID: "site--notification--details", Title: fmt.Sprintf("%s: %s", event.NotificationType, event.Title), Subtitle: formatReadingDate(ctx, event.OccurredAt)}) {
 		<form
 			id="site--notification--edit"
 			class="mt-4 flex items-end gap-2"
@@ -182,8 +182,8 @@ templ NotificationEventModal(event *sitemodels.SiteNotificationEvent) {
 			@readingDetail("App", orDash(event.CreatedByAppName))
 			@readingDetail("Device", orDash(event.CreatedByDeviceName))
 			@readingDetail("Created By", event.CreatedByIdentityName)
-			@readingDetail("Created", formatReadingDate(event.CreatedAt))
-			@readingDetail("Updated", formatReadingDate(event.UpdatedAt))
+			@readingDetail("Created", formatReadingDate(ctx, event.CreatedAt))
+			@readingDetail("Updated", formatReadingDate(ctx, event.UpdatedAt))
 			@readingDetail("Updated By", orDash(event.UpdatedByIdentityName))
 		</dl>
 		@modal.RawJSON("site--notification--details--raw", event.RawJsonData)

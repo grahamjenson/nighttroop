@@ -107,7 +107,7 @@ templ profilePresetRow(profile *sitemodels.SiteProfilePreset) {
 			{ orDash(profile.CreatedByDeviceName) }
 		}
 		@table.Cell() {
-			{ formatDate(profile.OccurredAt) }
+			{ formatDate(ctx, profile.OccurredAt) }
 		}
 		@table.Cell() {
 			<div class="flex justify-end">
@@ -136,7 +136,7 @@ templ profilePresetRow(profile *sitemodels.SiteProfilePreset) {
 
 templ ProfilePresetModal(profile *sitemodels.SiteProfilePreset) {
 	{{ units := orEmpty(profile.Units) }}
-	@modal.Modal(modal.Props{ID: "presets--profiles--details", Title: orDash(profile.Name), Subtitle: formatDate(profile.OccurredAt)}) {
+	@modal.Modal(modal.Props{ID: "presets--profiles--details", Title: orDash(profile.Name), Subtitle: formatDate(ctx, profile.OccurredAt)}) {
 		<form
 			id="presets--profiles--edit"
 			class="mt-4 flex items-center gap-2"
@@ -171,7 +171,7 @@ templ ProfilePresetModal(profile *sitemodels.SiteProfilePreset) {
 			@presetDetail("App", orDash(profile.CreatedByAppName))
 			@presetDetail("Device", orDash(profile.CreatedByDeviceName))
 			@presetDetail("Created By", profile.CreatedByIdentityName)
-			@presetDetail("Updated", formatDate(profile.UpdatedAt))
+			@presetDetail("Updated", formatDate(ctx, profile.UpdatedAt))
 			@presetDetail("Updated By", orDash(profile.UpdatedByIdentityName))
 		</dl>
 	}

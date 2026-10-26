@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 )
 
 // Graph draws the summary with go-echarts: the chart's element is ours, so it fills the section, and its
@@ -36,7 +37,7 @@ func Graph(summary *sitemodels.Summary) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		chart := graph(summary, time.Now().UnixMilli())
+		chart := graph(summary, time.Now().UnixMilli(), site_data_templ.Location(ctx))
 		snippet := chart.RenderSnippet()
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"site--summary--graph\" class=\"h-90 w-full text-xs\"><div id=\"")
 		if templ_7745c5c3_Err != nil {
@@ -45,7 +46,7 @@ func Graph(summary *sitemodels.Summary) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(chart.ChartID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/graph.templ`, Line: 15, Col: 25}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/graph.templ`, Line: 16, Col: 25}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 		if templ_7745c5c3_Err != nil {

@@ -114,7 +114,7 @@ templ componentEventRow(event *sitemodels.SiteComponentEvent) {
 		},
 	}) {
 		@table.Cell() {
-			{ formatReadingDate(event.OccurredAt) }
+			{ formatReadingDate(ctx, event.OccurredAt) }
 		}
 		@table.Cell() {
 			{ event.EventType }
@@ -154,7 +154,7 @@ templ componentEventRow(event *sitemodels.SiteComponentEvent) {
 }
 
 templ ComponentEventModal(event *sitemodels.SiteComponentEvent) {
-	@modal.Modal(modal.Props{ID: "site--component-event--details", Title: event.EventType, Subtitle: formatReadingDate(event.OccurredAt)}) {
+	@modal.Modal(modal.Props{ID: "site--component-event--details", Title: event.EventType, Subtitle: formatReadingDate(ctx, event.OccurredAt)}) {
 		<form
 			id="site--component-event--edit"
 			class="mt-4 flex items-center gap-2"
@@ -191,8 +191,8 @@ templ ComponentEventModal(event *sitemodels.SiteComponentEvent) {
 			@readingDetail("App", orDash(event.CreatedByAppName))
 			@readingDetail("Device", orDash(event.CreatedByDeviceName))
 			@readingDetail("Created By", event.CreatedByIdentityName)
-			@readingDetail("Created", formatReadingDate(event.CreatedAt))
-			@readingDetail("Updated", formatReadingDate(event.UpdatedAt))
+			@readingDetail("Created", formatReadingDate(ctx, event.CreatedAt))
+			@readingDetail("Updated", formatReadingDate(ctx, event.UpdatedAt))
 			@readingDetail("Updated By", orDash(event.UpdatedByIdentityName))
 		</dl>
 		@modal.RawJSON("site--component-event--details--raw", event.RawJsonData)
