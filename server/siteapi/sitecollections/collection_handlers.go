@@ -117,7 +117,7 @@ func UpdateHandler[R, M any](collection CollectionUpdate[R, M]) http.HandlerFunc
 
 		tx := siteapiutils.NewCollectionTx(r.Context(), siteContext)
 		defer tx.Rollback()
-		oldModel, _, herr := get(r.Context(), tx, collection.(CollectionBase[R, M]), id, siteContext)
+		oldModel, _, herr := get(r.Context(), tx, collection, id, siteContext)
 		if herr == nil && oldModel == nil {
 			herr = apiutils.ErrNotFound
 		}
@@ -160,16 +160,16 @@ func UpsertHandler[R, M any](collection CollectionUpsert[R, M]) http.HandlerFunc
 
 		tx := siteapiutils.NewCollectionTx(r.Context(), siteContext)
 		defer tx.Rollback()
-		oldModel, _, herr := get(r.Context(), tx, collection.(CollectionBase[R, M]), id, siteContext)
+		oldModel, _, herr := get(r.Context(), tx, collection, id, siteContext)
 		if herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return
 		}
 
 		if oldModel == nil {
-			herr = create(r.Context(), tx, collection.(CollectionCreate[R, M]), &id, siteContext, requestModel)
+			herr = create(r.Context(), tx, collection, &id, siteContext, requestModel)
 		} else {
-			herr = update(r.Context(), tx, collection.(CollectionUpdate[R, M]), siteContext, oldModel, requestModel)
+			herr = update(r.Context(), tx, collection, siteContext, oldModel, requestModel)
 		}
 		if herr = tx.Finish(herr); herr != nil {
 			herr.Write(siteContext.AcceptType, w)
@@ -265,7 +265,7 @@ func DeleteHandler[R, M any](collection CollectionDelete[R, M]) http.HandlerFunc
 			return
 		}
 
-		herr = tx.Finish(delete(r.Context(), siteContext, tx, collection.(CollectionDelete[R, M]), id, row))
+		herr = tx.Finish(delete(r.Context(), siteContext, tx, collection, id, row))
 		if herr != nil {
 			herr.Write(siteContext.AcceptType, w)
 			return
