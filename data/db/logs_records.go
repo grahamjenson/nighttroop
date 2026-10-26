@@ -70,7 +70,7 @@ type SiteArchivedAttributes struct {
 
 // SiteArchivedEvent records a control identity archiving a site, which started at started
 func (l *LogsDB) SiteArchivedEvent(ctx context.Context, siteID string, by string, started time.Time) {
-	l.finishedEvent(ctx, &siteID, EventSiteArchived, started, SiteArchivedAttributes{By: by})
+	l.finishedEvent(ctx, &siteID, nil, EventSiteArchived, started, SiteArchivedAttributes{By: by})
 }
 
 type SiteTruncatedAttributes struct {
@@ -82,7 +82,7 @@ type SiteTruncatedAttributes struct {
 // SiteTruncatedEvent records a control identity truncating a site's DB, which started at started, and its size before
 // and after
 func (l *LogsDB) SiteTruncatedEvent(ctx context.Context, siteID string, by string, started time.Time, beforeSizeKB *int64, afterSizeKB *int64) {
-	l.finishedEvent(ctx, &siteID, EventSiteTruncated, started, SiteTruncatedAttributes{By: by, BeforeSizeKB: beforeSizeKB, AfterSizeKB: afterSizeKB})
+	l.finishedEvent(ctx, &siteID, nil, EventSiteTruncated, started, SiteTruncatedAttributes{By: by, BeforeSizeKB: beforeSizeKB, AfterSizeKB: afterSizeKB})
 }
 
 type SiteDeletedAttributes struct {
@@ -102,7 +102,7 @@ type SiteBatchBackedUpAttributes struct {
 // SiteBatchBackedUpEvent records the sites whose IDs start with batch being backed up from started, and uploaded when
 // S3 works
 func (l *LogsDB) SiteBatchBackedUpEvent(ctx context.Context, batch string, siteCount int, started time.Time, uploaded bool) {
-	l.finishedEvent(ctx, nil, EventSiteBatchBackedUp, started, SiteBatchBackedUpAttributes{Batch: batch, SiteCount: siteCount, Uploaded: uploaded})
+	l.finishedEvent(ctx, nil, &batch, EventSiteBatchBackedUp, started, SiteBatchBackedUpAttributes{Batch: batch, SiteCount: siteCount, Uploaded: uploaded})
 }
 
 type ControlBackedUpAttributes struct {
@@ -111,7 +111,7 @@ type ControlBackedUpAttributes struct {
 
 // ControlBackedUpEvent records the control DB being backed up from started, and uploaded when S3 works
 func (l *LogsDB) ControlBackedUpEvent(ctx context.Context, started time.Time, uploaded bool) {
-	l.finishedEvent(ctx, nil, EventControlBackedUp, started, ControlBackedUpAttributes{Uploaded: uploaded})
+	l.finishedEvent(ctx, nil, nil, EventControlBackedUp, started, ControlBackedUpAttributes{Uploaded: uploaded})
 }
 
 type SyncTurnedOffAttributes struct {

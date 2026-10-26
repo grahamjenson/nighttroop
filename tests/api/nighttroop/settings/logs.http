@@ -1,0 +1,133 @@
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET site {{ .create_new_site.site_subdomain }}.localhost
+
+NAME login_admin
+POST http://{{ site }}/login
+H Accept: application/json
+B {"name": "admin", "password": "{{ .create_new_site.api_key }}", "totp": "123123"}
+ASSERT_STATUS 200
+SET jwt {{ .login_admin.token }}
+
+NAME create_other_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET other_site {{ .create_other_site.site_subdomain }}.localhost
+
+NAME login_other_admin
+POST http://{{ .other_site }}/login
+H Accept: application/json
+B {"name": "admin", "password": "{{ .create_other_site.api_key }}", "totp": "123123"}
+ASSERT_STATUS 200
+SET other_jwt {{ .login_other_admin.token }}
+
+// A site's admin sees its events, newest first, such as it being created
+NAME list_events
+GET http://{{ site }}/logs/events
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "site_created" "@result.0.name"
+ASSERT_EXISTS "@result.0.started_at"
+ASSERT_EQUALS null "@result.0.batch"
+SET event_id {{ dig "list_events.result.0.id" }}
+
+NAME get_event
+GET http://{{ site }}/logs/events/{{ .event_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "site_created" "@result.name"
+
+NAME list_events_paged
+GET http://{{ site }}/logs/events?limit=1
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+
+// Another site's event cannot be read
+NAME list_other_events
+GET http://{{ .other_site }}/logs/events
+H Authorization: Bearer {{ .other_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+SET other_event_id {{ dig "list_other_events.result.0.id" }}
+
+NAME get_other_sites_event
+GET http://{{ site }}/logs/events/{{ .other_event_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME get_event_not_a_number
+GET http://{{ site }}/logs/events/not-an-event
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+// Errors and logs page the same way
+NAME list_errors
+GET http://{{ site }}/logs/errors
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME get_unknown_error
+GET http://{{ site }}/logs/errors/999999999
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME list_logs
+GET http://{{ site }}/logs/logs
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME get_unknown_log
+GET http://{{ site }}/logs/logs/999999999
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+// Only the site's admin sees how the server is running it
+NAME create_carer
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "carer", "role": "user"}
+ASSERT_STATUS 201
+SET carer_password {{ .create_carer.result.password }}
+
+NAME login_carer
+POST http://{{ site }}/login
+H Accept: application/json
+B {"name": "carer", "password": "{{ .carer_password }}"}
+ASSERT_STATUS 200
+SET carer_jwt {{ .login_carer.token }}
+
+NAME carer_list_events_refused
+GET http://{{ site }}/logs/events
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME carer_list_errors_refused
+GET http://{{ site }}/logs/errors
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME carer_list_logs_refused
+GET http://{{ site }}/logs/logs
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME list_events_without_login
+GET http://{{ site }}/logs/events
+H Accept: application/json
+ASSERT_STATUS 401
+

@@ -1,0 +1,47 @@
+// A new site, so it has a site_created event
+GOTO {{ server_url}}/
+ASSERT_STATUS 200
+CLICK "Create Site"
+ASSERT_STATUS 200
+CLICK #public--login-button
+ASSERT_NEW_PAGE
+INPUT #site--login--name admin
+INPUT #site--login--password password
+CLICK #site--login-button
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--login--otp-1
+INPUT #site--login--otp-1 123123
+CLICK #site--login-totp-button
+ASSERT_NEW_URL
+ASSERT_VISIBLE "Nighttroop"
+RUN_BACKGROUND_JOBS
+
+// The site's admin sees its events, and its batch's backups when it has been backed up
+CLICK #site--settings-menu
+CLICK #site--logs--events-button
+ASSERT_STATUS 200
+ASSERT_PATH /logs/events
+ASSERT_VISIBLE #siteEventsTable
+ASSERT_TEXT_VISIBLE site_created
+ASSERT_TEXT_VISIBLE This site
+SCREENSHOT events
+
+// Clicking an event shows when it started and how long it took
+CLICK #siteEventsTable tbody tr >> nth=0
+ASSERT_VISIBLE #site--event--details
+ASSERT_TEXT_VISIBLE Duration
+SCREENSHOT event_details
+CLICK #site--event--details--close
+ASSERT_NOT_VISIBLE #site--event--details
+
+// Errors and logs have pages of their own
+CLICK #site--settings-menu
+CLICK #site--logs--errors-button
+ASSERT_PATH /logs/errors
+ASSERT_VISIBLE #siteErrorsTable
+SCREENSHOT errors
+
+CLICK #site--settings-menu
+CLICK #site--logs--logs-button
+ASSERT_PATH /logs/logs
+ASSERT_VISIBLE #siteLogsTable

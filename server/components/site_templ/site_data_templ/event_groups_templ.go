@@ -377,9 +377,9 @@ func eventGroupRow(eventGroup *sitemodels.SiteEventGroup) templ.Component {
 				}
 				ctx = templ.InitializeContext(ctx)
 				var templ_7745c5c3_Var15 string
-				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(formatReadingDate(eventGroup.OccurredAt))
+				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(formatReadingDate(ctx, eventGroup.OccurredAt))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 108, Col: 45}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 108, Col: 50}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 				if templ_7745c5c3_Err != nil {
@@ -696,11 +696,11 @@ func EventGroupModal(eventGroup *sitemodels.SiteEventGroup) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = readingDetail("Created", formatReadingDate(eventGroup.CreatedAt)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = readingDetail("Created", formatReadingDate(ctx, eventGroup.CreatedAt)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = readingDetail("Updated", formatReadingDate(eventGroup.UpdatedAt)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = readingDetail("Updated", formatReadingDate(ctx, eventGroup.UpdatedAt)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -718,7 +718,7 @@ func EventGroupModal(eventGroup *sitemodels.SiteEventGroup) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = modal.Modal(modal.Props{ID: "site--event-group--details", Title: eventGroup.GroupType, Subtitle: formatReadingDate(eventGroup.OccurredAt)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var27), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = modal.Modal(modal.Props{ID: "site--event-group--details", Title: eventGroup.GroupType, Subtitle: formatReadingDate(ctx, eventGroup.OccurredAt)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var27), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

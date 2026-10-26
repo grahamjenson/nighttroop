@@ -1,10 +1,12 @@
 package site_settings_templ
 
 import (
+	"context"
 	"strconv"
 	"time"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/copybutton"
 	"nighttroop.t1d.nz/server/components/ui/form"
@@ -30,11 +32,11 @@ func roleLabel(role string) string {
 	return role
 }
 
-func formatIdentityDate(ms *int64) string {
+func formatIdentityDate(ctx context.Context, ms *int64) string {
 	if ms == nil || *ms == 0 {
 		return "Never"
 	}
-	return time.UnixMilli(*ms).Format("2006-01-02 15:04:05")
+	return site_data_templ.FormatDate(ctx, *ms)
 }
 
 templ IdentitesTable(users []*sitemodels.UserIdentity, devices []*sitemodels.UserIdentity) {
@@ -118,13 +120,13 @@ templ IdentityRow(identity *sitemodels.UserIdentity) {
 			{ roleLabel(identity.Role) }
 		}
 		@table.Cell() {
-			{ formatIdentityDate(&identity.CreatedAt) }
+			{ formatIdentityDate(ctx, &identity.CreatedAt) }
 		}
 		@table.Cell() {
-			<span title={ formatIdentityDate(identity.LastSeenAt) }>{ display.Ago(identity.LastSeenAt, time.Now()) }</span>
+			<span title={ formatIdentityDate(ctx, identity.LastSeenAt) }>{ display.Ago(identity.LastSeenAt, time.Now()) }</span>
 		}
 		@table.Cell() {
-			<span title={ formatIdentityDate(identity.LastWriteAt) }>{ display.Ago(identity.LastWriteAt, time.Now()) }</span>
+			<span title={ formatIdentityDate(ctx, identity.LastWriteAt) }>{ display.Ago(identity.LastWriteAt, time.Now()) }</span>
 		}
 		@table.Cell() {
 			@identityActions(identity)

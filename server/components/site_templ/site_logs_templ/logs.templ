@@ -1,0 +1,228 @@
+package site_logs_templ
+
+import (
+	"encoding/json"
+	"fmt"
+	"time"
+
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/modal"
+	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/display"
+)
+
+func formatDate(ms int64) string {
+	return time.UnixMilli(ms).Format("2006-01-02 15:04:05")
+}
+
+// duration is how long an event took, or a dash when it happened at a moment
+func duration(event *sitemodels.SiteEvent) string {
+	if event.FinishedAt == nil {
+		return "-"
+	}
+	return fmt.Sprintf("%d ms", *event.FinishedAt-event.StartedAt)
+}
+
+// about is who an event was for: this site, or the batch of sites it is backed up with
+func about(event *sitemodels.SiteEvent) string {
+	if event.Batch != nil {
+		return "Batch " + *event.Batch
+	}
+	return "This site"
+}
+
+// attributes are a row's attributes as JSON, indented to read
+func attributes(raw json.RawMessage) string {
+	indented, err := json.MarshalIndent(raw, "", "  ")
+	if err != nil {
+		return string(raw)
+	}
+	return string(indented)
+}
+
+// page heads a page of rows with its title and description, and pages it
+templ page(id string, title string, description string, path string, count int, skip int64, limit int64) {
+	<div id={ id } class="mx-auto max-w-5xl space-y-6">
+		<div>
+			<h1 class="text-2xl font-bold">{ title }</h1>
+			<p class="mt-1 text-gray-500">{ description }</p>
+		</div>
+		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
+			{ children... }
+			@pager.Pager(pager.Props{ID: "site-" + path, Path: path, Count: count, Skip: skip, Limit: limit})
+		</section>
+		<div id="modal-container"></div>
+	</div>
+}
+
+templ rowLink(id string, path string) {
+	@table.Row(table.RowProps{
+		ID:    id,
+		Class: "cursor-pointer",
+		Attributes: templ.Attributes{
+			"hx-get":    path,
+			"hx-target": "#modal-container",
+			"hx-swap":   "innerHTML",
+		},
+	}) {
+		{ children... }
+	}
+}
+
+templ empty(columns string, what string) {
+	<tr><td colspan={ columns } class="p-4 text-sm text-gray-500">No { what } here.</td></tr>
+}
+
+templ attributesDetail(id string, raw json.RawMessage) {
+	if len(raw) > 0 {
+		<pre id={ id } class="mt-4 max-h-64 overflow-auto whitespace-pre-wrap break-all rounded bg-gray-50 p-2 text-xs">{ attributes(raw) }</pre>
+	}
+}
+
+var detail = modal.Detail
+
+// EventsTable shows one page of the site's events and its batch's, the newest first
+templ EventsTable(events []*sitemodels.SiteEvent, skip int64, limit int64) {
+	@page("events_table", "Events", "What happened to this site and the batch of sites it is backed up with, newest first.", "/logs/events", len(events), skip, limit) {
+		@table.Table(table.Props{ID: "siteEventsTable", Class: "rounded-lg border border-gray-200"}) {
+			@table.Header() {
+				@table.Row() {
+					@table.Head() {
+						Event
+					}
+					@table.Head() {
+						For
+					}
+					@table.Head() {
+						Started
+					}
+					@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
+						Duration
+					}
+				}
+			}
+			@table.Body() {
+				if len(events) == 0 {
+					@empty("4", "events")
+				}
+				for _, event := range events {
+					@rowLink(fmt.Sprintf("site--event--%d", event.ID), fmt.Sprintf("/logs/events/%d", event.ID)) {
+						@table.Cell() {
+							{ event.Name }
+						}
+						@table.Cell() {
+							{ about(event) }
+						}
+						@table.Cell() {
+							<span title={ formatDate(event.StartedAt) }>{ display.Ago(&event.StartedAt, time.Now()) }</span>
+						}
+						@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+							{ duration(event) }
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+templ EventModal(event *sitemodels.SiteEvent) {
+	@modal.Modal(modal.Props{ID: "site--event--details", Title: event.Name, Subtitle: formatDate(event.StartedAt)}) {
+		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+			@detail("For", about(event))
+			@detail("Started", formatDate(event.StartedAt))
+			if event.FinishedAt != nil {
+				@detail("Finished", formatDate(*event.FinishedAt))
+			}
+			@detail("Duration", duration(event))
+		</dl>
+		@attributesDetail("site--event--attributes", event.Attributes)
+	}
+}
+
+// ErrorsTable shows one page of the site's errors, the newest first
+templ ErrorsTable(errors []*sitemodels.SiteError, skip int64, limit int64) {
+	@page("errors_table", "Errors", "What failed for this site, newest first.", "/logs/errors", len(errors), skip, limit) {
+		@table.Table(table.Props{ID: "siteErrorsTable", Class: "rounded-lg border border-gray-200"}) {
+			@table.Header() {
+				@table.Row() {
+					@table.Head() {
+						Error
+					}
+					@table.Head() {
+						When
+					}
+				}
+			}
+			@table.Body() {
+				if len(errors) == 0 {
+					@empty("2", "errors")
+				}
+				for _, e := range errors {
+					@rowLink(fmt.Sprintf("site--error--%d", e.ID), fmt.Sprintf("/logs/errors/%d", e.ID)) {
+						@table.Cell() {
+							<span class="block max-w-xl truncate text-red-700">{ e.Message }</span>
+						}
+						@table.Cell() {
+							<span title={ formatDate(e.CreatedAt) }>{ display.Ago(&e.CreatedAt, time.Now()) }</span>
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+templ ErrorModal(e *sitemodels.SiteError) {
+	@modal.Modal(modal.Props{ID: "site--error--details", Title: "Error", Subtitle: formatDate(e.CreatedAt)}) {
+		<p class="mt-2 break-all text-sm text-red-700">{ e.Message }</p>
+		@attributesDetail("site--error--attributes", e.Attributes)
+	}
+}
+
+// LogsTable shows one page of the site's logs, the newest first
+templ LogsTable(logs []*sitemodels.SiteLog, skip int64, limit int64) {
+	@page("logs_table", "Logs", "Messages logged for this site, newest first.", "/logs/logs", len(logs), skip, limit) {
+		@table.Table(table.Props{ID: "siteLogsTable", Class: "rounded-lg border border-gray-200"}) {
+			@table.Header() {
+				@table.Row() {
+					@table.Head() {
+						Level
+					}
+					@table.Head() {
+						Message
+					}
+					@table.Head() {
+						When
+					}
+				}
+			}
+			@table.Body() {
+				if len(logs) == 0 {
+					@empty("3", "logs")
+				}
+				for _, log := range logs {
+					@rowLink(fmt.Sprintf("site--log--%d", log.ID), fmt.Sprintf("/logs/logs/%d", log.ID)) {
+						@table.Cell() {
+							{ log.Level }
+						}
+						@table.Cell() {
+							<span class="block max-w-xl truncate">{ log.Message }</span>
+						}
+						@table.Cell() {
+							<span title={ formatDate(log.CreatedAt) }>{ display.Ago(&log.CreatedAt, time.Now()) }</span>
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+templ LogModal(log *sitemodels.SiteLog) {
+	@modal.Modal(modal.Props{ID: "site--log--details", Title: log.Level, Subtitle: formatDate(log.CreatedAt)}) {
+		<p class="mt-2 break-all text-sm">{ log.Message }</p>
+		@attributesDetail("site--log--attributes", log.Attributes)
+	}
+}

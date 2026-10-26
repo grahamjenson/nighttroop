@@ -117,7 +117,7 @@ templ foodIntakeRow(foodIntake *sitemodels.SiteFoodIntake) {
 		},
 	}) {
 		@table.Cell() {
-			{ formatReadingDate(foodIntake.OccurredAt) }
+			{ formatReadingDate(ctx, foodIntake.OccurredAt) }
 		}
 		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ orDash(foodIntake.Carbs) }
@@ -157,7 +157,7 @@ templ foodIntakeRow(foodIntake *sitemodels.SiteFoodIntake) {
 }
 
 templ FoodIntakeModal(foodIntake *sitemodels.SiteFoodIntake) {
-	@modal.Modal(modal.Props{ID: "site--food--details", Title: fmt.Sprintf("%s g carbs", orDash(foodIntake.Carbs)), Subtitle: formatReadingDate(foodIntake.OccurredAt)}) {
+	@modal.Modal(modal.Props{ID: "site--food--details", Title: fmt.Sprintf("%s g carbs", orDash(foodIntake.Carbs)), Subtitle: formatReadingDate(ctx, foodIntake.OccurredAt)}) {
 		<form
 			id="site--food--edit"
 			class="mt-4 flex items-end gap-2"
@@ -192,8 +192,8 @@ templ FoodIntakeModal(foodIntake *sitemodels.SiteFoodIntake) {
 			@readingDetail("App", orDash(foodIntake.CreatedByAppName))
 			@readingDetail("Device", orDash(foodIntake.CreatedByDeviceName))
 			@readingDetail("Created By", foodIntake.CreatedByIdentityName)
-			@readingDetail("Created", formatReadingDate(foodIntake.CreatedAt))
-			@readingDetail("Updated", formatReadingDate(foodIntake.UpdatedAt))
+			@readingDetail("Created", formatReadingDate(ctx, foodIntake.CreatedAt))
+			@readingDetail("Updated", formatReadingDate(ctx, foodIntake.UpdatedAt))
 			@readingDetail("Updated By", orDash(foodIntake.UpdatedByIdentityName))
 		</dl>
 		@modal.RawJSON("site--food--details--raw", foodIntake.RawJsonData)

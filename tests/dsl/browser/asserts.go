@@ -68,6 +68,11 @@ type AssertTextVisible struct {
 }
 
 func (r *AssertTextVisible) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
+	text, err := renderTemplate(r.Text, ctx)
+	if err != nil {
+		t.Fatalf("%s: %v", r.ToErrorLine(), err)
+	}
+	r = &AssertTextVisible{Text: text, TestPath: r.TestPath, TestLine: r.TestLine}
 	waitForVisible(page.GetByText(r.Text, playwright.PageGetByTextOptions{Exact: playwright.Bool(false)}))
 	html, err := page.Content()
 	if err != nil {

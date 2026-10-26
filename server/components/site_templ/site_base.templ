@@ -151,6 +151,15 @@ templ Header() {
 								@dataMenuItem("site--settings--sync-button", "/settings/sync", "Sync Settings", icon.FolderSync(icon.Props{Class: "size-4 mr-2"}))
 							}
 							@dropdown.Separator()
+							@dropdown.Label() {
+								Logs
+							}
+							@dropdown.Group() {
+								@dataMenuItem("site--logs--events-button", "/logs/events", "Events", icon.Activity(icon.Props{Class: "size-4 mr-2"}))
+								@dataMenuItem("site--logs--errors-button", "/logs/errors", "Errors", icon.TriangleAlert(icon.Props{Class: "size-4 mr-2"}))
+								@dataMenuItem("site--logs--logs-button", "/logs/logs", "Logs", icon.ScrollText(icon.Props{Class: "size-4 mr-2"}))
+							}
+							@dropdown.Separator()
 							@dropdown.Item(dropdown.ItemProps{
 								ID:   "site--settings--logout-button",
 								Href: "#",

@@ -11,6 +11,8 @@ import (
 
 	"syscall"
 	"time"
+	// Every IANA timezone, for the timezone setting, wherever the server runs
+	_ "time/tzdata"
 
 	"github.com/getsentry/sentry-go"
 	"golang.org/x/crypto/bcrypt"
