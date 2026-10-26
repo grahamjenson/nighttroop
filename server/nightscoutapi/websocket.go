@@ -14,6 +14,7 @@ import (
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/events/sitemodels"
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsapi/nsv1"
 	"nighttroop.t1d.nz/server/nightscoutapi/nscollections"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
@@ -49,11 +50,12 @@ type Websocket struct {
 	collections map[nsutils.Collection]nscollections.CollectionStore
 
 	mu      sync.Mutex
-	servers map[string]*socketio.Server // one per site, so sites share no sessions or rooms
+	servers map[string]*socketio.Server              // one per site, so sites share no sessions or rooms
+	storage map[string]map[string]*storageSubscriber // each site's /storage subscribers by socket ID
 }
 
 func NewWebsocket(controlDB *db.ControlDB, config *config.ServerConfig) *Websocket {
-	return &Websocket{config: config, controlDB: controlDB, collections: AllCollections(), servers: map[string]*socketio.Server{}}
+	return &Websocket{config: config, controlDB: controlDB, collections: AllCollections(), servers: map[string]*socketio.Server{}, storage: map[string]map[string]*storageSubscriber{}}
 }
 
 func (ws *Websocket) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -70,10 +72,9 @@ func (ws *Websocket) server(subdomain string, create bool) *socketio.Server {
 	server := socketio.NewServer(engineio.Config{MaxSessions: maxSocketsPerSite})
 	main := server.Of(socketio.DefaultNamespace)
 	main.OnConnection(func(socket *socketio.Socket) { ws.connected(main, socket) })
-	storage := server.Of("/storage")
-	storage.OnConnection(ws.storageConnected)
+	server.Of("/storage").OnConnection(ws.storageConnected)
 	server.Of("/alarm").OnConnection(ws.alarmConnected)
-	ws.config.SiteModelEvents.Subscribe(subdomain, func(event sitemodels.Event) { ws.changed(main, storage, event) })
+	ws.config.SiteModelEvents.Subscribe(subdomain, func(event sitemodels.Event) { ws.changed(main, event) })
 	ws.servers[subdomain] = server
 	return server
 }
@@ -371,7 +372,7 @@ type recorder interface {
 
 // changed sends a changed model of the site to its DataReceivers as a delta dataUpdate, when it is a Nightscout
 // record. As in Nightscout, a treatment says whether it was updated or removed, and other removals are not sent.
-func (ws *Websocket) changed(main, storage *socketio.Namespace, event sitemodels.Event) {
+func (ws *Websocket) changed(main *socketio.Namespace, event sitemodels.Event) {
 	siteDB, siteModel, err := ws.controlDB.GetSite(event.SiteID)
 	if err != nil {
 		return
@@ -384,7 +385,7 @@ func (ws *Websocket) changed(main, storage *socketio.Namespace, event sitemodels
 		}
 		if record, ok := r.Record(event.Model, siteContext); ok {
 			ws.send(main, collection, record, event.Action)
-			sendToStorage(storage, collection, record, event.Action)
+			ws.sendToStorage(siteDB, siteModel, event, collection, r)
 			return
 		}
 	}
@@ -470,6 +471,12 @@ var storageCollections = []nsutils.Collection{nsutils.Devicestatus, nsutils.Entr
 // storageConnected is API v3's live updates on /storage: a socket subscribes with its access token to the
 // collections it wants, and gets each create, update and delete in them as API v3 shows its records
 func (ws *Websocket) storageConnected(socket *socketio.Socket) {
+	subdomain := httputils.GetSiteContext(socket.Request().Context()).Subdomain
+	socket.OnDisconnect(func(string) {
+		ws.mu.Lock()
+		delete(ws.storage[subdomain], socket.ID())
+		ws.mu.Unlock()
+	})
 	attempts := 0
 	socket.On("subscribe", func(args []json.RawMessage, ack func(...any)) {
 		attempts++
@@ -491,10 +498,17 @@ func (ws *Websocket) storageConnected(socket *socketio.Socket) {
 	})
 }
 
-// subscribe joins the socket to each collection's room it may read (every one when it names none), answering
-// as Nightscout does
+// storageSubscriber is a /storage socket, its identity, whose settings it sees records in, and its collections
+type storageSubscriber struct {
+	socket      *socketio.Socket
+	identity    *controldb.SiteIdentity
+	collections []nsutils.Collection
+}
+
+// subscribe adds each collection the socket may read (every one when it names none) to those it is sent,
+// keeping those it had as Nightscout's rooms do, answering as Nightscout does
 func (ws *Websocket) subscribe(socket *socketio.Socket, accessToken string, collections []nsutils.Collection) map[string]any {
-	_, identity := ws.identity(socket.Request().Context(), accessToken, "")
+	ctx, identity := ws.identity(socket.Request().Context(), accessToken, "")
 	if identity == nil {
 		return map[string]any{"success": false, "message": "Missing or bad accessToken"}
 	}
@@ -508,13 +522,29 @@ func (ws *Websocket) subscribe(socket *socketio.Socket, accessToken string, coll
 			permission = "api:settings:admin"
 		}
 		if slices.Contains(storageCollections, collection) && !slices.Contains(subscribed, collection) && nsutils.HasPermission(*identity, permission) {
-			socket.Join(string(collection))
 			subscribed = append(subscribed, collection)
 		}
 	}
 	if len(subscribed) == 0 {
 		return map[string]any{"success": false, "message": "Unauthorized to receive any collection"}
 	}
+	siteContext := httputils.GetSiteContext(ctx)
+	ws.mu.Lock()
+	if ws.storage[siteContext.Subdomain] == nil {
+		ws.storage[siteContext.Subdomain] = map[string]*storageSubscriber{}
+	}
+	subscriber := ws.storage[siteContext.Subdomain][socket.ID()]
+	if subscriber == nil {
+		subscriber = &storageSubscriber{socket: socket}
+		ws.storage[siteContext.Subdomain][socket.ID()] = subscriber
+	}
+	subscriber.identity = siteContext.IdentityModel
+	for _, collection := range subscribed {
+		if !slices.Contains(subscriber.collections, collection) {
+			subscriber.collections = append(subscriber.collections, collection)
+		}
+	}
+	ws.mu.Unlock()
 	return map[string]any{"success": true, "collections": subscribed}
 }
 
@@ -522,13 +552,25 @@ func (ws *Websocket) subscribe(socket *socketio.Socket, accessToken string, coll
 var storageEvents = map[sitemodels.Action]string{sitemodels.Created: "create", sitemodels.Updated: "update", sitemodels.Deleted: "delete"}
 
 // sendToStorage sends a change to the /storage sockets subscribed to its collection: a created or updated
-// record whole, and a deleted one by its identifier
-func sendToStorage(storage *socketio.Namespace, collection nsutils.Collection, record nsutils.Record, action sitemodels.Action) {
-	event := map[string]any{"colName": collection, "doc": record.ToMap(true)}
-	if action == sitemodels.Deleted {
-		event = map[string]any{"colName": collection, "identifier": record.Identifier()}
+// record whole, as API v3 shows it to the socket's identity, and a deleted one by its identifier
+func (ws *Websocket) sendToStorage(siteDB *db.SiteDB, siteModel *controldb.Site, event sitemodels.Event, collection nsutils.Collection, r recorder) {
+	ws.mu.Lock()
+	subscribers := []storageSubscriber{}
+	for _, subscriber := range ws.storage[event.SiteID] {
+		if slices.Contains(subscriber.collections, collection) {
+			subscribers = append(subscribers, *subscriber)
+		}
 	}
-	storage.EmitTo(string(collection), storageEvents[action], event)
+	ws.mu.Unlock()
+	for _, subscriber := range subscribers {
+		ctx := httputils.CreateSiteContext(context.Background(), ws.config, ws.controlDB, siteDB, siteModel, event.SiteID, "", httputils.HTTPActionRead, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
+		record, _ := r.Record(event.Model, httputils.GetSiteContext(httputils.SetIdentityModelInSiteContext(ctx, subscriber.identity)))
+		message := map[string]any{"colName": collection, "doc": record.ToMap(true)}
+		if event.Action == sitemodels.Deleted {
+			message = map[string]any{"colName": collection, "identifier": record.Identifier()}
+		}
+		subscriber.socket.Emit(storageEvents[event.Action], message)
+	}
 }
 
 // alarmReceivers is the room of /alarm sockets that can read, which the site's alarms will go to
