@@ -34,6 +34,28 @@ H Authorization: Bearer {{ .control_jwt }}
 H Accept: application/json
 ASSERT_STATUS 400
 
+// Sites can be ordered by how long since they were written to, the first to archive, or by their DB size
+NAME list_sites_by_last_write
+GET http://control.localhost/sites?order=last_write
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EXISTS "@result.0.id"
+
+NAME list_sites_by_db_size
+GET http://control.localhost/sites?order=db_size&limit=1
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+
+NAME list_sites_bad_order
+GET http://control.localhost/sites?order=name
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 400
+ASSERT_EQUALS "sites can be ordered by last_write or db_size" "@message"
+
 NAME get_site
 GET http://control.localhost/sites/{{ .site_id }}
 H Authorization: Bearer {{ .control_jwt }}

@@ -12,5 +12,9 @@ func QueryValuesToQuery(source QueryValues) Query {
 		apiqueryQuery.Device = &xstring
 	}
 	apiqueryQuery.Hours = GetHoursInt64(source)
+	if source.Order != nil {
+		xstring2 := *source.Order
+		apiqueryQuery.Order = &xstring2
+	}
 	return apiqueryQuery
 }

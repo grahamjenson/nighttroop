@@ -91,26 +91,30 @@ func SiteFromDB(source *controldb.Site) *Site {
 			xint64 := *(*source).MaxDbSizeKbLimit
 			controlmodelsSite.MaxDbSizeKbLimit = &xint64
 		}
+		if (*source).EstimatedDbSizeKb != nil {
+			xint642 := *(*source).EstimatedDbSizeKb
+			controlmodelsSite.EstimatedDbSizeKb = &xint642
+		}
 		controlmodelsSite.CreatedAt = (*source).CreatedAt
 		if (*source).LastSeenAt != nil {
-			xint642 := *(*source).LastSeenAt
-			controlmodelsSite.LastSeenAt = &xint642
+			xint643 := *(*source).LastSeenAt
+			controlmodelsSite.LastSeenAt = &xint643
 		}
 		if (*source).LastWriteAt != nil {
-			xint643 := *(*source).LastWriteAt
-			controlmodelsSite.LastWriteAt = &xint643
+			xint644 := *(*source).LastWriteAt
+			controlmodelsSite.LastWriteAt = &xint644
 		}
 		if (*source).DisabledAt != nil {
-			xint644 := *(*source).DisabledAt
-			controlmodelsSite.DisabledAt = &xint644
+			xint645 := *(*source).DisabledAt
+			controlmodelsSite.DisabledAt = &xint645
 		}
 		if (*source).ArchivedAt != nil {
-			xint645 := *(*source).ArchivedAt
-			controlmodelsSite.ArchivedAt = &xint645
+			xint646 := *(*source).ArchivedAt
+			controlmodelsSite.ArchivedAt = &xint646
 		}
 		if (*source).DeletedAt != nil {
-			xint646 := *(*source).DeletedAt
-			controlmodelsSite.DeletedAt = &xint646
+			xint647 := *(*source).DeletedAt
+			controlmodelsSite.DeletedAt = &xint647
 		}
 		pControlmodelsSite = &controlmodelsSite
 	}

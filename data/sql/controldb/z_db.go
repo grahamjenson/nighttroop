@@ -105,6 +105,12 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.searchSitesStmt, err = db.PrepareContext(ctx, searchSites); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchSites: %w", err)
 	}
+	if q.searchSitesByDBSizeStmt, err = db.PrepareContext(ctx, searchSitesByDBSize); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchSitesByDBSize: %w", err)
+	}
+	if q.searchSitesByLastWriteStmt, err = db.PrepareContext(ctx, searchSitesByLastWrite); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchSitesByLastWrite: %w", err)
+	}
 	if q.searchSyncSourcesStmt, err = db.PrepareContext(ctx, searchSyncSources); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchSyncSources: %w", err)
 	}
@@ -278,6 +284,16 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing searchSitesStmt: %w", cerr)
 		}
 	}
+	if q.searchSitesByDBSizeStmt != nil {
+		if cerr := q.searchSitesByDBSizeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchSitesByDBSizeStmt: %w", cerr)
+		}
+	}
+	if q.searchSitesByLastWriteStmt != nil {
+		if cerr := q.searchSitesByLastWriteStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchSitesByLastWriteStmt: %w", cerr)
+		}
+	}
 	if q.searchSyncSourcesStmt != nil {
 		if cerr := q.searchSyncSourcesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing searchSyncSourcesStmt: %w", cerr)
@@ -399,6 +415,8 @@ type Queries struct {
 	getSyncReportsToRunStmt            *sql.Stmt
 	getSyncSourceStmt                  *sql.Stmt
 	searchSitesStmt                    *sql.Stmt
+	searchSitesByDBSizeStmt            *sql.Stmt
+	searchSitesByLastWriteStmt         *sql.Stmt
 	searchSyncSourcesStmt              *sql.Stmt
 	siteExistsStmt                     *sql.Stmt
 	updateSiteDateFlagsStmt            *sql.Stmt
@@ -443,6 +461,8 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getSyncReportsToRunStmt:            q.getSyncReportsToRunStmt,
 		getSyncSourceStmt:                  q.getSyncSourceStmt,
 		searchSitesStmt:                    q.searchSitesStmt,
+		searchSitesByDBSizeStmt:            q.searchSitesByDBSizeStmt,
+		searchSitesByLastWriteStmt:         q.searchSitesByLastWriteStmt,
 		searchSyncSourcesStmt:              q.searchSyncSourcesStmt,
 		siteExistsStmt:                     q.siteExistsStmt,
 		updateSiteDateFlagsStmt:            q.updateSiteDateFlagsStmt,

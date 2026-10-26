@@ -97,7 +97,7 @@ func SiteIdentitySeenFlagsUpdateMiddleware(controlDB *db.ControlDB) func(http.Ha
 
 			if sw.Status == 200 || sw.Status == 201 {
 				wasWrite := siteContext.HTTPAction == HTTPActionWrite
-				controlDB.UpdateSiteAndIdentityDateFlags(siteContext.SiteModel, siteContext.IdentityModel, true, wasWrite)
+				controlDB.UpdateSiteAndIdentityDateFlags(siteContext.SiteModel, siteContext.SiteDB, siteContext.IdentityModel, true, wasWrite)
 			}
 		})
 	}

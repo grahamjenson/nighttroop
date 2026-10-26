@@ -39,6 +39,7 @@ type Site struct {
 	BackupKeyHash             string
 	CreatedAt                 int64
 	MaxDbSizeKbLimit          *int64
+	EstimatedDbSizeKb         *int64
 	LastSeenAt                *int64
 	LastWriteAt               *int64
 	State                     string

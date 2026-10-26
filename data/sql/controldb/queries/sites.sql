@@ -26,6 +26,18 @@ SELECT * FROM sites
 ORDER BY created_at DESC, id
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
+-- name: SearchSitesByLastWrite :many
+-- The longest since written to first, the first to archive; a site never written to counts from when it was made
+SELECT * FROM sites
+ORDER BY COALESCE(last_write_at, created_at) ASC, id
+LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+
+-- name: SearchSitesByDBSize :many
+-- The largest site DB first, the first to truncate; a site not yet measured is last
+SELECT * FROM sites
+ORDER BY estimated_db_size_kb IS NULL, estimated_db_size_kb DESC, created_at DESC, id
+LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+
 -- name: GetSiteInAnyState :one
 SELECT * FROM sites WHERE id = ?;
 
@@ -55,7 +67,8 @@ WHERE state = 'disabled' AND (last_seen_at < datetime('now', '-' || CAST(@last_s
 UPDATE sites
 SET
     last_seen_at = COALESCE(?, last_seen_at),
-    last_write_at = COALESCE(?, last_write_at)
+    last_write_at = COALESCE(?, last_write_at),
+    estimated_db_size_kb = COALESCE(?, estimated_db_size_kb)
 WHERE id = ?;
 
 
