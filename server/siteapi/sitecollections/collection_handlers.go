@@ -40,14 +40,11 @@ type CollectionUpdate[R, M any] interface {
 	UpdateHTMXResponse(model *M) templ.Component
 }
 
+// CollectionUpsert is a collection whose update creates what is not there yet, as each type of sync source has one
 type CollectionUpsert[R, M any] interface {
-	CollectionBase[R, M]
-
-	CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *M) (*R, error)
-	UpdateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, oldModel *M, model *M) (*R, error)
-
-	UpdateHTMXResponse(model *M) templ.Component
-	CreateHTMXResponse(model *M) templ.Component
+	CollectionCreate[R, M]
+	CollectionUpdate[R, M]
+	Upserts()
 }
 
 type CollectionGet[R, M any] interface {
@@ -262,7 +259,7 @@ func DeleteHandler[R, M any](collection CollectionDelete[R, M]) http.HandlerFunc
 
 		tx := siteapiutils.NewCollectionTx(r.Context(), siteContext)
 		defer tx.Rollback()
-		model, row, herr := get(r.Context(), tx, collection.(CollectionGet[R, M]), id, siteContext)
+		model, row, herr := get(r.Context(), tx, collection, id, siteContext)
 		if herr != nil || model == nil {
 			apiutils.ErrNotFound.Write(siteContext.AcceptType, w)
 			return

@@ -31,7 +31,7 @@ func (s *TempBasalsCollection) GetName() string {
 
 // GetRoute is where the collection is in its URL
 func (s *TempBasalsCollection) GetRoute() string {
-	return "temp_basals"
+	return "temp-basals"
 }
 
 // ////

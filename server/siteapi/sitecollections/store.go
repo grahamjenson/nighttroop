@@ -82,6 +82,9 @@ func (store *SiteStore) registerCollection[R, M any](collection CollectionBase[R
 		routes.Update = UpdateHandler(val)
 		added = true
 	}
+	if val, ok := collection.(CollectionUpsert[R, M]); ok {
+		routes.Update = UpsertHandler(val)
+	}
 	if val, ok := collection.(CollectionDelete[R, M]); ok {
 		routes.Delete = DeleteHandler(val)
 		added = true
@@ -93,6 +96,15 @@ func (store *SiteStore) registerCollection[R, M any](collection CollectionBase[R
 
 	store.collectionRoutes[route] = routes
 
+}
+
+// Collection is the routes of the collection at route, for a route of its own like the summary at /
+func (s *SiteStore) Collection(route string) *SiteCollectionRoutes {
+	routes, exists := s.collectionRoutes[route]
+	if !exists {
+		panic("no collection at route: " + route)
+	}
+	return routes
 }
 
 func notFoundHandler(w http.ResponseWriter, r *http.Request) {

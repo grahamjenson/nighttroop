@@ -29,7 +29,7 @@ func (s *TempTargetsCollection) GetName() string {
 
 // GetRoute is where the collection is in its URL
 func (s *TempTargetsCollection) GetRoute() string {
-	return "temp_targets"
+	return "temp-targets"
 }
 
 // ////

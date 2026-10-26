@@ -1,8 +1,6 @@
 package siteapi
 
 import (
-	"net/http"
-
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server/assets/static"
@@ -39,10 +37,16 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Use(httputils.SiteIdentityRateLimitMiddleware(config))
 		r.Use(httputils.SiteIdentitySeenFlagsUpdateMiddleware(controlDB)) // Updates user/identity flags
 
-		// Redirect home to Summary page
-		r.Get("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			http.Redirect(w, r, "/data/summary", http.StatusSeeOther)
-		}))
+		// The summary is the home page
+		r.Get("/", store.Collection("summary").Search)
+		r.Get("/summary", store.Collection("summary").Search)
+
+		// The settings page shows the identity's own settings, and the site's to an admin
+		r.Get("/settings", store.Collection("identity").Get)
+		for _, route := range []string{"site", "identity"} {
+			r.Get("/settings/"+route, store.Collection(route).Get)
+			r.Post("/settings/"+route, store.Collection(route).Update)
+		}
 
 		// Data Glucose Readings
 
