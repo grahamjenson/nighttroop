@@ -46,6 +46,18 @@ SCREENSHOT site_details
 CLICK #control--site--details--close
 ASSERT_NOT_VISIBLE #control--site--details
 
+// Escape closes it too, as does pressing beside it, but not pressing inside it
+CLICK #controlSitesTable tbody tr >> nth=0
+ASSERT_VISIBLE #control--site--details
+PRESS Escape
+ASSERT_NOT_VISIBLE #control--site--details
+
+CLICK #controlSitesTable tbody tr >> nth=0
+CLICK #control--site--details dt >> nth=0
+ASSERT_VISIBLE #control--site--details
+CLICK_CORNER #control--site--details
+ASSERT_NOT_VISIBLE #control--site--details
+
 // Disabling asks first (the test accepts), then updates the site's row
 CLICK #controlSitesTable tbody tr >> nth=0
 CLICK #control--site--disable
