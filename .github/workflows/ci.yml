@@ -11,6 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
+        id: go
         with:
           go-version-file: go.mod
           cache: false
@@ -32,12 +33,13 @@ jobs:
           key: gobuild-${{ runner.os }}-${{ github.sha }}
           restore-keys: gobuild-${{ runner.os }}-
 
+      # Keyed on Go too: generators built with an older Go cannot load packages needing a newer one
       - name: Cache code generator binaries
         id: tools
         uses: actions/cache@v4
         with:
           path: ~/go/bin
-          key: tools-${{ runner.os }}-templ0.3.1020-goverter1.10.0-sqlc1.31.1-tailwind4.3.0
+          key: tools-${{ runner.os }}-go${{ steps.go.outputs.go-version }}-templ0.3.1020-goverter1.10.0-sqlc1.31.1-tailwind4.3.0
 
       - name: Install code generators
         if: steps.tools.outputs.cache-hit != 'true'
