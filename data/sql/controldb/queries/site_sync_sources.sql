@@ -39,6 +39,7 @@ UPDATE site_sync_sources SET
     first_successful_sync_time = NULL,
     previous_sync_errors = NULL,
     entries_last_modified = NULL,
+    treatments_last_modified = NULL,
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) 
 WHERE type = sqlc.arg('Type') AND site_id = sqlc.arg('SiteID');
 
@@ -54,6 +55,7 @@ UPDATE site_sync_sources SET
     previous_sync_errors = NULL,
     first_successful_sync_time = NULL,
     entries_last_modified = NULL,
+    treatments_last_modified = NULL,
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
 WHERE type = ? AND site_id = ?;
 
@@ -83,8 +85,10 @@ WHERE us.enabled = 1
 
 ------ Updates to the Sync Reporting -----
 
--- name: UpdateSyncSourceEntriesLastModified :exec
-UPDATE site_sync_sources SET entries_last_modified = sqlc.arg('EntriesLastModified')
+-- name: UpdateSyncSourceLastModified :exec
+UPDATE site_sync_sources SET
+    entries_last_modified = COALESCE(sqlc.narg('EntriesLastModified'), entries_last_modified),
+    treatments_last_modified = COALESCE(sqlc.narg('TreatmentsLastModified'), treatments_last_modified)
 WHERE type = sqlc.arg('Type') AND site_id = sqlc.arg('SiteID');
 
 -- name: UpdateSyncReportAttempt :exec

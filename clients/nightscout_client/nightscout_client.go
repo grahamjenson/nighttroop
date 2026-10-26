@@ -29,12 +29,15 @@ import (
 // never makes HTTP calls; any other URL fails as if the host does not exist.
 const TestValidURL = "http://valid.nightscout.test"
 
-// TestEntriesLastModified is when TestValidURL says its entries were last modified
-const TestEntriesLastModified int64 = 1_700_000_000_000
+// TestLastModified is when TestValidURL says each collection it has was last modified
+const TestLastModified int64 = 1_700_000_000_000
+
+// TestDocuments are the documents TestValidURL returns for each collection; tests set them
+var TestDocuments = map[string][]any{}
 
 const (
 	maxResponseBytes = 1 << 20 // a Nightscout response body larger than this is refused
-	maxResultItems   = 1000    // the sync only ever asks for a handful of entries
+	maxResultItems   = 1000    // the sync only ever asks for a handful of documents
 	// A JWT this close to expiring is refreshed first, so a kept client never sends an expired one
 	jwtRefreshMargin = time.Minute
 )
@@ -48,8 +51,8 @@ type Client struct {
 	jwtExpire *time.Time
 }
 
-func entryHistoryEndpoint(nsURL string, gteCreatedAt int, limit int) string {
-	return fmt.Sprintf("%s/api/v3/entries?sort$desc=date&date$gte=%d&limit=%d", nsURL, gteCreatedAt, limit)
+func documentsEndpoint(nsURL string, collection string, gteDate int, limit int) string {
+	return fmt.Sprintf("%s/api/v3/%s?sort$desc=date&date$gte=%d&limit=%d", nsURL, collection, gteDate, limit)
 }
 func lastModifiedEndpoint(nsURL string) string {
 	return fmt.Sprintf("%s/api/v3/lastModified", nsURL)
@@ -87,9 +90,10 @@ func (c *Client) doRequest(
 	// Only TestValidURL is faked: a test that sets a JWT and an httptest URL goes over HTTP.
 	if testing.Testing() && c.baseURL == TestValidURL {
 		if url == lastModifiedEndpoint(c.baseURL) {
-			return map[string]any{"result": map[string]any{"collections": map[string]any{"entries": float64(TestEntriesLastModified)}}}, nil
+			return map[string]any{"result": map[string]any{"collections": map[string]any{"entries": float64(TestLastModified), "treatments": float64(TestLastModified)}}}, nil
 		}
-		return map[string]any{"result": []any{}}, nil
+		collection, _, _ := strings.Cut(strings.TrimPrefix(url, c.baseURL+"/api/v3/"), "?")
+		return map[string]any{"result": append([]any{}, TestDocuments[collection]...)}, nil
 	}
 
 	req, err := http.NewRequestWithContext(ctx, method, url, nil)
@@ -233,35 +237,37 @@ func (c *Client) GetLastModified(ctx context.Context) (map[string]int64, error) 
 }
 
 //
-// ENTRIES
+// DOCUMENTS
 //
 
-func (c *Client) GetEntries(
+// GetDocuments returns up to count of a collection's newest documents dated from afterTime, such as entries or treatments
+func (c *Client) GetDocuments(
 	ctx context.Context,
+	collection string,
 	afterTime time.Time,
 	count int,
 ) ([]map[string]any, error) {
-	reqURL := entryHistoryEndpoint(c.baseURL, int(afterTime.UnixMilli()), count)
+	reqURL := documentsEndpoint(c.baseURL, collection, int(afterTime.UnixMilli()), count)
 	resp, err := c.doRequest(ctx, http.MethodGet, reqURL)
 
 	if err != nil {
-		return nil, fmt.Errorf("NSClient Get Entries Error %s: %w", c.baseURL, err)
+		return nil, fmt.Errorf("NSClient Get %s Error %s: %w", collection, c.baseURL, err)
 	}
 
 	if result, ok := resp["result"].([]any); ok {
-		return entriesFromResult(result)
+		return documentsFromResult(result)
 	}
 
 	// The body is never put in the error: it is stored and shown as a sync error.
-	return nil, fmt.Errorf("NSClient Get Entries Error: %s returned no result array", c.baseURL)
+	return nil, fmt.Errorf("NSClient Get %s Error: %s returned no result array", collection, c.baseURL)
 
 }
 
-// entriesFromResult converts each item of the result array to a map[string]any,
+// documentsFromResult converts each item of the result array to a map[string]any,
 // refusing more than maxResultItems.
-func entriesFromResult(result []any) ([]map[string]any, error) {
+func documentsFromResult(result []any) ([]map[string]any, error) {
 	if len(result) > maxResultItems {
-		return nil, fmt.Errorf("NSClient Get Entries Error: %d results is more than %d", len(result), maxResultItems)
+		return nil, fmt.Errorf("NSClient Get Documents Error: %d results is more than %d", len(result), maxResultItems)
 	}
 	converted := []map[string]any{}
 	for _, item := range result {

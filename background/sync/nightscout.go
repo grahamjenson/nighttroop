@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net/http"
 	gosync "sync"
 	"time"
 
 	"nighttroop.t1d.nz/clients/nightscout_client"
+	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -46,33 +48,64 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
-	// One small call says whether entries have changed, so unchanged entries are not read every sync
+	// One small call says which collections have changed, so unchanged ones are not read every sync
 	lastModified, err := nsc.GetLastModified(ctx)
 	if err != nil {
 		return fmt.Errorf("NightscoutSync Error: %w", err)
 	}
-	entriesModified := lastModified[string(nsutils.Entries)]
-	if !entriesChanged(syncInfo.entriesLastModified, entriesModified) {
+
+	read := map[nsutils.Collection]*int64{}
+	for _, c := range nightscoutCollections {
+		modified := lastModified[string(c.collection)]
+		if !changedSince(syncInfo.lastModified[c.collection], modified) {
+			continue
+		}
+		if err := b.syncNightscoutCollection(ctx, nsc, syncInfo, c.collection, c.limit); err != nil {
+			return err
+		}
+		read[c.collection] = &modified
+	}
+	if len(read) == 0 {
 		return nil
 	}
+	return b.controlDB.Queries.UpdateSyncSourceLastModified(ctx, controldb.UpdateSyncSourceLastModifiedParams{
+		EntriesLastModified:    read[nsutils.Entries],
+		TreatmentsLastModified: read[nsutils.Treatments],
+		Type:                   syncInfo.Type,
+		SiteID:                 syncInfo.SiteID,
+	})
+}
 
-	afterTime := time.Now().Add(-time.Duration(20) * time.Minute)
-	egvs, err := nsc.GetEntries(ctx, afterTime, 3)
+// nightscoutCollections are what a Nightscout sync reads, and at most how many of each one's newest documents
+// from the last 20 minutes: a few readings, or a meal, its boluses and a loop's SMBs and temp basals
+var nightscoutCollections = []struct {
+	collection nsutils.Collection
+	limit      int
+}{
+	{nsutils.Entries, 3},
+	{nsutils.Treatments, 20},
+}
+
+// syncNightscoutCollection copies a collection's newest documents into each site. A document the site
+// refuses, such as a treatment with an eventType it does not know, is logged and skipped, so it does
+// not fail every sync until it is 20 minutes old.
+func (b *SyncJobManager) syncNightscoutCollection(ctx context.Context, nsc *nightscoutClient, syncInfo *SyncJobInfo, collection nsutils.Collection, limit int) error {
+	docs, err := nsc.GetDocuments(ctx, string(collection), time.Now().Add(-20*time.Minute), limit)
 	if err != nil {
 		return fmt.Errorf("NightscoutSync Error: %w", err)
 	}
 
 	// REMOVE WRITE ONLY COLUMNS
-	for _, egv := range egvs {
-		delete(egv, "srvCreated")
-		delete(egv, "srvModified")
-		delete(egv, "modifiedBy")
+	for _, doc := range docs {
+		delete(doc, "srvCreated")
+		delete(doc, "srvModified")
+		delete(doc, "modifiedBy")
 	}
-	////
-	//
-	////
 
-	totalAddedColumns := 0
+	collectionStore, ok := b.nightscoutStore.GetStore(collection)
+	if !ok {
+		return fmt.Errorf("Nightscout: %s collection not found", collection)
+	}
 	for _, userSyncSource := range syncInfo.UserSyncSources {
 		siteContext := &httputils.SiteContext{
 			Subdomain: userSyncSource.SiteModel.ID,
@@ -85,39 +118,29 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 			HTTPAction: httputils.HTTPActionWrite,
 		}
 
-		addedColumns := false
-
-		collectionsStore, ok := b.nightscoutStore.GetStore(nsutils.Entries)
-		if !ok {
-			return fmt.Errorf("Nightscout: Entries collection not found")
-		}
-
-		for _, egv := range egvs {
-			_, duplicateFound, err := collectionsStore.Create(ctx, siteContext, egv, false)
-			if err != nil {
-				return fmt.Errorf("Nightscout: Failed to create entry: %w", err)
+		added := 0
+		for _, doc := range docs {
+			_, duplicateFound, herr := collectionStore.Create(ctx, siteContext, doc, false)
+			if herr != nil && herr.Status < http.StatusInternalServerError {
+				b.controlDB.Logs.Log(ctx, &syncInfo.SiteID, db.LogLevelWarn, "skipped a Nightscout document the site refused", map[string]any{"collection": collection, "error": herr.Message})
+				continue
+			}
+			if herr != nil {
+				return fmt.Errorf("Nightscout: Failed to create %s: %w", collection, herr)
 			}
 			if !duplicateFound {
-				addedColumns = true
-				totalAddedColumns += 1
+				added++
 			}
 		}
-		// Update that it has been seen and used recently
-		if addedColumns {
-			slog.Info("Added new Nightscout entries for user", "subdomain", userSyncSource.SiteModel.ID)
-
+		if added > 0 {
+			slog.Info("Added new Nightscout documents for site", "subdomain", userSyncSource.SiteModel.ID, "collection", collection, "added", added)
 		}
 	}
-
-	return b.controlDB.Queries.UpdateSyncSourceEntriesLastModified(ctx, controldb.UpdateSyncSourceEntriesLastModifiedParams{
-		EntriesLastModified: &entriesModified,
-		Type:                syncInfo.Type,
-		SiteID:              syncInfo.SiteID,
-	})
+	return nil
 }
 
-// entriesChanged is whether entries may have changed since they were last read. A Nightscout
-// that does not say when its entries changed (0) has them read every sync, as before.
-func entriesChanged(lastRead *int64, modified int64) bool {
+// changedSince is whether a collection may have changed since it was last read. A Nightscout
+// that does not say when it changed (0) has it read every sync.
+func changedSince(lastRead *int64, modified int64) bool {
 	return modified == 0 || lastRead == nil || *lastRead != modified
 }
