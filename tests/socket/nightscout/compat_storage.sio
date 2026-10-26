@@ -1,0 +1,191 @@
+# API v3's "/storage" namespace, ported from socket_v3_storage.sio in
+# https://github.com/grahamjenson/nightscout_compatibility_test
+# Each assert is what Nightscout answered there, from its results/nightscout/socket_v3_storage,
+# numbered as those files are. Where nighttroop differs it is left out:
+#   - an updated document has no modifiedBy, which nighttroop does not keep, as API v3 also leaves it out
+
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET read_token {{ .create_new_site.read_only_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME jwtauth
+GET http://{{ site }}/api/v2/authorization/request/token={{ token }}
+ASSERT_STATUS 200
+SET jwt {{ .jwtauth.token }}
+
+# Nightscout's answers are in mg/dL
+NAME update_unit_to_mgdl
+PATCH http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+B {"value": "mg/dL"}
+ASSERT_STATUS 200
+
+NAME storage_connect
+CONNECT http://{{ site }}/socket.io/?EIO=4
+NS /storage
+
+# 002.storage_subscribe: subscribing to named collections acks them
+NAME storage_subscribe
+EMIT subscribe
+B {"accessToken": "{{ token }}", "collections": ["entries", "treatments"]}
+ACK
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS true "@success"
+ASSERT_LENGTH 2 "@collections"
+ASSERT_EQUALS "entries" "@collections.0"
+ASSERT_EQUALS "treatments" "@collections.1"
+
+NAME storage_create_treatment_v3
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {"eventType": "Note", "notes": "storage socket", "app": "socket-test", "date": {{ itime 0 }}}
+ASSERT_STATUS 201
+SET identifier {{ dig "storage_create_treatment_v3.identifier" }}
+
+# 004.storage_create_event: the created v3 document
+NAME storage_create_event
+WAIT create
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS "treatments" "@colName"
+ASSERT_EQUALS ".identifier" "@doc.identifier"
+ASSERT_EQUALS "socket-test" "@doc.app"
+ASSERT_EQUALS "Note" "@doc.eventType"
+ASSERT_EQUALS "storage socket" "@doc.notes"
+ASSERT_EQUALS 0 "@doc.utcOffset"
+ASSERT_EXISTS "@doc.created_at"
+ASSERT_EXISTS "@doc.date"
+ASSERT_EXISTS "@doc.srvCreated"
+ASSERT_EXISTS "@doc.srvModified"
+ASSERT_EXISTS "@doc.subject"
+
+NAME storage_update_treatment_v3
+PATCH http://{{ site }}/api/v3/treatments/{{ .identifier }}
+H Authorization: Bearer {{ jwt }}
+B {"notes": "storage socket patched"}
+ASSERT_STATUS 200
+
+# 006.storage_update_event: the whole updated document
+NAME storage_update_event
+WAIT update
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS "treatments" "@colName"
+ASSERT_EQUALS ".identifier" "@doc.identifier"
+ASSERT_EQUALS "socket-test" "@doc.app"
+ASSERT_EQUALS "Note" "@doc.eventType"
+ASSERT_EQUALS "storage socket patched" "@doc.notes"
+ASSERT_EQUALS 0 "@doc.utcOffset"
+ASSERT_EXISTS "@doc.created_at"
+ASSERT_EXISTS "@doc.date"
+ASSERT_EXISTS "@doc.srvCreated"
+ASSERT_EXISTS "@doc.srvModified"
+ASSERT_EXISTS "@doc.subject"
+
+NAME storage_delete_treatment_v3
+DELETE http://{{ site }}/api/v3/treatments/{{ .identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+# 008.storage_delete_event: only the collection and identifier
+NAME storage_delete_event
+WAIT delete
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS "treatments" "@colName"
+ASSERT_EQUALS ".identifier" "@identifier"
+
+NAME storage_disconnect
+DISCONNECT
+
+# 011 and 012: a bad or missing access token is refused
+NAME storage_bad_connect
+CONNECT http://{{ site }}/socket.io/?EIO=4
+NS /storage
+
+NAME storage_bad_subscribe
+EMIT subscribe
+B {"accessToken": "not-a-real-token", "collections": ["entries"]}
+ACK
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS false "@success"
+ASSERT_EQUALS "Missing or bad accessToken" "@message"
+
+NAME storage_no_token_subscribe
+EMIT subscribe
+B {"collections": ["entries"]}
+ACK
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS false "@success"
+ASSERT_EQUALS "Missing or bad accessToken" "@message"
+
+NAME storage_bad_disconnect
+DISCONNECT
+
+# 015.storage_all_subscribe: without collections, every one the token can read
+NAME storage_all_connect
+CONNECT http://{{ site }}/socket.io/?EIO=4
+NS /storage
+
+NAME storage_all_subscribe
+EMIT subscribe
+B {"accessToken": "{{ token }}"}
+ACK
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS true "@success"
+ASSERT_LENGTH 6 "@collections"
+ASSERT_EQUALS "devicestatus" "@collections.0"
+ASSERT_EQUALS "entries" "@collections.1"
+ASSERT_EQUALS "food" "@collections.2"
+ASSERT_EQUALS "profile" "@collections.3"
+ASSERT_EQUALS "settings" "@collections.4"
+ASSERT_EQUALS "treatments" "@collections.5"
+
+NAME storage_all_create_entry_v3
+POST http://{{ site }}/api/v3/entries
+H Authorization: Bearer {{ jwt }}
+B {"type": "sgv", "sgv": 133, "app": "socket-test", "device": "socket-test", "date": {{ itime 0 }}}
+ASSERT_STATUS 201
+SET entry_identifier {{ dig "storage_all_create_entry_v3.identifier" }}
+
+# 017.storage_all_entry_create_event
+NAME storage_all_entry_create_event
+WAIT create
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS "entries" "@colName"
+ASSERT_EQUALS ".entry_identifier" "@doc.identifier"
+ASSERT_EQUALS "socket-test" "@doc.app"
+ASSERT_EQUALS "socket-test" "@doc.device"
+ASSERT_EQUALS 133 "@doc.sgv"
+ASSERT_EQUALS "sgv" "@doc.type"
+ASSERT_EQUALS 0 "@doc.utcOffset"
+ASSERT_EXISTS "@doc.created_at"
+ASSERT_EXISTS "@doc.date"
+ASSERT_EXISTS "@doc.srvCreated"
+ASSERT_EXISTS "@doc.srvModified"
+ASSERT_EXISTS "@doc.subject"
+
+NAME storage_all_delete_entry_v3
+DELETE http://{{ site }}/api/v3/entries/{{ .entry_identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+# 019.storage_all_entry_delete_event
+NAME storage_all_entry_delete_event
+WAIT delete
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS "entries" "@colName"
+ASSERT_EQUALS ".entry_identifier" "@identifier"
+
+# 020.storage_read_subscribe: a read token is not subscribed to settings, which need admin
+NAME storage_read_subscribe
+EMIT subscribe
+B {"accessToken": "{{ read_token }}", "collections": ["entries", "settings"]}
+ACK
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS true "@success"
+ASSERT_LENGTH 1 "@collections"
+ASSERT_EQUALS "entries" "@collections.0"
+
+NAME storage_all_disconnect
+DISCONNECT

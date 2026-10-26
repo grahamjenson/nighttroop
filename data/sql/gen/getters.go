@@ -98,6 +98,9 @@ var TypeLookupMap = map[string]map[string]string{
 	"UpdateSyncSourceReportsSuccessParams": {
 		"Type": "consts.SyncSourceType",
 	},
+	"UpdateSyncSourceEntriesLastModifiedParams": {
+		"Type": "consts.SyncSourceType",
+	},
 	"ProfilePreset": {
 		"IsDefault": "bool",
 	},

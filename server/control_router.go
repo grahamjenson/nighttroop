@@ -24,7 +24,7 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 
 	r.Group(func(r chi.Router) {
 		r.Use(controlapi.JWTAuthMiddleware(controlDB, config))
-		r.Get("/", controlapi.GetDashboardHandler(controlDB, config))
+		r.Get("/", store.Collection("sites").Search) // The dashboard is the list of sites
 		r.Post("/logout", controlapi.POSTLogoutHandler(config))
 
 		// The control plane's collections, each at its route: sites, jobs, job stats and sync sources
