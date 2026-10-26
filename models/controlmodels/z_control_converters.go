@@ -6,11 +6,48 @@ package controlmodels
 import (
 	controldb "nighttroop.t1d.nz/data/sql/controldb"
 	jobsdb "nighttroop.t1d.nz/data/sql/jobsdb"
+	logsdb "nighttroop.t1d.nz/data/sql/logsdb"
 	apiquery "nighttroop.t1d.nz/utils/apiutils/apiquery"
 	consts "nighttroop.t1d.nz/utils/consts"
 	errors "nighttroop.t1d.nz/utils/errors"
 )
 
+func ErrorFromDB(source *logsdb.Error) *Error {
+	var pControlmodelsError *Error
+	if source != nil {
+		var controlmodelsError Error
+		controlmodelsError.ID = (*source).ID
+		if (*source).SiteID != nil {
+			xstring := *(*source).SiteID
+			controlmodelsError.SiteID = &xstring
+		}
+		controlmodelsError.Message = (*source).Message
+		controlmodelsError.Attributes = AttributesJSON((*source).Attributes)
+		controlmodelsError.CreatedAt = (*source).CreatedAt
+		pControlmodelsError = &controlmodelsError
+	}
+	return pControlmodelsError
+}
+func EventFromDB(source *logsdb.Event) *Event {
+	var pControlmodelsEvent *Event
+	if source != nil {
+		var controlmodelsEvent Event
+		controlmodelsEvent.ID = (*source).ID
+		if (*source).SiteID != nil {
+			xstring := *(*source).SiteID
+			controlmodelsEvent.SiteID = &xstring
+		}
+		controlmodelsEvent.Name = (*source).Name
+		controlmodelsEvent.Attributes = AttributesJSON((*source).Attributes)
+		controlmodelsEvent.StartedAt = (*source).StartedAt
+		if (*source).FinishedAt != nil {
+			xint64 := *(*source).FinishedAt
+			controlmodelsEvent.FinishedAt = &xint64
+		}
+		pControlmodelsEvent = &controlmodelsEvent
+	}
+	return pControlmodelsEvent
+}
 func JobFromDB(source *jobsdb.Job) *Job {
 	var pControlmodelsJob *Job
 	if source != nil {
@@ -48,6 +85,39 @@ func JobStatsDailyFromDB(source *jobsdb.JobStatsDaily) *JobStatsDaily {
 	}
 	return pControlmodelsJobStatsDaily
 }
+func LogFromDB(source *logsdb.Log) *Log {
+	var pControlmodelsLog *Log
+	if source != nil {
+		var controlmodelsLog Log
+		controlmodelsLog.ID = (*source).ID
+		if (*source).SiteID != nil {
+			xstring := *(*source).SiteID
+			controlmodelsLog.SiteID = &xstring
+		}
+		controlmodelsLog.Level = (*source).Level
+		controlmodelsLog.Message = (*source).Message
+		controlmodelsLog.Attributes = AttributesJSON((*source).Attributes)
+		controlmodelsLog.CreatedAt = (*source).CreatedAt
+		pControlmodelsLog = &controlmodelsLog
+	}
+	return pControlmodelsLog
+}
+func QueryToSearchErrors(source *apiquery.Query) logsdb.SearchErrorsParams {
+	var logsdbSearchErrorsParams logsdb.SearchErrorsParams
+	if source != nil {
+		logsdbSearchErrorsParams.Skip = (*source).Skip
+		logsdbSearchErrorsParams.Limit = (*source).Limit
+	}
+	return logsdbSearchErrorsParams
+}
+func QueryToSearchEvents(source *apiquery.Query) logsdb.SearchEventsParams {
+	var logsdbSearchEventsParams logsdb.SearchEventsParams
+	if source != nil {
+		logsdbSearchEventsParams.Skip = (*source).Skip
+		logsdbSearchEventsParams.Limit = (*source).Limit
+	}
+	return logsdbSearchEventsParams
+}
 func QueryToSearchJobStatsDaily(source *apiquery.Query) jobsdb.SearchJobStatsDailyParams {
 	var jobsdbSearchJobStatsDailyParams jobsdb.SearchJobStatsDailyParams
 	if source != nil {
@@ -63,6 +133,14 @@ func QueryToSearchJobs(source *apiquery.Query) jobsdb.SearchJobsParams {
 		jobsdbSearchJobsParams.Limit = (*source).Limit
 	}
 	return jobsdbSearchJobsParams
+}
+func QueryToSearchLogs(source *apiquery.Query) logsdb.SearchLogsParams {
+	var logsdbSearchLogsParams logsdb.SearchLogsParams
+	if source != nil {
+		logsdbSearchLogsParams.Skip = (*source).Skip
+		logsdbSearchLogsParams.Limit = (*source).Limit
+	}
+	return logsdbSearchLogsParams
 }
 func QueryToSearchSites(source *apiquery.Query) controldb.SearchSitesParams {
 	var controldbSearchSitesParams controldb.SearchSitesParams

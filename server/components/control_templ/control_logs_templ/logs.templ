@@ -1,0 +1,246 @@
+package control_logs_templ
+
+import (
+	"encoding/json"
+	"fmt"
+	"time"
+
+	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/server/components/modal"
+	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/display"
+)
+
+func formatDate(ms int64) string {
+	return time.UnixMilli(ms).Format("2006-01-02 15:04:05")
+}
+
+// orServer is the row's site, or that it is the server's own
+func orServer(siteID *string) string {
+	if siteID == nil {
+		return "server"
+	}
+	return *siteID
+}
+
+// duration is how long an event took, or a dash when it happened at a moment
+func duration(event *controlmodels.Event) string {
+	if event.FinishedAt == nil {
+		return "-"
+	}
+	return fmt.Sprintf("%d ms", *event.FinishedAt-event.StartedAt)
+}
+
+// attributes are a row's attributes as JSON, indented to read
+func attributes(raw json.RawMessage) string {
+	indented, err := json.MarshalIndent(raw, "", "  ")
+	if err != nil {
+		return string(raw)
+	}
+	return string(indented)
+}
+
+// page heads a page of rows with its title and description, and pages it
+templ page(id string, title string, description string, path string, count int, skip int64, limit int64) {
+	<div id={ id } class="mx-auto max-w-5xl space-y-6">
+		<div>
+			<h1 class="text-2xl font-bold">{ title }</h1>
+			<p class="mt-1 text-gray-500">{ description }</p>
+		</div>
+		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
+			{ children... }
+			@pager.Pager(pager.Props{ID: "control-" + path, Path: path, Count: count, Skip: skip, Limit: limit})
+		</section>
+		<div id="modal-container"></div>
+	</div>
+}
+
+templ rowLink(id string, path string) {
+	@table.Row(table.RowProps{
+		ID:    id,
+		Class: "cursor-pointer",
+		Attributes: templ.Attributes{
+			"hx-get":    path,
+			"hx-target": "#modal-container",
+			"hx-swap":   "innerHTML",
+		},
+	}) {
+		{ children... }
+	}
+}
+
+templ empty(columns string, what string) {
+	<tr><td colspan={ columns } class="p-4 text-sm text-gray-500">No { what } here.</td></tr>
+}
+
+templ attributesDetail(id string, raw json.RawMessage) {
+	if len(raw) > 0 {
+		<pre id={ id } class="mt-4 max-h-64 overflow-auto whitespace-pre-wrap break-all rounded bg-gray-50 p-2 text-xs">{ attributes(raw) }</pre>
+	}
+}
+
+var detail = modal.Detail
+
+// EventsTable shows one page of events, the newest first
+templ EventsTable(events []*controlmodels.Event, skip int64, limit int64) {
+	@page("events_table", "Events", "What happened to each site and the server, newest first. Click an event to see its details.", "/events", len(events), skip, limit) {
+		@table.Table(table.Props{ID: "controlEventsTable", Class: "rounded-lg border border-gray-200"}) {
+			@table.Header() {
+				@table.Row() {
+					@table.Head() {
+						Event
+					}
+					@table.Head() {
+						Site
+					}
+					@table.Head() {
+						Started
+					}
+					@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
+						Duration
+					}
+				}
+			}
+			@table.Body() {
+				if len(events) == 0 {
+					@empty("4", "events")
+				}
+				for _, event := range events {
+					@rowLink(fmt.Sprintf("control--event--%d", event.ID), fmt.Sprintf("/events/%d", event.ID)) {
+						@table.Cell() {
+							{ event.Name }
+						}
+						@table.Cell() {
+							{ orServer(event.SiteID) }
+						}
+						@table.Cell() {
+							<span title={ formatDate(event.StartedAt) }>{ display.Ago(&event.StartedAt, time.Now()) }</span>
+						}
+						@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+							{ duration(event) }
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+templ EventModal(event *controlmodels.Event) {
+	@modal.Modal(modal.Props{ID: "control--event--details", Title: event.Name, Subtitle: formatDate(event.StartedAt)}) {
+		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+			@detail("Site", orServer(event.SiteID))
+			@detail("Started", formatDate(event.StartedAt))
+			if event.FinishedAt != nil {
+				@detail("Finished", formatDate(*event.FinishedAt))
+			}
+			@detail("Duration", duration(event))
+		</dl>
+		@attributesDetail("control--event--attributes", event.Attributes)
+	}
+}
+
+// ErrorsTable shows one page of errors, the newest first
+templ ErrorsTable(errors []*controlmodels.Error, skip int64, limit int64) {
+	@page("errors_table", "Errors", "What failed for each site and the server, newest first. Click an error to see its details.", "/errors", len(errors), skip, limit) {
+		@table.Table(table.Props{ID: "controlErrorsTable", Class: "rounded-lg border border-gray-200"}) {
+			@table.Header() {
+				@table.Row() {
+					@table.Head() {
+						Error
+					}
+					@table.Head() {
+						Site
+					}
+					@table.Head() {
+						When
+					}
+				}
+			}
+			@table.Body() {
+				if len(errors) == 0 {
+					@empty("3", "errors")
+				}
+				for _, e := range errors {
+					@rowLink(fmt.Sprintf("control--error--%d", e.ID), fmt.Sprintf("/errors/%d", e.ID)) {
+						@table.Cell() {
+							<span class="block max-w-md truncate text-red-700">{ e.Message }</span>
+						}
+						@table.Cell() {
+							{ orServer(e.SiteID) }
+						}
+						@table.Cell() {
+							<span title={ formatDate(e.CreatedAt) }>{ display.Ago(&e.CreatedAt, time.Now()) }</span>
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+templ ErrorModal(e *controlmodels.Error) {
+	@modal.Modal(modal.Props{ID: "control--error--details", Title: "Error", Subtitle: formatDate(e.CreatedAt)}) {
+		<p class="mt-2 break-all text-sm text-red-700">{ e.Message }</p>
+		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+			@detail("Site", orServer(e.SiteID))
+		</dl>
+		@attributesDetail("control--error--attributes", e.Attributes)
+	}
+}
+
+// LogsTable shows one page of logs, the newest first
+templ LogsTable(logs []*controlmodels.Log, skip int64, limit int64) {
+	@page("logs_table", "Logs", "Messages logged for each site and the server, newest first. Click a log to see its details.", "/logs", len(logs), skip, limit) {
+		@table.Table(table.Props{ID: "controlLogsTable", Class: "rounded-lg border border-gray-200"}) {
+			@table.Header() {
+				@table.Row() {
+					@table.Head() {
+						Level
+					}
+					@table.Head() {
+						Message
+					}
+					@table.Head() {
+						Site
+					}
+					@table.Head() {
+						When
+					}
+				}
+			}
+			@table.Body() {
+				if len(logs) == 0 {
+					@empty("4", "logs")
+				}
+				for _, log := range logs {
+					@rowLink(fmt.Sprintf("control--log--%d", log.ID), fmt.Sprintf("/logs/%d", log.ID)) {
+						@table.Cell() {
+							{ log.Level }
+						}
+						@table.Cell() {
+							<span class="block max-w-md truncate">{ log.Message }</span>
+						}
+						@table.Cell() {
+							{ orServer(log.SiteID) }
+						}
+						@table.Cell() {
+							<span title={ formatDate(log.CreatedAt) }>{ display.Ago(&log.CreatedAt, time.Now()) }</span>
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+templ LogModal(log *controlmodels.Log) {
+	@modal.Modal(modal.Props{ID: "control--log--details", Title: log.Level, Subtitle: formatDate(log.CreatedAt)}) {
+		<p class="mt-2 break-all text-sm">{ log.Message }</p>
+		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+			@detail("Site", orServer(log.SiteID))
+		</dl>
+		@attributesDetail("control--log--attributes", log.Attributes)
+	}
+}

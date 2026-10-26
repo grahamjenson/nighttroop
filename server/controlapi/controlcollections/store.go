@@ -26,6 +26,9 @@ func NewControlStore() *ControlStore {
 	store.registerCollection(&JobStatsCollection{})
 	store.registerCollection(&JobsCollection{})
 	store.registerCollection(&SyncSourcesCollection{})
+	store.registerCollection(&LogsCollection{})
+	store.registerCollection(&EventsCollection{})
+	store.registerCollection(&ErrorsCollection{})
 
 	return store
 }
