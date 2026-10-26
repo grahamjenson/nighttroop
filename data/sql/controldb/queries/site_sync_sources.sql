@@ -80,6 +80,25 @@ WHERE us.enabled = 1
       OR us.last_attempted_sync <= CAST(unixepoch('subsec') * 1000 AS INTEGER) - (us.sync_interval_seconds * 1000)
   );
 
+-- name: StartSyncSourceBackfill :execresult
+-- Starts a backfill unless one is queued or running, and not over an hour old, so a double click starts only one
+UPDATE site_sync_sources SET
+    backfill_started_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    last_backfill_from = sqlc.arg('From'),
+    last_backfill_to = sqlc.arg('To'),
+    total_backfills = total_backfills + 1
+WHERE type = sqlc.arg('Type') AND site_id = sqlc.arg('SiteID')
+  AND (backfill_started_at IS NULL OR backfill_started_at < CAST(unixepoch('subsec') * 1000 AS INTEGER) - (60 * 60 * 1000));
+
+-- name: FinishSyncSourceBackfill :exec
+UPDATE site_sync_sources SET
+    backfill_started_at = NULL,
+    last_backfill_finished_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    last_backfill_duration = sqlc.arg('DurationMs'),
+    last_backfill_records = sqlc.arg('Records'),
+    last_backfill_error = sqlc.narg('Error')
+WHERE type = sqlc.arg('Type') AND site_id = sqlc.arg('SiteID');
+
 ------ Updates to the Sync Reporting -----
 
 -- name: UpdateSyncReportAttempt :exec
