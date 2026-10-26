@@ -125,19 +125,19 @@ templ deviceStatusTable(id string, statuses []*sitemodels.SiteDeviceStatus) {
 				@table.Head() {
 					Time
 				}
-				@table.Head() {
+				@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
 					Phone
 				}
-				@table.Head() {
+				@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
 					Reservoir
 				}
-				@table.Head() {
+				@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
 					Pump
 				}
-				@table.Head() {
+				@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
 					IOB
 				}
-				@table.Head() {
+				@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
 					COB
 				}
 				@table.Head() {
@@ -171,19 +171,19 @@ templ deviceStatusRow(status *sitemodels.SiteDeviceStatus) {
 		@table.Cell() {
 			{ formatReadingDate(status.OccurredAt) }
 		}
-		@table.Cell() {
+		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ withUnit(status.DeviceBatteryPercent, "%") }
 		}
-		@table.Cell() {
+		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ withUnit(status.PumpReservoir, " U") }
 		}
-		@table.Cell() {
+		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ withUnit(status.PumpBatteryPercent, "%") }
 		}
-		@table.Cell() {
+		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ withUnit(status.LoopIob, " U") }
 		}
-		@table.Cell() {
+		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ withUnit(status.LoopCob, " g") }
 		}
 		@table.Cell() {

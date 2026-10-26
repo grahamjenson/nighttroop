@@ -47,7 +47,7 @@ templ ActivitiesTable(activities []*sitemodels.SiteActivity, skip int64, limit i
 						@table.Head() {
 							Name
 						}
-						@table.Head() {
+						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
 							Minutes
 						}
 						@table.Head() {
@@ -135,7 +135,7 @@ templ activityRow(activity *sitemodels.SiteActivity) {
 		@table.Cell() {
 			{ orDash(activity.Name) }
 		}
-		@table.Cell() {
+		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ orDash(activity.DurationMinutes) }
 		}
 		@table.Cell() {

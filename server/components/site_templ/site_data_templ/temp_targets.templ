@@ -33,13 +33,13 @@ templ TempTargetsTable(tempTargets []*sitemodels.SiteTempTarget, skip int64, lim
 						@table.Head() {
 							Time
 						}
-						@table.Head() {
+						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
 							Low { string(*glucoseUnits(ctx)) }
 						}
-						@table.Head() {
+						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
 							High { string(*glucoseUnits(ctx)) }
 						}
-						@table.Head() {
+						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
 							Minutes
 						}
 						@table.Head() {
@@ -141,13 +141,13 @@ templ tempTargetRow(tempTarget *sitemodels.SiteTempTarget) {
 		@table.Cell() {
 			{ formatReadingDate(tempTarget.OccurredAt) }
 		}
-		@table.Cell() {
+		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ formatGlucose(tempTarget.LowTarget, tempTarget.Units) }
 		}
-		@table.Cell() {
+		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ formatGlucose(tempTarget.HighTarget, tempTarget.Units) }
 		}
-		@table.Cell() {
+		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ fmt.Sprint(tempTarget.DurationMinutes) }
 		}
 		@table.Cell() {

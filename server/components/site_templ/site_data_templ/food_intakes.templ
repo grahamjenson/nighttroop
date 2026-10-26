@@ -33,7 +33,7 @@ templ FoodIntakesTable(foodIntakes []*sitemodels.SiteFoodIntake, skip int64, lim
 						@table.Head() {
 							Time
 						}
-						@table.Head() {
+						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
 							Carbs g
 						}
 						@table.Head() {
@@ -52,7 +52,7 @@ templ FoodIntakesTable(foodIntakes []*sitemodels.SiteFoodIntake, skip int64, lim
 				}
 				@table.Body() {
 					if len(foodIntakes) == 0 {
-						<tr id="site--food--empty"><td colspan="5" class="p-4 text-sm text-gray-500">No food intakes here.</td></tr>
+						<tr id="site--food--empty"><td colspan="6" class="p-4 text-sm text-gray-500">No food intakes here.</td></tr>
 					}
 					for _, foodIntake := range foodIntakes {
 						@foodIntakeRow(foodIntake)
@@ -119,7 +119,7 @@ templ foodIntakeRow(foodIntake *sitemodels.SiteFoodIntake) {
 		@table.Cell() {
 			{ formatReadingDate(foodIntake.OccurredAt) }
 		}
-		@table.Cell() {
+		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ orDash(foodIntake.Carbs) }
 		}
 		@table.Cell() {

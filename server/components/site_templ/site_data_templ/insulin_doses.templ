@@ -33,7 +33,7 @@ templ InsulinDosesTable(insulinDoses []*sitemodels.SiteInsulinDose, skip int64, 
 						@table.Head() {
 							Time
 						}
-						@table.Head() {
+						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
 							Units
 						}
 						@table.Head() {
@@ -52,7 +52,7 @@ templ InsulinDosesTable(insulinDoses []*sitemodels.SiteInsulinDose, skip int64, 
 				}
 				@table.Body() {
 					if len(insulinDoses) == 0 {
-						<tr id="site--insulin--empty"><td colspan="5" class="p-4 text-sm text-gray-500">No insulin doses here.</td></tr>
+						<tr id="site--insulin--empty"><td colspan="6" class="p-4 text-sm text-gray-500">No insulin doses here.</td></tr>
 					}
 					for _, insulinDose := range insulinDoses {
 						@insulinDoseRow(insulinDose)
@@ -116,7 +116,7 @@ templ insulinDoseRow(insulinDose *sitemodels.SiteInsulinDose) {
 		@table.Cell() {
 			{ formatReadingDate(insulinDose.OccurredAt) }
 		}
-		@table.Cell() {
+		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ fmt.Sprint(insulinDose.Dose) }
 		}
 		@table.Cell() {
