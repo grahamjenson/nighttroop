@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/input"
@@ -197,55 +198,38 @@ templ tempBasalRow(tempBasal *sitemodels.SiteTempBasal) {
 }
 
 templ TempBasalModal(tempBasal *sitemodels.SiteTempBasal) {
-	<div id="site--temp-basal--details" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-		<div class="w-full max-w-2xl rounded-lg bg-white p-6 shadow-lg">
-			<h2 class="text-lg font-semibold">{ fmt.Sprintf("%s U/hr for %d minutes", orDash(tempBasal.Absolute), tempBasal.DurationMinutes) }</h2>
-			<p class="text-sm text-gray-500">{ formatReadingDate(tempBasal.OccurredAt) }</p>
-			<form
-				id="site--temp-basal--edit"
-				class="mt-4 flex items-center gap-2"
-				hx-post={ "/data/temp-basals/" + tempBasal.ID }
-				hx-target={ "#site--temp-basal--" + tempBasal.ID }
-				hx-swap="outerHTML"
-				hx-status:4xx="target:#toaster swap:beforeend"
-				hx-status:5xx="target:#toaster swap:beforeend"
-			>
-				@tempBasalInputs("site--temp-basal--edit", orDash(tempBasal.Absolute), fmt.Sprint(tempBasal.DurationMinutes), orEmpty(tempBasal.Notes))
-				@button.Button(button.Props{ID: "site--temp-basal--edit--submit", Type: button.TypeSubmit}) {
-					Save
-				}
-			</form>
-			<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-				@readingDetail("ID", tempBasal.ID)
-				@readingDetail("Percent", orDash(tempBasal.Percent))
-				@readingDetail("Notes", orDash(tempBasal.Notes))
-				@readingDetail("Reason", orDash(tempBasal.Reason))
-				@readingDetail("UTC Offset (minutes)", orDash(tempBasal.UtcOffsetMinutes))
-				@readingDetail("App", orDash(tempBasal.CreatedByAppName))
-				@readingDetail("Device", orDash(tempBasal.CreatedByDeviceName))
-				@readingDetail("Created By", tempBasal.CreatedByIdentityName)
-				@readingDetail("Created", formatReadingDate(tempBasal.CreatedAt))
-				@readingDetail("Updated", formatReadingDate(tempBasal.UpdatedAt))
-				@readingDetail("Updated By", orDash(tempBasal.UpdatedByIdentityName))
-			</dl>
-			if tempBasal.RawJsonData != nil {
-				<pre class="mt-4 max-h-48 overflow-auto rounded bg-gray-50 p-2 text-xs">{ *tempBasal.RawJsonData }</pre>
+	@modal.Modal(modal.Props{ID: "site--temp-basal--details", Title: fmt.Sprintf("%s U/hr for %d minutes", orDash(tempBasal.Absolute), tempBasal.DurationMinutes), Subtitle: formatReadingDate(tempBasal.OccurredAt)}) {
+		<form
+			id="site--temp-basal--edit"
+			class="mt-4 flex items-center gap-2"
+			hx-post={ "/data/temp-basals/" + tempBasal.ID }
+			hx-target={ "#site--temp-basal--" + tempBasal.ID }
+			hx-swap="outerHTML"
+			hx-status:4xx="target:#toaster swap:beforeend"
+			hx-status:5xx="target:#toaster swap:beforeend"
+		>
+			@tempBasalInputs("site--temp-basal--edit", orDash(tempBasal.Absolute), fmt.Sprint(tempBasal.DurationMinutes), orEmpty(tempBasal.Notes))
+			@button.Button(button.Props{ID: "site--temp-basal--edit--submit", Type: button.TypeSubmit}) {
+				Save
 			}
-			<div class="mt-4 flex justify-end">
-				@button.Button(button.Props{
-					ID:      "site--temp-basal--details--close",
-					Variant: button.VariantOutline,
-					Attributes: templ.Attributes{
-						"hx-get":    "/empty",
-						"hx-target": "#modal-container",
-						"hx-swap":   "innerHTML",
-					},
-				}) {
-					Close
-				}
-			</div>
-		</div>
-	</div>
+		</form>
+		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+			@readingDetail("ID", tempBasal.ID)
+			@readingDetail("Percent", orDash(tempBasal.Percent))
+			@readingDetail("Notes", orDash(tempBasal.Notes))
+			@readingDetail("Reason", orDash(tempBasal.Reason))
+			@readingDetail("UTC Offset (minutes)", orDash(tempBasal.UtcOffsetMinutes))
+			@readingDetail("App", orDash(tempBasal.CreatedByAppName))
+			@readingDetail("Device", orDash(tempBasal.CreatedByDeviceName))
+			@readingDetail("Created By", tempBasal.CreatedByIdentityName)
+			@readingDetail("Created", formatReadingDate(tempBasal.CreatedAt))
+			@readingDetail("Updated", formatReadingDate(tempBasal.UpdatedAt))
+			@readingDetail("Updated By", orDash(tempBasal.UpdatedByIdentityName))
+		</dl>
+		if tempBasal.RawJsonData != nil {
+			<pre class="mt-4 max-h-48 overflow-auto rounded bg-gray-50 p-2 text-xs">{ *tempBasal.RawJsonData }</pre>
+		}
+	}
 }
 
 templ TempBasalCreated(tempBasal *sitemodels.SiteTempBasal) {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/input"
@@ -230,69 +231,52 @@ templ profileSwitchSchedule(id string, label string, schedule *string) {
 }
 
 templ ProfileSwitchModal(profileSwitch *sitemodels.SiteProfileSwitch) {
-	<div id="site--profile-switch--details" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-		<div class="max-h-screen w-full max-w-3xl overflow-auto rounded-lg bg-white p-6 shadow-lg">
-			<h2 class="text-lg font-semibold">{ fmt.Sprintf("%s at %s%%", profileSwitch.Name, orDash(profileSwitch.Percent)) }</h2>
-			<p class="text-sm text-gray-500">{ formatReadingDate(profileSwitch.OccurredAt) }</p>
-			<form
-				id="site--profile-switch--edit"
-				class="mt-4 flex items-center gap-2"
-				hx-post={ "/data/profile-switches/" + profileSwitch.ID }
-				hx-target={ "#site--profile-switch--" + profileSwitch.ID }
-				hx-swap="outerHTML"
-				hx-status:4xx="target:#toaster swap:beforeend"
-				hx-status:5xx="target:#toaster swap:beforeend"
-			>
-				@profileSwitchInputs("site--profile-switch--edit", profileSwitch.Name, numberOr(profileSwitch.Percent, "100"), numberOr(profileSwitch.Timeshift, "0"), numberOr(profileSwitch.DurationMinutes, "0"), orEmpty(profileSwitch.Notes))
-				@button.Button(button.Props{ID: "site--profile-switch--edit--submit", Type: button.TypeSubmit}) {
-					Save
-				}
-			</form>
-			<dl class="mt-4 grid grid-cols-4 gap-x-4 gap-y-1 text-sm">
-				@readingDetail("ID", profileSwitch.ID)
-				@readingDetail("Percent", orDash(profileSwitch.Percent))
-				@readingDetail("Shift (minutes)", orDash(profileSwitch.Timeshift))
-				@readingDetail("Minutes", orDash(profileSwitch.DurationMinutes))
-				@readingDetail("DIA (hours)", orDash(profileSwitch.Dia))
-				@readingDetail("Units", orDash(profileSwitch.Units))
-				@readingDetail("Timezone", orDash(profileSwitch.Timezone))
-				@readingDetail("Carbs per Hour", orDash(profileSwitch.CarbsHr))
-				@readingDetail("Delay", orDash(profileSwitch.Delay))
-				@readingDetail("Notes", orDash(profileSwitch.Notes))
-				@readingDetail("Reason", orDash(profileSwitch.Reason))
-				@readingDetail("UTC Offset (minutes)", orDash(profileSwitch.UtcOffsetMinutes))
-				@readingDetail("App", orDash(profileSwitch.CreatedByAppName))
-				@readingDetail("Device", orDash(profileSwitch.CreatedByDeviceName))
-				@readingDetail("Created By", profileSwitch.CreatedByIdentityName)
-				@readingDetail("Created", formatReadingDate(profileSwitch.CreatedAt))
-				@readingDetail("Updated", formatReadingDate(profileSwitch.UpdatedAt))
-				@readingDetail("Updated By", orDash(profileSwitch.UpdatedByIdentityName))
-			</dl>
-			<div class="mt-4 grid grid-cols-3 gap-2">
-				@profileSwitchSchedule("basal-rates", "Basal Rates", profileSwitch.BasalRatesJson)
-				@profileSwitchSchedule("carb-ratios", "Carb Ratios", profileSwitch.CarbRatiosJson)
-				@profileSwitchSchedule("insulin-sensitivities", "Insulin Sensitivities", profileSwitch.InsulinSensitivitiesJson)
-				@profileSwitchSchedule("targets-low", "Low Targets", profileSwitch.TargetsLowJson)
-				@profileSwitchSchedule("targets-high", "High Targets", profileSwitch.TargetsHighJson)
-			</div>
-			if profileSwitch.RawJsonData != nil {
-				<pre class="mt-4 max-h-24 overflow-auto whitespace-pre-wrap break-all rounded bg-gray-50 p-2 text-xs">{ *profileSwitch.RawJsonData }</pre>
+	@modal.Modal(modal.Props{ID: "site--profile-switch--details", Title: fmt.Sprintf("%s at %s%%", profileSwitch.Name, orDash(profileSwitch.Percent)), Subtitle: formatReadingDate(profileSwitch.OccurredAt)}) {
+		<form
+			id="site--profile-switch--edit"
+			class="mt-4 flex items-center gap-2"
+			hx-post={ "/data/profile-switches/" + profileSwitch.ID }
+			hx-target={ "#site--profile-switch--" + profileSwitch.ID }
+			hx-swap="outerHTML"
+			hx-status:4xx="target:#toaster swap:beforeend"
+			hx-status:5xx="target:#toaster swap:beforeend"
+		>
+			@profileSwitchInputs("site--profile-switch--edit", profileSwitch.Name, numberOr(profileSwitch.Percent, "100"), numberOr(profileSwitch.Timeshift, "0"), numberOr(profileSwitch.DurationMinutes, "0"), orEmpty(profileSwitch.Notes))
+			@button.Button(button.Props{ID: "site--profile-switch--edit--submit", Type: button.TypeSubmit}) {
+				Save
 			}
-			<div class="mt-4 flex justify-end">
-				@button.Button(button.Props{
-					ID:      "site--profile-switch--details--close",
-					Variant: button.VariantOutline,
-					Attributes: templ.Attributes{
-						"hx-get":    "/empty",
-						"hx-target": "#modal-container",
-						"hx-swap":   "innerHTML",
-					},
-				}) {
-					Close
-				}
-			</div>
+		</form>
+		<dl class="mt-4 grid grid-cols-4 gap-x-4 gap-y-1 text-sm">
+			@readingDetail("ID", profileSwitch.ID)
+			@readingDetail("Percent", orDash(profileSwitch.Percent))
+			@readingDetail("Shift (minutes)", orDash(profileSwitch.Timeshift))
+			@readingDetail("Minutes", orDash(profileSwitch.DurationMinutes))
+			@readingDetail("DIA (hours)", orDash(profileSwitch.Dia))
+			@readingDetail("Units", orDash(profileSwitch.Units))
+			@readingDetail("Timezone", orDash(profileSwitch.Timezone))
+			@readingDetail("Carbs per Hour", orDash(profileSwitch.CarbsHr))
+			@readingDetail("Delay", orDash(profileSwitch.Delay))
+			@readingDetail("Notes", orDash(profileSwitch.Notes))
+			@readingDetail("Reason", orDash(profileSwitch.Reason))
+			@readingDetail("UTC Offset (minutes)", orDash(profileSwitch.UtcOffsetMinutes))
+			@readingDetail("App", orDash(profileSwitch.CreatedByAppName))
+			@readingDetail("Device", orDash(profileSwitch.CreatedByDeviceName))
+			@readingDetail("Created By", profileSwitch.CreatedByIdentityName)
+			@readingDetail("Created", formatReadingDate(profileSwitch.CreatedAt))
+			@readingDetail("Updated", formatReadingDate(profileSwitch.UpdatedAt))
+			@readingDetail("Updated By", orDash(profileSwitch.UpdatedByIdentityName))
+		</dl>
+		<div class="mt-4 grid grid-cols-3 gap-2">
+			@profileSwitchSchedule("basal-rates", "Basal Rates", profileSwitch.BasalRatesJson)
+			@profileSwitchSchedule("carb-ratios", "Carb Ratios", profileSwitch.CarbRatiosJson)
+			@profileSwitchSchedule("insulin-sensitivities", "Insulin Sensitivities", profileSwitch.InsulinSensitivitiesJson)
+			@profileSwitchSchedule("targets-low", "Low Targets", profileSwitch.TargetsLowJson)
+			@profileSwitchSchedule("targets-high", "High Targets", profileSwitch.TargetsHighJson)
 		</div>
-	</div>
+		if profileSwitch.RawJsonData != nil {
+			<pre class="mt-4 max-h-24 overflow-auto whitespace-pre-wrap break-all rounded bg-gray-50 p-2 text-xs">{ *profileSwitch.RawJsonData }</pre>
+		}
+	}
 }
 
 templ ProfileSwitchCreated(profileSwitch *sitemodels.SiteProfileSwitch) {

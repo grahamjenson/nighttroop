@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/input"
@@ -182,56 +183,39 @@ templ notificationEventRow(event *sitemodels.SiteNotificationEvent) {
 }
 
 templ NotificationEventModal(event *sitemodels.SiteNotificationEvent) {
-	<div id="site--notification--details" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-		<div class="w-full max-w-2xl rounded-lg bg-white p-6 shadow-lg">
-			<h2 class="text-lg font-semibold">{ fmt.Sprintf("%s: %s", event.NotificationType, event.Title) }</h2>
-			<p class="text-sm text-gray-500">{ formatReadingDate(event.OccurredAt) }</p>
-			<form
-				id="site--notification--edit"
-				class="mt-4 flex items-center gap-2"
-				hx-post={ "/data/notifications/" + event.ID }
-				hx-target={ "#site--notification--" + event.ID }
-				hx-swap="outerHTML"
-				hx-status:4xx="target:#toaster swap:beforeend"
-				hx-status:5xx="target:#toaster swap:beforeend"
-			>
-				@notificationEventInputs("site--notification--edit", event.Title, fmt.Sprint(event.Severity), orEmpty(event.Notes))
-				@button.Button(button.Props{ID: "site--notification--edit--submit", Type: button.TypeSubmit}) {
-					Save
-				}
-			</form>
-			<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-				@readingDetail("ID", event.ID)
-				@readingDetail("Severity", fmt.Sprint(event.Severity))
-				@readingDetail("Content", orDash(event.Content))
-				@readingDetail("Notes", orDash(event.Notes))
-				@readingDetail("Reason", orDash(event.Reason))
-				@readingDetail("UTC Offset (minutes)", orDash(event.UtcOffsetMinutes))
-				@readingDetail("App", orDash(event.CreatedByAppName))
-				@readingDetail("Device", orDash(event.CreatedByDeviceName))
-				@readingDetail("Created By", event.CreatedByIdentityName)
-				@readingDetail("Created", formatReadingDate(event.CreatedAt))
-				@readingDetail("Updated", formatReadingDate(event.UpdatedAt))
-				@readingDetail("Updated By", orDash(event.UpdatedByIdentityName))
-			</dl>
-			if event.RawJsonData != nil {
-				<pre class="mt-4 max-h-48 overflow-auto rounded bg-gray-50 p-2 text-xs">{ *event.RawJsonData }</pre>
+	@modal.Modal(modal.Props{ID: "site--notification--details", Title: fmt.Sprintf("%s: %s", event.NotificationType, event.Title), Subtitle: formatReadingDate(event.OccurredAt)}) {
+		<form
+			id="site--notification--edit"
+			class="mt-4 flex items-center gap-2"
+			hx-post={ "/data/notifications/" + event.ID }
+			hx-target={ "#site--notification--" + event.ID }
+			hx-swap="outerHTML"
+			hx-status:4xx="target:#toaster swap:beforeend"
+			hx-status:5xx="target:#toaster swap:beforeend"
+		>
+			@notificationEventInputs("site--notification--edit", event.Title, fmt.Sprint(event.Severity), orEmpty(event.Notes))
+			@button.Button(button.Props{ID: "site--notification--edit--submit", Type: button.TypeSubmit}) {
+				Save
 			}
-			<div class="mt-4 flex justify-end">
-				@button.Button(button.Props{
-					ID:      "site--notification--details--close",
-					Variant: button.VariantOutline,
-					Attributes: templ.Attributes{
-						"hx-get":    "/empty",
-						"hx-target": "#modal-container",
-						"hx-swap":   "innerHTML",
-					},
-				}) {
-					Close
-				}
-			</div>
-		</div>
-	</div>
+		</form>
+		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+			@readingDetail("ID", event.ID)
+			@readingDetail("Severity", fmt.Sprint(event.Severity))
+			@readingDetail("Content", orDash(event.Content))
+			@readingDetail("Notes", orDash(event.Notes))
+			@readingDetail("Reason", orDash(event.Reason))
+			@readingDetail("UTC Offset (minutes)", orDash(event.UtcOffsetMinutes))
+			@readingDetail("App", orDash(event.CreatedByAppName))
+			@readingDetail("Device", orDash(event.CreatedByDeviceName))
+			@readingDetail("Created By", event.CreatedByIdentityName)
+			@readingDetail("Created", formatReadingDate(event.CreatedAt))
+			@readingDetail("Updated", formatReadingDate(event.UpdatedAt))
+			@readingDetail("Updated By", orDash(event.UpdatedByIdentityName))
+		</dl>
+		if event.RawJsonData != nil {
+			<pre class="mt-4 max-h-48 overflow-auto rounded bg-gray-50 p-2 text-xs">{ *event.RawJsonData }</pre>
+		}
+	}
 }
 
 templ NotificationEventCreated(event *sitemodels.SiteNotificationEvent) {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/input"
@@ -180,57 +181,40 @@ templ insulinDoseRow(insulinDose *sitemodels.SiteInsulinDose) {
 }
 
 templ InsulinDoseModal(insulinDose *sitemodels.SiteInsulinDose) {
-	<div id="site--insulin--details" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-		<div class="w-full max-w-2xl rounded-lg bg-white p-6 shadow-lg">
-			<h2 class="text-lg font-semibold">{ fmt.Sprintf("%v units", insulinDose.Dose) }</h2>
-			<p class="text-sm text-gray-500">{ formatReadingDate(insulinDose.OccurredAt) }</p>
-			<form
-				id="site--insulin--edit"
-				class="mt-4 flex items-center gap-2"
-				hx-post={ "/data/insulin/" + insulinDose.ID }
-				hx-target={ "#site--insulin--" + insulinDose.ID }
-				hx-swap="outerHTML"
-				hx-status:4xx="target:#toaster swap:beforeend"
-				hx-status:5xx="target:#toaster swap:beforeend"
-			>
-				@insulinDoseInputs("site--insulin--edit", fmt.Sprint(insulinDose.Dose), orEmpty(insulinDose.Notes))
-				@button.Button(button.Props{ID: "site--insulin--edit--submit", Type: button.TypeSubmit}) {
-					Save
-				}
-			</form>
-			<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-				@readingDetail("ID", insulinDose.ID)
-				@readingDetail("Type", orDash(insulinDose.DoseType))
-				@readingDetail("Split Now", orDash(insulinDose.SplitNow))
-				@readingDetail("Split Extended", orDash(insulinDose.SplitExt))
-				@readingDetail("Notes", orDash(insulinDose.Notes))
-				@readingDetail("Reason", orDash(insulinDose.Reason))
-				@readingDetail("UTC Offset (minutes)", orDash(insulinDose.UtcOffsetMinutes))
-				@readingDetail("App", orDash(insulinDose.CreatedByAppName))
-				@readingDetail("Device", orDash(insulinDose.CreatedByDeviceName))
-				@readingDetail("Created By", insulinDose.CreatedByIdentityName)
-				@readingDetail("Created", formatReadingDate(insulinDose.CreatedAt))
-				@readingDetail("Updated", formatReadingDate(insulinDose.UpdatedAt))
-				@readingDetail("Updated By", orDash(insulinDose.UpdatedByIdentityName))
-			</dl>
-			if insulinDose.RawJsonData != nil {
-				<pre class="mt-4 max-h-48 overflow-auto rounded bg-gray-50 p-2 text-xs">{ *insulinDose.RawJsonData }</pre>
+	@modal.Modal(modal.Props{ID: "site--insulin--details", Title: fmt.Sprintf("%v units", insulinDose.Dose), Subtitle: formatReadingDate(insulinDose.OccurredAt)}) {
+		<form
+			id="site--insulin--edit"
+			class="mt-4 flex items-center gap-2"
+			hx-post={ "/data/insulin/" + insulinDose.ID }
+			hx-target={ "#site--insulin--" + insulinDose.ID }
+			hx-swap="outerHTML"
+			hx-status:4xx="target:#toaster swap:beforeend"
+			hx-status:5xx="target:#toaster swap:beforeend"
+		>
+			@insulinDoseInputs("site--insulin--edit", fmt.Sprint(insulinDose.Dose), orEmpty(insulinDose.Notes))
+			@button.Button(button.Props{ID: "site--insulin--edit--submit", Type: button.TypeSubmit}) {
+				Save
 			}
-			<div class="mt-4 flex justify-end">
-				@button.Button(button.Props{
-					ID:      "site--insulin--details--close",
-					Variant: button.VariantOutline,
-					Attributes: templ.Attributes{
-						"hx-get":    "/empty",
-						"hx-target": "#modal-container",
-						"hx-swap":   "innerHTML",
-					},
-				}) {
-					Close
-				}
-			</div>
-		</div>
-	</div>
+		</form>
+		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+			@readingDetail("ID", insulinDose.ID)
+			@readingDetail("Type", orDash(insulinDose.DoseType))
+			@readingDetail("Split Now", orDash(insulinDose.SplitNow))
+			@readingDetail("Split Extended", orDash(insulinDose.SplitExt))
+			@readingDetail("Notes", orDash(insulinDose.Notes))
+			@readingDetail("Reason", orDash(insulinDose.Reason))
+			@readingDetail("UTC Offset (minutes)", orDash(insulinDose.UtcOffsetMinutes))
+			@readingDetail("App", orDash(insulinDose.CreatedByAppName))
+			@readingDetail("Device", orDash(insulinDose.CreatedByDeviceName))
+			@readingDetail("Created By", insulinDose.CreatedByIdentityName)
+			@readingDetail("Created", formatReadingDate(insulinDose.CreatedAt))
+			@readingDetail("Updated", formatReadingDate(insulinDose.UpdatedAt))
+			@readingDetail("Updated By", orDash(insulinDose.UpdatedByIdentityName))
+		</dl>
+		if insulinDose.RawJsonData != nil {
+			<pre class="mt-4 max-h-48 overflow-auto rounded bg-gray-50 p-2 text-xs">{ *insulinDose.RawJsonData }</pre>
+		}
+	}
 }
 
 templ InsulinDoseCreated(insulinDose *sitemodels.SiteInsulinDose) {

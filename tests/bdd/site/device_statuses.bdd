@@ -56,6 +56,12 @@ SCREENSHOT device_status_details
 CLICK #site--device-status--details--close
 ASSERT_NOT_VISIBLE #site--device-status--details
 
+// Escape closes them too
+CLICK #deviceStatusTable-0 tbody tr >> nth=0
+ASSERT_VISIBLE #site--device-status--details
+PRESS Escape
+ASSERT_NOT_VISIBLE #site--device-status--details
+
 // Show all pages through every status the device sent
 CLICK #site--device-status--show-all-0
 ASSERT_STATUS 200

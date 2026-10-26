@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/input"
@@ -219,10 +220,7 @@ templ glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) {
 }
 
 templ GlucoseReadingModal(reading *sitemodels.SiteGlucoseReading) {
-	<div id="site--glucose--details" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-		<div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-lg">
-			<h2 class="text-lg font-semibold">{ formatGlucose(reading.Reading, reading.Units) } { orDash(reading.Units) }</h2>
-			<p class="text-sm text-gray-500">{ formatReadingDate(reading.OccurredAt) }</p>
+	@modal.Modal(modal.Props{ID: "site--glucose--details", Title: formatGlucose(reading.Reading, reading.Units) } { orDash(reading.Units), Subtitle: formatReadingDate(reading.OccurredAt)}) {
 			<form
 				id="site--glucose--edit"
 				class="mt-4 flex items-center gap-2"
@@ -261,27 +259,10 @@ templ GlucoseReadingModal(reading *sitemodels.SiteGlucoseReading) {
 			if reading.RawJsonData != nil {
 				<pre class="mt-4 max-h-48 overflow-auto rounded bg-gray-50 p-2 text-xs">{ *reading.RawJsonData }</pre>
 			}
-			<div class="mt-4 flex justify-end">
-				@button.Button(button.Props{
-					ID:      "site--glucose--details--close",
-					Variant: button.VariantOutline,
-					Attributes: templ.Attributes{
-						"hx-get":    "/empty",
-						"hx-target": "#modal-container",
-						"hx-swap":   "innerHTML",
-					},
-				}) {
-					Close
-				}
-			</div>
-		</div>
-	</div>
+	}
 }
 
-templ readingDetail(label string, value string) {
-	<dt class="text-gray-500">{ label }</dt>
-	<dd class="break-all">{ value }</dd>
-}
+var readingDetail = modal.Detail
 
 func orEmpty(value *string) string {
 	if value == nil {
