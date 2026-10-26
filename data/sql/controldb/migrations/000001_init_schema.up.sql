@@ -285,7 +285,7 @@ CREATE TABLE site_sync_sources (
     consecutive_failed_syncs INTEGER DEFAULT 0,
 
     -- Previous Error Text
-    previous_sync_errors TEXT CHECK(length(previous_sync_errors) <= 5012), -- stored to show to user as feedback
+    previous_sync_errors TEXT CHECK(length(previous_sync_errors) <= 5012 AND json_valid(previous_sync_errors)), -- stored to show to user as feedback
 
     -- Timing EMAs to then determine frequency on
     total_ema REAL,

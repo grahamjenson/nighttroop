@@ -455,11 +455,11 @@ CREATE TABLE profile_presets (
     carbs_hr REAL,
     delay REAL,
 
-    carb_ratios_json TEXT CHECK(length(carb_ratios_json) <= 2048), -- 
-    insulin_sensitivities_json TEXT CHECK(length(insulin_sensitivities_json) <= 2048), -- { [1,2] },
-    basal_rates_json TEXT CHECK(length(basal_rates_json) <= 2048), -- {"value": "110", "time": "00:00"},
-    targets_high_json TEXT CHECK(length(targets_high_json) <= 2048), -- { [high, low] }
-    targets_low_json TEXT CHECK(length(targets_low_json) <= 2048), -- { [high, low] }
+    carb_ratios_json TEXT CHECK(length(carb_ratios_json) <= 2048 AND json_valid(carb_ratios_json)), -- 
+    insulin_sensitivities_json TEXT CHECK(length(insulin_sensitivities_json) <= 2048 AND json_valid(insulin_sensitivities_json)), -- { [1,2] },
+    basal_rates_json TEXT CHECK(length(basal_rates_json) <= 2048 AND json_valid(basal_rates_json)), -- {"value": "110", "time": "00:00"},
+    targets_high_json TEXT CHECK(length(targets_high_json) <= 2048 AND json_valid(targets_high_json)), -- { [high, low] }
+    targets_low_json TEXT CHECK(length(targets_low_json) <= 2048 AND json_valid(targets_low_json)), -- { [high, low] }
 
     -- loop settings
     loop_settings_json TEXT CHECK(length(loop_settings_json) <= 2048 AND json_valid(loop_settings_json)), -- some loops (e.g. Loop) store settings on the profile
