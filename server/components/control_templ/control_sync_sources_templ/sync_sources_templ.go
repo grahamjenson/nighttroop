@@ -54,7 +54,7 @@ func stateClass(source *controlmodels.SyncSource) string {
 	return ""
 }
 
-// SyncSourcesTable shows one page of sync sources, most recently attempted first, with buttons to the pages either side
+// SyncSourcesTable shows one page of sync sources, the most recently failed first, with buttons to the pages either side
 func SyncSourcesTable(sources []*controlmodels.SyncSource, skip int64, limit int64) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -76,7 +76,7 @@ func SyncSourcesTable(sources []*controlmodels.SyncSource, skip int64, limit int
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"sync_sources_table\" class=\"mx-auto max-w-5xl space-y-6\"><div><h1 class=\"text-2xl font-bold\">Sync Sources</h1><p class=\"mt-1 text-gray-500\">Every site's sync sources, most recently attempted first. Click a source to see its reports.</p></div><section class=\"rounded-xl border border-gray-200 p-4 shadow-sm\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"sync_sources_table\" class=\"mx-auto max-w-5xl space-y-6\"><div><h1 class=\"text-2xl font-bold\">Sync Sources</h1><p class=\"mt-1 text-gray-500\">Every site's sync sources, the most recently failed first. Click a source to see its reports.</p></div><section class=\"rounded-xl border border-gray-200 p-4 shadow-sm\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
