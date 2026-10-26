@@ -24,6 +24,15 @@ func New(db DBTX) *Queries {
 func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	q := Queries{db: db}
 	var err error
+	if q.getErrorStmt, err = db.PrepareContext(ctx, getError); err != nil {
+		return nil, fmt.Errorf("error preparing query GetError: %w", err)
+	}
+	if q.getEventStmt, err = db.PrepareContext(ctx, getEvent); err != nil {
+		return nil, fmt.Errorf("error preparing query GetEvent: %w", err)
+	}
+	if q.getLogStmt, err = db.PrepareContext(ctx, getLog); err != nil {
+		return nil, fmt.Errorf("error preparing query GetLog: %w", err)
+	}
 	if q.insertErrorStmt, err = db.PrepareContext(ctx, insertError); err != nil {
 		return nil, fmt.Errorf("error preparing query InsertError: %w", err)
 	}
@@ -56,6 +65,21 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 
 func (q *Queries) Close() error {
 	var err error
+	if q.getErrorStmt != nil {
+		if cerr := q.getErrorStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getErrorStmt: %w", cerr)
+		}
+	}
+	if q.getEventStmt != nil {
+		if cerr := q.getEventStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getEventStmt: %w", cerr)
+		}
+	}
+	if q.getLogStmt != nil {
+		if cerr := q.getLogStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getLogStmt: %w", cerr)
+		}
+	}
 	if q.insertErrorStmt != nil {
 		if cerr := q.insertErrorStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing insertErrorStmt: %w", cerr)
@@ -140,6 +164,9 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 type Queries struct {
 	db               DBTX
 	tx               *sql.Tx
+	getErrorStmt     *sql.Stmt
+	getEventStmt     *sql.Stmt
+	getLogStmt       *sql.Stmt
 	insertErrorStmt  *sql.Stmt
 	insertEventStmt  *sql.Stmt
 	insertLogStmt    *sql.Stmt
@@ -155,6 +182,9 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
 		db:               tx,
 		tx:               tx,
+		getErrorStmt:     q.getErrorStmt,
+		getEventStmt:     q.getEventStmt,
+		getLogStmt:       q.getLogStmt,
 		insertErrorStmt:  q.insertErrorStmt,
 		insertEventStmt:  q.insertEventStmt,
 		insertLogStmt:    q.insertLogStmt,

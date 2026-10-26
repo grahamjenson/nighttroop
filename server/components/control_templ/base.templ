@@ -143,6 +143,15 @@ templ Header() {
 							@dropdown.Group() {
 								@menuItem("control--job-stats-button", "/job-stats", "Job Stats", icon.ChartColumn)
 								@menuItem("control--jobs-button", "/jobs", "Jobs", icon.ListChecks)
+							}
+							@dropdown.Separator()
+							@dropdown.Label() {
+								Logs
+							}
+							@dropdown.Group() {
+								@menuItem("control--events-button", "/events", "Events", icon.Activity)
+								@menuItem("control--errors-button", "/errors", "Errors", icon.TriangleAlert)
+								@menuItem("control--logs-button", "/logs", "Logs", icon.ScrollText)
 								@dropdown.Separator()
 								@dropdown.Item(dropdown.ItemProps{
 									Href: "#",
