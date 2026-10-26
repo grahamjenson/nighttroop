@@ -9,6 +9,7 @@ import (
 	"nighttroop.t1d.nz/background/sync"
 	"nighttroop.t1d.nz/clients/dexcom_client"
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/data/sql/logsdb"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/testutils"
@@ -53,6 +54,15 @@ func TestFailedFirstSyncDisablesTheSource(t *testing.T) {
 	require.False(t, s.Enabled)
 	require.Contains(t, s.PreviousSyncErrors[0], "The first sync failed, so syncing has been turned off")
 	require.False(t, due())
+
+	// The failure is in the logs DB's errors, and turning syncing off is an event, both for the site
+	syncErrors, err := controlDB.Logs.Queries.SearchErrors(ctx, logsdb.SearchErrorsParams{SiteID: &siteID, Limit: 10})
+	require.NoError(t, err)
+	require.Len(t, syncErrors, 1)
+	require.Equal(t, `{"kind":"sync","sync_type":"dexcom"}`, *syncErrors[0].Attributes)
+	events, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &siteID, Limit: 10})
+	require.NoError(t, err)
+	require.Equal(t, "sync_turned_off", events[0].Name)
 
 	// Saving working details clears the error, and the next sync is a first sync again
 	require.NoError(t, q.UpdateSyncSource(ctx, controldb.UpdateSyncSourceParams{SiteID: siteID, Type: typ, UrlOrUsernameEnc: enc(dexcom_client.TestValidUsername), Enabled: true}))

@@ -1,6 +1,7 @@
 package httputils
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 	"time"
@@ -12,8 +13,13 @@ import (
 	"nighttroop.t1d.nz/utils/config"
 )
 
-func AddStandardMiddleware(router chi.Router, config *config.ServerConfig) {
+// AddStandardMiddleware adds what every router has, recording its server errors in the logs DB when there is one
+func AddStandardMiddleware(router chi.Router, config *config.ServerConfig, controlDB *db.ControlDB) {
 	router.Use(middleware.RequestID)
+	if controlDB != nil {
+		// Before the recoverer, so a panic's 500 is recorded too
+		router.Use(RecordServerErrors(controlDB.Logs))
+	}
 
 	if config.SentryDSN != "" {
 		sentryMiddleware := sentryhttp.New(sentryhttp.Options{
@@ -26,6 +32,29 @@ func AddStandardMiddleware(router chi.Router, config *config.ServerConfig) {
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.RequestSize(500 * 1024)) // 500KB max body size, should be enough for any request and prevents abuse
 	router.Use(middleware.Timeout(30 * time.Second))
+}
+
+// RecordServerErrors records each response with a 5xx status in the logs DB's errors, with its site when it has one.
+// It records the route's pattern rather than the path, as a Nightscout path can carry a token.
+func RecordServerErrors(logs *db.LogsDB) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
+			next.ServeHTTP(ww, r)
+			if ww.Status() < http.StatusInternalServerError {
+				return
+			}
+			var siteID *string
+			if siteContext := GetSiteContext(r.Context()); siteContext != nil && siteContext.SiteModel != nil {
+				siteID = &siteContext.SiteModel.ID
+			}
+			route := ""
+			if routeContext := chi.RouteContext(r.Context()); routeContext != nil {
+				route = routeContext.RoutePattern()
+			}
+			logs.ServerError(context.WithoutCancel(r.Context()), siteID, ww.Status(), r.Method, route, middleware.GetReqID(r.Context()))
+		})
+	}
 }
 
 //////

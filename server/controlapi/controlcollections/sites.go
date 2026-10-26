@@ -77,6 +77,7 @@ func (s *SitesCollection) UpdateRow(ctx context.Context, controlContext *httputi
 	if rows, _ := result.RowsAffected(); rows == 0 {
 		return nil, apiutils.ErrConstraintCheckFailedWithHint("only a live site can be disabled")
 	}
+	controlContext.ControlDB.Logs.SiteDisabledEvent(ctx, oldModel.ID, controlContext.IdentityModel.Name)
 	return s.GetRow(ctx, oldModel.ID, controlContext)
 }
 

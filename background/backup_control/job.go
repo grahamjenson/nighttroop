@@ -3,6 +3,7 @@ package backup_control
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"nighttroop.t1d.nz/background/cron"
 	"nighttroop.t1d.nz/background/liteq"
@@ -46,9 +47,17 @@ func (b *BackupControlJobManager) SetupCron(c cron.CronScheduler, queue *liteq.J
 	})
 }
 
-func (b *BackupControlJobManager) BackupToS3() error {
+// BackupToS3 backs up the control DB, recording the backup as an event in the logs DB and a failure as an error
+func (b *BackupControlJobManager) BackupToS3() (err error) {
+	started := time.Now()
+	defer func() {
+		if err != nil {
+			b.controlDB.Logs.ControlBackupError(context.TODO(), err)
+		}
+	}()
+
 	// Backup the Database
-	err := b.controlDB.Backup(context.TODO())
+	err = b.controlDB.Backup(context.TODO())
 	if err != nil {
 		return fmt.Errorf("cannot backup control db: %w", err)
 	}
@@ -58,5 +67,6 @@ func (b *BackupControlJobManager) BackupToS3() error {
 	if err != nil {
 		return fmt.Errorf("cannot sync control db: %w", err)
 	}
+	b.controlDB.Logs.ControlBackedUpEvent(context.TODO(), time.Since(started), b.ServerConfig.Status.S3Working)
 	return nil
 }

@@ -95,7 +95,13 @@ func (b *BackupSiteJobManager) DeleteUnusedSites(batch string) error {
 	slog.Info("Deleting site without archiving", "subdomains", deleteList)
 
 	// Just delete these sites without an archive, as they have not been used in so many minutes
-	return b.controlDB.DeleteSites(deleteList)
+	if err := b.controlDB.DeleteSites(deleteList); err != nil {
+		return err
+	}
+	for _, siteID := range deleteList {
+		b.controlDB.Logs.SiteDeletedEvent(context.TODO(), siteID, "unused")
+	}
+	return nil
 }
 
 // The sites we delete without archiving are sites that
@@ -140,10 +146,18 @@ func (b *BackupSiteJobManager) BackupToS3() {
 // Site Backup
 // ///
 
-func (b *BackupSiteJobManager) BackupSiteBatch(char string) error {
+// BackupSiteBatch backs up the sites whose IDs start with char, recording the backup as an event in the logs DB and
+// a failure as an error
+func (b *BackupSiteJobManager) BackupSiteBatch(char string) (err error) {
 	trackTrim := false
-	defer aslog.TrackTime(time.Now(), "backup site pool "+char, &trackTrim, nil)
+	started := time.Now()
+	defer aslog.TrackTime(started, "backup site pool "+char, &trackTrim, nil)
 	ctx := context.TODO()
+	defer func() {
+		if err != nil {
+			b.controlDB.Logs.SiteBatchBackupError(ctx, char, err)
+		}
+	}()
 
 	sites, err := GetSiteBatch(b.controlDB, char)
 
@@ -178,6 +192,7 @@ func (b *BackupSiteJobManager) BackupSiteBatch(char string) error {
 	if err != nil {
 		return fmt.Errorf("cannot sync site pool %s: %w", string(char), err)
 	}
+	b.controlDB.Logs.SiteBatchBackedUpEvent(ctx, char, len(paths), time.Since(started), b.ServerConfig.Status.S3Working)
 
 	// Copy the control db to the backup location
 	return nil

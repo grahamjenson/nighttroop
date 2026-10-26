@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/logsdb"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -19,14 +20,14 @@ func TestLogsDBRecordsBySite(t *testing.T) {
 
 	logs.Log(ctx, &site, db.LogLevelInfo, "synced", map[string]any{"readings": 3})
 	logs.Log(ctx, nil, db.LogLevelWarn, "server wide", nil)
-	logs.Event(ctx, &site, "site_disabled", nil)
-	logs.Error(ctx, &site, errors.New("sync failed"), map[string]any{"sync_type": "dexcom"})
+	logs.SiteDisabledEvent(ctx, site, "admin")
+	logs.SyncError(ctx, site, consts.SyncSourceTypeDexcom, errors.New("sync failed"))
 
 	siteLogs, err := logs.Queries.SearchLogs(ctx, logsdb.SearchLogsParams{SiteID: &site, Limit: 10})
 	require.NoError(t, err)
 	require.Len(t, siteLogs, 1)
 	require.Equal(t, "synced", siteLogs[0].Message)
-	require.Equal(t, db.LogLevelInfo, siteLogs[0].Level)
+	require.Equal(t, string(db.LogLevelInfo), siteLogs[0].Level)
 	require.Equal(t, `{"readings":3}`, *siteLogs[0].Attributes)
 
 	allLogs, err := logs.Queries.SearchLogs(ctx, logsdb.SearchLogsParams{Limit: 10})
@@ -36,12 +37,13 @@ func TestLogsDBRecordsBySite(t *testing.T) {
 
 	events, err := logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &site, Limit: 10})
 	require.NoError(t, err)
-	require.Equal(t, "site_disabled", events[0].Name)
+	require.Equal(t, string(db.EventSiteDisabled), events[0].Name)
+	require.Equal(t, `{"by":"admin"}`, *events[0].Attributes)
 
 	siteErrors, err := logs.Queries.SearchErrors(ctx, logsdb.SearchErrorsParams{SiteID: &site, Limit: 10})
 	require.NoError(t, err)
 	require.Equal(t, "sync failed", siteErrors[0].Message)
-	require.Equal(t, `{"sync_type":"dexcom"}`, *siteErrors[0].Attributes)
+	require.Equal(t, `{"kind":"sync","sync_type":"dexcom"}`, *siteErrors[0].Attributes)
 }
 
 // TestLogsDBKeepsWithinLimits checks a long message is cut short and long attributes are replaced, rather than
@@ -80,8 +82,8 @@ func TestLogsDBTrim(t *testing.T) {
 			ctx, logs := context.TODO(), controlDB.Logs
 			for i := range test.written {
 				logs.Log(ctx, nil, db.LogLevelInfo, string(rune('a'+i)), nil)
-				logs.Event(ctx, nil, string(rune('a'+i)), nil)
-				logs.Error(ctx, nil, errors.New(string(rune('a'+i))), nil)
+				logs.SiteCreatedEvent(ctx, string(rune('a'+i)))
+				logs.ControlBackupError(ctx, errors.New(string(rune('a'+i))))
 			}
 
 			require.NoError(t, logs.Trim(ctx, test.maxRows))

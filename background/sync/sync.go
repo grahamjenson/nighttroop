@@ -83,11 +83,13 @@ func (b *SyncJobManager) SyncUserData(syncInfo *SyncJobInfo) error {
 	// This will be called on a schedule, and also on demand when a user logs in or something like that
 }
 
-// recordSyncFailure stores the failure so the source backs off. The message is truncated
-// first: an oversized one would fail the row's CHECK and leave the source retrying every tick.
+// recordSyncFailure stores the failure so the source backs off, and in the logs DB's errors. The message is
+// truncated first: an oversized one would fail the row's CHECK and leave the source retrying every tick.
 func (b *SyncJobManager) recordSyncFailure(syncInfo *SyncJobInfo, err error, elapsedTimeMS int64) {
+	b.controlDB.Logs.SyncError(context.TODO(), syncInfo.SiteID, syncInfo.Type, err)
 	errMsg := errors.Truncate(err.Error())
 	if syncInfo.firstSync {
+		b.controlDB.Logs.SyncTurnedOffEvent(context.TODO(), syncInfo.SiteID, syncInfo.Type)
 		errMsg = "The first sync failed, so syncing has been turned off. Check the details and save to try again. " + errMsg
 	}
 	updateError := b.controlDB.Queries.UpdateSyncSourceReportsFailure(context.TODO(), controldb.UpdateSyncSourceReportsFailureParams{
