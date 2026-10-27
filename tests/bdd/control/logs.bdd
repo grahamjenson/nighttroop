@@ -25,7 +25,9 @@ CLICK #control--events-button
 ASSERT_STATUS 200
 ASSERT_PATH /events
 ASSERT_VISIBLE #controlEventsTable
-ASSERT_TEXT_VISIBLE site_created
+// Events have names to read, not the names they are stored by
+ASSERT_TEXT_VISIBLE Site created
+ASSERT_NOT_VISIBLE #controlEventsTable >> text=site_created
 SCREENSHOT events
 
 // Clicking an event shows when it started and how long it took
