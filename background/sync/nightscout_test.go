@@ -10,23 +10,23 @@ import (
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/logsdb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
+	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
 func TestChangedSince(t *testing.T) {
-	read := int64(1000)
 	tests := []struct {
 		name     string
-		lastRead *int64
+		lastRead int64
 		modified int64
 		changed  bool
 	}{
-		{"never read", nil, 1000, true},
-		{"unchanged", &read, 1000, false},
-		{"modified since", &read, 2000, true},
-		{"modified earlier, as after a restore", &read, 500, true},
-		{"Nightscout does not say", &read, 0, true},
+		{"never read", 0, 1000, true},
+		{"unchanged", 1000, 1000, false},
+		{"modified since", 1000, 2000, true},
+		{"modified earlier, as after a restore", 1000, 500, true},
+		{"Nightscout does not say", 1000, 0, true},
 	}
 	for _, test := range tests {
 		require.Equal(t, test.changed, changedSince(test.lastRead, test.modified), test.name)
@@ -43,34 +43,26 @@ func TestNightscoutSyncRemembersWhenCollectionsWereModified(t *testing.T) {
 		require.NoError(t, err)
 		return &v
 	}
-	lastModified := func() *int64 {
-		s, err := q.GetSyncSource(ctx, controldb.GetSyncSourceParams{SiteID: siteID, Type: typ})
-		require.NoError(t, err)
-		require.Equal(t, s.EntriesLastModified, s.TreatmentsLastModified, "the fake Nightscout modified each at the same time")
-		require.Equal(t, s.EntriesLastModified, s.DevicestatusLastModified, "the fake Nightscout modified each at the same time")
-		return s.EntriesLastModified
+	all := func(modified int64) map[nsutils.Collection]int64 {
+		return map[nsutils.Collection]int64{nsutils.Entries: modified, nsutils.Treatments: modified, nsutils.Devicestatus: modified}
 	}
-	runSync := func() error { return jobs.SyncSource(ctx, SyncJobParams{SiteID: siteID, Type: typ}) }
+	runSync := func() map[nsutils.Collection]int64 {
+		require.NoError(t, jobs.SyncSource(ctx, SyncJobParams{SiteID: siteID, Type: typ}))
+		return jobs.nightscoutClients[siteID].lastModified
+	}
 
-	// A sync reads entries, treatments and device statuses and remembers when Nightscout says each was last modified
+	// A sync reads entries, treatments and device statuses and its client remembers when Nightscout says each was last modified
 	require.NoError(t, q.CreateSyncSource(ctx, controldb.CreateSyncSourceParams{SiteID: siteID, Type: typ, UrlOrUsernameEnc: enc(nightscout_client.TestValidURL), PasswordEnc: enc("token"), Enabled: true}))
-	require.Nil(t, lastModified())
-	require.NoError(t, runSync())
-	require.Equal(t, nightscout_client.TestLastModified, *lastModified())
+	require.Equal(t, all(nightscout_client.TestLastModified), runSync())
 
 	// With them unchanged, the next sync still works and keeps the same times
-	require.NoError(t, runSync())
-	require.Equal(t, nightscout_client.TestLastModified, *lastModified())
+	require.Equal(t, all(nightscout_client.TestLastModified), runSync())
 
-	// New settings may be another Nightscout, so everything is read again
-	require.NoError(t, q.UpdateSyncSource(ctx, controldb.UpdateSyncSourceParams{SiteID: siteID, Type: typ, Enabled: true}))
-	require.Nil(t, lastModified())
-	require.NoError(t, runSync())
-	require.NotNil(t, lastModified())
-
-	// Deleting the source forgets it too
-	require.NoError(t, q.DeleteSyncSource(ctx, controldb.DeleteSyncSourceParams{SiteID: siteID, Type: typ}))
-	require.Nil(t, lastModified())
+	// New details may be another Nightscout, so their new client reads everything again
+	require.NoError(t, q.UpdateSyncSource(ctx, controldb.UpdateSyncSourceParams{SiteID: siteID, Type: typ, PasswordEnc: enc("new-token"), Enabled: true}))
+	first := jobs.nightscoutClients[siteID]
+	require.Equal(t, all(nightscout_client.TestLastModified), runSync())
+	require.NotSame(t, first, jobs.nightscoutClients[siteID])
 }
 
 func TestNightscoutClientIsKeptBetweenSyncs(t *testing.T) {

@@ -60,9 +60,6 @@ UPDATE site_sync_sources SET
     password_enc = NULL,
     previous_sync_errors = NULL,
     first_successful_sync_time = NULL,
-    entries_last_modified = NULL,
-    treatments_last_modified = NULL,
-    devicestatus_last_modified = NULL,
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
 WHERE type = ? AND site_id = ?
 `
@@ -81,7 +78,7 @@ func (q *Queries) DeleteSyncSource(ctx context.Context, arg DeleteSyncSourcePara
 }
 
 const getAllSyncSourcesForSite = `-- name: GetAllSyncSourcesForSite :many
-SELECT site_id, type, url_or_username_enc, password_enc, region, created_at, updated_at, enabled, first_successful_sync_time, entries_last_modified, treatments_last_modified, devicestatus_last_modified, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_errors, total_ema, success_ema, failure_ema, last_sync_duration FROM site_sync_sources where site_id = ?
+SELECT site_id, type, url_or_username_enc, password_enc, region, created_at, updated_at, enabled, first_successful_sync_time, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_errors, total_ema, success_ema, failure_ema, last_sync_duration FROM site_sync_sources where site_id = ?
 `
 
 type GetAllSyncSourcesForSiteParams struct {
@@ -107,9 +104,6 @@ func (q *Queries) GetAllSyncSourcesForSite(ctx context.Context, arg GetAllSyncSo
 			&i.UpdatedAt,
 			&i.Enabled,
 			&i.FirstSuccessfulSyncTime,
-			&i.EntriesLastModified,
-			&i.TreatmentsLastModified,
-			&i.DevicestatusLastModified,
 			&i.SyncIntervalSecondsReason,
 			&i.SyncIntervalSeconds,
 			&i.LastAttemptedSync,
@@ -142,7 +136,7 @@ func (q *Queries) GetAllSyncSourcesForSite(ctx context.Context, arg GetAllSyncSo
 const getSyncReportsToRun = `-- name: GetSyncReportsToRun :many
 
 
-SELECT us.site_id, us.type, us.url_or_username_enc, us.password_enc, us.region, us.created_at, us.updated_at, us.enabled, us.first_successful_sync_time, us.entries_last_modified, us.treatments_last_modified, us.devicestatus_last_modified, us.sync_interval_seconds_reason, us.sync_interval_seconds, us.last_attempted_sync, us.last_successful_sync, us.last_failed_sync, us.total_syncs, us.total_successful_syncs, us.total_failed_syncs, us.consecutive_successful_syncs, us.consecutive_failed_syncs, us.previous_sync_errors, us.total_ema, us.success_ema, us.failure_ema, us.last_sync_duration FROM site_sync_sources us
+SELECT us.site_id, us.type, us.url_or_username_enc, us.password_enc, us.region, us.created_at, us.updated_at, us.enabled, us.first_successful_sync_time, us.sync_interval_seconds_reason, us.sync_interval_seconds, us.last_attempted_sync, us.last_successful_sync, us.last_failed_sync, us.total_syncs, us.total_successful_syncs, us.total_failed_syncs, us.consecutive_successful_syncs, us.consecutive_failed_syncs, us.previous_sync_errors, us.total_ema, us.success_ema, us.failure_ema, us.last_sync_duration FROM site_sync_sources us
 JOIN sites u ON u.id = us.site_id
 WHERE us.enabled = 1
   AND u.deleted_at IS NULL
@@ -183,9 +177,6 @@ func (q *Queries) GetSyncReportsToRun(ctx context.Context) ([]*SiteSyncSource, e
 			&i.UpdatedAt,
 			&i.Enabled,
 			&i.FirstSuccessfulSyncTime,
-			&i.EntriesLastModified,
-			&i.TreatmentsLastModified,
-			&i.DevicestatusLastModified,
 			&i.SyncIntervalSecondsReason,
 			&i.SyncIntervalSeconds,
 			&i.LastAttemptedSync,
@@ -216,7 +207,7 @@ func (q *Queries) GetSyncReportsToRun(ctx context.Context) ([]*SiteSyncSource, e
 }
 
 const getSyncSource = `-- name: GetSyncSource :one
-SELECT site_id, type, url_or_username_enc, password_enc, region, created_at, updated_at, enabled, first_successful_sync_time, entries_last_modified, treatments_last_modified, devicestatus_last_modified, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_errors, total_ema, success_ema, failure_ema, last_sync_duration FROM site_sync_sources where type = ? AND site_id = ? LIMIT 1
+SELECT site_id, type, url_or_username_enc, password_enc, region, created_at, updated_at, enabled, first_successful_sync_time, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_errors, total_ema, success_ema, failure_ema, last_sync_duration FROM site_sync_sources where type = ? AND site_id = ? LIMIT 1
 `
 
 type GetSyncSourceParams struct {
@@ -237,9 +228,6 @@ func (q *Queries) GetSyncSource(ctx context.Context, arg GetSyncSourceParams) (*
 		&i.UpdatedAt,
 		&i.Enabled,
 		&i.FirstSuccessfulSyncTime,
-		&i.EntriesLastModified,
-		&i.TreatmentsLastModified,
-		&i.DevicestatusLastModified,
 		&i.SyncIntervalSecondsReason,
 		&i.SyncIntervalSeconds,
 		&i.LastAttemptedSync,
@@ -260,7 +248,7 @@ func (q *Queries) GetSyncSource(ctx context.Context, arg GetSyncSourceParams) (*
 }
 
 const searchSyncSources = `-- name: SearchSyncSources :many
-SELECT site_id, type, url_or_username_enc, password_enc, region, created_at, updated_at, enabled, first_successful_sync_time, entries_last_modified, treatments_last_modified, devicestatus_last_modified, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_errors, total_ema, success_ema, failure_ema, last_sync_duration FROM site_sync_sources
+SELECT site_id, type, url_or_username_enc, password_enc, region, created_at, updated_at, enabled, first_successful_sync_time, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_errors, total_ema, success_ema, failure_ema, last_sync_duration FROM site_sync_sources
 ORDER BY last_failed_sync IS NULL, last_failed_sync DESC, last_attempted_sync DESC, site_id, type
 LIMIT ?2 OFFSET ?1
 `
@@ -290,9 +278,6 @@ func (q *Queries) SearchSyncSources(ctx context.Context, arg SearchSyncSourcesPa
 			&i.UpdatedAt,
 			&i.Enabled,
 			&i.FirstSuccessfulSyncTime,
-			&i.EntriesLastModified,
-			&i.TreatmentsLastModified,
-			&i.DevicestatusLastModified,
 			&i.SyncIntervalSecondsReason,
 			&i.SyncIntervalSeconds,
 			&i.LastAttemptedSync,
@@ -323,6 +308,7 @@ func (q *Queries) SearchSyncSources(ctx context.Context, arg SearchSyncSourcesPa
 }
 
 const updateSyncReportAttempt = `-- name: UpdateSyncReportAttempt :exec
+
 UPDATE site_sync_sources
 SET
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
@@ -335,6 +321,7 @@ type UpdateSyncReportAttemptParams struct {
 	SiteID string
 }
 
+// ---- Updates to the Sync Reporting -----
 func (q *Queries) UpdateSyncReportAttempt(ctx context.Context, arg UpdateSyncReportAttemptParams) error {
 	_, err := q.exec(ctx, q.updateSyncReportAttemptStmt, updateSyncReportAttempt, arg.Type, arg.SiteID)
 	return err
@@ -349,9 +336,6 @@ UPDATE site_sync_sources SET
     -- New settings get a fresh first sync, and old errors no longer apply
     first_successful_sync_time = NULL,
     previous_sync_errors = NULL,
-    entries_last_modified = NULL,
-    treatments_last_modified = NULL,
-    devicestatus_last_modified = NULL,
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) 
 WHERE type = ?5 AND site_id = ?6
 `
@@ -371,35 +355,6 @@ func (q *Queries) UpdateSyncSource(ctx context.Context, arg UpdateSyncSourcePara
 		arg.Enabled,
 		arg.UrlOrUsernameEnc,
 		arg.Region,
-		arg.Type,
-		arg.SiteID,
-	)
-	return err
-}
-
-const updateSyncSourceLastModified = `-- name: UpdateSyncSourceLastModified :exec
-
-UPDATE site_sync_sources SET
-    entries_last_modified = COALESCE(?1, entries_last_modified),
-    treatments_last_modified = COALESCE(?2, treatments_last_modified),
-    devicestatus_last_modified = COALESCE(?3, devicestatus_last_modified)
-WHERE type = ?4 AND site_id = ?5
-`
-
-type UpdateSyncSourceLastModifiedParams struct {
-	EntriesLastModified      *int64
-	TreatmentsLastModified   *int64
-	DevicestatusLastModified *int64
-	Type                     consts.SyncSourceType
-	SiteID                   string
-}
-
-// ---- Updates to the Sync Reporting -----
-func (q *Queries) UpdateSyncSourceLastModified(ctx context.Context, arg UpdateSyncSourceLastModifiedParams) error {
-	_, err := q.exec(ctx, q.updateSyncSourceLastModifiedStmt, updateSyncSourceLastModified,
-		arg.EntriesLastModified,
-		arg.TreatmentsLastModified,
-		arg.DevicestatusLastModified,
 		arg.Type,
 		arg.SiteID,
 	)

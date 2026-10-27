@@ -138,9 +138,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateSyncSourceStmt, err = db.PrepareContext(ctx, updateSyncSource); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSyncSource: %w", err)
 	}
-	if q.updateSyncSourceLastModifiedStmt, err = db.PrepareContext(ctx, updateSyncSourceLastModified); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateSyncSourceLastModified: %w", err)
-	}
 	if q.updateSyncSourceReportsFailureStmt, err = db.PrepareContext(ctx, updateSyncSourceReportsFailure); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSyncSourceReportsFailure: %w", err)
 	}
@@ -342,11 +339,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateSyncSourceStmt: %w", cerr)
 		}
 	}
-	if q.updateSyncSourceLastModifiedStmt != nil {
-		if cerr := q.updateSyncSourceLastModifiedStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateSyncSourceLastModifiedStmt: %w", cerr)
-		}
-	}
 	if q.updateSyncSourceReportsFailureStmt != nil {
 		if cerr := q.updateSyncSourceReportsFailureStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateSyncSourceReportsFailureStmt: %w", cerr)
@@ -434,7 +426,6 @@ type Queries struct {
 	updateSitesSettingsStmt            *sql.Stmt
 	updateSyncReportAttemptStmt        *sql.Stmt
 	updateSyncSourceStmt               *sql.Stmt
-	updateSyncSourceLastModifiedStmt   *sql.Stmt
 	updateSyncSourceReportsFailureStmt *sql.Stmt
 	updateSyncSourceReportsSuccessStmt *sql.Stmt
 }
@@ -481,7 +472,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateSitesSettingsStmt:            q.updateSitesSettingsStmt,
 		updateSyncReportAttemptStmt:        q.updateSyncReportAttemptStmt,
 		updateSyncSourceStmt:               q.updateSyncSourceStmt,
-		updateSyncSourceLastModifiedStmt:   q.updateSyncSourceLastModifiedStmt,
 		updateSyncSourceReportsFailureStmt: q.updateSyncSourceReportsFailureStmt,
 		updateSyncSourceReportsSuccessStmt: q.updateSyncSourceReportsSuccessStmt,
 	}
