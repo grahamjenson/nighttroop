@@ -28,6 +28,8 @@ ASSERT_PATH /data/food
 ASSERT_VISIBLE #foodIntakesTable
 ASSERT_TEXT_VISIBLE No food intakes here.
 ASSERT_NOT_VISIBLE #site--food--next
+// Units are in brackets after the name
+ASSERT_TEXT_VISIBLE Carbs (g)
 SCREENSHOT food_intakes_empty
 
 // Food typed in is eaten now, added to the top of the table

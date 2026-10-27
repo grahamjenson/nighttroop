@@ -124,7 +124,7 @@ func FoodIntakesTable(foodIntakes []*sitemodels.SiteFoodIntake, skip int64, limi
 							}()
 						}
 						ctx = templ.InitializeContext(ctx)
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "Carbs g")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "Carbs (g)")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
@@ -402,7 +402,7 @@ func foodIntakeInputs(id string, carbs string, name string, notes string) templ.
 				ID:          id + "--carbs",
 				Type:        input.TypeNumber,
 				Name:        "carbs",
-				Placeholder: "Carbs g",
+				Placeholder: "Carbs (g)",
 				Value:       carbs,
 				Required:    true,
 				Attributes:  templ.Attributes{"step": "any", "min": "0", "max": "1000"},

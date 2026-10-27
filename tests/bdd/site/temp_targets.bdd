@@ -39,7 +39,8 @@ ASSERT_TEXT_VISIBLE Showing 1 to 1
 ASSERT_NOT_VISIBLE #site--temp-target--next
 ASSERT_NOT_VISIBLE #site--temp-target--previous
 // Targets are in the settings' units, mmol/L by default
-ASSERT_TEXT_VISIBLE Low mmol/L
+ASSERT_TEXT_VISIBLE Low (mmol/L)
+ASSERT_TEXT_VISIBLE Duration (min)
 ASSERT_TEXT_VISIBLE 6.7
 SCREENSHOT temp_targets
 

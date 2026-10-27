@@ -122,7 +122,7 @@ func FoodPresetsTable(foodPresets []*sitemodels.SiteFoodPreset, skip int64, limi
 							}()
 						}
 						ctx = templ.InitializeContext(ctx)
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "Carbs g")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "Carbs (g)")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
@@ -148,7 +148,7 @@ func FoodPresetsTable(foodPresets []*sitemodels.SiteFoodPreset, skip int64, limi
 							}()
 						}
 						ctx = templ.InitializeContext(ctx)
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "Absorption (minutes)")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "Absorption (min)")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
@@ -396,7 +396,7 @@ func foodPresetInputs(id string, name string, carbs string, absorption string) t
 				ID:          id + "--carbs",
 				Type:        input.TypeNumber,
 				Name:        "carbs",
-				Placeholder: "Carbs g",
+				Placeholder: "Carbs (g)",
 				Value:       carbs,
 				Attributes:  templ.Attributes{"step": "any", "min": "0", "max": "1000"},
 			}).Render(ctx, templ_7745c5c3_Buffer)
