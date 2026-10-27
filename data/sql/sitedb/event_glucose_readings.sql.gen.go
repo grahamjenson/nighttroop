@@ -285,6 +285,18 @@ func (q *Queries) HardDeleteGlucoseReadingsByType(ctx context.Context, arg HardD
 	return q.exec(ctx, q.hardDeleteGlucoseReadingsByTypeStmt, hardDeleteGlucoseReadingsByType, arg.ReadingType)
 }
 
+const oldestGlucoseReadingAt = `-- name: OldestGlucoseReadingAt :one
+SELECT CAST(COALESCE(MIN(occurred_at), 0) AS INTEGER) FROM glucose_readings WHERE deleted_at IS NULL
+`
+
+// When the oldest reading not deleted was, or 0 when there are none
+func (q *Queries) OldestGlucoseReadingAt(ctx context.Context) (int64, error) {
+	row := q.queryRow(ctx, q.oldestGlucoseReadingAtStmt, oldestGlucoseReadingAt)
+	var column_1 int64
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
 const searchGlucoseReadings = `-- name: SearchGlucoseReadings :many
 SELECT id, mgdl, reading_type, units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings
 WHERE

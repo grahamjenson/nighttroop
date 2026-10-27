@@ -1,0 +1,63 @@
+GOTO {{ server_url}}/
+ASSERT_STATUS 200
+
+CLICK "Create Site"
+ASSERT_STATUS 200
+
+CLICK #public--login-button
+ASSERT_NEW_PAGE
+
+INPUT #site--login--name admin
+INPUT #site--login--password password
+
+CLICK #site--login-button
+ASSERT_STATUS 200
+
+ASSERT_VISIBLE #site--login--otp-1
+INPUT #site--login--otp-1 123123
+
+CLICK #site--login-totp-button
+ASSERT_NEW_URL
+ASSERT_VISIBLE "Nighttroop"
+
+CLICK #site--settings-menu
+CLICK #site--settings--sync-button
+ASSERT_STATUS 200
+ASSERT_PATH /settings/sync
+
+// A sync that is not saved and on cannot be backfilled
+CLICK #site--settings--nightscout-sync--backfill
+ASSERT_TEXT_VISIBLE turn on and save this sync before backfilling it
+
+// Virtual sync's first run writes its last 30 minutes, all on the first page of readings
+CLICK #site--settings--virtual-sync--enable
+CLICK #site--settings--virtual-sync--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Sync Updated
+RUN_BACKGROUND_JOBS
+
+CLICK #site--settings-menu
+CLICK #site--data--glucose-button
+ASSERT_STATUS 200
+ASSERT_VISIBLE #glucoseReadingsTable
+ASSERT_NOT_VISIBLE #site--glucose--next
+
+// Backfilling says what it will fetch, and asking again before it has run starts nothing
+CLICK #site--settings-menu
+CLICK #site--settings--sync-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-sync--backfill
+ASSERT_TEXT_VISIBLE Backfilling Virtual
+ASSERT_TEXT_VISIBLE Fetching records from
+SCREENSHOT sync_backfill_started
+// The toast goes to the toaster, leaving the button as it was
+ASSERT_TEXT_EQUALS #site--settings--virtual-sync--backfill Backfill
+CLICK #site--settings--virtual-sync--backfill
+ASSERT_TEXT_VISIBLE A backfill of this sync is already running
+
+// Once it has run, the week before the first reading fills many pages of readings
+RUN_BACKGROUND_JOBS
+CLICK #site--settings-menu
+CLICK #site--data--glucose-button
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--glucose--next
