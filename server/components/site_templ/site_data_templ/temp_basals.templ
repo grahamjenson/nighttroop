@@ -5,6 +5,7 @@ import (
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/field"
+	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/button"
@@ -16,12 +17,9 @@ import (
 // TempBasalsTable shows one page of temp basals, newest first, with buttons to the pages either side
 templ TempBasalsTable(tempBasals []*sitemodels.SiteTempBasal, skip int64, limit int64) {
 	<div id="temp_basals_table" class="mx-auto max-w-5xl space-y-6">
-		<div>
-			<h1 class="text-2xl font-bold">Temp Basals</h1>
-			<p class="mt-1 text-gray-500">
-				Newest first. Click a temp basal to see all its details.
-			</p>
-		</div>
+		@heading.Page("Temp Basals") {
+			Newest first. Click a temp basal to see all its details.
+		}
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			@tempBasalCreateForm()
 			@table.Table(table.Props{

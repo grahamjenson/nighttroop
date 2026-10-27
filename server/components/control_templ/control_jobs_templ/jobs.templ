@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/table"
@@ -38,10 +39,9 @@ func statusClass(job *controlmodels.Job) string {
 // JobsTable shows one page of jobs, newest first, with buttons to the pages either side
 templ JobsTable(jobs []*controlmodels.Job, skip int64, limit int64) {
 	<div id="jobs_table" class="mx-auto max-w-5xl space-y-6">
-		<div>
-			<h1 class="text-2xl font-bold">Jobs</h1>
-			<p class="mt-1 text-gray-500">Background jobs not yet summarised into the job stats, newest first. Click a job to see its details.</p>
-		</div>
+		@heading.Page("Jobs") {
+			Background jobs not yet summarised into the job stats, newest first. Click a job to see its details.
+		}
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			@table.Table(table.Props{ID: "controlJobsTable", Class: "rounded-lg border border-gray-200"}) {
 				@table.Header() {

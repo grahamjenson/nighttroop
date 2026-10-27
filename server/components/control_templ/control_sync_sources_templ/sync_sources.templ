@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/table"
@@ -59,10 +60,9 @@ func failedClass(source *controlmodels.SyncSource) string {
 // SyncSourcesTable shows one page of sync sources, the most recently failed first, with buttons to the pages either side
 templ SyncSourcesTable(sources []*controlmodels.SyncSource, skip int64, limit int64) {
 	<div id="sync_sources_table" class="mx-auto max-w-5xl space-y-6">
-		<div>
-			<h1 class="text-2xl font-bold">Sync Sources</h1>
-			<p class="mt-1 text-gray-500">Every site's sync sources, the most recently failed first. Click a source to see its reports.</p>
-		</div>
+		@heading.Page("Sync Sources") {
+			Every site's sync sources, the most recently failed first. Click a source to see its reports.
+		}
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			@table.Table(table.Props{ID: "controlSyncSourcesTable", Class: "rounded-lg border border-gray-200"}) {
 				@table.Header() {
