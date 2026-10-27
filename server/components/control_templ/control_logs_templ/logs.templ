@@ -29,7 +29,7 @@ func duration(event *controlmodels.Event) string {
 	if event.FinishedAt == nil {
 		return "-"
 	}
-	return fmt.Sprintf("%d ms", *event.FinishedAt-event.StartedAt)
+	return display.Duration(*event.FinishedAt - event.StartedAt)
 }
 
 // attributes are a row's attributes as JSON, indented to read

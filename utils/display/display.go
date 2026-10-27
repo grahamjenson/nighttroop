@@ -25,6 +25,20 @@ func Ago(ms *int64, now time.Time) string {
 	return fmt.Sprintf("%d days ago", int(since.Hours()/24))
 }
 
+// Duration is how long ms milliseconds is, as "250 ms", "1.5 s", "2 min 5 s" or "3 h 20 min"
+func Duration(ms int64) string {
+	d := time.Duration(ms) * time.Millisecond
+	switch {
+	case d < time.Second:
+		return fmt.Sprintf("%d ms", ms)
+	case d < time.Minute:
+		return fmt.Sprintf("%.1f s", d.Seconds())
+	case d < time.Hour:
+		return fmt.Sprintf("%d min %d s", int(d.Minutes()), int(d.Seconds())%60)
+	}
+	return fmt.Sprintf("%d h %d min", int(d.Hours()), int(d.Minutes())%60)
+}
+
 // ReadingType is what took a glucose reading: Sensor for sgv and Meter for mbg
 func ReadingType(readingType string) string {
 	switch readingType {

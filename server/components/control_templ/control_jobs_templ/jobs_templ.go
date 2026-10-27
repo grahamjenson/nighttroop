@@ -31,7 +31,7 @@ func duration(job *controlmodels.Job) string {
 	if job.ConsumerFetchedAt == 0 || job.FinishedAt == 0 {
 		return "-"
 	}
-	return fmt.Sprintf("%d ms", job.FinishedAt-job.ConsumerFetchedAt)
+	return display.Duration(job.FinishedAt - job.ConsumerFetchedAt)
 }
 
 // statusClass shows failed jobs as errors

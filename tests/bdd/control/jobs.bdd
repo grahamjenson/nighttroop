@@ -17,6 +17,8 @@ ASSERT_PATH /jobs
 ASSERT_VISIBLE #controlJobsTable
 ASSERT_TEXT_VISIBLE Showing 1 to
 ASSERT_TEXT_VISIBLE completed
+// Durations read in the units that suit them: a quick one in ms
+ASSERT_VISIBLE #controlJobsTable td >> text=/^\d+ ms$/ >> nth=0
 SCREENSHOT jobs
 
 // Clicking a job shows its details and errors
