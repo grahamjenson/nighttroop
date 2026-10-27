@@ -29,6 +29,9 @@ ASSERT_TEXT_VISIBLE Showing 1 to
 ASSERT_TEXT_VISIBLE DB Size (KB)
 // A site no one has used yet was never seen or written to
 ASSERT_TEXT_VISIBLE Never
+// States are capitalised like the rest of the table
+ASSERT_VISIBLE #controlSitesTable td >> text=/^Live/ >> nth=0
+ASSERT_NOT_VISIBLE #controlSitesTable td >> text=/^live/
 SCREENSHOT sites
 
 // The sites can be ordered by how long since they were written to, the first to archive, or by DB size
@@ -73,7 +76,7 @@ CLICK #controlSitesTable tbody tr >> nth=0
 CLICK #control--site--disable
 ASSERT_TEXT_VISIBLE Site Disabled
 ASSERT_NOT_VISIBLE #control--site--details
-ASSERT_TEXT_VISIBLE disabled
+ASSERT_VISIBLE #controlSitesTable td >> text=/^Disabled/ >> nth=0
 SCREENSHOT site_disabled
 
 // A disabled site cannot be disabled again, but can be archived, which needs S3 (not connected in tests)
