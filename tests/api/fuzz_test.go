@@ -41,11 +41,7 @@ func FuzzRequestFiles(f *testing.F) {
 			return nil
 		}
 
-		requestFileBytes, err := embeddedFiles.ReadFile(path)
-		if err != nil {
-			return nil
-		}
-		requestFile, err := jsonapi.ParseRequestFile(string(requestFileBytes), map[string]any{}, path)
+		requestFile, err := jsonapi.ParseRequestFile(embeddedFiles, path)
 		if err != nil {
 			return nil
 		}

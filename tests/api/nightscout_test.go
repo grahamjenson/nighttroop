@@ -22,7 +22,7 @@ import (
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
-//go:embed nightscout/** nighttroop/**
+//go:embed nightscout/** nighttroop/** steps/**
 var embeddedFiles embed.FS
 
 func TestNS(t *testing.T) {
@@ -71,10 +71,6 @@ func TestNS(t *testing.T) {
 func RunTheRequestFileAsATest(t *testing.T, root string, path string, router http.Handler, backgroundJobs *background.BackGroundManager, siteInformation *db.SiteCreateResult, defaultJwt string) {
 	removeNightscout := strings.TrimPrefix(path, root+"/")
 	t.Run(removeNightscout, func(t *testing.T) {
-		requestFileBytes, err := embeddedFiles.ReadFile(path)
-		if err != nil {
-			t.Fatalf("failed to read request file: %v", err)
-		}
 		fmt.Println()
 		fmt.Println("===============================================")
 		fmt.Printf("Running request file: %s\n", path)
@@ -85,7 +81,7 @@ func RunTheRequestFileAsATest(t *testing.T, root string, path string, router htt
 			"default_token": siteInformation.PwdNSToken,
 			"default_jwt":   defaultJwt,
 		}
-		requestFile, err := jsonapi.ParseRequestFile(string(requestFileBytes), requestContext, path)
+		requestFile, err := jsonapi.ParseRequestFile(embeddedFiles, path)
 		if err != nil {
 			t.Fatalf("failed to parse request file: %v", err)
 		}
