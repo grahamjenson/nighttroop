@@ -17,6 +17,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/consts"
 )
 
 // deviceHistoryPage is how many statuses one page of a device's history shows
@@ -44,12 +45,12 @@ func deviceHistoryURL(device string, skip int64, limit int64) string {
 	return fmt.Sprintf("/data/device-status?device=%s&skip=%d&limit=%d", url.QueryEscape(device), skip, limit)
 }
 
-// withUnit shows an optional value with its unit, or a dash when it is not set
+// withUnit shows an optional value, to at most two decimal places, with its unit, or a dash when it is not set
 func withUnit(value *float64, unit string) string {
 	if value == nil {
 		return "-"
 	}
-	return fmt.Sprintf("%g%s", *value, unit)
+	return fmt.Sprintf("%g%s", consts.Round(*value, 2), unit)
 }
 
 // DeviceStatusGroups shows the latest few statuses of each device, one section per device
@@ -96,7 +97,7 @@ func DeviceStatusGroups(statuses []*sitemodels.SiteDeviceStatus) templ.Component
 			var templ_7745c5c3_Var2 string
 			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(group.Device)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/device_statuses.templ`, Line: 67, Col: 20}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/device_statuses.templ`, Line: 68, Col: 20}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 			if templ_7745c5c3_Err != nil {
@@ -187,7 +188,7 @@ func DeviceStatusHistory(device string, statuses []*sitemodels.SiteDeviceStatus,
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(device)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/device_statuses.templ`, Line: 95, Col: 88}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/device_statuses.templ`, Line: 96, Col: 88}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -592,7 +593,7 @@ func deviceStatusRow(status *sitemodels.SiteDeviceStatus) templ.Component {
 				var templ_7745c5c3_Var22 string
 				templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(formatReadingDate(ctx, status.OccurredAt))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/device_statuses.templ`, Line: 172, Col: 46}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/device_statuses.templ`, Line: 173, Col: 46}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 				if templ_7745c5c3_Err != nil {
@@ -623,7 +624,7 @@ func deviceStatusRow(status *sitemodels.SiteDeviceStatus) templ.Component {
 				var templ_7745c5c3_Var24 string
 				templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(withUnit(status.DeviceBatteryPercent, "%"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/device_statuses.templ`, Line: 175, Col: 47}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/device_statuses.templ`, Line: 176, Col: 47}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 				if templ_7745c5c3_Err != nil {
@@ -654,7 +655,7 @@ func deviceStatusRow(status *sitemodels.SiteDeviceStatus) templ.Component {
 				var templ_7745c5c3_Var26 string
 				templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(withUnit(status.PumpReservoir, " U"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/device_statuses.templ`, Line: 178, Col: 41}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/device_statuses.templ`, Line: 179, Col: 41}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 				if templ_7745c5c3_Err != nil {
@@ -685,7 +686,7 @@ func deviceStatusRow(status *sitemodels.SiteDeviceStatus) templ.Component {
 				var templ_7745c5c3_Var28 string
 				templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(withUnit(status.PumpBatteryPercent, "%"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/device_statuses.templ`, Line: 181, Col: 45}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/device_statuses.templ`, Line: 182, Col: 45}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 				if templ_7745c5c3_Err != nil {
@@ -716,7 +717,7 @@ func deviceStatusRow(status *sitemodels.SiteDeviceStatus) templ.Component {
 				var templ_7745c5c3_Var30 string
 				templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(withUnit(status.LoopIob, " U"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/device_statuses.templ`, Line: 184, Col: 35}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/device_statuses.templ`, Line: 185, Col: 35}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 				if templ_7745c5c3_Err != nil {
@@ -747,7 +748,7 @@ func deviceStatusRow(status *sitemodels.SiteDeviceStatus) templ.Component {
 				var templ_7745c5c3_Var32 string
 				templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(withUnit(status.LoopCob, " g"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/device_statuses.templ`, Line: 187, Col: 35}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/device_statuses.templ`, Line: 188, Col: 35}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 				if templ_7745c5c3_Err != nil {

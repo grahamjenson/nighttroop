@@ -10,6 +10,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/consts"
 )
 
 // deviceHistoryPage is how many statuses one page of a device's history shows
@@ -37,12 +38,12 @@ func deviceHistoryURL(device string, skip int64, limit int64) string {
 	return fmt.Sprintf("/data/device-status?device=%s&skip=%d&limit=%d", url.QueryEscape(device), skip, limit)
 }
 
-// withUnit shows an optional value with its unit, or a dash when it is not set
+// withUnit shows an optional value, to at most two decimal places, with its unit, or a dash when it is not set
 func withUnit(value *float64, unit string) string {
 	if value == nil {
 		return "-"
 	}
-	return fmt.Sprintf("%g%s", *value, unit)
+	return fmt.Sprintf("%g%s", consts.Round(*value, 2), unit)
 }
 
 // DeviceStatusGroups shows the latest few statuses of each device, one section per device
