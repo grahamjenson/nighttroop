@@ -17,5 +17,6 @@ func QueryValuesToQuery(source QueryValues) Query {
 		apiqueryQuery.Order = &xstring2
 	}
 	apiqueryQuery.Type = GetType(source)
+	apiqueryQuery.Search = GetSearch(source)
 	return apiqueryQuery
 }

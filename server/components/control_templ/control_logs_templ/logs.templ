@@ -85,9 +85,9 @@ templ attributesDetail(id string, raw json.RawMessage) {
 var detail = modal.Detail
 
 // EventsTable shows one page of events, the newest first
-templ EventsTable(events []*controlmodels.Event, skip int64, limit int64, eventType *string) {
-	@page("events_table", "Events", "What happened to each site and the server, newest first. Click an event to see its details.", "/events", filter.PagePath("/events", eventType), len(events), skip, limit) {
-		@filter.Filter(filter.Props{ID: "control--events--filter", Path: "/events", All: "All events", Types: db.EventNames, Selected: eventType})
+templ EventsTable(events []*controlmodels.Event, skip int64, limit int64, eventType *string, search *string) {
+	@page("events_table", "Events", "What happened to each site and the server, newest first. Click an event to see its details.", "/events", filter.PagePath("/events", eventType, search), len(events), skip, limit) {
+		@filter.Filter(filter.Props{ID: "control--events--filter", Path: "/events", All: "All events", Types: db.EventNames, Selected: eventType, Search: search})
 		@table.Table(table.Props{ID: "controlEventsTable", Class: "rounded-lg border border-gray-200"}) {
 			@table.Header() {
 				@table.Row() {
@@ -145,9 +145,9 @@ templ EventModal(event *controlmodels.Event) {
 }
 
 // ErrorsTable shows one page of errors, the newest first
-templ ErrorsTable(errors []*controlmodels.Error, skip int64, limit int64, kind *string) {
-	@page("errors_table", "Errors", "What failed for each site and the server, newest first. Click an error to see its details.", "/errors", filter.PagePath("/errors", kind), len(errors), skip, limit) {
-		@filter.Filter(filter.Props{ID: "control--errors--filter", Path: "/errors", All: "All errors", Types: db.ErrorKinds, Selected: kind})
+templ ErrorsTable(errors []*controlmodels.Error, skip int64, limit int64, kind *string, search *string) {
+	@page("errors_table", "Errors", "What failed for each site and the server, newest first. Click an error to see its details.", "/errors", filter.PagePath("/errors", kind, search), len(errors), skip, limit) {
+		@filter.Filter(filter.Props{ID: "control--errors--filter", Path: "/errors", All: "All errors", Types: db.ErrorKinds, Selected: kind, Search: search})
 		@table.Table(table.Props{ID: "controlErrorsTable", Class: "rounded-lg border border-gray-200"}) {
 			@table.Header() {
 				@table.Row() {
@@ -195,8 +195,9 @@ templ ErrorModal(e *controlmodels.Error) {
 }
 
 // LogsTable shows one page of logs, the newest first
-templ LogsTable(logs []*controlmodels.Log, skip int64, limit int64) {
-	@page("logs_table", "Logs", "Messages logged for each site and the server, newest first. Click a log to see its details.", "/logs", "/logs", len(logs), skip, limit) {
+templ LogsTable(logs []*controlmodels.Log, skip int64, limit int64, search *string) {
+	@page("logs_table", "Logs", "Messages logged for each site and the server, newest first. Click a log to see its details.", "/logs", filter.PagePath("/logs", nil, search), len(logs), skip, limit) {
+		@filter.Filter(filter.Props{ID: "control--logs--filter", Path: "/logs", Search: search})
 		@table.Table(table.Props{ID: "controlLogsTable", Class: "rounded-lg border border-gray-200"}) {
 			@table.Header() {
 				@table.Row() {
