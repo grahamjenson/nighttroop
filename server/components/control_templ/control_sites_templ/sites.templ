@@ -137,7 +137,7 @@ templ siteRow(site *controlmodels.Site) {
 			{ site.ID }
 		}
 		@table.Cell() {
-			{ site.State }
+			{ display.Name(site.State) }
 			if inactive(ctx, site) {
 				<span id={ "control--site--" + site.ID + "--inactive" } class="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800">inactive</span>
 			}
@@ -165,7 +165,7 @@ templ siteRow(site *controlmodels.Site) {
 templ SiteModal(site *controlmodels.Site) {
 	@modal.Modal(modal.Props{ID: "control--site--details", Title: site.ID, Actions: siteActions(site)}) {
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-			@siteDetail("State", site.State)
+			@siteDetail("State", display.Name(site.State))
 			@siteDetail("Batch", site.Batch)
 			@siteDetail("DB Size Limit (KB)", orDash(site.MaxDbSizeKbLimit))
 			@siteDetail("DB Size (KB)", orDash(site.EstimatedDbSizeKb))
