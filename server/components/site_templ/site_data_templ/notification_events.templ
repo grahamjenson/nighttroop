@@ -5,6 +5,7 @@ import (
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/field"
+	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/button"
@@ -16,12 +17,9 @@ import (
 // NotificationEventsTable shows one page of notifications, newest first, with buttons to the pages either side
 templ NotificationEventsTable(events []*sitemodels.SiteNotificationEvent, skip int64, limit int64) {
 	<div id="notification_events_table" class="mx-auto max-w-5xl space-y-6">
-		<div>
-			<h1 class="text-2xl font-bold">Notifications</h1>
-			<p class="mt-1 text-gray-500">
-				Newest first. Click a notification to see all its details.
-			</p>
-		</div>
+		@heading.Page("Notifications") {
+			Newest first. Click a notification to see all its details.
+		}
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			@notificationEventCreateForm()
 			@table.Table(table.Props{

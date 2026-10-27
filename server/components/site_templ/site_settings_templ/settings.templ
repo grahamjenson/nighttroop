@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/toast"
@@ -77,14 +78,13 @@ func settingsColumns(site *sitemodels.Settings, yours *sitemodels.Settings) []se
 templ SettingsPage(site *sitemodels.Settings, yours *sitemodels.Settings) {
 	{{ columns := settingsColumns(site, yours) }}
 	<div id="settings_page" class="mx-auto max-w-4xl space-y-6">
-		<div>
-			<h1 class="text-2xl font-bold">Settings</h1>
+		@heading.Page("Settings") {
 			if site != nil {
-				<p class="mt-1 text-gray-500">The site's settings are for everyone on this site. Yours change it just for you; anything left on the site setting follows the site.</p>
+				The site's settings are for everyone on this site. Yours change it just for you; anything left on the site setting follows the site.
 			} else {
-				<p class="mt-1 text-gray-500">Your own settings. Anything left on the site setting follows the site.</p>
+				Your own settings. Anything left on the site setting follows the site.
 			}
-		</div>
+		}
 		for _, column := range columns {
 			<form
 				id={ column.FormID }

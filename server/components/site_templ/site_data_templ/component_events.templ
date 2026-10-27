@@ -2,6 +2,7 @@ package site_data_templ
 
 import (
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/button"
@@ -23,12 +24,9 @@ func componentDetail(event *sitemodels.SiteComponentEvent) string {
 // ComponentEventsTable shows one page of sensor, site and pump changes, newest first, with buttons to the pages either side
 templ ComponentEventsTable(events []*sitemodels.SiteComponentEvent, skip int64, limit int64) {
 	<div id="component_events_table" class="mx-auto max-w-5xl space-y-6">
-		<div>
-			<h1 class="text-2xl font-bold">Site &amp; Sensor Changes</h1>
-			<p class="mt-1 text-gray-500">
-				Newest first. Click a change to see all its details.
-			</p>
-		</div>
+		@heading.Page("Site & Sensor Changes") {
+			Newest first. Click a change to see all its details.
+		}
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			@componentEventCreateForm()
 			@table.Table(table.Props{

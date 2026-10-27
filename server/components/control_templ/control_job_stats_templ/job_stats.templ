@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/table"
@@ -46,10 +47,9 @@ func formatDate(ms int64) string {
 // JobStatsTable shows one page of daily job totals, newest day first, with buttons to the pages either side
 templ JobStatsTable(stats []*controlmodels.JobStatsDaily, skip int64, limit int64) {
 	<div id="job_stats_table" class="mx-auto max-w-5xl space-y-6">
-		<div>
-			<h1 class="text-2xl font-bold">Job Stats</h1>
-			<p class="mt-1 text-gray-500">Each day's totals for every queue's jobs, newest day first. Click a row to see its errors.</p>
-		</div>
+		@heading.Page("Job Stats") {
+			Each day's totals for every queue's jobs, newest day first. Click a row to see its errors.
+		}
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			@table.Table(table.Props{ID: "controlJobStatsTable", Class: "rounded-lg border border-gray-200"}) {
 				@table.Header() {
