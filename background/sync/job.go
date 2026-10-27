@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
-	"nighttroop.t1d.nz/data/events/sitemodels"
+	"nighttroop.t1d.nz/data/events"
 	gosync "sync"
 
 	lru "github.com/hashicorp/golang-lru/v2"
@@ -26,7 +26,7 @@ const SYNC_JOB = "sync_job"
 type SyncJobManager struct {
 	controlDB *db.ControlDB
 	security  *security.SecurityConfig
-	// config is the server's, whose site model events a sync's writes are published to
+	// config is the server's, whose events a sync's writes are published to
 	config *config.ServerConfig
 
 	SyncIntervalInSeconds int
@@ -71,14 +71,14 @@ type SyncUserInfo struct {
 	SiteModel *controldb.Site
 	SiteDB    *db.SiteDB
 	ControlDB *db.ControlDB
-	// Config is the server's, so a sync's writes are published to the site's model events, as the site's own are
+	// Config is the server's, so a sync's writes are published to the server's events, as the site's own are
 	Config *config.ServerConfig
 }
 
-// published tells the site's model events of a row a sync created directly, as a write through the site would
+// published sends the model change of a row a sync created directly, as a write through the site would
 func (u *SyncUserInfo) published(row any) {
-	if u.Config != nil && u.Config.SiteModelEvents != nil {
-		u.Config.SiteModelEvents.Publish(u.SiteModel.ID, sitemodels.Event{SiteID: u.SiteModel.ID, Action: sitemodels.Created, Model: row})
+	if u.Config != nil && u.Config.Events != nil {
+		u.Config.Events.Publish(u.SiteModel.ID, events.ModelChange(u.SiteModel.ID, events.Created, row))
 	}
 }
 

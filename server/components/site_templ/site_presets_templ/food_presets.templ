@@ -3,6 +3,7 @@ package site_presets_templ
 import (
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/field"
+	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/button"
@@ -14,12 +15,9 @@ import (
 // FoodPresetsTable shows one page of food presets, newest first, with buttons to the pages either side
 templ FoodPresetsTable(foodPresets []*sitemodels.SiteFoodPreset, skip int64, limit int64) {
 	<div id="food_presets_table" class="mx-auto max-w-5xl space-y-6">
-		<div>
-			<h1 class="text-2xl font-bold">Food Presets</h1>
-			<p class="mt-1 text-gray-500">
-				Foods kept to pick from, with what a portion has. Click one to see and edit it.
-			</p>
-		</div>
+		@heading.Page("Food Presets") {
+			Foods kept to pick from, with what a portion has. Click one to see and edit it.
+		}
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			@foodPresetCreateForm()
 			@table.Table(table.Props{

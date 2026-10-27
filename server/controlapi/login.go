@@ -12,6 +12,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/server/components/control_templ/control_login_templ"
+	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/errors"
@@ -112,8 +113,7 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 
 		if httputils.GetAcceptType(r).API() {
 			// Default to JSON because this is API first
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(map[string]string{
+			apiutils.WriteJSON(w, http.StatusOK, map[string]string{
 				"token":      tokenString,
 				"expires_at": expiresAt.Format(time.RFC3339),
 			})

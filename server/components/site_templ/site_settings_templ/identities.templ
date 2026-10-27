@@ -7,6 +7,7 @@ import (
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/field"
+	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/copybutton"
@@ -42,12 +43,9 @@ func formatIdentityDate(ctx context.Context, ms *int64) string {
 
 templ IdentitesTable(users []*sitemodels.UserIdentity, devices []*sitemodels.UserIdentity) {
 	<div id="identities_table" class="mx-auto max-w-5xl space-y-6">
-		<div>
-			<h1 class="text-2xl font-bold">Users & Devices</h1>
-			<p class="mt-1 text-gray-500">
-				Nighttroop uses strict role separation to improve security. Each user and device should have its own credentials.
-			</p>
-		</div>
+		@heading.Page("Users & Devices") {
+			Nighttroop uses strict role separation to improve security. Each user and device should have its own credentials.
+		}
 		<div class="grid gap-4 md:grid-cols-3">
 			@roleCard("Admin", "border-red-200 bg-red-50 text-red-700", "Manages users and site settings. Logs in with a password and TOTP, recovers only with the initial backup key, and cannot use the Nightscout API.")
 			@roleCard("User", "border-blue-200 bg-blue-50 text-blue-700", "A person using Nighttroop. Users can log in, view reports and use Nightscout features.")

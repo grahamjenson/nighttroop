@@ -1,11 +1,12 @@
 package nsutils
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
 	"time"
+
+	"nighttroop.t1d.nz/utils/apiutils"
 )
 
 type RecordWriteType int
@@ -37,12 +38,12 @@ func WriteRecordV3(w http.ResponseWriter, record Record, fields []string, create
 		w.Header().Set("ETag", fmt.Sprintf(`W/"%d"`, record.SrvModified))
 	}
 
-	WriteJSON(w, status, body)
+	apiutils.WriteJSON(w, status, body)
 }
 
 func WriteRecordsV3(w http.ResponseWriter, records []Record, fields []string) {
 	if len(records) == 0 {
-		WriteJSON(w, http.StatusOK, map[string]any{"status": http.StatusOK, "result": []map[string]any{}})
+		apiutils.WriteJSON(w, http.StatusOK, map[string]any{"status": http.StatusOK, "result": []map[string]any{}})
 		return
 	}
 
@@ -53,7 +54,7 @@ func WriteRecordsV3(w http.ResponseWriter, records []Record, fields []string) {
 
 	writeHeadersForRecords(w, records)
 
-	WriteJSON(w, http.StatusOK, map[string]any{"status": http.StatusOK, "result": result})
+	apiutils.WriteJSON(w, http.StatusOK, map[string]any{"status": http.StatusOK, "result": result})
 }
 
 func WriteRecordsV1(w http.ResponseWriter, records []Record, fields []string) {
@@ -62,7 +63,7 @@ func WriteRecordsV1(w http.ResponseWriter, records []Record, fields []string) {
 		response = append(response, record.SelectFields(fields, false))
 	}
 	writeHeadersForRecords(w, records)
-	WriteJSON(w, http.StatusOK, response)
+	apiutils.WriteJSON(w, http.StatusOK, response)
 }
 
 func WriteRecordV1(w http.ResponseWriter, record Record, fields []string) {
@@ -71,16 +72,7 @@ func WriteRecordV1(w http.ResponseWriter, record Record, fields []string) {
 	w.Header().Set("Last-Modified", time.UnixMilli(record.SrvModified).UTC().Format(http.TimeFormat))
 	w.Header().Set("ETag", fmt.Sprintf(`W/"%d"`, record.SrvModified))
 
-	WriteJSON(w, http.StatusOK, response)
-}
-
-// WriteJSON writes a JSON response with the provided HTTP status code.
-func WriteJSON(w http.ResponseWriter, status int, body any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	encoder := json.NewEncoder(w)
-	encoder.SetEscapeHTML(false)
-	encoder.Encode(body)
+	apiutils.WriteJSON(w, http.StatusOK, response)
 }
 
 func writeHeadersForRecords(w http.ResponseWriter, records []Record) {
@@ -98,14 +90,6 @@ func writeHeadersForRecords(w http.ResponseWriter, records []Record) {
 
 	w.Header().Set("Last-Modified", time.UnixMilli(maxSrvModified).UTC().Format(http.TimeFormat))
 	w.Header().Set("ETag", fmt.Sprintf(`W/"%d"`, maxSrvModified))
-}
-
-// ReadJSON decodes a request body as JSON while preserving number precision via
-// json.Number.
-func ReadJSON(r *http.Request, dst any) error {
-	decoder := json.NewDecoder(r.Body)
-	decoder.UseNumber()
-	return decoder.Decode(dst)
 }
 
 // ParseIfModifiedSince parses the If-Modified-Since header when present.

@@ -2,12 +2,14 @@ package control_logs_templ
 
 import (
 	"nighttroop.t1d.nz/data/db"
+	dataevents "nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/server/components/filter"
 	"encoding/json"
 	"fmt"
 	"time"
 
 	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/table"
@@ -46,10 +48,9 @@ func attributes(raw json.RawMessage) string {
 // page heads a page of rows with its title and description, and pages it
 templ page(id string, title string, description string, path string, pagePath string, count int, skip int64, limit int64) {
 	<div id={ id } class="mx-auto max-w-5xl space-y-6">
-		<div>
-			<h1 class="text-2xl font-bold">{ title }</h1>
-			<p class="mt-1 text-gray-500">{ description }</p>
-		</div>
+		@heading.Page(title) {
+			{ description }
+		}
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			{ children... }
 			@pager.Pager(pager.Props{ID: "control-" + path, Path: pagePath, Count: count, Skip: skip, Limit: limit})
@@ -87,7 +88,7 @@ var detail = modal.Detail
 // EventsTable shows one page of events, the newest first
 templ EventsTable(events []*controlmodels.Event, skip int64, limit int64, eventType *string, search *string) {
 	@page("events_table", "Events", "What happened to each site and the server, newest first. Click an event to see its details.", "/events", filter.PagePath("/events", eventType, search), len(events), skip, limit) {
-		@filter.Filter(filter.Props{ID: "control--events--filter", Path: "/events", All: "All events", Types: db.EventNames, Selected: eventType, Search: search})
+		@filter.Filter(filter.Props{ID: "control--events--filter", Path: "/events", All: "All events", Types: dataevents.PersistedNames(), Selected: eventType, Search: search})
 		@table.Table(table.Props{ID: "controlEventsTable", Class: "rounded-lg border border-gray-200"}) {
 			@table.Header() {
 				@table.Row() {

@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
+	"nighttroop.t1d.nz/utils/apiutils"
 )
 
 func ptr[T any](v T) *T {
@@ -23,7 +24,7 @@ func Count(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 			nsutils.WriteError(w, err)
 			return
 		}
-		nsutils.WriteJSON(w, http.StatusOK, map[string]any{"count": len(records)})
+		apiutils.WriteJSON(w, http.StatusOK, map[string]any{"count": len(records)})
 	}
 
 }
@@ -88,7 +89,7 @@ func Times(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 		}
 		records, err := store.Search(r.Context(), collection, q)
 		if err != nil {
-			nsutils.WriteJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+			apiutils.WriteJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
 			return
 		}
 		filteredRecords := []nsutils.Record{}
@@ -125,7 +126,7 @@ func Echo(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 			}
 		}
 
-		nsutils.WriteJSON(w, http.StatusOK, map[string]any{
+		apiutils.WriteJSON(w, http.StatusOK, map[string]any{
 			"input": map[string]any{
 				"method": r.Method,
 				"url":    r.URL.String(),

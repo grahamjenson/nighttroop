@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"nighttroop.t1d.nz/data/events/sitemodels"
+	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/config"
@@ -37,12 +37,12 @@ func (eventsCollection) GetRow(context.Context, *siteapiutils.CollectionTx, stri
 // watchAllCollection is an eventsCollection that also watches every other change, as the summary does
 type watchAllCollection struct{ eventsCollection }
 
-func (watchAllCollection) Watches(sitemodels.Event) bool { return true }
+func (watchAllCollection) Watches(events.Event) bool { return true }
 
 // eventStream serves the handler for the site as role, and reads its stream
-func eventStream(t *testing.T, bus *sitemodels.Bus, site string, role consts.IdentityRole, handler http.HandlerFunc) (*http.Response, *bufio.Reader) {
+func eventStream(t *testing.T, bus *events.SiteBus, site string, role consts.IdentityRole, handler http.HandlerFunc) (*http.Response, *bufio.Reader) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := httputils.CreateSiteContext(r.Context(), &config.ServerConfig{SiteModelEvents: bus}, nil, nil, nil, site, "", httputils.HTTPActionRead, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
+		ctx := httputils.CreateSiteContext(r.Context(), &config.ServerConfig{Events: bus}, nil, nil, nil, site, "", httputils.HTTPActionRead, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
 		handler(w, r.WithContext(httputils.SetIdentityModelInSiteContext(ctx, &controldb.SiteIdentity{Role: role})))
 	}))
 	t.Cleanup(server.Close)
@@ -85,16 +85,17 @@ func TestEventsHandlerStreamsTheCollectionsChanges(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			bus := sitemodels.NewBus()
+			bus := events.NewSiteBus()
 			resp, stream := eventStream(t, bus, "site-a", consts.IdentityRoleUserReadOnly, EventsHandler(test.collection))
 			require.Equal(t, http.StatusOK, resp.StatusCode)
 			require.Equal(t, "text/event-stream", resp.Header.Get("Content-Type"))
 
-			// Only the site's own changes are streamed
-			bus.Publish("site-b", sitemodels.Event{SiteID: "site-b", Action: sitemodels.Created, Model: &eventRow{ID: "other site"}})
-			bus.Publish("site-a", sitemodels.Event{SiteID: "site-a", Action: sitemodels.Created, Model: &eventRow{ID: "1"}})
-			bus.Publish("site-a", sitemodels.Event{SiteID: "site-a", Action: sitemodels.Updated, Model: &struct{}{}})
-			bus.Publish("site-a", sitemodels.Event{SiteID: "site-a", Action: sitemodels.Deleted, Model: &eventRow{ID: "2"}})
+			// Only the site's own model changes are streamed, not its other events
+			bus.Publish("site-b", events.Event{SiteID: "site-b", Action: events.Created, Model: &eventRow{ID: "other site"}})
+			bus.Publish("site-a", events.Event{SiteID: "site-a", Name: events.SiteDisabled, Attributes: map[string]any{"by": "admin"}})
+			bus.Publish("site-a", events.Event{SiteID: "site-a", Action: events.Created, Model: &eventRow{ID: "1"}})
+			bus.Publish("site-a", events.Event{SiteID: "site-a", Action: events.Updated, Model: &struct{}{}})
+			bus.Publish("site-a", events.Event{SiteID: "site-a", Action: events.Deleted, Model: &eventRow{ID: "2"}})
 			for _, want := range test.want {
 				require.Equal(t, want, nextEvent(t, stream))
 			}
@@ -104,7 +105,7 @@ func TestEventsHandlerStreamsTheCollectionsChanges(t *testing.T) {
 
 // An identity that may not search a collection cannot stream it, and a site can hold only so many streams open
 func TestEventsHandlerLimits(t *testing.T) {
-	bus := sitemodels.NewBus()
+	bus := events.NewSiteBus()
 	resp, _ := eventStream(t, bus, "site-a", consts.IdentityRoleUser, EventsHandler[eventRow, eventModel](eventsCollection{name: "site_logs"}))
 	require.Equal(t, http.StatusForbidden, resp.StatusCode)
 

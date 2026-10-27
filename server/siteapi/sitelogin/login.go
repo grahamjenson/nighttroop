@@ -15,6 +15,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/controldb"
 
 	"nighttroop.t1d.nz/server/components/site_templ/site_login_templ"
+	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
@@ -327,15 +328,10 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config *config.ServerConfig, r *h
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(map[string]string{
+	apiutils.WriteJSON(w, http.StatusOK, map[string]string{
 		"token":      tokenString,
 		"expires_at": expiresAt.Format(time.RFC3339),
 	})
-	if err != nil {
-		identityLoginErrorAPI(w, r, "Invalid login attempt", fmt.Errorf("invalid login attempt: %w", err))
-		return
-	}
 
 	slog.Info("User logged in", "identity", identity.Name, "role", identity.Role)
 

@@ -5,6 +5,7 @@ import (
 	"net/url"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/button"
@@ -49,12 +50,9 @@ func withUnit(value *float64, unit string) string {
 // DeviceStatusGroups shows the latest few statuses of each device, one section per device
 templ DeviceStatusGroups(statuses []*sitemodels.SiteDeviceStatus) {
 	<div id="device_statuses" class="mx-auto max-w-5xl space-y-6">
-		<div>
-			<h1 class="text-2xl font-bold">Device Status</h1>
-			<p class="mt-1 text-gray-500">
-				The latest statuses from each device that reported in the last week. Click a status to see all its details.
-			</p>
-		</div>
+		@heading.Page("Device Status") {
+			The latest statuses from each device that reported in the last week. Click a status to see all its details.
+		}
 		if len(statuses) == 0 {
 			<section id="site--device-status--empty" class="rounded-xl border border-gray-200 p-4 text-sm text-gray-500 shadow-sm">
 				No device has reported in the last week.
@@ -91,10 +89,9 @@ templ DeviceStatusGroups(statuses []*sitemodels.SiteDeviceStatus) {
 templ DeviceStatusHistory(device string, statuses []*sitemodels.SiteDeviceStatus, skip int64, limit int64) {
 	<div id="device_status_history" class="mx-auto max-w-5xl space-y-6">
 		<div class="flex items-start justify-between gap-2">
-			<div>
-				<h1 class="text-2xl font-bold">Device Status</h1>
-				<p class="mt-1 text-gray-500">Every status from <span class="font-semibold">{ device }</span>, newest first.</p>
-			</div>
+			@heading.Page("Device Status") {
+				Every status from <span class="font-semibold">{ device }</span>, newest first.
+			}
 			@button.Button(button.Props{
 				ID:      "site--device-status--all-devices",
 				Variant: button.VariantOutline,

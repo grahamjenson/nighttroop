@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/button"
@@ -44,12 +45,9 @@ func eventGroupEvents(group *sitemodels.SiteEventGroup) []string {
 // EventGroupsTable shows one page of event groups, newest first, with buttons to the pages either side
 templ EventGroupsTable(eventGroups []*sitemodels.SiteEventGroup, skip int64, limit int64) {
 	<div id="event_groups_table" class="mx-auto max-w-5xl space-y-6">
-		<div>
-			<h1 class="text-2xl font-bold">Event Groups</h1>
-			<p class="mt-1 text-gray-500">
-				Events recorded together, like a meal bolus's food and insulin: Nightscout's treatments. Newest first. Click one to see all its details.
-			</p>
-		</div>
+		@heading.Page("Event Groups") {
+			Events recorded together, like a meal bolus's food and insulin: Nightscout's treatments. Newest first. Click one to see all its details.
+		}
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			@table.Table(table.Props{
 				ID:    "eventGroupsTable",

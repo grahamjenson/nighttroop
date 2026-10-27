@@ -1,8 +1,8 @@
 package sitedata
 
 import (
+	"cmp"
 	"context"
-	"fmt"
 
 	"nighttroop.t1d.nz/utils/apiutils"
 
@@ -136,23 +136,12 @@ func (s *ActivitiesCollection) DeleteHTMXResponse(model *sitemodels.SiteActivity
 // UTIL METHODS
 ////////
 
-// activityLimits keep each number sent within what a day's activity could have
-var activityLimits = []struct {
-	name     string
-	value    func(*sitemodels.SiteActivity) *int64
-	min, max int64
-}{
-	{"duration", func(a *sitemodels.SiteActivity) *int64 { return a.DurationMinutes }, 1, 24 * 60},
-	{"calories", func(a *sitemodels.SiteActivity) *int64 { return a.Calories }, 0, 20_000},
-	{"steps", func(a *sitemodels.SiteActivity) *int64 { return a.Steps }, 0, 200_000},
-	{"heart rate", func(a *sitemodels.SiteActivity) *int64 { return a.HeartRate }, 20, 250},
-}
-
+// checkActivity keeps each number sent within what a day's activity could have
 func checkActivity(model *sitemodels.SiteActivity) *apiutils.HTTPError {
-	for _, limit := range activityLimits {
-		if v := limit.value(model); v != nil && (*v < limit.min || *v > limit.max) {
-			return apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("%s must be from %d to %d", limit.name, limit.min, limit.max))
-		}
-	}
-	return nil
+	return cmp.Or(
+		apiutils.CheckRange("duration", model.DurationMinutes, 1, 24*60, ""),
+		apiutils.CheckRange("calories", model.Calories, 0, 20_000, ""),
+		apiutils.CheckRange("steps", model.Steps, 0, 200_000, ""),
+		apiutils.CheckRange("heart rate", model.HeartRate, 20, 250, ""),
+	)
 }
