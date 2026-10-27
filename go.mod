@@ -23,7 +23,6 @@ require (
 	github.com/robfig/cron/v3 v3.0.0
 	github.com/samber/slog-multi v1.8.0
 	github.com/samber/slog-sentry/v2 v2.10.3
-	github.com/sqlc-dev/plugin-sdk-go v1.23.0
 	github.com/stretchr/testify v1.11.1
 	github.com/templui/templui v1.11.2
 	github.com/tink-crypto/tink-go/v2 v2.6.0
@@ -51,6 +50,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/ncruces/go-strftime v1.0.0 // indirect
@@ -59,13 +59,10 @@ require (
 	github.com/samber/lo v1.53.0 // indirect
 	github.com/samber/slog-common v0.21.0 // indirect
 	go.mongodb.org/mongo-driver v1.17.10 // indirect
-	go.opentelemetry.io/otel v1.43.0 // indirect
 	golang.org/x/mod v0.41.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/telemetry v0.0.0-20260811182544-a038080d80e5 // indirect
 	golang.org/x/tools v0.49.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250818200422-3122310a409c // indirect
-	google.golang.org/grpc v1.74.2 // indirect
 	google.golang.org/protobuf v1.36.8 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	modernc.org/libc v1.75.6 // indirect

@@ -188,6 +188,556 @@ func (m *DataSourceBlockList) SetReason(v *string) {
 }
 
 // GetID returns the ID value.
+func (m Site) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated Site.
+func (m *Site) SetID(v string) {
+	m.ID = v
+}
+
+// GetBatch returns the Batch value.
+func (m Site) GetBatch() string {
+	return m.Batch
+}
+
+// SetBatch sets the Batch value and returns the updated Site.
+func (m *Site) SetBatch(v string) {
+	m.Batch = v
+}
+
+// GetBackupKeyHash returns the BackupKeyHash value.
+func (m Site) GetBackupKeyHash() string {
+	return m.BackupKeyHash
+}
+
+// SetBackupKeyHash sets the BackupKeyHash value and returns the updated Site.
+func (m *Site) SetBackupKeyHash(v string) {
+	m.BackupKeyHash = v
+}
+
+// GetCreatedAt returns the CreatedAt value.
+func (m Site) GetCreatedAt() int64 {
+	return m.CreatedAt
+}
+
+// SetCreatedAt sets the CreatedAt value and returns the updated Site.
+func (m *Site) SetCreatedAt(v int64) {
+	m.CreatedAt = v
+}
+
+// GetMaxDbSizeKbLimit returns the MaxDbSizeKbLimit value.
+func (m Site) GetMaxDbSizeKbLimit() *int64 {
+	return m.MaxDbSizeKbLimit
+}
+
+// SetMaxDbSizeKbLimit sets the MaxDbSizeKbLimit value and returns the updated Site.
+func (m *Site) SetMaxDbSizeKbLimit(v *int64) {
+	m.MaxDbSizeKbLimit = v
+}
+
+// GetEstimatedDbSizeKb returns the EstimatedDbSizeKb value.
+func (m Site) GetEstimatedDbSizeKb() *int64 {
+	return m.EstimatedDbSizeKb
+}
+
+// SetEstimatedDbSizeKb sets the EstimatedDbSizeKb value and returns the updated Site.
+func (m *Site) SetEstimatedDbSizeKb(v *int64) {
+	m.EstimatedDbSizeKb = v
+}
+
+// GetLastSeenAt returns the LastSeenAt value.
+func (m Site) GetLastSeenAt() *int64 {
+	return m.LastSeenAt
+}
+
+// SetLastSeenAt sets the LastSeenAt value and returns the updated Site.
+func (m *Site) SetLastSeenAt(v *int64) {
+	m.LastSeenAt = v
+}
+
+// GetLastWriteAt returns the LastWriteAt value.
+func (m Site) GetLastWriteAt() *int64 {
+	return m.LastWriteAt
+}
+
+// SetLastWriteAt sets the LastWriteAt value and returns the updated Site.
+func (m *Site) SetLastWriteAt(v *int64) {
+	m.LastWriteAt = v
+}
+
+// GetState returns the State value.
+func (m Site) GetState() string {
+	return m.State
+}
+
+// SetState sets the State value and returns the updated Site.
+func (m *Site) SetState(v string) {
+	m.State = v
+}
+
+// GetDisabledAt returns the DisabledAt value.
+func (m Site) GetDisabledAt() *int64 {
+	return m.DisabledAt
+}
+
+// SetDisabledAt sets the DisabledAt value and returns the updated Site.
+func (m *Site) SetDisabledAt(v *int64) {
+	m.DisabledAt = v
+}
+
+// GetArchivedAt returns the ArchivedAt value.
+func (m Site) GetArchivedAt() *int64 {
+	return m.ArchivedAt
+}
+
+// SetArchivedAt sets the ArchivedAt value and returns the updated Site.
+func (m *Site) SetArchivedAt(v *int64) {
+	m.ArchivedAt = v
+}
+
+// GetDeletedAt returns the DeletedAt value.
+func (m Site) GetDeletedAt() *int64 {
+	return m.DeletedAt
+}
+
+// SetDeletedAt sets the DeletedAt value and returns the updated Site.
+func (m *Site) SetDeletedAt(v *int64) {
+	m.DeletedAt = v
+}
+
+// GetUnits returns the Units value.
+func (m Site) GetUnits() *consts.Units {
+	return m.Units
+}
+
+// SetUnits sets the Units value and returns the updated Site.
+func (m *Site) SetUnits(v *consts.Units) {
+	m.Units = v
+}
+
+// GetTimezone returns the Timezone value.
+func (m Site) GetTimezone() *string {
+	return m.Timezone
+}
+
+// SetTimezone sets the Timezone value and returns the updated Site.
+func (m *Site) SetTimezone(v *string) {
+	m.Timezone = v
+}
+
+// GetLanguage returns the Language value.
+func (m Site) GetLanguage() *string {
+	return m.Language
+}
+
+// SetLanguage sets the Language value and returns the updated Site.
+func (m *Site) SetLanguage(v *string) {
+	m.Language = v
+}
+
+// GetDateFormat returns the DateFormat value.
+func (m Site) GetDateFormat() *string {
+	return m.DateFormat
+}
+
+// SetDateFormat sets the DateFormat value and returns the updated Site.
+func (m *Site) SetDateFormat(v *string) {
+	m.DateFormat = v
+}
+
+// GetTimeFormat returns the TimeFormat value.
+func (m Site) GetTimeFormat() *string {
+	return m.TimeFormat
+}
+
+// SetTimeFormat sets the TimeFormat value and returns the updated Site.
+func (m *Site) SetTimeFormat(v *string) {
+	m.TimeFormat = v
+}
+
+// GetWeekStartDay returns the WeekStartDay value.
+func (m Site) GetWeekStartDay() *string {
+	return m.WeekStartDay
+}
+
+// SetWeekStartDay sets the WeekStartDay value and returns the updated Site.
+func (m *Site) SetWeekStartDay(v *string) {
+	m.WeekStartDay = v
+}
+
+// GetBolusDiaHours returns the BolusDiaHours value.
+func (m Site) GetBolusDiaHours() *float64 {
+	return m.BolusDiaHours
+}
+
+// SetBolusDiaHours sets the BolusDiaHours value and returns the updated Site.
+func (m *Site) SetBolusDiaHours(v *float64) {
+	m.BolusDiaHours = v
+}
+
+// GetBolusOnsetMinutes returns the BolusOnsetMinutes value.
+func (m Site) GetBolusOnsetMinutes() *float64 {
+	return m.BolusOnsetMinutes
+}
+
+// SetBolusOnsetMinutes sets the BolusOnsetMinutes value and returns the updated Site.
+func (m *Site) SetBolusOnsetMinutes(v *float64) {
+	m.BolusOnsetMinutes = v
+}
+
+// GetBolusPeakMinutes returns the BolusPeakMinutes value.
+func (m Site) GetBolusPeakMinutes() *float64 {
+	return m.BolusPeakMinutes
+}
+
+// SetBolusPeakMinutes sets the BolusPeakMinutes value and returns the updated Site.
+func (m *Site) SetBolusPeakMinutes(v *float64) {
+	m.BolusPeakMinutes = v
+}
+
+// GetBasalDiaHours returns the BasalDiaHours value.
+func (m Site) GetBasalDiaHours() *float64 {
+	return m.BasalDiaHours
+}
+
+// SetBasalDiaHours sets the BasalDiaHours value and returns the updated Site.
+func (m *Site) SetBasalDiaHours(v *float64) {
+	m.BasalDiaHours = v
+}
+
+// GetBasalOnsetMinutes returns the BasalOnsetMinutes value.
+func (m Site) GetBasalOnsetMinutes() *float64 {
+	return m.BasalOnsetMinutes
+}
+
+// SetBasalOnsetMinutes sets the BasalOnsetMinutes value and returns the updated Site.
+func (m *Site) SetBasalOnsetMinutes(v *float64) {
+	m.BasalOnsetMinutes = v
+}
+
+// GetBasalPeakMinutes returns the BasalPeakMinutes value.
+func (m Site) GetBasalPeakMinutes() *float64 {
+	return m.BasalPeakMinutes
+}
+
+// SetBasalPeakMinutes sets the BasalPeakMinutes value and returns the updated Site.
+func (m *Site) SetBasalPeakMinutes(v *float64) {
+	m.BasalPeakMinutes = v
+}
+
+// GetDefaultInsulinSensitivity returns the DefaultInsulinSensitivity value.
+func (m Site) GetDefaultInsulinSensitivity() *float64 {
+	return m.DefaultInsulinSensitivity
+}
+
+// SetDefaultInsulinSensitivity sets the DefaultInsulinSensitivity value and returns the updated Site.
+func (m *Site) SetDefaultInsulinSensitivity(v *float64) {
+	m.DefaultInsulinSensitivity = v
+}
+
+// GetDefaultCarbRatio returns the DefaultCarbRatio value.
+func (m Site) GetDefaultCarbRatio() *float64 {
+	return m.DefaultCarbRatio
+}
+
+// SetDefaultCarbRatio sets the DefaultCarbRatio value and returns the updated Site.
+func (m *Site) SetDefaultCarbRatio(v *float64) {
+	m.DefaultCarbRatio = v
+}
+
+// GetDefaultBasalRate returns the DefaultBasalRate value.
+func (m Site) GetDefaultBasalRate() *float64 {
+	return m.DefaultBasalRate
+}
+
+// SetDefaultBasalRate sets the DefaultBasalRate value and returns the updated Site.
+func (m *Site) SetDefaultBasalRate(v *float64) {
+	m.DefaultBasalRate = v
+}
+
+// GetCarbMaxAbsorptionHours returns the CarbMaxAbsorptionHours value.
+func (m Site) GetCarbMaxAbsorptionHours() *float64 {
+	return m.CarbMaxAbsorptionHours
+}
+
+// SetCarbMaxAbsorptionHours sets the CarbMaxAbsorptionHours value and returns the updated Site.
+func (m *Site) SetCarbMaxAbsorptionHours(v *float64) {
+	m.CarbMaxAbsorptionHours = v
+}
+
+// GetCarbMin5mImpact returns the CarbMin5mImpact value.
+func (m Site) GetCarbMin5mImpact() *float64 {
+	return m.CarbMin5mImpact
+}
+
+// SetCarbMin5mImpact sets the CarbMin5mImpact value and returns the updated Site.
+func (m *Site) SetCarbMin5mImpact(v *float64) {
+	m.CarbMin5mImpact = v
+}
+
+// GetAlarmUrgentLowEnabled returns the AlarmUrgentLowEnabled value.
+func (m Site) GetAlarmUrgentLowEnabled() *bool {
+	return m.AlarmUrgentLowEnabled
+}
+
+// SetAlarmUrgentLowEnabled sets the AlarmUrgentLowEnabled value and returns the updated Site.
+func (m *Site) SetAlarmUrgentLowEnabled(v *bool) {
+	m.AlarmUrgentLowEnabled = v
+}
+
+// GetAlarmUrgentLow returns the AlarmUrgentLow value.
+func (m Site) GetAlarmUrgentLow() *int64 {
+	return m.AlarmUrgentLow
+}
+
+// SetAlarmUrgentLow sets the AlarmUrgentLow value and returns the updated Site.
+func (m *Site) SetAlarmUrgentLow(v *int64) {
+	m.AlarmUrgentLow = v
+}
+
+// GetAlarmLowEnabled returns the AlarmLowEnabled value.
+func (m Site) GetAlarmLowEnabled() *bool {
+	return m.AlarmLowEnabled
+}
+
+// SetAlarmLowEnabled sets the AlarmLowEnabled value and returns the updated Site.
+func (m *Site) SetAlarmLowEnabled(v *bool) {
+	m.AlarmLowEnabled = v
+}
+
+// GetAlarmLow returns the AlarmLow value.
+func (m Site) GetAlarmLow() *int64 {
+	return m.AlarmLow
+}
+
+// SetAlarmLow sets the AlarmLow value and returns the updated Site.
+func (m *Site) SetAlarmLow(v *int64) {
+	m.AlarmLow = v
+}
+
+// GetAlarmLowMinutes returns the AlarmLowMinutes value.
+func (m Site) GetAlarmLowMinutes() *int64 {
+	return m.AlarmLowMinutes
+}
+
+// SetAlarmLowMinutes sets the AlarmLowMinutes value and returns the updated Site.
+func (m *Site) SetAlarmLowMinutes(v *int64) {
+	m.AlarmLowMinutes = v
+}
+
+// GetAlarmLowPredictionEnabled returns the AlarmLowPredictionEnabled value.
+func (m Site) GetAlarmLowPredictionEnabled() *bool {
+	return m.AlarmLowPredictionEnabled
+}
+
+// SetAlarmLowPredictionEnabled sets the AlarmLowPredictionEnabled value and returns the updated Site.
+func (m *Site) SetAlarmLowPredictionEnabled(v *bool) {
+	m.AlarmLowPredictionEnabled = v
+}
+
+// GetAlarmHighEnabled returns the AlarmHighEnabled value.
+func (m Site) GetAlarmHighEnabled() *bool {
+	return m.AlarmHighEnabled
+}
+
+// SetAlarmHighEnabled sets the AlarmHighEnabled value and returns the updated Site.
+func (m *Site) SetAlarmHighEnabled(v *bool) {
+	m.AlarmHighEnabled = v
+}
+
+// GetAlarmHigh returns the AlarmHigh value.
+func (m Site) GetAlarmHigh() *int64 {
+	return m.AlarmHigh
+}
+
+// SetAlarmHigh sets the AlarmHigh value and returns the updated Site.
+func (m *Site) SetAlarmHigh(v *int64) {
+	m.AlarmHigh = v
+}
+
+// GetAlarmHighMinutes returns the AlarmHighMinutes value.
+func (m Site) GetAlarmHighMinutes() *int64 {
+	return m.AlarmHighMinutes
+}
+
+// SetAlarmHighMinutes sets the AlarmHighMinutes value and returns the updated Site.
+func (m *Site) SetAlarmHighMinutes(v *int64) {
+	m.AlarmHighMinutes = v
+}
+
+// GetAlarmUrgentHighEnabled returns the AlarmUrgentHighEnabled value.
+func (m Site) GetAlarmUrgentHighEnabled() *bool {
+	return m.AlarmUrgentHighEnabled
+}
+
+// SetAlarmUrgentHighEnabled sets the AlarmUrgentHighEnabled value and returns the updated Site.
+func (m *Site) SetAlarmUrgentHighEnabled(v *bool) {
+	m.AlarmUrgentHighEnabled = v
+}
+
+// GetAlarmUrgentHigh returns the AlarmUrgentHigh value.
+func (m Site) GetAlarmUrgentHigh() *int64 {
+	return m.AlarmUrgentHigh
+}
+
+// SetAlarmUrgentHigh sets the AlarmUrgentHigh value and returns the updated Site.
+func (m *Site) SetAlarmUrgentHigh(v *int64) {
+	m.AlarmUrgentHigh = v
+}
+
+// GetAlarmFastRiseEnabled returns the AlarmFastRiseEnabled value.
+func (m Site) GetAlarmFastRiseEnabled() *bool {
+	return m.AlarmFastRiseEnabled
+}
+
+// SetAlarmFastRiseEnabled sets the AlarmFastRiseEnabled value and returns the updated Site.
+func (m *Site) SetAlarmFastRiseEnabled(v *bool) {
+	m.AlarmFastRiseEnabled = v
+}
+
+// GetAlarmFastRise returns the AlarmFastRise value.
+func (m Site) GetAlarmFastRise() *int64 {
+	return m.AlarmFastRise
+}
+
+// SetAlarmFastRise sets the AlarmFastRise value and returns the updated Site.
+func (m *Site) SetAlarmFastRise(v *int64) {
+	m.AlarmFastRise = v
+}
+
+// GetAlarmFastRiseMinutes returns the AlarmFastRiseMinutes value.
+func (m Site) GetAlarmFastRiseMinutes() *int64 {
+	return m.AlarmFastRiseMinutes
+}
+
+// SetAlarmFastRiseMinutes sets the AlarmFastRiseMinutes value and returns the updated Site.
+func (m *Site) SetAlarmFastRiseMinutes(v *int64) {
+	m.AlarmFastRiseMinutes = v
+}
+
+// GetAlarmFastDropEnabled returns the AlarmFastDropEnabled value.
+func (m Site) GetAlarmFastDropEnabled() *bool {
+	return m.AlarmFastDropEnabled
+}
+
+// SetAlarmFastDropEnabled sets the AlarmFastDropEnabled value and returns the updated Site.
+func (m *Site) SetAlarmFastDropEnabled(v *bool) {
+	m.AlarmFastDropEnabled = v
+}
+
+// GetAlarmFastDrop returns the AlarmFastDrop value.
+func (m Site) GetAlarmFastDrop() *int64 {
+	return m.AlarmFastDrop
+}
+
+// SetAlarmFastDrop sets the AlarmFastDrop value and returns the updated Site.
+func (m *Site) SetAlarmFastDrop(v *int64) {
+	m.AlarmFastDrop = v
+}
+
+// GetAlarmFastDropMinutes returns the AlarmFastDropMinutes value.
+func (m Site) GetAlarmFastDropMinutes() *int64 {
+	return m.AlarmFastDropMinutes
+}
+
+// SetAlarmFastDropMinutes sets the AlarmFastDropMinutes value and returns the updated Site.
+func (m *Site) SetAlarmFastDropMinutes(v *int64) {
+	m.AlarmFastDropMinutes = v
+}
+
+// GetAlarmNoDataEnabled returns the AlarmNoDataEnabled value.
+func (m Site) GetAlarmNoDataEnabled() *bool {
+	return m.AlarmNoDataEnabled
+}
+
+// SetAlarmNoDataEnabled sets the AlarmNoDataEnabled value and returns the updated Site.
+func (m *Site) SetAlarmNoDataEnabled(v *bool) {
+	m.AlarmNoDataEnabled = v
+}
+
+// GetAlarmNoDataMinutes returns the AlarmNoDataMinutes value.
+func (m Site) GetAlarmNoDataMinutes() *int64 {
+	return m.AlarmNoDataMinutes
+}
+
+// SetAlarmNoDataMinutes sets the AlarmNoDataMinutes value and returns the updated Site.
+func (m *Site) SetAlarmNoDataMinutes(v *int64) {
+	m.AlarmNoDataMinutes = v
+}
+
+// GetAlarmBatteryLowEnabled returns the AlarmBatteryLowEnabled value.
+func (m Site) GetAlarmBatteryLowEnabled() *bool {
+	return m.AlarmBatteryLowEnabled
+}
+
+// SetAlarmBatteryLowEnabled sets the AlarmBatteryLowEnabled value and returns the updated Site.
+func (m *Site) SetAlarmBatteryLowEnabled(v *bool) {
+	m.AlarmBatteryLowEnabled = v
+}
+
+// GetAlarmBatteryLowPercent returns the AlarmBatteryLowPercent value.
+func (m Site) GetAlarmBatteryLowPercent() *int64 {
+	return m.AlarmBatteryLowPercent
+}
+
+// SetAlarmBatteryLowPercent sets the AlarmBatteryLowPercent value and returns the updated Site.
+func (m *Site) SetAlarmBatteryLowPercent(v *int64) {
+	m.AlarmBatteryLowPercent = v
+}
+
+// GetAlarmBatteryLowPwdEnabled returns the AlarmBatteryLowPwdEnabled value.
+func (m Site) GetAlarmBatteryLowPwdEnabled() *bool {
+	return m.AlarmBatteryLowPwdEnabled
+}
+
+// SetAlarmBatteryLowPwdEnabled sets the AlarmBatteryLowPwdEnabled value and returns the updated Site.
+func (m *Site) SetAlarmBatteryLowPwdEnabled(v *bool) {
+	m.AlarmBatteryLowPwdEnabled = v
+}
+
+// GetAlarmBatteryLowPwdPercent returns the AlarmBatteryLowPwdPercent value.
+func (m Site) GetAlarmBatteryLowPwdPercent() *int64 {
+	return m.AlarmBatteryLowPwdPercent
+}
+
+// SetAlarmBatteryLowPwdPercent sets the AlarmBatteryLowPwdPercent value and returns the updated Site.
+func (m *Site) SetAlarmBatteryLowPwdPercent(v *int64) {
+	m.AlarmBatteryLowPwdPercent = v
+}
+
+// GetAlarmLowReservoirEnabled returns the AlarmLowReservoirEnabled value.
+func (m Site) GetAlarmLowReservoirEnabled() *bool {
+	return m.AlarmLowReservoirEnabled
+}
+
+// SetAlarmLowReservoirEnabled sets the AlarmLowReservoirEnabled value and returns the updated Site.
+func (m *Site) SetAlarmLowReservoirEnabled(v *bool) {
+	m.AlarmLowReservoirEnabled = v
+}
+
+// GetAlarmLowReservoirUnits returns the AlarmLowReservoirUnits value.
+func (m Site) GetAlarmLowReservoirUnits() *int64 {
+	return m.AlarmLowReservoirUnits
+}
+
+// SetAlarmLowReservoirUnits sets the AlarmLowReservoirUnits value and returns the updated Site.
+func (m *Site) SetAlarmLowReservoirUnits(v *int64) {
+	m.AlarmLowReservoirUnits = v
+}
+
+// GetNotificationsEnabled returns the NotificationsEnabled value.
+func (m Site) GetNotificationsEnabled() *bool {
+	return m.NotificationsEnabled
+}
+
+// SetNotificationsEnabled sets the NotificationsEnabled value and returns the updated Site.
+func (m *Site) SetNotificationsEnabled(v *bool) {
+	m.NotificationsEnabled = v
+}
+
+// GetID returns the ID value.
 func (m SiteIdentity) GetID() int64 {
 	return m.ID
 }
@@ -1075,556 +1625,6 @@ func (m SiteSyncSource) GetLastSyncDuration() *int64 {
 // SetLastSyncDuration sets the LastSyncDuration value and returns the updated SiteSyncSource.
 func (m *SiteSyncSource) SetLastSyncDuration(v *int64) {
 	m.LastSyncDuration = v
-}
-
-// GetID returns the ID value.
-func (m Site) GetID() string {
-	return m.ID
-}
-
-// SetID sets the ID value and returns the updated Site.
-func (m *Site) SetID(v string) {
-	m.ID = v
-}
-
-// GetBatch returns the Batch value.
-func (m Site) GetBatch() string {
-	return m.Batch
-}
-
-// SetBatch sets the Batch value and returns the updated Site.
-func (m *Site) SetBatch(v string) {
-	m.Batch = v
-}
-
-// GetBackupKeyHash returns the BackupKeyHash value.
-func (m Site) GetBackupKeyHash() string {
-	return m.BackupKeyHash
-}
-
-// SetBackupKeyHash sets the BackupKeyHash value and returns the updated Site.
-func (m *Site) SetBackupKeyHash(v string) {
-	m.BackupKeyHash = v
-}
-
-// GetCreatedAt returns the CreatedAt value.
-func (m Site) GetCreatedAt() int64 {
-	return m.CreatedAt
-}
-
-// SetCreatedAt sets the CreatedAt value and returns the updated Site.
-func (m *Site) SetCreatedAt(v int64) {
-	m.CreatedAt = v
-}
-
-// GetMaxDbSizeKbLimit returns the MaxDbSizeKbLimit value.
-func (m Site) GetMaxDbSizeKbLimit() *int64 {
-	return m.MaxDbSizeKbLimit
-}
-
-// SetMaxDbSizeKbLimit sets the MaxDbSizeKbLimit value and returns the updated Site.
-func (m *Site) SetMaxDbSizeKbLimit(v *int64) {
-	m.MaxDbSizeKbLimit = v
-}
-
-// GetEstimatedDbSizeKb returns the EstimatedDbSizeKb value.
-func (m Site) GetEstimatedDbSizeKb() *int64 {
-	return m.EstimatedDbSizeKb
-}
-
-// SetEstimatedDbSizeKb sets the EstimatedDbSizeKb value and returns the updated Site.
-func (m *Site) SetEstimatedDbSizeKb(v *int64) {
-	m.EstimatedDbSizeKb = v
-}
-
-// GetLastSeenAt returns the LastSeenAt value.
-func (m Site) GetLastSeenAt() *int64 {
-	return m.LastSeenAt
-}
-
-// SetLastSeenAt sets the LastSeenAt value and returns the updated Site.
-func (m *Site) SetLastSeenAt(v *int64) {
-	m.LastSeenAt = v
-}
-
-// GetLastWriteAt returns the LastWriteAt value.
-func (m Site) GetLastWriteAt() *int64 {
-	return m.LastWriteAt
-}
-
-// SetLastWriteAt sets the LastWriteAt value and returns the updated Site.
-func (m *Site) SetLastWriteAt(v *int64) {
-	m.LastWriteAt = v
-}
-
-// GetState returns the State value.
-func (m Site) GetState() string {
-	return m.State
-}
-
-// SetState sets the State value and returns the updated Site.
-func (m *Site) SetState(v string) {
-	m.State = v
-}
-
-// GetDisabledAt returns the DisabledAt value.
-func (m Site) GetDisabledAt() *int64 {
-	return m.DisabledAt
-}
-
-// SetDisabledAt sets the DisabledAt value and returns the updated Site.
-func (m *Site) SetDisabledAt(v *int64) {
-	m.DisabledAt = v
-}
-
-// GetArchivedAt returns the ArchivedAt value.
-func (m Site) GetArchivedAt() *int64 {
-	return m.ArchivedAt
-}
-
-// SetArchivedAt sets the ArchivedAt value and returns the updated Site.
-func (m *Site) SetArchivedAt(v *int64) {
-	m.ArchivedAt = v
-}
-
-// GetDeletedAt returns the DeletedAt value.
-func (m Site) GetDeletedAt() *int64 {
-	return m.DeletedAt
-}
-
-// SetDeletedAt sets the DeletedAt value and returns the updated Site.
-func (m *Site) SetDeletedAt(v *int64) {
-	m.DeletedAt = v
-}
-
-// GetUnits returns the Units value.
-func (m Site) GetUnits() *consts.Units {
-	return m.Units
-}
-
-// SetUnits sets the Units value and returns the updated Site.
-func (m *Site) SetUnits(v *consts.Units) {
-	m.Units = v
-}
-
-// GetTimezone returns the Timezone value.
-func (m Site) GetTimezone() *string {
-	return m.Timezone
-}
-
-// SetTimezone sets the Timezone value and returns the updated Site.
-func (m *Site) SetTimezone(v *string) {
-	m.Timezone = v
-}
-
-// GetLanguage returns the Language value.
-func (m Site) GetLanguage() *string {
-	return m.Language
-}
-
-// SetLanguage sets the Language value and returns the updated Site.
-func (m *Site) SetLanguage(v *string) {
-	m.Language = v
-}
-
-// GetDateFormat returns the DateFormat value.
-func (m Site) GetDateFormat() *string {
-	return m.DateFormat
-}
-
-// SetDateFormat sets the DateFormat value and returns the updated Site.
-func (m *Site) SetDateFormat(v *string) {
-	m.DateFormat = v
-}
-
-// GetTimeFormat returns the TimeFormat value.
-func (m Site) GetTimeFormat() *string {
-	return m.TimeFormat
-}
-
-// SetTimeFormat sets the TimeFormat value and returns the updated Site.
-func (m *Site) SetTimeFormat(v *string) {
-	m.TimeFormat = v
-}
-
-// GetWeekStartDay returns the WeekStartDay value.
-func (m Site) GetWeekStartDay() *string {
-	return m.WeekStartDay
-}
-
-// SetWeekStartDay sets the WeekStartDay value and returns the updated Site.
-func (m *Site) SetWeekStartDay(v *string) {
-	m.WeekStartDay = v
-}
-
-// GetBolusDiaHours returns the BolusDiaHours value.
-func (m Site) GetBolusDiaHours() *float64 {
-	return m.BolusDiaHours
-}
-
-// SetBolusDiaHours sets the BolusDiaHours value and returns the updated Site.
-func (m *Site) SetBolusDiaHours(v *float64) {
-	m.BolusDiaHours = v
-}
-
-// GetBolusOnsetMinutes returns the BolusOnsetMinutes value.
-func (m Site) GetBolusOnsetMinutes() *float64 {
-	return m.BolusOnsetMinutes
-}
-
-// SetBolusOnsetMinutes sets the BolusOnsetMinutes value and returns the updated Site.
-func (m *Site) SetBolusOnsetMinutes(v *float64) {
-	m.BolusOnsetMinutes = v
-}
-
-// GetBolusPeakMinutes returns the BolusPeakMinutes value.
-func (m Site) GetBolusPeakMinutes() *float64 {
-	return m.BolusPeakMinutes
-}
-
-// SetBolusPeakMinutes sets the BolusPeakMinutes value and returns the updated Site.
-func (m *Site) SetBolusPeakMinutes(v *float64) {
-	m.BolusPeakMinutes = v
-}
-
-// GetBasalDiaHours returns the BasalDiaHours value.
-func (m Site) GetBasalDiaHours() *float64 {
-	return m.BasalDiaHours
-}
-
-// SetBasalDiaHours sets the BasalDiaHours value and returns the updated Site.
-func (m *Site) SetBasalDiaHours(v *float64) {
-	m.BasalDiaHours = v
-}
-
-// GetBasalOnsetMinutes returns the BasalOnsetMinutes value.
-func (m Site) GetBasalOnsetMinutes() *float64 {
-	return m.BasalOnsetMinutes
-}
-
-// SetBasalOnsetMinutes sets the BasalOnsetMinutes value and returns the updated Site.
-func (m *Site) SetBasalOnsetMinutes(v *float64) {
-	m.BasalOnsetMinutes = v
-}
-
-// GetBasalPeakMinutes returns the BasalPeakMinutes value.
-func (m Site) GetBasalPeakMinutes() *float64 {
-	return m.BasalPeakMinutes
-}
-
-// SetBasalPeakMinutes sets the BasalPeakMinutes value and returns the updated Site.
-func (m *Site) SetBasalPeakMinutes(v *float64) {
-	m.BasalPeakMinutes = v
-}
-
-// GetDefaultInsulinSensitivity returns the DefaultInsulinSensitivity value.
-func (m Site) GetDefaultInsulinSensitivity() *float64 {
-	return m.DefaultInsulinSensitivity
-}
-
-// SetDefaultInsulinSensitivity sets the DefaultInsulinSensitivity value and returns the updated Site.
-func (m *Site) SetDefaultInsulinSensitivity(v *float64) {
-	m.DefaultInsulinSensitivity = v
-}
-
-// GetDefaultCarbRatio returns the DefaultCarbRatio value.
-func (m Site) GetDefaultCarbRatio() *float64 {
-	return m.DefaultCarbRatio
-}
-
-// SetDefaultCarbRatio sets the DefaultCarbRatio value and returns the updated Site.
-func (m *Site) SetDefaultCarbRatio(v *float64) {
-	m.DefaultCarbRatio = v
-}
-
-// GetDefaultBasalRate returns the DefaultBasalRate value.
-func (m Site) GetDefaultBasalRate() *float64 {
-	return m.DefaultBasalRate
-}
-
-// SetDefaultBasalRate sets the DefaultBasalRate value and returns the updated Site.
-func (m *Site) SetDefaultBasalRate(v *float64) {
-	m.DefaultBasalRate = v
-}
-
-// GetCarbMaxAbsorptionHours returns the CarbMaxAbsorptionHours value.
-func (m Site) GetCarbMaxAbsorptionHours() *float64 {
-	return m.CarbMaxAbsorptionHours
-}
-
-// SetCarbMaxAbsorptionHours sets the CarbMaxAbsorptionHours value and returns the updated Site.
-func (m *Site) SetCarbMaxAbsorptionHours(v *float64) {
-	m.CarbMaxAbsorptionHours = v
-}
-
-// GetCarbMin5mImpact returns the CarbMin5mImpact value.
-func (m Site) GetCarbMin5mImpact() *float64 {
-	return m.CarbMin5mImpact
-}
-
-// SetCarbMin5mImpact sets the CarbMin5mImpact value and returns the updated Site.
-func (m *Site) SetCarbMin5mImpact(v *float64) {
-	m.CarbMin5mImpact = v
-}
-
-// GetAlarmUrgentLowEnabled returns the AlarmUrgentLowEnabled value.
-func (m Site) GetAlarmUrgentLowEnabled() *bool {
-	return m.AlarmUrgentLowEnabled
-}
-
-// SetAlarmUrgentLowEnabled sets the AlarmUrgentLowEnabled value and returns the updated Site.
-func (m *Site) SetAlarmUrgentLowEnabled(v *bool) {
-	m.AlarmUrgentLowEnabled = v
-}
-
-// GetAlarmUrgentLow returns the AlarmUrgentLow value.
-func (m Site) GetAlarmUrgentLow() *int64 {
-	return m.AlarmUrgentLow
-}
-
-// SetAlarmUrgentLow sets the AlarmUrgentLow value and returns the updated Site.
-func (m *Site) SetAlarmUrgentLow(v *int64) {
-	m.AlarmUrgentLow = v
-}
-
-// GetAlarmLowEnabled returns the AlarmLowEnabled value.
-func (m Site) GetAlarmLowEnabled() *bool {
-	return m.AlarmLowEnabled
-}
-
-// SetAlarmLowEnabled sets the AlarmLowEnabled value and returns the updated Site.
-func (m *Site) SetAlarmLowEnabled(v *bool) {
-	m.AlarmLowEnabled = v
-}
-
-// GetAlarmLow returns the AlarmLow value.
-func (m Site) GetAlarmLow() *int64 {
-	return m.AlarmLow
-}
-
-// SetAlarmLow sets the AlarmLow value and returns the updated Site.
-func (m *Site) SetAlarmLow(v *int64) {
-	m.AlarmLow = v
-}
-
-// GetAlarmLowMinutes returns the AlarmLowMinutes value.
-func (m Site) GetAlarmLowMinutes() *int64 {
-	return m.AlarmLowMinutes
-}
-
-// SetAlarmLowMinutes sets the AlarmLowMinutes value and returns the updated Site.
-func (m *Site) SetAlarmLowMinutes(v *int64) {
-	m.AlarmLowMinutes = v
-}
-
-// GetAlarmLowPredictionEnabled returns the AlarmLowPredictionEnabled value.
-func (m Site) GetAlarmLowPredictionEnabled() *bool {
-	return m.AlarmLowPredictionEnabled
-}
-
-// SetAlarmLowPredictionEnabled sets the AlarmLowPredictionEnabled value and returns the updated Site.
-func (m *Site) SetAlarmLowPredictionEnabled(v *bool) {
-	m.AlarmLowPredictionEnabled = v
-}
-
-// GetAlarmHighEnabled returns the AlarmHighEnabled value.
-func (m Site) GetAlarmHighEnabled() *bool {
-	return m.AlarmHighEnabled
-}
-
-// SetAlarmHighEnabled sets the AlarmHighEnabled value and returns the updated Site.
-func (m *Site) SetAlarmHighEnabled(v *bool) {
-	m.AlarmHighEnabled = v
-}
-
-// GetAlarmHigh returns the AlarmHigh value.
-func (m Site) GetAlarmHigh() *int64 {
-	return m.AlarmHigh
-}
-
-// SetAlarmHigh sets the AlarmHigh value and returns the updated Site.
-func (m *Site) SetAlarmHigh(v *int64) {
-	m.AlarmHigh = v
-}
-
-// GetAlarmHighMinutes returns the AlarmHighMinutes value.
-func (m Site) GetAlarmHighMinutes() *int64 {
-	return m.AlarmHighMinutes
-}
-
-// SetAlarmHighMinutes sets the AlarmHighMinutes value and returns the updated Site.
-func (m *Site) SetAlarmHighMinutes(v *int64) {
-	m.AlarmHighMinutes = v
-}
-
-// GetAlarmUrgentHighEnabled returns the AlarmUrgentHighEnabled value.
-func (m Site) GetAlarmUrgentHighEnabled() *bool {
-	return m.AlarmUrgentHighEnabled
-}
-
-// SetAlarmUrgentHighEnabled sets the AlarmUrgentHighEnabled value and returns the updated Site.
-func (m *Site) SetAlarmUrgentHighEnabled(v *bool) {
-	m.AlarmUrgentHighEnabled = v
-}
-
-// GetAlarmUrgentHigh returns the AlarmUrgentHigh value.
-func (m Site) GetAlarmUrgentHigh() *int64 {
-	return m.AlarmUrgentHigh
-}
-
-// SetAlarmUrgentHigh sets the AlarmUrgentHigh value and returns the updated Site.
-func (m *Site) SetAlarmUrgentHigh(v *int64) {
-	m.AlarmUrgentHigh = v
-}
-
-// GetAlarmFastRiseEnabled returns the AlarmFastRiseEnabled value.
-func (m Site) GetAlarmFastRiseEnabled() *bool {
-	return m.AlarmFastRiseEnabled
-}
-
-// SetAlarmFastRiseEnabled sets the AlarmFastRiseEnabled value and returns the updated Site.
-func (m *Site) SetAlarmFastRiseEnabled(v *bool) {
-	m.AlarmFastRiseEnabled = v
-}
-
-// GetAlarmFastRise returns the AlarmFastRise value.
-func (m Site) GetAlarmFastRise() *int64 {
-	return m.AlarmFastRise
-}
-
-// SetAlarmFastRise sets the AlarmFastRise value and returns the updated Site.
-func (m *Site) SetAlarmFastRise(v *int64) {
-	m.AlarmFastRise = v
-}
-
-// GetAlarmFastRiseMinutes returns the AlarmFastRiseMinutes value.
-func (m Site) GetAlarmFastRiseMinutes() *int64 {
-	return m.AlarmFastRiseMinutes
-}
-
-// SetAlarmFastRiseMinutes sets the AlarmFastRiseMinutes value and returns the updated Site.
-func (m *Site) SetAlarmFastRiseMinutes(v *int64) {
-	m.AlarmFastRiseMinutes = v
-}
-
-// GetAlarmFastDropEnabled returns the AlarmFastDropEnabled value.
-func (m Site) GetAlarmFastDropEnabled() *bool {
-	return m.AlarmFastDropEnabled
-}
-
-// SetAlarmFastDropEnabled sets the AlarmFastDropEnabled value and returns the updated Site.
-func (m *Site) SetAlarmFastDropEnabled(v *bool) {
-	m.AlarmFastDropEnabled = v
-}
-
-// GetAlarmFastDrop returns the AlarmFastDrop value.
-func (m Site) GetAlarmFastDrop() *int64 {
-	return m.AlarmFastDrop
-}
-
-// SetAlarmFastDrop sets the AlarmFastDrop value and returns the updated Site.
-func (m *Site) SetAlarmFastDrop(v *int64) {
-	m.AlarmFastDrop = v
-}
-
-// GetAlarmFastDropMinutes returns the AlarmFastDropMinutes value.
-func (m Site) GetAlarmFastDropMinutes() *int64 {
-	return m.AlarmFastDropMinutes
-}
-
-// SetAlarmFastDropMinutes sets the AlarmFastDropMinutes value and returns the updated Site.
-func (m *Site) SetAlarmFastDropMinutes(v *int64) {
-	m.AlarmFastDropMinutes = v
-}
-
-// GetAlarmNoDataEnabled returns the AlarmNoDataEnabled value.
-func (m Site) GetAlarmNoDataEnabled() *bool {
-	return m.AlarmNoDataEnabled
-}
-
-// SetAlarmNoDataEnabled sets the AlarmNoDataEnabled value and returns the updated Site.
-func (m *Site) SetAlarmNoDataEnabled(v *bool) {
-	m.AlarmNoDataEnabled = v
-}
-
-// GetAlarmNoDataMinutes returns the AlarmNoDataMinutes value.
-func (m Site) GetAlarmNoDataMinutes() *int64 {
-	return m.AlarmNoDataMinutes
-}
-
-// SetAlarmNoDataMinutes sets the AlarmNoDataMinutes value and returns the updated Site.
-func (m *Site) SetAlarmNoDataMinutes(v *int64) {
-	m.AlarmNoDataMinutes = v
-}
-
-// GetAlarmBatteryLowEnabled returns the AlarmBatteryLowEnabled value.
-func (m Site) GetAlarmBatteryLowEnabled() *bool {
-	return m.AlarmBatteryLowEnabled
-}
-
-// SetAlarmBatteryLowEnabled sets the AlarmBatteryLowEnabled value and returns the updated Site.
-func (m *Site) SetAlarmBatteryLowEnabled(v *bool) {
-	m.AlarmBatteryLowEnabled = v
-}
-
-// GetAlarmBatteryLowPercent returns the AlarmBatteryLowPercent value.
-func (m Site) GetAlarmBatteryLowPercent() *int64 {
-	return m.AlarmBatteryLowPercent
-}
-
-// SetAlarmBatteryLowPercent sets the AlarmBatteryLowPercent value and returns the updated Site.
-func (m *Site) SetAlarmBatteryLowPercent(v *int64) {
-	m.AlarmBatteryLowPercent = v
-}
-
-// GetAlarmBatteryLowPwdEnabled returns the AlarmBatteryLowPwdEnabled value.
-func (m Site) GetAlarmBatteryLowPwdEnabled() *bool {
-	return m.AlarmBatteryLowPwdEnabled
-}
-
-// SetAlarmBatteryLowPwdEnabled sets the AlarmBatteryLowPwdEnabled value and returns the updated Site.
-func (m *Site) SetAlarmBatteryLowPwdEnabled(v *bool) {
-	m.AlarmBatteryLowPwdEnabled = v
-}
-
-// GetAlarmBatteryLowPwdPercent returns the AlarmBatteryLowPwdPercent value.
-func (m Site) GetAlarmBatteryLowPwdPercent() *int64 {
-	return m.AlarmBatteryLowPwdPercent
-}
-
-// SetAlarmBatteryLowPwdPercent sets the AlarmBatteryLowPwdPercent value and returns the updated Site.
-func (m *Site) SetAlarmBatteryLowPwdPercent(v *int64) {
-	m.AlarmBatteryLowPwdPercent = v
-}
-
-// GetAlarmLowReservoirEnabled returns the AlarmLowReservoirEnabled value.
-func (m Site) GetAlarmLowReservoirEnabled() *bool {
-	return m.AlarmLowReservoirEnabled
-}
-
-// SetAlarmLowReservoirEnabled sets the AlarmLowReservoirEnabled value and returns the updated Site.
-func (m *Site) SetAlarmLowReservoirEnabled(v *bool) {
-	m.AlarmLowReservoirEnabled = v
-}
-
-// GetAlarmLowReservoirUnits returns the AlarmLowReservoirUnits value.
-func (m Site) GetAlarmLowReservoirUnits() *int64 {
-	return m.AlarmLowReservoirUnits
-}
-
-// SetAlarmLowReservoirUnits sets the AlarmLowReservoirUnits value and returns the updated Site.
-func (m *Site) SetAlarmLowReservoirUnits(v *int64) {
-	m.AlarmLowReservoirUnits = v
-}
-
-// GetNotificationsEnabled returns the NotificationsEnabled value.
-func (m Site) GetNotificationsEnabled() *bool {
-	return m.NotificationsEnabled
-}
-
-// SetNotificationsEnabled sets the NotificationsEnabled value and returns the updated Site.
-func (m *Site) SetNotificationsEnabled(v *bool) {
-	m.NotificationsEnabled = v
 }
 
 // GetName returns the Name value.
@@ -2608,6 +2608,26 @@ func (m *UpdateSitesSettingsParams) SetID(v string) {
 }
 
 // GetSiteID returns the SiteID value.
+func (m AllSiteIdentitiesParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated AllSiteIdentitiesParams.
+func (m *AllSiteIdentitiesParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m CountSiteIdentitiesParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated CountSiteIdentitiesParams.
+func (m *CountSiteIdentitiesParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetSiteID returns the SiteID value.
 func (m CreateSiteIdentityParams) GetSiteID() string {
 	return m.SiteID
 }
@@ -2678,23 +2698,23 @@ func (m *CreateSiteIdentityParams) SetCreatedByIdentityName(v string) {
 }
 
 // GetSiteID returns the SiteID value.
-func (m AllSiteIdentitiesParams) GetSiteID() string {
+func (m DeleteSiteIdentityParams) GetSiteID() string {
 	return m.SiteID
 }
 
-// SetSiteID sets the SiteID value and returns the updated AllSiteIdentitiesParams.
-func (m *AllSiteIdentitiesParams) SetSiteID(v string) {
+// SetSiteID sets the SiteID value and returns the updated DeleteSiteIdentityParams.
+func (m *DeleteSiteIdentityParams) SetSiteID(v string) {
 	m.SiteID = v
 }
 
-// GetSiteID returns the SiteID value.
-func (m CountSiteIdentitiesParams) GetSiteID() string {
-	return m.SiteID
+// GetID returns the ID value.
+func (m DeleteSiteIdentityParams) GetID() int64 {
+	return m.ID
 }
 
-// SetSiteID sets the SiteID value and returns the updated CountSiteIdentitiesParams.
-func (m *CountSiteIdentitiesParams) SetSiteID(v string) {
-	m.SiteID = v
+// SetID sets the ID value and returns the updated DeleteSiteIdentityParams.
+func (m *DeleteSiteIdentityParams) SetID(v int64) {
+	m.ID = v
 }
 
 // GetSiteID returns the SiteID value.
@@ -2818,76 +2838,6 @@ func (m *UpdateSiteIdentityEnabledParams) SetID(v int64) {
 }
 
 // GetSiteID returns the SiteID value.
-func (m DeleteSiteIdentityParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated DeleteSiteIdentityParams.
-func (m *DeleteSiteIdentityParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetID returns the ID value.
-func (m DeleteSiteIdentityParams) GetID() int64 {
-	return m.ID
-}
-
-// SetID sets the ID value and returns the updated DeleteSiteIdentityParams.
-func (m *DeleteSiteIdentityParams) SetID(v int64) {
-	m.ID = v
-}
-
-// GetType returns the Type value.
-func (m GetSyncSourceParams) GetType() consts.SyncSourceType {
-	return m.Type
-}
-
-// SetType sets the Type value and returns the updated GetSyncSourceParams.
-func (m *GetSyncSourceParams) SetType(v consts.SyncSourceType) {
-	m.Type = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m GetSyncSourceParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated GetSyncSourceParams.
-func (m *GetSyncSourceParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetSkip returns the Skip value.
-func (m SearchSyncSourcesParams) GetSkip() int64 {
-	return m.Skip
-}
-
-// SetSkip sets the Skip value and returns the updated SearchSyncSourcesParams.
-func (m *SearchSyncSourcesParams) SetSkip(v int64) {
-	m.Skip = v
-}
-
-// GetLimit returns the Limit value.
-func (m SearchSyncSourcesParams) GetLimit() int64 {
-	return m.Limit
-}
-
-// SetLimit sets the Limit value and returns the updated SearchSyncSourcesParams.
-func (m *SearchSyncSourcesParams) SetLimit(v int64) {
-	m.Limit = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m GetAllSyncSourcesForSiteParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated GetAllSyncSourcesForSiteParams.
-func (m *GetAllSyncSourcesForSiteParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetSiteID returns the SiteID value.
 func (m CreateSyncSourceParams) GetSiteID() string {
 	return m.SiteID
 }
@@ -2945,6 +2895,186 @@ func (m CreateSyncSourceParams) GetEnabled() bool {
 // SetEnabled sets the Enabled value and returns the updated CreateSyncSourceParams.
 func (m *CreateSyncSourceParams) SetEnabled(v bool) {
 	m.Enabled = v
+}
+
+// GetType returns the Type value.
+func (m DeleteSyncSourceParams) GetType() consts.SyncSourceType {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated DeleteSyncSourceParams.
+func (m *DeleteSyncSourceParams) SetType(v consts.SyncSourceType) {
+	m.Type = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m DeleteSyncSourceParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated DeleteSyncSourceParams.
+func (m *DeleteSyncSourceParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetDurationMs returns the DurationMs value.
+func (m FinishSyncSourceBackfillParams) GetDurationMs() *int64 {
+	return m.DurationMs
+}
+
+// SetDurationMs sets the DurationMs value and returns the updated FinishSyncSourceBackfillParams.
+func (m *FinishSyncSourceBackfillParams) SetDurationMs(v *int64) {
+	m.DurationMs = v
+}
+
+// GetRecords returns the Records value.
+func (m FinishSyncSourceBackfillParams) GetRecords() *int64 {
+	return m.Records
+}
+
+// SetRecords sets the Records value and returns the updated FinishSyncSourceBackfillParams.
+func (m *FinishSyncSourceBackfillParams) SetRecords(v *int64) {
+	m.Records = v
+}
+
+// GetError returns the Error value.
+func (m FinishSyncSourceBackfillParams) GetError() *string {
+	return m.Error
+}
+
+// SetError sets the Error value and returns the updated FinishSyncSourceBackfillParams.
+func (m *FinishSyncSourceBackfillParams) SetError(v *string) {
+	m.Error = v
+}
+
+// GetType returns the Type value.
+func (m FinishSyncSourceBackfillParams) GetType() consts.SyncSourceType {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated FinishSyncSourceBackfillParams.
+func (m *FinishSyncSourceBackfillParams) SetType(v consts.SyncSourceType) {
+	m.Type = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m FinishSyncSourceBackfillParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated FinishSyncSourceBackfillParams.
+func (m *FinishSyncSourceBackfillParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m GetAllSyncSourcesForSiteParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated GetAllSyncSourcesForSiteParams.
+func (m *GetAllSyncSourcesForSiteParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetType returns the Type value.
+func (m GetSyncSourceParams) GetType() consts.SyncSourceType {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated GetSyncSourceParams.
+func (m *GetSyncSourceParams) SetType(v consts.SyncSourceType) {
+	m.Type = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m GetSyncSourceParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated GetSyncSourceParams.
+func (m *GetSyncSourceParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetSkip returns the Skip value.
+func (m SearchSyncSourcesParams) GetSkip() int64 {
+	return m.Skip
+}
+
+// SetSkip sets the Skip value and returns the updated SearchSyncSourcesParams.
+func (m *SearchSyncSourcesParams) SetSkip(v int64) {
+	m.Skip = v
+}
+
+// GetLimit returns the Limit value.
+func (m SearchSyncSourcesParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated SearchSyncSourcesParams.
+func (m *SearchSyncSourcesParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
+// GetFrom returns the From value.
+func (m StartSyncSourceBackfillParams) GetFrom() *int64 {
+	return m.From
+}
+
+// SetFrom sets the From value and returns the updated StartSyncSourceBackfillParams.
+func (m *StartSyncSourceBackfillParams) SetFrom(v *int64) {
+	m.From = v
+}
+
+// GetTo returns the To value.
+func (m StartSyncSourceBackfillParams) GetTo() *int64 {
+	return m.To
+}
+
+// SetTo sets the To value and returns the updated StartSyncSourceBackfillParams.
+func (m *StartSyncSourceBackfillParams) SetTo(v *int64) {
+	m.To = v
+}
+
+// GetType returns the Type value.
+func (m StartSyncSourceBackfillParams) GetType() consts.SyncSourceType {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated StartSyncSourceBackfillParams.
+func (m *StartSyncSourceBackfillParams) SetType(v consts.SyncSourceType) {
+	m.Type = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m StartSyncSourceBackfillParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated StartSyncSourceBackfillParams.
+func (m *StartSyncSourceBackfillParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetType returns the Type value.
+func (m UpdateSyncReportAttemptParams) GetType() consts.SyncSourceType {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated UpdateSyncReportAttemptParams.
+func (m *UpdateSyncReportAttemptParams) SetType(v consts.SyncSourceType) {
+	m.Type = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m UpdateSyncReportAttemptParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated UpdateSyncReportAttemptParams.
+func (m *UpdateSyncReportAttemptParams) SetSiteID(v string) {
+	m.SiteID = v
 }
 
 // GetPasswordEnc returns the PasswordEnc value.
@@ -3007,166 +3137,6 @@ func (m *UpdateSyncSourceParams) SetSiteID(v string) {
 	m.SiteID = v
 }
 
-// GetType returns the Type value.
-func (m DeleteSyncSourceParams) GetType() consts.SyncSourceType {
-	return m.Type
-}
-
-// SetType sets the Type value and returns the updated DeleteSyncSourceParams.
-func (m *DeleteSyncSourceParams) SetType(v consts.SyncSourceType) {
-	m.Type = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m DeleteSyncSourceParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated DeleteSyncSourceParams.
-func (m *DeleteSyncSourceParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetFrom returns the From value.
-func (m StartSyncSourceBackfillParams) GetFrom() *int64 {
-	return m.From
-}
-
-// SetFrom sets the From value and returns the updated StartSyncSourceBackfillParams.
-func (m *StartSyncSourceBackfillParams) SetFrom(v *int64) {
-	m.From = v
-}
-
-// GetTo returns the To value.
-func (m StartSyncSourceBackfillParams) GetTo() *int64 {
-	return m.To
-}
-
-// SetTo sets the To value and returns the updated StartSyncSourceBackfillParams.
-func (m *StartSyncSourceBackfillParams) SetTo(v *int64) {
-	m.To = v
-}
-
-// GetType returns the Type value.
-func (m StartSyncSourceBackfillParams) GetType() consts.SyncSourceType {
-	return m.Type
-}
-
-// SetType sets the Type value and returns the updated StartSyncSourceBackfillParams.
-func (m *StartSyncSourceBackfillParams) SetType(v consts.SyncSourceType) {
-	m.Type = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m StartSyncSourceBackfillParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated StartSyncSourceBackfillParams.
-func (m *StartSyncSourceBackfillParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetDurationMs returns the DurationMs value.
-func (m FinishSyncSourceBackfillParams) GetDurationMs() *int64 {
-	return m.DurationMs
-}
-
-// SetDurationMs sets the DurationMs value and returns the updated FinishSyncSourceBackfillParams.
-func (m *FinishSyncSourceBackfillParams) SetDurationMs(v *int64) {
-	m.DurationMs = v
-}
-
-// GetRecords returns the Records value.
-func (m FinishSyncSourceBackfillParams) GetRecords() *int64 {
-	return m.Records
-}
-
-// SetRecords sets the Records value and returns the updated FinishSyncSourceBackfillParams.
-func (m *FinishSyncSourceBackfillParams) SetRecords(v *int64) {
-	m.Records = v
-}
-
-// GetError returns the Error value.
-func (m FinishSyncSourceBackfillParams) GetError() *string {
-	return m.Error
-}
-
-// SetError sets the Error value and returns the updated FinishSyncSourceBackfillParams.
-func (m *FinishSyncSourceBackfillParams) SetError(v *string) {
-	m.Error = v
-}
-
-// GetType returns the Type value.
-func (m FinishSyncSourceBackfillParams) GetType() consts.SyncSourceType {
-	return m.Type
-}
-
-// SetType sets the Type value and returns the updated FinishSyncSourceBackfillParams.
-func (m *FinishSyncSourceBackfillParams) SetType(v consts.SyncSourceType) {
-	m.Type = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m FinishSyncSourceBackfillParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated FinishSyncSourceBackfillParams.
-func (m *FinishSyncSourceBackfillParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetType returns the Type value.
-func (m UpdateSyncReportAttemptParams) GetType() consts.SyncSourceType {
-	return m.Type
-}
-
-// SetType sets the Type value and returns the updated UpdateSyncReportAttemptParams.
-func (m *UpdateSyncReportAttemptParams) SetType(v consts.SyncSourceType) {
-	m.Type = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m UpdateSyncReportAttemptParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated UpdateSyncReportAttemptParams.
-func (m *UpdateSyncReportAttemptParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetElapsedMs returns the ElapsedMs value.
-func (m UpdateSyncSourceReportsSuccessParams) GetElapsedMs() *int64 {
-	return m.ElapsedMs
-}
-
-// SetElapsedMs sets the ElapsedMs value and returns the updated UpdateSyncSourceReportsSuccessParams.
-func (m *UpdateSyncSourceReportsSuccessParams) SetElapsedMs(v *int64) {
-	m.ElapsedMs = v
-}
-
-// GetType returns the Type value.
-func (m UpdateSyncSourceReportsSuccessParams) GetType() consts.SyncSourceType {
-	return m.Type
-}
-
-// SetType sets the Type value and returns the updated UpdateSyncSourceReportsSuccessParams.
-func (m *UpdateSyncSourceReportsSuccessParams) SetType(v consts.SyncSourceType) {
-	m.Type = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m UpdateSyncSourceReportsSuccessParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated UpdateSyncSourceReportsSuccessParams.
-func (m *UpdateSyncSourceReportsSuccessParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
 // GetErrorMessages returns the ErrorMessages value.
 func (m UpdateSyncSourceReportsFailureParams) GetErrorMessages() errors.ErrorList {
 	return m.ErrorMessages
@@ -3207,6 +3177,46 @@ func (m *UpdateSyncSourceReportsFailureParams) SetSiteID(v string) {
 	m.SiteID = v
 }
 
+// GetElapsedMs returns the ElapsedMs value.
+func (m UpdateSyncSourceReportsSuccessParams) GetElapsedMs() *int64 {
+	return m.ElapsedMs
+}
+
+// SetElapsedMs sets the ElapsedMs value and returns the updated UpdateSyncSourceReportsSuccessParams.
+func (m *UpdateSyncSourceReportsSuccessParams) SetElapsedMs(v *int64) {
+	m.ElapsedMs = v
+}
+
+// GetType returns the Type value.
+func (m UpdateSyncSourceReportsSuccessParams) GetType() consts.SyncSourceType {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated UpdateSyncSourceReportsSuccessParams.
+func (m *UpdateSyncSourceReportsSuccessParams) SetType(v consts.SyncSourceType) {
+	m.Type = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m UpdateSyncSourceReportsSuccessParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated UpdateSyncSourceReportsSuccessParams.
+func (m *UpdateSyncSourceReportsSuccessParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetJsonEach returns the JsonEach value.
+func (m ArchiveSitesParams) GetJsonEach() interface{} {
+	return m.JsonEach
+}
+
+// SetJsonEach sets the JsonEach value and returns the updated ArchiveSitesParams.
+func (m *ArchiveSitesParams) SetJsonEach(v interface{}) {
+	m.JsonEach = v
+}
+
 // GetID returns the ID value.
 func (m CreateSiteParams) GetID() string {
 	return m.ID
@@ -3227,14 +3237,44 @@ func (m *CreateSiteParams) SetBackupKeyHash(v string) {
 	m.BackupKeyHash = v
 }
 
+// GetJsonEach returns the JsonEach value.
+func (m DeleteSitesParams) GetJsonEach() interface{} {
+	return m.JsonEach
+}
+
+// SetJsonEach sets the JsonEach value and returns the updated DeleteSitesParams.
+func (m *DeleteSitesParams) SetJsonEach(v interface{}) {
+	m.JsonEach = v
+}
+
 // GetID returns the ID value.
-func (m SiteExistsParams) GetID() string {
+func (m DisableSiteParams) GetID() string {
 	return m.ID
 }
 
-// SetID sets the ID value and returns the updated SiteExistsParams.
-func (m *SiteExistsParams) SetID(v string) {
+// SetID sets the ID value and returns the updated DisableSiteParams.
+func (m *DisableSiteParams) SetID(v string) {
 	m.ID = v
+}
+
+// GetJsonEach returns the JsonEach value.
+func (m DisableSitesParams) GetJsonEach() interface{} {
+	return m.JsonEach
+}
+
+// SetJsonEach sets the JsonEach value and returns the updated DisableSitesParams.
+func (m *DisableSitesParams) SetJsonEach(v interface{}) {
+	m.JsonEach = v
+}
+
+// GetBatch returns the Batch value.
+func (m GetBatchSitesToBackUpParams) GetBatch() string {
+	return m.Batch
+}
+
+// SetBatch sets the Batch value and returns the updated GetBatchSitesToBackUpParams.
+func (m *GetBatchSitesToBackUpParams) SetBatch(v string) {
+	m.Batch = v
 }
 
 // GetID returns the ID value.
@@ -3245,6 +3285,76 @@ func (m GetSiteParams) GetID() string {
 // SetID sets the ID value and returns the updated GetSiteParams.
 func (m *GetSiteParams) SetID(v string) {
 	m.ID = v
+}
+
+// GetID returns the ID value.
+func (m GetSiteInAnyStateParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated GetSiteInAnyStateParams.
+func (m *GetSiteInAnyStateParams) SetID(v string) {
+	m.ID = v
+}
+
+// GetLastSeenAt returns the LastSeenAt value.
+func (m GetSitesToArchiveParams) GetLastSeenAt() float64 {
+	return m.LastSeenAt
+}
+
+// SetLastSeenAt sets the LastSeenAt value and returns the updated GetSitesToArchiveParams.
+func (m *GetSitesToArchiveParams) SetLastSeenAt(v float64) {
+	m.LastSeenAt = v
+}
+
+// GetLastWriteAt returns the LastWriteAt value.
+func (m GetSitesToArchiveParams) GetLastWriteAt() float64 {
+	return m.LastWriteAt
+}
+
+// SetLastWriteAt sets the LastWriteAt value and returns the updated GetSitesToArchiveParams.
+func (m *GetSitesToArchiveParams) SetLastWriteAt(v float64) {
+	m.LastWriteAt = v
+}
+
+// GetBatch returns the Batch value.
+func (m GetSitesToDeleteInBatchParams) GetBatch() string {
+	return m.Batch
+}
+
+// SetBatch sets the Batch value and returns the updated GetSitesToDeleteInBatchParams.
+func (m *GetSitesToDeleteInBatchParams) SetBatch(v string) {
+	m.Batch = v
+}
+
+// GetLastSeenAt returns the LastSeenAt value.
+func (m GetSitesToDeleteInBatchParams) GetLastSeenAt() float64 {
+	return m.LastSeenAt
+}
+
+// SetLastSeenAt sets the LastSeenAt value and returns the updated GetSitesToDeleteInBatchParams.
+func (m *GetSitesToDeleteInBatchParams) SetLastSeenAt(v float64) {
+	m.LastSeenAt = v
+}
+
+// GetLastSeenAt returns the LastSeenAt value.
+func (m GetSitesToDisableParams) GetLastSeenAt() float64 {
+	return m.LastSeenAt
+}
+
+// SetLastSeenAt sets the LastSeenAt value and returns the updated GetSitesToDisableParams.
+func (m *GetSitesToDisableParams) SetLastSeenAt(v float64) {
+	m.LastSeenAt = v
+}
+
+// GetLastWriteAt returns the LastWriteAt value.
+func (m GetSitesToDisableParams) GetLastWriteAt() float64 {
+	return m.LastWriteAt
+}
+
+// SetLastWriteAt sets the LastWriteAt value and returns the updated GetSitesToDisableParams.
+func (m *GetSitesToDisableParams) SetLastWriteAt(v float64) {
+	m.LastWriteAt = v
 }
 
 // GetSkip returns the Skip value.
@@ -3268,26 +3378,6 @@ func (m *SearchSitesParams) SetLimit(v int64) {
 }
 
 // GetSkip returns the Skip value.
-func (m SearchSitesByLastWriteParams) GetSkip() int64 {
-	return m.Skip
-}
-
-// SetSkip sets the Skip value and returns the updated SearchSitesByLastWriteParams.
-func (m *SearchSitesByLastWriteParams) SetSkip(v int64) {
-	m.Skip = v
-}
-
-// GetLimit returns the Limit value.
-func (m SearchSitesByLastWriteParams) GetLimit() int64 {
-	return m.Limit
-}
-
-// SetLimit sets the Limit value and returns the updated SearchSitesByLastWriteParams.
-func (m *SearchSitesByLastWriteParams) SetLimit(v int64) {
-	m.Limit = v
-}
-
-// GetSkip returns the Skip value.
 func (m SearchSitesByDBSizeParams) GetSkip() int64 {
 	return m.Skip
 }
@@ -3307,54 +3397,34 @@ func (m *SearchSitesByDBSizeParams) SetLimit(v int64) {
 	m.Limit = v
 }
 
+// GetSkip returns the Skip value.
+func (m SearchSitesByLastWriteParams) GetSkip() int64 {
+	return m.Skip
+}
+
+// SetSkip sets the Skip value and returns the updated SearchSitesByLastWriteParams.
+func (m *SearchSitesByLastWriteParams) SetSkip(v int64) {
+	m.Skip = v
+}
+
+// GetLimit returns the Limit value.
+func (m SearchSitesByLastWriteParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated SearchSitesByLastWriteParams.
+func (m *SearchSitesByLastWriteParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
 // GetID returns the ID value.
-func (m GetSiteInAnyStateParams) GetID() string {
+func (m SiteExistsParams) GetID() string {
 	return m.ID
 }
 
-// SetID sets the ID value and returns the updated GetSiteInAnyStateParams.
-func (m *GetSiteInAnyStateParams) SetID(v string) {
+// SetID sets the ID value and returns the updated SiteExistsParams.
+func (m *SiteExistsParams) SetID(v string) {
 	m.ID = v
-}
-
-// GetLastSeenAt returns the LastSeenAt value.
-func (m GetSitesToDisableParams) GetLastSeenAt() float64 {
-	return m.LastSeenAt
-}
-
-// SetLastSeenAt sets the LastSeenAt value and returns the updated GetSitesToDisableParams.
-func (m *GetSitesToDisableParams) SetLastSeenAt(v float64) {
-	m.LastSeenAt = v
-}
-
-// GetLastWriteAt returns the LastWriteAt value.
-func (m GetSitesToDisableParams) GetLastWriteAt() float64 {
-	return m.LastWriteAt
-}
-
-// SetLastWriteAt sets the LastWriteAt value and returns the updated GetSitesToDisableParams.
-func (m *GetSitesToDisableParams) SetLastWriteAt(v float64) {
-	m.LastWriteAt = v
-}
-
-// GetLastSeenAt returns the LastSeenAt value.
-func (m GetSitesToArchiveParams) GetLastSeenAt() float64 {
-	return m.LastSeenAt
-}
-
-// SetLastSeenAt sets the LastSeenAt value and returns the updated GetSitesToArchiveParams.
-func (m *GetSitesToArchiveParams) SetLastSeenAt(v float64) {
-	m.LastSeenAt = v
-}
-
-// GetLastWriteAt returns the LastWriteAt value.
-func (m GetSitesToArchiveParams) GetLastWriteAt() float64 {
-	return m.LastWriteAt
-}
-
-// SetLastWriteAt sets the LastWriteAt value and returns the updated GetSitesToArchiveParams.
-func (m *GetSitesToArchiveParams) SetLastWriteAt(v float64) {
-	m.LastWriteAt = v
 }
 
 // GetLastSeenAt returns the LastSeenAt value.
@@ -3395,75 +3465,5 @@ func (m UpdateSiteDateFlagsParams) GetID() string {
 // SetID sets the ID value and returns the updated UpdateSiteDateFlagsParams.
 func (m *UpdateSiteDateFlagsParams) SetID(v string) {
 	m.ID = v
-}
-
-// GetJsonEach returns the JsonEach value.
-func (m DisableSitesParams) GetJsonEach() interface{} {
-	return m.JsonEach
-}
-
-// SetJsonEach sets the JsonEach value and returns the updated DisableSitesParams.
-func (m *DisableSitesParams) SetJsonEach(v interface{}) {
-	m.JsonEach = v
-}
-
-// GetID returns the ID value.
-func (m DisableSiteParams) GetID() string {
-	return m.ID
-}
-
-// SetID sets the ID value and returns the updated DisableSiteParams.
-func (m *DisableSiteParams) SetID(v string) {
-	m.ID = v
-}
-
-// GetJsonEach returns the JsonEach value.
-func (m ArchiveSitesParams) GetJsonEach() interface{} {
-	return m.JsonEach
-}
-
-// SetJsonEach sets the JsonEach value and returns the updated ArchiveSitesParams.
-func (m *ArchiveSitesParams) SetJsonEach(v interface{}) {
-	m.JsonEach = v
-}
-
-// GetJsonEach returns the JsonEach value.
-func (m DeleteSitesParams) GetJsonEach() interface{} {
-	return m.JsonEach
-}
-
-// SetJsonEach sets the JsonEach value and returns the updated DeleteSitesParams.
-func (m *DeleteSitesParams) SetJsonEach(v interface{}) {
-	m.JsonEach = v
-}
-
-// GetBatch returns the Batch value.
-func (m GetBatchSitesToBackUpParams) GetBatch() string {
-	return m.Batch
-}
-
-// SetBatch sets the Batch value and returns the updated GetBatchSitesToBackUpParams.
-func (m *GetBatchSitesToBackUpParams) SetBatch(v string) {
-	m.Batch = v
-}
-
-// GetBatch returns the Batch value.
-func (m GetSitesToDeleteInBatchParams) GetBatch() string {
-	return m.Batch
-}
-
-// SetBatch sets the Batch value and returns the updated GetSitesToDeleteInBatchParams.
-func (m *GetSitesToDeleteInBatchParams) SetBatch(v string) {
-	m.Batch = v
-}
-
-// GetLastSeenAt returns the LastSeenAt value.
-func (m GetSitesToDeleteInBatchParams) GetLastSeenAt() float64 {
-	return m.LastSeenAt
-}
-
-// SetLastSeenAt sets the LastSeenAt value and returns the updated GetSitesToDeleteInBatchParams.
-func (m *GetSitesToDeleteInBatchParams) SetLastSeenAt(v float64) {
-	m.LastSeenAt = v
 }
 

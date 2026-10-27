@@ -1,17 +1,8 @@
 version: "2"
-plugins:
-  - name: getters
-    process:
-      cmd: "../../../bin/getters"
 sql:
   - schema: "schema_gen.sql"
     queries: "./queries"
     engine: "sqlite"
-    codegen:
-      - plugin: getters
-        out: "."
-        options:
-          package: "logsdb"
     gen:
       go:
         package: "logsdb"
