@@ -93,7 +93,7 @@ func jwtIdentity(config *config.ServerConfig, ctx context.Context, jwttokenStr s
 	if err != nil {
 		return nil, fmt.Errorf("bad JWT token: %w", err)
 	}
-	identity, err := GetSiteIdentity(ctx, subdomain, identityName, consts.IdentityRole(role))
+	identity, err := httputils.GetSiteIdentity(ctx, subdomain, identityName, consts.IdentityRole(role))
 	if err != nil {
 		slog.Warn("Bad JWT token cant find identity", "error", err)
 		return nil, fmt.Errorf("identity not found: %w", err)
@@ -118,7 +118,7 @@ func legacyTokenIdentity(config *config.ServerConfig, ctx context.Context, token
 		return nil, fmt.Errorf("token subdomain does not match user context subdomain")
 	}
 
-	identity, err := GetSiteIdentity(ctx, tokenParamSubdomain, tokenParamName, consts.IdentityRole(tokenRole))
+	identity, err := httputils.GetSiteIdentity(ctx, tokenParamSubdomain, tokenParamName, consts.IdentityRole(tokenRole))
 	if err != nil {
 		return nil, fmt.Errorf("identity not found: %w", err)
 	}
@@ -134,31 +134,6 @@ func legacyTokenIdentity(config *config.ServerConfig, ctx context.Context, token
 
 	if !config.Security.VerifyPasswordWithCache(tokenParamPassword, identity.PasswordHash) {
 		return nil, fmt.Errorf("invalid password")
-	}
-
-	return identity, nil
-}
-
-func GetSiteIdentity(ctx context.Context, subdomain string, identityName string, role consts.IdentityRole) (*controldb.SiteIdentity, error) {
-	siteContext := httputils.GetSiteContext(ctx)
-	if subdomain != siteContext.Subdomain {
-		return nil, fmt.Errorf("subdomain mismatch: expected %s, got %s", siteContext.Subdomain, subdomain)
-	}
-
-	identity, err := siteContext.ControlDB.Queries.GetSiteIdentity(ctx, controldb.GetSiteIdentityParams{
-		SiteID: subdomain,
-		Name:   identityName,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	if !identity.Enabled {
-		return nil, fmt.Errorf("identity disabled")
-	}
-
-	if consts.IdentityRole(identity.Role) != role {
-		return nil, fmt.Errorf("role mismatch")
 	}
 
 	return identity, nil

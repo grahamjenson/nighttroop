@@ -2,12 +2,14 @@ package httputils
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/events/sitemodels"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/settings"
 )
 
@@ -96,4 +98,30 @@ func (sc *SiteContext) GetSettings() *settings.CombinedSettingsMap {
 	}
 
 	return sc.settings
+}
+
+// GetSiteIdentity is the enabled identity with the name and role on the site of the request, refusing one for another site
+func GetSiteIdentity(ctx context.Context, subdomain string, identityName string, role consts.IdentityRole) (*controldb.SiteIdentity, error) {
+	siteContext := GetSiteContext(ctx)
+	if subdomain != siteContext.Subdomain {
+		return nil, fmt.Errorf("subdomain mismatch: expected %s, got %s", siteContext.Subdomain, subdomain)
+	}
+
+	identity, err := siteContext.ControlDB.Queries.GetSiteIdentity(ctx, controldb.GetSiteIdentityParams{
+		SiteID: subdomain,
+		Name:   identityName,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if !identity.Enabled {
+		return nil, fmt.Errorf("identity disabled")
+	}
+
+	if consts.IdentityRole(identity.Role) != role {
+		return nil, fmt.Errorf("role mismatch")
+	}
+
+	return identity, nil
 }
