@@ -48,6 +48,7 @@ func copyDexcomEGVs(ctx context.Context, syncInfo *SyncJobInfo, minutes int) (in
 			}
 			if res != nil {
 				added++
+				userSyncSource.published(res)
 			}
 		}
 	}

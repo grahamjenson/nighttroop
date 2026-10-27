@@ -111,13 +111,23 @@ templ rangeButton(hours int64, label string, selected bool) {
 	}
 }
 
-// Summary is the site's home page: the latest glucose, IOB and COB, then everything since the summary starts
+// Summary is the site's home page: the latest glucose, IOB and COB, then everything since the summary starts.
+// It streams the summary's events, shown Live while connected, and reloads its content a second after changes stop
+// arriving. The header, with the stream, is not reloaded, so the stream stays open.
 templ Summary(summary *sitemodels.Summary) {
 	<div id="site--summary" class="w-full space-y-4 py-4">
 		<div class="flex flex-wrap items-center justify-between gap-2">
 			<div>
 				<h1 class="text-2xl font-bold">Summary</h1>
 				<span id="site--summary--hours" class="text-sm text-gray-500">{ fmt.Sprintf("Last %d hours", summary.Hours) }</span>
+				<span
+					id="site--summary--live"
+					class="ml-2 hidden text-sm font-medium text-primary"
+					hx-sse:connect="/data/summary/events"
+					hx-on::sse:after:connection="this.classList.remove('hidden')"
+					hx-on::sse:close="this.classList.add('hidden')"
+					hx-on::sse:error="this.classList.add('hidden')"
+				>● Live</span>
 			</div>
 			<div class="flex gap-1">
 				for _, r := range ranges {
@@ -125,31 +135,46 @@ templ Summary(summary *sitemodels.Summary) {
 				}
 			</div>
 		</div>
-		@glucoseHero(summary)
-		<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-			@tile("site--summary--iob", "Insulin on board", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.LoopIob }, " U"), icon.Syringe)
-			@tile("site--summary--cob", "Carbs on board", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.LoopCob }, " g"), icon.Utensils)
-			@tile("site--summary--reservoir", "Reservoir", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.PumpReservoir }, " U"), icon.Gauge)
-			@tile("site--summary--phone-battery", "Phone battery", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.DeviceBatteryPercent }, "%"), icon.Smartphone)
+		<div
+			id="site--summary--content"
+			class="space-y-4"
+			hx-get={ fmt.Sprintf("/?hours=%d", summary.Hours) }
+			hx-trigger="created from:#site--summary--live delay:1s, updated from:#site--summary--live delay:1s, deleted from:#site--summary--live delay:1s"
+			hx-select="#site--summary--content"
+			hx-target="this"
+			hx-swap="outerHTML"
+		>
+			@summaryContent(summary)
 		</div>
-		<section class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-			@Graph(summary)
-		</section>
-		<div class="grid gap-4 lg:grid-cols-2">
-			@section("Treatments") {
-				@treatmentsTable(treatments(summary))
-			}
-			@section("Glucose Readings") {
-				@readingsTable(summary.GlucoseReadings)
-			}
-		</div>
-		<section id="site--summary--devices" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-			for _, status := range summary.DeviceStatuses {
-				@deviceCard(status)
-			}
-		</section>
 		<div id="modal-container"></div>
 	</div>
+}
+
+// summaryContent is everything in the summary below its header, which reloads as the summary's data changes
+templ summaryContent(summary *sitemodels.Summary) {
+	@glucoseHero(summary)
+	<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+		@tile("site--summary--iob", "Insulin on board", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.LoopIob }, " U"), icon.Syringe)
+		@tile("site--summary--cob", "Carbs on board", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.LoopCob }, " g"), icon.Utensils)
+		@tile("site--summary--reservoir", "Reservoir", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.PumpReservoir }, " U"), icon.Gauge)
+		@tile("site--summary--phone-battery", "Phone battery", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.DeviceBatteryPercent }, "%"), icon.Smartphone)
+	</div>
+	<section class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+		@Graph(summary)
+	</section>
+	<div class="grid gap-4 lg:grid-cols-2">
+		@section("Treatments") {
+			@treatmentsTable(treatments(summary))
+		}
+		@section("Glucose Readings") {
+			@readingsTable(summary.GlucoseReadings)
+		}
+	</div>
+	<section id="site--summary--devices" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+		for _, status := range summary.DeviceStatuses {
+			@deviceCard(status)
+		}
+	</section>
 }
 
 templ glucoseHero(summary *sitemodels.Summary) {

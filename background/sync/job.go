@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"nighttroop.t1d.nz/data/events/sitemodels"
 	gosync "sync"
 
 	lru "github.com/hashicorp/golang-lru/v2"
@@ -25,6 +26,8 @@ const SYNC_JOB = "sync_job"
 type SyncJobManager struct {
 	controlDB *db.ControlDB
 	security  *security.SecurityConfig
+	// config is the server's, whose site model events a sync's writes are published to
+	config *config.ServerConfig
 
 	SyncIntervalInSeconds int
 	BackgroundSyncWorkers int
@@ -68,6 +71,15 @@ type SyncUserInfo struct {
 	SiteModel *controldb.Site
 	SiteDB    *db.SiteDB
 	ControlDB *db.ControlDB
+	// Config is the server's, so a sync's writes are published to the site's model events, as the site's own are
+	Config *config.ServerConfig
+}
+
+// published tells the site's model events of a row a sync created directly, as a write through the site would
+func (u *SyncUserInfo) published(row any) {
+	if u.Config != nil && u.Config.SiteModelEvents != nil {
+		u.Config.SiteModelEvents.Publish(u.SiteModel.ID, sitemodels.Event{SiteID: u.SiteModel.ID, Action: sitemodels.Created, Model: row})
+	}
 }
 
 func SetupSyncJobManager(config *config.ServerConfig, controlDB *db.ControlDB) *SyncJobManager {
@@ -78,6 +90,7 @@ func SetupSyncJobManager(config *config.ServerConfig, controlDB *db.ControlDB) *
 	jobs := &SyncJobManager{
 		controlDB:             controlDB,
 		security:              config.Security,
+		config:                config,
 		SyncIntervalInSeconds: config.SyncIntervalInSeconds,
 		BackgroundSyncWorkers: config.BackgroundSyncWorkers,
 		nightscoutStore:       nightscoutapi.NewNightTroopAPIStore(controlDB, config),
@@ -207,6 +220,7 @@ func (b *SyncJobManager) AttachSyncSourceWithUserInfo(syncSource *controldb.Site
 		SiteDB:    userDb,
 		SiteModel: userModel,
 		ControlDB: b.controlDB,
+		Config:    b.config,
 	}, nil
 }
 

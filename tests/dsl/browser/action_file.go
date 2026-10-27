@@ -171,7 +171,8 @@ func parseFile(r io.Reader, path string) ([]Action, error) {
 			current = &ClearCookie{TestPath: path, TestLine: lineNumber, Name: second}
 		case "RUN_BACKGROUND_JOBS":
 			flush()
-			actions = append(actions, &RunBackgroundJobs{TestPath: path, TestLine: lineNumber})
+			// Asserts after it check the page once the jobs have run, e.g. that it updated itself live
+			current = &RunBackgroundJobs{TestPath: path, TestLine: lineNumber}
 		// Adding screenshot action
 		case "SCREENSHOT":
 			if current == nil {
