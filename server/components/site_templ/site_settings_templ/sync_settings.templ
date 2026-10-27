@@ -187,6 +187,7 @@ templ DexcomSyncForm(dexcomSyncSettings *sitemodels.SyncSource) {
 						}
 					</div>
 				</div>
+				@SyncStatus(dexcomSyncSettings, "dexcom")
 			</div>
 		</div>
 	</form>
@@ -316,6 +317,7 @@ templ LibreSyncForm(libreSyncSettings *sitemodels.SyncSource) {
 						}
 					</div>
 				</div>
+				@SyncStatus(libreSyncSettings, "libre")
 			</div>
 		</div>
 	</form>
@@ -439,6 +441,7 @@ templ NightscoutSyncForm(nightscoutSyncSettings *sitemodels.SyncSource) {
 						}
 					</div>
 				</div>
+				@SyncStatus(nightscoutSyncSettings, "nightscout")
 			</div>
 		</div>
 	</form>
@@ -509,6 +512,7 @@ templ VirtualSyncForm(synSource *sitemodels.SyncSource) {
 						}
 					</div>
 				</div>
+				@SyncStatus(synSource, "virtual")
 			</div>
 		</div>
 	</form>

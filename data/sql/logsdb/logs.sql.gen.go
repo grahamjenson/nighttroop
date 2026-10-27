@@ -212,6 +212,94 @@ func (q *Queries) InsertLog(ctx context.Context, arg InsertLogParams) error {
 	return err
 }
 
+const recentSyncErrors = `-- name: RecentSyncErrors :many
+SELECT id, site_id, message, attributes, created_at FROM errors
+WHERE site_id = ?1 AND json_extract(attributes, '$.kind') = 'sync' AND json_extract(attributes, '$.sync_type') = ?2
+ORDER BY id DESC
+LIMIT ?3
+`
+
+type RecentSyncErrorsParams struct {
+	SiteID   *string
+	SyncType *string
+	Limit    int64
+}
+
+// The newest errors of one of the site's sync sources
+func (q *Queries) RecentSyncErrors(ctx context.Context, arg RecentSyncErrorsParams) ([]*Error, error) {
+	rows, err := q.query(ctx, q.recentSyncErrorsStmt, recentSyncErrors, arg.SiteID, arg.SyncType, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*Error
+	for rows.Next() {
+		var i Error
+		if err := rows.Scan(
+			&i.ID,
+			&i.SiteID,
+			&i.Message,
+			&i.Attributes,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const recentSyncEvents = `-- name: RecentSyncEvents :many
+SELECT id, site_id, batch, name, attributes, started_at, finished_at FROM events
+WHERE site_id = ?1 AND json_extract(attributes, '$.sync_type') = ?2
+ORDER BY id DESC
+LIMIT ?3
+`
+
+type RecentSyncEventsParams struct {
+	SiteID   *string
+	SyncType *string
+	Limit    int64
+}
+
+// The newest events of one of the site's sync sources, by the sync_type the sync events record
+func (q *Queries) RecentSyncEvents(ctx context.Context, arg RecentSyncEventsParams) ([]*Event, error) {
+	rows, err := q.query(ctx, q.recentSyncEventsStmt, recentSyncEvents, arg.SiteID, arg.SyncType, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*Event
+	for rows.Next() {
+		var i Event
+		if err := rows.Scan(
+			&i.ID,
+			&i.SiteID,
+			&i.Batch,
+			&i.Name,
+			&i.Attributes,
+			&i.StartedAt,
+			&i.FinishedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const searchErrors = `-- name: SearchErrors :many
 SELECT id, site_id, message, attributes, created_at FROM errors
 WHERE (CAST(?1 AS TEXT) IS NULL OR site_id = ?1)

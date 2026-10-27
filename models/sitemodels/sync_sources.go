@@ -13,6 +13,25 @@ type SyncSource struct {
 	Enabled       bool                  `json:"enabled"`
 	// PreviousSyncErrors are from the last failed sync, shown to the user; cleared when the source is saved
 	PreviousSyncErrors []string `json:"previous_sync_errors,omitempty"`
+
+	// How it has synced, read only: saving a source never sets these
+	SyncIntervalSeconds       int64   `json:"sync_interval_seconds"`
+	SyncIntervalSecondsReason string  `json:"sync_interval_seconds_reason"`
+	LastAttemptedSync         *int64  `json:"last_attempted_sync"`
+	LastSuccessfulSync        *int64  `json:"last_successful_sync"`
+	LastFailedSync            *int64  `json:"last_failed_sync"`
+	LastSyncDuration          *int64  `json:"last_sync_duration"`
+	TotalSuccessfulSyncs      *int64  `json:"total_successful_syncs"`
+	TotalFailedSyncs          *int64  `json:"total_failed_syncs"`
+	ConsecutiveFailedSyncs    *int64  `json:"consecutive_failed_syncs"`
+	LastBackfillFinishedAt    *int64  `json:"last_backfill_finished_at"`
+	LastBackfillDuration      *int64  `json:"last_backfill_duration"`
+	LastBackfillRecords       *int64  `json:"last_backfill_records"`
+	LastBackfillError         *string `json:"last_backfill_error"`
+	TotalBackfills            int64   `json:"total_backfills"`
+	// RecentEvents and RecentErrors are the newest of the source's events and errors from the logs DB
+	RecentEvents []*SiteEvent `json:"recent_events,omitempty"`
+	RecentErrors []*SiteError `json:"recent_errors,omitempty"`
 }
 
 func (n *SyncSource) GetDexcomRegion() consts.DexcomRegion {

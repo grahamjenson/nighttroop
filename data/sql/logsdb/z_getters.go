@@ -413,6 +413,66 @@ func (m *InsertLogParams) SetAttributes(v *string) {
 }
 
 // GetSiteID returns the SiteID value.
+func (m RecentSyncErrorsParams) GetSiteID() *string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated RecentSyncErrorsParams.
+func (m *RecentSyncErrorsParams) SetSiteID(v *string) {
+	m.SiteID = v
+}
+
+// GetSyncType returns the SyncType value.
+func (m RecentSyncErrorsParams) GetSyncType() *string {
+	return m.SyncType
+}
+
+// SetSyncType sets the SyncType value and returns the updated RecentSyncErrorsParams.
+func (m *RecentSyncErrorsParams) SetSyncType(v *string) {
+	m.SyncType = v
+}
+
+// GetLimit returns the Limit value.
+func (m RecentSyncErrorsParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated RecentSyncErrorsParams.
+func (m *RecentSyncErrorsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m RecentSyncEventsParams) GetSiteID() *string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated RecentSyncEventsParams.
+func (m *RecentSyncEventsParams) SetSiteID(v *string) {
+	m.SiteID = v
+}
+
+// GetSyncType returns the SyncType value.
+func (m RecentSyncEventsParams) GetSyncType() *string {
+	return m.SyncType
+}
+
+// SetSyncType sets the SyncType value and returns the updated RecentSyncEventsParams.
+func (m *RecentSyncEventsParams) SetSyncType(v *string) {
+	m.SyncType = v
+}
+
+// GetLimit returns the Limit value.
+func (m RecentSyncEventsParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated RecentSyncEventsParams.
+func (m *RecentSyncEventsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
+// GetSiteID returns the SiteID value.
 func (m SearchErrorsParams) GetSiteID() *string {
 	return m.SiteID
 }

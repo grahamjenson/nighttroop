@@ -1645,6 +1645,53 @@ func SyncSourceFromDB(source *controldb.SiteSyncSource, context *security.Securi
 		sitemodelsSyncSource.Password = SetPasswordGarbage()
 		sitemodelsSyncSource.Enabled = (*source).Enabled
 		sitemodelsSyncSource.PreviousSyncErrors = errorsErrorListToStringList((*source).PreviousSyncErrors)
+		sitemodelsSyncSource.SyncIntervalSeconds = (*source).SyncIntervalSeconds
+		sitemodelsSyncSource.SyncIntervalSecondsReason = (*source).SyncIntervalSecondsReason
+		if (*source).LastAttemptedSync != nil {
+			xint64 := *(*source).LastAttemptedSync
+			sitemodelsSyncSource.LastAttemptedSync = &xint64
+		}
+		if (*source).LastSuccessfulSync != nil {
+			xint642 := *(*source).LastSuccessfulSync
+			sitemodelsSyncSource.LastSuccessfulSync = &xint642
+		}
+		if (*source).LastFailedSync != nil {
+			xint643 := *(*source).LastFailedSync
+			sitemodelsSyncSource.LastFailedSync = &xint643
+		}
+		if (*source).LastSyncDuration != nil {
+			xint644 := *(*source).LastSyncDuration
+			sitemodelsSyncSource.LastSyncDuration = &xint644
+		}
+		if (*source).TotalSuccessfulSyncs != nil {
+			xint645 := *(*source).TotalSuccessfulSyncs
+			sitemodelsSyncSource.TotalSuccessfulSyncs = &xint645
+		}
+		if (*source).TotalFailedSyncs != nil {
+			xint646 := *(*source).TotalFailedSyncs
+			sitemodelsSyncSource.TotalFailedSyncs = &xint646
+		}
+		if (*source).ConsecutiveFailedSyncs != nil {
+			xint647 := *(*source).ConsecutiveFailedSyncs
+			sitemodelsSyncSource.ConsecutiveFailedSyncs = &xint647
+		}
+		if (*source).LastBackfillFinishedAt != nil {
+			xint648 := *(*source).LastBackfillFinishedAt
+			sitemodelsSyncSource.LastBackfillFinishedAt = &xint648
+		}
+		if (*source).LastBackfillDuration != nil {
+			xint649 := *(*source).LastBackfillDuration
+			sitemodelsSyncSource.LastBackfillDuration = &xint649
+		}
+		if (*source).LastBackfillRecords != nil {
+			xint6410 := *(*source).LastBackfillRecords
+			sitemodelsSyncSource.LastBackfillRecords = &xint6410
+		}
+		if (*source).LastBackfillError != nil {
+			xstring2 := *(*source).LastBackfillError
+			sitemodelsSyncSource.LastBackfillError = &xstring2
+		}
+		sitemodelsSyncSource.TotalBackfills = (*source).TotalBackfills
 		pSitemodelsSyncSource = &sitemodelsSyncSource
 	}
 	return pSitemodelsSyncSource, nil
