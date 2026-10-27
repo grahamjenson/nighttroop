@@ -29,15 +29,14 @@ ASSERT_PATH /settings/sync
 CLICK #site--settings--nightscout-sync--backfill
 ASSERT_TEXT_VISIBLE turn on and save this sync before backfilling it
 
-// Virtual sync's first run writes its last 30 minutes, all on the first page of readings
+// Virtual sync's first run writes its last 30 minutes, all on the first page of 100 readings
 CLICK #site--settings--virtual-sync--enable
 CLICK #site--settings--virtual-sync--submit
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Sync Updated
 RUN_BACKGROUND_JOBS
 
-CLICK #site--settings-menu
-CLICK #site--data--glucose-button
+GOTO /data/glucose?limit=100
 ASSERT_STATUS 200
 ASSERT_VISIBLE #glucoseReadingsTable
 ASSERT_NOT_VISIBLE #site--glucose--next
@@ -55,9 +54,8 @@ ASSERT_TEXT_EQUALS #site--settings--virtual-sync--backfill Backfill
 CLICK #site--settings--virtual-sync--backfill
 ASSERT_TEXT_VISIBLE A backfill of this sync is already running
 
-// Once it has run, the week before the first reading fills many pages of readings
+// Once it has run, the day before the first reading (tests backfill a day) fills more pages of readings
 RUN_BACKGROUND_JOBS
-CLICK #site--settings-menu
-CLICK #site--data--glucose-button
+GOTO /data/glucose?limit=100
 ASSERT_STATUS 200
 ASSERT_VISIBLE #site--glucose--next
