@@ -53,7 +53,7 @@ func ConvertFromAnyTypeToSetting(source *settings.SettingAnyType, context *httpu
 
 func (c SettingsCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
 	var nsModel nightscoutmodels.Setting
-	err := utils.FromMap(data, &nsModel)
+	err := utils.ConvertViaJSON(data, &nsModel)
 	if err != nil {
 		slog.Error("failed to map data to model", "error", err, "collection", "settings")
 		return nil, false, nsutils.BadDataBodyError
@@ -83,7 +83,7 @@ func (c SettingsCollection) Replace(ctx context.Context, siteContext *httputils.
 	}
 
 	var nsModel nightscoutmodels.Setting
-	err := utils.FromMap(patch, &nsModel)
+	err := utils.ConvertViaJSON(patch, &nsModel)
 	if err != nil {
 		slog.Error("failed to map data to model", "error", err, "collection", "settings")
 		return nil, false, nsutils.BadDataBodyError

@@ -18,15 +18,6 @@ func ConvertViaJSON[F any, T any](src F, dst *T) error {
 	return json.Unmarshal(b, dst)
 }
 
-func FromMap[T any](m map[string]any, dst *T) error {
-	b, err := json.Marshal(m)
-	if err != nil {
-		return err
-	}
-
-	return json.Unmarshal(b, dst)
-}
-
 func ToMap[T any](src *T) (map[string]any, error) {
 	b, err := json.Marshal(src)
 	if err != nil {

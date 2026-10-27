@@ -95,7 +95,7 @@ func (c Collection[NS, DM]) Record(model any, siteContext *httputils.SiteContext
 func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
 	m := c.db
 	var nsModel NS
-	err := utils.FromMap(data, &nsModel)
+	err := utils.ConvertViaJSON(data, &nsModel)
 	if err != nil {
 		slog.Error("failed to map data", "error", err, "collection", m.Name())
 		return nil, false, nsutils.BadDataBodyErrorWithHint(err.Error())
@@ -273,7 +273,7 @@ func (c Collection[NS, DM]) DeleteType(ctx context.Context, siteContext *httputi
 func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, data map[string]any, canCreate bool, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
 	m := c.db
 	var nsModel NS
-	err := utils.FromMap(data, &nsModel)
+	err := utils.ConvertViaJSON(data, &nsModel)
 	if err != nil {
 		slog.Error("failed to map data to model", "error", err, "collection", m.Name())
 		return nil, false, nsutils.BadDataBodyError
@@ -360,7 +360,7 @@ func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.Si
 		return nil, nsutils.ErrNotImplemented
 	}
 	var nsModel NS
-	err := utils.FromMap(data, &nsModel)
+	err := utils.ConvertViaJSON(data, &nsModel)
 	if err != nil {
 		slog.Error("failed to map data to model", "error", err, "collection", m.Name())
 		return nil, nsutils.BadDataBodyError

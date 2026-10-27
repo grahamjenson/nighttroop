@@ -126,7 +126,7 @@ func ExtractModelFromRequest[T any](contentType httputils.ContentType, r *http.R
 	}
 
 	model := new(T)
-	err := utils.FromMap(doc, model)
+	err := utils.ConvertViaJSON(doc, model)
 	if err != nil {
 		slog.Info("failed to convert doc to model", "error", err)
 		return nil, ErrBadBody
