@@ -1,6 +1,6 @@
-// Package alarms decides, from a person's alarm settings and recent glucose readings, which alarms are on and when to
-// notify about them. It does no I/O: its caller gives it the readings, the time and the state it returned last, keeps
-// the new state and sends the notifications.
+// Package alarms decides, from a person's alarms and recent glucose readings, which alarms are active, which are
+// alerting, and when to notify about them. It does no I/O: its caller gives it the readings, the time and the state
+// it returned last, keeps the new state and sends the notifications.
 package alarms
 
 import (
@@ -9,7 +9,20 @@ import (
 	"slices"
 )
 
-// Type is one kind of alarm
+// Alarm is one of a person's alarms with its settings, each kind its own struct, as LowAlarm
+type Alarm interface {
+	// Type names the kind of alarm, as low
+	Type() Type
+	// RepeatMs is how long it waits, while it stays alerting, to notify again
+	RepeatMs() int64
+	// QuietedBy is the louder alarm that says all this one would, so this one does not alert while that one is
+	// active, or "" when there is none
+	QuietedBy() Type
+	// IsActive is whether its condition is met at now by the readings, sorted oldest first
+	IsActive(readings []Reading, now int64) bool
+}
+
+// Type names a kind of alarm
 type Type string
 
 const (
@@ -20,47 +33,79 @@ const (
 	NoData     Type = "no_data"
 )
 
-// Types are every alarm, each urgent one before the one it quiets, in the order they notify
+// Types are every kind of alarm, each louder one before the one it quiets, the order results list them in
 var Types = []Type{UrgentLow, Low, UrgentHigh, High, NoData}
-
-// louder is the urgent alarm that quiets an alarm while it is on, as an urgent low says all a low would
-var louder = map[Type]Type{Low: UrgentLow, High: UrgentHigh}
-
-// Level is how urgent an alarm is, numbered as Nightscout's are
-type Level int
-
-const (
-	Warn   Level = 1
-	Urgent Level = 2
-)
 
 const minute = int64(60_000)
 
-// Level is Urgent for the urgent alarms and Warn for the others
-func (t Type) Level() Level {
-	if t == UrgentLow || t == UrgentHigh {
-		return Urgent
-	}
-	return Warn
+// UrgentLowAlarm is active while the newest reading is under Mgdl, and alerts every 5 minutes
+type UrgentLowAlarm struct{ Mgdl float64 }
+
+func (UrgentLowAlarm) Type() Type      { return UrgentLow }
+func (UrgentLowAlarm) RepeatMs() int64 { return 5 * minute }
+func (UrgentLowAlarm) QuietedBy() Type { return "" }
+func (a UrgentLowAlarm) IsActive(readings []Reading, now int64) bool {
+	return lasted(readings, 0, func(r Reading) bool { return r.Mgdl < a.Mgdl })
 }
 
-// RepeatMs is how long an alarm that stays on waits to notify again: 5 minutes when urgent, 15 otherwise
-func (t Type) RepeatMs() int64 {
-	if t.Level() == Urgent {
-		return 5 * minute
-	}
-	return 15 * minute
-}
-
-// Threshold is an alarm's settings: the glucose in mg/dL it is under, for the lows, or over, for the highs, and the
-// minutes that must last. No data has only minutes, how long there has been no reading.
-type Threshold struct {
+// LowAlarm is active once readings have been under Mgdl for Minutes, alerts every 15 minutes, and is quiet while the
+// urgent low is active
+type LowAlarm struct {
 	Mgdl    float64
 	Minutes int64
 }
 
-// Config is the alarms that are turned on, each with its threshold
-type Config map[Type]Threshold
+func (LowAlarm) Type() Type      { return Low }
+func (LowAlarm) RepeatMs() int64 { return 15 * minute }
+func (LowAlarm) QuietedBy() Type { return UrgentLow }
+func (a LowAlarm) IsActive(readings []Reading, now int64) bool {
+	return lasted(readings, a.Minutes, func(r Reading) bool { return r.Mgdl < a.Mgdl })
+}
+
+// UrgentHighAlarm is active while the newest reading is over Mgdl, and alerts every 5 minutes
+type UrgentHighAlarm struct{ Mgdl float64 }
+
+func (UrgentHighAlarm) Type() Type      { return UrgentHigh }
+func (UrgentHighAlarm) RepeatMs() int64 { return 5 * minute }
+func (UrgentHighAlarm) QuietedBy() Type { return "" }
+func (a UrgentHighAlarm) IsActive(readings []Reading, now int64) bool {
+	return lasted(readings, 0, func(r Reading) bool { return r.Mgdl > a.Mgdl })
+}
+
+// HighAlarm is active once readings have been over Mgdl for Minutes, alerts every 15 minutes, and is quiet while the
+// urgent high is active
+type HighAlarm struct {
+	Mgdl    float64
+	Minutes int64
+}
+
+func (HighAlarm) Type() Type      { return High }
+func (HighAlarm) RepeatMs() int64 { return 15 * minute }
+func (HighAlarm) QuietedBy() Type { return UrgentHigh }
+func (a HighAlarm) IsActive(readings []Reading, now int64) bool {
+	return lasted(readings, a.Minutes, func(r Reading) bool { return r.Mgdl > a.Mgdl })
+}
+
+// NoDataAlarm is active once there has been no reading for Minutes, after at least one, and alerts every 15 minutes
+type NoDataAlarm struct{ Minutes int64 }
+
+func (NoDataAlarm) Type() Type      { return NoData }
+func (NoDataAlarm) RepeatMs() int64 { return 15 * minute }
+func (NoDataAlarm) QuietedBy() Type { return "" }
+func (a NoDataAlarm) IsActive(readings []Reading, now int64) bool {
+	return len(readings) > 0 && now-readings[len(readings)-1].At >= a.Minutes*minute
+}
+
+// lasted is whether the newest readings, sorted oldest first, have all been beyond a threshold for minutes: from the
+// oldest of the newest readings that are all beyond it to the newest. It is measured by readings, not the time now,
+// so a check without a new reading cannot make it last.
+func lasted(readings []Reading, minutes int64, beyond func(Reading) bool) bool {
+	i := len(readings)
+	for i > 0 && beyond(readings[i-1]) {
+		i--
+	}
+	return i < len(readings) && readings[len(readings)-1].At-readings[i].At >= minutes*minute
+}
 
 // Reading is a glucose reading in mg/dL at a time in milliseconds
 type Reading struct {
@@ -68,19 +113,19 @@ type Reading struct {
 	Mgdl float64
 }
 
-// Alarm is one alarm's state between checks, all times in milliseconds
-type Alarm struct {
-	// OnSince is when the alarm came on, or 0 while it is off
-	OnSince int64
-	// NotifiedAt is when it last notified. It is kept after the alarm goes off, so one that goes off and on again is
-	// not notified sooner than it would have been had it stayed on.
+// AlarmState is one kind of alarm's state between checks, all times in milliseconds
+type AlarmState struct {
+	// ActiveSince is when the alarm became active, or 0 while it is not
+	ActiveSince int64
+	// NotifiedAt is when it last notified. It is kept after the alarm stops being active, so one that stops and
+	// starts again is not notified sooner than it would have been had it stayed active.
 	NotifiedAt int64
-	// SnoozedUntil is when its snooze ends; until then it does not notify, even if it goes off and on again
+	// SnoozedUntil is when its snooze ends; until then it does not alert, even if it stops and starts again
 	SnoozedUntil int64
 }
 
-// State is each alarm's state, which a check returns for the caller to give the next one
-type State map[Type]Alarm
+// State is each kind of alarm's state, which a check returns for the caller to give the next one
+type State map[Type]AlarmState
 
 // Kind is what a notification says about its alarm
 type Kind string
@@ -98,77 +143,68 @@ type Notification struct {
 	At   int64
 }
 
-// Check is the alarms' state at now and the notifications to send, from the config, the last check's state and the
-// recent readings, which must include the newest if there is any. It is called for each new reading, and periodically,
-// so an alarm that waits on time, like no data or a repeat, notifies without a new reading.
-//
-// An alarm starts once its condition is met, repeats while it stays on and is not snoozed, and clears when it goes off
-// if it notified since it came on. While an urgent alarm is on, the alarm it quiets stays on without notifying.
-func Check(config Config, state State, readings []Reading, now int64) (State, []Notification) {
+// Result is what a check found
+type Result struct {
+	// State is for the caller to give the next check
+	State State
+	// Active are the alarms whose condition is met, alerting or not
+	Active []Alarm
+	// Alerting are the active alarms that are not snoozed or quieted by a louder one, which should be heard
+	Alerting []Alarm
+	// Notifications are the news to send now: an alerting alarm starts, then repeats while it stays alerting, then
+	// clears when it stops being active, if it notified since it became active
+	Notifications []Notification
+}
+
+// Check is the alarms at now, from the alarms turned on, the last check's state, and the recent readings, which must
+// include the newest if there is any. It is called for each new reading, and periodically, so an alarm that waits on
+// time, like no data or a repeat, notifies without a new reading.
+func Check(alarms []Alarm, state State, readings []Reading, now int64) Result {
 	readings = slices.Clone(readings)
 	slices.SortStableFunc(readings, func(a, b Reading) int { return cmp.Compare(a.At, b.At) })
-	next := State{}
-	on := map[Type]bool{}
-	for _, t := range Types {
-		threshold, enabled := config[t]
-		on[t] = enabled && isOn(t, threshold, readings, now)
+	turnedOn := map[Type]Alarm{}
+	active := map[Type]bool{}
+	for _, alarm := range alarms {
+		turnedOn[alarm.Type()] = alarm
+		active[alarm.Type()] = alarm.IsActive(readings, now)
 	}
 
-	var notifications []Notification
+	result := Result{State: State{}}
 	for _, t := range Types {
-		alarm := state[t]
-		notifiedSinceOn := alarm.OnSince != 0 && alarm.NotifiedAt >= alarm.OnSince
-		switch {
-		case !on[t]:
-			if notifiedSinceOn {
-				notifications = append(notifications, Notification{Type: t, Kind: Cleared, At: now})
+		alarm, s := turnedOn[t], state[t]
+		notifiedSinceActive := s.ActiveSince != 0 && s.NotifiedAt >= s.ActiveSince
+		if !active[t] {
+			if notifiedSinceActive {
+				result.Notifications = append(result.Notifications, Notification{Type: t, Kind: Cleared, At: now})
 			}
-			alarm.OnSince = 0
-		case alarm.OnSince == 0:
-			alarm.OnSince = now
-		}
-		quiet := !on[t] || on[louder[t]] || now < alarm.SnoozedUntil || now-alarm.NotifiedAt < t.RepeatMs()
-		if !quiet {
-			kind := Started
-			if alarm.NotifiedAt >= alarm.OnSince {
-				kind = Repeated
+			s.ActiveSince = 0
+		} else {
+			if s.ActiveSince == 0 {
+				s.ActiveSince = now
 			}
-			notifications = append(notifications, Notification{Type: t, Kind: kind, At: now})
-			alarm.NotifiedAt = now
+			result.Active = append(result.Active, alarm)
+			if now >= s.SnoozedUntil && !active[alarm.QuietedBy()] {
+				result.Alerting = append(result.Alerting, alarm)
+				if now-s.NotifiedAt >= alarm.RepeatMs() {
+					kind := Started
+					if notifiedSinceActive {
+						kind = Repeated
+					}
+					result.Notifications = append(result.Notifications, Notification{Type: t, Kind: kind, At: now})
+					s.NotifiedAt = now
+				}
+			}
 		}
-		// An alarm that is off, and whose last notification and snooze no longer matter, is forgotten
-		if alarm.OnSince != 0 || now < alarm.SnoozedUntil || now-alarm.NotifiedAt < t.RepeatMs() {
-			next[t] = alarm
+		// An alarm that is not active, and whose last notification and snooze no longer matter, is forgotten
+		if s.ActiveSince != 0 || now < s.SnoozedUntil || (alarm != nil && now-s.NotifiedAt < alarm.RepeatMs()) {
+			result.State[t] = s
 		}
 	}
-	return next, notifications
+	return result
 }
 
-// isOn is whether an alarm's condition is met at now by the readings, sorted oldest first
-func isOn(t Type, threshold Threshold, readings []Reading, now int64) bool {
-	if len(readings) == 0 {
-		return false
-	}
-	newest := readings[len(readings)-1]
-	if t == NoData {
-		return now-newest.At >= threshold.Minutes*minute
-	}
-	beyond := func(r Reading) bool {
-		if t == UrgentLow || t == Low {
-			return r.Mgdl < threshold.Mgdl
-		}
-		return r.Mgdl > threshold.Mgdl
-	}
-	// It has lasted since the oldest of the newest readings that are all beyond the threshold
-	i := len(readings)
-	for i > 0 && beyond(readings[i-1]) {
-		i--
-	}
-	return i < len(readings) && newest.At-readings[i].At >= threshold.Minutes*minute
-}
-
-// Snooze quiets an alarm until a time, whether it is on or not, so the snooze also covers it coming back on; a time
-// already past ends a snooze
+// Snooze quiets a kind of alarm until a time, whether it is active or not, so the snooze also covers it starting
+// again; a time already past ends a snooze
 func (s State) Snooze(t Type, until int64) State {
 	next := State{}
 	maps.Copy(next, s)

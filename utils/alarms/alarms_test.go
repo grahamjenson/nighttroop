@@ -15,20 +15,20 @@ func TestNight(t *testing.T) {
 				5m    95
 				10m   70                                  // under 4.0
 				15m   65    -> low started                // and it has lasted 5 minutes
-				20m   54    -> urgent_low started         // under 3.1, which quiets the low
+				20m   54    -> urgent_low started         active: urgent_low, low   alerting: urgent_low   // under 3.1, which quiets the low
 				25m   50    -> urgent_low repeated
 				30m   62    -> urgent_low cleared, low repeated   // treated, over 3.1 but still under 4.0
-				35m   80    -> low cleared                on:
+				35m   80    -> low cleared                active:
 				40m   190                                 // a big meal, over 10
 				55m   220
 				70m   240   -> high started               // which has lasted 30 minutes
 				75m   280   -> urgent_high started        // over 15
-				80m   260   -> urgent_high cleared        // the high notified 10 minutes ago, so waits
+				80m   260   -> urgent_high cleared        active: high   alerting: high   // the high notified 10 minutes ago, so waits
 				85m   150   -> high cleared
 				90m   140                                 // the sensor stops sending
 				109m  check
 				110m  check -> no_data started            // 20 minutes without a reading
-				115m  130   -> no_data cleared            on:
+				115m  130   -> no_data cleared            active:
 			`,
 		},
 	})
@@ -39,12 +39,12 @@ func TestUrgentLow(t *testing.T) {
 		{
 			name:     "a reading under it starts it at once",
 			config:   "urgent_low 56",
-			timeline: `0m 55 -> urgent_low started   on: urgent_low`,
+			timeline: `0m 55 -> urgent_low started   active: urgent_low`,
 		},
 		{
 			name:     "a reading at it is not under it",
 			config:   "urgent_low 56",
-			timeline: `0m 56   on:`,
+			timeline: `0m 56   active:`,
 		},
 		{
 			name:     "3.1 mmol/L is 55.9 mg/dL, under the 56 mg/dL 3.1 is stored as",
@@ -56,11 +56,11 @@ func TestUrgentLow(t *testing.T) {
 			config: "urgent_low 56",
 			timeline: `
 				0m 50 -> urgent_low started
-				5m 57 -> urgent_low cleared   on:
+				5m 57 -> urgent_low cleared   active:
 			`,
 		},
 		{
-			name:   "it repeats every 5 minutes while on, on readings or checks",
+			name:   "it repeats every 5 minutes while active, on readings or checks",
 			config: "urgent_low 56",
 			timeline: `
 				0m     50     -> urgent_low started
@@ -83,14 +83,14 @@ func TestUrgentLow(t *testing.T) {
 		{
 			name:     "turned off, it never starts",
 			config:   "",
-			timeline: `0m 40   on:`,
+			timeline: `0m 40   active:`,
 		},
 		{
 			name:   "a reading backfilled over it, older than the newest, does not clear it",
 			config: "urgent_low 56",
 			timeline: `
 				0m 50            -> urgent_low started
-				1m 100 at -1m    on: urgent_low
+				1m 100 at -1m    active: urgent_low
 			`,
 		},
 		{
@@ -109,7 +109,7 @@ func TestLow(t *testing.T) {
 		{
 			name:     "one reading under it is not enough",
 			config:   "low 72 5m",
-			timeline: `0m 70   on:`,
+			timeline: `0m 70   active:`,
 		},
 		{
 			name:   "it starts on the reading that makes it last 5 minutes",
@@ -117,7 +117,7 @@ func TestLow(t *testing.T) {
 			timeline: `
 				0m     70
 				4m59s  70
-				5m     70   -> low started   on: low
+				5m     70   -> low started   active: low
 			`,
 		},
 		{
@@ -162,7 +162,7 @@ func TestLow(t *testing.T) {
 				5m      70     -> low started
 				19m59s  check
 				20m     check  -> low repeated
-				25m     72     -> low cleared   on:
+				25m     72     -> low cleared   active:
 			`,
 		},
 		{
@@ -202,7 +202,7 @@ func TestHigh(t *testing.T) {
 			config: "high 180 30m",
 			timeline: `
 				0m   181
-				30m  180   on:
+				30m  180   active:
 			`,
 		},
 		{
@@ -243,7 +243,7 @@ func TestUrgentHigh(t *testing.T) {
 		{
 			name:     "a reading at it is not over it",
 			config:   "urgent_high 270",
-			timeline: `0m 270   on:`,
+			timeline: `0m 270   active:`,
 		},
 	})
 }
@@ -255,7 +255,7 @@ func TestNoData(t *testing.T) {
 			config: "no_data 20m",
 			timeline: `
 				0m   check
-				60m  check   on:
+				60m  check   active:
 			`,
 		},
 		{
@@ -267,7 +267,7 @@ func TestNoData(t *testing.T) {
 				20m     check  -> no_data started
 				34m     check
 				35m     check  -> no_data repeated
-				40m     100    -> no_data cleared   on:
+				40m     100    -> no_data cleared   active:
 			`,
 		},
 		{
@@ -286,7 +286,7 @@ func TestNoData(t *testing.T) {
 			timeline: `
 				0m   100
 				20m  check         -> no_data started
-				25m  100 at 1m     on: no_data
+				25m  100 at 1m     active: no_data
 			`,
 		},
 		{
@@ -309,20 +309,20 @@ func TestUrgentQuietsTheOther(t *testing.T) {
 			timeline: `
 				0m   70
 				5m   70   -> low started
-				10m  50   -> urgent_low started              on: urgent_low, low
+				10m  50   -> urgent_low started              active: urgent_low, low   alerting: urgent_low
 				15m  50   -> urgent_low repeated
 				20m  50   -> urgent_low repeated             // the low's repeat is due, but the urgent low says it
-				25m  65   -> urgent_low cleared, low repeated   on: low
-				30m  80   -> low cleared                     on:
+				25m  65   -> urgent_low cleared, low repeated   active: low   alerting: low
+				30m  80   -> low cleared                     active:
 			`,
 		},
 		{
 			name:   "a drop straight under the urgent low starts the low once it is back over it",
 			config: "urgent_low 56, low 72 5m",
 			timeline: `
-				0m   50   -> urgent_low started              on: urgent_low
-				5m   50   -> urgent_low repeated             on: urgent_low, low
-				10m  60   -> urgent_low cleared, low started   on: low
+				0m   50   -> urgent_low started              active: urgent_low
+				5m   50   -> urgent_low repeated             active: urgent_low, low   alerting: urgent_low
+				10m  60   -> urgent_low cleared, low started   active: low
 			`,
 		},
 		{
@@ -330,7 +330,7 @@ func TestUrgentQuietsTheOther(t *testing.T) {
 			config: "urgent_high 270, high 180 30m",
 			timeline: `
 				0m   200
-				30m  280   -> urgent_high started              on: urgent_high, high
+				30m  280   -> urgent_high started              active: urgent_high, high   alerting: urgent_high
 				35m  250   -> urgent_high cleared, high started
 			`,
 		},
@@ -345,9 +345,9 @@ func TestSnooze(t *testing.T) {
 			timeline: `
 				0m   50     -> urgent_low started
 				1m   snooze urgent_low 30m
-				5m   50
+				5m   50     active: urgent_low   alerting:
 				30m  50
-				31m  check  -> urgent_low repeated
+				31m  check  -> urgent_low repeated   alerting: urgent_low
 				36m  check  -> urgent_low repeated
 			`,
 		},
@@ -367,7 +367,7 @@ func TestSnooze(t *testing.T) {
 				0m   50     -> urgent_low started
 				1m   snooze urgent_low 30m
 				5m   60     -> urgent_low cleared
-				10m  50     on: urgent_low
+				10m  50     active: urgent_low   alerting:
 				31m  check  -> urgent_low started
 			`,
 		},
@@ -376,7 +376,7 @@ func TestSnooze(t *testing.T) {
 			config: "urgent_low 56",
 			timeline: `
 				0m   snooze urgent_low 30m
-				5m   50     on: urgent_low
+				5m   50     active: urgent_low   alerting:
 				30m  check  -> urgent_low started
 			`,
 		},
@@ -396,7 +396,7 @@ func TestSnooze(t *testing.T) {
 			timeline: `
 				0m   50     -> urgent_low started
 				1m   snooze urgent_low 1h
-				20m  check  -> no_data started   on: urgent_low, no_data
+				20m  check  -> no_data started   active: urgent_low, no_data   alerting: no_data
 			`,
 		},
 	})
@@ -410,8 +410,8 @@ func TestFlapping(t *testing.T) {
 			timeline: `
 				0m  55  -> urgent_low started
 				1m  57  -> urgent_low cleared
-				2m  55                          on: urgent_low
-				3m  57                          on:   // it did not notify while on, so there is nothing to clear
+				2m  55                          active: urgent_low   alerting: urgent_low   // alerting, but notified a minute ago
+				3m  57                          active:   // it did not notify while active, so there is nothing to clear
 				4m  55
 				5m  55  -> urgent_low started
 			`,
@@ -422,11 +422,11 @@ func TestFlapping(t *testing.T) {
 func TestConfigChanges(t *testing.T) {
 	runTimelines(t, []timeline{
 		{
-			name:   "turning an alarm off while it is on clears it",
+			name:   "turning an alarm off while it is active clears it",
 			config: "urgent_low 56",
 			timeline: `
 				0m  50       -> urgent_low started
-				1m  config   -> urgent_low cleared   on:
+				1m  config   -> urgent_low cleared   active:
 			`,
 		},
 		{

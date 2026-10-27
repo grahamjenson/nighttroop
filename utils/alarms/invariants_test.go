@@ -8,17 +8,25 @@ import (
 	"time"
 )
 
-// TestInvariants runs thousands of random steps, with every alarm on, and checks what must always hold after each:
+// TestInvariants runs thousands of random steps, with every alarm turned on, and checks what must always hold after
+// each:
 //
-//   - an alarm is on exactly when oracle, a slower and simpler reading of its condition, says it is
-//   - an alarm that is on, not snoozed or quieted, and not notified within its repeat, notifies
-//   - each alarm's notifications go started, then repeated, then cleared, and none is left started once it is off
-//   - an alarm never notifies sooner than its repeat, while snoozed, or while its urgent alarm is on
+//   - an alarm is active exactly when oracle, a slower and simpler reading of its condition, says it is
+//   - an alarm is alerting exactly when it is active, not snoozed, and its louder alarm is not active
+//   - an alerting alarm not notified within its repeat notifies, and only alerting alarms start or repeat
+//   - each alarm's notifications go started, then repeated, then cleared, and none is left started once inactive
+//   - an alarm never notifies sooner than its repeat
 //
 // A failure prints the timeline that made it, which can be pasted into a test in alarms_test.go to debug it.
 func TestInvariants(t *testing.T) {
 	const configText = "urgent_low 56, low 72 5m, urgent_high 270, high 180 30m, no_data 20m"
 	config := parseConfig(t, configText)
+	turnedOn := map[Type]Alarm{}
+	for _, alarm := range config {
+		turnedOn[alarm.Type()] = alarm
+	}
+	// quietedBy is which alarms quiet which, written out again here as what the alarms must do
+	quietedBy := map[Type]Type{Low: UrgentLow, High: UrgentHigh}
 
 	for seed := range uint64(200) {
 		r := rand.New(rand.NewPCG(seed, 1))
@@ -70,24 +78,35 @@ func TestInvariants(t *testing.T) {
 			}
 			lines = append(lines, line)
 
-			var notifications []Notification
-			state, notifications = Check(config, state, readings, now)
+			result := Check(config, state, readings, now)
+			state = result.State
 			fail := func(format string, args ...any) {
 				t.Helper()
 				t.Fatalf("seed %d: %s\n\nstate: %s\n\n{\n\tname:   \"seed %d\",\n\tconfig: %q,\n\ttimeline: `\n\t\t%s\n\t`,\n},",
 					seed, fmt.Sprintf(format, args...), formatState(state), seed, configText, strings.Join(lines, "\n\t\t"))
 			}
 
-			on := map[Type]bool{}
+			active, alerting := map[Type]bool{}, map[Type]bool{}
+			for _, alarm := range result.Active {
+				active[alarm.Type()] = true
+			}
+			for _, alarm := range result.Alerting {
+				alerting[alarm.Type()] = true
+			}
 			for _, alarm := range Types {
-				on[alarm] = oracle(alarm, config[alarm], readings, now)
-				if got := state[alarm].OnSince != 0; got != on[alarm] {
-					fail("%s is on %v, but the oracle says %v", alarm, got, on[alarm])
+				if want := oracle(turnedOn[alarm], readings, now); active[alarm] != want {
+					fail("%s is active %v, but the oracle says %v", alarm, active[alarm], want)
+				}
+				if got := state[alarm].ActiveSince != 0; got != active[alarm] {
+					fail("%s's state is active %v, but the result says %v", alarm, got, active[alarm])
+				}
+				if want := active[alarm] && now >= snoozedUntil[alarm] && !active[quietedBy[alarm]]; alerting[alarm] != want {
+					fail("%s is alerting %v, want %v", alarm, alerting[alarm], want)
 				}
 			}
 
 			notified, sounded := map[Type]bool{}, map[Type]bool{}
-			for _, notification := range notifications {
+			for _, notification := range result.Notifications {
 				alarm := notification.Type
 				if notified[alarm] {
 					fail("%s notified twice in one check", alarm)
@@ -109,29 +128,24 @@ func TestInvariants(t *testing.T) {
 					continue
 				}
 				sounded[alarm] = true
-				switch {
-				case !on[alarm]:
-					fail("%s %s while off", alarm, notification.Kind)
-				case now < snoozedUntil[alarm]:
-					fail("%s %s while snoozed", alarm, notification.Kind)
-				case on[louder[alarm]]:
-					fail("%s %s while %s is on", alarm, notification.Kind, louder[alarm])
-				case notifiedAt[alarm] != 0 && now-notifiedAt[alarm] < alarm.RepeatMs():
+				if !alerting[alarm] {
+					fail("%s %s while not alerting", alarm, notification.Kind)
+				}
+				if notifiedAt[alarm] != 0 && now-notifiedAt[alarm] < turnedOn[alarm].RepeatMs() {
 					fail("%s %s %s after it last notified", alarm, notification.Kind, since(now-notifiedAt[alarm]+start))
 				}
 			}
 
 			for _, alarm := range Types {
-				due := on[alarm] && now >= snoozedUntil[alarm] && !on[louder[alarm]] &&
-					(notifiedAt[alarm] == 0 || now-notifiedAt[alarm] >= alarm.RepeatMs())
+				due := alerting[alarm] && (notifiedAt[alarm] == 0 || now-notifiedAt[alarm] >= turnedOn[alarm].RepeatMs())
 				if due && !sounded[alarm] {
-					fail("%s is on and due, but did not notify", alarm)
+					fail("%s is alerting and due, but did not notify", alarm)
 				}
 				if sounded[alarm] {
 					notifiedAt[alarm] = now
 				}
-				if started[alarm] && !on[alarm] {
-					fail("%s is off, but was not cleared", alarm)
+				if started[alarm] && !active[alarm] {
+					fail("%s is not active, but was not cleared", alarm)
 				}
 			}
 		}
@@ -141,8 +155,8 @@ func TestInvariants(t *testing.T) {
 // oracle is whether an alarm's condition holds, worked out the slow way: for no data, whether the newest reading is
 // at least its minutes old; for the others, whether some reading at least its minutes before the newest has only
 // readings beyond the threshold from it on
-func oracle(alarm Type, threshold Threshold, readings []Reading, now int64) bool {
-	if len(readings) == 0 {
+func oracle(alarm Alarm, readings []Reading, now int64) bool {
+	if alarm == nil || len(readings) == 0 {
 		return false
 	}
 	newest := readings[0]
@@ -151,17 +165,29 @@ func oracle(alarm Type, threshold Threshold, readings []Reading, now int64) bool
 			newest = reading
 		}
 	}
-	if alarm == NoData {
-		return now-newest.At >= threshold.Minutes*minute
+	var mgdl float64
+	var minutes int64
+	under := false
+	switch a := alarm.(type) {
+	case NoDataAlarm:
+		return now-newest.At >= a.Minutes*minute
+	case UrgentLowAlarm:
+		mgdl, under = a.Mgdl, true
+	case LowAlarm:
+		mgdl, minutes, under = a.Mgdl, a.Minutes, true
+	case UrgentHighAlarm:
+		mgdl = a.Mgdl
+	case HighAlarm:
+		mgdl, minutes = a.Mgdl, a.Minutes
 	}
 	beyond := func(reading Reading) bool {
-		if alarm == UrgentLow || alarm == Low {
-			return reading.Mgdl < threshold.Mgdl
+		if under {
+			return reading.Mgdl < mgdl
 		}
-		return reading.Mgdl > threshold.Mgdl
+		return reading.Mgdl > mgdl
 	}
 	for _, from := range readings {
-		if newest.At-from.At < threshold.Minutes*minute {
+		if newest.At-from.At < minutes*minute {
 			continue
 		}
 		all := true

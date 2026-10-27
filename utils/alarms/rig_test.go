@@ -11,8 +11,9 @@ import (
 
 // The rig runs timelines. A timeline is a config and steps, one a line, each followed by a check, as a new reading or
 // the periodic check would be. A step is its time since the timeline started, what happens then, and, after "->",
-// the notifications that check must send, where nothing means it must send none. "on:" at the end lists the alarms
-// that must be on after it, notifying or not, and "on:" alone means none. "//" starts a comment.
+// the notifications that check must send, where nothing means it must send none. After those, "active:" lists the
+// alarms that must be active after it, alerting or not, and "alerting:" the ones that must be alerting; either alone
+// means none, and left out it is not checked. "//" starts a comment.
 //
 // What can happen at a step:
 //
@@ -23,7 +24,8 @@ import (
 //	config low 72 5m       the config changes to this, written as a timeline's config is; config alone turns all off
 //
 // A config is each alarm turned on, separated by commas, with its mg/dL and its minutes, as
-// "urgent_low 56, low 72 5m, no_data 20m". Notifications are each "<alarm> <kind>", separated by commas, in any order,
+// "urgent_low 56, low 72 5m, no_data 20m" for UrgentLowAlarm{Mgdl: 56}, LowAlarm{Mgdl: 72, Minutes: 5} and
+// NoDataAlarm{Minutes: 20}. Notifications are each "<alarm> <kind>", separated by commas, in any order,
 // as "urgent_low started, low cleared".
 //
 // For example:
@@ -34,8 +36,8 @@ import (
 //		timeline: `
 //			0m   70
 //			5m   70     -> low started
-//			20m  check  -> low repeated
-//			25m  80     -> low cleared   on:
+//			20m  check  -> low repeated   active: low   alerting: low
+//			25m  80     -> low cleared    active:
 //		`,
 //	},
 type timeline struct {
@@ -44,7 +46,7 @@ type timeline struct {
 	timeline string
 }
 
-// start is when timelines start, as an alarm whose times are 0 is off
+// start is when timelines start, as an alarm whose times are 0 is not active
 var start = time.Date(2026, 10, 27, 0, 0, 0, 0, time.UTC).UnixMilli()
 
 func runTimelines(t *testing.T, timelines []timeline) {
@@ -56,13 +58,14 @@ func runTimelines(t *testing.T, timelines []timeline) {
 	}
 }
 
-func runTimeline(t *testing.T, config Config, text string) {
+func runTimeline(t *testing.T, config []Alarm, text string) {
 	t.Helper()
 	state := State{}
 	var readings []Reading
 	for n, line := range strings.Split(text, "\n") {
 		step, _, _ := strings.Cut(line, "//")
-		step, onText, checkOn := strings.Cut(step, "on:")
+		step, alertingText, checkAlerting := strings.Cut(step, "alerting:")
+		step, activeText, checkActive := strings.Cut(step, "active:")
 		step, wantText, _ := strings.Cut(step, "->")
 		fields := strings.Fields(step)
 		if len(fields) == 0 {
@@ -99,44 +102,57 @@ func runTimeline(t *testing.T, config Config, text string) {
 			readings = append(readings, Reading{At: at, Mgdl: mgdl})
 		}
 
-		var notifications []Notification
-		state, notifications = Check(config, state, readings, now)
-		for _, notification := range notifications {
+		result := Check(config, state, readings, now)
+		state = result.State
+		for _, notification := range result.Notifications {
 			if notification.At != now {
 				fail("%s %s is at %d, not the check's time %d", notification.Type, notification.Kind, notification.At, now)
 			}
 		}
-		if got, want := formatNotifications(notifications), sortedList(wantText); got != want {
+		if got, want := formatNotifications(result.Notifications), sortedList(wantText); got != want {
 			fail("sent %s, want %s", got, want)
 		}
-		if checkOn {
-			if got, want := formatOn(state), sortedList(onText); got != want {
-				fail("on: %s, want %s", got, want)
-			}
+		if got, want := formatAlarms(result.Active), sortedList(activeText); checkActive && got != want {
+			fail("active: %s, want %s", got, want)
+		}
+		if got, want := formatAlarms(result.Alerting), sortedList(alertingText); checkAlerting && got != want {
+			fail("alerting: %s, want %s", got, want)
 		}
 	}
 }
 
-// parseConfig is a config written as "urgent_low 56, low 72 5m, no_data 20m"
-func parseConfig(t *testing.T, text string) Config {
+// parseConfig is the alarms turned on, written as "urgent_low 56, low 72 5m, no_data 20m"
+func parseConfig(t *testing.T, text string) []Alarm {
 	t.Helper()
-	config := Config{}
+	var alarms []Alarm
 	for part := range strings.SplitSeq(text, ",") {
 		fields := strings.Fields(part)
 		if len(fields) == 0 {
 			continue
 		}
-		threshold := Threshold{}
+		var mgdl float64
+		var minutes int64
 		for _, field := range fields[1:] {
-			if mgdl, err := strconv.ParseFloat(field, 64); err == nil {
-				threshold.Mgdl = mgdl
+			if value, err := strconv.ParseFloat(field, 64); err == nil {
+				mgdl = value
 			} else {
-				threshold.Minutes = int64(parseDuration(t, field) / time.Minute)
+				minutes = int64(parseDuration(t, field) / time.Minute)
 			}
 		}
-		config[parseType(t, fields[0])] = threshold
+		switch parseType(t, fields[0]) {
+		case UrgentLow:
+			alarms = append(alarms, UrgentLowAlarm{Mgdl: mgdl})
+		case Low:
+			alarms = append(alarms, LowAlarm{Mgdl: mgdl, Minutes: minutes})
+		case UrgentHigh:
+			alarms = append(alarms, UrgentHighAlarm{Mgdl: mgdl})
+		case High:
+			alarms = append(alarms, HighAlarm{Mgdl: mgdl, Minutes: minutes})
+		case NoData:
+			alarms = append(alarms, NoDataAlarm{Minutes: minutes})
+		}
 	}
-	return config
+	return alarms
 }
 
 func parseType(t *testing.T, text string) Type {
@@ -179,14 +195,12 @@ func formatNotifications(notifications []Notification) string {
 	return sortedList(strings.Join(items, ","))
 }
 
-func formatOn(state State) string {
-	var on []string
-	for t, alarm := range state {
-		if alarm.OnSince != 0 {
-			on = append(on, string(t))
-		}
+func formatAlarms(alarms []Alarm) string {
+	items := make([]string, len(alarms))
+	for i, alarm := range alarms {
+		items[i] = string(alarm.Type())
 	}
-	return sortedList(strings.Join(on, ","))
+	return sortedList(strings.Join(items, ","))
 }
 
 // formatState is each alarm's times since the timeline started, for a failure
@@ -200,7 +214,7 @@ func formatState(state State) string {
 	var items []string
 	for _, t := range Types {
 		if alarm, ok := state[t]; ok {
-			items = append(items, fmt.Sprintf("%s{on since %s, notified at %s, snoozed until %s}", t, since(alarm.OnSince), since(alarm.NotifiedAt), since(alarm.SnoozedUntil)))
+			items = append(items, fmt.Sprintf("%s{active since %s, notified at %s, snoozed until %s}", t, since(alarm.ActiveSince), since(alarm.NotifiedAt), since(alarm.SnoozedUntil)))
 		}
 	}
 	if len(items) == 0 {
