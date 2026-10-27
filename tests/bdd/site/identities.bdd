@@ -26,6 +26,9 @@ ASSERT_STATUS 200
 ASSERT_PATH /settings/identities
 ASSERT_TEXT_VISIBLE Admins & Users
 ASSERT_TEXT_VISIBLE PWD Phone
+// Column names are in title case like the others
+ASSERT_NOT_VISIBLE #main-content >> text=Created at
+ASSERT_VISIBLE #main-content th >> text=Created >> nth=0
 SCREENSHOT identities
 
 // Adding a device shows its credentials once
