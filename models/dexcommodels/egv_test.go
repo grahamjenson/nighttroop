@@ -13,14 +13,13 @@ import (
 
 // Each sync fetches the last 15 minutes, so the same reading must not be stored twice
 func TestEGVToCreateDedupesRepeatedReadings(t *testing.T) {
-	_, _, site, err := testutils.GetConfigControlDBAndSiteDBForTest()
-	require.NoError(t, err)
+	_, _, site := testutils.NewControlDBWithSite(t)
 	queries := site.SiteDB.Queries
 
 	reading := dexcommodels.EGV{Value: 120, SystemTime: time.UnixMilli(1786184674000).UTC(), DisplayTime: time.UnixMilli(1786184674000), RawJson: `{"Value":120}`}
 	next := dexcommodels.EGV{Value: 125, SystemTime: reading.SystemTime.Add(5 * time.Minute), DisplayTime: reading.DisplayTime.Add(5 * time.Minute), RawJson: `{"Value":125}`}
 
-	_, err = queries.CreateGlucoseReading(context.TODO(), dexcommodels.EGVToCreate(reading, "dexcom_sync"))
+	_, err := queries.CreateGlucoseReading(context.TODO(), dexcommodels.EGVToCreate(reading, "dexcom_sync"))
 	require.NoError(t, err)
 
 	_, err = queries.CreateGlucoseReading(context.TODO(), dexcommodels.EGVToCreate(reading, "dexcom_sync"))

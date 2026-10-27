@@ -35,8 +35,7 @@ func TestChangedSince(t *testing.T) {
 }
 
 func TestNightscoutSyncRemembersWhenCollectionsWereModified(t *testing.T) {
-	cfg, controlDB, site, err := testutils.GetConfigControlDBAndSiteDBForTest()
-	require.NoError(t, err)
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	q, ctx, siteID, typ := controlDB.Queries, context.TODO(), site.SiteDB.Subdomain, consts.SyncSourceTypeNightscout
 	jobs := SetupSyncJobManager(cfg, controlDB)
 	enc := func(s string) *string {
@@ -71,8 +70,7 @@ func TestNightscoutSyncRemembersWhenCollectionsWereModified(t *testing.T) {
 }
 
 func TestNightscoutClientIsKeptBetweenSyncs(t *testing.T) {
-	cfg, controlDB, site, err := testutils.GetConfigControlDBAndSiteDBForTest()
-	require.NoError(t, err)
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	q, ctx, siteID, typ := controlDB.Queries, context.TODO(), site.SiteDB.Subdomain, consts.SyncSourceTypeNightscout
 	jobs := SetupSyncJobManager(cfg, controlDB)
 	enc := func(s string) *string {
@@ -101,8 +99,7 @@ func TestNightscoutClientIsKeptBetweenSyncs(t *testing.T) {
 }
 
 func TestNightscoutClientsAreBounded(t *testing.T) {
-	cfg, controlDB, _, err := testutils.GetConfigControlDBAndSiteDBForTest()
-	require.NoError(t, err)
+	cfg, controlDB, _ := testutils.NewControlDBWithSite(t)
 	jobs := SetupSyncJobManager(cfg, controlDB)
 	clientFor := func(i int) *nightscoutClient {
 		return jobs.nightscoutClientFor(&SyncJobInfo{SiteID: fmt.Sprintf("site-%d", i), urlOrUsername: nightscout_client.TestValidURL, password: "token"})
@@ -121,8 +118,7 @@ func TestNightscoutClientsAreBounded(t *testing.T) {
 }
 
 func TestNightscoutSyncCopiesEntriesTreatmentsAndDeviceStatuses(t *testing.T) {
-	cfg, controlDB, site, err := testutils.GetConfigControlDBAndSiteDBForTest()
-	require.NoError(t, err)
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	q, ctx, siteID, typ := controlDB.Queries, context.TODO(), site.SiteDB.Subdomain, consts.SyncSourceTypeNightscout
 	jobs := SetupSyncJobManager(cfg, controlDB)
 	enc := func(s string) *string {

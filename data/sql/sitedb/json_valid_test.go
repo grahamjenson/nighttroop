@@ -11,8 +11,7 @@ import (
 
 // A profile preset's schedules are JSON, so anything else is refused when written
 func TestProfilePresetSchedulesMustBeJSON(t *testing.T) {
-	_, _, site, err := testutils.GetConfigControlDBAndSiteDBForTest()
-	require.NoError(t, err)
+	_, _, site := testutils.NewControlDBWithSite(t)
 	notJSON, schedule := "not json", `[{"time":"00:00","value":10}]`
 	tests := []struct {
 		name string

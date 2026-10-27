@@ -20,18 +20,12 @@ import (
 // FuzzRequestFiles parses all request files to build bodies, then we mangle them and send them against all create endpoints to test for panics and 500s
 func FuzzRequestFiles(f *testing.F) {
 	//// SETUP DEFUALT OBJECTS
-	config, controlDB, siteInformation, err := testutils.GetConfigControlDBAndSiteDBForTest()
-	if err != nil {
-		f.Fatalf("failed to get config and databases: %v", err)
-	}
+	config, controlDB, siteInformation := testutils.NewControlDBWithSite(f)
 	subdomain := siteInformation.SiteDB.Subdomain
 	token := siteInformation.PwdNSToken
-	if err != nil {
-		f.Fatalf("failed to get config and databases: %v", err)
-	}
 	bodies := []map[string]any{}
 	//// COLLECT BODIES AND PATHS AND SUCH
-	err = fs.WalkDir(embeddedFiles, ".", func(path string, d fs.DirEntry, err error) error {
+	err := fs.WalkDir(embeddedFiles, ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}

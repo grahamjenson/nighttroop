@@ -31,11 +31,7 @@ func TestNS(t *testing.T) {
 	// Every file signs in as its site's admin from the same IP
 	t.Setenv("SITE_LOGIN_PER_MINUTE_BURST", "100")
 
-	config, controlDB, siteInformation, err := testutils.GetConfigControlDBAndSiteDBForTest()
-
-	if err != nil {
-		t.Fatalf("failed to get config and databases: %v", err)
-	}
+	config, controlDB, siteInformation := testutils.NewControlDBWithSite(t)
 
 	defaultJwt, _, err := config.Security.GenerateUserJWTToken(siteInformation.SiteDB.Subdomain, consts.FIRST_PWD_NAME, string(consts.IdentityRoleDevicePWDPhone))
 	if err != nil {

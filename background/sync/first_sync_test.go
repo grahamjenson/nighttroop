@@ -16,8 +16,7 @@ import (
 )
 
 func TestFailedFirstSyncDisablesTheSource(t *testing.T) {
-	cfg, controlDB, site, err := testutils.GetConfigControlDBAndSiteDBForTest()
-	require.NoError(t, err)
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	q, ctx, siteID, typ := controlDB.Queries, context.TODO(), site.SiteDB.Subdomain, consts.SyncSourceTypeDexcom
 	jobs := sync.SetupSyncJobManager(cfg, controlDB)
 	enc := func(s string) *string {

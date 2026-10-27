@@ -13,8 +13,7 @@ import (
 )
 
 func TestBackupControlRecordsEvent(t *testing.T) {
-	cfg, controlDB, err := testutils.GetConfigControlDBForTest()
-	require.NoError(t, err)
+	cfg, controlDB := testutils.NewControlDB(t)
 	ctx := context.TODO()
 	jobs := backup_control.SetupBackupControlJob(ctx, controlDB, cfg, &s3utils.S3Client{ServerConfig: cfg})
 

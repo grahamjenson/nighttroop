@@ -14,8 +14,7 @@ import (
 )
 
 func TestBackupSiteBatchRecordsEvent(t *testing.T) {
-	cfg, controlDB, site, err := testutils.GetConfigControlDBAndSiteDBForTest()
-	require.NoError(t, err)
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	ctx, batch := context.TODO(), site.SiteDB.Subdomain[:1]
 	jobs := backup_sites.SetupBackupSiteJob(ctx, controlDB, cfg, &s3utils.S3Client{ServerConfig: cfg})
 
@@ -40,8 +39,7 @@ func TestBackupSiteBatchRecordsEvent(t *testing.T) {
 }
 
 func TestDeleteUnusedSitesRecordsEvent(t *testing.T) {
-	cfg, controlDB, site, err := testutils.GetConfigControlDBAndSiteDBForTest()
-	require.NoError(t, err)
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	ctx, siteID := context.TODO(), site.SiteDB.Subdomain
 	jobs := backup_sites.SetupBackupSiteJob(ctx, controlDB, cfg, &s3utils.S3Client{ServerConfig: cfg})
 	// The site has never been used, and counts as unused from the moment it was made

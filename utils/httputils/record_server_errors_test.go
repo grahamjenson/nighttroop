@@ -28,8 +28,7 @@ func TestRecordServerErrors(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			cfg, controlDB, err := testutils.GetConfigControlDBForTest()
-			require.NoError(t, err)
+			cfg, controlDB := testutils.NewControlDB(t)
 			router := chi.NewRouter()
 			AddStandardMiddleware(router, cfg, controlDB)
 			router.Get("/api/v2/authorization/request/{token}", func(w http.ResponseWriter, r *http.Request) {

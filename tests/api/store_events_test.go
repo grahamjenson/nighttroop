@@ -18,8 +18,7 @@ import (
 
 // A store's events stream through the whole server, past its timeouts and middleware, as changes are written
 func TestStoreEvents(t *testing.T) {
-	config, controlDB, site, err := testutils.GetConfigControlDBAndSiteDBForTest()
-	require.NoError(t, err)
+	config, controlDB, site := testutils.NewControlDBWithSite(t)
 	router := server.GetMainHandler(controlDB, config)
 	ts := httptest.NewServer(router)
 	t.Cleanup(ts.Close)

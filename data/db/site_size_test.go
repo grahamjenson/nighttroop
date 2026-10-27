@@ -47,8 +47,7 @@ func TestEstimatedSizeKB(t *testing.T) {
 
 // TestDateFlagsRecordSize checks a site's DB size is recorded with its last write, at most every 10 minutes
 func TestDateFlagsRecordSize(t *testing.T) {
-	_, controlDB, site, err := testutils.GetConfigControlDBAndSiteDBForTest()
-	require.NoError(t, err)
+	_, controlDB, site := testutils.NewControlDBWithSite(t)
 	ctx, siteID := context.TODO(), site.SiteDB.Subdomain
 	get := func() *controldb.Site {
 		model, err := controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: siteID})
@@ -69,8 +68,7 @@ func TestDateFlagsRecordSize(t *testing.T) {
 }
 
 func TestSearchSitesOrders(t *testing.T) {
-	_, controlDB, err := testutils.GetConfigControlDBForTest()
-	require.NoError(t, err)
+	_, controlDB := testutils.NewControlDB(t)
 	ctx, q := context.TODO(), controlDB.Queries
 	now := time.Now().UnixMilli()
 
@@ -104,8 +102,7 @@ func TestSearchSitesOrders(t *testing.T) {
 func ptr(v int64) *int64 { return &v }
 
 func TestSearchSyncSourcesFailedFirst(t *testing.T) {
-	_, controlDB, err := testutils.GetConfigControlDBForTest()
-	require.NoError(t, err)
+	_, controlDB := testutils.NewControlDB(t)
 	ctx, q := context.TODO(), controlDB.Queries
 	site, err := controlDB.CreateSite()
 	require.NoError(t, err)

@@ -16,8 +16,7 @@ import (
 )
 
 func TestLogsDBRecordsBySite(t *testing.T) {
-	_, controlDB, err := testutils.GetConfigControlDBForTest()
-	require.NoError(t, err)
+	_, controlDB := testutils.NewControlDB(t)
 	ctx, logs, site := context.TODO(), controlDB.Logs, "somesite"
 
 	logs.Log(ctx, &site, db.LogLevelInfo, "synced", map[string]any{"readings": 3})
@@ -54,8 +53,7 @@ func TestLogsDBRecordsBySite(t *testing.T) {
 // TestLogsDBKeepsWithinLimits checks a long message is cut short and long attributes are replaced, rather than
 // the row being refused
 func TestLogsDBKeepsWithinLimits(t *testing.T) {
-	_, controlDB, err := testutils.GetConfigControlDBForTest()
-	require.NoError(t, err)
+	_, controlDB := testutils.NewControlDB(t)
 	ctx, logs := context.TODO(), controlDB.Logs
 
 	logs.Log(ctx, nil, db.LogLevelError, strings.Repeat("é", 2000), map[string]any{"body": strings.Repeat("x", 5000)})
@@ -82,8 +80,7 @@ func TestLogsDBTrim(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			_, controlDB, err := testutils.GetConfigControlDBForTest()
-			require.NoError(t, err)
+			_, controlDB := testutils.NewControlDB(t)
 			ctx, logs := context.TODO(), controlDB.Logs
 			for i := range test.written {
 				logs.Log(ctx, nil, db.LogLevelInfo, string(rune('a'+i)), nil)
@@ -110,8 +107,7 @@ func TestLogsDBTrim(t *testing.T) {
 }
 
 func TestCreateSiteRecordsEvent(t *testing.T) {
-	_, controlDB, site, err := testutils.GetConfigControlDBAndSiteDBForTest()
-	require.NoError(t, err)
+	_, controlDB, site := testutils.NewControlDBWithSite(t)
 	siteID := site.SiteDB.Subdomain
 
 	events, err := controlDB.Logs.Queries.SearchEvents(context.TODO(), logsdb.SearchEventsParams{SiteID: &siteID, Limit: 10})
@@ -123,8 +119,7 @@ func TestCreateSiteRecordsEvent(t *testing.T) {
 // TestSiteSeesOnlyItsOwnLogs checks a site sees its own logs, errors and events, and its batch's events, but nothing
 // of another site, another batch or the server
 func TestSiteSeesOnlyItsOwnLogs(t *testing.T) {
-	_, controlDB, err := testutils.GetConfigControlDBForTest()
-	require.NoError(t, err)
+	_, controlDB := testutils.NewControlDB(t)
 	ctx, logs, q := context.TODO(), controlDB.Logs, controlDB.Logs.Queries
 	site, other, batch, otherBatch := "qownsite", "qothersite", "q", "r"
 
@@ -174,8 +169,7 @@ func TestSiteSeesOnlyItsOwnLogs(t *testing.T) {
 // TestLogsDBSearchByType checks a type keeps only the events of that name, or the errors of that kind, and no type
 // keeps them all
 func TestLogsDBSearchByType(t *testing.T) {
-	_, controlDB, err := testutils.GetConfigControlDBForTest()
-	require.NoError(t, err)
+	_, controlDB := testutils.NewControlDB(t)
 	ctx, logs, site, batch := context.TODO(), controlDB.Logs, "typedsite", "typedbatch"
 
 	logs.SiteCreatedEvent(ctx, site)
@@ -224,8 +218,7 @@ func TestLogsDBSearchByType(t *testing.T) {
 // TestLogsDBSearchText checks a search keeps only rows with it in their text or attributes, ignoring case, and that
 // a site cannot search the attributes of its batch's events, which it is not shown
 func TestLogsDBSearchText(t *testing.T) {
-	_, controlDB, err := testutils.GetConfigControlDBForTest()
-	require.NoError(t, err)
+	_, controlDB := testutils.NewControlDB(t)
 	ctx, logs, site, batch := context.TODO(), controlDB.Logs, "searchsite", "searchbatch"
 
 	logs.Log(ctx, &site, db.LogLevelInfo, "Synced readings", map[string]any{"source": "dexcom"})

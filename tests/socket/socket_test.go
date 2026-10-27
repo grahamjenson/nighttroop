@@ -21,17 +21,14 @@ var embeddedFiles embed.FS
 
 // TestSocketIO runs each .sio file against the whole server, with its own connection
 func TestSocketIO(t *testing.T) {
-	config, controlDB, site, err := testutils.GetConfigControlDBAndSiteDBForTest()
-	if err != nil {
-		t.Fatalf("failed to get config and databases: %v", err)
-	}
+	config, controlDB, site := testutils.NewControlDBWithSite(t)
 	router := server.GetMainHandler(controlDB, config)
 	ts := httptest.NewServer(router)
 	t.Cleanup(ts.Close)
 	backgroundJobs := background.NewBackGroundManager(context.Background(), controlDB, config, s3utils.NewS3Client(config))
 	testutils.DumpOnFailure(t, controlDB, "test_socket")
 
-	err = fs.WalkDir(embeddedFiles, ".", func(path string, d fs.DirEntry, err error) error {
+	err := fs.WalkDir(embeddedFiles, ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil || d.IsDir() || filepath.Ext(path) != ".sio" {
 			return err
 		}

@@ -19,12 +19,11 @@ import (
 )
 
 func TestDisablingSiteRecordsEvent(t *testing.T) {
-	_, controlDB, site, err := testutils.GetConfigControlDBAndSiteDBForTest()
-	require.NoError(t, err)
+	_, controlDB, site := testutils.NewControlDBWithSite(t)
 	ctx, siteID := context.TODO(), site.SiteDB.Subdomain
 	controlContext := &httputils.ControlContext{ControlDB: controlDB, IdentityModel: &controldb.ControlIdentity{Name: "admin", Role: consts.ControlRoleAdmin}}
 
-	_, err = (&SitesCollection{}).UpdateRow(ctx, controlContext, &controlmodels.Site{ID: siteID}, &controlmodels.Site{State: "disabled"})
+	_, err := (&SitesCollection{}).UpdateRow(ctx, controlContext, &controlmodels.Site{ID: siteID}, &controlmodels.Site{State: "disabled"})
 	require.NoError(t, err)
 
 	events, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &siteID, Limit: 10})
@@ -35,15 +34,14 @@ func TestDisablingSiteRecordsEvent(t *testing.T) {
 
 // TestDisablingActiveSiteRefused checks only a site not written to or seen in DisableAfterInactivityDays is disabled
 func TestDisablingActiveSiteRefused(t *testing.T) {
-	cfg, controlDB, site, err := testutils.GetConfigControlDBAndSiteDBForTest()
-	require.NoError(t, err)
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	cfg.DisableAfterInactivityDays = 7
 	t.Cleanup(func() { cfg.DisableAfterInactivityDays = 0 })
 	ctx, siteID, now := context.TODO(), site.SiteDB.Subdomain, time.Now().UnixMilli()
 	controlContext := &httputils.ControlContext{ControlDB: controlDB, IdentityModel: &controldb.ControlIdentity{Name: "admin", Role: consts.ControlRoleAdmin}}
 
 	active := &controlmodels.Site{ID: siteID, State: "live", CreatedAt: now, LastSeenAt: &now, LastWriteAt: &now}
-	_, err = (&SitesCollection{}).UpdateRow(ctx, controlContext, active, &controlmodels.Site{State: "disabled"})
+	_, err := (&SitesCollection{}).UpdateRow(ctx, controlContext, active, &controlmodels.Site{State: "disabled"})
 	require.ErrorContains(t, err, "only a site not written to or seen in 7 days can be disabled")
 
 	row, err := controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: siteID})
@@ -52,8 +50,7 @@ func TestDisablingActiveSiteRefused(t *testing.T) {
 }
 
 func TestTruncateHandler(t *testing.T) {
-	_, controlDB, site, err := testutils.GetConfigControlDBAndSiteDBForTest()
-	require.NoError(t, err)
+	_, controlDB, site := testutils.NewControlDBWithSite(t)
 	ctx, siteID := context.TODO(), site.SiteDB.Subdomain
 	router := chi.NewRouter()
 	router.Post("/sites/{id}/truncate", (&SitesCollection{}).TruncateHandler)
