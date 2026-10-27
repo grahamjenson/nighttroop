@@ -28,6 +28,9 @@ ASSERT_PATH /settings
 ASSERT_TEXT_VISIBLE Settings
 ASSERT_VISIBLE #site--settings--site--units
 ASSERT_VISIBLE #site--settings--identity--units
+// The week's days read as names, capitalised, as does the default
+ASSERT_TEXT_EQUALS #site--settings--site--week_start_day>option[value="sunday"] Sunday
+ASSERT_TEXT_EQUALS #site--settings--site--week_start_day>option[value=""] Default (Monday)
 SCREENSHOT site_settings
 
 INPUT #site--settings--site--units mg/dL
