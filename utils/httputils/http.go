@@ -123,3 +123,8 @@ func (w *StatusResponseWriter) WriteHeader(code int) {
 	w.Status = code
 	w.ResponseWriter.WriteHeader(code)
 }
+
+// Unwrap lets http.ResponseController reach the writer underneath, to flush a stream and lift its write deadline
+func (w *StatusResponseWriter) Unwrap() http.ResponseWriter {
+	return w.ResponseWriter
+}
