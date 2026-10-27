@@ -88,3 +88,17 @@ DELETE FROM events WHERE id <= (SELECT id FROM events ORDER BY id DESC LIMIT 1 O
 -- name: TrimErrors :execresult
 -- Deletes all but the newest Keep rows
 DELETE FROM errors WHERE id <= (SELECT id FROM errors ORDER BY id DESC LIMIT 1 OFFSET sqlc.arg('Keep'));
+
+-- name: RecentSyncEvents :many
+-- The newest events of one of the site's sync sources, by the sync_type the sync events record
+SELECT * FROM events
+WHERE site_id = sqlc.arg('SiteID') AND json_extract(attributes, '$.sync_type') = sqlc.arg('SyncType')
+ORDER BY id DESC
+LIMIT sqlc.arg('Limit');
+
+-- name: RecentSyncErrors :many
+-- The newest errors of one of the site's sync sources
+SELECT * FROM errors
+WHERE site_id = sqlc.arg('SiteID') AND json_extract(attributes, '$.kind') = 'sync' AND json_extract(attributes, '$.sync_type') = sqlc.arg('SyncType')
+ORDER BY id DESC
+LIMIT sqlc.arg('Limit');

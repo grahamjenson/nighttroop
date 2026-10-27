@@ -12,6 +12,7 @@ import (
 
 	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/data/sql/logsdb"
 	"nighttroop.t1d.nz/models/sitemodels"
 
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
@@ -287,9 +288,35 @@ func (s *SyncSettingsCollection) SearchRows(ctx context.Context, collectionTx *s
 			slog.Error("Failed to convert sync source from DB", "error", err)
 			continue
 		}
+		if err := addRecentLogs(ctx, siteContext, model); err != nil {
+			return nil, err
+		}
 		models = append(models, model)
 	}
 	return models, nil
+}
+
+// recentSyncLogs is how many of a sync source's newest events and errors its form shows
+const recentSyncLogs = 5
+
+// addRecentLogs adds the source's newest events and errors from the logs DB, the site's own only
+func addRecentLogs(ctx context.Context, siteContext *httputils.SiteContext, model *sitemodels.SyncSource) error {
+	logs, syncType := siteContext.ControlDB.Logs.Queries, string(model.Type)
+	events, err := logs.RecentSyncEvents(ctx, logsdb.RecentSyncEventsParams{SiteID: &siteContext.Subdomain, SyncType: &syncType, Limit: recentSyncLogs})
+	if err != nil {
+		return err
+	}
+	syncErrors, err := logs.RecentSyncErrors(ctx, logsdb.RecentSyncErrorsParams{SiteID: &siteContext.Subdomain, SyncType: &syncType, Limit: recentSyncLogs})
+	if err != nil {
+		return err
+	}
+	for _, event := range events {
+		model.RecentEvents = append(model.RecentEvents, sitemodels.SiteEventFromDB(event))
+	}
+	for _, syncError := range syncErrors {
+		model.RecentErrors = append(model.RecentErrors, sitemodels.SiteErrorFromDB(syncError))
+	}
+	return nil
 }
 
 func (s *SyncSettingsCollection) SearchHTMXResponse(models []*sitemodels.SyncSource, query *apiutils.Query) templ.Component {

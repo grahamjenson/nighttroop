@@ -51,6 +51,12 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.insertLogStmt, err = db.PrepareContext(ctx, insertLog); err != nil {
 		return nil, fmt.Errorf("error preparing query InsertLog: %w", err)
 	}
+	if q.recentSyncErrorsStmt, err = db.PrepareContext(ctx, recentSyncErrors); err != nil {
+		return nil, fmt.Errorf("error preparing query RecentSyncErrors: %w", err)
+	}
+	if q.recentSyncEventsStmt, err = db.PrepareContext(ctx, recentSyncEvents); err != nil {
+		return nil, fmt.Errorf("error preparing query RecentSyncEvents: %w", err)
+	}
 	if q.searchErrorsStmt, err = db.PrepareContext(ctx, searchErrors); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchErrors: %w", err)
 	}
@@ -120,6 +126,16 @@ func (q *Queries) Close() error {
 	if q.insertLogStmt != nil {
 		if cerr := q.insertLogStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing insertLogStmt: %w", cerr)
+		}
+	}
+	if q.recentSyncErrorsStmt != nil {
+		if cerr := q.recentSyncErrorsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing recentSyncErrorsStmt: %w", cerr)
+		}
+	}
+	if q.recentSyncEventsStmt != nil {
+		if cerr := q.recentSyncEventsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing recentSyncEventsStmt: %w", cerr)
 		}
 	}
 	if q.searchErrorsStmt != nil {
@@ -205,6 +221,8 @@ type Queries struct {
 	insertErrorStmt      *sql.Stmt
 	insertEventStmt      *sql.Stmt
 	insertLogStmt        *sql.Stmt
+	recentSyncErrorsStmt *sql.Stmt
+	recentSyncEventsStmt *sql.Stmt
 	searchErrorsStmt     *sql.Stmt
 	searchEventsStmt     *sql.Stmt
 	searchLogsStmt       *sql.Stmt
@@ -227,6 +245,8 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		insertErrorStmt:      q.insertErrorStmt,
 		insertEventStmt:      q.insertEventStmt,
 		insertLogStmt:        q.insertLogStmt,
+		recentSyncErrorsStmt: q.recentSyncErrorsStmt,
+		recentSyncEventsStmt: q.recentSyncEventsStmt,
 		searchErrorsStmt:     q.searchErrorsStmt,
 		searchEventsStmt:     q.searchEventsStmt,
 		searchLogsStmt:       q.searchLogsStmt,

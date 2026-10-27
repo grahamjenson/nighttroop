@@ -25,6 +25,7 @@ type SiteConverter interface {
 
 	// goverter:map Password | SetPasswordGarbage
 	// goverter:map UrlOrUsernameEnc UrlOrUsername | Decrypt
+	// goverter:ignore RecentEvents RecentErrors
 	// goverter:context security
 	SyncSourceFromDB(source *controldb.SiteSyncSource, security *security.SecurityConfig) (*SyncSource, error)
 
