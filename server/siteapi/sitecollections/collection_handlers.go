@@ -9,7 +9,7 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
-	"nighttroop.t1d.nz/data/events/sitemodels"
+	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/server/components/site_templ"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 
@@ -370,7 +370,7 @@ func create[R, M any](ctx context.Context, tx *siteapiutils.CollectionTx, collec
 	if herr := answer(err, collection.GetName()); herr != nil {
 		return herr
 	}
-	reportChange(tx, sitemodels.Created, row)
+	reportChange(tx, events.Created, row)
 	*model = *collection.ToModel(row, siteContext)
 	return nil
 }
@@ -381,7 +381,7 @@ func update[R, M any](ctx context.Context, tx *siteapiutils.CollectionTx, collec
 	if herr := answer(err, collection.GetName()); herr != nil {
 		return herr
 	}
-	reportChange(tx, sitemodels.Updated, row)
+	reportChange(tx, events.Updated, row)
 	*model = *collection.ToModel(row, siteContext)
 	return nil
 }
@@ -392,12 +392,12 @@ func delete[R, M any](ctx context.Context, siteContext *httputils.SiteContext, t
 	if herr := answer(collection.DeleteRow(ctx, tx, id, siteContext), collection.GetName()); herr != nil {
 		return herr
 	}
-	reportChange(tx, sitemodels.Deleted, row)
+	reportChange(tx, events.Deleted, row)
 	return nil
 }
 
 // reportChange reports a change to the site's own rows, to be published once the transaction commits
-func reportChange[R any](tx *siteapiutils.CollectionTx, action sitemodels.Action, row *R) {
+func reportChange[R any](tx *siteapiutils.CollectionTx, action events.Action, row *R) {
 	// TODO filter for the relevant site or collection before reporting the change
 	tx.ReportChange(action, row)
 }

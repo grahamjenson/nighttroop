@@ -1,8 +1,8 @@
 package sitepresets
 
 import (
+	"cmp"
 	"context"
-	"fmt"
 
 	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/sql/sitedb"
@@ -114,13 +114,11 @@ func (s *FoodPresetsCollection) DeleteHTMXResponse(model *sitemodels.SiteFoodPre
 
 // checkFoodPreset keeps any nutrients and absorption time sent within what a portion of food could have
 func checkFoodPreset(model *sitemodels.SiteFoodPreset) *apiutils.HTTPError {
-	for _, grams := range []*float64{model.Carbs, model.Fat, model.Protein, model.Fibre} {
-		if grams != nil && (*grams < 0 || *grams > maxPresetGrams) {
-			return apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("carbs, fat, protein and fibre must be from 0 to %d g", maxPresetGrams))
-		}
-	}
-	if minutes := model.AbsorptionTimeMinutes; minutes != nil && (*minutes < 0 || *minutes > maxAbsorptionMinutes) {
-		return apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("absorption time must be from 0 to %d minutes", maxAbsorptionMinutes))
-	}
-	return nil
+	return cmp.Or(
+		apiutils.CheckRange("carbs, fat, protein and fibre", model.Carbs, 0, maxPresetGrams, "g"),
+		apiutils.CheckRange("carbs, fat, protein and fibre", model.Fat, 0, maxPresetGrams, "g"),
+		apiutils.CheckRange("carbs, fat, protein and fibre", model.Protein, 0, maxPresetGrams, "g"),
+		apiutils.CheckRange("carbs, fat, protein and fibre", model.Fibre, 0, maxPresetGrams, "g"),
+		apiutils.CheckRange("absorption time", model.AbsorptionTimeMinutes, 0, maxAbsorptionMinutes, "minutes"),
+	)
 }

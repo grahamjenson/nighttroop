@@ -1,5 +1,5 @@
-// Package events is a publish and subscribe bus: handlers subscribe to a key, such as a site's ID,
-// and are called with every event published under it
+// Package events is every event on the server and the publish and subscribe bus they are sent through: handlers
+// subscribe to a key, such as a site's ID, and are called with every event published under it
 package events
 
 import (

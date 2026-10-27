@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"log/slog"
 
-	"nighttroop.t1d.nz/data/events/sitemodels"
+	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
@@ -153,7 +153,7 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 		return nil, false, nsutils.ErrInternal
 	}
 
-	siteContext.PublishModelChange(sitemodels.Created, dbModel)
+	siteContext.PublishModelChange(events.Created, dbModel)
 	return ptr(m.Convert(dbModel, siteContext, raw)), false, nil
 }
 
@@ -228,7 +228,7 @@ func (c Collection[NS, DM]) Delete(ctx context.Context, siteContext *httputils.S
 		slog.Error("failed to delete in database", "error", err, "collection", m.Name())
 		return nsutils.ErrInternal
 	}
-	siteContext.PublishModelChange(sitemodels.Deleted, deleted)
+	siteContext.PublishModelChange(events.Deleted, deleted)
 	return nil
 }
 
@@ -345,9 +345,9 @@ func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.
 	}
 
 	if creatingNewRecord {
-		siteContext.PublishModelChange(sitemodels.Created, dbCreateModel)
+		siteContext.PublishModelChange(events.Created, dbCreateModel)
 	} else {
-		siteContext.PublishModelChange(sitemodels.Updated, dbCreateModel)
+		siteContext.PublishModelChange(events.Updated, dbCreateModel)
 	}
 	return ptr(m.Convert(dbCreateModel, siteContext, raw)), creatingNewRecord, nil
 
@@ -421,7 +421,7 @@ func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.Si
 		return nil, nsutils.ErrInternal
 	}
 
-	siteContext.PublishModelChange(sitemodels.Updated, dbModel)
+	siteContext.PublishModelChange(events.Updated, dbModel)
 	return ptr(m.Convert(dbModel, siteContext, raw)), nil
 }
 
