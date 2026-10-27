@@ -27,6 +27,10 @@ ASSERT_TEXT_VISIBLE PWD Phone
 // Column names are in title case like the others
 ASSERT_NOT_VISIBLE #main-content >> text=Created at
 ASSERT_VISIBLE #main-content th >> text=Created >> nth=0
+// The forms to add a user or a device label what each input takes, like the data pages
+ASSERT_VISIBLE #identities_table label[for="name-createIdentityFormusersTable"]:has-text("Name")
+ASSERT_VISIBLE #identities_table label[for="select-form-createIdentityFormusersTable"]:has-text("Role")
+ASSERT_VISIBLE #identities_table label[for="name-createIdentityFormdevicesTable"]:has-text("Name")
 SCREENSHOT identities
 
 // Adding a device shows its credentials once

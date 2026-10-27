@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/copybutton"
@@ -190,9 +191,7 @@ templ formCreateIdentity(tableid string, name string, roles []sitemodels.RoleOpt
 			hx-status:5xx="target:#toaster"
 		>
 			<div class="flex w-x1 justify-end items-end gap-2">
-				@form.Item(form.ItemProps{
-					Class: "w-24",
-				}) {
+				@field.Field("name-"+formID, "Name", "w-24") {
 					@input.Input(input.Props{
 						ID:          "name-" + formID,
 						Type:        "text",
@@ -204,9 +203,7 @@ templ formCreateIdentity(tableid string, name string, roles []sitemodels.RoleOpt
 				if (len(roles) == 1) {
 					<input type="hidden" name="role" value={ string(roles[0].Value) }/>
 				} else {
-					@form.Item(form.ItemProps{
-						Class: "w-40",
-					}) {
+					@field.Field("select-form-"+formID, "Role", "w-40") {
 						@selectbox.SelectBox() {
 							@selectbox.Trigger(selectbox.TriggerProps{
 								ID:   "select-form-" + formID,
