@@ -28,6 +28,12 @@ const (
 	EventSyncBackfilled    EventName = "sync_backfilled"
 )
 
+// EventNames are every event's name, to pick from
+var EventNames = []string{
+	string(EventSiteCreated), string(EventSiteDisabled), string(EventSiteDeleted), string(EventSiteArchived),
+	string(EventSiteTruncated), string(EventSiteBatchBackedUp), string(EventControlBackedUp), string(EventSyncTurnedOff),
+}
+
 // ErrorKind is what failed in an error, the kind in its attributes
 type ErrorKind string
 
@@ -37,6 +43,11 @@ const (
 	ErrorKindSiteBatchBackup ErrorKind = "site_batch_backup"
 	ErrorKindControlBackup   ErrorKind = "control_backup"
 )
+
+// ErrorKinds are every error's kind, to pick from
+var ErrorKinds = []string{
+	string(ErrorKindServer), string(ErrorKindSync), string(ErrorKindSiteBatchBackup), string(ErrorKindControlBackup),
+}
 
 // LogLevel is how much a log matters
 type LogLevel string

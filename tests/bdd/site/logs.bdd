@@ -36,6 +36,17 @@ SCREENSHOT event_details
 CLICK #site--event--details--close
 ASSERT_NOT_VISIBLE #site--event--details
 
+// Events can be filtered to one type, with an option for all of them
+INPUT #site--events--filter--type sync_turned_off
+CLICK #site--events--filter--submit
+ASSERT_TEXT_VISIBLE No events here.
+ASSERT_NOT_VISIBLE #siteEventsTable >> text=Site created
+INPUT #site--events--filter--type site_created
+CLICK #site--events--filter--submit
+ASSERT_VISIBLE #siteEventsTable td >> text=Site created >> nth=0
+SCREENSHOT events_filtered
+ASSERT_TEXT_EQUALS #site--events--filter--type>option[value=""] All events
+
 // Errors and logs have pages of their own
 CLICK #site--settings-menu
 CLICK #site--logs--errors-button
