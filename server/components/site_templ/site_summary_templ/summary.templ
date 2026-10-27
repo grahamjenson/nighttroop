@@ -11,6 +11,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/display"
 )
 
 // directionArrows are the Nightscout trend directions as arrows
@@ -24,10 +25,6 @@ func arrow(direction *string) string {
 		return ""
 	}
 	return directionArrows[*direction]
-}
-
-func minutesAgo(ms int64) string {
-	return fmt.Sprintf("%d min ago", int(time.Since(time.UnixMilli(ms)).Minutes()))
 }
 
 // value shows an optional number with its unit, or a dash when it is not set
@@ -166,7 +163,7 @@ templ glucoseHero(summary *sitemodels.Summary) {
 					<span class="text-lg text-gray-500">{ unitsText(latest.Units) }</span>
 					<span class="ml-2 text-4xl text-gray-700">{ arrow(latest.Direction) }</span>
 				</div>
-				<div class="mt-1 text-sm text-gray-500">{ minutesAgo(latest.OccurredAt) }</div>
+				<div id="site--summary--glucose--ago" class="mt-1 text-sm text-gray-500" title={ site_data_templ.FormatDate(ctx, latest.OccurredAt) }>{ display.TimeAgo(latest.OccurredAt, time.Now()) }</div>
 			</div>
 		} else {
 			<div>
@@ -198,7 +195,7 @@ templ deviceCard(status *sitemodels.SiteDeviceStatus) {
 	>
 		<div class="flex items-baseline justify-between gap-2">
 			<span class="truncate font-semibold text-brand-night">{ orDash(status.CreatedByDeviceName) }</span>
-			<span class="whitespace-nowrap text-xs text-gray-500">{ minutesAgo(status.OccurredAt) }</span>
+			<span class="whitespace-nowrap text-xs text-gray-500" title={ site_data_templ.FormatDate(ctx, status.OccurredAt) }>{ display.TimeAgo(status.OccurredAt, time.Now()) }</span>
 		</div>
 		<dl class="mt-2 grid grid-cols-3 gap-x-3 gap-y-1 text-sm">
 			@detail("Phone", value(status.DeviceBatteryPercent, "%"))
@@ -235,7 +232,7 @@ templ treatmentsTable(list []treatment) {
 			for _, t := range list {
 				@table.Row() {
 					@table.Cell() {
-						<span class="whitespace-nowrap">{ site_data_templ.FormatDate(ctx, t.At) }</span>
+						<span class="whitespace-nowrap" title={ site_data_templ.FormatDate(ctx, t.At) }>{ display.TimeAgo(t.At, time.Now()) }</span>
 					}
 					@table.Cell() {
 						<span class="whitespace-nowrap font-medium">{ t.Kind }</span>
@@ -261,7 +258,7 @@ templ readingsTable(readings []*sitemodels.SiteGlucoseReading) {
 			for _, r := range readings {
 				@table.Row() {
 					@table.Cell() {
-						<span class="whitespace-nowrap">{ site_data_templ.FormatDate(ctx, r.OccurredAt) }</span>
+						<span class="whitespace-nowrap" title={ site_data_templ.FormatDate(ctx, r.OccurredAt) }>{ display.TimeAgo(r.OccurredAt, time.Now()) }</span>
 					}
 					@table.Cell() {
 						<span class="font-medium tabular-nums">{ site_data_templ.FormatGlucose(r.Reading, r.Units) }</span> { arrow(r.Direction) }

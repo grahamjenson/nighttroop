@@ -35,6 +35,29 @@ func TestAgo(t *testing.T) {
 	}
 }
 
+func TestTimeAgo(t *testing.T) {
+	now := time.Date(2026, 10, 26, 12, 0, 0, 0, time.UTC)
+	tests := []struct {
+		before time.Duration
+		want   string
+	}{
+		{30 * time.Second, "0m ago"},
+		{5 * time.Minute, "5m ago"},
+		{59*time.Minute + 59*time.Second, "59m ago"},
+		{time.Hour, "1h0m ago"},
+		{time.Hour + 5*time.Minute, "1h5m ago"},
+		{23*time.Hour + 59*time.Minute, "23h59m ago"},
+		{24 * time.Hour, "1d0h0m ago"},
+		{49*time.Hour + 5*time.Minute, "2d1h5m ago"},
+		{-10 * time.Minute, "0m ago"},
+	}
+	for _, tt := range tests {
+		if got := TimeAgo(now.Add(-tt.before).UnixMilli(), now); got != tt.want {
+			t.Errorf("TimeAgo(%s before) = %q, want %q", tt.before, got, tt.want)
+		}
+	}
+}
+
 func TestDuration(t *testing.T) {
 	for in, want := range map[int64]string{
 		0:          "0 ms",

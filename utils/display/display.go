@@ -25,6 +25,20 @@ func Ago(ms *int64, now time.Time) string {
 	return fmt.Sprintf("%d days ago", int(since.Hours()/24))
 }
 
+// TimeAgo is how long before now the time in ms was, in whole minutes, then hours and minutes, then days, hours and
+// minutes: "5m ago", "1h5m ago" or "2d1h5m ago". A time after now, as from a phone's clock running fast, is "0m ago".
+func TimeAgo(ms int64, now time.Time) string {
+	minutes := max(int(now.Sub(time.UnixMilli(ms)).Minutes()), 0)
+	days, hours := minutes/(24*60), minutes/60%24
+	switch {
+	case days > 0:
+		return fmt.Sprintf("%dd%dh%dm ago", days, hours, minutes%60)
+	case hours > 0:
+		return fmt.Sprintf("%dh%dm ago", hours, minutes%60)
+	}
+	return fmt.Sprintf("%dm ago", minutes)
+}
+
 // Duration is how long ms milliseconds is, as "250 ms", "1.5 s", "2 min 5 s" or "3 h 20 min"
 func Duration(ms int64) string {
 	d := time.Duration(ms) * time.Millisecond
