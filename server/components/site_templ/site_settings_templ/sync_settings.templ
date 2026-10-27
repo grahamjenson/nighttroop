@@ -307,12 +307,15 @@ templ LibreSyncForm(libreSyncSettings *sitemodels.SyncSource) {
 					}) {
 						Delete
 					}
-					@button.Button(button.Props{
-						ID:   "site--settings--libre-sync--submit",
-						Type: button.TypeSubmit,
-					}) {
-						Save
-					}
+					<div class="flex gap-3">
+						@BackfillButton("libre")
+						@button.Button(button.Props{
+							ID:   "site--settings--libre-sync--submit",
+							Type: button.TypeSubmit,
+						}) {
+							Save
+						}
+					</div>
 				</div>
 				@SyncStatus(libreSyncSettings, "libre")
 			</div>
@@ -539,8 +542,11 @@ templ BackfillButton(name string) {
 }
 
 func backfillConfirm(name string) string {
-	if name == string(consts.SyncSourceTypeDexcom) {
+	switch name {
+	case string(consts.SyncSourceTypeDexcom):
 		return "Backfill fetches the last 24 hours of readings, which is as far back as Dexcom Share goes. It runs in the background. Continue?"
+	case string(consts.SyncSourceTypeLibre):
+		return "Backfill fetches the last 12 hours of readings, which is as far back as LibreLinkUp goes. It runs in the background. Continue?"
 	}
 	return "Backfill fetches older records from before your oldest glucose reading, a week of them by default. It runs in the background and can take a minute. Continue?"
 }

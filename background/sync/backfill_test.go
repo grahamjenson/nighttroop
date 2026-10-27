@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/background/liteq"
+	"nighttroop.t1d.nz/clients/libre_client"
 	"nighttroop.t1d.nz/clients/nightscout_client"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/jobsdb"
@@ -83,6 +84,34 @@ func TestBackfillRangeOfDexcomIsTheLastDay(t *testing.T) {
 	require.NoError(t, err)
 	require.InDelta(t, time.Now().UnixMilli(), backfill.To, 1000)
 	require.Equal(t, backfill.To-24*time.Hour.Milliseconds(), backfill.From)
+}
+
+// LibreLinkUp's graph is the last 12 hours, so a Libre backfill fetches those, and runs as a backfill should
+func TestLibreBackfillFetchesTheLastTwelveHours(t *testing.T) {
+	cfg, controlDB, site, err := testutils.GetConfigControlDBAndSiteDBForTest()
+	require.NoError(t, err)
+	q, ctx, siteID, typ := controlDB.Queries, context.TODO(), site.SiteDB.Subdomain, consts.SyncSourceTypeLibre
+	jobs := SetupSyncJobManager(cfg, controlDB)
+	enc := func(s string) *string {
+		v, err := cfg.Security.Encrypt(s)
+		require.NoError(t, err)
+		return &v
+	}
+	region := "EU"
+	require.NoError(t, q.CreateSyncSource(ctx, controldb.CreateSyncSourceParams{SiteID: siteID, Type: typ, UrlOrUsernameEnc: enc(libre_client.TestValidEmail), PasswordEnc: enc("p"), Region: &region, Enabled: true}))
+
+	backfill, err := BackfillRange(ctx, site.SiteDB, typ, 7)
+	require.NoError(t, err)
+	require.InDelta(t, time.Now().UnixMilli(), backfill.To, 1000)
+	require.Equal(t, backfill.To-12*time.Hour.Milliseconds(), backfill.From)
+
+	require.NoError(t, QueueBackfill(ctx, controlDB, siteID, typ, backfill))
+	require.NoError(t, jobs.SyncSource(ctx, SyncJobParams{SiteID: siteID, Type: typ, Backfill: &backfill}))
+	s, err := q.GetSyncSource(ctx, controldb.GetSyncSourceParams{SiteID: siteID, Type: typ})
+	require.NoError(t, err)
+	require.Nil(t, s.LastBackfillError, "a Libre backfill runs rather than saying Libre cannot be backfilled")
+	require.Nil(t, s.BackfillStartedAt)
+	require.Equal(t, int64(1), s.TotalBackfills)
 }
 
 func TestNightscoutBackfillCopiesOlderDocuments(t *testing.T) {

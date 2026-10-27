@@ -40,36 +40,43 @@ func (b *SyncJobManager) libreClientFor(syncInfo *SyncJobInfo) (*libreClient, er
 }
 
 func (b *SyncJobManager) syncLibre(syncInfo *SyncJobInfo) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+	_, err := b.copyLibreReadings(ctx, syncInfo)
+	return err
+}
+
+// copyLibreReadings imports the followed patient's graph, the last 12 hours, all of it each time so a gap in syncing is
+// filled, returning how many readings were new. Readings already imported have the same IDs, so they are skipped.
+func (b *SyncJobManager) copyLibreReadings(ctx context.Context, syncInfo *SyncJobInfo) (int, error) {
 	if len(syncInfo.UserSyncSources) == 0 {
-		return fmt.Errorf("Libre, no user sync sources found for site_id %s type %s", syncInfo.SiteID, syncInfo.Type)
+		return 0, fmt.Errorf("Libre, no user sync sources found for site_id %s type %s", syncInfo.SiteID, syncInfo.Type)
 	}
 	if syncInfo.region == "" {
 		syncInfo.region = consts.LibreRegionGlobal
 	}
 	lc, err := b.libreClientFor(syncInfo)
 	if err != nil {
-		return fmt.Errorf("Libre Error: %w", err)
+		return 0, fmt.Errorf("Libre Error: %w", err)
 	}
 	lc.Lock()
 	defer lc.Unlock()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-	defer cancel()
-
 	readings, err := lc.FetchReadings(ctx)
 	if err != nil {
-		return fmt.Errorf("Libre Error: %w", err)
+		return 0, fmt.Errorf("Libre Error: %w", err)
 	}
-	// The graph is the last 12 hours, all of it imported each time so a gap in syncing is filled; readings already
-	// imported have the same IDs, so they are skipped as duplicates
+	added := 0
 	for _, userSyncSource := range syncInfo.UserSyncSources {
 		for _, r := range readings {
 			createParams := libremodels.ReadingToCreate(r, "libre_sync")
-			_, err := userSyncSource.SiteDB.Queries.CreateGlucoseReading(context.TODO(), createParams)
-			if err != nil && !utilerrors.IsSQLDuplicateID(err) {
+			_, err := userSyncSource.SiteDB.Queries.CreateGlucoseReading(ctx, createParams)
+			if err == nil {
+				added++
+			} else if !utilerrors.IsSQLDuplicateID(err) {
 				slog.Error("Error creating entry in database", "error", err, "id", createParams.ID, "site_id", syncInfo.SiteID, "sync_type", syncInfo.Type)
 			}
 		}
 	}
-	return nil
+	return added, nil
 }

@@ -26,8 +26,13 @@ echo 'export PATH=$PATH:$(go env GOPATH)/bin' >> ~/.zshrc
 ```
 
 ```
-brew install docker colima docker-compose golang-migrate tailwindcss go-air templ sqlc
+brew install docker colima docker-compose golang-migrate go-air templ sqlc
 go install github.com/jmattheis/goverter/cmd/goverter@v1.11.1
+# Tailwind's standalone binary at CI's version. Not brew's tailwindcss: it is the npm build run by Node, which writes
+# style_gen.css with double quotes where the standalone binary writes single ones, so go generate changes the file.
+curl -sSL -o "$(go env GOPATH)/bin/tailwindcss" \
+  https://github.com/tailwindlabs/tailwindcss/releases/download/v4.3.0/tailwindcss-macos-$(uname -m | sed 's/x86_64/x64/')
+chmod +x "$(go env GOPATH)/bin/tailwindcss"
 go install github.com/mickamy/slog-pretty/cmd/spretty@latest
 
 
