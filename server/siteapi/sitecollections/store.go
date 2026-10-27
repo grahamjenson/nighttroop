@@ -19,6 +19,8 @@ type SiteCollectionRoutes struct {
 	Create http.HandlerFunc
 	Update http.HandlerFunc
 	Delete http.HandlerFunc
+	// Events streams the collection's changes, which every collection has
+	Events http.HandlerFunc
 }
 
 type SiteStore struct {
@@ -84,6 +86,7 @@ func (store *SiteStore) registerCollection[R, M any](section string, collection 
 		Create: cannot("created"),
 		Update: cannot("updated"),
 		Delete: cannot("deleted"),
+		Events: EventsHandler(collection),
 	}
 
 	added := false
@@ -152,7 +155,7 @@ func (s *SiteStore) routes(section string, r *http.Request) *SiteCollectionRoute
 		return routes
 	}
 	missing := answerNotFound(http.StatusNotFound, "There is no "+name+" here")
-	return &SiteCollectionRoutes{Search: missing, Get: missing, Create: missing, Update: missing, Delete: missing}
+	return &SiteCollectionRoutes{Search: missing, Get: missing, Create: missing, Update: missing, Delete: missing, Events: missing}
 }
 
 // Section is the routes of whichever collection in the section a request names, e.g. glucose for /data/glucose
@@ -163,5 +166,6 @@ func (s *SiteStore) Section(section string) *SiteCollectionRoutes {
 		Create: func(w http.ResponseWriter, r *http.Request) { s.routes(section, r).Create(w, r) },
 		Update: func(w http.ResponseWriter, r *http.Request) { s.routes(section, r).Update(w, r) },
 		Delete: func(w http.ResponseWriter, r *http.Request) { s.routes(section, r).Delete(w, r) },
+		Events: func(w http.ResponseWriter, r *http.Request) { s.routes(section, r).Events(w, r) },
 	}
 }
