@@ -1,7 +1,6 @@
 package siteapiutils
 
 import (
-	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -60,7 +59,7 @@ func TryAuthWithJWTToken(config *config.ServerConfig, r *http.Request) (*control
 		if err != nil {
 			return nil, fmt.Errorf("bad JWT token: %w", err)
 		}
-		identity, err := GetSiteIdentity(r.Context(), subdomain, identityName, consts.IdentityRole(role))
+		identity, err := httputils.GetSiteIdentity(r.Context(), subdomain, identityName, consts.IdentityRole(role))
 		if err != nil {
 			slog.Warn("Bad JWT token cant find identity", "error", err)
 			return nil, fmt.Errorf("identity not found: %w", err)
@@ -81,7 +80,7 @@ func TryAuthWithJWTToken(config *config.ServerConfig, r *http.Request) (*control
 			slog.Info("Bad Cookie JWT token", "error", err)
 			return nil, fmt.Errorf("Bad Cookie JWT token: %w", err)
 		}
-		identity, err := GetSiteIdentity(r.Context(), subdomain, identityName, consts.IdentityRole(role))
+		identity, err := httputils.GetSiteIdentity(r.Context(), subdomain, identityName, consts.IdentityRole(role))
 		if err != nil {
 			slog.Warn("Bad Cookie JWT token cant find identity", "error", err)
 			return nil, fmt.Errorf("Bad Cookie JWT token: %w", err)
@@ -90,29 +89,4 @@ func TryAuthWithJWTToken(config *config.ServerConfig, r *http.Request) (*control
 	}
 
 	return nil, fmt.Errorf("No JWT token found")
-}
-
-func GetSiteIdentity(ctx context.Context, subdomain string, identityName string, role consts.IdentityRole) (*controldb.SiteIdentity, error) {
-	siteContext := httputils.GetSiteContext(ctx)
-	if subdomain != siteContext.Subdomain {
-		return nil, fmt.Errorf("subdomain mismatch: expected %s, got %s", siteContext.Subdomain, subdomain)
-	}
-
-	identity, err := siteContext.ControlDB.Queries.GetSiteIdentity(ctx, controldb.GetSiteIdentityParams{
-		SiteID: subdomain,
-		Name:   identityName,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	if !identity.Enabled {
-		return nil, fmt.Errorf("identity disabled")
-	}
-
-	if consts.IdentityRole(identity.Role) != role {
-		return nil, fmt.Errorf("role mismatch")
-	}
-
-	return identity, nil
 }
