@@ -108,6 +108,8 @@ type Click struct {
 	Key string
 	// Text is typed into Locator, a key at a time, instead of clicking it, for TYPE
 	Text string
+	// Hidden hides the page or shows it again, as a browser does a tab in the background, for BACKGROUND and FOREGROUND
+	Hidden *bool
 	// Corner clicks just inside Locator's top left corner instead of its centre, for CLICK_CORNER,
 	// e.g. a modal's backdrop beside the dialog over its centre
 	Corner bool
@@ -181,7 +183,7 @@ func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 	prettyOutput := PrettifyHTML(html)
 
 	var locator playwright.Locator
-	if r.History == "" && r.Key == "" {
+	if r.History == "" && r.Key == "" && r.Hidden == nil {
 		if locator = getLocator(r.Locator, page); locator == nil {
 			t.Fatalf("Failed to get locator for %s\n\n%s\n\n", r.Locator, prettyOutput)
 		}
@@ -211,6 +213,12 @@ func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 		_, err = page.GoForward()
 	case r.Key != "":
 		err = page.Keyboard().Press(r.Key)
+	case r.Hidden != nil:
+		_, err = page.Evaluate(`hidden => {
+			Object.defineProperty(document, "hidden", {configurable: true, get: () => hidden});
+			Object.defineProperty(document, "visibilityState", {configurable: true, get: () => hidden ? "hidden" : "visible"});
+			document.dispatchEvent(new Event("visibilitychange"));
+		}`, *r.Hidden)
 	case r.Text != "":
 		err = locator.PressSequentially(r.Text, playwright.LocatorPressSequentiallyOptions{Timeout: playwright.Float(actionWait)})
 	case r.Corner:
