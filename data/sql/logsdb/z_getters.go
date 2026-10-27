@@ -182,43 +182,133 @@ func (m *Log) SetCreatedAt(v int64) {
 	m.CreatedAt = v
 }
 
+// GetID returns the ID value.
+func (m GetErrorParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated GetErrorParams.
+func (m *GetErrorParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetID returns the ID value.
+func (m GetEventParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated GetEventParams.
+func (m *GetEventParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetID returns the ID value.
+func (m GetLogParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated GetLogParams.
+func (m *GetLogParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetID returns the ID value.
+func (m GetSiteErrorParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated GetSiteErrorParams.
+func (m *GetSiteErrorParams) SetID(v int64) {
+	m.ID = v
+}
+
 // GetSiteID returns the SiteID value.
-func (m InsertLogParams) GetSiteID() *string {
+func (m GetSiteErrorParams) GetSiteID() *string {
 	return m.SiteID
 }
 
-// SetSiteID sets the SiteID value and returns the updated InsertLogParams.
-func (m *InsertLogParams) SetSiteID(v *string) {
+// SetSiteID sets the SiteID value and returns the updated GetSiteErrorParams.
+func (m *GetSiteErrorParams) SetSiteID(v *string) {
 	m.SiteID = v
 }
 
-// GetLevel returns the Level value.
-func (m InsertLogParams) GetLevel() string {
-	return m.Level
+// GetID returns the ID value.
+func (m GetSiteEventParams) GetID() int64 {
+	return m.ID
 }
 
-// SetLevel sets the Level value and returns the updated InsertLogParams.
-func (m *InsertLogParams) SetLevel(v string) {
-	m.Level = v
+// SetID sets the ID value and returns the updated GetSiteEventParams.
+func (m *GetSiteEventParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m GetSiteEventParams) GetSiteID() *string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated GetSiteEventParams.
+func (m *GetSiteEventParams) SetSiteID(v *string) {
+	m.SiteID = v
+}
+
+// GetBatch returns the Batch value.
+func (m GetSiteEventParams) GetBatch() *string {
+	return m.Batch
+}
+
+// SetBatch sets the Batch value and returns the updated GetSiteEventParams.
+func (m *GetSiteEventParams) SetBatch(v *string) {
+	m.Batch = v
+}
+
+// GetID returns the ID value.
+func (m GetSiteLogParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated GetSiteLogParams.
+func (m *GetSiteLogParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m GetSiteLogParams) GetSiteID() *string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated GetSiteLogParams.
+func (m *GetSiteLogParams) SetSiteID(v *string) {
+	m.SiteID = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m InsertErrorParams) GetSiteID() *string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated InsertErrorParams.
+func (m *InsertErrorParams) SetSiteID(v *string) {
+	m.SiteID = v
 }
 
 // GetMessage returns the Message value.
-func (m InsertLogParams) GetMessage() string {
+func (m InsertErrorParams) GetMessage() string {
 	return m.Message
 }
 
-// SetMessage sets the Message value and returns the updated InsertLogParams.
-func (m *InsertLogParams) SetMessage(v string) {
+// SetMessage sets the Message value and returns the updated InsertErrorParams.
+func (m *InsertErrorParams) SetMessage(v string) {
 	m.Message = v
 }
 
 // GetAttributes returns the Attributes value.
-func (m InsertLogParams) GetAttributes() *string {
+func (m InsertErrorParams) GetAttributes() *string {
 	return m.Attributes
 }
 
-// SetAttributes sets the Attributes value and returns the updated InsertLogParams.
-func (m *InsertLogParams) SetAttributes(v *string) {
+// SetAttributes sets the Attributes value and returns the updated InsertErrorParams.
+func (m *InsertErrorParams) SetAttributes(v *string) {
 	m.Attributes = v
 }
 
@@ -283,72 +373,92 @@ func (m *InsertEventParams) SetFinishedAt(v *int64) {
 }
 
 // GetSiteID returns the SiteID value.
-func (m InsertErrorParams) GetSiteID() *string {
+func (m InsertLogParams) GetSiteID() *string {
 	return m.SiteID
 }
 
-// SetSiteID sets the SiteID value and returns the updated InsertErrorParams.
-func (m *InsertErrorParams) SetSiteID(v *string) {
+// SetSiteID sets the SiteID value and returns the updated InsertLogParams.
+func (m *InsertLogParams) SetSiteID(v *string) {
 	m.SiteID = v
 }
 
+// GetLevel returns the Level value.
+func (m InsertLogParams) GetLevel() string {
+	return m.Level
+}
+
+// SetLevel sets the Level value and returns the updated InsertLogParams.
+func (m *InsertLogParams) SetLevel(v string) {
+	m.Level = v
+}
+
 // GetMessage returns the Message value.
-func (m InsertErrorParams) GetMessage() string {
+func (m InsertLogParams) GetMessage() string {
 	return m.Message
 }
 
-// SetMessage sets the Message value and returns the updated InsertErrorParams.
-func (m *InsertErrorParams) SetMessage(v string) {
+// SetMessage sets the Message value and returns the updated InsertLogParams.
+func (m *InsertLogParams) SetMessage(v string) {
 	m.Message = v
 }
 
 // GetAttributes returns the Attributes value.
-func (m InsertErrorParams) GetAttributes() *string {
+func (m InsertLogParams) GetAttributes() *string {
 	return m.Attributes
 }
 
-// SetAttributes sets the Attributes value and returns the updated InsertErrorParams.
-func (m *InsertErrorParams) SetAttributes(v *string) {
+// SetAttributes sets the Attributes value and returns the updated InsertLogParams.
+func (m *InsertLogParams) SetAttributes(v *string) {
 	m.Attributes = v
 }
 
 // GetSiteID returns the SiteID value.
-func (m SearchLogsParams) GetSiteID() *string {
+func (m SearchErrorsParams) GetSiteID() *string {
 	return m.SiteID
 }
 
-// SetSiteID sets the SiteID value and returns the updated SearchLogsParams.
-func (m *SearchLogsParams) SetSiteID(v *string) {
+// SetSiteID sets the SiteID value and returns the updated SearchErrorsParams.
+func (m *SearchErrorsParams) SetSiteID(v *string) {
 	m.SiteID = v
 }
 
+// GetType returns the Type value.
+func (m SearchErrorsParams) GetType() *string {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated SearchErrorsParams.
+func (m *SearchErrorsParams) SetType(v *string) {
+	m.Type = v
+}
+
 // GetSearch returns the Search value.
-func (m SearchLogsParams) GetSearch() *string {
+func (m SearchErrorsParams) GetSearch() *string {
 	return m.Search
 }
 
-// SetSearch sets the Search value and returns the updated SearchLogsParams.
-func (m *SearchLogsParams) SetSearch(v *string) {
+// SetSearch sets the Search value and returns the updated SearchErrorsParams.
+func (m *SearchErrorsParams) SetSearch(v *string) {
 	m.Search = v
 }
 
 // GetSkip returns the Skip value.
-func (m SearchLogsParams) GetSkip() int64 {
+func (m SearchErrorsParams) GetSkip() int64 {
 	return m.Skip
 }
 
-// SetSkip sets the Skip value and returns the updated SearchLogsParams.
-func (m *SearchLogsParams) SetSkip(v int64) {
+// SetSkip sets the Skip value and returns the updated SearchErrorsParams.
+func (m *SearchErrorsParams) SetSkip(v int64) {
 	m.Skip = v
 }
 
 // GetLimit returns the Limit value.
-func (m SearchLogsParams) GetLimit() int64 {
+func (m SearchErrorsParams) GetLimit() int64 {
 	return m.Limit
 }
 
-// SetLimit sets the Limit value and returns the updated SearchLogsParams.
-func (m *SearchLogsParams) SetLimit(v int64) {
+// SetLimit sets the Limit value and returns the updated SearchErrorsParams.
+func (m *SearchErrorsParams) SetLimit(v int64) {
 	m.Limit = v
 }
 
@@ -403,83 +513,43 @@ func (m *SearchEventsParams) SetLimit(v int64) {
 }
 
 // GetSiteID returns the SiteID value.
-func (m SearchErrorsParams) GetSiteID() *string {
+func (m SearchLogsParams) GetSiteID() *string {
 	return m.SiteID
 }
 
-// SetSiteID sets the SiteID value and returns the updated SearchErrorsParams.
-func (m *SearchErrorsParams) SetSiteID(v *string) {
+// SetSiteID sets the SiteID value and returns the updated SearchLogsParams.
+func (m *SearchLogsParams) SetSiteID(v *string) {
 	m.SiteID = v
 }
 
-// GetType returns the Type value.
-func (m SearchErrorsParams) GetType() *string {
-	return m.Type
-}
-
-// SetType sets the Type value and returns the updated SearchErrorsParams.
-func (m *SearchErrorsParams) SetType(v *string) {
-	m.Type = v
-}
-
 // GetSearch returns the Search value.
-func (m SearchErrorsParams) GetSearch() *string {
+func (m SearchLogsParams) GetSearch() *string {
 	return m.Search
 }
 
-// SetSearch sets the Search value and returns the updated SearchErrorsParams.
-func (m *SearchErrorsParams) SetSearch(v *string) {
+// SetSearch sets the Search value and returns the updated SearchLogsParams.
+func (m *SearchLogsParams) SetSearch(v *string) {
 	m.Search = v
 }
 
 // GetSkip returns the Skip value.
-func (m SearchErrorsParams) GetSkip() int64 {
+func (m SearchLogsParams) GetSkip() int64 {
 	return m.Skip
 }
 
-// SetSkip sets the Skip value and returns the updated SearchErrorsParams.
-func (m *SearchErrorsParams) SetSkip(v int64) {
+// SetSkip sets the Skip value and returns the updated SearchLogsParams.
+func (m *SearchLogsParams) SetSkip(v int64) {
 	m.Skip = v
 }
 
 // GetLimit returns the Limit value.
-func (m SearchErrorsParams) GetLimit() int64 {
+func (m SearchLogsParams) GetLimit() int64 {
 	return m.Limit
 }
 
-// SetLimit sets the Limit value and returns the updated SearchErrorsParams.
-func (m *SearchErrorsParams) SetLimit(v int64) {
+// SetLimit sets the Limit value and returns the updated SearchLogsParams.
+func (m *SearchLogsParams) SetLimit(v int64) {
 	m.Limit = v
-}
-
-// GetID returns the ID value.
-func (m GetLogParams) GetID() int64 {
-	return m.ID
-}
-
-// SetID sets the ID value and returns the updated GetLogParams.
-func (m *GetLogParams) SetID(v int64) {
-	m.ID = v
-}
-
-// GetID returns the ID value.
-func (m GetEventParams) GetID() int64 {
-	return m.ID
-}
-
-// SetID sets the ID value and returns the updated GetEventParams.
-func (m *GetEventParams) SetID(v int64) {
-	m.ID = v
-}
-
-// GetID returns the ID value.
-func (m GetErrorParams) GetID() int64 {
-	return m.ID
-}
-
-// SetID sets the ID value and returns the updated GetErrorParams.
-func (m *GetErrorParams) SetID(v int64) {
-	m.ID = v
 }
 
 // GetSiteID returns the SiteID value.
@@ -542,83 +612,13 @@ func (m *SearchSiteEventsParams) SetLimit(v int64) {
 	m.Limit = v
 }
 
-// GetID returns the ID value.
-func (m GetSiteEventParams) GetID() int64 {
-	return m.ID
-}
-
-// SetID sets the ID value and returns the updated GetSiteEventParams.
-func (m *GetSiteEventParams) SetID(v int64) {
-	m.ID = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m GetSiteEventParams) GetSiteID() *string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated GetSiteEventParams.
-func (m *GetSiteEventParams) SetSiteID(v *string) {
-	m.SiteID = v
-}
-
-// GetBatch returns the Batch value.
-func (m GetSiteEventParams) GetBatch() *string {
-	return m.Batch
-}
-
-// SetBatch sets the Batch value and returns the updated GetSiteEventParams.
-func (m *GetSiteEventParams) SetBatch(v *string) {
-	m.Batch = v
-}
-
-// GetID returns the ID value.
-func (m GetSiteLogParams) GetID() int64 {
-	return m.ID
-}
-
-// SetID sets the ID value and returns the updated GetSiteLogParams.
-func (m *GetSiteLogParams) SetID(v int64) {
-	m.ID = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m GetSiteLogParams) GetSiteID() *string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated GetSiteLogParams.
-func (m *GetSiteLogParams) SetSiteID(v *string) {
-	m.SiteID = v
-}
-
-// GetID returns the ID value.
-func (m GetSiteErrorParams) GetID() int64 {
-	return m.ID
-}
-
-// SetID sets the ID value and returns the updated GetSiteErrorParams.
-func (m *GetSiteErrorParams) SetID(v int64) {
-	m.ID = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m GetSiteErrorParams) GetSiteID() *string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated GetSiteErrorParams.
-func (m *GetSiteErrorParams) SetSiteID(v *string) {
-	m.SiteID = v
-}
-
 // GetKeep returns the Keep value.
-func (m TrimLogsParams) GetKeep() int64 {
+func (m TrimErrorsParams) GetKeep() int64 {
 	return m.Keep
 }
 
-// SetKeep sets the Keep value and returns the updated TrimLogsParams.
-func (m *TrimLogsParams) SetKeep(v int64) {
+// SetKeep sets the Keep value and returns the updated TrimErrorsParams.
+func (m *TrimErrorsParams) SetKeep(v int64) {
 	m.Keep = v
 }
 
@@ -633,12 +633,12 @@ func (m *TrimEventsParams) SetKeep(v int64) {
 }
 
 // GetKeep returns the Keep value.
-func (m TrimErrorsParams) GetKeep() int64 {
+func (m TrimLogsParams) GetKeep() int64 {
 	return m.Keep
 }
 
-// SetKeep sets the Keep value and returns the updated TrimErrorsParams.
-func (m *TrimErrorsParams) SetKeep(v int64) {
+// SetKeep sets the Keep value and returns the updated TrimLogsParams.
+func (m *TrimLogsParams) SetKeep(v int64) {
 	m.Keep = v
 }
 
