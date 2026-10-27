@@ -73,6 +73,13 @@ ASSERT_VISIBLE #site--settings--libre-sync--email[value="valid-libre-user@exampl
 ASSERT_VISIBLE #site--settings--libre-sync--enable:checked
 SCREENSHOT libre_sync_saved
 
+// Backfill fetches the last 12 hours of readings, as far back as LibreLinkUp goes
+CLICK #site--settings--libre-sync--backfill
+ASSERT_TEXT_VISIBLE Backfilling Libre
+ASSERT_TEXT_VISIBLE Fetching records from
+SCREENSHOT libre_backfill_started
+RUN_BACKGROUND_JOBS
+
 // Deleting leaves the page in place, with the Libre form rendered unset again
 CLICK #site--settings--libre-sync--delete
 ASSERT_TEXT_VISIBLE Sync Deleted
