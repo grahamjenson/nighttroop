@@ -28,7 +28,7 @@ func (b *SyncJobManager) syncDexcom(syncInfo *SyncJobInfo) error {
 
 // copyDexcomEGVs copies the last minutes of Dexcom readings into each site, returning how many were new
 func copyDexcomEGVs(ctx context.Context, syncInfo *SyncJobInfo, minutes int) (int, error) {
-	client := dexcom_client.NewClient(syncInfo.urlOrUsername, syncInfo.password, syncInfo.region == consts.DexcomRegionOther)
+	client := dexcom_client.NewClient(syncInfo.urlOrUsername, syncInfo.password, consts.NewDexcomRegionFromString(syncInfo.region) == consts.DexcomRegionOther)
 	egvs, err := client.FetchEGVs(ctx, minutes)
 	if err != nil {
 		return 0, fmt.Errorf("Dexcom Error: %w", err)

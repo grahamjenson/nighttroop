@@ -29,6 +29,14 @@ func (n *SyncSource) IsUSARegion() bool {
 	return n.GetDexcomRegion() == consts.DexcomRegionUS
 }
 
+// GetLibreRegion is the source's LibreLinkUp region, or Global when it has none
+func (n *SyncSource) GetLibreRegion() string {
+	if n == nil || n.Region == nil || *n.Region == "" {
+		return consts.LibreRegionGlobal
+	}
+	return *n.Region
+}
+
 func (n *SyncSource) IsEnabled() bool {
 	if n == nil {
 		return false

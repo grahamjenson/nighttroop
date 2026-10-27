@@ -56,6 +56,8 @@ func (b *SyncJobManager) SyncUserData(syncInfo *SyncJobInfo) error {
 		err = b.syncNightscout(syncInfo)
 	case consts.SyncSourceTypeDexcom:
 		err = b.syncDexcom(syncInfo)
+	case consts.SyncSourceTypeLibre:
+		err = b.syncLibre(syncInfo)
 	case consts.SyncSourceTypeVirtual:
 		err = b.syncVirtual(syncInfo)
 	}

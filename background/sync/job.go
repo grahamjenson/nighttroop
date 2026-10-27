@@ -35,6 +35,10 @@ type SyncJobManager struct {
 	// Each site's Nightscout client, kept between syncs, the least recently used dropped once there are too many
 	nightscoutClientsLock gosync.Mutex
 	nightscoutClients     *lru.Cache[string, *nightscoutClient]
+
+	// Each site's LibreLinkUp client, kept between syncs like the Nightscout clients
+	libreClientsLock gosync.Mutex
+	libreClients     *lru.Cache[string, *libreClient]
 }
 
 // maxNightscoutClients is how many sites' Nightscout clients are kept, about 1KB each, so memory stays bounded however
@@ -54,7 +58,8 @@ type SyncJobInfo struct {
 	UserSyncSources []*SyncUserInfo
 	urlOrUsername   string
 	password        string
-	region          consts.DexcomRegion
+	// region is as stored: a Dexcom region, or one of consts.LibreRegions
+	region string
 	// firstSync is true until a sync has worked since the source was saved; a failure then disables it
 	firstSync bool
 }
@@ -68,6 +73,7 @@ type SyncUserInfo struct {
 func SetupSyncJobManager(config *config.ServerConfig, controlDB *db.ControlDB) *SyncJobManager {
 	// It only fails for a size under 1
 	nightscoutClients, _ := lru.New[string, *nightscoutClient](maxNightscoutClients)
+	libreClients, _ := lru.New[string, *libreClient](maxNightscoutClients)
 
 	jobs := &SyncJobManager{
 		controlDB:             controlDB,
@@ -76,6 +82,7 @@ func SetupSyncJobManager(config *config.ServerConfig, controlDB *db.ControlDB) *
 		BackgroundSyncWorkers: config.BackgroundSyncWorkers,
 		nightscoutStore:       nightscoutapi.NewNightTroopAPIStore(controlDB, config),
 		nightscoutClients:     nightscoutClients,
+		libreClients:          libreClients,
 	}
 
 	return jobs
@@ -157,33 +164,33 @@ func (b *SyncJobManager) SyncSource(ctx context.Context, syncJob SyncJobParams) 
 	return b.SyncUserData(syncInfo)
 }
 
-func (b *SyncJobManager) getUsernamePasswordRegion(syncSource *controldb.SiteSyncSource) (string, string, consts.DexcomRegion, error) {
+func (b *SyncJobManager) getUsernamePasswordRegion(syncSource *controldb.SiteSyncSource) (string, string, string, error) {
 	if syncSource == nil {
-		return "", "", consts.DexcomRegionOther, fmt.Errorf("sync source is nil")
+		return "", "", "", fmt.Errorf("sync source is nil")
 	}
 	if syncSource.Type == consts.SyncSourceTypeVirtual {
-		return "virtual_username", "virtual_password", consts.DexcomRegionOther, nil
+		return "virtual_username", "virtual_password", "", nil
 	}
 
 	encUrlOrUserName := syncSource.UrlOrUsernameEnc
 	encPassword := syncSource.PasswordEnc
-	dexcomRegion := consts.DexcomRegionOther
+	region := ""
 	if encUrlOrUserName == nil || encPassword == nil {
-		return "", "", consts.DexcomRegionOther, fmt.Errorf("encrypted username or password is nil")
+		return "", "", "", fmt.Errorf("encrypted username or password is nil")
 	}
 	if syncSource.Region != nil {
-		dexcomRegion = consts.NewDexcomRegionFromString(*syncSource.Region)
+		region = *syncSource.Region
 	}
 
 	unencUsername, err := b.security.Decrypt(*encUrlOrUserName)
 	if err != nil {
-		return "", "", consts.DexcomRegionOther, fmt.Errorf("error decrypting username: %w", err)
+		return "", "", "", fmt.Errorf("error decrypting username: %w", err)
 	}
 	unencPassword, err := b.security.Decrypt(*encPassword)
 	if err != nil {
-		return "", "", consts.DexcomRegionOther, fmt.Errorf("error decrypting password: %w", err)
+		return "", "", "", fmt.Errorf("error decrypting password: %w", err)
 	}
-	return unencUsername, unencPassword, dexcomRegion, nil
+	return unencUsername, unencPassword, region, nil
 }
 
 func (b *SyncJobManager) AttachSyncSourceWithUserInfo(syncSource *controldb.SiteSyncSource) (*SyncUserInfo, error) {

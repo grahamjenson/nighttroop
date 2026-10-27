@@ -125,13 +125,13 @@ CREATE TABLE site_identities (
 CREATE TABLE site_sync_sources (
     -- Nightscout/Dexcom
     site_id TEXT NOT NULL REFERENCES sites(id), -- only for nightscout, dexcom can leave null
-    type TEXT NOT NULL CHECK(type IN ('nightscout', 'dexcom', 'virtual')),
+    type TEXT NOT NULL CHECK(type IN ('nightscout', 'dexcom', 'libre', 'virtual')),
     
     url_or_username_enc TEXT CHECK(length(url_or_username_enc) <= 256),
     password_enc TEXT CHECK(length(password_enc) <= 256), -- or ns token
 
     -- Specific Info
-    region TEXT CHECK(region IN ('US', 'OUS')), -- dexcom at the moment
+    region TEXT CHECK(region IN ('US', 'OUS', 'GLOBAL', 'AE', 'AP', 'AU', 'CA', 'DE', 'EU', 'EU2', 'FR', 'JP', 'LA')), -- dexcom US or OUS, or a libre region in consts.LibreRegions
 
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
