@@ -19,7 +19,6 @@ func ReadJSON(r *http.Request, dst any) error {
 	return decoder.Decode(dst)
 }
 
-// WriteJSON writes a JSON response with the provided HTTP status code.
 // WriteStatus sets the Content-Type for the response, then the status: headers set after WriteHeader are dropped
 func WriteStatus(w http.ResponseWriter, acceptType httputils.AcceptType, status int) {
 	if acceptType == httputils.AcceptTypeHTMX || acceptType == httputils.AcceptTypeHTML {
@@ -30,8 +29,15 @@ func WriteStatus(w http.ResponseWriter, acceptType httputils.AcceptType, status 
 	w.WriteHeader(status)
 }
 
-func writeJSON(w http.ResponseWriter, body any) {
+// WriteJSON writes body as JSON with the status, setting the Content-Type first as headers set after it are dropped
+func WriteJSON(w http.ResponseWriter, status int, body any) {
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	encodeJSON(w, body)
+}
+
+// encodeJSON writes body as JSON, after WriteStatus has set the Content-Type and status
+func encodeJSON(w http.ResponseWriter, body any) {
 	encoder := json.NewEncoder(w)
 	encoder.SetEscapeHTML(false)
 	encoder.Encode(body)
@@ -94,12 +100,8 @@ func setNestedValue(m map[string]any, parts []string, value any) {
 type Model interface {
 }
 
-func WriteModelsJSON(w http.ResponseWriter, status int, models []Model) {
-	writeJSON(w, map[string]any{"status": status, "result": models})
-}
-
 func WriteModelJSON(w http.ResponseWriter, status int, model Model) {
-	writeJSON(w, map[string]any{"status": status, "result": model})
+	encodeJSON(w, map[string]any{"status": status, "result": model})
 }
 
 // ExtractModelFromRequest reads a JSON or form body into T

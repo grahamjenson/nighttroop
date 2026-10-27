@@ -27,9 +27,7 @@ func (e *HTTPError) Write(acceptType httputils.AcceptType, w http.ResponseWriter
 		w.WriteHeader(e.Status)
 		w.Write([]byte(e.Message))
 	case httputils.AcceptTypeJSON:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(e.Status)
-		writeJSON(w, map[string]any{
+		WriteJSON(w, e.Status, map[string]any{
 			"status":  e.Status,
 			"message": e.Message,
 		})

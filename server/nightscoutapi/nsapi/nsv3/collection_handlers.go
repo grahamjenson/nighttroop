@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
+	"nighttroop.t1d.nz/utils/apiutils"
 )
 
 // Read returns a single document from an API v3 collection.
@@ -45,7 +46,7 @@ func Search(store nsutils.Store) http.HandlerFunc {
 
 		records, err := store.Search(r.Context(), collection, query)
 		if err != nil {
-			nsutils.WriteJSON(w, http.StatusInternalServerError, map[string]any{"status": http.StatusInternalServerError, "message": err.Error()})
+			apiutils.WriteJSON(w, http.StatusInternalServerError, map[string]any{"status": http.StatusInternalServerError, "message": err.Error()})
 			return
 		}
 		nsutils.WriteRecordsV3(w, records, query.Fields)
@@ -63,14 +64,14 @@ func Create(store nsutils.Store) http.HandlerFunc {
 
 		// The Actual Create
 		var doc map[string]any
-		if err := nsutils.ReadJSON(r, &doc); err != nil || len(doc) == 0 {
-			nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": "Bad or missing request body"})
+		if err := apiutils.ReadJSON(r, &doc); err != nil || len(doc) == 0 {
+			apiutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": "Bad or missing request body"})
 			return
 		}
 
 		record, duplicate, err := store.Create(r.Context(), collection, doc, nsutils.RawParam(r))
 		if err != nil {
-			nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
+			apiutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 			return
 		}
 
@@ -104,7 +105,7 @@ func Remove(store nsutils.Store) http.HandlerFunc {
 			nsutils.WriteError(w, err)
 			return
 		}
-		nsutils.WriteJSON(w, http.StatusOK, map[string]any{"status": http.StatusOK})
+		apiutils.WriteJSON(w, http.StatusOK, map[string]any{"status": http.StatusOK})
 
 	}
 }
@@ -119,7 +120,7 @@ func History(store nsutils.Store) http.HandlerFunc {
 
 		since, errr := strconv.ParseInt(chi.URLParam(r, "since"), 10, 64)
 		if errr != nil {
-			nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
+			apiutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
 			return
 		}
 
@@ -154,8 +155,8 @@ func Replace(store nsutils.Store) http.HandlerFunc {
 		}
 
 		var doc map[string]any
-		if err := nsutils.ReadJSON(r, &doc); err != nil {
-			nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
+		if err := apiutils.ReadJSON(r, &doc); err != nil {
+			apiutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
 			return
 		}
 		// TODO put If-Unmodified-Since into the update query to make it atomic
@@ -190,8 +191,8 @@ func Patch(store nsutils.Store) http.HandlerFunc {
 		}
 
 		var doc map[string]any
-		if err := nsutils.ReadJSON(r, &doc); err != nil {
-			nsutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
+		if err := apiutils.ReadJSON(r, &doc); err != nil {
+			apiutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
 			return
 		}
 		// TODO put If-Unmodified-Since into the update query to make it atomic

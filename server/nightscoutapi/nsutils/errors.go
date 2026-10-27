@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 
+	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/consts"
 	utilerrors "nighttroop.t1d.nz/utils/errors"
 )
@@ -23,7 +24,7 @@ func WriteError(w http.ResponseWriter, err *HTTPError) {
 	if err == nil {
 		err = ErrBadRequest
 	}
-	WriteJSON(w, err.Status, map[string]any{"status": err.Status, "message": err.Message})
+	apiutils.WriteJSON(w, err.Status, map[string]any{"status": err.Status, "message": err.Message})
 }
 
 //////

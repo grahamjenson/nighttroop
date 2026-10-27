@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
+	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/consts"
 )
 
@@ -56,7 +57,7 @@ func Create(store nsutils.Store) http.HandlerFunc {
 		}
 
 		var body any
-		if err := nsutils.ReadJSON(r, &body); err != nil {
+		if err := apiutils.ReadJSON(r, &body); err != nil {
 			nsutils.WriteError(w, nsutils.BadDataBodyError)
 			return
 		}
@@ -143,7 +144,7 @@ func Delete(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 			} else if err := store.Delete(r.Context(), collection, identifierOrType, permanent); err == nil {
 				deleted = 1
 			}
-			nsutils.WriteJSON(w, http.StatusOK, map[string]any{
+			apiutils.WriteJSON(w, http.StatusOK, map[string]any{
 				"acknowledged": true,
 				"deletedCount": deleted,
 			})
@@ -162,7 +163,7 @@ func Replace(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 		canCreate := nsutils.CollectionActionHasPermission(collection, identity, nsutils.CollectionActionCreate)
 
 		var body map[string]any
-		if err := nsutils.ReadJSON(r, &body); err != nil {
+		if err := apiutils.ReadJSON(r, &body); err != nil {
 			nsutils.WriteError(w, nsutils.BadDataBodyError)
 			return
 		}

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
+	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -13,7 +14,7 @@ import (
 func Version(store nsutils.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		nsutils.WriteJSON(w, http.StatusOK, map[string]any{
+		apiutils.WriteJSON(w, http.StatusOK, map[string]any{
 			"status": http.StatusOK,
 			"result": map[string]any{
 				"version":    "3.0.4",
@@ -48,7 +49,7 @@ func Version(store nsutils.Store) http.HandlerFunc {
 // Status returns a lightweight authenticated health payload for API v3.
 func Status(_ nsutils.Store) func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
 	return func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
-		nsutils.WriteJSON(w, http.StatusOK, map[string]any{
+		apiutils.WriteJSON(w, http.StatusOK, map[string]any{
 			"status": http.StatusOK,
 			"result": map[string]any{
 				"srvDate":    time.Now().UnixMilli(),
@@ -74,7 +75,7 @@ func Status(_ nsutils.Store) func(http.ResponseWriter, *http.Request, *nsutils.I
 // Test is a minimal authenticated endpoint used for API v3 connectivity checks.
 func Test(_ nsutils.Store) func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
 	return func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
-		nsutils.WriteJSON(w, http.StatusOK, map[string]any{"status": http.StatusOK, "result": "ok"})
+		apiutils.WriteJSON(w, http.StatusOK, map[string]any{"status": http.StatusOK, "result": "ok"})
 	}
 }
 
@@ -97,7 +98,7 @@ func LastModified(store nsutils.Store) func(http.ResponseWriter, *http.Request, 
 			return
 		}
 
-		nsutils.WriteJSON(w, http.StatusOK, map[string]any{
+		apiutils.WriteJSON(w, http.StatusOK, map[string]any{
 			"status": http.StatusOK,
 			"result": map[string]any{
 				"srvDate": time.Now().UnixMilli(),

@@ -5,6 +5,7 @@ import (
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
+	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -24,7 +25,7 @@ func Summary(store nsutils.Store) func(http.ResponseWriter, *http.Request, *nsut
 			SensorChange:  GetComponentEventOccuredAt(lastSensorChange),
 		}
 
-		nsutils.WriteJSON(w, http.StatusOK, summary)
+		apiutils.WriteJSON(w, http.StatusOK, summary)
 	}
 }
 
