@@ -3,17 +3,15 @@ package browser
 import (
 	"bufio"
 	"fmt"
-	"io"
+	"io/fs"
 	"path/filepath"
 	"strconv"
 	"strings"
 )
 
-// //////
-//
-// //////
-func ParseActionFile(fileContents string, ctx map[string]any, path string) (*ActionFile, error) {
-	actions, err := parseFile(strings.NewReader(fileContents), path)
+// ParseActionFile reads the actions of the file at path in fsys, and of the files it INCLUDEs
+func ParseActionFile(fsys fs.FS, path string) (*ActionFile, error) {
+	actions, err := parseFile(fsys, path)
 	if err != nil {
 		return nil, err
 	}
@@ -26,8 +24,13 @@ func ParseActionFile(fileContents string, ctx map[string]any, path string) (*Act
 	}, nil
 }
 
-func parseFile(r io.Reader, path string) ([]Action, error) {
-	scanner := bufio.NewScanner(r)
+func parseFile(fsys fs.FS, path string) ([]Action, error) {
+	file, err := fsys.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
 
 	var actions []Action
 	var current Action
@@ -64,6 +67,17 @@ func parseFile(r io.Reader, path string) ([]Action, error) {
 		first := strings.TrimSpace(split[0])
 
 		switch first {
+		case "INCLUDE":
+			// Another file's steps, e.g. creating a site and logging in, run here as if written out
+			flush()
+			included, err := parseFile(fsys, second)
+			if err != nil {
+				return nil, fmt.Errorf("%s:%d: INCLUDE %s: %w", path, lineNumber, second, err)
+			}
+			// Asserts after it check the page its last step left
+			if len(included) > 0 {
+				actions, current = append(actions, included[:len(included)-1]...), included[len(included)-1]
+			}
 		case "GOTO":
 			flush()
 
