@@ -38,7 +38,7 @@ type SyncJobManager struct {
 }
 
 // maxNightscoutClients is how many sites' Nightscout clients are kept, about 1KB each, so memory stays bounded however
-// many sites sync; a site whose client is dropped logs in again on its next sync
+// many sites sync; a site whose client is dropped logs in again, and reads every collection, on its next sync
 const maxNightscoutClients = 10_000
 
 type SyncJobParams struct {
