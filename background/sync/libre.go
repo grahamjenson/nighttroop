@@ -22,18 +22,19 @@ type libreClient struct {
 }
 
 // libreClientFor returns the site's kept client, or a new one when there is none or its details have changed.
-// There is at most one per site, so saving new details many times does not grow them.
+// There is at most one per site, so saving new details many times does not grow them, and at most
+// maxNightscoutClients sites keep one.
 func (b *SyncJobManager) libreClientFor(syncInfo *SyncJobInfo) (*libreClient, error) {
 	b.libreClientsLock.Lock()
 	defer b.libreClientsLock.Unlock()
-	c := b.libreClients[syncInfo.SiteID]
+	c, _ := b.libreClients.Get(syncInfo.SiteID)
 	if c == nil || c.email != syncInfo.urlOrUsername || c.password != syncInfo.password || c.region != syncInfo.region {
 		client, err := libre_client.NewClient(syncInfo.urlOrUsername, syncInfo.password, syncInfo.region)
 		if err != nil {
 			return nil, err
 		}
 		c = &libreClient{email: syncInfo.urlOrUsername, password: syncInfo.password, region: syncInfo.region, Client: client}
-		b.libreClients[syncInfo.SiteID] = c
+		b.libreClients.Add(syncInfo.SiteID, c)
 	}
 	return c, nil
 }

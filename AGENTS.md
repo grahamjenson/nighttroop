@@ -58,6 +58,7 @@ Use code generators where possible, especially for building models and params fo
 
 - Never create an Issue
 - If you create a PR always start PR description with bold letters saying "I AM A LITTLE AI HERE TO HELP" with the model name at the end
+- All PRs should be against main, no stacked PRs just ask for more code, or break it up into independent changes.
 - One PR per feature or fix. When asked for several things, make separate PRs; stack a PR on the branch it depends on and say so in its description.
 - A PR description says what changed and why, notes any approved size over the limit, and lists the tests.
 - Remove code a change makes dead in the same PR.

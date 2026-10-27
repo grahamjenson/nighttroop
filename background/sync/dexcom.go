@@ -19,21 +19,25 @@ func (b *SyncJobManager) syncDexcom(syncInfo *SyncJobInfo) error {
 
 	slog.Info("Syncing Dexcom", "site_id", syncInfo.SiteID, "sync_type", syncInfo.Type)
 
-	client := dexcom_client.NewClient(syncInfo.urlOrUsername, syncInfo.password, consts.NewDexcomRegionFromString(syncInfo.region) == consts.DexcomRegionOther)
-
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
-	egvs, err := client.FetchEGVs(ctx, 15)
+	_, err := copyDexcomEGVs(ctx, syncInfo, 15)
+	return err
+}
+
+// copyDexcomEGVs copies the last minutes of Dexcom readings into each site, returning how many were new
+func copyDexcomEGVs(ctx context.Context, syncInfo *SyncJobInfo, minutes int) (int, error) {
+	client := dexcom_client.NewClient(syncInfo.urlOrUsername, syncInfo.password, consts.NewDexcomRegionFromString(syncInfo.region) == consts.DexcomRegionOther)
+	egvs, err := client.FetchEGVs(ctx, minutes)
 	if err != nil {
-		return fmt.Errorf("Dexcom Error: %w", err)
+		return 0, fmt.Errorf("Dexcom Error: %w", err)
 	}
-	totalAddedColumns := 0
+	added := 0
 	for _, userSyncSource := range syncInfo.UserSyncSources {
-		addedColumns := false
 		for _, e := range egvs {
 			createParams := dexcommodels.EGVToCreate(e, "dexcom_sync")
-			res, err := userSyncSource.SiteDB.Queries.CreateGlucoseReading(context.TODO(), createParams)
+			res, err := userSyncSource.SiteDB.Queries.CreateGlucoseReading(ctx, createParams)
 			if err != nil {
 				if utilerrors.IsSQLDuplicateID(err) {
 					continue
@@ -42,19 +46,13 @@ func (b *SyncJobManager) syncDexcom(syncInfo *SyncJobInfo) error {
 				slog.Error("Error creating entry in database", "error", err, "id", createParams.ID, "site_id", syncInfo.SiteID, "sync_type", syncInfo.Type)
 				continue
 			}
-
 			if res != nil {
-				addedColumns = true
+				added++
 			}
-
-		}
-
-		// Update that it has been seen and used recently
-		if addedColumns {
-			slog.Info("Added new Dexcom entries for user", "subdomain", userSyncSource.SiteModel.ID)
-			totalAddedColumns += 1
 		}
 	}
-
-	return nil
+	if added > 0 {
+		slog.Info("Added new Dexcom entries for site", "site_id", syncInfo.SiteID, "added", added)
+	}
+	return added, nil
 }

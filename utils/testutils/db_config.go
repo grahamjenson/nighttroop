@@ -24,6 +24,8 @@ func GetTestServerConfig() *config.ServerConfig {
 	cfg.Mode = consts.Test
 	// Any site can be disabled, as a test cannot wait days for one to be inactive
 	cfg.DisableAfterInactivityDays = 0
+	// A day's backfill is enough to test, and keeps it from slowing the browser scenarios running beside it
+	cfg.BackfillDays = 1
 
 	storedServerConfig = cfg
 	return storedServerConfig

@@ -64,6 +64,10 @@ SELECT * FROM glucose_readings WHERE
 (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL)
 AND id = sqlc.arg('ID');
 
+-- name: OldestGlucoseReadingAt :one
+-- When the oldest reading not deleted was, or 0 when there are none
+SELECT CAST(COALESCE(MIN(occurred_at), 0) AS INTEGER) FROM glucose_readings WHERE deleted_at IS NULL;
+
 --
 -- There are three queries here for performance
 -- 1. All default order with limit

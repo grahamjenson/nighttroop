@@ -214,20 +214,31 @@ func (q *Queries) InsertLog(ctx context.Context, arg InsertLogParams) error {
 
 const searchErrors = `-- name: SearchErrors :many
 SELECT id, site_id, message, attributes, created_at FROM errors
-WHERE CAST(?1 AS TEXT) IS NULL OR site_id = ?1
+WHERE (CAST(?1 AS TEXT) IS NULL OR site_id = ?1)
+AND (CAST(?2 AS TEXT) IS NULL OR json_extract(attributes, '$.kind') = ?2)
+AND (CAST(?3 AS TEXT) IS NULL OR instr(lower(message), lower(?3)) > 0 OR instr(lower(attributes), lower(?3)) > 0)
 ORDER BY id DESC
-LIMIT ?3 OFFSET ?2
+LIMIT ?5 OFFSET ?4
 `
 
 type SearchErrorsParams struct {
 	SiteID *string
+	Type   *string
+	Search *string
 	Skip   int64
 	Limit  int64
 }
 
-// Newest first, only the site's when SiteID is set
+// Newest first, only the site's when SiteID is set, only those of the kind Type when it is set, and only those
+// with Search in their text when it is set
 func (q *Queries) SearchErrors(ctx context.Context, arg SearchErrorsParams) ([]*Error, error) {
-	rows, err := q.query(ctx, q.searchErrorsStmt, searchErrors, arg.SiteID, arg.Skip, arg.Limit)
+	rows, err := q.query(ctx, q.searchErrorsStmt, searchErrors,
+		arg.SiteID,
+		arg.Type,
+		arg.Search,
+		arg.Skip,
+		arg.Limit,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -257,20 +268,31 @@ func (q *Queries) SearchErrors(ctx context.Context, arg SearchErrorsParams) ([]*
 
 const searchEvents = `-- name: SearchEvents :many
 SELECT id, site_id, batch, name, attributes, started_at, finished_at FROM events
-WHERE CAST(?1 AS TEXT) IS NULL OR site_id = ?1
+WHERE (CAST(?1 AS TEXT) IS NULL OR site_id = ?1)
+AND (CAST(?2 AS TEXT) IS NULL OR name = ?2)
+AND (CAST(?3 AS TEXT) IS NULL OR instr(lower(name), lower(?3)) > 0 OR instr(lower(attributes), lower(?3)) > 0)
 ORDER BY id DESC
-LIMIT ?3 OFFSET ?2
+LIMIT ?5 OFFSET ?4
 `
 
 type SearchEventsParams struct {
 	SiteID *string
+	Type   *string
+	Search *string
 	Skip   int64
 	Limit  int64
 }
 
-// Newest first, only the site's when SiteID is set
+// Newest first, only the site's when SiteID is set, only those named Type when it is set, and only those with
+// Search in their text when it is set
 func (q *Queries) SearchEvents(ctx context.Context, arg SearchEventsParams) ([]*Event, error) {
-	rows, err := q.query(ctx, q.searchEventsStmt, searchEvents, arg.SiteID, arg.Skip, arg.Limit)
+	rows, err := q.query(ctx, q.searchEventsStmt, searchEvents,
+		arg.SiteID,
+		arg.Type,
+		arg.Search,
+		arg.Skip,
+		arg.Limit,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -303,13 +325,15 @@ func (q *Queries) SearchEvents(ctx context.Context, arg SearchEventsParams) ([]*
 const searchLogs = `-- name: SearchLogs :many
 
 SELECT id, site_id, level, message, attributes, created_at FROM logs
-WHERE CAST(?1 AS TEXT) IS NULL OR site_id = ?1
+WHERE (CAST(?1 AS TEXT) IS NULL OR site_id = ?1)
+AND (CAST(?2 AS TEXT) IS NULL OR instr(lower(message), lower(?2)) > 0 OR instr(lower(attributes), lower(?2)) > 0)
 ORDER BY id DESC
-LIMIT ?3 OFFSET ?2
+LIMIT ?4 OFFSET ?3
 `
 
 type SearchLogsParams struct {
 	SiteID *string
+	Search *string
 	Skip   int64
 	Limit  int64
 }
@@ -317,9 +341,14 @@ type SearchLogsParams struct {
 // -----
 // READ
 // ------
-// Newest first, only the site's when SiteID is set
+// Newest first, only the site's when SiteID is set, and only those with Search in their text when it is set
 func (q *Queries) SearchLogs(ctx context.Context, arg SearchLogsParams) ([]*Log, error) {
-	rows, err := q.query(ctx, q.searchLogsStmt, searchLogs, arg.SiteID, arg.Skip, arg.Limit)
+	rows, err := q.query(ctx, q.searchLogsStmt, searchLogs,
+		arg.SiteID,
+		arg.Search,
+		arg.Skip,
+		arg.Limit,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -350,23 +379,31 @@ func (q *Queries) SearchLogs(ctx context.Context, arg SearchLogsParams) ([]*Log,
 
 const searchSiteEvents = `-- name: SearchSiteEvents :many
 SELECT id, site_id, batch, name, attributes, started_at, finished_at FROM events
-WHERE site_id = ?1 OR (site_id IS NULL AND batch = ?2)
+WHERE (site_id = ?1 OR (site_id IS NULL AND batch = ?2))
+AND (CAST(?3 AS TEXT) IS NULL OR name = ?3)
+AND (CAST(?4 AS TEXT) IS NULL OR instr(lower(name), lower(?4)) > 0
+  OR (site_id = ?1 AND instr(lower(attributes), lower(?4)) > 0))
 ORDER BY id DESC
-LIMIT ?4 OFFSET ?3
+LIMIT ?6 OFFSET ?5
 `
 
 type SearchSiteEventsParams struct {
 	SiteID *string
 	Batch  *string
+	Type   *string
+	Search *string
 	Skip   int64
 	Limit  int64
 }
 
-// Newest first, the site's own events and its batch's, which is all a site may see
+// Newest first, the site's own events and its batch's, which is all a site may see, only those named Type when it is set
+// Search looks in the names of all of them, but only in the attributes of the site's own, as a batch's are not shown
 func (q *Queries) SearchSiteEvents(ctx context.Context, arg SearchSiteEventsParams) ([]*Event, error) {
 	rows, err := q.query(ctx, q.searchSiteEventsStmt, searchSiteEvents,
 		arg.SiteID,
 		arg.Batch,
+		arg.Type,
+		arg.Search,
 		arg.Skip,
 		arg.Limit,
 	)

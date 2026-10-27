@@ -170,3 +170,98 @@ func TestSiteSeesOnlyItsOwnLogs(t *testing.T) {
 	_, err = q.GetSiteLog(ctx, logsdb.GetSiteLogParams{ID: otherLogs[0].ID, SiteID: &site})
 	require.ErrorIs(t, err, sql.ErrNoRows)
 }
+
+// TestLogsDBSearchByType checks a type keeps only the events of that name, or the errors of that kind, and no type
+// keeps them all
+func TestLogsDBSearchByType(t *testing.T) {
+	_, controlDB, err := testutils.GetConfigControlDBForTest()
+	require.NoError(t, err)
+	ctx, logs, site, batch := context.TODO(), controlDB.Logs, "typedsite", "typedbatch"
+
+	logs.SiteCreatedEvent(ctx, site)
+	logs.SiteDisabledEvent(ctx, site, "admin")
+	logs.SyncError(ctx, site, consts.SyncSourceTypeDexcom, errors.New("sync failed"))
+	logs.ServerError(ctx, &site, 500, "GET", "/", "request")
+
+	str := func(s string) *string { return &s }
+	tests := []struct {
+		name       string
+		typ        *string
+		eventNames []string
+		errorKinds []string
+	}{
+		{"every type", nil, []string{"site_disabled", "site_created"}, []string{"server", "sync"}},
+		{"one event name", str("site_created"), []string{"site_created"}, nil},
+		{"one error kind", str("sync"), nil, []string{"sync"}},
+		{"no such type", str("nope"), nil, nil},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			events, err := logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &site, Type: tt.typ, Limit: 10})
+			require.NoError(t, err)
+			siteEvents, err := logs.Queries.SearchSiteEvents(ctx, logsdb.SearchSiteEventsParams{SiteID: &site, Batch: &batch, Type: tt.typ, Limit: 10})
+			require.NoError(t, err)
+			errs, err := logs.Queries.SearchErrors(ctx, logsdb.SearchErrorsParams{SiteID: &site, Type: tt.typ, Limit: 10})
+			require.NoError(t, err)
+
+			names, siteNames, kinds := []string{}, []string{}, []string{}
+			for _, e := range events {
+				names = append(names, e.Name)
+			}
+			for _, e := range siteEvents {
+				siteNames = append(siteNames, e.Name)
+			}
+			for _, e := range errs {
+				kinds = append(kinds, strings.Split(strings.Split(*e.Attributes, `"kind":"`)[1], `"`)[0])
+			}
+			require.ElementsMatch(t, tt.eventNames, names)
+			require.ElementsMatch(t, tt.eventNames, siteNames)
+			require.ElementsMatch(t, tt.errorKinds, kinds)
+		})
+	}
+}
+
+// TestLogsDBSearchText checks a search keeps only rows with it in their text or attributes, ignoring case, and that
+// a site cannot search the attributes of its batch's events, which it is not shown
+func TestLogsDBSearchText(t *testing.T) {
+	_, controlDB, err := testutils.GetConfigControlDBForTest()
+	require.NoError(t, err)
+	ctx, logs, site, batch := context.TODO(), controlDB.Logs, "searchsite", "searchbatch"
+
+	logs.Log(ctx, &site, db.LogLevelInfo, "Synced readings", map[string]any{"source": "dexcom"})
+	logs.Log(ctx, &site, db.LogLevelInfo, "Something else", nil)
+	logs.SiteDisabledEvent(ctx, site, "admin")
+	logs.SiteBatchBackedUpEvent(ctx, batch, 3, time.Now(), false)
+	logs.SyncError(ctx, site, consts.SyncSourceTypeNightscout, errors.New("Nightscout refused"))
+
+	str := func(s string) *string { return &s }
+	tests := []struct {
+		name       string
+		search     *string
+		logs       int
+		siteEvents int
+		errors     int
+	}{
+		{"no search", nil, 2, 2, 1},
+		{"message, ignoring case", str("synced READINGS"), 1, 0, 0},
+		{"attributes", str("dexcom"), 1, 0, 0},
+		{"event name", str("disabled"), 0, 1, 0},
+		{"own event attributes", str("admin"), 0, 1, 0},
+		{"batch event attributes are not searched", str("site_count"), 0, 0, 0},
+		{"error message", str("refused"), 0, 0, 1},
+		{"nothing matches", str("nope"), 0, 0, 0},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			found, err := logs.Queries.SearchLogs(ctx, logsdb.SearchLogsParams{SiteID: &site, Search: tt.search, Limit: 10})
+			require.NoError(t, err)
+			require.Len(t, found, tt.logs)
+			events, err := logs.Queries.SearchSiteEvents(ctx, logsdb.SearchSiteEventsParams{SiteID: &site, Batch: &batch, Search: tt.search, Limit: 10})
+			require.NoError(t, err)
+			require.Len(t, events, tt.siteEvents)
+			errs, err := logs.Queries.SearchErrors(ctx, logsdb.SearchErrorsParams{SiteID: &site, Search: tt.search, Limit: 10})
+			require.NoError(t, err)
+			require.Len(t, errs, tt.errors)
+		})
+	}
+}

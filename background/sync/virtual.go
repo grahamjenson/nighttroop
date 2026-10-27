@@ -130,14 +130,7 @@ func (b *SyncJobManager) syncVirtual(syncInfo *SyncJobInfo) error {
 	defer cancel()
 
 	for _, userSyncSource := range syncInfo.UserSyncSources {
-		siteContext := &httputils.SiteContext{
-			Subdomain:     userSyncSource.SiteModel.ID,
-			IdentityModel: &controldb.SiteIdentity{Name: "virtual_sync"},
-			ControlDB:     userSyncSource.ControlDB,
-			SiteDB:        userSyncSource.SiteDB,
-			SiteModel:     userSyncSource.SiteModel,
-			HTTPAction:    httputils.HTTPActionWrite,
-		}
+		siteContext := virtualSiteContext(userSyncSource)
 		// The first sync fills the last 30 minutes, profile included, so the site has data to show straight away
 		span, skip := virtualSlot, []nsutils.Collection{nsutils.Profile}
 		if syncInfo.firstSync {
@@ -152,4 +145,16 @@ func (b *SyncJobManager) syncVirtual(syncInfo *SyncJobInfo) error {
 		}
 	}
 	return nil
+}
+
+// virtualSiteContext is what the virtual source writes to the site as
+func virtualSiteContext(userSyncSource *SyncUserInfo) *httputils.SiteContext {
+	return &httputils.SiteContext{
+		Subdomain:     userSyncSource.SiteModel.ID,
+		IdentityModel: &controldb.SiteIdentity{Name: "virtual_sync"},
+		ControlDB:     userSyncSource.ControlDB,
+		SiteDB:        userSyncSource.SiteDB,
+		SiteModel:     userSyncSource.SiteModel,
+		HTTPAction:    httputils.HTTPActionWrite,
+	}
 }

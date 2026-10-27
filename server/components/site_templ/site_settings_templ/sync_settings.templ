@@ -1,6 +1,9 @@
 package site_settings_templ
 
 import (
+	"strings"
+	"time"
+
 	"github.com/templui/templui/components/checkbox"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/ui/button"
@@ -175,11 +178,14 @@ templ DexcomSyncForm(dexcomSyncSettings *sitemodels.SyncSource) {
 					}) {
 						Delete
 					}
-					@button.Button(button.Props{
-						Type: button.TypeSubmit,
-					}) {
-						Save
-					}
+					<div class="flex gap-3">
+						@BackfillButton("dexcom")
+						@button.Button(button.Props{
+							Type: button.TypeSubmit,
+						}) {
+							Save
+						}
+					</div>
 				</div>
 			</div>
 		</div>
@@ -420,12 +426,15 @@ templ NightscoutSyncForm(nightscoutSyncSettings *sitemodels.SyncSource) {
 					}) {
 						Delete
 					}
-					@button.Button(button.Props{
-						ID:   "site--settings--nightscout-sync--submit",
-						Type: button.TypeSubmit,
-					}) {
-						Save
-					}
+					<div class="flex gap-3">
+						@BackfillButton("nightscout")
+						@button.Button(button.Props{
+							ID:   "site--settings--nightscout-sync--submit",
+							Type: button.TypeSubmit,
+						}) {
+							Save
+						}
+					</div>
 				</div>
 			</div>
 		</div>
@@ -487,16 +496,63 @@ templ VirtualSyncForm(synSource *sitemodels.SyncSource) {
 					}) {
 						Delete
 					}
-					@button.Button(button.Props{
-						ID:   "site--settings--virtual-sync--submit",
-						Type: button.TypeSubmit,
-					}) {
-						Save
-					}
+					<div class="flex gap-3">
+						@BackfillButton("virtual")
+						@button.Button(button.Props{
+							ID:   "site--settings--virtual-sync--submit",
+							Type: button.TypeSubmit,
+						}) {
+							Save
+						}
+					</div>
 				</div>
 			</div>
 		</div>
 	</form>
+}
+
+// BackfillButton asks to fetch the named source's older records, saying what it will fetch; it is disabled while its
+// request is sent, and the server starts only one backfill at a time
+templ BackfillButton(name string) {
+	@button.Button(button.Props{
+		ID:      "site--settings--" + name + "-sync--backfill",
+		Type:    "button",
+		Variant: button.VariantOutline,
+		Attributes: templ.Attributes{
+			"hx-include":      "none",
+			"hx-post":         "/settings/sync/" + name + "/backfill",
+			"hx-confirm":      backfillConfirm(name),
+			"hx-disabled-elt": "this",
+			"hx-sync":         "this:drop",
+			"hx-target":       "#toaster",
+			"hx-swap":         "beforeend",
+			"hx-status:4xx":   "target:#toaster swap:beforeend",
+			"hx-status:5xx":   "target:#toaster swap:beforeend",
+		},
+	}) {
+		Backfill
+	}
+}
+
+func backfillConfirm(name string) string {
+	if name == string(consts.SyncSourceTypeDexcom) {
+		return "Backfill fetches the last 24 hours of readings, which is as far back as Dexcom Share goes. It runs in the background. Continue?"
+	}
+	return "Backfill fetches older records from before your oldest glucose reading, a week of them by default. It runs in the background and can take a minute. Continue?"
+}
+
+// BackfillQueued says which records a backfill that has just started will fetch
+templ BackfillQueued(sourceType consts.SyncSourceType, from int64, to int64) {
+	@toast.Toast(toast.Props{
+		Title:         "Backfilling " + strings.ToUpper(string(sourceType)[:1]) + string(sourceType)[1:],
+		Description:   "Fetching records from " + time.UnixMilli(from).UTC().Format("2 Jan 15:04") + " to " + time.UnixMilli(to).UTC().Format("2 Jan 15:04") + " UTC",
+		Variant:       toast.VariantSuccess,
+		Position:      toast.PositionTopCenter,
+		Duration:      8000,
+		Dismissible:   true,
+		Icon:          true,
+		ShowIndicator: true,
+	})
 }
 
 templ SuccessfulUpdate(model *sitemodels.SyncSource) {

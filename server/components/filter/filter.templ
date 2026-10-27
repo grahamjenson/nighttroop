@@ -1,0 +1,72 @@
+package filter
+
+import (
+	"net/url"
+
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/utils/display"
+)
+
+type Props struct {
+	// ID names the form, its type select ID--type, its search input ID--search and its button ID--submit
+	ID string
+	// Path is the page's URL, without a query
+	Path string
+	// All labels the option that shows every type
+	All string
+	// Types are the types to pick from, or none for no type select
+	Types    []string
+	Selected *string
+	Search   *string
+}
+
+// Filter picks one type of row to show, or every type, and text to search them for, and shows the first page of them
+templ Filter(p Props) {
+	<form
+		id={ p.ID }
+		hx-get={ p.Path }
+		hx-target="#main-content"
+		hx-push-url="true"
+		hx-swap="innerHTML"
+		class="mb-4 flex justify-end gap-2"
+	>
+		<input
+			id={ p.ID + "--search" }
+			name="search"
+			type="search"
+			aria-label="Search"
+			placeholder="Search"
+			maxlength="64"
+			if p.Search != nil {
+				value={ *p.Search }
+			}
+			class="h-9 w-64 rounded-md border border-gray-200 bg-white px-3 text-sm"
+		/>
+		if len(p.Types) > 0 {
+			<select id={ p.ID + "--type" } name="type" aria-label="Type" class="h-9 rounded-md border border-gray-200 bg-white px-3 text-sm">
+			<option value="" selected?={ p.Selected == nil }>{ p.All }</option>
+			for _, t := range p.Types {
+				<option value={ t } selected?={ p.Selected != nil && *p.Selected == t }>{ display.Name(t) }</option>
+			}
+		</select>
+		}
+		@button.Button(button.Props{ID: p.ID + "--submit", Type: "submit", Variant: button.VariantOutline}) {
+			Filter
+		}
+	</form>
+}
+
+// PagePath is a page's URL keeping the type chosen and the search, for the pages either side
+func PagePath(path string, selected *string, search *string) string {
+	values := url.Values{}
+	if selected != nil {
+		values.Set("type", *selected)
+	}
+	if search != nil {
+		values.Set("search", *search)
+	}
+	if len(values) == 0 {
+		return path
+	}
+	return path + "?" + values.Encode()
+}

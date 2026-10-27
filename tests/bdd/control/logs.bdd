@@ -41,6 +41,26 @@ SCREENSHOT event_details
 CLICK #control--event--details--close
 ASSERT_NOT_VISIBLE #control--event--details
 
+// Events can be filtered to one type, with an option for all of them
+INPUT #control--events--filter--type sync_turned_off
+CLICK #control--events--filter--submit
+ASSERT_TEXT_VISIBLE No events here.
+ASSERT_NOT_VISIBLE #controlEventsTable >> text=Site created
+INPUT #control--events--filter--type site_created
+CLICK #control--events--filter--submit
+ASSERT_VISIBLE #controlEventsTable td >> text=Site created >> nth=0
+SCREENSHOT events_filtered
+ASSERT_TEXT_EQUALS #control--events--filter--type>option[value=""] All events
+
+// Events can be searched too, ignoring case, keeping the type chosen
+INPUT #control--events--filter--search CREATED
+CLICK #control--events--filter--submit
+ASSERT_VISIBLE #controlEventsTable td >> text=Site created >> nth=0
+SCREENSHOT events_searched
+INPUT #control--events--filter--search nothing like this
+CLICK #control--events--filter--submit
+ASSERT_TEXT_VISIBLE No events here.
+
 // Errors and logs have pages of their own
 CLICK #control--menu
 CLICK #control--errors-button
