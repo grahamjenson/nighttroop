@@ -6,8 +6,6 @@
 
 ## Before Beta Testing
 
-1. Backfill button on sync page for Dexcom, NS (one off creds would be cool, so I can pull data from multiple sources )
-
 1. Reports/Derived Values:
     1. AGP
     1. TTD
