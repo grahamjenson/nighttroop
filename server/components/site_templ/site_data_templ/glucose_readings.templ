@@ -53,6 +53,14 @@ func glucoseInputAttributes(ctx context.Context) templ.Attributes {
 	return templ.Attributes{"step": "any", "min": "0.1", "max": fmt.Sprint(consts.Round(glucoseUnits(ctx).FromMGDL(1000), 1))}
 }
 
+// directionDetail is a reading's trend as its arrow and Nightscout's name for it, like "↗ FortyFiveUp"
+func directionDetail(direction *string) string {
+	if direction == nil {
+		return "-"
+	}
+	return display.Direction(direction) + " " + *direction
+}
+
 // orDash shows an optional value, or a dash when it is not set
 func orDash[T any](value *T) string {
 	if value == nil {
@@ -218,10 +226,10 @@ templ GlucoseReadingModal(reading *sitemodels.SiteGlucoseReading) {
 			}
 		</form>
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-			@readingDetail("Type", reading.ReadingType)
+			@readingDetail("Type", display.ReadingType(reading.ReadingType))
 			@readingDetail("Original Units", orDash(reading.OriginalUnits))
 			@readingDetail("Measurement Method", orDash(reading.MeasurementMethod))
-			@readingDetail("Direction", orDash(reading.Direction))
+			@readingDetail("Direction", directionDetail(reading.Direction))
 			@readingDetail("Delta", orDash(reading.Delta))
 			@readingDetail("Noise", orDash(reading.Noise))
 			@readingDetail("Filtered", orDash(reading.Filtered))

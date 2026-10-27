@@ -46,6 +46,9 @@ SCREENSHOT glucose_readings
 CLICK #glucoseReadingsTable tbody tr >> nth=0
 ASSERT_VISIBLE #site--glucose--details
 ASSERT_TEXT_VISIBLE virtual_sync
+// Its type and trend read as they do in the table
+ASSERT_VISIBLE #site--glucose--details >> text=Sensor
+ASSERT_NOT_VISIBLE #site--glucose--details >> text=sgv
 SCREENSHOT glucose_reading_details
 
 CLICK #site--glucose--details--close
