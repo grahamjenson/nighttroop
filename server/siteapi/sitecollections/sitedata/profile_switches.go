@@ -1,6 +1,7 @@
 package sitedata
 
 import (
+	"cmp"
 	"context"
 	"unicode/utf8"
 
@@ -137,11 +138,11 @@ func checkProfileSwitch(model *sitemodels.SiteProfileSwitch) *apiutils.HTTPError
 	if utf8.RuneCountInString(model.Name) > 64 {
 		return apiutils.ErrConstraintCheckFailedWithHint("name must be at most 64 characters")
 	}
-	if p := model.Percent; p != nil && (*p < 10 || *p > 500) {
-		return apiutils.ErrConstraintCheckFailedWithHint("percent must be from 10 to 500")
-	}
-	if t := model.Timeshift; t != nil && (*t < -24*60 || *t > 24*60) {
-		return apiutils.ErrConstraintCheckFailedWithHint("timeshift must be from -1440 to 1440 minutes")
+	if herr := cmp.Or(
+		apiutils.CheckRange("percent", model.Percent, 10, 500, ""),
+		apiutils.CheckRange("timeshift", model.Timeshift, -24*60, 24*60, "minutes"),
+	); herr != nil {
+		return herr
 	}
 	if d := model.DurationMinutes; d != nil && (*d < 0 || *d > 7*24*60) {
 		return apiutils.ErrConstraintCheckFailedWithHint("duration must be from 0 to 10080 minutes, 0 is until the next switch")
