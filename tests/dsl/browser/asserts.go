@@ -124,8 +124,8 @@ func (r *AssertTextVisible) ToErrorLine() string {
 // click at its centre would hit, so one clipped by a scrolling box or covered by another element fails
 type AssertVisible struct {
 	Locator string
-	// Drawn is ASSERT_DRAWN, for a mark in a graph that others may be drawn over: it is shown, but need not be
-	// what a click at its centre would hit
+	// Drawn is ASSERT_DRAWN, for a mark in a graph that others may be drawn over: it is shown whole inside its
+	// graph, but need not be what a click at its centre would hit
 	Drawn bool
 
 	TestPath string
@@ -162,6 +162,14 @@ const clickableScript = `el => {
 	return hit !== null && (hit === el || el.contains(hit));
 }`
 
+// insideGraphScript checks the element is drawn wholly inside the SVG it is in, which clips anything past its edges
+const insideGraphScript = `el => {
+	const graph = el.closest('svg');
+	if (graph === null) return true;
+	const r = el.getBoundingClientRect(), g = graph.getBoundingClientRect();
+	return r.left >= g.left && r.right <= g.right && r.top >= g.top && r.bottom <= g.bottom;
+}`
+
 func (r *AssertVisible) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
 	locator := getLocator(r.Locator, page)
 	if locator != nil {
@@ -185,6 +193,13 @@ func (r *AssertVisible) Execute(t *testing.T, ctx map[string]any, page playwrigh
 		t.Fatalf("\n\n%s\n assertVisible failed: expected value to be visible for locator: %s\n\n%s\n\n", r.ToErrorLine(), r.Locator, prettyOutput)
 	}
 	if r.Drawn {
+		inside, err := locator.Evaluate(insideGraphScript, nil)
+		if err != nil {
+			t.Fatalf("\n\n%s\n failed to check locator is inside its graph: %v, error: %v\n\n%s\n\n", r.ToErrorLine(), r.Locator, err, prettyOutput)
+		}
+		if inside != true {
+			t.Fatalf("\n\n%s\n assertDrawn failed: element is cut off by the edge of its graph: %s\n\n%s\n\n", r.ToErrorLine(), r.Locator, prettyOutput)
+		}
 		return nil
 	}
 	clickable, err := locator.Evaluate(clickableScript, nil)
