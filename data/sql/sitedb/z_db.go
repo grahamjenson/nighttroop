@@ -261,6 +261,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.lastModifiedCollectionsStmt, err = db.PrepareContext(ctx, lastModifiedCollections); err != nil {
 		return nil, fmt.Errorf("error preparing query LastModifiedCollections: %w", err)
 	}
+	if q.oldestGlucoseReadingAtStmt, err = db.PrepareContext(ctx, oldestGlucoseReadingAt); err != nil {
+		return nil, fmt.Errorf("error preparing query OldestGlucoseReadingAt: %w", err)
+	}
 	if q.recentDeviceNamesStmt, err = db.PrepareContext(ctx, recentDeviceNames); err != nil {
 		return nil, fmt.Errorf("error preparing query RecentDeviceNames: %w", err)
 	}
@@ -793,6 +796,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing lastModifiedCollectionsStmt: %w", cerr)
 		}
 	}
+	if q.oldestGlucoseReadingAtStmt != nil {
+		if cerr := q.oldestGlucoseReadingAtStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing oldestGlucoseReadingAtStmt: %w", cerr)
+		}
+	}
 	if q.recentDeviceNamesStmt != nil {
 		if cerr := q.recentDeviceNamesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing recentDeviceNamesStmt: %w", cerr)
@@ -1131,6 +1139,7 @@ type Queries struct {
 	hardDeleteTempBasalStmt                     *sql.Stmt
 	hardDeleteTempTargetStmt                    *sql.Stmt
 	lastModifiedCollectionsStmt                 *sql.Stmt
+	oldestGlucoseReadingAtStmt                  *sql.Stmt
 	recentDeviceNamesStmt                       *sql.Stmt
 	searchActivitiesStmt                        *sql.Stmt
 	searchComponentEventsStmt                   *sql.Stmt
@@ -1260,6 +1269,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		hardDeleteTempBasalStmt:                     q.hardDeleteTempBasalStmt,
 		hardDeleteTempTargetStmt:                    q.hardDeleteTempTargetStmt,
 		lastModifiedCollectionsStmt:                 q.lastModifiedCollectionsStmt,
+		oldestGlucoseReadingAtStmt:                  q.oldestGlucoseReadingAtStmt,
 		recentDeviceNamesStmt:                       q.recentDeviceNamesStmt,
 		searchActivitiesStmt:                        q.searchActivitiesStmt,
 		searchComponentEventsStmt:                   q.searchComponentEventsStmt,

@@ -44,6 +44,8 @@ const maxNightscoutClients = 10_000
 type SyncJobParams struct {
 	SiteID string
 	Type   consts.SyncSourceType
+	// Backfill is set for a backfill rather than a sync
+	Backfill *BackfillParams `json:",omitempty"`
 }
 
 type SyncJobInfo struct {
@@ -148,6 +150,9 @@ func (b *SyncJobManager) SyncSource(ctx context.Context, syncJob SyncJobParams) 
 		password:        password,
 		region:          region,
 		firstSync:       syncSource.FirstSuccessfulSyncTime == nil,
+	}
+	if syncJob.Backfill != nil {
+		return b.backfill(syncInfo, *syncJob.Backfill)
 	}
 	return b.SyncUserData(syncInfo)
 }

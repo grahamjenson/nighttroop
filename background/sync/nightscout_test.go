@@ -47,10 +47,13 @@ func TestNightscoutSyncRemembersWhenCollectionsWereModified(t *testing.T) {
 	all := func(modified int64) map[nsutils.Collection]int64 {
 		return map[nsutils.Collection]int64{nsutils.Entries: modified, nsutils.Treatments: modified, nsutils.Devicestatus: modified}
 	}
+	client := func() *nightscoutClient {
+		c, _ := jobs.nightscoutClients.Get(siteID)
+		return c
+	}
 	runSync := func() map[nsutils.Collection]int64 {
 		require.NoError(t, jobs.SyncSource(ctx, SyncJobParams{SiteID: siteID, Type: typ}))
-		client, _ := jobs.nightscoutClients.Get(siteID)
-		return client.lastModified
+		return client().lastModified
 	}
 
 	// A sync reads entries, treatments and device statuses and its client remembers when Nightscout says each was last modified
@@ -62,10 +65,9 @@ func TestNightscoutSyncRemembersWhenCollectionsWereModified(t *testing.T) {
 
 	// New details may be another Nightscout, so their new client reads everything again
 	require.NoError(t, q.UpdateSyncSource(ctx, controldb.UpdateSyncSourceParams{SiteID: siteID, Type: typ, PasswordEnc: enc("new-token"), Enabled: true}))
-	first, _ := jobs.nightscoutClients.Get(siteID)
+	first := client()
 	require.Equal(t, all(nightscout_client.TestLastModified), runSync())
-	second, _ := jobs.nightscoutClients.Get(siteID)
-	require.NotSame(t, first, second)
+	require.NotSame(t, first, client())
 }
 
 func TestNightscoutClientIsKeptBetweenSyncs(t *testing.T) {
@@ -162,6 +164,6 @@ func TestNightscoutSyncCopiesEntriesTreatmentsAndDeviceStatuses(t *testing.T) {
 	logs, err := controlDB.Logs.Queries.SearchLogs(ctx, logsdb.SearchLogsParams{SiteID: &siteID, Limit: 10})
 	require.NoError(t, err)
 	require.Len(t, logs, 1)
-	require.Equal(t, "skipped a Nightscout document the site refused", logs[0].Message)
+	require.Equal(t, "skipped Nightscout documents the site refused", logs[0].Message)
 	require.Contains(t, *logs[0].Attributes, `"collection":"treatments"`)
 }

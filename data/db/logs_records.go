@@ -25,7 +25,14 @@ const (
 	EventSiteBatchBackedUp EventName = "site_batch_backed_up"
 	EventControlBackedUp   EventName = "control_backed_up"
 	EventSyncTurnedOff     EventName = "sync_turned_off"
+	EventSyncBackfilled    EventName = "sync_backfilled"
 )
+
+// EventNames are every event's name, to pick from
+var EventNames = []string{
+	string(EventSiteCreated), string(EventSiteDisabled), string(EventSiteDeleted), string(EventSiteArchived),
+	string(EventSiteTruncated), string(EventSiteBatchBackedUp), string(EventControlBackedUp), string(EventSyncTurnedOff),
+}
 
 // ErrorKind is what failed in an error, the kind in its attributes
 type ErrorKind string
@@ -36,6 +43,11 @@ const (
 	ErrorKindSiteBatchBackup ErrorKind = "site_batch_backup"
 	ErrorKindControlBackup   ErrorKind = "control_backup"
 )
+
+// ErrorKinds are every error's kind, to pick from
+var ErrorKinds = []string{
+	string(ErrorKindServer), string(ErrorKindSync), string(ErrorKindSiteBatchBackup), string(ErrorKindControlBackup),
+}
 
 // LogLevel is how much a log matters
 type LogLevel string
@@ -121,6 +133,25 @@ type SyncTurnedOffAttributes struct {
 // SyncTurnedOffEvent records a site's sync source being turned off because its first sync failed
 func (l *LogsDB) SyncTurnedOffEvent(ctx context.Context, siteID string, syncType consts.SyncSourceType) {
 	l.event(ctx, &siteID, EventSyncTurnedOff, SyncTurnedOffAttributes{SyncType: syncType})
+}
+
+type SyncBackfilledAttributes struct {
+	SyncType consts.SyncSourceType `json:"sync_type"`
+	From     int64                 `json:"from"`
+	To       int64                 `json:"to"`
+	Records  int                   `json:"records"`
+	Error    *string               `json:"error,omitempty"`
+}
+
+// SyncBackfilledEvent records a site's backfill of the records from from to to, which started at started, the new
+// records it added and why it stopped early if it did
+func (l *LogsDB) SyncBackfilledEvent(ctx context.Context, siteID string, syncType consts.SyncSourceType, started time.Time, from, to int64, records int, err error) {
+	attributes := SyncBackfilledAttributes{SyncType: syncType, From: from, To: to, Records: records}
+	if err != nil {
+		message := truncate(err.Error())
+		attributes.Error = &message
+	}
+	l.finishedEvent(ctx, &siteID, nil, EventSyncBackfilled, started, attributes)
 }
 
 ///////
