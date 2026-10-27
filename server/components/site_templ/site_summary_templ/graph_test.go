@@ -35,12 +35,27 @@ func TestGraph(t *testing.T) {
 	mmol := consts.UnitsMMOLL
 	now := time.Date(2026, 1, 2, 12, 0, 0, 0, time.Local).UnixMilli()
 	since := now - 48*time.Hour.Milliseconds()
-	rate := 2.0
+	// Targets of 5 to 7 for the first hour and 6 to 8 for the next, then none; a basal of 1 U/hr for most of the
+	// last hour then 2 U/hr, after none
+	minutes := make([]sitemodels.SummaryMinute, 48*60+1)
+	for i := range minutes {
+		switch {
+		case i < 60:
+			minutes[i].LowTarget, minutes[i].HighTarget = new(5.0), new(7.0)
+		case i < 120:
+			minutes[i].LowTarget, minutes[i].HighTarget = new(6.0), new(8.0)
+		}
+		switch {
+		case i >= 48*60-10:
+			minutes[i].Basal = new(2.0)
+		case i >= 47*60:
+			minutes[i].Basal = new(1.0)
+		}
+	}
 	option := option(t, &sitemodels.Summary{
 		Since: since, Units: &mmol,
 		GlucoseReadings: []*sitemodels.SiteGlucoseReading{{Reading: 20, Units: &mmol}, {Reading: 6, Units: &mmol}, {Reading: 3, Units: &mmol}, {Reading: 12, Units: &mmol}},
-		TempTargets:     []*sitemodels.SiteTempTarget{{LowTarget: 5, HighTarget: 7, OccurredAt: since, DurationMinutes: 60}},
-		TempBasals:      []*sitemodels.SiteTempBasal{{Absolute: &rate, OccurredAt: now - time.Hour.Milliseconds(), DurationMinutes: 120}},
+		Minutes:         minutes,
 	}, now)
 
 	// Every grid's time axis runs from the start of the summary to now, labelled only at the bottom
@@ -81,26 +96,27 @@ func TestGraph(t *testing.T) {
 	require.InDelta(t, 3.9, series(option, "Low")["markLine"].(map[string]any)["data"].([]any)[0].(map[string]any)["yAxis"], 0.05)
 	require.InDelta(t, 10, series(option, "High")["markLine"].(map[string]any)["data"].([]any)[0].(map[string]any)["yAxis"], 0.05)
 
-	// The target range is a band behind the readings, and a temp target shades its range for as long as it runs
+	// Each stretch of the same targets is a band behind the readings, from its high to its low, and none is drawn
+	// where no target is in force
 	areas := series(option, "In range")["markArea"].(map[string]any)["data"].([]any)
 	require.Len(t, areas, 2)
-	band, target := areas[0].([]any), areas[1].([]any)
-	require.Equal(t, []any{float64(since), float64(now)}, []any{band[0].(map[string]any)["coord"].([]any)[0], band[1].(map[string]any)["coord"].([]any)[0]})
-	require.InDelta(t, 10, band[0].(map[string]any)["coord"].([]any)[1], 0.05)
-	require.InDelta(t, 3.9, band[1].(map[string]any)["coord"].([]any)[1], 0.05)
-	require.Equal(t, []any{float64(since), 7.0}, target[0].(map[string]any)["coord"])
-	require.Equal(t, []any{float64(since + time.Hour.Milliseconds()), 5.0}, target[1].(map[string]any)["coord"])
+	hour := float64(time.Hour.Milliseconds())
+	for i, want := range [][]any{{float64(since), 7.0, float64(since) + hour, 5.0}, {float64(since) + hour, 8.0, float64(since) + 2*hour, 6.0}} {
+		area := areas[i].([]any)
+		require.Equal(t, []any{want[0], want[1]}, area[0].(map[string]any)["coord"])
+		require.Equal(t, []any{want[2], want[3]}, area[1].(map[string]any)["coord"])
+	}
 
-	// A temp basal rises to its rate on its own axis, and one running past now ends at the graph's edge
-	basal := series(option, "Temp basal")
+	// The basal rises to its rate on its own axis, steps to the next rate, and falls back at the graph's edge
+	basal := series(option, "Basal")
 	require.EqualValues(t, basalRate, basal["yAxisIndex"])
 	require.EqualValues(t, 2, option["yAxis"].([]any)[basalRate].(map[string]any)["max"])
 	points := []any{}
 	for _, point := range basal["data"].([]any) {
 		points = append(points, point.(map[string]any)["value"])
 	}
-	start := float64(now - time.Hour.Milliseconds())
-	require.Equal(t, []any{[]any{start, 0.0}, []any{start, 2.0}, []any{float64(now), 2.0}, []any{float64(now), 0.0}}, points)
+	start, step := float64(now)-hour, float64(now-10*time.Minute.Milliseconds())
+	require.Equal(t, []any{[]any{start, 0.0}, []any{start, 1.0}, []any{step, 1.0}, []any{step, 2.0}, []any{float64(now), 2.0}, []any{float64(now), 0.0}}, points)
 }
 
 // Treatments a moment apart overlap on a long graph, so the latest is drawn last, on top where it can be read

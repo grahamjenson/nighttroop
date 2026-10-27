@@ -30,15 +30,14 @@ var (
 	red600     = css.Colour("red-600")
 	amber500   = css.Colour("amber-500")
 	blue500    = css.Colour("blue-500")
-	gray100    = css.Colour("gray-100")
 	gray200    = css.Colour("gray-200")
 	gray700    = css.Colour("gray-700")
 )
 
-// graph is the summary as a go-echarts chart on one time axis: glucose dots over the target range with
-// temp targets as shaded lines, insulin as triangles pointing down and carbs as triangles pointing up
-// under it, and temp basals as a line at the bottom. Treatments are added oldest first, so the latest
-// is drawn on top where markers close together overlap.
+// graph is the summary as a go-echarts chart on one time axis: glucose dots over the targets in force each minute,
+// shaded, insulin as triangles pointing down and carbs as triangles pointing up under it, and the basal rate in force
+// each minute as a line at the bottom. Treatments are added oldest first, so the latest is drawn on top where markers
+// close together overlap.
 //
 // ECharts shows times in the browser's timezone, or in UTC, so each time is moved by the location's offset
 // from UTC at that time, and drawn in UTC: the axis and tooltips then show the location's time.
@@ -53,13 +52,12 @@ func graph(s *sitemodels.Summary, now int64, location *time.Location) *charts.Sc
 	}
 	// The glucose axis ends on whole numbers, so its labels are round
 	glucoseMin, glucoseMax := math.Floor(s.Units.FromMGDL(axisStartMgdl)), math.Ceil(glucoseMax)
-	for _, b := range s.TempBasals {
-		if b.Absolute != nil {
-			basalMax = max(basalMax, *b.Absolute)
+	for _, m := range s.Minutes {
+		if m.Basal != nil {
+			basalMax = max(basalMax, *m.Basal)
 		}
 	}
 	low, top := s.Units.FromMGDL(rangeLowMgdl), s.Units.FromMGDL(rangeTopMgdl)
-	endOf := func(start, durationMinutes int64) int64 { return min(start+durationMinutes*60_000, now) }
 
 	chart := charts.NewScatter()
 	chart.SetGlobalOptions(
@@ -83,8 +81,8 @@ func graph(s *sitemodels.Summary, now int64, location *time.Location) *charts.Sc
 		opts.YAxis{Type: "value", Min: 0, Max: basalMax, GridIndex: basalX, Show: opts.Bool(false)},
 	)
 
-	// Readings are red below the target range, amber above and the brand colour in it; the range is a band
-	// behind them, with its bounds as dashed lines, and each temp target is a blue line over its shaded range
+	// Readings are red below the range, amber above and the brand colour in it, with its bounds as dashed lines; behind
+	// them each stretch of the same targets is a shaded band
 	var lows, highs, inRange []opts.ScatterData
 	for _, r := range s.GlucoseReadings {
 		point := opts.ScatterData{Value: []any{at(r.OccurredAt), r.Reading}}
@@ -97,12 +95,11 @@ func graph(s *sitemodels.Summary, now int64, location *time.Location) *charts.Sc
 			inRange = append(inRange, point)
 		}
 	}
-	targets := []charts.SeriesOpts{charts.WithMarkAreaStyleOpts(opts.MarkAreaStyle{Label: &opts.Label{Show: opts.Bool(false)}}), charts.WithMarkAreaNameCoordItemOpts(opts.MarkAreaNameCoordItem{Name: "Target range", Coordinate0: []any{at(s.Since), top}, Coordinate1: []any{at(now), low}, ItemStyle: &opts.ItemStyle{Color: gray100}})}
-	for _, t := range s.TempTargets {
-		targets = append(targets,
-			charts.WithMarkAreaNameCoordItemOpts(opts.MarkAreaNameCoordItem{Name: "Temp target", Coordinate0: []any{at(t.OccurredAt), t.HighTarget}, Coordinate1: []any{at(endOf(t.OccurredAt, t.DurationMinutes)), t.LowTarget}, ItemStyle: &opts.ItemStyle{Color: blue500, Opacity: opts.Float(0.15)}}),
-			charts.WithMarkLineNameCoordItemOpts(opts.MarkLineNameCoordItem{Name: "Temp target", Coordinate0: []any{at(t.OccurredAt), (t.LowTarget + t.HighTarget) / 2}, Coordinate1: []any{at(endOf(t.OccurredAt, t.DurationMinutes)), (t.LowTarget + t.HighTarget) / 2}}),
-		)
+	targets := []charts.SeriesOpts{charts.WithMarkAreaStyleOpts(opts.MarkAreaStyle{Label: &opts.Label{Show: opts.Bool(false)}})}
+	for _, r := range runs(s, now, func(m sitemodels.SummaryMinute) []*float64 { return []*float64{m.LowTarget, m.HighTarget} }) {
+		if r.values[0] != nil && r.values[1] != nil {
+			targets = append(targets, charts.WithMarkAreaNameCoordItemOpts(opts.MarkAreaNameCoordItem{Name: "Target", Coordinate0: []any{at(r.start), *r.values[1]}, Coordinate1: []any{at(r.end), *r.values[0]}, ItemStyle: &opts.ItemStyle{Color: blue500, Opacity: opts.Float(0.15)}}))
+		}
 	}
 	dashed := func(colour string) charts.SeriesOpts {
 		return charts.WithMarkLineStyleOpts(opts.MarkLineStyle{Symbol: []string{"none", "none"}, Label: &opts.Label{Show: opts.Bool(false)}, LineStyle: &opts.LineStyle{Type: "dashed", Color: colour, Width: 2}})
@@ -110,7 +107,7 @@ func graph(s *sitemodels.Summary, now int64, location *time.Location) *charts.Sc
 	dot := charts.WithScatterChartOpts(opts.ScatterChart{SymbolSize: 6})
 	chart.AddSeries("Low", lows, dot, charts.WithItemStyleOpts(opts.ItemStyle{Color: red600}), dashed(red600), charts.WithMarkLineNameYAxisItemOpts(opts.MarkLineNameYAxisItem{Name: "Low", YAxis: low}))
 	chart.AddSeries("High", highs, dot, charts.WithItemStyleOpts(opts.ItemStyle{Color: amber500}), dashed(amber500), charts.WithMarkLineNameYAxisItemOpts(opts.MarkLineNameYAxisItem{Name: "High", YAxis: top}))
-	chart.AddSeries("In range", inRange, append(targets, dot, charts.WithItemStyleOpts(opts.ItemStyle{Color: brandNight}), charts.WithMarkLineStyleOpts(opts.MarkLineStyle{Symbol: []string{"none", "none"}, Label: &opts.Label{Show: opts.Bool(false)}, LineStyle: &opts.LineStyle{Color: blue500, Width: 2}}))...)
+	chart.AddSeries("In range", inRange, append(targets, dot, charts.WithItemStyleOpts(opts.ItemStyle{Color: brandNight}))...)
 
 	marker := func(colour string) []charts.SeriesOpts {
 		return []charts.SeriesOpts{
@@ -131,17 +128,26 @@ func graph(s *sitemodels.Summary, now int64, location *time.Location) *charts.Sc
 	chart.AddSeries("Insulin", insulin, marker(brandNight)...)
 	chart.AddSeries("Carbs", carbs, marker(amber500)...)
 
-	// Each temp basal rises to its rate when it starts and falls back when it ends
+	// The basal steps to each rate when it comes into force, and falls to nothing where none is in force
 	var basals []opts.LineData
-	for _, b := range slices.Backward(s.TempBasals) {
-		if b.Absolute == nil {
-			continue
+	var last *float64
+	for _, r := range runs(s, now, func(m sitemodels.SummaryMinute) []*float64 { return []*float64{m.Basal} }) {
+		rate := r.values[0]
+		switch {
+		case rate != nil && last == nil:
+			basals = append(basals, opts.LineData{Value: []any{at(r.start), 0}}, opts.LineData{Value: []any{at(r.start), *rate}}, opts.LineData{Value: []any{at(r.end), *rate}})
+		case rate != nil:
+			basals = append(basals, opts.LineData{Value: []any{at(r.start), *rate}}, opts.LineData{Value: []any{at(r.end), *rate}})
+		case last != nil:
+			basals = append(basals, opts.LineData{Value: []any{at(r.start), 0}})
 		}
-		end := endOf(b.OccurredAt, b.DurationMinutes)
-		basals = append(basals, opts.LineData{Value: []any{at(b.OccurredAt), 0}}, opts.LineData{Value: []any{at(b.OccurredAt), *b.Absolute}}, opts.LineData{Value: []any{at(end), *b.Absolute}}, opts.LineData{Value: []any{at(end), 0}})
+		last = rate
+	}
+	if last != nil {
+		basals = append(basals, opts.LineData{Value: []any{at(now), 0}})
 	}
 	basal := charts.NewLine()
-	basal.AddSeries("Temp basal", basals,
+	basal.AddSeries("Basal", basals,
 		charts.WithLineChartOpts(opts.LineChart{XAxisIndex: basalX, YAxisIndex: basalRate, ShowSymbol: opts.Bool(false)}),
 		charts.WithLineStyleOpts(opts.LineStyle{Color: brandNight, Width: 2}),
 		charts.WithAreaStyleOpts(opts.AreaStyle{Color: brandNight, Opacity: opts.Float(0.1)}),
@@ -149,6 +155,31 @@ func graph(s *sitemodels.Summary, now int64, location *time.Location) *charts.Sc
 	chart.Overlap(basal)
 	chart.AddJSFuncs("window.addEventListener('resize', function() { %MY_ECHARTS%.resize(); });")
 	return chart
+}
+
+// run is a stretch of minutes from start to end with the same values
+type run struct {
+	start, end int64
+	values     []*float64
+}
+
+// runs are the summary's minutes up to now joined into stretches whose values are the same
+func runs(s *sitemodels.Summary, now int64, values func(sitemodels.SummaryMinute) []*float64) []run {
+	var all []run
+	for i, m := range s.Minutes {
+		start := s.Since + int64(i)*60_000
+		if start >= now {
+			break
+		}
+		end := min(start+60_000, now)
+		v := values(m)
+		if len(all) > 0 && slices.EqualFunc(all[len(all)-1].values, v, func(a, b *float64) bool { return (a == nil) == (b == nil) && (a == nil || *a == *b) }) {
+			all[len(all)-1].end = end
+			continue
+		}
+		all = append(all, run{start: start, end: end, values: v})
+	}
+	return all
 }
 
 // timeAxis is the time axis of a grid, from the start of the summary to now, labelled only on the bottom grid
