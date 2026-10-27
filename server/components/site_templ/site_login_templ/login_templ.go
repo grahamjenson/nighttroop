@@ -457,7 +457,7 @@ func LoginTOTP() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "</form></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "</form><script>\n\t\t\t\t// Logs in as soon as the code's last digit is typed or pasted. It waits a tick for the code's slots to\n\t\t\t\t// fill its value, and does not send the same code twice, so a wrong code is not sent again on its own.\n\t\t\t\t(function () {\n\t\t\t\t\tconst form = document.getElementById(\"otp\");\n\t\t\t\t\tconst code = document.getElementById(\"otp-form\");\n\t\t\t\t\tlet sent = \"\";\n\t\t\t\t\tconst sendWhenFull = () => setTimeout(() => {\n\t\t\t\t\t\tif (/^\\d{6}$/.test(code.value) && code.value !== sent) {\n\t\t\t\t\t\t\tsent = code.value;\n\t\t\t\t\t\t\tform.requestSubmit();\n\t\t\t\t\t\t}\n\t\t\t\t\t}, 0);\n\t\t\t\t\tform.addEventListener(\"input\", sendWhenFull);\n\t\t\t\t\tform.addEventListener(\"paste\", sendWhenFull);\n\t\t\t\t})();\n\t\t\t</script></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

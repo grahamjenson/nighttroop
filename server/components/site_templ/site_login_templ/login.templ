@@ -149,6 +149,23 @@ templ LoginTOTP() {
 					Log In
 				}
 			</form>
+			<script>
+				// Logs in as soon as the code's last digit is typed or pasted. It waits a tick for the code's slots to
+				// fill its value, and does not send the same code twice, so a wrong code is not sent again on its own.
+				(function () {
+					const form = document.getElementById("otp");
+					const code = document.getElementById("otp-form");
+					let sent = "";
+					const sendWhenFull = () => setTimeout(() => {
+						if (/^\d{6}$/.test(code.value) && code.value !== sent) {
+							sent = code.value;
+							form.requestSubmit();
+						}
+					}, 0);
+					form.addEventListener("input", sendWhenFull);
+					form.addEventListener("paste", sendWhenFull);
+				})();
+			</script>
 		</div>
 	</div>
 }

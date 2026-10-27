@@ -95,6 +95,15 @@ func parseFile(r io.Reader, path string) ([]Action, error) {
 				click.Locator, click.Corner = second, true
 			}
 			current = click
+		case "TYPE":
+			flush()
+
+			// TYPE types into a field like INPUT, but takes asserts, for a field that does something once typed in
+			parts := strings.SplitN(second, " ", 2)
+			if len(parts) != 2 || parts[1] == "" {
+				return nil, fmt.Errorf("TYPE needs a locator and a value")
+			}
+			current = &Click{TestPath: path, TestLine: lineNumber, Asserts: []Assert{}, Locator: parts[0], Text: parts[1]}
 		case "CLICK_BACK", "CLICK_FORWARD":
 			flush()
 
