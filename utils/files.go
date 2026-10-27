@@ -1,8 +1,10 @@
 package utils
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 )
@@ -22,31 +24,25 @@ func MkParentDirs(path string) error {
 	return nil
 }
 
+// FileExists is whether path can be found; a path that cannot be checked, e.g. for permissions, does not exist
 func FileExists(path string) bool {
 	_, err := os.Stat(path)
-	if err == nil {
-		return true
-	} else if !os.IsNotExist(err) {
-		return false
-	}
-	return false
+	return err == nil
 }
 
+// DeleteFile removes the file at path, if there is one
 func DeleteFile(path string) error {
-	if FileExists(path) {
-		err := os.Remove(path)
-		if err != nil {
-			return fmt.Errorf("cannot delete file %s: %w", path, err)
-		}
+	if err := os.Remove(path); err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return fmt.Errorf("cannot delete file %s: %w", path, err)
 	}
 	return nil
 }
 
+// DeleteFiles removes each file there is, stopping at the first that cannot be removed
 func DeleteFiles(paths []string) error {
 	for _, path := range paths {
-		err := DeleteFile(path)
-		if err != nil {
-			return fmt.Errorf("cannot delete file %s: %w", path, err)
+		if err := DeleteFile(path); err != nil {
+			return err
 		}
 	}
 	return nil
