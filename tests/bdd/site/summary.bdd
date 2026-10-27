@@ -66,6 +66,11 @@ ASSERT_VISIBLE #site--summary--readings tbody tr >> nth=5
 ASSERT_VISIBLE #site--summary--devices >> text=virtual://nighttroop
 ASSERT_VISIBLE #site--summary--devices >> text=virtual://carer-phone
 
+// The latest glucose, each reading and each treatment say how long ago they were, all within the last half hour here
+ASSERT_VISIBLE #site--summary--glucose--ago >> text=/^\d+m ago$/
+ASSERT_VISIBLE #site--summary--readings tbody tr >> nth=0 >> text=/^\d+m ago$/
+ASSERT_VISIBLE #site--summary--treatments tbody tr >> nth=0 >> text=/^\d+m ago$/
+
 // ECharts draws the graph as an SVG in the browser: carbs and insulin are labelled by their markers, with the rows named down the side.
 // These are checked as drawn, as labels can be drawn over each other (virtual sync's meal can be at nearly the same time as
 // the one added here), and the sticky header can cover them once the page scrolls.
