@@ -11196,6 +11196,46 @@ func (m *HardDeleteProfileSwitchParams) SetID(v string) {
 	m.ID = v
 }
 
+// GetUntil returns the Until value.
+func (m SearchSummaryProfileSwitchesParams) GetUntil() int64 {
+	return m.Until
+}
+
+// SetUntil sets the Until value and returns the updated SearchSummaryProfileSwitchesParams.
+func (m *SearchSummaryProfileSwitchesParams) SetUntil(v int64) {
+	m.Until = v
+}
+
+// GetSince returns the Since value.
+func (m SearchSummaryProfileSwitchesParams) GetSince() int64 {
+	return m.Since
+}
+
+// SetSince sets the Since value and returns the updated SearchSummaryProfileSwitchesParams.
+func (m *SearchSummaryProfileSwitchesParams) SetSince(v int64) {
+	m.Since = v
+}
+
+// GetEarliest returns the Earliest value.
+func (m SearchSummaryProfileSwitchesParams) GetEarliest() int64 {
+	return m.Earliest
+}
+
+// SetEarliest sets the Earliest value and returns the updated SearchSummaryProfileSwitchesParams.
+func (m *SearchSummaryProfileSwitchesParams) SetEarliest(v int64) {
+	m.Earliest = v
+}
+
+// GetLimit returns the Limit value.
+func (m SearchSummaryProfileSwitchesParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated SearchSummaryProfileSwitchesParams.
+func (m *SearchSummaryProfileSwitchesParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
 // GetID returns the ID value.
 func (m CreateTempBasalParams) GetID() string {
 	return m.ID
@@ -13514,6 +13554,36 @@ func (m HardDeleteProfileStoreParams) GetProfileStoreID() string {
 // SetProfileStoreID sets the ProfileStoreID value and returns the updated HardDeleteProfileStoreParams.
 func (m *HardDeleteProfileStoreParams) SetProfileStoreID(v string) {
 	m.ProfileStoreID = v
+}
+
+// GetUntil returns the Until value.
+func (m SearchSummaryDefaultProfilesParams) GetUntil() int64 {
+	return m.Until
+}
+
+// SetUntil sets the Until value and returns the updated SearchSummaryDefaultProfilesParams.
+func (m *SearchSummaryDefaultProfilesParams) SetUntil(v int64) {
+	m.Until = v
+}
+
+// GetSince returns the Since value.
+func (m SearchSummaryDefaultProfilesParams) GetSince() int64 {
+	return m.Since
+}
+
+// SetSince sets the Since value and returns the updated SearchSummaryDefaultProfilesParams.
+func (m *SearchSummaryDefaultProfilesParams) SetSince(v int64) {
+	m.Since = v
+}
+
+// GetLimit returns the Limit value.
+func (m SearchSummaryDefaultProfilesParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated SearchSummaryDefaultProfilesParams.
+func (m *SearchSummaryDefaultProfilesParams) SetLimit(v int64) {
+	m.Limit = v
 }
 
 // GetBefore returns the Before value.

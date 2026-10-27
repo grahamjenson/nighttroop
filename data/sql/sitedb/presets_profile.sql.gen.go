@@ -525,6 +525,71 @@ func (q *Queries) SearchProfileStores(ctx context.Context, arg SearchProfileStor
 	return items, nil
 }
 
+const searchSummaryDefaultProfiles = `-- name: SearchSummaryDefaultProfiles :many
+SELECT id, name, profile_store_id, is_default, dia, units, timezone, carbs_hr, delay, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, loop_settings_json, raw_json_data, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM profile_presets
+WHERE profile_presets.is_default = 1 AND profile_presets.occurred_at <= ?1
+    AND profile_presets.occurred_at >= COALESCE((SELECT MAX(before.occurred_at) FROM profile_presets AS before WHERE before.is_default = 1 AND before.occurred_at <= ?2), 0)
+ORDER BY profile_presets.occurred_at DESC
+LIMIT ?3
+`
+
+type SearchSummaryDefaultProfilesParams struct {
+	Until int64
+	Since int64
+	Limit int64
+}
+
+// The default profiles in force from Since to Until, newest first: the last uploaded by Since and each one after
+func (q *Queries) SearchSummaryDefaultProfiles(ctx context.Context, arg SearchSummaryDefaultProfilesParams) ([]*ProfilePreset, error) {
+	rows, err := q.query(ctx, q.searchSummaryDefaultProfilesStmt, searchSummaryDefaultProfiles, arg.Until, arg.Since, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*ProfilePreset
+	for rows.Next() {
+		var i ProfilePreset
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.ProfileStoreID,
+			&i.IsDefault,
+			&i.Dia,
+			&i.Units,
+			&i.Timezone,
+			&i.CarbsHr,
+			&i.Delay,
+			&i.CarbRatiosJson,
+			&i.InsulinSensitivitiesJson,
+			&i.BasalRatesJson,
+			&i.TargetsHighJson,
+			&i.TargetsLowJson,
+			&i.LoopSettingsJson,
+			&i.RawJsonData,
+			&i.UtcOffsetMinutes,
+			&i.OccurredAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedByAppName,
+			&i.CreatedByDeviceName,
+			&i.UpdatedByIdentityID,
+			&i.UpdatedByIdentityName,
+			&i.CreatedByIdentityID,
+			&i.CreatedByIdentityName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateProfilePreset = `-- name: UpdateProfilePreset :one
 
 UPDATE profile_presets SET

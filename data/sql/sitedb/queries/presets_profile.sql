@@ -138,3 +138,10 @@ ORDER BY created_at DESC;
 
 -- name: HardDeleteProfileStore :execresult
 DELETE FROM profile_presets WHERE profile_store_id = ?;
+-- name: SearchSummaryDefaultProfiles :many
+-- The default profiles in force from Since to Until, newest first: the last uploaded by Since and each one after
+SELECT * FROM profile_presets
+WHERE profile_presets.is_default = 1 AND profile_presets.occurred_at <= sqlc.arg('Until')
+    AND profile_presets.occurred_at >= COALESCE((SELECT MAX(before.occurred_at) FROM profile_presets AS before WHERE before.is_default = 1 AND before.occurred_at <= sqlc.arg('Since')), 0)
+ORDER BY profile_presets.occurred_at DESC
+LIMIT sqlc.arg('Limit');
