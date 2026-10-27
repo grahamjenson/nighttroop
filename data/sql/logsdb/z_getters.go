@@ -352,6 +352,16 @@ func (m *SearchEventsParams) SetSiteID(v *string) {
 	m.SiteID = v
 }
 
+// GetType returns the Type value.
+func (m SearchEventsParams) GetType() *string {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated SearchEventsParams.
+func (m *SearchEventsParams) SetType(v *string) {
+	m.Type = v
+}
+
 // GetSkip returns the Skip value.
 func (m SearchEventsParams) GetSkip() int64 {
 	return m.Skip
@@ -380,6 +390,16 @@ func (m SearchErrorsParams) GetSiteID() *string {
 // SetSiteID sets the SiteID value and returns the updated SearchErrorsParams.
 func (m *SearchErrorsParams) SetSiteID(v *string) {
 	m.SiteID = v
+}
+
+// GetType returns the Type value.
+func (m SearchErrorsParams) GetType() *string {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated SearchErrorsParams.
+func (m *SearchErrorsParams) SetType(v *string) {
+	m.Type = v
 }
 
 // GetSkip returns the Skip value.
@@ -450,6 +470,16 @@ func (m SearchSiteEventsParams) GetBatch() *string {
 // SetBatch sets the Batch value and returns the updated SearchSiteEventsParams.
 func (m *SearchSiteEventsParams) SetBatch(v *string) {
 	m.Batch = v
+}
+
+// GetType returns the Type value.
+func (m SearchSiteEventsParams) GetType() *string {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated SearchSiteEventsParams.
+func (m *SearchSiteEventsParams) SetType(v *string) {
+	m.Type = v
 }
 
 // GetSkip returns the Skip value.

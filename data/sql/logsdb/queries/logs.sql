@@ -23,16 +23,18 @@ ORDER BY id DESC
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 -- name: SearchEvents :many
--- Newest first, only the site's when SiteID is set
+-- Newest first, only the site's when SiteID is set, and only those named Type when it is set
 SELECT * FROM events
-WHERE CAST(sqlc.narg('SiteID') AS TEXT) IS NULL OR site_id = sqlc.narg('SiteID')
+WHERE (CAST(sqlc.narg('SiteID') AS TEXT) IS NULL OR site_id = sqlc.narg('SiteID'))
+AND (CAST(sqlc.narg('Type') AS TEXT) IS NULL OR name = sqlc.narg('Type'))
 ORDER BY id DESC
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 -- name: SearchErrors :many
--- Newest first, only the site's when SiteID is set
+-- Newest first, only the site's when SiteID is set, and only those of the kind Type when it is set
 SELECT * FROM errors
-WHERE CAST(sqlc.narg('SiteID') AS TEXT) IS NULL OR site_id = sqlc.narg('SiteID')
+WHERE (CAST(sqlc.narg('SiteID') AS TEXT) IS NULL OR site_id = sqlc.narg('SiteID'))
+AND (CAST(sqlc.narg('Type') AS TEXT) IS NULL OR json_extract(attributes, '$.kind') = sqlc.narg('Type'))
 ORDER BY id DESC
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
@@ -46,9 +48,10 @@ SELECT * FROM events WHERE id = sqlc.arg('ID');
 SELECT * FROM errors WHERE id = sqlc.arg('ID');
 
 -- name: SearchSiteEvents :many
--- Newest first, the site's own events and its batch's, which is all a site may see
+-- Newest first, the site's own events and its batch's, which is all a site may see, only those named Type when it is set
 SELECT * FROM events
-WHERE site_id = sqlc.arg('SiteID') OR (site_id IS NULL AND batch = sqlc.arg('Batch'))
+WHERE (site_id = sqlc.arg('SiteID') OR (site_id IS NULL AND batch = sqlc.arg('Batch')))
+AND (CAST(sqlc.narg('Type') AS TEXT) IS NULL OR name = sqlc.narg('Type'))
 ORDER BY id DESC
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 

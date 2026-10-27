@@ -9,6 +9,7 @@ type QueryConverter interface {
 	// goverter:map . Limit | GetLimitInt64
 	// goverter:map . Skip | GetSkipInt64
 	// goverter:map . Hours | GetHoursInt64
+	// goverter:map . Type | GetType
 	QueryValuesToQuery(source QueryValues) Query
 }
 
@@ -34,4 +35,12 @@ func GetHoursInt64(source QueryValues) *int64 {
 	}
 	hours := min(source.Hours.Int64(), MaxQueryHours)
 	return &hours
+}
+
+// GetType leaves an empty type unset, which is every type
+func GetType(source QueryValues) *string {
+	if source.Type == nil || *source.Type == "" {
+		return nil
+	}
+	return source.Type
 }
