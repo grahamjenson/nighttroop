@@ -54,7 +54,8 @@ ASSERT_VISIBLE #site--summary--treatments tbody tr >> nth=0 >> text=/^\d+m ago$/
 
 // ECharts draws the graph as an SVG in the browser: carbs and insulin are labelled by their markers, with the rows named down the side.
 // These are checked as drawn, as labels can be drawn over each other (virtual sync's meal can be at nearly the same time as
-// the one added here), and the sticky header can cover them once the page scrolls.
+// the one added here), and the sticky header can cover them once the page scrolls. Drawn also checks each is inside the
+// graph, as the labels of a dose and a meal given just now are drawn right of markers at the graph's right edge.
 ASSERT_DRAWN #site--summary--graph svg
 ASSERT_DRAWN #site--summary--graph >> text=15g
 ASSERT_DRAWN #site--summary--graph >> text=2.5U

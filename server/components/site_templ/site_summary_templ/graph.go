@@ -66,9 +66,10 @@ func graph(s *sitemodels.Summary, now int64, location *time.Location) *charts.Sc
 		charts.WithLegendOpts(opts.Legend{Show: opts.Bool(false)}),
 		charts.WithTooltipOpts(opts.Tooltip{Show: opts.Bool(true), Formatter: opts.FuncOpts(tooltip)}),
 		charts.WithGridOpts(
-			opts.Grid{Left: "60", Right: "30", Top: "4%", Height: "54%"},
-			opts.Grid{Left: "60", Right: "30", Top: "64%", Height: "14%"},
-			opts.Grid{Left: "60", Right: "30", Top: "82%", Height: "8%"},
+			// Wide enough on the right for the label of a dose or meal given just now, which is drawn right of its marker
+			opts.Grid{Left: "60", Right: "60", Top: "4%", Height: "54%"},
+			opts.Grid{Left: "60", Right: "60", Top: "64%", Height: "14%"},
+			opts.Grid{Left: "60", Right: "60", Top: "82%", Height: "8%"},
 		),
 		charts.WithXAxisOpts(timeAxis(glucoseX, at(s.Since), at(now), false)),
 		charts.WithYAxisOpts(opts.YAxis{Type: "value", Min: glucoseMin, Max: glucoseMax, SplitLine: &opts.SplitLine{Show: opts.Bool(false)}, AxisLabel: &opts.AxisLabel{ShowMinLabel: opts.Bool(false)}}),
