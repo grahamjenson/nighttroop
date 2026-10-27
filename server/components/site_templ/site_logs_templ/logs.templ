@@ -1,6 +1,8 @@
 package site_logs_templ
 
 import (
+	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/server/components/filter"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -42,7 +44,7 @@ func attributes(raw json.RawMessage) string {
 }
 
 // page heads a page of rows with its title and description, and pages it
-templ page(id string, title string, description string, path string, count int, skip int64, limit int64) {
+templ page(id string, title string, description string, path string, pagePath string, count int, skip int64, limit int64) {
 	<div id={ id } class="mx-auto max-w-5xl space-y-6">
 		<div>
 			<h1 class="text-2xl font-bold">{ title }</h1>
@@ -50,7 +52,7 @@ templ page(id string, title string, description string, path string, count int, 
 		</div>
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			{ children... }
-			@pager.Pager(pager.Props{ID: "site-" + path, Path: path, Count: count, Skip: skip, Limit: limit})
+			@pager.Pager(pager.Props{ID: "site-" + path, Path: pagePath, Count: count, Skip: skip, Limit: limit})
 		</section>
 		<div id="modal-container"></div>
 	</div>
@@ -83,8 +85,9 @@ templ attributesDetail(id string, raw json.RawMessage) {
 var detail = modal.Detail
 
 // EventsTable shows one page of the site's events and its batch's, the newest first
-templ EventsTable(events []*sitemodels.SiteEvent, skip int64, limit int64) {
-	@page("events_table", "Events", "What happened to this site and the batch of sites it is backed up with, newest first.", "/logs/events", len(events), skip, limit) {
+templ EventsTable(events []*sitemodels.SiteEvent, skip int64, limit int64, eventType *string, search *string) {
+	@page("events_table", "Events", "What happened to this site and the batch of sites it is backed up with, newest first.", "/logs/events", filter.PagePath("/logs/events", eventType, search), len(events), skip, limit) {
+		@filter.Filter(filter.Props{ID: "site--events--filter", Path: "/logs/events", All: "All events", Types: db.EventNames, Selected: eventType, Search: search})
 		@table.Table(table.Props{ID: "siteEventsTable", Class: "rounded-lg border border-gray-200"}) {
 			@table.Header() {
 				@table.Row() {
@@ -142,8 +145,9 @@ templ EventModal(event *sitemodels.SiteEvent) {
 }
 
 // ErrorsTable shows one page of the site's errors, the newest first
-templ ErrorsTable(errors []*sitemodels.SiteError, skip int64, limit int64) {
-	@page("errors_table", "Errors", "What failed for this site, newest first.", "/logs/errors", len(errors), skip, limit) {
+templ ErrorsTable(errors []*sitemodels.SiteError, skip int64, limit int64, kind *string, search *string) {
+	@page("errors_table", "Errors", "What failed for this site, newest first.", "/logs/errors", filter.PagePath("/logs/errors", kind, search), len(errors), skip, limit) {
+		@filter.Filter(filter.Props{ID: "site--errors--filter", Path: "/logs/errors", All: "All errors", Types: db.ErrorKinds, Selected: kind, Search: search})
 		@table.Table(table.Props{ID: "siteErrorsTable", Class: "rounded-lg border border-gray-200"}) {
 			@table.Header() {
 				@table.Row() {
@@ -182,8 +186,9 @@ templ ErrorModal(e *sitemodels.SiteError) {
 }
 
 // LogsTable shows one page of the site's logs, the newest first
-templ LogsTable(logs []*sitemodels.SiteLog, skip int64, limit int64) {
-	@page("logs_table", "Logs", "Messages logged for this site, newest first.", "/logs/logs", len(logs), skip, limit) {
+templ LogsTable(logs []*sitemodels.SiteLog, skip int64, limit int64, search *string) {
+	@page("logs_table", "Logs", "Messages logged for this site, newest first.", "/logs/logs", filter.PagePath("/logs/logs", nil, search), len(logs), skip, limit) {
+		@filter.Filter(filter.Props{ID: "site--logs--filter", Path: "/logs/logs", Search: search})
 		@table.Table(table.Props{ID: "siteLogsTable", Class: "rounded-lg border border-gray-200"}) {
 			@table.Header() {
 				@table.Row() {

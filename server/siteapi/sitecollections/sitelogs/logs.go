@@ -32,11 +32,11 @@ func (s *EventsCollection) ToModel(row *logsdb.Event, _ *httputils.SiteContext) 
 }
 
 func (s *EventsCollection) SearchRows(ctx context.Context, _ *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*logsdb.Event, error) {
-	return siteContext.ControlDB.Logs.Queries.SearchSiteEvents(ctx, logsdb.SearchSiteEventsParams{SiteID: &siteContext.Subdomain, Batch: &siteContext.SiteModel.Batch, Skip: query.Skip, Limit: query.Limit})
+	return siteContext.ControlDB.Logs.Queries.SearchSiteEvents(ctx, logsdb.SearchSiteEventsParams{SiteID: &siteContext.Subdomain, Batch: &siteContext.SiteModel.Batch, Type: query.Type, Search: query.Search, Skip: query.Skip, Limit: query.Limit})
 }
 
 func (s *EventsCollection) SearchHTMXResponse(models []*sitemodels.SiteEvent, query *apiutils.Query) templ.Component {
-	return site_logs_templ.EventsTable(models, query.Skip, query.Limit)
+	return site_logs_templ.EventsTable(models, query.Skip, query.Limit, query.Type, query.Search)
 }
 
 func (s *EventsCollection) GetRow(ctx context.Context, _ *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*logsdb.Event, error) {
@@ -61,11 +61,11 @@ func (s *ErrorsCollection) ToModel(row *logsdb.Error, _ *httputils.SiteContext) 
 }
 
 func (s *ErrorsCollection) SearchRows(ctx context.Context, _ *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*logsdb.Error, error) {
-	return siteContext.ControlDB.Logs.Queries.SearchErrors(ctx, logsdb.SearchErrorsParams{SiteID: &siteContext.Subdomain, Skip: query.Skip, Limit: query.Limit})
+	return siteContext.ControlDB.Logs.Queries.SearchErrors(ctx, logsdb.SearchErrorsParams{SiteID: &siteContext.Subdomain, Type: query.Type, Search: query.Search, Skip: query.Skip, Limit: query.Limit})
 }
 
 func (s *ErrorsCollection) SearchHTMXResponse(models []*sitemodels.SiteError, query *apiutils.Query) templ.Component {
-	return site_logs_templ.ErrorsTable(models, query.Skip, query.Limit)
+	return site_logs_templ.ErrorsTable(models, query.Skip, query.Limit, query.Type, query.Search)
 }
 
 func (s *ErrorsCollection) GetRow(ctx context.Context, _ *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*logsdb.Error, error) {
@@ -90,11 +90,11 @@ func (s *LogsCollection) ToModel(row *logsdb.Log, _ *httputils.SiteContext) *sit
 }
 
 func (s *LogsCollection) SearchRows(ctx context.Context, _ *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*logsdb.Log, error) {
-	return siteContext.ControlDB.Logs.Queries.SearchLogs(ctx, logsdb.SearchLogsParams{SiteID: &siteContext.Subdomain, Skip: query.Skip, Limit: query.Limit})
+	return siteContext.ControlDB.Logs.Queries.SearchLogs(ctx, logsdb.SearchLogsParams{SiteID: &siteContext.Subdomain, Search: query.Search, Skip: query.Skip, Limit: query.Limit})
 }
 
 func (s *LogsCollection) SearchHTMXResponse(models []*sitemodels.SiteLog, query *apiutils.Query) templ.Component {
-	return site_logs_templ.LogsTable(models, query.Skip, query.Limit)
+	return site_logs_templ.LogsTable(models, query.Skip, query.Limit, query.Search)
 }
 
 func (s *LogsCollection) GetRow(ctx context.Context, _ *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*logsdb.Log, error) {

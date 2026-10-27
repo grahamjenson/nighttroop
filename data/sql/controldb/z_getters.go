@@ -1397,6 +1397,86 @@ func (m *SiteSyncSource) SetFirstSuccessfulSyncTime(v *int64) {
 	m.FirstSuccessfulSyncTime = v
 }
 
+// GetBackfillStartedAt returns the BackfillStartedAt value.
+func (m SiteSyncSource) GetBackfillStartedAt() *int64 {
+	return m.BackfillStartedAt
+}
+
+// SetBackfillStartedAt sets the BackfillStartedAt value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetBackfillStartedAt(v *int64) {
+	m.BackfillStartedAt = v
+}
+
+// GetLastBackfillFrom returns the LastBackfillFrom value.
+func (m SiteSyncSource) GetLastBackfillFrom() *int64 {
+	return m.LastBackfillFrom
+}
+
+// SetLastBackfillFrom sets the LastBackfillFrom value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetLastBackfillFrom(v *int64) {
+	m.LastBackfillFrom = v
+}
+
+// GetLastBackfillTo returns the LastBackfillTo value.
+func (m SiteSyncSource) GetLastBackfillTo() *int64 {
+	return m.LastBackfillTo
+}
+
+// SetLastBackfillTo sets the LastBackfillTo value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetLastBackfillTo(v *int64) {
+	m.LastBackfillTo = v
+}
+
+// GetLastBackfillFinishedAt returns the LastBackfillFinishedAt value.
+func (m SiteSyncSource) GetLastBackfillFinishedAt() *int64 {
+	return m.LastBackfillFinishedAt
+}
+
+// SetLastBackfillFinishedAt sets the LastBackfillFinishedAt value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetLastBackfillFinishedAt(v *int64) {
+	m.LastBackfillFinishedAt = v
+}
+
+// GetLastBackfillDuration returns the LastBackfillDuration value.
+func (m SiteSyncSource) GetLastBackfillDuration() *int64 {
+	return m.LastBackfillDuration
+}
+
+// SetLastBackfillDuration sets the LastBackfillDuration value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetLastBackfillDuration(v *int64) {
+	m.LastBackfillDuration = v
+}
+
+// GetLastBackfillRecords returns the LastBackfillRecords value.
+func (m SiteSyncSource) GetLastBackfillRecords() *int64 {
+	return m.LastBackfillRecords
+}
+
+// SetLastBackfillRecords sets the LastBackfillRecords value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetLastBackfillRecords(v *int64) {
+	m.LastBackfillRecords = v
+}
+
+// GetLastBackfillError returns the LastBackfillError value.
+func (m SiteSyncSource) GetLastBackfillError() *string {
+	return m.LastBackfillError
+}
+
+// SetLastBackfillError sets the LastBackfillError value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetLastBackfillError(v *string) {
+	m.LastBackfillError = v
+}
+
+// GetTotalBackfills returns the TotalBackfills value.
+func (m SiteSyncSource) GetTotalBackfills() int64 {
+	return m.TotalBackfills
+}
+
+// SetTotalBackfills sets the TotalBackfills value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetTotalBackfills(v int64) {
+	m.TotalBackfills = v
+}
+
 // GetSyncIntervalSecondsReason returns the SyncIntervalSecondsReason value.
 func (m SiteSyncSource) GetSyncIntervalSecondsReason() string {
 	return m.SyncIntervalSecondsReason
@@ -2837,6 +2917,56 @@ func (m *DeleteSyncSourceParams) SetSiteID(v string) {
 	m.SiteID = v
 }
 
+// GetDurationMs returns the DurationMs value.
+func (m FinishSyncSourceBackfillParams) GetDurationMs() *int64 {
+	return m.DurationMs
+}
+
+// SetDurationMs sets the DurationMs value and returns the updated FinishSyncSourceBackfillParams.
+func (m *FinishSyncSourceBackfillParams) SetDurationMs(v *int64) {
+	m.DurationMs = v
+}
+
+// GetRecords returns the Records value.
+func (m FinishSyncSourceBackfillParams) GetRecords() *int64 {
+	return m.Records
+}
+
+// SetRecords sets the Records value and returns the updated FinishSyncSourceBackfillParams.
+func (m *FinishSyncSourceBackfillParams) SetRecords(v *int64) {
+	m.Records = v
+}
+
+// GetError returns the Error value.
+func (m FinishSyncSourceBackfillParams) GetError() *string {
+	return m.Error
+}
+
+// SetError sets the Error value and returns the updated FinishSyncSourceBackfillParams.
+func (m *FinishSyncSourceBackfillParams) SetError(v *string) {
+	m.Error = v
+}
+
+// GetType returns the Type value.
+func (m FinishSyncSourceBackfillParams) GetType() consts.SyncSourceType {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated FinishSyncSourceBackfillParams.
+func (m *FinishSyncSourceBackfillParams) SetType(v consts.SyncSourceType) {
+	m.Type = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m FinishSyncSourceBackfillParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated FinishSyncSourceBackfillParams.
+func (m *FinishSyncSourceBackfillParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
 // GetSiteID returns the SiteID value.
 func (m GetAllSyncSourcesForSiteParams) GetSiteID() string {
 	return m.SiteID
@@ -2885,6 +3015,46 @@ func (m SearchSyncSourcesParams) GetLimit() int64 {
 // SetLimit sets the Limit value and returns the updated SearchSyncSourcesParams.
 func (m *SearchSyncSourcesParams) SetLimit(v int64) {
 	m.Limit = v
+}
+
+// GetFrom returns the From value.
+func (m StartSyncSourceBackfillParams) GetFrom() *int64 {
+	return m.From
+}
+
+// SetFrom sets the From value and returns the updated StartSyncSourceBackfillParams.
+func (m *StartSyncSourceBackfillParams) SetFrom(v *int64) {
+	m.From = v
+}
+
+// GetTo returns the To value.
+func (m StartSyncSourceBackfillParams) GetTo() *int64 {
+	return m.To
+}
+
+// SetTo sets the To value and returns the updated StartSyncSourceBackfillParams.
+func (m *StartSyncSourceBackfillParams) SetTo(v *int64) {
+	m.To = v
+}
+
+// GetType returns the Type value.
+func (m StartSyncSourceBackfillParams) GetType() consts.SyncSourceType {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated StartSyncSourceBackfillParams.
+func (m *StartSyncSourceBackfillParams) SetType(v consts.SyncSourceType) {
+	m.Type = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m StartSyncSourceBackfillParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated StartSyncSourceBackfillParams.
+func (m *StartSyncSourceBackfillParams) SetSiteID(v string) {
+	m.SiteID = v
 }
 
 // GetType returns the Type value.

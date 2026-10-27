@@ -34,7 +34,7 @@ func TestGetDocumentsRefusesRedirect(t *testing.T) {
 	}))
 	defer redirector.Close()
 
-	_, err := liveClient(redirector.URL).GetDocuments(context.Background(), "entries", time.Now(), 10)
+	_, err := liveClient(redirector.URL).GetDocuments(context.Background(), "entries", time.Now(), time.Time{}, 10)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "302")
 	require.NotContains(t, err.Error(), "xyz")
@@ -48,7 +48,7 @@ func TestGetDocumentsErrorOmitsBody(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	_, err := liveClient(srv.URL).GetDocuments(context.Background(), "entries", time.Now(), 10)
+	_, err := liveClient(srv.URL).GetDocuments(context.Background(), "entries", time.Now(), time.Time{}, 10)
 	require.Error(t, err)
 	require.NotContains(t, err.Error(), "xyz")
 }
