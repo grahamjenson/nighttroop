@@ -59,7 +59,7 @@ func SyncStatus(source *sitemodels.SyncSource, name string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" class=\"mt-4 rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm\"><dl class=\"grid gap-x-6 gap-y-2 sm:grid-cols-2 md:grid-cols-3\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" class=\"mt-4 rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm\"><dl class=\"grid gap-x-4 gap-y-1 sm:grid-cols-2 md:grid-cols-3\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
