@@ -1,14 +1,4 @@
-NAME create_new_site
-POST http://localhost/site
-ASSERT_STATUS 200
-SET token {{ .create_new_site.pwd_nstoken }}
-SET site {{ .create_new_site.site_subdomain }}.localhost
-SET ns_site {{ .create_new_site.site_subdomain }}.ns.localhost
-
-NAME jwtauth
-GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ token }}
-ASSERT_STATUS 200
-SET jwt {{ .jwtauth.token }}
+INCLUDE steps/new_site.steps
 
 NAME no_event_groups
 GET http://{{ site }}/data/event-groups

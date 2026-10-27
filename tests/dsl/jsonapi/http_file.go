@@ -3,7 +3,7 @@ package jsonapi
 import (
 	"bufio"
 	"fmt"
-	"io"
+	"io/fs"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -11,8 +11,9 @@ import (
 	"time"
 )
 
-func ParseRequestFile(fileContents string, ctx map[string]any, path string) (*RequestFile, error) {
-	requests, err := parseFile(strings.NewReader(fileContents), path)
+// ParseRequestFile reads the requests of the file at path in fsys, and of the files it INCLUDEs
+func ParseRequestFile(fsys fs.FS, path string) (*RequestFile, error) {
+	requests, err := parseFile(fsys, path)
 	if err != nil {
 		return nil, err
 	}
@@ -25,8 +26,13 @@ func ParseRequestFile(fileContents string, ctx map[string]any, path string) (*Re
 	}, nil
 }
 
-func parseFile(r io.Reader, path string) ([]*Request, error) {
-	scanner := bufio.NewScanner(r)
+func parseFile(fsys fs.FS, path string) ([]*Request, error) {
+	file, err := fsys.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
 
 	var requests []*Request
 	var current *Request
@@ -66,6 +72,18 @@ func parseFile(r io.Reader, path string) ([]*Request, error) {
 		first := strings.TrimSpace(split[0])
 
 		switch first {
+		case "INCLUDE":
+			// Another file's requests, e.g. creating a site and getting its JWT, run here as if written out
+			inBody = false
+			flush()
+			included, err := parseFile(fsys, second)
+			if err != nil {
+				return nil, fmt.Errorf("%s:%d: INCLUDE %s: %w", path, lineNumber, second, err)
+			}
+			// A SET or assert after it goes on its last request
+			if len(included) > 0 {
+				requests, current = append(requests, included[:len(included)-1]...), included[len(included)-1]
+			}
 		case "NAME":
 			inBody = false
 			flush()
