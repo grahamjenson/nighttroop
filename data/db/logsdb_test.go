@@ -10,6 +10,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/logsdb"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/testutils"
@@ -37,13 +38,13 @@ func TestLogsDBRecordsBySite(t *testing.T) {
 	require.Len(t, allLogs, 2)
 	require.Nil(t, allLogs[0].SiteID)
 
-	events, err := logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &site, Limit: 10})
+	siteEvents, err := logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &site, Limit: 10})
 	require.NoError(t, err)
-	require.Equal(t, string(db.EventSiteDisabled), events[0].Name)
-	require.Equal(t, `{"by":"admin"}`, *events[0].Attributes)
+	require.Equal(t, string(events.SiteDisabled), siteEvents[0].Name)
+	require.Equal(t, `{"by":"admin"}`, *siteEvents[0].Attributes)
 	// Disabling is over as soon as it happens, so it has a start but no finish
-	require.NotZero(t, events[0].StartedAt)
-	require.Nil(t, events[0].FinishedAt)
+	require.NotZero(t, siteEvents[0].StartedAt)
+	require.Nil(t, siteEvents[0].FinishedAt)
 
 	siteErrors, err := logs.Queries.SearchErrors(ctx, logsdb.SearchErrorsParams{SiteID: &site, Limit: 10})
 	require.NoError(t, err)
@@ -120,6 +121,28 @@ func TestCreateSiteRecordsEvent(t *testing.T) {
 	require.Equal(t, "site_created", events[0].Name)
 }
 
+// TestEventsArePublishedAndKept checks an event done to a site is sent through the server's events, to subscribers of
+// that site, as well as kept
+func TestEventsArePublishedAndKept(t *testing.T) {
+	cfg, controlDB, err := testutils.GetConfigControlDBForTest()
+	require.NoError(t, err)
+	ctx, site := context.TODO(), "publishedsite"
+	var published []events.Event
+	unsubscribe := cfg.Events.Subscribe(site, func(event events.Event) { published = append(published, event) })
+	defer unsubscribe()
+
+	controlDB.Logs.SiteDisabledEvent(ctx, site, "admin")
+	require.Len(t, published, 1)
+	require.Equal(t, events.SiteDisabled, published[0].Name)
+	require.Equal(t, site, published[0].SiteID)
+	require.Nil(t, published[0].Model, "it is not a model change")
+
+	kept, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &site, Limit: 10})
+	require.NoError(t, err)
+	require.Len(t, kept, 1)
+	require.Equal(t, string(events.SiteDisabled), kept[0].Name)
+}
+
 // TestSiteSeesOnlyItsOwnLogs checks a site sees its own logs, errors and events, and its batch's events, but nothing
 // of another site, another batch or the server
 func TestSiteSeesOnlyItsOwnLogs(t *testing.T) {
@@ -137,19 +160,19 @@ func TestSiteSeesOnlyItsOwnLogs(t *testing.T) {
 	logs.SiteBatchBackupError(ctx, batch, errors.New("batch failed"))
 	logs.Log(ctx, &other, db.LogLevelInfo, "other synced", nil)
 
-	events, err := q.SearchSiteEvents(ctx, logsdb.SearchSiteEventsParams{SiteID: &site, Batch: &batch, Limit: 100})
+	siteEvents, err := q.SearchSiteEvents(ctx, logsdb.SearchSiteEventsParams{SiteID: &site, Batch: &batch, Limit: 100})
 	require.NoError(t, err)
-	require.Len(t, events, 2)
-	require.Equal(t, string(db.EventSiteBatchBackedUp), events[0].Name)
-	require.Equal(t, batch, *events[0].Batch)
-	require.Equal(t, site, *events[1].SiteID)
+	require.Len(t, siteEvents, 2)
+	require.Equal(t, string(events.SiteBatchBackedUp), siteEvents[0].Name)
+	require.Equal(t, batch, *siteEvents[0].Batch)
+	require.Equal(t, site, *siteEvents[1].SiteID)
 
 	// Another site's or batch's event, or the server's, cannot be read by its ID either
 	allEvents, err := q.SearchEvents(ctx, logsdb.SearchEventsParams{Limit: 100})
 	require.NoError(t, err)
 	for _, event := range allEvents {
 		_, err := q.GetSiteEvent(ctx, logsdb.GetSiteEventParams{ID: event.ID, SiteID: &site, Batch: &batch})
-		if event.ID == events[0].ID || event.ID == events[1].ID {
+		if event.ID == siteEvents[0].ID || event.ID == siteEvents[1].ID {
 			require.NoError(t, err)
 		} else {
 			require.ErrorIs(t, err, sql.ErrNoRows, event.Name)

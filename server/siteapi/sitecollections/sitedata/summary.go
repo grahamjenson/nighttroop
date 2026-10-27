@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/a-h/templ"
-	events "nighttroop.t1d.nz/data/events/sitemodels"
+	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_summary_templ"

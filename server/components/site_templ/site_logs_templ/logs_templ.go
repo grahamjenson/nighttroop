@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"nighttroop.t1d.nz/data/db"
+	dataevents "nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/server/components/filter"
 	"time"
 
@@ -79,7 +80,7 @@ func page(id string, title string, description string, path string, pagePath str
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 48, Col: 13}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 49, Col: 13}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 		if templ_7745c5c3_Err != nil {
@@ -92,7 +93,7 @@ func page(id string, title string, description string, path string, pagePath str
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 50, Col: 41}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 51, Col: 41}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -105,7 +106,7 @@ func page(id string, title string, description string, path string, pagePath str
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(description)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 51, Col: 46}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 52, Col: 46}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -214,7 +215,7 @@ func empty(columns string, what string) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.ResolveAttributeValue(columns)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 76, Col: 26}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 77, Col: 26}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 		if templ_7745c5c3_Err != nil {
@@ -227,7 +228,7 @@ func empty(columns string, what string) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(what)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 76, Col: 72}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 77, Col: 72}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -270,7 +271,7 @@ func attributesDetail(id string, raw json.RawMessage) templ.Component {
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue(id)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 81, Col: 14}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 82, Col: 14}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 			if templ_7745c5c3_Err != nil {
@@ -283,7 +284,7 @@ func attributesDetail(id string, raw json.RawMessage) templ.Component {
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(attributes(raw))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 81, Col: 131}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 82, Col: 131}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
@@ -334,7 +335,7 @@ func EventsTable(events []*sitemodels.SiteEvent, skip int64, limit int64, eventT
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = filter.Filter(filter.Props{ID: "site--events--filter", Path: "/logs/events", All: "All events", Types: db.EventNames, Selected: eventType, Search: search}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = filter.Filter(filter.Props{ID: "site--events--filter", Path: "/logs/events", All: "All events", Types: dataevents.PersistedNames(), Selected: eventType, Search: search}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -540,7 +541,7 @@ func EventsTable(events []*sitemodels.SiteEvent, skip int64, limit int64, eventT
 								var templ_7745c5c3_Var25 string
 								templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(display.Name(event.Name))
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 115, Col: 33}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 116, Col: 33}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 								if templ_7745c5c3_Err != nil {
@@ -571,7 +572,7 @@ func EventsTable(events []*sitemodels.SiteEvent, skip int64, limit int64, eventT
 								var templ_7745c5c3_Var27 string
 								templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(about(event))
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 118, Col: 21}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 119, Col: 21}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 								if templ_7745c5c3_Err != nil {
@@ -606,7 +607,7 @@ func EventsTable(events []*sitemodels.SiteEvent, skip int64, limit int64, eventT
 								var templ_7745c5c3_Var29 string
 								templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.ResolveAttributeValue(formatDate(event.StartedAt))
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 121, Col: 48}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 122, Col: 48}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var29)
 								if templ_7745c5c3_Err != nil {
@@ -619,7 +620,7 @@ func EventsTable(events []*sitemodels.SiteEvent, skip int64, limit int64, eventT
 								var templ_7745c5c3_Var30 string
 								templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(&event.StartedAt, time.Now()))
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 121, Col: 94}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 122, Col: 94}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 								if templ_7745c5c3_Err != nil {
@@ -654,7 +655,7 @@ func EventsTable(events []*sitemodels.SiteEvent, skip int64, limit int64, eventT
 								var templ_7745c5c3_Var32 string
 								templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(duration(event))
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 124, Col: 24}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 125, Col: 24}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 								if templ_7745c5c3_Err != nil {
@@ -960,7 +961,7 @@ func ErrorsTable(errors []*sitemodels.SiteError, skip int64, limit int64, kind *
 								var templ_7745c5c3_Var45 string
 								templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(e.Message)
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 169, Col: 69}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 170, Col: 69}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 								if templ_7745c5c3_Err != nil {
@@ -999,7 +1000,7 @@ func ErrorsTable(errors []*sitemodels.SiteError, skip int64, limit int64, kind *
 								var templ_7745c5c3_Var47 string
 								templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.ResolveAttributeValue(formatDate(e.CreatedAt))
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 172, Col: 44}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 173, Col: 44}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var47)
 								if templ_7745c5c3_Err != nil {
@@ -1012,7 +1013,7 @@ func ErrorsTable(errors []*sitemodels.SiteError, skip int64, limit int64, kind *
 								var templ_7745c5c3_Var48 string
 								templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(&e.CreatedAt, time.Now()))
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 172, Col: 86}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 173, Col: 86}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 								if templ_7745c5c3_Err != nil {
@@ -1097,7 +1098,7 @@ func ErrorModal(e *sitemodels.SiteError) templ.Component {
 			var templ_7745c5c3_Var51 string
 			templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(e.Message)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 183, Col: 60}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 184, Col: 60}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
 			if templ_7745c5c3_Err != nil {
@@ -1335,7 +1336,7 @@ func LogsTable(logs []*sitemodels.SiteLog, skip int64, limit int64, search *stri
 								var templ_7745c5c3_Var63 string
 								templ_7745c5c3_Var63, templ_7745c5c3_Err = templ.JoinStringErrs(log.Level)
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 213, Col: 18}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 214, Col: 18}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var63))
 								if templ_7745c5c3_Err != nil {
@@ -1370,7 +1371,7 @@ func LogsTable(logs []*sitemodels.SiteLog, skip int64, limit int64, search *stri
 								var templ_7745c5c3_Var65 string
 								templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.JoinStringErrs(log.Message)
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 216, Col: 58}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 217, Col: 58}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var65))
 								if templ_7745c5c3_Err != nil {
@@ -1409,7 +1410,7 @@ func LogsTable(logs []*sitemodels.SiteLog, skip int64, limit int64, search *stri
 								var templ_7745c5c3_Var67 string
 								templ_7745c5c3_Var67, templ_7745c5c3_Err = templ.ResolveAttributeValue(formatDate(log.CreatedAt))
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 219, Col: 46}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 220, Col: 46}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var67)
 								if templ_7745c5c3_Err != nil {
@@ -1422,7 +1423,7 @@ func LogsTable(logs []*sitemodels.SiteLog, skip int64, limit int64, search *stri
 								var templ_7745c5c3_Var68 string
 								templ_7745c5c3_Var68, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(&log.CreatedAt, time.Now()))
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 219, Col: 90}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 220, Col: 90}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var68))
 								if templ_7745c5c3_Err != nil {
@@ -1507,7 +1508,7 @@ func LogModal(log *sitemodels.SiteLog) templ.Component {
 			var templ_7745c5c3_Var71 string
 			templ_7745c5c3_Var71, templ_7745c5c3_Err = templ.JoinStringErrs(log.Message)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 230, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 231, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var71))
 			if templ_7745c5c3_Err != nil {
