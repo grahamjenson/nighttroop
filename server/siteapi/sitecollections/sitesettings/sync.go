@@ -48,7 +48,7 @@ func (s *SyncSettingsCollection) CreateRow(ctx context.Context, collectionTx *si
 	var err error
 	params := sitemodels.SyncSourceToCreate(model)
 	// DO NOT ALLOW THE CLIENT TO SET SITEID OR TYPE
-	params.SiteID = siteContext.Subdomain
+	params.SiteID = siteContext.SiteID
 	if id == nil {
 		return nil, apiutils.ErrMissingRequiredFieldWithHint("id/type")
 	}
@@ -143,7 +143,7 @@ func (s *SyncSettingsCollection) UpdateRow(ctx context.Context, collectionTx *si
 
 	params := sitemodels.SyncSourceToUpdate(model)
 	// DO NOT ALLOW THE CLIENT TO SET SITEID OR TYPE
-	params.SiteID = siteContext.Subdomain
+	params.SiteID = siteContext.SiteID
 	params.Type = oldModel.Type
 
 	var err error
@@ -237,7 +237,7 @@ func (s *SyncSettingsCollection) GetRow(ctx context.Context, collectionTx *sitea
 
 	model, err := q.GetSyncSource(ctx, controldb.GetSyncSourceParams{
 		Type:   sstype,
-		SiteID: siteContext.Subdomain,
+		SiteID: siteContext.SiteID,
 	})
 
 	if err != nil {
@@ -274,7 +274,7 @@ func (s *SyncSettingsCollection) SearchRows(ctx context.Context, collectionTx *s
 	}
 
 	dbSyncSources, err := q.GetAllSyncSourcesForSite(ctx, controldb.GetAllSyncSourcesForSiteParams{
-		SiteID: siteContext.Subdomain,
+		SiteID: siteContext.SiteID,
 	})
 
 	if err != nil {
@@ -302,11 +302,11 @@ const recentSyncLogs = 5
 // addRecentLogs adds the source's newest events and errors from the logs DB, the site's own only
 func addRecentLogs(ctx context.Context, siteContext *httputils.SiteContext, model *sitemodels.SyncSource) error {
 	logs, syncType := siteContext.ControlDB.Logs.Queries, string(model.Type)
-	events, err := logs.RecentSyncEvents(ctx, logsdb.RecentSyncEventsParams{SiteID: &siteContext.Subdomain, SyncType: &syncType, Limit: recentSyncLogs})
+	events, err := logs.RecentSyncEvents(ctx, logsdb.RecentSyncEventsParams{SiteID: &siteContext.SiteID, SyncType: &syncType, Limit: recentSyncLogs})
 	if err != nil {
 		return err
 	}
-	syncErrors, err := logs.RecentSyncErrors(ctx, logsdb.RecentSyncErrorsParams{SiteID: &siteContext.Subdomain, SyncType: &syncType, Limit: recentSyncLogs})
+	syncErrors, err := logs.RecentSyncErrors(ctx, logsdb.RecentSyncErrorsParams{SiteID: &siteContext.SiteID, SyncType: &syncType, Limit: recentSyncLogs})
 	if err != nil {
 		return err
 	}
@@ -338,7 +338,7 @@ func (s *SyncSettingsCollection) DeleteRow(ctx context.Context, collectionTx *si
 		return err
 	}
 
-	return q.DeleteSyncSource(ctx, controldb.DeleteSyncSourceParams{Type: sstype, SiteID: siteContext.Subdomain})
+	return q.DeleteSyncSource(ctx, controldb.DeleteSyncSourceParams{Type: sstype, SiteID: siteContext.SiteID})
 }
 
 func (s *SyncSettingsCollection) DeleteHTMXResponse(model *sitemodels.SyncSource) templ.Component {

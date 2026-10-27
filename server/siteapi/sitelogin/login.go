@@ -76,7 +76,7 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 		////
 
 		siteContext := httputils.GetSiteContext(r.Context())
-		subdomain := siteContext.Subdomain
+		siteID := siteContext.SiteID
 
 		if err := r.ParseForm(); err != nil {
 			identityLoginErrorHTMX(w, r, "Failed to parse", fmt.Errorf("failed to parse form: %w", err))
@@ -93,14 +93,14 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 		}
 
 		// Rate Limit login attempts by user and IP
-		allowedToAttempt, _ := httputils.SiteLoginAttemptsWithinRateLimit(config, r, subdomain, formName)
+		allowedToAttempt, _ := httputils.SiteLoginAttemptsWithinRateLimit(config, r, siteID, formName)
 		if !allowedToAttempt {
 			rateLimitErrorHTMX(w, r)
 			return
 		}
 
 		// First thing validate the password
-		identity, err := loginTheUserPasswordOnly(siteContext.ControlDB, config.Security, siteContext.Subdomain, formName, formPassword)
+		identity, err := loginTheUserPasswordOnly(siteContext.ControlDB, config.Security, siteContext.SiteID, formName, formPassword)
 		if err != nil {
 			identityLoginErrorHTMX(w, r, "Invalid username or password.", fmt.Errorf("failed to login with password: %w", err))
 			return
@@ -113,7 +113,7 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 
 		if can.MustLoginWithTotp(identity.Role, identity.TotpSecretEnc != "") {
 			// If the Identity Requires TOTP validation, replace the original form with a new form that submits to TOTP validation input
-			err = config.Security.SetUserPreAuthCookie(w, siteContext.Subdomain, identity.Name)
+			err = config.Security.SetUserPreAuthCookie(w, siteContext.SiteID, identity.Name)
 			if err != nil {
 				identityLoginErrorHTMX(w, r, "", fmt.Errorf("failed to set pre-auth cookie: %w", err))
 				return
@@ -127,7 +127,7 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 			}
 			return
 		} else {
-			tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(siteContext.Subdomain, identity.Name, string(identity.Role))
+			tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(siteContext.SiteID, identity.Name, string(identity.Role))
 			if err != nil {
 				identityLoginErrorHTMX(w, r, "", fmt.Errorf("failed to generate JWT token: %w", err))
 				return
@@ -154,13 +154,13 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config *config.ServerConfig) http.Ha
 		siteContext := httputils.GetSiteContext(r.Context())
 
 		// 1. Fetch And Validate Pre-Auth Token
-		identityNameFromToken, err := fetchVerifyPreAuthToken(config, r, siteContext.Subdomain)
+		identityNameFromToken, err := fetchVerifyPreAuthToken(config, r, siteContext.SiteID)
 		if err != nil {
 			identityLoginErrorHTMX(w, r, "", fmt.Errorf("failed to fetch and verify pre-auth token: %w", err))
 			return
 		}
 
-		allowedToAttempt, _ := httputils.SiteLoginAttemptsWithinRateLimit(config, r, siteContext.Subdomain, identityNameFromToken)
+		allowedToAttempt, _ := httputils.SiteLoginAttemptsWithinRateLimit(config, r, siteContext.SiteID, identityNameFromToken)
 		if !allowedToAttempt {
 			rateLimitErrorHTMX(w, r)
 			return
@@ -192,7 +192,7 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config *config.ServerConfig) http.Ha
 		}
 
 		// TOTP is valid, generate the real JWT token
-		tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(siteContext.Subdomain, identity.Name, string(identity.Role))
+		tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(siteContext.SiteID, identity.Name, string(identity.Role))
 		if err != nil {
 			identityLoginErrorHTMX(w, r, "", fmt.Errorf("failed to generate JWT token: %w", err))
 			return
@@ -218,7 +218,7 @@ func getTheIdentityeModel(controlDB *db.ControlDB, r *http.Request, identityName
 	siteContext := httputils.GetSiteContext(r.Context())
 
 	identity, err := controlDB.Queries.GetSiteIdentity(context.TODO(), controldb.GetSiteIdentityParams{
-		SiteID: siteContext.Subdomain,
+		SiteID: siteContext.SiteID,
 		Name:   identityNameFromToken,
 	})
 	if err != nil {
@@ -310,19 +310,19 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config *config.ServerConfig, r *h
 	}
 
 	// Rate Limit login attempts by user and IP
-	allowedToAttempt, _ := httputils.SiteLoginAttemptsWithinRateLimit(config, r, siteContext.Subdomain, creds.Name)
+	allowedToAttempt, _ := httputils.SiteLoginAttemptsWithinRateLimit(config, r, siteContext.SiteID, creds.Name)
 	if !allowedToAttempt {
 		http.Error(w, "Too many login attempts Wait a bit", http.StatusTooManyRequests)
 		return
 	}
 
-	identity, err := loginTheUserAPI(siteContext.ControlDB, siteContext.Subdomain, config, creds.Name, creds.Password, creds.TOTP)
+	identity, err := loginTheUserAPI(siteContext.ControlDB, siteContext.SiteID, config, creds.Name, creds.Password, creds.TOTP)
 	if err != nil {
 		identityLoginErrorAPI(w, r, "Invalid login attempt", fmt.Errorf("invalid login attempt: %w", err))
 		return
 	}
 
-	tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(siteContext.Subdomain, identity.Name, string(identity.Role))
+	tokenString, expiresAt, err := config.Security.GenerateUserJWTToken(siteContext.SiteID, identity.Name, string(identity.Role))
 	if err != nil {
 		identityLoginErrorAPI(w, r, "Invalid login attempt", fmt.Errorf("invalid login attempt: %w", err))
 		return

@@ -109,7 +109,7 @@ func (b *SyncJobManager) createNightscoutDocuments(ctx context.Context, syncInfo
 	added := 0
 	for _, userSyncSource := range syncInfo.UserSyncSources {
 		siteContext := &httputils.SiteContext{
-			Subdomain: userSyncSource.SiteModel.ID,
+			SiteID: userSyncSource.SiteModel.ID,
 			IdentityModel: &controldb.SiteIdentity{
 				Name: "nightscout_sync",
 			},

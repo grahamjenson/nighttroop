@@ -27,7 +27,7 @@ func BackfillHandler(w http.ResponseWriter, r *http.Request) {
 		writeError(w, r, siteContext.AcceptType, apiutils.ErrNotFound)
 		return
 	}
-	source, err := siteContext.ControlDB.Queries.GetSyncSource(r.Context(), controldb.GetSyncSourceParams{Type: syncType, SiteID: siteContext.Subdomain})
+	source, err := siteContext.ControlDB.Queries.GetSyncSource(r.Context(), controldb.GetSyncSourceParams{Type: syncType, SiteID: siteContext.SiteID})
 	if err != nil || source == nil || !source.Enabled {
 		writeError(w, r, siteContext.AcceptType, apiutils.ErrConstraintCheckFailedWithHint("turn on and save this sync before backfilling it"))
 		return
@@ -35,7 +35,7 @@ func BackfillHandler(w http.ResponseWriter, r *http.Request) {
 
 	backfill, err := sync.BackfillRange(r.Context(), siteContext.SiteDB, syncType, siteContext.Config.BackfillDays)
 	if err == nil {
-		err = sync.QueueBackfill(r.Context(), siteContext.ControlDB, siteContext.Subdomain, syncType, backfill)
+		err = sync.QueueBackfill(r.Context(), siteContext.ControlDB, siteContext.SiteID, syncType, backfill)
 	}
 	if errors.Is(err, sync.ErrBackfillRunning) {
 		writeError(w, r, siteContext.AcceptType, &apiutils.HTTPError{Status: http.StatusConflict, Message: "A backfill of this sync is already running"})

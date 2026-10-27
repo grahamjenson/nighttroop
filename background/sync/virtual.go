@@ -150,7 +150,7 @@ func (b *SyncJobManager) syncVirtual(syncInfo *SyncJobInfo) error {
 // virtualSiteContext is what the virtual source writes to the site as
 func virtualSiteContext(userSyncSource *SyncUserInfo) *httputils.SiteContext {
 	return &httputils.SiteContext{
-		Subdomain:     userSyncSource.SiteModel.ID,
+		SiteID:        userSyncSource.SiteModel.ID,
 		IdentityModel: &controldb.SiteIdentity{Name: "virtual_sync"},
 		ControlDB:     userSyncSource.ControlDB,
 		SiteDB:        userSyncSource.SiteDB,

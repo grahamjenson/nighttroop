@@ -57,7 +57,7 @@ func NewWebsocket(controlDB *db.ControlDB, config *config.ServerConfig) *Websock
 }
 
 func (ws *Websocket) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	ws.server(httputils.GetSiteContext(r.Context()).Subdomain, true).ServeHTTP(w, r)
+	ws.server(httputils.GetSiteContext(r.Context()).SiteID, true).ServeHTTP(w, r)
 }
 
 // server is the site's Socket.IO server, made on its first connection when create is set
@@ -174,7 +174,7 @@ func (ws *Websocket) connected(main *socketio.Namespace, socket *socketio.Socket
 // withinReadLimit counts an authorize against the site's GET limit, as a request would: it checks a token
 // then reads the recent data, which a client reconnecting in a loop could otherwise ask for without end
 func (ws *Websocket) withinReadLimit(ctx context.Context) bool {
-	allowed, _ := httputils.WithinRateLimitAll(ws.config.RateLimiters.SiteGETLimiter(httputils.GetSiteContext(ctx).Subdomain))
+	allowed, _ := httputils.WithinRateLimitAll(ws.config.RateLimiters.SiteGETLimiter(httputils.GetSiteContext(ctx).SiteID))
 	return allowed
 }
 
@@ -213,7 +213,7 @@ func (ws *Websocket) dbWrite(event string, args []json.RawMessage, auth *authori
 	// A websocket's events skip the HTTP rate limits, so each write counts against them here
 	siteContext := httputils.GetSiteContext(ctx)
 	limiters := ws.config.RateLimiters
-	if allowed, _ := httputils.WithinRateLimitAll(limiters.SitePOSTLimiter(siteContext.Subdomain), limiters.IdentityPOSTLimiter(siteContext.IdentityModel.ID)); !allowed {
+	if allowed, _ := httputils.WithinRateLimitAll(limiters.SitePOSTLimiter(siteContext.SiteID), limiters.IdentityPOSTLimiter(siteContext.IdentityModel.ID)); !allowed {
 		return result("Too many requests")
 	}
 	var id string
@@ -487,10 +487,10 @@ var storageCollections = []nsutils.Collection{nsutils.Devicestatus, nsutils.Entr
 // storageConnected is API v3's live updates on /storage: a socket subscribes with its access token to the
 // collections it wants, and gets each create, update and delete in them as API v3 shows its records
 func (ws *Websocket) storageConnected(socket *socketio.Socket) {
-	subdomain := httputils.GetSiteContext(socket.Request().Context()).Subdomain
+	siteID := httputils.GetSiteContext(socket.Request().Context()).SiteID
 	socket.OnDisconnect(func(string) {
 		ws.mu.Lock()
-		delete(ws.storage[subdomain], socket.ID())
+		delete(ws.storage[siteID], socket.ID())
 		ws.mu.Unlock()
 	})
 	attempts := 0
@@ -546,13 +546,13 @@ func (ws *Websocket) subscribe(socket *socketio.Socket, accessToken string, coll
 	}
 	siteContext := httputils.GetSiteContext(ctx)
 	ws.mu.Lock()
-	if ws.storage[siteContext.Subdomain] == nil {
-		ws.storage[siteContext.Subdomain] = map[string]*storageSubscriber{}
+	if ws.storage[siteContext.SiteID] == nil {
+		ws.storage[siteContext.SiteID] = map[string]*storageSubscriber{}
 	}
-	subscriber := ws.storage[siteContext.Subdomain][socket.ID()]
+	subscriber := ws.storage[siteContext.SiteID][socket.ID()]
 	if subscriber == nil {
 		subscriber = &storageSubscriber{socket: socket}
-		ws.storage[siteContext.Subdomain][socket.ID()] = subscriber
+		ws.storage[siteContext.SiteID][socket.ID()] = subscriber
 	}
 	subscriber.identity = siteContext.IdentityModel
 	for _, collection := range subscribed {
