@@ -3,6 +3,7 @@ package display
 
 import (
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -55,4 +56,13 @@ func Direction(direction *string) string {
 		return arrow
 	}
 	return *direction
+}
+
+// Name is a stored snake_case name as words, e.g. "site_created" as "Site created"
+func Name(name string) string {
+	words := strings.ReplaceAll(name, "_", " ")
+	if words == "" {
+		return words
+	}
+	return strings.ToUpper(words[:1]) + words[1:]
 }

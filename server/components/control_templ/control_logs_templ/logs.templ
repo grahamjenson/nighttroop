@@ -109,7 +109,7 @@ templ EventsTable(events []*controlmodels.Event, skip int64, limit int64) {
 				for _, event := range events {
 					@rowLink(fmt.Sprintf("control--event--%d", event.ID), fmt.Sprintf("/events/%d", event.ID)) {
 						@table.Cell() {
-							{ event.Name }
+							{ display.Name(event.Name) }
 						}
 						@table.Cell() {
 							{ orServer(event.SiteID) }
@@ -128,7 +128,7 @@ templ EventsTable(events []*controlmodels.Event, skip int64, limit int64) {
 }
 
 templ EventModal(event *controlmodels.Event) {
-	@modal.Modal(modal.Props{ID: "control--event--details", Title: event.Name, Subtitle: formatDate(event.StartedAt)}) {
+	@modal.Modal(modal.Props{ID: "control--event--details", Title: display.Name(event.Name), Subtitle: formatDate(event.StartedAt)}) {
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@detail("Site", orServer(event.SiteID))
 			@detail("Started", formatDate(event.StartedAt))

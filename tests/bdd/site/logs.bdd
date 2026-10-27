@@ -22,7 +22,9 @@ CLICK #site--logs--events-button
 ASSERT_STATUS 200
 ASSERT_PATH /logs/events
 ASSERT_VISIBLE #siteEventsTable
-ASSERT_TEXT_VISIBLE site_created
+// Events have names to read, not the names they are stored by
+ASSERT_TEXT_VISIBLE Site created
+ASSERT_NOT_VISIBLE #siteEventsTable >> text=site_created
 ASSERT_TEXT_VISIBLE This site
 SCREENSHOT events
 
