@@ -5,15 +5,18 @@ import (
 	"fmt"
 	"io/fs"
 	"log/slog"
+	"maps"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
 	"nighttroop.t1d.nz/server"
 	"nighttroop.t1d.nz/tests/dsl/jsonapi"
+	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -98,37 +101,26 @@ func FuzzRequestFiles(f *testing.F) {
 		}
 		newBody := string(mutatedBodyBytes)
 
-		// Entries
-		runFuzzTest(t, "CreateEntryV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/entries?token=%s", subdomain, token), newBody)
-
-		runFuzzTest(t, "CreateEntryV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/entries?token=%s", subdomain, token), newBody)
-
-		// Treatments
-		runFuzzTest(t, "CreateTreatmentV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/treatments?token=%s", subdomain, token), newBody)
-
-		runFuzzTest(t, "CreateTreatmentV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/treatments?token=%s", subdomain, token), newBody)
-
-		// Device Status
-		runFuzzTest(t, "CreateDeviceStatusV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/devicestatus?token=%s", subdomain, token), newBody)
-
-		runFuzzTest(t, "CreateDeviceStatusV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/devicestatus?token=%s", subdomain, token), newBody)
-
-		// profile
-		runFuzzTest(t, "CreateProfileV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/profile?token=%s", subdomain, token), newBody)
-
-		runFuzzTest(t, "CreateProfileV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/profile?token=%s", subdomain, token), newBody)
-
-		// food
-		runFuzzTest(t, "CreateFoodV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/food?token=%s", subdomain, token), newBody)
-
-		runFuzzTest(t, "CreateFoodV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/food?token=%s", subdomain, token), newBody)
-
-		// settings
-		runFuzzTest(t, "CreateSettingsV3Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v3/settings?token=%s", subdomain, token), newBody)
-
-		// activities
-		runFuzzTest(t, "CreateActivitiesV1Mod", router, fmt.Sprintf("http://%s.ns.localhost/api/v1/activities?token=%s", subdomain, token), newBody)
+		for _, endpoint := range createEndpoints {
+			runFuzzTest(t, endpoint.name, router, fmt.Sprintf("http://%s.ns.localhost%s?token=%s", subdomain, endpoint.path, token), newBody)
+		}
 	})
+}
+
+// createEndpoints are the Nightscout API's create endpoints, each sent every mangled body
+var createEndpoints = []struct{ name, path string }{
+	{"CreateEntryV1Mod", "/api/v1/entries"},
+	{"CreateEntryV3Mod", "/api/v3/entries"},
+	{"CreateTreatmentV1Mod", "/api/v1/treatments"},
+	{"CreateTreatmentV3Mod", "/api/v3/treatments"},
+	{"CreateDeviceStatusV1Mod", "/api/v1/devicestatus"},
+	{"CreateDeviceStatusV3Mod", "/api/v3/devicestatus"},
+	{"CreateProfileV1Mod", "/api/v1/profile"},
+	{"CreateProfileV3Mod", "/api/v3/profile"},
+	{"CreateFoodV1Mod", "/api/v1/food"},
+	{"CreateFoodV3Mod", "/api/v3/food"},
+	{"CreateSettingsV3Mod", "/api/v3/settings"},
+	{"CreateActivitiesV1Mod", "/api/v1/activities"},
 }
 
 func runFuzzTest(t *testing.T, name string, router http.Handler, path, body string) {
@@ -157,7 +149,7 @@ func runFuzzTest(t *testing.T, name string, router http.Handler, path, body stri
 }
 
 func mutateBody(body map[string]any, r *rand.Rand, modifications int) map[string]any {
-	body, _ = mutateObject(cloneObject(body), r, modifications)
+	body, _ = mutateObject(utils.DeepCloneMap(body), r, modifications)
 	return body
 }
 
@@ -166,8 +158,9 @@ func mutateObject(body map[string]any, r *rand.Rand, modifications int) (map[str
 		return body, 0
 	}
 
-	// Mutate existing fields.
-	for key, value := range body {
+	// Mutate existing fields, in the order of their keys so a seed mutates a body the same way every run.
+	for _, key := range slices.Sorted(maps.Keys(body)) {
+		value := body[key]
 		if modifications <= 0 {
 			break
 		}
@@ -197,7 +190,7 @@ func mutateObject(body map[string]any, r *rand.Rand, modifications int) (map[str
 
 	// Occasionally rename an existing key.
 	if modifications > 0 && len(body) > 0 && r.Intn(10) == 0 {
-		keys := mapKeys(body)
+		keys := slices.Sorted(maps.Keys(body))
 		oldKey := keys[r.Intn(len(keys))]
 		newKey := randomKey(r)
 
@@ -457,39 +450,4 @@ func randomNumber(r *rand.Rand) float64 {
 	default:
 		return r.Float64()*2e12 - 1e12
 	}
-}
-
-func cloneObject(src map[string]any) map[string]any {
-	dst := make(map[string]any, len(src))
-
-	for key, value := range src {
-		dst[key] = cloneJSONValue(value)
-	}
-
-	return dst
-}
-
-func cloneJSONValue(value any) any {
-	switch v := value.(type) {
-	case map[string]any:
-		return cloneObject(v)
-
-	case []any:
-		dst := make([]any, len(v))
-		for i, value := range v {
-			dst[i] = cloneJSONValue(value)
-		}
-		return dst
-
-	default:
-		return v
-	}
-}
-
-func mapKeys(m map[string]any) []string {
-	keys := make([]string, 0, len(m))
-	for key := range m {
-		keys = append(keys, key)
-	}
-	return keys
 }
