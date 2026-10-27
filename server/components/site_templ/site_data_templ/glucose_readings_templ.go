@@ -885,7 +885,7 @@ func GlucoseReadingModal(reading *sitemodels.SiteGlucoseReading) templ.Component
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = glucoseInputs("site--glucose--edit", fmt.Sprint(reading.Reading), orEmpty(reading.Notes)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = glucoseInputs("site--glucose--edit", formatGlucose(reading.Reading, reading.Units), orEmpty(reading.Notes)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

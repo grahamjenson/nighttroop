@@ -82,6 +82,11 @@ ASSERT_TEXT_VISIBLE 155
 // The new reading's label says which units to type it in
 ASSERT_TEXT_VISIBLE Reading (mg/dL)
 SCREENSHOT glucose_readings_mgdl
+// Its details offer it to edit as it is shown, not with the decimals left from converting it from mmol/L
+CLICK "Meter"
+ASSERT_VISIBLE #site--glucose--edit--reading[value="155"]
+SCREENSHOT glucose_reading_edit_mgdl
+CLICK #site--glucose--details--close
 
 // A page of one reading pages through them, newest first
 GOTO /data/glucose?limit=1

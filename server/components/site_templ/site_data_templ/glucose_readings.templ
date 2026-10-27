@@ -218,7 +218,7 @@ templ GlucoseReadingModal(reading *sitemodels.SiteGlucoseReading) {
 			hx-status:4xx="target:#toaster swap:beforeend"
 			hx-status:5xx="target:#toaster swap:beforeend"
 		>
-			@glucoseInputs("site--glucose--edit", fmt.Sprint(reading.Reading), orEmpty(reading.Notes))
+			@glucoseInputs("site--glucose--edit", formatGlucose(reading.Reading, reading.Units), orEmpty(reading.Notes))
 			@button.Button(button.Props{ID: "site--glucose--edit--submit", Type: button.TypeSubmit}) {
 				Save
 			}
