@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 
-	"nighttroop.t1d.nz/data/events/sitemodels"
+	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/apiutils"
@@ -21,7 +21,7 @@ type CollectionTx struct {
 	controlTx   *sql.Tx
 	siteTx      *sql.Tx
 	// reportedChanges are the changes to the site's models made in the transaction, published once it commits
-	reportedChanges []sitemodels.Event
+	reportedChanges []events.Event
 }
 
 func NewCollectionTx(ctx context.Context, siteContext *httputils.SiteContext) *CollectionTx {
@@ -77,8 +77,8 @@ func (t *CollectionTx) Finish(herr *apiutils.HTTPError) *apiutils.HTTPError {
 }
 
 // reportChange reports a change to one of the site's models, its sitedb row, to be published once committed
-func (t *CollectionTx) ReportChange(action sitemodels.Action, row any) {
-	t.reportedChanges = append(t.reportedChanges, sitemodels.Event{Action: action, Model: row})
+func (t *CollectionTx) ReportChange(action events.Action, row any) {
+	t.reportedChanges = append(t.reportedChanges, events.Event{Action: action, Model: row})
 }
 
 // Rollback undoes anything not yet committed. It is safe to defer: after Finish it does nothing.

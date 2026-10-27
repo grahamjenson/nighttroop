@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/logsdb"
 	"nighttroop.t1d.nz/utils/config"
 )
@@ -16,6 +17,8 @@ import (
 // and Trim keeps only each table's newest rows.
 type LogsDB struct {
 	*logsdb.DB
+	// events are the server's events, which each event recorded here is sent through
+	events *events.SiteBus
 }
 
 // maxMessageLength and maxAttributesLength are the longest message and attributes JSON the tables keep
@@ -29,7 +32,7 @@ func NewLogsDB(ctx context.Context, cfg *config.ServerConfig) (*LogsDB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("cannot open logs db: %w", err)
 	}
-	return &LogsDB{DB: rawDB}, nil
+	return &LogsDB{DB: rawDB, events: cfg.Events}, nil
 }
 
 // Recording is best effort: a log, event or error that cannot be written is only logged with slog, so recording
@@ -44,16 +47,39 @@ func (l *LogsDB) Log(ctx context.Context, siteID *string, level LogLevel, messag
 	l.record("log", l.Queries.InsertLog(ctx, logsdb.InsertLogParams{SiteID: siteID, Level: string(level), Message: truncate(message), Attributes: attributesJSON(attrs)}))
 }
 
-// event records an event that happened now, with no finish time
-func (l *LogsDB) event(ctx context.Context, siteID *string, name EventName, attributes any) {
-	l.record("event", l.Queries.InsertEvent(ctx, logsdb.InsertEventParams{SiteID: siteID, Name: string(name), Attributes: attributesJSON(attributes), StartedAt: time.Now().UnixMilli()}))
+// publish sends an event through the server's events, and keeps it in the events table when it is persisted
+func (l *LogsDB) publish(ctx context.Context, event events.Event) {
+	if l.events != nil {
+		l.events.Publish(event.SiteID, event)
+	}
+	if !event.IsPersisted() {
+		return
+	}
+	var finished *int64
+	if event.FinishedAt != nil {
+		finished = new(event.FinishedAt.UnixMilli())
+	}
+	l.record("event", l.Queries.InsertEvent(ctx, logsdb.InsertEventParams{SiteID: orNil(event.SiteID), Batch: orNil(event.Batch), Name: string(event.Name), Attributes: attributesJSON(event.Attributes), StartedAt: event.StartedAt.UnixMilli(), FinishedAt: finished}))
 }
 
-// finishedEvent records an event, about a site or a batch of sites or neither, that started at started and finishes
+// event publishes an event about a site, or no one site when siteID is "", that happened now
+func (l *LogsDB) event(ctx context.Context, siteID string, name events.Name, attributes any) {
+	l.publish(ctx, events.Event{Name: name, SiteID: siteID, Attributes: attributes, StartedAt: time.Now()})
+}
+
+// finishedEvent publishes an event, about a site or a batch of sites or neither, that started at started and finishes
 // now, so it can be written in a defer
-func (l *LogsDB) finishedEvent(ctx context.Context, siteID *string, batch *string, name EventName, started time.Time, attributes any) {
-	finished := time.Now().UnixMilli()
-	l.record("event", l.Queries.InsertEvent(ctx, logsdb.InsertEventParams{SiteID: siteID, Batch: batch, Name: string(name), Attributes: attributesJSON(attributes), StartedAt: started.UnixMilli(), FinishedAt: &finished}))
+func (l *LogsDB) finishedEvent(ctx context.Context, siteID string, batch string, name events.Name, started time.Time, attributes any) {
+	finished := time.Now()
+	l.publish(ctx, events.Event{Name: name, SiteID: siteID, Batch: batch, Attributes: attributes, StartedAt: started, FinishedAt: &finished})
+}
+
+// orNil is nil for "", for a column that is NULL when not set
+func orNil(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
 }
 
 func (l *LogsDB) error(ctx context.Context, siteID *string, err error, attributes any) {

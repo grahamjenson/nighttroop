@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"nighttroop.t1d.nz/data/events/sitemodels"
+	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/apiutils"
 )
@@ -17,7 +17,7 @@ import (
 // which is made from many collections' rows
 type CollectionEvents interface {
 	// Watches is whether a change to one of the site's models changes this collection
-	Watches(event sitemodels.Event) bool
+	Watches(event events.Event) bool
 }
 
 const (
@@ -42,7 +42,7 @@ var eventStreams = struct {
 // A change to one of the collection's own rows has its model as JSON, as the API answers it; any other change the
 // collection watches has {}. A page or API client can then update as changes happen, rather than polling.
 func EventsHandler[R, M any](collection CollectionBase[R, M]) http.HandlerFunc {
-	watches := func(event sitemodels.Event) bool {
+	watches := func(event events.Event) bool {
 		_, own := event.Model.(*R)
 		return own
 	}
@@ -62,9 +62,10 @@ func EventsHandler[R, M any](collection CollectionBase[R, M]) http.HandlerFunc {
 		defer closeEventStream(siteContext.Subdomain)
 
 		// The bus calls this in the publisher's goroutine, so it must not wait for a slow client
-		changes, overflowed, overflow := make(chan sitemodels.Event, eventStreamBuffer), make(chan struct{}), sync.Once{}
-		unsubscribe := siteContext.Config.SiteModelEvents.Subscribe(siteContext.Subdomain, func(event sitemodels.Event) {
-			if !watches(event) {
+		changes, overflowed, overflow := make(chan events.Event, eventStreamBuffer), make(chan struct{}), sync.Once{}
+		// Only model changes are streamed: the site's other events, such as a control identity disabling it, are not its users'
+		unsubscribe := siteContext.Config.Events.Subscribe(siteContext.Subdomain, func(event events.Event) {
+			if event.Model == nil || !watches(event) {
 				return
 			}
 			select {

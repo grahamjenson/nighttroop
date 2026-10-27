@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/data/events/sitemodels"
+	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsapi/nsv1"
 	"nighttroop.t1d.nz/server/nightscoutapi/nscollections"
@@ -72,7 +72,12 @@ func (ws *Websocket) server(subdomain string, create bool) *socketio.Server {
 	main.OnConnection(func(socket *socketio.Socket) { ws.connected(main, socket) })
 	server.Of("/storage").OnConnection(ws.storageConnected)
 	server.Of("/alarm").OnConnection(ws.alarmConnected)
-	ws.config.SiteModelEvents.Subscribe(subdomain, func(event sitemodels.Event) { ws.changed(main, event) })
+	ws.config.Events.Subscribe(subdomain, func(event events.Event) {
+		// Only model changes are sent to the site's sockets
+		if event.Model != nil {
+			ws.changed(main, event)
+		}
+	})
 	ws.servers[subdomain] = server
 	return server
 }
@@ -383,7 +388,7 @@ type recorder interface {
 
 // changed sends a changed model of the site to its DataReceivers as a delta dataUpdate, when it is a Nightscout
 // record. As in Nightscout, a treatment says whether it was updated or removed, and other removals are not sent.
-func (ws *Websocket) changed(main *socketio.Namespace, event sitemodels.Event) {
+func (ws *Websocket) changed(main *socketio.Namespace, event events.Event) {
 	siteDB, siteModel, err := ws.controlDB.GetSite(event.SiteID)
 	if err != nil {
 		return
@@ -402,13 +407,13 @@ func (ws *Websocket) changed(main *socketio.Namespace, event sitemodels.Event) {
 	}
 }
 
-func (ws *Websocket) send(main *socketio.Namespace, collection nsutils.Collection, record nsutils.Record, action sitemodels.Action) {
+func (ws *Websocket) send(main *socketio.Namespace, collection nsutils.Collection, record nsutils.Record, action events.Action) {
 	key, value, ok := clientData(collection, record)
-	if !ok || (action == sitemodels.Deleted && collection != nsutils.Treatments) {
+	if !ok || (action == events.Deleted && collection != nsutils.Treatments) {
 		return
 	}
-	if collection == nsutils.Treatments && action != sitemodels.Created {
-		if action == sitemodels.Deleted {
+	if collection == nsutils.Treatments && action != events.Created {
+		if action == events.Deleted {
 			value = pick(value, "_id", "mills")
 			value["action"] = "remove"
 		} else {
@@ -560,11 +565,11 @@ func (ws *Websocket) subscribe(socket *socketio.Socket, accessToken string, coll
 }
 
 // storageEvents are what API v3 calls each change on /storage
-var storageEvents = map[sitemodels.Action]string{sitemodels.Created: "create", sitemodels.Updated: "update", sitemodels.Deleted: "delete"}
+var storageEvents = map[events.Action]string{events.Created: "create", events.Updated: "update", events.Deleted: "delete"}
 
 // sendToStorage sends a change to the /storage sockets subscribed to its collection: a created or updated
 // record whole, as API v3 shows it to the socket's identity, and a deleted one by its identifier
-func (ws *Websocket) sendToStorage(siteDB *db.SiteDB, siteModel *controldb.Site, event sitemodels.Event, collection nsutils.Collection, r recorder) {
+func (ws *Websocket) sendToStorage(siteDB *db.SiteDB, siteModel *controldb.Site, event events.Event, collection nsutils.Collection, r recorder) {
 	ws.mu.Lock()
 	subscribers := []storageSubscriber{}
 	for _, subscriber := range ws.storage[event.SiteID] {
@@ -577,7 +582,7 @@ func (ws *Websocket) sendToStorage(siteDB *db.SiteDB, siteModel *controldb.Site,
 		ctx := httputils.CreateSiteContext(context.Background(), ws.config, ws.controlDB, siteDB, siteModel, event.SiteID, "", httputils.HTTPActionRead, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
 		record, _ := r.Record(event.Model, httputils.GetSiteContext(httputils.SetIdentityModelInSiteContext(ctx, subscriber.identity)))
 		message := map[string]any{"colName": collection, "doc": record.ToMap(true)}
-		if event.Action == sitemodels.Deleted {
+		if event.Action == events.Deleted {
 			message = map[string]any{"colName": collection, "identifier": record.Identifier()}
 		}
 		subscriber.socket.Emit(storageEvents[event.Action], message)

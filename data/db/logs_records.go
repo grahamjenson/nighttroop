@@ -6,33 +6,13 @@ import (
 	"net/http"
 	"time"
 
+	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/utils/consts"
 )
 
 // Every event and error the server records has its own method here, with typed attributes, so what is in the logs
 // DB is known. A site ID must come from the site context, never from a request. An event that takes time is recorded
 // with when it started, and finishes when it is recorded, so it can be written in a defer.
-
-// EventName is what happened in an event
-type EventName string
-
-const (
-	EventSiteCreated       EventName = "site_created"
-	EventSiteDisabled      EventName = "site_disabled"
-	EventSiteDeleted       EventName = "site_deleted"
-	EventSiteArchived      EventName = "site_archived"
-	EventSiteTruncated     EventName = "site_truncated"
-	EventSiteBatchBackedUp EventName = "site_batch_backed_up"
-	EventControlBackedUp   EventName = "control_backed_up"
-	EventSyncTurnedOff     EventName = "sync_turned_off"
-	EventSyncBackfilled    EventName = "sync_backfilled"
-)
-
-// EventNames are every event's name, to pick from
-var EventNames = []string{
-	string(EventSiteCreated), string(EventSiteDisabled), string(EventSiteDeleted), string(EventSiteArchived),
-	string(EventSiteTruncated), string(EventSiteBatchBackedUp), string(EventControlBackedUp), string(EventSyncTurnedOff),
-}
 
 // ErrorKind is what failed in an error, the kind in its attributes
 type ErrorKind string
@@ -64,7 +44,7 @@ const (
 ///////
 
 func (l *LogsDB) SiteCreatedEvent(ctx context.Context, siteID string) {
-	l.event(ctx, &siteID, EventSiteCreated, nil)
+	l.event(ctx, siteID, events.SiteCreated, nil)
 }
 
 type SiteDisabledAttributes struct {
@@ -73,7 +53,7 @@ type SiteDisabledAttributes struct {
 
 // SiteDisabledEvent records a control identity disabling a site
 func (l *LogsDB) SiteDisabledEvent(ctx context.Context, siteID string, by string) {
-	l.event(ctx, &siteID, EventSiteDisabled, SiteDisabledAttributes{By: by})
+	l.event(ctx, siteID, events.SiteDisabled, SiteDisabledAttributes{By: by})
 }
 
 type SiteArchivedAttributes struct {
@@ -82,7 +62,7 @@ type SiteArchivedAttributes struct {
 
 // SiteArchivedEvent records a control identity archiving a site, which started at started
 func (l *LogsDB) SiteArchivedEvent(ctx context.Context, siteID string, by string, started time.Time) {
-	l.finishedEvent(ctx, &siteID, nil, EventSiteArchived, started, SiteArchivedAttributes{By: by})
+	l.finishedEvent(ctx, siteID, "", events.SiteArchived, started, SiteArchivedAttributes{By: by})
 }
 
 type SiteTruncatedAttributes struct {
@@ -94,7 +74,7 @@ type SiteTruncatedAttributes struct {
 // SiteTruncatedEvent records a control identity truncating a site's DB, which started at started, and its size before
 // and after
 func (l *LogsDB) SiteTruncatedEvent(ctx context.Context, siteID string, by string, started time.Time, beforeSizeKB *int64, afterSizeKB *int64) {
-	l.finishedEvent(ctx, &siteID, nil, EventSiteTruncated, started, SiteTruncatedAttributes{By: by, BeforeSizeKB: beforeSizeKB, AfterSizeKB: afterSizeKB})
+	l.finishedEvent(ctx, siteID, "", events.SiteTruncated, started, SiteTruncatedAttributes{By: by, BeforeSizeKB: beforeSizeKB, AfterSizeKB: afterSizeKB})
 }
 
 type SiteDeletedAttributes struct {
@@ -102,7 +82,7 @@ type SiteDeletedAttributes struct {
 }
 
 func (l *LogsDB) SiteDeletedEvent(ctx context.Context, siteID string, reason string) {
-	l.event(ctx, &siteID, EventSiteDeleted, SiteDeletedAttributes{Reason: reason})
+	l.event(ctx, siteID, events.SiteDeleted, SiteDeletedAttributes{Reason: reason})
 }
 
 type SiteBatchBackedUpAttributes struct {
@@ -114,7 +94,7 @@ type SiteBatchBackedUpAttributes struct {
 // SiteBatchBackedUpEvent records the sites whose IDs start with batch being backed up from started, and uploaded when
 // S3 works
 func (l *LogsDB) SiteBatchBackedUpEvent(ctx context.Context, batch string, siteCount int, started time.Time, uploaded bool) {
-	l.finishedEvent(ctx, nil, &batch, EventSiteBatchBackedUp, started, SiteBatchBackedUpAttributes{Batch: batch, SiteCount: siteCount, Uploaded: uploaded})
+	l.finishedEvent(ctx, "", batch, events.SiteBatchBackedUp, started, SiteBatchBackedUpAttributes{Batch: batch, SiteCount: siteCount, Uploaded: uploaded})
 }
 
 type ControlBackedUpAttributes struct {
@@ -123,7 +103,7 @@ type ControlBackedUpAttributes struct {
 
 // ControlBackedUpEvent records the control DB being backed up from started, and uploaded when S3 works
 func (l *LogsDB) ControlBackedUpEvent(ctx context.Context, started time.Time, uploaded bool) {
-	l.finishedEvent(ctx, nil, nil, EventControlBackedUp, started, ControlBackedUpAttributes{Uploaded: uploaded})
+	l.finishedEvent(ctx, "", "", events.ControlBackedUp, started, ControlBackedUpAttributes{Uploaded: uploaded})
 }
 
 type SyncTurnedOffAttributes struct {
@@ -132,7 +112,7 @@ type SyncTurnedOffAttributes struct {
 
 // SyncTurnedOffEvent records a site's sync source being turned off because its first sync failed
 func (l *LogsDB) SyncTurnedOffEvent(ctx context.Context, siteID string, syncType consts.SyncSourceType) {
-	l.event(ctx, &siteID, EventSyncTurnedOff, SyncTurnedOffAttributes{SyncType: syncType})
+	l.event(ctx, siteID, events.SyncTurnedOff, SyncTurnedOffAttributes{SyncType: syncType})
 }
 
 type SyncBackfilledAttributes struct {
@@ -151,7 +131,7 @@ func (l *LogsDB) SyncBackfilledEvent(ctx context.Context, siteID string, syncTyp
 		message := truncate(err.Error())
 		attributes.Error = &message
 	}
-	l.finishedEvent(ctx, &siteID, nil, EventSyncBackfilled, started, attributes)
+	l.finishedEvent(ctx, siteID, "", events.SyncBackfilled, started, attributes)
 }
 
 ///////
