@@ -1,6 +1,8 @@
 package browser
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/mxschmitt/playwright-go"
@@ -38,4 +40,28 @@ func TestVisibleAssertsWaitForThePage(t *testing.T) {
 			require.NoError(t, test.assert.Execute(t, map[string]any{}, page, nil))
 		})
 	}
+}
+
+// The page moves to /next half a second after it loads, as one does after a click goes to the next page
+const movingPage = `<html><body><script>
+setTimeout(() => { history.pushState({}, '', '/next') }, 500)
+</script></body></html>`
+
+func TestPathAssertWaitsForThePage(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(movingPage))
+	}))
+	t.Cleanup(server.Close)
+	pw, err := playwright.Run()
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = pw.Stop() })
+	browser, err := pw.Chromium.Launch()
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = browser.Close() })
+
+	page, err := browser.NewPage()
+	require.NoError(t, err)
+	_, err = page.Goto(server.URL + "/first")
+	require.NoError(t, err)
+	require.NoError(t, (&AssertPath{URLPath: "/next"}).Execute(t, map[string]any{}, page, nil))
 }
