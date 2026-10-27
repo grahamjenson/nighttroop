@@ -263,7 +263,7 @@ func (r *AssertTextEquals) Execute(t *testing.T, ctx map[string]any, page playwr
 
 	prettyOutput := PrettifyHTML(html)
 
-	expected := normalizeValue(r.Text)
+	expected := r.Text
 	locator := getLocator(r.Locator, page)
 	if locator == nil {
 		t.Fatalf("\n\n%s\n getLocator returned nil for rawLocator: %v\n\n%s\n\n", r.ToErrorLine(), r.Locator, prettyOutput)
