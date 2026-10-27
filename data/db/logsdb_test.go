@@ -120,8 +120,7 @@ func TestCreateSiteRecordsEvent(t *testing.T) {
 // TestEventsArePublishedAndKept checks an event done to a site is sent through the server's events, to subscribers of
 // that site, as well as kept
 func TestEventsArePublishedAndKept(t *testing.T) {
-	cfg, controlDB, err := testutils.GetConfigControlDBForTest()
-	require.NoError(t, err)
+	cfg, controlDB := testutils.NewControlDB(t)
 	ctx, site := context.TODO(), "publishedsite"
 	var published []events.Event
 	unsubscribe := cfg.Events.Subscribe(site, func(event events.Event) { published = append(published, event) })
