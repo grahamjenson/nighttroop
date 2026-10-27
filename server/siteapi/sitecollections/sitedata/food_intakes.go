@@ -1,8 +1,8 @@
 package sitedata
 
 import (
+	"cmp"
 	"context"
-	"fmt"
 
 	"nighttroop.t1d.nz/utils/apiutils"
 
@@ -137,10 +137,10 @@ func (s *FoodIntakesCollection) DeleteHTMXResponse(model *sitemodels.SiteFoodInt
 
 // checkFoodIntake keeps any carbs, fat, protein or fibre sent within what a meal could have
 func checkFoodIntake(model *sitemodels.SiteFoodIntake) *apiutils.HTTPError {
-	for _, grams := range []*float64{model.Carbs, model.Fat, model.Protein, model.Fibre} {
-		if grams != nil && (*grams < 0 || *grams > maxFoodGrams) {
-			return apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("carbs, fat, protein and fibre must be from 0 to %d g", maxFoodGrams))
-		}
-	}
-	return nil
+	return cmp.Or(
+		apiutils.CheckRange("carbs, fat, protein and fibre", model.Carbs, 0, maxFoodGrams, "g"),
+		apiutils.CheckRange("carbs, fat, protein and fibre", model.Fat, 0, maxFoodGrams, "g"),
+		apiutils.CheckRange("carbs, fat, protein and fibre", model.Protein, 0, maxFoodGrams, "g"),
+		apiutils.CheckRange("carbs, fat, protein and fibre", model.Fibre, 0, maxFoodGrams, "g"),
+	)
 }

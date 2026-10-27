@@ -142,8 +142,5 @@ func checkNotificationEvent(model *sitemodels.SiteNotificationEvent) *apiutils.H
 	if len(model.Title) > 128 {
 		return apiutils.ErrConstraintCheckFailedWithHint("title must be at most 128 characters")
 	}
-	if model.Severity < 0 || model.Severity > 5 {
-		return apiutils.ErrConstraintCheckFailedWithHint("severity must be from 0 to 5")
-	}
-	return nil
+	return apiutils.CheckRange("severity", &model.Severity, 0, 5, "")
 }
