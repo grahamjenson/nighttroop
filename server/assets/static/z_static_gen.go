@@ -60,6 +60,10 @@ var StaticFloatingUiDomJsETag = generateETag([]byte(StaticFloatingUiDomJs))
 var StaticHtmxJs []byte
 var StaticHtmxJsETag = generateETag([]byte(StaticHtmxJs))
 
+//go:embed htmx_sse.js
+var StaticHtmxSseJs []byte
+var StaticHtmxSseJsETag = generateETag([]byte(StaticHtmxSseJs))
+
 //go:embed input.js
 var StaticInputJs []byte
 var StaticInputJsETag = generateETag([]byte(StaticInputJs))
@@ -323,6 +327,22 @@ func AddStaticRoutes(r chi.Router) error {
 		_, err := w.Write([]byte(StaticHtmxJs))
 		if err != nil {
 			slog.Error("Failed to write response for htmx.js", "error", err)
+		}
+	})
+	r.Get("/htmx_sse.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+
+		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+		w.Header().Set("Cache-Control", "no-cache")
+		w.Header().Set("ETag", StaticHtmxSseJsETag)
+		if r.Header.Get("If-None-Match") == StaticHtmxSseJsETag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
+
+		_, err := w.Write([]byte(StaticHtmxSseJs))
+		if err != nil {
+			slog.Error("Failed to write response for htmx_sse.js", "error", err)
 		}
 	})
 	r.Get("/input.js", func(w http.ResponseWriter, r *http.Request) {

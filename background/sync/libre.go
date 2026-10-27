@@ -70,9 +70,10 @@ func (b *SyncJobManager) copyLibreReadings(ctx context.Context, syncInfo *SyncJo
 	for _, userSyncSource := range syncInfo.UserSyncSources {
 		for _, r := range readings {
 			createParams := libremodels.ReadingToCreate(r, "libre_sync")
-			_, err := userSyncSource.SiteDB.Queries.CreateGlucoseReading(ctx, createParams)
+			row, err := userSyncSource.SiteDB.Queries.CreateGlucoseReading(ctx, createParams)
 			if err == nil {
 				added++
+				userSyncSource.published(row)
 			} else if !utilerrors.IsSQLDuplicateID(err) {
 				slog.Error("Error creating entry in database", "error", err, "id", createParams.ID, "site_id", syncInfo.SiteID, "sync_type", syncInfo.Type)
 			}
