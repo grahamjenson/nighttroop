@@ -351,7 +351,7 @@ func Header() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, " ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "  ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -708,7 +708,7 @@ func Header() templ.Component {
 				return nil
 			})
 			templ_7745c5c3_Err = dropdown.Content(dropdown.ContentProps{
-				Class: "w-56",
+				Class: "w-56 max-h-[calc(100vh-5rem)]",
 			}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var11), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
