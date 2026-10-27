@@ -156,5 +156,6 @@ func virtualSiteContext(userSyncSource *SyncUserInfo) *httputils.SiteContext {
 		SiteDB:        userSyncSource.SiteDB,
 		SiteModel:     userSyncSource.SiteModel,
 		HTTPAction:    httputils.HTTPActionWrite,
+		Config:        userSyncSource.Config,
 	}
 }

@@ -117,6 +117,7 @@ func (b *SyncJobManager) createNightscoutDocuments(ctx context.Context, syncInfo
 			SiteDB:     userSyncSource.SiteDB,
 			SiteModel:  userSyncSource.SiteModel,
 			HTTPAction: httputils.HTTPActionWrite,
+			Config:     userSyncSource.Config,
 		}
 
 		skipped, reason := 0, ""

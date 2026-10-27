@@ -512,8 +512,14 @@ func (r *ClearCookie) Execute(t *testing.T, page playwright.Page, ctx map[string
 
 // RunBackgroundJobs runs every background and cron job once. The test runner does the work, as it owns the jobs.
 type RunBackgroundJobs struct {
+	Asserts []Assert
+
 	TestPath string
 	TestLine int
+}
+
+func (r *RunBackgroundJobs) AddAssert(assert Assert) {
+	r.Asserts = append(r.Asserts, assert)
 }
 
 func (r *RunBackgroundJobs) ToFlatString() string {
@@ -528,7 +534,13 @@ func (r *RunBackgroundJobs) PrintAction() {
 	fmt.Println(r.ToFlatString())
 }
 
+// Execute runs its asserts; the jobs themselves are run by the test before it, against the test's server
 func (r *RunBackgroundJobs) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
+	for _, assert := range r.Asserts {
+		if err := assert.Execute(t, ctx, page, nil); err != nil {
+			t.Fatalf("\n\n ASSERT FAILED \n %s: %v \n\n", r.ToErrorLine("Error with ASSERT"), err)
+		}
+	}
 	return page, nil
 }
 

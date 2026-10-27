@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/a-h/templ"
+	events "nighttroop.t1d.nz/data/events/sitemodels"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_summary_templ"
@@ -40,6 +41,17 @@ const maxDevices = 20
 
 // maxSwitchMinutes is how long before the summary a profile switch with a duration is looked for, as one still in force
 const maxSwitchMinutes = 7 * 24 * 60
+
+// Watches is whether a change is to something the summary shows, so its events stream tells the summary page to update
+func (s *SummaryCollection) Watches(event events.Event) bool {
+	switch event.Model.(type) {
+	case *sitedb.GlucoseReading, *sitedb.InsulinDose, *sitedb.FoodIntake, *sitedb.TempTarget, *sitedb.TempBasal,
+		*sitedb.DeviceReport, *sitedb.ProfileSwitch, *sitedb.ProfilePreset,
+		*sitedb.EventGroupsBundle, *sitedb.ProfilePresetBundle:
+		return true
+	}
+	return false
+}
 
 func (s *SummaryCollection) ToModel(row *sitemodels.Summary, siteContext *httputils.SiteContext) *sitemodels.Summary {
 	if row == nil {
