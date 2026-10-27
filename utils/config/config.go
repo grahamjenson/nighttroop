@@ -105,6 +105,8 @@ type ServerConfig struct {
 	// Sync Config
 	BackgroundSyncWorkers int
 	SyncIntervalInSeconds int
+	// BackfillDays is how far back before a site's oldest glucose reading a backfill fetches records
+	BackfillDays int
 
 	// Truncate Config
 	TruncateIntervalInSeconds int
@@ -234,6 +236,7 @@ func NewServerConfig() (*ServerConfig, error) {
 		// Sync Config
 		BackgroundSyncWorkers: configIntSelect(dotenv, "BACKGROUND_SYNC_WORKERS", 5),
 		SyncIntervalInSeconds: configIntSelect(dotenv, "SYNC_INTERVAL_IN_SECONDS", 5), // check syncs every 5 seconds
+		BackfillDays:          configIntSelect(dotenv, "BACKFILL_DAYS", 7),
 
 		// Dexcom Config
 		DexcomClientID:     configStringSelect(dotenv, "DEXCOM_CLIENT_ID", ""),

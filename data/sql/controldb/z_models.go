@@ -161,6 +161,14 @@ type SiteSyncSource struct {
 	UpdatedAt                  int64
 	Enabled                    bool
 	FirstSuccessfulSyncTime    *int64
+	BackfillStartedAt          *int64
+	LastBackfillFrom           *int64
+	LastBackfillTo             *int64
+	LastBackfillFinishedAt     *int64
+	LastBackfillDuration       *int64
+	LastBackfillRecords        *int64
+	LastBackfillError          *string
+	TotalBackfills             int64
 	SyncIntervalSecondsReason  string
 	SyncIntervalSeconds        int64
 	LastAttemptedSync          *int64

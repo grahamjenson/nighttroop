@@ -7,6 +7,8 @@ import (
 	"log/slog"
 	gosync "sync"
 
+	lru "github.com/hashicorp/golang-lru/v2"
+
 	"nighttroop.t1d.nz/background/cron"
 	"nighttroop.t1d.nz/background/liteq"
 	"nighttroop.t1d.nz/data/db"
@@ -30,14 +32,20 @@ type SyncJobManager struct {
 	// For Nightscout API
 	nightscoutStore *nightscoutapi.NightTroopAPIStore
 
-	// Each site's Nightscout client, kept between syncs
+	// Each site's Nightscout client, kept between syncs, the least recently used dropped once there are too many
 	nightscoutClientsLock gosync.Mutex
-	nightscoutClients     map[string]*nightscoutClient
+	nightscoutClients     *lru.Cache[string, *nightscoutClient]
 }
+
+// maxNightscoutClients is how many sites' Nightscout clients are kept, about 1KB each, so memory stays bounded however
+// many sites sync; a site whose client is dropped logs in again on its next sync
+const maxNightscoutClients = 10_000
 
 type SyncJobParams struct {
 	SiteID string
 	Type   consts.SyncSourceType
+	// Backfill is set for a backfill rather than a sync
+	Backfill *BackfillParams `json:",omitempty"`
 }
 
 type SyncJobInfo struct {
@@ -58,6 +66,8 @@ type SyncUserInfo struct {
 }
 
 func SetupSyncJobManager(config *config.ServerConfig, controlDB *db.ControlDB) *SyncJobManager {
+	// It only fails for a size under 1
+	nightscoutClients, _ := lru.New[string, *nightscoutClient](maxNightscoutClients)
 
 	jobs := &SyncJobManager{
 		controlDB:             controlDB,
@@ -65,7 +75,7 @@ func SetupSyncJobManager(config *config.ServerConfig, controlDB *db.ControlDB) *
 		SyncIntervalInSeconds: config.SyncIntervalInSeconds,
 		BackgroundSyncWorkers: config.BackgroundSyncWorkers,
 		nightscoutStore:       nightscoutapi.NewNightTroopAPIStore(controlDB, config),
-		nightscoutClients:     map[string]*nightscoutClient{},
+		nightscoutClients:     nightscoutClients,
 	}
 
 	return jobs
@@ -140,6 +150,9 @@ func (b *SyncJobManager) SyncSource(ctx context.Context, syncJob SyncJobParams) 
 		password:        password,
 		region:          region,
 		firstSync:       syncSource.FirstSuccessfulSyncTime == nil,
+	}
+	if syncJob.Backfill != nil {
+		return b.backfill(syncInfo, *syncJob.Backfill)
 	}
 	return b.SyncUserData(syncInfo)
 }
