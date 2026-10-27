@@ -1922,6 +1922,8 @@ func constsSyncSourceTypeToConstsSyncSourceType(source consts.SyncSourceType) co
 	switch source {
 	case consts.SyncSourceTypeDexcom:
 		constsSyncSourceType = consts.SyncSourceTypeDexcom
+	case consts.SyncSourceTypeLibre:
+		constsSyncSourceType = consts.SyncSourceTypeLibre
 	case consts.SyncSourceTypeNightscout:
 		constsSyncSourceType = consts.SyncSourceTypeNightscout
 	case consts.SyncSourceTypeVirtual:

@@ -70,6 +70,15 @@ func (s *SyncSettingsCollection) CreateRow(ctx context.Context, collectionTx *si
 
 	security := siteContext.Config.Security
 
+	if params.Type == consts.SyncSourceTypeLibre {
+		if params.Region == nil || *params.Region == "" {
+			params.Region = ptr(consts.LibreRegionGlobal)
+		}
+		if err := libreRegionValidate(params.Region); err != nil {
+			return nil, err
+		}
+	}
+
 	// Nightscout specific validation and normalization
 	if params.Type == consts.SyncSourceTypeNightscout {
 		normalized, err := nsURLNormalizeValidate(params.UrlOrUsernameEnc, siteContext.Config)
@@ -147,6 +156,12 @@ func (s *SyncSettingsCollection) UpdateRow(ctx context.Context, collectionTx *si
 	}
 
 	security := siteContext.Config.Security
+
+	if oldModel.Type == consts.SyncSourceTypeLibre && params.Region != nil {
+		if err := libreRegionValidate(params.Region); err != nil {
+			return nil, err
+		}
+	}
 
 	// Nightscout specific validation and normalization
 	if oldModel.Type == consts.SyncSourceTypeNightscout {
@@ -356,6 +371,14 @@ func nsURLNormalizeValidate(rawUrl *string, config *config.ServerConfig) (*strin
 	}
 
 	return ptr(normalizedUrl), nil
+}
+
+// libreRegionValidate refuses a region not in consts.LibreRegions, so a Libre sync only calls their hosts
+func libreRegionValidate(region *string) error {
+	if !consts.IsLibreRegion(*region) {
+		return apiutils.ErrBadBodyWithHint(fmt.Sprintf("LibreLinkUp region '%s' is not a known region.", *region))
+	}
+	return nil
 }
 
 func ptr[T any](v T) *T {

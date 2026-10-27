@@ -19,7 +19,7 @@ func (b *SyncJobManager) syncDexcom(syncInfo *SyncJobInfo) error {
 
 	slog.Info("Syncing Dexcom", "site_id", syncInfo.SiteID, "sync_type", syncInfo.Type)
 
-	client := dexcom_client.NewClient(syncInfo.urlOrUsername, syncInfo.password, syncInfo.region == consts.DexcomRegionOther)
+	client := dexcom_client.NewClient(syncInfo.urlOrUsername, syncInfo.password, consts.NewDexcomRegionFromString(syncInfo.region) == consts.DexcomRegionOther)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()

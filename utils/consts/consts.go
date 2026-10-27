@@ -3,6 +3,7 @@ package consts
 import (
 	"fmt"
 	"log/slog"
+	"slices"
 	"strings"
 )
 
@@ -118,11 +119,30 @@ func NewDexcomRegionFromString(s string) DexcomRegion {
 	}
 }
 
+// LibreRegion is a LibreLinkUp region, each with its own API host
+type LibreRegion struct{ Code, Name string }
+
+// LibreRegionGlobal is the default host, which tells a login to use the account's own region
+const LibreRegionGlobal = "GLOBAL"
+
+// LibreRegions are the only regions a Libre sync calls, so a sync never goes to a host a user or upstream chose
+var LibreRegions = []LibreRegion{
+	{LibreRegionGlobal, "Global"}, {"AE", "United Arab Emirates"}, {"AP", "Asia Pacific"}, {"AU", "Australia"},
+	{"CA", "Canada"}, {"DE", "Germany"}, {"EU", "Europe"}, {"EU2", "Europe 2"}, {"FR", "France"},
+	{"JP", "Japan"}, {"LA", "Latin America"}, {"US", "United States"},
+}
+
+// IsLibreRegion is whether the code is one of LibreRegions
+func IsLibreRegion(code string) bool {
+	return slices.ContainsFunc(LibreRegions, func(r LibreRegion) bool { return r.Code == code })
+}
+
 type SyncSourceType string
 
 const (
 	SyncSourceTypeNightscout SyncSourceType = "nightscout"
 	SyncSourceTypeDexcom     SyncSourceType = "dexcom"
+	SyncSourceTypeLibre      SyncSourceType = "libre"
 	SyncSourceTypeVirtual    SyncSourceType = "virtual"
 )
 
@@ -132,6 +152,8 @@ func NewSyncSourceTypeFromString(s string) (SyncSourceType, error) {
 		return SyncSourceTypeNightscout, nil
 	case "dexcom":
 		return SyncSourceTypeDexcom, nil
+	case "libre":
+		return SyncSourceTypeLibre, nil
 	case "virtual":
 		return SyncSourceTypeVirtual, nil
 	default:

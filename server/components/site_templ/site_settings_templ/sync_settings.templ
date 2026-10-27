@@ -32,6 +32,7 @@ templ SyncSettingsPartial(syncSettings []*sitemodels.SyncSource) {
 		</div>
 		@NightscoutSyncForm(findSyncSource(syncSettings, consts.SyncSourceTypeNightscout))
 		@DexcomSyncForm(findSyncSource(syncSettings, consts.SyncSourceTypeDexcom))
+		@LibreSyncForm(findSyncSource(syncSettings, consts.SyncSourceTypeLibre))
 		@VirtualSyncForm(findSyncSource(syncSettings, consts.SyncSourceTypeVirtual))
 	</div>
 }
@@ -175,6 +176,132 @@ templ DexcomSyncForm(dexcomSyncSettings *sitemodels.SyncSource) {
 						Delete
 					}
 					@button.Button(button.Props{
+						Type: button.TypeSubmit,
+					}) {
+						Save
+					}
+				</div>
+			</div>
+		</div>
+	</form>
+}
+
+templ LibreSyncForm(libreSyncSettings *sitemodels.SyncSource) {
+	<form
+		hx-post="/settings/sync/libre"
+		hx-target="#toaster"
+		hx-swap="beforeend"
+		hx-status:4xx="target:#toaster swap:beforeend"
+		hx-status:5xx="target:#toaster swap:beforeend"
+		class="mt-4"
+	>
+		<div class="rounded-xl border border-gray-200 shadow-sm">
+			<div class="p-6">
+				<!-- Header -->
+				<div class="mb-4 flex items-center justify-between">
+					<div>
+						<h2 class="text-lg font-semibold">
+							FreeStyle Libre Sync
+						</h2>
+						<div class="text-sm text-gray-500">
+							Connect a LibreLinkUp account that follows you
+						</div>
+					</div>
+					@form.Item(form.ItemProps{
+						Class: "flex items-start gap-2 justify-center",
+					}) {
+						@checkbox.Checkbox(checkbox.Props{
+							ID:      "site--settings--libre-sync--enable",
+							Name:    "enabled",
+							Checked: libreSyncSettings.IsEnabled(),
+							Class:   "h-4 w-4 rounded border-gray-600 bg-white",
+						})
+						@form.Label(form.LabelProps{
+							For:   "site--settings--libre-sync--enable",
+							Class: "item-center flex cursor-pointer gap-2",
+						}) {
+							Enable Sync
+						}
+					}
+				</div>
+				@SyncErrors(libreSyncSettings, "libre")
+				<!-- Fields -->
+				<div class="grid gap-4 md:grid-cols-12">
+					<div class="md:col-span-5">
+						@form.Item(form.ItemProps{}) {
+							@form.Label(form.LabelProps{
+								For: "site--settings--libre-sync--email",
+							}) {
+								LibreLinkUp Email
+							}
+							@input.Input(input.Props{
+								ID:       "site--settings--libre-sync--email",
+								Type:     "email",
+								Name:     "url_or_username",
+								Required: true,
+								Value:    libreSyncSettings.GetUsername(),
+								Attributes: templ.Attributes{
+									"autocomplete":   "new-password",
+									"autocapitalize": "none",
+									"spellcheck":     "false",
+								},
+							})
+						}
+					</div>
+					<div class="md:col-span-4">
+						@form.Item(form.ItemProps{}) {
+							@form.Label(form.LabelProps{
+								For: "site--settings--libre-sync--password",
+							}) {
+								LibreLinkUp Password
+							}
+							@input.Input(input.Props{
+								ID:       "site--settings--libre-sync--password",
+								Type:     "password",
+								Name:     "password",
+								Required: true,
+								Value:    libreSyncSettings.GetPasswordGarbage(),
+								Attributes: templ.Attributes{
+									"onmousedown":               "event.preventDefault(); this.select();",
+									"data-placeholder-password": "true",
+									"autocomplete":              "new-password",
+								},
+							})
+						}
+					</div>
+					<div class="md:col-span-3">
+						@form.Item(form.ItemProps{}) {
+							@form.Label(form.LabelProps{
+								For: "site--settings--libre-sync--region",
+							}) {
+								LibreLinkUp Region
+							}
+							<select id="site--settings--libre-sync--region" name="region" class="h-9 w-full rounded-md border border-input bg-white px-3 text-sm shadow-xs">
+								for _, region := range consts.LibreRegions {
+									<option value={ region.Code } selected?={ libreSyncSettings.GetLibreRegion() == region.Code }>{ region.Name }</option>
+								}
+							</select>
+						}
+					</div>
+				</div>
+				<!-- Footer -->
+				<div class="mt-6 flex flex-col gap-3 border-t border-gray-100 pt-4 md:flex-row md:items-center md:justify-between">
+					@button.Button(button.Props{
+						ID:      "site--settings--libre-sync--delete",
+						Type:    "button",
+						Variant: button.VariantDestructive,
+						Attributes: templ.Attributes{
+							"hx-include": "none",
+							"hx-delete":  "/settings/sync/libre",
+							"hx-confirm": "Are you sure you want to delete this FreeStyle Libre sync source?",
+							"hx-target":  "closest form",
+							"hx-swap":    "outerHTML",
+						},
+					}) {
+						Delete
+					}
+					@button.Button(button.Props{
+						ID:   "site--settings--libre-sync--submit",
 						Type: button.TypeSubmit,
 					}) {
 						Save
@@ -392,6 +519,8 @@ templ SyncDeleted(sourceType consts.SyncSourceType) {
 			@NightscoutSyncForm(nil)
 		case consts.SyncSourceTypeDexcom:
 			@DexcomSyncForm(nil)
+		case consts.SyncSourceTypeLibre:
+			@LibreSyncForm(nil)
 		case consts.SyncSourceTypeVirtual:
 			@VirtualSyncForm(nil)
 	}
