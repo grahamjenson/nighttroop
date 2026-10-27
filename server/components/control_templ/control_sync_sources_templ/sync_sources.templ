@@ -48,6 +48,14 @@ func stateClass(source *controlmodels.SyncSource) string {
 	return ""
 }
 
+// failedClass makes a source's failed count stand out once it has failed
+func failedClass(source *controlmodels.SyncSource) string {
+	if source.TotalFailedSyncs != nil && *source.TotalFailedSyncs > 0 {
+		return "font-medium text-red-700"
+	}
+	return ""
+}
+
 // SyncSourcesTable shows one page of sync sources, the most recently failed first, with buttons to the pages either side
 templ SyncSourcesTable(sources []*controlmodels.SyncSource, skip int64, limit int64) {
 	<div id="sync_sources_table" class="mx-auto max-w-5xl space-y-6">
@@ -125,7 +133,7 @@ templ syncSourceRow(source *controlmodels.SyncSource) {
 			{ orDash(source.TotalSuccessfulSyncs) }
 		}
 		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
-			{ orDash(source.TotalFailedSyncs) }
+			<span class={ failedClass(source) }>{ orDash(source.TotalFailedSyncs) }</span>
 		}
 	}
 }
