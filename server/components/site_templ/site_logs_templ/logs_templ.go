@@ -28,7 +28,7 @@ func duration(event *sitemodels.SiteEvent) string {
 	if event.FinishedAt == nil {
 		return "-"
 	}
-	return fmt.Sprintf("%d ms", *event.FinishedAt-event.StartedAt)
+	return display.Duration(*event.FinishedAt - event.StartedAt)
 }
 
 // about is who an event was for: this site, or the batch of sites it is backed up with

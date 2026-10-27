@@ -35,6 +35,21 @@ func TestAgo(t *testing.T) {
 	}
 }
 
+func TestDuration(t *testing.T) {
+	for in, want := range map[int64]string{
+		0:          "0 ms",
+		250:        "250 ms",
+		1500:       "1.5 s",
+		59_940:     "59.9 s",
+		125_000:    "2 min 5 s",
+		12_000_000: "3 h 20 min",
+	} {
+		if got := Duration(in); got != want {
+			t.Errorf("Duration(%d) = %q, want %q", in, got, want)
+		}
+	}
+}
+
 func TestReadingType(t *testing.T) {
 	for in, want := range map[string]string{"sgv": "Sensor", "mbg": "Meter", "cal": "cal"} {
 		if got := ReadingType(in); got != want {

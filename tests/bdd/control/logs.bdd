@@ -24,6 +24,8 @@ SCREENSHOT menu
 CLICK #control--events-button
 ASSERT_STATUS 200
 ASSERT_PATH /events
+// Durations read in the units that suit them: a quick one in ms
+ASSERT_VISIBLE #controlEventsTable td >> text=/^\d+ ms$/ >> nth=0
 ASSERT_VISIBLE #controlEventsTable
 ASSERT_TEXT_VISIBLE site_created
 SCREENSHOT events
