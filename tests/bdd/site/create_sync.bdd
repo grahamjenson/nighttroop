@@ -57,7 +57,7 @@ ASSERT_TEXT_VISIBLE The first sync failed, so syncing has been turned off
 // Its status says when it failed and that it now syncs less often because of the error
 ASSERT_TEXT_EQUALS #site--settings--nightscout-sync--status--last-success Never
 ASSERT_TEXT_EQUALS #site--settings--nightscout-sync--status--last-failure just now
-ASSERT_TEXT_EQUALS #site--settings--nightscout-sync--status--interval 120 s (Error response)
+ASSERT_TEXT_EQUALS #site--settings--nightscout-sync--status--interval 2 min (Error response)
 // The Dexcom region looks like the inputs beside it, not greyed out as if it could not be changed
 ASSERT_VISIBLE #dex_region
 ASSERT_NOT_VISIBLE .bg-gray-100:has(#dex_region)
