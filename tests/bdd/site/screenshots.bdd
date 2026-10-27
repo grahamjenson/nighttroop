@@ -18,9 +18,7 @@ ASSERT_STATUS 200
 SCREENSHOT site_login_totp
 
 ASSERT_VISIBLE #site--login--otp-1
-INPUT #site--login--otp-1 123123
-
-CLICK #site--login-totp-button
+TYPE #site--login--otp-1 123123
 ASSERT_NEW_URL
 ASSERT_VISIBLE "Nighttroop"
 SCREENSHOT site_home

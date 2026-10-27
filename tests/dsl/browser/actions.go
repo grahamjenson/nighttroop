@@ -106,6 +106,8 @@ type Click struct {
 	History string
 	// Key is pressed instead of clicking, for PRESS
 	Key string
+	// Text is typed into Locator, a key at a time, instead of clicking it, for TYPE
+	Text string
 	// Corner clicks just inside Locator's top left corner instead of its centre, for CLICK_CORNER,
 	// e.g. a modal's backdrop beside the dialog over its centre
 	Corner bool
@@ -209,6 +211,8 @@ func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 		_, err = page.GoForward()
 	case r.Key != "":
 		err = page.Keyboard().Press(r.Key)
+	case r.Text != "":
+		err = locator.PressSequentially(r.Text, playwright.LocatorPressSequentiallyOptions{Timeout: playwright.Float(actionWait)})
 	case r.Corner:
 		err = locator.Click(playwright.LocatorClickOptions{Timeout: playwright.Float(actionWait), Position: &playwright.Position{X: 2, Y: 2}})
 	default:
