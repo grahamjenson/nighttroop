@@ -6,7 +6,8 @@ on:
   pull_request:
 
 jobs:
-  test:
+  # Its own job beside test, so checking generated code adds no time to CI
+  generate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,7 +26,7 @@ jobs:
           key: gomod-${{ runner.os }}-${{ hashFiles('go.sum') }}
           restore-keys: gomod-${{ runner.os }}-
 
-      # Restores main's last build cache; only pushes to main save one (see the end).
+      # Restores main's last build cache; only test's pushes to main save one (see its end).
       - name: Restore Go build cache
         uses: actions/cache/restore@v4
         with:
@@ -57,13 +58,46 @@ jobs:
           git add -N .
           git diff --exit-code || { echo "::error::go generate ./... changed files; run it and commit"; exit 1; }
 
-      - name: Cache playwright browser
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: false
+
+      # Only the downloaded module zips: a few hundred files restore far faster than the
+      # unpacked modules, and Go unpacks the ones it needs in seconds.
+      - name: Cache Go modules
         uses: actions/cache@v4
         with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-v0.6201.1
+          path: ~/go/pkg/mod/cache/download
+          key: gomod-${{ runner.os }}-${{ hashFiles('go.sum') }}
+          restore-keys: gomod-${{ runner.os }}-
 
+      # Restores main's last build cache; only pushes to main save one (see the end).
+      - name: Restore Go build cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cache/go-build
+          key: gobuild-${{ runner.os }}-${{ github.sha }}
+          restore-keys: gobuild-${{ runner.os }}-
+
+      # The driver is cached with the browser, so a cache hit installs nothing
+      - name: Cache playwright
+        id: playwright
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/ms-playwright
+            ~/.cache/ms-playwright-go
+          key: playwright-${{ runner.os }}-v0.6201.1-driver
+
+      # The runner image has Chrome, so it already has the system libraries Chromium needs. --with-deps
+      # installs them again with apt, which took 18s a run and once over 10 minutes, so only a miss runs it.
       - name: Install playwright browser
+        if: steps.playwright.outputs.cache-hit != 'true'
         run: go run github.com/mxschmitt/playwright-go/cmd/playwright@v0.6201.1 install --with-deps chromium
 
       # -count=1 so integration tests always run instead of replaying cached results.
