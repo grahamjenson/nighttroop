@@ -260,8 +260,11 @@ func DeleteHandler[R, M any](collection CollectionDelete[R, M]) http.HandlerFunc
 		tx := siteapiutils.NewCollectionTx(r.Context(), siteContext)
 		defer tx.Rollback()
 		model, row, herr := get(r.Context(), tx, collection, id, siteContext)
-		if herr != nil || model == nil {
-			writeError(w, r, siteContext.AcceptType, apiutils.ErrNotFound)
+		if herr == nil && model == nil {
+			herr = apiutils.ErrNotFound
+		}
+		if herr != nil {
+			writeError(w, r, siteContext.AcceptType, herr)
 			return
 		}
 
