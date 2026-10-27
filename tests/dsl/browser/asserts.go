@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/mxschmitt/playwright-go"
 )
@@ -339,13 +340,21 @@ type AssertPath struct {
 	TestLine int
 }
 
+// Execute waits up to visibleWait for the page's path, as after a click the browser may still be going to the next page
 func (r *AssertPath) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
-	parsedURL, err := url.Parse(page.URL())
-	if err != nil {
-		t.Fatalf("\n\n%s\n failed to parse page URL: %v\n\n", r.ToErrorLine(), err)
+	path := ""
+	for deadline := time.Now().Add(visibleWait * time.Millisecond); ; time.Sleep(50 * time.Millisecond) {
+		parsedURL, err := url.Parse(page.URL())
+		if err != nil {
+			t.Fatalf("\n\n%s\n failed to parse page URL: %v\n\n", r.ToErrorLine(), err)
+		}
+		path = parsedURL.Path
+		if path == r.URLPath || time.Now().After(deadline) {
+			break
+		}
 	}
-	if parsedURL.Path != r.URLPath {
-		t.Fatalf("\n\n%s\n assertPath failed: expected path %s, got %s\n\n", r.ToErrorLine(), r.URLPath, parsedURL.Path)
+	if path != r.URLPath {
+		t.Fatalf("\n\n%s\n assertPath failed: expected path %s, got %s\n\n", r.ToErrorLine(), r.URLPath, path)
 	}
 	return nil
 }
