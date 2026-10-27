@@ -56,6 +56,9 @@ CLICK #site--settings--sync-button
 ASSERT_STATUS 200
 ASSERT_VISIBLE #site--settings--nightscout-sync--errors
 ASSERT_TEXT_VISIBLE The first sync failed, so syncing has been turned off
+// The Dexcom region looks like the inputs beside it, not greyed out as if it could not be changed
+ASSERT_VISIBLE #dex_region
+ASSERT_NOT_VISIBLE .bg-gray-100:has(#dex_region)
 SCREENSHOT sync_first_sync_failed
 
 // Deleting a source leaves the page in place, with the source's form rendered unset again
