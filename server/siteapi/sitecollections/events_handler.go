@@ -55,16 +55,16 @@ func EventsHandler[R, M any](collection CollectionBase[R, M]) http.HandlerFunc {
 		if siteContext == nil {
 			return
 		}
-		if !openEventStream(siteContext.Subdomain) {
+		if !openEventStream(siteContext.SiteID) {
 			writeError(w, r, siteContext.AcceptType, apiutils.ErrRateLimitExceeded(60))
 			return
 		}
-		defer closeEventStream(siteContext.Subdomain)
+		defer closeEventStream(siteContext.SiteID)
 
 		// The bus calls this in the publisher's goroutine, so it must not wait for a slow client
 		changes, overflowed, overflow := make(chan events.Event, eventStreamBuffer), make(chan struct{}), sync.Once{}
 		// Only model changes are streamed: the site's other events, such as a control identity disabling it, are not its users'
-		unsubscribe := siteContext.Config.Events.Subscribe(siteContext.Subdomain, func(event events.Event) {
+		unsubscribe := siteContext.Config.Events.Subscribe(siteContext.SiteID, func(event events.Event) {
 			if event.Model == nil || !watches(event) {
 				return
 			}

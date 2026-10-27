@@ -57,7 +57,7 @@ func (s *IdentitiesCollection) CreateRow(ctx context.Context, collectionTx *site
 	}
 
 	// Counted inside the transaction, so two creates at once cannot both pass the limit
-	count, err := q.CountSiteIdentities(ctx, controldb.CountSiteIdentitiesParams{SiteID: siteContext.Subdomain})
+	count, err := q.CountSiteIdentities(ctx, controldb.CountSiteIdentitiesParams{SiteID: siteContext.SiteID})
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func (s *IdentitiesCollection) CreateRow(ctx context.Context, collectionTx *site
 		return nil, apiutils.ErrRateLimitExceeded(seconds)
 	}
 
-	values, err := siteContext.ControlDB.CreateSiteIdentity(ctx, q, siteContext.Subdomain, model.Name, role)
+	values, err := siteContext.ControlDB.CreateSiteIdentity(ctx, q, siteContext.SiteID, model.Name, role)
 	if err != nil {
 		// Names are unique per site
 		return nil, err
@@ -130,7 +130,7 @@ func (s *IdentitiesCollection) GetRow(ctx context.Context, collectionTx *siteapi
 	if err != nil {
 		return nil, err
 	}
-	identity, err := q.GetSiteIdentityByID(ctx, controldb.GetSiteIdentityByIDParams{SiteID: siteContext.Subdomain, ID: identityID})
+	identity, err := q.GetSiteIdentityByID(ctx, controldb.GetSiteIdentityByIDParams{SiteID: siteContext.SiteID, ID: identityID})
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +155,7 @@ func (s *IdentitiesCollection) SearchRows(ctx context.Context, collectionTx *sit
 	if err != nil {
 		return nil, err
 	}
-	identities, err := q.AllSiteIdentities(ctx, controldb.AllSiteIdentitiesParams{SiteID: siteContext.Subdomain})
+	identities, err := q.AllSiteIdentities(ctx, controldb.AllSiteIdentitiesParams{SiteID: siteContext.SiteID})
 	if err != nil {
 		return nil, err
 	}
@@ -213,7 +213,7 @@ func (s *IdentitiesCollection) DeleteHTMXResponse(model *sitemodels.UserIdentity
 ////////
 
 func getIdentityByName(ctx context.Context, q *controldb.Queries, siteContext *httputils.SiteContext, name string) (*sitemodels.UserIdentity, *apiutils.HTTPError) {
-	identity, err := q.GetSiteIdentity(ctx, controldb.GetSiteIdentityParams{SiteID: siteContext.Subdomain, Name: name})
+	identity, err := q.GetSiteIdentity(ctx, controldb.GetSiteIdentityParams{SiteID: siteContext.SiteID, Name: name})
 	if err == sql.ErrNoRows || (err == nil && identity == nil) {
 		return nil, apiutils.ErrNotFound
 	}
@@ -233,7 +233,7 @@ func checkCanRemoveIdentity(ctx context.Context, q *controldb.Queries, siteConte
 		return nil
 	}
 
-	identities, err := q.AllSiteIdentities(ctx, controldb.AllSiteIdentitiesParams{SiteID: siteContext.Subdomain})
+	identities, err := q.AllSiteIdentities(ctx, controldb.AllSiteIdentitiesParams{SiteID: siteContext.SiteID})
 	if err != nil {
 		return apiutils.ErrInternalServerError
 	}

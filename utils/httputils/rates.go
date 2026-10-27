@@ -36,7 +36,7 @@ func SiteLoginAttemptsWithinRateLimit(serverConfig *config.ServerConfig, r *http
 
 func SiteUnauthWithinRateLimit(serverConfig *config.ServerConfig, r *http.Request) (bool, int) {
 	siteContext := GetSiteContext(r.Context())
-	return WithinRateLimitAll(serverConfig.RateLimiters.SiteUnauthLimiter(siteContext.Subdomain, siteContext.IPAddress))
+	return WithinRateLimitAll(serverConfig.RateLimiters.SiteUnauthLimiter(siteContext.SiteID, siteContext.IPAddress))
 }
 
 // //////
@@ -44,7 +44,7 @@ func SiteUnauthWithinRateLimit(serverConfig *config.ServerConfig, r *http.Reques
 // //////
 func SiteHTTPActionWithinRateLimit(serverConfig *config.ServerConfig, r *http.Request) (bool, int) {
 	siteContext := GetSiteContext(r.Context())
-	userSubdomain := siteContext.Subdomain
+	userSubdomain := siteContext.SiteID
 
 	var limiter *rate.Limiter
 	switch siteContext.HTTPAction {
@@ -82,7 +82,7 @@ func IdentityHTTPWithinRateLimit(serverConfig *config.ServerConfig, r *http.Requ
 
 func UserUpdateSyncWithinRateLimit(siteContext *SiteContext) (bool, int) {
 
-	userSubdomain := siteContext.Subdomain
+	userSubdomain := siteContext.SiteID
 
 	writeLimiter := siteContext.Config.RateLimiters.SiteUpdateSyncLimiter(userSubdomain)
 
@@ -90,7 +90,7 @@ func UserUpdateSyncWithinRateLimit(siteContext *SiteContext) (bool, int) {
 }
 
 func IdentityCreateWithinRateLimit(siteContext *SiteContext) (bool, int) {
-	return WithinRateLimitAll(siteContext.Config.RateLimiters.SiteIdentityCreateLimiter(siteContext.Subdomain))
+	return WithinRateLimitAll(siteContext.Config.RateLimiters.SiteIdentityCreateLimiter(siteContext.SiteID))
 }
 
 // //

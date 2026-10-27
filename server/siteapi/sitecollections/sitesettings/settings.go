@@ -129,7 +129,7 @@ func (s *SettingsCollection) UpdateRow(ctx context.Context, collectionTx *siteap
 		settings.SetSettings(params, level)
 		err = q.UpdateSitesSettings(ctx, *params)
 	} else {
-		params := &controldb.UpdateSiteIdentitySettingsParams{ID: siteContext.IdentityModel.ID, SiteID: siteContext.Subdomain}
+		params := &controldb.UpdateSiteIdentitySettingsParams{ID: siteContext.IdentityModel.ID, SiteID: siteContext.SiteID}
 		settings.SetSettings(params, level)
 		err = q.UpdateSiteIdentitySettings(ctx, *params)
 	}

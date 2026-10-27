@@ -72,7 +72,7 @@ func siteSocketServer(t *testing.T, cfg *config.ServerConfig, siteCtx context.Co
 		ws.ServeHTTP(w, r.WithContext(siteCtx))
 	}))
 	t.Cleanup(func() {
-		ws.server(httputils.GetSiteContext(siteCtx).Subdomain, false).Close()
+		ws.server(httputils.GetSiteContext(siteCtx).SiteID, false).Close()
 		ts.Close()
 	})
 	return ts

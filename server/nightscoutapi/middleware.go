@@ -114,7 +114,7 @@ func legacyTokenIdentity(config *config.ServerConfig, ctx context.Context, token
 		return nil, fmt.Errorf("invalid token format: %w", err)
 	}
 
-	if tokenParamSubdomain != siteContext.Subdomain {
+	if tokenParamSubdomain != siteContext.SiteID {
 		return nil, fmt.Errorf("token subdomain does not match user context subdomain")
 	}
 

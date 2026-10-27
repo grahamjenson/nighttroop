@@ -70,7 +70,7 @@ func NightscoutAuthRoute(controlDB *db.ControlDB, config *config.ServerConfig) h
 		}
 
 		// The user should have already been verified
-		token, expiresAt, err := config.Security.GenerateUserJWTToken(siteContext.Subdomain, siteContext.IdentityModel.Name, string(siteContext.IdentityModel.Role))
+		token, expiresAt, err := config.Security.GenerateUserJWTToken(siteContext.SiteID, siteContext.IdentityModel.Name, string(siteContext.IdentityModel.Role))
 		if err != nil {
 			http.Error(w, "Internal Server Error: Failed to generate JWT token", http.StatusInternalServerError)
 			return

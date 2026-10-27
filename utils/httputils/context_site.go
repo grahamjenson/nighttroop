@@ -24,7 +24,7 @@ type SiteContext struct {
 
 	IdentityModel *controldb.SiteIdentity
 
-	Subdomain string
+	SiteID    string
 	IPAddress string
 
 	HTTPAction  HTTPAction
@@ -48,13 +48,13 @@ func GetSiteContext(ctx context.Context) *SiteContext {
 // SiteDB
 ////
 
-func CreateSiteContext(ctx context.Context, config *config.ServerConfig, controlDB *db.ControlDB, siteDB *db.SiteDB, siteModel *controldb.Site, subdomain string, ipAddress string, httpAction HTTPAction, acceptType AcceptType, contentType ContentType) context.Context {
+func CreateSiteContext(ctx context.Context, config *config.ServerConfig, controlDB *db.ControlDB, siteDB *db.SiteDB, siteModel *controldb.Site, siteID string, ipAddress string, httpAction HTTPAction, acceptType AcceptType, contentType ContentType) context.Context {
 	siteContext := &SiteContext{}
 	siteContext.Config = config
 	siteContext.ControlDB = controlDB
 	siteContext.SiteDB = siteDB
 	siteContext.SiteModel = siteModel
-	siteContext.Subdomain = subdomain
+	siteContext.SiteID = siteID
 	siteContext.IPAddress = ipAddress
 	siteContext.HTTPAction = httpAction
 	siteContext.AcceptType = acceptType
@@ -67,7 +67,7 @@ func CreateSiteContext(ctx context.Context, config *config.ServerConfig, control
 // server's events
 func (s *SiteContext) PublishModelChange(action events.Action, model any) {
 	if s.Config != nil && s.Config.Events != nil {
-		s.Config.Events.Publish(s.Subdomain, events.ModelChange(s.Subdomain, action, model))
+		s.Config.Events.Publish(s.SiteID, events.ModelChange(s.SiteID, action, model))
 	}
 }
 
@@ -90,7 +90,7 @@ func SetIdentityModelInSiteContext(ctx context.Context, identityModel *controldb
 
 func (sc *SiteContext) GetSettings() *settings.CombinedSettingsMap {
 	if sc.SiteModel == nil || sc.IdentityModel == nil {
-		slog.Error("settings unavailable site or identity model is nil", "subdomain", sc.Subdomain, "siteModel", sc.SiteModel, "identityModel", sc.IdentityModel)
+		slog.Error("settings unavailable site or identity model is nil", "site_id", sc.SiteID, "siteModel", sc.SiteModel, "identityModel", sc.IdentityModel)
 		return settings.DefaultCombinedSettingsMap()
 	}
 
@@ -102,14 +102,14 @@ func (sc *SiteContext) GetSettings() *settings.CombinedSettingsMap {
 }
 
 // GetSiteIdentity is the enabled identity with the name and role on the site of the request, refusing one for another site
-func GetSiteIdentity(ctx context.Context, subdomain string, identityName string, role consts.IdentityRole) (*controldb.SiteIdentity, error) {
+func GetSiteIdentity(ctx context.Context, siteID string, identityName string, role consts.IdentityRole) (*controldb.SiteIdentity, error) {
 	siteContext := GetSiteContext(ctx)
-	if subdomain != siteContext.Subdomain {
-		return nil, fmt.Errorf("subdomain mismatch: expected %s, got %s", siteContext.Subdomain, subdomain)
+	if siteID != siteContext.SiteID {
+		return nil, fmt.Errorf("site ID mismatch: expected %s, got %s", siteContext.SiteID, siteID)
 	}
 
 	identity, err := siteContext.ControlDB.Queries.GetSiteIdentity(ctx, controldb.GetSiteIdentityParams{
-		SiteID: subdomain,
+		SiteID: siteID,
 		Name:   identityName,
 	})
 	if err != nil {

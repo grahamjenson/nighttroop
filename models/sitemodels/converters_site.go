@@ -350,7 +350,7 @@ func IsCurrentIdentity(id int64, siteContext *httputils.SiteContext) bool {
 
 // goverter:context siteContext
 func ContextSiteID(siteContext *httputils.SiteContext) string {
-	return siteContext.Subdomain
+	return siteContext.SiteID
 }
 
 // goverter:context siteContext
