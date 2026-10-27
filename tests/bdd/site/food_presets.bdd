@@ -30,6 +30,8 @@ ASSERT_PATH /presets/food
 ASSERT_VISIBLE #foodPresetsTable
 ASSERT_TEXT_VISIBLE No food presets here.
 ASSERT_NOT_VISIBLE #presets--food--next
+// Units are in brackets after the name
+ASSERT_TEXT_VISIBLE Carbs (g)
 SCREENSHOT food_presets_empty
 
 // A food preset typed in goes to the top of the table

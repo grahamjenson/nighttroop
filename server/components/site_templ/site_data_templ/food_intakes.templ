@@ -34,7 +34,7 @@ templ FoodIntakesTable(foodIntakes []*sitemodels.SiteFoodIntake, skip int64, lim
 							Time
 						}
 						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-							Carbs g
+							Carbs (g)
 						}
 						@table.Head() {
 							Name
@@ -90,7 +90,7 @@ templ foodIntakeInputs(id string, carbs string, name string, notes string) {
 			ID:          id + "--carbs",
 			Type:        input.TypeNumber,
 			Name:        "carbs",
-			Placeholder: "Carbs g",
+			Placeholder: "Carbs (g)",
 			Value:       carbs,
 			Required:    true,
 			Attributes:  templ.Attributes{"step": "any", "min": "0", "max": "1000"},
