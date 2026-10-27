@@ -42,10 +42,6 @@ func RunTheActionFileAsATest(t *testing.T, root string, path string, context pla
 			}
 		})
 
-		actionFileBytes, err := embeddedFiles.ReadFile(path)
-		if err != nil {
-			t.Fatalf("failed to read action file: %v", err)
-		}
 		fmt.Println()
 		fmt.Println("===============================================")
 		fmt.Printf("Running action file: %s\n", path)
@@ -58,7 +54,7 @@ func RunTheActionFileAsATest(t *testing.T, root string, path string, context pla
 			"default_token": siteInformation.PwdNSToken,
 			"default_jwt":   defaultJwt,
 		}
-		actionFile, err := browser.ParseActionFile(string(actionFileBytes), actionContext, path)
+		actionFile, err := browser.ParseActionFile(embeddedFiles, path)
 		if err != nil {
 			t.Fatalf("failed to parse action file: %v", err)
 		}

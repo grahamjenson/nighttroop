@@ -1,21 +1,4 @@
-GOTO {{ server_url}}/
-ASSERT_STATUS 200
-
-CLICK "Create Site"
-ASSERT_STATUS 200
-
-CLICK #public--login-button
-ASSERT_NEW_PAGE
-
-INPUT #site--login--name admin
-INPUT #site--login--password password
-
-CLICK #site--login-button
-ASSERT_STATUS 200
-
-ASSERT_VISIBLE #site--login--otp-1
-TYPE #site--login--otp-1 123123
-ASSERT_NEW_URL
+INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
 // A new site has no site or sensor changes
