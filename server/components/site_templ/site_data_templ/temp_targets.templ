@@ -192,7 +192,7 @@ templ TempTargetModal(tempTarget *sitemodels.SiteTempTarget) {
 			hx-status:4xx="target:#toaster swap:beforeend"
 			hx-status:5xx="target:#toaster swap:beforeend"
 		>
-			@tempTargetInputs("site--temp-target--edit", fmt.Sprint(tempTarget.LowTarget), fmt.Sprint(tempTarget.HighTarget), fmt.Sprint(tempTarget.DurationMinutes), orEmpty(tempTarget.Notes))
+			@tempTargetInputs("site--temp-target--edit", formatGlucose(tempTarget.LowTarget, tempTarget.Units), formatGlucose(tempTarget.HighTarget, tempTarget.Units), fmt.Sprint(tempTarget.DurationMinutes), orEmpty(tempTarget.Notes))
 			@button.Button(button.Props{ID: "site--temp-target--edit--submit", Type: button.TypeSubmit}) {
 				Save
 			}
