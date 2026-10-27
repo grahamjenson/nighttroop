@@ -17,8 +17,7 @@ type scheduler map[string]func() error
 func (s scheduler) AddFunc(name string, spec string, cmd func() error) { s[name] = cmd }
 
 func TestTrimLogsDBCron(t *testing.T) {
-	cfg, controlDB, err := testutils.GetConfigControlDBForTest()
-	require.NoError(t, err)
+	cfg, controlDB := testutils.NewControlDB(t)
 	ctx, logs := context.TODO(), controlDB.Logs
 	cfg.LogsDBMaxRowsPerTable = 2
 	for _, message := range []string{"first", "second", "third"} {

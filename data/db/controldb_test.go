@@ -18,8 +18,7 @@ import (
 
 // Sites created at the same time must each get their own subdomain and site DB
 func TestCreateSiteConcurrently(t *testing.T) {
-	_, controlDB, err := testutils.GetConfigControlDBForTest()
-	require.NoError(t, err)
+	_, controlDB := testutils.NewControlDB(t)
 
 	const count = 10
 	subdomains := make([]string, count)
@@ -53,8 +52,7 @@ func TestCreateSiteConcurrently(t *testing.T) {
 
 // A site DB that cannot be created is an error, not a panic
 func TestCreateSiteWhenSiteDBFails(t *testing.T) {
-	cfg, controlDB, err := testutils.GetConfigControlDBForTest()
-	require.NoError(t, err)
+	cfg, controlDB := testutils.NewControlDB(t)
 
 	// A file where the data folder should be, so the site DB cannot be written
 	badCfg := *cfg
@@ -63,15 +61,14 @@ func TestCreateSiteWhenSiteDBFails(t *testing.T) {
 	require.NoError(t, os.WriteFile(badCfg.DataDir, nil, 0o600))
 	controlDB.ServerConfig = &badCfg
 
-	_, err = controlDB.CreateSite()
+	_, err := controlDB.CreateSite()
 	require.ErrorContains(t, err, "Site DB Creation Error")
 }
 
 func TestArchiveSite(t *testing.T) {
-	cfg, controlDB, site, err := testutils.GetConfigControlDBAndSiteDBForTest()
-	require.NoError(t, err)
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	ctx, siteID := context.TODO(), site.SiteDB.Subdomain
-	_, err = controlDB.Queries.DisableSite(ctx, controldb.DisableSiteParams{ID: siteID})
+	_, err := controlDB.Queries.DisableSite(ctx, controldb.DisableSiteParams{ID: siteID})
 	require.NoError(t, err)
 
 	// An upload that fails keeps the site
@@ -100,8 +97,7 @@ func TestArchiveSite(t *testing.T) {
 }
 
 func TestTruncateSite(t *testing.T) {
-	_, controlDB, site, err := testutils.GetConfigControlDBAndSiteDBForTest()
-	require.NoError(t, err)
+	_, controlDB, site := testutils.NewControlDBWithSite(t)
 	ctx, q := context.TODO(), site.SiteDB.Queries
 	raw := `{"sgv":120,"device":"phone"}`
 	reading, err := q.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "reading", Mgdl: 120, ReadingType: "sgv", OccurredAt: 1, RawJsonData: &raw, CreatedByIdentityName: "phone"})

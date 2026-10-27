@@ -18,8 +18,7 @@ import (
 )
 
 func TestBackfillStartsOneAtATimeAndRecordsWhatItDid(t *testing.T) {
-	cfg, controlDB, site, err := testutils.GetConfigControlDBAndSiteDBForTest()
-	require.NoError(t, err)
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	q, ctx, siteID, typ := controlDB.Queries, context.TODO(), site.SiteDB.Subdomain, consts.SyncSourceTypeVirtual
 	jobs := SetupSyncJobManager(cfg, controlDB)
 	source := func() *controldb.SiteSyncSource {
@@ -78,8 +77,7 @@ func TestBackfillStartsOneAtATimeAndRecordsWhatItDid(t *testing.T) {
 }
 
 func TestBackfillRangeOfDexcomIsTheLastDay(t *testing.T) {
-	_, _, site, err := testutils.GetConfigControlDBAndSiteDBForTest()
-	require.NoError(t, err)
+	_, _, site := testutils.NewControlDBWithSite(t)
 	backfill, err := BackfillRange(context.TODO(), site.SiteDB, consts.SyncSourceTypeDexcom, 7)
 	require.NoError(t, err)
 	require.InDelta(t, time.Now().UnixMilli(), backfill.To, 1000)
@@ -88,8 +86,7 @@ func TestBackfillRangeOfDexcomIsTheLastDay(t *testing.T) {
 
 // LibreLinkUp's graph is the last 12 hours, so a Libre backfill fetches those, and runs as a backfill should
 func TestLibreBackfillFetchesTheLastTwelveHours(t *testing.T) {
-	cfg, controlDB, site, err := testutils.GetConfigControlDBAndSiteDBForTest()
-	require.NoError(t, err)
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	q, ctx, siteID, typ := controlDB.Queries, context.TODO(), site.SiteDB.Subdomain, consts.SyncSourceTypeLibre
 	jobs := SetupSyncJobManager(cfg, controlDB)
 	enc := func(s string) *string {
@@ -115,8 +112,7 @@ func TestLibreBackfillFetchesTheLastTwelveHours(t *testing.T) {
 }
 
 func TestNightscoutBackfillCopiesOlderDocuments(t *testing.T) {
-	cfg, controlDB, site, err := testutils.GetConfigControlDBAndSiteDBForTest()
-	require.NoError(t, err)
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	q, ctx, siteID, typ := controlDB.Queries, context.TODO(), site.SiteDB.Subdomain, consts.SyncSourceTypeNightscout
 	jobs := SetupSyncJobManager(cfg, controlDB)
 	enc := func(s string) *string {

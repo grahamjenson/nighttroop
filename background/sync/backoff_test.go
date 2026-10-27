@@ -11,8 +11,7 @@ import (
 )
 
 func TestSyncBacksOffOnFailureAndResetsOnSuccess(t *testing.T) {
-	_, controlDB, site, err := testutils.GetConfigControlDBAndSiteDBForTest()
-	require.NoError(t, err)
+	_, controlDB, site := testutils.NewControlDBWithSite(t)
 	q, ctx, siteID, typ := controlDB.Queries, context.TODO(), site.SiteDB.Subdomain, consts.SyncSourceTypeNightscout
 	require.NoError(t, q.CreateSyncSource(ctx, controldb.CreateSyncSourceParams{SiteID: siteID, Type: typ, Enabled: true}))
 	interval := func() int64 {

@@ -103,8 +103,7 @@ func (c *websocketClient) none(t *testing.T, event string) {
 }
 
 func TestNightscoutWebsocket(t *testing.T) {
-	config, controlDB, site, err := testutils.GetConfigControlDBAndSiteDBForTest()
-	require.NoError(t, err)
+	config, controlDB, site := testutils.NewControlDBWithSite(t)
 	router := server.GetMainHandler(controlDB, config)
 	ts := httptest.NewServer(router)
 	t.Cleanup(ts.Close)

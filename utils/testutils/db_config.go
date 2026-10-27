@@ -2,7 +2,7 @@ package testutils
 
 import (
 	"context"
-	"fmt"
+	"testing"
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/utils/config"
@@ -31,29 +31,24 @@ func GetTestServerConfig() *config.ServerConfig {
 	return storedServerConfig
 }
 
-func GetConfigControlDBForTest() (*config.ServerConfig, *db.ControlDB, error) {
+// NewControlDB is the test config and a new control DB for it, failing the test if the DB cannot be made
+func NewControlDB(t testing.TB) (*config.ServerConfig, *db.ControlDB) {
+	t.Helper()
 	cfg := GetTestServerConfig()
-
 	controlDB, err := db.NewControlDB(context.TODO(), cfg)
 	if err != nil {
-		return cfg, nil, fmt.Errorf("cannot create control db: %w", err)
+		t.Fatalf("cannot create control db: %v", err)
 	}
-
-	return cfg, controlDB, nil
+	return cfg, controlDB
 }
 
-func GetConfigControlDBAndSiteDBForTest() (*config.ServerConfig, *db.ControlDB, *db.SiteCreateResult, error) {
-	cfg := GetTestServerConfig()
-
-	controlDB, err := db.NewControlDB(context.TODO(), cfg)
+// NewControlDBWithSite is NewControlDB with a site created in it
+func NewControlDBWithSite(t testing.TB) (*config.ServerConfig, *db.ControlDB, *db.SiteCreateResult) {
+	t.Helper()
+	cfg, controlDB := NewControlDB(t)
+	site, err := controlDB.CreateSite()
 	if err != nil {
-		return cfg, nil, nil, fmt.Errorf("cannot create control db: %w", err)
+		t.Fatalf("cannot create site db: %v", err)
 	}
-
-	identityValues, err := controlDB.CreateSite()
-	if err != nil {
-		return cfg, nil, nil, fmt.Errorf("cannot create site db: %w", err)
-	}
-
-	return cfg, controlDB, identityValues, nil
+	return cfg, controlDB, site
 }

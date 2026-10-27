@@ -17,8 +17,7 @@ import (
 // A 10KB error (an upstream body, say) must not break the row's CHECK: it is stored truncated
 // and the failure still counts, so the source backs off instead of being retried every tick
 func TestOversizedSyncErrorIsTruncatedAndStillBacksOff(t *testing.T) {
-	cfg, controlDB, site, err := testutils.GetConfigControlDBAndSiteDBForTest()
-	require.NoError(t, err)
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	q, ctx, siteID, typ := controlDB.Queries, context.TODO(), site.SiteDB.Subdomain, consts.SyncSourceTypeNightscout
 	jobs := SetupSyncJobManager(cfg, controlDB)
 	require.NoError(t, q.CreateSyncSource(ctx, controldb.CreateSyncSourceParams{SiteID: siteID, Type: typ, Enabled: true}))

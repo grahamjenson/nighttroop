@@ -17,8 +17,7 @@ import (
 // Many distinct oversized job errors must still summarise into job_stats_daily (CHECK 51200)
 // and the summarised jobs must be deleted, or the jobs table grows forever
 func TestOversizedJobErrorsStillSummariseAndDeleteJobs(t *testing.T) {
-	_, controlDB, err := testutils.GetConfigControlDBForTest()
-	require.NoError(t, err)
+	_, controlDB := testutils.NewControlDB(t)
 	ctx, jobsDB, queue := context.TODO(), controlDB.Jobs, liteq.New(controlDB)
 	const queueName, count = "long-errors", 20
 
