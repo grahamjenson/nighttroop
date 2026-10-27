@@ -25,6 +25,8 @@ const (
 	maxBackfillPages = 200
 	// dexcomBackfillMinutes is as far back as Dexcom Share has readings
 	dexcomBackfillMinutes = 24 * 60
+	// libreBackfillMinutes is as far back as the LibreLinkUp graph goes
+	libreBackfillMinutes = 12 * 60
 )
 
 // BackfillParams is when, in ms, a backfill fetches records from and up to
@@ -37,11 +39,15 @@ type BackfillParams struct {
 var ErrBackfillRunning = errors.New("a backfill is already running")
 
 // BackfillRange is what a backfill of the source would fetch now: the backfillDays before the site's oldest glucose
-// reading, or before now when it has none. Dexcom only has the last 24 hours, so a Dexcom backfill fetches those.
+// reading, or before now when it has none. Dexcom only has the last 24 hours and Libre the last 12, so their backfills
+// fetch those.
 func BackfillRange(ctx context.Context, siteDB *db.SiteDB, syncType consts.SyncSourceType, backfillDays int) (BackfillParams, error) {
 	now := time.Now().UnixMilli()
-	if syncType == consts.SyncSourceTypeDexcom {
+	switch syncType {
+	case consts.SyncSourceTypeDexcom:
 		return BackfillParams{From: now - dexcomBackfillMinutes*time.Minute.Milliseconds(), To: now}, nil
+	case consts.SyncSourceTypeLibre:
+		return BackfillParams{From: now - libreBackfillMinutes*time.Minute.Milliseconds(), To: now}, nil
 	}
 	oldest, err := siteDB.Queries.OldestGlucoseReadingAt(ctx)
 	if err != nil {
@@ -89,6 +95,8 @@ func (b *SyncJobManager) backfill(syncInfo *SyncJobInfo, backfill BackfillParams
 		records, err = b.backfillNightscout(ctx, syncInfo, from, to)
 	case consts.SyncSourceTypeDexcom:
 		records, err = copyDexcomEGVs(ctx, syncInfo, dexcomBackfillMinutes)
+	case consts.SyncSourceTypeLibre:
+		records, err = b.copyLibreReadings(ctx, syncInfo)
 	case consts.SyncSourceTypeVirtual:
 		records, err = b.backfillVirtual(ctx, syncInfo, from, to)
 	}
