@@ -12,7 +12,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/table"
 )
 
-// eventGroupEvents are the group's events in words, like "4 U insulin" and "40 g carbs"
+// eventGroupEvents are the group's events in words, like "4 U insulin", "40 g carbs" and "5.5–6.7 mmol/L temp target for 30 min"
 func eventGroupEvents(group *sitemodels.SiteEventGroup) []string {
 	events := []string{}
 	if r := group.GlucoseReading; r != nil {
@@ -28,7 +28,7 @@ func eventGroupEvents(group *sitemodels.SiteEventGroup) []string {
 		events = append(events, fmt.Sprintf("%s U/hr temp basal for %d min", orDash(b.Absolute), b.DurationMinutes))
 	}
 	if t := group.TempTarget; t != nil {
-		events = append(events, fmt.Sprintf("%s–%s temp target for %d min", formatGlucose(t.LowTarget, t.Units), formatGlucose(t.HighTarget, t.Units), t.DurationMinutes))
+		events = append(events, fmt.Sprintf("%s–%s %s temp target for %d min", formatGlucose(t.LowTarget, t.Units), formatGlucose(t.HighTarget, t.Units), orDash(t.Units), t.DurationMinutes))
 	}
 	for _, other := range []struct {
 		id   *string

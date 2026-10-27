@@ -42,6 +42,8 @@ CLICK #site--data--event-groups-button
 ASSERT_STATUS 200
 ASSERT_VISIBLE #eventGroupsTable >> text="Temp Basal"
 ASSERT_VISIBLE #eventGroupsTable >> text=0.85 U/hr temp basal for 30 min
+// A temp target says its units, as glucose does
+ASSERT_VISIBLE #eventGroupsTable >> text=5.5–6.7 mmol/L temp target for 30 min
 ASSERT_VISIBLE #eventGroupsTable >> text="Profile Switch"
 SCREENSHOT event_groups
 
