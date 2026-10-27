@@ -220,3 +220,48 @@ func TestLogsDBSearchByType(t *testing.T) {
 		})
 	}
 }
+
+// TestLogsDBSearchText checks a search keeps only rows with it in their text or attributes, ignoring case, and that
+// a site cannot search the attributes of its batch's events, which it is not shown
+func TestLogsDBSearchText(t *testing.T) {
+	_, controlDB, err := testutils.GetConfigControlDBForTest()
+	require.NoError(t, err)
+	ctx, logs, site, batch := context.TODO(), controlDB.Logs, "searchsite", "searchbatch"
+
+	logs.Log(ctx, &site, db.LogLevelInfo, "Synced readings", map[string]any{"source": "dexcom"})
+	logs.Log(ctx, &site, db.LogLevelInfo, "Something else", nil)
+	logs.SiteDisabledEvent(ctx, site, "admin")
+	logs.SiteBatchBackedUpEvent(ctx, batch, 3, time.Now(), false)
+	logs.SyncError(ctx, site, consts.SyncSourceTypeNightscout, errors.New("Nightscout refused"))
+
+	str := func(s string) *string { return &s }
+	tests := []struct {
+		name       string
+		search     *string
+		logs       int
+		siteEvents int
+		errors     int
+	}{
+		{"no search", nil, 2, 2, 1},
+		{"message, ignoring case", str("synced READINGS"), 1, 0, 0},
+		{"attributes", str("dexcom"), 1, 0, 0},
+		{"event name", str("disabled"), 0, 1, 0},
+		{"own event attributes", str("admin"), 0, 1, 0},
+		{"batch event attributes are not searched", str("site_count"), 0, 0, 0},
+		{"error message", str("refused"), 0, 0, 1},
+		{"nothing matches", str("nope"), 0, 0, 0},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			found, err := logs.Queries.SearchLogs(ctx, logsdb.SearchLogsParams{SiteID: &site, Search: tt.search, Limit: 10})
+			require.NoError(t, err)
+			require.Len(t, found, tt.logs)
+			events, err := logs.Queries.SearchSiteEvents(ctx, logsdb.SearchSiteEventsParams{SiteID: &site, Batch: &batch, Search: tt.search, Limit: 10})
+			require.NoError(t, err)
+			require.Len(t, events, tt.siteEvents)
+			errs, err := logs.Queries.SearchErrors(ctx, logsdb.SearchErrorsParams{SiteID: &site, Search: tt.search, Limit: 10})
+			require.NoError(t, err)
+			require.Len(t, errs, tt.errors)
+		})
+	}
+}

@@ -109,6 +109,10 @@ func QueryToSearchErrors(source *apiquery.Query) logsdb.SearchErrorsParams {
 			xstring := *(*source).Type
 			logsdbSearchErrorsParams.Type = &xstring
 		}
+		if (*source).Search != nil {
+			xstring2 := *(*source).Search
+			logsdbSearchErrorsParams.Search = &xstring2
+		}
 		logsdbSearchErrorsParams.Skip = (*source).Skip
 		logsdbSearchErrorsParams.Limit = (*source).Limit
 	}
@@ -120,6 +124,10 @@ func QueryToSearchEvents(source *apiquery.Query) logsdb.SearchEventsParams {
 		if (*source).Type != nil {
 			xstring := *(*source).Type
 			logsdbSearchEventsParams.Type = &xstring
+		}
+		if (*source).Search != nil {
+			xstring2 := *(*source).Search
+			logsdbSearchEventsParams.Search = &xstring2
 		}
 		logsdbSearchEventsParams.Skip = (*source).Skip
 		logsdbSearchEventsParams.Limit = (*source).Limit
@@ -145,6 +153,10 @@ func QueryToSearchJobs(source *apiquery.Query) jobsdb.SearchJobsParams {
 func QueryToSearchLogs(source *apiquery.Query) logsdb.SearchLogsParams {
 	var logsdbSearchLogsParams logsdb.SearchLogsParams
 	if source != nil {
+		if (*source).Search != nil {
+			xstring := *(*source).Search
+			logsdbSearchLogsParams.Search = &xstring
+		}
 		logsdbSearchLogsParams.Skip = (*source).Skip
 		logsdbSearchLogsParams.Limit = (*source).Limit
 	}

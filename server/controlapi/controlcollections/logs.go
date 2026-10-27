@@ -29,7 +29,7 @@ func (s *LogsCollection) SearchRows(ctx context.Context, query *apiutils.Query, 
 }
 
 func (s *LogsCollection) SearchHTMXResponse(models []*controlmodels.Log, query *apiutils.Query) templ.Component {
-	return control_logs_templ.LogsTable(models, query.Skip, query.Limit)
+	return control_logs_templ.LogsTable(models, query.Skip, query.Limit, query.Search)
 }
 
 func (s *LogsCollection) GetRow(ctx context.Context, id string, controlContext *httputils.ControlContext) (*logsdb.Log, error) {
@@ -58,7 +58,7 @@ func (s *EventsCollection) SearchRows(ctx context.Context, query *apiutils.Query
 }
 
 func (s *EventsCollection) SearchHTMXResponse(models []*controlmodels.Event, query *apiutils.Query) templ.Component {
-	return control_logs_templ.EventsTable(models, query.Skip, query.Limit, query.Type)
+	return control_logs_templ.EventsTable(models, query.Skip, query.Limit, query.Type, query.Search)
 }
 
 func (s *EventsCollection) GetRow(ctx context.Context, id string, controlContext *httputils.ControlContext) (*logsdb.Event, error) {
@@ -87,7 +87,7 @@ func (s *ErrorsCollection) SearchRows(ctx context.Context, query *apiutils.Query
 }
 
 func (s *ErrorsCollection) SearchHTMXResponse(models []*controlmodels.Error, query *apiutils.Query) templ.Component {
-	return control_logs_templ.ErrorsTable(models, query.Skip, query.Limit, query.Type)
+	return control_logs_templ.ErrorsTable(models, query.Skip, query.Limit, query.Type, query.Search)
 }
 
 func (s *ErrorsCollection) GetRow(ctx context.Context, id string, controlContext *httputils.ControlContext) (*logsdb.Error, error) {

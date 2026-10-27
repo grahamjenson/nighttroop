@@ -301,7 +301,7 @@ func attributesDetail(id string, raw json.RawMessage) templ.Component {
 var detail = modal.Detail
 
 // EventsTable shows one page of the site's events and its batch's, the newest first
-func EventsTable(events []*sitemodels.SiteEvent, skip int64, limit int64, eventType *string) templ.Component {
+func EventsTable(events []*sitemodels.SiteEvent, skip int64, limit int64, eventType *string, search *string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -334,7 +334,7 @@ func EventsTable(events []*sitemodels.SiteEvent, skip int64, limit int64, eventT
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = filter.Filter(filter.Props{ID: "site--events--filter", Path: "/logs/events", All: "All events", Types: db.EventNames, Selected: eventType}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = filter.Filter(filter.Props{ID: "site--events--filter", Path: "/logs/events", All: "All events", Types: db.EventNames, Selected: eventType, Search: search}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -687,7 +687,7 @@ func EventsTable(events []*sitemodels.SiteEvent, skip int64, limit int64, eventT
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = page("events_table", "Events", "What happened to this site and the batch of sites it is backed up with, newest first.", "/logs/events", filter.PagePath("/logs/events", eventType), len(events), skip, limit).Render(templ.WithChildren(ctx, templ_7745c5c3_Var14), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = page("events_table", "Events", "What happened to this site and the batch of sites it is backed up with, newest first.", "/logs/events", filter.PagePath("/logs/events", eventType, search), len(events), skip, limit).Render(templ.WithChildren(ctx, templ_7745c5c3_Var14), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -769,7 +769,7 @@ func EventModal(event *sitemodels.SiteEvent) templ.Component {
 }
 
 // ErrorsTable shows one page of the site's errors, the newest first
-func ErrorsTable(errors []*sitemodels.SiteError, skip int64, limit int64, kind *string) templ.Component {
+func ErrorsTable(errors []*sitemodels.SiteError, skip int64, limit int64, kind *string, search *string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -802,7 +802,7 @@ func ErrorsTable(errors []*sitemodels.SiteError, skip int64, limit int64, kind *
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = filter.Filter(filter.Props{ID: "site--errors--filter", Path: "/logs/errors", All: "All errors", Types: db.ErrorKinds, Selected: kind}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = filter.Filter(filter.Props{ID: "site--errors--filter", Path: "/logs/errors", All: "All errors", Types: db.ErrorKinds, Selected: kind, Search: search}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1049,7 +1049,7 @@ func ErrorsTable(errors []*sitemodels.SiteError, skip int64, limit int64, kind *
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = page("errors_table", "Errors", "What failed for this site, newest first.", "/logs/errors", filter.PagePath("/logs/errors", kind), len(errors), skip, limit).Render(templ.WithChildren(ctx, templ_7745c5c3_Var36), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = page("errors_table", "Errors", "What failed for this site, newest first.", "/logs/errors", filter.PagePath("/logs/errors", kind, search), len(errors), skip, limit).Render(templ.WithChildren(ctx, templ_7745c5c3_Var36), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1122,7 +1122,7 @@ func ErrorModal(e *sitemodels.SiteError) templ.Component {
 }
 
 // LogsTable shows one page of the site's logs, the newest first
-func LogsTable(logs []*sitemodels.SiteLog, skip int64, limit int64) templ.Component {
+func LogsTable(logs []*sitemodels.SiteLog, skip int64, limit int64, search *string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1155,6 +1155,14 @@ func LogsTable(logs []*sitemodels.SiteLog, skip int64, limit int64) templ.Compon
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
+			templ_7745c5c3_Err = filter.Filter(filter.Props{ID: "site--logs--filter", Path: "/logs/logs", Search: search}).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, " ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 			templ_7745c5c3_Var54 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 				templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 				templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -1203,7 +1211,7 @@ func LogsTable(logs []*sitemodels.SiteLog, skip int64, limit int64) templ.Compon
 								}()
 							}
 							ctx = templ.InitializeContext(ctx)
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "Level")
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "Level")
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
@@ -1213,7 +1221,7 @@ func LogsTable(logs []*sitemodels.SiteLog, skip int64, limit int64) templ.Compon
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, " ")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, " ")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
@@ -1229,7 +1237,7 @@ func LogsTable(logs []*sitemodels.SiteLog, skip int64, limit int64) templ.Compon
 								}()
 							}
 							ctx = templ.InitializeContext(ctx)
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "Message")
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "Message")
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
@@ -1239,7 +1247,7 @@ func LogsTable(logs []*sitemodels.SiteLog, skip int64, limit int64) templ.Compon
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, " ")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, " ")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
@@ -1255,7 +1263,7 @@ func LogsTable(logs []*sitemodels.SiteLog, skip int64, limit int64) templ.Compon
 								}()
 							}
 							ctx = templ.InitializeContext(ctx)
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "When")
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, "When")
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
@@ -1277,7 +1285,7 @@ func LogsTable(logs []*sitemodels.SiteLog, skip int64, limit int64) templ.Compon
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, " ")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, " ")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1327,7 +1335,7 @@ func LogsTable(logs []*sitemodels.SiteLog, skip int64, limit int64) templ.Compon
 								var templ_7745c5c3_Var63 string
 								templ_7745c5c3_Var63, templ_7745c5c3_Err = templ.JoinStringErrs(log.Level)
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 212, Col: 18}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 213, Col: 18}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var63))
 								if templ_7745c5c3_Err != nil {
@@ -1339,7 +1347,7 @@ func LogsTable(logs []*sitemodels.SiteLog, skip int64, limit int64) templ.Compon
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, " ")
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 49, " ")
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
@@ -1355,20 +1363,20 @@ func LogsTable(logs []*sitemodels.SiteLog, skip int64, limit int64) templ.Compon
 									}()
 								}
 								ctx = templ.InitializeContext(ctx)
-								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 49, "<span class=\"block max-w-xl truncate\">")
+								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "<span class=\"block max-w-xl truncate\">")
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
 								var templ_7745c5c3_Var65 string
 								templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.JoinStringErrs(log.Message)
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 215, Col: 58}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 216, Col: 58}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var65))
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
-								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "</span>")
+								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 51, "</span>")
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
@@ -1378,7 +1386,7 @@ func LogsTable(logs []*sitemodels.SiteLog, skip int64, limit int64) templ.Compon
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 51, " ")
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, " ")
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
@@ -1394,33 +1402,33 @@ func LogsTable(logs []*sitemodels.SiteLog, skip int64, limit int64) templ.Compon
 									}()
 								}
 								ctx = templ.InitializeContext(ctx)
-								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "<span title=\"")
+								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 53, "<span title=\"")
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
 								var templ_7745c5c3_Var67 string
 								templ_7745c5c3_Var67, templ_7745c5c3_Err = templ.ResolveAttributeValue(formatDate(log.CreatedAt))
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 218, Col: 46}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 219, Col: 46}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var67)
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
-								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 53, "\">")
+								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "\">")
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
 								var templ_7745c5c3_Var68 string
 								templ_7745c5c3_Var68, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(&log.CreatedAt, time.Now()))
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 218, Col: 90}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 219, Col: 90}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var68))
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
-								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "</span>")
+								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, "</span>")
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
@@ -1451,7 +1459,7 @@ func LogsTable(logs []*sitemodels.SiteLog, skip int64, limit int64) templ.Compon
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = page("logs_table", "Logs", "Messages logged for this site, newest first.", "/logs/logs", "/logs/logs", len(logs), skip, limit).Render(templ.WithChildren(ctx, templ_7745c5c3_Var53), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = page("logs_table", "Logs", "Messages logged for this site, newest first.", "/logs/logs", filter.PagePath("/logs/logs", nil, search), len(logs), skip, limit).Render(templ.WithChildren(ctx, templ_7745c5c3_Var53), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1492,20 +1500,20 @@ func LogModal(log *sitemodels.SiteLog) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, "<p class=\"mt-2 break-all text-sm\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "<p class=\"mt-2 break-all text-sm\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var71 string
 			templ_7745c5c3_Var71, templ_7745c5c3_Err = templ.JoinStringErrs(log.Message)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 229, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_logs_templ/logs.templ`, Line: 230, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var71))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

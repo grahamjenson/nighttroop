@@ -47,6 +47,15 @@ ASSERT_VISIBLE #siteEventsTable td >> text=Site created >> nth=0
 SCREENSHOT events_filtered
 ASSERT_TEXT_EQUALS #site--events--filter--type>option[value=""] All events
 
+// Events can be searched too, ignoring case, keeping the type chosen
+INPUT #site--events--filter--search CREATED
+CLICK #site--events--filter--submit
+ASSERT_VISIBLE #siteEventsTable td >> text=Site created >> nth=0
+SCREENSHOT events_searched
+INPUT #site--events--filter--search nothing like this
+CLICK #site--events--filter--submit
+ASSERT_TEXT_VISIBLE No events here.
+
 // Errors and logs have pages of their own
 CLICK #site--settings-menu
 CLICK #site--logs--errors-button

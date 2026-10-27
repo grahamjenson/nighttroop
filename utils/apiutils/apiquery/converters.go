@@ -1,5 +1,7 @@
 package apiquery
 
+import "strings"
+
 //go:generate goverter gen .
 
 // goverter:converter
@@ -10,6 +12,7 @@ type QueryConverter interface {
 	// goverter:map . Skip | GetSkipInt64
 	// goverter:map . Hours | GetHoursInt64
 	// goverter:map . Type | GetType
+	// goverter:map . Search | GetSearch
 	QueryValuesToQuery(source QueryValues) Query
 }
 
@@ -43,4 +46,19 @@ func GetType(source QueryValues) *string {
 		return nil
 	}
 	return source.Type
+}
+
+// GetSearch leaves a blank search unset, which is every row, and cuts a long one to MaxSearchLength
+func GetSearch(source QueryValues) *string {
+	if source.Search == nil {
+		return nil
+	}
+	search := strings.TrimSpace(*source.Search)
+	if search == "" {
+		return nil
+	}
+	if len(search) > MaxSearchLength {
+		search = search[:MaxSearchLength]
+	}
+	return &search
 }

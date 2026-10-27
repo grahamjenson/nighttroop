@@ -2,6 +2,7 @@ package apiquery_test
 
 import (
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -62,6 +63,26 @@ func TestQueryHours(t *testing.T) {
 			queryValues, err := apiquery.ParseQueryValues(values)
 			require.NoError(t, err)
 			require.Equal(t, test.hours, apiquery.QueryValuesToQuery(queryValues).Hours)
+		})
+	}
+}
+
+func TestGetSearch(t *testing.T) {
+	str := func(s string) *string { return &s }
+	long := strings.Repeat("a", apiquery.MaxSearchLength+10)
+	tests := []struct {
+		name string
+		in   *string
+		want *string
+	}{
+		{"unset", nil, nil},
+		{"blank is every row", str("   "), nil},
+		{"trimmed", str("  synced "), str("synced")},
+		{"cut to the longest", &long, str(long[:apiquery.MaxSearchLength])},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.want, apiquery.GetSearch(apiquery.QueryValues{Search: tt.in}))
 		})
 	}
 }
