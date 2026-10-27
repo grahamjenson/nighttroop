@@ -66,7 +66,7 @@ ASSERT_STATUS 200
 ASSERT_VISIBLE #site--settings--virtual-sync--status
 ASSERT_TEXT_EQUALS #site--settings--virtual-sync--status--last-success just now
 ASSERT_TEXT_EQUALS #site--settings--virtual-sync--status--last-failure Never
-ASSERT_TEXT_EQUALS #site--settings--virtual-sync--status--interval 60 s (Default)
+ASSERT_TEXT_EQUALS #site--settings--virtual-sync--status--interval 1 min (Default)
 ASSERT_TEXT_VISIBLE records in
 CLICK #site--settings--virtual-sync--history summary
 ASSERT_TEXT_VISIBLE Sync backfilled

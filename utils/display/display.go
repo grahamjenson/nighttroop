@@ -39,7 +39,8 @@ func TimeAgo(ms int64, now time.Time) string {
 	return fmt.Sprintf("%dm ago", minutes)
 }
 
-// Duration is how long ms milliseconds is, as "250 ms", "1.5 s", "2 min 5 s" or "3 h 20 min"
+// Duration is how long ms milliseconds is, as "250 ms", "1.5 s", "2 min 5 s" or "3 h 20 min", leaving off a
+// second part of 0, as in "2 min" or "3 h"
 func Duration(ms int64) string {
 	d := time.Duration(ms) * time.Millisecond
 	switch {
@@ -48,9 +49,17 @@ func Duration(ms int64) string {
 	case d < time.Minute:
 		return fmt.Sprintf("%.1f s", d.Seconds())
 	case d < time.Hour:
-		return fmt.Sprintf("%d min %d s", int(d.Minutes()), int(d.Seconds())%60)
+		return withPart(int(d.Minutes()), "min", int(d.Seconds())%60, "s")
 	}
-	return fmt.Sprintf("%d h %d min", int(d.Hours()), int(d.Minutes())%60)
+	return withPart(int(d.Hours()), "h", int(d.Minutes())%60, "min")
+}
+
+// withPart is a count of a unit, then of the next smaller unit unless it is 0
+func withPart(count int, unit string, part int, partUnit string) string {
+	if part == 0 {
+		return fmt.Sprintf("%d %s", count, unit)
+	}
+	return fmt.Sprintf("%d %s %d %s", count, unit, part, partUnit)
 }
 
 // ReadingType is what took a glucose reading: Sensor for sgv and Meter for mbg

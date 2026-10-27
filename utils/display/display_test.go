@@ -65,7 +65,9 @@ func TestDuration(t *testing.T) {
 		1500:       "1.5 s",
 		59_940:     "59.9 s",
 		125_000:    "2 min 5 s",
+		120_000:    "2 min",
 		12_000_000: "3 h 20 min",
+		10_800_000: "3 h",
 	} {
 		if got := Duration(in); got != want {
 			t.Errorf("Duration(%d) = %q, want %q", in, got, want)

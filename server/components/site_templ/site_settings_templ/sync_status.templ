@@ -35,7 +35,7 @@ templ SyncStatus(source *sitemodels.SyncSource, name string) {
 					}
 				}
 				@syncStat(name, "interval", "Syncs every") {
-					{ fmt.Sprintf("%d s (%s)", source.SyncIntervalSeconds, display.Name(source.SyncIntervalSecondsReason)) }
+					{ fmt.Sprintf("%s (%s)", display.Duration(source.SyncIntervalSeconds*1000), display.Name(source.SyncIntervalSecondsReason)) }
 				}
 				@syncStat(name, "totals", "Syncs") {
 					{ fmt.Sprintf("%d worked, %d failed", count(source.TotalSuccessfulSyncs), count(source.TotalFailedSyncs)) }
