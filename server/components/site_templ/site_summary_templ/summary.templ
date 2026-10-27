@@ -113,7 +113,8 @@ templ rangeButton(hours int64, label string, selected bool) {
 
 // Summary is the site's home page: the latest glucose, IOB and COB, then everything since the summary starts.
 // It streams the summary's events, shown Live while connected, and reloads its content a second after changes stop
-// arriving. The header, with the stream, is not reloaded, so the stream stays open.
+// arriving, and when the stream reconnects, as changes may have been missed while it was not. The header, with the
+// stream, is not reloaded, so the stream stays open.
 templ Summary(summary *sitemodels.Summary) {
 	<div id="site--summary" class="w-full space-y-4 py-4">
 		<div class="flex flex-wrap items-center justify-between gap-2">
@@ -124,7 +125,7 @@ templ Summary(summary *sitemodels.Summary) {
 					id="site--summary--live"
 					class="ml-2 hidden text-sm font-medium text-primary"
 					hx-sse:connect="/data/summary/events"
-					hx-on::sse:after:connection="this.classList.remove('hidden')"
+					hx-on::sse:after:connection="this.classList.remove('hidden'); if (this.dataset.connected) htmx.trigger(this, 'reconnected'); this.dataset.connected = 'true'"
 					hx-on::sse:close="this.classList.add('hidden')"
 					hx-on::sse:error="this.classList.add('hidden')"
 				>● Live</span>
@@ -139,7 +140,7 @@ templ Summary(summary *sitemodels.Summary) {
 			id="site--summary--content"
 			class="space-y-4"
 			hx-get={ fmt.Sprintf("/?hours=%d", summary.Hours) }
-			hx-trigger="created from:#site--summary--live delay:1s, updated from:#site--summary--live delay:1s, deleted from:#site--summary--live delay:1s"
+			hx-trigger="created from:#site--summary--live delay:1s, updated from:#site--summary--live delay:1s, deleted from:#site--summary--live delay:1s, reconnected from:#site--summary--live"
 			hx-select="#site--summary--content"
 			hx-target="this"
 			hx-swap="outerHTML"

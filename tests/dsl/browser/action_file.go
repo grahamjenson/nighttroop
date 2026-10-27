@@ -104,6 +104,10 @@ func parseFile(r io.Reader, path string) ([]Action, error) {
 				return nil, fmt.Errorf("TYPE needs a locator and a value")
 			}
 			current = &Click{TestPath: path, TestLine: lineNumber, Asserts: []Assert{}, Locator: parts[0], Text: parts[1]}
+		case "BACKGROUND", "FOREGROUND":
+			// BACKGROUND hides the page, as a browser does a tab in the background, until FOREGROUND shows it again
+			flush()
+			current = &Click{TestPath: path, TestLine: lineNumber, Asserts: []Assert{}, Hidden: new(first == "BACKGROUND")}
 		case "CLICK_BACK", "CLICK_FORWARD":
 			flush()
 
