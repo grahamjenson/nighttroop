@@ -6,6 +6,7 @@ import (
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
+	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -26,7 +27,7 @@ func PropertiesList(store nsutils.Store) func(http.ResponseWriter, *http.Request
 			SAGE:  GetSensorAge(lastSensorStart, lastSensorChange),
 		}
 
-		nsutils.WriteJSON(w, http.StatusOK, properties)
+		apiutils.WriteJSON(w, http.StatusOK, properties)
 	}
 }
 

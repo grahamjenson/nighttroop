@@ -1,7 +1,6 @@
 package publicapi
 
 import (
-	"encoding/json"
 	"log/slog"
 	"net/http"
 	"runtime"
@@ -9,6 +8,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/models/publicmodels"
 	"nighttroop.t1d.nz/server/components/public_templ"
+	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -36,17 +36,15 @@ func POSTCreateSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig)
 	return func(w http.ResponseWriter, r *http.Request) {
 		allowed, remainingTime := httputils.CreateSiteWithinRateLimit(config, r)
 		if !allowed {
-			w.WriteHeader(http.StatusTooManyRequests)
 			if httputils.GetAcceptType(r).API() {
-				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(map[string]string{
+				apiutils.WriteJSON(w, http.StatusTooManyRequests, map[string]string{
 					"error": "Too many requests",
 				})
 				return
-			} else {
-				public_templ.CreateSiteRateLimited(remainingTime+1).Render(r.Context(), w)
-				return
 			}
+			w.WriteHeader(http.StatusTooManyRequests)
+			public_templ.CreateSiteRateLimited(remainingTime+1).Render(r.Context(), w)
+			return
 		}
 
 		// Check to see if there is 10k sites and return error if there is
@@ -75,9 +73,7 @@ func POSTCreateSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig)
 		slog.Info("Number of Sites", "count", controlDB.GetNSitesDBs(), "routines", runtime.NumGoroutine())
 
 		if httputils.GetAcceptType(r).API() {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(responseModel)
+			apiutils.WriteJSON(w, http.StatusOK, responseModel)
 			return
 		}
 

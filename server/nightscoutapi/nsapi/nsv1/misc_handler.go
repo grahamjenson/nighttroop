@@ -4,12 +4,13 @@ import (
 	"net/http"
 
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
+	"nighttroop.t1d.nz/utils/apiutils"
 )
 
 // Versions reports the API versions exposed by this server.
 func Versions() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		nsutils.WriteJSON(w, http.StatusOK, []map[string]string{
+		apiutils.WriteJSON(w, http.StatusOK, []map[string]string{
 			{"url": "/api/v1", "version": "1.0.0"},
 			{"url": "/api/v2", "version": "2.0.0"},
 			{"url": "/api/v3", "version": "3.0.4"},
@@ -22,7 +23,7 @@ func VerifyAuth(dep nsutils.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		identity, err := nsutils.AuthenticateExplicit(r)
 		if err != nil {
-			nsutils.WriteJSON(w, http.StatusOK, map[string]any{
+			apiutils.WriteJSON(w, http.StatusOK, map[string]any{
 				"status": "ok",
 				"message": map[string]any{
 					"message": "UNAUTHORIZED",
@@ -31,7 +32,7 @@ func VerifyAuth(dep nsutils.Store) http.HandlerFunc {
 			})
 			return
 		}
-		nsutils.WriteJSON(w, http.StatusOK, map[string]any{
+		apiutils.WriteJSON(w, http.StatusOK, map[string]any{
 			"status": "ok",
 			"message": map[string]any{
 				"message": "OK",
@@ -44,7 +45,7 @@ func VerifyAuth(dep nsutils.Store) http.HandlerFunc {
 // StatusJSON serves the v1 JSON status payload.
 func StatusJSON(store nsutils.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		nsutils.WriteJSON(w, http.StatusOK, Status())
+		apiutils.WriteJSON(w, http.StatusOK, Status())
 	}
 }
 
