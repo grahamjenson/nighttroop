@@ -284,15 +284,16 @@ func (r *AssertStatus) Execute(t *testing.T, ctx map[string]any, page playwright
 		t.Fatalf("\n\n%s\n assertStatus failed: response is nil\n\n", r.ToErrorLine())
 	}
 	for _, resp := range resps {
-		body := ""
-		bodyBytes, err := resp.Body()
-		if err != nil {
-			body = "Error reading body"
-		} else {
-			body = string(bodyBytes)
-		}
-
+		// the body is only read for a failure, as reading a stream's, e.g. an SSE's, waits until it closes
 		if resp.Status() != r.Code {
+			body := ""
+			bodyBytes, err := resp.Body()
+			if err != nil {
+				body = "Error reading body"
+			} else {
+				body = string(bodyBytes)
+			}
+
 			t.Fatalf("\n\n%s\n assertStatus failed: expected status code %d, got %d for URL %s with Body: %s\n\n", r.ToErrorLine(), r.Code, resp.Status(), resp.URL(), body)
 		}
 	}
