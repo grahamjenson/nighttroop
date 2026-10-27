@@ -28,6 +28,7 @@ ASSERT_PATH /settings/sync
 // A sync that is not saved and on cannot be backfilled
 CLICK #site--settings--nightscout-sync--backfill
 ASSERT_TEXT_VISIBLE turn on and save this sync before backfilling it
+ASSERT_VISIBLE #toaster [data-tui-toast][data-variant="error"]:has-text("turn on and save this sync")
 
 // Virtual sync's first run writes its last 30 minutes, all on the first page of 100 readings
 CLICK #site--settings--virtual-sync--enable
