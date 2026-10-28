@@ -113,99 +113,59 @@ func (c *Client) Login(ctx context.Context) error {
 }
 
 func (c *Client) authenticate(ctx context.Context) (string, error) {
-	reqBody := map[string]string{
-		"accountName":   c.username,
-		"password":      c.password,
-		"applicationId": applicationID,
-	}
-
-	bodyBytes, err := json.Marshal(reqBody)
-	if err != nil {
-		return "", err
-	}
-
-	req, err := http.NewRequestWithContext(
-		ctx,
-		http.MethodPost,
-		c.baseURL+"/ShareWebServices/Services/General/AuthenticatePublisherAccount",
-		bytes.NewReader(bodyBytes),
-	)
-	if err != nil {
-		return "", err
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return "", responseError("authenticate", resp)
-	}
-
-	accountIDBytes, err := httputils.ReadLimitedBody(resp.Body, maxResponseBytes)
-	if err != nil {
-		return "", err
-	}
-
-	accountID := strings.Trim(string(accountIDBytes), "\"")
-
-	if accountID == "" {
-		return "", fmt.Errorf("empty account id")
-	}
-
-	return accountID, nil
+	return c.postForID(ctx, "authenticate", "/ShareWebServices/Services/General/AuthenticatePublisherAccount",
+		"account", map[string]string{"accountName": c.username})
 }
 
 func (c *Client) loginByAccountID(ctx context.Context, accountID string) (string, error) {
-	reqBody := map[string]string{
-		"accountId":     accountID,
-		"password":      c.password,
-		"applicationId": applicationID,
-	}
+	return c.postForID(ctx, "login", "/ShareWebServices/Services/General/LoginPublisherAccountById",
+		"session", map[string]string{"accountId": accountID})
+}
 
-	bodyBytes, err := json.Marshal(reqBody)
+// postForID logs in with the account and its password, and is the ID, named idName, Dexcom answers with in quotes
+func (c *Client) postForID(ctx context.Context, what, path, idName string, account map[string]string) (string, error) {
+	account["password"] = c.password
+	account["applicationId"] = applicationID
+	body, err := c.post(ctx, what, path, account)
 	if err != nil {
 		return "", err
 	}
-
-	req, err := http.NewRequestWithContext(
-		ctx,
-		http.MethodPost,
-		c.baseURL+"/ShareWebServices/Services/General/LoginPublisherAccountById",
-		bytes.NewReader(bodyBytes),
-	)
-	if err != nil {
-		return "", err
+	id := strings.Trim(string(body), "\"")
+	if id == "" {
+		return "", fmt.Errorf("empty %s id", idName)
 	}
+	return id, nil
+}
 
-	req.Header.Set("Content-Type", "application/json")
+// post sends a POST to the Share path, with the JSON of reqBody unless it is nil, and is the body of
+// its OK response, of at most maxResponseBytes
+func (c *Client) post(ctx context.Context, what, path string, reqBody any) ([]byte, error) {
+	var body io.Reader
+	if reqBody != nil {
+		bodyBytes, err := json.Marshal(reqBody)
+		if err != nil {
+			return nil, err
+		}
+		body = bytes.NewReader(bodyBytes)
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+path, body)
+	if err != nil {
+		return nil, fmt.Errorf("error creating Dexcom request: %w", err)
+	}
+	if reqBody != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return "", err
+		return nil, fmt.Errorf("error sending Dexcom request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", responseError("login", resp)
+		return nil, responseError(what, resp)
 	}
-
-	sessionIDBytes, err := httputils.ReadLimitedBody(resp.Body, maxResponseBytes)
-	if err != nil {
-		return "", err
-	}
-
-	sessionID := strings.Trim(string(sessionIDBytes), "\"")
-
-	if sessionID == "" {
-		return "", fmt.Errorf("empty session id")
-	}
-
-	return sessionID, nil
+	return httputils.ReadLimitedBody(resp.Body, maxResponseBytes)
 }
 
 // FetchEGVs fetches the last specified minutes of EGV readings.
@@ -224,40 +184,15 @@ func (c *Client) FetchEGVs(ctx context.Context, minutes int) ([]dexcommodels.EGV
 	values.Set("minutes", fmt.Sprintf("%d", minutes))
 	values.Set("maxCount", fmt.Sprintf("%d", minutes/5))
 
-	endpoint := c.baseURL +
-		"/ShareWebServices/Services/Publisher/ReadPublisherLatestGlucoseValues?" +
-		values.Encode()
-
-	req, err := http.NewRequestWithContext(
-		ctx,
-		http.MethodPost,
-		endpoint,
-		nil,
-	)
+	body, err := c.post(ctx, "dexcom fetch", "/ShareWebServices/Services/Publisher/ReadPublisherLatestGlucoseValues?"+values.Encode(), nil)
 	if err != nil {
-		return nil, fmt.Errorf("error creating Dexcom request: %w", err)
+		return nil, err
 	}
-
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("error sending Dexcom request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, responseError("dexcom fetch", resp)
-	}
-
-	return decodeEGVs(resp.Body)
+	return decodeEGVs(body)
 }
 
-// decodeEGVs decodes the EGV array in a Dexcom response body of at most
-// maxResponseBytes, refusing more than maxEGVs.
-func decodeEGVs(body io.Reader) ([]dexcommodels.EGV, error) {
-	data, err := httputils.ReadLimitedBody(body, maxResponseBytes)
-	if err != nil {
-		return nil, fmt.Errorf("error reading Dexcom response: %w", err)
-	}
+// decodeEGVs decodes the EGV array in a Dexcom response body, refusing more than maxEGVs.
+func decodeEGVs(data []byte) ([]dexcommodels.EGV, error) {
 	var items []json.RawMessage
 	if err := json.Unmarshal(data, &items); err != nil {
 		return nil, fmt.Errorf("error decoding Dexcom response: %w", err)
