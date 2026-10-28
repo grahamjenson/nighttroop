@@ -1,0 +1,52 @@
+INCLUDE steps/new_site_admin.steps
+
+// Virtual sync writes readings between 5.8 and 8.3 mmol/L
+CLICK #site--settings-menu
+CLICK #site--settings--sync-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-sync--enable
+CLICK #site--settings--virtual-sync--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Sync Updated
+
+// The admin turns on an urgent high over 5.6 mmol/L for themselves
+GOTO /settings
+ASSERT_STATUS 200
+INPUT #site--settings--identity--alarm_urgent_high_enabled true
+INPUT #site--settings--identity--alarm_urgent_high 5.6
+CLICK #site--settings--identity--save
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Settings Saved
+
+// No alarm is shown before the readings come in
+GOTO /
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--summary--live
+ASSERT_NOT_VISIBLE #site--alarms--banner
+
+// Once the sync writes readings over it, the open page shows the urgent high, without being reloaded. The jobs run
+// the alarm checks before the queued sync, so the second run checks the readings the first wrote.
+RUN_BACKGROUND_JOBS
+RUN_BACKGROUND_JOBS
+ASSERT_VISIBLE #site--alarms--banner
+ASSERT_TEXT_EQUALS #site--alarms--alerting Alarm: Urgent high
+ASSERT_PATH /
+ASSERT_VISIBLE #site--summary--glucose--reading
+SCREENSHOT alarm_banner
+
+// It is under the header on every page, shown as each opens
+GOTO /data/glucose
+ASSERT_STATUS 200
+ASSERT_TEXT_EQUALS #site--alarms--alerting Alarm: Urgent high
+
+// Snoozing it quiets it, for this identity only, and it stays quiet as the readings are checked again
+CLICK #site--alarms--snooze
+ASSERT_STATUS 200
+ASSERT_NOT_VISIBLE #site--alarms--banner
+ASSERT_TEXT_EQUALS #site--alarms--snoozed Snoozed: Urgent high
+RUN_BACKGROUND_JOBS
+GOTO /
+ASSERT_STATUS 200
+ASSERT_TEXT_EQUALS #site--alarms--snoozed Snoozed: Urgent high
+ASSERT_NOT_VISIBLE #site--alarms--banner
+SCREENSHOT alarm_banner_snoozed

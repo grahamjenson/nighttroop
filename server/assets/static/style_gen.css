@@ -294,6 +294,9 @@
   .top-1\/2 {
     top: calc(1 / 2 * 100%);
   }
+  .top-14 {
+    top: calc(var(--spacing) * 14);
+  }
   .right-0 {
     right: calc(var(--spacing) * 0);
   }
@@ -308,6 +311,9 @@
   }
   .z-10 {
     z-index: 10;
+  }
+  .z-30 {
+    z-index: 30;
   }
   .z-40 {
     z-index: 40;
@@ -940,6 +946,9 @@
   .bg-amber-100 {
     background-color: var(--color-amber-100);
   }
+  .bg-amber-400 {
+    background-color: var(--color-amber-400);
+  }
   .bg-amber-500\/10 {
     background-color: color-mix(in srgb, oklch(76.9% 0.188 70.08) 10%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -1005,6 +1014,9 @@
   }
   .bg-red-100 {
     background-color: var(--color-red-100);
+  }
+  .bg-red-600 {
+    background-color: var(--color-red-600);
   }
   .bg-secondary {
     background-color: var(--secondary);

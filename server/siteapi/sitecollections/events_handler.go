@@ -11,6 +11,7 @@ import (
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 // CollectionEvents is a collection whose event stream has changes to more than its own rows, e.g. the summary,
@@ -55,63 +56,74 @@ func EventsHandler[R, M any](collection CollectionBase[R, M]) http.HandlerFunc {
 		if siteContext == nil {
 			return
 		}
-		if !openEventStream(siteContext.SiteID) {
-			writeError(w, r, siteContext.AcceptType, apiutils.ErrRateLimitExceeded(60))
-			return
-		}
-		defer closeEventStream(siteContext.SiteID)
-
-		// The bus calls this in the publisher's goroutine, so it must not wait for a slow client
-		changes, overflowed, overflow := make(chan events.Event, eventStreamBuffer), make(chan struct{}), sync.Once{}
 		// Only model changes are streamed: the site's other events, such as a control identity disabling it, are not its users'
-		unsubscribe := siteContext.Config.Events.Subscribe(siteContext.SiteID, func(event events.Event) {
-			if event.Model == nil || !watches(event) {
-				return
-			}
-			select {
-			case changes <- event:
-			default:
-				overflow.Do(func() { close(overflowed) })
-			}
-		})
-		defer unsubscribe()
+		StreamEvents(w, r, siteContext, func(event events.Event) bool { return event.Model != nil && watches(event) },
+			func(event events.Event) (string, any) {
+				if row, own := event.Model.(*R); own {
+					return string(event.Action), collection.ToModel(row, siteContext)
+				}
+				return string(event.Action), struct{}{}
+			})
+	}
+}
 
-		// The server's write timeout would end the stream
-		stream := http.NewResponseController(w)
-		_ = stream.SetWriteDeadline(time.Time{})
-		w.Header().Set("Content-Type", "text/event-stream")
-		w.Header().Set("Cache-Control", "no-cache")
-		w.WriteHeader(http.StatusOK)
-		if stream.Flush() != nil {
+// StreamEvents streams the site's events that a stream watches as server-sent events, each the name and data,
+// as JSON, that message makes of it, until the client goes, is too slow, or the stream has been open for an hour
+func StreamEvents(w http.ResponseWriter, r *http.Request, siteContext *httputils.SiteContext, watches func(events.Event) bool, message func(events.Event) (string, any)) {
+	if !openEventStream(siteContext.SiteID) {
+		writeError(w, r, siteContext.AcceptType, apiutils.ErrRateLimitExceeded(60))
+		return
+	}
+	defer closeEventStream(siteContext.SiteID)
+
+	// The bus calls this in the publisher's goroutine, so it must not wait for a slow client
+	changes, overflowed, overflow := make(chan events.Event, eventStreamBuffer), make(chan struct{}), sync.Once{}
+	unsubscribe := siteContext.Config.Events.Subscribe(siteContext.SiteID, func(event events.Event) {
+		if !watches(event) {
 			return
 		}
+		select {
+		case changes <- event:
+		default:
+			overflow.Do(func() { close(overflowed) })
+		}
+	})
+	defer unsubscribe()
 
-		ping := time.NewTicker(eventStreamPing)
-		defer ping.Stop()
-		end := time.After(maxEventStreamTime)
-		for {
-			var err error
-			select {
-			case <-r.Context().Done():
+	// The server's write timeout would end the stream
+	stream := http.NewResponseController(w)
+	_ = stream.SetWriteDeadline(time.Time{})
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.WriteHeader(http.StatusOK)
+	if stream.Flush() != nil {
+		return
+	}
+
+	ping := time.NewTicker(eventStreamPing)
+	defer ping.Stop()
+	end := time.After(maxEventStreamTime)
+	for {
+		var err error
+		select {
+		case <-r.Context().Done():
+			return
+		case <-overflowed:
+			return
+		case <-end:
+			return
+		case <-ping.C:
+			_, err = io.WriteString(w, ": ping\n\n")
+		case event := <-changes:
+			name, value := message(event)
+			var data []byte
+			if data, err = json.Marshal(value); err != nil {
 				return
-			case <-overflowed:
-				return
-			case <-end:
-				return
-			case <-ping.C:
-				_, err = io.WriteString(w, ": ping\n\n")
-			case event := <-changes:
-				data := []byte("{}")
-				if row, own := event.Model.(*R); own {
-					if data, err = json.Marshal(collection.ToModel(row, siteContext)); err != nil {
-						return
-					}
-				}
-				_, err = fmt.Fprintf(w, "event: %s\ndata: %s\n\n", event.Action, data)
 			}
-			if err != nil || stream.Flush() != nil {
-				return
-			}
+			_, err = fmt.Fprintf(w, "event: %s\ndata: %s\n\n", name, data)
+		}
+		if err != nil || stream.Flush() != nil {
+			return
 		}
 	}
 }
