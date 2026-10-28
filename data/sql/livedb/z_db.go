@@ -27,6 +27,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.alarmSiteIDsStmt, err = db.PrepareContext(ctx, alarmSiteIDs); err != nil {
 		return nil, fmt.Errorf("error preparing query AlarmSiteIDs: %w", err)
 	}
+	if q.closeConnectionStmt, err = db.PrepareContext(ctx, closeConnection); err != nil {
+		return nil, fmt.Errorf("error preparing query CloseConnection: %w", err)
+	}
 	if q.deleteAlarmStmt, err = db.PrepareContext(ctx, deleteAlarm); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteAlarm: %w", err)
 	}
@@ -35,6 +38,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.identityAlarmsStmt, err = db.PrepareContext(ctx, identityAlarms); err != nil {
 		return nil, fmt.Errorf("error preparing query IdentityAlarms: %w", err)
+	}
+	if q.openConnectionStmt, err = db.PrepareContext(ctx, openConnection); err != nil {
+		return nil, fmt.Errorf("error preparing query OpenConnection: %w", err)
 	}
 	if q.siteAlarmsStmt, err = db.PrepareContext(ctx, siteAlarms); err != nil {
 		return nil, fmt.Errorf("error preparing query SiteAlarms: %w", err)
@@ -58,6 +64,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing alarmSiteIDsStmt: %w", cerr)
 		}
 	}
+	if q.closeConnectionStmt != nil {
+		if cerr := q.closeConnectionStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing closeConnectionStmt: %w", cerr)
+		}
+	}
 	if q.deleteAlarmStmt != nil {
 		if cerr := q.deleteAlarmStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteAlarmStmt: %w", cerr)
@@ -71,6 +82,11 @@ func (q *Queries) Close() error {
 	if q.identityAlarmsStmt != nil {
 		if cerr := q.identityAlarmsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing identityAlarmsStmt: %w", cerr)
+		}
+	}
+	if q.openConnectionStmt != nil {
+		if cerr := q.openConnectionStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing openConnectionStmt: %w", cerr)
 		}
 	}
 	if q.siteAlarmsStmt != nil {
@@ -133,9 +149,11 @@ type Queries struct {
 	db                         DBTX
 	tx                         *sql.Tx
 	alarmSiteIDsStmt           *sql.Stmt
+	closeConnectionStmt        *sql.Stmt
 	deleteAlarmStmt            *sql.Stmt
 	getIdentityAlarmStmt       *sql.Stmt
 	identityAlarmsStmt         *sql.Stmt
+	openConnectionStmt         *sql.Stmt
 	siteAlarmsStmt             *sql.Stmt
 	snoozeAlarmStmt            *sql.Stmt
 	snoozedAlertingSiteIDsStmt *sql.Stmt
@@ -147,9 +165,11 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		db:                         tx,
 		tx:                         tx,
 		alarmSiteIDsStmt:           q.alarmSiteIDsStmt,
+		closeConnectionStmt:        q.closeConnectionStmt,
 		deleteAlarmStmt:            q.deleteAlarmStmt,
 		getIdentityAlarmStmt:       q.getIdentityAlarmStmt,
 		identityAlarmsStmt:         q.identityAlarmsStmt,
+		openConnectionStmt:         q.openConnectionStmt,
 		siteAlarmsStmt:             q.siteAlarmsStmt,
 		snoozeAlarmStmt:            q.snoozeAlarmStmt,
 		snoozedAlertingSiteIDsStmt: q.snoozedAlertingSiteIDsStmt,

@@ -76,6 +76,66 @@ func (m *Alarm) SetAlerting(v bool) {
 	m.Alerting = v
 }
 
+// GetID returns the ID value.
+func (m Connection) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated Connection.
+func (m *Connection) SetID(v int64) {
+	m.ID = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m Connection) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated Connection.
+func (m *Connection) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetIdentityID returns the IdentityID value.
+func (m Connection) GetIdentityID() int64 {
+	return m.IdentityID
+}
+
+// SetIdentityID sets the IdentityID value and returns the updated Connection.
+func (m *Connection) SetIdentityID(v int64) {
+	m.IdentityID = v
+}
+
+// GetKind returns the Kind value.
+func (m Connection) GetKind() string {
+	return m.Kind
+}
+
+// SetKind sets the Kind value and returns the updated Connection.
+func (m *Connection) SetKind(v string) {
+	m.Kind = v
+}
+
+// GetCollection returns the Collection value.
+func (m Connection) GetCollection() string {
+	return m.Collection
+}
+
+// SetCollection sets the Collection value and returns the updated Connection.
+func (m *Connection) SetCollection(v string) {
+	m.Collection = v
+}
+
+// GetOpenedAt returns the OpenedAt value.
+func (m Connection) GetOpenedAt() int64 {
+	return m.OpenedAt
+}
+
+// SetOpenedAt sets the OpenedAt value and returns the updated Connection.
+func (m *Connection) SetOpenedAt(v int64) {
+	m.OpenedAt = v
+}
+
 // GetSiteID returns the SiteID value.
 func (m DeleteAlarmParams) GetSiteID() string {
 	return m.SiteID
@@ -294,5 +354,65 @@ func (m UpsertAlarmParams) GetAlerting() bool {
 // SetAlerting sets the Alerting value and returns the updated UpsertAlarmParams.
 func (m *UpsertAlarmParams) SetAlerting(v bool) {
 	m.Alerting = v
+}
+
+// GetID returns the ID value.
+func (m CloseConnectionParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated CloseConnectionParams.
+func (m *CloseConnectionParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m OpenConnectionParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated OpenConnectionParams.
+func (m *OpenConnectionParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetIdentityID returns the IdentityID value.
+func (m OpenConnectionParams) GetIdentityID() int64 {
+	return m.IdentityID
+}
+
+// SetIdentityID sets the IdentityID value and returns the updated OpenConnectionParams.
+func (m *OpenConnectionParams) SetIdentityID(v int64) {
+	m.IdentityID = v
+}
+
+// GetKind returns the Kind value.
+func (m OpenConnectionParams) GetKind() string {
+	return m.Kind
+}
+
+// SetKind sets the Kind value and returns the updated OpenConnectionParams.
+func (m *OpenConnectionParams) SetKind(v string) {
+	m.Kind = v
+}
+
+// GetCollection returns the Collection value.
+func (m OpenConnectionParams) GetCollection() string {
+	return m.Collection
+}
+
+// SetCollection sets the Collection value and returns the updated OpenConnectionParams.
+func (m *OpenConnectionParams) SetCollection(v string) {
+	m.Collection = v
+}
+
+// GetMax returns the Max value.
+func (m OpenConnectionParams) GetMax() int64 {
+	return m.Max
+}
+
+// SetMax sets the Max value and returns the updated OpenConnectionParams.
+func (m *OpenConnectionParams) SetMax(v int64) {
+	m.Max = v
 }
 
