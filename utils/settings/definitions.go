@@ -251,6 +251,9 @@ var AlarmLowEnabled = &SettingDefinition[bool]{
 	ParseFunc:  ParseBool,
 }
 
+// MaxAlarmMinutes is the most minutes an alarm can wait for, so a check of the alarms reads only the readings it needs
+const MaxAlarmMinutes = 120
+
 var AlarmLow = &SettingDefinition[int64]{
 	Identifier:   "alarm_low",
 	TypeString:   "number",
@@ -263,7 +266,7 @@ var AlarmLowMinutes = &SettingDefinition[int64]{
 	Identifier:   "alarm_low_minutes",
 	TypeString:   "number",
 	Default:      5,
-	ValidateFunc: Range(int64(0), 120),
+	ValidateFunc: Range(int64(0), MaxAlarmMinutes),
 	ParseFunc:    ParseInt,
 }
 
@@ -293,7 +296,7 @@ var AlarmHighMinutes = &SettingDefinition[int64]{
 	Identifier:   "alarm_high_minutes",
 	TypeString:   "number",
 	Default:      30,
-	ValidateFunc: Range(int64(0), 120),
+	ValidateFunc: Range(int64(0), MaxAlarmMinutes),
 	ParseFunc:    ParseInt,
 }
 
@@ -331,7 +334,7 @@ var AlarmFastRiseMinutes = &SettingDefinition[int64]{
 	Identifier:   "alarm_fast_rise_minutes",
 	TypeString:   "number",
 	Default:      15,
-	ValidateFunc: Range(int64(0), 120),
+	ValidateFunc: Range(int64(0), MaxAlarmMinutes),
 	ParseFunc:    ParseInt,
 }
 
@@ -354,7 +357,7 @@ var AlarmFastDropMinutes = &SettingDefinition[int64]{
 	Identifier:   "alarm_fast_drop_minutes",
 	TypeString:   "number",
 	Default:      15,
-	ValidateFunc: Range(int64(0), 120),
+	ValidateFunc: Range(int64(0), MaxAlarmMinutes),
 	ParseFunc:    ParseInt,
 }
 
@@ -369,7 +372,7 @@ var AlarmNoDataMinutes = &SettingDefinition[int64]{
 	Identifier:   "alarm_no_data_minutes",
 	TypeString:   "number",
 	Default:      20,
-	ValidateFunc: Range(int64(0), 120),
+	ValidateFunc: Range(int64(0), MaxAlarmMinutes),
 	ParseFunc:    ParseInt,
 }
 

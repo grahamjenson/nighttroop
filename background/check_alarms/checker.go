@@ -20,9 +20,8 @@ import (
 	"nighttroop.t1d.nz/utils/settings"
 )
 
-// maxReadings is how many of the newest readings a check reads, enough to cover the longest alarm, 120 minutes, at a
-// reading a minute from more than one source
-const maxReadings = 500
+// maxReadings is the most readings a check reads, only a cap: a reading every 4 seconds over the longest alarm
+const maxReadings = 2000
 
 type Checker struct {
 	controlDB *db.ControlDB
@@ -149,9 +148,17 @@ func (c *Checker) checkSite(ctx context.Context, siteID string, now int64) error
 		return err
 	}
 
-	rows, err := siteDB.Queries.SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{TypeEq: new("sgv"), Limit: maxReadings})
+	// The newest reading, however old, as no data is measured from it, then those back to the longest an alarm can
+	// wait before it, as an alarm lasts by its readings, not by the time now
+	rows, err := siteDB.Queries.SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{TypeEq: new("sgv"), Limit: 1})
 	if err != nil {
 		return err
+	}
+	if len(rows) > 0 {
+		since := rows[0].OccurredAt - settings.MaxAlarmMinutes*time.Minute.Milliseconds()
+		if rows, err = siteDB.Queries.SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{TypeEq: new("sgv"), DateGTE: &since, Limit: maxReadings}); err != nil {
+			return err
+		}
 	}
 	readings := make([]alarms.Reading, len(rows))
 	for i, row := range rows {
