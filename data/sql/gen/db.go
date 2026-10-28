@@ -61,7 +61,7 @@ func NewDB(ctx context.Context, serverConfig *config.ServerConfig) (*DB, error) 
 	
 	db := &DB{
 		ServerConfig: serverConfig,
-		InMemory:     serverConfig.IsTest(),
+		{{ if eq .PkgName "livedb" }} InMemory: true, // it is only ever kept in memory {{ else }} InMemory: serverConfig.IsTest(), {{ end }}
 		{{ if eq .PkgName "sitedb" }} Subdomain:   subdomain, {{ end }}
 		Path:        path,
 		BackupPath:  backuppath,
@@ -70,7 +70,7 @@ func NewDB(ctx context.Context, serverConfig *config.ServerConfig) (*DB, error) 
 	var err error
 	var sqldb *sql.DB
 
-	if serverConfig.IsTest() {
+	if db.InMemory {
 		sqldb, err = OpenInMemorySqliteDB()
 		path = ":memory:"
 	} else {

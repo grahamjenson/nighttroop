@@ -15,6 +15,7 @@ import (
 	_ "modernc.org/sqlite"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/jobsdb"
+	"nighttroop.t1d.nz/data/sql/livedb"
 	"nighttroop.t1d.nz/data/sql/logsdb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/config"
@@ -50,6 +51,11 @@ func main() {
 		log.Fatalf("%sfailed to create logs DB: %v %s", topwrapper, err, bottomwrapper)
 	}
 
+	liveDB, err := livedb.NewDB(context.TODO(), &config)
+	if err != nil {
+		log.Fatalf("%sfailed to create live DB: %v %s", topwrapper, err, bottomwrapper)
+	}
+
 	/////////
 	// EXECUTE ALL QUERIES
 	/////////
@@ -69,6 +75,9 @@ func main() {
 	if err := executeAllQueries(context.TODO(), logsDB.Queries); err != nil {
 		log.Fatalf("%sfailed to create logs DB: %v %s", topwrapper, err, bottomwrapper)
 	}
+	if err := executeAllQueries(context.TODO(), liveDB.Queries); err != nil {
+		log.Fatalf("%sfailed to create live DB: %v %s", topwrapper, err, bottomwrapper)
+	}
 
 	////////
 	// CHECK ALL TABLES ARE STRICT
@@ -76,7 +85,7 @@ func main() {
 	for _, dbi := range []interface {
 		Name() string
 		GetRawDB() *sql.DB
-	}{siteDB, controlDB, jobsDB, logsDB} {
+	}{siteDB, controlDB, jobsDB, logsDB, liveDB} {
 		if err := assertAllTablesStrict(dbi.GetRawDB()); err != nil {
 			log.Fatalf("%s%s DB: %v %s", topwrapper, dbi.Name(), err, bottomwrapper)
 		}
@@ -102,6 +111,10 @@ func main() {
 
 	if err := checkMigrateDownDB(logsDB); err != nil {
 		log.Fatalf("%scheck migrate down logs DB failed: %v %s", topwrapper, err, bottomwrapper)
+	}
+
+	if err := checkMigrateDownDB(liveDB); err != nil {
+		log.Fatalf("%scheck migrate down live DB failed: %v %s", topwrapper, err, bottomwrapper)
 	}
 }
 
