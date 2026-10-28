@@ -194,7 +194,18 @@ templ glucoseHero(summary *sitemodels.Summary) {
 		} else {
 			<div>
 				<div class="text-2xl font-bold text-gray-900">No glucose readings in this time</div>
-				<div class="mt-1 text-sm text-gray-500">Upload from your phone, or connect a source under Settings → Sync.</div>
+				<div class="mt-1 text-sm text-gray-500">
+					Upload from your phone, or connect a source in
+					<a
+						id="site--summary--sync-link"
+						href="/settings/sync"
+						hx-get="/settings/sync"
+						hx-target="#main-content"
+						hx-push-url="true"
+						hx-swap="innerHTML"
+						class="text-primary underline"
+					>Sync Settings</a>.
+				</div>
 			</div>
 		}
 	</div>
