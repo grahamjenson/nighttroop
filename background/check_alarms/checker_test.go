@@ -268,3 +268,37 @@ func TestASnoozeDuringACheckIsKept(t *testing.T) {
 	require.Equal(t, []*livedb.Alarm{{SiteID: r.site, IdentityID: identity, Type: alarms.Low, ActiveSince: at, NotifiedAt: at + 1, SnoozedUntil: until}}, r.kept(),
 		"the snooze is kept, so the alarm is neither alerting nor deleted")
 }
+
+// No data stays on over a gap longer than the longest alarm, as the check reads the newest reading however old it is
+func TestNoDataLastsOverALongGap(t *testing.T) {
+	r := newRig(t)
+	identity := r.identities()[0]
+	require.NoError(t, r.control.UpdateSiteIdentitySettings(context.TODO(), controldb.UpdateSiteIdentitySettingsParams{
+		ID: identity.ID, SiteID: r.site, AlarmNoDataEnabled: new(true), AlarmNoDataMinutes: new(int64(20)),
+	}))
+	r.reading(100)
+	r.check(false)
+	r.now = r.now.Add(20 * time.Minute)
+	require.Equal(t, notified(alarms.Started, alarms.NoData, r.now), r.check(true)[identity.ID].Notifications)
+
+	r.now = r.now.Add(3 * time.Hour)
+	sent := r.check(true)[identity.ID]
+	require.Equal(t, notified(alarms.Repeated, alarms.NoData, r.now), sent.Notifications)
+	require.Equal(t, []alarms.Type{alarms.NoData}, sent.Alerting)
+}
+
+// A high lasting the longest an alarm can wait starts it, however many readings that is, as from several sources
+func TestALongHighAtManyReadingsAMinute(t *testing.T) {
+	r := newRig(t)
+	identity := r.identities()[0]
+	require.NoError(t, r.control.UpdateSiteIdentitySettings(context.TODO(), controldb.UpdateSiteIdentitySettingsParams{
+		ID: identity.ID, SiteID: r.site, AlarmHighEnabled: new(true), AlarmHigh: new(int64(180)), AlarmHighMinutes: new(int64(120)),
+	}))
+	// Ten readings a minute for 120 minutes
+	for range 120*10 + 1 {
+		r.reading(250)
+		r.now = r.now.Add(6 * time.Second)
+	}
+	r.now = r.now.Add(-6 * time.Second)
+	require.Equal(t, []alarms.Type{alarms.High}, r.check(false)[identity.ID].Alerting)
+}
