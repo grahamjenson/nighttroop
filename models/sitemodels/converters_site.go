@@ -6,6 +6,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils"
+	"nighttroop.t1d.nz/utils/authclients"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/security"
@@ -44,6 +45,7 @@ type SiteConverter interface {
 	// goverter:context siteContext
 	// goverter:map ID CurrentIdentity | IsCurrentIdentity
 	// goverter:map TotpSecretEnc HasTotpSecret | HasTotpSecret
+	// goverter:map ID RecentClients | RecentClients
 	// goverter:ignore Type Password TotpSecret NSToken SiteURL
 	IdentityFromDB(source *controldb.SiteIdentity, siteContext *httputils.SiteContext) *UserIdentity
 
@@ -346,6 +348,14 @@ func Decrypt(encString *string, security *security.SecurityConfig) (*string, err
 // goverter:context siteContext
 func IsCurrentIdentity(id int64, siteContext *httputils.SiteContext) bool {
 	return id == siteContext.IdentityModel.ID
+}
+
+// goverter:context siteContext
+func RecentClients(id int64, siteContext *httputils.SiteContext) []authclients.Client {
+	if siteContext.Config == nil || siteContext.Config.RecentClients == nil {
+		return nil
+	}
+	return siteContext.Config.RecentClients.Get(httputils.AuthClientKey(siteContext.SiteID, id))
 }
 
 // goverter:context siteContext

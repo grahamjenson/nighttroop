@@ -564,3 +564,61 @@ func resolveAgainstPage(page playwright.Page, target string) string {
 	}
 	return resolved.String()
 }
+
+// UserAgent sends the page's requests with a User-Agent, or the browser's own when it is empty
+type UserAgent struct {
+	Value string
+
+	TestPath string
+	TestLine int
+}
+
+func (r *UserAgent) ToFlatString() string {
+	return fmt.Sprintf("USER_AGENT %s", r.Value)
+}
+
+func (r *UserAgent) ToErrorLine(msg string) string {
+	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
+}
+
+func (r *UserAgent) PrintAction() {
+	fmt.Println(r.ToFlatString())
+}
+
+func (r *UserAgent) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
+	headers := map[string]string{}
+	if r.Value != "" {
+		headers["User-Agent"] = r.Value
+	}
+	return page, page.SetExtraHTTPHeaders(headers)
+}
+
+// SaveText keeps an element's text under a key, for a later line to use, e.g. a token shown once
+type SaveText struct {
+	Locator string
+	Key     string
+
+	TestPath string
+	TestLine int
+}
+
+func (r *SaveText) ToFlatString() string {
+	return fmt.Sprintf("SAVE_TEXT %s %s", r.Locator, r.Key)
+}
+
+func (r *SaveText) ToErrorLine(msg string) string {
+	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
+}
+
+func (r *SaveText) PrintAction() {
+	fmt.Println(r.ToFlatString())
+}
+
+func (r *SaveText) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
+	text, err := page.Locator(r.Locator).InnerText()
+	if err != nil {
+		return nil, fmt.Errorf("%s", r.ToErrorLine(err.Error()))
+	}
+	ctx[r.Key] = strings.TrimSpace(text)
+	return page, nil
+}

@@ -15,6 +15,7 @@ import (
 
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/utils"
+	"nighttroop.t1d.nz/utils/authclients"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/security"
 )
@@ -125,6 +126,8 @@ type ServerConfig struct {
 	SocketMaxPacketsPerSecond   float64
 
 	RateLimiters *RateLimiters
+	// RecentClients is where each identity recently authenticated from, for its site's admin to see
+	RecentClients *authclients.Recent
 
 	// Events is every event on the server, by site ID: each change to a site's models, for live updates and alarms,
 	// and each one done to a site or the server, which the logs DB also keeps
@@ -284,6 +287,7 @@ func NewServerConfig() (*ServerConfig, error) {
 	serverConfig.HostURLWithPort = fmt.Sprintf("%s://%s:%d", serverConfig.HostProtocol, serverConfig.HostName, serverConfig.HostPort)
 
 	serverConfig.RateLimiters = newRateLimiters(serverConfig)
+	serverConfig.RecentClients = authclients.New(10_000)
 	serverConfig.Events = events.NewSiteBus()
 
 	serverConfig.Security = security.NewSecurityConfig(serverConfig.RawKeySets, serverConfig.Mode, serverConfig.HostName, serverConfig.IsHTTPS())
