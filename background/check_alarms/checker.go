@@ -160,8 +160,8 @@ func (c *Checker) checkSite(ctx context.Context, siteID string, now int64) error
 	for identityID, on := range turnedOn {
 		last := kept[identityID]
 		result := alarms.Check(on, last.state(), readings, now)
-		checked := alarms.Checked{IdentityID: identityID, Notifications: result.Notifications, Alerting: types(result.Alerting)}
-		if len(checked.Notifications) > 0 || !slices.Equal(checked.Alerting, last.alerting()) {
+		checked := alarms.Checked{IdentityID: identityID, Notifications: result.Notifications, Alerting: types(result.Alerting), WasAlerting: last.alerting()}
+		if len(checked.Notifications) > 0 || !slices.Equal(checked.Alerting, checked.WasAlerting) {
 			c.events.Publish(siteID, events.Event{Name: events.Alarm, SiteID: siteID, Attributes: checked, StartedAt: time.UnixMilli(now)})
 		}
 		for _, t := range alarms.Types {

@@ -48,8 +48,6 @@ type Websocket struct {
 	mu      sync.Mutex
 	servers map[string]*socketio.Server              // one per site, so sites share no sessions or rooms
 	storage map[string]map[string]*storageSubscriber // each site's /storage subscribers by socket ID
-	// showing is the alarm each identity's /alarm sockets were last sent, the loudest of its alerting alarms
-	showing map[int64]alarms.Type
 }
 
 // IdentityFinder finds the identity a token belongs to, or errors when it belongs to none
@@ -57,7 +55,7 @@ type IdentityFinder func(config *config.ServerConfig, ctx context.Context, token
 
 // NewWebsocket serves the Nightscout API's collections, finding identities as the API does
 func NewWebsocket(controlDB *db.ControlDB, config *config.ServerConfig, collections map[nsutils.Collection]nscollections.CollectionStore, jwtIdentity, tokenIdentity IdentityFinder) *Websocket {
-	return &Websocket{config: config, controlDB: controlDB, collections: collections, jwtIdentity: jwtIdentity, tokenIdentity: tokenIdentity, servers: map[string]*socketio.Server{}, storage: map[string]map[string]*storageSubscriber{}, showing: map[int64]alarms.Type{}}
+	return &Websocket{config: config, controlDB: controlDB, collections: collections, jwtIdentity: jwtIdentity, tokenIdentity: tokenIdentity, servers: map[string]*socketio.Server{}, storage: map[string]map[string]*storageSubscriber{}}
 }
 
 func (ws *Websocket) ServeHTTP(w http.ResponseWriter, r *http.Request) {

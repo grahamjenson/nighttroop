@@ -42,4 +42,6 @@ type Checked struct {
 	IdentityID    int64
 	Notifications []Notification
 	Alerting      []Type
+	// WasAlerting are those that were alerting before the check, as the checker last sent them
+	WasAlerting []Type
 }

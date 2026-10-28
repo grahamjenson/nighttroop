@@ -132,20 +132,8 @@ func alarmGroup(t alarms.Type) string {
 // alarm, so when the loudest alerting one changes without notifying, as when an urgent alarm clears or is snoozed
 // while the one it quieted still alerts, they are cleared and sent the one alerting now.
 func (ws *Websocket) sendAlarms(namespace *socketio.Namespace, checked alarms.Checked) {
-	room := alarmRoom(checked.IdentityID)
-	var loudest alarms.Type
-	for _, t := range checked.Alerting {
-		if loudest == "" || t.Level() > loudest.Level() {
-			loudest = t
-		}
-	}
-	ws.mu.Lock()
-	showing := ws.showing[checked.IdentityID]
-	ws.showing[checked.IdentityID] = loudest
-	if loudest == "" {
-		delete(ws.showing, checked.IdentityID)
-	}
-	ws.mu.Unlock()
+	// The sockets were last sent the loudest of the alarms alerting before the check
+	room, loudest, showing := alarmRoom(checked.IdentityID), loudestOf(checked.Alerting), loudestOf(checked.WasAlerting)
 
 	sounded := false
 	for _, notification := range checked.Notifications {
@@ -165,6 +153,17 @@ func (ws *Websocket) sendAlarms(namespace *socketio.Namespace, checked alarms.Ch
 		clear()
 		sendAlarm(namespace, room, loudest, time.Now().UnixMilli())
 	}
+}
+
+// loudestOf is the loudest alarm, the first of the most urgent, or "" when there is none
+func loudestOf(alerting []alarms.Type) alarms.Type {
+	var loudest alarms.Type
+	for _, t := range alerting {
+		if loudest == "" || t.Level() > loudest.Level() {
+			loudest = t
+		}
+	}
+	return loudest
 }
 
 // sendAlarm sends one alarm to a room's /alarm sockets: an alarm, or urgent_alarm when urgent
