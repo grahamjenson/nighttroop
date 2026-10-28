@@ -7,6 +7,7 @@ import (
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/server/siteapi/sitecollections"
 	"nighttroop.t1d.nz/server/siteapi/sitelogin"
+	"nighttroop.t1d.nz/utils/alarms"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -21,6 +22,8 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 	static.AddStaticRoutes(r)
 
 	store := sitecollections.NewSiteStore()
+	// The alarms collection holds each identity's alarms from the alarm events, which it must hear from the start
+	alarms.NowFor(config.Events)
 
 	// Publically available (if the person knows the subdomain) endpoints
 	r.Group(func(r chi.Router) {

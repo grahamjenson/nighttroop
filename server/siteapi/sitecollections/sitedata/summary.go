@@ -43,7 +43,7 @@ const maxDevices = 20
 const maxSwitchMinutes = 7 * 24 * 60
 
 // Watches is whether a change is to something the summary shows, so its events stream tells the summary page to update
-func (s *SummaryCollection) Watches(event events.Event) bool {
+func (s *SummaryCollection) Watches(event events.Event, _ *httputils.SiteContext) bool {
 	switch event.Model.(type) {
 	case *sitedb.GlucoseReading, *sitedb.InsulinDose, *sitedb.FoodIntake, *sitedb.TempTarget, *sitedb.TempBasal,
 		*sitedb.DeviceReport, *sitedb.ProfileSwitch, *sitedb.ProfilePreset,

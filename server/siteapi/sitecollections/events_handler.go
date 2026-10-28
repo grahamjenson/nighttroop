@@ -1,6 +1,7 @@
 package sitecollections
 
 import (
+	"cmp"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -11,13 +12,14 @@ import (
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
-// CollectionEvents is a collection whose event stream has changes to more than its own rows, e.g. the summary,
-// which is made from many collections' rows
+// CollectionEvents is a collection whose event stream has more than changes to its own rows, e.g. the summary,
+// which is made from many collections' rows, or the alarms, which are an identity's alarm events
 type CollectionEvents interface {
-	// Watches is whether a change to one of the site's models changes this collection
-	Watches(event events.Event) bool
+	// Watches is whether one of the site's events changes this collection for the identity streaming it
+	Watches(event events.Event, siteContext *httputils.SiteContext) bool
 }
 
 const (
@@ -40,9 +42,10 @@ var eventStreams = struct {
 
 // EventsHandler streams a collection's changes as server-sent events, each named created, updated or deleted.
 // A change to one of the collection's own rows has its model as JSON, as the API answers it; any other change the
-// collection watches has {}. A page or API client can then update as changes happen, rather than polling.
+// collection watches has {}, and is updated when it is not a model's. A page or API client can then update as changes
+// happen, rather than polling.
 func EventsHandler[R, M any](collection CollectionBase[R, M]) http.HandlerFunc {
-	watches := func(event events.Event) bool {
+	watches := func(event events.Event, _ *httputils.SiteContext) bool {
 		_, own := event.Model.(*R)
 		return own
 	}
@@ -63,9 +66,10 @@ func EventsHandler[R, M any](collection CollectionBase[R, M]) http.HandlerFunc {
 
 		// The bus calls this in the publisher's goroutine, so it must not wait for a slow client
 		changes, overflowed, overflow := make(chan events.Event, eventStreamBuffer), make(chan struct{}), sync.Once{}
-		// Only model changes are streamed: the site's other events, such as a control identity disabling it, are not its users'
+		// Only the events the collection watches are streamed: the site's others, such as a control identity disabling
+		// it, are not its users'
 		unsubscribe := siteContext.Config.Events.Subscribe(siteContext.SiteID, func(event events.Event) {
-			if event.Model == nil || !watches(event) {
+			if !watches(event, siteContext) {
 				return
 			}
 			select {
@@ -107,7 +111,7 @@ func EventsHandler[R, M any](collection CollectionBase[R, M]) http.HandlerFunc {
 						return
 					}
 				}
-				_, err = fmt.Fprintf(w, "event: %s\ndata: %s\n\n", event.Action, data)
+				_, err = fmt.Fprintf(w, "event: %s\ndata: %s\n\n", cmp.Or(event.Action, events.Updated), data)
 			}
 			if err != nil || stream.Flush() != nil {
 				return
