@@ -9,7 +9,8 @@ import (
 
 func TestNowKeepsEachIdentitysLastAlarms(t *testing.T) {
 	bus := events.NewSiteBus()
-	now := WatchNow(bus)
+	now := NowFor(bus)
+	require.Same(t, now, NowFor(bus), "one per bus")
 	alarm := func(siteID string, checked Checked) {
 		bus.Publish(siteID, events.Event{Name: events.Alarm, SiteID: siteID, Attributes: checked})
 	}
@@ -19,6 +20,11 @@ func TestNowKeepsEachIdentitysLastAlarms(t *testing.T) {
 	require.Equal(t, Checked{IdentityID: 1, Active: []Type{UrgentLow, Low}, Alerting: []Type{UrgentLow}}, now.Of("site-a", 1), "without its notifications")
 	require.Equal(t, []Type{NoData}, now.Of("site-b", 1).Alerting, "each site's identities are their own")
 	require.Empty(t, now.Of("site-a", 2).Alerting)
+
+	// Quieting one stops it alerting until the checker sends the identity's alarms again
+	now.Quiet("site-a", 1, UrgentLow)
+	require.Equal(t, Checked{IdentityID: 1, Active: []Type{UrgentLow, Low}, Alerting: []Type{}}, now.Of("site-a", 1))
+	alarm("site-a", Checked{IdentityID: 1, Active: []Type{UrgentLow, Low}, Alerting: []Type{UrgentLow}})
 
 	// Other events are not alarms, and an identity with nothing active is forgotten
 	bus.Publish("site-a", events.Event{Name: events.SiteDisabled, SiteID: "site-a"})

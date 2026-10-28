@@ -4,10 +4,10 @@ import (
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server/assets/static"
-	"nighttroop.t1d.nz/server/siteapi/sitealarms"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/server/siteapi/sitecollections"
 	"nighttroop.t1d.nz/server/siteapi/sitelogin"
+	"nighttroop.t1d.nz/utils/alarms"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -22,7 +22,8 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 	static.AddStaticRoutes(r)
 
 	store := sitecollections.NewSiteStore()
-	alarmPages := sitealarms.New(config.Events)
+	// The alarms collection holds each identity's alarms from the alarm events, which it must hear from the start
+	alarms.NowFor(config.Events)
 
 	// Publically available (if the person knows the subdomain) endpoints
 	r.Group(func(r chi.Router) {
@@ -58,11 +59,6 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 			r.Post("/"+section+"/{collection}/{id}", routes.Update)
 			r.Delete("/"+section+"/{collection}/{id}", routes.Delete)
 		}
-
-		// The identity's alarm banner, the stream that keeps it up to date, and its snooze
-		r.Get("/alarms", alarmPages.Banner)
-		r.Get("/alarms/events", alarmPages.Events)
-		r.Post("/alarms/snooze", alarmPages.Snooze)
 
 		// Actions
 		r.Post("/settings/sync/{id}/backfill", sitecollections.BackfillHandler)

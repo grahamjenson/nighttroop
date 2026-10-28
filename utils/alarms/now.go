@@ -1,6 +1,7 @@
 package alarms
 
 import (
+	"slices"
 	"sync"
 
 	"nighttroop.t1d.nz/data/events"
@@ -18,9 +19,22 @@ type nowKey struct {
 	identityID int64
 }
 
-// WatchNow keeps the alarms of every alarm event published on the bus
-func WatchNow(bus *events.SiteBus) *Now {
+// nows are each bus's alarms, one per server
+var nows = struct {
+	sync.Mutex
+	of map[*events.SiteBus]*Now
+}{of: map[*events.SiteBus]*Now{}}
+
+// NowFor is the alarms of every alarm event published on the bus, kept from the first time it is asked for, so the
+// server asks as it starts
+func NowFor(bus *events.SiteBus) *Now {
+	nows.Lock()
+	defer nows.Unlock()
+	if now := nows.of[bus]; now != nil {
+		return now
+	}
 	now := &Now{checked: map[nowKey]Checked{}}
+	nows.of[bus] = now
 	bus.SubscribeAll(func(event events.Event) {
 		checked, ok := event.Attributes.(Checked)
 		if !ok || event.Name != events.Alarm {
@@ -43,4 +57,15 @@ func (n *Now) Of(siteID string, identityID int64) Checked {
 	n.mu.Lock()
 	defer n.mu.Unlock()
 	return n.checked[nowKey{siteID, identityID}]
+}
+
+// Quiet stops an identity's alarm alerting, as a snooze does, until the checker next sends its alarms
+func (n *Now) Quiet(siteID string, identityID int64, t Type) {
+	n.mu.Lock()
+	defer n.mu.Unlock()
+	k := nowKey{siteID, identityID}
+	if checked, ok := n.checked[k]; ok {
+		checked.Alerting = slices.DeleteFunc(slices.Clone(checked.Alerting), func(alerting Type) bool { return alerting == t })
+		n.checked[k] = checked
+	}
 }

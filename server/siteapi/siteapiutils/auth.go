@@ -23,8 +23,8 @@ var adminStores = map[string]bool{
 	"site_events": true, "site_errors": true, "site_logs": true,
 }
 
-// ownSettingsStore is the signed in identity's own settings, which any identity may read and change
-const ownSettingsStore = "identity_settings"
+// ownStores are the signed in identity's own settings and alarms, which any identity may read and change
+var ownStores = map[string]bool{"identity_settings": true, "alarms": true}
 
 // readOnlyRoles may only read the site's data
 var readOnlyRoles = map[consts.IdentityRole]bool{consts.IdentityRoleUserReadOnly: true, consts.IdentityRoleDeviceRead: true}
@@ -43,7 +43,7 @@ func HasPermission(collectionName string, action Action, identity *controldb.Sit
 	if adminStores[collectionName] {
 		return identity.Role == consts.IdentityRoleAdmin
 	}
-	if collectionName == ownSettingsStore {
+	if ownStores[collectionName] {
 		return readOnlyRoles[identity.Role] || readWriteRoles[identity.Role]
 	}
 	if readOnlyRoles[identity.Role] {

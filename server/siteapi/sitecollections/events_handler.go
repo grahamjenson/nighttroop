@@ -1,6 +1,7 @@
 package sitecollections
 
 import (
+	"cmp"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -14,11 +15,11 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-// CollectionEvents is a collection whose event stream has changes to more than its own rows, e.g. the summary,
-// which is made from many collections' rows
+// CollectionEvents is a collection whose event stream has more than changes to its own rows, e.g. the summary,
+// which is made from many collections' rows, or the alarms, which are an identity's alarm events
 type CollectionEvents interface {
-	// Watches is whether a change to one of the site's models changes this collection
-	Watches(event events.Event) bool
+	// Watches is whether one of the site's events changes this collection for the identity streaming it
+	Watches(event events.Event, siteContext *httputils.SiteContext) bool
 }
 
 const (
@@ -41,9 +42,10 @@ var eventStreams = struct {
 
 // EventsHandler streams a collection's changes as server-sent events, each named created, updated or deleted.
 // A change to one of the collection's own rows has its model as JSON, as the API answers it; any other change the
-// collection watches has {}. A page or API client can then update as changes happen, rather than polling.
+// collection watches has {}, and is updated when it is not a model's. A page or API client can then update as changes
+// happen, rather than polling.
 func EventsHandler[R, M any](collection CollectionBase[R, M]) http.HandlerFunc {
-	watches := func(event events.Event) bool {
+	watches := func(event events.Event, _ *httputils.SiteContext) bool {
 		_, own := event.Model.(*R)
 		return own
 	}
@@ -56,74 +58,64 @@ func EventsHandler[R, M any](collection CollectionBase[R, M]) http.HandlerFunc {
 		if siteContext == nil {
 			return
 		}
-		// Only model changes are streamed: the site's other events, such as a control identity disabling it, are not its users'
-		StreamEvents(w, r, siteContext, func(event events.Event) bool { return event.Model != nil && watches(event) },
-			func(event events.Event) (string, any) {
-				if row, own := event.Model.(*R); own {
-					return string(event.Action), collection.ToModel(row, siteContext)
-				}
-				return string(event.Action), struct{}{}
-			})
-	}
-}
-
-// StreamEvents streams the site's events that a stream watches as server-sent events, each the name and data,
-// as JSON, that message makes of it, until the client goes, is too slow, or the stream has been open for an hour
-func StreamEvents(w http.ResponseWriter, r *http.Request, siteContext *httputils.SiteContext, watches func(events.Event) bool, message func(events.Event) (string, any)) {
-	if !openEventStream(siteContext.SiteID) {
-		writeError(w, r, siteContext.AcceptType, apiutils.ErrRateLimitExceeded(60))
-		return
-	}
-	defer closeEventStream(siteContext.SiteID)
-
-	// The bus calls this in the publisher's goroutine, so it must not wait for a slow client
-	changes, overflowed, overflow := make(chan events.Event, eventStreamBuffer), make(chan struct{}), sync.Once{}
-	unsubscribe := siteContext.Config.Events.Subscribe(siteContext.SiteID, func(event events.Event) {
-		if !watches(event) {
+		if !openEventStream(siteContext.SiteID) {
+			writeError(w, r, siteContext.AcceptType, apiutils.ErrRateLimitExceeded(60))
 			return
 		}
-		select {
-		case changes <- event:
-		default:
-			overflow.Do(func() { close(overflowed) })
-		}
-	})
-	defer unsubscribe()
+		defer closeEventStream(siteContext.SiteID)
 
-	// The server's write timeout would end the stream
-	stream := http.NewResponseController(w)
-	_ = stream.SetWriteDeadline(time.Time{})
-	w.Header().Set("Content-Type", "text/event-stream")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.WriteHeader(http.StatusOK)
-	if stream.Flush() != nil {
-		return
-	}
-
-	ping := time.NewTicker(eventStreamPing)
-	defer ping.Stop()
-	end := time.After(maxEventStreamTime)
-	for {
-		var err error
-		select {
-		case <-r.Context().Done():
-			return
-		case <-overflowed:
-			return
-		case <-end:
-			return
-		case <-ping.C:
-			_, err = io.WriteString(w, ": ping\n\n")
-		case event := <-changes:
-			name, value := message(event)
-			var data []byte
-			if data, err = json.Marshal(value); err != nil {
+		// The bus calls this in the publisher's goroutine, so it must not wait for a slow client
+		changes, overflowed, overflow := make(chan events.Event, eventStreamBuffer), make(chan struct{}), sync.Once{}
+		// Only the events the collection watches are streamed: the site's others, such as a control identity disabling
+		// it, are not its users'
+		unsubscribe := siteContext.Config.Events.Subscribe(siteContext.SiteID, func(event events.Event) {
+			if !watches(event, siteContext) {
 				return
 			}
-			_, err = fmt.Fprintf(w, "event: %s\ndata: %s\n\n", name, data)
-		}
-		if err != nil || stream.Flush() != nil {
+			select {
+			case changes <- event:
+			default:
+				overflow.Do(func() { close(overflowed) })
+			}
+		})
+		defer unsubscribe()
+
+		// The server's write timeout would end the stream
+		stream := http.NewResponseController(w)
+		_ = stream.SetWriteDeadline(time.Time{})
+		w.Header().Set("Content-Type", "text/event-stream")
+		w.Header().Set("Cache-Control", "no-cache")
+		w.WriteHeader(http.StatusOK)
+		if stream.Flush() != nil {
 			return
+		}
+
+		ping := time.NewTicker(eventStreamPing)
+		defer ping.Stop()
+		end := time.After(maxEventStreamTime)
+		for {
+			var err error
+			select {
+			case <-r.Context().Done():
+				return
+			case <-overflowed:
+				return
+			case <-end:
+				return
+			case <-ping.C:
+				_, err = io.WriteString(w, ": ping\n\n")
+			case event := <-changes:
+				data := []byte("{}")
+				if row, own := event.Model.(*R); own {
+					if data, err = json.Marshal(collection.ToModel(row, siteContext)); err != nil {
+						return
+					}
+				}
+				_, err = fmt.Fprintf(w, "event: %s\ndata: %s\n\n", cmp.Or(event.Action, events.Updated), data)
+			}
+			if err != nil || stream.Flush() != nil {
+				return
+			}
 		}
 	}
 }
