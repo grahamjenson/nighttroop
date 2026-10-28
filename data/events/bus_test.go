@@ -27,6 +27,19 @@ func TestBus(t *testing.T) {
 	require.Empty(t, bus.handlers["site-a"], "a key with no handlers is dropped")
 }
 
+func TestBusSubscribeAll(t *testing.T) {
+	bus := NewBus[string, int]()
+	var all []int
+	unsubscribe := bus.SubscribeAll(func(event int) { all = append(all, event) })
+	bus.Publish("site-a", 1)
+	bus.Publish("site-b", 2)
+	require.Equal(t, []int{1, 2}, all, "it gets every key's events")
+
+	unsubscribe()
+	bus.Publish("site-a", 3)
+	require.Equal(t, []int{1, 2}, all)
+}
+
 func TestBusHandlerPanicDoesNotStopTheOthers(t *testing.T) {
 	bus := NewBus[string, int]()
 	var got []int

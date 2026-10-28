@@ -81,6 +81,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getSiteStmt, err = db.PrepareContext(ctx, getSite); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSite: %w", err)
 	}
+	if q.getSiteIDsWithAlarmsStmt, err = db.PrepareContext(ctx, getSiteIDsWithAlarms); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSiteIDsWithAlarms: %w", err)
+	}
 	if q.getSiteIdentityStmt, err = db.PrepareContext(ctx, getSiteIdentity); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSiteIdentity: %w", err)
 	}
@@ -248,6 +251,11 @@ func (q *Queries) Close() error {
 	if q.getSiteStmt != nil {
 		if cerr := q.getSiteStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getSiteStmt: %w", cerr)
+		}
+	}
+	if q.getSiteIDsWithAlarmsStmt != nil {
+		if cerr := q.getSiteIDsWithAlarmsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSiteIDsWithAlarmsStmt: %w", cerr)
 		}
 	}
 	if q.getSiteIdentityStmt != nil {
@@ -423,6 +431,7 @@ type Queries struct {
 	getControlIdentityStmt             *sql.Stmt
 	getLiveAndDisabledSitesStmt        *sql.Stmt
 	getSiteStmt                        *sql.Stmt
+	getSiteIDsWithAlarmsStmt           *sql.Stmt
 	getSiteIdentityStmt                *sql.Stmt
 	getSiteIdentityByIDStmt            *sql.Stmt
 	getSiteInAnyStateStmt              *sql.Stmt
@@ -471,6 +480,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getControlIdentityStmt:             q.getControlIdentityStmt,
 		getLiveAndDisabledSitesStmt:        q.getLiveAndDisabledSitesStmt,
 		getSiteStmt:                        q.getSiteStmt,
+		getSiteIDsWithAlarmsStmt:           q.getSiteIDsWithAlarmsStmt,
 		getSiteIdentityStmt:                q.getSiteIdentityStmt,
 		getSiteIdentityByIDStmt:            q.getSiteIdentityByIDStmt,
 		getSiteInAnyStateStmt:              q.getSiteInAnyStateStmt,

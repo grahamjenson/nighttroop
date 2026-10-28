@@ -1,0 +1,187 @@
+package check_alarms
+
+import (
+	"context"
+	"fmt"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/require"
+	"nighttroop.t1d.nz/data/events"
+	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/data/sql/sitedb"
+	"nighttroop.t1d.nz/utils/alarms"
+	"nighttroop.t1d.nz/utils/testutils"
+)
+
+// rig is a checker of one site, its clock moved by the test, that adds readings as a write through the site would,
+// and keeps the alarm events it sends
+type rig struct {
+	t       *testing.T
+	checker *Checker
+	site    string
+	db      *sitedb.Queries
+	control *controldb.Queries
+	now     time.Time
+	sent    []alarms.Checked
+}
+
+func newRig(t *testing.T) *rig {
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
+	r := &rig{t: t, site: site.SiteDB.Subdomain, db: site.SiteDB.Queries, control: controlDB.Queries, now: time.Date(2026, 10, 28, 0, 0, 0, 0, time.UTC)}
+	r.checker = NewChecker(cfg, controlDB)
+	r.checker.now = func() time.Time { return r.now }
+	cfg.Events.Subscribe(r.site, func(event events.Event) {
+		if event.Name == events.Alarm {
+			r.sent = append(r.sent, event.Attributes.(alarms.Checked))
+		}
+	})
+	return r
+}
+
+// reading adds a reading at the rig's time and publishes it, as the site's writes do
+func (r *rig) reading(mgdl float64) {
+	row, err := r.db.CreateGlucoseReading(context.TODO(), sitedb.CreateGlucoseReadingParams{
+		ID: fmt.Sprint(r.now.UnixMilli()), Mgdl: mgdl, ReadingType: "sgv", OccurredAt: r.now.UnixMilli(), CreatedByIdentityName: "test",
+	})
+	require.NoError(r.t, err)
+	r.checker.events.Publish(r.site, events.ModelChange(r.site, events.Created, row))
+}
+
+// check runs a check, of the changed sites or all, and is what it sent, by identity
+func (r *rig) check(all bool) map[int64]alarms.Checked {
+	r.sent = nil
+	require.NoError(r.t, r.checker.Check(context.TODO(), all))
+	sent := map[int64]alarms.Checked{}
+	for _, checked := range r.sent {
+		sent[checked.IdentityID] = checked
+	}
+	return sent
+}
+
+func (r *rig) identities() []*controldb.SiteIdentity {
+	identities, err := r.control.AllSiteIdentities(context.TODO(), controldb.AllSiteIdentitiesParams{SiteID: r.site})
+	require.NoError(r.t, err)
+	return identities
+}
+
+func notified(kind alarms.Kind, alarm alarms.Type, at time.Time) []alarms.Notification {
+	return []alarms.Notification{{Type: alarm, Kind: kind, At: at.UnixMilli()}}
+}
+
+func TestEachIdentityIsCheckedOnNewReadingsAndPeriodically(t *testing.T) {
+	r := newRig(t)
+	ctx := context.TODO()
+	// The site turns on the urgent low, and one of its identities turns it off for itself
+	require.NoError(t, r.control.UpdateSitesSettings(ctx, controldb.UpdateSitesSettingsParams{ID: r.site, AlarmUrgentLowEnabled: new(true)}))
+	identities := r.identities()
+	require.Len(t, identities, 3, "a site starts with three identities")
+	off := identities[0]
+	require.NoError(t, r.control.UpdateSiteIdentitySettings(ctx, controldb.UpdateSiteIdentitySettingsParams{ID: off.ID, SiteID: r.site, AlarmUrgentLowEnabled: new(false)}))
+	on := []int64{identities[1].ID, identities[2].ID}
+
+	// Nothing is sent before there is a reading under it
+	require.Empty(t, r.check(true))
+	r.reading(100)
+	require.Empty(t, r.check(false))
+
+	// A reading under it starts it for the identities it is on for, on the check of changed sites
+	r.now = r.now.Add(5 * time.Minute)
+	r.reading(50)
+	sent := r.check(false)
+	require.Len(t, sent, 2)
+	for _, id := range on {
+		require.Equal(t, alarms.Checked{IdentityID: id, Notifications: notified(alarms.Started, alarms.UrgentLow, r.now),
+			Active: []alarms.Type{alarms.UrgentLow}, Alerting: []alarms.Type{alarms.UrgentLow}}, sent[id])
+	}
+	require.Empty(t, r.check(false), "a site whose readings did not change is not checked again")
+
+	// The periodic check repeats it without a new reading, once its repeat is due
+	r.now = r.now.Add(4 * time.Minute)
+	require.Empty(t, r.check(true), "nothing changed, so nothing is sent")
+	r.now = r.now.Add(time.Minute)
+	sent = r.check(true)
+	require.Len(t, sent, 2)
+	require.Equal(t, notified(alarms.Repeated, alarms.UrgentLow, r.now), sent[on[0]].Notifications)
+
+	// A reading over it clears it
+	r.now = r.now.Add(time.Minute)
+	r.reading(100)
+	sent = r.check(false)
+	require.Len(t, sent, 2)
+	require.Equal(t, alarms.Checked{IdentityID: on[1], Notifications: notified(alarms.Cleared, alarms.UrgentLow, r.now)}, sent[on[1]])
+
+	// Once its last notification no longer matters, its state is forgotten
+	r.now = r.now.Add(10 * time.Minute)
+	require.Empty(t, r.check(true))
+	require.Empty(t, r.checker.states)
+}
+
+func TestNoDataStartsOnThePeriodicCheck(t *testing.T) {
+	r := newRig(t)
+	identity := r.identities()[0]
+	require.NoError(t, r.control.UpdateSiteIdentitySettings(context.TODO(), controldb.UpdateSiteIdentitySettingsParams{
+		ID: identity.ID, SiteID: r.site, AlarmNoDataEnabled: new(true), AlarmNoDataMinutes: new(int64(20)),
+	}))
+	r.reading(100)
+	require.Empty(t, r.check(false))
+
+	r.now = r.now.Add(20 * time.Minute)
+	require.Empty(t, r.check(false), "no reading changed")
+	sent := r.check(true)
+	require.Equal(t, map[int64]alarms.Checked{identity.ID: {IdentityID: identity.ID, Notifications: notified(alarms.Started, alarms.NoData, r.now),
+		Active: []alarms.Type{alarms.NoData}, Alerting: []alarms.Type{alarms.NoData}}}, sent)
+}
+
+func TestTurningAlarmsOffClearsThem(t *testing.T) {
+	r := newRig(t)
+	ctx := context.TODO()
+	identity := r.identities()[0]
+	require.NoError(t, r.control.UpdateSiteIdentitySettings(ctx, controldb.UpdateSiteIdentitySettingsParams{ID: identity.ID, SiteID: r.site, AlarmUrgentLowEnabled: new(true)}))
+	r.reading(50)
+	require.Len(t, r.check(false), 1)
+
+	// With every alarm off the site is no longer one with alarms, but its kept state has it checked once more
+	require.NoError(t, r.control.UpdateSiteIdentitySettings(ctx, controldb.UpdateSiteIdentitySettingsParams{ID: identity.ID, SiteID: r.site}))
+	sites, err := r.control.GetSiteIDsWithAlarms(ctx)
+	require.NoError(t, err)
+	require.NotContains(t, sites, r.site)
+	r.now = r.now.Add(time.Minute)
+	require.Equal(t, map[int64]alarms.Checked{identity.ID: {IdentityID: identity.ID, Notifications: notified(alarms.Cleared, alarms.UrgentLow, r.now)}}, r.check(true))
+}
+
+func TestSitesWithoutAlarmsAreNotChecked(t *testing.T) {
+	r := newRig(t)
+	sites, err := r.control.GetSiteIDsWithAlarms(context.TODO())
+	require.NoError(t, err)
+	require.NotContains(t, sites, r.site)
+	r.reading(40)
+	require.Empty(t, r.check(false))
+	require.Empty(t, r.check(true))
+	require.Empty(t, r.checker.states)
+}
+
+func TestALowLastsOverEarlierReadings(t *testing.T) {
+	r := newRig(t)
+	ctx := context.TODO()
+	require.NoError(t, r.control.UpdateSitesSettings(ctx, controldb.UpdateSitesSettingsParams{ID: r.site, AlarmLowEnabled: new(true), AlarmLow: new(int64(72)), AlarmLowMinutes: new(int64(5))}))
+	r.reading(70)
+	require.Empty(t, r.check(false), "one reading under it is not enough")
+	r.now = r.now.Add(5 * time.Minute)
+	r.reading(70)
+	sent := r.check(false)
+	require.Len(t, sent, 3, "it has lasted 5 minutes, for each of the site's identities")
+	require.Equal(t, notified(alarms.Started, alarms.Low, r.now), sent[r.identities()[0].ID].Notifications)
+}
+
+func TestDisabledIdentitiesAreNotChecked(t *testing.T) {
+	r := newRig(t)
+	ctx := context.TODO()
+	require.NoError(t, r.control.UpdateSitesSettings(ctx, controldb.UpdateSitesSettingsParams{ID: r.site, AlarmUrgentLowEnabled: new(true)}))
+	disabled := r.identities()[0]
+	require.NoError(t, r.control.UpdateSiteIdentityEnabled(ctx, controldb.UpdateSiteIdentityEnabledParams{SiteID: r.site, ID: disabled.ID, Enabled: false}))
+	r.reading(50)
+	sent := r.check(false)
+	require.Len(t, sent, 2)
+	require.NotContains(t, sent, disabled.ID)
+}
