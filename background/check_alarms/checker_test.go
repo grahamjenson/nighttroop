@@ -110,7 +110,8 @@ func TestEachIdentityIsCheckedOnNewReadingsAndPeriodically(t *testing.T) {
 	r.reading(100)
 	sent = r.check(false)
 	require.Len(t, sent, 2)
-	require.Equal(t, alarms.Checked{IdentityID: on[1], Notifications: notified(alarms.Cleared, alarms.UrgentLow, r.now)}, sent[on[1]])
+	require.Equal(t, alarms.Checked{IdentityID: on[1], Notifications: notified(alarms.Cleared, alarms.UrgentLow, r.now),
+		WasAlerting: []alarms.Type{alarms.UrgentLow}}, sent[on[1]])
 
 	// Once its last notification no longer matters, its state is forgotten
 	require.NotEmpty(t, r.kept(), "its last notification still matters")
@@ -149,7 +150,8 @@ func TestTurningAlarmsOffClearsThem(t *testing.T) {
 	require.NoError(t, err)
 	require.NotContains(t, sites, r.site)
 	r.now = r.now.Add(time.Minute)
-	require.Equal(t, map[int64]alarms.Checked{identity.ID: {IdentityID: identity.ID, Notifications: notified(alarms.Cleared, alarms.UrgentLow, r.now)}}, r.check(true))
+	require.Equal(t, map[int64]alarms.Checked{identity.ID: {IdentityID: identity.ID, Notifications: notified(alarms.Cleared, alarms.UrgentLow, r.now),
+		WasAlerting: []alarms.Type{alarms.UrgentLow}}}, r.check(true))
 }
 
 func TestSitesWithoutAlarmsAreNotChecked(t *testing.T) {
@@ -200,7 +202,7 @@ func TestASnoozeIsTheIdentitysOwn(t *testing.T) {
 	r.now = r.now.Add(time.Minute)
 	r.snooze(snoozer, alarms.UrgentLow, r.now.Add(30*time.Minute))
 	sent := r.check(false)
-	require.Equal(t, map[int64]alarms.Checked{snoozer: {IdentityID: snoozer}}, sent,
+	require.Equal(t, map[int64]alarms.Checked{snoozer: {IdentityID: snoozer, WasAlerting: []alarms.Type{alarms.UrgentLow}}}, sent,
 		"only the snoozer's alarm stops alerting")
 
 	// The others still repeat, and the snoozer's does not until its snooze ends
