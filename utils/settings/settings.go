@@ -67,6 +67,16 @@ func (m *CombinedSettingsMap) GetUnits() *consts.Units {
 	)
 }
 
+// GetAlarmLow is the low alarm's mg/dL, the identity's, then the site's, then the default, whether or not it is on
+func (m *CombinedSettingsMap) GetAlarmLow() *int64 {
+	return first(m.IdentitySettingsMap.GetAlarmLow(), m.SiteSettingsMap.GetAlarmLow(), m.DefaultSettingsMap.GetAlarmLow())
+}
+
+// GetAlarmHigh is the high alarm's mg/dL, the identity's, then the site's, then the default, whether or not it is on
+func (m *CombinedSettingsMap) GetAlarmHigh() *int64 {
+	return first(m.IdentitySettingsMap.GetAlarmHigh(), m.SiteSettingsMap.GetAlarmHigh(), m.DefaultSettingsMap.GetAlarmHigh())
+}
+
 // GetTimezone is the identity's timezone, then the site's, then the default UTC
 func (m *CombinedSettingsMap) GetTimezone() *string {
 	return first(

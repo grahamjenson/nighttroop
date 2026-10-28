@@ -71,3 +71,42 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 400
 
+
+// A summary's low and high alarms are the alarm settings', in its units, outside which a reading is out of range: by
+// default 72 and 180 mg/dL
+NAME summary_default_alarms
+GET http://{{ site }}/summary?hours=6
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 3.996 "@result.0.low_alarm"
+ASSERT_EQUALS 9.99 "@result.0.high_alarm"
+
+// The alarms are set through Nightscout, as the site's pages do not show them
+NAME set_identity_units
+POST http://{{ site }}/settings/identity
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"units": "mg/dL"}
+ASSERT_STATUS 200
+
+NAME set_identity_low_alarm
+PATCH http://{{ .ns_site }}/api/v3/settings/alarm_low
+H Authorization: Bearer {{ jwt }}
+B {"value": 80}
+ASSERT_STATUS 200
+
+NAME set_identity_high_alarm
+PATCH http://{{ .ns_site }}/api/v3/settings/alarm_high
+H Authorization: Bearer {{ jwt }}
+B {"value": 150}
+ASSERT_STATUS 200
+
+NAME summary_has_identity_alarms
+GET http://{{ site }}/summary?hours=6
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "mg/dL" "@result.0.units"
+ASSERT_EQUALS 80 "@result.0.low_alarm"
+ASSERT_EQUALS 150 "@result.0.high_alarm"

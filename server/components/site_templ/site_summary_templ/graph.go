@@ -12,8 +12,6 @@ import (
 )
 
 const (
-	rangeLowMgdl = 70.0
-	rangeTopMgdl = 180.0
 	// The glucose axis always shows up to at least this, so a flat day is not stretched
 	minAxisMgdl = 270.0
 	// The glucose axis starts here, as readings below it are rare
@@ -26,13 +24,27 @@ const (
 
 // ECharts draws with these colours from css/theme.css, as it cannot use the Tailwind classes
 var (
-	brandNight = css.Colour("brand-night")
-	red600     = css.Colour("red-600")
-	amber500   = css.Colour("amber-500")
+	brandNight     = css.Colour("brand-night")
+	amber500       = css.Colour("amber-500")
+	glucoseLow     = css.Colour("glucose-low")
+	glucoseHigh    = css.Colour("glucose-high")
+	glucoseInRange = css.Colour("glucose-in-range")
 	blue500    = css.Colour("blue-500")
 	gray200    = css.Colour("gray-200")
 	gray700    = css.Colour("gray-700")
 )
+
+// glucoseRange is a reading in the summary's units below its low alarm, "Low", above its high alarm, "High", or
+// between them, ""
+func glucoseRange(s *sitemodels.Summary, reading float64) string {
+	switch {
+	case reading < s.LowAlarm:
+		return "Low"
+	case reading > s.HighAlarm:
+		return "High"
+	}
+	return ""
+}
 
 // graph is the summary as a go-echarts chart on one time axis: glucose dots over the targets in force each minute,
 // shaded, insulin as triangles pointing down and carbs as triangles pointing up under it, and the basal rate in force
@@ -57,7 +69,6 @@ func graph(s *sitemodels.Summary, now int64, location *time.Location) *charts.Sc
 			basalMax = max(basalMax, *m.Basal)
 		}
 	}
-	low, top := s.Units.FromMGDL(rangeLowMgdl), s.Units.FromMGDL(rangeTopMgdl)
 
 	chart := charts.NewScatter()
 	chart.SetGlobalOptions(
@@ -87,10 +98,10 @@ func graph(s *sitemodels.Summary, now int64, location *time.Location) *charts.Sc
 	var lows, highs, inRange []opts.ScatterData
 	for _, r := range s.GlucoseReadings {
 		point := opts.ScatterData{Value: []any{at(r.OccurredAt), r.Reading}}
-		switch {
-		case r.Reading < low:
+		switch glucoseRange(s, r.Reading) {
+		case "Low":
 			lows = append(lows, point)
-		case r.Reading > top:
+		case "High":
 			highs = append(highs, point)
 		default:
 			inRange = append(inRange, point)
@@ -106,9 +117,9 @@ func graph(s *sitemodels.Summary, now int64, location *time.Location) *charts.Sc
 		return charts.WithMarkLineStyleOpts(opts.MarkLineStyle{Symbol: []string{"none", "none"}, Label: &opts.Label{Show: opts.Bool(false)}, LineStyle: &opts.LineStyle{Type: "dashed", Color: colour, Width: 2}})
 	}
 	dot := charts.WithScatterChartOpts(opts.ScatterChart{SymbolSize: 6})
-	chart.AddSeries("Low", lows, dot, charts.WithItemStyleOpts(opts.ItemStyle{Color: red600}), dashed(red600), charts.WithMarkLineNameYAxisItemOpts(opts.MarkLineNameYAxisItem{Name: "Low", YAxis: low}))
-	chart.AddSeries("High", highs, dot, charts.WithItemStyleOpts(opts.ItemStyle{Color: amber500}), dashed(amber500), charts.WithMarkLineNameYAxisItemOpts(opts.MarkLineNameYAxisItem{Name: "High", YAxis: top}))
-	chart.AddSeries("In range", inRange, append(targets, dot, charts.WithItemStyleOpts(opts.ItemStyle{Color: brandNight}))...)
+	chart.AddSeries("Low", lows, dot, charts.WithItemStyleOpts(opts.ItemStyle{Color: glucoseLow}), dashed(glucoseLow), charts.WithMarkLineNameYAxisItemOpts(opts.MarkLineNameYAxisItem{Name: "Low", YAxis: s.LowAlarm}))
+	chart.AddSeries("High", highs, dot, charts.WithItemStyleOpts(opts.ItemStyle{Color: glucoseHigh}), dashed(glucoseHigh), charts.WithMarkLineNameYAxisItemOpts(opts.MarkLineNameYAxisItem{Name: "High", YAxis: s.HighAlarm}))
+	chart.AddSeries("In range", inRange, append(targets, dot, charts.WithItemStyleOpts(opts.ItemStyle{Color: glucoseInRange}))...)
 
 	marker := func(colour string) []charts.SeriesOpts {
 		return []charts.SeriesOpts{
