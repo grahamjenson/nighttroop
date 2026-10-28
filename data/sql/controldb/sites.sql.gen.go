@@ -547,6 +547,41 @@ func (q *Queries) GetSite(ctx context.Context, arg GetSiteParams) (*Site, error)
 	return &i, err
 }
 
+const getSiteIDsWithAlarms = `-- name: GetSiteIDsWithAlarms :many
+SELECT id FROM sites WHERE state = 'live' AND (
+    alarm_urgent_low_enabled OR alarm_low_enabled OR alarm_urgent_high_enabled OR alarm_high_enabled OR alarm_no_data_enabled
+    OR id IN (
+        SELECT site_id FROM site_identities WHERE enabled AND (
+            alarm_urgent_low_enabled OR alarm_low_enabled OR alarm_urgent_high_enabled OR alarm_high_enabled OR alarm_no_data_enabled
+        )
+    )
+)
+`
+
+// The live sites with an alarm turned on, for the site or for one of its enabled identities, which are checked periodically
+func (q *Queries) GetSiteIDsWithAlarms(ctx context.Context) ([]string, error) {
+	rows, err := q.query(ctx, q.getSiteIDsWithAlarmsStmt, getSiteIDsWithAlarms)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getSiteInAnyState = `-- name: GetSiteInAnyState :one
 SELECT id, batch, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, last_seen_at, last_write_at, state, disabled_at, archived_at, deleted_at, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, alarm_urgent_low, alarm_low_enabled, alarm_low, alarm_low_minutes, alarm_low_prediction_enabled, alarm_high_enabled, alarm_high, alarm_high_minutes, alarm_urgent_high_enabled, alarm_urgent_high, alarm_fast_rise_enabled, alarm_fast_rise, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_battery_low_enabled, alarm_battery_low_percent, alarm_battery_low_pwd_enabled, alarm_battery_low_pwd_percent, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM sites WHERE id = ?
 `

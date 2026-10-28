@@ -25,6 +25,8 @@ const (
 	ControlBackedUp   Name = "control_backed_up"
 	SyncTurnedOff     Name = "sync_turned_off"
 	SyncBackfilled    Name = "sync_backfilled"
+	// Alarm is an identity's alarms after a check that changed them, its Attributes an alarms.Checked
+	Alarm Name = "alarm"
 )
 
 // Persisted are the events kept in the logs DB. A model change is not, as the site's DB row is its record.
