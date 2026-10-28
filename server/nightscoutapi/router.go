@@ -11,13 +11,14 @@ import (
 	"nighttroop.t1d.nz/server/nightscoutapi/nsapi/nsv1"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsapi/nsv2"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsapi/nsv3"
+	"nighttroop.t1d.nz/server/nightscoutapi/nsapi/nswebsockets"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
 func NewNightscoutRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Router {
-	websocket := NewWebsocket(controlDB, config)
+	websocket := nswebsockets.NewWebsocket(controlDB, config, AllCollections(), jwtIdentity, legacyTokenIdentity)
 	store := NewNightTroopAPIStore(controlDB, config)
 
 	r := chi.NewRouter()
