@@ -13,13 +13,14 @@ var alarmNames = map[string]string{
 }
 
 // Alarms holds the signed in identity's alarm banner under the header on every page. The alarms collection's stream
-// sends an event when the identity's alarms change, and the banner is loaded again then, and each time it connects.
+// sends an event as each of the identity's alarms is created, updated or deleted, and the banner is loaded again then,
+// and each time it connects.
 templ Alarms() {
 	<div id="site--alarms" class="sticky top-14 z-30" hx-sse:connect="/data/alarms/events">
 		<div
 			id="site--alarms--content"
 			hx-get="/data/alarms"
-			hx-trigger="updated from:#site--alarms, deleted from:#site--alarms, htmx:sse:after:connection from:#site--alarms"
+			hx-trigger="created from:#site--alarms, updated from:#site--alarms, deleted from:#site--alarms, htmx:sse:after:connection from:#site--alarms"
 			hx-swap="innerHTML"
 		></div>
 	</div>

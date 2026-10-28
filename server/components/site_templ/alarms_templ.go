@@ -20,7 +20,8 @@ var alarmNames = map[string]string{
 }
 
 // Alarms holds the signed in identity's alarm banner under the header on every page. The alarms collection's stream
-// sends an event when the identity's alarms change, and the banner is loaded again then, and each time it connects.
+// sends an event as each of the identity's alarms is created, updated or deleted, and the banner is loaded again then,
+// and each time it connects.
 func Alarms() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -42,7 +43,7 @@ func Alarms() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"site--alarms\" class=\"sticky top-14 z-30\" hx-sse:connect=\"/data/alarms/events\"><div id=\"site--alarms--content\" hx-get=\"/data/alarms\" hx-trigger=\"updated from:#site--alarms, deleted from:#site--alarms, htmx:sse:after:connection from:#site--alarms\" hx-swap=\"innerHTML\"></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"site--alarms\" class=\"sticky top-14 z-30\" hx-sse:connect=\"/data/alarms/events\"><div id=\"site--alarms--content\" hx-get=\"/data/alarms\" hx-trigger=\"created from:#site--alarms, updated from:#site--alarms, deleted from:#site--alarms, htmx:sse:after:connection from:#site--alarms\" hx-swap=\"innerHTML\"></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -123,7 +124,7 @@ func AlarmRow(alarm *sitemodels.SiteAlarm) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue("site--alarms--alarm-" + alarm.ID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 44, Col: 41}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 45, Col: 41}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 			if templ_7745c5c3_Err != nil {
@@ -149,7 +150,7 @@ func AlarmRow(alarm *sitemodels.SiteAlarm) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(alarmNames[alarm.ID])
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 49, Col: 38}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 50, Col: 38}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -203,7 +204,7 @@ func AlarmRow(alarm *sitemodels.SiteAlarm) templ.Component {
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue("site--alarms--alarm-" + alarm.ID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 65, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 66, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 			if templ_7745c5c3_Err != nil {
@@ -216,7 +217,7 @@ func AlarmRow(alarm *sitemodels.SiteAlarm) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(alarmNames[alarm.ID])
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 66, Col: 34}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 67, Col: 34}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {

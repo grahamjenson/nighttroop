@@ -93,7 +93,7 @@ func TestEachIdentityIsCheckedOnNewReadingsAndPeriodically(t *testing.T) {
 	require.Len(t, sent, 2)
 	for _, id := range on {
 		require.Equal(t, alarms.Checked{IdentityID: id, Notifications: notified(alarms.Started, alarms.UrgentLow, r.now),
-			Active: []alarms.Type{alarms.UrgentLow}, Alerting: []alarms.Type{alarms.UrgentLow}}, sent[id])
+			Alerting: []alarms.Type{alarms.UrgentLow}}, sent[id])
 	}
 	require.Empty(t, r.check(false), "a site whose readings did not change is not checked again")
 
@@ -132,7 +132,7 @@ func TestNoDataStartsOnThePeriodicCheck(t *testing.T) {
 	require.Empty(t, r.check(false), "no reading changed")
 	sent := r.check(true)
 	require.Equal(t, map[int64]alarms.Checked{identity.ID: {IdentityID: identity.ID, Notifications: notified(alarms.Started, alarms.NoData, r.now),
-		Active: []alarms.Type{alarms.NoData}, Alerting: []alarms.Type{alarms.NoData}}}, sent)
+		Alerting: []alarms.Type{alarms.NoData}}}, sent)
 }
 
 func TestTurningAlarmsOffClearsThem(t *testing.T) {
@@ -196,12 +196,11 @@ func TestASnoozeIsTheIdentitysOwn(t *testing.T) {
 	r.reading(50)
 	require.Len(t, r.check(false), 3)
 
-	// The snooze, sent as an event as a socket's ack does, is applied on the next check of changed sites
+	// The snooze, written as the site and a socket's ack do, stops it alerting on the next check of changed sites
 	r.now = r.now.Add(time.Minute)
-	r.checker.events.Publish(r.site, events.Event{Name: events.AlarmSnoozed, SiteID: r.site,
-		Attributes: alarms.Snoozed{IdentityID: snoozer, Types: []alarms.Type{alarms.UrgentLow}, Until: r.now.Add(30 * time.Minute).UnixMilli()}})
+	r.snooze(snoozer, alarms.UrgentLow, r.now.Add(30*time.Minute))
 	sent := r.check(false)
-	require.Equal(t, map[int64]alarms.Checked{snoozer: {IdentityID: snoozer, Active: []alarms.Type{alarms.UrgentLow}}}, sent,
+	require.Equal(t, map[int64]alarms.Checked{snoozer: {IdentityID: snoozer}}, sent,
 		"only the snoozer's alarm stops alerting")
 
 	// The others still repeat, and the snoozer's does not until its snooze ends
@@ -214,9 +213,58 @@ func TestASnoozeIsTheIdentitysOwn(t *testing.T) {
 	require.Equal(t, notified(alarms.Repeated, alarms.UrgentLow, r.now), r.check(true)[snoozer].Notifications)
 }
 
+// snooze snoozes an identity's alarm until a time, as the site and a socket's ack do
+func (r *rig) snooze(identityID int64, alarm alarms.Type, until time.Time) {
+	require.NoError(r.t, r.checker.controlDB.Live.Queries.SnoozeAlarm(context.TODO(), livedb.SnoozeAlarmParams{
+		SiteID: r.site, IdentityID: identityID, Type: alarm, Until: until.UnixMilli()}))
+}
+
 // kept are the site's alarms the checker keeps between checks
 func (r *rig) kept() []*livedb.Alarm {
 	rows, err := r.checker.controlDB.Live.Queries.SiteAlarms(context.TODO(), livedb.SiteAlarmsParams{SiteID: r.site})
 	require.NoError(r.t, err)
 	return rows
+}
+
+func TestEachChangeToAnActiveAlarmIsPublished(t *testing.T) {
+	r := newRig(t)
+	identity := r.identities()[0]
+	require.NoError(t, r.control.UpdateSiteIdentitySettings(context.TODO(), controldb.UpdateSiteIdentitySettingsParams{ID: identity.ID, SiteID: r.site, AlarmUrgentLowEnabled: new(true)}))
+	var changes []string
+	r.checker.events.Subscribe(r.site, func(event events.Event) {
+		if row, ok := event.Model.(*livedb.Alarm); ok {
+			changes = append(changes, fmt.Sprintf("%s %s alerting:%v", event.Action, row.Type, row.Alerting))
+		}
+	})
+
+	r.reading(50)
+	r.check(false)
+	r.now = r.now.Add(time.Minute)
+	r.snooze(identity.ID, alarms.UrgentLow, r.now.Add(30*time.Minute))
+	r.check(false)
+	r.now = r.now.Add(time.Minute)
+	r.reading(100)
+	r.check(false)
+	require.Equal(t, []string{"created urgent_low alerting:true", "updated urgent_low alerting:false", "deleted urgent_low alerting:false"}, changes,
+		"it is created as it becomes active, updated as it stops alerting, and deleted as it stops being active")
+	require.NotEmpty(t, r.kept(), "its snooze is kept after it clears")
+}
+
+func TestASnoozeDuringACheckIsKept(t *testing.T) {
+	r := newRig(t)
+	live := r.checker.controlDB.Live.Queries
+	identity := r.identities()[0].ID
+	at := r.now.UnixMilli()
+	require.NoError(t, live.UpsertAlarm(context.TODO(), livedb.UpsertAlarmParams{SiteID: r.site, IdentityID: identity, Type: alarms.Low, ActiveSince: at, NotifiedAt: at, Alerting: true}))
+
+	// A snooze lands after a check read the alarm, before it writes what it found from the alarm unsnoozed
+	until := r.now.Add(30 * time.Minute).UnixMilli()
+	r.snooze(identity, alarms.Low, r.now.Add(30*time.Minute))
+	sites, err := live.SnoozedAlertingSiteIDs(context.TODO(), livedb.SnoozedAlertingSiteIDsParams{Now: at})
+	require.NoError(t, err)
+	require.Equal(t, []string{r.site}, sites, "a snoozed alarm still alerting has its site checked next")
+	require.NoError(t, live.UpsertAlarm(context.TODO(), livedb.UpsertAlarmParams{SiteID: r.site, IdentityID: identity, Type: alarms.Low, ActiveSince: at, NotifiedAt: at + 1, Alerting: true}))
+	require.NoError(t, live.DeleteAlarm(context.TODO(), livedb.DeleteAlarmParams{SiteID: r.site, IdentityID: identity, Type: alarms.Low}))
+	require.Equal(t, []*livedb.Alarm{{SiteID: r.site, IdentityID: identity, Type: alarms.Low, ActiveSince: at, NotifiedAt: at + 1, SnoozedUntil: until}}, r.kept(),
+		"the snooze is kept, so the alarm is neither alerting nor deleted")
 }
