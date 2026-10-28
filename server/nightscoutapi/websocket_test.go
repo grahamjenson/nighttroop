@@ -53,15 +53,15 @@ func TestSocketWritesAreRateLimited(t *testing.T) {
 	writes := 0
 	write := func(context.Context, nsutils.Collection, string, json.RawMessage) any {
 		writes++
-		return result("success")
+		return ackResult("success")
 	}
 	args := []json.RawMessage{json.RawMessage(`{"collection":"treatments","data":{}}`)}
 	auth := &authorization{Read: true, Write: true, WriteTreatment: true}
 
 	for range 3 {
-		require.Equal(t, result("success"), ws.dbWrite("dbAdd", args, auth, ctx, write))
+		require.Equal(t, ackResult("success"), ws.handleDBWrite("dbAdd", args, auth, ctx, write))
 	}
-	require.Equal(t, result("Too many requests"), ws.dbWrite("dbAdd", args, auth, ctx, write))
+	require.Equal(t, ackResult("Too many requests"), ws.handleDBWrite("dbAdd", args, auth, ctx, write))
 	require.Equal(t, 3, writes)
 }
 
@@ -72,7 +72,7 @@ func siteSocketServer(t *testing.T, cfg *config.ServerConfig, siteCtx context.Co
 		ws.ServeHTTP(w, r.WithContext(siteCtx))
 	}))
 	t.Cleanup(func() {
-		ws.server(httputils.GetSiteContext(siteCtx).SiteID, false).Close()
+		ws.siteServer(httputils.GetSiteContext(siteCtx).SiteID, false).Close()
 		ts.Close()
 	})
 	return ts
