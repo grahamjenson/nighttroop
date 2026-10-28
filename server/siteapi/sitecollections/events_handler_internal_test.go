@@ -7,14 +7,17 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
+	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/testutils"
 )
 
 type eventRow struct{ ID string }
@@ -41,10 +44,21 @@ func (watchAllCollection) Watches(event events.Event, _ *httputils.SiteContext) 
 	return event.Model != nil
 }
 
+// streams are the events streamed, and the control DB whose live DB holds the open streams
+type streams struct {
+	bus       *events.SiteBus
+	controlDB *db.ControlDB
+}
+
+func newStreams(t *testing.T) streams {
+	_, controlDB := testutils.NewControlDB(t)
+	return streams{bus: events.NewSiteBus(), controlDB: controlDB}
+}
+
 // eventStream serves the handler for the site as role, and reads its stream
-func eventStream(t *testing.T, bus *events.SiteBus, site string, role consts.IdentityRole, handler http.HandlerFunc) (*http.Response, *bufio.Reader) {
+func eventStream(t *testing.T, streams streams, site string, role consts.IdentityRole, handler http.HandlerFunc) (*http.Response, *bufio.Reader) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := httputils.CreateSiteContext(r.Context(), &config.ServerConfig{Events: bus}, nil, nil, nil, site, "", httputils.HTTPActionRead, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
+		ctx := httputils.CreateSiteContext(r.Context(), &config.ServerConfig{Events: streams.bus}, streams.controlDB, nil, nil, site, "", httputils.HTTPActionRead, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
 		handler(w, r.WithContext(httputils.SetIdentityModelInSiteContext(ctx, &controldb.SiteIdentity{Role: role})))
 	}))
 	t.Cleanup(server.Close)
@@ -87,8 +101,9 @@ func TestEventsHandlerStreamsTheCollectionsChanges(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			bus := events.NewSiteBus()
-			resp, stream := eventStream(t, bus, "site-a", consts.IdentityRoleUserReadOnly, EventsHandler(test.collection))
+			streams := newStreams(t)
+			bus := streams.bus
+			resp, stream := eventStream(t, streams, "site-a", consts.IdentityRoleUserReadOnly, EventsHandler(test.collection))
 			require.Equal(t, http.StatusOK, resp.StatusCode)
 			require.Equal(t, "text/event-stream", resp.Header.Get("Content-Type"))
 
@@ -107,19 +122,30 @@ func TestEventsHandlerStreamsTheCollectionsChanges(t *testing.T) {
 
 // An identity that may not search a collection cannot stream it, and a site can hold only so many streams open
 func TestEventsHandlerLimits(t *testing.T) {
-	bus := events.NewSiteBus()
-	resp, _ := eventStream(t, bus, "site-a", consts.IdentityRoleUser, EventsHandler[eventRow, eventModel](eventsCollection{name: "site_logs"}))
+	streams := newStreams(t)
+	resp, _ := eventStream(t, streams, "site-a", consts.IdentityRoleUser, EventsHandler[eventRow, eventModel](eventsCollection{name: "site_logs"}))
 	require.Equal(t, http.StatusForbidden, resp.StatusCode)
 
 	handler := EventsHandler[eventRow, eventModel](eventsCollection{name: "glucose_readings"})
 	for range maxEventStreamsPerSite {
-		resp, _ := eventStream(t, bus, "site-a", consts.IdentityRoleUser, handler)
+		resp, _ := eventStream(t, streams, "site-a", consts.IdentityRoleUser, handler)
 		require.Equal(t, http.StatusOK, resp.StatusCode)
 	}
-	resp, _ = eventStream(t, bus, "site-a", consts.IdentityRoleUser, handler)
+	resp, _ = eventStream(t, streams, "site-a", consts.IdentityRoleUser, handler)
 	require.Equal(t, http.StatusTooManyRequests, resp.StatusCode)
 
+	// A stream that ends is closed, so another can open
+	open, _ := eventStream(t, streams, "site-c", consts.IdentityRoleUser, handler)
+	for range maxEventStreamsPerSite - 1 {
+		eventStream(t, streams, "site-c", consts.IdentityRoleUser, handler)
+	}
+	open.Body.Close()
+	require.Eventually(t, func() bool {
+		resp, _ := eventStream(t, streams, "site-c", consts.IdentityRoleUser, handler)
+		return resp.StatusCode == http.StatusOK
+	}, 5*time.Second, 50*time.Millisecond)
+
 	// Another site has its own streams
-	resp, _ = eventStream(t, bus, "site-b", consts.IdentityRoleUser, handler)
+	resp, _ = eventStream(t, streams, "site-b", consts.IdentityRoleUser, handler)
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 }

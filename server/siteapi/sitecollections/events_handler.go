@@ -2,7 +2,10 @@ package sitecollections
 
 import (
 	"cmp"
+	"context"
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -10,6 +13,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/data/events"
+	"nighttroop.t1d.nz/data/sql/livedb"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -34,12 +38,6 @@ const (
 	maxEventStreamTime = time.Hour
 )
 
-// eventStreams counts each site's open streams, at most one count per site
-var eventStreams = struct {
-	sync.Mutex
-	open map[string]int
-}{open: map[string]int{}}
-
 // EventsHandler streams a collection's changes as server-sent events, each named created, updated or deleted.
 // A change to one of the collection's own rows has its model as JSON, as the API answers it; any other change the
 // collection watches has {}, and is updated when it is not a model's. A page or API client can then update as changes
@@ -58,11 +56,20 @@ func EventsHandler[R, M any](collection CollectionBase[R, M]) http.HandlerFunc {
 		if siteContext == nil {
 			return
 		}
-		if !openEventStream(siteContext.SiteID) {
+		// Each open stream is a connection in the live DB, so a site can hold only so many open
+		live := siteContext.ControlDB.Live.Queries
+		connection, err := live.OpenConnection(r.Context(), livedb.OpenConnectionParams{SiteID: siteContext.SiteID,
+			IdentityID: siteContext.IdentityModel.ID, Kind: "event_stream", Collection: collection.GetName(), Max: maxEventStreamsPerSite})
+		if errors.Is(err, sql.ErrNoRows) {
 			writeError(w, r, siteContext.AcceptType, apiutils.ErrRateLimitExceeded(60))
 			return
 		}
-		defer closeEventStream(siteContext.SiteID)
+		if err != nil {
+			writeError(w, r, siteContext.AcceptType, apiutils.ErrInternalServerError)
+			return
+		}
+		// The request's context is done as the stream ends, so it is not the one closing it
+		defer live.CloseConnection(context.Background(), livedb.CloseConnectionParams{ID: connection})
 
 		// The bus calls this in the publisher's goroutine, so it must not wait for a slow client
 		changes, overflowed, overflow := make(chan events.Event, eventStreamBuffer), make(chan struct{}), sync.Once{}
@@ -118,21 +125,4 @@ func EventsHandler[R, M any](collection CollectionBase[R, M]) http.HandlerFunc {
 			}
 		}
 	}
-}
-
-// openEventStream counts a stream the site opens, or is false when it has as many open as it may
-func openEventStream(siteID string) bool {
-	eventStreams.Lock()
-	defer eventStreams.Unlock()
-	if eventStreams.open[siteID] >= maxEventStreamsPerSite {
-		return false
-	}
-	eventStreams.open[siteID]++
-	return true
-}
-
-func closeEventStream(siteID string) {
-	eventStreams.Lock()
-	defer eventStreams.Unlock()
-	eventStreams.open[siteID]--
 }

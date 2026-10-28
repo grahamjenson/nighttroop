@@ -1,3 +1,5 @@
+CREATE INDEX connections_site ON connections (site_id, kind);
+
 CREATE TABLE alarms (
     site_id TEXT NOT NULL CHECK(length(site_id) <= 32),
     identity_id INTEGER NOT NULL,
@@ -9,5 +11,14 @@ CREATE TABLE alarms (
     -- alerting is whether it is active and neither snoozed nor quieted by a louder alarm, so should be heard
     alerting INTEGER NOT NULL CHECK(alerting IN (0, 1)),
     PRIMARY KEY (site_id, identity_id, type)
+) STRICT;
+
+CREATE TABLE connections (
+    id INTEGER PRIMARY KEY,
+    site_id TEXT NOT NULL CHECK(length(site_id) <= 32),
+    identity_id INTEGER NOT NULL,
+    kind TEXT NOT NULL CHECK(kind IN ('event_stream')),
+    collection TEXT NOT NULL CHECK(length(collection) <= 64),
+    opened_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
 ) STRICT;
 
