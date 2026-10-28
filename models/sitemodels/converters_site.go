@@ -10,7 +10,6 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/security"
-	"nighttroop.t1d.nz/utils/settings"
 )
 
 // goverter:converter
@@ -315,15 +314,6 @@ type SiteConverter interface {
 	///////
 	// SETTINGS
 	///////
-
-	// goverter:map GetUnits Units
-	// goverter:map GetTimezone Timezone
-	// goverter:map GetLanguage Language
-	// goverter:map GetDateFormat DateFormat
-	// goverter:map GetTimeFormat TimeFormat
-	// goverter:map GetWeekStartDay WeekStartDay
-	// goverter:ignore Inherited Site
-	SettingsFromMap(source *settings.SettingMap) *Settings
 }
 
 func SetPasswordGarbage() *string {
