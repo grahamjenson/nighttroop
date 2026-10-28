@@ -2,7 +2,9 @@ package testutils
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -31,4 +33,13 @@ func JSONRequest[T any](t *testing.T, handler http.Handler, method, path_or_url 
 	}
 
 	return rr.Code, out, rr.Header()
+}
+
+// HostClient sends every request to the test server, whatever its host, so the site is chosen by the Host
+// header as in production
+func HostClient(ts *httptest.Server) *http.Client {
+	addr := ts.Listener.Addr().String()
+	return &http.Client{Transport: &http.Transport{DialContext: func(ctx context.Context, network, _ string) (net.Conn, error) {
+		return (&net.Dialer{}).DialContext(ctx, network, addr)
+	}}}
 }
