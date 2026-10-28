@@ -18,6 +18,15 @@ type Alarm struct {
 	Alerting     bool
 }
 
+type Connection struct {
+	ID         int64
+	SiteID     string
+	IdentityID int64
+	Kind       string
+	Collection string
+	OpenedAt   int64
+}
+
 type NightscoutCursor struct {
 	SiteID       string
 	Collection   string
