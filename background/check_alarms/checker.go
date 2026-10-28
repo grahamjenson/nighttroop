@@ -13,6 +13,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/data/sql/livedb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/alarms"
 	"nighttroop.t1d.nz/utils/config"
@@ -21,12 +22,6 @@ import (
 
 // maxReadings is the most readings a check reads, only a cap: a reading every 4 seconds over the longest alarm
 const maxReadings = 2000
-
-// key is an identity's alarms, kept by its site and ID
-type key struct {
-	siteID     string
-	identityID int64
-}
 
 type Checker struct {
 	controlDB *db.ControlDB
@@ -38,10 +33,8 @@ type Checker struct {
 	pending     map[string]bool
 	snoozes     []snooze
 
-	// checkLock lets one check run at a time, as they share the identities' states and what they last sent
+	// checkLock lets one check run at a time, as they share the identities' alarms kept in the live DB
 	checkLock sync.Mutex
-	states    map[key]alarms.State
-	sent      map[key]alarms.Checked
 }
 
 // snooze is an identity's snooze, kept for the next check
@@ -62,7 +55,7 @@ func SetupCron(c cron.CronScheduler, config *config.ServerConfig, controlDB *db.
 func NewChecker(config *config.ServerConfig, controlDB *db.ControlDB) *Checker {
 	checker := &Checker{
 		controlDB: controlDB, events: config.Events, now: time.Now,
-		pending: map[string]bool{}, states: map[key]alarms.State{}, sent: map[key]alarms.Checked{},
+		pending: map[string]bool{},
 	}
 	// A handler must not block its publisher, so it only notes the site, and any snooze, for the next check
 	config.Events.SubscribeAll(func(event events.Event) {
@@ -90,10 +83,11 @@ func (c *Checker) Check(ctx context.Context, all bool) error {
 
 	c.checkLock.Lock()
 	defer c.checkLock.Unlock()
+	live := c.controlDB.Live.Queries
+	var errs []error
 	for _, s := range snoozes {
-		k := key{s.siteID, s.IdentityID}
 		for _, t := range s.Types {
-			c.states[k] = c.states[k].Snooze(t, s.Until)
+			errs = append(errs, live.SnoozeAlarm(ctx, livedb.SnoozeAlarmParams{SiteID: s.siteID, IdentityID: s.IdentityID, Type: t, Until: s.Until}))
 		}
 	}
 	if all {
@@ -105,11 +99,14 @@ func (c *Checker) Check(ctx context.Context, all bool) error {
 			sites[siteID] = true
 		}
 		// A site whose alarms were all turned off is checked once more, to clear them
-		for k := range c.states {
-			sites[k.siteID] = true
+		kept, err := live.AlarmSiteIDs(ctx)
+		if err != nil {
+			return err
+		}
+		for _, siteID := range kept {
+			sites[siteID] = true
 		}
 	}
-	var errs []error
 	for siteID := range sites {
 		errs = append(errs, c.checkSite(ctx, siteID, c.now().UnixMilli()))
 	}
@@ -118,10 +115,22 @@ func (c *Checker) Check(ctx context.Context, all bool) error {
 
 // checkSite checks each of a site's enabled identities' alarms, forgetting those of any identity gone
 func (c *Checker) checkSite(ctx context.Context, siteID string, now int64) error {
+	live := c.controlDB.Live.Queries
+	keptRows, err := live.SiteAlarms(ctx, livedb.SiteAlarmsParams{SiteID: siteID})
+	if err != nil {
+		return err
+	}
+	kept := map[int64]keptAlarms{}
+	for _, row := range keptRows {
+		if kept[row.IdentityID] == nil {
+			kept[row.IdentityID] = keptAlarms{}
+		}
+		kept[row.IdentityID][row.Type] = row
+	}
+
 	siteDB, site, err := c.controlDB.GetSite(siteID)
 	if err != nil || site == nil || siteDB == nil {
-		c.forget(siteID, nil)
-		return err
+		return errors.Join(err, c.forget(ctx, kept, nil))
 	}
 	identities, err := c.controlDB.Queries.AllSiteIdentities(ctx, controldb.AllSiteIdentitiesParams{SiteID: siteID})
 	if err != nil {
@@ -130,15 +139,13 @@ func (c *Checker) checkSite(ctx context.Context, siteID string, now int64) error
 
 	turnedOn := map[int64][]alarms.Alarm{}
 	for _, identity := range identities {
-		k := key{siteID, identity.ID}
 		on := alarms.FromSettings(settings.NewCombinedSettingsMap(site, identity))
-		if identity.Enabled && (len(on) > 0 || c.states[k] != nil) {
+		if identity.Enabled && (len(on) > 0 || kept[identity.ID] != nil) {
 			turnedOn[identity.ID] = on
 		}
 	}
-	c.forget(siteID, turnedOn)
-	if len(turnedOn) == 0 {
-		return nil
+	if err := c.forget(ctx, kept, turnedOn); err != nil || len(turnedOn) == 0 {
+		return err
 	}
 
 	// The newest reading, however old, as no data is measured from it, then those back to the longest an alarm can
@@ -158,31 +165,65 @@ func (c *Checker) checkSite(ctx context.Context, siteID string, now int64) error
 		readings[i] = alarms.Reading{At: row.OccurredAt, Mgdl: row.Mgdl}
 	}
 
+	var errs []error
 	for identityID, on := range turnedOn {
-		k := key{siteID, identityID}
-		result := alarms.Check(on, c.states[k], readings, now)
+		last := kept[identityID]
+		result := alarms.Check(on, last.state(), readings, now)
 		checked := alarms.Checked{IdentityID: identityID, Notifications: result.Notifications, Active: types(result.Active), Alerting: types(result.Alerting)}
-		last := c.sent[k]
-		if len(checked.Notifications) > 0 || !slices.Equal(checked.Active, last.Active) || !slices.Equal(checked.Alerting, last.Alerting) {
+		lastActive, lastAlerting := last.types()
+		if len(checked.Notifications) > 0 || !slices.Equal(checked.Active, lastActive) || !slices.Equal(checked.Alerting, lastAlerting) {
 			c.events.Publish(siteID, events.Event{Name: events.Alarm, SiteID: siteID, Attributes: checked, StartedAt: time.UnixMilli(now)})
 		}
-		c.states[k], c.sent[k] = result.State, checked
-		if len(result.State) == 0 {
-			delete(c.states, k)
-			delete(c.sent, k)
+		for _, t := range alarms.Types {
+			s, keep := result.State[t]
+			if keep {
+				errs = append(errs, live.UpsertAlarm(ctx, livedb.UpsertAlarmParams{SiteID: siteID, IdentityID: identityID, Type: t,
+					ActiveSince: s.ActiveSince, NotifiedAt: s.NotifiedAt, SnoozedUntil: s.SnoozedUntil, Alerting: slices.Contains(checked.Alerting, t)}))
+			} else if last[t] != nil {
+				errs = append(errs, live.DeleteAlarm(ctx, livedb.DeleteAlarmParams{SiteID: siteID, IdentityID: identityID, Type: t}))
+			}
 		}
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
-// forget drops the states of a site's identities that are not to be checked
-func (c *Checker) forget(siteID string, checked map[int64][]alarms.Alarm) {
-	for k := range c.states {
-		if _, ok := checked[k.identityID]; k.siteID == siteID && !ok {
-			delete(c.states, k)
-			delete(c.sent, k)
+// keptAlarms are an identity's alarms kept in the live DB from its last check, by type
+type keptAlarms map[alarms.Type]*livedb.Alarm
+
+// state is the kept alarms as the state a check is given
+func (k keptAlarms) state() alarms.State {
+	state := alarms.State{}
+	for t, row := range k {
+		state[t] = alarms.AlarmState{ActiveSince: row.ActiveSince, NotifiedAt: row.NotifiedAt, SnoozedUntil: row.SnoozedUntil}
+	}
+	return state
+}
+
+// types are the kept alarms that were active and alerting, in the order a check lists them
+func (k keptAlarms) types() (active, alerting []alarms.Type) {
+	for _, t := range alarms.Types {
+		if row := k[t]; row != nil && row.ActiveSince != 0 {
+			active = append(active, t)
+			if row.Alerting {
+				alerting = append(alerting, t)
+			}
 		}
 	}
+	return active, alerting
+}
+
+// forget deletes the kept alarms of a site's identities that are not to be checked
+func (c *Checker) forget(ctx context.Context, kept map[int64]keptAlarms, checked map[int64][]alarms.Alarm) error {
+	var errs []error
+	for identityID, rows := range kept {
+		if _, ok := checked[identityID]; ok {
+			continue
+		}
+		for _, row := range rows {
+			errs = append(errs, c.controlDB.Live.Queries.DeleteAlarm(ctx, livedb.DeleteAlarmParams{SiteID: row.SiteID, IdentityID: identityID, Type: row.Type}))
+		}
+	}
+	return errors.Join(errs...)
 }
 
 func types(of []alarms.Alarm) []alarms.Type {

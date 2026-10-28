@@ -49,7 +49,7 @@ func NewDB(ctx context.Context, subdomain string, serverConfig *config.ServerCon
 	var err error
 	var sqldb *sql.DB
 
-	if serverConfig.IsTest() {
+	if db.InMemory {
 		sqldb, err = OpenInMemorySqliteDB()
 		path = ":memory:"
 	} else {

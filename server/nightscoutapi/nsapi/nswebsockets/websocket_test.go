@@ -1,8 +1,9 @@
-package nightscoutapi
+package nswebsockets
 
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -65,9 +66,14 @@ func TestSocketWritesAreRateLimited(t *testing.T) {
 	require.Equal(t, 3, writes)
 }
 
+// noIdentity finds no identity, as the Nightscout API does for these tests' empty tokens
+func noIdentity(*config.ServerConfig, context.Context, string) (*controldb.SiteIdentity, error) {
+	return nil, errors.New("no identity")
+}
+
 // siteSocketServer serves a site's Socket.IO server, as the router would, with every request in its site context
 func siteSocketServer(t *testing.T, cfg *config.ServerConfig, siteCtx context.Context) *httptest.Server {
-	ws := &Websocket{config: cfg, servers: map[string]*socketio.Server{}}
+	ws := NewWebsocket(nil, cfg, nil, noIdentity, noIdentity)
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ws.ServeHTTP(w, r.WithContext(siteCtx))
 	}))

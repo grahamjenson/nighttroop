@@ -2,6 +2,7 @@ package alarms
 
 import (
 	"fmt"
+	"maps"
 	"slices"
 	"strconv"
 	"strings"
@@ -85,7 +86,7 @@ func runTimeline(t *testing.T, config []Alarm, text string) {
 			if len(fields) != 4 {
 				fail("snooze needs an alarm and a duration")
 			}
-			state = state.Snooze(parseType(t, fields[2]), now+parseDuration(t, fields[3]).Milliseconds())
+			state = snooze(state, parseType(t, fields[2]), now+parseDuration(t, fields[3]).Milliseconds())
 		case "config":
 			config = parseConfig(t, strings.Join(fields[2:], " "))
 		default:
@@ -221,4 +222,17 @@ func formatState(state State) string {
 		return "nothing"
 	}
 	return strings.Join(items, "; ")
+}
+
+// snooze quiets a kind of alarm until a time, whether it is active or not, as the checker's snooze does, so the
+// snooze also covers it starting again
+func snooze(state State, t Type, until int64) State {
+	next := maps.Clone(state)
+	if next == nil {
+		next = State{}
+	}
+	alarm := next[t]
+	alarm.SnoozedUntil = until
+	next[t] = alarm
+	return next
 }
