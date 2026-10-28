@@ -1,0 +1,33 @@
+version: "2"
+sql:
+  - schema: "schema_gen.sql"
+    queries: "./queries"
+    engine: "sqlite"
+    gen:
+      go:
+        package: "livedb"
+        out: "."
+
+        emit_prepared_queries: true
+        emit_pointers_for_null_types: true
+        emit_result_struct_pointers: true
+
+        query_parameter_limit: 0
+
+        output_files_suffix: ".gen"
+        output_db_file_name: "z_db.go"
+        output_models_file_name: "z_models.go"
+        output_querier_file_name: "z_querier.go"
+        output_batch_file_name: "z_batch.go"
+        output_copyfrom_file_name: "z_copyfrom.go"
+
+overrides:
+  go:
+    overrides:
+      - column: "alarms.type"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/alarms"
+          type: "Type"
+      - column: "alarms.alerting"
+        go_type:
+          type: "bool"

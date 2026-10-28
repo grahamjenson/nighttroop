@@ -5,7 +5,6 @@ package alarms
 
 import (
 	"cmp"
-	"maps"
 	"slices"
 )
 
@@ -217,15 +216,4 @@ func Check(alarms []Alarm, state State, readings []Reading, now int64) Result {
 		}
 	}
 	return result
-}
-
-// Snooze quiets a kind of alarm until a time, whether it is active or not, so the snooze also covers it starting
-// again; a time already past ends a snooze
-func (s State) Snooze(t Type, until int64) State {
-	next := State{}
-	maps.Copy(next, s)
-	alarm := next[t]
-	alarm.SnoozedUntil = until
-	next[t] = alarm
-	return next
 }

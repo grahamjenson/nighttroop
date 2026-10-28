@@ -70,7 +70,7 @@ func TestInvariants(t *testing.T) {
 			case n < 15:
 				alarm := Types[r.IntN(len(Types))]
 				until := now + int64(r.IntN(60))*minute
-				state = state.Snooze(alarm, until)
+				state = snooze(state, alarm, until)
 				snoozedUntil[alarm] = until
 				line += fmt.Sprintf("snooze %s %s", alarm, since(until-now+start))
 			default:

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/data/sql/livedb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/can"
@@ -31,6 +32,8 @@ type ControlDB struct {
 
 	Jobs *JobsDB
 	Logs *LogsDB
+	// Live is what the server keeps only while it runs, like each identity's alarms
+	Live *livedb.DB
 }
 
 func NewControlDB(ctx context.Context, serverConfig *config.ServerConfig) (*ControlDB, error) {
@@ -50,11 +53,17 @@ func NewControlDB(ctx context.Context, serverConfig *config.ServerConfig) (*Cont
 		return nil, err
 	}
 
+	live, err := livedb.NewDB(ctx, serverConfig)
+	if err != nil {
+		return nil, fmt.Errorf("cannot open live db: %w", err)
+	}
+
 	// Create a new control db
 	controlDB := &ControlDB{
 		DB:    rawDB,
 		Jobs:  jobs,
 		Logs:  logs,
+		Live:  live,
 		sites: make(map[string]*SiteDB),
 	}
 
@@ -450,6 +459,10 @@ func (db *ControlDB) Close() error {
 
 	if err := db.Logs.Close(); err != nil {
 		slog.Error("Failed to close logs db", "error", err)
+	}
+
+	if err := db.Live.Close(); err != nil {
+		slog.Error("Failed to close live db", "error", err)
 	}
 
 	return db.SQLiteDB.Close()

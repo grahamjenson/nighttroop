@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/data/sql/livedb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/alarms"
 	"nighttroop.t1d.nz/utils/testutils"
@@ -112,9 +113,10 @@ func TestEachIdentityIsCheckedOnNewReadingsAndPeriodically(t *testing.T) {
 	require.Equal(t, alarms.Checked{IdentityID: on[1], Notifications: notified(alarms.Cleared, alarms.UrgentLow, r.now)}, sent[on[1]])
 
 	// Once its last notification no longer matters, its state is forgotten
+	require.NotEmpty(t, r.kept(), "its last notification still matters")
 	r.now = r.now.Add(10 * time.Minute)
 	require.Empty(t, r.check(true))
-	require.Empty(t, r.checker.states)
+	require.Empty(t, r.kept())
 }
 
 func TestNoDataStartsOnThePeriodicCheck(t *testing.T) {
@@ -158,7 +160,7 @@ func TestSitesWithoutAlarmsAreNotChecked(t *testing.T) {
 	r.reading(40)
 	require.Empty(t, r.check(false))
 	require.Empty(t, r.check(true))
-	require.Empty(t, r.checker.states)
+	require.Empty(t, r.kept())
 }
 
 func TestALowLastsOverEarlierReadings(t *testing.T) {
@@ -210,4 +212,11 @@ func TestASnoozeIsTheIdentitysOwn(t *testing.T) {
 	require.Equal(t, notified(alarms.Repeated, alarms.UrgentLow, r.now), sent[other].Notifications)
 	r.now = r.now.Add(26 * time.Minute)
 	require.Equal(t, notified(alarms.Repeated, alarms.UrgentLow, r.now), r.check(true)[snoozer].Notifications)
+}
+
+// kept are the site's alarms the checker keeps between checks
+func (r *rig) kept() []*livedb.Alarm {
+	rows, err := r.checker.controlDB.Live.Queries.SiteAlarms(context.TODO(), livedb.SiteAlarmsParams{SiteID: r.site})
+	require.NoError(r.t, err)
+	return rows
 }
