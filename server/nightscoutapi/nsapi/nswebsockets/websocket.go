@@ -1,4 +1,4 @@
-package nightscoutapi
+package nswebsockets
 
 import (
 	"context"
@@ -10,6 +10,7 @@ import (
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/events"
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/server/nightscoutapi/nscollections"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/socketio"
@@ -41,6 +42,8 @@ type Websocket struct {
 	config      *config.ServerConfig
 	controlDB   *db.ControlDB
 	collections map[nsutils.Collection]nscollections.CollectionStore
+	// jwtIdentity and tokenIdentity find the identity of a JWT and of an access token, as the Nightscout API does
+	jwtIdentity, tokenIdentity IdentityFinder
 
 	mu      sync.Mutex
 	servers map[string]*socketio.Server              // one per site, so sites share no sessions or rooms
@@ -49,8 +52,12 @@ type Websocket struct {
 	showing map[int64]alarms.Type
 }
 
-func NewWebsocket(controlDB *db.ControlDB, config *config.ServerConfig) *Websocket {
-	return &Websocket{config: config, controlDB: controlDB, collections: AllCollections(), servers: map[string]*socketio.Server{}, storage: map[string]map[string]*storageSubscriber{}, showing: map[int64]alarms.Type{}}
+// IdentityFinder finds the identity a token belongs to, or errors when it belongs to none
+type IdentityFinder func(config *config.ServerConfig, ctx context.Context, token string) (*controldb.SiteIdentity, error)
+
+// NewWebsocket serves the Nightscout API's collections, finding identities as the API does
+func NewWebsocket(controlDB *db.ControlDB, config *config.ServerConfig, collections map[nsutils.Collection]nscollections.CollectionStore, jwtIdentity, tokenIdentity IdentityFinder) *Websocket {
+	return &Websocket{config: config, controlDB: controlDB, collections: collections, jwtIdentity: jwtIdentity, tokenIdentity: tokenIdentity, servers: map[string]*socketio.Server{}, storage: map[string]map[string]*storageSubscriber{}, showing: map[int64]alarms.Type{}}
 }
 
 func (ws *Websocket) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -153,12 +160,12 @@ func (ws *Websocket) authorize(r *http.Request, token, secret string) (context.C
 // identity is the Nightscout identity for a token, a JWT or the token given as the API secret, or nil for none
 func (ws *Websocket) identity(r *http.Request, token, secret string) (context.Context, *nsutils.Identity) {
 	ctx := r.Context()
-	identity, err := jwtIdentity(ws.config, ctx, token)
+	identity, err := ws.jwtIdentity(ws.config, ctx, token)
 	if err != nil {
-		identity, err = legacyTokenIdentity(ws.config, ctx, token)
+		identity, err = ws.tokenIdentity(ws.config, ctx, token)
 	}
 	if err != nil {
-		identity, err = legacyTokenIdentity(ws.config, ctx, secret)
+		identity, err = ws.tokenIdentity(ws.config, ctx, secret)
 	}
 	if err != nil {
 		slog.Info("Websocket authorization failed", "error", err)

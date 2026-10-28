@@ -1,4 +1,4 @@
-package nightscoutapi
+package nswebsockets
 
 import (
 	"cmp"
