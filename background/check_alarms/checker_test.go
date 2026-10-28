@@ -274,7 +274,7 @@ func TestASnoozeDuringACheckIsKept(t *testing.T) {
 	require.Equal(t, []*livedb.Alarm{&kept}, r.kept(), "the snooze is kept, and the alarm is not deleted")
 
 	// The next check of changed sites finds it snoozed while alerting, so stops it alerting for the identity's sockets
-	require.Equal(t, map[int64]alarms.Checked{identity: {IdentityID: identity}}, r.check(false))
+	require.Equal(t, map[int64]alarms.Checked{identity: {IdentityID: identity, WasAlerting: []alarms.Type{alarms.UrgentLow}}}, r.check(false))
 }
 
 // No data stays on over a gap longer than the longest alarm, as the check reads the newest reading however old it is
