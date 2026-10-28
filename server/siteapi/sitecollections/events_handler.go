@@ -1,7 +1,6 @@
 package sitecollections
 
 import (
-	"cmp"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -20,7 +19,7 @@ import (
 )
 
 // CollectionEvents is a collection whose event stream has more than changes to its own rows, e.g. the summary,
-// which is made from many collections' rows, or the alarms, which are an identity's alarm events
+// which is made from many collections' rows
 type CollectionEvents interface {
 	// Watches is whether one of the site's events changes this collection for the identity streaming it
 	Watches(event events.Event, siteContext *httputils.SiteContext) bool
@@ -40,8 +39,7 @@ const (
 
 // EventsHandler streams a collection's changes as server-sent events, each named created, updated or deleted.
 // A change to one of the collection's own rows has its model as JSON, as the API answers it; any other change the
-// collection watches has {}, and is updated when it is not a model's. A page or API client can then update as changes
-// happen, rather than polling.
+// collection watches has {}. A page or API client can then update as changes happen, rather than polling.
 func EventsHandler[R, M any](collection CollectionBase[R, M]) http.HandlerFunc {
 	watches := func(event events.Event, _ *httputils.SiteContext) bool {
 		_, own := event.Model.(*R)
@@ -76,7 +74,9 @@ func EventsHandler[R, M any](collection CollectionBase[R, M]) http.HandlerFunc {
 		// Only the events the collection watches are streamed: the site's others, such as a control identity disabling
 		// it, are not its users'
 		unsubscribe := siteContext.Config.Events.Subscribe(siteContext.SiteID, func(event events.Event) {
-			if !watches(event, siteContext) {
+			// A row an identity owns, as its alarms, is streamed to it alone
+			owned, isOwned := event.Model.(interface{ GetIdentityID() int64 })
+			if !watches(event, siteContext) || (isOwned && owned.GetIdentityID() != siteContext.IdentityModel.ID) {
 				return
 			}
 			select {
@@ -118,7 +118,7 @@ func EventsHandler[R, M any](collection CollectionBase[R, M]) http.HandlerFunc {
 						return
 					}
 				}
-				_, err = fmt.Fprintf(w, "event: %s\ndata: %s\n\n", cmp.Or(event.Action, events.Updated), data)
+				_, err = fmt.Fprintf(w, "event: %s\ndata: %s\n\n", event.Action, data)
 			}
 			if err != nil || stream.Flush() != nil {
 				return

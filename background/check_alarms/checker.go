@@ -20,28 +20,20 @@ import (
 	"nighttroop.t1d.nz/utils/settings"
 )
 
-// maxReadings is how many of the newest readings a check reads, enough to cover the longest alarm, 120 minutes, at a
-// reading a minute from more than one source
-const maxReadings = 500
+// maxReadings is the most readings a check reads, only a cap: a reading every 4 seconds over the longest alarm
+const maxReadings = 2000
 
 type Checker struct {
 	controlDB *db.ControlDB
 	events    *events.SiteBus
 	now       func() time.Time
 
-	// pending are the sites whose readings changed, or that were snoozed, since they were last checked
+	// pending are the sites whose readings changed since they were last checked
 	pendingLock sync.Mutex
 	pending     map[string]bool
-	snoozes     []snooze
 
 	// checkLock lets one check run at a time, as they share the identities' alarms kept in the live DB
 	checkLock sync.Mutex
-}
-
-// snooze is an identity's snooze, kept for the next check
-type snooze struct {
-	siteID string
-	alarms.Snoozed
 }
 
 // SetupCron checks the sites whose readings changed every 5 seconds, and every site with alarms every minute
@@ -58,38 +50,35 @@ func NewChecker(config *config.ServerConfig, controlDB *db.ControlDB) *Checker {
 		controlDB: controlDB, events: config.Events, now: time.Now,
 		pending: map[string]bool{},
 	}
-	// A handler must not block its publisher, so it only notes the site, and any snooze, for the next check
+	// A handler must not block its publisher, so it only notes the site for the next check
 	config.Events.SubscribeAll(func(event events.Event) {
-		_, reading := event.Model.(*sitedb.GlucoseReading)
-		snoozed, isSnooze := event.Attributes.(alarms.Snoozed)
-		if !reading && !(event.Name == events.AlarmSnoozed && isSnooze) {
+		if _, reading := event.Model.(*sitedb.GlucoseReading); !reading {
 			return
 		}
 		checker.pendingLock.Lock()
 		defer checker.pendingLock.Unlock()
 		checker.pending[event.SiteID] = true
-		if isSnooze {
-			checker.snoozes = append(checker.snoozes, snooze{event.SiteID, snoozed})
-		}
 	})
 	return checker
 }
 
-// Check checks the sites whose readings changed and, with all, every site with an alarm turned on or still kept
+// Check checks the sites whose readings changed or whose alerting alarms were snoozed and, with all, every site with
+// an alarm turned on or still kept
 func (c *Checker) Check(ctx context.Context, all bool) error {
 	c.pendingLock.Lock()
-	sites, snoozes := c.pending, c.snoozes
-	c.pending, c.snoozes = map[string]bool{}, nil
+	sites := c.pending
+	c.pending = map[string]bool{}
 	c.pendingLock.Unlock()
 
 	c.checkLock.Lock()
 	defer c.checkLock.Unlock()
 	live := c.controlDB.Live.Queries
-	var errs []error
-	for _, s := range snoozes {
-		for _, t := range s.Types {
-			errs = append(errs, live.SnoozeAlarm(ctx, livedb.SnoozeAlarmParams{SiteID: s.siteID, IdentityID: s.IdentityID, Type: t, Until: s.Until}))
-		}
+	snoozed, err := live.SnoozedAlertingSiteIDs(ctx, livedb.SnoozedAlertingSiteIDsParams{Now: c.now().UnixMilli()})
+	if err != nil {
+		return err
+	}
+	for _, siteID := range snoozed {
+		sites[siteID] = true
 	}
 	if all {
 		withAlarms, err := c.controlDB.Queries.GetSiteIDsWithAlarms(ctx)
@@ -108,6 +97,7 @@ func (c *Checker) Check(ctx context.Context, all bool) error {
 			sites[siteID] = true
 		}
 	}
+	var errs []error
 	for siteID := range sites {
 		errs = append(errs, c.checkSite(ctx, siteID, c.now().UnixMilli()))
 	}
@@ -149,9 +139,17 @@ func (c *Checker) checkSite(ctx context.Context, siteID string, now int64) error
 		return err
 	}
 
-	rows, err := siteDB.Queries.SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{TypeEq: new("sgv"), Limit: maxReadings})
+	// The newest reading, however old, as no data is measured from it, then those back to the longest an alarm can
+	// wait before it, as an alarm lasts by its readings, not by the time now
+	rows, err := siteDB.Queries.SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{TypeEq: new("sgv"), Limit: 1})
 	if err != nil {
 		return err
+	}
+	if len(rows) > 0 {
+		since := rows[0].OccurredAt - settings.MaxAlarmMinutes*time.Minute.Milliseconds()
+		if rows, err = siteDB.Queries.SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{TypeEq: new("sgv"), DateGTE: &since, Limit: maxReadings}); err != nil {
+			return err
+		}
 	}
 	readings := make([]alarms.Reading, len(rows))
 	for i, row := range rows {
@@ -162,19 +160,20 @@ func (c *Checker) checkSite(ctx context.Context, siteID string, now int64) error
 	for identityID, on := range turnedOn {
 		last := kept[identityID]
 		result := alarms.Check(on, last.state(), readings, now)
-		checked := alarms.Checked{IdentityID: identityID, Notifications: result.Notifications, Active: types(result.Active), Alerting: types(result.Alerting)}
-		lastActive, lastAlerting := last.types()
-		if len(checked.Notifications) > 0 || !slices.Equal(checked.Active, lastActive) || !slices.Equal(checked.Alerting, lastAlerting) {
+		checked := alarms.Checked{IdentityID: identityID, Notifications: result.Notifications, Alerting: types(result.Alerting)}
+		if len(checked.Notifications) > 0 || !slices.Equal(checked.Alerting, last.alerting()) {
 			c.events.Publish(siteID, events.Event{Name: events.Alarm, SiteID: siteID, Attributes: checked, StartedAt: time.UnixMilli(now)})
 		}
 		for _, t := range alarms.Types {
 			s, keep := result.State[t]
+			row := &livedb.Alarm{SiteID: siteID, IdentityID: identityID, Type: t, ActiveSince: s.ActiveSince, NotifiedAt: s.NotifiedAt,
+				SnoozedUntil: s.SnoozedUntil, Alerting: slices.Contains(checked.Alerting, t)}
 			if keep {
-				errs = append(errs, live.UpsertAlarm(ctx, livedb.UpsertAlarmParams{SiteID: siteID, IdentityID: identityID, Type: t,
-					ActiveSince: s.ActiveSince, NotifiedAt: s.NotifiedAt, SnoozedUntil: s.SnoozedUntil, Alerting: slices.Contains(checked.Alerting, t)}))
+				errs = append(errs, live.UpsertAlarm(ctx, livedb.UpsertAlarmParams(*row)))
 			} else if last[t] != nil {
-				errs = append(errs, live.DeleteAlarm(ctx, livedb.DeleteAlarmParams{SiteID: siteID, IdentityID: identityID, Type: t}))
+				errs = append(errs, live.DeleteAlarm(ctx, livedb.DeleteAlarmParams{SiteID: siteID, IdentityID: identityID, Type: t, SnoozedUntil: last[t].SnoozedUntil}))
 			}
+			c.publishChange(siteID, last[t], row)
 		}
 	}
 	return errors.Join(errs...)
@@ -192,17 +191,15 @@ func (k keptAlarms) state() alarms.State {
 	return state
 }
 
-// types are the kept alarms that were active and alerting, in the order a check lists them
-func (k keptAlarms) types() (active, alerting []alarms.Type) {
+// alerting are the kept alarms that were alerting, in the order a check lists them
+func (k keptAlarms) alerting() []alarms.Type {
+	var alerting []alarms.Type
 	for _, t := range alarms.Types {
-		if row := k[t]; row != nil && row.ActiveSince != 0 {
-			active = append(active, t)
-			if row.Alerting {
-				alerting = append(alerting, t)
-			}
+		if row := k[t]; row != nil && row.Alerting {
+			alerting = append(alerting, t)
 		}
 	}
-	return active, alerting
+	return alerting
 }
 
 // forget deletes the kept alarms of a site's identities that are not to be checked
@@ -213,10 +210,25 @@ func (c *Checker) forget(ctx context.Context, kept map[int64]keptAlarms, checked
 			continue
 		}
 		for _, row := range rows {
-			errs = append(errs, c.controlDB.Live.Queries.DeleteAlarm(ctx, livedb.DeleteAlarmParams{SiteID: row.SiteID, IdentityID: identityID, Type: row.Type}))
+			errs = append(errs, c.controlDB.Live.Queries.DeleteAlarm(ctx, livedb.DeleteAlarmParams{SiteID: row.SiteID, IdentityID: identityID, Type: row.Type, SnoozedUntil: row.SnoozedUntil}))
+			c.publishChange(row.SiteID, row, &livedb.Alarm{})
 		}
 	}
 	return errors.Join(errs...)
+}
+
+// publishChange publishes the change to an alarm as the alarms collection has it, which has only active alarms: it is
+// created as it becomes active, updated as it starts or stops alerting, and deleted as it stops being active
+func (c *Checker) publishChange(siteID string, last, row *livedb.Alarm) {
+	wasActive, active := last != nil && last.ActiveSince != 0, row.ActiveSince != 0
+	switch {
+	case !wasActive && active:
+		c.events.Publish(siteID, events.ModelChange(siteID, events.Created, row))
+	case wasActive && !active:
+		c.events.Publish(siteID, events.ModelChange(siteID, events.Deleted, last))
+	case active && last.Alerting != row.Alerting:
+		c.events.Publish(siteID, events.ModelChange(siteID, events.Updated, row))
+	}
 }
 
 func types(of []alarms.Alarm) []alarms.Type {

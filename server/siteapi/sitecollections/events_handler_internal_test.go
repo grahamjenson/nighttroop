@@ -149,3 +149,29 @@ func TestEventsHandlerLimits(t *testing.T) {
 	resp, _ = eventStream(t, streams, "site-b", consts.IdentityRoleUser, handler)
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 }
+
+// ownedRow is a row an identity owns, as its alarms are
+type ownedRow struct{ IdentityID int64 }
+
+func (r ownedRow) GetIdentityID() int64 { return r.IdentityID }
+
+type ownedCollection struct{}
+
+func (ownedCollection) GetName() string  { return "alarms" }
+func (ownedCollection) GetRoute() string { return "alarms" }
+func (ownedCollection) ToModel(row *ownedRow, _ *httputils.SiteContext) *ownedRow {
+	return row
+}
+func (ownedCollection) GetRow(context.Context, *siteapiutils.CollectionTx, string, *httputils.SiteContext) (*ownedRow, error) {
+	return nil, nil
+}
+
+func TestEventsHandlerStreamsAnIdentitysOwnRowsToItAlone(t *testing.T) {
+	streams := newStreams(t)
+	bus := streams.bus
+	// The stream's identity has ID 0
+	_, stream := eventStream(t, streams, "site-a", consts.IdentityRoleUser, EventsHandler[ownedRow, ownedRow](ownedCollection{}))
+	bus.Publish("site-a", events.Event{SiteID: "site-a", Action: events.Created, Model: &ownedRow{IdentityID: 7}})
+	bus.Publish("site-a", events.Event{SiteID: "site-a", Action: events.Updated, Model: &ownedRow{IdentityID: 0}})
+	require.Equal(t, "event: updated\ndata: {\"IdentityID\":0}\n", nextEvent(t, stream))
+}

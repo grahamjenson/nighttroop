@@ -2,11 +2,13 @@ package nswebsockets
 
 import (
 	"cmp"
+	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"time"
 
-	"nighttroop.t1d.nz/data/events"
+	"nighttroop.t1d.nz/data/sql/livedb"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/socketio"
 	"nighttroop.t1d.nz/utils/alarms"
@@ -76,7 +78,7 @@ func (ws *Websocket) subscribeToAlarms(socket *socketio.Socket, accessToken, jwt
 }
 
 // snoozeAlarms is Nightscout's ack of a level, group and silence time in milliseconds: it snoozes the identity's
-// alarms in that group up to that level, sent to the alarm checker as an event
+// alarms in that group up to that level, which the alarm checker stops alerting on its next check
 func (ws *Websocket) snoozeAlarms(socket *socketio.Socket, identityID int64, args []json.RawMessage) {
 	var level alarms.Level
 	var group string
@@ -87,14 +89,15 @@ func (ws *Websocket) snoozeAlarms(socket *socketio.Socket, identityID int64, arg
 		}
 	}
 	silence := min(cmp.Or(time.Duration(max(silenceMs, 0))*time.Millisecond, defaultSilence), maxSilence)
-	snoozed := alarms.Snoozed{IdentityID: identityID, Until: time.Now().Add(silence).UnixMilli()}
+	siteID := httputils.GetSiteContext(socket.Request().Context()).SiteID
 	for _, t := range alarms.Types {
 		if t.Level() <= level && alarmGroup(t) == group {
-			snoozed.Types = append(snoozed.Types, t)
+			snooze := livedb.SnoozeAlarmParams{SiteID: siteID, IdentityID: identityID, Type: t, Until: time.Now().Add(silence).UnixMilli()}
+			if err := ws.controlDB.Live.Queries.SnoozeAlarm(context.Background(), snooze); err != nil {
+				slog.Error("cannot snooze alarm", "error", err)
+			}
 		}
 	}
-	siteID := httputils.GetSiteContext(socket.Request().Context()).SiteID
-	ws.config.Events.Publish(siteID, events.Event{Name: events.AlarmSnoozed, SiteID: siteID, Attributes: snoozed, StartedAt: time.Now()})
 }
 
 // alarmNotification is a Nightscout notification, as its /alarm sockets get them
