@@ -1,0 +1,51 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_PATH /
+
+// A reading under the low alarm (72 mg/dL by default) is coloured low and says Low, on its own and in the readings list,
+// as the graph colours it
+CLICK #site--settings-menu
+CLICK #site--data--glucose-button
+ASSERT_STATUS 200
+INPUT #site--glucose--create--reading 3.2
+CLICK #site--glucose--create--submit
+ASSERT_STATUS 201
+CLICK #site--nav--home
+ASSERT_NEW_URL
+ASSERT_PATH /
+ASSERT_TEXT_EQUALS #site--summary--glucose--reading 3.2
+ASSERT_VISIBLE #site--summary--glucose--reading.text-glucose-low
+ASSERT_TEXT_EQUALS #site--summary--glucose--range Low
+ASSERT_VISIBLE #site--summary--readings .text-glucose-low >> text=3.2
+SCREENSHOT summary_low
+
+// One over the high alarm (180 mg/dL by default) is coloured high and says High
+CLICK #site--settings-menu
+CLICK #site--data--glucose-button
+ASSERT_STATUS 200
+INPUT #site--glucose--create--reading 12.5
+CLICK #site--glucose--create--submit
+ASSERT_STATUS 201
+CLICK #site--nav--home
+ASSERT_NEW_URL
+ASSERT_PATH /
+ASSERT_TEXT_EQUALS #site--summary--glucose--reading 12.5
+ASSERT_VISIBLE #site--summary--glucose--reading.text-glucose-high
+ASSERT_TEXT_EQUALS #site--summary--glucose--range High
+SCREENSHOT summary_high
+
+// One between them is coloured in range, with no word beside it
+CLICK #site--settings-menu
+CLICK #site--data--glucose-button
+ASSERT_STATUS 200
+INPUT #site--glucose--create--reading 6.4
+CLICK #site--glucose--create--submit
+ASSERT_STATUS 201
+CLICK #site--nav--home
+ASSERT_NEW_URL
+ASSERT_PATH /
+ASSERT_TEXT_EQUALS #site--summary--glucose--reading 6.4
+ASSERT_VISIBLE #site--summary--glucose--reading.text-glucose-in-range
+ASSERT_NOT_VISIBLE #site--summary--glucose--range
+// The earlier readings keep their colours in the list
+ASSERT_VISIBLE #site--summary--readings .text-glucose-low >> text=3.2
+ASSERT_VISIBLE #site--summary--readings .text-glucose-high >> text=12.5

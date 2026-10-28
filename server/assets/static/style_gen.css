@@ -89,6 +89,9 @@
     --color-blue-500: oklch(62.3% 0.214 259.815);
     --color-blue-700: oklch(48.8% 0.243 264.376);
     --color-indigo-500: oklch(58.5% 0.233 277.117);
+    --color-glucose-low: oklch(57.7% 0.245 27.325);
+    --color-glucose-high: oklch(76.9% 0.188 70.08);
+    --color-glucose-in-range: #10203F;
     --color-green-50: oklch(98.2% 0.018 155.826);
     --color-green-200: oklch(92.5% 0.084 155.995);
     --color-green-500: oklch(72.3% 0.219 149.579);
@@ -317,6 +320,9 @@
   }
   .col-span-2 {
     grid-column: span 2 / span 2;
+  }
+  .col-span-full {
+    grid-column: 1 / -1;
   }
   .container {
     width: 100%;
@@ -1263,6 +1269,15 @@
   }
   .text-destructive {
     color: var(--destructive);
+  }
+  .text-glucose-high {
+    color: var(--color-glucose-high);
+  }
+  .text-glucose-in-range {
+    color: var(--color-glucose-in-range);
+  }
+  .text-glucose-low {
+    color: var(--color-glucose-low);
   }
   .text-gray-400 {
     color: var(--color-gray-400);

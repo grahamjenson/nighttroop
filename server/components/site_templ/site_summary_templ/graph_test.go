@@ -53,7 +53,7 @@ func TestGraph(t *testing.T) {
 		}
 	}
 	option := option(t, &sitemodels.Summary{
-		Since: since, Units: &mmol,
+		Since: since, Units: &mmol, LowAlarm: 3.9, HighAlarm: 10,
 		GlucoseReadings: []*sitemodels.SiteGlucoseReading{{Reading: 20, Units: &mmol}, {Reading: 6, Units: &mmol}, {Reading: 3, Units: &mmol}, {Reading: 12, Units: &mmol}},
 		Minutes:         minutes,
 	}, now)
@@ -74,15 +74,15 @@ func TestGraph(t *testing.T) {
 	require.EqualValues(t, 2, glucoseAxis["min"])
 	require.EqualValues(t, 20, glucoseAxis["max"])
 
-	// Readings are split by the target range, in the summary's units, and each bound is a dashed line
+	// Readings are split by the summary's low and high alarms, in its units, and each is a dashed line
 	tests := []struct {
 		name     string
 		colour   string
 		readings []any
 	}{
-		{"Low", red600, []any{3.0}},
-		{"In range", brandNight, []any{6.0}},
-		{"High", amber500, []any{20.0, 12.0}},
+		{"Low", glucoseLow, []any{3.0}},
+		{"In range", glucoseInRange, []any{6.0}},
+		{"High", glucoseHigh, []any{20.0, 12.0}},
 	}
 	for _, test := range tests {
 		s := series(option, test.name)
@@ -159,7 +159,7 @@ func TestGraphInTheLocationsTime(t *testing.T) {
 	since := time.Date(2026, 9, 26, 12, 0, 0, 0, time.UTC).UnixMilli()
 	now := since + 24*time.Hour.Milliseconds()
 	chart := graph(&sitemodels.Summary{
-		Since: since, Units: &mmol,
+		Since: since, Units: &mmol, LowAlarm: 3.9, HighAlarm: 10,
 		GlucoseReadings: []*sitemodels.SiteGlucoseReading{{Reading: 6, Units: &mmol, OccurredAt: now}},
 	}, now, auckland)
 	chart.Validate()

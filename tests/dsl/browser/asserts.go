@@ -149,17 +149,19 @@ func waitForVisible(locator playwright.Locator) {
 	_ = locator.First().WaitFor(playwright.LocatorWaitForOptions{State: playwright.WaitForSelectorStateVisible, Timeout: playwright.Float(visibleWait)})
 }
 
-// clickableScript scrolls the page, as a user would, to bring the element into the window, but not
-// boxes that scroll inside the page, then checks the element is what a click at its centre would hit
+// clickableScript scrolls the page, as a user would, to bring the element into the window or out from under
+// something fixed to it such as the header, but not boxes that scroll inside the page, then checks the element is
+// what a click at its centre would hit
 const clickableScript = `el => {
-	let r = el.getBoundingClientRect();
-	const x = r.left + r.width / 2, y = r.top + r.height / 2;
-	if (x < 0 || x > innerWidth || y < 0 || y > innerHeight) {
-		window.scrollBy(x - innerWidth / 2, y - innerHeight / 2);
-		r = el.getBoundingClientRect();
-	}
-	const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
-	return hit !== null && (hit === el || el.contains(hit));
+	const hits = () => {
+		const r = el.getBoundingClientRect();
+		const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+		return hit !== null && (hit === el || el.contains(hit));
+	};
+	if (hits()) return true;
+	const r = el.getBoundingClientRect();
+	window.scrollBy(r.left + r.width / 2 - innerWidth / 2, r.top + r.height / 2 - innerHeight / 2);
+	return hits();
 }`
 
 // insideGraphScript checks the element is drawn wholly inside the SVG it is in, which clips anything past its edges

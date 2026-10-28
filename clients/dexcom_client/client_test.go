@@ -54,7 +54,7 @@ func TestFetchEGVsErrorBodyIsBounded(t *testing.T) {
 	require.Less(t, len(err.Error()), 200)
 }
 
-func TestDecodeEGVsRefusesLargeBodies(t *testing.T) {
+func TestFetchEGVsRefusesLargeBodies(t *testing.T) {
 	// A few MB of spaces inside the array inflate well from a small gzip body
 	big := `[{"Value":100}` + strings.Repeat(" ", 3<<20) + `]`
 	var gz bytes.Buffer
@@ -80,11 +80,8 @@ func TestDecodeEGVsRefusesLargeBodies(t *testing.T) {
 				_, _ = w.Write(tt.body)
 			}))
 			defer server.Close()
-			resp, err := http.Get(server.URL)
-			require.NoError(t, err)
-			defer resp.Body.Close()
 
-			egvs, err := decodeEGVs(resp.Body)
+			egvs, err := liveClient(server.URL).FetchEGVs(context.Background(), 60)
 			require.Error(t, err)
 			require.Nil(t, egvs)
 		})
@@ -94,12 +91,12 @@ func TestDecodeEGVsRefusesLargeBodies(t *testing.T) {
 func TestDecodeEGVsRefusesTooManyEGVs(t *testing.T) {
 	egv := `{"WT":"Date(1700000000000)","ST":"Date(1700000000000)","DT":"Date(1700000000000)","Value":100,"Trend":"Flat"}`
 	ok := "[" + strings.Repeat(egv+",", maxEGVs-1) + egv + "]"
-	egvs, err := decodeEGVs(strings.NewReader(ok))
+	egvs, err := decodeEGVs([]byte(ok))
 	require.NoError(t, err)
 	require.Len(t, egvs, maxEGVs)
 
 	tooMany := "[" + strings.Repeat(egv+",", maxEGVs) + egv + "]"
-	egvs, err = decodeEGVs(strings.NewReader(tooMany))
+	egvs, err = decodeEGVs([]byte(tooMany))
 	require.Error(t, err)
 	require.Nil(t, egvs)
 }
