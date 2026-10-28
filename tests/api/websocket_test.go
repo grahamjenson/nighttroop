@@ -3,7 +3,6 @@ package api_test
 import (
 	"context"
 	"encoding/json"
-	"net"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -24,11 +23,6 @@ type websocketClient struct {
 }
 
 func dialWebsocket(t *testing.T, ts *httptest.Server, subdomain string, version int) *websocketClient {
-	// Every host goes to the test server, so the site is chosen by the Host header as in production
-	addr := ts.Listener.Addr().String()
-	httpClient := &http.Client{Transport: &http.Transport{DialContext: func(ctx context.Context, network, _ string) (net.Conn, error) {
-		return (&net.Dialer{}).DialContext(ctx, network, addr)
-	}}}
 	client := socketio.NewClient(version)
 	c := &websocketClient{Client: client, events: map[string]chan json.RawMessage{}}
 	for _, event := range []string{"connected", "dataUpdate", "clients"} {
@@ -46,7 +40,7 @@ func dialWebsocket(t *testing.T, ts *httptest.Server, subdomain string, version 
 			}
 		})
 	}
-	require.NoError(t, client.Open(wsTimeout(t), "http://"+subdomain+".ns.localhost/socket.io/", httpClient))
+	require.NoError(t, client.Open(wsTimeout(t), "http://"+subdomain+".ns.localhost/socket.io/", testutils.HostClient(ts)))
 	t.Cleanup(func() { client.Close() })
 	require.NoError(t, client.Connect(wsTimeout(t), socketio.DefaultNamespace, nil))
 	return c

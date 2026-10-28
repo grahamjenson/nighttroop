@@ -3,7 +3,6 @@ package api_test
 import (
 	"bufio"
 	"context"
-	"net"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -24,11 +23,7 @@ func TestStoreEvents(t *testing.T) {
 	t.Cleanup(ts.Close)
 	subdomain := site.SiteDB.Subdomain
 
-	// Every host goes to the test server, so the site is chosen by the Host header as in production
-	addr := ts.Listener.Addr().String()
-	client := &http.Client{Transport: &http.Transport{DialContext: func(ctx context.Context, network, _ string) (net.Conn, error) {
-		return (&net.Dialer{}).DialContext(ctx, network, addr)
-	}}}
+	client := testutils.HostClient(ts)
 	jwt, _, err := config.Security.GenerateUserJWTToken(subdomain, consts.FIRST_PWD_NAME, string(consts.IdentityRoleDevicePWDPhone))
 	require.NoError(t, err)
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -17,6 +16,7 @@ import (
 	socket "nighttroop.t1d.nz/socketio"
 	"nighttroop.t1d.nz/socketio/engineio"
 	"nighttroop.t1d.nz/tests/dsl/jsonapi"
+	"nighttroop.t1d.nz/utils/testutils"
 )
 
 const (
@@ -152,10 +152,6 @@ func (r *Runner) connect(ctx map[string]any, events []string, step *Step, timeou
 		return err
 	}
 
-	addr := r.Server.Listener.Addr().String()
-	httpClient := &http.Client{Transport: &http.Transport{DialContext: func(ctx context.Context, network, _ string) (net.Conn, error) {
-		return (&net.Dialer{}).DialContext(ctx, network, addr)
-	}}}
 	dialCtx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	r.namespace = socket.DefaultNamespace
@@ -175,7 +171,7 @@ func (r *Runner) connect(ctx map[string]any, events []string, step *Step, timeou
 			}
 		})
 	}
-	if err := client.Open(dialCtx, rawURL, httpClient); err != nil {
+	if err := client.Open(dialCtx, rawURL, testutils.HostClient(r.Server)); err != nil {
 		return err
 	}
 	r.client = client
