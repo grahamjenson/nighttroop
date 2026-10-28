@@ -185,3 +185,29 @@ func TestDisabledIdentitiesAreNotChecked(t *testing.T) {
 	require.Len(t, sent, 2)
 	require.NotContains(t, sent, disabled.ID)
 }
+
+func TestASnoozeIsTheIdentitysOwn(t *testing.T) {
+	r := newRig(t)
+	require.NoError(t, r.control.UpdateSitesSettings(context.TODO(), controldb.UpdateSitesSettingsParams{ID: r.site, AlarmUrgentLowEnabled: new(true)}))
+	identities := r.identities()
+	snoozer, other := identities[0].ID, identities[1].ID
+	r.reading(50)
+	require.Len(t, r.check(false), 3)
+
+	// The snooze, sent as an event as a socket's ack does, is applied on the next check of changed sites
+	r.now = r.now.Add(time.Minute)
+	r.checker.events.Publish(r.site, events.Event{Name: events.AlarmSnoozed, SiteID: r.site,
+		Attributes: alarms.Snoozed{IdentityID: snoozer, Types: []alarms.Type{alarms.UrgentLow}, Until: r.now.Add(30 * time.Minute).UnixMilli()}})
+	sent := r.check(false)
+	require.Equal(t, map[int64]alarms.Checked{snoozer: {IdentityID: snoozer, Active: []alarms.Type{alarms.UrgentLow}}}, sent,
+		"only the snoozer's alarm stops alerting")
+
+	// The others still repeat, and the snoozer's does not until its snooze ends
+	r.now = r.now.Add(4 * time.Minute)
+	sent = r.check(true)
+	require.Len(t, sent, 2)
+	require.NotContains(t, sent, snoozer)
+	require.Equal(t, notified(alarms.Repeated, alarms.UrgentLow, r.now), sent[other].Notifications)
+	r.now = r.now.Add(26 * time.Minute)
+	require.Equal(t, notified(alarms.Repeated, alarms.UrgentLow, r.now), r.check(true)[snoozer].Notifications)
+}

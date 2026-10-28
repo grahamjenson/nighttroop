@@ -2,7 +2,8 @@
 // one of the verbs CONNECT <url>, EMIT <event> (with ACK to wait for its acknowledgement), WAIT <event>,
 // COLLECT <event>, DISCONNECT, an HTTP request (GET <url> and so on) or RUN_BACKGROUND_JOBS.
 // NS is the namespace CONNECT joins (/ by default), which the steps after it use.
-// B is the step's body (CONNECT's auth, EMIT's argument, a request's JSON), T how long it may take (e.g. 5s),
+// B is the step's body (CONNECT's auth, EMIT's argument, a request's JSON), and ARGS a JSON list of EMIT's
+// arguments, for an event that takes more than one, as Nightscout's ack does. T is how long it may take (e.g. 5s),
 // and SET and ASSERT_* work on what the step got as they do in .http files.
 package socketio
 
@@ -25,12 +26,14 @@ type File struct {
 
 // Step is one NAME block
 type Step struct {
-	Name    string
-	Line    int
-	Verb    string // CONNECT, EMIT, WAIT, COLLECT, DISCONNECT, RUN_BACKGROUND_JOBS or an HTTP method
-	Target  string // the URL for CONNECT and HTTP, the event for EMIT, WAIT and COLLECT
-	NS      string // the namespace CONNECT joins
-	Body    *string
+	Name   string
+	Line   int
+	Verb   string // CONNECT, EMIT, WAIT, COLLECT, DISCONNECT, RUN_BACKGROUND_JOBS or an HTTP method
+	Target string // the URL for CONNECT and HTTP, the event for EMIT, WAIT and COLLECT
+	NS     string // the namespace CONNECT joins
+	Body   *string
+	// Args is set when the body is ARGS, a list of EMIT's arguments
+	Args    bool
 	Headers http.Header
 	Ack     bool
 	Timeout time.Duration
@@ -112,8 +115,8 @@ func ParseFile(contents string, path string) (*File, error) {
 				return nil, fail("T %q must be a duration like 5s", second)
 			}
 			current.Timeout = timeout
-		case first == "B":
-			current.Body = &second
+		case first == "B", first == "ARGS":
+			current.Body, current.Args = &second, first == "ARGS"
 			inBody = true
 		case first == "H":
 			key, value, found := strings.Cut(second, ":")
@@ -141,6 +144,9 @@ func ParseFile(contents string, path string) (*File, error) {
 		if step.Ack && step.Verb != "EMIT" {
 			return nil, fmt.Errorf("%s:%d: ACK is only for EMIT", path, step.Line)
 		}
+		if step.Args && step.Verb != "EMIT" {
+			return nil, fmt.Errorf("%s:%d: ARGS is only for EMIT", path, step.Line)
+		}
 		if step.NS != "" && step.Verb != "CONNECT" {
 			return nil, fmt.Errorf("%s:%d: NS is only for CONNECT", path, step.Line)
 		}
@@ -152,5 +158,5 @@ func ParseFile(contents string, path string) (*File, error) {
 func isKeyword(first string) bool {
 	_, isAssert, _ := jsonapi.ParseAssert(first, "", "", 0)
 	return isAssert || slices.Contains(socketVerbs, first) || slices.Contains(httpVerbs, first) ||
-		slices.Contains([]string{"NAME", "RUN_BACKGROUND_JOBS", "ACK", "NS", "T", "B", "H", "SET"}, first)
+		slices.Contains([]string{"NAME", "RUN_BACKGROUND_JOBS", "ACK", "NS", "T", "B", "ARGS", "H", "SET"}, first)
 }

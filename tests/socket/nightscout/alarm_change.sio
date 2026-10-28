@@ -1,0 +1,91 @@
+# Nightscout's clients show one alarm, so when the loudest alerting alarm changes without a new notification, as when
+# an urgent low clears while the low it quieted still alerts, they are cleared and sent the alarm alerting now
+
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME jwtauth
+GET http://{{ site }}/api/v2/authorization/request/token={{ token }}
+ASSERT_STATUS 200
+SET jwt {{ .jwtauth.token }}
+
+# The PWD phone turns on its urgent low, and its low with no minutes to wait
+NAME urgent_low_on
+PATCH http://{{ site }}/api/v3/settings/alarm_urgent_low_enabled
+H Authorization: Bearer {{ jwt }}
+B { "value": true }
+ASSERT_STATUS 200
+
+NAME low_on
+PATCH http://{{ site }}/api/v3/settings/alarm_low_enabled
+H Authorization: Bearer {{ jwt }}
+B { "value": true }
+ASSERT_STATUS 200
+
+NAME low_at_once
+PATCH http://{{ site }}/api/v3/settings/alarm_low_minutes
+H Authorization: Bearer {{ jwt }}
+B { "value": 0 }
+ASSERT_STATUS 200
+
+NAME connect_alarms
+CONNECT http://{{ site }}/socket.io/?EIO=4
+NS /alarm
+T 5s
+
+NAME subscribe_alarms
+EMIT subscribe
+B {"accessToken":"{{ token }}"}
+ACK
+ASSERT_EQUALS true "@success"
+
+# A low starts
+NAME post_low
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [{"type":"sgv","sgv":65,"date":{{ itime 3 }}}]
+ASSERT_STATUS 200
+
+RUN_BACKGROUND_JOBS
+
+NAME low_alarm
+WAIT alarm
+T 5s
+ASSERT_EQUALS "Low warning" "@title"
+
+# Under the urgent low, which quiets the low
+NAME post_urgent_low
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [{"type":"sgv","sgv":50,"date":{{ itime 2 }}}]
+ASSERT_STATUS 200
+
+RUN_BACKGROUND_JOBS
+
+NAME urgent_alarm
+WAIT urgent_alarm
+T 5s
+ASSERT_EQUALS "Urgent LOW" "@title"
+
+# Back over the urgent low but still low: the low notified a minute ago, so is not due, but is shown again
+NAME post_low_again
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [{"type":"sgv","sgv":65,"date":{{ itime 1 }}}]
+ASSERT_STATUS 200
+
+RUN_BACKGROUND_JOBS
+
+NAME urgent_cleared
+WAIT clear_alarm
+T 5s
+ASSERT_EQUALS true "@clear"
+
+NAME low_shown_again
+WAIT alarm
+T 5s
+ASSERT_EQUALS 1 "@level"
+ASSERT_EQUALS "Low warning" "@title"
+
+NAME bye
+DISCONNECT

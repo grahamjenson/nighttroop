@@ -14,6 +14,7 @@ import (
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/socketio"
 	"nighttroop.t1d.nz/socketio/engineio"
+	"nighttroop.t1d.nz/utils/alarms"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -44,10 +45,12 @@ type Websocket struct {
 	mu      sync.Mutex
 	servers map[string]*socketio.Server              // one per site, so sites share no sessions or rooms
 	storage map[string]map[string]*storageSubscriber // each site's /storage subscribers by socket ID
+	// showing is the alarm each identity's /alarm sockets were last sent, the loudest of its alerting alarms
+	showing map[int64]alarms.Type
 }
 
 func NewWebsocket(controlDB *db.ControlDB, config *config.ServerConfig) *Websocket {
-	return &Websocket{config: config, controlDB: controlDB, collections: AllCollections(), servers: map[string]*socketio.Server{}, storage: map[string]map[string]*storageSubscriber{}}
+	return &Websocket{config: config, controlDB: controlDB, collections: AllCollections(), servers: map[string]*socketio.Server{}, storage: map[string]map[string]*storageSubscriber{}, showing: map[int64]alarms.Type{}}
 }
 
 func (ws *Websocket) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -65,11 +68,15 @@ func (ws *Websocket) siteServer(siteID string, create bool) *socketio.Server {
 	main := server.Of(socketio.DefaultNamespace)
 	main.OnConnection(func(socket *socketio.Socket) { ws.onConnect(main, socket) })
 	server.Of("/storage").OnConnection(ws.onStorageConnect)
-	server.Of("/alarm").OnConnection(ws.onAlarmConnect)
+	alarm := server.Of("/alarm")
+	alarm.OnConnection(ws.onAlarmConnect)
 	ws.config.Events.Subscribe(siteID, func(event events.Event) {
-		// Only model changes are sent to the site's sockets
+		// Model changes are sent to the site's sockets, and an identity's alarms to its /alarm sockets
 		if event.Model != nil {
 			ws.broadcastChange(main, event)
+		}
+		if checked, ok := event.Attributes.(alarms.Checked); ok && event.Name == events.Alarm {
+			ws.sendAlarms(alarm, checked)
 		}
 	})
 	ws.servers[siteID] = server

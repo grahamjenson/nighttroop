@@ -27,6 +27,8 @@ const (
 	SyncBackfilled    Name = "sync_backfilled"
 	// Alarm is an identity's alarms after a check that changed them, its Attributes an alarms.Checked
 	Alarm Name = "alarm"
+	// AlarmSnoozed is an identity snoozing some of its alarms, its Attributes an alarms.Snoozed
+	AlarmSnoozed Name = "alarm_snoozed"
 )
 
 // Persisted are the events kept in the logs DB. A model change is not, as the site's DB row is its record.
