@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net/http"
+	"strconv"
+	"time"
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/events"
@@ -125,4 +128,19 @@ func GetSiteIdentity(ctx context.Context, siteID string, identityName string, ro
 	}
 
 	return identity, nil
+}
+
+// RecordAuthClient records the identity authenticating from the request's app and network, for its site's admin to
+// see an identity shared by several
+func RecordAuthClient(r *http.Request, identity *controldb.SiteIdentity) {
+	siteContext := GetSiteContext(r.Context())
+	if identity == nil || siteContext == nil || siteContext.Config == nil || siteContext.Config.RecentClients == nil {
+		return
+	}
+	siteContext.Config.RecentClients.Add(AuthClientKey(identity.SiteID, identity.ID), r.UserAgent(), GetIPFromHTTPContext(r.Context()), time.Now())
+}
+
+// AuthClientKey is an identity's key in the server's recent clients
+func AuthClientKey(siteID string, identityID int64) string {
+	return siteID + "/" + strconv.FormatInt(identityID, 10)
 }

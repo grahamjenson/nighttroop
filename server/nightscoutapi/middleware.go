@@ -39,6 +39,8 @@ func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg *config.ServerConfig)
 			// Last Chance
 			identityModel, err = tryAuthWithLegacyToken(cfg, r)
 			if err == nil {
+				// A JWT is got with a token, so this is where each client authenticates
+				httputils.RecordAuthClient(r, identityModel)
 				ctx = httputils.SetIdentityModelInSiteContext(ctx, identityModel)
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return

@@ -115,6 +115,10 @@ func renderTemplate(input string, ctx map[string]any) (string, error) {
 				}
 				return time.Now().In(location).Format(layout), nil
 			},
+			// replace is s with each old replaced by new, e.g. {{ replace ".localhost" ".ns.localhost" .site_url }}
+			"replace": func(old, new, s string) string {
+				return strings.ReplaceAll(s, old, new)
+			},
 			"jwt": func() string {
 				if v, ok := ctx["jwt"]; ok && v != nil {
 					return ctx["jwt"].(string)

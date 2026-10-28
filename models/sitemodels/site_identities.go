@@ -1,6 +1,7 @@
 package sitemodels
 
 import (
+	"nighttroop.t1d.nz/utils/authclients"
 	"nighttroop.t1d.nz/utils/consts"
 )
 
@@ -16,6 +17,8 @@ type UserIdentity struct {
 	HasTotpSecret   bool   `json:"has_totp_secret"`
 
 	Enabled bool `json:"enabled"`
+	// RecentClients are where it recently authenticated from, newest first, kept in memory only
+	RecentClients []authclients.Client `json:"recent_clients"`
 
 	// Only set when an identity is created: the credentials are shown once and never stored in the clear
 	Password   string  `json:"password,omitempty"`

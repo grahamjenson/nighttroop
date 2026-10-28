@@ -135,8 +135,8 @@ type authorization struct {
 }
 
 // authorize finds the identity for a token, a JWT or the token given as the API secret, and what it may do
-func (ws *Websocket) authorize(ctx context.Context, token, secret string) (context.Context, authorization) {
-	ctx, nsIdentity := ws.identity(ctx, token, secret)
+func (ws *Websocket) authorize(r *http.Request, token, secret string) (context.Context, authorization) {
+	ctx, nsIdentity := ws.identity(r, token, secret)
 	if nsIdentity == nil {
 		return ctx, authorization{}
 	}
@@ -149,7 +149,8 @@ func (ws *Websocket) authorize(ctx context.Context, token, secret string) (conte
 }
 
 // identity is the Nightscout identity for a token, a JWT or the token given as the API secret, or nil for none
-func (ws *Websocket) identity(ctx context.Context, token, secret string) (context.Context, *nsutils.Identity) {
+func (ws *Websocket) identity(r *http.Request, token, secret string) (context.Context, *nsutils.Identity) {
+	ctx := r.Context()
 	identity, err := jwtIdentity(ws.config, ctx, token)
 	if err != nil {
 		identity, err = legacyTokenIdentity(ws.config, ctx, token)
@@ -165,5 +166,6 @@ func (ws *Websocket) identity(ctx context.Context, token, secret string) (contex
 	if err != nil {
 		return ctx, nil
 	}
+	httputils.RecordAuthClient(r, identity)
 	return httputils.SetIdentityModelInSiteContext(ctx, identity), nsIdentity
 }

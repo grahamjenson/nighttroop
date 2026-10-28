@@ -60,7 +60,7 @@ func (ws *Websocket) subscribeToAlarms(socket *socketio.Socket, accessToken, jwt
 	if secret == "null" {
 		secret = ""
 	}
-	ctx, identity := ws.identity(socket.Request().Context(), token, secret)
+	ctx, identity := ws.identity(socket.Request(), token, secret)
 	if identity == nil && token+secret != "" {
 		return map[string]any{"success": false, "message": "Missing or bad accessToken"}, nil
 	}
