@@ -9,10 +9,11 @@ ASSERT_TEXT_VISIBLE No treatments in this time
 ASSERT_TEXT_EQUALS #site--summary--iob –
 SCREENSHOT summary_empty
 
-// Virtual sync fills the last 30 minutes with readings, treatments and device statuses
-CLICK #site--settings-menu
-CLICK #site--settings--sync-button
+// The empty summary links to Sync Settings, where virtual sync fills the last 30 minutes with readings, treatments
+// and device statuses
+CLICK #site--summary--sync-link
 ASSERT_STATUS 200
+ASSERT_PATH /settings/sync
 CLICK #site--settings--virtual-sync--enable
 CLICK #site--settings--virtual-sync--submit
 ASSERT_STATUS 200
