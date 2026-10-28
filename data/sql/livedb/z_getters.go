@@ -77,6 +77,46 @@ func (m *Alarm) SetAlerting(v bool) {
 }
 
 // GetSiteID returns the SiteID value.
+func (m NightscoutCursor) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated NightscoutCursor.
+func (m *NightscoutCursor) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetCollection returns the Collection value.
+func (m NightscoutCursor) GetCollection() string {
+	return m.Collection
+}
+
+// SetCollection sets the Collection value and returns the updated NightscoutCursor.
+func (m *NightscoutCursor) SetCollection(v string) {
+	m.Collection = v
+}
+
+// GetSource returns the Source value.
+func (m NightscoutCursor) GetSource() string {
+	return m.Source
+}
+
+// SetSource sets the Source value and returns the updated NightscoutCursor.
+func (m *NightscoutCursor) SetSource(v string) {
+	m.Source = v
+}
+
+// GetLastModified returns the LastModified value.
+func (m NightscoutCursor) GetLastModified() int64 {
+	return m.LastModified
+}
+
+// SetLastModified sets the LastModified value and returns the updated NightscoutCursor.
+func (m *NightscoutCursor) SetLastModified(v int64) {
+	m.LastModified = v
+}
+
+// GetSiteID returns the SiteID value.
 func (m DeleteAlarmParams) GetSiteID() string {
 	return m.SiteID
 }
@@ -224,5 +264,65 @@ func (m UpsertAlarmParams) GetAlerting() bool {
 // SetAlerting sets the Alerting value and returns the updated UpsertAlarmParams.
 func (m *UpsertAlarmParams) SetAlerting(v bool) {
 	m.Alerting = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m NightscoutCursorsParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated NightscoutCursorsParams.
+func (m *NightscoutCursorsParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetSource returns the Source value.
+func (m NightscoutCursorsParams) GetSource() string {
+	return m.Source
+}
+
+// SetSource sets the Source value and returns the updated NightscoutCursorsParams.
+func (m *NightscoutCursorsParams) SetSource(v string) {
+	m.Source = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m SetNightscoutCursorParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated SetNightscoutCursorParams.
+func (m *SetNightscoutCursorParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetCollection returns the Collection value.
+func (m SetNightscoutCursorParams) GetCollection() string {
+	return m.Collection
+}
+
+// SetCollection sets the Collection value and returns the updated SetNightscoutCursorParams.
+func (m *SetNightscoutCursorParams) SetCollection(v string) {
+	m.Collection = v
+}
+
+// GetSource returns the Source value.
+func (m SetNightscoutCursorParams) GetSource() string {
+	return m.Source
+}
+
+// SetSource sets the Source value and returns the updated SetNightscoutCursorParams.
+func (m *SetNightscoutCursorParams) SetSource(v string) {
+	m.Source = v
+}
+
+// GetLastModified returns the LastModified value.
+func (m SetNightscoutCursorParams) GetLastModified() int64 {
+	return m.LastModified
+}
+
+// SetLastModified sets the LastModified value and returns the updated SetNightscoutCursorParams.
+func (m *SetNightscoutCursorParams) SetLastModified(v int64) {
+	m.LastModified = v
 }
 

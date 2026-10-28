@@ -2,6 +2,8 @@ package sync
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -11,6 +13,7 @@ import (
 	"nighttroop.t1d.nz/clients/nightscout_client"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/data/sql/livedb"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -21,8 +24,12 @@ type nightscoutClient struct {
 	gosync.Mutex
 	url, token string
 	*nightscout_client.Client
-	// lastModified is Nightscout's lastModified for each collection when it was last read; a new client reads them all
-	lastModified map[nsutils.Collection]int64
+}
+
+// source is the Nightscout the client's details are for, as the live DB keeps how far each collection was read from it
+func (c *nightscoutClient) source() string {
+	sum := sha256.Sum256([]byte(c.url + "\x00" + c.token))
+	return hex.EncodeToString(sum[:])
 }
 
 // nightscoutClientFor returns the site's kept client, or a new one when there is none or its URL or token has changed.
@@ -32,7 +39,7 @@ func (b *SyncJobManager) nightscoutClientFor(syncInfo *SyncJobInfo) *nightscoutC
 	defer b.nightscoutClientsLock.Unlock()
 	c, _ := b.nightscoutClients.Get(syncInfo.SiteID)
 	if c == nil || c.url != syncInfo.urlOrUsername || c.token != syncInfo.password {
-		c = &nightscoutClient{url: syncInfo.urlOrUsername, token: syncInfo.password, Client: nightscout_client.NewClient(syncInfo.urlOrUsername, syncInfo.password), lastModified: map[nsutils.Collection]int64{}}
+		c = &nightscoutClient{url: syncInfo.urlOrUsername, token: syncInfo.password, Client: nightscout_client.NewClient(syncInfo.urlOrUsername, syncInfo.password)}
 		b.nightscoutClients.Add(syncInfo.SiteID, c)
 	}
 	return c
@@ -55,16 +62,28 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 	if err != nil {
 		return fmt.Errorf("NightscoutSync Error: %w", err)
 	}
+	live, source := b.controlDB.Live.Queries, nsc.source()
+	cursors, err := live.NightscoutCursors(ctx, livedb.NightscoutCursorsParams{SiteID: syncInfo.SiteID, Source: source})
+	if err != nil {
+		return err
+	}
+	lastRead := map[string]int64{}
+	for _, cursor := range cursors {
+		lastRead[cursor.Collection] = cursor.LastModified
+	}
 
 	for _, c := range nightscoutCollections {
 		modified := lastModified[string(c.collection)]
-		if !changedSince(nsc.lastModified[c.collection], modified) {
+		if !changedSince(lastRead[string(c.collection)], modified) {
 			continue
 		}
 		if err := b.syncNightscoutCollection(ctx, nsc, syncInfo, c.collection, c.limit); err != nil {
 			return err
 		}
-		nsc.lastModified[c.collection] = modified
+		cursor := livedb.SetNightscoutCursorParams{SiteID: syncInfo.SiteID, Collection: string(c.collection), Source: source, LastModified: modified}
+		if err := live.SetNightscoutCursor(ctx, cursor); err != nil {
+			return err
+		}
 	}
 	return nil
 }

@@ -30,6 +30,12 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deleteAlarmStmt, err = db.PrepareContext(ctx, deleteAlarm); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteAlarm: %w", err)
 	}
+	if q.nightscoutCursorsStmt, err = db.PrepareContext(ctx, nightscoutCursors); err != nil {
+		return nil, fmt.Errorf("error preparing query NightscoutCursors: %w", err)
+	}
+	if q.setNightscoutCursorStmt, err = db.PrepareContext(ctx, setNightscoutCursor); err != nil {
+		return nil, fmt.Errorf("error preparing query SetNightscoutCursor: %w", err)
+	}
 	if q.siteAlarmsStmt, err = db.PrepareContext(ctx, siteAlarms); err != nil {
 		return nil, fmt.Errorf("error preparing query SiteAlarms: %w", err)
 	}
@@ -52,6 +58,16 @@ func (q *Queries) Close() error {
 	if q.deleteAlarmStmt != nil {
 		if cerr := q.deleteAlarmStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteAlarmStmt: %w", cerr)
+		}
+	}
+	if q.nightscoutCursorsStmt != nil {
+		if cerr := q.nightscoutCursorsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing nightscoutCursorsStmt: %w", cerr)
+		}
+	}
+	if q.setNightscoutCursorStmt != nil {
+		if cerr := q.setNightscoutCursorStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing setNightscoutCursorStmt: %w", cerr)
 		}
 	}
 	if q.siteAlarmsStmt != nil {
@@ -106,23 +122,27 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db               DBTX
-	tx               *sql.Tx
-	alarmSiteIDsStmt *sql.Stmt
-	deleteAlarmStmt  *sql.Stmt
-	siteAlarmsStmt   *sql.Stmt
-	snoozeAlarmStmt  *sql.Stmt
-	upsertAlarmStmt  *sql.Stmt
+	db                      DBTX
+	tx                      *sql.Tx
+	alarmSiteIDsStmt        *sql.Stmt
+	deleteAlarmStmt         *sql.Stmt
+	nightscoutCursorsStmt   *sql.Stmt
+	setNightscoutCursorStmt *sql.Stmt
+	siteAlarmsStmt          *sql.Stmt
+	snoozeAlarmStmt         *sql.Stmt
+	upsertAlarmStmt         *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:               tx,
-		tx:               tx,
-		alarmSiteIDsStmt: q.alarmSiteIDsStmt,
-		deleteAlarmStmt:  q.deleteAlarmStmt,
-		siteAlarmsStmt:   q.siteAlarmsStmt,
-		snoozeAlarmStmt:  q.snoozeAlarmStmt,
-		upsertAlarmStmt:  q.upsertAlarmStmt,
+		db:                      tx,
+		tx:                      tx,
+		alarmSiteIDsStmt:        q.alarmSiteIDsStmt,
+		deleteAlarmStmt:         q.deleteAlarmStmt,
+		nightscoutCursorsStmt:   q.nightscoutCursorsStmt,
+		setNightscoutCursorStmt: q.setNightscoutCursorStmt,
+		siteAlarmsStmt:          q.siteAlarmsStmt,
+		snoozeAlarmStmt:         q.snoozeAlarmStmt,
+		upsertAlarmStmt:         q.upsertAlarmStmt,
 	}
 }

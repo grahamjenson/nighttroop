@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/clients/nightscout_client"
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/data/sql/livedb"
 	"nighttroop.t1d.nz/data/sql/logsdb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
@@ -50,16 +51,27 @@ func TestNightscoutSyncRemembersWhenCollectionsWereModified(t *testing.T) {
 		c, _ := jobs.nightscoutClients.Get(siteID)
 		return c
 	}
+	// runSync is when Nightscout said each collection was last modified, as the live DB keeps it for the client's details
 	runSync := func() map[nsutils.Collection]int64 {
 		require.NoError(t, jobs.SyncSource(ctx, SyncJobParams{SiteID: siteID, Type: typ}))
-		return client().lastModified
+		cursors, err := controlDB.Live.Queries.NightscoutCursors(ctx, livedb.NightscoutCursorsParams{SiteID: siteID, Source: client().source()})
+		require.NoError(t, err)
+		read := map[nsutils.Collection]int64{}
+		for _, cursor := range cursors {
+			read[nsutils.Collection(cursor.Collection)] = cursor.LastModified
+		}
+		return read
 	}
 
-	// A sync reads entries, treatments and device statuses and its client remembers when Nightscout says each was last modified
+	// A sync reads entries, treatments and device statuses and remembers when Nightscout says each was last modified
 	require.NoError(t, q.CreateSyncSource(ctx, controldb.CreateSyncSourceParams{SiteID: siteID, Type: typ, UrlOrUsernameEnc: enc(nightscout_client.TestValidURL), PasswordEnc: enc("token"), Enabled: true}))
 	require.Equal(t, all(nightscout_client.TestLastModified), runSync())
 
 	// With them unchanged, the next sync still works and keeps the same times
+	require.Equal(t, all(nightscout_client.TestLastModified), runSync())
+
+	// A client dropped from those kept leaves them, so the next sync's new client still knows them
+	jobs.nightscoutClients.Remove(siteID)
 	require.Equal(t, all(nightscout_client.TestLastModified), runSync())
 
 	// New details may be another Nightscout, so their new client reads everything again
@@ -67,6 +79,7 @@ func TestNightscoutSyncRemembersWhenCollectionsWereModified(t *testing.T) {
 	first := client()
 	require.Equal(t, all(nightscout_client.TestLastModified), runSync())
 	require.NotSame(t, first, client())
+	require.NotEqual(t, first.source(), client().source())
 }
 
 func TestNightscoutClientIsKeptBetweenSyncs(t *testing.T) {

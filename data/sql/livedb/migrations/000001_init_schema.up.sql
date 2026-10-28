@@ -15,3 +15,14 @@ CREATE TABLE alarms (
     alerting INTEGER NOT NULL CHECK(alerting IN (0, 1)),
     PRIMARY KEY (site_id, identity_id, type)
 ) STRICT;
+
+-- How far a site's Nightscout sync has read each collection: the lastModified Nightscout gave for it when it was last
+-- read, so a sync does not read it again until it changes. source is a hash of the Nightscout's URL and token, as new
+-- details may be another Nightscout, whose collections are all read again.
+CREATE TABLE nightscout_cursors (
+    site_id TEXT NOT NULL CHECK(length(site_id) <= 32),
+    collection TEXT NOT NULL CHECK(collection IN ('entries', 'treatments', 'devicestatus')),
+    source TEXT NOT NULL CHECK(length(source) = 64),
+    last_modified INTEGER NOT NULL,
+    PRIMARY KEY (site_id, collection)
+) STRICT;

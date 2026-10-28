@@ -17,3 +17,10 @@ type Alarm struct {
 	SnoozedUntil int64
 	Alerting     bool
 }
+
+type NightscoutCursor struct {
+	SiteID       string
+	Collection   string
+	Source       string
+	LastModified int64
+}

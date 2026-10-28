@@ -11,3 +11,11 @@ CREATE TABLE alarms (
     PRIMARY KEY (site_id, identity_id, type)
 ) STRICT;
 
+CREATE TABLE nightscout_cursors (
+    site_id TEXT NOT NULL CHECK(length(site_id) <= 32),
+    collection TEXT NOT NULL CHECK(collection IN ('entries', 'treatments', 'devicestatus')),
+    source TEXT NOT NULL CHECK(length(source) = 64),
+    last_modified INTEGER NOT NULL,
+    PRIMARY KEY (site_id, collection)
+) STRICT;
+
