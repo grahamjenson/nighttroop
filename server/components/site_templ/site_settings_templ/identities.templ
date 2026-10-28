@@ -17,6 +17,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/selectbox"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/server/components/ui/toast"
+	"nighttroop.t1d.nz/utils/authclients"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/display"
 )
@@ -95,6 +96,9 @@ templ buildIdentityTable(id string, identities []*sitemodels.UserIdentity) {
 					Last Write 
 				}
 				@table.Head() {
+					Recent Clients
+				}
+				@table.Head() {
 					<span class="sr-only">Actions</span>
 				}
 			}
@@ -128,8 +132,39 @@ templ IdentityRow(identity *sitemodels.UserIdentity) {
 			<span title={ formatIdentityDate(ctx, identity.LastWriteAt) }>{ display.Ago(identity.LastWriteAt, time.Now()) }</span>
 		}
 		@table.Cell() {
+			@recentClients(identity)
+		}
+		@table.Cell() {
 			@identityActions(identity)
 		}
+	}
+}
+
+// recentClients lists the apps and networks the identity recently authenticated from. A device used by more than one
+// app is probably shared, and so are its settings and alarms, so it is marked.
+templ recentClients(identity *sitemodels.UserIdentity) {
+	{{ id := "site--identities--" + identity.Name + "--clients" }}
+	{{ shared := consts.IdentityRole(identity.Role).GetType() == consts.IdentityTypeDevice && authclients.Shared(identity.RecentClients, time.Now()) }}
+	if len(identity.RecentClients) == 0 {
+		<span id={ id } class="text-sm text-gray-400">None yet</span>
+	} else {
+		<details id={ id } class="max-w-xs text-sm">
+			<summary class={ "cursor-pointer", templ.KV("font-medium text-amber-800", shared) }>
+				if shared {
+					Used by more than one app
+				} else {
+					{ strconv.Itoa(len(identity.RecentClients)) } recent
+				}
+			</summary>
+			if shared {
+				<p class="mt-1 text-xs text-amber-800">Give each device its own identity, so its settings and alarms are its own.</p>
+			}
+			<ul class="mt-1 space-y-1 text-xs text-gray-600">
+				for _, client := range identity.RecentClients {
+					<li><span class="break-all">{ client.UserAgent }</span> · { client.Network } · { display.Ago(&client.LastAt, time.Now()) }</li>
+				}
+			</ul>
+		</details>
 	}
 }
 
@@ -294,11 +329,11 @@ templ createdUserInfo(url string, username string, password string, totpSecret *
 			</div>
 			<!-- Monospace Content Area -->
 			<div class="p-4 font-mono text-sm text-slate-800 space-y-2 select-all bg-white">
-				<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Site:</span><span class="break-all">{ url }</span></div>
+				<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Site:</span><span id="site--identities--created--site" class="break-all">{ url }</span></div>
 				<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Username:</span><span>{ username }</span></div>
 				<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Password:</span><span class="break-all">{ password }</span></div>
 				if nsToken != nil {
-					<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Nightscout Token:</span><span class="break-all">{ *nsToken }</span></div>
+					<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Nightscout Token:</span><span id="site--identities--created--ns-token" class="break-all">{ *nsToken }</span></div>
 				}
 				if totpSecret != nil {
 					<div class="flex">

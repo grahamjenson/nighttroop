@@ -183,6 +183,17 @@ func parseFile(fsys fs.FS, path string) ([]Action, error) {
 			} else {
 				current = &SetCookie{TestPath: path, TestLine: lineNumber, Name: parts[0], Value: parts[1]}
 			}
+		case "USER_AGENT":
+			// USER_AGENT sends the pages' requests with a User-Agent, as another app would, until one with none
+			flush()
+			current = &UserAgent{TestPath: path, TestLine: lineNumber, Value: second}
+		case "SAVE_TEXT":
+			flush()
+			parts := strings.SplitN(second, " ", 2)
+			if len(parts) != 2 {
+				return nil, fmt.Errorf("%s:%d: expected a locator and a key", path, lineNumber)
+			}
+			current = &SaveText{TestPath: path, TestLine: lineNumber, Locator: parts[0], Key: parts[1]}
 		case "CLEAR_COOKIE":
 			flush()
 

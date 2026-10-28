@@ -137,6 +137,7 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 			config.Security.SetUserLoginCookie(w, tokenString, expiresAt)
 
 			slog.Info("User logged in", "device", identity.Name, "role", identity.Role)
+			httputils.RecordAuthClient(r, identity)
 			w.Header().Set("HX-Redirect", "/")
 			w.WriteHeader(http.StatusOK)
 		}
@@ -205,6 +206,7 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config *config.ServerConfig) http.Ha
 		config.Security.SetUserLoginCookie(w, tokenString, expiresAt)
 
 		slog.Info("User logged in", "identity", identity.Name, "role", identity.Role)
+		httputils.RecordAuthClient(r, identity)
 
 		// Just render the dashboard HTMX here
 

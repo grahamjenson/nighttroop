@@ -1088,6 +1088,7 @@ func IdentityFromDB(source *controldb.SiteIdentity, context *httputils.SiteConte
 		sitemodelsUserIdentity.CurrentIdentity = IsCurrentIdentity((*source).ID, context)
 		sitemodelsUserIdentity.HasTotpSecret = HasTotpSecret((*source).TotpSecretEnc)
 		sitemodelsUserIdentity.Enabled = (*source).Enabled
+		sitemodelsUserIdentity.RecentClients = RecentClients((*source).ID, context)
 		pSitemodelsUserIdentity = &sitemodelsUserIdentity
 	}
 	return pSitemodelsUserIdentity
