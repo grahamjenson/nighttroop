@@ -1,6 +1,7 @@
 package site_settings_templ
 
 import (
+	"context"
 	"strings"
 
 	"nighttroop.t1d.nz/models/sitemodels"
@@ -8,6 +9,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/toast"
+	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/settings"
 )
 
@@ -33,7 +35,14 @@ type settingField struct {
 	Name    string
 	Label   string
 	Options []string
+	// Section is the heading shown above the field, starting a section of the page
+	Section string
+	// Glucose is shown and typed in the settings' units, which its label says
+	Glucose bool
 }
+
+// onOff are the options of an alarm, turned on or off
+var onOff = []string{"true", "false"}
 
 // settingFields are the settings the page shows, in order; one without options is typed in
 var settingFields = []settingField{
@@ -43,21 +52,42 @@ var settingFields = []settingField{
 	{Name: "date_format", Label: "Date Format", Options: settings.DateFormats},
 	{Name: "time_format", Label: "Time Format", Options: settings.TimeFormats},
 	{Name: "week_start_day", Label: "Week Starts On", Options: settings.WeekStartDays},
+	{Name: "alarm_urgent_low_enabled", Label: "Urgent Low Alarm", Options: onOff, Section: "Alarms"},
+	{Name: "alarm_urgent_low", Label: "Urgent Low Under", Glucose: true},
+	{Name: "alarm_low_enabled", Label: "Low Alarm", Options: onOff},
+	{Name: "alarm_low", Label: "Low Under", Glucose: true},
+	{Name: "alarm_low_minutes", Label: "Low For Minutes"},
+	{Name: "alarm_high_enabled", Label: "High Alarm", Options: onOff},
+	{Name: "alarm_high", Label: "High Over", Glucose: true},
+	{Name: "alarm_high_minutes", Label: "High For Minutes"},
+	{Name: "alarm_urgent_high_enabled", Label: "Urgent High Alarm", Options: onOff},
+	{Name: "alarm_urgent_high", Label: "Urgent High Over", Glucose: true},
+	{Name: "alarm_no_data_enabled", Label: "No Data Alarm", Options: onOff},
+	{Name: "alarm_no_data_minutes", Label: "No Data For Minutes"},
 }
 
-// optionLabel is how a setting's option reads, the week's days capitalised as names are, its value unchanged
+// fieldLabel is a setting's label, with the units of one that is a glucose
+func fieldLabel(ctx context.Context, field settingField) string {
+	if units := httputils.GetSiteContext(ctx).GetSettings().GetUnits(); field.Glucose && units != nil {
+		return field.Label + " (" + string(*units) + ")"
+	}
+	return field.Label
+}
+
+// optionLabel is how a setting's option reads, the week's days capitalised as names are and an alarm On or Off,
+// its value unchanged
 func optionLabel(field settingField, option string) string {
-	if field.Name == "week_start_day" && option != "" {
+	switch {
+	case field.Name == "week_start_day" && option != "":
 		return strings.ToUpper(option[:1]) + option[1:]
+	case strings.HasSuffix(field.Name, "_enabled") && option != "":
+		return map[string]string{"true": "On", "false": "Off"}[option]
 	}
 	return option
 }
 
 func (c settingsColumn) value(name string) *string {
-	return map[string]*string{
-		"units": c.Model.Units, "timezone": c.Model.Timezone, "language": c.Model.Language,
-		"date_format": c.Model.DateFormat, "time_format": c.Model.TimeFormat, "week_start_day": c.Model.WeekStartDay,
-	}[name]
+	return *c.Model.Fields()[name]
 }
 
 // settingsColumns are the site's settings for an admin, then the signed in identity's own
@@ -101,7 +131,10 @@ templ SettingsPage(site *sitemodels.Settings, yours *sitemodels.Settings) {
 				<span class="text-sm font-semibold">{ column.Title }</span>
 			}
 			for _, field := range settingFields {
-				<span class="text-sm font-medium">{ field.Label }</span>
+				if field.Section != "" {
+					<h2 class="col-span-full mt-2 border-t border-gray-200 pt-4 text-sm font-semibold text-brand-night">{ field.Section }</h2>
+				}
+				<span class="text-sm font-medium">{ fieldLabel(ctx, field) }</span>
 				for _, column := range columns {
 					@settingControl(column, field)
 				}
@@ -125,7 +158,7 @@ templ SettingsPage(site *sitemodels.Settings, yours *sitemodels.Settings) {
 // settingControl is one setting in one column, a select or a text input, belonging to the column's form
 templ settingControl(column settingsColumn, field settingField) {
 	{{ value, placeholder := column.value(field.Name), column.Inherited + " (" + optionLabel(field, column.Model.Inherited[field.Name]) + ")" }}
-	{{ label := field.Label + " (" + column.Title + ")" }}
+	{{ label := fieldLabel(ctx, field) + " (" + column.Title + ")" }}
 	if field.Options != nil {
 		<select id={ column.IDPrefix + field.Name } name={ field.Name } form={ column.FormID } aria-label={ label } class="h-9 w-full rounded-md border border-gray-200 bg-white px-3 text-sm">
 			<option value="" selected?={ value == nil }>{ placeholder }</option>

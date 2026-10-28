@@ -3,12 +3,16 @@ package sitesettings
 import (
 	"context"
 	"fmt"
+	"math"
+	"slices"
+	"strconv"
 
 	"nighttroop.t1d.nz/utils/apiutils"
 
 	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/consts"
@@ -23,7 +27,21 @@ type SettingsCollection struct {
 }
 
 // settingNames are the settings the pages show so far, in order
-var settingNames = []string{"units", "timezone", "language", "date_format", "time_format", "week_start_day"}
+var settingNames = []string{"units", "timezone", "language", "date_format", "time_format", "week_start_day",
+	"alarm_urgent_low_enabled", "alarm_urgent_low", "alarm_low_enabled", "alarm_low", "alarm_low_minutes",
+	"alarm_high_enabled", "alarm_high", "alarm_high_minutes", "alarm_urgent_high_enabled", "alarm_urgent_high",
+	"alarm_no_data_enabled", "alarm_no_data_minutes"}
+
+// glucoseSettings are kept in mg/dL, and shown and typed in the settings' units
+var glucoseSettings = []string{"alarm_urgent_low", "alarm_low", "alarm_high", "alarm_urgent_high"}
+
+// showSetting is a setting's value as the page shows it, a glucose in the settings' units
+func showSetting(setting *settings.SettingAnyType, units *consts.Units) string {
+	if mgdl, ok := setting.Value.(int64); ok && slices.Contains(glucoseSettings, setting.Identifier) {
+		return site_data_templ.FormatGlucose(units.FromMGDL(float64(mgdl)), units)
+	}
+	return fmt.Sprint(setting.Value)
+}
 
 // ////
 // Shared
@@ -58,15 +76,18 @@ func (s *SettingsCollection) GetRow(ctx context.Context, collectionTx *siteapiut
 	if s.Site && siteContext.IdentityModel.Role != consts.IdentityRoleAdmin {
 		return nil, apiutils.ErrForbidden
 	}
-	combined := siteContext.GetSettings()
-	model := sitemodels.SettingsFromMap(s.level(siteContext))
-	model.Inherited = map[string]string{}
+	combined, units := siteContext.GetSettings(), siteContext.GetSettings().GetUnits()
+	model := &sitemodels.Settings{Inherited: map[string]string{}}
+	fields := model.Fields()
 	for _, name := range settingNames {
+		if setting := s.level(siteContext).GetSettingAnyTypeByName(name); setting != nil {
+			*fields[name] = new(showSetting(setting, units))
+		}
 		inherited := combined.DefaultSettingsMap.GetSettingAnyTypeByName(name)
 		if site := combined.SiteSettingsMap.GetSettingAnyTypeByName(name); !s.Site && site != nil {
 			inherited = site
 		}
-		model.Inherited[name] = fmt.Sprint(inherited.Value)
+		model.Inherited[name] = showSetting(inherited, units)
 	}
 
 	// An admin's settings page shows the site's settings beside their own
@@ -101,17 +122,22 @@ func (s *SettingsCollection) UpdateRow(ctx context.Context, collectionTx *siteap
 	if s.Site {
 		subject = ptr("site")
 	}
-	sent := map[string]*string{
-		"units": model.Units, "timezone": model.Timezone, "language": model.Language,
-		"date_format": model.DateFormat, "time_format": model.TimeFormat, "week_start_day": model.WeekStartDay,
-	}
+	sent, units := model.Fields(), siteContext.GetSettings().GetUnits()
 	for _, name := range settingNames {
-		if sent[name] == nil {
+		if *sent[name] == nil {
 			continue
 		}
 		var value any
-		if *sent[name] != "" {
-			value = *sent[name]
+		if typed := **sent[name]; typed != "" {
+			value = typed
+		}
+		// A glucose is typed in the units it was shown in, and kept as whole mg/dL
+		if typed, ok := value.(string); ok && slices.Contains(glucoseSettings, name) {
+			glucose, err := strconv.ParseFloat(typed, 64)
+			if err != nil {
+				return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("%s must be a number", name))
+			}
+			value = int64(math.Round(units.ToMGDL(glucose)))
 		}
 		if err := level.SetSettingByName(name, value, nil, subject); err != nil {
 			return nil, apiutils.ErrBadBodyWithHint(err.Error())

@@ -1,0 +1,64 @@
+INCLUDE steps/new_site_admin.steps
+
+// The settings page has the alarms, each off by default, with the defaults' glucose in the settings' units
+CLICK #site--settings-menu
+CLICK #site--settings--settings-button
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Alarms
+ASSERT_TEXT_VISIBLE Urgent Low Under (mmol/L)
+ASSERT_TEXT_EQUALS #site--settings--site--alarm_urgent_low_enabled>option[value=""] Default (Off)
+ASSERT_VISIBLE #site--settings--site--alarm_urgent_low[placeholder="Default (3.1)"]
+ASSERT_VISIBLE #site--settings--site--alarm_low_minutes[placeholder="Default (5)"]
+SCREENSHOT alarm_settings
+
+// The site turns on its urgent low at 3.5 mmol/L
+INPUT #site--settings--site--alarm_urgent_low_enabled true
+INPUT #site--settings--site--alarm_urgent_low 3.5
+CLICK #site--settings--site--save
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Settings Saved
+
+// It is saved, and the admin's own alarms follow the site's
+// Opened afresh, at the top of the page without the saved toasts
+GOTO /settings
+ASSERT_STATUS 200
+ASSERT_TEXT_EQUALS #site--settings--site--alarm_urgent_low_enabled>option[selected] On
+ASSERT_VISIBLE #site--settings--site--alarm_urgent_low[value="3.5"]
+ASSERT_TEXT_EQUALS #site--settings--identity--alarm_urgent_low_enabled>option[value=""] Site setting (On)
+ASSERT_VISIBLE #site--settings--identity--alarm_urgent_low[placeholder="Site setting (3.5)"]
+SCREENSHOT alarm_settings_saved
+
+// In mg/dL the same urgent low reads as the 63 mg/dL it is kept as
+INPUT #site--settings--identity--units mg/dL
+CLICK #site--settings--identity--save
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Settings Saved
+// Opened afresh, at the top of the page without the saved toasts
+GOTO /settings
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Urgent Low Under (mg/dL)
+ASSERT_VISIBLE #site--settings--site--alarm_urgent_low[value="63"]
+
+// The admin turns the urgent low off just for themselves, and a low on, for 10 minutes under 80 mg/dL
+INPUT #site--settings--identity--alarm_urgent_low_enabled false
+INPUT #site--settings--identity--alarm_low_enabled true
+INPUT #site--settings--identity--alarm_low 80
+INPUT #site--settings--identity--alarm_low_minutes 10
+CLICK #site--settings--identity--save
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Settings Saved
+// Opened afresh, at the top of the page without the saved toasts
+GOTO /settings
+ASSERT_STATUS 200
+ASSERT_TEXT_EQUALS #site--settings--identity--alarm_urgent_low_enabled>option[selected] Off
+ASSERT_TEXT_EQUALS #site--settings--site--alarm_urgent_low_enabled>option[selected] On
+ASSERT_TEXT_EQUALS #site--settings--identity--alarm_low_enabled>option[selected] On
+ASSERT_VISIBLE #site--settings--identity--alarm_low[value="80"]
+ASSERT_VISIBLE #site--settings--identity--alarm_low_minutes[value="10"]
+SCREENSHOT alarm_settings_identity
+
+// A glucose that is not a number is refused
+INPUT #site--settings--identity--alarm_low low
+CLICK #site--settings--identity--save
+ASSERT_STATUS 400
+ASSERT_VISIBLE #toaster [data-tui-toast][data-variant="error"]:has-text("alarm_low must be a number")
