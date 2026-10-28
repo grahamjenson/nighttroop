@@ -125,23 +125,51 @@ func alarmGroup(t alarms.Type) string {
 }
 
 // sendAlarms sends an identity's checked alarms to its /alarm sockets as Nightscout does: an alarm, or urgent_alarm
-// when urgent, for each that starts or repeats, and clear_alarm once none is alerting
-func sendAlarms(namespace *socketio.Namespace, checked alarms.Checked) {
+// when urgent, for each that starts or repeats, and clear_alarm once none is alerting. Nightscout's clients show one
+// alarm, so when the loudest alerting one changes without notifying, as when an urgent alarm clears or is snoozed
+// while the one it quieted still alerts, they are cleared and sent the one alerting now.
+func (ws *Websocket) sendAlarms(namespace *socketio.Namespace, checked alarms.Checked) {
 	room := alarmRoom(checked.IdentityID)
-	for _, notification := range checked.Notifications {
-		if notification.Kind == alarms.Cleared {
-			continue
+	var loudest alarms.Type
+	for _, t := range checked.Alerting {
+		if loudest == "" || t.Level() > loudest.Level() {
+			loudest = t
 		}
-		event := "alarm"
-		if notification.Type.Level() == alarms.Urgent {
-			event = "urgent_alarm"
-		}
-		title := alarmTitles[notification.Type]
-		namespace.EmitTo(room, event, alarmNotification{Level: notification.Type.Level(), Title: title[0], Message: title[1],
-			Group: alarmGroup(notification.Type), Timestamp: notification.At})
 	}
-	if len(checked.Alerting) == 0 {
+	ws.mu.Lock()
+	showing := ws.showing[checked.IdentityID]
+	ws.showing[checked.IdentityID] = loudest
+	if loudest == "" {
+		delete(ws.showing, checked.IdentityID)
+	}
+	ws.mu.Unlock()
+
+	sounded := false
+	for _, notification := range checked.Notifications {
+		if notification.Kind != alarms.Cleared {
+			sendAlarm(namespace, room, notification.Type, notification.At)
+			sounded = true
+		}
+	}
+	clear := func() {
 		namespace.EmitTo(room, "clear_alarm", alarmNotification{Title: "All Clear", Message: "No alarm is sounding",
 			Group: "default", Timestamp: time.Now().UnixMilli(), Clear: true})
 	}
+	switch {
+	case loudest == "":
+		clear()
+	case !sounded && loudest != showing:
+		clear()
+		sendAlarm(namespace, room, loudest, time.Now().UnixMilli())
+	}
+}
+
+// sendAlarm sends one alarm to a room's /alarm sockets: an alarm, or urgent_alarm when urgent
+func sendAlarm(namespace *socketio.Namespace, room string, t alarms.Type, at int64) {
+	event := "alarm"
+	if t.Level() == alarms.Urgent {
+		event = "urgent_alarm"
+	}
+	title := alarmTitles[t]
+	namespace.EmitTo(room, event, alarmNotification{Level: t.Level(), Title: title[0], Message: title[1], Group: alarmGroup(t), Timestamp: at})
 }
