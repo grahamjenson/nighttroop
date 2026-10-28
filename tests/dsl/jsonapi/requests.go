@@ -45,6 +45,38 @@ type Request struct {
 	RunBackgroundJobs bool
 }
 
+// Run runs the file's requests in order against handler, each seeing the values the ones before it SET in ctx,
+// and calls runBackgroundJobs for each RUN_BACKGROUND_JOBS. Each request and its response are printed.
+func (f *RequestFile) Run(t *testing.T, handler http.Handler, ctx map[string]any, runBackgroundJobs func()) {
+	t.Helper()
+	for _, request := range f.Requests {
+		if request.RunBackgroundJobs {
+			fmt.Println("=============== RUN_BACKGROUND_JOBS ================")
+			runBackgroundJobs()
+			continue
+		}
+
+		fmt.Printf("\n=============== %s  ================\n\n", request.Name)
+		request.PrintRequest()
+		var err error
+		if ctx, err = request.ExecuteRequest(t, handler, ctx); err != nil {
+			t.Fatalf("failed to execute request: %v, method: %s, url: %s", err, request.Method, request.URL)
+		}
+
+		fmt.Printf("\nSTATUS CODE: %d\n", ctx[request.Name+"_status"])
+		var buf bytes.Buffer
+		encoder := json.NewEncoder(&buf)
+		encoder.SetEscapeHTML(false)
+		encoder.SetIndent("", "  ")
+		if err := encoder.Encode(ctx[request.Name]); err != nil {
+			fmt.Printf("RESPONSE: %s and failed to format response: %v\n", ctx[request.Name], err)
+		} else {
+			fmt.Printf("RESPONSE:\n%s", buf.String())
+		}
+		fmt.Println("===============================")
+	}
+}
+
 func (r *Request) ToFlatString() string {
 	return fmt.Sprintf("NAME %s METHOD %s URL %s", r.Name, r.Method, r.URL)
 }
