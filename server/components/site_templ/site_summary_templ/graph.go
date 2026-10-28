@@ -9,6 +9,7 @@ import (
 	"github.com/go-echarts/go-echarts/v2/opts"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/css"
+	"nighttroop.t1d.nz/utils/consts"
 )
 
 const (
@@ -33,6 +34,17 @@ var (
 	gray200    = css.Colour("gray-200")
 	gray700    = css.Colour("gray-700")
 )
+
+// glucoseRange is a reading in units below the range, "Low", above it, "High", or in it, ""
+func glucoseRange(reading float64, units *consts.Units) string {
+	switch {
+	case reading < units.FromMGDL(rangeLowMgdl):
+		return "Low"
+	case reading > units.FromMGDL(rangeTopMgdl):
+		return "High"
+	}
+	return ""
+}
 
 // graph is the summary as a go-echarts chart on one time axis: glucose dots over the targets in force each minute,
 // shaded, insulin as triangles pointing down and carbs as triangles pointing up under it, and the basal rate in force
@@ -87,10 +99,10 @@ func graph(s *sitemodels.Summary, now int64, location *time.Location) *charts.Sc
 	var lows, highs, inRange []opts.ScatterData
 	for _, r := range s.GlucoseReadings {
 		point := opts.ScatterData{Value: []any{at(r.OccurredAt), r.Reading}}
-		switch {
-		case r.Reading < low:
+		switch glucoseRange(r.Reading, s.Units) {
+		case "Low":
 			lows = append(lows, point)
-		case r.Reading > top:
+		case "High":
 			highs = append(highs, point)
 		default:
 			inRange = append(inRange, point)

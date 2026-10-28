@@ -1246,6 +1246,9 @@
   .whitespace-pre-wrap {
     white-space: pre-wrap;
   }
+  .text-amber-500 {
+    color: var(--color-amber-500);
+  }
   .text-amber-800 {
     color: var(--color-amber-800);
   }
