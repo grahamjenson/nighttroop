@@ -37,7 +37,9 @@ func (eventsCollection) GetRow(context.Context, *siteapiutils.CollectionTx, stri
 // watchAllCollection is an eventsCollection that also watches every other change, as the summary does
 type watchAllCollection struct{ eventsCollection }
 
-func (watchAllCollection) Watches(event events.Event, _ *httputils.SiteContext) bool { return event.Model != nil }
+func (watchAllCollection) Watches(event events.Event, _ *httputils.SiteContext) bool {
+	return event.Model != nil
+}
 
 // eventStream serves the handler for the site as role, and reads its stream
 func eventStream(t *testing.T, bus *events.SiteBus, site string, role consts.IdentityRole, handler http.HandlerFunc) (*http.Response, *bufio.Reader) {
