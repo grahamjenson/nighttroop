@@ -34,14 +34,21 @@ type Checker struct {
 	events    *events.SiteBus
 	now       func() time.Time
 
-	// pending are the sites whose readings changed since they were last checked
+	// pending are the sites whose readings changed, or that were snoozed, since they were last checked
 	pendingLock sync.Mutex
 	pending     map[string]bool
+	snoozes     []snooze
 
 	// checkLock lets one check run at a time, as they share the identities' states and what they last sent
 	checkLock sync.Mutex
 	states    map[key]alarms.State
 	sent      map[key]alarms.Checked
+}
+
+// snooze is an identity's snooze, kept for the next check
+type snooze struct {
+	siteID string
+	alarms.Snoozed
 }
 
 // SetupCron checks the sites whose readings changed every 5 seconds, and every site with alarms every minute
@@ -58,12 +65,18 @@ func NewChecker(config *config.ServerConfig, controlDB *db.ControlDB) *Checker {
 		controlDB: controlDB, events: config.Events, now: time.Now,
 		pending: map[string]bool{}, states: map[key]alarms.State{}, sent: map[key]alarms.Checked{},
 	}
-	// A handler must not block its publisher, so it only notes the site
+	// A handler must not block its publisher, so it only notes the site, and any snooze, for the next check
 	config.Events.SubscribeAll(func(event events.Event) {
-		if _, ok := event.Model.(*sitedb.GlucoseReading); ok {
-			checker.pendingLock.Lock()
-			checker.pending[event.SiteID] = true
-			checker.pendingLock.Unlock()
+		_, reading := event.Model.(*sitedb.GlucoseReading)
+		snoozed, isSnooze := event.Attributes.(alarms.Snoozed)
+		if !reading && !(event.Name == events.AlarmSnoozed && isSnooze) {
+			return
+		}
+		checker.pendingLock.Lock()
+		defer checker.pendingLock.Unlock()
+		checker.pending[event.SiteID] = true
+		if isSnooze {
+			checker.snoozes = append(checker.snoozes, snooze{event.SiteID, snoozed})
 		}
 	})
 	return checker
@@ -72,12 +85,18 @@ func NewChecker(config *config.ServerConfig, controlDB *db.ControlDB) *Checker {
 // Check checks the sites whose readings changed and, with all, every site with an alarm turned on or still kept
 func (c *Checker) Check(ctx context.Context, all bool) error {
 	c.pendingLock.Lock()
-	sites := c.pending
-	c.pending = map[string]bool{}
+	sites, snoozes := c.pending, c.snoozes
+	c.pending, c.snoozes = map[string]bool{}, nil
 	c.pendingLock.Unlock()
 
 	c.checkLock.Lock()
 	defer c.checkLock.Unlock()
+	for _, s := range snoozes {
+		k := key{s.siteID, s.IdentityID}
+		for _, t := range s.Types {
+			c.states[k] = c.states[k].Snooze(t, s.Until)
+		}
+	}
 	if all {
 		withAlarms, err := c.controlDB.Queries.GetSiteIDsWithAlarms(ctx)
 		if err != nil {

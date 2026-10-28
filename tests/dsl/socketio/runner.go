@@ -221,6 +221,13 @@ func (r *Runner) body(step *Step, ctx map[string]any) ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
+	if step.Args {
+		var args []any
+		if err := json.Unmarshal([]byte(rendered), &args); err != nil {
+			return nil, fmt.Errorf("ARGS is not a JSON list: %w", err)
+		}
+		return args, nil
+	}
 	var arg any
 	if err := json.Unmarshal([]byte(rendered), &arg); err != nil {
 		return nil, fmt.Errorf("B is not valid JSON: %w", err)

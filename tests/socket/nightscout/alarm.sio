@@ -5,6 +5,7 @@ NAME create_new_site
 POST http://localhost/site
 ASSERT_STATUS 200
 SET token {{ .create_new_site.pwd_nstoken }}
+SET read_token {{ .create_new_site.read_only_nstoken }}
 SET site {{ .create_new_site.site_subdomain }}.ns.localhost
 
 NAME connect_web
@@ -58,4 +59,84 @@ ASSERT_EQUALS true "@success"
 ASSERT_EQUALS "Subscribed for alarms" "@message"
 
 NAME bye_native
+DISCONNECT
+
+# A socket gets its own identity's alarms: the PWD phone turns on its urgent low, and a reading under it starts
+NAME jwtauth
+GET http://{{ site }}/api/v2/authorization/request/token={{ token }}
+ASSERT_STATUS 200
+SET jwt {{ .jwtauth.token }}
+
+NAME urgent_low_on
+PATCH http://{{ site }}/api/v3/settings/alarm_urgent_low_enabled
+H Authorization: Bearer {{ jwt }}
+B { "value": true }
+ASSERT_STATUS 200
+
+NAME connect_alarms
+CONNECT http://{{ site }}/socket.io/?EIO=4
+NS /alarm
+T 5s
+
+NAME subscribe_alarms
+EMIT subscribe
+B {"accessToken":"{{ token }}"}
+ACK
+ASSERT_EQUALS true "@success"
+
+NAME post_low
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [{"type":"sgv","sgv":50,"date":{{ itime 0 }}}]
+ASSERT_STATUS 200
+
+RUN_BACKGROUND_JOBS
+
+NAME urgent_alarm
+WAIT urgent_alarm
+T 5s
+ASSERT_EQUALS 2 "@level"
+ASSERT_EQUALS "Urgent LOW" "@title"
+ASSERT_EQUALS "default" "@group"
+
+# An ack, as Nightscout's of a level, group and silence time, snoozes it, which clears it
+NAME ack
+EMIT ack
+ARGS [2, "default", 1800000]
+
+RUN_BACKGROUND_JOBS
+
+NAME cleared
+WAIT clear_alarm
+T 5s
+ASSERT_EQUALS true "@clear"
+
+NAME bye_alarms
+DISCONNECT
+
+# Another identity's socket gets none of the PWD phone's alarms, such as the clear of turning it off
+NAME connect_read_only
+CONNECT http://{{ site }}/socket.io/?EIO=4
+NS /alarm
+T 5s
+
+NAME subscribe_read_only
+EMIT subscribe
+B {"accessToken":"{{ read_token }}"}
+ACK
+ASSERT_EQUALS true "@success"
+
+NAME urgent_low_off
+PATCH http://{{ site }}/api/v3/settings/alarm_urgent_low_enabled
+H Authorization: Bearer {{ jwt }}
+B { "value": false }
+ASSERT_STATUS 200
+
+RUN_BACKGROUND_JOBS
+
+NAME read_only_gets_nothing
+COLLECT clear_alarm
+T 500ms
+ASSERT_LENGTH 0 "@"
+
+NAME bye_read_only
 DISCONNECT

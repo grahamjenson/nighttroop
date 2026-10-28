@@ -14,6 +14,7 @@ import (
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/socketio"
 	"nighttroop.t1d.nz/socketio/engineio"
+	"nighttroop.t1d.nz/utils/alarms"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -65,11 +66,15 @@ func (ws *Websocket) siteServer(siteID string, create bool) *socketio.Server {
 	main := server.Of(socketio.DefaultNamespace)
 	main.OnConnection(func(socket *socketio.Socket) { ws.onConnect(main, socket) })
 	server.Of("/storage").OnConnection(ws.onStorageConnect)
-	server.Of("/alarm").OnConnection(ws.onAlarmConnect)
+	alarm := server.Of("/alarm")
+	alarm.OnConnection(ws.onAlarmConnect)
 	ws.config.Events.Subscribe(siteID, func(event events.Event) {
-		// Only model changes are sent to the site's sockets
+		// Model changes are sent to the site's sockets, and an identity's alarms to its /alarm sockets
 		if event.Model != nil {
 			ws.broadcastChange(main, event)
+		}
+		if checked, ok := event.Attributes.(alarms.Checked); ok && event.Name == events.Alarm {
+			sendAlarms(alarm, checked)
 		}
 	})
 	ws.servers[siteID] = server

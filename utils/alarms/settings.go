@@ -44,3 +44,11 @@ type Checked struct {
 	Active        []Type
 	Alerting      []Type
 }
+
+// Snoozed is an identity's snooze of some kinds of alarm until a time in milliseconds, which the checker applies
+// when it is sent as an alarm_snoozed event
+type Snoozed struct {
+	IdentityID int64
+	Types      []Type
+	Until      int64
+}

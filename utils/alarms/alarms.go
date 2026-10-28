@@ -36,6 +36,22 @@ const (
 // Types are every kind of alarm, each louder one before the one it quiets, the order results list them in
 var Types = []Type{UrgentLow, Low, UrgentHigh, High, NoData}
 
+// Level is how urgent an alarm is, numbered as Nightscout's are
+type Level int
+
+const (
+	Warn   Level = 1
+	Urgent Level = 2
+)
+
+// Level is Urgent for the urgent low and high, and Warn for the others
+func (t Type) Level() Level {
+	if t == UrgentLow || t == UrgentHigh {
+		return Urgent
+	}
+	return Warn
+}
+
 const minute = int64(60_000)
 
 // UrgentLowAlarm is active while the newest reading is under Mgdl, and alerts every 5 minutes
