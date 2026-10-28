@@ -8,6 +8,9 @@ type Summary struct {
 	// Since is when the summary starts, in milliseconds
 	Since int64         `json:"since"`
 	Units *consts.Units `json:"units"`
+	// LowAlarm and HighAlarm are the alarm settings' low and high, in Units: a reading below or above is out of range
+	LowAlarm  float64 `json:"low_alarm"`
+	HighAlarm float64 `json:"high_alarm"`
 
 	GlucoseReadings []*SiteGlucoseReading `json:"glucose_readings"`
 	InsulinDoses    []*SiteInsulinDose    `json:"insulin_doses"`

@@ -27,8 +27,9 @@ func arrow(direction *string) string {
 	return directionArrows[*direction]
 }
 
-// rangeColours colour a reading red below the range and amber above it, as the graph colours its dots
-var rangeColours = map[string]string{"Low": "text-red-600", "High": "text-amber-500", "": "text-brand-night"}
+// rangeColours colour a reading below the low alarm, above the high alarm and between them with the theme's glucose
+// colours, as the graph colours its dots
+var rangeColours = map[string]string{"Low": "text-glucose-low", "High": "text-glucose-high", "": "text-glucose-in-range"}
 
 // value shows an optional number with its unit, or a dash when it is not set
 func value(v *float64, unit string) string {
@@ -171,7 +172,7 @@ templ summaryContent(summary *sitemodels.Summary) {
 			@treatmentsTable(treatments(summary))
 		}
 		@section("Glucose Readings") {
-			@readingsTable(summary.GlucoseReadings)
+			@readingsTable(summary)
 		}
 	</div>
 	<section id="site--summary--devices" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -185,7 +186,7 @@ templ glucoseHero(summary *sitemodels.Summary) {
 	<div id="site--summary--glucose" class="flex flex-wrap items-end justify-between gap-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
 		if len(summary.GlucoseReadings) > 0 {
 			{{ latest := summary.GlucoseReadings[0] }}
-			{{ outOfRange := glucoseRange(latest.Reading, latest.Units) }}
+			{{ outOfRange := glucoseRange(summary, latest.Reading) }}
 			<div>
 				<div class="text-sm font-semibold uppercase tracking-wide text-gray-500">Glucose</div>
 				<div class="flex items-baseline gap-2">
@@ -282,7 +283,8 @@ templ treatmentsTable(list []treatment) {
 	}
 }
 
-templ readingsTable(readings []*sitemodels.SiteGlucoseReading) {
+templ readingsTable(summary *sitemodels.Summary) {
+	{{ readings := summary.GlucoseReadings }}
 	@table.Table(table.Props{ID: "site--summary--readings"}) {
 		@table.Body() {
 			if len(readings) == 0 {
@@ -294,7 +296,7 @@ templ readingsTable(readings []*sitemodels.SiteGlucoseReading) {
 						<span class="whitespace-nowrap" title={ site_data_templ.FormatDate(ctx, r.OccurredAt) }>{ display.TimeAgo(r.OccurredAt, time.Now()) }</span>
 					}
 					@table.Cell() {
-						<span class={ "font-medium tabular-nums", rangeColours[glucoseRange(r.Reading, r.Units)] }>{ site_data_templ.FormatGlucose(r.Reading, r.Units) }</span> { arrow(r.Direction) }
+						<span class={ "font-medium tabular-nums", rangeColours[glucoseRange(summary, r.Reading)] }>{ site_data_templ.FormatGlucose(r.Reading, r.Units) }</span> { arrow(r.Direction) }
 					}
 					@table.Cell() {
 						<span class="text-gray-500">{ orDash(r.CreatedByDeviceName) }</span>
