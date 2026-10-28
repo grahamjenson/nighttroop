@@ -254,19 +254,25 @@ func TestASnoozeDuringACheckIsKept(t *testing.T) {
 	r := newRig(t)
 	live := r.checker.controlDB.Live.Queries
 	identity := r.identities()[0].ID
-	at := r.now.UnixMilli()
-	require.NoError(t, live.UpsertAlarm(context.TODO(), livedb.UpsertAlarmParams{SiteID: r.site, IdentityID: identity, Type: alarms.Low, ActiveSince: at, NotifiedAt: at, Alerting: true}))
+	require.NoError(t, r.control.UpdateSiteIdentitySettings(context.TODO(), controldb.UpdateSiteIdentitySettingsParams{ID: identity, SiteID: r.site, AlarmUrgentLowEnabled: new(true)}))
+	r.reading(50)
+	require.Len(t, r.check(false), 1)
+	started := r.kept()[0]
 
-	// A snooze lands after a check read the alarm, before it writes what it found from the alarm unsnoozed
+	// A snooze lands after a check read the alarm, before it writes what it found from the alarm unsnoozed: that it
+	// still alerts, as it sends
+	r.now = r.now.Add(time.Minute)
 	until := r.now.Add(30 * time.Minute).UnixMilli()
-	r.snooze(identity, alarms.Low, r.now.Add(30*time.Minute))
-	sites, err := live.SnoozedAlertingSiteIDs(context.TODO(), livedb.SnoozedAlertingSiteIDsParams{Now: at})
-	require.NoError(t, err)
-	require.Equal(t, []string{r.site}, sites, "a snoozed alarm still alerting has its site checked next")
-	require.NoError(t, live.UpsertAlarm(context.TODO(), livedb.UpsertAlarmParams{SiteID: r.site, IdentityID: identity, Type: alarms.Low, ActiveSince: at, NotifiedAt: at + 1, Alerting: true}))
-	require.NoError(t, live.DeleteAlarm(context.TODO(), livedb.DeleteAlarmParams{SiteID: r.site, IdentityID: identity, Type: alarms.Low}))
-	require.Equal(t, []*livedb.Alarm{{SiteID: r.site, IdentityID: identity, Type: alarms.Low, ActiveSince: at, NotifiedAt: at + 1, SnoozedUntil: until}}, r.kept(),
-		"the snooze is kept, so the alarm is neither alerting nor deleted")
+	r.snooze(identity, alarms.UrgentLow, r.now.Add(30*time.Minute))
+	stale := livedb.UpsertAlarmParams(*started)
+	require.NoError(t, live.UpsertAlarm(context.TODO(), stale))
+	require.NoError(t, live.DeleteAlarm(context.TODO(), livedb.DeleteAlarmParams{SiteID: r.site, IdentityID: identity, Type: alarms.UrgentLow}))
+	kept := *started
+	kept.SnoozedUntil = until
+	require.Equal(t, []*livedb.Alarm{&kept}, r.kept(), "the snooze is kept, and the alarm is not deleted")
+
+	// The next check of changed sites finds it snoozed while alerting, so stops it alerting for the identity's sockets
+	require.Equal(t, map[int64]alarms.Checked{identity: {IdentityID: identity}}, r.check(false))
 }
 
 // No data stays on over a gap longer than the longest alarm, as the check reads the newest reading however old it is

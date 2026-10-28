@@ -4,14 +4,15 @@
 
 -- name: UpsertAlarm :exec
 -- Keeps a check's state of an alarm, from the snooze it read. Only SnoozeAlarm changes a snooze, so one made during
--- the check is kept, and it is not alerting until it is checked again.
+-- the check is kept, and the alarm stays alerting, as the check sent it, so the next check finds it snoozed while
+-- alerting and stops it.
 INSERT INTO alarms (site_id, identity_id, type, active_since, notified_at, snoozed_until, alerting)
 VALUES (sqlc.arg('SiteID'), sqlc.arg('IdentityID'), sqlc.arg('Type'), sqlc.arg('ActiveSince'), sqlc.arg('NotifiedAt'),
     sqlc.arg('SnoozedUntil'), sqlc.arg('Alerting'))
 ON CONFLICT (site_id, identity_id, type) DO UPDATE SET
     active_since = excluded.active_since,
     notified_at = excluded.notified_at,
-    alerting = excluded.alerting AND alarms.snoozed_until = excluded.snoozed_until;
+    alerting = excluded.alerting;
 
 -- name: SnoozeAlarm :exec
 -- Snoozes an identity's alarm until a time, whether it is kept or not, so the snooze also covers it starting again
