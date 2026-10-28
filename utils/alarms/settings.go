@@ -37,18 +37,9 @@ func resolve[T any](m *settings.CombinedSettingsMap, get func(settings.SettingMa
 }
 
 // Checked is what a check found for an identity, which the checker sends as an alarm event when it notifies or the
-// identity's active or alerting alarms change
+// identity's alerting alarms change
 type Checked struct {
 	IdentityID    int64
 	Notifications []Notification
-	Active        []Type
 	Alerting      []Type
-}
-
-// Snoozed is an identity's snooze of some kinds of alarm until a time in milliseconds, which the checker applies
-// when it is sent as an alarm_snoozed event
-type Snoozed struct {
-	IdentityID int64
-	Types      []Type
-	Until      int64
 }

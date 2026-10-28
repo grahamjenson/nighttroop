@@ -146,6 +146,66 @@ func (m *DeleteAlarmParams) SetType(v alarms.Type) {
 	m.Type = v
 }
 
+// GetSnoozedUntil returns the SnoozedUntil value.
+func (m DeleteAlarmParams) GetSnoozedUntil() int64 {
+	return m.SnoozedUntil
+}
+
+// SetSnoozedUntil sets the SnoozedUntil value and returns the updated DeleteAlarmParams.
+func (m *DeleteAlarmParams) SetSnoozedUntil(v int64) {
+	m.SnoozedUntil = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m GetIdentityAlarmParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated GetIdentityAlarmParams.
+func (m *GetIdentityAlarmParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetIdentityID returns the IdentityID value.
+func (m GetIdentityAlarmParams) GetIdentityID() int64 {
+	return m.IdentityID
+}
+
+// SetIdentityID sets the IdentityID value and returns the updated GetIdentityAlarmParams.
+func (m *GetIdentityAlarmParams) SetIdentityID(v int64) {
+	m.IdentityID = v
+}
+
+// GetType returns the Type value.
+func (m GetIdentityAlarmParams) GetType() alarms.Type {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated GetIdentityAlarmParams.
+func (m *GetIdentityAlarmParams) SetType(v alarms.Type) {
+	m.Type = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m IdentityAlarmsParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated IdentityAlarmsParams.
+func (m *IdentityAlarmsParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetIdentityID returns the IdentityID value.
+func (m IdentityAlarmsParams) GetIdentityID() int64 {
+	return m.IdentityID
+}
+
+// SetIdentityID sets the IdentityID value and returns the updated IdentityAlarmsParams.
+func (m *IdentityAlarmsParams) SetIdentityID(v int64) {
+	m.IdentityID = v
+}
+
 // GetSiteID returns the SiteID value.
 func (m SiteAlarmsParams) GetSiteID() string {
 	return m.SiteID
@@ -194,6 +254,16 @@ func (m SnoozeAlarmParams) GetUntil() int64 {
 // SetUntil sets the Until value and returns the updated SnoozeAlarmParams.
 func (m *SnoozeAlarmParams) SetUntil(v int64) {
 	m.Until = v
+}
+
+// GetNow returns the Now value.
+func (m SnoozedAlertingSiteIDsParams) GetNow() int64 {
+	return m.Now
+}
+
+// SetNow sets the Now value and returns the updated SnoozedAlertingSiteIDsParams.
+func (m *SnoozedAlertingSiteIDsParams) SetNow(v int64) {
+	m.Now = v
 }
 
 // GetSiteID returns the SiteID value.

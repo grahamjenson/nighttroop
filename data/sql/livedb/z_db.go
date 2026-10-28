@@ -30,6 +30,12 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deleteAlarmStmt, err = db.PrepareContext(ctx, deleteAlarm); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteAlarm: %w", err)
 	}
+	if q.getIdentityAlarmStmt, err = db.PrepareContext(ctx, getIdentityAlarm); err != nil {
+		return nil, fmt.Errorf("error preparing query GetIdentityAlarm: %w", err)
+	}
+	if q.identityAlarmsStmt, err = db.PrepareContext(ctx, identityAlarms); err != nil {
+		return nil, fmt.Errorf("error preparing query IdentityAlarms: %w", err)
+	}
 	if q.nightscoutCursorsStmt, err = db.PrepareContext(ctx, nightscoutCursors); err != nil {
 		return nil, fmt.Errorf("error preparing query NightscoutCursors: %w", err)
 	}
@@ -41,6 +47,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.snoozeAlarmStmt, err = db.PrepareContext(ctx, snoozeAlarm); err != nil {
 		return nil, fmt.Errorf("error preparing query SnoozeAlarm: %w", err)
+	}
+	if q.snoozedAlertingSiteIDsStmt, err = db.PrepareContext(ctx, snoozedAlertingSiteIDs); err != nil {
+		return nil, fmt.Errorf("error preparing query SnoozedAlertingSiteIDs: %w", err)
 	}
 	if q.upsertAlarmStmt, err = db.PrepareContext(ctx, upsertAlarm); err != nil {
 		return nil, fmt.Errorf("error preparing query UpsertAlarm: %w", err)
@@ -58,6 +67,16 @@ func (q *Queries) Close() error {
 	if q.deleteAlarmStmt != nil {
 		if cerr := q.deleteAlarmStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteAlarmStmt: %w", cerr)
+		}
+	}
+	if q.getIdentityAlarmStmt != nil {
+		if cerr := q.getIdentityAlarmStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getIdentityAlarmStmt: %w", cerr)
+		}
+	}
+	if q.identityAlarmsStmt != nil {
+		if cerr := q.identityAlarmsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing identityAlarmsStmt: %w", cerr)
 		}
 	}
 	if q.nightscoutCursorsStmt != nil {
@@ -78,6 +97,11 @@ func (q *Queries) Close() error {
 	if q.snoozeAlarmStmt != nil {
 		if cerr := q.snoozeAlarmStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing snoozeAlarmStmt: %w", cerr)
+		}
+	}
+	if q.snoozedAlertingSiteIDsStmt != nil {
+		if cerr := q.snoozedAlertingSiteIDsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing snoozedAlertingSiteIDsStmt: %w", cerr)
 		}
 	}
 	if q.upsertAlarmStmt != nil {
@@ -122,27 +146,33 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db                      DBTX
-	tx                      *sql.Tx
-	alarmSiteIDsStmt        *sql.Stmt
-	deleteAlarmStmt         *sql.Stmt
-	nightscoutCursorsStmt   *sql.Stmt
-	setNightscoutCursorStmt *sql.Stmt
-	siteAlarmsStmt          *sql.Stmt
-	snoozeAlarmStmt         *sql.Stmt
-	upsertAlarmStmt         *sql.Stmt
+	db                         DBTX
+	tx                         *sql.Tx
+	alarmSiteIDsStmt           *sql.Stmt
+	deleteAlarmStmt            *sql.Stmt
+	getIdentityAlarmStmt       *sql.Stmt
+	identityAlarmsStmt         *sql.Stmt
+	nightscoutCursorsStmt      *sql.Stmt
+	setNightscoutCursorStmt    *sql.Stmt
+	siteAlarmsStmt             *sql.Stmt
+	snoozeAlarmStmt            *sql.Stmt
+	snoozedAlertingSiteIDsStmt *sql.Stmt
+	upsertAlarmStmt            *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                      tx,
-		tx:                      tx,
-		alarmSiteIDsStmt:        q.alarmSiteIDsStmt,
-		deleteAlarmStmt:         q.deleteAlarmStmt,
-		nightscoutCursorsStmt:   q.nightscoutCursorsStmt,
-		setNightscoutCursorStmt: q.setNightscoutCursorStmt,
-		siteAlarmsStmt:          q.siteAlarmsStmt,
-		snoozeAlarmStmt:         q.snoozeAlarmStmt,
-		upsertAlarmStmt:         q.upsertAlarmStmt,
+		db:                         tx,
+		tx:                         tx,
+		alarmSiteIDsStmt:           q.alarmSiteIDsStmt,
+		deleteAlarmStmt:            q.deleteAlarmStmt,
+		getIdentityAlarmStmt:       q.getIdentityAlarmStmt,
+		identityAlarmsStmt:         q.identityAlarmsStmt,
+		nightscoutCursorsStmt:      q.nightscoutCursorsStmt,
+		setNightscoutCursorStmt:    q.setNightscoutCursorStmt,
+		siteAlarmsStmt:             q.siteAlarmsStmt,
+		snoozeAlarmStmt:            q.snoozeAlarmStmt,
+		snoozedAlertingSiteIDsStmt: q.snoozedAlertingSiteIDsStmt,
+		upsertAlarmStmt:            q.upsertAlarmStmt,
 	}
 }

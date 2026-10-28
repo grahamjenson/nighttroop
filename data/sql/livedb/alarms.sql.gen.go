@@ -41,20 +41,98 @@ func (q *Queries) AlarmSiteIDs(ctx context.Context) ([]string, error) {
 const deleteAlarm = `-- name: DeleteAlarm :exec
 
 DELETE FROM alarms WHERE site_id = ?1 AND identity_id = ?2 AND type = ?3
+AND snoozed_until = ?4
 `
 
 type DeleteAlarmParams struct {
-	SiteID     string
-	IdentityID int64
-	Type       alarms.Type
+	SiteID       string
+	IdentityID   int64
+	Type         alarms.Type
+	SnoozedUntil int64
 }
 
 // -----
 // DELETE
 // ------
+// Forgets an alarm, unless it was snoozed since its check read the snooze it has
 func (q *Queries) DeleteAlarm(ctx context.Context, arg DeleteAlarmParams) error {
-	_, err := q.exec(ctx, q.deleteAlarmStmt, deleteAlarm, arg.SiteID, arg.IdentityID, arg.Type)
+	_, err := q.exec(ctx, q.deleteAlarmStmt, deleteAlarm,
+		arg.SiteID,
+		arg.IdentityID,
+		arg.Type,
+		arg.SnoozedUntil,
+	)
 	return err
+}
+
+const getIdentityAlarm = `-- name: GetIdentityAlarm :one
+SELECT site_id, identity_id, type, active_since, notified_at, snoozed_until, alerting FROM alarms
+WHERE site_id = ?1 AND identity_id = ?2 AND type = ?3 AND active_since != 0
+`
+
+type GetIdentityAlarmParams struct {
+	SiteID     string
+	IdentityID int64
+	Type       alarms.Type
+}
+
+// One of an identity's active alarms
+func (q *Queries) GetIdentityAlarm(ctx context.Context, arg GetIdentityAlarmParams) (*Alarm, error) {
+	row := q.queryRow(ctx, q.getIdentityAlarmStmt, getIdentityAlarm, arg.SiteID, arg.IdentityID, arg.Type)
+	var i Alarm
+	err := row.Scan(
+		&i.SiteID,
+		&i.IdentityID,
+		&i.Type,
+		&i.ActiveSince,
+		&i.NotifiedAt,
+		&i.SnoozedUntil,
+		&i.Alerting,
+	)
+	return &i, err
+}
+
+const identityAlarms = `-- name: IdentityAlarms :many
+SELECT site_id, identity_id, type, active_since, notified_at, snoozed_until, alerting FROM alarms
+WHERE site_id = ?1 AND identity_id = ?2 AND active_since != 0
+ORDER BY CASE type WHEN 'urgent_low' THEN 0 WHEN 'low' THEN 1 WHEN 'urgent_high' THEN 2 WHEN 'high' THEN 3 ELSE 4 END
+`
+
+type IdentityAlarmsParams struct {
+	SiteID     string
+	IdentityID int64
+}
+
+// An identity's active alarms, the most urgent first, as alarms.Types lists them
+func (q *Queries) IdentityAlarms(ctx context.Context, arg IdentityAlarmsParams) ([]*Alarm, error) {
+	rows, err := q.query(ctx, q.identityAlarmsStmt, identityAlarms, arg.SiteID, arg.IdentityID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*Alarm
+	for rows.Next() {
+		var i Alarm
+		if err := rows.Scan(
+			&i.SiteID,
+			&i.IdentityID,
+			&i.Type,
+			&i.ActiveSince,
+			&i.NotifiedAt,
+			&i.SnoozedUntil,
+			&i.Alerting,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const siteAlarms = `-- name: SiteAlarms :many
@@ -124,15 +202,47 @@ func (q *Queries) SnoozeAlarm(ctx context.Context, arg SnoozeAlarmParams) error 
 	return err
 }
 
+const snoozedAlertingSiteIDs = `-- name: SnoozedAlertingSiteIDs :many
+SELECT DISTINCT site_id FROM alarms WHERE alerting = 1 AND snoozed_until > ?1
+`
+
+type SnoozedAlertingSiteIDsParams struct {
+	Now int64
+}
+
+// The sites with an alarm snoozed since it was checked, which a check stops alerting
+func (q *Queries) SnoozedAlertingSiteIDs(ctx context.Context, arg SnoozedAlertingSiteIDsParams) ([]string, error) {
+	rows, err := q.query(ctx, q.snoozedAlertingSiteIDsStmt, snoozedAlertingSiteIDs, arg.Now)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var site_id string
+		if err := rows.Scan(&site_id); err != nil {
+			return nil, err
+		}
+		items = append(items, site_id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const upsertAlarm = `-- name: UpsertAlarm :exec
 
 INSERT INTO alarms (site_id, identity_id, type, active_since, notified_at, snoozed_until, alerting)
-VALUES (?, ?, ?, ?, ?, ?, ?)
+VALUES (?1, ?2, ?3, ?4, ?5,
+    ?6, ?7)
 ON CONFLICT (site_id, identity_id, type) DO UPDATE SET
     active_since = excluded.active_since,
     notified_at = excluded.notified_at,
-    snoozed_until = excluded.snoozed_until,
-    alerting = excluded.alerting
+    alerting = excluded.alerting AND alarms.snoozed_until = excluded.snoozed_until
 `
 
 type UpsertAlarmParams struct {
@@ -148,6 +258,8 @@ type UpsertAlarmParams struct {
 // -----
 // CREATE
 // ------
+// Keeps a check's state of an alarm, from the snooze it read. Only SnoozeAlarm changes a snooze, so one made during
+// the check is kept, and it is not alerting until it is checked again.
 func (q *Queries) UpsertAlarm(ctx context.Context, arg UpsertAlarmParams) error {
 	_, err := q.exec(ctx, q.upsertAlarmStmt, upsertAlarm,
 		arg.SiteID,

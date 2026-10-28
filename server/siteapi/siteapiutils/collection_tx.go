@@ -6,6 +6,7 @@ import (
 
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/data/sql/livedb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -48,6 +49,11 @@ func (t *CollectionTx) Site() (*sitedb.Queries, error) {
 		t.siteTx = tx
 	}
 	return t.siteContext.SiteDB.Queries.WithTx(t.siteTx), nil
+}
+
+// Live is the live DB's queries, which are not in the transaction, so a rollback does not undo them
+func (t *CollectionTx) Live() *livedb.Queries {
+	return t.siteContext.ControlDB.Live.Queries
 }
 
 // Finish commits on success, otherwise rolls back
