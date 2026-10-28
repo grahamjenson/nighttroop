@@ -13,14 +13,8 @@ import (
 // Read returns a single document from an API v3 collection.
 func Read(store nsutils.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		collection, _, err := nsutils.GetCollectionAndEnsurePermission(r, nsutils.CollectionActionRead)
-		if err != nil {
-			nsutils.WriteError(w, err)
-			return
-		}
-		identifier := chi.URLParam(r, "identifier")
-		if err := nsutils.ValidateIdentifierIsntBad(identifier); err != nil {
-			nsutils.WriteError(w, err)
+		collection, _, identifier, ok := nsutils.ReadCollectionAndIdentifier(w, r, nsutils.CollectionActionRead)
+		if !ok {
 			return
 		}
 
@@ -88,19 +82,13 @@ func Create(store nsutils.Store) http.HandlerFunc {
 // Remove soft-deletes or permanently deletes an API v3 document.
 func Remove(store nsutils.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		collection, _, err := nsutils.GetCollectionAndEnsurePermission(r, nsutils.CollectionActionDelete)
-		if err != nil {
-			nsutils.WriteError(w, err)
+		collection, _, identifier, ok := nsutils.ReadCollectionAndIdentifier(w, r, nsutils.CollectionActionDelete)
+		if !ok {
 			return
 		}
 
 		permanent := r.URL.Query().Get("permanent") == "true"
-		identifier := chi.URLParam(r, "identifier")
-		if err := nsutils.ValidateIdentifierIsntBad(identifier); err != nil {
-			nsutils.WriteError(w, err)
-			return
-		}
-		err = store.Delete(r.Context(), collection, identifier, permanent)
+		err := store.Delete(r.Context(), collection, identifier, permanent)
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return
@@ -141,22 +129,14 @@ func History(store nsutils.Store) http.HandlerFunc {
 // Replace will replace (delete, then insert) if it exists, or create it if it doesnt
 func Replace(store nsutils.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		collection, identity, err := nsutils.GetCollectionAndEnsurePermission(r, nsutils.CollectionActionUpdate)
-		if err != nil {
-			nsutils.WriteError(w, err)
+		collection, identity, identifier, ok := nsutils.ReadCollectionAndIdentifier(w, r, nsutils.CollectionActionUpdate)
+		if !ok {
 			return
 		}
 		canCreate := nsutils.CollectionActionHasPermission(collection, identity, nsutils.CollectionActionCreate)
 
-		identifier := chi.URLParam(r, "identifier")
-		if err := nsutils.ValidateIdentifierIsntBad(identifier); err != nil {
-			nsutils.WriteError(w, err)
-			return
-		}
-
-		var doc map[string]any
-		if err := apiutils.ReadJSON(r, &doc); err != nil {
-			apiutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
+		doc, ok := readDocument(w, r)
+		if !ok {
 			return
 		}
 		// TODO put If-Unmodified-Since into the update query to make it atomic
@@ -178,21 +158,13 @@ func Replace(store nsutils.Store) http.HandlerFunc {
 // Patch applies a partial update to an API v3 document.
 func Patch(store nsutils.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		collection, _, err := nsutils.GetCollectionAndEnsurePermission(r, nsutils.CollectionActionUpdate)
-		if err != nil {
-			nsutils.WriteError(w, err)
+		collection, _, identifier, ok := nsutils.ReadCollectionAndIdentifier(w, r, nsutils.CollectionActionUpdate)
+		if !ok {
 			return
 		}
 
-		identifier := chi.URLParam(r, "identifier")
-		if err := nsutils.ValidateIdentifierIsntBad(identifier); err != nil {
-			nsutils.WriteError(w, err)
-			return
-		}
-
-		var doc map[string]any
-		if err := apiutils.ReadJSON(r, &doc); err != nil {
-			apiutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
+		doc, ok := readDocument(w, r)
+		if !ok {
 			return
 		}
 		// TODO put If-Unmodified-Since into the update query to make it atomic
@@ -206,4 +178,13 @@ func Patch(store nsutils.Store) http.HandlerFunc {
 
 		nsutils.WriteRecordV3(w, record, nil, nsutils.Replaced)
 	}
+}
+
+// readDocument is the request's JSON body. When it is bad it writes a 400 and ok is false.
+func readDocument(w http.ResponseWriter, r *http.Request) (doc map[string]any, ok bool) {
+	if err := apiutils.ReadJSON(r, &doc); err != nil {
+		apiutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
+		return nil, false
+	}
+	return doc, true
 }

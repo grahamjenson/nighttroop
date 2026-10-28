@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/utils/types"
 )
@@ -71,6 +72,20 @@ func ReadCollectionAndQuery(w http.ResponseWriter, r *http.Request) (collection 
 	}
 	WriteError(w, err)
 	return collection, query, false
+}
+
+// ReadCollectionAndIdentifier is the request's collection, which its identity must be able to act on, the identity,
+// and the identifier in its URL. When either is bad it writes the error and ok is false.
+func ReadCollectionAndIdentifier(w http.ResponseWriter, r *http.Request, action CollectionAction) (collection Collection, identity *Identity, identifier string, ok bool) {
+	collection, identity, err := GetCollectionAndEnsurePermission(r, action)
+	if err == nil {
+		identifier = chi.URLParam(r, "identifier")
+		if err = ValidateIdentifierIsntBad(identifier); err == nil {
+			return collection, identity, identifier, true
+		}
+	}
+	WriteError(w, err)
+	return collection, identity, identifier, false
 }
 
 // RawParam is the request's raw parameter, false when it is missing or not a bool
