@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"golang.org/x/text/language"
+	"nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils/consts"
 )
 
@@ -376,34 +377,38 @@ var AlarmNoDataMinutes = &SettingDefinition[int64]{
 	ParseFunc:    ParseInt,
 }
 
-var AlarmBatteryLowEnabled = &SettingDefinition[bool]{
-	Identifier: "alarm_battery_low_enabled",
+var AlarmDeviceBatteryLowEnabled = &SettingDefinition[bool]{
+	Identifier: "alarm_device_battery_low_enabled",
 	TypeString: "boolean",
 	Default:    false,
 	ParseFunc:  ParseBool,
 }
 
-var AlarmBatteryLowPercent = &SettingDefinition[int64]{
-	Identifier:   "alarm_battery_low_percent",
+var AlarmDeviceBatteryLowPercent = &SettingDefinition[int64]{
+	Identifier:   "alarm_device_battery_low_percent",
 	TypeString:   "number",
 	Default:      20,
 	ValidateFunc: Range(int64(5), 80),
 	ParseFunc:    ParseInt,
 }
 
-var AlarmBatteryLowPwdEnabled = &SettingDefinition[bool]{
-	Identifier: "alarm_battery_low_pwd_enabled",
-	TypeString: "boolean",
-	Default:    false,
-	ParseFunc:  ParseBool,
+// AlarmDeviceBatteryLowMinutes is how long a listed device can go without a status before it is alarmed for too
+var AlarmDeviceBatteryLowMinutes = &SettingDefinition[int64]{
+	Identifier:   "alarm_device_battery_low_minutes",
+	TypeString:   "number",
+	Default:      30,
+	ValidateFunc: Range(int64(5), MaxAlarmMinutes),
+	ParseFunc:    ParseInt,
 }
 
-var AlarmBatteryLowPwdPercent = &SettingDefinition[int64]{
-	Identifier:   "alarm_battery_low_pwd_percent",
-	TypeString:   "number",
-	Default:      20,
-	ValidateFunc: Range(int64(5), 80),
-	ParseFunc:    ParseInt,
+// AlarmDeviceBatteryLowDevicesJson are the names of the devices whose batteries and statuses the alarm checks, as
+// their device statuses name them; none are checked by default
+var AlarmDeviceBatteryLowDevicesJson = &SettingDefinition[types.DeviceNames]{
+	Identifier:   "alarm_device_battery_low_devices",
+	TypeString:   "array",
+	Default:      types.DeviceNames{},
+	ValidateFunc: ValidDeviceNames,
+	ParseFunc:    ParseDeviceNames,
 }
 
 var AlarmLowReservoirEnabled = &SettingDefinition[bool]{

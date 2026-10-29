@@ -11,6 +11,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/livedb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
+	datatypes "nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils/alarms"
 	"nighttroop.t1d.nz/utils/testutils"
 )
@@ -309,4 +310,40 @@ func TestALongHighAtManyReadingsAMinute(t *testing.T) {
 	}
 	r.now = r.now.Add(-6 * time.Second)
 	require.Equal(t, []alarms.Type{alarms.High}, r.check(false)[identity.ID].Alerting)
+}
+
+// status adds a device's status at the rig's time and publishes it, as the site's writes do
+func (r *rig) status(device string, battery float64, charging bool) {
+	row, err := r.db.CreateDeviceReport(context.TODO(), sitedb.CreateDeviceReportParams{
+		ID: fmt.Sprint(device, r.now.UnixMilli()), CreatedByDeviceName: &device, DeviceBatteryPercent: &battery, IsDeviceCharging: &charging,
+		OccurredAt: r.now.UnixMilli(), CreatedByIdentityName: "test",
+	})
+	require.NoError(r.t, err)
+	r.checker.events.Publish(r.site, events.ModelChange(r.site, events.Created, row))
+}
+
+// A listed device's status under the battery percent starts the alarm on the check of changed sites, its charging
+// clears it, and its going quiet for the minutes starts it again on the periodic check
+func TestDeviceBatteryAlarm(t *testing.T) {
+	r := newRig(t)
+	identity := r.identities()[0]
+	require.NoError(t, r.control.UpdateSiteIdentitySettings(context.TODO(), controldb.UpdateSiteIdentitySettingsParams{
+		ID: identity.ID, SiteID: r.site, AlarmDeviceBatteryLowEnabled: new(true), AlarmDeviceBatteryLowDevicesJson: &datatypes.DeviceNames{"phone"},
+	}))
+
+	r.status("other", 5, false)
+	require.Empty(t, r.check(false), "only listed devices are checked")
+	r.status("phone", 50, false)
+	require.Empty(t, r.check(false))
+
+	r.now = r.now.Add(5 * time.Minute)
+	r.status("phone", 15, false)
+	require.Equal(t, notified(alarms.Started, alarms.DeviceBattery, r.now), r.check(false)[identity.ID].Notifications)
+
+	r.now = r.now.Add(time.Minute)
+	r.status("phone", 15, true)
+	require.Equal(t, notified(alarms.Cleared, alarms.DeviceBattery, r.now), r.check(false)[identity.ID].Notifications)
+
+	r.now = r.now.Add(30 * time.Minute)
+	require.Equal(t, notified(alarms.Started, alarms.DeviceBattery, r.now), r.check(true)[identity.ID].Notifications)
 }

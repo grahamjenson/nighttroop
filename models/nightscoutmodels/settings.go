@@ -40,6 +40,11 @@ func (t *Setting) UnmarshalJSON(data []byte) error {
 		}
 
 	case int64, float64, bool:
+	// A list, as of device names, which its setting checks; this only keeps it small
+	case []any:
+		if len(v) > 20 {
+			return fmt.Errorf("list value exceeds 20 items")
+		}
 	default:
 		return fmt.Errorf("unsupported value type")
 

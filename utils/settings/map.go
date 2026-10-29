@@ -1,147 +1,148 @@
 package settings
 
 import (
+	"nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils/consts"
 )
 
 type SettingMap struct {
-	Units                     *Setting[consts.Units]
-	Timezone                  *Setting[string]
-	Language                  *Setting[string]
-	DateFormat                *Setting[string]
-	TimeFormat                *Setting[string]
-	WeekStartDay              *Setting[string]
-	BolusDiaHours             *Setting[float64]
-	BolusOnsetMinutes         *Setting[float64]
-	BolusPeakMinutes          *Setting[float64]
-	BasalDiaHours             *Setting[float64]
-	BasalOnsetMinutes         *Setting[float64]
-	BasalPeakMinutes          *Setting[float64]
-	DefaultInsulinSensitivity *Setting[float64]
-	DefaultCarbRatio          *Setting[float64]
-	DefaultBasalRate          *Setting[float64]
-	CarbMaxAbsorptionHours    *Setting[float64]
-	CarbMin5mImpact           *Setting[float64]
-	AlarmUrgentLowEnabled     *Setting[bool]
-	AlarmUrgentLow            *Setting[int64]
-	AlarmLowEnabled           *Setting[bool]
-	AlarmLow                  *Setting[int64]
-	AlarmLowMinutes           *Setting[int64]
-	AlarmLowPredictionEnabled *Setting[bool]
-	AlarmHighEnabled          *Setting[bool]
-	AlarmHigh                 *Setting[int64]
-	AlarmHighMinutes          *Setting[int64]
-	AlarmUrgentHighEnabled    *Setting[bool]
-	AlarmUrgentHigh           *Setting[int64]
-	AlarmFastRiseEnabled      *Setting[bool]
-	AlarmFastRise             *Setting[int64]
-	AlarmFastRiseMinutes      *Setting[int64]
-	AlarmFastDropEnabled      *Setting[bool]
-	AlarmFastDrop             *Setting[int64]
-	AlarmFastDropMinutes      *Setting[int64]
-	AlarmNoDataEnabled        *Setting[bool]
-	AlarmNoDataMinutes        *Setting[int64]
-	AlarmBatteryLowEnabled    *Setting[bool]
-	AlarmBatteryLowPercent    *Setting[int64]
-	AlarmBatteryLowPwdEnabled *Setting[bool]
-	AlarmBatteryLowPwdPercent *Setting[int64]
-	AlarmLowReservoirEnabled  *Setting[bool]
-	AlarmLowReservoirUnits    *Setting[int64]
-	NotificationsEnabled      *Setting[bool]
+	Units                            *Setting[consts.Units]
+	Timezone                         *Setting[string]
+	Language                         *Setting[string]
+	DateFormat                       *Setting[string]
+	TimeFormat                       *Setting[string]
+	WeekStartDay                     *Setting[string]
+	BolusDiaHours                    *Setting[float64]
+	BolusOnsetMinutes                *Setting[float64]
+	BolusPeakMinutes                 *Setting[float64]
+	BasalDiaHours                    *Setting[float64]
+	BasalOnsetMinutes                *Setting[float64]
+	BasalPeakMinutes                 *Setting[float64]
+	DefaultInsulinSensitivity        *Setting[float64]
+	DefaultCarbRatio                 *Setting[float64]
+	DefaultBasalRate                 *Setting[float64]
+	CarbMaxAbsorptionHours           *Setting[float64]
+	CarbMin5mImpact                  *Setting[float64]
+	AlarmUrgentLowEnabled            *Setting[bool]
+	AlarmUrgentLow                   *Setting[int64]
+	AlarmLowEnabled                  *Setting[bool]
+	AlarmLow                         *Setting[int64]
+	AlarmLowMinutes                  *Setting[int64]
+	AlarmLowPredictionEnabled        *Setting[bool]
+	AlarmHighEnabled                 *Setting[bool]
+	AlarmHigh                        *Setting[int64]
+	AlarmHighMinutes                 *Setting[int64]
+	AlarmUrgentHighEnabled           *Setting[bool]
+	AlarmUrgentHigh                  *Setting[int64]
+	AlarmFastRiseEnabled             *Setting[bool]
+	AlarmFastRise                    *Setting[int64]
+	AlarmFastRiseMinutes             *Setting[int64]
+	AlarmFastDropEnabled             *Setting[bool]
+	AlarmFastDrop                    *Setting[int64]
+	AlarmFastDropMinutes             *Setting[int64]
+	AlarmNoDataEnabled               *Setting[bool]
+	AlarmNoDataMinutes               *Setting[int64]
+	AlarmDeviceBatteryLowEnabled     *Setting[bool]
+	AlarmDeviceBatteryLowPercent     *Setting[int64]
+	AlarmDeviceBatteryLowMinutes     *Setting[int64]
+	AlarmDeviceBatteryLowDevicesJson *Setting[types.DeviceNames]
+	AlarmLowReservoirEnabled         *Setting[bool]
+	AlarmLowReservoirUnits           *Setting[int64]
+	NotificationsEnabled             *Setting[bool]
 }
 
 var DefaultSettingsMap = &SettingMap{
-	Units:                     NewDefaultSetting(Units),
-	Timezone:                  NewDefaultSetting(Timezone),
-	Language:                  NewDefaultSetting(Language),
-	DateFormat:                NewDefaultSetting(DateFormat),
-	TimeFormat:                NewDefaultSetting(TimeFormat),
-	WeekStartDay:              NewDefaultSetting(WeekStartDay),
-	BolusDiaHours:             NewDefaultSetting(BolusDIAHours),
-	BolusOnsetMinutes:         NewDefaultSetting(BolusOnsetMinutes),
-	BolusPeakMinutes:          NewDefaultSetting(BolusPeakMinutes),
-	BasalDiaHours:             NewDefaultSetting(BasalDIAHours),
-	BasalOnsetMinutes:         NewDefaultSetting(BasalOnsetMinutes),
-	BasalPeakMinutes:          NewDefaultSetting(BasalPeakMinutes),
-	DefaultInsulinSensitivity: NewDefaultSetting(DefaultInsulinSensitivity),
-	DefaultCarbRatio:          NewDefaultSetting(DefaultCarbRatio),
-	DefaultBasalRate:          NewDefaultSetting(DefaultBasalRate),
-	CarbMaxAbsorptionHours:    NewDefaultSetting(CarbMaxAbsorptionHours),
-	CarbMin5mImpact:           NewDefaultSetting(CarbMin5mImpact),
-	AlarmUrgentLowEnabled:     NewDefaultSetting(AlarmUrgentLowEnabled),
-	AlarmUrgentLow:            NewDefaultSetting(AlarmUrgentLow),
-	AlarmLowEnabled:           NewDefaultSetting(AlarmLowEnabled),
-	AlarmLow:                  NewDefaultSetting(AlarmLow),
-	AlarmLowMinutes:           NewDefaultSetting(AlarmLowMinutes),
-	AlarmLowPredictionEnabled: NewDefaultSetting(AlarmLowPredictionEnabled),
-	AlarmHighEnabled:          NewDefaultSetting(AlarmHighEnabled),
-	AlarmHigh:                 NewDefaultSetting(AlarmHigh),
-	AlarmHighMinutes:          NewDefaultSetting(AlarmHighMinutes),
-	AlarmUrgentHighEnabled:    NewDefaultSetting(AlarmUrgentHighEnabled),
-	AlarmUrgentHigh:           NewDefaultSetting(AlarmUrgentHigh),
-	AlarmFastRiseEnabled:      NewDefaultSetting(AlarmFastRiseEnabled),
-	AlarmFastRise:             NewDefaultSetting(AlarmFastRise),
-	AlarmFastRiseMinutes:      NewDefaultSetting(AlarmFastRiseMinutes),
-	AlarmFastDropEnabled:      NewDefaultSetting(AlarmFastDropEnabled),
-	AlarmFastDrop:             NewDefaultSetting(AlarmFastDrop),
-	AlarmFastDropMinutes:      NewDefaultSetting(AlarmFastDropMinutes),
-	AlarmNoDataEnabled:        NewDefaultSetting(AlarmNoDataEnabled),
-	AlarmNoDataMinutes:        NewDefaultSetting(AlarmNoDataMinutes),
-	AlarmBatteryLowEnabled:    NewDefaultSetting(AlarmBatteryLowEnabled),
-	AlarmBatteryLowPercent:    NewDefaultSetting(AlarmBatteryLowPercent),
-	AlarmBatteryLowPwdEnabled: NewDefaultSetting(AlarmBatteryLowPwdEnabled),
-	AlarmBatteryLowPwdPercent: NewDefaultSetting(AlarmBatteryLowPwdPercent),
-	AlarmLowReservoirEnabled:  NewDefaultSetting(AlarmLowReservoirEnabled),
-	AlarmLowReservoirUnits:    NewDefaultSetting(AlarmLowReservoirUnits),
-	NotificationsEnabled:      NewDefaultSetting(NotificationsEnabled),
+	Units:                            NewDefaultSetting(Units),
+	Timezone:                         NewDefaultSetting(Timezone),
+	Language:                         NewDefaultSetting(Language),
+	DateFormat:                       NewDefaultSetting(DateFormat),
+	TimeFormat:                       NewDefaultSetting(TimeFormat),
+	WeekStartDay:                     NewDefaultSetting(WeekStartDay),
+	BolusDiaHours:                    NewDefaultSetting(BolusDIAHours),
+	BolusOnsetMinutes:                NewDefaultSetting(BolusOnsetMinutes),
+	BolusPeakMinutes:                 NewDefaultSetting(BolusPeakMinutes),
+	BasalDiaHours:                    NewDefaultSetting(BasalDIAHours),
+	BasalOnsetMinutes:                NewDefaultSetting(BasalOnsetMinutes),
+	BasalPeakMinutes:                 NewDefaultSetting(BasalPeakMinutes),
+	DefaultInsulinSensitivity:        NewDefaultSetting(DefaultInsulinSensitivity),
+	DefaultCarbRatio:                 NewDefaultSetting(DefaultCarbRatio),
+	DefaultBasalRate:                 NewDefaultSetting(DefaultBasalRate),
+	CarbMaxAbsorptionHours:           NewDefaultSetting(CarbMaxAbsorptionHours),
+	CarbMin5mImpact:                  NewDefaultSetting(CarbMin5mImpact),
+	AlarmUrgentLowEnabled:            NewDefaultSetting(AlarmUrgentLowEnabled),
+	AlarmUrgentLow:                   NewDefaultSetting(AlarmUrgentLow),
+	AlarmLowEnabled:                  NewDefaultSetting(AlarmLowEnabled),
+	AlarmLow:                         NewDefaultSetting(AlarmLow),
+	AlarmLowMinutes:                  NewDefaultSetting(AlarmLowMinutes),
+	AlarmLowPredictionEnabled:        NewDefaultSetting(AlarmLowPredictionEnabled),
+	AlarmHighEnabled:                 NewDefaultSetting(AlarmHighEnabled),
+	AlarmHigh:                        NewDefaultSetting(AlarmHigh),
+	AlarmHighMinutes:                 NewDefaultSetting(AlarmHighMinutes),
+	AlarmUrgentHighEnabled:           NewDefaultSetting(AlarmUrgentHighEnabled),
+	AlarmUrgentHigh:                  NewDefaultSetting(AlarmUrgentHigh),
+	AlarmFastRiseEnabled:             NewDefaultSetting(AlarmFastRiseEnabled),
+	AlarmFastRise:                    NewDefaultSetting(AlarmFastRise),
+	AlarmFastRiseMinutes:             NewDefaultSetting(AlarmFastRiseMinutes),
+	AlarmFastDropEnabled:             NewDefaultSetting(AlarmFastDropEnabled),
+	AlarmFastDrop:                    NewDefaultSetting(AlarmFastDrop),
+	AlarmFastDropMinutes:             NewDefaultSetting(AlarmFastDropMinutes),
+	AlarmNoDataEnabled:               NewDefaultSetting(AlarmNoDataEnabled),
+	AlarmNoDataMinutes:               NewDefaultSetting(AlarmNoDataMinutes),
+	AlarmDeviceBatteryLowEnabled:     NewDefaultSetting(AlarmDeviceBatteryLowEnabled),
+	AlarmDeviceBatteryLowPercent:     NewDefaultSetting(AlarmDeviceBatteryLowPercent),
+	AlarmDeviceBatteryLowMinutes:     NewDefaultSetting(AlarmDeviceBatteryLowMinutes),
+	AlarmDeviceBatteryLowDevicesJson: NewDefaultSetting(AlarmDeviceBatteryLowDevicesJson),
+	AlarmLowReservoirEnabled:         NewDefaultSetting(AlarmLowReservoirEnabled),
+	AlarmLowReservoirUnits:           NewDefaultSetting(AlarmLowReservoirUnits),
+	NotificationsEnabled:             NewDefaultSetting(NotificationsEnabled),
 }
 
 // New Setting Does not validate Check
 func NewSettingsMap(g SettingsGetter, createdAt *int64, subject *string) *SettingMap {
 	s := &SettingMap{
-		Units:                     NewSetting(Units, g.GetUnits(), createdAt, subject),
-		Timezone:                  NewSetting(Timezone, g.GetTimezone(), createdAt, subject),
-		Language:                  NewSetting(Language, g.GetLanguage(), createdAt, subject),
-		DateFormat:                NewSetting(DateFormat, g.GetDateFormat(), createdAt, subject),
-		TimeFormat:                NewSetting(TimeFormat, g.GetTimeFormat(), createdAt, subject),
-		WeekStartDay:              NewSetting(WeekStartDay, g.GetWeekStartDay(), createdAt, subject),
-		BolusDiaHours:             NewSetting(BolusDIAHours, g.GetBolusDiaHours(), createdAt, subject),
-		BolusOnsetMinutes:         NewSetting(BolusOnsetMinutes, g.GetBolusOnsetMinutes(), createdAt, subject),
-		BolusPeakMinutes:          NewSetting(BolusPeakMinutes, g.GetBolusPeakMinutes(), createdAt, subject),
-		BasalDiaHours:             NewSetting(BasalDIAHours, g.GetBasalDiaHours(), createdAt, subject),
-		BasalOnsetMinutes:         NewSetting(BasalOnsetMinutes, g.GetBasalOnsetMinutes(), createdAt, subject),
-		BasalPeakMinutes:          NewSetting(BasalPeakMinutes, g.GetBasalPeakMinutes(), createdAt, subject),
-		DefaultInsulinSensitivity: NewSetting(DefaultInsulinSensitivity, g.GetDefaultInsulinSensitivity(), createdAt, subject),
-		DefaultCarbRatio:          NewSetting(DefaultCarbRatio, g.GetDefaultCarbRatio(), createdAt, subject),
-		DefaultBasalRate:          NewSetting(DefaultBasalRate, g.GetDefaultBasalRate(), createdAt, subject),
-		CarbMaxAbsorptionHours:    NewSetting(CarbMaxAbsorptionHours, g.GetCarbMaxAbsorptionHours(), createdAt, subject),
-		CarbMin5mImpact:           NewSetting(CarbMin5mImpact, g.GetCarbMin5mImpact(), createdAt, subject),
-		AlarmUrgentLowEnabled:     NewSetting(AlarmUrgentLowEnabled, g.GetAlarmUrgentLowEnabled(), createdAt, subject),
-		AlarmUrgentLow:            NewSetting(AlarmUrgentLow, g.GetAlarmUrgentLow(), createdAt, subject),
-		AlarmLowEnabled:           NewSetting(AlarmLowEnabled, g.GetAlarmLowEnabled(), createdAt, subject),
-		AlarmLow:                  NewSetting(AlarmLow, g.GetAlarmLow(), createdAt, subject),
-		AlarmLowMinutes:           NewSetting(AlarmLowMinutes, g.GetAlarmLowMinutes(), createdAt, subject),
-		AlarmLowPredictionEnabled: NewSetting(AlarmLowPredictionEnabled, g.GetAlarmLowPredictionEnabled(), createdAt, subject),
-		AlarmHighEnabled:          NewSetting(AlarmHighEnabled, g.GetAlarmHighEnabled(), createdAt, subject),
-		AlarmHigh:                 NewSetting(AlarmHigh, g.GetAlarmHigh(), createdAt, subject),
-		AlarmHighMinutes:          NewSetting(AlarmHighMinutes, g.GetAlarmHighMinutes(), createdAt, subject),
-		AlarmUrgentHighEnabled:    NewSetting(AlarmUrgentHighEnabled, g.GetAlarmUrgentHighEnabled(), createdAt, subject),
-		AlarmUrgentHigh:           NewSetting(AlarmUrgentHigh, g.GetAlarmUrgentHigh(), createdAt, subject),
-		AlarmFastRiseEnabled:      NewSetting(AlarmFastRiseEnabled, g.GetAlarmFastRiseEnabled(), createdAt, subject),
-		AlarmFastRise:             NewSetting(AlarmFastRise, g.GetAlarmFastRise(), createdAt, subject),
-		AlarmFastRiseMinutes:      NewSetting(AlarmFastRiseMinutes, g.GetAlarmFastRiseMinutes(), createdAt, subject),
-		AlarmFastDropEnabled:      NewSetting(AlarmFastDropEnabled, g.GetAlarmFastDropEnabled(), createdAt, subject),
-		AlarmFastDrop:             NewSetting(AlarmFastDrop, g.GetAlarmFastDrop(), createdAt, subject),
-		AlarmFastDropMinutes:      NewSetting(AlarmFastDropMinutes, g.GetAlarmFastDropMinutes(), createdAt, subject),
-		AlarmNoDataEnabled:        NewSetting(AlarmNoDataEnabled, g.GetAlarmNoDataEnabled(), createdAt, subject),
-		AlarmNoDataMinutes:        NewSetting(AlarmNoDataMinutes, g.GetAlarmNoDataMinutes(), createdAt, subject),
-		AlarmBatteryLowEnabled:    NewSetting(AlarmBatteryLowEnabled, g.GetAlarmBatteryLowEnabled(), createdAt, subject),
-		AlarmBatteryLowPercent:    NewSetting(AlarmBatteryLowPercent, g.GetAlarmBatteryLowPercent(), createdAt, subject),
-		AlarmBatteryLowPwdEnabled: NewSetting(AlarmBatteryLowPwdEnabled, g.GetAlarmBatteryLowPwdEnabled(), createdAt, subject),
-		AlarmBatteryLowPwdPercent: NewSetting(AlarmBatteryLowPwdPercent, g.GetAlarmBatteryLowPwdPercent(), createdAt, subject),
-		AlarmLowReservoirEnabled:  NewSetting(AlarmLowReservoirEnabled, g.GetAlarmLowReservoirEnabled(), createdAt, subject),
-		AlarmLowReservoirUnits:    NewSetting(AlarmLowReservoirUnits, g.GetAlarmLowReservoirUnits(), createdAt, subject),
-		NotificationsEnabled:      NewSetting(NotificationsEnabled, g.GetNotificationsEnabled(), createdAt, subject),
+		Units:                            NewSetting(Units, g.GetUnits(), createdAt, subject),
+		Timezone:                         NewSetting(Timezone, g.GetTimezone(), createdAt, subject),
+		Language:                         NewSetting(Language, g.GetLanguage(), createdAt, subject),
+		DateFormat:                       NewSetting(DateFormat, g.GetDateFormat(), createdAt, subject),
+		TimeFormat:                       NewSetting(TimeFormat, g.GetTimeFormat(), createdAt, subject),
+		WeekStartDay:                     NewSetting(WeekStartDay, g.GetWeekStartDay(), createdAt, subject),
+		BolusDiaHours:                    NewSetting(BolusDIAHours, g.GetBolusDiaHours(), createdAt, subject),
+		BolusOnsetMinutes:                NewSetting(BolusOnsetMinutes, g.GetBolusOnsetMinutes(), createdAt, subject),
+		BolusPeakMinutes:                 NewSetting(BolusPeakMinutes, g.GetBolusPeakMinutes(), createdAt, subject),
+		BasalDiaHours:                    NewSetting(BasalDIAHours, g.GetBasalDiaHours(), createdAt, subject),
+		BasalOnsetMinutes:                NewSetting(BasalOnsetMinutes, g.GetBasalOnsetMinutes(), createdAt, subject),
+		BasalPeakMinutes:                 NewSetting(BasalPeakMinutes, g.GetBasalPeakMinutes(), createdAt, subject),
+		DefaultInsulinSensitivity:        NewSetting(DefaultInsulinSensitivity, g.GetDefaultInsulinSensitivity(), createdAt, subject),
+		DefaultCarbRatio:                 NewSetting(DefaultCarbRatio, g.GetDefaultCarbRatio(), createdAt, subject),
+		DefaultBasalRate:                 NewSetting(DefaultBasalRate, g.GetDefaultBasalRate(), createdAt, subject),
+		CarbMaxAbsorptionHours:           NewSetting(CarbMaxAbsorptionHours, g.GetCarbMaxAbsorptionHours(), createdAt, subject),
+		CarbMin5mImpact:                  NewSetting(CarbMin5mImpact, g.GetCarbMin5mImpact(), createdAt, subject),
+		AlarmUrgentLowEnabled:            NewSetting(AlarmUrgentLowEnabled, g.GetAlarmUrgentLowEnabled(), createdAt, subject),
+		AlarmUrgentLow:                   NewSetting(AlarmUrgentLow, g.GetAlarmUrgentLow(), createdAt, subject),
+		AlarmLowEnabled:                  NewSetting(AlarmLowEnabled, g.GetAlarmLowEnabled(), createdAt, subject),
+		AlarmLow:                         NewSetting(AlarmLow, g.GetAlarmLow(), createdAt, subject),
+		AlarmLowMinutes:                  NewSetting(AlarmLowMinutes, g.GetAlarmLowMinutes(), createdAt, subject),
+		AlarmLowPredictionEnabled:        NewSetting(AlarmLowPredictionEnabled, g.GetAlarmLowPredictionEnabled(), createdAt, subject),
+		AlarmHighEnabled:                 NewSetting(AlarmHighEnabled, g.GetAlarmHighEnabled(), createdAt, subject),
+		AlarmHigh:                        NewSetting(AlarmHigh, g.GetAlarmHigh(), createdAt, subject),
+		AlarmHighMinutes:                 NewSetting(AlarmHighMinutes, g.GetAlarmHighMinutes(), createdAt, subject),
+		AlarmUrgentHighEnabled:           NewSetting(AlarmUrgentHighEnabled, g.GetAlarmUrgentHighEnabled(), createdAt, subject),
+		AlarmUrgentHigh:                  NewSetting(AlarmUrgentHigh, g.GetAlarmUrgentHigh(), createdAt, subject),
+		AlarmFastRiseEnabled:             NewSetting(AlarmFastRiseEnabled, g.GetAlarmFastRiseEnabled(), createdAt, subject),
+		AlarmFastRise:                    NewSetting(AlarmFastRise, g.GetAlarmFastRise(), createdAt, subject),
+		AlarmFastRiseMinutes:             NewSetting(AlarmFastRiseMinutes, g.GetAlarmFastRiseMinutes(), createdAt, subject),
+		AlarmFastDropEnabled:             NewSetting(AlarmFastDropEnabled, g.GetAlarmFastDropEnabled(), createdAt, subject),
+		AlarmFastDrop:                    NewSetting(AlarmFastDrop, g.GetAlarmFastDrop(), createdAt, subject),
+		AlarmFastDropMinutes:             NewSetting(AlarmFastDropMinutes, g.GetAlarmFastDropMinutes(), createdAt, subject),
+		AlarmNoDataEnabled:               NewSetting(AlarmNoDataEnabled, g.GetAlarmNoDataEnabled(), createdAt, subject),
+		AlarmNoDataMinutes:               NewSetting(AlarmNoDataMinutes, g.GetAlarmNoDataMinutes(), createdAt, subject),
+		AlarmDeviceBatteryLowEnabled:     NewSetting(AlarmDeviceBatteryLowEnabled, g.GetAlarmDeviceBatteryLowEnabled(), createdAt, subject),
+		AlarmDeviceBatteryLowPercent:     NewSetting(AlarmDeviceBatteryLowPercent, g.GetAlarmDeviceBatteryLowPercent(), createdAt, subject),
+		AlarmDeviceBatteryLowMinutes:     NewSetting(AlarmDeviceBatteryLowMinutes, g.GetAlarmDeviceBatteryLowMinutes(), createdAt, subject),
+		AlarmDeviceBatteryLowDevicesJson: NewSetting(AlarmDeviceBatteryLowDevicesJson, g.GetAlarmDeviceBatteryLowDevicesJson(), createdAt, subject),
+		AlarmLowReservoirEnabled:         NewSetting(AlarmLowReservoirEnabled, g.GetAlarmLowReservoirEnabled(), createdAt, subject),
+		AlarmLowReservoirUnits:           NewSetting(AlarmLowReservoirUnits, g.GetAlarmLowReservoirUnits(), createdAt, subject),
+		NotificationsEnabled:             NewSetting(NotificationsEnabled, g.GetNotificationsEnabled(), createdAt, subject),
 	}
 
 	return s
@@ -681,63 +682,63 @@ func (m *SettingMap) SetAlarmNoDataMinutes(v *int64) {
 
 }
 
-// GetAlarmBatteryLowEnabled returns the AlarmBatteryLowEnabled value.
-func (m SettingMap) GetAlarmBatteryLowEnabled() *bool {
-	if m.AlarmBatteryLowEnabled == nil {
+// GetAlarmDeviceBatteryLowEnabled returns the AlarmDeviceBatteryLowEnabled value.
+func (m SettingMap) GetAlarmDeviceBatteryLowEnabled() *bool {
+	if m.AlarmDeviceBatteryLowEnabled == nil {
 		return nil
 	}
-	return ptr(m.AlarmBatteryLowEnabled.Value)
+	return ptr(m.AlarmDeviceBatteryLowEnabled.Value)
 }
 
-// SetAlarmBatteryLowEnabled sets the AlarmBatteryLowEnabled value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmBatteryLowEnabled(v *bool) {
+// SetAlarmDeviceBatteryLowEnabled sets the AlarmDeviceBatteryLowEnabled value and returns the updated SettingMap.
+func (m *SettingMap) SetAlarmDeviceBatteryLowEnabled(v *bool) {
 
-	m.AlarmBatteryLowEnabled = NewSetting(AlarmBatteryLowEnabled, v, nil, nil)
+	m.AlarmDeviceBatteryLowEnabled = NewSetting(AlarmDeviceBatteryLowEnabled, v, nil, nil)
 
 }
 
-// GetAlarmBatteryLowPercent returns the AlarmBatteryLowPercent value.
-func (m SettingMap) GetAlarmBatteryLowPercent() *int64 {
-	if m.AlarmBatteryLowPercent == nil {
+// GetAlarmDeviceBatteryLowPercent returns the AlarmDeviceBatteryLowPercent value.
+func (m SettingMap) GetAlarmDeviceBatteryLowPercent() *int64 {
+	if m.AlarmDeviceBatteryLowPercent == nil {
 		return nil
 	}
-	return ptr(m.AlarmBatteryLowPercent.Value)
+	return ptr(m.AlarmDeviceBatteryLowPercent.Value)
 }
 
-// SetAlarmBatteryLowPercent sets the AlarmBatteryLowPercent value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmBatteryLowPercent(v *int64) {
+// SetAlarmDeviceBatteryLowPercent sets the AlarmDeviceBatteryLowPercent value and returns the updated SettingMap.
+func (m *SettingMap) SetAlarmDeviceBatteryLowPercent(v *int64) {
 
-	m.AlarmBatteryLowPercent = NewSetting(AlarmBatteryLowPercent, v, nil, nil)
+	m.AlarmDeviceBatteryLowPercent = NewSetting(AlarmDeviceBatteryLowPercent, v, nil, nil)
 
 }
 
-// GetAlarmBatteryLowPwdEnabled returns the AlarmBatteryLowPwdEnabled value.
-func (m SettingMap) GetAlarmBatteryLowPwdEnabled() *bool {
-	if m.AlarmBatteryLowPwdEnabled == nil {
+// GetAlarmDeviceBatteryLowMinutes returns the AlarmDeviceBatteryLowMinutes value.
+func (m SettingMap) GetAlarmDeviceBatteryLowMinutes() *int64 {
+	if m.AlarmDeviceBatteryLowMinutes == nil {
 		return nil
 	}
-	return ptr(m.AlarmBatteryLowPwdEnabled.Value)
+	return ptr(m.AlarmDeviceBatteryLowMinutes.Value)
 }
 
-// SetAlarmBatteryLowPwdEnabled sets the AlarmBatteryLowPwdEnabled value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmBatteryLowPwdEnabled(v *bool) {
+// SetAlarmDeviceBatteryLowMinutes sets the AlarmDeviceBatteryLowMinutes value and returns the updated SettingMap.
+func (m *SettingMap) SetAlarmDeviceBatteryLowMinutes(v *int64) {
 
-	m.AlarmBatteryLowPwdEnabled = NewSetting(AlarmBatteryLowPwdEnabled, v, nil, nil)
+	m.AlarmDeviceBatteryLowMinutes = NewSetting(AlarmDeviceBatteryLowMinutes, v, nil, nil)
 
 }
 
-// GetAlarmBatteryLowPwdPercent returns the AlarmBatteryLowPwdPercent value.
-func (m SettingMap) GetAlarmBatteryLowPwdPercent() *int64 {
-	if m.AlarmBatteryLowPwdPercent == nil {
+// GetAlarmDeviceBatteryLowDevicesJson returns the AlarmDeviceBatteryLowDevicesJson value.
+func (m SettingMap) GetAlarmDeviceBatteryLowDevicesJson() *types.DeviceNames {
+	if m.AlarmDeviceBatteryLowDevicesJson == nil {
 		return nil
 	}
-	return ptr(m.AlarmBatteryLowPwdPercent.Value)
+	return ptr(m.AlarmDeviceBatteryLowDevicesJson.Value)
 }
 
-// SetAlarmBatteryLowPwdPercent sets the AlarmBatteryLowPwdPercent value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmBatteryLowPwdPercent(v *int64) {
+// SetAlarmDeviceBatteryLowDevicesJson sets the AlarmDeviceBatteryLowDevicesJson value and returns the updated SettingMap.
+func (m *SettingMap) SetAlarmDeviceBatteryLowDevicesJson(v *types.DeviceNames) {
 
-	m.AlarmBatteryLowPwdPercent = NewSetting(AlarmBatteryLowPwdPercent, v, nil, nil)
+	m.AlarmDeviceBatteryLowDevicesJson = NewSetting(AlarmDeviceBatteryLowDevicesJson, v, nil, nil)
 
 }
 
@@ -865,14 +866,14 @@ func (m SettingMap) GetSettingAnyTypeByName(name string) *SettingAnyType {
 		return m.AlarmNoDataEnabled.ToSettingAnyType()
 	case "alarm_no_data_minutes":
 		return m.AlarmNoDataMinutes.ToSettingAnyType()
-	case "alarm_battery_low_enabled":
-		return m.AlarmBatteryLowEnabled.ToSettingAnyType()
-	case "alarm_battery_low_percent":
-		return m.AlarmBatteryLowPercent.ToSettingAnyType()
-	case "alarm_battery_low_pwd_enabled":
-		return m.AlarmBatteryLowPwdEnabled.ToSettingAnyType()
-	case "alarm_battery_low_pwd_percent":
-		return m.AlarmBatteryLowPwdPercent.ToSettingAnyType()
+	case "alarm_device_battery_low_enabled":
+		return m.AlarmDeviceBatteryLowEnabled.ToSettingAnyType()
+	case "alarm_device_battery_low_percent":
+		return m.AlarmDeviceBatteryLowPercent.ToSettingAnyType()
+	case "alarm_device_battery_low_minutes":
+		return m.AlarmDeviceBatteryLowMinutes.ToSettingAnyType()
+	case "alarm_device_battery_low_devices":
+		return m.AlarmDeviceBatteryLowDevicesJson.ToSettingAnyType()
 	case "alarm_low_reservoir_enabled":
 		return m.AlarmLowReservoirEnabled.ToSettingAnyType()
 	case "alarm_low_reservoir_units":
@@ -995,17 +996,17 @@ func (m *SettingMap) SetSettingByName(name string, v any, createdAt *int64, subj
 	case "alarm_no_data_minutes":
 		m.AlarmNoDataMinutes, err = NewSettingAndParseValidate(AlarmNoDataMinutes, v, createdAt, subject)
 		return err
-	case "alarm_battery_low_enabled":
-		m.AlarmBatteryLowEnabled, err = NewSettingAndParseValidate(AlarmBatteryLowEnabled, v, createdAt, subject)
+	case "alarm_device_battery_low_enabled":
+		m.AlarmDeviceBatteryLowEnabled, err = NewSettingAndParseValidate(AlarmDeviceBatteryLowEnabled, v, createdAt, subject)
 		return err
-	case "alarm_battery_low_percent":
-		m.AlarmBatteryLowPercent, err = NewSettingAndParseValidate(AlarmBatteryLowPercent, v, createdAt, subject)
+	case "alarm_device_battery_low_percent":
+		m.AlarmDeviceBatteryLowPercent, err = NewSettingAndParseValidate(AlarmDeviceBatteryLowPercent, v, createdAt, subject)
 		return err
-	case "alarm_battery_low_pwd_enabled":
-		m.AlarmBatteryLowPwdEnabled, err = NewSettingAndParseValidate(AlarmBatteryLowPwdEnabled, v, createdAt, subject)
+	case "alarm_device_battery_low_minutes":
+		m.AlarmDeviceBatteryLowMinutes, err = NewSettingAndParseValidate(AlarmDeviceBatteryLowMinutes, v, createdAt, subject)
 		return err
-	case "alarm_battery_low_pwd_percent":
-		m.AlarmBatteryLowPwdPercent, err = NewSettingAndParseValidate(AlarmBatteryLowPwdPercent, v, createdAt, subject)
+	case "alarm_device_battery_low_devices":
+		m.AlarmDeviceBatteryLowDevicesJson, err = NewSettingAndParseValidate(AlarmDeviceBatteryLowDevicesJson, v, createdAt, subject)
 		return err
 	case "alarm_low_reservoir_enabled":
 		m.AlarmLowReservoirEnabled, err = NewSettingAndParseValidate(AlarmLowReservoirEnabled, v, createdAt, subject)

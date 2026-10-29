@@ -28,7 +28,7 @@ type Checker struct {
 	events    *events.SiteBus
 	now       func() time.Time
 
-	// pending are the sites whose readings changed since they were last checked
+	// pending are the sites whose readings or device statuses changed since they were last checked
 	pendingLock sync.Mutex
 	pending     map[string]bool
 
@@ -44,7 +44,7 @@ func SetupCron(c cron.CronScheduler, config *config.ServerConfig, controlDB *db.
 	return checker
 }
 
-// NewChecker is a checker that notes each site whose glucose readings change, to check it next
+// NewChecker is a checker that notes each site whose glucose readings or device statuses change, to check it next
 func NewChecker(config *config.ServerConfig, controlDB *db.ControlDB) *Checker {
 	checker := &Checker{
 		controlDB: controlDB, events: config.Events, now: time.Now,
@@ -52,7 +52,9 @@ func NewChecker(config *config.ServerConfig, controlDB *db.ControlDB) *Checker {
 	}
 	// A handler must not block its publisher, so it only notes the site for the next check
 	config.Events.SubscribeAll(func(event events.Event) {
-		if _, reading := event.Model.(*sitedb.GlucoseReading); !reading {
+		switch event.Model.(type) {
+		case *sitedb.GlucoseReading, *sitedb.DeviceReport:
+		default:
 			return
 		}
 		checker.pendingLock.Lock()
@@ -138,6 +140,9 @@ func (c *Checker) checkSite(ctx context.Context, siteID string, now int64) error
 	if err := c.forget(ctx, kept, turnedOn); err != nil || len(turnedOn) == 0 {
 		return err
 	}
+	if err := giveDeviceStatuses(ctx, siteDB.Queries, turnedOn); err != nil {
+		return err
+	}
 
 	// The newest reading, however old, as no data is measured from it, then those back to the longest an alarm can
 	// wait before it, as an alarm lasts by its readings, not by the time now
@@ -200,6 +205,38 @@ func (k keptAlarms) alerting() []alarms.Type {
 		}
 	}
 	return alerting
+}
+
+// giveDeviceStatuses gives each device battery alarm the newest status of each device it checks, reading each device
+// once however many alarms list it
+func giveDeviceStatuses(ctx context.Context, q *sitedb.Queries, turnedOn map[int64][]alarms.Alarm) error {
+	statuses := map[string]alarms.DeviceStatus{}
+	read := map[string]bool{}
+	for _, on := range turnedOn {
+		for i, alarm := range on {
+			battery, ok := alarm.(alarms.DeviceBatteryAlarm)
+			if !ok {
+				continue
+			}
+			for _, device := range battery.Devices {
+				if read[device] {
+					continue
+				}
+				read[device] = true
+				reports, err := q.DeviceReportsForDevice(ctx, sitedb.DeviceReportsForDeviceParams{Device: &device, Limit: 1})
+				if err != nil {
+					return err
+				}
+				if len(reports) > 0 {
+					r := reports[0]
+					statuses[device] = alarms.DeviceStatus{At: r.OccurredAt, BatteryPercent: r.DeviceBatteryPercent, Charging: r.IsDeviceCharging != nil && *r.IsDeviceCharging}
+				}
+			}
+			battery.Statuses = statuses
+			on[i] = battery
+		}
+	}
+	return nil
 }
 
 // forget deletes the kept alarms of a site's identities that are not to be checked

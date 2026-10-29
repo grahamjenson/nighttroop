@@ -1,9 +1,11 @@
 package settings_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/settings"
 )
@@ -69,5 +71,32 @@ func TestCombinedSettingsTimezone(t *testing.T) {
 
 			require.Equal(t, test.want, combined.Location().String())
 		})
+	}
+}
+
+func TestDeviceBatteryLowDevices(t *testing.T) {
+	tests := []struct {
+		name  string
+		value any
+		want  types.DeviceNames
+		err   bool
+	}{
+		{"a list of names", []any{"openaps://pixel", "SugarPixel"}, types.DeviceNames{"openaps://pixel", "SugarPixel"}, false},
+		{"none", []any{}, types.DeviceNames{}, false},
+		{"not a list", "openaps://pixel", nil, true},
+		{"a name that is not a string", []any{"phone", 3}, nil, true},
+		{"an empty name", []any{""}, nil, true},
+		{"a name too long", []any{strings.Repeat("a", 65)}, nil, true},
+		{"a name twice", []any{"phone", "phone"}, nil, true},
+		{"too many names", []any{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"}, nil, true},
+	}
+	for _, tt := range tests {
+		got, err := settings.AlarmDeviceBatteryLowDevicesJson.ParseValidate(tt.value)
+		if tt.err {
+			require.Error(t, err, tt.name)
+			continue
+		}
+		require.NoError(t, err, tt.name)
+		require.Equal(t, tt.want, *got, tt.name)
 	}
 }

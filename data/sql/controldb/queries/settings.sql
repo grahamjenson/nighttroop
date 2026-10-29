@@ -55,10 +55,10 @@ UPDATE site_identities SET
     alarm_no_data_enabled = sqlc.narg('AlarmNoDataEnabled'),
     alarm_no_data_minutes = sqlc.narg('AlarmNoDataMinutes'),
 
-    alarm_battery_low_enabled = sqlc.narg('AlarmBatteryLowEnabled'),
-    alarm_battery_low_percent = sqlc.narg('AlarmBatteryLowPercent'),
-    alarm_battery_low_pwd_enabled = sqlc.narg('AlarmBatteryLowPwdEnabled'),
-    alarm_battery_low_pwd_percent = sqlc.narg('AlarmBatteryLowPwdPercent'),
+    alarm_device_battery_low_enabled = sqlc.narg('AlarmDeviceBatteryLowEnabled'),
+    alarm_device_battery_low_percent = sqlc.narg('AlarmDeviceBatteryLowPercent'),
+    alarm_device_battery_low_minutes = sqlc.narg('AlarmDeviceBatteryLowMinutes'),
+    alarm_device_battery_low_devices_json = sqlc.narg('AlarmDeviceBatteryLowDevicesJson'),
 
     alarm_low_reservoir_enabled = sqlc.narg('AlarmLowReservoirEnabled'),
     alarm_low_reservoir_units = sqlc.narg('AlarmLowReservoirUnits'),
@@ -124,10 +124,10 @@ UPDATE sites SET
     alarm_no_data_enabled = sqlc.narg('AlarmNoDataEnabled'),
     alarm_no_data_minutes = sqlc.narg('AlarmNoDataMinutes'),
 
-    alarm_battery_low_enabled = sqlc.narg('AlarmBatteryLowEnabled'),
-    alarm_battery_low_percent = sqlc.narg('AlarmBatteryLowPercent'),
-    alarm_battery_low_pwd_enabled = sqlc.narg('AlarmBatteryLowPwdEnabled'),
-    alarm_battery_low_pwd_percent = sqlc.narg('AlarmBatteryLowPwdPercent'),
+    alarm_device_battery_low_enabled = sqlc.narg('AlarmDeviceBatteryLowEnabled'),
+    alarm_device_battery_low_percent = sqlc.narg('AlarmDeviceBatteryLowPercent'),
+    alarm_device_battery_low_minutes = sqlc.narg('AlarmDeviceBatteryLowMinutes'),
+    alarm_device_battery_low_devices_json = sqlc.narg('AlarmDeviceBatteryLowDevicesJson'),
 
     alarm_low_reservoir_enabled = sqlc.narg('AlarmLowReservoirEnabled'),
     alarm_low_reservoir_units = sqlc.narg('AlarmLowReservoirUnits'),

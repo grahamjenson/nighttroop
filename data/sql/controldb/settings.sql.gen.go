@@ -8,6 +8,7 @@ package controldb
 import (
 	"context"
 
+	"nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils/consts"
 )
 
@@ -67,10 +68,10 @@ UPDATE site_identities SET
     alarm_no_data_enabled = ?35,
     alarm_no_data_minutes = ?36,
 
-    alarm_battery_low_enabled = ?37,
-    alarm_battery_low_percent = ?38,
-    alarm_battery_low_pwd_enabled = ?39,
-    alarm_battery_low_pwd_percent = ?40,
+    alarm_device_battery_low_enabled = ?37,
+    alarm_device_battery_low_percent = ?38,
+    alarm_device_battery_low_minutes = ?39,
+    alarm_device_battery_low_devices_json = ?40,
 
     alarm_low_reservoir_enabled = ?41,
     alarm_low_reservoir_units = ?42,
@@ -81,51 +82,51 @@ WHERE id = ?44 AND site_id = ?45
 `
 
 type UpdateSiteIdentitySettingsParams struct {
-	Units                     *consts.Units
-	Timezone                  *string
-	Language                  *string
-	DateFormat                *string
-	TimeFormat                *string
-	WeekStartDay              *string
-	BolusDiaHours             *float64
-	BolusOnsetMinutes         *float64
-	BolusPeakMinutes          *float64
-	BasalDiaHours             *float64
-	BasalOnsetMinutes         *float64
-	BasalPeakMinutes          *float64
-	DefaultInsulinSensitivity *float64
-	DefaultCarbRatio          *float64
-	DefaultBasalRate          *float64
-	CarbMaxAbsorptionHours    *float64
-	CarbMin5mImpact           *float64
-	AlarmUrgentLowEnabled     *bool
-	AlarmUrgentLow            *int64
-	AlarmLowEnabled           *bool
-	AlarmLow                  *int64
-	AlarmLowMinutes           *int64
-	AlarmLowPredictionEnabled *bool
-	AlarmHighEnabled          *bool
-	AlarmHigh                 *int64
-	AlarmHighMinutes          *int64
-	AlarmUrgentHighEnabled    *bool
-	AlarmUrgentHigh           *int64
-	AlarmFastRiseEnabled      *bool
-	AlarmFastRise             *int64
-	AlarmFastRiseMinutes      *int64
-	AlarmFastDropEnabled      *bool
-	AlarmFastDrop             *int64
-	AlarmFastDropMinutes      *int64
-	AlarmNoDataEnabled        *bool
-	AlarmNoDataMinutes        *int64
-	AlarmBatteryLowEnabled    *bool
-	AlarmBatteryLowPercent    *int64
-	AlarmBatteryLowPwdEnabled *bool
-	AlarmBatteryLowPwdPercent *int64
-	AlarmLowReservoirEnabled  *bool
-	AlarmLowReservoirUnits    *int64
-	NotificationsEnabled      *bool
-	ID                        int64
-	SiteID                    string
+	Units                            *consts.Units
+	Timezone                         *string
+	Language                         *string
+	DateFormat                       *string
+	TimeFormat                       *string
+	WeekStartDay                     *string
+	BolusDiaHours                    *float64
+	BolusOnsetMinutes                *float64
+	BolusPeakMinutes                 *float64
+	BasalDiaHours                    *float64
+	BasalOnsetMinutes                *float64
+	BasalPeakMinutes                 *float64
+	DefaultInsulinSensitivity        *float64
+	DefaultCarbRatio                 *float64
+	DefaultBasalRate                 *float64
+	CarbMaxAbsorptionHours           *float64
+	CarbMin5mImpact                  *float64
+	AlarmUrgentLowEnabled            *bool
+	AlarmUrgentLow                   *int64
+	AlarmLowEnabled                  *bool
+	AlarmLow                         *int64
+	AlarmLowMinutes                  *int64
+	AlarmLowPredictionEnabled        *bool
+	AlarmHighEnabled                 *bool
+	AlarmHigh                        *int64
+	AlarmHighMinutes                 *int64
+	AlarmUrgentHighEnabled           *bool
+	AlarmUrgentHigh                  *int64
+	AlarmFastRiseEnabled             *bool
+	AlarmFastRise                    *int64
+	AlarmFastRiseMinutes             *int64
+	AlarmFastDropEnabled             *bool
+	AlarmFastDrop                    *int64
+	AlarmFastDropMinutes             *int64
+	AlarmNoDataEnabled               *bool
+	AlarmNoDataMinutes               *int64
+	AlarmDeviceBatteryLowEnabled     *bool
+	AlarmDeviceBatteryLowPercent     *int64
+	AlarmDeviceBatteryLowMinutes     *int64
+	AlarmDeviceBatteryLowDevicesJson *types.DeviceNames
+	AlarmLowReservoirEnabled         *bool
+	AlarmLowReservoirUnits           *int64
+	NotificationsEnabled             *bool
+	ID                               int64
+	SiteID                           string
 }
 
 func (q *Queries) UpdateSiteIdentitySettings(ctx context.Context, arg UpdateSiteIdentitySettingsParams) error {
@@ -166,10 +167,10 @@ func (q *Queries) UpdateSiteIdentitySettings(ctx context.Context, arg UpdateSite
 		arg.AlarmFastDropMinutes,
 		arg.AlarmNoDataEnabled,
 		arg.AlarmNoDataMinutes,
-		arg.AlarmBatteryLowEnabled,
-		arg.AlarmBatteryLowPercent,
-		arg.AlarmBatteryLowPwdEnabled,
-		arg.AlarmBatteryLowPwdPercent,
+		arg.AlarmDeviceBatteryLowEnabled,
+		arg.AlarmDeviceBatteryLowPercent,
+		arg.AlarmDeviceBatteryLowMinutes,
+		arg.AlarmDeviceBatteryLowDevicesJson,
 		arg.AlarmLowReservoirEnabled,
 		arg.AlarmLowReservoirUnits,
 		arg.NotificationsEnabled,
@@ -235,10 +236,10 @@ UPDATE sites SET
     alarm_no_data_enabled = ?35,
     alarm_no_data_minutes = ?36,
 
-    alarm_battery_low_enabled = ?37,
-    alarm_battery_low_percent = ?38,
-    alarm_battery_low_pwd_enabled = ?39,
-    alarm_battery_low_pwd_percent = ?40,
+    alarm_device_battery_low_enabled = ?37,
+    alarm_device_battery_low_percent = ?38,
+    alarm_device_battery_low_minutes = ?39,
+    alarm_device_battery_low_devices_json = ?40,
 
     alarm_low_reservoir_enabled = ?41,
     alarm_low_reservoir_units = ?42,
@@ -249,50 +250,50 @@ WHERE id = ?44
 `
 
 type UpdateSitesSettingsParams struct {
-	Units                     *consts.Units
-	Timezone                  *string
-	Language                  *string
-	DateFormat                *string
-	TimeFormat                *string
-	WeekStartDay              *string
-	BolusDiaHours             *float64
-	BolusOnsetMinutes         *float64
-	BolusPeakMinutes          *float64
-	BasalDiaHours             *float64
-	BasalOnsetMinutes         *float64
-	BasalPeakMinutes          *float64
-	DefaultInsulinSensitivity *float64
-	DefaultCarbRatio          *float64
-	DefaultBasalRate          *float64
-	CarbMaxAbsorptionHours    *float64
-	CarbMin5mImpact           *float64
-	AlarmUrgentLowEnabled     *bool
-	AlarmUrgentLow            *int64
-	AlarmLowEnabled           *bool
-	AlarmLow                  *int64
-	AlarmLowMinutes           *int64
-	AlarmLowPredictionEnabled *bool
-	AlarmHighEnabled          *bool
-	AlarmHigh                 *int64
-	AlarmHighMinutes          *int64
-	AlarmUrgentHighEnabled    *bool
-	AlarmUrgentHigh           *int64
-	AlarmFastRiseEnabled      *bool
-	AlarmFastRise             *int64
-	AlarmFastRiseMinutes      *int64
-	AlarmFastDropEnabled      *bool
-	AlarmFastDrop             *int64
-	AlarmFastDropMinutes      *int64
-	AlarmNoDataEnabled        *bool
-	AlarmNoDataMinutes        *int64
-	AlarmBatteryLowEnabled    *bool
-	AlarmBatteryLowPercent    *int64
-	AlarmBatteryLowPwdEnabled *bool
-	AlarmBatteryLowPwdPercent *int64
-	AlarmLowReservoirEnabled  *bool
-	AlarmLowReservoirUnits    *int64
-	NotificationsEnabled      *bool
-	ID                        string
+	Units                            *consts.Units
+	Timezone                         *string
+	Language                         *string
+	DateFormat                       *string
+	TimeFormat                       *string
+	WeekStartDay                     *string
+	BolusDiaHours                    *float64
+	BolusOnsetMinutes                *float64
+	BolusPeakMinutes                 *float64
+	BasalDiaHours                    *float64
+	BasalOnsetMinutes                *float64
+	BasalPeakMinutes                 *float64
+	DefaultInsulinSensitivity        *float64
+	DefaultCarbRatio                 *float64
+	DefaultBasalRate                 *float64
+	CarbMaxAbsorptionHours           *float64
+	CarbMin5mImpact                  *float64
+	AlarmUrgentLowEnabled            *bool
+	AlarmUrgentLow                   *int64
+	AlarmLowEnabled                  *bool
+	AlarmLow                         *int64
+	AlarmLowMinutes                  *int64
+	AlarmLowPredictionEnabled        *bool
+	AlarmHighEnabled                 *bool
+	AlarmHigh                        *int64
+	AlarmHighMinutes                 *int64
+	AlarmUrgentHighEnabled           *bool
+	AlarmUrgentHigh                  *int64
+	AlarmFastRiseEnabled             *bool
+	AlarmFastRise                    *int64
+	AlarmFastRiseMinutes             *int64
+	AlarmFastDropEnabled             *bool
+	AlarmFastDrop                    *int64
+	AlarmFastDropMinutes             *int64
+	AlarmNoDataEnabled               *bool
+	AlarmNoDataMinutes               *int64
+	AlarmDeviceBatteryLowEnabled     *bool
+	AlarmDeviceBatteryLowPercent     *int64
+	AlarmDeviceBatteryLowMinutes     *int64
+	AlarmDeviceBatteryLowDevicesJson *types.DeviceNames
+	AlarmLowReservoirEnabled         *bool
+	AlarmLowReservoirUnits           *int64
+	NotificationsEnabled             *bool
+	ID                               string
 }
 
 func (q *Queries) UpdateSitesSettings(ctx context.Context, arg UpdateSitesSettingsParams) error {
@@ -333,10 +334,10 @@ func (q *Queries) UpdateSitesSettings(ctx context.Context, arg UpdateSitesSettin
 		arg.AlarmFastDropMinutes,
 		arg.AlarmNoDataEnabled,
 		arg.AlarmNoDataMinutes,
-		arg.AlarmBatteryLowEnabled,
-		arg.AlarmBatteryLowPercent,
-		arg.AlarmBatteryLowPwdEnabled,
-		arg.AlarmBatteryLowPwdPercent,
+		arg.AlarmDeviceBatteryLowEnabled,
+		arg.AlarmDeviceBatteryLowPercent,
+		arg.AlarmDeviceBatteryLowMinutes,
+		arg.AlarmDeviceBatteryLowDevicesJson,
 		arg.AlarmLowReservoirEnabled,
 		arg.AlarmLowReservoirUnits,
 		arg.NotificationsEnabled,
