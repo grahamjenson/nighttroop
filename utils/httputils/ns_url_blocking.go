@@ -54,7 +54,7 @@ func IsNightscoutURLBlocked(host string, cfg *config.ServerConfig) error {
 		ips = resolved
 	}
 	for _, ip := range ips {
-		if isBlockedIP(ip) {
+		if IsBlockedIP(ip) {
 			return fmt.Errorf("Nightscout cannot be on a private or local network.")
 		}
 	}
@@ -62,7 +62,8 @@ func IsNightscoutURLBlocked(host string, cfg *config.ServerConfig) error {
 	return nil
 }
 
-func isBlockedIP(ip net.IP) bool {
+// IsBlockedIP is whether the address is unspecified, or on a private or local network
+func IsBlockedIP(ip net.IP) bool {
 	if ip.IsUnspecified() {
 		return true
 	}

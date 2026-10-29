@@ -30,7 +30,7 @@ func (b *SyncJobManager) nightscoutClientFor(syncInfo *SyncJobInfo) *nightscoutC
 	defer b.nightscoutClientsLock.Unlock()
 	c, _ := b.nightscoutClients.Get(syncInfo.SiteID)
 	if c == nil || c.url != syncInfo.urlOrUsername || c.token != syncInfo.password {
-		c = &nightscoutClient{url: syncInfo.urlOrUsername, token: syncInfo.password, Client: nightscout_client.NewClient(syncInfo.urlOrUsername, syncInfo.password), lastModified: map[nsutils.Collection]int64{}}
+		c = &nightscoutClient{url: syncInfo.urlOrUsername, token: syncInfo.password, Client: nightscout_client.NewClient(syncInfo.urlOrUsername, syncInfo.password, b.config.IsDev()), lastModified: map[nsutils.Collection]int64{}}
 		b.nightscoutClients.Add(syncInfo.SiteID, c)
 	}
 	return c
