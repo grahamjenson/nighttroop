@@ -149,6 +149,8 @@ func parseConfig(t *testing.T, text string) []Alarm {
 			alarms = append(alarms, UrgentHighAlarm{Mgdl: mgdl})
 		case High:
 			alarms = append(alarms, HighAlarm{Mgdl: mgdl, Minutes: minutes})
+		case PredictedLow:
+			alarms = append(alarms, PredictedLowAlarm{Mgdl: mgdl, Minutes: minutes})
 		case FastRise:
 			alarms = append(alarms, FastRiseAlarm{Mgdl: mgdl, Minutes: minutes})
 		case FastDrop:

@@ -29,6 +29,7 @@ type SettingMap struct {
 	AlarmLow                         *Setting[int64]
 	AlarmLowMinutes                  *Setting[int64]
 	AlarmLowPredictionEnabled        *Setting[bool]
+	AlarmLowPredictionMinutes        *Setting[int64]
 	AlarmHighEnabled                 *Setting[bool]
 	AlarmHigh                        *Setting[int64]
 	AlarmHighMinutes                 *Setting[int64]
@@ -75,6 +76,7 @@ var DefaultSettingsMap = &SettingMap{
 	AlarmLow:                         NewDefaultSetting(AlarmLow),
 	AlarmLowMinutes:                  NewDefaultSetting(AlarmLowMinutes),
 	AlarmLowPredictionEnabled:        NewDefaultSetting(AlarmLowPredictionEnabled),
+	AlarmLowPredictionMinutes:        NewDefaultSetting(AlarmLowPredictionMinutes),
 	AlarmHighEnabled:                 NewDefaultSetting(AlarmHighEnabled),
 	AlarmHigh:                        NewDefaultSetting(AlarmHigh),
 	AlarmHighMinutes:                 NewDefaultSetting(AlarmHighMinutes),
@@ -123,6 +125,7 @@ func NewSettingsMap(g SettingsGetter, createdAt *int64, subject *string) *Settin
 		AlarmLow:                         NewSetting(AlarmLow, g.GetAlarmLow(), createdAt, subject),
 		AlarmLowMinutes:                  NewSetting(AlarmLowMinutes, g.GetAlarmLowMinutes(), createdAt, subject),
 		AlarmLowPredictionEnabled:        NewSetting(AlarmLowPredictionEnabled, g.GetAlarmLowPredictionEnabled(), createdAt, subject),
+		AlarmLowPredictionMinutes:        NewSetting(AlarmLowPredictionMinutes, g.GetAlarmLowPredictionMinutes(), createdAt, subject),
 		AlarmHighEnabled:                 NewSetting(AlarmHighEnabled, g.GetAlarmHighEnabled(), createdAt, subject),
 		AlarmHigh:                        NewSetting(AlarmHigh, g.GetAlarmHigh(), createdAt, subject),
 		AlarmHighMinutes:                 NewSetting(AlarmHighMinutes, g.GetAlarmHighMinutes(), createdAt, subject),
@@ -487,6 +490,21 @@ func (m *SettingMap) SetAlarmLowPredictionEnabled(v *bool) {
 
 }
 
+// GetAlarmLowPredictionMinutes returns the AlarmLowPredictionMinutes value.
+func (m SettingMap) GetAlarmLowPredictionMinutes() *int64 {
+	if m.AlarmLowPredictionMinutes == nil {
+		return nil
+	}
+	return ptr(m.AlarmLowPredictionMinutes.Value)
+}
+
+// SetAlarmLowPredictionMinutes sets the AlarmLowPredictionMinutes value and returns the updated SettingMap.
+func (m *SettingMap) SetAlarmLowPredictionMinutes(v *int64) {
+
+	m.AlarmLowPredictionMinutes = NewSetting(AlarmLowPredictionMinutes, v, nil, nil)
+
+}
+
 // GetAlarmHighEnabled returns the AlarmHighEnabled value.
 func (m SettingMap) GetAlarmHighEnabled() *bool {
 	if m.AlarmHighEnabled == nil {
@@ -840,6 +858,8 @@ func (m SettingMap) GetSettingAnyTypeByName(name string) *SettingAnyType {
 		return m.AlarmLowMinutes.ToSettingAnyType()
 	case "alarm_low_prediction_enabled":
 		return m.AlarmLowPredictionEnabled.ToSettingAnyType()
+	case "alarm_low_prediction_minutes":
+		return m.AlarmLowPredictionMinutes.ToSettingAnyType()
 	case "alarm_high_enabled":
 		return m.AlarmHighEnabled.ToSettingAnyType()
 	case "alarm_high":
@@ -956,6 +976,9 @@ func (m *SettingMap) SetSettingByName(name string, v any, createdAt *int64, subj
 		return err
 	case "alarm_low_prediction_enabled":
 		m.AlarmLowPredictionEnabled, err = NewSettingAndParseValidate(AlarmLowPredictionEnabled, v, createdAt, subject)
+		return err
+	case "alarm_low_prediction_minutes":
+		m.AlarmLowPredictionMinutes, err = NewSettingAndParseValidate(AlarmLowPredictionMinutes, v, createdAt, subject)
 		return err
 	case "alarm_high_enabled":
 		m.AlarmHighEnabled, err = NewSettingAndParseValidate(AlarmHighEnabled, v, createdAt, subject)

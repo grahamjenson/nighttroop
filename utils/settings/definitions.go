@@ -278,6 +278,15 @@ var AlarmLowPredictionEnabled = &SettingDefinition[bool]{
 	ParseFunc:  ParseBool,
 }
 
+// AlarmLowPredictionMinutes is how far ahead the predicted low alarm follows the current trend to the low alarm's glucose
+var AlarmLowPredictionMinutes = &SettingDefinition[int64]{
+	Identifier:   "alarm_low_prediction_minutes",
+	TypeString:   "number",
+	Default:      20,
+	ValidateFunc: Range(int64(5), 60),
+	ParseFunc:    ParseInt,
+}
+
 var AlarmHighEnabled = &SettingDefinition[bool]{
 	Identifier: "alarm_high_enabled",
 	TypeString: "boolean",

@@ -185,6 +185,60 @@ func TestLow(t *testing.T) {
 	})
 }
 
+func TestPredictedLow(t *testing.T) {
+	runTimelines(t, []timeline{
+		{
+			name:   "falling a mg/dL a minute, 20 minutes on is under 72 once it is, and it clears as the fall slows",
+			config: "predicted_low 72 20m",
+			timeline: `
+				0m   100
+				5m   95                                  // 75 in 20 minutes, not under 72
+				10m  90    -> predicted_low started      // 70 in 20 minutes
+				15m  90    -> predicted_low cleared      active:   // 10 over 15 minutes, so 77 in 20
+			`,
+		},
+		{
+			name:   "the trend is from the newest readings within 15 minutes, not an older fall",
+			config: "predicted_low 72 20m",
+			timeline: `
+				0m   200
+				20m  100
+				25m  99    active:   // 1 over 5 minutes, so 79 in 20
+			`,
+		},
+		{
+			name:   "readings less than 5 minutes apart are too close to make a trend",
+			config: "predicted_low 72 20m",
+			timeline: `
+				0m   100
+				4m   80    active:
+			`,
+		},
+		{
+			name:   "a steady glucose under it is not falling, so is not predicted, but low",
+			config: "predicted_low 72 20m",
+			timeline: `
+				0m   70
+				10m  70    active:
+			`,
+		},
+		{
+			name:     "rising is not predicted",
+			config:   "predicted_low 72 20m",
+			timeline: "0m 60\n10m 70   active:",
+		},
+		{
+			name:   "it warns before the low, which quiets it once it is active",
+			config: "low 72 0m, predicted_low 72 20m",
+			timeline: `
+				0m   90
+				10m  80    -> predicted_low started                   // 60 in 20 minutes
+				15m  70    -> low started   active: low, predicted_low   alerting: low
+			`,
+		},
+	})
+}
+
 func TestHigh(t *testing.T) {
 	runTimelines(t, []timeline{
 		{

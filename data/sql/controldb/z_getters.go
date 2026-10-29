@@ -538,6 +538,16 @@ func (m *Site) SetAlarmLowPredictionEnabled(v *bool) {
 	m.AlarmLowPredictionEnabled = v
 }
 
+// GetAlarmLowPredictionMinutes returns the AlarmLowPredictionMinutes value.
+func (m Site) GetAlarmLowPredictionMinutes() *int64 {
+	return m.AlarmLowPredictionMinutes
+}
+
+// SetAlarmLowPredictionMinutes sets the AlarmLowPredictionMinutes value and returns the updated Site.
+func (m *Site) SetAlarmLowPredictionMinutes(v *int64) {
+	m.AlarmLowPredictionMinutes = v
+}
+
 // GetAlarmHighEnabled returns the AlarmHighEnabled value.
 func (m Site) GetAlarmHighEnabled() *bool {
 	return m.AlarmHighEnabled
@@ -1106,6 +1116,16 @@ func (m SiteIdentity) GetAlarmLowPredictionEnabled() *bool {
 // SetAlarmLowPredictionEnabled sets the AlarmLowPredictionEnabled value and returns the updated SiteIdentity.
 func (m *SiteIdentity) SetAlarmLowPredictionEnabled(v *bool) {
 	m.AlarmLowPredictionEnabled = v
+}
+
+// GetAlarmLowPredictionMinutes returns the AlarmLowPredictionMinutes value.
+func (m SiteIdentity) GetAlarmLowPredictionMinutes() *int64 {
+	return m.AlarmLowPredictionMinutes
+}
+
+// SetAlarmLowPredictionMinutes sets the AlarmLowPredictionMinutes value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmLowPredictionMinutes(v *int64) {
+	m.AlarmLowPredictionMinutes = v
 }
 
 // GetAlarmHighEnabled returns the AlarmHighEnabled value.
@@ -1948,6 +1968,16 @@ func (m *UpdateSiteIdentitySettingsParams) SetAlarmLowPredictionEnabled(v *bool)
 	m.AlarmLowPredictionEnabled = v
 }
 
+// GetAlarmLowPredictionMinutes returns the AlarmLowPredictionMinutes value.
+func (m UpdateSiteIdentitySettingsParams) GetAlarmLowPredictionMinutes() *int64 {
+	return m.AlarmLowPredictionMinutes
+}
+
+// SetAlarmLowPredictionMinutes sets the AlarmLowPredictionMinutes value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m *UpdateSiteIdentitySettingsParams) SetAlarmLowPredictionMinutes(v *int64) {
+	m.AlarmLowPredictionMinutes = v
+}
+
 // GetAlarmHighEnabled returns the AlarmHighEnabled value.
 func (m UpdateSiteIdentitySettingsParams) GetAlarmHighEnabled() *bool {
 	return m.AlarmHighEnabled
@@ -2396,6 +2426,16 @@ func (m UpdateSitesSettingsParams) GetAlarmLowPredictionEnabled() *bool {
 // SetAlarmLowPredictionEnabled sets the AlarmLowPredictionEnabled value and returns the updated UpdateSitesSettingsParams.
 func (m *UpdateSitesSettingsParams) SetAlarmLowPredictionEnabled(v *bool) {
 	m.AlarmLowPredictionEnabled = v
+}
+
+// GetAlarmLowPredictionMinutes returns the AlarmLowPredictionMinutes value.
+func (m UpdateSitesSettingsParams) GetAlarmLowPredictionMinutes() *int64 {
+	return m.AlarmLowPredictionMinutes
+}
+
+// SetAlarmLowPredictionMinutes sets the AlarmLowPredictionMinutes value and returns the updated UpdateSitesSettingsParams.
+func (m *UpdateSitesSettingsParams) SetAlarmLowPredictionMinutes(v *int64) {
+	m.AlarmLowPredictionMinutes = v
 }
 
 // GetAlarmHighEnabled returns the AlarmHighEnabled value.

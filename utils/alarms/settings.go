@@ -13,6 +13,9 @@ func FromSettings(m *settings.CombinedSettingsMap) []Alarm {
 	if resolve(m, settings.SettingMap.GetAlarmLowEnabled) {
 		alarms = append(alarms, LowAlarm{Mgdl: mgdl(settings.SettingMap.GetAlarmLow), Minutes: resolve(m, settings.SettingMap.GetAlarmLowMinutes)})
 	}
+	if resolve(m, settings.SettingMap.GetAlarmLowPredictionEnabled) {
+		alarms = append(alarms, PredictedLowAlarm{Mgdl: mgdl(settings.SettingMap.GetAlarmLow), Minutes: resolve(m, settings.SettingMap.GetAlarmLowPredictionMinutes)})
+	}
 	if resolve(m, settings.SettingMap.GetAlarmUrgentHighEnabled) {
 		alarms = append(alarms, UrgentHighAlarm{Mgdl: mgdl(settings.SettingMap.GetAlarmUrgentHigh)})
 	}

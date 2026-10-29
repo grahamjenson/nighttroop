@@ -338,6 +338,14 @@ ASSERT_EQUALS "alarm_low_prediction_enabled" "@result.identifier"
 ASSERT_EQUALS "boolean" "@result.type"
 ASSERT_EQUALS false "@result.value"
 
+NAME get_alarm_low_prediction_minutes_settings_v3
+GET http://{{ site }}/api/v3/settings/alarm_low_prediction_minutes
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_low_prediction_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 20 "@result.value"
+
 NAME get_alarm_high_enabled_settings_v3
 GET http://{{ site }}/api/v3/settings/alarm_high_enabled
 H Authorization: Bearer {{ jwt }}
@@ -713,6 +721,15 @@ ASSERT_STATUS 200
 ASSERT_EQUALS "alarm_low_prediction_enabled" "@result.identifier"
 ASSERT_EQUALS "boolean" "@result.type"
 ASSERT_EQUALS true "@result.value"
+
+NAME put_alarm_low_prediction_minutes_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_low_prediction_minutes
+H Authorization: Bearer {{ jwt }}
+B { "value": 30 }
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_low_prediction_minutes" "@result.identifier"
+ASSERT_EQUALS "number" "@result.type"
+ASSERT_EQUALS 30 "@result.value"
 
 NAME put_alarm_high_enabled_settings_v3
 PUT http://{{ site }}/api/v3/settings/alarm_high_enabled

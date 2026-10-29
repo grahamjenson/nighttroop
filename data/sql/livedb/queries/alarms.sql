@@ -38,8 +38,8 @@ SELECT DISTINCT site_id FROM alarms WHERE alerting = 1 AND snoozed_until > sqlc.
 -- An identity's active alarms, the most urgent first, as alarms.Types lists them
 SELECT * FROM alarms
 WHERE site_id = sqlc.arg('SiteID') AND identity_id = sqlc.arg('IdentityID') AND active_since != 0
-ORDER BY CASE type WHEN 'urgent_low' THEN 0 WHEN 'low' THEN 1 WHEN 'urgent_high' THEN 2 WHEN 'high' THEN 3
-    WHEN 'fast_rise' THEN 4 WHEN 'fast_drop' THEN 5 WHEN 'no_data' THEN 6 ELSE 7 END;
+ORDER BY CASE type WHEN 'urgent_low' THEN 0 WHEN 'low' THEN 1 WHEN 'predicted_low' THEN 2 WHEN 'urgent_high' THEN 3
+    WHEN 'high' THEN 4 WHEN 'fast_rise' THEN 5 WHEN 'fast_drop' THEN 6 WHEN 'no_data' THEN 7 ELSE 8 END;
 
 -- name: GetIdentityAlarm :one
 -- One of an identity's active alarms
