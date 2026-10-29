@@ -31,6 +31,16 @@ func NewCombinedSettingsMap(site *controldb.Site, identity *controldb.SiteIdenti
 	}
 }
 
+// NewSiteCombinedSettingsMap is the site's own settings over the defaults, for what is the site's rather than one
+// identity's, such as its days
+func NewSiteCombinedSettingsMap(site *controldb.Site) *CombinedSettingsMap {
+	return &CombinedSettingsMap{
+		SiteSettingsMap:     NewSettingsMap(site, &site.CreatedAt, ptr("site")),
+		IdentitySettingsMap: &SettingMap{},
+		DefaultSettingsMap:  DefaultSettingsMap,
+	}
+}
+
 func (m *CombinedSettingsMap) GetSettingAnyTypeByName(identifier string) (*SettingAnyType, error) {
 	setting := first(
 		m.IdentitySettingsMap.GetSettingAnyTypeByName(identifier),

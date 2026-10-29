@@ -487,6 +487,19 @@ type ProfileSwitchesVw struct {
 	CreatedByIdentityName    *string
 }
 
+type SummaryDaily struct {
+	Date            string
+	Timezone        string
+	StartAt         int64
+	EndAt           int64
+	TimeInRange     *float64
+	TotalDailyDose  float64
+	TotalCarbs      float64
+	GlucoseMgdlJson string
+	CreatedAt       int64
+	UpdatedAt       int64
+}
+
 type TempBasal struct {
 	ID                    string
 	DurationMinutes       int64
