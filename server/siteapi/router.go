@@ -15,23 +15,24 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 	r := chi.NewRouter()
 	httputils.AddStandardMiddleware(r, config, controlDB)
 
-	// Rate Limiter is before auth because auth can be expencive
-	r.Use(httputils.SiteRateLimitMiddleware(config))
-
+	// Static files are embedded and cheap, so like the public and control sites only the global limits cover them
 	static.AddStaticRoutes(r)
 
 	store := sitecollections.NewSiteStore()
 
 	// Publically available (if the person knows the subdomain) endpoints
 	r.Group(func(r chi.Router) {
+		// Before sign in only the IP is known, so an IP spamming logins cannot spend the site's own limit
+		r.Use(httputils.SiteUnauthRateLimitMiddleware(config))
 		r.Get("/login", sitelogin.GETLoginPageHandler())
 		r.Post("/login", sitelogin.POSTLogin(controlDB, config))
 		r.Post("/login/totp", sitelogin.POSTLoginTOTP(controlDB, config))
 	})
 
 	r.Group(func(r chi.Router) {
-		// Checks read and write rates and makes sure not over limit
 		r.Use(siteapiutils.JWTAuthMiddleware(controlDB, config)) // Checks for JWT Login and Token to Auth
+		// Checks read and write rates and makes sure not over limit, once the site's own identity has signed in
+		r.Use(httputils.SiteRateLimitMiddleware(config))
 		r.Use(httputils.SiteIdentityRateLimitMiddleware(config))
 		r.Use(httputils.SiteIdentitySeenFlagsUpdateMiddleware(controlDB)) // Updates user/identity flags
 
