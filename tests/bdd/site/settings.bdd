@@ -14,6 +14,16 @@ ASSERT_TEXT_EQUALS #site--settings--site--week_start_day>option[value="sunday"] 
 ASSERT_TEXT_EQUALS #site--settings--site--week_start_day>option[value=""] Default (Monday)
 SCREENSHOT site_settings
 
+// The timezone suggests the browser's timezones as it is typed, the browser's own first, and a button fills it in
+ASSERT_VISIBLE #site--settings--site--timezone[list="site--settings--timezones"]
+ASSERT_VISIBLE #site--settings--identity--timezone[list="site--settings--timezones"]
+ASSERT_TEXT_EQUALS #site--settings--timezones>option:first-child This browser's timezone
+ASSERT_TEXT_EQUALS #site--settings--timezones>option[value="Pacific/Auckland"] Pacific/Auckland
+CLICK #site--settings--site--timezone--browser
+ASSERT_VISIBLE #site--settings--site--timezone:not(:placeholder-shown)
+ASSERT_VISIBLE #site--settings--identity--timezone:placeholder-shown
+SCREENSHOT browser_timezone
+
 INPUT #site--settings--site--units mg/dL
 INPUT #site--settings--site--date_format DD/MM/YYYY
 INPUT #site--settings--site--timezone Pacific/Auckland
