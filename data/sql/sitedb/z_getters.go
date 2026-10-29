@@ -7686,6 +7686,26 @@ func (m *UpdateFoodIntakeParams) SetID(v string) {
 	m.ID = v
 }
 
+// GetMinutes returns the Minutes value.
+func (m AlarmGlucoseReadingsParams) GetMinutes() int64 {
+	return m.Minutes
+}
+
+// SetMinutes sets the Minutes value and returns the updated AlarmGlucoseReadingsParams.
+func (m *AlarmGlucoseReadingsParams) SetMinutes(v int64) {
+	m.Minutes = v
+}
+
+// GetLimit returns the Limit value.
+func (m AlarmGlucoseReadingsParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated AlarmGlucoseReadingsParams.
+func (m *AlarmGlucoseReadingsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
 // GetIncludeDeleted returns the IncludeDeleted value.
 func (m AllGlucoseReadingsParams) GetIncludeDeleted() bool {
 	return m.IncludeDeleted

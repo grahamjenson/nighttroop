@@ -145,17 +145,9 @@ func (c *Checker) checkSite(ctx context.Context, siteID string, now int64) error
 		return err
 	}
 
-	// The newest reading, however old, as no data is measured from it, then those back to the longest an alarm can
-	// wait before it, as an alarm lasts by its readings, not by the time now
-	rows, err := siteDB.Queries.SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{TypeEq: new("sgv"), Limit: 1})
+	rows, err := siteDB.Queries.AlarmGlucoseReadings(ctx, sitedb.AlarmGlucoseReadingsParams{Minutes: settings.MaxAlarmMinutes, Limit: maxReadings})
 	if err != nil {
 		return err
-	}
-	if len(rows) > 0 {
-		since := rows[0].OccurredAt - settings.MaxAlarmMinutes*time.Minute.Milliseconds()
-		if rows, err = siteDB.Queries.SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{TypeEq: new("sgv"), DateGTE: &since, Limit: maxReadings}); err != nil {
-			return err
-		}
 	}
 	// The same glucose from more than one source is one reading, so it counts once
 	cleaned := glucose.CleanReadings(rows)
