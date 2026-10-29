@@ -67,14 +67,14 @@ func (m *CombinedSettingsMap) GetUnits() *consts.Units {
 	)
 }
 
-// GetAlarmLowMgdl is the low alarm's mg/dL, the identity's, then the site's, then the default, whether or not it is on
-func (m *CombinedSettingsMap) GetAlarmLowMgdl() *int64 {
-	return first(m.IdentitySettingsMap.GetAlarmLowMgdl(), m.SiteSettingsMap.GetAlarmLowMgdl(), m.DefaultSettingsMap.GetAlarmLowMgdl())
+// GetRangeLowMgdl is the low of the range in mg/dL, the identity's, then the site's, then the default, whether or not its alarm is on
+func (m *CombinedSettingsMap) GetRangeLowMgdl() *int64 {
+	return first(m.IdentitySettingsMap.GetRangeLowMgdl(), m.SiteSettingsMap.GetRangeLowMgdl(), m.DefaultSettingsMap.GetRangeLowMgdl())
 }
 
-// GetAlarmHighMgdl is the high alarm's mg/dL, the identity's, then the site's, then the default, whether or not it is on
-func (m *CombinedSettingsMap) GetAlarmHighMgdl() *int64 {
-	return first(m.IdentitySettingsMap.GetAlarmHighMgdl(), m.SiteSettingsMap.GetAlarmHighMgdl(), m.DefaultSettingsMap.GetAlarmHighMgdl())
+// GetRangeHighMgdl is the high of the range in mg/dL, the identity's, then the site's, then the default, whether or not its alarm is on
+func (m *CombinedSettingsMap) GetRangeHighMgdl() *int64 {
+	return first(m.IdentitySettingsMap.GetRangeHighMgdl(), m.SiteSettingsMap.GetRangeHighMgdl(), m.DefaultSettingsMap.GetRangeHighMgdl())
 }
 
 // GetTimezone is the identity's timezone, then the site's, then the default UTC

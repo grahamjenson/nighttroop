@@ -21,13 +21,13 @@ func TestFromSettings(t *testing.T) {
 		},
 		{
 			name: "the site's alarm, with the default settings it leaves out",
-			site: controldb.Site{AlarmLowEnabled: new(true), AlarmLowMgdl: new(int64(70))},
+			site: controldb.Site{AlarmLowEnabled: new(true), RangeLowMgdl: new(int64(70))},
 			want: []Alarm{LowAlarm{Mgdl: 70, Minutes: 5}},
 		},
 		{
 			name:     "the identity's settings win over the site's",
-			site:     controldb.Site{AlarmUrgentLowEnabled: new(true), AlarmUrgentLowMgdl: new(int64(50))},
-			identity: controldb.SiteIdentity{AlarmUrgentLowMgdl: new(int64(60))},
+			site:     controldb.Site{AlarmUrgentLowEnabled: new(true), RangeUrgentLowMgdl: new(int64(50))},
+			identity: controldb.SiteIdentity{RangeUrgentLowMgdl: new(int64(60))},
 			want:     []Alarm{UrgentLowAlarm{Mgdl: 60}},
 		},
 		{
@@ -48,7 +48,7 @@ func TestFromSettings(t *testing.T) {
 		},
 		{
 			name:     "the predicted low follows the trend 20 minutes on to the low's glucose, by default",
-			site:     controldb.Site{AlarmLowMgdl: new(int64(80))},
+			site:     controldb.Site{RangeLowMgdl: new(int64(80))},
 			identity: controldb.SiteIdentity{AlarmLowPredictionEnabled: new(true)},
 			want:     []Alarm{PredictedLowAlarm{Mgdl: 80, Minutes: 20}},
 		},

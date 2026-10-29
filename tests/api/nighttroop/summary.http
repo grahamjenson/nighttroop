@@ -91,13 +91,13 @@ B {"units": "mg/dL"}
 ASSERT_STATUS 200
 
 NAME set_identity_low_alarm
-PATCH http://{{ .ns_site }}/api/v3/settings/alarm_low_mgdl
+PATCH http://{{ .ns_site }}/api/v3/settings/range_low_mgdl
 H Authorization: Bearer {{ jwt }}
 B {"value": 80}
 ASSERT_STATUS 200
 
 NAME set_identity_high_alarm
-PATCH http://{{ .ns_site }}/api/v3/settings/alarm_high_mgdl
+PATCH http://{{ .ns_site }}/api/v3/settings/range_high_mgdl
 H Authorization: Bearer {{ jwt }}
 B {"value": 150}
 ASSERT_STATUS 200
