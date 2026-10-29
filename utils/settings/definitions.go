@@ -237,8 +237,8 @@ var AlarmUrgentLowEnabled = &SettingDefinition[bool]{
 	ParseFunc:  ParseBool,
 }
 
-var AlarmUrgentLow = &SettingDefinition[int64]{
-	Identifier:   "alarm_urgent_low",
+var AlarmUrgentLowMgdl = &SettingDefinition[int64]{
+	Identifier:   "alarm_urgent_low_mgdl",
 	TypeString:   "number",
 	Default:      56,
 	ValidateFunc: Range(int64(20), 100),
@@ -255,8 +255,8 @@ var AlarmLowEnabled = &SettingDefinition[bool]{
 // MaxAlarmMinutes is the most minutes an alarm can wait for, so a check of the alarms reads only the readings it needs
 const MaxAlarmMinutes = 120
 
-var AlarmLow = &SettingDefinition[int64]{
-	Identifier:   "alarm_low",
+var AlarmLowMgdl = &SettingDefinition[int64]{
+	Identifier:   "alarm_low_mgdl",
 	TypeString:   "number",
 	Default:      72,
 	ValidateFunc: Range(int64(20), 150),
@@ -294,8 +294,8 @@ var AlarmHighEnabled = &SettingDefinition[bool]{
 	ParseFunc:  ParseBool,
 }
 
-var AlarmHigh = &SettingDefinition[int64]{
-	Identifier:   "alarm_high",
+var AlarmHighMgdl = &SettingDefinition[int64]{
+	Identifier:   "alarm_high_mgdl",
 	TypeString:   "number",
 	Default:      180,
 	ValidateFunc: Range(int64(70), 600),
@@ -317,8 +317,8 @@ var AlarmUrgentHighEnabled = &SettingDefinition[bool]{
 	ParseFunc:  ParseBool,
 }
 
-var AlarmUrgentHigh = &SettingDefinition[int64]{
-	Identifier:   "alarm_urgent_high",
+var AlarmUrgentHighMgdl = &SettingDefinition[int64]{
+	Identifier:   "alarm_urgent_high_mgdl",
 	TypeString:   "number",
 	Default:      270,
 	ValidateFunc: Range(int64(100), 600),
@@ -332,8 +332,8 @@ var AlarmFastRiseEnabled = &SettingDefinition[bool]{
 	ParseFunc:  ParseBool,
 }
 
-var AlarmFastRise = &SettingDefinition[int64]{
-	Identifier:   "alarm_fast_rise",
+var AlarmFastRiseMgdl = &SettingDefinition[int64]{
+	Identifier:   "alarm_fast_rise_mgdl",
 	TypeString:   "number",
 	Default:      18,
 	ValidateFunc: Range(int64(5), 50),
@@ -356,8 +356,8 @@ var AlarmFastDropEnabled = &SettingDefinition[bool]{
 	ParseFunc:  ParseBool,
 }
 
-var AlarmFastDrop = &SettingDefinition[int64]{
-	Identifier:   "alarm_fast_drop",
+var AlarmFastDropMgdl = &SettingDefinition[int64]{
+	Identifier:   "alarm_fast_drop_mgdl",
 	TypeString:   "number",
 	Default:      18,
 	ValidateFunc: Range(int64(5), 50),

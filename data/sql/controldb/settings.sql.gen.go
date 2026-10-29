@@ -44,26 +44,26 @@ UPDATE site_identities SET
 
     -- ALERTS
     alarm_urgent_low_enabled = ?18,
-    alarm_urgent_low = ?19,
+    alarm_urgent_low_mgdl = ?19,
 
     alarm_low_enabled = ?20,
-    alarm_low = ?21,
+    alarm_low_mgdl = ?21,
     alarm_low_minutes = ?22,
     alarm_low_prediction_enabled = ?23,
     alarm_low_prediction_minutes = ?24,
 
     alarm_high_enabled = ?25,
-    alarm_high = ?26,
+    alarm_high_mgdl = ?26,
     alarm_high_minutes = ?27,
     alarm_urgent_high_enabled = ?28,
-    alarm_urgent_high = ?29,
+    alarm_urgent_high_mgdl = ?29,
 
     alarm_fast_rise_enabled = ?30,
-    alarm_fast_rise = ?31,
+    alarm_fast_rise_mgdl = ?31,
     alarm_fast_rise_minutes = ?32,
 
     alarm_fast_drop_enabled = ?33,
-    alarm_fast_drop = ?34,
+    alarm_fast_drop_mgdl = ?34,
     alarm_fast_drop_minutes = ?35,
 
     alarm_no_data_enabled = ?36,
@@ -101,22 +101,22 @@ type UpdateSiteIdentitySettingsParams struct {
 	CarbMaxAbsorptionHours           *float64
 	CarbMin5mImpact                  *float64
 	AlarmUrgentLowEnabled            *bool
-	AlarmUrgentLow                   *int64
+	AlarmUrgentLowMgdl               *int64
 	AlarmLowEnabled                  *bool
-	AlarmLow                         *int64
+	AlarmLowMgdl                     *int64
 	AlarmLowMinutes                  *int64
 	AlarmLowPredictionEnabled        *bool
 	AlarmLowPredictionMinutes        *int64
 	AlarmHighEnabled                 *bool
-	AlarmHigh                        *int64
+	AlarmHighMgdl                    *int64
 	AlarmHighMinutes                 *int64
 	AlarmUrgentHighEnabled           *bool
-	AlarmUrgentHigh                  *int64
+	AlarmUrgentHighMgdl              *int64
 	AlarmFastRiseEnabled             *bool
-	AlarmFastRise                    *int64
+	AlarmFastRiseMgdl                *int64
 	AlarmFastRiseMinutes             *int64
 	AlarmFastDropEnabled             *bool
-	AlarmFastDrop                    *int64
+	AlarmFastDropMgdl                *int64
 	AlarmFastDropMinutes             *int64
 	AlarmNoDataEnabled               *bool
 	AlarmNoDataMinutes               *int64
@@ -151,22 +151,22 @@ func (q *Queries) UpdateSiteIdentitySettings(ctx context.Context, arg UpdateSite
 		arg.CarbMaxAbsorptionHours,
 		arg.CarbMin5mImpact,
 		arg.AlarmUrgentLowEnabled,
-		arg.AlarmUrgentLow,
+		arg.AlarmUrgentLowMgdl,
 		arg.AlarmLowEnabled,
-		arg.AlarmLow,
+		arg.AlarmLowMgdl,
 		arg.AlarmLowMinutes,
 		arg.AlarmLowPredictionEnabled,
 		arg.AlarmLowPredictionMinutes,
 		arg.AlarmHighEnabled,
-		arg.AlarmHigh,
+		arg.AlarmHighMgdl,
 		arg.AlarmHighMinutes,
 		arg.AlarmUrgentHighEnabled,
-		arg.AlarmUrgentHigh,
+		arg.AlarmUrgentHighMgdl,
 		arg.AlarmFastRiseEnabled,
-		arg.AlarmFastRise,
+		arg.AlarmFastRiseMgdl,
 		arg.AlarmFastRiseMinutes,
 		arg.AlarmFastDropEnabled,
-		arg.AlarmFastDrop,
+		arg.AlarmFastDropMgdl,
 		arg.AlarmFastDropMinutes,
 		arg.AlarmNoDataEnabled,
 		arg.AlarmNoDataMinutes,
@@ -215,26 +215,26 @@ UPDATE sites SET
 
     -- ALERTS
     alarm_urgent_low_enabled = ?18,
-    alarm_urgent_low = ?19,
+    alarm_urgent_low_mgdl = ?19,
 
     alarm_low_enabled = ?20,
-    alarm_low = ?21,
+    alarm_low_mgdl = ?21,
     alarm_low_minutes = ?22,
     alarm_low_prediction_enabled = ?23,
     alarm_low_prediction_minutes = ?24,
 
     alarm_high_enabled = ?25,
-    alarm_high = ?26,
+    alarm_high_mgdl = ?26,
     alarm_high_minutes = ?27,
     alarm_urgent_high_enabled = ?28,
-    alarm_urgent_high = ?29,
+    alarm_urgent_high_mgdl = ?29,
 
     alarm_fast_rise_enabled = ?30,
-    alarm_fast_rise = ?31,
+    alarm_fast_rise_mgdl = ?31,
     alarm_fast_rise_minutes = ?32,
 
     alarm_fast_drop_enabled = ?33,
-    alarm_fast_drop = ?34,
+    alarm_fast_drop_mgdl = ?34,
     alarm_fast_drop_minutes = ?35,
 
     alarm_no_data_enabled = ?36,
@@ -272,22 +272,22 @@ type UpdateSitesSettingsParams struct {
 	CarbMaxAbsorptionHours           *float64
 	CarbMin5mImpact                  *float64
 	AlarmUrgentLowEnabled            *bool
-	AlarmUrgentLow                   *int64
+	AlarmUrgentLowMgdl               *int64
 	AlarmLowEnabled                  *bool
-	AlarmLow                         *int64
+	AlarmLowMgdl                     *int64
 	AlarmLowMinutes                  *int64
 	AlarmLowPredictionEnabled        *bool
 	AlarmLowPredictionMinutes        *int64
 	AlarmHighEnabled                 *bool
-	AlarmHigh                        *int64
+	AlarmHighMgdl                    *int64
 	AlarmHighMinutes                 *int64
 	AlarmUrgentHighEnabled           *bool
-	AlarmUrgentHigh                  *int64
+	AlarmUrgentHighMgdl              *int64
 	AlarmFastRiseEnabled             *bool
-	AlarmFastRise                    *int64
+	AlarmFastRiseMgdl                *int64
 	AlarmFastRiseMinutes             *int64
 	AlarmFastDropEnabled             *bool
-	AlarmFastDrop                    *int64
+	AlarmFastDropMgdl                *int64
 	AlarmFastDropMinutes             *int64
 	AlarmNoDataEnabled               *bool
 	AlarmNoDataMinutes               *int64
@@ -321,22 +321,22 @@ func (q *Queries) UpdateSitesSettings(ctx context.Context, arg UpdateSitesSettin
 		arg.CarbMaxAbsorptionHours,
 		arg.CarbMin5mImpact,
 		arg.AlarmUrgentLowEnabled,
-		arg.AlarmUrgentLow,
+		arg.AlarmUrgentLowMgdl,
 		arg.AlarmLowEnabled,
-		arg.AlarmLow,
+		arg.AlarmLowMgdl,
 		arg.AlarmLowMinutes,
 		arg.AlarmLowPredictionEnabled,
 		arg.AlarmLowPredictionMinutes,
 		arg.AlarmHighEnabled,
-		arg.AlarmHigh,
+		arg.AlarmHighMgdl,
 		arg.AlarmHighMinutes,
 		arg.AlarmUrgentHighEnabled,
-		arg.AlarmUrgentHigh,
+		arg.AlarmUrgentHighMgdl,
 		arg.AlarmFastRiseEnabled,
-		arg.AlarmFastRise,
+		arg.AlarmFastRiseMgdl,
 		arg.AlarmFastRiseMinutes,
 		arg.AlarmFastDropEnabled,
-		arg.AlarmFastDrop,
+		arg.AlarmFastDropMgdl,
 		arg.AlarmFastDropMinutes,
 		arg.AlarmNoDataEnabled,
 		arg.AlarmNoDataMinutes,

@@ -65,22 +65,22 @@ type Site struct {
 	CarbMaxAbsorptionHours           *float64
 	CarbMin5mImpact                  *float64
 	AlarmUrgentLowEnabled            *bool
-	AlarmUrgentLow                   *int64
+	AlarmUrgentLowMgdl               *int64
 	AlarmLowEnabled                  *bool
-	AlarmLow                         *int64
+	AlarmLowMgdl                     *int64
 	AlarmLowMinutes                  *int64
 	AlarmLowPredictionEnabled        *bool
 	AlarmLowPredictionMinutes        *int64
 	AlarmHighEnabled                 *bool
-	AlarmHigh                        *int64
+	AlarmHighMgdl                    *int64
 	AlarmHighMinutes                 *int64
 	AlarmUrgentHighEnabled           *bool
-	AlarmUrgentHigh                  *int64
+	AlarmUrgentHighMgdl              *int64
 	AlarmFastRiseEnabled             *bool
-	AlarmFastRise                    *int64
+	AlarmFastRiseMgdl                *int64
 	AlarmFastRiseMinutes             *int64
 	AlarmFastDropEnabled             *bool
-	AlarmFastDrop                    *int64
+	AlarmFastDropMgdl                *int64
 	AlarmFastDropMinutes             *int64
 	AlarmNoDataEnabled               *bool
 	AlarmNoDataMinutes               *int64
@@ -126,22 +126,22 @@ type SiteIdentity struct {
 	CarbMaxAbsorptionHours           *float64
 	CarbMin5mImpact                  *float64
 	AlarmUrgentLowEnabled            *bool
-	AlarmUrgentLow                   *int64
+	AlarmUrgentLowMgdl               *int64
 	AlarmLowEnabled                  *bool
-	AlarmLow                         *int64
+	AlarmLowMgdl                     *int64
 	AlarmLowMinutes                  *int64
 	AlarmLowPredictionEnabled        *bool
 	AlarmLowPredictionMinutes        *int64
 	AlarmHighEnabled                 *bool
-	AlarmHigh                        *int64
+	AlarmHighMgdl                    *int64
 	AlarmHighMinutes                 *int64
 	AlarmUrgentHighEnabled           *bool
-	AlarmUrgentHigh                  *int64
+	AlarmUrgentHighMgdl              *int64
 	AlarmFastRiseEnabled             *bool
-	AlarmFastRise                    *int64
+	AlarmFastRiseMgdl                *int64
 	AlarmFastRiseMinutes             *int64
 	AlarmFastDropEnabled             *bool
-	AlarmFastDrop                    *int64
+	AlarmFastDropMgdl                *int64
 	AlarmFastDropMinutes             *int64
 	AlarmNoDataEnabled               *bool
 	AlarmNoDataMinutes               *int64

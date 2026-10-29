@@ -8,25 +8,25 @@ func FromSettings(m *settings.CombinedSettingsMap) []Alarm {
 	mgdl := func(get func(settings.SettingMap) *int64) float64 { return float64(resolve(m, get)) }
 	var alarms []Alarm
 	if resolve(m, settings.SettingMap.GetAlarmUrgentLowEnabled) {
-		alarms = append(alarms, UrgentLowAlarm{Mgdl: mgdl(settings.SettingMap.GetAlarmUrgentLow)})
+		alarms = append(alarms, UrgentLowAlarm{Mgdl: mgdl(settings.SettingMap.GetAlarmUrgentLowMgdl)})
 	}
 	if resolve(m, settings.SettingMap.GetAlarmLowEnabled) {
-		alarms = append(alarms, LowAlarm{Mgdl: mgdl(settings.SettingMap.GetAlarmLow), Minutes: resolve(m, settings.SettingMap.GetAlarmLowMinutes)})
+		alarms = append(alarms, LowAlarm{Mgdl: mgdl(settings.SettingMap.GetAlarmLowMgdl), Minutes: resolve(m, settings.SettingMap.GetAlarmLowMinutes)})
 	}
 	if resolve(m, settings.SettingMap.GetAlarmLowPredictionEnabled) {
-		alarms = append(alarms, PredictedLowAlarm{Mgdl: mgdl(settings.SettingMap.GetAlarmLow), Minutes: resolve(m, settings.SettingMap.GetAlarmLowPredictionMinutes)})
+		alarms = append(alarms, PredictedLowAlarm{Mgdl: mgdl(settings.SettingMap.GetAlarmLowMgdl), Minutes: resolve(m, settings.SettingMap.GetAlarmLowPredictionMinutes)})
 	}
 	if resolve(m, settings.SettingMap.GetAlarmUrgentHighEnabled) {
-		alarms = append(alarms, UrgentHighAlarm{Mgdl: mgdl(settings.SettingMap.GetAlarmUrgentHigh)})
+		alarms = append(alarms, UrgentHighAlarm{Mgdl: mgdl(settings.SettingMap.GetAlarmUrgentHighMgdl)})
 	}
 	if resolve(m, settings.SettingMap.GetAlarmHighEnabled) {
-		alarms = append(alarms, HighAlarm{Mgdl: mgdl(settings.SettingMap.GetAlarmHigh), Minutes: resolve(m, settings.SettingMap.GetAlarmHighMinutes)})
+		alarms = append(alarms, HighAlarm{Mgdl: mgdl(settings.SettingMap.GetAlarmHighMgdl), Minutes: resolve(m, settings.SettingMap.GetAlarmHighMinutes)})
 	}
 	if resolve(m, settings.SettingMap.GetAlarmFastRiseEnabled) {
-		alarms = append(alarms, FastRiseAlarm{Mgdl: mgdl(settings.SettingMap.GetAlarmFastRise), Minutes: resolve(m, settings.SettingMap.GetAlarmFastRiseMinutes)})
+		alarms = append(alarms, FastRiseAlarm{Mgdl: mgdl(settings.SettingMap.GetAlarmFastRiseMgdl), Minutes: resolve(m, settings.SettingMap.GetAlarmFastRiseMinutes)})
 	}
 	if resolve(m, settings.SettingMap.GetAlarmFastDropEnabled) {
-		alarms = append(alarms, FastDropAlarm{Mgdl: mgdl(settings.SettingMap.GetAlarmFastDrop), Minutes: resolve(m, settings.SettingMap.GetAlarmFastDropMinutes)})
+		alarms = append(alarms, FastDropAlarm{Mgdl: mgdl(settings.SettingMap.GetAlarmFastDropMgdl), Minutes: resolve(m, settings.SettingMap.GetAlarmFastDropMinutes)})
 	}
 	if resolve(m, settings.SettingMap.GetAlarmNoDataEnabled) {
 		alarms = append(alarms, NoDataAlarm{Minutes: resolve(m, settings.SettingMap.GetAlarmNoDataMinutes)})

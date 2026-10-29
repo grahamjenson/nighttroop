@@ -6,6 +6,7 @@ import (
 	"math"
 	"slices"
 	"strconv"
+	"strings"
 
 	"nighttroop.t1d.nz/utils/apiutils"
 
@@ -35,12 +36,21 @@ var settingNames = []string{"units", "timezone", "language", "date_format", "tim
 	"alarm_fast_rise_enabled", "alarm_fast_rise", "alarm_fast_rise_minutes", "alarm_fast_drop_enabled", "alarm_fast_drop",
 	"alarm_fast_drop_minutes", "alarm_no_data_enabled", "alarm_no_data_minutes"}
 
-// glucoseSettings are kept in mg/dL, and shown and typed in the settings' units, a fast rise or drop as how far
+// glucoseSettings are shown and typed in the settings' units, a fast rise or drop as how far, and kept in mg/dL as
+// the setting of the same name ending _mgdl
 var glucoseSettings = []string{"alarm_urgent_low", "alarm_low", "alarm_high", "alarm_urgent_high", "alarm_fast_rise", "alarm_fast_drop"}
 
-// showSetting is a setting's value as the page shows it, a glucose in the settings' units
+// settingID is the setting a field on the page is kept as
+func settingID(name string) string {
+	if slices.Contains(glucoseSettings, name) {
+		return name + "_mgdl"
+	}
+	return name
+}
+
+// showSetting is a setting's value as the page shows it, one kept in mg/dL in the settings' units
 func showSetting(setting *settings.SettingAnyType, units *consts.Units) string {
-	if mgdl, ok := setting.Value.(int64); ok && slices.Contains(glucoseSettings, setting.Identifier) {
+	if mgdl, ok := setting.Value.(int64); ok && strings.HasSuffix(setting.Identifier, "_mgdl") {
 		return site_data_templ.FormatGlucose(units.FromMGDL(float64(mgdl)), units)
 	}
 	return fmt.Sprint(setting.Value)
@@ -89,11 +99,11 @@ func (s *SettingsCollection) GetRow(ctx context.Context, collectionTx *siteapiut
 	model := &sitemodels.Settings{Inherited: map[string]string{}}
 	fields := model.Fields()
 	for _, name := range settingNames {
-		if setting := s.level(siteContext).GetSettingAnyTypeByName(name); setting != nil {
+		if setting := s.level(siteContext).GetSettingAnyTypeByName(settingID(name)); setting != nil {
 			*fields[name] = new(showSetting(setting, units))
 		}
-		inherited := combined.DefaultSettingsMap.GetSettingAnyTypeByName(name)
-		if site := combined.SiteSettingsMap.GetSettingAnyTypeByName(name); !s.Site && site != nil {
+		inherited := combined.DefaultSettingsMap.GetSettingAnyTypeByName(settingID(name))
+		if site := combined.SiteSettingsMap.GetSettingAnyTypeByName(settingID(name)); !s.Site && site != nil {
 			inherited = site
 		}
 		model.Inherited[name] = showSetting(inherited, units)
@@ -152,7 +162,7 @@ func (s *SettingsCollection) UpdateRow(ctx context.Context, collectionTx *siteap
 			}
 			value = int64(math.Round(units.ToMGDL(glucose)))
 		}
-		if err := level.SetSettingByName(name, value, nil, subject); err != nil {
+		if err := level.SetSettingByName(settingID(name), value, nil, subject); err != nil {
 			return nil, apiutils.ErrBadBodyWithHint(err.Error())
 		}
 	}

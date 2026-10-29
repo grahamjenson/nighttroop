@@ -299,10 +299,10 @@ ASSERT_EQUALS "boolean" "@result.type"
 ASSERT_EQUALS false "@result.value"
 
 NAME get_alarm_urgent_low_settings_v3
-GET http://{{ site }}/api/v3/settings/alarm_urgent_low
+GET http://{{ site }}/api/v3/settings/alarm_urgent_low_mgdl
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_EQUALS "alarm_urgent_low" "@result.identifier"
+ASSERT_EQUALS "alarm_urgent_low_mgdl" "@result.identifier"
 ASSERT_EQUALS "number" "@result.type"
 ASSERT_EQUALS 56 "@result.value"
 
@@ -315,10 +315,10 @@ ASSERT_EQUALS "boolean" "@result.type"
 ASSERT_EQUALS false "@result.value"
 
 NAME get_alarm_low_settings_v3
-GET http://{{ site }}/api/v3/settings/alarm_low
+GET http://{{ site }}/api/v3/settings/alarm_low_mgdl
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_EQUALS "alarm_low" "@result.identifier"
+ASSERT_EQUALS "alarm_low_mgdl" "@result.identifier"
 ASSERT_EQUALS "number" "@result.type"
 ASSERT_EQUALS 72 "@result.value"
 
@@ -355,10 +355,10 @@ ASSERT_EQUALS "boolean" "@result.type"
 ASSERT_EQUALS false "@result.value"
 
 NAME get_alarm_high_settings_v3
-GET http://{{ site }}/api/v3/settings/alarm_high
+GET http://{{ site }}/api/v3/settings/alarm_high_mgdl
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_EQUALS "alarm_high" "@result.identifier"
+ASSERT_EQUALS "alarm_high_mgdl" "@result.identifier"
 ASSERT_EQUALS "number" "@result.type"
 ASSERT_EQUALS 180 "@result.value"
 
@@ -379,10 +379,10 @@ ASSERT_EQUALS "boolean" "@result.type"
 ASSERT_EQUALS false "@result.value"
 
 NAME get_alarm_urgent_high_settings_v3
-GET http://{{ site }}/api/v3/settings/alarm_urgent_high
+GET http://{{ site }}/api/v3/settings/alarm_urgent_high_mgdl
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_EQUALS "alarm_urgent_high" "@result.identifier"
+ASSERT_EQUALS "alarm_urgent_high_mgdl" "@result.identifier"
 ASSERT_EQUALS "number" "@result.type"
 ASSERT_EQUALS 270 "@result.value"
 
@@ -395,10 +395,10 @@ ASSERT_EQUALS "boolean" "@result.type"
 ASSERT_EQUALS false "@result.value"
 
 NAME get_alarm_fast_rise_settings_v3
-GET http://{{ site }}/api/v3/settings/alarm_fast_rise
+GET http://{{ site }}/api/v3/settings/alarm_fast_rise_mgdl
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_EQUALS "alarm_fast_rise" "@result.identifier"
+ASSERT_EQUALS "alarm_fast_rise_mgdl" "@result.identifier"
 ASSERT_EQUALS "number" "@result.type"
 ASSERT_EQUALS 18 "@result.value"
 
@@ -419,10 +419,10 @@ ASSERT_EQUALS "boolean" "@result.type"
 ASSERT_EQUALS false "@result.value"
 
 NAME get_alarm_fast_drop_settings_v3
-GET http://{{ site }}/api/v3/settings/alarm_fast_drop
+GET http://{{ site }}/api/v3/settings/alarm_fast_drop_mgdl
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_EQUALS "alarm_fast_drop" "@result.identifier"
+ASSERT_EQUALS "alarm_fast_drop_mgdl" "@result.identifier"
 ASSERT_EQUALS "number" "@result.type"
 ASSERT_EQUALS 18 "@result.value"
 
@@ -678,11 +678,11 @@ ASSERT_EQUALS "boolean" "@result.type"
 ASSERT_EQUALS true "@result.value"
 
 NAME put_alarm_urgent_low_settings_v3
-PUT http://{{ site }}/api/v3/settings/alarm_urgent_low
+PUT http://{{ site }}/api/v3/settings/alarm_urgent_low_mgdl
 H Authorization: Bearer {{ jwt }}
 B { "value": 32 }
 ASSERT_STATUS 200
-ASSERT_EQUALS "alarm_urgent_low" "@result.identifier"
+ASSERT_EQUALS "alarm_urgent_low_mgdl" "@result.identifier"
 ASSERT_EQUALS "number" "@result.type"
 ASSERT_EQUALS 32 "@result.value"
 
@@ -696,11 +696,11 @@ ASSERT_EQUALS "boolean" "@result.type"
 ASSERT_EQUALS true "@result.value"
 
 NAME put_alarm_low_settings_v3
-PUT http://{{ site }}/api/v3/settings/alarm_low
+PUT http://{{ site }}/api/v3/settings/alarm_low_mgdl
 H Authorization: Bearer {{ jwt }}
 B { "value": 32 }
 ASSERT_STATUS 200
-ASSERT_EQUALS "alarm_low" "@result.identifier"
+ASSERT_EQUALS "alarm_low_mgdl" "@result.identifier"
 ASSERT_EQUALS "number" "@result.type"
 ASSERT_EQUALS 32 "@result.value"
 
@@ -741,11 +741,11 @@ ASSERT_EQUALS "boolean" "@result.type"
 ASSERT_EQUALS true "@result.value"
 
 NAME put_alarm_high_settings_v3
-PUT http://{{ site }}/api/v3/settings/alarm_high
+PUT http://{{ site }}/api/v3/settings/alarm_high_mgdl
 H Authorization: Bearer {{ jwt }}
 B { "value": 70 }
 ASSERT_STATUS 200
-ASSERT_EQUALS "alarm_high" "@result.identifier"
+ASSERT_EQUALS "alarm_high_mgdl" "@result.identifier"
 ASSERT_EQUALS "number" "@result.type"
 ASSERT_EQUALS 70 "@result.value"
 
@@ -768,11 +768,11 @@ ASSERT_EQUALS "boolean" "@result.type"
 ASSERT_EQUALS true "@result.value"
 
 NAME put_alarm_urgent_high_settings_v3
-PUT http://{{ site }}/api/v3/settings/alarm_urgent_high
+PUT http://{{ site }}/api/v3/settings/alarm_urgent_high_mgdl
 H Authorization: Bearer {{ jwt }}
 B { "value": 100 }
 ASSERT_STATUS 200
-ASSERT_EQUALS "alarm_urgent_high" "@result.identifier"
+ASSERT_EQUALS "alarm_urgent_high_mgdl" "@result.identifier"
 ASSERT_EQUALS "number" "@result.type"
 ASSERT_EQUALS 100 "@result.value"
 
@@ -786,11 +786,11 @@ ASSERT_EQUALS "boolean" "@result.type"
 ASSERT_EQUALS true "@result.value"
 
 NAME put_alarm_fast_rise_settings_v3
-PUT http://{{ site }}/api/v3/settings/alarm_fast_rise
+PUT http://{{ site }}/api/v3/settings/alarm_fast_rise_mgdl
 H Authorization: Bearer {{ jwt }}
 B { "value": 32 }
 ASSERT_STATUS 200
-ASSERT_EQUALS "alarm_fast_rise" "@result.identifier"
+ASSERT_EQUALS "alarm_fast_rise_mgdl" "@result.identifier"
 ASSERT_EQUALS "number" "@result.type"
 ASSERT_EQUALS 32 "@result.value"
 
@@ -813,11 +813,11 @@ ASSERT_EQUALS "boolean" "@result.type"
 ASSERT_EQUALS true "@result.value"
 
 NAME put_alarm_fast_drop_settings_v3
-PUT http://{{ site }}/api/v3/settings/alarm_fast_drop
+PUT http://{{ site }}/api/v3/settings/alarm_fast_drop_mgdl
 H Authorization: Bearer {{ jwt }}
 B { "value": 32 }
 ASSERT_STATUS 200
-ASSERT_EQUALS "alarm_fast_drop" "@result.identifier"
+ASSERT_EQUALS "alarm_fast_drop_mgdl" "@result.identifier"
 ASSERT_EQUALS "number" "@result.type"
 ASSERT_EQUALS 32 "@result.value"
 
@@ -1038,7 +1038,7 @@ B { "value": "nope" }
 ASSERT_STATUS 400
 
 NAME fail_alarm_urgent_low_settings_v3
-PUT http://{{ site }}/api/v3/settings/alarm_urgent_low
+PUT http://{{ site }}/api/v3/settings/alarm_urgent_low_mgdl
 H Authorization: Bearer {{ jwt }}
 B { "value": 0 }
 ASSERT_STATUS 400
@@ -1050,7 +1050,7 @@ B { "value": "nope" }
 ASSERT_STATUS 400
 
 NAME fail_alarm_low_settings_v3
-PUT http://{{ site }}/api/v3/settings/alarm_low
+PUT http://{{ site }}/api/v3/settings/alarm_low_mgdl
 H Authorization: Bearer {{ jwt }}
 B { "value": 0 }
 ASSERT_STATUS 400
@@ -1074,7 +1074,7 @@ B { "value": "nope" }
 ASSERT_STATUS 400
 
 NAME fail_alarm_high_settings_v3
-PUT http://{{ site }}/api/v3/settings/alarm_high
+PUT http://{{ site }}/api/v3/settings/alarm_high_mgdl
 H Authorization: Bearer {{ jwt }}
 B { "value": 0 }
 ASSERT_STATUS 400
@@ -1092,7 +1092,7 @@ B { "value": "nope" }
 ASSERT_STATUS 400
 
 NAME fail_alarm_urgent_high_settings_v3
-PUT http://{{ site }}/api/v3/settings/alarm_urgent_high
+PUT http://{{ site }}/api/v3/settings/alarm_urgent_high_mgdl
 H Authorization: Bearer {{ jwt }}
 B { "value": 0 }
 ASSERT_STATUS 400
@@ -1104,7 +1104,7 @@ B { "value": "nope" }
 ASSERT_STATUS 400
 
 NAME fail_alarm_fast_rise_settings_v3
-PUT http://{{ site }}/api/v3/settings/alarm_fast_rise
+PUT http://{{ site }}/api/v3/settings/alarm_fast_rise_mgdl
 H Authorization: Bearer {{ jwt }}
 B { "value": 0 }
 ASSERT_STATUS 400
@@ -1122,7 +1122,7 @@ B { "value": "nope" }
 ASSERT_STATUS 400
 
 NAME fail_alarm_fast_drop_settings_v3
-PUT http://{{ site }}/api/v3/settings/alarm_fast_drop
+PUT http://{{ site }}/api/v3/settings/alarm_fast_drop_mgdl
 H Authorization: Bearer {{ jwt }}
 B { "value": 0 }
 ASSERT_STATUS 400

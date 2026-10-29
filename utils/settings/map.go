@@ -24,22 +24,22 @@ type SettingMap struct {
 	CarbMaxAbsorptionHours           *Setting[float64]
 	CarbMin5mImpact                  *Setting[float64]
 	AlarmUrgentLowEnabled            *Setting[bool]
-	AlarmUrgentLow                   *Setting[int64]
+	AlarmUrgentLowMgdl               *Setting[int64]
 	AlarmLowEnabled                  *Setting[bool]
-	AlarmLow                         *Setting[int64]
+	AlarmLowMgdl                     *Setting[int64]
 	AlarmLowMinutes                  *Setting[int64]
 	AlarmLowPredictionEnabled        *Setting[bool]
 	AlarmLowPredictionMinutes        *Setting[int64]
 	AlarmHighEnabled                 *Setting[bool]
-	AlarmHigh                        *Setting[int64]
+	AlarmHighMgdl                    *Setting[int64]
 	AlarmHighMinutes                 *Setting[int64]
 	AlarmUrgentHighEnabled           *Setting[bool]
-	AlarmUrgentHigh                  *Setting[int64]
+	AlarmUrgentHighMgdl              *Setting[int64]
 	AlarmFastRiseEnabled             *Setting[bool]
-	AlarmFastRise                    *Setting[int64]
+	AlarmFastRiseMgdl                *Setting[int64]
 	AlarmFastRiseMinutes             *Setting[int64]
 	AlarmFastDropEnabled             *Setting[bool]
-	AlarmFastDrop                    *Setting[int64]
+	AlarmFastDropMgdl                *Setting[int64]
 	AlarmFastDropMinutes             *Setting[int64]
 	AlarmNoDataEnabled               *Setting[bool]
 	AlarmNoDataMinutes               *Setting[int64]
@@ -71,22 +71,22 @@ var DefaultSettingsMap = &SettingMap{
 	CarbMaxAbsorptionHours:           NewDefaultSetting(CarbMaxAbsorptionHours),
 	CarbMin5mImpact:                  NewDefaultSetting(CarbMin5mImpact),
 	AlarmUrgentLowEnabled:            NewDefaultSetting(AlarmUrgentLowEnabled),
-	AlarmUrgentLow:                   NewDefaultSetting(AlarmUrgentLow),
+	AlarmUrgentLowMgdl:               NewDefaultSetting(AlarmUrgentLowMgdl),
 	AlarmLowEnabled:                  NewDefaultSetting(AlarmLowEnabled),
-	AlarmLow:                         NewDefaultSetting(AlarmLow),
+	AlarmLowMgdl:                     NewDefaultSetting(AlarmLowMgdl),
 	AlarmLowMinutes:                  NewDefaultSetting(AlarmLowMinutes),
 	AlarmLowPredictionEnabled:        NewDefaultSetting(AlarmLowPredictionEnabled),
 	AlarmLowPredictionMinutes:        NewDefaultSetting(AlarmLowPredictionMinutes),
 	AlarmHighEnabled:                 NewDefaultSetting(AlarmHighEnabled),
-	AlarmHigh:                        NewDefaultSetting(AlarmHigh),
+	AlarmHighMgdl:                    NewDefaultSetting(AlarmHighMgdl),
 	AlarmHighMinutes:                 NewDefaultSetting(AlarmHighMinutes),
 	AlarmUrgentHighEnabled:           NewDefaultSetting(AlarmUrgentHighEnabled),
-	AlarmUrgentHigh:                  NewDefaultSetting(AlarmUrgentHigh),
+	AlarmUrgentHighMgdl:              NewDefaultSetting(AlarmUrgentHighMgdl),
 	AlarmFastRiseEnabled:             NewDefaultSetting(AlarmFastRiseEnabled),
-	AlarmFastRise:                    NewDefaultSetting(AlarmFastRise),
+	AlarmFastRiseMgdl:                NewDefaultSetting(AlarmFastRiseMgdl),
 	AlarmFastRiseMinutes:             NewDefaultSetting(AlarmFastRiseMinutes),
 	AlarmFastDropEnabled:             NewDefaultSetting(AlarmFastDropEnabled),
-	AlarmFastDrop:                    NewDefaultSetting(AlarmFastDrop),
+	AlarmFastDropMgdl:                NewDefaultSetting(AlarmFastDropMgdl),
 	AlarmFastDropMinutes:             NewDefaultSetting(AlarmFastDropMinutes),
 	AlarmNoDataEnabled:               NewDefaultSetting(AlarmNoDataEnabled),
 	AlarmNoDataMinutes:               NewDefaultSetting(AlarmNoDataMinutes),
@@ -120,22 +120,22 @@ func NewSettingsMap(g SettingsGetter, createdAt *int64, subject *string) *Settin
 		CarbMaxAbsorptionHours:           NewSetting(CarbMaxAbsorptionHours, g.GetCarbMaxAbsorptionHours(), createdAt, subject),
 		CarbMin5mImpact:                  NewSetting(CarbMin5mImpact, g.GetCarbMin5mImpact(), createdAt, subject),
 		AlarmUrgentLowEnabled:            NewSetting(AlarmUrgentLowEnabled, g.GetAlarmUrgentLowEnabled(), createdAt, subject),
-		AlarmUrgentLow:                   NewSetting(AlarmUrgentLow, g.GetAlarmUrgentLow(), createdAt, subject),
+		AlarmUrgentLowMgdl:               NewSetting(AlarmUrgentLowMgdl, g.GetAlarmUrgentLowMgdl(), createdAt, subject),
 		AlarmLowEnabled:                  NewSetting(AlarmLowEnabled, g.GetAlarmLowEnabled(), createdAt, subject),
-		AlarmLow:                         NewSetting(AlarmLow, g.GetAlarmLow(), createdAt, subject),
+		AlarmLowMgdl:                     NewSetting(AlarmLowMgdl, g.GetAlarmLowMgdl(), createdAt, subject),
 		AlarmLowMinutes:                  NewSetting(AlarmLowMinutes, g.GetAlarmLowMinutes(), createdAt, subject),
 		AlarmLowPredictionEnabled:        NewSetting(AlarmLowPredictionEnabled, g.GetAlarmLowPredictionEnabled(), createdAt, subject),
 		AlarmLowPredictionMinutes:        NewSetting(AlarmLowPredictionMinutes, g.GetAlarmLowPredictionMinutes(), createdAt, subject),
 		AlarmHighEnabled:                 NewSetting(AlarmHighEnabled, g.GetAlarmHighEnabled(), createdAt, subject),
-		AlarmHigh:                        NewSetting(AlarmHigh, g.GetAlarmHigh(), createdAt, subject),
+		AlarmHighMgdl:                    NewSetting(AlarmHighMgdl, g.GetAlarmHighMgdl(), createdAt, subject),
 		AlarmHighMinutes:                 NewSetting(AlarmHighMinutes, g.GetAlarmHighMinutes(), createdAt, subject),
 		AlarmUrgentHighEnabled:           NewSetting(AlarmUrgentHighEnabled, g.GetAlarmUrgentHighEnabled(), createdAt, subject),
-		AlarmUrgentHigh:                  NewSetting(AlarmUrgentHigh, g.GetAlarmUrgentHigh(), createdAt, subject),
+		AlarmUrgentHighMgdl:              NewSetting(AlarmUrgentHighMgdl, g.GetAlarmUrgentHighMgdl(), createdAt, subject),
 		AlarmFastRiseEnabled:             NewSetting(AlarmFastRiseEnabled, g.GetAlarmFastRiseEnabled(), createdAt, subject),
-		AlarmFastRise:                    NewSetting(AlarmFastRise, g.GetAlarmFastRise(), createdAt, subject),
+		AlarmFastRiseMgdl:                NewSetting(AlarmFastRiseMgdl, g.GetAlarmFastRiseMgdl(), createdAt, subject),
 		AlarmFastRiseMinutes:             NewSetting(AlarmFastRiseMinutes, g.GetAlarmFastRiseMinutes(), createdAt, subject),
 		AlarmFastDropEnabled:             NewSetting(AlarmFastDropEnabled, g.GetAlarmFastDropEnabled(), createdAt, subject),
-		AlarmFastDrop:                    NewSetting(AlarmFastDrop, g.GetAlarmFastDrop(), createdAt, subject),
+		AlarmFastDropMgdl:                NewSetting(AlarmFastDropMgdl, g.GetAlarmFastDropMgdl(), createdAt, subject),
 		AlarmFastDropMinutes:             NewSetting(AlarmFastDropMinutes, g.GetAlarmFastDropMinutes(), createdAt, subject),
 		AlarmNoDataEnabled:               NewSetting(AlarmNoDataEnabled, g.GetAlarmNoDataEnabled(), createdAt, subject),
 		AlarmNoDataMinutes:               NewSetting(AlarmNoDataMinutes, g.GetAlarmNoDataMinutes(), createdAt, subject),
@@ -415,18 +415,18 @@ func (m *SettingMap) SetAlarmUrgentLowEnabled(v *bool) {
 
 }
 
-// GetAlarmUrgentLow returns the AlarmUrgentLow value.
-func (m SettingMap) GetAlarmUrgentLow() *int64 {
-	if m.AlarmUrgentLow == nil {
+// GetAlarmUrgentLowMgdl returns the AlarmUrgentLowMgdl value.
+func (m SettingMap) GetAlarmUrgentLowMgdl() *int64 {
+	if m.AlarmUrgentLowMgdl == nil {
 		return nil
 	}
-	return ptr(m.AlarmUrgentLow.Value)
+	return ptr(m.AlarmUrgentLowMgdl.Value)
 }
 
-// SetAlarmUrgentLow sets the AlarmUrgentLow value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmUrgentLow(v *int64) {
+// SetAlarmUrgentLowMgdl sets the AlarmUrgentLowMgdl value and returns the updated SettingMap.
+func (m *SettingMap) SetAlarmUrgentLowMgdl(v *int64) {
 
-	m.AlarmUrgentLow = NewSetting(AlarmUrgentLow, v, nil, nil)
+	m.AlarmUrgentLowMgdl = NewSetting(AlarmUrgentLowMgdl, v, nil, nil)
 
 }
 
@@ -445,18 +445,18 @@ func (m *SettingMap) SetAlarmLowEnabled(v *bool) {
 
 }
 
-// GetAlarmLow returns the AlarmLow value.
-func (m SettingMap) GetAlarmLow() *int64 {
-	if m.AlarmLow == nil {
+// GetAlarmLowMgdl returns the AlarmLowMgdl value.
+func (m SettingMap) GetAlarmLowMgdl() *int64 {
+	if m.AlarmLowMgdl == nil {
 		return nil
 	}
-	return ptr(m.AlarmLow.Value)
+	return ptr(m.AlarmLowMgdl.Value)
 }
 
-// SetAlarmLow sets the AlarmLow value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmLow(v *int64) {
+// SetAlarmLowMgdl sets the AlarmLowMgdl value and returns the updated SettingMap.
+func (m *SettingMap) SetAlarmLowMgdl(v *int64) {
 
-	m.AlarmLow = NewSetting(AlarmLow, v, nil, nil)
+	m.AlarmLowMgdl = NewSetting(AlarmLowMgdl, v, nil, nil)
 
 }
 
@@ -520,18 +520,18 @@ func (m *SettingMap) SetAlarmHighEnabled(v *bool) {
 
 }
 
-// GetAlarmHigh returns the AlarmHigh value.
-func (m SettingMap) GetAlarmHigh() *int64 {
-	if m.AlarmHigh == nil {
+// GetAlarmHighMgdl returns the AlarmHighMgdl value.
+func (m SettingMap) GetAlarmHighMgdl() *int64 {
+	if m.AlarmHighMgdl == nil {
 		return nil
 	}
-	return ptr(m.AlarmHigh.Value)
+	return ptr(m.AlarmHighMgdl.Value)
 }
 
-// SetAlarmHigh sets the AlarmHigh value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmHigh(v *int64) {
+// SetAlarmHighMgdl sets the AlarmHighMgdl value and returns the updated SettingMap.
+func (m *SettingMap) SetAlarmHighMgdl(v *int64) {
 
-	m.AlarmHigh = NewSetting(AlarmHigh, v, nil, nil)
+	m.AlarmHighMgdl = NewSetting(AlarmHighMgdl, v, nil, nil)
 
 }
 
@@ -565,18 +565,18 @@ func (m *SettingMap) SetAlarmUrgentHighEnabled(v *bool) {
 
 }
 
-// GetAlarmUrgentHigh returns the AlarmUrgentHigh value.
-func (m SettingMap) GetAlarmUrgentHigh() *int64 {
-	if m.AlarmUrgentHigh == nil {
+// GetAlarmUrgentHighMgdl returns the AlarmUrgentHighMgdl value.
+func (m SettingMap) GetAlarmUrgentHighMgdl() *int64 {
+	if m.AlarmUrgentHighMgdl == nil {
 		return nil
 	}
-	return ptr(m.AlarmUrgentHigh.Value)
+	return ptr(m.AlarmUrgentHighMgdl.Value)
 }
 
-// SetAlarmUrgentHigh sets the AlarmUrgentHigh value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmUrgentHigh(v *int64) {
+// SetAlarmUrgentHighMgdl sets the AlarmUrgentHighMgdl value and returns the updated SettingMap.
+func (m *SettingMap) SetAlarmUrgentHighMgdl(v *int64) {
 
-	m.AlarmUrgentHigh = NewSetting(AlarmUrgentHigh, v, nil, nil)
+	m.AlarmUrgentHighMgdl = NewSetting(AlarmUrgentHighMgdl, v, nil, nil)
 
 }
 
@@ -595,18 +595,18 @@ func (m *SettingMap) SetAlarmFastRiseEnabled(v *bool) {
 
 }
 
-// GetAlarmFastRise returns the AlarmFastRise value.
-func (m SettingMap) GetAlarmFastRise() *int64 {
-	if m.AlarmFastRise == nil {
+// GetAlarmFastRiseMgdl returns the AlarmFastRiseMgdl value.
+func (m SettingMap) GetAlarmFastRiseMgdl() *int64 {
+	if m.AlarmFastRiseMgdl == nil {
 		return nil
 	}
-	return ptr(m.AlarmFastRise.Value)
+	return ptr(m.AlarmFastRiseMgdl.Value)
 }
 
-// SetAlarmFastRise sets the AlarmFastRise value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmFastRise(v *int64) {
+// SetAlarmFastRiseMgdl sets the AlarmFastRiseMgdl value and returns the updated SettingMap.
+func (m *SettingMap) SetAlarmFastRiseMgdl(v *int64) {
 
-	m.AlarmFastRise = NewSetting(AlarmFastRise, v, nil, nil)
+	m.AlarmFastRiseMgdl = NewSetting(AlarmFastRiseMgdl, v, nil, nil)
 
 }
 
@@ -640,18 +640,18 @@ func (m *SettingMap) SetAlarmFastDropEnabled(v *bool) {
 
 }
 
-// GetAlarmFastDrop returns the AlarmFastDrop value.
-func (m SettingMap) GetAlarmFastDrop() *int64 {
-	if m.AlarmFastDrop == nil {
+// GetAlarmFastDropMgdl returns the AlarmFastDropMgdl value.
+func (m SettingMap) GetAlarmFastDropMgdl() *int64 {
+	if m.AlarmFastDropMgdl == nil {
 		return nil
 	}
-	return ptr(m.AlarmFastDrop.Value)
+	return ptr(m.AlarmFastDropMgdl.Value)
 }
 
-// SetAlarmFastDrop sets the AlarmFastDrop value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmFastDrop(v *int64) {
+// SetAlarmFastDropMgdl sets the AlarmFastDropMgdl value and returns the updated SettingMap.
+func (m *SettingMap) SetAlarmFastDropMgdl(v *int64) {
 
-	m.AlarmFastDrop = NewSetting(AlarmFastDrop, v, nil, nil)
+	m.AlarmFastDropMgdl = NewSetting(AlarmFastDropMgdl, v, nil, nil)
 
 }
 
@@ -848,12 +848,12 @@ func (m SettingMap) GetSettingAnyTypeByName(name string) *SettingAnyType {
 		return m.CarbMin5mImpact.ToSettingAnyType()
 	case "alarm_urgent_low_enabled":
 		return m.AlarmUrgentLowEnabled.ToSettingAnyType()
-	case "alarm_urgent_low":
-		return m.AlarmUrgentLow.ToSettingAnyType()
+	case "alarm_urgent_low_mgdl":
+		return m.AlarmUrgentLowMgdl.ToSettingAnyType()
 	case "alarm_low_enabled":
 		return m.AlarmLowEnabled.ToSettingAnyType()
-	case "alarm_low":
-		return m.AlarmLow.ToSettingAnyType()
+	case "alarm_low_mgdl":
+		return m.AlarmLowMgdl.ToSettingAnyType()
 	case "alarm_low_minutes":
 		return m.AlarmLowMinutes.ToSettingAnyType()
 	case "alarm_low_prediction_enabled":
@@ -862,24 +862,24 @@ func (m SettingMap) GetSettingAnyTypeByName(name string) *SettingAnyType {
 		return m.AlarmLowPredictionMinutes.ToSettingAnyType()
 	case "alarm_high_enabled":
 		return m.AlarmHighEnabled.ToSettingAnyType()
-	case "alarm_high":
-		return m.AlarmHigh.ToSettingAnyType()
+	case "alarm_high_mgdl":
+		return m.AlarmHighMgdl.ToSettingAnyType()
 	case "alarm_high_minutes":
 		return m.AlarmHighMinutes.ToSettingAnyType()
 	case "alarm_urgent_high_enabled":
 		return m.AlarmUrgentHighEnabled.ToSettingAnyType()
-	case "alarm_urgent_high":
-		return m.AlarmUrgentHigh.ToSettingAnyType()
+	case "alarm_urgent_high_mgdl":
+		return m.AlarmUrgentHighMgdl.ToSettingAnyType()
 	case "alarm_fast_rise_enabled":
 		return m.AlarmFastRiseEnabled.ToSettingAnyType()
-	case "alarm_fast_rise":
-		return m.AlarmFastRise.ToSettingAnyType()
+	case "alarm_fast_rise_mgdl":
+		return m.AlarmFastRiseMgdl.ToSettingAnyType()
 	case "alarm_fast_rise_minutes":
 		return m.AlarmFastRiseMinutes.ToSettingAnyType()
 	case "alarm_fast_drop_enabled":
 		return m.AlarmFastDropEnabled.ToSettingAnyType()
-	case "alarm_fast_drop":
-		return m.AlarmFastDrop.ToSettingAnyType()
+	case "alarm_fast_drop_mgdl":
+		return m.AlarmFastDropMgdl.ToSettingAnyType()
 	case "alarm_fast_drop_minutes":
 		return m.AlarmFastDropMinutes.ToSettingAnyType()
 	case "alarm_no_data_enabled":
@@ -962,14 +962,14 @@ func (m *SettingMap) SetSettingByName(name string, v any, createdAt *int64, subj
 	case "alarm_urgent_low_enabled":
 		m.AlarmUrgentLowEnabled, err = NewSettingAndParseValidate(AlarmUrgentLowEnabled, v, createdAt, subject)
 		return err
-	case "alarm_urgent_low":
-		m.AlarmUrgentLow, err = NewSettingAndParseValidate(AlarmUrgentLow, v, createdAt, subject)
+	case "alarm_urgent_low_mgdl":
+		m.AlarmUrgentLowMgdl, err = NewSettingAndParseValidate(AlarmUrgentLowMgdl, v, createdAt, subject)
 		return err
 	case "alarm_low_enabled":
 		m.AlarmLowEnabled, err = NewSettingAndParseValidate(AlarmLowEnabled, v, createdAt, subject)
 		return err
-	case "alarm_low":
-		m.AlarmLow, err = NewSettingAndParseValidate(AlarmLow, v, createdAt, subject)
+	case "alarm_low_mgdl":
+		m.AlarmLowMgdl, err = NewSettingAndParseValidate(AlarmLowMgdl, v, createdAt, subject)
 		return err
 	case "alarm_low_minutes":
 		m.AlarmLowMinutes, err = NewSettingAndParseValidate(AlarmLowMinutes, v, createdAt, subject)
@@ -983,8 +983,8 @@ func (m *SettingMap) SetSettingByName(name string, v any, createdAt *int64, subj
 	case "alarm_high_enabled":
 		m.AlarmHighEnabled, err = NewSettingAndParseValidate(AlarmHighEnabled, v, createdAt, subject)
 		return err
-	case "alarm_high":
-		m.AlarmHigh, err = NewSettingAndParseValidate(AlarmHigh, v, createdAt, subject)
+	case "alarm_high_mgdl":
+		m.AlarmHighMgdl, err = NewSettingAndParseValidate(AlarmHighMgdl, v, createdAt, subject)
 		return err
 	case "alarm_high_minutes":
 		m.AlarmHighMinutes, err = NewSettingAndParseValidate(AlarmHighMinutes, v, createdAt, subject)
@@ -992,14 +992,14 @@ func (m *SettingMap) SetSettingByName(name string, v any, createdAt *int64, subj
 	case "alarm_urgent_high_enabled":
 		m.AlarmUrgentHighEnabled, err = NewSettingAndParseValidate(AlarmUrgentHighEnabled, v, createdAt, subject)
 		return err
-	case "alarm_urgent_high":
-		m.AlarmUrgentHigh, err = NewSettingAndParseValidate(AlarmUrgentHigh, v, createdAt, subject)
+	case "alarm_urgent_high_mgdl":
+		m.AlarmUrgentHighMgdl, err = NewSettingAndParseValidate(AlarmUrgentHighMgdl, v, createdAt, subject)
 		return err
 	case "alarm_fast_rise_enabled":
 		m.AlarmFastRiseEnabled, err = NewSettingAndParseValidate(AlarmFastRiseEnabled, v, createdAt, subject)
 		return err
-	case "alarm_fast_rise":
-		m.AlarmFastRise, err = NewSettingAndParseValidate(AlarmFastRise, v, createdAt, subject)
+	case "alarm_fast_rise_mgdl":
+		m.AlarmFastRiseMgdl, err = NewSettingAndParseValidate(AlarmFastRiseMgdl, v, createdAt, subject)
 		return err
 	case "alarm_fast_rise_minutes":
 		m.AlarmFastRiseMinutes, err = NewSettingAndParseValidate(AlarmFastRiseMinutes, v, createdAt, subject)
@@ -1007,8 +1007,8 @@ func (m *SettingMap) SetSettingByName(name string, v any, createdAt *int64, subj
 	case "alarm_fast_drop_enabled":
 		m.AlarmFastDropEnabled, err = NewSettingAndParseValidate(AlarmFastDropEnabled, v, createdAt, subject)
 		return err
-	case "alarm_fast_drop":
-		m.AlarmFastDrop, err = NewSettingAndParseValidate(AlarmFastDrop, v, createdAt, subject)
+	case "alarm_fast_drop_mgdl":
+		m.AlarmFastDropMgdl, err = NewSettingAndParseValidate(AlarmFastDropMgdl, v, createdAt, subject)
 		return err
 	case "alarm_fast_drop_minutes":
 		m.AlarmFastDropMinutes, err = NewSettingAndParseValidate(AlarmFastDropMinutes, v, createdAt, subject)
