@@ -109,13 +109,11 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 		return nil, false, err
 	}
 
-	tx, err := siteContext.SiteDB.SQLiteDB.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, false, nsutils.ErrInternal
+	tx, q, httpErr := c.begin(ctx, siteContext)
+	if httpErr != nil {
+		return nil, false, httpErr
 	}
 	defer tx.Rollback()
-
-	q := siteContext.SiteDB.Queries.WithTx(tx)
 
 	duplicateDBModel, err := m.GetDuplicate(q, ctx, nsModel)
 	if err != nil {
@@ -130,27 +128,16 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 		q,
 		ctx,
 		nsModel,
-		nightscoutmodels.ConverterContext{IdentityID: siteContext.IdentityModel.ID, IdentityName: siteContext.IdentityModel.Name},
+		converterContext(siteContext),
 		nil,
 	)
 
-	if err != nil {
-		sqlTranslatedError := nsutils.GetSQLTranslatedError(err)
-		if sqlTranslatedError != nil {
-			return nil, false, sqlTranslatedError
-		}
-
-		slog.Error("failed to create in database", "error", err, "collection", m.Name())
-		return nil, false, nsutils.ErrInternal
-	}
-	if dbModel == nil {
-		slog.Error("failed to create in database, dbModel is nil", "collection", m.Name())
-		return nil, false, nsutils.ErrInternal
+	if httpErr := c.stored(dbModel, err, "create"); httpErr != nil {
+		return nil, false, httpErr
 	}
 
-	if err := tx.Commit(); err != nil {
-		slog.Error("failed to commit create in database", "error", err, "dbModel", dbModel, "collection", m.Name())
-		return nil, false, nsutils.ErrInternal
+	if httpErr := c.commit(tx, "create"); httpErr != nil {
+		return nil, false, httpErr
 	}
 
 	siteContext.PublishModelChange(events.Created, dbModel)
@@ -184,12 +171,11 @@ func (c Collection[NS, DM]) Search(ctx context.Context, siteContext *httputils.S
 
 func (c Collection[NS, DM]) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
 	m := c.db
-	tx, err := siteContext.SiteDB.SQLiteDB.BeginTx(ctx, nil)
-	if err != nil {
-		return nsutils.ErrInternal
+	tx, q, httpErr := c.begin(ctx, siteContext)
+	if httpErr != nil {
+		return httpErr
 	}
 	defer tx.Rollback()
-	q := siteContext.SiteDB.Queries.WithTx(tx)
 
 	// Read first, so a missing record is not found and the change can say what was deleted.
 	// A permanent delete can remove a record already soft deleted.
@@ -224,9 +210,8 @@ func (c Collection[NS, DM]) Delete(ctx context.Context, siteContext *httputils.S
 	}
 	slog.Info(label+" Deleted", "eid", identifier, "rowsAffected", rowsAffected, "collection", m.Name())
 
-	if err := tx.Commit(); err != nil {
-		slog.Error("failed to delete in database", "error", err, "collection", m.Name())
-		return nsutils.ErrInternal
+	if httpErr := c.commit(tx, "delete"); httpErr != nil {
+		return httpErr
 	}
 	siteContext.PublishModelChange(events.Deleted, deleted)
 	return nil
@@ -237,12 +222,11 @@ func (c Collection[NS, DM]) DeleteType(ctx context.Context, siteContext *httputi
 	if !ok {
 		return 0, nsutils.ErrNotImplemented
 	}
-	tx, err := siteContext.SiteDB.SQLiteDB.BeginTx(ctx, nil)
-	if err != nil {
-		return 0, nsutils.ErrInternal
+	tx, q, httpErr := c.begin(ctx, siteContext)
+	if httpErr != nil {
+		return 0, httpErr
 	}
 	defer tx.Rollback()
-	q := siteContext.SiteDB.Queries.WithTx(tx)
 
 	deleteFunc := m.SoftDeleteType
 	if permanent {
@@ -262,9 +246,8 @@ func (c Collection[NS, DM]) DeleteType(ctx context.Context, siteContext *httputi
 		return 0, nsutils.ErrInternal
 	}
 
-	if err := tx.Commit(); err != nil {
-		slog.Error("failed to delete in database", "error", err, "collection", c.db.Name())
-		return 0, nsutils.ErrInternal
+	if httpErr := c.commit(tx, "delete"); httpErr != nil {
+		return 0, httpErr
 	}
 
 	return int(rowsAffected), nil
@@ -279,14 +262,11 @@ func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.
 		return nil, false, nsutils.BadDataBodyError
 	}
 
-	tx, err := siteContext.SiteDB.SQLiteDB.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, false, nsutils.ErrInternal
+	tx, q, httpErr := c.begin(ctx, siteContext)
+	if httpErr != nil {
+		return nil, false, httpErr
 	}
 	defer tx.Rollback()
-	q := siteContext.SiteDB.Queries.WithTx(tx)
-
-	cc := nightscoutmodels.ConverterContext{IdentityID: siteContext.IdentityModel.ID, IdentityName: siteContext.IdentityModel.Name}
 
 	creatingNewRecord := false
 
@@ -324,24 +304,13 @@ func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.
 	}
 
 	// CREATE
-	dbCreateModel, err := m.CreateModel(q, ctx, nsModel, cc, &identifier)
-	if err != nil {
-		// Bad data is the client's error, as it is for create
-		if sqlTranslatedError := nsutils.GetSQLTranslatedError(err); sqlTranslatedError != nil {
-			return nil, false, sqlTranslatedError
-		}
-		slog.Error("failed to create in database", "error", err, "collection", m.Name())
-		return nil, false, nsutils.ErrInternal
+	dbCreateModel, err := m.CreateModel(q, ctx, nsModel, converterContext(siteContext), &identifier)
+	if httpErr := c.stored(dbCreateModel, err, "replace"); httpErr != nil {
+		return nil, false, httpErr
 	}
 
-	if dbCreateModel == nil {
-		slog.Error("failed to create in database, dbCreateModel is nil", "collection", m.Name())
-		return nil, false, nsutils.ErrInternal
-	}
-
-	if err := tx.Commit(); err != nil {
-		slog.Error("failed to commit create in database", "error", err, "collection", m.Name())
-		return nil, false, nsutils.ErrInternal
+	if httpErr := c.commit(tx, "replace"); httpErr != nil {
+		return nil, false, httpErr
 	}
 
 	if creatingNewRecord {
@@ -366,13 +335,11 @@ func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.Si
 		return nil, nsutils.BadDataBodyError
 	}
 
-	tx, err := siteContext.SiteDB.SQLiteDB.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, nsutils.ErrInternal
+	tx, q, httpErr := c.begin(ctx, siteContext)
+	if httpErr != nil {
+		return nil, httpErr
 	}
 	defer tx.Rollback()
-
-	q := siteContext.SiteDB.Queries.WithTx(tx)
 
 	updateingModel, err := m.GetModel(q, ctx, identifier, true)
 
@@ -400,25 +367,15 @@ func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.Si
 		nsModel,
 		identifier,
 		updateingModel,
-		nightscoutmodels.ConverterContext{IdentityID: siteContext.IdentityModel.ID, IdentityName: siteContext.IdentityModel.Name},
+		converterContext(siteContext),
 	)
 
-	if err != nil {
-		// Bad data is the client's error, as it is for create and replace
-		if sqlTranslatedError := nsutils.GetSQLTranslatedError(err); sqlTranslatedError != nil {
-			return nil, sqlTranslatedError
-		}
-		slog.Error("failed to patch in database", "error", err, "collection", m.Name(), "identifier", identifier, "params", data)
-		return nil, nsutils.ErrInternal
-	}
-	if dbModel == nil {
-		slog.Error("failed to patch in database, dbModel is nil", "collection", m.Name(), "identifier", identifier, "params", data)
-		return nil, nsutils.ErrInternal
+	if httpErr := c.stored(dbModel, err, "patch"); httpErr != nil {
+		return nil, httpErr
 	}
 
-	if err := tx.Commit(); err != nil {
-		slog.Error("failed to commit patch in database", "error", err, "dbModel", dbModel, "collection", m.Name())
-		return nil, nsutils.ErrInternal
+	if httpErr := c.commit(tx, "patch"); httpErr != nil {
+		return nil, httpErr
 	}
 
 	siteContext.PublishModelChange(events.Updated, dbModel)
@@ -477,4 +434,42 @@ func ValidateNotChangingSharedFields[NS SharedNSFields, DM SharedDBFields](repla
 	}
 
 	return nil
+}
+
+// begin starts a write to the site's database, which is rolled back unless it is committed
+func (c Collection[NS, DM]) begin(ctx context.Context, siteContext *httputils.SiteContext) (*sql.Tx, *sitedb.Queries, *nsutils.HTTPError) {
+	tx, err := siteContext.SiteDB.SQLiteDB.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, nil, nsutils.ErrInternal
+	}
+	return tx, siteContext.SiteDB.Queries.WithTx(tx), nil
+}
+
+func (c Collection[NS, DM]) commit(tx *sql.Tx, action string) *nsutils.HTTPError {
+	if err := tx.Commit(); err != nil {
+		slog.Error("failed to commit "+action+" in database", "error", err, "collection", c.db.Name())
+		return nsutils.ErrInternal
+	}
+	return nil
+}
+
+// stored is the error from storing a model with CreateModel or UpdateModel. Data the database refuses is the client's error.
+func (c Collection[NS, DM]) stored(dbModel *DM, err error, action string) *nsutils.HTTPError {
+	if err != nil {
+		if sqlTranslatedError := nsutils.GetSQLTranslatedError(err); sqlTranslatedError != nil {
+			return sqlTranslatedError
+		}
+		slog.Error("failed to "+action+" in database", "error", err, "collection", c.db.Name())
+		return nsutils.ErrInternal
+	}
+	if dbModel == nil {
+		slog.Error("failed to "+action+" in database, the model is nil", "collection", c.db.Name())
+		return nsutils.ErrInternal
+	}
+	return nil
+}
+
+// converterContext is who is making a change, which a stored model records
+func converterContext(siteContext *httputils.SiteContext) nightscoutmodels.ConverterContext {
+	return nightscoutmodels.ConverterContext{IdentityID: siteContext.IdentityModel.ID, IdentityName: siteContext.IdentityModel.Name}
 }
