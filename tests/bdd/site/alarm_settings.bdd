@@ -1,104 +1,116 @@
 INCLUDE steps/new_site_admin.steps
 
-// The settings page has the alarms, each off by default, with the defaults' glucose in the settings' units
+// The general settings page has no alarms: they have their own page
 CLICK #site--settings-menu
 CLICK #site--settings--settings-button
 ASSERT_STATUS 200
-ASSERT_TEXT_VISIBLE Alarms
+ASSERT_VISIBLE #site--settings--site--units
+ASSERT_NOT_VISIBLE #site--alarms--site--alarm_low
+
+// The alarms page has the alarms, in sections, each off by default, with the defaults' glucose in the settings' units
+CLICK #site--settings-menu
+CLICK #site--settings--alarms-button
+ASSERT_STATUS 200
+ASSERT_PATH /settings/alarms
+ASSERT_VISIBLE #alarm_settings_page h2:text-is("Lows")
+ASSERT_VISIBLE #alarm_settings_page h2:text-is("No Data")
+ASSERT_NOT_VISIBLE #site--alarms--site--units
 ASSERT_TEXT_VISIBLE Urgent Low Under (mmol/L)
-ASSERT_TEXT_EQUALS #site--settings--site--alarm_urgent_low_enabled>option[value=""] Default (Off)
-ASSERT_VISIBLE #site--settings--site--alarm_urgent_low[placeholder="Default (3.1)"]
-ASSERT_VISIBLE #site--settings--site--alarm_low_minutes[placeholder="Default (5)"]
+ASSERT_TEXT_EQUALS #site--alarms--site--alarm_urgent_low_enabled>option[value=""] Default (Off)
+ASSERT_VISIBLE #site--alarms--site--alarm_urgent_low[placeholder="Default (3.1)"]
+ASSERT_VISIBLE #site--alarms--site--alarm_low_minutes[placeholder="Default (5)"]
 // The predicted low follows the trend 20 minutes ahead by default
 ASSERT_TEXT_VISIBLE Predicted Low Alarm
-ASSERT_VISIBLE #site--settings--site--alarm_low_prediction_minutes[placeholder="Default (20)"]
+ASSERT_VISIBLE #site--alarms--site--alarm_low_prediction_minutes[placeholder="Default (20)"]
 // A fast rise or drop is how far glucose goes, also in the settings' units: 18 mg/dL is 1.0 mmol/L
 ASSERT_TEXT_VISIBLE Rises By (mmol/L)
-ASSERT_VISIBLE #site--settings--site--alarm_fast_rise[placeholder="Default (1.0)"]
-ASSERT_VISIBLE #site--settings--site--alarm_fast_drop_minutes[placeholder="Default (15)"]
+ASSERT_VISIBLE #site--alarms--site--alarm_fast_rise[placeholder="Default (1.0)"]
+ASSERT_VISIBLE #site--alarms--site--alarm_fast_drop_minutes[placeholder="Default (15)"]
 SCREENSHOT alarm_settings
 
 // The site turns on its urgent low at 3.5 mmol/L
-INPUT #site--settings--site--alarm_urgent_low_enabled true
-INPUT #site--settings--site--alarm_urgent_low 3.5
-CLICK #site--settings--site--save
+INPUT #site--alarms--site--alarm_urgent_low_enabled true
+INPUT #site--alarms--site--alarm_urgent_low 3.5
+CLICK #site--alarms--site--save
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Settings Saved
 
 // It is saved, and the admin's own alarms follow the site's
 // Opened afresh, at the top of the page without the saved toasts
-GOTO /settings
+GOTO /settings/alarms
 ASSERT_STATUS 200
-ASSERT_TEXT_EQUALS #site--settings--site--alarm_urgent_low_enabled>option[selected] On
-ASSERT_VISIBLE #site--settings--site--alarm_urgent_low[value="3.5"]
-ASSERT_TEXT_EQUALS #site--settings--identity--alarm_urgent_low_enabled>option[value=""] Site setting (On)
-ASSERT_VISIBLE #site--settings--identity--alarm_urgent_low[placeholder="Site setting (3.5)"]
+ASSERT_TEXT_EQUALS #site--alarms--site--alarm_urgent_low_enabled>option[selected] On
+ASSERT_VISIBLE #site--alarms--site--alarm_urgent_low[value="3.5"]
+ASSERT_TEXT_EQUALS #site--alarms--identity--alarm_urgent_low_enabled>option[value=""] Site setting (On)
+ASSERT_VISIBLE #site--alarms--identity--alarm_urgent_low[placeholder="Site setting (3.5)"]
 SCREENSHOT alarm_settings_saved
 
 // In mg/dL the same urgent low reads as the 63 mg/dL it is kept as
+GOTO /settings
+ASSERT_STATUS 200
 INPUT #site--settings--identity--units mg/dL
 CLICK #site--settings--identity--save
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Settings Saved
 // Opened afresh, at the top of the page without the saved toasts
-GOTO /settings
+GOTO /settings/alarms
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Urgent Low Under (mg/dL)
-ASSERT_VISIBLE #site--settings--site--alarm_urgent_low[value="63"]
+ASSERT_VISIBLE #site--alarms--site--alarm_urgent_low[value="63"]
 
 // The admin turns the urgent low off just for themselves, and a low on, for 10 minutes under 80 mg/dL
-INPUT #site--settings--identity--alarm_urgent_low_enabled false
-INPUT #site--settings--identity--alarm_low_enabled true
-INPUT #site--settings--identity--alarm_low 80
-INPUT #site--settings--identity--alarm_low_minutes 10
-CLICK #site--settings--identity--save
+INPUT #site--alarms--identity--alarm_urgent_low_enabled false
+INPUT #site--alarms--identity--alarm_low_enabled true
+INPUT #site--alarms--identity--alarm_low 80
+INPUT #site--alarms--identity--alarm_low_minutes 10
+CLICK #site--alarms--identity--save
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Settings Saved
 // Opened afresh, at the top of the page without the saved toasts
-GOTO /settings
+GOTO /settings/alarms
 ASSERT_STATUS 200
-ASSERT_TEXT_EQUALS #site--settings--identity--alarm_urgent_low_enabled>option[selected] Off
-ASSERT_TEXT_EQUALS #site--settings--site--alarm_urgent_low_enabled>option[selected] On
-ASSERT_TEXT_EQUALS #site--settings--identity--alarm_low_enabled>option[selected] On
-ASSERT_VISIBLE #site--settings--identity--alarm_low[value="80"]
-ASSERT_VISIBLE #site--settings--identity--alarm_low_minutes[value="10"]
+ASSERT_TEXT_EQUALS #site--alarms--identity--alarm_urgent_low_enabled>option[selected] Off
+ASSERT_TEXT_EQUALS #site--alarms--site--alarm_urgent_low_enabled>option[selected] On
+ASSERT_TEXT_EQUALS #site--alarms--identity--alarm_low_enabled>option[selected] On
+ASSERT_VISIBLE #site--alarms--identity--alarm_low[value="80"]
+ASSERT_VISIBLE #site--alarms--identity--alarm_low_minutes[value="10"]
 SCREENSHOT alarm_settings_identity
 
 // The admin turns on a fast drop, of 27 mg/dL within 10 minutes
-INPUT #site--settings--identity--alarm_fast_drop_enabled true
-INPUT #site--settings--identity--alarm_fast_drop 27
-INPUT #site--settings--identity--alarm_fast_drop_minutes 10
-CLICK #site--settings--identity--save
+INPUT #site--alarms--identity--alarm_fast_drop_enabled true
+INPUT #site--alarms--identity--alarm_fast_drop 27
+INPUT #site--alarms--identity--alarm_fast_drop_minutes 10
+CLICK #site--alarms--identity--save
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Settings Saved
 // Opened afresh, at the top of the page without the saved toasts
-GOTO /settings
+GOTO /settings/alarms
 ASSERT_STATUS 200
-ASSERT_TEXT_EQUALS #site--settings--identity--alarm_fast_drop_enabled>option[selected] On
-ASSERT_VISIBLE #site--settings--identity--alarm_fast_drop[value="27"]
-ASSERT_VISIBLE #site--settings--identity--alarm_fast_drop_minutes[value="10"]
+ASSERT_TEXT_EQUALS #site--alarms--identity--alarm_fast_drop_enabled>option[selected] On
+ASSERT_VISIBLE #site--alarms--identity--alarm_fast_drop[value="27"]
+ASSERT_VISIBLE #site--alarms--identity--alarm_fast_drop_minutes[value="10"]
 SCREENSHOT alarm_settings_fast_drop
 
 // The admin turns on the predicted low, following the trend 30 minutes ahead to their 80 mg/dL low
-INPUT #site--settings--identity--alarm_low_prediction_enabled true
-INPUT #site--settings--identity--alarm_low_prediction_minutes 30
-CLICK #site--settings--identity--save
+INPUT #site--alarms--identity--alarm_low_prediction_enabled true
+INPUT #site--alarms--identity--alarm_low_prediction_minutes 30
+CLICK #site--alarms--identity--save
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Settings Saved
 // Opened afresh, at the top of the page without the saved toasts
-GOTO /settings
+GOTO /settings/alarms
 ASSERT_STATUS 200
-ASSERT_TEXT_EQUALS #site--settings--identity--alarm_low_prediction_enabled>option[selected] On
-ASSERT_VISIBLE #site--settings--identity--alarm_low_prediction_minutes[value="30"]
+ASSERT_TEXT_EQUALS #site--alarms--identity--alarm_low_prediction_enabled>option[selected] On
+ASSERT_VISIBLE #site--alarms--identity--alarm_low_prediction_minutes[value="30"]
 SCREENSHOT alarm_settings_predicted_low
 
 // A fast drop measured over less than 5 minutes is refused
-INPUT #site--settings--identity--alarm_fast_drop_minutes 4
-CLICK #site--settings--identity--save
+INPUT #site--alarms--identity--alarm_fast_drop_minutes 4
+CLICK #site--alarms--identity--save
 ASSERT_STATUS 400
 
 // A glucose that is not a number is refused
-INPUT #site--settings--identity--alarm_low low
-CLICK #site--settings--identity--save
+INPUT #site--alarms--identity--alarm_low low
+CLICK #site--alarms--identity--save
 ASSERT_STATUS 400
 ASSERT_VISIBLE #toaster [data-tui-toast][data-variant="error"]:has-text("alarm_low must be a number")

@@ -21,9 +21,10 @@ import (
 )
 
 // SettingsCollection is a level of settings: the site's, which only admins can change,
-// or the signed in identity's own, which override the site's
+// or the signed in identity's own, which override the site's. Alarms shows the identity's on the alarms page.
 type SettingsCollection struct {
-	Site bool
+	Site   bool
+	Alarms bool
 }
 
 // settingNames are the settings the pages show so far, in order
@@ -52,6 +53,9 @@ func (s *SettingsCollection) GetName() string {
 	if s.Site {
 		return "site_settings"
 	}
+	if s.Alarms {
+		return "alarm_settings"
+	}
 	return "identity_settings"
 }
 
@@ -59,6 +63,9 @@ func (s *SettingsCollection) GetName() string {
 func (s *SettingsCollection) GetRoute() string {
 	if s.Site {
 		return "site"
+	}
+	if s.Alarms {
+		return "alarms"
 	}
 	return "identity"
 }
@@ -108,10 +115,14 @@ func (s *SettingsCollection) ToModel(row *sitemodels.Settings, _ *httputils.Site
 }
 
 func (s *SettingsCollection) GetHTMXResponse(model *sitemodels.Settings) templ.Component {
-	if s.Site {
-		return site_settings_templ.SettingsPage(model, nil)
+	page := site_settings_templ.SettingsPage
+	if s.Alarms {
+		page = site_settings_templ.AlarmSettingsPage
 	}
-	return site_settings_templ.SettingsPage(model.Site, model)
+	if s.Site {
+		return page(model, nil)
+	}
+	return page(model.Site, model)
 }
 
 // ///
