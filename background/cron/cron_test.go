@@ -13,111 +13,64 @@ import (
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
+// TestAddFunc checks a job that returns, errors or panics is run and kept as completed or failed, then summarised
+// into the day's stats with its error
 func TestAddFunc(t *testing.T) {
+	tests := []struct {
+		name    string
+		job     func() error
+		status  string
+		success int64
+		failed  int64
+		err     string
+	}{
+		{"returns", func() error { return nil }, "completed", 1, 0, ""},
+		{"errors", func() error { return fmt.Errorf("test error") }, "failed", 0, 1, "test error"},
+		{"panics", func() error { panic("test panic") }, "failed", 0, 1, "test panic"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.TODO()
+			jobsDB, err := db.NewJobsDB(ctx, testutils.GetTestServerConfig())
+			require.NoError(t, err)
+			testutils.DumpJobsOnFailure(t, jobsDB, "TestAddFunc")
+			toBeSummarised := func(secondsAgo int64) []*jobsdb.Job {
+				jobs, err := jobsDB.Queries.GetJobsToBeSummarised(ctx, jobsdb.GetJobsToBeSummarisedParams{SecondsAgo: secondsAgo})
+				require.NoError(t, err)
+				return jobs
+			}
 
-	config := testutils.GetTestServerConfig()
-	jobsDB, err := db.NewJobsDB(context.TODO(), config)
-	require.NoError(t, err)
+			cron := cron.NewCron(jobsDB)
+			entryid, err := cron.RawAddFunc("testing", "@every 1s", tt.job)
+			require.NoError(t, err)
+			require.NotZero(t, entryid)
+			require.Len(t, cron.Entries(), 1)
+			require.Empty(t, toBeSummarised(0))
 
-	testutils.DumpJobsOnFailure(t, jobsDB, "TestAddFunc")
+			// Running it is caught by the jobs DB, even when it panics
+			cron.Entry(entryid).Job.Run()
 
-	cron := cron.NewCron(jobsDB)
+			// SecondsAgo is seconds: a job from a few milliseconds ago is not a second old yet
+			time.Sleep(10 * time.Millisecond)
+			require.Empty(t, toBeSummarised(1))
+			jobs := toBeSummarised(0)
+			require.Len(t, jobs, 1)
+			require.Equal(t, tt.status, jobs[0].JobStatus)
 
-	entryid, err := cron.RawAddFunc("testing", "@every 1s", func() error { return nil })
-	require.NoError(t, err)
-	require.NotZero(t, entryid)
-
-	require.Len(t, cron.Entries(), 1)
-	jobsTBS, err := jobsDB.Queries.GetJobsToBeSummarised(context.TODO(), jobsdb.GetJobsToBeSummarisedParams{
-		SecondsAgo: 0,
-	})
-	require.NoError(t, err)
-	require.Len(t, jobsTBS, 0)
-
-	// Run the entry
-	entry := cron.Entry(entryid)
-	entry.Job.Run()
-
-	// SecondsAgo is seconds: a job from a few milliseconds ago is not a second old yet
-	time.Sleep(10 * time.Millisecond)
-	jobsTBS, err = jobsDB.Queries.GetJobsToBeSummarised(context.TODO(), jobsdb.GetJobsToBeSummarisedParams{
-		SecondsAgo: 1,
-	})
-	require.NoError(t, err)
-	require.Len(t, jobsTBS, 0)
-
-	jobsTBS, err = jobsDB.Queries.GetJobsToBeSummarised(context.TODO(), jobsdb.GetJobsToBeSummarisedParams{
-		SecondsAgo: 0,
-	})
-	require.NoError(t, err)
-	require.Len(t, jobsTBS, 1)
-	require.Equal(t, "completed", jobsTBS[0].JobStatus)
-
-	err = jobsDB.BuildDailyReports(context.TODO(), 0)
-	require.NoError(t, err)
-
-	jobStats, err := jobsDB.Queries.AllJobStatsDaily(context.TODO())
-	require.NoError(t, err)
-	require.Len(t, jobStats, 1)
-	require.Equal(t, int64(1), jobStats[0].TotalSuccess)
-
-}
-
-func TestAddFuncPanic(t *testing.T) {
-	config := testutils.GetTestServerConfig()
-	jobsDB, _ := db.NewJobsDB(context.TODO(), config)
-
-	cron := cron.NewCron(jobsDB)
-	entryid, _ := cron.RawAddFunc("testing", "@every 1s", func() error { panic("test panic") })
-	entry := cron.Entry(entryid)
-	// Should not panic and be caught by the jobs DB
-	entry.Job.Run()
-
-	jobsTBS, err := jobsDB.Queries.GetJobsToBeSummarised(context.TODO(), jobsdb.GetJobsToBeSummarisedParams{
-		SecondsAgo: 0,
-	})
-	require.NoError(t, err)
-	require.Len(t, jobsTBS, 1)
-	require.Equal(t, "failed", jobsTBS[0].JobStatus)
-
-	err = jobsDB.BuildDailyReports(context.TODO(), 0)
-	require.NoError(t, err)
-
-	jobStats, err := jobsDB.Queries.AllJobStatsDaily(context.TODO())
-	require.NoError(t, err)
-	require.Len(t, jobStats, 1)
-	require.Equal(t, int64(1), jobStats[0].TotalFailed)
-
-	require.Len(t, jobStats[0].Errors, 1)
-	require.Contains(t, jobStats[0].Errors[0], "test panic")
-}
-
-func TestAddFuncError(t *testing.T) {
-	config := testutils.GetTestServerConfig()
-	jobsDB, _ := db.NewJobsDB(context.TODO(), config)
-
-	cron := cron.NewCron(jobsDB)
-	entryid, _ := cron.RawAddFunc("testing", "@every 1s", func() error { return fmt.Errorf("test error") })
-	entry := cron.Entry(entryid)
-	// Simulate an error in the job
-	entry.Job.Run()
-
-	jobsTBS, err := jobsDB.Queries.GetJobsToBeSummarised(context.TODO(), jobsdb.GetJobsToBeSummarisedParams{
-		SecondsAgo: 0,
-	})
-	require.NoError(t, err)
-	require.Len(t, jobsTBS, 1)
-	require.Equal(t, "failed", jobsTBS[0].JobStatus)
-
-	err = jobsDB.BuildDailyReports(context.TODO(), 0)
-	require.NoError(t, err)
-
-	jobStats, err := jobsDB.Queries.AllJobStatsDaily(context.TODO())
-	require.NoError(t, err)
-	require.Len(t, jobStats, 1)
-	require.Equal(t, int64(1), jobStats[0].TotalFailed)
-	require.Len(t, jobStats[0].Errors, 1)
-	require.Contains(t, jobStats[0].Errors[0], "test error")
+			require.NoError(t, jobsDB.BuildDailyReports(ctx, 0))
+			jobStats, err := jobsDB.Queries.AllJobStatsDaily(ctx)
+			require.NoError(t, err)
+			require.Len(t, jobStats, 1)
+			require.Equal(t, tt.success, jobStats[0].TotalSuccess)
+			require.Equal(t, tt.failed, jobStats[0].TotalFailed)
+			if tt.err == "" {
+				require.Empty(t, jobStats[0].Errors)
+				return
+			}
+			require.Len(t, jobStats[0].Errors, 1)
+			require.Contains(t, jobStats[0].Errors[0], tt.err)
+		})
+	}
 }
 
 func TestAddFuncRunsAgainAfterPanic(t *testing.T) {
