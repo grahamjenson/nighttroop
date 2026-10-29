@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 	gosync "sync"
-	"time"
 
 	"nighttroop.t1d.nz/clients/libre_client"
 	"nighttroop.t1d.nz/models/libremodels"
@@ -40,7 +39,7 @@ func (b *SyncJobManager) libreClientFor(syncInfo *SyncJobInfo) (*libreClient, er
 }
 
 func (b *SyncJobManager) syncLibre(syncInfo *SyncJobInfo) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), syncTimeout)
 	defer cancel()
 	_, err := b.copyLibreReadings(ctx, syncInfo)
 	return err

@@ -166,8 +166,9 @@ SET
     enabled = CASE WHEN first_successful_sync_time IS NULL THEN 0 ELSE enabled END,
 
     -- Back off: double the wait after every failure (bad status, timeout,
-    -- bad credentials), capped at an hour, so a broken source is not hammered
-    sync_interval_seconds = MIN(sync_interval_seconds * 2, 3600),
+    -- bad credentials), capped at 10 minutes, so a broken source is not hammered,
+    -- but one that was down for hours is back to its usual interval soon after it returns
+    sync_interval_seconds = MIN(sync_interval_seconds * 2, 600),
     sync_interval_seconds_reason = 'error_response',
 
     

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"time"
 
 	"nighttroop.t1d.nz/clients/dexcom_client"
 	"nighttroop.t1d.nz/models/dexcommodels"
@@ -15,7 +14,7 @@ import (
 func (b *SyncJobManager) syncDexcom(syncInfo *SyncJobInfo) error {
 	slog.Info("Syncing Dexcom", "site_id", syncInfo.SiteID, "sync_type", syncInfo.Type)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), syncTimeout)
 	defer cancel()
 
 	_, err := copyDexcomEGVs(ctx, syncInfo, 15)

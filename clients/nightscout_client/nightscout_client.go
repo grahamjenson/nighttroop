@@ -83,7 +83,7 @@ func NewClient(baseURL, token string, options ClientOptions) *Client {
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	transport.Proxy = nil
 	if !options.AllowLocalAddresses {
-		transport.DialContext = (&net.Dialer{Timeout: 30 * time.Second, KeepAlive: 30 * time.Second, Control: refuseBlockedIPs}).DialContext
+		transport.DialContext = (&net.Dialer{Timeout: 10 * time.Second, KeepAlive: 30 * time.Second, Control: refuseBlockedIPs}).DialContext
 	}
 
 	return &Client{
@@ -91,7 +91,7 @@ func NewClient(baseURL, token string, options ClientOptions) *Client {
 		token:   token,
 		httpClient: &http.Client{
 			Transport: transport,
-			Timeout:   30 * time.Second,
+			Timeout:   10 * time.Second,
 			// Never follow redirects: the sync URL is only checked when saved, so a
 			// redirect could point at an internal host. The 3xx is handled as a failure.
 			CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },

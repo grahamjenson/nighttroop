@@ -29,7 +29,7 @@ func TestSyncBacksOffOnFailureAndResetsOnSuccess(t *testing.T) {
 	for range 10 {
 		require.NoError(t, q.UpdateSyncSourceReportsFailure(ctx, controldb.UpdateSyncSourceReportsFailureParams{ErrorMessages: []string{"HTTP 400"}, ElapsedMs: &ms, SiteID: siteID, Type: typ}))
 	}
-	require.Equal(t, int64(3600), interval())
+	require.Equal(t, int64(600), interval())
 
 	require.NoError(t, q.UpdateSyncSourceReportsSuccess(ctx, controldb.UpdateSyncSourceReportsSuccessParams{ElapsedMs: &ms, SiteID: siteID, Type: typ}))
 	require.Equal(t, int64(60), interval())
