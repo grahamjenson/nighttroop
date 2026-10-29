@@ -26,15 +26,15 @@ SELECT
     n.id, n.notification_type, n.title, n.severity, n.content, n.notes, n.reason, n.raw_json_data, n.deleted_at, n.utc_offset_minutes, n.occurred_at, n.created_at, n.updated_at, n.created_by_app_name, n.created_by_device_name, n.updated_by_identity_id, n.updated_by_identity_name, n.created_by_identity_id, n.created_by_identity_name
 
 FROM event_groups eg
-LEFT JOIN glucose_readings_vw gr ON eg.glucose_reading_id = gr.id
-LEFT JOIN insulin_doses_vw idose ON eg.insulin_dose_id = idose.id
-LEFT JOIN food_intakes_vw fi ON eg.food_intake_id = fi.id
-LEFT JOIN temp_basals_vw tb ON eg.temp_basal_id = tb.id
-LEFT JOIN temp_targets_vw tt ON eg.temp_target_id = tt.id
-LEFT JOIN profile_switches_vw ps ON eg.profile_switch_id = ps.id
-LEFT JOIN component_events_vw ce ON eg.component_event_id = ce.id
-LEFT JOIN activities_vw a ON eg.activity_id = a.id
-LEFT JOIN notification_events_vw n ON eg.notification_event_id = n.id
+LEFT JOIN glucose_readings gr ON eg.glucose_reading_id = gr.id
+LEFT JOIN insulin_doses idose ON eg.insulin_dose_id = idose.id
+LEFT JOIN food_intakes fi ON eg.food_intake_id = fi.id
+LEFT JOIN temp_basals tb ON eg.temp_basal_id = tb.id
+LEFT JOIN temp_targets tt ON eg.temp_target_id = tt.id
+LEFT JOIN profile_switches ps ON eg.profile_switch_id = ps.id
+LEFT JOIN component_events ce ON eg.component_event_id = ce.id
+LEFT JOIN activities a ON eg.activity_id = a.id
+LEFT JOIN notification_events n ON eg.notification_event_id = n.id
 
 
 WHERE (CAST(?1 AS BOOL) IS TRUE OR eg.deleted_at IS NULL)
@@ -61,6 +61,8 @@ type AllEventGroupsRow struct {
 	NotificationEventsVw NotificationEventsVw
 }
 
+// The joins name the _vw views so sqlc types their columns as nullable, but the generated queries join the tables
+// themselves (see joinTablesNotViews in data/sql/gen/sqlc.go), so SQLite does not copy each table for every query
 func (q *Queries) AllEventGroups(ctx context.Context, arg AllEventGroupsParams) ([]*AllEventGroupsRow, error) {
 	rows, err := q.query(ctx, q.allEventGroupsStmt, allEventGroups, arg.IncludeDeleted, arg.Skip, arg.Limit)
 	if err != nil {
@@ -439,15 +441,15 @@ SELECT
     n.id, n.notification_type, n.title, n.severity, n.content, n.notes, n.reason, n.raw_json_data, n.deleted_at, n.utc_offset_minutes, n.occurred_at, n.created_at, n.updated_at, n.created_by_app_name, n.created_by_device_name, n.updated_by_identity_id, n.updated_by_identity_name, n.created_by_identity_id, n.created_by_identity_name
 
 FROM event_groups eg
-LEFT JOIN glucose_readings_vw gr ON eg.glucose_reading_id = gr.id
-LEFT JOIN insulin_doses_vw idose ON eg.insulin_dose_id = idose.id
-LEFT JOIN food_intakes_vw fi ON eg.food_intake_id = fi.id
-LEFT JOIN temp_basals_vw tb ON eg.temp_basal_id = tb.id
-LEFT JOIN temp_targets_vw tt ON eg.temp_target_id = tt.id
-LEFT JOIN profile_switches_vw ps ON eg.profile_switch_id = ps.id
-LEFT JOIN component_events_vw ce ON eg.component_event_id = ce.id
-LEFT JOIN activities_vw a ON eg.activity_id = a.id
-LEFT JOIN notification_events_vw n ON eg.notification_event_id = n.id
+LEFT JOIN glucose_readings gr ON eg.glucose_reading_id = gr.id
+LEFT JOIN insulin_doses idose ON eg.insulin_dose_id = idose.id
+LEFT JOIN food_intakes fi ON eg.food_intake_id = fi.id
+LEFT JOIN temp_basals tb ON eg.temp_basal_id = tb.id
+LEFT JOIN temp_targets tt ON eg.temp_target_id = tt.id
+LEFT JOIN profile_switches ps ON eg.profile_switch_id = ps.id
+LEFT JOIN component_events ce ON eg.component_event_id = ce.id
+LEFT JOIN activities a ON eg.activity_id = a.id
+LEFT JOIN notification_events n ON eg.notification_event_id = n.id
 
 WHERE eg.id = ? AND (CAST(?2 AS BOOL) = TRUE OR eg.deleted_at IS NULL)
 `
@@ -925,15 +927,15 @@ SELECT
     n.id, n.notification_type, n.title, n.severity, n.content, n.notes, n.reason, n.raw_json_data, n.deleted_at, n.utc_offset_minutes, n.occurred_at, n.created_at, n.updated_at, n.created_by_app_name, n.created_by_device_name, n.updated_by_identity_id, n.updated_by_identity_name, n.created_by_identity_id, n.created_by_identity_name
 
 FROM event_groups eg
-LEFT JOIN glucose_readings_vw gr ON eg.glucose_reading_id = gr.id
-LEFT JOIN insulin_doses_vw idose ON eg.insulin_dose_id = idose.id
-LEFT JOIN food_intakes_vw fi ON eg.food_intake_id = fi.id
-LEFT JOIN temp_basals_vw tb ON eg.temp_basal_id = tb.id
-LEFT JOIN temp_targets_vw tt ON eg.temp_target_id = tt.id
-LEFT JOIN profile_switches_vw ps ON eg.profile_switch_id = ps.id
-LEFT JOIN component_events_vw ce ON eg.component_event_id = ce.id
-LEFT JOIN activities_vw a ON eg.activity_id = a.id
-LEFT JOIN notification_events_vw n ON eg.notification_event_id = n.id
+LEFT JOIN glucose_readings gr ON eg.glucose_reading_id = gr.id
+LEFT JOIN insulin_doses idose ON eg.insulin_dose_id = idose.id
+LEFT JOIN food_intakes fi ON eg.food_intake_id = fi.id
+LEFT JOIN temp_basals tb ON eg.temp_basal_id = tb.id
+LEFT JOIN temp_targets tt ON eg.temp_target_id = tt.id
+LEFT JOIN profile_switches ps ON eg.profile_switch_id = ps.id
+LEFT JOIN component_events ce ON eg.component_event_id = ce.id
+LEFT JOIN activities a ON eg.activity_id = a.id
+LEFT JOIN notification_events n ON eg.notification_event_id = n.id
 
 
 WHERE
