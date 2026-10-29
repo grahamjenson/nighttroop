@@ -249,41 +249,52 @@ func TestConcurrentPollClosesTheSession(t *testing.T) {
 	require.Equal(t, "1", firstBody)
 }
 
+// A server with its most sessions open refuses another, over polling or a websocket
 func TestMaxSessions(t *testing.T) {
-	_, ts, _ := echoServer(t, Config{MaxSessions: 2})
-	handshake(t, ts.URL, "4")
-	handshake(t, ts.URL, "4")
-	status, _ := get(t, ts.URL+"/?EIO=4&transport=polling")
-	require.Equal(t, http.StatusTooManyRequests, status)
-}
-
-func TestSlowClientIsClosedWhenItsBufferFills(t *testing.T) {
-	var session *Session
-	server := NewServer(Config{MaxBuffered: 3}, func(s *Session) { session = s })
-	ts := httptest.NewServer(server)
-	defer ts.Close()
-	handshake(t, ts.URL, "4")
-
-	for range 3 {
-		require.NoError(t, session.Send("x"))
+	tests := []struct {
+		transport string
+		open      func(url string) (*Client, error)
+	}{
+		{"polling", func(url string) (*Client, error) { return Dial(context.Background(), url, V4, nil, nil) }},
+		{"websocket", func(url string) (*Client, error) { return DialOverWebSocket(context.Background(), url, V4, nil) }},
 	}
-	require.ErrorIs(t, session.Send("x"), ErrClosed)
-	<-session.Done()
-	require.Equal(t, 0, server.Count())
+	for _, test := range tests {
+		t.Run(test.transport, func(t *testing.T) {
+			_, ts, _ := echoServer(t, Config{MaxSessions: 2})
+			handshake(t, ts.URL, "4")
+			handshake(t, ts.URL, "4")
+			_, err := test.open(ts.URL)
+			require.ErrorContains(t, err, "429")
+		})
+	}
 }
 
-func TestSlowClientIsClosedWhenItsBufferHoldsTooManyBytes(t *testing.T) {
-	var session *Session
-	server := NewServer(Config{MaxBufferedBytes: 10}, func(s *Session) { session = s })
-	ts := httptest.NewServer(server)
-	defer ts.Close()
-	handshake(t, ts.URL, "4")
+// A client that does not poll is closed once the messages waiting for it are too many, or hold too many bytes
+func TestSlowClientIsClosedWhenItsBufferFills(t *testing.T) {
+	tests := []struct {
+		name   string
+		config Config
+		fit    []string // the messages that fit, before one more "x" is too many
+	}{
+		{"too many messages", Config{MaxBuffered: 3}, []string{"x", "x", "x"}},
+		{"too many bytes", Config{MaxBufferedBytes: 10}, []string{"12345", "12345"}},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var session *Session
+			server := NewServer(test.config, func(s *Session) { session = s })
+			ts := httptest.NewServer(server)
+			defer ts.Close()
+			handshake(t, ts.URL, "4")
 
-	require.NoError(t, session.Send("12345"))
-	require.NoError(t, session.Send("12345"))
-	require.ErrorIs(t, session.Send("x"), ErrClosed)
-	<-session.Done()
-	require.Equal(t, 0, server.Count())
+			for _, data := range test.fit {
+				require.NoError(t, session.Send(data))
+			}
+			require.ErrorIs(t, session.Send("x"), ErrClosed)
+			<-session.Done()
+			require.Equal(t, 0, server.Count())
+		})
+	}
 }
 
 // A client sending packets faster than the rate, in one POST or down a websocket, is closed before they are all handled
@@ -402,11 +413,4 @@ func TestWebSocketSessionClosesWithoutHeartbeat(t *testing.T) {
 			require.Equal(t, 0, server.Count())
 		})
 	}
-}
-
-func TestMaxSessionsOverWebSocket(t *testing.T) {
-	_, ts, _ := echoServer(t, Config{MaxSessions: 1})
-	handshake(t, ts.URL, "4")
-	_, err := DialWebSocket(context.Background(), ts.URL, V4, "")
-	require.ErrorContains(t, err, "429")
 }
