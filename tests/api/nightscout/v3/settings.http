@@ -442,37 +442,38 @@ ASSERT_EQUALS "alarm_no_data_minutes" "@result.identifier"
 ASSERT_EQUALS "number" "@result.type"
 ASSERT_EQUALS 20 "@result.value"
 
-NAME get_alarm_battery_low_enabled_settings_v3
-GET http://{{ site }}/api/v3/settings/alarm_battery_low_enabled
+NAME get_alarm_device_battery_low_enabled_settings_v3
+GET http://{{ site }}/api/v3/settings/alarm_device_battery_low_enabled
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_EQUALS "alarm_battery_low_enabled" "@result.identifier"
+ASSERT_EQUALS "alarm_device_battery_low_enabled" "@result.identifier"
 ASSERT_EQUALS "boolean" "@result.type"
 ASSERT_EQUALS false "@result.value"
 
-NAME get_alarm_battery_low_percent_settings_v3
-GET http://{{ site }}/api/v3/settings/alarm_battery_low_percent
+NAME get_alarm_device_battery_low_percent_settings_v3
+GET http://{{ site }}/api/v3/settings/alarm_device_battery_low_percent
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_EQUALS "alarm_battery_low_percent" "@result.identifier"
+ASSERT_EQUALS "alarm_device_battery_low_percent" "@result.identifier"
 ASSERT_EQUALS "number" "@result.type"
 ASSERT_EQUALS 20 "@result.value"
 
-NAME get_alarm_battery_low_pwd_enabled_settings_v3
-GET http://{{ site }}/api/v3/settings/alarm_battery_low_pwd_enabled
+NAME get_alarm_device_battery_low_minutes_settings_v3
+GET http://{{ site }}/api/v3/settings/alarm_device_battery_low_minutes
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_EQUALS "alarm_battery_low_pwd_enabled" "@result.identifier"
-ASSERT_EQUALS "boolean" "@result.type"
-ASSERT_EQUALS false "@result.value"
-
-NAME get_alarm_battery_low_pwd_percent_settings_v3
-GET http://{{ site }}/api/v3/settings/alarm_battery_low_pwd_percent
-H Authorization: Bearer {{ jwt }}
-ASSERT_STATUS 200
-ASSERT_EQUALS "alarm_battery_low_pwd_percent" "@result.identifier"
+ASSERT_EQUALS "alarm_device_battery_low_minutes" "@result.identifier"
 ASSERT_EQUALS "number" "@result.type"
-ASSERT_EQUALS 20 "@result.value"
+ASSERT_EQUALS 30 "@result.value"
+
+// No devices are checked by default
+NAME get_alarm_device_battery_low_devices_settings_v3
+GET http://{{ site }}/api/v3/settings/alarm_device_battery_low_devices
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_device_battery_low_devices" "@result.identifier"
+ASSERT_EQUALS "array" "@result.type"
+ASSERT_LENGTH 0 "@result.value"
 
 NAME get_alarm_low_reservoir_enabled_settings_v3
 GET http://{{ site }}/api/v3/settings/alarm_low_reservoir_enabled
@@ -830,41 +831,50 @@ ASSERT_EQUALS "alarm_no_data_minutes" "@result.identifier"
 ASSERT_EQUALS "number" "@result.type"
 ASSERT_EQUALS 32 "@result.value"
 
-NAME put_alarm_battery_low_enabled_settings_v3
-PUT http://{{ site }}/api/v3/settings/alarm_battery_low_enabled
+NAME put_alarm_device_battery_low_enabled_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_device_battery_low_enabled
 H Authorization: Bearer {{ jwt }}
 B { "value": true }
 ASSERT_STATUS 200
-ASSERT_EQUALS "alarm_battery_low_enabled" "@result.identifier"
+ASSERT_EQUALS "alarm_device_battery_low_enabled" "@result.identifier"
 ASSERT_EQUALS "boolean" "@result.type"
 ASSERT_EQUALS true "@result.value"
 
-NAME put_alarm_battery_low_percent_settings_v3
-PUT http://{{ site }}/api/v3/settings/alarm_battery_low_percent
+NAME put_alarm_device_battery_low_percent_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_device_battery_low_percent
 H Authorization: Bearer {{ jwt }}
 B { "value": 32 }
 ASSERT_STATUS 200
-ASSERT_EQUALS "alarm_battery_low_percent" "@result.identifier"
+ASSERT_EQUALS "alarm_device_battery_low_percent" "@result.identifier"
 ASSERT_EQUALS "number" "@result.type"
 ASSERT_EQUALS 32 "@result.value"
 
-NAME put_alarm_battery_low_pwd_enabled_settings_v3
-PUT http://{{ site }}/api/v3/settings/alarm_battery_low_pwd_enabled
+NAME put_alarm_device_battery_low_minutes_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_device_battery_low_minutes
 H Authorization: Bearer {{ jwt }}
-B { "value": true }
+B { "value": 45 }
 ASSERT_STATUS 200
-ASSERT_EQUALS "alarm_battery_low_pwd_enabled" "@result.identifier"
-ASSERT_EQUALS "boolean" "@result.type"
-ASSERT_EQUALS true "@result.value"
-
-NAME put_alarm_battery_low_pwd_percent_settings_v3
-PUT http://{{ site }}/api/v3/settings/alarm_battery_low_pwd_percent
-H Authorization: Bearer {{ jwt }}
-B { "value": 32 }
-ASSERT_STATUS 200
-ASSERT_EQUALS "alarm_battery_low_pwd_percent" "@result.identifier"
+ASSERT_EQUALS "alarm_device_battery_low_minutes" "@result.identifier"
 ASSERT_EQUALS "number" "@result.type"
-ASSERT_EQUALS 32 "@result.value"
+ASSERT_EQUALS 45 "@result.value"
+
+NAME put_alarm_device_battery_low_devices_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_device_battery_low_devices
+H Authorization: Bearer {{ jwt }}
+B { "value": ["openaps://pixel", "SugarPixel"] }
+ASSERT_STATUS 200
+ASSERT_EQUALS "alarm_device_battery_low_devices" "@result.identifier"
+ASSERT_EQUALS "array" "@result.type"
+ASSERT_EQUALS "openaps://pixel" "@result.value.0"
+ASSERT_EQUALS "SugarPixel" "@result.value.1"
+
+// The devices are stored, so reading them again gives them back
+NAME get_alarm_device_battery_low_devices_saved_settings_v3
+GET http://{{ site }}/api/v3/settings/alarm_device_battery_low_devices
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result.value"
+ASSERT_EQUALS "SugarPixel" "@result.value.1"
 
 NAME put_alarm_low_reservoir_enabled_settings_v3
 PUT http://{{ site }}/api/v3/settings/alarm_low_reservoir_enabled
@@ -1118,28 +1128,34 @@ H Authorization: Bearer {{ jwt }}
 B { "value": -1 }
 ASSERT_STATUS 400
 
-NAME fail_alarm_battery_low_enabled_settings_v3
-PUT http://{{ site }}/api/v3/settings/alarm_battery_low_enabled
+NAME fail_alarm_device_battery_low_enabled_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_device_battery_low_enabled
 H Authorization: Bearer {{ jwt }}
 B { "value": "nope" }
 ASSERT_STATUS 400
 
-NAME fail_alarm_battery_low_percent_settings_v3
-PUT http://{{ site }}/api/v3/settings/alarm_battery_low_percent
+NAME fail_alarm_device_battery_low_percent_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_device_battery_low_percent
 H Authorization: Bearer {{ jwt }}
 B { "value": 0 }
 ASSERT_STATUS 400
 
-NAME fail_alarm_battery_low_pwd_enabled_settings_v3
-PUT http://{{ site }}/api/v3/settings/alarm_battery_low_pwd_enabled
+NAME fail_alarm_device_battery_low_minutes_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_device_battery_low_minutes
 H Authorization: Bearer {{ jwt }}
-B { "value": "nope" }
+B { "value": 121 }
 ASSERT_STATUS 400
 
-NAME fail_alarm_battery_low_pwd_percent_settings_v3
-PUT http://{{ site }}/api/v3/settings/alarm_battery_low_pwd_percent
+NAME fail_alarm_device_battery_low_devices_not_a_list_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_device_battery_low_devices
 H Authorization: Bearer {{ jwt }}
-B { "value": 0 }
+B { "value": "openaps://pixel" }
+ASSERT_STATUS 400
+
+NAME fail_alarm_device_battery_low_devices_too_many_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_device_battery_low_devices
+H Authorization: Bearer {{ jwt }}
+B { "value": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"] }
 ASSERT_STATUS 400
 
 NAME fail_alarm_low_reservoir_enabled_settings_v3

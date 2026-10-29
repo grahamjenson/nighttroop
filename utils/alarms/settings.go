@@ -22,6 +22,12 @@ func FromSettings(m *settings.CombinedSettingsMap) []Alarm {
 	if resolve(m, settings.SettingMap.GetAlarmNoDataEnabled) {
 		alarms = append(alarms, NoDataAlarm{Minutes: resolve(m, settings.SettingMap.GetAlarmNoDataMinutes)})
 	}
+	// With no devices listed there is nothing for it to check
+	devices := resolve(m, settings.SettingMap.GetAlarmDeviceBatteryLowDevicesJson)
+	if resolve(m, settings.SettingMap.GetAlarmDeviceBatteryLowEnabled) && len(devices) > 0 {
+		alarms = append(alarms, DeviceBatteryAlarm{Percent: float64(resolve(m, settings.SettingMap.GetAlarmDeviceBatteryLowPercent)),
+			Minutes: resolve(m, settings.SettingMap.GetAlarmDeviceBatteryLowMinutes), Devices: devices})
+	}
 	return alarms
 }
 

@@ -2,6 +2,7 @@
 package controldb
 
 import (
+	"nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/errors"
 )
@@ -667,44 +668,44 @@ func (m *Site) SetAlarmNoDataMinutes(v *int64) {
 	m.AlarmNoDataMinutes = v
 }
 
-// GetAlarmBatteryLowEnabled returns the AlarmBatteryLowEnabled value.
-func (m Site) GetAlarmBatteryLowEnabled() *bool {
-	return m.AlarmBatteryLowEnabled
+// GetAlarmDeviceBatteryLowEnabled returns the AlarmDeviceBatteryLowEnabled value.
+func (m Site) GetAlarmDeviceBatteryLowEnabled() *bool {
+	return m.AlarmDeviceBatteryLowEnabled
 }
 
-// SetAlarmBatteryLowEnabled sets the AlarmBatteryLowEnabled value and returns the updated Site.
-func (m *Site) SetAlarmBatteryLowEnabled(v *bool) {
-	m.AlarmBatteryLowEnabled = v
+// SetAlarmDeviceBatteryLowEnabled sets the AlarmDeviceBatteryLowEnabled value and returns the updated Site.
+func (m *Site) SetAlarmDeviceBatteryLowEnabled(v *bool) {
+	m.AlarmDeviceBatteryLowEnabled = v
 }
 
-// GetAlarmBatteryLowPercent returns the AlarmBatteryLowPercent value.
-func (m Site) GetAlarmBatteryLowPercent() *int64 {
-	return m.AlarmBatteryLowPercent
+// GetAlarmDeviceBatteryLowPercent returns the AlarmDeviceBatteryLowPercent value.
+func (m Site) GetAlarmDeviceBatteryLowPercent() *int64 {
+	return m.AlarmDeviceBatteryLowPercent
 }
 
-// SetAlarmBatteryLowPercent sets the AlarmBatteryLowPercent value and returns the updated Site.
-func (m *Site) SetAlarmBatteryLowPercent(v *int64) {
-	m.AlarmBatteryLowPercent = v
+// SetAlarmDeviceBatteryLowPercent sets the AlarmDeviceBatteryLowPercent value and returns the updated Site.
+func (m *Site) SetAlarmDeviceBatteryLowPercent(v *int64) {
+	m.AlarmDeviceBatteryLowPercent = v
 }
 
-// GetAlarmBatteryLowPwdEnabled returns the AlarmBatteryLowPwdEnabled value.
-func (m Site) GetAlarmBatteryLowPwdEnabled() *bool {
-	return m.AlarmBatteryLowPwdEnabled
+// GetAlarmDeviceBatteryLowMinutes returns the AlarmDeviceBatteryLowMinutes value.
+func (m Site) GetAlarmDeviceBatteryLowMinutes() *int64 {
+	return m.AlarmDeviceBatteryLowMinutes
 }
 
-// SetAlarmBatteryLowPwdEnabled sets the AlarmBatteryLowPwdEnabled value and returns the updated Site.
-func (m *Site) SetAlarmBatteryLowPwdEnabled(v *bool) {
-	m.AlarmBatteryLowPwdEnabled = v
+// SetAlarmDeviceBatteryLowMinutes sets the AlarmDeviceBatteryLowMinutes value and returns the updated Site.
+func (m *Site) SetAlarmDeviceBatteryLowMinutes(v *int64) {
+	m.AlarmDeviceBatteryLowMinutes = v
 }
 
-// GetAlarmBatteryLowPwdPercent returns the AlarmBatteryLowPwdPercent value.
-func (m Site) GetAlarmBatteryLowPwdPercent() *int64 {
-	return m.AlarmBatteryLowPwdPercent
+// GetAlarmDeviceBatteryLowDevicesJson returns the AlarmDeviceBatteryLowDevicesJson value.
+func (m Site) GetAlarmDeviceBatteryLowDevicesJson() *types.DeviceNames {
+	return m.AlarmDeviceBatteryLowDevicesJson
 }
 
-// SetAlarmBatteryLowPwdPercent sets the AlarmBatteryLowPwdPercent value and returns the updated Site.
-func (m *Site) SetAlarmBatteryLowPwdPercent(v *int64) {
-	m.AlarmBatteryLowPwdPercent = v
+// SetAlarmDeviceBatteryLowDevicesJson sets the AlarmDeviceBatteryLowDevicesJson value and returns the updated Site.
+func (m *Site) SetAlarmDeviceBatteryLowDevicesJson(v *types.DeviceNames) {
+	m.AlarmDeviceBatteryLowDevicesJson = v
 }
 
 // GetAlarmLowReservoirEnabled returns the AlarmLowReservoirEnabled value.
@@ -1237,44 +1238,44 @@ func (m *SiteIdentity) SetAlarmNoDataMinutes(v *int64) {
 	m.AlarmNoDataMinutes = v
 }
 
-// GetAlarmBatteryLowEnabled returns the AlarmBatteryLowEnabled value.
-func (m SiteIdentity) GetAlarmBatteryLowEnabled() *bool {
-	return m.AlarmBatteryLowEnabled
+// GetAlarmDeviceBatteryLowEnabled returns the AlarmDeviceBatteryLowEnabled value.
+func (m SiteIdentity) GetAlarmDeviceBatteryLowEnabled() *bool {
+	return m.AlarmDeviceBatteryLowEnabled
 }
 
-// SetAlarmBatteryLowEnabled sets the AlarmBatteryLowEnabled value and returns the updated SiteIdentity.
-func (m *SiteIdentity) SetAlarmBatteryLowEnabled(v *bool) {
-	m.AlarmBatteryLowEnabled = v
+// SetAlarmDeviceBatteryLowEnabled sets the AlarmDeviceBatteryLowEnabled value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmDeviceBatteryLowEnabled(v *bool) {
+	m.AlarmDeviceBatteryLowEnabled = v
 }
 
-// GetAlarmBatteryLowPercent returns the AlarmBatteryLowPercent value.
-func (m SiteIdentity) GetAlarmBatteryLowPercent() *int64 {
-	return m.AlarmBatteryLowPercent
+// GetAlarmDeviceBatteryLowPercent returns the AlarmDeviceBatteryLowPercent value.
+func (m SiteIdentity) GetAlarmDeviceBatteryLowPercent() *int64 {
+	return m.AlarmDeviceBatteryLowPercent
 }
 
-// SetAlarmBatteryLowPercent sets the AlarmBatteryLowPercent value and returns the updated SiteIdentity.
-func (m *SiteIdentity) SetAlarmBatteryLowPercent(v *int64) {
-	m.AlarmBatteryLowPercent = v
+// SetAlarmDeviceBatteryLowPercent sets the AlarmDeviceBatteryLowPercent value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmDeviceBatteryLowPercent(v *int64) {
+	m.AlarmDeviceBatteryLowPercent = v
 }
 
-// GetAlarmBatteryLowPwdEnabled returns the AlarmBatteryLowPwdEnabled value.
-func (m SiteIdentity) GetAlarmBatteryLowPwdEnabled() *bool {
-	return m.AlarmBatteryLowPwdEnabled
+// GetAlarmDeviceBatteryLowMinutes returns the AlarmDeviceBatteryLowMinutes value.
+func (m SiteIdentity) GetAlarmDeviceBatteryLowMinutes() *int64 {
+	return m.AlarmDeviceBatteryLowMinutes
 }
 
-// SetAlarmBatteryLowPwdEnabled sets the AlarmBatteryLowPwdEnabled value and returns the updated SiteIdentity.
-func (m *SiteIdentity) SetAlarmBatteryLowPwdEnabled(v *bool) {
-	m.AlarmBatteryLowPwdEnabled = v
+// SetAlarmDeviceBatteryLowMinutes sets the AlarmDeviceBatteryLowMinutes value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmDeviceBatteryLowMinutes(v *int64) {
+	m.AlarmDeviceBatteryLowMinutes = v
 }
 
-// GetAlarmBatteryLowPwdPercent returns the AlarmBatteryLowPwdPercent value.
-func (m SiteIdentity) GetAlarmBatteryLowPwdPercent() *int64 {
-	return m.AlarmBatteryLowPwdPercent
+// GetAlarmDeviceBatteryLowDevicesJson returns the AlarmDeviceBatteryLowDevicesJson value.
+func (m SiteIdentity) GetAlarmDeviceBatteryLowDevicesJson() *types.DeviceNames {
+	return m.AlarmDeviceBatteryLowDevicesJson
 }
 
-// SetAlarmBatteryLowPwdPercent sets the AlarmBatteryLowPwdPercent value and returns the updated SiteIdentity.
-func (m *SiteIdentity) SetAlarmBatteryLowPwdPercent(v *int64) {
-	m.AlarmBatteryLowPwdPercent = v
+// SetAlarmDeviceBatteryLowDevicesJson sets the AlarmDeviceBatteryLowDevicesJson value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmDeviceBatteryLowDevicesJson(v *types.DeviceNames) {
+	m.AlarmDeviceBatteryLowDevicesJson = v
 }
 
 // GetAlarmLowReservoirEnabled returns the AlarmLowReservoirEnabled value.
@@ -2077,44 +2078,44 @@ func (m *UpdateSiteIdentitySettingsParams) SetAlarmNoDataMinutes(v *int64) {
 	m.AlarmNoDataMinutes = v
 }
 
-// GetAlarmBatteryLowEnabled returns the AlarmBatteryLowEnabled value.
-func (m UpdateSiteIdentitySettingsParams) GetAlarmBatteryLowEnabled() *bool {
-	return m.AlarmBatteryLowEnabled
+// GetAlarmDeviceBatteryLowEnabled returns the AlarmDeviceBatteryLowEnabled value.
+func (m UpdateSiteIdentitySettingsParams) GetAlarmDeviceBatteryLowEnabled() *bool {
+	return m.AlarmDeviceBatteryLowEnabled
 }
 
-// SetAlarmBatteryLowEnabled sets the AlarmBatteryLowEnabled value and returns the updated UpdateSiteIdentitySettingsParams.
-func (m *UpdateSiteIdentitySettingsParams) SetAlarmBatteryLowEnabled(v *bool) {
-	m.AlarmBatteryLowEnabled = v
+// SetAlarmDeviceBatteryLowEnabled sets the AlarmDeviceBatteryLowEnabled value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m *UpdateSiteIdentitySettingsParams) SetAlarmDeviceBatteryLowEnabled(v *bool) {
+	m.AlarmDeviceBatteryLowEnabled = v
 }
 
-// GetAlarmBatteryLowPercent returns the AlarmBatteryLowPercent value.
-func (m UpdateSiteIdentitySettingsParams) GetAlarmBatteryLowPercent() *int64 {
-	return m.AlarmBatteryLowPercent
+// GetAlarmDeviceBatteryLowPercent returns the AlarmDeviceBatteryLowPercent value.
+func (m UpdateSiteIdentitySettingsParams) GetAlarmDeviceBatteryLowPercent() *int64 {
+	return m.AlarmDeviceBatteryLowPercent
 }
 
-// SetAlarmBatteryLowPercent sets the AlarmBatteryLowPercent value and returns the updated UpdateSiteIdentitySettingsParams.
-func (m *UpdateSiteIdentitySettingsParams) SetAlarmBatteryLowPercent(v *int64) {
-	m.AlarmBatteryLowPercent = v
+// SetAlarmDeviceBatteryLowPercent sets the AlarmDeviceBatteryLowPercent value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m *UpdateSiteIdentitySettingsParams) SetAlarmDeviceBatteryLowPercent(v *int64) {
+	m.AlarmDeviceBatteryLowPercent = v
 }
 
-// GetAlarmBatteryLowPwdEnabled returns the AlarmBatteryLowPwdEnabled value.
-func (m UpdateSiteIdentitySettingsParams) GetAlarmBatteryLowPwdEnabled() *bool {
-	return m.AlarmBatteryLowPwdEnabled
+// GetAlarmDeviceBatteryLowMinutes returns the AlarmDeviceBatteryLowMinutes value.
+func (m UpdateSiteIdentitySettingsParams) GetAlarmDeviceBatteryLowMinutes() *int64 {
+	return m.AlarmDeviceBatteryLowMinutes
 }
 
-// SetAlarmBatteryLowPwdEnabled sets the AlarmBatteryLowPwdEnabled value and returns the updated UpdateSiteIdentitySettingsParams.
-func (m *UpdateSiteIdentitySettingsParams) SetAlarmBatteryLowPwdEnabled(v *bool) {
-	m.AlarmBatteryLowPwdEnabled = v
+// SetAlarmDeviceBatteryLowMinutes sets the AlarmDeviceBatteryLowMinutes value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m *UpdateSiteIdentitySettingsParams) SetAlarmDeviceBatteryLowMinutes(v *int64) {
+	m.AlarmDeviceBatteryLowMinutes = v
 }
 
-// GetAlarmBatteryLowPwdPercent returns the AlarmBatteryLowPwdPercent value.
-func (m UpdateSiteIdentitySettingsParams) GetAlarmBatteryLowPwdPercent() *int64 {
-	return m.AlarmBatteryLowPwdPercent
+// GetAlarmDeviceBatteryLowDevicesJson returns the AlarmDeviceBatteryLowDevicesJson value.
+func (m UpdateSiteIdentitySettingsParams) GetAlarmDeviceBatteryLowDevicesJson() *types.DeviceNames {
+	return m.AlarmDeviceBatteryLowDevicesJson
 }
 
-// SetAlarmBatteryLowPwdPercent sets the AlarmBatteryLowPwdPercent value and returns the updated UpdateSiteIdentitySettingsParams.
-func (m *UpdateSiteIdentitySettingsParams) SetAlarmBatteryLowPwdPercent(v *int64) {
-	m.AlarmBatteryLowPwdPercent = v
+// SetAlarmDeviceBatteryLowDevicesJson sets the AlarmDeviceBatteryLowDevicesJson value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m *UpdateSiteIdentitySettingsParams) SetAlarmDeviceBatteryLowDevicesJson(v *types.DeviceNames) {
+	m.AlarmDeviceBatteryLowDevicesJson = v
 }
 
 // GetAlarmLowReservoirEnabled returns the AlarmLowReservoirEnabled value.
@@ -2527,44 +2528,44 @@ func (m *UpdateSitesSettingsParams) SetAlarmNoDataMinutes(v *int64) {
 	m.AlarmNoDataMinutes = v
 }
 
-// GetAlarmBatteryLowEnabled returns the AlarmBatteryLowEnabled value.
-func (m UpdateSitesSettingsParams) GetAlarmBatteryLowEnabled() *bool {
-	return m.AlarmBatteryLowEnabled
+// GetAlarmDeviceBatteryLowEnabled returns the AlarmDeviceBatteryLowEnabled value.
+func (m UpdateSitesSettingsParams) GetAlarmDeviceBatteryLowEnabled() *bool {
+	return m.AlarmDeviceBatteryLowEnabled
 }
 
-// SetAlarmBatteryLowEnabled sets the AlarmBatteryLowEnabled value and returns the updated UpdateSitesSettingsParams.
-func (m *UpdateSitesSettingsParams) SetAlarmBatteryLowEnabled(v *bool) {
-	m.AlarmBatteryLowEnabled = v
+// SetAlarmDeviceBatteryLowEnabled sets the AlarmDeviceBatteryLowEnabled value and returns the updated UpdateSitesSettingsParams.
+func (m *UpdateSitesSettingsParams) SetAlarmDeviceBatteryLowEnabled(v *bool) {
+	m.AlarmDeviceBatteryLowEnabled = v
 }
 
-// GetAlarmBatteryLowPercent returns the AlarmBatteryLowPercent value.
-func (m UpdateSitesSettingsParams) GetAlarmBatteryLowPercent() *int64 {
-	return m.AlarmBatteryLowPercent
+// GetAlarmDeviceBatteryLowPercent returns the AlarmDeviceBatteryLowPercent value.
+func (m UpdateSitesSettingsParams) GetAlarmDeviceBatteryLowPercent() *int64 {
+	return m.AlarmDeviceBatteryLowPercent
 }
 
-// SetAlarmBatteryLowPercent sets the AlarmBatteryLowPercent value and returns the updated UpdateSitesSettingsParams.
-func (m *UpdateSitesSettingsParams) SetAlarmBatteryLowPercent(v *int64) {
-	m.AlarmBatteryLowPercent = v
+// SetAlarmDeviceBatteryLowPercent sets the AlarmDeviceBatteryLowPercent value and returns the updated UpdateSitesSettingsParams.
+func (m *UpdateSitesSettingsParams) SetAlarmDeviceBatteryLowPercent(v *int64) {
+	m.AlarmDeviceBatteryLowPercent = v
 }
 
-// GetAlarmBatteryLowPwdEnabled returns the AlarmBatteryLowPwdEnabled value.
-func (m UpdateSitesSettingsParams) GetAlarmBatteryLowPwdEnabled() *bool {
-	return m.AlarmBatteryLowPwdEnabled
+// GetAlarmDeviceBatteryLowMinutes returns the AlarmDeviceBatteryLowMinutes value.
+func (m UpdateSitesSettingsParams) GetAlarmDeviceBatteryLowMinutes() *int64 {
+	return m.AlarmDeviceBatteryLowMinutes
 }
 
-// SetAlarmBatteryLowPwdEnabled sets the AlarmBatteryLowPwdEnabled value and returns the updated UpdateSitesSettingsParams.
-func (m *UpdateSitesSettingsParams) SetAlarmBatteryLowPwdEnabled(v *bool) {
-	m.AlarmBatteryLowPwdEnabled = v
+// SetAlarmDeviceBatteryLowMinutes sets the AlarmDeviceBatteryLowMinutes value and returns the updated UpdateSitesSettingsParams.
+func (m *UpdateSitesSettingsParams) SetAlarmDeviceBatteryLowMinutes(v *int64) {
+	m.AlarmDeviceBatteryLowMinutes = v
 }
 
-// GetAlarmBatteryLowPwdPercent returns the AlarmBatteryLowPwdPercent value.
-func (m UpdateSitesSettingsParams) GetAlarmBatteryLowPwdPercent() *int64 {
-	return m.AlarmBatteryLowPwdPercent
+// GetAlarmDeviceBatteryLowDevicesJson returns the AlarmDeviceBatteryLowDevicesJson value.
+func (m UpdateSitesSettingsParams) GetAlarmDeviceBatteryLowDevicesJson() *types.DeviceNames {
+	return m.AlarmDeviceBatteryLowDevicesJson
 }
 
-// SetAlarmBatteryLowPwdPercent sets the AlarmBatteryLowPwdPercent value and returns the updated UpdateSitesSettingsParams.
-func (m *UpdateSitesSettingsParams) SetAlarmBatteryLowPwdPercent(v *int64) {
-	m.AlarmBatteryLowPwdPercent = v
+// SetAlarmDeviceBatteryLowDevicesJson sets the AlarmDeviceBatteryLowDevicesJson value and returns the updated UpdateSitesSettingsParams.
+func (m *UpdateSitesSettingsParams) SetAlarmDeviceBatteryLowDevicesJson(v *types.DeviceNames) {
+	m.AlarmDeviceBatteryLowDevicesJson = v
 }
 
 // GetAlarmLowReservoirEnabled returns the AlarmLowReservoirEnabled value.

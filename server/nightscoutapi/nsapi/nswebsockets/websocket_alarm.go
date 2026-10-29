@@ -112,11 +112,12 @@ type alarmNotification struct {
 
 // alarmTitles are each alarm's title and message, as Nightscout's simplealarms and timeago say them
 var alarmTitles = map[alarms.Type][2]string{
-	alarms.UrgentLow:  {"Urgent LOW", "Glucose is urgently low"},
-	alarms.Low:        {"Low warning", "Glucose has been low"},
-	alarms.UrgentHigh: {"Urgent HIGH", "Glucose is urgently high"},
-	alarms.High:       {"High warning", "Glucose has been high"},
-	alarms.NoData:     {"Stale data, check rig?", "No glucose readings are coming in"},
+	alarms.UrgentLow:     {"Urgent LOW", "Glucose is urgently low"},
+	alarms.Low:           {"Low warning", "Glucose has been low"},
+	alarms.UrgentHigh:    {"Urgent HIGH", "Glucose is urgently high"},
+	alarms.High:          {"High warning", "Glucose has been high"},
+	alarms.NoData:        {"Stale data, check rig?", "No glucose readings are coming in"},
+	alarms.DeviceBattery: {"Device battery low", "A device's battery is low, or it has stopped reporting"},
 }
 
 // alarmGroup is Nightscout's group for an alarm: Time Ago for no data, and default for the glucose alarms

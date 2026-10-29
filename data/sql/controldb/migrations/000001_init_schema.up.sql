@@ -112,10 +112,10 @@ CREATE TABLE sites (
     alarm_no_data_enabled INTEGER,
     alarm_no_data_minutes INTEGER,
 
-    alarm_battery_low_enabled INTEGER,
-    alarm_battery_low_percent INTEGER,
-    alarm_battery_low_pwd_enabled INTEGER,
-    alarm_battery_low_pwd_percent INTEGER,
+    alarm_device_battery_low_enabled INTEGER,
+    alarm_device_battery_low_percent INTEGER,
+    alarm_device_battery_low_minutes INTEGER,
+    alarm_device_battery_low_devices_json TEXT CHECK(length(alarm_device_battery_low_devices_json) <= 1024 AND json_valid(alarm_device_battery_low_devices_json)), -- the devices whose batteries and statuses are checked
 
     alarm_low_reservoir_enabled INTEGER,
     alarm_low_reservoir_units  INTEGER,
@@ -229,10 +229,10 @@ CREATE TABLE site_identities (
     alarm_no_data_enabled INTEGER,
     alarm_no_data_minutes INTEGER,
 
-    alarm_battery_low_enabled INTEGER,
-    alarm_battery_low_percent INTEGER,
-    alarm_battery_low_pwd_enabled INTEGER,
-    alarm_battery_low_pwd_percent INTEGER,
+    alarm_device_battery_low_enabled INTEGER,
+    alarm_device_battery_low_percent INTEGER,
+    alarm_device_battery_low_minutes INTEGER,
+    alarm_device_battery_low_devices_json TEXT CHECK(length(alarm_device_battery_low_devices_json) <= 1024 AND json_valid(alarm_device_battery_low_devices_json)), -- the devices whose batteries and statuses are checked
 
     alarm_low_reservoir_enabled INTEGER,
     alarm_low_reservoir_units  INTEGER,

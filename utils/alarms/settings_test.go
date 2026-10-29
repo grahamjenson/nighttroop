@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils/settings"
 )
 
@@ -44,6 +45,16 @@ func TestFromSettings(t *testing.T) {
 				UrgentLowAlarm{Mgdl: 56}, LowAlarm{Mgdl: 72, Minutes: 5}, UrgentHighAlarm{Mgdl: 270},
 				HighAlarm{Mgdl: 180, Minutes: 30}, NoDataAlarm{Minutes: 20},
 			},
+		},
+		{
+			name:     "the device battery alarm checks nothing with no devices listed",
+			identity: controldb.SiteIdentity{AlarmDeviceBatteryLowEnabled: new(true)},
+		},
+		{
+			name:     "the device battery alarm checks the devices listed, at the defaults",
+			site:     controldb.Site{AlarmDeviceBatteryLowDevicesJson: &types.DeviceNames{"openaps://pixel", "SugarPixel"}},
+			identity: controldb.SiteIdentity{AlarmDeviceBatteryLowEnabled: new(true)},
+			want:     []Alarm{DeviceBatteryAlarm{Percent: 20, Minutes: 30, Devices: []string{"openaps://pixel", "SugarPixel"}}},
 		},
 	}
 	for _, tt := range tests {

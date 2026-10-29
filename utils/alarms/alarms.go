@@ -30,10 +30,12 @@ const (
 	UrgentHigh Type = "urgent_high"
 	High       Type = "high"
 	NoData     Type = "no_data"
+	// DeviceBattery is a listed device's battery being low, or the device not reporting
+	DeviceBattery Type = "device_battery"
 )
 
 // Types are every kind of alarm, each louder one before the one it quiets, the order results list them in
-var Types = []Type{UrgentLow, Low, UrgentHigh, High, NoData}
+var Types = []Type{UrgentLow, Low, UrgentHigh, High, NoData, DeviceBattery}
 
 // Level is how urgent an alarm is, numbered as Nightscout's are
 type Level int
@@ -109,6 +111,41 @@ func (NoDataAlarm) RepeatMs() int64 { return 15 * minute }
 func (NoDataAlarm) QuietedBy() Type { return "" }
 func (a NoDataAlarm) IsActive(readings []Reading, now int64) bool {
 	return len(readings) > 0 && now-readings[len(readings)-1].At >= a.Minutes*minute
+}
+
+// DeviceBatteryAlarm is active while any of its Devices, by its newest status, is under Percent battery and not
+// charging, or has sent no status for Minutes. A device that has never sent one is not alarmed for, as no data is
+// not. It alerts every 30 minutes.
+type DeviceBatteryAlarm struct {
+	Percent float64
+	Minutes int64
+	Devices []string
+	// Statuses are the newest status of each of its devices that has sent one, which its checker gives it
+	Statuses map[string]DeviceStatus
+}
+
+// DeviceStatus is what a device last said of itself, at a time in milliseconds
+type DeviceStatus struct {
+	At             int64
+	BatteryPercent *float64
+	Charging       bool
+}
+
+func (DeviceBatteryAlarm) Type() Type      { return DeviceBattery }
+func (DeviceBatteryAlarm) RepeatMs() int64 { return 30 * minute }
+func (DeviceBatteryAlarm) QuietedBy() Type { return "" }
+func (a DeviceBatteryAlarm) IsActive(_ []Reading, now int64) bool {
+	for _, device := range a.Devices {
+		status, ok := a.Statuses[device]
+		if !ok {
+			continue
+		}
+		low := status.BatteryPercent != nil && *status.BatteryPercent < a.Percent && !status.Charging
+		if low || now-status.At >= a.Minutes*minute {
+			return true
+		}
+	}
+	return false
 }
 
 // lasted is whether the newest readings, sorted oldest first, have all been beyond a threshold for minutes: from the

@@ -3,9 +3,11 @@ package settings
 import (
 	"cmp"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
+	"nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils/consts"
 )
 
@@ -189,9 +191,45 @@ func ParseLowerString(value any) (string, error) {
 	}
 }
 
+// ParseDeviceNames is a list of device names, as a JSON array is decoded
+func ParseDeviceNames(value any) (types.DeviceNames, error) {
+	list, ok := value.([]any)
+	if !ok {
+		return nil, fmt.Errorf("unsupported type for ParseDeviceNames: %T", value)
+	}
+	names := make(types.DeviceNames, len(list))
+	for i, item := range list {
+		name, ok := item.(string)
+		if !ok {
+			return nil, fmt.Errorf("device names must be strings, not %T", item)
+		}
+		names[i] = name
+	}
+	return names, nil
+}
+
 /////
 // Validators
 /////
+
+// maxDeviceNames and maxDeviceName keep the list of device names within its column
+const maxDeviceNames, maxDeviceName = 10, 64
+
+// ValidDeviceNames is at most 10 different device names, each of 1 to 64 characters
+func ValidDeviceNames(names types.DeviceNames) error {
+	if len(names) > maxDeviceNames {
+		return fmt.Errorf("must be at most %d devices", maxDeviceNames)
+	}
+	for i, name := range names {
+		if name == "" || len(name) > maxDeviceName {
+			return fmt.Errorf("each device must be 1 to %d characters", maxDeviceName)
+		}
+		if slices.Contains(names[:i], name) {
+			return fmt.Errorf("%s is listed twice", name)
+		}
+	}
+	return nil
+}
 
 func Min[T cmp.Ordered](min T) func(T) error {
 	return func(value T) error {
@@ -265,10 +303,10 @@ var allSettingNames = []string{
 	"alarm_fast_drop_minutes",
 	"alarm_no_data_enabled",
 	"alarm_no_data_minutes",
-	"alarm_battery_low_enabled",
-	"alarm_battery_low_percent",
-	"alarm_battery_low_pwd_enabled",
-	"alarm_battery_low_pwd_percent",
+	"alarm_device_battery_low_enabled",
+	"alarm_device_battery_low_percent",
+	"alarm_device_battery_low_minutes",
+	"alarm_device_battery_low_devices",
 	"alarm_low_reservoir_enabled",
 	"alarm_low_reservoir_units",
 	"notifications_enabled",
@@ -315,10 +353,10 @@ type SettingsGetter interface {
 	GetAlarmFastDropMinutes() *int64
 	GetAlarmNoDataEnabled() *bool
 	GetAlarmNoDataMinutes() *int64
-	GetAlarmBatteryLowEnabled() *bool
-	GetAlarmBatteryLowPercent() *int64
-	GetAlarmBatteryLowPwdEnabled() *bool
-	GetAlarmBatteryLowPwdPercent() *int64
+	GetAlarmDeviceBatteryLowEnabled() *bool
+	GetAlarmDeviceBatteryLowPercent() *int64
+	GetAlarmDeviceBatteryLowMinutes() *int64
+	GetAlarmDeviceBatteryLowDevicesJson() *types.DeviceNames
 	GetAlarmLowReservoirEnabled() *bool
 	GetAlarmLowReservoirUnits() *int64
 	GetNotificationsEnabled() *bool
@@ -398,14 +436,14 @@ func GetSettingByName(name string, in SettingsGetter) any {
 		return in.GetAlarmNoDataEnabled()
 	case "alarm_no_data_minutes":
 		return in.GetAlarmNoDataMinutes()
-	case "alarm_battery_low_enabled":
-		return in.GetAlarmBatteryLowEnabled()
-	case "alarm_battery_low_percent":
-		return in.GetAlarmBatteryLowPercent()
-	case "alarm_battery_low_pwd_enabled":
-		return in.GetAlarmBatteryLowPwdEnabled()
-	case "alarm_battery_low_pwd_percent":
-		return in.GetAlarmBatteryLowPwdPercent()
+	case "alarm_device_battery_low_enabled":
+		return in.GetAlarmDeviceBatteryLowEnabled()
+	case "alarm_device_battery_low_percent":
+		return in.GetAlarmDeviceBatteryLowPercent()
+	case "alarm_device_battery_low_minutes":
+		return in.GetAlarmDeviceBatteryLowMinutes()
+	case "alarm_device_battery_low_devices":
+		return in.GetAlarmDeviceBatteryLowDevicesJson()
 	case "alarm_low_reservoir_enabled":
 		return in.GetAlarmLowReservoirEnabled()
 	case "alarm_low_reservoir_units":
@@ -454,10 +492,10 @@ type SettingsSetter interface {
 	SetAlarmFastDropMinutes(v *int64)
 	SetAlarmNoDataEnabled(v *bool)
 	SetAlarmNoDataMinutes(v *int64)
-	SetAlarmBatteryLowEnabled(v *bool)
-	SetAlarmBatteryLowPercent(v *int64)
-	SetAlarmBatteryLowPwdEnabled(v *bool)
-	SetAlarmBatteryLowPwdPercent(v *int64)
+	SetAlarmDeviceBatteryLowEnabled(v *bool)
+	SetAlarmDeviceBatteryLowPercent(v *int64)
+	SetAlarmDeviceBatteryLowMinutes(v *int64)
+	SetAlarmDeviceBatteryLowDevicesJson(v *types.DeviceNames)
 	SetAlarmLowReservoirEnabled(v *bool)
 	SetAlarmLowReservoirUnits(v *int64)
 	SetNotificationsEnabled(v *bool)
@@ -500,10 +538,10 @@ func SetSettings(s SettingsSetter, g SettingsGetter) {
 	s.SetAlarmFastDropMinutes(g.GetAlarmFastDropMinutes())
 	s.SetAlarmNoDataEnabled(g.GetAlarmNoDataEnabled())
 	s.SetAlarmNoDataMinutes(g.GetAlarmNoDataMinutes())
-	s.SetAlarmBatteryLowEnabled(g.GetAlarmBatteryLowEnabled())
-	s.SetAlarmBatteryLowPercent(g.GetAlarmBatteryLowPercent())
-	s.SetAlarmBatteryLowPwdEnabled(g.GetAlarmBatteryLowPwdEnabled())
-	s.SetAlarmBatteryLowPwdPercent(g.GetAlarmBatteryLowPwdPercent())
+	s.SetAlarmDeviceBatteryLowEnabled(g.GetAlarmDeviceBatteryLowEnabled())
+	s.SetAlarmDeviceBatteryLowPercent(g.GetAlarmDeviceBatteryLowPercent())
+	s.SetAlarmDeviceBatteryLowMinutes(g.GetAlarmDeviceBatteryLowMinutes())
+	s.SetAlarmDeviceBatteryLowDevicesJson(g.GetAlarmDeviceBatteryLowDevicesJson())
 	s.SetAlarmLowReservoirEnabled(g.GetAlarmLowReservoirEnabled())
 	s.SetAlarmLowReservoirUnits(g.GetAlarmLowReservoirUnits())
 	s.SetNotificationsEnabled(g.GetNotificationsEnabled())
