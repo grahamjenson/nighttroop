@@ -13,6 +13,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/s3utils"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -72,19 +73,21 @@ func TestArchiveSite(t *testing.T) {
 	require.NoError(t, err)
 
 	// An upload that fails keeps the site
-	require.Error(t, controlDB.ArchiveSite(ctx, siteID, func(string, []string) error { return errors.New("S3 is down") }))
+	require.Error(t, controlDB.ArchiveSite(ctx, siteID, func(string, s3utils.Retention, []string) error { return errors.New("S3 is down") }))
 	row, err := controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: siteID})
 	require.NoError(t, err)
 	require.Equal(t, "disabled", row.State)
 
 	// The site's backup is uploaded to its archive path, then it is archived and closed here
 	var uploadedKey string
+	var uploadedRetention s3utils.Retention
 	var uploadedPaths []string
-	require.NoError(t, controlDB.ArchiveSite(ctx, siteID, func(key string, paths []string) error {
-		uploadedKey, uploadedPaths = key, paths
+	require.NoError(t, controlDB.ArchiveSite(ctx, siteID, func(key string, retention s3utils.Retention, paths []string) error {
+		uploadedKey, uploadedRetention, uploadedPaths = key, retention, paths
 		return nil
 	}))
 	require.Equal(t, sitedb.GetS3ArchivePath(siteID, cfg), uploadedKey)
+	require.Equal(t, s3utils.SiteRetention, uploadedRetention)
 	require.Equal(t, []string{site.SiteDB.BackupPath}, uploadedPaths)
 	row, err = controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: siteID})
 	require.NoError(t, err)
@@ -93,7 +96,7 @@ func TestArchiveSite(t *testing.T) {
 	require.NoFileExists(t, site.SiteDB.BackupPath)
 
 	// It is no longer open, so it cannot be archived again
-	require.ErrorContains(t, controlDB.ArchiveSite(ctx, siteID, func(string, []string) error { return nil }), "is not open")
+	require.ErrorContains(t, controlDB.ArchiveSite(ctx, siteID, func(string, s3utils.Retention, []string) error { return nil }), "is not open")
 }
 
 func TestTruncateSite(t *testing.T) {

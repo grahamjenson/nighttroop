@@ -14,6 +14,7 @@ import (
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/s3utils"
 
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/errors"
@@ -263,7 +264,7 @@ func (db *ControlDB) DeleteSites(subdomains []string) error {
 
 // ArchiveSite backs up a site's DB and uploads it, with upload, to its archive path, then marks the site archived and
 // deletes its local files, so it is no longer served or backed up but can be restored from the archive
-func (db *ControlDB) ArchiveSite(ctx context.Context, subdomain string, upload func(key string, paths []string) error) error {
+func (db *ControlDB) ArchiveSite(ctx context.Context, subdomain string, upload func(key string, retention s3utils.Retention, paths []string) error) error {
 	db.sitesRWLock.RLock()
 	site, ok := db.sites[subdomain]
 	db.sitesRWLock.RUnlock()
@@ -273,7 +274,7 @@ func (db *ControlDB) ArchiveSite(ctx context.Context, subdomain string, upload f
 	if err := site.Backup(ctx); err != nil {
 		return fmt.Errorf("cannot back up site %s: %w", subdomain, err)
 	}
-	if err := upload(sitedb.GetS3ArchivePath(subdomain, db.ServerConfig), []string{site.BackupPath}); err != nil {
+	if err := upload(sitedb.GetS3ArchivePath(subdomain, db.ServerConfig), s3utils.SiteRetention, []string{site.BackupPath}); err != nil {
 		return fmt.Errorf("cannot upload the archive of site %s: %w", subdomain, err)
 	}
 	bytes, _ := json.Marshal([]string{subdomain})

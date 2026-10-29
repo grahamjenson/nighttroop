@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/aws/smithy-go"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/config"
@@ -56,6 +57,16 @@ const MaxKeys = 1000
 // DefaultRegion is the region used if one is not specified.
 const DefaultRegion = "us-east-1"
 
+// Retention is the tag an upload carries so the bucket's lifecycle rules expire the versions it replaces
+type Retention string
+
+const (
+	SiteRetention    Retention = "site"
+	ControlRetention Retention = "control"
+)
+
+const retentionTag = "nighttroop-retention"
+
 func NewS3Client(config *config.ServerConfig) *S3Client {
 	c := &S3Client{
 		ServerConfig:    config,
@@ -86,9 +97,10 @@ func (c *S3Client) TestS3Client() error {
 	testContent := fmt.Sprintf("This istest object %s", randomGen)
 
 	_, err := c.s3.PutObject(context.TODO(), &s3.PutObjectInput{
-		Bucket: aws.String(c.Bucket),
-		Key:    aws.String(testKey),
-		Body:   strings.NewReader(testContent),
+		Bucket:  aws.String(c.Bucket),
+		Key:     aws.String(testKey),
+		Body:    strings.NewReader(testContent),
+		Tagging: aws.String(retentionTag + "=" + string(SiteRetention)),
 	})
 
 	// Testing the Raw S3Client
@@ -125,6 +137,59 @@ func (c *S3Client) TestS3Client() error {
 	return nil
 }
 
+// ConfigureVersioning turns on the bucket's versioning, so an upload keeps the object it replaces as an old version,
+// and sets the lifecycle rules that expire those old versions
+func (c *S3Client) ConfigureVersioning(ctx context.Context) error {
+	_, err := c.s3.PutBucketVersioning(ctx, &s3.PutBucketVersioningInput{
+		Bucket:                  aws.String(c.Bucket),
+		VersioningConfiguration: &types.VersioningConfiguration{Status: types.BucketVersioningStatusEnabled},
+	})
+	if err != nil {
+		return fmt.Errorf("cannot enable bucket versioning: %w", err)
+	}
+
+	// Lifecycle rules replace the bucket's whole configuration, so keep the rules this server does not own
+	rules := c.RetentionRules()
+	existing, err := c.s3.GetBucketLifecycleConfiguration(ctx, &s3.GetBucketLifecycleConfigurationInput{Bucket: aws.String(c.Bucket)})
+	var apiErr smithy.APIError
+	if err != nil && !(errors.As(err, &apiErr) && apiErr.ErrorCode() == "NoSuchLifecycleConfiguration") {
+		return fmt.Errorf("cannot get bucket lifecycle: %w", err)
+	}
+	if existing != nil {
+		for _, rule := range existing.Rules {
+			if !strings.HasPrefix(aws.ToString(rule.ID), retentionTag) {
+				rules = append(rules, rule)
+			}
+		}
+	}
+
+	_, err = c.s3.PutBucketLifecycleConfiguration(ctx, &s3.PutBucketLifecycleConfigurationInput{
+		Bucket:                 aws.String(c.Bucket),
+		LifecycleConfiguration: &types.BucketLifecycleConfiguration{Rules: rules},
+	})
+	if err != nil {
+		return fmt.Errorf("cannot set bucket lifecycle: %w", err)
+	}
+	return nil
+}
+
+// RetentionRules expire the old versions of the objects tagged with each Retention after its days in the config
+func (c *S3Client) RetentionRules() []types.LifecycleRule {
+	rules := []types.LifecycleRule{}
+	for retention, days := range map[Retention]int{
+		SiteRetention:    c.ServerConfig.SiteBackupRetentionDays,
+		ControlRetention: c.ServerConfig.ControlBackupRetentionDays,
+	} {
+		rules = append(rules, types.LifecycleRule{
+			ID:                          aws.String(retentionTag + "-" + string(retention)),
+			Status:                      types.ExpirationStatusEnabled,
+			Filter:                      &types.LifecycleRuleFilter{Tag: &types.Tag{Key: aws.String(retentionTag), Value: aws.String(string(retention))}},
+			NoncurrentVersionExpiration: &types.NoncurrentVersionExpiration{NoncurrentDays: aws.Int32(int32(days))},
+		})
+	}
+	return rules
+}
+
 // //
 // PATHS
 // //
@@ -141,7 +206,7 @@ func (c *S3Client) TestObjectPath() string {
 // UPLOAD METHODS
 ////
 
-func (c *S3Client) UploadFilesToS3(key string, paths []string) error {
+func (c *S3Client) UploadFilesToS3(key string, retention Retention, paths []string) error {
 	if !c.ServerConfig.Status.S3Working {
 		return nil
 	}
@@ -170,7 +235,7 @@ func (c *S3Client) UploadFilesToS3(key string, paths []string) error {
 		}
 	}()
 
-	err := c.uploadStreamToS3(ctx, key, pr)
+	err := c.uploadStreamToS3(ctx, key, retention, pr)
 	if err != nil {
 		slog.Error("Error uploading stream to s3", "key", key, "error", err)
 		return fmt.Errorf("cannot upload stream to s3: %w", err)
@@ -180,11 +245,12 @@ func (c *S3Client) UploadFilesToS3(key string, paths []string) error {
 	return nil
 }
 
-func (c *S3Client) uploadStreamToS3(ctx context.Context, key string, stream io.Reader) error {
+func (c *S3Client) uploadStreamToS3(ctx context.Context, key string, retention Retention, stream io.Reader) error {
 	_, err := c.uploader.Upload(ctx, &s3.PutObjectInput{
-		Bucket: aws.String(c.Bucket),
-		Key:    aws.String(key),
-		Body:   stream,
+		Bucket:  aws.String(c.Bucket),
+		Key:     aws.String(key),
+		Body:    stream,
+		Tagging: aws.String(retentionTag + "=" + string(retention)),
 	})
 
 	if err != nil {
