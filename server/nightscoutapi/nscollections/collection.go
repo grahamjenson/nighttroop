@@ -350,6 +350,10 @@ func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.Si
 		slog.Error("failed to get by ID", "error", err, "collection", m.Name(), "identifier", identifier)
 		return nil, nsutils.ErrInternal
 	}
+	// As in Nightscout, a deleted record is gone, so it cannot be patched
+	if m.Convert(updateingModel, siteContext, false).DeletedAt != nil {
+		return nil, nsutils.ErrGone
+	}
 
 	if err := ValidateNotChangingSharedFields(updateingModel, nsModel, data, identifier); err != nil {
 		slog.Error("validation failed for patching model", "error", err, "collection", m.Name())

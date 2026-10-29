@@ -16,6 +16,19 @@ ASSERT_EQUALS "units" "@result.identifier"
 ASSERT_EQUALS "mmol/L" "@result.value"
 ASSERT_EQUALS "string" "@result.type"
 
+# A body of JSON null is refused like any other bad body, by a replace and a patch
+NAME put_null_setting_v3
+PUT http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+B null
+ASSERT_STATUS 400
+
+NAME patch_null_setting_v3
+PATCH http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+B null
+ASSERT_STATUS 400
+
 # Returns all the 
 NAME create_settings_v3
 POST http://{{ site }}/api/v3/settings
