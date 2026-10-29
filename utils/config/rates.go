@@ -29,6 +29,7 @@ type RateLimiters struct {
 
 	siteUpdateSyncRateLimiters     *lru.Cache[string, *rate.Limiter]
 	siteIdentityCreateRateLimiters *lru.Cache[string, *rate.Limiter]
+	siteDownloadRateLimiters       *lru.Cache[string, *rate.Limiter]
 
 	SiteCreateLimiter   *rate.Limiter
 	siteCreateIpLimiter *lru.Cache[string, *rate.Limiter]
@@ -58,6 +59,7 @@ func newRateLimiters(config ServerConfig) *RateLimiters {
 
 		siteUpdateSyncRateLimiters:     lruMust(maxSites * wiggle),
 		siteIdentityCreateRateLimiters: lruMust(maxSites * wiggle),
+		siteDownloadRateLimiters:       lruMust(maxSites * wiggle),
 
 		SiteCreateLimiter:   rate.NewLimiter(rate.Limit(float64(config.SiteCreateGlobalPerMinuteLimit)/60.0), config.SiteCreateGlobalPerMinuteBurst),
 		siteCreateIpLimiter: lruMust(maxSites * wiggle),
@@ -126,6 +128,10 @@ func (r *RateLimiters) SiteUpdateSyncLimiter(subdomain string) *rate.Limiter {
 
 func (r *RateLimiters) SiteIdentityCreateLimiter(subdomain string) *rate.Limiter {
 	return r.getOrCreateLimiter(r.siteIdentityCreateRateLimiters, subdomain, float64(r.serverConfig.SiteIdentityCreatePerMinuteLimit), r.serverConfig.SiteIdentityCreatePerMinuteBurst)
+}
+
+func (r *RateLimiters) SiteDownloadLimiter(subdomain string) *rate.Limiter {
+	return r.getOrCreateLimiter(r.siteDownloadRateLimiters, subdomain, float64(r.serverConfig.SiteDownloadPerMinuteLimit), r.serverConfig.SiteDownloadPerMinuteBurst)
 }
 
 // SiteUnauthLimiter is one IP's budget on a site before it authenticates: 401s and Socket.IO handshakes spend it, not the site's own limit

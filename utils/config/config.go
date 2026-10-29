@@ -82,6 +82,10 @@ type ServerConfig struct {
 	SiteIdentityCreatePerMinuteLimit int
 	SiteIdentityCreatePerMinuteBurst int
 
+	// Each download of a site's data copies its whole DB
+	SiteDownloadPerMinuteLimit int
+	SiteDownloadPerMinuteBurst int
+
 	//
 	// Site Create Rate Limits
 	SiteCreateGlobalPerMinuteLimit int
@@ -229,6 +233,9 @@ func NewServerConfig() (*ServerConfig, error) {
 
 		SiteIdentityCreatePerMinuteLimit: configIntSelect(dotenv, "SITE_IDENTITY_CREATE_PER_MINUTE_LIMIT", 1), // Stop creating and deleting identities using up the CPU with bcrypt
 		SiteIdentityCreatePerMinuteBurst: configIntSelect(dotenv, "SITE_IDENTITY_CREATE_PER_MINUTE_BURST", 5),
+
+		SiteDownloadPerMinuteLimit: configIntSelect(dotenv, "SITE_DOWNLOAD_PER_MINUTE_LIMIT", 1),
+		SiteDownloadPerMinuteBurst: configIntSelect(dotenv, "SITE_DOWNLOAD_PER_MINUTE_BURST", 3),
 
 		//
 		// Site Limits
