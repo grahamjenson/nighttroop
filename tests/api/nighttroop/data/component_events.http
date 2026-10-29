@@ -7,7 +7,7 @@ H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_LENGTH 0 "@result"
 
-// A site change from the Nightscout API is listed (the Nightscout API keeps a change only when it names the pump)
+// A site change from the Nightscout API is listed, with the pump it names
 NAME create_ns_site_change
 POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
 B { "eventType": "Site Change", "created_at": "{{ time 5 }}", "pumpType": "Omnipod", "pumpSerial": "P123", "notes": "New pod" }
