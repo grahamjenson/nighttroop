@@ -9,9 +9,9 @@ var orders = []struct {
 	by          float64
 	rule        string
 }{
-	{"alarm_urgent_low", "alarm_low", 1, "the urgent low alarm must be under the low alarm"},
-	{"alarm_low", "alarm_high", 1, "the low alarm must be under the high alarm"},
-	{"alarm_high", "alarm_urgent_high", 1, "the high alarm must be under the urgent high alarm"},
+	{"alarm_urgent_low_mgdl", "alarm_low_mgdl", 1, "the urgent low alarm must be under the low alarm"},
+	{"alarm_low_mgdl", "alarm_high_mgdl", 1, "the low alarm must be under the high alarm"},
+	{"alarm_high_mgdl", "alarm_urgent_high_mgdl", 1, "the high alarm must be under the urgent high alarm"},
 	{"bolus_onset_minutes", "bolus_peak_minutes", 1, "bolus insulin must start acting before its peak"},
 	{"bolus_peak_minutes", "bolus_dia_hours", 60, "bolus insulin must peak before it stops acting"},
 	{"basal_onset_minutes", "basal_peak_minutes", 1, "basal insulin must start acting before its peak"},

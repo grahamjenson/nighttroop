@@ -751,13 +751,13 @@ ASSERT_EQUALS 70 "@result.value"
 
 // A low alarm over the high alarm, or an urgent low over the low alarm, is refused
 NAME put_alarm_low_over_high_settings_v3
-PUT http://{{ site }}/api/v3/settings/alarm_low
+PUT http://{{ site }}/api/v3/settings/alarm_low_mgdl
 H Authorization: Bearer {{ jwt }}
 B { "value": 80 }
 ASSERT_STATUS 400
 
 NAME put_alarm_urgent_low_over_low_settings_v3
-PUT http://{{ site }}/api/v3/settings/alarm_urgent_low
+PUT http://{{ site }}/api/v3/settings/alarm_urgent_low_mgdl
 H Authorization: Bearer {{ jwt }}
 B { "value": 40 }
 ASSERT_STATUS 400
