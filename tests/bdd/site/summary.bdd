@@ -45,6 +45,8 @@ ASSERT_NOT_VISIBLE #site--summary--cob >> text="–"
 ASSERT_VISIBLE #site--summary--treatments >> text=Temp Basal
 ASSERT_VISIBLE #site--summary--treatments >> text=Temp Target
 ASSERT_VISIBLE #site--summary--readings tbody tr >> nth=5
+// The readings are just when and what they were, not the device they came from
+ASSERT_NOT_VISIBLE #site--summary--readings >> text=virtual://nighttroop
 ASSERT_VISIBLE #site--summary--devices >> text=virtual://nighttroop
 ASSERT_VISIBLE #site--summary--devices >> text=virtual://carer-phone
 
