@@ -112,7 +112,7 @@ func History(store nsutils.Store) http.HandlerFunc {
 			return
 		}
 
-		query.UpdatedGTE = ptr(since)
+		query.UpdatedGTE = new(since)
 		// HasFilters was worked out when the query was parsed, so it must be set for a filter added after
 		query.HasFilters = true
 

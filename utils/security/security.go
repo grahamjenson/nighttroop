@@ -68,9 +68,9 @@ func NewSecurityConfig(keysRaw string, mode consts.ServerMode, hostname string, 
 	}
 
 	if cfg.IsDevOrTest() {
-		cfg.DevelopmentDangerousHardcodedAdminPassword = ptr("password")
-		cfg.DevelopmentDangerousHardcodedAdminTOTPSecret = ptr("FakeTOTPSecretForDevOnly")
-		cfg.DevelopmentDangerousHardcodedAdminTOTPCode = ptr("123123")
+		cfg.DevelopmentDangerousHardcodedAdminPassword = new("password")
+		cfg.DevelopmentDangerousHardcodedAdminTOTPSecret = new("FakeTOTPSecretForDevOnly")
+		cfg.DevelopmentDangerousHardcodedAdminTOTPCode = new("123123")
 	}
 
 	return cfg
@@ -98,8 +98,4 @@ func (config *SecurityConfig) IsTest() bool {
 
 func (config *SecurityConfig) IsDevOrTest() bool {
 	return config.Mode == consts.Development || config.Mode == consts.Test
-}
-
-func ptr[T any](v T) *T {
-	return &v
 }

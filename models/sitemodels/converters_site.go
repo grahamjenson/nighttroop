@@ -317,7 +317,7 @@ type SiteConverter interface {
 }
 
 func SetPasswordGarbage() *string {
-	return ptr(consts.PASSWORD_GARBAGE_VALUE)
+	return new(consts.PASSWORD_GARBAGE_VALUE)
 }
 
 // goverter:context security
@@ -365,10 +365,6 @@ func ContextIdentityName(siteContext *httputils.SiteContext) *string {
 
 func HasTotpSecret(totpSecretEnc string) bool {
 	return totpSecretEnc != ""
-}
-
-func ptr[T any](v T) *T {
-	return &v
 }
 
 // goverter:context siteContext
