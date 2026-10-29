@@ -303,9 +303,10 @@ func TestALongHighAtManyReadingsAMinute(t *testing.T) {
 	require.NoError(t, r.control.UpdateSiteIdentitySettings(context.TODO(), controldb.UpdateSiteIdentitySettingsParams{
 		ID: identity.ID, SiteID: r.site, AlarmHighEnabled: new(true), AlarmHigh: new(int64(180)), AlarmHighMinutes: new(int64(120)),
 	}))
-	// Ten readings a minute for 120 minutes
-	for range 120*10 + 1 {
-		r.reading(250)
+	// Ten readings a minute for 120 minutes, each more than 10 mg/dL from the others within a minute, so none is the
+	// same glucose as another
+	for i := range 120*10 + 1 {
+		r.reading(float64(200 + (i%11)*11))
 		r.now = r.now.Add(6 * time.Second)
 	}
 	r.now = r.now.Add(-6 * time.Second)

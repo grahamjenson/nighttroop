@@ -103,10 +103,12 @@ func getSummary(ctx context.Context, tx *siteapiutils.CollectionTx, hours int64,
 	excludeDeleted := false
 
 	var herr *apiutils.HTTPError
-	readings, err := q.SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{DateGTE: &since, Limit: maxRows})
-	if summary.GlucoseReadings, herr = apiutils.Searched(readings, err, "summary glucose readings", apiutils.WithContext(sitemodels.GlucoseReadingFromDB, siteContext)); herr != nil {
-		return nil, herr
+	readings, err := cleanGlucoseReadings(ctx, q, since, nil, siteContext)
+	if err != nil {
+		slog.Error("Error searching summary glucose readings", "error", err)
+		return nil, apiutils.ErrInternalServerError
 	}
+	summary.GlucoseReadings = readings[:min(len(readings), maxRows)]
 	doses, err := q.SearchInsulinDoses(ctx, sitedb.SearchInsulinDosesParams{DateGTE: &since, IncludeDeleted: &excludeDeleted, Limit: maxRows})
 	if summary.InsulinDoses, herr = apiutils.Searched(doses, err, "summary insulin doses", sitemodels.InsulinDoseFromDB); herr != nil {
 		return nil, herr
