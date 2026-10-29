@@ -19,7 +19,7 @@ func liveClient(baseURL string) *Client {
 }
 
 func signedInClient(baseURL string, allowLocal bool) *Client {
-	c := NewClient(baseURL, "token", allowLocal)
+	c := NewClient(baseURL, "token", ClientOptions{AllowLocalAddresses: allowLocal})
 	jwt, expire := "jwt", time.Now().Add(time.Hour)
 	c.jwt, c.jwtExpire = &jwt, &expire
 	return c

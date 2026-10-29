@@ -66,15 +66,23 @@ func jwtEndpoint(nsURL, token string) string {
 	return fmt.Sprintf("%s/api/v2/authorization/request/token=%s", nsURL, token)
 }
 
-// NewClient is a client for the Nightscout at baseURL. Unless allowLocal, it refuses to connect to a private or local
-// address: the URL is only checked when saved, and its host's DNS could later point at an internal one.
-func NewClient(baseURL, token string, allowLocal bool) *Client {
+// ClientOptions are how a Client connects
+type ClientOptions struct {
+	// AllowLocalAddresses lets it connect to a private or local address, such as a Nightscout run alongside in
+	// development
+	AllowLocalAddresses bool
+}
+
+// NewClient is a client for the Nightscout at baseURL. Unless its options allow local addresses, it refuses to connect
+// to a private or local address: the URL is only checked when saved, and its host's DNS could later point at an
+// internal one.
+func NewClient(baseURL, token string, options ClientOptions) *Client {
 	baseURL = strings.TrimRight(baseURL, "/")
 
 	// Connect directly, so the address checked is the Nightscout's own and not a proxy's
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	transport.Proxy = nil
-	if !allowLocal {
+	if !options.AllowLocalAddresses {
 		transport.DialContext = (&net.Dialer{Timeout: 30 * time.Second, KeepAlive: 30 * time.Second, Control: refuseBlockedIPs}).DialContext
 	}
 
