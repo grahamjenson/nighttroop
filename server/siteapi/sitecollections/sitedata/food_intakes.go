@@ -77,11 +77,7 @@ func (s *FoodIntakesCollection) UpdateHTMXResponse(model *sitemodels.SiteFoodInt
 // Get Model
 // /////
 func (s *FoodIntakesCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.FoodIntake, error) {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.GetFoodIntake(ctx, sitedb.GetFoodIntakeParams{ID: id})
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).GetFoodIntake, sitedb.GetFoodIntakeParams{ID: id})
 }
 
 // ToModel is the site model of a row
@@ -116,11 +112,7 @@ func (s *FoodIntakesCollection) SearchHTMXResponse(models []*sitemodels.SiteFood
 
 // DeleteRow soft deletes, like the Nightscout API, so syncing clients see the delete
 func (s *FoodIntakesCollection) DeleteRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) error {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return err
-	}
-	_, err = q.SoftDeleteFoodIntake(ctx, sitedb.SoftDeleteFoodIntakeParams{
+	_, err := siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).SoftDeleteFoodIntake, sitedb.SoftDeleteFoodIntakeParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
 		ID:                    id,
 	})

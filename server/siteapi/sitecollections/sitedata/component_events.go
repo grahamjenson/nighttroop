@@ -74,11 +74,7 @@ func (s *ComponentEventsCollection) UpdateHTMXResponse(model *sitemodels.SiteCom
 // Get Model
 // /////
 func (s *ComponentEventsCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.ComponentEvent, error) {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.GetComponentEvent(ctx, sitedb.GetComponentEventParams{ID: id})
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).GetComponentEvent, sitedb.GetComponentEventParams{ID: id})
 }
 
 // ToModel is the site model of a row
@@ -113,12 +109,7 @@ func (s *ComponentEventsCollection) SearchHTMXResponse(models []*sitemodels.Site
 
 // DeleteRow soft deletes, like the Nightscout API, so syncing clients see the delete
 func (s *ComponentEventsCollection) DeleteRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) error {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return err
-	}
-
-	_, err = q.SoftDeleteComponentEvent(ctx, sitedb.SoftDeleteComponentEventParams{
+	_, err := siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).SoftDeleteComponentEvent, sitedb.SoftDeleteComponentEventParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
 		ID:                    id,
 	})

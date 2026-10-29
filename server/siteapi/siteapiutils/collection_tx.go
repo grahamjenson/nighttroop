@@ -51,6 +51,16 @@ func (t *CollectionTx) Site() (*sitedb.Queries, error) {
 	return t.siteContext.SiteDB.Queries.WithTx(t.siteTx), nil
 }
 
+// SiteQuery runs one query, such as (*sitedb.Queries).GetInsulinDose, with its params in the transaction's site DB
+func SiteQuery[P, R any](ctx context.Context, t *CollectionTx, query func(*sitedb.Queries, context.Context, P) (R, error), params P) (R, error) {
+	q, err := t.Site()
+	if err != nil {
+		var none R
+		return none, err
+	}
+	return query(q, ctx, params)
+}
+
 // Live is the live DB's queries, which are not in the transaction, so a rollback does not undo them
 func (t *CollectionTx) Live() *livedb.Queries {
 	return t.siteContext.ControlDB.Live.Queries

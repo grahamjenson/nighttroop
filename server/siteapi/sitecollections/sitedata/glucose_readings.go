@@ -76,11 +76,7 @@ func (s *GlucoseReadingsCollection) UpdateHTMXResponse(model *sitemodels.SiteGlu
 // Get Model
 // /////
 func (s *GlucoseReadingsCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.GlucoseReading, error) {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: id})
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).GetGlucoseReading, sitedb.GetGlucoseReadingParams{ID: id})
 }
 
 // ToModel is the site model of a row
@@ -115,11 +111,7 @@ func (s *GlucoseReadingsCollection) SearchHTMXResponse(models []*sitemodels.Site
 
 // DeleteRow soft deletes, like the Nightscout API, so syncing clients see the delete
 func (s *GlucoseReadingsCollection) DeleteRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) error {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return err
-	}
-	_, err = q.SoftDeleteGlucoseReading(ctx, sitedb.SoftDeleteGlucoseReadingParams{
+	_, err := siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).SoftDeleteGlucoseReading, sitedb.SoftDeleteGlucoseReadingParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
 		ID:                    id,
 	})

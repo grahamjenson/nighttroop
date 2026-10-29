@@ -75,11 +75,7 @@ func (s *ProfileSwitchesCollection) UpdateHTMXResponse(model *sitemodels.SitePro
 // Get Model
 // /////
 func (s *ProfileSwitchesCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.ProfileSwitch, error) {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.GetProfileSwitch(ctx, sitedb.GetProfileSwitchParams{ID: id})
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).GetProfileSwitch, sitedb.GetProfileSwitchParams{ID: id})
 }
 
 // ToModel is the site model of a row
@@ -114,11 +110,7 @@ func (s *ProfileSwitchesCollection) SearchHTMXResponse(models []*sitemodels.Site
 
 // DeleteRow soft deletes, like the Nightscout API, so syncing clients see the delete
 func (s *ProfileSwitchesCollection) DeleteRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) error {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return err
-	}
-	_, err = q.SoftDeleteProfileSwitch(ctx, sitedb.SoftDeleteProfileSwitchParams{
+	_, err := siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).SoftDeleteProfileSwitch, sitedb.SoftDeleteProfileSwitchParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
 		ID:                    id,
 	})

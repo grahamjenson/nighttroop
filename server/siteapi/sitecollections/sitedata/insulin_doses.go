@@ -76,11 +76,7 @@ func (s *InsulinDosesCollection) UpdateHTMXResponse(model *sitemodels.SiteInsuli
 // Get Model
 // /////
 func (s *InsulinDosesCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.InsulinDose, error) {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.GetInsulinDose(ctx, sitedb.GetInsulinDoseParams{ID: id})
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).GetInsulinDose, sitedb.GetInsulinDoseParams{ID: id})
 }
 
 // ToModel is the site model of a row
@@ -115,11 +111,7 @@ func (s *InsulinDosesCollection) SearchHTMXResponse(models []*sitemodels.SiteIns
 
 // DeleteRow soft deletes, like the Nightscout API, so syncing clients see the delete
 func (s *InsulinDosesCollection) DeleteRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) error {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return err
-	}
-	_, err = q.SoftDeleteInsulinDose(ctx, sitedb.SoftDeleteInsulinDoseParams{
+	_, err := siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).SoftDeleteInsulinDose, sitedb.SoftDeleteInsulinDoseParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
 		ID:                    id,
 	})

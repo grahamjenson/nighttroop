@@ -85,11 +85,7 @@ func (s *TempBasalsCollection) UpdateHTMXResponse(model *sitemodels.SiteTempBasa
 // Get Model
 // /////
 func (s *TempBasalsCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.TempBasal, error) {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.GetTempBasal(ctx, sitedb.GetTempBasalParams{ID: id})
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).GetTempBasal, sitedb.GetTempBasalParams{ID: id})
 }
 
 // ToModel is the site model of a row
@@ -124,11 +120,7 @@ func (s *TempBasalsCollection) SearchHTMXResponse(models []*sitemodels.SiteTempB
 
 // DeleteRow soft deletes, like the Nightscout API, so syncing clients see the delete
 func (s *TempBasalsCollection) DeleteRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) error {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return err
-	}
-	_, err = q.SoftDeleteTempBasal(ctx, sitedb.SoftDeleteTempBasalParams{
+	_, err := siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).SoftDeleteTempBasal, sitedb.SoftDeleteTempBasalParams{
 		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
 		ID:                    id,
 	})
