@@ -296,6 +296,23 @@ func TestNoDataLastsOverALongGap(t *testing.T) {
 	require.Equal(t, []alarms.Type{alarms.NoData}, sent.Alerting)
 }
 
+// No data is measured from the newest CGM reading, so a meter reading long after it neither counts as data nor moves
+// the readings read back past the CGM's
+func TestNoDataIsMeasuredFromTheNewestCGMReading(t *testing.T) {
+	r := newRig(t)
+	identity := r.identities()[0]
+	require.NoError(t, r.control.UpdateSiteIdentitySettings(context.TODO(), controldb.UpdateSiteIdentitySettingsParams{
+		ID: identity.ID, SiteID: r.site, AlarmNoDataEnabled: new(true), AlarmNoDataMinutes: new(int64(20)),
+	}))
+	r.reading(100)
+	r.now = r.now.Add(3 * time.Hour)
+	_, err := r.db.CreateGlucoseReading(context.TODO(), sitedb.CreateGlucoseReadingParams{
+		ID: "meter", Mgdl: 110, ReadingType: "mbg", OccurredAt: r.now.UnixMilli(), CreatedByIdentityName: "test",
+	})
+	require.NoError(t, err)
+	require.Equal(t, notified(alarms.Started, alarms.NoData, r.now), r.check(true)[identity.ID].Notifications)
+}
+
 // A high lasting the longest an alarm can wait starts it, however many readings that is, as from several sources
 func TestALongHighAtManyReadingsAMinute(t *testing.T) {
 	r := newRig(t)

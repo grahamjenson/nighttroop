@@ -60,6 +60,7 @@ func NewSiteStore() *SiteStore {
 	siteStore.registerCollection("settings", &sitesettings.IdentitiesCollection{})
 	siteStore.registerCollection("settings", &sitesettings.SettingsCollection{Site: true})
 	siteStore.registerCollection("settings", &sitesettings.SettingsCollection{Site: false})
+	siteStore.registerCollection("settings", &sitesettings.SettingsCollection{Alarms: true})
 
 	// Logs collections, the site's own rows of the logs DB
 	siteStore.registerCollection("logs", &sitelogs.EventsCollection{})

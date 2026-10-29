@@ -13,6 +13,8 @@ const (
 	// SameWithinMs and SameWithinMgdl are how close in time and value two readings are to be the same glucose
 	SameWithinMs   = 60_000
 	SameWithinMgdl = 10.0
+	// fiveMinutesMs is the time a change is given over, a CGM's usual time between readings
+	fiveMinutesMs = 5 * 60_000.0
 )
 
 // Where a reading came from, by the identity that wrote it
@@ -55,10 +57,10 @@ type Other struct {
 type Clean struct {
 	Row    *sitedb.GlucoseReading
 	Source string
-	// DiffMgdl and DiffMinutes are its change since the reading before it, unset for the first
-	DiffMgdl    *float64
-	DiffMinutes *float64
-	Others      []Other
+	// DiffPer5mMgdl is its change since the reading before it, as mg/dL every 5 minutes, so readings further apart
+	// compare; unset for the first, and for one at the same time as the one before
+	DiffPer5mMgdl *float64
+	Others        []Other
 }
 
 // CleanReadings is the readings with each glucose read by more than one source kept once, by the order of priority,
@@ -89,9 +91,9 @@ func CleanReadings(rows []*sitedb.GlucoseReading) []*Clean {
 			c.Others = append(c.Others, Other{ID: other.ID, Mgdl: other.Mgdl, Source: Source(other)})
 		}
 		if i > 0 {
-			previous := cleaned[i-1].Row
-			c.DiffMgdl = new(c.Row.Mgdl - previous.Mgdl)
-			c.DiffMinutes = new(float64(c.Row.OccurredAt-previous.OccurredAt) / 60_000)
+			if previous := cleaned[i-1].Row; c.Row.OccurredAt > previous.OccurredAt {
+				c.DiffPer5mMgdl = new((c.Row.Mgdl - previous.Mgdl) * fiveMinutesMs / float64(c.Row.OccurredAt-previous.OccurredAt))
+			}
 		}
 		cleaned[i] = c
 	}

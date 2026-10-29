@@ -122,6 +122,16 @@ WHERE
 ORDER BY occurred_at DESC
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
+-- name: AlarmGlucoseReadings :many
+-- The CGM readings back to Minutes before the newest, however old it is, newest first: no data is measured from the
+-- newest, and an alarm lasts by its readings, not by the time now
+SELECT * FROM glucose_readings
+WHERE reading_type = 'sgv' AND deleted_at IS NULL
+AND occurred_at >= (SELECT MAX(occurred_at) FROM glucose_readings WHERE reading_type = 'sgv' AND deleted_at IS NULL)
+    - CAST(sqlc.arg('Minutes') AS INTEGER) * 60000
+ORDER BY occurred_at DESC
+LIMIT sqlc.arg('Limit');
+
 
 --------
 -- UPDATE

@@ -122,9 +122,9 @@ func cleanGlucoseReadings(ctx context.Context, q *sitedb.Queries, since int64, u
 func cleanGlucoseReadingFromDB(c *glucose.Clean, siteContext *httputils.SiteContext) *sitemodels.SiteCleanGlucoseReading {
 	units := sitemodels.ContextUnits(siteContext)
 	model := &sitemodels.SiteCleanGlucoseReading{SiteGlucoseReading: *sitemodels.GlucoseReadingFromDB(c.Row, siteContext), Source: c.Source,
-		DiffMinutes: c.DiffMinutes, Others: []sitemodels.SiteOtherGlucoseReading{}}
-	if c.DiffMgdl != nil {
-		model.Diff = new(units.FromMGDL(*c.DiffMgdl))
+		Others: []sitemodels.SiteOtherGlucoseReading{}}
+	if c.DiffPer5mMgdl != nil {
+		model.DiffPer5m = new(units.FromMGDL(*c.DiffPer5mMgdl))
 	}
 	for _, other := range c.Others {
 		model.Others = append(model.Others, sitemodels.SiteOtherGlucoseReading{ID: other.ID, Reading: units.FromMGDL(other.Mgdl), Source: other.Source})

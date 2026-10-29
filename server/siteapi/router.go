@@ -39,8 +39,10 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Get("/", store.Collection("data", "summary").Search)
 		r.Get("/summary", store.Collection("data", "summary").Search)
 
-		// The settings page shows the identity's own settings, and the site's to an admin
+		// The settings and alarms pages show the identity's own settings, and the site's to an admin. Both save to
+		// /settings/site and /settings/identity.
 		r.Get("/settings", store.Collection("settings", "identity").Get)
+		r.Get("/settings/alarms", store.Collection("settings", "alarms").Get)
 		for _, route := range []string{"site", "identity"} {
 			r.Get("/settings/"+route, store.Collection("settings", route).Get)
 			r.Post("/settings/"+route, store.Collection("settings", route).Update)
