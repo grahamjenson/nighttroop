@@ -1,7 +1,8 @@
 INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
-// One settings page shows an admin the site's settings, which start on the defaults, beside their own
+// One settings page shows an admin the site's settings, which start on the defaults, beside their own. The site's
+// time zone and language are those of the browser that created it
 CLICK #site--settings-menu
 CLICK #site--settings--settings-button
 ASSERT_STATUS 200
@@ -9,6 +10,8 @@ ASSERT_PATH /settings
 ASSERT_TEXT_VISIBLE Settings
 ASSERT_VISIBLE #site--settings--site--units
 ASSERT_VISIBLE #site--settings--identity--units
+ASSERT_VISIBLE #site--settings--site--timezone[value="UTC"]
+ASSERT_VISIBLE #site--settings--site--language[value="en"]
 // The week's days read as names, capitalised, as does the default
 ASSERT_TEXT_EQUALS #site--settings--site--week_start_day>option[value="sunday"] Sunday
 ASSERT_TEXT_EQUALS #site--settings--site--week_start_day>option[value=""] Default (Monday)

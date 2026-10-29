@@ -28,6 +28,7 @@ templ CreateSite() {
 						Class: "h-14 px-10 rounded-full text-lg font-semibold text-white bg-brand-night hover:bg-brand-night/90 shadow-lg shadow-brand-night/30 hover:shadow-xl transition-all duration-200",
 						Attributes: templ.Attributes{
 							"hx-post":       "/site",
+							"hx-vals":       "js:{timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, language: navigator.language}",
 							"hx-target":     "#panel-content",
 							"hx-swap":       "innerHTML",
 							"hx-status:4xx": "target:#error-container",
