@@ -11,8 +11,8 @@ type Settings struct {
 	TimeFormat   *string `json:"time_format"`
 	WeekStartDay *string `json:"week_start_day"`
 
-	// The alarms, each turned on with true or off with false, with the glucose it is under or over, in the
-	// settings' units, and the minutes it must last
+	// The alarms, each turned on with true or off with false, with the glucose it is under or over, or rises or
+	// drops by, in the settings' units, and the minutes it must last or rise or drop over
 	AlarmUrgentLowEnabled  *string `json:"alarm_urgent_low_enabled"`
 	AlarmUrgentLow         *string `json:"alarm_urgent_low"`
 	AlarmLowEnabled        *string `json:"alarm_low_enabled"`
@@ -23,6 +23,12 @@ type Settings struct {
 	AlarmHighMinutes       *string `json:"alarm_high_minutes"`
 	AlarmUrgentHighEnabled *string `json:"alarm_urgent_high_enabled"`
 	AlarmUrgentHigh        *string `json:"alarm_urgent_high"`
+	AlarmFastRiseEnabled   *string `json:"alarm_fast_rise_enabled"`
+	AlarmFastRise          *string `json:"alarm_fast_rise"`
+	AlarmFastRiseMinutes   *string `json:"alarm_fast_rise_minutes"`
+	AlarmFastDropEnabled   *string `json:"alarm_fast_drop_enabled"`
+	AlarmFastDrop          *string `json:"alarm_fast_drop"`
+	AlarmFastDropMinutes   *string `json:"alarm_fast_drop_minutes"`
 	AlarmNoDataEnabled     *string `json:"alarm_no_data_enabled"`
 	AlarmNoDataMinutes     *string `json:"alarm_no_data_minutes"`
 
@@ -41,6 +47,8 @@ func (s *Settings) Fields() map[string]**string {
 		"alarm_low_enabled": &s.AlarmLowEnabled, "alarm_low": &s.AlarmLow, "alarm_low_minutes": &s.AlarmLowMinutes,
 		"alarm_high_enabled": &s.AlarmHighEnabled, "alarm_high": &s.AlarmHigh, "alarm_high_minutes": &s.AlarmHighMinutes,
 		"alarm_urgent_high_enabled": &s.AlarmUrgentHighEnabled, "alarm_urgent_high": &s.AlarmUrgentHigh,
+		"alarm_fast_rise_enabled": &s.AlarmFastRiseEnabled, "alarm_fast_rise": &s.AlarmFastRise, "alarm_fast_rise_minutes": &s.AlarmFastRiseMinutes,
+		"alarm_fast_drop_enabled": &s.AlarmFastDropEnabled, "alarm_fast_drop": &s.AlarmFastDrop, "alarm_fast_drop_minutes": &s.AlarmFastDropMinutes,
 		"alarm_no_data_enabled": &s.AlarmNoDataEnabled, "alarm_no_data_minutes": &s.AlarmNoDataMinutes,
 	}
 }

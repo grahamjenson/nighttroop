@@ -116,6 +116,8 @@ var alarmTitles = map[alarms.Type][2]string{
 	alarms.Low:           {"Low warning", "Glucose has been low"},
 	alarms.UrgentHigh:    {"Urgent HIGH", "Glucose is urgently high"},
 	alarms.High:          {"High warning", "Glucose has been high"},
+	alarms.FastRise:      {"Rising fast", "Glucose is rising fast"},
+	alarms.FastDrop:      {"Dropping fast", "Glucose is dropping fast"},
 	alarms.NoData:        {"Stale data, check rig?", "No glucose readings are coming in"},
 	alarms.DeviceBattery: {"Device battery low", "A device's battery is low, or it has stopped reporting"},
 }

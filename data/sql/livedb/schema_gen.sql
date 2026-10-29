@@ -3,7 +3,7 @@ CREATE INDEX connections_site ON connections (site_id, kind);
 CREATE TABLE alarms (
     site_id TEXT NOT NULL CHECK(length(site_id) <= 32),
     identity_id INTEGER NOT NULL,
-    type TEXT NOT NULL CHECK(type IN ('urgent_low', 'low', 'urgent_high', 'high', 'no_data', 'device_battery')),
+    type TEXT NOT NULL CHECK(type IN ('urgent_low', 'low', 'urgent_high', 'high', 'fast_rise', 'fast_drop', 'no_data', 'device_battery')),
     -- active_since is when it became active, or 0 while it is not
     active_since INTEGER NOT NULL,
     notified_at INTEGER NOT NULL,

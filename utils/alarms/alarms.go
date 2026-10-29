@@ -29,13 +29,15 @@ const (
 	Low        Type = "low"
 	UrgentHigh Type = "urgent_high"
 	High       Type = "high"
+	FastRise   Type = "fast_rise"
+	FastDrop   Type = "fast_drop"
 	NoData     Type = "no_data"
 	// DeviceBattery is a listed device's battery being low, or the device not reporting
 	DeviceBattery Type = "device_battery"
 )
 
 // Types are every kind of alarm, each louder one before the one it quiets, the order results list them in
-var Types = []Type{UrgentLow, Low, UrgentHigh, High, NoData, DeviceBattery}
+var Types = []Type{UrgentLow, Low, UrgentHigh, High, FastRise, FastDrop, NoData, DeviceBattery}
 
 // Level is how urgent an alarm is, numbered as Nightscout's are
 type Level int
@@ -103,6 +105,34 @@ func (a HighAlarm) IsActive(readings []Reading, now int64) bool {
 	return lasted(readings, a.Minutes, func(r Reading) bool { return r.Mgdl > a.Mgdl })
 }
 
+// FastRiseAlarm is active once glucose has risen by Mgdl or more over the newest readings within Minutes, and alerts
+// every 15 minutes
+type FastRiseAlarm struct {
+	Mgdl    float64
+	Minutes int64
+}
+
+func (FastRiseAlarm) Type() Type      { return FastRise }
+func (FastRiseAlarm) RepeatMs() int64 { return 15 * minute }
+func (FastRiseAlarm) QuietedBy() Type { return "" }
+func (a FastRiseAlarm) IsActive(readings []Reading, now int64) bool {
+	return changed(readings, a.Minutes) >= a.Mgdl
+}
+
+// FastDropAlarm is active once glucose has fallen by Mgdl or more over the newest readings within Minutes, and alerts
+// every 15 minutes
+type FastDropAlarm struct {
+	Mgdl    float64
+	Minutes int64
+}
+
+func (FastDropAlarm) Type() Type      { return FastDrop }
+func (FastDropAlarm) RepeatMs() int64 { return 15 * minute }
+func (FastDropAlarm) QuietedBy() Type { return "" }
+func (a FastDropAlarm) IsActive(readings []Reading, now int64) bool {
+	return -changed(readings, a.Minutes) >= a.Mgdl
+}
+
 // NoDataAlarm is active once there has been no reading for Minutes, after at least one, and alerts every 15 minutes
 type NoDataAlarm struct{ Minutes int64 }
 
@@ -157,6 +187,19 @@ func lasted(readings []Reading, minutes int64, beyond func(Reading) bool) bool {
 		i--
 	}
 	return i < len(readings) && readings[len(readings)-1].At-readings[i].At >= minutes*minute
+}
+
+// changed is how much glucose changed over the newest readings, sorted oldest first, within minutes of the newest:
+// from the oldest of them to the newest, or 0 with only one. Like lasted, it is measured by readings, not the time now.
+func changed(readings []Reading, minutes int64) float64 {
+	if len(readings) == 0 {
+		return 0
+	}
+	newest, i := readings[len(readings)-1], len(readings)-1
+	for i > 0 && newest.At-readings[i-1].At <= minutes*minute {
+		i--
+	}
+	return newest.Mgdl - readings[i].Mgdl
 }
 
 // Reading is a glucose reading in mg/dL at a time in milliseconds

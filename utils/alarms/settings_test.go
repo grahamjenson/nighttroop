@@ -47,6 +47,17 @@ func TestFromSettings(t *testing.T) {
 			},
 		},
 		{
+			name:     "the fast rise and drop, at the defaults, rising or dropping 18 mg/dL within 15 minutes",
+			identity: controldb.SiteIdentity{AlarmFastRiseEnabled: new(true), AlarmFastDropEnabled: new(true)},
+			want:     []Alarm{FastRiseAlarm{Mgdl: 18, Minutes: 15}, FastDropAlarm{Mgdl: 18, Minutes: 15}},
+		},
+		{
+			name:     "the site's fast drop, the identity's minutes",
+			site:     controldb.Site{AlarmFastDropEnabled: new(true), AlarmFastDrop: new(int64(27))},
+			identity: controldb.SiteIdentity{AlarmFastDropMinutes: new(int64(10))},
+			want:     []Alarm{FastDropAlarm{Mgdl: 27, Minutes: 10}},
+		},
+		{
 			name:     "the device battery alarm checks nothing with no devices listed",
 			identity: controldb.SiteIdentity{AlarmDeviceBatteryLowEnabled: new(true)},
 		},
