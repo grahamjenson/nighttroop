@@ -19,6 +19,7 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 
@@ -65,19 +66,49 @@ func jwtEndpoint(nsURL, token string) string {
 	return fmt.Sprintf("%s/api/v2/authorization/request/token=%s", nsURL, token)
 }
 
-func NewClient(baseURL, token string) *Client {
+// ClientOptions are how a Client connects
+type ClientOptions struct {
+	// AllowLocalAddresses lets it connect to a private or local address, such as a Nightscout run alongside in
+	// development
+	AllowLocalAddresses bool
+}
+
+// NewClient is a client for the Nightscout at baseURL. Unless its options allow local addresses, it refuses to connect
+// to a private or local address: the URL is only checked when saved, and its host's DNS could later point at an
+// internal one.
+func NewClient(baseURL, token string, options ClientOptions) *Client {
 	baseURL = strings.TrimRight(baseURL, "/")
+
+	// Connect directly, so the address checked is the Nightscout's own and not a proxy's
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.Proxy = nil
+	if !options.AllowLocalAddresses {
+		transport.DialContext = (&net.Dialer{Timeout: 30 * time.Second, KeepAlive: 30 * time.Second, Control: refuseBlockedIPs}).DialContext
+	}
 
 	return &Client{
 		baseURL: baseURL,
 		token:   token,
 		httpClient: &http.Client{
-			Timeout: 30 * time.Second,
+			Transport: transport,
+			Timeout:   30 * time.Second,
 			// Never follow redirects: the sync URL is only checked when saved, so a
 			// redirect could point at an internal host. The 3xx is handled as a failure.
 			CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
 		},
 	}
+}
+
+// refuseBlockedIPs is a dialer Control that refuses an address on a private or local network as it is connected to
+func refuseBlockedIPs(_, address string, _ syscall.RawConn) error {
+	host, _, err := net.SplitHostPort(address)
+	if err != nil {
+		return err
+	}
+	if ip := net.ParseIP(host); ip == nil || httputils.IsBlockedIP(ip) {
+		return fmt.Errorf("nightscout cannot be on a private or local network: %s", host)
+	}
+	return nil
 }
 
 func (c *Client) doRequest(

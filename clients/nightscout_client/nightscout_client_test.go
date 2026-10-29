@@ -13,12 +13,37 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// liveClient is a client whose requests go over HTTP to the given server.
+// liveClient is a client whose requests go over HTTP to the given server, which httptest runs on a local address.
 func liveClient(baseURL string) *Client {
-	c := NewClient(baseURL, "token")
+	return signedInClient(baseURL, true)
+}
+
+func signedInClient(baseURL string, allowLocal bool) *Client {
+	c := NewClient(baseURL, "token", ClientOptions{AllowLocalAddresses: allowLocal})
 	jwt, expire := "jwt", time.Now().Add(time.Hour)
 	c.jwt, c.jwtExpire = &jwt, &expire
 	return c
+}
+
+// A Nightscout host checked when saved can later resolve to an internal address, so the client checks as it connects
+func TestRefusesToConnectToLocalAddresses(t *testing.T) {
+	hits := 0
+	internal := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		hits++
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"result":{"collections":{}}}`))
+	}))
+	defer internal.Close()
+
+	_, err := signedInClient(internal.URL, false).GetLastModified(context.Background())
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "private or local network")
+	require.Equal(t, 0, hits, "a local address must never be requested")
+
+	for _, address := range []string{"127.0.0.1:443", "10.0.0.1:443", "169.254.169.254:80", "[::1]:443", "[fd00:ec2::254]:80"} {
+		require.Error(t, refuseBlockedIPs("tcp", address, nil), address)
+	}
+	require.NoError(t, refuseBlockedIPs("tcp", "93.184.215.14:443", nil))
 }
 
 func TestGetDocumentsRefusesRedirect(t *testing.T) {
