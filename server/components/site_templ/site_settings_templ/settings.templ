@@ -132,6 +132,32 @@ func settingsColumns(page settingsPage, site *sitemodels.Settings, yours *sitemo
 // SettingsPage is the general settings, and AlarmSettingsPage the alarms: the site's to an admin, beside their own
 templ SettingsPage(site *sitemodels.Settings, yours *sitemodels.Settings) {
 	@settingsPageOf(generalPage, site, yours)
+	if site != nil {
+		@deleteSite()
+	}
+}
+
+// deleteSite lets an admin delete the site, which archives it, after confirming
+templ deleteSite() {
+	<section id="site--settings--delete" class="mx-auto mt-6 max-w-4xl space-y-3 rounded-xl border border-red-200 p-4 shadow-sm">
+		<h2 class="text-sm font-semibold text-red-700">Delete Site</h2>
+		<p class="text-sm text-gray-600">
+			Deleting the site signs everyone out and stops it being served, to you, your devices and Nightscout apps. Its
+			data is archived, so the server's admins can still bring it back.
+		</p>
+		<form
+			hx-post="/settings/site/delete"
+			hx-confirm="Delete this site? Everyone is signed out and its data is archived."
+			hx-target="#toaster"
+			hx-swap="beforeend"
+			hx-status:4xx="target:#toaster swap:beforeend"
+			hx-status:5xx="target:#toaster swap:beforeend"
+		>
+			@button.Button(button.Props{ID: "site--settings--delete-site", Type: button.TypeSubmit, Variant: button.VariantDestructive}) {
+				Delete Site
+			}
+		</form>
+	</section>
 }
 
 templ AlarmSettingsPage(site *sitemodels.Settings, yours *sitemodels.Settings) {

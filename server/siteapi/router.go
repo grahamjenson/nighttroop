@@ -62,6 +62,7 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 
 		// Actions
 		r.Post("/settings/sync/{id}/backfill", sitecollections.BackfillHandler)
+		r.Post("/settings/site/delete", sitecollections.DeleteSiteHandler)
 		r.Post("/logout", sitelogin.POSTLogoutHandler(config))
 	})
 
