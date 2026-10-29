@@ -110,6 +110,23 @@ WAIT clear_alarm
 T 5s
 ASSERT_EQUALS true "@clear"
 
+# The site's events say the ack snoozed the urgent alarms of the default group, which its admin can read
+NAME login_admin
+POST http://{{ .create_new_site.site_subdomain }}.localhost/login
+H Accept: application/json
+B {"name": "admin", "password": "{{ .create_new_site.api_key }}", "totp": "123123"}
+ASSERT_STATUS 200
+SET admin_jwt {{ .login_admin.token }}
+
+NAME ack_snoozed_event
+GET http://{{ .create_new_site.site_subdomain }}.localhost/logs/events?type=alarm_snoozed
+H Authorization: Bearer {{ .admin_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS "nightscout" "@result.0.attributes.by"
+ASSERT_EQUALS "urgent_low" "@result.0.attributes.types.0"
+
 NAME bye_alarms
 DISCONNECT
 
