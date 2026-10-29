@@ -1,0 +1,32 @@
+INCLUDE steps/new_site.steps
+
+// Sensor and site changes from Nightscout apps name no pump, and are kept as changes all the same, so the summary and
+// Nightscout's sensor and cannula ages have them
+NAME create_ns_changes
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B [{"eventType": "Sensor Start", "created_at": "{{ time 10 }}", "notes": "Left arm"}, {"eventType": "Site Change", "created_at": "{{ time 5 }}", "enteredBy": "Loop", "notes": "Right thigh"}]
+ASSERT_STATUS 200
+
+NAME ns_changes_listed
+GET http://{{ site }}/data/component-events
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result"
+ASSERT_EQUALS "Site Change" "@result.0.event_type"
+ASSERT_EQUALS "Right thigh" "@result.0.notes"
+ASSERT_EQUALS "Sensor Start" "@result.1.event_type"
+ASSERT_EQUALS "Left arm" "@result.1.notes"
+
+// A bolus that names no pump has no change
+NAME create_ns_bolus
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B [{"eventType": "Correction Bolus", "created_at": "{{ time 1 }}", "insulin": 1}]
+ASSERT_STATUS 200
+
+NAME bolus_not_listed
+GET http://{{ site }}/data/component-events
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result"
