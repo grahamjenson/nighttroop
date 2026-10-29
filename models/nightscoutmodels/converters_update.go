@@ -76,7 +76,7 @@ type UpdateMapConverter interface {
 
 // goverter:context ctx
 func AssignUpdatedByName(ctx ConverterContext) *string {
-	return ptr(ctx.IdentityName)
+	return new(ctx.IdentityName)
 }
 
 // goverter:context ctx

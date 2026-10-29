@@ -55,15 +55,15 @@ func (t *Setting) UnmarshalJSON(data []byte) error {
 }
 
 func (t Setting) GetDevice() *string {
-	return ptr("")
+	return new("")
 }
 
 func (t Setting) GetApp() *string {
-	return ptr("")
+	return new("")
 }
 
 func (t Setting) GetSubject() *string {
-	return ptr("")
+	return new("")
 }
 
 func (t Setting) GetDate() *int64 {
@@ -71,12 +71,12 @@ func (t Setting) GetDate() *int64 {
 }
 
 func (t Setting) GetUtcOffsetMinutes() *int64 {
-	return ptr(int64(0))
+	return new(int64(0))
 }
 
 func (t Setting) GetIdentifier() *string {
 	if t.Identifier == nil {
-		return ptr("")
+		return new("")
 	}
 	return t.Identifier.Stringp()
 }

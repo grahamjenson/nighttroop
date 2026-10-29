@@ -171,7 +171,7 @@ func GetUnitsAndValue(mgdl float64, siteContext *httputils.SiteContext) (*consts
 
 	units := siteContext.GetSettings().GetUnits()
 	value := units.FromMGDL(mgdl)
-	return units, ptr(types.FlexibleFloat64(value))
+	return units, new(types.FlexibleFloat64(value))
 }
 
 func JSONToScheduleValueSlice(jsonStr *string) []*ScheduleValue {
@@ -212,7 +212,7 @@ func JSONToScheduleValueSliceWithUnitConversionFromMGDL(jsonStr *string, siteCon
 		}
 
 		if sv.Value != nil {
-			sv.Value = ptr(types.FlexibleFloat64(units.FromMGDL(sv.Value.Float64())))
+			sv.Value = new(types.FlexibleFloat64(units.FromMGDL(sv.Value.Float64())))
 		}
 
 		if sv.TimeAsSeconds == nil && sv.Time != nil {

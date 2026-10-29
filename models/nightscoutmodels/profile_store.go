@@ -173,101 +173,101 @@ const (
 func (s *ScheduleTime) ToSeconds() *types.FlexibleInt64 {
 	switch *s {
 	case T0000:
-		return ptr(types.FlexibleInt64(0))
+		return new(types.FlexibleInt64(0))
 	case T0030:
-		return ptr(types.FlexibleInt64(1800))
+		return new(types.FlexibleInt64(1800))
 	case T0100:
-		return ptr(types.FlexibleInt64(1800 * 2))
+		return new(types.FlexibleInt64(1800 * 2))
 	case T0130:
-		return ptr(types.FlexibleInt64(1800 * 3))
+		return new(types.FlexibleInt64(1800 * 3))
 	case T0200:
-		return ptr(types.FlexibleInt64(1800 * 4))
+		return new(types.FlexibleInt64(1800 * 4))
 	case T0230:
-		return ptr(types.FlexibleInt64(1800 * 5))
+		return new(types.FlexibleInt64(1800 * 5))
 	case T0300:
-		return ptr(types.FlexibleInt64(1800 * 6))
+		return new(types.FlexibleInt64(1800 * 6))
 	case T0330:
-		return ptr(types.FlexibleInt64(1800 * 7))
+		return new(types.FlexibleInt64(1800 * 7))
 	case T0400:
-		return ptr(types.FlexibleInt64(1800 * 8))
+		return new(types.FlexibleInt64(1800 * 8))
 	case T0430:
-		return ptr(types.FlexibleInt64(1800 * 9))
+		return new(types.FlexibleInt64(1800 * 9))
 	case T0500:
-		return ptr(types.FlexibleInt64(1800 * 10))
+		return new(types.FlexibleInt64(1800 * 10))
 	case T0530:
-		return ptr(types.FlexibleInt64(1800 * 11))
+		return new(types.FlexibleInt64(1800 * 11))
 	case T0600:
-		return ptr(types.FlexibleInt64(1800 * 12))
+		return new(types.FlexibleInt64(1800 * 12))
 	case T0630:
-		return ptr(types.FlexibleInt64(1800 * 13))
+		return new(types.FlexibleInt64(1800 * 13))
 	case T0700:
-		return ptr(types.FlexibleInt64(1800 * 14))
+		return new(types.FlexibleInt64(1800 * 14))
 	case T0730:
-		return ptr(types.FlexibleInt64(1800 * 15))
+		return new(types.FlexibleInt64(1800 * 15))
 	case T0800:
-		return ptr(types.FlexibleInt64(1800 * 16))
+		return new(types.FlexibleInt64(1800 * 16))
 	case T0830:
-		return ptr(types.FlexibleInt64(1800 * 17))
+		return new(types.FlexibleInt64(1800 * 17))
 	case T0900:
-		return ptr(types.FlexibleInt64(1800 * 18))
+		return new(types.FlexibleInt64(1800 * 18))
 	case T0930:
-		return ptr(types.FlexibleInt64(1800 * 19))
+		return new(types.FlexibleInt64(1800 * 19))
 	case T1000:
-		return ptr(types.FlexibleInt64(1800 * 20))
+		return new(types.FlexibleInt64(1800 * 20))
 	case T1030:
-		return ptr(types.FlexibleInt64(1800 * 21))
+		return new(types.FlexibleInt64(1800 * 21))
 	case T1100:
-		return ptr(types.FlexibleInt64(1800 * 22))
+		return new(types.FlexibleInt64(1800 * 22))
 	case T1130:
-		return ptr(types.FlexibleInt64(1800 * 23))
+		return new(types.FlexibleInt64(1800 * 23))
 	case T1200:
-		return ptr(types.FlexibleInt64(1800 * 24))
+		return new(types.FlexibleInt64(1800 * 24))
 	case T1230:
-		return ptr(types.FlexibleInt64(1800 * 25))
+		return new(types.FlexibleInt64(1800 * 25))
 	case T1300:
-		return ptr(types.FlexibleInt64(1800 * 26))
+		return new(types.FlexibleInt64(1800 * 26))
 	case T1330:
-		return ptr(types.FlexibleInt64(1800 * 27))
+		return new(types.FlexibleInt64(1800 * 27))
 	case T1400:
-		return ptr(types.FlexibleInt64(1800 * 28))
+		return new(types.FlexibleInt64(1800 * 28))
 	case T1430:
-		return ptr(types.FlexibleInt64(1800 * 29))
+		return new(types.FlexibleInt64(1800 * 29))
 	case T1500:
-		return ptr(types.FlexibleInt64(1800 * 30))
+		return new(types.FlexibleInt64(1800 * 30))
 	case T1530:
-		return ptr(types.FlexibleInt64(1800 * 31))
+		return new(types.FlexibleInt64(1800 * 31))
 	case T1600:
-		return ptr(types.FlexibleInt64(1800 * 32))
+		return new(types.FlexibleInt64(1800 * 32))
 	case T1630:
-		return ptr(types.FlexibleInt64(1800 * 33))
+		return new(types.FlexibleInt64(1800 * 33))
 	case T1700:
-		return ptr(types.FlexibleInt64(1800 * 34))
+		return new(types.FlexibleInt64(1800 * 34))
 	case T1730:
-		return ptr(types.FlexibleInt64(1800 * 35))
+		return new(types.FlexibleInt64(1800 * 35))
 	case T1800:
-		return ptr(types.FlexibleInt64(1800 * 36))
+		return new(types.FlexibleInt64(1800 * 36))
 	case T1830:
-		return ptr(types.FlexibleInt64(1800 * 37))
+		return new(types.FlexibleInt64(1800 * 37))
 	case T1900:
-		return ptr(types.FlexibleInt64(1800 * 38))
+		return new(types.FlexibleInt64(1800 * 38))
 	case T1930:
-		return ptr(types.FlexibleInt64(1800 * 39))
+		return new(types.FlexibleInt64(1800 * 39))
 	case T2000:
-		return ptr(types.FlexibleInt64(1800 * 40))
+		return new(types.FlexibleInt64(1800 * 40))
 	case T2030:
-		return ptr(types.FlexibleInt64(1800 * 41))
+		return new(types.FlexibleInt64(1800 * 41))
 	case T2100:
-		return ptr(types.FlexibleInt64(1800 * 42))
+		return new(types.FlexibleInt64(1800 * 42))
 	case T2130:
-		return ptr(types.FlexibleInt64(1800 * 43))
+		return new(types.FlexibleInt64(1800 * 43))
 	case T2200:
-		return ptr(types.FlexibleInt64(1800 * 44))
+		return new(types.FlexibleInt64(1800 * 44))
 	case T2230:
-		return ptr(types.FlexibleInt64(1800 * 45))
+		return new(types.FlexibleInt64(1800 * 45))
 	case T2300:
-		return ptr(types.FlexibleInt64(1800 * 46))
+		return new(types.FlexibleInt64(1800 * 46))
 	case T2330:
-		return ptr(types.FlexibleInt64(1800 * 47))
+		return new(types.FlexibleInt64(1800 * 47))
 	default:
 		return nil
 	}
@@ -339,7 +339,7 @@ func ScheduleValuesToJSONWithUnitConversionToMGDL(svs []*ScheduleValue, units *c
 
 	for _, sv := range svs {
 		if sv.Value != nil {
-			sv.Value = ptr(types.FlexibleFloat64(units.ToMGDL(sv.Value.Float64())))
+			sv.Value = new(types.FlexibleFloat64(units.ToMGDL(sv.Value.Float64())))
 		}
 	}
 	return svs
