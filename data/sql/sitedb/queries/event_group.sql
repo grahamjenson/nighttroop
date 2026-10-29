@@ -40,6 +40,8 @@ SELECT * from event_groups WHERE id = ? AND (CAST(sqlc.arg('IncludeDeleted') AS 
 -- name: GetEventGroupOfTypeWithoutJoins :many
 SELECT * from event_groups WHERE group_type = ? AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) IS TRUE OR deleted_at IS NULL);
 
+-- The joins name the _vw views so sqlc types their columns as nullable, but the generated queries join the tables
+-- themselves (see joinTablesNotViews in data/sql/gen/sqlc.go), so SQLite does not copy each table for every query
 -- name: AllEventGroups :many
 SELECT 
     -- It would be awesome if sqlc worked with embed null objects
