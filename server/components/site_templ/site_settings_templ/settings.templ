@@ -132,6 +132,27 @@ func settingsColumns(page settingsPage, site *sitemodels.Settings, yours *sitemo
 // SettingsPage is the general settings, and AlarmSettingsPage the alarms: the site's to an admin, beside their own
 templ SettingsPage(site *sitemodels.Settings, yours *sitemodels.Settings) {
 	@settingsPageOf(generalPage, site, yours)
+	if site != nil {
+		@downloadData()
+	}
+}
+
+// downloadData lets an admin download a snapshot of the site's DB, to look through all its data
+templ downloadData() {
+	<section id="site--settings--download" class="mx-auto mt-6 max-w-4xl space-y-3 rounded-xl border border-gray-200 p-4 shadow-sm">
+		<h2 class="text-sm font-semibold text-brand-night">Download Data</h2>
+		<p class="text-sm text-gray-600">
+			A copy of all the site's data, as it is now, in one SQLite file, which a SQLite browser can open to look through.
+		</p>
+		@button.Button(button.Props{
+			ID:      "site--settings--download-data",
+			Href:    "/settings/site/download",
+			Variant: button.VariantOutline,
+			Attributes: templ.Attributes{"download": ""},
+		}) {
+			Download Data
+		}
+	</section>
 }
 
 templ AlarmSettingsPage(site *sitemodels.Settings, yours *sitemodels.Settings) {
