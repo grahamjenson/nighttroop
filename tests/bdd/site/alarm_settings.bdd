@@ -102,3 +102,12 @@ INPUT #site--settings--identity--alarm_low low
 CLICK #site--settings--identity--save
 ASSERT_STATUS 400
 ASSERT_VISIBLE #toaster [data-tui-toast][data-variant="error"]:has-text("alarm_low must be a number")
+
+// A high alarm under the low alarm is refused, saying why
+INPUT #site--settings--identity--alarm_fast_drop_minutes 10
+INPUT #site--settings--identity--alarm_low 80
+INPUT #site--settings--identity--alarm_high 70
+CLICK #site--settings--identity--save
+ASSERT_STATUS 400
+ASSERT_VISIBLE #toaster [data-tui-toast][data-variant="error"]:has-text("the low alarm must be under the high alarm")
+SCREENSHOT alarm_settings_low_over_high

@@ -146,6 +146,16 @@ func (s *SettingsCollection) UpdateRow(ctx context.Context, collectionTx *siteap
 		}
 	}
 
+	// The settings in effect must make sense together: the identity's over the site's, or the site's over the
+	// defaults for everyone else
+	inEffect := siteContext.GetSettings()
+	if s.Site {
+		inEffect = &settings.CombinedSettingsMap{SiteSettingsMap: level, IdentitySettingsMap: &settings.SettingMap{}, DefaultSettingsMap: settings.DefaultSettingsMap}
+	}
+	if err := inEffect.Consistent(); err != nil {
+		return nil, apiutils.ErrBadBodyWithHint(err.Error())
+	}
+
 	q, err := collectionTx.Control()
 	if err != nil {
 		return nil, err

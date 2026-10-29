@@ -589,11 +589,11 @@ ASSERT_EQUALS 32 "@result.value"
 NAME put_bolus_peak_minutes_settings_v3
 PUT http://{{ site }}/api/v3/settings/bolus_peak_minutes
 H Authorization: Bearer {{ jwt }}
-B { "value": 32 }
+B { "value": 60 }
 ASSERT_STATUS 200
 ASSERT_EQUALS "bolus_peak_minutes" "@result.identifier"
 ASSERT_EQUALS "number" "@result.type"
-ASSERT_EQUALS 32 "@result.value"
+ASSERT_EQUALS 60 "@result.value"
 
 NAME put_basal_dia_hours_settings_v3
 PUT http://{{ site }}/api/v3/settings/basal_dia_hours
@@ -616,11 +616,11 @@ ASSERT_EQUALS 32 "@result.value"
 NAME put_basal_peak_minutes_settings_v3
 PUT http://{{ site }}/api/v3/settings/basal_peak_minutes
 H Authorization: Bearer {{ jwt }}
-B { "value": 32 }
+B { "value": 90 }
 ASSERT_STATUS 200
 ASSERT_EQUALS "basal_peak_minutes" "@result.identifier"
 ASSERT_EQUALS "number" "@result.type"
-ASSERT_EQUALS 32 "@result.value"
+ASSERT_EQUALS 90 "@result.value"
 
 NAME put_default_insulin_sensitivity_settings_v3
 PUT http://{{ site }}/api/v3/settings/default_insulin_sensitivity
@@ -680,11 +680,11 @@ ASSERT_EQUALS true "@result.value"
 NAME put_alarm_urgent_low_settings_v3
 PUT http://{{ site }}/api/v3/settings/alarm_urgent_low
 H Authorization: Bearer {{ jwt }}
-B { "value": 32 }
+B { "value": 30 }
 ASSERT_STATUS 200
 ASSERT_EQUALS "alarm_urgent_low" "@result.identifier"
 ASSERT_EQUALS "number" "@result.type"
-ASSERT_EQUALS 32 "@result.value"
+ASSERT_EQUALS 30 "@result.value"
 
 NAME put_alarm_low_enabled_settings_v3
 PUT http://{{ site }}/api/v3/settings/alarm_low_enabled
@@ -748,6 +748,19 @@ ASSERT_STATUS 200
 ASSERT_EQUALS "alarm_high" "@result.identifier"
 ASSERT_EQUALS "number" "@result.type"
 ASSERT_EQUALS 70 "@result.value"
+
+// A low alarm over the high alarm, or an urgent low over the low alarm, is refused
+NAME put_alarm_low_over_high_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_low
+H Authorization: Bearer {{ jwt }}
+B { "value": 80 }
+ASSERT_STATUS 400
+
+NAME put_alarm_urgent_low_over_low_settings_v3
+PUT http://{{ site }}/api/v3/settings/alarm_urgent_low
+H Authorization: Bearer {{ jwt }}
+B { "value": 40 }
+ASSERT_STATUS 400
 
 NAME put_alarm_high_minutes_settings_v3
 PUT http://{{ site }}/api/v3/settings/alarm_high_minutes
