@@ -72,6 +72,7 @@ Keep every change as small as possible.
 - Do not reformat surrounding code or bundle unrelated fixes; those are their own PR.
 - Before writing a function, look for an equivalent in `utils` or an imported library.
 - Any UI change must be accompanied with a BDD test to render and check the UI renders and works.
+- When reducing size do not rely on lots of generics, a function should have a max of two generic types.
 
 ## UI Changes
 
