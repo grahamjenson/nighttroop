@@ -17,6 +17,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/alarms"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/glucose"
 	"nighttroop.t1d.nz/utils/settings"
 )
 
@@ -156,9 +157,11 @@ func (c *Checker) checkSite(ctx context.Context, siteID string, now int64) error
 			return err
 		}
 	}
-	readings := make([]alarms.Reading, len(rows))
-	for i, row := range rows {
-		readings[i] = alarms.Reading{At: row.OccurredAt, Mgdl: row.Mgdl}
+	// The same glucose from more than one source is one reading, so it counts once
+	cleaned := glucose.CleanReadings(rows)
+	readings := make([]alarms.Reading, len(cleaned))
+	for i, c := range cleaned {
+		readings[i] = alarms.Reading{At: c.Row.OccurredAt, Mgdl: c.Row.Mgdl}
 	}
 
 	var errs []error

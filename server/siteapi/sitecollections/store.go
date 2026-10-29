@@ -38,6 +38,7 @@ func NewSiteStore() *SiteStore {
 	// Data collections
 	siteStore.registerCollection("data", &sitedata.SummaryCollection{})
 	siteStore.registerCollection("data", &sitedata.GlucoseReadingsCollection{})
+	siteStore.registerCollection("data", &sitedata.CleanGlucoseReadingsCollection{})
 	siteStore.registerCollection("data", &sitedata.TempTargetsCollection{})
 	siteStore.registerCollection("data", &sitedata.TempBasalsCollection{})
 	siteStore.registerCollection("data", &sitedata.ActivitiesCollection{})

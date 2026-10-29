@@ -1,0 +1,72 @@
+INCLUDE steps/new_site.steps
+
+NAME units_mgdl
+POST http://{{ .site }}/settings/identity
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"units": "mg/dL"}
+ASSERT_STATUS 200
+
+// A CGM reading and a meter's of the same glucose at the same time, then a CGM reading five minutes later. Each names
+// its device, as Nightscout's own dedupe takes two entries of one time and device to be one.
+NAME cgm_reading
+POST http://{{ .ns_site }}/api/v1/entries?token={{ token }}
+B {"type": "sgv", "sgv": 120, "date": {{ itime 10 }}, "device": "cgm"}
+ASSERT_STATUS 200
+SET same_time {{ dig "cgm_reading.0.date" }}
+
+NAME meter_reading
+POST http://{{ .ns_site }}/api/v1/entries?token={{ token }}
+B {"type": "mbg", "mbg": 125, "date": {{ .same_time }}, "device": "meter"}
+ASSERT_STATUS 200
+
+NAME later_cgm_reading
+POST http://{{ .ns_site }}/api/v1/entries?token={{ token }}
+B {"type": "sgv", "sgv": 135, "date": {{ itime 5 }}, "device": "cgm"}
+ASSERT_STATUS 200
+
+// The same glucose is one reading, the meter's, with the CGM's alongside it, and the later one says how it changed
+NAME clean_glucose
+GET http://{{ .site }}/data/clean_glucose
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result"
+ASSERT_EQUALS 135 "@result.0.reading"
+ASSERT_EQUALS "mg/dL" "@result.0.units"
+ASSERT_EQUALS 10 "@result.0.diff"
+ASSERT_LENGTH 0 "@result.0.others"
+ASSERT_EQUALS 125 "@result.1.reading"
+ASSERT_EQUALS "mbg" "@result.1.reading_type"
+ASSERT_EQUALS "direct" "@result.1.source"
+ASSERT_EQUALS null "@result.1.diff"
+ASSERT_LENGTH 1 "@result.1.others"
+ASSERT_EQUALS 120 "@result.1.others.0.reading"
+ASSERT_EQUALS "direct" "@result.1.others.0.source"
+SET merged_id {{ dig "clean_glucose.result.1.others.0.id" }}
+
+// Reading the merged reading by its ID gives the reading it is part of
+NAME get_merged
+GET http://{{ .site }}/data/clean_glucose/{{ .merged_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 125 "@result.reading"
+
+// The summary shows the cleaned readings
+NAME summary_is_clean
+GET http://{{ .site }}/summary?hours=1
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result.0.glucose_readings"
+ASSERT_EQUALS 10 "@result.0.glucose_readings.0.diff"
+
+// A page of them
+NAME clean_glucose_paged
+GET http://{{ .site }}/data/clean_glucose?limit=1&skip=1
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS 125 "@result.0.reading"

@@ -54,7 +54,7 @@ func TestGraph(t *testing.T) {
 	}
 	option := option(t, &sitemodels.Summary{
 		Since: since, Units: &mmol, LowAlarm: 3.9, HighAlarm: 10,
-		GlucoseReadings: []*sitemodels.SiteGlucoseReading{{Reading: 20, Units: &mmol}, {Reading: 6, Units: &mmol}, {Reading: 3, Units: &mmol}, {Reading: 12, Units: &mmol}},
+		GlucoseReadings: []*sitemodels.SiteCleanGlucoseReading{{SiteGlucoseReading: sitemodels.SiteGlucoseReading{Reading: 20, Units: &mmol}}, {SiteGlucoseReading: sitemodels.SiteGlucoseReading{Reading: 6, Units: &mmol}}, {SiteGlucoseReading: sitemodels.SiteGlucoseReading{Reading: 3, Units: &mmol}}, {SiteGlucoseReading: sitemodels.SiteGlucoseReading{Reading: 12, Units: &mmol}}},
 		Minutes:         minutes,
 	}, now)
 
@@ -160,7 +160,7 @@ func TestGraphInTheLocationsTime(t *testing.T) {
 	now := since + 24*time.Hour.Milliseconds()
 	chart := graph(&sitemodels.Summary{
 		Since: since, Units: &mmol, LowAlarm: 3.9, HighAlarm: 10,
-		GlucoseReadings: []*sitemodels.SiteGlucoseReading{{Reading: 6, Units: &mmol, OccurredAt: now}},
+		GlucoseReadings: []*sitemodels.SiteCleanGlucoseReading{{SiteGlucoseReading: sitemodels.SiteGlucoseReading{Reading: 6, Units: &mmol, OccurredAt: now}}},
 	}, now, auckland)
 	chart.Validate()
 	var option map[string]any

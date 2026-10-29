@@ -12,11 +12,12 @@ type Summary struct {
 	LowAlarm  float64 `json:"low_alarm"`
 	HighAlarm float64 `json:"high_alarm"`
 
-	GlucoseReadings []*SiteGlucoseReading `json:"glucose_readings"`
-	InsulinDoses    []*SiteInsulinDose    `json:"insulin_doses"`
-	FoodIntakes     []*SiteFoodIntake     `json:"food_intakes"`
-	TempTargets     []*SiteTempTarget     `json:"temp_targets"`
-	TempBasals      []*SiteTempBasal      `json:"temp_basals"`
+	// GlucoseReadings are cleaned, the same glucose from more than one source kept once
+	GlucoseReadings []*SiteCleanGlucoseReading `json:"glucose_readings"`
+	InsulinDoses    []*SiteInsulinDose         `json:"insulin_doses"`
+	FoodIntakes     []*SiteFoodIntake          `json:"food_intakes"`
+	TempTargets     []*SiteTempTarget          `json:"temp_targets"`
+	TempBasals      []*SiteTempBasal           `json:"temp_basals"`
 
 	// DeviceStatuses is each device's latest status
 	DeviceStatuses []*SiteDeviceStatus `json:"device_statuses"`
