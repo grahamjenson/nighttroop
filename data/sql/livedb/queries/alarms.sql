@@ -35,9 +35,11 @@ SELECT DISTINCT site_id FROM alarms;
 SELECT DISTINCT site_id FROM alarms WHERE alerting = 1 AND snoozed_until > sqlc.arg('Now');
 
 -- name: IdentityAlarms :many
--- An identity's active alarms, the most urgent first, as alarms.Types lists them
+-- An identity's active alarms, and with IncludeSnoozed those snoozed at Now that are not, the most urgent first, as
+-- alarms.Types lists them
 SELECT * FROM alarms
-WHERE site_id = sqlc.arg('SiteID') AND identity_id = sqlc.arg('IdentityID') AND active_since != 0
+WHERE site_id = sqlc.arg('SiteID') AND identity_id = sqlc.arg('IdentityID')
+AND (active_since != 0 OR (CAST(sqlc.arg('IncludeSnoozed') AS BOOLEAN) AND snoozed_until > sqlc.arg('Now')))
 ORDER BY CASE type WHEN 'urgent_low' THEN 0 WHEN 'low' THEN 1 WHEN 'predicted_low' THEN 2 WHEN 'urgent_high' THEN 3
     WHEN 'high' THEN 4 WHEN 'fast_rise' THEN 5 WHEN 'fast_drop' THEN 6 WHEN 'no_data' THEN 7 ELSE 8 END;
 

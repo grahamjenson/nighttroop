@@ -36,7 +36,13 @@ func (s *AlarmsCollection) GetRow(ctx context.Context, collectionTx *siteapiutil
 
 // ToModel is the alarm, not alerting once it is snoozed, before the checker next checks it
 func (s *AlarmsCollection) ToModel(row *livedb.Alarm, _ *httputils.SiteContext) *sitemodels.SiteAlarm {
-	return &sitemodels.SiteAlarm{ID: string(row.Type), Urgent: row.Type.Level() == alarms.Urgent, Alerting: row.Alerting && time.Now().UnixMilli() >= row.SnoozedUntil}
+	now := time.Now().UnixMilli()
+	model := &sitemodels.SiteAlarm{ID: string(row.Type), Urgent: row.Type.Level() == alarms.Urgent, Active: row.ActiveSince != 0,
+		Alerting: row.Alerting && now >= row.SnoozedUntil}
+	if now < row.SnoozedUntil {
+		model.SnoozedUntil = new(row.SnoozedUntil)
+	}
+	return model
 }
 
 func (s *AlarmsCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*livedb.Alarm, error) {

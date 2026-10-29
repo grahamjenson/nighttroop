@@ -226,6 +226,26 @@ func (m *IdentityAlarmsParams) SetIdentityID(v int64) {
 	m.IdentityID = v
 }
 
+// GetIncludeSnoozed returns the IncludeSnoozed value.
+func (m IdentityAlarmsParams) GetIncludeSnoozed() bool {
+	return m.IncludeSnoozed
+}
+
+// SetIncludeSnoozed sets the IncludeSnoozed value and returns the updated IdentityAlarmsParams.
+func (m *IdentityAlarmsParams) SetIncludeSnoozed(v bool) {
+	m.IncludeSnoozed = v
+}
+
+// GetNow returns the Now value.
+func (m IdentityAlarmsParams) GetNow() int64 {
+	return m.Now
+}
+
+// SetNow sets the Now value and returns the updated IdentityAlarmsParams.
+func (m *IdentityAlarmsParams) SetNow(v int64) {
+	m.Now = v
+}
+
 // GetSiteID returns the SiteID value.
 func (m SiteAlarmsParams) GetSiteID() string {
 	return m.SiteID

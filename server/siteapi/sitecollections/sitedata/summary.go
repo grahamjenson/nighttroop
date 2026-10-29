@@ -8,6 +8,7 @@ import (
 
 	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/events"
+	"nighttroop.t1d.nz/data/sql/livedb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_summary_templ"
@@ -42,12 +43,13 @@ const maxDevices = 20
 // maxSwitchMinutes is how long before the summary a profile switch with a duration is looked for, as one still in force
 const maxSwitchMinutes = 7 * 24 * 60
 
-// Watches is whether a change is to something the summary shows, so its events stream tells the summary page to update
+// Watches is whether a change is to something the summary shows, so its events stream tells the summary page to update.
+// An alarm is the identity's own, as the stream sends an identity only its own.
 func (s *SummaryCollection) Watches(event events.Event, _ *httputils.SiteContext) bool {
 	switch event.Model.(type) {
 	case *sitedb.GlucoseReading, *sitedb.InsulinDose, *sitedb.FoodIntake, *sitedb.TempTarget, *sitedb.TempBasal,
 		*sitedb.DeviceReport, *sitedb.ProfileSwitch, *sitedb.ProfilePreset,
-		*sitedb.EventGroupsBundle, *sitedb.ProfilePresetBundle:
+		*sitedb.EventGroupsBundle, *sitedb.ProfilePresetBundle, *livedb.Alarm:
 		return true
 	}
 	return false
@@ -145,6 +147,11 @@ func getSummary(ctx context.Context, tx *siteapiutils.CollectionTx, hours int64,
 		return nil, herr
 	}
 	if herr = addMinutes(ctx, q, summary, siteContext); herr != nil {
+		return nil, herr
+	}
+	alarms, err := tx.Live().IdentityAlarms(ctx, livedb.IdentityAlarmsParams{SiteID: siteContext.SiteID, IdentityID: siteContext.IdentityModel.ID,
+		IncludeSnoozed: true, Now: time.Now().UnixMilli()})
+	if summary.Alarms, herr = apiutils.Searched(alarms, err, "summary alarms", apiutils.WithContext((&AlarmsCollection{}).ToModel, siteContext)); herr != nil {
 		return nil, herr
 	}
 	return summary, nil
