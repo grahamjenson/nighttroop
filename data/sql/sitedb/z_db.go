@@ -24,6 +24,9 @@ func New(db DBTX) *Queries {
 func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	q := Queries{db: db}
 	var err error
+	if q.alarmGlucoseReadingsStmt, err = db.PrepareContext(ctx, alarmGlucoseReadings); err != nil {
+		return nil, fmt.Errorf("error preparing query AlarmGlucoseReadings: %w", err)
+	}
 	if q.allActivitiesStmt, err = db.PrepareContext(ctx, allActivities); err != nil {
 		return nil, fmt.Errorf("error preparing query AllActivities: %w", err)
 	}
@@ -401,6 +404,11 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 
 func (q *Queries) Close() error {
 	var err error
+	if q.alarmGlucoseReadingsStmt != nil {
+		if cerr := q.alarmGlucoseReadingsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing alarmGlucoseReadingsStmt: %w", cerr)
+		}
+	}
 	if q.allActivitiesStmt != nil {
 		if cerr := q.allActivitiesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing allActivitiesStmt: %w", cerr)
@@ -1060,6 +1068,7 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 type Queries struct {
 	db                                          DBTX
 	tx                                          *sql.Tx
+	alarmGlucoseReadingsStmt                    *sql.Stmt
 	allActivitiesStmt                           *sql.Stmt
 	allComponentEventsStmt                      *sql.Stmt
 	allDeviceReportsStmt                        *sql.Stmt
@@ -1190,6 +1199,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
 		db:                                          tx,
 		tx:                                          tx,
+		alarmGlucoseReadingsStmt:                    q.alarmGlucoseReadingsStmt,
 		allActivitiesStmt:                           q.allActivitiesStmt,
 		allComponentEventsStmt:                      q.allComponentEventsStmt,
 		allDeviceReportsStmt:                        q.allDeviceReportsStmt,

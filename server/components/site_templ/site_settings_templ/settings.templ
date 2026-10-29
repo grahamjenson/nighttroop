@@ -44,33 +44,49 @@ type settingField struct {
 // onOff are the options of an alarm, turned on or off
 var onOff = []string{"true", "false"}
 
-// settingFields are the settings the page shows, in order; one without options is typed in
-var settingFields = []settingField{
+// settingsPage is a page of settings, the general ones or the alarms, its inputs' IDs starting with IDPrefix
+type settingsPage struct {
+	ID       string
+	Title    string
+	IDPrefix string
+	Fields   []settingField
+}
+
+var (
+	generalPage = settingsPage{ID: "settings_page", Title: "Settings", IDPrefix: "site--settings--", Fields: generalFields}
+	alarmsPage  = settingsPage{ID: "alarm_settings_page", Title: "Alarms", IDPrefix: "site--alarms--", Fields: alarmFields}
+)
+
+// generalFields and alarmFields are the settings each page shows, in order; one without options is typed in
+var generalFields = []settingField{
 	{Name: "units", Label: "Units", Options: []string{"mmol/L", "mg/dL"}},
 	{Name: "timezone", Label: "Timezone"},
 	{Name: "language", Label: "Language"},
 	{Name: "date_format", Label: "Date Format", Options: settings.DateFormats},
 	{Name: "time_format", Label: "Time Format", Options: settings.TimeFormats},
 	{Name: "week_start_day", Label: "Week Starts On", Options: settings.WeekStartDays},
-	{Name: "alarm_urgent_low_enabled", Label: "Urgent Low Alarm", Options: onOff, Section: "Alarms"},
+}
+
+var alarmFields = []settingField{
+	{Name: "alarm_urgent_low_enabled", Label: "Urgent Low Alarm", Options: onOff, Section: "Lows"},
 	{Name: "alarm_urgent_low", Label: "Urgent Low Under", Glucose: true},
 	{Name: "alarm_low_enabled", Label: "Low Alarm", Options: onOff},
 	{Name: "alarm_low", Label: "Low Under", Glucose: true},
 	{Name: "alarm_low_minutes", Label: "Low For Minutes"},
 	{Name: "alarm_low_prediction_enabled", Label: "Predicted Low Alarm", Options: onOff},
 	{Name: "alarm_low_prediction_minutes", Label: "Predicts Minutes Ahead"},
-	{Name: "alarm_high_enabled", Label: "High Alarm", Options: onOff},
+	{Name: "alarm_high_enabled", Label: "High Alarm", Options: onOff, Section: "Highs"},
 	{Name: "alarm_high", Label: "High Over", Glucose: true},
 	{Name: "alarm_high_minutes", Label: "High For Minutes"},
 	{Name: "alarm_urgent_high_enabled", Label: "Urgent High Alarm", Options: onOff},
 	{Name: "alarm_urgent_high", Label: "Urgent High Over", Glucose: true},
-	{Name: "alarm_fast_rise_enabled", Label: "Fast Rise Alarm", Options: onOff},
+	{Name: "alarm_fast_rise_enabled", Label: "Fast Rise Alarm", Options: onOff, Section: "Fast Changes"},
 	{Name: "alarm_fast_rise", Label: "Rises By", Glucose: true},
 	{Name: "alarm_fast_rise_minutes", Label: "Rises Within Minutes"},
 	{Name: "alarm_fast_drop_enabled", Label: "Fast Drop Alarm", Options: onOff},
 	{Name: "alarm_fast_drop", Label: "Drops By", Glucose: true},
 	{Name: "alarm_fast_drop_minutes", Label: "Drops Within Minutes"},
-	{Name: "alarm_no_data_enabled", Label: "No Data Alarm", Options: onOff},
+	{Name: "alarm_no_data_enabled", Label: "No Data Alarm", Options: onOff, Section: "No Data"},
 	{Name: "alarm_no_data_minutes", Label: "No Data For Minutes"},
 }
 
@@ -99,13 +115,13 @@ func (c settingsColumn) value(name string) *string {
 }
 
 // settingsColumns are the site's settings for an admin, then the signed in identity's own
-func settingsColumns(site *sitemodels.Settings, yours *sitemodels.Settings) []settingsColumn {
+func settingsColumns(page settingsPage, site *sitemodels.Settings, yours *sitemodels.Settings) []settingsColumn {
 	columns := []settingsColumn{}
 	if site != nil {
-		columns = append(columns, settingsColumn{"Site", "Save Site Settings", site, "site--settings--site--", "site--settings--site-form", "/settings/site", "Default"})
+		columns = append(columns, settingsColumn{"Site", "Save Site Settings", site, page.IDPrefix + "site--", page.IDPrefix + "site-form", "/settings/site", "Default"})
 	}
 	if yours != nil {
-		columns = append(columns, settingsColumn{"Yours", "Save Your Settings", yours, "site--settings--identity--", "site--settings--identity-form", "/settings/identity", "Site setting"})
+		columns = append(columns, settingsColumn{"Yours", "Save Your Settings", yours, page.IDPrefix + "identity--", page.IDPrefix + "identity-form", "/settings/identity", "Site setting"})
 	}
 	return columns
 }
@@ -113,10 +129,19 @@ func settingsColumns(site *sitemodels.Settings, yours *sitemodels.Settings) []se
 // SettingsPage shows the site's settings beside an admin's own, or just the signed in identity's.
 // Each column saves with its own form. A setting left empty follows the level above:
 // the defaults for the site, the site's for an identity.
+// SettingsPage is the general settings, and AlarmSettingsPage the alarms: the site's to an admin, beside their own
 templ SettingsPage(site *sitemodels.Settings, yours *sitemodels.Settings) {
-	{{ columns := settingsColumns(site, yours) }}
-	<div id="settings_page" class="mx-auto max-w-4xl space-y-6">
-		@heading.Page("Settings") {
+	@settingsPageOf(generalPage, site, yours)
+}
+
+templ AlarmSettingsPage(site *sitemodels.Settings, yours *sitemodels.Settings) {
+	@settingsPageOf(alarmsPage, site, yours)
+}
+
+templ settingsPageOf(page settingsPage, site *sitemodels.Settings, yours *sitemodels.Settings) {
+	{{ columns := settingsColumns(page, site, yours) }}
+	<div id={ page.ID } class="mx-auto max-w-4xl space-y-6">
+		@heading.Page(page.Title) {
 			if site != nil {
 				The site's settings are for everyone on this site. Yours change it just for you; anything left on the site setting follows the site.
 			} else {
@@ -138,7 +163,7 @@ templ SettingsPage(site *sitemodels.Settings, yours *sitemodels.Settings) {
 			for _, column := range columns {
 				<span class="text-sm font-semibold">{ column.Title }</span>
 			}
-			for _, field := range settingFields {
+			for _, field := range page.Fields {
 				if field.Section != "" {
 					<h2 class="col-span-full mt-2 border-t border-gray-200 pt-4 text-sm font-semibold text-brand-night">{ field.Section }</h2>
 				}
