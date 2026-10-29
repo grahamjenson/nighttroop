@@ -23,7 +23,14 @@ func ScreenshotPage(page playwright.Page, foldername string, testPath string, na
 	if _, err := page.Evaluate("document.fonts.ready"); err != nil {
 		return "", err
 	}
-	_, err := page.Screenshot(playwright.PageScreenshotOptions{
+	// A full page screenshot draws the sticky header where the window is scrolled to, part way down the page, so it is
+	// taken from the top of the page, with the header at the top, and the page scrolled back after
+	scrolled, err := page.Evaluate("() => { const y = window.scrollY; window.scrollTo(0, 0); return y; }")
+	if err != nil {
+		return "", err
+	}
+	defer page.Evaluate("y => window.scrollTo(0, y)", scrolled)
+	_, err = page.Screenshot(playwright.PageScreenshotOptions{
 		Path:       playwright.String(filepath.Join(dir, name+".png")),
 		FullPage:   playwright.Bool(true),
 		Animations: playwright.ScreenshotAnimationsDisabled,

@@ -1,0 +1,25 @@
+INCLUDE steps/new_site_admin.steps
+
+// Virtual sync fills the summary, so it is longer than the window
+CLICK #site--settings-menu
+CLICK #site--settings--sync-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-sync--enable
+CLICK #site--settings--virtual-sync--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Sync Updated
+RUN_BACKGROUND_JOBS
+GOTO /
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--summary--glucose--reading
+
+// Scrolled down the page, the top bar is still there to use, with its menu working
+SCROLL 500
+ASSERT_VISIBLE #site--nav--home
+CLICK #site--settings-menu
+ASSERT_VISIBLE #site--data--glucose-button
+PRESS Escape
+
+// A screenshot of the scrolled page still shows the top bar at the top of the page, not part way down it
+SCROLL 100
+SCREENSHOT top_bar_scrolled
