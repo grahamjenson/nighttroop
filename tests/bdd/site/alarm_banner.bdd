@@ -9,9 +9,10 @@ CLICK #site--settings--virtual-sync--submit
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Sync Updated
 
-// The admin turns on an urgent high over 5.6 mmol/L for themselves
+// The admin turns on an urgent high over 5.6 mmol/L for themselves, with their high under it
 GOTO /settings/alarms
 ASSERT_STATUS 200
+INPUT #site--alarms--identity--alarm_high 5.0
 INPUT #site--alarms--identity--alarm_urgent_high_enabled true
 INPUT #site--alarms--identity--alarm_urgent_high 5.6
 CLICK #site--alarms--identity--save

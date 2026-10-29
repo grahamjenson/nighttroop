@@ -380,11 +380,12 @@ var AlarmNoDataEnabled = &SettingDefinition[bool]{
 	ParseFunc:  ParseBool,
 }
 
+// AlarmNoDataMinutes is at least 10 minutes, as a reading comes every 5 and fewer would alarm between them
 var AlarmNoDataMinutes = &SettingDefinition[int64]{
 	Identifier:   "alarm_no_data_minutes",
 	TypeString:   "number",
 	Default:      20,
-	ValidateFunc: Range(int64(0), MaxAlarmMinutes),
+	ValidateFunc: Range(int64(10), MaxAlarmMinutes),
 	ParseFunc:    ParseInt,
 }
 

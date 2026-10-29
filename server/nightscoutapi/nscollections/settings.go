@@ -218,6 +218,9 @@ func UpdateIndividualSetting(ctx context.Context, siteContext *httputils.SiteCon
 		slog.Error("failed to set setting in identity settings map", "error", err, "collection", "settings")
 		return nil, nsutils.BadDataBodyErrorWithHint(err.Error())
 	}
+	if err := settingsMap.Consistent(); err != nil {
+		return nil, nsutils.BadDataBodyErrorWithHint(err.Error())
+	}
 
 	params := &controldb.UpdateSiteIdentitySettingsParams{
 		ID:     siteContext.IdentityModel.ID,
