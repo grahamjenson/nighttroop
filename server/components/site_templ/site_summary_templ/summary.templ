@@ -80,6 +80,14 @@ func treatments(s *sitemodels.Summary) []treatment {
 	return list
 }
 
+// ago is how long ago ms was, or a dash when it is not set
+func ago(ms *int64) string {
+	if ms == nil {
+		return "–"
+	}
+	return display.TimeAgo(*ms, time.Now())
+}
+
 func orDash(v *string) string {
 	if v == nil {
 		return "–"
@@ -163,6 +171,16 @@ templ summaryContent(summary *sitemodels.Summary) {
 		@tile("site--summary--reservoir", "Reservoir", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.PumpReservoir }, " U"), icon.Gauge)
 		@tile("site--summary--phone-battery", "Phone battery", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.DeviceBatteryPercent }, "%"), icon.Smartphone)
 	</div>
+	<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+		@tile("site--summary--time-in-range", "Time in range", value(summary.Today.TimeInRange, "%"), icon.Target) {
+			@yesterday("site--summary--time-in-range--yesterday", value(summary.Yesterday.TimeInRange, "%"))
+		}
+		@tile("site--summary--total-daily-dose", "Total daily dose", value(&summary.Today.TotalDailyDose, " U"), icon.Droplet) {
+			@yesterday("site--summary--total-daily-dose--yesterday", value(&summary.Yesterday.TotalDailyDose, " U"))
+		}
+		@tile("site--summary--sensor-started", "Sensor started", ago(summary.SensorStartedAt), icon.Activity)
+		@tile("site--summary--site-changed", "Site changed", ago(summary.SiteChangedAt), icon.Bandage)
+	</div>
 	<section class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
 		@Graph(summary)
 	</section>
@@ -225,7 +243,13 @@ templ tile(id, label, text string, ic func(...icon.Props) templ.Component) {
 			{ label }
 		</div>
 		<div id={ id } class="mt-1 text-2xl font-bold tabular-nums text-gray-900">{ text }</div>
+		{ children... }
 	</div>
+}
+
+// yesterday is a day tile's value for yesterday, under today's
+templ yesterday(id, text string) {
+	<div id={ id } class="text-xs text-gray-500">Yesterday { text }</div>
 }
 
 // deviceCard is a device's latest status; clicking it opens all its details

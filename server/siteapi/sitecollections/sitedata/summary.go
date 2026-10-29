@@ -14,6 +14,7 @@ import (
 	"nighttroop.t1d.nz/server/components/site_templ/site_summary_templ"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -48,7 +49,7 @@ const maxSwitchMinutes = 7 * 24 * 60
 func (s *SummaryCollection) Watches(event events.Event, _ *httputils.SiteContext) bool {
 	switch event.Model.(type) {
 	case *sitedb.GlucoseReading, *sitedb.InsulinDose, *sitedb.FoodIntake, *sitedb.TempTarget, *sitedb.TempBasal,
-		*sitedb.DeviceReport, *sitedb.ProfileSwitch, *sitedb.ProfilePreset,
+		*sitedb.DeviceReport, *sitedb.ProfileSwitch, *sitedb.ProfilePreset, *sitedb.ComponentEvent,
 		*sitedb.EventGroupsBundle, *sitedb.ProfilePresetBundle, *livedb.Alarm:
 		return true
 	}
@@ -149,6 +150,12 @@ func getSummary(ctx context.Context, tx *siteapiutils.CollectionTx, hours int64,
 	if herr = addMinutes(ctx, q, summary, siteContext); herr != nil {
 		return nil, herr
 	}
+	if herr = addDays(ctx, q, summary, siteContext); herr != nil {
+		return nil, herr
+	}
+	if herr = addChanges(ctx, q, summary); herr != nil {
+		return nil, herr
+	}
 	alarms, err := tx.Live().IdentityAlarms(ctx, livedb.IdentityAlarmsParams{SiteID: siteContext.SiteID, IdentityID: siteContext.IdentityModel.ID,
 		IncludeSnoozed: true, Now: time.Now().UnixMilli()})
 	if summary.Alarms, herr = apiutils.Searched(alarms, err, "summary alarms", apiutils.WithContext((&AlarmsCollection{}).ToModel, siteContext)); herr != nil {
@@ -157,34 +164,97 @@ func getSummary(ctx context.Context, tx *siteapiutils.CollectionTx, hours int64,
 	return summary, nil
 }
 
-// addMinutes works out the targets and basal in force each minute of the summary, from the profiles, profile switches,
-// temp targets and temp basals in force through it, including those that started before it
-func addMinutes(ctx context.Context, q *sitedb.Queries, summary *sitemodels.Summary, siteContext *httputils.SiteContext) *apiutils.HTTPError {
-	since, now, excludeDeleted := summary.Since, time.Now().UnixMilli(), false
-	defaults, err := q.SearchSummaryDefaultProfiles(ctx, sitedb.SearchSummaryDefaultProfilesParams{Since: since, Until: now, Limit: maxRows})
+// addMinutes works out the targets and basal in force each minute of the summary
+func addMinutes(ctx context.Context, q *sitedb.Queries, summary *sitemodels.Summary, siteContext *httputils.SiteContext) (herr *apiutils.HTTPError) {
+	summary.Minutes, herr = summaryMinutes(ctx, q, summary.Since, time.Now().UnixMilli(), summary.Units, siteContext, summary.TempTargets, summary.TempBasals)
+	return herr
+}
+
+// summaryMinutes are the targets and basal in force each minute from since until until, from the profiles, profile
+// switches, temp targets and temp basals in force through it. The temp targets and basals from since are given, and
+// those that started before it are looked up.
+func summaryMinutes(ctx context.Context, q *sitedb.Queries, since, until int64, units *consts.Units, siteContext *httputils.SiteContext, targets []*sitemodels.SiteTempTarget, basals []*sitemodels.SiteTempBasal) ([]sitemodels.SummaryMinute, *apiutils.HTTPError) {
+	excludeDeleted := false
+	defaults, err := q.SearchSummaryDefaultProfiles(ctx, sitedb.SearchSummaryDefaultProfilesParams{Since: since, Until: until, Limit: maxRows})
 	if err != nil {
 		slog.Error("Error searching summary profiles", "error", err)
-		return apiutils.ErrInternalServerError
+		return nil, apiutils.ErrInternalServerError
 	}
-	switches, err := q.SearchSummaryProfileSwitches(ctx, sitedb.SearchSummaryProfileSwitchesParams{Since: since, Until: now, Earliest: since - maxSwitchMinutes*60_000, Limit: maxRows})
+	switches, err := q.SearchSummaryProfileSwitches(ctx, sitedb.SearchSummaryProfileSwitchesParams{Since: since, Until: until, Earliest: since - maxSwitchMinutes*60_000, Limit: maxRows})
 	if err != nil {
 		slog.Error("Error searching summary profile switches", "error", err)
-		return apiutils.ErrInternalServerError
+		return nil, apiutils.ErrInternalServerError
 	}
 	targetsSince, basalsSince, before := since-maxTempTargetMinutes*60_000, since-maxTempBasalMinutes*60_000, since-1
 	earlierTargets, err := q.SearchTempTargets(ctx, sitedb.SearchTempTargetsParams{DateGTE: &targetsSince, DateLTE: &before, IncludeDeleted: &excludeDeleted, Limit: maxRows})
-	targets, herr := apiutils.Searched(earlierTargets, err, "summary temp targets", apiutils.WithContext(sitemodels.TempTargetFromDB, siteContext))
+	earlier, herr := apiutils.Searched(earlierTargets, err, "summary temp targets", apiutils.WithContext(sitemodels.TempTargetFromDB, siteContext))
 	if herr != nil {
-		return herr
+		return nil, herr
 	}
 	earlierBasals, err := q.SearchTempBasals(ctx, sitedb.SearchTempBasalsParams{DateGTE: &basalsSince, DateLTE: &before, IncludeDeleted: &excludeDeleted, Limit: maxRows})
-	basals, herr := apiutils.Searched(earlierBasals, err, "summary temp basals", sitemodels.TempBasalFromDB)
+	earlierBasal, herr := apiutils.Searched(earlierBasals, err, "summary temp basals", sitemodels.TempBasalFromDB)
 	if herr != nil {
-		return herr
+		return nil, herr
 	}
 	slices.Reverse(defaults)
 	slices.Reverse(switches)
-	summary.Minutes = sitemodels.SummaryMinutes(since, now, summary.Units, siteContext.GetSettings().Location(), defaults, switches,
-		append(targets, summary.TempTargets...), append(basals, summary.TempBasals...))
+	return sitemodels.SummaryMinutes(since, until, units, siteContext.GetSettings().Location(), defaults, switches,
+		append(earlier, targets...), append(earlierBasal, basals...)), nil
+}
+
+// addDays works out today's and yesterday's time in range and total daily dose, from midnight in the settings'
+// timezone. A summary over both days has what they need, and a shorter one looks it up from yesterday.
+func addDays(ctx context.Context, q *sitedb.Queries, summary *sitemodels.Summary, siteContext *httputils.SiteContext) *apiutils.HTTPError {
+	now := time.Now().In(siteContext.GetSettings().Location())
+	midnight := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	today, yesterday := midnight.UnixMilli(), midnight.AddDate(0, 0, -1).UnixMilli()
+	readings, doses, minutesSince, minutes := summary.GlucoseReadings, summary.InsulinDoses, summary.Since, summary.Minutes
+	if summary.Since > yesterday {
+		var err error
+		var herr *apiutils.HTTPError
+		if readings, err = cleanGlucoseReadings(ctx, q, yesterday, nil, siteContext); err != nil {
+			slog.Error("Error searching summary day glucose readings", "error", err)
+			return apiutils.ErrInternalServerError
+		}
+		excludeDeleted := false
+		dayDoses, err := q.SearchInsulinDoses(ctx, sitedb.SearchInsulinDosesParams{DateGTE: &yesterday, IncludeDeleted: &excludeDeleted, Limit: maxRows})
+		if doses, herr = apiutils.Searched(dayDoses, err, "summary day insulin doses", sitemodels.InsulinDoseFromDB); herr != nil {
+			return herr
+		}
+		dayBasals, err := q.SearchTempBasals(ctx, sitedb.SearchTempBasalsParams{DateGTE: &yesterday, IncludeDeleted: &excludeDeleted, Limit: maxRows})
+		basals, herr := apiutils.Searched(dayBasals, err, "summary day temp basals", sitemodels.TempBasalFromDB)
+		if herr != nil {
+			return herr
+		}
+		// Only the basal is used, so the temp targets are left out
+		minutesSince = yesterday
+		if minutes, herr = summaryMinutes(ctx, q, yesterday, now.UnixMilli(), summary.Units, siteContext, nil, basals); herr != nil {
+			return herr
+		}
+	}
+	summary.Today = sitemodels.NewSummaryDay(today, now.UnixMilli(), summary.LowAlarm, summary.HighAlarm, readings, doses, minutesSince, minutes)
+	summary.Yesterday = sitemodels.NewSummaryDay(yesterday, today, summary.LowAlarm, summary.HighAlarm, readings, doses, minutesSince, minutes)
 	return nil
+}
+
+// addChanges finds when the latest CGM sensor was started or changed, and when the pump site was last changed
+func addChanges(ctx context.Context, q *sitedb.Queries, summary *sitemodels.Summary) *apiutils.HTTPError {
+	excludeDeleted := false
+	latest := func(types string) (*int64, *apiutils.HTTPError) {
+		events, err := q.SearchComponentEvents(ctx, sitedb.SearchComponentEventsParams{TypeIn: &types, IncludeDeleted: &excludeDeleted, Limit: 1})
+		if err != nil {
+			slog.Error("Error searching summary component events", "error", err)
+			return nil, apiutils.ErrInternalServerError
+		}
+		if len(events) == 0 {
+			return nil, nil
+		}
+		return &events[0].OccurredAt, nil
+	}
+	var herr *apiutils.HTTPError
+	if summary.SensorStartedAt, herr = latest(`["Sensor Start","Sensor Change"]`); herr != nil {
+		return herr
+	}
+	summary.SiteChangedAt, herr = latest(`["Site Change"]`)
+	return herr
 }
