@@ -100,8 +100,8 @@ func getSummary(ctx context.Context, tx *siteapiutils.CollectionTx, hours int64,
 	since := time.Now().Add(-time.Duration(hours) * time.Hour).UnixMilli()
 	summary := &sitemodels.Summary{Hours: hours, Since: since, Units: sitemodels.ContextUnits(siteContext)}
 	settings := siteContext.GetSettings()
-	summary.LowAlarm = summary.Units.FromMGDL(float64(*settings.GetRangeLowMgdl()))
-	summary.HighAlarm = summary.Units.FromMGDL(float64(*settings.GetRangeHighMgdl()))
+	summary.RangeLow = summary.Units.FromMGDL(float64(*settings.GetRangeLowMgdl()))
+	summary.RangeHigh = summary.Units.FromMGDL(float64(*settings.GetRangeHighMgdl()))
 	// A set IncludeDeleted leaves out deleted rows in these searches
 	excludeDeleted := false
 
@@ -232,8 +232,8 @@ func addDays(ctx context.Context, q *sitedb.Queries, summary *sitemodels.Summary
 			return herr
 		}
 	}
-	summary.Today = sitemodels.NewSummaryDay(today, now.UnixMilli(), summary.LowAlarm, summary.HighAlarm, readings, doses, minutesSince, minutes)
-	summary.Yesterday = sitemodels.NewSummaryDay(yesterday, today, summary.LowAlarm, summary.HighAlarm, readings, doses, minutesSince, minutes)
+	summary.Today = sitemodels.NewSummaryDay(today, now.UnixMilli(), summary.RangeLow, summary.RangeHigh, readings, doses, minutesSince, minutes)
+	summary.Yesterday = sitemodels.NewSummaryDay(yesterday, today, summary.RangeLow, summary.RangeHigh, readings, doses, minutesSince, minutes)
 	return nil
 }
 
