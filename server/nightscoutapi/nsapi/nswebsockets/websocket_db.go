@@ -9,6 +9,7 @@ import (
 
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -67,6 +68,10 @@ func (ws *Websocket) dbAdd(ctx context.Context, collection nsutils.Collection, _
 			return ackResult("Invalid data")
 		}
 		documents = []map[string]any{document}
+	}
+	// The write counted once against the rate limits, so a list is capped as a batch POST is
+	if len(documents) > consts.MaxBatchRecords {
+		return ackResult("Too many records")
 	}
 	stored := []map[string]any{}
 	for _, document := range documents {
