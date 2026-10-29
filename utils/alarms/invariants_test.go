@@ -19,7 +19,7 @@ import (
 //
 // A failure prints the timeline that made it, which can be pasted into a test in alarms_test.go to debug it.
 func TestInvariants(t *testing.T) {
-	const configText = "urgent_low 56, low 72 5m, urgent_high 270, high 180 30m, no_data 20m"
+	const configText = "urgent_low 56, low 72 5m, urgent_high 270, high 180 30m, fast_rise 18 15m, fast_drop 18 15m, no_data 20m"
 	config := parseConfig(t, configText)
 	turnedOn := map[Type]Alarm{}
 	for _, alarm := range config {
@@ -168,9 +168,23 @@ func oracle(alarm Alarm, readings []Reading, now int64) bool {
 	var mgdl float64
 	var minutes int64
 	under := false
+	// changed is from the oldest reading within minutes of the newest to the newest
+	changed := func(minutes int64) float64 {
+		oldest := newest
+		for _, reading := range readings {
+			if newest.At-reading.At <= minutes*minute && reading.At < oldest.At {
+				oldest = reading
+			}
+		}
+		return newest.Mgdl - oldest.Mgdl
+	}
 	switch a := alarm.(type) {
 	case NoDataAlarm:
 		return now-newest.At >= a.Minutes*minute
+	case FastRiseAlarm:
+		return changed(a.Minutes) >= a.Mgdl
+	case FastDropAlarm:
+		return -changed(a.Minutes) >= a.Mgdl
 	case UrgentLowAlarm:
 		mgdl, under = a.Mgdl, true
 	case LowAlarm:

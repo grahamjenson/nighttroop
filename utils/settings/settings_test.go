@@ -100,3 +100,12 @@ func TestDeviceBatteryLowDevices(t *testing.T) {
 		require.Equal(t, tt.want, *got, tt.name)
 	}
 }
+
+// A fast rise or drop is measured over at least 5 minutes, as no change is seen over none
+func TestFastRiseAndDropMinutes(t *testing.T) {
+	for _, minutes := range []*settings.SettingDefinition[int64]{settings.AlarmFastRiseMinutes, settings.AlarmFastDropMinutes} {
+		require.Error(t, minutes.ValidateFunc(4), minutes.Identifier)
+		require.NoError(t, minutes.ValidateFunc(5), minutes.Identifier)
+		require.NoError(t, minutes.ValidateFunc(settings.MaxAlarmMinutes), minutes.Identifier)
+	}
+}

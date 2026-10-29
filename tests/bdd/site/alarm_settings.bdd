@@ -9,6 +9,10 @@ ASSERT_TEXT_VISIBLE Urgent Low Under (mmol/L)
 ASSERT_TEXT_EQUALS #site--settings--site--alarm_urgent_low_enabled>option[value=""] Default (Off)
 ASSERT_VISIBLE #site--settings--site--alarm_urgent_low[placeholder="Default (3.1)"]
 ASSERT_VISIBLE #site--settings--site--alarm_low_minutes[placeholder="Default (5)"]
+// A fast rise or drop is how far glucose goes, also in the settings' units: 18 mg/dL is 1.0 mmol/L
+ASSERT_TEXT_VISIBLE Rises By (mmol/L)
+ASSERT_VISIBLE #site--settings--site--alarm_fast_rise[placeholder="Default (1.0)"]
+ASSERT_VISIBLE #site--settings--site--alarm_fast_drop_minutes[placeholder="Default (15)"]
 SCREENSHOT alarm_settings
 
 // The site turns on its urgent low at 3.5 mmol/L
@@ -56,6 +60,26 @@ ASSERT_TEXT_EQUALS #site--settings--identity--alarm_low_enabled>option[selected]
 ASSERT_VISIBLE #site--settings--identity--alarm_low[value="80"]
 ASSERT_VISIBLE #site--settings--identity--alarm_low_minutes[value="10"]
 SCREENSHOT alarm_settings_identity
+
+// The admin turns on a fast drop, of 27 mg/dL within 10 minutes
+INPUT #site--settings--identity--alarm_fast_drop_enabled true
+INPUT #site--settings--identity--alarm_fast_drop 27
+INPUT #site--settings--identity--alarm_fast_drop_minutes 10
+CLICK #site--settings--identity--save
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Settings Saved
+// Opened afresh, at the top of the page without the saved toasts
+GOTO /settings
+ASSERT_STATUS 200
+ASSERT_TEXT_EQUALS #site--settings--identity--alarm_fast_drop_enabled>option[selected] On
+ASSERT_VISIBLE #site--settings--identity--alarm_fast_drop[value="27"]
+ASSERT_VISIBLE #site--settings--identity--alarm_fast_drop_minutes[value="10"]
+SCREENSHOT alarm_settings_fast_drop
+
+// A fast drop measured over less than 5 minutes is refused
+INPUT #site--settings--identity--alarm_fast_drop_minutes 4
+CLICK #site--settings--identity--save
+ASSERT_STATUS 400
 
 // A glucose that is not a number is refused
 INPUT #site--settings--identity--alarm_low low
