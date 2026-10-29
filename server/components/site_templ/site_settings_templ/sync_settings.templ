@@ -74,13 +74,13 @@ templ DexcomSyncForm(dexcomSyncSettings *sitemodels.SyncSource) {
 						Class: "flex items-start gap-2 justify-center",
 					}) {
 						@checkbox.Checkbox(checkbox.Props{
-							ID:      "dexcomSync",
+							ID:      "site--settings--dexcom-sync--enable",
 							Name:    "enabled",
 							Checked: dexcomSyncSettings.IsEnabled(),
 							Class:   "h-4 w-4 rounded border-gray-600 bg-white",
 						})
 						@form.Label(form.LabelProps{
-							For:   "dexcomSync",
+							For:   "site--settings--dexcom-sync--enable",
 							Class: "item-center flex cursor-pointer gap-2",
 						}) {
 							Enable Sync
@@ -89,17 +89,17 @@ templ DexcomSyncForm(dexcomSyncSettings *sitemodels.SyncSource) {
 				</div>
 				@SyncErrors(dexcomSyncSettings, "dexcom")
 				<!-- Fields -->
-				<div id="dex-fields" class="grid gap-4 md:grid-cols-12">
+				<div class="grid gap-4 md:grid-cols-12">
 					<!-- Username -->
 					<div class="md:col-span-5">
 						@form.Item(form.ItemProps{}) {
 							@form.Label(form.LabelProps{
-								For: "dex_url_or_username",
+								For: "site--settings--dexcom-sync--username",
 							}) {
 								Dexcom Username
 							}
 							@input.Input(input.Props{
-								ID:       "dex_url_or_username",
+								ID:       "site--settings--dexcom-sync--username",
 								Type:     "text",
 								Name:     "url_or_username",
 								Required: true,
@@ -116,12 +116,12 @@ templ DexcomSyncForm(dexcomSyncSettings *sitemodels.SyncSource) {
 					<div class="md:col-span-4">
 						@form.Item(form.ItemProps{}) {
 							@form.Label(form.LabelProps{
-								For: "dex_password",
+								For: "site--settings--dexcom-sync--password",
 							}) {
 								Dexcom Password
 							}
 							@input.Input(input.Props{
-								ID:       "dex_password",
+								ID:       "site--settings--dexcom-sync--password",
 								Type:     "password",
 								Name:     "password",
 								Required: true,
@@ -138,32 +138,21 @@ templ DexcomSyncForm(dexcomSyncSettings *sitemodels.SyncSource) {
 					<div class="md:col-span-3">
 						@form.Item(form.ItemProps{}) {
 							@form.Label(form.LabelProps{
-								For: "dex_region",
+								For: "site--settings--dexcom-sync--region",
 							}) {
 								Dexcom Region
 							}
-							<div class="flex h-9 items-center gap-3 rounded-md border border-input px-3 shadow-xs">
-								@checkbox.Checkbox(checkbox.Props{
-									ID:      "dex_region",
-									Name:    "region",
-									Value:   "US",
-									Checked: dexcomSyncSettings.IsUSARegion(),
-									Class:   "h-4 w-4 rounded border-gray-600 bg-white",
-								})
-								<!-- first region value wins, so unchecked falls through to OUS -->
-								<input type="hidden" name="region" value="OUS"/>
-								@form.Label(form.LabelProps{
-									For: "dex_region",
-								}) {
-									USA
-								}
-							</div>
+							<select id="site--settings--dexcom-sync--region" name="region" class="h-9 w-full rounded-md border border-input bg-white px-3 text-sm shadow-xs">
+								<option value="OUS" selected?={ !dexcomSyncSettings.IsUSARegion() }>Outside the United States</option>
+								<option value="US" selected?={ dexcomSyncSettings.IsUSARegion() }>United States</option>
+							</select>
 						}
 					</div>
 				</div>
 				<!-- Footer Actions -->
 				<div class="mt-6 flex flex-col gap-3 border-t border-gray-100 pt-4 md:flex-row md:items-center md:justify-between">
 					@button.Button(button.Props{
+						ID:      "site--settings--dexcom-sync--delete",
 						Type:    "button",
 						Variant: button.VariantDestructive,
 						Attributes: templ.Attributes{
@@ -179,6 +168,7 @@ templ DexcomSyncForm(dexcomSyncSettings *sitemodels.SyncSource) {
 					<div class="flex gap-3">
 						@BackfillButton("dexcom")
 						@button.Button(button.Props{
+							ID:   "site--settings--dexcom-sync--submit",
 							Type: button.TypeSubmit,
 						}) {
 							Save
