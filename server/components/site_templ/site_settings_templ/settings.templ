@@ -168,6 +168,9 @@ templ settingsPageOf(page settingsPage, site *sitemodels.Settings, yours *sitemo
 					<h2 class="col-span-full mt-2 border-t border-gray-200 pt-4 text-sm font-semibold text-brand-night">{ field.Section }</h2>
 				}
 				<span class="text-sm font-medium">{ fieldLabel(ctx, field) }</span>
+				if field.Name == "timezone" {
+					@timezoneSuggestions()
+				}
 				for _, column := range columns {
 					@settingControl(column, field)
 				}
@@ -200,14 +203,45 @@ templ settingControl(column settingsColumn, field settingField) {
 			}
 		</select>
 	} else {
-		@input.Input(input.Props{
-			ID:          column.IDPrefix + field.Name,
-			Name:        field.Name,
-			Value:       settingValue(value),
-			Placeholder: placeholder,
-			Attributes:  templ.Attributes{"form": column.FormID, "aria-label": label},
-		})
+		{{ attributes := templ.Attributes{"form": column.FormID, "aria-label": label} }}
+		if field.Name == "timezone" {
+			{{ attributes["list"] = timezonesID }}
+		}
+		<div class="space-y-1">
+			@input.Input(input.Props{
+				ID:          column.IDPrefix + field.Name,
+				Name:        field.Name,
+				Value:       settingValue(value),
+				Placeholder: placeholder,
+				Attributes:  attributes,
+			})
+			if field.Name == "timezone" {
+				@button.Button(button.Props{
+					ID:         column.IDPrefix + "timezone--browser",
+					Variant:    button.VariantLink,
+					Class:      "h-auto justify-start whitespace-normal p-0 text-left text-xs",
+					Attributes: templ.Attributes{"hx-on:click": "this.parentElement.querySelector('input').value = Intl.DateTimeFormat().resolvedOptions().timeZone"},
+				}) {
+					Use this browser's timezone
+				}
+			}
+		</div>
 	}
+}
+
+// timezonesID is the list of timezones the timezone inputs suggest as they are typed
+const timezonesID = "site--settings--timezones"
+
+// timezoneSuggestions fills the timezones suggested with the browser's, its own first, as there are too many to pick from
+templ timezoneSuggestions() {
+	<datalist id={ timezonesID }></datalist>
+	<script type="text/javascript">
+		(() => {
+			const own = Intl.DateTimeFormat().resolvedOptions().timeZone
+			const zones = [own, ...Intl.supportedValuesOf("timeZone").filter((zone) => zone !== own)]
+			document.getElementById("site--settings--timezones").append(...zones.map((zone) => new Option(zone === own ? "This browser's timezone" : zone, zone)))
+		})()
+	</script>
 }
 
 templ SettingsSaved() {
