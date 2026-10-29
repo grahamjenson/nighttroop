@@ -24,7 +24,7 @@ CREATE INDEX food_presets_updated_at_idx ON food_presets(updated_at);
 
 CREATE INDEX glucose_readings_occurred_at_idx ON glucose_readings(occurred_at);
 
-CREATE INDEX glucose_readings_reading_type_idx ON glucose_readings(reading_type);
+CREATE INDEX glucose_readings_reading_type_occurred_at_idx ON glucose_readings(reading_type, occurred_at);
 
 CREATE INDEX glucose_readings_updated_at_idx ON glucose_readings(updated_at);
 
