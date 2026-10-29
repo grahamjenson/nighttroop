@@ -511,11 +511,13 @@ ASSERT_EQUALS "Name" "@0.name"
 # 	Activity:       activity,
 # 	ComponentEvent: componentEvent,
 # }
+// A minute ago, so it is never taken for put_create_uuid_treatments_v1's Note, which the server dated now: a Note at
+// the same millisecond is a duplicate, and that one lands on a whole second about once in a thousand runs
 NAME create_full_note_v1
 POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {
   "eventType": "Note",
-  "created_at": "{{ time 0 }}",
+  "created_at": "{{ time 1 }}",
   "notes": "Note",
   "reason": "reason",
   
