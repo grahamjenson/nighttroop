@@ -29,4 +29,12 @@ type Summary struct {
 
 	// Minutes are the targets and basal in force each minute from Since, the first at Since and each a minute after
 	Minutes []SummaryMinute `json:"minutes"`
+
+	// Today is the day so far from midnight in the settings' timezone, and Yesterday the whole day before it
+	Today     SummaryDay `json:"today"`
+	Yesterday SummaryDay `json:"yesterday"`
+	// SensorStartedAt is when the latest CGM sensor was started or changed, and SiteChangedAt when the pump site was
+	// last changed, in milliseconds, null when there is none
+	SensorStartedAt *int64 `json:"sensor_started_at"`
+	SiteChangedAt   *int64 `json:"site_changed_at"`
 }

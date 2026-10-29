@@ -7,6 +7,12 @@ ASSERT_TEXT_EQUALS #site--summary--hours Last 48 hours
 ASSERT_TEXT_VISIBLE No glucose readings in this time
 ASSERT_TEXT_VISIBLE No treatments in this time
 ASSERT_TEXT_EQUALS #site--summary--iob –
+// It has no time in range today or yesterday, no insulin, and no sensor or site change
+ASSERT_TEXT_EQUALS #site--summary--time-in-range –
+ASSERT_TEXT_EQUALS #site--summary--time-in-range--yesterday Yesterday –
+ASSERT_TEXT_EQUALS #site--summary--total-daily-dose 0 U
+ASSERT_TEXT_EQUALS #site--summary--sensor-started –
+ASSERT_TEXT_EQUALS #site--summary--site-changed –
 SCREENSHOT summary_empty
 
 // The empty summary links to Sync Settings, where virtual sync fills the last 30 minutes with readings, treatments
@@ -34,6 +40,14 @@ INPUT #site--insulin--create--dose 2.5
 CLICK #site--insulin--create--submit
 ASSERT_STATUS 201
 
+// A sensor started now
+CLICK #site--settings-menu
+CLICK #site--data--component-events-button
+ASSERT_STATUS 200
+INPUT #site--component-event--create--event-type Sensor Start
+CLICK #site--component-event--create--submit
+ASSERT_STATUS 201
+
 // The summary shows the latest glucose, the loop's IOB and COB, every treatment and each device's latest status
 CLICK #site--nav--home
 ASSERT_NEW_URL
@@ -42,6 +56,13 @@ ASSERT_VISIBLE #site--summary--glucose--reading
 SCREENSHOT summary
 ASSERT_NOT_VISIBLE #site--summary--iob >> text="–"
 ASSERT_NOT_VISIBLE #site--summary--cob >> text="–"
+// Today's readings have a time in range, its insulin a total daily dose with the dose given, and the sensor was
+// started minutes ago, but the site has not been changed
+ASSERT_VISIBLE #site--summary--time-in-range >> text=/^\d+(\.\d)?%$/
+ASSERT_VISIBLE #site--summary--total-daily-dose >> text=/^\d+(\.\d+)? U$/
+ASSERT_NOT_VISIBLE #site--summary--total-daily-dose >> text="0 U"
+ASSERT_VISIBLE #site--summary--sensor-started >> text=/^\d+m ago$/
+ASSERT_TEXT_EQUALS #site--summary--site-changed –
 ASSERT_VISIBLE #site--summary--treatments >> text=Temp Basal
 ASSERT_VISIBLE #site--summary--treatments >> text=Temp Target
 ASSERT_VISIBLE #site--summary--readings tbody tr >> nth=5
