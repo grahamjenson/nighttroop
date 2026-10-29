@@ -3398,6 +3398,36 @@ func (m *GetSitesToDisableParams) SetLastWriteAt(v float64) {
 	m.LastWriteAt = v
 }
 
+// GetID returns the ID value.
+func (m HydrateSiteParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated HydrateSiteParams.
+func (m *HydrateSiteParams) SetID(v string) {
+	m.ID = v
+}
+
+// GetSkip returns the Skip value.
+func (m SearchArchivedSitesParams) GetSkip() int64 {
+	return m.Skip
+}
+
+// SetSkip sets the Skip value and returns the updated SearchArchivedSitesParams.
+func (m *SearchArchivedSitesParams) SetSkip(v int64) {
+	m.Skip = v
+}
+
+// GetLimit returns the Limit value.
+func (m SearchArchivedSitesParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated SearchArchivedSitesParams.
+func (m *SearchArchivedSitesParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
 // GetSkip returns the Skip value.
 func (m SearchSitesParams) GetSkip() int64 {
 	return m.Skip

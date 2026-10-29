@@ -23,6 +23,7 @@ func NewControlStore() *ControlStore {
 	store := &ControlStore{collectionRoutes: make(map[string]*ControlCollectionRoutes)}
 
 	store.registerCollection(&SitesCollection{})
+	store.registerCollection(&ArchivedSitesCollection{})
 	store.registerCollection(&JobStatsCollection{})
 	store.registerCollection(&JobsCollection{})
 	store.registerCollection(&SyncSourcesCollection{})
