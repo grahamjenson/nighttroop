@@ -53,7 +53,7 @@ func TestGraph(t *testing.T) {
 		}
 	}
 	option := option(t, &sitemodels.Summary{
-		Since: since, Units: &mmol, LowAlarm: 3.9, HighAlarm: 10,
+		Since: since, Units: &mmol, RangeLow: 3.9, RangeHigh: 10,
 		GlucoseReadings: []*sitemodels.SiteCleanGlucoseReading{{SiteGlucoseReading: sitemodels.SiteGlucoseReading{Reading: 20, Units: &mmol}}, {SiteGlucoseReading: sitemodels.SiteGlucoseReading{Reading: 6, Units: &mmol}}, {SiteGlucoseReading: sitemodels.SiteGlucoseReading{Reading: 3, Units: &mmol}}, {SiteGlucoseReading: sitemodels.SiteGlucoseReading{Reading: 12, Units: &mmol}}},
 		Minutes:         minutes,
 	}, now)
@@ -159,7 +159,7 @@ func TestGraphInTheLocationsTime(t *testing.T) {
 	since := time.Date(2026, 9, 26, 12, 0, 0, 0, time.UTC).UnixMilli()
 	now := since + 24*time.Hour.Milliseconds()
 	chart := graph(&sitemodels.Summary{
-		Since: since, Units: &mmol, LowAlarm: 3.9, HighAlarm: 10,
+		Since: since, Units: &mmol, RangeLow: 3.9, RangeHigh: 10,
 		GlucoseReadings: []*sitemodels.SiteCleanGlucoseReading{{SiteGlucoseReading: sitemodels.SiteGlucoseReading{Reading: 6, Units: &mmol, OccurredAt: now}}},
 	}, now, auckland)
 	chart.Validate()
