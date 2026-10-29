@@ -59,8 +59,8 @@ ASSERT_TEXT_EQUALS #site--settings--nightscout-sync--status--last-success Never
 ASSERT_TEXT_EQUALS #site--settings--nightscout-sync--status--last-failure just now
 ASSERT_TEXT_EQUALS #site--settings--nightscout-sync--status--interval 2 min (Error response)
 // The Dexcom region looks like the inputs beside it, not greyed out as if it could not be changed
-ASSERT_VISIBLE #dex_region
-ASSERT_NOT_VISIBLE .bg-gray-100:has(#dex_region)
+ASSERT_VISIBLE #site--settings--dexcom-sync--region
+ASSERT_NOT_VISIBLE .bg-gray-100:has(#site--settings--dexcom-sync--region)
 SCREENSHOT sync_first_sync_failed
 
 // Deleting a source leaves the page in place, with the source's form rendered unset again
@@ -70,3 +70,32 @@ ASSERT_PATH /settings/sync
 ASSERT_TEXT_VISIBLE Sync Settings
 ASSERT_NOT_VISIBLE #site--settings--nightscout-sync--errors
 ASSERT_VISIBLE #site--settings--nightscout-sync--url:not([value*="will_not_pass"])
+
+// The Dexcom region is picked from a list like the Libre region, starting outside the United States
+ASSERT_VISIBLE #site--settings--dexcom-sync--enable
+ASSERT_VISIBLE #site--settings--dexcom-sync--username
+ASSERT_VISIBLE #site--settings--dexcom-sync--password
+ASSERT_VISIBLE #site--settings--dexcom-sync--delete
+ASSERT_VISIBLE #site--settings--dexcom-sync--submit
+ASSERT_VISIBLE #site--settings--dexcom-sync--region:has(option[value="OUS"]:checked)
+
+INPUT #site--settings--dexcom-sync--username valid-dexcom-user
+INPUT #site--settings--dexcom-sync--password dex-pass
+INPUT #site--settings--dexcom-sync--region US
+CLICK #site--settings--dexcom-sync--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Sync Updated
+
+CLICK #site--settings-menu
+ASSERT_VISIBLE #site--settings--sync-button
+CLICK #site--settings--sync-button
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--settings--dexcom-sync--username[value="valid-dexcom-user"]
+ASSERT_VISIBLE #site--settings--dexcom-sync--region:has(option[value="US"]:checked)
+SCREENSHOT dexcom_sync_saved
+
+// Deleting renders the Dexcom form unset again, back outside the United States
+CLICK #site--settings--dexcom-sync--delete
+ASSERT_TEXT_VISIBLE Sync Deleted
+ASSERT_VISIBLE #site--settings--dexcom-sync--username:not([value*="valid-dexcom"])
+ASSERT_VISIBLE #site--settings--dexcom-sync--region:has(option[value="OUS"]:checked)
