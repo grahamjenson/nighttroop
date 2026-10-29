@@ -67,6 +67,12 @@ This section below is information for running your own nighttroop
 
 ------------------------------------------------------------------------------------------------------------------------
 
+# Deployment: Hostinger VPS with Docker
+
+[docs/deploy/hostinger.md](docs/deploy/hostinger.md) runs Nighttroop behind Caddy, with wildcard Let's Encrypt
+certificates, from the image CI publishes to `ghcr.io`, and updates it with a script that rolls back if the new version
+isn't healthy.
+
 # Deployment: Fly.io
 
 Fly.io Is a platform. This comes with the needed info to deploy the project

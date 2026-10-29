@@ -1,0 +1,11 @@
+# Only the Go sources the binary embeds and builds from go into the image
+.git
+.github
+.dbs
+.test
+.env*
+*.sqlite*
+bin
+tmp
+docs
+tests
