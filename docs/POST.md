@@ -2,12 +2,12 @@
 
 Nightscout is a self-hosted, open-source observability server used to collect real-time diabetic data, such as Blood Glucose Levels (BGL), and share it with apps and devices for monitoring, alerting and analysis. We have a Nightscout server for my T1D son that his phone uploads his BGL and treatment data to. Our family and his caregivers can then get his current numbers on phones, watches and other devices. We have set it up so that if we upload some kinds of information (e.g. what he is eating) to Nightscout, his phone will syncs that info down and use an algorithm to control his insulin delivery. The point here is that **Nightscout is an integral part of my sons T1D management.**
 
-Here is the shit part: self-hosting Nightscout is difficult and requires a lot of technical knowledge that you don't magically get when you're diagnosed with diabetes. This has lead to third parties popping up to host Nightscout, but they can cost as much as $12 per month, which you also don't get magically when diagnosed with diabetes.
+Here is the shit part: self-hosting Nightscout is difficult and requires a lot of technical knowledge that you don't magically get when you're diagnosed with diabetes. This has lead to third parties popping up to host Nightscout, but they can cost as much as $12 per month, which you also are not magically paid when diagnosed with diabetes.
 
 To help people out and let them save a buck or two I tried hosting my own and other people Nightscout instances, but...
 
 1. Nightscout can only host one persons data per server instance, so you have to run multiple instances of the server and database!
-2. Configuration of Nightscout is all over the place, environment variables, dot files, plugins, file flags, DB... Config is annoying, water is also wet; but with nightscout each user has their own config (e.g. timezone) and changing anything requires restarting the server, so the difficulty has depth.
+2. Configuration of Nightscout is all over the place, environment variables, dot files, plugins, file flags, DB... Since each user has their own config and changing anything requires restarting the server, each user compounds the difficulty.
 3. Nightscout uses socket.io for real-time communication with its default endpoint at `/socket.io`. So, to support websockets each server needs its own domain, e.g. `host1.example.com/socket.io`, `host2.example.com/socket.io`, making TLS cert, DNS, proxying and routing a more difficult.
 
 This irked me. It made me itchy. I want to make an API compatible (including socket.io) rewrite of Nightscout to be multi-user, I am calling it "NightTroop" (because a group of scouts is a troop).
@@ -19,11 +19,11 @@ What makes NightTroop (or probably any nightscout rewrite) different from a typi
 1. users will want it to be open source and self host. The idea of not sharing code that your life may rely on, as well as let them do what they want with it is a good idea.
 1. putting hurdles in front of it to sign up for and use, like requiring email, or login can stop some people using it.
 
-For NightTroop to be sustainable it **must be** extremely low complexity and low cost. To make this interesting, lets put an arbitrary number of $0.01 per-user per-year; so to support 10,000 users costs $100 per year.
+For NightTroop to be sustainable it **must be** extremely low complexity and low cost because I am going to host and pay for it. So lets make it interesting and put an arbitrary number of $0.01 per-user per-year; so to support 10,000 users costs $100 per year and try to design a system that can reach that goal.
 
 # The Plan
 
-NightTroop is a multi-tennant Nighscout system. Each "tennent" is called a site, as each site can have multiple users.
+NightTroop is a multi-tenant Nightscout system. Each "tenant" is called a site, and a site can have multiple users.
 
 ## SQLite + Split user DBs
 
@@ -147,7 +147,7 @@ The solution I came up with is to segment sites into batches (based on letter th
 
 ## Network Costs
 
-On fly.io in New Zealand, bandwidth is $0.04 per GB. So with 10K users polling like me (very agressivly), and returning 1kb of data per call on average, with `users * amount of data * devices connected` that is: 
+On fly.io in New Zealand, bandwidth is $0.04 per GB. So with 10K users polling like me (very aggressively), and returning 1kb of data per call on average, with `users * amount of data * devices connected` that is: 
 
 1. 1,667 requests per second 
 2. 144GB of data per day 
@@ -157,6 +157,8 @@ This cost estimate surprised me. If everyone used *socket.io* instead of polling
 Looking at other hosting options, like Hetzner, has significantly lower price per/GB, basically free for this scale but has an increase in cost to compute at least $480 per year. As well as time and effort managing secrets, deployment...
 
 Other network costs, like the Domain ($15 per year) and wildcard cert ($12 per year) are rounding errors compared to bandwidth egress costs.
+
+Another VPS  
 
 # Conclusion
 
@@ -178,7 +180,56 @@ and everything is harder and more expensive than even I assumed. Post coming soo
 
 
 
+# PART 2: The implementation
 
+# Implementing Nighttroop
+
+So to test this out I have to actually impllement it. This has lots of features that are going to impact the assumptions in the previous post.
+
+1. CPU and RAM usage for things like encryption/decrpytion of backups, also bcrypt checking of credentials
+
+1. CPU usage for checking tokens on nightscout was horrible
+1. Getting 1-1 nightscout API is very difficult. The query structure passing to mongo, the worst issue was SQL Order as dynamic order is not really supported in sql queries, and it caches very badly.
+
+List what is supported and what is not.
+
+SQLC Goverter... 
+
+# Problems
+
+The WAL takes up a lot of space on disk
+
+➜  nighttroop git:(main) ls -halt .dbs/db/site/a 
+total 8632
+-rw-r--r--   1 grahamjenson  staff   4.0M Sep  4 14:40 alicezzz.sqlite-wal
+-rw-r--r--   1 grahamjenson  staff   216K Sep  4 14:40 alicezzz.sqlite
+-rw-r--r--   1 grahamjenson  staff    32K Sep  4 14:40 alicezzz.sqlite-shm
+drwxr-xr-x   5 grahamjenson  staff   160B Sep  4 14:40 .
+drwxr-xr-x  28 grahamjenson  staff   896B Sep  4 14:40 ..
+➜  nighttroop git:(main) ls -halt .dbs/backup/site 
+total 0
+drwxr-xr-x  3 grahamjenson  staff    96B Sep  4 14:42 a
+drwxr-xr-x  4 grahamjenson  staff   128B Sep  4 14:42 ..
+drwxr-xr-x  3 grahamjenson  staff    96B Sep  4 14:41 .
+➜  nighttroop git:(main) ls -halt .dbs/backup/site/a 
+total 456
+drwxr-xr-x  3 grahamjenson  staff    96B Sep  4 14:42 .
+-rw-r--r--  1 grahamjenson  staff   228K Sep  4 14:42 alicezzz.sqlite
+drwxr-xr-x  3 grahamjenson  staff    96B Sep  4 14:41 ..
+➜  nighttroop git:(main) 
+
+
+
+# Stopping bad users
+
+Part of the fun of this project was thinking through the ways in which users could be noisy and stopping them.
+
+Here are a few of the ways I thought about:
+
+1. Creating lots of users --> rate limiting IPs, + global user creation rate limit
+1. Creating users, then abandoning --> maintaining when users last read and wrote so we can archive if needed
+1. Sending through massive amounts of data, limiting every DB column to a size
+1. Creating lots of tokens
 
 
 
@@ -193,15 +244,7 @@ Then when comfortable it is working a user can migrate over to directly write to
 The wo services I need to pull from are:
 1. Nightscout sites
 1. Dexcom share 
-
-
-
-## Deploy and Backup
-
-1. Check all users DBs exist
-2. If any don't, download that users pool
-3. 
-
+1. Libre
 
 
 
@@ -225,14 +268,6 @@ Deploy flow for same machine:
 This deploy flow should work for both releasing a new version on the same machine AND releasing a new version on a brand new machine. The only difference will be that DB download wont be needed if a new machine is not used.
 
 The deploy time to a clean server (worst case) is then 
-
-# Testing locally
-
-```
-docker run -p 9000:9000 -p 9001:9001 minio/minio server /data --console-address ":9001"
-```
-
-then login at http://localhost:9001 with minioadmin and then create bucket
 
 
 
@@ -278,19 +313,6 @@ The server dies unexpectidly and we need to move to a new machine:
 If the server dies naturally with a SIGTERM then their should be enough time to backup and restart on a 
 
 
-# Left to figure out
-
-Migrations
-1. I would put the version of the DB of the user in the control database, then when accessed check against a constant value to make sure it is up to date. 
-
-Blast Radius
-1. A single bad acting user could take a lot of resources, DB size, request thoughput. The fix would be to rate limit the DBs, and to truncate the DB tables to some value. To limit DB size.
-
-Back Office stuff
-
-Deleting old users in s3.
-
-reducing cost of s3 usage
 
 # Pricing estimates
 Pricing for 10k users
