@@ -113,7 +113,9 @@ func runScenarios(t *testing.T, browser playwright.Browser, config *config.Serve
 	testutils.DumpOnFailure(t, controlDB, "test_site_bdd")
 
 	for _, path := range paths {
-		context, err := browser.NewContext()
+		// Sites take the time zone and language of the browser that creates them, and en names no country, so a
+		// test's site keeps the default units and formats
+		context, err := browser.NewContext(playwright.BrowserNewContextOptions{Locale: playwright.String("en"), TimezoneId: playwright.String("UTC")})
 
 		require.NoError(t, err)
 

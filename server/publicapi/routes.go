@@ -6,11 +6,13 @@ import (
 	"runtime"
 
 	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/publicmodels"
 	"nighttroop.t1d.nz/server/components/public_templ"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/settings"
 )
 
 type CreateUserResponse struct {
@@ -59,6 +61,13 @@ func POSTCreateSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig)
 			slog.Error("Unable to create site", "error", err)
 			http.Error(w, "Unable to Create Site", http.StatusInternalServerError)
 			return
+		}
+
+		// The site starts in the time zone and language of the browser that created it, with its country's formats
+		params := &controldb.UpdateSitesSettingsParams{ID: siteCreateResult.SiteDB.Subdomain}
+		settings.SetSettings(params, settings.BrowserSettings(r.FormValue("timezone"), r.FormValue("language")))
+		if err := controlDB.Queries.UpdateSitesSettings(r.Context(), *params); err != nil {
+			slog.Error("Unable to set the new site's settings", "error", err)
 		}
 
 		responseModel := CreateUserResponse{
