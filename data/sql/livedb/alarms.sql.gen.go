@@ -94,19 +94,28 @@ func (q *Queries) GetIdentityAlarm(ctx context.Context, arg GetIdentityAlarmPara
 
 const identityAlarms = `-- name: IdentityAlarms :many
 SELECT site_id, identity_id, type, active_since, notified_at, snoozed_until, alerting FROM alarms
-WHERE site_id = ?1 AND identity_id = ?2 AND active_since != 0
+WHERE site_id = ?1 AND identity_id = ?2
+AND (active_since != 0 OR (CAST(?3 AS BOOLEAN) AND snoozed_until > ?4))
 ORDER BY CASE type WHEN 'urgent_low' THEN 0 WHEN 'low' THEN 1 WHEN 'predicted_low' THEN 2 WHEN 'urgent_high' THEN 3
     WHEN 'high' THEN 4 WHEN 'fast_rise' THEN 5 WHEN 'fast_drop' THEN 6 WHEN 'no_data' THEN 7 ELSE 8 END
 `
 
 type IdentityAlarmsParams struct {
-	SiteID     string
-	IdentityID int64
+	SiteID         string
+	IdentityID     int64
+	IncludeSnoozed bool
+	Now            int64
 }
 
-// An identity's active alarms, the most urgent first, as alarms.Types lists them
+// An identity's active alarms, and with IncludeSnoozed those snoozed at Now that are not, the most urgent first, as
+// alarms.Types lists them
 func (q *Queries) IdentityAlarms(ctx context.Context, arg IdentityAlarmsParams) ([]*Alarm, error) {
-	rows, err := q.query(ctx, q.identityAlarmsStmt, identityAlarms, arg.SiteID, arg.IdentityID)
+	rows, err := q.query(ctx, q.identityAlarmsStmt, identityAlarms,
+		arg.SiteID,
+		arg.IdentityID,
+		arg.IncludeSnoozed,
+		arg.Now,
+	)
 	if err != nil {
 		return nil, err
 	}
