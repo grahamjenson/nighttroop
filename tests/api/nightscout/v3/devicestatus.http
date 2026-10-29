@@ -88,3 +88,10 @@ NAME delete_soft_devicestatus_v1
 DELETE http://{{ site }}/api/v3/devicestatus/{{ dig "create_devicestatus_v1.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
+
+// A deleted status is gone, so it cannot be patched
+NAME patch_deleted_devicestatus_v1
+PATCH http://{{ site }}/api/v3/devicestatus/{{ dig "create_devicestatus_v1.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+B { "device": "iphone", "uploaderBattery": 10 }
+ASSERT_STATUS 410
