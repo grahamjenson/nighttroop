@@ -2,12 +2,16 @@
 package static
 
 import (
+	"bytes"
+	"compress/gzip"
 	"crypto/sha256"
 	_ "embed"
 	"encoding/hex"
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
+	"sync"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -15,30 +19,37 @@ import (
 //go:embed checkbox.js
 var StaticCheckboxJs []byte
 var StaticCheckboxJsETag = generateETag([]byte(StaticCheckboxJs))
+var StaticCheckboxJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticCheckboxJs) })
 
 //go:embed checkbox.min.js
 var StaticCheckboxMinJs []byte
 var StaticCheckboxMinJsETag = generateETag([]byte(StaticCheckboxMinJs))
+var StaticCheckboxMinJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticCheckboxMinJs) })
 
 //go:embed copybutton.js
 var StaticCopybuttonJs []byte
 var StaticCopybuttonJsETag = generateETag([]byte(StaticCopybuttonJs))
+var StaticCopybuttonJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticCopybuttonJs) })
 
 //go:embed copybutton.min.js
 var StaticCopybuttonMinJs []byte
 var StaticCopybuttonMinJsETag = generateETag([]byte(StaticCopybuttonMinJs))
+var StaticCopybuttonMinJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticCopybuttonMinJs) })
 
 //go:embed dropdown.js
 var StaticDropdownJs []byte
 var StaticDropdownJsETag = generateETag([]byte(StaticDropdownJs))
+var StaticDropdownJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticDropdownJs) })
 
 //go:embed dropdown.min.js
 var StaticDropdownMinJs []byte
 var StaticDropdownMinJsETag = generateETag([]byte(StaticDropdownMinJs))
+var StaticDropdownMinJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticDropdownMinJs) })
 
 //go:embed echarts.min.js
 var StaticEchartsMinJs []byte
 var StaticEchartsMinJsETag = generateETag([]byte(StaticEchartsMinJs))
+var StaticEchartsMinJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticEchartsMinJs) })
 
 //go:embed empty
 var StaticEmpty []byte
@@ -51,42 +62,52 @@ var StaticFaviconIcoETag = generateETag([]byte(StaticFaviconIco))
 //go:embed floating_ui_core.js
 var StaticFloatingUiCoreJs []byte
 var StaticFloatingUiCoreJsETag = generateETag([]byte(StaticFloatingUiCoreJs))
+var StaticFloatingUiCoreJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticFloatingUiCoreJs) })
 
 //go:embed floating_ui_dom.js
 var StaticFloatingUiDomJs []byte
 var StaticFloatingUiDomJsETag = generateETag([]byte(StaticFloatingUiDomJs))
+var StaticFloatingUiDomJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticFloatingUiDomJs) })
 
 //go:embed htmx.js
 var StaticHtmxJs []byte
 var StaticHtmxJsETag = generateETag([]byte(StaticHtmxJs))
+var StaticHtmxJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticHtmxJs) })
 
 //go:embed htmx_sse.js
 var StaticHtmxSseJs []byte
 var StaticHtmxSseJsETag = generateETag([]byte(StaticHtmxSseJs))
+var StaticHtmxSseJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticHtmxSseJs) })
 
 //go:embed input.js
 var StaticInputJs []byte
 var StaticInputJsETag = generateETag([]byte(StaticInputJs))
+var StaticInputJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticInputJs) })
 
 //go:embed input.min.js
 var StaticInputMinJs []byte
 var StaticInputMinJsETag = generateETag([]byte(StaticInputMinJs))
+var StaticInputMinJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticInputMinJs) })
 
 //go:embed inputotp.js
 var StaticInputotpJs []byte
 var StaticInputotpJsETag = generateETag([]byte(StaticInputotpJs))
+var StaticInputotpJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticInputotpJs) })
 
 //go:embed inputotp.min.js
 var StaticInputotpMinJs []byte
 var StaticInputotpMinJsETag = generateETag([]byte(StaticInputotpMinJs))
+var StaticInputotpMinJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticInputotpMinJs) })
 
 //go:embed label.js
 var StaticLabelJs []byte
 var StaticLabelJsETag = generateETag([]byte(StaticLabelJs))
+var StaticLabelJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticLabelJs) })
 
 //go:embed label.min.js
 var StaticLabelMinJs []byte
 var StaticLabelMinJsETag = generateETag([]byte(StaticLabelMinJs))
+var StaticLabelMinJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticLabelMinJs) })
 
 //go:embed logo.png
 var StaticLogoPng []byte
@@ -95,546 +116,181 @@ var StaticLogoPngETag = generateETag([]byte(StaticLogoPng))
 //go:embed logo.svg
 var StaticLogoSvg []byte
 var StaticLogoSvgETag = generateETag([]byte(StaticLogoSvg))
+var StaticLogoSvgGzip = sync.OnceValue(func() []byte { return gzipped(StaticLogoSvg) })
 
 //go:embed popover.js
 var StaticPopoverJs []byte
 var StaticPopoverJsETag = generateETag([]byte(StaticPopoverJs))
+var StaticPopoverJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticPopoverJs) })
 
 //go:embed popover.min.js
 var StaticPopoverMinJs []byte
 var StaticPopoverMinJsETag = generateETag([]byte(StaticPopoverMinJs))
+var StaticPopoverMinJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticPopoverMinJs) })
 
 //go:embed qrcode.js
 var StaticQrcodeJs []byte
 var StaticQrcodeJsETag = generateETag([]byte(StaticQrcodeJs))
+var StaticQrcodeJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticQrcodeJs) })
 
 //go:embed robots.txt
 var StaticRobotsTxt []byte
 var StaticRobotsTxtETag = generateETag([]byte(StaticRobotsTxt))
+var StaticRobotsTxtGzip = sync.OnceValue(func() []byte { return gzipped(StaticRobotsTxt) })
 
 //go:embed selectbox.js
 var StaticSelectboxJs []byte
 var StaticSelectboxJsETag = generateETag([]byte(StaticSelectboxJs))
+var StaticSelectboxJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticSelectboxJs) })
 
 //go:embed selectbox.min.js
 var StaticSelectboxMinJs []byte
 var StaticSelectboxMinJsETag = generateETag([]byte(StaticSelectboxMinJs))
+var StaticSelectboxMinJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticSelectboxMinJs) })
 
 //go:embed style_gen.css
 var StaticStyleGenCss []byte
 var StaticStyleGenCssETag = generateETag([]byte(StaticStyleGenCss))
+var StaticStyleGenCssGzip = sync.OnceValue(func() []byte { return gzipped(StaticStyleGenCss) })
 
 //go:embed toast.js
 var StaticToastJs []byte
 var StaticToastJsETag = generateETag([]byte(StaticToastJs))
+var StaticToastJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticToastJs) })
 
 //go:embed toast.min.js
 var StaticToastMinJs []byte
 var StaticToastMinJsETag = generateETag([]byte(StaticToastMinJs))
-
-//go:embed z_static_gen.go
-var StaticZStaticGenGo []byte
-var StaticZStaticGenGoETag = generateETag([]byte(StaticZStaticGenGo))
+var StaticToastMinJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticToastMinJs) })
 
 func AddStaticRoutes(r chi.Router) error {
 	r.Get("/checkbox.js", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-
-		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("ETag", StaticCheckboxJsETag)
-		if r.Header.Get("If-None-Match") == StaticCheckboxJsETag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-
-		_, err := w.Write([]byte(StaticCheckboxJs))
-		if err != nil {
-			slog.Error("Failed to write response for checkbox.js", "error", err)
-		}
+		serve(w, r, "checkbox.js", "text/javascript; charset=utf-8", StaticCheckboxJsETag, StaticCheckboxJs, StaticCheckboxJsGzip)
 	})
 	r.Get("/checkbox.min.js", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-
-		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("ETag", StaticCheckboxMinJsETag)
-		if r.Header.Get("If-None-Match") == StaticCheckboxMinJsETag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-
-		_, err := w.Write([]byte(StaticCheckboxMinJs))
-		if err != nil {
-			slog.Error("Failed to write response for checkbox.min.js", "error", err)
-		}
+		serve(w, r, "checkbox.min.js", "text/javascript; charset=utf-8", StaticCheckboxMinJsETag, StaticCheckboxMinJs, StaticCheckboxMinJsGzip)
 	})
 	r.Get("/copybutton.js", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-
-		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("ETag", StaticCopybuttonJsETag)
-		if r.Header.Get("If-None-Match") == StaticCopybuttonJsETag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-
-		_, err := w.Write([]byte(StaticCopybuttonJs))
-		if err != nil {
-			slog.Error("Failed to write response for copybutton.js", "error", err)
-		}
+		serve(w, r, "copybutton.js", "text/javascript; charset=utf-8", StaticCopybuttonJsETag, StaticCopybuttonJs, StaticCopybuttonJsGzip)
 	})
 	r.Get("/copybutton.min.js", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-
-		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("ETag", StaticCopybuttonMinJsETag)
-		if r.Header.Get("If-None-Match") == StaticCopybuttonMinJsETag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-
-		_, err := w.Write([]byte(StaticCopybuttonMinJs))
-		if err != nil {
-			slog.Error("Failed to write response for copybutton.min.js", "error", err)
-		}
+		serve(w, r, "copybutton.min.js", "text/javascript; charset=utf-8", StaticCopybuttonMinJsETag, StaticCopybuttonMinJs, StaticCopybuttonMinJsGzip)
 	})
 	r.Get("/dropdown.js", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-
-		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("ETag", StaticDropdownJsETag)
-		if r.Header.Get("If-None-Match") == StaticDropdownJsETag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-
-		_, err := w.Write([]byte(StaticDropdownJs))
-		if err != nil {
-			slog.Error("Failed to write response for dropdown.js", "error", err)
-		}
+		serve(w, r, "dropdown.js", "text/javascript; charset=utf-8", StaticDropdownJsETag, StaticDropdownJs, StaticDropdownJsGzip)
 	})
 	r.Get("/dropdown.min.js", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-
-		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("ETag", StaticDropdownMinJsETag)
-		if r.Header.Get("If-None-Match") == StaticDropdownMinJsETag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-
-		_, err := w.Write([]byte(StaticDropdownMinJs))
-		if err != nil {
-			slog.Error("Failed to write response for dropdown.min.js", "error", err)
-		}
+		serve(w, r, "dropdown.min.js", "text/javascript; charset=utf-8", StaticDropdownMinJsETag, StaticDropdownMinJs, StaticDropdownMinJsGzip)
 	})
 	r.Get("/echarts.min.js", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-
-		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("ETag", StaticEchartsMinJsETag)
-		if r.Header.Get("If-None-Match") == StaticEchartsMinJsETag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-
-		_, err := w.Write([]byte(StaticEchartsMinJs))
-		if err != nil {
-			slog.Error("Failed to write response for echarts.min.js", "error", err)
-		}
+		serve(w, r, "echarts.min.js", "text/javascript; charset=utf-8", StaticEchartsMinJsETag, StaticEchartsMinJs, StaticEchartsMinJsGzip)
 	})
 	r.Get("/empty", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/octet-stream")
-
-		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("ETag", StaticEmptyETag)
-		if r.Header.Get("If-None-Match") == StaticEmptyETag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-
-		_, err := w.Write([]byte(StaticEmpty))
-		if err != nil {
-			slog.Error("Failed to write response for empty", "error", err)
-		}
+		serve(w, r, "empty", "application/octet-stream", StaticEmptyETag, StaticEmpty, nil)
 	})
 	r.Get("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "image/x-icon")
-
-		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("ETag", StaticFaviconIcoETag)
-		if r.Header.Get("If-None-Match") == StaticFaviconIcoETag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-
-		_, err := w.Write([]byte(StaticFaviconIco))
-		if err != nil {
-			slog.Error("Failed to write response for favicon.ico", "error", err)
-		}
+		serve(w, r, "favicon.ico", "image/x-icon", StaticFaviconIcoETag, StaticFaviconIco, nil)
 	})
 	r.Get("/floating_ui_core.js", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-
-		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("ETag", StaticFloatingUiCoreJsETag)
-		if r.Header.Get("If-None-Match") == StaticFloatingUiCoreJsETag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-
-		_, err := w.Write([]byte(StaticFloatingUiCoreJs))
-		if err != nil {
-			slog.Error("Failed to write response for floating_ui_core.js", "error", err)
-		}
+		serve(w, r, "floating_ui_core.js", "text/javascript; charset=utf-8", StaticFloatingUiCoreJsETag, StaticFloatingUiCoreJs, StaticFloatingUiCoreJsGzip)
 	})
 	r.Get("/floating_ui_dom.js", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-
-		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("ETag", StaticFloatingUiDomJsETag)
-		if r.Header.Get("If-None-Match") == StaticFloatingUiDomJsETag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-
-		_, err := w.Write([]byte(StaticFloatingUiDomJs))
-		if err != nil {
-			slog.Error("Failed to write response for floating_ui_dom.js", "error", err)
-		}
+		serve(w, r, "floating_ui_dom.js", "text/javascript; charset=utf-8", StaticFloatingUiDomJsETag, StaticFloatingUiDomJs, StaticFloatingUiDomJsGzip)
 	})
 	r.Get("/htmx.js", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-
-		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("ETag", StaticHtmxJsETag)
-		if r.Header.Get("If-None-Match") == StaticHtmxJsETag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-
-		_, err := w.Write([]byte(StaticHtmxJs))
-		if err != nil {
-			slog.Error("Failed to write response for htmx.js", "error", err)
-		}
+		serve(w, r, "htmx.js", "text/javascript; charset=utf-8", StaticHtmxJsETag, StaticHtmxJs, StaticHtmxJsGzip)
 	})
 	r.Get("/htmx_sse.js", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-
-		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("ETag", StaticHtmxSseJsETag)
-		if r.Header.Get("If-None-Match") == StaticHtmxSseJsETag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-
-		_, err := w.Write([]byte(StaticHtmxSseJs))
-		if err != nil {
-			slog.Error("Failed to write response for htmx_sse.js", "error", err)
-		}
+		serve(w, r, "htmx_sse.js", "text/javascript; charset=utf-8", StaticHtmxSseJsETag, StaticHtmxSseJs, StaticHtmxSseJsGzip)
 	})
 	r.Get("/input.js", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-
-		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("ETag", StaticInputJsETag)
-		if r.Header.Get("If-None-Match") == StaticInputJsETag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-
-		_, err := w.Write([]byte(StaticInputJs))
-		if err != nil {
-			slog.Error("Failed to write response for input.js", "error", err)
-		}
+		serve(w, r, "input.js", "text/javascript; charset=utf-8", StaticInputJsETag, StaticInputJs, StaticInputJsGzip)
 	})
 	r.Get("/input.min.js", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-
-		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("ETag", StaticInputMinJsETag)
-		if r.Header.Get("If-None-Match") == StaticInputMinJsETag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-
-		_, err := w.Write([]byte(StaticInputMinJs))
-		if err != nil {
-			slog.Error("Failed to write response for input.min.js", "error", err)
-		}
+		serve(w, r, "input.min.js", "text/javascript; charset=utf-8", StaticInputMinJsETag, StaticInputMinJs, StaticInputMinJsGzip)
 	})
 	r.Get("/inputotp.js", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-
-		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("ETag", StaticInputotpJsETag)
-		if r.Header.Get("If-None-Match") == StaticInputotpJsETag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-
-		_, err := w.Write([]byte(StaticInputotpJs))
-		if err != nil {
-			slog.Error("Failed to write response for inputotp.js", "error", err)
-		}
+		serve(w, r, "inputotp.js", "text/javascript; charset=utf-8", StaticInputotpJsETag, StaticInputotpJs, StaticInputotpJsGzip)
 	})
 	r.Get("/inputotp.min.js", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-
-		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("ETag", StaticInputotpMinJsETag)
-		if r.Header.Get("If-None-Match") == StaticInputotpMinJsETag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-
-		_, err := w.Write([]byte(StaticInputotpMinJs))
-		if err != nil {
-			slog.Error("Failed to write response for inputotp.min.js", "error", err)
-		}
+		serve(w, r, "inputotp.min.js", "text/javascript; charset=utf-8", StaticInputotpMinJsETag, StaticInputotpMinJs, StaticInputotpMinJsGzip)
 	})
 	r.Get("/label.js", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-
-		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("ETag", StaticLabelJsETag)
-		if r.Header.Get("If-None-Match") == StaticLabelJsETag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-
-		_, err := w.Write([]byte(StaticLabelJs))
-		if err != nil {
-			slog.Error("Failed to write response for label.js", "error", err)
-		}
+		serve(w, r, "label.js", "text/javascript; charset=utf-8", StaticLabelJsETag, StaticLabelJs, StaticLabelJsGzip)
 	})
 	r.Get("/label.min.js", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-
-		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("ETag", StaticLabelMinJsETag)
-		if r.Header.Get("If-None-Match") == StaticLabelMinJsETag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-
-		_, err := w.Write([]byte(StaticLabelMinJs))
-		if err != nil {
-			slog.Error("Failed to write response for label.min.js", "error", err)
-		}
+		serve(w, r, "label.min.js", "text/javascript; charset=utf-8", StaticLabelMinJsETag, StaticLabelMinJs, StaticLabelMinJsGzip)
 	})
 	r.Get("/logo.png", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "image/png")
-
-		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("ETag", StaticLogoPngETag)
-		if r.Header.Get("If-None-Match") == StaticLogoPngETag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-
-		_, err := w.Write([]byte(StaticLogoPng))
-		if err != nil {
-			slog.Error("Failed to write response for logo.png", "error", err)
-		}
+		serve(w, r, "logo.png", "image/png", StaticLogoPngETag, StaticLogoPng, nil)
 	})
 	r.Get("/logo.svg", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "image/svg+xml")
-
-		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("ETag", StaticLogoSvgETag)
-		if r.Header.Get("If-None-Match") == StaticLogoSvgETag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-
-		_, err := w.Write([]byte(StaticLogoSvg))
-		if err != nil {
-			slog.Error("Failed to write response for logo.svg", "error", err)
-		}
+		serve(w, r, "logo.svg", "image/svg+xml", StaticLogoSvgETag, StaticLogoSvg, StaticLogoSvgGzip)
 	})
 	r.Get("/popover.js", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-
-		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("ETag", StaticPopoverJsETag)
-		if r.Header.Get("If-None-Match") == StaticPopoverJsETag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-
-		_, err := w.Write([]byte(StaticPopoverJs))
-		if err != nil {
-			slog.Error("Failed to write response for popover.js", "error", err)
-		}
+		serve(w, r, "popover.js", "text/javascript; charset=utf-8", StaticPopoverJsETag, StaticPopoverJs, StaticPopoverJsGzip)
 	})
 	r.Get("/popover.min.js", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-
-		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("ETag", StaticPopoverMinJsETag)
-		if r.Header.Get("If-None-Match") == StaticPopoverMinJsETag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-
-		_, err := w.Write([]byte(StaticPopoverMinJs))
-		if err != nil {
-			slog.Error("Failed to write response for popover.min.js", "error", err)
-		}
+		serve(w, r, "popover.min.js", "text/javascript; charset=utf-8", StaticPopoverMinJsETag, StaticPopoverMinJs, StaticPopoverMinJsGzip)
 	})
 	r.Get("/qrcode.js", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-
-		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("ETag", StaticQrcodeJsETag)
-		if r.Header.Get("If-None-Match") == StaticQrcodeJsETag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-
-		_, err := w.Write([]byte(StaticQrcodeJs))
-		if err != nil {
-			slog.Error("Failed to write response for qrcode.js", "error", err)
-		}
+		serve(w, r, "qrcode.js", "text/javascript; charset=utf-8", StaticQrcodeJsETag, StaticQrcodeJs, StaticQrcodeJsGzip)
 	})
 	r.Get("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-
-		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("ETag", StaticRobotsTxtETag)
-		if r.Header.Get("If-None-Match") == StaticRobotsTxtETag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-
-		_, err := w.Write([]byte(StaticRobotsTxt))
-		if err != nil {
-			slog.Error("Failed to write response for robots.txt", "error", err)
-		}
+		serve(w, r, "robots.txt", "text/plain; charset=utf-8", StaticRobotsTxtETag, StaticRobotsTxt, StaticRobotsTxtGzip)
 	})
 	r.Get("/selectbox.js", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-
-		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("ETag", StaticSelectboxJsETag)
-		if r.Header.Get("If-None-Match") == StaticSelectboxJsETag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-
-		_, err := w.Write([]byte(StaticSelectboxJs))
-		if err != nil {
-			slog.Error("Failed to write response for selectbox.js", "error", err)
-		}
+		serve(w, r, "selectbox.js", "text/javascript; charset=utf-8", StaticSelectboxJsETag, StaticSelectboxJs, StaticSelectboxJsGzip)
 	})
 	r.Get("/selectbox.min.js", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-
-		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("ETag", StaticSelectboxMinJsETag)
-		if r.Header.Get("If-None-Match") == StaticSelectboxMinJsETag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-
-		_, err := w.Write([]byte(StaticSelectboxMinJs))
-		if err != nil {
-			slog.Error("Failed to write response for selectbox.min.js", "error", err)
-		}
+		serve(w, r, "selectbox.min.js", "text/javascript; charset=utf-8", StaticSelectboxMinJsETag, StaticSelectboxMinJs, StaticSelectboxMinJsGzip)
 	})
 	r.Get("/style_gen.css", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/css; charset=utf-8")
-
-		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("ETag", StaticStyleGenCssETag)
-		if r.Header.Get("If-None-Match") == StaticStyleGenCssETag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-
-		_, err := w.Write([]byte(StaticStyleGenCss))
-		if err != nil {
-			slog.Error("Failed to write response for style_gen.css", "error", err)
-		}
+		serve(w, r, "style_gen.css", "text/css; charset=utf-8", StaticStyleGenCssETag, StaticStyleGenCss, StaticStyleGenCssGzip)
 	})
 	r.Get("/toast.js", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-
-		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("ETag", StaticToastJsETag)
-		if r.Header.Get("If-None-Match") == StaticToastJsETag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-
-		_, err := w.Write([]byte(StaticToastJs))
-		if err != nil {
-			slog.Error("Failed to write response for toast.js", "error", err)
-		}
+		serve(w, r, "toast.js", "text/javascript; charset=utf-8", StaticToastJsETag, StaticToastJs, StaticToastJsGzip)
 	})
 	r.Get("/toast.min.js", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-
-		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("ETag", StaticToastMinJsETag)
-		if r.Header.Get("If-None-Match") == StaticToastMinJsETag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-
-		_, err := w.Write([]byte(StaticToastMinJs))
-		if err != nil {
-			slog.Error("Failed to write response for toast.min.js", "error", err)
-		}
-	})
-	r.Get("/z_static_gen.go", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/octet-stream")
-
-		// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("ETag", StaticZStaticGenGoETag)
-		if r.Header.Get("If-None-Match") == StaticZStaticGenGoETag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-
-		_, err := w.Write([]byte(StaticZStaticGenGo))
-		if err != nil {
-			slog.Error("Failed to write response for z_static_gen.go", "error", err)
-		}
+		serve(w, r, "toast.min.js", "text/javascript; charset=utf-8", StaticToastMinJsETag, StaticToastMinJs, StaticToastMinJsGzip)
 	})
 
 	return nil
+}
+
+// serve writes a file, gzipped once and kept for clients that accept it, so a request does not compress it again
+func serve(w http.ResponseWriter, r *http.Request, fileName string, contentType string, etag string, body []byte, gzipBody func() []byte) {
+	w.Header().Set("Content-Type", contentType)
+
+	// URLs are not versioned, so browsers must revalidate with the ETag to see new deploys
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("ETag", etag)
+	if gzipBody != nil {
+		w.Header().Add("Vary", "Accept-Encoding")
+	}
+	if r.Header.Get("If-None-Match") == etag {
+		w.WriteHeader(http.StatusNotModified)
+		return
+	}
+
+	if gzipBody != nil && strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+		// The compress middleware leaves a response that already has an encoding
+		w.Header().Set("Content-Encoding", "gzip")
+		body = gzipBody()
+	}
+
+	_, err := w.Write(body)
+	if err != nil {
+		slog.Error("Failed to write response for "+fileName, "error", err)
+	}
+}
+
+func gzipped(body []byte) []byte {
+	var buf bytes.Buffer
+	writer, _ := gzip.NewWriterLevel(&buf, gzip.BestCompression)
+	writer.Write(body)
+	writer.Close()
+	return buf.Bytes()
 }
 
 func generateETag(data []byte) string {
