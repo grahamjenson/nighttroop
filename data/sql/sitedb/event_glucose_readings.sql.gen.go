@@ -12,6 +12,71 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 )
 
+const alarmGlucoseReadings = `-- name: AlarmGlucoseReadings :many
+SELECT id, mgdl, reading_type, units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings
+WHERE reading_type = 'sgv' AND deleted_at IS NULL
+AND occurred_at >= (SELECT MAX(occurred_at) FROM glucose_readings WHERE reading_type = 'sgv' AND deleted_at IS NULL)
+    - CAST(?1 AS INTEGER) * 60000
+ORDER BY occurred_at DESC
+LIMIT ?2
+`
+
+type AlarmGlucoseReadingsParams struct {
+	Minutes int64
+	Limit   int64
+}
+
+// The CGM readings back to Minutes before the newest, however old it is, newest first: no data is measured from the
+// newest, and an alarm lasts by its readings, not by the time now
+func (q *Queries) AlarmGlucoseReadings(ctx context.Context, arg AlarmGlucoseReadingsParams) ([]*GlucoseReading, error) {
+	rows, err := q.query(ctx, q.alarmGlucoseReadingsStmt, alarmGlucoseReadings, arg.Minutes, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*GlucoseReading
+	for rows.Next() {
+		var i GlucoseReading
+		if err := rows.Scan(
+			&i.ID,
+			&i.Mgdl,
+			&i.ReadingType,
+			&i.Units,
+			&i.MeasurementMethod,
+			&i.Delta,
+			&i.Direction,
+			&i.Noise,
+			&i.Filtered,
+			&i.Unfiltered,
+			&i.Rssi,
+			&i.Notes,
+			&i.Reason,
+			&i.RawJsonData,
+			&i.DeletedAt,
+			&i.UtcOffsetMinutes,
+			&i.OccurredAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedByAppName,
+			&i.CreatedByDeviceName,
+			&i.UpdatedByIdentityID,
+			&i.UpdatedByIdentityName,
+			&i.CreatedByIdentityID,
+			&i.CreatedByIdentityName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const allGlucoseReadings = `-- name: AllGlucoseReadings :many
 
 SELECT id, mgdl, reading_type, units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings 
