@@ -78,8 +78,13 @@ func (ws *Websocket) subscribeToAlarms(socket *socketio.Socket, accessToken, jwt
 }
 
 // snoozeAlarms is Nightscout's ack of a level, group and silence time in milliseconds: it snoozes the identity's
-// alarms in that group up to that level, which the alarm checker stops alerting on its next check
+// alarms in that group up to that level, which the alarm checker stops alerting on its next check, and records the
+// snooze in the logs DB's events. It is a write, so within the site's write limit, as each records an event.
 func (ws *Websocket) snoozeAlarms(socket *socketio.Socket, identityID int64, args []json.RawMessage) {
+	ctx := socket.Request().Context()
+	if allowed, _ := httputils.WithinRateLimitAll(ws.config.RateLimiters.SitePOSTLimiter(httputils.GetSiteContext(ctx).SiteID)); !allowed {
+		return
+	}
 	var level alarms.Level
 	var group string
 	var silenceMs int64
@@ -89,14 +94,20 @@ func (ws *Websocket) snoozeAlarms(socket *socketio.Socket, identityID int64, arg
 		}
 	}
 	silence := min(cmp.Or(time.Duration(max(silenceMs, 0))*time.Millisecond, defaultSilence), maxSilence)
-	siteID := httputils.GetSiteContext(socket.Request().Context()).SiteID
+	siteID, until := httputils.GetSiteContext(ctx).SiteID, time.Now().Add(silence).UnixMilli()
+	var snoozed []string
 	for _, t := range alarms.Types {
 		if t.Level() <= level && alarmGroup(t) == group {
-			snooze := livedb.SnoozeAlarmParams{SiteID: siteID, IdentityID: identityID, Type: t, Until: time.Now().Add(silence).UnixMilli()}
+			snooze := livedb.SnoozeAlarmParams{SiteID: siteID, IdentityID: identityID, Type: t, Until: until}
 			if err := ws.controlDB.Live.Queries.SnoozeAlarm(context.Background(), snooze); err != nil {
 				slog.Error("cannot snooze alarm", "error", err)
+				continue
 			}
+			snoozed = append(snoozed, string(t))
 		}
+	}
+	if len(snoozed) > 0 {
+		ws.controlDB.Logs.AlarmSnoozedEvent(context.Background(), siteID, identityID, snoozed, until, "nightscout")
 	}
 }
 

@@ -173,7 +173,7 @@ func (c *Checker) checkSite(ctx context.Context, siteID string, now int64) error
 			} else if last[t] != nil {
 				errs = append(errs, live.DeleteAlarm(ctx, livedb.DeleteAlarmParams{SiteID: siteID, IdentityID: identityID, Type: t, SnoozedUntil: last[t].SnoozedUntil}))
 			}
-			c.publishChange(siteID, last[t], row)
+			c.publishChange(ctx, siteID, last[t], row)
 		}
 	}
 	return errors.Join(errs...)
@@ -243,21 +243,24 @@ func (c *Checker) forget(ctx context.Context, kept map[int64]keptAlarms, checked
 		}
 		for _, row := range rows {
 			errs = append(errs, c.controlDB.Live.Queries.DeleteAlarm(ctx, livedb.DeleteAlarmParams{SiteID: row.SiteID, IdentityID: identityID, Type: row.Type, SnoozedUntil: row.SnoozedUntil}))
-			c.publishChange(row.SiteID, row, &livedb.Alarm{})
+			c.publishChange(ctx, row.SiteID, row, &livedb.Alarm{})
 		}
 	}
 	return errors.Join(errs...)
 }
 
-// publishChange publishes the change to an alarm as the alarms collection has it, which has only active alarms: it is
+// publishChange publishes the change to an alarm as the alarms collection has it, which has only active alarms, and
+// records its creating and deleting in the logs DB's events: it is
 // created as it becomes active, updated as it starts or stops alerting, and deleted as it stops being active
-func (c *Checker) publishChange(siteID string, last, row *livedb.Alarm) {
+func (c *Checker) publishChange(ctx context.Context, siteID string, last, row *livedb.Alarm) {
 	wasActive, active := last != nil && last.ActiveSince != 0, row.ActiveSince != 0
 	switch {
 	case !wasActive && active:
 		c.events.Publish(siteID, events.ModelChange(siteID, events.Created, row))
+		c.controlDB.Logs.AlarmCreatedEvent(ctx, siteID, row.IdentityID, string(row.Type))
 	case wasActive && !active:
 		c.events.Publish(siteID, events.ModelChange(siteID, events.Deleted, last))
+		c.controlDB.Logs.AlarmDeletedEvent(ctx, siteID, last.IdentityID, string(last.Type))
 	case active && last.Alerting != row.Alerting:
 		c.events.Publish(siteID, events.ModelChange(siteID, events.Updated, row))
 	}

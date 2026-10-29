@@ -56,8 +56,12 @@ func (s *AlarmsCollection) SearchHTMXResponse(models []*sitemodels.SiteAlarm, qu
 // DeleteRow snoozes the alarm for 30 minutes, as a soft delete: it stops alerting at once, and the checker stops it
 // alerting to the identity's other clients on its next check
 func (s *AlarmsCollection) DeleteRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) error {
-	return collectionTx.Live().SnoozeAlarm(ctx, livedb.SnoozeAlarmParams{SiteID: siteContext.SiteID, IdentityID: siteContext.IdentityModel.ID,
-		Type: alarms.Type(id), Until: time.Now().Add(snoozeFor).UnixMilli()})
+	snooze := livedb.SnoozeAlarmParams{SiteID: siteContext.SiteID, IdentityID: siteContext.IdentityModel.ID, Type: alarms.Type(id), Until: time.Now().Add(snoozeFor).UnixMilli()}
+	if err := collectionTx.Live().SnoozeAlarm(ctx, snooze); err != nil {
+		return err
+	}
+	siteContext.ControlDB.Logs.AlarmSnoozedEvent(ctx, snooze.SiteID, snooze.IdentityID, []string{id}, snooze.Until, "site")
+	return nil
 }
 
 // DeleteHTMXResponse is the alarm's row in the banner, snoozed

@@ -134,6 +134,36 @@ func (l *LogsDB) SyncBackfilledEvent(ctx context.Context, siteID string, syncTyp
 	l.finishedEvent(ctx, siteID, "", events.SyncBackfilled, started, attributes)
 }
 
+type AlarmAttributes struct {
+	IdentityID int64  `json:"identity_id"`
+	Type       string `json:"type"`
+}
+
+type AlarmSnoozedAttributes struct {
+	IdentityID int64 `json:"identity_id"`
+	// Types are the alarms snoozed, one from the site, and those of a level and group from a Nightscout ack
+	Types []string `json:"types"`
+	// SnoozedUntil is when the snooze ends, in milliseconds, and By where it came from: site or nightscout
+	SnoozedUntil int64  `json:"snoozed_until"`
+	By           string `json:"by"`
+}
+
+// AlarmCreatedEvent records an identity's alarm becoming active
+func (l *LogsDB) AlarmCreatedEvent(ctx context.Context, siteID string, identityID int64, alarmType string) {
+	l.event(ctx, siteID, events.AlarmCreated, AlarmAttributes{IdentityID: identityID, Type: alarmType})
+}
+
+// AlarmSnoozedEvent records an identity snoozing some of its alarms until a time in milliseconds, from the site or
+// Nightscout
+func (l *LogsDB) AlarmSnoozedEvent(ctx context.Context, siteID string, identityID int64, types []string, until int64, by string) {
+	l.event(ctx, siteID, events.AlarmSnoozed, AlarmSnoozedAttributes{IdentityID: identityID, Types: types, SnoozedUntil: until, By: by})
+}
+
+// AlarmDeletedEvent records an identity's alarm stopping being active
+func (l *LogsDB) AlarmDeletedEvent(ctx context.Context, siteID string, identityID int64, alarmType string) {
+	l.event(ctx, siteID, events.AlarmDeleted, AlarmAttributes{IdentityID: identityID, Type: alarmType})
+}
+
 ///////
 // ERRORS
 ///////

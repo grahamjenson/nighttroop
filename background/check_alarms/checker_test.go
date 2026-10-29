@@ -10,6 +10,7 @@ import (
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/livedb"
+	"nighttroop.t1d.nz/data/sql/logsdb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	datatypes "nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils/alarms"
@@ -251,6 +252,17 @@ func TestEachChangeToAnActiveAlarmIsPublished(t *testing.T) {
 	require.Equal(t, []string{"created urgent_low alerting:true", "updated urgent_low alerting:false", "deleted urgent_low alerting:false"}, changes,
 		"it is created as it becomes active, updated as it stops alerting, and deleted as it stops being active")
 	require.NotEmpty(t, r.kept(), "its snooze is kept after it clears")
+
+	// Its creating and deleting are kept in the logs DB's events, newest first, as the live DB's alarms are not
+	recorded, err := r.checker.controlDB.Logs.Queries.SearchEvents(context.TODO(), logsdb.SearchEventsParams{SiteID: &r.site, Search: new("alarm_"), Limit: 10})
+	require.NoError(t, err)
+	var names, attributes []string
+	for _, event := range recorded {
+		names, attributes = append(names, event.Name), append(attributes, *event.Attributes)
+	}
+	require.Equal(t, []string{"alarm_deleted", "alarm_created"}, names)
+	want := fmt.Sprintf(`{"identity_id":%d,"type":"urgent_low"}`, identity.ID)
+	require.Equal(t, []string{want, want}, attributes)
 }
 
 func TestASnoozeDuringACheckIsKept(t *testing.T) {

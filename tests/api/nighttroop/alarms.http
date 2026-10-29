@@ -66,6 +66,32 @@ ASSERT_STATUS 200
 
 RUN_BACKGROUND_JOBS
 
+// The site's events say when the alarm was created and snoozed, which its admin can read
+NAME login_admin
+POST http://{{ site }}/login
+H Accept: application/json
+B {"name": "admin", "password": "{{ .create_new_site.api_key }}", "totp": "123123"}
+ASSERT_STATUS 200
+SET admin_jwt {{ .login_admin.token }}
+
+NAME alarm_created_event
+GET http://{{ site }}/logs/events?type=alarm_created
+H Authorization: Bearer {{ .admin_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS "urgent_low" "@result.0.attributes.type"
+
+NAME alarm_snoozed_event
+GET http://{{ site }}/logs/events?type=alarm_snoozed
+H Authorization: Bearer {{ .admin_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS "urgent_low" "@result.0.attributes.types.0"
+ASSERT_EQUALS "site" "@result.0.attributes.by"
+ASSERT_EXISTS "@result.0.attributes.snoozed_until"
+
 NAME urgent_low_snoozed
 GET http://{{ site }}/data/alarms
 H Authorization: Bearer {{ jwt }}
@@ -100,6 +126,14 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_LENGTH 0 "@result"
+
+NAME alarm_deleted_event
+GET http://{{ site }}/logs/events?type=alarm_deleted
+H Authorization: Bearer {{ .admin_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS "urgent_low" "@result.0.attributes.type"
 
 NAME summary_urgent_low_cleared_and_snoozed
 GET http://{{ site }}/summary?hours=6
