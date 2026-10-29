@@ -16,6 +16,7 @@ func NewPublicRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.R
 	static.AddStaticRoutes(r)
 
 	r.Get("/", publicapi.GETMainPageHandler(controlDB))
+	r.Get("/health", publicapi.GETHealthHandler(controlDB))
 
 	r.Post("/site", publicapi.POSTCreateSiteHandler(controlDB, config))
 

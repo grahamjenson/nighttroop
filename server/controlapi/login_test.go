@@ -44,7 +44,7 @@ func TestControlLoginRejectsLongNameBeforeRateLimit(t *testing.T) {
 			r := httptest.NewRequest("POST", "/login", strings.NewReader(tt.body))
 			r.RemoteAddr = tt.ip + ":1234"
 			r.Header.Set("Content-Type", tt.contentType)
-			ctx, _ := httputils.SetIPInHTTPContext(context.Background(), r)
+			ctx, _ := httputils.SetIPInHTTPContext(context.Background(), r, nil)
 			r = r.WithContext(ctx)
 
 			w := httptest.NewRecorder()

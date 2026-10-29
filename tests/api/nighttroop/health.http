@@ -1,0 +1,5 @@
+// The server answers its health check on the main host, which Docker and the deploy script wait on
+NAME get_health
+GET http://localhost/health
+ASSERT_STATUS 200
+ASSERT_EQUALS "ok" "@status"

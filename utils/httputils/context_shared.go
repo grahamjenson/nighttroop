@@ -4,14 +4,17 @@ import (
 	"context"
 	"net"
 	"net/http"
+	"net/netip"
 	"os"
+	"slices"
 	"strings"
 )
 
 const ipAddressKey = "ip_address"
 
-func SetIPInHTTPContext(ctx context.Context, r *http.Request) (context.Context, string) {
-	ip := getIPAddressFromRequest(r)
+// SetIPInHTTPContext is the client's IP, from X-Forwarded-For only when the request came through a trusted proxy
+func SetIPInHTTPContext(ctx context.Context, r *http.Request, trustedProxies []netip.Prefix) (context.Context, string) {
+	ip := getIPAddressFromRequest(r, trustedProxies)
 	return context.WithValue(ctx, ipAddressKey, ip), ip
 }
 
@@ -25,7 +28,7 @@ func GetIPFromHTTPContext(ctx context.Context) string {
 	return ""
 }
 
-func getIPAddressFromRequest(r *http.Request) string {
+func getIPAddressFromRequest(r *http.Request, trustedProxies []netip.Prefix) string {
 	host, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
 		host = r.RemoteAddr
@@ -39,7 +42,7 @@ func getIPAddressFromRequest(r *http.Request) string {
 	}
 
 	// If it is a trusted proxy then we can accept the X-Forwarded For
-	if isTrustedProxy(host) {
+	if isTrustedProxy(host, trustedProxies) {
 		// Check X-Forwarded-For header first (in case of reverse proxy)
 		xForwardedFor := r.Header.Get("X-Forwarded-For")
 		if xForwardedFor != "" {
@@ -52,18 +55,11 @@ func getIPAddressFromRequest(r *http.Request) string {
 	return host
 }
 
-func isTrustedProxy(ip string) bool {
-	// Define a list of trusted proxy IPs or CIDR ranges
-	trustedProxies := []string{
-		"127.0.0.1",
-		"::1",
+func isTrustedProxy(host string, trustedProxies []netip.Prefix) bool {
+	addr, err := netip.ParseAddr(host)
+	if err != nil {
+		return false
 	}
-
-	for _, trustedProxy := range trustedProxies {
-		if ip == trustedProxy {
-			return true
-		}
-	}
-
-	return false
+	addr = addr.Unmap()
+	return slices.ContainsFunc(trustedProxies, func(p netip.Prefix) bool { return p.Contains(addr) })
 }

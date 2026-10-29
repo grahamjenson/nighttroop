@@ -46,7 +46,7 @@ func TestLoginRejectsLongNameBeforeRateLimit(t *testing.T) {
 			r.RemoteAddr = tt.ip + ":1234"
 			r.Header.Set("Content-Type", tt.contentType)
 			r.Header.Set("Accept", tt.accept)
-			ctx, _ := httputils.SetIPInHTTPContext(context.Background(), r)
+			ctx, _ := httputils.SetIPInHTTPContext(context.Background(), r, nil)
 			ctx = httputils.CreateSiteContext(ctx, testConfig, nil, nil, nil, "site"+tt.name, tt.ip, httputils.HTTPActionWrite, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
 			r = r.WithContext(ctx)
 
