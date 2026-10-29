@@ -19,6 +19,12 @@ func FromSettings(m *settings.CombinedSettingsMap) []Alarm {
 	if resolve(m, settings.SettingMap.GetAlarmHighEnabled) {
 		alarms = append(alarms, HighAlarm{Mgdl: mgdl(settings.SettingMap.GetAlarmHigh), Minutes: resolve(m, settings.SettingMap.GetAlarmHighMinutes)})
 	}
+	if resolve(m, settings.SettingMap.GetAlarmFastRiseEnabled) {
+		alarms = append(alarms, FastRiseAlarm{Mgdl: mgdl(settings.SettingMap.GetAlarmFastRise), Minutes: resolve(m, settings.SettingMap.GetAlarmFastRiseMinutes)})
+	}
+	if resolve(m, settings.SettingMap.GetAlarmFastDropEnabled) {
+		alarms = append(alarms, FastDropAlarm{Mgdl: mgdl(settings.SettingMap.GetAlarmFastDrop), Minutes: resolve(m, settings.SettingMap.GetAlarmFastDropMinutes)})
+	}
 	if resolve(m, settings.SettingMap.GetAlarmNoDataEnabled) {
 		alarms = append(alarms, NoDataAlarm{Minutes: resolve(m, settings.SettingMap.GetAlarmNoDataMinutes)})
 	}

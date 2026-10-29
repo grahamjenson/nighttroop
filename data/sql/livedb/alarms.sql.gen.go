@@ -95,7 +95,8 @@ func (q *Queries) GetIdentityAlarm(ctx context.Context, arg GetIdentityAlarmPara
 const identityAlarms = `-- name: IdentityAlarms :many
 SELECT site_id, identity_id, type, active_since, notified_at, snoozed_until, alerting FROM alarms
 WHERE site_id = ?1 AND identity_id = ?2 AND active_since != 0
-ORDER BY CASE type WHEN 'urgent_low' THEN 0 WHEN 'low' THEN 1 WHEN 'urgent_high' THEN 2 WHEN 'high' THEN 3 ELSE 4 END
+ORDER BY CASE type WHEN 'urgent_low' THEN 0 WHEN 'low' THEN 1 WHEN 'urgent_high' THEN 2 WHEN 'high' THEN 3
+    WHEN 'fast_rise' THEN 4 WHEN 'fast_drop' THEN 5 WHEN 'no_data' THEN 6 ELSE 7 END
 `
 
 type IdentityAlarmsParams struct {

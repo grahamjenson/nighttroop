@@ -248,6 +248,91 @@ func TestUrgentHigh(t *testing.T) {
 	})
 }
 
+func TestFastRise(t *testing.T) {
+	runTimelines(t, []timeline{
+		{
+			name:   "rising 18 within 15 minutes starts it, and rising slower clears it",
+			config: "fast_rise 18 15m",
+			timeline: `
+				0m   100
+				5m   106
+				10m  112
+				15m  118    -> fast_rise started   active: fast_rise   // 18 since 15 minutes ago
+				20m  120    -> fast_rise cleared   active:             // only 14 since 15 minutes ago
+			`,
+		},
+		{
+			name:   "17 within 15 minutes is not fast enough",
+			config: "fast_rise 18 15m",
+			timeline: `
+				0m   100
+				15m  117   active:
+			`,
+		},
+		{
+			name:   "it is measured from the oldest reading within the minutes, not an older one",
+			config: "fast_rise 18 15m",
+			timeline: `
+				0m   100
+				5m   140    -> fast_rise started   // a quick jump within 15 minutes
+				20m  150    -> fast_rise cleared   // 10 since 5m, the oldest within 15 minutes
+			`,
+		},
+		{
+			name:   "one reading, or one after a gap longer than the minutes, has nothing to rise from",
+			config: "fast_rise 18 15m",
+			timeline: `
+				0m   100   active:
+				30m  200   active:
+			`,
+		},
+		{
+			name:   "it stays on without a new reading, as it is measured by readings",
+			config: "fast_rise 18 15m",
+			timeline: `
+				0m   100
+				10m  130    -> fast_rise started
+				24m  check  active: fast_rise
+				25m  check  -> fast_rise repeated
+			`,
+		},
+		{
+			name:     "falling does not start it",
+			config:   "fast_rise 18 15m",
+			timeline: "0m 150\n10m 100   active:",
+		},
+	})
+}
+
+func TestFastDrop(t *testing.T) {
+	runTimelines(t, []timeline{
+		{
+			name:   "dropping 18 within 15 minutes starts it, and dropping slower clears it",
+			config: "fast_drop 18 15m",
+			timeline: `
+				0m   150
+				5m   144
+				10m  138
+				15m  132    -> fast_drop started   active: fast_drop
+				20m  130    -> fast_drop cleared   active:
+			`,
+		},
+		{
+			name:     "rising does not start it",
+			config:   "fast_drop 18 15m",
+			timeline: "0m 100\n10m 150   active:",
+		},
+		{
+			name:   "it alerts beside the low it is heading into, which does not quiet it",
+			config: "low 72 0m, fast_drop 18 15m",
+			timeline: `
+				0m   100
+				10m  70    -> low started, fast_drop started   active: low, fast_drop   alerting: low, fast_drop
+			`,
+		},
+	})
+}
+
 func TestNoData(t *testing.T) {
 	runTimelines(t, []timeline{
 		{

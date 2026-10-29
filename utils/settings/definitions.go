@@ -331,11 +331,12 @@ var AlarmFastRise = &SettingDefinition[int64]{
 	ParseFunc:    ParseInt,
 }
 
+// AlarmFastRiseMinutes is how far back the rise is measured, at least 5 minutes, as no change is seen over none
 var AlarmFastRiseMinutes = &SettingDefinition[int64]{
 	Identifier:   "alarm_fast_rise_minutes",
 	TypeString:   "number",
 	Default:      15,
-	ValidateFunc: Range(int64(0), MaxAlarmMinutes),
+	ValidateFunc: Range(int64(5), MaxAlarmMinutes),
 	ParseFunc:    ParseInt,
 }
 
@@ -354,11 +355,12 @@ var AlarmFastDrop = &SettingDefinition[int64]{
 	ParseFunc:    ParseInt,
 }
 
+// AlarmFastDropMinutes is how far back the drop is measured, at least 5 minutes, as no change is seen over none
 var AlarmFastDropMinutes = &SettingDefinition[int64]{
 	Identifier:   "alarm_fast_drop_minutes",
 	TypeString:   "number",
 	Default:      15,
-	ValidateFunc: Range(int64(0), MaxAlarmMinutes),
+	ValidateFunc: Range(int64(5), MaxAlarmMinutes),
 	ParseFunc:    ParseInt,
 }
 
