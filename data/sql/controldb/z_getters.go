@@ -488,14 +488,14 @@ func (m *Site) SetAlarmUrgentLowEnabled(v *bool) {
 	m.AlarmUrgentLowEnabled = v
 }
 
-// GetAlarmUrgentLow returns the AlarmUrgentLow value.
-func (m Site) GetAlarmUrgentLow() *int64 {
-	return m.AlarmUrgentLow
+// GetAlarmUrgentLowMgdl returns the AlarmUrgentLowMgdl value.
+func (m Site) GetAlarmUrgentLowMgdl() *int64 {
+	return m.AlarmUrgentLowMgdl
 }
 
-// SetAlarmUrgentLow sets the AlarmUrgentLow value and returns the updated Site.
-func (m *Site) SetAlarmUrgentLow(v *int64) {
-	m.AlarmUrgentLow = v
+// SetAlarmUrgentLowMgdl sets the AlarmUrgentLowMgdl value and returns the updated Site.
+func (m *Site) SetAlarmUrgentLowMgdl(v *int64) {
+	m.AlarmUrgentLowMgdl = v
 }
 
 // GetAlarmLowEnabled returns the AlarmLowEnabled value.
@@ -508,14 +508,14 @@ func (m *Site) SetAlarmLowEnabled(v *bool) {
 	m.AlarmLowEnabled = v
 }
 
-// GetAlarmLow returns the AlarmLow value.
-func (m Site) GetAlarmLow() *int64 {
-	return m.AlarmLow
+// GetAlarmLowMgdl returns the AlarmLowMgdl value.
+func (m Site) GetAlarmLowMgdl() *int64 {
+	return m.AlarmLowMgdl
 }
 
-// SetAlarmLow sets the AlarmLow value and returns the updated Site.
-func (m *Site) SetAlarmLow(v *int64) {
-	m.AlarmLow = v
+// SetAlarmLowMgdl sets the AlarmLowMgdl value and returns the updated Site.
+func (m *Site) SetAlarmLowMgdl(v *int64) {
+	m.AlarmLowMgdl = v
 }
 
 // GetAlarmLowMinutes returns the AlarmLowMinutes value.
@@ -558,14 +558,14 @@ func (m *Site) SetAlarmHighEnabled(v *bool) {
 	m.AlarmHighEnabled = v
 }
 
-// GetAlarmHigh returns the AlarmHigh value.
-func (m Site) GetAlarmHigh() *int64 {
-	return m.AlarmHigh
+// GetAlarmHighMgdl returns the AlarmHighMgdl value.
+func (m Site) GetAlarmHighMgdl() *int64 {
+	return m.AlarmHighMgdl
 }
 
-// SetAlarmHigh sets the AlarmHigh value and returns the updated Site.
-func (m *Site) SetAlarmHigh(v *int64) {
-	m.AlarmHigh = v
+// SetAlarmHighMgdl sets the AlarmHighMgdl value and returns the updated Site.
+func (m *Site) SetAlarmHighMgdl(v *int64) {
+	m.AlarmHighMgdl = v
 }
 
 // GetAlarmHighMinutes returns the AlarmHighMinutes value.
@@ -588,14 +588,14 @@ func (m *Site) SetAlarmUrgentHighEnabled(v *bool) {
 	m.AlarmUrgentHighEnabled = v
 }
 
-// GetAlarmUrgentHigh returns the AlarmUrgentHigh value.
-func (m Site) GetAlarmUrgentHigh() *int64 {
-	return m.AlarmUrgentHigh
+// GetAlarmUrgentHighMgdl returns the AlarmUrgentHighMgdl value.
+func (m Site) GetAlarmUrgentHighMgdl() *int64 {
+	return m.AlarmUrgentHighMgdl
 }
 
-// SetAlarmUrgentHigh sets the AlarmUrgentHigh value and returns the updated Site.
-func (m *Site) SetAlarmUrgentHigh(v *int64) {
-	m.AlarmUrgentHigh = v
+// SetAlarmUrgentHighMgdl sets the AlarmUrgentHighMgdl value and returns the updated Site.
+func (m *Site) SetAlarmUrgentHighMgdl(v *int64) {
+	m.AlarmUrgentHighMgdl = v
 }
 
 // GetAlarmFastRiseEnabled returns the AlarmFastRiseEnabled value.
@@ -608,14 +608,14 @@ func (m *Site) SetAlarmFastRiseEnabled(v *bool) {
 	m.AlarmFastRiseEnabled = v
 }
 
-// GetAlarmFastRise returns the AlarmFastRise value.
-func (m Site) GetAlarmFastRise() *int64 {
-	return m.AlarmFastRise
+// GetAlarmFastRiseMgdl returns the AlarmFastRiseMgdl value.
+func (m Site) GetAlarmFastRiseMgdl() *int64 {
+	return m.AlarmFastRiseMgdl
 }
 
-// SetAlarmFastRise sets the AlarmFastRise value and returns the updated Site.
-func (m *Site) SetAlarmFastRise(v *int64) {
-	m.AlarmFastRise = v
+// SetAlarmFastRiseMgdl sets the AlarmFastRiseMgdl value and returns the updated Site.
+func (m *Site) SetAlarmFastRiseMgdl(v *int64) {
+	m.AlarmFastRiseMgdl = v
 }
 
 // GetAlarmFastRiseMinutes returns the AlarmFastRiseMinutes value.
@@ -638,14 +638,14 @@ func (m *Site) SetAlarmFastDropEnabled(v *bool) {
 	m.AlarmFastDropEnabled = v
 }
 
-// GetAlarmFastDrop returns the AlarmFastDrop value.
-func (m Site) GetAlarmFastDrop() *int64 {
-	return m.AlarmFastDrop
+// GetAlarmFastDropMgdl returns the AlarmFastDropMgdl value.
+func (m Site) GetAlarmFastDropMgdl() *int64 {
+	return m.AlarmFastDropMgdl
 }
 
-// SetAlarmFastDrop sets the AlarmFastDrop value and returns the updated Site.
-func (m *Site) SetAlarmFastDrop(v *int64) {
-	m.AlarmFastDrop = v
+// SetAlarmFastDropMgdl sets the AlarmFastDropMgdl value and returns the updated Site.
+func (m *Site) SetAlarmFastDropMgdl(v *int64) {
+	m.AlarmFastDropMgdl = v
 }
 
 // GetAlarmFastDropMinutes returns the AlarmFastDropMinutes value.
@@ -1068,14 +1068,14 @@ func (m *SiteIdentity) SetAlarmUrgentLowEnabled(v *bool) {
 	m.AlarmUrgentLowEnabled = v
 }
 
-// GetAlarmUrgentLow returns the AlarmUrgentLow value.
-func (m SiteIdentity) GetAlarmUrgentLow() *int64 {
-	return m.AlarmUrgentLow
+// GetAlarmUrgentLowMgdl returns the AlarmUrgentLowMgdl value.
+func (m SiteIdentity) GetAlarmUrgentLowMgdl() *int64 {
+	return m.AlarmUrgentLowMgdl
 }
 
-// SetAlarmUrgentLow sets the AlarmUrgentLow value and returns the updated SiteIdentity.
-func (m *SiteIdentity) SetAlarmUrgentLow(v *int64) {
-	m.AlarmUrgentLow = v
+// SetAlarmUrgentLowMgdl sets the AlarmUrgentLowMgdl value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmUrgentLowMgdl(v *int64) {
+	m.AlarmUrgentLowMgdl = v
 }
 
 // GetAlarmLowEnabled returns the AlarmLowEnabled value.
@@ -1088,14 +1088,14 @@ func (m *SiteIdentity) SetAlarmLowEnabled(v *bool) {
 	m.AlarmLowEnabled = v
 }
 
-// GetAlarmLow returns the AlarmLow value.
-func (m SiteIdentity) GetAlarmLow() *int64 {
-	return m.AlarmLow
+// GetAlarmLowMgdl returns the AlarmLowMgdl value.
+func (m SiteIdentity) GetAlarmLowMgdl() *int64 {
+	return m.AlarmLowMgdl
 }
 
-// SetAlarmLow sets the AlarmLow value and returns the updated SiteIdentity.
-func (m *SiteIdentity) SetAlarmLow(v *int64) {
-	m.AlarmLow = v
+// SetAlarmLowMgdl sets the AlarmLowMgdl value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmLowMgdl(v *int64) {
+	m.AlarmLowMgdl = v
 }
 
 // GetAlarmLowMinutes returns the AlarmLowMinutes value.
@@ -1138,14 +1138,14 @@ func (m *SiteIdentity) SetAlarmHighEnabled(v *bool) {
 	m.AlarmHighEnabled = v
 }
 
-// GetAlarmHigh returns the AlarmHigh value.
-func (m SiteIdentity) GetAlarmHigh() *int64 {
-	return m.AlarmHigh
+// GetAlarmHighMgdl returns the AlarmHighMgdl value.
+func (m SiteIdentity) GetAlarmHighMgdl() *int64 {
+	return m.AlarmHighMgdl
 }
 
-// SetAlarmHigh sets the AlarmHigh value and returns the updated SiteIdentity.
-func (m *SiteIdentity) SetAlarmHigh(v *int64) {
-	m.AlarmHigh = v
+// SetAlarmHighMgdl sets the AlarmHighMgdl value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmHighMgdl(v *int64) {
+	m.AlarmHighMgdl = v
 }
 
 // GetAlarmHighMinutes returns the AlarmHighMinutes value.
@@ -1168,14 +1168,14 @@ func (m *SiteIdentity) SetAlarmUrgentHighEnabled(v *bool) {
 	m.AlarmUrgentHighEnabled = v
 }
 
-// GetAlarmUrgentHigh returns the AlarmUrgentHigh value.
-func (m SiteIdentity) GetAlarmUrgentHigh() *int64 {
-	return m.AlarmUrgentHigh
+// GetAlarmUrgentHighMgdl returns the AlarmUrgentHighMgdl value.
+func (m SiteIdentity) GetAlarmUrgentHighMgdl() *int64 {
+	return m.AlarmUrgentHighMgdl
 }
 
-// SetAlarmUrgentHigh sets the AlarmUrgentHigh value and returns the updated SiteIdentity.
-func (m *SiteIdentity) SetAlarmUrgentHigh(v *int64) {
-	m.AlarmUrgentHigh = v
+// SetAlarmUrgentHighMgdl sets the AlarmUrgentHighMgdl value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmUrgentHighMgdl(v *int64) {
+	m.AlarmUrgentHighMgdl = v
 }
 
 // GetAlarmFastRiseEnabled returns the AlarmFastRiseEnabled value.
@@ -1188,14 +1188,14 @@ func (m *SiteIdentity) SetAlarmFastRiseEnabled(v *bool) {
 	m.AlarmFastRiseEnabled = v
 }
 
-// GetAlarmFastRise returns the AlarmFastRise value.
-func (m SiteIdentity) GetAlarmFastRise() *int64 {
-	return m.AlarmFastRise
+// GetAlarmFastRiseMgdl returns the AlarmFastRiseMgdl value.
+func (m SiteIdentity) GetAlarmFastRiseMgdl() *int64 {
+	return m.AlarmFastRiseMgdl
 }
 
-// SetAlarmFastRise sets the AlarmFastRise value and returns the updated SiteIdentity.
-func (m *SiteIdentity) SetAlarmFastRise(v *int64) {
-	m.AlarmFastRise = v
+// SetAlarmFastRiseMgdl sets the AlarmFastRiseMgdl value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmFastRiseMgdl(v *int64) {
+	m.AlarmFastRiseMgdl = v
 }
 
 // GetAlarmFastRiseMinutes returns the AlarmFastRiseMinutes value.
@@ -1218,14 +1218,14 @@ func (m *SiteIdentity) SetAlarmFastDropEnabled(v *bool) {
 	m.AlarmFastDropEnabled = v
 }
 
-// GetAlarmFastDrop returns the AlarmFastDrop value.
-func (m SiteIdentity) GetAlarmFastDrop() *int64 {
-	return m.AlarmFastDrop
+// GetAlarmFastDropMgdl returns the AlarmFastDropMgdl value.
+func (m SiteIdentity) GetAlarmFastDropMgdl() *int64 {
+	return m.AlarmFastDropMgdl
 }
 
-// SetAlarmFastDrop sets the AlarmFastDrop value and returns the updated SiteIdentity.
-func (m *SiteIdentity) SetAlarmFastDrop(v *int64) {
-	m.AlarmFastDrop = v
+// SetAlarmFastDropMgdl sets the AlarmFastDropMgdl value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetAlarmFastDropMgdl(v *int64) {
+	m.AlarmFastDropMgdl = v
 }
 
 // GetAlarmFastDropMinutes returns the AlarmFastDropMinutes value.
@@ -1918,14 +1918,14 @@ func (m *UpdateSiteIdentitySettingsParams) SetAlarmUrgentLowEnabled(v *bool) {
 	m.AlarmUrgentLowEnabled = v
 }
 
-// GetAlarmUrgentLow returns the AlarmUrgentLow value.
-func (m UpdateSiteIdentitySettingsParams) GetAlarmUrgentLow() *int64 {
-	return m.AlarmUrgentLow
+// GetAlarmUrgentLowMgdl returns the AlarmUrgentLowMgdl value.
+func (m UpdateSiteIdentitySettingsParams) GetAlarmUrgentLowMgdl() *int64 {
+	return m.AlarmUrgentLowMgdl
 }
 
-// SetAlarmUrgentLow sets the AlarmUrgentLow value and returns the updated UpdateSiteIdentitySettingsParams.
-func (m *UpdateSiteIdentitySettingsParams) SetAlarmUrgentLow(v *int64) {
-	m.AlarmUrgentLow = v
+// SetAlarmUrgentLowMgdl sets the AlarmUrgentLowMgdl value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m *UpdateSiteIdentitySettingsParams) SetAlarmUrgentLowMgdl(v *int64) {
+	m.AlarmUrgentLowMgdl = v
 }
 
 // GetAlarmLowEnabled returns the AlarmLowEnabled value.
@@ -1938,14 +1938,14 @@ func (m *UpdateSiteIdentitySettingsParams) SetAlarmLowEnabled(v *bool) {
 	m.AlarmLowEnabled = v
 }
 
-// GetAlarmLow returns the AlarmLow value.
-func (m UpdateSiteIdentitySettingsParams) GetAlarmLow() *int64 {
-	return m.AlarmLow
+// GetAlarmLowMgdl returns the AlarmLowMgdl value.
+func (m UpdateSiteIdentitySettingsParams) GetAlarmLowMgdl() *int64 {
+	return m.AlarmLowMgdl
 }
 
-// SetAlarmLow sets the AlarmLow value and returns the updated UpdateSiteIdentitySettingsParams.
-func (m *UpdateSiteIdentitySettingsParams) SetAlarmLow(v *int64) {
-	m.AlarmLow = v
+// SetAlarmLowMgdl sets the AlarmLowMgdl value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m *UpdateSiteIdentitySettingsParams) SetAlarmLowMgdl(v *int64) {
+	m.AlarmLowMgdl = v
 }
 
 // GetAlarmLowMinutes returns the AlarmLowMinutes value.
@@ -1988,14 +1988,14 @@ func (m *UpdateSiteIdentitySettingsParams) SetAlarmHighEnabled(v *bool) {
 	m.AlarmHighEnabled = v
 }
 
-// GetAlarmHigh returns the AlarmHigh value.
-func (m UpdateSiteIdentitySettingsParams) GetAlarmHigh() *int64 {
-	return m.AlarmHigh
+// GetAlarmHighMgdl returns the AlarmHighMgdl value.
+func (m UpdateSiteIdentitySettingsParams) GetAlarmHighMgdl() *int64 {
+	return m.AlarmHighMgdl
 }
 
-// SetAlarmHigh sets the AlarmHigh value and returns the updated UpdateSiteIdentitySettingsParams.
-func (m *UpdateSiteIdentitySettingsParams) SetAlarmHigh(v *int64) {
-	m.AlarmHigh = v
+// SetAlarmHighMgdl sets the AlarmHighMgdl value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m *UpdateSiteIdentitySettingsParams) SetAlarmHighMgdl(v *int64) {
+	m.AlarmHighMgdl = v
 }
 
 // GetAlarmHighMinutes returns the AlarmHighMinutes value.
@@ -2018,14 +2018,14 @@ func (m *UpdateSiteIdentitySettingsParams) SetAlarmUrgentHighEnabled(v *bool) {
 	m.AlarmUrgentHighEnabled = v
 }
 
-// GetAlarmUrgentHigh returns the AlarmUrgentHigh value.
-func (m UpdateSiteIdentitySettingsParams) GetAlarmUrgentHigh() *int64 {
-	return m.AlarmUrgentHigh
+// GetAlarmUrgentHighMgdl returns the AlarmUrgentHighMgdl value.
+func (m UpdateSiteIdentitySettingsParams) GetAlarmUrgentHighMgdl() *int64 {
+	return m.AlarmUrgentHighMgdl
 }
 
-// SetAlarmUrgentHigh sets the AlarmUrgentHigh value and returns the updated UpdateSiteIdentitySettingsParams.
-func (m *UpdateSiteIdentitySettingsParams) SetAlarmUrgentHigh(v *int64) {
-	m.AlarmUrgentHigh = v
+// SetAlarmUrgentHighMgdl sets the AlarmUrgentHighMgdl value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m *UpdateSiteIdentitySettingsParams) SetAlarmUrgentHighMgdl(v *int64) {
+	m.AlarmUrgentHighMgdl = v
 }
 
 // GetAlarmFastRiseEnabled returns the AlarmFastRiseEnabled value.
@@ -2038,14 +2038,14 @@ func (m *UpdateSiteIdentitySettingsParams) SetAlarmFastRiseEnabled(v *bool) {
 	m.AlarmFastRiseEnabled = v
 }
 
-// GetAlarmFastRise returns the AlarmFastRise value.
-func (m UpdateSiteIdentitySettingsParams) GetAlarmFastRise() *int64 {
-	return m.AlarmFastRise
+// GetAlarmFastRiseMgdl returns the AlarmFastRiseMgdl value.
+func (m UpdateSiteIdentitySettingsParams) GetAlarmFastRiseMgdl() *int64 {
+	return m.AlarmFastRiseMgdl
 }
 
-// SetAlarmFastRise sets the AlarmFastRise value and returns the updated UpdateSiteIdentitySettingsParams.
-func (m *UpdateSiteIdentitySettingsParams) SetAlarmFastRise(v *int64) {
-	m.AlarmFastRise = v
+// SetAlarmFastRiseMgdl sets the AlarmFastRiseMgdl value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m *UpdateSiteIdentitySettingsParams) SetAlarmFastRiseMgdl(v *int64) {
+	m.AlarmFastRiseMgdl = v
 }
 
 // GetAlarmFastRiseMinutes returns the AlarmFastRiseMinutes value.
@@ -2068,14 +2068,14 @@ func (m *UpdateSiteIdentitySettingsParams) SetAlarmFastDropEnabled(v *bool) {
 	m.AlarmFastDropEnabled = v
 }
 
-// GetAlarmFastDrop returns the AlarmFastDrop value.
-func (m UpdateSiteIdentitySettingsParams) GetAlarmFastDrop() *int64 {
-	return m.AlarmFastDrop
+// GetAlarmFastDropMgdl returns the AlarmFastDropMgdl value.
+func (m UpdateSiteIdentitySettingsParams) GetAlarmFastDropMgdl() *int64 {
+	return m.AlarmFastDropMgdl
 }
 
-// SetAlarmFastDrop sets the AlarmFastDrop value and returns the updated UpdateSiteIdentitySettingsParams.
-func (m *UpdateSiteIdentitySettingsParams) SetAlarmFastDrop(v *int64) {
-	m.AlarmFastDrop = v
+// SetAlarmFastDropMgdl sets the AlarmFastDropMgdl value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m *UpdateSiteIdentitySettingsParams) SetAlarmFastDropMgdl(v *int64) {
+	m.AlarmFastDropMgdl = v
 }
 
 // GetAlarmFastDropMinutes returns the AlarmFastDropMinutes value.
@@ -2378,14 +2378,14 @@ func (m *UpdateSitesSettingsParams) SetAlarmUrgentLowEnabled(v *bool) {
 	m.AlarmUrgentLowEnabled = v
 }
 
-// GetAlarmUrgentLow returns the AlarmUrgentLow value.
-func (m UpdateSitesSettingsParams) GetAlarmUrgentLow() *int64 {
-	return m.AlarmUrgentLow
+// GetAlarmUrgentLowMgdl returns the AlarmUrgentLowMgdl value.
+func (m UpdateSitesSettingsParams) GetAlarmUrgentLowMgdl() *int64 {
+	return m.AlarmUrgentLowMgdl
 }
 
-// SetAlarmUrgentLow sets the AlarmUrgentLow value and returns the updated UpdateSitesSettingsParams.
-func (m *UpdateSitesSettingsParams) SetAlarmUrgentLow(v *int64) {
-	m.AlarmUrgentLow = v
+// SetAlarmUrgentLowMgdl sets the AlarmUrgentLowMgdl value and returns the updated UpdateSitesSettingsParams.
+func (m *UpdateSitesSettingsParams) SetAlarmUrgentLowMgdl(v *int64) {
+	m.AlarmUrgentLowMgdl = v
 }
 
 // GetAlarmLowEnabled returns the AlarmLowEnabled value.
@@ -2398,14 +2398,14 @@ func (m *UpdateSitesSettingsParams) SetAlarmLowEnabled(v *bool) {
 	m.AlarmLowEnabled = v
 }
 
-// GetAlarmLow returns the AlarmLow value.
-func (m UpdateSitesSettingsParams) GetAlarmLow() *int64 {
-	return m.AlarmLow
+// GetAlarmLowMgdl returns the AlarmLowMgdl value.
+func (m UpdateSitesSettingsParams) GetAlarmLowMgdl() *int64 {
+	return m.AlarmLowMgdl
 }
 
-// SetAlarmLow sets the AlarmLow value and returns the updated UpdateSitesSettingsParams.
-func (m *UpdateSitesSettingsParams) SetAlarmLow(v *int64) {
-	m.AlarmLow = v
+// SetAlarmLowMgdl sets the AlarmLowMgdl value and returns the updated UpdateSitesSettingsParams.
+func (m *UpdateSitesSettingsParams) SetAlarmLowMgdl(v *int64) {
+	m.AlarmLowMgdl = v
 }
 
 // GetAlarmLowMinutes returns the AlarmLowMinutes value.
@@ -2448,14 +2448,14 @@ func (m *UpdateSitesSettingsParams) SetAlarmHighEnabled(v *bool) {
 	m.AlarmHighEnabled = v
 }
 
-// GetAlarmHigh returns the AlarmHigh value.
-func (m UpdateSitesSettingsParams) GetAlarmHigh() *int64 {
-	return m.AlarmHigh
+// GetAlarmHighMgdl returns the AlarmHighMgdl value.
+func (m UpdateSitesSettingsParams) GetAlarmHighMgdl() *int64 {
+	return m.AlarmHighMgdl
 }
 
-// SetAlarmHigh sets the AlarmHigh value and returns the updated UpdateSitesSettingsParams.
-func (m *UpdateSitesSettingsParams) SetAlarmHigh(v *int64) {
-	m.AlarmHigh = v
+// SetAlarmHighMgdl sets the AlarmHighMgdl value and returns the updated UpdateSitesSettingsParams.
+func (m *UpdateSitesSettingsParams) SetAlarmHighMgdl(v *int64) {
+	m.AlarmHighMgdl = v
 }
 
 // GetAlarmHighMinutes returns the AlarmHighMinutes value.
@@ -2478,14 +2478,14 @@ func (m *UpdateSitesSettingsParams) SetAlarmUrgentHighEnabled(v *bool) {
 	m.AlarmUrgentHighEnabled = v
 }
 
-// GetAlarmUrgentHigh returns the AlarmUrgentHigh value.
-func (m UpdateSitesSettingsParams) GetAlarmUrgentHigh() *int64 {
-	return m.AlarmUrgentHigh
+// GetAlarmUrgentHighMgdl returns the AlarmUrgentHighMgdl value.
+func (m UpdateSitesSettingsParams) GetAlarmUrgentHighMgdl() *int64 {
+	return m.AlarmUrgentHighMgdl
 }
 
-// SetAlarmUrgentHigh sets the AlarmUrgentHigh value and returns the updated UpdateSitesSettingsParams.
-func (m *UpdateSitesSettingsParams) SetAlarmUrgentHigh(v *int64) {
-	m.AlarmUrgentHigh = v
+// SetAlarmUrgentHighMgdl sets the AlarmUrgentHighMgdl value and returns the updated UpdateSitesSettingsParams.
+func (m *UpdateSitesSettingsParams) SetAlarmUrgentHighMgdl(v *int64) {
+	m.AlarmUrgentHighMgdl = v
 }
 
 // GetAlarmFastRiseEnabled returns the AlarmFastRiseEnabled value.
@@ -2498,14 +2498,14 @@ func (m *UpdateSitesSettingsParams) SetAlarmFastRiseEnabled(v *bool) {
 	m.AlarmFastRiseEnabled = v
 }
 
-// GetAlarmFastRise returns the AlarmFastRise value.
-func (m UpdateSitesSettingsParams) GetAlarmFastRise() *int64 {
-	return m.AlarmFastRise
+// GetAlarmFastRiseMgdl returns the AlarmFastRiseMgdl value.
+func (m UpdateSitesSettingsParams) GetAlarmFastRiseMgdl() *int64 {
+	return m.AlarmFastRiseMgdl
 }
 
-// SetAlarmFastRise sets the AlarmFastRise value and returns the updated UpdateSitesSettingsParams.
-func (m *UpdateSitesSettingsParams) SetAlarmFastRise(v *int64) {
-	m.AlarmFastRise = v
+// SetAlarmFastRiseMgdl sets the AlarmFastRiseMgdl value and returns the updated UpdateSitesSettingsParams.
+func (m *UpdateSitesSettingsParams) SetAlarmFastRiseMgdl(v *int64) {
+	m.AlarmFastRiseMgdl = v
 }
 
 // GetAlarmFastRiseMinutes returns the AlarmFastRiseMinutes value.
@@ -2528,14 +2528,14 @@ func (m *UpdateSitesSettingsParams) SetAlarmFastDropEnabled(v *bool) {
 	m.AlarmFastDropEnabled = v
 }
 
-// GetAlarmFastDrop returns the AlarmFastDrop value.
-func (m UpdateSitesSettingsParams) GetAlarmFastDrop() *int64 {
-	return m.AlarmFastDrop
+// GetAlarmFastDropMgdl returns the AlarmFastDropMgdl value.
+func (m UpdateSitesSettingsParams) GetAlarmFastDropMgdl() *int64 {
+	return m.AlarmFastDropMgdl
 }
 
-// SetAlarmFastDrop sets the AlarmFastDrop value and returns the updated UpdateSitesSettingsParams.
-func (m *UpdateSitesSettingsParams) SetAlarmFastDrop(v *int64) {
-	m.AlarmFastDrop = v
+// SetAlarmFastDropMgdl sets the AlarmFastDropMgdl value and returns the updated UpdateSitesSettingsParams.
+func (m *UpdateSitesSettingsParams) SetAlarmFastDropMgdl(v *int64) {
+	m.AlarmFastDropMgdl = v
 }
 
 // GetAlarmFastDropMinutes returns the AlarmFastDropMinutes value.

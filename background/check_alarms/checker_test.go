@@ -169,7 +169,7 @@ func TestSitesWithoutAlarmsAreNotChecked(t *testing.T) {
 func TestALowLastsOverEarlierReadings(t *testing.T) {
 	r := newRig(t)
 	ctx := context.TODO()
-	require.NoError(t, r.control.UpdateSitesSettings(ctx, controldb.UpdateSitesSettingsParams{ID: r.site, AlarmLowEnabled: new(true), AlarmLow: new(int64(72)), AlarmLowMinutes: new(int64(5))}))
+	require.NoError(t, r.control.UpdateSitesSettings(ctx, controldb.UpdateSitesSettingsParams{ID: r.site, AlarmLowEnabled: new(true), AlarmLowMgdl: new(int64(72)), AlarmLowMinutes: new(int64(5))}))
 	r.reading(70)
 	require.Empty(t, r.check(false), "one reading under it is not enough")
 	r.now = r.now.Add(5 * time.Minute)
@@ -301,7 +301,7 @@ func TestALongHighAtManyReadingsAMinute(t *testing.T) {
 	r := newRig(t)
 	identity := r.identities()[0]
 	require.NoError(t, r.control.UpdateSiteIdentitySettings(context.TODO(), controldb.UpdateSiteIdentitySettingsParams{
-		ID: identity.ID, SiteID: r.site, AlarmHighEnabled: new(true), AlarmHigh: new(int64(180)), AlarmHighMinutes: new(int64(120)),
+		ID: identity.ID, SiteID: r.site, AlarmHighEnabled: new(true), AlarmHighMgdl: new(int64(180)), AlarmHighMinutes: new(int64(120)),
 	}))
 	// Ten readings a minute for 120 minutes, each more than 10 mg/dL from the others within a minute, so none is the
 	// same glucose as another
