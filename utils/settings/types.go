@@ -285,22 +285,22 @@ var allSettingNames = []string{
 	"carb_max_absorption_hours",
 	"carb_min_5m_impact",
 	"alarm_urgent_low_enabled",
-	"alarm_urgent_low",
+	"alarm_urgent_low_mgdl",
 	"alarm_low_enabled",
-	"alarm_low",
+	"alarm_low_mgdl",
 	"alarm_low_minutes",
 	"alarm_low_prediction_enabled",
 	"alarm_low_prediction_minutes",
 	"alarm_high_enabled",
-	"alarm_high",
+	"alarm_high_mgdl",
 	"alarm_high_minutes",
 	"alarm_urgent_high_enabled",
-	"alarm_urgent_high",
+	"alarm_urgent_high_mgdl",
 	"alarm_fast_rise_enabled",
-	"alarm_fast_rise",
+	"alarm_fast_rise_mgdl",
 	"alarm_fast_rise_minutes",
 	"alarm_fast_drop_enabled",
-	"alarm_fast_drop",
+	"alarm_fast_drop_mgdl",
 	"alarm_fast_drop_minutes",
 	"alarm_no_data_enabled",
 	"alarm_no_data_minutes",
@@ -336,22 +336,22 @@ type SettingsGetter interface {
 	GetCarbMaxAbsorptionHours() *float64
 	GetCarbMin5mImpact() *float64
 	GetAlarmUrgentLowEnabled() *bool
-	GetAlarmUrgentLow() *int64
+	GetAlarmUrgentLowMgdl() *int64
 	GetAlarmLowEnabled() *bool
-	GetAlarmLow() *int64
+	GetAlarmLowMgdl() *int64
 	GetAlarmLowMinutes() *int64
 	GetAlarmLowPredictionEnabled() *bool
 	GetAlarmLowPredictionMinutes() *int64
 	GetAlarmHighEnabled() *bool
-	GetAlarmHigh() *int64
+	GetAlarmHighMgdl() *int64
 	GetAlarmHighMinutes() *int64
 	GetAlarmUrgentHighEnabled() *bool
-	GetAlarmUrgentHigh() *int64
+	GetAlarmUrgentHighMgdl() *int64
 	GetAlarmFastRiseEnabled() *bool
-	GetAlarmFastRise() *int64
+	GetAlarmFastRiseMgdl() *int64
 	GetAlarmFastRiseMinutes() *int64
 	GetAlarmFastDropEnabled() *bool
-	GetAlarmFastDrop() *int64
+	GetAlarmFastDropMgdl() *int64
 	GetAlarmFastDropMinutes() *int64
 	GetAlarmNoDataEnabled() *bool
 	GetAlarmNoDataMinutes() *int64
@@ -402,12 +402,12 @@ func GetSettingByName(name string, in SettingsGetter) any {
 		return in.GetCarbMin5mImpact()
 	case "alarm_urgent_low_enabled":
 		return in.GetAlarmUrgentLowEnabled()
-	case "alarm_urgent_low":
-		return in.GetAlarmUrgentLow()
+	case "alarm_urgent_low_mgdl":
+		return in.GetAlarmUrgentLowMgdl()
 	case "alarm_low_enabled":
 		return in.GetAlarmLowEnabled()
-	case "alarm_low":
-		return in.GetAlarmLow()
+	case "alarm_low_mgdl":
+		return in.GetAlarmLowMgdl()
 	case "alarm_low_minutes":
 		return in.GetAlarmLowMinutes()
 	case "alarm_low_prediction_enabled":
@@ -416,24 +416,24 @@ func GetSettingByName(name string, in SettingsGetter) any {
 		return in.GetAlarmLowPredictionMinutes()
 	case "alarm_high_enabled":
 		return in.GetAlarmHighEnabled()
-	case "alarm_high":
-		return in.GetAlarmHigh()
+	case "alarm_high_mgdl":
+		return in.GetAlarmHighMgdl()
 	case "alarm_high_minutes":
 		return in.GetAlarmHighMinutes()
 	case "alarm_urgent_high_enabled":
 		return in.GetAlarmUrgentHighEnabled()
-	case "alarm_urgent_high":
-		return in.GetAlarmUrgentHigh()
+	case "alarm_urgent_high_mgdl":
+		return in.GetAlarmUrgentHighMgdl()
 	case "alarm_fast_rise_enabled":
 		return in.GetAlarmFastRiseEnabled()
-	case "alarm_fast_rise":
-		return in.GetAlarmFastRise()
+	case "alarm_fast_rise_mgdl":
+		return in.GetAlarmFastRiseMgdl()
 	case "alarm_fast_rise_minutes":
 		return in.GetAlarmFastRiseMinutes()
 	case "alarm_fast_drop_enabled":
 		return in.GetAlarmFastDropEnabled()
-	case "alarm_fast_drop":
-		return in.GetAlarmFastDrop()
+	case "alarm_fast_drop_mgdl":
+		return in.GetAlarmFastDropMgdl()
 	case "alarm_fast_drop_minutes":
 		return in.GetAlarmFastDropMinutes()
 	case "alarm_no_data_enabled":
@@ -478,22 +478,22 @@ type SettingsSetter interface {
 	SetCarbMaxAbsorptionHours(v *float64)
 	SetCarbMin5mImpact(v *float64)
 	SetAlarmUrgentLowEnabled(v *bool)
-	SetAlarmUrgentLow(v *int64)
+	SetAlarmUrgentLowMgdl(v *int64)
 	SetAlarmLowEnabled(v *bool)
-	SetAlarmLow(v *int64)
+	SetAlarmLowMgdl(v *int64)
 	SetAlarmLowMinutes(v *int64)
 	SetAlarmLowPredictionEnabled(v *bool)
 	SetAlarmLowPredictionMinutes(v *int64)
 	SetAlarmHighEnabled(v *bool)
-	SetAlarmHigh(v *int64)
+	SetAlarmHighMgdl(v *int64)
 	SetAlarmHighMinutes(v *int64)
 	SetAlarmUrgentHighEnabled(v *bool)
-	SetAlarmUrgentHigh(v *int64)
+	SetAlarmUrgentHighMgdl(v *int64)
 	SetAlarmFastRiseEnabled(v *bool)
-	SetAlarmFastRise(v *int64)
+	SetAlarmFastRiseMgdl(v *int64)
 	SetAlarmFastRiseMinutes(v *int64)
 	SetAlarmFastDropEnabled(v *bool)
-	SetAlarmFastDrop(v *int64)
+	SetAlarmFastDropMgdl(v *int64)
 	SetAlarmFastDropMinutes(v *int64)
 	SetAlarmNoDataEnabled(v *bool)
 	SetAlarmNoDataMinutes(v *int64)
@@ -525,22 +525,22 @@ func SetSettings(s SettingsSetter, g SettingsGetter) {
 	s.SetCarbMaxAbsorptionHours(g.GetCarbMaxAbsorptionHours())
 	s.SetCarbMin5mImpact(g.GetCarbMin5mImpact())
 	s.SetAlarmUrgentLowEnabled(g.GetAlarmUrgentLowEnabled())
-	s.SetAlarmUrgentLow(g.GetAlarmUrgentLow())
+	s.SetAlarmUrgentLowMgdl(g.GetAlarmUrgentLowMgdl())
 	s.SetAlarmLowEnabled(g.GetAlarmLowEnabled())
-	s.SetAlarmLow(g.GetAlarmLow())
+	s.SetAlarmLowMgdl(g.GetAlarmLowMgdl())
 	s.SetAlarmLowMinutes(g.GetAlarmLowMinutes())
 	s.SetAlarmLowPredictionEnabled(g.GetAlarmLowPredictionEnabled())
 	s.SetAlarmLowPredictionMinutes(g.GetAlarmLowPredictionMinutes())
 	s.SetAlarmHighEnabled(g.GetAlarmHighEnabled())
-	s.SetAlarmHigh(g.GetAlarmHigh())
+	s.SetAlarmHighMgdl(g.GetAlarmHighMgdl())
 	s.SetAlarmHighMinutes(g.GetAlarmHighMinutes())
 	s.SetAlarmUrgentHighEnabled(g.GetAlarmUrgentHighEnabled())
-	s.SetAlarmUrgentHigh(g.GetAlarmUrgentHigh())
+	s.SetAlarmUrgentHighMgdl(g.GetAlarmUrgentHighMgdl())
 	s.SetAlarmFastRiseEnabled(g.GetAlarmFastRiseEnabled())
-	s.SetAlarmFastRise(g.GetAlarmFastRise())
+	s.SetAlarmFastRiseMgdl(g.GetAlarmFastRiseMgdl())
 	s.SetAlarmFastRiseMinutes(g.GetAlarmFastRiseMinutes())
 	s.SetAlarmFastDropEnabled(g.GetAlarmFastDropEnabled())
-	s.SetAlarmFastDrop(g.GetAlarmFastDrop())
+	s.SetAlarmFastDropMgdl(g.GetAlarmFastDropMgdl())
 	s.SetAlarmFastDropMinutes(g.GetAlarmFastDropMinutes())
 	s.SetAlarmNoDataEnabled(g.GetAlarmNoDataEnabled())
 	s.SetAlarmNoDataMinutes(g.GetAlarmNoDataMinutes())

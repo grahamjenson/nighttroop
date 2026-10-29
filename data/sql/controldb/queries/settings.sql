@@ -31,26 +31,26 @@ UPDATE site_identities SET
 
     -- ALERTS
     alarm_urgent_low_enabled = sqlc.narg('AlarmUrgentLowEnabled'),
-    alarm_urgent_low = sqlc.narg('AlarmUrgentLow'),
+    alarm_urgent_low_mgdl = sqlc.narg('AlarmUrgentLowMgdl'),
 
     alarm_low_enabled = sqlc.narg('AlarmLowEnabled'),
-    alarm_low = sqlc.narg('AlarmLow'),
+    alarm_low_mgdl = sqlc.narg('AlarmLowMgdl'),
     alarm_low_minutes = sqlc.narg('AlarmLowMinutes'),
     alarm_low_prediction_enabled = sqlc.narg('AlarmLowPredictionEnabled'),
     alarm_low_prediction_minutes = sqlc.narg('AlarmLowPredictionMinutes'),
 
     alarm_high_enabled = sqlc.narg('AlarmHighEnabled'),
-    alarm_high = sqlc.narg('AlarmHigh'),
+    alarm_high_mgdl = sqlc.narg('AlarmHighMgdl'),
     alarm_high_minutes = sqlc.narg('AlarmHighMinutes'),
     alarm_urgent_high_enabled = sqlc.narg('AlarmUrgentHighEnabled'),
-    alarm_urgent_high = sqlc.narg('AlarmUrgentHigh'),
+    alarm_urgent_high_mgdl = sqlc.narg('AlarmUrgentHighMgdl'),
 
     alarm_fast_rise_enabled = sqlc.narg('AlarmFastRiseEnabled'),
-    alarm_fast_rise = sqlc.narg('AlarmFastRise'),
+    alarm_fast_rise_mgdl = sqlc.narg('AlarmFastRiseMgdl'),
     alarm_fast_rise_minutes = sqlc.narg('AlarmFastRiseMinutes'),
 
     alarm_fast_drop_enabled = sqlc.narg('AlarmFastDropEnabled'),
-    alarm_fast_drop = sqlc.narg('AlarmFastDrop'),
+    alarm_fast_drop_mgdl = sqlc.narg('AlarmFastDropMgdl'),
     alarm_fast_drop_minutes = sqlc.narg('AlarmFastDropMinutes'),
 
     alarm_no_data_enabled = sqlc.narg('AlarmNoDataEnabled'),
@@ -101,26 +101,26 @@ UPDATE sites SET
 
     -- ALERTS
     alarm_urgent_low_enabled = sqlc.narg('AlarmUrgentLowEnabled'),
-    alarm_urgent_low = sqlc.narg('AlarmUrgentLow'),
+    alarm_urgent_low_mgdl = sqlc.narg('AlarmUrgentLowMgdl'),
 
     alarm_low_enabled = sqlc.narg('AlarmLowEnabled'),
-    alarm_low = sqlc.narg('AlarmLow'),
+    alarm_low_mgdl = sqlc.narg('AlarmLowMgdl'),
     alarm_low_minutes = sqlc.narg('AlarmLowMinutes'),
     alarm_low_prediction_enabled = sqlc.narg('AlarmLowPredictionEnabled'),
     alarm_low_prediction_minutes = sqlc.narg('AlarmLowPredictionMinutes'),
 
     alarm_high_enabled = sqlc.narg('AlarmHighEnabled'),
-    alarm_high = sqlc.narg('AlarmHigh'),
+    alarm_high_mgdl = sqlc.narg('AlarmHighMgdl'),
     alarm_high_minutes = sqlc.narg('AlarmHighMinutes'),
     alarm_urgent_high_enabled = sqlc.narg('AlarmUrgentHighEnabled'),
-    alarm_urgent_high = sqlc.narg('AlarmUrgentHigh'),
+    alarm_urgent_high_mgdl = sqlc.narg('AlarmUrgentHighMgdl'),
 
     alarm_fast_rise_enabled = sqlc.narg('AlarmFastRiseEnabled'),
-    alarm_fast_rise = sqlc.narg('AlarmFastRise'),
+    alarm_fast_rise_mgdl = sqlc.narg('AlarmFastRiseMgdl'),
     alarm_fast_rise_minutes = sqlc.narg('AlarmFastRiseMinutes'),
 
     alarm_fast_drop_enabled = sqlc.narg('AlarmFastDropEnabled'),
-    alarm_fast_drop = sqlc.narg('AlarmFastDrop'),
+    alarm_fast_drop_mgdl = sqlc.narg('AlarmFastDropMgdl'),
     alarm_fast_drop_minutes = sqlc.narg('AlarmFastDropMinutes'),
 
     alarm_no_data_enabled = sqlc.narg('AlarmNoDataEnabled'),
