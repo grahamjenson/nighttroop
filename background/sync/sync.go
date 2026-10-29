@@ -37,6 +37,10 @@ import (
 
 // Dexcom is easier, but if say the dexcom servers are down we might encounter lots of timeouts, which we should detect quickly and slow down all syncing.
 
+// syncTimeout is all the time a Nightscout, Dexcom or Libre sync has, from its first request to its last write. A slow
+// or down source fails fast and is tried again later.
+const syncTimeout = 10 * time.Second
+
 // Background Jobs
 
 /////////////

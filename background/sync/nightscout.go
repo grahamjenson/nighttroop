@@ -41,7 +41,7 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 	nsc.Lock()
 	defer nsc.Unlock()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), syncTimeout)
 	defer cancel()
 
 	// One small call says which collections have changed, so unchanged ones are not read every sync

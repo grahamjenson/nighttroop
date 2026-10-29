@@ -69,7 +69,7 @@ func NewClient(username, password string, outsideUS bool) *Client {
 
 	return &Client{
 		httpClient: &http.Client{
-			Timeout: 30 * time.Second,
+			Timeout: 10 * time.Second,
 			// Never follow redirects, which could point at an internal host; the 3xx is a failure.
 			CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
 		},
