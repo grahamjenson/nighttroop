@@ -23,7 +23,14 @@ func ScreenshotPage(page playwright.Page, foldername string, testPath string, na
 	if _, err := page.Evaluate("document.fonts.ready"); err != nil {
 		return "", err
 	}
-	_, err := page.Screenshot(playwright.PageScreenshotOptions{
+	// A full page screenshot draws the sticky header where the window is scrolled to, part way down the page, so it is
+	// taken from the top of the page, with the header at the top, and the page scrolled back after
+	scrolled, err := page.Evaluate("() => { const y = window.scrollY; window.scrollTo(0, 0); return y; }")
+	if err != nil {
+		return "", err
+	}
+	defer page.Evaluate("y => window.scrollTo(0, y)", scrolled)
+	_, err = page.Screenshot(playwright.PageScreenshotOptions{
 		Path:       playwright.String(filepath.Join(dir, name+".png")),
 		FullPage:   playwright.Bool(true),
 		Animations: playwright.ScreenshotAnimationsDisabled,
@@ -149,12 +156,10 @@ func waitForVisible(locator playwright.Locator) {
 	_ = locator.First().WaitFor(playwright.LocatorWaitForOptions{State: playwright.WaitForSelectorStateVisible, Timeout: playwright.Float(visibleWait)})
 }
 
-// clickableScript waits for transitions, such as the header sliding back in, to finish, so it checks the page as it
-// settles. It then scrolls the page, as a user would, to bring the element into the window or out from under
-// something fixed to it such as the header, but not boxes that scroll inside the page, and checks the element is what
-// a click at its centre would hit
-const clickableScript = `async el => {
-	await Promise.all(document.getAnimations().filter(a => a instanceof CSSTransition).map(a => a.finished.catch(() => {})));
+// clickableScript scrolls the page, as a user would, to bring the element into the window or out from under
+// something fixed to it such as the header, but not boxes that scroll inside the page, then checks the element is
+// what a click at its centre would hit
+const clickableScript = `el => {
 	const hits = () => {
 		const r = el.getBoundingClientRect();
 		const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);

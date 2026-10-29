@@ -294,6 +294,9 @@
   .top-1\/2 {
     top: calc(1 / 2 * 100%);
   }
+  .top-14 {
+    top: calc(var(--spacing) * 14);
+  }
   .right-0 {
     right: calc(var(--spacing) * 0);
   }
@@ -308,6 +311,9 @@
   }
   .z-10 {
     z-index: 10;
+  }
+  .z-30 {
+    z-index: 30;
   }
   .z-40 {
     z-index: 40;
@@ -1455,11 +1461,6 @@
     transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
     transition-duration: var(--tw-duration, var(--default-transition-duration));
   }
-  .transition-\[visibility\] {
-    transition-property: visibility;
-    transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
-    transition-duration: var(--tw-duration, var(--default-transition-duration));
-  }
   .transition-all {
     transition-property: all;
     transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
@@ -1516,11 +1517,6 @@
   .select-none {
     -webkit-user-select: none;
     user-select: none;
-  }
-  .group-data-\[hidden\]\:invisible {
-    &:is(:where(.group)[data-hidden] *) {
-      visibility: hidden;
-    }
   }
   .group-data-\[tui-selectbox-selected\=true\]\:opacity-100 {
     &:is(:where(.group)[data-tui-selectbox-selected="true"] *) {
@@ -1974,12 +1970,6 @@
       @supports (color: color-mix(in lab, red, red)) {
         --tw-ring-color: color-mix(in oklab, var(--destructive) 20%, transparent);
       }
-    }
-  }
-  .data-\[hidden\]\:-translate-y-14 {
-    &[data-hidden] {
-      --tw-translate-y: calc(var(--spacing) * -14);
-      translate: var(--tw-translate-x) var(--tw-translate-y);
     }
   }
   .data-\[position\=bottom-center\]\:bottom-0 {

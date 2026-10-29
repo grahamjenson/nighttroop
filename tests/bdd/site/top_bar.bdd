@@ -12,23 +12,14 @@ RUN_BACKGROUND_JOBS
 GOTO /
 ASSERT_STATUS 200
 ASSERT_VISIBLE #site--summary--glucose--reading
-ASSERT_VISIBLE #site--nav--home
 
-// Scrolling down slides the top bar away, out of the way of what is being read
+// Scrolled down the page, the top bar is still there to use, with its menu working
 SCROLL 500
-ASSERT_NOT_VISIBLE #site--nav--home
-ASSERT_NOT_VISIBLE #site--settings-menu
-SCREENSHOT top_bar_hidden
-
-// Scrolling back up a little brings it back, at the top of the window and over the page, with its menu working
-SCROLL -100
 ASSERT_VISIBLE #site--nav--home
-SCREENSHOT top_bar_shown
 CLICK #site--settings-menu
 ASSERT_VISIBLE #site--data--glucose-button
+PRESS Escape
 
-// Going to another page from its menu shows it there too
-CLICK #site--data--glucose-button
-ASSERT_STATUS 200
-ASSERT_PATH /data/glucose
-ASSERT_VISIBLE #site--nav--home
+// A screenshot of the scrolled page still shows the top bar at the top of the page, not part way down it
+SCROLL 100
+SCREENSHOT top_bar_scrolled
