@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
+	"net/netip"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -141,6 +142,9 @@ type ServerConfig struct {
 	// Dexcom Client ID and Secret
 	DexcomClientID     string
 	DexcomClientSecret string
+
+	// TrustedProxies are the reverse proxies, such as Caddy in front of the server, whose X-Forwarded-For is believed
+	TrustedProxies []netip.Prefix
 }
 
 const SITE_GET_LIMIT = 180
@@ -263,6 +267,11 @@ func NewServerConfig() (*ServerConfig, error) {
 		// Dexcom Config
 		DexcomClientID:     configStringSelect(dotenv, "DEXCOM_CLIENT_ID", ""),
 		DexcomClientSecret: configStringSelect(dotenv, "DEXCOM_CLIENT_SECRET", ""),
+	}
+
+	serverConfig.TrustedProxies, err = ParseTrustedProxies(configStringSelect(dotenv, "TRUSTED_PROXIES", "127.0.0.1,::1"))
+	if err != nil {
+		return nil, err
 	}
 
 	if len(dotenv) > 0 {
@@ -510,6 +519,7 @@ func printServerConfig(config ServerConfig) {
 		"Host", fmt.Sprintf("%s://%s:%d", config.HostProtocol, config.HostName, config.HostPort),
 		"S3", fmt.Sprintf("%s/%s", config.S3URL, config.S3Bucket),
 		"SQLitePath", config.SqlitePath,
+		"TrustedProxies", config.TrustedProxies,
 		"GlobalRateLimit r/s", config.GlobalRateLimit,
 		"GlobalRateBurst", config.GlobalRateBurst,
 		"SiteGETPerMinuteLimit r/s", config.SiteGETPerMinuteLimit,
@@ -538,6 +548,27 @@ func printServerConfig(config ServerConfig) {
 func (config *ServerConfig) IsHTTPS() bool {
 	// This should only be false in development
 	return config.HostProtocol == "https"
+}
+
+// ParseTrustedProxies reads comma separated IPs or CIDR ranges, e.g. "127.0.0.1,::1,172.30.0.0/24"
+func ParseTrustedProxies(raw string) ([]netip.Prefix, error) {
+	prefixes := []netip.Prefix{}
+	for _, part := range strings.Split(raw, ",") {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		if addr, err := netip.ParseAddr(part); err == nil {
+			prefixes = append(prefixes, netip.PrefixFrom(addr, addr.BitLen()))
+			continue
+		}
+		prefix, err := netip.ParsePrefix(part)
+		if err != nil {
+			return nil, fmt.Errorf("invalid TRUSTED_PROXIES entry %q: %w", part, err)
+		}
+		prefixes = append(prefixes, prefix.Masked())
+	}
+	return prefixes, nil
 }
 
 func MergeMaps(a, b map[string]string) map[string]string {
