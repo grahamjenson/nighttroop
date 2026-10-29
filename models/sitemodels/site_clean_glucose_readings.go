@@ -6,10 +6,9 @@ type SiteCleanGlucoseReading struct {
 	SiteGlucoseReading
 	// Source is direct, or the sync that wrote it: nightscout, dexcom, libre or virtual
 	Source string `json:"source"`
-	// Diff is its change in Units, and DiffMinutes the minutes, since the reading before it; unset for the first
-	Diff        *float64                  `json:"diff"`
-	DiffMinutes *float64                  `json:"diff_minutes"`
-	Others      []SiteOtherGlucoseReading `json:"others"`
+	// DiffPer5m is its change since the reading before it, in Units every 5 minutes; unset for the first
+	DiffPer5m *float64                  `json:"diff_per_5m"`
+	Others    []SiteOtherGlucoseReading `json:"others"`
 }
 
 // SiteOtherGlucoseReading is a reading of the same glucose that was not kept, in Units

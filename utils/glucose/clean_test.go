@@ -77,9 +77,22 @@ func TestCleanReadingsTrend(t *testing.T) {
 		reading("c", 600, 130, "p"), reading("b-copy", 310, 121, "dexcom_sync"), reading("b", 300, 120, "p"), reading("a", 0, 100, "p"),
 	})
 	require.Len(t, cleaned, 3)
-	require.Nil(t, cleaned[2].DiffMgdl, "the oldest has nothing to change from")
-	require.Equal(t, 20.0, *cleaned[1].DiffMgdl)
-	require.Equal(t, 5.0, *cleaned[1].DiffMinutes)
-	require.Equal(t, 10.0, *cleaned[0].DiffMgdl)
-	require.Equal(t, 5.0, *cleaned[0].DiffMinutes)
+	require.Nil(t, cleaned[2].DiffPer5mMgdl, "the oldest has nothing to change from")
+	require.Equal(t, 20.0, *cleaned[1].DiffPer5mMgdl)
+	require.Equal(t, 10.0, *cleaned[0].DiffPer5mMgdl)
+}
+
+func TestCleanReadingsTrendIsPerFiveMinutes(t *testing.T) {
+	tests := []struct {
+		name string
+		rows []*sitedb.GlucoseReading
+		want *float64
+	}{
+		{"a rise over 10 minutes is half of it every 5", []*sitedb.GlucoseReading{reading("a", 0, 100, "p"), reading("b", 600, 120, "p")}, new(10.0)},
+		{"a fall over 2 minutes is two and a half times it every 5", []*sitedb.GlucoseReading{reading("a", 0, 100, "p"), reading("b", 120, 96, "p")}, new(-10.0)},
+		{"two CGMs at the same time have no change between them", []*sitedb.GlucoseReading{reading("a", 0, 100, "p"), reading("b", 0, 140, "p")}, nil},
+	}
+	for _, tt := range tests {
+		require.Equal(t, tt.want, CleanReadings(tt.rows)[0].DiffPer5mMgdl, tt.name)
+	}
 }
