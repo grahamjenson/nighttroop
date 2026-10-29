@@ -32,6 +32,13 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, cfg *config.ServerConfig) func(h
 				return
 			}
 
+			// A failed sign in spends the IP's budget on the site, not the site's own limit its identities need
+			if allowed, _ := httputils.SiteUnauthWithinRateLimit(cfg, r); !allowed {
+				w.WriteHeader(http.StatusTooManyRequests)
+				slog.Info("Site unauthenticated rate limit exceeded")
+				return
+			}
+
 			if acceptType.API() {
 				slog.Info("Identity Login Failed: invalid JWT token", "error", err, "stack", errors.LocalStack())
 				http.Error(w, "Invalid credentials", http.StatusUnauthorized)
