@@ -49,10 +49,15 @@ templ Base() {
 templ SiteBase() {
 	@Base() {
 		<div class="flex min-h-screen flex-col">
-			@Header()
-			if identityName(ctx) != "" {
-				@Alarms()
-			}
+			// The header and alarms stay at the top of the window. Scrolling down slides the header up out of the way,
+			// leaving the alarms, and scrolling up brings it back.
+			<div id="site--top" class="group sticky top-0 z-40 transition-transform duration-300 data-[hidden]:-translate-y-14 motion-reduce:transition-none">
+				@Header()
+				if identityName(ctx) != "" {
+					@Alarms()
+				}
+			</div>
+			@topBarScript()
 			<main id="main-content" class="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
 				{ children... }
 			</main>
@@ -86,8 +91,39 @@ templ dataMenuItem(id string, path string, label string, itemIcon templ.Componen
 	}
 }
 
+// topBarScript hides the header once the page scrolls down past the top bar, unless its menu is open or it has
+// focus, and shows it again on any scroll up or when something in it gets focus. A new page, swapped in or restored by
+// the back button, shows it too, and the scroll to its place in the page over the next half second does not hide it.
+// Moves under 5px, as a touch scroll settles, change nothing.
+templ topBarScript() {
+	<script>
+		(function () {
+			if (window.siteTopBar) return;
+			window.siteTopBar = true;
+			const bar = () => document.getElementById("site--top");
+			let last = window.scrollY, settleUntil = 0;
+			window.addEventListener("scroll", () => {
+				const y = window.scrollY, top = bar();
+				if (!top || (Math.abs(y - last) < 5 && Date.now() >= settleUntil)) return;
+				const busy = top.contains(document.activeElement) || top.querySelector('[data-tui-popover-open="true"]');
+				if (Date.now() >= settleUntil && y > last && y > top.offsetHeight && !busy) top.setAttribute("data-hidden", "");
+				if (y < last) top.removeAttribute("data-hidden");
+				last = y;
+			}, { passive: true });
+			document.addEventListener("focusin", (e) => { if (bar()?.contains(e.target)) bar().removeAttribute("data-hidden"); });
+			document.addEventListener("htmx:after:swap", (e) => {
+				const target = e.detail?.ctx?.target;
+				if (target === document.body || target?.id === "main-content") {
+					bar()?.removeAttribute("data-hidden");
+					settleUntil = Date.now() + 500;
+				}
+			});
+		})();
+	</script>
+}
+
 templ Header() {
-	<header class="sticky top-0 z-40 border-b border-white/10 bg-brand-night text-white">
+	<header class="border-b border-white/10 bg-brand-night text-white transition-[visibility] duration-300 group-data-[hidden]:invisible motion-reduce:transition-none">
 		<div class="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
 			<a id="site--nav--home" href="/" class="flex items-center gap-2 font-semibold tracking-wide">
 				<img id="site--nav--logo" src="/logo.svg" alt="" class="size-8"/>

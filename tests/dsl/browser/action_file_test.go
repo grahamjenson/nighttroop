@@ -28,3 +28,21 @@ func TestIncludeRunsAnotherFilesSteps(t *testing.T) {
 	_, err = ParseActionFile(fsys, "site/missing.bdd")
 	require.ErrorContains(t, err, "site/missing.bdd:2: INCLUDE steps/missing.steps")
 }
+
+func TestScrollTurnsTheWheelByPixels(t *testing.T) {
+	fsys := fstest.MapFS{
+		"site/scroll.bdd": {Data: []byte("GOTO /\nSCROLL 400\nASSERT_NOT_VISIBLE #header\nSCROLL -100\n")},
+		"site/bad.bdd":    {Data: []byte("GOTO /\nSCROLL down\n")},
+	}
+
+	file, err := ParseActionFile(fsys, "site/scroll.bdd")
+	require.NoError(t, err)
+	require.Len(t, file.Actions, 3)
+	down := file.Actions[1].(*Click)
+	require.Equal(t, 400, *down.Scroll)
+	require.Len(t, down.Asserts, 1)
+	require.Equal(t, "SCROLL -100", file.Actions[2].ToFlatString())
+
+	_, err = ParseActionFile(fsys, "site/bad.bdd")
+	require.ErrorContains(t, err, "site/bad.bdd:2: SCROLL needs a number of pixels")
+}

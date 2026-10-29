@@ -113,6 +113,8 @@ type Click struct {
 	// Corner clicks just inside Locator's top left corner instead of its centre, for CLICK_CORNER,
 	// e.g. a modal's backdrop beside the dialog over its centre
 	Corner bool
+	// Scroll turns the mouse wheel by this many pixels, down or up when negative, as a user scrolls the page, for SCROLL
+	Scroll *int
 
 	Asserts []Assert
 
@@ -129,6 +131,9 @@ func (r *Click) ToFlatString() string {
 	}
 	if r.Corner {
 		return "CLICK_CORNER " + r.Locator
+	}
+	if r.Scroll != nil {
+		return fmt.Sprintf("SCROLL %d", *r.Scroll)
 	}
 	return fmt.Sprintf("CLICK %s", r.Locator)
 }
@@ -183,7 +188,7 @@ func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 	prettyOutput := PrettifyHTML(html)
 
 	var locator playwright.Locator
-	if r.History == "" && r.Key == "" && r.Hidden == nil {
+	if r.History == "" && r.Key == "" && r.Hidden == nil && r.Scroll == nil {
 		if locator = getLocator(r.Locator, page); locator == nil {
 			t.Fatalf("Failed to get locator for %s\n\n%s\n\n", r.Locator, prettyOutput)
 		}
@@ -219,6 +224,8 @@ func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 			Object.defineProperty(document, "visibilityState", {configurable: true, get: () => hidden ? "hidden" : "visible"});
 			document.dispatchEvent(new Event("visibilitychange"));
 		}`, *r.Hidden)
+	case r.Scroll != nil:
+		err = page.Mouse().Wheel(0, float64(*r.Scroll))
 	case r.Text != "":
 		err = locator.PressSequentially(r.Text, playwright.LocatorPressSequentiallyOptions{Timeout: playwright.Float(actionWait)})
 	case r.Corner:

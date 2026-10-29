@@ -1,0 +1,34 @@
+INCLUDE steps/new_site_admin.steps
+
+// Virtual sync fills the summary, so it is longer than the window
+CLICK #site--settings-menu
+CLICK #site--settings--sync-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-sync--enable
+CLICK #site--settings--virtual-sync--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Sync Updated
+RUN_BACKGROUND_JOBS
+GOTO /
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--summary--glucose--reading
+ASSERT_VISIBLE #site--nav--home
+
+// Scrolling down slides the top bar away, out of the way of what is being read
+SCROLL 500
+ASSERT_NOT_VISIBLE #site--nav--home
+ASSERT_NOT_VISIBLE #site--settings-menu
+SCREENSHOT top_bar_hidden
+
+// Scrolling back up a little brings it back, at the top of the window and over the page, with its menu working
+SCROLL -100
+ASSERT_VISIBLE #site--nav--home
+SCREENSHOT top_bar_shown
+CLICK #site--settings-menu
+ASSERT_VISIBLE #site--data--glucose-button
+
+// Going to another page from its menu shows it there too
+CLICK #site--data--glucose-button
+ASSERT_STATUS 200
+ASSERT_PATH /data/glucose
+ASSERT_VISIBLE #site--nav--home

@@ -118,6 +118,15 @@ func parseFile(fsys fs.FS, path string) ([]Action, error) {
 				return nil, fmt.Errorf("TYPE needs a locator and a value")
 			}
 			current = &Click{TestPath: path, TestLine: lineNumber, Asserts: []Assert{}, Locator: parts[0], Text: parts[1]}
+		case "SCROLL":
+			// SCROLL turns the mouse wheel by a number of pixels, down or up when negative, so asserts can check what
+			// scrolling shows or hides
+			flush()
+			pixels, err := strconv.Atoi(second)
+			if err != nil {
+				return nil, fmt.Errorf("%s:%d: SCROLL needs a number of pixels: %q", path, lineNumber, second)
+			}
+			current = &Click{TestPath: path, TestLine: lineNumber, Asserts: []Assert{}, Scroll: &pixels}
 		case "BACKGROUND", "FOREGROUND":
 			// BACKGROUND hides the page, as a browser does a tab in the background, until FOREGROUND shows it again
 			flush()

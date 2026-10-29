@@ -149,10 +149,12 @@ func waitForVisible(locator playwright.Locator) {
 	_ = locator.First().WaitFor(playwright.LocatorWaitForOptions{State: playwright.WaitForSelectorStateVisible, Timeout: playwright.Float(visibleWait)})
 }
 
-// clickableScript scrolls the page, as a user would, to bring the element into the window or out from under
-// something fixed to it such as the header, but not boxes that scroll inside the page, then checks the element is
-// what a click at its centre would hit
-const clickableScript = `el => {
+// clickableScript waits for transitions, such as the header sliding back in, to finish, so it checks the page as it
+// settles. It then scrolls the page, as a user would, to bring the element into the window or out from under
+// something fixed to it such as the header, but not boxes that scroll inside the page, and checks the element is what
+// a click at its centre would hit
+const clickableScript = `async el => {
+	await Promise.all(document.getAnimations().filter(a => a instanceof CSSTransition).map(a => a.finished.catch(() => {})));
 	const hits = () => {
 		const r = el.getBoundingClientRect();
 		const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
