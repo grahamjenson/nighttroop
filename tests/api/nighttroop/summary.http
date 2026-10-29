@@ -79,8 +79,8 @@ GET http://{{ site }}/summary?hours=6
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS 3.996 "@result.0.low_alarm"
-ASSERT_EQUALS 9.99 "@result.0.high_alarm"
+ASSERT_EQUALS 3.996 "@result.0.range_low"
+ASSERT_EQUALS 9.99 "@result.0.range_high"
 
 // The alarms are set through Nightscout, as the site's pages do not show them
 NAME set_identity_units
@@ -90,14 +90,14 @@ H Accept: application/json
 B {"units": "mg/dL"}
 ASSERT_STATUS 200
 
-NAME set_identity_low_alarm
-PATCH http://{{ .ns_site }}/api/v3/settings/alarm_low_mgdl
+NAME set_identity_range_low
+PATCH http://{{ .ns_site }}/api/v3/settings/range_low_mgdl
 H Authorization: Bearer {{ jwt }}
 B {"value": 80}
 ASSERT_STATUS 200
 
-NAME set_identity_high_alarm
-PATCH http://{{ .ns_site }}/api/v3/settings/alarm_high_mgdl
+NAME set_identity_range_high
+PATCH http://{{ .ns_site }}/api/v3/settings/range_high_mgdl
 H Authorization: Bearer {{ jwt }}
 B {"value": 150}
 ASSERT_STATUS 200
@@ -108,8 +108,8 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_EQUALS "mg/dL" "@result.0.units"
-ASSERT_EQUALS 80 "@result.0.low_alarm"
-ASSERT_EQUALS 150 "@result.0.high_alarm"
+ASSERT_EQUALS 80 "@result.0.range_low"
+ASSERT_EQUALS 150 "@result.0.range_high"
 
 // Today's time in range is the percent of its readings from the low to the high alarm, the 117 mg/dL reading in it.
 // Yesterday has no readings or insulin, and there has been no sensor or site change yet.

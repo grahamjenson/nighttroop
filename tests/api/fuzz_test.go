@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"log/slog"
 	"maps"
+	"math"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
@@ -339,7 +340,7 @@ func mutateNumber(v float64, r *rand.Rand) float64 {
 }
 
 func mutateString(s string, r *rand.Rand) string {
-	switch r.Intn(12) {
+	switch r.Intn(13) {
 	case 0:
 		return ""
 	case 1:
@@ -365,6 +366,9 @@ func mutateString(s string, r *rand.Rand) string {
 		return "[]"
 	case 10:
 		return "\x00\x01\x02"
+	case 11:
+		// Longer than any column takes
+		return strings.Repeat(s+"x", 5000)
 	default:
 		// Unicode and unusual characters.
 		return s + " \t\n\r \u0000 😀 💩"
@@ -437,6 +441,9 @@ func randomNumber(r *rand.Rand) float64 {
 		return 9999999999999999
 	case 5:
 		return -9999999999999999
+	case 6:
+		// Past what an int64 holds, and the largest and smallest a float64 holds
+		return []float64{1e19, -1e19, 1e300, -1e300, math.MaxFloat64, math.SmallestNonzeroFloat64}[r.Intn(6)]
 	default:
 		return r.Float64()*2e12 - 1e12
 	}

@@ -131,7 +131,7 @@ func RebuildSummaryDailyWeek(ctx context.Context, q *sitedb.Queries, site *setti
 
 // buildSummaryDaily is the site's day named date, from midnight in its timezone, built from its clean readings,
 // insulin, basal and food up to until, so a day not yet over is its part so far. Its time in range is from the site's
-// low alarm to its high alarm.
+// range low to its range high.
 func buildSummaryDaily(ctx context.Context, q *sitedb.Queries, site *settings.CombinedSettingsMap, date string, until int64) (*sitedb.SummaryDaily, error) {
 	location := site.Location()
 	midnight, err := time.ParseInLocation(time.DateOnly, date, location)
@@ -161,6 +161,6 @@ func buildSummaryDaily(ctx context.Context, q *sitedb.Queries, site *settings.Co
 	if herr != nil {
 		return nil, herr
 	}
-	return sitemodels.NewSummaryDaily(date, location.String(), start, end, float64(*site.GetAlarmLowMgdl()), float64(*site.GetAlarmHighMgdl()),
+	return sitemodels.NewSummaryDaily(date, location.String(), start, end, float64(*site.GetRangeLowMgdl()), float64(*site.GetRangeHighMgdl()),
 		glucose.CleanReadings(rows), doses, food, start, minutes), nil
 }

@@ -32,15 +32,15 @@ type SettingsCollection struct {
 
 // settingNames are the settings the pages show so far, in order
 var settingNames = []string{"units", "timezone", "language", "date_format", "time_format", "week_start_day",
-	"alarm_urgent_low_enabled", "alarm_urgent_low", "alarm_low_enabled", "alarm_low", "alarm_low_minutes",
+	"alarm_urgent_low_enabled", "range_urgent_low", "alarm_low_enabled", "range_low", "alarm_low_minutes",
 	"alarm_low_prediction_enabled", "alarm_low_prediction_minutes",
-	"alarm_high_enabled", "alarm_high", "alarm_high_minutes", "alarm_urgent_high_enabled", "alarm_urgent_high",
+	"alarm_high_enabled", "range_high", "alarm_high_minutes", "alarm_urgent_high_enabled", "range_urgent_high",
 	"alarm_fast_rise_enabled", "alarm_fast_rise", "alarm_fast_rise_minutes", "alarm_fast_drop_enabled", "alarm_fast_drop",
 	"alarm_fast_drop_minutes", "alarm_no_data_enabled", "alarm_no_data_minutes"}
 
 // glucoseSettings are shown and typed in the settings' units, a fast rise or drop as how far, and kept in mg/dL as
 // the setting of the same name ending _mgdl
-var glucoseSettings = []string{"alarm_urgent_low", "alarm_low", "alarm_high", "alarm_urgent_high", "alarm_fast_rise", "alarm_fast_drop"}
+var glucoseSettings = []string{"range_urgent_low", "range_low", "range_high", "range_urgent_high", "alarm_fast_rise", "alarm_fast_drop"}
 
 // settingID is the setting a field on the page is kept as
 func settingID(name string) string {

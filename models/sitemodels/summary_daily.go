@@ -51,7 +51,7 @@ func SummaryDailyFromDB(row *sitedb.SummaryDaily, siteContext *httputils.SiteCon
 type SummaryDay struct {
 	Start int64 `json:"start"`
 	End   int64 `json:"end"`
-	// TimeInRange is the percent of the day's readings from the low alarm to the high alarm, null when it has none
+	// TimeInRange is the percent of the day's readings from the range low to the range high, null when it has none
 	TimeInRange *float64 `json:"time_in_range"`
 	// TotalDailyDose is the day's insulin doses and the basal in force through it, in U
 	TotalDailyDose float64 `json:"total_daily_dose"`

@@ -237,8 +237,8 @@ var AlarmUrgentLowEnabled = &SettingDefinition[bool]{
 	ParseFunc:  ParseBool,
 }
 
-var AlarmUrgentLowMgdl = &SettingDefinition[int64]{
-	Identifier:   "alarm_urgent_low_mgdl",
+var RangeUrgentLowMgdl = &SettingDefinition[int64]{
+	Identifier:   "range_urgent_low_mgdl",
 	TypeString:   "number",
 	Default:      56,
 	ValidateFunc: Range(int64(20), 100),
@@ -255,8 +255,8 @@ var AlarmLowEnabled = &SettingDefinition[bool]{
 // MaxAlarmMinutes is the most minutes an alarm can wait for, so a check of the alarms reads only the readings it needs
 const MaxAlarmMinutes = 120
 
-var AlarmLowMgdl = &SettingDefinition[int64]{
-	Identifier:   "alarm_low_mgdl",
+var RangeLowMgdl = &SettingDefinition[int64]{
+	Identifier:   "range_low_mgdl",
 	TypeString:   "number",
 	Default:      72,
 	ValidateFunc: Range(int64(20), 150),
@@ -294,8 +294,8 @@ var AlarmHighEnabled = &SettingDefinition[bool]{
 	ParseFunc:  ParseBool,
 }
 
-var AlarmHighMgdl = &SettingDefinition[int64]{
-	Identifier:   "alarm_high_mgdl",
+var RangeHighMgdl = &SettingDefinition[int64]{
+	Identifier:   "range_high_mgdl",
 	TypeString:   "number",
 	Default:      180,
 	ValidateFunc: Range(int64(70), 600),
@@ -317,8 +317,8 @@ var AlarmUrgentHighEnabled = &SettingDefinition[bool]{
 	ParseFunc:  ParseBool,
 }
 
-var AlarmUrgentHighMgdl = &SettingDefinition[int64]{
-	Identifier:   "alarm_urgent_high_mgdl",
+var RangeUrgentHighMgdl = &SettingDefinition[int64]{
+	Identifier:   "range_urgent_high_mgdl",
 	TypeString:   "number",
 	Default:      270,
 	ValidateFunc: Range(int64(100), 600),

@@ -32,7 +32,7 @@ func TestGlucoseHeroColoursItsRange(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// The alarms are 70 and 180 mg/dL, as the summary has them in its units
-			summary := &sitemodels.Summary{Units: tt.units, LowAlarm: tt.units.FromMGDL(70), HighAlarm: tt.units.FromMGDL(180), GlucoseReadings: []*sitemodels.SiteCleanGlucoseReading{{SiteGlucoseReading: sitemodels.SiteGlucoseReading{Reading: tt.reading, Units: tt.units}}}}
+			summary := &sitemodels.Summary{Units: tt.units, RangeLow: tt.units.FromMGDL(70), RangeHigh: tt.units.FromMGDL(180), GlucoseReadings: []*sitemodels.SiteCleanGlucoseReading{{SiteGlucoseReading: sitemodels.SiteGlucoseReading{Reading: tt.reading, Units: tt.units}}}}
 			var buf bytes.Buffer
 			require.NoError(t, glucoseHero(summary).Render(context.Background(), &buf))
 			html := buf.String()

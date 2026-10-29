@@ -103,8 +103,8 @@ func getSummary(ctx context.Context, tx *siteapiutils.CollectionTx, hours int64,
 	since := time.Now().Add(-time.Duration(hours) * time.Hour).UnixMilli()
 	summary := &sitemodels.Summary{Hours: hours, Since: since, Units: sitemodels.ContextUnits(siteContext)}
 	settings := siteContext.GetSettings()
-	summary.LowAlarm = summary.Units.FromMGDL(float64(*settings.GetAlarmLowMgdl()))
-	summary.HighAlarm = summary.Units.FromMGDL(float64(*settings.GetAlarmHighMgdl()))
+	summary.RangeLow = summary.Units.FromMGDL(float64(*settings.GetRangeLowMgdl()))
+	summary.RangeHigh = summary.Units.FromMGDL(float64(*settings.GetRangeHighMgdl()))
 	// A set IncludeDeleted leaves out deleted rows in these searches
 	excludeDeleted := false
 

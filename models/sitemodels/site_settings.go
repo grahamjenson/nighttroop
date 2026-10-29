@@ -11,18 +11,18 @@ type Settings struct {
 	TimeFormat   *string `json:"time_format"`
 	WeekStartDay *string `json:"week_start_day"`
 
-	// The alarms, each turned on with true or off with false, with the glucose it is under or over, or rises or
+	// The alarms, each turned on with true or off with false, with the range's glucose it is under or over, or rises or
 	// drops by, in the settings' units, and the minutes it must last or rise or drop over
 	AlarmUrgentLowEnabled  *string `json:"alarm_urgent_low_enabled"`
-	AlarmUrgentLow         *string `json:"alarm_urgent_low"`
+	RangeUrgentLow         *string `json:"range_urgent_low"`
 	AlarmLowEnabled        *string `json:"alarm_low_enabled"`
-	AlarmLow               *string `json:"alarm_low"`
+	RangeLow               *string `json:"range_low"`
 	AlarmLowMinutes        *string `json:"alarm_low_minutes"`
 	AlarmHighEnabled       *string `json:"alarm_high_enabled"`
-	AlarmHigh              *string `json:"alarm_high"`
+	RangeHigh              *string `json:"range_high"`
 	AlarmHighMinutes       *string `json:"alarm_high_minutes"`
 	AlarmUrgentHighEnabled *string `json:"alarm_urgent_high_enabled"`
-	AlarmUrgentHigh        *string `json:"alarm_urgent_high"`
+	RangeUrgentHigh        *string `json:"range_urgent_high"`
 	AlarmFastRiseEnabled   *string `json:"alarm_fast_rise_enabled"`
 	AlarmFastRise          *string `json:"alarm_fast_rise"`
 	AlarmFastRiseMinutes   *string `json:"alarm_fast_rise_minutes"`
@@ -47,11 +47,11 @@ func (s *Settings) Fields() map[string]**string {
 	return map[string]**string{
 		"units": &s.Units, "timezone": &s.Timezone, "language": &s.Language,
 		"date_format": &s.DateFormat, "time_format": &s.TimeFormat, "week_start_day": &s.WeekStartDay,
-		"alarm_urgent_low_enabled": &s.AlarmUrgentLowEnabled, "alarm_urgent_low": &s.AlarmUrgentLow,
-		"alarm_low_enabled": &s.AlarmLowEnabled, "alarm_low": &s.AlarmLow, "alarm_low_minutes": &s.AlarmLowMinutes,
+		"alarm_urgent_low_enabled": &s.AlarmUrgentLowEnabled, "range_urgent_low": &s.RangeUrgentLow,
+		"alarm_low_enabled": &s.AlarmLowEnabled, "range_low": &s.RangeLow, "alarm_low_minutes": &s.AlarmLowMinutes,
 		"alarm_low_prediction_enabled": &s.AlarmLowPredictionEnabled, "alarm_low_prediction_minutes": &s.AlarmLowPredictionMinutes,
-		"alarm_high_enabled": &s.AlarmHighEnabled, "alarm_high": &s.AlarmHigh, "alarm_high_minutes": &s.AlarmHighMinutes,
-		"alarm_urgent_high_enabled": &s.AlarmUrgentHighEnabled, "alarm_urgent_high": &s.AlarmUrgentHigh,
+		"alarm_high_enabled": &s.AlarmHighEnabled, "range_high": &s.RangeHigh, "alarm_high_minutes": &s.AlarmHighMinutes,
+		"alarm_urgent_high_enabled": &s.AlarmUrgentHighEnabled, "range_urgent_high": &s.RangeUrgentHigh,
 		"alarm_fast_rise_enabled": &s.AlarmFastRiseEnabled, "alarm_fast_rise": &s.AlarmFastRise, "alarm_fast_rise_minutes": &s.AlarmFastRiseMinutes,
 		"alarm_fast_drop_enabled": &s.AlarmFastDropEnabled, "alarm_fast_drop": &s.AlarmFastDrop, "alarm_fast_drop_minutes": &s.AlarmFastDropMinutes,
 		"alarm_no_data_enabled": &s.AlarmNoDataEnabled, "alarm_no_data_minutes": &s.AlarmNoDataMinutes,

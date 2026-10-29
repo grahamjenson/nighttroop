@@ -82,20 +82,20 @@ CREATE TABLE site_identities (
 
     -- ALERTS
     alarm_urgent_low_enabled INTEGER,
-    alarm_urgent_low_mgdl INTEGER,
+    range_urgent_low_mgdl INTEGER,
 
     alarm_low_enabled INTEGER,
-    alarm_low_mgdl INTEGER,
+    range_low_mgdl INTEGER,
     alarm_low_minutes INTEGER,
     alarm_low_prediction_enabled INTEGER,
     alarm_low_prediction_minutes INTEGER, -- how far ahead the current trend is followed to the low alarm's glucose
 
     alarm_high_enabled INTEGER,
-    alarm_high_mgdl INTEGER,
+    range_high_mgdl INTEGER,
     alarm_high_minutes INTEGER,
     
     alarm_urgent_high_enabled INTEGER,
-    alarm_urgent_high_mgdl INTEGER,
+    range_urgent_high_mgdl INTEGER,
 
     alarm_fast_rise_enabled INTEGER,
     alarm_fast_rise_mgdl INTEGER,
@@ -239,20 +239,20 @@ CREATE TABLE sites (
 
     -- ALERTS
     alarm_urgent_low_enabled INTEGER,
-    alarm_urgent_low_mgdl INTEGER,
+    range_urgent_low_mgdl INTEGER,
 
     alarm_low_enabled INTEGER,
-    alarm_low_mgdl INTEGER,
+    range_low_mgdl INTEGER,
     alarm_low_minutes INTEGER,
     alarm_low_prediction_enabled INTEGER,
     alarm_low_prediction_minutes INTEGER, -- how far ahead the current trend is followed to the low alarm's glucose
 
     alarm_high_enabled INTEGER,
-    alarm_high_mgdl INTEGER,
+    range_high_mgdl INTEGER,
     alarm_high_minutes INTEGER,
     
     alarm_urgent_high_enabled INTEGER,
-    alarm_urgent_high_mgdl INTEGER,
+    range_urgent_high_mgdl INTEGER,
 
     alarm_fast_rise_enabled INTEGER,
     alarm_fast_rise_mgdl INTEGER,

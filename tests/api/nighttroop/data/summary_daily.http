@@ -22,7 +22,7 @@ H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_LENGTH 0 "@result"
 
-// Yesterday, in the site's default UTC: a reading in range at noon, one over the high alarm (180 mg/dL) 5 minutes later,
+// Yesterday, in the site's default UTC: a reading in range at noon, one over the range high (180 mg/dL by default) 5 minutes later,
 // a 2 U bolus and 30 g of carbs, and a reading today that is not yesterday's
 NAME post_readings
 POST http://{{ .ns_site }}/api/v1/entries?token={{ token }}

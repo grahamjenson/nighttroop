@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -27,7 +28,7 @@ type ControlDB struct {
 	sites map[string]*SiteDB
 
 	sitesRWLock sync.RWMutex
-	// createSiteLock serialises CreateSite so two calls never pick, open or delete the same subdomain's DB
+	// createSiteLock serialises CreateSite and HydrateSite so two calls never pick, open or delete the same subdomain's DB
 	createSiteLock sync.Mutex
 
 	Jobs *JobsDB
@@ -288,6 +289,45 @@ func (db *ControlDB) ArchiveSite(ctx context.Context, subdomain string, upload f
 	if err := utils.DeleteFiles([]string{site.Path, site.BackupPath}); err != nil {
 		slog.Error("Failed to delete archived site db files", "subdomain", subdomain, "error", err)
 	}
+	return nil
+}
+
+// HydrateSite brings an archived site back: it downloads, with download, the site's archive into its DB's folder, opens
+// it and makes the site live again
+func (db *ControlDB) HydrateSite(ctx context.Context, subdomain string, download func(key string, outpath string) (int64, bool, error)) error {
+	db.createSiteLock.Lock()
+	defer db.createSiteLock.Unlock()
+	db.sitesRWLock.RLock()
+	_, open := db.sites[subdomain]
+	db.sitesRWLock.RUnlock()
+	if open {
+		return fmt.Errorf("site %s is already open", subdomain)
+	}
+	path := sitedb.GetPath(subdomain, db.ServerConfig)
+	if _, found, err := download(sitedb.GetS3ArchivePath(subdomain, db.ServerConfig), filepath.Dir(path)); err != nil {
+		return fmt.Errorf("cannot download the archive of site %s: %w", subdomain, err)
+	} else if !found || !utils.FileExists(path) {
+		return fmt.Errorf("site %s has no archive", subdomain)
+	}
+	siteDB, err := NewSiteDB(ctx, subdomain, db.ServerConfig)
+	if err != nil {
+		return err
+	}
+	result, err := db.Queries.HydrateSite(ctx, controldb.HydrateSiteParams{ID: subdomain})
+	if err == nil {
+		if rows, _ := result.RowsAffected(); rows == 0 {
+			err = fmt.Errorf("site %s is not archived", subdomain)
+		}
+	}
+	if err != nil {
+		siteDB.Close()
+		_ = utils.DeleteFiles([]string{path})
+		return err
+	}
+
+	db.sitesRWLock.Lock()
+	db.sites[subdomain] = siteDB
+	db.sitesRWLock.Unlock()
 	return nil
 }
 

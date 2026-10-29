@@ -25,6 +25,7 @@ func TestControlStoreRoutes(t *testing.T) {
 		message string
 	}{
 		{"read only cannot disable a site", consts.ControlRoleRead, http.MethodPost, "/sites/some-site", http.StatusForbidden, ""},
+		{"read only cannot hydrate a site", consts.ControlRoleRead, http.MethodPost, "/archived-sites/some-site", http.StatusForbidden, ""},
 		{"jobs cannot be updated", consts.ControlRoleAdmin, http.MethodPost, "/jobs/1", http.StatusMethodNotAllowed, "jobs cannot be updated here"},
 		{"job stats cannot be updated", consts.ControlRoleAdmin, http.MethodPost, "/job-stats/day", http.StatusMethodNotAllowed, "job-stats cannot be updated here"},
 		{"sync sources cannot be updated", consts.ControlRoleAdmin, http.MethodPost, "/sync-sources/site::virtual", http.StatusMethodNotAllowed, "sync-sources cannot be updated here"},
