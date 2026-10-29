@@ -32,7 +32,7 @@ func EGVToCreate(e EGV, createdByIdentityName string) sitedb.CreateGlucoseReadin
 		ReadingType:           "sgv",
 		RawJsonData:           &e.RawJson,
 		CreatedByIdentityName: createdByIdentityName,
-		UtcOffsetMinutes:      ptr(int64(e.UTCOffsetInMinutes())),
+		UtcOffsetMinutes:      new(int64(e.UTCOffsetInMinutes())),
 	}
 }
 
@@ -115,8 +115,4 @@ func parseDexcomTime(s string) (time.Time, error) {
 
 	// Interpret the epoch instant in the supplied timezone.
 	return t.In(loc), nil
-}
-
-func ptr[T any](v T) *T {
-	return &v
 }

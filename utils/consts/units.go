@@ -68,7 +68,7 @@ func (u *Units) Stringp() *string {
 
 func (u *Units) FromMGDL(mgdl float64) float64 {
 	if u == nil {
-		u = ptr(UnitsMGDL)
+		u = new(UnitsMGDL)
 	}
 
 	if *u == UnitsMGDL {
@@ -82,7 +82,7 @@ func (u *Units) FromMGDL(mgdl float64) float64 {
 func (u *Units) ToMGDL(unitValue float64) float64 {
 	if u == nil {
 		// Dont know the unit, better guess
-		u = ptr(GuessUnits(unitValue))
+		u = new(GuessUnits(unitValue))
 	}
 	if *u == UnitsMGDL {
 		return Round(unitValue, 3)
@@ -101,8 +101,4 @@ func GuessUnits(value float64) Units {
 		return UnitsMGDL
 	}
 	return UnitsMMOLL
-}
-
-func ptr[T any](v T) *T {
-	return &v
 }

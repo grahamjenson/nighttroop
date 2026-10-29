@@ -20,11 +20,11 @@ func Search(store nsutils.Store) http.HandlerFunc {
 		if identifierOrType != "" {
 			// If the URL has an identifier or type segment, treat it as a filter on the default id or type field.
 			if collection.IsTypeString(identifierOrType) {
-				query.TypeEq = ptr(identifierOrType)
+				query.TypeEq = new(identifierOrType)
 				// HasFilters was worked out when the query was parsed, so it must be set for a filter added after
 				query.HasFilters = true
 			} else {
-				query.IDEq = ptr(identifierOrType)
+				query.IDEq = new(identifierOrType)
 			}
 		}
 		records := []nsutils.Record{}

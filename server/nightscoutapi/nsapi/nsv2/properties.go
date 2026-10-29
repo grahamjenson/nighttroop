@@ -108,7 +108,7 @@ type SensorAge struct {
 func GetIOB(dr *sitedb.DeviceReport) IOB {
 	if dr == nil {
 		return IOB{
-			Found: ptr(false),
+			Found: new(false),
 		}
 	}
 
@@ -122,7 +122,7 @@ func GetIOB(dr *sitedb.DeviceReport) IOB {
 func GetCOB(dr *sitedb.DeviceReport) COB {
 	if dr == nil {
 		return COB{
-			Found: ptr(false),
+			Found: new(false),
 		}
 	}
 
@@ -134,7 +134,7 @@ func GetCOB(dr *sitedb.DeviceReport) COB {
 func GetDeviceTime(lastDevice *sitedb.ComponentEvent) DeviceTime {
 	if lastDevice == nil {
 		return DeviceTime{
-			Found: ptr(false),
+			Found: new(false),
 		}
 	}
 
@@ -148,14 +148,14 @@ func GetSensorAge(lastSensorStart, lastSensorChange *sitedb.ComponentEvent) Sens
 	scTime := GetDeviceTime(lastSensorChange)
 	var min *string
 	if ssTime.TreatmentDate == nil && scTime.TreatmentDate != nil {
-		min = ptr("Sensor Change")
+		min = new("Sensor Change")
 	} else if ssTime.TreatmentDate != nil && scTime.TreatmentDate == nil {
-		min = ptr("Sensor Start")
+		min = new("Sensor Start")
 	} else if ssTime.TreatmentDate != nil && scTime.TreatmentDate != nil {
 		if *ssTime.TreatmentDate < *scTime.TreatmentDate {
-			min = ptr("Sensor Start")
+			min = new("Sensor Start")
 		} else {
-			min = ptr("Sensor Change")
+			min = new("Sensor Change")
 		}
 	}
 
@@ -169,7 +169,7 @@ func GetSensorAge(lastSensorStart, lastSensorChange *sitedb.ComponentEvent) Sens
 func GetUptimeBattery(dr *sitedb.DeviceReport) UptimeBattery {
 	if dr == nil || dr.DeviceBatteryPercent == nil {
 		return UptimeBattery{
-			Found: ptr(false),
+			Found: new(false),
 		}
 	}
 
@@ -177,7 +177,7 @@ func GetUptimeBattery(dr *sitedb.DeviceReport) UptimeBattery {
 		Min: &BatteryStatus{
 			Battery: dr.DeviceBatteryPercent,
 			Value:   dr.DeviceBatteryPercent,
-			Display: ptr(fmt.Sprintf("%v%%", *dr.DeviceBatteryPercent)),
+			Display: new(fmt.Sprintf("%v%%", *dr.DeviceBatteryPercent)),
 			Level:   dr.DeviceBatteryPercent,
 		},
 	}

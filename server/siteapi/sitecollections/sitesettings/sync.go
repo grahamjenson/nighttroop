@@ -61,19 +61,19 @@ func (s *SyncSettingsCollection) CreateRow(ctx context.Context, collectionTx *si
 
 	// The virtual source has no upstream; the sync job ignores these values.
 	if params.Type == consts.SyncSourceTypeVirtual {
-		params.UrlOrUsernameEnc, params.PasswordEnc = ptr("virtual"), ptr("virtual")
+		params.UrlOrUsernameEnc, params.PasswordEnc = new("virtual"), new("virtual")
 	}
 
 	if params.UrlOrUsernameEnc == nil || strings.TrimSpace(*params.UrlOrUsernameEnc) == "" {
 		return nil, apiutils.ErrMissingRequiredFieldWithHint("Url Or Username")
 	}
-	params.UrlOrUsernameEnc = ptr(strings.TrimSpace(*params.UrlOrUsernameEnc))
+	params.UrlOrUsernameEnc = new(strings.TrimSpace(*params.UrlOrUsernameEnc))
 
 	security := siteContext.Config.Security
 
 	if params.Type == consts.SyncSourceTypeLibre {
 		if params.Region == nil || *params.Region == "" {
-			params.Region = ptr(consts.LibreRegionGlobal)
+			params.Region = new(consts.LibreRegionGlobal)
 		}
 		if err := libreRegionValidate(params.Region); err != nil {
 			return nil, err
@@ -153,7 +153,7 @@ func (s *SyncSettingsCollection) UpdateRow(ctx context.Context, collectionTx *si
 			return nil, apiutils.ErrMissingRequiredFieldWithHint("Url Or Username")
 		}
 		// Trim like create does, so pasted spaces do not make the URL invalid
-		params.UrlOrUsernameEnc = ptr(strings.TrimSpace(*params.UrlOrUsernameEnc))
+		params.UrlOrUsernameEnc = new(strings.TrimSpace(*params.UrlOrUsernameEnc))
 	}
 
 	security := siteContext.Config.Security
@@ -397,7 +397,7 @@ func nsURLNormalizeValidate(rawUrl *string, config *config.ServerConfig) (*strin
 		normalizedUrl = fmt.Sprintf("%s://%s:%s", scheme, host, port)
 	}
 
-	return ptr(normalizedUrl), nil
+	return new(normalizedUrl), nil
 }
 
 // libreRegionValidate refuses a region not in consts.LibreRegions, so a Libre sync only calls their hosts
@@ -406,8 +406,4 @@ func libreRegionValidate(region *string) error {
 		return apiutils.ErrBadBodyWithHint(fmt.Sprintf("LibreLinkUp region '%s' is not a known region.", *region))
 	}
 	return nil
-}
-
-func ptr[T any](v T) *T {
-	return &v
 }

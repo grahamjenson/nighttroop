@@ -141,9 +141,9 @@ func (s *SettingsCollection) GetHTMXResponse(model *sitemodels.Settings) templ.C
 
 // UpdateRow sets the values sent. An empty value clears it, so the level above applies; one not sent is left as it is.
 func (s *SettingsCollection) UpdateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, oldModel *sitemodels.Settings, model *sitemodels.Settings) (*sitemodels.Settings, error) {
-	level, subject := s.level(siteContext), ptr("identity")
+	level, subject := s.level(siteContext), new("identity")
 	if s.Site {
-		subject = ptr("site")
+		subject = new("site")
 	}
 	sent, units := model.Fields(), siteContext.GetSettings().GetUnits()
 	for _, name := range settingNames {

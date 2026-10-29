@@ -37,11 +37,3 @@ func GetLastSensorChangeCannulaChange(q *sitedb.Queries, ctx context.Context) (*
 	}
 	return lastSensorStart, lastSensorChange, lastCannulaChange
 }
-
-/////
-// MODELS
-/////
-
-func ptr[T any](v T) *T {
-	return &v
-}

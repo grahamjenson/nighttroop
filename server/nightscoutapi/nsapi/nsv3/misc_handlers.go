@@ -114,7 +114,3 @@ func LastModified(store nsutils.Store) func(http.ResponseWriter, *http.Request, 
 		})
 	}
 }
-
-func ptr[T any](v T) *T {
-	return &v
-}

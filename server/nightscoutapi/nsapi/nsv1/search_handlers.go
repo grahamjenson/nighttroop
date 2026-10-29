@@ -9,10 +9,6 @@ import (
 	"nighttroop.t1d.nz/utils/apiutils"
 )
 
-func ptr[T any](v T) *T {
-	return &v
-}
-
 func Count(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		collection, query, ok := nsutils.ReadCollectionAndQuery(w, r)
@@ -39,7 +35,7 @@ func Slice(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 
 		typeEq := chi.URLParam(r, "type")
 		if typeEq != "" {
-			q.TypeEq = ptr(typeEq)
+			q.TypeEq = new(typeEq)
 			// HasFilters was worked out when the query was parsed, so it must be set for a filter added after
 			q.HasFilters = true
 		}
@@ -120,9 +116,9 @@ func Echo(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 		if identifierOrType != "" {
 			// If the URL has an identifier or type segment, treat it as a filter on the default id or type field.
 			if collection.IsTypeString(identifierOrType) {
-				q.TypeEq = ptr(identifierOrType)
+				q.TypeEq = new(identifierOrType)
 			} else {
-				q.IDEq = ptr(identifierOrType)
+				q.IDEq = new(identifierOrType)
 			}
 		}
 
