@@ -160,13 +160,5 @@ func oldestDate(docs []map[string]any, before int64) int64 {
 
 // backfillVirtual writes the virtual source's documents from from to to into the site
 func (b *SyncJobManager) backfillVirtual(ctx context.Context, syncInfo *SyncJobInfo, from, to time.Time) (int, error) {
-	added := 0
-	for _, userSyncSource := range syncInfo.UserSyncSources {
-		written, err := WriteVirtualData(ctx, b.nightscoutStore, virtualSiteContext(userSyncSource), to, to.Sub(from))
-		added += written
-		if err != nil {
-			return added, err
-		}
-	}
-	return added, nil
+	return WriteVirtualData(ctx, b.nightscoutStore, syncInfo.Site.siteContext(virtualIdentity), to, to.Sub(from))
 }

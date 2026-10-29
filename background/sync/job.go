@@ -18,6 +18,7 @@ import (
 	"nighttroop.t1d.nz/server/nightscoutapi"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/security"
 )
 
@@ -56,18 +57,20 @@ type SyncJobParams struct {
 }
 
 type SyncJobInfo struct {
-	SiteID          string
-	Type            consts.SyncSourceType
-	UserSyncSources []*SyncUserInfo
-	urlOrUsername   string
-	password        string
+	SiteID string
+	Type   consts.SyncSourceType
+	// Site is the site the source syncs into
+	Site          *SyncSite
+	urlOrUsername string
+	password      string
 	// region is as stored: a Dexcom region, or one of consts.LibreRegions
 	region string
 	// firstSync is true until a sync has worked since the source was saved; a failure then disables it
 	firstSync bool
 }
 
-type SyncUserInfo struct {
+// SyncSite is the site a sync writes its records into
+type SyncSite struct {
 	SiteModel *controldb.Site
 	SiteDB    *db.SiteDB
 	ControlDB *db.ControlDB
@@ -76,9 +79,22 @@ type SyncUserInfo struct {
 }
 
 // published sends the model change of a row a sync created directly, as a write through the site would
-func (u *SyncUserInfo) published(row any) {
-	if u.Config != nil && u.Config.Events != nil {
-		u.Config.Events.Publish(u.SiteModel.ID, events.ModelChange(u.SiteModel.ID, events.Created, row))
+func (s *SyncSite) published(row any) {
+	if s.Config != nil && s.Config.Events != nil {
+		s.Config.Events.Publish(s.SiteModel.ID, events.ModelChange(s.SiteModel.ID, events.Created, row))
+	}
+}
+
+// siteContext is what a sync writes to the site through the Nightscout collections as, the identity naming the sync
+func (s *SyncSite) siteContext(identityName string) *httputils.SiteContext {
+	return &httputils.SiteContext{
+		SiteID:        s.SiteModel.ID,
+		IdentityModel: &controldb.SiteIdentity{Name: identityName},
+		ControlDB:     s.ControlDB,
+		SiteDB:        s.SiteDB,
+		SiteModel:     s.SiteModel,
+		HTTPAction:    httputils.HTTPActionWrite,
+		Config:        s.Config,
 	}
 }
 
@@ -135,23 +151,13 @@ func (b *SyncJobManager) SyncSource(ctx context.Context, syncJob SyncJobParams) 
 		return nil
 	}
 
-	userInfoSyncSources := []*SyncUserInfo{}
-	for _, syncSource := range []*controldb.SiteSyncSource{syncSource} {
-		userInfo, err := b.AttachSyncSourceWithUserInfo(syncSource)
-		if err != nil {
-			slog.Error("Error attaching sync source with user info", "error", err, "site_id", syncJob.SiteID, "sync_type", syncJob.Type)
-			continue
-		}
-
-		if userInfo == nil {
-			slog.Error("No user info found for sync source", "site_id", syncJob.SiteID, "sync_type", syncJob.Type)
-			continue
-		}
-		userInfoSyncSources = append(userInfoSyncSources, userInfo)
+	site, err := b.syncSite(syncSource.SiteID)
+	if err != nil {
+		slog.Error("Error getting the site for sync source", "error", err, "site_id", syncJob.SiteID, "sync_type", syncJob.Type)
+		return nil
 	}
-
-	if len(userInfoSyncSources) == 0 {
-		slog.Error("No user info sync sources found for unique hash", "site_id", syncJob.SiteID, "sync_type", syncJob.Type)
+	if site == nil {
+		slog.Error("No site found for sync source", "site_id", syncJob.SiteID, "sync_type", syncJob.Type)
 		return nil
 	}
 
@@ -163,13 +169,13 @@ func (b *SyncJobManager) SyncSource(ctx context.Context, syncJob SyncJobParams) 
 	}
 
 	syncInfo := &SyncJobInfo{
-		SiteID:          syncJob.SiteID,
-		Type:            syncJob.Type,
-		UserSyncSources: userInfoSyncSources,
-		urlOrUsername:   username,
-		password:        password,
-		region:          region,
-		firstSync:       syncSource.FirstSuccessfulSyncTime == nil,
+		SiteID:        syncJob.SiteID,
+		Type:          syncJob.Type,
+		Site:          site,
+		urlOrUsername: username,
+		password:      password,
+		region:        region,
+		firstSync:     syncSource.FirstSuccessfulSyncTime == nil,
 	}
 	if syncJob.Backfill != nil {
 		return b.backfill(syncInfo, *syncJob.Backfill)
@@ -206,19 +212,20 @@ func (b *SyncJobManager) getUsernamePasswordRegion(syncSource *controldb.SiteSyn
 	return unencUsername, unencPassword, region, nil
 }
 
-func (b *SyncJobManager) AttachSyncSourceWithUserInfo(syncSource *controldb.SiteSyncSource) (*SyncUserInfo, error) {
-	userDb, userModel, err := b.controlDB.GetSite(syncSource.SiteID)
+// syncSite is the site a sync source writes into, or nil when it has gone
+func (b *SyncJobManager) syncSite(siteID string) (*SyncSite, error) {
+	siteDB, siteModel, err := b.controlDB.GetSite(siteID)
 	if err != nil {
-		slog.Error("Cannot find the site for sync source", "site_id", syncSource.SiteID, "error", err)
+		slog.Error("Cannot find the site for sync source", "site_id", siteID, "error", err)
 		return nil, err
 	}
-	if userModel == nil || userDb == nil {
+	if siteModel == nil || siteDB == nil {
 		return nil, nil
 	}
 
-	return &SyncUserInfo{
-		SiteDB:    userDb,
-		SiteModel: userModel,
+	return &SyncSite{
+		SiteDB:    siteDB,
+		SiteModel: siteModel,
 		ControlDB: b.controlDB,
 		Config:    b.config,
 	}, nil
