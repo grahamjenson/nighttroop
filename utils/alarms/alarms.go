@@ -34,10 +34,12 @@ const (
 	NoData     Type = "no_data"
 	// DeviceBattery is a listed device's battery being low, or the device not reporting
 	DeviceBattery Type = "device_battery"
+	// PredictedLow is glucose heading under the low alarm's, at its current trend
+	PredictedLow Type = "predicted_low"
 )
 
 // Types are every kind of alarm, each louder one before the one it quiets, the order results list them in
-var Types = []Type{UrgentLow, Low, UrgentHigh, High, FastRise, FastDrop, NoData, DeviceBattery}
+var Types = []Type{UrgentLow, Low, PredictedLow, UrgentHigh, High, FastRise, FastDrop, NoData, DeviceBattery}
 
 // Level is how urgent an alarm is, numbered as Nightscout's are
 type Level int
@@ -81,6 +83,33 @@ func (a LowAlarm) IsActive(readings []Reading, now int64) bool {
 	return lasted(readings, a.Minutes, func(r Reading) bool { return r.Mgdl < a.Mgdl })
 }
 
+// trendMinutes is how far back the current trend is taken from, and minTrendMinutes the least its readings must span
+// to be trusted, so two readings close together cannot make a steep one
+const (
+	trendMinutes    = 15
+	minTrendMinutes = 5
+)
+
+// PredictedLowAlarm is active while glucose is falling and, going on at its current trend for Minutes, would be under
+// Mgdl, the low alarm's. The trend is its change over the newest readings within 15 minutes, which must span at least
+// 5. It alerts every 15 minutes and is quiet once the low is active.
+type PredictedLowAlarm struct {
+	Mgdl    float64
+	Minutes int64
+}
+
+func (PredictedLowAlarm) Type() Type      { return PredictedLow }
+func (PredictedLowAlarm) RepeatMs() int64 { return 15 * minute }
+func (PredictedLowAlarm) QuietedBy() Type { return Low }
+func (a PredictedLowAlarm) IsActive(readings []Reading, now int64) bool {
+	change, over := changed(readings, trendMinutes)
+	if change >= 0 || over < minTrendMinutes*minute {
+		return false
+	}
+	predicted := readings[len(readings)-1].Mgdl + change/float64(over)*float64(a.Minutes*minute)
+	return predicted < a.Mgdl
+}
+
 // UrgentHighAlarm is active while the newest reading is over Mgdl, and alerts every 5 minutes
 type UrgentHighAlarm struct{ Mgdl float64 }
 
@@ -116,7 +145,8 @@ func (FastRiseAlarm) Type() Type      { return FastRise }
 func (FastRiseAlarm) RepeatMs() int64 { return 15 * minute }
 func (FastRiseAlarm) QuietedBy() Type { return "" }
 func (a FastRiseAlarm) IsActive(readings []Reading, now int64) bool {
-	return changed(readings, a.Minutes) >= a.Mgdl
+	rise, _ := changed(readings, a.Minutes)
+	return rise >= a.Mgdl
 }
 
 // FastDropAlarm is active once glucose has fallen by Mgdl or more over the newest readings within Minutes, and alerts
@@ -130,7 +160,8 @@ func (FastDropAlarm) Type() Type      { return FastDrop }
 func (FastDropAlarm) RepeatMs() int64 { return 15 * minute }
 func (FastDropAlarm) QuietedBy() Type { return "" }
 func (a FastDropAlarm) IsActive(readings []Reading, now int64) bool {
-	return -changed(readings, a.Minutes) >= a.Mgdl
+	drop, _ := changed(readings, a.Minutes)
+	return -drop >= a.Mgdl
 }
 
 // NoDataAlarm is active once there has been no reading for Minutes, after at least one, and alerts every 15 minutes
@@ -190,16 +221,17 @@ func lasted(readings []Reading, minutes int64, beyond func(Reading) bool) bool {
 }
 
 // changed is how much glucose changed over the newest readings, sorted oldest first, within minutes of the newest:
-// from the oldest of them to the newest, or 0 with only one. Like lasted, it is measured by readings, not the time now.
-func changed(readings []Reading, minutes int64) float64 {
+// from the oldest of them to the newest, and the milliseconds between them, both 0 with only one. Like lasted, it is
+// measured by readings, not the time now.
+func changed(readings []Reading, minutes int64) (mgdl float64, over int64) {
 	if len(readings) == 0 {
-		return 0
+		return 0, 0
 	}
 	newest, i := readings[len(readings)-1], len(readings)-1
 	for i > 0 && newest.At-readings[i-1].At <= minutes*minute {
 		i--
 	}
-	return newest.Mgdl - readings[i].Mgdl
+	return newest.Mgdl - readings[i].Mgdl, newest.At - readings[i].At
 }
 
 // Reading is a glucose reading in mg/dL at a time in milliseconds

@@ -47,6 +47,12 @@ func TestFromSettings(t *testing.T) {
 			},
 		},
 		{
+			name:     "the predicted low follows the trend 20 minutes on to the low's glucose, by default",
+			site:     controldb.Site{AlarmLow: new(int64(80))},
+			identity: controldb.SiteIdentity{AlarmLowPredictionEnabled: new(true)},
+			want:     []Alarm{PredictedLowAlarm{Mgdl: 80, Minutes: 20}},
+		},
+		{
 			name:     "the fast rise and drop, at the defaults, rising or dropping 18 mg/dL within 15 minutes",
 			identity: controldb.SiteIdentity{AlarmFastRiseEnabled: new(true), AlarmFastDropEnabled: new(true)},
 			want:     []Alarm{FastRiseAlarm{Mgdl: 18, Minutes: 15}, FastDropAlarm{Mgdl: 18, Minutes: 15}},

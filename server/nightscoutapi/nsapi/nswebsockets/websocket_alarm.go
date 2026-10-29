@@ -114,6 +114,7 @@ type alarmNotification struct {
 var alarmTitles = map[alarms.Type][2]string{
 	alarms.UrgentLow:     {"Urgent LOW", "Glucose is urgently low"},
 	alarms.Low:           {"Low warning", "Glucose has been low"},
+	alarms.PredictedLow:  {"Low predicted", "Glucose is heading low"},
 	alarms.UrgentHigh:    {"Urgent HIGH", "Glucose is urgently high"},
 	alarms.High:          {"High warning", "Glucose has been high"},
 	alarms.FastRise:      {"Rising fast", "Glucose is rising fast"},

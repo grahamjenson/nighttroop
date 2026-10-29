@@ -50,35 +50,36 @@ UPDATE site_identities SET
     alarm_low = ?21,
     alarm_low_minutes = ?22,
     alarm_low_prediction_enabled = ?23,
+    alarm_low_prediction_minutes = ?24,
 
-    alarm_high_enabled = ?24,
-    alarm_high = ?25,
-    alarm_high_minutes = ?26,
-    alarm_urgent_high_enabled = ?27,
-    alarm_urgent_high = ?28,
+    alarm_high_enabled = ?25,
+    alarm_high = ?26,
+    alarm_high_minutes = ?27,
+    alarm_urgent_high_enabled = ?28,
+    alarm_urgent_high = ?29,
 
-    alarm_fast_rise_enabled = ?29,
-    alarm_fast_rise = ?30,
-    alarm_fast_rise_minutes = ?31,
+    alarm_fast_rise_enabled = ?30,
+    alarm_fast_rise = ?31,
+    alarm_fast_rise_minutes = ?32,
 
-    alarm_fast_drop_enabled = ?32,
-    alarm_fast_drop = ?33,
-    alarm_fast_drop_minutes = ?34,
+    alarm_fast_drop_enabled = ?33,
+    alarm_fast_drop = ?34,
+    alarm_fast_drop_minutes = ?35,
 
-    alarm_no_data_enabled = ?35,
-    alarm_no_data_minutes = ?36,
+    alarm_no_data_enabled = ?36,
+    alarm_no_data_minutes = ?37,
 
-    alarm_device_battery_low_enabled = ?37,
-    alarm_device_battery_low_percent = ?38,
-    alarm_device_battery_low_minutes = ?39,
-    alarm_device_battery_low_devices_json = ?40,
+    alarm_device_battery_low_enabled = ?38,
+    alarm_device_battery_low_percent = ?39,
+    alarm_device_battery_low_minutes = ?40,
+    alarm_device_battery_low_devices_json = ?41,
 
-    alarm_low_reservoir_enabled = ?41,
-    alarm_low_reservoir_units = ?42,
+    alarm_low_reservoir_enabled = ?42,
+    alarm_low_reservoir_units = ?43,
 
     -- NOTIFICATIONS
-    notifications_enabled = ?43
-WHERE id = ?44 AND site_id = ?45
+    notifications_enabled = ?44
+WHERE id = ?45 AND site_id = ?46
 `
 
 type UpdateSiteIdentitySettingsParams struct {
@@ -105,6 +106,7 @@ type UpdateSiteIdentitySettingsParams struct {
 	AlarmLow                         *int64
 	AlarmLowMinutes                  *int64
 	AlarmLowPredictionEnabled        *bool
+	AlarmLowPredictionMinutes        *int64
 	AlarmHighEnabled                 *bool
 	AlarmHigh                        *int64
 	AlarmHighMinutes                 *int64
@@ -154,6 +156,7 @@ func (q *Queries) UpdateSiteIdentitySettings(ctx context.Context, arg UpdateSite
 		arg.AlarmLow,
 		arg.AlarmLowMinutes,
 		arg.AlarmLowPredictionEnabled,
+		arg.AlarmLowPredictionMinutes,
 		arg.AlarmHighEnabled,
 		arg.AlarmHigh,
 		arg.AlarmHighMinutes,
@@ -218,35 +221,36 @@ UPDATE sites SET
     alarm_low = ?21,
     alarm_low_minutes = ?22,
     alarm_low_prediction_enabled = ?23,
+    alarm_low_prediction_minutes = ?24,
 
-    alarm_high_enabled = ?24,
-    alarm_high = ?25,
-    alarm_high_minutes = ?26,
-    alarm_urgent_high_enabled = ?27,
-    alarm_urgent_high = ?28,
+    alarm_high_enabled = ?25,
+    alarm_high = ?26,
+    alarm_high_minutes = ?27,
+    alarm_urgent_high_enabled = ?28,
+    alarm_urgent_high = ?29,
 
-    alarm_fast_rise_enabled = ?29,
-    alarm_fast_rise = ?30,
-    alarm_fast_rise_minutes = ?31,
+    alarm_fast_rise_enabled = ?30,
+    alarm_fast_rise = ?31,
+    alarm_fast_rise_minutes = ?32,
 
-    alarm_fast_drop_enabled = ?32,
-    alarm_fast_drop = ?33,
-    alarm_fast_drop_minutes = ?34,
+    alarm_fast_drop_enabled = ?33,
+    alarm_fast_drop = ?34,
+    alarm_fast_drop_minutes = ?35,
 
-    alarm_no_data_enabled = ?35,
-    alarm_no_data_minutes = ?36,
+    alarm_no_data_enabled = ?36,
+    alarm_no_data_minutes = ?37,
 
-    alarm_device_battery_low_enabled = ?37,
-    alarm_device_battery_low_percent = ?38,
-    alarm_device_battery_low_minutes = ?39,
-    alarm_device_battery_low_devices_json = ?40,
+    alarm_device_battery_low_enabled = ?38,
+    alarm_device_battery_low_percent = ?39,
+    alarm_device_battery_low_minutes = ?40,
+    alarm_device_battery_low_devices_json = ?41,
 
-    alarm_low_reservoir_enabled = ?41,
-    alarm_low_reservoir_units = ?42,
+    alarm_low_reservoir_enabled = ?42,
+    alarm_low_reservoir_units = ?43,
 
     -- NOTIFICATIONS
-    notifications_enabled = ?43
-WHERE id = ?44
+    notifications_enabled = ?44
+WHERE id = ?45
 `
 
 type UpdateSitesSettingsParams struct {
@@ -273,6 +277,7 @@ type UpdateSitesSettingsParams struct {
 	AlarmLow                         *int64
 	AlarmLowMinutes                  *int64
 	AlarmLowPredictionEnabled        *bool
+	AlarmLowPredictionMinutes        *int64
 	AlarmHighEnabled                 *bool
 	AlarmHigh                        *int64
 	AlarmHighMinutes                 *int64
@@ -321,6 +326,7 @@ func (q *Queries) UpdateSitesSettings(ctx context.Context, arg UpdateSitesSettin
 		arg.AlarmLow,
 		arg.AlarmLowMinutes,
 		arg.AlarmLowPredictionEnabled,
+		arg.AlarmLowPredictionMinutes,
 		arg.AlarmHighEnabled,
 		arg.AlarmHigh,
 		arg.AlarmHighMinutes,

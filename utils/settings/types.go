@@ -290,6 +290,7 @@ var allSettingNames = []string{
 	"alarm_low",
 	"alarm_low_minutes",
 	"alarm_low_prediction_enabled",
+	"alarm_low_prediction_minutes",
 	"alarm_high_enabled",
 	"alarm_high",
 	"alarm_high_minutes",
@@ -340,6 +341,7 @@ type SettingsGetter interface {
 	GetAlarmLow() *int64
 	GetAlarmLowMinutes() *int64
 	GetAlarmLowPredictionEnabled() *bool
+	GetAlarmLowPredictionMinutes() *int64
 	GetAlarmHighEnabled() *bool
 	GetAlarmHigh() *int64
 	GetAlarmHighMinutes() *int64
@@ -410,6 +412,8 @@ func GetSettingByName(name string, in SettingsGetter) any {
 		return in.GetAlarmLowMinutes()
 	case "alarm_low_prediction_enabled":
 		return in.GetAlarmLowPredictionEnabled()
+	case "alarm_low_prediction_minutes":
+		return in.GetAlarmLowPredictionMinutes()
 	case "alarm_high_enabled":
 		return in.GetAlarmHighEnabled()
 	case "alarm_high":
@@ -479,6 +483,7 @@ type SettingsSetter interface {
 	SetAlarmLow(v *int64)
 	SetAlarmLowMinutes(v *int64)
 	SetAlarmLowPredictionEnabled(v *bool)
+	SetAlarmLowPredictionMinutes(v *int64)
 	SetAlarmHighEnabled(v *bool)
 	SetAlarmHigh(v *int64)
 	SetAlarmHighMinutes(v *int64)
@@ -525,6 +530,7 @@ func SetSettings(s SettingsSetter, g SettingsGetter) {
 	s.SetAlarmLow(g.GetAlarmLow())
 	s.SetAlarmLowMinutes(g.GetAlarmLowMinutes())
 	s.SetAlarmLowPredictionEnabled(g.GetAlarmLowPredictionEnabled())
+	s.SetAlarmLowPredictionMinutes(g.GetAlarmLowPredictionMinutes())
 	s.SetAlarmHighEnabled(g.GetAlarmHighEnabled())
 	s.SetAlarmHigh(g.GetAlarmHigh())
 	s.SetAlarmHighMinutes(g.GetAlarmHighMinutes())

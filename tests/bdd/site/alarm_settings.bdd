@@ -9,6 +9,9 @@ ASSERT_TEXT_VISIBLE Urgent Low Under (mmol/L)
 ASSERT_TEXT_EQUALS #site--settings--site--alarm_urgent_low_enabled>option[value=""] Default (Off)
 ASSERT_VISIBLE #site--settings--site--alarm_urgent_low[placeholder="Default (3.1)"]
 ASSERT_VISIBLE #site--settings--site--alarm_low_minutes[placeholder="Default (5)"]
+// The predicted low follows the trend 20 minutes ahead by default
+ASSERT_TEXT_VISIBLE Predicted Low Alarm
+ASSERT_VISIBLE #site--settings--site--alarm_low_prediction_minutes[placeholder="Default (20)"]
 // A fast rise or drop is how far glucose goes, also in the settings' units: 18 mg/dL is 1.0 mmol/L
 ASSERT_TEXT_VISIBLE Rises By (mmol/L)
 ASSERT_VISIBLE #site--settings--site--alarm_fast_rise[placeholder="Default (1.0)"]
@@ -75,6 +78,19 @@ ASSERT_TEXT_EQUALS #site--settings--identity--alarm_fast_drop_enabled>option[sel
 ASSERT_VISIBLE #site--settings--identity--alarm_fast_drop[value="27"]
 ASSERT_VISIBLE #site--settings--identity--alarm_fast_drop_minutes[value="10"]
 SCREENSHOT alarm_settings_fast_drop
+
+// The admin turns on the predicted low, following the trend 30 minutes ahead to their 80 mg/dL low
+INPUT #site--settings--identity--alarm_low_prediction_enabled true
+INPUT #site--settings--identity--alarm_low_prediction_minutes 30
+CLICK #site--settings--identity--save
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Settings Saved
+// Opened afresh, at the top of the page without the saved toasts
+GOTO /settings
+ASSERT_STATUS 200
+ASSERT_TEXT_EQUALS #site--settings--identity--alarm_low_prediction_enabled>option[selected] On
+ASSERT_VISIBLE #site--settings--identity--alarm_low_prediction_minutes[value="30"]
+SCREENSHOT alarm_settings_predicted_low
 
 // A fast drop measured over less than 5 minutes is refused
 INPUT #site--settings--identity--alarm_fast_drop_minutes 4

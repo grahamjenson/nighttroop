@@ -32,6 +32,10 @@ type Settings struct {
 	AlarmNoDataEnabled     *string `json:"alarm_no_data_enabled"`
 	AlarmNoDataMinutes     *string `json:"alarm_no_data_minutes"`
 
+	// The predicted low follows the current trend for its minutes to the low alarm's glucose
+	AlarmLowPredictionEnabled *string `json:"alarm_low_prediction_enabled"`
+	AlarmLowPredictionMinutes *string `json:"alarm_low_prediction_minutes"`
+
 	// Inherited are the values from the level above, by setting name
 	Inherited map[string]string `json:"inherited,omitempty"`
 	// Site is the site's settings, shown beside an admin's own on the settings page
@@ -45,6 +49,7 @@ func (s *Settings) Fields() map[string]**string {
 		"date_format": &s.DateFormat, "time_format": &s.TimeFormat, "week_start_day": &s.WeekStartDay,
 		"alarm_urgent_low_enabled": &s.AlarmUrgentLowEnabled, "alarm_urgent_low": &s.AlarmUrgentLow,
 		"alarm_low_enabled": &s.AlarmLowEnabled, "alarm_low": &s.AlarmLow, "alarm_low_minutes": &s.AlarmLowMinutes,
+		"alarm_low_prediction_enabled": &s.AlarmLowPredictionEnabled, "alarm_low_prediction_minutes": &s.AlarmLowPredictionMinutes,
 		"alarm_high_enabled": &s.AlarmHighEnabled, "alarm_high": &s.AlarmHigh, "alarm_high_minutes": &s.AlarmHighMinutes,
 		"alarm_urgent_high_enabled": &s.AlarmUrgentHighEnabled, "alarm_urgent_high": &s.AlarmUrgentHigh,
 		"alarm_fast_rise_enabled": &s.AlarmFastRiseEnabled, "alarm_fast_rise": &s.AlarmFastRise, "alarm_fast_rise_minutes": &s.AlarmFastRiseMinutes,

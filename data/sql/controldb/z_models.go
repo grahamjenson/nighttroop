@@ -70,6 +70,7 @@ type Site struct {
 	AlarmLow                         *int64
 	AlarmLowMinutes                  *int64
 	AlarmLowPredictionEnabled        *bool
+	AlarmLowPredictionMinutes        *int64
 	AlarmHighEnabled                 *bool
 	AlarmHigh                        *int64
 	AlarmHighMinutes                 *int64
@@ -130,6 +131,7 @@ type SiteIdentity struct {
 	AlarmLow                         *int64
 	AlarmLowMinutes                  *int64
 	AlarmLowPredictionEnabled        *bool
+	AlarmLowPredictionMinutes        *int64
 	AlarmHighEnabled                 *bool
 	AlarmHigh                        *int64
 	AlarmHighMinutes                 *int64

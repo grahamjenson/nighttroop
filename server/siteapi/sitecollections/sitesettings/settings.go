@@ -29,6 +29,7 @@ type SettingsCollection struct {
 // settingNames are the settings the pages show so far, in order
 var settingNames = []string{"units", "timezone", "language", "date_format", "time_format", "week_start_day",
 	"alarm_urgent_low_enabled", "alarm_urgent_low", "alarm_low_enabled", "alarm_low", "alarm_low_minutes",
+	"alarm_low_prediction_enabled", "alarm_low_prediction_minutes",
 	"alarm_high_enabled", "alarm_high", "alarm_high_minutes", "alarm_urgent_high_enabled", "alarm_urgent_high",
 	"alarm_fast_rise_enabled", "alarm_fast_rise", "alarm_fast_rise_minutes", "alarm_fast_drop_enabled", "alarm_fast_drop",
 	"alarm_fast_drop_minutes", "alarm_no_data_enabled", "alarm_no_data_minutes"}

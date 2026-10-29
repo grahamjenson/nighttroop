@@ -93,6 +93,7 @@ CREATE TABLE sites (
     alarm_low INTEGER,
     alarm_low_minutes INTEGER,
     alarm_low_prediction_enabled INTEGER,
+    alarm_low_prediction_minutes INTEGER, -- how far ahead the current trend is followed to the low alarm's glucose
 
     alarm_high_enabled INTEGER,
     alarm_high INTEGER,
@@ -210,6 +211,7 @@ CREATE TABLE site_identities (
     alarm_low INTEGER,
     alarm_low_minutes INTEGER,
     alarm_low_prediction_enabled INTEGER,
+    alarm_low_prediction_minutes INTEGER, -- how far ahead the current trend is followed to the low alarm's glucose
 
     alarm_high_enabled INTEGER,
     alarm_high INTEGER,

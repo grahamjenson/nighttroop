@@ -37,6 +37,7 @@ UPDATE site_identities SET
     alarm_low = sqlc.narg('AlarmLow'),
     alarm_low_minutes = sqlc.narg('AlarmLowMinutes'),
     alarm_low_prediction_enabled = sqlc.narg('AlarmLowPredictionEnabled'),
+    alarm_low_prediction_minutes = sqlc.narg('AlarmLowPredictionMinutes'),
 
     alarm_high_enabled = sqlc.narg('AlarmHighEnabled'),
     alarm_high = sqlc.narg('AlarmHigh'),
@@ -106,6 +107,7 @@ UPDATE sites SET
     alarm_low = sqlc.narg('AlarmLow'),
     alarm_low_minutes = sqlc.narg('AlarmLowMinutes'),
     alarm_low_prediction_enabled = sqlc.narg('AlarmLowPredictionEnabled'),
+    alarm_low_prediction_minutes = sqlc.narg('AlarmLowPredictionMinutes'),
 
     alarm_high_enabled = sqlc.narg('AlarmHighEnabled'),
     alarm_high = sqlc.narg('AlarmHigh'),

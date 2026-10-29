@@ -19,14 +19,14 @@ import (
 //
 // A failure prints the timeline that made it, which can be pasted into a test in alarms_test.go to debug it.
 func TestInvariants(t *testing.T) {
-	const configText = "urgent_low 56, low 72 5m, urgent_high 270, high 180 30m, fast_rise 18 15m, fast_drop 18 15m, no_data 20m"
+	const configText = "urgent_low 56, low 72 5m, predicted_low 72 20m, urgent_high 270, high 180 30m, fast_rise 18 15m, fast_drop 18 15m, no_data 20m"
 	config := parseConfig(t, configText)
 	turnedOn := map[Type]Alarm{}
 	for _, alarm := range config {
 		turnedOn[alarm.Type()] = alarm
 	}
 	// quietedBy is which alarms quiet which, written out again here as what the alarms must do
-	quietedBy := map[Type]Type{Low: UrgentLow, High: UrgentHigh}
+	quietedBy := map[Type]Type{Low: UrgentLow, PredictedLow: Low, High: UrgentHigh}
 
 	for seed := range uint64(200) {
 		r := rand.New(rand.NewPCG(seed, 1))
@@ -168,23 +168,29 @@ func oracle(alarm Alarm, readings []Reading, now int64) bool {
 	var mgdl float64
 	var minutes int64
 	under := false
-	// changed is from the oldest reading within minutes of the newest to the newest
-	changed := func(minutes int64) float64 {
+	// changed is from the oldest reading within minutes of the newest to the newest, and the minutes between them
+	changed := func(minutes int64) (float64, float64) {
 		oldest := newest
 		for _, reading := range readings {
 			if newest.At-reading.At <= minutes*minute && reading.At < oldest.At {
 				oldest = reading
 			}
 		}
-		return newest.Mgdl - oldest.Mgdl
+		return newest.Mgdl - oldest.Mgdl, float64(newest.At-oldest.At) / float64(minute)
 	}
 	switch a := alarm.(type) {
 	case NoDataAlarm:
 		return now-newest.At >= a.Minutes*minute
+	case PredictedLowAlarm:
+		// Falling over at least 5 of the last 15 minutes, and under the low that many minutes on at that rate
+		change, over := changed(15)
+		return change < 0 && over >= 5 && newest.Mgdl+change/over*float64(a.Minutes) < a.Mgdl
 	case FastRiseAlarm:
-		return changed(a.Minutes) >= a.Mgdl
+		change, _ := changed(a.Minutes)
+		return change >= a.Mgdl
 	case FastDropAlarm:
-		return -changed(a.Minutes) >= a.Mgdl
+		change, _ := changed(a.Minutes)
+		return -change >= a.Mgdl
 	case UrgentLowAlarm:
 		mgdl, under = a.Mgdl, true
 	case LowAlarm:
