@@ -10,9 +10,7 @@ import (
 
 	"nighttroop.t1d.nz/clients/nightscout_client"
 	"nighttroop.t1d.nz/data/db"
-	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
-	"nighttroop.t1d.nz/utils/httputils"
 )
 
 // nightscoutClient is a site's Nightscout client, kept between syncs so its JWT is reused
@@ -39,10 +37,6 @@ func (b *SyncJobManager) nightscoutClientFor(syncInfo *SyncJobInfo) *nightscoutC
 }
 
 func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
-	if len(syncInfo.UserSyncSources) == 0 {
-		return fmt.Errorf("Nightscout: No user sync sources found for site_id %s type %s", syncInfo.SiteID, syncInfo.Type)
-	}
-
 	nsc := b.nightscoutClientFor(syncInfo)
 	nsc.Lock()
 	defer nsc.Unlock()
@@ -82,7 +76,7 @@ var nightscoutCollections = []struct {
 	{nsutils.Devicestatus, 10, 50},
 }
 
-// syncNightscoutCollection copies a collection's newest documents into each site
+// syncNightscoutCollection copies a collection's newest documents into the site
 func (b *SyncJobManager) syncNightscoutCollection(ctx context.Context, nsc *nightscoutClient, syncInfo *SyncJobInfo, collection nsutils.Collection, limit int) error {
 	docs, err := nsc.GetDocuments(ctx, string(collection), time.Now().Add(-20*time.Minute), time.Time{}, limit)
 	if err != nil {
@@ -92,7 +86,7 @@ func (b *SyncJobManager) syncNightscoutCollection(ctx context.Context, nsc *nigh
 	return err
 }
 
-// createNightscoutDocuments copies documents into each site, returning how many were new. Documents a site refuses,
+// createNightscoutDocuments copies documents into the site, returning how many were new. Documents a site refuses,
 // such as a treatment with an eventType it does not know, are skipped and logged once, so they do not fail every sync.
 func (b *SyncJobManager) createNightscoutDocuments(ctx context.Context, syncInfo *SyncJobInfo, collection nsutils.Collection, docs []map[string]any) (int, error) {
 	// REMOVE WRITE ONLY COLUMNS
@@ -106,37 +100,23 @@ func (b *SyncJobManager) createNightscoutDocuments(ctx context.Context, syncInfo
 	if !ok {
 		return 0, fmt.Errorf("Nightscout: %s collection not found", collection)
 	}
-	added := 0
-	for _, userSyncSource := range syncInfo.UserSyncSources {
-		siteContext := &httputils.SiteContext{
-			SiteID: userSyncSource.SiteModel.ID,
-			IdentityModel: &controldb.SiteIdentity{
-				Name: "nightscout_sync",
-			},
-			ControlDB:  userSyncSource.ControlDB,
-			SiteDB:     userSyncSource.SiteDB,
-			SiteModel:  userSyncSource.SiteModel,
-			HTTPAction: httputils.HTTPActionWrite,
-			Config:     userSyncSource.Config,
+	siteContext := syncInfo.Site.siteContext("nightscout_sync")
+	added, skipped, reason := 0, 0, ""
+	for _, doc := range docs {
+		_, duplicateFound, herr := collectionStore.Create(ctx, siteContext, doc, false)
+		if herr != nil && herr.Status < http.StatusInternalServerError {
+			skipped, reason = skipped+1, herr.Message
+			continue
 		}
-
-		skipped, reason := 0, ""
-		for _, doc := range docs {
-			_, duplicateFound, herr := collectionStore.Create(ctx, siteContext, doc, false)
-			if herr != nil && herr.Status < http.StatusInternalServerError {
-				skipped, reason = skipped+1, herr.Message
-				continue
-			}
-			if herr != nil {
-				return added, fmt.Errorf("Nightscout: Failed to create %s: %w", collection, herr)
-			}
-			if !duplicateFound {
-				added++
-			}
+		if herr != nil {
+			return added, fmt.Errorf("Nightscout: Failed to create %s: %w", collection, herr)
 		}
-		if skipped > 0 {
-			b.controlDB.Logs.Log(ctx, &syncInfo.SiteID, db.LogLevelWarn, "skipped Nightscout documents the site refused", map[string]any{"collection": collection, "skipped": skipped, "error": reason})
+		if !duplicateFound {
+			added++
 		}
+	}
+	if skipped > 0 {
+		b.controlDB.Logs.Log(ctx, &syncInfo.SiteID, db.LogLevelWarn, "skipped Nightscout documents the site refused", map[string]any{"collection": collection, "skipped": skipped, "error": reason})
 	}
 	if added > 0 {
 		slog.Info("Added new Nightscout documents for site", "site_id", syncInfo.SiteID, "collection", collection, "added", added)

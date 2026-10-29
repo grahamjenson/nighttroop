@@ -49,9 +49,6 @@ func (b *SyncJobManager) syncLibre(syncInfo *SyncJobInfo) error {
 // copyLibreReadings imports the followed patient's graph, the last 12 hours, all of it each time so a gap in syncing is
 // filled, returning how many readings were new. Readings already imported have the same IDs, so they are skipped.
 func (b *SyncJobManager) copyLibreReadings(ctx context.Context, syncInfo *SyncJobInfo) (int, error) {
-	if len(syncInfo.UserSyncSources) == 0 {
-		return 0, fmt.Errorf("Libre, no user sync sources found for site_id %s type %s", syncInfo.SiteID, syncInfo.Type)
-	}
 	if syncInfo.region == "" {
 		syncInfo.region = consts.LibreRegionGlobal
 	}
@@ -67,16 +64,14 @@ func (b *SyncJobManager) copyLibreReadings(ctx context.Context, syncInfo *SyncJo
 		return 0, fmt.Errorf("Libre Error: %w", err)
 	}
 	added := 0
-	for _, userSyncSource := range syncInfo.UserSyncSources {
-		for _, r := range readings {
-			createParams := libremodels.ReadingToCreate(r, "libre_sync")
-			row, err := userSyncSource.SiteDB.Queries.CreateGlucoseReading(ctx, createParams)
-			if err == nil {
-				added++
-				userSyncSource.published(row)
-			} else if !utilerrors.IsSQLDuplicateID(err) {
-				slog.Error("Error creating entry in database", "error", err, "id", createParams.ID, "site_id", syncInfo.SiteID, "sync_type", syncInfo.Type)
-			}
+	for _, r := range readings {
+		createParams := libremodels.ReadingToCreate(r, "libre_sync")
+		row, err := syncInfo.Site.SiteDB.Queries.CreateGlucoseReading(ctx, createParams)
+		if err == nil {
+			added++
+			syncInfo.Site.published(row)
+		} else if !utilerrors.IsSQLDuplicateID(err) {
+			slog.Error("Error creating entry in database", "error", err, "id", createParams.ID, "site_id", syncInfo.SiteID, "sync_type", syncInfo.Type)
 		}
 	}
 	return added, nil
