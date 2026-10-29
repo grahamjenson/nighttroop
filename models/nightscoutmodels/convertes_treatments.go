@@ -447,10 +447,10 @@ func ToProfileJSON(source interface {
 	profile := Profile{}
 
 	if source.GetDia() != nil {
-		profile.Dia = ptr(types.FlexibleFloat64(*source.GetDia()))
+		profile.Dia = new(types.FlexibleFloat64(*source.GetDia()))
 	}
 	if source.GetTimezone() != nil {
-		profile.Timezone = ptr(types.Timezone(*source.GetTimezone()))
+		profile.Timezone = new(types.Timezone(*source.GetTimezone()))
 	}
 
 	profile.Units = siteContext.GetSettings().GetUnits()
@@ -485,8 +485,8 @@ func ToCorrectionRange(source interface {
 }) []*types.FlexibleFloat64 {
 
 	correctionRange := []*types.FlexibleFloat64{
-		ptr(types.FlexibleFloat64(source.GetLowTargetMgdl())),
-		ptr(types.FlexibleFloat64(source.GetHighTargetMgdl())),
+		new(types.FlexibleFloat64(source.GetLowTargetMgdl())),
+		new(types.FlexibleFloat64(source.GetHighTargetMgdl())),
 	}
 	return correctionRange
 }
