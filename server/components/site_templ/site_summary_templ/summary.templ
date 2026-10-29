@@ -58,24 +58,23 @@ type treatment struct {
 	At     int64
 	Kind   string
 	Detail string
-	Device *string
 }
 
 // treatments are the summary's insulin, food, temp targets and temp basals in one list, newest first
 func treatments(s *sitemodels.Summary) []treatment {
 	list := []treatment{}
 	for _, d := range s.InsulinDoses {
-		list = append(list, treatment{d.OccurredAt, "Insulin", value(&d.Dose, " U"), d.CreatedByDeviceName})
+		list = append(list, treatment{d.OccurredAt, "Insulin", value(&d.Dose, " U")})
 	}
 	for _, f := range s.FoodIntakes {
-		list = append(list, treatment{f.OccurredAt, "Food", value(f.Carbs, " g carbs"), f.CreatedByDeviceName})
+		list = append(list, treatment{f.OccurredAt, "Food", value(f.Carbs, " g carbs")})
 	}
 	for _, t := range s.TempTargets {
 		detail := fmt.Sprintf("%s–%s %s for %d min", site_data_templ.FormatGlucose(t.LowTarget, t.Units), site_data_templ.FormatGlucose(t.HighTarget, t.Units), unitsText(t.Units), t.DurationMinutes)
-		list = append(list, treatment{t.OccurredAt, "Temp Target", detail, t.CreatedByDeviceName})
+		list = append(list, treatment{t.OccurredAt, "Temp Target", detail})
 	}
 	for _, b := range s.TempBasals {
-		list = append(list, treatment{b.OccurredAt, "Temp Basal", fmt.Sprintf("%s for %d min", value(b.Absolute, " U/hr"), b.DurationMinutes), b.CreatedByDeviceName})
+		list = append(list, treatment{b.OccurredAt, "Temp Basal", fmt.Sprintf("%s for %d min", value(b.Absolute, " U/hr"), b.DurationMinutes)})
 	}
 	sort.SliceStable(list, func(i, j int) bool { return list[i].At > list[j].At })
 	return list
@@ -284,9 +283,6 @@ templ treatmentsTable(list []treatment) {
 					}
 					@table.Cell() {
 						{ t.Detail }
-					}
-					@table.Cell() {
-						<span class="text-gray-500">{ orDash(t.Device) }</span>
 					}
 				}
 			}
