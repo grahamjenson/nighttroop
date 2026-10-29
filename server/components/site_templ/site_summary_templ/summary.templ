@@ -309,9 +309,6 @@ templ readingsTable(summary *sitemodels.Summary) {
 					@table.Cell() {
 						<span class={ "font-medium tabular-nums", rangeColours[glucoseRange(summary, r.Reading)] }>{ site_data_templ.FormatGlucose(r.Reading, r.Units) }</span> { arrow(r.Direction) }
 					}
-					@table.Cell() {
-						<span class="text-gray-500">{ orDash(r.CreatedByDeviceName) }</span>
-					}
 				}
 			}
 		}
