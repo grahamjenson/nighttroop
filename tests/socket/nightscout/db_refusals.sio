@@ -100,3 +100,16 @@ EMIT dbAdd
 B {"collection":"entries","data":{"type":"sgv","sgv":5000,"date":{{ itime 0 }}}}
 ACK
 ASSERT_LENGTH 0 "@"
+
+# A list is capped like a Nightscout batch POST, as one event could otherwise store thousands of records
+NAME add_most_entries
+EMIT dbAdd
+B {"collection":"entries","data":[{{ range $i := 100 }}{{ if $i }},{{ end }}{"type":"sgv","sgv":100,"date":{{ itime $i }}}{{ end }}]}
+ACK
+ASSERT_LENGTH 100 "@"
+
+NAME add_too_many_entries
+EMIT dbAdd
+B {"collection":"entries","data":[{{ range $i := 101 }}{{ if $i }},{{ end }}{"type":"sgv","sgv":100,"date":{{ itime $i }}}{{ end }}]}
+ACK
+ASSERT_EQUALS "Too many records" "@result"
