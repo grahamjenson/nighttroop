@@ -108,6 +108,12 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getSyncSourceStmt, err = db.PrepareContext(ctx, getSyncSource); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSyncSource: %w", err)
 	}
+	if q.hydrateSiteStmt, err = db.PrepareContext(ctx, hydrateSite); err != nil {
+		return nil, fmt.Errorf("error preparing query HydrateSite: %w", err)
+	}
+	if q.searchArchivedSitesStmt, err = db.PrepareContext(ctx, searchArchivedSites); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchArchivedSites: %w", err)
+	}
 	if q.searchSitesStmt, err = db.PrepareContext(ctx, searchSites); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchSites: %w", err)
 	}
@@ -298,6 +304,16 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getSyncSourceStmt: %w", cerr)
 		}
 	}
+	if q.hydrateSiteStmt != nil {
+		if cerr := q.hydrateSiteStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing hydrateSiteStmt: %w", cerr)
+		}
+	}
+	if q.searchArchivedSitesStmt != nil {
+		if cerr := q.searchArchivedSitesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchArchivedSitesStmt: %w", cerr)
+		}
+	}
 	if q.searchSitesStmt != nil {
 		if cerr := q.searchSitesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing searchSitesStmt: %w", cerr)
@@ -440,6 +456,8 @@ type Queries struct {
 	getSitesToDisableStmt              *sql.Stmt
 	getSyncReportsToRunStmt            *sql.Stmt
 	getSyncSourceStmt                  *sql.Stmt
+	hydrateSiteStmt                    *sql.Stmt
+	searchArchivedSitesStmt            *sql.Stmt
 	searchSitesStmt                    *sql.Stmt
 	searchSitesByDBSizeStmt            *sql.Stmt
 	searchSitesByLastWriteStmt         *sql.Stmt
@@ -489,6 +507,8 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getSitesToDisableStmt:              q.getSitesToDisableStmt,
 		getSyncReportsToRunStmt:            q.getSyncReportsToRunStmt,
 		getSyncSourceStmt:                  q.getSyncSourceStmt,
+		hydrateSiteStmt:                    q.hydrateSiteStmt,
+		searchArchivedSitesStmt:            q.searchArchivedSitesStmt,
 		searchSitesStmt:                    q.searchSitesStmt,
 		searchSitesByDBSizeStmt:            q.searchSitesByDBSizeStmt,
 		searchSitesByLastWriteStmt:         q.searchSitesByLastWriteStmt,

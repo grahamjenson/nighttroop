@@ -87,3 +87,17 @@ ASSERT_VISIBLE #control--site--archive
 SCREENSHOT site_archive
 CLICK #control--site--archive
 ASSERT_TEXT_VISIBLE a site can only be archived when S3 is connected
+
+// The archived sites have a page of their own, each with a button to hydrate it, bringing it back live. There are none
+// here, as archiving needs S3
+PRESS Escape
+CLICK #control--menu
+CLICK #control--archived-sites-button
+ASSERT_STATUS 200
+ASSERT_PATH /archived-sites
+ASSERT_VISIBLE #controlArchivedSitesTable
+// Loaded again, without the toasts from before
+GOTO {{ .control_url }}/archived-sites
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE No archived sites.
+SCREENSHOT archived_sites

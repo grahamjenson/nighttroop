@@ -65,6 +65,11 @@ func (l *LogsDB) SiteArchivedEvent(ctx context.Context, siteID string, by string
 	l.finishedEvent(ctx, siteID, "", events.SiteArchived, started, SiteArchivedAttributes{By: by})
 }
 
+// SiteHydratedEvent records a control identity bringing an archived site back, which started at started
+func (l *LogsDB) SiteHydratedEvent(ctx context.Context, siteID string, by string, started time.Time) {
+	l.finishedEvent(ctx, siteID, "", events.SiteHydrated, started, SiteArchivedAttributes{By: by})
+}
+
 type SiteTruncatedAttributes struct {
 	By           string `json:"by"`
 	BeforeSizeKB *int64 `json:"before_size_kb"`
