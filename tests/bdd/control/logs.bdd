@@ -61,6 +61,12 @@ INPUT #control--events--filter--search nothing like this
 CLICK #control--events--filter--submit
 ASSERT_TEXT_VISIBLE No events here.
 
+// Clearing the type and search shows every event again
+CLICK #control--events--filter--clear
+ASSERT_PATH /events
+ASSERT_VISIBLE #controlEventsTable td >> text=Site created >> nth=0
+ASSERT_NOT_VISIBLE #control--events--filter--clear
+
 // Errors and logs have pages of their own
 CLICK #control--menu
 CLICK #control--errors-button

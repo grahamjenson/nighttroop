@@ -8,7 +8,7 @@ import (
 )
 
 type Props struct {
-	// ID names the form, its type select ID--type, its search input ID--search and its button ID--submit
+	// ID names the form, its type select ID--type, its search input ID--search, its button ID--submit and its clear button ID--clear
 	ID string
 	// Path is the page's URL, without a query
 	Path string
@@ -52,6 +52,22 @@ templ Filter(p Props) {
 		}
 		@button.Button(button.Props{ID: p.ID + "--submit", Type: "submit", Variant: button.VariantOutline}) {
 			Filter
+		}
+		// Once a type or search is chosen, one click goes back to every row
+		if p.Selected != nil || p.Search != nil {
+			@button.Button(button.Props{
+				ID:      p.ID + "--clear",
+				Href:    p.Path,
+				Variant: button.VariantGhost,
+				Attributes: templ.Attributes{
+					"hx-get":      p.Path,
+					"hx-target":   "#main-content",
+					"hx-push-url": "true",
+					"hx-swap":     "innerHTML",
+				},
+			}) {
+				Clear
+			}
 		}
 	</form>
 }
