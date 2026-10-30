@@ -1,6 +1,6 @@
 -- name: UpsertSummaryPeriod :one
-INSERT INTO summary_period (period, date, timezone, start_at, end_at, days, time_in_range, total_daily_dose, total_daily_carbs, glucose_mgdl_json)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+INSERT INTO summary_period (period, date, timezone, start_at, end_at, days, time_in_range, total_daily_dose, total_daily_carbs, glucose_mgdl_json, agp_mgdl_json)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ON CONFLICT(period, date) DO UPDATE SET
     timezone = excluded.timezone,
     start_at = excluded.start_at,
@@ -10,6 +10,7 @@ ON CONFLICT(period, date) DO UPDATE SET
     total_daily_dose = excluded.total_daily_dose,
     total_daily_carbs = excluded.total_daily_carbs,
     glucose_mgdl_json = excluded.glucose_mgdl_json,
+    agp_mgdl_json = excluded.agp_mgdl_json,
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
 RETURNING *;
 

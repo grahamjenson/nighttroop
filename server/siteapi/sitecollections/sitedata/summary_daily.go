@@ -117,7 +117,7 @@ func RebuildSummaryDaily(ctx context.Context, q *sitedb.Queries, siteContext *ht
 func upsertSummaryPeriod(ctx context.Context, q *sitedb.Queries, row *sitedb.SummaryPeriod) (*sitedb.SummaryPeriod, error) {
 	return q.UpsertSummaryPeriod(ctx, sitedb.UpsertSummaryPeriodParams{Period: row.Period, Date: row.Date, Timezone: row.Timezone,
 		StartAt: row.StartAt, EndAt: row.EndAt, Days: row.Days, TimeInRange: row.TimeInRange, TotalDailyDose: row.TotalDailyDose,
-		TotalDailyCarbs: row.TotalDailyCarbs, GlucoseMgdlJson: row.GlucoseMgdlJson})
+		TotalDailyCarbs: row.TotalDailyCarbs, GlucoseMgdlJson: row.GlucoseMgdlJson, AgpMgdlJson: row.AgpMgdlJson})
 }
 
 // RebuildSummaryDailyWeek deletes all the site's days and periods, as from a timezone they no longer follow, and

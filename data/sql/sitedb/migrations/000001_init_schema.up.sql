@@ -494,7 +494,8 @@ CREATE TABLE profile_presets (
 -- month from its days. days is how many days had data, and the daily dose and carbs are a day's totals, or the mean
 -- of a week's or month's days with data, as is its time in range. Glucose is in mg/dL every 5 minutes from midnight,
 -- 288 values (276 or 300 for a day the clocks change), null when there was no reading: for a week or month, the
--- mean of its days' at that time of day.
+-- mean of its days' at that time of day. A week or month also has its AGP: the 5th, 25th, 50th, 75th and 95th
+-- percentiles of its days' glucose in each 15 minutes from midnight, 96 of them, null when none had a reading then.
 CREATE TABLE summary_period (
     period TEXT NOT NULL CHECK(period IN ('day', 'week', 'month')),
     date TEXT NOT NULL CHECK(length(date) = 10),
@@ -507,6 +508,7 @@ CREATE TABLE summary_period (
     total_daily_dose REAL NOT NULL,
     total_daily_carbs REAL NOT NULL,
     glucose_mgdl_json TEXT NOT NULL CHECK(length(glucose_mgdl_json) <= 2048 AND json_valid(glucose_mgdl_json)),
+    agp_mgdl_json TEXT CHECK(agp_mgdl_json IS NULL OR (length(agp_mgdl_json) <= 4096 AND json_valid(agp_mgdl_json))),
 
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),

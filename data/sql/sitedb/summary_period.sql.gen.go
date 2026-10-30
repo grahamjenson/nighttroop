@@ -24,7 +24,7 @@ func (q *Queries) DeleteSummaryPeriods(ctx context.Context, arg DeleteSummaryPer
 }
 
 const getSummaryPeriod = `-- name: GetSummaryPeriod :one
-SELECT period, date, timezone, start_at, end_at, days, time_in_range, total_daily_dose, total_daily_carbs, glucose_mgdl_json, created_at, updated_at FROM summary_period WHERE period = ? AND date = ?
+SELECT period, date, timezone, start_at, end_at, days, time_in_range, total_daily_dose, total_daily_carbs, glucose_mgdl_json, agp_mgdl_json, created_at, updated_at FROM summary_period WHERE period = ? AND date = ?
 `
 
 type GetSummaryPeriodParams struct {
@@ -46,6 +46,7 @@ func (q *Queries) GetSummaryPeriod(ctx context.Context, arg GetSummaryPeriodPara
 		&i.TotalDailyDose,
 		&i.TotalDailyCarbs,
 		&i.GlucoseMgdlJson,
+		&i.AgpMgdlJson,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -66,7 +67,7 @@ func (q *Queries) HardDeleteSummaryPeriod(ctx context.Context, arg HardDeleteSum
 }
 
 const searchSummaryPeriods = `-- name: SearchSummaryPeriods :many
-SELECT period, date, timezone, start_at, end_at, days, time_in_range, total_daily_dose, total_daily_carbs, glucose_mgdl_json, created_at, updated_at FROM summary_period
+SELECT period, date, timezone, start_at, end_at, days, time_in_range, total_daily_dose, total_daily_carbs, glucose_mgdl_json, agp_mgdl_json, created_at, updated_at FROM summary_period
 WHERE
     period = ?1
     AND (CAST(?2 AS TEXT) IS NULL OR date >= ?2)
@@ -109,6 +110,7 @@ func (q *Queries) SearchSummaryPeriods(ctx context.Context, arg SearchSummaryPer
 			&i.TotalDailyDose,
 			&i.TotalDailyCarbs,
 			&i.GlucoseMgdlJson,
+			&i.AgpMgdlJson,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -126,8 +128,8 @@ func (q *Queries) SearchSummaryPeriods(ctx context.Context, arg SearchSummaryPer
 }
 
 const upsertSummaryPeriod = `-- name: UpsertSummaryPeriod :one
-INSERT INTO summary_period (period, date, timezone, start_at, end_at, days, time_in_range, total_daily_dose, total_daily_carbs, glucose_mgdl_json)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+INSERT INTO summary_period (period, date, timezone, start_at, end_at, days, time_in_range, total_daily_dose, total_daily_carbs, glucose_mgdl_json, agp_mgdl_json)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ON CONFLICT(period, date) DO UPDATE SET
     timezone = excluded.timezone,
     start_at = excluded.start_at,
@@ -137,8 +139,9 @@ ON CONFLICT(period, date) DO UPDATE SET
     total_daily_dose = excluded.total_daily_dose,
     total_daily_carbs = excluded.total_daily_carbs,
     glucose_mgdl_json = excluded.glucose_mgdl_json,
+    agp_mgdl_json = excluded.agp_mgdl_json,
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
-RETURNING period, date, timezone, start_at, end_at, days, time_in_range, total_daily_dose, total_daily_carbs, glucose_mgdl_json, created_at, updated_at
+RETURNING period, date, timezone, start_at, end_at, days, time_in_range, total_daily_dose, total_daily_carbs, glucose_mgdl_json, agp_mgdl_json, created_at, updated_at
 `
 
 type UpsertSummaryPeriodParams struct {
@@ -152,6 +155,7 @@ type UpsertSummaryPeriodParams struct {
 	TotalDailyDose  float64
 	TotalDailyCarbs float64
 	GlucoseMgdlJson string
+	AgpMgdlJson     *string
 }
 
 func (q *Queries) UpsertSummaryPeriod(ctx context.Context, arg UpsertSummaryPeriodParams) (*SummaryPeriod, error) {
@@ -166,6 +170,7 @@ func (q *Queries) UpsertSummaryPeriod(ctx context.Context, arg UpsertSummaryPeri
 		arg.TotalDailyDose,
 		arg.TotalDailyCarbs,
 		arg.GlucoseMgdlJson,
+		arg.AgpMgdlJson,
 	)
 	var i SummaryPeriod
 	err := row.Scan(
@@ -179,6 +184,7 @@ func (q *Queries) UpsertSummaryPeriod(ctx context.Context, arg UpsertSummaryPeri
 		&i.TotalDailyDose,
 		&i.TotalDailyCarbs,
 		&i.GlucoseMgdlJson,
+		&i.AgpMgdlJson,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

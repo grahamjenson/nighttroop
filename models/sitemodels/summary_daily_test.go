@@ -166,3 +166,39 @@ func TestNewSummaryPeriodGlucose(t *testing.T) {
 		})
 	}
 }
+
+func TestNewSummaryPeriodAGP(t *testing.T) {
+	day := func(withData int64, glucose string) *sitedb.SummaryPeriod {
+		return &sitedb.SummaryPeriod{Days: withData, GlucoseMgdlJson: glucose}
+	}
+	// agp is the 96 AGP bins, with the percentiles at the bins given and the rest null
+	agp := func(bins map[int][]int64) string {
+		all := make([][]int64, 96)
+		for bin, percentiles := range bins {
+			all[bin] = percentiles
+		}
+		value, _ := json.Marshal(all)
+		return string(value)
+	}
+	tests := []struct {
+		name string
+		days []*sitedb.SummaryPeriod
+		want string
+	}{
+		{name: "no days has no percentiles", want: agp(nil)},
+		{name: "one reading is every percentile", days: []*sitedb.SummaryPeriod{day(1, "[120]")}, want: agp(map[int][]int64{0: {120, 120, 120, 120, 120}})},
+		{name: "a bin is the readings of its 15 minutes on every day",
+			days: []*sitedb.SummaryPeriod{day(1, "[100,110,120,200]"), day(1, "[130,null,140]")},
+			// 100, 110, 120, 130, 140 in the first 15 minutes, and 200 in the second
+			want: agp(map[int][]int64{0: {102, 110, 120, 130, 138}, 1: {200, 200, 200, 200, 200}})},
+		{name: "a day without data is left out", days: []*sitedb.SummaryPeriod{day(1, "[100]"), day(0, "[300]")},
+			want: agp(map[int][]int64{0: {100, 100, 100, 100, 100}})},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := NewSummaryPeriod("week", "2026-10-26", "UTC", 1, 2, tt.days).AgpMgdlJson; got == nil || *got != tt.want {
+				t.Errorf("AGP is %v, want %s", got, tt.want)
+			}
+		})
+	}
+}
