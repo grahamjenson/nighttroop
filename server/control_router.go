@@ -16,7 +16,6 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 	r := chi.NewRouter()
 	store := controlcollections.NewControlStore()
 	httputils.AddStandardMiddleware(r, config, controlDB)
-	r.Use(httputils.CountRoutes(config.Usage, "control"))
 
 	static.AddStaticRoutes(r)
 
@@ -27,12 +26,17 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 
 	r.Group(func(r chi.Router) {
 		r.Use(controlapi.JWTAuthMiddleware(controlDB, config))
+		r.Use(httputils.CountRoutes(config.Usage, "control"))
 		r.Get("/", store.Collection("sites").Search) // The dashboard is the list of sites
 		r.Post("/logout", controlapi.POSTLogoutHandler(config))
 
 		// The control plane's collections, each at its route: sites, jobs, job stats and sync sources
 		store.Routes(r)
+		r.Post("/sites", (&controlcollections.SitesCollection{}).CreateHandler)
 		r.Post("/sites/{id}/truncate", (&controlcollections.SitesCollection{}).TruncateHandler)
+		r.Get("/sites/{id}/identities", (&controlcollections.SitesCollection{}).IdentitiesHandler)
+		r.Post("/sites/{id}/identities/{identity}/password", (&controlcollections.SitesCollection{}).ResetPasswordHandler)
+		r.Post("/sites/{id}/identities/{identity}/totp", (&controlcollections.SitesCollection{}).ResetTOTPHandler)
 		r.Get("/usage", controlapi.UsageHandler)
 
 		//// TODO

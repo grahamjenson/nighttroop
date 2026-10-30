@@ -23,7 +23,6 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config *config.ServerConfig) c
 
 	r := chi.NewRouter()
 	httputils.AddStandardMiddleware(r, config, controlDB)
-	r.Use(httputils.CountRoutes(config.Usage, "nightscout"))
 	// Before auth only the IP is known, so an IP spamming bad tokens cannot spend the site's own limit
 	r.Use(httputils.SiteUnauthRateLimitMiddleware(config))
 
@@ -37,6 +36,7 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config *config.ServerConfig) c
 		r.Use(httputils.SiteRateLimitMiddleware(config))
 		r.Use(httputils.SiteIdentityRateLimitMiddleware(config))
 		r.Use(httputils.SiteIdentitySeenFlagsUpdateMiddleware(controlDB)) // Updates user/identity flags
+		r.Use(httputils.CountRoutes(config.Usage, "nightscout"))
 
 		r.Get("/api/v2/authorization/request/token={token}", NightscoutAuthRoute(controlDB, config))
 		r.Get("/api/v2/authorization/request/{token}", NightscoutAuthRoute(controlDB, config))

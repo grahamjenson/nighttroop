@@ -15,7 +15,6 @@ import (
 func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Router {
 	r := chi.NewRouter()
 	httputils.AddStandardMiddleware(r, config, controlDB)
-	r.Use(httputils.CountRoutes(config.Usage, "site"))
 
 	// Static files are embedded and cheap, so like the public and control sites only the global limits cover them
 	static.AddStaticRoutes(r)
@@ -30,6 +29,8 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		publicapi.LegalRoutes(r)
 		r.Post("/login", sitelogin.POSTLogin(controlDB, config))
 		r.Post("/login/totp", sitelogin.POSTLoginTOTP(controlDB, config))
+		// The backup key proves ownership, giving the site's admin new credentials
+		r.Post("/recover", sitelogin.POSTRecover(controlDB, config))
 	})
 
 	r.Group(func(r chi.Router) {
@@ -38,6 +39,7 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Use(httputils.SiteRateLimitMiddleware(config))
 		r.Use(httputils.SiteIdentityRateLimitMiddleware(config))
 		r.Use(httputils.SiteIdentitySeenFlagsUpdateMiddleware(controlDB)) // Updates user/identity flags
+		r.Use(httputils.CountRoutes(config.Usage, "site"))
 
 		// The summary is the home page
 		r.Get("/", store.Collection("data", "summary").Search)

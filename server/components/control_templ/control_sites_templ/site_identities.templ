@@ -1,0 +1,124 @@
+package control_sites_templ
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/httputils"
+)
+
+// canReset is whether the control identity is an admin, who can reset a site identity's password or TOTP
+func canReset(ctx context.Context) bool {
+	controlContext := httputils.GetControlContext(ctx)
+	return controlContext != nil && controlContext.IdentityModel != nil && controlContext.IdentityModel.Role == consts.ControlRoleAdmin
+}
+
+// SiteIdentities is a site's identities, in its details, with buttons for an admin to reset one's password, or its TOTP
+// when it logs in with one. The new credentials are shown above the table, once.
+templ SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) {
+	<h3 class="mt-6 text-sm font-semibold text-brand-night">Identities</h3>
+	<div id="control--site--identities--reset"></div>
+	@table.Table(table.Props{ID: "control--site--identities--table", Class: "mt-2 rounded-lg border border-gray-200 text-sm"}) {
+		@table.Header() {
+			@table.Row() {
+				@table.Head() {
+					Name
+				}
+				@table.Head() {
+					Role
+				}
+				@table.Head() {
+					Enabled
+				}
+				@table.Head() {
+					TOTP
+				}
+				@table.Head() {
+					Last Seen
+				}
+				if canReset(ctx) {
+					@table.Head() {
+						Reset
+					}
+				}
+			}
+		}
+		@table.Body() {
+			for _, identity := range identities {
+				@table.Row(table.RowProps{ID: fmt.Sprintf("control--site--identity--%d", identity.ID)}) {
+					@table.Cell() {
+						<span title={ "Created " + formatDate(&identity.CreatedAt) + " by " + identity.CreatedByIdentityName }>{ identity.Name }</span>
+					}
+					@table.Cell() {
+						{ display.Name(string(identity.Role)) }
+					}
+					@table.Cell() {
+						{ yesNo(identity.Enabled) }
+					}
+					@table.Cell() {
+						{ yesNo(identity.HasTotp) }
+					}
+					@table.Cell() {
+						<span title={ formatDate(identity.LastSeenAt) }>{ display.Ago(identity.LastSeenAt, time.Now()) }</span>
+					}
+					if canReset(ctx) {
+						@table.Cell(table.CellProps{Class: "flex gap-1"}) {
+							@resetButton(siteID, identity, "password", "Password", "Give "+identity.Name+" a new random password? Their old one stops working.")
+							if identity.HasTotp {
+								@resetButton(siteID, identity, "totp", "TOTP", "Give "+identity.Name+" a new TOTP secret? Codes from their authenticator app stop working.")
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+func yesNo(yes bool) string {
+	if yes {
+		return "Yes"
+	}
+	return "No"
+}
+
+// resetButton resets what of an identity, its password or totp, after asking to confirm
+templ resetButton(siteID string, identity *controlmodels.SiteIdentity, what string, label string, confirm string) {
+	<form
+		hx-post={ fmt.Sprintf("/sites/%s/identities/%d/%s", siteID, identity.ID, what) }
+		hx-target="#control--site--identities--reset"
+		hx-swap="innerHTML"
+		hx-confirm={ confirm }
+		hx-status:4xx="target:#toaster swap:beforeend"
+		hx-status:5xx="target:#toaster swap:beforeend"
+	>
+		@button.Button(button.Props{ID: fmt.Sprintf("control--site--identity--%d--reset-%s", identity.ID, what), Type: button.TypeSubmit,
+			Variant: button.VariantOutline, Size: button.SizeSm}) {
+			{ label }
+		}
+	</form>
+}
+
+// SiteIdentityReset shows an identity's new credentials after a reset, which are shown only this once
+templ SiteIdentityReset(credentials *controlmodels.SiteIdentityCredentials) {
+	<div id="control--site--identity-reset" class="mt-2 rounded-lg border border-amber-400 bg-amber-100 p-3 text-sm">
+		<p class="font-semibold text-amber-800">New credentials for { credentials.Name }. Save them now: they are shown only this once.</p>
+		<dl class="mt-2 grid grid-cols-[8rem_1fr] gap-x-4 gap-y-1 font-mono">
+			if credentials.Password != nil {
+				@siteDetail("Password", *credentials.Password)
+			}
+			if credentials.NSToken != nil {
+				@siteDetail("NS token", *credentials.NSToken)
+			}
+			if credentials.TotpSecret != nil {
+				@siteDetail("TOTP secret", *credentials.TotpSecret)
+			}
+		</dl>
+	</div>
+}

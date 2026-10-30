@@ -1035,6 +1035,27 @@ func (q *Queries) HydrateSite(ctx context.Context, arg HydrateSiteParams) (sql.R
 	return q.exec(ctx, q.hydrateSiteStmt, hydrateSite, arg.ID)
 }
 
+const rotateSiteBackupKey = `-- name: RotateSiteBackupKey :execresult
+
+UPDATE sites SET backup_key_hash = ?1
+WHERE id = ?2 AND backup_key_hash = ?3
+`
+
+type RotateSiteBackupKeyParams struct {
+	NewHash string
+	ID      string
+	OldHash string
+}
+
+// -----
+// UPDATE
+// ------
+// A backup key works once: using it replaces its hash, only while the hash is still the one checked, so two uses of
+// the same key cannot both succeed
+func (q *Queries) RotateSiteBackupKey(ctx context.Context, arg RotateSiteBackupKeyParams) (sql.Result, error) {
+	return q.exec(ctx, q.rotateSiteBackupKeyStmt, rotateSiteBackupKey, arg.NewHash, arg.ID, arg.OldHash)
+}
+
 const searchArchivedSites = `-- name: SearchArchivedSites :many
 SELECT id, batch, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, last_seen_at, last_write_at, state, disabled_at, archived_at, deleted_at, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM sites
 WHERE state = 'archived'
@@ -1423,7 +1444,6 @@ func (q *Queries) SiteExists(ctx context.Context, arg SiteExistsParams) (bool, e
 }
 
 const updateSiteDateFlags = `-- name: UpdateSiteDateFlags :exec
-
 UPDATE sites
 SET
     last_seen_at = COALESCE(?, last_seen_at),
@@ -1439,9 +1459,6 @@ type UpdateSiteDateFlagsParams struct {
 	ID                string
 }
 
-// -----
-// UPDATE
-// ------
 func (q *Queries) UpdateSiteDateFlags(ctx context.Context, arg UpdateSiteDateFlagsParams) error {
 	_, err := q.exec(ctx, q.updateSiteDateFlagsStmt, updateSiteDateFlags,
 		arg.LastSeenAt,

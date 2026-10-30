@@ -27,4 +27,6 @@ ASSERT_VISIBLE #control--usage--requests-per-site
 ASSERT_VISIBLE #control--usage--cpu >> text=/%$/
 ASSERT_VISIBLE #control--usage--disk
 ASSERT_VISIBLE #control--usage--routes td >> text=/^site GET \/$/
+// Only signed in requests are counted, so no static file, unmatched or public page is
+ASSERT_NOT_VISIBLE #control--usage--routes td >> text=/static files|unmatched|^public /
 SCREENSHOT usage

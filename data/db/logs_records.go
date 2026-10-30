@@ -47,6 +47,11 @@ func (l *LogsDB) SiteCreatedEvent(ctx context.Context, siteID string) {
 	l.event(ctx, siteID, events.SiteCreated, nil)
 }
 
+// SiteAdminRecoveredEvent records the site's backup key giving its admin new credentials, which its admins can see
+func (l *LogsDB) SiteAdminRecoveredEvent(ctx context.Context, siteID string) {
+	l.event(ctx, siteID, events.SiteAdminRecovered, nil)
+}
+
 type SiteDisabledAttributes struct {
 	By string `json:"by"`
 }

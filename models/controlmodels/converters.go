@@ -14,6 +14,9 @@ import (
 // goverter:output:file ./z_control_converters.go
 type ControlConverter interface {
 	SiteFromDB(source *controldb.Site) *Site
+	// goverter:enum no
+	// goverter:map TotpSecretEnc HasTotp | HasSecret
+	SiteIdentityFromDB(source *controldb.SiteIdentity) *SiteIdentity
 
 	// goverter:useZeroValueOnPointerInconsistency
 	QueryToSearchSites(source *apiquery.Query) controldb.SearchSitesParams

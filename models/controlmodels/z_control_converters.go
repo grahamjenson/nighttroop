@@ -218,6 +218,33 @@ func SiteFromDB(source *controldb.Site) *Site {
 	}
 	return pControlmodelsSite
 }
+func SiteIdentityFromDB(source *controldb.SiteIdentity) *SiteIdentity {
+	var pControlmodelsSiteIdentity *SiteIdentity
+	if source != nil {
+		var controlmodelsSiteIdentity SiteIdentity
+		controlmodelsSiteIdentity.ID = (*source).ID
+		controlmodelsSiteIdentity.Name = (*source).Name
+		controlmodelsSiteIdentity.Role = consts.IdentityRole((*source).Role)
+		controlmodelsSiteIdentity.Enabled = (*source).Enabled
+		controlmodelsSiteIdentity.HasTotp = HasSecret((*source).TotpSecretEnc)
+		controlmodelsSiteIdentity.CreatedAt = (*source).CreatedAt
+		controlmodelsSiteIdentity.CreatedByIdentityName = (*source).CreatedByIdentityName
+		if (*source).UpdatedByIdentityName != nil {
+			xstring := *(*source).UpdatedByIdentityName
+			controlmodelsSiteIdentity.UpdatedByIdentityName = &xstring
+		}
+		if (*source).LastSeenAt != nil {
+			xint64 := *(*source).LastSeenAt
+			controlmodelsSiteIdentity.LastSeenAt = &xint64
+		}
+		if (*source).LastWriteAt != nil {
+			xint642 := *(*source).LastWriteAt
+			controlmodelsSiteIdentity.LastWriteAt = &xint642
+		}
+		pControlmodelsSiteIdentity = &controlmodelsSiteIdentity
+	}
+	return pControlmodelsSiteIdentity
+}
 func SyncSourceFromDB(source *controldb.SiteSyncSource) *SyncSource {
 	var pControlmodelsSyncSource *SyncSource
 	if source != nil {

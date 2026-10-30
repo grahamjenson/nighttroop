@@ -12,7 +12,6 @@ import (
 func NewPublicRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Router {
 	r := chi.NewRouter()
 	httputils.AddStandardMiddleware(r, config, controlDB)
-	r.Use(httputils.CountRoutes(config.Usage, "public"))
 
 	static.AddStaticRoutes(r)
 
@@ -26,8 +25,6 @@ func NewPublicRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.R
 	// 1. Documentation
 	// 2. SEO
 	// TODO backupKeyhashFcuntions
-	// 1. reset admin passwrod
-	// 2. reset admin totp
 	// 3. download sqlite backup
 	return r
 }

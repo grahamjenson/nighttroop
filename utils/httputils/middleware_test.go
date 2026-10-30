@@ -62,18 +62,40 @@ func TestResponsesAreGzippedWhenAccepted(t *testing.T) {
 	assert.Equal(t, css, w.Body.String())
 }
 
-// Requests are counted by their route's pattern, not their path, and those no route matched together
+// Only signed in requests are counted, by their route's pattern, not their path
 func TestCountRoutes(t *testing.T) {
 	tracker := usage.New()
 	router := chi.NewRouter()
-	router.Use(CountRoutes(tracker, "site"))
-	router.Get("/data/{collection}", func(w http.ResponseWriter, r *http.Request) {})
 	router.Get("/htmx.js", func(w http.ResponseWriter, r *http.Request) {})
-	router.Get("/style.css", func(w http.ResponseWriter, r *http.Request) {})
-	for _, path := range []string{"/data/glucose", "/data/insulin", "/secret-token", "/other", "/htmx.js", "/style.css", "/htmx.js"} {
-		router.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, path, nil))
+	router.Group(func(r chi.Router) {
+		// A stand in for a router's sign in
+		r.Use(func(next http.Handler) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.Header.Get("Authorization") == "" {
+					w.WriteHeader(http.StatusUnauthorized)
+					return
+				}
+				next.ServeHTTP(w, r)
+			})
+		})
+		r.Use(CountRoutes(tracker, "site"))
+		r.Get("/data/{collection}", func(w http.ResponseWriter, r *http.Request) {})
+	})
+	for _, request := range []struct {
+		path     string
+		signedIn bool
+	}{
+		{"/data/glucose", true}, {"/data/insulin", true},
+		{"/data/glucose", false}, {"/secret-token", true}, {"/secret-token", false}, {"/htmx.js", true}, {"/htmx.js", false},
+	} {
+		r := httptest.NewRequest(http.MethodGet, request.path, nil)
+		if request.signedIn {
+			r.Header.Set("Authorization", "Bearer token")
+		}
+		router.ServeHTTP(httptest.NewRecorder(), r)
 	}
 	routes := tracker.Snapshot(time.Now(), 10).Routes
-	require.Equal(t, []string{"site static files", "site GET /data/{collection}", "site unmatched"}, []string{routes[0].Route, routes[1].Route, routes[2].Route})
-	require.Equal(t, []int64{3, 2, 2}, []int64{routes[0].Count, routes[1].Count, routes[2].Count})
+	require.Len(t, routes, 1)
+	require.Equal(t, "site GET /data/{collection}", routes[0].Route)
+	require.Equal(t, int64(2), routes[0].Count)
 }

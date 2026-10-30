@@ -2808,6 +2808,46 @@ func (m *GetSiteIdentityByIDParams) SetID(v int64) {
 	m.ID = v
 }
 
+// GetPasswordHash returns the PasswordHash value.
+func (m ResetSiteAdminCredentialsParams) GetPasswordHash() string {
+	return m.PasswordHash
+}
+
+// SetPasswordHash sets the PasswordHash value and returns the updated ResetSiteAdminCredentialsParams.
+func (m *ResetSiteAdminCredentialsParams) SetPasswordHash(v string) {
+	m.PasswordHash = v
+}
+
+// GetTotpSecretEnc returns the TotpSecretEnc value.
+func (m ResetSiteAdminCredentialsParams) GetTotpSecretEnc() string {
+	return m.TotpSecretEnc
+}
+
+// SetTotpSecretEnc sets the TotpSecretEnc value and returns the updated ResetSiteAdminCredentialsParams.
+func (m *ResetSiteAdminCredentialsParams) SetTotpSecretEnc(v string) {
+	m.TotpSecretEnc = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m ResetSiteAdminCredentialsParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated ResetSiteAdminCredentialsParams.
+func (m *ResetSiteAdminCredentialsParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetName returns the Name value.
+func (m ResetSiteAdminCredentialsParams) GetName() string {
+	return m.Name
+}
+
+// SetName sets the Name value and returns the updated ResetSiteAdminCredentialsParams.
+func (m *ResetSiteAdminCredentialsParams) SetName(v string) {
+	m.Name = v
+}
+
 // GetLastSeenAt returns the LastSeenAt value.
 func (m UpdateSiteIdentityDateFlagsParams) GetLastSeenAt() *int64 {
 	return m.LastSeenAt
@@ -2885,6 +2925,86 @@ func (m UpdateSiteIdentityEnabledParams) GetID() int64 {
 
 // SetID sets the ID value and returns the updated UpdateSiteIdentityEnabledParams.
 func (m *UpdateSiteIdentityEnabledParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetPasswordHash returns the PasswordHash value.
+func (m UpdateSiteIdentityPasswordParams) GetPasswordHash() string {
+	return m.PasswordHash
+}
+
+// SetPasswordHash sets the PasswordHash value and returns the updated UpdateSiteIdentityPasswordParams.
+func (m *UpdateSiteIdentityPasswordParams) SetPasswordHash(v string) {
+	m.PasswordHash = v
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m UpdateSiteIdentityPasswordParams) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdateSiteIdentityPasswordParams.
+func (m *UpdateSiteIdentityPasswordParams) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m UpdateSiteIdentityPasswordParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated UpdateSiteIdentityPasswordParams.
+func (m *UpdateSiteIdentityPasswordParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetID returns the ID value.
+func (m UpdateSiteIdentityPasswordParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated UpdateSiteIdentityPasswordParams.
+func (m *UpdateSiteIdentityPasswordParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetTotpSecretEnc returns the TotpSecretEnc value.
+func (m UpdateSiteIdentityTOTPParams) GetTotpSecretEnc() string {
+	return m.TotpSecretEnc
+}
+
+// SetTotpSecretEnc sets the TotpSecretEnc value and returns the updated UpdateSiteIdentityTOTPParams.
+func (m *UpdateSiteIdentityTOTPParams) SetTotpSecretEnc(v string) {
+	m.TotpSecretEnc = v
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m UpdateSiteIdentityTOTPParams) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdateSiteIdentityTOTPParams.
+func (m *UpdateSiteIdentityTOTPParams) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m UpdateSiteIdentityTOTPParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated UpdateSiteIdentityTOTPParams.
+func (m *UpdateSiteIdentityTOTPParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetID returns the ID value.
+func (m UpdateSiteIdentityTOTPParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated UpdateSiteIdentityTOTPParams.
+func (m *UpdateSiteIdentityTOTPParams) SetID(v int64) {
 	m.ID = v
 }
 
@@ -3436,6 +3556,36 @@ func (m HydrateSiteParams) GetID() string {
 // SetID sets the ID value and returns the updated HydrateSiteParams.
 func (m *HydrateSiteParams) SetID(v string) {
 	m.ID = v
+}
+
+// GetNewHash returns the NewHash value.
+func (m RotateSiteBackupKeyParams) GetNewHash() string {
+	return m.NewHash
+}
+
+// SetNewHash sets the NewHash value and returns the updated RotateSiteBackupKeyParams.
+func (m *RotateSiteBackupKeyParams) SetNewHash(v string) {
+	m.NewHash = v
+}
+
+// GetID returns the ID value.
+func (m RotateSiteBackupKeyParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated RotateSiteBackupKeyParams.
+func (m *RotateSiteBackupKeyParams) SetID(v string) {
+	m.ID = v
+}
+
+// GetOldHash returns the OldHash value.
+func (m RotateSiteBackupKeyParams) GetOldHash() string {
+	return m.OldHash
+}
+
+// SetOldHash sets the OldHash value and returns the updated RotateSiteBackupKeyParams.
+func (m *RotateSiteBackupKeyParams) SetOldHash(v string) {
+	m.OldHash = v
 }
 
 // GetSkip returns the Skip value.

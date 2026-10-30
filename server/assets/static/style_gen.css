@@ -722,6 +722,9 @@
   .grid-cols-4 {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
+  .grid-cols-\[8rem_1fr\] {
+    grid-template-columns: 8rem 1fr;
+  }
   .grid-cols-\[8rem_minmax\(0\,1fr\)\] {
     grid-template-columns: 8rem minmax(0,1fr);
   }
@@ -903,6 +906,9 @@
   .border-b {
     border-bottom-style: var(--tw-border-style);
     border-bottom-width: 1px;
+  }
+  .border-amber-400 {
+    border-color: var(--color-amber-400);
   }
   .border-amber-500\/20 {
     border-color: color-mix(in srgb, oklch(76.9% 0.188 70.08) 20%, transparent);
@@ -1393,6 +1399,9 @@
   }
   .text-yellow-500 {
     color: var(--color-yellow-500);
+  }
+  .lowercase {
+    text-transform: lowercase;
   }
   .uppercase {
     text-transform: uppercase;

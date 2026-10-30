@@ -123,6 +123,12 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.hydrateSiteStmt, err = db.PrepareContext(ctx, hydrateSite); err != nil {
 		return nil, fmt.Errorf("error preparing query HydrateSite: %w", err)
 	}
+	if q.resetSiteAdminCredentialsStmt, err = db.PrepareContext(ctx, resetSiteAdminCredentials); err != nil {
+		return nil, fmt.Errorf("error preparing query ResetSiteAdminCredentials: %w", err)
+	}
+	if q.rotateSiteBackupKeyStmt, err = db.PrepareContext(ctx, rotateSiteBackupKey); err != nil {
+		return nil, fmt.Errorf("error preparing query RotateSiteBackupKey: %w", err)
+	}
 	if q.searchArchivedSitesStmt, err = db.PrepareContext(ctx, searchArchivedSites); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchArchivedSites: %w", err)
 	}
@@ -153,8 +159,14 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateSiteIdentityEnabledStmt, err = db.PrepareContext(ctx, updateSiteIdentityEnabled); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSiteIdentityEnabled: %w", err)
 	}
+	if q.updateSiteIdentityPasswordStmt, err = db.PrepareContext(ctx, updateSiteIdentityPassword); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateSiteIdentityPassword: %w", err)
+	}
 	if q.updateSiteIdentitySettingsStmt, err = db.PrepareContext(ctx, updateSiteIdentitySettings); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSiteIdentitySettings: %w", err)
+	}
+	if q.updateSiteIdentityTOTPStmt, err = db.PrepareContext(ctx, updateSiteIdentityTOTP); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateSiteIdentityTOTP: %w", err)
 	}
 	if q.updateSitesSettingsStmt, err = db.PrepareContext(ctx, updateSitesSettings); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSitesSettings: %w", err)
@@ -341,6 +353,16 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing hydrateSiteStmt: %w", cerr)
 		}
 	}
+	if q.resetSiteAdminCredentialsStmt != nil {
+		if cerr := q.resetSiteAdminCredentialsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing resetSiteAdminCredentialsStmt: %w", cerr)
+		}
+	}
+	if q.rotateSiteBackupKeyStmt != nil {
+		if cerr := q.rotateSiteBackupKeyStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing rotateSiteBackupKeyStmt: %w", cerr)
+		}
+	}
 	if q.searchArchivedSitesStmt != nil {
 		if cerr := q.searchArchivedSitesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing searchArchivedSitesStmt: %w", cerr)
@@ -391,9 +413,19 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateSiteIdentityEnabledStmt: %w", cerr)
 		}
 	}
+	if q.updateSiteIdentityPasswordStmt != nil {
+		if cerr := q.updateSiteIdentityPasswordStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateSiteIdentityPasswordStmt: %w", cerr)
+		}
+	}
 	if q.updateSiteIdentitySettingsStmt != nil {
 		if cerr := q.updateSiteIdentitySettingsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateSiteIdentitySettingsStmt: %w", cerr)
+		}
+	}
+	if q.updateSiteIdentityTOTPStmt != nil {
+		if cerr := q.updateSiteIdentityTOTPStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateSiteIdentityTOTPStmt: %w", cerr)
 		}
 	}
 	if q.updateSitesSettingsStmt != nil {
@@ -493,6 +525,8 @@ type Queries struct {
 	getSyncReportsToRunStmt            *sql.Stmt
 	getSyncSourceStmt                  *sql.Stmt
 	hydrateSiteStmt                    *sql.Stmt
+	resetSiteAdminCredentialsStmt      *sql.Stmt
+	rotateSiteBackupKeyStmt            *sql.Stmt
 	searchArchivedSitesStmt            *sql.Stmt
 	searchSitesStmt                    *sql.Stmt
 	searchSitesByDBSizeStmt            *sql.Stmt
@@ -503,7 +537,9 @@ type Queries struct {
 	updateSiteDateFlagsStmt            *sql.Stmt
 	updateSiteIdentityDateFlagsStmt    *sql.Stmt
 	updateSiteIdentityEnabledStmt      *sql.Stmt
+	updateSiteIdentityPasswordStmt     *sql.Stmt
 	updateSiteIdentitySettingsStmt     *sql.Stmt
+	updateSiteIdentityTOTPStmt         *sql.Stmt
 	updateSitesSettingsStmt            *sql.Stmt
 	updateSyncReportAttemptStmt        *sql.Stmt
 	updateSyncSourceStmt               *sql.Stmt
@@ -548,6 +584,8 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getSyncReportsToRunStmt:            q.getSyncReportsToRunStmt,
 		getSyncSourceStmt:                  q.getSyncSourceStmt,
 		hydrateSiteStmt:                    q.hydrateSiteStmt,
+		resetSiteAdminCredentialsStmt:      q.resetSiteAdminCredentialsStmt,
+		rotateSiteBackupKeyStmt:            q.rotateSiteBackupKeyStmt,
 		searchArchivedSitesStmt:            q.searchArchivedSitesStmt,
 		searchSitesStmt:                    q.searchSitesStmt,
 		searchSitesByDBSizeStmt:            q.searchSitesByDBSizeStmt,
@@ -558,7 +596,9 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateSiteDateFlagsStmt:            q.updateSiteDateFlagsStmt,
 		updateSiteIdentityDateFlagsStmt:    q.updateSiteIdentityDateFlagsStmt,
 		updateSiteIdentityEnabledStmt:      q.updateSiteIdentityEnabledStmt,
+		updateSiteIdentityPasswordStmt:     q.updateSiteIdentityPasswordStmt,
 		updateSiteIdentitySettingsStmt:     q.updateSiteIdentitySettingsStmt,
+		updateSiteIdentityTOTPStmt:         q.updateSiteIdentityTOTPStmt,
 		updateSitesSettingsStmt:            q.updateSitesSettingsStmt,
 		updateSyncReportAttemptStmt:        q.updateSyncReportAttemptStmt,
 		updateSyncSourceStmt:               q.updateSyncSourceStmt,
