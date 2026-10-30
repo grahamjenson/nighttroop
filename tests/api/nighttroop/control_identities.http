@@ -40,6 +40,17 @@ H Authorization: Bearer {{ .control_jwt }}
 H Accept: application/json
 ASSERT_STATUS 404
 
+// The admin's sign-in and the PWD phone's Nightscout JWT from before their credentials are reset
+NAME admin_login_before_reset
+POST http://{{ .site }}/login
+H Accept: application/json
+B {"name": "admin", "password": "{{ .create_new_site.api_key }}", "totp": "123123"}
+ASSERT_STATUS 200
+
+NAME pwd_jwt_before_reset
+GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ .create_new_site.pwd_nstoken }}
+ASSERT_STATUS 200
+
 // Resetting the admin's password gives a new one, which it logs in with, recorded as changed by the control admin
 NAME reset_admin_password
 POST http://control.localhost/sites/{{ .site_id }}/identities/{{ .admin_id }}/password
@@ -53,6 +64,19 @@ NAME login_with_new_password
 POST http://{{ .site }}/login
 H Accept: application/json
 B {"name": "admin", "password": "{{ .reset_admin_password.result.password }}", "totp": "123123"}
+ASSERT_STATUS 200
+
+// The admin's JWT from before the reset is refused, so whoever had the old password is signed out
+NAME admin_jwt_before_reset_refused
+GET http://{{ .site }}/settings/site
+H Authorization: Bearer {{ .admin_login_before_reset.token }}
+H Accept: application/json
+ASSERT_STATUS 401
+
+NAME admin_jwt_after_reset_works
+GET http://{{ .site }}/settings/site
+H Authorization: Bearer {{ .login_with_new_password.token }}
+H Accept: application/json
 ASSERT_STATUS 200
 
 NAME reset_recorded
@@ -74,6 +98,17 @@ NAME use_new_ns_token
 GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ .reset_pwd_password.result.ns_token }}
 ASSERT_STATUS 200
 
+// The phone's Nightscout JWT from the old token is refused, and the one from the new token works
+NAME pwd_jwt_before_reset_refused
+GET http://{{ .ns_site }}/api/v3/entries
+H Authorization: Bearer {{ .pwd_jwt_before_reset.token }}
+ASSERT_STATUS 401
+
+NAME pwd_jwt_after_reset_works
+GET http://{{ .ns_site }}/api/v3/entries
+H Authorization: Bearer {{ .use_new_ns_token.token }}
+ASSERT_STATUS 200
+
 // The admin logs in with TOTP, so it can have a new TOTP secret
 NAME reset_admin_totp
 POST http://control.localhost/sites/{{ .site_id }}/identities/{{ .admin_id }}/totp
@@ -81,6 +116,33 @@ H Authorization: Bearer {{ .control_jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_EXISTS "@result.totp_secret"
+
+// A new TOTP signs out the admin's JWTs too, so it signs in again
+NAME admin_jwt_before_totp_reset_refused
+GET http://{{ .site }}/settings/site
+H Authorization: Bearer {{ .login_with_new_password.token }}
+H Accept: application/json
+ASSERT_STATUS 401
+
+NAME login_after_totp_reset
+POST http://{{ .site }}/login
+H Accept: application/json
+B {"name": "admin", "password": "{{ .reset_admin_password.result.password }}", "totp": "123123"}
+ASSERT_STATUS 200
+
+// Each reset is an event the site's admins see, newest first, with what changed and which control admin changed it
+NAME credentials_changed_events
+GET http://{{ .site }}/logs/events?type=identity_credentials_changed
+H Authorization: Bearer {{ .login_after_totp_reset.token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@result"
+ASSERT_EQUALS "admin" "@result.0.attributes.identity_name"
+ASSERT_EQUALS "totp" "@result.0.attributes.credentials"
+ASSERT_EQUALS "admin" "@result.0.attributes.by"
+ASSERT_EQUALS "pwd_phone" "@result.1.attributes.identity_name"
+ASSERT_EQUALS "password" "@result.1.attributes.credentials"
+ASSERT_EQUALS "password" "@result.2.attributes.credentials"
 
 // The PWD phone does not log in with TOTP, so it has none to reset
 NAME reset_pwd_totp_refused

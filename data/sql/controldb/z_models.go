@@ -108,6 +108,7 @@ type SiteIdentity struct {
 	CreatedByIdentityID              int64
 	CreatedByIdentityName            string
 	Enabled                          bool
+	CredentialsChangedAt             int64
 	Units                            *consts.Units
 	Timezone                         *string
 	Language                         *string

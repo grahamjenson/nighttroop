@@ -9,7 +9,6 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/config"
-	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/security"
@@ -61,17 +60,7 @@ func TryAuthWithJWTToken(config *config.ServerConfig, r *http.Request) (*control
 	authHeader := r.Header.Get("Authorization")
 	hasBearer := strings.HasPrefix(strings.ToLower(authHeader), strings.ToLower(BearerPrefix))
 	if hasBearer {
-		jwttokenStr := authHeader[len(BearerPrefix):]
-		subdomain, identityName, role, err := config.Security.VerifyUserJWTToken(jwttokenStr)
-		if err != nil {
-			return nil, fmt.Errorf("bad JWT token: %w", err)
-		}
-		identity, err := httputils.GetSiteIdentity(r.Context(), subdomain, identityName, consts.IdentityRole(role))
-		if err != nil {
-			slog.Warn("Bad JWT token cant find identity", "error", err)
-			return nil, fmt.Errorf("identity not found: %w", err)
-		}
-		return identity, nil
+		return httputils.GetJWTSiteIdentity(r.Context(), config, authHeader[len(BearerPrefix):])
 	}
 
 	if authHeader != "" {
@@ -81,15 +70,9 @@ func TryAuthWithJWTToken(config *config.ServerConfig, r *http.Request) (*control
 	// Check for Cookie
 	cookieToken, err := security.GetUserTokenFromRequest(r)
 	if err == nil {
-		jwttokenStr := cookieToken
-		subdomain, identityName, role, err := config.Security.VerifyUserJWTToken(jwttokenStr)
+		identity, err := httputils.GetJWTSiteIdentity(r.Context(), config, cookieToken)
 		if err != nil {
 			slog.Info("Bad Cookie JWT token", "error", err)
-			return nil, fmt.Errorf("Bad Cookie JWT token: %w", err)
-		}
-		identity, err := httputils.GetSiteIdentity(r.Context(), subdomain, identityName, consts.IdentityRole(role))
-		if err != nil {
-			slog.Warn("Bad Cookie JWT token cant find identity", "error", err)
 			return nil, fmt.Errorf("Bad Cookie JWT token: %w", err)
 		}
 		return identity, nil

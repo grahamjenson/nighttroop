@@ -60,7 +60,8 @@ WHERE id = ?;
 
 -- A recovery gives the site's admin new credentials and turns it back on
 -- name: ResetSiteAdminCredentials :execresult
-UPDATE site_identities SET password_hash = sqlc.arg('PasswordHash'), totp_secret_enc = sqlc.arg('TotpSecretEnc'), enabled = 1, updated_by_identity_name = 'backup key'
+UPDATE site_identities SET password_hash = sqlc.arg('PasswordHash'), totp_secret_enc = sqlc.arg('TotpSecretEnc'), enabled = 1, updated_by_identity_name = 'backup key',
+    credentials_changed_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
 WHERE site_id = sqlc.arg('SiteID') AND name = sqlc.arg('Name') AND role = 'admin';
 
 -- name: UpdateSiteIdentityEnabled :exec
@@ -76,6 +77,7 @@ WHERE site_id = sqlc.arg('SiteID') AND id = sqlc.arg('ID');
 UPDATE site_identities
 SET
     password_hash = sqlc.arg('PasswordHash'),
+    credentials_changed_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_id = NULL,
     updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
 WHERE site_id = sqlc.arg('SiteID') AND id = sqlc.arg('ID');
@@ -84,6 +86,7 @@ WHERE site_id = sqlc.arg('SiteID') AND id = sqlc.arg('ID');
 UPDATE site_identities
 SET
     totp_secret_enc = sqlc.arg('TotpSecretEnc'),
+    credentials_changed_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_id = NULL,
     updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
 WHERE site_id = sqlc.arg('SiteID') AND id = sqlc.arg('ID');

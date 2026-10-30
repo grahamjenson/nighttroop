@@ -55,10 +55,33 @@ B {"backup_key": "{{ .recover.backup_key }}"}
 ASSERT_STATUS 200
 ASSERT_EQUALS "admin" "@name"
 
-// Each recovery is an event its admins can see
+// The admin's JWT from before that recovery is refused, so whoever had the old credentials is signed out
+NAME jwt_before_recovery_refused
+GET http://{{ site }}/logs/events
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 401
+
+NAME login_after_recovery
+POST http://{{ site }}/login
+H Accept: application/json
+B {"name": "admin", "password": "{{ .recover_new_key.password }}", "totp": "123123"}
+ASSERT_STATUS 200
+SET jwt {{ .login_after_recovery.token }}
+
+// Each recovery is an event its admins can see, and so is the admin's credentials changing
 NAME recovered_events
 GET http://{{ site }}/logs/events?type=site_admin_recovered
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 2 "@"
+ASSERT_LENGTH 2 "@result"
+
+NAME credentials_changed_events
+GET http://{{ site }}/logs/events?type=identity_credentials_changed
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result"
+ASSERT_EQUALS "password_and_totp" "@result.0.attributes.credentials"
+ASSERT_EQUALS "backup key" "@result.0.attributes.by"

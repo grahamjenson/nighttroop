@@ -888,6 +888,16 @@ func (m *SiteIdentity) SetEnabled(v bool) {
 	m.Enabled = v
 }
 
+// GetCredentialsChangedAt returns the CredentialsChangedAt value.
+func (m SiteIdentity) GetCredentialsChangedAt() int64 {
+	return m.CredentialsChangedAt
+}
+
+// SetCredentialsChangedAt sets the CredentialsChangedAt value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetCredentialsChangedAt(v int64) {
+	m.CredentialsChangedAt = v
+}
+
 // GetUnits returns the Units value.
 func (m SiteIdentity) GetUnits() *consts.Units {
 	return m.Units

@@ -8,6 +8,10 @@ import (
 	"github.com/tink-crypto/tink-go/v2/jwt"
 )
 
+// IssuedAtMsClaim is when a user or pre-auth JWT was issued, in milliseconds, as iat only has seconds and a JWT
+// issued before its identity's credentials changed is refused
+const IssuedAtMsClaim = "iat_ms"
+
 // AUDIENCE STRINGS
 var ControlAudience = "control"
 var UserAudience = "user"
@@ -138,7 +142,8 @@ func (config *SecurityConfig) GenerateUserJWTToken(subdomain string, identityNam
 		ExpiresAt: &expiresAt,
 		IssuedAt:  &now,
 		CustomClaims: map[string]any{
-			"role": role,
+			"role":          role,
+			IssuedAtMsClaim: now.UnixMilli(),
 		},
 	})
 	if err != nil {
@@ -153,30 +158,36 @@ func (config *SecurityConfig) GenerateUserJWTToken(subdomain string, identityNam
 	return tokenString, expiresAt, nil
 }
 
-func (config *SecurityConfig) VerifyUserJWTToken(tokenStr string) (string, string, string, error) {
+// VerifyUserJWTToken is the site, identity name and role a user JWT is for, and when it was issued in milliseconds
+func (config *SecurityConfig) VerifyUserJWTToken(tokenStr string) (string, string, string, int64, error) {
 
 	verifiedJWT, err := config.jwtMac.VerifyMACAndDecode(tokenStr, config.jwtUserValidator)
 	if err != nil {
 		slog.Info("Failed to VerifyMACAndDecode user JWT token ", "error", err)
-		return "", "", "", err
+		return "", "", "", 0, err
 	}
 
 	identityName, err := verifiedJWT.Subject()
 	if err != nil {
-		return "", "", "", err
+		return "", "", "", 0, err
 	}
 
 	role, err := verifiedJWT.StringClaim("role")
 	if err != nil {
-		return "", "", "", err
+		return "", "", "", 0, err
 	}
 
 	subdomain, err := verifiedJWT.Issuer()
 	if err != nil {
-		return "", "", "", err
+		return "", "", "", 0, err
 	}
 
-	return subdomain, identityName, string(role), nil
+	issuedAtMs, err := verifiedJWT.NumberClaim(IssuedAtMsClaim)
+	if err != nil {
+		return "", "", "", 0, err
+	}
+
+	return subdomain, identityName, string(role), int64(issuedAtMs), nil
 }
 
 ///
@@ -195,6 +206,9 @@ func (config *SecurityConfig) GeneratePreAuthJWTToken(subdomain string, deviceNa
 		Audience:  &PreAuthAudience,
 		ExpiresAt: &expiresAt,
 		IssuedAt:  &now,
+		CustomClaims: map[string]any{
+			IssuedAtMsClaim: now.UnixMilli(),
+		},
 	})
 	if err != nil {
 		return "", time.Time{}, err
@@ -207,21 +221,27 @@ func (config *SecurityConfig) GeneratePreAuthJWTToken(subdomain string, deviceNa
 	return tokenString, expiresAt, nil
 }
 
-func (config *SecurityConfig) VerifyPreAuthJWTToken(tokenStr string, subdomain string) (string, error) {
+// VerifyPreAuthJWTToken is the identity name a pre-auth JWT for the site is for, and when it was issued in milliseconds
+func (config *SecurityConfig) VerifyPreAuthJWTToken(tokenStr string, subdomain string) (string, int64, error) {
 	verifiedJWT, err := config.jwtMac.VerifyMACAndDecode(tokenStr, config.jwtPreAuthValidator)
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 
 	issuer, err := verifiedJWT.Issuer()
 	if err != nil || issuer != subdomain {
-		return "", fmt.Errorf("pre-auth token is for a different site")
+		return "", 0, fmt.Errorf("pre-auth token is for a different site")
 	}
 
 	subject, err := verifiedJWT.Subject()
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 
-	return subject, nil
+	issuedAtMs, err := verifiedJWT.NumberClaim(IssuedAtMsClaim)
+	if err != nil {
+		return "", 0, err
+	}
+
+	return subject, int64(issuedAtMs), nil
 }

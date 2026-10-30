@@ -52,6 +52,19 @@ func (l *LogsDB) SiteAdminRecoveredEvent(ctx context.Context, siteID string) {
 	l.event(ctx, siteID, events.SiteAdminRecovered, nil)
 }
 
+type IdentityCredentialsChangedAttributes struct {
+	IdentityName string `json:"identity_name"`
+	// Credentials are what changed: password, totp, or password_and_totp
+	Credentials string `json:"credentials"`
+	By          string `json:"by"`
+}
+
+// IdentityCredentialsChangedEvent records an identity getting new credentials, by a control identity or the backup key,
+// which signs out whoever had the old ones
+func (l *LogsDB) IdentityCredentialsChangedEvent(ctx context.Context, siteID string, identityName string, credentials string, by string) {
+	l.event(ctx, siteID, events.IdentityCredentialsChanged, IdentityCredentialsChangedAttributes{IdentityName: identityName, Credentials: credentials, By: by})
+}
+
 type SiteDisabledAttributes struct {
 	By string `json:"by"`
 }

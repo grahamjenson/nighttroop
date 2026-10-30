@@ -38,11 +38,13 @@ const (
 	AlarmCreated Name = "alarm_created"
 	AlarmSnoozed Name = "alarm_snoozed"
 	AlarmDeleted Name = "alarm_deleted"
+	// IdentityCredentialsChanged is an identity getting a new password or TOTP, which refuses its JWTs issued before
+	IdentityCredentialsChanged Name = "identity_credentials_changed"
 )
 
 // Persisted are the events kept in the logs DB. A model change is not, as the site's DB row is its record.
 var Persisted = []Name{SiteCreated, SiteDisabled, SiteDeleted, SiteArchived, SiteHydrated, SiteTruncated, SiteBatchBackedUp, ControlBackedUp,
-	SiteAdminRecovered, SyncTurnedOff, SyncBackfilled, SyncAdded, SiteTimezoneChanged, AlarmCreated, AlarmSnoozed, AlarmDeleted}
+	SiteAdminRecovered, IdentityCredentialsChanged, SyncTurnedOff, SyncBackfilled, SyncAdded, SiteTimezoneChanged, AlarmCreated, AlarmSnoozed, AlarmDeleted}
 
 // PersistedNames are the persisted events' names, to pick from
 func PersistedNames() []string {

@@ -30,7 +30,7 @@ func TestVerifyUserJWTTokenGarbageIsNotLoggedAtError(t *testing.T) {
 	defer slog.SetDefault(previous)
 
 	cfg := security.NewSecurityConfig("", consts.Test, "localhost", false)
-	if _, _, _, err := cfg.VerifyUserJWTToken("not.a.jwt"); err == nil {
+	if _, _, _, _, err := cfg.VerifyUserJWTToken("not.a.jwt"); err == nil {
 		t.Fatal("expected a garbage token to fail verification")
 	}
 	if len(levels) == 0 {
