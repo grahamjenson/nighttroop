@@ -62,9 +62,6 @@ type ServerConfig struct {
 	// of service and privacy policy
 	SupportEmail string
 
-	// paths
-	SqlitePath string
-
 	// Unauthenticated Rate Limits
 	GlobalRateLimit int
 	GlobalRateBurst int
@@ -128,8 +125,6 @@ type ServerConfig struct {
 
 	// Truncate Config
 	TruncateIntervalInSeconds int
-	MaxSiteDBSizeKB           int
-	MaxControlDBSizeKB        int
 	// LogsDBMaxRowsPerTable is how many of the newest logs, events and errors are kept in each of their tables
 	LogsDBMaxRowsPerTable int
 
@@ -157,10 +152,6 @@ type ServerConfig struct {
 	// This has the option to add additional keys
 	Security   *security.SecurityConfig
 	RawKeySets string
-
-	// Dexcom Client ID and Secret
-	DexcomClientID     string
-	DexcomClientSecret string
 
 	// TrustedProxies are the reverse proxies, such as Caddy in front of the server, whose X-Forwarded-For is believed
 	TrustedProxies []netip.Prefix
@@ -216,9 +207,6 @@ func NewServerConfig() (*ServerConfig, error) {
 		// security
 		RawKeySets: configStringSelect(dotenv, consts.KEY_SETS_ENV_KEY, ""),
 
-		// paths
-		SqlitePath: configStringSelect(dotenv, "SQLITE_PATH", "./data"),
-
 		// RATE LIMTERS TODO fine tune these a bit more
 
 		// Public RateLimits
@@ -260,8 +248,6 @@ func NewServerConfig() (*ServerConfig, error) {
 		MaxIdentitiesPerSite: configIntSelect(dotenv, "MAX_IDENTITIES_PER_USER", 10),
 
 		// Truncate Config
-		MaxSiteDBSizeKB:           configIntSelect(dotenv, "MAX_SITE_DB_SIZE_KB", 3000),
-		MaxControlDBSizeKB:        configIntSelect(dotenv, "MAX_CONTROL_DB_SIZE_KB", 5000),
 		TruncateIntervalInSeconds: configIntSelect(dotenv, "TRUNCATE_INTERVAL_IN_SECONDS", 60),
 		LogsDBMaxRowsPerTable:     configIntSelect(dotenv, "LOGS_DB_MAX_ROWS_PER_TABLE", 100000),
 
@@ -289,10 +275,6 @@ func NewServerConfig() (*ServerConfig, error) {
 		SocketMaxBufferedPackets:    configIntSelect(dotenv, "SOCKET_MAX_BUFFERED_PACKETS", 1000), // A client too slow to collect its packets is closed
 		SocketMaxBufferedBytes:      configIntSelect(dotenv, "SOCKET_MAX_BUFFERED_BYTES", 2000000),
 		SocketMaxPacketsPerSecond:   configFloatSelect(dotenv, "SOCKET_MAX_PACKETS_PER_SECOND", 20), // A client sending faster, past a burst of 5 seconds' worth, is closed
-
-		// Dexcom Config
-		DexcomClientID:     configStringSelect(dotenv, "DEXCOM_CLIENT_ID", ""),
-		DexcomClientSecret: configStringSelect(dotenv, "DEXCOM_CLIENT_SECRET", ""),
 	}
 
 	serverConfig.TrustedProxies, err = ParseTrustedProxies(configStringSelect(dotenv, "TRUSTED_PROXIES", "127.0.0.1,::1"))
@@ -545,7 +527,6 @@ func printServerConfig(config ServerConfig) {
 		"Mode", map[consts.ServerMode]string{consts.Production: "Production", consts.Development: "Development", consts.Test: "Test"}[config.Mode],
 		"Host", fmt.Sprintf("%s://%s:%d", config.HostProtocol, config.HostName, config.HostPort),
 		"S3", fmt.Sprintf("%s/%s", config.S3URL, config.S3Bucket),
-		"SQLitePath", config.SqlitePath,
 		"TrustedProxies", config.TrustedProxies,
 		"GlobalRateLimit r/s", config.GlobalRateLimit,
 		"GlobalRateBurst", config.GlobalRateBurst,
@@ -562,7 +543,6 @@ func printServerConfig(config ServerConfig) {
 		"DeleteAfterInactivityMins", config.DeleteAfterInactivityMins,
 		"DisableAfterInactivityDays", config.DisableAfterInactivityDays,
 		"TruncateRecordsAfterDays", config.TruncateRecordsAfterDays,
-		"MaxSiteDBSizeKB", config.MaxSiteDBSizeKB,
 		"LogsDBMaxRowsPerTable", config.LogsDBMaxRowsPerTable,
 		"ControlBackupIntervalInSeconds", config.ControlBackupIntervalInSeconds,
 		"BatchBackupIntervalInSeconds", config.BatchBackupIntervalInSeconds,

@@ -274,10 +274,6 @@ The compose file already sets the host name, HTTPS and the trusted proxy, so thi
 
    # Optional: report errors to Sentry
    # SENTRY_DSN=...
-
-   # Optional: Dexcom sync
-   # DEXCOM_CLIENT_ID=...
-   # DEXCOM_CLIENT_SECRET=...
    ```
 
 3. **Keep a copy of `KEY_SETS` somewhere safe, off the VPS**, such as a password manager.
