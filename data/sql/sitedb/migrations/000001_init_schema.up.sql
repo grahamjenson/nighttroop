@@ -489,28 +489,14 @@ CREATE TABLE profile_presets (
 -- INDEXES
 --
 
--- summary_daily is each day of the site's data, built from its readings, insulin and food: a day is from midnight in
--- the site's timezone, and the date names it. Glucose is in mg/dL every 5 minutes from midnight, null when there was
--- no reading, so a day is 288 values (276 or 300 when the clocks change).
-CREATE TABLE summary_daily (
-    date TEXT PRIMARY KEY CHECK(length(date) = 10),
-    timezone TEXT NOT NULL CHECK(length(timezone) <= 64),
-    start_at INTEGER NOT NULL,
-    end_at INTEGER NOT NULL,
-
-    time_in_range REAL,
-    total_daily_dose REAL NOT NULL,
-    total_carbs REAL NOT NULL,
-    glucose_mgdl_json TEXT NOT NULL CHECK(length(glucose_mgdl_json) <= 2048 AND json_valid(glucose_mgdl_json)),
-
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
-) STRICT;
-
--- summary_periods is each week, from Monday, and month of the site's summary days, named by its first date: days is
--- how many of them had data, and its time in range, daily dose and daily carbs are the means of theirs.
-CREATE TABLE summary_periods (
-    period TEXT NOT NULL CHECK(period IN ('week', 'month')),
+-- summary_period is each day, week and month of the site's data, named by its first date and from midnight in the
+-- site's timezone, weeks from its week start day. A day is built from its readings, insulin and food, and a week or
+-- month from its days. days is how many days had data, and the daily dose and carbs are a day's totals, or the mean
+-- of a week's or month's days with data, as is its time in range. Glucose is in mg/dL every 5 minutes from midnight,
+-- 288 values (276 or 300 for a day the clocks change), null when there was no reading: for a week or month, the
+-- mean of its days' at that time of day.
+CREATE TABLE summary_period (
+    period TEXT NOT NULL CHECK(period IN ('day', 'week', 'month')),
     date TEXT NOT NULL CHECK(length(date) = 10),
     timezone TEXT NOT NULL CHECK(length(timezone) <= 64),
     start_at INTEGER NOT NULL,
@@ -518,8 +504,9 @@ CREATE TABLE summary_periods (
 
     days INTEGER NOT NULL,
     time_in_range REAL,
-    mean_daily_dose REAL NOT NULL,
-    mean_daily_carbs REAL NOT NULL,
+    total_daily_dose REAL NOT NULL,
+    total_daily_carbs REAL NOT NULL,
+    glucose_mgdl_json TEXT NOT NULL CHECK(length(glucose_mgdl_json) <= 2048 AND json_valid(glucose_mgdl_json)),
 
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),

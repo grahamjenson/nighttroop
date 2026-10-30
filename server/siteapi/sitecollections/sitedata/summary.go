@@ -218,7 +218,7 @@ func addDays(ctx context.Context, q *sitedb.Queries, summary *sitemodels.Summary
 		slog.Error("Error building the summary's today", "error", err)
 		return apiutils.ErrInternalServerError
 	}
-	yesterdayRow, err := q.GetSummaryDaily(ctx, sitedb.GetSummaryDailyParams{Date: yesterday})
+	yesterdayRow, err := q.GetSummaryPeriod(ctx, sitedb.GetSummaryPeriodParams{Period: "day", Date: yesterday})
 	if errors.Is(err, sql.ErrNoRows) {
 		yesterdayRow, err = buildSummaryDaily(ctx, q, siteContext, yesterday, now.UnixMilli())
 	}
@@ -226,7 +226,7 @@ func addDays(ctx context.Context, q *sitedb.Queries, summary *sitemodels.Summary
 		slog.Error("Error finding the summary's yesterday", "error", err)
 		return apiutils.ErrInternalServerError
 	}
-	summary.Today, summary.Yesterday = sitemodels.SummaryDayFromDaily(todayRow), sitemodels.SummaryDayFromDaily(yesterdayRow)
+	summary.Today, summary.Yesterday = sitemodels.SummaryDayFromPeriod(todayRow), sitemodels.SummaryDayFromPeriod(yesterdayRow)
 	summary.Today.End = now.UnixMilli()
 	for period, day := range map[string]*sitemodels.SummaryDay{"week": &summary.LastWeek, "month": &summary.LastMonth} {
 		row, _, err := LastSummaryPeriod(ctx, q, siteContext, period, now)

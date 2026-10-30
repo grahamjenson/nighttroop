@@ -3,6 +3,7 @@ package sitemodels
 import (
 	"encoding/json"
 	"reflect"
+	"strings"
 	"testing"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
@@ -66,8 +67,12 @@ func TestNewSummaryDaily(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			day := NewSummaryDaily("1970-01-01", "UTC", start, end, 70, 180, tt.readings, tt.doses, tt.food, tt.minutesSince, tt.minutes)
-			if day.Date != "1970-01-01" || day.Timezone != "UTC" || day.StartAt != start || day.EndAt != end {
-				t.Errorf("day is %s in %s from %d to %d", day.Date, day.Timezone, day.StartAt, day.EndAt)
+			if day.Period != "day" || day.Date != "1970-01-01" || day.Timezone != "UTC" || day.StartAt != start || day.EndAt != end {
+				t.Errorf("day is a %s %s in %s from %d to %d", day.Period, day.Date, day.Timezone, day.StartAt, day.EndAt)
+			}
+			// A day with readings, insulin or carbs has data, so counts towards its week and month
+			if withData := tt.inRange != nil || tt.dose > 0 || tt.carbs > 0; day.Days != map[bool]int64{true: 1}[withData] {
+				t.Errorf("day has %d days with data, want data %v", day.Days, withData)
 			}
 			if !reflect.DeepEqual(day.TimeInRange, tt.inRange) {
 				t.Errorf("time in range is %v, want %v", day.TimeInRange, tt.inRange)
@@ -75,8 +80,8 @@ func TestNewSummaryDaily(t *testing.T) {
 			if day.TotalDailyDose != tt.dose {
 				t.Errorf("total daily dose is %v, want %v", day.TotalDailyDose, tt.dose)
 			}
-			if day.TotalCarbs != tt.carbs {
-				t.Errorf("total carbs is %v, want %v", day.TotalCarbs, tt.carbs)
+			if day.TotalDailyCarbs != tt.carbs {
+				t.Errorf("total carbs is %v, want %v", day.TotalDailyCarbs, tt.carbs)
 			}
 			want, _ := json.Marshal(tt.glucose)
 			if day.GlucoseMgdlJson != string(want) {
@@ -87,24 +92,28 @@ func TestNewSummaryDaily(t *testing.T) {
 }
 
 func TestNewSummaryPeriod(t *testing.T) {
-	day := func(inRange *float64, dose, carbs float64) *sitedb.SummaryDaily {
-		return &sitedb.SummaryDaily{TimeInRange: inRange, TotalDailyDose: dose, TotalCarbs: carbs}
+	day := func(inRange *float64, dose, carbs float64) *sitedb.SummaryPeriod {
+		withData := int64(0)
+		if inRange != nil || dose > 0 || carbs > 0 {
+			withData = 1
+		}
+		return &sitedb.SummaryPeriod{Days: withData, TimeInRange: inRange, TotalDailyDose: dose, TotalDailyCarbs: carbs, GlucoseMgdlJson: "[]"}
 	}
 	tests := []struct {
 		name    string
-		days    []*sitedb.SummaryDaily
+		days    []*sitedb.SummaryPeriod
 		count   int64
 		inRange *float64
 		dose    float64
 		carbs   float64
 	}{
 		{name: "no days is no data", days: nil},
-		{name: "a day without data is left out", days: []*sitedb.SummaryDaily{day(nil, 0, 0)}},
-		{name: "the means are of the days with data", days: []*sitedb.SummaryDaily{day(new(50.0), 30, 100), day(new(75.0), 40, 150), day(nil, 0, 0)},
+		{name: "a day without data is left out", days: []*sitedb.SummaryPeriod{day(nil, 0, 0)}},
+		{name: "the means are of the days with data", days: []*sitedb.SummaryPeriod{day(new(50.0), 30, 100), day(new(75.0), 40, 150), day(nil, 0, 0)},
 			count: 2, inRange: new(62.5), dose: 35, carbs: 125},
 		{name: "a day with insulin but no readings counts for the dose, not the time in range",
-			days: []*sitedb.SummaryDaily{day(new(80.0), 30, 0), day(nil, 31, 0)}, count: 2, inRange: new(80.0), dose: 30.5},
-		{name: "the means are rounded", days: []*sitedb.SummaryDaily{day(new(10.0), 1, 1), day(new(20.0), 1, 1), day(new(20.0), 2, 0)},
+			days: []*sitedb.SummaryPeriod{day(new(80.0), 30, 0), day(nil, 31, 0)}, count: 2, inRange: new(80.0), dose: 30.5},
+		{name: "the means are rounded", days: []*sitedb.SummaryPeriod{day(new(10.0), 1, 1), day(new(20.0), 1, 1), day(new(20.0), 2, 0)},
 			count: 3, inRange: new(16.7), dose: 1.33, carbs: 0.7},
 	}
 	for _, tt := range tests {
@@ -113,9 +122,46 @@ func TestNewSummaryPeriod(t *testing.T) {
 			if period.Period != "week" || period.Date != "2026-10-26" || period.Timezone != "UTC" || period.StartAt != 1 || period.EndAt != 2 {
 				t.Errorf("period is %s %s in %s from %d to %d", period.Period, period.Date, period.Timezone, period.StartAt, period.EndAt)
 			}
-			if period.Days != tt.count || !reflect.DeepEqual(period.TimeInRange, tt.inRange) || period.MeanDailyDose != tt.dose || period.MeanDailyCarbs != tt.carbs {
+			if period.Days != tt.count || !reflect.DeepEqual(period.TimeInRange, tt.inRange) || period.TotalDailyDose != tt.dose || period.TotalDailyCarbs != tt.carbs {
 				t.Errorf("period has %d days, %v in range, %v U and %v g a day, want %d, %v, %v and %v",
-					period.Days, period.TimeInRange, period.MeanDailyDose, period.MeanDailyCarbs, tt.count, tt.inRange, tt.dose, tt.carbs)
+					period.Days, period.TimeInRange, period.TotalDailyDose, period.TotalDailyCarbs, tt.count, tt.inRange, tt.dose, tt.carbs)
+			}
+		})
+	}
+}
+
+func TestNewSummaryPeriodGlucose(t *testing.T) {
+	day := func(withData int64, glucose string) *sitedb.SummaryPeriod {
+		return &sitedb.SummaryPeriod{Days: withData, GlucoseMgdlJson: glucose}
+	}
+	// at is the period's glucose at slots, the rest of its 288 null
+	at := func(values map[int]int64) string {
+		slots := make([]*int64, 288)
+		for slot, value := range values {
+			slots[slot] = new(value)
+		}
+		glucose, _ := json.Marshal(slots)
+		return string(glucose)
+	}
+	// longDay is a day the clocks go back, 300 slots with a reading in its 288th and its 289th
+	longDay := strings.TrimSuffix(at(map[int]int64{287: 80}), "]") + ",200" + strings.Repeat(",null", 11) + "]"
+	tests := []struct {
+		name string
+		days []*sitedb.SummaryPeriod
+		want string
+	}{
+		{name: "no days is no glucose", want: at(nil)},
+		{name: "each time of day is the mean of the days with a reading then",
+			days: []*sitedb.SummaryPeriod{day(1, "[100,null,120]"), day(1, "[200,150]"), day(1, "[null,null,null,90]")},
+			want: at(map[int]int64{0: 150, 1: 150, 2: 120, 3: 90})},
+		{name: "the mean is rounded", days: []*sitedb.SummaryPeriod{day(1, "[100]"), day(1, "[101]")}, want: at(map[int]int64{0: 101})},
+		{name: "a day without data is left out", days: []*sitedb.SummaryPeriod{day(1, "[100]"), day(0, "[300]")}, want: at(map[int]int64{0: 100})},
+		{name: "a day the clocks go back keeps only its first 24 hours", days: []*sitedb.SummaryPeriod{day(1, longDay)}, want: at(map[int]int64{287: 80})},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := NewSummaryPeriod("month", "2026-10-01", "UTC", 1, 2, tt.days).GlucoseMgdlJson; got != tt.want {
+				t.Errorf("glucose is %s, want %s", got, tt.want)
 			}
 		})
 	}
