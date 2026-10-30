@@ -26,6 +26,8 @@
     --text-xl--line-height: calc(1.75 / 1.25);
     --text-2xl: 1.5rem;
     --text-2xl--line-height: calc(2 / 1.5);
+    --text-3xl: 1.875rem;
+    --text-3xl--line-height: calc(2.25 / 1.875);
     --text-4xl: 2.25rem;
     --text-4xl--line-height: calc(2.5 / 2.25);
     --text-5xl: 3rem;
@@ -1525,6 +1527,48 @@
     -webkit-user-select: none;
     user-select: none;
   }
+  .group-has-\[\#public--site-info\]\:mt-0 {
+    &:is(:where(.group):has(*:is(#public--site-info)) *) {
+      margin-top: calc(var(--spacing) * 0);
+    }
+  }
+  .group-has-\[\#public--site-info\]\:mt-6 {
+    &:is(:where(.group):has(*:is(#public--site-info)) *) {
+      margin-top: calc(var(--spacing) * 6);
+    }
+  }
+  .group-has-\[\#public--site-info\]\:hidden {
+    &:is(:where(.group):has(*:is(#public--site-info)) *) {
+      display: none;
+    }
+  }
+  .group-has-\[\#public--site-info\]\:size-10 {
+    &:is(:where(.group):has(*:is(#public--site-info)) *) {
+      width: calc(var(--spacing) * 10);
+      height: calc(var(--spacing) * 10);
+    }
+  }
+  .group-has-\[\#public--site-info\]\:flex-row {
+    &:is(:where(.group):has(*:is(#public--site-info)) *) {
+      flex-direction: row;
+    }
+  }
+  .group-has-\[\#public--site-info\]\:justify-center {
+    &:is(:where(.group):has(*:is(#public--site-info)) *) {
+      justify-content: center;
+    }
+  }
+  .group-has-\[\#public--site-info\]\:gap-3 {
+    &:is(:where(.group):has(*:is(#public--site-info)) *) {
+      gap: calc(var(--spacing) * 3);
+    }
+  }
+  .group-has-\[\#public--site-info\]\:text-3xl {
+    &:is(:where(.group):has(*:is(#public--site-info)) *) {
+      font-size: var(--text-3xl);
+      line-height: var(--tw-leading, var(--text-3xl--line-height));
+    }
+  }
   .group-data-\[tui-selectbox-selected\=true\]\:opacity-100 {
     &:is(:where(.group)[data-tui-selectbox-selected="true"] *) {
       opacity: 100%;
@@ -1949,6 +1993,16 @@
   .disabled\:opacity-50 {
     &:disabled {
       opacity: 50%;
+    }
+  }
+  .has-\[\#public--site-info\]\:justify-start {
+    &:has(*:is(#public--site-info)) {
+      justify-content: flex-start;
+    }
+  }
+  .has-\[\#public--site-info\]\:py-6 {
+    &:has(*:is(#public--site-info)) {
+      padding-block: calc(var(--spacing) * 6);
     }
   }
   .has-\[\>svg\]\:px-2\.5 {
