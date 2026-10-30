@@ -127,13 +127,6 @@ func (c *S3Client) TestS3Client() error {
 	if bodyString != testContent {
 		return fmt.Errorf("s3Client test content mismatch: expected %s, got %s", testContent, bodyString)
 	}
-
-	// Testing the upload and download stuff, which means key encryption and streaming
-	// TODO test encryption and decryption of files
-	// err = c.UploadFilesToS3(testKey, []string{})
-	// if err != nil {
-	// 	return fmt.Errorf("s3Client test empty upload failed: %w", err)
-	// }
 	return nil
 }
 
@@ -306,10 +299,8 @@ func (c *S3Client) DownloadFilesFromS3(key string, outpath string) (int64, bool,
 // END OF DOWNLOAD METHODS
 ////
 
-// //
-// TODO SLOP TO BE REVIEWED
-// //
-
+// createTarLZ4 writes files to writer as a tar, compressed with LZ4 and encrypted with the server's keys, and is how
+// many bytes it wrote
 func (c *S3Client) createTarLZ4(files []string, writer io.Writer) (int64, error) {
 	cw := &utils.CountingWriter{W: writer}
 	// Wrap all up in encryption
@@ -375,6 +366,8 @@ func addFileToTar(tw *tar.Writer, filePath string) error {
 	return err
 }
 
+// ExtractTarLZ4 decrypts, decompresses and untars a backup from reader into outputDir, refusing an entry that would be
+// written outside it
 func (c *S3Client) ExtractTarLZ4(reader io.Reader, outputDir string) error {
 
 	// Wrap with decryption
