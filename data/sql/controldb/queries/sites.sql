@@ -90,6 +90,12 @@ WHERE state = 'disabled' AND (last_seen_at < datetime('now', '-' || CAST(@last_s
 -- UPDATE
 --------
 
+-- A backup key works once: using it replaces its hash, only while the hash is still the one checked, so two uses of
+-- the same key cannot both succeed
+-- name: RotateSiteBackupKey :execresult
+UPDATE sites SET backup_key_hash = sqlc.arg('NewHash')
+WHERE id = sqlc.arg('ID') AND backup_key_hash = sqlc.arg('OldHash');
+
 -- name: UpdateSiteDateFlags :exec
 UPDATE sites
 SET

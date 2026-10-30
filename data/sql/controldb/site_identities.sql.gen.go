@@ -7,6 +7,7 @@ package controldb
 
 import (
 	"context"
+	"database/sql"
 
 	"nighttroop.t1d.nz/utils/consts"
 )
@@ -354,6 +355,28 @@ func (q *Queries) GetSiteIdentityByID(ctx context.Context, arg GetSiteIdentityBy
 		&i.NotificationsEnabled,
 	)
 	return &i, err
+}
+
+const resetSiteAdminCredentials = `-- name: ResetSiteAdminCredentials :execresult
+UPDATE site_identities SET password_hash = ?1, totp_secret_enc = ?2, enabled = 1, updated_by_identity_name = 'backup key'
+WHERE site_id = ?3 AND name = ?4 AND role = 'admin'
+`
+
+type ResetSiteAdminCredentialsParams struct {
+	PasswordHash  string
+	TotpSecretEnc string
+	SiteID        string
+	Name          string
+}
+
+// A recovery gives the site's admin new credentials and turns it back on
+func (q *Queries) ResetSiteAdminCredentials(ctx context.Context, arg ResetSiteAdminCredentialsParams) (sql.Result, error) {
+	return q.exec(ctx, q.resetSiteAdminCredentialsStmt, resetSiteAdminCredentials,
+		arg.PasswordHash,
+		arg.TotpSecretEnc,
+		arg.SiteID,
+		arg.Name,
+	)
 }
 
 const updateSiteIdentityDateFlags = `-- name: UpdateSiteIdentityDateFlags :exec

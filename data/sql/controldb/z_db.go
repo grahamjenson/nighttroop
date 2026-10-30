@@ -120,6 +120,12 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.hydrateSiteStmt, err = db.PrepareContext(ctx, hydrateSite); err != nil {
 		return nil, fmt.Errorf("error preparing query HydrateSite: %w", err)
 	}
+	if q.resetSiteAdminCredentialsStmt, err = db.PrepareContext(ctx, resetSiteAdminCredentials); err != nil {
+		return nil, fmt.Errorf("error preparing query ResetSiteAdminCredentials: %w", err)
+	}
+	if q.rotateSiteBackupKeyStmt, err = db.PrepareContext(ctx, rotateSiteBackupKey); err != nil {
+		return nil, fmt.Errorf("error preparing query RotateSiteBackupKey: %w", err)
+	}
 	if q.searchArchivedSitesStmt, err = db.PrepareContext(ctx, searchArchivedSites); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchArchivedSites: %w", err)
 	}
@@ -333,6 +339,16 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing hydrateSiteStmt: %w", cerr)
 		}
 	}
+	if q.resetSiteAdminCredentialsStmt != nil {
+		if cerr := q.resetSiteAdminCredentialsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing resetSiteAdminCredentialsStmt: %w", cerr)
+		}
+	}
+	if q.rotateSiteBackupKeyStmt != nil {
+		if cerr := q.rotateSiteBackupKeyStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing rotateSiteBackupKeyStmt: %w", cerr)
+		}
+	}
 	if q.searchArchivedSitesStmt != nil {
 		if cerr := q.searchArchivedSitesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing searchArchivedSitesStmt: %w", cerr)
@@ -484,6 +500,8 @@ type Queries struct {
 	getSyncReportsToRunStmt            *sql.Stmt
 	getSyncSourceStmt                  *sql.Stmt
 	hydrateSiteStmt                    *sql.Stmt
+	resetSiteAdminCredentialsStmt      *sql.Stmt
+	rotateSiteBackupKeyStmt            *sql.Stmt
 	searchArchivedSitesStmt            *sql.Stmt
 	searchSitesStmt                    *sql.Stmt
 	searchSitesByDBSizeStmt            *sql.Stmt
@@ -538,6 +556,8 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getSyncReportsToRunStmt:            q.getSyncReportsToRunStmt,
 		getSyncSourceStmt:                  q.getSyncSourceStmt,
 		hydrateSiteStmt:                    q.hydrateSiteStmt,
+		resetSiteAdminCredentialsStmt:      q.resetSiteAdminCredentialsStmt,
+		rotateSiteBackupKeyStmt:            q.rotateSiteBackupKeyStmt,
 		searchArchivedSitesStmt:            q.searchArchivedSitesStmt,
 		searchSitesStmt:                    q.searchSitesStmt,
 		searchSitesByDBSizeStmt:            q.searchSitesByDBSizeStmt,

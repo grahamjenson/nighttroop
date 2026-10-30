@@ -30,6 +30,8 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		publicapi.LegalRoutes(r)
 		r.Post("/login", sitelogin.POSTLogin(controlDB, config))
 		r.Post("/login/totp", sitelogin.POSTLoginTOTP(controlDB, config))
+		// The backup key proves ownership, giving the site's admin new credentials
+		r.Post("/recover", sitelogin.POSTRecover(controlDB, config))
 	})
 
 	r.Group(func(r chi.Router) {
