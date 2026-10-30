@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Updates Nighttroop run with hostinger.compose.yml, and rolls back if the new version is not healthy.
 #
-#   sudo ./update.sh [image]    e.g. sudo ./update.sh ghcr.io/grahamjenson/nighttroop:sha-1a2b3c4
+#   sudo ./update.sh [image]    e.g. sudo ./update.sh ghcr.io/grahamjenson/nighttroop:v1.2.3
 #
 # 1. Pulls the new image, before anything is stopped
 # 2. Stops Nighttroop, which uploads a last backup to S3, and copies ./data into ./backups
