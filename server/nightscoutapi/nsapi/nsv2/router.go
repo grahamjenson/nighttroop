@@ -26,6 +26,7 @@ func NewNightscoutV2Router(store nsutils.Store) http.Handler {
 func registerPropertiesRoutes(r *chi.Mux, store nsutils.Store) {
 	r.Get("/properties", nsutils.Require("api:properties:read", true, PropertiesList(store)))
 	r.Get("/properties.json", nsutils.Require("api:properties:read", true, PropertiesList(store)))
+	r.Get("/properties/{names}", nsutils.Require("api:properties:read", true, PropertiesList(store)))
 
 	r.Get("/summary", nsutils.Require("api:summary:read", true, Summary(store)))
 	r.Get("/summary.json", nsutils.Require("api:summary:read", true, Summary(store)))
