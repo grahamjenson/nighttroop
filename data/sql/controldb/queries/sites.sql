@@ -49,6 +49,10 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 -- The live sites seen since Since, in milliseconds
 SELECT COUNT(*) FROM sites WHERE state = 'live' AND last_seen_at >= sqlc.arg('Since');
 
+-- name: CountSitesCreated :one
+-- The sites created since Since, in milliseconds, whatever their state now
+SELECT COUNT(*) FROM sites WHERE created_at >= sqlc.arg('Since');
+
 -- name: CountSitesByState :many
 SELECT state, COUNT(*) AS count FROM sites GROUP BY state ORDER BY state;
 

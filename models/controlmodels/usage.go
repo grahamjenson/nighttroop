@@ -16,6 +16,10 @@ type Usage struct {
 	ActiveIdentitiesDay  int64          `json:"active_identities_day"`
 	ActiveIdentitiesWeek int64          `json:"active_identities_week"`
 	SitesByState         map[string]int64 `json:"sites_by_state"`
+	// SitesCreatedToday, Week and Month are the sites created since midnight, Monday and the 1st, in UTC
+	SitesCreatedToday int64 `json:"sites_created_today"`
+	SitesCreatedWeek  int64 `json:"sites_created_week"`
+	SitesCreatedMonth int64 `json:"sites_created_month"`
 	SinceStart           usage.Snapshot `json:"since_start"`
 	Server               usage.Server   `json:"server"`
 }
