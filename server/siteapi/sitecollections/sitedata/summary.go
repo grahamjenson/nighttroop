@@ -208,8 +208,8 @@ func summaryMinutes(ctx context.Context, q *sitedb.Queries, since, until int64, 
 		append(earlier, targets...), append(earlierBasal, basals...)), nil
 }
 
-// addDays is today so far and yesterday, as days from midnight in the site's timezone: yesterday from its summary day,
-// or built when that is not yet built, and today built up to now
+// addDays is today so far, yesterday, last week and last month, as days from midnight in the site's timezone: today
+// built up to now, and the others from their summaries, or built when those are not yet built
 func addDays(ctx context.Context, q *sitedb.Queries, summary *sitemodels.Summary, siteContext *httputils.SiteContext) *apiutils.HTTPError {
 	now, location := time.Now(), siteContext.GetSiteTimezone()
 	today, yesterday := LocalDate(now, location, 0), LocalDate(now, location, -1)
@@ -228,6 +228,14 @@ func addDays(ctx context.Context, q *sitedb.Queries, summary *sitemodels.Summary
 	}
 	summary.Today, summary.Yesterday = sitemodels.SummaryDayFromDaily(todayRow), sitemodels.SummaryDayFromDaily(yesterdayRow)
 	summary.Today.End = now.UnixMilli()
+	for period, day := range map[string]*sitemodels.SummaryDay{"week": &summary.LastWeek, "month": &summary.LastMonth} {
+		row, _, err := LastSummaryPeriod(ctx, q, siteContext, period, now)
+		if err != nil {
+			slog.Error("Error finding the summary's last "+period, "error", err)
+			return apiutils.ErrInternalServerError
+		}
+		*day = sitemodels.SummaryDayFromPeriod(row)
+	}
 	return nil
 }
 

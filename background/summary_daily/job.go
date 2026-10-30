@@ -15,8 +15,8 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-// SetupCron builds each site's yesterday soon after midnight in its timezone, checking every 10 minutes for one not yet
-// built
+// SetupCron builds each site's yesterday soon after midnight in its timezone, and its last week and month once they
+// end, checking every 10 minutes for ones not yet built
 func SetupCron(c cron.CronScheduler, controlDB *db.ControlDB) {
 	c.AddFunc("BuildSummaryDaily", "@every 600s", func() error { return Build(context.Background(), controlDB, time.Now()) })
 }
@@ -37,7 +37,7 @@ func RebuildOnTimezoneChange(controlDB *db.ControlDB) onevent.Job {
 	}
 }
 
-// Build builds each live site's yesterday, in its timezone, that is not yet built
+// Build builds each live site's yesterday, last week and last month, in its timezone, that are not yet built
 func Build(ctx context.Context, controlDB *db.ControlDB, now time.Time) error {
 	sites, err := controlDB.Queries.GetAllSites(ctx)
 	if err != nil {
@@ -59,11 +59,15 @@ func buildYesterday(ctx context.Context, controlDB *db.ControlDB, siteID string,
 	}
 	q := siteContext.SiteDB.Queries
 	yesterday := sitedata.LocalDate(now, siteContext.GetSiteTimezone(), -1)
-	if _, err := q.GetSummaryDaily(ctx, sitedb.GetSummaryDailyParams{Date: yesterday}); !errors.Is(err, sql.ErrNoRows) {
+	if _, err := q.GetSummaryDaily(ctx, sitedb.GetSummaryDailyParams{Date: yesterday}); errors.Is(err, sql.ErrNoRows) {
+		if _, err := sitedata.RebuildSummaryDaily(ctx, q, siteContext, yesterday, now); err != nil {
+			return err
+		}
+	} else if err != nil {
 		return err
 	}
-	_, err = sitedata.RebuildSummaryDaily(ctx, q, siteContext, yesterday, now)
-	return err
+	// Yesterday is built first, as it may be the last day of the week or month
+	return sitedata.BuildLastSummaryPeriods(ctx, q, siteContext, now)
 }
 
 // site is the site's context for building its days, which only need the site's own settings and DB

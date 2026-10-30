@@ -33,6 +33,10 @@ type Summary struct {
 	// Today is the day so far from midnight in the settings' timezone, and Yesterday the whole day before it
 	Today     SummaryDay `json:"today"`
 	Yesterday SummaryDay `json:"yesterday"`
+	// LastWeek, from Monday, and LastMonth are the mean day of the last whole week and month before today's, their
+	// time in range and total daily dose the means of their days with data
+	LastWeek  SummaryDay `json:"last_week"`
+	LastMonth SummaryDay `json:"last_month"`
 	// SensorStartedAt is when the latest CGM sensor was started or changed, and SiteChangedAt when the pump site was
 	// last changed, in milliseconds, null when there is none
 	SensorStartedAt *int64 `json:"sensor_started_at"`

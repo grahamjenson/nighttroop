@@ -2,6 +2,8 @@ package sitedata
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/a-h/templ"
@@ -114,14 +116,68 @@ func RebuildSummaryDaily(ctx context.Context, q *sitedb.Queries, siteContext *ht
 		GlucoseMgdlJson: day.GlucoseMgdlJson})
 }
 
-// RebuildSummaryDailyWeek deletes all the site's days, as from a timezone they no longer follow, and builds the
-// RebuildDays up to yesterday again
+// RebuildSummaryDailyWeek deletes all the site's days and periods, as from a timezone they no longer follow, and
+// builds the RebuildDays up to yesterday, and the last week and month of what days there are, again
 func RebuildSummaryDailyWeek(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, now time.Time) error {
 	if _, err := q.DeleteAllSummaryDaily(ctx); err != nil {
 		return err
 	}
+	if _, err := q.DeleteAllSummaryPeriods(ctx); err != nil {
+		return err
+	}
 	for days := -RebuildDays; days < 0; days++ {
 		if _, err := RebuildSummaryDaily(ctx, q, siteContext, LocalDate(now, siteContext.GetSiteTimezone(), days), now); err != nil {
+			return err
+		}
+	}
+	return BuildLastSummaryPeriods(ctx, q, siteContext, now)
+}
+
+// SummaryPeriods are what the summary days are put together into: weeks from Monday, and months
+var SummaryPeriods = []string{"week", "month"}
+
+// LastPeriodStart is the midnight, in location, that starts the last whole week or month before now's
+func LastPeriodStart(period string, now time.Time, location *time.Location) time.Time {
+	local := now.In(location)
+	if period == "week" {
+		return time.Date(local.Year(), local.Month(), local.Day()-(int(local.Weekday())+6)%7-7, 0, 0, 0, 0, location)
+	}
+	return time.Date(local.Year(), local.Month()-1, 1, 0, 0, 0, 0, location)
+}
+
+// LastSummaryPeriod is the site's last whole week or month, and whether it was built, built from its days if not
+func LastSummaryPeriod(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, period string, now time.Time) (*sitedb.SummaryPeriod, bool, error) {
+	start := LastPeriodStart(period, now, siteContext.GetSiteTimezone())
+	date := start.Format(time.DateOnly)
+	row, err := q.GetSummaryPeriod(ctx, sitedb.GetSummaryPeriodParams{Period: period, Date: date})
+	if !errors.Is(err, sql.ErrNoRows) {
+		return row, err == nil, err
+	}
+	end := start.AddDate(0, 1, 0)
+	if period == "week" {
+		end = start.AddDate(0, 0, 7)
+	}
+	last := end.AddDate(0, 0, -1).Format(time.DateOnly)
+	days, err := q.SearchSummaryDaily(ctx, sitedb.SearchSummaryDailyParams{DateGTE: &date, DateLTE: &last, Limit: 31})
+	if err != nil {
+		return nil, false, err
+	}
+	return sitemodels.NewSummaryPeriod(period, date, start.Location().String(), start.UnixMilli(), end.UnixMilli(), days), false, nil
+}
+
+// BuildLastSummaryPeriods builds and keeps the site's last whole week and month, when they are not yet built
+func BuildLastSummaryPeriods(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, now time.Time) error {
+	for _, period := range SummaryPeriods {
+		row, built, err := LastSummaryPeriod(ctx, q, siteContext, period, now)
+		if err != nil {
+			return err
+		}
+		if built {
+			continue
+		}
+		if _, err := q.UpsertSummaryPeriod(ctx, sitedb.UpsertSummaryPeriodParams{Period: row.Period, Date: row.Date, Timezone: row.Timezone,
+			StartAt: row.StartAt, EndAt: row.EndAt, Days: row.Days, TimeInRange: row.TimeInRange, MeanDailyDose: row.MeanDailyDose,
+			MeanDailyCarbs: row.MeanDailyCarbs}); err != nil {
 			return err
 		}
 	}

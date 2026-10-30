@@ -500,6 +500,20 @@ type SummaryDaily struct {
 	UpdatedAt       int64
 }
 
+type SummaryPeriod struct {
+	Period         string
+	Date           string
+	Timezone       string
+	StartAt        int64
+	EndAt          int64
+	Days           int64
+	TimeInRange    *float64
+	MeanDailyDose  float64
+	MeanDailyCarbs float64
+	CreatedAt      int64
+	UpdatedAt      int64
+}
+
 type TempBasal struct {
 	ID                    string
 	DurationMinutes       int64

@@ -11,6 +11,11 @@ ASSERT_TEXT_EQUALS #site--summary--iob –
 ASSERT_TEXT_EQUALS #site--summary--time-in-range –
 ASSERT_TEXT_EQUALS #site--summary--time-in-range--yesterday Yesterday –
 ASSERT_TEXT_EQUALS #site--summary--total-daily-dose 0 U
+// nor in last week or last month, whose total daily dose is the mean of their days
+ASSERT_TEXT_EQUALS #site--summary--time-in-range--last-week Last week –
+ASSERT_TEXT_EQUALS #site--summary--time-in-range--last-month Last month –
+ASSERT_TEXT_EQUALS #site--summary--total-daily-dose--last-week Last week 0 U
+ASSERT_TEXT_EQUALS #site--summary--total-daily-dose--last-month Last month 0 U
 ASSERT_TEXT_EQUALS #site--summary--sensor-started –
 ASSERT_TEXT_EQUALS #site--summary--site-changed –
 SCREENSHOT summary_empty

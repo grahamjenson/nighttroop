@@ -447,6 +447,23 @@ CREATE TABLE summary_daily (
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
 ) STRICT;
 
+CREATE TABLE summary_periods (
+    period TEXT NOT NULL CHECK(period IN ('week', 'month')),
+    date TEXT NOT NULL CHECK(length(date) = 10),
+    timezone TEXT NOT NULL CHECK(length(timezone) <= 64),
+    start_at INTEGER NOT NULL,
+    end_at INTEGER NOT NULL,
+
+    days INTEGER NOT NULL,
+    time_in_range REAL,
+    mean_daily_dose REAL NOT NULL,
+    mean_daily_carbs REAL NOT NULL,
+
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    PRIMARY KEY (period, date)
+) STRICT;
+
 CREATE TABLE temp_basals (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
 

@@ -107,3 +107,35 @@ func NewSummaryDaily(date, timezone string, start, end int64, low, high float64,
 	day.GlucoseMgdlJson = string(glucoseJSON)
 	return day
 }
+
+// NewSummaryPeriod is the period, a week or month named by its first date, from start until end, of its summary days.
+// Only days with data count, so its time in range, daily dose and daily carbs are the means of theirs.
+func NewSummaryPeriod(period, date, timezone string, start, end int64, days []*sitedb.SummaryDaily) *sitedb.SummaryPeriod {
+	row := &sitedb.SummaryPeriod{Period: period, Date: date, Timezone: timezone, StartAt: start, EndAt: end}
+	inRange, withRange := 0.0, 0
+	for _, day := range days {
+		if day.TimeInRange == nil && day.TotalDailyDose == 0 && day.TotalCarbs == 0 {
+			continue
+		}
+		row.Days++
+		row.MeanDailyDose += day.TotalDailyDose
+		row.MeanDailyCarbs += day.TotalCarbs
+		if day.TimeInRange != nil {
+			inRange += *day.TimeInRange
+			withRange++
+		}
+	}
+	if withRange > 0 {
+		row.TimeInRange = new(consts.Round(inRange/float64(withRange), 1))
+	}
+	if row.Days > 0 {
+		row.MeanDailyDose = consts.Round(row.MeanDailyDose/float64(row.Days), 2)
+		row.MeanDailyCarbs = consts.Round(row.MeanDailyCarbs/float64(row.Days), 1)
+	}
+	return row
+}
+
+// SummaryDayFromPeriod is the summary's day of a period's mean day
+func SummaryDayFromPeriod(row *sitedb.SummaryPeriod) SummaryDay {
+	return SummaryDay{Start: row.StartAt, End: row.EndAt, TimeInRange: row.TimeInRange, TotalDailyDose: row.MeanDailyDose}
+}
