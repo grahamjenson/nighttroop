@@ -367,9 +367,15 @@ func (r *Input) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 		t.Fatalf("Failed to get locator for %s\n\n%s\n\n", r.Locator, prettyOutput)
 	}
 
+	// The value can be one saved earlier, e.g. INPUT #key {{ .backup_key }}
+	value, err := renderTemplate(r.Value, ctx)
+	if err != nil {
+		t.Fatalf("\n\n %s: %v \n\n", r.ToErrorLine("Error Rendering value"), err)
+	}
+
 	// A select can't be typed into, so pick the option with this value
 	if tag, err := locator.Evaluate("element => element.tagName", nil); err == nil && tag == "SELECT" {
-		_, err = locator.SelectOption(playwright.SelectOptionValues{Values: &[]string{r.Value}}, playwright.LocatorSelectOptionOptions{Timeout: playwright.Float(actionWait)})
+		_, err = locator.SelectOption(playwright.SelectOptionValues{Values: &[]string{value}}, playwright.LocatorSelectOptionOptions{Timeout: playwright.Float(actionWait)})
 		return page, err
 	}
 
@@ -378,7 +384,7 @@ func (r *Input) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 		return nil, err
 	}
 	// Use this instead of Fill to simulate typing each key sequentially
-	err = locator.PressSequentially(r.Value)
+	err = locator.PressSequentially(value)
 	if err != nil {
 		return nil, err
 	}

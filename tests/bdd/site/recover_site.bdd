@@ -1,0 +1,56 @@
+// A new site's credentials say to keep the backup key safe, as it is what gets a new admin login on the recover page
+GOTO {{ server_url }}/
+ASSERT_STATUS 200
+CLICK "Create Site"
+ASSERT_STATUS 200
+ASSERT_VISIBLE #public--site-info--recover-link
+SCREENSHOT created
+SAVE_TEXT #public--site-info--site-id site_id
+SAVE_TEXT #public--site-info--backup-key backup_key
+
+CLICK #public--site-info--recover-link
+ASSERT_PATH /recover
+ASSERT_VISIBLE #public--recover--form
+SCREENSHOT recover_form
+
+// A wrong key is refused, saying nothing of why
+INPUT #public--recover--site-id {{ .site_id }}
+INPUT #public--recover--backup-key {{ .site_id }}:notthekey123
+CLICK #public--recover--submit
+ASSERT_STATUS 401
+ASSERT_VISIBLE #public--recover--error
+SCREENSHOT refused
+
+// The site's ID and backup key give the admin a new password and TOTP, and the site a new backup key, shown as a new
+// site's credentials are, less the phone's, which are left as they were
+INPUT #public--recover--backup-key {{ .backup_key }}
+CLICK #public--recover--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Save your credentials somewhere safe
+ASSERT_VISIBLE #public--site-info--password
+ASSERT_VISIBLE #public--site-info--backup-key
+ASSERT_NOT_VISIBLE #public--site-info--ns-token
+SCREENSHOT recovered
+SAVE_TEXT #public--site-info--backup-key new_backup_key
+
+// The admin logs in with them
+CLICK #public--login-button
+ASSERT_NEW_PAGE
+INPUT #site--login--name admin
+INPUT #site--login--password password
+CLICK #site--login-button
+ASSERT_STATUS 200
+TYPE #site--login--otp-1 123123
+ASSERT_NEW_URL
+
+// The key works once, so the old one is refused, and the new one works in its place
+GOTO {{ server_url }}/recover
+INPUT #public--recover--site-id {{ .site_id }}
+INPUT #public--recover--backup-key {{ .backup_key }}
+CLICK #public--recover--submit
+ASSERT_STATUS 401
+ASSERT_VISIBLE #public--recover--error
+INPUT #public--recover--backup-key {{ .new_backup_key }}
+CLICK #public--recover--submit
+ASSERT_STATUS 200
+ASSERT_VISIBLE #public--site-info--password

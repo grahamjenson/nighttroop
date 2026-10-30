@@ -20,6 +20,8 @@ func NewPublicRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.R
 	publicapi.LegalRoutes(r)
 
 	r.Post("/site", publicapi.POSTCreateSiteHandler(controlDB, config))
+	r.Get("/recover", publicapi.GETRecoverSitePageHandler())
+	r.Post("/recover", publicapi.POSTRecoverSiteHandler(controlDB, config))
 
 	// TODO public routes
 	// 1. Documentation

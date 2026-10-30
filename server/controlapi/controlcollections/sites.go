@@ -163,7 +163,8 @@ func (s *SitesCollection) CreateHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	info := publicmodels.NewSiteInfo{URL: site.SiteDB.URL(), AdminPassword: site.AdminPassword, AdminTotpSecret: site.TotpSecret,
-		PwdNSToken: site.PwdNSToken, PwdNSURL: site.SiteDB.NSURL(), BackupKey: site.BackupPassword}
+		PwdNSToken: site.PwdNSToken, PwdNSURL: site.SiteDB.NSURL(), BackupKey: site.BackupPassword,
+		RecoverURL: site.SiteDB.ServerConfig.RecoverURL()}
 	WriteResponse(w, r, acceptType, http.StatusCreated, info, control_sites_templ.SiteCreated(info))
 }
 

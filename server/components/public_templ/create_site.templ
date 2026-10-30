@@ -94,7 +94,12 @@ templ CreateSiteRateLimited(seconds int) {
 
 templ CreateSiteInfo(newsite publicmodels.NewSiteInfo) {
 	<div class="w-full max-w-2xl mx-auto text-left space-y-6">
-		@step("1", "Save your credentials somewhere safe", "They are shown once and cannot be recovered.") {
+		@step("1", "Save your credentials somewhere safe", "They are shown once. Keep the backup key safe: it is the only way back in if you lose the admin login.") {
+			<p id="public--site-info--recover" class="px-5 pb-4 -mt-2 text-sm text-slate-500">
+				With your site's ID and the backup key, the
+				<a id="public--site-info--recover-link" href={ templ.SafeURL(newsite.RecoverURL) } class="font-medium text-brand-night underline">recover page</a>
+				gives you a new admin password and TOTP.
+			</p>
 			<textarea id="public--site-info" hidden>{ newsite.AllInfo() }</textarea>
 			<div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2.5">
 				<span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Your credentials</span>
@@ -106,11 +111,12 @@ templ CreateSiteInfo(newsite publicmodels.NewSiteInfo) {
 			</div>
 			<dl class="divide-y divide-slate-100 font-mono text-sm">
 				@group("Site")
-				@row("URL", newsite.URL)
-				@row("Backup key", newsite.BackupKey)
+				@row("url", "URL", newsite.URL)
+				@row("site-id", "Site ID", newsite.SiteID())
+				@row("backup-key", "Backup key", newsite.BackupKey)
 				@group("Admin login")
-				@row("Username", "admin")
-				@row("Password", newsite.AdminPassword)
+				@row("username", "Username", "admin")
+				@row("password", "Password", newsite.AdminPassword)
 				<div class="grid sm:grid-cols-[8rem_1fr] gap-1 px-4 py-3">
 					<dt class="text-slate-400">TOTP secret</dt>
 					<dd class="flex flex-wrap items-start gap-4">
@@ -121,9 +127,12 @@ templ CreateSiteInfo(newsite publicmodels.NewSiteInfo) {
 						</div>
 					</dd>
 				</div>
-				@group("Phone setup (AAPS / Trio)")
-				@row("NS URL", newsite.PwdNSURL)
-				@row("NS token", newsite.PwdNSToken)
+				// A recovery leaves the phone's credentials as they were, so there are none to show
+				if newsite.PwdNSToken != "" {
+					@group("Phone setup (AAPS / Trio)")
+					@row("ns-url", "NS URL", newsite.PwdNSURL)
+					@row("ns-token", "NS token", newsite.PwdNSToken)
+				}
 			</dl>
 			<script type="text/javascript">
 				new QRCode(document.getElementById("qrcode"), {
@@ -134,7 +143,7 @@ templ CreateSiteInfo(newsite publicmodels.NewSiteInfo) {
 				});
 			</script>
 		}
-		@step("2", "Log in to your new site", "Use the admin password and a code from your authenticator app.") {
+		@step("2", "Log in to your site", "Use the admin password and a code from your authenticator app.") {
 			<div class="flex justify-center p-6">
 				@button.Button(button.Props{
 					ID:     "public--login-button",
@@ -168,9 +177,10 @@ templ group(title string) {
 	<h3 class="bg-slate-50 px-4 py-1.5 font-sans text-xs font-semibold uppercase tracking-wide text-slate-500">{ title }</h3>
 }
 
-templ row(label, value string) {
+// row is a credential, with an ID of public--site-info--<id>
+templ row(id, label, value string) {
 	<div class="grid sm:grid-cols-[8rem_1fr] gap-1 px-4 py-3">
 		<dt class="text-slate-400">{ label }</dt>
-		<dd class="break-all text-slate-800 select-all">{ value }</dd>
+		<dd id={ "public--site-info--" + id } class="break-all text-slate-800 select-all">{ value }</dd>
 	</div>
 }
