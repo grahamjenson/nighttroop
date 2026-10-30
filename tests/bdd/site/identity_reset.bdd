@@ -1,0 +1,82 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// An admin resets a device's password from Users & Devices, and stays signed in
+CLICK #site--settings-menu
+CLICK #site--settings--identities-button
+ASSERT_PATH /settings/identities
+// The admin's own password and TOTP are reset from the settings page instead
+ASSERT_DRAWN #site--identities--admin--reset-password[disabled]
+ASSERT_DRAWN #site--identities--admin--reset-totp[disabled]
+// A device has no TOTP to reset
+ASSERT_NOT_VISIBLE #site--identities--pwd_phone--reset-totp
+CLICK #site--identities--pwd_phone--reset-password
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--identities--created--password
+ASSERT_VISIBLE #site--identities--created--ns-token
+ASSERT_NOT_VISIBLE #site--identities--signed-out
+SCREENSHOT identity_password_reset
+CLICK "I Have Saved These"
+ASSERT_NOT_VISIBLE #site--identities--created--password
+ASSERT_VISIBLE #site--identities--pwd_phone--reset-password
+
+// Add a user, to sign in as later
+INPUT #name-createIdentityFormusersTable carer
+CLICK #select-form-createIdentityFormusersTable
+CLICK #identities_table [role="option"][data-tui-selectbox-value="user"]
+CLICK "Add User"
+ASSERT_STATUS 201
+SAVE_TEXT #site--identities--created--site site_url
+SAVE_TEXT #site--identities--created--password carer_password
+CLICK "I Have Saved These"
+
+// The settings page warns that resetting your own password or TOTP signs you out
+CLICK #site--settings-menu
+CLICK #site--settings--settings-button
+ASSERT_PATH /settings
+ASSERT_TEXT_VISIBLE Resetting your password or TOTP signs you out
+ASSERT_VISIBLE #site--settings--reset-password
+ASSERT_VISIBLE #site--settings--reset-totp
+SCREENSHOT settings_credentials
+
+// Resetting your own TOTP signs you out and shows the new secret, to sign in again with
+CLICK #site--settings--reset-totp
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE You have been signed out
+ASSERT_NOT_VISIBLE #site--identities--created--password
+SCREENSHOT settings_totp_reset
+CLICK #site--identities--sign-in-again
+ASSERT_PATH /login
+INPUT #site--login--name admin
+INPUT #site--login--password password
+CLICK #site--login-button
+ASSERT_STATUS 200
+TYPE #site--login--otp-1 123123
+ASSERT_NEW_URL
+ASSERT_PATH /
+
+// A user resets their own password from the settings page, which has no TOTP for them
+CLICK #site--settings-menu
+CLICK #site--settings--logout-button
+GOTO {{ .site_url }}/login
+INPUT #site--login--name carer
+INPUT #site--login--password {{ .carer_password }}
+CLICK #site--login-button
+ASSERT_NEW_URL
+CLICK #site--settings-menu
+CLICK #site--settings--settings-button
+ASSERT_TEXT_VISIBLE Resetting your password or TOTP signs you out
+ASSERT_NOT_VISIBLE #site--settings--reset-totp
+CLICK #site--settings--reset-password
+ASSERT_TEXT_VISIBLE You have been signed out
+SCREENSHOT settings_password_reset
+SAVE_TEXT #site--identities--created--password carer_new_password
+
+// Signed out, the site sends them to sign in, where the new password works
+GOTO {{ .site_url }}/settings
+ASSERT_PATH /login
+INPUT #site--login--name carer
+INPUT #site--login--password {{ .carer_new_password }}
+CLICK #site--login-button
+ASSERT_NEW_URL
+ASSERT_PATH /

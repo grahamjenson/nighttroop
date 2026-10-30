@@ -626,7 +626,7 @@ func (db *ControlDB) CreateSiteIdentity(ctx context.Context, q *controldb.Querie
 }
 
 // ResetSiteIdentityPassword gives one of a site's identities a new random password, and a device the Nightscout token
-// made from it, recorded as changed by the control identity named by. The old password stops working.
+// made from it, recorded as changed by the control or site identity named by. The old password stops working.
 func (db *ControlDB) ResetSiteIdentityPassword(ctx context.Context, identity *controldb.SiteIdentity, by string) (*IdentityValues, error) {
 	password, hashedPassword, err := db.ServerConfig.Security.GeneratePassword()
 	if err != nil {
@@ -649,7 +649,7 @@ func (db *ControlDB) ResetSiteIdentityPassword(ctx context.Context, identity *co
 }
 
 // ResetSiteIdentityTOTP gives one of a site's identities a new TOTP secret, for its authenticator app, recorded as
-// changed by the control identity named by. Codes from the old secret stop working.
+// changed by the control or site identity named by. Codes from the old secret stop working.
 func (db *ControlDB) ResetSiteIdentityTOTP(ctx context.Context, identity *controldb.SiteIdentity, by string) (*IdentityValues, error) {
 	totpSecret, encTOTPSecret, err := db.ServerConfig.Security.TOTPGenerate(fmt.Sprintf("%s@%s.%s", identity.Name, identity.SiteID, db.ServerConfig.HostName))
 	if err != nil {
