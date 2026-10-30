@@ -6,14 +6,9 @@ import (
 	"crypto/rand"
 	"fmt"
 	"io"
-	"io/fs"
-	"net/http"
-	"path"
-	"strings"
 	"time"
 
 	"github.com/a-h/templ"
-	"github.com/templui/templui/components"
 
 	twmerge "github.com/Oudwins/tailwind-merge-go"
 )
@@ -124,39 +119,4 @@ func ComponentScript(component string) templ.Component {
 
 		return nil
 	})
-}
-
-// SetupScriptRoutes serves embedded component JavaScript files for the import workflow.
-// Example: SetupScriptRoutes(mux, true) mounts /templui/js/*.js with no-store caching in development.
-func SetupScriptRoutes(mux *http.ServeMux, isDevelopment bool) {
-	if mux == nil || componentScriptBasePath != "/templui/js" {
-		return
-	}
-
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		urlPath := strings.TrimPrefix(r.URL.Path, "/templui/js/")
-		if urlPath == r.URL.Path || urlPath == "" || strings.Contains(urlPath, "..") {
-			http.NotFound(w, r)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/javascript")
-		if isDevelopment {
-			w.Header().Set("Cache-Control", "no-store")
-		} else {
-			w.Header().Set("Cache-Control", "public, max-age=31536000")
-		}
-
-		fileName := path.Base(urlPath)
-		component := strings.TrimSuffix(fileName, ".min.js")
-		component = strings.TrimSuffix(component, ".js")
-		file, err := fs.ReadFile(components.TemplFiles, path.Join(component, fileName))
-		if err != nil {
-			http.NotFound(w, r)
-			return
-		}
-		_, _ = w.Write(file)
-	})
-
-	mux.Handle("GET /templui/js/", handler)
 }

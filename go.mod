@@ -14,10 +14,10 @@ require (
 	github.com/getsentry/sentry-go v0.46.1
 	github.com/go-chi/chi/v5 v5.2.3
 	github.com/go-echarts/go-echarts/v2 v2.7.3
+	github.com/go-viper/mapstructure/v2 v2.5.0
 	github.com/golang-migrate/migrate/v4 v4.19.1
 	github.com/gorilla/websocket v1.5.3
 	github.com/hashicorp/golang-lru/v2 v2.0.7
-	github.com/mitchellh/mapstructure v1.5.0
 	github.com/mxschmitt/playwright-go v0.6201.1
 	github.com/pierrec/lz4/v4 v4.1.22
 	github.com/pquerna/otp v1.5.0
@@ -25,7 +25,6 @@ require (
 	github.com/samber/slog-multi v1.8.0
 	github.com/samber/slog-sentry/v2 v2.10.3
 	github.com/stretchr/testify v1.11.1
-	github.com/templui/templui v1.11.2
 	github.com/tink-crypto/tink-go/v2 v2.6.0
 	github.com/yuin/goldmark v1.7.13
 	golang.org/x/crypto v0.57.0
@@ -57,6 +56,7 @@ require (
 	github.com/ncruces/go-strftime v1.0.0 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
+	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/samber/lo v1.53.0 // indirect
 	github.com/samber/slog-common v0.21.0 // indirect
 	go.mongodb.org/mongo-driver v1.17.10 // indirect

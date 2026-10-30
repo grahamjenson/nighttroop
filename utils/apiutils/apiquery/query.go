@@ -3,7 +3,7 @@ package apiquery
 import (
 	"net/url"
 
-	"github.com/mitchellh/mapstructure"
+	"github.com/go-viper/mapstructure/v2"
 	"nighttroop.t1d.nz/utils/types"
 )
 
