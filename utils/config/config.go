@@ -166,21 +166,51 @@ const SITE_POST_LIMIT = 60
 // 4. .env
 // 5. Default
 func NewServerConfig() (*ServerConfig, error) {
+	mode, dotenv, err := readFlagsAndDotEnv()
+	if err != nil {
+		return nil, err
+	}
 
+	setupLogging(mode)
+
+	serverConfig, err := readServerConfig(mode, dotenv)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := rejectUnknownVariables(dotenv); err != nil {
+		return nil, err
+	}
+	if err := serverConfig.ValidateClean(); err != nil {
+		return nil, err
+	}
+
+	serverConfig.setHostURLs()
+	serverConfig.startServices()
+
+	printServerConfig(serverConfig)
+	return &serverConfig, nil
+}
+
+// readFlagsAndDotEnv are the server's mode and the variables from its flags over its mode's .env file
+func readFlagsAndDotEnv() (consts.ServerMode, map[string]string, error) {
 	flagsnev := compileFlags()
 
 	mode := findMode(flagsnev)
 	dotenv, err := compileDotEnvFile(mode)
 	if err != nil {
-		return nil, err
+		return mode, nil, err
 	}
 
 	dotenv = MergeMaps(dotenv, flagsnev) // flags override .env
 	// MODE has already been read by findMode, so it is not left over as an unknown variable
 	delete(dotenv, "MODE")
+	return mode, dotenv, nil
+}
 
-	setupLogging(mode)
-
+// readServerConfig reads each setting from the environment, then dotenv, then its default, removing what it reads
+// from dotenv, so the variables left in it are unknown
+func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerConfig, error) {
 	// DEFAULTS
 	serverConfig := ServerConfig{
 		Mode: mode,
@@ -277,11 +307,13 @@ func NewServerConfig() (*ServerConfig, error) {
 		SocketMaxPacketsPerSecond:   configFloatSelect(dotenv, "SOCKET_MAX_PACKETS_PER_SECOND", 20), // A client sending faster, past a burst of 5 seconds' worth, is closed
 	}
 
+	var err error
 	serverConfig.TrustedProxies, err = ParseTrustedProxies(configStringSelect(dotenv, "TRUSTED_PROXIES", "127.0.0.1,::1"))
-	if err != nil {
-		return nil, err
-	}
+	return serverConfig, err
+}
 
+// rejectUnknownVariables fails if any variable is left in dotenv after the config is read, e.g. a misspelt one
+func rejectUnknownVariables(dotenv map[string]string) error {
 	if len(dotenv) > 0 {
 		slog.Error("Unknown .env variables: ", "variables", func() []string {
 			var keys []string
@@ -290,28 +322,26 @@ func NewServerConfig() (*ServerConfig, error) {
 			}
 			return keys
 		}())
-		return nil, fmt.Errorf("unknown .env variables")
+		return fmt.Errorf("unknown .env variables")
 	}
+	return nil
+}
 
-	// Validate the config
-	if err := serverConfig.ValidateClean(); err != nil {
-		return nil, err
-	}
+// setHostURLs precomputes the host's URLs from its protocol, name and port
+func (config *ServerConfig) setHostURLs() {
+	config.HostNameWithPort = fmt.Sprintf("%s:%d", config.HostName, config.HostPort)
+	config.HostURL = fmt.Sprintf("%s://%s", config.HostProtocol, config.HostName)
+	config.HostURLWithPort = fmt.Sprintf("%s://%s:%d", config.HostProtocol, config.HostName, config.HostPort)
+}
 
-	// Precompute some Host URLs
-	serverConfig.HostNameWithPort = fmt.Sprintf("%s:%d", serverConfig.HostName, serverConfig.HostPort)
-	serverConfig.HostURL = fmt.Sprintf("%s://%s", serverConfig.HostProtocol, serverConfig.HostName)
-	serverConfig.HostURLWithPort = fmt.Sprintf("%s://%s:%d", serverConfig.HostProtocol, serverConfig.HostName, serverConfig.HostPort)
+// startServices builds what the server shares across requests from the config, e.g. its rate limiters and keys
+func (config *ServerConfig) startServices() {
+	config.RateLimiters = newRateLimiters(*config)
+	config.RecentClients = authclients.New(10_000)
+	config.Events = events.NewSiteBus()
+	config.Usage = usage.New()
 
-	serverConfig.RateLimiters = newRateLimiters(serverConfig)
-	serverConfig.RecentClients = authclients.New(10_000)
-	serverConfig.Events = events.NewSiteBus()
-	serverConfig.Usage = usage.New()
-
-	serverConfig.Security = security.NewSecurityConfig(serverConfig.RawKeySets, serverConfig.Mode, serverConfig.HostName, serverConfig.IsHTTPS())
-
-	printServerConfig(serverConfig)
-	return &serverConfig, nil
+	config.Security = security.NewSecurityConfig(config.RawKeySets, config.Mode, config.HostName, config.IsHTTPS())
 }
 
 func (config *ServerConfig) IsDev() bool {
@@ -358,62 +388,36 @@ func (config *ServerConfig) ValidateClean() error {
 	return nil
 }
 
+// configSelect is envVar parsed from the environment, then dotenv, then the default. A value that does not parse
+// keeps the default, as e.g. a 0 would turn a limit off. envVar is deleted from dotenv so we can find unknown keys later
+func configSelect[T any](dotenv map[string]string, envVar string, defaultValue T, parse func(string) (T, error)) T {
+	raw, ok := dotenv[envVar]
+	delete(dotenv, envVar)
+	if val, inEnv := os.LookupEnv(envVar); inEnv {
+		raw, ok = val, true
+	}
+	if !ok {
+		return defaultValue
+	}
+
+	value, err := parse(raw)
+	if err != nil {
+		slog.Error("Cannot parse config value, using the default", "envVar", envVar, "value", raw, "default", defaultValue, "error", err)
+		return defaultValue
+	}
+	return value
+}
+
 func configStringSelect(dotenv map[string]string, envVar string, defaultValue string) string {
-	returnval := defaultValue
-
-	if val, ok := dotenv[envVar]; ok {
-		returnval = val
-		delete(dotenv, envVar) // delete so we can find unknown keys later
-	}
-
-	if val, ok := os.LookupEnv(envVar); ok {
-		returnval = val
-	}
-
-	return returnval
+	return configSelect(dotenv, envVar, defaultValue, func(raw string) (string, error) { return raw, nil })
 }
 
 func configIntSelect(dotenv map[string]string, envVar string, defaultValue int) int {
-
-	returnval := fmt.Sprintf("%d", defaultValue)
-
-	if val, ok := dotenv[envVar]; ok {
-		returnval = val
-		delete(dotenv, envVar) // delete so we can find unknown keys later
-	}
-
-	if val, ok := os.LookupEnv(envVar); ok {
-		returnval = val
-	}
-
-	intVal, err := strconv.Atoi(returnval)
-	if err != nil {
-		// Atoi returns 0 on error, which would turn a limit off, so keep the default
-		slog.Error("Cannot parse config value, using the default", "envVar", envVar, "value", returnval, "default", defaultValue, "error", err)
-		return defaultValue
-	}
-	return intVal
+	return configSelect(dotenv, envVar, defaultValue, strconv.Atoi)
 }
 
 func configFloatSelect(dotenv map[string]string, envVar string, defaultValue float64) float64 {
-
-	returnval := fmt.Sprintf("%f", defaultValue)
-
-	if val, ok := dotenv[envVar]; ok {
-		returnval = val
-		delete(dotenv, envVar) // delete so we can find unknown keys later
-	}
-
-	if val, ok := os.LookupEnv(envVar); ok {
-		returnval = val
-	}
-
-	floatVal, err := strconv.ParseFloat(returnval, 64)
-	if err != nil {
-		slog.Error("Cannot parse config value, using the default", "envVar", envVar, "value", returnval, "default", defaultValue, "error", err)
-		return defaultValue
-	}
-	return floatVal
+	return configSelect(dotenv, envVar, defaultValue, func(raw string) (float64, error) { return strconv.ParseFloat(raw, 64) })
 }
 
 // 1. check explicit settings, the flag and envar
