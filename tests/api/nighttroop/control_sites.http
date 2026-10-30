@@ -173,3 +173,78 @@ H Authorization: Bearer {{ .control_jwt }}
 H Accept: application/json
 B {"state": "disabled"}
 ASSERT_STATUS 404
+
+//////
+// CREATE a site at an ID the admin picks, such as a vanity one for a special user
+//////
+
+NAME create_vanity_site
+POST http://control.localhost/sites
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+B {"id": "vanityaa"}
+ASSERT_STATUS 201
+ASSERT_CONTAINS "vanityaa." "@result.url"
+ASSERT_CONTAINS "vanityaa.ns." "@result.pwd_ns_url"
+ASSERT_EXISTS "@result.admin_password"
+ASSERT_EXISTS "@result.admin_totp_secret"
+ASSERT_EXISTS "@result.pwd_ns_token"
+ASSERT_EXISTS "@result.backup_key"
+
+// It is a site like any other: its admin logs in with the password it was given
+NAME login_vanity_site_admin
+POST http://vanityaa.localhost/login
+H Accept: application/json
+B {"name": "admin", "password": "{{ .create_vanity_site.result.admin_password }}", "totp": "123123"}
+ASSERT_STATUS 200
+
+NAME vanity_site_listed
+GET http://control.localhost/sites/vanityaa
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "live" "@result.state"
+
+// An ID that is taken is refused
+NAME create_vanity_site_taken
+POST http://control.localhost/sites
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+B {"id": "vanityaa"}
+ASSERT_STATUS 409
+
+// An ID must be 8 lowercase letters, like every site's
+NAME create_site_id_too_short
+POST http://control.localhost/sites
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+B {"id": "vanity"}
+ASSERT_STATUS 400
+
+NAME create_site_id_too_long
+POST http://control.localhost/sites
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+B {"id": "vanityabc"}
+ASSERT_STATUS 400
+
+NAME create_site_id_uppercase
+POST http://control.localhost/sites
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+B {"id": "Vanityab"}
+ASSERT_STATUS 400
+
+NAME create_site_id_digits
+POST http://control.localhost/sites
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+B {"id": "vanity12"}
+ASSERT_STATUS 400
+
+NAME create_site_id_missing
+POST http://control.localhost/sites
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+B {"state": "live"}
+ASSERT_STATUS 400

@@ -2,6 +2,7 @@ package controlcollections
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -10,9 +11,12 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
+	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/models/publicmodels"
 	"nighttroop.t1d.nz/server/components/control_templ/control_sites_templ"
+	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/s3utils"
@@ -122,6 +126,45 @@ func (s *SitesCollection) archive(ctx context.Context, controlContext *httputils
 
 func (s *SitesCollection) UpdateHTMXResponse(model *controlmodels.Site) templ.Component {
 	return control_sites_templ.SiteUpdated(model)
+}
+
+// CreateHandler creates a site at the site ID an admin picks, such as a vanity one for a special user, and shows its
+// credentials once. Only admins can, and the ID must be 8 lowercase letters, like every site's, and not taken.
+func (s *SitesCollection) CreateHandler(w http.ResponseWriter, r *http.Request) {
+	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
+	if controlContext.IdentityModel.Role != consts.ControlRoleAdmin {
+		apiutils.ErrForbidden.Write(acceptType, w)
+		return
+	}
+	model, herr := apiutils.ExtractModelFromRequest[controlmodels.Site](httputils.GetContentType(r), r)
+	controlDB := controlContext.ControlDB
+	if herr == nil && !utils.SyntacticallyValidateSiteID(model.ID) {
+		herr = apiutils.ErrBadBodyWithHint(fmt.Sprintf("a site ID is %d lowercase letters, a to z", utils.SITE_ID_LENGTH))
+	}
+	if herr == nil && controlDB.GetNSitesDBs() >= controlDB.ServerConfig.MaxSites {
+		herr = apiutils.ErrConstraintCheckFailedWithHint("the server has as many sites as it can hold")
+	}
+	var site *db.SiteCreateResult
+	if herr == nil {
+		var err error
+		if site, err = controlDB.CreateSiteWithID(model.ID); errors.Is(err, db.ErrSiteIDTaken) {
+			herr = &apiutils.HTTPError{Status: http.StatusConflict, Message: err.Error()}
+		} else if err != nil {
+			herr = apiutils.ErrInternalServerError
+		}
+	}
+	if herr != nil && acceptType == httputils.AcceptTypeHTMX {
+		apiutils.WriteStatus(w, acceptType, herr.Status)
+		control_sites_templ.SiteNotCreated(herr.Message).Render(r.Context(), w)
+		return
+	}
+	if herr != nil {
+		herr.Write(acceptType, w)
+		return
+	}
+	info := publicmodels.NewSiteInfo{URL: site.SiteDB.URL(), AdminPassword: site.AdminPassword, AdminTotpSecret: site.TotpSecret,
+		PwdNSToken: site.PwdNSToken, PwdNSURL: site.SiteDB.NSURL(), BackupKey: site.BackupPassword}
+	WriteResponse(w, r, acceptType, http.StatusCreated, info, control_sites_templ.SiteCreated(info))
 }
 
 // TruncateHandler clears the raw JSON a site over its DB size limit keeps, then shrinks its DB. Only admins can.
