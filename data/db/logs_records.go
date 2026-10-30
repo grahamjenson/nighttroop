@@ -99,6 +99,11 @@ func (l *LogsDB) SiteTimezoneChangedEvent(ctx context.Context, siteID string, by
 	l.event(ctx, siteID, events.SiteTimezoneChanged, SiteTimezoneChangedAttributes{By: by, From: from, To: to})
 }
 
+// SiteWeekStartChangedEvent records a site's admin changing its own week start day, from one to another
+func (l *LogsDB) SiteWeekStartChangedEvent(ctx context.Context, siteID string, by string, from string, to string) {
+	l.event(ctx, siteID, events.SiteWeekStartChanged, SiteTimezoneChangedAttributes{By: by, From: from, To: to})
+}
+
 type SiteTruncatedAttributes struct {
 	By           string `json:"by"`
 	BeforeSizeKB *int64 `json:"before_size_kb"`

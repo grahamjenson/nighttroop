@@ -124,6 +124,11 @@ func (sc *SiteContext) GetSiteTimezone() *time.Location {
 	return sc.getSiteSettings().Location()
 }
 
+// GetSiteWeekStartDay is the site's own week start day, monday or sunday, whatever the identity's
+func (sc *SiteContext) GetSiteWeekStartDay() string {
+	return *sc.getSiteSettings().GetWeekStartDay()
+}
+
 // GetSiteRangeMgdl is the site's own glucose range, low and high in mg/dL, whatever the identity's
 func (sc *SiteContext) GetSiteRangeMgdl() (low, high int64) {
 	site := sc.getSiteSettings()

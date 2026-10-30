@@ -203,6 +203,11 @@ func (s *SettingsCollection) UpdateRow(ctx context.Context, collectionTx *siteap
 			siteContext.ControlDB.Logs.SiteTimezoneChangedEvent(ctx, siteContext.SiteID, siteContext.IdentityModel.Name, was, now)
 		})
 	}
+	if was, now := siteContext.GetSiteWeekStartDay(), *inEffect.GetWeekStartDay(); s.Site && now != was {
+		collectionTx.OnCommit(func() {
+			siteContext.ControlDB.Logs.SiteWeekStartChangedEvent(ctx, siteContext.SiteID, siteContext.IdentityModel.Name, was, now)
+		})
+	}
 	return s.GetRow(ctx, collectionTx, "", siteContext)
 }
 

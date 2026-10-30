@@ -134,21 +134,35 @@ func RebuildSummaryDailyWeek(ctx context.Context, q *sitedb.Queries, siteContext
 	return BuildLastSummaryPeriods(ctx, q, siteContext, now)
 }
 
-// SummaryPeriods are what the summary days are put together into: weeks from Monday, and months
+// RebuildSummaryWeeks deletes all the site's weeks, as from a week start day they no longer follow, and builds the
+// last one again
+func RebuildSummaryWeeks(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, now time.Time) error {
+	if _, err := q.DeleteSummaryPeriods(ctx, sitedb.DeleteSummaryPeriodsParams{Period: new("week")}); err != nil {
+		return err
+	}
+	return BuildLastSummaryPeriods(ctx, q, siteContext, now)
+}
+
+// SummaryPeriods are what the summary days are put together into: weeks from the site's week start day, and months
 var SummaryPeriods = []string{"week", "month"}
 
-// LastPeriodStart is the midnight, in location, that starts the last whole week or month before now's
-func LastPeriodStart(period string, now time.Time, location *time.Location) time.Time {
+// LastPeriodStart is the midnight, in location, that starts the last whole week, from weekStart (monday or sunday),
+// or month before now's
+func LastPeriodStart(period string, now time.Time, location *time.Location, weekStart string) time.Time {
 	local := now.In(location)
 	if period == "week" {
-		return time.Date(local.Year(), local.Month(), local.Day()-(int(local.Weekday())+6)%7-7, 0, 0, 0, 0, location)
+		sinceStart := int(local.Weekday())
+		if weekStart == "monday" {
+			sinceStart = (sinceStart + 6) % 7
+		}
+		return time.Date(local.Year(), local.Month(), local.Day()-sinceStart-7, 0, 0, 0, 0, location)
 	}
 	return time.Date(local.Year(), local.Month()-1, 1, 0, 0, 0, 0, location)
 }
 
 // LastSummaryPeriod is the site's last whole week or month, and whether it was built, built from its days if not
 func LastSummaryPeriod(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, period string, now time.Time) (*sitedb.SummaryPeriod, bool, error) {
-	start := LastPeriodStart(period, now, siteContext.GetSiteTimezone())
+	start := LastPeriodStart(period, now, siteContext.GetSiteTimezone(), siteContext.GetSiteWeekStartDay())
 	date := start.Format(time.DateOnly)
 	row, err := q.GetSummaryPeriod(ctx, sitedb.GetSummaryPeriodParams{Period: period, Date: date})
 	if !errors.Is(err, sql.ErrNoRows) {

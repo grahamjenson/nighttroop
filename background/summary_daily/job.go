@@ -21,16 +21,22 @@ func SetupCron(c cron.CronScheduler, controlDB *db.ControlDB) {
 	c.AddFunc("BuildSummaryDaily", "@every 600s", func() error { return Build(context.Background(), controlDB, time.Now()) })
 }
 
-// RebuildOnTimezoneChange is the job that, when a site's timezone changes, deletes its days, from a midnight they no
-// longer follow, and builds the last week of them again in the new one
-func RebuildOnTimezoneChange(controlDB *db.ControlDB) onevent.Job {
+// RebuildOnSettingsChange is the job that, when a site's timezone changes, deletes its days, weeks and months, from a
+// midnight they no longer follow, and builds the last week of days, and the last week and month, again in the new
+// one; and when its week start day changes, does the same for its weeks
+func RebuildOnSettingsChange(controlDB *db.ControlDB) onevent.Job {
 	return onevent.Job{
-		Queue:  "RebuildSummaryDaily",
-		Filter: func(event events.Event) bool { return event.Name == events.SiteTimezoneChanged },
+		Queue: "RebuildSummaryDaily",
+		Filter: func(event events.Event) bool {
+			return event.Name == events.SiteTimezoneChanged || event.Name == events.SiteWeekStartChanged
+		},
 		Run: func(ctx context.Context, fired onevent.Fired) error {
 			siteContext, err := site(controlDB, fired.SiteID)
 			if err != nil {
 				return err
+			}
+			if fired.Name == events.SiteWeekStartChanged {
+				return sitedata.RebuildSummaryWeeks(ctx, siteContext.SiteDB.Queries, siteContext, time.Now())
 			}
 			return sitedata.RebuildSummaryDailyWeek(ctx, siteContext.SiteDB.Queries, siteContext, time.Now())
 		},

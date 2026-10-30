@@ -86,6 +86,11 @@ func (m *CombinedSettingsMap) GetTimezone() *string {
 	)
 }
 
+// GetWeekStartDay is the identity's week start day, then the site's, then the default monday
+func (m *CombinedSettingsMap) GetWeekStartDay() *string {
+	return first(m.IdentitySettingsMap.GetWeekStartDay(), m.SiteSettingsMap.GetWeekStartDay(), m.DefaultSettingsMap.GetWeekStartDay())
+}
+
 // locations are the timezones loaded, by name, as a page shows many times in one
 var locations sync.Map
 
