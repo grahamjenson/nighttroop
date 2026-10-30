@@ -14,7 +14,6 @@ import (
 
 type BackupConn interface {
 	NewBackup(string) (*sqlite.Backup, error)
-	NewRestore(srcUri string) (*sqlite.Backup, error) // TODO look into this and how to use
 }
 
 func SqliteBackup(ctx context.Context, db *sql.DB, backupPath string) error {

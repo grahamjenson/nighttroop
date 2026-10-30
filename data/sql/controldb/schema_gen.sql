@@ -20,14 +20,6 @@ CREATE TABLE control_identities (
     deleted_at INTEGER -- soft delete here, but on delete will wipe out password and such
 ) STRICT;
 
-CREATE TABLE data_source_block_list(
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    username TEXT CHECK(length(username) <= 32), -- in case it is a dexcom account or something
-    url TEXT CHECK(length(url) <= 256),
-    reason TEXT CHECK(length(reason) <= 256)
-) STRICT;
-
 CREATE TABLE site_identities (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     site_id TEXT NOT NULL REFERENCES sites(id),

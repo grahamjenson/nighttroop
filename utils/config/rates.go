@@ -12,7 +12,6 @@ import (
 
 // This contains all rate limiters in the system
 // This might be more efficient if joined together, but right now this is fine
-// TODO: find out if this needs optimisation
 type RateLimiters struct {
 	serverConfig ServerConfig
 
