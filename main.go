@@ -151,12 +151,7 @@ func setupSentry(serverConfig *config.ServerConfig) {
 	err := sentry.Init(sentry.ClientOptions{
 		Dsn:           serverConfig.SentryDSN,
 		EnableTracing: false,
-		BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
-			if event.Request != nil {
-				event.Request.QueryString = httputils.RedactQuery(event.Request.QueryString)
-			}
-			return event
-		},
+		BeforeSend:    httputils.RedactSentryEvent,
 	})
 	if err != nil {
 		slog.Warn("Sentry is not working, running without error reporting", "error", err)
