@@ -393,9 +393,6 @@
   .mt-12 {
     margin-top: calc(var(--spacing) * 12);
   }
-  .mt-16 {
-    margin-top: calc(var(--spacing) * 16);
-  }
   .mr-2 {
     margin-right: calc(var(--spacing) * 2);
   }
@@ -1132,6 +1129,9 @@
   .py-6 {
     padding-block: calc(var(--spacing) * 6);
   }
+  .py-10 {
+    padding-block: calc(var(--spacing) * 10);
+  }
   .py-12 {
     padding-block: calc(var(--spacing) * 12);
   }
@@ -1227,6 +1227,10 @@
   }
   .text-\[10px\] {
     font-size: 10px;
+  }
+  .leading-6 {
+    --tw-leading: calc(var(--spacing) * 6);
+    line-height: calc(var(--spacing) * 6);
   }
   .leading-none {
     --tw-leading: 1;
@@ -1811,17 +1815,17 @@
       }
     }
   }
+  .hover\:text-primary {
+    &:hover {
+      @media (hover: hover) {
+        color: var(--primary);
+      }
+    }
+  }
   .hover\:text-slate-900 {
     &:hover {
       @media (hover: hover) {
         color: var(--color-slate-900);
-      }
-    }
-  }
-  .hover\:text-white {
-    &:hover {
-      @media (hover: hover) {
-        color: var(--color-white);
       }
     }
   }
@@ -2314,6 +2318,85 @@
           --tw-ring-color: color-mix(in oklab, var(--destructive) 40%, transparent);
         }
       }
+    }
+  }
+  .\[\&_a\]\:text-primary {
+    & a {
+      color: var(--primary);
+    }
+  }
+  .\[\&_a\]\:underline {
+    & a {
+      text-decoration-line: underline;
+    }
+  }
+  .\[\&_h1\]\:mb-4 {
+    & h1 {
+      margin-bottom: calc(var(--spacing) * 4);
+    }
+  }
+  .\[\&_h1\]\:text-2xl {
+    & h1 {
+      font-size: var(--text-2xl);
+      line-height: var(--tw-leading, var(--text-2xl--line-height));
+    }
+  }
+  .\[\&_h1\]\:font-bold {
+    & h1 {
+      --tw-font-weight: var(--font-weight-bold);
+      font-weight: var(--font-weight-bold);
+    }
+  }
+  .\[\&_h1\]\:text-brand-night {
+    & h1 {
+      color: var(--color-brand-night);
+    }
+  }
+  .\[\&_h2\]\:mt-8 {
+    & h2 {
+      margin-top: calc(var(--spacing) * 8);
+    }
+  }
+  .\[\&_h2\]\:mb-2 {
+    & h2 {
+      margin-bottom: calc(var(--spacing) * 2);
+    }
+  }
+  .\[\&_h2\]\:text-lg {
+    & h2 {
+      font-size: var(--text-lg);
+      line-height: var(--tw-leading, var(--text-lg--line-height));
+    }
+  }
+  .\[\&_h2\]\:font-semibold {
+    & h2 {
+      --tw-font-weight: var(--font-weight-semibold);
+      font-weight: var(--font-weight-semibold);
+    }
+  }
+  .\[\&_h2\]\:text-brand-night {
+    & h2 {
+      color: var(--color-brand-night);
+    }
+  }
+  .\[\&_li\]\:mt-1 {
+    & li {
+      margin-top: calc(var(--spacing) * 1);
+    }
+  }
+  .\[\&_ol\]\:list-decimal {
+    & ol {
+      list-style-type: decimal;
+    }
+  }
+  .\[\&_ol\]\:pl-6 {
+    & ol {
+      padding-left: calc(var(--spacing) * 6);
+    }
+  }
+  .\[\&_p\]\:mt-3 {
+    & p {
+      margin-top: calc(var(--spacing) * 3);
     }
   }
   .\[\&_svg\]\:pointer-events-none {

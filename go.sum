@@ -124,6 +124,8 @@ github.com/templui/templui v1.11.2 h1:iMmuIm/IVaEcGMmYqWww+46+y4ng0xeIZRDj1NBAgK
 github.com/templui/templui v1.11.2/go.mod h1:WWX9O4UebQiSipKaoUQ7Cb0UWtqopzZHtgBu1gtItzU=
 github.com/tink-crypto/tink-go/v2 v2.6.0 h1:+KHNBHhWH33Vn+igZWcsgdEPUxKwBMEe0QC60t388v4=
 github.com/tink-crypto/tink-go/v2 v2.6.0/go.mod h1:2WbBA6pfNsAfBwDCggboaHeB2X29wkU8XHtGwh2YIk8=
+github.com/yuin/goldmark v1.7.13 h1:GPddIs617DnBLFFVJFgpo1aBfe/4xcvMc3SB5t/D0pA=
+github.com/yuin/goldmark v1.7.13/go.mod h1:ip/1k0VRfGynBgxOz0yCqHrbZXhcjxyuS66Brc7iBKg=
 go.mongodb.org/mongo-driver v1.17.10 h1:kdAgQvu8TROXZpSkJQd5wzfaNCCrMbpZyKFtQ6qkPCE=
 go.mongodb.org/mongo-driver v1.17.10/go.mod h1:LlOhpH5NUEfhxcAwG0UEkMqwYcc4JU18gtCdGudk/tQ=
 go.uber.org/goleak v1.3.0 h1:2K3zAYmnTNqV73imy9J1T3WC+gmCePx2hEGkimedGto=

@@ -3,6 +3,7 @@ package site_templ
 import (
 	"context"
 
+	"nighttroop.t1d.nz/server/components/footer"
 	"nighttroop.t1d.nz/server/components/ui/checkbox"
 	"nighttroop.t1d.nz/server/components/ui/copybutton"
 	"nighttroop.t1d.nz/server/components/ui/dropdown"
@@ -56,6 +57,7 @@ templ SiteBase() {
 			<main id="main-content" class="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
 				{ children... }
 			</main>
+			@footer.Footer()
 		</div>
 	}
 }

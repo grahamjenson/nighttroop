@@ -1,6 +1,9 @@
 package public_templ
 
-import "nighttroop.t1d.nz/server/components/ui/copybutton"
+import (
+	"nighttroop.t1d.nz/server/components/footer"
+	"nighttroop.t1d.nz/server/components/ui/copybutton"
+)
 
 templ PublicBase() {
 	<!DOCTYPE html>
@@ -17,13 +20,14 @@ templ PublicBase() {
 			<script src="/qrcode.js"></script>
 			@copybutton.Script()
 		</head>
-		<body>
+		<body class="flex min-h-screen flex-col">
 			<div
 				id="main-content"
-				class=""
+				class="flex-1"
 			>
 				{ children... }
 			</div>
+			@footer.Footer()
 		</body>
 	</html>
 }

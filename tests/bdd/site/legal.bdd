@@ -1,0 +1,28 @@
+// Every page's footer links to contact, the support email, and the terms of service and privacy policy
+GOTO {{ server_url }}/
+ASSERT_STATUS 200
+ASSERT_VISIBLE #footer
+ASSERT_VISIBLE #footer--contact[href="mailto:nighttroop@t1d.nz"]
+ASSERT_TEXT_VISIBLE Nighttroop 2026
+SCREENSHOT footer
+
+// The terms and privacy policy are generated from their Markdown, with the support email in place
+CLICK #footer--terms
+ASSERT_PATH /terms
+ASSERT_TEXT_VISIBLE TERMS OF SERVICE
+ASSERT_VISIBLE #legal a[href="mailto:nighttroop@t1d.nz"] >> nth=0
+ASSERT_NOT_VISIBLE #legal >> text=SUPPORT_EMAIL
+SCREENSHOT terms
+
+CLICK #footer--privacy
+ASSERT_PATH /privacy
+ASSERT_TEXT_VISIBLE Consent by Sending Data
+ASSERT_VISIBLE #legal a[href="mailto:nighttroop@t1d.nz"] >> nth=0
+SCREENSHOT privacy
+
+// A site's pages have the footer too, linking to the site's own copies
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE #footer
+CLICK #footer--privacy
+ASSERT_PATH /privacy
+ASSERT_TEXT_VISIBLE PRIVACY POLICY
