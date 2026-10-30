@@ -7,6 +7,7 @@ import (
 
 	"nighttroop.t1d.nz/server/controlapi"
 	"nighttroop.t1d.nz/server/controlapi/controlcollections"
+	"nighttroop.t1d.nz/server/publicapi"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -19,6 +20,7 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 	static.AddStaticRoutes(r)
 
 	r.Get("/login", controlapi.GETLoginPageHandler())
+	publicapi.LegalRoutes(r)
 
 	r.Post("/login", controlapi.POSTLogin(controlDB, config))
 

@@ -7,21 +7,25 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/icon"
 )
 
+// CreateSite is the home page. Once a site is created its two steps are the page: the header shrinks to the logo and
+// name beside each other, and the rest of it is hidden
 templ CreateSite() {
 	@PublicBase() {
-		<main class="min-h-screen flex flex-col items-center justify-center px-6 py-12 bg-gradient-to-b from-slate-100 via-slate-50 to-white">
+		<main class="group min-h-screen flex flex-col items-center justify-center px-6 py-12 bg-gradient-to-b from-slate-100 via-slate-50 to-white has-[#public--site-info]:justify-start has-[#public--site-info]:py-6">
 			<div class="w-full max-w-3xl text-center">
-				<p class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 shadow-sm">
+				<p class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 shadow-sm group-has-[#public--site-info]:hidden">
 					@icon.Rocket(icon.Props{Class: "size-3.5 text-brand-gold"})
 					Free hosting, Nightscout compatible
 					<span class="rounded-full bg-brand-gold px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-night">Alpha</span>
 				</p>
-				<img id="public--logo" src="/logo.svg" alt="" class="mx-auto mt-8 size-24"/>
-				<h1 class="mt-4 text-5xl sm:text-6xl font-extrabold tracking-tight text-slate-900">NightTroop</h1>
-				<p class="mt-4 text-lg text-slate-600 max-w-xl mx-auto">
+				<div class="flex flex-col items-center group-has-[#public--site-info]:flex-row group-has-[#public--site-info]:justify-center group-has-[#public--site-info]:gap-3">
+					<img id="public--logo" src="/logo.svg" alt="" class="mt-8 size-24 group-has-[#public--site-info]:mt-0 group-has-[#public--site-info]:size-10"/>
+					<h1 class="mt-4 text-5xl sm:text-6xl font-extrabold tracking-tight text-slate-900 group-has-[#public--site-info]:mt-0 group-has-[#public--site-info]:text-3xl">NightTroop</h1>
+				</div>
+				<p class="mt-4 text-lg text-slate-600 max-w-xl mx-auto group-has-[#public--site-info]:hidden">
 					Your own Nightscout-compatible site in one click. No servers, no databases, no sign-up. Create a site, save your credentials, and start syncing.
 				</p>
-				<div id="panel-content" class="mt-10 flex flex-col items-center">
+				<div id="panel-content" class="mt-10 flex flex-col items-center group-has-[#public--site-info]:mt-6">
 					@button.Button(button.Props{
 						ID:    "public--create-site-button",
 						Size:  button.SizeLg,
@@ -39,7 +43,7 @@ templ CreateSite() {
 					}
 					<div id="error-container" class="h-8 w-full mt-2"></div>
 				</div>
-				<dl class="mt-12 grid gap-6 sm:grid-cols-3 text-left">
+				<dl id="public--features" class="mt-12 grid gap-6 sm:grid-cols-3 text-left group-has-[#public--site-info]:hidden">
 					@feature(icon.MousePointerClick, "One click", "No account to make. Your site and its credentials are generated instantly.")
 					@feature(icon.ShieldCheck, "Private by default", "Each site is isolated with its own admin login, TOTP and backup key.")
 					@feature(icon.RefreshCw, "Works with your apps", "Upload from AAPS or Trio like you would to Nightscout, or pull from Dexcom, Libre or a Nightscout site.")
