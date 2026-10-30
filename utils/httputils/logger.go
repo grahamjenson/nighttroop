@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
@@ -25,6 +26,7 @@ var (
 	ResponseBodyMaxSize = 64 * 1024 // 64KB
 
 	HiddenRequestHeaders = map[string]struct{}{
+		"api-secret":    {}, // the Nightscout API takes a token in it
 		"authorization": {},
 		"cookie":        {},
 		"set-cookie":    {},
@@ -54,8 +56,11 @@ type Config struct {
 	WithCustomMessage  func(w http.ResponseWriter, r *http.Request) string
 }
 
-// credentialParams are query and route params that carry tokens
-var credentialParams = []string{"token"}
+// credentialParams are query and route params that carry tokens; the Nightscout API takes a token as secret too
+var credentialParams = []string{"token", "secret"}
+
+// authorizationRequestPath is where a Nightscout authorization request's path ends in its token
+const authorizationRequestPath = "/authorization/request/"
 
 // redactCredentials keeps tokens out of logs, and so out of Sentry
 func redactCredentials(path, query string, params map[string]string) (string, string) {
@@ -77,6 +82,24 @@ func RedactQuery(query string) string {
 		}
 	}
 	return values.Encode()
+}
+
+// RedactSentryEvent keeps tokens out of what is sent to Sentry: its request's query, its hidden headers, which Sentry
+// only partly leaves out, and the token a Nightscout authorization request's path ends in
+func RedactSentryEvent(event *sentry.Event, _ *sentry.EventHint) *sentry.Event {
+	if event.Request == nil {
+		return event
+	}
+	event.Request.QueryString = RedactQuery(event.Request.QueryString)
+	for k := range event.Request.Headers {
+		if _, hidden := HiddenRequestHeaders[strings.ToLower(k)]; hidden {
+			delete(event.Request.Headers, k)
+		}
+	}
+	if before, _, found := strings.Cut(event.Request.URL, authorizationRequestPath); found {
+		event.Request.URL = before + authorizationRequestPath + "REDACTED"
+	}
+	return event
 }
 
 // New returns a `func(http.Handler) http.Handler` (middleware) that logs requests using slog.

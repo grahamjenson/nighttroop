@@ -3,6 +3,7 @@ package httputils
 import (
 	"bytes"
 	"compress/gzip"
+	"encoding/json"
 	"io"
 	"log/slog"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -25,13 +27,34 @@ func TestRequestLogsRedactCredentials(t *testing.T) {
 	AddStandardMiddleware(router, &config.ServerConfig{}, nil)
 	router.Get("/api/v2/authorization/request/{token}", func(w http.ResponseWriter, r *http.Request) {})
 
-	r := httptest.NewRequest(http.MethodGet, "/api/v2/authorization/request/pathtoken123?token=querytoken456&count=10", nil)
+	r := httptest.NewRequest(http.MethodGet, "/api/v2/authorization/request/pathtoken123?token=querytoken456&secret=querysecret789&count=10", nil)
 	router.ServeHTTP(httptest.NewRecorder(), r)
 
 	assert.Contains(t, logs.String(), "count=10")
-	for _, credential := range []string{"pathtoken123", "querytoken456"} {
+	for _, credential := range []string{"pathtoken123", "querytoken456", "querysecret789"} {
 		assert.NotContains(t, logs.String(), credential)
 	}
+}
+
+// The Nightscout API takes a token in the query, the api-secret header and the path, none of which may reach Sentry
+func TestSentryEventsRedactCredentials(t *testing.T) {
+	r := httptest.NewRequest(http.MethodGet, "https://abcdefgh.ns.example.com/api/v2/authorization/request/pathtoken123?token=querytoken456&secret=querysecret789&count=10", nil)
+	r.Header.Set("Api-Secret", "headersecret000")
+	r.Header.Set("Authorization", "Bearer bearertoken111")
+	r.Header.Set("Accept", "application/json")
+
+	event := RedactSentryEvent(&sentry.Event{Request: sentry.NewRequest(r)}, nil)
+	sent, err := json.Marshal(event.Request)
+	require.NoError(t, err)
+
+	assert.Contains(t, string(sent), "count=10")
+	assert.Contains(t, string(sent), "application/json")
+	for _, credential := range []string{"pathtoken123", "querytoken456", "querysecret789", "headersecret000", "bearertoken111"} {
+		assert.NotContains(t, string(sent), credential)
+	}
+
+	// An event without a request is sent as it is
+	assert.Nil(t, RedactSentryEvent(&sentry.Event{}, nil).Request)
 }
 
 func TestResponsesAreGzippedWhenAccepted(t *testing.T) {
