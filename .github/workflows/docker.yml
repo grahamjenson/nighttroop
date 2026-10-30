@@ -1,35 +1,23 @@
 name: Docker image
 
-# Once CI passes on main, publishes the server's image to GitHub's container registry, as
-# ghcr.io/<owner>/<repo>:latest and :sha-<first 7 of the commit>, which docs/deploy/update.sh deploys.
+# Pushing a version tag, e.g. v1.2.3, publishes the server's image built from it to GitHub's container registry, as
+# ghcr.io/<owner>/<repo>:v1.2.3 and :latest, which docs/deploy/update.sh deploys. Merges to main build no image.
 on:
-  workflow_run:
-    workflows: [CI]
-    types: [completed]
-    branches: [main]
-  workflow_dispatch:
+  push:
+    tags: ['v*']
 
 jobs:
   publish:
-    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
     steps:
       - uses: actions/checkout@v4
-        with:
-          # The commit CI passed on, not whatever main is by now
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Name the image
         id: image
-        run: |
-          {
-            echo "name=ghcr.io/${GITHUB_REPOSITORY,,}"
-            echo "sha=$(git rev-parse HEAD)"
-            echo "short=$(git rev-parse --short=7 HEAD)"
-          } >> "$GITHUB_OUTPUT"
+        run: echo "name=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
 
       - uses: docker/setup-buildx-action@v3
 
@@ -44,10 +32,9 @@ jobs:
           context: .
           push: true
           tags: |
+            ${{ steps.image.outputs.name }}:${{ github.ref_name }}
             ${{ steps.image.outputs.name }}:latest
-            ${{ steps.image.outputs.name }}:sha-${{ steps.image.outputs.short }}
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
-            org.opencontainers.image.revision=${{ steps.image.outputs.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ github.ref_name }}

@@ -346,16 +346,22 @@ current container's logs, so they are gone once an update recreates it.
 
 ### Where new versions come from
 
-Every time CI passes on `main`, the **Docker image** workflow (`.github/workflows/docker.yml`) builds the server's image
-and pushes two tags to `ghcr.io/grahamjenson/nighttroop`:
+Merges to `main` build no image. A version is released by pushing a tag for it, on a commit CI passed on:
 
-- **`:latest`** is the newest build.
-- **`:sha-<commit>`** is that exact build, e.g. `:sha-1a2b3c4`, and never changes.
+```sh
+git tag v1.2.3 && git push origin v1.2.3
+```
 
-Deploy the `sha-` tags, so you always know which commit is running and can go back to it. You can find them:
+The **Docker image** workflow (`.github/workflows/docker.yml`) then builds the server's image from that tag and pushes
+two tags to `ghcr.io/grahamjenson/nighttroop`:
+
+- **`:v1.2.3`** is that version, and never changes.
+- **`:latest`** is the newest version.
+
+Deploy the version tags, so you always know which version is running and can go back to it. You can find them:
 
 - on the repository's **Packages** page on GitHub;
-- in the logs of the **Docker image** workflow run for a commit.
+- in the repository's tags.
 
 ### Running an update
 
@@ -363,7 +369,7 @@ On the VPS:
 
 ```sh
 cd /opt/nighttroop
-sudo ./update.sh ghcr.io/grahamjenson/nighttroop:sha-1a2b3c4
+sudo ./update.sh ghcr.io/grahamjenson/nighttroop:v1.2.3
 ```
 
 The script:
