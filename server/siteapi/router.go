@@ -15,6 +15,7 @@ import (
 func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Router {
 	r := chi.NewRouter()
 	httputils.AddStandardMiddleware(r, config, controlDB)
+	r.Use(httputils.CountRoutes(config.Usage, "site"))
 
 	// Static files are embedded and cheap, so like the public and control sites only the global limits cover them
 	static.AddStaticRoutes(r)

@@ -15,6 +15,7 @@ import (
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/s3utils"
 
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/errors"
@@ -152,16 +153,39 @@ type SiteCreateResult struct {
 	BackupPassword  string
 }
 
+// ErrSiteIDTaken is a site ID picked for a new site that a site, in any state, already has
+var ErrSiteIDTaken = fmt.Errorf("that site ID is taken")
+
 func (db *ControlDB) CreateSite() (*SiteCreateResult, error) {
+	return db.createSite("")
+}
+
+// CreateSiteWithID creates a site at a site ID picked for it, such as a vanity one for a special user. It is 8
+// lowercase letters like every site's, and one already taken is refused.
+func (db *ControlDB) CreateSiteWithID(subdomain string) (*SiteCreateResult, error) {
+	if !utils.SyntacticallyValidateSiteID(subdomain) {
+		return nil, fmt.Errorf("site ID %q is not %d lowercase letters", subdomain, utils.SITE_ID_LENGTH)
+	}
+	return db.createSite(subdomain)
+}
+
+// createSite creates a site at subdomain, or at a random one when it is ""
+func (db *ControlDB) createSite(subdomain string) (*SiteCreateResult, error) {
 	db.createSiteLock.Lock()
 	defer db.createSiteLock.Unlock()
 
-	subdomain := utils.NextSiteSubdomain(db.ServerConfig.IsDevOrTest())
-	if db.SubdomainUsed(subdomain) {
-		// Try Again with an actual random ID
-		subdomain = utils.NextSiteSubdomain(false)
+	if subdomain != "" {
 		if db.SubdomainUsed(subdomain) {
-			return nil, fmt.Errorf("site already exists")
+			return nil, ErrSiteIDTaken
+		}
+	} else {
+		subdomain = utils.NextSiteSubdomain(db.ServerConfig.IsDevOrTest())
+		if db.SubdomainUsed(subdomain) {
+			// Try Again with an actual random ID
+			subdomain = utils.NextSiteSubdomain(false)
+			if db.SubdomainUsed(subdomain) {
+				return nil, fmt.Errorf("site already exists")
+			}
 		}
 	}
 
@@ -264,7 +288,7 @@ func (db *ControlDB) DeleteSites(subdomains []string) error {
 
 // ArchiveSite backs up a site's DB and uploads it, with upload, to its archive path, then marks the site archived and
 // deletes its local files, so it is no longer served or backed up but can be restored from the archive
-func (db *ControlDB) ArchiveSite(ctx context.Context, subdomain string, upload func(key string, paths []string) error) error {
+func (db *ControlDB) ArchiveSite(ctx context.Context, subdomain string, upload func(key string, retention s3utils.Retention, paths []string) error) error {
 	db.sitesRWLock.RLock()
 	site, ok := db.sites[subdomain]
 	db.sitesRWLock.RUnlock()
@@ -274,7 +298,7 @@ func (db *ControlDB) ArchiveSite(ctx context.Context, subdomain string, upload f
 	if err := site.Backup(ctx); err != nil {
 		return fmt.Errorf("cannot back up site %s: %w", subdomain, err)
 	}
-	if err := upload(sitedb.GetS3ArchivePath(subdomain, db.ServerConfig), []string{site.BackupPath}); err != nil {
+	if err := upload(sitedb.GetS3ArchivePath(subdomain, db.ServerConfig), s3utils.SiteRetention, []string{site.BackupPath}); err != nil {
 		return fmt.Errorf("cannot upload the archive of site %s: %w", subdomain, err)
 	}
 	bytes, _ := json.Marshal([]string{subdomain})

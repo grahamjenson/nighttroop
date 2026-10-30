@@ -45,6 +45,13 @@ WHERE state = 'archived'
 ORDER BY archived_at DESC, id
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
+-- name: CountActiveSites :one
+-- The live sites seen since Since, in milliseconds
+SELECT COUNT(*) FROM sites WHERE state = 'live' AND last_seen_at >= sqlc.arg('Since');
+
+-- name: CountSitesByState :many
+SELECT state, COUNT(*) AS count FROM sites GROUP BY state ORDER BY state;
+
 -- name: GetSiteInAnyState :one
 SELECT * FROM sites WHERE id = ?;
 

@@ -103,3 +103,14 @@ func Name(name string) string {
 	}
 	return strings.ToUpper(words[:1]) + words[1:]
 }
+
+// Bytes is a count of bytes as B, KB, MB or GB, in 1024s
+func Bytes(bytes float64) string {
+	for _, unit := range []string{"B", "KB", "MB"} {
+		if bytes < 1024 {
+			return fmt.Sprintf("%.1f %s", bytes, unit)
+		}
+		bytes /= 1024
+	}
+	return fmt.Sprintf("%.1f GB", bytes)
+}

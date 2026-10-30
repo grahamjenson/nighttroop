@@ -11,14 +11,14 @@ import (
 	utilerrors "nighttroop.t1d.nz/utils/errors"
 )
 
-func (b *SyncJobManager) syncDexcom(syncInfo *SyncJobInfo) error {
+// syncDexcom copies the last 15 minutes of Dexcom readings into the site, returning how many were new
+func (b *SyncJobManager) syncDexcom(syncInfo *SyncJobInfo) (int, error) {
 	slog.Info("Syncing Dexcom", "site_id", syncInfo.SiteID, "sync_type", syncInfo.Type)
 
 	ctx, cancel := context.WithTimeout(context.Background(), syncTimeout)
 	defer cancel()
 
-	_, err := copyDexcomEGVs(ctx, syncInfo, 15)
-	return err
+	return copyDexcomEGVs(ctx, syncInfo, 15)
 }
 
 // copyDexcomEGVs copies the last minutes of Dexcom readings into the site, returning how many were new

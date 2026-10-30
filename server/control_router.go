@@ -16,6 +16,7 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 	r := chi.NewRouter()
 	store := controlcollections.NewControlStore()
 	httputils.AddStandardMiddleware(r, config, controlDB)
+	r.Use(httputils.CountRoutes(config.Usage, "control"))
 
 	static.AddStaticRoutes(r)
 
@@ -31,7 +32,9 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 
 		// The control plane's collections, each at its route: sites, jobs, job stats and sync sources
 		store.Routes(r)
+		r.Post("/sites", (&controlcollections.SitesCollection{}).CreateHandler)
 		r.Post("/sites/{id}/truncate", (&controlcollections.SitesCollection{}).TruncateHandler)
+		r.Get("/usage", controlapi.UsageHandler)
 
 		//// TODO
 		// Get User details including db size , last seen, API usage per device, list devices and last seen at, list DB table sizes

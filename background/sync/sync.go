@@ -49,6 +49,7 @@ const syncTimeout = 10 * time.Second
 
 func (b *SyncJobManager) SyncUserData(syncInfo *SyncJobInfo) error {
 	var err error
+	added := 0
 
 	// TODO CHECK REPORT AND MAKE SURE NOT ABUSING
 	// Check that enought time has passed since the last sync to rerun sync
@@ -57,13 +58,13 @@ func (b *SyncJobManager) SyncUserData(syncInfo *SyncJobInfo) error {
 
 	switch consts.SyncSourceType(syncInfo.Type) {
 	case consts.SyncSourceTypeNightscout:
-		err = b.syncNightscout(syncInfo)
+		added, err = b.syncNightscout(syncInfo)
 	case consts.SyncSourceTypeDexcom:
-		err = b.syncDexcom(syncInfo)
+		added, err = b.syncDexcom(syncInfo)
 	case consts.SyncSourceTypeLibre:
-		err = b.syncLibre(syncInfo)
+		added, err = b.syncLibre(syncInfo)
 	case consts.SyncSourceTypeVirtual:
-		err = b.syncVirtual(syncInfo)
+		added, err = b.syncVirtual(syncInfo)
 	}
 	elapsedTimeMS := time.Since(startTime).Milliseconds()
 
@@ -74,6 +75,9 @@ func (b *SyncJobManager) SyncUserData(syncInfo *SyncJobInfo) error {
 	}
 
 	slog.Info("finished sync", "site_id", syncInfo.SiteID, "sync_type", syncInfo.Type, "elapsed_time_ms", elapsedTimeMS)
+	if added > 0 {
+		b.controlDB.Logs.SyncAddedEvent(context.TODO(), syncInfo.SiteID, syncInfo.Type, added)
+	}
 	updateError := b.controlDB.Queries.UpdateSyncSourceReportsSuccess(context.TODO(), controldb.UpdateSyncSourceReportsSuccessParams{
 		ElapsedMs: &elapsedTimeMS,
 		Type:      syncInfo.Type,

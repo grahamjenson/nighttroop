@@ -1,0 +1,26 @@
+// A site used by its admin, so the server has some activity to show
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE #site--summary
+
+GOTO {{ .control_url }}/login
+ASSERT_STATUS 200
+INPUT #name admin
+INPUT #password password
+INPUT #control--login--otp-1 123123
+CLICK #control--login-button
+ASSERT_VISIBLE #control--nav--logo
+
+// The usage page shows the active sites and users, the use since start, the server's resources and the most asked
+// for routes, and asks for itself again every 10 seconds
+CLICK #control--menu
+CLICK #control--usage-button
+ASSERT_PATH /usage
+ASSERT_VISIBLE #control--usage[hx-trigger="every 10s"]
+ASSERT_VISIBLE #control--usage--sites-day
+ASSERT_NOT_VISIBLE #control--usage--sites-day >> text=/^0$/
+ASSERT_VISIBLE #control--usage--users-week
+ASSERT_VISIBLE #control--usage--requests-per-site
+ASSERT_VISIBLE #control--usage--cpu >> text=/%$/
+ASSERT_VISIBLE #control--usage--disk
+ASSERT_VISIBLE #control--usage--routes td >> text=/^site GET \/$/
+SCREENSHOT usage

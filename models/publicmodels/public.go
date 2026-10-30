@@ -1,12 +1,12 @@
 package publicmodels
 
 type NewSiteInfo struct {
-	URL             string
-	AdminPassword   string
-	AdminTotpSecret string
-	PwdNSToken      string
-	PwdNSURL        string
-	BackupKey       string
+	URL             string `json:"url"`
+	AdminPassword   string `json:"admin_password"`
+	AdminTotpSecret string `json:"admin_totp_secret"`
+	PwdNSToken      string `json:"pwd_ns_token"`
+	PwdNSURL        string `json:"pwd_ns_url"`
+	BackupKey       string `json:"backup_key"`
 }
 
 func (n NewSiteInfo) AllInfo() string {

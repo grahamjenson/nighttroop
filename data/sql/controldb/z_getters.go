@@ -2658,6 +2658,16 @@ func (m *AllSiteIdentitiesParams) SetSiteID(v string) {
 	m.SiteID = v
 }
 
+// GetSince returns the Since value.
+func (m CountActiveIdentitiesParams) GetSince() *int64 {
+	return m.Since
+}
+
+// SetSince sets the Since value and returns the updated CountActiveIdentitiesParams.
+func (m *CountActiveIdentitiesParams) SetSince(v *int64) {
+	m.Since = v
+}
+
 // GetSiteID returns the SiteID value.
 func (m CountSiteIdentitiesParams) GetSiteID() string {
 	return m.SiteID
@@ -3296,6 +3306,16 @@ func (m ArchiveSitesParams) GetJsonEach() interface{} {
 // SetJsonEach sets the JsonEach value and returns the updated ArchiveSitesParams.
 func (m *ArchiveSitesParams) SetJsonEach(v interface{}) {
 	m.JsonEach = v
+}
+
+// GetSince returns the Since value.
+func (m CountActiveSitesParams) GetSince() *int64 {
+	return m.Since
+}
+
+// SetSince sets the Since value and returns the updated CountActiveSitesParams.
+func (m *CountActiveSitesParams) SetSince(v *int64) {
+	m.Since = v
 }
 
 // GetID returns the ID value.

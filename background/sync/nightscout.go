@@ -36,7 +36,8 @@ func (b *SyncJobManager) nightscoutClientFor(syncInfo *SyncJobInfo) *nightscoutC
 	return c
 }
 
-func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
+// syncNightscout copies the changed collections' newest documents into the site, returning how many were new
+func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) (int, error) {
 	nsc := b.nightscoutClientFor(syncInfo)
 	nsc.Lock()
 	defer nsc.Unlock()
@@ -47,20 +48,23 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) error {
 	// One small call says which collections have changed, so unchanged ones are not read every sync
 	lastModified, err := nsc.GetLastModified(ctx)
 	if err != nil {
-		return fmt.Errorf("NightscoutSync Error: %w", err)
+		return 0, fmt.Errorf("NightscoutSync Error: %w", err)
 	}
 
+	added := 0
 	for _, c := range nightscoutCollections {
 		modified := lastModified[string(c.collection)]
 		if !changedSince(nsc.lastModified[c.collection], modified) {
 			continue
 		}
-		if err := b.syncNightscoutCollection(ctx, nsc, syncInfo, c.collection, c.limit); err != nil {
-			return err
+		collectionAdded, err := b.syncNightscoutCollection(ctx, nsc, syncInfo, c.collection, c.limit)
+		added += collectionAdded
+		if err != nil {
+			return added, err
 		}
 		nsc.lastModified[c.collection] = modified
 	}
-	return nil
+	return added, nil
 }
 
 // nightscoutCollections are what a Nightscout sync reads, and at most how many of each one's newest documents
@@ -76,14 +80,13 @@ var nightscoutCollections = []struct {
 	{nsutils.Devicestatus, 10, 50},
 }
 
-// syncNightscoutCollection copies a collection's newest documents into the site
-func (b *SyncJobManager) syncNightscoutCollection(ctx context.Context, nsc *nightscoutClient, syncInfo *SyncJobInfo, collection nsutils.Collection, limit int) error {
+// syncNightscoutCollection copies a collection's newest documents into the site, returning how many were new
+func (b *SyncJobManager) syncNightscoutCollection(ctx context.Context, nsc *nightscoutClient, syncInfo *SyncJobInfo, collection nsutils.Collection, limit int) (int, error) {
 	docs, err := nsc.GetDocuments(ctx, string(collection), time.Now().Add(-20*time.Minute), time.Time{}, limit)
 	if err != nil {
-		return fmt.Errorf("NightscoutSync Error: %w", err)
+		return 0, fmt.Errorf("NightscoutSync Error: %w", err)
 	}
-	_, err = b.createNightscoutDocuments(ctx, syncInfo, collection, docs)
-	return err
+	return b.createNightscoutDocuments(ctx, syncInfo, collection, docs)
 }
 
 // createNightscoutDocuments copies documents into the site, returning how many were new. Documents a site refuses,

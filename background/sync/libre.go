@@ -38,11 +38,11 @@ func (b *SyncJobManager) libreClientFor(syncInfo *SyncJobInfo) (*libreClient, er
 	return c, nil
 }
 
-func (b *SyncJobManager) syncLibre(syncInfo *SyncJobInfo) error {
+// syncLibre imports the followed patient's readings, returning how many were new
+func (b *SyncJobManager) syncLibre(syncInfo *SyncJobInfo) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), syncTimeout)
 	defer cancel()
-	_, err := b.copyLibreReadings(ctx, syncInfo)
-	return err
+	return b.copyLibreReadings(ctx, syncInfo)
 }
 
 // copyLibreReadings imports the followed patient's graph, the last 12 hours, all of it each time so a gap in syncing is
