@@ -107,6 +107,45 @@ func TestLogsDBTrim(t *testing.T) {
 	}
 }
 
+// TestLogsDBTrimAgain checks a trim after rows are written since the last keeps the newest, as the cron trims
+func TestLogsDBTrimAgain(t *testing.T) {
+	_, controlDB := testutils.NewControlDB(t)
+	ctx, logs := context.TODO(), controlDB.Logs
+	for _, batch := range [][]string{{"a", "b", "c", "d"}, {"e", "f", "g"}} {
+		for _, message := range batch {
+			logs.Log(ctx, nil, db.LogLevelInfo, message, nil)
+		}
+		require.NoError(t, logs.Trim(ctx, 2))
+	}
+
+	rows, err := logs.Queries.SearchLogs(ctx, logsdb.SearchLogsParams{Limit: 10})
+	require.NoError(t, err)
+	require.Len(t, rows, 2)
+	require.Equal(t, "g", rows[0].Message)
+	require.Equal(t, "f", rows[1].Message)
+}
+
+// BenchmarkLogsDBTrim is the trim the cron runs every minute on full tables, with a row each written since the last
+func BenchmarkLogsDBTrim(b *testing.B) {
+	const maxRows = 100_000
+	_, controlDB := testutils.NewControlDB(b)
+	ctx, logs := context.TODO(), controlDB.Logs
+	site, attributes := "benchsite", map[string]any{"sync_type": "dexcom", "body": strings.Repeat("x", 200)}
+	write := func() {
+		logs.Log(ctx, &site, db.LogLevelInfo, "synced", attributes)
+		logs.SyncError(ctx, site, consts.SyncSourceTypeDexcom, errors.New("sync failed"))
+		logs.SiteDisabledEvent(ctx, site, "admin")
+	}
+	for range maxRows {
+		write()
+	}
+	b.ResetTimer()
+	for b.Loop() {
+		write()
+		require.NoError(b, logs.Trim(ctx, maxRows))
+	}
+}
+
 func TestCreateSiteRecordsEvent(t *testing.T) {
 	_, controlDB, site := testutils.NewControlDBWithSite(t)
 	siteID := site.SiteDB.Subdomain
