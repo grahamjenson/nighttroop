@@ -270,7 +270,7 @@ func Usage(model controlmodels.Usage) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = tile("control--usage--disk", "Disk used", display.Bytes(float64(model.Server.DiskUsed)), display.Bytes(float64(model.Server.DiskFree))+" free").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = tile("control--usage--disk", "DB disk used", display.Bytes(float64(model.Server.DiskUsed)), display.Bytes(float64(model.Server.DiskFree))+" free on disk").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
