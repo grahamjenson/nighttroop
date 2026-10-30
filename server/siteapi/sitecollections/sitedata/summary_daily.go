@@ -134,33 +134,42 @@ func RebuildSummaryDailyWeek(ctx context.Context, q *sitedb.Queries, siteContext
 	return BuildLastSummaryPeriods(ctx, q, siteContext, now)
 }
 
-// RebuildSummaryWeeks deletes all the site's weeks, as from a week start day they no longer follow, and builds the
-// last one again
+// RebuildSummaryWeeks deletes all the site's weeks and fortnights, as from a week start day they no longer follow,
+// and builds the last ones again
 func RebuildSummaryWeeks(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, now time.Time) error {
-	if _, err := q.DeleteSummaryPeriods(ctx, sitedb.DeleteSummaryPeriodsParams{Period: new("week")}); err != nil {
-		return err
+	for _, period := range []string{"week", "fortnight"} {
+		if _, err := q.DeleteSummaryPeriods(ctx, sitedb.DeleteSummaryPeriodsParams{Period: &period}); err != nil {
+			return err
+		}
 	}
 	return BuildLastSummaryPeriods(ctx, q, siteContext, now)
 }
 
-// SummaryPeriods are what the summary days are put together into: weeks from the site's week start day, and months
-var SummaryPeriods = []string{"week", "month"}
+// SummaryPeriods are what the summary days are put together into: weeks and fortnights from the site's week start
+// day, and months
+var SummaryPeriods = []string{"week", "fortnight", "month"}
 
-// LastPeriodStart is the midnight, in location, that starts the last whole week, from weekStart (monday or sunday),
-// or month before now's
+// LastPeriodStart is the midnight, in location, that starts the last whole week or fortnight, from weekStart (monday
+// or sunday), or month before now's. Fortnights are every other week from the first weekStart of 1970, so each week
+// is always in the same one.
 func LastPeriodStart(period string, now time.Time, location *time.Location, weekStart string) time.Time {
 	local := now.In(location)
-	if period == "week" {
-		sinceStart := int(local.Weekday())
-		if weekStart == "monday" {
-			sinceStart = (sinceStart + 6) % 7
-		}
-		return time.Date(local.Year(), local.Month(), local.Day()-sinceStart-7, 0, 0, 0, 0, location)
+	if period == "month" {
+		return time.Date(local.Year(), local.Month()-1, 1, 0, 0, 0, 0, location)
 	}
-	return time.Date(local.Year(), local.Month()-1, 1, 0, 0, 0, 0, location)
+	sinceStart, firstStart := int(local.Weekday()), 3 // 4 Jan 1970, the first Sunday, is day 3
+	if weekStart == "monday" {
+		sinceStart, firstStart = (sinceStart+6)%7, 4
+	}
+	weekDay := time.Date(local.Year(), local.Month(), local.Day()-sinceStart, 0, 0, 0, 0, time.UTC).Unix() / 86400
+	if period == "fortnight" {
+		sinceStart += 7 + 7*int((weekDay-int64(firstStart))/7%2)
+	}
+	return time.Date(local.Year(), local.Month(), local.Day()-sinceStart-7, 0, 0, 0, 0, location)
 }
 
-// LastSummaryPeriod is the site's last whole week or month, and whether it was built, built from its days if not
+// LastSummaryPeriod is the site's last whole week, fortnight or month, and whether it was built, built from its days
+// if not
 func LastSummaryPeriod(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, period string, now time.Time) (*sitedb.SummaryPeriod, bool, error) {
 	start := LastPeriodStart(period, now, siteContext.GetSiteTimezone(), siteContext.GetSiteWeekStartDay())
 	date := start.Format(time.DateOnly)
@@ -168,10 +177,7 @@ func LastSummaryPeriod(ctx context.Context, q *sitedb.Queries, siteContext *http
 	if !errors.Is(err, sql.ErrNoRows) {
 		return row, err == nil, err
 	}
-	end := start.AddDate(0, 1, 0)
-	if period == "week" {
-		end = start.AddDate(0, 0, 7)
-	}
+	end := map[string]time.Time{"week": start.AddDate(0, 0, 7), "fortnight": start.AddDate(0, 0, 14), "month": start.AddDate(0, 1, 0)}[period]
 	last := end.AddDate(0, 0, -1).Format(time.DateOnly)
 	days, err := q.SearchSummaryPeriods(ctx, sitedb.SearchSummaryPeriodsParams{Period: "day", DateGTE: &date, DateLTE: &last, Limit: 31})
 	if err != nil {
@@ -180,7 +186,7 @@ func LastSummaryPeriod(ctx context.Context, q *sitedb.Queries, siteContext *http
 	return sitemodels.NewSummaryPeriod(period, date, start.Location().String(), start.UnixMilli(), end.UnixMilli(), days), false, nil
 }
 
-// BuildLastSummaryPeriods builds and keeps the site's last whole week and month, when they are not yet built
+// BuildLastSummaryPeriods builds and keeps the site's last whole week, fortnight and month, when they are not yet built
 func BuildLastSummaryPeriods(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, now time.Time) error {
 	for _, period := range SummaryPeriods {
 		row, built, err := LastSummaryPeriod(ctx, q, siteContext, period, now)

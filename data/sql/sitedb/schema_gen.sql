@@ -433,7 +433,7 @@ CREATE TABLE profile_switches (
 ) STRICT;
 
 CREATE TABLE summary_period (
-    period TEXT NOT NULL CHECK(period IN ('day', 'week', 'month')),
+    period TEXT NOT NULL CHECK(period IN ('day', 'week', 'fortnight', 'month')),
     date TEXT NOT NULL CHECK(length(date) = 10),
     timezone TEXT NOT NULL CHECK(length(timezone) <= 64),
     start_at INTEGER NOT NULL,

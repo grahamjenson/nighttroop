@@ -175,11 +175,13 @@ templ summaryContent(summary *sitemodels.Summary) {
 		@tile("site--summary--time-in-range", "Time in range", value(summary.Today.TimeInRange, "%"), icon.Target) {
 			@previous("site--summary--time-in-range--yesterday", "Yesterday", value(summary.Yesterday.TimeInRange, "%"))
 			@previous("site--summary--time-in-range--last-week", "Last week", value(summary.LastWeek.TimeInRange, "%"))
+			@previous("site--summary--time-in-range--last-fortnight", "Last fortnight", value(summary.LastFortnight.TimeInRange, "%"))
 			@previous("site--summary--time-in-range--last-month", "Last month", value(summary.LastMonth.TimeInRange, "%"))
 		}
 		@tile("site--summary--total-daily-dose", "Total daily dose", value(&summary.Today.TotalDailyDose, " U"), icon.Droplet) {
 			@previous("site--summary--total-daily-dose--yesterday", "Yesterday", value(&summary.Yesterday.TotalDailyDose, " U"))
 			@previous("site--summary--total-daily-dose--last-week", "Last week", value(&summary.LastWeek.TotalDailyDose, " U"))
+			@previous("site--summary--total-daily-dose--last-fortnight", "Last fortnight", value(&summary.LastFortnight.TotalDailyDose, " U"))
 			@previous("site--summary--total-daily-dose--last-month", "Last month", value(&summary.LastMonth.TotalDailyDose, " U"))
 		}
 		@tile("site--summary--sensor-started", "Sensor started", ago(summary.SensorStartedAt), icon.Activity)
