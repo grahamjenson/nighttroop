@@ -173,10 +173,14 @@ templ summaryContent(summary *sitemodels.Summary) {
 	</div>
 	<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
 		@tile("site--summary--time-in-range", "Time in range", value(summary.Today.TimeInRange, "%"), icon.Target) {
-			@yesterday("site--summary--time-in-range--yesterday", value(summary.Yesterday.TimeInRange, "%"))
+			@previous("site--summary--time-in-range--yesterday", "Yesterday", value(summary.Yesterday.TimeInRange, "%"))
+			@previous("site--summary--time-in-range--last-week", "Last week", value(summary.LastWeek.TimeInRange, "%"))
+			@previous("site--summary--time-in-range--last-month", "Last month", value(summary.LastMonth.TimeInRange, "%"))
 		}
 		@tile("site--summary--total-daily-dose", "Total daily dose", value(&summary.Today.TotalDailyDose, " U"), icon.Droplet) {
-			@yesterday("site--summary--total-daily-dose--yesterday", value(&summary.Yesterday.TotalDailyDose, " U"))
+			@previous("site--summary--total-daily-dose--yesterday", "Yesterday", value(&summary.Yesterday.TotalDailyDose, " U"))
+			@previous("site--summary--total-daily-dose--last-week", "Last week", value(&summary.LastWeek.TotalDailyDose, " U"))
+			@previous("site--summary--total-daily-dose--last-month", "Last month", value(&summary.LastMonth.TotalDailyDose, " U"))
 		}
 		@tile("site--summary--sensor-started", "Sensor started", ago(summary.SensorStartedAt), icon.Activity)
 		@tile("site--summary--site-changed", "Site changed", ago(summary.SiteChangedAt), icon.Bandage)
@@ -247,9 +251,9 @@ templ tile(id, label, text string, ic func(...icon.Props) templ.Component) {
 	</div>
 }
 
-// yesterday is a day tile's value for yesterday, under today's
-templ yesterday(id, text string) {
-	<div id={ id } class="text-xs text-gray-500">Yesterday { text }</div>
+// previous is a day tile's value for yesterday, or the mean day of last week or month, under today's
+templ previous(id, label, text string) {
+	<div id={ id } class="text-xs text-gray-500">{ label } { text }</div>
 }
 
 // deviceCard is a device's latest status; clicking it opens all its details

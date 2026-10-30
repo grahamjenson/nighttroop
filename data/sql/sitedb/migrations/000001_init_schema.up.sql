@@ -507,6 +507,25 @@ CREATE TABLE summary_daily (
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
 ) STRICT;
 
+-- summary_periods is each week, from Monday, and month of the site's summary days, named by its first date: days is
+-- how many of them had data, and its time in range, daily dose and daily carbs are the means of theirs.
+CREATE TABLE summary_periods (
+    period TEXT NOT NULL CHECK(period IN ('week', 'month')),
+    date TEXT NOT NULL CHECK(length(date) = 10),
+    timezone TEXT NOT NULL CHECK(length(timezone) <= 64),
+    start_at INTEGER NOT NULL,
+    end_at INTEGER NOT NULL,
+
+    days INTEGER NOT NULL,
+    time_in_range REAL,
+    mean_daily_dose REAL NOT NULL,
+    mean_daily_carbs REAL NOT NULL,
+
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    PRIMARY KEY (period, date)
+) STRICT;
+
 -- Every All*/Search* query orders by occurred_at DESC with a LIMIT, so an
 -- index on it lets SQLite walk rows newest first and stop instead of scanning
 -- and sorting the whole table (the Nightscout API dedups every create this way).

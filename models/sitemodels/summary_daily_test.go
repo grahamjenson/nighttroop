@@ -85,3 +85,38 @@ func TestNewSummaryDaily(t *testing.T) {
 		})
 	}
 }
+
+func TestNewSummaryPeriod(t *testing.T) {
+	day := func(inRange *float64, dose, carbs float64) *sitedb.SummaryDaily {
+		return &sitedb.SummaryDaily{TimeInRange: inRange, TotalDailyDose: dose, TotalCarbs: carbs}
+	}
+	tests := []struct {
+		name    string
+		days    []*sitedb.SummaryDaily
+		count   int64
+		inRange *float64
+		dose    float64
+		carbs   float64
+	}{
+		{name: "no days is no data", days: nil},
+		{name: "a day without data is left out", days: []*sitedb.SummaryDaily{day(nil, 0, 0)}},
+		{name: "the means are of the days with data", days: []*sitedb.SummaryDaily{day(new(50.0), 30, 100), day(new(75.0), 40, 150), day(nil, 0, 0)},
+			count: 2, inRange: new(62.5), dose: 35, carbs: 125},
+		{name: "a day with insulin but no readings counts for the dose, not the time in range",
+			days: []*sitedb.SummaryDaily{day(new(80.0), 30, 0), day(nil, 31, 0)}, count: 2, inRange: new(80.0), dose: 30.5},
+		{name: "the means are rounded", days: []*sitedb.SummaryDaily{day(new(10.0), 1, 1), day(new(20.0), 1, 1), day(new(20.0), 2, 0)},
+			count: 3, inRange: new(16.7), dose: 1.33, carbs: 0.7},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			period := NewSummaryPeriod("week", "2026-10-26", "UTC", 1, 2, tt.days)
+			if period.Period != "week" || period.Date != "2026-10-26" || period.Timezone != "UTC" || period.StartAt != 1 || period.EndAt != 2 {
+				t.Errorf("period is %s %s in %s from %d to %d", period.Period, period.Date, period.Timezone, period.StartAt, period.EndAt)
+			}
+			if period.Days != tt.count || !reflect.DeepEqual(period.TimeInRange, tt.inRange) || period.MeanDailyDose != tt.dose || period.MeanDailyCarbs != tt.carbs {
+				t.Errorf("period has %d days, %v in range, %v U and %v g a day, want %d, %v, %v and %v",
+					period.Days, period.TimeInRange, period.MeanDailyDose, period.MeanDailyCarbs, tt.count, tt.inRange, tt.dose, tt.carbs)
+			}
+		})
+	}
+}

@@ -4356,6 +4356,116 @@ func (m *SummaryDaily) SetUpdatedAt(v int64) {
 	m.UpdatedAt = v
 }
 
+// GetPeriod returns the Period value.
+func (m SummaryPeriod) GetPeriod() string {
+	return m.Period
+}
+
+// SetPeriod sets the Period value and returns the updated SummaryPeriod.
+func (m *SummaryPeriod) SetPeriod(v string) {
+	m.Period = v
+}
+
+// GetDate returns the Date value.
+func (m SummaryPeriod) GetDate() string {
+	return m.Date
+}
+
+// SetDate sets the Date value and returns the updated SummaryPeriod.
+func (m *SummaryPeriod) SetDate(v string) {
+	m.Date = v
+}
+
+// GetTimezone returns the Timezone value.
+func (m SummaryPeriod) GetTimezone() string {
+	return m.Timezone
+}
+
+// SetTimezone sets the Timezone value and returns the updated SummaryPeriod.
+func (m *SummaryPeriod) SetTimezone(v string) {
+	m.Timezone = v
+}
+
+// GetStartAt returns the StartAt value.
+func (m SummaryPeriod) GetStartAt() int64 {
+	return m.StartAt
+}
+
+// SetStartAt sets the StartAt value and returns the updated SummaryPeriod.
+func (m *SummaryPeriod) SetStartAt(v int64) {
+	m.StartAt = v
+}
+
+// GetEndAt returns the EndAt value.
+func (m SummaryPeriod) GetEndAt() int64 {
+	return m.EndAt
+}
+
+// SetEndAt sets the EndAt value and returns the updated SummaryPeriod.
+func (m *SummaryPeriod) SetEndAt(v int64) {
+	m.EndAt = v
+}
+
+// GetDays returns the Days value.
+func (m SummaryPeriod) GetDays() int64 {
+	return m.Days
+}
+
+// SetDays sets the Days value and returns the updated SummaryPeriod.
+func (m *SummaryPeriod) SetDays(v int64) {
+	m.Days = v
+}
+
+// GetTimeInRange returns the TimeInRange value.
+func (m SummaryPeriod) GetTimeInRange() *float64 {
+	return m.TimeInRange
+}
+
+// SetTimeInRange sets the TimeInRange value and returns the updated SummaryPeriod.
+func (m *SummaryPeriod) SetTimeInRange(v *float64) {
+	m.TimeInRange = v
+}
+
+// GetMeanDailyDose returns the MeanDailyDose value.
+func (m SummaryPeriod) GetMeanDailyDose() float64 {
+	return m.MeanDailyDose
+}
+
+// SetMeanDailyDose sets the MeanDailyDose value and returns the updated SummaryPeriod.
+func (m *SummaryPeriod) SetMeanDailyDose(v float64) {
+	m.MeanDailyDose = v
+}
+
+// GetMeanDailyCarbs returns the MeanDailyCarbs value.
+func (m SummaryPeriod) GetMeanDailyCarbs() float64 {
+	return m.MeanDailyCarbs
+}
+
+// SetMeanDailyCarbs sets the MeanDailyCarbs value and returns the updated SummaryPeriod.
+func (m *SummaryPeriod) SetMeanDailyCarbs(v float64) {
+	m.MeanDailyCarbs = v
+}
+
+// GetCreatedAt returns the CreatedAt value.
+func (m SummaryPeriod) GetCreatedAt() int64 {
+	return m.CreatedAt
+}
+
+// SetCreatedAt sets the CreatedAt value and returns the updated SummaryPeriod.
+func (m *SummaryPeriod) SetCreatedAt(v int64) {
+	m.CreatedAt = v
+}
+
+// GetUpdatedAt returns the UpdatedAt value.
+func (m SummaryPeriod) GetUpdatedAt() int64 {
+	return m.UpdatedAt
+}
+
+// SetUpdatedAt sets the UpdatedAt value and returns the updated SummaryPeriod.
+func (m *SummaryPeriod) SetUpdatedAt(v int64) {
+	m.UpdatedAt = v
+}
+
 // GetID returns the ID value.
 func (m TempBasal) GetID() string {
 	return m.ID
@@ -13844,6 +13954,116 @@ func (m UpsertSummaryDailyParams) GetGlucoseMgdlJson() string {
 // SetGlucoseMgdlJson sets the GlucoseMgdlJson value and returns the updated UpsertSummaryDailyParams.
 func (m *UpsertSummaryDailyParams) SetGlucoseMgdlJson(v string) {
 	m.GlucoseMgdlJson = v
+}
+
+// GetPeriod returns the Period value.
+func (m GetSummaryPeriodParams) GetPeriod() string {
+	return m.Period
+}
+
+// SetPeriod sets the Period value and returns the updated GetSummaryPeriodParams.
+func (m *GetSummaryPeriodParams) SetPeriod(v string) {
+	m.Period = v
+}
+
+// GetDate returns the Date value.
+func (m GetSummaryPeriodParams) GetDate() string {
+	return m.Date
+}
+
+// SetDate sets the Date value and returns the updated GetSummaryPeriodParams.
+func (m *GetSummaryPeriodParams) SetDate(v string) {
+	m.Date = v
+}
+
+// GetPeriod returns the Period value.
+func (m UpsertSummaryPeriodParams) GetPeriod() string {
+	return m.Period
+}
+
+// SetPeriod sets the Period value and returns the updated UpsertSummaryPeriodParams.
+func (m *UpsertSummaryPeriodParams) SetPeriod(v string) {
+	m.Period = v
+}
+
+// GetDate returns the Date value.
+func (m UpsertSummaryPeriodParams) GetDate() string {
+	return m.Date
+}
+
+// SetDate sets the Date value and returns the updated UpsertSummaryPeriodParams.
+func (m *UpsertSummaryPeriodParams) SetDate(v string) {
+	m.Date = v
+}
+
+// GetTimezone returns the Timezone value.
+func (m UpsertSummaryPeriodParams) GetTimezone() string {
+	return m.Timezone
+}
+
+// SetTimezone sets the Timezone value and returns the updated UpsertSummaryPeriodParams.
+func (m *UpsertSummaryPeriodParams) SetTimezone(v string) {
+	m.Timezone = v
+}
+
+// GetStartAt returns the StartAt value.
+func (m UpsertSummaryPeriodParams) GetStartAt() int64 {
+	return m.StartAt
+}
+
+// SetStartAt sets the StartAt value and returns the updated UpsertSummaryPeriodParams.
+func (m *UpsertSummaryPeriodParams) SetStartAt(v int64) {
+	m.StartAt = v
+}
+
+// GetEndAt returns the EndAt value.
+func (m UpsertSummaryPeriodParams) GetEndAt() int64 {
+	return m.EndAt
+}
+
+// SetEndAt sets the EndAt value and returns the updated UpsertSummaryPeriodParams.
+func (m *UpsertSummaryPeriodParams) SetEndAt(v int64) {
+	m.EndAt = v
+}
+
+// GetDays returns the Days value.
+func (m UpsertSummaryPeriodParams) GetDays() int64 {
+	return m.Days
+}
+
+// SetDays sets the Days value and returns the updated UpsertSummaryPeriodParams.
+func (m *UpsertSummaryPeriodParams) SetDays(v int64) {
+	m.Days = v
+}
+
+// GetTimeInRange returns the TimeInRange value.
+func (m UpsertSummaryPeriodParams) GetTimeInRange() *float64 {
+	return m.TimeInRange
+}
+
+// SetTimeInRange sets the TimeInRange value and returns the updated UpsertSummaryPeriodParams.
+func (m *UpsertSummaryPeriodParams) SetTimeInRange(v *float64) {
+	m.TimeInRange = v
+}
+
+// GetMeanDailyDose returns the MeanDailyDose value.
+func (m UpsertSummaryPeriodParams) GetMeanDailyDose() float64 {
+	return m.MeanDailyDose
+}
+
+// SetMeanDailyDose sets the MeanDailyDose value and returns the updated UpsertSummaryPeriodParams.
+func (m *UpsertSummaryPeriodParams) SetMeanDailyDose(v float64) {
+	m.MeanDailyDose = v
+}
+
+// GetMeanDailyCarbs returns the MeanDailyCarbs value.
+func (m UpsertSummaryPeriodParams) GetMeanDailyCarbs() float64 {
+	return m.MeanDailyCarbs
+}
+
+// SetMeanDailyCarbs sets the MeanDailyCarbs value and returns the updated UpsertSummaryPeriodParams.
+func (m *UpsertSummaryPeriodParams) SetMeanDailyCarbs(v float64) {
+	m.MeanDailyCarbs = v
 }
 
 // GetBefore returns the Before value.

@@ -147,6 +147,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deleteAllSummaryDailyStmt, err = db.PrepareContext(ctx, deleteAllSummaryDaily); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteAllSummaryDaily: %w", err)
 	}
+	if q.deleteAllSummaryPeriodsStmt, err = db.PrepareContext(ctx, deleteAllSummaryPeriods); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteAllSummaryPeriods: %w", err)
+	}
 	if q.deviceReportsForDeviceStmt, err = db.PrepareContext(ctx, deviceReportsForDevice); err != nil {
 		return nil, fmt.Errorf("error preparing query DeviceReportsForDevice: %w", err)
 	}
@@ -203,6 +206,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.getSummaryDailyStmt, err = db.PrepareContext(ctx, getSummaryDaily); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSummaryDaily: %w", err)
+	}
+	if q.getSummaryPeriodStmt, err = db.PrepareContext(ctx, getSummaryPeriod); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSummaryPeriod: %w", err)
 	}
 	if q.getTempBasalStmt, err = db.PrepareContext(ctx, getTempBasal); err != nil {
 		return nil, fmt.Errorf("error preparing query GetTempBasal: %w", err)
@@ -414,6 +420,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.upsertSummaryDailyStmt, err = db.PrepareContext(ctx, upsertSummaryDaily); err != nil {
 		return nil, fmt.Errorf("error preparing query UpsertSummaryDaily: %w", err)
 	}
+	if q.upsertSummaryPeriodStmt, err = db.PrepareContext(ctx, upsertSummaryPeriod); err != nil {
+		return nil, fmt.Errorf("error preparing query UpsertSummaryPeriod: %w", err)
+	}
 	return &q, nil
 }
 
@@ -624,6 +633,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing deleteAllSummaryDailyStmt: %w", cerr)
 		}
 	}
+	if q.deleteAllSummaryPeriodsStmt != nil {
+		if cerr := q.deleteAllSummaryPeriodsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteAllSummaryPeriodsStmt: %w", cerr)
+		}
+	}
 	if q.deviceReportsForDeviceStmt != nil {
 		if cerr := q.deviceReportsForDeviceStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deviceReportsForDeviceStmt: %w", cerr)
@@ -717,6 +731,11 @@ func (q *Queries) Close() error {
 	if q.getSummaryDailyStmt != nil {
 		if cerr := q.getSummaryDailyStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getSummaryDailyStmt: %w", cerr)
+		}
+	}
+	if q.getSummaryPeriodStmt != nil {
+		if cerr := q.getSummaryPeriodStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSummaryPeriodStmt: %w", cerr)
 		}
 	}
 	if q.getTempBasalStmt != nil {
@@ -1069,6 +1088,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing upsertSummaryDailyStmt: %w", cerr)
 		}
 	}
+	if q.upsertSummaryPeriodStmt != nil {
+		if cerr := q.upsertSummaryPeriodStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing upsertSummaryPeriodStmt: %w", cerr)
+		}
+	}
 	return err
 }
 
@@ -1149,6 +1173,7 @@ type Queries struct {
 	createTempBasalStmt                         *sql.Stmt
 	createTempTargetStmt                        *sql.Stmt
 	deleteAllSummaryDailyStmt                   *sql.Stmt
+	deleteAllSummaryPeriodsStmt                 *sql.Stmt
 	deviceReportsForDeviceStmt                  *sql.Stmt
 	getActivityStmt                             *sql.Stmt
 	getComponentEventStmt                       *sql.Stmt
@@ -1168,6 +1193,7 @@ type Queries struct {
 	getProfileStoreStmt                         *sql.Stmt
 	getProfileSwitchStmt                        *sql.Stmt
 	getSummaryDailyStmt                         *sql.Stmt
+	getSummaryPeriodStmt                        *sql.Stmt
 	getTempBasalStmt                            *sql.Stmt
 	getTempTargetStmt                           *sql.Stmt
 	hardDeleteActivitiesByTypeStmt              *sql.Stmt
@@ -1238,6 +1264,7 @@ type Queries struct {
 	updateTempBasalStmt                         *sql.Stmt
 	updateTempTargetStmt                        *sql.Stmt
 	upsertSummaryDailyStmt                      *sql.Stmt
+	upsertSummaryPeriodStmt                     *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
@@ -1285,6 +1312,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		createTempBasalStmt:                         q.createTempBasalStmt,
 		createTempTargetStmt:                        q.createTempTargetStmt,
 		deleteAllSummaryDailyStmt:                   q.deleteAllSummaryDailyStmt,
+		deleteAllSummaryPeriodsStmt:                 q.deleteAllSummaryPeriodsStmt,
 		deviceReportsForDeviceStmt:                  q.deviceReportsForDeviceStmt,
 		getActivityStmt:                             q.getActivityStmt,
 		getComponentEventStmt:                       q.getComponentEventStmt,
@@ -1304,6 +1332,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getProfileStoreStmt:                         q.getProfileStoreStmt,
 		getProfileSwitchStmt:                        q.getProfileSwitchStmt,
 		getSummaryDailyStmt:                         q.getSummaryDailyStmt,
+		getSummaryPeriodStmt:                        q.getSummaryPeriodStmt,
 		getTempBasalStmt:                            q.getTempBasalStmt,
 		getTempTargetStmt:                           q.getTempTargetStmt,
 		hardDeleteActivitiesByTypeStmt:              q.hardDeleteActivitiesByTypeStmt,
@@ -1374,5 +1403,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateTempBasalStmt:                         q.updateTempBasalStmt,
 		updateTempTargetStmt:                        q.updateTempTargetStmt,
 		upsertSummaryDailyStmt:                      q.upsertSummaryDailyStmt,
+		upsertSummaryPeriodStmt:                     q.upsertSummaryPeriodStmt,
 	}
 }
