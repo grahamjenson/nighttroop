@@ -4,8 +4,6 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
-	"path"
-	"strings"
 	"time"
 
 	sentryhttp "github.com/getsentry/sentry-go/http"
@@ -160,22 +158,17 @@ func SiteIdentitySeenFlagsUpdateMiddleware(controlDB *db.ControlDB) func(http.Ha
 	}
 }
 
-// CountRoutes counts each request to the router named name by its route's pattern, never its path, which can carry a
-// token or a site. Static files, whose pattern is a file name, are counted together, and so are requests no route
-// matched, whatever their method.
+// CountRoutes counts each request to a route of the router named name by the route's pattern, never its path, which
+// can carry a token or a site. It goes in a router's signed in group, after its sign in, so only signed in requests
+// to the group's own routes are counted, and no one can add routes to count.
 func CountRoutes(tracker *usage.Tracker, name string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			started := time.Now()
 			next.ServeHTTP(w, r)
-			route := name + " unmatched"
 			if rctx := chi.RouteContext(r.Context()); rctx != nil && rctx.RoutePattern() != "" {
-				route = name + " " + r.Method + " " + rctx.RoutePattern()
-				if strings.Contains(path.Base(rctx.RoutePattern()), ".") {
-					route = name + " static files"
-				}
+				tracker.Route(name+" "+r.Method+" "+rctx.RoutePattern(), time.Since(started))
 			}
-			tracker.Route(route, time.Since(started))
 		})
 	}
 }
