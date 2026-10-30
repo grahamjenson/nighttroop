@@ -500,7 +500,7 @@ func createSiteForm() templ.Component {
 			templ_7745c5c3_Err = input.Input(input.Props{
 				ID:          "control--sites--create--id",
 				Name:        "id",
-				Placeholder: "grahamjz",
+				Placeholder: "mynewnts",
 				Required:    true,
 				Attributes: templ.Attributes{
 					"pattern": fmt.Sprintf("[a-z]{%d}", utils.SITE_ID_LENGTH), "minlength": utils.SITE_ID_LENGTH, "maxlength": utils.SITE_ID_LENGTH,
