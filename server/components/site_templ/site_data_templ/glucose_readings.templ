@@ -54,6 +54,31 @@ func glucoseInputAttributes(ctx context.Context) templ.Attributes {
 	return templ.Attributes{"step": "any", "min": "0.1", "max": fmt.Sprint(consts.Round(glucoseUnits(ctx).FromMGDL(1000), 1))}
 }
 
+// glucoseRangeColours colour a reading below or above the range settings as the summary does
+var glucoseRangeColours = map[string]string{"Low": "font-medium text-glucose-low", "High": "font-medium text-glucose-high"}
+
+// glucoseRange is "Low" or "High" for a reading, in the settings' units, below or above the range settings
+func glucoseRange(ctx context.Context, reading float64) string {
+	settings, units := httputils.GetSiteContext(ctx).GetSettings(), glucoseUnits(ctx)
+	switch {
+	case reading < units.FromMGDL(float64(*settings.GetRangeLowMgdl())):
+		return "Low"
+	case reading > units.FromMGDL(float64(*settings.GetRangeHighMgdl())):
+		return "High"
+	}
+	return ""
+}
+
+// glucoseReadingCell colours an out of range reading's cell, with a title saying whether it is low or high
+func glucoseReadingCell(ctx context.Context, reading float64) table.CellProps {
+	outOfRange := glucoseRange(ctx, reading)
+	props := table.CellProps{Class: "text-right tabular-nums " + glucoseRangeColours[outOfRange]}
+	if outOfRange != "" {
+		props.Attributes = templ.Attributes{"title": outOfRange}
+	}
+	return props
+}
+
 // directionDetail is a reading's trend as its arrow and Nightscout's name for it, like "↗ FortyFiveUp"
 func directionDetail(direction *string) string {
 	if direction == nil {
@@ -170,7 +195,7 @@ templ glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) {
 		@table.Cell() {
 			{ formatReadingDate(ctx, reading.OccurredAt) }
 		}
-		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+		@table.Cell(glucoseReadingCell(ctx, reading.Reading)) {
 			{ formatGlucose(reading.Reading, reading.Units) }
 		}
 		@table.Cell() {
