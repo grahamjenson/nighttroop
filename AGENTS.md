@@ -44,10 +44,17 @@ Use code generators where possible, especially for building models and params fo
 
 - Adding, removing or changing a configuration environment variable (in `utils/config`) must update `docs/config.md` in the same change.
 
-## Requirements
+## Documents
 
-- `docs/Requirements.md` lists every feature, under Control, Site and Identity. A PR that adds, changes or removes a feature must update it in the same PR.
-- Write it as the file is written: one feature per line, saying what a person can do, not how the code does it.
+When making a change kep these documents up to date:
+
+- `docs/Requirements.md` 
+    - lists every feature, under Control, Site and Identity. A PR that adds, changes or removes a feature must update it in the same PR.
+    - Write it as the file is written: one feature per line, saying what a person can do, not how the code does it.
+
+- `clients/nighttroop/openapi.json`
+    - a openapi description of all the API endpoints and their responses which is used to generate a client for nighttroop
+    - Use abstractions and models as much as possible
 
 ## SQL
 
