@@ -58,7 +58,8 @@ ASSERT_PATH /
 // A user resets their own password from the settings page, which has no TOTP for them
 CLICK #site--settings-menu
 CLICK #site--settings--logout-button
-GOTO {{ .site_url }}/login
+ASSERT_NEW_URL
+ASSERT_PATH /login
 INPUT #site--login--name carer
 INPUT #site--login--password {{ .carer_password }}
 CLICK #site--login-button
