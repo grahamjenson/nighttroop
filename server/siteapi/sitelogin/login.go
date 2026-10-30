@@ -155,7 +155,7 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config *config.ServerConfig) http.Ha
 		siteContext := httputils.GetSiteContext(r.Context())
 
 		// 1. Fetch And Validate Pre-Auth Token
-		identityNameFromToken, err := fetchVerifyPreAuthToken(config, r, siteContext.SiteID)
+		identityNameFromToken, issuedAtMs, err := fetchVerifyPreAuthToken(config, r, siteContext.SiteID)
 		if err != nil {
 			identityLoginErrorHTMX(w, r, "", fmt.Errorf("failed to fetch and verify pre-auth token: %w", err))
 			return
@@ -170,6 +170,10 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config *config.ServerConfig) http.Ha
 		// 2. Grab the user db and identity
 
 		identity, err := getTheIdentityeModel(controlDB, r, identityNameFromToken)
+		if err == nil {
+			// The password checked for the pre-auth token may have been reset since
+			err = httputils.CheckIssuedAfterCredentialsChanged(identity, issuedAtMs)
+		}
 		if err != nil {
 			identityLoginErrorHTMX(w, r, "", fmt.Errorf("failed to get identity model: %w", err))
 			return
@@ -279,18 +283,18 @@ func validateIdentityTOTP(config *config.ServerConfig, identity *controldb.SiteI
 	return nil
 }
 
-func fetchVerifyPreAuthToken(config *config.ServerConfig, r *http.Request, subdomain string) (string, error) {
+func fetchVerifyPreAuthToken(config *config.ServerConfig, r *http.Request, subdomain string) (string, int64, error) {
 	preAuthToken, err := security.GetUserPreAuthTokenFromRequest(r)
 	if err != nil {
-		return "", fmt.Errorf("Pre-auth token is required: %w", err)
+		return "", 0, fmt.Errorf("Pre-auth token is required: %w", err)
 	}
 
-	identityName, err := config.Security.VerifyPreAuthJWTToken(preAuthToken, subdomain)
+	identityName, issuedAtMs, err := config.Security.VerifyPreAuthJWTToken(preAuthToken, subdomain)
 	if err != nil {
-		return "", fmt.Errorf("Invalid pre-auth token: %w", err)
+		return "", 0, fmt.Errorf("Invalid pre-auth token: %w", err)
 	}
 
-	return identityName, nil
+	return identityName, issuedAtMs, nil
 }
 
 // ///

@@ -91,16 +91,7 @@ func tryAuthWithLegacyToken(config *config.ServerConfig, r *http.Request) (*cont
 
 // jwtIdentity is the site identity a JWT is for
 func jwtIdentity(config *config.ServerConfig, ctx context.Context, jwttokenStr string) (*controldb.SiteIdentity, error) {
-	subdomain, identityName, role, err := config.Security.VerifyUserJWTToken(jwttokenStr)
-	if err != nil {
-		return nil, fmt.Errorf("bad JWT token: %w", err)
-	}
-	identity, err := httputils.GetSiteIdentity(ctx, subdomain, identityName, consts.IdentityRole(role))
-	if err != nil {
-		slog.Warn("Bad JWT token cant find identity", "error", err)
-		return nil, fmt.Errorf("identity not found: %w", err)
-	}
-	return identity, nil
+	return httputils.GetJWTSiteIdentity(ctx, config, jwttokenStr)
 }
 
 // legacyTokenIdentity is the site identity a Nightscout token (or API secret) is for

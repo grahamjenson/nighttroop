@@ -636,6 +636,7 @@ func (db *ControlDB) ResetSiteIdentityPassword(ctx context.Context, identity *co
 		UpdatedByIdentityName: &by, SiteID: identity.SiteID, ID: identity.ID}); err != nil {
 		return nil, err
 	}
+	db.Logs.IdentityCredentialsChangedEvent(ctx, identity.SiteID, identity.Name, "password", by)
 	values := &IdentityValues{Password: password}
 	if can.HaveNightscoutToken(identity.Role) {
 		token, err := db.ServerConfig.Security.CreateNightscoutTokenForIdentity(identity.SiteID, identity.Name, string(identity.Role), password)
@@ -658,6 +659,7 @@ func (db *ControlDB) ResetSiteIdentityTOTP(ctx context.Context, identity *contro
 		UpdatedByIdentityName: &by, SiteID: identity.SiteID, ID: identity.ID}); err != nil {
 		return nil, err
 	}
+	db.Logs.IdentityCredentialsChangedEvent(ctx, identity.SiteID, identity.Name, "totp", by)
 	return &IdentityValues{TotpSecret: &totpSecret}, nil
 }
 

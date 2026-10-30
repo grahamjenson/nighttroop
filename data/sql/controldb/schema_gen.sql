@@ -49,6 +49,8 @@ CREATE TABLE site_identities (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32),
 
     enabled INTEGER NOT NULL DEFAULT 1,
+    -- credentials_changed_at is when its password or TOTP last changed, or it was made: JWTs issued before it are refused
+    credentials_changed_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
 
     ---------------
     -- IDENTITY SETTINGS

@@ -79,5 +79,6 @@ func (db *ControlDB) RecoverSiteAdmin(ctx context.Context, siteID string, backup
 	}
 
 	db.Logs.SiteAdminRecoveredEvent(ctx, siteID)
+	db.Logs.IdentityCredentialsChangedEvent(ctx, siteID, name, "password_and_totp", "backup key")
 	return &RecoveredAdmin{Name: name, Password: password, TotpSecret: totpSecret, BackupKey: newKey}, nil
 }

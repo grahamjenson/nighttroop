@@ -2,15 +2,21 @@ package sitelogin
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/security"
+	"nighttroop.t1d.nz/utils/testutils"
 )
 
 // testConfig allows one login attempt an IP and name; a config can only be made once per process
@@ -19,11 +25,7 @@ var testConfig *config.ServerConfig
 func TestMain(m *testing.M) {
 	os.Setenv("SITE_LOGIN_PER_MINUTE_LIMIT", "1")
 	os.Setenv("SITE_LOGIN_PER_MINUTE_BURST", "1")
-	cfg, err := config.NewServerConfig()
-	if err != nil {
-		panic(err)
-	}
-	testConfig = cfg
+	testConfig = testutils.GetTestServerConfig()
 	os.Exit(m.Run())
 }
 
@@ -58,5 +60,49 @@ func TestLoginRejectsLongNameBeforeRateLimit(t *testing.T) {
 			allowed, _ := httputils.SiteLoginAttemptsWithinRateLimit(testConfig, r, "site"+tt.name, "phone")
 			require.True(t, allowed)
 		})
+	}
+}
+
+// The TOTP step refuses a pre-auth token from before the identity's password was reset, as it proved the old password,
+// and takes one from after it
+func TestLoginTOTPRefusesPreAuthFromBeforeAReset(t *testing.T) {
+	_, controlDB := testutils.NewControlDB(t)
+	// Each from its own IP and site, as login attempts are limited to one for each IP and for each site and name
+	for i, preAuthBeforeReset := range []bool{true, false} {
+		ip := fmt.Sprintf("203.0.113.%d", 10+i)
+		site, err := controlDB.CreateSite()
+		require.NoError(t, err)
+		siteID := site.SiteDB.Subdomain
+		preAuth := func() string {
+			token, _, err := testConfig.Security.GeneratePreAuthJWTToken(siteID, consts.FIRST_ADMIN_NAME)
+			require.NoError(t, err)
+			return token
+		}
+
+		token := ""
+		if preAuthBeforeReset {
+			token = preAuth()
+			time.Sleep(2 * time.Millisecond) // so the reset is a millisecond after the token
+		}
+		admin, err := controlDB.Queries.GetSiteIdentity(context.TODO(), controldb.GetSiteIdentityParams{SiteID: siteID, Name: consts.FIRST_ADMIN_NAME})
+		require.NoError(t, err)
+		_, err = controlDB.ResetSiteIdentityPassword(context.TODO(), admin, "control admin")
+		require.NoError(t, err)
+		if !preAuthBeforeReset {
+			token = preAuth()
+		}
+
+		r := httptest.NewRequest("POST", "/login/totp", strings.NewReader("totp=123123"))
+		r.RemoteAddr = ip + ":1234"
+		r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		r.Header.Set("Accept", "text/htmx")
+		r.AddCookie(&http.Cookie{Name: security.PRE_AUTH_TOKEN_COOKIE, Value: token})
+		ctx, _ := httputils.SetIPInHTTPContext(context.Background(), r, nil)
+		ctx = httputils.CreateSiteContext(ctx, testConfig, controlDB, site.SiteDB, nil, siteID, ip, httputils.HTTPActionWrite, httputils.AcceptTypeHTMX, httputils.ContentTypeForm)
+		w := httptest.NewRecorder()
+		POSTLoginTOTP(controlDB, testConfig)(w, r.WithContext(ctx))
+
+		signedIn := w.Header().Get("HX-Redirect") == "/"
+		require.Equal(t, !preAuthBeforeReset, signedIn, "pre-auth before the reset: %v, response %d", preAuthBeforeReset, w.Code)
 	}
 }
