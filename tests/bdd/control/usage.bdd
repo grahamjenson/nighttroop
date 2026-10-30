@@ -25,7 +25,10 @@ ASSERT_NOT_VISIBLE #control--usage--created-week >> text=/^0$/
 ASSERT_NOT_VISIBLE #control--usage--created-month >> text=/^0$/
 ASSERT_VISIBLE #control--usage--requests-per-site
 ASSERT_VISIBLE #control--usage--cpu >> text=/%$/
+// The DBs' size, and the space left on their disk
 ASSERT_VISIBLE #control--usage--disk
+ASSERT_VISIBLE #control--usage >> text=/^DB disk used$/i
+ASSERT_VISIBLE #control--usage--disk + div >> text=/free on disk$/
 ASSERT_VISIBLE #control--usage--routes td >> text=/^site GET \/$/
 // Only signed in requests are counted, so no static file, unmatched or public page is
 ASSERT_NOT_VISIBLE #control--usage--routes td >> text=/static files|unmatched|^public /

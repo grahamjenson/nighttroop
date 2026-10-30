@@ -53,7 +53,7 @@ func UsageHandler(w http.ResponseWriter, r *http.Request) {
 		model.SitesByState[state.State] = state.Count
 	}
 	model.SinceStart = config.Usage.Snapshot(now, usageRoutes)
-	model.Server = config.Usage.Server(config.DataDir, now)
+	model.Server = config.Usage.Server(config.DBDir(), now)
 	controlcollections.WriteResponse(w, r, acceptType, http.StatusOK, model, control_usage_templ.Usage(model))
 }
 

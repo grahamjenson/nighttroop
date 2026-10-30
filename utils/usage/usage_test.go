@@ -1,6 +1,8 @@
 package usage
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -55,12 +57,24 @@ func TestNilTrackerCountsNothing(t *testing.T) {
 }
 
 func TestServerReadsTheProcessAndDisk(t *testing.T) {
+	// The DB folder's files, a site's in a batch folder, are all that is counted as used
+	dbDir := t.TempDir()
+	require.NoError(t, os.MkdirAll(filepath.Join(dbDir, "site", "a"), 0o755))
+	require.NoError(t, os.WriteFile(filepath.Join(dbDir, "control.sqlite"), make([]byte, 3000), 0o600))
+	require.NoError(t, os.WriteFile(filepath.Join(dbDir, "site", "a", "abc.sqlite"), make([]byte, 1234), 0o600))
+
 	tracker := New()
-	server := tracker.Server(t.TempDir(), time.Now().Add(time.Second))
+	server := tracker.Server(dbDir, time.Now().Add(time.Second))
 	require.Positive(t, server.CPUs)
 	require.Positive(t, server.Goroutines)
 	require.Positive(t, server.HeapBytes)
 	require.GreaterOrEqual(t, server.CPUPercent, 0.0)
-	require.Positive(t, server.DiskUsed+server.DiskFree)
+	require.Equal(t, uint64(4234), server.DiskUsed)
+	require.Positive(t, server.DiskFree)
 	require.Positive(t, server.UptimeMs)
+
+	// Before the DB folder is made, nothing is used and the working folder's disk is free
+	server = tracker.Server(filepath.Join(dbDir, "missing"), time.Now())
+	require.Zero(t, server.DiskUsed)
+	require.Positive(t, server.DiskFree)
 }

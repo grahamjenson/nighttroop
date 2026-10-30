@@ -1,6 +1,8 @@
 package usage
 
 import (
+	"io/fs"
+	"path/filepath"
 	"runtime"
 	"syscall"
 	"time"
@@ -12,7 +14,7 @@ type cpuSample struct {
 }
 
 // Server is the server process's resources now: CPU since the last time they were read, as a percent of every core,
-// memory in bytes, and the disk the data is on
+// memory in bytes, the size of the DBs and the space left on their disk
 type Server struct {
 	CPUPercent float64 `json:"cpu_percent"`
 	CPUs       int     `json:"cpus"`
@@ -25,8 +27,8 @@ type Server struct {
 	DiskFree   uint64  `json:"disk_free"`
 }
 
-// Server reads the process's resources, and the disk dataDir is on
-func (t *Tracker) Server(dataDir string, now time.Time) Server {
+// Server reads the process's resources, the size of the files in dbDir, and the space left on its disk
+func (t *Tracker) Server(dbDir string, now time.Time) Server {
 	var memory runtime.MemStats
 	runtime.ReadMemStats(&memory)
 	server := Server{CPUs: runtime.NumCPU(), Goroutines: runtime.NumGoroutine(), HeapBytes: memory.HeapAlloc, SysBytes: memory.Sys, GCs: memory.NumGC}
@@ -50,12 +52,26 @@ func (t *Tracker) Server(dataDir string, now time.Time) Server {
 		t.mu.Unlock()
 	}
 
-	// The data folder's disk, or the working folder's before the data folder is made
+	// The DB folder's disk, or the working folder's before the DB folder is made
+	server.DiskUsed = dirSize(dbDir)
 	var disk syscall.Statfs_t
-	if syscall.Statfs(dataDir, &disk) == nil || syscall.Statfs(".", &disk) == nil {
-		blockSize := uint64(disk.Bsize)
-		server.DiskFree = disk.Bavail * blockSize
-		server.DiskUsed = (disk.Blocks - disk.Bfree) * blockSize
+	if syscall.Statfs(dbDir, &disk) == nil || syscall.Statfs(".", &disk) == nil {
+		server.DiskFree = disk.Bavail * uint64(disk.Bsize)
 	}
 	return server
+}
+
+// dirSize is the size of the files in dir and its folders, skipping any that cannot be read, such as a DB deleted
+// while it is walked
+func dirSize(dir string) uint64 {
+	var size uint64
+	filepath.WalkDir(dir, func(_ string, entry fs.DirEntry, err error) error {
+		if err == nil && !entry.IsDir() {
+			if info, err := entry.Info(); err == nil {
+				size += uint64(info.Size())
+			}
+		}
+		return nil
+	})
+	return size
 }
