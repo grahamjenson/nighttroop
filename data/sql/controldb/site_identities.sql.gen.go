@@ -7,6 +7,7 @@ package controldb
 
 import (
 	"context"
+	"database/sql"
 
 	"nighttroop.t1d.nz/utils/consts"
 )
@@ -390,4 +391,54 @@ func (q *Queries) UpdateSiteIdentityEnabled(ctx context.Context, arg UpdateSiteI
 		arg.ID,
 	)
 	return err
+}
+
+const updateSiteIdentityPassword = `-- name: UpdateSiteIdentityPassword :execresult
+UPDATE site_identities
+SET
+    password_hash = ?1,
+    updated_by_identity_id = NULL,
+    updated_by_identity_name = ?2
+WHERE site_id = ?3 AND id = ?4
+`
+
+type UpdateSiteIdentityPasswordParams struct {
+	PasswordHash          string
+	UpdatedByIdentityName *string
+	SiteID                string
+	ID                    int64
+}
+
+func (q *Queries) UpdateSiteIdentityPassword(ctx context.Context, arg UpdateSiteIdentityPasswordParams) (sql.Result, error) {
+	return q.exec(ctx, q.updateSiteIdentityPasswordStmt, updateSiteIdentityPassword,
+		arg.PasswordHash,
+		arg.UpdatedByIdentityName,
+		arg.SiteID,
+		arg.ID,
+	)
+}
+
+const updateSiteIdentityTOTP = `-- name: UpdateSiteIdentityTOTP :execresult
+UPDATE site_identities
+SET
+    totp_secret_enc = ?1,
+    updated_by_identity_id = NULL,
+    updated_by_identity_name = ?2
+WHERE site_id = ?3 AND id = ?4
+`
+
+type UpdateSiteIdentityTOTPParams struct {
+	TotpSecretEnc         string
+	UpdatedByIdentityName *string
+	SiteID                string
+	ID                    int64
+}
+
+func (q *Queries) UpdateSiteIdentityTOTP(ctx context.Context, arg UpdateSiteIdentityTOTPParams) (sql.Result, error) {
+	return q.exec(ctx, q.updateSiteIdentityTOTPStmt, updateSiteIdentityTOTP,
+		arg.TotpSecretEnc,
+		arg.UpdatedByIdentityName,
+		arg.SiteID,
+		arg.ID,
+	)
 }

@@ -176,6 +176,7 @@ templ SiteModal(site *controlmodels.Site) {
 			@siteDetail("Archived", formatDate(site.ArchivedAt))
 			@siteDetail("Deleted", formatDate(site.DeletedAt))
 		</dl>
+		<div id="control--site--identities" hx-get={ "/sites/" + site.ID + "/identities" } hx-trigger="load" hx-swap="innerHTML"></div>
 	}
 }
 

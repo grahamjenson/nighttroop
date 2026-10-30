@@ -32,6 +32,9 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 		// The control plane's collections, each at its route: sites, jobs, job stats and sync sources
 		store.Routes(r)
 		r.Post("/sites/{id}/truncate", (&controlcollections.SitesCollection{}).TruncateHandler)
+		r.Get("/sites/{id}/identities", (&controlcollections.SitesCollection{}).IdentitiesHandler)
+		r.Post("/sites/{id}/identities/{identity}/password", (&controlcollections.SitesCollection{}).ResetPasswordHandler)
+		r.Post("/sites/{id}/identities/{identity}/totp", (&controlcollections.SitesCollection{}).ResetTOTPHandler)
 
 		//// TODO
 		// Get User details including db size , last seen, API usage per device, list devices and last seen at, list DB table sizes

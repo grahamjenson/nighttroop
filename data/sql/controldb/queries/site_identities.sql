@@ -67,6 +67,23 @@ SET
 WHERE site_id = sqlc.arg('SiteID') AND id = sqlc.arg('ID');
 
 
+-- name: UpdateSiteIdentityPassword :execresult
+UPDATE site_identities
+SET
+    password_hash = sqlc.arg('PasswordHash'),
+    updated_by_identity_id = NULL,
+    updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
+WHERE site_id = sqlc.arg('SiteID') AND id = sqlc.arg('ID');
+
+-- name: UpdateSiteIdentityTOTP :execresult
+UPDATE site_identities
+SET
+    totp_secret_enc = sqlc.arg('TotpSecretEnc'),
+    updated_by_identity_id = NULL,
+    updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
+WHERE site_id = sqlc.arg('SiteID') AND id = sqlc.arg('ID');
+
+
 --------
 -- DELETE
 --------
