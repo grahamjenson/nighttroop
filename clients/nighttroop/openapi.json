@@ -1,0 +1,296 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Nighttroop",
+    "version": "0.1.0",
+    "description": "Nighttroop's JSON API. POST /site is on the public host (https://<host>); everything else is on a site's host (https://<site>.<host>) with a JWT from POST /login. Times are milliseconds since the epoch, and glucose is in the units of the signed in identity's settings."
+  },
+  "security": [{ "bearerAuth": [] }],
+  "paths": {
+    "/site": {
+      "post": {
+        "operationId": "CreateSite",
+        "summary": "Creates a site, on the public host, and gives its credentials once",
+        "security": [],
+        "responses": {
+          "200": { "description": "The new site", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreatedSite" } } } },
+          "default": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/login": {
+      "post": {
+        "operationId": "Login",
+        "summary": "Signs an admin (with TOTP) or user in, for a JWT",
+        "security": [],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginRequest" } } } },
+        "responses": {
+          "200": { "description": "Signed in", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginToken" } } } },
+          "default": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/summary": {
+      "get": {
+        "operationId": "GetSummary",
+        "summary": "The site's summary over the last hours (48 by default, a week at most)",
+        "parameters": [{ "name": "hours", "in": "query", "schema": { "type": "integer", "format": "int64" } }],
+        "responses": {
+          "200": { "description": "The summary, as a list of one", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SummaryList" } } } },
+          "default": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/data/glucose": {
+      "get": {
+        "operationId": "ListGlucoseReadings",
+        "parameters": [{ "$ref": "#/components/parameters/Limit" }, { "$ref": "#/components/parameters/Skip" }],
+        "responses": { "200": { "$ref": "#/components/responses/GlucoseReadingList" }, "default": { "$ref": "#/components/responses/Error" } }
+      },
+      "post": {
+        "operationId": "CreateGlucoseReading",
+        "requestBody": { "$ref": "#/components/requestBodies/GlucoseReadingBody" },
+        "responses": { "201": { "$ref": "#/components/responses/GlucoseReadingResult" }, "default": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/data/glucose/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/Id" }],
+      "get": {
+        "operationId": "GetGlucoseReading",
+        "responses": { "200": { "$ref": "#/components/responses/GlucoseReadingResult" }, "default": { "$ref": "#/components/responses/Error" } }
+      },
+      "post": {
+        "operationId": "UpdateGlucoseReading",
+        "requestBody": { "$ref": "#/components/requestBodies/GlucoseReadingBody" },
+        "responses": { "200": { "$ref": "#/components/responses/GlucoseReadingResult" }, "default": { "$ref": "#/components/responses/Error" } }
+      },
+      "delete": {
+        "operationId": "DeleteGlucoseReading",
+        "responses": { "200": { "$ref": "#/components/responses/Deleted" }, "default": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/data/insulin": {
+      "get": {
+        "operationId": "ListInsulinDoses",
+        "parameters": [{ "$ref": "#/components/parameters/Limit" }, { "$ref": "#/components/parameters/Skip" }],
+        "responses": { "200": { "$ref": "#/components/responses/InsulinDoseList" }, "default": { "$ref": "#/components/responses/Error" } }
+      },
+      "post": {
+        "operationId": "CreateInsulinDose",
+        "requestBody": { "$ref": "#/components/requestBodies/InsulinDoseBody" },
+        "responses": { "201": { "$ref": "#/components/responses/InsulinDoseResult" }, "default": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/data/insulin/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/Id" }],
+      "get": {
+        "operationId": "GetInsulinDose",
+        "responses": { "200": { "$ref": "#/components/responses/InsulinDoseResult" }, "default": { "$ref": "#/components/responses/Error" } }
+      },
+      "post": {
+        "operationId": "UpdateInsulinDose",
+        "requestBody": { "$ref": "#/components/requestBodies/InsulinDoseBody" },
+        "responses": { "200": { "$ref": "#/components/responses/InsulinDoseResult" }, "default": { "$ref": "#/components/responses/Error" } }
+      },
+      "delete": {
+        "operationId": "DeleteInsulinDose",
+        "responses": { "200": { "$ref": "#/components/responses/Deleted" }, "default": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/data/food": {
+      "get": {
+        "operationId": "ListFoodIntakes",
+        "parameters": [{ "$ref": "#/components/parameters/Limit" }, { "$ref": "#/components/parameters/Skip" }],
+        "responses": { "200": { "$ref": "#/components/responses/FoodIntakeList" }, "default": { "$ref": "#/components/responses/Error" } }
+      },
+      "post": {
+        "operationId": "CreateFoodIntake",
+        "requestBody": { "$ref": "#/components/requestBodies/FoodIntakeBody" },
+        "responses": { "201": { "$ref": "#/components/responses/FoodIntakeResult" }, "default": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/data/food/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/Id" }],
+      "get": {
+        "operationId": "GetFoodIntake",
+        "responses": { "200": { "$ref": "#/components/responses/FoodIntakeResult" }, "default": { "$ref": "#/components/responses/Error" } }
+      },
+      "post": {
+        "operationId": "UpdateFoodIntake",
+        "requestBody": { "$ref": "#/components/requestBodies/FoodIntakeBody" },
+        "responses": { "200": { "$ref": "#/components/responses/FoodIntakeResult" }, "default": { "$ref": "#/components/responses/Error" } }
+      },
+      "delete": {
+        "operationId": "DeleteFoodIntake",
+        "responses": { "200": { "$ref": "#/components/responses/Deleted" }, "default": { "$ref": "#/components/responses/Error" } }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" }
+    },
+    "parameters": {
+      "Id": { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } },
+      "Limit": { "name": "limit", "in": "query", "description": "At most 1000", "schema": { "type": "integer", "format": "int64" } },
+      "Skip": { "name": "skip", "in": "query", "schema": { "type": "integer", "format": "int64" } }
+    },
+    "requestBodies": {
+      "GlucoseReadingBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GlucoseReading" } } } },
+      "InsulinDoseBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/InsulinDose" } } } },
+      "FoodIntakeBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FoodIntake" } } } }
+    },
+    "responses": {
+      "Error": { "description": "An error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "Deleted": { "description": "Deleted", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string", "description": "deleted" } } } } } },
+      "GlucoseReadingResult": { "description": "A reading", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "$ref": "#/components/schemas/GlucoseReading" } } } } } },
+      "GlucoseReadingList": { "description": "Readings, newest first", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "type": "array", "items": { "$ref": "#/components/schemas/GlucoseReading" } } } } } } },
+      "InsulinDoseResult": { "description": "A dose", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "$ref": "#/components/schemas/InsulinDose" } } } } } },
+      "InsulinDoseList": { "description": "Doses, newest first", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "type": "array", "items": { "$ref": "#/components/schemas/InsulinDose" } } } } } } },
+      "FoodIntakeResult": { "description": "A food intake", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "$ref": "#/components/schemas/FoodIntake" } } } } } },
+      "FoodIntakeList": { "description": "Food intakes, newest first", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "type": "array", "items": { "$ref": "#/components/schemas/FoodIntake" } } } } } } }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": { "status": { "type": "integer" }, "message": { "type": "string" } }
+      },
+      "CreatedSite": {
+        "type": "object",
+        "required": ["site_subdomain", "api_key", "totp_secret", "backup_key", "pwd_nstoken", "read_only_nstoken"],
+        "properties": {
+          "site_subdomain": { "type": "string" },
+          "api_key": { "type": "string", "description": "The admin's password" },
+          "totp_secret": { "type": "string", "description": "The admin's TOTP secret" },
+          "backup_key": { "type": "string", "description": "Gets a new admin login on the recover page; it works once" },
+          "pwd_nstoken": { "type": "string", "description": "The PWD phone's Nightscout token" },
+          "read_only_nstoken": { "type": "string", "description": "The read only device's Nightscout token" }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["name", "password"],
+        "properties": {
+          "name": { "type": "string" },
+          "password": { "type": "string" },
+          "totp": { "type": "string", "description": "A code from the authenticator app, for an admin" }
+        }
+      },
+      "LoginToken": {
+        "type": "object",
+        "required": ["token", "expires_at"],
+        "properties": {
+          "token": { "type": "string", "description": "A JWT, sent as Authorization: Bearer <token>" },
+          "expires_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Units": { "type": "string", "enum": ["mg/dL", "mmol/L"] },
+      "Record": {
+        "type": "object",
+        "description": "What every record has. Read only fields are set by the server, which ignores them if sent.",
+        "properties": {
+          "id": { "type": "string", "readOnly": true },
+          "notes": { "type": "string" },
+          "reason": { "type": "string" },
+          "raw_json_data": { "type": "string", "readOnly": true },
+          "utc_offset_minutes": { "type": "integer", "format": "int64" },
+          "occurred_at": { "type": "integer", "format": "int64", "description": "Now, if not sent when creating" },
+          "created_at": { "type": "integer", "format": "int64", "readOnly": true },
+          "updated_at": { "type": "integer", "format": "int64", "readOnly": true },
+          "created_by_app_name": { "type": "string", "readOnly": true },
+          "created_by_device_name": { "type": "string", "readOnly": true },
+          "created_by_identity_name": { "type": "string", "readOnly": true },
+          "updated_by_identity_name": { "type": "string", "readOnly": true }
+        }
+      },
+      "GlucoseReading": {
+        "allOf": [
+          { "$ref": "#/components/schemas/Record" },
+          {
+            "type": "object",
+            "properties": {
+              "reading": { "type": "number", "format": "double", "description": "In units" },
+              "units": { "$ref": "#/components/schemas/Units" },
+              "reading_type": { "type": "string", "description": "sgv from a sensor or mbg from a meter" },
+              "original_units": { "$ref": "#/components/schemas/Units" },
+              "measurement_method": { "type": "string" },
+              "delta": { "type": "number", "format": "double" },
+              "direction": { "type": "string" },
+              "noise": { "type": "number", "format": "double" },
+              "filtered": { "type": "number", "format": "double" },
+              "unfiltered": { "type": "number", "format": "double" },
+              "rssi": { "type": "number", "format": "double" }
+            }
+          }
+        ]
+      },
+      "InsulinDose": {
+        "allOf": [
+          { "$ref": "#/components/schemas/Record" },
+          {
+            "type": "object",
+            "properties": {
+              "dose": { "type": "number", "format": "double", "description": "Units of insulin" },
+              "dose_type": { "type": "string" },
+              "split_now": { "type": "number", "format": "double" },
+              "split_ext": { "type": "number", "format": "double" }
+            }
+          }
+        ]
+      },
+      "FoodIntake": {
+        "allOf": [
+          { "$ref": "#/components/schemas/Record" },
+          {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "food_type": { "type": "string" },
+              "category": { "type": "string" },
+              "subcategory": { "type": "string" },
+              "absorption_time_minutes": { "type": "integer", "format": "int64" },
+              "pre_bolus": { "type": "number", "format": "double" },
+              "carbs": { "type": "number", "format": "double", "description": "Grams" },
+              "fat": { "type": "number", "format": "double" },
+              "protein": { "type": "number", "format": "double" },
+              "fibre": { "type": "number", "format": "double" },
+              "energy": { "type": "number", "format": "double" },
+              "portions": { "type": "number", "format": "double" }
+            }
+          }
+        ]
+      },
+      "CleanGlucoseReading": {
+        "allOf": [
+          { "$ref": "#/components/schemas/GlucoseReading" },
+          {
+            "type": "object",
+            "properties": {
+              "source": { "type": "string", "description": "direct, or the sync that wrote it: nightscout, dexcom, libre or virtual" },
+              "diff_per_5m": { "type": "number", "format": "double" }
+            }
+          }
+        ]
+      },
+      "Summary": {
+        "type": "object",
+        "description": "The parts of the summary described here; the rest is kept in AdditionalProperties",
+        "additionalProperties": true,
+        "properties": {
+          "hours": { "type": "integer", "format": "int64" },
+          "since": { "type": "integer", "format": "int64" },
+          "units": { "$ref": "#/components/schemas/Units" },
+          "range_low": { "type": "number", "format": "double" },
+          "range_high": { "type": "number", "format": "double" },
+          "glucose_readings": { "type": "array", "items": { "$ref": "#/components/schemas/CleanGlucoseReading" } },
+          "insulin_doses": { "type": "array", "items": { "$ref": "#/components/schemas/InsulinDose" } },
+          "food_intakes": { "type": "array", "items": { "$ref": "#/components/schemas/FoodIntake" } }
+        }
+      },
+      "SummaryList": {
+        "type": "object",
+        "properties": { "status": { "type": "integer" }, "result": { "type": "array", "items": { "$ref": "#/components/schemas/Summary" } } }
+      }
+    }
+  }
+}
