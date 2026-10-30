@@ -59,7 +59,7 @@ func buildYesterday(ctx context.Context, controlDB *db.ControlDB, siteID string,
 	}
 	q := siteContext.SiteDB.Queries
 	yesterday := sitedata.LocalDate(now, siteContext.GetSiteTimezone(), -1)
-	if _, err := q.GetSummaryDaily(ctx, sitedb.GetSummaryDailyParams{Date: yesterday}); errors.Is(err, sql.ErrNoRows) {
+	if _, err := q.GetSummaryPeriod(ctx, sitedb.GetSummaryPeriodParams{Period: "day", Date: yesterday}); errors.Is(err, sql.ErrNoRows) {
 		if _, err := sitedata.RebuildSummaryDaily(ctx, q, siteContext, yesterday, now); err != nil {
 			return err
 		}

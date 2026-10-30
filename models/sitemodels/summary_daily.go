@@ -30,10 +30,10 @@ type SiteSummaryDaily struct {
 }
 
 // SummaryDailyFromDB is the site model of a summary day, with its glucose in the site context's units
-func SummaryDailyFromDB(row *sitedb.SummaryDaily, siteContext *httputils.SiteContext) *SiteSummaryDaily {
+func SummaryDailyFromDB(row *sitedb.SummaryPeriod, siteContext *httputils.SiteContext) *SiteSummaryDaily {
 	units := ContextUnits(siteContext)
 	model := &SiteSummaryDaily{Date: row.Date, Timezone: row.Timezone, Start: row.StartAt, End: row.EndAt, TimeInRange: row.TimeInRange,
-		TotalDailyDose: row.TotalDailyDose, TotalCarbs: row.TotalCarbs, Glucose: []*float64{}, Units: units,
+		TotalDailyDose: row.TotalDailyDose, TotalCarbs: row.TotalDailyCarbs, Glucose: []*float64{}, Units: units,
 		CreatedAt: row.CreatedAt, UpdatedAt: row.UpdatedAt}
 	var mgdl []*int64
 	_ = json.Unmarshal([]byte(row.GlucoseMgdlJson), &mgdl)
@@ -57,16 +57,16 @@ type SummaryDay struct {
 	TotalDailyDose float64 `json:"total_daily_dose"`
 }
 
-// SummaryDayFromDaily is the summary's day of a summary day
-func SummaryDayFromDaily(row *sitedb.SummaryDaily) SummaryDay {
+// SummaryDayFromPeriod is the summary's day of a summary day, or the mean day of a week or month
+func SummaryDayFromPeriod(row *sitedb.SummaryPeriod) SummaryDay {
 	return SummaryDay{Start: row.StartAt, End: row.EndAt, TimeInRange: row.TimeInRange, TotalDailyDose: row.TotalDailyDose}
 }
 
 // NewSummaryDaily is the day named date from start until end, built from readings, doses, food and minutes that may
 // run outside it. Its time in range is of the readings from low to high mg/dL, its total daily dose is the doses and
 // the basal in force each minute from minutesSince, and its glucose is the newest reading in each 5 minutes.
-func NewSummaryDaily(date, timezone string, start, end int64, low, high float64, readings []*glucose.Clean, doses []*sitedb.InsulinDose, food []*sitedb.FoodIntake, minutesSince int64, minutes []SummaryMinute) *sitedb.SummaryDaily {
-	day := &sitedb.SummaryDaily{Date: date, Timezone: timezone, StartAt: start, EndAt: end}
+func NewSummaryDaily(date, timezone string, start, end int64, low, high float64, readings []*glucose.Clean, doses []*sitedb.InsulinDose, food []*sitedb.FoodIntake, minutesSince int64, minutes []SummaryMinute) *sitedb.SummaryPeriod {
+	day := &sitedb.SummaryPeriod{Period: "day", Date: date, Timezone: timezone, StartAt: start, EndAt: end}
 	within := func(at int64) bool { return at >= start && at < end }
 	slots := make([]*int64, (end-start+SummaryDailySlotMs-1)/SummaryDailySlotMs)
 	count, inRange := 0, 0
@@ -99,43 +99,59 @@ func NewSummaryDaily(date, timezone string, start, end int64, low, high float64,
 	day.TotalDailyDose = consts.Round(day.TotalDailyDose, 2)
 	for _, f := range food {
 		if within(f.OccurredAt) && f.Carbs != nil {
-			day.TotalCarbs += *f.Carbs
+			day.TotalDailyCarbs += *f.Carbs
 		}
 	}
-	day.TotalCarbs = consts.Round(day.TotalCarbs, 1)
+	day.TotalDailyCarbs = consts.Round(day.TotalDailyCarbs, 1)
+	if count > 0 || day.TotalDailyDose > 0 || day.TotalDailyCarbs > 0 {
+		day.Days = 1
+	}
 	glucoseJSON, _ := json.Marshal(slots)
 	day.GlucoseMgdlJson = string(glucoseJSON)
 	return day
 }
 
 // NewSummaryPeriod is the period, a week or month named by its first date, from start until end, of its summary days.
-// Only days with data count, so its time in range, daily dose and daily carbs are the means of theirs.
-func NewSummaryPeriod(period, date, timezone string, start, end int64, days []*sitedb.SummaryDaily) *sitedb.SummaryPeriod {
+// Only days with data count, so its time in range, daily dose and daily carbs are the means of theirs, and its glucose
+// at each 5 minutes from midnight the mean of the days with a reading then.
+func NewSummaryPeriod(period, date, timezone string, start, end int64, days []*sitedb.SummaryPeriod) *sitedb.SummaryPeriod {
 	row := &sitedb.SummaryPeriod{Period: period, Date: date, Timezone: timezone, StartAt: start, EndAt: end}
 	inRange, withRange := 0.0, 0
+	sums, counts := make([]int64, 24*60*60_000/SummaryDailySlotMs), make([]int64, 24*60*60_000/SummaryDailySlotMs)
 	for _, day := range days {
-		if day.TimeInRange == nil && day.TotalDailyDose == 0 && day.TotalCarbs == 0 {
+		if day.Days == 0 {
 			continue
 		}
 		row.Days++
-		row.MeanDailyDose += day.TotalDailyDose
-		row.MeanDailyCarbs += day.TotalCarbs
+		row.TotalDailyDose += day.TotalDailyDose
+		row.TotalDailyCarbs += day.TotalDailyCarbs
 		if day.TimeInRange != nil {
 			inRange += *day.TimeInRange
 			withRange++
+		}
+		var mgdl []*int64
+		_ = json.Unmarshal([]byte(day.GlucoseMgdlJson), &mgdl)
+		for slot, value := range mgdl[:min(len(mgdl), len(sums))] {
+			if value != nil {
+				sums[slot] += *value
+				counts[slot]++
+			}
 		}
 	}
 	if withRange > 0 {
 		row.TimeInRange = new(consts.Round(inRange/float64(withRange), 1))
 	}
 	if row.Days > 0 {
-		row.MeanDailyDose = consts.Round(row.MeanDailyDose/float64(row.Days), 2)
-		row.MeanDailyCarbs = consts.Round(row.MeanDailyCarbs/float64(row.Days), 1)
+		row.TotalDailyDose = consts.Round(row.TotalDailyDose/float64(row.Days), 2)
+		row.TotalDailyCarbs = consts.Round(row.TotalDailyCarbs/float64(row.Days), 1)
 	}
+	slots := make([]*int64, len(sums))
+	for slot, count := range counts {
+		if count > 0 {
+			slots[slot] = new(int64(math.Round(float64(sums[slot]) / float64(count))))
+		}
+	}
+	glucoseJSON, _ := json.Marshal(slots)
+	row.GlucoseMgdlJson = string(glucoseJSON)
 	return row
-}
-
-// SummaryDayFromPeriod is the summary's day of a period's mean day
-func SummaryDayFromPeriod(row *sitedb.SummaryPeriod) SummaryDay {
-	return SummaryDay{Start: row.StartAt, End: row.EndAt, TimeInRange: row.TimeInRange, TotalDailyDose: row.MeanDailyDose}
 }

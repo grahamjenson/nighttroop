@@ -432,23 +432,8 @@ CREATE TABLE profile_switches (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
 ) STRICT;
 
-CREATE TABLE summary_daily (
-    date TEXT PRIMARY KEY CHECK(length(date) = 10),
-    timezone TEXT NOT NULL CHECK(length(timezone) <= 64),
-    start_at INTEGER NOT NULL,
-    end_at INTEGER NOT NULL,
-
-    time_in_range REAL,
-    total_daily_dose REAL NOT NULL,
-    total_carbs REAL NOT NULL,
-    glucose_mgdl_json TEXT NOT NULL CHECK(length(glucose_mgdl_json) <= 2048 AND json_valid(glucose_mgdl_json)),
-
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
-) STRICT;
-
-CREATE TABLE summary_periods (
-    period TEXT NOT NULL CHECK(period IN ('week', 'month')),
+CREATE TABLE summary_period (
+    period TEXT NOT NULL CHECK(period IN ('day', 'week', 'month')),
     date TEXT NOT NULL CHECK(length(date) = 10),
     timezone TEXT NOT NULL CHECK(length(timezone) <= 64),
     start_at INTEGER NOT NULL,
@@ -456,8 +441,9 @@ CREATE TABLE summary_periods (
 
     days INTEGER NOT NULL,
     time_in_range REAL,
-    mean_daily_dose REAL NOT NULL,
-    mean_daily_carbs REAL NOT NULL,
+    total_daily_dose REAL NOT NULL,
+    total_daily_carbs REAL NOT NULL,
+    glucose_mgdl_json TEXT NOT NULL CHECK(length(glucose_mgdl_json) <= 2048 AND json_valid(glucose_mgdl_json)),
 
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),

@@ -4256,106 +4256,6 @@ func (m *ProfileSwitchesVw) SetCreatedByIdentityName(v *string) {
 	m.CreatedByIdentityName = v
 }
 
-// GetDate returns the Date value.
-func (m SummaryDaily) GetDate() string {
-	return m.Date
-}
-
-// SetDate sets the Date value and returns the updated SummaryDaily.
-func (m *SummaryDaily) SetDate(v string) {
-	m.Date = v
-}
-
-// GetTimezone returns the Timezone value.
-func (m SummaryDaily) GetTimezone() string {
-	return m.Timezone
-}
-
-// SetTimezone sets the Timezone value and returns the updated SummaryDaily.
-func (m *SummaryDaily) SetTimezone(v string) {
-	m.Timezone = v
-}
-
-// GetStartAt returns the StartAt value.
-func (m SummaryDaily) GetStartAt() int64 {
-	return m.StartAt
-}
-
-// SetStartAt sets the StartAt value and returns the updated SummaryDaily.
-func (m *SummaryDaily) SetStartAt(v int64) {
-	m.StartAt = v
-}
-
-// GetEndAt returns the EndAt value.
-func (m SummaryDaily) GetEndAt() int64 {
-	return m.EndAt
-}
-
-// SetEndAt sets the EndAt value and returns the updated SummaryDaily.
-func (m *SummaryDaily) SetEndAt(v int64) {
-	m.EndAt = v
-}
-
-// GetTimeInRange returns the TimeInRange value.
-func (m SummaryDaily) GetTimeInRange() *float64 {
-	return m.TimeInRange
-}
-
-// SetTimeInRange sets the TimeInRange value and returns the updated SummaryDaily.
-func (m *SummaryDaily) SetTimeInRange(v *float64) {
-	m.TimeInRange = v
-}
-
-// GetTotalDailyDose returns the TotalDailyDose value.
-func (m SummaryDaily) GetTotalDailyDose() float64 {
-	return m.TotalDailyDose
-}
-
-// SetTotalDailyDose sets the TotalDailyDose value and returns the updated SummaryDaily.
-func (m *SummaryDaily) SetTotalDailyDose(v float64) {
-	m.TotalDailyDose = v
-}
-
-// GetTotalCarbs returns the TotalCarbs value.
-func (m SummaryDaily) GetTotalCarbs() float64 {
-	return m.TotalCarbs
-}
-
-// SetTotalCarbs sets the TotalCarbs value and returns the updated SummaryDaily.
-func (m *SummaryDaily) SetTotalCarbs(v float64) {
-	m.TotalCarbs = v
-}
-
-// GetGlucoseMgdlJson returns the GlucoseMgdlJson value.
-func (m SummaryDaily) GetGlucoseMgdlJson() string {
-	return m.GlucoseMgdlJson
-}
-
-// SetGlucoseMgdlJson sets the GlucoseMgdlJson value and returns the updated SummaryDaily.
-func (m *SummaryDaily) SetGlucoseMgdlJson(v string) {
-	m.GlucoseMgdlJson = v
-}
-
-// GetCreatedAt returns the CreatedAt value.
-func (m SummaryDaily) GetCreatedAt() int64 {
-	return m.CreatedAt
-}
-
-// SetCreatedAt sets the CreatedAt value and returns the updated SummaryDaily.
-func (m *SummaryDaily) SetCreatedAt(v int64) {
-	m.CreatedAt = v
-}
-
-// GetUpdatedAt returns the UpdatedAt value.
-func (m SummaryDaily) GetUpdatedAt() int64 {
-	return m.UpdatedAt
-}
-
-// SetUpdatedAt sets the UpdatedAt value and returns the updated SummaryDaily.
-func (m *SummaryDaily) SetUpdatedAt(v int64) {
-	m.UpdatedAt = v
-}
-
 // GetPeriod returns the Period value.
 func (m SummaryPeriod) GetPeriod() string {
 	return m.Period
@@ -4426,24 +4326,34 @@ func (m *SummaryPeriod) SetTimeInRange(v *float64) {
 	m.TimeInRange = v
 }
 
-// GetMeanDailyDose returns the MeanDailyDose value.
-func (m SummaryPeriod) GetMeanDailyDose() float64 {
-	return m.MeanDailyDose
+// GetTotalDailyDose returns the TotalDailyDose value.
+func (m SummaryPeriod) GetTotalDailyDose() float64 {
+	return m.TotalDailyDose
 }
 
-// SetMeanDailyDose sets the MeanDailyDose value and returns the updated SummaryPeriod.
-func (m *SummaryPeriod) SetMeanDailyDose(v float64) {
-	m.MeanDailyDose = v
+// SetTotalDailyDose sets the TotalDailyDose value and returns the updated SummaryPeriod.
+func (m *SummaryPeriod) SetTotalDailyDose(v float64) {
+	m.TotalDailyDose = v
 }
 
-// GetMeanDailyCarbs returns the MeanDailyCarbs value.
-func (m SummaryPeriod) GetMeanDailyCarbs() float64 {
-	return m.MeanDailyCarbs
+// GetTotalDailyCarbs returns the TotalDailyCarbs value.
+func (m SummaryPeriod) GetTotalDailyCarbs() float64 {
+	return m.TotalDailyCarbs
 }
 
-// SetMeanDailyCarbs sets the MeanDailyCarbs value and returns the updated SummaryPeriod.
-func (m *SummaryPeriod) SetMeanDailyCarbs(v float64) {
-	m.MeanDailyCarbs = v
+// SetTotalDailyCarbs sets the TotalDailyCarbs value and returns the updated SummaryPeriod.
+func (m *SummaryPeriod) SetTotalDailyCarbs(v float64) {
+	m.TotalDailyCarbs = v
+}
+
+// GetGlucoseMgdlJson returns the GlucoseMgdlJson value.
+func (m SummaryPeriod) GetGlucoseMgdlJson() string {
+	return m.GlucoseMgdlJson
+}
+
+// SetGlucoseMgdlJson sets the GlucoseMgdlJson value and returns the updated SummaryPeriod.
+func (m *SummaryPeriod) SetGlucoseMgdlJson(v string) {
+	m.GlucoseMgdlJson = v
 }
 
 // GetCreatedAt returns the CreatedAt value.
@@ -13816,144 +13726,14 @@ func (m *UpdateProfilePresetParams) SetID(v string) {
 	m.ID = v
 }
 
-// GetDate returns the Date value.
-func (m GetSummaryDailyParams) GetDate() string {
-	return m.Date
+// GetPeriod returns the Period value.
+func (m DeleteSummaryPeriodsParams) GetPeriod() *string {
+	return m.Period
 }
 
-// SetDate sets the Date value and returns the updated GetSummaryDailyParams.
-func (m *GetSummaryDailyParams) SetDate(v string) {
-	m.Date = v
-}
-
-// GetDate returns the Date value.
-func (m HardDeleteSummaryDailyParams) GetDate() string {
-	return m.Date
-}
-
-// SetDate sets the Date value and returns the updated HardDeleteSummaryDailyParams.
-func (m *HardDeleteSummaryDailyParams) SetDate(v string) {
-	m.Date = v
-}
-
-// GetDateGTE returns the DateGTE value.
-func (m SearchSummaryDailyParams) GetDateGTE() *string {
-	return m.DateGTE
-}
-
-// SetDateGTE sets the DateGTE value and returns the updated SearchSummaryDailyParams.
-func (m *SearchSummaryDailyParams) SetDateGTE(v *string) {
-	m.DateGTE = v
-}
-
-// GetDateLTE returns the DateLTE value.
-func (m SearchSummaryDailyParams) GetDateLTE() *string {
-	return m.DateLTE
-}
-
-// SetDateLTE sets the DateLTE value and returns the updated SearchSummaryDailyParams.
-func (m *SearchSummaryDailyParams) SetDateLTE(v *string) {
-	m.DateLTE = v
-}
-
-// GetSkip returns the Skip value.
-func (m SearchSummaryDailyParams) GetSkip() int64 {
-	return m.Skip
-}
-
-// SetSkip sets the Skip value and returns the updated SearchSummaryDailyParams.
-func (m *SearchSummaryDailyParams) SetSkip(v int64) {
-	m.Skip = v
-}
-
-// GetLimit returns the Limit value.
-func (m SearchSummaryDailyParams) GetLimit() int64 {
-	return m.Limit
-}
-
-// SetLimit sets the Limit value and returns the updated SearchSummaryDailyParams.
-func (m *SearchSummaryDailyParams) SetLimit(v int64) {
-	m.Limit = v
-}
-
-// GetDate returns the Date value.
-func (m UpsertSummaryDailyParams) GetDate() string {
-	return m.Date
-}
-
-// SetDate sets the Date value and returns the updated UpsertSummaryDailyParams.
-func (m *UpsertSummaryDailyParams) SetDate(v string) {
-	m.Date = v
-}
-
-// GetTimezone returns the Timezone value.
-func (m UpsertSummaryDailyParams) GetTimezone() string {
-	return m.Timezone
-}
-
-// SetTimezone sets the Timezone value and returns the updated UpsertSummaryDailyParams.
-func (m *UpsertSummaryDailyParams) SetTimezone(v string) {
-	m.Timezone = v
-}
-
-// GetStartAt returns the StartAt value.
-func (m UpsertSummaryDailyParams) GetStartAt() int64 {
-	return m.StartAt
-}
-
-// SetStartAt sets the StartAt value and returns the updated UpsertSummaryDailyParams.
-func (m *UpsertSummaryDailyParams) SetStartAt(v int64) {
-	m.StartAt = v
-}
-
-// GetEndAt returns the EndAt value.
-func (m UpsertSummaryDailyParams) GetEndAt() int64 {
-	return m.EndAt
-}
-
-// SetEndAt sets the EndAt value and returns the updated UpsertSummaryDailyParams.
-func (m *UpsertSummaryDailyParams) SetEndAt(v int64) {
-	m.EndAt = v
-}
-
-// GetTimeInRange returns the TimeInRange value.
-func (m UpsertSummaryDailyParams) GetTimeInRange() *float64 {
-	return m.TimeInRange
-}
-
-// SetTimeInRange sets the TimeInRange value and returns the updated UpsertSummaryDailyParams.
-func (m *UpsertSummaryDailyParams) SetTimeInRange(v *float64) {
-	m.TimeInRange = v
-}
-
-// GetTotalDailyDose returns the TotalDailyDose value.
-func (m UpsertSummaryDailyParams) GetTotalDailyDose() float64 {
-	return m.TotalDailyDose
-}
-
-// SetTotalDailyDose sets the TotalDailyDose value and returns the updated UpsertSummaryDailyParams.
-func (m *UpsertSummaryDailyParams) SetTotalDailyDose(v float64) {
-	m.TotalDailyDose = v
-}
-
-// GetTotalCarbs returns the TotalCarbs value.
-func (m UpsertSummaryDailyParams) GetTotalCarbs() float64 {
-	return m.TotalCarbs
-}
-
-// SetTotalCarbs sets the TotalCarbs value and returns the updated UpsertSummaryDailyParams.
-func (m *UpsertSummaryDailyParams) SetTotalCarbs(v float64) {
-	m.TotalCarbs = v
-}
-
-// GetGlucoseMgdlJson returns the GlucoseMgdlJson value.
-func (m UpsertSummaryDailyParams) GetGlucoseMgdlJson() string {
-	return m.GlucoseMgdlJson
-}
-
-// SetGlucoseMgdlJson sets the GlucoseMgdlJson value and returns the updated UpsertSummaryDailyParams.
-func (m *UpsertSummaryDailyParams) SetGlucoseMgdlJson(v string) {
-	m.GlucoseMgdlJson = v
+// SetPeriod sets the Period value and returns the updated DeleteSummaryPeriodsParams.
+func (m *DeleteSummaryPeriodsParams) SetPeriod(v *string) {
+	m.Period = v
 }
 
 // GetPeriod returns the Period value.
@@ -13974,6 +13754,76 @@ func (m GetSummaryPeriodParams) GetDate() string {
 // SetDate sets the Date value and returns the updated GetSummaryPeriodParams.
 func (m *GetSummaryPeriodParams) SetDate(v string) {
 	m.Date = v
+}
+
+// GetPeriod returns the Period value.
+func (m HardDeleteSummaryPeriodParams) GetPeriod() string {
+	return m.Period
+}
+
+// SetPeriod sets the Period value and returns the updated HardDeleteSummaryPeriodParams.
+func (m *HardDeleteSummaryPeriodParams) SetPeriod(v string) {
+	m.Period = v
+}
+
+// GetDate returns the Date value.
+func (m HardDeleteSummaryPeriodParams) GetDate() string {
+	return m.Date
+}
+
+// SetDate sets the Date value and returns the updated HardDeleteSummaryPeriodParams.
+func (m *HardDeleteSummaryPeriodParams) SetDate(v string) {
+	m.Date = v
+}
+
+// GetPeriod returns the Period value.
+func (m SearchSummaryPeriodsParams) GetPeriod() string {
+	return m.Period
+}
+
+// SetPeriod sets the Period value and returns the updated SearchSummaryPeriodsParams.
+func (m *SearchSummaryPeriodsParams) SetPeriod(v string) {
+	m.Period = v
+}
+
+// GetDateGTE returns the DateGTE value.
+func (m SearchSummaryPeriodsParams) GetDateGTE() *string {
+	return m.DateGTE
+}
+
+// SetDateGTE sets the DateGTE value and returns the updated SearchSummaryPeriodsParams.
+func (m *SearchSummaryPeriodsParams) SetDateGTE(v *string) {
+	m.DateGTE = v
+}
+
+// GetDateLTE returns the DateLTE value.
+func (m SearchSummaryPeriodsParams) GetDateLTE() *string {
+	return m.DateLTE
+}
+
+// SetDateLTE sets the DateLTE value and returns the updated SearchSummaryPeriodsParams.
+func (m *SearchSummaryPeriodsParams) SetDateLTE(v *string) {
+	m.DateLTE = v
+}
+
+// GetSkip returns the Skip value.
+func (m SearchSummaryPeriodsParams) GetSkip() int64 {
+	return m.Skip
+}
+
+// SetSkip sets the Skip value and returns the updated SearchSummaryPeriodsParams.
+func (m *SearchSummaryPeriodsParams) SetSkip(v int64) {
+	m.Skip = v
+}
+
+// GetLimit returns the Limit value.
+func (m SearchSummaryPeriodsParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated SearchSummaryPeriodsParams.
+func (m *SearchSummaryPeriodsParams) SetLimit(v int64) {
+	m.Limit = v
 }
 
 // GetPeriod returns the Period value.
@@ -14046,24 +13896,34 @@ func (m *UpsertSummaryPeriodParams) SetTimeInRange(v *float64) {
 	m.TimeInRange = v
 }
 
-// GetMeanDailyDose returns the MeanDailyDose value.
-func (m UpsertSummaryPeriodParams) GetMeanDailyDose() float64 {
-	return m.MeanDailyDose
+// GetTotalDailyDose returns the TotalDailyDose value.
+func (m UpsertSummaryPeriodParams) GetTotalDailyDose() float64 {
+	return m.TotalDailyDose
 }
 
-// SetMeanDailyDose sets the MeanDailyDose value and returns the updated UpsertSummaryPeriodParams.
-func (m *UpsertSummaryPeriodParams) SetMeanDailyDose(v float64) {
-	m.MeanDailyDose = v
+// SetTotalDailyDose sets the TotalDailyDose value and returns the updated UpsertSummaryPeriodParams.
+func (m *UpsertSummaryPeriodParams) SetTotalDailyDose(v float64) {
+	m.TotalDailyDose = v
 }
 
-// GetMeanDailyCarbs returns the MeanDailyCarbs value.
-func (m UpsertSummaryPeriodParams) GetMeanDailyCarbs() float64 {
-	return m.MeanDailyCarbs
+// GetTotalDailyCarbs returns the TotalDailyCarbs value.
+func (m UpsertSummaryPeriodParams) GetTotalDailyCarbs() float64 {
+	return m.TotalDailyCarbs
 }
 
-// SetMeanDailyCarbs sets the MeanDailyCarbs value and returns the updated UpsertSummaryPeriodParams.
-func (m *UpsertSummaryPeriodParams) SetMeanDailyCarbs(v float64) {
-	m.MeanDailyCarbs = v
+// SetTotalDailyCarbs sets the TotalDailyCarbs value and returns the updated UpsertSummaryPeriodParams.
+func (m *UpsertSummaryPeriodParams) SetTotalDailyCarbs(v float64) {
+	m.TotalDailyCarbs = v
+}
+
+// GetGlucoseMgdlJson returns the GlucoseMgdlJson value.
+func (m UpsertSummaryPeriodParams) GetGlucoseMgdlJson() string {
+	return m.GlucoseMgdlJson
+}
+
+// SetGlucoseMgdlJson sets the GlucoseMgdlJson value and returns the updated UpsertSummaryPeriodParams.
+func (m *UpsertSummaryPeriodParams) SetGlucoseMgdlJson(v string) {
+	m.GlucoseMgdlJson = v
 }
 
 // GetBefore returns the Before value.

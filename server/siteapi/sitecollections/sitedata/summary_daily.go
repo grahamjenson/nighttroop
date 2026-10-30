@@ -35,31 +35,31 @@ func (s *SummaryDailyCollection) GetRoute() string {
 	return "summary-daily"
 }
 
-func (s *SummaryDailyCollection) ToModel(row *sitedb.SummaryDaily, siteContext *httputils.SiteContext) *sitemodels.SiteSummaryDaily {
+func (s *SummaryDailyCollection) ToModel(row *sitedb.SummaryPeriod, siteContext *httputils.SiteContext) *sitemodels.SiteSummaryDaily {
 	if row == nil {
 		return nil
 	}
 	return sitemodels.SummaryDailyFromDB(row, siteContext)
 }
 
-func (s *SummaryDailyCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.SummaryDaily, error) {
+func (s *SummaryDailyCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.SummaryPeriod, error) {
 	q, err := collectionTx.Site()
 	if err != nil {
 		return nil, err
 	}
-	return q.GetSummaryDaily(ctx, sitedb.GetSummaryDailyParams{Date: id})
+	return q.GetSummaryPeriod(ctx, sitedb.GetSummaryPeriodParams{Period: "day", Date: id})
 }
 
-func (s *SummaryDailyCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.SummaryDaily, error) {
+func (s *SummaryDailyCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.SummaryPeriod, error) {
 	q, err := collectionTx.Site()
 	if err != nil {
 		return nil, err
 	}
-	return q.SearchSummaryDaily(ctx, sitedb.SearchSummaryDailyParams{Limit: query.Limit, Skip: query.Skip})
+	return q.SearchSummaryPeriods(ctx, sitedb.SearchSummaryPeriodsParams{Period: "day", Limit: query.Limit, Skip: query.Skip})
 }
 
 // CreateRow builds the model's date again, a day before today in the site's timezone and no more than a year ago
-func (s *SummaryDailyCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteSummaryDaily) (*sitedb.SummaryDaily, error) {
+func (s *SummaryDailyCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteSummaryDaily) (*sitedb.SummaryPeriod, error) {
 	q, err := collectionTx.Site()
 	if err != nil {
 		return nil, err
@@ -79,7 +79,7 @@ func (s *SummaryDailyCollection) DeleteRow(ctx context.Context, collectionTx *si
 	if err != nil {
 		return err
 	}
-	_, err = q.HardDeleteSummaryDaily(ctx, sitedb.HardDeleteSummaryDailyParams{Date: id})
+	_, err = q.HardDeleteSummaryPeriod(ctx, sitedb.HardDeleteSummaryPeriodParams{Period: "day", Date: id})
 	return err
 }
 
@@ -106,23 +106,24 @@ func LocalDate(now time.Time, location *time.Location, days int) string {
 }
 
 // RebuildSummaryDaily builds the site's day named date again and keeps it
-func RebuildSummaryDaily(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, date string, now time.Time) (*sitedb.SummaryDaily, error) {
+func RebuildSummaryDaily(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, date string, now time.Time) (*sitedb.SummaryPeriod, error) {
 	day, err := buildSummaryDaily(ctx, q, siteContext, date, now.UnixMilli())
 	if err != nil {
 		return nil, err
 	}
-	return q.UpsertSummaryDaily(ctx, sitedb.UpsertSummaryDailyParams{Date: day.Date, Timezone: day.Timezone, StartAt: day.StartAt,
-		EndAt: day.EndAt, TimeInRange: day.TimeInRange, TotalDailyDose: day.TotalDailyDose, TotalCarbs: day.TotalCarbs,
-		GlucoseMgdlJson: day.GlucoseMgdlJson})
+	return upsertSummaryPeriod(ctx, q, day)
+}
+
+func upsertSummaryPeriod(ctx context.Context, q *sitedb.Queries, row *sitedb.SummaryPeriod) (*sitedb.SummaryPeriod, error) {
+	return q.UpsertSummaryPeriod(ctx, sitedb.UpsertSummaryPeriodParams{Period: row.Period, Date: row.Date, Timezone: row.Timezone,
+		StartAt: row.StartAt, EndAt: row.EndAt, Days: row.Days, TimeInRange: row.TimeInRange, TotalDailyDose: row.TotalDailyDose,
+		TotalDailyCarbs: row.TotalDailyCarbs, GlucoseMgdlJson: row.GlucoseMgdlJson})
 }
 
 // RebuildSummaryDailyWeek deletes all the site's days and periods, as from a timezone they no longer follow, and
 // builds the RebuildDays up to yesterday, and the last week and month of what days there are, again
 func RebuildSummaryDailyWeek(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, now time.Time) error {
-	if _, err := q.DeleteAllSummaryDaily(ctx); err != nil {
-		return err
-	}
-	if _, err := q.DeleteAllSummaryPeriods(ctx); err != nil {
+	if _, err := q.DeleteSummaryPeriods(ctx, sitedb.DeleteSummaryPeriodsParams{}); err != nil {
 		return err
 	}
 	for days := -RebuildDays; days < 0; days++ {
@@ -158,7 +159,7 @@ func LastSummaryPeriod(ctx context.Context, q *sitedb.Queries, siteContext *http
 		end = start.AddDate(0, 0, 7)
 	}
 	last := end.AddDate(0, 0, -1).Format(time.DateOnly)
-	days, err := q.SearchSummaryDaily(ctx, sitedb.SearchSummaryDailyParams{DateGTE: &date, DateLTE: &last, Limit: 31})
+	days, err := q.SearchSummaryPeriods(ctx, sitedb.SearchSummaryPeriodsParams{Period: "day", DateGTE: &date, DateLTE: &last, Limit: 31})
 	if err != nil {
 		return nil, false, err
 	}
@@ -175,9 +176,7 @@ func BuildLastSummaryPeriods(ctx context.Context, q *sitedb.Queries, siteContext
 		if built {
 			continue
 		}
-		if _, err := q.UpsertSummaryPeriod(ctx, sitedb.UpsertSummaryPeriodParams{Period: row.Period, Date: row.Date, Timezone: row.Timezone,
-			StartAt: row.StartAt, EndAt: row.EndAt, Days: row.Days, TimeInRange: row.TimeInRange, MeanDailyDose: row.MeanDailyDose,
-			MeanDailyCarbs: row.MeanDailyCarbs}); err != nil {
+		if _, err := upsertSummaryPeriod(ctx, q, row); err != nil {
 			return err
 		}
 	}
@@ -187,7 +186,7 @@ func BuildLastSummaryPeriods(ctx context.Context, q *sitedb.Queries, siteContext
 // buildSummaryDaily is the site's day named date, from midnight in its timezone, built from its clean readings,
 // insulin, basal and food up to until, so a day not yet over is its part so far. Its time in range is from the site's
 // range low to its range high.
-func buildSummaryDaily(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, date string, until int64) (*sitedb.SummaryDaily, error) {
+func buildSummaryDaily(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, date string, until int64) (*sitedb.SummaryPeriod, error) {
 	location := siteContext.GetSiteTimezone()
 	midnight, err := time.ParseInLocation(time.DateOnly, date, location)
 	if err != nil {

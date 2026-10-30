@@ -144,11 +144,8 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createTempTargetStmt, err = db.PrepareContext(ctx, createTempTarget); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateTempTarget: %w", err)
 	}
-	if q.deleteAllSummaryDailyStmt, err = db.PrepareContext(ctx, deleteAllSummaryDaily); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteAllSummaryDaily: %w", err)
-	}
-	if q.deleteAllSummaryPeriodsStmt, err = db.PrepareContext(ctx, deleteAllSummaryPeriods); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteAllSummaryPeriods: %w", err)
+	if q.deleteSummaryPeriodsStmt, err = db.PrepareContext(ctx, deleteSummaryPeriods); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteSummaryPeriods: %w", err)
 	}
 	if q.deviceReportsForDeviceStmt, err = db.PrepareContext(ctx, deviceReportsForDevice); err != nil {
 		return nil, fmt.Errorf("error preparing query DeviceReportsForDevice: %w", err)
@@ -203,9 +200,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.getProfileSwitchStmt, err = db.PrepareContext(ctx, getProfileSwitch); err != nil {
 		return nil, fmt.Errorf("error preparing query GetProfileSwitch: %w", err)
-	}
-	if q.getSummaryDailyStmt, err = db.PrepareContext(ctx, getSummaryDaily); err != nil {
-		return nil, fmt.Errorf("error preparing query GetSummaryDaily: %w", err)
 	}
 	if q.getSummaryPeriodStmt, err = db.PrepareContext(ctx, getSummaryPeriod); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSummaryPeriod: %w", err)
@@ -267,8 +261,8 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.hardDeleteProfileSwitchStmt, err = db.PrepareContext(ctx, hardDeleteProfileSwitch); err != nil {
 		return nil, fmt.Errorf("error preparing query HardDeleteProfileSwitch: %w", err)
 	}
-	if q.hardDeleteSummaryDailyStmt, err = db.PrepareContext(ctx, hardDeleteSummaryDaily); err != nil {
-		return nil, fmt.Errorf("error preparing query HardDeleteSummaryDaily: %w", err)
+	if q.hardDeleteSummaryPeriodStmt, err = db.PrepareContext(ctx, hardDeleteSummaryPeriod); err != nil {
+		return nil, fmt.Errorf("error preparing query HardDeleteSummaryPeriod: %w", err)
 	}
 	if q.hardDeleteTempBasalStmt, err = db.PrepareContext(ctx, hardDeleteTempBasal); err != nil {
 		return nil, fmt.Errorf("error preparing query HardDeleteTempBasal: %w", err)
@@ -318,11 +312,11 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.searchProfileSwitchesStmt, err = db.PrepareContext(ctx, searchProfileSwitches); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchProfileSwitches: %w", err)
 	}
-	if q.searchSummaryDailyStmt, err = db.PrepareContext(ctx, searchSummaryDaily); err != nil {
-		return nil, fmt.Errorf("error preparing query SearchSummaryDaily: %w", err)
-	}
 	if q.searchSummaryDefaultProfilesStmt, err = db.PrepareContext(ctx, searchSummaryDefaultProfiles); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchSummaryDefaultProfiles: %w", err)
+	}
+	if q.searchSummaryPeriodsStmt, err = db.PrepareContext(ctx, searchSummaryPeriods); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchSummaryPeriods: %w", err)
 	}
 	if q.searchSummaryProfileSwitchesStmt, err = db.PrepareContext(ctx, searchSummaryProfileSwitches); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchSummaryProfileSwitches: %w", err)
@@ -416,9 +410,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.updateTempTargetStmt, err = db.PrepareContext(ctx, updateTempTarget); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateTempTarget: %w", err)
-	}
-	if q.upsertSummaryDailyStmt, err = db.PrepareContext(ctx, upsertSummaryDaily); err != nil {
-		return nil, fmt.Errorf("error preparing query UpsertSummaryDaily: %w", err)
 	}
 	if q.upsertSummaryPeriodStmt, err = db.PrepareContext(ctx, upsertSummaryPeriod); err != nil {
 		return nil, fmt.Errorf("error preparing query UpsertSummaryPeriod: %w", err)
@@ -628,14 +619,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createTempTargetStmt: %w", cerr)
 		}
 	}
-	if q.deleteAllSummaryDailyStmt != nil {
-		if cerr := q.deleteAllSummaryDailyStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteAllSummaryDailyStmt: %w", cerr)
-		}
-	}
-	if q.deleteAllSummaryPeriodsStmt != nil {
-		if cerr := q.deleteAllSummaryPeriodsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteAllSummaryPeriodsStmt: %w", cerr)
+	if q.deleteSummaryPeriodsStmt != nil {
+		if cerr := q.deleteSummaryPeriodsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteSummaryPeriodsStmt: %w", cerr)
 		}
 	}
 	if q.deviceReportsForDeviceStmt != nil {
@@ -726,11 +712,6 @@ func (q *Queries) Close() error {
 	if q.getProfileSwitchStmt != nil {
 		if cerr := q.getProfileSwitchStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getProfileSwitchStmt: %w", cerr)
-		}
-	}
-	if q.getSummaryDailyStmt != nil {
-		if cerr := q.getSummaryDailyStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getSummaryDailyStmt: %w", cerr)
 		}
 	}
 	if q.getSummaryPeriodStmt != nil {
@@ -833,9 +814,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing hardDeleteProfileSwitchStmt: %w", cerr)
 		}
 	}
-	if q.hardDeleteSummaryDailyStmt != nil {
-		if cerr := q.hardDeleteSummaryDailyStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing hardDeleteSummaryDailyStmt: %w", cerr)
+	if q.hardDeleteSummaryPeriodStmt != nil {
+		if cerr := q.hardDeleteSummaryPeriodStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing hardDeleteSummaryPeriodStmt: %w", cerr)
 		}
 	}
 	if q.hardDeleteTempBasalStmt != nil {
@@ -918,14 +899,14 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing searchProfileSwitchesStmt: %w", cerr)
 		}
 	}
-	if q.searchSummaryDailyStmt != nil {
-		if cerr := q.searchSummaryDailyStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing searchSummaryDailyStmt: %w", cerr)
-		}
-	}
 	if q.searchSummaryDefaultProfilesStmt != nil {
 		if cerr := q.searchSummaryDefaultProfilesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing searchSummaryDefaultProfilesStmt: %w", cerr)
+		}
+	}
+	if q.searchSummaryPeriodsStmt != nil {
+		if cerr := q.searchSummaryPeriodsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchSummaryPeriodsStmt: %w", cerr)
 		}
 	}
 	if q.searchSummaryProfileSwitchesStmt != nil {
@@ -1083,11 +1064,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateTempTargetStmt: %w", cerr)
 		}
 	}
-	if q.upsertSummaryDailyStmt != nil {
-		if cerr := q.upsertSummaryDailyStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing upsertSummaryDailyStmt: %w", cerr)
-		}
-	}
 	if q.upsertSummaryPeriodStmt != nil {
 		if cerr := q.upsertSummaryPeriodStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing upsertSummaryPeriodStmt: %w", cerr)
@@ -1172,8 +1148,7 @@ type Queries struct {
 	createProfileSwitchStmt                     *sql.Stmt
 	createTempBasalStmt                         *sql.Stmt
 	createTempTargetStmt                        *sql.Stmt
-	deleteAllSummaryDailyStmt                   *sql.Stmt
-	deleteAllSummaryPeriodsStmt                 *sql.Stmt
+	deleteSummaryPeriodsStmt                    *sql.Stmt
 	deviceReportsForDeviceStmt                  *sql.Stmt
 	getActivityStmt                             *sql.Stmt
 	getComponentEventStmt                       *sql.Stmt
@@ -1192,7 +1167,6 @@ type Queries struct {
 	getProfilePresetStmt                        *sql.Stmt
 	getProfileStoreStmt                         *sql.Stmt
 	getProfileSwitchStmt                        *sql.Stmt
-	getSummaryDailyStmt                         *sql.Stmt
 	getSummaryPeriodStmt                        *sql.Stmt
 	getTempBasalStmt                            *sql.Stmt
 	getTempTargetStmt                           *sql.Stmt
@@ -1213,7 +1187,7 @@ type Queries struct {
 	hardDeleteProfilePresetStmt                 *sql.Stmt
 	hardDeleteProfileStoreStmt                  *sql.Stmt
 	hardDeleteProfileSwitchStmt                 *sql.Stmt
-	hardDeleteSummaryDailyStmt                  *sql.Stmt
+	hardDeleteSummaryPeriodStmt                 *sql.Stmt
 	hardDeleteTempBasalStmt                     *sql.Stmt
 	hardDeleteTempTargetStmt                    *sql.Stmt
 	lastModifiedCollectionsStmt                 *sql.Stmt
@@ -1230,8 +1204,8 @@ type Queries struct {
 	searchNotificationEventsStmt                *sql.Stmt
 	searchProfileStoresStmt                     *sql.Stmt
 	searchProfileSwitchesStmt                   *sql.Stmt
-	searchSummaryDailyStmt                      *sql.Stmt
 	searchSummaryDefaultProfilesStmt            *sql.Stmt
+	searchSummaryPeriodsStmt                    *sql.Stmt
 	searchSummaryProfileSwitchesStmt            *sql.Stmt
 	searchTempBasalsStmt                        *sql.Stmt
 	searchTempTargetsStmt                       *sql.Stmt
@@ -1263,7 +1237,6 @@ type Queries struct {
 	updateProfileSwitchStmt                     *sql.Stmt
 	updateTempBasalStmt                         *sql.Stmt
 	updateTempTargetStmt                        *sql.Stmt
-	upsertSummaryDailyStmt                      *sql.Stmt
 	upsertSummaryPeriodStmt                     *sql.Stmt
 }
 
@@ -1311,8 +1284,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		createProfileSwitchStmt:                     q.createProfileSwitchStmt,
 		createTempBasalStmt:                         q.createTempBasalStmt,
 		createTempTargetStmt:                        q.createTempTargetStmt,
-		deleteAllSummaryDailyStmt:                   q.deleteAllSummaryDailyStmt,
-		deleteAllSummaryPeriodsStmt:                 q.deleteAllSummaryPeriodsStmt,
+		deleteSummaryPeriodsStmt:                    q.deleteSummaryPeriodsStmt,
 		deviceReportsForDeviceStmt:                  q.deviceReportsForDeviceStmt,
 		getActivityStmt:                             q.getActivityStmt,
 		getComponentEventStmt:                       q.getComponentEventStmt,
@@ -1331,7 +1303,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getProfilePresetStmt:                        q.getProfilePresetStmt,
 		getProfileStoreStmt:                         q.getProfileStoreStmt,
 		getProfileSwitchStmt:                        q.getProfileSwitchStmt,
-		getSummaryDailyStmt:                         q.getSummaryDailyStmt,
 		getSummaryPeriodStmt:                        q.getSummaryPeriodStmt,
 		getTempBasalStmt:                            q.getTempBasalStmt,
 		getTempTargetStmt:                           q.getTempTargetStmt,
@@ -1352,7 +1323,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		hardDeleteProfilePresetStmt:                 q.hardDeleteProfilePresetStmt,
 		hardDeleteProfileStoreStmt:                  q.hardDeleteProfileStoreStmt,
 		hardDeleteProfileSwitchStmt:                 q.hardDeleteProfileSwitchStmt,
-		hardDeleteSummaryDailyStmt:                  q.hardDeleteSummaryDailyStmt,
+		hardDeleteSummaryPeriodStmt:                 q.hardDeleteSummaryPeriodStmt,
 		hardDeleteTempBasalStmt:                     q.hardDeleteTempBasalStmt,
 		hardDeleteTempTargetStmt:                    q.hardDeleteTempTargetStmt,
 		lastModifiedCollectionsStmt:                 q.lastModifiedCollectionsStmt,
@@ -1369,8 +1340,8 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		searchNotificationEventsStmt:                q.searchNotificationEventsStmt,
 		searchProfileStoresStmt:                     q.searchProfileStoresStmt,
 		searchProfileSwitchesStmt:                   q.searchProfileSwitchesStmt,
-		searchSummaryDailyStmt:                      q.searchSummaryDailyStmt,
 		searchSummaryDefaultProfilesStmt:            q.searchSummaryDefaultProfilesStmt,
+		searchSummaryPeriodsStmt:                    q.searchSummaryPeriodsStmt,
 		searchSummaryProfileSwitchesStmt:            q.searchSummaryProfileSwitchesStmt,
 		searchTempBasalsStmt:                        q.searchTempBasalsStmt,
 		searchTempTargetsStmt:                       q.searchTempTargetsStmt,
@@ -1402,7 +1373,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateProfileSwitchStmt:                     q.updateProfileSwitchStmt,
 		updateTempBasalStmt:                         q.updateTempBasalStmt,
 		updateTempTargetStmt:                        q.updateTempTargetStmt,
-		upsertSummaryDailyStmt:                      q.upsertSummaryDailyStmt,
 		upsertSummaryPeriodStmt:                     q.upsertSummaryPeriodStmt,
 	}
 }
