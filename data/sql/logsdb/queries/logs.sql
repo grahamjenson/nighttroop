@@ -78,16 +78,18 @@ SELECT * FROM errors WHERE id = sqlc.arg('ID') AND site_id = sqlc.arg('SiteID');
 --------
 
 -- name: TrimLogs :execresult
--- Deletes all but the newest Keep rows
-DELETE FROM logs WHERE id <= (SELECT id FROM logs ORDER BY id DESC LIMIT 1 OFFSET sqlc.arg('Keep'));
+-- Deletes all but the newest Keep rows. A row's id is one more than the newest's and rows are only deleted oldest
+-- first, so the newest Keep are those within Keep of the newest id, which is read from the end of the table rather
+-- than walking back over Keep rows on every trim.
+DELETE FROM logs WHERE id <= (SELECT MAX(newest.id) FROM logs newest) - CAST(sqlc.arg('Keep') AS INTEGER);
 
 -- name: TrimEvents :execresult
--- Deletes all but the newest Keep rows
-DELETE FROM events WHERE id <= (SELECT id FROM events ORDER BY id DESC LIMIT 1 OFFSET sqlc.arg('Keep'));
+-- Deletes all but the newest Keep rows, as TrimLogs does
+DELETE FROM events WHERE id <= (SELECT MAX(newest.id) FROM events newest) - CAST(sqlc.arg('Keep') AS INTEGER);
 
 -- name: TrimErrors :execresult
--- Deletes all but the newest Keep rows
-DELETE FROM errors WHERE id <= (SELECT id FROM errors ORDER BY id DESC LIMIT 1 OFFSET sqlc.arg('Keep'));
+-- Deletes all but the newest Keep rows, as TrimLogs does
+DELETE FROM errors WHERE id <= (SELECT MAX(newest.id) FROM errors newest) - CAST(sqlc.arg('Keep') AS INTEGER);
 
 -- name: RecentSyncEvents :many
 -- The newest events of one of the site's sync sources, by the sync_type the sync events record

@@ -525,34 +525,34 @@ func (q *Queries) SearchSiteEvents(ctx context.Context, arg SearchSiteEventsPara
 }
 
 const trimErrors = `-- name: TrimErrors :execresult
-DELETE FROM errors WHERE id <= (SELECT id FROM errors ORDER BY id DESC LIMIT 1 OFFSET ?1)
+DELETE FROM errors WHERE id <= (SELECT MAX(newest.id) FROM errors newest) - CAST(?1 AS INTEGER)
 `
 
 type TrimErrorsParams struct {
 	Keep int64
 }
 
-// Deletes all but the newest Keep rows
+// Deletes all but the newest Keep rows, as TrimLogs does
 func (q *Queries) TrimErrors(ctx context.Context, arg TrimErrorsParams) (sql.Result, error) {
 	return q.exec(ctx, q.trimErrorsStmt, trimErrors, arg.Keep)
 }
 
 const trimEvents = `-- name: TrimEvents :execresult
-DELETE FROM events WHERE id <= (SELECT id FROM events ORDER BY id DESC LIMIT 1 OFFSET ?1)
+DELETE FROM events WHERE id <= (SELECT MAX(newest.id) FROM events newest) - CAST(?1 AS INTEGER)
 `
 
 type TrimEventsParams struct {
 	Keep int64
 }
 
-// Deletes all but the newest Keep rows
+// Deletes all but the newest Keep rows, as TrimLogs does
 func (q *Queries) TrimEvents(ctx context.Context, arg TrimEventsParams) (sql.Result, error) {
 	return q.exec(ctx, q.trimEventsStmt, trimEvents, arg.Keep)
 }
 
 const trimLogs = `-- name: TrimLogs :execresult
 
-DELETE FROM logs WHERE id <= (SELECT id FROM logs ORDER BY id DESC LIMIT 1 OFFSET ?1)
+DELETE FROM logs WHERE id <= (SELECT MAX(newest.id) FROM logs newest) - CAST(?1 AS INTEGER)
 `
 
 type TrimLogsParams struct {
@@ -562,7 +562,9 @@ type TrimLogsParams struct {
 // -----
 // DELETE
 // ------
-// Deletes all but the newest Keep rows
+// Deletes all but the newest Keep rows. A row's id is one more than the newest's and rows are only deleted oldest
+// first, so the newest Keep are those within Keep of the newest id, which is read from the end of the table rather
+// than walking back over Keep rows on every trim.
 func (q *Queries) TrimLogs(ctx context.Context, arg TrimLogsParams) (sql.Result, error) {
 	return q.exec(ctx, q.trimLogsStmt, trimLogs, arg.Keep)
 }
