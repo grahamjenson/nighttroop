@@ -26,6 +26,7 @@ const (
 	ControlBackedUp   Name = "control_backed_up"
 	SyncTurnedOff     Name = "sync_turned_off"
 	SyncBackfilled    Name = "sync_backfilled"
+	SyncAdded         Name = "sync_added"
 	// SiteTimezoneChanged is a site's own timezone changing, its Attributes the timezone it was and is
 	SiteTimezoneChanged Name = "site_timezone_changed"
 	// Alarm is an identity's alarms after a check that changed them, its Attributes an alarms.Checked
@@ -39,7 +40,7 @@ const (
 
 // Persisted are the events kept in the logs DB. A model change is not, as the site's DB row is its record.
 var Persisted = []Name{SiteCreated, SiteDisabled, SiteDeleted, SiteArchived, SiteHydrated, SiteTruncated, SiteBatchBackedUp, ControlBackedUp,
-	SyncTurnedOff, SyncBackfilled, SiteTimezoneChanged, AlarmCreated, AlarmSnoozed, AlarmDeleted}
+	SyncTurnedOff, SyncBackfilled, SyncAdded, SiteTimezoneChanged, AlarmCreated, AlarmSnoozed, AlarmDeleted}
 
 // PersistedNames are the persisted events' names, to pick from
 func PersistedNames() []string {
