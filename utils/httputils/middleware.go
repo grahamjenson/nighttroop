@@ -4,6 +4,8 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+	"path"
+	"strings"
 	"time"
 
 	sentryhttp "github.com/getsentry/sentry-go/http"
@@ -11,6 +13,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/usage"
 )
 
 // AddStandardMiddleware adds what every router has, recording its server errors in the logs DB when there is one
@@ -147,9 +150,32 @@ func SiteIdentitySeenFlagsUpdateMiddleware(controlDB *db.ControlDB) func(http.Ha
 			next.ServeHTTP(sw, r)
 
 			if sw.Status == 200 || sw.Status == 201 {
+				if siteContext.Config != nil && siteContext.IdentityModel != nil {
+					siteContext.Config.Usage.Seen(siteContext.SiteID, siteContext.IdentityModel.ID, r.ContentLength, time.Now())
+				}
 				wasWrite := siteContext.HTTPAction == HTTPActionWrite
 				controlDB.UpdateSiteAndIdentityDateFlags(siteContext.SiteModel, siteContext.SiteDB, siteContext.IdentityModel, true, wasWrite)
 			}
+		})
+	}
+}
+
+// CountRoutes counts each request to the router named name by its route's pattern, never its path, which can carry a
+// token or a site. Static files, whose pattern is a file name, are counted together, and so are requests no route
+// matched, whatever their method.
+func CountRoutes(tracker *usage.Tracker, name string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			started := time.Now()
+			next.ServeHTTP(w, r)
+			route := name + " unmatched"
+			if rctx := chi.RouteContext(r.Context()); rctx != nil && rctx.RoutePattern() != "" {
+				route = name + " " + r.Method + " " + rctx.RoutePattern()
+				if strings.Contains(path.Base(rctx.RoutePattern()), ".") {
+					route = name + " static files"
+				}
+			}
+			tracker.Route(route, time.Since(started))
 		})
 	}
 }

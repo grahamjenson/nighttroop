@@ -12,6 +12,7 @@ import (
 func NewPublicRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Router {
 	r := chi.NewRouter()
 	httputils.AddStandardMiddleware(r, config, controlDB)
+	r.Use(httputils.CountRoutes(config.Usage, "public"))
 
 	static.AddStaticRoutes(r)
 

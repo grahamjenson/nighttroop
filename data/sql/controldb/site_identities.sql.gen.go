@@ -106,6 +106,22 @@ func (q *Queries) AllSiteIdentities(ctx context.Context, arg AllSiteIdentitiesPa
 	return items, nil
 }
 
+const countActiveIdentities = `-- name: CountActiveIdentities :one
+SELECT COUNT(*) FROM site_identities WHERE last_seen_at >= ?1
+`
+
+type CountActiveIdentitiesParams struct {
+	Since *int64
+}
+
+// The identities seen since Since, in milliseconds
+func (q *Queries) CountActiveIdentities(ctx context.Context, arg CountActiveIdentitiesParams) (int64, error) {
+	row := q.queryRow(ctx, q.countActiveIdentitiesStmt, countActiveIdentities, arg.Since)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countSiteIdentities = `-- name: CountSiteIdentities :one
 
 SELECT COUNT(*) FROM site_identities WHERE site_id = ?1
