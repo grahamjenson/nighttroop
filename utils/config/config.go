@@ -559,6 +559,11 @@ func (config *ServerConfig) IsHTTPS() bool {
 	return config.HostProtocol == "https"
 }
 
+// RecoverURL is the public page a site's backup key gets a new admin login on
+func (config *ServerConfig) RecoverURL() string {
+	return fmt.Sprintf("%s://%s:%d/recover", config.HostProtocol, config.HostName, config.HostPort)
+}
+
 // ParseTrustedProxies reads comma separated IPs or CIDR ranges, e.g. "127.0.0.1,::1,172.30.0.0/24"
 func ParseTrustedProxies(raw string) ([]netip.Prefix, error) {
 	prefixes := []netip.Prefix{}

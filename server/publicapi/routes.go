@@ -97,6 +97,7 @@ func POSTCreateSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig)
 			PwdNSToken:      siteCreateResult.PwdNSToken,
 			PwdNSURL:        siteCreateResult.SiteDB.NSURL(),
 			BackupKey:       siteCreateResult.BackupPassword,
+			RecoverURL:      config.RecoverURL(),
 		}).Render(r.Context(), w)
 		if err != nil {
 			slog.Error("Unable to create site", "error", err)
