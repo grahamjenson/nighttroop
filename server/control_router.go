@@ -16,7 +16,6 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 	r := chi.NewRouter()
 	store := controlcollections.NewControlStore()
 	httputils.AddStandardMiddleware(r, config, controlDB)
-	r.Use(httputils.CountRoutes(config.Usage, "control"))
 
 	static.AddStaticRoutes(r)
 
@@ -27,6 +26,7 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 
 	r.Group(func(r chi.Router) {
 		r.Use(controlapi.JWTAuthMiddleware(controlDB, config))
+		r.Use(httputils.CountRoutes(config.Usage, "control"))
 		r.Get("/", store.Collection("sites").Search) // The dashboard is the list of sites
 		r.Post("/logout", controlapi.POSTLogoutHandler(config))
 
