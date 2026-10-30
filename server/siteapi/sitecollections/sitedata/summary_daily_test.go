@@ -27,6 +27,14 @@ func TestLastPeriodStart(t *testing.T) {
 		{name: "from Sunday, on a Friday last week is from the Sunday before this one", period: "week", now: at("2026-10-30 12:00", time.UTC), location: time.UTC, weekStart: "sunday", want: "2026-10-18"},
 		{name: "from Sunday, on a Sunday last week ended yesterday", period: "week", now: at("2026-11-01 00:00", time.UTC), location: time.UTC, weekStart: "sunday", want: "2026-10-25"},
 		{name: "from Sunday, on a Saturday last week is still the one before", period: "week", now: at("2026-10-31 23:59", time.UTC), location: time.UTC, weekStart: "sunday", want: "2026-10-18"},
+		// 2026-10-26 is an even number of weeks from 5 Jan 1970, the first Monday, so starts a fortnight, as did 12 Oct
+		{name: "in a fortnight's first week last fortnight ended last Sunday", period: "fortnight", now: at("2026-10-30 12:00", time.UTC), location: time.UTC, want: "2026-10-12"},
+		{name: "in a fortnight's second week last fortnight ended the Sunday before last", period: "fortnight", now: at("2026-10-23 12:00", time.UTC), location: time.UTC, want: "2026-09-28"},
+		{name: "on the Monday a fortnight starts last fortnight ended yesterday", period: "fortnight", now: at("2026-11-09 00:00", time.UTC), location: time.UTC, want: "2026-10-26"},
+		// 2026-10-25 is an even number of weeks from 4 Jan 1970, the first Sunday
+		{name: "from Sunday, fortnights start on Sundays", period: "fortnight", now: at("2026-10-30 12:00", time.UTC), location: time.UTC, weekStart: "sunday", want: "2026-10-11"},
+		{name: "from Sunday, on the Sunday a fortnight starts last fortnight ended yesterday", period: "fortnight", now: at("2026-11-08 00:00", time.UTC), location: time.UTC, weekStart: "sunday", want: "2026-10-25"},
+		{name: "the fortnight is in the site's timezone", period: "fortnight", now: at("2026-11-08 12:00", time.UTC), location: auckland, want: "2026-10-26"},
 		{name: "last month is the one before this", period: "month", now: at("2026-10-30 12:00", time.UTC), location: time.UTC, want: "2026-09-01"},
 		{name: "in January last month is last year's December", period: "month", now: at("2026-01-15 12:00", time.UTC), location: time.UTC, want: "2025-12-01"},
 		{name: "the month is in the site's timezone", period: "month", now: at("2026-10-31 12:00", time.UTC), location: auckland, want: "2026-10-01"},

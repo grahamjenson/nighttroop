@@ -228,7 +228,7 @@ func addDays(ctx context.Context, q *sitedb.Queries, summary *sitemodels.Summary
 	}
 	summary.Today, summary.Yesterday = sitemodels.SummaryDayFromPeriod(todayRow), sitemodels.SummaryDayFromPeriod(yesterdayRow)
 	summary.Today.End = now.UnixMilli()
-	for period, day := range map[string]*sitemodels.SummaryDay{"week": &summary.LastWeek, "month": &summary.LastMonth} {
+	for period, day := range map[string]*sitemodels.SummaryDay{"week": &summary.LastWeek, "fortnight": &summary.LastFortnight, "month": &summary.LastMonth} {
 		row, _, err := LastSummaryPeriod(ctx, q, siteContext, period, now)
 		if err != nil {
 			slog.Error("Error finding the summary's last "+period, "error", err)

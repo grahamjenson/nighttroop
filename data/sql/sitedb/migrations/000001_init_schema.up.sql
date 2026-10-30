@@ -489,15 +489,15 @@ CREATE TABLE profile_presets (
 -- INDEXES
 --
 
--- summary_period is each day, week and month of the site's data, named by its first date and from midnight in the
--- site's timezone, weeks from its week start day. A day is built from its readings, insulin and food, and a week or
--- month from its days. days is how many days had data, and the daily dose and carbs are a day's totals, or the mean
+-- summary_period is each day, week, fortnight and month of the site's data, named by its first date and from midnight
+-- in the site's timezone, weeks from its week start day and fortnights every other one from the first of 1970. A day is
+-- built from its readings, insulin and food, and a week, fortnight or month from its days. days is how many days had data, and the daily dose and carbs are a day's totals, or the mean
 -- of a week's or month's days with data, as is its time in range. Glucose is in mg/dL every 5 minutes from midnight,
 -- 288 values (276 or 300 for a day the clocks change), null when there was no reading: for a week or month, the
 -- mean of its days' at that time of day. A week or month also has its AGP: the 5th, 25th, 50th, 75th and 95th
 -- percentiles of its days' glucose in each 15 minutes from midnight, 96 of them, null when none had a reading then.
 CREATE TABLE summary_period (
-    period TEXT NOT NULL CHECK(period IN ('day', 'week', 'month')),
+    period TEXT NOT NULL CHECK(period IN ('day', 'week', 'fortnight', 'month')),
     date TEXT NOT NULL CHECK(length(date) = 10),
     timezone TEXT NOT NULL CHECK(length(timezone) <= 64),
     start_at INTEGER NOT NULL,

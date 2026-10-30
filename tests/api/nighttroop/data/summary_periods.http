@@ -12,7 +12,7 @@ B {"name": "admin", "password": "{{ .create_new_site.api_key }}", "totp": "12312
 ASSERT_STATUS 200
 SET jwt {{ .login_admin.token }}
 
-// A new site's last week and month have no data
+// A new site's last week, fortnight and month have no data
 NAME summary_empty_periods
 GET http://{{ site }}/summary
 H Authorization: Bearer {{ jwt }}
@@ -20,6 +20,7 @@ H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_EQUALS null "@result.0.last_week.time_in_range"
 ASSERT_EQUALS 0 "@result.0.last_week.total_daily_dose"
+ASSERT_EQUALS null "@result.0.last_fortnight.time_in_range"
 ASSERT_EQUALS null "@result.0.last_month.time_in_range"
 
 // A week ago, always in last week, in the site's default UTC: a reading in range at noon, one over the range high 5
@@ -69,8 +70,8 @@ ASSERT_EQUALS 50 "@result.0.last_week.time_in_range"
 ASSERT_EQUALS 2 "@result.0.last_week.total_daily_dose"
 
 
-// A new week start day deletes the weeks, which no longer follow it, so once the jobs run the kept week is gone:
-// back on Monday, last week is built from its days again, and its day was deleted
+// A new week start day deletes the weeks and fortnights, which no longer follow it, so once the jobs run the kept ones
+// are gone: back on Monday, they are built from their days again, and the day was deleted
 NAME week_start_sunday
 POST http://{{ site }}/settings/site
 H Authorization: Bearer {{ jwt }}
@@ -94,3 +95,4 @@ H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_EQUALS null "@result.0.last_week.time_in_range"
 ASSERT_EQUALS 0 "@result.0.last_week.total_daily_dose"
+ASSERT_EQUALS null "@result.0.last_fortnight.time_in_range"
