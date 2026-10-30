@@ -19,6 +19,7 @@ import (
 	"nighttroop.t1d.nz/utils/authclients"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/security"
+	"nighttroop.t1d.nz/utils/usage"
 )
 
 // DefaultSupportEmail is the support email address when SUPPORT_EMAIL is not set
@@ -114,6 +115,10 @@ type ServerConfig struct {
 	// Backup Config
 	ControlBackupIntervalInSeconds int
 	BatchBackupIntervalInSeconds   int
+	// SiteBackupRetentionDays is how long S3 keeps a site batch backup or archive after a newer upload replaces it
+	SiteBackupRetentionDays int
+	// ControlBackupRetentionDays is how long S3 keeps a control backup after a newer upload replaces it
+	ControlBackupRetentionDays int
 
 	// Sync Config
 	BackgroundSyncWorkers int
@@ -144,6 +149,9 @@ type ServerConfig struct {
 	// Events is every event on the server, by site ID: each change to a site's models, for live updates and alarms,
 	// and each one done to a site or the server, which the logs DB also keeps
 	Events *events.SiteBus
+
+	// Usage counts how the server is used since it started, for control's usage page
+	Usage *usage.Tracker
 
 	// These keys are used to encrypt secrets in the DB and S3 at rest
 	// This has the option to add additional keys
@@ -265,6 +273,8 @@ func NewServerConfig() (*ServerConfig, error) {
 		// Backup Config
 		ControlBackupIntervalInSeconds: configIntSelect(dotenv, "CONTROL_BACKUP_INTERVAL_IN_SECONDS", 30),
 		BatchBackupIntervalInSeconds:   configIntSelect(dotenv, "BATCH_BACKUP_INTERVAL_IN_SECONDS", 300), // 5 minutes
+		SiteBackupRetentionDays:        configIntSelect(dotenv, "SITE_BACKUP_RETENTION_DAYS", 30),
+		ControlBackupRetentionDays:     configIntSelect(dotenv, "CONTROL_BACKUP_RETENTION_DAYS", 90),
 
 		// Sync Config
 		BackgroundSyncWorkers: configIntSelect(dotenv, "BACKGROUND_SYNC_WORKERS", 5),
@@ -314,6 +324,7 @@ func NewServerConfig() (*ServerConfig, error) {
 	serverConfig.RateLimiters = newRateLimiters(serverConfig)
 	serverConfig.RecentClients = authclients.New(10_000)
 	serverConfig.Events = events.NewSiteBus()
+	serverConfig.Usage = usage.New()
 
 	serverConfig.Security = security.NewSecurityConfig(serverConfig.RawKeySets, serverConfig.Mode, serverConfig.HostName, serverConfig.IsHTTPS())
 
@@ -555,6 +566,8 @@ func printServerConfig(config ServerConfig) {
 		"LogsDBMaxRowsPerTable", config.LogsDBMaxRowsPerTable,
 		"ControlBackupIntervalInSeconds", config.ControlBackupIntervalInSeconds,
 		"BatchBackupIntervalInSeconds", config.BatchBackupIntervalInSeconds,
+		"SiteBackupRetentionDays", config.SiteBackupRetentionDays,
+		"ControlBackupRetentionDays", config.ControlBackupRetentionDays,
 		"SocketMaxSessionsPerSite", config.SocketMaxSessionsPerSite,
 		"SocketMaxBufferedBytes", config.SocketMaxBufferedBytes,
 		"SocketMaxPacketsPerSecond", config.SocketMaxPacketsPerSecond,

@@ -92,3 +92,6 @@ WHERE site_id = sqlc.arg('SiteID') AND id = sqlc.arg('ID');
 -- name: DeleteSiteIdentity :exec
 DELETE FROM site_identities
 WHERE site_id = sqlc.arg('SiteID') AND id = sqlc.arg('ID');
+-- name: CountActiveIdentities :one
+-- The identities seen since Since, in milliseconds
+SELECT COUNT(*) FROM site_identities WHERE last_seen_at >= sqlc.arg('Since');

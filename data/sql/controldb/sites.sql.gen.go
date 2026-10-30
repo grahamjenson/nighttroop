@@ -46,6 +46,54 @@ func (q *Queries) ArchiveSites(ctx context.Context, arg ArchiveSitesParams) ([]s
 	return items, nil
 }
 
+const countActiveSites = `-- name: CountActiveSites :one
+SELECT COUNT(*) FROM sites WHERE state = 'live' AND last_seen_at >= ?1
+`
+
+type CountActiveSitesParams struct {
+	Since *int64
+}
+
+// The live sites seen since Since, in milliseconds
+func (q *Queries) CountActiveSites(ctx context.Context, arg CountActiveSitesParams) (int64, error) {
+	row := q.queryRow(ctx, q.countActiveSitesStmt, countActiveSites, arg.Since)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countSitesByState = `-- name: CountSitesByState :many
+SELECT state, COUNT(*) AS count FROM sites GROUP BY state ORDER BY state
+`
+
+type CountSitesByStateRow struct {
+	State string
+	Count int64
+}
+
+func (q *Queries) CountSitesByState(ctx context.Context) ([]*CountSitesByStateRow, error) {
+	rows, err := q.query(ctx, q.countSitesByStateStmt, countSitesByState)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*CountSitesByStateRow
+	for rows.Next() {
+		var i CountSitesByStateRow
+		if err := rows.Scan(&i.State, &i.Count); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const createSite = `-- name: CreateSite :one
 
 INSERT INTO sites (id, backup_key_hash)

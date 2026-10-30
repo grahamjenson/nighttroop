@@ -30,8 +30,17 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.archiveSitesStmt, err = db.PrepareContext(ctx, archiveSites); err != nil {
 		return nil, fmt.Errorf("error preparing query ArchiveSites: %w", err)
 	}
+	if q.countActiveIdentitiesStmt, err = db.PrepareContext(ctx, countActiveIdentities); err != nil {
+		return nil, fmt.Errorf("error preparing query CountActiveIdentities: %w", err)
+	}
+	if q.countActiveSitesStmt, err = db.PrepareContext(ctx, countActiveSites); err != nil {
+		return nil, fmt.Errorf("error preparing query CountActiveSites: %w", err)
+	}
 	if q.countSiteIdentitiesStmt, err = db.PrepareContext(ctx, countSiteIdentities); err != nil {
 		return nil, fmt.Errorf("error preparing query CountSiteIdentities: %w", err)
+	}
+	if q.countSitesByStateStmt, err = db.PrepareContext(ctx, countSitesByState); err != nil {
+		return nil, fmt.Errorf("error preparing query CountSitesByState: %w", err)
 	}
 	if q.createControlIdentityStmt, err = db.PrepareContext(ctx, createControlIdentity); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateControlIdentity: %w", err)
@@ -180,9 +189,24 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing archiveSitesStmt: %w", cerr)
 		}
 	}
+	if q.countActiveIdentitiesStmt != nil {
+		if cerr := q.countActiveIdentitiesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing countActiveIdentitiesStmt: %w", cerr)
+		}
+	}
+	if q.countActiveSitesStmt != nil {
+		if cerr := q.countActiveSitesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing countActiveSitesStmt: %w", cerr)
+		}
+	}
 	if q.countSiteIdentitiesStmt != nil {
 		if cerr := q.countSiteIdentitiesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing countSiteIdentitiesStmt: %w", cerr)
+		}
+	}
+	if q.countSitesByStateStmt != nil {
+		if cerr := q.countSitesByStateStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing countSitesByStateStmt: %w", cerr)
 		}
 	}
 	if q.createControlIdentityStmt != nil {
@@ -446,7 +470,10 @@ type Queries struct {
 	tx                                 *sql.Tx
 	allSiteIdentitiesStmt              *sql.Stmt
 	archiveSitesStmt                   *sql.Stmt
+	countActiveIdentitiesStmt          *sql.Stmt
+	countActiveSitesStmt               *sql.Stmt
 	countSiteIdentitiesStmt            *sql.Stmt
+	countSitesByStateStmt              *sql.Stmt
 	createControlIdentityStmt          *sql.Stmt
 	createSiteStmt                     *sql.Stmt
 	createSiteIdentityStmt             *sql.Stmt
@@ -499,7 +526,10 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		tx:                                 tx,
 		allSiteIdentitiesStmt:              q.allSiteIdentitiesStmt,
 		archiveSitesStmt:                   q.archiveSitesStmt,
+		countActiveIdentitiesStmt:          q.countActiveIdentitiesStmt,
+		countActiveSitesStmt:               q.countActiveSitesStmt,
 		countSiteIdentitiesStmt:            q.countSiteIdentitiesStmt,
+		countSitesByStateStmt:              q.countSitesByStateStmt,
 		createControlIdentityStmt:          q.createControlIdentityStmt,
 		createSiteStmt:                     q.createSiteStmt,
 		createSiteIdentityStmt:             q.createSiteIdentityStmt,

@@ -188,7 +188,7 @@ func (b *BackupSiteJobManager) BackupSiteBatch(char string) (err error) {
 
 	trackTrim = len(paths) > 0
 
-	err = b.S3Client.UploadFilesToS3(sitedb.GetS3BatchPath(char, b.ServerConfig), paths)
+	err = b.S3Client.UploadFilesToS3(sitedb.GetS3BatchPath(char, b.ServerConfig), s3utils.SiteRetention, paths)
 	if err != nil {
 		return fmt.Errorf("cannot sync site pool %s: %w", string(char), err)
 	}

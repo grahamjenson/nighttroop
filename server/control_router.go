@@ -16,6 +16,7 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 	r := chi.NewRouter()
 	store := controlcollections.NewControlStore()
 	httputils.AddStandardMiddleware(r, config, controlDB)
+	r.Use(httputils.CountRoutes(config.Usage, "control"))
 
 	static.AddStaticRoutes(r)
 
@@ -35,6 +36,7 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 		r.Get("/sites/{id}/identities", (&controlcollections.SitesCollection{}).IdentitiesHandler)
 		r.Post("/sites/{id}/identities/{identity}/password", (&controlcollections.SitesCollection{}).ResetPasswordHandler)
 		r.Post("/sites/{id}/identities/{identity}/totp", (&controlcollections.SitesCollection{}).ResetTOTPHandler)
+		r.Get("/usage", controlapi.UsageHandler)
 
 		//// TODO
 		// Get User details including db size , last seen, API usage per device, list devices and last seen at, list DB table sizes

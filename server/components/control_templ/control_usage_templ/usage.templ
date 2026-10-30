@@ -1,0 +1,116 @@
+package control_usage_templ
+
+import (
+	"fmt"
+	"slices"
+	"maps"
+
+	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/usage"
+)
+
+// meanStd is a mean and standard deviation, shown with what to
+func meanStd(stats usage.Stats, show func(float64) string) string {
+	return fmt.Sprintf("%s ± %s", show(stats.Mean), show(stats.Std))
+}
+
+func count(value float64) string {
+	return fmt.Sprintf("%.1f", value)
+}
+
+// Usage is how many use the server and how much, and its resources. It asks for itself again every 10 seconds, and
+// swaps in its new numbers.
+templ Usage(model controlmodels.Usage) {
+	<div
+		id="control--usage"
+		class="mx-auto max-w-5xl space-y-6"
+		hx-get="/usage"
+		hx-trigger="every 10s"
+		hx-select="#control--usage"
+		hx-target="this"
+		hx-swap="outerHTML"
+	>
+		@heading.Page("Usage") {
+			How many use the server and how much. Active sites and users are from the DB; the rest is counted since the server started { display.TimeAgo(model.SinceStart.Started, model.NowTime()) }. Updates every 10 seconds.
+		}
+		@section("Active") {
+			@tile("control--usage--sites-day", "Sites today", fmt.Sprint(model.ActiveSitesDay), "seen in the last 24 hours")
+			@tile("control--usage--sites-week", "Sites this week", fmt.Sprint(model.ActiveSitesWeek), "seen in the last 7 days")
+			@tile("control--usage--users-day", "Users today", fmt.Sprint(model.ActiveIdentitiesDay), "people and devices")
+			@tile("control--usage--users-week", "Users this week", fmt.Sprint(model.ActiveIdentitiesWeek), "people and devices")
+			for _, state := range slices.Sorted(maps.Keys(model.SitesByState)) {
+				@tile("control--usage--sites-"+state, display.Name(state)+" sites", fmt.Sprint(model.SitesByState[state]), "in all")
+			}
+		}
+		@section("Use since start") {
+			@tile("control--usage--requests-today", "Requests today", fmt.Sprint(model.SinceStart.Today.Requests), fmt.Sprintf("%d this week", model.SinceStart.Week.Requests))
+			@tile("control--usage--ingested-today", "Ingested today", display.Bytes(float64(model.SinceStart.Today.Ingested)), display.Bytes(float64(model.SinceStart.Week.Ingested))+" this week")
+			@tile("control--usage--ingested-total", "Ingested in all", display.Bytes(float64(model.SinceStart.Ingested)), "since start")
+			@tile("control--usage--requests-per-site", "Requests per site day", meanStd(model.SinceStart.RequestsPerSiteDay, count), fmt.Sprintf("mean ± std of %d site days", model.SinceStart.RequestsPerSiteDay.N))
+			@tile("control--usage--ingested-per-site", "Ingested per site day", meanStd(model.SinceStart.IngestedPerSiteDay, display.Bytes), fmt.Sprintf("mean ± std of %d site days", model.SinceStart.IngestedPerSiteDay.N))
+		}
+		@section("Server") {
+			@tile("control--usage--cpu", "CPU", fmt.Sprintf("%.1f%%", model.Server.CPUPercent), fmt.Sprintf("of %d cores", model.Server.CPUs))
+			@tile("control--usage--memory", "Memory", display.Bytes(float64(model.Server.HeapBytes)), display.Bytes(float64(model.Server.SysBytes))+" from the OS")
+			@tile("control--usage--goroutines", "Goroutines", fmt.Sprint(model.Server.Goroutines), fmt.Sprintf("%d GCs", model.Server.GCs))
+			@tile("control--usage--disk", "Disk used", display.Bytes(float64(model.Server.DiskUsed)), display.Bytes(float64(model.Server.DiskFree))+" free")
+			@tile("control--usage--uptime", "Uptime", display.Duration(model.Server.UptimeMs), "since start")
+		}
+		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
+			<h2 class="mb-3 text-sm font-semibold text-brand-night">Most asked for routes</h2>
+			@table.Table(table.Props{ID: "control--usage--routes", Class: "rounded-lg border border-gray-200"}) {
+				@table.Header() {
+					@table.Row() {
+						@table.Head() {
+							Route
+						}
+						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
+							Requests
+						}
+						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
+							Mean ms
+						}
+					}
+				}
+				@table.Body() {
+					if len(model.SinceStart.Routes) == 0 {
+						<tr><td colspan="3" class="p-4 text-sm text-gray-500">No requests yet.</td></tr>
+					}
+					for _, route := range model.SinceStart.Routes {
+						@table.Row() {
+							@table.Cell(table.CellProps{Class: "font-mono text-xs"}) {
+								{ route.Route }
+							}
+							@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+								{ fmt.Sprint(route.Count) }
+							}
+							@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+								{ fmt.Sprintf("%.1f", route.MeanMs) }
+							}
+						}
+					}
+				}
+			}
+		</section>
+	</div>
+}
+
+templ section(title string) {
+	<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
+		<h2 class="mb-3 text-sm font-semibold text-brand-night">{ title }</h2>
+		<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+			{ children... }
+		</div>
+	</section>
+}
+
+templ tile(id, label, value, note string) {
+	<div class="rounded-lg border border-gray-200 p-3">
+		<div class="text-xs font-semibold uppercase tracking-wide text-gray-500">{ label }</div>
+		<div id={ id } class="mt-1 text-xl font-bold tabular-nums text-gray-900">{ value }</div>
+		<div class="text-xs text-gray-500">{ note }</div>
+	</div>
+}
