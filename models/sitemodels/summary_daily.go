@@ -3,6 +3,7 @@ package sitemodels
 import (
 	"encoding/json"
 	"math"
+	"slices"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/consts"
@@ -12,6 +13,11 @@ import (
 
 // SummaryDailySlotMs is how far apart a summary day's glucose values are, in milliseconds
 const SummaryDailySlotMs = int64(5 * 60_000)
+
+// AGPSlotMs is how long each of a week's or month's AGP percentiles is of, and AGPPercentiles are the percentiles
+const AGPSlotMs = int64(15 * 60_000)
+
+var AGPPercentiles = []float64{5, 25, 50, 75, 95}
 
 // SiteSummaryDaily is a day of the site's data, from midnight in its timezone: its time in range, total daily dose and
 // carbs, and its glucose every 5 minutes from midnight, null when there was no reading, in the settings' units
@@ -113,11 +119,13 @@ func NewSummaryDaily(date, timezone string, start, end int64, low, high float64,
 
 // NewSummaryPeriod is the period, a week or month named by its first date, from start until end, of its summary days.
 // Only days with data count, so its time in range, daily dose and daily carbs are the means of theirs, and its glucose
-// at each 5 minutes from midnight the mean of the days with a reading then.
+// at each 5 minutes from midnight the mean of the days with a reading then. Its AGP is the percentiles of their glucose
+// in each 15 minutes from midnight.
 func NewSummaryPeriod(period, date, timezone string, start, end int64, days []*sitedb.SummaryPeriod) *sitedb.SummaryPeriod {
 	row := &sitedb.SummaryPeriod{Period: period, Date: date, Timezone: timezone, StartAt: start, EndAt: end}
 	inRange, withRange := 0.0, 0
 	sums, counts := make([]int64, 24*60*60_000/SummaryDailySlotMs), make([]int64, 24*60*60_000/SummaryDailySlotMs)
+	bins := make([][]int64, 24*60*60_000/AGPSlotMs)
 	for _, day := range days {
 		if day.Days == 0 {
 			continue
@@ -135,6 +143,8 @@ func NewSummaryPeriod(period, date, timezone string, start, end int64, days []*s
 			if value != nil {
 				sums[slot] += *value
 				counts[slot]++
+				bin := int64(slot) * SummaryDailySlotMs / AGPSlotMs
+				bins[bin] = append(bins[bin], *value)
 			}
 		}
 	}
@@ -153,5 +163,16 @@ func NewSummaryPeriod(period, date, timezone string, start, end int64, days []*s
 	}
 	glucoseJSON, _ := json.Marshal(slots)
 	row.GlucoseMgdlJson = string(glucoseJSON)
+	agp := make([][]int64, len(bins))
+	for bin, values := range bins {
+		slices.Sort(values)
+		for _, p := range AGPPercentiles {
+			if len(values) > 0 {
+				agp[bin] = append(agp[bin], int64(math.Round(glucose.Percentile(values, p))))
+			}
+		}
+	}
+	agpJSON, _ := json.Marshal(agp)
+	row.AgpMgdlJson = new(string(agpJSON))
 	return row
 }

@@ -4356,6 +4356,16 @@ func (m *SummaryPeriod) SetGlucoseMgdlJson(v string) {
 	m.GlucoseMgdlJson = v
 }
 
+// GetAgpMgdlJson returns the AgpMgdlJson value.
+func (m SummaryPeriod) GetAgpMgdlJson() *string {
+	return m.AgpMgdlJson
+}
+
+// SetAgpMgdlJson sets the AgpMgdlJson value and returns the updated SummaryPeriod.
+func (m *SummaryPeriod) SetAgpMgdlJson(v *string) {
+	m.AgpMgdlJson = v
+}
+
 // GetCreatedAt returns the CreatedAt value.
 func (m SummaryPeriod) GetCreatedAt() int64 {
 	return m.CreatedAt
@@ -13924,6 +13934,16 @@ func (m UpsertSummaryPeriodParams) GetGlucoseMgdlJson() string {
 // SetGlucoseMgdlJson sets the GlucoseMgdlJson value and returns the updated UpsertSummaryPeriodParams.
 func (m *UpsertSummaryPeriodParams) SetGlucoseMgdlJson(v string) {
 	m.GlucoseMgdlJson = v
+}
+
+// GetAgpMgdlJson returns the AgpMgdlJson value.
+func (m UpsertSummaryPeriodParams) GetAgpMgdlJson() *string {
+	return m.AgpMgdlJson
+}
+
+// SetAgpMgdlJson sets the AgpMgdlJson value and returns the updated UpsertSummaryPeriodParams.
+func (m *UpsertSummaryPeriodParams) SetAgpMgdlJson(v *string) {
+	m.AgpMgdlJson = v
 }
 
 // GetBefore returns the Before value.
