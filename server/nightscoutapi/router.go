@@ -23,6 +23,7 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config *config.ServerConfig) c
 
 	r := chi.NewRouter()
 	httputils.AddStandardMiddleware(r, config, controlDB)
+	r.Use(httputils.CountRoutes(config.Usage, "nightscout"))
 	// Before auth only the IP is known, so an IP spamming bad tokens cannot spend the site's own limit
 	r.Use(httputils.SiteUnauthRateLimitMiddleware(config))
 
