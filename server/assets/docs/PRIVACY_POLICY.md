@@ -8,7 +8,7 @@ Owner contact email: **[SUPPORT_EMAIL](mailto:SUPPORT_EMAIL)**
 
 ## Consent by Sending Data
 
-The Service is a web service that stores and processes diabetes data, so that Users and the people and devices they choose can see it. By sending Data to the Service, whether you enter it on a site, upload it from a device or app, or set up a sync that fetches it from another service, you consent to the Owner storing and processing that Data to provide the Service, as this policy describes. If you send Data about another person, such as someone you care for, you confirm that you have their consent, or are legally able to give it for them.
+The Service is a web service that stores and processes data, so that Users and the people and devices they choose can see it. By sending Data to the Service, whether you enter it on a site, upload it from a device or app, or set up a sync that fetches it from another service, you consent to the Owner storing and processing that Data to provide the Service, as this policy describes. If you send Data about another person, such as someone you care for, you confirm that you have their consent, or are legally able to give it for them.
 
 You can withdraw this consent at any time by no longer sending Data and deleting your site, as described under The Rights of Users.
 
@@ -16,10 +16,10 @@ You can withdraw this consent at any time by no longer sending Data and deleting
 
 The Service keeps:
 
-1. **Health Data** that is sent to a site: glucose readings, insulin doses, food, temporary targets and basal rates, profiles, devices and their status, notes, and the settings and alarms of the site and its Users. Health Data is sensitive, and is only used to provide the Service.
-2. **Account Data**: each site's address, and the names, roles, settings and sign-in details of the Users and devices of a site. Passwords are stored only as hashes.
-3. **Sync credentials**: the usernames, passwords, addresses and tokens of other services (such as Dexcom, LibreLinkUp and Nightscout) a site is set up to sync from. These are encrypted when stored, and are only used to fetch the site's Data.
-4. **Usage Data**: logs of requests to the Service, including IP addresses, the times of requests and what was requested, and records of the Service's own jobs and errors, such as syncs and backups.
+1. **User Data** that is sent to a site: such as glucose readings, insulin doses, food, temporary targets and basal rates, profiles, devices and their status, notes, and the settings and alarms of the site and its Users. This User Data is sensitive, and is only used to provide the Service.
+2. **Account Data**: such as each site's address, and the names, roles, settings and sign-in details of the Users and devices of a site. Passwords are stored only as hashes.
+3. **Sync credentials**: such as the usernames, passwords, addresses and tokens of other services (such as Dexcom, LibreLinkUp and Nightscout) a site is set up to sync from. These are encrypted when stored, and are only used to fetch the site's Data.
+4. **Usage Data**: such as logs of requests to the Service, including IP addresses, the times of requests and what was requested, and records of the Service's own jobs and errors, such as syncs and backups.
 
 The Service uses one cookie, to keep a User signed in. It does not use advertising or analytics tracking.
 
@@ -27,7 +27,7 @@ Unless the Service says otherwise, Data it asks for is needed to provide the Ser
 
 ## Methods of Processing
 
-The Owner takes appropriate security measures to prevent unauthorised access, disclosure, modification or destruction of the Data, including encrypting sync credentials and backups. The Data is processed by computers, following procedures strictly related to the purposes in this policy.
+The Owner takes appropriate security measures to prevent unauthorised access, disclosure, modification or destruction of the Data, including encrypting credentials and backups. The Data is processed by computers, following procedures strictly related to the purposes in this policy.
 
 A site's Data is shown only to the Users and devices of that site, and to anyone they give its address and a token or password to, such as Nightscout apps. It is not shown to other sites.
 
@@ -66,10 +66,10 @@ Users may exercise certain rights over their Data processed by the Owner. In par
 
 1. **Withdraw their consent at any time**: by no longer sending Data to the Service, and deleting their site.
 2. **Object to processing of their Data**: where the processing is carried out on a legal basis other than consent.
-3. **Access their Data**: a site's admin can see all its Data on the site, and download a copy of it from the site's General settings.
+3. **Access their Data**: a site's admin can see all its Data on the site, and download a copy of it.
 4. **Verify and seek rectification**: Users can correct their Data on the site, or ask the Owner to.
 5. **Restrict the processing of their Data**: under certain circumstances; the Owner will then only store the Data.
-6. **Have their Data deleted**: a site's admin can delete the site from its General settings, which removes it from the Service and keeps it only in an encrypted archive. To have the archive erased too, contact the Owner.
+6. **Have their Data deleted**: a site's admin can delete the site, which removes it from the Service and keeps it only in an encrypted archive for a limited time. To have the archive erased too, contact the Owner.
 7. **Receive their Data and have it transferred to another controller**: the site's Data can be downloaded in a structured, commonly used and machine-readable format, and much of it is also available through the Service's Nightscout compatible API.
 8. **Lodge a complaint**: with their competent data protection authority, such as the New Zealand Privacy Commissioner.
 
