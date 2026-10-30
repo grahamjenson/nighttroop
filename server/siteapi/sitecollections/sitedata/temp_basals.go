@@ -124,15 +124,7 @@ func (s *TempBasalsCollection) SearchHTMXResponse(models []*sitemodels.SiteTempB
 
 // DeleteRow soft deletes, like the Nightscout API, so syncing clients see the delete
 func (s *TempBasalsCollection) DeleteRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) error {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return err
-	}
-	_, err = q.SoftDeleteTempBasal(ctx, sitedb.SoftDeleteTempBasalParams{
-		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
-		ID:                    id,
-	})
-	return err
+	return siteapiutils.SoftDelete(ctx, collectionTx, id, siteContext, (*sitedb.Queries).SoftDeleteTempBasal)
 }
 
 func (s *TempBasalsCollection) DeleteHTMXResponse(model *sitemodels.SiteTempBasal) templ.Component {

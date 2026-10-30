@@ -114,15 +114,7 @@ func (s *ProfileSwitchesCollection) SearchHTMXResponse(models []*sitemodels.Site
 
 // DeleteRow soft deletes, like the Nightscout API, so syncing clients see the delete
 func (s *ProfileSwitchesCollection) DeleteRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) error {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return err
-	}
-	_, err = q.SoftDeleteProfileSwitch(ctx, sitedb.SoftDeleteProfileSwitchParams{
-		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
-		ID:                    id,
-	})
-	return err
+	return siteapiutils.SoftDelete(ctx, collectionTx, id, siteContext, (*sitedb.Queries).SoftDeleteProfileSwitch)
 }
 
 func (s *ProfileSwitchesCollection) DeleteHTMXResponse(model *sitemodels.SiteProfileSwitch) templ.Component {

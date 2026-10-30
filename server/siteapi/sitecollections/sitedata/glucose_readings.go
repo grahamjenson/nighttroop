@@ -115,15 +115,7 @@ func (s *GlucoseReadingsCollection) SearchHTMXResponse(models []*sitemodels.Site
 
 // DeleteRow soft deletes, like the Nightscout API, so syncing clients see the delete
 func (s *GlucoseReadingsCollection) DeleteRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) error {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return err
-	}
-	_, err = q.SoftDeleteGlucoseReading(ctx, sitedb.SoftDeleteGlucoseReadingParams{
-		UpdatedByIdentityName: &siteContext.IdentityModel.Name,
-		ID:                    id,
-	})
-	return err
+	return siteapiutils.SoftDelete(ctx, collectionTx, id, siteContext, (*sitedb.Queries).SoftDeleteGlucoseReading)
 }
 
 func (s *GlucoseReadingsCollection) DeleteHTMXResponse(model *sitemodels.SiteGlucoseReading) templ.Component {
