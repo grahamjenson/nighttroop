@@ -65,7 +65,7 @@ func (b *BackupControlJobManager) BackupToS3() (err error) {
 	}
 
 	// Copy the control db to S3 path
-	err = b.S3Client.UploadFilesToS3(controldb.GetS3Path(b.ServerConfig), []string{b.controlDB.BackupPath})
+	err = b.S3Client.UploadFilesToS3(controldb.GetS3Path(b.ServerConfig), s3utils.ControlRetention, []string{b.controlDB.BackupPath})
 	if err != nil {
 		return fmt.Errorf("cannot sync control db: %w", err)
 	}

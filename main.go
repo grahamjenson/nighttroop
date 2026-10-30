@@ -59,6 +59,10 @@ func run() error {
 		slog.Warn("S3 is not working, running without S3 restore or backups", "error", err)
 	} else {
 		serverConfig.Status.S3Working = true
+		// Without versioning each backup replaces the last, which is worth an error but not stopping backups
+		if err := s3Client.ConfigureVersioning(context.TODO()); err != nil {
+			slog.Error("S3 versioning is not set up, so each backup replaces the last", "error", err)
+		}
 	}
 
 	// Run some tests to make sure the server is setup properly
