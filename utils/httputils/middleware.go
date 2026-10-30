@@ -34,6 +34,26 @@ func AddStandardMiddleware(router chi.Router, config *config.ServerConfig, contr
 	router.Use(middleware.Timeout(30 * time.Second))
 	// Gzip text responses, like the pages, styles, scripts and JSON, for clients that accept it
 	router.Use(middleware.Compress(5))
+	router.Use(withSupportEmail(config.SupportEmail))
+}
+
+type supportEmailKey struct{}
+
+// withSupportEmail puts the server's support email address in each request's context, for its pages' footer
+func withSupportEmail(email string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), supportEmailKey{}, email)))
+		})
+	}
+}
+
+// SupportEmail is the server's support email address, or the default outside a request
+func SupportEmail(ctx context.Context) string {
+	if email, ok := ctx.Value(supportEmailKey{}).(string); ok && email != "" {
+		return email
+	}
+	return config.DefaultSupportEmail
 }
 
 // RecordServerErrors records each response with a 5xx status in the logs DB's errors, with its site when it has one.

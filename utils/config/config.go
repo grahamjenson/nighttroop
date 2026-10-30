@@ -21,6 +21,9 @@ import (
 	"nighttroop.t1d.nz/utils/security"
 )
 
+// DefaultSupportEmail is the support email address when SUPPORT_EMAIL is not set
+const DefaultSupportEmail = "nighttroop@t1d.nz"
+
 // ServerStatus records which optional services are working. It is filled in
 // at startup and read by anything that depends on them.
 type ServerStatus struct {
@@ -53,6 +56,10 @@ type ServerConfig struct {
 
 	// sentry
 	SentryDSN string
+
+	// SupportEmail is where users contact the server's operator, linked from every page's footer and in the terms
+	// of service and privacy policy
+	SupportEmail string
 
 	// paths
 	SqlitePath string
@@ -195,6 +202,8 @@ func NewServerConfig() (*ServerConfig, error) {
 
 		// sentry
 		SentryDSN: configStringSelect(dotenv, "SENTRY_DSN", ""),
+
+		SupportEmail: configStringSelect(dotenv, "SUPPORT_EMAIL", DefaultSupportEmail),
 
 		// security
 		RawKeySets: configStringSelect(dotenv, consts.KEY_SETS_ENV_KEY, ""),
