@@ -625,6 +625,42 @@ func (db *ControlDB) CreateSiteIdentity(ctx context.Context, q *controldb.Querie
 	}, nil
 }
 
+// ResetSiteIdentityPassword gives one of a site's identities a new random password, and a device the Nightscout token
+// made from it, recorded as changed by the control identity named by. The old password stops working.
+func (db *ControlDB) ResetSiteIdentityPassword(ctx context.Context, identity *controldb.SiteIdentity, by string) (*IdentityValues, error) {
+	password, hashedPassword, err := db.ServerConfig.Security.GeneratePassword()
+	if err != nil {
+		return nil, fmt.Errorf("cannot generate user password: %w", err)
+	}
+	if _, err := db.Queries.UpdateSiteIdentityPassword(ctx, controldb.UpdateSiteIdentityPasswordParams{PasswordHash: hashedPassword,
+		UpdatedByIdentityName: &by, SiteID: identity.SiteID, ID: identity.ID}); err != nil {
+		return nil, err
+	}
+	values := &IdentityValues{Password: password}
+	if can.HaveNightscoutToken(identity.Role) {
+		token, err := db.ServerConfig.Security.CreateNightscoutTokenForIdentity(identity.SiteID, identity.Name, string(identity.Role), password)
+		if err != nil {
+			return nil, fmt.Errorf("cannot create nightscout token for identity: %w", err)
+		}
+		values.NSToken = &token
+	}
+	return values, nil
+}
+
+// ResetSiteIdentityTOTP gives one of a site's identities a new TOTP secret, for its authenticator app, recorded as
+// changed by the control identity named by. Codes from the old secret stop working.
+func (db *ControlDB) ResetSiteIdentityTOTP(ctx context.Context, identity *controldb.SiteIdentity, by string) (*IdentityValues, error) {
+	totpSecret, encTOTPSecret, err := db.ServerConfig.Security.TOTPGenerate(fmt.Sprintf("%s@%s.%s", identity.Name, identity.SiteID, db.ServerConfig.HostName))
+	if err != nil {
+		return nil, fmt.Errorf("cannot generate user TOTP: %w", err)
+	}
+	if _, err := db.Queries.UpdateSiteIdentityTOTP(ctx, controldb.UpdateSiteIdentityTOTPParams{TotpSecretEnc: encTOTPSecret,
+		UpdatedByIdentityName: &by, SiteID: identity.SiteID, ID: identity.ID}); err != nil {
+		return nil, err
+	}
+	return &IdentityValues{TotpSecret: &totpSecret}, nil
+}
+
 func (db *ControlDB) CreateControlIdentity(name string, role consts.ControlRole) (*IdentityValues, error) {
 	security := db.ServerConfig.Security
 	hostname := db.ServerConfig.HostName

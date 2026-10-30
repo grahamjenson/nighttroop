@@ -34,6 +34,9 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 		store.Routes(r)
 		r.Post("/sites", (&controlcollections.SitesCollection{}).CreateHandler)
 		r.Post("/sites/{id}/truncate", (&controlcollections.SitesCollection{}).TruncateHandler)
+		r.Get("/sites/{id}/identities", (&controlcollections.SitesCollection{}).IdentitiesHandler)
+		r.Post("/sites/{id}/identities/{identity}/password", (&controlcollections.SitesCollection{}).ResetPasswordHandler)
+		r.Post("/sites/{id}/identities/{identity}/totp", (&controlcollections.SitesCollection{}).ResetTOTPHandler)
 		r.Get("/usage", controlapi.UsageHandler)
 
 		//// TODO

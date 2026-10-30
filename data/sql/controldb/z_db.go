@@ -156,8 +156,14 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateSiteIdentityEnabledStmt, err = db.PrepareContext(ctx, updateSiteIdentityEnabled); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSiteIdentityEnabled: %w", err)
 	}
+	if q.updateSiteIdentityPasswordStmt, err = db.PrepareContext(ctx, updateSiteIdentityPassword); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateSiteIdentityPassword: %w", err)
+	}
 	if q.updateSiteIdentitySettingsStmt, err = db.PrepareContext(ctx, updateSiteIdentitySettings); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSiteIdentitySettings: %w", err)
+	}
+	if q.updateSiteIdentityTOTPStmt, err = db.PrepareContext(ctx, updateSiteIdentityTOTP); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateSiteIdentityTOTP: %w", err)
 	}
 	if q.updateSitesSettingsStmt, err = db.PrepareContext(ctx, updateSitesSettings); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSitesSettings: %w", err)
@@ -399,9 +405,19 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateSiteIdentityEnabledStmt: %w", cerr)
 		}
 	}
+	if q.updateSiteIdentityPasswordStmt != nil {
+		if cerr := q.updateSiteIdentityPasswordStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateSiteIdentityPasswordStmt: %w", cerr)
+		}
+	}
 	if q.updateSiteIdentitySettingsStmt != nil {
 		if cerr := q.updateSiteIdentitySettingsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateSiteIdentitySettingsStmt: %w", cerr)
+		}
+	}
+	if q.updateSiteIdentityTOTPStmt != nil {
+		if cerr := q.updateSiteIdentityTOTPStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateSiteIdentityTOTPStmt: %w", cerr)
 		}
 	}
 	if q.updateSitesSettingsStmt != nil {
@@ -512,7 +528,9 @@ type Queries struct {
 	updateSiteDateFlagsStmt            *sql.Stmt
 	updateSiteIdentityDateFlagsStmt    *sql.Stmt
 	updateSiteIdentityEnabledStmt      *sql.Stmt
+	updateSiteIdentityPasswordStmt     *sql.Stmt
 	updateSiteIdentitySettingsStmt     *sql.Stmt
+	updateSiteIdentityTOTPStmt         *sql.Stmt
 	updateSitesSettingsStmt            *sql.Stmt
 	updateSyncReportAttemptStmt        *sql.Stmt
 	updateSyncSourceStmt               *sql.Stmt
@@ -568,7 +586,9 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateSiteDateFlagsStmt:            q.updateSiteDateFlagsStmt,
 		updateSiteIdentityDateFlagsStmt:    q.updateSiteIdentityDateFlagsStmt,
 		updateSiteIdentityEnabledStmt:      q.updateSiteIdentityEnabledStmt,
+		updateSiteIdentityPasswordStmt:     q.updateSiteIdentityPasswordStmt,
 		updateSiteIdentitySettingsStmt:     q.updateSiteIdentitySettingsStmt,
+		updateSiteIdentityTOTPStmt:         q.updateSiteIdentityTOTPStmt,
 		updateSitesSettingsStmt:            q.updateSitesSettingsStmt,
 		updateSyncReportAttemptStmt:        q.updateSyncReportAttemptStmt,
 		updateSyncSourceStmt:               q.updateSyncSourceStmt,
