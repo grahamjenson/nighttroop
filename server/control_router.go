@@ -31,6 +31,7 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 
 		// The control plane's collections, each at its route: sites, jobs, job stats and sync sources
 		store.Routes(r)
+		r.Post("/sites", (&controlcollections.SitesCollection{}).CreateHandler)
 		r.Post("/sites/{id}/truncate", (&controlcollections.SitesCollection{}).TruncateHandler)
 
 		//// TODO

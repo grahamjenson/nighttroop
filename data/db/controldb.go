@@ -152,16 +152,39 @@ type SiteCreateResult struct {
 	BackupPassword  string
 }
 
+// ErrSiteIDTaken is a site ID picked for a new site that a site, in any state, already has
+var ErrSiteIDTaken = fmt.Errorf("that site ID is taken")
+
 func (db *ControlDB) CreateSite() (*SiteCreateResult, error) {
+	return db.createSite("")
+}
+
+// CreateSiteWithID creates a site at a site ID picked for it, such as a vanity one for a special user. It is 8
+// lowercase letters like every site's, and one already taken is refused.
+func (db *ControlDB) CreateSiteWithID(subdomain string) (*SiteCreateResult, error) {
+	if !utils.SyntacticallyValidateSiteID(subdomain) {
+		return nil, fmt.Errorf("site ID %q is not %d lowercase letters", subdomain, utils.SITE_ID_LENGTH)
+	}
+	return db.createSite(subdomain)
+}
+
+// createSite creates a site at subdomain, or at a random one when it is ""
+func (db *ControlDB) createSite(subdomain string) (*SiteCreateResult, error) {
 	db.createSiteLock.Lock()
 	defer db.createSiteLock.Unlock()
 
-	subdomain := utils.NextSiteSubdomain(db.ServerConfig.IsDevOrTest())
-	if db.SubdomainUsed(subdomain) {
-		// Try Again with an actual random ID
-		subdomain = utils.NextSiteSubdomain(false)
+	if subdomain != "" {
 		if db.SubdomainUsed(subdomain) {
-			return nil, fmt.Errorf("site already exists")
+			return nil, ErrSiteIDTaken
+		}
+	} else {
+		subdomain = utils.NextSiteSubdomain(db.ServerConfig.IsDevOrTest())
+		if db.SubdomainUsed(subdomain) {
+			// Try Again with an actual random ID
+			subdomain = utils.NextSiteSubdomain(false)
+			if db.SubdomainUsed(subdomain) {
+				return nil, fmt.Errorf("site already exists")
+			}
 		}
 	}
 

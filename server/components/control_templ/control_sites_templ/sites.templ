@@ -6,12 +6,18 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/models/publicmodels"
+	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/public_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/server/components/ui/toast"
+	"nighttroop.t1d.nz/utils"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -23,6 +29,12 @@ func inactive(ctx context.Context, site *controlmodels.Site) bool {
 		return false
 	}
 	return site.Inactive(controlContext.ControlDB.ServerConfig.DisableAfterInactivityDays, time.Now())
+}
+
+// isAdmin is whether the control identity is an admin, who can create sites
+func isAdmin(ctx context.Context) bool {
+	controlContext := httputils.GetControlContext(ctx)
+	return controlContext != nil && controlContext.IdentityModel != nil && controlContext.IdentityModel.Role == consts.ControlRoleAdmin
 }
 
 // formatDate shows an optional time in ms, or a dash when it is not set
@@ -46,6 +58,9 @@ templ SitesTable(sites []*controlmodels.Site, skip int64, limit int64, order str
 	<div id="sites_table" class="mx-auto max-w-5xl space-y-6">
 		@heading.Page("Sites") {
 			Every site. Click a site to see its details.
+		}
+		if isAdmin(ctx) {
+			@createSiteForm()
 		}
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			<div id="control--sites--order" class="mb-4 flex justify-end gap-2">
@@ -121,6 +136,49 @@ templ sitesPageButton(id string, label string, skip int64, limit int64, order st
 	}) {
 		{ label }
 	}
+}
+
+// createSiteForm creates a site at an ID an admin picks, such as a vanity one for a special user: 8 lowercase
+// letters, like every site's
+templ createSiteForm() {
+	<form
+		id="control--sites--create"
+		class="flex items-end gap-2 rounded-xl border border-gray-200 p-4 shadow-sm"
+		hx-post="/sites"
+		hx-target="#modal-container"
+		hx-swap="innerHTML"
+		hx-status:4xx="target:#toaster swap:beforeend"
+		hx-status:5xx="target:#toaster swap:beforeend"
+	>
+		@field.Field("control--sites--create--id", fmt.Sprintf("New site ID (%d lowercase letters)", utils.SITE_ID_LENGTH), "w-64") {
+			@input.Input(input.Props{
+				ID:          "control--sites--create--id",
+				Name:        "id",
+				Placeholder: "grahamjz",
+				Required:    true,
+				Attributes: templ.Attributes{
+					"pattern": fmt.Sprintf("[a-z]{%d}", utils.SITE_ID_LENGTH), "minlength": utils.SITE_ID_LENGTH, "maxlength": utils.SITE_ID_LENGTH,
+					"title": fmt.Sprintf("%d lowercase letters, a to z", utils.SITE_ID_LENGTH), "autocomplete": "off", "spellcheck": "false",
+				},
+			})
+		}
+		@button.Button(button.Props{ID: "control--sites--create--submit", Type: button.TypeSubmit}) {
+			Create Site
+		}
+	</form>
+}
+
+// SiteCreated shows a site an admin created, with its credentials, which are shown only this once
+templ SiteCreated(info publicmodels.NewSiteInfo) {
+	@modal.Modal(modal.Props{ID: "control--site--created", Title: "Site Created", Subtitle: info.URL}) {
+		@public_templ.CreateSiteInfo(info)
+	}
+}
+
+// SiteNotCreated is a toast saying why a site could not be created, such as its ID being taken
+templ SiteNotCreated(message string) {
+	@toast.Toast(toast.Props{Title: "Site Not Created", Description: message, Variant: toast.VariantError, Position: toast.PositionTopCenter,
+		Dismissible: true, Icon: true})
 }
 
 templ siteRow(site *controlmodels.Site) {
