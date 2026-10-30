@@ -44,6 +44,11 @@ Use code generators where possible, especially for building models and params fo
 
 - Adding, removing or changing a configuration environment variable (in `utils/config`) must update `docs/config.md` in the same change.
 
+## Requirements
+
+- `docs/Requirements.md` lists every feature, under Control, Site and Identity. A PR that adds, changes or removes a feature must update it in the same PR.
+- Write it as the file is written: one feature per line, saying what a person can do, not how the code does it.
+
 ## SQL
 
 - Only ever use prepared statements: add a named query to `data/sql/*/queries` and call the generated sqlc method.
