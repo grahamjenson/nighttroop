@@ -40,6 +40,10 @@ Use code generators where possible, especially for building models and params fo
 
 - Run `go generate ./...` and commit what it changes; CI fails if generating changes any file.
 
+## Config
+
+- Adding, removing or changing a configuration environment variable (in `utils/config`) must update `docs/config.md` in the same change.
+
 ## SQL
 
 - Only ever use prepared statements: add a named query to `data/sql/*/queries` and call the generated sqlc method.
