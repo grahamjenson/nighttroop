@@ -139,56 +139,6 @@ func (m *ControlIdentity) SetDeletedAt(v *int64) {
 }
 
 // GetID returns the ID value.
-func (m DataSourceBlockList) GetID() int64 {
-	return m.ID
-}
-
-// SetID sets the ID value and returns the updated DataSourceBlockList.
-func (m *DataSourceBlockList) SetID(v int64) {
-	m.ID = v
-}
-
-// GetCreatedAt returns the CreatedAt value.
-func (m DataSourceBlockList) GetCreatedAt() int64 {
-	return m.CreatedAt
-}
-
-// SetCreatedAt sets the CreatedAt value and returns the updated DataSourceBlockList.
-func (m *DataSourceBlockList) SetCreatedAt(v int64) {
-	m.CreatedAt = v
-}
-
-// GetUsername returns the Username value.
-func (m DataSourceBlockList) GetUsername() *string {
-	return m.Username
-}
-
-// SetUsername sets the Username value and returns the updated DataSourceBlockList.
-func (m *DataSourceBlockList) SetUsername(v *string) {
-	m.Username = v
-}
-
-// GetUrl returns the Url value.
-func (m DataSourceBlockList) GetUrl() *string {
-	return m.Url
-}
-
-// SetUrl sets the Url value and returns the updated DataSourceBlockList.
-func (m *DataSourceBlockList) SetUrl(v *string) {
-	m.Url = v
-}
-
-// GetReason returns the Reason value.
-func (m DataSourceBlockList) GetReason() *string {
-	return m.Reason
-}
-
-// SetReason sets the Reason value and returns the updated DataSourceBlockList.
-func (m *DataSourceBlockList) SetReason(v *string) {
-	m.Reason = v
-}
-
-// GetID returns the ID value.
 func (m Site) GetID() string {
 	return m.ID
 }
