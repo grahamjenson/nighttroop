@@ -489,6 +489,24 @@ CREATE TABLE profile_presets (
 -- INDEXES
 --
 
+-- summary_daily is each day of the site's data, built from its readings, insulin and food: a day is from midnight in
+-- the site's timezone, and the date names it. Glucose is in mg/dL every 5 minutes from midnight, null when there was
+-- no reading, so a day is 288 values (276 or 300 when the clocks change).
+CREATE TABLE summary_daily (
+    date TEXT PRIMARY KEY CHECK(length(date) = 10),
+    timezone TEXT NOT NULL CHECK(length(timezone) <= 64),
+    start_at INTEGER NOT NULL,
+    end_at INTEGER NOT NULL,
+
+    time_in_range REAL,
+    total_daily_dose REAL NOT NULL,
+    total_carbs REAL NOT NULL,
+    glucose_mgdl_json TEXT NOT NULL CHECK(length(glucose_mgdl_json) <= 2048 AND json_valid(glucose_mgdl_json)),
+
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
+) STRICT;
+
 -- Every All*/Search* query orders by occurred_at DESC with a LIMIT, so an
 -- index on it lets SQLite walk rows newest first and stop instead of scanning
 -- and sorting the whole table (the Nightscout API dedups every create this way).

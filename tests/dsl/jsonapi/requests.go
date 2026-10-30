@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 	"text/template"
+	"time"
 )
 
 type RequestFile struct {
@@ -276,6 +277,9 @@ func RenderTemplate(input string, ctx map[string]any) (string, error) {
 			},
 			"time":  templateTime,
 			"itime": templateITime,
+			"date":    func(days int) string { return templateDayTime(days, 0).Format(time.DateOnly) },
+			"daytime": func(days, minutes int) string { return templateDayTime(days, minutes).Format(time.RFC3339) },
+			"dayms":   func(days, minutes int) int64 { return templateDayTime(days, minutes).UnixMilli() },
 			"tokenByName": func(list []any, name string) string {
 				for _, item := range list {
 					m := item.(map[string]any)
