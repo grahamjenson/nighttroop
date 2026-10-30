@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // Kept first so it is the first parse in this package, like the first requests after a restart
@@ -27,143 +28,64 @@ func Test_ConcurrentFirstParse(t *testing.T) {
 	wg.Wait()
 }
 
-// We are only going to support a limited set of query params
-
-func Test_Query_DateGTE(t *testing.T) {
+// We are only going to support a limited set of query params, so each query is checked for all of them
+func TestParseQueryValues(t *testing.T) {
 	date := "2023-01-01T00:10:00Z"
-	tm, _ := time.Parse(time.RFC3339, date) // Ensure the date is valid
-	dateMills := fmt.Sprintf("%d", tm.UnixMilli())
-	dateSeconds := fmt.Sprintf("%d", tm.Unix())
-	dateDifferentFormat := tm.Format(time.DateTime)
-	queries := []url.Values{
-		{
-			"find[date][$gte]": []string{date},
-		},
-		{
-			"date$gte": []string{date},
-		},
-		{
-			"find[date][$gte]": []string{dateMills},
-		},
-		{
-			"find[date][$gte]": []string{dateSeconds},
-		},
-		{
-			"find[date][$gte]": []string{dateDifferentFormat},
-		},
+	tm, err := time.Parse(time.RFC3339, date)
+	require.NoError(t, err)
+	fields := []string{"date", "value", "type"}
+	asc := SortOccurredAtAsc.String()
+	tests := []struct {
+		name    string
+		query   url.Values
+		dateGTE string   // "" when not set
+		fields  []string // nil when not set
+		sort    string   // "" when there is no sort order
+		filters bool
+	}{
+		{"date gte", url.Values{"find[date][$gte]": {date}}, date, nil, "", true},
+		{"date gte short", url.Values{"date$gte": {date}}, date, nil, "", true},
+		{"date gte in milliseconds", url.Values{"find[date][$gte]": {fmt.Sprintf("%d", tm.UnixMilli())}}, date, nil, "", true},
+		{"date gte in seconds", url.Values{"find[date][$gte]": {fmt.Sprintf("%d", tm.Unix())}}, date, nil, "", true},
+		{"date gte in another format", url.Values{"find[date][$gte]": {tm.Format(time.DateTime)}}, date, nil, "", true},
+		{"date lte", url.Values{"find[date][$lte]": {date}}, "", nil, "", true},
+		{"date lte short", url.Values{"date$lte": {date}}, "", nil, "", true},
+		{"fields listed", url.Values{"fields": {"date", "value", "type"}}, "", fields, "", false},
+		{"fields with commas", url.Values{"fields": {"date,value,type"}}, "", fields, "", false},
+		{"fields listed and with commas", url.Values{"fields": {"date,value", "type"}}, "", fields, "", false},
+		{"fields with pipes", url.Values{"fields": {"date|value|type"}}, "", fields, "", false},
+		{"sort by date", url.Values{"sort": {"date"}}, "", nil, asc, false},
+		{"sort by mills", url.Values{"sort": {"mills"}}, "", nil, asc, false},
+		{"sort by dateString", url.Values{"sort": {"dateString"}}, "", nil, asc, false},
+		{"sort by an invalid field", url.Values{"sort": {"invalid_field"}}, "", nil, "", false},
+		{"limit", url.Values{"limit": {"1"}}, "", nil, "", false},
+		{"skip", url.Values{"skip": {"1"}}, "", nil, "", false},
+		{"nothing", url.Values{}, "", nil, "", false},
 	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			query, err := ParseQueryValues(test.query)
+			require.NoError(t, err)
 
-	for _, q := range queries {
-		query, err := ParseQueryValues(q)
-		if !assert.NoError(t, err) {
-			return
-		}
-		if !assert.NotNil(t, query.DateGTE) {
-			return
-		}
-		assert.Equal(t, date, query.DateGTE.TimeString())
-	}
-}
+			dateGTE := ""
+			if query.DateGTE != nil {
+				dateGTE = query.DateGTE.TimeString()
+			}
+			require.Equal(t, test.dateGTE, dateGTE)
 
-func Test_Fields(t *testing.T) {
-	queries := []url.Values{
-		{
-			"fields": []string{"date", "value", "type"},
-		},
-		{
-			"fields": []string{"date,value,type"},
-		},
-		{
-			"fields": []string{"date,value", "type"},
-		},
-		{
-			"fields": []string{"date|value|type"},
-		},
-	}
-	for _, q := range queries {
-		query, err := ParseQueryValues(q)
-		if !assert.NoError(t, err) {
-			return
-		}
-		if !assert.NotNil(t, query.Fields) {
-			return
-		}
-		assert.Equal(t, []string{"date", "value", "type"}, query.Fields.ToArray())
-	}
-}
+			var fields []string
+			if query.Fields != nil {
+				fields = query.Fields.ToArray()
+			}
+			require.Equal(t, test.fields, fields)
 
-func Test_Sort(t *testing.T) {
-	// Tests Sort parsing different params
-	queries := []url.Values{
-		{
-			"sort": []string{"date"},
-		},
-		{
-			"sort": []string{"mills"},
-		},
-		{
-			"sort": []string{"dateString"},
-		},
-	}
+			sort := ""
+			if order := query.SortOrder(); order != nil {
+				sort = order.String()
+			}
+			require.Equal(t, test.sort, sort)
 
-	for _, q := range queries {
-		query, err := ParseQueryValues(q)
-		if !assert.NoError(t, err) {
-			return
-		}
-		assert.NotNil(t, query.SortOrder())
-		assert.Equal(t, SortOccurredAtAsc.String(), query.SortOrder().String())
-	}
-
-	query, err := ParseQueryValues(url.Values{
-		"sort": []string{"invalid_field"},
-	})
-
-	if !assert.NoError(t, err) {
-		return
-	}
-
-	assert.Nil(t, query.SortOrder())
-}
-
-func Test_HasAnyFilters(t *testing.T) {
-	queries := []url.Values{
-		{
-			"find[date][$gte]": []string{"2023-01-01T00:10:00Z"},
-		},
-		{
-			"date$gte": []string{"2023-01-01T00:10:00Z"},
-		},
-		{
-			"find[date][$lte]": []string{"2023-01-01T00:10:00Z"},
-		},
-		{
-			"date$lte": []string{"2023-01-01T00:10:00Z"},
-		},
-	}
-
-	for _, q := range queries {
-		query, err := ParseQueryValues(q)
-		if !assert.NoError(t, err) {
-			return
-		}
-		assert.True(t, query.HasAnyFilters())
-	}
-
-	falsequeries := []url.Values{
-		{
-			"limit": []string{"1"},
-		},
-		{
-			"skip": []string{"1"},
-		},
-		{},
-	}
-	for _, q := range falsequeries {
-		query, err := ParseQueryValues(q)
-		if !assert.NoError(t, err) {
-			return
-		}
-		assert.False(t, query.HasAnyFilters())
+			require.Equal(t, test.filters, query.HasAnyFilters())
+		})
 	}
 }
