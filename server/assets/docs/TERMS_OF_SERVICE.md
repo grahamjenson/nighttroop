@@ -1,23 +1,30 @@
 # TERMS OF SERVICE
+
+<!-- SUPPORT_EMAIL is replaced with the server's support email address wherever these documents are shown -->
+
 We are T1DNZ ('Company', 'Owner', 'we', 'us', or 'our').
 
-We operate the application NightTroop (the 'App'), as well as any other related products and services that refer or link to these legal terms (the 'Legal Terms') (collectively, the 'Services'). We refer to you, and any other person who you use the app on behalf of, as a "User".
+We operate Nighttroop, a web service that stores diabetes data and shares it with the people, devices and apps you choose (the 'Service'), as well as any other related products and services that refer or link to these legal terms (the 'Legal Terms') (collectively, the 'Services'). We refer to you, and any other person who you use the app on behalf of, as a "User".
 
-You can contact us by email at **tos@t1d.nz**
+You can contact us by email at **[SUPPORT_EMAIL](mailto:SUPPORT_EMAIL)**
 
 These Legal Terms constitute a legally binding agreement made between you, whether personally or on behalf of an entity ('you'), and T1DNZ, concerning your access to and use of the Services. You agree that by accessing the Services, you have read, understood, and agreed to be bound by all of these Legal Terms. IF YOU DO NOT AGREE WITH ALL OF THESE LEGAL TERMS, THEN YOU ARE EXPRESSLY PROHIBITED FROM USING THE SERVICES AND YOU MUST DISCONTINUE USE IMMEDIATELY.
 
 Supplemental terms and conditions or documents that may be posted on the Services from time to time are hereby expressly incorporated herein by reference. We reserve the right, in our sole discretion, to make changes or modifications to these Legal Terms from time to time. We will alert you about any changes by updating the 'Last updated' date of these Legal Terms, and you waive any right to receive specific notice of each such change. It is your responsibility to periodically review these Legal Terms to stay informed of updates. You will be subject to, and will be deemed to have been made aware of and to have accepted, the changes in any revised Legal Terms by your continued use of the Services after the date such revised Legal Terms are posted.
 
-## 1. IT IS NOT A MEDICAL OR HEALCARE SERVICE
+## 1. IT IS NOT A MEDICAL OR HEALTHCARE SERVICE
 
 1.1 Services are not medical or healthcare services. You understand that T1DNZ is not a healthcare professional and does not provide medical, health or other professional services or advice, nor do we verify the accuracy of User Data. Services and Software Apps are not replacements for proper medical care, and you agree that the User is solely responsible for obtaining proper treatment for his or her conditions. You may provide the information and reports received from Services to the User's healthcare providers at your own responsibility, understanding that the Services are provided without warranty except as required by law or as otherwise expressly set forth in this Agreement.
 
 1.2 The information provided when using the Services is not intended for distribution to or use by any person or entity in any jurisdiction or country where such distribution or use would be contrary to law or regulation or which would subject us to any registration requirement within such jurisdiction or country. Accordingly, those persons who choose to access the Services from other locations do so on their own initiative and are solely responsible for compliance with local laws, if and to the extent local laws are applicable. The Services are not tailored to comply with industry-specific regulations (Health Insurance Portability and Accountability Act (HIPAA) etc.), so if your interactions would be subjected to such laws, you may not use the Services.
 
-1.3 By using the Services, you represent and warrant that: (1) you have the legal capacity and you agree to comply with these Legal Terms; (2) you are not a minor in the jurisdiction in which you reside; (3) you will not access the Services through automated or non-human means, whether through a bot, script or otherwise; (4) you will not use the Services for any illegal or unauthorised purpose; and (5) your use of the Services will not violate any applicable law or regulation.
+1.3 By using the Services, you represent and warrant that: (1) you have the legal capacity and you agree to comply with these Legal Terms; (2) you are not a minor in the jurisdiction in which you reside; (3) you will not access the Services through automated or non-human means, whether through a bot, script or otherwise, except through the interfaces the Services provide for devices and apps, such as uploaders and Nightscout compatible apps; (4) you will not use the Services for any illegal or unauthorised purpose; and (5) your use of the Services will not violate any applicable law or regulation.
 
 1.4 Our Services are intended to allow a User to use the data fetched from, or created by, other services to help the User manage his or her diabetes. Use of our Services requires an internet-enabled Smart Device or computer. Each Service receives Data from other services that is stored. Our Services process Data applying methodologies, provide data, and where applicable, provide reports, to Users. Our Services may also permit Users to share User Data, reports and other information relating to the User. You acknowledge and agree that Services are not a substitute for regular monitoring and medical care, and that you will ensure that all appropriate treatment, attention and efforts are made by and for the benefit of the User, as applicable, to maintain his or her health and wellness. Our collection, storage and transmission of User Data and any other information that you provide to through Services and Software Apps is governed by the Privacy Policy.
+
+1.5 Alarms and other notifications from the Services may be late, wrong or not delivered at all, for example when a device, an app, a network or the Services are not working. They must not be relied on to keep the User safe, and are not a replacement for a medical device's own alarms.
+
+1.6 The Services can fetch Data from other services you choose to connect, such as Dexcom, LibreLinkUp or a Nightscout site. You confirm that you have the right to connect them and to share their Data with the Services. Your use of those services is governed by their own terms, and we are not responsible for them, their Data or their availability.
 
 ## 2. PRIVACY POLICY
 
@@ -25,7 +32,7 @@ Supplemental terms and conditions or documents that may be posted on the Service
 
 2.2. Please be advised the Services may be hosted in another country from the User's location or residence. If you access the Services from any other region of the world with laws or other requirements governing personal data collection, use, or disclosure that differ from applicable laws of the country the Services are hosted in, then through your continued use of the Services, and you expressly consent to have your data transferred to and processed in the country where the Services are hosted.
 
-2.3 You and Services agree that we may access, store, process, and use any information and personal data that you provide following the terms of the Privacy Policy and your choices (including settings). By submitting suggestions or other feedback regarding the Services, you agree that we can use and share such feedback for any purpose without compensation to you.
+2.3 You and Services agree that we may access, store, process, and use any information and personal data that you provide following the terms of the Privacy Policy and your choices (including settings). By sending Data to the Services, whether you enter it, upload it from a device or app, or set up a sync that fetches it, you consent to us storing and processing it to provide the Services, as the Privacy Policy describes. By submitting suggestions or other feedback regarding the Services, you agree that we can use and share such feedback for any purpose without compensation to you.
 
 
 ## 3. SERVICES MANAGEMENT
@@ -34,13 +41,13 @@ Supplemental terms and conditions or documents that may be posted on the Service
 
 ## 4. LIABILITY
 
-4.1 We are not responsible for third-party matters. Without limiting the provisions of this Agreement or expanding the scope of our responsibilities, is not responsible for outages or defects in power, telecommunications, computers, Smart Devices, third party software and any other event outside of our  direct control.
+4.1 We are not responsible for third-party matters. Without limiting the provisions of this Agreement or expanding the scope of our responsibilities, T1DNZ is not responsible for outages or defects in power, telecommunications, computers, Smart Devices, third party software and any other event outside of our  direct control.
 
 4.2 In no event will T1DNZ be liable to you or any third party for any direct, indirect, consequential, exemplary, incidental, special, or punitive damages, including lost profit, lost revenue, loss of data, or other damages arising from your use of the Services, even if we have been advised of the possibility of such damages.
 
 ## 5. TERM AND TERMINATION
 
-5.1 These Legal Terms shall remain in full force and effect while you use the Services. Without limiting any other provision of these legal terms, we reserve the right to, in our sole discretion and without notice or liability, deny access to and use of the Services (including blocking certain ip addresses), to any person for any reason or for no reason, including without limitation for breach of any representation, warranty, or covenant contained in these legal terms or of any applicable law or regulation. We may terminate your use or participation in the Services or delete any content or information that you posted at any time, without warning, in our sole discretion.
+5.1 These Legal Terms shall remain in full force and effect while you use the Services. You may stop using the Services at any time, and a site's admin can delete the site from its settings. Without limiting any other provision of these legal terms, we reserve the right to, in our sole discretion and without notice or liability, deny access to and use of the Services (including blocking certain ip addresses), to any person for any reason or for no reason, including without limitation for breach of any representation, warranty, or covenant contained in these legal terms or of any applicable law or regulation. We may terminate your use or participation in the Services or delete any content or information that you posted at any time, without warning, in our sole discretion.
 
 5.2 If we terminate or suspend your account for any reason, you are prohibited from registering and creating a new account, even if you may be acting on behalf of the third party. In addition to terminating or suspending your account, we reserve the right to take appropriate legal action, including without limitation pursuing civil, criminal, and injunctive redress.
 
@@ -85,7 +92,7 @@ Supplemental terms and conditions or documents that may be posted on the Service
 
 ## 11. USER DATA
 
-11.1 We will maintain certain data that you transmit to the Services for the purpose of managing the performance of the Services, as well as data relating to your use of the Services. Although we perform regular routine backups of data, you are solely responsible for all data that you transmit or that relates to any activity you have undertaken using the Services. You agree that we shall have no liability to you for any loss or corruption of any such data, and you hereby waive any right of action against us arising from any such loss or corruption of such data.
+11.1 We will maintain certain data that you transmit to the Services for the purpose of managing the performance of the Services, as well as data relating to your use of the Services. Although we perform regular routine backups of data, you are solely responsible for all data that you transmit or that relates to any activity you have undertaken using the Services. You agree that we shall have no liability to you for any loss or corruption of any such data, and you hereby waive any right of action against us arising from any such loss or corruption of such data. A site's admin can download a copy of the site's data from its settings at any time.
 
 ## 12. ELECTRONIC COMMUNICATIONS, TRANSACTIONS, AND SIGNATURES
 
@@ -103,7 +110,7 @@ Supplemental terms and conditions or documents that may be posted on the Service
 ## 14. CONTACT US
 
 In order to resolve a complaint regarding the Services or to receive further information regarding use of the Services, please contact us at:
-T1DNZ **tos@t1d.nz**
+T1DNZ **[SUPPORT_EMAIL](mailto:SUPPORT_EMAIL)**
 
 
 ## Version

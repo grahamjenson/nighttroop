@@ -1,0 +1,13 @@
+package public_templ
+
+// Legal is the terms of service or privacy policy, its HTML generated from its Markdown
+templ Legal(document string) {
+	@PublicBase() {
+		<article
+			id="legal"
+			class="mx-auto max-w-3xl px-4 py-10 text-sm leading-6 text-gray-700 [&_a]:text-primary [&_a]:underline [&_h1]:mb-4 [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:text-brand-night [&_h2]:mb-2 [&_h2]:mt-8 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-brand-night [&_li]:mt-1 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:mt-3"
+		>
+			@templ.Raw(document)
+		</article>
+	}
+}
