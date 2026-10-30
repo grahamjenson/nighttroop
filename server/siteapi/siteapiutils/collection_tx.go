@@ -106,3 +106,17 @@ func (t *CollectionTx) Rollback() {
 		}
 	}
 }
+
+// SoftDelete soft deletes the site row with id, recording who deleted it.
+// softDelete is the row's query, e.g. (*sitedb.Queries).SoftDeleteInsulinDose.
+func SoftDelete[P ~struct {
+	UpdatedByIdentityName *string
+	ID                    string
+}](ctx context.Context, collectionTx *CollectionTx, id string, siteContext *httputils.SiteContext, softDelete func(*sitedb.Queries, context.Context, P) (sql.Result, error)) error {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return err
+	}
+	_, err = softDelete(q, ctx, P{UpdatedByIdentityName: &siteContext.IdentityModel.Name, ID: id})
+	return err
+}
