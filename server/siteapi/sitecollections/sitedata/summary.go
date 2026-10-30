@@ -18,7 +18,6 @@ import (
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
-	"nighttroop.t1d.nz/utils/settings"
 )
 
 type SummaryCollection struct{}
@@ -212,17 +211,16 @@ func summaryMinutes(ctx context.Context, q *sitedb.Queries, since, until int64, 
 // addDays is today so far and yesterday, as days from midnight in the site's timezone: yesterday from its summary day,
 // or built when that is not yet built, and today built up to now
 func addDays(ctx context.Context, q *sitedb.Queries, summary *sitemodels.Summary, siteContext *httputils.SiteContext) *apiutils.HTTPError {
-	site := settings.NewSiteCombinedSettingsMap(siteContext.SiteModel)
-	now := time.Now()
-	today, yesterday := LocalDate(now, site, 0), LocalDate(now, site, -1)
-	todayRow, err := buildSummaryDaily(ctx, q, site, today, now.UnixMilli())
+	now, location := time.Now(), siteContext.GetSiteTimezone()
+	today, yesterday := LocalDate(now, location, 0), LocalDate(now, location, -1)
+	todayRow, err := buildSummaryDaily(ctx, q, siteContext, today, now.UnixMilli())
 	if err != nil {
 		slog.Error("Error building the summary's today", "error", err)
 		return apiutils.ErrInternalServerError
 	}
 	yesterdayRow, err := q.GetSummaryDaily(ctx, sitedb.GetSummaryDailyParams{Date: yesterday})
 	if errors.Is(err, sql.ErrNoRows) {
-		yesterdayRow, err = buildSummaryDaily(ctx, q, site, yesterday, now.UnixMilli())
+		yesterdayRow, err = buildSummaryDaily(ctx, q, siteContext, yesterday, now.UnixMilli())
 	}
 	if err != nil {
 		slog.Error("Error finding the summary's yesterday", "error", err)
