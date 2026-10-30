@@ -89,7 +89,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 Each kind of data has a page with a table, newest first and paged, where records can be added, viewed, edited and
 deleted (after a confirmation):
 
-- **Glucose**: CGM and meter readings with trend arrows, in the settings' units (mmol/L or mg/dL).
+- **Glucose**: CGM and meter readings with trend arrows, in the settings' units (mmol/L or mg/dL), with lows and
+  highs coloured as on the summary.
 - **Insulin doses**
 - **Food intakes**
 - **Temp basals**

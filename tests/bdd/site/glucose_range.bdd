@@ -1,0 +1,49 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_PATH /
+
+// A reading under the low alarm (72 mg/dL by default) is coloured low in the readings table, and says Low on hover,
+// as the summary colours it
+CLICK #site--settings-menu
+CLICK #site--data--glucose-button
+ASSERT_STATUS 200
+INPUT #site--glucose--create--reading 3.2
+CLICK #site--glucose--create--submit
+ASSERT_STATUS 201
+ASSERT_VISIBLE #glucoseReadingsTable td.text-glucose-low[title="Low"] >> text=3.2
+
+// One over the high alarm (180 mg/dL by default) is coloured high and says High
+INPUT #site--glucose--create--reading 12.5
+CLICK #site--glucose--create--submit
+ASSERT_STATUS 201
+ASSERT_VISIBLE #glucoseReadingsTable td.text-glucose-high[title="High"] >> text=12.5
+
+// One between them keeps the table's colour, with no title
+INPUT #site--glucose--create--reading 6.4
+CLICK #site--glucose--create--submit
+ASSERT_STATUS 201
+ASSERT_VISIBLE #glucoseReadingsTable td:not([title]) >> text=6.4
+ASSERT_NOT_VISIBLE #glucoseReadingsTable td.text-glucose-low >> text=6.4
+ASSERT_NOT_VISIBLE #glucoseReadingsTable td.text-glucose-high >> text=6.4
+SCREENSHOT glucose_readings_range
+
+// The colours stay after a reload
+CLICK #site--settings-menu
+CLICK #site--data--glucose-button
+ASSERT_STATUS 200
+ASSERT_VISIBLE #glucoseReadingsTable td.text-glucose-low[title="Low"] >> text=3.2
+ASSERT_VISIBLE #glucoseReadingsTable td.text-glucose-high[title="High"] >> text=12.5
+
+// In mg/dL the same readings are coloured the same
+CLICK #site--settings-menu
+CLICK #site--settings--settings-button
+ASSERT_STATUS 200
+INPUT #site--settings--identity--units mg/dL
+CLICK #site--settings--identity--save
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Settings Saved
+CLICK #site--settings-menu
+CLICK #site--data--glucose-button
+ASSERT_STATUS 200
+ASSERT_VISIBLE #glucoseReadingsTable td.text-glucose-low[title="Low"] >> text=58
+ASSERT_VISIBLE #glucoseReadingsTable td.text-glucose-high[title="High"] >> text=225
+ASSERT_VISIBLE #glucoseReadingsTable td:not([title]) >> text=115
