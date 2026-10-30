@@ -18,13 +18,26 @@ import (
 )
 
 const (
-	BearerAuthScopes = "bearerAuth.Scopes"
+	BearerAuthScopes  = "bearerAuth.Scopes"
+	NsApiSecretScopes = "nsApiSecret.Scopes"
+	NsTokenScopes     = "nsToken.Scopes"
 )
 
 // Defines values for Units.
 const (
 	MgdL  Units = "mg/dL"
 	MmolL Units = "mmol/L"
+)
+
+// Defines values for NsCollection.
+const (
+	Activity     NsCollection = "activity"
+	Devicestatus NsCollection = "devicestatus"
+	Entries      NsCollection = "entries"
+	Food         NsCollection = "food"
+	Profile      NsCollection = "profile"
+	Settings     NsCollection = "settings"
+	Treatments   NsCollection = "treatments"
 )
 
 // CleanGlucoseReading defines model for CleanGlucoseReading.
@@ -195,6 +208,48 @@ type LoginToken struct {
 	Token string `json:"token"`
 }
 
+// NsAuthorization defines model for NsAuthorization.
+type NsAuthorization struct {
+	Exp              *int64      `json:"exp,omitempty"`
+	Iat              *int64      `json:"iat,omitempty"`
+	PermissionGroups *[][]string `json:"permissionGroups,omitempty"`
+	Sub              *string     `json:"sub,omitempty"`
+
+	// Token A JWT, sent as Authorization: Bearer <token>
+	Token *string `json:"token,omitempty"`
+}
+
+// NsDocument A Nightscout document, such as an entry or treatment; the fields named here are common to most, the rest are kept in AdditionalProperties
+type NsDocument struct {
+	UnderscoreId *string  `json:"_id,omitempty"`
+	Carbs        *float64 `json:"carbs,omitempty"`
+	CreatedAt    *string  `json:"created_at,omitempty"`
+	Date         *int64   `json:"date,omitempty"`
+	DateString   *string  `json:"dateString,omitempty"`
+	Device       *string  `json:"device,omitempty"`
+	Direction    *string  `json:"direction,omitempty"`
+	EnteredBy    *string  `json:"enteredBy,omitempty"`
+	EventType    *string  `json:"eventType,omitempty"`
+	Identifier   *string  `json:"identifier,omitempty"`
+	Insulin      *float64 `json:"insulin,omitempty"`
+	IsValid      *bool    `json:"isValid,omitempty"`
+
+	// Mbg In units
+	Mbg   *float64 `json:"mbg,omitempty"`
+	Notes *string  `json:"notes,omitempty"`
+
+	// Sgv In units
+	Sgv         *float64 `json:"sgv,omitempty"`
+	SrvCreated  *int64   `json:"srvCreated,omitempty"`
+	SrvModified *int64   `json:"srvModified,omitempty"`
+	Type        *string  `json:"type,omitempty"`
+
+	// Units The units of sgv and mbg, the identity's
+	Units                *string                `json:"units,omitempty"`
+	UtcOffset            *int64                 `json:"utcOffset,omitempty"`
+	AdditionalProperties map[string]interface{} `json:"-"`
+}
+
 // Record What every record has. Read only fields are set by the server, which ignores them if sent.
 type Record struct {
 	CreatedAt             *int64  `json:"created_at,omitempty"`
@@ -241,6 +296,33 @@ type Id = string
 // Limit defines model for Limit.
 type Limit = int64
 
+// NsCollection defines model for NsCollection.
+type NsCollection string
+
+// NsCount defines model for NsCount.
+type NsCount = int64
+
+// NsDateGte defines model for NsDateGte.
+type NsDateGte = int64
+
+// NsDateLte defines model for NsDateLte.
+type NsDateLte = int64
+
+// NsFields defines model for NsFields.
+type NsFields = string
+
+// NsIdentifier defines model for NsIdentifier.
+type NsIdentifier = string
+
+// NsPermanent defines model for NsPermanent.
+type NsPermanent = bool
+
+// NsSort defines model for NsSort.
+type NsSort = string
+
+// NsSortDesc defines model for NsSortDesc.
+type NsSortDesc = string
+
 // Skip defines model for Skip.
 type Skip = int64
 
@@ -286,6 +368,38 @@ type InsulinDoseResult struct {
 	Status *int         `json:"status,omitempty"`
 }
 
+// NsDocuments defines model for NsDocuments.
+type NsDocuments = []NsDocument
+
+// NsError defines model for NsError.
+type NsError = Error
+
+// NsObject defines model for NsObject.
+type NsObject map[string]interface{}
+
+// NsV3Document defines model for NsV3Document.
+type NsV3Document struct {
+	Identifier      *string `json:"identifier,omitempty"`
+	IsDeduplication *bool   `json:"isDeduplication,omitempty"`
+	LastModified    *int64  `json:"lastModified,omitempty"`
+
+	// Result A Nightscout document, such as an entry or treatment; the fields named here are common to most, the rest are kept in AdditionalProperties
+	Result *NsDocument `json:"result,omitempty"`
+	Status *int        `json:"status,omitempty"`
+}
+
+// NsV3Documents defines model for NsV3Documents.
+type NsV3Documents struct {
+	Result *[]NsDocument `json:"result,omitempty"`
+	Status *int          `json:"status,omitempty"`
+}
+
+// NsV3Result defines model for NsV3Result.
+type NsV3Result struct {
+	Result interface{} `json:"result,omitempty"`
+	Status *int        `json:"status,omitempty"`
+}
+
 // FoodIntakeBody defines model for FoodIntakeBody.
 type FoodIntakeBody = FoodIntake
 
@@ -294,6 +408,107 @@ type GlucoseReadingBody = GlucoseReading
 
 // InsulinDoseBody defines model for InsulinDoseBody.
 type InsulinDoseBody = InsulinDose
+
+// NsV1CountParams defines parameters for NsV1Count.
+type NsV1CountParams struct {
+	// DateGte Documents from this time, in milliseconds
+	DateGte *NsDateGte `form:"date$gte,omitempty" json:"date$gte,omitempty"`
+
+	// DateLte Documents up to this time, in milliseconds
+	DateLte *NsDateLte `form:"date$lte,omitempty" json:"date$lte,omitempty"`
+}
+
+// NsV1SliceParams defines parameters for NsV1Slice.
+type NsV1SliceParams struct {
+	// Count How many documents, at most 1000
+	Count *NsCount `form:"count,omitempty" json:"count,omitempty"`
+}
+
+// NsV1TimesParams defines parameters for NsV1Times.
+type NsV1TimesParams struct {
+	// Count How many documents, at most 1000
+	Count *NsCount `form:"count,omitempty" json:"count,omitempty"`
+}
+
+// NsV1SearchParams defines parameters for NsV1Search.
+type NsV1SearchParams struct {
+	// Count How many documents, at most 1000
+	Count *NsCount `form:"count,omitempty" json:"count,omitempty"`
+	Skip  *Skip    `form:"skip,omitempty" json:"skip,omitempty"`
+
+	// Sort A field to sort by, ascending
+	Sort *NsSort `form:"sort,omitempty" json:"sort,omitempty"`
+
+	// SortDesc A field to sort by, descending
+	SortDesc *NsSortDesc `form:"sort$desc,omitempty" json:"sort$desc,omitempty"`
+
+	// Fields Comma separated fields to return
+	Fields *NsFields `form:"fields,omitempty" json:"fields,omitempty"`
+
+	// DateGte Documents from this time, in milliseconds
+	DateGte *NsDateGte `form:"date$gte,omitempty" json:"date$gte,omitempty"`
+
+	// DateLte Documents up to this time, in milliseconds
+	DateLte *NsDateLte `form:"date$lte,omitempty" json:"date$lte,omitempty"`
+}
+
+// NsV1CreateJSONBody defines parameters for NsV1Create.
+type NsV1CreateJSONBody = []NsDocument
+
+// NsV1DeleteParams defines parameters for NsV1Delete.
+type NsV1DeleteParams struct {
+	// Permanent Deletes the row instead of marking it deleted
+	Permanent *NsPermanent `form:"permanent,omitempty" json:"permanent,omitempty"`
+}
+
+// NsV1GetParams defines parameters for NsV1Get.
+type NsV1GetParams struct {
+	// Count How many documents, at most 1000
+	Count *NsCount `form:"count,omitempty" json:"count,omitempty"`
+
+	// Fields Comma separated fields to return
+	Fields *NsFields `form:"fields,omitempty" json:"fields,omitempty"`
+}
+
+// NsV3SearchParams defines parameters for NsV3Search.
+type NsV3SearchParams struct {
+	// Limit At most 1000
+	Limit *Limit `form:"limit,omitempty" json:"limit,omitempty"`
+	Skip  *Skip  `form:"skip,omitempty" json:"skip,omitempty"`
+
+	// Sort A field to sort by, ascending
+	Sort *NsSort `form:"sort,omitempty" json:"sort,omitempty"`
+
+	// SortDesc A field to sort by, descending
+	SortDesc *NsSortDesc `form:"sort$desc,omitempty" json:"sort$desc,omitempty"`
+
+	// Fields Comma separated fields to return
+	Fields *NsFields `form:"fields,omitempty" json:"fields,omitempty"`
+
+	// DateGte Documents from this time, in milliseconds
+	DateGte *NsDateGte `form:"date$gte,omitempty" json:"date$gte,omitempty"`
+
+	// DateLte Documents up to this time, in milliseconds
+	DateLte *NsDateLte `form:"date$lte,omitempty" json:"date$lte,omitempty"`
+}
+
+// NsV3HistoryParams defines parameters for NsV3History.
+type NsV3HistoryParams struct {
+	// Limit At most 1000
+	Limit *Limit `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// NsV3DeleteParams defines parameters for NsV3Delete.
+type NsV3DeleteParams struct {
+	// Permanent Deletes the row instead of marking it deleted
+	Permanent *NsPermanent `form:"permanent,omitempty" json:"permanent,omitempty"`
+}
+
+// NsV3ReadParams defines parameters for NsV3Read.
+type NsV3ReadParams struct {
+	// Fields Comma separated fields to return
+	Fields *NsFields `form:"fields,omitempty" json:"fields,omitempty"`
+}
 
 // ListFoodIntakesParams defines parameters for ListFoodIntakes.
 type ListFoodIntakesParams struct {
@@ -321,6 +536,24 @@ type GetSummaryParams struct {
 	Hours *int64 `form:"hours,omitempty" json:"hours,omitempty"`
 }
 
+// NsV1CreateJSONRequestBody defines body for NsV1Create for application/json ContentType.
+type NsV1CreateJSONRequestBody = NsV1CreateJSONBody
+
+// NsV1ReplaceByBodyJSONRequestBody defines body for NsV1ReplaceByBody for application/json ContentType.
+type NsV1ReplaceByBodyJSONRequestBody = NsDocument
+
+// NsV1ReplaceJSONRequestBody defines body for NsV1Replace for application/json ContentType.
+type NsV1ReplaceJSONRequestBody = NsDocument
+
+// NsV3CreateJSONRequestBody defines body for NsV3Create for application/json ContentType.
+type NsV3CreateJSONRequestBody = NsDocument
+
+// NsV3PatchJSONRequestBody defines body for NsV3Patch for application/json ContentType.
+type NsV3PatchJSONRequestBody = NsDocument
+
+// NsV3ReplaceJSONRequestBody defines body for NsV3Replace for application/json ContentType.
+type NsV3ReplaceJSONRequestBody = NsDocument
+
 // CreateFoodIntakeJSONRequestBody defines body for CreateFoodIntake for application/json ContentType.
 type CreateFoodIntakeJSONRequestBody = FoodIntake
 
@@ -341,6 +574,359 @@ type UpdateInsulinDoseJSONRequestBody = InsulinDose
 
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
 type LoginJSONRequestBody = LoginRequest
+
+// Getter for additional properties for NsDocument. Returns the specified
+// element and whether it was found
+func (a NsDocument) Get(fieldName string) (value interface{}, found bool) {
+	if a.AdditionalProperties != nil {
+		value, found = a.AdditionalProperties[fieldName]
+	}
+	return
+}
+
+// Setter for additional properties for NsDocument
+func (a *NsDocument) Set(fieldName string, value interface{}) {
+	if a.AdditionalProperties == nil {
+		a.AdditionalProperties = make(map[string]interface{})
+	}
+	a.AdditionalProperties[fieldName] = value
+}
+
+// Override default JSON handling for NsDocument to handle AdditionalProperties
+func (a *NsDocument) UnmarshalJSON(b []byte) error {
+	object := make(map[string]json.RawMessage)
+	err := json.Unmarshal(b, &object)
+	if err != nil {
+		return err
+	}
+
+	if raw, found := object["_id"]; found {
+		err = json.Unmarshal(raw, &a.UnderscoreId)
+		if err != nil {
+			return fmt.Errorf("error reading '_id': %w", err)
+		}
+		delete(object, "_id")
+	}
+
+	if raw, found := object["carbs"]; found {
+		err = json.Unmarshal(raw, &a.Carbs)
+		if err != nil {
+			return fmt.Errorf("error reading 'carbs': %w", err)
+		}
+		delete(object, "carbs")
+	}
+
+	if raw, found := object["created_at"]; found {
+		err = json.Unmarshal(raw, &a.CreatedAt)
+		if err != nil {
+			return fmt.Errorf("error reading 'created_at': %w", err)
+		}
+		delete(object, "created_at")
+	}
+
+	if raw, found := object["date"]; found {
+		err = json.Unmarshal(raw, &a.Date)
+		if err != nil {
+			return fmt.Errorf("error reading 'date': %w", err)
+		}
+		delete(object, "date")
+	}
+
+	if raw, found := object["dateString"]; found {
+		err = json.Unmarshal(raw, &a.DateString)
+		if err != nil {
+			return fmt.Errorf("error reading 'dateString': %w", err)
+		}
+		delete(object, "dateString")
+	}
+
+	if raw, found := object["device"]; found {
+		err = json.Unmarshal(raw, &a.Device)
+		if err != nil {
+			return fmt.Errorf("error reading 'device': %w", err)
+		}
+		delete(object, "device")
+	}
+
+	if raw, found := object["direction"]; found {
+		err = json.Unmarshal(raw, &a.Direction)
+		if err != nil {
+			return fmt.Errorf("error reading 'direction': %w", err)
+		}
+		delete(object, "direction")
+	}
+
+	if raw, found := object["enteredBy"]; found {
+		err = json.Unmarshal(raw, &a.EnteredBy)
+		if err != nil {
+			return fmt.Errorf("error reading 'enteredBy': %w", err)
+		}
+		delete(object, "enteredBy")
+	}
+
+	if raw, found := object["eventType"]; found {
+		err = json.Unmarshal(raw, &a.EventType)
+		if err != nil {
+			return fmt.Errorf("error reading 'eventType': %w", err)
+		}
+		delete(object, "eventType")
+	}
+
+	if raw, found := object["identifier"]; found {
+		err = json.Unmarshal(raw, &a.Identifier)
+		if err != nil {
+			return fmt.Errorf("error reading 'identifier': %w", err)
+		}
+		delete(object, "identifier")
+	}
+
+	if raw, found := object["insulin"]; found {
+		err = json.Unmarshal(raw, &a.Insulin)
+		if err != nil {
+			return fmt.Errorf("error reading 'insulin': %w", err)
+		}
+		delete(object, "insulin")
+	}
+
+	if raw, found := object["isValid"]; found {
+		err = json.Unmarshal(raw, &a.IsValid)
+		if err != nil {
+			return fmt.Errorf("error reading 'isValid': %w", err)
+		}
+		delete(object, "isValid")
+	}
+
+	if raw, found := object["mbg"]; found {
+		err = json.Unmarshal(raw, &a.Mbg)
+		if err != nil {
+			return fmt.Errorf("error reading 'mbg': %w", err)
+		}
+		delete(object, "mbg")
+	}
+
+	if raw, found := object["notes"]; found {
+		err = json.Unmarshal(raw, &a.Notes)
+		if err != nil {
+			return fmt.Errorf("error reading 'notes': %w", err)
+		}
+		delete(object, "notes")
+	}
+
+	if raw, found := object["sgv"]; found {
+		err = json.Unmarshal(raw, &a.Sgv)
+		if err != nil {
+			return fmt.Errorf("error reading 'sgv': %w", err)
+		}
+		delete(object, "sgv")
+	}
+
+	if raw, found := object["srvCreated"]; found {
+		err = json.Unmarshal(raw, &a.SrvCreated)
+		if err != nil {
+			return fmt.Errorf("error reading 'srvCreated': %w", err)
+		}
+		delete(object, "srvCreated")
+	}
+
+	if raw, found := object["srvModified"]; found {
+		err = json.Unmarshal(raw, &a.SrvModified)
+		if err != nil {
+			return fmt.Errorf("error reading 'srvModified': %w", err)
+		}
+		delete(object, "srvModified")
+	}
+
+	if raw, found := object["type"]; found {
+		err = json.Unmarshal(raw, &a.Type)
+		if err != nil {
+			return fmt.Errorf("error reading 'type': %w", err)
+		}
+		delete(object, "type")
+	}
+
+	if raw, found := object["units"]; found {
+		err = json.Unmarshal(raw, &a.Units)
+		if err != nil {
+			return fmt.Errorf("error reading 'units': %w", err)
+		}
+		delete(object, "units")
+	}
+
+	if raw, found := object["utcOffset"]; found {
+		err = json.Unmarshal(raw, &a.UtcOffset)
+		if err != nil {
+			return fmt.Errorf("error reading 'utcOffset': %w", err)
+		}
+		delete(object, "utcOffset")
+	}
+
+	if len(object) != 0 {
+		a.AdditionalProperties = make(map[string]interface{})
+		for fieldName, fieldBuf := range object {
+			var fieldVal interface{}
+			err := json.Unmarshal(fieldBuf, &fieldVal)
+			if err != nil {
+				return fmt.Errorf("error unmarshaling field %s: %w", fieldName, err)
+			}
+			a.AdditionalProperties[fieldName] = fieldVal
+		}
+	}
+	return nil
+}
+
+// Override default JSON handling for NsDocument to handle AdditionalProperties
+func (a NsDocument) MarshalJSON() ([]byte, error) {
+	var err error
+	object := make(map[string]json.RawMessage)
+
+	if a.UnderscoreId != nil {
+		object["_id"], err = json.Marshal(a.UnderscoreId)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling '_id': %w", err)
+		}
+	}
+
+	if a.Carbs != nil {
+		object["carbs"], err = json.Marshal(a.Carbs)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'carbs': %w", err)
+		}
+	}
+
+	if a.CreatedAt != nil {
+		object["created_at"], err = json.Marshal(a.CreatedAt)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'created_at': %w", err)
+		}
+	}
+
+	if a.Date != nil {
+		object["date"], err = json.Marshal(a.Date)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'date': %w", err)
+		}
+	}
+
+	if a.DateString != nil {
+		object["dateString"], err = json.Marshal(a.DateString)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'dateString': %w", err)
+		}
+	}
+
+	if a.Device != nil {
+		object["device"], err = json.Marshal(a.Device)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'device': %w", err)
+		}
+	}
+
+	if a.Direction != nil {
+		object["direction"], err = json.Marshal(a.Direction)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'direction': %w", err)
+		}
+	}
+
+	if a.EnteredBy != nil {
+		object["enteredBy"], err = json.Marshal(a.EnteredBy)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'enteredBy': %w", err)
+		}
+	}
+
+	if a.EventType != nil {
+		object["eventType"], err = json.Marshal(a.EventType)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'eventType': %w", err)
+		}
+	}
+
+	if a.Identifier != nil {
+		object["identifier"], err = json.Marshal(a.Identifier)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'identifier': %w", err)
+		}
+	}
+
+	if a.Insulin != nil {
+		object["insulin"], err = json.Marshal(a.Insulin)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'insulin': %w", err)
+		}
+	}
+
+	if a.IsValid != nil {
+		object["isValid"], err = json.Marshal(a.IsValid)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'isValid': %w", err)
+		}
+	}
+
+	if a.Mbg != nil {
+		object["mbg"], err = json.Marshal(a.Mbg)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'mbg': %w", err)
+		}
+	}
+
+	if a.Notes != nil {
+		object["notes"], err = json.Marshal(a.Notes)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'notes': %w", err)
+		}
+	}
+
+	if a.Sgv != nil {
+		object["sgv"], err = json.Marshal(a.Sgv)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'sgv': %w", err)
+		}
+	}
+
+	if a.SrvCreated != nil {
+		object["srvCreated"], err = json.Marshal(a.SrvCreated)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'srvCreated': %w", err)
+		}
+	}
+
+	if a.SrvModified != nil {
+		object["srvModified"], err = json.Marshal(a.SrvModified)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'srvModified': %w", err)
+		}
+	}
+
+	if a.Type != nil {
+		object["type"], err = json.Marshal(a.Type)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'type': %w", err)
+		}
+	}
+
+	if a.Units != nil {
+		object["units"], err = json.Marshal(a.Units)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'units': %w", err)
+		}
+	}
+
+	if a.UtcOffset != nil {
+		object["utcOffset"], err = json.Marshal(a.UtcOffset)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'utcOffset': %w", err)
+		}
+	}
+
+	for fieldName, field := range a.AdditionalProperties {
+		object[fieldName], err = json.Marshal(field)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling '%s': %w", fieldName, err)
+		}
+	}
+	return json.Marshal(object)
+}
 
 // Getter for additional properties for Summary. Returns the specified
 // element and whether it was found
@@ -588,6 +1174,108 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
+	// NsV1Count request
+	NsV1Count(ctx context.Context, collection NsCollection, params *NsV1CountParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV1Echo request
+	NsV1Echo(ctx context.Context, collection NsCollection, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV1Slice request
+	NsV1Slice(ctx context.Context, collection NsCollection, field string, pType string, prefix string, params *NsV1SliceParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV1Status request
+	NsV1Status(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV1Times request
+	NsV1Times(ctx context.Context, prefix string, params *NsV1TimesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV1VerifyAuth request
+	NsV1VerifyAuth(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV1Versions request
+	NsV1Versions(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV1Search request
+	NsV1Search(ctx context.Context, collection NsCollection, params *NsV1SearchParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV1CreateWithBody request with any body
+	NsV1CreateWithBody(ctx context.Context, collection NsCollection, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	NsV1Create(ctx context.Context, collection NsCollection, body NsV1CreateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV1ReplaceByBodyWithBody request with any body
+	NsV1ReplaceByBodyWithBody(ctx context.Context, collection NsCollection, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	NsV1ReplaceByBody(ctx context.Context, collection NsCollection, body NsV1ReplaceByBodyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV1Current request
+	NsV1Current(ctx context.Context, collection NsCollection, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV1Delete request
+	NsV1Delete(ctx context.Context, collection NsCollection, identifier NsIdentifier, params *NsV1DeleteParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV1Get request
+	NsV1Get(ctx context.Context, collection NsCollection, identifier NsIdentifier, params *NsV1GetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV1ReplaceWithBody request with any body
+	NsV1ReplaceWithBody(ctx context.Context, collection NsCollection, identifier NsIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	NsV1Replace(ctx context.Context, collection NsCollection, identifier NsIdentifier, body NsV1ReplaceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV2Authorize request
+	NsV2Authorize(ctx context.Context, token string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV2Properties request
+	NsV2Properties(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV2PropertiesNamed request
+	NsV2PropertiesNamed(ctx context.Context, names string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV2Summary request
+	NsV2Summary(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV3Authorize request
+	NsV3Authorize(ctx context.Context, token string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV3LastModified request
+	NsV3LastModified(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV3Status request
+	NsV3Status(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV3Test request
+	NsV3Test(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV3Version request
+	NsV3Version(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV3Search request
+	NsV3Search(ctx context.Context, collection NsCollection, params *NsV3SearchParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV3CreateWithBody request with any body
+	NsV3CreateWithBody(ctx context.Context, collection NsCollection, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	NsV3Create(ctx context.Context, collection NsCollection, body NsV3CreateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV3History request
+	NsV3History(ctx context.Context, collection NsCollection, since int64, params *NsV3HistoryParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV3Delete request
+	NsV3Delete(ctx context.Context, collection NsCollection, identifier NsIdentifier, params *NsV3DeleteParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV3Read request
+	NsV3Read(ctx context.Context, collection NsCollection, identifier NsIdentifier, params *NsV3ReadParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV3PatchWithBody request with any body
+	NsV3PatchWithBody(ctx context.Context, collection NsCollection, identifier NsIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	NsV3Patch(ctx context.Context, collection NsCollection, identifier NsIdentifier, body NsV3PatchJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV3ReplaceWithBody request with any body
+	NsV3ReplaceWithBody(ctx context.Context, collection NsCollection, identifier NsIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	NsV3Replace(ctx context.Context, collection NsCollection, identifier NsIdentifier, body NsV3ReplaceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListFoodIntakes request
 	ListFoodIntakes(ctx context.Context, params *ListFoodIntakesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -655,6 +1343,438 @@ type ClientInterface interface {
 
 	// GetSummary request
 	GetSummary(ctx context.Context, params *GetSummaryParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+}
+
+func (c *Client) NsV1Count(ctx context.Context, collection NsCollection, params *NsV1CountParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV1CountRequest(c.Server, collection, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV1Echo(ctx context.Context, collection NsCollection, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV1EchoRequest(c.Server, collection)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV1Slice(ctx context.Context, collection NsCollection, field string, pType string, prefix string, params *NsV1SliceParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV1SliceRequest(c.Server, collection, field, pType, prefix, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV1Status(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV1StatusRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV1Times(ctx context.Context, prefix string, params *NsV1TimesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV1TimesRequest(c.Server, prefix, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV1VerifyAuth(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV1VerifyAuthRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV1Versions(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV1VersionsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV1Search(ctx context.Context, collection NsCollection, params *NsV1SearchParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV1SearchRequest(c.Server, collection, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV1CreateWithBody(ctx context.Context, collection NsCollection, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV1CreateRequestWithBody(c.Server, collection, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV1Create(ctx context.Context, collection NsCollection, body NsV1CreateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV1CreateRequest(c.Server, collection, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV1ReplaceByBodyWithBody(ctx context.Context, collection NsCollection, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV1ReplaceByBodyRequestWithBody(c.Server, collection, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV1ReplaceByBody(ctx context.Context, collection NsCollection, body NsV1ReplaceByBodyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV1ReplaceByBodyRequest(c.Server, collection, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV1Current(ctx context.Context, collection NsCollection, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV1CurrentRequest(c.Server, collection)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV1Delete(ctx context.Context, collection NsCollection, identifier NsIdentifier, params *NsV1DeleteParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV1DeleteRequest(c.Server, collection, identifier, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV1Get(ctx context.Context, collection NsCollection, identifier NsIdentifier, params *NsV1GetParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV1GetRequest(c.Server, collection, identifier, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV1ReplaceWithBody(ctx context.Context, collection NsCollection, identifier NsIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV1ReplaceRequestWithBody(c.Server, collection, identifier, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV1Replace(ctx context.Context, collection NsCollection, identifier NsIdentifier, body NsV1ReplaceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV1ReplaceRequest(c.Server, collection, identifier, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV2Authorize(ctx context.Context, token string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV2AuthorizeRequest(c.Server, token)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV2Properties(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV2PropertiesRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV2PropertiesNamed(ctx context.Context, names string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV2PropertiesNamedRequest(c.Server, names)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV2Summary(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV2SummaryRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV3Authorize(ctx context.Context, token string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV3AuthorizeRequest(c.Server, token)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV3LastModified(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV3LastModifiedRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV3Status(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV3StatusRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV3Test(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV3TestRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV3Version(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV3VersionRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV3Search(ctx context.Context, collection NsCollection, params *NsV3SearchParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV3SearchRequest(c.Server, collection, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV3CreateWithBody(ctx context.Context, collection NsCollection, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV3CreateRequestWithBody(c.Server, collection, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV3Create(ctx context.Context, collection NsCollection, body NsV3CreateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV3CreateRequest(c.Server, collection, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV3History(ctx context.Context, collection NsCollection, since int64, params *NsV3HistoryParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV3HistoryRequest(c.Server, collection, since, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV3Delete(ctx context.Context, collection NsCollection, identifier NsIdentifier, params *NsV3DeleteParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV3DeleteRequest(c.Server, collection, identifier, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV3Read(ctx context.Context, collection NsCollection, identifier NsIdentifier, params *NsV3ReadParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV3ReadRequest(c.Server, collection, identifier, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV3PatchWithBody(ctx context.Context, collection NsCollection, identifier NsIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV3PatchRequestWithBody(c.Server, collection, identifier, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV3Patch(ctx context.Context, collection NsCollection, identifier NsIdentifier, body NsV3PatchJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV3PatchRequest(c.Server, collection, identifier, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV3ReplaceWithBody(ctx context.Context, collection NsCollection, identifier NsIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV3ReplaceRequestWithBody(c.Server, collection, identifier, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV3Replace(ctx context.Context, collection NsCollection, identifier NsIdentifier, body NsV3ReplaceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV3ReplaceRequest(c.Server, collection, identifier, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
 }
 
 func (c *Client) ListFoodIntakes(ctx context.Context, params *ListFoodIntakesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -955,6 +2075,1562 @@ func (c *Client) GetSummary(ctx context.Context, params *GetSummaryParams, reqEd
 		return nil, err
 	}
 	return c.Client.Do(req)
+}
+
+// NewNsV1CountRequest generates requests for NsV1Count
+func NewNsV1CountRequest(server string, collection NsCollection, params *NsV1CountParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "collection", runtime.ParamLocationPath, collection)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/count/%s/where", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.DateGte != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "date$gte", runtime.ParamLocationQuery, *params.DateGte); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.DateLte != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "date$lte", runtime.ParamLocationQuery, *params.DateLte); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewNsV1EchoRequest generates requests for NsV1Echo
+func NewNsV1EchoRequest(server string, collection NsCollection) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "collection", runtime.ParamLocationPath, collection)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/echo/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewNsV1SliceRequest generates requests for NsV1Slice
+func NewNsV1SliceRequest(server string, collection NsCollection, field string, pType string, prefix string, params *NsV1SliceParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "collection", runtime.ParamLocationPath, collection)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "field", runtime.ParamLocationPath, field)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithLocation("simple", false, "type", runtime.ParamLocationPath, pType)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam3 string
+
+	pathParam3, err = runtime.StyleParamWithLocation("simple", false, "prefix", runtime.ParamLocationPath, prefix)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/slice/%s/%s/%s/%s", pathParam0, pathParam1, pathParam2, pathParam3)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Count != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "count", runtime.ParamLocationQuery, *params.Count); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewNsV1StatusRequest generates requests for NsV1Status
+func NewNsV1StatusRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/status")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewNsV1TimesRequest generates requests for NsV1Times
+func NewNsV1TimesRequest(server string, prefix string, params *NsV1TimesParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "prefix", runtime.ParamLocationPath, prefix)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/times/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Count != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "count", runtime.ParamLocationQuery, *params.Count); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewNsV1VerifyAuthRequest generates requests for NsV1VerifyAuth
+func NewNsV1VerifyAuthRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/verifyauth")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewNsV1VersionsRequest generates requests for NsV1Versions
+func NewNsV1VersionsRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/versions")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewNsV1SearchRequest generates requests for NsV1Search
+func NewNsV1SearchRequest(server string, collection NsCollection, params *NsV1SearchParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "collection", runtime.ParamLocationPath, collection)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Count != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "count", runtime.ParamLocationQuery, *params.Count); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Skip != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "skip", runtime.ParamLocationQuery, *params.Skip); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Sort != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "sort", runtime.ParamLocationQuery, *params.Sort); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.SortDesc != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "sort$desc", runtime.ParamLocationQuery, *params.SortDesc); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Fields != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "fields", runtime.ParamLocationQuery, *params.Fields); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.DateGte != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "date$gte", runtime.ParamLocationQuery, *params.DateGte); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.DateLte != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "date$lte", runtime.ParamLocationQuery, *params.DateLte); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewNsV1CreateRequest calls the generic NsV1Create builder with application/json body
+func NewNsV1CreateRequest(server string, collection NsCollection, body NsV1CreateJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewNsV1CreateRequestWithBody(server, collection, "application/json", bodyReader)
+}
+
+// NewNsV1CreateRequestWithBody generates requests for NsV1Create with any type of body
+func NewNsV1CreateRequestWithBody(server string, collection NsCollection, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "collection", runtime.ParamLocationPath, collection)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewNsV1ReplaceByBodyRequest calls the generic NsV1ReplaceByBody builder with application/json body
+func NewNsV1ReplaceByBodyRequest(server string, collection NsCollection, body NsV1ReplaceByBodyJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewNsV1ReplaceByBodyRequestWithBody(server, collection, "application/json", bodyReader)
+}
+
+// NewNsV1ReplaceByBodyRequestWithBody generates requests for NsV1ReplaceByBody with any type of body
+func NewNsV1ReplaceByBodyRequestWithBody(server string, collection NsCollection, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "collection", runtime.ParamLocationPath, collection)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewNsV1CurrentRequest generates requests for NsV1Current
+func NewNsV1CurrentRequest(server string, collection NsCollection) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "collection", runtime.ParamLocationPath, collection)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/%s/current", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewNsV1DeleteRequest generates requests for NsV1Delete
+func NewNsV1DeleteRequest(server string, collection NsCollection, identifier NsIdentifier, params *NsV1DeleteParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "collection", runtime.ParamLocationPath, collection)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "identifier", runtime.ParamLocationPath, identifier)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/%s/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Permanent != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "permanent", runtime.ParamLocationQuery, *params.Permanent); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewNsV1GetRequest generates requests for NsV1Get
+func NewNsV1GetRequest(server string, collection NsCollection, identifier NsIdentifier, params *NsV1GetParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "collection", runtime.ParamLocationPath, collection)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "identifier", runtime.ParamLocationPath, identifier)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/%s/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Count != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "count", runtime.ParamLocationQuery, *params.Count); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Fields != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "fields", runtime.ParamLocationQuery, *params.Fields); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewNsV1ReplaceRequest calls the generic NsV1Replace builder with application/json body
+func NewNsV1ReplaceRequest(server string, collection NsCollection, identifier NsIdentifier, body NsV1ReplaceJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewNsV1ReplaceRequestWithBody(server, collection, identifier, "application/json", bodyReader)
+}
+
+// NewNsV1ReplaceRequestWithBody generates requests for NsV1Replace with any type of body
+func NewNsV1ReplaceRequestWithBody(server string, collection NsCollection, identifier NsIdentifier, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "collection", runtime.ParamLocationPath, collection)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "identifier", runtime.ParamLocationPath, identifier)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/%s/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewNsV2AuthorizeRequest generates requests for NsV2Authorize
+func NewNsV2AuthorizeRequest(server string, token string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "token", runtime.ParamLocationPath, token)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/authorization/request/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewNsV2PropertiesRequest generates requests for NsV2Properties
+func NewNsV2PropertiesRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/properties")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewNsV2PropertiesNamedRequest generates requests for NsV2PropertiesNamed
+func NewNsV2PropertiesNamedRequest(server string, names string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "names", runtime.ParamLocationPath, names)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/properties/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewNsV2SummaryRequest generates requests for NsV2Summary
+func NewNsV2SummaryRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/summary")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewNsV3AuthorizeRequest generates requests for NsV3Authorize
+func NewNsV3AuthorizeRequest(server string, token string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "token", runtime.ParamLocationPath, token)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v3/authorization/request/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewNsV3LastModifiedRequest generates requests for NsV3LastModified
+func NewNsV3LastModifiedRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v3/lastModified")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewNsV3StatusRequest generates requests for NsV3Status
+func NewNsV3StatusRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v3/status")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewNsV3TestRequest generates requests for NsV3Test
+func NewNsV3TestRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v3/test")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewNsV3VersionRequest generates requests for NsV3Version
+func NewNsV3VersionRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v3/version")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewNsV3SearchRequest generates requests for NsV3Search
+func NewNsV3SearchRequest(server string, collection NsCollection, params *NsV3SearchParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "collection", runtime.ParamLocationPath, collection)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v3/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "limit", runtime.ParamLocationQuery, *params.Limit); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Skip != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "skip", runtime.ParamLocationQuery, *params.Skip); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Sort != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "sort", runtime.ParamLocationQuery, *params.Sort); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.SortDesc != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "sort$desc", runtime.ParamLocationQuery, *params.SortDesc); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Fields != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "fields", runtime.ParamLocationQuery, *params.Fields); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.DateGte != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "date$gte", runtime.ParamLocationQuery, *params.DateGte); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.DateLte != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "date$lte", runtime.ParamLocationQuery, *params.DateLte); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewNsV3CreateRequest calls the generic NsV3Create builder with application/json body
+func NewNsV3CreateRequest(server string, collection NsCollection, body NsV3CreateJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewNsV3CreateRequestWithBody(server, collection, "application/json", bodyReader)
+}
+
+// NewNsV3CreateRequestWithBody generates requests for NsV3Create with any type of body
+func NewNsV3CreateRequestWithBody(server string, collection NsCollection, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "collection", runtime.ParamLocationPath, collection)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v3/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewNsV3HistoryRequest generates requests for NsV3History
+func NewNsV3HistoryRequest(server string, collection NsCollection, since int64, params *NsV3HistoryParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "collection", runtime.ParamLocationPath, collection)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "since", runtime.ParamLocationPath, since)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v3/%s/history/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "limit", runtime.ParamLocationQuery, *params.Limit); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewNsV3DeleteRequest generates requests for NsV3Delete
+func NewNsV3DeleteRequest(server string, collection NsCollection, identifier NsIdentifier, params *NsV3DeleteParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "collection", runtime.ParamLocationPath, collection)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "identifier", runtime.ParamLocationPath, identifier)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v3/%s/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Permanent != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "permanent", runtime.ParamLocationQuery, *params.Permanent); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewNsV3ReadRequest generates requests for NsV3Read
+func NewNsV3ReadRequest(server string, collection NsCollection, identifier NsIdentifier, params *NsV3ReadParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "collection", runtime.ParamLocationPath, collection)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "identifier", runtime.ParamLocationPath, identifier)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v3/%s/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Fields != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "fields", runtime.ParamLocationQuery, *params.Fields); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewNsV3PatchRequest calls the generic NsV3Patch builder with application/json body
+func NewNsV3PatchRequest(server string, collection NsCollection, identifier NsIdentifier, body NsV3PatchJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewNsV3PatchRequestWithBody(server, collection, identifier, "application/json", bodyReader)
+}
+
+// NewNsV3PatchRequestWithBody generates requests for NsV3Patch with any type of body
+func NewNsV3PatchRequestWithBody(server string, collection NsCollection, identifier NsIdentifier, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "collection", runtime.ParamLocationPath, collection)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "identifier", runtime.ParamLocationPath, identifier)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v3/%s/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewNsV3ReplaceRequest calls the generic NsV3Replace builder with application/json body
+func NewNsV3ReplaceRequest(server string, collection NsCollection, identifier NsIdentifier, body NsV3ReplaceJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewNsV3ReplaceRequestWithBody(server, collection, identifier, "application/json", bodyReader)
+}
+
+// NewNsV3ReplaceRequestWithBody generates requests for NsV3Replace with any type of body
+func NewNsV3ReplaceRequestWithBody(server string, collection NsCollection, identifier NsIdentifier, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "collection", runtime.ParamLocationPath, collection)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "identifier", runtime.ParamLocationPath, identifier)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v3/%s/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
 }
 
 // NewListFoodIntakesRequest generates requests for ListFoodIntakes
@@ -1776,6 +4452,108 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
+	// NsV1CountWithResponse request
+	NsV1CountWithResponse(ctx context.Context, collection NsCollection, params *NsV1CountParams, reqEditors ...RequestEditorFn) (*NsV1CountResponse, error)
+
+	// NsV1EchoWithResponse request
+	NsV1EchoWithResponse(ctx context.Context, collection NsCollection, reqEditors ...RequestEditorFn) (*NsV1EchoResponse, error)
+
+	// NsV1SliceWithResponse request
+	NsV1SliceWithResponse(ctx context.Context, collection NsCollection, field string, pType string, prefix string, params *NsV1SliceParams, reqEditors ...RequestEditorFn) (*NsV1SliceResponse, error)
+
+	// NsV1StatusWithResponse request
+	NsV1StatusWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV1StatusResponse, error)
+
+	// NsV1TimesWithResponse request
+	NsV1TimesWithResponse(ctx context.Context, prefix string, params *NsV1TimesParams, reqEditors ...RequestEditorFn) (*NsV1TimesResponse, error)
+
+	// NsV1VerifyAuthWithResponse request
+	NsV1VerifyAuthWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV1VerifyAuthResponse, error)
+
+	// NsV1VersionsWithResponse request
+	NsV1VersionsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV1VersionsResponse, error)
+
+	// NsV1SearchWithResponse request
+	NsV1SearchWithResponse(ctx context.Context, collection NsCollection, params *NsV1SearchParams, reqEditors ...RequestEditorFn) (*NsV1SearchResponse, error)
+
+	// NsV1CreateWithBodyWithResponse request with any body
+	NsV1CreateWithBodyWithResponse(ctx context.Context, collection NsCollection, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NsV1CreateResponse, error)
+
+	NsV1CreateWithResponse(ctx context.Context, collection NsCollection, body NsV1CreateJSONRequestBody, reqEditors ...RequestEditorFn) (*NsV1CreateResponse, error)
+
+	// NsV1ReplaceByBodyWithBodyWithResponse request with any body
+	NsV1ReplaceByBodyWithBodyWithResponse(ctx context.Context, collection NsCollection, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NsV1ReplaceByBodyResponse, error)
+
+	NsV1ReplaceByBodyWithResponse(ctx context.Context, collection NsCollection, body NsV1ReplaceByBodyJSONRequestBody, reqEditors ...RequestEditorFn) (*NsV1ReplaceByBodyResponse, error)
+
+	// NsV1CurrentWithResponse request
+	NsV1CurrentWithResponse(ctx context.Context, collection NsCollection, reqEditors ...RequestEditorFn) (*NsV1CurrentResponse, error)
+
+	// NsV1DeleteWithResponse request
+	NsV1DeleteWithResponse(ctx context.Context, collection NsCollection, identifier NsIdentifier, params *NsV1DeleteParams, reqEditors ...RequestEditorFn) (*NsV1DeleteResponse, error)
+
+	// NsV1GetWithResponse request
+	NsV1GetWithResponse(ctx context.Context, collection NsCollection, identifier NsIdentifier, params *NsV1GetParams, reqEditors ...RequestEditorFn) (*NsV1GetResponse, error)
+
+	// NsV1ReplaceWithBodyWithResponse request with any body
+	NsV1ReplaceWithBodyWithResponse(ctx context.Context, collection NsCollection, identifier NsIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NsV1ReplaceResponse, error)
+
+	NsV1ReplaceWithResponse(ctx context.Context, collection NsCollection, identifier NsIdentifier, body NsV1ReplaceJSONRequestBody, reqEditors ...RequestEditorFn) (*NsV1ReplaceResponse, error)
+
+	// NsV2AuthorizeWithResponse request
+	NsV2AuthorizeWithResponse(ctx context.Context, token string, reqEditors ...RequestEditorFn) (*NsV2AuthorizeResponse, error)
+
+	// NsV2PropertiesWithResponse request
+	NsV2PropertiesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV2PropertiesResponse, error)
+
+	// NsV2PropertiesNamedWithResponse request
+	NsV2PropertiesNamedWithResponse(ctx context.Context, names string, reqEditors ...RequestEditorFn) (*NsV2PropertiesNamedResponse, error)
+
+	// NsV2SummaryWithResponse request
+	NsV2SummaryWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV2SummaryResponse, error)
+
+	// NsV3AuthorizeWithResponse request
+	NsV3AuthorizeWithResponse(ctx context.Context, token string, reqEditors ...RequestEditorFn) (*NsV3AuthorizeResponse, error)
+
+	// NsV3LastModifiedWithResponse request
+	NsV3LastModifiedWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV3LastModifiedResponse, error)
+
+	// NsV3StatusWithResponse request
+	NsV3StatusWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV3StatusResponse, error)
+
+	// NsV3TestWithResponse request
+	NsV3TestWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV3TestResponse, error)
+
+	// NsV3VersionWithResponse request
+	NsV3VersionWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV3VersionResponse, error)
+
+	// NsV3SearchWithResponse request
+	NsV3SearchWithResponse(ctx context.Context, collection NsCollection, params *NsV3SearchParams, reqEditors ...RequestEditorFn) (*NsV3SearchResponse, error)
+
+	// NsV3CreateWithBodyWithResponse request with any body
+	NsV3CreateWithBodyWithResponse(ctx context.Context, collection NsCollection, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NsV3CreateResponse, error)
+
+	NsV3CreateWithResponse(ctx context.Context, collection NsCollection, body NsV3CreateJSONRequestBody, reqEditors ...RequestEditorFn) (*NsV3CreateResponse, error)
+
+	// NsV3HistoryWithResponse request
+	NsV3HistoryWithResponse(ctx context.Context, collection NsCollection, since int64, params *NsV3HistoryParams, reqEditors ...RequestEditorFn) (*NsV3HistoryResponse, error)
+
+	// NsV3DeleteWithResponse request
+	NsV3DeleteWithResponse(ctx context.Context, collection NsCollection, identifier NsIdentifier, params *NsV3DeleteParams, reqEditors ...RequestEditorFn) (*NsV3DeleteResponse, error)
+
+	// NsV3ReadWithResponse request
+	NsV3ReadWithResponse(ctx context.Context, collection NsCollection, identifier NsIdentifier, params *NsV3ReadParams, reqEditors ...RequestEditorFn) (*NsV3ReadResponse, error)
+
+	// NsV3PatchWithBodyWithResponse request with any body
+	NsV3PatchWithBodyWithResponse(ctx context.Context, collection NsCollection, identifier NsIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NsV3PatchResponse, error)
+
+	NsV3PatchWithResponse(ctx context.Context, collection NsCollection, identifier NsIdentifier, body NsV3PatchJSONRequestBody, reqEditors ...RequestEditorFn) (*NsV3PatchResponse, error)
+
+	// NsV3ReplaceWithBodyWithResponse request with any body
+	NsV3ReplaceWithBodyWithResponse(ctx context.Context, collection NsCollection, identifier NsIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NsV3ReplaceResponse, error)
+
+	NsV3ReplaceWithResponse(ctx context.Context, collection NsCollection, identifier NsIdentifier, body NsV3ReplaceJSONRequestBody, reqEditors ...RequestEditorFn) (*NsV3ReplaceResponse, error)
+
 	// ListFoodIntakesWithResponse request
 	ListFoodIntakesWithResponse(ctx context.Context, params *ListFoodIntakesParams, reqEditors ...RequestEditorFn) (*ListFoodIntakesResponse, error)
 
@@ -1843,6 +4621,693 @@ type ClientWithResponsesInterface interface {
 
 	// GetSummaryWithResponse request
 	GetSummaryWithResponse(ctx context.Context, params *GetSummaryParams, reqEditors ...RequestEditorFn) (*GetSummaryResponse, error)
+}
+
+type NsV1CountResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsObject
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV1CountResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV1CountResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV1EchoResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsObject
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV1EchoResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV1EchoResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV1SliceResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsDocuments
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV1SliceResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV1SliceResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV1StatusResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsObject
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV1StatusResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV1StatusResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV1TimesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsDocuments
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV1TimesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV1TimesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV1VerifyAuthResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsObject
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV1VerifyAuthResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV1VerifyAuthResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV1VersionsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsDocuments
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV1VersionsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV1VersionsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV1SearchResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsDocuments
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV1SearchResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV1SearchResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV1CreateResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsDocuments
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV1CreateResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV1CreateResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV1ReplaceByBodyResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsObject
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV1ReplaceByBodyResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV1ReplaceByBodyResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV1CurrentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsDocuments
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV1CurrentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV1CurrentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV1DeleteResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsObject
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV1DeleteResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV1DeleteResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV1GetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsDocuments
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV1GetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV1GetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV1ReplaceResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsObject
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV1ReplaceResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV1ReplaceResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV2AuthorizeResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsAuthorization
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV2AuthorizeResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV2AuthorizeResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV2PropertiesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsObject
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV2PropertiesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV2PropertiesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV2PropertiesNamedResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsObject
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV2PropertiesNamedResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV2PropertiesNamedResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV2SummaryResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsObject
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV2SummaryResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV2SummaryResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV3AuthorizeResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsAuthorization
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV3AuthorizeResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV3AuthorizeResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV3LastModifiedResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsV3Result
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV3LastModifiedResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV3LastModifiedResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV3StatusResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsV3Result
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV3StatusResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV3StatusResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV3TestResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsV3Result
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV3TestResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV3TestResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV3VersionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsV3Result
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV3VersionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV3VersionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV3SearchResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsV3Documents
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV3SearchResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV3SearchResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV3CreateResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsV3Document
+	JSON201      *NsV3Document
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV3CreateResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV3CreateResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV3HistoryResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsV3Documents
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV3HistoryResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV3HistoryResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV3DeleteResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsObject
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV3DeleteResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV3DeleteResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV3ReadResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsV3Document
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV3ReadResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV3ReadResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV3PatchResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsV3Document
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV3PatchResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV3PatchResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV3ReplaceResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsV3Document
+	JSON201      *NsV3Document
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV3ReplaceResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV3ReplaceResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
 }
 
 type ListFoodIntakesResponse struct {
@@ -2259,6 +5724,324 @@ func (r GetSummaryResponse) StatusCode() int {
 	return 0
 }
 
+// NsV1CountWithResponse request returning *NsV1CountResponse
+func (c *ClientWithResponses) NsV1CountWithResponse(ctx context.Context, collection NsCollection, params *NsV1CountParams, reqEditors ...RequestEditorFn) (*NsV1CountResponse, error) {
+	rsp, err := c.NsV1Count(ctx, collection, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV1CountResponse(rsp)
+}
+
+// NsV1EchoWithResponse request returning *NsV1EchoResponse
+func (c *ClientWithResponses) NsV1EchoWithResponse(ctx context.Context, collection NsCollection, reqEditors ...RequestEditorFn) (*NsV1EchoResponse, error) {
+	rsp, err := c.NsV1Echo(ctx, collection, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV1EchoResponse(rsp)
+}
+
+// NsV1SliceWithResponse request returning *NsV1SliceResponse
+func (c *ClientWithResponses) NsV1SliceWithResponse(ctx context.Context, collection NsCollection, field string, pType string, prefix string, params *NsV1SliceParams, reqEditors ...RequestEditorFn) (*NsV1SliceResponse, error) {
+	rsp, err := c.NsV1Slice(ctx, collection, field, pType, prefix, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV1SliceResponse(rsp)
+}
+
+// NsV1StatusWithResponse request returning *NsV1StatusResponse
+func (c *ClientWithResponses) NsV1StatusWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV1StatusResponse, error) {
+	rsp, err := c.NsV1Status(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV1StatusResponse(rsp)
+}
+
+// NsV1TimesWithResponse request returning *NsV1TimesResponse
+func (c *ClientWithResponses) NsV1TimesWithResponse(ctx context.Context, prefix string, params *NsV1TimesParams, reqEditors ...RequestEditorFn) (*NsV1TimesResponse, error) {
+	rsp, err := c.NsV1Times(ctx, prefix, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV1TimesResponse(rsp)
+}
+
+// NsV1VerifyAuthWithResponse request returning *NsV1VerifyAuthResponse
+func (c *ClientWithResponses) NsV1VerifyAuthWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV1VerifyAuthResponse, error) {
+	rsp, err := c.NsV1VerifyAuth(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV1VerifyAuthResponse(rsp)
+}
+
+// NsV1VersionsWithResponse request returning *NsV1VersionsResponse
+func (c *ClientWithResponses) NsV1VersionsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV1VersionsResponse, error) {
+	rsp, err := c.NsV1Versions(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV1VersionsResponse(rsp)
+}
+
+// NsV1SearchWithResponse request returning *NsV1SearchResponse
+func (c *ClientWithResponses) NsV1SearchWithResponse(ctx context.Context, collection NsCollection, params *NsV1SearchParams, reqEditors ...RequestEditorFn) (*NsV1SearchResponse, error) {
+	rsp, err := c.NsV1Search(ctx, collection, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV1SearchResponse(rsp)
+}
+
+// NsV1CreateWithBodyWithResponse request with arbitrary body returning *NsV1CreateResponse
+func (c *ClientWithResponses) NsV1CreateWithBodyWithResponse(ctx context.Context, collection NsCollection, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NsV1CreateResponse, error) {
+	rsp, err := c.NsV1CreateWithBody(ctx, collection, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV1CreateResponse(rsp)
+}
+
+func (c *ClientWithResponses) NsV1CreateWithResponse(ctx context.Context, collection NsCollection, body NsV1CreateJSONRequestBody, reqEditors ...RequestEditorFn) (*NsV1CreateResponse, error) {
+	rsp, err := c.NsV1Create(ctx, collection, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV1CreateResponse(rsp)
+}
+
+// NsV1ReplaceByBodyWithBodyWithResponse request with arbitrary body returning *NsV1ReplaceByBodyResponse
+func (c *ClientWithResponses) NsV1ReplaceByBodyWithBodyWithResponse(ctx context.Context, collection NsCollection, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NsV1ReplaceByBodyResponse, error) {
+	rsp, err := c.NsV1ReplaceByBodyWithBody(ctx, collection, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV1ReplaceByBodyResponse(rsp)
+}
+
+func (c *ClientWithResponses) NsV1ReplaceByBodyWithResponse(ctx context.Context, collection NsCollection, body NsV1ReplaceByBodyJSONRequestBody, reqEditors ...RequestEditorFn) (*NsV1ReplaceByBodyResponse, error) {
+	rsp, err := c.NsV1ReplaceByBody(ctx, collection, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV1ReplaceByBodyResponse(rsp)
+}
+
+// NsV1CurrentWithResponse request returning *NsV1CurrentResponse
+func (c *ClientWithResponses) NsV1CurrentWithResponse(ctx context.Context, collection NsCollection, reqEditors ...RequestEditorFn) (*NsV1CurrentResponse, error) {
+	rsp, err := c.NsV1Current(ctx, collection, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV1CurrentResponse(rsp)
+}
+
+// NsV1DeleteWithResponse request returning *NsV1DeleteResponse
+func (c *ClientWithResponses) NsV1DeleteWithResponse(ctx context.Context, collection NsCollection, identifier NsIdentifier, params *NsV1DeleteParams, reqEditors ...RequestEditorFn) (*NsV1DeleteResponse, error) {
+	rsp, err := c.NsV1Delete(ctx, collection, identifier, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV1DeleteResponse(rsp)
+}
+
+// NsV1GetWithResponse request returning *NsV1GetResponse
+func (c *ClientWithResponses) NsV1GetWithResponse(ctx context.Context, collection NsCollection, identifier NsIdentifier, params *NsV1GetParams, reqEditors ...RequestEditorFn) (*NsV1GetResponse, error) {
+	rsp, err := c.NsV1Get(ctx, collection, identifier, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV1GetResponse(rsp)
+}
+
+// NsV1ReplaceWithBodyWithResponse request with arbitrary body returning *NsV1ReplaceResponse
+func (c *ClientWithResponses) NsV1ReplaceWithBodyWithResponse(ctx context.Context, collection NsCollection, identifier NsIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NsV1ReplaceResponse, error) {
+	rsp, err := c.NsV1ReplaceWithBody(ctx, collection, identifier, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV1ReplaceResponse(rsp)
+}
+
+func (c *ClientWithResponses) NsV1ReplaceWithResponse(ctx context.Context, collection NsCollection, identifier NsIdentifier, body NsV1ReplaceJSONRequestBody, reqEditors ...RequestEditorFn) (*NsV1ReplaceResponse, error) {
+	rsp, err := c.NsV1Replace(ctx, collection, identifier, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV1ReplaceResponse(rsp)
+}
+
+// NsV2AuthorizeWithResponse request returning *NsV2AuthorizeResponse
+func (c *ClientWithResponses) NsV2AuthorizeWithResponse(ctx context.Context, token string, reqEditors ...RequestEditorFn) (*NsV2AuthorizeResponse, error) {
+	rsp, err := c.NsV2Authorize(ctx, token, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV2AuthorizeResponse(rsp)
+}
+
+// NsV2PropertiesWithResponse request returning *NsV2PropertiesResponse
+func (c *ClientWithResponses) NsV2PropertiesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV2PropertiesResponse, error) {
+	rsp, err := c.NsV2Properties(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV2PropertiesResponse(rsp)
+}
+
+// NsV2PropertiesNamedWithResponse request returning *NsV2PropertiesNamedResponse
+func (c *ClientWithResponses) NsV2PropertiesNamedWithResponse(ctx context.Context, names string, reqEditors ...RequestEditorFn) (*NsV2PropertiesNamedResponse, error) {
+	rsp, err := c.NsV2PropertiesNamed(ctx, names, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV2PropertiesNamedResponse(rsp)
+}
+
+// NsV2SummaryWithResponse request returning *NsV2SummaryResponse
+func (c *ClientWithResponses) NsV2SummaryWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV2SummaryResponse, error) {
+	rsp, err := c.NsV2Summary(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV2SummaryResponse(rsp)
+}
+
+// NsV3AuthorizeWithResponse request returning *NsV3AuthorizeResponse
+func (c *ClientWithResponses) NsV3AuthorizeWithResponse(ctx context.Context, token string, reqEditors ...RequestEditorFn) (*NsV3AuthorizeResponse, error) {
+	rsp, err := c.NsV3Authorize(ctx, token, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV3AuthorizeResponse(rsp)
+}
+
+// NsV3LastModifiedWithResponse request returning *NsV3LastModifiedResponse
+func (c *ClientWithResponses) NsV3LastModifiedWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV3LastModifiedResponse, error) {
+	rsp, err := c.NsV3LastModified(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV3LastModifiedResponse(rsp)
+}
+
+// NsV3StatusWithResponse request returning *NsV3StatusResponse
+func (c *ClientWithResponses) NsV3StatusWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV3StatusResponse, error) {
+	rsp, err := c.NsV3Status(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV3StatusResponse(rsp)
+}
+
+// NsV3TestWithResponse request returning *NsV3TestResponse
+func (c *ClientWithResponses) NsV3TestWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV3TestResponse, error) {
+	rsp, err := c.NsV3Test(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV3TestResponse(rsp)
+}
+
+// NsV3VersionWithResponse request returning *NsV3VersionResponse
+func (c *ClientWithResponses) NsV3VersionWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV3VersionResponse, error) {
+	rsp, err := c.NsV3Version(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV3VersionResponse(rsp)
+}
+
+// NsV3SearchWithResponse request returning *NsV3SearchResponse
+func (c *ClientWithResponses) NsV3SearchWithResponse(ctx context.Context, collection NsCollection, params *NsV3SearchParams, reqEditors ...RequestEditorFn) (*NsV3SearchResponse, error) {
+	rsp, err := c.NsV3Search(ctx, collection, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV3SearchResponse(rsp)
+}
+
+// NsV3CreateWithBodyWithResponse request with arbitrary body returning *NsV3CreateResponse
+func (c *ClientWithResponses) NsV3CreateWithBodyWithResponse(ctx context.Context, collection NsCollection, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NsV3CreateResponse, error) {
+	rsp, err := c.NsV3CreateWithBody(ctx, collection, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV3CreateResponse(rsp)
+}
+
+func (c *ClientWithResponses) NsV3CreateWithResponse(ctx context.Context, collection NsCollection, body NsV3CreateJSONRequestBody, reqEditors ...RequestEditorFn) (*NsV3CreateResponse, error) {
+	rsp, err := c.NsV3Create(ctx, collection, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV3CreateResponse(rsp)
+}
+
+// NsV3HistoryWithResponse request returning *NsV3HistoryResponse
+func (c *ClientWithResponses) NsV3HistoryWithResponse(ctx context.Context, collection NsCollection, since int64, params *NsV3HistoryParams, reqEditors ...RequestEditorFn) (*NsV3HistoryResponse, error) {
+	rsp, err := c.NsV3History(ctx, collection, since, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV3HistoryResponse(rsp)
+}
+
+// NsV3DeleteWithResponse request returning *NsV3DeleteResponse
+func (c *ClientWithResponses) NsV3DeleteWithResponse(ctx context.Context, collection NsCollection, identifier NsIdentifier, params *NsV3DeleteParams, reqEditors ...RequestEditorFn) (*NsV3DeleteResponse, error) {
+	rsp, err := c.NsV3Delete(ctx, collection, identifier, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV3DeleteResponse(rsp)
+}
+
+// NsV3ReadWithResponse request returning *NsV3ReadResponse
+func (c *ClientWithResponses) NsV3ReadWithResponse(ctx context.Context, collection NsCollection, identifier NsIdentifier, params *NsV3ReadParams, reqEditors ...RequestEditorFn) (*NsV3ReadResponse, error) {
+	rsp, err := c.NsV3Read(ctx, collection, identifier, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV3ReadResponse(rsp)
+}
+
+// NsV3PatchWithBodyWithResponse request with arbitrary body returning *NsV3PatchResponse
+func (c *ClientWithResponses) NsV3PatchWithBodyWithResponse(ctx context.Context, collection NsCollection, identifier NsIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NsV3PatchResponse, error) {
+	rsp, err := c.NsV3PatchWithBody(ctx, collection, identifier, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV3PatchResponse(rsp)
+}
+
+func (c *ClientWithResponses) NsV3PatchWithResponse(ctx context.Context, collection NsCollection, identifier NsIdentifier, body NsV3PatchJSONRequestBody, reqEditors ...RequestEditorFn) (*NsV3PatchResponse, error) {
+	rsp, err := c.NsV3Patch(ctx, collection, identifier, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV3PatchResponse(rsp)
+}
+
+// NsV3ReplaceWithBodyWithResponse request with arbitrary body returning *NsV3ReplaceResponse
+func (c *ClientWithResponses) NsV3ReplaceWithBodyWithResponse(ctx context.Context, collection NsCollection, identifier NsIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NsV3ReplaceResponse, error) {
+	rsp, err := c.NsV3ReplaceWithBody(ctx, collection, identifier, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV3ReplaceResponse(rsp)
+}
+
+func (c *ClientWithResponses) NsV3ReplaceWithResponse(ctx context.Context, collection NsCollection, identifier NsIdentifier, body NsV3ReplaceJSONRequestBody, reqEditors ...RequestEditorFn) (*NsV3ReplaceResponse, error) {
+	rsp, err := c.NsV3Replace(ctx, collection, identifier, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV3ReplaceResponse(rsp)
+}
+
 // ListFoodIntakesWithResponse request returning *ListFoodIntakesResponse
 func (c *ClientWithResponses) ListFoodIntakesWithResponse(ctx context.Context, params *ListFoodIntakesParams, reqEditors ...RequestEditorFn) (*ListFoodIntakesResponse, error) {
 	rsp, err := c.ListFoodIntakes(ctx, params, reqEditors...)
@@ -2475,6 +6258,975 @@ func (c *ClientWithResponses) GetSummaryWithResponse(ctx context.Context, params
 		return nil, err
 	}
 	return ParseGetSummaryResponse(rsp)
+}
+
+// ParseNsV1CountResponse parses an HTTP response from a NsV1CountWithResponse call
+func ParseNsV1CountResponse(rsp *http.Response) (*NsV1CountResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV1CountResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsObject
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV1EchoResponse parses an HTTP response from a NsV1EchoWithResponse call
+func ParseNsV1EchoResponse(rsp *http.Response) (*NsV1EchoResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV1EchoResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsObject
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV1SliceResponse parses an HTTP response from a NsV1SliceWithResponse call
+func ParseNsV1SliceResponse(rsp *http.Response) (*NsV1SliceResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV1SliceResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsDocuments
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV1StatusResponse parses an HTTP response from a NsV1StatusWithResponse call
+func ParseNsV1StatusResponse(rsp *http.Response) (*NsV1StatusResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV1StatusResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsObject
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV1TimesResponse parses an HTTP response from a NsV1TimesWithResponse call
+func ParseNsV1TimesResponse(rsp *http.Response) (*NsV1TimesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV1TimesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsDocuments
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV1VerifyAuthResponse parses an HTTP response from a NsV1VerifyAuthWithResponse call
+func ParseNsV1VerifyAuthResponse(rsp *http.Response) (*NsV1VerifyAuthResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV1VerifyAuthResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsObject
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV1VersionsResponse parses an HTTP response from a NsV1VersionsWithResponse call
+func ParseNsV1VersionsResponse(rsp *http.Response) (*NsV1VersionsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV1VersionsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsDocuments
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV1SearchResponse parses an HTTP response from a NsV1SearchWithResponse call
+func ParseNsV1SearchResponse(rsp *http.Response) (*NsV1SearchResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV1SearchResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsDocuments
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV1CreateResponse parses an HTTP response from a NsV1CreateWithResponse call
+func ParseNsV1CreateResponse(rsp *http.Response) (*NsV1CreateResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV1CreateResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsDocuments
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV1ReplaceByBodyResponse parses an HTTP response from a NsV1ReplaceByBodyWithResponse call
+func ParseNsV1ReplaceByBodyResponse(rsp *http.Response) (*NsV1ReplaceByBodyResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV1ReplaceByBodyResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsObject
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV1CurrentResponse parses an HTTP response from a NsV1CurrentWithResponse call
+func ParseNsV1CurrentResponse(rsp *http.Response) (*NsV1CurrentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV1CurrentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsDocuments
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV1DeleteResponse parses an HTTP response from a NsV1DeleteWithResponse call
+func ParseNsV1DeleteResponse(rsp *http.Response) (*NsV1DeleteResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV1DeleteResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsObject
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV1GetResponse parses an HTTP response from a NsV1GetWithResponse call
+func ParseNsV1GetResponse(rsp *http.Response) (*NsV1GetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV1GetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsDocuments
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV1ReplaceResponse parses an HTTP response from a NsV1ReplaceWithResponse call
+func ParseNsV1ReplaceResponse(rsp *http.Response) (*NsV1ReplaceResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV1ReplaceResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsObject
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV2AuthorizeResponse parses an HTTP response from a NsV2AuthorizeWithResponse call
+func ParseNsV2AuthorizeResponse(rsp *http.Response) (*NsV2AuthorizeResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV2AuthorizeResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsAuthorization
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV2PropertiesResponse parses an HTTP response from a NsV2PropertiesWithResponse call
+func ParseNsV2PropertiesResponse(rsp *http.Response) (*NsV2PropertiesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV2PropertiesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsObject
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV2PropertiesNamedResponse parses an HTTP response from a NsV2PropertiesNamedWithResponse call
+func ParseNsV2PropertiesNamedResponse(rsp *http.Response) (*NsV2PropertiesNamedResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV2PropertiesNamedResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsObject
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV2SummaryResponse parses an HTTP response from a NsV2SummaryWithResponse call
+func ParseNsV2SummaryResponse(rsp *http.Response) (*NsV2SummaryResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV2SummaryResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsObject
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV3AuthorizeResponse parses an HTTP response from a NsV3AuthorizeWithResponse call
+func ParseNsV3AuthorizeResponse(rsp *http.Response) (*NsV3AuthorizeResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV3AuthorizeResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsAuthorization
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV3LastModifiedResponse parses an HTTP response from a NsV3LastModifiedWithResponse call
+func ParseNsV3LastModifiedResponse(rsp *http.Response) (*NsV3LastModifiedResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV3LastModifiedResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsV3Result
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV3StatusResponse parses an HTTP response from a NsV3StatusWithResponse call
+func ParseNsV3StatusResponse(rsp *http.Response) (*NsV3StatusResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV3StatusResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsV3Result
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV3TestResponse parses an HTTP response from a NsV3TestWithResponse call
+func ParseNsV3TestResponse(rsp *http.Response) (*NsV3TestResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV3TestResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsV3Result
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV3VersionResponse parses an HTTP response from a NsV3VersionWithResponse call
+func ParseNsV3VersionResponse(rsp *http.Response) (*NsV3VersionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV3VersionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsV3Result
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV3SearchResponse parses an HTTP response from a NsV3SearchWithResponse call
+func ParseNsV3SearchResponse(rsp *http.Response) (*NsV3SearchResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV3SearchResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsV3Documents
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV3CreateResponse parses an HTTP response from a NsV3CreateWithResponse call
+func ParseNsV3CreateResponse(rsp *http.Response) (*NsV3CreateResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV3CreateResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsV3Document
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest NsV3Document
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV3HistoryResponse parses an HTTP response from a NsV3HistoryWithResponse call
+func ParseNsV3HistoryResponse(rsp *http.Response) (*NsV3HistoryResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV3HistoryResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsV3Documents
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV3DeleteResponse parses an HTTP response from a NsV3DeleteWithResponse call
+func ParseNsV3DeleteResponse(rsp *http.Response) (*NsV3DeleteResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV3DeleteResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsObject
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV3ReadResponse parses an HTTP response from a NsV3ReadWithResponse call
+func ParseNsV3ReadResponse(rsp *http.Response) (*NsV3ReadResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV3ReadResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsV3Document
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV3PatchResponse parses an HTTP response from a NsV3PatchWithResponse call
+func ParseNsV3PatchResponse(rsp *http.Response) (*NsV3PatchResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV3PatchResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsV3Document
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV3ReplaceResponse parses an HTTP response from a NsV3ReplaceWithResponse call
+func ParseNsV3ReplaceResponse(rsp *http.Response) (*NsV3ReplaceResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV3ReplaceResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsV3Document
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest NsV3Document
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
 }
 
 // ParseListFoodIntakesResponse parses an HTTP response from a ListFoodIntakesWithResponse call
