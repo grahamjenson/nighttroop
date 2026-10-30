@@ -230,6 +230,12 @@ func templateTime(offset int) string {
 	return t.Format(time.RFC3339)
 }
 
+// templateDayTime is minutes after midnight, in UTC, the day days from today, e.g. daytime -1 720 for noon yesterday
+func templateDayTime(days, minutes int) time.Time {
+	now := time.Now().UTC()
+	return time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC).AddDate(0, 0, days).Add(time.Duration(minutes) * time.Minute)
+}
+
 func templateITime(offset int) int64 {
 	// top of the minute
 	t := time.Now().Add(-time.Duration(offset) * time.Minute)

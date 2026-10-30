@@ -23,6 +23,8 @@ type CollectionTx struct {
 	siteTx      *sql.Tx
 	// reportedChanges are the changes to the site's models made in the transaction, published once it commits
 	reportedChanges []events.Event
+	// onCommit are called once everything is committed
+	onCommit []func()
 }
 
 func NewCollectionTx(ctx context.Context, siteContext *httputils.SiteContext) *CollectionTx {
@@ -79,12 +81,21 @@ func (t *CollectionTx) Finish(herr *apiutils.HTTPError) *apiutils.HTTPError {
 	for _, change := range t.reportedChanges {
 		t.siteContext.PublishModelChange(change.Action, change.Model)
 	}
+	for _, committed := range t.onCommit {
+		committed()
+	}
 	return nil
 }
 
 // reportChange reports a change to one of the site's models, its sitedb row, to be published once committed
 func (t *CollectionTx) ReportChange(action events.Action, row any) {
 	t.reportedChanges = append(t.reportedChanges, events.Event{Action: action, Model: row})
+}
+
+// OnCommit calls committed once everything is committed, and never when it is rolled back, e.g. to record an event a
+// background job acts on, so the job sees what was committed
+func (t *CollectionTx) OnCommit(committed func()) {
+	t.onCommit = append(t.onCommit, committed)
 }
 
 // Rollback undoes anything not yet committed. It is safe to defer: after Finish it does nothing.

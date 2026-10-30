@@ -27,6 +27,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/templui/templui v1.11.2
 	github.com/tink-crypto/tink-go/v2 v2.6.0
+	github.com/yuin/goldmark v1.7.13
 	golang.org/x/crypto v0.57.0
 	golang.org/x/net v0.59.0
 	golang.org/x/sync v0.23.0

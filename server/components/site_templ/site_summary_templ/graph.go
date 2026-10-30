@@ -38,9 +38,9 @@ var (
 // between them, ""
 func glucoseRange(s *sitemodels.Summary, reading float64) string {
 	switch {
-	case reading < s.LowAlarm:
+	case reading < s.RangeLow:
 		return "Low"
-	case reading > s.HighAlarm:
+	case reading > s.RangeHigh:
 		return "High"
 	}
 	return ""
@@ -117,8 +117,8 @@ func graph(s *sitemodels.Summary, now int64, location *time.Location) *charts.Sc
 		return charts.WithMarkLineStyleOpts(opts.MarkLineStyle{Symbol: []string{"none", "none"}, Label: &opts.Label{Show: opts.Bool(false)}, LineStyle: &opts.LineStyle{Type: "dashed", Color: colour, Width: 2}})
 	}
 	dot := charts.WithScatterChartOpts(opts.ScatterChart{SymbolSize: 6})
-	chart.AddSeries("Low", lows, dot, charts.WithItemStyleOpts(opts.ItemStyle{Color: glucoseLow}), dashed(glucoseLow), charts.WithMarkLineNameYAxisItemOpts(opts.MarkLineNameYAxisItem{Name: "Low", YAxis: s.LowAlarm}))
-	chart.AddSeries("High", highs, dot, charts.WithItemStyleOpts(opts.ItemStyle{Color: glucoseHigh}), dashed(glucoseHigh), charts.WithMarkLineNameYAxisItemOpts(opts.MarkLineNameYAxisItem{Name: "High", YAxis: s.HighAlarm}))
+	chart.AddSeries("Low", lows, dot, charts.WithItemStyleOpts(opts.ItemStyle{Color: glucoseLow}), dashed(glucoseLow), charts.WithMarkLineNameYAxisItemOpts(opts.MarkLineNameYAxisItem{Name: "Low", YAxis: s.RangeLow}))
+	chart.AddSeries("High", highs, dot, charts.WithItemStyleOpts(opts.ItemStyle{Color: glucoseHigh}), dashed(glucoseHigh), charts.WithMarkLineNameYAxisItemOpts(opts.MarkLineNameYAxisItem{Name: "High", YAxis: s.RangeHigh}))
 	chart.AddSeries("In range", inRange, append(targets, dot, charts.WithItemStyleOpts(opts.ItemStyle{Color: glucoseInRange}))...)
 
 	marker := func(colour string) []charts.SeriesOpts {

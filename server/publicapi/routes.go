@@ -5,9 +5,11 @@ import (
 	"net/http"
 	"runtime"
 
+	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/publicmodels"
+	"nighttroop.t1d.nz/server/assets/docs"
 	"nighttroop.t1d.nz/server/components/public_templ"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/config"
@@ -101,5 +103,18 @@ func POSTCreateSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig)
 			http.Error(w, "Unable to Create Site", http.StatusInternalServerError)
 		}
 
+	}
+}
+
+// LegalRoutes serves the terms of service and privacy policy, with the server's support email, so every host's footer
+// links to its own /terms and /privacy
+func LegalRoutes(r chi.Router) {
+	for path, document := range map[string]string{"/terms": docs.TermsOfService, "/privacy": docs.PrivacyPolicy} {
+		r.Get(path, func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			if err := public_templ.Legal(docs.WithSupportEmail(document, httputils.SupportEmail(r.Context()))).Render(r.Context(), w); err != nil {
+				slog.Error("failed to render a legal document", "path", path, "error", err)
+			}
+		})
 	}
 }

@@ -21,6 +21,9 @@ import (
 	"nighttroop.t1d.nz/utils/security"
 )
 
+// DefaultSupportEmail is the support email address when SUPPORT_EMAIL is not set
+const DefaultSupportEmail = "nighttroop@t1d.nz"
+
 // ServerStatus records which optional services are working. It is filled in
 // at startup and read by anything that depends on them.
 type ServerStatus struct {
@@ -54,6 +57,10 @@ type ServerConfig struct {
 	// sentry
 	SentryDSN string
 
+	// SupportEmail is where users contact the server's operator, linked from every page's footer and in the terms
+	// of service and privacy policy
+	SupportEmail string
+
 	// paths
 	SqlitePath string
 
@@ -81,6 +88,10 @@ type ServerConfig struct {
 	// Each identity create hashes a password with bcrypt
 	SiteIdentityCreatePerMinuteLimit int
 	SiteIdentityCreatePerMinuteBurst int
+
+	// Each download of a site's data copies its whole DB
+	SiteDownloadPerMinuteLimit int
+	SiteDownloadPerMinuteBurst int
 
 	//
 	// Site Create Rate Limits
@@ -196,6 +207,8 @@ func NewServerConfig() (*ServerConfig, error) {
 		// sentry
 		SentryDSN: configStringSelect(dotenv, "SENTRY_DSN", ""),
 
+		SupportEmail: configStringSelect(dotenv, "SUPPORT_EMAIL", DefaultSupportEmail),
+
 		// security
 		RawKeySets: configStringSelect(dotenv, consts.KEY_SETS_ENV_KEY, ""),
 
@@ -233,6 +246,9 @@ func NewServerConfig() (*ServerConfig, error) {
 
 		SiteIdentityCreatePerMinuteLimit: configIntSelect(dotenv, "SITE_IDENTITY_CREATE_PER_MINUTE_LIMIT", 1), // Stop creating and deleting identities using up the CPU with bcrypt
 		SiteIdentityCreatePerMinuteBurst: configIntSelect(dotenv, "SITE_IDENTITY_CREATE_PER_MINUTE_BURST", 5),
+
+		SiteDownloadPerMinuteLimit: configIntSelect(dotenv, "SITE_DOWNLOAD_PER_MINUTE_LIMIT", 1),
+		SiteDownloadPerMinuteBurst: configIntSelect(dotenv, "SITE_DOWNLOAD_PER_MINUTE_BURST", 3),
 
 		//
 		// Site Limits

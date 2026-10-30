@@ -4,6 +4,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server/assets/static"
+	"nighttroop.t1d.nz/server/publicapi"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/server/siteapi/sitecollections"
 	"nighttroop.t1d.nz/server/siteapi/sitelogin"
@@ -25,6 +26,7 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		// Before sign in only the IP is known, so an IP spamming logins cannot spend the site's own limit
 		r.Use(httputils.SiteUnauthRateLimitMiddleware(config))
 		r.Get("/login", sitelogin.GETLoginPageHandler())
+		publicapi.LegalRoutes(r)
 		r.Post("/login", sitelogin.POSTLogin(controlDB, config))
 		r.Post("/login/totp", sitelogin.POSTLoginTOTP(controlDB, config))
 	})
@@ -62,6 +64,8 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 
 		// Actions
 		r.Post("/settings/sync/{id}/backfill", sitecollections.BackfillHandler)
+		r.Get("/settings/site/download", sitecollections.DownloadDataHandler)
+		r.Post("/settings/site/delete", sitecollections.DeleteSiteHandler)
 		r.Post("/logout", sitelogin.POSTLogoutHandler(config))
 	})
 

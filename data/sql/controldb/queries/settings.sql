@@ -31,19 +31,19 @@ UPDATE site_identities SET
 
     -- ALERTS
     alarm_urgent_low_enabled = sqlc.narg('AlarmUrgentLowEnabled'),
-    alarm_urgent_low_mgdl = sqlc.narg('AlarmUrgentLowMgdl'),
+    range_urgent_low_mgdl = sqlc.narg('RangeUrgentLowMgdl'),
 
     alarm_low_enabled = sqlc.narg('AlarmLowEnabled'),
-    alarm_low_mgdl = sqlc.narg('AlarmLowMgdl'),
+    range_low_mgdl = sqlc.narg('RangeLowMgdl'),
     alarm_low_minutes = sqlc.narg('AlarmLowMinutes'),
     alarm_low_prediction_enabled = sqlc.narg('AlarmLowPredictionEnabled'),
     alarm_low_prediction_minutes = sqlc.narg('AlarmLowPredictionMinutes'),
 
     alarm_high_enabled = sqlc.narg('AlarmHighEnabled'),
-    alarm_high_mgdl = sqlc.narg('AlarmHighMgdl'),
+    range_high_mgdl = sqlc.narg('RangeHighMgdl'),
     alarm_high_minutes = sqlc.narg('AlarmHighMinutes'),
     alarm_urgent_high_enabled = sqlc.narg('AlarmUrgentHighEnabled'),
-    alarm_urgent_high_mgdl = sqlc.narg('AlarmUrgentHighMgdl'),
+    range_urgent_high_mgdl = sqlc.narg('RangeUrgentHighMgdl'),
 
     alarm_fast_rise_enabled = sqlc.narg('AlarmFastRiseEnabled'),
     alarm_fast_rise_mgdl = sqlc.narg('AlarmFastRiseMgdl'),
@@ -101,19 +101,19 @@ UPDATE sites SET
 
     -- ALERTS
     alarm_urgent_low_enabled = sqlc.narg('AlarmUrgentLowEnabled'),
-    alarm_urgent_low_mgdl = sqlc.narg('AlarmUrgentLowMgdl'),
+    range_urgent_low_mgdl = sqlc.narg('RangeUrgentLowMgdl'),
 
     alarm_low_enabled = sqlc.narg('AlarmLowEnabled'),
-    alarm_low_mgdl = sqlc.narg('AlarmLowMgdl'),
+    range_low_mgdl = sqlc.narg('RangeLowMgdl'),
     alarm_low_minutes = sqlc.narg('AlarmLowMinutes'),
     alarm_low_prediction_enabled = sqlc.narg('AlarmLowPredictionEnabled'),
     alarm_low_prediction_minutes = sqlc.narg('AlarmLowPredictionMinutes'),
 
     alarm_high_enabled = sqlc.narg('AlarmHighEnabled'),
-    alarm_high_mgdl = sqlc.narg('AlarmHighMgdl'),
+    range_high_mgdl = sqlc.narg('RangeHighMgdl'),
     alarm_high_minutes = sqlc.narg('AlarmHighMinutes'),
     alarm_urgent_high_enabled = sqlc.narg('AlarmUrgentHighEnabled'),
-    alarm_urgent_high_mgdl = sqlc.narg('AlarmUrgentHighMgdl'),
+    range_urgent_high_mgdl = sqlc.narg('RangeUrgentHighMgdl'),
 
     alarm_fast_rise_enabled = sqlc.narg('AlarmFastRiseEnabled'),
     alarm_fast_rise_mgdl = sqlc.narg('AlarmFastRiseMgdl'),

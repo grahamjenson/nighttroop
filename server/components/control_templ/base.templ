@@ -1,6 +1,7 @@
 package control_templ
 
 import (
+	"nighttroop.t1d.nz/server/components/footer"
 	"nighttroop.t1d.nz/server/components/ui/checkbox"
 	"nighttroop.t1d.nz/server/components/ui/copybutton"
 	"nighttroop.t1d.nz/server/components/ui/dropdown"
@@ -49,7 +50,7 @@ templ ControlBase() {
 				<div id="error-container" class="mt-3"></div>
 				{ children... }
 			</div>
-			@Footer()
+			@footer.Footer()
 		</body>
 	</html>
 }
@@ -135,6 +136,7 @@ templ Header() {
 							}
 							@dropdown.Group() {
 								@menuItem("control--sites-button", "/sites", "Sites", icon.Users)
+								@menuItem("control--archived-sites-button", "/archived-sites", "Archived Sites", icon.Archive)
 								@menuItem("control--sync-sources-button", "/sync-sources", "Sync Sources", icon.RefreshCw)
 							}
 							@dropdown.Separator()
@@ -175,18 +177,4 @@ templ Header() {
 			</div>
 		</div>
 	</nav>
-}
-
-templ Footer() {
-	<footer class="mt-16 border-t border-white/10 bg-brand-night">
-		<div class="flex w-full flex-col gap-3 py-4 flex-row items-center justify-between">
-			<!-- Middle links -->
-			<div class="flex  items-center justify-center gap-6 text-sm w-full">
-				<a href="#" class="text-gray-400 hover:text-white transition">Privacy </a>
-				<a href="#" class="text-gray-400 hover:text-white transition">Terms </a>
-				<a href="#" class="text-gray-400 hover:text-white transition">Support </a>
-				<a href="#" class="text-gray-400 hover:text-white transition">Contact </a>
-			</div>
-		</div>
-	</footer>
 }

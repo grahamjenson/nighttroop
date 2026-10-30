@@ -35,6 +35,8 @@ type SiteContext struct {
 	ContentType ContentType
 
 	settings *settings.CombinedSettingsMap
+	// siteSettings are the site's own settings over the defaults, without the identity's
+	siteSettings *settings.CombinedSettingsMap
 }
 
 func GetSiteContext(ctx context.Context) *SiteContext {
@@ -102,6 +104,30 @@ func (sc *SiteContext) GetSettings() *settings.CombinedSettingsMap {
 	}
 
 	return sc.settings
+}
+
+// getSiteSettings is the site's own settings over the defaults, whatever the identity's, for what is the site's
+// rather than any one identity's, such as its days
+func (sc *SiteContext) getSiteSettings() *settings.CombinedSettingsMap {
+	if sc.siteSettings == nil {
+		sc.siteSettings = &settings.CombinedSettingsMap{SiteSettingsMap: &settings.SettingMap{}, IdentitySettingsMap: &settings.SettingMap{},
+			DefaultSettingsMap: settings.DefaultSettingsMap}
+		if sc.SiteModel != nil {
+			sc.siteSettings.SiteSettingsMap = settings.NewSettingsMap(sc.SiteModel, &sc.SiteModel.CreatedAt, new("site"))
+		}
+	}
+	return sc.siteSettings
+}
+
+// GetSiteTimezone is the site's own timezone, or UTC, whatever the identity's
+func (sc *SiteContext) GetSiteTimezone() *time.Location {
+	return sc.getSiteSettings().Location()
+}
+
+// GetSiteRangeMgdl is the site's own glucose range, low and high in mg/dL, whatever the identity's
+func (sc *SiteContext) GetSiteRangeMgdl() (low, high int64) {
+	site := sc.getSiteSettings()
+	return *site.GetRangeLowMgdl(), *site.GetRangeHighMgdl()
 }
 
 // GetSiteIdentity is the enabled identity with the name and role on the site of the request, refusing one for another site

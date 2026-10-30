@@ -4,8 +4,16 @@ ASSERT_VISIBLE          "Create Site"
 ASSERT_VISIBLE          #public--logo
 ASSERT_TEXT_EQUALS      #public--create-site-button Create Site
 
+SCREENSHOT create_site
+
 CLICK "Create Site"
 ASSERT_STATUS 200
+
+// The new site's two steps are the page, under a smaller logo and name
+ASSERT_NOT_VISIBLE #public--features
+ASSERT_VISIBLE #public--logo
+ASSERT_VISIBLE #public--copy-button
+SCREENSHOT site_created
 
 CLICK #public--login-button
 ASSERT_NEW_PAGE

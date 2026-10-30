@@ -69,17 +69,17 @@ var generalFields = []settingField{
 
 var alarmFields = []settingField{
 	{Name: "alarm_urgent_low_enabled", Label: "Urgent Low Alarm", Options: onOff, Section: "Lows"},
-	{Name: "alarm_urgent_low", Label: "Urgent Low Under", Glucose: true},
+	{Name: "range_urgent_low", Label: "Urgent Low Under", Glucose: true},
 	{Name: "alarm_low_enabled", Label: "Low Alarm", Options: onOff},
-	{Name: "alarm_low", Label: "Low Under", Glucose: true},
+	{Name: "range_low", Label: "Low Under", Glucose: true},
 	{Name: "alarm_low_minutes", Label: "Low For Minutes"},
 	{Name: "alarm_low_prediction_enabled", Label: "Predicted Low Alarm", Options: onOff},
 	{Name: "alarm_low_prediction_minutes", Label: "Predicts Minutes Ahead"},
 	{Name: "alarm_high_enabled", Label: "High Alarm", Options: onOff, Section: "Highs"},
-	{Name: "alarm_high", Label: "High Over", Glucose: true},
+	{Name: "range_high", Label: "High Over", Glucose: true},
 	{Name: "alarm_high_minutes", Label: "High For Minutes"},
 	{Name: "alarm_urgent_high_enabled", Label: "Urgent High Alarm", Options: onOff},
-	{Name: "alarm_urgent_high", Label: "Urgent High Over", Glucose: true},
+	{Name: "range_urgent_high", Label: "Urgent High Over", Glucose: true},
 	{Name: "alarm_fast_rise_enabled", Label: "Fast Rise Alarm", Options: onOff, Section: "Fast Changes"},
 	{Name: "alarm_fast_rise", Label: "Rises By", Glucose: true},
 	{Name: "alarm_fast_rise_minutes", Label: "Rises Within Minutes"},
@@ -132,6 +132,51 @@ func settingsColumns(page settingsPage, site *sitemodels.Settings, yours *sitemo
 // SettingsPage is the general settings, and AlarmSettingsPage the alarms: the site's to an admin, beside their own
 templ SettingsPage(site *sitemodels.Settings, yours *sitemodels.Settings) {
 	@settingsPageOf(generalPage, site, yours)
+	if site != nil {
+		@downloadData()
+		@deleteSite()
+	}
+}
+
+// downloadData lets an admin download a snapshot of the site's DB, to look through all its data
+templ downloadData() {
+	<section id="site--settings--download" class="mx-auto mt-6 max-w-4xl space-y-3 rounded-xl border border-gray-200 p-4 shadow-sm">
+		<h2 class="text-sm font-semibold text-brand-night">Download Data</h2>
+		<p class="text-sm text-gray-600">
+			A copy of all the site's data, as it is now, in one SQLite file, which a SQLite browser can open to look through.
+		</p>
+		@button.Button(button.Props{
+			ID:      "site--settings--download-data",
+			Href:    "/settings/site/download",
+			Variant: button.VariantOutline,
+			Attributes: templ.Attributes{"download": ""},
+		}) {
+			Download Data
+		}
+	</section>
+}
+
+// deleteSite lets an admin delete the site, which archives it, after confirming
+templ deleteSite() {
+	<section id="site--settings--delete" class="mx-auto mt-6 max-w-4xl space-y-3 rounded-xl border border-red-200 p-4 shadow-sm">
+		<h2 class="text-sm font-semibold text-red-700">Delete Site</h2>
+		<p class="text-sm text-gray-600">
+			Deleting the site signs everyone out and stops it being served, to you, your devices and Nightscout apps. Its
+			data is archived, so the server's admins can still bring it back.
+		</p>
+		<form
+			hx-post="/settings/site/delete"
+			hx-confirm="Delete this site? Everyone is signed out and its data is archived."
+			hx-target="#toaster"
+			hx-swap="beforeend"
+			hx-status:4xx="target:#toaster swap:beforeend"
+			hx-status:5xx="target:#toaster swap:beforeend"
+		>
+			@button.Button(button.Props{ID: "site--settings--delete-site", Type: button.TypeSubmit, Variant: button.VariantDestructive}) {
+				Delete Site
+			}
+		</form>
+	</section>
 }
 
 templ AlarmSettingsPage(site *sitemodels.Settings, yours *sitemodels.Settings) {

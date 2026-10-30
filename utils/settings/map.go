@@ -24,17 +24,17 @@ type SettingMap struct {
 	CarbMaxAbsorptionHours           *Setting[float64]
 	CarbMin5mImpact                  *Setting[float64]
 	AlarmUrgentLowEnabled            *Setting[bool]
-	AlarmUrgentLowMgdl               *Setting[int64]
+	RangeUrgentLowMgdl               *Setting[int64]
 	AlarmLowEnabled                  *Setting[bool]
-	AlarmLowMgdl                     *Setting[int64]
+	RangeLowMgdl                     *Setting[int64]
 	AlarmLowMinutes                  *Setting[int64]
 	AlarmLowPredictionEnabled        *Setting[bool]
 	AlarmLowPredictionMinutes        *Setting[int64]
 	AlarmHighEnabled                 *Setting[bool]
-	AlarmHighMgdl                    *Setting[int64]
+	RangeHighMgdl                    *Setting[int64]
 	AlarmHighMinutes                 *Setting[int64]
 	AlarmUrgentHighEnabled           *Setting[bool]
-	AlarmUrgentHighMgdl              *Setting[int64]
+	RangeUrgentHighMgdl              *Setting[int64]
 	AlarmFastRiseEnabled             *Setting[bool]
 	AlarmFastRiseMgdl                *Setting[int64]
 	AlarmFastRiseMinutes             *Setting[int64]
@@ -71,17 +71,17 @@ var DefaultSettingsMap = &SettingMap{
 	CarbMaxAbsorptionHours:           NewDefaultSetting(CarbMaxAbsorptionHours),
 	CarbMin5mImpact:                  NewDefaultSetting(CarbMin5mImpact),
 	AlarmUrgentLowEnabled:            NewDefaultSetting(AlarmUrgentLowEnabled),
-	AlarmUrgentLowMgdl:               NewDefaultSetting(AlarmUrgentLowMgdl),
+	RangeUrgentLowMgdl:               NewDefaultSetting(RangeUrgentLowMgdl),
 	AlarmLowEnabled:                  NewDefaultSetting(AlarmLowEnabled),
-	AlarmLowMgdl:                     NewDefaultSetting(AlarmLowMgdl),
+	RangeLowMgdl:                     NewDefaultSetting(RangeLowMgdl),
 	AlarmLowMinutes:                  NewDefaultSetting(AlarmLowMinutes),
 	AlarmLowPredictionEnabled:        NewDefaultSetting(AlarmLowPredictionEnabled),
 	AlarmLowPredictionMinutes:        NewDefaultSetting(AlarmLowPredictionMinutes),
 	AlarmHighEnabled:                 NewDefaultSetting(AlarmHighEnabled),
-	AlarmHighMgdl:                    NewDefaultSetting(AlarmHighMgdl),
+	RangeHighMgdl:                    NewDefaultSetting(RangeHighMgdl),
 	AlarmHighMinutes:                 NewDefaultSetting(AlarmHighMinutes),
 	AlarmUrgentHighEnabled:           NewDefaultSetting(AlarmUrgentHighEnabled),
-	AlarmUrgentHighMgdl:              NewDefaultSetting(AlarmUrgentHighMgdl),
+	RangeUrgentHighMgdl:              NewDefaultSetting(RangeUrgentHighMgdl),
 	AlarmFastRiseEnabled:             NewDefaultSetting(AlarmFastRiseEnabled),
 	AlarmFastRiseMgdl:                NewDefaultSetting(AlarmFastRiseMgdl),
 	AlarmFastRiseMinutes:             NewDefaultSetting(AlarmFastRiseMinutes),
@@ -120,17 +120,17 @@ func NewSettingsMap(g SettingsGetter, createdAt *int64, subject *string) *Settin
 		CarbMaxAbsorptionHours:           NewSetting(CarbMaxAbsorptionHours, g.GetCarbMaxAbsorptionHours(), createdAt, subject),
 		CarbMin5mImpact:                  NewSetting(CarbMin5mImpact, g.GetCarbMin5mImpact(), createdAt, subject),
 		AlarmUrgentLowEnabled:            NewSetting(AlarmUrgentLowEnabled, g.GetAlarmUrgentLowEnabled(), createdAt, subject),
-		AlarmUrgentLowMgdl:               NewSetting(AlarmUrgentLowMgdl, g.GetAlarmUrgentLowMgdl(), createdAt, subject),
+		RangeUrgentLowMgdl:               NewSetting(RangeUrgentLowMgdl, g.GetRangeUrgentLowMgdl(), createdAt, subject),
 		AlarmLowEnabled:                  NewSetting(AlarmLowEnabled, g.GetAlarmLowEnabled(), createdAt, subject),
-		AlarmLowMgdl:                     NewSetting(AlarmLowMgdl, g.GetAlarmLowMgdl(), createdAt, subject),
+		RangeLowMgdl:                     NewSetting(RangeLowMgdl, g.GetRangeLowMgdl(), createdAt, subject),
 		AlarmLowMinutes:                  NewSetting(AlarmLowMinutes, g.GetAlarmLowMinutes(), createdAt, subject),
 		AlarmLowPredictionEnabled:        NewSetting(AlarmLowPredictionEnabled, g.GetAlarmLowPredictionEnabled(), createdAt, subject),
 		AlarmLowPredictionMinutes:        NewSetting(AlarmLowPredictionMinutes, g.GetAlarmLowPredictionMinutes(), createdAt, subject),
 		AlarmHighEnabled:                 NewSetting(AlarmHighEnabled, g.GetAlarmHighEnabled(), createdAt, subject),
-		AlarmHighMgdl:                    NewSetting(AlarmHighMgdl, g.GetAlarmHighMgdl(), createdAt, subject),
+		RangeHighMgdl:                    NewSetting(RangeHighMgdl, g.GetRangeHighMgdl(), createdAt, subject),
 		AlarmHighMinutes:                 NewSetting(AlarmHighMinutes, g.GetAlarmHighMinutes(), createdAt, subject),
 		AlarmUrgentHighEnabled:           NewSetting(AlarmUrgentHighEnabled, g.GetAlarmUrgentHighEnabled(), createdAt, subject),
-		AlarmUrgentHighMgdl:              NewSetting(AlarmUrgentHighMgdl, g.GetAlarmUrgentHighMgdl(), createdAt, subject),
+		RangeUrgentHighMgdl:              NewSetting(RangeUrgentHighMgdl, g.GetRangeUrgentHighMgdl(), createdAt, subject),
 		AlarmFastRiseEnabled:             NewSetting(AlarmFastRiseEnabled, g.GetAlarmFastRiseEnabled(), createdAt, subject),
 		AlarmFastRiseMgdl:                NewSetting(AlarmFastRiseMgdl, g.GetAlarmFastRiseMgdl(), createdAt, subject),
 		AlarmFastRiseMinutes:             NewSetting(AlarmFastRiseMinutes, g.GetAlarmFastRiseMinutes(), createdAt, subject),
@@ -415,18 +415,18 @@ func (m *SettingMap) SetAlarmUrgentLowEnabled(v *bool) {
 
 }
 
-// GetAlarmUrgentLowMgdl returns the AlarmUrgentLowMgdl value.
-func (m SettingMap) GetAlarmUrgentLowMgdl() *int64 {
-	if m.AlarmUrgentLowMgdl == nil {
+// GetRangeUrgentLowMgdl returns the RangeUrgentLowMgdl value.
+func (m SettingMap) GetRangeUrgentLowMgdl() *int64 {
+	if m.RangeUrgentLowMgdl == nil {
 		return nil
 	}
-	return ptr(m.AlarmUrgentLowMgdl.Value)
+	return ptr(m.RangeUrgentLowMgdl.Value)
 }
 
-// SetAlarmUrgentLowMgdl sets the AlarmUrgentLowMgdl value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmUrgentLowMgdl(v *int64) {
+// SetRangeUrgentLowMgdl sets the RangeUrgentLowMgdl value and returns the updated SettingMap.
+func (m *SettingMap) SetRangeUrgentLowMgdl(v *int64) {
 
-	m.AlarmUrgentLowMgdl = NewSetting(AlarmUrgentLowMgdl, v, nil, nil)
+	m.RangeUrgentLowMgdl = NewSetting(RangeUrgentLowMgdl, v, nil, nil)
 
 }
 
@@ -445,18 +445,18 @@ func (m *SettingMap) SetAlarmLowEnabled(v *bool) {
 
 }
 
-// GetAlarmLowMgdl returns the AlarmLowMgdl value.
-func (m SettingMap) GetAlarmLowMgdl() *int64 {
-	if m.AlarmLowMgdl == nil {
+// GetRangeLowMgdl returns the RangeLowMgdl value.
+func (m SettingMap) GetRangeLowMgdl() *int64 {
+	if m.RangeLowMgdl == nil {
 		return nil
 	}
-	return ptr(m.AlarmLowMgdl.Value)
+	return ptr(m.RangeLowMgdl.Value)
 }
 
-// SetAlarmLowMgdl sets the AlarmLowMgdl value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmLowMgdl(v *int64) {
+// SetRangeLowMgdl sets the RangeLowMgdl value and returns the updated SettingMap.
+func (m *SettingMap) SetRangeLowMgdl(v *int64) {
 
-	m.AlarmLowMgdl = NewSetting(AlarmLowMgdl, v, nil, nil)
+	m.RangeLowMgdl = NewSetting(RangeLowMgdl, v, nil, nil)
 
 }
 
@@ -520,18 +520,18 @@ func (m *SettingMap) SetAlarmHighEnabled(v *bool) {
 
 }
 
-// GetAlarmHighMgdl returns the AlarmHighMgdl value.
-func (m SettingMap) GetAlarmHighMgdl() *int64 {
-	if m.AlarmHighMgdl == nil {
+// GetRangeHighMgdl returns the RangeHighMgdl value.
+func (m SettingMap) GetRangeHighMgdl() *int64 {
+	if m.RangeHighMgdl == nil {
 		return nil
 	}
-	return ptr(m.AlarmHighMgdl.Value)
+	return ptr(m.RangeHighMgdl.Value)
 }
 
-// SetAlarmHighMgdl sets the AlarmHighMgdl value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmHighMgdl(v *int64) {
+// SetRangeHighMgdl sets the RangeHighMgdl value and returns the updated SettingMap.
+func (m *SettingMap) SetRangeHighMgdl(v *int64) {
 
-	m.AlarmHighMgdl = NewSetting(AlarmHighMgdl, v, nil, nil)
+	m.RangeHighMgdl = NewSetting(RangeHighMgdl, v, nil, nil)
 
 }
 
@@ -565,18 +565,18 @@ func (m *SettingMap) SetAlarmUrgentHighEnabled(v *bool) {
 
 }
 
-// GetAlarmUrgentHighMgdl returns the AlarmUrgentHighMgdl value.
-func (m SettingMap) GetAlarmUrgentHighMgdl() *int64 {
-	if m.AlarmUrgentHighMgdl == nil {
+// GetRangeUrgentHighMgdl returns the RangeUrgentHighMgdl value.
+func (m SettingMap) GetRangeUrgentHighMgdl() *int64 {
+	if m.RangeUrgentHighMgdl == nil {
 		return nil
 	}
-	return ptr(m.AlarmUrgentHighMgdl.Value)
+	return ptr(m.RangeUrgentHighMgdl.Value)
 }
 
-// SetAlarmUrgentHighMgdl sets the AlarmUrgentHighMgdl value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmUrgentHighMgdl(v *int64) {
+// SetRangeUrgentHighMgdl sets the RangeUrgentHighMgdl value and returns the updated SettingMap.
+func (m *SettingMap) SetRangeUrgentHighMgdl(v *int64) {
 
-	m.AlarmUrgentHighMgdl = NewSetting(AlarmUrgentHighMgdl, v, nil, nil)
+	m.RangeUrgentHighMgdl = NewSetting(RangeUrgentHighMgdl, v, nil, nil)
 
 }
 

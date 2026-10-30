@@ -1,0 +1,17 @@
+package footer
+
+import "nighttroop.t1d.nz/utils/httputils"
+
+// Footer is every page's thin footer: a mailto link to the server's support email, its terms of service and privacy
+// policy, and Nighttroop's year
+templ Footer() {
+	<footer id="footer" class="border-t border-gray-200 bg-white py-3 text-center text-xs text-gray-500">
+		<a id="footer--contact" href={ templ.SafeURL("mailto:" + httputils.SupportEmail(ctx)) } class="hover:text-primary">contact</a>
+		<span aria-hidden="true">·</span>
+		<a id="footer--terms" href="/terms" class="hover:text-primary">terms of service</a>
+		<span aria-hidden="true">·</span>
+		<a id="footer--privacy" href="/privacy" class="hover:text-primary">privacy policy</a>
+		<span aria-hidden="true">·</span>
+		<span>Nighttroop 2026</span>
+	</footer>
+}

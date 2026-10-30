@@ -180,9 +180,10 @@ func Patch(store nsutils.Store) http.HandlerFunc {
 	}
 }
 
-// readDocument is the request's JSON body. When it is bad it writes a 400 and ok is false.
+// readDocument is the request's JSON body. When it is bad, or JSON null rather than a document, it writes a 400
+// and ok is false.
 func readDocument(w http.ResponseWriter, r *http.Request) (doc map[string]any, ok bool) {
-	if err := apiutils.ReadJSON(r, &doc); err != nil {
+	if err := apiutils.ReadJSON(r, &doc); err != nil || doc == nil {
 		apiutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest})
 		return nil, false
 	}

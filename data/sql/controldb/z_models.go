@@ -65,17 +65,17 @@ type Site struct {
 	CarbMaxAbsorptionHours           *float64
 	CarbMin5mImpact                  *float64
 	AlarmUrgentLowEnabled            *bool
-	AlarmUrgentLowMgdl               *int64
+	RangeUrgentLowMgdl               *int64
 	AlarmLowEnabled                  *bool
-	AlarmLowMgdl                     *int64
+	RangeLowMgdl                     *int64
 	AlarmLowMinutes                  *int64
 	AlarmLowPredictionEnabled        *bool
 	AlarmLowPredictionMinutes        *int64
 	AlarmHighEnabled                 *bool
-	AlarmHighMgdl                    *int64
+	RangeHighMgdl                    *int64
 	AlarmHighMinutes                 *int64
 	AlarmUrgentHighEnabled           *bool
-	AlarmUrgentHighMgdl              *int64
+	RangeUrgentHighMgdl              *int64
 	AlarmFastRiseEnabled             *bool
 	AlarmFastRiseMgdl                *int64
 	AlarmFastRiseMinutes             *int64
@@ -126,17 +126,17 @@ type SiteIdentity struct {
 	CarbMaxAbsorptionHours           *float64
 	CarbMin5mImpact                  *float64
 	AlarmUrgentLowEnabled            *bool
-	AlarmUrgentLowMgdl               *int64
+	RangeUrgentLowMgdl               *int64
 	AlarmLowEnabled                  *bool
-	AlarmLowMgdl                     *int64
+	RangeLowMgdl                     *int64
 	AlarmLowMinutes                  *int64
 	AlarmLowPredictionEnabled        *bool
 	AlarmLowPredictionMinutes        *int64
 	AlarmHighEnabled                 *bool
-	AlarmHighMgdl                    *int64
+	RangeHighMgdl                    *int64
 	AlarmHighMinutes                 *int64
 	AlarmUrgentHighEnabled           *bool
-	AlarmUrgentHighMgdl              *int64
+	RangeUrgentHighMgdl              *int64
 	AlarmFastRiseEnabled             *bool
 	AlarmFastRiseMgdl                *int64
 	AlarmFastRiseMinutes             *int64

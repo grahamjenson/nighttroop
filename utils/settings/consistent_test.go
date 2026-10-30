@@ -14,12 +14,12 @@ func TestConsistent(t *testing.T) {
 		want     string
 	}{
 		{name: "the defaults"},
-		{name: "a low under the high", identity: map[string]any{"alarm_low_mgdl": "80", "alarm_high_mgdl": "200"}},
-		{name: "a low over the high", identity: map[string]any{"alarm_low_mgdl": "150", "alarm_high_mgdl": "140"}, want: "the low alarm must be under the high alarm"},
-		{name: "a low at the high", identity: map[string]any{"alarm_low_mgdl": "100", "alarm_high_mgdl": "100"}, want: "the low alarm must be under the high alarm"},
-		{name: "the identity's low over the site's high", site: map[string]any{"alarm_high_mgdl": "120"}, identity: map[string]any{"alarm_low_mgdl": "130"}, want: "the low alarm must be under the high alarm"},
-		{name: "an urgent low over the default low", identity: map[string]any{"alarm_urgent_low_mgdl": "80"}, want: "the urgent low alarm must be under the low alarm"},
-		{name: "an urgent high under the default high", site: map[string]any{"alarm_urgent_high_mgdl": "150"}, want: "the high alarm must be under the urgent high alarm"},
+		{name: "a low under the high", identity: map[string]any{"range_low_mgdl": "80", "range_high_mgdl": "200"}},
+		{name: "a low over the high", identity: map[string]any{"range_low_mgdl": "150", "range_high_mgdl": "140"}, want: "the low must be under the high"},
+		{name: "a low at the high", identity: map[string]any{"range_low_mgdl": "100", "range_high_mgdl": "100"}, want: "the low must be under the high"},
+		{name: "the identity's low over the site's high", site: map[string]any{"range_high_mgdl": "120"}, identity: map[string]any{"range_low_mgdl": "130"}, want: "the low must be under the high"},
+		{name: "an urgent low over the default low", identity: map[string]any{"range_urgent_low_mgdl": "80"}, want: "the urgent low must be under the low"},
+		{name: "an urgent high under the default high", site: map[string]any{"range_urgent_high_mgdl": "150"}, want: "the high must be under the urgent high"},
 		{name: "bolus onset after its peak", identity: map[string]any{"bolus_onset_minutes": "90", "bolus_peak_minutes": "60"}, want: "bolus insulin must start acting before its peak"},
 		{name: "bolus peak after its duration", identity: map[string]any{"bolus_peak_minutes": "200", "bolus_dia_hours": "3"}, want: "bolus insulin must peak before it stops acting"},
 		{name: "basal onset after its peak", site: map[string]any{"basal_onset_minutes": "200"}, want: "basal insulin must start acting before its peak"},

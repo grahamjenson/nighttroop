@@ -157,9 +157,9 @@ func getLocator(expected any, page playwright.Page) playwright.Locator {
 		return page.Locator(s)
 
 	case len(s) >= 2 && strings.HasPrefix(s, `"`) && strings.HasSuffix(s, `"`):
-		// Text content: "Submit"
+		// Text content: "Submit", the first element with it, as a word like the site's name can also be in the footer
 		text := strings.Trim(s, `"`)
-		return page.GetByText(text)
+		return page.GetByText(text).First()
 
 	default:
 		// Normal string value

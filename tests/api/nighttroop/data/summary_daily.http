@@ -1,0 +1,160 @@
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.localhost
+SET ns_site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+// Signed in as the site's admin, who can also change its timezone
+NAME login_admin
+POST http://{{ site }}/login
+H Accept: application/json
+B {"name": "admin", "password": "{{ .create_new_site.api_key }}", "totp": "123123"}
+ASSERT_STATUS 200
+SET jwt {{ .login_admin.token }}
+SET yesterday {{ date -1 }}
+
+// A new site has no days
+NAME no_summary_days
+GET http://{{ site }}/data/summary-daily
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
+
+// Yesterday, in the site's default UTC: a reading in range at noon, one over the range high (180 mg/dL by default) 5 minutes later,
+// a 2 U bolus and 30 g of carbs, and a reading today that is not yesterday's
+NAME post_readings
+POST http://{{ .ns_site }}/api/v1/entries?token={{ token }}
+B [{"type":"sgv","sgv":120,"date":{{ dayms -1 720 }}},{"type":"sgv","sgv":250,"date":{{ dayms -1 725 }}},{"type":"sgv","sgv":40,"date":{{ dayms 0 0 }}}]
+ASSERT_STATUS 200
+
+NAME post_bolus
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B {"eventType": "Correction Bolus", "created_at": "{{ daytime -1 730 }}", "insulin": 2}
+ASSERT_STATUS 200
+
+NAME post_carbs
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B {"eventType": "Carb Correction", "created_at": "{{ daytime -1 735 }}", "carbs": 30}
+ASSERT_STATUS 200
+
+// Creating a day builds it from that data: half its readings in range, its dose and carbs, and its glucose every 5
+// minutes from midnight, the noon reading 144 five minutes in
+NAME build_yesterday
+POST http://{{ site }}/data/summary-daily
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"date": "{{ date -1 }}"}
+ASSERT_STATUS 201
+ASSERT_EQUALS ".yesterday" "@result.date"
+ASSERT_EQUALS "UTC" "@result.timezone"
+ASSERT_EXISTS "@result.start"
+ASSERT_EXISTS "@result.end"
+ASSERT_EQUALS 50 "@result.time_in_range"
+ASSERT_EQUALS 2 "@result.total_daily_dose"
+ASSERT_EQUALS 30 "@result.total_carbs"
+ASSERT_LENGTH 288 "@result.glucose"
+ASSERT_EQUALS null "@result.glucose.143"
+ASSERT_EXISTS "@result.glucose.144"
+ASSERT_EXISTS "@result.glucose.145"
+ASSERT_EQUALS null "@result.glucose.146"
+
+// The days are searched newest first, and a day is got by its date
+NAME search_summary_days
+GET http://{{ site }}/data/summary-daily
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS ".yesterday" "@result.0.date"
+
+NAME get_summary_day
+GET http://{{ site }}/data/summary-daily/{{ date -1 }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 50 "@result.time_in_range"
+
+// The summary takes yesterday from it, and today so far from today's readings
+NAME summary_yesterday
+GET http://{{ site }}/summary
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 50 "@result.0.yesterday.time_in_range"
+ASSERT_EQUALS 2 "@result.0.yesterday.total_daily_dose"
+ASSERT_EQUALS 0 "@result.0.today.time_in_range"
+
+// Only a day before today, and within a year, can be built
+NAME build_today_refused
+POST http://{{ site }}/data/summary-daily
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"date": "{{ date 0 }}"}
+ASSERT_STATUS 400
+
+NAME build_long_ago_refused
+POST http://{{ site }}/data/summary-daily
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"date": "{{ date -400 }}"}
+ASSERT_STATUS 400
+
+NAME build_not_a_date_refused
+POST http://{{ site }}/data/summary-daily
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"date": "yesterday"}
+ASSERT_STATUS 400
+
+// Deleting a day removes it for good
+NAME delete_summary_day
+DELETE http://{{ site }}/data/summary-daily/{{ date -1 }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME deleted_summary_day
+GET http://{{ site }}/data/summary-daily/{{ date -1 }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+// After midnight the background job builds yesterday, as it is not yet built
+RUN_BACKGROUND_JOBS
+
+NAME job_built_yesterday
+GET http://{{ site }}/data/summary-daily/{{ date -1 }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 2 "@result.total_daily_dose"
+
+// A new site timezone deletes the days, from a midnight they no longer follow, and builds the last 7 days in it
+NAME change_timezone
+POST http://{{ site }}/settings/site
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"timezone": "Pacific/Auckland"}
+ASSERT_STATUS 200
+
+// The change is an event a background job acts on, so the days are as they were until the jobs run
+NAME days_before_jobs
+GET http://{{ site }}/data/summary-daily
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS "UTC" "@result.0.timezone"
+
+RUN_BACKGROUND_JOBS
+
+NAME rebuilt_week
+GET http://{{ site }}/data/summary-daily
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 7 "@result"
+ASSERT_EQUALS "Pacific/Auckland" "@result.0.timezone"
+ASSERT_EQUALS "Pacific/Auckland" "@result.6.timezone"

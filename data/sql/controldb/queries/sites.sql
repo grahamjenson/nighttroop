@@ -38,6 +38,13 @@ SELECT * FROM sites
 ORDER BY estimated_db_size_kb IS NULL, estimated_db_size_kb DESC, created_at DESC, id
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
+-- name: SearchArchivedSites :many
+-- The archived sites, which can be hydrated, the most recently archived first
+SELECT * FROM sites
+WHERE state = 'archived'
+ORDER BY archived_at DESC, id
+LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+
 -- name: GetSiteInAnyState :one
 SELECT * FROM sites WHERE id = ?;
 
@@ -112,6 +119,17 @@ SET
 WHERE id IN (SELECT value FROM json_each(?))
 RETURNING id;
 
+
+-- name: HydrateSite :execresult
+-- Brings an archived site back live, as if just seen and written to, so it is not disabled again straight away
+UPDATE sites
+SET
+    state = 'live',
+    disabled_at = NULL,
+    archived_at = NULL,
+    last_seen_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    last_write_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+WHERE id = ? AND state = 'archived';
 
 -- Pass a list of sites as a string to delete
 -- name: DeleteSites :many
