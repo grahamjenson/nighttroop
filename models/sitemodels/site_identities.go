@@ -20,7 +20,7 @@ type UserIdentity struct {
 	// RecentClients are where it recently authenticated from, newest first, kept in memory only
 	RecentClients []authclients.Client `json:"recent_clients"`
 
-	// Only set when an identity is created: the credentials are shown once and never stored in the clear
+	// Only set when an identity is created or reset: the credentials are shown once and never stored in the clear
 	Password   string  `json:"password,omitempty"`
 	TotpSecret *string `json:"totp_secret,omitempty"`
 	NSToken    *string `json:"ns_token,omitempty"`

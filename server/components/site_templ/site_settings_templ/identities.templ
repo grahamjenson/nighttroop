@@ -168,7 +168,8 @@ templ recentClients(identity *sitemodels.UserIdentity) {
 	}
 }
 
-// identityActions turns an identity on or off, or deletes it. Your own identity cannot be changed here.
+// identityActions resets an identity's password or TOTP, turns it on or off, or deletes it. Your own identity cannot be
+// changed here; its password and TOTP are reset from the settings page.
 // The toggle's hx-vals keeps its form from being empty when unchecked, and a failed update flips it back.
 templ identityActions(identity *sitemodels.UserIdentity) {
 	{{ id := "site--identities--" + identity.Name }}
@@ -191,6 +192,16 @@ templ identityActions(identity *sitemodels.UserIdentity) {
 			/>
 			<span class="h-5 w-9 rounded-full bg-gray-300 transition-colors peer-checked:bg-gray-900 after:absolute after:left-0.5 after:top-0.5 after:size-4 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:after:translate-x-4"></span>
 		</label>
+		@resetButton(button.Props{ID: id + "--reset-password", Variant: button.VariantGhost, Size: button.SizeIcon, Disabled: identity.CurrentIdentity},
+			identity.ID, "password", "Reset password", "Reset "+identity.Name+"'s password? Its old password and Nightscout token stop working, and it is signed out.") {
+			@icon.KeyRound(icon.Props{Class: "size-4"})
+		}
+		if identity.HasTotpSecret {
+			@resetButton(button.Props{ID: id + "--reset-totp", Variant: button.VariantGhost, Size: button.SizeIcon, Disabled: identity.CurrentIdentity},
+				identity.ID, "totp", "Reset TOTP", "Reset "+identity.Name+"'s TOTP? Codes from its old secret stop working, and it is signed out.") {
+				@icon.RotateCcwKey(icon.Props{Class: "size-4"})
+			}
+		}
 		@button.Button(button.Props{
 			ID:       id + "--delete",
 			Variant:  button.VariantGhost,
@@ -210,6 +221,24 @@ templ identityActions(identity *sitemodels.UserIdentity) {
 			@icon.Trash2(icon.Props{Class: "size-4 text-red-600"})
 		}
 	</div>
+}
+
+// resetButton resets an identity's password or totp after confirming, showing the new one in the page's modal
+templ resetButton(props button.Props, identityID int64, credential string, title string, confirm string) {
+	{{
+		props.Attributes = templ.Attributes{
+			"title":         title,
+			"hx-post":       "/settings/identities/" + strconv.FormatInt(identityID, 10) + "/" + credential,
+			"hx-confirm":    confirm,
+			"hx-target":     "#modal-container",
+			"hx-swap":       "innerHTML",
+			"hx-status:4xx": "target:#toaster swap:beforeend",
+			"hx-status:5xx": "target:#toaster swap:beforeend",
+		}
+	}}
+	@button.Button(props) {
+		{ children... }
+	}
 }
 
 templ formCreateIdentity(tableid string, name string, roles []sitemodels.RoleOption) {
@@ -279,27 +308,56 @@ templ formCreateIdentity(tableid string, name string, roles []sitemodels.RoleOpt
 templ CreateIdentityResponse(url string, identity *sitemodels.UserIdentity, password string, totpSecret *string, nsToken *string) {
 	@IdentityRow(identity)
 	<div id="modal-container" class="w-full" hx-swap-oob="innerHTML">
-		@newIdentityModal(url, identity, password, totpSecret, nsToken)
+		@credentialsModal(url, identity.Name, password, totpSecret, nsToken, false)
 	</div>
 }
 
-templ newIdentityModal(url string, identity *sitemodels.UserIdentity, password string, totpSecret *string, nsToken *string) {
+// IdentityReset shows an identity's new credentials once. Resetting your own signed you out, to sign in again with them.
+templ IdentityReset(url string, identity *sitemodels.UserIdentity, signedOut bool) {
+	@credentialsModal(url, identity.Name, identity.Password, identity.TotpSecret, identity.NSToken, signedOut)
+}
+
+templ credentialsModal(url string, name string, password string, totpSecret *string, nsToken *string, signedOut bool) {
 	<div class="fixed inset-0 bg-black/50 flex items-center justify-center">
 		<div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md flex flex-col items-center justify-center">
-			@createdUserInfo(url, identity.Name, password, totpSecret, nsToken)
-			@button.Button(button.Props{
-				Class:   "mt-4",
-				Variant: button.VariantDestructive,
-				Attributes: templ.Attributes{
-					"hx-get":    "/empty",
-					"hx-target": "#modal-container",
-					"hx-swap":   "innerHTML",
-				},
-			}) {
-				I Have Saved These
+			if signedOut {
+				<p id="site--identities--signed-out" class="mb-4 text-sm font-medium text-amber-800">You have been signed out. Save these, then sign in again with them.</p>
+			}
+			@createdUserInfo(url, name, password, totpSecret, nsToken)
+			if signedOut {
+				@button.Button(button.Props{ID: "site--identities--sign-in-again", Class: "mt-4", Href: "/login"}) {
+					Sign In Again
+				}
+			} else {
+				@button.Button(button.Props{
+					Class:   "mt-4",
+					Variant: button.VariantDestructive,
+					Attributes: templ.Attributes{
+						"hx-get":    "/empty",
+						"hx-target": "#modal-container",
+						"hx-swap":   "innerHTML",
+					},
+				}) {
+					I Have Saved These
+				}
 			}
 		</div>
 	</div>
+}
+
+// credentialsText is the credentials to copy, one a line, leaving out those a reset did not change
+func credentialsText(url string, username string, password string, totpSecret *string, nsToken *string) string {
+	text := "Site: " + url + "\nUsername: " + username
+	if password != "" {
+		text += "\nPassword: " + password
+	}
+	if totpSecret != nil {
+		text += "\nTOTP Secret: " + *totpSecret
+	}
+	if nsToken != nil {
+		text += "\nNightscout Token: " + *nsToken
+	}
+	return text
 }
 
 templ createdUserInfo(url string, username string, password string, totpSecret *string, nsToken *string) {
@@ -310,15 +368,7 @@ templ createdUserInfo(url string, username string, password string, totpSecret *
 		<div class="relative group rounded-xl border border-slate-200 bg-slate-50 shadow-sm overflow-hidden">
 			<div class="flex items-center justify-between border-b border-slate-200 bg-slate-100/70 px-4 py-2.5">
 				<span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Your Credentials</span>
-				if totpSecret != nil && nsToken != nil {
-					<textarea id="textToCopy" hidden>{ "Site: " + url + "\nUsername: " + username + "\nPassword: " + password + "\nTOTP Secret: " + *totpSecret + "\nNightscout Token: " + *nsToken }</textarea>
-				} else if totpSecret != nil {
-					<textarea id="textToCopy" hidden>{ "Site: " + url + "\nUsername: " + username + "\nPassword: " + password + "\nTOTP Secret: " + *totpSecret }</textarea>
-				} else if nsToken != nil {
-					<textarea id="textToCopy" hidden>{ "Site: " + url + "\nUsername: " + username + "\nPassword: " + password + "\nNightscout Token: " + *nsToken }</textarea>
-				} else {
-					<textarea id="textToCopy" hidden>{ "Site: " + url + "\nUsername: " + username + "\nPassword: " + password }</textarea>
-				}
+				<textarea id="textToCopy" hidden>{ credentialsText(url, username, password, totpSecret, nsToken) }</textarea>
 				<!-- Clear, High-Visibility Copy Button -->
 				<div class="inline-flex shadow-sm rounded-lg">
 					@copybutton.CopyButton(copybutton.Props{
@@ -331,7 +381,9 @@ templ createdUserInfo(url string, username string, password string, totpSecret *
 			<div class="p-4 font-mono text-sm text-slate-800 space-y-2 select-all bg-white">
 				<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Site:</span><span id="site--identities--created--site" class="break-all">{ url }</span></div>
 				<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Username:</span><span>{ username }</span></div>
-				<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Password:</span><span class="break-all">{ password }</span></div>
+				if password != "" {
+					<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Password:</span><span id="site--identities--created--password" class="break-all">{ password }</span></div>
+				}
 				if nsToken != nil {
 					<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Nightscout Token:</span><span id="site--identities--created--ns-token" class="break-all">{ *nsToken }</span></div>
 				}

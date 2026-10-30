@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/ui/button"
@@ -132,10 +133,45 @@ func settingsColumns(page settingsPage, site *sitemodels.Settings, yours *sitemo
 // SettingsPage is the general settings, and AlarmSettingsPage the alarms: the site's to an admin, beside their own
 templ SettingsPage(site *sitemodels.Settings, yours *sitemodels.Settings) {
 	@settingsPageOf(generalPage, site, yours)
+	if identity := signedIn(ctx); identity != nil {
+		@resetYourCredentials(identity)
+	}
 	if site != nil {
 		@downloadData()
 		@deleteSite()
 	}
+}
+
+// signedIn is the identity signed in to the site, or nil
+func signedIn(ctx context.Context) *controldb.SiteIdentity {
+	if siteContext := httputils.GetSiteContext(ctx); siteContext != nil {
+		return siteContext.IdentityModel
+	}
+	return nil
+}
+
+// resetYourCredentials resets the signed in identity's password, or its TOTP if it has one, warning that either signs
+// it out, to sign in again with the new one
+templ resetYourCredentials(identity *controldb.SiteIdentity) {
+	<section id="site--settings--credentials" class="mx-auto mt-6 max-w-4xl space-y-3 rounded-xl border border-gray-200 p-4 shadow-sm">
+		<h2 class="text-sm font-semibold text-brand-night">Password & TOTP</h2>
+		<p id="site--settings--credentials-warning" class="text-sm text-amber-800">
+			Resetting your password or TOTP signs you out. The new one is shown once, and you sign in again with it.
+		</p>
+		<div class="flex gap-2">
+			@resetButton(button.Props{ID: "site--settings--reset-password", Variant: button.VariantOutline}, identity.ID, "password",
+				"Reset your password", "Reset your password? You will be signed out, and must sign in again with the new one.") {
+				Reset Password
+			}
+			if identity.TotpSecretEnc != "" {
+				@resetButton(button.Props{ID: "site--settings--reset-totp", Variant: button.VariantOutline}, identity.ID, "totp",
+					"Reset your TOTP", "Reset your TOTP? You will be signed out, and must sign in again with a code from the new one.") {
+					Reset TOTP
+				}
+			}
+		</div>
+		<div id="modal-container"></div>
+	</section>
 }
 
 // downloadData lets an admin download a snapshot of the site's DB, to look through all its data
