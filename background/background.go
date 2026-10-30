@@ -61,7 +61,7 @@ func NewBackGroundManager(ctx context.Context, controlDB *db.ControlDB, config *
 
 	// Build each site's yesterday soon after its midnight, and its last week again when its timezone changes
 	summary_daily.SetupCron(cron, controlDB)
-	consumers = append(consumers, onevent.Listen(config.Events, queue, summary_daily.RebuildOnTimezoneChange(controlDB))...)
+	consumers = append(consumers, onevent.Listen(config.Events, queue, summary_daily.RebuildOnSettingsChange(controlDB))...)
 
 	// Sync Jobs
 	syncjobManager.SetupCron(cron, queue)
