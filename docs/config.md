@@ -1,0 +1,114 @@
+# Configuration
+
+The server is configured by environment variables, read in `utils/config/config.go`. Each is taken from, highest first:
+
+1. a command line flag (only `MODE`, `HOST_NAME`, `HOST_PORT` and `HOST_PROTOCOL` have one, e.g. `-HOST_PORT=8080`)
+2. the environment
+3. the mode's `.env` file: `.env.dev` in development, `.env.test` in test, `.env` in production
+4. the default below
+
+The server will not start with a variable in its `.env` file that it does not know.
+
+Limits written per minute are rates; their burst is how many can be used at once before the rate applies.
+
+## Server
+
+| Variable | Default | Use |
+| --- | --- | --- |
+| `MODE` | `development`, or `test` under `go test` | `development`, `test` or `production`. Picks the `.env` file, and dev and test use cheap bcrypt, fixed site names and fixed keys |
+| `HOST_NAME` | `nt.local.t1d.nz` | The domain sites are subdomains of, e.g. `abc.nt.local.t1d.nz`, used in links and cookies |
+| `HOST_PORT` | `3000` | The port the server listens on |
+| `HOST_PROTOCOL` | `https` | `http` or `https`, used in links and cookies. `http` is only allowed in development and test |
+| `DATA_DIR` | `./.dbs` | Where the SQLite DBs (`db/`) and backups waiting to upload (`backup/`) are kept |
+| `TRUSTED_PROXIES` | `127.0.0.1,::1` | Comma separated IPs or CIDR ranges of reverse proxies, such as Caddy, whose `X-Forwarded-For` is believed for the client's IP |
+| `FLY_APP_NAME` | unset | Set by Fly.io. When set, the client's IP is read from the `Fly-Client-IP` header |
+| `SUPPORT_EMAIL` | `nighttroop@t1d.nz` | Where users contact the server's operator, in every page's footer and in the terms of service and privacy policy |
+| `SENTRY_DSN` | empty | Where errors are reported. Empty turns Sentry off |
+
+## Security
+
+| Variable | Default | Use |
+| --- | --- | --- |
+| `KEY_SETS` | empty | Required: the server will not start without it, except in test mode, which uses fixed keys. The four keys that encrypt secrets in the DBs and backups, and sign logins. Make them with `scripts/keysets/create_keysets.go`, and keep a copy somewhere safe: backups cannot be read without them |
+
+## S3 backups
+
+| Variable | Default | Use |
+| --- | --- | --- |
+| `S3_URL` | `http://localhost:9000` | The S3 compatible endpoint backups and archives upload to. If it fails its startup test, there is no restore on start, no backup upload, and sites cannot be deleted |
+| `S3_BUCKET` | `mybucket` | The bucket. Versioning and lifecycle rules are turned on for it at startup |
+| `S3_ACCESS_KEY` | `minioadmin` | The S3 access key ID |
+| `S3_SECRET_KEY` | `minioadmin` | The S3 secret key |
+| `CONTROL_BACKUP_INTERVAL_IN_SECONDS` | `30` | How often the control DB is backed up to S3 |
+| `BATCH_BACKUP_INTERVAL_IN_SECONDS` | `300` | How often each batch of site DBs is backed up to S3 |
+| `CONTROL_BACKUP_RETENTION_DAYS` | `90` | How long S3 keeps a control backup after a newer upload replaces it |
+| `SITE_BACKUP_RETENTION_DAYS` | `30` | How long S3 keeps a site batch backup or archive after a newer upload replaces it |
+
+## Sites
+
+| Variable | Default | Use |
+| --- | --- | --- |
+| `MAX_SITES` | `10000` | The most sites the server holds; creating another is refused |
+| `MAX_IDENTITIES_PER_USER` | `10` | The most identities one site can have |
+| `DELETE_AFTER_INACTIVITY_MINS` | `10080` (a week) | How long a site that was never used is kept before it is deleted |
+| `DISABLE_AFTER_INACTIVITY_DAYS` | `7` | How long a site goes unwritten or unseen before control can disable it |
+| `TRUNCATE_RECORDS_AFTER_DAYS` | `30` | How old a site's records are before truncating clears their raw JSON |
+| `TRUNCATE_INTERVAL_IN_SECONDS` | `60` | How often the logs DB is trimmed and the jobs are summarised |
+| `LOGS_DB_MAX_ROWS_PER_TABLE` | `100000` | How many of the newest logs, events and errors each logs DB table keeps |
+
+## Sync
+
+| Variable | Default | Use |
+| --- | --- | --- |
+| `BACKGROUND_SYNC_WORKERS` | `5` | How many syncs run at once |
+| `SYNC_INTERVAL_IN_SECONDS` | `5` | How often the syncs that are due are queued |
+| `BACKFILL_DAYS` | `7` | How far back before a site's oldest glucose reading a backfill fetches records |
+
+## Rate limits
+
+| Variable | Default | Use |
+| --- | --- | --- |
+| `GLOBAL_RATE_LIMIT` / `GLOBAL_RATE_BURST` | `100000` / `100000` | Requests to the whole server, to stop a DDoS |
+| `GLOBAL_IP_PER_MINUTE_LIMIT` / `_BURST` | `720` / `1440` | Requests from one IP, enough to manage 4 sites |
+| `SITE_LOGIN_PER_MINUTE_LIMIT` / `_BURST` | `1` / `10` | Logins to a site, to stop credential stuffing |
+| `SITE_UNAUTH_PER_MINUTE_LIMIT` / `_BURST` | `60` / `120` | Requests from one IP to a site before it authenticates, so bad tokens cannot spend the site's limit |
+| `SITE_CREATE_GLOBAL_PER_MINUTE_LIMIT` / `_BURST` | `7` / `20` | Sites created on the whole server |
+| `SITE_CREATE_IP_PER_MINUTE_LIMIT` / `_BURST` | `0.1` / `1` | Sites created from one IP, one every 10 minutes |
+| `SITE_GET_PER_MINUTE_LIMIT` / `_BURST` | `180` / `360` | A site's authenticated reads |
+| `SITE_POST_PER_MINUTE_LIMIT` / `_BURST` | `60` / `240` | A site's authenticated writes |
+| `SITE_UPDATE_SYNC_PER_MINUTE_LIMIT` / `_BURST` | `1` / `4` | A site's changes to its sync settings |
+| `SITE_IDENTITY_CREATE_PER_MINUTE_LIMIT` / `_BURST` | `1` / `5` | A site's new identities, each of which hashes a password with bcrypt |
+| `SITE_DOWNLOAD_PER_MINUTE_LIMIT` / `_BURST` | `1` / `3` | A site's data downloads, each of which copies its whole DB |
+
+## Socket.IO live updates
+
+| Variable | Default | Use |
+| --- | --- | --- |
+| `SOCKET_PING_INTERVAL_IN_SECONDS` | `25` | How often a client is pinged, Nightscout's interval, which v2 clients expect |
+| `SOCKET_PING_TIMEOUT_IN_SECONDS` | `20` | How long a ping waits for its pong before the client is closed |
+| `SOCKET_MAX_PAYLOAD_BYTES` | `100000` | The largest POST body or websocket message |
+| `SOCKET_MAX_SESSIONS_PER_SITE` | `100` | The most live sessions one site may hold |
+| `SOCKET_MAX_BUFFERED_PACKETS` | `1000` | Packets waiting for a client before it is closed as too slow |
+| `SOCKET_MAX_BUFFERED_BYTES` | `2000000` | Bytes waiting for a client before it is closed as too slow |
+| `SOCKET_MAX_PACKETS_PER_SECOND` | `20` | Packets a client may send a second, after a burst of 5 seconds' worth, before it is closed |
+
+## Read but not used yet
+
+These are accepted, so a `.env` file with them still starts, but nothing reads their values.
+
+| Variable | Default |
+| --- | --- |
+| `SQLITE_PATH` | `./data` |
+| `MAX_SITE_DB_SIZE_KB` | `3000` |
+| `MAX_CONTROL_DB_SIZE_KB` | `5000` |
+| `DEXCOM_CLIENT_ID` | empty |
+| `DEXCOM_CLIENT_SECRET` | empty |
+
+## Scripts
+
+These are read only by the scripts in `scripts/keysets`, not the server.
+
+| Variable | Use |
+| --- | --- |
+| `KEY_SETS` | The keys to decrypt with |
+| `ENCRYPTED_ADMIN_BUNDLE` | The encrypted admin bundle `decrypt_admin_bundle.go` decrypts |
