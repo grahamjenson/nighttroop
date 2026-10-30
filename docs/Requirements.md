@@ -150,6 +150,12 @@ deleted (after a confirmation):
 - Glucose is stored in mg/dL and returned and accepted in the settings' units.
 - Duplicate uploads are ignored; values far outside real use are refused.
 
+### Nighttroop API and client
+
+- Every site page is also a JSON API, with a JWT from signing in.
+- A Go client, `clients/nighttroop`, is generated from its OpenAPI schema. It can create a site, sign in, read the
+  summary, and list, read, add, edit and delete glucose readings, insulin doses and food intakes.
+
 ### Backups and limits
 
 - Every site's DB is backed up to S3 in batches, and the control DB on its own, with old versions kept for a
