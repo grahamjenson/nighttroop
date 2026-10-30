@@ -131,24 +131,12 @@ NOTE: Fly.io secrets are not easily read, so keep the KEY_SETS ENVAR saved OFFLI
 // TODO generate QR code image to print
 
 
-One the first run of the server, it will create an admin user and print the encrypted password and totp data.
-```
-export ENCRYPTED_ADMIN_BUNDLE=<base64encodeddata>
-export KEY_SETS=<defined above>
-```
-
-```
-go run utils/keysets/decrypt_admin_bundle.go
-```
-
-This will output the information to the admin account for the service.
+On its first run the server has no control admin, so every page goes to `control.<host>/setup` until one is made.
+The server prints a one-time setup code to its logs; enter it on that page, save the admin's password and TOTP secret
+it shows, and enter a code from your authenticator app to finish.
 
 ### Security Operations
 add a new key and roll the old key
-
-```
-go run utils/keysets/decrypt_admin_bundle.go "<base64 encoded admin info>"
-```
 
 This will add the new key and make it primary, so then all new values will be encrypted with that new primary value
 TODO as encrypted values are read, if they are on an old key they will be moved over.

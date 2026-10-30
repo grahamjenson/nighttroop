@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/mxschmitt/playwright-go"
@@ -22,7 +23,7 @@ import (
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
-//go:embed site/** control/** steps/**
+//go:embed site/** control/** steps/** setup/**
 var embeddedFiles embed.FS
 
 // bddShards is how many groups of scenarios run at once. Each has its own databases, server and background jobs, so
@@ -53,7 +54,8 @@ func TestSite(t *testing.T) {
 
 	paths := []string{}
 	err = fs.WalkDir(embeddedFiles, ".", func(path string, d fs.DirEntry, err error) error {
-		if err == nil && !d.IsDir() && filepath.Ext(path) == ".bdd" {
+		// The setup files need a server that is not set up, see TestSetup
+		if err == nil && !d.IsDir() && filepath.Ext(path) == ".bdd" && !strings.HasPrefix(path, "setup/") {
 			paths = append(paths, path)
 		}
 		return err
@@ -80,6 +82,7 @@ func TestSite(t *testing.T) {
 func runScenarios(t *testing.T, browser playwright.Browser, config *config.ServerConfig, paths []string) {
 	controlDB, err := db.NewControlDB(context.Background(), config)
 	require.NoError(t, err)
+	require.NoError(t, controlDB.SeedDevAdmin())
 	siteInformation, err := controlDB.CreateSite()
 	require.NoError(t, err)
 
@@ -123,7 +126,13 @@ func runScenarios(t *testing.T, browser playwright.Browser, config *config.Serve
 		// Accept confirm dialogs, so tests can click buttons with hx-confirm
 		context.OnDialog(func(dialog playwright.Dialog) { _ = dialog.Accept() })
 
-		RunTheActionFileAsATest(t, "site", path, context, server.URL, backgroundJobs, siteInformation, defaultJwt)
+		RunTheActionFileAsATest(t, "site", path, context, backgroundJobs, map[string]any{
+			"server_url":    server.URL,
+			"control_url":   strings.Replace(server.URL, "127.0.0.1", "control.localhost", 1),
+			"default_site":  siteInformation.SiteDB.Subdomain + ".ns.localhost",
+			"default_token": siteInformation.PwdNSToken,
+			"default_jwt":   defaultJwt,
+		})
 		context.Close()
 	}
 }

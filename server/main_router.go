@@ -23,6 +23,7 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 	siteRouter := siteapi.NewSiteRouter(controlDB, config)
 	public := NewPublicRouter(controlDB, config)
 	nightscoutRouter := nightscoutapi.NewNightscoutRouter(controlDB, config)
+	setupRouter := NewSetupRouter(controlDB, config)
 
 	// Only the configured host is served; loopback names are for local runs only
 	validHostnames := []string{config.HostName}
@@ -57,6 +58,12 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 		if err != nil {
 			slog.Info("Main router 404 for host header", "host", host, "error", err)
 			http.NotFound(w, r)
+			return
+		}
+
+		// Until its control admin is made, a new server is only its setup page
+		if !controlDB.SetupDone() {
+			serveSetup(w, r.WithContext(ctx), config, routeTarget, setupRouter, public)
 			return
 		}
 

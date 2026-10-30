@@ -18,7 +18,6 @@ import (
 	"nighttroop.t1d.nz/utils/s3utils"
 
 	"nighttroop.t1d.nz/utils/consts"
-	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/security"
 )
 
@@ -36,6 +35,8 @@ type ControlDB struct {
 	Logs *LogsDB
 	// Live is what the server keeps only while it runs, like each identity's alarms
 	Live *livedb.DB
+
+	setup setup
 }
 
 func NewControlDB(ctx context.Context, serverConfig *config.ServerConfig) (*ControlDB, error) {
@@ -69,10 +70,9 @@ func NewControlDB(ctx context.Context, serverConfig *config.ServerConfig) (*Cont
 		sites: make(map[string]*SiteDB),
 	}
 
-	// If no admin user exists create one with a random password and TOTP secret and print the ENCRYPTED credentials to the console
-	err = controlDB.seedDefaultIdentities()
-	if err != nil {
-		return nil, fmt.Errorf("cannot create default identities: %w", err)
+	// Without a control admin the server starts in setup, see control_setup.go
+	if err := controlDB.startSetupIfNoAdmin(ctx); err != nil {
+		return nil, fmt.Errorf("cannot check for the control admin: %w", err)
 	}
 
 	// This will go over all non-deleted sites and add them to the control db sites
@@ -111,27 +111,6 @@ func (db *ControlDB) fillSites() ([]string, error) {
 	}
 
 	return sites, nil
-}
-
-func (db *ControlDB) seedDefaultIdentities() error {
-	idValues, err := db.CreateControlIdentity(consts.FIRST_ADMIN_NAME, consts.ControlRoleAdmin)
-	if err != nil && errors.IsSQLUniqueViolationError(err) {
-		// Admin user already exists so we can ignore this error
-		return nil
-	} else if err != nil {
-		return err
-	}
-
-	bundle := fmt.Sprintf("Admin Username: %s\nAdmin Password: %s\nAdmin TOTP Secret: %s\n", consts.FIRST_ADMIN_NAME, idValues.Password, *idValues.TotpSecret)
-	encBundle, err := db.ServerConfig.Security.Encrypt(bundle)
-	if err != nil {
-		return fmt.Errorf("cannot encrypt admin bundle: %w", err)
-	}
-
-	fmt.Println("######## ADMIN SERVER BUNDLE ########")
-	fmt.Printf("ENCRYPTED_ADMIN_BUNDLE=%s\n", encBundle)
-	fmt.Println("######## END OF ADMIN SERVER BUNDLE ########")
-	return nil
 }
 
 ///

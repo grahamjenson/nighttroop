@@ -30,7 +30,7 @@ The files this guide uses are in this folder:
 8. [Put the files on the VPS](#6-put-the-files-on-the-vps)
 9. [Configure it](#7-configure-it)
 10. [Start it](#8-start-it)
-11. [Log in to the control plane](#9-log-in-to-the-control-plane)
+11. [Set up the control plane](#9-set-up-the-control-plane)
 12. [Updating Nighttroop safely](#updating-nighttroop-safely)
 13. [Other upkeep](#other-upkeep)
 14. [Troubleshooting](#troubleshooting)
@@ -306,37 +306,27 @@ Then check that everything works:
 
 - [ ] `docker compose ps` shows both containers running, and `nighttroop` as `healthy`.
 - [ ] `curl https://example.com/health` prints `{"status":"ok"}`.
-- [ ] <https://example.com> shows the page for creating a site, with a valid padlock.
+- [ ] <https://example.com> goes to the setup page at `https://control.example.com/setup`, with a valid padlock.
 - [ ] `http://example.com` redirects to HTTPS.
 
-## 9. Log in to the control plane
+## 9. Set up the control plane
 
-On its first start, Nighttroop makes the control plane's admin. It prints the admin's password and TOTP secret
-encrypted with your `KEY_SETS`, so they never appear in the logs in plain text.
+A new server has no control plane admin, so every page goes to the setup page until you make one. Only someone with
+the setup code the server prints to its logs can, so nobody else can take a new server before you do.
 
-Do this straight after the first start. The bundle is only printed once, and `docker compose logs` only shows the
-current container's logs, so they are gone once an update recreates it.
-
-- If you miss it on a brand new install with nothing in it yet, start again with an empty data folder:
-  `docker compose down`, `rm -rf data/*`, then `docker compose up -d`.
-
-1. Find the encrypted bundle in the logs:
+1. Find the setup code in the logs:
 
    ```sh
-   docker compose logs nighttroop | grep ENCRYPTED_ADMIN_BUNDLE=
+   docker compose logs nighttroop | grep -A1 "SET UP NIGHTTROOP"
    ```
 
-2. Decrypt it, pasting the value after `ENCRYPTED_ADMIN_BUNDLE=`:
-
-   ```sh
-   docker run --rm --env-file nighttroop.env -e ENCRYPTED_ADMIN_BUNDLE='<the value>' \
-     --entrypoint decrypt_admin_bundle ghcr.io/grahamjenson/nighttroop:latest
-   ```
-
-3. It prints the admin's username, password and TOTP secret:
-   1. Add the TOTP secret to your authenticator app.
-   2. Log in at <https://control.example.com>.
-   3. Store the password and TOTP secret somewhere safe.
+   - The code is printed on every start until setup is done, so restart Nighttroop to see it again.
+2. Open <https://control.example.com/setup> and enter the code.
+3. It shows the admin's username, password and TOTP secret, once:
+   1. Store the password and TOTP secret somewhere safe.
+   2. Add the TOTP secret to your authenticator app, e.g. by scanning its QR code.
+   3. Enter the code from your authenticator app and press **Finish setup**.
+4. Log in at <https://control.example.com>. The rest of the server, such as creating sites, now works.
 
 ## Updating Nighttroop safely
 

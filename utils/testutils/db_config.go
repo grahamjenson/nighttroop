@@ -39,6 +39,9 @@ func NewControlDB(t testing.TB) (*config.ServerConfig, *db.ControlDB) {
 	if err != nil {
 		t.Fatalf("cannot create control db: %v", err)
 	}
+	if err := controlDB.SeedDevAdmin(); err != nil {
+		t.Fatalf("cannot create the control admin: %v", err)
+	}
 	return cfg, controlDB
 }
 
