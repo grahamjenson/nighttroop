@@ -70,6 +70,17 @@ func (l *LogsDB) SiteHydratedEvent(ctx context.Context, siteID string, by string
 	l.finishedEvent(ctx, siteID, "", events.SiteHydrated, started, SiteArchivedAttributes{By: by})
 }
 
+type SiteTimezoneChangedAttributes struct {
+	By   string `json:"by"`
+	From string `json:"from"`
+	To   string `json:"to"`
+}
+
+// SiteTimezoneChangedEvent records a site's admin changing its own timezone, from one to another
+func (l *LogsDB) SiteTimezoneChangedEvent(ctx context.Context, siteID string, by string, from string, to string) {
+	l.event(ctx, siteID, events.SiteTimezoneChanged, SiteTimezoneChangedAttributes{By: by, From: from, To: to})
+}
+
 type SiteTruncatedAttributes struct {
 	By           string `json:"by"`
 	BeforeSizeKB *int64 `json:"before_size_kb"`

@@ -139,6 +139,17 @@ H Accept: application/json
 B {"timezone": "Pacific/Auckland"}
 ASSERT_STATUS 200
 
+// The change is an event a background job acts on, so the days are as they were until the jobs run
+NAME days_before_jobs
+GET http://{{ site }}/data/summary-daily
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS "UTC" "@result.0.timezone"
+
+RUN_BACKGROUND_JOBS
+
 NAME rebuilt_week
 GET http://{{ site }}/data/summary-daily
 H Authorization: Bearer {{ jwt }}

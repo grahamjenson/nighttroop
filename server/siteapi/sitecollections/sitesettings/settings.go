@@ -7,7 +7,6 @@ import (
 	"slices"
 	"strconv"
 	"strings"
-	"time"
 
 	"nighttroop.t1d.nz/utils/apiutils"
 
@@ -17,7 +16,6 @@ import (
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
-	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitedata"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/settings"
@@ -148,8 +146,6 @@ func (s *SettingsCollection) UpdateRow(ctx context.Context, collectionTx *siteap
 		subject = new("site")
 	}
 	sent, units := model.Fields(), siteContext.GetSettings().GetUnits()
-	// The level is changed in place, so the timezone its days were built in is read first
-	wasLocation := (&settings.CombinedSettingsMap{SiteSettingsMap: level, IdentitySettingsMap: &settings.SettingMap{}, DefaultSettingsMap: settings.DefaultSettingsMap}).Location()
 	for _, name := range settingNames {
 		if *sent[name] == nil {
 			continue
@@ -200,15 +196,12 @@ func (s *SettingsCollection) UpdateRow(ctx context.Context, collectionTx *siteap
 		return nil, err
 	}
 
-	// The site's days are from its midnight, so a new timezone builds them again
-	if s.Site && inEffect.Location().String() != wasLocation.String() {
-		site, err := collectionTx.Site()
-		if err != nil {
-			return nil, err
-		}
-		if err := sitedata.RebuildSummaryDailyWeek(ctx, site, inEffect, time.Now()); err != nil {
-			return nil, err
-		}
+	// A new site timezone is an event, once saved, so the background jobs that follow it, such as the site's days,
+	// see it
+	if was, now := siteContext.GetSiteTimezone().String(), inEffect.Location().String(); s.Site && now != was {
+		collectionTx.OnCommit(func() {
+			siteContext.ControlDB.Logs.SiteTimezoneChangedEvent(ctx, siteContext.SiteID, siteContext.IdentityModel.Name, was, now)
+		})
 	}
 	return s.GetRow(ctx, collectionTx, "", siteContext)
 }
