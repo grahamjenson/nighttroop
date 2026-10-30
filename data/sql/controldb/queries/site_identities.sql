@@ -58,6 +58,11 @@ WHERE id = ?;
 
 
 
+-- A recovery gives the site's admin new credentials and turns it back on
+-- name: ResetSiteAdminCredentials :execresult
+UPDATE site_identities SET password_hash = sqlc.arg('PasswordHash'), totp_secret_enc = sqlc.arg('TotpSecretEnc'), enabled = 1, updated_by_identity_name = 'backup key'
+WHERE site_id = sqlc.arg('SiteID') AND name = sqlc.arg('Name') AND role = 'admin';
+
 -- name: UpdateSiteIdentityEnabled :exec
 UPDATE site_identities
 SET
