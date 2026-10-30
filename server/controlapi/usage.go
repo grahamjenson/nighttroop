@@ -29,14 +29,21 @@ func UsageHandler(w http.ResponseWriter, r *http.Request) {
 	activeIdentities := func(since int64) (int64, error) {
 		return q.CountActiveIdentities(ctx, controldb.CountActiveIdentitiesParams{Since: &since})
 	}
+	created := func(since time.Time) (int64, error) {
+		return q.CountSitesCreated(ctx, controldb.CountSitesCreatedParams{Since: since.UnixMilli()})
+	}
+	midnight, monday, firstOfMonth := periodStarts(now)
 	model := controlmodels.Usage{Now: now.UnixMilli(), SitesByState: map[string]int64{}}
-	var errs [5]error
+	var errs [8]error
 	var states []*controldb.CountSitesByStateRow
 	model.ActiveSitesDay, errs[0] = activeSites(day)
 	model.ActiveSitesWeek, errs[1] = activeSites(week)
 	model.ActiveIdentitiesDay, errs[2] = activeIdentities(day)
 	model.ActiveIdentitiesWeek, errs[3] = activeIdentities(week)
 	states, errs[4] = q.CountSitesByState(ctx)
+	model.SitesCreatedToday, errs[5] = created(midnight)
+	model.SitesCreatedWeek, errs[6] = created(monday)
+	model.SitesCreatedMonth, errs[7] = created(firstOfMonth)
 	if err := errors.Join(errs[:]...); err != nil {
 		slog.Error("failed to count the server's usage", "error", err)
 		apiutils.ErrInternalServerError.Write(acceptType, w)
@@ -48,4 +55,12 @@ func UsageHandler(w http.ResponseWriter, r *http.Request) {
 	model.SinceStart = config.Usage.Snapshot(now, usageRoutes)
 	model.Server = config.Usage.Server(config.DataDir, now)
 	controlcollections.WriteResponse(w, r, acceptType, http.StatusOK, model, control_usage_templ.Usage(model))
+}
+
+// periodStarts are the starts of now's day, week and month in UTC: midnight, the Monday and the 1st
+func periodStarts(now time.Time) (time.Time, time.Time, time.Time) {
+	utc := now.UTC()
+	midnight := time.Date(utc.Year(), utc.Month(), utc.Day(), 0, 0, 0, 0, time.UTC)
+	monday := midnight.AddDate(0, 0, -(int(midnight.Weekday())+6)%7)
+	return midnight, monday, time.Date(utc.Year(), utc.Month(), 1, 0, 0, 0, 0, time.UTC)
 }

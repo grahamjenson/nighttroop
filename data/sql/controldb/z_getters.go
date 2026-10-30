@@ -3278,6 +3278,16 @@ func (m *CountActiveSitesParams) SetSince(v *int64) {
 	m.Since = v
 }
 
+// GetSince returns the Since value.
+func (m CountSitesCreatedParams) GetSince() int64 {
+	return m.Since
+}
+
+// SetSince sets the Since value and returns the updated CountSitesCreatedParams.
+func (m *CountSitesCreatedParams) SetSince(v int64) {
+	m.Since = v
+}
+
 // GetID returns the ID value.
 func (m CreateSiteParams) GetID() string {
 	return m.ID

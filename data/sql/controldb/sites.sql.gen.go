@@ -94,6 +94,22 @@ func (q *Queries) CountSitesByState(ctx context.Context) ([]*CountSitesByStateRo
 	return items, nil
 }
 
+const countSitesCreated = `-- name: CountSitesCreated :one
+SELECT COUNT(*) FROM sites WHERE created_at >= ?1
+`
+
+type CountSitesCreatedParams struct {
+	Since int64
+}
+
+// The sites created since Since, in milliseconds, whatever their state now
+func (q *Queries) CountSitesCreated(ctx context.Context, arg CountSitesCreatedParams) (int64, error) {
+	row := q.queryRow(ctx, q.countSitesCreatedStmt, countSitesCreated, arg.Since)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createSite = `-- name: CreateSite :one
 
 INSERT INTO sites (id, backup_key_hash)

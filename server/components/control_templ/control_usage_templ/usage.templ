@@ -45,6 +45,11 @@ templ Usage(model controlmodels.Usage) {
 				@tile("control--usage--sites-"+state, display.Name(state)+" sites", fmt.Sprint(model.SitesByState[state]), "in all")
 			}
 		}
+		@section("Sites created") {
+			@tile("control--usage--created-today", "Today", fmt.Sprint(model.SitesCreatedToday), "since midnight UTC")
+			@tile("control--usage--created-week", "This week", fmt.Sprint(model.SitesCreatedWeek), "since Monday UTC")
+			@tile("control--usage--created-month", "This month", fmt.Sprint(model.SitesCreatedMonth), "since the 1st UTC")
+		}
 		@section("Use since start") {
 			@tile("control--usage--requests-today", "Requests today", fmt.Sprint(model.SinceStart.Today.Requests), fmt.Sprintf("%d this week", model.SinceStart.Week.Requests))
 			@tile("control--usage--ingested-today", "Ingested today", display.Bytes(float64(model.SinceStart.Today.Ingested)), display.Bytes(float64(model.SinceStart.Week.Ingested))+" this week")
