@@ -139,6 +139,16 @@ func (l *LogsDB) SyncBackfilledEvent(ctx context.Context, siteID string, syncTyp
 	l.finishedEvent(ctx, siteID, "", events.SyncBackfilled, started, attributes)
 }
 
+type SyncAddedAttributes struct {
+	SyncType consts.SyncSourceType `json:"sync_type"`
+	Records  int                   `json:"records"`
+}
+
+// SyncAddedEvent records a site's sync adding new records, and how many
+func (l *LogsDB) SyncAddedEvent(ctx context.Context, siteID string, syncType consts.SyncSourceType, records int) {
+	l.event(ctx, siteID, events.SyncAdded, SyncAddedAttributes{SyncType: syncType, Records: records})
+}
+
 type AlarmAttributes struct {
 	IdentityID int64  `json:"identity_id"`
 	Type       string `json:"type"`

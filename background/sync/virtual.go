@@ -124,7 +124,7 @@ func WriteVirtualData(ctx context.Context, store *nightscoutapi.NightTroopAPISto
 // reading, device status, temp basal, temp target and profile switch. The
 // profile store is only written when the source is enabled. Slots already
 // written are deduped, so running more often than every 5 minutes is a no-op.
-func (b *SyncJobManager) syncVirtual(syncInfo *SyncJobInfo) error {
+func (b *SyncJobManager) syncVirtual(syncInfo *SyncJobInfo) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
@@ -135,10 +135,10 @@ func (b *SyncJobManager) syncVirtual(syncInfo *SyncJobInfo) error {
 	}
 	added, err := WriteVirtualData(ctx, b.nightscoutStore, syncInfo.Site.siteContext(virtualIdentity), time.Now(), span, skip...)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	if added > 0 {
 		slog.Info("Added virtual data for user", "subdomain", syncInfo.Site.SiteModel.ID, "added", added)
 	}
-	return nil
+	return added, nil
 }
