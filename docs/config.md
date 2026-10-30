@@ -92,18 +92,6 @@ Limits written per minute are rates; their burst is how many can be used at once
 | `SOCKET_MAX_BUFFERED_BYTES` | `2000000` | Bytes waiting for a client before it is closed as too slow |
 | `SOCKET_MAX_PACKETS_PER_SECOND` | `20` | Packets a client may send a second, after a burst of 5 seconds' worth, before it is closed |
 
-## Read but not used yet
-
-These are accepted, so a `.env` file with them still starts, but nothing reads their values.
-
-| Variable | Default |
-| --- | --- |
-| `SQLITE_PATH` | `./data` |
-| `MAX_SITE_DB_SIZE_KB` | `3000` |
-| `MAX_CONTROL_DB_SIZE_KB` | `5000` |
-| `DEXCOM_CLIENT_ID` | empty |
-| `DEXCOM_CLIENT_SECRET` | empty |
-
 ## Scripts
 
 These are read only by the scripts in `scripts/keysets`, not the server.
