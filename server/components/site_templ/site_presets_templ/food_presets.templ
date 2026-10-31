@@ -2,6 +2,7 @@ package site_presets_templ
 
 import (
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/addmodal"
 	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
@@ -19,7 +20,7 @@ templ FoodPresetsTable(foodPresets []*sitemodels.SiteFoodPreset, skip int64, lim
 			Foods kept to pick from, with what a portion has. Click one to see and edit it.
 		}
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			@foodPresetCreateForm()
+			@addmodal.Open("presets--food--add", "/presets/food/new", "Add Food Preset")
 			@table.Table(table.Props{
 				ID:    "foodPresetsTable",
 				Class: "rounded-lg border border-gray-200",
@@ -58,23 +59,26 @@ templ FoodPresetsTable(foodPresets []*sitemodels.SiteFoodPreset, skip int64, lim
 	</div>
 }
 
-// foodPresetCreateForm adds a food preset, putting its row at the top of the table
-templ foodPresetCreateForm() {
-	<form
-		id="presets--food--create"
-		class="mb-4 flex items-end justify-end gap-2"
-		hx-post="/presets/food"
-		hx-target="#foodPresetsTable tbody"
-		hx-swap="afterbegin"
-		hx-status:4xx="target:#toaster swap:beforeend"
-		hx-status:5xx="target:#toaster swap:beforeend"
-		hx-on::after:request="if (ctx.response.status < 400) { this.reset(); document.getElementById('presets--food--empty')?.remove() }"
-	>
-		@foodPresetInputs("presets--food--create", "", "", "")
-		@button.Button(button.Props{ID: "presets--food--create--submit", Type: button.TypeSubmit}) {
-			Add Food Preset
-		}
-	</form>
+// FoodPresetNew adds a food preset with all its fields, putting its row at the top of the table
+templ FoodPresetNew() {
+	@addmodal.Modal(addmodal.Props{ID: "presets--food--create", Title: "Add Food Preset", Path: "/presets/food", Target: "#foodPresetsTable tbody",
+		EmptyID: "presets--food--empty", Submit: "Add Food Preset", Fields: foodPresetFields})
+}
+
+// foodPresetFields are what a food preset has that a person can type in, as a food intake has, less its time and notes
+var foodPresetFields = []addmodal.Field{
+	{Name: "name", Label: "Name", Help: "What the food is, e.g. toast, to pick it by.", Required: true, Kind: addmodal.Text, Max: "64"},
+	{Name: "carbs", Label: "Carbs (g)", Help: "Grams of carbohydrate in a portion.", Min: "0", Max: "1000", Step: "any"},
+	{Name: "absorption_time_minutes", Label: "Absorption time (minutes)", Help: "How long its carbs take to be absorbed.", Min: "0", Max: "1440", Step: "1"},
+	{Name: "fat", Label: "Fat (g)", Help: "Grams of fat, which slows absorption.", Min: "0", Max: "1000", Step: "any"},
+	{Name: "protein", Label: "Protein (g)", Help: "Grams of protein.", Min: "0", Max: "1000", Step: "any"},
+	{Name: "fibre", Label: "Fibre (g)", Help: "Grams of fibre.", Min: "0", Max: "1000", Step: "any"},
+	{Name: "energy", Label: "Energy", Help: "Its energy, in kcal or kJ.", Min: "0", Max: "20000", Step: "any"},
+	{Name: "portions", Label: "Portions", Help: "How many portions these amounts are for.", Min: "0", Max: "1000", Step: "any"},
+	{Name: "pre_bolus", Label: "Pre-bolus (minutes)", Help: "Minutes before eating to give its insulin.", Min: "-1440", Max: "1440", Step: "1"},
+	{Name: "food_type", Label: "Type", Help: "The kind of food, e.g. a meal or a snack.", Kind: addmodal.Text, Max: "32", Options: []string{"meal", "snack", "hypo treatment"}},
+	{Name: "category", Label: "Category", Help: "A group it belongs to, e.g. bread.", Kind: addmodal.Text, Max: "64"},
+	{Name: "subcategory", Label: "Subcategory", Help: "A group within its category, e.g. white bread.", Kind: addmodal.Text, Max: "64"},
 }
 
 templ foodPresetInputs(id string, name string, carbs string, absorption string) {

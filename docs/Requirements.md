@@ -133,7 +133,7 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 
 ### Presets
 
-- **Food presets**: added, viewed, edited and deleted.
+- **Food presets**: added in a modal of all their fields, as data is, viewed, edited and deleted.
 - **Profiles**: profile stores uploaded by a loop, with their schedules to read, renamed or deleted.
 
 ### Sync

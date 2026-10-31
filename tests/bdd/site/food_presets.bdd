@@ -15,17 +15,29 @@ ASSERT_NOT_VISIBLE #presets--food--next
 ASSERT_TEXT_VISIBLE Carbs (g)
 SCREENSHOT food_presets_empty
 
-// A food preset typed in goes to the top of the table
+// Adding opens a modal of all a food preset's fields, saying what each is and whether it is required
+CLICK #presets--food--add
+ASSERT_VISIBLE #presets--food--create--modal
+ASSERT_TEXT_VISIBLE What the food is, e.g. toast, to pick it by.
+ASSERT_TEXT_VISIBLE Required
+ASSERT_VISIBLE #presets--food--create--fat
+SCREENSHOT food_preset_add
+
+// A food preset added goes to the top of the table, and the modal closes
 INPUT #presets--food--create--name Apple
 INPUT #presets--food--create--carbs 15
 CLICK #presets--food--create--submit
 ASSERT_STATUS 201
+ASSERT_NOT_VISIBLE #presets--food--create--modal
 ASSERT_TEXT_VISIBLE Apple
 ASSERT_NOT_VISIBLE #presets--food--empty
 
+CLICK #presets--food--add
 INPUT #presets--food--create--name Toast
 INPUT #presets--food--create--carbs 20
-INPUT #presets--food--create--absorption 90
+INPUT #presets--food--create--absorption-time-minutes 90
+INPUT #presets--food--create--fat 2
+INPUT #presets--food--create--food-type snack
 CLICK #presets--food--create--submit
 ASSERT_STATUS 201
 ASSERT_TEXT_VISIBLE Toast
