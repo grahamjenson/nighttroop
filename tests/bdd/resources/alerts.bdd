@@ -1,0 +1,26 @@
+// The control admin signs in to a server whose resource alert levels are all 0
+GOTO {{ .control_url }}/login
+INPUT #name admin
+INPUT #password password
+INPUT #control--login--otp-1 123123
+CLICK #control--login-button
+ASSERT_VISIBLE #control--nav--logo
+// Its resources have not been checked yet, so there is nothing to warn of
+ASSERT_NOT_VISIBLE #control--status-banner--disk
+ASSERT_NOT_VISIBLE #control--status-banner--cpu
+
+// Each check reads the CPU, memory and disk, and with every level at 0 each warns, on every control page
+RUN_BACKGROUND_JOBS
+GOTO {{ .control_url }}/
+ASSERT_VISIBLE #control--status-banner
+ASSERT_VISIBLE #control--status-banner--disk
+ASSERT_VISIBLE #control--status-banner--cpu
+ASSERT_TEXT_VISIBLE Disk high
+ASSERT_TEXT_VISIBLE CPU high
+SCREENSHOT banner
+
+// Going over is an event of the server's
+GOTO {{ .control_url }}/events?type=resource_high
+ASSERT_VISIBLE #controlEventsTable >> text=Resource high >> nth=0
+ASSERT_VISIBLE #control--status-banner--disk
+SCREENSHOT events

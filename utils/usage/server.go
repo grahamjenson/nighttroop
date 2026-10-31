@@ -37,9 +37,7 @@ func (t *Tracker) Server(dbDir string, now time.Time) Server {
 	}
 	server.UptimeMs = now.Sub(t.started).Milliseconds()
 
-	var rusage syscall.Rusage
-	if syscall.Getrusage(syscall.RUSAGE_SELF, &rusage) == nil {
-		used := time.Duration(rusage.Utime.Nano() + rusage.Stime.Nano())
+	if used, ok := processCPU(); ok {
 		t.mu.Lock()
 		last := t.cpu
 		if last.at.IsZero() {

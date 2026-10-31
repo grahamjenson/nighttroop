@@ -22,3 +22,11 @@ CREATE TABLE connections (
     opened_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
 ) STRICT;
 
+CREATE TABLE resource_readings (
+    at INTEGER PRIMARY KEY,
+    cpu_percent REAL NOT NULL,
+    cpu_pegged_seconds INTEGER NOT NULL,
+    memory_percent REAL,
+    disk_percent REAL
+) STRICT;
+
