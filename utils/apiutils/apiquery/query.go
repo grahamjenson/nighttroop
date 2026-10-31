@@ -3,7 +3,7 @@ package apiquery
 import (
 	"net/url"
 
-	"github.com/go-viper/mapstructure/v2"
+	"nighttroop.t1d.nz/utils/mapstructure"
 	"nighttroop.t1d.nz/utils/types"
 )
 
@@ -49,13 +49,6 @@ func ParseQueryValues(values url.Values) (QueryValues, error) {
 	}
 
 	var queryValues QueryValues
-	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
-		Result:     &queryValues,
-		DecodeHook: types.JSONUnmarshalerHook,
-	})
-	if err != nil {
-		return QueryValues{}, err
-	}
-	err = decoder.Decode(params)
+	err := mapstructure.Decode(params, &queryValues, nil)
 	return queryValues, err
 }
