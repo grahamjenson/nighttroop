@@ -127,6 +127,10 @@ deleted (after a confirmation):
 - **Event groups**: the treatments that came in together through the Nightscout API, with their events.
 - **Device statuses**: each device's latest 3 statuses, and every status a device sent.
 
+Every value written to a site, from its pages, the Nightscout API or a sync, has a broad limit far outside real use,
+e.g. a bolus of at most 500 units or 1000 g of carbs, and a date from 1970 to the year 9999. Insulin and food can be
+negative, to take back too much entered. The pages are stricter, e.g. a dose of at most 100 units either way.
+
 ### Presets
 
 - **Food presets**: added, viewed, edited and deleted.

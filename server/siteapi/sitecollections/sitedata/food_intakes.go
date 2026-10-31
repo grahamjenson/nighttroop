@@ -14,7 +14,7 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-// maxFoodGrams is far more of any one nutrient than a meal has
+// maxFoodGrams is far more of any one nutrient than a meal has; as much again below 0 takes back food entered twice
 const maxFoodGrams = 1000
 
 type FoodIntakesCollection struct{}
@@ -127,12 +127,12 @@ func (s *FoodIntakesCollection) DeleteHTMXResponse(model *sitemodels.SiteFoodInt
 // UTIL METHODS
 ////////
 
-// checkFoodIntake keeps any carbs, fat, protein or fibre sent within what a meal could have
+// checkFoodIntake keeps any carbs, fat, protein or fibre sent within what a meal could have, or take back
 func checkFoodIntake(model *sitemodels.SiteFoodIntake) *apiutils.HTTPError {
 	return cmp.Or(
-		apiutils.CheckRange("carbs, fat, protein and fibre", model.Carbs, 0, maxFoodGrams, "g"),
-		apiutils.CheckRange("carbs, fat, protein and fibre", model.Fat, 0, maxFoodGrams, "g"),
-		apiutils.CheckRange("carbs, fat, protein and fibre", model.Protein, 0, maxFoodGrams, "g"),
-		apiutils.CheckRange("carbs, fat, protein and fibre", model.Fibre, 0, maxFoodGrams, "g"),
+		apiutils.CheckRange("carbs, fat, protein and fibre", model.Carbs, -maxFoodGrams, maxFoodGrams, "g"),
+		apiutils.CheckRange("carbs, fat, protein and fibre", model.Fat, -maxFoodGrams, maxFoodGrams, "g"),
+		apiutils.CheckRange("carbs, fat, protein and fibre", model.Protein, -maxFoodGrams, maxFoodGrams, "g"),
+		apiutils.CheckRange("carbs, fat, protein and fibre", model.Fibre, -maxFoodGrams, maxFoodGrams, "g"),
 	)
 }

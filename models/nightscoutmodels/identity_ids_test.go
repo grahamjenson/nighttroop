@@ -16,7 +16,7 @@ func TestRecordsStoreTheWritersIdentityID(t *testing.T) {
 	_, _, site := testutils.NewControlDBWithSite(t)
 	q, ctx := site.SiteDB.Queries, context.Background()
 	sgv := types.FlexibleFloat64(120)
-	entry := nightscoutmodels.Entry{SGV: &sgv}
+	entry := nightscoutmodels.Entry{SGV: &sgv, Mgdl: &sgv}
 	rawJSON := "{}"
 	// The API stores the raw JSON after converting, so the tests do too
 	create := func(cc nightscoutmodels.ConverterContext) sitedb.CreateGlucoseReadingParams {

@@ -82,13 +82,28 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"carbs": 5000}
 ASSERT_STATUS 400
-ASSERT_CONTAINS "must be from 0 to 1000 g" "@message"
+ASSERT_CONTAINS "must be from -1000 to 1000 g" "@message"
 
-NAME create_food_intake_negative_fat
+// A negative amount takes back food entered too many times, as far below 0 as above
+NAME create_food_intake_negative
 POST http://{{ site }}/data/food
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
-B {"carbs": 20, "fat": -1}
+B {"carbs": -20, "fat": -1}
+ASSERT_STATUS 201
+ASSERT_EQUALS -20 "@result.carbs"
+
+NAME delete_negative_food_intake
+DELETE http://{{ site }}/data/food/{{ .create_food_intake_negative.result.id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME create_food_intake_too_low
+POST http://{{ site }}/data/food
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"carbs": -5000}
 ASSERT_STATUS 400
 
 // Only the fields sent change

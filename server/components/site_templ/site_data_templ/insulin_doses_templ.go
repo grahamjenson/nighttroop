@@ -396,7 +396,7 @@ func insulinDoseInputs(id string, dose string, notes string) templ.Component {
 				Placeholder: "Units",
 				Value:       dose,
 				Required:    true,
-				Attributes:  templ.Attributes{"step": "any", "min": "0.01", "max": "100"},
+				Attributes:  templ.Attributes{"step": "any", "min": "-100", "max": "100"},
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
