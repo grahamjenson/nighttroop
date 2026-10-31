@@ -51,6 +51,8 @@ type ServerConfig struct {
 	HostName     string
 	HostPort     int
 	HostProtocol string // http or https, used for generating links.
+	// MaxRequestBodyBytes is the largest request body read, so a huge upload cannot exhaust memory while it is decoded
+	MaxRequestBodyBytes int64
 
 	// Some common Host URLs cached here so we dont fmt.Sprintf them all the time
 	HostNameWithPort string
@@ -253,6 +255,8 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		HostName:     configStringSelect(dotenv, "HOST_NAME", "nt.local.t1d.nz"),
 		HostPort:     configIntSelect(dotenv, "HOST_PORT", 3000),
 		HostProtocol: configStringSelect(dotenv, "HOST_PROTOCOL", "https"),
+		// Far above an uploader's batch of 100 records
+		MaxRequestBodyBytes: int64(configIntSelect(dotenv, "MAX_REQUEST_BODY_BYTES", 4000000)),
 
 		// Filesystem
 		DataDir: configStringSelect(dotenv, "DATA_DIR", "./.dbs"),
@@ -594,6 +598,7 @@ func printServerConfig(config ServerConfig) {
 		"Host", fmt.Sprintf("%s://%s:%d", config.HostProtocol, config.HostName, config.HostPort),
 		"S3", fmt.Sprintf("%s/%s", config.S3URL, config.S3Bucket),
 		"TrustedProxies", config.TrustedProxies,
+		"MaxRequestBodyBytes", config.MaxRequestBodyBytes,
 		"GlobalRateLimit r/s", config.GlobalRateLimit,
 		"GlobalRateBurst", config.GlobalRateBurst,
 		"SiteGETPerMinuteLimit r/s", config.SiteGETPerMinuteLimit,

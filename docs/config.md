@@ -18,6 +18,7 @@ Limits written per minute are rates; their burst is how many can be used at once
 | `MODE` | `development`, or `test` under `go test` | `development`, `test` or `production`. Picks the `.env` file, and dev and test use cheap bcrypt, fixed site names and fixed keys |
 | `HOST_NAME` | `nt.local.t1d.nz` | The domain sites are subdomains of, e.g. `abc.nt.local.t1d.nz`, used in links and cookies |
 | `HOST_PORT` | `3000` | The port the server listens on |
+| `MAX_REQUEST_BODY_BYTES` | `4000000` | The largest request body the server reads, far above an uploader's batch of 100 records. A larger body is refused with 413 |
 | `HOST_PROTOCOL` | `https` | `http` or `https`, used in links and cookies. `http` is only allowed in development and test |
 | `DATA_DIR` | `./.dbs` | Where the SQLite DBs (`db/`) and backups waiting to upload (`backup/`) are kept |
 | `TRUSTED_PROXIES` | `127.0.0.1,::1` | Comma separated IPs or CIDR ranges of reverse proxies, such as Caddy, whose `X-Forwarded-For` is believed for the client's IP |

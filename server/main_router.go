@@ -50,6 +50,10 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 			slog.InfoContext(r.Context(), "Global IP rate limit exceeded", "ip", ipAddress)
 			return
 		}
+		if !httputils.LimitRequestBody(w, r, config.MaxRequestBodyBytes) {
+			slog.InfoContext(r.Context(), "Request body too large", "ip", ipAddress, "bytes", r.ContentLength)
+			return
+		}
 		host, _, err := net.SplitHostPort(r.Host)
 		if err != nil {
 			host = r.Host
