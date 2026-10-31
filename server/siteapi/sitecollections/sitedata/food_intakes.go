@@ -48,6 +48,11 @@ func (s *FoodIntakesCollection) CreateRow(ctx context.Context, collectionTx *sit
 	return q.CreateFoodIntake(ctx, sitemodels.FoodIntakeToCreate(model, siteContext))
 }
 
+// NewHTMXResponse is the modal to add a food intake in
+func (s *FoodIntakesCollection) NewHTMXResponse() templ.Component {
+	return site_data_templ.FoodIntakeNew()
+}
+
 func (s *FoodIntakesCollection) CreateHTMXResponse(model *sitemodels.SiteFoodIntake) templ.Component {
 	return site_data_templ.FoodIntakeCreated(model)
 }

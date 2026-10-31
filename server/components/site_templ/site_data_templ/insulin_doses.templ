@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/addmodal"
 	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
@@ -21,7 +22,7 @@ templ InsulinDosesTable(insulinDoses []*sitemodels.SiteInsulinDose, skip int64, 
 			Newest first. Click an insulin dose to see all its details.
 		}
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			@insulinDoseCreateForm()
+			@addmodal.Open("site--insulin--add", "/data/insulin/new", "Add Insulin Dose")
 			@table.Table(table.Props{
 				ID:    "insulinDosesTable",
 				Class: "rounded-lg border border-gray-200",
@@ -63,23 +64,21 @@ templ InsulinDosesTable(insulinDoses []*sitemodels.SiteInsulinDose, skip int64, 
 	</div>
 }
 
-// insulinDoseCreateForm adds an insulin dose given now, putting its row at the top of the table
-templ insulinDoseCreateForm() {
-	<form
-		id="site--insulin--create"
-		class="mb-4 flex items-end justify-end gap-2"
-		hx-post="/data/insulin"
-		hx-target="#insulinDosesTable tbody"
-		hx-swap="afterbegin"
-		hx-status:4xx="target:#toaster swap:beforeend"
-		hx-status:5xx="target:#toaster swap:beforeend"
-		hx-on::after:request="if (ctx.response.status < 400) { this.reset(); document.getElementById('site--insulin--empty')?.remove() }"
-	>
-		@insulinDoseInputs("site--insulin--create", "", "")
-		@button.Button(button.Props{ID: "site--insulin--create--submit", Type: button.TypeSubmit}) {
-			Add Insulin Dose
-		}
-	</form>
+// InsulinDoseNew adds an insulin dose with all its fields, putting its row at the top of the table
+templ InsulinDoseNew() {
+	@addmodal.Modal(addmodal.Props{ID: "site--insulin--create", Title: "Add Insulin Dose", Path: "/data/insulin", Target: "#insulinDosesTable tbody",
+		EmptyID: "site--insulin--empty", Submit: "Add Insulin Dose", Fields: insulinDoseFields})
+}
+
+// insulinDoseFields are what an insulin dose has that a person can type in
+var insulinDoseFields = []addmodal.Field{
+	{Name: "dose", Label: "Dose (U)", Help: "Units of insulin given. A negative dose takes back one entered by mistake.", Required: true, Min: "-100", Max: "100", Step: "any"},
+	{Name: "occurred_at", Label: "When", Help: "When it was given, in your timezone. Blank is now.", Kind: addmodal.When},
+	{Name: "dose_type", Label: "Type", Help: "How it was given, e.g. normal, or SMB for a loop's small automatic bolus.", Kind: addmodal.Text, Max: "32", Options: []string{"normal", "SMB"}},
+	{Name: "reason", Label: "Reason", Help: "Why it was given, e.g. a correction or a meal.", Kind: addmodal.Text, Max: "64"},
+	{Name: "split_now", Label: "Given at once (%)", Help: "For a combo bolus, the percent of it given straight away.", Min: "0", Max: "100", Step: "any"},
+	{Name: "split_ext", Label: "Extended (%)", Help: "For a combo bolus, the percent of it given over time.", Min: "0", Max: "100", Step: "any"},
+	{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
 }
 
 templ insulinDoseInputs(id string, dose string, notes string) {

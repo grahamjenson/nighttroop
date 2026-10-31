@@ -13,15 +13,30 @@ ASSERT_NOT_VISIBLE #site--food--next
 ASSERT_TEXT_VISIBLE Carbs (g)
 SCREENSHOT food_intakes_empty
 
-// Food typed in is eaten now, added to the top of the table
+// Adding opens a modal of all a food intake's fields, saying what each is and whether it is required
+CLICK #site--food--add
+ASSERT_VISIBLE #site--food--create--modal
+ASSERT_TEXT_VISIBLE Grams of carbohydrate eaten.
+ASSERT_VISIBLE #site--food--create--absorption-time-minutes
+ASSERT_VISIBLE #site--food--create--fat
+SCREENSHOT food_intake_add
+
+// Food added goes to the top of the table, at the time it was eaten, with its other nutrients, and the modal closes
 INPUT #site--food--create--carbs 15
+INPUT #site--food--create--occurred-at 2026-01-02T15:45
 INPUT #site--food--create--name Juice
+INPUT #site--food--create--fat 1
+INPUT #site--food--create--food-type hypo treatment
 INPUT #site--food--create--notes Correction
 CLICK #site--food--create--submit
 ASSERT_STATUS 201
+ASSERT_NOT_VISIBLE #site--food--create--modal
 ASSERT_TEXT_VISIBLE Correction
+ASSERT_TEXT_VISIBLE 2026-01-02 15:45
 ASSERT_NOT_VISIBLE #site--food--empty
 
+// Left blank, it is eaten now
+CLICK #site--food--add
 INPUT #site--food--create--carbs 45
 INPUT #site--food--create--name Sandwich
 INPUT #site--food--create--notes Lunch
@@ -85,6 +100,7 @@ ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
 
 // Negative carbs take back food entered by mistake
+CLICK #site--food--add
 INPUT #site--food--create--carbs -20
 INPUT #site--food--create--notes Entered twice
 CLICK #site--food--create--submit

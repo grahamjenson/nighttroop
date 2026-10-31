@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -46,8 +47,8 @@ func encodeJSON(w http.ResponseWriter, body any) {
 // FormToMap turns a form submission into the document a JSON client would
 // send for T. Dotted names nest, and because form values are only strings,
 // bool and number fields of T, or pointers to them, (matched by json tag) are converted; an absent
-// checkbox becomes false, and a number left blank is not sent.
-func FormToMap[T any](form url.Values) map[string]any {
+// checkbox becomes false, a number left blank is not sent, and a date and time input is milliseconds, typed in location.
+func FormToMap[T any](form url.Values, location *time.Location) map[string]any {
 	doc := make(map[string]any)
 
 	for key, values := range form {
@@ -75,6 +76,9 @@ func FormToMap[T any](form url.Values) map[string]any {
 		case reflect.Int, reflect.Int64, reflect.Float64:
 			if n, err := strconv.ParseFloat(str, 64); present && err == nil {
 				doc[name] = n
+			} else if when, err := time.ParseInLocation("2006-01-02T15:04", str, location); present && err == nil {
+				// A date and time input, typed in the timezone times are shown in, is milliseconds
+				doc[name] = when.UnixMilli()
 			} else if present && str == "" {
 				// An empty number input was left blank, so it is not sent
 				delete(doc, name)
@@ -120,7 +124,11 @@ func ExtractModelFromRequest[T any](contentType httputils.ContentType, r *http.R
 			slog.DebugContext(r.Context(), "failed to parse form data", "error", err)
 			return nil, ErrBadForm
 		}
-		doc = FormToMap[T](r.Form)
+		location := time.UTC
+		if siteContext := httputils.GetSiteContext(r.Context()); siteContext != nil {
+			location = siteContext.GetSettings().Location()
+		}
+		doc = FormToMap[T](r.Form, location)
 	default:
 		return nil, ErrUnknownContent
 	}

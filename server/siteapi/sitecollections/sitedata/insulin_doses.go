@@ -46,6 +46,11 @@ func (s *InsulinDosesCollection) CreateRow(ctx context.Context, collectionTx *si
 	return q.CreateInsulinDose(ctx, sitemodels.InsulinDoseToCreate(model, siteContext))
 }
 
+// NewHTMXResponse is the modal to add an insulin dose in
+func (s *InsulinDosesCollection) NewHTMXResponse() templ.Component {
+	return site_data_templ.InsulinDoseNew()
+}
+
 func (s *InsulinDosesCollection) CreateHTMXResponse(model *sitemodels.SiteInsulinDose) templ.Component {
 	return site_data_templ.InsulinDoseCreated(model)
 }
