@@ -2282,6 +2282,11 @@
       grid-template-columns: repeat(5, minmax(0, 1fr));
     }
   }
+  .sm\:grid-cols-\[1fr_auto\] {
+    @media (width >= 40rem) {
+      grid-template-columns: 1fr auto;
+    }
+  }
   .sm\:flex-row {
     @media (width >= 40rem) {
       flex-direction: row;

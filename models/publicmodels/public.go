@@ -1,6 +1,10 @@
 package publicmodels
 
-import "strings"
+import (
+	"strings"
+
+	"nighttroop.t1d.nz/utils/consts"
+)
 
 type NewSiteInfo struct {
 	URL             string `json:"url"`
@@ -8,6 +12,7 @@ type NewSiteInfo struct {
 	AdminTotpSecret string `json:"admin_totp_secret"`
 	PwdNSToken      string `json:"pwd_ns_token"`
 	PwdNSURL        string `json:"pwd_ns_url"`
+	ReadOnlyNSToken string `json:"read_only_ns_token"`
 	BackupKey       string `json:"backup_key"`
 	// RecoverURL is the page the backup key gets a new admin login on
 	RecoverURL string `json:"-"`
@@ -19,11 +24,16 @@ func (n NewSiteInfo) SiteID() string {
 	return siteID
 }
 
-// AllInfo is the credentials to copy, leaving out the phone's when there are none, as on a recovery
+// AllInfo is the credentials to copy: the site's, then each of its first identities', leaving out the devices' when
+// there are none, as on a recovery
 func (n NewSiteInfo) AllInfo() string {
-	info := "Site: " + n.URL + "\nSite ID: " + n.SiteID() + "\nUsername: admin\nPassword: " + n.AdminPassword + "\nTOTP Secret: " + n.AdminTotpSecret
+	info := "Nighttroop site: " + n.URL + "\nSite ID: " + n.SiteID() + "\nBackup key: " + n.BackupKey +
+		"\n\nAdmin login\nUsername: " + consts.FIRST_ADMIN_NAME + "\nPassword: " + n.AdminPassword + "\nTOTP secret: " + n.AdminTotpSecret
 	if n.PwdNSToken != "" {
-		info += "\nPWD NS Token: " + n.PwdNSToken + "\nPWD NS URL: " + n.PwdNSURL
+		info += "\n\nPhone setup (AAPS / Trio), the " + consts.FIRST_PWD_NAME + " device\nNS URL: " + n.PwdNSURL + "\nNS token: " + n.PwdNSToken
 	}
-	return info + "\nBackup Key: " + n.BackupKey
+	if n.ReadOnlyNSToken != "" {
+		info += "\n\nRead only, the " + consts.FIRST_READ_ONLY_NAME + " device\nNS URL: " + n.PwdNSURL + "\nNS token: " + n.ReadOnlyNSToken
+	}
+	return info
 }

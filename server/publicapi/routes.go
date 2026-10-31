@@ -96,6 +96,7 @@ func POSTCreateSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig)
 			AdminTotpSecret: siteCreateResult.TotpSecret,
 			PwdNSToken:      siteCreateResult.PwdNSToken,
 			PwdNSURL:        siteCreateResult.SiteDB.NSURL(),
+			ReadOnlyNSToken: siteCreateResult.ReadOnlyNSToken,
 			BackupKey:       siteCreateResult.BackupPassword,
 			RecoverURL:      config.RecoverURL(),
 		}).Render(r.Context(), w)
