@@ -379,6 +379,11 @@ func (r *Input) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 		return page, err
 	}
 
+	// A date or time input splits typing across its parts, so it takes the value whole, e.g. 2026-01-02T12:30
+	if kind, err := locator.Evaluate("element => element.type", nil); err == nil && (kind == "datetime-local" || kind == "date" || kind == "time") {
+		return page, locator.Fill(value, playwright.LocatorFillOptions{Timeout: playwright.Float(actionWait)})
+	}
+
 	err = locator.Clear(playwright.LocatorClearOptions{Timeout: playwright.Float(actionWait)})
 	if err != nil {
 		return nil, err

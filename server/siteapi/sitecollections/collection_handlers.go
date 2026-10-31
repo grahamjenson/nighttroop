@@ -33,6 +33,12 @@ type CollectionCreate[R, M any] interface {
 	CreateHTMXResponse(model *M) templ.Component
 }
 
+// CollectionNew is a collection added to in a modal of all its fields
+type CollectionNew[R, M any] interface {
+	CollectionCreate[R, M]
+	NewHTMXResponse() templ.Component
+}
+
 type CollectionUpdate[R, M any] interface {
 	CollectionBase[R, M]
 
@@ -92,6 +98,17 @@ func CreateHandler[R, M any](collection CollectionCreate[R, M]) http.HandlerFunc
 		}
 
 		WriteResponse(w, r, siteContext, http.StatusCreated, requestModel, collection.CreateHTMXResponse(requestModel), false)
+	}
+}
+
+// NewHandler is the modal to add a record in, for whoever can add one
+func NewHandler[R, M any](collection CollectionNew[R, M]) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		siteContext := SiteContextFor(w, r, collection.GetName(), siteapiutils.ActionCreate)
+		if siteContext == nil {
+			return
+		}
+		WriteResponse(w, r, siteContext, http.StatusOK, nil, collection.NewHTMXResponse(), true)
 	}
 }
 

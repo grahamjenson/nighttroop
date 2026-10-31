@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/addmodal"
 	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
@@ -21,7 +22,7 @@ templ FoodIntakesTable(foodIntakes []*sitemodels.SiteFoodIntake, skip int64, lim
 			Newest first. Click a food intake to see all its details.
 		}
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			@foodIntakeCreateForm()
+			@addmodal.Open("site--food--add", "/data/food/new", "Add Food Intake")
 			@table.Table(table.Props{
 				ID:    "foodIntakesTable",
 				Class: "rounded-lg border border-gray-200",
@@ -63,23 +64,29 @@ templ FoodIntakesTable(foodIntakes []*sitemodels.SiteFoodIntake, skip int64, lim
 	</div>
 }
 
-// foodIntakeCreateForm adds a food intake eaten now, putting its row at the top of the table
-templ foodIntakeCreateForm() {
-	<form
-		id="site--food--create"
-		class="mb-4 flex items-end justify-end gap-2"
-		hx-post="/data/food"
-		hx-target="#foodIntakesTable tbody"
-		hx-swap="afterbegin"
-		hx-status:4xx="target:#toaster swap:beforeend"
-		hx-status:5xx="target:#toaster swap:beforeend"
-		hx-on::after:request="if (ctx.response.status < 400) { this.reset(); document.getElementById('site--food--empty')?.remove() }"
-	>
-		@foodIntakeInputs("site--food--create", "", "", "")
-		@button.Button(button.Props{ID: "site--food--create--submit", Type: button.TypeSubmit}) {
-			Add Food Intake
-		}
-	</form>
+// FoodIntakeNew adds a food intake with all its fields, putting its row at the top of the table
+templ FoodIntakeNew() {
+	@addmodal.Modal(addmodal.Props{ID: "site--food--create", Title: "Add Food Intake", Path: "/data/food", Target: "#foodIntakesTable tbody",
+		EmptyID: "site--food--empty", Submit: "Add Food Intake", Fields: foodIntakeFields, Location: Location(ctx)})
+}
+
+// foodIntakeFields are what a food intake has that a person can type in
+var foodIntakeFields = []addmodal.Field{
+	{Name: "carbs", Label: "Carbs (g)", Help: "Grams of carbohydrate eaten.", Required: true, Min: "0", Max: "1000", Step: "any"},
+	{Name: "occurred_at", Label: "When", Help: "When it was eaten, now unless changed.", Kind: addmodal.When},
+	{Name: "name", Label: "Name", Help: "What it was, e.g. a sandwich.", Kind: addmodal.Text, Max: "64"},
+	{Name: "absorption_time_minutes", Label: "Absorption time (minutes)", Help: "How long its carbs take to be absorbed.", Min: "0", Max: "1440", Step: "1"},
+	{Name: "fat", Label: "Fat (g)", Help: "Grams of fat, which slows absorption.", Min: "0", Max: "1000", Step: "any"},
+	{Name: "protein", Label: "Protein (g)", Help: "Grams of protein.", Min: "0", Max: "1000", Step: "any"},
+	{Name: "fibre", Label: "Fibre (g)", Help: "Grams of fibre.", Min: "0", Max: "1000", Step: "any"},
+	{Name: "energy", Label: "Energy", Help: "Its energy, in kcal or kJ.", Min: "0", Max: "20000", Step: "any"},
+	{Name: "portions", Label: "Portions", Help: "How many portions of it were eaten.", Min: "0", Max: "1000", Step: "any"},
+	{Name: "pre_bolus", Label: "Pre-bolus (minutes)", Help: "Minutes before eating that its insulin was given.", Min: "-1440", Max: "1440", Step: "1"},
+	{Name: "food_type", Label: "Type", Help: "The kind of food, e.g. a meal or a snack.", Kind: addmodal.Text, Max: "32", Options: []string{"meal", "snack", "hypo treatment"}},
+	{Name: "category", Label: "Category", Help: "A group it belongs to, e.g. fruit.", Kind: addmodal.Text, Max: "64"},
+	{Name: "subcategory", Label: "Subcategory", Help: "A group within its category, e.g. apples.", Kind: addmodal.Text, Max: "64"},
+	{Name: "reason", Label: "Reason", Help: "Why it was eaten, e.g. lunch or a low.", Kind: addmodal.Text, Max: "64"},
+	{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
 }
 
 templ foodIntakeInputs(id string, carbs string, name string, notes string) {

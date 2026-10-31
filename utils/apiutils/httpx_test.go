@@ -3,6 +3,7 @@ package apiutils_test
 import (
 	"net/url"
 	"testing"
+	"time"
 
 	"nighttroop.t1d.nz/utils/apiutils"
 )
@@ -15,7 +16,7 @@ func TestFormToMap(t *testing.T) {
 		Name    *string  `json:"name"`
 		Rate    *float64 `json:"rate"`
 	}
-	doc := apiutils.FormToMap[model](url.Values{"enabled": {"on"}, "count": {"3"}, "name": {"true"}, "rate": {"0"}, "a.b": {"c"}})
+	doc := apiutils.FormToMap[model](url.Values{"enabled": {"on"}, "count": {"3"}, "name": {"true"}, "rate": {"0"}, "a.b": {"c"}}, time.UTC)
 	if doc["enabled"] != true || doc["off"] != false || doc["count"] != 3.0 || doc["name"] != "true" || doc["rate"] != 0.0 {
 		t.Fatalf("unexpected conversion: %v", doc)
 	}
@@ -31,11 +32,26 @@ func TestFormToMapBlankNumber(t *testing.T) {
 		Rate    *float64 `json:"rate"`
 		Notes   *string  `json:"notes"`
 	}
-	doc := apiutils.FormToMap[model](url.Values{"minutes": {""}, "rate": {"1.5"}, "notes": {""}})
+	doc := apiutils.FormToMap[model](url.Values{"minutes": {""}, "rate": {"1.5"}, "notes": {""}}, time.UTC)
 	if _, sent := doc["minutes"]; sent {
 		t.Fatalf("blank number was sent: %v", doc)
 	}
 	if doc["rate"] != 1.5 || doc["notes"] != "" {
 		t.Fatalf("unexpected conversion: %v", doc)
+	}
+}
+
+// A date and time input is the milliseconds of that time in the timezone times are shown in
+func TestFormToMapDateTime(t *testing.T) {
+	type model struct {
+		OccurredAt int64 `json:"occurred_at"`
+	}
+	auckland, err := time.LoadLocation("Pacific/Auckland")
+	if err != nil {
+		t.Fatal(err)
+	}
+	doc := apiutils.FormToMap[model](url.Values{"occurred_at": {"2026-10-31T09:30"}}, auckland)
+	if want := time.Date(2026, 10, 31, 9, 30, 0, 0, auckland).UnixMilli(); doc["occurred_at"] != want {
+		t.Fatalf("got %v, want %v", doc["occurred_at"], want)
 	}
 }

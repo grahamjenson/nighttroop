@@ -11,18 +11,33 @@ ASSERT_TEXT_VISIBLE No insulin doses here.
 ASSERT_NOT_VISIBLE #site--insulin--next
 SCREENSHOT insulin_doses_empty
 
-// Each input is labelled with what it takes and in what units
+// Adding opens a modal of all a dose's fields, each labelled with what it takes, in what units, and whether it is
+// required, starting at now
+CLICK #site--insulin--add
+ASSERT_VISIBLE #site--insulin--create--modal
 ASSERT_VISIBLE #site--insulin--create label[for="site--insulin--create--dose"]
 ASSERT_TEXT_VISIBLE Dose (U)
+ASSERT_TEXT_VISIBLE Units of insulin given.
+ASSERT_TEXT_VISIBLE Required
+ASSERT_VISIBLE #site--insulin--create--occurred-at
+ASSERT_VISIBLE #site--insulin--create--split-now
+SCREENSHOT insulin_dose_add
 
-// A dose typed in is given now, added to the top of the table
+// A dose added goes to the top of the table, at the time it was given, with its type and reason, and the modal closes
 INPUT #site--insulin--create--dose 2.5
+INPUT #site--insulin--create--occurred-at 2026-01-02T12:30
+INPUT #site--insulin--create--dose-type normal
+INPUT #site--insulin--create--reason correction
 INPUT #site--insulin--create--notes Correction
 CLICK #site--insulin--create--submit
 ASSERT_STATUS 201
+ASSERT_NOT_VISIBLE #site--insulin--create--modal
 ASSERT_TEXT_VISIBLE Correction
+ASSERT_TEXT_VISIBLE 2026-01-02 12:30
 ASSERT_NOT_VISIBLE #site--insulin--empty
 
+// Left at now, it is given now
+CLICK #site--insulin--add
 INPUT #site--insulin--create--dose 4
 INPUT #site--insulin--create--notes Lunch
 CLICK #site--insulin--create--submit

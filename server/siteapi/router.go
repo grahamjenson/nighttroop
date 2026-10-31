@@ -59,6 +59,7 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 			routes := store.Section(section)
 			r.Get("/"+section+"/{collection}", routes.Search)
 			r.Get("/"+section+"/{collection}/events", routes.Events)
+			r.Get("/"+section+"/{collection}/new", routes.New)
 			r.Get("/"+section+"/{collection}/{id}", routes.Get)
 			r.Post("/"+section+"/{collection}", routes.Create)
 			r.Post("/"+section+"/{collection}/{id}", routes.Update)

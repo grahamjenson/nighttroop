@@ -37,12 +37,14 @@ RUN_BACKGROUND_JOBS
 CLICK #site--settings-menu
 CLICK #site--data--food-button
 ASSERT_STATUS 200
+CLICK #site--food--add
 INPUT #site--food--create--carbs 15
 CLICK #site--food--create--submit
 ASSERT_STATUS 201
 CLICK #site--settings-menu
 CLICK #site--data--insulin-button
 ASSERT_STATUS 200
+CLICK #site--insulin--add
 INPUT #site--insulin--create--dose 2.5
 CLICK #site--insulin--create--submit
 ASSERT_STATUS 201

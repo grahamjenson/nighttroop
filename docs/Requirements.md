@@ -127,6 +127,9 @@ deleted (after a confirmation):
 - **Event groups**: the treatments that came in together through the Nightscout API, with their events.
 - **Device statuses**: each device's latest 3 statuses, and every status a device sent.
 
+Adding an insulin dose or food intake opens a modal of all its fields, each saying what it is, in what units, whether
+it is required, and with its limits. Its time is now unless changed, in the settings' timezone.
+
 ### Presets
 
 - **Food presets**: added, viewed, edited and deleted.

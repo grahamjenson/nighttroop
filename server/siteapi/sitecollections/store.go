@@ -21,6 +21,8 @@ type SiteCollectionRoutes struct {
 	Delete http.HandlerFunc
 	// Events streams the collection's changes, which every collection has
 	Events http.HandlerFunc
+	// New is the modal to add a record in
+	New http.HandlerFunc
 }
 
 type SiteStore struct {
@@ -91,6 +93,7 @@ func (store *SiteStore) registerCollection[R, M any](section string, collection 
 		Update: cannot("updated"),
 		Delete: cannot("deleted"),
 		Events: EventsHandler(collection),
+		New:    cannot("added in a modal"),
 	}
 
 	added := false
@@ -105,6 +108,9 @@ func (store *SiteStore) registerCollection[R, M any](section string, collection 
 	if val, ok := collection.(CollectionCreate[R, M]); ok {
 		routes.Create = CreateHandler(val)
 		added = true
+	}
+	if val, ok := collection.(CollectionNew[R, M]); ok {
+		routes.New = NewHandler(val)
 	}
 	if val, ok := collection.(CollectionUpdate[R, M]); ok {
 		routes.Update = UpdateHandler(val)
@@ -159,7 +165,7 @@ func (s *SiteStore) routes(section string, r *http.Request) *SiteCollectionRoute
 		return routes
 	}
 	missing := answerNotFound(http.StatusNotFound, "There is no "+name+" here")
-	return &SiteCollectionRoutes{Search: missing, Get: missing, Create: missing, Update: missing, Delete: missing, Events: missing}
+	return &SiteCollectionRoutes{Search: missing, Get: missing, Create: missing, Update: missing, Delete: missing, Events: missing, New: missing}
 }
 
 // Section is the routes of whichever collection in the section a request names, e.g. glucose for /data/glucose
@@ -171,5 +177,6 @@ func (s *SiteStore) Section(section string) *SiteCollectionRoutes {
 		Update: func(w http.ResponseWriter, r *http.Request) { s.routes(section, r).Update(w, r) },
 		Delete: func(w http.ResponseWriter, r *http.Request) { s.routes(section, r).Delete(w, r) },
 		Events: func(w http.ResponseWriter, r *http.Request) { s.routes(section, r).Events(w, r) },
+		New:    func(w http.ResponseWriter, r *http.Request) { s.routes(section, r).New(w, r) },
 	}
 }

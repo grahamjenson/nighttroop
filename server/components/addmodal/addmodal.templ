@@ -1,0 +1,140 @@
+package addmodal
+
+import (
+	"strings"
+	"time"
+
+	"nighttroop.t1d.nz/server/components/modal"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/input"
+)
+
+// Kind is how a field is typed in
+type Kind int
+
+const (
+	Number Kind = iota
+	Text
+	// When is a date and time in the timezone times are shown in, now unless changed
+	When
+)
+
+// Field is one of a model's fields in its add modal
+type Field struct {
+	// Name is the model's JSON field, which the input is sent as
+	Name  string
+	Label string
+	// Help says in a few words what it is
+	Help     string
+	Required bool
+	Kind     Kind
+	// Min, Max and Step limit a number, and Max a text's length
+	Min, Max, Step string
+	// Options are a text's suggestions
+	Options []string
+	// Wide takes the whole row, for notes
+	Wide bool
+}
+
+// Props is an add modal, posting its fields to Path and putting the row it answers with at the top of Target
+type Props struct {
+	// ID is the form's, and with "--" and a field's name, each input's, e.g. site--insulin--create--dose
+	ID     string
+	Title  string
+	Path   string
+	Target string
+	// EmptyID is the row saying the table is empty, removed once a record is added
+	EmptyID string
+	Submit  string
+	Fields  []Field
+	// Location is the timezone a When field is typed in
+	Location *time.Location
+}
+
+// Open is the button opening the add modal at path in #modal-container, above the table
+templ Open(id string, path string, label string) {
+	<div class="mb-4 flex justify-end">
+		@button.Button(button.Props{ID: id, Attributes: templ.Attributes{"hx-get": path, "hx-target": "#modal-container", "hx-swap": "innerHTML"}}) {
+			{ label }
+		}
+	</div>
+}
+
+// Modal adds a record with all its fields, each saying what it is and whether it is required. It closes once the record
+// is added, and an error goes to the toaster, leaving it open to fix.
+templ Modal(p Props) {
+	@modal.Modal(modal.Props{ID: p.ID + "--modal", Title: p.Title, Subtitle: "Only the required fields need filling in.", Actions: submit(p)}) {
+		<form
+			id={ p.ID }
+			class="grid gap-x-4 gap-y-3 py-4 sm:grid-cols-2"
+			hx-post={ p.Path }
+			hx-target={ p.Target }
+			hx-swap="afterbegin"
+			hx-status:4xx="target:#toaster swap:beforeend"
+			hx-status:5xx="target:#toaster swap:beforeend"
+			{ closeOnAdded(p.EmptyID)... }
+		>
+			for _, f := range p.Fields {
+				@field(p, f)
+			}
+		</form>
+	}
+}
+
+// closeOnAdded empties the modal container once a record is added, and removes the empty table's row
+func closeOnAdded(emptyID string) templ.Attributes {
+	return templ.Attributes{"hx-on::after:request": templ.JSUnsafeFuncCall("if (ctx.response.status < 400) { document.getElementById('modal-container').innerHTML = ''; document.getElementById('" + emptyID + "')?.remove() }")}
+}
+
+templ submit(p Props) {
+	@button.Button(button.Props{ID: p.ID + "--submit", Type: button.TypeSubmit, Attributes: templ.Attributes{"form": p.ID}}) {
+		{ p.Submit }
+	}
+}
+
+templ field(p Props, f Field) {
+	{{ id := p.ID + "--" + strings.ReplaceAll(f.Name, "_", "-") }}
+	<div class={ templ.KV("sm:col-span-2", f.Wide) }>
+		<label for={ id } class="mb-1 flex items-baseline justify-between text-sm font-medium text-gray-700">
+			{ f.Label }
+			if f.Required {
+				<span class="text-xs font-semibold text-primary">Required</span>
+			} else {
+				<span class="text-xs font-normal text-gray-400">Optional</span>
+			}
+		</label>
+		switch f.Kind {
+			case When:
+				@input.Input(input.Props{ID: id, Name: f.Name, Type: input.TypeDateTime, Value: now(p.Location)})
+			case Number:
+				@input.Input(input.Props{ID: id, Name: f.Name, Type: input.TypeNumber, Required: f.Required, Attributes: templ.Attributes{"step": f.Step, "min": f.Min, "max": f.Max}})
+			default:
+				@input.Input(input.Props{ID: id, Name: f.Name, Required: f.Required, Attributes: textAttributes(f, id)})
+				if len(f.Options) > 0 {
+					<datalist id={ id + "--options" }>
+						for _, option := range f.Options {
+							<option value={ option }></option>
+						}
+					</datalist>
+				}
+		}
+		<p class="mt-1 text-xs text-gray-500">{ f.Help }</p>
+	</div>
+}
+
+// textAttributes limit a text's length, and point it at its suggestions when it has some
+func textAttributes(f Field, id string) templ.Attributes {
+	attributes := templ.Attributes{"maxlength": f.Max}
+	if len(f.Options) > 0 {
+		attributes["list"] = id + "--options"
+	}
+	return attributes
+}
+
+// now is the time a When field starts at, to the minute in its timezone, as a datetime-local input takes it
+func now(location *time.Location) string {
+	if location == nil {
+		location = time.UTC
+	}
+	return time.Now().In(location).Format("2006-01-02T15:04")
+}
