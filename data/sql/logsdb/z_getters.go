@@ -42,6 +42,26 @@ func (m *Error) SetAttributes(v *string) {
 	m.Attributes = v
 }
 
+// GetRequestID returns the RequestID value.
+func (m Error) GetRequestID() *string {
+	return m.RequestID
+}
+
+// SetRequestID sets the RequestID value and returns the updated Error.
+func (m *Error) SetRequestID(v *string) {
+	m.RequestID = v
+}
+
+// GetJobID returns the JobID value.
+func (m Error) GetJobID() *string {
+	return m.JobID
+}
+
+// SetJobID sets the JobID value and returns the updated Error.
+func (m *Error) SetJobID(v *string) {
+	m.JobID = v
+}
+
 // GetCreatedAt returns the CreatedAt value.
 func (m Error) GetCreatedAt() int64 {
 	return m.CreatedAt
@@ -122,6 +142,26 @@ func (m *Event) SetFinishedAt(v *int64) {
 	m.FinishedAt = v
 }
 
+// GetRequestID returns the RequestID value.
+func (m Event) GetRequestID() *string {
+	return m.RequestID
+}
+
+// SetRequestID sets the RequestID value and returns the updated Event.
+func (m *Event) SetRequestID(v *string) {
+	m.RequestID = v
+}
+
+// GetJobID returns the JobID value.
+func (m Event) GetJobID() *string {
+	return m.JobID
+}
+
+// SetJobID sets the JobID value and returns the updated Event.
+func (m *Event) SetJobID(v *string) {
+	m.JobID = v
+}
+
 // GetID returns the ID value.
 func (m Log) GetID() int64 {
 	return m.ID
@@ -170,6 +210,26 @@ func (m Log) GetAttributes() *string {
 // SetAttributes sets the Attributes value and returns the updated Log.
 func (m *Log) SetAttributes(v *string) {
 	m.Attributes = v
+}
+
+// GetRequestID returns the RequestID value.
+func (m Log) GetRequestID() *string {
+	return m.RequestID
+}
+
+// SetRequestID sets the RequestID value and returns the updated Log.
+func (m *Log) SetRequestID(v *string) {
+	m.RequestID = v
+}
+
+// GetJobID returns the JobID value.
+func (m Log) GetJobID() *string {
+	return m.JobID
+}
+
+// SetJobID sets the JobID value and returns the updated Log.
+func (m *Log) SetJobID(v *string) {
+	m.JobID = v
 }
 
 // GetCreatedAt returns the CreatedAt value.
@@ -312,6 +372,26 @@ func (m *InsertErrorParams) SetAttributes(v *string) {
 	m.Attributes = v
 }
 
+// GetRequestID returns the RequestID value.
+func (m InsertErrorParams) GetRequestID() *string {
+	return m.RequestID
+}
+
+// SetRequestID sets the RequestID value and returns the updated InsertErrorParams.
+func (m *InsertErrorParams) SetRequestID(v *string) {
+	m.RequestID = v
+}
+
+// GetJobID returns the JobID value.
+func (m InsertErrorParams) GetJobID() *string {
+	return m.JobID
+}
+
+// SetJobID sets the JobID value and returns the updated InsertErrorParams.
+func (m *InsertErrorParams) SetJobID(v *string) {
+	m.JobID = v
+}
+
 // GetSiteID returns the SiteID value.
 func (m InsertEventParams) GetSiteID() *string {
 	return m.SiteID
@@ -372,6 +452,26 @@ func (m *InsertEventParams) SetFinishedAt(v *int64) {
 	m.FinishedAt = v
 }
 
+// GetRequestID returns the RequestID value.
+func (m InsertEventParams) GetRequestID() *string {
+	return m.RequestID
+}
+
+// SetRequestID sets the RequestID value and returns the updated InsertEventParams.
+func (m *InsertEventParams) SetRequestID(v *string) {
+	m.RequestID = v
+}
+
+// GetJobID returns the JobID value.
+func (m InsertEventParams) GetJobID() *string {
+	return m.JobID
+}
+
+// SetJobID sets the JobID value and returns the updated InsertEventParams.
+func (m *InsertEventParams) SetJobID(v *string) {
+	m.JobID = v
+}
+
 // GetSiteID returns the SiteID value.
 func (m InsertLogParams) GetSiteID() *string {
 	return m.SiteID
@@ -410,6 +510,36 @@ func (m InsertLogParams) GetAttributes() *string {
 // SetAttributes sets the Attributes value and returns the updated InsertLogParams.
 func (m *InsertLogParams) SetAttributes(v *string) {
 	m.Attributes = v
+}
+
+// GetRequestID returns the RequestID value.
+func (m InsertLogParams) GetRequestID() *string {
+	return m.RequestID
+}
+
+// SetRequestID sets the RequestID value and returns the updated InsertLogParams.
+func (m *InsertLogParams) SetRequestID(v *string) {
+	m.RequestID = v
+}
+
+// GetJobID returns the JobID value.
+func (m InsertLogParams) GetJobID() *string {
+	return m.JobID
+}
+
+// SetJobID sets the JobID value and returns the updated InsertLogParams.
+func (m *InsertLogParams) SetJobID(v *string) {
+	m.JobID = v
+}
+
+// GetCreatedAt returns the CreatedAt value.
+func (m InsertLogParams) GetCreatedAt() int64 {
+	return m.CreatedAt
+}
+
+// SetCreatedAt sets the CreatedAt value and returns the updated InsertLogParams.
+func (m *InsertLogParams) SetCreatedAt(v int64) {
+	m.CreatedAt = v
 }
 
 // GetSiteID returns the SiteID value.

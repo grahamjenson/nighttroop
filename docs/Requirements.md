@@ -70,6 +70,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 - Every site's and the server's events, newest first, with readable names, when each started and how long it took.
 - Events can be filtered by type and searched (ignoring case); errors and logs have their own pages.
+- Every log the server writes is kept in the logs too, written in batches, without IP addresses. Logs, events and
+  errors keep the `request_id` or `job_id` they were for. Logs held for writing are capped at 1 MB; past that they are
+  dropped, and the logs then say how many.
 - Each sign in to the control site, and each refused one, is an event with the country (and city, where the server
   has DB-IP's City Lite) its IP address is estimated to be from. The IP address itself is not kept.
 

@@ -3,13 +3,13 @@
 --------
 
 -- name: InsertLog :exec
-INSERT INTO logs (site_id, level, message, attributes) VALUES (?, ?, ?, ?);
+INSERT INTO logs (site_id, level, message, attributes, request_id, job_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?);
 
 -- name: InsertEvent :exec
-INSERT INTO events (site_id, batch, name, attributes, started_at, finished_at) VALUES (?, ?, ?, ?, ?, ?);
+INSERT INTO events (site_id, batch, name, attributes, started_at, finished_at, request_id, job_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 
 -- name: InsertError :exec
-INSERT INTO errors (site_id, message, attributes) VALUES (?, ?, ?);
+INSERT INTO errors (site_id, message, attributes, request_id, job_id) VALUES (?, ?, ?, ?, ?);
 
 -------
 -- READ

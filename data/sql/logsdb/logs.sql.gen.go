@@ -11,7 +11,7 @@ import (
 )
 
 const getError = `-- name: GetError :one
-SELECT id, site_id, message, attributes, created_at FROM errors WHERE id = ?1
+SELECT id, site_id, message, attributes, request_id, job_id, created_at FROM errors WHERE id = ?1
 `
 
 type GetErrorParams struct {
@@ -26,13 +26,15 @@ func (q *Queries) GetError(ctx context.Context, arg GetErrorParams) (*Error, err
 		&i.SiteID,
 		&i.Message,
 		&i.Attributes,
+		&i.RequestID,
+		&i.JobID,
 		&i.CreatedAt,
 	)
 	return &i, err
 }
 
 const getEvent = `-- name: GetEvent :one
-SELECT id, site_id, batch, name, attributes, started_at, finished_at FROM events WHERE id = ?1
+SELECT id, site_id, batch, name, attributes, started_at, finished_at, request_id, job_id FROM events WHERE id = ?1
 `
 
 type GetEventParams struct {
@@ -50,12 +52,14 @@ func (q *Queries) GetEvent(ctx context.Context, arg GetEventParams) (*Event, err
 		&i.Attributes,
 		&i.StartedAt,
 		&i.FinishedAt,
+		&i.RequestID,
+		&i.JobID,
 	)
 	return &i, err
 }
 
 const getLog = `-- name: GetLog :one
-SELECT id, site_id, level, message, attributes, created_at FROM logs WHERE id = ?1
+SELECT id, site_id, level, message, attributes, request_id, job_id, created_at FROM logs WHERE id = ?1
 `
 
 type GetLogParams struct {
@@ -71,13 +75,15 @@ func (q *Queries) GetLog(ctx context.Context, arg GetLogParams) (*Log, error) {
 		&i.Level,
 		&i.Message,
 		&i.Attributes,
+		&i.RequestID,
+		&i.JobID,
 		&i.CreatedAt,
 	)
 	return &i, err
 }
 
 const getSiteError = `-- name: GetSiteError :one
-SELECT id, site_id, message, attributes, created_at FROM errors WHERE id = ?1 AND site_id = ?2
+SELECT id, site_id, message, attributes, request_id, job_id, created_at FROM errors WHERE id = ?1 AND site_id = ?2
 `
 
 type GetSiteErrorParams struct {
@@ -93,13 +99,15 @@ func (q *Queries) GetSiteError(ctx context.Context, arg GetSiteErrorParams) (*Er
 		&i.SiteID,
 		&i.Message,
 		&i.Attributes,
+		&i.RequestID,
+		&i.JobID,
 		&i.CreatedAt,
 	)
 	return &i, err
 }
 
 const getSiteEvent = `-- name: GetSiteEvent :one
-SELECT id, site_id, batch, name, attributes, started_at, finished_at FROM events
+SELECT id, site_id, batch, name, attributes, started_at, finished_at, request_id, job_id FROM events
 WHERE id = ?1 AND (site_id = ?2 OR (site_id IS NULL AND batch = ?3))
 `
 
@@ -120,12 +128,14 @@ func (q *Queries) GetSiteEvent(ctx context.Context, arg GetSiteEventParams) (*Ev
 		&i.Attributes,
 		&i.StartedAt,
 		&i.FinishedAt,
+		&i.RequestID,
+		&i.JobID,
 	)
 	return &i, err
 }
 
 const getSiteLog = `-- name: GetSiteLog :one
-SELECT id, site_id, level, message, attributes, created_at FROM logs WHERE id = ?1 AND site_id = ?2
+SELECT id, site_id, level, message, attributes, request_id, job_id, created_at FROM logs WHERE id = ?1 AND site_id = ?2
 `
 
 type GetSiteLogParams struct {
@@ -142,28 +152,38 @@ func (q *Queries) GetSiteLog(ctx context.Context, arg GetSiteLogParams) (*Log, e
 		&i.Level,
 		&i.Message,
 		&i.Attributes,
+		&i.RequestID,
+		&i.JobID,
 		&i.CreatedAt,
 	)
 	return &i, err
 }
 
 const insertError = `-- name: InsertError :exec
-INSERT INTO errors (site_id, message, attributes) VALUES (?, ?, ?)
+INSERT INTO errors (site_id, message, attributes, request_id, job_id) VALUES (?, ?, ?, ?, ?)
 `
 
 type InsertErrorParams struct {
 	SiteID     *string
 	Message    string
 	Attributes *string
+	RequestID  *string
+	JobID      *string
 }
 
 func (q *Queries) InsertError(ctx context.Context, arg InsertErrorParams) error {
-	_, err := q.exec(ctx, q.insertErrorStmt, insertError, arg.SiteID, arg.Message, arg.Attributes)
+	_, err := q.exec(ctx, q.insertErrorStmt, insertError,
+		arg.SiteID,
+		arg.Message,
+		arg.Attributes,
+		arg.RequestID,
+		arg.JobID,
+	)
 	return err
 }
 
 const insertEvent = `-- name: InsertEvent :exec
-INSERT INTO events (site_id, batch, name, attributes, started_at, finished_at) VALUES (?, ?, ?, ?, ?, ?)
+INSERT INTO events (site_id, batch, name, attributes, started_at, finished_at, request_id, job_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 `
 
 type InsertEventParams struct {
@@ -173,6 +193,8 @@ type InsertEventParams struct {
 	Attributes *string
 	StartedAt  int64
 	FinishedAt *int64
+	RequestID  *string
+	JobID      *string
 }
 
 func (q *Queries) InsertEvent(ctx context.Context, arg InsertEventParams) error {
@@ -183,13 +205,15 @@ func (q *Queries) InsertEvent(ctx context.Context, arg InsertEventParams) error 
 		arg.Attributes,
 		arg.StartedAt,
 		arg.FinishedAt,
+		arg.RequestID,
+		arg.JobID,
 	)
 	return err
 }
 
 const insertLog = `-- name: InsertLog :exec
 
-INSERT INTO logs (site_id, level, message, attributes) VALUES (?, ?, ?, ?)
+INSERT INTO logs (site_id, level, message, attributes, request_id, job_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)
 `
 
 type InsertLogParams struct {
@@ -197,6 +221,9 @@ type InsertLogParams struct {
 	Level      string
 	Message    string
 	Attributes *string
+	RequestID  *string
+	JobID      *string
+	CreatedAt  int64
 }
 
 // -----
@@ -208,12 +235,15 @@ func (q *Queries) InsertLog(ctx context.Context, arg InsertLogParams) error {
 		arg.Level,
 		arg.Message,
 		arg.Attributes,
+		arg.RequestID,
+		arg.JobID,
+		arg.CreatedAt,
 	)
 	return err
 }
 
 const recentSyncErrors = `-- name: RecentSyncErrors :many
-SELECT id, site_id, message, attributes, created_at FROM errors
+SELECT id, site_id, message, attributes, request_id, job_id, created_at FROM errors
 WHERE site_id = ?1 AND json_extract(attributes, '$.kind') = 'sync' AND json_extract(attributes, '$.sync_type') = ?2
 ORDER BY id DESC
 LIMIT ?3
@@ -240,6 +270,8 @@ func (q *Queries) RecentSyncErrors(ctx context.Context, arg RecentSyncErrorsPara
 			&i.SiteID,
 			&i.Message,
 			&i.Attributes,
+			&i.RequestID,
+			&i.JobID,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -256,7 +288,7 @@ func (q *Queries) RecentSyncErrors(ctx context.Context, arg RecentSyncErrorsPara
 }
 
 const recentSyncEvents = `-- name: RecentSyncEvents :many
-SELECT id, site_id, batch, name, attributes, started_at, finished_at FROM events
+SELECT id, site_id, batch, name, attributes, started_at, finished_at, request_id, job_id FROM events
 WHERE site_id = ?1 AND json_extract(attributes, '$.sync_type') = ?2
 ORDER BY id DESC
 LIMIT ?3
@@ -286,6 +318,8 @@ func (q *Queries) RecentSyncEvents(ctx context.Context, arg RecentSyncEventsPara
 			&i.Attributes,
 			&i.StartedAt,
 			&i.FinishedAt,
+			&i.RequestID,
+			&i.JobID,
 		); err != nil {
 			return nil, err
 		}
@@ -301,7 +335,7 @@ func (q *Queries) RecentSyncEvents(ctx context.Context, arg RecentSyncEventsPara
 }
 
 const searchErrors = `-- name: SearchErrors :many
-SELECT id, site_id, message, attributes, created_at FROM errors
+SELECT id, site_id, message, attributes, request_id, job_id, created_at FROM errors
 WHERE (CAST(?1 AS TEXT) IS NULL OR site_id = ?1)
 AND (CAST(?2 AS TEXT) IS NULL OR json_extract(attributes, '$.kind') = ?2)
 AND (CAST(?3 AS TEXT) IS NULL OR instr(lower(message), lower(?3)) > 0 OR instr(lower(attributes), lower(?3)) > 0)
@@ -339,6 +373,8 @@ func (q *Queries) SearchErrors(ctx context.Context, arg SearchErrorsParams) ([]*
 			&i.SiteID,
 			&i.Message,
 			&i.Attributes,
+			&i.RequestID,
+			&i.JobID,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -355,7 +391,7 @@ func (q *Queries) SearchErrors(ctx context.Context, arg SearchErrorsParams) ([]*
 }
 
 const searchEvents = `-- name: SearchEvents :many
-SELECT id, site_id, batch, name, attributes, started_at, finished_at FROM events
+SELECT id, site_id, batch, name, attributes, started_at, finished_at, request_id, job_id FROM events
 WHERE (CAST(?1 AS TEXT) IS NULL OR site_id = ?1)
 AND (CAST(?2 AS TEXT) IS NULL OR name = ?2)
 AND (CAST(?3 AS TEXT) IS NULL OR instr(lower(name), lower(?3)) > 0 OR instr(lower(attributes), lower(?3)) > 0)
@@ -396,6 +432,8 @@ func (q *Queries) SearchEvents(ctx context.Context, arg SearchEventsParams) ([]*
 			&i.Attributes,
 			&i.StartedAt,
 			&i.FinishedAt,
+			&i.RequestID,
+			&i.JobID,
 		); err != nil {
 			return nil, err
 		}
@@ -412,7 +450,7 @@ func (q *Queries) SearchEvents(ctx context.Context, arg SearchEventsParams) ([]*
 
 const searchLogs = `-- name: SearchLogs :many
 
-SELECT id, site_id, level, message, attributes, created_at FROM logs
+SELECT id, site_id, level, message, attributes, request_id, job_id, created_at FROM logs
 WHERE (CAST(?1 AS TEXT) IS NULL OR site_id = ?1)
 AND (CAST(?2 AS TEXT) IS NULL OR instr(lower(message), lower(?2)) > 0 OR instr(lower(attributes), lower(?2)) > 0)
 ORDER BY id DESC
@@ -450,6 +488,8 @@ func (q *Queries) SearchLogs(ctx context.Context, arg SearchLogsParams) ([]*Log,
 			&i.Level,
 			&i.Message,
 			&i.Attributes,
+			&i.RequestID,
+			&i.JobID,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -466,7 +506,7 @@ func (q *Queries) SearchLogs(ctx context.Context, arg SearchLogsParams) ([]*Log,
 }
 
 const searchSiteErrors = `-- name: SearchSiteErrors :many
-SELECT id, site_id, message, attributes, created_at FROM errors
+SELECT id, site_id, message, attributes, request_id, job_id, created_at FROM errors
 WHERE site_id = ?1
 AND (CAST(?2 AS TEXT) IS NULL OR json_extract(attributes, '$.kind') = ?2)
 AND (CAST(?3 AS TEXT) IS NULL OR instr(lower(message), lower(?3)) > 0 OR instr(lower(attributes), lower(?3)) > 0)
@@ -503,6 +543,8 @@ func (q *Queries) SearchSiteErrors(ctx context.Context, arg SearchSiteErrorsPara
 			&i.SiteID,
 			&i.Message,
 			&i.Attributes,
+			&i.RequestID,
+			&i.JobID,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -519,13 +561,13 @@ func (q *Queries) SearchSiteErrors(ctx context.Context, arg SearchSiteErrorsPara
 }
 
 const searchSiteEvents = `-- name: SearchSiteEvents :many
-SELECT own.id, own.site_id, own.batch, own.name, own.attributes, own.started_at, own.finished_at FROM events own
+SELECT own.id, own.site_id, own.batch, own.name, own.attributes, own.started_at, own.finished_at, own.request_id, own.job_id FROM events own
 WHERE own.site_id = ?3
 AND (CAST(?4 AS TEXT) IS NULL OR own.name = ?4)
 AND (CAST(?5 AS TEXT) IS NULL OR instr(lower(own.name), lower(?5)) > 0
   OR instr(lower(own.attributes), lower(?5)) > 0)
 UNION ALL
-SELECT batched.id, batched.site_id, batched.batch, batched.name, batched.attributes, batched.started_at, batched.finished_at FROM events batched
+SELECT batched.id, batched.site_id, batched.batch, batched.name, batched.attributes, batched.started_at, batched.finished_at, batched.request_id, batched.job_id FROM events batched
 WHERE batched.site_id IS NULL AND batched.batch = ?6
 AND (CAST(?4 AS TEXT) IS NULL OR batched.name = ?4)
 AND (CAST(?5 AS TEXT) IS NULL OR instr(lower(batched.name), lower(?5)) > 0)
@@ -569,6 +611,8 @@ func (q *Queries) SearchSiteEvents(ctx context.Context, arg SearchSiteEventsPara
 			&i.Attributes,
 			&i.StartedAt,
 			&i.FinishedAt,
+			&i.RequestID,
+			&i.JobID,
 		); err != nil {
 			return nil, err
 		}
@@ -585,7 +629,7 @@ func (q *Queries) SearchSiteEvents(ctx context.Context, arg SearchSiteEventsPara
 
 const searchSiteLogs = `-- name: SearchSiteLogs :many
 
-SELECT id, site_id, level, message, attributes, created_at FROM logs
+SELECT id, site_id, level, message, attributes, request_id, job_id, created_at FROM logs
 WHERE site_id = ?1
 AND (CAST(?2 AS TEXT) IS NULL OR instr(lower(message), lower(?2)) > 0 OR instr(lower(attributes), lower(?2)) > 0)
 ORDER BY id DESC
@@ -622,6 +666,8 @@ func (q *Queries) SearchSiteLogs(ctx context.Context, arg SearchSiteLogsParams) 
 			&i.Level,
 			&i.Message,
 			&i.Attributes,
+			&i.RequestID,
+			&i.JobID,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
