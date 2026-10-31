@@ -8,6 +8,7 @@ import (
 
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/geoip"
 )
 
 // Every event and error the server records has its own method here, with typed attributes, so what is in the logs
@@ -63,6 +64,22 @@ type IdentityCredentialsChangedAttributes struct {
 // which signs out whoever had the old ones
 func (l *LogsDB) IdentityCredentialsChangedEvent(ctx context.Context, siteID string, identityName string, credentials string, by string) {
 	l.event(ctx, siteID, events.IdentityCredentialsChanged, IdentityCredentialsChangedAttributes{IdentityName: identityName, Credentials: credentials, By: by})
+}
+
+type SignInAttributes struct {
+	IdentityName string `json:"identity_name,omitempty"`
+	// From is where the sign in is estimated to be from, by its IP address
+	From geoip.Location `json:"from"`
+}
+
+// SignedInEvent records an identity signing in to its site, or with no siteID a control identity to the control site
+func (l *LogsDB) SignedInEvent(ctx context.Context, siteID string, identityName string, from geoip.Location) {
+	l.event(ctx, siteID, events.SignedIn, SignInAttributes{IdentityName: identityName, From: from})
+}
+
+// SignInFailedEvent records a refused sign in, without the name tried, which may not be an identity's
+func (l *LogsDB) SignInFailedEvent(ctx context.Context, siteID string, from geoip.Location) {
+	l.event(ctx, siteID, events.SignInFailed, SignInAttributes{From: from})
 }
 
 type SiteDisabledAttributes struct {

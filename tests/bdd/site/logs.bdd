@@ -28,6 +28,9 @@ ASSERT_VISIBLE #siteEventsTable
 // Events have names to read, not the names they are stored by
 ASSERT_TEXT_VISIBLE Site created
 ASSERT_NOT_VISIBLE #siteEventsTable >> text=site_created
+// The admin signing in is an event, with where from by DB-IP's estimate, so the footer links to DB-IP
+ASSERT_VISIBLE #siteEventsTable >> text=Signed in
+ASSERT_VISIBLE #footer--dbip-link
 ASSERT_TEXT_VISIBLE This site
 // With nothing filtered there is nothing to clear
 ASSERT_NOT_VISIBLE #site--events--filter--clear

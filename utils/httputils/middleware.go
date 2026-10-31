@@ -36,6 +36,7 @@ func AddStandardMiddleware(router chi.Router, config *config.ServerConfig, contr
 	// Gzip text responses, like the pages, styles, scripts and JSON, for clients that accept it
 	router.Use(middleware.Compress(5))
 	router.Use(withSupportEmail(config.SupportEmail))
+	router.Use(withDBIPCredit)
 }
 
 type supportEmailKey struct{}
@@ -55,6 +56,40 @@ func SupportEmail(ctx context.Context) string {
 		return email
 	}
 	return config.DefaultSupportEmail
+}
+
+type dbipCreditKey struct{}
+
+// dbipCredit is whether a page shows locations from DB-IP's database, whose licence asks for a link to DB-IP on it
+type dbipCredit struct {
+	shown bool
+	// partial is a part of a page loaded into one, whose footer is already drawn
+	partial bool
+}
+
+// withDBIPCredit lets a request's page say it shows DB-IP's locations, for its footer to credit DB-IP
+func withDBIPCredit(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		credit := &dbipCredit{partial: GetAcceptType(r) == AcceptTypeHTMX}
+		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), dbipCreditKey{}, credit)))
+	})
+}
+
+// CreditDBIP marks the page as showing DB-IP's locations, and is whether it is a part of a page, whose drawn footer
+// is sent the credit out of band
+func CreditDBIP(ctx context.Context) bool {
+	credit, ok := ctx.Value(dbipCreditKey{}).(*dbipCredit)
+	if !ok {
+		return false
+	}
+	credit.shown = true
+	return credit.partial
+}
+
+// DBIPCredited is whether the page shows DB-IP's locations, so its footer credits DB-IP
+func DBIPCredited(ctx context.Context) bool {
+	credit, ok := ctx.Value(dbipCreditKey{}).(*dbipCredit)
+	return ok && credit.shown
 }
 
 // RecordServerErrors records each response with a 5xx status in the logs DB's errors, with its site when it has one.

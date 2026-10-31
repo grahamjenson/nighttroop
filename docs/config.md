@@ -24,6 +24,7 @@ Limits written per minute are rates; their burst is how many can be used at once
 | `FLY_APP_NAME` | unset | Set by Fly.io. When set, the client's IP is read from the `Fly-Client-IP` header |
 | `SUPPORT_EMAIL` | `nighttroop@t1d.nz` | Where users contact the server's operator, in every page's footer and in the terms of service and privacy policy |
 | `SENTRY_DSN` | empty | Where errors are reported. Empty turns Sentry off |
+| `GEOIP_DB_PATH` | empty; the Docker image sets it to its DB-IP IP to City Lite database | A DB-IP IP to City Lite `.mmdb` file, for the city sign ins come from. Without one, or if it cannot be opened, the built in IP to Country Lite gives only the country |
 
 ## Security
 

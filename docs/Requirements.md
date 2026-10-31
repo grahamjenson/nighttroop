@@ -60,6 +60,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 - Every site's and the server's events, newest first, with readable names, when each started and how long it took.
 - Events can be filtered by type and searched (ignoring case); errors and logs have their own pages.
+- Each sign in to the control site, and each refused one, is an event with the country (and city, where the server
+  has DB-IP's City Lite) its IP address is estimated to be from. The IP address itself is not kept.
 
 ### Usage
 
@@ -83,6 +85,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   site a new backup key. The key works once; a wrong key is refused without saying why.
 - A site that is never used is deleted after `DELETE_AFTER_INACTIVITY_MINS`.
 - Every page's footer links to contact, the terms of service and the privacy policy.
+- A page that shows estimated locations, such as the events pages, also links to DB-IP, whose free databases make
+  the estimates, in its footer.
 
 ### Summary
 
@@ -147,6 +151,8 @@ deleted (after a confirmation):
 
 - An admin sees the site's events (e.g. created, alarms, recoveries, credential changes), errors and logs, filtered
   by type and searched, and its batch's backups.
+- Each sign in to the site, and each refused one, is an event with the country (and city, where the server has
+  DB-IP's City Lite) its IP address is estimated to be from. A refused one does not keep the name it tried.
 
 ### Nightscout API
 

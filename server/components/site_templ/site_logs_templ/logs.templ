@@ -4,6 +4,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	dataevents "nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/server/components/filter"
+	"nighttroop.t1d.nz/server/components/footer"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -87,6 +88,8 @@ var detail = modal.Detail
 
 // EventsTable shows one page of the site's events and its batch's, the newest first
 templ EventsTable(events []*sitemodels.SiteEvent, skip int64, limit int64, eventType *string, search *string) {
+	// Sign ins are from where DB-IP estimates
+	@footer.DBIPCredit()
 	@page("events_table", "Events", "What happened to this site and the batch of sites it is backed up with, newest first.", "/logs/events", filter.PagePath("/logs/events", eventType, search), len(events), skip, limit) {
 		@filter.Filter(filter.Props{ID: "site--events--filter", Path: "/logs/events", All: "All events", Types: dataevents.PersistedNames(), Selected: eventType, Search: search})
 		@table.Table(table.Props{ID: "siteEventsTable", Class: "rounded-lg border border-gray-200"}) {
@@ -132,6 +135,8 @@ templ EventsTable(events []*sitemodels.SiteEvent, skip int64, limit int64, event
 }
 
 templ EventModal(event *sitemodels.SiteEvent) {
+	// Sign ins are from where DB-IP estimates
+	@footer.DBIPCredit()
 	@modal.Modal(modal.Props{ID: "site--event--details", Title: display.Name(event.Name), Subtitle: formatDate(event.StartedAt)}) {
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@detail("For", about(event))
