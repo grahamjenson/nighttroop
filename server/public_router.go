@@ -25,10 +25,6 @@ func NewPublicRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.R
 	r.Get("/recover", publicapi.GETRecoverSitePageHandler())
 	r.With(httputils.AllowedCountriesMiddleware(config)).Post("/recover", publicapi.POSTRecoverSiteHandler(controlDB, config))
 
-	// TODO public routes
-	// 1. Documentation
-	// 2. SEO
-	// TODO backupKeyhashFcuntions
-	// 3. download sqlite backup
+	// Not served here yet: documentation pages, and pages for search engines beyond robots.txt
 	return r
 }

@@ -76,7 +76,7 @@ func NewControlDB(ctx context.Context, serverConfig *config.ServerConfig) (*Cont
 	}
 
 	// This will go over all non-deleted sites and add them to the control db sites
-	_, err = controlDB.fillSites()
+	_, err = controlDB.fillSites(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("cannot fill sites: %w", err)
 	}
@@ -85,9 +85,9 @@ func NewControlDB(ctx context.Context, serverConfig *config.ServerConfig) (*Cont
 }
 
 // This will fetch all the sites in
-func (db *ControlDB) fillSites() ([]string, error) {
+func (db *ControlDB) fillSites(ctx context.Context) ([]string, error) {
 	sites := []string{}
-	res, err := db.Queries.GetLiveAndDisabledSites(context.TODO())
+	res, err := db.Queries.GetLiveAndDisabledSites(ctx)
 
 	if err != nil {
 		return sites, fmt.Errorf("cannot query sites: %w", err)
@@ -103,7 +103,7 @@ func (db *ControlDB) fillSites() ([]string, error) {
 			return nil, fmt.Errorf("The Site DB %s Must exist and doesnt", model.ID)
 		}
 
-		siteDB, err := NewSiteDB(context.TODO(), model.ID, db.ServerConfig)
+		siteDB, err := NewSiteDB(ctx, model.ID, db.ServerConfig)
 		if err != nil {
 			return sites, fmt.Errorf("SiteDB failed to be added to the ControlDB list, %w", err)
 		}
@@ -135,34 +135,34 @@ type SiteCreateResult struct {
 // ErrSiteIDTaken is a site ID picked for a new site that a site, in any state, already has
 var ErrSiteIDTaken = fmt.Errorf("that site ID is taken")
 
-func (db *ControlDB) CreateSite() (*SiteCreateResult, error) {
-	return db.createSite("")
+func (db *ControlDB) CreateSite(ctx context.Context) (*SiteCreateResult, error) {
+	return db.createSite(ctx, "")
 }
 
 // CreateSiteWithID creates a site at a site ID picked for it, such as a vanity one for a special user. It is 8
 // lowercase letters like every site's, and one already taken is refused.
-func (db *ControlDB) CreateSiteWithID(subdomain string) (*SiteCreateResult, error) {
+func (db *ControlDB) CreateSiteWithID(ctx context.Context, subdomain string) (*SiteCreateResult, error) {
 	if !utils.SyntacticallyValidateSiteID(subdomain) {
 		return nil, fmt.Errorf("site ID %q is not %d lowercase letters", subdomain, utils.SITE_ID_LENGTH)
 	}
-	return db.createSite(subdomain)
+	return db.createSite(ctx, subdomain)
 }
 
 // createSite creates a site at subdomain, or at a random one when it is ""
-func (db *ControlDB) createSite(subdomain string) (*SiteCreateResult, error) {
+func (db *ControlDB) createSite(ctx context.Context, subdomain string) (*SiteCreateResult, error) {
 	db.createSiteLock.Lock()
 	defer db.createSiteLock.Unlock()
 
 	if subdomain != "" {
-		if db.SubdomainUsed(subdomain) {
+		if db.SubdomainUsed(ctx, subdomain) {
 			return nil, ErrSiteIDTaken
 		}
 	} else {
 		subdomain = utils.NextSiteSubdomain(db.ServerConfig.IsDevOrTest())
-		if db.SubdomainUsed(subdomain) {
+		if db.SubdomainUsed(ctx, subdomain) {
 			// Try Again with an actual random ID
 			subdomain = utils.NextSiteSubdomain(false)
-			if db.SubdomainUsed(subdomain) {
+			if db.SubdomainUsed(ctx, subdomain) {
 				return nil, fmt.Errorf("site already exists")
 			}
 		}
@@ -173,7 +173,7 @@ func (db *ControlDB) createSite(subdomain string) (*SiteCreateResult, error) {
 		return nil, fmt.Errorf("cannot generate backup key hash: %w", err)
 	}
 
-	siteDB, err := NewSiteDB(context.TODO(), subdomain, db.ServerConfig)
+	siteDB, err := NewSiteDB(ctx, subdomain, db.ServerConfig)
 	if err != nil {
 		return nil, fmt.Errorf("Site DB Creation Error: %w", err)
 	}
@@ -182,7 +182,7 @@ func (db *ControlDB) createSite(subdomain string) (*SiteCreateResult, error) {
 	db.sitesRWLock.Lock()
 	defer db.sitesRWLock.Unlock()
 
-	_, err = db.Queries.CreateSite(context.TODO(), controldb.CreateSiteParams{
+	_, err = db.Queries.CreateSite(ctx, controldb.CreateSiteParams{
 		ID:            subdomain,
 		BackupKeyHash: backupKeyHash,
 	})
@@ -200,7 +200,7 @@ func (db *ControlDB) createSite(subdomain string) (*SiteCreateResult, error) {
 	// Setup the new SiteDB
 	////
 
-	adminIdentity, pwdIdentity, readOnlyIdentity, err := db.createSiteDefaultIdentities(subdomain)
+	adminIdentity, pwdIdentity, readOnlyIdentity, err := db.createSiteDefaultIdentities(ctx, subdomain)
 
 	if err != nil {
 		siteDB.TryCloseAndDelete()
@@ -208,7 +208,7 @@ func (db *ControlDB) createSite(subdomain string) (*SiteCreateResult, error) {
 	}
 
 	db.sites[subdomain] = siteDB
-	db.Logs.SiteCreatedEvent(context.TODO(), subdomain)
+	db.Logs.SiteCreatedEvent(ctx, subdomain)
 
 	return &SiteCreateResult{
 		SiteDB:          siteDB,
@@ -224,14 +224,16 @@ func (db *ControlDB) createSite(subdomain string) (*SiteCreateResult, error) {
 // Delete USER methods
 ////
 
-// TODO think through implications of errors at different places in this method
-func (db *ControlDB) DeleteSites(subdomains []string) error {
+// DeleteSites marks the sites deleted, then closes and removes each one's DB files. A site missing from the map stops
+// the rest being closed, and a file that cannot be removed is only logged, so a failure part way leaves the sites
+// marked deleted with some files left behind.
+func (db *ControlDB) DeleteSites(ctx context.Context, subdomains []string) error {
 	// Set the deleted at timestammp in the control DB
 	if len(subdomains) == 0 {
 		return nil
 	}
 	bytes, _ := json.Marshal(subdomains)
-	deletedSubdomains, err := db.Queries.DeleteSites(context.TODO(), controldb.DeleteSitesParams{
+	deletedSubdomains, err := db.Queries.DeleteSites(ctx, controldb.DeleteSitesParams{
 		JsonEach: string(bytes),
 	})
 
@@ -404,8 +406,8 @@ func (db *ControlDB) AllSites() []*SiteDB {
 	return sites
 }
 
-func (db *ControlDB) SubdomainUsed(subdomain string) bool {
-	exists, err := db.Queries.SiteExists(context.TODO(), controldb.SiteExistsParams{
+func (db *ControlDB) SubdomainUsed(ctx context.Context, subdomain string) bool {
+	exists, err := db.Queries.SiteExists(ctx, controldb.SiteExistsParams{
 		ID: subdomain,
 	})
 	if err != nil {
@@ -416,7 +418,7 @@ func (db *ControlDB) SubdomainUsed(subdomain string) bool {
 
 // UpdateSiteAndIdentityDateFlags records when the site and identity were last seen and written to, at most every
 // 10 minutes, and the site DB's size with its last write
-func (db *ControlDB) UpdateSiteAndIdentityDateFlags(siteModel *controldb.Site, siteDB *SiteDB, identityModel *controldb.SiteIdentity, updateLastSeen bool, updateLastWrite bool) error {
+func (db *ControlDB) UpdateSiteAndIdentityDateFlags(ctx context.Context, siteModel *controldb.Site, siteDB *SiteDB, identityModel *controldb.SiteIdentity, updateLastSeen bool, updateLastWrite bool) error {
 	subdomain := siteModel.ID
 
 	// Only update if not seen in 10 minutes
@@ -434,14 +436,14 @@ func (db *ControlDB) UpdateSiteAndIdentityDateFlags(siteModel *controldb.Site, s
 		lastWriteAt = &now
 		estimatedDBSizeKB = siteDB.EstimatedSizeKB()
 	}
-	db.Queries.UpdateSiteDateFlags(context.TODO(), controldb.UpdateSiteDateFlagsParams{
+	db.Queries.UpdateSiteDateFlags(ctx, controldb.UpdateSiteDateFlagsParams{
 		LastSeenAt:        lastSeenAt,
 		LastWriteAt:       lastWriteAt,
 		EstimatedDbSizeKb: estimatedDBSizeKB,
 		ID:                subdomain,
 	})
 
-	db.Queries.UpdateSiteIdentityDateFlags(context.TODO(), controldb.UpdateSiteIdentityDateFlagsParams{
+	db.Queries.UpdateSiteIdentityDateFlags(ctx, controldb.UpdateSiteIdentityDateFlagsParams{
 		LastSeenAt:  lastSeenAt,
 		LastWriteAt: lastWriteAt,
 		ID:          identityModel.ID,
@@ -450,9 +452,9 @@ func (db *ControlDB) UpdateSiteAndIdentityDateFlags(siteModel *controldb.Site, s
 	return nil
 }
 
-func (db *ControlDB) GetSite(subdomain string) (*SiteDB, *controldb.Site, error) {
+func (db *ControlDB) GetSite(ctx context.Context, subdomain string) (*SiteDB, *controldb.Site, error) {
 	// Check if site exists in the db
-	model, err := db.Queries.GetSite(context.TODO(), controldb.GetSiteParams{
+	model, err := db.Queries.GetSite(ctx, controldb.GetSiteParams{
 		ID: subdomain,
 	})
 
@@ -515,9 +517,9 @@ func (db *ControlDB) Close() error {
 // Identities
 // ////
 
-func (db *ControlDB) createSiteDefaultIdentities(subdomain string) (*IdentityValues, *IdentityValues, *IdentityValues, error) {
+func (db *ControlDB) createSiteDefaultIdentities(ctx context.Context, subdomain string) (*IdentityValues, *IdentityValues, *IdentityValues, error) {
 	// Create Default Admin User
-	adminIdentity, err := db.CreateSiteIdentity(context.TODO(), db.Queries, subdomain, consts.FIRST_ADMIN_NAME, consts.IdentityRoleAdmin)
+	adminIdentity, err := db.CreateSiteIdentity(ctx, db.Queries, subdomain, consts.FIRST_ADMIN_NAME, consts.IdentityRoleAdmin)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("Failed to Create Default Admin User:	 %w", err)
 	}
@@ -527,7 +529,7 @@ func (db *ControlDB) createSiteDefaultIdentities(subdomain string) (*IdentityVal
 
 	// Create Default PWD User (Able to write data on the ns API)
 
-	pwdIdentity, err := db.CreateSiteIdentity(context.TODO(), db.Queries, subdomain, consts.FIRST_PWD_NAME, consts.IdentityRoleDevicePWDPhone)
+	pwdIdentity, err := db.CreateSiteIdentity(ctx, db.Queries, subdomain, consts.FIRST_PWD_NAME, consts.IdentityRoleDevicePWDPhone)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("Failed to Create Default PWD User:	 %w", err)
 	}
@@ -536,7 +538,7 @@ func (db *ControlDB) createSiteDefaultIdentities(subdomain string) (*IdentityVal
 	}
 
 	// Create Default Read-Only User
-	readOnlyIdentity, err := db.CreateSiteIdentity(context.TODO(), db.Queries, subdomain, consts.FIRST_READ_ONLY_NAME, consts.IdentityRoleDeviceRead)
+	readOnlyIdentity, err := db.CreateSiteIdentity(ctx, db.Queries, subdomain, consts.FIRST_READ_ONLY_NAME, consts.IdentityRoleDeviceRead)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("Failed to Create Default Read-Only User:	 %w", err)
 	}
@@ -642,7 +644,7 @@ func (db *ControlDB) ResetSiteIdentityTOTP(ctx context.Context, identity *contro
 	return &IdentityValues{TotpSecret: &totpSecret}, nil
 }
 
-func (db *ControlDB) CreateControlIdentity(name string, role consts.ControlRole) (*IdentityValues, error) {
+func (db *ControlDB) CreateControlIdentity(ctx context.Context, name string, role consts.ControlRole) (*IdentityValues, error) {
 	security := db.ServerConfig.Security
 	hostname := db.ServerConfig.HostName
 	password, hashedPassword, err := security.GeneratePassword()
@@ -662,7 +664,7 @@ func (db *ControlDB) CreateControlIdentity(name string, role consts.ControlRole)
 	totpSecretPtr = &totpSecret
 	encTOTPSecret = encTOTPSecretRet
 
-	err = db.Queries.CreateControlIdentity(context.TODO(), controldb.CreateControlIdentityParams{
+	err = db.Queries.CreateControlIdentity(ctx, controldb.CreateControlIdentityParams{
 		Name:          name,
 		PasswordHash:  hashedPassword,
 		TotpSecretEnc: encTOTPSecret,

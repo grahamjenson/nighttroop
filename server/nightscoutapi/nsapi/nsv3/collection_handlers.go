@@ -139,7 +139,7 @@ func Replace(store nsutils.Store) http.HandlerFunc {
 		if !ok {
 			return
 		}
-		// TODO put If-Unmodified-Since into the update query to make it atomic
+		// If-Unmodified-Since is not checked yet, so a replace can overwrite a change made since the client read it
 		record, created, err := store.Replace(r.Context(), collection, identifier, doc, canCreate, nsutils.RawParam(r))
 
 		if err != nil {
@@ -167,7 +167,7 @@ func Patch(store nsutils.Store) http.HandlerFunc {
 		if !ok {
 			return
 		}
-		// TODO put If-Unmodified-Since into the update query to make it atomic
+		// If-Unmodified-Since is not checked yet, so a patch can overwrite a change made since the client read it
 
 		record, err := store.Patch(r.Context(), collection, identifier, doc, nsutils.RawParam(r))
 

@@ -1,7 +1,6 @@
 package httputils
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -44,7 +43,7 @@ func TestRecordServerErrors(t *testing.T) {
 			}
 			router.ServeHTTP(httptest.NewRecorder(), r)
 
-			recorded, err := controlDB.Logs.Queries.SearchErrors(context.TODO(), logsdb.SearchErrorsParams{Limit: 10})
+			recorded, err := controlDB.Logs.Queries.SearchErrors(t.Context(), logsdb.SearchErrorsParams{Limit: 10})
 			require.NoError(t, err)
 			if test.message == "" {
 				require.Empty(t, recorded)

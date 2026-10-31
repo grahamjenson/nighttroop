@@ -80,7 +80,7 @@ func (i IdentityRole) GetType() IdentityType {
 	}
 }
 
-// TODO implement CanCan on the User and Admin Roles
+// What each role can do is checked where it is done, not in one table of permissions
 
 /// Some reusable ENVARS
 

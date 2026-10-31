@@ -27,31 +27,32 @@ const topwrapper string = "\n\n------------------------------ SQL CHECK ERRORS -
 const bottomwrapper string = "\n\n-----------------------------------------------------------------------------------------------------------\n\n"
 
 func main() {
+	ctx := context.Background()
 	config := config.ServerConfig{
 		Mode: consts.Test, // Get In memory Database
 	}
 
-	siteDB, err := sitedb.NewDB(context.TODO(), "subdomain", &config)
+	siteDB, err := sitedb.NewDB(ctx, "subdomain", &config)
 	if err != nil {
 		log.Fatalf("%sfailed to create site DB: %v %s", topwrapper, err, bottomwrapper)
 	}
 
-	controlDB, err := controldb.NewDB(context.TODO(), &config)
+	controlDB, err := controldb.NewDB(ctx, &config)
 	if err != nil {
 		log.Fatalf("%sfailed to create control DB: %v %s", topwrapper, err, bottomwrapper)
 	}
 
-	jobsDB, err := jobsdb.NewDB(context.TODO(), &config)
+	jobsDB, err := jobsdb.NewDB(ctx, &config)
 	if err != nil {
 		log.Fatalf("%sfailed to create jobs DB: %v %s", topwrapper, err, bottomwrapper)
 	}
 
-	logsDB, err := logsdb.NewDB(context.TODO(), &config)
+	logsDB, err := logsdb.NewDB(ctx, &config)
 	if err != nil {
 		log.Fatalf("%sfailed to create logs DB: %v %s", topwrapper, err, bottomwrapper)
 	}
 
-	liveDB, err := livedb.NewDB(context.TODO(), &config)
+	liveDB, err := livedb.NewDB(ctx, &config)
 	if err != nil {
 		log.Fatalf("%sfailed to create live DB: %v %s", topwrapper, err, bottomwrapper)
 	}
@@ -62,20 +63,20 @@ func main() {
 
 	// Sometimes SQLc will generate a query that is incorrect causing a syntax error when queried.
 	// This executes all queries ignoring normal errors and checking for a bad query syntax.
-	if err := executeAllQueries(context.TODO(), siteDB.Queries); err != nil {
+	if err := executeAllQueries(ctx, siteDB.Queries); err != nil {
 		log.Fatalf("%sfailed to create site DB: %v %s", topwrapper, err, bottomwrapper)
 	}
 
-	if err := executeAllQueries(context.TODO(), controlDB.Queries); err != nil {
+	if err := executeAllQueries(ctx, controlDB.Queries); err != nil {
 		log.Fatalf("%sfailed to create control DB: %v %s", topwrapper, err, bottomwrapper)
 	}
-	if err := executeAllQueries(context.TODO(), jobsDB.Queries); err != nil {
+	if err := executeAllQueries(ctx, jobsDB.Queries); err != nil {
 		log.Fatalf("%sfailed to create jobs DB: %v %s", topwrapper, err, bottomwrapper)
 	}
-	if err := executeAllQueries(context.TODO(), logsDB.Queries); err != nil {
+	if err := executeAllQueries(ctx, logsDB.Queries); err != nil {
 		log.Fatalf("%sfailed to create logs DB: %v %s", topwrapper, err, bottomwrapper)
 	}
-	if err := executeAllQueries(context.TODO(), liveDB.Queries); err != nil {
+	if err := executeAllQueries(ctx, liveDB.Queries); err != nil {
 		log.Fatalf("%sfailed to create live DB: %v %s", topwrapper, err, bottomwrapper)
 	}
 

@@ -1,7 +1,6 @@
 package db_test
 
 import (
-	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -48,7 +47,7 @@ func TestEstimatedSizeKB(t *testing.T) {
 // TestDateFlagsRecordSize checks a site's DB size is recorded with its last write, at most every 10 minutes
 func TestDateFlagsRecordSize(t *testing.T) {
 	_, controlDB, site := testutils.NewControlDBWithSite(t)
-	ctx, siteID := context.TODO(), site.SiteDB.Subdomain
+	ctx, siteID := t.Context(), site.SiteDB.Subdomain
 	get := func() *controldb.Site {
 		model, err := controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: siteID})
 		require.NoError(t, err)
@@ -56,20 +55,20 @@ func TestDateFlagsRecordSize(t *testing.T) {
 	}
 
 	// Seen but not written to measures nothing
-	require.NoError(t, controlDB.UpdateSiteAndIdentityDateFlags(get(), siteDBFiles(t, 4096, 0), &controldb.SiteIdentity{}, true, false))
+	require.NoError(t, controlDB.UpdateSiteAndIdentityDateFlags(t.Context(), get(), siteDBFiles(t, 4096, 0), &controldb.SiteIdentity{}, true, false))
 	require.Nil(t, get().EstimatedDbSizeKb)
 
-	require.NoError(t, controlDB.UpdateSiteAndIdentityDateFlags(get(), siteDBFiles(t, 4096, 0), &controldb.SiteIdentity{}, true, true))
+	require.NoError(t, controlDB.UpdateSiteAndIdentityDateFlags(t.Context(), get(), siteDBFiles(t, 4096, 0), &controldb.SiteIdentity{}, true, true))
 	require.Equal(t, ptr(4), get().EstimatedDbSizeKb)
 
 	// Written to again within 10 minutes, so not measured again
-	require.NoError(t, controlDB.UpdateSiteAndIdentityDateFlags(get(), siteDBFiles(t, 8192, 0), &controldb.SiteIdentity{}, true, true))
+	require.NoError(t, controlDB.UpdateSiteAndIdentityDateFlags(t.Context(), get(), siteDBFiles(t, 8192, 0), &controldb.SiteIdentity{}, true, true))
 	require.Equal(t, ptr(4), get().EstimatedDbSizeKb)
 }
 
 func TestSearchSitesOrders(t *testing.T) {
 	_, controlDB := testutils.NewControlDB(t)
-	ctx, q := context.TODO(), controlDB.Queries
+	ctx, q := t.Context(), controlDB.Queries
 	now := time.Now().UnixMilli()
 
 	// Each site's last write and DB size; nil when there is none yet
@@ -80,7 +79,7 @@ func TestSearchSitesOrders(t *testing.T) {
 	}
 	ids := map[string]string{}
 	for name, flags := range sites {
-		site, err := controlDB.CreateSite()
+		site, err := controlDB.CreateSite(t.Context())
 		require.NoError(t, err)
 		ids[site.SiteDB.Subdomain] = name
 		require.NoError(t, q.UpdateSiteDateFlags(ctx, controldb.UpdateSiteDateFlagsParams{LastWriteAt: flags.lastWriteAt, EstimatedDbSizeKb: flags.sizeKB, ID: site.SiteDB.Subdomain}))
@@ -103,8 +102,8 @@ func ptr(v int64) *int64 { return &v }
 
 func TestSearchSyncSourcesFailedFirst(t *testing.T) {
 	_, controlDB := testutils.NewControlDB(t)
-	ctx, q := context.TODO(), controlDB.Queries
-	site, err := controlDB.CreateSite()
+	ctx, q := t.Context(), controlDB.Queries
+	site, err := controlDB.CreateSite(t.Context())
 	require.NoError(t, err)
 	siteID := site.SiteDB.Subdomain
 

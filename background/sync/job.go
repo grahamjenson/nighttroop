@@ -220,7 +220,7 @@ func (b *SyncJobManager) getUsernamePasswordRegion(syncSource *controldb.SiteSyn
 
 // syncSite is the site a sync source writes into, or nil when it has gone
 func (b *SyncJobManager) syncSite(ctx context.Context, siteID string) (*SyncSite, error) {
-	siteDB, siteModel, err := b.controlDB.GetSite(siteID)
+	siteDB, siteModel, err := b.controlDB.GetSite(ctx, siteID)
 	if err != nil {
 		slog.ErrorContext(ctx, "Cannot find the site for sync source", "error", err)
 		return nil, err

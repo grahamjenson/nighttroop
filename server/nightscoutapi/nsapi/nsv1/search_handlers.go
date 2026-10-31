@@ -70,7 +70,8 @@ func Slice(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 
 func Times(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// TODO this just lists everything at this point
+		// The entries are searched as any query asks, then those not at a time with the prefix are left out, so a
+		// page of the search can hold fewer than its limit
 		collection, _, err := nsutils.GetCollectionFromStringAndEnsurePermission("entries", r, nsutils.CollectionActionRead)
 		if err != nil {
 			http.NotFound(w, r)

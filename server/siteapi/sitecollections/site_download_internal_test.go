@@ -22,7 +22,7 @@ import (
 func TestDownloadData(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	siteID := site.SiteDB.Subdomain
-	_, err := site.SiteDB.Queries.CreateGlucoseReading(context.TODO(), sitedb.CreateGlucoseReadingParams{ID: "kept", Mgdl: 120, ReadingType: "sgv", OccurredAt: 1, CreatedByIdentityName: "phone"})
+	_, err := site.SiteDB.Queries.CreateGlucoseReading(t.Context(), sitedb.CreateGlucoseReadingParams{ID: "kept", Mgdl: 120, ReadingType: "sgv", OccurredAt: 1, CreatedByIdentityName: "phone"})
 	require.NoError(t, err)
 	downloadAs := func(role consts.IdentityRole) *httptest.ResponseRecorder {
 		ctx := httputils.CreateSiteContext(context.Background(), cfg, controlDB, site.SiteDB, nil, siteID, "", httputils.HTTPActionRead, httputils.AcceptTypeHTML, httputils.ContentTypeForm)
@@ -42,7 +42,7 @@ func TestDownloadData(t *testing.T) {
 	downloaded, err := sql.Open("sqlite", path)
 	require.NoError(t, err)
 	defer downloaded.Close()
-	reading, err := sitedb.New(downloaded).GetGlucoseReading(context.TODO(), sitedb.GetGlucoseReadingParams{ID: "kept"})
+	reading, err := sitedb.New(downloaded).GetGlucoseReading(t.Context(), sitedb.GetGlucoseReadingParams{ID: "kept"})
 	require.NoError(t, err)
 	require.Equal(t, 120.0, reading.Mgdl)
 

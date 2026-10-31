@@ -170,7 +170,7 @@ func TestNightscoutWebsocket(t *testing.T) {
 	})
 
 	t.Run("another site's writes are not sent", func(t *testing.T) {
-		other, err := controlDB.CreateSite()
+		other, err := controlDB.CreateSite(t.Context())
 		require.NoError(t, err)
 		client := dialWebsocket(t, ts, other.SiteDB.Subdomain, engineio.V4)
 		client.authorize(t, map[string]any{"secret": other.PwdNSToken})

@@ -1,7 +1,6 @@
 package sync
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -19,7 +18,7 @@ import (
 
 func TestBackfillStartsOneAtATimeAndRecordsWhatItDid(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
-	q, ctx, siteID, typ := controlDB.Queries, context.TODO(), site.SiteDB.Subdomain, consts.SyncSourceTypeVirtual
+	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.SyncSourceTypeVirtual
 	jobs := SetupSyncJobManager(cfg, controlDB)
 	source := func() *controldb.SiteSyncSource {
 		s, err := q.GetSyncSource(ctx, controldb.GetSyncSourceParams{SiteID: siteID, Type: typ})
@@ -78,7 +77,7 @@ func TestBackfillStartsOneAtATimeAndRecordsWhatItDid(t *testing.T) {
 
 func TestBackfillRangeOfDexcomIsTheLastDay(t *testing.T) {
 	_, _, site := testutils.NewControlDBWithSite(t)
-	backfill, err := BackfillRange(context.TODO(), site.SiteDB, consts.SyncSourceTypeDexcom, 7)
+	backfill, err := BackfillRange(t.Context(), site.SiteDB, consts.SyncSourceTypeDexcom, 7)
 	require.NoError(t, err)
 	require.InDelta(t, time.Now().UnixMilli(), backfill.To, 1000)
 	require.Equal(t, backfill.To-24*time.Hour.Milliseconds(), backfill.From)
@@ -87,7 +86,7 @@ func TestBackfillRangeOfDexcomIsTheLastDay(t *testing.T) {
 // LibreLinkUp's graph is the last 12 hours, so a Libre backfill fetches those, and runs as a backfill should
 func TestLibreBackfillFetchesTheLastTwelveHours(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
-	q, ctx, siteID, typ := controlDB.Queries, context.TODO(), site.SiteDB.Subdomain, consts.SyncSourceTypeLibre
+	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.SyncSourceTypeLibre
 	jobs := SetupSyncJobManager(cfg, controlDB)
 	enc := func(s string) *string {
 		v, err := cfg.Security.Encrypt(s)
@@ -113,7 +112,7 @@ func TestLibreBackfillFetchesTheLastTwelveHours(t *testing.T) {
 
 func TestNightscoutBackfillCopiesOlderDocuments(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
-	q, ctx, siteID, typ := controlDB.Queries, context.TODO(), site.SiteDB.Subdomain, consts.SyncSourceTypeNightscout
+	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.SyncSourceTypeNightscout
 	jobs := SetupSyncJobManager(cfg, controlDB)
 	enc := func(s string) *string {
 		v, err := cfg.Security.Encrypt(s)

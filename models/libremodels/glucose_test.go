@@ -1,7 +1,6 @@
 package libremodels_test
 
 import (
-	"context"
 	"encoding/json"
 	"testing"
 	"time"
@@ -82,10 +81,10 @@ func TestReadingToCreateDedupesRepeatedReadings(t *testing.T) {
 	first := reading(t, `{"FactoryTimestamp":"12/30/2022 4:47:40 PM","Timestamp":"12/30/2022 5:47:40 PM","ValueInMgPerDl":115}`)
 	next := reading(t, `{"FactoryTimestamp":"12/30/2022 5:02:40 PM","Timestamp":"12/30/2022 6:02:40 PM","ValueInMgPerDl":120}`)
 
-	_, err := queries.CreateGlucoseReading(context.TODO(), libremodels.ReadingToCreate(first, "libre_sync"))
+	_, err := queries.CreateGlucoseReading(t.Context(), libremodels.ReadingToCreate(first, "libre_sync"))
 	require.NoError(t, err)
-	_, err = queries.CreateGlucoseReading(context.TODO(), libremodels.ReadingToCreate(first, "libre_sync"))
+	_, err = queries.CreateGlucoseReading(t.Context(), libremodels.ReadingToCreate(first, "libre_sync"))
 	require.True(t, utilerrors.IsSQLDuplicateID(err), "second sync of the same reading should be a duplicate, got %v", err)
-	_, err = queries.CreateGlucoseReading(context.TODO(), libremodels.ReadingToCreate(next, "libre_sync"))
+	_, err = queries.CreateGlucoseReading(t.Context(), libremodels.ReadingToCreate(next, "libre_sync"))
 	require.NoError(t, err)
 }

@@ -53,12 +53,12 @@ func POSTCreateSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig)
 
 		// Check to see if there is 10k sites and return error if there is
 		if controlDB.GetNSitesDBs() > config.MaxSites {
-			// TODO make this a template like above
+			// Plain text, as there is no page for a full server yet, unlike the rate limit's above
 			http.Error(w, "Full: Too many sites", http.StatusTooManyRequests)
 			return
 		}
 
-		siteCreateResult, err := controlDB.CreateSite()
+		siteCreateResult, err := controlDB.CreateSite(r.Context())
 		if err != nil {
 			slog.ErrorContext(r.Context(), "Unable to create site", "error", err)
 			http.Error(w, "Unable to Create Site", http.StatusInternalServerError)

@@ -160,7 +160,7 @@ func TempBasalValuePtr(t Treatment) *float64 {
 		x := float64(*t.Absolute)
 		return &x
 	}
-	// TODO handle t.Percent
+	// A temp basal sent only as a percent has no rate, as that needs the profile's basal rate at the time
 	return nil
 }
 

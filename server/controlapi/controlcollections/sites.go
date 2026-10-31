@@ -147,7 +147,7 @@ func (s *SitesCollection) CreateHandler(w http.ResponseWriter, r *http.Request) 
 	var site *db.SiteCreateResult
 	if herr == nil {
 		var err error
-		if site, err = controlDB.CreateSiteWithID(model.ID); errors.Is(err, db.ErrSiteIDTaken) {
+		if site, err = controlDB.CreateSiteWithID(r.Context(), model.ID); errors.Is(err, db.ErrSiteIDTaken) {
 			herr = &apiutils.HTTPError{Status: http.StatusConflict, Message: err.Error()}
 		} else if err != nil {
 			herr = apiutils.ErrInternalServerError

@@ -29,7 +29,7 @@ func TestCreateSiteConcurrently(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			result, err := controlDB.CreateSite()
+			result, err := controlDB.CreateSite(t.Context())
 			errs[i] = err
 			if err == nil {
 				subdomains[i] = result.SiteDB.Subdomain
@@ -44,9 +44,9 @@ func TestCreateSiteConcurrently(t *testing.T) {
 		require.False(t, seen[subdomains[i]], "subdomain %s created twice", subdomains[i])
 		seen[subdomains[i]] = true
 
-		siteDB, _, err := controlDB.GetSite(subdomains[i])
+		siteDB, _, err := controlDB.GetSite(t.Context(), subdomains[i])
 		require.NoError(t, err, "site %s was not created", subdomains[i])
-		_, err = siteDB.Queries.GetMostRecentProfileStore(context.TODO())
+		_, err = siteDB.Queries.GetMostRecentProfileStore(t.Context())
 		require.NoError(t, err, "site %s DB is not usable", subdomains[i])
 	}
 }
@@ -62,13 +62,13 @@ func TestCreateSiteWhenSiteDBFails(t *testing.T) {
 	require.NoError(t, os.WriteFile(badCfg.DataDir, nil, 0o600))
 	controlDB.ServerConfig = &badCfg
 
-	_, err := controlDB.CreateSite()
+	_, err := controlDB.CreateSite(t.Context())
 	require.ErrorContains(t, err, "Site DB Creation Error")
 }
 
 func TestArchiveSite(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
-	ctx, siteID := context.TODO(), site.SiteDB.Subdomain
+	ctx, siteID := t.Context(), site.SiteDB.Subdomain
 	_, err := controlDB.Queries.DisableSite(ctx, controldb.DisableSiteParams{ID: siteID})
 	require.NoError(t, err)
 
@@ -107,8 +107,8 @@ func TestHydrateSite(t *testing.T) {
 	fileCfg.Mode = consts.Development
 	fileCfg.DataDir = t.TempDir()
 	controlDB.ServerConfig = &fileCfg
-	ctx := context.TODO()
-	site, err := controlDB.CreateSite()
+	ctx := t.Context()
+	site, err := controlDB.CreateSite(ctx)
 	require.NoError(t, err)
 	siteID := site.SiteDB.Subdomain
 	_, err = site.SiteDB.Queries.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "kept", Mgdl: 120, ReadingType: "sgv", OccurredAt: 1, CreatedByIdentityName: "phone"})
@@ -154,7 +154,7 @@ func TestHydrateSite(t *testing.T) {
 	require.Nil(t, row.DisabledAt)
 	require.NotNil(t, row.LastSeenAt)
 	require.InDelta(t, time.Now().UnixMilli(), *row.LastSeenAt, 60_000)
-	siteDB, _, err := controlDB.GetSite(siteID)
+	siteDB, _, err := controlDB.GetSite(ctx, siteID)
 	require.NoError(t, err)
 	reading, err := siteDB.Queries.GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: "kept"})
 	require.NoError(t, err)
@@ -163,7 +163,7 @@ func TestHydrateSite(t *testing.T) {
 
 func TestTruncateSite(t *testing.T) {
 	_, controlDB, site := testutils.NewControlDBWithSite(t)
-	ctx, q := context.TODO(), site.SiteDB.Queries
+	ctx, q := t.Context(), site.SiteDB.Queries
 	raw := `{"sgv":120,"device":"phone"}`
 	reading, err := q.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "reading", Mgdl: 120, ReadingType: "sgv", OccurredAt: 1, RawJsonData: &raw, CreatedByIdentityName: "phone"})
 	require.NoError(t, err)

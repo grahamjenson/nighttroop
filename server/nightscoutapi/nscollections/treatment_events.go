@@ -24,7 +24,7 @@ type treatmentEvent interface {
 	// 2. Create if the group has an event but no ID for it
 	// 3. Update if the group has an ID and an event
 	//
-	// TODO: This means events are always updated, we should selectivly update.
+	// So an event is written again on every update of its group, even when it has not changed.
 	write(ctx context.Context, q *sitedb.Queries, bundle *sitedb.EventGroupsBundle, cc nightscoutmodels.ConverterContext) error
 	// hardDelete deletes the group's event of this kind, if it has one
 	hardDelete(ctx context.Context, q *sitedb.Queries, eventGroup sitedb.EventGroup) error
@@ -258,7 +258,7 @@ var (
 		},
 		partial: nightscoutmodels.PartialTreatmentToProfileSwitch,
 		complete: func(source nightscoutmodels.Treatment, target *sitedb.ProfileSwitch) {
-			// TODO: This is the bit that will need more work, with the json of profile
+			// The profile's settings and schedules are kept from its JSON, converted to mg/dL, but not checked
 			if source.Profile != nil {
 				target.Name = source.Profile.String()
 			}

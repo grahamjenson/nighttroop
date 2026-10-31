@@ -101,7 +101,7 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 
 		// Control sign ins are the server's events, with no site
 		from := config.GeoIP.Locate(httputils.GetIPFromHTTPContext(r.Context()))
-		admin, err := loginTheControlUser(controlDB, config, username, password, totpToken)
+		admin, err := loginTheControlUser(r.Context(), controlDB, config, username, password, totpToken)
 		if err != nil {
 			controlDB.Logs.SignInFailedEvent(r.Context(), "", from)
 			errors.GenericAdminLoginError(w, r, fmt.Errorf("invalid credentials: %w", err))
@@ -133,8 +133,8 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 	}
 }
 
-func loginTheControlUser(controlDB *db.ControlDB, config *config.ServerConfig, username, password, totpToken string) (*controldb.ControlIdentity, error) {
-	admin, err := controlDB.Queries.GetControlIdentity(context.TODO(), controldb.GetControlIdentityParams{
+func loginTheControlUser(ctx context.Context, controlDB *db.ControlDB, config *config.ServerConfig, username, password, totpToken string) (*controldb.ControlIdentity, error) {
+	admin, err := controlDB.Queries.GetControlIdentity(ctx, controldb.GetControlIdentityParams{
 		Name: username,
 	})
 

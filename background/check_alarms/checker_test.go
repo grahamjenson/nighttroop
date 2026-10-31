@@ -44,7 +44,7 @@ func newRig(t *testing.T) *rig {
 
 // reading adds a reading at the rig's time and publishes it, as the site's writes do
 func (r *rig) reading(mgdl float64) {
-	row, err := r.db.CreateGlucoseReading(context.TODO(), sitedb.CreateGlucoseReadingParams{
+	row, err := r.db.CreateGlucoseReading(context.Background(), sitedb.CreateGlucoseReadingParams{
 		ID: fmt.Sprint(r.now.UnixMilli()), Mgdl: mgdl, ReadingType: "sgv", OccurredAt: r.now.UnixMilli(), CreatedByIdentityName: "test",
 	})
 	require.NoError(r.t, err)
@@ -54,7 +54,7 @@ func (r *rig) reading(mgdl float64) {
 // check runs a check, of the changed sites or all, and is what it sent, by identity
 func (r *rig) check(all bool) map[int64]alarms.Checked {
 	r.sent = nil
-	require.NoError(r.t, r.checker.Check(context.TODO(), all))
+	require.NoError(r.t, r.checker.Check(context.Background(), all))
 	sent := map[int64]alarms.Checked{}
 	for _, checked := range r.sent {
 		sent[checked.IdentityID] = checked
@@ -63,7 +63,7 @@ func (r *rig) check(all bool) map[int64]alarms.Checked {
 }
 
 func (r *rig) identities() []*controldb.SiteIdentity {
-	identities, err := r.control.AllSiteIdentities(context.TODO(), controldb.AllSiteIdentitiesParams{SiteID: r.site})
+	identities, err := r.control.AllSiteIdentities(context.Background(), controldb.AllSiteIdentitiesParams{SiteID: r.site})
 	require.NoError(r.t, err)
 	return identities
 }
@@ -74,7 +74,7 @@ func notified(kind alarms.Kind, alarm alarms.Type, at time.Time) []alarms.Notifi
 
 func TestEachIdentityIsCheckedOnNewReadingsAndPeriodically(t *testing.T) {
 	r := newRig(t)
-	ctx := context.TODO()
+	ctx := t.Context()
 	// The site turns on the urgent low, and one of its identities turns it off for itself
 	require.NoError(t, r.control.UpdateSitesSettings(ctx, controldb.UpdateSitesSettingsParams{ID: r.site, AlarmUrgentLowEnabled: new(true)}))
 	identities := r.identities()
@@ -125,7 +125,7 @@ func TestEachIdentityIsCheckedOnNewReadingsAndPeriodically(t *testing.T) {
 func TestNoDataStartsOnThePeriodicCheck(t *testing.T) {
 	r := newRig(t)
 	identity := r.identities()[0]
-	require.NoError(t, r.control.UpdateSiteIdentitySettings(context.TODO(), controldb.UpdateSiteIdentitySettingsParams{
+	require.NoError(t, r.control.UpdateSiteIdentitySettings(t.Context(), controldb.UpdateSiteIdentitySettingsParams{
 		ID: identity.ID, SiteID: r.site, AlarmNoDataEnabled: new(true), AlarmNoDataMinutes: new(int64(20)),
 	}))
 	r.reading(100)
@@ -140,7 +140,7 @@ func TestNoDataStartsOnThePeriodicCheck(t *testing.T) {
 
 func TestTurningAlarmsOffClearsThem(t *testing.T) {
 	r := newRig(t)
-	ctx := context.TODO()
+	ctx := t.Context()
 	identity := r.identities()[0]
 	require.NoError(t, r.control.UpdateSiteIdentitySettings(ctx, controldb.UpdateSiteIdentitySettingsParams{ID: identity.ID, SiteID: r.site, AlarmUrgentLowEnabled: new(true)}))
 	r.reading(50)
@@ -158,7 +158,7 @@ func TestTurningAlarmsOffClearsThem(t *testing.T) {
 
 func TestSitesWithoutAlarmsAreNotChecked(t *testing.T) {
 	r := newRig(t)
-	sites, err := r.control.GetSiteIDsWithAlarms(context.TODO())
+	sites, err := r.control.GetSiteIDsWithAlarms(t.Context())
 	require.NoError(t, err)
 	require.NotContains(t, sites, r.site)
 	r.reading(40)
@@ -169,7 +169,7 @@ func TestSitesWithoutAlarmsAreNotChecked(t *testing.T) {
 
 func TestALowLastsOverEarlierReadings(t *testing.T) {
 	r := newRig(t)
-	ctx := context.TODO()
+	ctx := t.Context()
 	require.NoError(t, r.control.UpdateSitesSettings(ctx, controldb.UpdateSitesSettingsParams{ID: r.site, AlarmLowEnabled: new(true), RangeLowMgdl: new(int64(72)), AlarmLowMinutes: new(int64(5))}))
 	r.reading(70)
 	require.Empty(t, r.check(false), "one reading under it is not enough")
@@ -182,7 +182,7 @@ func TestALowLastsOverEarlierReadings(t *testing.T) {
 
 func TestDisabledIdentitiesAreNotChecked(t *testing.T) {
 	r := newRig(t)
-	ctx := context.TODO()
+	ctx := t.Context()
 	require.NoError(t, r.control.UpdateSitesSettings(ctx, controldb.UpdateSitesSettingsParams{ID: r.site, AlarmUrgentLowEnabled: new(true)}))
 	disabled := r.identities()[0]
 	require.NoError(t, r.control.UpdateSiteIdentityEnabled(ctx, controldb.UpdateSiteIdentityEnabledParams{SiteID: r.site, ID: disabled.ID, Enabled: false}))
@@ -194,7 +194,7 @@ func TestDisabledIdentitiesAreNotChecked(t *testing.T) {
 
 func TestASnoozeIsTheIdentitysOwn(t *testing.T) {
 	r := newRig(t)
-	require.NoError(t, r.control.UpdateSitesSettings(context.TODO(), controldb.UpdateSitesSettingsParams{ID: r.site, AlarmUrgentLowEnabled: new(true)}))
+	require.NoError(t, r.control.UpdateSitesSettings(t.Context(), controldb.UpdateSitesSettingsParams{ID: r.site, AlarmUrgentLowEnabled: new(true)}))
 	identities := r.identities()
 	snoozer, other := identities[0].ID, identities[1].ID
 	r.reading(50)
@@ -219,13 +219,13 @@ func TestASnoozeIsTheIdentitysOwn(t *testing.T) {
 
 // snooze snoozes an identity's alarm until a time, as the site and a socket's ack do
 func (r *rig) snooze(identityID int64, alarm alarms.Type, until time.Time) {
-	require.NoError(r.t, r.checker.controlDB.Live.Queries.SnoozeAlarm(context.TODO(), livedb.SnoozeAlarmParams{
+	require.NoError(r.t, r.checker.controlDB.Live.Queries.SnoozeAlarm(context.Background(), livedb.SnoozeAlarmParams{
 		SiteID: r.site, IdentityID: identityID, Type: alarm, Until: until.UnixMilli()}))
 }
 
 // kept are the site's alarms the checker keeps between checks
 func (r *rig) kept() []*livedb.Alarm {
-	rows, err := r.checker.controlDB.Live.Queries.SiteAlarms(context.TODO(), livedb.SiteAlarmsParams{SiteID: r.site})
+	rows, err := r.checker.controlDB.Live.Queries.SiteAlarms(context.Background(), livedb.SiteAlarmsParams{SiteID: r.site})
 	require.NoError(r.t, err)
 	return rows
 }
@@ -233,7 +233,7 @@ func (r *rig) kept() []*livedb.Alarm {
 func TestEachChangeToAnActiveAlarmIsPublished(t *testing.T) {
 	r := newRig(t)
 	identity := r.identities()[0]
-	require.NoError(t, r.control.UpdateSiteIdentitySettings(context.TODO(), controldb.UpdateSiteIdentitySettingsParams{ID: identity.ID, SiteID: r.site, AlarmUrgentLowEnabled: new(true)}))
+	require.NoError(t, r.control.UpdateSiteIdentitySettings(t.Context(), controldb.UpdateSiteIdentitySettingsParams{ID: identity.ID, SiteID: r.site, AlarmUrgentLowEnabled: new(true)}))
 	var changes []string
 	r.checker.events.Subscribe(r.site, func(event events.Event) {
 		if row, ok := event.Model.(*livedb.Alarm); ok {
@@ -254,7 +254,7 @@ func TestEachChangeToAnActiveAlarmIsPublished(t *testing.T) {
 	require.NotEmpty(t, r.kept(), "its snooze is kept after it clears")
 
 	// Its creating and deleting are kept in the logs DB's events, newest first, as the live DB's alarms are not
-	recorded, err := r.checker.controlDB.Logs.Queries.SearchEvents(context.TODO(), logsdb.SearchEventsParams{SiteID: &r.site, Search: new("alarm_"), Limit: 10})
+	recorded, err := r.checker.controlDB.Logs.Queries.SearchEvents(t.Context(), logsdb.SearchEventsParams{SiteID: &r.site, Search: new("alarm_"), Limit: 10})
 	require.NoError(t, err)
 	var names, attributes []string
 	for _, event := range recorded {
@@ -269,7 +269,7 @@ func TestASnoozeDuringACheckIsKept(t *testing.T) {
 	r := newRig(t)
 	live := r.checker.controlDB.Live.Queries
 	identity := r.identities()[0].ID
-	require.NoError(t, r.control.UpdateSiteIdentitySettings(context.TODO(), controldb.UpdateSiteIdentitySettingsParams{ID: identity, SiteID: r.site, AlarmUrgentLowEnabled: new(true)}))
+	require.NoError(t, r.control.UpdateSiteIdentitySettings(t.Context(), controldb.UpdateSiteIdentitySettingsParams{ID: identity, SiteID: r.site, AlarmUrgentLowEnabled: new(true)}))
 	r.reading(50)
 	require.Len(t, r.check(false), 1)
 	started := r.kept()[0]
@@ -280,8 +280,8 @@ func TestASnoozeDuringACheckIsKept(t *testing.T) {
 	until := r.now.Add(30 * time.Minute).UnixMilli()
 	r.snooze(identity, alarms.UrgentLow, r.now.Add(30*time.Minute))
 	stale := livedb.UpsertAlarmParams(*started)
-	require.NoError(t, live.UpsertAlarm(context.TODO(), stale))
-	require.NoError(t, live.DeleteAlarm(context.TODO(), livedb.DeleteAlarmParams{SiteID: r.site, IdentityID: identity, Type: alarms.UrgentLow}))
+	require.NoError(t, live.UpsertAlarm(t.Context(), stale))
+	require.NoError(t, live.DeleteAlarm(t.Context(), livedb.DeleteAlarmParams{SiteID: r.site, IdentityID: identity, Type: alarms.UrgentLow}))
 	kept := *started
 	kept.SnoozedUntil = until
 	require.Equal(t, []*livedb.Alarm{&kept}, r.kept(), "the snooze is kept, and the alarm is not deleted")
@@ -294,7 +294,7 @@ func TestASnoozeDuringACheckIsKept(t *testing.T) {
 func TestNoDataLastsOverALongGap(t *testing.T) {
 	r := newRig(t)
 	identity := r.identities()[0]
-	require.NoError(t, r.control.UpdateSiteIdentitySettings(context.TODO(), controldb.UpdateSiteIdentitySettingsParams{
+	require.NoError(t, r.control.UpdateSiteIdentitySettings(t.Context(), controldb.UpdateSiteIdentitySettingsParams{
 		ID: identity.ID, SiteID: r.site, AlarmNoDataEnabled: new(true), AlarmNoDataMinutes: new(int64(20)),
 	}))
 	r.reading(100)
@@ -313,12 +313,12 @@ func TestNoDataLastsOverALongGap(t *testing.T) {
 func TestNoDataIsMeasuredFromTheNewestCGMReading(t *testing.T) {
 	r := newRig(t)
 	identity := r.identities()[0]
-	require.NoError(t, r.control.UpdateSiteIdentitySettings(context.TODO(), controldb.UpdateSiteIdentitySettingsParams{
+	require.NoError(t, r.control.UpdateSiteIdentitySettings(t.Context(), controldb.UpdateSiteIdentitySettingsParams{
 		ID: identity.ID, SiteID: r.site, AlarmNoDataEnabled: new(true), AlarmNoDataMinutes: new(int64(20)),
 	}))
 	r.reading(100)
 	r.now = r.now.Add(3 * time.Hour)
-	_, err := r.db.CreateGlucoseReading(context.TODO(), sitedb.CreateGlucoseReadingParams{
+	_, err := r.db.CreateGlucoseReading(t.Context(), sitedb.CreateGlucoseReadingParams{
 		ID: "meter", Mgdl: 110, ReadingType: "mbg", OccurredAt: r.now.UnixMilli(), CreatedByIdentityName: "test",
 	})
 	require.NoError(t, err)
@@ -329,7 +329,7 @@ func TestNoDataIsMeasuredFromTheNewestCGMReading(t *testing.T) {
 func TestALongHighAtManyReadingsAMinute(t *testing.T) {
 	r := newRig(t)
 	identity := r.identities()[0]
-	require.NoError(t, r.control.UpdateSiteIdentitySettings(context.TODO(), controldb.UpdateSiteIdentitySettingsParams{
+	require.NoError(t, r.control.UpdateSiteIdentitySettings(t.Context(), controldb.UpdateSiteIdentitySettingsParams{
 		ID: identity.ID, SiteID: r.site, AlarmHighEnabled: new(true), RangeHighMgdl: new(int64(180)), AlarmHighMinutes: new(int64(120)),
 	}))
 	// Ten readings a minute for 120 minutes, each more than 10 mg/dL from the others within a minute, so none is the
@@ -344,7 +344,7 @@ func TestALongHighAtManyReadingsAMinute(t *testing.T) {
 
 // status adds a device's status at the rig's time and publishes it, as the site's writes do
 func (r *rig) status(device string, battery float64, charging bool) {
-	row, err := r.db.CreateDeviceReport(context.TODO(), sitedb.CreateDeviceReportParams{
+	row, err := r.db.CreateDeviceReport(context.Background(), sitedb.CreateDeviceReportParams{
 		ID: fmt.Sprint(device, r.now.UnixMilli()), CreatedByDeviceName: &device, DeviceBatteryPercent: &battery, IsDeviceCharging: &charging,
 		OccurredAt: r.now.UnixMilli(), CreatedByIdentityName: "test",
 	})
@@ -357,7 +357,7 @@ func (r *rig) status(device string, battery float64, charging bool) {
 func TestDeviceBatteryAlarm(t *testing.T) {
 	r := newRig(t)
 	identity := r.identities()[0]
-	require.NoError(t, r.control.UpdateSiteIdentitySettings(context.TODO(), controldb.UpdateSiteIdentitySettingsParams{
+	require.NoError(t, r.control.UpdateSiteIdentitySettings(t.Context(), controldb.UpdateSiteIdentitySettingsParams{
 		ID: identity.ID, SiteID: r.site, AlarmDeviceBatteryLowEnabled: new(true), AlarmDeviceBatteryLowDevicesJson: &datatypes.DeviceNames{"phone"},
 	}))
 

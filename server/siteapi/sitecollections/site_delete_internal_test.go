@@ -30,7 +30,7 @@ func TestDeleteSite(t *testing.T) {
 		return w
 	}
 	state := func() string {
-		row, err := controlDB.Queries.GetSiteInAnyState(context.TODO(), controldb.GetSiteInAnyStateParams{ID: siteID})
+		row, err := controlDB.Queries.GetSiteInAnyState(t.Context(), controldb.GetSiteInAnyStateParams{ID: siteID})
 		require.NoError(t, err)
 		return row.State
 	}
@@ -47,10 +47,10 @@ func TestDeleteSite(t *testing.T) {
 	require.Contains(t, w.Header().Get("Set-Cookie"), "Max-Age=0", "the admin is signed out")
 	require.NotEmpty(t, uploaded)
 	require.Equal(t, "archived", state())
-	_, _, err := controlDB.GetSite(siteID)
+	_, _, err := controlDB.GetSite(t.Context(), siteID)
 	require.Error(t, err, "it is no longer served")
 
-	events, err := controlDB.Logs.Queries.SearchEvents(context.TODO(), logsdb.SearchEventsParams{SiteID: &siteID, Limit: 10})
+	events, err := controlDB.Logs.Queries.SearchEvents(t.Context(), logsdb.SearchEventsParams{SiteID: &siteID, Limit: 10})
 	require.NoError(t, err)
 	require.Equal(t, "site_archived", events[0].Name)
 	require.Equal(t, `{"by":"site admin"}`, *events[0].Attributes)

@@ -36,6 +36,7 @@
     1. Block IP addresses
     1. Show all rate limits for users
     1. Restore one site from its backup
+    1. P3: Manage the control admins: list them, reset another's password or TOTP, change their role or delete one
 
 1. Accounts
     1. Recovering a site's admin without the initial backup key
@@ -52,6 +53,11 @@
 1. Docs hosting
 1. Fuzz testing beyond the API (`tests/api/fuzz_test.go`)
 1. Performance testing (cost estimate for running full node)
+1. Nightscout API:
+    1. P2: Check If-Unmodified-Since on API v3 replace and patch, in the same query as the update
+    1. P3: A temp basal sent only as a percent, given a rate from the profile's basal at the time
+    1. P4: Only write a treatment's events that changed, rather than every one on each update
+    1. P4: Keep when a site's settings last changed, for API v3 lastModified
 
 ## Bugs
 
