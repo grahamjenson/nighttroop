@@ -66,13 +66,7 @@ ASSERT_EQUALS "mmol/L" "@result.units"
 # We check that all the values are correct
 
 # SET TO MG/DL
-NAME update_unit_to_mgdl
-PATCH http://{{ site }}/api/v3/settings/units
-H Authorization: Bearer {{ jwt }}
-B {"value":  "mg/dL"}
-ASSERT_STATUS 200
-ASSERT_EQUALS "units" "@result.identifier"
-ASSERT_EQUALS "mg/dL" "@result.value"
+INCLUDE steps/ns_units_mgdl.steps
 
 
 NAME get_unlabeled_mmol_entry
