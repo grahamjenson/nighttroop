@@ -46,3 +46,20 @@ func TestScrollTurnsTheWheelByPixels(t *testing.T) {
 	_, err = ParseActionFile(fsys, "site/bad.bdd")
 	require.ErrorContains(t, err, "site/bad.bdd:2: SCROLL needs a number of pixels")
 }
+
+func TestTitleAssertKeepsTheWholeTitle(t *testing.T) {
+	fsys := fstest.MapFS{
+		"site/title.bdd": {Data: []byte("GOTO /data/glucose\nASSERT_TITLE Glucose Readings · Nighttroop\n")},
+		"site/bad.bdd":   {Data: []byte("ASSERT_TITLE Nighttroop\n")},
+	}
+
+	file, err := ParseActionFile(fsys, "site/title.bdd")
+	require.NoError(t, err)
+	require.Len(t, file.Actions, 1)
+	asserts := file.Actions[0].(*Goto).Asserts
+	require.Len(t, asserts, 1)
+	require.Equal(t, "Glucose Readings · Nighttroop", asserts[0].(*AssertTitle).Title)
+
+	_, err = ParseActionFile(fsys, "site/bad.bdd")
+	require.ErrorContains(t, err, "assert_title before action")
+}

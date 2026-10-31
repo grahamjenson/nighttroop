@@ -1,11 +1,34 @@
 package heading
 
-// Page is a page's title, with what the page shows, given as its children, below it
+import (
+	"context"
+
+	"nighttroop.t1d.nz/utils/httputils"
+)
+
+// Page is a page's title, with what the page shows, given as its children, below it. The title also names the
+// browser's tab: htmx sets the tab's title from it as the page is opened from a menu, and on a full page load it is
+// the document's first title, before the base's own.
 templ Page(title string) {
+	@Title(title)
 	<div>
 		<h1 class="text-2xl font-bold">{ title }</h1>
 		<p class="mt-1 text-gray-500">
 			{ children... }
 		</p>
 	</div>
+}
+
+// Title names the browser's tab for a page, e.g. Glucose Readings · Nighttroop, for a page with no heading.Page
+templ Title(title string) {
+	<title>{ title } · { Brand(ctx) }</title>
+}
+
+// Brand is what every tab's title ends with: Nighttroop Control on the control site, and Nighttroop elsewhere. A base's
+// own title, after the page's, is the brand alone, for pages with no title of their own.
+func Brand(ctx context.Context) string {
+	if httputils.GetControlContext(ctx) != nil {
+		return "Nighttroop Control"
+	}
+	return "Nighttroop"
 }

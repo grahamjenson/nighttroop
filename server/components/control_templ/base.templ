@@ -23,7 +23,6 @@ templ ControlBase() {
 		<head>
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-			<title>NightTroop Control</title>
 			<link rel="icon" type="image/x-icon" href="/favicon.ico"/>
 			<link rel="apple-touch-icon" href="/logo.png"/>
 			<!-- Tailwind CSS -->
@@ -53,6 +52,8 @@ templ ControlBase() {
 				{ children... }
 			</div>
 			@footer.Footer()
+			// After the page's own title, so it names the tab only when the page has none, see heading.Page
+			<title>Nighttroop Control</title>
 		</body>
 	</html>
 }

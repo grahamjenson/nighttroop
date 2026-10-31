@@ -387,3 +387,33 @@ func (r *AssertPath) Execute(t *testing.T, ctx map[string]any, page playwright.P
 func (r *AssertPath) ToErrorLine() string {
 	return fmt.Sprintf("%s:%d: expected path to be %s", r.TestPath, r.TestLine, r.URLPath)
 }
+
+// AssertTitle checks the browser tab's title, e.g. ASSERT_TITLE Glucose Readings · Nighttroop
+type AssertTitle struct {
+	Title string
+
+	TestPath string
+	TestLine int
+}
+
+// Execute waits up to visibleWait for the title, as htmx sets it once a page opened from a menu is swapped in
+func (r *AssertTitle) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
+	title := ""
+	for deadline := time.Now().Add(visibleWait * time.Millisecond); ; time.Sleep(50 * time.Millisecond) {
+		var err error
+		if title, err = page.Title(); err != nil {
+			t.Fatalf("\n\n%s\n failed to read the page's title: %v\n\n", r.ToErrorLine(), err)
+		}
+		if title == r.Title || time.Now().After(deadline) {
+			break
+		}
+	}
+	if title != r.Title {
+		t.Fatalf("\n\n%s\n assertTitle failed: expected title %q, got %q\n\n", r.ToErrorLine(), r.Title, title)
+	}
+	return nil
+}
+
+func (r *AssertTitle) ToErrorLine() string {
+	return fmt.Sprintf("%s:%d: expected title to be %s", r.TestPath, r.TestLine, r.Title)
+}

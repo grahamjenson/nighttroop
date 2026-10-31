@@ -32,8 +32,9 @@ var embeddedFiles embed.FS
 const bddShards = 4
 
 func TestSite(t *testing.T) {
-	// Every scenario logs in from 127.0.0.1, so the per-IP login burst is shared across all files
-	t.Setenv("SITE_LOGIN_PER_MINUTE_BURST", "100")
+	// Every scenario logs in from 127.0.0.1, and the shards share one config's rate limiters, so the per-IP login
+	// burst is shared across all files. They use nearly 100 attempts, so leave room for more files.
+	t.Setenv("SITE_LOGIN_PER_MINUTE_BURST", "1000")
 
 	// Start Playwright
 	pw, err := playwright.Run()

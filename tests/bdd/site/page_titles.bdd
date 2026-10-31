@@ -1,0 +1,41 @@
+INCLUDE steps/new_site_admin.steps
+
+// Each page names the browser's tab, so tabs, history and bookmarks of the site's pages can be told apart. Login
+// opens the summary.
+ASSERT_PATH /
+ASSERT_TITLE Summary · Nighttroop
+
+// A page opened from a menu is swapped in by htmx, which names the tab from the page
+CLICK #site--settings-menu
+CLICK #site--data--glucose-button
+ASSERT_STATUS 200
+ASSERT_PATH /data/glucose
+ASSERT_TITLE Glucose Readings · Nighttroop
+
+CLICK #site--settings-menu
+CLICK #site--settings--identities-button
+ASSERT_STATUS 200
+ASSERT_TITLE Users & Devices · Nighttroop
+
+CLICK #site--settings-menu
+CLICK #site--settings--alarms-button
+ASSERT_STATUS 200
+ASSERT_TITLE Alarms · Nighttroop
+
+// A page loaded in full has the same title, before the base's own
+GOTO /settings/sync
+ASSERT_STATUS 200
+ASSERT_TITLE Sync Settings · Nighttroop
+
+// Back on the summary from the logo, the tab is named for it again
+CLICK #site--nav--home
+ASSERT_NEW_URL
+ASSERT_PATH /
+ASSERT_TITLE Summary · Nighttroop
+
+// The login page has no title of its own, so the tab is named by the base's
+CLICK #site--settings-menu
+CLICK #site--settings--logout-button
+ASSERT_NEW_URL
+ASSERT_PATH /login
+ASSERT_TITLE Nighttroop
