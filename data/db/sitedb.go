@@ -57,7 +57,7 @@ func (db *SiteDB) EstimatedSizeKB() *int64 {
 // WARNING THIS IS A BEST TRY FUNCTION ALL ERRORS ARE SWALLOWED
 
 func (db *SiteDB) URL() string {
-	return fmt.Sprintf("%s://%s.%s:%d", db.ServerConfig.HostProtocol, db.Subdomain, db.ServerConfig.HostName, db.ServerConfig.HostPort)
+	return db.ServerConfig.SiteURL(db.Subdomain)
 }
 
 func (db *SiteDB) NSURL() string {

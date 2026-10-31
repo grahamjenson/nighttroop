@@ -15,6 +15,18 @@ ASSERT_VISIBLE #public--logo
 ASSERT_VISIBLE #public--copy-button
 SCREENSHOT site_created
 
+// Login is disabled until a code from the authenticator app matches the TOTP secret, and a wrong code says so
+ASSERT_DRAWN #public--login-button[disabled]
+INPUT #public--site-info--totp 000000
+CLICK #public--totp-check-button
+ASSERT_VISIBLE #public--totp-failed
+ASSERT_DRAWN #public--login-button[disabled]
+SCREENSHOT totp_check_failed
+INPUT #public--site-info--totp 123123
+CLICK #public--totp-check-button
+ASSERT_VISIBLE #public--totp-checked
+ASSERT_NOT_VISIBLE #public--login-button[disabled]
+SCREENSHOT totp_checked
 CLICK #public--login-button
 ASSERT_NEW_PAGE
 ASSERT_PATH /login

@@ -143,21 +143,71 @@ templ CreateSiteInfo(newsite publicmodels.NewSiteInfo) {
 				});
 			</script>
 		}
-		@step("2", "Log in to your site", "Use the admin password and a code from your authenticator app.") {
-			<div class="flex justify-center p-6">
-				@button.Button(button.Props{
-					ID:     "public--login-button",
-					Size:   button.SizeLg,
-					Class:  "h-14 px-10 rounded-full text-lg font-semibold text-white bg-brand-night hover:bg-brand-night/90 shadow-lg shadow-brand-night/30 transition-all duration-200",
-					Href:   newsite.URL,
-					Target: "_blank",
-				}) {
-					Login
-					@icon.ExternalLink(icon.Props{Class: "size-5"})
+		@step("2", "Check your authenticator app", "Enter the code it shows for the TOTP secret above, to be sure it is set up before you log in.") {
+			<form
+				id="public--totp-check"
+				class="flex flex-wrap items-center justify-center gap-3 px-5 pb-5"
+				hx-post="/site/totp"
+				hx-target="#public--totp-result"
+				hx-swap="innerHTML"
+			>
+				<input type="hidden" name="site" value={ newsite.SiteID() }/>
+				<input type="hidden" name="secret" value={ newsite.AdminTotpSecret }/>
+				<input
+					id="public--site-info--totp"
+					name="totp"
+					inputmode="numeric"
+					autocomplete="one-time-code"
+					maxlength="6"
+					placeholder="123456"
+					class="w-32 rounded-lg border border-slate-200 px-3 py-2 text-center font-mono text-lg tracking-widest"
+				/>
+				@button.Button(button.Props{ID: "public--totp-check-button", Type: button.TypeSubmit, Class: "bg-brand-night hover:bg-brand-night/90"}) {
+					Check code
 				}
-			</div>
+				<div id="public--totp-result" class="w-full text-center text-sm"></div>
+			</form>
+		}
+		@step("3", "Log in to your site", "Use the admin password and a code from your authenticator app.") {
+			@loginButton("", false)
 		}
 	</div>
+}
+
+// loginButton opens the new site's login, disabled until the authenticator's code has been checked; oob swaps it into
+// the page, from a code's check
+templ loginButton(url string, oob bool) {
+	<div id="public--login" class="flex justify-center p-6" { oobAttributes(oob)... }>
+		@button.Button(button.Props{
+			ID:       "public--login-button",
+			Size:     button.SizeLg,
+			Class:    "h-14 px-10 rounded-full text-lg font-semibold text-white bg-brand-night hover:bg-brand-night/90 shadow-lg shadow-brand-night/30 transition-all duration-200",
+			Href:     url,
+			Target:   "_blank",
+			Disabled: url == "",
+		}) {
+			Login
+			@icon.ExternalLink(icon.Props{Class: "size-5"})
+		}
+	</div>
+}
+
+func oobAttributes(oob bool) templ.Attributes {
+	if oob {
+		return templ.Attributes{"hx-swap-oob": "true"}
+	}
+	return nil
+}
+
+// TOTPChecked is a code from the authenticator matching the new site's TOTP secret, and its login button enabled
+templ TOTPChecked(url string) {
+	<p id="public--totp-checked" class="font-medium text-green-700">That code matches: your authenticator app is set up.</p>
+	@loginButton(url, true)
+}
+
+// TOTPCheckFailed is a code not matching the new site's TOTP secret
+templ TOTPCheckFailed() {
+	<p id="public--totp-failed" class="font-medium text-red-700">That code does not match. Check the app has the secret above and your phone's time is right, then try its next code.</p>
 }
 
 templ step(n, title, hint string) {
