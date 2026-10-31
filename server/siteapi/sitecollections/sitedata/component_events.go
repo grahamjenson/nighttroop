@@ -79,11 +79,7 @@ func (s *ComponentEventsCollection) UpdateHTMXResponse(model *sitemodels.SiteCom
 // Get Model
 // /////
 func (s *ComponentEventsCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.ComponentEvent, error) {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.GetComponentEvent(ctx, sitedb.GetComponentEventParams{ID: id})
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).GetComponentEvent, sitedb.GetComponentEventParams{ID: id})
 }
 
 // ToModel is the site model of a row
@@ -101,11 +97,7 @@ func (s *ComponentEventsCollection) GetHTMXResponse(model *sitemodels.SiteCompon
 // ///
 
 func (s *ComponentEventsCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.ComponentEvent, error) {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.AllComponentEvents(ctx, siteapiutils.QueryToAllComponentEvents(query))
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).AllComponentEvents, siteapiutils.QueryToAllComponentEvents(query))
 }
 
 func (s *ComponentEventsCollection) SearchHTMXResponse(models []*sitemodels.SiteComponentEvent, query *apiutils.Query) templ.Component {

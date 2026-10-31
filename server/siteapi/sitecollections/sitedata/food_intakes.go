@@ -82,11 +82,7 @@ func (s *FoodIntakesCollection) UpdateHTMXResponse(model *sitemodels.SiteFoodInt
 // Get Model
 // /////
 func (s *FoodIntakesCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.FoodIntake, error) {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.GetFoodIntake(ctx, sitedb.GetFoodIntakeParams{ID: id})
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).GetFoodIntake, sitedb.GetFoodIntakeParams{ID: id})
 }
 
 // ToModel is the site model of a row
@@ -104,11 +100,7 @@ func (s *FoodIntakesCollection) GetHTMXResponse(model *sitemodels.SiteFoodIntake
 // ///
 
 func (s *FoodIntakesCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.FoodIntake, error) {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.AllFoodIntakes(ctx, siteapiutils.QueryToAllFoodIntakes(query))
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).AllFoodIntakes, siteapiutils.QueryToAllFoodIntakes(query))
 }
 
 func (s *FoodIntakesCollection) SearchHTMXResponse(models []*sitemodels.SiteFoodIntake, query *apiutils.Query) templ.Component {

@@ -91,11 +91,7 @@ func (s *TempTargetsCollection) UpdateHTMXResponse(model *sitemodels.SiteTempTar
 // Get Model
 // /////
 func (s *TempTargetsCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.TempTarget, error) {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.GetTempTarget(ctx, sitedb.GetTempTargetParams{ID: id})
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).GetTempTarget, sitedb.GetTempTargetParams{ID: id})
 }
 
 // ToModel is the site model of a row
@@ -113,11 +109,7 @@ func (s *TempTargetsCollection) GetHTMXResponse(model *sitemodels.SiteTempTarget
 // ///
 
 func (s *TempTargetsCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.TempTarget, error) {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.AllTempTargets(ctx, siteapiutils.QueryToAllTempTargets(query))
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).AllTempTargets, siteapiutils.QueryToAllTempTargets(query))
 }
 
 func (s *TempTargetsCollection) SearchHTMXResponse(models []*sitemodels.SiteTempTarget, query *apiutils.Query) templ.Component {

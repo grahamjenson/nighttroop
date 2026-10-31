@@ -81,11 +81,7 @@ func (s *GlucoseReadingsCollection) UpdateHTMXResponse(model *sitemodels.SiteGlu
 // Get Model
 // /////
 func (s *GlucoseReadingsCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.GlucoseReading, error) {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: id})
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).GetGlucoseReading, sitedb.GetGlucoseReadingParams{ID: id})
 }
 
 // ToModel is the site model of a row
@@ -103,11 +99,7 @@ func (s *GlucoseReadingsCollection) GetHTMXResponse(model *sitemodels.SiteGlucos
 // ///
 
 func (s *GlucoseReadingsCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.GlucoseReading, error) {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.AllGlucoseReadings(ctx, siteapiutils.QueryToAllGlucoseReadings(query))
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).AllGlucoseReadings, siteapiutils.QueryToAllGlucoseReadings(query))
 }
 
 func (s *GlucoseReadingsCollection) SearchHTMXResponse(models []*sitemodels.SiteGlucoseReading, query *apiutils.Query) templ.Component {

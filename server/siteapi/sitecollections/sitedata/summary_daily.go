@@ -43,19 +43,11 @@ func (s *SummaryDailyCollection) ToModel(row *sitedb.SummaryPeriod, siteContext 
 }
 
 func (s *SummaryDailyCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.SummaryPeriod, error) {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.GetSummaryPeriod(ctx, sitedb.GetSummaryPeriodParams{Period: "day", Date: id})
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).GetSummaryPeriod, sitedb.GetSummaryPeriodParams{Period: "day", Date: id})
 }
 
 func (s *SummaryDailyCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.SummaryPeriod, error) {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.SearchSummaryPeriods(ctx, sitedb.SearchSummaryPeriodsParams{Period: "day", Limit: query.Limit, Skip: query.Skip})
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).SearchSummaryPeriods, sitedb.SearchSummaryPeriodsParams{Period: "day", Limit: query.Limit, Skip: query.Skip})
 }
 
 // CreateRow builds the model's date again, a day before today in the site's timezone and no more than a year ago

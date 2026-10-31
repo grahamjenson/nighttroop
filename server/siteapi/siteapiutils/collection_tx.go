@@ -107,16 +107,22 @@ func (t *CollectionTx) Rollback() {
 	}
 }
 
+// SiteQuery runs query, e.g. (*sitedb.Queries).GetInsulinDose, with params in the transaction on the site's DB
+func SiteQuery[P, R any](ctx context.Context, collectionTx *CollectionTx, query func(*sitedb.Queries, context.Context, P) (R, error), params P) (R, error) {
+	q, err := collectionTx.Site()
+	if err != nil {
+		var none R
+		return none, err
+	}
+	return query(q, ctx, params)
+}
+
 // SoftDelete soft deletes the site row with id, recording who deleted it.
 // softDelete is the row's query, e.g. (*sitedb.Queries).SoftDeleteInsulinDose.
 func SoftDelete[P ~struct {
 	UpdatedByIdentityName *string
 	ID                    string
 }](ctx context.Context, collectionTx *CollectionTx, id string, siteContext *httputils.SiteContext, softDelete func(*sitedb.Queries, context.Context, P) (sql.Result, error)) error {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return err
-	}
-	_, err = softDelete(q, ctx, P{UpdatedByIdentityName: &siteContext.IdentityModel.Name, ID: id})
+	_, err := SiteQuery(ctx, collectionTx, softDelete, P{UpdatedByIdentityName: &siteContext.IdentityModel.Name, ID: id})
 	return err
 }

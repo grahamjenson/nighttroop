@@ -80,11 +80,7 @@ func (s *ProfileSwitchesCollection) UpdateHTMXResponse(model *sitemodels.SitePro
 // Get Model
 // /////
 func (s *ProfileSwitchesCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.ProfileSwitch, error) {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.GetProfileSwitch(ctx, sitedb.GetProfileSwitchParams{ID: id})
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).GetProfileSwitch, sitedb.GetProfileSwitchParams{ID: id})
 }
 
 // ToModel is the site model of a row
@@ -102,11 +98,7 @@ func (s *ProfileSwitchesCollection) GetHTMXResponse(model *sitemodels.SiteProfil
 // ///
 
 func (s *ProfileSwitchesCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.ProfileSwitch, error) {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.AllProfileSwitches(ctx, siteapiutils.QueryToAllProfileSwitches(query))
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).AllProfileSwitches, siteapiutils.QueryToAllProfileSwitches(query))
 }
 
 func (s *ProfileSwitchesCollection) SearchHTMXResponse(models []*sitemodels.SiteProfileSwitch, query *apiutils.Query) templ.Component {

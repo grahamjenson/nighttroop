@@ -83,11 +83,7 @@ func (s *ActivitiesCollection) UpdateHTMXResponse(model *sitemodels.SiteActivity
 // Get Model
 // /////
 func (s *ActivitiesCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.Activity, error) {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.GetActivity(ctx, sitedb.GetActivityParams{ID: id})
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).GetActivity, sitedb.GetActivityParams{ID: id})
 }
 
 // ToModel is the site model of a row
@@ -105,11 +101,7 @@ func (s *ActivitiesCollection) GetHTMXResponse(model *sitemodels.SiteActivity) t
 // ///
 
 func (s *ActivitiesCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.Activity, error) {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.AllActivities(ctx, siteapiutils.QueryToAllActivities(query))
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).AllActivities, siteapiutils.QueryToAllActivities(query))
 }
 
 func (s *ActivitiesCollection) SearchHTMXResponse(models []*sitemodels.SiteActivity, query *apiutils.Query) templ.Component {
