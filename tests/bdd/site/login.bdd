@@ -15,7 +15,10 @@ ASSERT_VISIBLE #public--logo
 ASSERT_VISIBLE #public--copy-button
 SCREENSHOT site_created
 
-// The phone's token is not shown, only copied, and the copy buttons say when they have copied
+// The TOTP secret is only the QR code, the phone's token is not shown, only copied, and the copy buttons say when they
+// have copied
+ASSERT_NOT_VISIBLE #public--site-info--totp-secret
+ASSERT_VISIBLE #qrcode
 ASSERT_NOT_VISIBLE #public--site-info--ns-token
 CLICK #public--copy-ns-token
 ASSERT_VISIBLE #public--copy-ns-token>span[data-copy-icon-check]

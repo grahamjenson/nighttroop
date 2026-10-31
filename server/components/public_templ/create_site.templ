@@ -115,7 +115,6 @@ templ CreateSiteInfo(newsite publicmodels.NewSiteInfo) {
 				<dl class="grid sm:grid-cols-2">
 					@row("username", "Username", "admin", false)
 					@row("password", "Password", newsite.AdminPassword, false)
-					@row("totp-secret", "TOTP secret", newsite.AdminTotpSecret, true)
 				</dl>
 				// A recovery leaves the phone's credentials as they were, so there are none to show
 				if newsite.PwdNSToken != "" {
@@ -224,7 +223,7 @@ templ TOTPChecked(url string) {
 
 // TOTPCheckFailed is a code not matching the new site's TOTP secret
 templ TOTPCheckFailed() {
-	<p id="public--totp-failed" class="font-medium text-red-700">That code does not match. Check the app has the secret above and your phone's time is right, then try its next code.</p>
+	<p id="public--totp-failed" class="font-medium text-red-700">That code does not match. Check the app scanned the QR code and your phone's time is right, then try its next code.</p>
 }
 
 // step is a numbered step, with its hint beside its title

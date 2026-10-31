@@ -73,9 +73,10 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 ### Creating and recovering a site
 
 - Anyone can create a site in one click on the public home page, without an account. It is shown once: its URL, site
-  ID, admin password and TOTP secret, the phone's Nightscout URL, and the backup key, with a prominent button to copy
-  them all for a password manager. The phone's Nightscout token is not shown, only copied with its own button.
-- The new site's TOTP secret is shown as a QR code beside a code check, and its login button is disabled until a code
+  ID, admin password, the phone's Nightscout URL, and the backup key, with a prominent button to copy them all for a
+  password manager. The TOTP secret and the phone's Nightscout token are not shown as text: the secret is in the copy,
+  and the token has its own copy button.
+- The new site's TOTP secret is shown only as a QR code, beside a code check, and its login button is disabled until a code
   from the authenticator app matches; a wrong code says so. The check changes nothing, and a recovered site's credentials are checked the same way.
 - A new site takes the time zone and language of the browser that created it, and its country's units and formats.
 - Site creation is rate limited per IP and server wide, and refused once the server holds `MAX_SITES`.
