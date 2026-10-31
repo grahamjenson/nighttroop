@@ -57,6 +57,9 @@ Limits written per minute are rates; their burst is how many can be used at once
 | `TRUNCATE_RECORDS_AFTER_DAYS` | `30` | How old a site's records are before truncating clears their raw JSON |
 | `TRUNCATE_INTERVAL_IN_SECONDS` | `60` | How often the logs DB is trimmed and the jobs are summarised |
 | `LOGS_DB_MAX_ROWS_PER_TABLE` | `100000` | How many of the newest logs, events and errors each logs DB table keeps |
+| `MEMORY_ALERT_PERCENT` | `60` | The memory used, of the container's limit or else the machine's, at or over which the control site is warned |
+| `DISK_ALERT_PERCENT` | `60` | The space used on the DBs' disk at or over which the control site is warned |
+| `CPU_PEGGED_ALERT_SECONDS` | `20` | How long the server's CPU is at 100% of every core before the control site is warned |
 
 ## Sync
 

@@ -42,7 +42,7 @@ func BackfillHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		slog.Error("failed to start a backfill", "error", err, "sync_type", syncType)
+		slog.ErrorContext(r.Context(), "failed to start a backfill", "error", err, "sync_type", syncType)
 		writeError(w, r, siteContext.AcceptType, apiutils.ErrInternalServerError)
 		return
 	}

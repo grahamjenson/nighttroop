@@ -60,7 +60,7 @@ func POSTCreateSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig)
 
 		siteCreateResult, err := controlDB.CreateSite()
 		if err != nil {
-			slog.Error("Unable to create site", "error", err)
+			slog.ErrorContext(r.Context(), "Unable to create site", "error", err)
 			http.Error(w, "Unable to Create Site", http.StatusInternalServerError)
 			return
 		}
@@ -69,7 +69,7 @@ func POSTCreateSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig)
 		params := &controldb.UpdateSitesSettingsParams{ID: siteCreateResult.SiteDB.Subdomain}
 		settings.SetSettings(params, settings.BrowserSettings(r.FormValue("timezone"), r.FormValue("language")))
 		if err := controlDB.Queries.UpdateSitesSettings(r.Context(), *params); err != nil {
-			slog.Error("Unable to set the new site's settings", "error", err)
+			slog.ErrorContext(r.Context(), "Unable to set the new site's settings", "error", err)
 		}
 
 		responseModel := CreateUserResponse{
@@ -81,7 +81,7 @@ func POSTCreateSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig)
 			ReadOnlyNSToken: siteCreateResult.ReadOnlyNSToken,
 		}
 
-		slog.Info("Number of Sites", "count", controlDB.GetNSitesDBs(), "routines", runtime.NumGoroutine())
+		slog.InfoContext(r.Context(), "Number of Sites", "count", controlDB.GetNSitesDBs(), "routines", runtime.NumGoroutine())
 
 		if httputils.GetAcceptType(r).API() {
 			apiutils.WriteJSON(w, http.StatusOK, responseModel)
@@ -101,7 +101,7 @@ func POSTCreateSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig)
 			RecoverURL:      config.RecoverURL(),
 		}).Render(r.Context(), w)
 		if err != nil {
-			slog.Error("Unable to create site", "error", err)
+			slog.ErrorContext(r.Context(), "Unable to create site", "error", err)
 			http.Error(w, "Unable to Create Site", http.StatusInternalServerError)
 		}
 
@@ -115,7 +115,7 @@ func LegalRoutes(r chi.Router) {
 		r.Get(path, func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			if err := public_templ.Legal(docs.WithSupportEmail(document, httputils.SupportEmail(r.Context()))).Render(r.Context(), w); err != nil {
-				slog.Error("failed to render a legal document", "path", path, "error", err)
+				slog.ErrorContext(r.Context(), "failed to render a legal document", "path", path, "error", err)
 			}
 		})
 	}

@@ -15,7 +15,10 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/testutils"
 	"nighttroop.t1d.nz/utils/usage"
 )
@@ -121,4 +124,44 @@ func TestCountRoutes(t *testing.T) {
 	require.Len(t, routes, 1)
 	require.Equal(t, "site GET /data/{collection}", routes[0].Route)
 	require.Equal(t, int64(2), routes[0].Count)
+}
+
+// Everything logged for a request, and its request log, says which request it was, its site, and once signed in its
+// identity, so the logs before an error can be found by any of them
+func TestRequestLogsCarryRequestSiteAndIdentity(t *testing.T) {
+	var logs bytes.Buffer
+	testutils.UseLogHandler(t, aslog.ContextHandler{Handler: slog.NewJSONHandler(&logs, nil)})
+	router := chi.NewRouter()
+	AddStandardMiddleware(router, &config.ServerConfig{}, nil)
+	router.Get("/data", func(w http.ResponseWriter, r *http.Request) {
+		slog.InfoContext(r.Context(), "before sign in")
+		ctx := SetIdentityModelInSiteContext(r.Context(), &controldb.SiteIdentity{ID: 7, Name: "phone", Role: consts.IdentityRoleUser})
+		slog.InfoContext(ctx, "after sign in")
+		w.WriteHeader(http.StatusOK)
+	})
+	// The main router gives a site's requests their site context before its router's middleware
+	site := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		router.ServeHTTP(w, r.WithContext(CreateSiteContext(r.Context(), nil, nil, nil, nil, "site-a", "", HTTPActionRead, AcceptTypeJSON, ContentTypeJSON)))
+	})
+
+	site.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, "/data", nil))
+
+	lines := map[string]map[string]any{}
+	for line := range bytes.Lines(logs.Bytes()) {
+		var record map[string]any
+		require.NoError(t, json.Unmarshal(line, &record))
+		lines[record["msg"].(string)] = record
+	}
+	require.Contains(t, lines, "200: OK")
+	requestID := lines["before sign in"]["request_id"]
+	require.NotEmpty(t, requestID)
+	require.Equal(t, "site-a", lines["before sign in"]["site_id"])
+	require.NotContains(t, lines["before sign in"], "identity_id")
+	for _, msg := range []string{"after sign in", "200: OK"} {
+		require.Equal(t, requestID, lines[msg]["request_id"], msg)
+		require.Equal(t, "site-a", lines[msg]["site_id"], msg)
+		require.EqualValues(t, 7, lines[msg]["identity_id"], msg)
+		require.Equal(t, "phone", lines[msg]["identity_name"], msg)
+		require.Equal(t, string(consts.IdentityRoleUser), lines[msg]["role"], msg)
+	}
 }

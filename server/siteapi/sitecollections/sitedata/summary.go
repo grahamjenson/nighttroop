@@ -110,7 +110,7 @@ func getSummary(ctx context.Context, tx *siteapiutils.CollectionTx, hours int64,
 	var herr *apiutils.HTTPError
 	readings, err := cleanGlucoseReadings(ctx, q, since, nil, siteContext)
 	if err != nil {
-		slog.Error("Error searching summary glucose readings", "error", err)
+		slog.ErrorContext(ctx, "Error searching summary glucose readings", "error", err)
 		return nil, apiutils.ErrInternalServerError
 	}
 	summary.GlucoseReadings = readings[:min(len(readings), maxRows)]
@@ -133,7 +133,7 @@ func getSummary(ctx context.Context, tx *siteapiutils.CollectionTx, hours int64,
 
 	devices, err := q.RecentDeviceNames(ctx, sitedb.RecentDeviceNamesParams{Since: since, Limit: maxDevices})
 	if err != nil {
-		slog.Error("Error searching summary devices", "error", err)
+		slog.ErrorContext(ctx, "Error searching summary devices", "error", err)
 		return nil, apiutils.ErrInternalServerError
 	}
 	summary.DeviceStatuses = []*sitemodels.SiteDeviceStatus{}
@@ -180,12 +180,12 @@ func summaryMinutes(ctx context.Context, q *sitedb.Queries, since, until int64, 
 	excludeDeleted := false
 	defaults, err := q.SearchSummaryDefaultProfiles(ctx, sitedb.SearchSummaryDefaultProfilesParams{Since: since, Until: until, Limit: maxRows})
 	if err != nil {
-		slog.Error("Error searching summary profiles", "error", err)
+		slog.ErrorContext(ctx, "Error searching summary profiles", "error", err)
 		return nil, apiutils.ErrInternalServerError
 	}
 	switches, err := q.SearchSummaryProfileSwitches(ctx, sitedb.SearchSummaryProfileSwitchesParams{Since: since, Until: until, Earliest: since - maxSwitchMinutes*60_000, Limit: maxRows})
 	if err != nil {
-		slog.Error("Error searching summary profile switches", "error", err)
+		slog.ErrorContext(ctx, "Error searching summary profile switches", "error", err)
 		return nil, apiutils.ErrInternalServerError
 	}
 	targetsSince, basalsSince, before := since-maxTempTargetMinutes*60_000, since-maxTempBasalMinutes*60_000, since-1
@@ -215,7 +215,7 @@ func addDays(ctx context.Context, q *sitedb.Queries, summary *sitemodels.Summary
 	today, yesterday := LocalDate(now, location, 0), LocalDate(now, location, -1)
 	todayRow, err := buildSummaryDaily(ctx, q, siteContext, today, now.UnixMilli())
 	if err != nil {
-		slog.Error("Error building the summary's today", "error", err)
+		slog.ErrorContext(ctx, "Error building the summary's today", "error", err)
 		return apiutils.ErrInternalServerError
 	}
 	yesterdayRow, err := q.GetSummaryPeriod(ctx, sitedb.GetSummaryPeriodParams{Period: "day", Date: yesterday})
@@ -223,7 +223,7 @@ func addDays(ctx context.Context, q *sitedb.Queries, summary *sitemodels.Summary
 		yesterdayRow, err = buildSummaryDaily(ctx, q, siteContext, yesterday, now.UnixMilli())
 	}
 	if err != nil {
-		slog.Error("Error finding the summary's yesterday", "error", err)
+		slog.ErrorContext(ctx, "Error finding the summary's yesterday", "error", err)
 		return apiutils.ErrInternalServerError
 	}
 	summary.Today, summary.Yesterday = sitemodels.SummaryDayFromPeriod(todayRow), sitemodels.SummaryDayFromPeriod(yesterdayRow)
@@ -231,7 +231,7 @@ func addDays(ctx context.Context, q *sitedb.Queries, summary *sitemodels.Summary
 	for period, day := range map[string]*sitemodels.SummaryDay{"week": &summary.LastWeek, "fortnight": &summary.LastFortnight, "month": &summary.LastMonth} {
 		row, _, err := LastSummaryPeriod(ctx, q, siteContext, period, now)
 		if err != nil {
-			slog.Error("Error finding the summary's last "+period, "error", err)
+			slog.ErrorContext(ctx, "Error finding the summary's last "+period, "error", err)
 			return apiutils.ErrInternalServerError
 		}
 		*day = sitemodels.SummaryDayFromPeriod(row)
@@ -245,7 +245,7 @@ func addChanges(ctx context.Context, q *sitedb.Queries, summary *sitemodels.Summ
 	latest := func(types string) (*int64, *apiutils.HTTPError) {
 		events, err := q.SearchComponentEvents(ctx, sitedb.SearchComponentEventsParams{TypeIn: &types, IncludeDeleted: &excludeDeleted, Limit: 1})
 		if err != nil {
-			slog.Error("Error searching summary component events", "error", err)
+			slog.ErrorContext(ctx, "Error searching summary component events", "error", err)
 			return nil, apiutils.ErrInternalServerError
 		}
 		if len(events) == 0 {

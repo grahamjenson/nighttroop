@@ -31,6 +31,16 @@ const DefaultSupportEmail = "nighttroop@t1d.nz"
 type ServerStatus struct {
 	S3Working     bool
 	SentryWorking bool
+	// HighResources are the server's resources at or over their alert levels at its last check
+	HighResources []ResourceLevel
+}
+
+// ResourceLevel is one of the server's resources at a check: memory or disk, its percent used, or cpu, the seconds it
+// was at 100%, and its alert level
+type ResourceLevel struct {
+	Resource string  `json:"resource"`
+	Value    float64 `json:"value"`
+	Limit    float64 `json:"limit"`
 }
 
 type ServerConfig struct {
@@ -124,6 +134,12 @@ type ServerConfig struct {
 	DisableAfterInactivityDays int
 	// TruncateRecordsAfterDays is how old a site's records are before truncating it clears their raw JSON
 	TruncateRecordsAfterDays int
+
+	// MemoryAlertPercent and DiskAlertPercent are the memory and DB disk used, and CPUPeggedAlertSeconds how long the
+	// CPU is at 100%, at or over which a check of the server's resources warns the control site
+	MemoryAlertPercent    int
+	DiskAlertPercent      int
+	CPUPeggedAlertSeconds int
 
 	// Backup Config
 	ControlBackupIntervalInSeconds int
@@ -304,6 +320,11 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		DeleteAfterInactivityMins:  configIntSelect(dotenv, "DELETE_AFTER_INACTIVITY_MINS", 60*24*7), // 1 week
 		DisableAfterInactivityDays: configIntSelect(dotenv, "DISABLE_AFTER_INACTIVITY_DAYS", 7),
 		TruncateRecordsAfterDays:   configIntSelect(dotenv, "TRUNCATE_RECORDS_AFTER_DAYS", 30),
+
+		// Resource alerts
+		MemoryAlertPercent:    configIntSelect(dotenv, "MEMORY_ALERT_PERCENT", 60),
+		DiskAlertPercent:      configIntSelect(dotenv, "DISK_ALERT_PERCENT", 60),
+		CPUPeggedAlertSeconds: configIntSelect(dotenv, "CPU_PEGGED_ALERT_SECONDS", 20),
 
 		// Backup Config
 		ControlBackupIntervalInSeconds: configIntSelect(dotenv, "CONTROL_BACKUP_INTERVAL_IN_SECONDS", 30),

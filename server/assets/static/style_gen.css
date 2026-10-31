@@ -1105,6 +1105,15 @@
     --tw-gradient-to: var(--color-white);
     --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
   }
+  .stroke-amber-500 {
+    stroke: var(--color-amber-500);
+  }
+  .stroke-brand-night {
+    stroke: var(--color-brand-night);
+  }
+  .stroke-gray-200 {
+    stroke: var(--color-gray-200);
+  }
   .p-0 {
     padding: calc(var(--spacing) * 0);
   }

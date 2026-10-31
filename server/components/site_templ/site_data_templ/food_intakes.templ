@@ -72,13 +72,13 @@ templ FoodIntakeNew() {
 
 // foodIntakeFields are what a food intake has that a person can type in
 var foodIntakeFields = []addmodal.Field{
-	{Name: "carbs", Label: "Carbs (g)", Help: "Grams of carbohydrate eaten.", Required: true, Min: "0", Max: "1000", Step: "any"},
+	{Name: "carbs", Label: "Carbs (g)", Help: "Grams of carbohydrate eaten. Negative takes back food entered by mistake.", Required: true, Min: "-1000", Max: "1000", Step: "any"},
 	{Name: "occurred_at", Label: "When", Help: "When it was eaten, in your timezone. Blank is now.", Kind: addmodal.When},
 	{Name: "name", Label: "Name", Help: "What it was, e.g. a sandwich.", Kind: addmodal.Text, Max: "64"},
 	{Name: "absorption_time_minutes", Label: "Absorption time (minutes)", Help: "How long its carbs take to be absorbed.", Min: "0", Max: "1440", Step: "1"},
-	{Name: "fat", Label: "Fat (g)", Help: "Grams of fat, which slows absorption.", Min: "0", Max: "1000", Step: "any"},
-	{Name: "protein", Label: "Protein (g)", Help: "Grams of protein.", Min: "0", Max: "1000", Step: "any"},
-	{Name: "fibre", Label: "Fibre (g)", Help: "Grams of fibre.", Min: "0", Max: "1000", Step: "any"},
+	{Name: "fat", Label: "Fat (g)", Help: "Grams of fat, which slows absorption.", Min: "-1000", Max: "1000", Step: "any"},
+	{Name: "protein", Label: "Protein (g)", Help: "Grams of protein.", Min: "-1000", Max: "1000", Step: "any"},
+	{Name: "fibre", Label: "Fibre (g)", Help: "Grams of fibre.", Min: "-1000", Max: "1000", Step: "any"},
 	{Name: "energy", Label: "Energy", Help: "Its energy, in kcal or kJ.", Min: "0", Max: "20000", Step: "any"},
 	{Name: "portions", Label: "Portions", Help: "How many portions of it were eaten.", Min: "0", Max: "1000", Step: "any"},
 	{Name: "pre_bolus", Label: "Pre-bolus (minutes)", Help: "Minutes before eating that its insulin was given.", Min: "-1440", Max: "1440", Step: "1"},
@@ -98,7 +98,7 @@ templ foodIntakeInputs(id string, carbs string, name string, notes string) {
 			Placeholder: "Carbs (g)",
 			Value:       carbs,
 			Required:    true,
-			Attributes:  templ.Attributes{"step": "any", "min": "0", "max": "1000"},
+			Attributes:  templ.Attributes{"step": "any", "min": "-1000", "max": "1000"},
 		})
 	}
 	@field.Field(id+"--name", "Name", "w-40") {

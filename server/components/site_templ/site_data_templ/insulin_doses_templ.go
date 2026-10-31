@@ -334,7 +334,7 @@ func InsulinDoseNew() templ.Component {
 
 // insulinDoseFields are what an insulin dose has that a person can type in
 var insulinDoseFields = []addmodal.Field{
-	{Name: "dose", Label: "Dose (U)", Help: "Units of insulin given.", Required: true, Min: "0.01", Max: "100", Step: "any"},
+	{Name: "dose", Label: "Dose (U)", Help: "Units of insulin given. A negative dose takes back one entered by mistake.", Required: true, Min: "-100", Max: "100", Step: "any"},
 	{Name: "occurred_at", Label: "When", Help: "When it was given, in your timezone. Blank is now.", Kind: addmodal.When},
 	{Name: "dose_type", Label: "Type", Help: "How it was given, e.g. normal, or SMB for a loop's small automatic bolus.", Kind: addmodal.Text, Max: "32", Options: []string{"normal", "SMB"}},
 	{Name: "reason", Label: "Reason", Help: "Why it was given, e.g. a correction or a meal.", Kind: addmodal.Text, Max: "64"},
@@ -379,7 +379,7 @@ func insulinDoseInputs(id string, dose string, notes string) templ.Component {
 				Placeholder: "Units",
 				Value:       dose,
 				Required:    true,
-				Attributes:  templ.Attributes{"step": "any", "min": "0.01", "max": "100"},
+				Attributes:  templ.Attributes{"step": "any", "min": "-100", "max": "100"},
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

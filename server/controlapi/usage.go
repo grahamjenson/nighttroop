@@ -6,7 +6,9 @@ import (
 	"net/http"
 	"time"
 
+	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/data/sql/livedb"
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/server/components/control_templ/control_usage_templ"
 	"nighttroop.t1d.nz/server/controlapi/controlcollections"
@@ -45,7 +47,7 @@ func UsageHandler(w http.ResponseWriter, r *http.Request) {
 	model.SitesCreatedWeek, errs[6] = created(monday)
 	model.SitesCreatedMonth, errs[7] = created(firstOfMonth)
 	if err := errors.Join(errs[:]...); err != nil {
-		slog.Error("failed to count the server's usage", "error", err)
+		slog.ErrorContext(r.Context(), "failed to count the server's usage", "error", err)
 		apiutils.ErrInternalServerError.Write(acceptType, w)
 		return
 	}
@@ -54,6 +56,16 @@ func UsageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	model.SinceStart = config.Usage.Snapshot(now, usageRoutes)
 	model.Server = config.Usage.Server(config.DBDir(), now)
+	model.ResourcesSince = now.Add(-db.KeepResourceReadings).UnixMilli()
+	model.MemoryAlertPercent, model.DiskAlertPercent = config.MemoryAlertPercent, config.DiskAlertPercent
+	readings, err := controlContext.ControlDB.Live.Queries.ResourceReadingsSince(ctx, livedb.ResourceReadingsSinceParams{Since: model.ResourcesSince})
+	if err != nil {
+		slog.ErrorContext(r.Context(), "failed to read the server's resource checks", "error", err)
+	}
+	for _, reading := range readings {
+		model.ResourceReadings = append(model.ResourceReadings, controlmodels.ResourceReading{At: reading.At, CPUPercent: reading.CpuPercent,
+			CPUPeggedSeconds: reading.CpuPeggedSeconds, MemoryPercent: reading.MemoryPercent, DiskPercent: reading.DiskPercent})
+	}
 	controlcollections.WriteResponse(w, r, acceptType, http.StatusOK, model, control_usage_templ.Usage(model))
 }
 

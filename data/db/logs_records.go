@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/data/events"
+	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/geoip"
 )
@@ -80,6 +81,16 @@ func (l *LogsDB) SignedInEvent(ctx context.Context, siteID string, identityName 
 // SignInFailedEvent records a refused sign in, without the name tried, which may not be an identity's
 func (l *LogsDB) SignInFailedEvent(ctx context.Context, siteID string, from geoip.Location) {
 	l.event(ctx, siteID, events.SignInFailed, SignInAttributes{From: from})
+}
+
+// ResourceHighEvent records one of the server's resources going over its alert level, an event of no one site
+func (l *LogsDB) ResourceHighEvent(ctx context.Context, level config.ResourceLevel) {
+	l.event(ctx, "", events.ResourceHigh, level)
+}
+
+// ResourceRecoveredEvent records one of the server's resources coming back under its alert level
+func (l *LogsDB) ResourceRecoveredEvent(ctx context.Context, level config.ResourceLevel) {
+	l.event(ctx, "", events.ResourceRecovered, level)
 }
 
 type SiteDisabledAttributes struct {

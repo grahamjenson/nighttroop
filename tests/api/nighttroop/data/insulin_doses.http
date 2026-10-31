@@ -74,7 +74,7 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"notes": "no dose"}
 ASSERT_STATUS 400
-ASSERT_CONTAINS "dose must be more than 0" "@message"
+ASSERT_CONTAINS "dose must not be 0" "@message"
 
 NAME create_insulin_dose_too_high
 POST http://{{ site }}/data/insulin
@@ -82,6 +82,28 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"dose": 500}
 ASSERT_STATUS 400
+
+NAME create_insulin_dose_too_low
+POST http://{{ site }}/data/insulin
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"dose": -500}
+ASSERT_STATUS 400
+
+// A negative dose takes insulin entered by mistake back off insulin on board
+NAME create_insulin_dose_negative
+POST http://{{ site }}/data/insulin
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"dose": -1.5}
+ASSERT_STATUS 201
+ASSERT_EQUALS -1.5 "@result.dose"
+
+NAME delete_negative_insulin_dose
+DELETE http://{{ site }}/data/insulin/{{ .create_insulin_dose_negative.result.id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
 
 // Only the fields sent change
 NAME update_insulin_dose_notes

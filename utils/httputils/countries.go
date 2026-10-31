@@ -18,7 +18,7 @@ func AllowedCountriesMiddleware(cfg *config.ServerConfig) func(http.Handler) htt
 			if len(cfg.AllowedCountries) > 0 {
 				country := cfg.GeoIP.Locate(GetIPFromHTTPContext(r.Context())).Country
 				if country != "" && !slices.Contains(cfg.AllowedCountries, country) {
-					slog.Info("Refused a request from a country not allowed", "country", country, "path", r.URL.Path)
+					slog.InfoContext(r.Context(), "Refused a request from a country not allowed", "country", country, "path", r.URL.Path)
 					http.Error(w, "Nighttroop is not available in your country", http.StatusForbidden)
 					return
 				}
