@@ -31,7 +31,7 @@ import (
 // 2. If a users sync is taking too long or failing decrease the rate at which they sync (until they are disabled)
 // 3. Only sync once from a source:password combination (prevents multiple users pointing at the same URL and causing a DDOS)
 // 4. Agressive timeouts for jobs as well as logging
-// 5. List of bad and blocked hostnames, that are never allowed to be synced from (TODO)
+// 5. Blocked hostnames and private networks are never synced from (httputils.IsNightscoutURLBlocked)
 // 6. We only Sync users that have called a read endpoint recently.
 // 7. We slow down syncing of users that don't actually get new data (count writes to the DB)
 
@@ -50,9 +50,6 @@ const syncTimeout = 10 * time.Second
 func (b *SyncJobManager) SyncUserData(syncInfo *SyncJobInfo) error {
 	var err error
 	added := 0
-
-	// TODO CHECK REPORT AND MAKE SURE NOT ABUSING
-	// Check that enought time has passed since the last sync to rerun sync
 
 	startTime := time.Now()
 
@@ -89,8 +86,6 @@ func (b *SyncJobManager) SyncUserData(syncInfo *SyncJobInfo) error {
 	}
 
 	return nil
-	// TODO this is where we will sync data from the user DB to the control DB, and also do any processing needed
-	// This will be called on a schedule, and also on demand when a user logs in or something like that
 }
 
 // recordSyncFailure stores the failure so the source backs off, and in the logs DB's errors. The message is

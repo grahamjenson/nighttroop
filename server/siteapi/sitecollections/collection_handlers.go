@@ -396,9 +396,8 @@ func delete[R, M any](ctx context.Context, siteContext *httputils.SiteContext, t
 	return nil
 }
 
-// reportChange reports a change to the site's own rows, to be published once the transaction commits
+// reportChange reports a change to the site's own rows, to be published once the transaction commits, only to the site
 func reportChange[R any](tx *siteapiutils.CollectionTx, action events.Action, row *R) {
-	// TODO filter for the relevant site or collection before reporting the change
 	tx.ReportChange(action, row)
 }
 

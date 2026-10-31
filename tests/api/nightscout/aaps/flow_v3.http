@@ -35,8 +35,7 @@ GET http://{{ site }}/api/v3/food?limit=1000
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 
-// Not sure what it is doing here, probably checking past devicestatuses
-// TODO
+// The device statuses changed since a time, as AAPS asks for to catch up
 NAME get_devicestatus_history
 GET http://{{ site }}/api/v3/devicestatus/history/{{ itime 5 }}
 H Authorization: Bearer {{ jwt }}
