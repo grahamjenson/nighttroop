@@ -13,7 +13,7 @@ The Nighttroop project has strict rules for AI usage:
 
 - **Issues and discussions can use AI assistance but must have a full
   human-in-the-loop.** This means that any content generated with AI
-  must have been reviewed _and edited_ by a human before submission.
+  must have been reviewed by a human before submission.
   AI is very good at being overly verbose and including noise that
   distracts from the main point. Humans must do their research and
   trim this down.

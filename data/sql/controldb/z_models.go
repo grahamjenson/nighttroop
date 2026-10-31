@@ -26,14 +26,6 @@ type ControlIdentity struct {
 	DeletedAt             *int64
 }
 
-type DataSourceBlockList struct {
-	ID        int64
-	CreatedAt int64
-	Username  *string
-	Url       *string
-	Reason    *string
-}
-
 type Site struct {
 	ID                               string
 	Batch                            string

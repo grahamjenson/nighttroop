@@ -10,7 +10,6 @@ import (
 
 func IsSQLDuplicateID(err error) bool {
 	// Exmaple Error String is "UNIQUE constraint failed: glucose_readings.id"
-	// TODO: probably slow
 	return IsSQLUniqueViolationError(err) && strings.Contains(err.Error(), ".id")
 }
 
