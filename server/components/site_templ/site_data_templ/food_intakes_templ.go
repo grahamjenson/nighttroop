@@ -324,7 +324,7 @@ func FoodIntakeNew() templ.Component {
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
 		templ_7745c5c3_Err = addmodal.Modal(addmodal.Props{ID: "site--food--create", Title: "Add Food Intake", Path: "/data/food", Target: "#foodIntakesTable tbody",
-			EmptyID: "site--food--empty", Submit: "Add Food Intake", Fields: foodIntakeFields, Location: Location(ctx)}).Render(ctx, templ_7745c5c3_Buffer)
+			EmptyID: "site--food--empty", Submit: "Add Food Intake", Fields: foodIntakeFields}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -335,7 +335,7 @@ func FoodIntakeNew() templ.Component {
 // foodIntakeFields are what a food intake has that a person can type in
 var foodIntakeFields = []addmodal.Field{
 	{Name: "carbs", Label: "Carbs (g)", Help: "Grams of carbohydrate eaten.", Required: true, Min: "0", Max: "1000", Step: "any"},
-	{Name: "occurred_at", Label: "When", Help: "When it was eaten, now unless changed.", Kind: addmodal.When},
+	{Name: "occurred_at", Label: "When", Help: "When it was eaten, in your timezone. Blank is now.", Kind: addmodal.When},
 	{Name: "name", Label: "Name", Help: "What it was, e.g. a sandwich.", Kind: addmodal.Text, Max: "64"},
 	{Name: "absorption_time_minutes", Label: "Absorption time (minutes)", Help: "How long its carbs take to be absorbed.", Min: "0", Max: "1440", Step: "1"},
 	{Name: "fat", Label: "Fat (g)", Help: "Grams of fat, which slows absorption.", Min: "0", Max: "1000", Step: "any"},

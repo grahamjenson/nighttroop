@@ -12,7 +12,7 @@ ASSERT_NOT_VISIBLE #site--insulin--next
 SCREENSHOT insulin_doses_empty
 
 // Adding opens a modal of all a dose's fields, each labelled with what it takes, in what units, and whether it is
-// required, starting at now
+// required
 CLICK #site--insulin--add
 ASSERT_VISIBLE #site--insulin--create--modal
 ASSERT_VISIBLE #site--insulin--create label[for="site--insulin--create--dose"]
@@ -36,7 +36,7 @@ ASSERT_TEXT_VISIBLE Correction
 ASSERT_TEXT_VISIBLE 2026-01-02 12:30
 ASSERT_NOT_VISIBLE #site--insulin--empty
 
-// Left at now, it is given now
+// Left blank, it is given now
 CLICK #site--insulin--add
 INPUT #site--insulin--create--dose 4
 INPUT #site--insulin--create--notes Lunch

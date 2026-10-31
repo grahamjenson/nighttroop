@@ -128,7 +128,7 @@ deleted (after a confirmation):
 - **Device statuses**: each device's latest 3 statuses, and every status a device sent.
 
 Adding an insulin dose or food intake opens a modal of all its fields, each saying what it is, in what units, whether
-it is required, and with its limits. Its time is now unless changed, in the settings' timezone.
+it is required, and with its limits. Its time is typed in the settings' timezone, and is now when left blank.
 
 ### Presets
 

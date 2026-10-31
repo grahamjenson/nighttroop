@@ -2,7 +2,6 @@ package addmodal
 
 import (
 	"strings"
-	"time"
 
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/ui/button"
@@ -15,7 +14,7 @@ type Kind int
 const (
 	Number Kind = iota
 	Text
-	// When is a date and time in the timezone times are shown in, now unless changed
+	// When is a date and time in the timezone times are shown in, or now when left blank
 	When
 )
 
@@ -47,8 +46,6 @@ type Props struct {
 	EmptyID string
 	Submit  string
 	Fields  []Field
-	// Location is the timezone a When field is typed in
-	Location *time.Location
 }
 
 // Open is the button opening the add modal at path in #modal-container, above the table
@@ -105,7 +102,7 @@ templ field(p Props, f Field) {
 		</label>
 		switch f.Kind {
 			case When:
-				@input.Input(input.Props{ID: id, Name: f.Name, Type: input.TypeDateTime, Value: now(p.Location)})
+				@input.Input(input.Props{ID: id, Name: f.Name, Type: input.TypeDateTime})
 			case Number:
 				@input.Input(input.Props{ID: id, Name: f.Name, Type: input.TypeNumber, Required: f.Required, Attributes: templ.Attributes{"step": f.Step, "min": f.Min, "max": f.Max}})
 			default:
@@ -129,12 +126,4 @@ func textAttributes(f Field, id string) templ.Attributes {
 		attributes["list"] = id + "--options"
 	}
 	return attributes
-}
-
-// now is the time a When field starts at, to the minute in its timezone, as a datetime-local input takes it
-func now(location *time.Location) string {
-	if location == nil {
-		location = time.UTC
-	}
-	return time.Now().In(location).Format("2006-01-02T15:04")
 }

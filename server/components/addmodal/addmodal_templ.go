@@ -9,7 +9,6 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"strings"
-	"time"
 
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/ui/button"
@@ -22,7 +21,7 @@ type Kind int
 const (
 	Number Kind = iota
 	Text
-	// When is a date and time in the timezone times are shown in, now unless changed
+	// When is a date and time in the timezone times are shown in, or now when left blank
 	When
 )
 
@@ -54,8 +53,6 @@ type Props struct {
 	EmptyID string
 	Submit  string
 	Fields  []Field
-	// Location is the timezone a When field is typed in
-	Location *time.Location
 }
 
 // Open is the button opening the add modal at path in #modal-container, above the table
@@ -95,7 +92,7 @@ func Open(id string, path string, label string) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 58, Col: 10}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 55, Col: 10}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -157,7 +154,7 @@ func Modal(p Props) templ.Component {
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templruntime.NewAttributeExpression(p.ID).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 68, Col: 12}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 65, Col: 12}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
 				if templ_7745c5c3_Err != nil {
@@ -170,7 +167,7 @@ func Modal(p Props) templ.Component {
 				var templ_7745c5c3_Var7 string
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templruntime.NewAttributeExpression(p.Path).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 70, Col: 19}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 67, Col: 19}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 				if templ_7745c5c3_Err != nil {
@@ -183,7 +180,7 @@ func Modal(p Props) templ.Component {
 				var templ_7745c5c3_Var8 string
 				templ_7745c5c3_Var8, templ_7745c5c3_Err = templruntime.NewAttributeExpression(p.Target).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 71, Col: 23}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 68, Col: 23}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 				if templ_7745c5c3_Err != nil {
@@ -268,7 +265,7 @@ func submit(p Props) templ.Component {
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(p.Submit)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 91, Col: 12}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 88, Col: 12}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -345,7 +342,7 @@ func field(p Props, f Field) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templruntime.NewAttributeExpression(id).Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 98, Col: 17}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 95, Col: 17}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
 		if templ_7745c5c3_Err != nil {
@@ -358,7 +355,7 @@ func field(p Props, f Field) templ.Component {
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(f.Label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 99, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 96, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
@@ -385,7 +382,7 @@ func field(p Props, f Field) templ.Component {
 		}
 		switch f.Kind {
 		case When:
-			templ_7745c5c3_Err = input.Input(input.Props{ID: id, Name: f.Name, Type: input.TypeDateTime, Value: now(p.Location)}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = input.Input(input.Props{ID: id, Name: f.Name, Type: input.TypeDateTime}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -407,7 +404,7 @@ func field(p Props, f Field) templ.Component {
 				var templ_7745c5c3_Var17 string
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templruntime.NewAttributeExpression(id + "--options").Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 114, Col: 36}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 111, Col: 36}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var17)
 				if templ_7745c5c3_Err != nil {
@@ -425,7 +422,7 @@ func field(p Props, f Field) templ.Component {
 					var templ_7745c5c3_Var18 string
 					templ_7745c5c3_Var18, templ_7745c5c3_Err = templruntime.NewAttributeExpression(option).Resolve(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 116, Col: 29}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 113, Col: 29}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var18)
 					if templ_7745c5c3_Err != nil {
@@ -449,7 +446,7 @@ func field(p Props, f Field) templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(f.Help)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 121, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 118, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 		if templ_7745c5c3_Err != nil {
@@ -470,14 +467,6 @@ func textAttributes(f Field, id string) templ.Attributes {
 		attributes["list"] = id + "--options"
 	}
 	return attributes
-}
-
-// now is the time a When field starts at, to the minute in its timezone, as a datetime-local input takes it
-func now(location *time.Location) string {
-	if location == nil {
-		location = time.UTC
-	}
-	return time.Now().In(location).Format("2006-01-02T15:04")
 }
 
 var _ = templruntime.GeneratedTemplate

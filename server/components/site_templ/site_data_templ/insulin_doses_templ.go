@@ -324,7 +324,7 @@ func InsulinDoseNew() templ.Component {
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
 		templ_7745c5c3_Err = addmodal.Modal(addmodal.Props{ID: "site--insulin--create", Title: "Add Insulin Dose", Path: "/data/insulin", Target: "#insulinDosesTable tbody",
-			EmptyID: "site--insulin--empty", Submit: "Add Insulin Dose", Fields: insulinDoseFields, Location: Location(ctx)}).Render(ctx, templ_7745c5c3_Buffer)
+			EmptyID: "site--insulin--empty", Submit: "Add Insulin Dose", Fields: insulinDoseFields}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -335,7 +335,7 @@ func InsulinDoseNew() templ.Component {
 // insulinDoseFields are what an insulin dose has that a person can type in
 var insulinDoseFields = []addmodal.Field{
 	{Name: "dose", Label: "Dose (U)", Help: "Units of insulin given.", Required: true, Min: "0.01", Max: "100", Step: "any"},
-	{Name: "occurred_at", Label: "When", Help: "When it was given, now unless changed.", Kind: addmodal.When},
+	{Name: "occurred_at", Label: "When", Help: "When it was given, in your timezone. Blank is now.", Kind: addmodal.When},
 	{Name: "dose_type", Label: "Type", Help: "How it was given, e.g. normal, or SMB for a loop's small automatic bolus.", Kind: addmodal.Text, Max: "32", Options: []string{"normal", "SMB"}},
 	{Name: "reason", Label: "Reason", Help: "Why it was given, e.g. a correction or a meal.", Kind: addmodal.Text, Max: "64"},
 	{Name: "split_now", Label: "Given at once (%)", Help: "For a combo bolus, the percent of it given straight away.", Min: "0", Max: "100", Step: "any"},

@@ -35,7 +35,7 @@ ASSERT_TEXT_VISIBLE Correction
 ASSERT_TEXT_VISIBLE 2026-01-02 15:45
 ASSERT_NOT_VISIBLE #site--food--empty
 
-// Left at now, it is eaten now
+// Left blank, it is eaten now
 CLICK #site--food--add
 INPUT #site--food--create--carbs 45
 INPUT #site--food--create--name Sandwich
