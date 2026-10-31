@@ -17,8 +17,8 @@ package sql
 //go:generate go run ./gen/getters.go -folder logsdb
 //go:generate go run ./gen/getters.go -folder livedb
 
-//go:generate goverter gen ./controldb
-//go:generate goverter gen ./sitedb
-//go:generate goverter gen ./jobsdb
+//go:generate go tool goverter gen ./controldb
+//go:generate go tool goverter gen ./sitedb
+//go:generate go tool goverter gen ./jobsdb
 
 //go:generate go run ./gen/check.go

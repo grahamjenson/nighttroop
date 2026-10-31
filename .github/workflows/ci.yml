@@ -40,12 +40,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/go/bin
-          key: tools-${{ runner.os }}-go${{ steps.go.outputs.go-version }}-goverter1.11.1-sqlc1.31.1-tailwind4.3.0
+          key: tools-${{ runner.os }}-go${{ steps.go.outputs.go-version }}-sqlc1.31.1-tailwind4.3.0
 
       - name: Install code generators
         if: steps.tools.outputs.cache-hit != 'true'
         run: |
-          go install github.com/jmattheis/goverter/cmd/goverter@v1.11.1
           go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.31.1
           curl -sSL -o ~/go/bin/tailwindcss \
             https://github.com/tailwindlabs/tailwindcss/releases/download/v4.3.0/tailwindcss-linux-x64

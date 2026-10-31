@@ -26,10 +26,9 @@ echo 'export PATH=$PATH:$(go env GOPATH)/bin' >> ~/.zshrc
 ```
 
 ```
-# templ is not installed: go generate runs the version go.mod pins, as `go tool templ`, since a newer one writes code
-# the pinned templ library cannot build
+# templ and goverter are not installed: go generate runs the versions go.mod pins, as `go tool templ` and
+# `go tool goverter`, since a newer templ writes code the pinned templ library cannot build
 brew install docker colima docker-compose golang-migrate go-air sqlc
-go install github.com/jmattheis/goverter/cmd/goverter@v1.11.1
 # Tailwind's standalone binary at CI's version. Not brew's tailwindcss: it is the npm build run by Node, which writes
 # style_gen.css with double quotes where the standalone binary writes single ones, so go generate changes the file.
 curl -sSL -o "$(go env GOPATH)/bin/tailwindcss" \

@@ -7,7 +7,7 @@ import (
 	"nighttroop.t1d.nz/utils/apiutils/apiquery"
 )
 
-//go:generate goverter gen .
+//go:generate go tool goverter gen .
 
 // goverter:converter
 // goverter:output:format function

@@ -2,7 +2,7 @@ package apiquery
 
 import "strings"
 
-//go:generate goverter gen .
+//go:generate go tool goverter gen .
 
 // goverter:converter
 // goverter:output:format function
