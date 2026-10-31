@@ -189,6 +189,7 @@ ASSERT_CONTAINS "vanityaa.ns." "@result.pwd_ns_url"
 ASSERT_EXISTS "@result.admin_password"
 ASSERT_EXISTS "@result.admin_totp_secret"
 ASSERT_EXISTS "@result.pwd_ns_token"
+ASSERT_EXISTS "@result.read_only_ns_token"
 ASSERT_EXISTS "@result.backup_key"
 
 // It is a site like any other: its admin logs in with the password it was given

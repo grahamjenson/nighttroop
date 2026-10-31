@@ -74,7 +74,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 - Anyone can create a site in one click on the public home page, without an account. It is shown once: its URL, site
   ID, admin password, the phone's Nightscout URL, and the backup key, with a prominent button to copy them all for a
-  password manager. The TOTP secret and the phone's Nightscout token are not shown as text: the secret is in the copy,
+  password manager. The copy has every first identity's credentials: the admin's, and the phone's and the read only
+  device's Nightscout tokens. The TOTP secret and the phone's token are not shown as text: the secret is in the copy,
   and the token has its own copy button.
 - The new site's TOTP secret is shown only as a QR code, beside a code check, and its login button is disabled until a code
   from the authenticator app matches; a wrong code says so. The check changes nothing, and a recovered site's credentials are checked the same way.
