@@ -27,7 +27,7 @@ import (
 	_ "modernc.org/sqlite"
 
 	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/sqlite3"
+	"github.com/golang-migrate/migrate/v4/database/sqlite"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 )
 
@@ -198,7 +198,7 @@ func GetS3Path(serverConfig *config.ServerConfig) string {
 var migrations embed.FS
 
 func MigrateUp(db *sql.DB) error {
-	driver, err := sqlite3.WithInstance(db, &sqlite3.Config{})
+	driver, err := sqlite.WithInstance(db, &sqlite.Config{})
 	if err != nil {
 		return err
 	}
@@ -211,7 +211,7 @@ func MigrateUp(db *sql.DB) error {
 	m, err := migrate.NewWithInstance(
 		"iofs",
 		d,
-		"sqlite3",
+		"sqlite",
 		driver,
 	)
 	if err != nil {
@@ -227,7 +227,7 @@ func MigrateUp(db *sql.DB) error {
 }
 
 func MigrateDown(db *sql.DB) error {
-	driver, err := sqlite3.WithInstance(db, &sqlite3.Config{})
+	driver, err := sqlite.WithInstance(db, &sqlite.Config{})
 	if err != nil {
 		return err
 	}
@@ -240,7 +240,7 @@ func MigrateDown(db *sql.DB) error {
 	m, err := migrate.NewWithInstance(
 		"iofs",
 		d,
-		"sqlite3",
+		"sqlite",
 		driver,
 	)
 	if err != nil {
