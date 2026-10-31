@@ -1,0 +1,54 @@
+// A new server has no control admin, so every page goes to the control site's setup page
+GOTO {{ server_url }}/
+ASSERT_PATH /setup
+ASSERT_VISIBLE #control--setup--code
+SCREENSHOT setup
+
+// A wrong setup code is refused
+INPUT #control--setup--code notthecode
+CLICK #control--setup--submit
+ASSERT_STATUS 401
+ASSERT_VISIBLE #control--setup--error
+SCREENSHOT wrong_code
+
+// The code from the server's logs shows the control admin's login, with its TOTP secret's QR code
+INPUT #control--setup--code {{ .setup_code }}
+CLICK #control--setup--submit
+ASSERT_STATUS 200
+ASSERT_VISIBLE #control--setup--password
+ASSERT_VISIBLE #control--setup--totp-secret
+ASSERT_NOT_VISIBLE #control--setup--error
+SCREENSHOT credentials
+
+// It is only saved with a code from that TOTP secret, so the login cannot be lost unsaved
+INPUT #control--setup--otp-1 111111
+CLICK #control--setup--confirm
+ASSERT_STATUS 401
+ASSERT_VISIBLE #control--setup--error
+
+// Entering the setup code again shows a new login to save, its code boxes empty. Tests' TOTP codes are always 123123
+GOTO {{ .control_url }}/setup
+INPUT #control--setup--code {{ .setup_code }}
+CLICK #control--setup--submit
+ASSERT_STATUS 200
+INPUT #control--setup--otp-1 123123
+CLICK #control--setup--confirm
+ASSERT_STATUS 200
+ASSERT_VISIBLE #control--setup--complete
+ASSERT_NOT_VISIBLE #control--setup--error
+SCREENSHOT complete
+
+// The control admin logs in with it, and tests' passwords are always password
+CLICK #control--setup--login
+ASSERT_PATH /login
+INPUT #name admin
+INPUT #password password
+INPUT #control--login--otp-1 123123
+CLICK #control--login-button
+ASSERT_VISIBLE #control--nav--logo
+
+// Setup is done, so its page is gone and the public site can be used
+GOTO {{ .control_url }}/setup
+ASSERT_STATUS 404
+GOTO {{ server_url }}/
+ASSERT_VISIBLE #public--create-site-button

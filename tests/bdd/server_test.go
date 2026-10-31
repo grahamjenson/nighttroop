@@ -7,11 +7,11 @@ import (
 
 	"github.com/mxschmitt/playwright-go"
 	"nighttroop.t1d.nz/background"
-	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/tests/dsl/browser"
 )
 
-func RunTheActionFileAsATest(t *testing.T, root string, path string, context playwright.BrowserContext, serverURL string, backgroundJobs *background.BackGroundManager, siteInformation *db.SiteCreateResult, defaultJwt string) {
+// RunTheActionFileAsATest runs the action file at path, its templates filled from actionContext
+func RunTheActionFileAsATest(t *testing.T, root string, path string, context playwright.BrowserContext, backgroundJobs *background.BackGroundManager, actionContext map[string]any) {
 	page, err := context.NewPage()
 	if err != nil {
 		t.Fatalf("failed to create new page: %v", err)
@@ -33,13 +33,6 @@ func RunTheActionFileAsATest(t *testing.T, root string, path string, context pla
 		fmt.Printf("Running action file: %s\n", path)
 		fmt.Println("===============================================")
 
-		actionContext := map[string]any{
-			"server_url":    serverURL,
-			"control_url":   strings.Replace(serverURL, "127.0.0.1", "control.localhost", 1),
-			"default_site":  siteInformation.SiteDB.Subdomain + ".ns.localhost",
-			"default_token": siteInformation.PwdNSToken,
-			"default_jwt":   defaultJwt,
-		}
 		actionFile, err := browser.ParseActionFile(embeddedFiles, path)
 		if err != nil {
 			t.Fatalf("failed to parse action file: %v", err)

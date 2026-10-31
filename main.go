@@ -90,6 +90,15 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("cannot create control db: %w", err)
 	}
+	// Development has an admin to log in with; anywhere else a new server is set up with the code it prints
+	if serverConfig.IsDev() {
+		if err := controlDB.SeedDevAdmin(); err != nil {
+			return fmt.Errorf("cannot create the development admin: %w", err)
+		}
+	}
+	if code := controlDB.SetupCode(); code != "" {
+		fmt.Printf("######## SET UP NIGHTTROOP ########\nOpen %s and enter the setup code: %s\n###################################\n", serverConfig.SetupURL(), code)
+	}
 
 	//
 	// Background jobs
