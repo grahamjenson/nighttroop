@@ -12,13 +12,14 @@ import (
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitedata"
+	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
 // SetupCron builds each site's yesterday soon after midnight in its timezone, and its last week and month once they
 // end, checking every 10 minutes for ones not yet built
 func SetupCron(c cron.CronScheduler, controlDB *db.ControlDB) {
-	c.AddFunc("BuildSummaryDaily", "@every 600s", func() error { return Build(context.Background(), controlDB, time.Now()) })
+	c.AddFunc("BuildSummaryDaily", "@every 600s", func(ctx context.Context) error { return Build(ctx, controlDB, time.Now()) })
 }
 
 // RebuildOnSettingsChange is the job that, when a site's timezone changes, deletes its days, weeks and months, from a
@@ -52,7 +53,7 @@ func Build(ctx context.Context, controlDB *db.ControlDB, now time.Time) error {
 	var errs []error
 	for _, site := range sites {
 		if site.State == "live" {
-			errs = append(errs, buildYesterday(ctx, controlDB, site.ID, now))
+			errs = append(errs, buildYesterday(aslog.WithSite(ctx, site.ID), controlDB, site.ID, now))
 		}
 	}
 	return errors.Join(errs...)

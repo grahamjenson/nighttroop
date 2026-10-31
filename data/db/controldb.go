@@ -267,7 +267,7 @@ func (db *ControlDB) DeleteSites(subdomains []string) error {
 
 // ArchiveSite backs up a site's DB and uploads it, with upload, to its archive path, then marks the site archived and
 // deletes its local files, so it is no longer served or backed up but can be restored from the archive
-func (db *ControlDB) ArchiveSite(ctx context.Context, subdomain string, upload func(key string, retention s3utils.Retention, paths []string) error) error {
+func (db *ControlDB) ArchiveSite(ctx context.Context, subdomain string, upload s3utils.UploadFunc) error {
 	db.sitesRWLock.RLock()
 	site, ok := db.sites[subdomain]
 	db.sitesRWLock.RUnlock()
@@ -277,7 +277,7 @@ func (db *ControlDB) ArchiveSite(ctx context.Context, subdomain string, upload f
 	if err := site.Backup(ctx); err != nil {
 		return fmt.Errorf("cannot back up site %s: %w", subdomain, err)
 	}
-	if err := upload(sitedb.GetS3ArchivePath(subdomain, db.ServerConfig), s3utils.SiteRetention, []string{site.BackupPath}); err != nil {
+	if err := upload(ctx, sitedb.GetS3ArchivePath(subdomain, db.ServerConfig), s3utils.SiteRetention, []string{site.BackupPath}); err != nil {
 		return fmt.Errorf("cannot upload the archive of site %s: %w", subdomain, err)
 	}
 	bytes, _ := json.Marshal([]string{subdomain})
@@ -297,7 +297,7 @@ func (db *ControlDB) ArchiveSite(ctx context.Context, subdomain string, upload f
 
 // HydrateSite brings an archived site back: it downloads, with download, the site's archive into its DB's folder, opens
 // it and makes the site live again
-func (db *ControlDB) HydrateSite(ctx context.Context, subdomain string, download func(key string, outpath string) (int64, bool, error)) error {
+func (db *ControlDB) HydrateSite(ctx context.Context, subdomain string, download s3utils.DownloadFunc) error {
 	db.createSiteLock.Lock()
 	defer db.createSiteLock.Unlock()
 	db.sitesRWLock.RLock()
@@ -307,7 +307,7 @@ func (db *ControlDB) HydrateSite(ctx context.Context, subdomain string, download
 		return fmt.Errorf("site %s is already open", subdomain)
 	}
 	path := sitedb.GetPath(subdomain, db.ServerConfig)
-	if _, found, err := download(sitedb.GetS3ArchivePath(subdomain, db.ServerConfig), filepath.Dir(path)); err != nil {
+	if _, found, err := download(ctx, sitedb.GetS3ArchivePath(subdomain, db.ServerConfig), filepath.Dir(path)); err != nil {
 		return fmt.Errorf("cannot download the archive of site %s: %w", subdomain, err)
 	} else if !found || !utils.FileExists(path) {
 		return fmt.Errorf("site %s has no archive", subdomain)

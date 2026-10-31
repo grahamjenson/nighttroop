@@ -24,7 +24,7 @@ func TestOversizedSyncErrorIsTruncatedAndStillBacksOff(t *testing.T) {
 
 	long := "HTTP 502: " + strings.Repeat("<html>", 2000)
 	require.Greater(t, len(long), 10*1024)
-	jobs.recordSyncFailure(&SyncJobInfo{SiteID: siteID, Type: typ, firstSync: true}, fmt.Errorf("%s", long), 10)
+	jobs.recordSyncFailure(&SyncJobInfo{ctx: ctx, SiteID: siteID, Type: typ, firstSync: true}, fmt.Errorf("%s", long), 10)
 
 	s, err := q.GetSyncSource(ctx, controldb.GetSyncSourceParams{SiteID: siteID, Type: typ})
 	require.NoError(t, err)

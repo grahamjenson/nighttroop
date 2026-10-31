@@ -42,7 +42,7 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) (int, error) {
 	nsc.Lock()
 	defer nsc.Unlock()
 
-	ctx, cancel := context.WithTimeout(context.Background(), syncTimeout)
+	ctx, cancel := context.WithTimeout(syncInfo.ctx, syncTimeout)
 	defer cancel()
 
 	// One small call says which collections have changed, so unchanged ones are not read every sync
@@ -122,7 +122,7 @@ func (b *SyncJobManager) createNightscoutDocuments(ctx context.Context, syncInfo
 		b.controlDB.Logs.Log(ctx, &syncInfo.SiteID, db.LogLevelWarn, "skipped Nightscout documents the site refused", map[string]any{"collection": collection, "skipped": skipped, "error": reason})
 	}
 	if added > 0 {
-		slog.Info("Added new Nightscout documents for site", "site_id", syncInfo.SiteID, "collection", collection, "added", added)
+		slog.InfoContext(ctx, "Added new Nightscout documents for site", "collection", collection, "added", added)
 	}
 	return added, nil
 }

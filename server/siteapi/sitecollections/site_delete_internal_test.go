@@ -21,8 +21,8 @@ func TestDeleteSite(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	siteID := site.SiteDB.Subdomain
 	uploaded := ""
-	upload := func(key string, _ s3utils.Retention, _ []string) error { uploaded = key; return nil }
-	deleteAs := func(role consts.IdentityRole, upload func(string, s3utils.Retention, []string) error) *httptest.ResponseRecorder {
+	upload := func(_ context.Context, key string, _ s3utils.Retention, _ []string) error { uploaded = key; return nil }
+	deleteAs := func(role consts.IdentityRole, upload s3utils.UploadFunc) *httptest.ResponseRecorder {
 		ctx := httputils.CreateSiteContext(context.Background(), cfg, controlDB, site.SiteDB, nil, siteID, "", httputils.HTTPActionWrite, httputils.AcceptTypeHTMX, httputils.ContentTypeForm)
 		ctx = httputils.SetIdentityModelInSiteContext(ctx, &controldb.SiteIdentity{Name: "someone", Role: role})
 		w := httptest.NewRecorder()

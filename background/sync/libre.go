@@ -40,7 +40,7 @@ func (b *SyncJobManager) libreClientFor(syncInfo *SyncJobInfo) (*libreClient, er
 
 // syncLibre imports the followed patient's readings, returning how many were new
 func (b *SyncJobManager) syncLibre(syncInfo *SyncJobInfo) (int, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), syncTimeout)
+	ctx, cancel := context.WithTimeout(syncInfo.ctx, syncTimeout)
 	defer cancel()
 	return b.copyLibreReadings(ctx, syncInfo)
 }
@@ -70,7 +70,7 @@ func (b *SyncJobManager) copyLibreReadings(ctx context.Context, syncInfo *SyncJo
 			added++
 			syncInfo.Site.published(row)
 		} else if !utilerrors.IsSQLDuplicateID(err) {
-			slog.Error("Error creating entry in database", "error", err, "id", createParams.ID, "site_id", syncInfo.SiteID, "sync_type", syncInfo.Type)
+			slog.ErrorContext(ctx, "Error creating entry in database", "error", err, "id", createParams.ID)
 		}
 	}
 	return added, nil

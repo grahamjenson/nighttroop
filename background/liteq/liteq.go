@@ -3,6 +3,7 @@ package liteq
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/alitto/pond/v2"
@@ -10,6 +11,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 
 	"nighttroop.t1d.nz/data/sql/jobsdb"
+	"nighttroop.t1d.nz/utils/aslog"
 )
 
 func New(controlDB *db.ControlDB) *JobQueue {
@@ -104,6 +106,12 @@ func (j *JobQueue) GrabJobs(ctx context.Context, params GrabJobsParams) ([]*jobs
 
 type WorkerFunc func(context.Context, *jobsdb.Job) error
 
+// jobContext is ctx for one run of a queued job: what is logged with it says its queue, its row in the jobs DB and a
+// job_id of its own
+func jobContext(ctx context.Context, job *jobsdb.Job) context.Context {
+	return aslog.NewJob(ctx, job.Queue, slog.Int64("queued_job_id", job.ID))
+}
+
 type ConsumeParams struct {
 	Queue             string
 	PoolSize          int
@@ -154,7 +162,7 @@ func (j *JobQueue) Consume(ctx context.Context, params ConsumeParams) error {
 		for _, job := range grabbedJobs {
 			job := job
 			workers.Submit(func() {
-				err := params.Worker(ctx, job)
+				err := params.Worker(jobContext(ctx, job), job)
 				if err != nil {
 					j.queries.FailJob(ctx, jobsdb.FailJobParams{
 						Errors: job.Errors.Add(err.Error()),

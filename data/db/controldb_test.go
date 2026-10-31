@@ -73,7 +73,7 @@ func TestArchiveSite(t *testing.T) {
 	require.NoError(t, err)
 
 	// An upload that fails keeps the site
-	require.Error(t, controlDB.ArchiveSite(ctx, siteID, func(string, s3utils.Retention, []string) error { return errors.New("S3 is down") }))
+	require.Error(t, controlDB.ArchiveSite(ctx, siteID, func(context.Context, string, s3utils.Retention, []string) error { return errors.New("S3 is down") }))
 	row, err := controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: siteID})
 	require.NoError(t, err)
 	require.Equal(t, "disabled", row.State)
@@ -82,7 +82,7 @@ func TestArchiveSite(t *testing.T) {
 	var uploadedKey string
 	var uploadedRetention s3utils.Retention
 	var uploadedPaths []string
-	require.NoError(t, controlDB.ArchiveSite(ctx, siteID, func(key string, retention s3utils.Retention, paths []string) error {
+	require.NoError(t, controlDB.ArchiveSite(ctx, siteID, func(_ context.Context, key string, retention s3utils.Retention, paths []string) error {
 		uploadedKey, uploadedRetention, uploadedPaths = key, retention, paths
 		return nil
 	}))
@@ -96,7 +96,7 @@ func TestArchiveSite(t *testing.T) {
 	require.NoFileExists(t, site.SiteDB.BackupPath)
 
 	// It is no longer open, so it cannot be archived again
-	require.ErrorContains(t, controlDB.ArchiveSite(ctx, siteID, func(string, s3utils.Retention, []string) error { return nil }), "is not open")
+	require.ErrorContains(t, controlDB.ArchiveSite(ctx, siteID, func(context.Context, string, s3utils.Retention, []string) error { return nil }), "is not open")
 }
 
 // An archived site hydrates from its archive with its data, live again and open, and only an archived one does
@@ -116,7 +116,7 @@ func TestHydrateSite(t *testing.T) {
 
 	// A stand in for S3, holding the archive's file
 	archive := filepath.Join(t.TempDir(), siteID+".sqlite")
-	download := func(key string, outpath string) (int64, bool, error) {
+	download := func(_ context.Context, key string, outpath string) (int64, bool, error) {
 		require.Equal(t, sitedb.GetS3ArchivePath(siteID, &fileCfg), key)
 		data, err := os.ReadFile(archive)
 		if errors.Is(err, os.ErrNotExist) {
@@ -131,7 +131,7 @@ func TestHydrateSite(t *testing.T) {
 
 	_, err = controlDB.Queries.DisableSite(ctx, controldb.DisableSiteParams{ID: siteID})
 	require.NoError(t, err)
-	require.NoError(t, controlDB.ArchiveSite(ctx, siteID, func(_ string, _ s3utils.Retention, paths []string) error {
+	require.NoError(t, controlDB.ArchiveSite(ctx, siteID, func(_ context.Context, _ string, _ s3utils.Retention, paths []string) error {
 		data, err := os.ReadFile(paths[0])
 		require.NoError(t, err)
 		return os.WriteFile(archive, data, 0o600)
@@ -139,8 +139,8 @@ func TestHydrateSite(t *testing.T) {
 	require.NoFileExists(t, sitedb.GetPath(siteID, &fileCfg))
 
 	// A download that fails, or finds no archive, leaves it archived
-	require.Error(t, controlDB.HydrateSite(ctx, siteID, func(string, string) (int64, bool, error) { return 0, false, errors.New("S3 is down") }))
-	require.ErrorContains(t, controlDB.HydrateSite(ctx, siteID, func(string, string) (int64, bool, error) { return 0, false, nil }), "has no archive")
+	require.Error(t, controlDB.HydrateSite(ctx, siteID, func(context.Context, string, string) (int64, bool, error) { return 0, false, errors.New("S3 is down") }))
+	require.ErrorContains(t, controlDB.HydrateSite(ctx, siteID, func(context.Context, string, string) (int64, bool, error) { return 0, false, nil }), "has no archive")
 	row, err := controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: siteID})
 	require.NoError(t, err)
 	require.Equal(t, "archived", row.State)

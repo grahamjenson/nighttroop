@@ -18,7 +18,7 @@ func DeleteSiteHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // deleteSite archives the site with upload, or to S3 when upload is nil
-func deleteSite(w http.ResponseWriter, r *http.Request, upload func(key string, retention s3utils.Retention, paths []string) error) {
+func deleteSite(w http.ResponseWriter, r *http.Request, upload s3utils.UploadFunc) {
 	siteContext := SiteContextFor(w, r, (&sitesettings.SettingsCollection{Site: true}).GetName(), siteapiutils.ActionUpdate)
 	if siteContext == nil {
 		return

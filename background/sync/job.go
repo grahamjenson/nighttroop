@@ -16,6 +16,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/jobsdb"
 	"nighttroop.t1d.nz/server/nightscoutapi"
+	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -67,6 +68,9 @@ type SyncJobInfo struct {
 	region string
 	// firstSync is true until a sync has worked since the source was saved; a failure then disables it
 	firstSync bool
+	// ctx logs the job, the site and the sync's type. It is never cancelled, as a first sync stopped part way would be
+	// a failure that turns syncing off.
+	ctx context.Context
 }
 
 // SyncSite is the site a sync writes its records into
@@ -129,7 +133,7 @@ func (b *SyncJobManager) workerFunc() func(ctx context.Context, j *jobsdb.Job) e
 		var syncJob SyncJobParams
 		err := json.Unmarshal([]byte(j.Job), &syncJob)
 		if err != nil {
-			slog.Error("Error unmarshalling sync job params", "error", err, "job", j.Job)
+			slog.ErrorContext(ctx, "Error unmarshalling sync job params", "error", err, "params", j.Job)
 			return nil
 		}
 		return b.SyncSource(ctx, syncJob)
@@ -138,32 +142,33 @@ func (b *SyncJobManager) workerFunc() func(ctx context.Context, j *jobsdb.Job) e
 
 // SyncSource runs one sync of a site's sync source now, recording the result on the source
 func (b *SyncJobManager) SyncSource(ctx context.Context, syncJob SyncJobParams) error {
+	ctx = aslog.With(aslog.WithSite(ctx, syncJob.SiteID), slog.String("sync_type", string(syncJob.Type)))
 	syncSource, err := b.controlDB.Queries.GetSyncSource(ctx, controldb.GetSyncSourceParams{
 		SiteID: syncJob.SiteID,
 		Type:   syncJob.Type,
 	})
 	if err != nil {
-		slog.Error("Error getting user sync sources", "error", err, "site_id", syncJob.SiteID, "sync_type", syncJob.Type)
+		slog.ErrorContext(ctx, "Error getting user sync sources", "error", err)
 		return err
 	}
 	if syncSource == nil {
-		slog.Error("workerFunc: No user sync sources found for site", "site_id", syncJob.SiteID, "sync_type", syncJob.Type)
+		slog.ErrorContext(ctx, "workerFunc: No user sync sources found for site")
 		return nil
 	}
 
-	site, err := b.syncSite(syncSource.SiteID)
+	site, err := b.syncSite(ctx, syncSource.SiteID)
 	if err != nil {
-		slog.Error("Error getting the site for sync source", "error", err, "site_id", syncJob.SiteID, "sync_type", syncJob.Type)
+		slog.ErrorContext(ctx, "Error getting the site for sync source", "error", err)
 		return nil
 	}
 	if site == nil {
-		slog.Error("No site found for sync source", "site_id", syncJob.SiteID, "sync_type", syncJob.Type)
+		slog.ErrorContext(ctx, "No site found for sync source")
 		return nil
 	}
 
 	username, password, region, err := b.getUsernamePasswordRegion(syncSource)
 	if err != nil {
-		slog.Error("Error getting username, password, and region", "error", err, "site_id", syncJob.SiteID, "sync_type", syncJob.Type)
+		slog.ErrorContext(ctx, "Error getting username, password, and region", "error", err)
 		b.controlDB.Logs.SyncError(ctx, syncJob.SiteID, syncJob.Type, err)
 		return nil
 	}
@@ -176,6 +181,7 @@ func (b *SyncJobManager) SyncSource(ctx context.Context, syncJob SyncJobParams) 
 		password:      password,
 		region:        region,
 		firstSync:     syncSource.FirstSuccessfulSyncTime == nil,
+		ctx:           context.WithoutCancel(ctx),
 	}
 	if syncJob.Backfill != nil {
 		return b.backfill(syncInfo, *syncJob.Backfill)
@@ -213,10 +219,10 @@ func (b *SyncJobManager) getUsernamePasswordRegion(syncSource *controldb.SiteSyn
 }
 
 // syncSite is the site a sync source writes into, or nil when it has gone
-func (b *SyncJobManager) syncSite(siteID string) (*SyncSite, error) {
+func (b *SyncJobManager) syncSite(ctx context.Context, siteID string) (*SyncSite, error) {
 	siteDB, siteModel, err := b.controlDB.GetSite(siteID)
 	if err != nil {
-		slog.Error("Cannot find the site for sync source", "site_id", siteID, "error", err)
+		slog.ErrorContext(ctx, "Cannot find the site for sync source", "error", err)
 		return nil, err
 	}
 	if siteModel == nil || siteDB == nil {
@@ -238,16 +244,16 @@ func (b *SyncJobManager) SetupCron(c cron.CronScheduler, queue *liteq.JobQueue) 
 
 }
 
-func (b *SyncJobManager) buildSyncCronFunc(queue *liteq.JobQueue) func() error {
-	return func() error {
+func (b *SyncJobManager) buildSyncCronFunc(queue *liteq.JobQueue) func(ctx context.Context) error {
+	return func(ctx context.Context) error {
 		// This gets reports that are:
 		// 1. Have a user with an Enabled sync_source
 		// 2. Are due to run because last attempt is null or was more than the sync interval ago
 		// 3. The User has been seen in the last day
 		// 4. The User is not deleted
-		syncSources, err := b.controlDB.Queries.GetSyncReportsToRun(context.TODO())
+		syncSources, err := b.controlDB.Queries.GetSyncReportsToRun(ctx)
 		if err != nil {
-			slog.Error("error getting sync reports to run", "error", err)
+			slog.ErrorContext(ctx, "error getting sync reports to run", "error", err)
 			return err
 		}
 
@@ -260,16 +266,16 @@ func (b *SyncJobManager) buildSyncCronFunc(queue *liteq.JobQueue) func() error {
 
 			jsonRaw, err := json.Marshal(syncJob)
 			if err != nil {
-				slog.Error("Error marshalling sync job params", "error", err, "syncJob", syncJob)
+				slog.ErrorContext(ctx, "Error marshalling sync job params", "error", err, "syncJob", syncJob)
 				continue
 			}
-			err = queue.QueueJob(context.Background(), liteq.QueueJobParams{
+			err = queue.QueueJob(ctx, liteq.QueueJobParams{
 				Queue:       SYNC_JOB,
 				Job:         string(jsonRaw),
 				DedupingKey: liteq.ReplaceDuplicate(fmt.Sprintf("%s-%s", syncJob.SiteID, syncJob.Type)),
 			})
 			if err != nil {
-				slog.Error("Error queueing sync job", "error", err)
+				slog.ErrorContext(ctx, "Error queueing sync job", "error", err)
 			}
 		}
 

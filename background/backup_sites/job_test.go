@@ -19,7 +19,7 @@ func TestBackupSiteBatchRecordsEvent(t *testing.T) {
 	jobs := backup_sites.SetupBackupSiteJob(ctx, controlDB, cfg, &s3utils.S3Client{ServerConfig: cfg})
 
 	started := time.Now().UnixMilli()
-	require.NoError(t, jobs.BackupSiteBatch(batch))
+	require.NoError(t, jobs.BackupSiteBatch(ctx, batch))
 
 	events, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{Limit: 10})
 	require.NoError(t, err)
@@ -45,7 +45,7 @@ func TestDeleteUnusedSitesRecordsEvent(t *testing.T) {
 	// The site has never been used, and counts as unused from the moment it was made
 	jobs.DeleteAfterInactivity = -time.Minute
 
-	require.NoError(t, jobs.DeleteUnusedSites(siteID[:1]))
+	require.NoError(t, jobs.DeleteUnusedSites(ctx, siteID[:1]))
 
 	events, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &siteID, Limit: 10})
 	require.NoError(t, err)

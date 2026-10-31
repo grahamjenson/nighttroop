@@ -102,7 +102,7 @@ func (c *ConsumerSupervisor) RunQueued(ctx context.Context) error {
 			return err
 		}
 		job := jobs[0]
-		if err := c.worker(ctx, job); err != nil {
+		if err := c.worker(jobContext(ctx, job), job); err != nil {
 			c.queue.queries.FailJob(ctx, jobsdb.FailJobParams{Errors: job.Errors.Add(err.Error()), ID: job.ID})
 			continue
 		}
