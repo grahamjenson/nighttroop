@@ -47,14 +47,11 @@ type ControlConverter interface {
 	ErrorFromDB(source *logsdb.Error) *Error
 
 	// goverter:useZeroValueOnPointerInconsistency
-	// goverter:ignore SiteID
 	QueryToSearchLogs(source *apiquery.Query) logsdb.SearchLogsParams
 
 	// goverter:useZeroValueOnPointerInconsistency
-	// goverter:ignore SiteID
 	QueryToSearchEvents(source *apiquery.Query) logsdb.SearchEventsParams
 
 	// goverter:useZeroValueOnPointerInconsistency
-	// goverter:ignore SiteID
 	QueryToSearchErrors(source *apiquery.Query) logsdb.SearchErrorsParams
 }

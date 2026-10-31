@@ -6,6 +6,8 @@ import "encoding/json"
 type Log struct {
 	ID         int64           `json:"id"`
 	SiteID     *string         `json:"site_id"`
+	RequestID  *string         `json:"request_id"`
+	JobID      *string         `json:"job_id"`
 	Level      string          `json:"level"`
 	Message    string          `json:"message"`
 	Attributes json.RawMessage `json:"attributes"`
@@ -16,6 +18,8 @@ type Log struct {
 type Event struct {
 	ID         int64           `json:"id"`
 	SiteID     *string         `json:"site_id"`
+	RequestID  *string         `json:"request_id"`
+	JobID      *string         `json:"job_id"`
 	Name       string          `json:"name"`
 	Attributes json.RawMessage `json:"attributes"`
 	StartedAt  int64           `json:"started_at"`
@@ -26,6 +30,8 @@ type Event struct {
 type Error struct {
 	ID         int64           `json:"id"`
 	SiteID     *string         `json:"site_id"`
+	RequestID  *string         `json:"request_id"`
+	JobID      *string         `json:"job_id"`
 	Message    string          `json:"message"`
 	Attributes json.RawMessage `json:"attributes"`
 	CreatedAt  int64           `json:"created_at"`

@@ -13,6 +13,9 @@ type QueryConverter interface {
 	// goverter:map . Hours | GetHoursInt64
 	// goverter:map . Type | GetType
 	// goverter:map . Search | GetSearch
+	// goverter:map SiteID | GetID
+	// goverter:map RequestID | GetID
+	// goverter:map JobID | GetID
 	QueryValuesToQuery(source QueryValues) Query
 }
 
@@ -61,4 +64,19 @@ func GetSearch(source QueryValues) *string {
 		search = search[:MaxSearchLength]
 	}
 	return &search
+}
+
+// GetID leaves a blank ID unset, which is every row, and cuts a long one to MaxSearchLength, longer than any ID
+func GetID(id *string) *string {
+	if id == nil {
+		return nil
+	}
+	trimmed := strings.TrimSpace(*id)
+	if trimmed == "" {
+		return nil
+	}
+	if len(trimmed) > MaxSearchLength {
+		trimmed = trimmed[:MaxSearchLength]
+	}
+	return &trimmed
 }

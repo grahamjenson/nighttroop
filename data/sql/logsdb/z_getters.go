@@ -632,6 +632,26 @@ func (m *SearchErrorsParams) SetSearch(v *string) {
 	m.Search = v
 }
 
+// GetRequestID returns the RequestID value.
+func (m SearchErrorsParams) GetRequestID() *string {
+	return m.RequestID
+}
+
+// SetRequestID sets the RequestID value and returns the updated SearchErrorsParams.
+func (m *SearchErrorsParams) SetRequestID(v *string) {
+	m.RequestID = v
+}
+
+// GetJobID returns the JobID value.
+func (m SearchErrorsParams) GetJobID() *string {
+	return m.JobID
+}
+
+// SetJobID sets the JobID value and returns the updated SearchErrorsParams.
+func (m *SearchErrorsParams) SetJobID(v *string) {
+	m.JobID = v
+}
+
 // GetSkip returns the Skip value.
 func (m SearchErrorsParams) GetSkip() int64 {
 	return m.Skip
@@ -682,6 +702,26 @@ func (m *SearchEventsParams) SetSearch(v *string) {
 	m.Search = v
 }
 
+// GetRequestID returns the RequestID value.
+func (m SearchEventsParams) GetRequestID() *string {
+	return m.RequestID
+}
+
+// SetRequestID sets the RequestID value and returns the updated SearchEventsParams.
+func (m *SearchEventsParams) SetRequestID(v *string) {
+	m.RequestID = v
+}
+
+// GetJobID returns the JobID value.
+func (m SearchEventsParams) GetJobID() *string {
+	return m.JobID
+}
+
+// SetJobID sets the JobID value and returns the updated SearchEventsParams.
+func (m *SearchEventsParams) SetJobID(v *string) {
+	m.JobID = v
+}
+
 // GetSkip returns the Skip value.
 func (m SearchEventsParams) GetSkip() int64 {
 	return m.Skip
@@ -720,6 +760,26 @@ func (m SearchLogsParams) GetSearch() *string {
 // SetSearch sets the Search value and returns the updated SearchLogsParams.
 func (m *SearchLogsParams) SetSearch(v *string) {
 	m.Search = v
+}
+
+// GetRequestID returns the RequestID value.
+func (m SearchLogsParams) GetRequestID() *string {
+	return m.RequestID
+}
+
+// SetRequestID sets the RequestID value and returns the updated SearchLogsParams.
+func (m *SearchLogsParams) SetRequestID(v *string) {
+	m.RequestID = v
+}
+
+// GetJobID returns the JobID value.
+func (m SearchLogsParams) GetJobID() *string {
+	return m.JobID
+}
+
+// SetJobID sets the JobID value and returns the updated SearchLogsParams.
+func (m *SearchLogsParams) SetJobID(v *string) {
+	m.JobID = v
 }
 
 // GetSkip returns the Skip value.

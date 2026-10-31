@@ -339,25 +339,30 @@ SELECT id, site_id, message, attributes, request_id, job_id, created_at FROM err
 WHERE (CAST(?1 AS TEXT) IS NULL OR site_id = ?1)
 AND (CAST(?2 AS TEXT) IS NULL OR json_extract(attributes, '$.kind') = ?2)
 AND (CAST(?3 AS TEXT) IS NULL OR instr(lower(message), lower(?3)) > 0 OR instr(lower(attributes), lower(?3)) > 0)
+AND (CAST(?4 AS TEXT) IS NULL OR request_id = ?4)
+AND (CAST(?5 AS TEXT) IS NULL OR job_id = ?5)
 ORDER BY id DESC
-LIMIT ?5 OFFSET ?4
+LIMIT ?7 OFFSET ?6
 `
 
 type SearchErrorsParams struct {
-	SiteID *string
-	Type   *string
-	Search *string
-	Skip   int64
-	Limit  int64
+	SiteID    *string
+	Type      *string
+	Search    *string
+	RequestID *string
+	JobID     *string
+	Skip      int64
+	Limit     int64
 }
 
-// Newest first, only the site's when SiteID is set, only those of the kind Type when it is set, and only those
-// with Search in their text when it is set
+// Newest first, filtered as SearchLogs is, and only those of the kind Type when it is set
 func (q *Queries) SearchErrors(ctx context.Context, arg SearchErrorsParams) ([]*Error, error) {
 	rows, err := q.query(ctx, q.searchErrorsStmt, searchErrors,
 		arg.SiteID,
 		arg.Type,
 		arg.Search,
+		arg.RequestID,
+		arg.JobID,
 		arg.Skip,
 		arg.Limit,
 	)
@@ -395,25 +400,30 @@ SELECT id, site_id, batch, name, attributes, started_at, finished_at, request_id
 WHERE (CAST(?1 AS TEXT) IS NULL OR site_id = ?1)
 AND (CAST(?2 AS TEXT) IS NULL OR name = ?2)
 AND (CAST(?3 AS TEXT) IS NULL OR instr(lower(name), lower(?3)) > 0 OR instr(lower(attributes), lower(?3)) > 0)
+AND (CAST(?4 AS TEXT) IS NULL OR request_id = ?4)
+AND (CAST(?5 AS TEXT) IS NULL OR job_id = ?5)
 ORDER BY id DESC
-LIMIT ?5 OFFSET ?4
+LIMIT ?7 OFFSET ?6
 `
 
 type SearchEventsParams struct {
-	SiteID *string
-	Type   *string
-	Search *string
-	Skip   int64
-	Limit  int64
+	SiteID    *string
+	Type      *string
+	Search    *string
+	RequestID *string
+	JobID     *string
+	Skip      int64
+	Limit     int64
 }
 
-// Newest first, only the site's when SiteID is set, only those named Type when it is set, and only those with
-// Search in their text when it is set
+// Newest first, filtered as SearchLogs is, and only those named Type when it is set
 func (q *Queries) SearchEvents(ctx context.Context, arg SearchEventsParams) ([]*Event, error) {
 	rows, err := q.query(ctx, q.searchEventsStmt, searchEvents,
 		arg.SiteID,
 		arg.Type,
 		arg.Search,
+		arg.RequestID,
+		arg.JobID,
 		arg.Skip,
 		arg.Limit,
 	)
@@ -453,25 +463,32 @@ const searchLogs = `-- name: SearchLogs :many
 SELECT id, site_id, level, message, attributes, request_id, job_id, created_at FROM logs
 WHERE (CAST(?1 AS TEXT) IS NULL OR site_id = ?1)
 AND (CAST(?2 AS TEXT) IS NULL OR instr(lower(message), lower(?2)) > 0 OR instr(lower(attributes), lower(?2)) > 0)
+AND (CAST(?3 AS TEXT) IS NULL OR request_id = ?3)
+AND (CAST(?4 AS TEXT) IS NULL OR job_id = ?4)
 ORDER BY id DESC
-LIMIT ?4 OFFSET ?3
+LIMIT ?6 OFFSET ?5
 `
 
 type SearchLogsParams struct {
-	SiteID *string
-	Search *string
-	Skip   int64
-	Limit  int64
+	SiteID    *string
+	Search    *string
+	RequestID *string
+	JobID     *string
+	Skip      int64
+	Limit     int64
 }
 
 // -----
 // READ
 // ------
-// Newest first, only the site's when SiteID is set, and only those with Search in their text when it is set
+// Newest first, only the site's, request's and job's when SiteID, RequestID and JobID are set, and only those with
+// Search in their text when it is set
 func (q *Queries) SearchLogs(ctx context.Context, arg SearchLogsParams) ([]*Log, error) {
 	rows, err := q.query(ctx, q.searchLogsStmt, searchLogs,
 		arg.SiteID,
 		arg.Search,
+		arg.RequestID,
+		arg.JobID,
 		arg.Skip,
 		arg.Limit,
 	)

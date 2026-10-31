@@ -14,6 +14,7 @@ import (
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/apiutils/apiquery"
 	"nighttroop.t1d.nz/utils/display"
 )
 
@@ -86,12 +87,34 @@ templ attributesDetail(id string, raw json.RawMessage) {
 
 var detail = modal.Detail
 
+// ids are the site, request and job a page's rows can be narrowed to
+func ids(q *apiquery.Query) []filter.ID {
+	return []filter.ID{{Name: "site_id", Label: "Site ID", Value: q.SiteID}, {Name: "request_id", Label: "Request ID", Value: q.RequestID}, {Name: "job_id", Label: "Job ID", Value: q.JobID}}
+}
+
+// idDetail is a row's request or job, when it has one, linking to the page's rows with it
+templ idDetail(id string, label string, path string, name string, value *string) {
+	if value != nil {
+		{{ link := filter.PagePath(path, nil, nil, filter.ID{Name: name, Value: value}) }}
+		<dt class="text-gray-500">{ label }</dt>
+		<dd class="break-all">
+			<a id={ id } href={ templ.SafeURL(link) } hx-get={ link } hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML" class="text-primary underline">{ *value }</a>
+		</dd>
+	}
+}
+
+// idDetails are a row's request and job, each linking to the rows of path with it
+templ idDetails(id string, path string, requestID *string, jobID *string) {
+	@idDetail(id+"--request-id", "Request", path, "request_id", requestID)
+	@idDetail(id+"--job-id", "Job", path, "job_id", jobID)
+}
+
 // EventsTable shows one page of events, the newest first
-templ EventsTable(events []*controlmodels.Event, skip int64, limit int64, eventType *string, search *string) {
+templ EventsTable(events []*controlmodels.Event, q *apiquery.Query) {
 	// Sign ins are from where DB-IP estimates
 	@footer.DBIPCredit()
-	@page("events_table", "Events", "What happened to each site and the server, newest first. Click an event to see its details.", "/events", filter.PagePath("/events", eventType, search), len(events), skip, limit) {
-		@filter.Filter(filter.Props{ID: "control--events--filter", Path: "/events", All: "All events", Types: dataevents.PersistedNames(), Selected: eventType, Search: search})
+	@page("events_table", "Events", "What happened to each site and the server, newest first. Click an event to see its details.", "/events", filter.PagePath("/events", q.Type, q.Search, ids(q)...), len(events), q.Skip, q.Limit) {
+		@filter.Filter(filter.Props{ID: "control--events--filter", Path: "/events", All: "All events", Types: dataevents.PersistedNames(), Selected: q.Type, Search: q.Search, IDs: ids(q)})
 		@table.Table(table.Props{ID: "controlEventsTable", Class: "rounded-lg border border-gray-200"}) {
 			@table.Header() {
 				@table.Row() {
@@ -145,15 +168,16 @@ templ EventModal(event *controlmodels.Event) {
 				@detail("Finished", formatDate(*event.FinishedAt))
 			}
 			@detail("Duration", duration(event))
+			@idDetails("control--event", "/events", event.RequestID, event.JobID)
 		</dl>
 		@attributesDetail("control--event--attributes", event.Attributes)
 	}
 }
 
 // ErrorsTable shows one page of errors, the newest first
-templ ErrorsTable(errors []*controlmodels.Error, skip int64, limit int64, kind *string, search *string) {
-	@page("errors_table", "Errors", "What failed for each site and the server, newest first. Click an error to see its details.", "/errors", filter.PagePath("/errors", kind, search), len(errors), skip, limit) {
-		@filter.Filter(filter.Props{ID: "control--errors--filter", Path: "/errors", All: "All errors", Types: db.ErrorKinds, Selected: kind, Search: search})
+templ ErrorsTable(errors []*controlmodels.Error, q *apiquery.Query) {
+	@page("errors_table", "Errors", "What failed for each site and the server, newest first. Click an error to see its details.", "/errors", filter.PagePath("/errors", q.Type, q.Search, ids(q)...), len(errors), q.Skip, q.Limit) {
+		@filter.Filter(filter.Props{ID: "control--errors--filter", Path: "/errors", All: "All errors", Types: db.ErrorKinds, Selected: q.Type, Search: q.Search, IDs: ids(q)})
 		@table.Table(table.Props{ID: "controlErrorsTable", Class: "rounded-lg border border-gray-200"}) {
 			@table.Header() {
 				@table.Row() {
@@ -195,15 +219,16 @@ templ ErrorModal(e *controlmodels.Error) {
 		<p class="mt-2 break-all text-sm text-red-700">{ e.Message }</p>
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@detail("Site", orServer(e.SiteID))
+			@idDetails("control--error", "/errors", e.RequestID, e.JobID)
 		</dl>
 		@attributesDetail("control--error--attributes", e.Attributes)
 	}
 }
 
 // LogsTable shows one page of logs, the newest first
-templ LogsTable(logs []*controlmodels.Log, skip int64, limit int64, search *string) {
-	@page("logs_table", "Logs", "Messages logged for each site and the server, newest first. Click a log to see its details.", "/logs", filter.PagePath("/logs", nil, search), len(logs), skip, limit) {
-		@filter.Filter(filter.Props{ID: "control--logs--filter", Path: "/logs", Search: search})
+templ LogsTable(logs []*controlmodels.Log, q *apiquery.Query) {
+	@page("logs_table", "Logs", "Messages logged for each site and the server, newest first. Click a log to see its details.", "/logs", filter.PagePath("/logs", nil, q.Search, ids(q)...), len(logs), q.Skip, q.Limit) {
+		@filter.Filter(filter.Props{ID: "control--logs--filter", Path: "/logs", Search: q.Search, IDs: ids(q)})
 		@table.Table(table.Props{ID: "controlLogsTable", Class: "rounded-lg border border-gray-200"}) {
 			@table.Header() {
 				@table.Row() {
@@ -251,6 +276,7 @@ templ LogModal(log *controlmodels.Log) {
 		<p class="mt-2 break-all text-sm">{ log.Message }</p>
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@detail("Site", orServer(log.SiteID))
+			@idDetails("control--log", "/logs", log.RequestID, log.JobID)
 		</dl>
 		@attributesDetail("control--log--attributes", log.Attributes)
 	}
