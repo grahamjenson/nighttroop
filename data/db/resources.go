@@ -11,8 +11,8 @@ import (
 	"nighttroop.t1d.nz/utils/config"
 )
 
-// keepResourceReadings is how long checks of the server's resources are kept, for the control site's graphs
-const keepResourceReadings = 3 * 24 * time.Hour
+// KeepResourceReadings is how long checks of the server's resources are kept, for the control site's graphs
+const KeepResourceReadings = 3 * 24 * time.Hour
 
 // RecordResources keeps a check of the server's resources, forgetting checks older than a few days, and records an
 // event for each resource that went over its alert level since the last check, or came back under it
@@ -24,7 +24,7 @@ func (db *ControlDB) RecordResources(ctx context.Context, reading livedb.CreateR
 	if err := db.Live.Queries.CreateResourceReading(ctx, reading); err != nil {
 		return err
 	}
-	before := time.UnixMilli(reading.At).Add(-keepResourceReadings).UnixMilli()
+	before := time.UnixMilli(reading.At).Add(-KeepResourceReadings).UnixMilli()
 	if err := db.Live.Queries.DeleteResourceReadingsBefore(ctx, livedb.DeleteResourceReadingsBeforeParams{Before: before}); err != nil {
 		return err
 	}
