@@ -146,7 +146,7 @@ it is required, and with its limits. Its time is typed in the settings' timezone
 
 ### Presets
 
-- **Food presets**: added, viewed, edited and deleted.
+- **Food presets**: added in a modal of all their fields, as data is, viewed, edited and deleted.
 - **Profiles**: profile stores uploaded by a loop, with their schedules to read, renamed or deleted.
 
 ### Sync
