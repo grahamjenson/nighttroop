@@ -6,18 +6,21 @@ ASSERT_PATH /
 CLICK #site--settings-menu
 CLICK #site--data--glucose-button
 ASSERT_STATUS 200
+CLICK #site--glucose--add
 INPUT #site--glucose--create--reading 3.2
 CLICK #site--glucose--create--submit
 ASSERT_STATUS 201
 ASSERT_VISIBLE #glucoseReadingsTable td.text-glucose-low[title="Low"] >> text=3.2
 
 // One over the high alarm (180 mg/dL by default) is coloured high and says High
+CLICK #site--glucose--add
 INPUT #site--glucose--create--reading 12.5
 CLICK #site--glucose--create--submit
 ASSERT_STATUS 201
 ASSERT_VISIBLE #glucoseReadingsTable td.text-glucose-high[title="High"] >> text=12.5
 
 // One between them keeps the table's colour, with no title
+CLICK #site--glucose--add
 INPUT #site--glucose--create--reading 6.4
 CLICK #site--glucose--create--submit
 ASSERT_STATUS 201

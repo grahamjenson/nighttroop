@@ -46,6 +46,11 @@ func (s *ProfileSwitchesCollection) CreateRow(ctx context.Context, collectionTx 
 	return q.CreateProfileSwitch(ctx, sitemodels.ProfileSwitchToCreate(model, siteContext))
 }
 
+// NewHTMXResponse is the modal to add a profile switch in
+func (s *ProfileSwitchesCollection) NewHTMXResponse() templ.Component {
+	return site_data_templ.ProfileSwitchNew()
+}
+
 func (s *ProfileSwitchesCollection) CreateHTMXResponse(model *sitemodels.SiteProfileSwitch) templ.Component {
 	return site_data_templ.ProfileSwitchCreated(model)
 }

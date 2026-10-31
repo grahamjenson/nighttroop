@@ -11,6 +11,13 @@ ASSERT_VISIBLE #site--notification--empty
 SCREENSHOT notification_events_empty
 
 // A notification typed in happens now, added to the top of the table
+CLICK #site--notification--add
+// Adding opens a modal of all its fields, each saying what it is and whether it is required
+ASSERT_VISIBLE #site--notification--create--modal
+ASSERT_TEXT_VISIBLE What it is about, in a few words.
+ASSERT_TEXT_VISIBLE Required
+ASSERT_VISIBLE #site--notification--create--content
+SCREENSHOT notification_event_add
 INPUT #site--notification--create--title Sensor change
 INPUT #site--notification--create--severity 2
 INPUT #site--notification--create--notes New sensor tonight
@@ -18,6 +25,7 @@ CLICK #site--notification--create--submit
 ASSERT_STATUS 201
 ASSERT_TEXT_VISIBLE Sensor change
 ASSERT_NOT_VISIBLE #site--notification--empty
+CLICK #site--notification--add
 INPUT #site--notification--create--title Swimming
 INPUT #site--notification--create--severity 1
 CLICK #site--notification--create--submit

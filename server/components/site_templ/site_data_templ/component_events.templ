@@ -2,6 +2,7 @@ package site_data_templ
 
 import (
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/addmodal"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
@@ -28,7 +29,7 @@ templ ComponentEventsTable(events []*sitemodels.SiteComponentEvent, skip int64, 
 			Newest first. Click a change to see all its details.
 		}
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			@componentEventCreateForm()
+			@addmodal.Open("site--component-event--add", "/data/component-events/new", "Add Change")
 			@table.Table(table.Props{
 				ID:    "componentEventsTable",
 				Class: "rounded-lg border border-gray-200",
@@ -70,33 +71,23 @@ templ ComponentEventsTable(events []*sitemodels.SiteComponentEvent, skip int64, 
 	</div>
 }
 
-// componentEventCreateForm adds a change happening now, putting its row at the top of the table
-templ componentEventCreateForm() {
-	<form
-		id="site--component-event--create"
-		class="mb-4 flex items-center justify-end gap-2"
-		hx-post="/data/component-events"
-		hx-target="#componentEventsTable tbody"
-		hx-swap="afterbegin"
-		hx-status:4xx="target:#toaster swap:beforeend"
-		hx-status:5xx="target:#toaster swap:beforeend"
-		hx-on::after:request="if (ctx.response.status < 400) { this.reset(); document.getElementById('site--component-event--empty')?.remove() }"
-	>
-		<select id="site--component-event--create--event-type" name="event_type" aria-label="Type" class="h-9 w-48 rounded-md border border-gray-200 bg-white px-3 text-sm">
-			for _, eventType := range sitemodels.ComponentEventTypes {
-				<option value={ eventType }>{ eventType }</option>
-			}
-		</select>
-		<div class="w-40">
-			@input.Input(input.Props{ID: "site--component-event--create--sensor-code", Name: "sensor_code", Placeholder: "Sensor Code", Attributes: templ.Attributes{"maxlength": "64"}})
-		</div>
-		<div class="w-64">
-			@input.Input(input.Props{ID: "site--component-event--create--notes", Name: "notes", Placeholder: "Notes"})
-		</div>
-		@button.Button(button.Props{ID: "site--component-event--create--submit", Type: button.TypeSubmit}) {
-			Add Change
-		}
-	</form>
+// ComponentEventNew adds a site or sensor change with all its fields, putting its row at the top of the table
+templ ComponentEventNew() {
+	@addmodal.Modal(addmodal.Props{ID: "site--component-event--create", Title: "Add Change", Path: "/data/component-events", Target: "#componentEventsTable tbody",
+		EmptyID: "site--component-event--empty", Submit: "Add Change", Fields: componentEventFields})
+}
+
+// componentEventFields are what a site or sensor change has that a person can type in
+var componentEventFields = []addmodal.Field{
+	{Name: "event_type", Label: "Change", Help: "What was changed, started or filled.", Required: true, Kind: addmodal.Select, Options: sitemodels.ComponentEventTypes},
+	{Name: "occurred_at", Label: "When", Help: "When it was changed, in your timezone. Blank is now.", Kind: addmodal.When},
+	{Name: "sensor_code", Label: "Sensor code", Help: "The new sensor's calibration code.", Kind: addmodal.Text, Max: "64"},
+	{Name: "transmitter_id", Label: "Transmitter ID", Help: "The sensor's transmitter.", Kind: addmodal.Text, Max: "64"},
+	{Name: "pump_type", Label: "Pump type", Help: "The pump's make or model.", Kind: addmodal.Text, Max: "64"},
+	{Name: "pump_serial", Label: "Pump serial", Help: "The pump's serial number.", Kind: addmodal.Text, Max: "32"},
+	{Name: "pump_id", Label: "Pump ID", Help: "The pump's ID for the change.", Kind: addmodal.Text, Max: "32"},
+	{Name: "reason", Label: "Reason", Help: "Why it was changed, e.g. it fell off.", Kind: addmodal.Text, Max: "64"},
+	{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
 }
 
 // componentEventRow opens the change's details when clicked. The delete button stops its click reaching the row.

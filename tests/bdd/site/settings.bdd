@@ -73,6 +73,7 @@ SCREENSHOT invalid_timezone_toast
 CLICK #site--settings-menu
 CLICK #site--data--glucose-button
 ASSERT_STATUS 200
+CLICK #site--glucose--add
 INPUT #site--glucose--create--reading 120
 CLICK #site--glucose--create--submit
 ASSERT_STATUS 201

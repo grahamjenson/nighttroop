@@ -48,6 +48,11 @@ func (s *TempBasalsCollection) CreateRow(ctx context.Context, collectionTx *site
 	return q.CreateTempBasal(ctx, sitemodels.TempBasalToCreate(model, siteContext))
 }
 
+// NewHTMXResponse is the modal to add a temp basal in
+func (s *TempBasalsCollection) NewHTMXResponse() templ.Component {
+	return site_data_templ.TempBasalNew()
+}
+
 func (s *TempBasalsCollection) CreateHTMXResponse(model *sitemodels.SiteTempBasal) templ.Component {
 	return site_data_templ.TempBasalCreated(model)
 }

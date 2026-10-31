@@ -143,12 +143,13 @@ Every value written to a site, from its pages, the Nightscout API or a sync, has
 e.g. a bolus of at most 500 units or 1000 g of carbs, and a date from 1970 to the year 9999. Insulin and food can be
 negative, to take back too much entered. The pages are stricter, e.g. a dose of at most 100 units either way.
 
-Adding an insulin dose or food intake opens a modal of all its fields, each saying what it is, in what units, whether
-it is required, and with its limits. Its time is typed in the settings' timezone, and is now when left blank.
+Adding a record on a data page opens a modal of all the fields a person can type in, each saying what it is, in what
+units, whether it is required, with its limits, and a dropdown or suggestions for its types. Its time is typed in the
+settings' timezone, and is now when left blank; other fields left blank are not set.
 
 ### Presets
 
-- **Food presets**: added, viewed, edited and deleted.
+- **Food presets**: added in a modal of all their fields, as data is, viewed, edited and deleted.
 - **Profiles**: profile stores uploaded by a loop, with their schedules to read, renamed or deleted.
 
 ### Sync

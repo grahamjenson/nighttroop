@@ -53,6 +53,7 @@ ASSERT_STATUS 201
 CLICK #site--settings-menu
 CLICK #site--data--component-events-button
 ASSERT_STATUS 200
+CLICK #site--component-event--add
 INPUT #site--component-event--create--event-type Sensor Start
 CLICK #site--component-event--create--submit
 ASSERT_STATUS 201

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/addmodal"
 	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
@@ -21,7 +22,7 @@ templ NotificationEventsTable(events []*sitemodels.SiteNotificationEvent, skip i
 			Newest first. Click a notification to see all its details.
 		}
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			@notificationEventCreateForm()
+			@addmodal.Open("site--notification--add", "/data/notifications/new", "Add Notification")
 			@table.Table(table.Props{
 				ID:    "notificationEventsTable",
 				Class: "rounded-lg border border-gray-200",
@@ -63,23 +64,21 @@ templ NotificationEventsTable(events []*sitemodels.SiteNotificationEvent, skip i
 	</div>
 }
 
-// notificationEventCreateForm adds a notification happening now, putting its row at the top of the table
-templ notificationEventCreateForm() {
-	<form
-		id="site--notification--create"
-		class="mb-4 flex items-end justify-end gap-2"
-		hx-post="/data/notifications"
-		hx-target="#notificationEventsTable tbody"
-		hx-swap="afterbegin"
-		hx-status:4xx="target:#toaster swap:beforeend"
-		hx-status:5xx="target:#toaster swap:beforeend"
-		hx-on::after:request="if (ctx.response.status < 400) { this.reset(); document.getElementById('site--notification--empty')?.remove() }"
-	>
-		@notificationEventInputs("site--notification--create", "", "", "")
-		@button.Button(button.Props{ID: "site--notification--create--submit", Type: button.TypeSubmit}) {
-			Add Notification
-		}
-	</form>
+// NotificationEventNew adds a notification with all its fields, putting its row at the top of the table
+templ NotificationEventNew() {
+	@addmodal.Modal(addmodal.Props{ID: "site--notification--create", Title: "Add Notification", Path: "/data/notifications", Target: "#notificationEventsTable tbody",
+		EmptyID: "site--notification--empty", Submit: "Add Notification", Fields: notificationEventFields})
+}
+
+// notificationEventFields are what a notification has that a person can type in
+var notificationEventFields = []addmodal.Field{
+	{Name: "title", Label: "Title", Help: "What it is about, in a few words.", Required: true, Kind: addmodal.Text, Max: "128"},
+	{Name: "occurred_at", Label: "When", Help: "When it happened, in your timezone. Blank is now.", Kind: addmodal.When},
+	{Name: "severity", Label: "Severity", Help: "How important it is, from 0, the lowest, to 5.", Min: "0", Max: "5", Step: "1"},
+	{Name: "notification_type", Label: "Type", Help: "The kind of notification, announcement when left blank.", Kind: addmodal.Text, Max: "32", Options: []string{"announcement", "question"}},
+	{Name: "content", Label: "Content", Help: "What it says in full.", Kind: addmodal.Text, Max: "1024", Wide: true},
+	{Name: "reason", Label: "Reason", Help: "Why it was sent.", Kind: addmodal.Text, Max: "64"},
+	{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
 }
 
 templ notificationEventInputs(id string, title string, severity string, notes string) {

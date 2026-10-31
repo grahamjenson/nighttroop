@@ -11,15 +11,23 @@ ASSERT_VISIBLE #site--activity--empty
 SCREENSHOT activities_empty
 
 // An activity typed in happens now, added to the top of the table
+CLICK #site--activity--add
+// Adding opens a modal of all its fields, each saying what it is and whether it is required
+ASSERT_VISIBLE #site--activity--create--modal
+ASSERT_TEXT_VISIBLE What it was, e.g. a run.
+ASSERT_TEXT_VISIBLE Required
+ASSERT_VISIBLE #site--activity--create--heart-rate
+SCREENSHOT activity_add
 INPUT #site--activity--create--name Football
-INPUT #site--activity--create--duration 90
+INPUT #site--activity--create--duration-minutes 90
 INPUT #site--activity--create--notes Training
 CLICK #site--activity--create--submit
 ASSERT_STATUS 201
 ASSERT_TEXT_VISIBLE Football
 ASSERT_NOT_VISIBLE #site--activity--empty
+CLICK #site--activity--add
 INPUT #site--activity--create--name Walk
-INPUT #site--activity--create--duration 30
+INPUT #site--activity--create--duration-minutes 30
 CLICK #site--activity--create--submit
 ASSERT_STATUS 201
 ASSERT_TEXT_VISIBLE Walk

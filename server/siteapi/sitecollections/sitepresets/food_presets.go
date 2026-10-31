@@ -44,6 +44,11 @@ func (s *FoodPresetsCollection) CreateRow(ctx context.Context, collectionTx *sit
 	return q.CreateFoodPreset(ctx, sitemodels.FoodPresetToCreate(model, siteContext))
 }
 
+// NewHTMXResponse is the modal to add a food preset in
+func (s *FoodPresetsCollection) NewHTMXResponse() templ.Component {
+	return site_presets_templ.FoodPresetNew()
+}
+
 func (s *FoodPresetsCollection) CreateHTMXResponse(model *sitemodels.SiteFoodPreset) templ.Component {
 	return site_presets_templ.FoodPresetCreated(model)
 }

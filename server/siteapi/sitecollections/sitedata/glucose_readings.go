@@ -44,6 +44,11 @@ func (s *GlucoseReadingsCollection) CreateRow(ctx context.Context, collectionTx 
 	return q.CreateGlucoseReading(ctx, params)
 }
 
+// NewHTMXResponse is the modal to add a glucose reading in
+func (s *GlucoseReadingsCollection) NewHTMXResponse() templ.Component {
+	return site_data_templ.GlucoseReadingNew()
+}
+
 func (s *GlucoseReadingsCollection) CreateHTMXResponse(model *sitemodels.SiteGlucoseReading) templ.Component {
 	return site_data_templ.GlucoseReadingCreated(model)
 }

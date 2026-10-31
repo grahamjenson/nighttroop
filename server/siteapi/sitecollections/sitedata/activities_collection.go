@@ -49,6 +49,11 @@ func (s *ActivitiesCollection) CreateRow(ctx context.Context, collectionTx *site
 	return q.CreateActivity(ctx, sitemodels.ActivityToCreate(model, siteContext))
 }
 
+// NewHTMXResponse is the modal to add an activity in
+func (s *ActivitiesCollection) NewHTMXResponse() templ.Component {
+	return site_data_templ.ActivityNew()
+}
+
 func (s *ActivitiesCollection) CreateHTMXResponse(model *sitemodels.SiteActivity) templ.Component {
 	return site_data_templ.ActivityCreated(model)
 }

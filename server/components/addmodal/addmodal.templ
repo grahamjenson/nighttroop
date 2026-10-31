@@ -14,6 +14,8 @@ type Kind int
 const (
 	Number Kind = iota
 	Text
+	// Select is one of its options, or none when it is not required
+	Select
 	// When is a date and time in the timezone times are shown in, or now when left blank
 	When
 )
@@ -29,8 +31,10 @@ type Field struct {
 	Kind     Kind
 	// Min, Max and Step limit a number, and Max a text's length
 	Min, Max, Step string
-	// Options are a text's suggestions
+	// Options are a select's choices, or a text's suggestions
 	Options []string
+	// Value is what a number or text starts at
+	Value string
 	// Wide takes the whole row, for notes
 	Wide bool
 }
@@ -105,12 +109,21 @@ templ field(p Props, f Field) {
 			}
 		</label>
 		switch f.Kind {
+			case Select:
+				<select id={ id } name={ f.Name } required?={ f.Required } class="h-9 w-full rounded-md border border-gray-200 bg-white px-3 text-sm">
+					if !f.Required {
+						<option value="">None</option>
+					}
+					for _, option := range f.Options {
+						<option value={ option }>{ option }</option>
+					}
+				</select>
 			case When:
 				@input.Input(input.Props{ID: id, Name: f.Name, Type: input.TypeDateTime})
 			case Number:
-				@input.Input(input.Props{ID: id, Name: f.Name, Type: input.TypeNumber, Required: f.Required, Attributes: templ.Attributes{"step": f.Step, "min": f.Min, "max": f.Max}})
+				@input.Input(input.Props{ID: id, Name: f.Name, Type: input.TypeNumber, Value: f.Value, Required: f.Required, Attributes: templ.Attributes{"step": f.Step, "min": f.Min, "max": f.Max}})
 			default:
-				@input.Input(input.Props{ID: id, Name: f.Name, Required: f.Required, Attributes: textAttributes(f, id)})
+				@input.Input(input.Props{ID: id, Name: f.Name, Value: f.Value, Required: f.Required, Attributes: textAttributes(f, id)})
 				if len(f.Options) > 0 {
 					<datalist id={ id + "--options" }>
 						for _, option := range f.Options {
