@@ -77,6 +77,15 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - Counts the sites created today, this week and this month.
 - Only signed in requests are counted.
 
+### Resource alerts
+
+- Every 5 minutes the server checks its memory (of its container's limit, or else the machine's), the space used on
+  its DBs' disk, and how long its CPU stayed at 100%, sampled every 5 seconds.
+- Memory or disk at or over 60% (`MEMORY_ALERT_PERCENT`, `DISK_ALERT_PERCENT`), or the CPU at 100% for 20 seconds or
+  more (`CPU_PEGGED_ALERT_SECONDS`), shows in the banner on every control page until a check finds it back under.
+- Going over is a "Resource high" event of the server's, and coming back under a "Resource recovered" one.
+- The last 3 days of checks are kept while the server runs, and start again when it restarts.
+
 ## Site
 
 ### Creating and recovering a site

@@ -28,3 +28,14 @@ CREATE TABLE connections (
 ) STRICT;
 
 CREATE INDEX connections_site ON connections (site_id, kind);
+
+-- A check of the server's resources, every few minutes, kept a few days for the control site's graphs, the time in
+-- milliseconds. CPU is the mean percent of every core since the last check and the longest it was pegged at 100%;
+-- memory and disk are percents used, null where they cannot be read
+CREATE TABLE resource_readings (
+    at INTEGER PRIMARY KEY,
+    cpu_percent REAL NOT NULL,
+    cpu_pegged_seconds INTEGER NOT NULL,
+    memory_percent REAL,
+    disk_percent REAL
+) STRICT;

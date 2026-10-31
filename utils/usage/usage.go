@@ -22,6 +22,7 @@ type Tracker struct {
 	ingested int64
 	routes   map[string]*route
 	cpu      cpuSample
+	watch    cpuWatch
 }
 
 type day struct {

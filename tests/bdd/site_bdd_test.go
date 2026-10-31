@@ -23,7 +23,7 @@ import (
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
-//go:embed site/** control/** steps/** setup/**
+//go:embed site/** control/** steps/** setup/** resources/**
 var embeddedFiles embed.FS
 
 // bddShards is how many groups of scenarios run at once. Each has its own databases, server and background jobs, so
@@ -54,8 +54,9 @@ func TestSite(t *testing.T) {
 
 	paths := []string{}
 	err = fs.WalkDir(embeddedFiles, ".", func(path string, d fs.DirEntry, err error) error {
-		// The setup files need a server that is not set up, see TestSetup
-		if err == nil && !d.IsDir() && filepath.Ext(path) == ".bdd" && !strings.HasPrefix(path, "setup/") {
+		// The setup and resources files need servers of their own, see TestSetup and TestResourceAlerts
+		ownServer := strings.HasPrefix(path, "setup/") || strings.HasPrefix(path, "resources/")
+		if err == nil && !d.IsDir() && filepath.Ext(path) == ".bdd" && !ownServer {
 			paths = append(paths, path)
 		}
 		return err
