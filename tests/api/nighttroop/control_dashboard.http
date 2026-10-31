@@ -1,9 +1,4 @@
-NAME control_login
-POST http://control.localhost/login
-H Accept: application/json
-B {"name": "admin", "password": "password", "totp": "123123"}
-ASSERT_STATUS 200
-SET control_jwt {{ .control_login.token }}
+INCLUDE steps/control_login.steps
 
 // A logged in control admin can load the dashboard
 NAME control_dashboard

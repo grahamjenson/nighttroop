@@ -2,12 +2,7 @@ NAME create_new_site
 POST http://localhost/site
 ASSERT_STATUS 200
 
-NAME control_login
-POST http://control.localhost/login
-H Accept: application/json
-B {"name": "admin", "password": "password", "totp": "123123"}
-ASSERT_STATUS 200
-SET control_jwt {{ .control_login.token }}
+INCLUDE steps/control_login.steps
 
 // Creating a site records an event, which the control API sees with when it started
 NAME list_events

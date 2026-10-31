@@ -163,13 +163,7 @@ ASSERT_EQUALS 3.885 "@result.glucose"
 # NOW CHANGE TO MGDL
 ######
 
-NAME update_unit_to_mgdl
-PATCH http://{{ site }}/api/v3/settings/units
-H Authorization: Bearer {{ jwt }}
-B {"value":  "mg/dL"}
-ASSERT_STATUS 200
-ASSERT_EQUALS "units" "@result.identifier"
-ASSERT_EQUALS "mg/dL" "@result.value"
+INCLUDE steps/ns_units_mgdl.steps
 
 
 NAME get_profile_switch_mmol

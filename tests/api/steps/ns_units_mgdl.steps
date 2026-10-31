@@ -1,0 +1,9 @@
+// Sets the site's units to mg/dL through the Nightscout API, with site its Nightscout host and jwt a JWT
+// that can write settings
+NAME update_unit_to_mgdl
+PATCH http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+B {"value":  "mg/dL"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "units" "@result.identifier"
+ASSERT_EQUALS "mg/dL" "@result.value"
