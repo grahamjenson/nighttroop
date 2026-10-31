@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/clients/nighttroop"
@@ -101,6 +102,118 @@ func TestClient(t *testing.T) {
 	require.Len(t, *day.GlucoseReadings, 1)
 	require.Len(t, *day.FoodIntakes, 1)
 	require.Contains(t, day.AdditionalProperties, "today")
+}
+
+// The generated client uses a site's Nightscout API, v1, v2 and v3, on its Nightscout host with its PWD phone's token
+func TestNightscoutClient(t *testing.T) {
+	config, controlDB := testutils.NewControlDB(t)
+	ts := httptest.NewServer(server.GetMainHandler(controlDB, config))
+	t.Cleanup(ts.Close)
+	ctx := context.Background()
+	httpClient := nighttroop.WithHTTPClient(testutils.HostClient(ts))
+
+	public, err := nighttroop.NewClientWithResponses("http://localhost", httpClient)
+	require.NoError(t, err)
+	created, err := public.CreateSiteWithResponse(ctx)
+	require.NoError(t, err)
+	newSite := created.JSON200
+	ns, err := nighttroop.NewClientWithResponses("http://"+newSite.SiteSubdomain+".ns.localhost", httpClient)
+	require.NoError(t, err)
+
+	// Without a token the API is refused
+	unauthed, err := ns.NsV1StatusWithResponse(ctx)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusUnauthorized, unauthed.StatusCode())
+
+	// The token itself, as the token query parameter, or the JWT it is exchanged for
+	byToken, err := ns.NsV3TestWithResponse(ctx, func(_ context.Context, req *http.Request) error {
+		query := req.URL.Query()
+		query.Set("token", newSite.PwdNstoken)
+		req.URL.RawQuery = query.Encode()
+		return nil
+	})
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, byToken.StatusCode(), string(byToken.Body))
+	authorization, err := ns.NsV2AuthorizeWithResponse(ctx, newSite.PwdNstoken)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, authorization.StatusCode(), string(authorization.Body))
+	auth := nighttroop.RequestEditorFn(func(_ context.Context, req *http.Request) error {
+		req.Header.Set("Authorization", "Bearer "+*authorization.JSON200.Token)
+		return nil
+	})
+
+	status, err := ns.NsV1StatusWithResponse(ctx, auth)
+	require.NoError(t, err)
+	require.Equal(t, "ok", (*status.JSON200)["status"])
+	versions, err := ns.NsV1VersionsWithResponse(ctx, auth)
+	require.NoError(t, err)
+	require.Len(t, *versions.JSON200, 3)
+	version, err := ns.NsV3VersionWithResponse(ctx, auth)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, version.StatusCode())
+	verified, err := ns.NsV1VerifyAuthWithResponse(ctx, auth)
+	require.NoError(t, err)
+	require.Equal(t, "OK", (*verified.JSON200)["message"].(map[string]any)["message"])
+
+	// v1: an entry is created, searched, the current one read, counted and deleted
+	now := time.Now().UnixMilli()
+	entries, err := ns.NsV1CreateWithResponse(ctx, nighttroop.Entries, []nighttroop.NsDocument{{Type: ptr("sgv"), Sgv: ptr(120.0), Date: ptr(now)}}, auth)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, entries.StatusCode(), string(entries.Body))
+	entryID := *(*entries.JSON200)[0].UnderscoreId
+	found, err := ns.NsV1SearchWithResponse(ctx, nighttroop.Entries, &nighttroop.NsV1SearchParams{Count: ptr(int64(10)), DateGte: ptr(now - 1000)}, auth)
+	require.NoError(t, err)
+	require.Len(t, *found.JSON200, 1)
+	require.Equal(t, "mmol/L", *(*found.JSON200)[0].Units, "glucose is in the identity's units, the default mmol/L")
+	require.InDelta(t, 120/18.018, *(*found.JSON200)[0].Sgv, 0.01)
+	current, err := ns.NsV1CurrentWithResponse(ctx, nighttroop.Entries, auth)
+	require.NoError(t, err)
+	require.Equal(t, entryID, *(*current.JSON200)[0].UnderscoreId)
+	byID, err := ns.NsV1GetWithResponse(ctx, nighttroop.Entries, entryID, nil, auth)
+	require.NoError(t, err)
+	require.Len(t, *byID.JSON200, 1)
+	count, err := ns.NsV1CountWithResponse(ctx, nighttroop.Entries, nil, auth)
+	require.NoError(t, err)
+	require.EqualValues(t, 1, (*count.JSON200)["count"])
+
+	// v3: a treatment is created, read, patched, found in a search and the history, then deleted
+	bolus := nighttroop.NsDocument{EventType: ptr("Correction Bolus"), Insulin: ptr(2.0), Date: ptr(now)}
+	bolus.Set("app", "client test")
+	treatment, err := ns.NsV3CreateWithResponse(ctx, nighttroop.Treatments, bolus, auth)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusCreated, treatment.StatusCode(), string(treatment.Body))
+	identifier := *treatment.JSON201.Identifier
+	patched, err := ns.NsV3PatchWithResponse(ctx, nighttroop.Treatments, identifier, nighttroop.NsDocument{Notes: ptr("Lunch")}, auth)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, patched.StatusCode(), string(patched.Body))
+	read, err := ns.NsV3ReadWithResponse(ctx, nighttroop.Treatments, identifier, nil, auth)
+	require.NoError(t, err)
+	require.Equal(t, 2.0, *read.JSON200.Result.Insulin)
+	require.Equal(t, "Lunch", *read.JSON200.Result.Notes)
+	search, err := ns.NsV3SearchWithResponse(ctx, nighttroop.Treatments, &nighttroop.NsV3SearchParams{Limit: ptr(int64(10))}, auth)
+	require.NoError(t, err)
+	require.Len(t, *search.JSON200.Result, 1)
+	history, err := ns.NsV3HistoryWithResponse(ctx, nighttroop.Treatments, 0, nil, auth)
+	require.NoError(t, err)
+	require.Len(t, *history.JSON200.Result, 1)
+	lastModified, err := ns.NsV3LastModifiedWithResponse(ctx, auth)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, lastModified.StatusCode(), string(lastModified.Body))
+
+	// v2: the properties and summary
+	properties, err := ns.NsV2PropertiesNamedWithResponse(ctx, "bgnow", auth)
+	require.NoError(t, err)
+	require.Contains(t, *properties.JSON200, "bgnow")
+	nsSummary, err := ns.NsV2SummaryWithResponse(ctx, auth)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, nsSummary.StatusCode(), string(nsSummary.Body))
+
+	removed, err := ns.NsV3DeleteWithResponse(ctx, nighttroop.Treatments, identifier, nil, auth)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, removed.StatusCode(), string(removed.Body))
+	deleted, err := ns.NsV1DeleteWithResponse(ctx, nighttroop.Entries, entryID, nil, auth)
+	require.NoError(t, err)
+	require.EqualValues(t, 1, (*deleted.JSON200)["deletedCount"])
 }
 
 func ptr[T any](v T) *T {
