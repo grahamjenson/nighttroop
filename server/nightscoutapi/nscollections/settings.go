@@ -55,18 +55,18 @@ func (c SettingsCollection) Create(ctx context.Context, siteContext *httputils.S
 	var nsModel nightscoutmodels.Setting
 	err := utils.ConvertViaJSON(data, &nsModel)
 	if err != nil {
-		slog.Error("failed to map data to model", "error", err, "collection", "settings")
+		slog.ErrorContext(ctx, "failed to map data to model", "error", err, "collection", "settings")
 		return nil, false, nsutils.BadDataBodyError
 	}
 
 	if nsModel.Identifier.String() == "" {
-		slog.Error("setting identifier not available", "data", data, "collection", "settings")
+		slog.ErrorContext(ctx, "setting identifier not available", "data", data, "collection", "settings")
 		return nil, false, nsutils.ErrNotFound
 	}
 
 	sm, herr := UpdateIndividualSetting(ctx, siteContext, nsModel.Identifier.String(), nsModel.Value)
 	if herr != nil {
-		slog.Error("failed to update individual setting", "error", herr, "collection", "settings")
+		slog.ErrorContext(ctx, "failed to update individual setting", "error", herr, "collection", "settings")
 		return nil, false, herr
 	}
 
@@ -75,7 +75,7 @@ func (c SettingsCollection) Create(ctx context.Context, siteContext *httputils.S
 
 func (c SettingsCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
 	if identifier == "" {
-		slog.Error("setting identifier not available", "data", patch, "collection", "settings")
+		slog.ErrorContext(ctx, "setting identifier not available", "data", patch, "collection", "settings")
 		return nil, false, nsutils.ErrNotFound
 	}
 	if patch["identifier"] == nil {
@@ -85,7 +85,7 @@ func (c SettingsCollection) Replace(ctx context.Context, siteContext *httputils.
 	var nsModel nightscoutmodels.Setting
 	err := utils.ConvertViaJSON(patch, &nsModel)
 	if err != nil {
-		slog.Error("failed to map data to model", "error", err, "collection", "settings")
+		slog.ErrorContext(ctx, "failed to map data to model", "error", err, "collection", "settings")
 		return nil, false, nsutils.BadDataBodyError
 	}
 
@@ -94,13 +94,13 @@ func (c SettingsCollection) Replace(ctx context.Context, siteContext *httputils.
 	}
 
 	if nsModel.Identifier.String() != identifier {
-		slog.Error("setting identifier mismatch", "data", patch, "collection", "settings")
+		slog.ErrorContext(ctx, "setting identifier mismatch", "data", patch, "collection", "settings")
 		return nil, false, nsutils.ErrBadRequest
 	}
 
 	sm, herr := UpdateIndividualSetting(ctx, siteContext, nsModel.Identifier.String(), nsModel.Value)
 	if herr != nil {
-		slog.Error("failed to update individual setting", "error", herr, "collection", "settings")
+		slog.ErrorContext(ctx, "failed to update individual setting", "error", herr, "collection", "settings")
 		return nil, false, herr
 	}
 
@@ -109,7 +109,7 @@ func (c SettingsCollection) Replace(ctx context.Context, siteContext *httputils.
 
 func (c SettingsCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
 	if identifier == "" {
-		slog.Error("setting identifier not available", "data", patch, "collection", "settings")
+		slog.ErrorContext(ctx, "setting identifier not available", "data", patch, "collection", "settings")
 		return nil, nsutils.ErrNotFound
 	}
 	if patch["identifier"] == nil {
@@ -127,7 +127,7 @@ func (c SettingsCollection) Patch(ctx context.Context, siteContext *httputils.Si
 func (c SettingsCollection) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
 	_, herr := UpdateIndividualSetting(ctx, siteContext, identifier, nil)
 	if herr != nil {
-		slog.Error("failed to update individual setting", "error", herr, "collection", "settings")
+		slog.ErrorContext(ctx, "failed to update individual setting", "error", herr, "collection", "settings")
 		return herr
 	}
 
@@ -215,7 +215,7 @@ func UpdateIndividualSetting(ctx context.Context, siteContext *httputils.SiteCon
 
 	err := identitySettingsMap.SetSettingByName(identifier, value, &siteContext.IdentityModel.CreatedAt, ptr("identity"))
 	if err != nil {
-		slog.Error("failed to set setting in identity settings map", "error", err, "collection", "settings")
+		slog.ErrorContext(ctx, "failed to set setting in identity settings map", "error", err, "collection", "settings")
 		return nil, nsutils.BadDataBodyErrorWithHint(err.Error())
 	}
 	if err := settingsMap.Consistent(); err != nil {
@@ -233,7 +233,7 @@ func UpdateIndividualSetting(ctx context.Context, siteContext *httputils.SiteCon
 		if nsErr := nsutils.GetSQLTranslatedError(err); nsErr != nil {
 			return nil, nsErr
 		}
-		slog.Error("failed to update identity settings", "error", err, "collection", "settings")
+		slog.ErrorContext(ctx, "failed to update identity settings", "error", err, "collection", "settings")
 		return nil, nsutils.ErrInternal
 	}
 

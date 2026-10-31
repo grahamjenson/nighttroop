@@ -40,7 +40,7 @@ func POSTRecoverSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig
 			recovered, err = controlDB.RecoverSiteAdmin(r.Context(), siteID, r.FormValue("backup_key"))
 		}
 		if err != nil {
-			slog.Info("Site recovery failed", "error", err)
+			slog.InfoContext(r.Context(), "Site recovery failed", "error", err)
 			w.WriteHeader(http.StatusUnauthorized)
 			public_templ.RecoverSiteFailed("That site ID and backup key do not match a site.").Render(r.Context(), w)
 			return
@@ -51,7 +51,7 @@ func POSTRecoverSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig
 		info := publicmodels.NewSiteInfo{URL: siteDB.URL(), AdminPassword: recovered.Password, AdminTotpSecret: recovered.TotpSecret,
 			BackupKey: recovered.BackupKey, RecoverURL: config.RecoverURL()}
 		if err := public_templ.CreateSiteInfo(info).Render(r.Context(), w); err != nil {
-			slog.Error("Unable to show the recovered site", "error", err)
+			slog.ErrorContext(r.Context(), "Unable to show the recovered site", "error", err)
 		}
 	}
 }

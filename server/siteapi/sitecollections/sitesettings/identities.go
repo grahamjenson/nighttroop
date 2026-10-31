@@ -218,7 +218,7 @@ func getIdentityByName(ctx context.Context, q *controldb.Queries, siteContext *h
 		return nil, apiutils.ErrNotFound
 	}
 	if err != nil {
-		slog.Error("Error fetching identity", "error", err)
+		slog.ErrorContext(ctx, "Error fetching identity", "error", err)
 		return nil, apiutils.ErrInternalServerError
 	}
 	return sitemodels.IdentityFromDB(identity, siteContext), nil

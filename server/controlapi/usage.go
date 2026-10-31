@@ -47,7 +47,7 @@ func UsageHandler(w http.ResponseWriter, r *http.Request) {
 	model.SitesCreatedWeek, errs[6] = created(monday)
 	model.SitesCreatedMonth, errs[7] = created(firstOfMonth)
 	if err := errors.Join(errs[:]...); err != nil {
-		slog.Error("failed to count the server's usage", "error", err)
+		slog.ErrorContext(r.Context(), "failed to count the server's usage", "error", err)
 		apiutils.ErrInternalServerError.Write(acceptType, w)
 		return
 	}
@@ -60,7 +60,7 @@ func UsageHandler(w http.ResponseWriter, r *http.Request) {
 	model.MemoryAlertPercent, model.DiskAlertPercent = config.MemoryAlertPercent, config.DiskAlertPercent
 	readings, err := controlContext.ControlDB.Live.Queries.ResourceReadingsSince(ctx, livedb.ResourceReadingsSinceParams{Since: model.ResourcesSince})
 	if err != nil {
-		slog.Error("failed to read the server's resource checks", "error", err)
+		slog.ErrorContext(r.Context(), "failed to read the server's resource checks", "error", err)
 	}
 	for _, reading := range readings {
 		model.ResourceReadings = append(model.ResourceReadings, controlmodels.ResourceReading{At: reading.At, CPUPercent: reading.CpuPercent,

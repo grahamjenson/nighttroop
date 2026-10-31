@@ -18,9 +18,8 @@ import (
 )
 
 var (
-	TraceIDKey   = "trace_id"
-	SpanIDKey    = "span_id"
-	RequestIDKey = "id"
+	TraceIDKey = "trace_id"
+	SpanIDKey  = "span_id"
 
 	RequestBodyMaxSize  = 64 * 1024 // 64KB
 	ResponseBodyMaxSize = 64 * 1024 // 64KB
@@ -45,7 +44,6 @@ type Config struct {
 	ServerErrorLevel slog.Level
 
 	WithUserAgent      bool
-	WithRequestID      bool
 	WithRequestBody    bool
 	WithRequestHeader  bool
 	WithResponseBody   bool
@@ -119,7 +117,6 @@ func DefaultConfig() Config {
 		ServerErrorLevel: slog.LevelError,
 
 		WithUserAgent:      false,
-		WithRequestID:      true,
 		WithRequestBody:    false,
 		WithRequestHeader:  false,
 		WithResponseBody:   false,
@@ -192,10 +189,6 @@ func NewLoggerWithConfig(logger *slog.Logger, config Config) func(http.Handler) 
 					slog.Duration("latency", latency),
 					slog.Int("status", status),
 				)
-
-				if config.WithRequestID {
-					baseAttributes = append(baseAttributes, slog.String(RequestIDKey, middleware.GetReqID(r.Context())))
-				}
 
 				// request body
 				requestAttributes = append(requestAttributes, slog.Int("length", br.bytes))

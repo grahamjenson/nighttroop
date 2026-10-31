@@ -18,7 +18,7 @@ func NewNightscoutV1Router(store nsutils.Store) *chi.Mux {
 	registerCollectionRoutes(r, store)
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
-		slog.Info("Nightscout router 404 for path", "path", r.URL.Path)
+		slog.InfoContext(r.Context(), "Nightscout router 404 for path", "path", r.URL.Path)
 		http.Error(w, "Not Found", http.StatusNotFound)
 	})
 	return r

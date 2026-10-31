@@ -6,16 +6,18 @@ import (
 
 	slogmulti "github.com/samber/slog-multi"
 	slogsentry "github.com/samber/slog-sentry/v2"
+	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/consts"
 )
 
 // setupLogging makes slog.Default() the single logger for the server. Everything logs through it,
-// including request logs and the std log package. Use slog.With(...) for sub loggers with context.
+// including request logs and the std log package. Use slog.With(...) for sub loggers with context, and
+// slog.ErrorContext(ctx, ...) in a request, so it is logged with the request's ID, site and identity.
 func setupLogging(mode consts.ServerMode) {
 	if mode == consts.Test {
-		slog.SetDefault(slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		slog.SetDefault(slog.New(aslog.ContextHandler{Handler: slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 			Level: slog.LevelDebug, // Set minimum log level
-		})))
+		})}))
 		return
 	}
 
@@ -28,5 +30,5 @@ func setupLogging(mode consts.ServerMode) {
 		Level: slog.LevelError, // Only send errors to Sentry
 	}.NewSentryHandler()
 
-	slog.SetDefault(slog.New(slogmulti.Fanout(jsonHandler, sentryHandler)))
+	slog.SetDefault(slog.New(aslog.ContextHandler{Handler: slogmulti.Fanout(jsonHandler, sentryHandler)}))
 }
