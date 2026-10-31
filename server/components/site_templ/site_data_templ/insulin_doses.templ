@@ -91,7 +91,7 @@ templ insulinDoseInputs(id string, dose string, notes string) {
 			Placeholder: "Units",
 			Value:       dose,
 			Required:    true,
-			Attributes:  templ.Attributes{"step": "any", "min": "0.01", "max": "100"},
+			Attributes:  templ.Attributes{"step": "any", "min": "-100", "max": "100"},
 		})
 	}
 	@field.Field(id+"--notes", "Notes", "w-64") {

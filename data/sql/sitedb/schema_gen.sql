@@ -48,10 +48,10 @@ CREATE TABLE activities (
     name TEXT CHECK(length(name) <= 64),
     activity_type TEXT NOT NULL CHECK(length(activity_type) <= 32) default 'exercise',
 
-    duration_minutes INTEGER,
-    calories INTEGER,
-    steps INTEGER,
-    heart_rate INTEGER,
+    duration_minutes INTEGER CHECK(duration_minutes BETWEEN 0 AND 10080), -- at most a week
+    calories INTEGER CHECK(calories BETWEEN 0 AND 50000),
+    steps INTEGER CHECK(steps BETWEEN 0 AND 1000000),
+    heart_rate INTEGER CHECK(heart_rate BETWEEN 0 AND 300),
 
 
     -- Default Stuff
@@ -60,8 +60,8 @@ CREATE TABLE activities (
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
-    utc_offset_minutes INTEGER DEFAULT 0,
-    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    utc_offset_minutes INTEGER DEFAULT 0 CHECK(utc_offset_minutes BETWEEN -1440 AND 1440),
+    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)) CHECK(occurred_at BETWEEN 0 AND 253402300799999), -- before the year 10000, the last a date string can have
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     
@@ -91,8 +91,8 @@ CREATE TABLE component_events (
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
-    utc_offset_minutes INTEGER DEFAULT 0,
-    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    utc_offset_minutes INTEGER DEFAULT 0 CHECK(utc_offset_minutes BETWEEN -1440 AND 1440),
+    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)) CHECK(occurred_at BETWEEN 0 AND 253402300799999), -- before the year 10000, the last a date string can have
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
 
@@ -110,13 +110,13 @@ CREATE TABLE device_reports (
     
     -- uploader
     -- device is created_by_device_name
-    device_battery_percent REAL,
-    is_device_charging INTEGER DEFAULT 0,
+    device_battery_percent REAL CHECK(device_battery_percent BETWEEN 0 AND 100),
+    is_device_charging INTEGER DEFAULT 0 CHECK(is_device_charging IN (0, 1)),
 
     -- PUMP
     pump_state TEXT CHECK(length(pump_state) <= 64),
-    pump_reservoir REAL,
-    pump_battery_percent REAL,
+    pump_reservoir REAL CHECK(pump_reservoir BETWEEN 0 AND 10000), -- units
+    pump_battery_percent REAL CHECK(pump_battery_percent BETWEEN 0 AND 100),
     pump_charging_state TEXT CHECK(length(pump_charging_state) <= 32),
 
     -- Raw Loop Settings
@@ -125,12 +125,12 @@ CREATE TABLE device_reports (
     loop_settings_json TEXT CHECK(length(loop_settings_json) <= 8192 AND json_valid(loop_settings_json)), -- some loops (e.g. Loop) store settings on the profile
 
     -- Extracted Loop Settings that will be useful for reporting and analysis
-    loop_iob REAL,
-    loop_iob_basal REAL,
-    loop_iob_treatment REAL,
-    loop_cob REAL,
+    loop_iob REAL CHECK(loop_iob BETWEEN -1000 AND 1000),
+    loop_iob_basal REAL CHECK(loop_iob_basal BETWEEN -1000 AND 1000),
+    loop_iob_treatment REAL CHECK(loop_iob_treatment BETWEEN -1000 AND 1000),
+    loop_cob REAL CHECK(loop_cob BETWEEN -1000 AND 2000),
 
-    loop_predictions_start_time INTEGER,
+    loop_predictions_start_time INTEGER CHECK(loop_predictions_start_time BETWEEN 0 AND 253402300799999),
     loop_predictions_default TEXT CHECK(length(loop_predictions_default) <= 2048 AND json_valid(loop_predictions_default)), -- iob for openaps, normal for loop
     loop_predictions_zt TEXT CHECK(length(loop_predictions_zt) <= 2048 AND json_valid(loop_predictions_zt)),
     
@@ -138,8 +138,8 @@ CREATE TABLE device_reports (
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
-    utc_offset_minutes INTEGER DEFAULT 0,
-    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    utc_offset_minutes INTEGER DEFAULT 0 CHECK(utc_offset_minutes BETWEEN -1440 AND 1440),
+    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)) CHECK(occurred_at BETWEEN 0 AND 253402300799999), -- before the year 10000, the last a date string can have
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
 
@@ -171,12 +171,12 @@ CREATE TABLE event_groups (
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
     reason TEXT CHECK(length(reason) <= 64),
-    duration_minutes INTEGER, -- this is needed for notes, and is common enough
+    duration_minutes INTEGER CHECK(duration_minutes BETWEEN 0 AND 525600), -- at most a year; this is needed for notes, and is common enough
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
-    utc_offset_minutes INTEGER DEFAULT 0,
-    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    utc_offset_minutes INTEGER DEFAULT 0 CHECK(utc_offset_minutes BETWEEN -1440 AND 1440),
+    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)) CHECK(occurred_at BETWEEN 0 AND 253402300799999), -- before the year 10000, the last a date string can have
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     
@@ -196,15 +196,15 @@ CREATE TABLE food_intakes (
     category TEXT CHECK(length(category) <= 64),
     subcategory TEXT CHECK(length(subcategory) <= 64),
 
-    absorption_time_minutes INTEGER,
-    pre_bolus REAL,
+    absorption_time_minutes INTEGER CHECK(absorption_time_minutes BETWEEN 0 AND 1440),
+    pre_bolus REAL CHECK(pre_bolus BETWEEN -1440 AND 1440), -- minutes
 
-    carbs REAL,
-    fat REAL,
-    protein REAL,
-    fibre REAL,
-    energy REAL,
-    portions REAL,
+    carbs REAL CHECK(carbs BETWEEN -1000 AND 1000), -- grams, negative takes back too much
+    fat REAL CHECK(fat BETWEEN -1000 AND 1000),
+    protein REAL CHECK(protein BETWEEN -1000 AND 1000),
+    fibre REAL CHECK(fibre BETWEEN -1000 AND 1000),
+    energy REAL CHECK(energy BETWEEN -20000 AND 20000), -- kcal or kJ
+    portions REAL CHECK(portions BETWEEN -1000 AND 1000),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
@@ -212,8 +212,8 @@ CREATE TABLE food_intakes (
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
-    utc_offset_minutes INTEGER DEFAULT 0,
-    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    utc_offset_minutes INTEGER DEFAULT 0 CHECK(utc_offset_minutes BETWEEN -1440 AND 1440),
+    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)) CHECK(occurred_at BETWEEN 0 AND 253402300799999), -- before the year 10000, the last a date string can have
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     
@@ -233,15 +233,15 @@ CREATE TABLE food_presets (
     category TEXT CHECK(length(category) <= 64),
     subcategory TEXT CHECK(length(subcategory) <= 64),
 
-    absorption_time_minutes INTEGER,
-    pre_bolus REAL,
+    absorption_time_minutes INTEGER CHECK(absorption_time_minutes BETWEEN 0 AND 1440),
+    pre_bolus REAL CHECK(pre_bolus BETWEEN -1440 AND 1440), -- minutes
 
-    carbs REAL,
-    fat REAL,
-    protein REAL,
-    fibre REAL,
-    energy REAL,
-    portions REAL,
+    carbs REAL CHECK(carbs BETWEEN -1000 AND 1000), -- grams, negative takes back too much
+    fat REAL CHECK(fat BETWEEN -1000 AND 1000),
+    protein REAL CHECK(protein BETWEEN -1000 AND 1000),
+    fibre REAL CHECK(fibre BETWEEN -1000 AND 1000),
+    energy REAL CHECK(energy BETWEEN -20000 AND 20000), -- kcal or kJ
+    portions REAL CHECK(portions BETWEEN -1000 AND 1000),
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly
@@ -261,17 +261,17 @@ CREATE TABLE glucose_readings (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
     
     -- UNIT IS ALWAYS MG/DL BECAUSE IT IS HIGHER RESOLUTION
-    mgdl REAL NOT NULL,
+    mgdl REAL NOT NULL CHECK(mgdl > 0 AND mgdl <= 1000),
     reading_type TEXT NOT NULL CHECK(reading_type IN ('sgv', 'mbg')) DEFAULT 'sgv', -- sgv, mbg etc
     units TEXT CHECK(units IN ('mmol/L', 'mg/dL')), -- mg/dL, mmol/L -- the reading is always store in mgdl, but the original unit CAN also be stored
     measurement_method TEXT CHECK(length(measurement_method) <= 32), -- cgm, meter, manual, etc
 
-    delta REAL,
+    delta REAL CHECK(delta BETWEEN -1000 AND 1000),
     direction TEXT CHECK(length(direction) <= 16),
-    noise REAL,
-    filtered REAL,
-    unfiltered REAL,
-    rssi REAL,
+    noise REAL CHECK(noise BETWEEN -1000 AND 1000),
+    filtered REAL CHECK(filtered BETWEEN 0 AND 10000000), -- raw sensor values can be in the hundreds of thousands
+    unfiltered REAL CHECK(unfiltered BETWEEN 0 AND 10000000),
+    rssi REAL CHECK(rssi BETWEEN -1000 AND 1000),
 
 
     -- Default Stuff
@@ -280,8 +280,8 @@ CREATE TABLE glucose_readings (
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
-    utc_offset_minutes INTEGER DEFAULT 0,
-    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    utc_offset_minutes INTEGER DEFAULT 0 CHECK(utc_offset_minutes BETWEEN -1440 AND 1440),
+    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)) CHECK(occurred_at BETWEEN 0 AND 253402300799999), -- before the year 10000, the last a date string can have
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     
@@ -296,11 +296,11 @@ CREATE TABLE glucose_readings (
 CREATE TABLE insulin_doses (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
 
-    dose REAL NOT NULL,
+    dose REAL NOT NULL CHECK(dose BETWEEN -500 AND 500), -- units, negative takes insulin back off IOB
     dose_type TEXT CHECK(length(dose_type) <= 32),
     
-    split_now REAL,
-    split_ext REAL,
+    split_now REAL CHECK(split_now BETWEEN 0 AND 100), -- percent
+    split_ext REAL CHECK(split_ext BETWEEN 0 AND 100),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
@@ -308,8 +308,8 @@ CREATE TABLE insulin_doses (
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
-    utc_offset_minutes INTEGER DEFAULT 0,
-    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    utc_offset_minutes INTEGER DEFAULT 0 CHECK(utc_offset_minutes BETWEEN -1440 AND 1440),
+    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)) CHECK(occurred_at BETWEEN 0 AND 253402300799999), -- before the year 10000, the last a date string can have
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     
@@ -335,8 +335,8 @@ CREATE TABLE notification_events (
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
-    utc_offset_minutes INTEGER DEFAULT 0,
-    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    utc_offset_minutes INTEGER DEFAULT 0 CHECK(utc_offset_minutes BETWEEN -1440 AND 1440),
+    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)) CHECK(occurred_at BETWEEN 0 AND 253402300799999), -- before the year 10000, the last a date string can have
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     
@@ -357,11 +357,11 @@ CREATE TABLE profile_presets (
     is_default INTEGER NOT NULL DEFAULT 0, -- 0 for false, 1 for true
 
     -- Profile Stuff
-    dia REAL, -- in hours
+    dia REAL CHECK(dia BETWEEN 0 AND 24), -- in hours
     units TEXT CHECK(units IN ('mmol/L', 'mg/dL')), -- mg/dL, mmol/L
     timezone TEXT CHECK(length(timezone) <= 32), -- e.g. UTC, America/New_York, etc
-    carbs_hr REAL,
-    delay REAL,
+    carbs_hr REAL CHECK(carbs_hr BETWEEN 0 AND 500),
+    delay REAL CHECK(delay BETWEEN 0 AND 1440),
 
     carb_ratios_json TEXT CHECK(length(carb_ratios_json) <= 2048 AND json_valid(carb_ratios_json)), -- 
     insulin_sensitivities_json TEXT CHECK(length(insulin_sensitivities_json) <= 2048 AND json_valid(insulin_sensitivities_json)), -- { [1,2] },
@@ -375,8 +375,8 @@ CREATE TABLE profile_presets (
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly
 
-    utc_offset_minutes INTEGER DEFAULT 0,
-    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    utc_offset_minutes INTEGER DEFAULT 0 CHECK(utc_offset_minutes BETWEEN -1440 AND 1440),
+    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)) CHECK(occurred_at BETWEEN 0 AND 253402300799999), -- before the year 10000, the last a date string can have
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     
@@ -396,16 +396,16 @@ CREATE TABLE profile_switches (
     name TEXT NOT NULL CHECK(length(name) <= 64),
     
     -- Profile Switch Specific
-    duration_minutes INTEGER NOT NULL default 0, -- e.g. 0 means it is forever unless another profile overrides it
-    percent REAL default 100, 
-    timeshift INTEGER default 0, -- in minutes, e.g. 60 means the profile is shifted forward by 1 hour
+    duration_minutes INTEGER NOT NULL default 0 CHECK(duration_minutes BETWEEN 0 AND 525600), -- at most a year, and 0 means it is forever unless another profile overrides it
+    percent REAL default 100 CHECK(percent BETWEEN 0 AND 1000),
+    timeshift INTEGER default 0 CHECK(timeshift BETWEEN -1440 AND 1440), -- in minutes, e.g. 60 means the profile is shifted forward by 1 hour
 
     -- Profile Stuff
-    dia REAL, -- in hours
+    dia REAL CHECK(dia BETWEEN 0 AND 24), -- in hours
     units TEXT CHECK(units IN ('mmol/L', 'mg/dL')), -- mg/dL, mmol/L used for targets
     timezone TEXT CHECK(length(timezone) <= 32),
-    carbs_hr REAL,
-    delay REAL,
+    carbs_hr REAL CHECK(carbs_hr BETWEEN 0 AND 500),
+    delay REAL CHECK(delay BETWEEN 0 AND 1440),
 
     carb_ratios_json TEXT CHECK(length(carb_ratios_json) <= 2048                     AND json_valid(carb_ratios_json)), -- 
     insulin_sensitivities_json TEXT CHECK(length(insulin_sensitivities_json) <= 2048 AND json_valid(insulin_sensitivities_json)), -- { [1,2] },
@@ -419,8 +419,8 @@ CREATE TABLE profile_switches (
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
-    utc_offset_minutes INTEGER DEFAULT 0,
-    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    utc_offset_minutes INTEGER DEFAULT 0 CHECK(utc_offset_minutes BETWEEN -1440 AND 1440),
+    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)) CHECK(occurred_at BETWEEN 0 AND 253402300799999), -- before the year 10000, the last a date string can have
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     
@@ -454,9 +454,9 @@ CREATE TABLE summary_period (
 CREATE TABLE temp_basals (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
 
-    duration_minutes INTEGER NOT NULL,
-    absolute REAL NOT NULL,
-    percent REAL, -- This is optional, but absolute is not
+    duration_minutes INTEGER NOT NULL CHECK(duration_minutes BETWEEN 0 AND 10080), -- at most a week
+    absolute REAL NOT NULL CHECK(absolute BETWEEN 0 AND 100), -- units an hour
+    percent REAL CHECK(percent BETWEEN -100 AND 1000), -- This is optional, but absolute is not
     
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
@@ -464,8 +464,8 @@ CREATE TABLE temp_basals (
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
-    utc_offset_minutes INTEGER DEFAULT 0,
-    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    utc_offset_minutes INTEGER DEFAULT 0 CHECK(utc_offset_minutes BETWEEN -1440 AND 1440),
+    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)) CHECK(occurred_at BETWEEN 0 AND 253402300799999), -- before the year 10000, the last a date string can have
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     
@@ -480,10 +480,10 @@ CREATE TABLE temp_basals (
 CREATE TABLE temp_targets (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
 
-    duration_minutes INTEGER NOT NULL,
-    high_target_mgdl REAL NOT NULL,
-    low_target_mgdl REAL NOT NULL,
-    insulin_needs_scale_factor REAL,
+    duration_minutes INTEGER NOT NULL CHECK(duration_minutes BETWEEN 0 AND 10080), -- at most a week, 0 cancels
+    high_target_mgdl REAL NOT NULL CHECK(high_target_mgdl BETWEEN 0 AND 1000), -- a cancel can have no targets
+    low_target_mgdl REAL NOT NULL CHECK(low_target_mgdl BETWEEN 0 AND 1000),
+    insulin_needs_scale_factor REAL CHECK(insulin_needs_scale_factor BETWEEN 0 AND 10),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
@@ -491,8 +491,8 @@ CREATE TABLE temp_targets (
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
-    utc_offset_minutes INTEGER DEFAULT 0,
-    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    utc_offset_minutes INTEGER DEFAULT 0 CHECK(utc_offset_minutes BETWEEN -1440 AND 1440),
+    occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)) CHECK(occurred_at BETWEEN 0 AND 253402300799999), -- before the year 10000, the last a date string can have
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     

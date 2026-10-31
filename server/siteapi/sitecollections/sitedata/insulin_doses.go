@@ -14,7 +14,8 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-// maxInsulinDoseUnits is far above any single dose a pump or pen gives
+// maxInsulinDoseUnits is far above any single dose a pump or pen gives; as much again below 0 takes back a dose
+// entered by mistake, from insulin on board
 const maxInsulinDoseUnits = 100
 
 type InsulinDosesCollection struct{}
@@ -127,8 +128,8 @@ func (s *InsulinDosesCollection) DeleteHTMXResponse(model *sitemodels.SiteInsuli
 ////////
 
 func checkInsulinDose(model *sitemodels.SiteInsulinDose) *apiutils.HTTPError {
-	if model.Dose <= 0 || model.Dose > maxInsulinDoseUnits {
-		return apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("dose must be more than 0 and at most %d units", maxInsulinDoseUnits))
+	if model.Dose == 0 || model.Dose < -maxInsulinDoseUnits || model.Dose > maxInsulinDoseUnits {
+		return apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("dose must not be 0, and must be from -%d to %d units", maxInsulinDoseUnits, maxInsulinDoseUnits))
 	}
 	return nil
 }
