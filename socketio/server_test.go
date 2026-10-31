@@ -156,6 +156,17 @@ func TestV2ConnectErrorIsAString(t *testing.T) {
 	require.NoError(t, allowed.Connect(timeout(t), "/", nil))
 }
 
+// A Socket.IO v2 server answers the default namespace as soon as the client opens, so a refusal can arrive before
+// Connect waits for it; Connect still returns it rather than waiting for its timeout
+func TestV2ConnectErrorBeforeConnect(t *testing.T) {
+	server, url := newTestServer(t)
+	server.Of("/").Use(func(s *Socket, auth json.RawMessage) error { return errors.New("Not authorized") })
+
+	refused := dial(t, url, engineio.V3)
+	time.Sleep(200 * time.Millisecond) // the refusal arrives
+	require.EqualError(t, refused.Connect(timeout(t), "/", nil), "Not authorized")
+}
+
 func TestRoomsAndBroadcast(t *testing.T) {
 	overEveryTransport(t, func(t *testing.T, version int, transport string) {
 		server, url := newTestServer(t)
