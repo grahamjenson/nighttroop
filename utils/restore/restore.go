@@ -17,7 +17,7 @@ import (
 )
 
 func TryRestoreControlDB(s3Client *s3utils.S3Client) error {
-	defer aslog.TrackTime(time.Now(), "TryRestoreControlDB", nil, nil)
+	defer aslog.TrackTime(context.Background(), time.Now(), "TryRestoreControlDB", nil, nil)
 	slog.Info("TryRestoreControlDB")
 
 	err := TryDownloadExtractControlDbs(s3Client)
@@ -48,7 +48,7 @@ func TryDownloadExtractControlDbs(s3Client *s3utils.S3Client) error {
 		return fmt.Errorf("cannot create parent directories: %w", err)
 	}
 
-	_, found, err := s3Client.DownloadFilesFromS3(s3Path, s3Client.ServerConfig.DBDir())
+	_, found, err := s3Client.DownloadFilesFromS3(context.Background(), s3Path, s3Client.ServerConfig.DBDir())
 	if !found && err == nil {
 		slog.Info("No control db backup found")
 		return nil
@@ -61,7 +61,7 @@ func TryDownloadExtractControlDbs(s3Client *s3utils.S3Client) error {
 }
 
 func TryRestoreAllFiles(s3Client *s3utils.S3Client) error {
-	defer aslog.TrackTime(time.Now(), "TryRestoreAllFiles", nil, nil)
+	defer aslog.TrackTime(context.Background(), time.Now(), "TryRestoreAllFiles", nil, nil)
 	slog.Info("TryRestoreAllFiles")
 
 	err := TryDownloadExrtractUserDbs(s3Client)
@@ -79,7 +79,7 @@ func TryRestoreAllFiles(s3Client *s3utils.S3Client) error {
 }
 
 func TryDownloadExrtractUserDbs(s3Client *s3utils.S3Client) error {
-	defer aslog.TrackTime(time.Now(), "TryDownloadExrtractUserDbs", nil, nil)
+	defer aslog.TrackTime(context.Background(), time.Now(), "TryDownloadExrtractUserDbs", nil, nil)
 
 	g, _ := errgroup.WithContext(context.Background())
 	limit := int(math.Max(1, float64(runtime.NumCPU()-1)))
@@ -115,7 +115,7 @@ func TryDownloadExrtractUserDbsForBatch(s3Client *s3utils.S3Client, char string)
 
 	s3Path := sitedb.GetS3BatchPath(char, s3Client.ServerConfig)
 
-	_, found, err := s3Client.DownloadFilesFromS3(s3Path, path)
+	_, found, err := s3Client.DownloadFilesFromS3(context.Background(), s3Path, path)
 
 	// A batch with no backup is not found, not an error
 	if err != nil {

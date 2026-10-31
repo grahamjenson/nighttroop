@@ -17,7 +17,7 @@ type BackupConn interface {
 }
 
 func SqliteBackup(ctx context.Context, db *sql.DB, backupPath string) error {
-	defer aslog.TrackTime(time.Now(), "SqliteBackup "+backupPath, nil, nil)
+	defer aslog.TrackTime(ctx, time.Now(), "SqliteBackup "+backupPath, nil, nil)
 	slog.InfoContext(ctx, "Starting SqliteBackup", "backupPath", backupPath)
 	err := utils.MkParentDirs(backupPath)
 	if err != nil {

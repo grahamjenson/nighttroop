@@ -65,26 +65,22 @@ func (b *BackupSiteJobManager) SetupCron(c cron.CronScheduler) {
 	// The goal here is to smooth out resource usage, if you looped over all baches at once, we would use a ton of CPU and that will slow down responses
 	// This nice thing about this method of backing up is that because the cron task cannot run concurrently for the same batch,
 	// we avoid using too many resources, instead it will just delay the backup by tick time
-	c.AddFunc("BackupSiteJob", fmt.Sprintf("@every %ds", tick), func() error {
+	c.AddFunc("BackupSiteJob", fmt.Sprintf("@every %ds", tick), func(ctx context.Context) error {
 		i := int(index.Add(1)-1) % count
 		batch := string(utils.SITE_CHAR_SET[i])
-		if err := b.DeleteUnusedSites(batch); err != nil {
-			slog.Error(
-				"Error deleting unused sites",
-				"error", err,
-				"batch", batch,
-			)
+		if err := b.DeleteUnusedSites(ctx, batch); err != nil {
+			slog.ErrorContext(ctx, "Error deleting unused sites", "error", err, "batch", batch)
 		}
 
-		return b.BackupSiteBatch(batch)
+		return b.BackupSiteBatch(ctx, batch)
 	})
 }
 
-func (b *BackupSiteJobManager) DeleteUnusedSites(batch string) error {
+func (b *BackupSiteJobManager) DeleteUnusedSites(ctx context.Context, batch string) error {
 	log := false
-	defer aslog.TrackTime(time.Now(), "DeleteUnusedSites", &log, nil)
+	defer aslog.TrackTime(ctx, time.Now(), "DeleteUnusedSites", &log, nil)
 
-	deleteList, err := b.findSitesToDelete(batch)
+	deleteList, err := b.findSitesToDelete(ctx, batch)
 	if err != nil {
 		return fmt.Errorf("cant find sites to delete without archiving %w", err)
 	}
@@ -92,21 +88,21 @@ func (b *BackupSiteJobManager) DeleteUnusedSites(batch string) error {
 		return nil
 	}
 	log = true
-	slog.Info("Deleting site without archiving", "subdomains", deleteList)
+	slog.InfoContext(ctx, "Deleting site without archiving", "subdomains", deleteList)
 
 	// Just delete these sites without an archive, as they have not been used in so many minutes
 	if err := b.controlDB.DeleteSites(deleteList); err != nil {
 		return err
 	}
 	for _, siteID := range deleteList {
-		b.controlDB.Logs.SiteDeletedEvent(context.TODO(), siteID, "unused")
+		b.controlDB.Logs.SiteDeletedEvent(aslog.WithSite(ctx, siteID), siteID, "unused")
 	}
 	return nil
 }
 
 // The sites we delete without archiving are sites that
-func (b *BackupSiteJobManager) findSitesToDelete(batch string) ([]string, error) {
-	sites, err := GetNeverUsedSites(b.controlDB, batch, b.DeleteAfterInactivity)
+func (b *BackupSiteJobManager) findSitesToDelete(ctx context.Context, batch string) ([]string, error) {
+	sites, err := GetNeverUsedSites(ctx, b.controlDB, batch, b.DeleteAfterInactivity)
 	if err != nil {
 		return nil, fmt.Errorf("cant get never seen sites %w", err)
 	}
@@ -127,12 +123,12 @@ func (b *BackupSiteJobManager) findSitesToDelete(batch string) ([]string, error)
 }
 
 // BackupToS3 This is the last method called to backup both control and site dbs
-func (b *BackupSiteJobManager) BackupToS3() {
+func (b *BackupSiteJobManager) BackupToS3(ctx context.Context) {
 	for _, char := range utils.SITE_CHAR_SET {
-		err := b.BackupSiteBatch(string(char))
+		err := b.BackupSiteBatch(ctx, string(char))
 
 		if err != nil {
-			slog.Error("Error backing up site batch", "error", err, "char", string(char))
+			slog.ErrorContext(ctx, "Error backing up site batch", "error", err, "char", string(char))
 			continue
 		}
 	}
@@ -148,18 +144,18 @@ func (b *BackupSiteJobManager) BackupToS3() {
 
 // BackupSiteBatch backs up the sites whose IDs start with char, recording the backup as an event in the logs DB and
 // a failure as an error
-func (b *BackupSiteJobManager) BackupSiteBatch(char string) (err error) {
+func (b *BackupSiteJobManager) BackupSiteBatch(ctx context.Context, char string) (err error) {
+	ctx = aslog.With(ctx, slog.String("batch", char))
 	trackTrim := false
 	started := time.Now()
-	defer aslog.TrackTime(started, "backup site pool "+char, &trackTrim, nil)
-	ctx := context.TODO()
+	defer aslog.TrackTime(ctx, started, "backup site pool "+char, &trackTrim, nil)
 	defer func() {
 		if err != nil {
 			b.controlDB.Logs.SiteBatchBackupError(ctx, char, err)
 		}
 	}()
 
-	sites, err := GetSiteBatch(b.controlDB, char)
+	sites, err := GetSiteBatch(ctx, b.controlDB, char)
 
 	if err != nil {
 		return fmt.Errorf("cannot get site batch: %w", err)
@@ -168,7 +164,7 @@ func (b *BackupSiteJobManager) BackupSiteBatch(char string) (err error) {
 		return nil
 	}
 
-	slog.Info("Backing up site batch", "char", char, "site_count", len(sites))
+	slog.InfoContext(ctx, "Backing up site batch", "site_count", len(sites))
 
 	paths := []string{}
 
@@ -178,7 +174,7 @@ func (b *BackupSiteJobManager) BackupSiteBatch(char string) (err error) {
 		}
 
 		// Have to add it anyway because we need all paths
-		err := backupSite.Backup(ctx)
+		err := backupSite.Backup(aslog.WithSite(ctx, backupSite.Subdomain))
 		if err != nil {
 			return fmt.Errorf("cannot backup site db %s: %w", backupSite.Subdomain, err)
 		}
@@ -188,7 +184,7 @@ func (b *BackupSiteJobManager) BackupSiteBatch(char string) (err error) {
 
 	trackTrim = len(paths) > 0
 
-	err = b.S3Client.UploadFilesToS3(sitedb.GetS3BatchPath(char, b.ServerConfig), s3utils.SiteRetention, paths)
+	err = b.S3Client.UploadFilesToS3(ctx, sitedb.GetS3BatchPath(char, b.ServerConfig), s3utils.SiteRetention, paths)
 	if err != nil {
 		return fmt.Errorf("cannot sync site pool %s: %w", string(char), err)
 	}
@@ -202,10 +198,10 @@ func (b *BackupSiteJobManager) BackupSiteBatch(char string) (err error) {
 // DB queries
 // ////
 
-func GetSiteBatch(controlDB *db.ControlDB, char string) ([]*db.SiteDB, error) {
+func GetSiteBatch(ctx context.Context, controlDB *db.ControlDB, char string) ([]*db.SiteDB, error) {
 
 	sites := []*db.SiteDB{}
-	res, err := controlDB.Queries.GetBatchSitesToBackUp(context.TODO(), controldb.GetBatchSitesToBackUpParams{
+	res, err := controlDB.Queries.GetBatchSitesToBackUp(ctx, controldb.GetBatchSitesToBackUpParams{
 		Batch: char,
 	})
 	if err != nil {
@@ -216,8 +212,8 @@ func GetSiteBatch(controlDB *db.ControlDB, char string) ([]*db.SiteDB, error) {
 }
 
 // GetNeverUsedSites retrieves sites that have never been logged into
-func GetNeverUsedSites(controlDB *db.ControlDB, char string, lastSeenMinutes time.Duration) ([]*db.SiteDB, error) {
-	res, err := controlDB.Queries.GetSitesToDeleteInBatch(context.TODO(), controldb.GetSitesToDeleteInBatchParams{
+func GetNeverUsedSites(ctx context.Context, controlDB *db.ControlDB, char string, lastSeenMinutes time.Duration) ([]*db.SiteDB, error) {
+	res, err := controlDB.Queries.GetSitesToDeleteInBatch(ctx, controldb.GetSitesToDeleteInBatchParams{
 		Batch:      char,
 		LastSeenAt: lastSeenMinutes.Minutes(),
 	})

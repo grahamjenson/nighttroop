@@ -12,9 +12,9 @@ import (
 )
 
 // scheduler keeps the jobs added to it, to run them straight away
-type scheduler map[string]func() error
+type scheduler map[string]func(context.Context) error
 
-func (s scheduler) AddFunc(name string, spec string, cmd func() error) { s[name] = cmd }
+func (s scheduler) AddFunc(name string, spec string, cmd func(context.Context) error) { s[name] = cmd }
 
 func TestTrimLogsDBCron(t *testing.T) {
 	cfg, controlDB := testutils.NewControlDB(t)
@@ -26,7 +26,7 @@ func TestTrimLogsDBCron(t *testing.T) {
 
 	jobs := scheduler{}
 	trim_logs.SetupCron(jobs, cfg, logs)
-	require.NoError(t, jobs["TrimLogsDB"]())
+	require.NoError(t, jobs["TrimLogsDB"](ctx))
 
 	rows, err := logs.Queries.SearchLogs(ctx, logsdb.SearchLogsParams{Limit: 10})
 	require.NoError(t, err)

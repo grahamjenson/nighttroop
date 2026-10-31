@@ -10,11 +10,13 @@ import (
 	"github.com/robfig/cron/v3"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/jobsdb"
+	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/errors"
 )
 
+// CronScheduler runs jobs on a schedule. Each run's context logs the job's name and a job_id of its own.
 type CronScheduler interface {
-	AddFunc(name string, spec string, cmd func() error)
+	AddFunc(name string, spec string, cmd func(ctx context.Context) error)
 }
 
 type ACron struct {
@@ -33,20 +35,21 @@ func NewCron(jobsDB *db.JobsDB) *ACron {
 	}
 }
 
-func (c *ACron) AddFunc(name string, spec string, cmd func() error) {
+func (c *ACron) AddFunc(name string, spec string, cmd func(ctx context.Context) error) {
 	_, err := c.RawAddFunc(name, spec, cmd)
 	if err != nil {
 		panic(fmt.Sprintf("Error adding cron function: %v", err))
 	}
 }
 
-func (c *ACron) RawAddFunc(name string, spec string, cmd func() error) (cron.EntryID, error) {
+func (c *ACron) RawAddFunc(name string, spec string, cmd func(ctx context.Context) error) (cron.EntryID, error) {
 	// Skip if still running channel
 	var ch = make(chan struct{}, 1)
 	ch <- struct{}{}
 
 	wrappedCmd := func() {
 		startedAt := time.Now().UnixMilli()
+		ctx := aslog.NewJob(context.Background(), name)
 
 		defer func() {
 			if r := recover(); r != nil {
@@ -57,8 +60,8 @@ func (c *ACron) RawAddFunc(name string, spec string, cmd func() error) (cron.Ent
 				if !ok {
 					err = fmt.Errorf("%v:%T", r, r)
 				}
-				slog.Error("Cron: Command panicked", "name", name, "stack", string(buf), "error", err)
-				c.jobsDB.Queries.InsertFailedCronJob(context.TODO(), jobsdb.InsertFailedCronJobParams{
+				slog.ErrorContext(ctx, "Cron: Command panicked", "stack", string(buf), "error", err)
+				c.jobsDB.Queries.InsertFailedCronJob(ctx, jobsdb.InsertFailedCronJobParams{
 					Job:               name,
 					ConsumerFetchedAt: startedAt,
 					Errors:            errors.ErrorList{}.Add(err.Error()),
@@ -70,21 +73,21 @@ func (c *ACron) RawAddFunc(name string, spec string, cmd func() error) (cron.Ent
 		case v := <-ch:
 			// Deferred so a panic in cmd still lets the next run start
 			defer func() { ch <- v }()
-			if err := cmd(); err != nil {
-				slog.Error("Cron: Command returned error", "name", name, "error", err)
-				c.jobsDB.Queries.InsertFailedCronJob(context.TODO(), jobsdb.InsertFailedCronJobParams{
+			if err := cmd(ctx); err != nil {
+				slog.ErrorContext(ctx, "Cron: Command returned error", "error", err)
+				c.jobsDB.Queries.InsertFailedCronJob(ctx, jobsdb.InsertFailedCronJobParams{
 					Job:               name,
 					ConsumerFetchedAt: startedAt,
 					Errors:            errors.ErrorList{}.Add(err.Error()),
 				})
 			} else {
-				c.jobsDB.Queries.InsertSuccessfulCronJob(context.TODO(), jobsdb.InsertSuccessfulCronJobParams{
+				c.jobsDB.Queries.InsertSuccessfulCronJob(ctx, jobsdb.InsertSuccessfulCronJobParams{
 					Job:               name,
 					ConsumerFetchedAt: startedAt,
 				})
 			}
 		default:
-			slog.Info("Cron: Skipping execution because previous run is still in progress", "name", name)
+			slog.InfoContext(ctx, "Cron: Skipping execution because previous run is still in progress")
 		}
 
 	}

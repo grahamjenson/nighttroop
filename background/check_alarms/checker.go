@@ -16,6 +16,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/livedb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/alarms"
+	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/glucose"
 	"nighttroop.t1d.nz/utils/settings"
@@ -40,8 +41,8 @@ type Checker struct {
 // SetupCron checks the sites whose readings changed every 5 seconds, and every site with alarms every minute
 func SetupCron(c cron.CronScheduler, config *config.ServerConfig, controlDB *db.ControlDB) *Checker {
 	checker := NewChecker(config, controlDB)
-	c.AddFunc("CheckAlarmsOfNewReadings", "@every 5s", func() error { return checker.Check(context.Background(), false) })
-	c.AddFunc("CheckAlarms", "@every 60s", func() error { return checker.Check(context.Background(), true) })
+	c.AddFunc("CheckAlarmsOfNewReadings", "@every 5s", func(ctx context.Context) error { return checker.Check(ctx, false) })
+	c.AddFunc("CheckAlarms", "@every 60s", func(ctx context.Context) error { return checker.Check(ctx, true) })
 	return checker
 }
 
@@ -102,7 +103,7 @@ func (c *Checker) Check(ctx context.Context, all bool) error {
 	}
 	var errs []error
 	for siteID := range sites {
-		errs = append(errs, c.checkSite(ctx, siteID, c.now().UnixMilli()))
+		errs = append(errs, c.checkSite(aslog.WithSite(ctx, siteID), siteID, c.now().UnixMilli()))
 	}
 	return errors.Join(errs...)
 }

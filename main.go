@@ -20,6 +20,7 @@ import (
 	"nighttroop.t1d.nz/background"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server"
+	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/restore"
@@ -137,10 +138,11 @@ func run() error {
 
 	slog.Info("Performing final backup to S3...")
 	// Force a final backup before exiting; a failure here can lose the latest control data, so log it
-	if err := backgroundManager.BackupControlJobManager.BackupToS3(); err != nil {
-		slog.Error("Final control DB backup failed", "error", err)
+	finalBackup := aslog.NewJob(context.Background(), "FinalBackup")
+	if err := backgroundManager.BackupControlJobManager.BackupToS3(finalBackup); err != nil {
+		slog.ErrorContext(finalBackup, "Final control DB backup failed", "error", err)
 	}
-	backgroundManager.BackupSiteJobManager.BackupToS3() // Force a final backup before exiting
+	backgroundManager.BackupSiteJobManager.BackupToS3(finalBackup) // Force a final backup before exiting
 	slog.Info("Final backup complete")
 
 	// Close control and User dbs

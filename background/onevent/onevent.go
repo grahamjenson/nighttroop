@@ -10,6 +10,7 @@ import (
 	"nighttroop.t1d.nz/background/liteq"
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/jobsdb"
+	"nighttroop.t1d.nz/utils/aslog"
 )
 
 // Job is a background job an event starts. It runs once for each site, however many of its matching events were
@@ -40,9 +41,10 @@ func Listen(bus *events.SiteBus, queue *liteq.JobQueue, jobs ...Job) []*liteq.Co
 				return
 			}
 			fired, _ := json.Marshal(Fired{Name: event.Name, SiteID: event.SiteID, Batch: event.Batch})
-			if err := queue.QueueJob(context.Background(), liteq.QueueJobParams{Queue: job.Queue, Job: string(fired),
+			ctx := aslog.WithSite(context.Background(), event.SiteID)
+			if err := queue.QueueJob(ctx, liteq.QueueJobParams{Queue: job.Queue, Job: string(fired),
 				DedupingKey: liteq.ReplaceDuplicate(job.Queue + "-" + event.SiteID)}); err != nil {
-				slog.Error("Cannot queue an event's job", "queue", job.Queue, "event", event.Name, "error", err)
+				slog.ErrorContext(ctx, "Cannot queue an event's job", "queue", job.Queue, "event", event.Name, "error", err)
 			}
 		})
 		consumers = append(consumers, liteq.NewConsumerSupervisor(queue, job.Queue, 1, func(ctx context.Context, queued *jobsdb.Job) error {
@@ -50,7 +52,7 @@ func Listen(bus *events.SiteBus, queue *liteq.JobQueue, jobs ...Job) []*liteq.Co
 			if err := json.Unmarshal([]byte(queued.Job), &fired); err != nil {
 				return err
 			}
-			return job.Run(ctx, fired)
+			return job.Run(aslog.WithSite(ctx, fired.SiteID), fired)
 		}))
 	}
 	return consumers

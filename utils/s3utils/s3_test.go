@@ -1,6 +1,7 @@
 package s3utils_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -13,9 +14,9 @@ func TestS3IsSkippedWhenNotWorking(t *testing.T) {
 	// No S3 connection at all: any real call would panic
 	c := &s3utils.S3Client{ServerConfig: &config.ServerConfig{}}
 
-	require.NoError(t, c.UploadFilesToS3("key", s3utils.SiteRetention, []string{"file"}))
+	require.NoError(t, c.UploadFilesToS3(context.Background(), "key", s3utils.SiteRetention, []string{"file"}))
 
-	size, found, err := c.DownloadFilesFromS3("key", t.TempDir())
+	size, found, err := c.DownloadFilesFromS3(context.Background(), "key", t.TempDir())
 	require.NoError(t, err)
 	require.False(t, found)
 	require.Zero(t, size)

@@ -31,10 +31,10 @@ func SetupTruncateJobManager(config *config.ServerConfig, controlDB *db.ControlD
 
 func (t *TruncateJobManager) SetupCron(c cron.CronScheduler) {
 	truncateCron := fmt.Sprintf("@every %ds", t.TruncateIntervalInSeconds)
-	c.AddFunc("TruncateJobManager", truncateCron, func() error {
-		err := t.JobsDB.BuildDailyReports(context.Background(), t.SummariseAfterSeconds)
+	c.AddFunc("TruncateJobManager", truncateCron, func(ctx context.Context) error {
+		err := t.JobsDB.BuildDailyReports(ctx, t.SummariseAfterSeconds)
 		if err != nil {
-			slog.Error("Error building daily reports", "error", err)
+			slog.ErrorContext(ctx, "Error building daily reports", "error", err)
 		}
 		return err
 	})

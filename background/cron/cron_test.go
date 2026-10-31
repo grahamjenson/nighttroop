@@ -1,8 +1,11 @@
 package cron_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"log/slog"
+	"regexp"
 	"testing"
 	"time"
 
@@ -10,6 +13,7 @@ import (
 	"nighttroop.t1d.nz/background/cron"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/jobsdb"
+	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -18,15 +22,15 @@ import (
 func TestAddFunc(t *testing.T) {
 	tests := []struct {
 		name    string
-		job     func() error
+		job     func(context.Context) error
 		status  string
 		success int64
 		failed  int64
 		err     string
 	}{
-		{"returns", func() error { return nil }, "completed", 1, 0, ""},
-		{"errors", func() error { return fmt.Errorf("test error") }, "failed", 0, 1, "test error"},
-		{"panics", func() error { panic("test panic") }, "failed", 0, 1, "test panic"},
+		{"returns", func(context.Context) error { return nil }, "completed", 1, 0, ""},
+		{"errors", func(context.Context) error { return fmt.Errorf("test error") }, "failed", 0, 1, "test error"},
+		{"panics", func(context.Context) error { panic("test panic") }, "failed", 0, 1, "test panic"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -79,11 +83,32 @@ func TestAddFuncRunsAgainAfterPanic(t *testing.T) {
 
 	cron := cron.NewCron(jobsDB)
 	runs := 0
-	entryid, _ := cron.RawAddFunc("testing", "@every 1s", func() error { runs++; panic("test panic") })
+	entryid, _ := cron.RawAddFunc("testing", "@every 1s", func(context.Context) error { runs++; panic("test panic") })
 	entry := cron.Entry(entryid)
 	entry.Job.Run()
 	// A panic must not leave the job marked as still running
 	entry.Job.Run()
 
 	require.Equal(t, 2, runs)
+}
+
+// Each run of a job logs the job and an ID of its own
+func TestAddFuncLogsEachRunsID(t *testing.T) {
+	jobsDB, err := db.NewJobsDB(context.TODO(), testutils.GetTestServerConfig())
+	require.NoError(t, err)
+	var logs bytes.Buffer
+	testutils.UseLogHandler(t, aslog.ContextHandler{Handler: slog.NewTextHandler(&logs, nil)})
+
+	cron := cron.NewCron(jobsDB)
+	entryid, err := cron.RawAddFunc("testing", "@every 1s", func(ctx context.Context) error {
+		slog.InfoContext(ctx, "in the job")
+		return nil
+	})
+	require.NoError(t, err)
+	cron.Entry(entryid).Job.Run()
+	cron.Entry(entryid).Job.Run()
+
+	ids := regexp.MustCompile(`msg="in the job" job_id=([0-9a-f]{16}) job=testing`).FindAllStringSubmatch(logs.String(), -1)
+	require.Len(t, ids, 2)
+	require.NotEqual(t, ids[0][1], ids[1][1])
 }

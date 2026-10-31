@@ -85,7 +85,7 @@ func QueueBackfill(ctx context.Context, controlDB *db.ControlDB, siteID string, 
 // if it did, on the source and as an event
 func (b *SyncJobManager) backfill(syncInfo *SyncJobInfo, backfill BackfillParams) error {
 	started := time.Now()
-	ctx, cancel := context.WithTimeout(context.Background(), backfillTimeout)
+	ctx, cancel := context.WithTimeout(syncInfo.ctx, backfillTimeout)
 	defer cancel()
 
 	from, to := time.UnixMilli(backfill.From), time.UnixMilli(backfill.To)
@@ -101,8 +101,8 @@ func (b *SyncJobManager) backfill(syncInfo *SyncJobInfo, backfill BackfillParams
 		records, err = b.backfillVirtual(ctx, syncInfo, from, to)
 	}
 
-	// Recorded with a new context, as a backfill that ran out of time has none left
-	recordCtx := context.Background()
+	// Recorded with the sync's own context, as a backfill that ran out of time has none left
+	recordCtx := syncInfo.ctx
 	var message *string
 	if err != nil {
 		truncated := utilerrors.Truncate(err.Error())

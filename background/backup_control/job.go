@@ -42,30 +42,30 @@ func (b *BackupControlJobManager) SetupCron(c cron.CronScheduler, queue *liteq.J
 
 	backupControlCron := fmt.Sprintf("@every %ds", b.ControlBackupIntervalInSeconds)
 
-	c.AddFunc("BackupControlJobManager", backupControlCron, func() error {
-		return b.BackupToS3()
+	c.AddFunc("BackupControlJobManager", backupControlCron, func(ctx context.Context) error {
+		return b.BackupToS3(ctx)
 	})
 }
 
 // BackupToS3 backs up the control DB, recording the backup as an event in the logs DB and a failure as an error
-func (b *BackupControlJobManager) BackupToS3() (err error) {
+func (b *BackupControlJobManager) BackupToS3(ctx context.Context) (err error) {
 	started := time.Now()
 	defer func() {
 		if err != nil {
-			b.controlDB.Logs.ControlBackupError(context.TODO(), err)
+			b.controlDB.Logs.ControlBackupError(ctx, err)
 			return
 		}
-		b.controlDB.Logs.ControlBackedUpEvent(context.TODO(), started, b.ServerConfig.Status.S3Working)
+		b.controlDB.Logs.ControlBackedUpEvent(ctx, started, b.ServerConfig.Status.S3Working)
 	}()
 
 	// Backup the Database
-	err = b.controlDB.Backup(context.TODO())
+	err = b.controlDB.Backup(ctx)
 	if err != nil {
 		return fmt.Errorf("cannot backup control db: %w", err)
 	}
 
 	// Copy the control db to S3 path
-	err = b.S3Client.UploadFilesToS3(controldb.GetS3Path(b.ServerConfig), s3utils.ControlRetention, []string{b.controlDB.BackupPath})
+	err = b.S3Client.UploadFilesToS3(ctx, controldb.GetS3Path(b.ServerConfig), s3utils.ControlRetention, []string{b.controlDB.BackupPath})
 	if err != nil {
 		return fmt.Errorf("cannot sync control db: %w", err)
 	}

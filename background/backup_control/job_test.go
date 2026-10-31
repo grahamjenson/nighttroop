@@ -18,7 +18,7 @@ func TestBackupControlRecordsEvent(t *testing.T) {
 	jobs := backup_control.SetupBackupControlJob(ctx, controlDB, cfg, &s3utils.S3Client{ServerConfig: cfg})
 
 	started := time.Now().UnixMilli()
-	require.NoError(t, jobs.BackupToS3())
+	require.NoError(t, jobs.BackupToS3(ctx))
 
 	events, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{Limit: 10})
 	require.NoError(t, err)

@@ -13,9 +13,9 @@ import (
 
 // syncDexcom copies the last 15 minutes of Dexcom readings into the site, returning how many were new
 func (b *SyncJobManager) syncDexcom(syncInfo *SyncJobInfo) (int, error) {
-	slog.Info("Syncing Dexcom", "site_id", syncInfo.SiteID, "sync_type", syncInfo.Type)
+	slog.InfoContext(syncInfo.ctx, "Syncing Dexcom")
 
-	ctx, cancel := context.WithTimeout(context.Background(), syncTimeout)
+	ctx, cancel := context.WithTimeout(syncInfo.ctx, syncTimeout)
 	defer cancel()
 
 	return copyDexcomEGVs(ctx, syncInfo, 15)
@@ -37,7 +37,7 @@ func copyDexcomEGVs(ctx context.Context, syncInfo *SyncJobInfo, minutes int) (in
 				continue
 			}
 			// Probably just non-unique ID
-			slog.Error("Error creating entry in database", "error", err, "id", createParams.ID, "site_id", syncInfo.SiteID, "sync_type", syncInfo.Type)
+			slog.ErrorContext(ctx, "Error creating entry in database", "error", err, "id", createParams.ID)
 			continue
 		}
 		if res != nil {
@@ -46,7 +46,7 @@ func copyDexcomEGVs(ctx context.Context, syncInfo *SyncJobInfo, minutes int) (in
 		}
 	}
 	if added > 0 {
-		slog.Info("Added new Dexcom entries for site", "site_id", syncInfo.SiteID, "added", added)
+		slog.InfoContext(ctx, "Added new Dexcom entries for site", "added", added)
 	}
 	return added, nil
 }

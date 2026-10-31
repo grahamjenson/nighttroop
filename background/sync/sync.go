@@ -1,7 +1,6 @@
 package sync
 
 import (
-	"context"
 	"log/slog"
 	"time"
 
@@ -66,22 +65,22 @@ func (b *SyncJobManager) SyncUserData(syncInfo *SyncJobInfo) error {
 	elapsedTimeMS := time.Since(startTime).Milliseconds()
 
 	if err != nil {
-		slog.Error("error syncing user data", "site_id", syncInfo.SiteID, "sync_type", syncInfo.Type, "error", err)
+		slog.ErrorContext(syncInfo.ctx, "error syncing user data", "error", err)
 		b.recordSyncFailure(syncInfo, err, elapsedTimeMS)
 		return err
 	}
 
-	slog.Info("finished sync", "site_id", syncInfo.SiteID, "sync_type", syncInfo.Type, "elapsed_time_ms", elapsedTimeMS)
+	slog.InfoContext(syncInfo.ctx, "finished sync", "elapsed_time_ms", elapsedTimeMS)
 	if added > 0 {
-		b.controlDB.Logs.SyncAddedEvent(context.TODO(), syncInfo.SiteID, syncInfo.Type, added)
+		b.controlDB.Logs.SyncAddedEvent(syncInfo.ctx, syncInfo.SiteID, syncInfo.Type, added)
 	}
-	updateError := b.controlDB.Queries.UpdateSyncSourceReportsSuccess(context.TODO(), controldb.UpdateSyncSourceReportsSuccessParams{
+	updateError := b.controlDB.Queries.UpdateSyncSourceReportsSuccess(syncInfo.ctx, controldb.UpdateSyncSourceReportsSuccessParams{
 		ElapsedMs: &elapsedTimeMS,
 		Type:      syncInfo.Type,
 		SiteID:    syncInfo.SiteID,
 	})
 	if updateError != nil {
-		slog.Error("error updating sync source report with success", "site_id", syncInfo.SiteID, "sync_type", syncInfo.Type, "error", updateError)
+		slog.ErrorContext(syncInfo.ctx, "error updating sync source report with success", "error", updateError)
 		return updateError
 	}
 
@@ -91,19 +90,19 @@ func (b *SyncJobManager) SyncUserData(syncInfo *SyncJobInfo) error {
 // recordSyncFailure stores the failure so the source backs off, and in the logs DB's errors. The message is
 // truncated first: an oversized one would fail the row's CHECK and leave the source retrying every tick.
 func (b *SyncJobManager) recordSyncFailure(syncInfo *SyncJobInfo, err error, elapsedTimeMS int64) {
-	b.controlDB.Logs.SyncError(context.TODO(), syncInfo.SiteID, syncInfo.Type, err)
+	b.controlDB.Logs.SyncError(syncInfo.ctx, syncInfo.SiteID, syncInfo.Type, err)
 	errMsg := errors.Truncate(err.Error())
 	if syncInfo.firstSync {
-		b.controlDB.Logs.SyncTurnedOffEvent(context.TODO(), syncInfo.SiteID, syncInfo.Type)
+		b.controlDB.Logs.SyncTurnedOffEvent(syncInfo.ctx, syncInfo.SiteID, syncInfo.Type)
 		errMsg = "The first sync failed, so syncing has been turned off. Check the details and save to try again. " + errMsg
 	}
-	updateError := b.controlDB.Queries.UpdateSyncSourceReportsFailure(context.TODO(), controldb.UpdateSyncSourceReportsFailureParams{
+	updateError := b.controlDB.Queries.UpdateSyncSourceReportsFailure(syncInfo.ctx, controldb.UpdateSyncSourceReportsFailureParams{
 		ErrorMessages: errors.ErrorList{errMsg},
 		ElapsedMs:     &elapsedTimeMS,
 		Type:          syncInfo.Type,
 		SiteID:        syncInfo.SiteID,
 	})
 	if updateError != nil {
-		slog.Error("error updating sync source report with failure", "site_id", syncInfo.SiteID, "sync_type", syncInfo.Type, "error", updateError)
+		slog.ErrorContext(syncInfo.ctx, "error updating sync source report with failure", "error", updateError)
 	}
 }

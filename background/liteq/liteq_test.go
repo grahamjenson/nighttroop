@@ -1,8 +1,10 @@
 package liteq_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"log/slog"
 	"strings"
 	"testing"
 	"unicode/utf8"
@@ -10,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/background/liteq"
 	"nighttroop.t1d.nz/data/sql/jobsdb"
+	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/testutils"
 )
@@ -58,4 +61,22 @@ func TestOversizedJobErrorsStillSummariseAndDeleteJobs(t *testing.T) {
 	stats, err := jobsDB.Queries.AllJobStatsDaily(ctx)
 	require.NoError(t, err)
 	require.Equal(t, int64(2*count), stats[0].TotalFailed)
+}
+
+// A queued job's logs say which queue and job row it is, with an ID for the run
+func TestQueuedJobLogsItsIDs(t *testing.T) {
+	_, controlDB := testutils.NewControlDB(t)
+	ctx, queue := context.TODO(), liteq.New(controlDB)
+	var logs bytes.Buffer
+	testutils.UseLogHandler(t, aslog.ContextHandler{Handler: slog.NewTextHandler(&logs, nil)})
+	require.NoError(t, queue.QueueJob(ctx, liteq.QueueJobParams{Queue: "logged", Job: "fetch"}))
+
+	var queuedID int64
+	worker := func(ctx context.Context, job *jobsdb.Job) error {
+		queuedID = job.ID
+		slog.InfoContext(ctx, "in the job")
+		return nil
+	}
+	require.NoError(t, liteq.NewConsumerSupervisor(queue, "logged", 1, worker).RunQueued(ctx))
+	require.Regexp(t, fmt.Sprintf(`msg="in the job" job_id=[0-9a-f]{16} job=logged queued_job_id=%d`, queuedID), logs.String())
 }

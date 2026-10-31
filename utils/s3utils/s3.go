@@ -199,18 +199,23 @@ func (c *S3Client) TestObjectPath() string {
 // UPLOAD METHODS
 ////
 
-func (c *S3Client) UploadFilesToS3(key string, retention Retention, paths []string) error {
+// UploadFunc and DownloadFunc are UploadFilesToS3 and DownloadFilesFromS3, which tests can stand in for
+type UploadFunc func(ctx context.Context, key string, retention Retention, paths []string) error
+type DownloadFunc func(ctx context.Context, key string, outpath string) (int64, bool, error)
+
+func (c *S3Client) UploadFilesToS3(ctx context.Context, key string, retention Retention, paths []string) error {
 	if !c.ServerConfig.Status.S3Working {
 		return nil
 	}
 	info := ""
-	defer aslog.TrackTime(time.Now(), "UploadFilesToS3 "+key, nil, &info)
+	defer aslog.TrackTime(ctx, time.Now(), "UploadFilesToS3 "+key, nil, &info)
 	if len(paths) == 0 {
-		slog.Error("No files to sync", "key", key)
+		slog.ErrorContext(ctx, "No files to sync", "key", key)
 		return nil
 	}
 
-	ctx := context.TODO()
+	// The upload finishes even if what asked for it is cancelled, logging with its job, request or site
+	ctx = context.WithoutCancel(ctx)
 
 	// Creating the pipes
 	pr, pw := io.Pipe()
@@ -222,7 +227,7 @@ func (c *S3Client) UploadFilesToS3(key string, retention Retention, paths []stri
 		filesize, err := c.createTarLZ4(paths, pw)
 		info = fmt.Sprintf("uploaded %d bytes", filesize)
 		if err != nil {
-			slog.Error("Error creating tar LZ4", "key", key, "error", err)
+			slog.ErrorContext(ctx, "Error creating tar LZ4", "key", key, "error", err)
 			// Important: propagate error to the reader side
 			pw.CloseWithError(err)
 		}
@@ -230,7 +235,7 @@ func (c *S3Client) UploadFilesToS3(key string, retention Retention, paths []stri
 
 	err := c.uploadStreamToS3(ctx, key, retention, pr)
 	if err != nil {
-		slog.Error("Error uploading stream to s3", "key", key, "error", err)
+		slog.ErrorContext(ctx, "Error uploading stream to s3", "key", key, "error", err)
 		return fmt.Errorf("cannot upload stream to s3: %w", err)
 	}
 
@@ -262,14 +267,14 @@ func (c *S3Client) uploadStreamToS3(ctx context.Context, key string, retention R
 // DOWNLOAD METHODS
 ////
 
-func (c *S3Client) DownloadFilesFromS3(key string, outpath string) (int64, bool, error) {
+func (c *S3Client) DownloadFilesFromS3(ctx context.Context, key string, outpath string) (int64, bool, error) {
 	if !c.ServerConfig.Status.S3Working {
 		return 0, false, nil
 	}
 	info := ""
-	defer aslog.TrackTime(time.Now(), "DownloadFilesFromS3 "+key, nil, &info)
+	defer aslog.TrackTime(ctx, time.Now(), "DownloadFilesFromS3 "+key, nil, &info)
 
-	ctx := context.TODO()
+	ctx = context.WithoutCancel(ctx)
 	out, err := c.s3.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(c.Bucket),
 		Key:    aws.String(key),

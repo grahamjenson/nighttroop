@@ -57,6 +57,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - The jobs page lists the background jobs, newest first, with their duration; clicking one shows its details and
   errors.
 - The job stats page summarises each day's jobs, newest day first, with its totals and errors.
+- Every run of a cron or queued job logs its name and a `job_id` of its own (a queued one also its `queued_job_id`),
+  and its work for a site also the `site_id`, so one run's logs can be found together.
 
 ### Sync sources
 
