@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"slices"
 	"maps"
+	"strings"
 
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/server/components/heading"
@@ -20,6 +21,38 @@ func meanStd(stats usage.Stats, show func(float64) string) string {
 func count(value float64) string {
 	return fmt.Sprintf("%.1f", value)
 }
+
+// The resource graphs are drawn in a box graphW wide and graphH high, from 0% at its bottom to 100% at its top
+const graphW, graphH = 300.0, 60.0
+
+func graphY(percent float64) float64 {
+	return graphH - graphH*min(max(percent, 0), 100)/100
+}
+
+// resourcePoints are a graph line's points: each check's value, placed by its time across the checks kept. A check
+// without the value, as memory on a Mac, is left out.
+func resourcePoints(model controlmodels.Usage, value func(controlmodels.ResourceReading) *float64) string {
+	points := []string{}
+	for _, reading := range model.ResourceReadings {
+		if v := value(reading); v != nil {
+			x := graphW * float64(reading.At-model.ResourcesSince) / float64(max(model.Now-model.ResourcesSince, 1))
+			points = append(points, fmt.Sprintf("%.1f,%.1f", x, graphY(*v)))
+		}
+	}
+	return strings.Join(points, " ")
+}
+
+// latestPercent is the newest check's value, or a dash when it has none
+func latestPercent(model controlmodels.Usage, value func(controlmodels.ResourceReading) *float64) string {
+	if len(model.ResourceReadings) == 0 || value(model.ResourceReadings[len(model.ResourceReadings)-1]) == nil {
+		return "-"
+	}
+	return fmt.Sprintf("%.0f%%", *value(model.ResourceReadings[len(model.ResourceReadings)-1]))
+}
+
+func cpuPercent(r controlmodels.ResourceReading) *float64 { return &r.CPUPercent }
+func memoryPercent(r controlmodels.ResourceReading) *float64 { return r.MemoryPercent }
+func diskPercent(r controlmodels.ResourceReading) *float64 { return r.DiskPercent }
 
 // Usage is how many use the server and how much, and its resources. It asks for itself again every 10 seconds, and
 // swaps in its new numbers.
@@ -65,6 +98,18 @@ templ Usage(model controlmodels.Usage) {
 			@tile("control--usage--uptime", "Uptime", display.Duration(model.Server.UptimeMs), "since start")
 		}
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
+			<h2 class="mb-3 text-sm font-semibold text-brand-night">Resources, checked every 5 minutes</h2>
+			if len(model.ResourceReadings) == 0 {
+				<p id="control--usage--resources-empty" class="text-sm text-gray-500">Not checked yet since the server started.</p>
+			} else {
+				<div class="grid gap-3 sm:grid-cols-3">
+					@resourceGraph(model, "cpu", "Mean CPU", cpuPercent, -1)
+					@resourceGraph(model, "memory", "Memory used", memoryPercent, model.MemoryAlertPercent)
+					@resourceGraph(model, "disk", "DB disk used", diskPercent, model.DiskAlertPercent)
+				</div>
+			}
+		</section>
+		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			<h2 class="mb-3 text-sm font-semibold text-brand-night">Most asked for routes</h2>
 			@table.Table(table.Props{ID: "control--usage--routes", Class: "rounded-lg border border-gray-200"}) {
 				@table.Header() {
@@ -100,6 +145,25 @@ templ Usage(model controlmodels.Usage) {
 				}
 			}
 		</section>
+	</div>
+}
+
+// resourceGraph is a small graph of a resource's percent over the checks kept, with a dashed line at the level it
+// warns at, unless alertPercent is negative
+templ resourceGraph(model controlmodels.Usage, name string, label string, value func(controlmodels.ResourceReading) *float64, alertPercent int) {
+	<div class="rounded-lg border border-gray-200 p-3">
+		<div class="flex justify-between text-xs font-semibold uppercase tracking-wide text-gray-500">
+			<span>{ label }</span>
+			<span id={ "control--usage--resources-" + name + "-latest" } class="tabular-nums">{ latestPercent(model, value) }</span>
+		</div>
+		<svg id={ "control--usage--resources-" + name } viewBox={ fmt.Sprintf("0 0 %.0f %.0f", graphW, graphH) } preserveAspectRatio="none" class="mt-2 h-16 w-full overflow-visible" role="img" aria-label={ label + " over the checks kept" }>
+			<line x1="0" x2={ fmt.Sprint(graphW) } y1={ fmt.Sprint(graphH) } y2={ fmt.Sprint(graphH) } class="stroke-gray-200" vector-effect="non-scaling-stroke"></line>
+			if alertPercent >= 0 {
+				<line x1="0" x2={ fmt.Sprint(graphW) } y1={ fmt.Sprint(graphY(float64(alertPercent))) } y2={ fmt.Sprint(graphY(float64(alertPercent))) } class="stroke-amber-500" stroke-dasharray="4 3" vector-effect="non-scaling-stroke"></line>
+			}
+			<polyline points={ resourcePoints(model, value) } fill="none" class="stroke-brand-night" stroke-width="1.5" vector-effect="non-scaling-stroke"></polyline>
+		</svg>
+		<div class="text-xs text-gray-500">over the last 3 days, newest at the right</div>
 	</div>
 }
 

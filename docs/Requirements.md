@@ -84,7 +84,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - Memory or disk at or over 60% (`MEMORY_ALERT_PERCENT`, `DISK_ALERT_PERCENT`), or the CPU at 100% for 20 seconds or
   more (`CPU_PEGGED_ALERT_SECONDS`), shows in the banner on every control page until a check finds it back under.
 - Going over is a "Resource high" event of the server's, and coming back under a "Resource recovered" one.
-- The last 3 days of checks are kept while the server runs, and start again when it restarts.
+- The last 3 days of checks are kept while the server runs, and start again when it restarts. The usage page graphs
+  them: mean CPU, and memory and DB disk used, with a dashed line at the level each warns at.
 
 ## Site
 
