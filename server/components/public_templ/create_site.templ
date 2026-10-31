@@ -94,52 +94,54 @@ templ CreateSiteRateLimited(seconds int) {
 
 templ CreateSiteInfo(newsite publicmodels.NewSiteInfo) {
 	<div class="w-full max-w-2xl mx-auto text-left space-y-6">
-		@step("1", "Save your credentials somewhere safe", "They are shown once. Keep the backup key safe: it is the only way back in if you lose the admin login.") {
-			<p id="public--site-info--recover" class="px-5 pb-4 -mt-2 text-sm text-slate-500">
-				With your site's ID and the backup key, the
+		@step("1", "Save your credentials somewhere safe", "They are shown once.") {
+			<p id="public--site-info--recover" class="pl-15 pr-5 pb-3 -mt-3 text-sm text-slate-500">
+				Keep the backup key safe: with the site ID, the
 				<a id="public--site-info--recover-link" href={ templ.SafeURL(newsite.RecoverURL) } class="font-medium text-brand-night underline">recover page</a>
-				gives you a new admin password and TOTP.
+				gives you a new admin login.
 			</p>
 			<textarea id="public--site-info" hidden>{ newsite.AllInfo() }</textarea>
-			<div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2.5">
-				<span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Your credentials</span>
-				@copybutton.CopyButton(copybutton.Props{
-					ID:       "public--copy-button",
-					TargetID: "public--site-info",
-					Class:    "inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-medium rounded-lg transition-colors cursor-pointer",
-				})
-			</div>
-			<dl class="divide-y divide-slate-100 font-mono text-sm">
-				@group("Site")
-				@row("url", "URL", newsite.URL)
-				@row("site-id", "Site ID", newsite.SiteID())
-				@row("backup-key", "Backup key", newsite.BackupKey)
+			<div class="font-mono text-sm">
+				@group("Site") {
+					@copybutton.CopyButton(copybutton.Props{
+						ID:       "public--copy-button",
+						TargetID: "public--site-info",
+						Class:    "inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-medium normal-case tracking-normal rounded-lg transition-colors cursor-pointer",
+					})
+				}
+				<dl class="divide-y divide-slate-100">
+					@row("url", "URL", newsite.URL)
+					@row("site-id", "Site ID", newsite.SiteID())
+					@row("backup-key", "Backup key", newsite.BackupKey)
+				</dl>
 				@group("Admin login")
-				@row("username", "Username", "admin")
-				@row("password", "Password", newsite.AdminPassword)
-				<div class="grid sm:grid-cols-[8rem_1fr] gap-1 px-4 py-3">
-					<dt class="text-slate-400">TOTP secret</dt>
-					<dd class="flex flex-wrap items-start gap-4">
-						<span class="break-all">{ newsite.AdminTotpSecret }</span>
-						<div class="flex flex-col items-center gap-1">
-							<div id="qrcode" class="p-2 bg-white rounded-lg border border-slate-200"></div>
-							<span class="font-sans text-xs text-slate-400">Scan with an authenticator app</span>
-						</div>
-					</dd>
+				// The QR code sits beside the login it is for, rather than under it
+				<div class="flex items-center gap-3 pr-4">
+					<dl class="min-w-0 flex-1 divide-y divide-slate-100">
+						@row("username", "Username", "admin")
+						@row("password", "Password", newsite.AdminPassword)
+						@row("totp-secret", "TOTP secret", newsite.AdminTotpSecret)
+					</dl>
+					<div class="flex shrink-0 flex-col items-center gap-1 py-2">
+						<div id="qrcode" class="p-1.5 bg-white rounded-lg border border-slate-200"></div>
+						<span class="font-sans text-[10px] text-slate-400">Scan with an authenticator app</span>
+					</div>
 				</div>
 				// A recovery leaves the phone's credentials as they were, so there are none to show
 				if newsite.PwdNSToken != "" {
 					@group("Phone setup (AAPS / Trio)")
-					@row("ns-url", "NS URL", newsite.PwdNSURL)
-					@row("ns-token", "NS token", newsite.PwdNSToken)
+					<dl class="divide-y divide-slate-100">
+						@row("ns-url", "NS URL", newsite.PwdNSURL)
+						@row("ns-token", "NS token", newsite.PwdNSToken)
+					</dl>
 				}
-			</dl>
+			</div>
 			<script type="text/javascript">
 				new QRCode(document.getElementById("qrcode"), {
 					text: "{{ newsite.AdminTotpSecret }}",
-					width: 128,
-					height: 128,
-					correctLevel: QRCode.CorrectLevel.H
+					width: 96,
+					height: 96,
+					correctLevel: QRCode.CorrectLevel.M
 				});
 			</script>
 		}
@@ -223,13 +225,17 @@ templ step(n, title, hint string) {
 	</section>
 }
 
+// group heads a group of credentials, with any children, such as a button, at its right
 templ group(title string) {
-	<h3 class="bg-slate-50 px-4 py-1.5 font-sans text-xs font-semibold uppercase tracking-wide text-slate-500">{ title }</h3>
+	<h3 class="flex items-center justify-between border-y border-slate-100 bg-slate-50 px-4 py-1.5 font-sans text-xs font-semibold uppercase tracking-wide text-slate-500">
+		{ title }
+		{ children... }
+	</h3>
 }
 
 // row is a credential, with an ID of public--site-info--<id>
 templ row(id, label, value string) {
-	<div class="grid sm:grid-cols-[8rem_1fr] gap-1 px-4 py-3">
+	<div class="grid sm:grid-cols-[7rem_1fr] gap-x-2 px-4 py-1.5">
 		<dt class="text-slate-400">{ label }</dt>
 		<dd id={ "public--site-info--" + id } class="break-all text-slate-800 select-all">{ value }</dd>
 	</div>
