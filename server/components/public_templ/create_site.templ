@@ -119,14 +119,15 @@ templ CreateSiteInfo(newsite publicmodels.NewSiteInfo) {
 				// A recovery leaves the phone's credentials as they were, so there are none to show
 				if newsite.PwdNSToken != "" {
 					@group("Phone setup (AAPS / Trio)")
-					<dl class="grid sm:grid-cols-2">
-						@row("ns-url", "NS URL", newsite.PwdNSURL, true)
+					// The URL takes what the token's button leaves, so it fits on the line with it
+					<dl class="grid sm:grid-cols-[1fr_auto]">
+						@row("ns-url", "NS URL", newsite.PwdNSURL, false)
 						// The token is too long to read or type, so it is only copied
-						<div class="flex items-center gap-2 px-4 py-1.5 sm:col-span-2">
-							<dt class="w-24 shrink-0 text-slate-400">NS token</dt>
+						<div class="flex items-center px-4 py-1.5">
+							<dt class="sr-only">NS token</dt>
 							<dd>
 								<textarea id="public--site-info--ns-token" hidden>{ newsite.PwdNSToken }</textarea>
-								@copyButton("public--copy-ns-token", "public--site-info--ns-token", "Copy token", "h-7 px-2.5 font-sans text-xs font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-100")
+								@copyButton("public--copy-ns-token", "public--site-info--ns-token", "Copy NS token", "h-7 px-2.5 font-sans text-xs font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-100")
 							</dd>
 						</div>
 					</dl>
