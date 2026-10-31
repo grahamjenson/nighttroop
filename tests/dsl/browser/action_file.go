@@ -348,6 +348,21 @@ func parseFile(fsys fs.FS, path string) ([]Action, error) {
 				TestPath: path,
 				TestLine: lineNumber,
 			})
+		case "ASSERT_TITLE":
+			if current == nil {
+				return nil, fmt.Errorf("assert_title before action")
+			}
+
+			assertable, ok := current.(interface{ AddAssert(Assert) })
+			if !ok {
+				return nil, fmt.Errorf("current action does not support asserts")
+			}
+
+			assertable.AddAssert(&AssertTitle{
+				Title:    second,
+				TestPath: path,
+				TestLine: lineNumber,
+			})
 		default:
 			return nil, fmt.Errorf("unknown line: %q", line)
 		}

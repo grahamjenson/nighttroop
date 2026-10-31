@@ -24,6 +24,7 @@ CLICK #control--menu
 CLICK #control--sites-button
 ASSERT_STATUS 200
 ASSERT_PATH /sites
+ASSERT_TITLE Sites · Nighttroop Control
 ASSERT_VISIBLE #controlSitesTable
 ASSERT_TEXT_VISIBLE Showing 1 to
 ASSERT_TEXT_VISIBLE DB Size (KB)

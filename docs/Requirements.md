@@ -30,6 +30,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 - A control admin signs in with a username, password and TOTP code, and can sign out.
 - A banner on every control page says when S3 backups or Sentry error reporting are not connected.
+- Every control page names the browser's tab after itself, e.g. `Sites · Nighttroop Control`.
 
 ### Sites
 
@@ -107,6 +108,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   site a new backup key. The key works once; a wrong key is refused without saying why.
 - A site that is never used is deleted after `DELETE_AFTER_INACTIVITY_MINS`.
 - Every page's footer links to contact, the terms of service and the privacy policy.
+- Every page names the browser's tab after itself, e.g. `Glucose Readings · Nighttroop`, whether it is loaded in full or
+  opened from a menu; a page with no title of its own, such as the login, is named `Nighttroop`.
 - A page that shows estimated locations, such as the events pages, also links to DB-IP, whose free databases make
   the estimates, in its footer.
 

@@ -22,7 +22,6 @@ templ Base() {
 		<head>
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-			<title>NightTroop </title>
 			<link rel="icon" type="image/x-icon" href="/favicon.ico"/>
 			<link rel="apple-touch-icon" href="/logo.png"/>
 			<!-- Tailwind CSS -->
@@ -43,6 +42,8 @@ templ Base() {
 		<body hx-ext="response-targets">
 			<div id="toaster" class="mb-3"></div>
 			{ children... }
+			// After the page's own title, so it names the tab only when the page has none, see heading.Page
+			<title>Nighttroop</title>
 		</body>
 	</html>
 }

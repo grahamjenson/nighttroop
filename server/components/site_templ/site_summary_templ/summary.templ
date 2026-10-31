@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
@@ -127,6 +128,7 @@ templ rangeButton(hours int64, label string, selected bool) {
 // arriving, and when the stream reconnects, as changes may have been missed while it was not. The header, with the
 // stream, is not reloaded, so the stream stays open.
 templ Summary(summary *sitemodels.Summary) {
+	@heading.Title("Summary")
 	<div id="site--summary" class="w-full space-y-4 py-4">
 		<div class="flex flex-wrap items-center justify-between gap-2">
 			<div>
