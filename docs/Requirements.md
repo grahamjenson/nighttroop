@@ -19,6 +19,13 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - The setup page shows the control admin's username, password and TOTP secret (with a QR code) once, and saves the
   admin only when a code from that TOTP secret is entered.
 
+### Limiting a server to some countries
+
+- With `ALLOWED_COUNTRIES` set, only addresses in those countries can create sites, sign in (to sites and the control
+  site) and recover; others are refused with "Nighttroop is not available in your country". Addresses whose country
+  is not known are allowed.
+- Signed in pages and the Nightscout API are not limited, so a phone keeps uploading while its person travels.
+
 ### Signing in
 
 - A control admin signs in with a username, password and TOTP code, and can sign out.

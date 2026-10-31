@@ -19,10 +19,11 @@ func NewPublicRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.R
 	r.Get("/health", publicapi.GETHealthHandler(controlDB))
 	publicapi.LegalRoutes(r)
 
-	r.Post("/site", publicapi.POSTCreateSiteHandler(controlDB, config))
+	// Creating a site, signing in and recovering are limited to the server's ALLOWED_COUNTRIES
+	r.With(httputils.AllowedCountriesMiddleware(config)).Post("/site", publicapi.POSTCreateSiteHandler(controlDB, config))
 	r.Post("/site/totp", publicapi.POSTCheckTOTPHandler(config))
 	r.Get("/recover", publicapi.GETRecoverSitePageHandler())
-	r.Post("/recover", publicapi.POSTRecoverSiteHandler(controlDB, config))
+	r.With(httputils.AllowedCountriesMiddleware(config)).Post("/recover", publicapi.POSTRecoverSiteHandler(controlDB, config))
 
 	// TODO public routes
 	// 1. Documentation

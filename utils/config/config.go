@@ -66,6 +66,18 @@ type ServerConfig struct {
 	// GeoIPDBPath is a DB-IP IP to City Lite database, for the city sign ins are from; without one only the country is
 	GeoIPDBPath string
 
+	// AllowedCountries are the only countries, by ISO 3166-1 alpha-2 code, that can create sites, sign in and
+	// recover; empty allows every country, and an address whose country is not known is allowed. To limit a server,
+	// copy every country DB-IP knows, below, into ALLOWED_COUNTRIES and remove the ones it is not for:
+	//   AD,AE,AF,AG,AI,AL,AM,AO,AQ,AR,AS,AT,AU,AW,AX,AZ,BA,BB,BD,BE,BF,BG,BH,BI,BJ,BL,BM,BN,BO,BQ,BR,BS,BT,BV,BW,BY,BZ,
+	//   CA,CC,CD,CF,CG,CH,CI,CK,CL,CM,CN,CO,CR,CU,CV,CW,CX,CY,CZ,DE,DJ,DK,DM,DO,DZ,EC,EE,EG,EH,ER,ES,ET,FI,FJ,FK,FM,FO,
+	//   FR,GA,GB,GD,GE,GF,GG,GH,GI,GL,GM,GN,GP,GQ,GR,GS,GT,GU,GW,GY,HK,HM,HN,HR,HT,HU,ID,IE,IL,IM,IN,IO,IQ,IR,IS,IT,JE,
+	//   JM,JO,JP,KE,KG,KH,KI,KM,KN,KP,KR,KW,KY,KZ,LA,LB,LC,LI,LK,LR,LS,LT,LU,LV,LY,MA,MC,MD,ME,MF,MG,MH,MK,ML,MM,MN,MO,
+	//   MP,MQ,MR,MS,MT,MU,MV,MW,MX,MY,MZ,NA,NC,NE,NF,NG,NI,NL,NO,NP,NR,NU,NZ,OM,PA,PE,PF,PG,PH,PK,PL,PM,PN,PR,PS,PT,PW,
+	//   PY,QA,RE,RO,RS,RU,RW,SA,SB,SC,SD,SE,SG,SH,SI,SJ,SK,SL,SM,SN,SO,SR,SS,ST,SV,SX,SY,SZ,TC,TD,TF,TG,TH,TJ,TK,TL,TM,
+	//   TN,TO,TR,TT,TV,TW,TZ,UA,UG,UM,US,UY,UZ,VA,VC,VE,VG,VI,VN,VU,WF,WS,XK,YE,YT,ZA,ZM,ZW
+	AllowedCountries []string
+
 	// Unauthenticated Rate Limits
 	GlobalRateLimit int
 	GlobalRateBurst int
@@ -316,6 +328,11 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 
 	var err error
 	serverConfig.TrustedProxies, err = ParseTrustedProxies(configStringSelect(dotenv, "TRUSTED_PROXIES", "127.0.0.1,::1"))
+	if err != nil {
+		return serverConfig, err
+	}
+	// A list that does not read fails the server, rather than letting every country in
+	serverConfig.AllowedCountries, err = parseCountries(configStringSelect(dotenv, "ALLOWED_COUNTRIES", ""))
 	return serverConfig, err
 }
 
@@ -394,6 +411,22 @@ func (config *ServerConfig) ValidateClean() error {
 	}
 
 	return nil
+}
+
+// parseCountries reads comma separated ISO 3166-1 alpha-2 country codes, e.g. "NZ,AU"
+func parseCountries(raw string) ([]string, error) {
+	countries := []string{}
+	for _, part := range strings.Split(raw, ",") {
+		code := strings.ToUpper(strings.TrimSpace(part))
+		if code == "" {
+			continue
+		}
+		if len(code) != 2 || code[0] < 'A' || code[0] > 'Z' || code[1] < 'A' || code[1] > 'Z' {
+			return nil, fmt.Errorf("invalid country code in ALLOWED_COUNTRIES: %q", part)
+		}
+		countries = append(countries, code)
+	}
+	return countries, nil
 }
 
 // configSelect is envVar parsed from the environment, then dotenv, then the default. A value that does not parse

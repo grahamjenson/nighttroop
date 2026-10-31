@@ -22,7 +22,7 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 	r.Get("/login", controlapi.GETLoginPageHandler())
 	publicapi.LegalRoutes(r)
 
-	r.Post("/login", controlapi.POSTLogin(controlDB, config))
+	r.With(httputils.AllowedCountriesMiddleware(config)).Post("/login", controlapi.POSTLogin(controlDB, config))
 
 	r.Group(func(r chi.Router) {
 		r.Use(controlapi.JWTAuthMiddleware(controlDB, config))
