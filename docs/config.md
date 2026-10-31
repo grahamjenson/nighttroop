@@ -25,6 +25,7 @@ Limits written per minute are rates; their burst is how many can be used at once
 | `SUPPORT_EMAIL` | `nighttroop@t1d.nz` | Where users contact the server's operator, in every page's footer and in the terms of service and privacy policy |
 | `SENTRY_DSN` | empty | Where errors are reported. Empty turns Sentry off |
 | `GEOIP_DB_PATH` | empty; the Docker image sets it to its DB-IP IP to City Lite database | A DB-IP IP to City Lite `.mmdb` file, for the city sign ins come from. Without one, or if it cannot be opened, the built in IP to Country Lite gives only the country |
+| `ALLOWED_COUNTRIES` | empty, allowing every country | Comma separated ISO 3166-1 alpha-2 codes, e.g. `NZ,AU`, of the only countries that can create sites, sign in and recover. An address whose country is not known is allowed, and signed in sites and the Nightscout API are not limited. Every code DB-IP knows is listed beside `AllowedCountries` in `utils/config/config.go`, to copy and remove from. A code that is not two letters stops the server starting |
 
 ## Security
 

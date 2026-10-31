@@ -27,10 +27,10 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Use(httputils.SiteUnauthRateLimitMiddleware(config))
 		r.Get("/login", sitelogin.GETLoginPageHandler())
 		publicapi.LegalRoutes(r)
-		r.Post("/login", sitelogin.POSTLogin(controlDB, config))
-		r.Post("/login/totp", sitelogin.POSTLoginTOTP(controlDB, config))
+		r.With(httputils.AllowedCountriesMiddleware(config)).Post("/login", sitelogin.POSTLogin(controlDB, config))
+		r.With(httputils.AllowedCountriesMiddleware(config)).Post("/login/totp", sitelogin.POSTLoginTOTP(controlDB, config))
 		// The backup key proves ownership, giving the site's admin new credentials
-		r.Post("/recover", sitelogin.POSTRecover(controlDB, config))
+		r.With(httputils.AllowedCountriesMiddleware(config)).Post("/recover", sitelogin.POSTRecover(controlDB, config))
 	})
 
 	r.Group(func(r chi.Router) {
