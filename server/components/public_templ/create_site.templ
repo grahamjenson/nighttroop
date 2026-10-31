@@ -3,7 +3,6 @@ package public_templ
 import (
 	"nighttroop.t1d.nz/models/publicmodels"
 	"nighttroop.t1d.nz/server/components/ui/button"
-	"nighttroop.t1d.nz/server/components/ui/copybutton"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 )
 
@@ -93,48 +92,74 @@ templ CreateSiteRateLimited(seconds int) {
 }
 
 templ CreateSiteInfo(newsite publicmodels.NewSiteInfo) {
-	<div class="w-full max-w-2xl mx-auto text-left space-y-6">
-		@step("1", "Save your credentials somewhere safe", "They are shown once.") {
-			<p id="public--site-info--recover" class="pl-15 pr-5 pb-3 -mt-3 text-sm text-slate-500">
-				Keep the backup key safe: with the site ID, the
-				<a id="public--site-info--recover-link" href={ templ.SafeURL(newsite.RecoverURL) } class="font-medium text-brand-night underline">recover page</a>
-				gives you a new admin login.
-			</p>
+	<div class="w-full max-w-2xl mx-auto text-left space-y-4">
+		@step("1", "Save your credentials somewhere safe", "They are shown once") {
 			<textarea id="public--site-info" hidden>{ newsite.AllInfo() }</textarea>
+			// Copying them all is the one thing to do here, so it is the step's main button
+			<div class="mx-5 mb-4 flex flex-col items-center gap-3 rounded-xl border border-brand-gold bg-brand-gold/10 p-4 sm:flex-row">
+				@copyButton("public--copy-button", "public--site-info", "Copy all credentials", "h-12 shrink-0 px-6 text-base font-semibold text-white bg-brand-night hover:bg-brand-night/90 shadow-lg shadow-brand-night/30")
+				<p id="public--site-info--recover" class="text-sm text-slate-700">
+					<strong>Paste them into a password manager.</strong>
+					The backup key, with the site ID, is the only way back in on the
+					<a id="public--site-info--recover-link" href={ templ.SafeURL(newsite.RecoverURL) } class="font-medium text-brand-night underline">recover page</a>.
+				</p>
+			</div>
 			<div class="font-mono text-sm">
-				@group("Site") {
-					@copybutton.CopyButton(copybutton.Props{
-						ID:       "public--copy-button",
-						TargetID: "public--site-info",
-						Class:    "inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-medium normal-case tracking-normal rounded-lg transition-colors cursor-pointer",
-					})
-				}
-				<dl class="divide-y divide-slate-100">
-					@row("url", "URL", newsite.URL)
-					@row("site-id", "Site ID", newsite.SiteID())
-					@row("backup-key", "Backup key", newsite.BackupKey)
+				@group("Site")
+				<dl class="grid sm:grid-cols-2">
+					@row("url", "URL", newsite.URL, true)
+					@row("site-id", "Site ID", newsite.SiteID(), false)
+					@row("backup-key", "Backup key", newsite.BackupKey, false)
 				</dl>
 				@group("Admin login")
-				// The QR code sits beside the login it is for, rather than under it
-				<div class="flex items-center gap-3 pr-4">
-					<dl class="min-w-0 flex-1 divide-y divide-slate-100">
-						@row("username", "Username", "admin")
-						@row("password", "Password", newsite.AdminPassword)
-						@row("totp-secret", "TOTP secret", newsite.AdminTotpSecret)
-					</dl>
-					<div class="flex shrink-0 flex-col items-center gap-1 py-2">
-						<div id="qrcode" class="p-1.5 bg-white rounded-lg border border-slate-200"></div>
-						<span class="font-sans text-[10px] text-slate-400">Scan with an authenticator app</span>
-					</div>
-				</div>
+				<dl class="grid sm:grid-cols-2">
+					@row("username", "Username", "admin", false)
+					@row("password", "Password", newsite.AdminPassword, false)
+					@row("totp-secret", "TOTP secret", newsite.AdminTotpSecret, true)
+				</dl>
 				// A recovery leaves the phone's credentials as they were, so there are none to show
 				if newsite.PwdNSToken != "" {
 					@group("Phone setup (AAPS / Trio)")
-					<dl class="divide-y divide-slate-100">
-						@row("ns-url", "NS URL", newsite.PwdNSURL)
-						@row("ns-token", "NS token", newsite.PwdNSToken)
+					<dl class="grid sm:grid-cols-2">
+						@row("ns-url", "NS URL", newsite.PwdNSURL, true)
+						// The token is too long to read or type, so it is only copied
+						<div class="flex items-center gap-2 px-4 py-1.5 sm:col-span-2">
+							<dt class="w-24 shrink-0 text-slate-400">NS token</dt>
+							<dd>
+								<textarea id="public--site-info--ns-token" hidden>{ newsite.PwdNSToken }</textarea>
+								@copyButton("public--copy-ns-token", "public--site-info--ns-token", "Copy token", "h-7 px-2.5 font-sans text-xs font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-100")
+							</dd>
+						</div>
 					</dl>
 				}
+			</div>
+		}
+		@step("2", "Check your authenticator app", "Scan the QR code, then enter the code it shows") {
+			<div class="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 px-5 pb-5">
+				<div id="qrcode" class="p-1.5 bg-white rounded-lg border border-slate-200"></div>
+				<form
+					id="public--totp-check"
+					class="flex flex-wrap items-center justify-center gap-3"
+					hx-post="/site/totp"
+					hx-target="#public--totp-result"
+					hx-swap="innerHTML"
+				>
+					<input type="hidden" name="site" value={ newsite.SiteID() }/>
+					<input type="hidden" name="secret" value={ newsite.AdminTotpSecret }/>
+					<input
+						id="public--site-info--totp"
+						name="totp"
+						inputmode="numeric"
+						autocomplete="one-time-code"
+						maxlength="6"
+						placeholder="123456"
+						class="w-32 rounded-lg border border-slate-200 px-3 py-2 text-center font-mono text-lg tracking-widest"
+					/>
+					@button.Button(button.Props{ID: "public--totp-check-button", Type: button.TypeSubmit, Class: "bg-brand-night hover:bg-brand-night/90"}) {
+						Check code
+					}
+				</form>
+				<div id="public--totp-result" class="w-full text-center text-sm empty:hidden"></div>
 			</div>
 			<script type="text/javascript">
 				new QRCode(document.getElementById("qrcode"), {
@@ -145,33 +170,23 @@ templ CreateSiteInfo(newsite publicmodels.NewSiteInfo) {
 				});
 			</script>
 		}
-		@step("2", "Check your authenticator app", "Enter the code it shows for the TOTP secret above, to be sure it is set up before you log in.") {
-			<form
-				id="public--totp-check"
-				class="flex flex-wrap items-center justify-center gap-3 px-5 pb-5"
-				hx-post="/site/totp"
-				hx-target="#public--totp-result"
-				hx-swap="innerHTML"
-			>
-				<input type="hidden" name="site" value={ newsite.SiteID() }/>
-				<input type="hidden" name="secret" value={ newsite.AdminTotpSecret }/>
-				<input
-					id="public--site-info--totp"
-					name="totp"
-					inputmode="numeric"
-					autocomplete="one-time-code"
-					maxlength="6"
-					placeholder="123456"
-					class="w-32 rounded-lg border border-slate-200 px-3 py-2 text-center font-mono text-lg tracking-widest"
-				/>
-				@button.Button(button.Props{ID: "public--totp-check-button", Type: button.TypeSubmit, Class: "bg-brand-night hover:bg-brand-night/90"}) {
-					Check code
-				}
-				<div id="public--totp-result" class="w-full text-center text-sm"></div>
-			</form>
-		}
-		@step("3", "Log in to your site", "Use the admin password and a code from your authenticator app.") {
+		@step("3", "Log in to your site", "With the admin password and a code from the app") {
 			@loginButton("", false)
+		}
+	</div>
+}
+
+// copyButton copies the text of the element with targetID, with a label beside the copybutton component's icons
+templ copyButton(id, targetID, label, class string) {
+	<div data-copy-button data-target-id={ targetID } class="inline-block">
+		@button.Button(button.Props{ID: id, Type: button.TypeButton, Class: "gap-2 rounded-lg " + class}) {
+			<span data-copy-icon-clipboard>
+				@icon.Clipboard(icon.Props{Class: "size-4"})
+			</span>
+			<span data-copy-icon-check class="hidden">
+				@icon.Check(icon.Props{Class: "size-4"})
+			</span>
+			{ label }
 		}
 	</div>
 }
@@ -212,31 +227,28 @@ templ TOTPCheckFailed() {
 	<p id="public--totp-failed" class="font-medium text-red-700">That code does not match. Check the app has the secret above and your phone's time is right, then try its next code.</p>
 }
 
+// step is a numbered step, with its hint beside its title
 templ step(n, title, hint string) {
 	<section class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-		<header class="flex items-start gap-3 px-5 py-4">
+		<header class="flex items-center gap-3 px-5 py-3">
 			<span class="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-night text-sm font-bold text-white">{ n }</span>
-			<div>
-				<h2 class="font-semibold text-slate-900">{ title }</h2>
-				<p class="text-sm text-slate-500">{ hint }</p>
-			</div>
+			<h2 class="font-semibold text-slate-900">
+				{ title }
+				<span class="text-sm font-normal text-slate-500">{ hint }</span>
+			</h2>
 		</header>
 		{ children... }
 	</section>
 }
 
-// group heads a group of credentials, with any children, such as a button, at its right
 templ group(title string) {
-	<h3 class="flex items-center justify-between border-y border-slate-100 bg-slate-50 px-4 py-1.5 font-sans text-xs font-semibold uppercase tracking-wide text-slate-500">
-		{ title }
-		{ children... }
-	</h3>
+	<h3 class="border-y border-slate-100 bg-slate-50 px-4 py-1.5 font-sans text-xs font-semibold uppercase tracking-wide text-slate-500">{ title }</h3>
 }
 
-// row is a credential, with an ID of public--site-info--<id>
-templ row(id, label, value string) {
-	<div class="grid sm:grid-cols-[7rem_1fr] gap-x-2 px-4 py-1.5">
-		<dt class="text-slate-400">{ label }</dt>
-		<dd id={ "public--site-info--" + id } class="break-all text-slate-800 select-all">{ value }</dd>
+// row is a credential, with an ID of public--site-info--<id>; a wide one takes both columns
+templ row(id, label, value string, wide bool) {
+	<div class={ "flex min-w-0 gap-2 px-4 py-1.5", templ.KV("sm:col-span-2", wide) }>
+		<dt class="w-24 shrink-0 text-slate-400">{ label }</dt>
+		<dd id={ "public--site-info--" + id } class="min-w-0 break-all text-slate-800 select-all">{ value }</dd>
 	</div>
 }
