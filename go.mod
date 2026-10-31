@@ -17,7 +17,6 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.20.1
 	github.com/gorilla/websocket v1.5.3
 	github.com/hashicorp/golang-lru/v2 v2.0.7
-	github.com/mitchellh/mapstructure v1.5.0
 	github.com/mxschmitt/playwright-go v0.6201.1
 	github.com/oapi-codegen/runtime v1.1.2
 	github.com/pierrec/lz4/v4 v4.1.33
@@ -26,7 +25,6 @@ require (
 	github.com/samber/slog-multi v1.9.0
 	github.com/samber/slog-sentry/v2 v2.11.0
 	github.com/stretchr/testify v1.12.1
-	github.com/templui/templui v1.11.2
 	github.com/tink-crypto/tink-go/v2 v2.9.0
 	github.com/yuin/goldmark v1.8.7
 	golang.org/x/crypto v0.58.0
@@ -51,6 +49,7 @@ require (
 	github.com/deckarep/golang-set/v2 v2.9.0 // indirect
 	github.com/dprotaso/go-yit v0.0.0-20220510233725-9ba8df137936 // indirect
 	github.com/dustin/go-humanize v1.1.0 // indirect
+	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/getkin/kin-openapi v0.133.0 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/swag v0.23.0 // indirect
@@ -59,7 +58,6 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-isatty v0.0.24 // indirect
-	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/ncruces/go-strftime v1.1.0 // indirect
 	github.com/oapi-codegen/oapi-codegen/v2 v2.5.1 // indirect

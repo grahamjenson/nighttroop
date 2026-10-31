@@ -10,6 +10,15 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 ## Control
 
+### Setting up a new server
+
+- A new server has no control admin, so every page goes to `control.<host>/setup` and the APIs answer that it is not
+  set up, until the admin is made. Only the health check works.
+- The server prints a one-time setup code to its logs; the setup page asks for it, so only whoever runs the server can
+  set it up. Wrong codes are rate limited.
+- The setup page shows the control admin's username, password and TOTP secret (with a QR code) once, and saves the
+  admin only when a code from that TOTP secret is entered.
+
 ### Signing in
 
 - A control admin signs in with a username, password and TOTP code, and can sign out.
@@ -155,6 +164,8 @@ deleted (after a confirmation):
 - Every site page is also a JSON API, with a JWT from signing in.
 - A Go client, `clients/nighttroop`, is generated from its OpenAPI schema. It can create a site, sign in, read the
   summary, and list, read, add, edit and delete glucose readings, insulin doses and food intakes.
+- The client also calls every Nightscout API v1, v2 and v3 endpoint on a site's Nightscout host, with a device's
+  Nightscout token or the JWT it is exchanged for.
 
 ### Backups and limits
 

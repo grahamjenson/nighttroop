@@ -99,4 +99,3 @@ These are read only by the scripts in `scripts/keysets`, not the server.
 | Variable | Use |
 | --- | --- |
 | `KEY_SETS` | The keys to decrypt with |
-| `ENCRYPTED_ADMIN_BUNDLE` | The encrypted admin bundle `decrypt_admin_bundle.go` decrypts |
