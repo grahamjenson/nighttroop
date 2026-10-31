@@ -111,11 +111,6 @@ templ CreateSiteInfo(newsite publicmodels.NewSiteInfo) {
 					@row("site-id", "Site ID", newsite.SiteID(), false)
 					@row("backup-key", "Backup key", newsite.BackupKey, false)
 				</dl>
-				@group("Admin login")
-				<dl class="grid sm:grid-cols-2">
-					@row("username", "Username", "admin", false)
-					@row("password", "Password", newsite.AdminPassword, false)
-				</dl>
 				// A recovery leaves the phone's credentials as they were, so there are none to show
 				if newsite.PwdNSToken != "" {
 					@group("Phone setup (AAPS / Trio)")
@@ -134,7 +129,12 @@ templ CreateSiteInfo(newsite publicmodels.NewSiteInfo) {
 				}
 			</div>
 		}
-		@step("2", "Check your authenticator app", "Scan the QR code, then enter the code it shows") {
+		// The admin's login is with its TOTP, so it is clear whose the QR code is
+		@step("2", "Set up the admin login", "Scan the QR code, then enter the code it shows") {
+			<dl class="mb-4 grid font-mono text-sm sm:grid-cols-2">
+				@row("username", "Username", "admin", false)
+				@row("password", "Password", newsite.AdminPassword, false)
+			</dl>
 			<div class="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 px-5 pb-5">
 				<div id="qrcode" class="p-1.5 bg-white rounded-lg border border-slate-200"></div>
 				<form
