@@ -136,6 +136,56 @@ func (m *Connection) SetOpenedAt(v int64) {
 	m.OpenedAt = v
 }
 
+// GetAt returns the At value.
+func (m ResourceReading) GetAt() int64 {
+	return m.At
+}
+
+// SetAt sets the At value and returns the updated ResourceReading.
+func (m *ResourceReading) SetAt(v int64) {
+	m.At = v
+}
+
+// GetCpuPercent returns the CpuPercent value.
+func (m ResourceReading) GetCpuPercent() float64 {
+	return m.CpuPercent
+}
+
+// SetCpuPercent sets the CpuPercent value and returns the updated ResourceReading.
+func (m *ResourceReading) SetCpuPercent(v float64) {
+	m.CpuPercent = v
+}
+
+// GetCpuPeggedSeconds returns the CpuPeggedSeconds value.
+func (m ResourceReading) GetCpuPeggedSeconds() int64 {
+	return m.CpuPeggedSeconds
+}
+
+// SetCpuPeggedSeconds sets the CpuPeggedSeconds value and returns the updated ResourceReading.
+func (m *ResourceReading) SetCpuPeggedSeconds(v int64) {
+	m.CpuPeggedSeconds = v
+}
+
+// GetMemoryPercent returns the MemoryPercent value.
+func (m ResourceReading) GetMemoryPercent() *float64 {
+	return m.MemoryPercent
+}
+
+// SetMemoryPercent sets the MemoryPercent value and returns the updated ResourceReading.
+func (m *ResourceReading) SetMemoryPercent(v *float64) {
+	m.MemoryPercent = v
+}
+
+// GetDiskPercent returns the DiskPercent value.
+func (m ResourceReading) GetDiskPercent() *float64 {
+	return m.DiskPercent
+}
+
+// SetDiskPercent sets the DiskPercent value and returns the updated ResourceReading.
+func (m *ResourceReading) SetDiskPercent(v *float64) {
+	m.DiskPercent = v
+}
+
 // GetSiteID returns the SiteID value.
 func (m DeleteAlarmParams) GetSiteID() string {
 	return m.SiteID
@@ -434,5 +484,75 @@ func (m OpenConnectionParams) GetMax() int64 {
 // SetMax sets the Max value and returns the updated OpenConnectionParams.
 func (m *OpenConnectionParams) SetMax(v int64) {
 	m.Max = v
+}
+
+// GetAt returns the At value.
+func (m CreateResourceReadingParams) GetAt() int64 {
+	return m.At
+}
+
+// SetAt sets the At value and returns the updated CreateResourceReadingParams.
+func (m *CreateResourceReadingParams) SetAt(v int64) {
+	m.At = v
+}
+
+// GetCPUPercent returns the CPUPercent value.
+func (m CreateResourceReadingParams) GetCPUPercent() float64 {
+	return m.CPUPercent
+}
+
+// SetCPUPercent sets the CPUPercent value and returns the updated CreateResourceReadingParams.
+func (m *CreateResourceReadingParams) SetCPUPercent(v float64) {
+	m.CPUPercent = v
+}
+
+// GetCPUPeggedSeconds returns the CPUPeggedSeconds value.
+func (m CreateResourceReadingParams) GetCPUPeggedSeconds() int64 {
+	return m.CPUPeggedSeconds
+}
+
+// SetCPUPeggedSeconds sets the CPUPeggedSeconds value and returns the updated CreateResourceReadingParams.
+func (m *CreateResourceReadingParams) SetCPUPeggedSeconds(v int64) {
+	m.CPUPeggedSeconds = v
+}
+
+// GetMemoryPercent returns the MemoryPercent value.
+func (m CreateResourceReadingParams) GetMemoryPercent() *float64 {
+	return m.MemoryPercent
+}
+
+// SetMemoryPercent sets the MemoryPercent value and returns the updated CreateResourceReadingParams.
+func (m *CreateResourceReadingParams) SetMemoryPercent(v *float64) {
+	m.MemoryPercent = v
+}
+
+// GetDiskPercent returns the DiskPercent value.
+func (m CreateResourceReadingParams) GetDiskPercent() *float64 {
+	return m.DiskPercent
+}
+
+// SetDiskPercent sets the DiskPercent value and returns the updated CreateResourceReadingParams.
+func (m *CreateResourceReadingParams) SetDiskPercent(v *float64) {
+	m.DiskPercent = v
+}
+
+// GetBefore returns the Before value.
+func (m DeleteResourceReadingsBeforeParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated DeleteResourceReadingsBeforeParams.
+func (m *DeleteResourceReadingsBeforeParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetSince returns the Since value.
+func (m ResourceReadingsSinceParams) GetSince() int64 {
+	return m.Since
+}
+
+// SetSince sets the Since value and returns the updated ResourceReadingsSinceParams.
+func (m *ResourceReadingsSinceParams) SetSince(v int64) {
+	m.Since = v
 }
 

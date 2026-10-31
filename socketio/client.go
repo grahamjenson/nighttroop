@@ -21,6 +21,10 @@ type Client struct {
 	waiting   map[string]chan error
 	acks      map[int64]chan []json.RawMessage
 	nextAck   int64
+
+	// refused are the namespaces the server refused before Connect waited for its answer, as a Socket.IO v2 server
+	// answers the default namespace as soon as the client opens
+	refused map[string]error
 }
 
 // Dial opens a connection to the server at rawURL (e.g. http://host/socket.io/); call Connect before emitting.
@@ -62,6 +66,7 @@ func NewClient(version int) *Client {
 		handlers:  map[string]map[string]func([]json.RawMessage){},
 		connected: map[string]bool{},
 		waiting:   map[string]chan error{},
+		refused:   map[string]error{},
 		acks:      map[int64]chan []json.RawMessage{},
 	}
 }
@@ -76,6 +81,11 @@ func (c *Client) Connect(ctx context.Context, namespace string, auth any) error 
 	if c.connected[namespace] {
 		c.mu.Unlock()
 		return nil
+	}
+	if err := c.refused[namespace]; err != nil {
+		delete(c.refused, namespace)
+		c.mu.Unlock()
+		return err
 	}
 	wait := make(chan error, 1)
 	c.waiting[namespace] = wait
@@ -221,6 +231,9 @@ func (c *Client) answer(namespace string, err error) {
 	c.mu.Lock()
 	wait := c.waiting[namespace]
 	delete(c.waiting, namespace)
+	if wait == nil && err != nil {
+		c.refused[namespace] = err
+	}
 	c.mu.Unlock()
 	if wait != nil {
 		wait <- err

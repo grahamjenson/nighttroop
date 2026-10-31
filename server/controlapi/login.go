@@ -127,7 +127,7 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 		// Default set the cookie
 		config.Security.SetControlLoginCookie(w, tokenString, expiresAt)
 
-		slog.Info("Admin logged in", "admin", admin.Name, "role", admin.Role)
+		slog.InfoContext(r.Context(), "Admin logged in", "admin", admin.Name, "role", admin.Role)
 		w.Header().Set("HX-Redirect", "/")
 
 	}

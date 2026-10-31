@@ -102,7 +102,7 @@ func (k eventKind[T, C, U, D]) write(ctx context.Context, q *sitedb.Queries, bun
 			return nil
 		}
 		if _, err := k.delete(q, ctx, D{ID: **id}); err != nil {
-			slog.Error("failed to delete "+k.name+" from database", "error", err)
+			slog.ErrorContext(ctx, "failed to delete "+k.name+" from database", "error", err)
 			return err
 		}
 		*id = nil
@@ -117,7 +117,7 @@ func (k eventKind[T, C, U, D]) write(ctx context.Context, q *sitedb.Queries, bun
 		written, err = k.update(q, ctx, k.toUpdate(**event, cc))
 	}
 	if err != nil || written == nil {
-		slog.Error("failed to "+verb+" "+k.name+" in database", "error", err, "dbModel", written)
+		slog.ErrorContext(ctx, "failed to "+verb+" "+k.name+" in database", "error", err, "dbModel", written)
 		return err
 	}
 	*id, *event = ptr((*written).GetID()), written
@@ -131,7 +131,7 @@ func (k eventKind[T, C, U, D]) hardDelete(ctx context.Context, q *sitedb.Queries
 	}
 	res, err := k.delete(q, ctx, D{ID: **id})
 	if err != nil {
-		slog.Error("failed to delete "+k.name+" by ID", "error", err, "id", **id, "result", res)
+		slog.ErrorContext(ctx, "failed to delete "+k.name+" by ID", "error", err, "id", **id, "result", res)
 	}
 	return err
 }

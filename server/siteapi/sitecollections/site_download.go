@@ -33,7 +33,7 @@ func DownloadDataHandler(w http.ResponseWriter, r *http.Request) {
 		err = backup.SqliteBackup(r.Context(), siteContext.SiteDB.SQLiteDB, file.Name())
 	}
 	if err != nil {
-		slog.Error("failed to snapshot a site's data", "error", err)
+		slog.ErrorContext(r.Context(), "failed to snapshot a site's data", "error", err)
 		writeError(w, r, siteContext.AcceptType, apiutils.ErrInternalServerError)
 		return
 	}

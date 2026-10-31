@@ -100,3 +100,11 @@ CLICK #site--settings-menu
 CLICK #site--data--insulin-button
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
+
+// A negative dose takes back insulin entered by mistake
+CLICK #site--insulin--add
+INPUT #site--insulin--create--dose -1.5
+INPUT #site--insulin--create--notes Entered twice
+CLICK #site--insulin--create--submit
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE Entered twice

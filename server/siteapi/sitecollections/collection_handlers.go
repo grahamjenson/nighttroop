@@ -317,7 +317,7 @@ func DeleteHandler[R, M any](collection CollectionDelete[R, M]) http.HandlerFunc
 func SiteContextFor(w http.ResponseWriter, r *http.Request, collectionName string, actions ...siteapiutils.Action) *httputils.SiteContext {
 	siteContext := httputils.GetSiteContext(r.Context())
 	if siteContext == nil {
-		slog.Error("site context is nil")
+		slog.ErrorContext(r.Context(), "site context is nil")
 		writeError(w, r, httputils.GetAcceptType(r), apiutils.ErrNotFound)
 		return nil
 	}

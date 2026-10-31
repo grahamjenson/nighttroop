@@ -290,7 +290,7 @@ func (db *ControlDB) ArchiveSite(ctx context.Context, subdomain string, upload f
 	db.sitesRWLock.Unlock()
 	site.Close()
 	if err := utils.DeleteFiles([]string{site.Path, site.BackupPath}); err != nil {
-		slog.Error("Failed to delete archived site db files", "subdomain", subdomain, "error", err)
+		slog.ErrorContext(ctx, "Failed to delete archived site db files", "subdomain", subdomain, "error", err)
 	}
 	return nil
 }

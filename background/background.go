@@ -7,6 +7,7 @@ import (
 	"nighttroop.t1d.nz/background/backup_control"
 	"nighttroop.t1d.nz/background/backup_sites"
 	"nighttroop.t1d.nz/background/check_alarms"
+	"nighttroop.t1d.nz/background/check_resources"
 	"nighttroop.t1d.nz/background/summary_daily"
 	"nighttroop.t1d.nz/background/cron"
 	"nighttroop.t1d.nz/background/liteq"
@@ -58,6 +59,9 @@ func NewBackGroundManager(ctx context.Context, controlDB *db.ControlDB, config *
 
 	// Check each identity's alarms on new readings, and periodically
 	check_alarms.SetupCron(cron, config, controlDB)
+
+	// Watch the server's CPU, memory and disk, warning the control site when one gets high
+	check_resources.SetupCron(cron, config, controlDB)
 
 	// Build each site's yesterday soon after its midnight, and its last week again when its timezone changes
 	summary_daily.SetupCron(cron, controlDB)

@@ -63,7 +63,7 @@ func resetIdentity(w http.ResponseWriter, r *http.Request, credential string) {
 		values, err = siteContext.ControlDB.ResetSiteIdentityPassword(r.Context(), identity, you.Name)
 	}
 	if err != nil {
-		slog.Error("failed to reset an identity's credentials", "error", err)
+		slog.ErrorContext(r.Context(), "failed to reset an identity's credentials", "error", err)
 		writeError(w, r, siteContext.AcceptType, apiutils.ErrInternalServerError)
 		return
 	}

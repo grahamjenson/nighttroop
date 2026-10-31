@@ -84,7 +84,7 @@ func (s *SyncSettingsCollection) CreateRow(ctx context.Context, collectionTx *si
 	if params.Type == consts.SyncSourceTypeNightscout {
 		normalized, err := nsURLNormalizeValidate(params.UrlOrUsernameEnc, siteContext.Config)
 		if err != nil {
-			slog.Error("Failed to normalize and validate Nightscout URL", "error", err, "url", *params.UrlOrUsernameEnc)
+			slog.ErrorContext(ctx, "Failed to normalize and validate Nightscout URL", "error", err, "url", *params.UrlOrUsernameEnc)
 			return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Nightscout URL '%s' is not a valid URL. %s", *params.UrlOrUsernameEnc, err))
 		}
 		params.UrlOrUsernameEnc = normalized
@@ -169,7 +169,7 @@ func (s *SyncSettingsCollection) UpdateRow(ctx context.Context, collectionTx *si
 		if params.UrlOrUsernameEnc != nil {
 			normalized, err := nsURLNormalizeValidate(params.UrlOrUsernameEnc, siteContext.Config)
 			if err != nil {
-				slog.Error("Failed to normalize and validate Nightscout URL", "error", err, "url", *params.UrlOrUsernameEnc)
+				slog.ErrorContext(ctx, "Failed to normalize and validate Nightscout URL", "error", err, "url", *params.UrlOrUsernameEnc)
 				return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Nightscout URL '%s' is not a valid URL. %s", *params.UrlOrUsernameEnc, err))
 			}
 			params.UrlOrUsernameEnc = normalized
@@ -241,7 +241,7 @@ func (s *SyncSettingsCollection) GetRow(ctx context.Context, collectionTx *sitea
 	})
 
 	if err != nil {
-		slog.Error("Error fetching sync source", "error", err)
+		slog.ErrorContext(ctx, "Error fetching sync source", "error", err)
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
@@ -278,14 +278,14 @@ func (s *SyncSettingsCollection) SearchRows(ctx context.Context, collectionTx *s
 	})
 
 	if err != nil {
-		slog.Error("Search Sync sources", "error", err)
+		slog.ErrorContext(ctx, "Search Sync sources", "error", err)
 		return nil, apiutils.ErrInternalServerError
 	}
 	models := []*sitemodels.SyncSource{}
 	for _, dbSyncSource := range dbSyncSources {
 		model, err := sitemodels.SyncSourceFromDB(dbSyncSource, siteContext.Config.Security)
 		if err != nil {
-			slog.Error("Failed to convert sync source from DB", "error", err)
+			slog.ErrorContext(ctx, "Failed to convert sync source from DB", "error", err)
 			continue
 		}
 		if err := addRecentLogs(ctx, siteContext, model); err != nil {

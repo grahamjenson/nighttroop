@@ -33,7 +33,7 @@ func POSTRecover(controlDB *db.ControlDB, config *config.ServerConfig) http.Hand
 			recovered, err = controlDB.RecoverSiteAdmin(r.Context(), siteContext.SiteID, body.BackupKey)
 		}
 		if err != nil {
-			slog.Info("Site recovery failed", "error", err)
+			slog.InfoContext(r.Context(), "Site recovery failed", "error", err)
 			http.Error(w, "Invalid backup key", http.StatusUnauthorized)
 			return
 		}

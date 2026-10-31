@@ -98,3 +98,11 @@ CLICK #site--settings-menu
 CLICK #site--data--food-button
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
+
+// Negative carbs take back food entered by mistake
+CLICK #site--food--add
+INPUT #site--food--create--carbs -20
+INPUT #site--food--create--notes Entered twice
+CLICK #site--food--create--submit
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE Entered twice

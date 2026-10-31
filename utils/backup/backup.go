@@ -18,7 +18,7 @@ type BackupConn interface {
 
 func SqliteBackup(ctx context.Context, db *sql.DB, backupPath string) error {
 	defer aslog.TrackTime(time.Now(), "SqliteBackup "+backupPath, nil, nil)
-	slog.Info("Starting SqliteBackup", "backupPath", backupPath)
+	slog.InfoContext(ctx, "Starting SqliteBackup", "backupPath", backupPath)
 	err := utils.MkParentDirs(backupPath)
 	if err != nil {
 		return fmt.Errorf("cannot create parent directories: %w", err)
@@ -26,7 +26,7 @@ func SqliteBackup(ctx context.Context, db *sql.DB, backupPath string) error {
 
 	conn, err := db.Conn(ctx)
 	if err != nil {
-		slog.Error("SqliteBackup Error on Conn", "backupPath", backupPath, "error", err)
+		slog.ErrorContext(ctx, "SqliteBackup Error on Conn", "backupPath", backupPath, "error", err)
 		return err
 	}
 	defer conn.Close()
@@ -47,7 +47,7 @@ func SqliteBackup(ctx context.Context, db *sql.DB, backupPath string) error {
 	})
 
 	if err != nil {
-		slog.Error("SqliteBackup Error on Raw", "backupPath", backupPath, "error", err)
+		slog.ErrorContext(ctx, "SqliteBackup Error on Raw", "backupPath", backupPath, "error", err)
 		return fmt.Errorf("cannot backup db: %w", err)
 	}
 

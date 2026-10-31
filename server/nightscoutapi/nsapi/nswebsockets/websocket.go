@@ -166,7 +166,7 @@ func (ws *Websocket) identity(r *http.Request, token, secret string) (context.Co
 		identity, err = ws.tokenIdentity(ws.config, ctx, secret)
 	}
 	if err != nil {
-		slog.Info("Websocket authorization failed", "error", err)
+		slog.InfoContext(r.Context(), "Websocket authorization failed", "error", err)
 		return ctx, nil
 	}
 	nsIdentity, err := nsutils.NighttroopIdentityToNightscoutIdentity(identity.Name, consts.IdentityRole(identity.Role))
