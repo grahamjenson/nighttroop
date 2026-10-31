@@ -301,7 +301,7 @@ templ settingControl(column settingsColumn, field settingField) {
 					ID:         column.IDPrefix + "timezone--browser",
 					Variant:    button.VariantLink,
 					Class:      "h-auto justify-start whitespace-normal p-0 text-left text-xs",
-					Attributes: templ.Attributes{"hx-on:click": "this.parentElement.querySelector('input').value = Intl.DateTimeFormat().resolvedOptions().timeZone"},
+					Attributes: templ.Attributes{"hx-on:click": templ.JSUnsafeFuncCall("this.parentElement.querySelector('input').value = Intl.DateTimeFormat().resolvedOptions().timeZone")},
 				}) {
 					Use this browser's timezone
 				}

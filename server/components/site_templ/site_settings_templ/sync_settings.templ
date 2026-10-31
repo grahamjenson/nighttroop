@@ -127,7 +127,7 @@ templ DexcomSyncForm(dexcomSyncSettings *sitemodels.SyncSource) {
 								Required: true,
 								Value:    dexcomSyncSettings.GetPasswordGarbage(),
 								Attributes: templ.Attributes{
-									"onmousedown":               "event.preventDefault(); this.select();",
+									"onmousedown":               templ.JSUnsafeFuncCall("event.preventDefault(); this.select();"),
 									"data-placeholder-password": "true",
 									"autocomplete":              "new-password",
 								},
@@ -257,7 +257,7 @@ templ LibreSyncForm(libreSyncSettings *sitemodels.SyncSource) {
 								Required: true,
 								Value:    libreSyncSettings.GetPasswordGarbage(),
 								Attributes: templ.Attributes{
-									"onmousedown":               "event.preventDefault(); this.select();",
+									"onmousedown":               templ.JSUnsafeFuncCall("event.preventDefault(); this.select();"),
 									"data-placeholder-password": "true",
 									"autocomplete":              "new-password",
 								},
@@ -395,7 +395,7 @@ templ NightscoutSyncForm(nightscoutSyncSettings *sitemodels.SyncSource) {
 								Required: true,
 								Value:    nightscoutSyncSettings.GetPasswordGarbage(),
 								Attributes: templ.Attributes{
-									"onmousedown":               "event.preventDefault(); this.select();",
+									"onmousedown":               templ.JSUnsafeFuncCall("event.preventDefault(); this.select();"),
 									"data-placeholder-password": "true",
 									"autocomplete":              "new-password",
 								},
