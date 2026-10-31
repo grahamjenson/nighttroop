@@ -32,7 +32,7 @@ func deleteSite(w http.ResponseWriter, r *http.Request, upload func(key string, 
 	}
 	started := time.Now()
 	if err := siteContext.ControlDB.ArchiveSite(r.Context(), siteContext.SiteID, upload); err != nil {
-		slog.Error("failed to delete a site", "error", err)
+		slog.ErrorContext(r.Context(), "failed to delete a site", "error", err)
 		writeError(w, r, siteContext.AcceptType, apiutils.ErrInternalServerError)
 		return
 	}

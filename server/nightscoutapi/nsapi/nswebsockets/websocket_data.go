@@ -39,7 +39,7 @@ func (ws *Websocket) recentData(ctx context.Context, history time.Duration) map[
 	for collection, query := range queries {
 		records, err := ws.collections[collection].Search(ctx, httputils.GetSiteContext(ctx), query)
 		if err != nil {
-			slog.Error("Websocket failed to load recent data", "collection", collection, "error", err)
+			slog.ErrorContext(ctx, "Websocket failed to load recent data", "collection", collection, "error", err)
 			continue
 		}
 		slices.Reverse(records)
@@ -58,7 +58,7 @@ func (ws *Websocket) retroDeviceStatuses(ctx context.Context) []map[string]any {
 	query := nsquery.Query{DateGTE: &since, HasFilters: true, Limit: maxRecords, SortOrder: &nsquery.SortOccurredAtDesc}
 	records, err := ws.collections[nsutils.Devicestatus].Search(ctx, httputils.GetSiteContext(ctx), query)
 	if err != nil {
-		slog.Error("Websocket failed to load retro device statuses", "error", err)
+		slog.ErrorContext(ctx, "Websocket failed to load retro device statuses", "error", err)
 	}
 	slices.Reverse(records)
 	statuses := make([]map[string]any, 0, len(records))

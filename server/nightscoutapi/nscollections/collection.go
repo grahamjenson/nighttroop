@@ -97,7 +97,7 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 	var nsModel NS
 	err := utils.ConvertViaJSON(data, &nsModel)
 	if err != nil {
-		slog.Error("failed to map data", "error", err, "collection", m.Name())
+		slog.ErrorContext(ctx, "failed to map data", "error", err, "collection", m.Name())
 		return nil, false, nsutils.BadDataBodyErrorWithHint(err.Error())
 	}
 
@@ -117,7 +117,7 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 
 	duplicateDBModel, err := m.GetDuplicate(q, ctx, nsModel)
 	if err != nil {
-		slog.Error("failed to check for duplicate in database", "error", err, "collection", m.Name())
+		slog.ErrorContext(ctx, "failed to check for duplicate in database", "error", err, "collection", m.Name())
 		return nil, false, nsutils.ErrInternal
 	}
 	if duplicateDBModel != nil {
@@ -151,7 +151,7 @@ func (c Collection[NS, DM]) Get(ctx context.Context, siteContext *httputils.Site
 		return nil, nsutils.ErrNotFound
 	}
 	if err != nil {
-		slog.Error("failed to get "+m.Name()+" by ID", "error", err)
+		slog.ErrorContext(ctx, "failed to get "+m.Name()+" by ID", "error", err)
 		return nil, nsutils.ErrInternal
 	}
 	if dbModel == nil {
@@ -163,7 +163,7 @@ func (c Collection[NS, DM]) Get(ctx context.Context, siteContext *httputils.Site
 func (c Collection[NS, DM]) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
 	models, err := c.db.SearchModels(siteContext.SiteDB.Queries, ctx, query)
 	if err != nil {
-		slog.Error("failed to search the database", "error", err, "collection", c.db.Name())
+		slog.ErrorContext(ctx, "failed to search the database", "error", err, "collection", c.db.Name())
 		return nil, nsutils.ErrInternal
 	}
 	return nsutils.CreateRecordSlice(models, c.db.Convert, siteContext, query.Raw), nil
@@ -184,7 +184,7 @@ func (c Collection[NS, DM]) Delete(ctx context.Context, siteContext *httputils.S
 		return nsutils.ErrNotFound
 	}
 	if err != nil {
-		slog.Error("failed to get "+m.Name()+" to delete", "error", err)
+		slog.ErrorContext(ctx, "failed to get "+m.Name()+" to delete", "error", err)
 		return nsutils.ErrInternal
 	}
 	deleteFunc, label := m.SoftDelete, "Soft"
@@ -197,18 +197,18 @@ func (c Collection[NS, DM]) Delete(ctx context.Context, siteContext *httputils.S
 		return nsutils.ErrNotFound
 	}
 	if err != nil {
-		slog.Error("failed to delete by ID", "error", err, "collection", m.Name(), "permanent", permanent)
+		slog.ErrorContext(ctx, "failed to delete by ID", "error", err, "collection", m.Name(), "permanent", permanent)
 		return nsutils.ErrInternal
 	}
 	rowsAffected, err := res.RowsAffected()
 	if err != nil {
-		slog.Error("failed to get rows affected for delete", "error", err, "collection", m.Name())
+		slog.ErrorContext(ctx, "failed to get rows affected for delete", "error", err, "collection", m.Name())
 		return nsutils.ErrInternal
 	}
 	if rowsAffected == 0 {
 		return nsutils.ErrNotFound
 	}
-	slog.Info(label+" Deleted", "eid", identifier, "rowsAffected", rowsAffected, "collection", m.Name())
+	slog.InfoContext(ctx, label+" Deleted", "eid", identifier, "rowsAffected", rowsAffected, "collection", m.Name())
 
 	if httpErr := c.commit(tx, "delete"); httpErr != nil {
 		return httpErr
@@ -237,12 +237,12 @@ func (c Collection[NS, DM]) DeleteType(ctx context.Context, siteContext *httputi
 		return 0, nsutils.ErrNotFound
 	}
 	if err != nil {
-		slog.Error("failed to delete by type", "error", err, "collection", c.db.Name(), "permanent", permanent)
+		slog.ErrorContext(ctx, "failed to delete by type", "error", err, "collection", c.db.Name(), "permanent", permanent)
 		return 0, nsutils.ErrInternal
 	}
 	rowsAffected, err := res.RowsAffected()
 	if err != nil {
-		slog.Error("failed to get rows affected for delete", "error", err, "collection", c.db.Name())
+		slog.ErrorContext(ctx, "failed to get rows affected for delete", "error", err, "collection", c.db.Name())
 		return 0, nsutils.ErrInternal
 	}
 
@@ -258,7 +258,7 @@ func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.
 	var nsModel NS
 	err := utils.ConvertViaJSON(data, &nsModel)
 	if err != nil {
-		slog.Error("failed to map data to model", "error", err, "collection", m.Name())
+		slog.ErrorContext(ctx, "failed to map data to model", "error", err, "collection", m.Name())
 		return nil, false, nsutils.BadDataBodyError
 	}
 
@@ -280,7 +280,7 @@ func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.
 		creatingNewRecord = true
 		replacingModel = nil
 	} else if err != nil {
-		slog.Error("failed to get by ID", "error", err, "collection", m.Name(), "identifier", identifier)
+		slog.ErrorContext(ctx, "failed to get by ID", "error", err, "collection", m.Name(), "identifier", identifier)
 		return nil, false, nsutils.ErrInternal
 	}
 
@@ -288,18 +288,18 @@ func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.
 	if !creatingNewRecord {
 		_, err := m.HardDelete(q, ctx, identifier)
 		if err != nil {
-			slog.Error("failed to hard delete in database", "error", err, "collection", m.Name(), "identifier", identifier)
+			slog.ErrorContext(ctx, "failed to hard delete in database", "error", err, "collection", m.Name(), "identifier", identifier)
 			return nil, false, nsutils.ErrInternal
 		}
 	}
 
 	if err := ValidateNotChangingSharedFields(replacingModel, nsModel, data, identifier); err != nil {
-		slog.Error("validation failed for replacing model", "error", err, "collection", m.Name())
+		slog.ErrorContext(ctx, "validation failed for replacing model", "error", err, "collection", m.Name())
 		return nil, false, err
 	}
 
 	if err := m.Validate(nsModel, replacingModel); err != nil {
-		slog.Error("validation failed for replacing model", "error", err, "collection", m.Name())
+		slog.ErrorContext(ctx, "validation failed for replacing model", "error", err, "collection", m.Name())
 		return nil, false, err
 	}
 
@@ -331,7 +331,7 @@ func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.Si
 	var nsModel NS
 	err := utils.ConvertViaJSON(data, &nsModel)
 	if err != nil {
-		slog.Error("failed to map data to model", "error", err, "collection", m.Name())
+		slog.ErrorContext(ctx, "failed to map data to model", "error", err, "collection", m.Name())
 		return nil, nsutils.BadDataBodyError
 	}
 
@@ -347,7 +347,7 @@ func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.Si
 		// Check no Record exists
 		return nil, nsutils.ErrNotFound
 	} else if err != nil {
-		slog.Error("failed to get by ID", "error", err, "collection", m.Name(), "identifier", identifier)
+		slog.ErrorContext(ctx, "failed to get by ID", "error", err, "collection", m.Name(), "identifier", identifier)
 		return nil, nsutils.ErrInternal
 	}
 	// As in Nightscout, a deleted record is gone, so it cannot be patched
@@ -356,12 +356,12 @@ func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.Si
 	}
 
 	if err := ValidateNotChangingSharedFields(updateingModel, nsModel, data, identifier); err != nil {
-		slog.Error("validation failed for patching model", "error", err, "collection", m.Name())
+		slog.ErrorContext(ctx, "validation failed for patching model", "error", err, "collection", m.Name())
 		return nil, err
 	}
 
 	if err := patcher.ValidatePatch(nsModel, updateingModel); err != nil {
-		slog.Error("validation failed for patching model", "error", err, "collection", m.Name())
+		slog.ErrorContext(ctx, "validation failed for patching model", "error", err, "collection", m.Name())
 		return nil, err
 	}
 

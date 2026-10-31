@@ -22,6 +22,22 @@ type Usage struct {
 	SitesCreatedMonth int64 `json:"sites_created_month"`
 	SinceStart           usage.Snapshot `json:"since_start"`
 	Server               usage.Server   `json:"server"`
+	// ResourceReadings are the checks of the server's resources since ResourcesSince, oldest first, kept while it
+	// runs, and the levels memory and disk warn at
+	ResourceReadings   []ResourceReading `json:"resource_readings"`
+	ResourcesSince     int64             `json:"resources_since"`
+	MemoryAlertPercent int               `json:"memory_alert_percent"`
+	DiskAlertPercent   int               `json:"disk_alert_percent"`
+}
+
+// ResourceReading is a check of the server's resources: its mean CPU since the check before and the longest it was at
+// 100%, and the memory and disk used, unset where they could not be read
+type ResourceReading struct {
+	At               int64    `json:"at"`
+	CPUPercent       float64  `json:"cpu_percent"`
+	CPUPeggedSeconds int64    `json:"cpu_pegged_seconds"`
+	MemoryPercent    *float64 `json:"memory_percent"`
+	DiskPercent      *float64 `json:"disk_percent"`
 }
 
 // NowTime is Now as a time

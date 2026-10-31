@@ -86,14 +86,14 @@ func LastModified(store nsutils.Store) func(http.ResponseWriter, *http.Request, 
 
 		siteContext := httputils.GetSiteContext(r.Context())
 		if siteContext == nil {
-			slog.Error("site context not available")
+			slog.ErrorContext(r.Context(), "site context not available")
 			http.Error(w, nsutils.ErrMissingCredentials.Error(), http.StatusUnauthorized)
 			return
 		}
 
 		lasModified, err := siteContext.SiteDB.Queries.LastModifiedCollections(r.Context())
 		if err != nil {
-			slog.Error("failed to query last modified timestamps from database", "error", err)
+			slog.ErrorContext(r.Context(), "failed to query last modified timestamps from database", "error", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

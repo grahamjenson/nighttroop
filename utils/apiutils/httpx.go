@@ -114,14 +114,14 @@ func ExtractModelFromRequest[T any](contentType httputils.ContentType, r *http.R
 	switch contentType {
 	case httputils.ContentTypeJSON:
 		if err := ReadJSON(r, &doc); err != nil || len(doc) == 0 {
-			slog.Info("failed to read JSON body", "error", err)
+			slog.InfoContext(r.Context(), "failed to read JSON body", "error", err)
 			return nil, ErrBadBody
 
 		}
 	case httputils.ContentTypeForm:
 
 		if err := r.ParseForm(); err != nil || len(r.Form) == 0 {
-			slog.Debug("failed to parse form data", "error", err)
+			slog.DebugContext(r.Context(), "failed to parse form data", "error", err)
 			return nil, ErrBadForm
 		}
 		location := time.UTC
@@ -136,7 +136,7 @@ func ExtractModelFromRequest[T any](contentType httputils.ContentType, r *http.R
 	model := new(T)
 	err := utils.ConvertViaJSON(doc, model)
 	if err != nil {
-		slog.Info("failed to convert doc to model", "error", err)
+		slog.InfoContext(r.Context(), "failed to convert doc to model", "error", err)
 		return nil, ErrBadBody
 	}
 	return model, nil

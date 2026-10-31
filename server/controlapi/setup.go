@@ -24,7 +24,7 @@ func POSTSetupHandler(controlDB *db.ControlDB, config *config.ServerConfig) http
 		}
 		admin, err := controlDB.BeginSetup(r.FormValue("code"))
 		if err != nil {
-			slog.Info("Setup code refused", "error", err)
+			slog.InfoContext(r.Context(), "Setup code refused", "error", err)
 			w.WriteHeader(http.StatusUnauthorized)
 			control_setup_templ.SetupFailed("That is not the setup code in the server's logs.").Render(r.Context(), w)
 			return
@@ -42,12 +42,12 @@ func POSTSetupConfirmHandler(controlDB *db.ControlDB, config *config.ServerConfi
 			return
 		}
 		if err := controlDB.CompleteSetup(r.Context(), r.FormValue("code"), r.FormValue("totp")); err != nil {
-			slog.Info("Setup confirmation refused", "error", err)
+			slog.InfoContext(r.Context(), "Setup confirmation refused", "error", err)
 			w.WriteHeader(http.StatusUnauthorized)
 			control_setup_templ.SetupFailed("That code is not from the TOTP secret shown.").Render(r.Context(), w)
 			return
 		}
-		slog.Info("Nighttroop is set up, with its control admin")
+		slog.InfoContext(r.Context(), "Nighttroop is set up, with its control admin")
 		control_setup_templ.SetupComplete().Render(r.Context(), w)
 	}
 }

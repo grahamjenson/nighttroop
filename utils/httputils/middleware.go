@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/usage"
 )
@@ -17,6 +18,7 @@ import (
 // AddStandardMiddleware adds what every router has, recording its server errors in the logs DB when there is one
 func AddStandardMiddleware(router chi.Router, config *config.ServerConfig, controlDB *db.ControlDB) {
 	router.Use(middleware.RequestID)
+	router.Use(withRequestLogAttrs)
 	if controlDB != nil {
 		// Before the recoverer, so a panic's 500 is recorded too
 		router.Use(RecordServerErrors(controlDB.Logs))
@@ -37,6 +39,18 @@ func AddStandardMiddleware(router chi.Router, config *config.ServerConfig, contr
 	router.Use(middleware.Compress(5))
 	router.Use(withSupportEmail(config.SupportEmail))
 	router.Use(withDBIPCredit)
+}
+
+// withRequestLogAttrs logs the request's ID, and its site's, with everything logged with its context; the identity is
+// added once it is signed in
+func withRequestLogAttrs(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		attrs := []slog.Attr{slog.String("request_id", middleware.GetReqID(r.Context()))}
+		if siteContext := GetSiteContext(r.Context()); siteContext != nil {
+			attrs = append(attrs, slog.String("site_id", siteContext.SiteID))
+		}
+		next.ServeHTTP(w, r.WithContext(aslog.NewContext(r.Context(), attrs...)))
+	})
 }
 
 type supportEmailKey struct{}
@@ -126,7 +140,7 @@ func SiteRateLimitMiddleware(config *config.ServerConfig) func(http.Handler) htt
 			allowed, remainingTime := SiteHTTPActionWithinRateLimit(config, r)
 			if !allowed {
 				w.WriteHeader(http.StatusTooManyRequests)
-				slog.Info("Site rate limit exceeded", "remainingTime", remainingTime)
+				slog.InfoContext(r.Context(), "Site rate limit exceeded", "remainingTime", remainingTime)
 				return
 			}
 
@@ -143,7 +157,7 @@ func SiteUnauthRateLimitMiddleware(config *config.ServerConfig) func(http.Handle
 			allowed, remainingTime := SiteUnauthWithinRateLimit(config, r)
 			if !allowed {
 				w.WriteHeader(http.StatusTooManyRequests)
-				slog.Info("Site unauthenticated rate limit exceeded", "remainingTime", remainingTime)
+				slog.InfoContext(r.Context(), "Site unauthenticated rate limit exceeded", "remainingTime", remainingTime)
 				return
 			}
 
@@ -159,7 +173,7 @@ func SiteIdentityRateLimitMiddleware(config *config.ServerConfig) func(http.Hand
 			allowed, remainingTime := IdentityHTTPWithinRateLimit(config, r)
 			if !allowed {
 				w.WriteHeader(http.StatusTooManyRequests)
-				slog.Info("Identity rate limit exceeded", "remainingTime", remainingTime)
+				slog.InfoContext(r.Context(), "Identity rate limit exceeded", "remainingTime", remainingTime)
 				return
 			}
 
