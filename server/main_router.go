@@ -97,7 +97,7 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 }
 
 func CreateSiteContext(ctx context.Context, config *config.ServerConfig, controlDB *db.ControlDB, r *http.Request, subdomain string, ipAddress string) (bool, context.Context) {
-	siteDB, siteModel, err := controlDB.GetSite(subdomain)
+	siteDB, siteModel, err := controlDB.GetSite(ctx, subdomain)
 	if err != nil {
 		slog.InfoContext(ctx, "Error getting site for subdomain", "subdomain", subdomain, "error", err)
 		return false, nil

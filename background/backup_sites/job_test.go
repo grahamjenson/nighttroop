@@ -1,7 +1,6 @@
 package backup_sites_test
 
 import (
-	"context"
 	"encoding/json"
 	"testing"
 	"time"
@@ -15,7 +14,7 @@ import (
 
 func TestBackupSiteBatchRecordsEvent(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
-	ctx, batch := context.TODO(), site.SiteDB.Subdomain[:1]
+	ctx, batch := t.Context(), site.SiteDB.Subdomain[:1]
 	jobs := backup_sites.SetupBackupSiteJob(ctx, controlDB, cfg, &s3utils.S3Client{ServerConfig: cfg})
 
 	started := time.Now().UnixMilli()
@@ -40,7 +39,7 @@ func TestBackupSiteBatchRecordsEvent(t *testing.T) {
 
 func TestDeleteUnusedSitesRecordsEvent(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
-	ctx, siteID := context.TODO(), site.SiteDB.Subdomain
+	ctx, siteID := t.Context(), site.SiteDB.Subdomain
 	jobs := backup_sites.SetupBackupSiteJob(ctx, controlDB, cfg, &s3utils.S3Client{ServerConfig: cfg})
 	// The site has never been used, and counts as unused from the moment it was made
 	jobs.DeleteAfterInactivity = -time.Minute

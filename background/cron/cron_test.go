@@ -34,7 +34,7 @@ func TestAddFunc(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := context.TODO()
+			ctx := t.Context()
 			jobsDB, err := db.NewJobsDB(ctx, testutils.GetTestServerConfig())
 			require.NoError(t, err)
 			testutils.DumpJobsOnFailure(t, jobsDB, "TestAddFunc")
@@ -79,7 +79,7 @@ func TestAddFunc(t *testing.T) {
 
 func TestAddFuncRunsAgainAfterPanic(t *testing.T) {
 	config := testutils.GetTestServerConfig()
-	jobsDB, _ := db.NewJobsDB(context.TODO(), config)
+	jobsDB, _ := db.NewJobsDB(t.Context(), config)
 
 	cron := cron.NewCron(jobsDB)
 	runs := 0
@@ -94,7 +94,7 @@ func TestAddFuncRunsAgainAfterPanic(t *testing.T) {
 
 // Each run of a job logs the job and an ID of its own
 func TestAddFuncLogsEachRunsID(t *testing.T) {
-	jobsDB, err := db.NewJobsDB(context.TODO(), testutils.GetTestServerConfig())
+	jobsDB, err := db.NewJobsDB(t.Context(), testutils.GetTestServerConfig())
 	require.NoError(t, err)
 	var logs bytes.Buffer
 	testutils.UseLogHandler(t, aslog.ContextHandler{Handler: slog.NewTextHandler(&logs, nil)})

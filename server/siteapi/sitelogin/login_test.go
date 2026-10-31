@@ -70,7 +70,7 @@ func TestLoginTOTPRefusesPreAuthFromBeforeAReset(t *testing.T) {
 	// Each from its own IP and site, as login attempts are limited to one for each IP and for each site and name
 	for i, preAuthBeforeReset := range []bool{true, false} {
 		ip := fmt.Sprintf("203.0.113.%d", 10+i)
-		site, err := controlDB.CreateSite()
+		site, err := controlDB.CreateSite(t.Context())
 		require.NoError(t, err)
 		siteID := site.SiteDB.Subdomain
 		preAuth := func() string {
@@ -84,9 +84,9 @@ func TestLoginTOTPRefusesPreAuthFromBeforeAReset(t *testing.T) {
 			token = preAuth()
 			time.Sleep(2 * time.Millisecond) // so the reset is a millisecond after the token
 		}
-		admin, err := controlDB.Queries.GetSiteIdentity(context.TODO(), controldb.GetSiteIdentityParams{SiteID: siteID, Name: consts.FIRST_ADMIN_NAME})
+		admin, err := controlDB.Queries.GetSiteIdentity(t.Context(), controldb.GetSiteIdentityParams{SiteID: siteID, Name: consts.FIRST_ADMIN_NAME})
 		require.NoError(t, err)
-		_, err = controlDB.ResetSiteIdentityPassword(context.TODO(), admin, "control admin")
+		_, err = controlDB.ResetSiteIdentityPassword(t.Context(), admin, "control admin")
 		require.NoError(t, err)
 		if !preAuthBeforeReset {
 			token = preAuth()

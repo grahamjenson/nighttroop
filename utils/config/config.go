@@ -272,7 +272,7 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		// security
 		RawKeySets: configStringSelect(dotenv, consts.KEY_SETS_ENV_KEY, ""),
 
-		// RATE LIMTERS TODO fine tune these a bit more
+		// RATE LIMITERS, from estimates of real use rather than measured traffic
 
 		// Public RateLimits
 		GlobalRateLimit:        configIntSelect(dotenv, "GLOBAL_RATE_LIMIT", 100000), // Stop DDOS doing downloads

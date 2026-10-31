@@ -36,14 +36,14 @@ func DumpOnFailure(t interface {
 
 		utils.MkDirs(dumpFolder)
 		backupPath := filepath.Join(dumpFolder, "control.sqlite")
-		err := backup.SqliteBackup(context.TODO(), controlDB.SQLiteDB, backupPath)
+		err := backup.SqliteBackup(context.Background(), controlDB.SQLiteDB, backupPath)
 		if err != nil {
 			t.Logf("🛑 Test failed! In-memory DB snapshot could not be saved: %v", err)
 			return
 		}
 
 		backupPath = filepath.Join(dumpFolder, "jobs.sqlite")
-		err = backup.SqliteBackup(context.TODO(), controlDB.Jobs.SQLiteDB, backupPath)
+		err = backup.SqliteBackup(context.Background(), controlDB.Jobs.SQLiteDB, backupPath)
 		if err != nil {
 			t.Logf("🛑 Test failed! In-memory DB snapshot could not be saved for jobs DB: %v", err)
 			return
@@ -55,7 +55,7 @@ func DumpOnFailure(t interface {
 			}
 
 			backupPath = filepath.Join(dumpFolder, site.Subdomain+".sqlite")
-			err := backup.SqliteBackup(context.TODO(), site.SQLiteDB, backupPath)
+			err := backup.SqliteBackup(context.Background(), site.SQLiteDB, backupPath)
 			if err != nil {
 				t.Logf("🛑 Test failed! In-memory DB snapshot could not be saved for site %s: %v", site.Subdomain, err)
 				return
@@ -87,7 +87,7 @@ func DumpJobsOnFailure(t interface {
 
 		utils.MkDirs(dumpFolder)
 		backupPath := filepath.Join(dumpFolder, "jobs.sqlite")
-		err := backup.SqliteBackup(context.TODO(), jobs.SQLiteDB, backupPath)
+		err := backup.SqliteBackup(context.Background(), jobs.SQLiteDB, backupPath)
 		if err != nil {
 			t.Logf("🛑 Test failed! In-memory DB snapshot could not be saved for jobs DB: %v", err)
 			return

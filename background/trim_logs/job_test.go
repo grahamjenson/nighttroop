@@ -18,7 +18,7 @@ func (s scheduler) AddFunc(name string, spec string, cmd func(context.Context) e
 
 func TestTrimLogsDBCron(t *testing.T) {
 	cfg, controlDB := testutils.NewControlDB(t)
-	ctx, logs := context.TODO(), controlDB.Logs
+	ctx, logs := t.Context(), controlDB.Logs
 	cfg.LogsDBMaxRowsPerTable = 2
 	for _, message := range []string{"first", "second", "third"} {
 		logs.Log(ctx, nil, db.LogLevelInfo, message, nil)

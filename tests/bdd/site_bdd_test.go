@@ -83,8 +83,8 @@ func TestSite(t *testing.T) {
 func runScenarios(t *testing.T, browser playwright.Browser, config *config.ServerConfig, paths []string) {
 	controlDB, err := db.NewControlDB(context.Background(), config)
 	require.NoError(t, err)
-	require.NoError(t, controlDB.SeedDevAdmin())
-	siteInformation, err := controlDB.CreateSite()
+	require.NoError(t, controlDB.SeedDevAdmin(t.Context()))
+	siteInformation, err := controlDB.CreateSite(t.Context())
 	require.NoError(t, err)
 
 	defaultJwt, _, err := config.Security.GenerateUserJWTToken(siteInformation.SiteDB.Subdomain, consts.FIRST_PWD_NAME, string(consts.IdentityRoleDevicePWDPhone))
@@ -93,7 +93,7 @@ func runScenarios(t *testing.T, browser playwright.Browser, config *config.Serve
 	}
 
 	require.NoError(t, err)
-	require.NotEmpty(t, defaultJwt) // TODO insert this as a cookie to dodge login for default
+	require.NotEmpty(t, defaultJwt) // for the API requests; browser tests still sign in on the login page
 
 	router := server.GetMainHandler(controlDB, config)
 	// Background jobs are run after every action instead of on their timers

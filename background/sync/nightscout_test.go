@@ -1,7 +1,6 @@
 package sync
 
 import (
-	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -36,7 +35,7 @@ func TestChangedSince(t *testing.T) {
 
 func TestNightscoutSyncRemembersWhenCollectionsWereModified(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
-	q, ctx, siteID, typ := controlDB.Queries, context.TODO(), site.SiteDB.Subdomain, consts.SyncSourceTypeNightscout
+	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.SyncSourceTypeNightscout
 	jobs := SetupSyncJobManager(cfg, controlDB)
 	enc := func(s string) *string {
 		v, err := cfg.Security.Encrypt(s)
@@ -71,7 +70,7 @@ func TestNightscoutSyncRemembersWhenCollectionsWereModified(t *testing.T) {
 
 func TestNightscoutClientIsKeptBetweenSyncs(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
-	q, ctx, siteID, typ := controlDB.Queries, context.TODO(), site.SiteDB.Subdomain, consts.SyncSourceTypeNightscout
+	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.SyncSourceTypeNightscout
 	jobs := SetupSyncJobManager(cfg, controlDB)
 	enc := func(s string) *string {
 		v, err := cfg.Security.Encrypt(s)
@@ -119,7 +118,7 @@ func TestNightscoutClientsAreBounded(t *testing.T) {
 
 func TestNightscoutSyncCopiesEntriesTreatmentsAndDeviceStatuses(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
-	q, ctx, siteID, typ := controlDB.Queries, context.TODO(), site.SiteDB.Subdomain, consts.SyncSourceTypeNightscout
+	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.SyncSourceTypeNightscout
 	jobs := SetupSyncJobManager(cfg, controlDB)
 	enc := func(s string) *string {
 		v, err := cfg.Security.Encrypt(s)

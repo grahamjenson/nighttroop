@@ -201,7 +201,7 @@ func SiteIdentitySeenFlagsUpdateMiddleware(controlDB *db.ControlDB) func(http.Ha
 					siteContext.Config.Usage.Seen(siteContext.SiteID, siteContext.IdentityModel.ID, r.ContentLength, time.Now())
 				}
 				wasWrite := siteContext.HTTPAction == HTTPActionWrite
-				controlDB.UpdateSiteAndIdentityDateFlags(siteContext.SiteModel, siteContext.SiteDB, siteContext.IdentityModel, true, wasWrite)
+				controlDB.UpdateSiteAndIdentityDateFlags(r.Context(), siteContext.SiteModel, siteContext.SiteDB, siteContext.IdentityModel, true, wasWrite)
 			}
 		})
 	}

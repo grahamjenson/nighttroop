@@ -32,7 +32,7 @@ func RebuildOnSettingsChange(controlDB *db.ControlDB) onevent.Job {
 			return event.Name == events.SiteTimezoneChanged || event.Name == events.SiteWeekStartChanged
 		},
 		Run: func(ctx context.Context, fired onevent.Fired) error {
-			siteContext, err := site(controlDB, fired.SiteID)
+			siteContext, err := site(ctx, controlDB, fired.SiteID)
 			if err != nil {
 				return err
 			}
@@ -60,7 +60,7 @@ func Build(ctx context.Context, controlDB *db.ControlDB, now time.Time) error {
 }
 
 func buildYesterday(ctx context.Context, controlDB *db.ControlDB, siteID string, now time.Time) error {
-	siteContext, err := site(controlDB, siteID)
+	siteContext, err := site(ctx, controlDB, siteID)
 	if err != nil {
 		return err
 	}
@@ -78,8 +78,8 @@ func buildYesterday(ctx context.Context, controlDB *db.ControlDB, siteID string,
 }
 
 // site is the site's context for building its days, which only need the site's own settings and DB
-func site(controlDB *db.ControlDB, siteID string) (*httputils.SiteContext, error) {
-	siteDB, model, err := controlDB.GetSite(siteID)
+func site(ctx context.Context, controlDB *db.ControlDB, siteID string) (*httputils.SiteContext, error) {
+	siteDB, model, err := controlDB.GetSite(ctx, siteID)
 	if err != nil {
 		return nil, err
 	}

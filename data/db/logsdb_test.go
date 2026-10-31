@@ -1,7 +1,6 @@
 package db_test
 
 import (
-	"context"
 	"database/sql"
 	"errors"
 	"strings"
@@ -18,7 +17,7 @@ import (
 
 func TestLogsDBRecordsBySite(t *testing.T) {
 	_, controlDB := testutils.NewControlDB(t)
-	ctx, logs, site := context.TODO(), controlDB.Logs, "somesite"
+	ctx, logs, site := t.Context(), controlDB.Logs, "somesite"
 
 	logs.Log(ctx, &site, db.LogLevelInfo, "synced", map[string]any{"readings": 3})
 	logs.Log(ctx, nil, db.LogLevelWarn, "server wide", nil)
@@ -55,7 +54,7 @@ func TestLogsDBRecordsBySite(t *testing.T) {
 // the row being refused
 func TestLogsDBKeepsWithinLimits(t *testing.T) {
 	_, controlDB := testutils.NewControlDB(t)
-	ctx, logs := context.TODO(), controlDB.Logs
+	ctx, logs := t.Context(), controlDB.Logs
 
 	logs.Log(ctx, nil, db.LogLevelError, strings.Repeat("é", 2000), map[string]any{"body": strings.Repeat("x", 5000)})
 
@@ -82,7 +81,7 @@ func TestLogsDBTrim(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			_, controlDB := testutils.NewControlDB(t)
-			ctx, logs := context.TODO(), controlDB.Logs
+			ctx, logs := t.Context(), controlDB.Logs
 			for i := range test.written {
 				logs.Log(ctx, nil, db.LogLevelInfo, string(rune('a'+i)), nil)
 				logs.SiteCreatedEvent(ctx, string(rune('a'+i)))
@@ -110,7 +109,7 @@ func TestLogsDBTrim(t *testing.T) {
 // TestLogsDBTrimAgain checks a trim after rows are written since the last keeps the newest, as the cron trims
 func TestLogsDBTrimAgain(t *testing.T) {
 	_, controlDB := testutils.NewControlDB(t)
-	ctx, logs := context.TODO(), controlDB.Logs
+	ctx, logs := t.Context(), controlDB.Logs
 	for _, batch := range [][]string{{"a", "b", "c", "d"}, {"e", "f", "g"}} {
 		for _, message := range batch {
 			logs.Log(ctx, nil, db.LogLevelInfo, message, nil)
@@ -129,7 +128,7 @@ func TestLogsDBTrimAgain(t *testing.T) {
 func BenchmarkLogsDBTrim(b *testing.B) {
 	const maxRows = 100_000
 	_, controlDB := testutils.NewControlDB(b)
-	ctx, logs := context.TODO(), controlDB.Logs
+	ctx, logs := b.Context(), controlDB.Logs
 	site, attributes := "benchsite", map[string]any{"sync_type": "dexcom", "body": strings.Repeat("x", 200)}
 	write := func() {
 		logs.Log(ctx, &site, db.LogLevelInfo, "synced", attributes)
@@ -150,7 +149,7 @@ func TestCreateSiteRecordsEvent(t *testing.T) {
 	_, controlDB, site := testutils.NewControlDBWithSite(t)
 	siteID := site.SiteDB.Subdomain
 
-	events, err := controlDB.Logs.Queries.SearchEvents(context.TODO(), logsdb.SearchEventsParams{SiteID: &siteID, Limit: 10})
+	events, err := controlDB.Logs.Queries.SearchEvents(t.Context(), logsdb.SearchEventsParams{SiteID: &siteID, Limit: 10})
 	require.NoError(t, err)
 	require.Len(t, events, 1)
 	require.Equal(t, "site_created", events[0].Name)
@@ -160,7 +159,7 @@ func TestCreateSiteRecordsEvent(t *testing.T) {
 // that site, as well as kept
 func TestEventsArePublishedAndKept(t *testing.T) {
 	cfg, controlDB := testutils.NewControlDB(t)
-	ctx, site := context.TODO(), "publishedsite"
+	ctx, site := t.Context(), "publishedsite"
 	var published []events.Event
 	unsubscribe := cfg.Events.Subscribe(site, func(event events.Event) { published = append(published, event) })
 	defer unsubscribe()
@@ -181,7 +180,7 @@ func TestEventsArePublishedAndKept(t *testing.T) {
 // of another site, another batch or the server
 func TestSiteSeesOnlyItsOwnLogs(t *testing.T) {
 	_, controlDB := testutils.NewControlDB(t)
-	ctx, logs, q := context.TODO(), controlDB.Logs, controlDB.Logs.Queries
+	ctx, logs, q := t.Context(), controlDB.Logs, controlDB.Logs.Queries
 	site, other, batch, otherBatch := "qownsite", "qothersite", "q", "r"
 
 	logs.SiteDisabledEvent(ctx, site, "admin")
@@ -231,7 +230,7 @@ func TestSiteSeesOnlyItsOwnLogs(t *testing.T) {
 // keeps them all
 func TestLogsDBSearchByType(t *testing.T) {
 	_, controlDB := testutils.NewControlDB(t)
-	ctx, logs, site, batch := context.TODO(), controlDB.Logs, "typedsite", "typedbatch"
+	ctx, logs, site, batch := t.Context(), controlDB.Logs, "typedsite", "typedbatch"
 
 	logs.SiteCreatedEvent(ctx, site)
 	logs.SiteDisabledEvent(ctx, site, "admin")
@@ -280,7 +279,7 @@ func TestLogsDBSearchByType(t *testing.T) {
 // a site cannot search the attributes of its batch's events, which it is not shown
 func TestLogsDBSearchText(t *testing.T) {
 	_, controlDB := testutils.NewControlDB(t)
-	ctx, logs, site, batch := context.TODO(), controlDB.Logs, "searchsite", "searchbatch"
+	ctx, logs, site, batch := t.Context(), controlDB.Logs, "searchsite", "searchbatch"
 
 	logs.Log(ctx, &site, db.LogLevelInfo, "Synced readings", map[string]any{"source": "dexcom"})
 	logs.Log(ctx, &site, db.LogLevelInfo, "Something else", nil)

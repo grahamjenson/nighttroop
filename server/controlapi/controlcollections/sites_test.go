@@ -20,7 +20,7 @@ import (
 
 func TestDisablingSiteRecordsEvent(t *testing.T) {
 	_, controlDB, site := testutils.NewControlDBWithSite(t)
-	ctx, siteID := context.TODO(), site.SiteDB.Subdomain
+	ctx, siteID := t.Context(), site.SiteDB.Subdomain
 	controlContext := &httputils.ControlContext{ControlDB: controlDB, IdentityModel: &controldb.ControlIdentity{Name: "admin", Role: consts.ControlRoleAdmin}}
 
 	_, err := (&SitesCollection{}).UpdateRow(ctx, controlContext, &controlmodels.Site{ID: siteID}, &controlmodels.Site{State: "disabled"})
@@ -37,7 +37,7 @@ func TestDisablingActiveSiteRefused(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	cfg.DisableAfterInactivityDays = 7
 	t.Cleanup(func() { cfg.DisableAfterInactivityDays = 0 })
-	ctx, siteID, now := context.TODO(), site.SiteDB.Subdomain, time.Now().UnixMilli()
+	ctx, siteID, now := context.Background(), site.SiteDB.Subdomain, time.Now().UnixMilli()
 	controlContext := &httputils.ControlContext{ControlDB: controlDB, IdentityModel: &controldb.ControlIdentity{Name: "admin", Role: consts.ControlRoleAdmin}}
 
 	active := &controlmodels.Site{ID: siteID, State: "live", CreatedAt: now, LastSeenAt: &now, LastWriteAt: &now}
@@ -51,7 +51,7 @@ func TestDisablingActiveSiteRefused(t *testing.T) {
 
 func TestTruncateHandler(t *testing.T) {
 	_, controlDB, site := testutils.NewControlDBWithSite(t)
-	ctx, siteID := context.TODO(), site.SiteDB.Subdomain
+	ctx, siteID := t.Context(), site.SiteDB.Subdomain
 	router := chi.NewRouter()
 	router.Post("/sites/{id}/truncate", (&SitesCollection{}).TruncateHandler)
 	truncate := func(role consts.ControlRole) *httptest.ResponseRecorder {

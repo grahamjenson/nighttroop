@@ -1,7 +1,6 @@
 package testutils
 
 import (
-	"context"
 	"testing"
 
 	"nighttroop.t1d.nz/data/db"
@@ -35,11 +34,11 @@ func GetTestServerConfig() *config.ServerConfig {
 func NewControlDB(t testing.TB) (*config.ServerConfig, *db.ControlDB) {
 	t.Helper()
 	cfg := GetTestServerConfig()
-	controlDB, err := db.NewControlDB(context.TODO(), cfg)
+	controlDB, err := db.NewControlDB(t.Context(), cfg)
 	if err != nil {
 		t.Fatalf("cannot create control db: %v", err)
 	}
-	if err := controlDB.SeedDevAdmin(); err != nil {
+	if err := controlDB.SeedDevAdmin(t.Context()); err != nil {
 		t.Fatalf("cannot create the control admin: %v", err)
 	}
 	return cfg, controlDB
@@ -49,7 +48,7 @@ func NewControlDB(t testing.TB) (*config.ServerConfig, *db.ControlDB) {
 func NewControlDBWithSite(t testing.TB) (*config.ServerConfig, *db.ControlDB, *db.SiteCreateResult) {
 	t.Helper()
 	cfg, controlDB := NewControlDB(t)
-	site, err := controlDB.CreateSite()
+	site, err := controlDB.CreateSite(t.Context())
 	if err != nil {
 		t.Fatalf("cannot create site db: %v", err)
 	}

@@ -1,7 +1,6 @@
 package controlcollections
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -25,7 +24,7 @@ func TestHydratingRefused(t *testing.T) {
 		{"only with S3", "archived", "live", "a site can only be hydrated when S3 is connected"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			_, err := (&ArchivedSitesCollection{}).UpdateRow(context.TODO(), controlContext, &controlmodels.Site{ID: siteID, State: test.from}, &controlmodels.Site{State: test.to})
+			_, err := (&ArchivedSitesCollection{}).UpdateRow(t.Context(), controlContext, &controlmodels.Site{ID: siteID, State: test.from}, &controlmodels.Site{State: test.to})
 			require.ErrorContains(t, err, test.message)
 		})
 	}

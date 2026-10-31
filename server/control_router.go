@@ -39,13 +39,9 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 		r.Post("/sites/{id}/identities/{identity}/totp", (&controlcollections.SitesCollection{}).ResetTOTPHandler)
 		r.Get("/usage", controlapi.UsageHandler)
 
-		//// TODO
-		// Get User details including db size , last seen, API usage per device, list devices and last seen at, list DB table sizes
-		// Get Admin Users
-		// Reset Admin User Password (cannot do currently logged in user)
-		// Reset Admin User TOTP (cannot do currently logged in user)
-		// Change role of user (admin, user, read only)
-		// Delete User (cannot delete currently logged in user)
+		// Not here yet: a site's API use per device and DB table sizes, and managing the control admins themselves,
+		// listing them, resetting another's password or TOTP, changing their role or deleting one (never the one
+		// signed in)
 	})
 	return r
 }

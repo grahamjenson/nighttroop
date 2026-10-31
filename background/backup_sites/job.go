@@ -91,7 +91,7 @@ func (b *BackupSiteJobManager) DeleteUnusedSites(ctx context.Context, batch stri
 	slog.InfoContext(ctx, "Deleting site without archiving", "subdomains", deleteList)
 
 	// Just delete these sites without an archive, as they have not been used in so many minutes
-	if err := b.controlDB.DeleteSites(deleteList); err != nil {
+	if err := b.controlDB.DeleteSites(ctx, deleteList); err != nil {
 		return err
 	}
 	for _, siteID := range deleteList {

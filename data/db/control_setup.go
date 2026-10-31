@@ -100,8 +100,8 @@ func (db *ControlDB) setupCodeMatches(code string) bool {
 }
 
 // SeedDevAdmin sets up a development or test server with an admin of the development password and TOTP
-func (db *ControlDB) SeedDevAdmin() error {
-	_, err := db.CreateControlIdentity(consts.FIRST_ADMIN_NAME, consts.ControlRoleAdmin)
+func (db *ControlDB) SeedDevAdmin(ctx context.Context) error {
+	_, err := db.CreateControlIdentity(ctx, consts.FIRST_ADMIN_NAME, consts.ControlRoleAdmin)
 	if err != nil && !nterrors.IsSQLUniqueViolationError(err) {
 		return err
 	}

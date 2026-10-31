@@ -100,7 +100,7 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 		}
 
 		// First thing validate the password
-		identity, err := loginTheUserPasswordOnly(siteContext.ControlDB, config.Security, siteContext.SiteID, formName, formPassword)
+		identity, err := loginTheUserPasswordOnly(r.Context(), siteContext.ControlDB, config.Security, siteContext.SiteID, formName, formPassword)
 		if err != nil {
 			identityLoginErrorHTMX(w, r, "Invalid username or password.", fmt.Errorf("failed to login with password: %w", err))
 			return
@@ -225,7 +225,7 @@ func getTheIdentityeModel(controlDB *db.ControlDB, r *http.Request, identityName
 	// First try the JWT token (either header or cookie)
 	siteContext := httputils.GetSiteContext(r.Context())
 
-	identity, err := controlDB.Queries.GetSiteIdentity(context.TODO(), controldb.GetSiteIdentityParams{
+	identity, err := controlDB.Queries.GetSiteIdentity(r.Context(), controldb.GetSiteIdentityParams{
 		SiteID: siteContext.SiteID,
 		Name:   identityNameFromToken,
 	})
@@ -239,12 +239,12 @@ func getTheIdentityeModel(controlDB *db.ControlDB, r *http.Request, identityName
 	return identity, nil
 }
 
-func loginTheUserPasswordOnly(controlDB *db.ControlDB, securityConfig *security.SecurityConfig, subdomain, formName, formPassword string) (*controldb.SiteIdentity, error) {
+func loginTheUserPasswordOnly(ctx context.Context, controlDB *db.ControlDB, securityConfig *security.SecurityConfig, subdomain, formName, formPassword string) (*controldb.SiteIdentity, error) {
 	if formName == "" || formPassword == "" {
 		return nil, fmt.Errorf("device name and password are required")
 	}
 
-	identity, err := controlDB.Queries.GetSiteIdentity(context.TODO(), controldb.GetSiteIdentityParams{
+	identity, err := controlDB.Queries.GetSiteIdentity(ctx, controldb.GetSiteIdentityParams{
 		SiteID: subdomain,
 		Name:   formName,
 	})
@@ -324,7 +324,7 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config *config.ServerConfig, r *h
 		return
 	}
 
-	identity, err := loginTheUserAPI(siteContext.ControlDB, siteContext.SiteID, config, creds.Name, creds.Password, creds.TOTP)
+	identity, err := loginTheUserAPI(r.Context(), siteContext.ControlDB, siteContext.SiteID, config, creds.Name, creds.Password, creds.TOTP)
 	if err != nil {
 		identityLoginErrorAPI(w, r, "Invalid login attempt", fmt.Errorf("invalid login attempt: %w", err))
 		return
@@ -359,8 +359,8 @@ func recordSignIn(r *http.Request, identity *controldb.SiteIdentity) {
 	siteContext.ControlDB.Logs.SignedInEvent(r.Context(), siteContext.SiteID, identity.Name, from)
 }
 
-func loginTheUserAPI(controlDB *db.ControlDB, subdomain string, cfg *config.ServerConfig, devicename, password, totpToken string) (*controldb.SiteIdentity, error) {
-	device, err := loginTheUserPasswordOnly(controlDB, cfg.Security, subdomain, devicename, password)
+func loginTheUserAPI(ctx context.Context, controlDB *db.ControlDB, subdomain string, cfg *config.ServerConfig, devicename, password, totpToken string) (*controldb.SiteIdentity, error) {
+	device, err := loginTheUserPasswordOnly(ctx, controlDB, cfg.Security, subdomain, devicename, password)
 	if err != nil {
 		return nil, err
 	}

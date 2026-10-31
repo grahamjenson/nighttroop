@@ -1,7 +1,6 @@
 package sync_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -12,7 +11,7 @@ import (
 
 func TestSyncBacksOffOnFailureAndResetsOnSuccess(t *testing.T) {
 	_, controlDB, site := testutils.NewControlDBWithSite(t)
-	q, ctx, siteID, typ := controlDB.Queries, context.TODO(), site.SiteDB.Subdomain, consts.SyncSourceTypeNightscout
+	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.SyncSourceTypeNightscout
 	require.NoError(t, q.CreateSyncSource(ctx, controldb.CreateSyncSourceParams{SiteID: siteID, Type: typ, Enabled: true}))
 	interval := func() int64 {
 		s, err := q.GetSyncSource(ctx, controldb.GetSyncSourceParams{SiteID: siteID, Type: typ})

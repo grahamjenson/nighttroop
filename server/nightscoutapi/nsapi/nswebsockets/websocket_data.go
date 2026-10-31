@@ -77,11 +77,13 @@ type recorder interface {
 // broadcastChange sends a changed model of the site to its DataReceivers as a delta dataUpdate, and to its /storage
 // subscribers, when it is a Nightscout record
 func (ws *Websocket) broadcastChange(main *socketio.Namespace, event events.Event) {
-	siteDB, siteModel, err := ws.controlDB.GetSite(event.SiteID)
+	// An event is sent after the request that made it, so it has a context of its own
+	ctx := context.Background()
+	siteDB, siteModel, err := ws.controlDB.GetSite(ctx, event.SiteID)
 	if err != nil {
 		return
 	}
-	siteContext := httputils.GetSiteContext(httputils.CreateSiteContext(context.Background(), ws.config, ws.controlDB, siteDB, siteModel, event.SiteID, "", httputils.HTTPActionRead, httputils.AcceptTypeJSON, httputils.ContentTypeJSON))
+	siteContext := httputils.GetSiteContext(httputils.CreateSiteContext(ctx, ws.config, ws.controlDB, siteDB, siteModel, event.SiteID, "", httputils.HTTPActionRead, httputils.AcceptTypeJSON, httputils.ContentTypeJSON))
 	for collection, store := range ws.collections {
 		r, ok := store.(recorder)
 		if !ok {

@@ -1,7 +1,6 @@
 package sync_test
 
 import (
-	"context"
 	"encoding/json"
 	"testing"
 	"time"
@@ -18,7 +17,7 @@ import (
 // A sync that adds records records a sync_added event with how many, and one that adds none records nothing
 func TestSyncThatAddsRecordsRecordsAnEvent(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
-	q, ctx, siteID := controlDB.Queries, context.TODO(), site.SiteDB.Subdomain
+	q, ctx, siteID := controlDB.Queries, t.Context(), site.SiteDB.Subdomain
 	jobs := sync.SetupSyncJobManager(cfg, controlDB)
 	now := time.Now().UnixMilli()
 	require.NoError(t, q.UpdateSiteDateFlags(ctx, controldb.UpdateSiteDateFlagsParams{LastSeenAt: &now, ID: siteID}))

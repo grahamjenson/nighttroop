@@ -1,7 +1,6 @@
 package sync_test
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -17,7 +16,7 @@ import (
 
 func TestFailedFirstSyncDisablesTheSource(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
-	q, ctx, siteID, typ := controlDB.Queries, context.TODO(), site.SiteDB.Subdomain, consts.SyncSourceTypeDexcom
+	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.SyncSourceTypeDexcom
 	jobs := sync.SetupSyncJobManager(cfg, controlDB)
 	enc := func(s string) *string {
 		v, err := cfg.Security.Encrypt(s)

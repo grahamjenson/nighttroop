@@ -123,7 +123,7 @@ func (c *Checker) checkSite(ctx context.Context, siteID string, now int64) error
 		kept[row.IdentityID][row.Type] = row
 	}
 
-	siteDB, site, err := c.controlDB.GetSite(siteID)
+	siteDB, site, err := c.controlDB.GetSite(ctx, siteID)
 	if err != nil || site == nil || siteDB == nil {
 		return errors.Join(err, c.forget(ctx, kept, nil))
 	}

@@ -69,7 +69,7 @@ func TestSummaryEventsOnAlarmChanges(t *testing.T) {
 	jwt, _, err := config.Security.GenerateUserJWTToken(subdomain, consts.FIRST_PWD_NAME, string(consts.IdentityRoleDevicePWDPhone))
 	require.NoError(t, err)
 
-	identities, err := controlDB.Queries.AllSiteIdentities(context.TODO(), controldb.AllSiteIdentitiesParams{SiteID: subdomain})
+	identities, err := controlDB.Queries.AllSiteIdentities(t.Context(), controldb.AllSiteIdentitiesParams{SiteID: subdomain})
 	require.NoError(t, err)
 	var pwd, other int64
 	for _, identity := range identities {
@@ -80,7 +80,7 @@ func TestSummaryEventsOnAlarmChanges(t *testing.T) {
 		}
 	}
 	at := time.Now().UnixMilli()
-	require.NoError(t, controlDB.Live.Queries.UpsertAlarm(context.TODO(), livedb.UpsertAlarmParams{
+	require.NoError(t, controlDB.Live.Queries.UpsertAlarm(t.Context(), livedb.UpsertAlarmParams{
 		SiteID: subdomain, IdentityID: pwd, Type: alarms.UrgentLow, ActiveSince: at, NotifiedAt: at, Alerting: true}))
 
 	request := func(method, path string) *http.Response {

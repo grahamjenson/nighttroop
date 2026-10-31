@@ -11,6 +11,7 @@ import (
 
 	"syscall"
 	"time"
+
 	// Every IANA timezone, for the timezone setting, wherever the server runs
 	_ "time/tzdata"
 
@@ -56,12 +57,12 @@ func run() error {
 	s3Client := s3utils.NewS3Client(serverConfig)
 
 	// S3 is optional: without it there is no restore on start or backup upload
-	if err := s3Client.TestS3Client(); err != nil {
+	if err := s3Client.TestS3Client(ctx); err != nil {
 		slog.Warn("S3 is not working, running without S3 restore or backups", "error", err)
 	} else {
 		serverConfig.Status.S3Working = true
 		// Without versioning each backup replaces the last, which is worth an error but not stopping backups
-		if err := s3Client.ConfigureVersioning(context.TODO()); err != nil {
+		if err := s3Client.ConfigureVersioning(ctx); err != nil {
 			slog.Error("S3 versioning is not set up, so each backup replaces the last", "error", err)
 		}
 	}
@@ -93,7 +94,7 @@ func run() error {
 	}
 	// Development has an admin to log in with; anywhere else a new server is set up with the code it prints
 	if serverConfig.IsDev() {
-		if err := controlDB.SeedDevAdmin(); err != nil {
+		if err := controlDB.SeedDevAdmin(ctx); err != nil {
 			return fmt.Errorf("cannot create the development admin: %w", err)
 		}
 	}

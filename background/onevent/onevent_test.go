@@ -13,7 +13,7 @@ import (
 
 func TestListenQueuesAJobForEachMatchingSite(t *testing.T) {
 	_, controlDB := testutils.NewControlDB(t)
-	ctx, bus, queue := context.TODO(), events.NewSiteBus(), liteq.New(controlDB)
+	ctx, bus, queue := t.Context(), events.NewSiteBus(), liteq.New(controlDB)
 	ran := []onevent.Fired{}
 	job := onevent.Job{
 		Queue:  "test-on-event",

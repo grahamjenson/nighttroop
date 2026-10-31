@@ -1,7 +1,6 @@
 package sync
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -18,7 +17,7 @@ import (
 // and the failure still counts, so the source backs off instead of being retried every tick
 func TestOversizedSyncErrorIsTruncatedAndStillBacksOff(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
-	q, ctx, siteID, typ := controlDB.Queries, context.TODO(), site.SiteDB.Subdomain, consts.SyncSourceTypeNightscout
+	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.SyncSourceTypeNightscout
 	jobs := SetupSyncJobManager(cfg, controlDB)
 	require.NoError(t, q.CreateSyncSource(ctx, controldb.CreateSyncSourceParams{SiteID: siteID, Type: typ, Enabled: true}))
 

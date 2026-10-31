@@ -34,7 +34,7 @@ func POSTRecoverSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig
 		}
 
 		// The site is found first, so its URL is known before the key is used up
-		siteDB, _, err := controlDB.GetSite(siteID)
+		siteDB, _, err := controlDB.GetSite(r.Context(), siteID)
 		var recovered *db.RecoveredAdmin
 		if err == nil {
 			recovered, err = controlDB.RecoverSiteAdmin(r.Context(), siteID, r.FormValue("backup_key"))

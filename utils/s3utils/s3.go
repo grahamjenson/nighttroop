@@ -91,12 +91,12 @@ func NewS3Client(config *config.ServerConfig) *S3Client {
 	return c
 }
 
-func (c *S3Client) TestS3Client() error {
+func (c *S3Client) TestS3Client(ctx context.Context) error {
 	testKey := c.TestObjectPath()
 	randomGen := utils.NextSiteSubdomain(false)
 	testContent := fmt.Sprintf("This istest object %s", randomGen)
 
-	_, err := c.s3.PutObject(context.TODO(), &s3.PutObjectInput{
+	_, err := c.s3.PutObject(ctx, &s3.PutObjectInput{
 		Bucket:  aws.String(c.Bucket),
 		Key:     aws.String(testKey),
 		Body:    strings.NewReader(testContent),
@@ -108,7 +108,7 @@ func (c *S3Client) TestS3Client() error {
 		return fmt.Errorf("s3Client test upload failed: %w", err)
 	}
 
-	output, err := c.s3.GetObject(context.TODO(), &s3.GetObjectInput{
+	output, err := c.s3.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(c.Bucket),
 		Key:    aws.String(testKey),
 	})

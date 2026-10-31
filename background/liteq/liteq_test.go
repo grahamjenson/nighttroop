@@ -21,7 +21,7 @@ import (
 // and the summarised jobs must be deleted, or the jobs table grows forever
 func TestOversizedJobErrorsStillSummariseAndDeleteJobs(t *testing.T) {
 	_, controlDB := testutils.NewControlDB(t)
-	ctx, jobsDB, queue := context.TODO(), controlDB.Jobs, liteq.New(controlDB)
+	ctx, jobsDB, queue := t.Context(), controlDB.Jobs, liteq.New(controlDB)
 	const queueName, count = "long-errors", 20
 
 	worker := func(ctx context.Context, job *jobsdb.Job) error {
@@ -66,7 +66,7 @@ func TestOversizedJobErrorsStillSummariseAndDeleteJobs(t *testing.T) {
 // A queued job's logs say which queue and job row it is, with an ID for the run
 func TestQueuedJobLogsItsIDs(t *testing.T) {
 	_, controlDB := testutils.NewControlDB(t)
-	ctx, queue := context.TODO(), liteq.New(controlDB)
+	ctx, queue := t.Context(), liteq.New(controlDB)
 	var logs bytes.Buffer
 	testutils.UseLogHandler(t, aslog.ContextHandler{Handler: slog.NewTextHandler(&logs, nil)})
 	require.NoError(t, queue.QueueJob(ctx, liteq.QueueJobParams{Queue: "logged", Job: "fetch"}))

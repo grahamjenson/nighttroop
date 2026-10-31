@@ -1,7 +1,6 @@
 package backup_control_test
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -14,7 +13,7 @@ import (
 
 func TestBackupControlRecordsEvent(t *testing.T) {
 	cfg, controlDB := testutils.NewControlDB(t)
-	ctx := context.TODO()
+	ctx := t.Context()
 	jobs := backup_control.SetupBackupControlJob(ctx, controlDB, cfg, &s3utils.S3Client{ServerConfig: cfg})
 
 	started := time.Now().UnixMilli()
