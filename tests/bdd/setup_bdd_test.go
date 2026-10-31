@@ -19,6 +19,8 @@ import (
 
 // TestSetup runs the setup files against a new server, whose control admin is not made yet
 func TestSetup(t *testing.T) {
+	// The test config is loaded once for every test here, so it is loaded with TestSite's login burst
+	t.Setenv("SITE_LOGIN_PER_MINUTE_BURST", "100")
 	pw, err := playwright.Run()
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = pw.Stop() })
@@ -40,7 +42,9 @@ func TestSetup(t *testing.T) {
 	config.HostPort, err = strconv.Atoi(u.Port())
 	require.NoError(t, err)
 
-	browserContext, err := browser.NewContext(playwright.BrowserNewContextOptions{Locale: playwright.String("en"), TimezoneId: playwright.String("UTC")})
+	// Its own address, so its attempts do not spend TestSite's login limit for 127.0.0.1, whose forwarding is trusted
+	browserContext, err := browser.NewContext(playwright.BrowserNewContextOptions{Locale: playwright.String("en"), TimezoneId: playwright.String("UTC"),
+		ExtraHttpHeaders: map[string]string{"X-Forwarded-For": "192.0.2.10"}})
 	require.NoError(t, err)
 	browserContext.SetDefaultTimeout(1000)
 	RunTheActionFileAsATest(t, "setup", "setup/first_run.bdd", browserContext, backgroundJobs, map[string]any{
