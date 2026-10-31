@@ -66,8 +66,14 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.searchLogsStmt, err = db.PrepareContext(ctx, searchLogs); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchLogs: %w", err)
 	}
+	if q.searchSiteErrorsStmt, err = db.PrepareContext(ctx, searchSiteErrors); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchSiteErrors: %w", err)
+	}
 	if q.searchSiteEventsStmt, err = db.PrepareContext(ctx, searchSiteEvents); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchSiteEvents: %w", err)
+	}
+	if q.searchSiteLogsStmt, err = db.PrepareContext(ctx, searchSiteLogs); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchSiteLogs: %w", err)
 	}
 	if q.trimErrorsStmt, err = db.PrepareContext(ctx, trimErrors); err != nil {
 		return nil, fmt.Errorf("error preparing query TrimErrors: %w", err)
@@ -153,9 +159,19 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing searchLogsStmt: %w", cerr)
 		}
 	}
+	if q.searchSiteErrorsStmt != nil {
+		if cerr := q.searchSiteErrorsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchSiteErrorsStmt: %w", cerr)
+		}
+	}
 	if q.searchSiteEventsStmt != nil {
 		if cerr := q.searchSiteEventsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing searchSiteEventsStmt: %w", cerr)
+		}
+	}
+	if q.searchSiteLogsStmt != nil {
+		if cerr := q.searchSiteLogsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchSiteLogsStmt: %w", cerr)
 		}
 	}
 	if q.trimErrorsStmt != nil {
@@ -226,7 +242,9 @@ type Queries struct {
 	searchErrorsStmt     *sql.Stmt
 	searchEventsStmt     *sql.Stmt
 	searchLogsStmt       *sql.Stmt
+	searchSiteErrorsStmt *sql.Stmt
 	searchSiteEventsStmt *sql.Stmt
+	searchSiteLogsStmt   *sql.Stmt
 	trimErrorsStmt       *sql.Stmt
 	trimEventsStmt       *sql.Stmt
 	trimLogsStmt         *sql.Stmt
@@ -250,7 +268,9 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		searchErrorsStmt:     q.searchErrorsStmt,
 		searchEventsStmt:     q.searchEventsStmt,
 		searchLogsStmt:       q.searchLogsStmt,
+		searchSiteErrorsStmt: q.searchSiteErrorsStmt,
 		searchSiteEventsStmt: q.searchSiteEventsStmt,
+		searchSiteLogsStmt:   q.searchSiteLogsStmt,
 		trimErrorsStmt:       q.trimErrorsStmt,
 		trimEventsStmt:       q.trimEventsStmt,
 		trimLogsStmt:         q.trimLogsStmt,

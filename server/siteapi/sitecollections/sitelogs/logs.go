@@ -61,7 +61,7 @@ func (s *ErrorsCollection) ToModel(row *logsdb.Error, _ *httputils.SiteContext) 
 }
 
 func (s *ErrorsCollection) SearchRows(ctx context.Context, _ *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*logsdb.Error, error) {
-	return siteContext.ControlDB.Logs.Queries.SearchErrors(ctx, logsdb.SearchErrorsParams{SiteID: &siteContext.SiteID, Type: query.Type, Search: query.Search, Skip: query.Skip, Limit: query.Limit})
+	return siteContext.ControlDB.Logs.Queries.SearchSiteErrors(ctx, logsdb.SearchSiteErrorsParams{SiteID: &siteContext.SiteID, Type: query.Type, Search: query.Search, Skip: query.Skip, Limit: query.Limit})
 }
 
 func (s *ErrorsCollection) SearchHTMXResponse(models []*sitemodels.SiteError, query *apiutils.Query) templ.Component {
@@ -90,7 +90,7 @@ func (s *LogsCollection) ToModel(row *logsdb.Log, _ *httputils.SiteContext) *sit
 }
 
 func (s *LogsCollection) SearchRows(ctx context.Context, _ *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*logsdb.Log, error) {
-	return siteContext.ControlDB.Logs.Queries.SearchLogs(ctx, logsdb.SearchLogsParams{SiteID: &siteContext.SiteID, Search: query.Search, Skip: query.Skip, Limit: query.Limit})
+	return siteContext.ControlDB.Logs.Queries.SearchSiteLogs(ctx, logsdb.SearchSiteLogsParams{SiteID: &siteContext.SiteID, Search: query.Search, Skip: query.Skip, Limit: query.Limit})
 }
 
 func (s *LogsCollection) SearchHTMXResponse(models []*sitemodels.SiteLog, query *apiutils.Query) templ.Component {

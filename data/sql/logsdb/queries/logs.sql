@@ -52,14 +52,40 @@ SELECT * FROM events WHERE id = sqlc.arg('ID');
 -- name: GetError :one
 SELECT * FROM errors WHERE id = sqlc.arg('ID');
 
+-- The site's own rows, for its logs pages. SearchLogs and SearchErrors with SiteID set match the same rows, but
+-- their optional SiteID keeps SQLite from using the (site_id, id) index, so they walk every site's rows.
+
+-- name: SearchSiteLogs :many
+-- Newest first, only those with Search in their text when it is set
+SELECT * FROM logs
+WHERE site_id = sqlc.arg('SiteID')
+AND (CAST(sqlc.narg('Search') AS TEXT) IS NULL OR instr(lower(message), lower(sqlc.narg('Search'))) > 0 OR instr(lower(attributes), lower(sqlc.narg('Search'))) > 0)
+ORDER BY id DESC
+LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+
+-- name: SearchSiteErrors :many
+-- Newest first, only those of the kind Type when it is set, and only those with Search in their text when it is set
+SELECT * FROM errors
+WHERE site_id = sqlc.arg('SiteID')
+AND (CAST(sqlc.narg('Type') AS TEXT) IS NULL OR json_extract(attributes, '$.kind') = sqlc.narg('Type'))
+AND (CAST(sqlc.narg('Search') AS TEXT) IS NULL OR instr(lower(message), lower(sqlc.narg('Search'))) > 0 OR instr(lower(attributes), lower(sqlc.narg('Search'))) > 0)
+ORDER BY id DESC
+LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+
 -- name: SearchSiteEvents :many
--- Newest first, the site's own events and its batch's, which is all a site may see, only those named Type when it is set
-SELECT * FROM events
-WHERE (site_id = sqlc.arg('SiteID') OR (site_id IS NULL AND batch = sqlc.arg('Batch')))
-AND (CAST(sqlc.narg('Type') AS TEXT) IS NULL OR name = sqlc.narg('Type'))
--- Search looks in the names of all of them, but only in the attributes of the site's own, as a batch's are not shown
-AND (CAST(sqlc.narg('Search') AS TEXT) IS NULL OR instr(lower(name), lower(sqlc.narg('Search'))) > 0
-  OR (site_id = sqlc.arg('SiteID') AND instr(lower(attributes), lower(sqlc.narg('Search'))) > 0))
+-- Newest first, the site's own events and its batch's, which is all a site may see, only those named Type when it is set.
+-- Each half reads its own index newest first and SQLite merges the two, rather than sorting all of the site's events.
+SELECT own.* FROM events own
+WHERE own.site_id = sqlc.arg('SiteID')
+AND (CAST(sqlc.narg('Type') AS TEXT) IS NULL OR own.name = sqlc.narg('Type'))
+AND (CAST(sqlc.narg('Search') AS TEXT) IS NULL OR instr(lower(own.name), lower(sqlc.narg('Search'))) > 0
+  OR instr(lower(own.attributes), lower(sqlc.narg('Search'))) > 0)
+UNION ALL
+-- Search looks only in a batch's names, as its attributes are not shown
+SELECT batched.* FROM events batched
+WHERE batched.site_id IS NULL AND batched.batch = sqlc.arg('Batch')
+AND (CAST(sqlc.narg('Type') AS TEXT) IS NULL OR batched.name = sqlc.narg('Type'))
+AND (CAST(sqlc.narg('Search') AS TEXT) IS NULL OR instr(lower(batched.name), lower(sqlc.narg('Search'))) > 0)
 ORDER BY id DESC
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
