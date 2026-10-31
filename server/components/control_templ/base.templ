@@ -1,6 +1,8 @@
 package control_templ
 
 import (
+	"fmt"
+
 	"nighttroop.t1d.nz/server/components/footer"
 	"nighttroop.t1d.nz/server/components/ui/checkbox"
 	"nighttroop.t1d.nz/server/components/ui/copybutton"
@@ -55,9 +57,9 @@ templ ControlBase() {
 	</html>
 }
 
-// StatusBanner warns control admins about optional services that are not working
+// StatusBanner warns control admins about optional services that are not working, and resources running high
 templ StatusBanner(status config.ServerStatus) {
-	if !status.S3Working || !status.SentryWorking {
+	if !status.S3Working || !status.SentryWorking || len(status.HighResources) > 0 {
 		<div id="control--status-banner" class="bg-amber-500/10 border-b border-amber-500/20 text-amber-800 text-sm" role="alert">
 			<div class="mx-auto max-w-7xl px-4 py-2 sm:px-6 lg:px-8">
 				if !status.S3Working {
@@ -66,9 +68,24 @@ templ StatusBanner(status config.ServerStatus) {
 				if !status.SentryWorking {
 					<p id="control--status-banner--sentry"><strong>Sentry not connected:</strong> errors are not being reported.</p>
 				}
+				for _, level := range status.HighResources {
+					<p id={ "control--status-banner--" + level.Resource }><strong>{ resourceTitle(level) }:</strong> { resourceWarning(level) }</p>
+				}
 			</div>
 		</div>
 	}
+}
+
+func resourceTitle(level config.ResourceLevel) string {
+	return map[string]string{"memory": "Memory high", "disk": "Disk high", "cpu": "CPU high"}[level.Resource]
+}
+
+// resourceWarning says how high a resource was at the last check, and its alert level
+func resourceWarning(level config.ResourceLevel) string {
+	if level.Resource == "cpu" {
+		return fmt.Sprintf("at 100%% for %.0f seconds, and %.0f or more warns.", level.Value, level.Limit)
+	}
+	return fmt.Sprintf("%.0f%% used, and %.0f%% or more warns.", level.Value, level.Limit)
 }
 
 templ FullPage(content templ.Component) {

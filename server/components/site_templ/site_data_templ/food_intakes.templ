@@ -91,7 +91,7 @@ templ foodIntakeInputs(id string, carbs string, name string, notes string) {
 			Placeholder: "Carbs (g)",
 			Value:       carbs,
 			Required:    true,
-			Attributes:  templ.Attributes{"step": "any", "min": "0", "max": "1000"},
+			Attributes:  templ.Attributes{"step": "any", "min": "-1000", "max": "1000"},
 		})
 	}
 	@field.Field(id+"--name", "Name", "w-40") {

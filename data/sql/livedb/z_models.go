@@ -26,3 +26,11 @@ type Connection struct {
 	Collection string
 	OpenedAt   int64
 }
+
+type ResourceReading struct {
+	At               int64
+	CpuPercent       float64
+	CpuPeggedSeconds int64
+	MemoryPercent    *float64
+	DiskPercent      *float64
+}

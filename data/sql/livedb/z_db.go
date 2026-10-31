@@ -30,8 +30,14 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.closeConnectionStmt, err = db.PrepareContext(ctx, closeConnection); err != nil {
 		return nil, fmt.Errorf("error preparing query CloseConnection: %w", err)
 	}
+	if q.createResourceReadingStmt, err = db.PrepareContext(ctx, createResourceReading); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateResourceReading: %w", err)
+	}
 	if q.deleteAlarmStmt, err = db.PrepareContext(ctx, deleteAlarm); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteAlarm: %w", err)
+	}
+	if q.deleteResourceReadingsBeforeStmt, err = db.PrepareContext(ctx, deleteResourceReadingsBefore); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteResourceReadingsBefore: %w", err)
 	}
 	if q.getIdentityAlarmStmt, err = db.PrepareContext(ctx, getIdentityAlarm); err != nil {
 		return nil, fmt.Errorf("error preparing query GetIdentityAlarm: %w", err)
@@ -39,8 +45,14 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.identityAlarmsStmt, err = db.PrepareContext(ctx, identityAlarms); err != nil {
 		return nil, fmt.Errorf("error preparing query IdentityAlarms: %w", err)
 	}
+	if q.latestResourceReadingStmt, err = db.PrepareContext(ctx, latestResourceReading); err != nil {
+		return nil, fmt.Errorf("error preparing query LatestResourceReading: %w", err)
+	}
 	if q.openConnectionStmt, err = db.PrepareContext(ctx, openConnection); err != nil {
 		return nil, fmt.Errorf("error preparing query OpenConnection: %w", err)
+	}
+	if q.resourceReadingsSinceStmt, err = db.PrepareContext(ctx, resourceReadingsSince); err != nil {
+		return nil, fmt.Errorf("error preparing query ResourceReadingsSince: %w", err)
 	}
 	if q.siteAlarmsStmt, err = db.PrepareContext(ctx, siteAlarms); err != nil {
 		return nil, fmt.Errorf("error preparing query SiteAlarms: %w", err)
@@ -69,9 +81,19 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing closeConnectionStmt: %w", cerr)
 		}
 	}
+	if q.createResourceReadingStmt != nil {
+		if cerr := q.createResourceReadingStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createResourceReadingStmt: %w", cerr)
+		}
+	}
 	if q.deleteAlarmStmt != nil {
 		if cerr := q.deleteAlarmStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteAlarmStmt: %w", cerr)
+		}
+	}
+	if q.deleteResourceReadingsBeforeStmt != nil {
+		if cerr := q.deleteResourceReadingsBeforeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteResourceReadingsBeforeStmt: %w", cerr)
 		}
 	}
 	if q.getIdentityAlarmStmt != nil {
@@ -84,9 +106,19 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing identityAlarmsStmt: %w", cerr)
 		}
 	}
+	if q.latestResourceReadingStmt != nil {
+		if cerr := q.latestResourceReadingStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing latestResourceReadingStmt: %w", cerr)
+		}
+	}
 	if q.openConnectionStmt != nil {
 		if cerr := q.openConnectionStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing openConnectionStmt: %w", cerr)
+		}
+	}
+	if q.resourceReadingsSinceStmt != nil {
+		if cerr := q.resourceReadingsSinceStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing resourceReadingsSinceStmt: %w", cerr)
 		}
 	}
 	if q.siteAlarmsStmt != nil {
@@ -146,33 +178,41 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db                         DBTX
-	tx                         *sql.Tx
-	alarmSiteIDsStmt           *sql.Stmt
-	closeConnectionStmt        *sql.Stmt
-	deleteAlarmStmt            *sql.Stmt
-	getIdentityAlarmStmt       *sql.Stmt
-	identityAlarmsStmt         *sql.Stmt
-	openConnectionStmt         *sql.Stmt
-	siteAlarmsStmt             *sql.Stmt
-	snoozeAlarmStmt            *sql.Stmt
-	snoozedAlertingSiteIDsStmt *sql.Stmt
-	upsertAlarmStmt            *sql.Stmt
+	db                               DBTX
+	tx                               *sql.Tx
+	alarmSiteIDsStmt                 *sql.Stmt
+	closeConnectionStmt              *sql.Stmt
+	createResourceReadingStmt        *sql.Stmt
+	deleteAlarmStmt                  *sql.Stmt
+	deleteResourceReadingsBeforeStmt *sql.Stmt
+	getIdentityAlarmStmt             *sql.Stmt
+	identityAlarmsStmt               *sql.Stmt
+	latestResourceReadingStmt        *sql.Stmt
+	openConnectionStmt               *sql.Stmt
+	resourceReadingsSinceStmt        *sql.Stmt
+	siteAlarmsStmt                   *sql.Stmt
+	snoozeAlarmStmt                  *sql.Stmt
+	snoozedAlertingSiteIDsStmt       *sql.Stmt
+	upsertAlarmStmt                  *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                         tx,
-		tx:                         tx,
-		alarmSiteIDsStmt:           q.alarmSiteIDsStmt,
-		closeConnectionStmt:        q.closeConnectionStmt,
-		deleteAlarmStmt:            q.deleteAlarmStmt,
-		getIdentityAlarmStmt:       q.getIdentityAlarmStmt,
-		identityAlarmsStmt:         q.identityAlarmsStmt,
-		openConnectionStmt:         q.openConnectionStmt,
-		siteAlarmsStmt:             q.siteAlarmsStmt,
-		snoozeAlarmStmt:            q.snoozeAlarmStmt,
-		snoozedAlertingSiteIDsStmt: q.snoozedAlertingSiteIDsStmt,
-		upsertAlarmStmt:            q.upsertAlarmStmt,
+		db:                               tx,
+		tx:                               tx,
+		alarmSiteIDsStmt:                 q.alarmSiteIDsStmt,
+		closeConnectionStmt:              q.closeConnectionStmt,
+		createResourceReadingStmt:        q.createResourceReadingStmt,
+		deleteAlarmStmt:                  q.deleteAlarmStmt,
+		deleteResourceReadingsBeforeStmt: q.deleteResourceReadingsBeforeStmt,
+		getIdentityAlarmStmt:             q.getIdentityAlarmStmt,
+		identityAlarmsStmt:               q.identityAlarmsStmt,
+		latestResourceReadingStmt:        q.latestResourceReadingStmt,
+		openConnectionStmt:               q.openConnectionStmt,
+		resourceReadingsSinceStmt:        q.resourceReadingsSinceStmt,
+		siteAlarmsStmt:                   q.siteAlarmsStmt,
+		snoozeAlarmStmt:                  q.snoozeAlarmStmt,
+		snoozedAlertingSiteIDsStmt:       q.snoozedAlertingSiteIDsStmt,
+		upsertAlarmStmt:                  q.upsertAlarmStmt,
 	}
 }

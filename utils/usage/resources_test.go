@@ -1,0 +1,73 @@
+package usage
+
+import (
+	"os"
+	"path/filepath"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/require"
+)
+
+// The longest the CPU stays pegged runs across samples, starts again once it drops, and is taken once
+func TestCPUWatch(t *testing.T) {
+	start := time.Unix(0, 0)
+	at := func(seconds int) time.Time { return start.Add(time.Duration(seconds) * time.Second) }
+	tracker := New()
+	w := &tracker.watch
+	for i, percent := range []float64{50, 99, 100, 97, 40, 100, 100} {
+		w.record(percent, at(i*5), at(i*5+5))
+	}
+	mean, pegged := tracker.TakeCPU()
+	require.InDelta(t, 83.71, mean, 0.01)
+	require.Equal(t, 15*time.Second, pegged, "three pegged samples of 5 seconds")
+	mean, pegged = tracker.TakeCPU()
+	require.Zero(t, mean)
+	require.Zero(t, pegged)
+
+	// Still pegged after it was taken, so the run carries on from before
+	w.record(100, at(35), at(40))
+	_, pegged = tracker.TakeCPU()
+	require.Equal(t, 15*time.Second, pegged)
+
+	var none *Tracker
+	none.SampleCPU(at(0), 4)
+	mean, pegged = none.TakeCPU()
+	require.Zero(t, mean+pegged.Seconds())
+}
+
+func TestMemoryPercent(t *testing.T) {
+	write := func(dir, name, content string) {
+		require.NoError(t, os.WriteFile(filepath.Join(dir, name), []byte(content), 0o644))
+	}
+	meminfo := filepath.Join(t.TempDir(), "meminfo")
+	write(filepath.Dir(meminfo), "meminfo", "MemTotal:       1000 kB\nMemFree:  100 kB\nMemAvailable:    250 kB\n")
+
+	// A container's limit
+	limited := t.TempDir()
+	write(limited, "memory.max", "2000\n")
+	write(limited, "memory.current", "1500\n")
+	percent, ok := memoryPercent(limited, meminfo)
+	require.True(t, ok)
+	require.Equal(t, 75.0, percent)
+
+	// No limit, so the machine's
+	unlimited := t.TempDir()
+	write(unlimited, "memory.max", "max\n")
+	write(unlimited, "memory.current", "1500\n")
+	percent, ok = memoryPercent(unlimited, meminfo)
+	require.True(t, ok)
+	require.Equal(t, 75.0, percent)
+
+	// Neither, as on a Mac
+	_, ok = memoryPercent(t.TempDir(), filepath.Join(t.TempDir(), "missing"))
+	require.False(t, ok)
+}
+
+func TestDiskPercent(t *testing.T) {
+	percent, ok := DiskPercent(t.TempDir())
+	require.True(t, ok)
+	require.True(t, percent > 0 && percent <= 100, percent)
+	_, ok = DiskPercent(filepath.Join(t.TempDir(), "missing"))
+	require.False(t, ok)
+}

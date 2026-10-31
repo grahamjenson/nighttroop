@@ -396,7 +396,7 @@ func foodIntakeInputs(id string, carbs string, name string, notes string) templ.
 				Placeholder: "Carbs (g)",
 				Value:       carbs,
 				Required:    true,
-				Attributes:  templ.Attributes{"step": "any", "min": "0", "max": "1000"},
+				Attributes:  templ.Attributes{"step": "any", "min": "-1000", "max": "1000"},
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
