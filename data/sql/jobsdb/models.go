@@ -22,14 +22,11 @@ func (j *Job) TotalSuccess() int64 {
 	return 0
 }
 
+// Duration is how long the job ran, from a consumer fetching it to it finishing, in milliseconds
 func (j *Job) Duration() float64 {
-	// Annoying thing is this isnt how long it ran it is how long it waited
-	// TODO: Make this return two values, How long it took from queuing to finish, and how long it took from fetched to complete
 	return float64(j.FinishedAt - j.ConsumerFetchedAt)
 }
 
 func (j *Job) DurationSquared() float64 {
-	// Annoying thing is this isnt how long it ran it is how long it waited
-	// TODO: Make this return two values, How long it took from queuing to finish, and how long it took from fetched to complete
 	return j.Duration() * j.Duration()
 }

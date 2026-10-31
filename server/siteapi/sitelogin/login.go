@@ -24,8 +24,8 @@ import (
 	"nighttroop.t1d.nz/utils/security"
 )
 
-// TODO CSRF Token protection for all
-// TODO Form injections, make sure queries are good with that
+// LoginRequest is an identity's credentials. Cross-site requests cannot log in or act as an identity, as its cookies are
+// SameSite=Strict, and its fields only ever reach the DB through prepared statements.
 type LoginRequest struct {
 	Name     string `json:"name"`
 	Password string `json:"password"`

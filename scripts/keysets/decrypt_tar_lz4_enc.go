@@ -9,7 +9,7 @@ import (
 
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
-	s3utils "nighttroop.t1d.nz/utils/s3"
+	"nighttroop.t1d.nz/utils/s3utils"
 	"nighttroop.t1d.nz/utils/security"
 )
 
