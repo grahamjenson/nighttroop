@@ -9,6 +9,8 @@ type Error struct {
 	SiteID     *string
 	Message    string
 	Attributes *string
+	RequestID  *string
+	JobID      *string
 	CreatedAt  int64
 }
 
@@ -20,6 +22,8 @@ type Event struct {
 	Attributes *string
 	StartedAt  int64
 	FinishedAt *int64
+	RequestID  *string
+	JobID      *string
 }
 
 type Log struct {
@@ -28,5 +32,7 @@ type Log struct {
 	Level      string
 	Message    string
 	Attributes *string
+	RequestID  *string
+	JobID      *string
 	CreatedAt  int64
 }

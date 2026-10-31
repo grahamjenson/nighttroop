@@ -5,11 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/logsdb"
+	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/config"
 )
 
@@ -19,6 +22,9 @@ type LogsDB struct {
 	*logsdb.DB
 	// events are the server's events, which each event recorded here is sent through
 	events *events.SiteBus
+	// stop ends writing aslog.Logs, and done is closed once it has written the last of them
+	stop, done chan struct{}
+	stopOnce   sync.Once
 }
 
 // maxMessageLength and maxAttributesLength are the longest message and attributes JSON the tables keep
@@ -32,7 +38,65 @@ func NewLogsDB(ctx context.Context, cfg *config.ServerConfig) (*LogsDB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("cannot open logs db: %w", err)
 	}
-	return &LogsDB{DB: rawDB, events: cfg.Events}, nil
+	l := &LogsDB{DB: rawDB, events: cfg.Events, stop: make(chan struct{}), done: make(chan struct{})}
+	go l.writeLogs()
+	return l, nil
+}
+
+// writeLogs writes the server's slog logs, from aslog.Logs, to the logs table every second, or once FlushRecords are
+// held, until stopped
+func (l *LogsDB) writeLogs() {
+	defer close(l.done)
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-l.stop:
+			l.flush(aslog.Logs)
+			return
+		case <-ticker.C:
+		case <-aslog.Logs.Full:
+		}
+		l.flush(aslog.Logs)
+	}
+}
+
+// flush writes buffer's held logs in one transaction, and how many were dropped while the buffer was full. A failure is
+// written to standard error, not logged, so a broken DB does not fill the buffer with its own failures.
+func (l *LogsDB) flush(buffer *aslog.Buffer) {
+	records, dropped := buffer.Take()
+	if dropped > 0 {
+		records = append(records, aslog.Record{Time: time.Now(), Level: "warn", Message: fmt.Sprintf("Dropped %d logs while the buffer was full", dropped)})
+	}
+	if len(records) == 0 {
+		return
+	}
+	ctx := context.Background()
+	tx, err := l.SQLiteDB.BeginTx(ctx, nil)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Cannot write logs to the logs db:", err)
+		return
+	}
+	defer tx.Rollback()
+	q := l.Queries.WithTx(tx)
+	for _, r := range records {
+		err = q.InsertLog(ctx, logsdb.InsertLogParams{SiteID: orNil(r.SiteID), Level: r.Level, Message: r.Message, Attributes: orNil(r.Attributes),
+			RequestID: orNil(r.RequestID), JobID: orNil(r.JobID), CreatedAt: r.Time.UnixMilli()})
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Cannot write logs to the logs db:", err)
+			return
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		fmt.Fprintln(os.Stderr, "Cannot write logs to the logs db:", err)
+	}
+}
+
+// Close writes the last of the held logs, then closes the DB
+func (l *LogsDB) Close() error {
+	l.stopOnce.Do(func() { close(l.stop) })
+	<-l.done
+	return l.DB.Close()
 }
 
 // Recording is best effort: a log, event or error that cannot be written is only logged with slog, so recording
@@ -44,7 +108,9 @@ func (l *LogsDB) Log(ctx context.Context, siteID *string, level LogLevel, messag
 	if len(attributes) > 0 {
 		attrs = attributes
 	}
-	l.record("log", l.Queries.InsertLog(ctx, logsdb.InsertLogParams{SiteID: siteID, Level: string(level), Message: truncate(message), Attributes: attributesJSON(attrs)}))
+	requestID, jobID := aslog.IDs(ctx)
+	l.record("log", l.Queries.InsertLog(ctx, logsdb.InsertLogParams{SiteID: siteID, Level: string(level), Message: truncate(message), Attributes: attributesJSON(attrs),
+		RequestID: orNil(requestID), JobID: orNil(jobID), CreatedAt: time.Now().UnixMilli()}))
 }
 
 // publish sends an event through the server's events, and keeps it in the events table when it is persisted
@@ -59,7 +125,9 @@ func (l *LogsDB) publish(ctx context.Context, event events.Event) {
 	if event.FinishedAt != nil {
 		finished = new(event.FinishedAt.UnixMilli())
 	}
-	l.record("event", l.Queries.InsertEvent(ctx, logsdb.InsertEventParams{SiteID: orNil(event.SiteID), Batch: orNil(event.Batch), Name: string(event.Name), Attributes: attributesJSON(event.Attributes), StartedAt: event.StartedAt.UnixMilli(), FinishedAt: finished}))
+	requestID, jobID := aslog.IDs(ctx)
+	l.record("event", l.Queries.InsertEvent(ctx, logsdb.InsertEventParams{SiteID: orNil(event.SiteID), Batch: orNil(event.Batch), Name: string(event.Name), Attributes: attributesJSON(event.Attributes), StartedAt: event.StartedAt.UnixMilli(), FinishedAt: finished,
+		RequestID: orNil(requestID), JobID: orNil(jobID)}))
 }
 
 // event publishes an event about a site, or no one site when siteID is "", that happened now
@@ -83,7 +151,9 @@ func orNil(s string) *string {
 }
 
 func (l *LogsDB) error(ctx context.Context, siteID *string, err error, attributes any) {
-	l.record("error", l.Queries.InsertError(ctx, logsdb.InsertErrorParams{SiteID: siteID, Message: truncate(err.Error()), Attributes: attributesJSON(attributes)}))
+	requestID, jobID := aslog.IDs(ctx)
+	l.record("error", l.Queries.InsertError(ctx, logsdb.InsertErrorParams{SiteID: siteID, Message: truncate(err.Error()), Attributes: attributesJSON(attributes),
+		RequestID: orNil(requestID), JobID: orNil(jobID)}))
 }
 
 // Trim deletes all but each table's newest maxRows rows
