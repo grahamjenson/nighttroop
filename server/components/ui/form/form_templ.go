@@ -12,8 +12,8 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"github.com/templui/templui/utils"
 	"nighttroop.t1d.nz/server/components/ui/label"
+	"nighttroop.t1d.nz/utils/templui/utils"
 )
 
 type MessageVariant string

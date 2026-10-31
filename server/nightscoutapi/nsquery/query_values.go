@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/mitchellh/mapstructure"
+	"nighttroop.t1d.nz/utils/mapstructure"
 	"nighttroop.t1d.nz/utils/types"
 )
 
@@ -215,27 +215,12 @@ func ParseQueryValues(values url.Values) (QueryValues, error) {
 	}
 
 	var qv QueryValues
-	config := &mapstructure.DecoderConfig{
-		Result:  &qv,
-		TagName: "mapstructure",
-		MatchName: func(mapKey, fieldName string) bool {
-			v, ok := reverseLookupName[mapKey]
-			if ok {
-				mapKey = v
-			}
-			ret := strings.EqualFold(mapKey, fieldName)
-			return ret
-		},
-		DecodeHook: mapstructure.ComposeDecodeHookFunc(
-			types.JSONUnmarshalerHook,
-		),
-	}
-
-	decoder, err := mapstructure.NewDecoder(config)
-	if err != nil {
-		return QueryValues{}, fmt.Errorf("failed to create mapstructure decoder: %w", err)
-	}
-	err = decoder.Decode(qvMap)
+	err := mapstructure.Decode(qvMap, &qv, func(mapKey, fieldName string) bool {
+		if v, ok := reverseLookupName[mapKey]; ok {
+			mapKey = v
+		}
+		return strings.EqualFold(mapKey, fieldName)
+	})
 	if err != nil {
 		return QueryValues{}, fmt.Errorf("failed to decode query values: %w", err)
 	}
