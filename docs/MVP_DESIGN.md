@@ -1,15 +1,16 @@
 # NightTroop Design
 
-Night**Troop** hosts many (10kish) Night**Scout** servers. 
-The main goal is to reduce the complexity of setting up NightScout to a single **FREE** click.
+This document is the stories I want the user and the admin to experience when using Nighttroop for the MVP.
 
-# On Boarding
+## Site User
+
+### On Boarding
 
 1. Go to nt01au.t1d.nz (something like nt<instance #><zone>.t1d.nz)
 2. Click the "Create Site" button
 3. Copy the **Site Data** and store it somewhere safe
 
-# Getting data into Nighttroop
+### Getting data into Nighttroop
 
 Getting the BGL and treatment data into Nightscout should be pretty easy
 
