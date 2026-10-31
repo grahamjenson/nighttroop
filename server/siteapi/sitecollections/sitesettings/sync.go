@@ -22,6 +22,7 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/errors"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/security"
 )
 
 type SyncSettingsCollection struct{}
@@ -64,12 +65,12 @@ func (s *SyncSettingsCollection) CreateRow(ctx context.Context, collectionTx *si
 		params.UrlOrUsernameEnc, params.PasswordEnc = new("virtual"), new("virtual")
 	}
 
-	if params.UrlOrUsernameEnc == nil || strings.TrimSpace(*params.UrlOrUsernameEnc) == "" {
+	if params.UrlOrUsernameEnc == nil {
 		return nil, apiutils.ErrMissingRequiredFieldWithHint("Url Or Username")
 	}
-	params.UrlOrUsernameEnc = new(strings.TrimSpace(*params.UrlOrUsernameEnc))
-
-	security := siteContext.Config.Security
+	if params.UrlOrUsernameEnc, err = cleanURLOrUsername(ctx, siteContext, params.Type, params.UrlOrUsernameEnc); err != nil {
+		return nil, err
+	}
 
 	if params.Type == consts.SyncSourceTypeLibre {
 		if params.Region == nil || *params.Region == "" {
@@ -80,49 +81,21 @@ func (s *SyncSettingsCollection) CreateRow(ctx context.Context, collectionTx *si
 		}
 	}
 
-	// Nightscout specific validation and normalization
-	if params.Type == consts.SyncSourceTypeNightscout {
-		normalized, err := nsURLNormalizeValidate(params.UrlOrUsernameEnc, siteContext.Config)
-		if err != nil {
-			slog.ErrorContext(ctx, "Failed to normalize and validate Nightscout URL", "error", err, "url", *params.UrlOrUsernameEnc)
-			return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Nightscout URL '%s' is not a valid URL. %s", *params.UrlOrUsernameEnc, err))
-		}
-		params.UrlOrUsernameEnc = normalized
-	}
-
 	if params.PasswordEnc == nil || *params.PasswordEnc == "" {
 		return nil, apiutils.ErrMissingRequiredFieldWithHint("password")
 	}
 
-	encPassword, err := security.Encrypt(*params.PasswordEnc)
-	if err != nil {
-		return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Failed to encrypt Nightscout password: %s", err))
+	if err := encryptCredentials(siteContext.Config.Security, params.UrlOrUsernameEnc, params.PasswordEnc); err != nil {
+		return nil, err
 	}
-	params.PasswordEnc = &encPassword
-
-	encUrlOrUsername, err := security.Encrypt(*params.UrlOrUsernameEnc)
-	if err != nil {
-		return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Failed to encrypt Nightscout URL: %s", err))
-	}
-	params.UrlOrUsernameEnc = &encUrlOrUsername
 
 	q, err := collectionTx.Control()
 	if err != nil {
 		return nil, err
 	}
 
-	err = q.CreateSyncSource(ctx, params)
-	if err != nil {
-		if errors.IsSQLUniqueViolationError(err) {
-			return nil, apiutils.ErrUniqueConstraintViolation
-		}
-		if errors.IsSQLConstraintNotNull(err) {
-			return nil, apiutils.ErrMissingRequiredField
-		}
-		if errors.IsSQLConstraintCheck(err) {
-			return nil, apiutils.ErrConstraintCheckFailedWithHint(err.Error())
-		}
-		return nil, apiutils.ErrBadBody
+	if err := q.CreateSyncSource(ctx, params); err != nil {
+		return nil, syncSourceWriteError(err)
 	}
 
 	return model, nil
@@ -136,6 +109,7 @@ func (s *SyncSettingsCollection) CreateHTMXResponse(model *sitemodels.SyncSource
 // Update
 // ///
 
+// UpdateRow changes the fields sent of the site's sync source, keeping its type
 func (s *SyncSettingsCollection) UpdateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, oldModel *sitemodels.SyncSource, model *sitemodels.SyncSource) (*sitemodels.SyncSource, error) {
 	if allowed, seconds := httputils.UserUpdateSyncWithinRateLimit(siteContext); !allowed {
 		return nil, apiutils.ErrRateLimitExceeded(seconds)
@@ -149,50 +123,24 @@ func (s *SyncSettingsCollection) UpdateRow(ctx context.Context, collectionTx *si
 	var err error
 
 	if params.UrlOrUsernameEnc != nil {
-		if strings.TrimSpace(*params.UrlOrUsernameEnc) == "" {
-			return nil, apiutils.ErrMissingRequiredFieldWithHint("Url Or Username")
+		if params.UrlOrUsernameEnc, err = cleanURLOrUsername(ctx, siteContext, params.Type, params.UrlOrUsernameEnc); err != nil {
+			return nil, err
 		}
-		// Trim like create does, so pasted spaces do not make the URL invalid
-		params.UrlOrUsernameEnc = new(strings.TrimSpace(*params.UrlOrUsernameEnc))
 	}
 
-	security := siteContext.Config.Security
-
-	if oldModel.Type == consts.SyncSourceTypeLibre && params.Region != nil {
+	if params.Type == consts.SyncSourceTypeLibre && params.Region != nil {
 		if err := libreRegionValidate(params.Region); err != nil {
 			return nil, err
 		}
 	}
 
-	// Nightscout specific validation and normalization
-	if oldModel.Type == consts.SyncSourceTypeNightscout {
-		if params.UrlOrUsernameEnc != nil {
-			normalized, err := nsURLNormalizeValidate(params.UrlOrUsernameEnc, siteContext.Config)
-			if err != nil {
-				slog.ErrorContext(ctx, "Failed to normalize and validate Nightscout URL", "error", err, "url", *params.UrlOrUsernameEnc)
-				return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Nightscout URL '%s' is not a valid URL. %s", *params.UrlOrUsernameEnc, err))
-			}
-			params.UrlOrUsernameEnc = normalized
-		}
+	// A blank password, or the placeholder the form shows for the saved one, keeps the saved one
+	if params.PasswordEnc != nil && (strings.TrimSpace(*params.PasswordEnc) == "" || *params.PasswordEnc == consts.PASSWORD_GARBAGE_VALUE) {
+		params.PasswordEnc = nil
 	}
 
-	if params.PasswordEnc != nil {
-		if strings.TrimSpace(*params.PasswordEnc) == "" || *params.PasswordEnc == consts.PASSWORD_GARBAGE_VALUE {
-			params.PasswordEnc = nil
-		} else {
-			*params.PasswordEnc, err = security.Encrypt(*params.PasswordEnc)
-			if err != nil {
-				return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Failed to encrypt Password: %s", err))
-			}
-
-		}
-	}
-
-	if params.UrlOrUsernameEnc != nil {
-		*params.UrlOrUsernameEnc, err = security.Encrypt(*params.UrlOrUsernameEnc)
-		if err != nil {
-			return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Failed to encrypt URL Or Username: %s", err))
-		}
+	if err := encryptCredentials(siteContext.Config.Security, params.UrlOrUsernameEnc, params.PasswordEnc); err != nil {
+		return nil, err
 	}
 
 	q, err := collectionTx.Control()
@@ -200,18 +148,8 @@ func (s *SyncSettingsCollection) UpdateRow(ctx context.Context, collectionTx *si
 		return nil, err
 	}
 
-	err = q.UpdateSyncSource(ctx, params)
-	if err != nil {
-		if errors.IsSQLUniqueViolationError(err) {
-			return nil, apiutils.ErrUniqueConstraintViolation
-		}
-		if errors.IsSQLConstraintNotNull(err) {
-			return nil, apiutils.ErrMissingRequiredField
-		}
-		if errors.IsSQLConstraintCheck(err) {
-			return nil, apiutils.ErrConstraintCheckFailed
-		}
-		return nil, apiutils.ErrBadBody
+	if err := q.UpdateSyncSource(ctx, params); err != nil {
+		return nil, syncSourceWriteError(err)
 	}
 
 	return model, nil
@@ -348,6 +286,52 @@ func (s *SyncSettingsCollection) DeleteHTMXResponse(model *sitemodels.SyncSource
 ///////
 // UTIL METHODS
 ////////
+
+// cleanURLOrUsername is the URL or username trimmed, as pasted spaces would make a URL invalid, with a Nightscout URL
+// normalised, or why it cannot be used
+func cleanURLOrUsername(ctx context.Context, siteContext *httputils.SiteContext, sstype consts.SyncSourceType, urlOrUsername *string) (*string, error) {
+	trimmed := strings.TrimSpace(*urlOrUsername)
+	if trimmed == "" {
+		return nil, apiutils.ErrMissingRequiredFieldWithHint("Url Or Username")
+	}
+	if sstype != consts.SyncSourceTypeNightscout {
+		return &trimmed, nil
+	}
+	normalized, err := nsURLNormalizeValidate(&trimmed, siteContext.Config)
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to normalize and validate Nightscout URL", "error", err, "url", trimmed)
+		return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Nightscout URL '%s' is not a valid URL. %s", trimmed, err))
+	}
+	return normalized, nil
+}
+
+// encryptCredentials encrypts in place each of the sync source's URL or username and password that is set
+func encryptCredentials(security *security.SecurityConfig, credentials ...*string) error {
+	for _, credential := range credentials {
+		if credential == nil {
+			continue
+		}
+		encrypted, err := security.Encrypt(*credential)
+		if err != nil {
+			return apiutils.ErrBadBodyWithHint(fmt.Sprintf("Failed to encrypt sync source credentials: %s", err))
+		}
+		*credential = encrypted
+	}
+	return nil
+}
+
+// syncSourceWriteError is the error for the control DB refusing to create or update a sync source
+func syncSourceWriteError(err error) error {
+	switch {
+	case errors.IsSQLUniqueViolationError(err):
+		return apiutils.ErrUniqueConstraintViolation
+	case errors.IsSQLConstraintNotNull(err):
+		return apiutils.ErrMissingRequiredField
+	case errors.IsSQLConstraintCheck(err):
+		return apiutils.ErrConstraintCheckFailedWithHint(err.Error())
+	}
+	return apiutils.ErrBadBody
+}
 
 func nsURLNormalizeValidate(rawUrl *string, config *config.ServerConfig) (*string, error) {
 	if rawUrl == nil {
