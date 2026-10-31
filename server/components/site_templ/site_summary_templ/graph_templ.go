@@ -32,10 +32,6 @@ func Graph(summary *sitemodels.Summary) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var1 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var1 == nil {
-			templ_7745c5c3_Var1 = templ.NopComponent
-		}
 		ctx = templ.ClearChildren(ctx)
 		chart := graph(summary, time.Now().UnixMilli(), site_data_templ.Location(ctx))
 		snippet := chart.RenderSnippet()
@@ -44,7 +40,7 @@ func Graph(summary *sitemodels.Summary) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var2 string
-		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(chart.ChartID)
+		templ_7745c5c3_Var2, templ_7745c5c3_Err = templruntime.NewAttributeExpression(chart.ChartID).Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/graph.templ`, Line: 16, Col: 25}
 		}
