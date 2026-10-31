@@ -1,3 +1,3 @@
 package nightscoutmodels
 
-//go:generate goverter gen .
+//go:generate go tool goverter gen .
