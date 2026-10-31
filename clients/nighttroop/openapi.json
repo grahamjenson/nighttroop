@@ -3,7 +3,7 @@
   "info": {
     "title": "Nighttroop",
     "version": "0.1.0",
-    "description": "Nighttroop's JSON API. POST /site is on the public host (https://<host>); everything else is on a site's host (https://<site>.<host>) with a JWT from POST /login. Times are milliseconds since the epoch, and glucose is in the units of the signed in identity's settings."
+    "description": "Nighttroop's JSON API. POST /site is on the public host (https://<host>); /api/... is the Nightscout API, on a site's Nightscout host (https://<site>.ns.<host>); everything else is on a site's host (https://<site>.<host>) with a JWT from POST /login. Times are milliseconds since the epoch, and glucose is in the units of the signed in identity's settings; a Nightscout document says its units in its units field."
   },
   "security": [{ "bearerAuth": [] }],
   "paths": {
@@ -124,21 +124,220 @@
         "operationId": "DeleteFoodIntake",
         "responses": { "200": { "$ref": "#/components/responses/Deleted" }, "default": { "$ref": "#/components/responses/Error" } }
       }
+    },
+    "/api/v2/authorization/request/{token}": {
+      "get": {
+        "operationId": "NsV2Authorize",
+        "summary": "Exchanges a device's Nightscout token for a JWT",
+        "security": [],
+        "parameters": [{ "name": "token", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "A JWT", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/NsAuthorization" } } } }, "default": { "$ref": "#/components/responses/NsError" } }
+      }
+    },
+    "/api/v3/authorization/request/{token}": {
+      "get": {
+        "operationId": "NsV3Authorize",
+        "summary": "Exchanges a device's Nightscout token for a JWT",
+        "security": [],
+        "parameters": [{ "name": "token", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "A JWT", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/NsAuthorization" } } } }, "default": { "$ref": "#/components/responses/NsError" } }
+      }
+    },
+    "/api/v1/status": {
+      "get": { "operationId": "NsV1Status", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsObject" } } }
+    },
+    "/api/v1/versions": {
+      "get": { "operationId": "NsV1Versions", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsDocuments" } } }
+    },
+    "/api/v1/verifyauth": {
+      "get": { "operationId": "NsV1VerifyAuth", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsObject" } } }
+    },
+    "/api/v1/{collection}": {
+      "parameters": [{ "$ref": "#/components/parameters/NsCollection" }],
+      "get": {
+        "operationId": "NsV1Search",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/NsCount" }, { "$ref": "#/components/parameters/Skip" }, { "$ref": "#/components/parameters/NsSort" }, { "$ref": "#/components/parameters/NsSortDesc" }, { "$ref": "#/components/parameters/NsFields" }, { "$ref": "#/components/parameters/NsDateGte" }, { "$ref": "#/components/parameters/NsDateLte" }],
+        "responses": { "200": { "$ref": "#/components/responses/NsDocuments" }, "default": { "$ref": "#/components/responses/NsError" } }
+      },
+      "post": {
+        "operationId": "NsV1Create",
+        "summary": "Creates one document or each in an array, and returns those created",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "requestBody": { "$ref": "#/components/requestBodies/NsDocuments" },
+        "responses": { "200": { "$ref": "#/components/responses/NsDocuments" }, "default": { "$ref": "#/components/responses/NsError" } }
+      },
+      "put": {
+        "operationId": "NsV1ReplaceByBody",
+        "summary": "Replaces the document with the _id in the body",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "requestBody": { "$ref": "#/components/requestBodies/NsDocument" },
+        "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } }
+      }
+    },
+    "/api/v1/{collection}/current": {
+      "parameters": [{ "$ref": "#/components/parameters/NsCollection" }],
+      "get": { "operationId": "NsV1Current", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsDocuments" }, "default": { "$ref": "#/components/responses/NsError" } } }
+    },
+    "/api/v1/{collection}/{identifier}": {
+      "parameters": [{ "$ref": "#/components/parameters/NsCollection" }, { "$ref": "#/components/parameters/NsIdentifier" }],
+      "get": {
+        "operationId": "NsV1Get",
+        "summary": "The document with the identifier, or the documents of a type, such as sgv",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/NsCount" }, { "$ref": "#/components/parameters/NsFields" }],
+        "responses": { "200": { "$ref": "#/components/responses/NsDocuments" }, "default": { "$ref": "#/components/responses/NsError" } }
+      },
+      "put": {
+        "operationId": "NsV1Replace",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "requestBody": { "$ref": "#/components/requestBodies/NsDocument" },
+        "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } }
+      },
+      "delete": {
+        "operationId": "NsV1Delete",
+        "summary": "Deletes the document with the identifier, or the documents of a type",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/NsPermanent" }],
+        "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } }
+      }
+    },
+    "/api/v1/slice/{collection}/{field}/{type}/{prefix}": {
+      "parameters": [{ "$ref": "#/components/parameters/NsCollection" }],
+      "get": {
+        "operationId": "NsV1Slice",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "parameters": [{ "name": "field", "in": "path", "required": true, "schema": { "type": "string" } }, { "name": "type", "in": "path", "required": true, "schema": { "type": "string" } }, { "name": "prefix", "in": "path", "required": true, "schema": { "type": "string" } }, { "$ref": "#/components/parameters/NsCount" }],
+        "responses": { "200": { "$ref": "#/components/responses/NsDocuments" }, "default": { "$ref": "#/components/responses/NsError" } }
+      }
+    },
+    "/api/v1/count/{collection}/where": {
+      "parameters": [{ "$ref": "#/components/parameters/NsCollection" }],
+      "get": {
+        "operationId": "NsV1Count",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/NsDateGte" }, { "$ref": "#/components/parameters/NsDateLte" }],
+        "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } }
+      }
+    },
+    "/api/v1/times/{prefix}": {
+      "get": {
+        "operationId": "NsV1Times",
+        "summary": "The entries whose dateString starts with the prefix, such as 2026-10",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "parameters": [{ "name": "prefix", "in": "path", "required": true, "schema": { "type": "string" } }, { "$ref": "#/components/parameters/NsCount" }],
+        "responses": { "200": { "$ref": "#/components/responses/NsDocuments" }, "default": { "$ref": "#/components/responses/NsError" } }
+      }
+    },
+    "/api/v1/echo/{collection}": {
+      "parameters": [{ "$ref": "#/components/parameters/NsCollection" }],
+      "get": { "operationId": "NsV1Echo", "summary": "How a search of the collection is understood, without running it", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsObject" } } }
+    },
+    "/api/v2/properties": {
+      "get": { "operationId": "NsV2Properties", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } } }
+    },
+    "/api/v2/properties/{names}": {
+      "get": {
+        "operationId": "NsV2PropertiesNamed",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "parameters": [{ "name": "names", "in": "path", "required": true, "description": "Comma separated, such as bgnow,delta", "schema": { "type": "string" } }],
+        "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } }
+      }
+    },
+    "/api/v2/summary": {
+      "get": { "operationId": "NsV2Summary", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } } }
+    },
+    "/api/v3/version": {
+      "get": { "operationId": "NsV3Version", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsV3Result" } } }
+    },
+    "/api/v3/status": {
+      "get": { "operationId": "NsV3Status", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsV3Result" }, "default": { "$ref": "#/components/responses/NsError" } } }
+    },
+    "/api/v3/test": {
+      "get": { "operationId": "NsV3Test", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsV3Result" }, "default": { "$ref": "#/components/responses/NsError" } } }
+    },
+    "/api/v3/lastModified": {
+      "get": { "operationId": "NsV3LastModified", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsV3Result" }, "default": { "$ref": "#/components/responses/NsError" } } }
+    },
+    "/api/v3/{collection}": {
+      "parameters": [{ "$ref": "#/components/parameters/NsCollection" }],
+      "get": {
+        "operationId": "NsV3Search",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/Limit" }, { "$ref": "#/components/parameters/Skip" }, { "$ref": "#/components/parameters/NsSort" }, { "$ref": "#/components/parameters/NsSortDesc" }, { "$ref": "#/components/parameters/NsFields" }, { "$ref": "#/components/parameters/NsDateGte" }, { "$ref": "#/components/parameters/NsDateLte" }],
+        "responses": { "200": { "$ref": "#/components/responses/NsV3Documents" }, "default": { "$ref": "#/components/responses/NsError" } }
+      },
+      "post": {
+        "operationId": "NsV3Create",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "requestBody": { "$ref": "#/components/requestBodies/NsDocument" },
+        "responses": { "200": { "$ref": "#/components/responses/NsV3Document" }, "201": { "$ref": "#/components/responses/NsV3Document" }, "default": { "$ref": "#/components/responses/NsError" } }
+      }
+    },
+    "/api/v3/{collection}/history/{since}": {
+      "parameters": [{ "$ref": "#/components/parameters/NsCollection" }],
+      "get": {
+        "operationId": "NsV3History",
+        "summary": "The documents changed since a time, the oldest change first, including deletions",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "parameters": [{ "name": "since", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" } }, { "$ref": "#/components/parameters/Limit" }],
+        "responses": { "200": { "$ref": "#/components/responses/NsV3Documents" }, "default": { "$ref": "#/components/responses/NsError" } }
+      }
+    },
+    "/api/v3/{collection}/{identifier}": {
+      "parameters": [{ "$ref": "#/components/parameters/NsCollection" }, { "$ref": "#/components/parameters/NsIdentifier" }],
+      "get": {
+        "operationId": "NsV3Read",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/NsFields" }],
+        "responses": { "200": { "$ref": "#/components/responses/NsV3Document" }, "default": { "$ref": "#/components/responses/NsError" } }
+      },
+      "put": {
+        "operationId": "NsV3Replace",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "requestBody": { "$ref": "#/components/requestBodies/NsDocument" },
+        "responses": { "200": { "$ref": "#/components/responses/NsV3Document" }, "201": { "$ref": "#/components/responses/NsV3Document" }, "default": { "$ref": "#/components/responses/NsError" } }
+      },
+      "patch": {
+        "operationId": "NsV3Patch",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "requestBody": { "$ref": "#/components/requestBodies/NsDocument" },
+        "responses": { "200": { "$ref": "#/components/responses/NsV3Document" }, "default": { "$ref": "#/components/responses/NsError" } }
+      },
+      "delete": {
+        "operationId": "NsV3Delete",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/NsPermanent" }],
+        "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } }
+      }
     }
   },
   "components": {
     "securitySchemes": {
-      "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" }
+      "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" },
+      "nsToken": { "type": "apiKey", "in": "query", "name": "token", "description": "A device's Nightscout token" },
+      "nsApiSecret": { "type": "apiKey", "in": "header", "name": "api-secret", "description": "The SHA-1 hex of a device's Nightscout token" }
     },
     "parameters": {
       "Id": { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } },
       "Limit": { "name": "limit", "in": "query", "description": "At most 1000", "schema": { "type": "integer", "format": "int64" } },
-      "Skip": { "name": "skip", "in": "query", "schema": { "type": "integer", "format": "int64" } }
+      "Skip": { "name": "skip", "in": "query", "schema": { "type": "integer", "format": "int64" } },
+      "NsCollection": { "name": "collection", "in": "path", "required": true, "schema": { "type": "string", "enum": ["entries", "treatments", "devicestatus", "profile", "food", "settings", "activity"] } },
+      "NsIdentifier": { "name": "identifier", "in": "path", "required": true, "schema": { "type": "string" } },
+      "NsCount": { "name": "count", "in": "query", "description": "How many documents, at most 1000", "schema": { "type": "integer", "format": "int64" } },
+      "NsSort": { "name": "sort", "in": "query", "description": "A field to sort by, ascending", "schema": { "type": "string" } },
+      "NsSortDesc": { "name": "sort$desc", "in": "query", "description": "A field to sort by, descending", "schema": { "type": "string" } },
+      "NsFields": { "name": "fields", "in": "query", "description": "Comma separated fields to return", "schema": { "type": "string" } },
+      "NsDateGte": { "name": "date$gte", "in": "query", "description": "Documents from this time, in milliseconds", "schema": { "type": "integer", "format": "int64" } },
+      "NsDateLte": { "name": "date$lte", "in": "query", "description": "Documents up to this time, in milliseconds", "schema": { "type": "integer", "format": "int64" } },
+      "NsPermanent": { "name": "permanent", "in": "query", "description": "Deletes the row instead of marking it deleted", "schema": { "type": "boolean" } }
     },
     "requestBodies": {
       "GlucoseReadingBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GlucoseReading" } } } },
       "InsulinDoseBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/InsulinDose" } } } },
-      "FoodIntakeBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FoodIntake" } } } }
+      "FoodIntakeBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FoodIntake" } } } },
+      "NsDocument": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/NsDocument" } } } },
+      "NsDocuments": { "required": true, "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/NsDocument" } } } } }
     },
     "responses": {
       "Error": { "description": "An error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
@@ -148,7 +347,13 @@
       "InsulinDoseResult": { "description": "A dose", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "$ref": "#/components/schemas/InsulinDose" } } } } } },
       "InsulinDoseList": { "description": "Doses, newest first", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "type": "array", "items": { "$ref": "#/components/schemas/InsulinDose" } } } } } } },
       "FoodIntakeResult": { "description": "A food intake", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "$ref": "#/components/schemas/FoodIntake" } } } } } },
-      "FoodIntakeList": { "description": "Food intakes, newest first", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "type": "array", "items": { "$ref": "#/components/schemas/FoodIntake" } } } } } } }
+      "FoodIntakeList": { "description": "Food intakes, newest first", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "type": "array", "items": { "$ref": "#/components/schemas/FoodIntake" } } } } } } },
+      "NsError": { "description": "A Nightscout error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "NsObject": { "description": "A Nightscout response", "content": { "application/json": { "schema": { "type": "object", "additionalProperties": true } } } },
+      "NsDocuments": { "description": "Documents, newest first", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/NsDocument" } } } } },
+      "NsV3Result": { "description": "An API v3 result", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": {} } } } } },
+      "NsV3Document": { "description": "A document", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "identifier": { "type": "string" }, "lastModified": { "type": "integer", "format": "int64" }, "isDeduplication": { "type": "boolean" }, "result": { "$ref": "#/components/schemas/NsDocument" } } } } } },
+      "NsV3Documents": { "description": "Documents", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "type": "array", "items": { "$ref": "#/components/schemas/NsDocument" } } } } } } }
     },
     "schemas": {
       "Error": {
@@ -285,6 +490,43 @@
           "glucose_readings": { "type": "array", "items": { "$ref": "#/components/schemas/CleanGlucoseReading" } },
           "insulin_doses": { "type": "array", "items": { "$ref": "#/components/schemas/InsulinDose" } },
           "food_intakes": { "type": "array", "items": { "$ref": "#/components/schemas/FoodIntake" } }
+        }
+      },
+      "NsAuthorization": {
+        "type": "object",
+        "properties": {
+          "token": { "type": "string", "description": "A JWT, sent as Authorization: Bearer <token>" },
+          "sub": { "type": "string" },
+          "permissionGroups": { "type": "array", "items": { "type": "array", "items": { "type": "string" } } },
+          "iat": { "type": "integer", "format": "int64" },
+          "exp": { "type": "integer", "format": "int64" }
+        }
+      },
+      "NsDocument": {
+        "type": "object",
+        "description": "A Nightscout document, such as an entry or treatment; the fields named here are common to most, the rest are kept in AdditionalProperties",
+        "additionalProperties": true,
+        "properties": {
+          "_id": { "type": "string" },
+          "identifier": { "type": "string" },
+          "type": { "type": "string" },
+          "eventType": { "type": "string" },
+          "date": { "type": "integer", "format": "int64" },
+          "dateString": { "type": "string" },
+          "created_at": { "type": "string" },
+          "sgv": { "type": "number", "format": "double", "description": "In units" },
+          "mbg": { "type": "number", "format": "double", "description": "In units" },
+          "units": { "type": "string", "description": "The units of sgv and mbg, the identity's" },
+          "direction": { "type": "string" },
+          "insulin": { "type": "number", "format": "double" },
+          "carbs": { "type": "number", "format": "double" },
+          "notes": { "type": "string" },
+          "enteredBy": { "type": "string" },
+          "device": { "type": "string" },
+          "utcOffset": { "type": "integer", "format": "int64" },
+          "srvModified": { "type": "integer", "format": "int64" },
+          "srvCreated": { "type": "integer", "format": "int64" },
+          "isValid": { "type": "boolean" }
         }
       },
       "SummaryList": {

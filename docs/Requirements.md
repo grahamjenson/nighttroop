@@ -155,6 +155,8 @@ deleted (after a confirmation):
 - Every site page is also a JSON API, with a JWT from signing in.
 - A Go client, `clients/nighttroop`, is generated from its OpenAPI schema. It can create a site, sign in, read the
   summary, and list, read, add, edit and delete glucose readings, insulin doses and food intakes.
+- The client also calls every Nightscout API v1, v2 and v3 endpoint on a site's Nightscout host, with a device's
+  Nightscout token or the JWT it is exchanged for.
 
 ### Backups and limits
 
