@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -31,11 +32,15 @@ var embeddedFiles embed.FS
 // TestSite/shardN/<file>, so run one with -run 'TestSite//summary'.
 const bddShards = 4
 
-func TestSite(t *testing.T) {
+// TestMain sets the environment before any test loads the package's one config, which its rate limiters copy then
+func TestMain(m *testing.M) {
 	// Every scenario logs in from 127.0.0.1, and the shards share one config's rate limiters, so the per-IP login
 	// burst is shared across all files. They use nearly 100 attempts, so leave room for more files.
-	t.Setenv("SITE_LOGIN_PER_MINUTE_BURST", "1000")
+	os.Setenv("SITE_LOGIN_PER_MINUTE_BURST", "1000")
+	os.Exit(m.Run())
+}
 
+func TestSite(t *testing.T) {
 	// Start Playwright
 	pw, err := playwright.Run()
 	require.NoError(t, err)

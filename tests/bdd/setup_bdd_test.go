@@ -41,8 +41,7 @@ func TestResourceAlerts(t *testing.T) {
 // it, with the values prepare gives the file. Its browser sends its own address, so its attempts do not spend
 // TestSite's login limit for 127.0.0.1, whose forwarding is trusted.
 func runOnOwnServer(t *testing.T, path string, address string, configure func(*config.ServerConfig), prepare func(*db.ControlDB) map[string]any) {
-	// The test config is loaded once for every test here, so it is loaded with TestSite's login burst
-	t.Setenv("SITE_LOGIN_PER_MINUTE_BURST", "100")
+	// The test config is loaded once for every test here, with the login burst TestMain sets for TestSite
 	pw, err := playwright.Run()
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = pw.Stop() })

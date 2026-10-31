@@ -1,7 +1,8 @@
 // Package components contains the http html components
 package components
 
-//go:generate templ generate -include-version=false
+// templ is the go.mod tool, so its generated code always matches the templ library it is built with
+//go:generate go tool templ generate -include-version=false
 
 //go:generate tailwindcss -i ./css/input.css -o ../assets/static/style_gen.css
 
