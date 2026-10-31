@@ -36,13 +36,14 @@ ASSERT_TEXT_VISIBLE Correction
 ASSERT_TEXT_VISIBLE 2026-01-02 12:30
 ASSERT_NOT_VISIBLE #site--insulin--empty
 
-// Left blank, it is given now
+// Left blank, it is given now, and fields left blank are not set
 CLICK #site--insulin--add
 INPUT #site--insulin--create--dose 4
 INPUT #site--insulin--create--notes Lunch
 CLICK #site--insulin--create--submit
 ASSERT_STATUS 201
 ASSERT_TEXT_VISIBLE Lunch
+ASSERT_TEXT_EQUALS #insulinDosesTable>tbody>tr:first-child>td:nth-child(3) -
 SCREENSHOT insulin_dose_created
 
 // Clicking a dose shows all its details, and they can be edited, which updates its row

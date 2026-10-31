@@ -69,7 +69,7 @@ templ Modal(p Props) {
 			hx-swap="afterbegin"
 			hx-status:4xx="target:#toaster swap:beforeend"
 			hx-status:5xx="target:#toaster swap:beforeend"
-			{ closeOnAdded(p.EmptyID)... }
+			{ formHandlers(p.EmptyID)... }
 		>
 			for _, f := range p.Fields {
 				@field(p, f)
@@ -78,9 +78,13 @@ templ Modal(p Props) {
 	}
 }
 
-// closeOnAdded empties the modal container once a record is added, and removes the empty table's row
-func closeOnAdded(emptyID string) templ.Attributes {
-	return templ.Attributes{"hx-on::after:request": templ.JSUnsafeFuncCall("if (ctx.response.status < 400) { document.getElementById('modal-container').innerHTML = ''; document.getElementById('" + emptyID + "')?.remove() }")}
+// formHandlers leave out the fields left blank, so they are not set rather than empty, then once a record is added,
+// empty the modal container and remove the empty table's row
+func formHandlers(emptyID string) templ.Attributes {
+	return templ.Attributes{
+		"hx-on::config:request": templ.JSUnsafeFuncCall("for (const [name, value] of [...ctx.request.body]) { if (value === '') ctx.request.body.delete(name) }"),
+		"hx-on::after:request":  templ.JSUnsafeFuncCall("if (ctx.response.status < 400) { document.getElementById('modal-container').innerHTML = ''; document.getElementById('" + emptyID + "')?.remove() }"),
+	}
 }
 
 templ submit(p Props) {
