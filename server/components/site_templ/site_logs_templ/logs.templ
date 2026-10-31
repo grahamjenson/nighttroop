@@ -86,6 +86,18 @@ templ attributesDetail(id string, raw json.RawMessage) {
 
 var detail = modal.Detail
 
+// idDetails are the request and job a row was for, when it has them, to find it by
+templ idDetails(id string, requestID *string, jobID *string) {
+	if requestID != nil {
+		<dt class="text-gray-500">Request</dt>
+		<dd id={ id + "--request-id" } class="break-all">{ *requestID }</dd>
+	}
+	if jobID != nil {
+		<dt class="text-gray-500">Job</dt>
+		<dd id={ id + "--job-id" } class="break-all">{ *jobID }</dd>
+	}
+}
+
 // EventsTable shows one page of the site's events and its batch's, the newest first
 templ EventsTable(events []*sitemodels.SiteEvent, skip int64, limit int64, eventType *string, search *string) {
 	// Sign ins are from where DB-IP estimates
@@ -145,6 +157,7 @@ templ EventModal(event *sitemodels.SiteEvent) {
 				@detail("Finished", formatDate(*event.FinishedAt))
 			}
 			@detail("Duration", duration(event))
+			@idDetails("site--event", event.RequestID, event.JobID)
 		</dl>
 		@attributesDetail("site--event--attributes", event.Attributes)
 	}
@@ -187,6 +200,9 @@ templ ErrorsTable(errors []*sitemodels.SiteError, skip int64, limit int64, kind 
 templ ErrorModal(e *sitemodels.SiteError) {
 	@modal.Modal(modal.Props{ID: "site--error--details", Title: "Error", Subtitle: formatDate(e.CreatedAt)}) {
 		<p class="mt-2 break-all text-sm text-red-700">{ e.Message }</p>
+		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+			@idDetails("site--error", e.RequestID, e.JobID)
+		</dl>
 		@attributesDetail("site--error--attributes", e.Attributes)
 	}
 }
@@ -234,6 +250,9 @@ templ LogsTable(logs []*sitemodels.SiteLog, skip int64, limit int64, search *str
 templ LogModal(log *sitemodels.SiteLog) {
 	@modal.Modal(modal.Props{ID: "site--log--details", Title: log.Level, Subtitle: formatDate(log.CreatedAt)}) {
 		<p class="mt-2 break-all text-sm">{ log.Message }</p>
+		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+			@idDetails("site--log", log.RequestID, log.JobID)
+		</dl>
 		@attributesDetail("site--log--attributes", log.Attributes)
 	}
 }
