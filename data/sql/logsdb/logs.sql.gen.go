@@ -465,35 +465,94 @@ func (q *Queries) SearchLogs(ctx context.Context, arg SearchLogsParams) ([]*Log,
 	return items, nil
 }
 
-const searchSiteEvents = `-- name: SearchSiteEvents :many
-SELECT id, site_id, batch, name, attributes, started_at, finished_at FROM events
-WHERE (site_id = ?1 OR (site_id IS NULL AND batch = ?2))
-AND (CAST(?3 AS TEXT) IS NULL OR name = ?3)
-AND (CAST(?4 AS TEXT) IS NULL OR instr(lower(name), lower(?4)) > 0
-  OR (site_id = ?1 AND instr(lower(attributes), lower(?4)) > 0))
+const searchSiteErrors = `-- name: SearchSiteErrors :many
+SELECT id, site_id, message, attributes, created_at FROM errors
+WHERE site_id = ?1
+AND (CAST(?2 AS TEXT) IS NULL OR json_extract(attributes, '$.kind') = ?2)
+AND (CAST(?3 AS TEXT) IS NULL OR instr(lower(message), lower(?3)) > 0 OR instr(lower(attributes), lower(?3)) > 0)
 ORDER BY id DESC
-LIMIT ?6 OFFSET ?5
+LIMIT ?5 OFFSET ?4
 `
 
-type SearchSiteEventsParams struct {
+type SearchSiteErrorsParams struct {
 	SiteID *string
-	Batch  *string
 	Type   *string
 	Search *string
 	Skip   int64
 	Limit  int64
 }
 
-// Newest first, the site's own events and its batch's, which is all a site may see, only those named Type when it is set
-// Search looks in the names of all of them, but only in the attributes of the site's own, as a batch's are not shown
-func (q *Queries) SearchSiteEvents(ctx context.Context, arg SearchSiteEventsParams) ([]*Event, error) {
-	rows, err := q.query(ctx, q.searchSiteEventsStmt, searchSiteEvents,
+// Newest first, only those of the kind Type when it is set, and only those with Search in their text when it is set
+func (q *Queries) SearchSiteErrors(ctx context.Context, arg SearchSiteErrorsParams) ([]*Error, error) {
+	rows, err := q.query(ctx, q.searchSiteErrorsStmt, searchSiteErrors,
 		arg.SiteID,
-		arg.Batch,
 		arg.Type,
 		arg.Search,
 		arg.Skip,
 		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*Error
+	for rows.Next() {
+		var i Error
+		if err := rows.Scan(
+			&i.ID,
+			&i.SiteID,
+			&i.Message,
+			&i.Attributes,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const searchSiteEvents = `-- name: SearchSiteEvents :many
+SELECT own.id, own.site_id, own.batch, own.name, own.attributes, own.started_at, own.finished_at FROM events own
+WHERE own.site_id = ?3
+AND (CAST(?4 AS TEXT) IS NULL OR own.name = ?4)
+AND (CAST(?5 AS TEXT) IS NULL OR instr(lower(own.name), lower(?5)) > 0
+  OR instr(lower(own.attributes), lower(?5)) > 0)
+UNION ALL
+SELECT batched.id, batched.site_id, batched.batch, batched.name, batched.attributes, batched.started_at, batched.finished_at FROM events batched
+WHERE batched.site_id IS NULL AND batched.batch = ?6
+AND (CAST(?4 AS TEXT) IS NULL OR batched.name = ?4)
+AND (CAST(?5 AS TEXT) IS NULL OR instr(lower(batched.name), lower(?5)) > 0)
+ORDER BY id DESC
+LIMIT ?2 OFFSET ?1
+`
+
+type SearchSiteEventsParams struct {
+	Skip   int64
+	Limit  int64
+	SiteID *string
+	Type   *string
+	Search *string
+	Batch  *string
+}
+
+// Newest first, the site's own events and its batch's, which is all a site may see, only those named Type when it is set.
+// Each half reads its own index newest first and SQLite merges the two, rather than sorting all of the site's events.
+// Search looks only in a batch's names, as its attributes are not shown
+func (q *Queries) SearchSiteEvents(ctx context.Context, arg SearchSiteEventsParams) ([]*Event, error) {
+	rows, err := q.query(ctx, q.searchSiteEventsStmt, searchSiteEvents,
+		arg.Skip,
+		arg.Limit,
+		arg.SiteID,
+		arg.Type,
+		arg.Search,
+		arg.Batch,
 	)
 	if err != nil {
 		return nil, err
@@ -510,6 +569,60 @@ func (q *Queries) SearchSiteEvents(ctx context.Context, arg SearchSiteEventsPara
 			&i.Attributes,
 			&i.StartedAt,
 			&i.FinishedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const searchSiteLogs = `-- name: SearchSiteLogs :many
+
+SELECT id, site_id, level, message, attributes, created_at FROM logs
+WHERE site_id = ?1
+AND (CAST(?2 AS TEXT) IS NULL OR instr(lower(message), lower(?2)) > 0 OR instr(lower(attributes), lower(?2)) > 0)
+ORDER BY id DESC
+LIMIT ?4 OFFSET ?3
+`
+
+type SearchSiteLogsParams struct {
+	SiteID *string
+	Search *string
+	Skip   int64
+	Limit  int64
+}
+
+// The site's own rows, for its logs pages. SearchLogs and SearchErrors with SiteID set match the same rows, but
+// their optional SiteID keeps SQLite from using the (site_id, id) index, so they walk every site's rows.
+// Newest first, only those with Search in their text when it is set
+func (q *Queries) SearchSiteLogs(ctx context.Context, arg SearchSiteLogsParams) ([]*Log, error) {
+	rows, err := q.query(ctx, q.searchSiteLogsStmt, searchSiteLogs,
+		arg.SiteID,
+		arg.Search,
+		arg.Skip,
+		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*Log
+	for rows.Next() {
+		var i Log
+		if err := rows.Scan(
+			&i.ID,
+			&i.SiteID,
+			&i.Level,
+			&i.Message,
+			&i.Attributes,
+			&i.CreatedAt,
 		); err != nil {
 			return nil, err
 		}

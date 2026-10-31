@@ -613,6 +613,76 @@ func (m *SearchLogsParams) SetLimit(v int64) {
 }
 
 // GetSiteID returns the SiteID value.
+func (m SearchSiteErrorsParams) GetSiteID() *string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated SearchSiteErrorsParams.
+func (m *SearchSiteErrorsParams) SetSiteID(v *string) {
+	m.SiteID = v
+}
+
+// GetType returns the Type value.
+func (m SearchSiteErrorsParams) GetType() *string {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated SearchSiteErrorsParams.
+func (m *SearchSiteErrorsParams) SetType(v *string) {
+	m.Type = v
+}
+
+// GetSearch returns the Search value.
+func (m SearchSiteErrorsParams) GetSearch() *string {
+	return m.Search
+}
+
+// SetSearch sets the Search value and returns the updated SearchSiteErrorsParams.
+func (m *SearchSiteErrorsParams) SetSearch(v *string) {
+	m.Search = v
+}
+
+// GetSkip returns the Skip value.
+func (m SearchSiteErrorsParams) GetSkip() int64 {
+	return m.Skip
+}
+
+// SetSkip sets the Skip value and returns the updated SearchSiteErrorsParams.
+func (m *SearchSiteErrorsParams) SetSkip(v int64) {
+	m.Skip = v
+}
+
+// GetLimit returns the Limit value.
+func (m SearchSiteErrorsParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated SearchSiteErrorsParams.
+func (m *SearchSiteErrorsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
+// GetSkip returns the Skip value.
+func (m SearchSiteEventsParams) GetSkip() int64 {
+	return m.Skip
+}
+
+// SetSkip sets the Skip value and returns the updated SearchSiteEventsParams.
+func (m *SearchSiteEventsParams) SetSkip(v int64) {
+	m.Skip = v
+}
+
+// GetLimit returns the Limit value.
+func (m SearchSiteEventsParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated SearchSiteEventsParams.
+func (m *SearchSiteEventsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
+// GetSiteID returns the SiteID value.
 func (m SearchSiteEventsParams) GetSiteID() *string {
 	return m.SiteID
 }
@@ -620,16 +690,6 @@ func (m SearchSiteEventsParams) GetSiteID() *string {
 // SetSiteID sets the SiteID value and returns the updated SearchSiteEventsParams.
 func (m *SearchSiteEventsParams) SetSiteID(v *string) {
 	m.SiteID = v
-}
-
-// GetBatch returns the Batch value.
-func (m SearchSiteEventsParams) GetBatch() *string {
-	return m.Batch
-}
-
-// SetBatch sets the Batch value and returns the updated SearchSiteEventsParams.
-func (m *SearchSiteEventsParams) SetBatch(v *string) {
-	m.Batch = v
 }
 
 // GetType returns the Type value.
@@ -652,23 +712,53 @@ func (m *SearchSiteEventsParams) SetSearch(v *string) {
 	m.Search = v
 }
 
+// GetBatch returns the Batch value.
+func (m SearchSiteEventsParams) GetBatch() *string {
+	return m.Batch
+}
+
+// SetBatch sets the Batch value and returns the updated SearchSiteEventsParams.
+func (m *SearchSiteEventsParams) SetBatch(v *string) {
+	m.Batch = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m SearchSiteLogsParams) GetSiteID() *string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated SearchSiteLogsParams.
+func (m *SearchSiteLogsParams) SetSiteID(v *string) {
+	m.SiteID = v
+}
+
+// GetSearch returns the Search value.
+func (m SearchSiteLogsParams) GetSearch() *string {
+	return m.Search
+}
+
+// SetSearch sets the Search value and returns the updated SearchSiteLogsParams.
+func (m *SearchSiteLogsParams) SetSearch(v *string) {
+	m.Search = v
+}
+
 // GetSkip returns the Skip value.
-func (m SearchSiteEventsParams) GetSkip() int64 {
+func (m SearchSiteLogsParams) GetSkip() int64 {
 	return m.Skip
 }
 
-// SetSkip sets the Skip value and returns the updated SearchSiteEventsParams.
-func (m *SearchSiteEventsParams) SetSkip(v int64) {
+// SetSkip sets the Skip value and returns the updated SearchSiteLogsParams.
+func (m *SearchSiteLogsParams) SetSkip(v int64) {
 	m.Skip = v
 }
 
 // GetLimit returns the Limit value.
-func (m SearchSiteEventsParams) GetLimit() int64 {
+func (m SearchSiteLogsParams) GetLimit() int64 {
 	return m.Limit
 }
 
-// SetLimit sets the Limit value and returns the updated SearchSiteEventsParams.
-func (m *SearchSiteEventsParams) SetLimit(v int64) {
+// SetLimit sets the Limit value and returns the updated SearchSiteLogsParams.
+func (m *SearchSiteLogsParams) SetLimit(v int64) {
 	m.Limit = v
 }
 
