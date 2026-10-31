@@ -8,12 +8,24 @@ COPY . .
 RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/nighttroop main.go && \
     CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/create_keysets scripts/keysets/create_keysets.go
 
+# DB-IP's free IP to City Lite (CC BY 4.0), this month's or last month's, for the city each sign in is from. If it
+# cannot be downloaded the image is still built, and the server knows only countries, from its built in database.
+FROM alpine:3.24 AS geoip
+ARG DBIP_URL=https://download.db-ip.com/free
+RUN mkdir /out && cd /out && \
+    for month in $(date -u +%Y-%m) $(date -u -d "@$(( $(date -u +%s) - $(date -u +%-d) * 86400 ))" +%Y-%m); do \
+      wget -q -O city.mmdb.gz "$DBIP_URL/dbip-city-lite-$month.mmdb.gz" && gunzip city.mmdb.gz && \
+        mv city.mmdb dbip-city-lite.mmdb && echo "DB-IP IP to City Lite $month" && break; \
+      rm -f city.mmdb.gz city.mmdb; \
+    done; true
+
 FROM alpine:3.24
 RUN adduser -D -H -u 10001 nighttroop && \
     mkdir /app /data && chown nighttroop:nighttroop /data
 COPY --from=build /out/ /usr/local/bin/
+COPY --from=geoip /out/ /usr/local/share/nighttroop/
 # The databases and their local backups live in /data; /app is empty, so no stray .env is read
-ENV MODE=production DATA_DIR=/data HOST_PORT=3000
+ENV MODE=production DATA_DIR=/data HOST_PORT=3000 GEOIP_DB_PATH=/usr/local/share/nighttroop/dbip-city-lite.mmdb
 WORKDIR /app
 USER nighttroop
 EXPOSE 3000

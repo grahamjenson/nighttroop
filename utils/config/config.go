@@ -18,6 +18,7 @@ import (
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/authclients"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/geoip"
 	"nighttroop.t1d.nz/utils/security"
 	"nighttroop.t1d.nz/utils/usage"
 )
@@ -61,6 +62,9 @@ type ServerConfig struct {
 	// SupportEmail is where users contact the server's operator, linked from every page's footer and in the terms
 	// of service and privacy policy
 	SupportEmail string
+
+	// GeoIPDBPath is a DB-IP IP to City Lite database, for the city sign ins are from; without one only the country is
+	GeoIPDBPath string
 
 	// Unauthenticated Rate Limits
 	GlobalRateLimit int
@@ -140,6 +144,8 @@ type ServerConfig struct {
 	RateLimiters *RateLimiters
 	// RecentClients is where each identity recently authenticated from, for its site's admin to see
 	RecentClients *authclients.Recent
+	// GeoIP estimates where a client's IP address is, as recorded on its sign ins
+	GeoIP *geoip.Locator
 
 	// Events is every event on the server, by site ID: each change to a site's models, for live updates and alarms,
 	// and each one done to a site or the server, which the logs DB also keeps
@@ -233,6 +239,7 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		SentryDSN: configStringSelect(dotenv, "SENTRY_DSN", ""),
 
 		SupportEmail: configStringSelect(dotenv, "SUPPORT_EMAIL", DefaultSupportEmail),
+		GeoIPDBPath:  configStringSelect(dotenv, "GEOIP_DB_PATH", ""),
 
 		// security
 		RawKeySets: configStringSelect(dotenv, consts.KEY_SETS_ENV_KEY, ""),
@@ -338,6 +345,7 @@ func (config *ServerConfig) setHostURLs() {
 func (config *ServerConfig) startServices() {
 	config.RateLimiters = newRateLimiters(*config)
 	config.RecentClients = authclients.New(10_000)
+	config.GeoIP = geoip.New(config.GeoIPDBPath)
 	config.Events = events.NewSiteBus()
 	config.Usage = usage.New()
 

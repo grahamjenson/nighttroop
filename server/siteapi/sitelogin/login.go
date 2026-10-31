@@ -138,6 +138,7 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 
 			slog.Info("User logged in", "device", identity.Name, "role", identity.Role)
 			httputils.RecordAuthClient(r, identity)
+			recordSignIn(r, identity)
 			w.Header().Set("HX-Redirect", "/")
 			w.WriteHeader(http.StatusOK)
 		}
@@ -211,6 +212,7 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config *config.ServerConfig) http.Ha
 
 		slog.Info("User logged in", "identity", identity.Name, "role", identity.Role)
 		httputils.RecordAuthClient(r, identity)
+		recordSignIn(r, identity)
 
 		// Just render the dashboard HTMX here
 
@@ -340,7 +342,21 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config *config.ServerConfig, r *h
 	})
 
 	slog.Info("User logged in", "identity", identity.Name, "role", identity.Role)
+	recordSignIn(r, identity)
+}
 
+// recordSignIn records a sign in to the site, or a refused one when there is no identity, with where it is from
+func recordSignIn(r *http.Request, identity *controldb.SiteIdentity) {
+	siteContext := httputils.GetSiteContext(r.Context())
+	if siteContext == nil || siteContext.ControlDB == nil {
+		return
+	}
+	from := siteContext.Config.GeoIP.Locate(siteContext.IPAddress)
+	if identity == nil {
+		siteContext.ControlDB.Logs.SignInFailedEvent(r.Context(), siteContext.SiteID, from)
+		return
+	}
+	siteContext.ControlDB.Logs.SignedInEvent(r.Context(), siteContext.SiteID, identity.Name, from)
 }
 
 func loginTheUserAPI(controlDB *db.ControlDB, subdomain string, cfg *config.ServerConfig, devicename, password, totpToken string) (*controldb.SiteIdentity, error) {
@@ -385,6 +401,7 @@ func rateLimitErrorHTMX(w http.ResponseWriter, r *http.Request) {
 
 // We have a very generic error to not give any hints about how far through it was rejected
 func identityLoginErrorHTMX(w http.ResponseWriter, r *http.Request, usrMsg string, err error) {
+	recordSignIn(r, nil)
 	allArgs := []any{
 		"error", err,
 		"stack", errors.LocalStack(),
@@ -403,6 +420,7 @@ func identityLoginErrorHTMX(w http.ResponseWriter, r *http.Request, usrMsg strin
 
 // We have a very generic error to not give any hints about how far through it was rejected
 func identityLoginErrorAPI(w http.ResponseWriter, r *http.Request, usrMsg string, err error) {
+	recordSignIn(r, nil)
 	allArgs := []any{
 		"error", err,
 		"stack", errors.LocalStack(),

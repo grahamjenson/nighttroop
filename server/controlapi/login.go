@@ -99,11 +99,15 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 			return
 		}
 
+		// Control sign ins are the server's events, with no site
+		from := config.GeoIP.Locate(httputils.GetIPFromHTTPContext(r.Context()))
 		admin, err := loginTheControlUser(controlDB, config, username, password, totpToken)
 		if err != nil {
+			controlDB.Logs.SignInFailedEvent(r.Context(), "", from)
 			errors.GenericAdminLoginError(w, r, fmt.Errorf("invalid credentials: %w", err))
 			return
 		}
+		controlDB.Logs.SignedInEvent(r.Context(), "", admin.Name, from)
 
 		tokenString, expiresAt, err := config.Security.GenerateControlJWTToken(admin.Name, string(admin.Role))
 		if err != nil {

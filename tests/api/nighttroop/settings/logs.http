@@ -22,16 +22,35 @@ B {"name": "admin", "password": "{{ .create_other_site.api_key }}", "totp": "123
 ASSERT_STATUS 200
 SET other_jwt {{ .login_other_admin.token }}
 
-// A site's admin sees its events, newest first, such as it being created
+// A site's admin sees its events, newest first: its admin signing in, after it being created. The tests' requests are
+// from 192.0.2.1, a documentation address, so where the sign in is from is not known
 NAME list_events
 GET http://{{ site }}/logs/events
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS "site_created" "@result.0.name"
-ASSERT_EXISTS "@result.0.started_at"
-ASSERT_EQUALS null "@result.0.batch"
-SET event_id {{ dig "list_events.result.0.id" }}
+ASSERT_EQUALS "signed_in" "@result.0.name"
+ASSERT_EQUALS "admin" "@result.0.attributes.identity_name"
+ASSERT_EXISTS "@result.0.attributes.from"
+ASSERT_EQUALS "site_created" "@result.1.name"
+ASSERT_EXISTS "@result.1.started_at"
+ASSERT_EQUALS null "@result.1.batch"
+SET event_id {{ dig "list_events.result.1.id" }}
+
+// A refused sign in is an event too, without the name it tried
+NAME login_wrong_password
+POST http://{{ site }}/login
+H Accept: application/json
+B {"name": "admin", "password": "wrong", "totp": "123123"}
+ASSERT_STATUS 401
+
+NAME list_sign_in_failed
+GET http://{{ site }}/logs/events?type=sign_in_failed
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS null "@result.0.attributes.identity_name"
 
 NAME get_event
 GET http://{{ site }}/logs/events/{{ .event_id }}

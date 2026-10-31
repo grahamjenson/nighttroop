@@ -19,6 +19,7 @@ require (
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/mxschmitt/playwright-go v0.6201.1
 	github.com/oapi-codegen/runtime v1.1.2
+	github.com/oschwald/maxminddb-golang/v2 v2.8.0
 	github.com/pierrec/lz4/v4 v4.1.33
 	github.com/pquerna/otp v1.5.0
 	github.com/robfig/cron/v3 v3.0.1
