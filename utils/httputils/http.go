@@ -20,6 +20,18 @@ func ReadLimitedBody(r io.Reader, max int64) ([]byte, error) {
 	return body, nil
 }
 
+// LimitRequestBody caps how much of r's body handlers can read, so a huge upload cannot exhaust memory while it is
+// decoded. A body that says it is larger than max is refused with 413; one that does not is cut off at max, failing
+// its decode. It is false when the request was refused.
+func LimitRequestBody(w http.ResponseWriter, r *http.Request, max int64) bool {
+	if r.ContentLength > max {
+		w.WriteHeader(http.StatusRequestEntityTooLarge)
+		return false
+	}
+	r.Body = http.MaxBytesReader(w, r.Body, max)
+	return true
+}
+
 // ////
 // Accept Type
 // ////
