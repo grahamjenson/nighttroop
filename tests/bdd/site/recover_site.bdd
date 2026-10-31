@@ -34,6 +34,10 @@ SCREENSHOT recovered
 SAVE_TEXT #public--site-info--backup-key new_backup_key
 
 // The admin logs in with them
+// Login is offered once a code from the authenticator app has been checked
+INPUT #public--site-info--totp 123123
+CLICK #public--totp-check-button
+ASSERT_VISIBLE #public--totp-checked
 CLICK #public--login-button
 ASSERT_NEW_PAGE
 INPUT #site--login--name admin

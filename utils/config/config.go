@@ -568,6 +568,11 @@ func (config *ServerConfig) RecoverURL() string {
 	return fmt.Sprintf("%s://%s:%d/recover", config.HostProtocol, config.HostName, config.HostPort)
 }
 
+// SiteURL is the address of the site with the subdomain
+func (config *ServerConfig) SiteURL(subdomain string) string {
+	return fmt.Sprintf("%s://%s.%s:%d", config.HostProtocol, subdomain, config.HostName, config.HostPort)
+}
+
 // SetupURL is the control site's page a new server is set up on
 func (config *ServerConfig) SetupURL() string {
 	return fmt.Sprintf("%s://control.%s:%d/setup", config.HostProtocol, config.HostName, config.HostPort)
