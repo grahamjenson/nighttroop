@@ -38,7 +38,7 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 		allowed := config.RateLimiters.GlobalRateLimiter.Allow()
 		if !allowed {
 			w.WriteHeader(http.StatusTooManyRequests)
-			slog.Info("Global rate limit exceeded")
+			slog.InfoContext(r.Context(), "Global rate limit exceeded")
 			return
 		}
 
@@ -47,7 +47,7 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 		allowed = httputils.GlobalIPWithinRateLimit(config, ipAddress)
 		if !allowed {
 			w.WriteHeader(http.StatusTooManyRequests)
-			slog.Info("Global IP rate limit exceeded", "ip", ipAddress)
+			slog.InfoContext(r.Context(), "Global IP rate limit exceeded", "ip", ipAddress)
 			return
 		}
 		host, _, err := net.SplitHostPort(r.Host)
@@ -56,7 +56,7 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 		}
 		routeTarget, siteSubdomain, err := GetRouteTargetFromSubdomain(host, validHostnames)
 		if err != nil {
-			slog.Info("Main router 404 for host header", "host", host, "error", err)
+			slog.InfoContext(r.Context(), "Main router 404 for host header", "host", host, "error", err)
 			http.NotFound(w, r)
 			return
 		}
@@ -77,7 +77,7 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 			if exists, ctx := CreateSiteContext(ctx, config, controlDB, r, siteSubdomain, ipAddress); exists {
 				nightscoutRouter.ServeHTTP(w, r.WithContext(ctx))
 			} else {
-				slog.Info("Main router 404 for nightscout subdomain", "subdomain", siteSubdomain)
+				slog.InfoContext(r.Context(), "Main router 404 for nightscout subdomain", "subdomain", siteSubdomain)
 				http.NotFound(w, r)
 			}
 		case RouteTargetSite:
@@ -85,11 +85,11 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 			if exists, ctx := CreateSiteContext(ctx, config, controlDB, r, siteSubdomain, ipAddress); exists {
 				siteRouter.ServeHTTP(w, r.WithContext(ctx))
 			} else {
-				slog.Info("Main router 404 for subdomain", "subdomain", siteSubdomain)
+				slog.InfoContext(r.Context(), "Main router 404 for subdomain", "subdomain", siteSubdomain)
 				http.NotFound(w, r)
 			}
 		default:
-			slog.Info("Main router 404 for subdomain", "host", r.Host, "siteSubdomain", siteSubdomain, "routeTarget", routeTarget)
+			slog.InfoContext(r.Context(), "Main router 404 for subdomain", "host", r.Host, "siteSubdomain", siteSubdomain, "routeTarget", routeTarget)
 			http.NotFound(w, r)
 		}
 	})
@@ -99,7 +99,7 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 func CreateSiteContext(ctx context.Context, config *config.ServerConfig, controlDB *db.ControlDB, r *http.Request, subdomain string, ipAddress string) (bool, context.Context) {
 	siteDB, siteModel, err := controlDB.GetSite(subdomain)
 	if err != nil {
-		slog.Info("Error getting site for subdomain", "subdomain", subdomain, "error", err)
+		slog.InfoContext(ctx, "Error getting site for subdomain", "subdomain", subdomain, "error", err)
 		return false, nil
 	}
 

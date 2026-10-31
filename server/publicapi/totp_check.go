@@ -22,7 +22,7 @@ func POSTCheckTOTPHandler(config *config.ServerConfig) http.HandlerFunc {
 			err = public_templ.TOTPCheckFailed().Render(r.Context(), w)
 		}
 		if err != nil {
-			slog.Error("Unable to show the TOTP check", "error", err)
+			slog.ErrorContext(r.Context(), "Unable to show the TOTP check", "error", err)
 		}
 	}
 }

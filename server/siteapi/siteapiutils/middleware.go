@@ -34,12 +34,12 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, cfg *config.ServerConfig) func(h
 			// A failed sign in spends the IP's budget on the site, not the site's own limit its identities need
 			if allowed, _ := httputils.SiteUnauthWithinRateLimit(cfg, r); !allowed {
 				w.WriteHeader(http.StatusTooManyRequests)
-				slog.Info("Site unauthenticated rate limit exceeded")
+				slog.InfoContext(r.Context(), "Site unauthenticated rate limit exceeded")
 				return
 			}
 
 			if acceptType.API() {
-				slog.Info("Identity Login Failed: invalid JWT token", "error", err, "stack", errors.LocalStack())
+				slog.InfoContext(r.Context(), "Identity Login Failed: invalid JWT token", "error", err, "stack", errors.LocalStack())
 				http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 
 				return
@@ -72,7 +72,7 @@ func TryAuthWithJWTToken(config *config.ServerConfig, r *http.Request) (*control
 	if err == nil {
 		identity, err := httputils.GetJWTSiteIdentity(r.Context(), config, cookieToken)
 		if err != nil {
-			slog.Info("Bad Cookie JWT token", "error", err)
+			slog.InfoContext(r.Context(), "Bad Cookie JWT token", "error", err)
 			return nil, fmt.Errorf("Bad Cookie JWT token: %w", err)
 		}
 		return identity, nil

@@ -247,7 +247,7 @@ func (c *S3Client) uploadStreamToS3(ctx context.Context, key string, retention R
 	})
 
 	if err != nil {
-		slog.Error("Failed to upload Stream", "key", key, "error", err)
+		slog.ErrorContext(ctx, "Failed to upload Stream", "key", key, "error", err)
 		return fmt.Errorf("failed to upload Stream: %w", err)
 	}
 

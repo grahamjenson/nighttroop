@@ -23,13 +23,13 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, config *config.ServerConfig) fun
 			controlIdentity, err := tryLoginWithJWTToken(controlDB, config, r)
 
 			if err == nil {
-				slog.Info("Control User Logged In", "user_name", controlIdentity.Name)
+				slog.InfoContext(r.Context(), "Control User Logged In", "user_name", controlIdentity.Name)
 				ctx := httputils.SetAdminControlContext(r.Context(), controlIdentity, config.Status)
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}
 
-			slog.Info("Control User Not Logged In", "error", err.Error())
+			slog.InfoContext(r.Context(), "Control User Not Logged In", "error", err.Error())
 
 			if httputils.GetAcceptType(r).API() {
 				http.Error(w, "Unauthorized: Invalid JWT token", http.StatusUnauthorized)

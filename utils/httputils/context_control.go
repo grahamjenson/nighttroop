@@ -2,9 +2,11 @@ package httputils
 
 import (
 	"context"
+	"log/slog"
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/config"
 )
 
@@ -47,5 +49,8 @@ func SetAdminControlContext(ctx context.Context, identity *controldb.ControlIden
 	controlContext := GetControlContext(ctx)
 	controlContext.IdentityModel = identity
 	controlContext.ServerStatus = status
+	if identity != nil {
+		aslog.AddAttrs(ctx, slog.Int64("identity_id", identity.ID), slog.String("identity_name", identity.Name), slog.String("role", string(identity.Role)))
+	}
 	return context.WithValue(ctx, controlContextKey, controlContext)
 }

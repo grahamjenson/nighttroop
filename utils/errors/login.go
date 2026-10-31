@@ -14,7 +14,7 @@ func GenericAdminLoginError(w http.ResponseWriter, r *http.Request, err error, a
 		"error", err,
 		"stack", LocalStack(),
 	}, args...)
-	slog.Info("Control User Login Failed", allArgs...)
+	slog.InfoContext(r.Context(), "Control User Login Failed", allArgs...)
 	http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 
 }

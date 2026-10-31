@@ -79,12 +79,12 @@ func (c TreatmentCollection) CreateModel(q *sitedb.Queries, ctx context.Context,
 	}
 	newEventGroup, err := q.CreateEventGroup(ctx, createEventGroupParams)
 	if err != nil {
-		slog.Error("failed to create event group in database", "error", err, "createParams", tebg)
+		slog.ErrorContext(ctx, "failed to create event group in database", "error", err, "createParams", tebg)
 		return nil, err
 	}
 
 	if newEventGroup == nil || newEventGroup.ID == "" {
-		slog.Error("failed to create event group in database, EventGroup is nil", "bundle", tebg)
+		slog.ErrorContext(ctx, "failed to create event group in database, EventGroup is nil", "bundle", tebg)
 		return nil, fmt.Errorf("newEventGroup is nil or has empty ID")
 	}
 
@@ -144,12 +144,12 @@ func (c TreatmentCollection) UpdateModel(q *sitedb.Queries, ctx context.Context,
 	updateEventGroupParams := nightscoutmodels.EventGroupUpdate(dbModel.EventGroup, cc)
 	newEventGroup, err := q.UpdateEventGroup(ctx, updateEventGroupParams)
 	if err != nil {
-		slog.Error("failed to update event group in database", "error", err)
+		slog.ErrorContext(ctx, "failed to update event group in database", "error", err)
 		return nil, err
 	}
 
 	if newEventGroup == nil || newEventGroup.ID == "" {
-		slog.Error("failed to update event group in database, EventGroup is nil")
+		slog.ErrorContext(ctx, "failed to update event group in database, EventGroup is nil")
 		return nil, fmt.Errorf("newEventGroup is nil or has empty ID")
 	}
 
@@ -233,12 +233,12 @@ func createUpdateEventGroup(ctx context.Context, q *sitedb.Queries, bundle *site
 func hardDeleteEventGroup(ctx context.Context, q *sitedb.Queries, identifier string) (sql.Result, error) {
 	eventGroup, err := q.HardDeleteEventGroup(ctx, sitedb.HardDeleteEventGroupParams{ID: identifier})
 	if err != nil {
-		slog.Error("failed to hard delete eventGroup event group by ID", "error", err)
+		slog.ErrorContext(ctx, "failed to hard delete eventGroup event group by ID", "error", err)
 		return nil, err
 	}
 
 	if eventGroup == nil {
-		slog.Error("failed to hard delete eventGroup event group by ID, eventGroup is nil", "identifier", identifier)
+		slog.ErrorContext(ctx, "failed to hard delete eventGroup event group by ID, eventGroup is nil", "identifier", identifier)
 		return nsutils.SQLResultCustomResult{LastInsertIdInt: 0, RowsAffectedInt: 0, Err: nil}, sql.ErrNoRows
 	}
 
@@ -253,7 +253,7 @@ func hardDeleteEventGroup(ctx context.Context, q *sitedb.Queries, identifier str
 
 func softDeleteEventGroup(ctx context.Context, q *sitedb.Queries, identifier string) (sql.Result, error) {
 	if err := sitedb.SoftDeleteEventGroupAndEvents(ctx, q, identifier, nil); err != nil {
-		slog.Error("failed to soft delete event group by ID", "error", err, "identifier", identifier)
+		slog.ErrorContext(ctx, "failed to soft delete event group by ID", "error", err, "identifier", identifier)
 		return nil, err
 	}
 	return nsutils.SQLResultCustomResult{LastInsertIdInt: 0, RowsAffectedInt: 1, Err: nil}, nil

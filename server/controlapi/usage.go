@@ -45,7 +45,7 @@ func UsageHandler(w http.ResponseWriter, r *http.Request) {
 	model.SitesCreatedWeek, errs[6] = created(monday)
 	model.SitesCreatedMonth, errs[7] = created(firstOfMonth)
 	if err := errors.Join(errs[:]...); err != nil {
-		slog.Error("failed to count the server's usage", "error", err)
+		slog.ErrorContext(r.Context(), "failed to count the server's usage", "error", err)
 		apiutils.ErrInternalServerError.Write(acceptType, w)
 		return
 	}

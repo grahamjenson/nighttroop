@@ -11,6 +11,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/settings"
@@ -86,6 +87,9 @@ func (s *SiteContext) PublishModelChange(action events.Action, model any) {
 func SetIdentityModelInSiteContext(ctx context.Context, identityModel *controldb.SiteIdentity) context.Context {
 	siteContext := GetSiteContext(ctx)
 	siteContext.IdentityModel = identityModel
+	if identityModel != nil {
+		aslog.AddAttrs(ctx, slog.Int64("identity_id", identityModel.ID), slog.String("identity_name", identityModel.Name), slog.String("role", string(identityModel.Role)))
+	}
 	return context.WithValue(ctx, siteContextKey, siteContext)
 }
 
@@ -170,7 +174,7 @@ func GetJWTSiteIdentity(ctx context.Context, cfg *config.ServerConfig, token str
 	}
 	identity, err := GetSiteIdentity(ctx, subdomain, identityName, consts.IdentityRole(role))
 	if err != nil {
-		slog.Warn("Bad JWT token cant find identity", "error", err)
+		slog.WarnContext(ctx, "Bad JWT token cant find identity", "error", err)
 		return nil, fmt.Errorf("identity not found: %w", err)
 	}
 	if err := CheckIssuedAfterCredentialsChanged(identity, issuedAtMs); err != nil {

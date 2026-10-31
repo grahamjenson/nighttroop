@@ -136,7 +136,7 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 			// Set proper cookie and redirect to dashboard
 			config.Security.SetUserLoginCookie(w, tokenString, expiresAt)
 
-			slog.Info("User logged in", "device", identity.Name, "role", identity.Role)
+			slog.InfoContext(r.Context(), "User logged in", "device", identity.Name, "role", identity.Role)
 			httputils.RecordAuthClient(r, identity)
 			recordSignIn(r, identity)
 			w.Header().Set("HX-Redirect", "/")
@@ -210,7 +210,7 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config *config.ServerConfig) http.Ha
 		// Set proper cookie and redirect to dashboard
 		config.Security.SetUserLoginCookie(w, tokenString, expiresAt)
 
-		slog.Info("User logged in", "identity", identity.Name, "role", identity.Role)
+		slog.InfoContext(r.Context(), "User logged in", "identity", identity.Name, "role", identity.Role)
 		httputils.RecordAuthClient(r, identity)
 		recordSignIn(r, identity)
 
@@ -341,7 +341,7 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config *config.ServerConfig, r *h
 		"expires_at": expiresAt.Format(time.RFC3339),
 	})
 
-	slog.Info("User logged in", "identity", identity.Name, "role", identity.Role)
+	slog.InfoContext(r.Context(), "User logged in", "identity", identity.Name, "role", identity.Role)
 	recordSignIn(r, identity)
 }
 
@@ -388,13 +388,13 @@ func loginTheUserAPI(controlDB *db.ControlDB, subdomain string, cfg *config.Serv
 }
 
 func rateLimitErrorHTMX(w http.ResponseWriter, r *http.Request) {
-	slog.Info("Identity Login Failed", "stack", errors.LocalStack())
+	slog.InfoContext(r.Context(), "Identity Login Failed", "stack", errors.LocalStack())
 
 	w.WriteHeader(http.StatusTooManyRequests)
 
 	err := site_login_templ.LoginError("Too many attempts").Render(r.Context(), w)
 	if err != nil {
-		slog.Error("Failed to render login error template", "error", err)
+		slog.ErrorContext(r.Context(), "Failed to render login error template", "error", err)
 	}
 
 }
@@ -406,7 +406,7 @@ func identityLoginErrorHTMX(w http.ResponseWriter, r *http.Request, usrMsg strin
 		"error", err,
 		"stack", errors.LocalStack(),
 	}
-	slog.Info("Identity Login Failed", allArgs...)
+	slog.InfoContext(r.Context(), "Identity Login Failed", allArgs...)
 
 	if usrMsg == "" {
 		usrMsg = "Invalid login attempt"
@@ -414,7 +414,7 @@ func identityLoginErrorHTMX(w http.ResponseWriter, r *http.Request, usrMsg strin
 	w.WriteHeader(http.StatusUnauthorized)
 	err = site_login_templ.LoginError(usrMsg).Render(r.Context(), w)
 	if err != nil {
-		slog.Error("Failed to render login error template", "error", err)
+		slog.ErrorContext(r.Context(), "Failed to render login error template", "error", err)
 	}
 }
 
@@ -425,7 +425,7 @@ func identityLoginErrorAPI(w http.ResponseWriter, r *http.Request, usrMsg string
 		"error", err,
 		"stack", errors.LocalStack(),
 	}
-	slog.Info("Identity Login Failed", allArgs...)
+	slog.InfoContext(r.Context(), "Identity Login Failed", allArgs...)
 
 	if usrMsg == "" {
 		usrMsg = "Invalid login attempt"
