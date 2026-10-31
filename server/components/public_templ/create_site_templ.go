@@ -32,10 +32,6 @@ func CreateSite() templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var1 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var1 == nil {
-			templ_7745c5c3_Var1 = templ.NopComponent
-		}
 		ctx = templ.ClearChildren(ctx)
 		templ_7745c5c3_Var2 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -57,7 +53,7 @@ func CreateSite() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "Free hosting, Nightscout compatible <span class=\"rounded-full bg-brand-gold px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-night\">Alpha</span></p><div class=\"flex flex-col items-center group-has-[#public--site-info]:flex-row group-has-[#public--site-info]:justify-center group-has-[#public--site-info]:gap-3\"><img id=\"public--logo\" src=\"/logo.svg\" alt=\"\" class=\"mt-8 size-24 group-has-[#public--site-info]:mt-0 group-has-[#public--site-info]:size-10\"><h1 class=\"mt-4 text-5xl sm:text-6xl font-extrabold tracking-tight text-slate-900 group-has-[#public--site-info]:mt-0 group-has-[#public--site-info]:text-3xl\">NightTroop</h1></div><p class=\"mt-4 text-lg text-slate-600 max-w-xl mx-auto group-has-[#public--site-info]:hidden\">Your own Nightscout-compatible site in one click. No servers, no databases, no sign-up. Create a site, save your credentials, and start syncing.</p><div id=\"panel-content\" class=\"mt-10 flex flex-col items-center group-has-[#public--site-info]:mt-6\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, " Free hosting, Nightscout compatible <span class=\"rounded-full bg-brand-gold px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-night\">Alpha</span></p><div class=\"flex flex-col items-center group-has-[#public--site-info]:flex-row group-has-[#public--site-info]:justify-center group-has-[#public--site-info]:gap-3\"><img id=\"public--logo\" src=\"/logo.svg\" alt=\"\" class=\"mt-8 size-24 group-has-[#public--site-info]:mt-0 group-has-[#public--site-info]:size-10\"><h1 class=\"mt-4 text-5xl sm:text-6xl font-extrabold tracking-tight text-slate-900 group-has-[#public--site-info]:mt-0 group-has-[#public--site-info]:text-3xl\">NightTroop</h1></div><p class=\"mt-4 text-lg text-slate-600 max-w-xl mx-auto group-has-[#public--site-info]:hidden\">Your own Nightscout-compatible site in one click. No servers, no databases, no sign-up. Create a site, save your credentials, and start syncing.</p><div id=\"panel-content\" class=\"mt-10 flex flex-col items-center group-has-[#public--site-info]:mt-6\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -141,16 +137,16 @@ func feature(ic func(...icon.Props) templ.Component, title, body string) templ.C
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var4 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var4 == nil {
-			templ_7745c5c3_Var4 = templ.NopComponent
-		}
 		ctx = templ.ClearChildren(ctx)
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div class=\"rounded-xl border border-slate-200 bg-white p-5 shadow-sm\"><dt class=\"flex items-center gap-2 font-semibold text-slate-900\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = ic(icon.Props{Class: "size-5 text-brand-night"}).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, " ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -163,7 +159,7 @@ func feature(ic func(...icon.Props) templ.Component, title, body string) templ.C
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</dt><dd class=\"mt-2 text-sm text-slate-600\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</dt><dd class=\"mt-2 text-sm text-slate-600\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -176,7 +172,7 @@ func feature(ic func(...icon.Props) templ.Component, title, body string) templ.C
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</dd></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</dd></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -200,12 +196,8 @@ func CreateSiteRateLimited(seconds int) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var7 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var7 == nil {
-			templ_7745c5c3_Var7 = templ.NopComponent
-		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<div id=\"rate-limit-alert\" class=\"mt-3 rounded-xl bg-amber-500/10 p-4 text-amber-800 border border-amber-500/20 shadow-sm\" role=\"alert\"><div class=\"flex items-center justify-center\"><!-- Animated Tailwind Spinner --><div class=\"mr-2 h-4 w-4 animate-spin rounded-full border-2 border-amber-500/30 border-t-amber-400\" role=\"status\"></div><span class=\"text-sm font-medium\">Please wait <strong id=\"countdownNum\" class=\"mx-1 font-bold text-rose-400\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<div id=\"rate-limit-alert\" class=\"mt-3 rounded-xl bg-amber-500/10 p-4 text-amber-800 border border-amber-500/20 shadow-sm\" role=\"alert\"><div class=\"flex items-center justify-center\"><!-- Animated Tailwind Spinner --><div class=\"mr-2 h-4 w-4 animate-spin rounded-full border-2 border-amber-500/30 border-t-amber-400\" role=\"status\"></div><span class=\"text-sm font-medium\">Please wait <strong id=\"countdownNum\" class=\"mx-1 font-bold text-rose-400\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -218,7 +210,7 @@ func CreateSiteRateLimited(seconds int) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</strong> seconds.</span></div></div><script>\n    document.span = document.getElementById('countdownNum');\n\n    clearInterval(document._timer);\n\n    document._timer = setInterval(() => {\n        let count = parseInt(document.span.innerText);\n        if (count <= 1) {\n            clearInterval(document._timer);\n            document.getElementById('rate-limit-alert').remove();\n        } else {\n            document.span.innerText = count - 1;\n        }\n    }, 1000);\n</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</strong> seconds.</span></div></div><script>\n    document.span = document.getElementById('countdownNum');\n\n    clearInterval(document._timer);\n\n    document._timer = setInterval(() => {\n        let count = parseInt(document.span.innerText);\n        if (count <= 1) {\n            clearInterval(document._timer);\n            document.getElementById('rate-limit-alert').remove();\n        } else {\n            document.span.innerText = count - 1;\n        }\n    }, 1000);\n</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -242,12 +234,8 @@ func CreateSiteInfo(newsite publicmodels.NewSiteInfo) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var9 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var9 == nil {
-			templ_7745c5c3_Var9 = templ.NopComponent
-		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<div class=\"w-full max-w-2xl mx-auto text-left space-y-6\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<div class=\"w-full max-w-2xl mx-auto text-left space-y-6\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -263,20 +251,20 @@ func CreateSiteInfo(newsite publicmodels.NewSiteInfo) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<p id=\"public--site-info--recover\" class=\"px-5 pb-4 -mt-2 text-sm text-slate-500\">With your site's ID and the backup key, the <a id=\"public--site-info--recover-link\" href=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<p id=\"public--site-info--recover\" class=\"px-5 pb-4 -mt-2 text-sm text-slate-500\">With your site's ID and the backup key, the <a id=\"public--site-info--recover-link\" href=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var11 templ.SafeURL
-			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(newsite.RecoverURL))
+			var templ_7745c5c3_Var11 string
+			templ_7745c5c3_Var11, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.SafeURL(newsite.RecoverURL)).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 100, Col: 84}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\" class=\"font-medium text-brand-night underline\">recover page</a> gives you a new admin password and TOTP.</p><textarea id=\"public--site-info\" hidden>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\" class=\"font-medium text-brand-night underline\">recover page</a> gives you a new admin password and TOTP.</p><textarea id=\"public--site-info\" hidden>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -289,7 +277,7 @@ func CreateSiteInfo(newsite publicmodels.NewSiteInfo) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</textarea><div class=\"flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2.5\"><span class=\"text-xs font-semibold uppercase tracking-wider text-slate-500\">Your credentials</span>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</textarea><div class=\"flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2.5\"><span class=\"text-xs font-semibold uppercase tracking-wider text-slate-500\">Your credentials</span>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -301,7 +289,7 @@ func CreateSiteInfo(newsite publicmodels.NewSiteInfo) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</div><dl class=\"divide-y divide-slate-100 font-mono text-sm\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</div><dl class=\"divide-y divide-slate-100 font-mono text-sm\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -333,7 +321,7 @@ func CreateSiteInfo(newsite publicmodels.NewSiteInfo) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div class=\"grid sm:grid-cols-[8rem_1fr] gap-1 px-4 py-3\"><dt class=\"text-slate-400\">TOTP secret</dt><dd class=\"flex flex-wrap items-start gap-4\"><span class=\"break-all\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<div class=\"grid sm:grid-cols-[8rem_1fr] gap-1 px-4 py-3\"><dt class=\"text-slate-400\">TOTP secret</dt><dd class=\"flex flex-wrap items-start gap-4\"><span class=\"break-all\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -346,7 +334,7 @@ func CreateSiteInfo(newsite publicmodels.NewSiteInfo) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</span><div class=\"flex flex-col items-center gap-1\"><div id=\"qrcode\" class=\"p-2 bg-white rounded-lg border border-slate-200\"></div><span class=\"font-sans text-xs text-slate-400\">Scan with an authenticator app</span></div></dd></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</span><div class=\"flex flex-col items-center gap-1\"><div id=\"qrcode\" class=\"p-2 bg-white rounded-lg border border-slate-200\"></div><span class=\"font-sans text-xs text-slate-400\">Scan with an authenticator app</span></div></dd></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -355,15 +343,7 @@ func CreateSiteInfo(newsite publicmodels.NewSiteInfo) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, " ")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
 				templ_7745c5c3_Err = row("ns-url", "NS URL", newsite.PwdNSURL).Render(ctx, templ_7745c5c3_Buffer)
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, " ")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -372,7 +352,7 @@ func CreateSiteInfo(newsite publicmodels.NewSiteInfo) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "</dl><script type=\"text/javascript\">\n\t\t\t\tnew QRCode(document.getElementById(\"qrcode\"), {\n\t\t\t\t\ttext: \"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</dl><script type=\"text/javascript\">\n\t\t\t\tnew QRCode(document.getElementById(\"qrcode\"), {\n\t\t\t\t\ttext: \"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -384,7 +364,7 @@ func CreateSiteInfo(newsite publicmodels.NewSiteInfo) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "\",\n\t\t\t\t\twidth: 128,\n\t\t\t\t\theight: 128,\n\t\t\t\t\tcorrectLevel: QRCode.CorrectLevel.H\n\t\t\t\t});\n\t\t\t</script>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "\",\n\t\t\t\t\twidth: 128,\n\t\t\t\t\theight: 128,\n\t\t\t\t\tcorrectLevel: QRCode.CorrectLevel.H\n\t\t\t\t});\n\t\t\t</script>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -406,7 +386,7 @@ func CreateSiteInfo(newsite publicmodels.NewSiteInfo) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<div class=\"flex justify-center p-6\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<div class=\"flex justify-center p-6\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -422,7 +402,7 @@ func CreateSiteInfo(newsite publicmodels.NewSiteInfo) templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "Login")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "Login")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -442,7 +422,7 @@ func CreateSiteInfo(newsite publicmodels.NewSiteInfo) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -452,7 +432,7 @@ func CreateSiteInfo(newsite publicmodels.NewSiteInfo) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -477,11 +457,8 @@ func step(n, title, hint string) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		templ_7745c5c3_Var17 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var17 == nil {
-			templ_7745c5c3_Var17 = templ.NopComponent
-		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "<section class=\"rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden\"><header class=\"flex items-start gap-3 px-5 py-4\"><span class=\"flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-night text-sm font-bold text-white\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<section class=\"rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden\"><header class=\"flex items-start gap-3 px-5 py-4\"><span class=\"flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-night text-sm font-bold text-white\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -494,7 +471,7 @@ func step(n, title, hint string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "</span><div><h2 class=\"font-semibold text-slate-900\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "</span><div><h2 class=\"font-semibold text-slate-900\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -507,7 +484,7 @@ func step(n, title, hint string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "</h2><p class=\"text-sm text-slate-500\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "</h2><p class=\"text-sm text-slate-500\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -520,7 +497,7 @@ func step(n, title, hint string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "</p></div></header>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "</p></div></header>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -528,7 +505,7 @@ func step(n, title, hint string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "</section>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "</section>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -552,12 +529,8 @@ func group(title string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var21 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var21 == nil {
-			templ_7745c5c3_Var21 = templ.NopComponent
-		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "<h3 class=\"bg-slate-50 px-4 py-1.5 font-sans text-xs font-semibold uppercase tracking-wide text-slate-500\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "<h3 class=\"bg-slate-50 px-4 py-1.5 font-sans text-xs font-semibold uppercase tracking-wide text-slate-500\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -570,7 +543,7 @@ func group(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "</h3>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "</h3>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -595,12 +568,8 @@ func row(id, label, value string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var23 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var23 == nil {
-			templ_7745c5c3_Var23 = templ.NopComponent
-		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "<div class=\"grid sm:grid-cols-[8rem_1fr] gap-1 px-4 py-3\"><dt class=\"text-slate-400\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "<div class=\"grid sm:grid-cols-[8rem_1fr] gap-1 px-4 py-3\"><dt class=\"text-slate-400\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -613,12 +582,12 @@ func row(id, label, value string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "</dt><dd id=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "</dt><dd id=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var25 string
-		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.ResolveAttributeValue("public--site-info--" + id)
+		templ_7745c5c3_Var25, templ_7745c5c3_Err = templruntime.NewAttributeExpression("public--site-info--" + id).Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `public_templ/create_site.templ`, Line: 184, Col: 37}
 		}
@@ -626,7 +595,7 @@ func row(id, label, value string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "\" class=\"break-all text-slate-800 select-all\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "\" class=\"break-all text-slate-800 select-all\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -639,7 +608,7 @@ func row(id, label, value string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "</dd></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "</dd></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
