@@ -82,11 +82,7 @@ func (s *InsulinDosesCollection) UpdateHTMXResponse(model *sitemodels.SiteInsuli
 // Get Model
 // /////
 func (s *InsulinDosesCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.InsulinDose, error) {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.GetInsulinDose(ctx, sitedb.GetInsulinDoseParams{ID: id})
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).GetInsulinDose, sitedb.GetInsulinDoseParams{ID: id})
 }
 
 // ToModel is the site model of a row
@@ -104,11 +100,7 @@ func (s *InsulinDosesCollection) GetHTMXResponse(model *sitemodels.SiteInsulinDo
 // ///
 
 func (s *InsulinDosesCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.InsulinDose, error) {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.AllInsulinDoses(ctx, siteapiutils.QueryToAllInsulinDoses(query))
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).AllInsulinDoses, siteapiutils.QueryToAllInsulinDoses(query))
 }
 
 func (s *InsulinDosesCollection) SearchHTMXResponse(models []*sitemodels.SiteInsulinDose, query *apiutils.Query) templ.Component {

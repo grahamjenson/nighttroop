@@ -40,11 +40,7 @@ func (s *DeviceStatusesCollection) GetRoute() string {
 // Get Model
 // /////
 func (s *DeviceStatusesCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.DeviceReport, error) {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: id})
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).GetDeviceReport, sitedb.GetDeviceReportParams{ID: id})
 }
 
 // ToModel is the site model of a row
