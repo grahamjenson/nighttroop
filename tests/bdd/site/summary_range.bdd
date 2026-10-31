@@ -6,6 +6,7 @@ ASSERT_PATH /
 CLICK #site--settings-menu
 CLICK #site--data--glucose-button
 ASSERT_STATUS 200
+CLICK #site--glucose--add
 INPUT #site--glucose--create--reading 3.2
 CLICK #site--glucose--create--submit
 ASSERT_STATUS 201
@@ -22,6 +23,7 @@ SCREENSHOT summary_low
 CLICK #site--settings-menu
 CLICK #site--data--glucose-button
 ASSERT_STATUS 200
+CLICK #site--glucose--add
 INPUT #site--glucose--create--reading 12.5
 CLICK #site--glucose--create--submit
 ASSERT_STATUS 201
@@ -37,6 +39,7 @@ SCREENSHOT summary_high
 CLICK #site--settings-menu
 CLICK #site--data--glucose-button
 ASSERT_STATUS 200
+CLICK #site--glucose--add
 INPUT #site--glucose--create--reading 6.4
 CLICK #site--glucose--create--submit
 ASSERT_STATUS 201

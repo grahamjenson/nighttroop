@@ -50,6 +50,11 @@ func (s *NotificationEventsCollection) CreateRow(ctx context.Context, collection
 	return q.CreateNotificationEvent(ctx, sitemodels.NotificationEventToCreate(model, siteContext))
 }
 
+// NewHTMXResponse is the modal to add a notification in
+func (s *NotificationEventsCollection) NewHTMXResponse() templ.Component {
+	return site_data_templ.NotificationEventNew()
+}
+
 func (s *NotificationEventsCollection) CreateHTMXResponse(model *sitemodels.SiteNotificationEvent) templ.Component {
 	return site_data_templ.NotificationEventCreated(model)
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/addmodal"
 	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
@@ -21,7 +22,7 @@ templ TempBasalsTable(tempBasals []*sitemodels.SiteTempBasal, skip int64, limit 
 			Newest first. Click a temp basal to see all its details.
 		}
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			@tempBasalCreateForm()
+			@addmodal.Open("site--temp-basal--add", "/data/temp-basals/new", "Add Temp Basal")
 			@table.Table(table.Props{
 				ID:    "tempBasalsTable",
 				Class: "rounded-lg border border-gray-200",
@@ -66,23 +67,20 @@ templ TempBasalsTable(tempBasals []*sitemodels.SiteTempBasal, skip int64, limit 
 	</div>
 }
 
-// tempBasalCreateForm adds a temp basal starting now, putting its row at the top of the table
-templ tempBasalCreateForm() {
-	<form
-		id="site--temp-basal--create"
-		class="mb-4 flex items-end justify-end gap-2"
-		hx-post="/data/temp-basals"
-		hx-target="#tempBasalsTable tbody"
-		hx-swap="afterbegin"
-		hx-status:4xx="target:#toaster swap:beforeend"
-		hx-status:5xx="target:#toaster swap:beforeend"
-		hx-on::after:request="if (ctx.response.status < 400) { this.reset(); document.getElementById('site--temp-basal--empty')?.remove() }"
-	>
-		@tempBasalInputs("site--temp-basal--create", "", "", "")
-		@button.Button(button.Props{ID: "site--temp-basal--create--submit", Type: button.TypeSubmit}) {
-			Add Temp Basal
-		}
-	</form>
+// TempBasalNew adds a temp basal with all its fields, putting its row at the top of the table
+templ TempBasalNew() {
+	@addmodal.Modal(addmodal.Props{ID: "site--temp-basal--create", Title: "Add Temp Basal", Path: "/data/temp-basals", Target: "#tempBasalsTable tbody",
+		EmptyID: "site--temp-basal--empty", Submit: "Add Temp Basal", Fields: tempBasalFields})
+}
+
+// tempBasalFields are what a temp basal has that a person can type in
+var tempBasalFields = []addmodal.Field{
+	{Name: "absolute", Label: "Rate (U/hr)", Help: "The basal rate given instead, 0 for a suspend.", Required: true, Min: "0", Max: "50", Step: "any"},
+	{Name: "duration_minutes", Label: "Duration (minutes)", Help: "How long it runs for.", Required: true, Min: "1", Max: "1440", Step: "1"},
+	{Name: "occurred_at", Label: "When", Help: "When it started, in your timezone. Blank is now.", Kind: addmodal.When},
+	{Name: "percent", Label: "Percent (%)", Help: "Its rate as a percent, when it was set as one.", Min: "-100", Max: "1000", Step: "any"},
+	{Name: "reason", Label: "Reason", Help: "Why it was set, e.g. exercise.", Kind: addmodal.Text, Max: "64"},
+	{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
 }
 
 templ tempBasalInputs(id string, absolute string, duration string, notes string) {

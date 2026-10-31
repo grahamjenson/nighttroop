@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/addmodal"
 	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
@@ -29,7 +30,7 @@ templ ActivitiesTable(activities []*sitemodels.SiteActivity, skip int64, limit i
 			Newest first. Click an activity to see all its details.
 		}
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			@activityCreateForm()
+			@addmodal.Open("site--activity--add", "/data/activities/new", "Add Activity")
 			@table.Table(table.Props{
 				ID:    "activitiesTable",
 				Class: "rounded-lg border border-gray-200",
@@ -74,23 +75,23 @@ templ ActivitiesTable(activities []*sitemodels.SiteActivity, skip int64, limit i
 	</div>
 }
 
-// activityCreateForm adds an activity happening now, putting its row at the top of the table
-templ activityCreateForm() {
-	<form
-		id="site--activity--create"
-		class="mb-4 flex items-end justify-end gap-2"
-		hx-post="/data/activities"
-		hx-target="#activitiesTable tbody"
-		hx-swap="afterbegin"
-		hx-status:4xx="target:#toaster swap:beforeend"
-		hx-status:5xx="target:#toaster swap:beforeend"
-		hx-on::after:request="if (ctx.response.status < 400) { this.reset(); document.getElementById('site--activity--empty')?.remove() }"
-	>
-		@activityInputs("site--activity--create", "", "", "")
-		@button.Button(button.Props{ID: "site--activity--create--submit", Type: button.TypeSubmit}) {
-			Add Activity
-		}
-	</form>
+// ActivityNew adds an activity with all its fields, putting its row at the top of the table
+templ ActivityNew() {
+	@addmodal.Modal(addmodal.Props{ID: "site--activity--create", Title: "Add Activity", Path: "/data/activities", Target: "#activitiesTable tbody",
+		EmptyID: "site--activity--empty", Submit: "Add Activity", Fields: activityFields})
+}
+
+// activityFields are what an activity has that a person can type in
+var activityFields = []addmodal.Field{
+	{Name: "name", Label: "Name", Help: "What it was, e.g. a run.", Required: true, Kind: addmodal.Text, Max: "64"},
+	{Name: "occurred_at", Label: "When", Help: "When it started, in your timezone. Blank is now.", Kind: addmodal.When},
+	{Name: "activity_type", Label: "Type", Help: "The kind of activity, exercise when left blank.", Kind: addmodal.Text, Max: "32", Options: []string{"exercise", "walking", "running", "cycling", "swimming"}},
+	{Name: "duration_minutes", Label: "Duration (minutes)", Help: "How long it lasted.", Min: "1", Max: "1440", Step: "1"},
+	{Name: "calories", Label: "Calories", Help: "Energy it burned, in kcal.", Min: "0", Max: "20000", Step: "1"},
+	{Name: "steps", Label: "Steps", Help: "Steps taken during it.", Min: "0", Max: "200000", Step: "1"},
+	{Name: "heart_rate", Label: "Heart rate", Help: "Average beats per minute.", Min: "20", Max: "250", Step: "1"},
+	{Name: "reason", Label: "Reason", Help: "Why it was done, e.g. training.", Kind: addmodal.Text, Max: "64"},
+	{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
 }
 
 templ activityInputs(id string, name string, duration string, notes string) {

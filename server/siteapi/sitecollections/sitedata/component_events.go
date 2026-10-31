@@ -43,6 +43,11 @@ func (s *ComponentEventsCollection) CreateRow(ctx context.Context, collectionTx 
 	return q.CreateComponentEvent(ctx, sitemodels.ComponentEventToCreate(model, siteContext))
 }
 
+// NewHTMXResponse is the modal to add a site or sensor change in
+func (s *ComponentEventsCollection) NewHTMXResponse() templ.Component {
+	return site_data_templ.ComponentEventNew()
+}
+
 func (s *ComponentEventsCollection) CreateHTMXResponse(model *sitemodels.SiteComponentEvent) templ.Component {
 	return site_data_templ.ComponentEventCreated(model)
 }

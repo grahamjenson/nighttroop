@@ -11,6 +11,13 @@ ASSERT_VISIBLE #site--component-event--empty
 SCREENSHOT component_events_empty
 
 // A change typed in happens now, added to the top of the table
+CLICK #site--component-event--add
+// Adding opens a modal of all its fields, each saying what it is and whether it is required
+ASSERT_VISIBLE #site--component-event--create--modal
+ASSERT_TEXT_VISIBLE What was changed, started or filled.
+ASSERT_TEXT_VISIBLE Required
+ASSERT_VISIBLE #site--component-event--create--transmitter-id
+SCREENSHOT component_event_add
 INPUT #site--component-event--create--event-type Sensor Change
 INPUT #site--component-event--create--sensor-code 1234
 INPUT #site--component-event--create--notes Left arm
@@ -18,6 +25,7 @@ CLICK #site--component-event--create--submit
 ASSERT_STATUS 201
 ASSERT_TEXT_VISIBLE Left arm
 ASSERT_NOT_VISIBLE #site--component-event--empty
+CLICK #site--component-event--add
 INPUT #site--component-event--create--event-type Site Change
 INPUT #site--component-event--create--notes New pod
 CLICK #site--component-event--create--submit

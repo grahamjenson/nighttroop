@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/addmodal"
 	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
@@ -29,7 +30,7 @@ templ ProfileSwitchesTable(profileSwitches []*sitemodels.SiteProfileSwitch, skip
 			Newest first. Click a profile switch to see all its details.
 		}
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			@profileSwitchCreateForm()
+			@addmodal.Open("site--profile-switch--add", "/data/profile-switches/new", "Add Profile Switch")
 			@table.Table(table.Props{
 				ID:    "profileSwitchesTable",
 				Class: "rounded-lg border border-gray-200",
@@ -74,23 +75,21 @@ templ ProfileSwitchesTable(profileSwitches []*sitemodels.SiteProfileSwitch, skip
 	</div>
 }
 
-// profileSwitchCreateForm adds a profile switch happening now, putting its row at the top of the table
-templ profileSwitchCreateForm() {
-	<form
-		id="site--profile-switch--create"
-		class="mb-4 flex items-end justify-end gap-2"
-		hx-post="/data/profile-switches"
-		hx-target="#profileSwitchesTable tbody"
-		hx-swap="afterbegin"
-		hx-status:4xx="target:#toaster swap:beforeend"
-		hx-status:5xx="target:#toaster swap:beforeend"
-		hx-on::after:request="if (ctx.response.status < 400) { this.reset(); document.getElementById('site--profile-switch--empty')?.remove() }"
-	>
-		@profileSwitchInputs("site--profile-switch--create", "", "100", "0", "0", "")
-		@button.Button(button.Props{ID: "site--profile-switch--create--submit", Type: button.TypeSubmit}) {
-			Add Profile Switch
-		}
-	</form>
+// ProfileSwitchNew adds a profile switch with all its fields, putting its row at the top of the table
+templ ProfileSwitchNew() {
+	@addmodal.Modal(addmodal.Props{ID: "site--profile-switch--create", Title: "Add Profile Switch", Path: "/data/profile-switches", Target: "#profileSwitchesTable tbody",
+		EmptyID: "site--profile-switch--empty", Submit: "Add Profile Switch", Fields: profileSwitchFields})
+}
+
+// profileSwitchFields are what a profile switch has that a person can type in
+var profileSwitchFields = []addmodal.Field{
+	{Name: "name", Label: "Profile", Help: "The name of the profile switched to.", Required: true, Kind: addmodal.Text, Max: "64"},
+	{Name: "occurred_at", Label: "When", Help: "When it was switched to, in your timezone. Blank is now.", Kind: addmodal.When},
+	{Name: "percent", Label: "Percent (%)", Help: "The profile's insulin scaled to this, 100 for as it is.", Min: "10", Max: "500", Step: "1", Value: "100"},
+	{Name: "timeshift", Label: "Shift (minutes)", Help: "Its schedule moved forward by this, e.g. 60 for an hour.", Min: "-1440", Max: "1440", Step: "1", Value: "0"},
+	{Name: "duration_minutes", Label: "Duration (minutes)", Help: "How long it lasts, 0 or blank until the next switch.", Min: "0", Max: "10080", Step: "1"},
+	{Name: "reason", Label: "Reason", Help: "Why it was switched to, e.g. illness.", Kind: addmodal.Text, Max: "64"},
+	{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
 }
 
 // profileSwitchInputs always send a percent, shift and minutes, as an empty number is not one

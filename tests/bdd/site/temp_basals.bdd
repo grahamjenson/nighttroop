@@ -40,8 +40,15 @@ CLICK #site--temp-basal--details--close
 ASSERT_NOT_VISIBLE #site--temp-basal--details
 
 // A temp basal typed in starts now, added to the top of the table
+CLICK #site--temp-basal--add
+// Adding opens a modal of all its fields, each saying what it is and whether it is required
+ASSERT_VISIBLE #site--temp-basal--create--modal
+ASSERT_TEXT_VISIBLE The basal rate given instead, 0 for a suspend.
+ASSERT_TEXT_VISIBLE Required
+ASSERT_VISIBLE #site--temp-basal--create--percent
+SCREENSHOT temp_basal_add
 INPUT #site--temp-basal--create--absolute 1.25
-INPUT #site--temp-basal--create--duration 45
+INPUT #site--temp-basal--create--duration-minutes 45
 INPUT #site--temp-basal--create--notes Sick day
 CLICK #site--temp-basal--create--submit
 ASSERT_STATUS 201

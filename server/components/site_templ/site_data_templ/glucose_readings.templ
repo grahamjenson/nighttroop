@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/addmodal"
 	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
@@ -102,7 +103,7 @@ templ GlucoseReadingsTable(readings []*sitemodels.SiteGlucoseReading, skip int64
 			Newest first. Click a reading to see all its details.
 		}
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			@glucoseCreateForm()
+			@addmodal.Open("site--glucose--add", "/data/glucose/new", "Add Reading")
 			@table.Table(table.Props{
 				ID:    "glucoseReadingsTable",
 				Class: "rounded-lg border border-gray-200",
@@ -144,23 +145,24 @@ templ GlucoseReadingsTable(readings []*sitemodels.SiteGlucoseReading, skip int64
 	</div>
 }
 
-// glucoseCreateForm adds a reading typed in from a meter, putting its row at the top of the table
-templ glucoseCreateForm() {
-	<form
-		id="site--glucose--create"
-		class="mb-4 flex items-end justify-end gap-2"
-		hx-post="/data/glucose"
-		hx-target="#glucoseReadingsTable tbody"
-		hx-swap="afterbegin"
-		hx-status:4xx="target:#toaster swap:beforeend"
-		hx-status:5xx="target:#toaster swap:beforeend"
-		hx-on::after:request="if (ctx.response.status < 400) { this.reset(); document.getElementById('site--glucose--empty')?.remove() }"
-	>
-		@glucoseInputs("site--glucose--create", "", "")
-		@button.Button(button.Props{ID: "site--glucose--create--submit", Type: button.TypeSubmit}) {
-			Add Reading
-		}
-	</form>
+// GlucoseReadingNew adds a glucose reading with all its fields, putting its row at the top of the table
+templ GlucoseReadingNew() {
+	@addmodal.Modal(addmodal.Props{ID: "site--glucose--create", Title: "Add Reading", Path: "/data/glucose", Target: "#glucoseReadingsTable tbody",
+		EmptyID: "site--glucose--empty", Submit: "Add Reading", Fields: glucoseFields(ctx)})
+}
+
+// glucoseFields are what a glucose reading has that a person can type in
+func glucoseFields(ctx context.Context) []addmodal.Field {
+	attributes, units := glucoseInputAttributes(ctx), string(*glucoseUnits(ctx))
+	return []addmodal.Field{
+		{Name: "reading", Label: "Reading (" + units + ")", Help: "The glucose measured, in your units.", Required: true, Min: fmt.Sprint(attributes["min"]), Max: fmt.Sprint(attributes["max"]), Step: "any"},
+		{Name: "occurred_at", Label: "When", Help: "When it was measured, in your timezone. Blank is now.", Kind: addmodal.When},
+		{Name: "reading_type", Label: "Type", Help: "mbg for a finger prick meter, sgv for a sensor.", Required: true, Kind: addmodal.Select, Options: []string{"mbg", "sgv"}},
+		{Name: "measurement_method", Label: "Method", Help: "How it was measured, e.g. a meter.", Kind: addmodal.Text, Max: "32", Options: []string{"meter", "cgm", "manual"}},
+		{Name: "direction", Label: "Trend", Help: "Which way it was heading, for a sensor reading.", Kind: addmodal.Select, Options: []string{"DoubleUp", "SingleUp", "FortyFiveUp", "Flat", "FortyFiveDown", "SingleDown", "DoubleDown"}},
+		{Name: "reason", Label: "Reason", Help: "Why it was measured, e.g. before a meal.", Kind: addmodal.Text, Max: "64"},
+		{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
+	}
 }
 
 templ glucoseInputs(id string, value string, notes string) {

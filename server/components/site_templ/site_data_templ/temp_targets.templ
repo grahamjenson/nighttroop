@@ -1,9 +1,11 @@
 package site_data_templ
 
 import (
+	"context"
 	"fmt"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/addmodal"
 	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
@@ -21,7 +23,7 @@ templ TempTargetsTable(tempTargets []*sitemodels.SiteTempTarget, skip int64, lim
 			Newest first. Click a temp target to see all its details.
 		}
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			@tempTargetCreateForm()
+			@addmodal.Open("site--temp-target--add", "/data/temp-targets/new", "Add Temp Target")
 			@table.Table(table.Props{
 				ID:    "tempTargetsTable",
 				Class: "rounded-lg border border-gray-200",
@@ -66,23 +68,25 @@ templ TempTargetsTable(tempTargets []*sitemodels.SiteTempTarget, skip int64, lim
 	</div>
 }
 
-// tempTargetCreateForm adds a temp target starting now, putting its row at the top of the table
-templ tempTargetCreateForm() {
-	<form
-		id="site--temp-target--create"
-		class="mb-4 flex items-end justify-end gap-2"
-		hx-post="/data/temp-targets"
-		hx-target="#tempTargetsTable tbody"
-		hx-swap="afterbegin"
-		hx-status:4xx="target:#toaster swap:beforeend"
-		hx-status:5xx="target:#toaster swap:beforeend"
-		hx-on::after:request="if (ctx.response.status < 400) { this.reset(); document.getElementById('site--temp-target--empty')?.remove() }"
-	>
-		@tempTargetInputs("site--temp-target--create", "", "", "", "")
-		@button.Button(button.Props{ID: "site--temp-target--create--submit", Type: button.TypeSubmit}) {
-			Add Temp Target
-		}
-	</form>
+// TempTargetNew adds a temp target with all its fields, putting its row at the top of the table
+templ TempTargetNew() {
+	@addmodal.Modal(addmodal.Props{ID: "site--temp-target--create", Title: "Add Temp Target", Path: "/data/temp-targets", Target: "#tempTargetsTable tbody",
+		EmptyID: "site--temp-target--empty", Submit: "Add Temp Target", Fields: tempTargetFields(ctx)})
+}
+
+// tempTargetFields are what a temp target has that a person can type in
+func tempTargetFields(ctx context.Context) []addmodal.Field {
+	attributes, units := glucoseInputAttributes(ctx), string(*glucoseUnits(ctx))
+	low, high := fmt.Sprint(attributes["min"]), fmt.Sprint(attributes["max"])
+	return []addmodal.Field{
+		{Name: "low_target", Label: "Low (" + units + ")", Help: "The bottom of the range aimed for.", Required: true, Min: low, Max: high, Step: "any"},
+		{Name: "high_target", Label: "High (" + units + ")", Help: "The top of the range aimed for, at least the low.", Required: true, Min: low, Max: high, Step: "any"},
+		{Name: "duration_minutes", Label: "Duration (minutes)", Help: "How long it is aimed for, at most a week.", Required: true, Min: "1", Max: "10080", Step: "1"},
+		{Name: "occurred_at", Label: "When", Help: "When it started, in your timezone. Blank is now.", Kind: addmodal.When},
+		{Name: "insulin_needs_scale_factor", Label: "Insulin needs", Help: "What insulin needs are scaled by, e.g. 0.8 for 80%.", Min: "0", Max: "10", Step: "any"},
+		{Name: "reason", Label: "Reason", Help: "Why it was set, e.g. activity or eating soon.", Kind: addmodal.Text, Max: "64", Options: []string{"Activity", "Eating Soon", "Hypo"}},
+		{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
+	}
 }
 
 templ tempTargetInputs(id string, low string, high string, duration string, notes string) {

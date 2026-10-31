@@ -127,8 +127,9 @@ deleted (after a confirmation):
 - **Event groups**: the treatments that came in together through the Nightscout API, with their events.
 - **Device statuses**: each device's latest 3 statuses, and every status a device sent.
 
-Adding an insulin dose or food intake opens a modal of all its fields, each saying what it is, in what units, whether
-it is required, and with its limits. Its time is typed in the settings' timezone, and is now when left blank.
+Adding a record on a data page opens a modal of all the fields a person can type in, each saying what it is, in what
+units, whether it is required, with its limits, and a dropdown or suggestions for its types. Its time is typed in the
+settings' timezone, and is now when left blank; other fields left blank are not set.
 
 ### Presets
 

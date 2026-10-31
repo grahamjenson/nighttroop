@@ -46,6 +46,11 @@ func (s *TempTargetsCollection) CreateRow(ctx context.Context, collectionTx *sit
 	return q.CreateTempTarget(ctx, sitemodels.TempTargetToCreate(model, siteContext))
 }
 
+// NewHTMXResponse is the modal to add a temp target in
+func (s *TempTargetsCollection) NewHTMXResponse() templ.Component {
+	return site_data_templ.TempTargetNew()
+}
+
 func (s *TempTargetsCollection) CreateHTMXResponse(model *sitemodels.SiteTempTarget) templ.Component {
 	return site_data_templ.TempTargetCreated(model)
 }

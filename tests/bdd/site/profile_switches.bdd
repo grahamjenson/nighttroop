@@ -27,6 +27,13 @@ ASSERT_TEXT_VISIBLE Showing 1 to 1
 ASSERT_TEXT_VISIBLE virtual://nighttroop
 
 // A profile switch typed in happens now, added to the top of the table
+CLICK #site--profile-switch--add
+// Adding opens a modal of all its fields, each saying what it is and whether it is required
+ASSERT_VISIBLE #site--profile-switch--create--modal
+ASSERT_TEXT_VISIBLE The name of the profile switched to.
+ASSERT_TEXT_VISIBLE Required
+ASSERT_VISIBLE #site--profile-switch--create--percent[value="100"]
+SCREENSHOT profile_switch_add
 INPUT #site--profile-switch--create--name Sick Day
 INPUT #site--profile-switch--create--percent 120
 INPUT #site--profile-switch--create--notes Flu

@@ -35,9 +35,16 @@ CLICK #site--temp-target--details--close
 ASSERT_NOT_VISIBLE #site--temp-target--details
 
 // A temp target typed in mmol/L starts now, added to the top of the table
-INPUT #site--temp-target--create--low 7.5
-INPUT #site--temp-target--create--high 9
-INPUT #site--temp-target--create--duration 45
+CLICK #site--temp-target--add
+// Adding opens a modal of all its fields, each saying what it is and whether it is required
+ASSERT_VISIBLE #site--temp-target--create--modal
+ASSERT_TEXT_VISIBLE The bottom of the range aimed for.
+ASSERT_TEXT_VISIBLE Required
+ASSERT_VISIBLE #site--temp-target--create--insulin-needs-scale-factor
+SCREENSHOT temp_target_add
+INPUT #site--temp-target--create--low-target 7.5
+INPUT #site--temp-target--create--high-target 9
+INPUT #site--temp-target--create--duration-minutes 45
 INPUT #site--temp-target--create--notes Walk
 CLICK #site--temp-target--create--submit
 ASSERT_STATUS 201
