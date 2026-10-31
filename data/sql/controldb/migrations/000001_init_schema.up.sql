@@ -7,18 +7,6 @@
 ------------------
 
 
--- SITE SYNC TABLES
-
--- This is a basic table that will stop certain urls from being added as data sources, for security and abuse prevention
--- TODO: everything here
-CREATE TABLE data_source_block_list(
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    username TEXT CHECK(length(username) <= 32), -- in case it is a dexcom account or something
-    url TEXT CHECK(length(url) <= 256),
-    reason TEXT CHECK(length(reason) <= 256)
-) STRICT;
-
 --------------------------
 --- SITE TABLES
 --------------------------

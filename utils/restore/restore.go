@@ -53,7 +53,6 @@ func TryDownloadExtractControlDbs(s3Client *s3utils.S3Client) error {
 		slog.Info("No control db backup found")
 		return nil
 	}
-	// TODO: check to see the error is not a 404
 	if err != nil {
 		return fmt.Errorf("cannot download control db: %w", err)
 	}
@@ -118,8 +117,8 @@ func TryDownloadExrtractUserDbsForBatch(s3Client *s3utils.S3Client, char string)
 
 	_, found, err := s3Client.DownloadFilesFromS3(s3Path, path)
 
+	// A batch with no backup is not found, not an error
 	if err != nil {
-		// TODO dont fail here if just not found
 		return false, fmt.Errorf("cannot download user db: %w", err)
 	}
 

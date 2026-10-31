@@ -49,7 +49,7 @@ func (j *JobsDB) BuildDailyReports(ctx context.Context, secondsAgo int64) error 
 			stats.TotalSuccess += j.TotalSuccess()
 			stats.TotalFailed += j.TotalFailed()
 			stats.DurationSum += j.Duration()
-			stats.DurationSquaredSum += j.DurationSquared() // TODO figure this out get better data
+			stats.DurationSquaredSum += j.DurationSquared()
 			stats.Errors = stats.Errors.AddAll(j.Errors)
 			dayQueueJobMap[j.DayQueueJob()] = stats
 		} else {
