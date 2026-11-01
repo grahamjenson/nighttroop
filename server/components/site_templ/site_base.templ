@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"nighttroop.t1d.nz/server/components/footer"
+	"nighttroop.t1d.nz/server/components/testsite"
 	"nighttroop.t1d.nz/server/components/ui/checkbox"
 	"nighttroop.t1d.nz/server/components/ui/copybutton"
 	"nighttroop.t1d.nz/server/components/ui/dropdown"
@@ -40,6 +41,7 @@ templ Base() {
 			<script src="/echarts.min.js"></script>
 		</head>
 		<body hx-ext="response-targets">
+			@testsite.Banner()
 			<div id="toaster" class="mb-3"></div>
 			{ children... }
 			// After the page's own title, so it names the tab only when the page has none, see heading.Page

@@ -37,6 +37,15 @@ func TestResourceAlerts(t *testing.T) {
 	})
 }
 
+// TestTestSiteBanner runs the testsite files against a server set up as a test site, whose every page says so
+func TestTestSiteBanner(t *testing.T) {
+	testSite := func(c *config.ServerConfig) { c.TestSite = true }
+	runOnOwnServer(t, "testsite/banner.bdd", "192.0.2.12", testSite, func(controlDB *db.ControlDB) map[string]any {
+		require.NoError(t, controlDB.SeedDevAdmin(t.Context()))
+		return nil
+	})
+}
+
 // runOnOwnServer runs one file against a server and databases of its own, from the test config as configure changes
 // it, with the values prepare gives the file. Its browser sends its own address, so its attempts do not spend
 // TestSite's login limit for 127.0.0.1, whose forwarding is trusted.

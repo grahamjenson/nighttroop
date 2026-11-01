@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"nighttroop.t1d.nz/server/components/footer"
+	"nighttroop.t1d.nz/server/components/testsite"
 	"nighttroop.t1d.nz/server/components/ui/checkbox"
 	"nighttroop.t1d.nz/server/components/ui/copybutton"
 	"nighttroop.t1d.nz/server/components/ui/dropdown"
@@ -39,6 +40,7 @@ templ ControlBase() {
 			<script src="/qrcode.js"></script>
 		</head>
 		<body class="min-h-screen flex flex-col">
+			@testsite.Banner()
 			<div id="toaster" class="mb-3"></div>
 			@Header()
 			if controlContext := httputils.GetControlContext(ctx); controlContext != nil && controlContext.IdentityModel != nil {
