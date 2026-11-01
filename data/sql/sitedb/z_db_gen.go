@@ -125,6 +125,25 @@ func (db *DB) Vacuum(ctx context.Context) error {
 	return err
 }
 
+// Schema is how a DB's tables, indexes, triggers and views were made, by type and name, so an existing DB's schema can
+// be compared with the one its migrations make for a new DB. sqlc cannot read sqlite_master, so it is generated here.
+func Schema(ctx context.Context, sqldb *sql.DB) ([]string, error) {
+	rows, err := sqldb.QueryContext(ctx, "SELECT sql FROM sqlite_master WHERE sql IS NOT NULL ORDER BY type, name")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var schema []string
+	for rows.Next() {
+		var stmt string
+		if err := rows.Scan(&stmt); err != nil {
+			return nil, err
+		}
+		schema = append(schema, stmt)
+	}
+	return schema, rows.Err()
+}
+
 /////
 // File paths
 /////

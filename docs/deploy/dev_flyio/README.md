@@ -5,8 +5,9 @@ try the newest code.
 
 - **It runs every commit on `main`.** Each time CI passes on `main`, a GitHub Actions workflow builds that commit and
   deploys it.
-- **It wipes all its data every time.** Every deploy and every restart starts with empty databases, and nothing is
-  backed up. Nothing carries over between versions, so a tester never hits data from an older version.
+- **It keeps its data until a migration change breaks it.** The databases are on a volume, so they last through
+  deploys and restarts. When a new version changes a migration so the old databases no longer fit, that deploy wipes
+  them and starts empty, so a tester never hits data the new version cannot read. Nothing is backed up.
 - **It says so on every page.** `TEST_SITE` puts a large banner at the top of every page, so nobody mistakes it for a
   real site or keeps anything they need on it.
 
@@ -48,8 +49,13 @@ of your own domain:
   - Fly's proxy ends HTTPS and forwards to the server on port 3000.
   - Nighttroop reads the visitor's IP from Fly's `Fly-Client-IP` header, because Fly sets `FLY_APP_NAME`.
   - There is only one machine because each machine would have its own databases.
-- **No volume.** The databases are in `/data` on the machine's own disk, which Fly resets to the image on every
-  deploy and restart. That is what wipes the data.
+- **A volume.** The databases are in `/data`, on the `nighttroop_dev_data` volume, which the first deploy makes.
+  - The image is the `Dockerfile`'s `dev` target. It starts as root, as Fly mounts the volume owned by root, gives
+    `/data` to the server's user, and runs the server as that user.
+  - Before the server starts, `dbs_are_valid` ([`scripts/dbs_are_valid`](../../../scripts/dbs_are_valid/main.go))
+    migrates each database as the server would, and checks its schema matches what the migrations make for a new one.
+  - If any does not, as when a migration was edited rather than added, `/data/db` and `/data/backup` are wiped and
+    the server starts empty. The logs say `the databases no longer fit the migrations, so they are wiped`.
 - **No S3.** `S3_URL` is left unset, so the S3 check fails at startup. Then:
   - nothing is restored on start and nothing is backed up;
   - the control plane warns that S3 is not connected, which is expected here;
@@ -101,11 +107,13 @@ fly apps create nighttroop-dev-yourname
 From the repository's root:
 
 ```sh
-fly deploy . --app nighttroop-dev-yourname --config docs/deploy/dev_flyio/fly.toml --dockerfile Dockerfile --ha=false
+fly deploy . --app nighttroop-dev-yourname --config docs/deploy/dev_flyio/fly.toml --dockerfile Dockerfile \
+  --build-target dev --ha=false
 ```
 
 - **The leading `.`** makes the repository's root the build context. The `--config` and `--dockerfile` paths are
   relative to it.
+- **`--build-target dev`** builds the dev image, which checks the databases on the volume before the server starts.
 - **`--ha=false`** keeps it to one machine. Fly makes two by default, and each would have its own databases.
 
 Check it is up:
@@ -175,8 +183,8 @@ To stop deploying, delete the `DEV_FLYIO_APP` variable. To stop the server too, 
 
 ## 6. Set up the control plane
 
-Every deploy starts a new, empty server, so its control plane needs setting up again after each one. Testers don't need
-it; you only need it to see the server's sites, jobs and logs.
+The first deploy, and any deploy that wipes the databases, starts an empty server, so its control plane needs setting
+up again then. Testers don't need it; you only need it to see the server's sites, jobs and logs.
 
 1. Find the setup code in the logs:
 
@@ -184,8 +192,7 @@ it; you only need it to see the server's sites, jobs and logs.
    fly logs --app nighttroop-dev-yourname | grep -A1 "SET UP NIGHTTROOP"
    ```
 
-   - The code is printed on every start until setup is done, so `fly machine restart` shows it again. Restarting also
-     wipes the data.
+   - The code is printed on every start until setup is done, so `fly machine restart` shows it again.
 2. Open <https://control.dev.example.com/setup> and enter the code.
 3. Save the admin's password and add the TOTP secret to your authenticator app, then finish setup.
    - A password manager entry for the dev server can be overwritten each time.
@@ -193,15 +200,19 @@ it; you only need it to see the server's sites, jobs and logs.
 ## Day to day
 
 - **Tell testers what to expect:**
-  - every new version wipes everything;
-  - the server can restart at any time, which wipes it too;
-  - a phone's Nightscout URL and token stop working after each deploy, so testers create a new site and set their
-    apps up again.
+  - a new version that changes the databases' migrations wipes everything;
+  - when it does, a phone's Nightscout URL and token stop working, so testers create a new site and set their apps up
+    again.
 - **Testing with realistic data:** testers can turn on virtual sync in a site's sync settings, instead of syncing a
   real Dexcom, Libre or Nightscout account.
 - **What is running:** `fly releases --app nighttroop-dev-yourname` lists each deploy, newest first. The workflow run on
   the **Actions** tab names its commit.
-- **Wiping it by hand:** `fly machine restart --app nighttroop-dev-yourname` restarts the server with empty databases.
+- **Wiping it by hand:** remove the databases, then restart the server, which starts empty:
+
+  ```sh
+  fly ssh console --app nighttroop-dev-yourname -C "rm -rf /data/db /data/backup"
+  fly machine restart --app nighttroop-dev-yourname
+  ```
 - **If it is struggling:**
   - the control plane's usage page shows memory and CPU;
   - `fly scale memory 1024 --app nighttroop-dev-yourname` gives it more memory.
@@ -222,10 +233,12 @@ it; you only need it to see the server's sites, jobs and logs.
 
 ### Testers' data is gone
 
-That is how this server works: every deploy and restart wipes it.
+A deploy wipes the databases when a migration change means they no longer fit.
 
-- `fly releases` shows whether a deploy just happened.
-- `fly machine status` shows a restart.
+- `fly logs` says `the databases no longer fit the migrations, so they are wiped`, with `dbs_are_valid`'s reason
+  before it.
+- `fly releases` shows which deploy it was.
+- `fly volumes list` shows whether the volume is still there; a machine made without it starts empty every time.
 
 ### There are two machines, and pages show different data
 

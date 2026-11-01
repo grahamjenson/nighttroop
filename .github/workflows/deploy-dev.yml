@@ -1,8 +1,9 @@
 name: Deploy dev
 
-# Deploys each commit on main that CI passed on to the dev Nighttroop on Fly.io, which wipes its data on every deploy;
-# see docs/deploy/dev_flyio/README.md. It does nothing until the repository variable DEV_FLYIO_APP names the Fly app
-# and the secret FLY_API_TOKEN holds a deploy token for it.
+# Deploys each commit on main that CI passed on to the dev Nighttroop on Fly.io, which keeps its data between deploys
+# unless a migration change means its databases no longer fit; see docs/deploy/dev_flyio/README.md. It does nothing
+# until the repository variable DEV_FLYIO_APP names the Fly app and the secret FLY_API_TOKEN holds a deploy token for
+# it.
 on:
   workflow_run:
     workflows: [CI]
@@ -32,7 +33,7 @@ jobs:
       # From the repository's root, the build context, with the dev config. One machine, as each has its own data.
       - run: >-
           flyctl deploy . --app "$DEV_FLYIO_APP" --config docs/deploy/dev_flyio/fly.toml --dockerfile Dockerfile
-          --remote-only --ha=false
+          --build-target dev --remote-only --ha=false
         env:
           DEV_FLYIO_APP: ${{ vars.DEV_FLYIO_APP }}
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
