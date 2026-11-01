@@ -24,10 +24,7 @@ import (
 type ControlDB struct {
 	*controldb.DB
 
-	// previously modified
-	sites map[string]*SiteDB
-
-	sitesRWLock sync.RWMutex
+	sites openSites
 	// createSiteLock serialises CreateSite and HydrateSite so two calls never pick, open or delete the same subdomain's DB
 	createSiteLock sync.Mutex
 
@@ -67,7 +64,7 @@ func NewControlDB(ctx context.Context, serverConfig *config.ServerConfig) (*Cont
 		Jobs:  jobs,
 		Logs:  logs,
 		Live:  live,
-		sites: make(map[string]*SiteDB),
+		sites: openSites{bySubdomain: map[string]*SiteDB{}},
 	}
 
 	// Without a control admin the server starts in setup, see control_setup.go
@@ -107,7 +104,7 @@ func (db *ControlDB) fillSites(ctx context.Context) ([]string, error) {
 		if err != nil {
 			return sites, fmt.Errorf("SiteDB failed to be added to the ControlDB list, %w", err)
 		}
-		db.sites[model.ID] = siteDB
+		db.sites.add(siteDB)
 	}
 
 	return sites, nil
@@ -178,9 +175,9 @@ func (db *ControlDB) createSite(ctx context.Context, subdomain string) (*SiteCre
 		return nil, fmt.Errorf("Site DB Creation Error: %w", err)
 	}
 
-	// Lock and write site to the db and add to the in memory map
-	db.sitesRWLock.Lock()
-	defer db.sitesRWLock.Unlock()
+	// The open sites are held until the site's DB is added, so its row is never found without its DB open
+	db.sites.mu.Lock()
+	defer db.sites.mu.Unlock()
 
 	_, err = db.Queries.CreateSite(ctx, controldb.CreateSiteParams{
 		ID:            subdomain,
@@ -207,7 +204,7 @@ func (db *ControlDB) createSite(ctx context.Context, subdomain string) (*SiteCre
 		return nil, fmt.Errorf("cannot create admin identity: %w", err)
 	}
 
-	db.sites[subdomain] = siteDB
+	db.sites.bySubdomain[subdomain] = siteDB
 	db.Logs.SiteCreatedEvent(ctx, subdomain)
 
 	return &SiteCreateResult{
@@ -245,15 +242,10 @@ func (db *ControlDB) DeleteSites(ctx context.Context, subdomains []string) error
 
 	// Close the DB and remove from the map
 	for _, subdomain := range deletedSubdomains {
-		db.sitesRWLock.Lock()
-		site, ok := db.sites[subdomain]
-		if !ok {
-			db.sitesRWLock.Unlock()
+		site := db.sites.remove(subdomain)
+		if site == nil {
 			return fmt.Errorf("site not found")
 		}
-		delete(db.sites, subdomain)
-		db.sitesRWLock.Unlock()
-
 		site.Close()
 
 		err := utils.DeleteFiles([]string{site.Path, site.BackupPath})
@@ -270,10 +262,8 @@ func (db *ControlDB) DeleteSites(ctx context.Context, subdomains []string) error
 // ArchiveSite backs up a site's DB and uploads it, with upload, to its archive path, then marks the site archived and
 // deletes its local files, so it is no longer served or backed up but can be restored from the archive
 func (db *ControlDB) ArchiveSite(ctx context.Context, subdomain string, upload s3utils.UploadFunc) error {
-	db.sitesRWLock.RLock()
-	site, ok := db.sites[subdomain]
-	db.sitesRWLock.RUnlock()
-	if !ok {
+	site := db.sites.get(subdomain)
+	if site == nil {
 		return fmt.Errorf("site %s is not open", subdomain)
 	}
 	if err := site.Backup(ctx); err != nil {
@@ -287,9 +277,7 @@ func (db *ControlDB) ArchiveSite(ctx context.Context, subdomain string, upload s
 		return fmt.Errorf("cannot archive site %s: %w", subdomain, err)
 	}
 
-	db.sitesRWLock.Lock()
-	delete(db.sites, subdomain)
-	db.sitesRWLock.Unlock()
+	db.sites.remove(subdomain)
 	site.Close()
 	if err := utils.DeleteFiles([]string{site.Path, site.BackupPath}); err != nil {
 		slog.ErrorContext(ctx, "Failed to delete archived site db files", "subdomain", subdomain, "error", err)
@@ -302,10 +290,7 @@ func (db *ControlDB) ArchiveSite(ctx context.Context, subdomain string, upload s
 func (db *ControlDB) HydrateSite(ctx context.Context, subdomain string, download s3utils.DownloadFunc) error {
 	db.createSiteLock.Lock()
 	defer db.createSiteLock.Unlock()
-	db.sitesRWLock.RLock()
-	_, open := db.sites[subdomain]
-	db.sitesRWLock.RUnlock()
-	if open {
+	if db.sites.get(subdomain) != nil {
 		return fmt.Errorf("site %s is already open", subdomain)
 	}
 	path := sitedb.GetPath(subdomain, db.ServerConfig)
@@ -330,19 +315,15 @@ func (db *ControlDB) HydrateSite(ctx context.Context, subdomain string, download
 		return err
 	}
 
-	db.sitesRWLock.Lock()
-	db.sites[subdomain] = siteDB
-	db.sitesRWLock.Unlock()
+	db.sites.add(siteDB)
 	return nil
 }
 
 // TruncateSite clears the raw JSON a site's DB keeps of what each row older than TruncateRecordsAfterDays was sent,
 // keeping all its data, then shrinks the DB and records its new size, which it returns
 func (db *ControlDB) TruncateSite(ctx context.Context, subdomain string) (*int64, error) {
-	db.sitesRWLock.RLock()
-	site, ok := db.sites[subdomain]
-	db.sitesRWLock.RUnlock()
-	if !ok {
+	site := db.sites.get(subdomain)
+	if site == nil {
 		return nil, fmt.Errorf("site %s is not open", subdomain)
 	}
 	q, before := site.Queries, time.Now().AddDate(0, 0, -db.ServerConfig.TruncateRecordsAfterDays).UnixMilli()
@@ -388,22 +369,11 @@ func clearBefore[P ~struct{ Before int64 }](clear func(context.Context, P) error
 // //
 
 func (db *ControlDB) GetNSitesDBs() int {
-	l := 0
-	db.sitesRWLock.RLock()
-	l = len(db.sites)
-	db.sitesRWLock.RUnlock()
-	return l
+	return db.sites.count()
 }
 
 func (db *ControlDB) AllSites() []*SiteDB {
-	db.sitesRWLock.RLock()
-	defer db.sitesRWLock.RUnlock()
-
-	sites := []*SiteDB{}
-	for _, site := range db.sites {
-		sites = append(sites, site)
-	}
-	return sites
+	return db.sites.all()
 }
 
 func (db *ControlDB) SubdomainUsed(ctx context.Context, subdomain string) bool {
@@ -465,23 +435,11 @@ func (db *ControlDB) GetSite(ctx context.Context, subdomain string) (*SiteDB, *c
 		return nil, nil, fmt.Errorf("site not found")
 	}
 
-	siteDB, err := db.getSiteDBFromMap(subdomain)
-	if err != nil {
-		return nil, nil, fmt.Errorf("Cannot get SiteDB from memory: %w", err)
+	siteDB := db.sites.get(subdomain)
+	if siteDB == nil {
+		return nil, nil, fmt.Errorf("Cannot get SiteDB from memory: site not found in memory")
 	}
 	return siteDB, model, nil
-}
-
-func (db *ControlDB) getSiteDBFromMap(subdomain string) (*SiteDB, error) {
-	db.sitesRWLock.RLock()
-	defer db.sitesRWLock.RUnlock()
-
-	siteDB := db.sites[subdomain]
-	if siteDB == nil {
-		return nil, fmt.Errorf("site not found in memory")
-	}
-
-	return siteDB, nil
 }
 
 ////
@@ -489,8 +447,7 @@ func (db *ControlDB) getSiteDBFromMap(subdomain string) (*SiteDB, error) {
 ////
 
 func (db *ControlDB) Close() error {
-	// Keep it locked so no new sites can be created
-	for _, site := range db.sites {
+	for _, site := range db.sites.all() {
 		err := site.Close()
 		if err != nil {
 			slog.Error("Failed to close site db", "subdomain", site.Subdomain, "error", err)
@@ -695,11 +652,8 @@ func (db *ControlDB) CreateControlIdentity(ctx context.Context, name string, rol
 
 func (db *ControlDB) GetSiteDBsFromModels(models []*controldb.Site) ([]*SiteDB, error) {
 	sites := []*SiteDB{}
-	db.sitesRWLock.RLock()
-	defer db.sitesRWLock.RUnlock()
-
 	for _, model := range models {
-		site := db.sites[model.ID]
+		site := db.sites.get(model.ID)
 		if site == nil {
 			return sites, fmt.Errorf("site not found in memory")
 		}
