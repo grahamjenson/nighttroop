@@ -32,5 +32,7 @@ type ResourceReading struct {
 	CpuPercent       float64
 	CpuPeggedSeconds int64
 	MemoryPercent    *float64
+	MemoryTotalBytes *int64
 	DiskPercent      *float64
+	DiskTotalBytes   *int64
 }

@@ -35,12 +35,13 @@ type ServerStatus struct {
 	HighResources []ResourceLevel
 }
 
-// ResourceLevel is one of the server's resources at a check: memory or disk, its percent used, or cpu, the seconds it
-// was at 100%, and its alert level
+// ResourceLevel is one of the server's resources at a check: memory or disk, its percent used of its total bytes, or
+// cpu, the seconds it was at 100%, and its alert level
 type ResourceLevel struct {
-	Resource string  `json:"resource"`
-	Value    float64 `json:"value"`
-	Limit    float64 `json:"limit"`
+	Resource string   `json:"resource"`
+	Value    float64  `json:"value"`
+	Limit    float64  `json:"limit"`
+	Total    *float64 `json:"total,omitempty"`
 }
 
 type ServerConfig struct {
@@ -142,9 +143,11 @@ type ServerConfig struct {
 	TruncateRecordsAfterDays int
 
 	// MemoryAlertPercent and DiskAlertPercent are the memory and DB disk used, and CPUPeggedAlertSeconds how long the
-	// CPU is at 100%, at or over which a check of the server's resources warns the control site
+	// CPU is at 100%, at or over which a check of the server's resources warns the control site; disk only warns while
+	// under DiskAlertFreeGB is free
 	MemoryAlertPercent    int
 	DiskAlertPercent      int
+	DiskAlertFreeGB       int
 	CPUPeggedAlertSeconds int
 
 	// Backup Config
@@ -333,6 +336,7 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		// Resource alerts
 		MemoryAlertPercent:    configIntSelect(dotenv, "MEMORY_ALERT_PERCENT", 60),
 		DiskAlertPercent:      configIntSelect(dotenv, "DISK_ALERT_PERCENT", 60),
+		DiskAlertFreeGB:       configIntSelect(dotenv, "DISK_ALERT_FREE_GB", 100),
 		CPUPeggedAlertSeconds: configIntSelect(dotenv, "CPU_PEGGED_ALERT_SECONDS", 20),
 
 		// Backup Config

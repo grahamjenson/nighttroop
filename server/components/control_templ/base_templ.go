@@ -22,6 +22,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/selectbox"
 	"nighttroop.t1d.nz/server/components/ui/toast"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -168,7 +169,7 @@ func StatusBanner(status config.ServerStatus) templ.Component {
 				var templ_7745c5c3_Var3 string
 				templ_7745c5c3_Var3, templ_7745c5c3_Err = templruntime.NewAttributeExpression("control--status-banner--" + level.Resource).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/base.templ`, Line: 75, Col: 56}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/base.templ`, Line: 76, Col: 56}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 				if templ_7745c5c3_Err != nil {
@@ -181,7 +182,7 @@ func StatusBanner(status config.ServerStatus) templ.Component {
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(resourceTitle(level))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/base.templ`, Line: 75, Col: 89}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/base.templ`, Line: 76, Col: 89}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
@@ -194,7 +195,7 @@ func StatusBanner(status config.ServerStatus) templ.Component {
 				var templ_7745c5c3_Var5 string
 				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(resourceWarning(level))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/base.templ`, Line: 75, Col: 126}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/base.templ`, Line: 76, Col: 126}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 				if templ_7745c5c3_Err != nil {
@@ -218,12 +219,19 @@ func resourceTitle(level config.ResourceLevel) string {
 	return map[string]string{"memory": "Memory high", "disk": "Disk high", "cpu": "CPU high"}[level.Resource]
 }
 
-// resourceWarning says how high a resource was at the last check, and its alert level
+// resourceWarning says how high a resource was at the last check: the CPU's seconds at 100%, the memory used and the
+// disk free, in bytes where its total is known
 func resourceWarning(level config.ResourceLevel) string {
-	if level.Resource == "cpu" {
+	switch {
+	case level.Resource == "cpu":
 		return fmt.Sprintf("at 100%% for %.0f seconds, and %.0f or more warns.", level.Value, level.Limit)
+	case level.Total == nil:
+		return fmt.Sprintf("%.0f%% used, and %.0f%% or more warns.", level.Value, level.Limit)
+	case level.Resource == "disk":
+		free := *level.Total * (100 - level.Value) / 100
+		return fmt.Sprintf("%s free of %s.", display.Bytes(free), display.Bytes(*level.Total))
 	}
-	return fmt.Sprintf("%.0f%% used, and %.0f%% or more warns.", level.Value, level.Limit)
+	return fmt.Sprintf("%s used of %s.", display.Bytes(*level.Total*level.Value/100), display.Bytes(*level.Total))
 }
 
 func FullPage(content templ.Component) templ.Component {
@@ -313,7 +321,7 @@ func menuItem(id string, path string, label string, itemIcon func(...icon.Props)
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/base.templ`, Line: 113, Col: 10}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/base.templ`, Line: 121, Col: 10}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {

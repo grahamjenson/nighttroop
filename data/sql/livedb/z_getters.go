@@ -176,6 +176,16 @@ func (m *ResourceReading) SetMemoryPercent(v *float64) {
 	m.MemoryPercent = v
 }
 
+// GetMemoryTotalBytes returns the MemoryTotalBytes value.
+func (m ResourceReading) GetMemoryTotalBytes() *int64 {
+	return m.MemoryTotalBytes
+}
+
+// SetMemoryTotalBytes sets the MemoryTotalBytes value and returns the updated ResourceReading.
+func (m *ResourceReading) SetMemoryTotalBytes(v *int64) {
+	m.MemoryTotalBytes = v
+}
+
 // GetDiskPercent returns the DiskPercent value.
 func (m ResourceReading) GetDiskPercent() *float64 {
 	return m.DiskPercent
@@ -184,6 +194,16 @@ func (m ResourceReading) GetDiskPercent() *float64 {
 // SetDiskPercent sets the DiskPercent value and returns the updated ResourceReading.
 func (m *ResourceReading) SetDiskPercent(v *float64) {
 	m.DiskPercent = v
+}
+
+// GetDiskTotalBytes returns the DiskTotalBytes value.
+func (m ResourceReading) GetDiskTotalBytes() *int64 {
+	return m.DiskTotalBytes
+}
+
+// SetDiskTotalBytes sets the DiskTotalBytes value and returns the updated ResourceReading.
+func (m *ResourceReading) SetDiskTotalBytes(v *int64) {
+	m.DiskTotalBytes = v
 }
 
 // GetSiteID returns the SiteID value.
@@ -526,6 +546,16 @@ func (m *CreateResourceReadingParams) SetMemoryPercent(v *float64) {
 	m.MemoryPercent = v
 }
 
+// GetMemoryTotalBytes returns the MemoryTotalBytes value.
+func (m CreateResourceReadingParams) GetMemoryTotalBytes() *int64 {
+	return m.MemoryTotalBytes
+}
+
+// SetMemoryTotalBytes sets the MemoryTotalBytes value and returns the updated CreateResourceReadingParams.
+func (m *CreateResourceReadingParams) SetMemoryTotalBytes(v *int64) {
+	m.MemoryTotalBytes = v
+}
+
 // GetDiskPercent returns the DiskPercent value.
 func (m CreateResourceReadingParams) GetDiskPercent() *float64 {
 	return m.DiskPercent
@@ -534,6 +564,16 @@ func (m CreateResourceReadingParams) GetDiskPercent() *float64 {
 // SetDiskPercent sets the DiskPercent value and returns the updated CreateResourceReadingParams.
 func (m *CreateResourceReadingParams) SetDiskPercent(v *float64) {
 	m.DiskPercent = v
+}
+
+// GetDiskTotalBytes returns the DiskTotalBytes value.
+func (m CreateResourceReadingParams) GetDiskTotalBytes() *int64 {
+	return m.DiskTotalBytes
+}
+
+// SetDiskTotalBytes sets the DiskTotalBytes value and returns the updated CreateResourceReadingParams.
+func (m *CreateResourceReadingParams) SetDiskTotalBytes(v *int64) {
+	m.DiskTotalBytes = v
 }
 
 // GetBefore returns the Before value.

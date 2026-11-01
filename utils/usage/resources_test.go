@@ -36,7 +36,7 @@ func TestCPUWatch(t *testing.T) {
 	require.Zero(t, mean+pegged.Seconds())
 }
 
-func TestMemoryPercent(t *testing.T) {
+func TestMemory(t *testing.T) {
 	write := func(dir, name, content string) {
 		require.NoError(t, os.WriteFile(filepath.Join(dir, name), []byte(content), 0o644))
 	}
@@ -47,27 +47,27 @@ func TestMemoryPercent(t *testing.T) {
 	limited := t.TempDir()
 	write(limited, "memory.max", "2000\n")
 	write(limited, "memory.current", "1500\n")
-	percent, ok := memoryPercent(limited, meminfo)
+	used, total, ok := memory(limited, meminfo)
 	require.True(t, ok)
-	require.Equal(t, 75.0, percent)
+	require.Equal(t, []float64{1500, 2000}, []float64{used, total})
 
 	// No limit, so the machine's
 	unlimited := t.TempDir()
 	write(unlimited, "memory.max", "max\n")
 	write(unlimited, "memory.current", "1500\n")
-	percent, ok = memoryPercent(unlimited, meminfo)
+	used, total, ok = memory(unlimited, meminfo)
 	require.True(t, ok)
-	require.Equal(t, 75.0, percent)
+	require.Equal(t, []float64{750 * 1024, 1000 * 1024}, []float64{used, total}, "meminfo is in kB")
 
 	// Neither, as on a Mac
-	_, ok = memoryPercent(t.TempDir(), filepath.Join(t.TempDir(), "missing"))
+	_, _, ok = memory(t.TempDir(), filepath.Join(t.TempDir(), "missing"))
 	require.False(t, ok)
 }
 
-func TestDiskPercent(t *testing.T) {
-	percent, ok := DiskPercent(t.TempDir())
+func TestDisk(t *testing.T) {
+	used, total, ok := Disk(t.TempDir())
 	require.True(t, ok)
-	require.True(t, percent > 0 && percent <= 100, percent)
-	_, ok = DiskPercent(filepath.Join(t.TempDir(), "missing"))
+	require.True(t, used > 0 && used <= total, used, total)
+	_, _, ok = Disk(filepath.Join(t.TempDir(), "missing"))
 	require.False(t, ok)
 }
