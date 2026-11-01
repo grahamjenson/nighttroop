@@ -66,4 +66,5 @@
 ## Bugs
 
 1. Archive has a problem where they are deleting files from the db not removing from control
+1. P4: A start killed mid restore leaves its `.<folder>-restore-*` staging folder beside the DBs; remove them on start
 

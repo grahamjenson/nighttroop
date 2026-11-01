@@ -233,6 +233,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 
 - Every site's DB is backed up to S3 in batches, and the control DB on its own, with old versions kept for a
   retention period.
+- A server with no control DB or site batch folder restores it from S3 on start; a download that fails or is cut off
+  leaves nothing behind, so the next start downloads it again.
 - Old records' raw JSON is cleared after `TRUNCATE_RECORDS_AFTER_DAYS`.
 - Reads and writes are rate limited per site, identity and IP, and live sessions per site are capped.
 - An IP's rate limits, on requests, sign ins, recoveries and site creation, cover its whole IPv6 /64, so stepping

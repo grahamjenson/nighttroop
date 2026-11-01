@@ -289,15 +289,47 @@ func (c *S3Client) DownloadFilesFromS3(ctx context.Context, key string, outpath 
 		return 0, false, fmt.Errorf("cannot get object from s3: %w", err)
 	}
 	defer out.Body.Close()
+
+	// Extract beside outpath and move in only once all of it is there, so a cut off download leaves nothing behind
+	outpath = filepath.Clean(outpath)
+	if err := utils.MkParentDirs(outpath); err != nil {
+		return 0, true, err
+	}
+	staging, err := os.MkdirTemp(filepath.Dir(outpath), "."+filepath.Base(outpath)+"-restore-")
+	if err != nil {
+		return 0, true, fmt.Errorf("cannot create staging dir: %w", err)
+	}
+	defer os.RemoveAll(staging)
+
 	cr := &utils.CountingReader{R: out.Body}
-	err = c.ExtractTarLZ4(cr, outpath)
+	err = c.ExtractTarLZ4(cr, staging)
 
 	info = fmt.Sprintf("downloaded and extracted %d bytes", cr.Bytes)
 	if err != nil {
 		return cr.Bytes, true, fmt.Errorf("cannot extract tar LZ4: %w", err)
 	}
 
+	if err := moveInto(staging, outpath); err != nil {
+		return cr.Bytes, true, fmt.Errorf("cannot move download into place: %w", err)
+	}
 	return cr.Bytes, true, nil
+}
+
+// moveInto renames dir to outpath, or when outpath is already a folder, each of dir's entries into it
+func moveInto(dir string, outpath string) error {
+	if !utils.FileExists(outpath) {
+		return os.Rename(dir, outpath)
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		if err := os.Rename(filepath.Join(dir, entry.Name()), filepath.Join(outpath, entry.Name())); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 ////
