@@ -72,7 +72,7 @@ WHERE
     AND (CAST(sqlc.narg('InsulinLTE') AS INTEGER) IS NULL OR dose <= sqlc.narg('InsulinLTE'))
     AND (CAST(sqlc.narg('InsulinLT') AS INTEGER) IS NULL OR dose < sqlc.narg('InsulinLT'))
 
-    AND (CAST(sqlc.narg('IncludeDeleted') AS BOOL) IS NULL OR deleted_at IS NULL)
+    AND (CAST(sqlc.narg('IncludeDeleted') AS BOOL) IS TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 

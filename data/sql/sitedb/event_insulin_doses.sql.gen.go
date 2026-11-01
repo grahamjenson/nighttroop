@@ -238,7 +238,7 @@ WHERE
     AND (CAST(?25 AS INTEGER) IS NULL OR dose <= ?25)
     AND (CAST(?26 AS INTEGER) IS NULL OR dose < ?26)
 
-    AND (CAST(?27 AS BOOL) IS NULL OR deleted_at IS NULL)
+    AND (CAST(?27 AS BOOL) IS TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT ?29 OFFSET ?28
 `

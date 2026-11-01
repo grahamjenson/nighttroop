@@ -227,7 +227,7 @@ WHERE
     AND (CAST(?17 AS TEXT) IS NULL OR created_by_device_name = ?17)
     AND (CAST(?18 AS TEXT) IS NULL OR created_by_app_name = ?18)
     
-    AND (CAST(?19 AS BOOL) IS NULL OR deleted_at IS NULL)
+    AND (CAST(?19 AS BOOL) IS TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT ?21 OFFSET ?20
 `
