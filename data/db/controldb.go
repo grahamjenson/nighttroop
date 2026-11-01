@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"os"
 	"path/filepath"
 	"sync"
 	"time"
@@ -13,6 +14,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/livedb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils"
+	"nighttroop.t1d.nz/utils/backup"
 	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/s3utils"
@@ -246,10 +248,21 @@ func (db *ControlDB) ArchiveSite(ctx context.Context, subdomain string, upload s
 	if site == nil {
 		return fmt.Errorf("site %s is not open", subdomain)
 	}
-	if err := site.Backup(ctx); err != nil {
+	// Backed up to a folder of its own beside the site's backup file, on the same disk, as a batch backup can be
+	// rewriting that file at the same time
+	if err := utils.MkParentDirs(site.BackupPath); err != nil {
+		return fmt.Errorf("cannot make a folder to archive site %s: %w", subdomain, err)
+	}
+	dir, err := os.MkdirTemp(filepath.Dir(site.BackupPath), ".archive-*")
+	if err != nil {
+		return fmt.Errorf("cannot make a folder to archive site %s: %w", subdomain, err)
+	}
+	defer os.RemoveAll(dir)
+	path := filepath.Join(dir, filepath.Base(site.BackupPath))
+	if err := backup.SqliteBackup(ctx, site.SQLiteDB, path); err != nil {
 		return fmt.Errorf("cannot back up site %s: %w", subdomain, err)
 	}
-	if err := upload(ctx, sitedb.GetS3ArchivePath(subdomain, db.ServerConfig), s3utils.SiteRetention, []string{site.BackupPath}); err != nil {
+	if err := upload(ctx, sitedb.GetS3ArchivePath(subdomain, db.ServerConfig), s3utils.SiteRetention, []string{path}); err != nil {
 		return fmt.Errorf("cannot upload the archive of site %s: %w", subdomain, err)
 	}
 	bytes, _ := json.Marshal([]string{subdomain})
