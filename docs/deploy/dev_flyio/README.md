@@ -54,7 +54,8 @@ of your own domain:
     `/data` to the server's user, and runs the server as that user.
   - Before the server starts, `try_migrate_or_delete`
     ([`scripts/try_migrate_or_delete`](../../../scripts/try_migrate_or_delete/try_migrate_or_delete.go)) opens each
-    database as the server does: it migrates it and prepares its queries.
+    database as the server does: it migrates it and prepares its queries. As there can be thousands of sites, a site
+    database's queries are only prepared when no other with the same schema has had them prepared.
   - If any cannot be opened, as when a migration was edited rather than added, it deletes them all, `/data/db` and
     `/data/backup`, and the server starts empty. The logs say `deleting every database, as one cannot be migrated`,
     with the database and why.
