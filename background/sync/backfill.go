@@ -49,7 +49,7 @@ func BackfillRange(ctx context.Context, siteDB *db.SiteDB, syncType consts.SyncS
 	case consts.SyncSourceTypeLibre:
 		return BackfillParams{From: now - libreBackfillMinutes*time.Minute.Milliseconds(), To: now}, nil
 	}
-	oldest, err := siteDB.Queries.OldestGlucoseReadingAt(ctx)
+	oldest, err := siteDB.Queries().OldestGlucoseReadingAt(ctx)
 	if err != nil {
 		return BackfillParams{}, err
 	}

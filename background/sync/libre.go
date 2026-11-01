@@ -65,7 +65,7 @@ func (b *SyncJobManager) copyLibreReadings(ctx context.Context, syncInfo *SyncJo
 	added := 0
 	for _, r := range readings {
 		createParams := libremodels.ReadingToCreate(r, "libre_sync")
-		row, err := syncInfo.Site.SiteDB.Queries.CreateGlucoseReading(ctx, createParams)
+		row, err := syncInfo.Site.SiteDB.Queries().CreateGlucoseReading(ctx, createParams)
 		if err == nil {
 			added++
 			syncInfo.Site.published(row)

@@ -39,7 +39,7 @@ func EventGroupChoicesHandler(w http.ResponseWriter, r *http.Request) {
 		at = time.UnixMilli(params.OccurredAt)
 	}
 
-	q := siteContext.SiteDB.Queries
+	q := siteContext.SiteDB.Queries()
 	picked := map[string]*string{}
 	if params.GroupID != "" {
 		group, err := q.GetEventGroupWithoutJoins(r.Context(), sitedb.GetEventGroupWithoutJoinsParams{ID: params.GroupID})

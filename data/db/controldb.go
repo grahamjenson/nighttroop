@@ -326,7 +326,7 @@ func (db *ControlDB) TruncateSite(ctx context.Context, subdomain string) (*int64
 	if site == nil {
 		return nil, fmt.Errorf("site %s is not open", subdomain)
 	}
-	q, before := site.Queries, time.Now().AddDate(0, 0, -db.ServerConfig.TruncateRecordsAfterDays).UnixMilli()
+	q, before := site.Queries(), time.Now().AddDate(0, 0, -db.ServerConfig.TruncateRecordsAfterDays).UnixMilli()
 	for _, clear := range []func(context.Context, int64) error{
 		clearBefore(q.ClearActivitiesRawJSON),
 		clearBefore(q.ClearComponentEventsRawJSON),

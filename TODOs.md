@@ -55,6 +55,8 @@
 1. P3: Add event groups (list, get, add, edit, delete and the events to group) to `clients/nighttroop/openapi.json`
    and its client
 1. Performance testing (cost estimate for running full node)
+1. P3: Open a site's DB when it is first used rather than every site's at start, as each still takes ~2ms to open
+   and check migrations
 1. Nightscout API:
     1. P2: Check If-Unmodified-Since on API v3 replace and patch, in the same query as the update
     1. P3: A temp basal sent only as a percent, given a rate from the profile's basal at the time

@@ -14,7 +14,7 @@ import (
 // Records keep the writer's identity id, as its name can be reused after the identity is deleted
 func TestRecordsStoreTheWritersIdentityID(t *testing.T) {
 	_, _, site := testutils.NewControlDBWithSite(t)
-	q, ctx := site.SiteDB.Queries, context.Background()
+	q, ctx := site.SiteDB.Queries(), context.Background()
 	sgv := types.FlexibleFloat64(120)
 	entry := nightscoutmodels.Entry{SGV: &sgv, Mgdl: &sgv}
 	rawJSON := "{}"

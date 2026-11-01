@@ -31,7 +31,7 @@ type rig struct {
 
 func newRig(t *testing.T) *rig {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
-	r := &rig{t: t, site: site.SiteDB.Subdomain, db: site.SiteDB.Queries, control: controlDB.Queries, now: time.Date(2026, 10, 28, 0, 0, 0, 0, time.UTC)}
+	r := &rig{t: t, site: site.SiteDB.Subdomain, db: site.SiteDB.Queries(), control: controlDB.Queries, now: time.Date(2026, 10, 28, 0, 0, 0, 0, time.UTC)}
 	r.checker = NewChecker(cfg, controlDB)
 	r.checker.now = func() time.Time { return r.now }
 	cfg.Events.Subscribe(r.site, func(event events.Event) {

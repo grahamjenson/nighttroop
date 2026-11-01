@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	{{ if eq .PkgName "sitedb" }} "sync" {{ end }}
 
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/backup"
@@ -35,7 +36,8 @@ import (
 type DB struct{
 	SQLiteDB  *sql.DB
 	ServerConfig *config.ServerConfig
-	Queries *Queries
+	{{ if eq .PkgName "sitedb" }} queries *Queries
+	prepareOnce sync.Once {{ else }} Queries *Queries {{ end }}
 	InMemory bool
 	
 	Path        string
@@ -90,14 +92,31 @@ func NewDB(ctx context.Context, serverConfig *config.ServerConfig) (*DB, error) 
 	
 	slog.Info("{{.PkgName}} Migration applied successfully to " + path)
 
+	{{ if ne .PkgName "sitedb" }}
 	db.Queries, err = Prepare(ctx, sqldb)
 	if err != nil {
 		sqldb.Close()
 		return db, fmt.Errorf("{{.PkgName}} Prepare Error for: %s %w", path, err)
 	}
+	{{ end }}
 		
 	return db, nil
 }
+
+{{ if eq .PkgName "sitedb" }}
+// Queries prepares all the site's queries the first time it is called, rather than when the DB opens, as every
+// site's DB is opened at start. Call it before beginning a transaction, which may hold the DB's only connection.
+func (db *DB) Queries() *Queries {
+	db.prepareOnce.Do(func() {
+		var err error
+		if db.queries, err = Prepare(context.Background(), db.SQLiteDB); err != nil {
+			slog.Error("sitedb Prepare Error, so its queries run unprepared: " + err.Error())
+			db.queries = New(db.SQLiteDB)
+		}
+	})
+	return db.queries
+}
+{{ end }}
 
 func (db *DB) Name() string {
 	return "{{.PkgName}}"

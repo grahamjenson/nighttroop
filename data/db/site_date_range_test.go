@@ -14,9 +14,10 @@ import (
 // addReadings adds count glucose readings to the site, every step milliseconds back from newest, with IDs from 0 newest
 func addReadings(t testing.TB, siteDB *db.SiteDB, count int64, newest int64, step int64) {
 	ctx := t.Context()
+	q := siteDB.Queries()
 	tx, err := siteDB.SQLiteDB.BeginTx(ctx, nil)
 	require.NoError(t, err)
-	insert := siteDB.Queries.WithTx(tx)
+	insert := q.WithTx(tx)
 	for i := range count {
 		_, err := insert.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: fmt.Sprint(i), Mgdl: 100, ReadingType: "sgv", OccurredAt: newest - i*step, CreatedByIdentityName: "test"})
 		require.NoError(t, err)
@@ -58,7 +59,7 @@ func TestSearchDateFilters(t *testing.T) {
 			if tt.params.Limit == 0 {
 				tt.params.Limit = 100
 			}
-			rows, err := site.SiteDB.Queries.SearchGlucoseReadings(t.Context(), tt.params)
+			rows, err := site.SiteDB.Queries().SearchGlucoseReadings(t.Context(), tt.params)
 			require.NoError(t, err)
 			var ids []string
 			for _, row := range rows {
@@ -89,7 +90,7 @@ func BenchmarkSearchDateRange(b *testing.B) {
 	for _, tt := range tests {
 		b.Run(tt.name, func(b *testing.B) {
 			for b.Loop() {
-				rows, err := site.SiteDB.Queries.SearchGlucoseReadings(b.Context(), tt.params)
+				rows, err := site.SiteDB.Queries().SearchGlucoseReadings(b.Context(), tt.params)
 				require.NoError(b, err)
 				require.Len(b, rows, tt.want)
 			}
