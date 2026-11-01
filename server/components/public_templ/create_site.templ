@@ -150,10 +150,8 @@ templ CreateSiteInfo(newsite publicmodels.NewSiteInfo) {
 						id="public--site-info--totp"
 						name="totp"
 						inputmode="numeric"
-						pattern="[0-9]*"
 						autocomplete="one-time-code"
 						maxlength="6"
-						oninput="this.value = this.value.replace(/\D/g, '')"
 						placeholder="123456"
 						class="w-32 rounded-lg border border-slate-200 px-3 py-2 text-center font-mono text-lg tracking-widest"
 					/>
@@ -169,6 +167,10 @@ templ CreateSiteInfo(newsite publicmodels.NewSiteInfo) {
 					width: 96,
 					height: 96,
 					correctLevel: QRCode.CorrectLevel.M
+				});
+				// A code is only digits, so a letter typed or pasted is dropped
+				document.getElementById("public--site-info--totp").addEventListener("input", (e) => {
+					e.target.value = e.target.value.replace(/\D/g, "");
 				});
 			</script>
 		}

@@ -5,20 +5,17 @@ import (
 	"database/sql"
 	"fmt"
 	"log/slog"
-	"time"
 
 	"modernc.org/sqlite"
 	"nighttroop.t1d.nz/utils"
-	"nighttroop.t1d.nz/utils/aslog"
 )
 
 type BackupConn interface {
 	NewBackup(string) (*sqlite.Backup, error)
 }
 
+// SqliteBackup copies db to backupPath. It logs only when it fails, as every site's DB is backed up in turn.
 func SqliteBackup(ctx context.Context, db *sql.DB, backupPath string) error {
-	defer aslog.TrackTime(ctx, time.Now(), "SqliteBackup "+backupPath, nil, nil)
-	slog.InfoContext(ctx, "Starting SqliteBackup", "backupPath", backupPath)
 	err := utils.MkParentDirs(backupPath)
 	if err != nil {
 		return fmt.Errorf("cannot create parent directories: %w", err)

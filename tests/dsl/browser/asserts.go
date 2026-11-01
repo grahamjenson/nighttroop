@@ -388,42 +388,6 @@ func (r *AssertPath) ToErrorLine() string {
 	return fmt.Sprintf("%s:%d: expected path to be %s", r.TestPath, r.TestLine, r.URLPath)
 }
 
-// AssertValue checks what an input holds, as typed rather than as rendered, e.g. ASSERT_VALUE #site--login--otp-1 1,
-// or with no value that it is empty
-type AssertValue struct {
-	Locator string
-	Value   string
-
-	TestPath string
-	TestLine int
-}
-
-// Execute waits up to visibleWait for the value, as a field's script can change it a moment after it is typed in
-func (r *AssertValue) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
-	locator := getLocator(r.Locator, page)
-	if locator == nil {
-		t.Fatalf("\n\n%s\n getLocator returned nil for rawLocator: %v\n\n", r.ToErrorLine(), r.Locator)
-	}
-	value := ""
-	for deadline := time.Now().Add(visibleWait * time.Millisecond); ; time.Sleep(50 * time.Millisecond) {
-		var err error
-		if value, err = locator.InputValue(playwright.LocatorInputValueOptions{Timeout: playwright.Float(actionWait)}); err != nil {
-			t.Fatalf("\n\n%s\n failed to read the value: %v\n\n", r.ToErrorLine(), err)
-		}
-		if value == r.Value || time.Now().After(deadline) {
-			break
-		}
-	}
-	if value != r.Value {
-		t.Fatalf("\n\n%s\n assertValue failed: expected %q, got %q\n\n", r.ToErrorLine(), r.Value, value)
-	}
-	return nil
-}
-
-func (r *AssertValue) ToErrorLine() string {
-	return fmt.Sprintf("%s:%d: expected value for locator %s to be %q", r.TestPath, r.TestLine, r.Locator, r.Value)
-}
-
 // AssertTitle checks the browser tab's title, e.g. ASSERT_TITLE Glucose Readings · Nighttroop
 type AssertTitle struct {
 	Title string
