@@ -55,9 +55,11 @@ func loopValue(loop *sitemodels.SiteDeviceStatus, get func(*sitemodels.SiteDevic
 	return value(get(loop), unit)
 }
 
+// treatment is one row of the summary's treatments, with Path the data page listing its kind
 type treatment struct {
 	At     int64
 	Kind   string
+	Path   string
 	Detail string
 }
 
@@ -65,17 +67,17 @@ type treatment struct {
 func treatments(s *sitemodels.Summary) []treatment {
 	list := []treatment{}
 	for _, d := range s.InsulinDoses {
-		list = append(list, treatment{d.OccurredAt, "Insulin", value(&d.Dose, " U")})
+		list = append(list, treatment{d.OccurredAt, "Insulin", "/data/insulin", value(&d.Dose, " U")})
 	}
 	for _, f := range s.FoodIntakes {
-		list = append(list, treatment{f.OccurredAt, "Food", value(f.Carbs, " g carbs")})
+		list = append(list, treatment{f.OccurredAt, "Food", "/data/food", value(f.Carbs, " g carbs")})
 	}
 	for _, t := range s.TempTargets {
 		detail := fmt.Sprintf("%s–%s %s for %d min", site_data_templ.FormatGlucose(t.LowTarget, t.Units), site_data_templ.FormatGlucose(t.HighTarget, t.Units), unitsText(t.Units), t.DurationMinutes)
-		list = append(list, treatment{t.OccurredAt, "Temp Target", detail})
+		list = append(list, treatment{t.OccurredAt, "Temp Target", "/data/temp-targets", detail})
 	}
 	for _, b := range s.TempBasals {
-		list = append(list, treatment{b.OccurredAt, "Temp Basal", fmt.Sprintf("%s for %d min", value(b.Absolute, " U/hr"), b.DurationMinutes)})
+		list = append(list, treatment{b.OccurredAt, "Temp Basal", "/data/temp-basals", fmt.Sprintf("%s for %d min", value(b.Absolute, " U/hr"), b.DurationMinutes)})
 	}
 	sort.SliceStable(list, func(i, j int) bool { return list[i].At > list[j].At })
 	return list
@@ -193,10 +195,10 @@ templ summaryContent(summary *sitemodels.Summary) {
 		@Graph(summary)
 	</section>
 	<div class="grid gap-4 lg:grid-cols-2">
-		@section("Treatments") {
+		@section("Treatments", "", "", "") {
 			@treatmentsTable(treatments(summary))
 		}
-		@section("Glucose Readings") {
+		@section("Glucose Readings", "site--summary--all-readings", "All readings", "/data/glucose") {
 			@readingsTable(summary)
 		}
 	</div>
@@ -290,9 +292,34 @@ templ detail(label, text string) {
 	</div>
 }
 
-templ section(title string) {
+// pageLink opens another of the site's pages in place of this one, so back returns here
+templ pageLink(id, path, class string) {
+	<a
+		if id != "" {
+			id={ id }
+		}
+		href={ templ.SafeURL(path) }
+		hx-get={ path }
+		hx-target="#main-content"
+		hx-push-url="true"
+		hx-swap="innerHTML"
+		class={ class }
+	>
+		{ children... }
+	</a>
+}
+
+// section is a titled list on the summary, with a link to the page of all its records when it has one
+templ section(title, linkID, linkText, path string) {
 	<section class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-		<h2 class="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">{ title }</h2>
+		<div class="mb-2 flex items-baseline justify-between gap-2">
+			<h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">{ title }</h2>
+			if path != "" {
+				@pageLink(linkID, path, "text-sm text-primary underline") {
+					{ linkText }
+				}
+			}
+		</div>
 		<div class="max-h-96 overflow-y-auto">
 			{ children... }
 		</div>
@@ -311,7 +338,9 @@ templ treatmentsTable(list []treatment) {
 						<span class="whitespace-nowrap" title={ site_data_templ.FormatDate(ctx, t.At) }>{ display.TimeAgo(t.At, time.Now()) }</span>
 					}
 					@table.Cell() {
-						<span class="whitespace-nowrap font-medium">{ t.Kind }</span>
+						@pageLink("", t.Path, "whitespace-nowrap font-medium text-primary underline") {
+							{ t.Kind }
+						}
 					}
 					@table.Cell() {
 						{ t.Detail }
