@@ -295,6 +295,11 @@ func OpenSqliteDB(path string, cacheSize int) (*sql.DB, error) {
 		return nil, fmt.Errorf("cannot open sqlite db: %w", err)
 	}
 
+	// One connection, so writes queue in Go, as a second connection's write after its read in a transaction fails
+	// with SQLITE_BUSY_SNAPSHOT (517), which busy_timeout does not retry
+	sqldb.SetMaxOpenConns(1)
+	sqldb.SetMaxIdleConns(1)
+
 	return sqldb, nil
 }
 
