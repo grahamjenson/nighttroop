@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"strings"
 	"testing"
+	"time"
 	"unicode/utf8"
 
 	"github.com/stretchr/testify/require"
@@ -106,4 +107,52 @@ func TestFailedQueuedJobKeepsItsRunID(t *testing.T) {
 	require.Equal(t, "failed", job.JobStatus)
 	require.NotNil(t, job.RunID)
 	require.Contains(t, logs.String(), `msg="upstream is down" job_id=`+*job.RunID)
+}
+
+// A job is only fetched when a worker is free to run it. Its visibility timeout counts from when it is fetched, so a
+// job fetched to wait behind others would time out, and be queued again, before it ran.
+func TestConsumeOnlyFetchesJobsAWorkerIsFreeFor(t *testing.T) {
+	_, controlDB := testutils.NewControlDB(t)
+	ctx, stop := context.WithCancel(t.Context())
+	queue := liteq.New(controlDB)
+	const queueName, count = "one-at-a-time", 3
+	for range count {
+		require.NoError(t, queue.QueueJob(ctx, liteq.QueueJobParams{Queue: queueName, Job: "fetch"}))
+	}
+
+	started, release := make(chan struct{}), make(chan struct{})
+	worker := func(ctx context.Context, job *jobsdb.Job) error {
+		select {
+		case started <- struct{}{}:
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+		<-release
+		return nil
+	}
+	consumed := make(chan error)
+	go func() {
+		consumed <- queue.Consume(ctx, liteq.ConsumeParams{Queue: queueName, PoolSize: 1, Worker: worker, OnEmptySleep: time.Millisecond})
+	}()
+
+	countStatus := func(status string) int {
+		jobs, err := controlDB.Jobs.Queries.SearchJobs(ctx, jobsdb.SearchJobsParams{Limit: count})
+		require.NoError(t, err)
+		n := 0
+		for _, job := range jobs {
+			if job.JobStatus == status {
+				n++
+			}
+		}
+		return n
+	}
+	for ran := range count {
+		<-started
+		require.Never(t, func() bool { return countStatus("fetched") != 1 || countStatus("queued") != count-ran-1 },
+			200*time.Millisecond, 10*time.Millisecond, "while a job runs, the ones behind it stay queued")
+		release <- struct{}{}
+	}
+	require.Eventually(t, func() bool { return countStatus("completed") == count }, 5*time.Second, 10*time.Millisecond)
+	stop()
+	<-consumed // stopping can cancel a query, so it may return that error, but it does return
 }
