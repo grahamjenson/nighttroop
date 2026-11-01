@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/server/components/control_templ/control_jobs_templ"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
@@ -126,7 +127,8 @@ templ jobStatsRow(stats *controlmodels.JobStatsDaily) {
 	}
 }
 
-// JobStatsModal shows a day's totals for a job and the distinct errors its failures had
+// JobStatsModal shows a day's totals for a job, the distinct errors its failures had, and links to the logs of its last
+// failed runs
 templ JobStatsModal(stats *controlmodels.JobStatsDaily) {
 	{{ day, queue, job := dayQueueJob(stats) }}
 	@modal.Modal(modal.Props{ID: "control--job-stats--details", Title: queue + " / " + job}) {
@@ -146,6 +148,17 @@ templ JobStatsModal(stats *controlmodels.JobStatsDaily) {
 			<ul id="control--job-stats--errors" class="mt-1 max-h-48 list-disc space-y-1 overflow-y-auto pl-5 text-sm text-red-700">
 				for _, e := range stats.Errors {
 					<li class="break-all">{ e }</li>
+				}
+			</ul>
+		}
+		if len(stats.FailedRunIDs) > 0 {
+			<h3 class="mt-4 text-sm font-semibold">Failed Runs' Logs</h3>
+			<p class="mt-1 text-xs text-gray-500">The day's last failed runs, newest first. Old logs are trimmed, so the oldest runs may have none left.</p>
+			<ul id="control--job-stats--failed-runs" class="mt-1 max-h-48 list-disc space-y-1 overflow-y-auto pl-5 text-sm">
+				for i := range stats.FailedRunIDs {
+					<li>
+						@control_jobs_templ.RunLogsLink(fmt.Sprintf("control--job-stats--failed-run--%d", i), stats.FailedRunIDs[len(stats.FailedRunIDs)-1-i])
+					</li>
 				}
 			</ul>
 		}

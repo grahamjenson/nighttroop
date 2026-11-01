@@ -51,6 +51,7 @@ func (j *JobsDB) BuildDailyReports(ctx context.Context, secondsAgo int64) error 
 			stats.DurationSum += j.Duration()
 			stats.DurationSquaredSum += j.DurationSquared()
 			stats.Errors = stats.Errors.AddAll(j.Errors)
+			stats.FailedRunIdsJson = jobsdb.LatestRunIDs(stats.FailedRunIdsJson, j.FailedRunID()...)
 			dayQueueJobMap[j.DayQueueJob()] = stats
 		} else {
 			dayQueueJobMap[j.DayQueueJob()] = jobsdb.JobStatsDaily{
@@ -61,6 +62,7 @@ func (j *JobsDB) BuildDailyReports(ctx context.Context, secondsAgo int64) error 
 				DurationSum:        j.Duration(),
 				DurationSquaredSum: j.DurationSquared(),
 				Errors:             j.Errors,
+				FailedRunIdsJson:   jobsdb.LatestRunIDs(nil, j.FailedRunID()...),
 			}
 		}
 	}
@@ -74,6 +76,7 @@ func (j *JobsDB) BuildDailyReports(ctx context.Context, secondsAgo int64) error 
 		}
 		// Merged here, not in SQL, so the stored list stays bounded and the update cannot fail its CHECK
 		stats.Errors = existing.Errors.AddAll(stats.Errors)
+		stats.FailedRunIdsJson = jobsdb.LatestRunIDs(existing.FailedRunIdsJson, stats.FailedRunIdsJson...)
 		dayQueueJobMap[k] = stats
 	}
 
@@ -93,6 +96,7 @@ func (j *JobsDB) BuildDailyReports(ctx context.Context, secondsAgo int64) error 
 			DurationSum:        stats.DurationSum,
 			DurationSquaredSum: stats.DurationSquaredSum,
 			Errors:             stats.Errors,
+			FailedRunIdsJson:   stats.FailedRunIdsJson,
 		})
 		if err != nil {
 			return fmt.Errorf("Error updating job stats daily: %w", err)

@@ -15,7 +15,8 @@ SET
     duration_squared_sum = duration_squared_sum + sqlc.arg(duration_squared_sum),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
 
-    errors = sqlc.arg(errors)
+    errors = sqlc.arg(errors),
+    failed_run_ids_json = sqlc.arg(failed_run_ids_json)
 WHERE
     day_queue_job = sqlc.arg(day_queue_job)
 ;

@@ -14,4 +14,7 @@ type Job struct {
 	Errors            []string `json:"errors"`
 	CreatedAt         int64    `json:"created_at"`
 	UpdatedAt         int64    `json:"updated_at"`
+
+	// RunID is a failed run's job_id, which its logs have
+	RunID *string `json:"run_id"`
 }

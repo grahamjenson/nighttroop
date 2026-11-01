@@ -50,6 +50,16 @@ func (c *ACron) RawAddFunc(name string, spec string, cmd func(ctx context.Contex
 	wrappedCmd := func() {
 		startedAt := time.Now().UnixMilli()
 		ctx := aslog.NewJob(context.Background(), name)
+		// A failed run keeps its job_id, so the control site can link to its logs
+		fail := func(err error) {
+			_, runID := aslog.IDs(ctx)
+			c.jobsDB.Queries.InsertFailedCronJob(ctx, jobsdb.InsertFailedCronJobParams{
+				Job:               name,
+				ConsumerFetchedAt: startedAt,
+				Errors:            errors.ErrorList{}.Add(err.Error()),
+				RunID:             &runID,
+			})
+		}
 
 		defer func() {
 			if r := recover(); r != nil {
@@ -61,11 +71,7 @@ func (c *ACron) RawAddFunc(name string, spec string, cmd func(ctx context.Contex
 					err = fmt.Errorf("%v:%T", r, r)
 				}
 				slog.ErrorContext(ctx, "Cron: Command panicked", "stack", string(buf), "error", err)
-				c.jobsDB.Queries.InsertFailedCronJob(ctx, jobsdb.InsertFailedCronJobParams{
-					Job:               name,
-					ConsumerFetchedAt: startedAt,
-					Errors:            errors.ErrorList{}.Add(err.Error()),
-				})
+				fail(err)
 			}
 		}()
 
@@ -75,11 +81,7 @@ func (c *ACron) RawAddFunc(name string, spec string, cmd func(ctx context.Contex
 			defer func() { ch <- v }()
 			if err := cmd(ctx); err != nil {
 				slog.ErrorContext(ctx, "Cron: Command returned error", "error", err)
-				c.jobsDB.Queries.InsertFailedCronJob(ctx, jobsdb.InsertFailedCronJobParams{
-					Job:               name,
-					ConsumerFetchedAt: startedAt,
-					Errors:            errors.ErrorList{}.Add(err.Error()),
-				})
+				fail(err)
 			} else {
 				c.jobsDB.Queries.InsertSuccessfulCronJob(ctx, jobsdb.InsertSuccessfulCronJobParams{
 					Job:               name,

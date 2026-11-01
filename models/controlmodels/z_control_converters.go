@@ -80,6 +80,10 @@ func JobFromDB(source *jobsdb.Job) *Job {
 		controlmodelsJob.Errors = errorsErrorListToStringList((*source).Errors)
 		controlmodelsJob.CreatedAt = (*source).CreatedAt
 		controlmodelsJob.UpdatedAt = (*source).UpdatedAt
+		if (*source).RunID != nil {
+			xstring := *(*source).RunID
+			controlmodelsJob.RunID = &xstring
+		}
 		pControlmodelsJob = &controlmodelsJob
 	}
 	return pControlmodelsJob
@@ -97,6 +101,7 @@ func JobStatsDailyFromDB(source *jobsdb.JobStatsDaily) *JobStatsDaily {
 		controlmodelsJobStatsDaily.Errors = errorsErrorListToStringList((*source).Errors)
 		controlmodelsJobStatsDaily.CreatedAt = (*source).CreatedAt
 		controlmodelsJobStatsDaily.UpdatedAt = (*source).UpdatedAt
+		controlmodelsJobStatsDaily.FailedRunIDs = errorsErrorListToStringList((*source).FailedRunIdsJson)
 		pControlmodelsJobStatsDaily = &controlmodelsJobStatsDaily
 	}
 	return pControlmodelsJobStatsDaily

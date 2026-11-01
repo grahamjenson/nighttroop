@@ -44,6 +44,9 @@ func TestAddFunc(t *testing.T) {
 				return jobs
 			}
 
+			var logs bytes.Buffer
+			testutils.UseLogHandler(t, aslog.ContextHandler{Handler: slog.NewTextHandler(&logs, nil)})
+
 			cron := cron.NewCron(jobsDB)
 			entryid, err := cron.RawAddFunc("testing", "@every 1s", tt.job)
 			require.NoError(t, err)
@@ -60,6 +63,11 @@ func TestAddFunc(t *testing.T) {
 			jobs := toBeSummarised(0)
 			require.Len(t, jobs, 1)
 			require.Equal(t, tt.status, jobs[0].JobStatus)
+			// A failed run keeps the job_id its logs have, so the control site can link to them
+			if tt.err != "" {
+				require.NotNil(t, jobs[0].RunID)
+				require.Contains(t, logs.String(), "job_id="+*jobs[0].RunID)
+			}
 
 			require.NoError(t, jobsDB.BuildDailyReports(ctx, 0))
 			jobStats, err := jobsDB.Queries.AllJobStatsDaily(ctx)
@@ -69,8 +77,10 @@ func TestAddFunc(t *testing.T) {
 			require.Equal(t, tt.failed, jobStats[0].TotalFailed)
 			if tt.err == "" {
 				require.Empty(t, jobStats[0].Errors)
+				require.Empty(t, jobStats[0].FailedRunIdsJson)
 				return
 			}
+			require.Equal(t, []string{*jobs[0].RunID}, []string(jobStats[0].FailedRunIdsJson))
 			require.Len(t, jobStats[0].Errors, 1)
 			require.Contains(t, jobStats[0].Errors[0], tt.err)
 		})

@@ -98,7 +98,8 @@ SET
         ELSE 0
     END,
     remaining_attempts = MAX(remaining_attempts - 1, 0),
-    errors = ?
+    errors = ?,
+    run_id = ?
 WHERE
     id = ?;
 
@@ -223,6 +224,7 @@ INSERT INTO
         job,
         consumer_fetched_at, -- started at
         errors,
+        run_id,
         job_status,
         finished_at, -- finished at
         created_at,
@@ -232,6 +234,7 @@ INSERT INTO
 VALUES
     (
         "cron",
+        ?,
         ?,
         ?,
         ?,

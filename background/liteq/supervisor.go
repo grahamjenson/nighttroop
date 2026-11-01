@@ -5,8 +5,6 @@ import (
 	"log/slog"
 	"sync"
 	"time"
-
-	"nighttroop.t1d.nz/data/sql/jobsdb"
 )
 
 ///////
@@ -102,10 +100,6 @@ func (c *ConsumerSupervisor) RunQueued(ctx context.Context) error {
 			return err
 		}
 		job := jobs[0]
-		if err := c.worker(jobContext(ctx, job), job); err != nil {
-			c.queue.queries.FailJob(ctx, jobsdb.FailJobParams{Errors: job.Errors.Add(err.Error()), ID: job.ID})
-			continue
-		}
-		c.queue.queries.CompleteJob(ctx, jobsdb.CompleteJobParams{ID: job.ID})
+		runJob(ctx, c.queue.queries, c.worker, job)
 	}
 }

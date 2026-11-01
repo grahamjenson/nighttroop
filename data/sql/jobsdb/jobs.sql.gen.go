@@ -88,24 +88,26 @@ SET
         ELSE 0
     END,
     remaining_attempts = MAX(remaining_attempts - 1, 0),
-    errors = ?
+    errors = ?,
+    run_id = ?
 WHERE
     id = ?
 `
 
 type FailJobParams struct {
 	Errors errors.ErrorList
+	RunID  *string
 	ID     int64
 }
 
 func (q *Queries) FailJob(ctx context.Context, arg FailJobParams) error {
-	_, err := q.exec(ctx, q.failJobStmt, failJob, arg.Errors, arg.ID)
+	_, err := q.exec(ctx, q.failJobStmt, failJob, arg.Errors, arg.RunID, arg.ID)
 	return err
 }
 
 const findJob = `-- name: FindJob :one
 SELECT
-    id, queue, job, job_status, execute_after, remaining_attempts, consumer_fetched_at, finished_at, deduping_key, errors, created_at, updated_at
+    id, queue, job, job_status, execute_after, remaining_attempts, consumer_fetched_at, finished_at, deduping_key, errors, run_id, created_at, updated_at
 FROM
     jobs
 WHERE
@@ -130,6 +132,7 @@ func (q *Queries) FindJob(ctx context.Context, arg FindJobParams) (*Job, error) 
 		&i.FinishedAt,
 		&i.DedupingKey,
 		&i.Errors,
+		&i.RunID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -139,7 +142,7 @@ func (q *Queries) FindJob(ctx context.Context, arg FindJobParams) (*Job, error) 
 const getJobsToBeSummarised = `-- name: GetJobsToBeSummarised :many
 
 
-SELECT id, queue, job, job_status, execute_after, remaining_attempts, consumer_fetched_at, finished_at, deduping_key, errors, created_at, updated_at FROM jobs
+SELECT id, queue, job, job_status, execute_after, remaining_attempts, consumer_fetched_at, finished_at, deduping_key, errors, run_id, created_at, updated_at FROM jobs
 WHERE
     job_status IN ('completed', 'failed')
     AND remaining_attempts = 0
@@ -176,6 +179,7 @@ func (q *Queries) GetJobsToBeSummarised(ctx context.Context, arg GetJobsToBeSumm
 			&i.FinishedAt,
 			&i.DedupingKey,
 			&i.Errors,
+			&i.RunID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -199,6 +203,7 @@ INSERT INTO
         job,
         consumer_fetched_at, -- started at
         errors,
+        run_id,
         job_status,
         finished_at, -- finished at
         created_at,
@@ -208,6 +213,7 @@ INSERT INTO
 VALUES
     (
         "cron",
+        ?,
         ?,
         ?,
         ?,
@@ -223,10 +229,16 @@ type InsertFailedCronJobParams struct {
 	Job               string
 	ConsumerFetchedAt int64
 	Errors            errors.ErrorList
+	RunID             *string
 }
 
 func (q *Queries) InsertFailedCronJob(ctx context.Context, arg InsertFailedCronJobParams) error {
-	_, err := q.exec(ctx, q.insertFailedCronJobStmt, insertFailedCronJob, arg.Job, arg.ConsumerFetchedAt, arg.Errors)
+	_, err := q.exec(ctx, q.insertFailedCronJobStmt, insertFailedCronJob,
+		arg.Job,
+		arg.ConsumerFetchedAt,
+		arg.Errors,
+		arg.RunID,
+	)
 	return err
 }
 
@@ -293,7 +305,7 @@ WHERE
             execute_after ASC
         LIMIT
             ?
-    ) RETURNING id, queue, job, job_status, execute_after, remaining_attempts, consumer_fetched_at, finished_at, deduping_key, errors, created_at, updated_at
+    ) RETURNING id, queue, job, job_status, execute_after, remaining_attempts, consumer_fetched_at, finished_at, deduping_key, errors, run_id, created_at, updated_at
 `
 
 type MarkJobsForConsumerParams struct {
@@ -323,6 +335,7 @@ func (q *Queries) MarkJobsForConsumer(ctx context.Context, arg MarkJobsForConsum
 			&i.FinishedAt,
 			&i.DedupingKey,
 			&i.Errors,
+			&i.RunID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -475,7 +488,7 @@ func (q *Queries) ResetJobs(ctx context.Context, arg ResetJobsParams) (int64, er
 }
 
 const searchJobs = `-- name: SearchJobs :many
-SELECT id, queue, job, job_status, execute_after, remaining_attempts, consumer_fetched_at, finished_at, deduping_key, errors, created_at, updated_at FROM jobs
+SELECT id, queue, job, job_status, execute_after, remaining_attempts, consumer_fetched_at, finished_at, deduping_key, errors, run_id, created_at, updated_at FROM jobs
 ORDER BY id DESC
 LIMIT ?2 OFFSET ?1
 `
@@ -505,6 +518,7 @@ func (q *Queries) SearchJobs(ctx context.Context, arg SearchJobsParams) ([]*Job,
 			&i.FinishedAt,
 			&i.DedupingKey,
 			&i.Errors,
+			&i.RunID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {

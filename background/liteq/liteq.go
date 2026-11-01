@@ -108,6 +108,18 @@ type WorkerFunc func(context.Context, *jobsdb.Job) error
 
 // jobContext is ctx for one run of a queued job: what is logged with it says its queue, its row in the jobs DB and a
 // job_id of its own
+// runJob runs the worker on the job and records how it went. A failure keeps its run's job_id, so the control site can
+// link to its logs.
+func runJob(ctx context.Context, q *jobsdb.Queries, worker WorkerFunc, job *jobsdb.Job) {
+	runCtx := jobContext(ctx, job)
+	if err := worker(runCtx, job); err != nil {
+		_, runID := aslog.IDs(runCtx)
+		q.FailJob(ctx, jobsdb.FailJobParams{Errors: job.Errors.Add(err.Error()), RunID: &runID, ID: job.ID})
+		return
+	}
+	q.CompleteJob(ctx, jobsdb.CompleteJobParams{ID: job.ID})
+}
+
 func jobContext(ctx context.Context, job *jobsdb.Job) context.Context {
 	return aslog.NewJob(ctx, job.Queue, slog.Int64("queued_job_id", job.ID))
 }
@@ -161,20 +173,7 @@ func (j *JobQueue) Consume(ctx context.Context, params ConsumeParams) error {
 
 		for _, job := range grabbedJobs {
 			job := job
-			workers.Submit(func() {
-				err := params.Worker(jobContext(ctx, job), job)
-				if err != nil {
-					j.queries.FailJob(ctx, jobsdb.FailJobParams{
-						Errors: job.Errors.Add(err.Error()),
-						ID:     job.ID,
-					})
-					return
-				}
-
-				j.queries.CompleteJob(ctx, jobsdb.CompleteJobParams{
-					ID: job.ID,
-				})
-			})
+			workers.Submit(func() { runJob(ctx, j.queries, params.Worker, job) })
 		}
 	}
 }
