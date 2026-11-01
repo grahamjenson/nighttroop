@@ -1,0 +1,81 @@
+# Nighttroop on a Voyager VPS: Caddy takes HTTPS on 80 and 443, with Let's Encrypt wildcard certificates it gets and
+# renews through Cloudflare's DNS API, and proxies to Nighttroop, which is only on the internal network.
+# See docs/deploy/voyager.md. Values in ${...} come from the .env file beside this file.
+name: nighttroop
+
+services:
+  nighttroop:
+    image: ${NIGHTTROOP_IMAGE:-ghcr.io/grahamjenson/nighttroop:latest}
+    restart: unless-stopped
+    env_file: nighttroop.env
+    environment:
+      HOST_NAME: ${DOMAIN:?set DOMAIN in .env}
+      HOST_PROTOCOL: https
+      # Only Caddy's X-Forwarded-For is believed, so each visitor is rate limited by their own IP
+      TRUSTED_PROXIES: 172.30.0.2
+    volumes:
+      - ./data:/data
+    networks:
+      - internal
+    # Stopping uploads a last backup to S3 before the server exits
+    stop_grace_period: 2m
+    logging: &logging
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "5"
+
+  caddy:
+    # Caddy built with the Cloudflare DNS module, for the DNS challenge wildcard certificates need
+    build:
+      dockerfile_inline: |
+        FROM caddy:2.11-builder AS builder
+        RUN xcaddy build --with github.com/caddy-dns/cloudflare@v0.2.4
+        FROM caddy:2.11
+        COPY --from=builder /usr/bin/caddy /usr/bin/caddy
+    image: nighttroop-caddy-cloudflare:2.11
+    restart: unless-stopped
+    depends_on:
+      - nighttroop
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN:?set CLOUDFLARE_API_TOKEN in .env}
+    configs:
+      - source: caddyfile
+        target: /etc/caddy/Caddyfile
+    volumes:
+      # The certificates; keep them, or every restart asks Let's Encrypt again and hits its rate limits
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      internal:
+        ipv4_address: 172.30.0.2
+    logging: *logging
+
+configs:
+  caddyfile:
+    # The main host, each site's subdomain and each site's Nightscout API subdomain, on one wildcard certificate each
+    content: |
+      ${DOMAIN}, *.${DOMAIN}, *.ns.${DOMAIN} {
+        tls ${ACME_EMAIL:?set ACME_EMAIL in .env} {
+          dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+          # Public resolvers see the challenge record as soon as Cloudflare's nameservers have it
+          resolvers 1.1.1.1 8.8.8.8
+        }
+        reverse_proxy nighttroop:3000
+      }
+
+networks:
+  internal:
+    ipam:
+      config:
+        # Containers get addresses from the top half, so Caddy's 172.30.0.2 is never taken before it starts
+        - subnet: 172.30.0.0/24
+          ip_range: 172.30.0.128/25
+
+volumes:
+  caddy_data:
+  caddy_config:
