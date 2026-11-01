@@ -71,7 +71,7 @@ func (ws *Websocket) retroDeviceStatuses(ctx context.Context) []map[string]any {
 
 // recorder is a collection that can show a site's model as its record
 type recorder interface {
-	Record(model any, siteContext *httputils.SiteContext) (nsutils.Record, bool)
+	Record(model any, siteContext *httputils.SiteContext) (nsutils.Document, bool)
 }
 
 // broadcastChange sends a changed model of the site to its DataReceivers as a delta dataUpdate, and to its /storage
@@ -99,7 +99,7 @@ func (ws *Websocket) broadcastChange(main *socketio.Namespace, event events.Even
 
 // sendDataUpdate sends a changed record to the DataReceivers as a delta dataUpdate. As in Nightscout, a treatment
 // says whether it was updated or removed, and other removals are not sent.
-func (ws *Websocket) sendDataUpdate(main *socketio.Namespace, collection nsutils.Collection, record nsutils.Record, action events.Action) {
+func (ws *Websocket) sendDataUpdate(main *socketio.Namespace, collection nsutils.Collection, record nsutils.Document, action events.Action) {
 	key, value, ok := clientData(collection, record)
 	if !ok || (action == events.Deleted && collection != nsutils.Treatments) {
 		return
@@ -120,9 +120,9 @@ func (ws *Websocket) sendDataUpdate(main *socketio.Namespace, collection nsutils
 }
 
 // clientData is a record as Nightscout's client data holds it, and its key in a dataUpdate
-func clientData(collection nsutils.Collection, record nsutils.Record) (string, map[string]any, bool) {
-	out := record.ToMap(false)
-	out["mills"] = record.OccuredAt
+func clientData(collection nsutils.Collection, record nsutils.Document) (string, map[string]any, bool) {
+	out := record.Fields(false)
+	out["mills"] = record.OccurredAt()
 	switch collection {
 	case nsutils.Entries:
 		switch out["type"] {

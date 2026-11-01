@@ -8,6 +8,18 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
+// Document is one stored record as the Nightscout API writes it, whatever collection it is from
+type Document interface {
+	// Identifier is its public ID
+	Identifier() string
+	// Modified is when the server last changed it, in milliseconds, for Last-Modified and API v3's lastModified
+	Modified() int64
+	// OccurredAt is when it happened, in milliseconds
+	OccurredAt() int64
+	// Fields is it as JSON fields: API v3's with the server's fields, or v1's with an _id
+	Fields(v3 bool) map[string]any
+}
+
 // Record is the normalized internal representation used by the storage layer.
 type Record struct {
 	Collection  string
@@ -26,10 +38,14 @@ func (r Record) Identifier() string {
 	return r.ID
 }
 
-// ToMap converts the record into a JSON-friendly map.
+func (r Record) Modified() int64 { return r.SrvModified }
+
+func (r Record) OccurredAt() int64 { return r.OccuredAt }
+
+// Fields converts the record into a JSON-friendly map.
 //
 // When version3 is true, server-managed metadata fields are included.
-func (r Record) ToMap(version3 bool) map[string]any {
+func (r Record) Fields(version3 bool) map[string]any {
 	out := utils.DeepCloneMap(r.Data)
 
 	out["created_at"] = time.UnixMilli(r.OccuredAt).UTC().Format(time.RFC3339Nano)
@@ -52,13 +68,14 @@ func (r Record) ToMap(version3 bool) map[string]any {
 	return out
 }
 
-func (r Record) OccuredAtString() string {
-	return time.UnixMilli(r.OccuredAt).UTC().Format(time.RFC3339Nano)
+// DateString is when the document happened, as Nightscout's dateString
+func DateString(doc Document) string {
+	return time.UnixMilli(doc.OccurredAt()).UTC().Format(time.RFC3339Nano)
 }
 
-// SelectFields projects a record to the requested fields.
-func (r Record) SelectFields(fields []string, version3 bool) map[string]any {
-	full := r.ToMap(version3)
+// SelectFields projects a document to the requested fields.
+func SelectFields(doc Document, fields []string, version3 bool) map[string]any {
+	full := doc.Fields(version3)
 	if len(fields) == 0 {
 		return full
 	}
@@ -136,12 +153,4 @@ func DBModelToRecord[T any, PT interface {
 		}
 		return record
 	}
-}
-
-func CreateRecordSlice[T any](in []T, fn func(T, *httputils.SiteContext, bool) Record, siteContext *httputils.SiteContext, raw bool) []Record {
-	out := make([]Record, len(in))
-	for i, v := range in {
-		out[i] = fn(v, siteContext, raw)
-	}
-	return out
 }

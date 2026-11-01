@@ -57,41 +57,41 @@ func (nts *NightTroopAPIStore) collectionFor(ctx context.Context, collection nsu
 	return collectionsStore, siteContext, nil
 }
 
-// found is the record, or not found when there is none
-func found(record *nsutils.Record, err *nsutils.HTTPError) (nsutils.Record, *nsutils.HTTPError) {
+// found is the document, or not found when there is none
+func found(doc nsutils.Document, err *nsutils.HTTPError) (nsutils.Document, *nsutils.HTTPError) {
 	if err != nil {
-		return nsutils.Record{}, err
+		return nil, err
 	}
-	if record == nil {
-		return nsutils.Record{}, nsutils.ErrNotFound
+	if doc == nil {
+		return nil, nsutils.ErrNotFound
 	}
-	return *record, nil
+	return doc, nil
 }
 
 // foundAnd is found with the flag (created or duplicated) that came with the record
-func foundAnd(record *nsutils.Record, flag bool, err *nsutils.HTTPError) (nsutils.Record, bool, *nsutils.HTTPError) {
-	r, err := found(record, err)
+func foundAnd(doc nsutils.Document, flag bool, err *nsutils.HTTPError) (nsutils.Document, bool, *nsutils.HTTPError) {
+	r, err := found(doc, err)
 	return r, flag && err == nil, err
 }
 
 // Return Model that has identifier and srv modified and also a boolean indicating if the record was created (true) or updated (false)
-func (nts *NightTroopAPIStore) Create(ctx context.Context, collection nsutils.Collection, data map[string]any, raw bool) (nsutils.Record, bool, *nsutils.HTTPError) {
+func (nts *NightTroopAPIStore) Create(ctx context.Context, collection nsutils.Collection, data map[string]any, raw bool) (nsutils.Document, bool, *nsutils.HTTPError) {
 	collectionsStore, siteContext, err := nts.collectionFor(ctx, collection)
 	if err != nil {
-		return nsutils.Record{}, false, err
+		return nil, false, err
 	}
 	return foundAnd(collectionsStore.Create(ctx, siteContext, data, raw))
 }
 
-func (nts *NightTroopAPIStore) Get(ctx context.Context, collection nsutils.Collection, identifier string, query nsquery.Query) (nsutils.Record, *nsutils.HTTPError) {
+func (nts *NightTroopAPIStore) Get(ctx context.Context, collection nsutils.Collection, identifier string, query nsquery.Query) (nsutils.Document, *nsutils.HTTPError) {
 	collectionsStore, siteContext, err := nts.collectionFor(ctx, collection)
 	if err != nil {
-		return nsutils.Record{}, err
+		return nil, err
 	}
 	return found(collectionsStore.Get(ctx, siteContext, identifier, query))
 }
 
-func (nts *NightTroopAPIStore) Search(ctx context.Context, collection nsutils.Collection, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
+func (nts *NightTroopAPIStore) Search(ctx context.Context, collection nsutils.Collection, query nsquery.Query) ([]nsutils.Document, *nsutils.HTTPError) {
 	collectionsStore, siteContext, err := nts.collectionFor(ctx, collection)
 	if err != nil {
 		return nil, err
@@ -99,18 +99,18 @@ func (nts *NightTroopAPIStore) Search(ctx context.Context, collection nsutils.Co
 	return collectionsStore.Search(ctx, siteContext, query)
 }
 
-func (nts *NightTroopAPIStore) Replace(ctx context.Context, collection nsutils.Collection, identifier string, patch map[string]any, canCreate bool, raw bool) (nsutils.Record, bool, *nsutils.HTTPError) {
+func (nts *NightTroopAPIStore) Replace(ctx context.Context, collection nsutils.Collection, identifier string, patch map[string]any, canCreate bool, raw bool) (nsutils.Document, bool, *nsutils.HTTPError) {
 	collectionsStore, siteContext, err := nts.collectionFor(ctx, collection)
 	if err != nil {
-		return nsutils.Record{}, false, err
+		return nil, false, err
 	}
 	return foundAnd(collectionsStore.Replace(ctx, siteContext, identifier, patch, canCreate, raw))
 }
 
-func (nts *NightTroopAPIStore) Patch(ctx context.Context, collection nsutils.Collection, identifier string, patch map[string]any, raw bool) (nsutils.Record, *nsutils.HTTPError) {
+func (nts *NightTroopAPIStore) Patch(ctx context.Context, collection nsutils.Collection, identifier string, patch map[string]any, raw bool) (nsutils.Document, *nsutils.HTTPError) {
 	collectionsStore, siteContext, err := nts.collectionFor(ctx, collection)
 	if err != nil {
-		return nsutils.Record{}, err
+		return nil, err
 	}
 	return found(collectionsStore.Patch(ctx, siteContext, identifier, patch, raw))
 }
