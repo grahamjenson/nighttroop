@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"math"
+	"net/netip"
 	"strconv"
 
 	lru "github.com/hashicorp/golang-lru/v2"
@@ -90,12 +91,26 @@ func (r *RateLimiters) getOrCreateLimiter(limiters *lru.Cache[string, *rate.Limi
 	return limiter
 }
 
+// ipKey is what an IP's limiters are keyed on. An IPv6 address is keyed on its /64, as a host is usually given a whole
+// /64 to pick addresses from, so stepping through it cannot reset its limits.
+func ipKey(ip string) string {
+	addr, err := netip.ParseAddr(ip)
+	if err != nil {
+		return ip
+	}
+	if addr = addr.Unmap(); addr.Is4() {
+		return addr.String()
+	}
+	prefix, _ := addr.Prefix(64)
+	return prefix.String()
+}
+
 func (r *RateLimiters) GetGlobalIPRateLimiter(ipAddress string) *rate.Limiter {
-	return r.getOrCreateLimiter(r.globalIPRateLimiters, ipAddress, float64(r.serverConfig.GlobalIPPerMinuteLimit), r.serverConfig.GlobalIPPerMinuteBurst)
+	return r.getOrCreateLimiter(r.globalIPRateLimiters, ipKey(ipAddress), float64(r.serverConfig.GlobalIPPerMinuteLimit), r.serverConfig.GlobalIPPerMinuteBurst)
 }
 
 func (r *RateLimiters) GetSiteCreateIPRateLimiter(ipAddress string) *rate.Limiter {
-	return r.getOrCreateLimiter(r.siteCreateIpLimiter, ipAddress, r.serverConfig.SiteCreateIPPerMinuteLimit, r.serverConfig.SiteCreateIPPerMinuteBurst)
+	return r.getOrCreateLimiter(r.siteCreateIpLimiter, ipKey(ipAddress), r.serverConfig.SiteCreateIPPerMinuteLimit, r.serverConfig.SiteCreateIPPerMinuteBurst)
 }
 
 // //
@@ -135,12 +150,12 @@ func (r *RateLimiters) SiteDownloadLimiter(subdomain string) *rate.Limiter {
 
 // SiteUnauthLimiter is one IP's budget on a site before it authenticates: 401s and Socket.IO handshakes spend it, not the site's own limit
 func (r *RateLimiters) SiteUnauthLimiter(subdomain string, ip string) *rate.Limiter {
-	return r.getOrCreateLimiter(r.siteUnauthRateLimiters, subdomain+":"+ip, float64(r.serverConfig.SiteUnauthPerMinuteLimit), r.serverConfig.SiteUnauthPerMinuteBurst)
+	return r.getOrCreateLimiter(r.siteUnauthRateLimiters, subdomain+":"+ipKey(ip), float64(r.serverConfig.SiteUnauthPerMinuteLimit), r.serverConfig.SiteUnauthPerMinuteBurst)
 }
 
 func (r *RateLimiters) SiteLoginAllow(subdomain string, ip string) (bool, int) {
 	userLimiter := r.getOrCreateLimiter(r.userLoginRateLimiters, subdomain, float64(r.serverConfig.SiteLoginPerMinuteLimit), r.serverConfig.SiteLoginPerMinuteBurst)
-	ipLimiter := r.getOrCreateLimiter(r.ipLoginRateLimiters, ip, float64(r.serverConfig.SiteLoginPerMinuteLimit), r.serverConfig.SiteLoginPerMinuteBurst)
+	ipLimiter := r.getOrCreateLimiter(r.ipLoginRateLimiters, ipKey(ip), float64(r.serverConfig.SiteLoginPerMinuteLimit), r.serverConfig.SiteLoginPerMinuteBurst)
 
 	// Calculate tokens remaining
 	userTokens := userLimiter.Tokens()
