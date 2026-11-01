@@ -24,13 +24,6 @@ func NewDeviceStatusCollection() CollectionStore {
 }
 
 func (c DeviceStatusCollection) Validate(nsModel nightscoutmodels.DeviceStatus, dbModel *sitedb.DeviceReport) *nsutils.HTTPError {
-	if dbModel == nil {
-		return nil
-	}
-	return nil
-}
-
-func (c DeviceStatusCollection) ValidatePatch(nsModel nightscoutmodels.DeviceStatus, dbModel *sitedb.DeviceReport) *nsutils.HTTPError {
 	return nil
 }
 
@@ -45,33 +38,17 @@ func (c DeviceStatusCollection) CreateModel(q *sitedb.Queries, ctx context.Conte
 }
 
 func (c DeviceStatusCollection) GetDuplicate(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.DeviceStatus) (*sitedb.DeviceReport, error) {
-	// Without a date every filter below is empty and would match the newest row
-	if nsModel.Date == nil {
-		return nil, nil
-	}
-	deviceStatuses, rerr := q.SearchDeviceReports(ctx, sitedb.SearchDeviceReportsParams{
-		DateEQ:   nsModel.Date.Int64p(),
-		DeviceEq: nsModel.Device.Stringp(),
-		Limit:    1,
-	})
-	if rerr != nil {
-		return nil, rerr
-	}
-	if len(deviceStatuses) > 0 {
-		return deviceStatuses[0], nil
-	}
-	return nil, nil
+	return first(q.SearchDeviceReports(ctx, sitedb.SearchDeviceReportsParams{DateEQ: nsModel.Date.Int64p(), DeviceEq: nsModel.Device.Stringp(), Limit: 1}))
 }
 
 func (c DeviceStatusCollection) GetModel(q *sitedb.Queries, ctx context.Context, identifier string, includeDeleted bool) (*sitedb.DeviceReport, error) {
 	return q.GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: identifier, IncludeDeleted: includeDeleted})
 }
 
-func (c DeviceStatusCollection) HardDelete(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
-	return q.HardDeleteDeviceReport(ctx, sitedb.HardDeleteDeviceReportParams{ID: identifier})
-}
-
-func (c DeviceStatusCollection) SoftDelete(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
+func (c DeviceStatusCollection) Delete(q *sitedb.Queries, ctx context.Context, identifier string, permanent bool) (sql.Result, error) {
+	if permanent {
+		return q.HardDeleteDeviceReport(ctx, sitedb.HardDeleteDeviceReportParams{ID: identifier})
+	}
 	return q.SoftDeleteDeviceReport(ctx, sitedb.SoftDeleteDeviceReportParams{ID: identifier})
 }
 
