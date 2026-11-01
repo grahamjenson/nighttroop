@@ -3,6 +3,7 @@ package s3utils
 import (
 	"archive/tar"
 	"bytes"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"sync"
@@ -23,7 +24,8 @@ func testClient(t *testing.T) *S3Client {
 	return &S3Client{ServerConfig: cfg}
 }
 
-// A backup is the site's files tarred, compressed and encrypted, and unpacks to the same files
+// A backup is the site's files tarred, compressed and encrypted, and unpacks to the same files without logging each,
+// as a restore unpacks every site's
 func TestBackupRoundTrip(t *testing.T) {
 	c, src, dst := testClient(t), t.TempDir(), t.TempDir()
 	files := map[string][]byte{"site.sqlite": bytes.Repeat([]byte("glucose "), 10_000), "site.sqlite-wal": {}, "notes.txt": []byte("a note")}
@@ -42,7 +44,13 @@ func TestBackupRoundTrip(t *testing.T) {
 	require.NotContains(t, backup.String(), "a note")
 	require.NotContains(t, backup.String(), "glucose glucose")
 
-	require.NoError(t, c.ExtractTarLZ4(&backup, dst))
+	var logged bytes.Buffer
+	previous := slog.Default()
+	slog.SetDefault(slog.New(slog.NewTextHandler(&logged, nil)))
+	err = c.ExtractTarLZ4(&backup, dst)
+	slog.SetDefault(previous)
+	require.NoError(t, err)
+	require.Empty(t, logged.String())
 	for name, content := range files {
 		got, err := os.ReadFile(filepath.Join(dst, name))
 		require.NoError(t, err)
