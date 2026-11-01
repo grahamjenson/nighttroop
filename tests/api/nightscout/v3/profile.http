@@ -398,6 +398,46 @@ ASSERT_STATUS 404
 // UPDATE
 /////
 
+// A replace keeps the store's identifier, so it can still be read by it
+NAME replace_profile_v3
+PUT http://{{ site }}/api/v3/profiles/{{ dig "create_profile_v3.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+B {
+    "units": "mg/dL",
+    "startDate": "{{ dig "create_profile_v3.result.startDate" }}",
+    "defaultProfile": "Default",
+    "store": {
+        "Default": {
+            "dia": "5",
+            "units": "mg/dL",
+            "timezone": "UTC",
+            "basal": [{"value": "0.45", "time": "00:00", "timeAsSeconds": "0"}]
+        }
+    }
+}
+ASSERT_STATUS 200
+ASSERT_EQUALS ".create_profile_v3.result.identifier" "@result.identifier"
+
+NAME get_replaced_profile_v3
+GET http://{{ site }}/api/v3/profiles/{{ dig "create_profile_v3.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS ".create_profile_v3.result.identifier" "@result.identifier"
+ASSERT_EQUALS 0.45 "@result.store.Default.basal.0.value"
+
+// A v1 replace by _id keeps it too
+NAME replace_profile_v1
+PUT http://{{ site }}/api/v1/profile?token={{ token }}
+B {"_id": "{{ dig "create_profile_v3.result.identifier" }}", "units": "mg/dL", "startDate": "{{ dig "create_profile_v3.result.startDate" }}", "defaultProfile": "Default", "store": {"Default": {"dia": "5", "units": "mg/dL", "timezone": "UTC", "basal": [{"value": "0.55", "time": "00:00", "timeAsSeconds": "0"}]}}}
+ASSERT_STATUS 200
+ASSERT_EQUALS ".create_profile_v3.result.identifier" "@_id"
+
+NAME get_v1_replaced_profile_v3
+GET http://{{ site }}/api/v3/profiles/{{ dig "create_profile_v3.result.identifier" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 0.55 "@result.store.Default.basal.0.value"
+
 
 ///////
 // DELETE
