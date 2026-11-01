@@ -217,6 +217,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - **v2**: authorization (a token for a JWT), properties and summary.
 - **v3**: create, read, update, patch, delete, search and history of each collection, plus version, status,
   lastModified and settings.
+- A v3 history includes deleted documents, with `isValid` false, so apps learn of deletions; a search leaves them
+  out.
 - **Socket.IO** live updates and alarms over long polling or websockets.
 - Glucose is stored in mg/dL and returned and accepted in the settings' units.
 - Duplicate uploads are ignored; values far outside real use are refused.

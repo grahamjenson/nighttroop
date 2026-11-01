@@ -284,7 +284,7 @@ WHERE
     AND (CAST(?21 AS TEXT) IS NULL OR event_type NOT IN (SELECT value FROM json_each(?21)))
 
 
-    AND (CAST(?22 AS BOOL) IS NULL OR deleted_at IS NULL)
+    AND (CAST(?22 AS BOOL) IS TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT ?24 OFFSET ?23
 `

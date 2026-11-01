@@ -230,7 +230,7 @@ WHERE
     AND (CAST(?21 AS INTEGER) IS NULL OR duration_minutes <= ?21)
     AND (CAST(?22 AS INTEGER) IS NULL OR duration_minutes < ?22)
 
-    AND (CAST(?23 AS BOOL) IS NULL OR deleted_at IS NULL)
+    AND (CAST(?23 AS BOOL) IS TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT ?25 OFFSET ?24
 `

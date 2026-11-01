@@ -1,0 +1,60 @@
+INCLUDE steps/new_ns_site.steps
+
+// History returns deleted documents with isValid false, so clients like AAPS learn of deletions,
+// while a search leaves them out
+
+NAME create_history_treatment
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+  "eventType": "Note",
+  "created_at": "{{ time 0 }}",
+  "notes": "to be deleted"
+ }
+ASSERT_STATUS 201
+SET treatment_id {{ .create_history_treatment.result.identifier }}
+
+NAME create_history_devicestatus
+POST http://{{ site }}/api/v3/devicestatus
+H Authorization: Bearer {{ jwt }}
+B { "device": "history-phone" }
+ASSERT_STATUS 201
+SET devicestatus_id {{ .create_history_devicestatus.result.identifier }}
+
+NAME delete_history_treatment
+DELETE http://{{ site }}/api/v3/treatments/{{ .treatment_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+NAME delete_history_devicestatus
+DELETE http://{{ site }}/api/v3/devicestatus/{{ .devicestatus_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+NAME history_has_deleted_treatment
+GET http://{{ site }}/api/v3/treatments/history/{{ itime 60 }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS "to be deleted" "@result.0.notes"
+ASSERT_EQUALS false "@result.0.isValid"
+
+NAME history_has_deleted_devicestatus
+GET http://{{ site }}/api/v3/devicestatus/history/{{ itime 60 }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS "history-phone" "@result.0.device"
+ASSERT_EQUALS false "@result.0.isValid"
+
+NAME search_leaves_out_deleted_treatment
+GET http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
+
+NAME search_leaves_out_deleted_devicestatus
+GET http://{{ site }}/api/v3/devicestatus?device=history-phone
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"

@@ -68,7 +68,7 @@ WHERE
     AND (CAST(sqlc.narg('TypeNin') AS TEXT) IS NULL OR event_type NOT IN (SELECT value FROM json_each(sqlc.narg('TypeNin'))))
 
 
-    AND (CAST(sqlc.narg('IncludeDeleted') AS BOOL) IS NULL OR deleted_at IS NULL)
+    AND (CAST(sqlc.narg('IncludeDeleted') AS BOOL) IS TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
