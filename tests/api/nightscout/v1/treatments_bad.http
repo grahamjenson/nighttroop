@@ -3,3 +3,9 @@ POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {"app":"AAPS","date":1787481585647}
 ASSERT_STATUS 400
 ASSERT_CONTAINS "eventType" "@message"
+
+// A null in a profile switch's schedule is kept and skipped, rather than failing the request
+NAME create_profile_switch_null_schedule_entry
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+B {"eventType":"Profile Switch","created_at":"{{ time 3 }}","profile":"Nulls","duration":0,"profileJson":"{\"units\":\"mmol/L\",\"target_low\":[null],\"target_high\":[null]}"}
+ASSERT_STATUS 200

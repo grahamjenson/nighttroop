@@ -61,7 +61,8 @@ func Properties(ctx context.Context, q *sitedb.Queries, now time.Time) map[strin
 		return properties
 	}
 	properties["bgnow"] = GetBucket(readings[0])
-	if readings[0].Direction != nil {
+	// An empty direction has no arrow, so is left out like a missing one
+	if readings[0].Direction != nil && *readings[0].Direction != "" {
 		label := display.Direction(readings[0].Direction)
 		properties["direction"] = Direction{Value: *readings[0].Direction, Label: label, Entity: fmt.Sprintf("&#%d;", []rune(label)[0])}
 	}
