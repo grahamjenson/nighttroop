@@ -8806,6 +8806,36 @@ func (m *CreateEventGroupParams) SetCreatedByIdentityID(v *int64) {
 	m.CreatedByIdentityID = v
 }
 
+// GetGroupID returns the GroupID value.
+func (m EventsToGroupParams) GetGroupID() string {
+	return m.GroupID
+}
+
+// SetGroupID sets the GroupID value and returns the updated EventsToGroupParams.
+func (m *EventsToGroupParams) SetGroupID(v string) {
+	m.GroupID = v
+}
+
+// GetFrom returns the From value.
+func (m EventsToGroupParams) GetFrom() int64 {
+	return m.From
+}
+
+// SetFrom sets the From value and returns the updated EventsToGroupParams.
+func (m *EventsToGroupParams) SetFrom(v int64) {
+	m.From = v
+}
+
+// GetTo returns the To value.
+func (m EventsToGroupParams) GetTo() int64 {
+	return m.To
+}
+
+// SetTo sets the To value and returns the updated EventsToGroupParams.
+func (m *EventsToGroupParams) SetTo(v int64) {
+	m.To = v
+}
+
 // GetID returns the ID value.
 func (m GetEventGroupParams) GetID() string {
 	return m.ID
@@ -8884,6 +8914,166 @@ func (m HardDeleteEventGroupsByTypeParams) GetGroupType() string {
 // SetGroupType sets the GroupType value and returns the updated HardDeleteEventGroupsByTypeParams.
 func (m *HardDeleteEventGroupsByTypeParams) SetGroupType(v string) {
 	m.GroupType = v
+}
+
+// GetGroupType returns the GroupType value.
+func (m RegroupEventGroupParams) GetGroupType() *string {
+	return m.GroupType
+}
+
+// SetGroupType sets the GroupType value and returns the updated RegroupEventGroupParams.
+func (m *RegroupEventGroupParams) SetGroupType(v *string) {
+	m.GroupType = v
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m RegroupEventGroupParams) GetOccurredAt() *int64 {
+	return m.OccurredAt
+}
+
+// SetOccurredAt sets the OccurredAt value and returns the updated RegroupEventGroupParams.
+func (m *RegroupEventGroupParams) SetOccurredAt(v *int64) {
+	m.OccurredAt = v
+}
+
+// GetGlucoseReadingID returns the GlucoseReadingID value.
+func (m RegroupEventGroupParams) GetGlucoseReadingID() *string {
+	return m.GlucoseReadingID
+}
+
+// SetGlucoseReadingID sets the GlucoseReadingID value and returns the updated RegroupEventGroupParams.
+func (m *RegroupEventGroupParams) SetGlucoseReadingID(v *string) {
+	m.GlucoseReadingID = v
+}
+
+// GetInsulinDoseID returns the InsulinDoseID value.
+func (m RegroupEventGroupParams) GetInsulinDoseID() *string {
+	return m.InsulinDoseID
+}
+
+// SetInsulinDoseID sets the InsulinDoseID value and returns the updated RegroupEventGroupParams.
+func (m *RegroupEventGroupParams) SetInsulinDoseID(v *string) {
+	m.InsulinDoseID = v
+}
+
+// GetFoodIntakeID returns the FoodIntakeID value.
+func (m RegroupEventGroupParams) GetFoodIntakeID() *string {
+	return m.FoodIntakeID
+}
+
+// SetFoodIntakeID sets the FoodIntakeID value and returns the updated RegroupEventGroupParams.
+func (m *RegroupEventGroupParams) SetFoodIntakeID(v *string) {
+	m.FoodIntakeID = v
+}
+
+// GetTempBasalID returns the TempBasalID value.
+func (m RegroupEventGroupParams) GetTempBasalID() *string {
+	return m.TempBasalID
+}
+
+// SetTempBasalID sets the TempBasalID value and returns the updated RegroupEventGroupParams.
+func (m *RegroupEventGroupParams) SetTempBasalID(v *string) {
+	m.TempBasalID = v
+}
+
+// GetTempTargetID returns the TempTargetID value.
+func (m RegroupEventGroupParams) GetTempTargetID() *string {
+	return m.TempTargetID
+}
+
+// SetTempTargetID sets the TempTargetID value and returns the updated RegroupEventGroupParams.
+func (m *RegroupEventGroupParams) SetTempTargetID(v *string) {
+	m.TempTargetID = v
+}
+
+// GetProfileSwitchID returns the ProfileSwitchID value.
+func (m RegroupEventGroupParams) GetProfileSwitchID() *string {
+	return m.ProfileSwitchID
+}
+
+// SetProfileSwitchID sets the ProfileSwitchID value and returns the updated RegroupEventGroupParams.
+func (m *RegroupEventGroupParams) SetProfileSwitchID(v *string) {
+	m.ProfileSwitchID = v
+}
+
+// GetComponentEventID returns the ComponentEventID value.
+func (m RegroupEventGroupParams) GetComponentEventID() *string {
+	return m.ComponentEventID
+}
+
+// SetComponentEventID sets the ComponentEventID value and returns the updated RegroupEventGroupParams.
+func (m *RegroupEventGroupParams) SetComponentEventID(v *string) {
+	m.ComponentEventID = v
+}
+
+// GetActivityID returns the ActivityID value.
+func (m RegroupEventGroupParams) GetActivityID() *string {
+	return m.ActivityID
+}
+
+// SetActivityID sets the ActivityID value and returns the updated RegroupEventGroupParams.
+func (m *RegroupEventGroupParams) SetActivityID(v *string) {
+	m.ActivityID = v
+}
+
+// GetNotificationEventID returns the NotificationEventID value.
+func (m RegroupEventGroupParams) GetNotificationEventID() *string {
+	return m.NotificationEventID
+}
+
+// SetNotificationEventID sets the NotificationEventID value and returns the updated RegroupEventGroupParams.
+func (m *RegroupEventGroupParams) SetNotificationEventID(v *string) {
+	m.NotificationEventID = v
+}
+
+// GetNotes returns the Notes value.
+func (m RegroupEventGroupParams) GetNotes() *string {
+	return m.Notes
+}
+
+// SetNotes sets the Notes value and returns the updated RegroupEventGroupParams.
+func (m *RegroupEventGroupParams) SetNotes(v *string) {
+	m.Notes = v
+}
+
+// GetReason returns the Reason value.
+func (m RegroupEventGroupParams) GetReason() *string {
+	return m.Reason
+}
+
+// SetReason sets the Reason value and returns the updated RegroupEventGroupParams.
+func (m *RegroupEventGroupParams) SetReason(v *string) {
+	m.Reason = v
+}
+
+// GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
+func (m RegroupEventGroupParams) GetUpdatedByIdentityID() *int64 {
+	return m.UpdatedByIdentityID
+}
+
+// SetUpdatedByIdentityID sets the UpdatedByIdentityID value and returns the updated RegroupEventGroupParams.
+func (m *RegroupEventGroupParams) SetUpdatedByIdentityID(v *int64) {
+	m.UpdatedByIdentityID = v
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m RegroupEventGroupParams) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated RegroupEventGroupParams.
+func (m *RegroupEventGroupParams) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
+}
+
+// GetID returns the ID value.
+func (m RegroupEventGroupParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated RegroupEventGroupParams.
+func (m *RegroupEventGroupParams) SetID(v string) {
+	m.ID = v
 }
 
 // GetDateGTE returns the DateGTE value.

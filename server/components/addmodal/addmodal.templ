@@ -1,6 +1,7 @@
 package addmodal
 
 import (
+	"slices"
 	"strings"
 
 	"nighttroop.t1d.nz/server/components/modal"
@@ -33,7 +34,7 @@ type Field struct {
 	Min, Max, Step string
 	// Options are a select's choices, or a text's suggestions
 	Options []string
-	// Value is what a number or text starts at
+	// Value is what a number, text, select or time starts at
 	Value string
 	// Wide takes the whole row, for notes
 	Wide bool
@@ -50,6 +51,10 @@ type Props struct {
 	EmptyID string
 	Submit  string
 	Fields  []Field
+	// Swap is how the answer goes in Target, afterbegin when empty, e.g. outerHTML to replace an edited row
+	Swap string
+	// Extra is more of the form after its fields, such as inputs loaded for what is typed in them
+	Extra templ.Component
 }
 
 // Open is the button opening the add modal at path in #modal-container, above the table
@@ -64,34 +69,53 @@ templ Open(id string, path string, label string) {
 // Modal adds a record with all its fields, each saying what it is and whether it is required. It closes once the record
 // is added, and an error goes to the toaster, leaving it open to fix.
 templ Modal(p Props) {
-	@modal.Modal(modal.Props{ID: p.ID + "--modal", Title: p.Title, Subtitle: "Only the required fields need filling in.", Actions: submit(p)}) {
-		<form
-			id={ p.ID }
-			class="grid gap-x-4 gap-y-3 py-4 sm:grid-cols-2"
-			hx-post={ p.Path }
-			hx-target={ p.Target }
-			hx-swap="afterbegin"
-			hx-status:4xx="target:#toaster swap:beforeend"
-			hx-status:5xx="target:#toaster swap:beforeend"
-			{ formHandlers(p.EmptyID)... }
-		>
-			for _, f := range p.Fields {
-				@field(p, f)
-			}
-		</form>
+	@modal.Modal(modal.Props{ID: p.ID + "--modal", Title: p.Title, Subtitle: "Only the required fields need filling in.", Actions: SubmitButton(p)}) {
+		@Form(p)
 	}
+}
+
+// Form is the modal's form on its own, to edit a record in its details modal beside a SubmitButton
+templ Form(p Props) {
+	<form
+		id={ p.ID }
+		class="grid gap-x-4 gap-y-3 py-4 sm:grid-cols-2"
+		hx-post={ p.Path }
+		hx-target={ p.Target }
+		hx-swap={ swap(p) }
+		hx-status:4xx="target:#toaster swap:beforeend"
+		hx-status:5xx="target:#toaster swap:beforeend"
+		{ formHandlers(p.EmptyID)... }
+	>
+		for _, f := range p.Fields {
+			@field(p, f)
+		}
+		if p.Extra != nil {
+			<div class="sm:col-span-2">
+				@p.Extra
+			</div>
+		}
+	</form>
+}
+
+func swap(p Props) string {
+	if p.Swap == "" {
+		return "afterbegin"
+	}
+	return p.Swap
 }
 
 // formHandlers leave out the fields left blank, so they are not set rather than empty, then once a record is added,
-// empty the modal container and remove the empty table's row
+// empty the modal container and remove the empty table's row. Only the form's own request closes it, not one of an
+// input's within it, like loading what can be picked.
 func formHandlers(emptyID string) templ.Attributes {
 	return templ.Attributes{
 		"hx-on::config:request": templ.JSUnsafeFuncCall("for (const [name, value] of [...ctx.request.body]) { if (value === '') ctx.request.body.delete(name) }"),
-		"hx-on::after:request":  templ.JSUnsafeFuncCall("if (ctx.response.status < 400) { document.getElementById('modal-container').innerHTML = ''; document.getElementById('" + emptyID + "')?.remove() }"),
+		"hx-on::after:request":  templ.JSUnsafeFuncCall("if (event.target === this && ctx.response.status < 400) { document.getElementById('modal-container').innerHTML = ''; document.getElementById('" + emptyID + "')?.remove() }"),
 	}
 }
 
-templ submit(p Props) {
+// SubmitButton submits the form, from outside it, as in a modal's actions
+templ SubmitButton(p Props) {
 	@button.Button(button.Props{ID: p.ID + "--submit", Type: button.TypeSubmit, Attributes: templ.Attributes{"form": p.ID}}) {
 		{ p.Submit }
 	}
@@ -114,12 +138,15 @@ templ field(p Props, f Field) {
 					if !f.Required {
 						<option value="">None</option>
 					}
+					if f.Value != "" && !slices.Contains(f.Options, f.Value) {
+						<option value={ f.Value } selected>{ f.Value }</option>
+					}
 					for _, option := range f.Options {
-						<option value={ option }>{ option }</option>
+						<option value={ option } selected?={ option == f.Value }>{ option }</option>
 					}
 				</select>
 			case When:
-				@input.Input(input.Props{ID: id, Name: f.Name, Type: input.TypeDateTime})
+				@input.Input(input.Props{ID: id, Name: f.Name, Type: input.TypeDateTime, Value: f.Value})
 			case Number:
 				@input.Input(input.Props{ID: id, Name: f.Name, Type: input.TypeNumber, Value: f.Value, Required: f.Required, Attributes: templ.Attributes{"step": f.Step, "min": f.Min, "max": f.Max}})
 			default:

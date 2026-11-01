@@ -150,6 +150,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deviceReportsForDeviceStmt, err = db.PrepareContext(ctx, deviceReportsForDevice); err != nil {
 		return nil, fmt.Errorf("error preparing query DeviceReportsForDevice: %w", err)
 	}
+	if q.eventsToGroupStmt, err = db.PrepareContext(ctx, eventsToGroup); err != nil {
+		return nil, fmt.Errorf("error preparing query EventsToGroup: %w", err)
+	}
 	if q.getActivityStmt, err = db.PrepareContext(ctx, getActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query GetActivity: %w", err)
 	}
@@ -278,6 +281,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.recentDeviceNamesStmt, err = db.PrepareContext(ctx, recentDeviceNames); err != nil {
 		return nil, fmt.Errorf("error preparing query RecentDeviceNames: %w", err)
+	}
+	if q.regroupEventGroupStmt, err = db.PrepareContext(ctx, regroupEventGroup); err != nil {
+		return nil, fmt.Errorf("error preparing query RegroupEventGroup: %w", err)
 	}
 	if q.searchActivitiesStmt, err = db.PrepareContext(ctx, searchActivities); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchActivities: %w", err)
@@ -629,6 +635,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing deviceReportsForDeviceStmt: %w", cerr)
 		}
 	}
+	if q.eventsToGroupStmt != nil {
+		if cerr := q.eventsToGroupStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing eventsToGroupStmt: %w", cerr)
+		}
+	}
 	if q.getActivityStmt != nil {
 		if cerr := q.getActivityStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getActivityStmt: %w", cerr)
@@ -842,6 +853,11 @@ func (q *Queries) Close() error {
 	if q.recentDeviceNamesStmt != nil {
 		if cerr := q.recentDeviceNamesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing recentDeviceNamesStmt: %w", cerr)
+		}
+	}
+	if q.regroupEventGroupStmt != nil {
+		if cerr := q.regroupEventGroupStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing regroupEventGroupStmt: %w", cerr)
 		}
 	}
 	if q.searchActivitiesStmt != nil {
@@ -1150,6 +1166,7 @@ type Queries struct {
 	createTempTargetStmt                        *sql.Stmt
 	deleteSummaryPeriodsStmt                    *sql.Stmt
 	deviceReportsForDeviceStmt                  *sql.Stmt
+	eventsToGroupStmt                           *sql.Stmt
 	getActivityStmt                             *sql.Stmt
 	getComponentEventStmt                       *sql.Stmt
 	getComponentEventByTypeStmt                 *sql.Stmt
@@ -1193,6 +1210,7 @@ type Queries struct {
 	lastModifiedCollectionsStmt                 *sql.Stmt
 	oldestGlucoseReadingAtStmt                  *sql.Stmt
 	recentDeviceNamesStmt                       *sql.Stmt
+	regroupEventGroupStmt                       *sql.Stmt
 	searchActivitiesStmt                        *sql.Stmt
 	searchComponentEventsStmt                   *sql.Stmt
 	searchDeviceReportsStmt                     *sql.Stmt
@@ -1286,6 +1304,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		createTempTargetStmt:                        q.createTempTargetStmt,
 		deleteSummaryPeriodsStmt:                    q.deleteSummaryPeriodsStmt,
 		deviceReportsForDeviceStmt:                  q.deviceReportsForDeviceStmt,
+		eventsToGroupStmt:                           q.eventsToGroupStmt,
 		getActivityStmt:                             q.getActivityStmt,
 		getComponentEventStmt:                       q.getComponentEventStmt,
 		getComponentEventByTypeStmt:                 q.getComponentEventByTypeStmt,
@@ -1329,6 +1348,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		lastModifiedCollectionsStmt:                 q.lastModifiedCollectionsStmt,
 		oldestGlucoseReadingAtStmt:                  q.oldestGlucoseReadingAtStmt,
 		recentDeviceNamesStmt:                       q.recentDeviceNamesStmt,
+		regroupEventGroupStmt:                       q.regroupEventGroupStmt,
 		searchActivitiesStmt:                        q.searchActivitiesStmt,
 		searchComponentEventsStmt:                   q.searchComponentEventsStmt,
 		searchDeviceReportsStmt:                     q.searchDeviceReportsStmt,

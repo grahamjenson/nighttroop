@@ -52,6 +52,8 @@
 1. Think about Translations
 1. Docs hosting
 1. Fuzz testing beyond the API (`tests/api/fuzz_test.go`)
+1. P3: Add event groups (list, get, add, edit, delete and the events to group) to `clients/nighttroop/openapi.json`
+   and its client
 1. Performance testing (cost estimate for running full node)
 1. Nightscout API:
     1. P2: Check If-Unmodified-Since on API v3 replace and patch, in the same query as the update

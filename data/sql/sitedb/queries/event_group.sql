@@ -233,6 +233,79 @@ UPDATE event_groups SET
 WHERE id = sqlc.arg('ID') AND deleted_at IS NULL
 RETURNING *; 
 
+-- EventsToGroup are the events that can be put in the group with GroupID (empty for a new one): those not deleted, nor in
+-- another group, from the window, and the group's own. Kind is the group's column for the event, and amount, minutes
+-- and detail what tells it apart, like a dose and its type.
+-- name: EventsToGroup :many
+-- Each argument is given once, in params, as sqlc numbers an argument used in more than one select wrongly
+WITH params AS (
+    SELECT CAST(sqlc.arg('GroupID') AS TEXT) AS group_id, CAST(sqlc.arg('From') AS INTEGER) AS from_ms,
+        CAST(sqlc.arg('To') AS INTEGER) AS to_ms
+)
+-- sqlc types the columns by the first select, so this one, which has no rows, says which can be null
+SELECT '' AS kind, '' AS id, 0 AS occurred_at, CAST(NULL AS REAL) AS amount, CAST(NULL AS INTEGER) AS minutes,
+    CAST(NULL AS TEXT) AS detail WHERE FALSE
+UNION ALL
+SELECT 'glucose_reading_id', e.id, e.occurred_at, mgdl, NULL, reading_type FROM glucose_readings e, params p
+WHERE e.deleted_at IS NULL AND e.id NOT IN (SELECT glucose_reading_id FROM event_groups WHERE glucose_reading_id IS NOT NULL AND id != p.group_id)
+    AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT glucose_reading_id FROM event_groups WHERE id = p.group_id))
+UNION ALL
+SELECT 'insulin_dose_id', e.id, e.occurred_at, dose, NULL, dose_type FROM insulin_doses e, params p
+WHERE e.deleted_at IS NULL AND e.id NOT IN (SELECT insulin_dose_id FROM event_groups WHERE insulin_dose_id IS NOT NULL AND id != p.group_id)
+    AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT insulin_dose_id FROM event_groups WHERE id = p.group_id))
+UNION ALL
+SELECT 'food_intake_id', e.id, e.occurred_at, carbs, NULL, name FROM food_intakes e, params p
+WHERE e.deleted_at IS NULL AND e.id NOT IN (SELECT food_intake_id FROM event_groups WHERE food_intake_id IS NOT NULL AND id != p.group_id)
+    AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT food_intake_id FROM event_groups WHERE id = p.group_id))
+UNION ALL
+SELECT 'temp_basal_id', e.id, e.occurred_at, absolute, duration_minutes, NULL FROM temp_basals e, params p
+WHERE e.deleted_at IS NULL AND e.id NOT IN (SELECT temp_basal_id FROM event_groups WHERE temp_basal_id IS NOT NULL AND id != p.group_id)
+    AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT temp_basal_id FROM event_groups WHERE id = p.group_id))
+UNION ALL
+SELECT 'temp_target_id', e.id, e.occurred_at, low_target_mgdl, duration_minutes, high_target_mgdl FROM temp_targets e, params p
+WHERE e.deleted_at IS NULL AND e.id NOT IN (SELECT temp_target_id FROM event_groups WHERE temp_target_id IS NOT NULL AND id != p.group_id)
+    AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT temp_target_id FROM event_groups WHERE id = p.group_id))
+UNION ALL
+SELECT 'profile_switch_id', e.id, e.occurred_at, NULL, duration_minutes, name FROM profile_switches e, params p
+WHERE e.deleted_at IS NULL AND e.id NOT IN (SELECT profile_switch_id FROM event_groups WHERE profile_switch_id IS NOT NULL AND id != p.group_id)
+    AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT profile_switch_id FROM event_groups WHERE id = p.group_id))
+UNION ALL
+SELECT 'component_event_id', e.id, e.occurred_at, NULL, NULL, event_type FROM component_events e, params p
+WHERE e.deleted_at IS NULL AND e.id NOT IN (SELECT component_event_id FROM event_groups WHERE component_event_id IS NOT NULL AND id != p.group_id)
+    AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT component_event_id FROM event_groups WHERE id = p.group_id))
+UNION ALL
+SELECT 'activity_id', e.id, e.occurred_at, NULL, duration_minutes, COALESCE(name, activity_type) FROM activities e, params p
+WHERE e.deleted_at IS NULL AND e.id NOT IN (SELECT activity_id FROM event_groups WHERE activity_id IS NOT NULL AND id != p.group_id)
+    AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT activity_id FROM event_groups WHERE id = p.group_id))
+UNION ALL
+SELECT 'notification_event_id', e.id, e.occurred_at, NULL, NULL, title FROM notification_events e, params p
+WHERE e.deleted_at IS NULL AND e.id NOT IN (SELECT notification_event_id FROM event_groups WHERE notification_event_id IS NOT NULL AND id != p.group_id)
+    AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT notification_event_id FROM event_groups WHERE id = p.group_id))
+LIMIT 1000;
+
+-- RegroupEventGroup sets the group's events to exactly those given, as the site's edit page picks them, keeping its
+-- type, time, notes and reason when not given
+-- name: RegroupEventGroup :one
+UPDATE event_groups SET
+    group_type = COALESCE(sqlc.narg('GroupType'), group_type),
+    occurred_at = COALESCE(sqlc.narg('OccurredAt'), occurred_at),
+    glucose_reading_id = sqlc.narg('GlucoseReadingID'),
+    insulin_dose_id = sqlc.narg('InsulinDoseID'),
+    food_intake_id = sqlc.narg('FoodIntakeID'),
+    temp_basal_id = sqlc.narg('TempBasalID'),
+    temp_target_id = sqlc.narg('TempTargetID'),
+    profile_switch_id = sqlc.narg('ProfileSwitchID'),
+    component_event_id = sqlc.narg('ComponentEventID'),
+    activity_id = sqlc.narg('ActivityID'),
+    notification_event_id = sqlc.narg('NotificationEventID'),
+    notes = COALESCE(sqlc.narg('Notes'), notes),
+    reason = COALESCE(sqlc.narg('Reason'), reason),
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_by_identity_id = sqlc.narg('UpdatedByIdentityID'),
+    updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
+WHERE id = sqlc.arg('ID') AND deleted_at IS NULL
+RETURNING *;
+
 --------
 -- DELETE
 --------

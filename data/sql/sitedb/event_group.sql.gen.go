@@ -424,6 +424,102 @@ func (q *Queries) CreateEventGroup(ctx context.Context, arg CreateEventGroupPara
 	return &i, err
 }
 
+const eventsToGroup = `-- name: EventsToGroup :many
+WITH params AS (
+    SELECT CAST(?1 AS TEXT) AS group_id, CAST(?2 AS INTEGER) AS from_ms,
+        CAST(?3 AS INTEGER) AS to_ms
+)
+SELECT '' AS kind, '' AS id, 0 AS occurred_at, CAST(NULL AS REAL) AS amount, CAST(NULL AS INTEGER) AS minutes,
+    CAST(NULL AS TEXT) AS detail WHERE FALSE
+UNION ALL
+SELECT 'glucose_reading_id', e.id, e.occurred_at, mgdl, NULL, reading_type FROM glucose_readings e, params p
+WHERE e.deleted_at IS NULL AND e.id NOT IN (SELECT glucose_reading_id FROM event_groups WHERE glucose_reading_id IS NOT NULL AND id != p.group_id)
+    AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT glucose_reading_id FROM event_groups WHERE id = p.group_id))
+UNION ALL
+SELECT 'insulin_dose_id', e.id, e.occurred_at, dose, NULL, dose_type FROM insulin_doses e, params p
+WHERE e.deleted_at IS NULL AND e.id NOT IN (SELECT insulin_dose_id FROM event_groups WHERE insulin_dose_id IS NOT NULL AND id != p.group_id)
+    AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT insulin_dose_id FROM event_groups WHERE id = p.group_id))
+UNION ALL
+SELECT 'food_intake_id', e.id, e.occurred_at, carbs, NULL, name FROM food_intakes e, params p
+WHERE e.deleted_at IS NULL AND e.id NOT IN (SELECT food_intake_id FROM event_groups WHERE food_intake_id IS NOT NULL AND id != p.group_id)
+    AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT food_intake_id FROM event_groups WHERE id = p.group_id))
+UNION ALL
+SELECT 'temp_basal_id', e.id, e.occurred_at, absolute, duration_minutes, NULL FROM temp_basals e, params p
+WHERE e.deleted_at IS NULL AND e.id NOT IN (SELECT temp_basal_id FROM event_groups WHERE temp_basal_id IS NOT NULL AND id != p.group_id)
+    AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT temp_basal_id FROM event_groups WHERE id = p.group_id))
+UNION ALL
+SELECT 'temp_target_id', e.id, e.occurred_at, low_target_mgdl, duration_minutes, high_target_mgdl FROM temp_targets e, params p
+WHERE e.deleted_at IS NULL AND e.id NOT IN (SELECT temp_target_id FROM event_groups WHERE temp_target_id IS NOT NULL AND id != p.group_id)
+    AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT temp_target_id FROM event_groups WHERE id = p.group_id))
+UNION ALL
+SELECT 'profile_switch_id', e.id, e.occurred_at, NULL, duration_minutes, name FROM profile_switches e, params p
+WHERE e.deleted_at IS NULL AND e.id NOT IN (SELECT profile_switch_id FROM event_groups WHERE profile_switch_id IS NOT NULL AND id != p.group_id)
+    AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT profile_switch_id FROM event_groups WHERE id = p.group_id))
+UNION ALL
+SELECT 'component_event_id', e.id, e.occurred_at, NULL, NULL, event_type FROM component_events e, params p
+WHERE e.deleted_at IS NULL AND e.id NOT IN (SELECT component_event_id FROM event_groups WHERE component_event_id IS NOT NULL AND id != p.group_id)
+    AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT component_event_id FROM event_groups WHERE id = p.group_id))
+UNION ALL
+SELECT 'activity_id', e.id, e.occurred_at, NULL, duration_minutes, COALESCE(name, activity_type) FROM activities e, params p
+WHERE e.deleted_at IS NULL AND e.id NOT IN (SELECT activity_id FROM event_groups WHERE activity_id IS NOT NULL AND id != p.group_id)
+    AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT activity_id FROM event_groups WHERE id = p.group_id))
+UNION ALL
+SELECT 'notification_event_id', e.id, e.occurred_at, NULL, NULL, title FROM notification_events e, params p
+WHERE e.deleted_at IS NULL AND e.id NOT IN (SELECT notification_event_id FROM event_groups WHERE notification_event_id IS NOT NULL AND id != p.group_id)
+    AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT notification_event_id FROM event_groups WHERE id = p.group_id))
+LIMIT 1000
+`
+
+type EventsToGroupParams struct {
+	GroupID string
+	From    int64
+	To      int64
+}
+
+type EventsToGroupRow struct {
+	Kind       string
+	ID         string
+	OccurredAt int64
+	Amount     *float64
+	Minutes    *int64
+	Detail     *string
+}
+
+// EventsToGroup are the events that can be put in the group with GroupID (empty for a new one): those not deleted, nor in
+// another group, from the window, and the group's own. Kind is the group's column for the event, and amount, minutes
+// and detail what tells it apart, like a dose and its type.
+// Each argument is given once, in params, as sqlc numbers an argument used in more than one select wrongly
+// sqlc types the columns by the first select, so this one, which has no rows, says which can be null
+func (q *Queries) EventsToGroup(ctx context.Context, arg EventsToGroupParams) ([]*EventsToGroupRow, error) {
+	rows, err := q.query(ctx, q.eventsToGroupStmt, eventsToGroup, arg.GroupID, arg.From, arg.To)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*EventsToGroupRow
+	for rows.Next() {
+		var i EventsToGroupRow
+		if err := rows.Scan(
+			&i.Kind,
+			&i.ID,
+			&i.OccurredAt,
+			&i.Amount,
+			&i.Minutes,
+			&i.Detail,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getEventGroup = `-- name: GetEventGroup :one
 SELECT
     -- It would be awesome if sqlc worked with embed null objects
@@ -908,6 +1004,100 @@ func (q *Queries) HardDeleteEventGroupsByType(ctx context.Context, arg HardDelet
 		return nil, err
 	}
 	return items, nil
+}
+
+const regroupEventGroup = `-- name: RegroupEventGroup :one
+UPDATE event_groups SET
+    group_type = COALESCE(?1, group_type),
+    occurred_at = COALESCE(?2, occurred_at),
+    glucose_reading_id = ?3,
+    insulin_dose_id = ?4,
+    food_intake_id = ?5,
+    temp_basal_id = ?6,
+    temp_target_id = ?7,
+    profile_switch_id = ?8,
+    component_event_id = ?9,
+    activity_id = ?10,
+    notification_event_id = ?11,
+    notes = COALESCE(?12, notes),
+    reason = COALESCE(?13, reason),
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_by_identity_id = ?14,
+    updated_by_identity_name = ?15
+WHERE id = ?16 AND deleted_at IS NULL
+RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, component_event_id, activity_id, notification_event_id, notes, reason, duration_minutes, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+`
+
+type RegroupEventGroupParams struct {
+	GroupType             *string
+	OccurredAt            *int64
+	GlucoseReadingID      *string
+	InsulinDoseID         *string
+	FoodIntakeID          *string
+	TempBasalID           *string
+	TempTargetID          *string
+	ProfileSwitchID       *string
+	ComponentEventID      *string
+	ActivityID            *string
+	NotificationEventID   *string
+	Notes                 *string
+	Reason                *string
+	UpdatedByIdentityID   *int64
+	UpdatedByIdentityName *string
+	ID                    string
+}
+
+// RegroupEventGroup sets the group's events to exactly those given, as the site's edit page picks them, keeping its
+// type, time, notes and reason when not given
+func (q *Queries) RegroupEventGroup(ctx context.Context, arg RegroupEventGroupParams) (*EventGroup, error) {
+	row := q.queryRow(ctx, q.regroupEventGroupStmt, regroupEventGroup,
+		arg.GroupType,
+		arg.OccurredAt,
+		arg.GlucoseReadingID,
+		arg.InsulinDoseID,
+		arg.FoodIntakeID,
+		arg.TempBasalID,
+		arg.TempTargetID,
+		arg.ProfileSwitchID,
+		arg.ComponentEventID,
+		arg.ActivityID,
+		arg.NotificationEventID,
+		arg.Notes,
+		arg.Reason,
+		arg.UpdatedByIdentityID,
+		arg.UpdatedByIdentityName,
+		arg.ID,
+	)
+	var i EventGroup
+	err := row.Scan(
+		&i.ID,
+		&i.GroupType,
+		&i.GlucoseReadingID,
+		&i.InsulinDoseID,
+		&i.FoodIntakeID,
+		&i.TempBasalID,
+		&i.TempTargetID,
+		&i.ProfileSwitchID,
+		&i.ComponentEventID,
+		&i.ActivityID,
+		&i.NotificationEventID,
+		&i.Notes,
+		&i.Reason,
+		&i.DurationMinutes,
+		&i.RawJsonData,
+		&i.DeletedAt,
+		&i.UtcOffsetMinutes,
+		&i.OccurredAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedByAppName,
+		&i.CreatedByDeviceName,
+		&i.UpdatedByIdentityID,
+		&i.UpdatedByIdentityName,
+		&i.CreatedByIdentityID,
+		&i.CreatedByIdentityName,
+	)
+	return &i, err
 }
 
 const searchEventGroups = `-- name: SearchEventGroups :many
