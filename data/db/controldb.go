@@ -6,8 +6,11 @@ import (
 	"fmt"
 	"log/slog"
 	"path/filepath"
+	"runtime"
 	"sync"
 	"time"
+
+	"golang.org/x/sync/errgroup"
 
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/livedb"
@@ -73,41 +76,38 @@ func NewControlDB(ctx context.Context, serverConfig *config.ServerConfig) (*Cont
 	}
 
 	// This will go over all non-deleted sites and add them to the control db sites
-	_, err = controlDB.fillSites(ctx)
-	if err != nil {
+	if err := controlDB.fillSites(ctx); err != nil {
 		return nil, fmt.Errorf("cannot fill sites: %w", err)
 	}
 
 	return controlDB, nil
 }
 
-// This will fetch all the sites in
-func (db *ControlDB) fillSites(ctx context.Context) ([]string, error) {
-	sites := []string{}
+// fillSites opens every live and disabled site's DB. Opening one is mostly SQLite reading its schema, which with
+// thousands of sites is most of the server's start, so a site is opened on each core at once.
+func (db *ControlDB) fillSites(ctx context.Context) error {
 	res, err := db.Queries.GetLiveAndDisabledSites(ctx)
-
 	if err != nil {
-		return sites, fmt.Errorf("cannot query sites: %w", err)
+		return fmt.Errorf("cannot query sites: %w", err)
 	}
 
+	g, ctx := errgroup.WithContext(ctx)
+	g.SetLimit(runtime.NumCPU())
 	for _, model := range res {
-		sites = append(sites, model.ID)
-
-		// Site DB has to be available
-		path := sitedb.GetPath(model.ID, db.ServerConfig)
-
-		if !utils.FileExists(path) {
-			return nil, fmt.Errorf("The Site DB %s Must exist and doesnt", model.ID)
-		}
-
-		siteDB, err := NewSiteDB(ctx, model.ID, db.ServerConfig)
-		if err != nil {
-			return sites, fmt.Errorf("SiteDB failed to be added to the ControlDB list, %w", err)
-		}
-		db.sites.add(siteDB)
+		g.Go(func() error {
+			// Site DB has to be available
+			if !utils.FileExists(sitedb.GetPath(model.ID, db.ServerConfig)) {
+				return fmt.Errorf("The Site DB %s Must exist and doesnt", model.ID)
+			}
+			siteDB, err := NewSiteDB(ctx, model.ID, db.ServerConfig)
+			if err != nil {
+				return fmt.Errorf("SiteDB failed to be added to the ControlDB list, %w", err)
+			}
+			db.sites.add(siteDB)
+			return nil
+		})
 	}
-
-	return sites, nil
+	return g.Wait()
 }
 
 ///
