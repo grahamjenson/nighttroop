@@ -1,7 +1,10 @@
 package backup_sites_test
 
 import (
+	"bytes"
 	"encoding/json"
+	"log/slog"
+	"strings"
 	"testing"
 	"time"
 
@@ -16,9 +19,16 @@ func TestBackupSiteBatchRecordsEvent(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	ctx, batch := t.Context(), site.SiteDB.Subdomain[:1]
 	jobs := backup_sites.SetupBackupSiteJob(ctx, controlDB, cfg, &s3utils.S3Client{ServerConfig: cfg})
+	var logs bytes.Buffer
+	testutils.UseLogHandler(t, slog.NewTextHandler(&logs, nil))
 
 	started := time.Now().UnixMilli()
 	require.NoError(t, jobs.BackupSiteBatch(ctx, batch))
+
+	// One log lists the sites backed up, and as nothing went wrong, nothing else is logged
+	lines := strings.Split(strings.TrimSpace(logs.String()), "\n")
+	require.Len(t, lines, 1, logs.String())
+	require.Contains(t, lines[0], `msg="Backing up site DBs" sites=[`+site.SiteDB.Subdomain+`]`)
 
 	events, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{Limit: 10})
 	require.NoError(t, err)

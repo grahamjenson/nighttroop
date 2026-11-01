@@ -207,8 +207,6 @@ func (c *S3Client) UploadFilesToS3(ctx context.Context, key string, retention Re
 	if !c.ServerConfig.Status.S3Working {
 		return nil
 	}
-	info := ""
-	defer aslog.TrackTime(ctx, time.Now(), "UploadFilesToS3 "+key, nil, &info)
 	if len(paths) == 0 {
 		slog.ErrorContext(ctx, "No files to sync", "key", key)
 		return nil
@@ -224,8 +222,8 @@ func (c *S3Client) UploadFilesToS3(ctx context.Context, key string, retention Re
 	// Create a goroutine to write to the pipe the zip
 	go func() {
 		defer pw.Close()
-		filesize, err := c.createTarLZ4(paths, pw)
-		info = fmt.Sprintf("uploaded %d bytes", filesize)
+		// An upload logs only when it fails, as every backup is one
+		_, err := c.createTarLZ4(paths, pw)
 		if err != nil {
 			slog.ErrorContext(ctx, "Error creating tar LZ4", "key", key, "error", err)
 			// Important: propagate error to the reader side

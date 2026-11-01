@@ -1,6 +1,8 @@
 package backup_control_test
 
 import (
+	"bytes"
+	"log/slog"
 	"testing"
 	"time"
 
@@ -15,9 +17,12 @@ func TestBackupControlRecordsEvent(t *testing.T) {
 	cfg, controlDB := testutils.NewControlDB(t)
 	ctx := t.Context()
 	jobs := backup_control.SetupBackupControlJob(ctx, controlDB, cfg, &s3utils.S3Client{ServerConfig: cfg})
+	var logs bytes.Buffer
+	testutils.UseLogHandler(t, slog.NewTextHandler(&logs, nil))
 
 	started := time.Now().UnixMilli()
 	require.NoError(t, jobs.BackupToS3(ctx))
+	require.Empty(t, logs.String(), "a backup that works logs nothing, as it runs every few seconds")
 
 	events, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{Limit: 10})
 	require.NoError(t, err)
