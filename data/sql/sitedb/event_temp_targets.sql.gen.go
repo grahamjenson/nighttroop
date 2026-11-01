@@ -204,11 +204,9 @@ func (q *Queries) HardDeleteTempTarget(ctx context.Context, arg HardDeleteTempTa
 const searchTempTargets = `-- name: SearchTempTargets :many
 SELECT id, duration_minutes, high_target_mgdl, low_target_mgdl, insulin_needs_scale_factor, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM temp_targets
 WHERE
-    (CAST(?1 AS INTEGER) IS NULL OR occurred_at >= ?1)
-    AND (CAST(?2 AS INTEGER) IS NULL OR occurred_at <= ?2)
-    AND (CAST(?3 AS INTEGER) IS NULL OR occurred_at = ?3)
-    AND (CAST(?4 AS INTEGER) IS NULL OR occurred_at > ?4)
-    AND (CAST(?5 AS INTEGER) IS NULL OR occurred_at < ?5)
+    -- The date filters as one range, occurred_at's CHECK where unset, so SQLite reads only that range of its index
+    occurred_at BETWEEN MAX(COALESCE(CAST(?1 AS INTEGER), 0), COALESCE(CAST(?2 AS INTEGER) + 1, 0), COALESCE(CAST(?3 AS INTEGER), 0))
+        AND MIN(COALESCE(CAST(?4 AS INTEGER), 253402300799999), COALESCE(CAST(?5 AS INTEGER) - 1, 253402300799999), COALESCE(?3, 253402300799999))
 
     AND (CAST(?6 AS INTEGER) IS NULL OR created_at >= ?6)
     AND (CAST(?7 AS INTEGER) IS NULL OR created_at <= ?7)
@@ -239,9 +237,9 @@ LIMIT ?25 OFFSET ?24
 
 type SearchTempTargetsParams struct {
 	DateGTE        *int64
-	DateLTE        *int64
-	DateEQ         *int64
 	DateGT         *int64
+	DateEQ         *int64
+	DateLTE        *int64
 	DateLT         *int64
 	CreatedAtGTE   *int64
 	CreatedAtLTE   *int64
@@ -268,9 +266,9 @@ type SearchTempTargetsParams struct {
 func (q *Queries) SearchTempTargets(ctx context.Context, arg SearchTempTargetsParams) ([]*TempTarget, error) {
 	rows, err := q.query(ctx, q.searchTempTargetsStmt, searchTempTargets,
 		arg.DateGTE,
-		arg.DateLTE,
-		arg.DateEQ,
 		arg.DateGT,
+		arg.DateEQ,
+		arg.DateLTE,
 		arg.DateLT,
 		arg.CreatedAtGTE,
 		arg.CreatedAtLTE,
