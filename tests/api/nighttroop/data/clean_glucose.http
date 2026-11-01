@@ -7,22 +7,19 @@ H Accept: application/json
 B {"units": "mg/dL"}
 ASSERT_STATUS 200
 
-// A CGM reading and a meter's of the same glucose at the same time, then a CGM reading five minutes later. Each names
-// its device, as Nightscout's own dedupe takes two entries of one time and device to be one.
-NAME cgm_reading
+// A CGM reading and a CGM reading five minutes later, sent together so their times are five minutes apart however long
+// a request takes, then a meter's of the same glucose at the time of the first. Each names its device, as Nightscout's
+// own dedupe takes two entries of one time and device to be one.
+NAME cgm_readings
 POST http://{{ .ns_site }}/api/v1/entries?token={{ token }}
-B {"type": "sgv", "sgv": 120, "date": {{ itime 10 }}, "device": "cgm"}
+B [{"type": "sgv", "sgv": 120, "date": {{ itime 10 }}, "device": "cgm"}, {"type": "sgv", "sgv": 135, "date": {{ itime 5 }}, "device": "cgm"}]
 ASSERT_STATUS 200
-SET same_time {{ dig "cgm_reading.0.date" }}
+ASSERT_EQUALS 120 "@0.sgv"
+SET same_time {{ dig "cgm_readings.0.date" }}
 
 NAME meter_reading
 POST http://{{ .ns_site }}/api/v1/entries?token={{ token }}
 B {"type": "mbg", "mbg": 125, "date": {{ .same_time }}, "device": "meter"}
-ASSERT_STATUS 200
-
-NAME later_cgm_reading
-POST http://{{ .ns_site }}/api/v1/entries?token={{ token }}
-B {"type": "sgv", "sgv": 135, "date": {{ itime 5 }}, "device": "cgm"}
 ASSERT_STATUS 200
 
 // The same glucose is one reading, the meter's, with the CGM's alongside it, and the later one says how it changed every 5 minutes
