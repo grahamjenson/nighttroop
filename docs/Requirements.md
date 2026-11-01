@@ -242,6 +242,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   server still starts and the rest of its batch is still backed up.
 - Old records' raw JSON is cleared after `TRUNCATE_RECORDS_AFTER_DAYS`.
 - Reads and writes are rate limited per site, identity and IP, and live sessions per site are capped.
+- A DB serves many reads at once, so one slow read, such as a long search, does not hold up the others; writes to it
+  take turns rather than fail.
 - An IP's rate limits, on requests, sign ins, recoveries and site creation, cover its whole IPv6 /64, so stepping
   through the addresses of one /64 does not get fresh limits.
 - A request body larger than `MAX_REQUEST_BODY_BYTES` is refused with 413, or, when it does not say its length,

@@ -2,6 +2,7 @@ package sitedb_test
 
 import (
 	"context"
+	"database/sql"
 	"path/filepath"
 	"testing"
 	"time"
@@ -44,4 +45,29 @@ func TestWriteTransactionsWaitForEachOther(t *testing.T) {
 	readings, err := q.SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{Limit: 10})
 	require.NoError(t, err)
 	require.Len(t, readings, 2)
+}
+
+// A site's DB on disk reads on many connections at once, so one slow read, such as a long search, does not hold up the
+// site's other requests
+func TestReadsDoNotWaitForEachOther(t *testing.T) {
+	ctx := context.Background()
+	db, err := sitedb.OpenSqliteDB(filepath.Join(t.TempDir(), "site.sqlite"), 0)
+	require.NoError(t, err)
+	t.Cleanup(func() { db.Close() })
+	require.NoError(t, sitedb.MigrateUp(db))
+	q, err := sitedb.Prepare(ctx, db)
+	require.NoError(t, err)
+
+	// One read keeps its connection
+	tx, err := db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	require.NoError(t, err)
+	defer tx.Rollback()
+	_, err = q.WithTx(tx).SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{Limit: 1})
+	require.NoError(t, err)
+
+	// Another read runs beside it, rather than waiting for its connection
+	other, cancel := context.WithTimeout(ctx, time.Second)
+	defer cancel()
+	_, err = q.SearchGlucoseReadings(other, sitedb.SearchGlucoseReadingsParams{Limit: 1})
+	require.NoError(t, err)
 }
