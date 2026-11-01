@@ -9,25 +9,16 @@ import (
 	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
-	"nighttroop.t1d.nz/utils/httputils"
 )
 
 type FoodCollection struct {
-	converter func(c *sitedb.FoodPreset, siteContext *httputils.SiteContext, raw bool) nsutils.Record
+	named[sitedb.FoodPreset]
 }
 
 func NewFoodCollection() CollectionStore {
 	return NewCollection[nightscoutmodels.Food, sitedb.FoodPreset](FoodCollection{
-		converter: nsutils.DBModelToRecord(nsutils.Food, nightscoutmodels.DBModelToFood),
+		named[sitedb.FoodPreset]{nsutils.Food, nsutils.DBModelToRecord(nsutils.Food, nightscoutmodels.DBModelToFood)},
 	})
-}
-
-func (c FoodCollection) Name() string {
-	return "food"
-}
-
-func (c FoodCollection) Convert(dr *sitedb.FoodPreset, siteContext *httputils.SiteContext, raw bool) nsutils.Record {
-	return c.converter(dr, siteContext, raw)
 }
 
 func (c FoodCollection) Validate(nsModel nightscoutmodels.Food, dbModel *sitedb.FoodPreset) *nsutils.HTTPError {
