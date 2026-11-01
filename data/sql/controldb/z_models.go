@@ -26,6 +26,13 @@ type ControlIdentity struct {
 	DeletedAt             *int64
 }
 
+type ServerSetting struct {
+	ID                    int64
+	PublicSiteCreation    bool
+	UpdatedAt             *int64
+	UpdatedByIdentityName *string
+}
+
 type Site struct {
 	ID                               string
 	Batch                            string

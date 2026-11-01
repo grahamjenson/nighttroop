@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -129,7 +130,8 @@ func (s *SitesCollection) UpdateHTMXResponse(model *controlmodels.Site) templ.Co
 }
 
 // CreateHandler creates a site at the site ID an admin picks, such as a vanity one for a special user, and shows its
-// credentials once. Only admins can, and the ID must be 8 lowercase letters, like every site's, and not taken.
+// credentials once. Only admins can, and the ID must be 8 lowercase letters, like every site's, and not taken. MAX_SITES
+// and turning off public site creation do not stop them.
 func (s *SitesCollection) CreateHandler(w http.ResponseWriter, r *http.Request) {
 	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
 	if controlContext.IdentityModel.Role != consts.ControlRoleAdmin {
@@ -140,9 +142,6 @@ func (s *SitesCollection) CreateHandler(w http.ResponseWriter, r *http.Request) 
 	controlDB := controlContext.ControlDB
 	if herr == nil && !utils.SyntacticallyValidateSiteID(model.ID) {
 		herr = apiutils.ErrBadBodyWithHint(fmt.Sprintf("a site ID is %d lowercase letters, a to z", utils.SITE_ID_LENGTH))
-	}
-	if herr == nil && controlDB.GetNSitesDBs() >= controlDB.ServerConfig.MaxSites {
-		herr = apiutils.ErrConstraintCheckFailedWithHint("the server has as many sites as it can hold")
 	}
 	var site *db.SiteCreateResult
 	if herr == nil {
@@ -166,6 +165,28 @@ func (s *SitesCollection) CreateHandler(w http.ResponseWriter, r *http.Request) 
 		PwdNSToken: site.PwdNSToken, PwdNSURL: site.SiteDB.NSURL(), ReadOnlyNSToken: site.ReadOnlyNSToken, BackupKey: site.BackupPassword,
 		RecoverURL: site.SiteDB.ServerConfig.RecoverURL()}
 	WriteResponse(w, r, acceptType, http.StatusCreated, info, control_sites_templ.SiteCreated(info))
+}
+
+// SettingsHandler changes the server's settings: whether the public can create sites. Only admins can.
+func (s *SitesCollection) SettingsHandler(w http.ResponseWriter, r *http.Request) {
+	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
+	if controlContext.IdentityModel.Role != consts.ControlRoleAdmin {
+		apiutils.ErrForbidden.Write(acceptType, w)
+		return
+	}
+	model, herr := apiutils.ExtractModelFromRequest[controlmodels.ServerSettings](httputils.GetContentType(r), r)
+	if herr != nil {
+		herr.Write(acceptType, w)
+		return
+	}
+	err := controlContext.ControlDB.Queries.UpdatePublicSiteCreation(r.Context(), controldb.UpdatePublicSiteCreationParams{
+		PublicSiteCreation: model.PublicSiteCreation, UpdatedByIdentityName: &controlContext.IdentityModel.Name})
+	if err != nil {
+		slog.ErrorContext(r.Context(), "Unable to update the server settings", "error", err)
+		apiutils.ErrInternalServerError.Write(acceptType, w)
+		return
+	}
+	WriteResponse(w, r, acceptType, http.StatusOK, model, control_sites_templ.PublicSiteCreationChanged(model.PublicSiteCreation))
 }
 
 // TruncateHandler clears the raw JSON a site over its DB size limit keeps, then shrinks its DB. Only admins can.

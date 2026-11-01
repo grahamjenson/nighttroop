@@ -3,6 +3,7 @@ package control_sites_templ
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"nighttroop.t1d.nz/models/controlmodels"
@@ -61,6 +62,7 @@ templ SitesTable(sites []*controlmodels.Site, skip int64, limit int64, order str
 		}
 		if isAdmin(ctx) {
 			@createSiteForm()
+			@PublicSiteCreation(httputils.GetControlContext(ctx).ControlDB.PublicSiteCreation(ctx))
 		}
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			<div id="control--sites--order" class="mb-4 flex justify-end gap-2">
@@ -166,6 +168,51 @@ templ createSiteForm() {
 			Create Site
 		}
 	</form>
+}
+
+// PublicSiteCreation says whether the public can create sites from the home page, with a button to turn it the other
+// way. An admin can create sites here either way.
+templ PublicSiteCreation(on bool) {
+	<form
+		id="control--sites--public-creation"
+		class="flex items-center justify-between gap-4 rounded-xl border border-gray-200 p-4 shadow-sm"
+		hx-post="/settings"
+		hx-swap="outerHTML"
+		hx-status:4xx="target:#toaster swap:beforeend"
+		hx-status:5xx="target:#toaster swap:beforeend"
+	>
+		<input type="hidden" name="public_site_creation" value={ strconv.FormatBool(!on) }/>
+		<p id="control--sites--public-creation--state" class="text-sm text-gray-700">
+			if on {
+				The public can create sites from the home page.
+			} else {
+				Public site creation is off: the home page cannot create sites, but an admin can create them here.
+			}
+		</p>
+		@button.Button(button.Props{ID: "control--sites--public-creation--toggle", Type: button.TypeSubmit, Variant: button.VariantOutline}) {
+			if on {
+				Turn Off Public Site Creation
+			} else {
+				Turn On Public Site Creation
+			}
+		}
+	</form>
+}
+
+// PublicSiteCreationChanged replaces the public site creation switch, with a toast saying which way it was turned
+templ PublicSiteCreationChanged(on bool) {
+	@PublicSiteCreation(on)
+	<div hx-swap-oob="beforeend:#toaster">
+		@toast.Toast(toast.Props{
+			Title:       "Success",
+			Description: map[bool]string{true: "Public site creation turned on", false: "Public site creation turned off"}[on],
+			Variant:     toast.VariantSuccess,
+			Position:    toast.PositionTopCenter,
+			Duration:    5000,
+			Dismissible: true,
+			Icon:        true,
+		})
+	</div>
 }
 
 // SiteCreated shows a site an admin created, with its credentials, which are shown only this once

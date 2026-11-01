@@ -46,6 +46,11 @@ overrides:
 
       # site
 
+      # Server Settings
+      - column: "server_settings.public_site_creation"
+        go_type:
+          type: "bool"
+
       # Control Identities
       - column: "control_identities.role"
         go_type:

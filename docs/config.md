@@ -52,7 +52,7 @@ Limits written per minute are rates; their burst is how many can be used at once
 
 | Variable | Default | Use |
 | --- | --- | --- |
-| `MAX_SITES` | `10000` | The most sites the server holds; creating another is refused |
+| `MAX_SITES` | `10000` | The most sites the public can create; creating another from the home page is refused, though a control admin can |
 | `MAX_IDENTITIES_PER_USER` | `10` | The most identities one site can have |
 | `DELETE_AFTER_INACTIVITY_MINS` | `10080` (a week) | How long a site that was never used is kept before it is deleted |
 | `DISABLE_AFTER_INACTIVITY_DAYS` | `7` | How long a site goes unwritten or unseen before control can disable it |

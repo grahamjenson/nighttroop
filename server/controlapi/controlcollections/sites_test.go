@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -75,4 +76,50 @@ func TestTruncateHandler(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "site_truncated", events[0].Name)
 	require.Equal(t, `{"by":"admin","before_size_kb":5000,"after_size_kb":null}`, *events[0].Attributes)
+}
+
+// TestSettingsHandler checks only an admin can turn public site creation off and on
+func TestSettingsHandler(t *testing.T) {
+	_, controlDB, _ := testutils.NewControlDBWithSite(t)
+	settings := func(role consts.ControlRole, body string) *httptest.ResponseRecorder {
+		r := httptest.NewRequest(http.MethodPost, "/settings", strings.NewReader(body))
+		r.Header.Set("Accept", "application/json")
+		r.Header.Set("Content-Type", "application/json")
+		rctx := httputils.CreateControlContext(r.Context(), controlDB, "", httputils.HTTPActionWrite)
+		rctx = httputils.SetAdminControlContext(rctx, &controldb.ControlIdentity{Name: "admin", Role: role}, config.ServerStatus{})
+		w := httptest.NewRecorder()
+		(&SitesCollection{}).SettingsHandler(w, r.WithContext(rctx))
+		return w
+	}
+
+	require.True(t, controlDB.PublicSiteCreation(t.Context()), "the public can create sites on a new server")
+	require.Equal(t, http.StatusForbidden, settings(consts.ControlRoleRead, `{"public_site_creation": false}`).Code)
+	require.True(t, controlDB.PublicSiteCreation(t.Context()))
+
+	off := settings(consts.ControlRoleAdmin, `{"public_site_creation": false}`)
+	require.Equal(t, http.StatusOK, off.Code)
+	require.JSONEq(t, `{"status": 200, "result": {"public_site_creation": false}}`, off.Body.String())
+	require.False(t, controlDB.PublicSiteCreation(t.Context()))
+
+	require.Equal(t, http.StatusOK, settings(consts.ControlRoleAdmin, `{"public_site_creation": true}`).Code)
+	require.True(t, controlDB.PublicSiteCreation(t.Context()))
+}
+
+// TestCreateHandlerOverMaxSites checks MAX_SITES and turning off public site creation do not stop an admin
+func TestCreateHandlerOverMaxSites(t *testing.T) {
+	cfg, controlDB, _ := testutils.NewControlDBWithSite(t)
+	maxSites := cfg.MaxSites
+	cfg.MaxSites = controlDB.GetNSitesDBs()
+	t.Cleanup(func() { cfg.MaxSites = maxSites })
+	require.NoError(t, controlDB.Queries.UpdatePublicSiteCreation(t.Context(), controldb.UpdatePublicSiteCreationParams{PublicSiteCreation: false}))
+
+	r := httptest.NewRequest(http.MethodPost, "/sites", strings.NewReader(`{"id": "overmaxs"}`))
+	r.Header.Set("Accept", "application/json")
+	r.Header.Set("Content-Type", "application/json")
+	rctx := httputils.CreateControlContext(r.Context(), controlDB, "", httputils.HTTPActionWrite)
+	rctx = httputils.SetAdminControlContext(rctx, &controldb.ControlIdentity{Name: "admin", Role: consts.ControlRoleAdmin}, config.ServerStatus{})
+	w := httptest.NewRecorder()
+	(&SitesCollection{}).CreateHandler(w, r.WithContext(rctx))
+	require.Equal(t, http.StatusCreated, w.Code, w.Body.String())
+	require.Equal(t, cfg.MaxSites+1, controlDB.GetNSitesDBs())
 }
