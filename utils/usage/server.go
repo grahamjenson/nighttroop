@@ -14,7 +14,8 @@ type cpuSample struct {
 }
 
 // Server is the server process's resources now: CPU since the last time they were read, as a percent of every core,
-// memory in bytes, the size of the DBs and the space left on their disk
+// memory in bytes, the size of the DBs and the space left on their disk. ResidentBytes is all the memory the OS counts
+// for the process, which HeapBytes and SysBytes, Go's own, leave out SQLite's from.
 type Server struct {
 	CPUPercent float64 `json:"cpu_percent"`
 	CPUs       int     `json:"cpus"`
@@ -25,6 +26,9 @@ type Server struct {
 	UptimeMs   int64   `json:"uptime_ms"`
 	DiskUsed   uint64  `json:"disk_used"`
 	DiskFree   uint64  `json:"disk_free"`
+
+	// ResidentBytes is 0 when the OS cannot say
+	ResidentBytes uint64 `json:"resident_bytes"`
 }
 
 // Server reads the process's resources, the size of the files in dbDir, and the space left on its disk
@@ -32,6 +36,7 @@ func (t *Tracker) Server(dbDir string, now time.Time) Server {
 	var memory runtime.MemStats
 	runtime.ReadMemStats(&memory)
 	server := Server{CPUs: runtime.NumCPU(), Goroutines: runtime.NumGoroutine(), HeapBytes: memory.HeapAlloc, SysBytes: memory.Sys, GCs: memory.NumGC}
+	server.ResidentBytes, _ = residentBytes()
 	if t == nil {
 		return server
 	}
