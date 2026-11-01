@@ -44,6 +44,10 @@ func (c ProfileCollection) CreateModel(q *sitedb.Queries, ctx context.Context, n
 	ret := sitedb.ProfilePresetBundle([]*sitedb.ProfilePreset{})
 
 	for _, createParams := range manyCreateParams {
+		// A replace keeps the store's identifier, as every preset in it shares it
+		if overrideIdentifier != nil {
+			createParams.ProfileStoreID = *overrideIdentifier
+		}
 		dbModel, err := q.CreateProfilePreset(ctx, createParams)
 		if err != nil {
 			return nil, err
