@@ -13,12 +13,12 @@ import (
 )
 
 type EntriesCollection struct {
-	named[sitedb.GlucoseReading]
+	named[nightscoutmodels.Entry, sitedb.GlucoseReading]
 }
 
 func NewEntriesCollection() CollectionStore {
 	return NewCollection[nightscoutmodels.Entry, sitedb.GlucoseReading](EntriesCollection{
-		named[sitedb.GlucoseReading]{nsutils.Entries, nsutils.DBModelToRecord(nsutils.Entries, nightscoutmodels.DBModelToEntry)},
+		named[nightscoutmodels.Entry, sitedb.GlucoseReading]{nsutils.Entries, nightscoutmodels.DBModelToEntry},
 	})
 }
 

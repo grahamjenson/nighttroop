@@ -14,12 +14,12 @@ import (
 )
 
 type DeviceStatusCollection struct {
-	named[sitedb.DeviceReport]
+	named[nightscoutmodels.DeviceStatus, sitedb.DeviceReport]
 }
 
 func NewDeviceStatusCollection() CollectionStore {
 	return NewCollection[nightscoutmodels.DeviceStatus, sitedb.DeviceReport](DeviceStatusCollection{
-		named[sitedb.DeviceReport]{nsutils.Devicestatus, nsutils.DBModelToRecord(nsutils.Devicestatus, DBToNightscoutDeviceStatus)},
+		named[nightscoutmodels.DeviceStatus, sitedb.DeviceReport]{nsutils.Devicestatus, DBToNightscoutDeviceStatus},
 	})
 }
 

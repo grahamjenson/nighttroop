@@ -15,12 +15,12 @@ import (
 )
 
 type TreatmentCollection struct {
-	named[sitedb.EventGroupsBundle]
+	named[nightscoutmodels.Treatment, sitedb.EventGroupsBundle]
 }
 
 func NewTreatmentCollection() CollectionStore {
 	return NewCollection[nightscoutmodels.Treatment, sitedb.EventGroupsBundle](TreatmentCollection{
-		named[sitedb.EventGroupsBundle]{nsutils.Treatments, nsutils.DBModelToRecord(nsutils.Treatments, DBModelToTreatment)},
+		named[nightscoutmodels.Treatment, sitedb.EventGroupsBundle]{nsutils.Treatments, DBModelToTreatment},
 	})
 }
 

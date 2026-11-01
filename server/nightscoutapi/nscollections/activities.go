@@ -12,12 +12,12 @@ import (
 )
 
 type ActivityCollection struct {
-	named[sitedb.Activity]
+	named[nightscoutmodels.Activity, sitedb.Activity]
 }
 
 func NewActivityCollection() CollectionStore {
 	return NewCollection[nightscoutmodels.Activity, sitedb.Activity](ActivityCollection{
-		named[sitedb.Activity]{nsutils.Activity, nsutils.DBModelToRecord(nsutils.Activity, nightscoutmodels.DBModelToActivity)},
+		named[nightscoutmodels.Activity, sitedb.Activity]{nsutils.Activity, nightscoutmodels.DBModelToActivity},
 	})
 }
 
