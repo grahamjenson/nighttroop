@@ -99,7 +99,8 @@ func SetIdentityModelInSiteContext(ctx context.Context, identityModel *controldb
 
 func (sc *SiteContext) GetSettings() *settings.CombinedSettingsMap {
 	if sc.SiteModel == nil || sc.IdentityModel == nil {
-		slog.Error("settings unavailable site or identity model is nil", "site_id", sc.SiteID, "siteModel", sc.SiteModel, "identityModel", sc.IdentityModel)
+		// Whether each is known, not the models, which hold the backup key's hash and the identity's secrets
+		slog.Error("settings unavailable site or identity model is nil", "site_id", sc.SiteID, "has_site", sc.SiteModel != nil, "has_identity", sc.IdentityModel != nil)
 		return settings.DefaultCombinedSettingsMap()
 	}
 
