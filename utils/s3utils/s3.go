@@ -468,8 +468,8 @@ func (c *S3Client) ExtractTarLZ4(reader io.Reader, outputDir string) error {
 				return fmt.Errorf("writing file: %w", err)
 			}
 
+			// Not logged, as a restore extracts every site's DB; an error is returned instead
 			outFile.Close()
-			slog.Info("Extraction of file complete", "path", targetPath)
 
 			// Restore original file permissions
 			if err := os.Chmod(targetPath, os.FileMode(header.Mode)); err != nil {
