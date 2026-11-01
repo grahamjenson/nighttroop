@@ -46,7 +46,7 @@ func TestCreateSiteConcurrently(t *testing.T) {
 
 		siteDB, _, err := controlDB.GetSite(t.Context(), subdomains[i])
 		require.NoError(t, err, "site %s was not created", subdomains[i])
-		_, err = siteDB.Queries.GetMostRecentProfileStore(t.Context())
+		_, err = siteDB.Queries().GetMostRecentProfileStore(t.Context())
 		require.NoError(t, err, "site %s DB is not usable", subdomains[i])
 	}
 }
@@ -111,7 +111,7 @@ func TestHydrateSite(t *testing.T) {
 	site, err := controlDB.CreateSite(ctx)
 	require.NoError(t, err)
 	siteID := site.SiteDB.Subdomain
-	_, err = site.SiteDB.Queries.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "kept", Mgdl: 120, ReadingType: "sgv", OccurredAt: 1, CreatedByIdentityName: "phone"})
+	_, err = site.SiteDB.Queries().CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "kept", Mgdl: 120, ReadingType: "sgv", OccurredAt: 1, CreatedByIdentityName: "phone"})
 	require.NoError(t, err)
 
 	// A stand in for S3, holding the archive's file
@@ -156,14 +156,14 @@ func TestHydrateSite(t *testing.T) {
 	require.InDelta(t, time.Now().UnixMilli(), *row.LastSeenAt, 60_000)
 	siteDB, _, err := controlDB.GetSite(ctx, siteID)
 	require.NoError(t, err)
-	reading, err := siteDB.Queries.GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: "kept"})
+	reading, err := siteDB.Queries().GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: "kept"})
 	require.NoError(t, err)
 	require.Equal(t, 120.0, reading.Mgdl)
 }
 
 func TestTruncateSite(t *testing.T) {
 	_, controlDB, site := testutils.NewControlDBWithSite(t)
-	ctx, q := t.Context(), site.SiteDB.Queries
+	ctx, q := t.Context(), site.SiteDB.Queries()
 	raw := `{"sgv":120,"device":"phone"}`
 	reading, err := q.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "reading", Mgdl: 120, ReadingType: "sgv", OccurredAt: 1, RawJsonData: &raw, CreatedByIdentityName: "phone"})
 	require.NoError(t, err)

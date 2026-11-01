@@ -14,9 +14,9 @@ func Summary(store nsutils.Store) func(http.ResponseWriter, *http.Request, *nsut
 	return func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
 		siteContext := httputils.GetSiteContext(r.Context())
 
-		dr := LastDeviceStatusFromPWD(siteContext.SiteDB.Queries, r.Context())
+		dr := LastDeviceStatusFromPWD(siteContext.SiteDB.Queries(), r.Context())
 
-		_, lastSensorChange, lastCannulaChange := GetLastSensorChangeCannulaChange(siteContext.SiteDB.Queries, r.Context())
+		_, lastSensorChange, lastCannulaChange := GetLastSensorChangeCannulaChange(siteContext.SiteDB.Queries(), r.Context())
 
 		summary := SummaryStr{
 			IOB:           GetIOBFloat(dr),

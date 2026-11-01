@@ -20,7 +20,7 @@ import (
 // gives {} as Nightscout does
 func PropertiesList(store nsutils.Store) func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
 	return func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
-		properties := Properties(r.Context(), httputils.GetSiteContext(r.Context()).SiteDB.Queries, time.Now())
+		properties := Properties(r.Context(), httputils.GetSiteContext(r.Context()).SiteDB.Queries(), time.Now())
 		if names := chi.URLParam(r, "names"); names != "" {
 			asked := map[string]any{}
 			for _, name := range strings.Split(names, ",") {

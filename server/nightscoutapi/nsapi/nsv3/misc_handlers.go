@@ -91,7 +91,7 @@ func LastModified(store nsutils.Store) func(http.ResponseWriter, *http.Request, 
 			return
 		}
 
-		lasModified, err := siteContext.SiteDB.Queries.LastModifiedCollections(r.Context())
+		lasModified, err := siteContext.SiteDB.Queries().LastModifiedCollections(r.Context())
 		if err != nil {
 			slog.ErrorContext(r.Context(), "failed to query last modified timestamps from database", "error", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)

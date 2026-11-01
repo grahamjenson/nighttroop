@@ -15,7 +15,7 @@ import (
 // or 10000 g of carbs, while still taking negative insulin and food, which take back too much
 func TestSiteDataLimits(t *testing.T) {
 	_, _, site := testutils.NewControlDBWithSite(t)
-	q, ctx, now := site.SiteDB.Queries, context.Background(), time.Now().UnixMilli()
+	q, ctx, now := site.SiteDB.Queries(), context.Background(), time.Now().UnixMilli()
 	tests := []struct {
 		name    string
 		write   func(id string, v float64) error

@@ -49,7 +49,7 @@ func TestBackfillStartsOneAtATimeAndRecordsWhatItDid(t *testing.T) {
 	// Running it writes the day's virtual readings, and records how it went on the source and as an event
 	require.NoError(t, jobs.workerFunc()(ctx, queued[0]))
 	require.NoError(t, controlDB.Jobs.Queries.CompleteJob(ctx, jobsdb.CompleteJobParams{ID: queued[0].ID}))
-	readings, err := site.SiteDB.Queries.AllGlucoseReadings(ctx, sitedb.AllGlucoseReadingsParams{Limit: 1000})
+	readings, err := site.SiteDB.Queries().AllGlucoseReadings(ctx, sitedb.AllGlucoseReadingsParams{Limit: 1000})
 	require.NoError(t, err)
 	require.Len(t, readings, 24*12)
 	s := source()
@@ -132,7 +132,7 @@ func TestNightscoutBackfillCopiesOlderDocuments(t *testing.T) {
 	require.NoError(t, QueueBackfill(ctx, controlDB, siteID, typ, backfill))
 	require.NoError(t, jobs.SyncSource(ctx, SyncJobParams{SiteID: siteID, Type: typ, Backfill: &backfill}))
 
-	readings, err := site.SiteDB.Queries.AllGlucoseReadings(ctx, sitedb.AllGlucoseReadingsParams{Limit: 10})
+	readings, err := site.SiteDB.Queries().AllGlucoseReadings(ctx, sitedb.AllGlucoseReadingsParams{Limit: 10})
 	require.NoError(t, err)
 	require.Len(t, readings, 1)
 	require.Equal(t, int64(threeDaysAgo), readings[0].OccurredAt)

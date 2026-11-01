@@ -43,6 +43,8 @@ func (t *CollectionTx) Control() (*controldb.Queries, error) {
 }
 
 func (t *CollectionTx) Site() (*sitedb.Queries, error) {
+	// Before the transaction, which may hold the DB's only connection that preparing its queries needs
+	q := t.siteContext.SiteDB.Queries()
 	if t.siteTx == nil {
 		tx, err := t.siteContext.SiteDB.SQLiteDB.BeginTx(t.ctx, nil)
 		if err != nil {
@@ -50,7 +52,7 @@ func (t *CollectionTx) Site() (*sitedb.Queries, error) {
 		}
 		t.siteTx = tx
 	}
-	return t.siteContext.SiteDB.WithTx(t.siteTx), nil
+	return q.WithTx(t.siteTx), nil
 }
 
 // Live is the live DB's queries, which are not in the transaction, so a rollback does not undo them

@@ -37,9 +37,9 @@ func RebuildOnSettingsChange(controlDB *db.ControlDB) onevent.Job {
 				return err
 			}
 			if fired.Name == events.SiteWeekStartChanged {
-				return sitedata.RebuildSummaryWeeks(ctx, siteContext.SiteDB.Queries, siteContext, time.Now())
+				return sitedata.RebuildSummaryWeeks(ctx, siteContext.SiteDB.Queries(), siteContext, time.Now())
 			}
-			return sitedata.RebuildSummaryDailyWeek(ctx, siteContext.SiteDB.Queries, siteContext, time.Now())
+			return sitedata.RebuildSummaryDailyWeek(ctx, siteContext.SiteDB.Queries(), siteContext, time.Now())
 		},
 	}
 }
@@ -64,7 +64,7 @@ func buildYesterday(ctx context.Context, controlDB *db.ControlDB, siteID string,
 	if err != nil {
 		return err
 	}
-	q := siteContext.SiteDB.Queries
+	q := siteContext.SiteDB.Queries()
 	yesterday := sitedata.LocalDate(now, siteContext.GetSiteTimezone(), -1)
 	if _, err := q.GetSummaryPeriod(ctx, sitedb.GetSummaryPeriodParams{Period: "day", Date: yesterday}); errors.Is(err, sql.ErrNoRows) {
 		if _, err := sitedata.RebuildSummaryDaily(ctx, q, siteContext, yesterday, now); err != nil {

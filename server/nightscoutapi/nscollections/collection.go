@@ -178,7 +178,7 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 
 func (c Collection[NS, DM]) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (nsutils.Document, *nsutils.HTTPError) {
 	m := c.db
-	dbModel, err := m.GetModel(siteContext.SiteDB.Queries, ctx, identifier, query.IncludeDeleted)
+	dbModel, err := m.GetModel(siteContext.SiteDB.Queries(), ctx, identifier, query.IncludeDeleted)
 	if err == sql.ErrNoRows {
 		return nil, nsutils.ErrNotFound
 	}
@@ -193,7 +193,7 @@ func (c Collection[NS, DM]) Get(ctx context.Context, siteContext *httputils.Site
 }
 
 func (c Collection[NS, DM]) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Document, *nsutils.HTTPError) {
-	models, err := c.db.SearchModels(siteContext.SiteDB.Queries, ctx, query)
+	models, err := c.db.SearchModels(siteContext.SiteDB.Queries(), ctx, query)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to search the database", "error", err, "collection", c.db.Name())
 		return nil, nsutils.ErrInternal
@@ -478,11 +478,13 @@ func ValidateNotChangingSharedFields[NS SharedNSFields, DM SharedDBFields](repla
 
 // begin starts a write to the site's database, which is rolled back unless it is committed
 func (c Collection[NS, DM]) begin(ctx context.Context, siteContext *httputils.SiteContext) (*sql.Tx, *sitedb.Queries, *nsutils.HTTPError) {
+	// Before the transaction, which may hold the DB's only connection that preparing its queries needs
+	q := siteContext.SiteDB.Queries()
 	tx, err := siteContext.SiteDB.SQLiteDB.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, nil, nsutils.ErrInternal
 	}
-	return tx, siteContext.SiteDB.WithTx(tx), nil
+	return tx, q.WithTx(tx), nil
 }
 
 func (c Collection[NS, DM]) commit(tx *sql.Tx, action string) *nsutils.HTTPError {

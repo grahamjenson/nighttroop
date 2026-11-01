@@ -28,9 +28,9 @@ func TestProfilePresetSchedulesMustBeJSON(t *testing.T) {
 			test.set(&p, v)
 			return p
 		}
-		_, err := site.SiteDB.Queries.CreateProfilePreset(t.Context(), params("bad "+test.name, &notJSON))
+		_, err := site.SiteDB.Queries().CreateProfilePreset(t.Context(), params("bad "+test.name, &notJSON))
 		require.ErrorContains(t, err, "CHECK constraint failed", test.name)
-		_, err = site.SiteDB.Queries.CreateProfilePreset(t.Context(), params("good "+test.name, &schedule))
+		_, err = site.SiteDB.Queries().CreateProfilePreset(t.Context(), params("good "+test.name, &schedule))
 		require.NoError(t, err, test.name)
 	}
 }

@@ -8,8 +8,8 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"sync"
 
-	"nighttroop.t1d.nz/data/sql/stmtcache"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/backup"
 	"nighttroop.t1d.nz/utils/config"
@@ -24,14 +24,14 @@ import (
 type DB struct {
 	SQLiteDB     *sql.DB
 	ServerConfig *config.ServerConfig
-	Queries      *Queries
+	queries      *Queries
+	prepareOnce  sync.Once
 	InMemory     bool
 
 	Path       string
 	BackupPath string
 
 	Subdomain string
-	stmts     *stmtcache.DB
 }
 
 func NewDB(ctx context.Context, subdomain string, serverConfig *config.ServerConfig) (*DB, error) {
@@ -70,16 +70,20 @@ func NewDB(ctx context.Context, subdomain string, serverConfig *config.ServerCon
 
 	slog.Info("sitedb Migration applied successfully to " + path)
 
-	// Every site's DB is opened at start, so its queries are prepared when first run rather than all of them here
-	db.stmts = stmtcache.New(sqldb)
-	db.Queries = New(db.stmts)
-
 	return db, nil
 }
 
-// WithTx runs the queries in tx with the statements already prepared on the DB, which Queries.WithTx does not have
-func (db *DB) WithTx(tx *sql.Tx) *Queries {
-	return New(db.stmts.WithTx(tx))
+// Queries prepares all the site's queries the first time it is called, rather than when the DB opens, as every
+// site's DB is opened at start. Call it before beginning a transaction, which may hold the DB's only connection.
+func (db *DB) Queries() *Queries {
+	db.prepareOnce.Do(func() {
+		var err error
+		if db.queries, err = Prepare(context.Background(), db.SQLiteDB); err != nil {
+			slog.Error("sitedb Prepare Error, so its queries run unprepared: " + err.Error())
+			db.queries = New(db.SQLiteDB)
+		}
+	})
+	return db.queries
 }
 
 func (db *DB) Name() string {

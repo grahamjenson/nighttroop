@@ -142,11 +142,11 @@ func (c *Checker) checkSite(ctx context.Context, siteID string, now int64) error
 	if err := c.forget(ctx, kept, turnedOn); err != nil || len(turnedOn) == 0 {
 		return err
 	}
-	if err := giveDeviceStatuses(ctx, siteDB.Queries, turnedOn); err != nil {
+	if err := giveDeviceStatuses(ctx, siteDB.Queries(), turnedOn); err != nil {
 		return err
 	}
 
-	rows, err := siteDB.Queries.AlarmGlucoseReadings(ctx, sitedb.AlarmGlucoseReadingsParams{Minutes: settings.MaxAlarmMinutes, Limit: maxReadings})
+	rows, err := siteDB.Queries().AlarmGlucoseReadings(ctx, sitedb.AlarmGlucoseReadingsParams{Minutes: settings.MaxAlarmMinutes, Limit: maxReadings})
 	if err != nil {
 		return err
 	}

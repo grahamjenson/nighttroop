@@ -31,7 +31,7 @@ func copyDexcomEGVs(ctx context.Context, syncInfo *SyncJobInfo, minutes int) (in
 	added := 0
 	for _, e := range egvs {
 		createParams := dexcommodels.EGVToCreate(e, "dexcom_sync")
-		res, err := syncInfo.Site.SiteDB.Queries.CreateGlucoseReading(ctx, createParams)
+		res, err := syncInfo.Site.SiteDB.Queries().CreateGlucoseReading(ctx, createParams)
 		if err != nil {
 			if utilerrors.IsSQLDuplicateID(err) {
 				continue

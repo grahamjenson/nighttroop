@@ -63,7 +63,7 @@ func main() {
 
 	// Sometimes SQLc will generate a query that is incorrect causing a syntax error when queried.
 	// This executes all queries ignoring normal errors and checking for a bad query syntax.
-	if err := executeAllQueries(ctx, siteDB.Queries); err != nil {
+	if err := executeAllQueries(ctx, siteDB.Queries()); err != nil {
 		log.Fatalf("%sfailed to create site DB: %v %s", topwrapper, err, bottomwrapper)
 	}
 

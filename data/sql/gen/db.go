@@ -19,8 +19,8 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	{{ if eq .PkgName "sitedb" }} "sync" {{ end }}
 
-	{{ if eq .PkgName "sitedb" }} "nighttroop.t1d.nz/data/sql/stmtcache" {{ end }}
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/backup"
 	"nighttroop.t1d.nz/utils/config"
@@ -36,14 +36,14 @@ import (
 type DB struct{
 	SQLiteDB  *sql.DB
 	ServerConfig *config.ServerConfig
-	Queries *Queries
+	{{ if eq .PkgName "sitedb" }} queries *Queries
+	prepareOnce sync.Once {{ else }} Queries *Queries {{ end }}
 	InMemory bool
 	
 	Path        string
 	BackupPath  string
 
-	{{ if eq .PkgName "sitedb" }} Subdomain string
-	stmts *stmtcache.DB {{ end }}
+	{{ if eq .PkgName "sitedb" }} Subdomain string {{ end }}
 }
 
 {{ if eq .PkgName "sitedb" }}
@@ -92,25 +92,29 @@ func NewDB(ctx context.Context, serverConfig *config.ServerConfig) (*DB, error) 
 	
 	slog.Info("{{.PkgName}} Migration applied successfully to " + path)
 
-	{{ if eq .PkgName "sitedb" }}
-	// Every site's DB is opened at start, so its queries are prepared when first run rather than all of them here
-	db.stmts = stmtcache.New(sqldb)
-	db.Queries = New(db.stmts)
-	{{ else }}
+	{{ if ne .PkgName "sitedb" }}
 	db.Queries, err = Prepare(ctx, sqldb)
 	if err != nil {
 		sqldb.Close()
 		return db, fmt.Errorf("{{.PkgName}} Prepare Error for: %s %w", path, err)
 	}
 	{{ end }}
-
+		
 	return db, nil
 }
 
 {{ if eq .PkgName "sitedb" }}
-// WithTx runs the queries in tx with the statements already prepared on the DB, which Queries.WithTx does not have
-func (db *DB) WithTx(tx *sql.Tx) *Queries {
-	return New(db.stmts.WithTx(tx))
+// Queries prepares all the site's queries the first time it is called, rather than when the DB opens, as every
+// site's DB is opened at start. Call it before beginning a transaction, which may hold the DB's only connection.
+func (db *DB) Queries() *Queries {
+	db.prepareOnce.Do(func() {
+		var err error
+		if db.queries, err = Prepare(context.Background(), db.SQLiteDB); err != nil {
+			slog.Error("sitedb Prepare Error, so its queries run unprepared: " + err.Error())
+			db.queries = New(db.SQLiteDB)
+		}
+	})
+	return db.queries
 }
 {{ end }}
 

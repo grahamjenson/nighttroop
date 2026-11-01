@@ -76,7 +76,7 @@ func TestReadingRefusesBadValues(t *testing.T) {
 // Each sync reads the graph again, so the same reading must not be stored twice
 func TestReadingToCreateDedupesRepeatedReadings(t *testing.T) {
 	_, _, site := testutils.NewControlDBWithSite(t)
-	queries := site.SiteDB.Queries
+	queries := site.SiteDB.Queries()
 
 	first := reading(t, `{"FactoryTimestamp":"12/30/2022 4:47:40 PM","Timestamp":"12/30/2022 5:47:40 PM","ValueInMgPerDl":115}`)
 	next := reading(t, `{"FactoryTimestamp":"12/30/2022 5:02:40 PM","Timestamp":"12/30/2022 6:02:40 PM","ValueInMgPerDl":120}`)
