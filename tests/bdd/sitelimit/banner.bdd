@@ -1,0 +1,21 @@
+// The control admin signs in to a server with 9 of the 10 sites MAX_SITES allows, so every control page warns of it
+GOTO {{ .control_url }}/login
+INPUT #name admin
+INPUT #password password
+INPUT #control--login--otp-1 123123
+CLICK #control--login-button
+ASSERT_VISIBLE #control--nav--logo
+ASSERT_VISIBLE #control--status-banner--sites
+ASSERT_TEXT_VISIBLE Sites near their limit
+ASSERT_TEXT_VISIBLE 9 of the 10 MAX_SITES allows.
+SCREENSHOT near_limit
+
+// A site created from the public page reaches the limit, which the banner then says
+GOTO {{ .server_url }}/
+CLICK "Create Site"
+ASSERT_STATUS 200
+GOTO {{ .control_url }}/
+ASSERT_VISIBLE #control--status-banner--sites
+ASSERT_TEXT_VISIBLE Sites at their limit
+ASSERT_TEXT_VISIBLE 10 of the 10 MAX_SITES allows.
+SCREENSHOT at_limit

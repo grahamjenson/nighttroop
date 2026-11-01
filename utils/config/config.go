@@ -33,6 +33,19 @@ type ServerStatus struct {
 	SentryWorking bool
 	// HighResources are the server's resources at or over their alert levels at its last check
 	HighResources []ResourceLevel
+	// Sites is how many sites the server has, and MaxSites how many MAX_SITES lets the public create
+	Sites    int
+	MaxSites int
+}
+
+// SitesNearLimit is whether the server has 90% or more of the sites MAX_SITES allows
+func (s ServerStatus) SitesNearLimit() bool {
+	return s.MaxSites > 0 && s.Sites*10 >= s.MaxSites*9
+}
+
+// SitesAtLimit is whether the server has as many sites as MAX_SITES allows, or more
+func (s ServerStatus) SitesAtLimit() bool {
+	return s.MaxSites > 0 && s.Sites >= s.MaxSites
 }
 
 // ResourceLevel is one of the server's resources at a check: memory or disk, its percent used, or cpu, the seconds it

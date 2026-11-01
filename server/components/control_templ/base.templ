@@ -60,9 +60,10 @@ templ ControlBase() {
 	</html>
 }
 
-// StatusBanner warns control admins about optional services that are not working, and resources running high
+// StatusBanner warns control admins about optional services that are not working, resources running high, and sites
+// near or at the limit MAX_SITES sets
 templ StatusBanner(status config.ServerStatus) {
-	if !status.S3Working || !status.SentryWorking || len(status.HighResources) > 0 {
+	if !status.S3Working || !status.SentryWorking || len(status.HighResources) > 0 || status.SitesNearLimit() {
 		<div id="control--status-banner" class="bg-amber-500/10 border-b border-amber-500/20 text-amber-800 text-sm" role="alert">
 			<div class="mx-auto max-w-7xl px-4 py-2 sm:px-6 lg:px-8">
 				if !status.S3Working {
@@ -74,9 +75,21 @@ templ StatusBanner(status config.ServerStatus) {
 				for _, level := range status.HighResources {
 					<p id={ "control--status-banner--" + level.Resource }><strong>{ resourceTitle(level) }:</strong> { resourceWarning(level) }</p>
 				}
+				if status.SitesNearLimit() {
+					<p id="control--status-banner--sites">
+						<strong>{ sitesTitle(status) }:</strong> { fmt.Sprintf("%d of the %d MAX_SITES allows.", status.Sites, status.MaxSites) }
+					</p>
+				}
 			</div>
 		</div>
 	}
+}
+
+func sitesTitle(status config.ServerStatus) string {
+	if status.SitesAtLimit() {
+		return "Sites at their limit"
+	}
+	return "Sites near their limit"
 }
 
 func resourceTitle(level config.ResourceLevel) string {
