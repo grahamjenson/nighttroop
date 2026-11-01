@@ -92,7 +92,12 @@ templ Usage(model controlmodels.Usage) {
 		}
 		@section("Server") {
 			@tile("control--usage--cpu", "CPU", fmt.Sprintf("%.1f%%", model.Server.CPUPercent), fmt.Sprintf("of %d cores", model.Server.CPUs))
-			@tile("control--usage--memory", "Memory", display.Bytes(float64(model.Server.HeapBytes)), display.Bytes(float64(model.Server.SysBytes))+" from the OS")
+			if model.Server.ResidentBytes > 0 {
+				// All the process's memory, as the OS counts it: SQLite's is outside Go's
+				@tile("control--usage--memory", "Memory", display.Bytes(float64(model.Server.ResidentBytes)), display.Bytes(float64(model.Server.HeapBytes))+" in Go's heap, the rest mostly SQLite")
+			} else {
+				@tile("control--usage--memory", "Memory", display.Bytes(float64(model.Server.HeapBytes)), display.Bytes(float64(model.Server.SysBytes))+" from the OS")
+			}
 			@tile("control--usage--goroutines", "Goroutines", fmt.Sprint(model.Server.Goroutines), fmt.Sprintf("%d GCs", model.Server.GCs))
 			@tile("control--usage--disk", "DB disk used", display.Bytes(float64(model.Server.DiskUsed)), display.Bytes(float64(model.Server.DiskFree))+" free on disk")
 			@tile("control--usage--uptime", "Uptime", display.Duration(model.Server.UptimeMs), "since start")

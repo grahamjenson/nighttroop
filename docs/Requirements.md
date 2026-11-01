@@ -85,6 +85,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - Shows active sites and users, use since start, the server's resources and the most used routes, refreshing every
   10 seconds.
 - Counts the sites created today, this week and this month.
+- Its memory is all the server's, as the operating system counts it (htop's RES), with SQLite's, which Go's own figures
+  leave out, and says how much of it is Go's heap.
 - Only signed in requests are counted.
 
 ### Resource alerts

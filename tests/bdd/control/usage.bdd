@@ -25,6 +25,8 @@ ASSERT_NOT_VISIBLE #control--usage--created-week >> text=/^0$/
 ASSERT_NOT_VISIBLE #control--usage--created-month >> text=/^0$/
 ASSERT_VISIBLE #control--usage--requests-per-site
 ASSERT_VISIBLE #control--usage--cpu >> text=/%$/
+// The memory is all the OS counts for the server, with SQLite's, which is outside Go's heap
+ASSERT_VISIBLE #control--usage--memory + div >> text=/in Go's heap, the rest mostly SQLite$/
 // The DBs' size, and the space left on their disk
 ASSERT_VISIBLE #control--usage--disk
 // Once the resources are checked their graph has the same title, so the first is the tile
