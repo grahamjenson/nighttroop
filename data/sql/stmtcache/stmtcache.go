@@ -11,9 +11,10 @@ import (
 // DB runs sqlc's queries as statements prepared on first use. Only use it for queries whose text never changes, as
 // each text is kept; a sqlc.slice query has a text for every length of its list.
 type DB struct {
-	db    *sql.DB
-	tx    *sql.Tx
-	stmts *sync.Map // query text to *sql.Stmt
+	db      *sql.DB
+	stmts   *sync.Map // query text to *sql.Stmt
+	tx      *sql.Tx
+	txStmts *sync.Map // query text to *sql.Stmt prepared in tx, closed when it ends
 }
 
 func New(db *sql.DB) *DB {
@@ -22,24 +23,32 @@ func New(db *sql.DB) *DB {
 
 // WithTx runs the queries in tx, using the statements already prepared on the DB
 func (c *DB) WithTx(tx *sql.Tx) *DB {
-	return &DB{db: c.db, tx: tx, stmts: c.stmts}
+	return &DB{db: c.db, stmts: c.stmts, tx: tx, txStmts: &sync.Map{}}
 }
 
 func (c *DB) stmt(ctx context.Context, query string) (*sql.Stmt, error) {
-	cached, ok := c.stmts.Load(query)
-	if !ok {
-		stmt, err := c.db.PrepareContext(ctx, query)
-		if err != nil {
-			return nil, err
-		}
-		// Another query may have prepared it first, so only one is kept
-		var loaded bool
-		if cached, loaded = c.stmts.LoadOrStore(query, stmt); loaded {
-			stmt.Close()
-		}
-	}
 	if c.tx != nil {
-		return c.tx.StmtContext(ctx, cached.(*sql.Stmt)), nil
+		if cached, ok := c.stmts.Load(query); ok {
+			return c.tx.StmtContext(ctx, cached.(*sql.Stmt)), nil
+		}
+		// The transaction may hold the DB's only connection, so a query the DB has not prepared is prepared in it
+		return prepareOnce(c.txStmts, query, func() (*sql.Stmt, error) { return c.tx.PrepareContext(ctx, query) })
+	}
+	return prepareOnce(c.stmts, query, func() (*sql.Stmt, error) { return c.db.PrepareContext(ctx, query) })
+}
+
+func prepareOnce(stmts *sync.Map, query string, prepare func() (*sql.Stmt, error)) (*sql.Stmt, error) {
+	if cached, ok := stmts.Load(query); ok {
+		return cached.(*sql.Stmt), nil
+	}
+	stmt, err := prepare()
+	if err != nil {
+		return nil, err
+	}
+	// Another query may have prepared it first, so only one is kept
+	cached, loaded := stmts.LoadOrStore(query, stmt)
+	if loaded {
+		stmt.Close()
 	}
 	return cached.(*sql.Stmt), nil
 }

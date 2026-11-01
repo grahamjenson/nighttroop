@@ -12,8 +12,8 @@ import (
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
-// The site DB prepares its queries when they first run, so the same query runs on its own, in a transaction that is
-// rolled back or committed, and from many requests at once
+// The site DB prepares its queries when they first run, so the same query runs first in a transaction that is
+// rolled back or committed, which may hold the DB's only connection, then on its own and from many requests at once
 func TestSiteDBQueriesPreparedOnFirstUse(t *testing.T) {
 	_, _, site := testutils.NewControlDBWithSite(t)
 	ctx := context.Background()
@@ -25,9 +25,6 @@ func TestSiteDBQueriesPreparedOnFirstUse(t *testing.T) {
 		_, err := site.SiteDB.Queries.GetInsulinDose(ctx, sitedb.GetInsulinDoseParams{ID: id})
 		return err == nil
 	}
-
-	require.NoError(t, create(site.SiteDB.Queries, "alone"))
-	require.True(t, found("alone"))
 
 	for _, commit := range []bool{false, true} {
 		id := fmt.Sprintf("tx-commit-%v", commit)
@@ -41,6 +38,9 @@ func TestSiteDBQueriesPreparedOnFirstUse(t *testing.T) {
 		}
 		require.Equal(t, commit, found(id), id)
 	}
+
+	require.NoError(t, create(site.SiteDB.Queries, "alone"))
+	require.True(t, found("alone"))
 
 	var wg sync.WaitGroup
 	for i := range 20 {
