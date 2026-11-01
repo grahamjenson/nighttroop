@@ -348,6 +348,28 @@ func parseFile(fsys fs.FS, path string) ([]Action, error) {
 				TestPath: path,
 				TestLine: lineNumber,
 			})
+		case "ASSERT_VALUE":
+			if current == nil {
+				return nil, fmt.Errorf("assert_value before action")
+			}
+
+			assertable, ok := current.(interface{ AddAssert(Assert) })
+			if !ok {
+				return nil, fmt.Errorf("current action does not support asserts")
+			}
+
+			// The value is everything after the locator, and with none the field is to be empty
+			parts := strings.SplitN(second, " ", 2)
+			value := ""
+			if len(parts) == 2 {
+				value = strings.TrimSpace(parts[1])
+			}
+			assertable.AddAssert(&AssertValue{
+				Locator:  parts[0],
+				Value:    value,
+				TestPath: path,
+				TestLine: lineNumber,
+			})
 		case "ASSERT_TITLE":
 			if current == nil {
 				return nil, fmt.Errorf("assert_title before action")

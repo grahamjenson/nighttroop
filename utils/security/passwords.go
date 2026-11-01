@@ -2,6 +2,7 @@ package security
 
 import (
 	"fmt"
+	"regexp"
 
 	"github.com/pquerna/otp/totp"
 	"golang.org/x/crypto/bcrypt"
@@ -46,7 +47,15 @@ func (cfg *SecurityConfig) GeneratePassword() (password, hashedPassword string, 
 	return password, hashedPassword, nil
 }
 
+// totpCode is a TOTP code as an authenticator app shows it, six digits
+var totpCode = regexp.MustCompile(`^[0-9]{6}$`)
+
+// TOTPValidate is whether token is the code for secret now. A token that is not six digits is refused like a wrong
+// code, before the secret is used.
 func (cfg *SecurityConfig) TOTPValidate(token, secret string) bool {
+	if !totpCode.MatchString(token) {
+		return false
+	}
 	if cfg.IsDevOrTest() && secret == *cfg.DevelopmentDangerousHardcodedAdminTOTPSecret {
 		return token == *cfg.DevelopmentDangerousHardcodedAdminTOTPCode
 	}

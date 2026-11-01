@@ -260,6 +260,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 
 - The admin signs in with a password, then a TOTP code; users with a password.
 - The TOTP step only accepts the pre-auth token from this site's own password step.
+- Every TOTP code field (site and control login, control setup, new site code check) takes digits only: typed or
+  pasted letters are dropped, and phones show a number pad. A code that is not six digits is refused like a wrong one.
 - Sign-in attempts are rate limited per identity and IP; a disabled identity cannot sign in.
 - Devices use their Nightscout token, as a token, API secret or for a JWT.
 - Changing an identity's password or TOTP signs out its existing sessions.

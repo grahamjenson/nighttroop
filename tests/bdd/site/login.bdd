@@ -27,6 +27,13 @@ ASSERT_VISIBLE #public--copy-button>span[data-copy-icon-check]
 
 // Login is disabled until a code from the authenticator app matches the TOTP secret, and a wrong code says so
 ASSERT_DRAWN #public--login-button[disabled]
+
+// The code takes digits only, so letters typed into it are dropped
+TYPE #public--site-info--totp abc
+ASSERT_VALUE #public--site-info--totp
+TYPE #public--site-info--totp 1a2b3
+ASSERT_VALUE #public--site-info--totp 123
+
 INPUT #public--site-info--totp 000000
 CLICK #public--totp-check-button
 ASSERT_VISIBLE #public--totp-failed
@@ -66,9 +73,19 @@ CLICK #site--login-totp-button
 ASSERT_STATUS 401
 ASSERT_PATH /login
 
-// PUT IN THE CORRECT LOGIN
+// The code's boxes take digits only, so typed letters are dropped and do not move on to the next box
+TYPE #site--login--otp-1 abc
+ASSERT_VALUE #site--login--otp-1
+ASSERT_VALUE #otp-2
+TYPE #site--login--otp-1 1a2b
+ASSERT_VALUE #site--login--otp-1 1
+ASSERT_VALUE #otp-2 2
+ASSERT_VALUE #otp-3
+SCREENSHOT totp_digits_only
+
+// PUT IN THE CORRECT LOGIN, typing the rest of the code after the digits already in
 ASSERT_VISIBLE #site--login-totp-button
-TYPE #site--login--otp-1 123123
+TYPE #site--login--otp-1 3123
 ASSERT_NEW_URL
 ASSERT_VISIBLE "Nighttroop"
 ASSERT_VISIBLE #site--nav--logo

@@ -63,3 +63,17 @@ func TestTitleAssertKeepsTheWholeTitle(t *testing.T) {
 	_, err = ParseActionFile(fsys, "site/bad.bdd")
 	require.ErrorContains(t, err, "assert_title before action")
 }
+
+func TestValueAssertTakesAnEmptyValue(t *testing.T) {
+	fsys := fstest.MapFS{
+		"site/value.bdd": {Data: []byte("TYPE #code abc\nASSERT_VALUE #code\nTYPE #code 12\nASSERT_VALUE #code 1 2\n")},
+	}
+
+	file, err := ParseActionFile(fsys, "site/value.bdd")
+	require.NoError(t, err)
+	require.Len(t, file.Actions, 2)
+	empty := file.Actions[0].(*Click).Asserts[0].(*AssertValue)
+	require.Equal(t, "#code", empty.Locator)
+	require.Equal(t, "", empty.Value)
+	require.Equal(t, "1 2", file.Actions[1].(*Click).Asserts[0].(*AssertValue).Value)
+}

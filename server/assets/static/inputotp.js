@@ -46,6 +46,18 @@
     return index > 0 ? slots[index - 1] : null;
   }
 
+  // fillSlots puts a code's digits in the slots from slot on, as when one is pasted or autofilled, and focuses the
+  // next empty slot, or the last one filled
+  function fillSlots(container, slot, digits) {
+    const slots = getSlots(container);
+    const startIndex = slots.indexOf(slot);
+    for (let i = 0; i < digits.length && startIndex + i < slots.length; i++) {
+      slots[startIndex + i].value = digits[i];
+    }
+    updateHiddenValue(container);
+    focusSlot(findFirstEmptySlot(container) || slots[Math.min(startIndex + digits.length, slots.length - 1)]);
+  }
+
   // Event handlers
   document.addEventListener('input', (e) => {
     const target = getEventTargetElement(e);
@@ -55,16 +67,22 @@
     const container = slot.closest('[data-tui-inputotp]');
     if (!container) return;
 
-    // Handle space as empty
-    if (slot.value === ' ') {
+    // A code is digits only, so anything else that gets in is dropped
+    const digits = slot.value.replace(/\D/g, '');
+    if (!digits) {
       slot.value = '';
+      updateHiddenValue(container);
       return;
     }
 
-    // Keep only last character
-    if (slot.value.length > 1) {
-      slot.value = slot.value.slice(-1);
+    // More digits than one keystroke adds is a whole code autofilled, which fills the slots from this one on
+    if (digits.length > 2) {
+      fillSlots(container, slot, digits);
+      return;
     }
+
+    // Keep only last digit
+    slot.value = digits.slice(-1);
 
     // Move to next slot if filled
     if (slot.value) {
@@ -73,6 +91,12 @@
     }
 
     updateHiddenValue(container);
+  });
+
+  // Typing anything but a digit does nothing, so it neither shows nor moves on to the next slot
+  document.addEventListener('beforeinput', (e) => {
+    const target = getEventTargetElement(e);
+    if (target?.matches('[data-tui-inputotp-slot]') && e.data && !/\d/.test(e.data)) e.preventDefault();
   });
 
   document.addEventListener('keydown', (e) => {
@@ -136,19 +160,7 @@
     if (!container) return;
 
     const pastedData = (e.clipboardData || window.clipboardData).getData('text');
-    const chars = pastedData.replace(/\s/g, '').split('');
-    const slots = getSlots(container);
-
-    let startIndex = slots.indexOf(slot);
-    for (let i = 0; i < chars.length && startIndex + i < slots.length; i++) {
-      slots[startIndex + i].value = chars[i];
-    }
-
-    updateHiddenValue(container);
-
-    // Focus next empty or last filled slot
-    const nextEmpty = findFirstEmptySlot(container);
-    focusSlot(nextEmpty || slots[Math.min(startIndex + chars.length, slots.length - 1)]);
+    fillSlots(container, slot, pastedData.replace(/\D/g, ''));
   });
 
   // Label click handling

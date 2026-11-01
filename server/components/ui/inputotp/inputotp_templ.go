@@ -461,7 +461,7 @@ func Slot(props ...SlotProps) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "\" inputmode=\"numeric\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "\" inputmode=\"numeric\" pattern=\"[0-9]*\" autocomplete=\"one-time-code\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -473,7 +473,7 @@ func Slot(props ...SlotProps) templ.Component {
 				var templ_7745c5c3_Var17 string
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templruntime.NewAttributeExpression(p.Placeholder).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/inputotp/inputotp.templ`, Line: 130, Col: 31}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/inputotp/inputotp.templ`, Line: 132, Col: 31}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var17)
 				if templ_7745c5c3_Err != nil {
@@ -549,7 +549,7 @@ func Slot(props ...SlotProps) templ.Component {
 			var templ_7745c5c3_Var20 string
 			templ_7745c5c3_Var20, templ_7745c5c3_Err = templruntime.NewAttributeExpression(strconv.Itoa(p.Index)).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/inputotp/inputotp.templ`, Line: 158, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/inputotp/inputotp.templ`, Line: 160, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var20)
 			if templ_7745c5c3_Err != nil {
@@ -618,7 +618,7 @@ func Separator(props ...SeparatorProps) templ.Component {
 				var templ_7745c5c3_Var22 string
 				templ_7745c5c3_Var22, templ_7745c5c3_Err = templruntime.NewAttributeExpression(p.ID).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/inputotp/inputotp.templ`, Line: 172, Col: 12}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/inputotp/inputotp.templ`, Line: 174, Col: 12}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var22)
 				if templ_7745c5c3_Err != nil {

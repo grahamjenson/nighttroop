@@ -126,6 +126,8 @@ templ Slot(props ...SlotProps) {
 			}
 			type={ p.Type }
 			inputmode="numeric"
+			pattern="[0-9]*"
+			autocomplete="one-time-code"
 			if p.Placeholder != "" {
 				placeholder={ p.Placeholder }
 			}
