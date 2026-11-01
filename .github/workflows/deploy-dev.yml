@@ -1,7 +1,7 @@
 name: Deploy dev
 
 # Deploys each commit on main that CI passed on to the dev Nighttroop on Fly.io, which keeps its data between deploys
-# unless a migration change means its databases no longer fit; see docs/deploy/dev_flyio/README.md. It does nothing
+# unless a migration change means a database can no longer be migrated; see docs/deploy/dev_flyio/README.md. It does nothing
 # until the repository variable DEV_FLYIO_APP names the Fly app and the secret FLY_API_TOKEN holds a deploy token for
 # it.
 on:

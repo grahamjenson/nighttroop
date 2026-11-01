@@ -6,7 +6,7 @@ try the newest code.
 - **It runs every commit on `main`.** Each time CI passes on `main`, a GitHub Actions workflow builds that commit and
   deploys it.
 - **It keeps its data until a migration change breaks it.** The databases are on a volume, so they last through
-  deploys and restarts. When a new version changes a migration so the old databases no longer fit, that deploy wipes
+  deploys and restarts. When a new version changes a migration so an old database can no longer be migrated, that deploy wipes
   them and starts empty, so a tester never hits data the new version cannot read. Nothing is backed up.
 - **It says so on every page.** `TEST_SITE` puts a large banner at the top of every page, so nobody mistakes it for a
   real site or keeps anything they need on it.
@@ -52,10 +52,15 @@ of your own domain:
 - **A volume.** The databases are in `/data`, on the `nighttroop_dev_data` volume, which the first deploy makes.
   - The image is the `Dockerfile`'s `dev` target. It starts as root, as Fly mounts the volume owned by root, gives
     `/data` to the server's user, and runs the server as that user.
-  - Before the server starts, `dbs_are_valid` ([`scripts/dbs_are_valid`](../../../scripts/dbs_are_valid/main.go))
-    migrates each database as the server would, and checks its schema matches what the migrations make for a new one.
-  - If any does not, as when a migration was edited rather than added, `/data/db` and `/data/backup` are wiped and
-    the server starts empty. The logs say `the databases no longer fit the migrations, so they are wiped`.
+  - Before the server starts, `try_migrate_or_delete`
+    ([`scripts/try_migrate_or_delete`](../../../scripts/try_migrate_or_delete/try_migrate_or_delete.go)) opens each
+    database as the server does: it migrates it and prepares its queries.
+  - If any cannot be opened, as when a migration was edited rather than added, it deletes them all, `/data/db` and
+    `/data/backup`, and the server starts empty. The logs say `deleting every database, as one cannot be migrated`,
+    with the database and why.
+  - **Each deploy stops the server for a minute or so.** The volume can only be attached to one machine, so Fly stops
+    the old one before the new one starts, opens every database, and passes its health check. Pages and apps get
+    errors until it is back.
 - **No S3.** `S3_URL` is left unset, so the S3 check fails at startup. Then:
   - nothing is restored on start and nothing is backed up;
   - the control plane warns that S3 is not connected, which is expected here;
@@ -233,10 +238,9 @@ up again then. Testers don't need it; you only need it to see the server's sites
 
 ### Testers' data is gone
 
-A deploy wipes the databases when a migration change means they no longer fit.
+A deploy wipes the databases when a migration change means one can no longer be migrated.
 
-- `fly logs` says `the databases no longer fit the migrations, so they are wiped`, with `dbs_are_valid`'s reason
-  before it.
+- `fly logs` says `deleting every database, as one cannot be migrated`, with the database and why.
 - `fly releases` shows which deploy it was.
 - `fly volumes list` shows whether the volume is still there; a machine made without it starts empty every time.
 

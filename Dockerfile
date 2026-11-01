@@ -1,6 +1,6 @@
 # The server is one static binary, as its SQLite is pure Go. It runs on Alpine for its CA certificates and busybox
 # wget, which the health check uses. The keyset tool is built beside it, so a server needs no Go to make keys, and
-# dbs_are_valid, which the dev server checks its databases with.
+# try_migrate_or_delete, which the dev server opens its databases with before it starts.
 FROM golang:1.27-alpine AS build
 WORKDIR /src
 COPY go.mod go.sum ./
@@ -8,7 +8,7 @@ RUN go mod download
 COPY . .
 RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/nighttroop main.go && \
     CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/create_keysets scripts/keysets/create_keysets.go && \
-    CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/dbs_are_valid ./scripts/dbs_are_valid
+    CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/try_migrate_or_delete ./scripts/try_migrate_or_delete
 
 # DB-IP's free IP to City Lite (CC BY 4.0), this month's or last month's, for the city each sign in is from. If it
 # cannot be downloaded the image is still built, and the server knows only countries, from its built in database.
@@ -38,11 +38,11 @@ HEALTHCHECK --interval=10s --timeout=5s --start-period=120s --retries=3 \
 ENTRYPOINT ["nighttroop"]
 
 # The dev server on Fly.io (docs/deploy/dev_flyio), built with --build-target dev. It starts as root to take over its
-# volume and wipe its databases when they no longer fit the migrations, then runs the server as nighttroop.
+# volume and delete its databases when one can no longer be migrated, then runs the server as nighttroop.
 FROM server AS dev
 USER root
 RUN apk add --no-cache su-exec
-COPY scripts/dbs_are_valid/dev_start.sh /usr/local/bin/dev_start
+COPY scripts/try_migrate_or_delete/dev_start.sh /usr/local/bin/dev_start
 ENTRYPOINT ["dev_start"]
 
 # The server, the image built by default

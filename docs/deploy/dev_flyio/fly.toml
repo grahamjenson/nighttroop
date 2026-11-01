@@ -1,5 +1,5 @@
 # A dev Nighttroop on Fly.io for alpha testing, open to everyone. Its data is kept between deploys and restarts, and
-# wiped only when a migration change means the databases no longer fit. See README.md.
+# wiped only when a migration change means a database can no longer be migrated. See README.md.
 # Change HOST_NAME, and the health check's Host below with it, to your domain. The app is named when deploying.
 
 primary_region = "syd"
@@ -34,8 +34,8 @@ primary_region = "syd"
     [http_service.checks.headers]
       Host = "dev.example.com"
 
-# The databases, kept between deploys. The image built with --build-target dev checks them with dbs_are_valid at each
-# start, and wipes them only when they no longer fit the migrations. A deploy makes the volume if there is none.
+# The databases, kept between deploys. The image built with --build-target dev opens them with try_migrate_or_delete
+# at each start, and deletes them all if one cannot be migrated. A deploy makes the volume if there is none.
 [mounts]
   source = "nighttroop_dev_data"
   destination = "/data"
