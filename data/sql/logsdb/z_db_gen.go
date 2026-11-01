@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"time"
 
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/backup"
@@ -222,9 +221,6 @@ func OpenSqliteDB(path string, cacheSize int) (*sql.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("cannot open sqlite db: %w", err)
 	}
-	// A connection holds its files, page cache and schema, about 1MB, so an idle one is closed, as with thousands of
-	// sites most are idle at any time. Opening one again takes a couple of milliseconds.
-	sqldb.SetConnMaxIdleTime(time.Minute)
 
 	return sqldb, nil
 }
