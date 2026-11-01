@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/server/components/filter"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
@@ -126,6 +127,12 @@ templ JobModal(job *controlmodels.Job) {
 			@jobDetail("Fetched", formatDate(job.ConsumerFetchedAt))
 			@jobDetail("Finished", formatDate(job.FinishedAt))
 			@jobDetail("Duration", duration(job))
+			if job.RunID != nil {
+				<dt class="text-gray-500">Logs</dt>
+				<dd>
+					@RunLogsLink("control--job--logs", *job.RunID)
+				</dd>
+			}
 		</dl>
 		<h3 class="mt-4 text-sm font-semibold">Errors</h3>
 		if len(job.Errors) == 0 {
@@ -141,3 +148,9 @@ templ JobModal(job *controlmodels.Job) {
 }
 
 var jobDetail = modal.Detail
+
+// RunLogsLink goes to the logs of a job's run, by the job_id they have, to see why it failed
+templ RunLogsLink(id string, runID string) {
+	{{ link := filter.PagePath("/logs", nil, nil, filter.ID{Name: "job_id", Value: &runID}) }}
+	<a id={ id } href={ templ.SafeURL(link) } hx-get={ link } hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML" class="break-all text-primary underline">{ runID }</a>
+}

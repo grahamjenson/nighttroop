@@ -19,6 +19,7 @@ type Job struct {
 	FinishedAt        int64
 	DedupingKey       string
 	Errors            errors.ErrorList
+	RunID             *string
 	CreatedAt         int64
 	UpdatedAt         int64
 }
@@ -31,6 +32,7 @@ type JobStatsDaily struct {
 	DurationSum        float64
 	DurationSquaredSum float64
 	Errors             errors.ErrorList
+	FailedRunIdsJson   errors.ErrorList
 	CreatedAt          int64
 	UpdatedAt          int64
 }

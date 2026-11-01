@@ -12,4 +12,7 @@ type JobStatsDaily struct {
 	Errors             []string `json:"errors"`
 	CreatedAt          int64    `json:"created_at"`
 	UpdatedAt          int64    `json:"updated_at"`
+
+	// FailedRunIDs are the job_ids of the day's last failed runs, oldest first, which their logs have
+	FailedRunIDs []string `json:"failed_run_ids"`
 }

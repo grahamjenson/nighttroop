@@ -14,7 +14,7 @@ import (
 const allJobStatsDaily = `-- name: AllJobStatsDaily :many
 ;
 
-SELECT day_queue_job, total_jobs, total_success, total_failed, duration_sum, duration_squared_sum, errors, created_at, updated_at FROM job_stats_daily
+SELECT day_queue_job, total_jobs, total_success, total_failed, duration_sum, duration_squared_sum, errors, failed_run_ids_json, created_at, updated_at FROM job_stats_daily
 `
 
 func (q *Queries) AllJobStatsDaily(ctx context.Context) ([]*JobStatsDaily, error) {
@@ -34,6 +34,7 @@ func (q *Queries) AllJobStatsDaily(ctx context.Context) ([]*JobStatsDaily, error
 			&i.DurationSum,
 			&i.DurationSquaredSum,
 			&i.Errors,
+			&i.FailedRunIdsJson,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -55,7 +56,7 @@ INSERT INTO job_stats_daily (day_queue_job, errors, created_at, updated_at)
 VALUES (?, '[]', CAST(unixepoch('subsec') * 1000 AS INTEGER), CAST(unixepoch('subsec') * 1000 AS INTEGER))
 ON CONFLICT(day_queue_job) DO UPDATE SET
     day_queue_job = day_queue_job -- Forces NOOP assignment to return conflicting row
-RETURNING day_queue_job, total_jobs, total_success, total_failed, duration_sum, duration_squared_sum, errors, created_at, updated_at
+RETURNING day_queue_job, total_jobs, total_success, total_failed, duration_sum, duration_squared_sum, errors, failed_run_ids_json, created_at, updated_at
 `
 
 type EnsureJobStatsDailyForGroupParams struct {
@@ -73,6 +74,7 @@ func (q *Queries) EnsureJobStatsDailyForGroup(ctx context.Context, arg EnsureJob
 		&i.DurationSum,
 		&i.DurationSquaredSum,
 		&i.Errors,
+		&i.FailedRunIdsJson,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -80,7 +82,7 @@ func (q *Queries) EnsureJobStatsDailyForGroup(ctx context.Context, arg EnsureJob
 }
 
 const getJobStatsDaily = `-- name: GetJobStatsDaily :one
-SELECT day_queue_job, total_jobs, total_success, total_failed, duration_sum, duration_squared_sum, errors, created_at, updated_at FROM job_stats_daily
+SELECT day_queue_job, total_jobs, total_success, total_failed, duration_sum, duration_squared_sum, errors, failed_run_ids_json, created_at, updated_at FROM job_stats_daily
 WHERE day_queue_job = ?1
 `
 
@@ -99,6 +101,7 @@ func (q *Queries) GetJobStatsDaily(ctx context.Context, arg GetJobStatsDailyPara
 		&i.DurationSum,
 		&i.DurationSquaredSum,
 		&i.Errors,
+		&i.FailedRunIdsJson,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -106,7 +109,7 @@ func (q *Queries) GetJobStatsDaily(ctx context.Context, arg GetJobStatsDailyPara
 }
 
 const searchJobStatsDaily = `-- name: SearchJobStatsDaily :many
-SELECT day_queue_job, total_jobs, total_success, total_failed, duration_sum, duration_squared_sum, errors, created_at, updated_at FROM job_stats_daily
+SELECT day_queue_job, total_jobs, total_success, total_failed, duration_sum, duration_squared_sum, errors, failed_run_ids_json, created_at, updated_at FROM job_stats_daily
 ORDER BY day_queue_job DESC
 LIMIT ?2 OFFSET ?1
 `
@@ -133,6 +136,7 @@ func (q *Queries) SearchJobStatsDaily(ctx context.Context, arg SearchJobStatsDai
 			&i.DurationSum,
 			&i.DurationSquaredSum,
 			&i.Errors,
+			&i.FailedRunIdsJson,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -159,9 +163,10 @@ SET
     duration_squared_sum = duration_squared_sum + ?5,
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
 
-    errors = ?6
+    errors = ?6,
+    failed_run_ids_json = ?7
 WHERE
-    day_queue_job = ?7
+    day_queue_job = ?8
 `
 
 type UpdateJobStatsDailyParams struct {
@@ -171,6 +176,7 @@ type UpdateJobStatsDailyParams struct {
 	DurationSum        float64
 	DurationSquaredSum float64
 	Errors             errors.ErrorList
+	FailedRunIdsJson   errors.ErrorList
 	DayQueueJob        string
 }
 
@@ -182,6 +188,7 @@ func (q *Queries) UpdateJobStatsDaily(ctx context.Context, arg UpdateJobStatsDai
 		arg.DurationSum,
 		arg.DurationSquaredSum,
 		arg.Errors,
+		arg.FailedRunIdsJson,
 		arg.DayQueueJob,
 	)
 	return err

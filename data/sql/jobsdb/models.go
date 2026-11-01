@@ -1,6 +1,10 @@
 package jobsdb
 
-import "time"
+import (
+	"time"
+
+	"nighttroop.t1d.nz/utils/errors"
+)
 
 func (j *Job) DayQueueJob() string {
 	// calculates the "YYYY-MM-DD::queue::job" string for the job based on the CreatedAt timestamp
@@ -29,4 +33,18 @@ func (j *Job) Duration() float64 {
 
 func (j *Job) DurationSquared() float64 {
 	return j.Duration() * j.Duration()
+}
+
+// FailedRunID is the job_id of a failed job's run, which its logs have, when it is known
+func (j *Job) FailedRunID() []string {
+	if j.JobStatus != "failed" || j.RunID == nil || *j.RunID == "" {
+		return nil
+	}
+	return []string{*j.RunID}
+}
+
+// LatestRunIDs adds runs' IDs to ids, keeping only the newest MaxErrors, as the oldest runs' logs are trimmed first
+func LatestRunIDs(ids errors.ErrorList, runIDs ...string) errors.ErrorList {
+	ids = append(ids, runIDs...)
+	return ids[max(0, len(ids)-errors.MaxErrors):]
 }

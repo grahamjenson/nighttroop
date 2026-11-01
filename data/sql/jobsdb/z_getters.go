@@ -106,6 +106,16 @@ func (m *Job) SetErrors(v errors.ErrorList) {
 	m.Errors = v
 }
 
+// GetRunID returns the RunID value.
+func (m Job) GetRunID() *string {
+	return m.RunID
+}
+
+// SetRunID sets the RunID value and returns the updated Job.
+func (m *Job) SetRunID(v *string) {
+	m.RunID = v
+}
+
 // GetCreatedAt returns the CreatedAt value.
 func (m Job) GetCreatedAt() int64 {
 	return m.CreatedAt
@@ -194,6 +204,16 @@ func (m JobStatsDaily) GetErrors() errors.ErrorList {
 // SetErrors sets the Errors value and returns the updated JobStatsDaily.
 func (m *JobStatsDaily) SetErrors(v errors.ErrorList) {
 	m.Errors = v
+}
+
+// GetFailedRunIdsJson returns the FailedRunIdsJson value.
+func (m JobStatsDaily) GetFailedRunIdsJson() errors.ErrorList {
+	return m.FailedRunIdsJson
+}
+
+// SetFailedRunIdsJson sets the FailedRunIdsJson value and returns the updated JobStatsDaily.
+func (m *JobStatsDaily) SetFailedRunIdsJson(v errors.ErrorList) {
+	m.FailedRunIdsJson = v
 }
 
 // GetCreatedAt returns the CreatedAt value.
@@ -316,6 +336,16 @@ func (m *UpdateJobStatsDailyParams) SetErrors(v errors.ErrorList) {
 	m.Errors = v
 }
 
+// GetFailedRunIdsJson returns the FailedRunIdsJson value.
+func (m UpdateJobStatsDailyParams) GetFailedRunIdsJson() errors.ErrorList {
+	return m.FailedRunIdsJson
+}
+
+// SetFailedRunIdsJson sets the FailedRunIdsJson value and returns the updated UpdateJobStatsDailyParams.
+func (m *UpdateJobStatsDailyParams) SetFailedRunIdsJson(v errors.ErrorList) {
+	m.FailedRunIdsJson = v
+}
+
 // GetDayQueueJob returns the DayQueueJob value.
 func (m UpdateJobStatsDailyParams) GetDayQueueJob() string {
 	return m.DayQueueJob
@@ -354,6 +384,16 @@ func (m FailJobParams) GetErrors() errors.ErrorList {
 // SetErrors sets the Errors value and returns the updated FailJobParams.
 func (m *FailJobParams) SetErrors(v errors.ErrorList) {
 	m.Errors = v
+}
+
+// GetRunID returns the RunID value.
+func (m FailJobParams) GetRunID() *string {
+	return m.RunID
+}
+
+// SetRunID sets the RunID value and returns the updated FailJobParams.
+func (m *FailJobParams) SetRunID(v *string) {
+	m.RunID = v
 }
 
 // GetID returns the ID value.
@@ -414,6 +454,16 @@ func (m InsertFailedCronJobParams) GetErrors() errors.ErrorList {
 // SetErrors sets the Errors value and returns the updated InsertFailedCronJobParams.
 func (m *InsertFailedCronJobParams) SetErrors(v errors.ErrorList) {
 	m.Errors = v
+}
+
+// GetRunID returns the RunID value.
+func (m InsertFailedCronJobParams) GetRunID() *string {
+	return m.RunID
+}
+
+// SetRunID sets the RunID value and returns the updated InsertFailedCronJobParams.
+func (m *InsertFailedCronJobParams) SetRunID(v *string) {
+	m.RunID = v
 }
 
 // GetJob returns the Job value.
