@@ -268,8 +268,12 @@ func (db *ControlDB) ArchiveSite(ctx context.Context, subdomain string, upload s
 	if site == nil {
 		return fmt.Errorf("site %s is not open", subdomain)
 	}
-	// Backed up to a folder of its own, as a batch backup can be rewriting the site's backup file at the same time
-	dir, err := os.MkdirTemp("", "site-archive-*")
+	// Backed up to a folder of its own beside the site's backup file, on the same disk, as a batch backup can be
+	// rewriting that file at the same time
+	if err := utils.MkParentDirs(site.BackupPath); err != nil {
+		return fmt.Errorf("cannot make a folder to archive site %s: %w", subdomain, err)
+	}
+	dir, err := os.MkdirTemp(filepath.Dir(site.BackupPath), ".archive-*")
 	if err != nil {
 		return fmt.Errorf("cannot make a folder to archive site %s: %w", subdomain, err)
 	}
