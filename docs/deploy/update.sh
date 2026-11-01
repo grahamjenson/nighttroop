@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Updates Nighttroop run with hostinger.compose.yml, and rolls back if the new version is not healthy.
+# Updates Nighttroop run with hostinger.compose.yml or voyager.compose.yml, and rolls back if the new version is not
+# healthy.
 #
 #   sudo ./update.sh [image]    e.g. sudo ./update.sh ghcr.io/grahamjenson/nighttroop:v1.2.3
 #
@@ -9,10 +10,12 @@
 # 4. If it is not healthy, puts back ./data from that copy and starts the previous image again
 #
 # HEALTH_TIMEOUT (seconds, default 180) is how long the new version has to be healthy; KEEP_BACKUPS (default 5) is how
-# many copies of ./data, and previous images, are kept. COMPOSE_FILE is the compose file, as for docker compose.
+# many copies of ./data, and previous images, are kept. COMPOSE_FILE is the compose file, as for docker compose: the
+# one .env names, or hostinger.compose.yml.
 set -euo pipefail
 
 cd "$(dirname "$0")"
+COMPOSE_FILE=${COMPOSE_FILE:-$(sed -n 's/^COMPOSE_FILE=//p' .env 2>/dev/null | tail -n 1)}
 export COMPOSE_FILE=${COMPOSE_FILE:-hostinger.compose.yml}
 COMPOSE=(docker compose)
 SERVICE=nighttroop
