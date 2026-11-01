@@ -208,7 +208,7 @@ func GetSiteBatch(ctx context.Context, controlDB *db.ControlDB, char string) ([]
 		return sites, fmt.Errorf("cannot query sites: %w", err)
 	}
 
-	return controlDB.GetSiteDBsFromModels(res)
+	return controlDB.GetSiteDBsFromModels(res), nil
 }
 
 // GetNeverUsedSites retrieves sites that have never been logged into
@@ -221,5 +221,5 @@ func GetNeverUsedSites(ctx context.Context, controlDB *db.ControlDB, char string
 		return nil, fmt.Errorf("cannot query never seen sites: %w", err)
 	}
 
-	return controlDB.GetSiteDBsFromModels(res)
+	return controlDB.GetSiteDBsFromModels(res), nil
 }
