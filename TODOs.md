@@ -57,6 +57,8 @@
 1. Performance testing (cost estimate for running full node)
 1. P3: Open a site's DB when it is first used rather than every site's at start, as each still takes ~2ms to open
    and check migrations
+1. P4: Keep which batches were uploaded, and with which sites, across restarts, as the first backup round after a
+   restart uploads every batch again though their backups are current
 1. Nightscout API:
     1. P2: Check If-Unmodified-Since on API v3 replace and patch, in the same query as the update
     1. P1: A soft delete sets `updated_at` and API v3 lastModified counts deleted rows, so a history since a client's
