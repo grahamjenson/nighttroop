@@ -3,6 +3,7 @@ package background
 import (
 	"context"
 	"log/slog"
+	"time"
 
 	"nighttroop.t1d.nz/background/backup_control"
 	"nighttroop.t1d.nz/background/backup_sites"
@@ -107,8 +108,17 @@ func (b *BackGroundManager) RunAllNow(ctx context.Context) {
 	}
 }
 
+// stopCronTimeout is the longest Stop waits for running cron jobs, so a stuck one cannot hang shutdown
+const stopCronTimeout = time.Minute
+
+// Stop stops the cron and the consumers, waiting for their running jobs, so a backup running now does not overlap
+// the final one or the DBs closing
 func (b *BackGroundManager) Stop() {
-	b.cron.Stop()
+	select {
+	case <-b.cron.Stop().Done():
+	case <-time.After(stopCronTimeout):
+		slog.Error("Stopping background jobs: cron jobs are still running", "timeout", stopCronTimeout)
+	}
 
 	for _, consumer := range b.consumers {
 		consumer.Stop()

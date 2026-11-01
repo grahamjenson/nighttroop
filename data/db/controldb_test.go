@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -12,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
+	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/s3utils"
 	"nighttroop.t1d.nz/utils/testutils"
@@ -88,7 +90,8 @@ func TestArchiveSite(t *testing.T) {
 	}))
 	require.Equal(t, sitedb.GetS3ArchivePath(siteID, cfg), uploadedKey)
 	require.Equal(t, s3utils.SiteRetention, uploadedRetention)
-	require.Equal(t, []string{site.SiteDB.BackupPath}, uploadedPaths)
+	require.Len(t, uploadedPaths, 1)
+	require.Equal(t, filepath.Base(site.SiteDB.BackupPath), filepath.Base(uploadedPaths[0]))
 	row, err = controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: siteID})
 	require.NoError(t, err)
 	require.Equal(t, "archived", row.State)
@@ -97,6 +100,28 @@ func TestArchiveSite(t *testing.T) {
 
 	// It is no longer open, so it cannot be archived again
 	require.ErrorContains(t, controlDB.ArchiveSite(ctx, siteID, func(context.Context, string, s3utils.Retention, []string) error { return nil }), "is not open")
+}
+
+// A batch backup rewriting the site's backup file while it is archived does not change the archive uploaded
+func TestArchiveSiteDuringBatchBackup(t *testing.T) {
+	_, controlDB, site := testutils.NewControlDBWithSite(t)
+	ctx, siteID := t.Context(), site.SiteDB.Subdomain
+	_, err := controlDB.Queries.DisableSite(ctx, controldb.DisableSiteParams{ID: siteID})
+	require.NoError(t, err)
+
+	var uploaded string
+	require.NoError(t, controlDB.ArchiveSite(ctx, siteID, func(_ context.Context, _ string, _ s3utils.Retention, paths []string) error {
+		require.NoError(t, utils.MkParentDirs(site.SiteDB.BackupPath))
+		require.NoError(t, os.WriteFile(site.SiteDB.BackupPath, []byte("half written"), 0o600))
+		data, err := os.ReadFile(paths[0])
+		require.NoError(t, err)
+		uploaded = paths[0]
+		require.True(t, strings.HasPrefix(string(data), "SQLite format 3\x00"), "the archive is a whole DB")
+		return nil
+	}))
+	// Named as the site's DB so it hydrates, and removed once uploaded
+	require.Equal(t, filepath.Base(site.SiteDB.BackupPath), filepath.Base(uploaded))
+	require.NoFileExists(t, uploaded)
 }
 
 // An archived site hydrates from its archive with its data, live again and open, and only an archived one does

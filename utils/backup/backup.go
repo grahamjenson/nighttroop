@@ -31,19 +31,21 @@ func SqliteBackup(ctx context.Context, db *sql.DB, backupPath string) error {
 	}
 	defer conn.Close()
 
-	err = conn.Raw(func(driverConn any) error {
+	err = conn.Raw(func(driverConn any) (err error) {
 		bck, err := driverConn.(BackupConn).NewBackup(backupPath)
 		if err != nil {
 			return err
 		}
-		for more := true; more; {
-			more, err = bck.Step(-1)
-			if err != nil {
-				return err
+		// Finished even when a step fails, or the destination stays open and locked, failing every later backup to it
+		defer func() {
+			if finishErr := bck.Finish(); err == nil {
+				err = finishErr
 			}
+		}()
+		for more := true; more && err == nil; {
+			more, err = bck.Step(-1)
 		}
-
-		return bck.Finish()
+		return err
 	})
 
 	if err != nil {
