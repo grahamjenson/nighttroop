@@ -1129,11 +1129,9 @@ LEFT JOIN notification_events n ON eg.notification_event_id = n.id
 
 
 WHERE
-    (CAST(?1 AS INTEGER) IS NULL OR eg.occurred_at >= ?1)
-    AND (CAST(?2 AS INTEGER) IS NULL OR eg.occurred_at <= ?2)
-    AND (CAST(?3 AS INTEGER) IS NULL OR eg.occurred_at = ?3)
-    AND (CAST(?4 AS INTEGER) IS NULL OR eg.occurred_at > ?4)
-    AND (CAST(?5 AS INTEGER) IS NULL OR eg.occurred_at < ?5)
+    -- The date filters as one range, occurred_at's CHECK where unset, so SQLite reads only that range of its index
+    eg.occurred_at BETWEEN MAX(COALESCE(CAST(?1 AS INTEGER), 0), COALESCE(CAST(?2 AS INTEGER) + 1, 0), COALESCE(CAST(?3 AS INTEGER), 0))
+        AND MIN(COALESCE(CAST(?4 AS INTEGER), 253402300799999), COALESCE(CAST(?5 AS INTEGER) - 1, 253402300799999), COALESCE(?3, 253402300799999))
 
     AND (CAST(?6 AS INTEGER) IS NULL OR eg.created_at >= ?6)
     AND (CAST(?7 AS INTEGER) IS NULL OR eg.created_at <= ?7)
@@ -1201,9 +1199,9 @@ LIMIT ?45 OFFSET ?44
 
 type SearchEventGroupsParams struct {
 	DateGTE        *int64
-	DateLTE        *int64
-	DateEQ         *int64
 	DateGT         *int64
+	DateEQ         *int64
+	DateLTE        *int64
 	DateLT         *int64
 	CreatedAtGTE   *int64
 	CreatedAtLTE   *int64
@@ -1263,9 +1261,9 @@ type SearchEventGroupsRow struct {
 func (q *Queries) SearchEventGroups(ctx context.Context, arg SearchEventGroupsParams) ([]*SearchEventGroupsRow, error) {
 	rows, err := q.query(ctx, q.searchEventGroupsStmt, searchEventGroups,
 		arg.DateGTE,
-		arg.DateLTE,
-		arg.DateEQ,
 		arg.DateGT,
+		arg.DateEQ,
+		arg.DateLTE,
 		arg.DateLT,
 		arg.CreatedAtGTE,
 		arg.CreatedAtLTE,
