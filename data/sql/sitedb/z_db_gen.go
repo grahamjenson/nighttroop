@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	"nighttroop.t1d.nz/data/sql/stmtcache"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/backup"
 	"nighttroop.t1d.nz/utils/config"
@@ -30,6 +31,7 @@ type DB struct {
 	BackupPath string
 
 	Subdomain string
+	stmts     *stmtcache.DB
 }
 
 func NewDB(ctx context.Context, subdomain string, serverConfig *config.ServerConfig) (*DB, error) {
@@ -68,13 +70,16 @@ func NewDB(ctx context.Context, subdomain string, serverConfig *config.ServerCon
 
 	slog.Info("sitedb Migration applied successfully to " + path)
 
-	db.Queries, err = Prepare(ctx, sqldb)
-	if err != nil {
-		sqldb.Close()
-		return db, fmt.Errorf("sitedb Prepare Error for: %s %w", path, err)
-	}
+	// Every site's DB is opened at start, so its queries are prepared when first run rather than all of them here
+	db.stmts = stmtcache.New(sqldb)
+	db.Queries = New(db.stmts)
 
 	return db, nil
+}
+
+// WithTx runs the queries in tx with the statements already prepared on the DB, which Queries.WithTx does not have
+func (db *DB) WithTx(tx *sql.Tx) *Queries {
+	return New(db.stmts.WithTx(tx))
 }
 
 func (db *DB) Name() string {

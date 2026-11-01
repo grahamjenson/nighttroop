@@ -460,7 +460,7 @@ func (c Collection[NS, DM]) begin(ctx context.Context, siteContext *httputils.Si
 	if err != nil {
 		return nil, nil, nsutils.ErrInternal
 	}
-	return tx, siteContext.SiteDB.Queries.WithTx(tx), nil
+	return tx, siteContext.SiteDB.WithTx(tx), nil
 }
 
 func (c Collection[NS, DM]) commit(tx *sql.Tx, action string) *nsutils.HTTPError {

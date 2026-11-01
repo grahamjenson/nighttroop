@@ -50,7 +50,7 @@ func (t *CollectionTx) Site() (*sitedb.Queries, error) {
 		}
 		t.siteTx = tx
 	}
-	return t.siteContext.SiteDB.Queries.WithTx(t.siteTx), nil
+	return t.siteContext.SiteDB.WithTx(t.siteTx), nil
 }
 
 // Live is the live DB's queries, which are not in the transaction, so a rollback does not undo them
