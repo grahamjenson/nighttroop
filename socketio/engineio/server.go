@@ -268,7 +268,8 @@ type Session struct {
 	server  *Server
 	request *http.Request
 
-	limiter *rate.Limiter // paces the client's packets
+	limiter  *rate.Limiter // paces the client's packets
+	handling sync.Mutex    // handles one packet at a time, even from a POST in flight as the session upgrades
 
 	mu        sync.Mutex
 	ws        *WebSocket // set once the session is on a websocket
@@ -486,6 +487,12 @@ func (s *Session) poll(w http.ResponseWriter, r *http.Request) {
 // receive handles a POST of the client's packets
 func (s *Session) receive(w http.ResponseWriter, r *http.Request) {
 	s.mu.Lock()
+	// Once upgraded the client sends over the websocket, as the JavaScript server refuses a transport mismatch
+	if s.ws != nil {
+		s.mu.Unlock()
+		writeError(w, http.StatusBadRequest, errBadRequest)
+		return
+	}
 	if s.posting {
 		s.mu.Unlock()
 		s.Close("concurrent post")
@@ -526,6 +533,8 @@ func (s *Session) receive(w http.ResponseWriter, r *http.Request) {
 
 // handle acts on one of the client's packets; a client sending them faster than MaxPacketRate is closed
 func (s *Session) handle(p Packet) {
+	s.handling.Lock()
+	defer s.handling.Unlock()
 	if !s.limiter.Allow() {
 		s.Close("too many packets")
 		return

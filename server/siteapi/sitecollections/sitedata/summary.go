@@ -104,7 +104,7 @@ func getSummary(ctx context.Context, tx *siteapiutils.CollectionTx, hours int64,
 	settings := siteContext.GetSettings()
 	summary.RangeLow = summary.Units.FromMGDL(float64(*settings.GetRangeLowMgdl()))
 	summary.RangeHigh = summary.Units.FromMGDL(float64(*settings.GetRangeHighMgdl()))
-	// A set IncludeDeleted leaves out deleted rows in these searches
+	// A false IncludeDeleted leaves out deleted rows in these searches
 	excludeDeleted := false
 
 	var herr *apiutils.HTTPError

@@ -2,6 +2,7 @@ package db_test
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"os"
 	"path/filepath"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/consts"
@@ -185,4 +187,60 @@ func TestTruncateSite(t *testing.T) {
 
 	_, err = controlDB.TruncateSite(ctx, "not-a-site")
 	require.ErrorContains(t, err, "is not open")
+}
+
+// A site whose identities cannot be made is not kept, so no live site is left without its DB
+func TestCreateSiteWhenIdentitiesFail(t *testing.T) {
+	_, controlDB := testutils.NewControlDB(t)
+	ctx, siteID := t.Context(), "failsite"
+	// An identity already holding the device's name makes the site's second identity fail, after the site and its admin
+	// are written. Only a test's in-memory control DB, without foreign keys, lets it be made before its site.
+	require.NoError(t, controlDB.Queries.CreateSiteIdentity(ctx, controldb.CreateSiteIdentityParams{SiteID: siteID,
+		Name: consts.FIRST_PWD_NAME, PasswordHash: "taken", Role: consts.IdentityRoleDevicePWDPhone, CreatedByIdentityName: "test"}))
+
+	_, err := controlDB.CreateSiteWithID(ctx, siteID)
+	require.ErrorContains(t, err, "cannot create admin identity")
+	_, err = controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: siteID})
+	require.ErrorIs(t, err, sql.ErrNoRows, "the site is not kept")
+	_, err = controlDB.Queries.GetSiteIdentity(ctx, controldb.GetSiteIdentityParams{SiteID: siteID, Name: consts.FIRST_ADMIN_NAME})
+	require.ErrorIs(t, err, sql.ErrNoRows, "the site's admin is not kept")
+}
+
+// A site that is not open is left out of its batch, and the rest of the batch is still backed up
+func TestBatchLeavesOutSiteNotOpen(t *testing.T) {
+	_, controlDB, site := testutils.NewControlDBWithSite(t)
+	batch := controlDB.GetSiteDBsFromModels([]*controldb.Site{{ID: "notopen"}, {ID: site.SiteDB.Subdomain}})
+	require.Equal(t, []*db.SiteDB{site.SiteDB}, batch)
+}
+
+// A live site whose DB file is missing, such as one restored before its batch was backed up, is left out of the start
+// and of its batch, while the rest of its batch is opened
+func TestStartWhenSiteDBIsMissing(t *testing.T) {
+	cfg := *testutils.GetTestServerConfig()
+	cfg.Mode = consts.Development
+	cfg.DataDir = t.TempDir()
+	ctx := t.Context()
+	controlDB, err := db.NewControlDB(ctx, &cfg)
+	require.NoError(t, err)
+	for _, siteID := range []string{"keptsite", "kostsite"} {
+		_, err := controlDB.CreateSiteWithID(ctx, siteID)
+		require.NoError(t, err)
+	}
+	require.NoError(t, controlDB.Close())
+	require.NoError(t, os.Remove(sitedb.GetPath("kostsite", &cfg)))
+
+	controlDB, err = db.NewControlDB(ctx, &cfg)
+	require.NoError(t, err, "the server starts")
+	t.Cleanup(func() { controlDB.Close() })
+	_, _, err = controlDB.GetSite(ctx, "keptsite")
+	require.NoError(t, err)
+	_, _, err = controlDB.GetSite(ctx, "kostsite")
+	require.ErrorContains(t, err, "not found in memory")
+
+	sites, err := controlDB.Queries.GetLiveAndDisabledSites(ctx)
+	require.NoError(t, err)
+	require.Len(t, sites, 2)
+	batch := controlDB.GetSiteDBsFromModels(sites)
+	require.Len(t, batch, 1)
+	require.Equal(t, "keptsite", batch[0].Subdomain)
 }

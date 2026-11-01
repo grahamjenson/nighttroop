@@ -166,6 +166,27 @@ func (db *DB) Vacuum(ctx context.Context) error {
 	return err
 }
 
+{{ if eq .PkgName "sitedb" }}
+// Schema is the SQL that made each of db's tables, indexes and triggers, so DBs made by the same migrations have the
+// same one. sqlc cannot generate a query of sqlite_master, so it is read here, with the rest of the DB's upkeep.
+func Schema(ctx context.Context, db *sql.DB) (string, error) {
+	rows, err := db.QueryContext(ctx, "SELECT sql FROM sqlite_master WHERE sql IS NOT NULL ORDER BY type, name")
+	if err != nil {
+		return "", err
+	}
+	defer rows.Close()
+	schema := ""
+	for rows.Next() {
+		var stmt string
+		if err := rows.Scan(&stmt); err != nil {
+			return "", err
+		}
+		schema += stmt + ";\n"
+	}
+	return schema, rows.Err()
+}
+{{ end }}
+
 /////
 // File paths
 /////
@@ -285,12 +306,20 @@ func OpenSqliteDB(path string, cacheSize int) (*sql.DB, error) {
 		return nil, fmt.Errorf("cannot create parent directories: %w", err)
 	}
 
-	dsn := fmt.Sprintf("file:%s?_cache_size=%v&_journal_mode=WAL&_busy_timeout=5000&_foreign_keys=1", path, -cacheSize)
+	// A file has many connections, so a write transaction takes the write lock when it begins (_txlock=immediate): a
+	// write between its read and its own write would otherwise fail it at once with SQLITE_BUSY, as the busy timeout
+	// cannot wait for a snapshot that is already stale. Read only transactions still begin deferred.
+	dsn := fmt.Sprintf("file:%s?_cache_size=%v&_journal_mode=WAL&_busy_timeout=5000&_foreign_keys=1&_txlock=immediate", path, -cacheSize)
 
 	sqldb, err := sql.Open("sqlite", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open sqlite db: %w", err)
 	}
+
+	// One connection, so writes queue in Go, as a second connection's write after its read in a transaction fails
+	// with SQLITE_BUSY_SNAPSHOT (517), which busy_timeout does not retry
+	sqldb.SetMaxOpenConns(1)
+	sqldb.SetMaxIdleConns(1)
 
 	return sqldb, nil
 }

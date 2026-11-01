@@ -168,6 +168,10 @@ templ CreateSiteInfo(newsite publicmodels.NewSiteInfo) {
 					height: 96,
 					correctLevel: QRCode.CorrectLevel.M
 				});
+				// A code is only digits, so a letter typed or pasted is dropped
+				document.getElementById("public--site-info--totp").addEventListener("input", (e) => {
+					e.target.value = e.target.value.replace(/\D/g, "");
+				});
 			</script>
 		}
 		@step("3", "Log in to your site", "With the admin password and a code from the app") {

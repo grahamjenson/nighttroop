@@ -113,6 +113,8 @@ func History(store nsutils.Store) http.HandlerFunc {
 		}
 
 		query.UpdatedGTE = new(since)
+		// History returns deleted documents too (isValid false), so clients learn of deletions
+		query.IncludeDeleted = true
 		// HasFilters was worked out when the query was parsed, so it must be set for a filter added after
 		query.HasFilters = true
 

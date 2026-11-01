@@ -91,14 +91,12 @@ func (db *ControlDB) fillSites(ctx context.Context) ([]string, error) {
 	}
 
 	for _, model := range res {
-		sites = append(sites, model.ID)
-
-		// Site DB has to be available
-		path := sitedb.GetPath(model.ID, db.ServerConfig)
-
-		if !utils.FileExists(path) {
-			return nil, fmt.Errorf("The Site DB %s Must exist and doesnt", model.ID)
+		// A site without its DB, such as one restored before its batch's backup, is left out rather than stop the start
+		if !utils.FileExists(sitedb.GetPath(model.ID, db.ServerConfig)) {
+			slog.ErrorContext(ctx, "Site DB is missing, so the site is not opened", "site_id", model.ID)
+			continue
 		}
+		sites = append(sites, model.ID)
 
 		siteDB, err := NewSiteDB(ctx, model.ID, db.ServerConfig)
 		if err != nil {
@@ -179,29 +177,11 @@ func (db *ControlDB) createSite(ctx context.Context, subdomain string) (*SiteCre
 	db.sites.mu.Lock()
 	defer db.sites.mu.Unlock()
 
-	_, err = db.Queries.CreateSite(ctx, controldb.CreateSiteParams{
-		ID:            subdomain,
-		BackupKeyHash: backupKeyHash,
-	})
-
+	adminIdentity, pwdIdentity, readOnlyIdentity, err := db.createSiteRows(ctx, subdomain, backupKeyHash)
 	if err != nil {
-		// Clean up the created DB file
-		// If anything happens later the archiving process can clean it up
-
+		// Nothing of the site was kept, so its new DB file goes too
 		siteDB.TryCloseAndDelete()
-
-		return nil, fmt.Errorf("cannot create site: %w", err)
-	}
-
-	////
-	// Setup the new SiteDB
-	////
-
-	adminIdentity, pwdIdentity, readOnlyIdentity, err := db.createSiteDefaultIdentities(ctx, subdomain)
-
-	if err != nil {
-		siteDB.TryCloseAndDelete()
-		return nil, fmt.Errorf("cannot create admin identity: %w", err)
+		return nil, err
 	}
 
 	db.sites.bySubdomain[subdomain] = siteDB
@@ -474,9 +454,32 @@ func (db *ControlDB) Close() error {
 // Identities
 // ////
 
-func (db *ControlDB) createSiteDefaultIdentities(ctx context.Context, subdomain string) (*IdentityValues, *IdentityValues, *IdentityValues, error) {
+// createSiteRows writes the site and its default identities in one transaction, so a failure part way, such as the
+// request being cancelled, leaves none of them
+func (db *ControlDB) createSiteRows(ctx context.Context, subdomain string, backupKeyHash string) (*IdentityValues, *IdentityValues, *IdentityValues, error) {
+	tx, err := db.SQLiteDB.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("cannot create site: %w", err)
+	}
+	defer tx.Rollback()
+	q := db.Queries.WithTx(tx)
+
+	if _, err := q.CreateSite(ctx, controldb.CreateSiteParams{ID: subdomain, BackupKeyHash: backupKeyHash}); err != nil {
+		return nil, nil, nil, fmt.Errorf("cannot create site: %w", err)
+	}
+	adminIdentity, pwdIdentity, readOnlyIdentity, err := db.createSiteDefaultIdentities(ctx, q, subdomain)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("cannot create admin identity: %w", err)
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, nil, nil, fmt.Errorf("cannot create site: %w", err)
+	}
+	return adminIdentity, pwdIdentity, readOnlyIdentity, nil
+}
+
+func (db *ControlDB) createSiteDefaultIdentities(ctx context.Context, q *controldb.Queries, subdomain string) (*IdentityValues, *IdentityValues, *IdentityValues, error) {
 	// Create Default Admin User
-	adminIdentity, err := db.CreateSiteIdentity(ctx, db.Queries, subdomain, consts.FIRST_ADMIN_NAME, consts.IdentityRoleAdmin)
+	adminIdentity, err := db.CreateSiteIdentity(ctx, q, subdomain, consts.FIRST_ADMIN_NAME, consts.IdentityRoleAdmin)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("Failed to Create Default Admin User:	 %w", err)
 	}
@@ -486,7 +489,7 @@ func (db *ControlDB) createSiteDefaultIdentities(ctx context.Context, subdomain 
 
 	// Create Default PWD User (Able to write data on the ns API)
 
-	pwdIdentity, err := db.CreateSiteIdentity(ctx, db.Queries, subdomain, consts.FIRST_PWD_NAME, consts.IdentityRoleDevicePWDPhone)
+	pwdIdentity, err := db.CreateSiteIdentity(ctx, q, subdomain, consts.FIRST_PWD_NAME, consts.IdentityRoleDevicePWDPhone)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("Failed to Create Default PWD User:	 %w", err)
 	}
@@ -495,7 +498,7 @@ func (db *ControlDB) createSiteDefaultIdentities(ctx context.Context, subdomain 
 	}
 
 	// Create Default Read-Only User
-	readOnlyIdentity, err := db.CreateSiteIdentity(ctx, db.Queries, subdomain, consts.FIRST_READ_ONLY_NAME, consts.IdentityRoleDeviceRead)
+	readOnlyIdentity, err := db.CreateSiteIdentity(ctx, q, subdomain, consts.FIRST_READ_ONLY_NAME, consts.IdentityRoleDeviceRead)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("Failed to Create Default Read-Only User:	 %w", err)
 	}
@@ -650,15 +653,18 @@ func (db *ControlDB) CreateControlIdentity(ctx context.Context, name string, rol
 // Utils
 ////
 
-func (db *ControlDB) GetSiteDBsFromModels(models []*controldb.Site) ([]*SiteDB, error) {
+// GetSiteDBsFromModels is the open DB of each site, leaving out, and logging, any site not open, so one site without its
+// DB does not stop the rest of its batch
+func (db *ControlDB) GetSiteDBsFromModels(models []*controldb.Site) []*SiteDB {
 	sites := []*SiteDB{}
 	for _, model := range models {
 		site := db.sites.get(model.ID)
 		if site == nil {
-			return sites, fmt.Errorf("site not found in memory")
+			slog.Error("Site is not open, so it is left out of its batch", "site_id", model.ID)
+			continue
 		}
 		sites = append(sites, site)
 	}
 
-	return sites, nil
+	return sites
 }

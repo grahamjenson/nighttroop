@@ -217,6 +217,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - **v2**: authorization (a token for a JWT), properties and summary.
 - **v3**: create, read, update, patch, delete, search and history of each collection, plus version, status,
   lastModified and settings.
+- A v3 history includes deleted documents, with `isValid` false, so apps learn of deletions; a search leaves them
+  out.
 - **Socket.IO** live updates and alarms over long polling or websockets.
 - Glucose is stored in mg/dL and returned and accepted in the settings' units.
 - Duplicate uploads are ignored; values far outside real use are refused.
@@ -235,6 +237,9 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   retention period.
 - A server with no control DB or site batch folder restores it from S3 on start; a download that fails or is cut off
   leaves nothing behind, so the next start downloads it again.
+- A site whose creation fails part way, such as its request being cancelled, leaves no site or identities behind.
+- A site whose DB file is missing, such as one restored before its batch was backed up, is logged and left out, so the
+  server still starts and the rest of its batch is still backed up.
 - Old records' raw JSON is cleared after `TRUNCATE_RECORDS_AFTER_DAYS`.
 - Reads and writes are rate limited per site, identity and IP, and live sessions per site are capped.
 - An IP's rate limits, on requests, sign ins, recoveries and site creation, cover its whole IPv6 /64, so stepping
@@ -262,6 +267,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 
 - The admin signs in with a password, then a TOTP code; users with a password.
 - The TOTP step only accepts the pre-auth token from this site's own password step.
+- Every TOTP code field, on sign in, setup and the new site's code check, takes only digits; letters typed or pasted
+  into it are dropped.
 - Sign-in attempts are rate limited per identity and IP; a disabled identity cannot sign in.
 - Devices use their Nightscout token, as a token, API secret or for a JWT.
 - Changing an identity's password or TOTP signs out its existing sessions.

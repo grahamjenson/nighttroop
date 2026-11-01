@@ -262,7 +262,7 @@ WHERE
     AND (CAST(?26 AS INTEGER) IS NULL OR duration_minutes <= ?26)
     AND (CAST(?27 AS INTEGER) IS NULL OR duration_minutes < ?27)
     
-    AND (CAST(?28 AS BOOL) IS NULL OR deleted_at IS NULL)
+    AND (CAST(?28 AS BOOL) IS TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT ?30 OFFSET ?29
 `
