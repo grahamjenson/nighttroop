@@ -40,13 +40,25 @@ func TestSlogLogsAreWrittenWithTheirRequestAndJob(t *testing.T) {
 	require.Equal(t, "error", found[1].Level)
 	require.Equal(t, site, *found[1].SiteID)
 	require.Equal(t, "req-42", *found[1].RequestID)
+	// Each can be found by its request or job
+	request42 := "req-42"
+	byRequest, err := q.SearchLogs(t.Context(), logsdb.SearchLogsParams{RequestID: &request42, Limit: 10})
+	require.NoError(t, err)
+	require.Len(t, byRequest, 1)
+	require.Equal(t, "cannot sync", byRequest[0].Message)
+	byJob, err := q.SearchLogs(t.Context(), logsdb.SearchLogsParams{JobID: &jobID, Limit: 10})
+	require.NoError(t, err)
+	require.Len(t, byJob, 1)
+	require.Equal(t, "synced", byJob[0].Message)
 
 	logs.SyncError(request, site, consts.SyncSourceTypeDexcom, errors.New("refused"))
 	logs.SiteCreatedEvent(job, site)
-	errs, err := q.SearchErrors(t.Context(), logsdb.SearchErrorsParams{Limit: 1})
+	errs, err := q.SearchErrors(t.Context(), logsdb.SearchErrorsParams{RequestID: &request42, Limit: 10})
 	require.NoError(t, err)
+	require.Len(t, errs, 1)
 	require.Equal(t, "req-42", *errs[0].RequestID)
-	events, err := q.SearchEvents(t.Context(), logsdb.SearchEventsParams{Limit: 1})
+	events, err := q.SearchEvents(t.Context(), logsdb.SearchEventsParams{JobID: &jobID, Limit: 10})
 	require.NoError(t, err)
+	require.Len(t, events, 1)
 	require.Equal(t, jobID, *events[0].JobID)
 }

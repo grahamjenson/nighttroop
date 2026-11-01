@@ -21,6 +21,14 @@ func ErrorFromDB(source *logsdb.Error) *Error {
 			xstring := *(*source).SiteID
 			controlmodelsError.SiteID = &xstring
 		}
+		if (*source).RequestID != nil {
+			xstring2 := *(*source).RequestID
+			controlmodelsError.RequestID = &xstring2
+		}
+		if (*source).JobID != nil {
+			xstring3 := *(*source).JobID
+			controlmodelsError.JobID = &xstring3
+		}
 		controlmodelsError.Message = (*source).Message
 		controlmodelsError.Attributes = AttributesJSON((*source).Attributes)
 		controlmodelsError.CreatedAt = (*source).CreatedAt
@@ -36,6 +44,14 @@ func EventFromDB(source *logsdb.Event) *Event {
 		if (*source).SiteID != nil {
 			xstring := *(*source).SiteID
 			controlmodelsEvent.SiteID = &xstring
+		}
+		if (*source).RequestID != nil {
+			xstring2 := *(*source).RequestID
+			controlmodelsEvent.RequestID = &xstring2
+		}
+		if (*source).JobID != nil {
+			xstring3 := *(*source).JobID
+			controlmodelsEvent.JobID = &xstring3
 		}
 		controlmodelsEvent.Name = (*source).Name
 		controlmodelsEvent.Attributes = AttributesJSON((*source).Attributes)
@@ -94,6 +110,14 @@ func LogFromDB(source *logsdb.Log) *Log {
 			xstring := *(*source).SiteID
 			controlmodelsLog.SiteID = &xstring
 		}
+		if (*source).RequestID != nil {
+			xstring2 := *(*source).RequestID
+			controlmodelsLog.RequestID = &xstring2
+		}
+		if (*source).JobID != nil {
+			xstring3 := *(*source).JobID
+			controlmodelsLog.JobID = &xstring3
+		}
 		controlmodelsLog.Level = (*source).Level
 		controlmodelsLog.Message = (*source).Message
 		controlmodelsLog.Attributes = AttributesJSON((*source).Attributes)
@@ -105,13 +129,25 @@ func LogFromDB(source *logsdb.Log) *Log {
 func QueryToSearchErrors(source *apiquery.Query) logsdb.SearchErrorsParams {
 	var logsdbSearchErrorsParams logsdb.SearchErrorsParams
 	if source != nil {
+		if (*source).SiteID != nil {
+			xstring := *(*source).SiteID
+			logsdbSearchErrorsParams.SiteID = &xstring
+		}
 		if (*source).Type != nil {
-			xstring := *(*source).Type
-			logsdbSearchErrorsParams.Type = &xstring
+			xstring2 := *(*source).Type
+			logsdbSearchErrorsParams.Type = &xstring2
 		}
 		if (*source).Search != nil {
-			xstring2 := *(*source).Search
-			logsdbSearchErrorsParams.Search = &xstring2
+			xstring3 := *(*source).Search
+			logsdbSearchErrorsParams.Search = &xstring3
+		}
+		if (*source).RequestID != nil {
+			xstring4 := *(*source).RequestID
+			logsdbSearchErrorsParams.RequestID = &xstring4
+		}
+		if (*source).JobID != nil {
+			xstring5 := *(*source).JobID
+			logsdbSearchErrorsParams.JobID = &xstring5
 		}
 		logsdbSearchErrorsParams.Skip = (*source).Skip
 		logsdbSearchErrorsParams.Limit = (*source).Limit
@@ -121,13 +157,25 @@ func QueryToSearchErrors(source *apiquery.Query) logsdb.SearchErrorsParams {
 func QueryToSearchEvents(source *apiquery.Query) logsdb.SearchEventsParams {
 	var logsdbSearchEventsParams logsdb.SearchEventsParams
 	if source != nil {
+		if (*source).SiteID != nil {
+			xstring := *(*source).SiteID
+			logsdbSearchEventsParams.SiteID = &xstring
+		}
 		if (*source).Type != nil {
-			xstring := *(*source).Type
-			logsdbSearchEventsParams.Type = &xstring
+			xstring2 := *(*source).Type
+			logsdbSearchEventsParams.Type = &xstring2
 		}
 		if (*source).Search != nil {
-			xstring2 := *(*source).Search
-			logsdbSearchEventsParams.Search = &xstring2
+			xstring3 := *(*source).Search
+			logsdbSearchEventsParams.Search = &xstring3
+		}
+		if (*source).RequestID != nil {
+			xstring4 := *(*source).RequestID
+			logsdbSearchEventsParams.RequestID = &xstring4
+		}
+		if (*source).JobID != nil {
+			xstring5 := *(*source).JobID
+			logsdbSearchEventsParams.JobID = &xstring5
 		}
 		logsdbSearchEventsParams.Skip = (*source).Skip
 		logsdbSearchEventsParams.Limit = (*source).Limit
@@ -153,9 +201,21 @@ func QueryToSearchJobs(source *apiquery.Query) jobsdb.SearchJobsParams {
 func QueryToSearchLogs(source *apiquery.Query) logsdb.SearchLogsParams {
 	var logsdbSearchLogsParams logsdb.SearchLogsParams
 	if source != nil {
+		if (*source).SiteID != nil {
+			xstring := *(*source).SiteID
+			logsdbSearchLogsParams.SiteID = &xstring
+		}
 		if (*source).Search != nil {
-			xstring := *(*source).Search
-			logsdbSearchLogsParams.Search = &xstring
+			xstring2 := *(*source).Search
+			logsdbSearchLogsParams.Search = &xstring2
+		}
+		if (*source).RequestID != nil {
+			xstring3 := *(*source).RequestID
+			logsdbSearchLogsParams.RequestID = &xstring3
+		}
+		if (*source).JobID != nil {
+			xstring4 := *(*source).JobID
+			logsdbSearchLogsParams.JobID = &xstring4
 		}
 		logsdbSearchLogsParams.Skip = (*source).Skip
 		logsdbSearchLogsParams.Limit = (*source).Limit

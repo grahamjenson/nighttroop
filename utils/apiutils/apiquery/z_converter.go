@@ -18,5 +18,8 @@ func QueryValuesToQuery(source QueryValues) Query {
 	}
 	apiqueryQuery.Type = GetType(source)
 	apiqueryQuery.Search = GetSearch(source)
+	apiqueryQuery.SiteID = GetID(source.SiteID)
+	apiqueryQuery.RequestID = GetID(source.RequestID)
+	apiqueryQuery.JobID = GetID(source.JobID)
 	return apiqueryQuery
 }

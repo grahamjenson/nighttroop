@@ -81,3 +81,33 @@ CLICK #control--menu
 CLICK #control--logs-button
 ASSERT_PATH /logs
 ASSERT_VISIBLE #controlLogsTable
+
+// An event's details link to its request, which narrows the events to those made while answering it
+CLICK #control--menu
+CLICK #control--events-button
+INPUT #control--events--filter--type site_created
+CLICK #control--events--filter--submit
+CLICK #controlEventsTable tbody tr >> nth=0
+ASSERT_VISIBLE #control--event--request-id
+SCREENSHOT event_request
+SAVE_TEXT #control--event--request-id request_id
+CLICK #control--event--request-id
+ASSERT_VISIBLE #control--events--filter--clear
+ASSERT_VISIBLE #controlEventsTable td >> text=Site created
+SCREENSHOT events_by_request
+
+// Logs can be narrowed to a request too, by its ID, as well as to a site or background job run. Which logs are
+// this server's is not known, as every test server copies its logs from the one buffer.
+CLICK #control--menu
+CLICK #control--logs-button
+ASSERT_VISIBLE #control--logs--filter--site-id
+INPUT #control--logs--filter--request-id {{ .request_id }}
+CLICK #control--logs--filter--submit
+ASSERT_VISIBLE #control--logs--filter--clear
+SCREENSHOT logs_by_request
+INPUT #control--logs--filter--job-id no-such-job
+CLICK #control--logs--filter--submit
+ASSERT_TEXT_VISIBLE No logs here.
+CLICK #control--logs--filter--clear
+ASSERT_PATH /logs
+ASSERT_NOT_VISIBLE #control--logs--filter--clear
