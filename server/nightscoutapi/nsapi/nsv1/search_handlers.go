@@ -49,13 +49,13 @@ func Slice(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 			return
 		}
 
-		filteredRecords := []nsutils.Record{}
+		filteredRecords := []nsutils.Document{}
 		for _, record := range records {
 			switch field {
 			// The only example I have seen is someone using this for dateString
 			// Can add more if there are other usecases
 			case "dateString":
-				if strings.HasPrefix(record.OccuredAtString(), prefix) {
+				if strings.HasPrefix(nsutils.DateString(record), prefix) {
 					filteredRecords = append(filteredRecords, record)
 				}
 			default:
@@ -89,9 +89,9 @@ func Times(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 			apiutils.WriteJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
 			return
 		}
-		filteredRecords := []nsutils.Record{}
+		filteredRecords := []nsutils.Document{}
 		for _, record := range records {
-			if strings.HasPrefix(record.OccuredAtString(), prefix) {
+			if strings.HasPrefix(nsutils.DateString(record), prefix) {
 				filteredRecords = append(filteredRecords, record)
 			}
 		}

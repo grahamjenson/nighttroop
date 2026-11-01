@@ -27,7 +27,7 @@ func Search(store nsutils.Store) http.HandlerFunc {
 				query.IDEq = new(identifierOrType)
 			}
 		}
-		records := []nsutils.Record{}
+		records := []nsutils.Document{}
 		if query.IDEq != nil {
 			record, err := store.Get(r.Context(), collection, *query.IDEq, query)
 			if err != nil {
@@ -62,7 +62,7 @@ func Create(store nsutils.Store) http.HandlerFunc {
 			return
 		}
 
-		var created []nsutils.Record
+		var created []nsutils.Document
 
 		// Deal with one record being sent or an array being sent
 		arrayOfModels := []any{}

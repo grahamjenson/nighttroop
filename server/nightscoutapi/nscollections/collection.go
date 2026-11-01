@@ -16,11 +16,11 @@ import (
 
 // CollectionStore is what the Nightscout API does with a collection
 type CollectionStore interface {
-	Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError)
-	Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (*nsutils.Record, *nsutils.HTTPError)
-	Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError)
-	Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError)
-	Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError)
+	Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (nsutils.Document, bool, *nsutils.HTTPError)
+	Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (nsutils.Document, *nsutils.HTTPError)
+	Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Document, *nsutils.HTTPError)
+	Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool, raw bool) (nsutils.Document, bool, *nsutils.HTTPError)
+	Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, raw bool) (nsutils.Document, *nsutils.HTTPError)
 	Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError
 	DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError)
 }
@@ -98,15 +98,15 @@ type SharedDBFields interface {
 }
 
 // Record is a database model as this collection's record, and false when the model is not this collection's
-func (c Collection[NS, DM]) Record(model any, siteContext *httputils.SiteContext) (nsutils.Record, bool) {
+func (c Collection[NS, DM]) Record(model any, siteContext *httputils.SiteContext) (nsutils.Document, bool) {
 	dbModel, ok := model.(*DM)
 	if !ok || dbModel == nil {
-		return nsutils.Record{}, false
+		return nil, false
 	}
 	return c.db.Convert(dbModel, siteContext, false), true
 }
 
-func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
+func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (nsutils.Document, bool, *nsutils.HTTPError) {
 	m := c.db
 	var nsModel NS
 	err := utils.ConvertViaJSON(data, &nsModel)
@@ -135,7 +135,7 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 		return nil, false, nsutils.ErrInternal
 	}
 	if duplicateDBModel != nil {
-		return ptr(m.Convert(duplicateDBModel, siteContext, raw)), true, nil
+		return m.Convert(duplicateDBModel, siteContext, raw), true, nil
 	}
 
 	dbModel, err := m.CreateModel(
@@ -155,10 +155,10 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 	}
 
 	siteContext.PublishModelChange(events.Created, dbModel)
-	return ptr(m.Convert(dbModel, siteContext, raw)), false, nil
+	return m.Convert(dbModel, siteContext, raw), false, nil
 }
 
-func (c Collection[NS, DM]) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (*nsutils.Record, *nsutils.HTTPError) {
+func (c Collection[NS, DM]) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (nsutils.Document, *nsutils.HTTPError) {
 	m := c.db
 	dbModel, err := m.GetModel(siteContext.SiteDB.Queries, ctx, identifier, query.IncludeDeleted)
 	if err == sql.ErrNoRows {
@@ -171,16 +171,20 @@ func (c Collection[NS, DM]) Get(ctx context.Context, siteContext *httputils.Site
 	if dbModel == nil {
 		return nil, nsutils.ErrNotFound
 	}
-	return ptr(m.Convert(dbModel, siteContext, query.Raw)), nil
+	return m.Convert(dbModel, siteContext, query.Raw), nil
 }
 
-func (c Collection[NS, DM]) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
+func (c Collection[NS, DM]) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Document, *nsutils.HTTPError) {
 	models, err := c.db.SearchModels(siteContext.SiteDB.Queries, ctx, query)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to search the database", "error", err, "collection", c.db.Name())
 		return nil, nsutils.ErrInternal
 	}
-	return nsutils.CreateRecordSlice(models, c.db.Convert, siteContext, query.Raw), nil
+	docs := make([]nsutils.Document, len(models))
+	for i, model := range models {
+		docs[i] = c.db.Convert(model, siteContext, query.Raw)
+	}
+	return docs, nil
 }
 
 func (c Collection[NS, DM]) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {
@@ -267,7 +271,7 @@ func (c Collection[NS, DM]) DeleteType(ctx context.Context, siteContext *httputi
 	return int(rowsAffected), nil
 }
 
-func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, data map[string]any, canCreate bool, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
+func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, data map[string]any, canCreate bool, raw bool) (nsutils.Document, bool, *nsutils.HTTPError) {
 	m := c.db
 	var nsModel NS
 	err := utils.ConvertViaJSON(data, &nsModel)
@@ -332,11 +336,11 @@ func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.
 	} else {
 		siteContext.PublishModelChange(events.Updated, dbCreateModel)
 	}
-	return ptr(m.Convert(dbCreateModel, siteContext, raw)), creatingNewRecord, nil
+	return m.Convert(dbCreateModel, siteContext, raw), creatingNewRecord, nil
 
 }
 
-func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, data map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
+func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, data map[string]any, raw bool) (nsutils.Document, *nsutils.HTTPError) {
 	m := c.db
 	patcher, ok := any(m).(CollectionPatcher[NS, DM])
 	if !ok {
@@ -397,7 +401,7 @@ func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.Si
 	}
 
 	siteContext.PublishModelChange(events.Updated, dbModel)
-	return ptr(m.Convert(dbModel, siteContext, raw)), nil
+	return m.Convert(dbModel, siteContext, raw), nil
 }
 
 func ValidateInputData(nsModelMap map[string]any) *nsutils.HTTPError {

@@ -101,8 +101,11 @@ func (ws *Websocket) sendToStorage(siteDB *db.SiteDB, siteModel *controldb.Site,
 	ws.mu.Unlock()
 	for _, subscriber := range subscribers {
 		ctx := httputils.CreateSiteContext(context.Background(), ws.config, ws.controlDB, siteDB, siteModel, event.SiteID, "", httputils.HTTPActionRead, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
-		record, _ := r.Record(event.Model, httputils.GetSiteContext(httputils.SetIdentityModelInSiteContext(ctx, subscriber.identity)))
-		message := map[string]any{"colName": collection, "doc": record.ToMap(true)}
+		record, ok := r.Record(event.Model, httputils.GetSiteContext(httputils.SetIdentityModelInSiteContext(ctx, subscriber.identity)))
+		if !ok {
+			continue
+		}
+		message := map[string]any{"colName": collection, "doc": record.Fields(true)}
 		if event.Action == events.Deleted {
 			message = map[string]any{"colName": collection, "identifier": record.Identifier()}
 		}
