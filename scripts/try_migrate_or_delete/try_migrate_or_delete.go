@@ -1,5 +1,5 @@
 // try_migrate_or_delete opens each database in a data folder as the server does, migrating it and preparing its
-// queries, so a dev server can keep its data between deploys. If any cannot be opened, as when a migration was edited
+// queries, once for each schema the site databases have, so a dev server can keep its data between deploys. If any cannot be opened, as when a migration was edited
 // rather than added, it deletes all of them, and their backups, so the server starts empty rather than with only some.
 // The live DB is only ever in memory, so it has none.
 //
@@ -47,7 +47,28 @@ var openers = map[string]opener{
 	"controldb": open(controldb.OpenSqliteDB, controldb.MigrateUp, func(ctx context.Context, db *sql.DB) (*controldb.Queries, error) { return controldb.Prepare(ctx, db) }),
 	"jobsdb":    open(jobsdb.OpenSqliteDB, jobsdb.MigrateUp, func(ctx context.Context, db *sql.DB) (*jobsdb.Queries, error) { return jobsdb.Prepare(ctx, db) }),
 	"logsdb":    open(logsdb.OpenSqliteDB, logsdb.MigrateUp, func(ctx context.Context, db *sql.DB) (*logsdb.Queries, error) { return logsdb.Prepare(ctx, db) }),
-	"sitedb":    open(sitedb.OpenSqliteDB, sitedb.MigrateUp, func(ctx context.Context, db *sql.DB) (*sitedb.Queries, error) { return sitedb.Prepare(ctx, db) }),
+	"sitedb":    open(sitedb.OpenSqliteDB, sitedb.MigrateUp, prepareSite),
+}
+
+// preparedSiteSchemas are the site DB schemas whose queries have been prepared. There can be thousands of sites, most
+// with the same schema, and preparing is most of the time opening one takes.
+var preparedSiteSchemas = map[string]bool{}
+
+// prepareSite prepares a site DB's queries, unless one with the same schema has been
+func prepareSite(ctx context.Context, db *sql.DB) (*sitedb.Queries, error) {
+	schema, err := sitedb.Schema(ctx, db)
+	if err != nil {
+		return nil, err
+	}
+	if preparedSiteSchemas[schema] {
+		return sitedb.New(db), nil
+	}
+	queries, err := sitedb.Prepare(ctx, db)
+	if err != nil {
+		return nil, err
+	}
+	preparedSiteSchemas[schema] = true
+	return queries, nil
 }
 
 func main() {

@@ -25,16 +25,19 @@ func TestTryMigrateOrDelete(t *testing.T) {
 		newDB(t, dataDir, name+".sqlite", name)
 	}
 	newDB(t, dataDir, "site/a/abcdefgh.sqlite", "sitedb")
+	newDB(t, dataDir, "site/c/cdefghij.sqlite", "sitedb")
 	backup := filepath.Join(dataDir, "backup", "controldb.sqlite")
 	require.NoError(t, os.MkdirAll(filepath.Dir(backup), 0o700))
 	require.NoError(t, os.WriteFile(backup, []byte("a backup"), 0o600))
+	clear(preparedSiteSchemas)
 	require.NoError(t, tryMigrateOrDelete(ctx, dataDir))
 	require.FileExists(t, filepath.Join(dataDir, "db", "controldb.sqlite"))
 	require.FileExists(t, filepath.Join(dataDir, "db", "site/a/abcdefgh.sqlite"))
 	require.FileExists(t, backup)
+	require.Len(t, preparedSiteSchemas, 1, "site DBs with the same schema have their queries prepared once")
 
-	// A site DB whose tables its queries do not fit, as one made before a migration was edited, deletes every DB and
-	// backup, not only it
+	// A site DB whose tables its queries do not fit, as one made before a migration was edited, has another schema, so
+	// its queries are prepared, and deletes every DB and backup, not only it
 	newDB(t, dataDir, "site/b/bcdefghi.sqlite", "jobsdb")
 	require.NoError(t, tryMigrateOrDelete(ctx, dataDir))
 	require.NoDirExists(t, filepath.Join(dataDir, "db"))
