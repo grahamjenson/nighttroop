@@ -45,7 +45,8 @@ docker-compose up -d
 air | spretty
 ```
 
-If you want to wipe data and start again
+If you want to wipe data and start again. `minio` keeps its bucket in memory, so the restart empties it too; otherwise the
+server would restore the old databases from their backups when it starts.
 
 ```
 docker-compose restart && rm -rf .dbs && go generate ./... && sleep 2 && air | spretty
