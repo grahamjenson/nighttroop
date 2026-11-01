@@ -63,8 +63,7 @@ func main() {
 
 	// Sometimes SQLc will generate a query that is incorrect causing a syntax error when queried.
 	// This executes all queries ignoring normal errors and checking for a bad query syntax.
-	// A site DB prepares its queries on its first Queries() call, which runs them unprepared if they fail to, so they
-	// are prepared here to fail on any that cannot be
+	// A site DB runs its queries unprepared, so they are prepared here to fail on any that cannot be
 	siteQueries, err := sitedb.Prepare(ctx, siteDB.SQLiteDB)
 	if err != nil {
 		log.Fatalf("%sfailed to prepare site DB queries: %v %s", topwrapper, err, bottomwrapper)
