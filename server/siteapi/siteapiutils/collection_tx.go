@@ -13,8 +13,9 @@ import (
 )
 
 // CollectionTx gives a store one transaction per database it writes to, started on first use.
-// Each DB has a single connection, so while a transaction is open every other query on that
-// DB waits for it: do network calls and plain Queries reads before the first Control() or Site().
+// A transaction holds its DB's write lock from its start, and an in memory DB has a single connection, so while one is
+// open every other write on that DB waits for it: do network calls and plain Queries reads before the first Control()
+// or Site().
 // The two transactions commit separately, so they are atomic per DB, not across both.
 type CollectionTx struct {
 	ctx         context.Context
