@@ -1,0 +1,65 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// Food and insulin added on their own pages are in no group yet
+CLICK #site--settings-menu
+CLICK #site--data--food-button
+CLICK #site--food--add
+INPUT #site--food--create--carbs 40
+INPUT #site--food--create--occurred-at 2026-01-02T12:30
+INPUT #site--food--create--name Sandwich
+CLICK #site--food--create--submit
+ASSERT_STATUS 201
+CLICK #site--settings-menu
+CLICK #site--data--insulin-button
+CLICK #site--insulin--add
+INPUT #site--insulin--create--dose 4
+INPUT #site--insulin--create--occurred-at 2026-01-02T12:35
+CLICK #site--insulin--create--submit
+ASSERT_STATUS 201
+
+// Adding a group picks its type and time, then from the events within an hour of it, one of each kind
+CLICK #site--settings-menu
+CLICK #site--data--event-groups-button
+ASSERT_VISIBLE #site--event-group--empty
+CLICK #site--event-group--add
+ASSERT_VISIBLE #site--event-group--create--modal
+ASSERT_TEXT_VISIBLE Events within an hour of it can be picked.
+INPUT #site--event-group--create--occurred-at 2026-01-02T12:30
+CLICK #site--event-group--create--reason
+ASSERT_TEXT_VISIBLE from 2026-01-02 11:30 to 13:30
+INPUT #site--event-group--create--group-type Meal Bolus
+INPUT #site--event-group--create--food-intake-id 12:30 40 g carbs Sandwich
+INPUT #site--event-group--create--insulin-dose-id 12:35 4 U
+INPUT #site--event-group--create--notes Lunch
+CLICK #site--event-group--create--reason
+SCREENSHOT event_group_add
+CLICK #site--event-group--create--submit
+ASSERT_STATUS 201
+ASSERT_NOT_VISIBLE #site--event-group--create--modal
+ASSERT_NOT_VISIBLE #site--event-group--empty
+ASSERT_VISIBLE #eventGroupsTable >> text="Meal Bolus"
+ASSERT_VISIBLE #eventGroupsTable >> text=4 U insulin, 40 g carbs
+SCREENSHOT event_group_created
+
+// Editing a group changes its type and events; an event taken out is in no group, so can be grouped again (the
+// API tests check an event in a group is not offered for another)
+CLICK #eventGroupsTable tbody tr:has(td:text-is("Meal Bolus"))
+ASSERT_VISIBLE #site--event-group--details
+INPUT #site--event-group--edit--group-type Carb Correction
+INPUT #site--event-group--edit--insulin-dose-id None
+CLICK #site--event-group--edit--reason
+SCREENSHOT event_group_edit
+CLICK #site--event-group--edit--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Event Group Updated
+ASSERT_NOT_VISIBLE #site--event-group--details
+ASSERT_VISIBLE #eventGroupsTable >> text="Carb Correction"
+ASSERT_NOT_VISIBLE #eventGroupsTable >> text=4 U insulin, 40 g carbs
+ASSERT_VISIBLE #eventGroupsTable >> text=40 g carbs
+SCREENSHOT event_group_updated
+CLICK #site--event-group--add
+INPUT #site--event-group--create--occurred-at 2026-01-02T12:30
+CLICK #site--event-group--create--reason
+ASSERT_TEXT_VISIBLE from 2026-01-02 11:30 to 13:30
+INPUT #site--event-group--create--insulin-dose-id 12:35 4 U

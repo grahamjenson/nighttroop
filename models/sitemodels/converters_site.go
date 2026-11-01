@@ -226,7 +226,26 @@ type SiteConverter interface {
 	// goverter:map EventGroup.ComponentEventID ComponentEventID
 	// goverter:map EventGroup.ActivityID ActivityID
 	// goverter:map EventGroup.NotificationEventID NotificationEventID
+	// goverter:map EventGroup.GlucoseReadingID GlucoseReadingID
+	// goverter:map EventGroup.InsulinDoseID InsulinDoseID
+	// goverter:map EventGroup.FoodIntakeID FoodIntakeID
+	// goverter:map EventGroup.TempBasalID TempBasalID
+	// goverter:map EventGroup.TempTargetID TempTargetID
 	EventGroupFromDB(source *sitedb.EventGroupsBundle, siteContext *httputils.SiteContext) *SiteEventGroup
+
+	// goverter:context siteContext
+	// goverter:map ID | NewSiteDataID
+	// goverter:map OccurredAt | OccurredAtOrNow
+	// goverter:map CreatedByIdentityID | ContextIdentityID
+	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
+	EventGroupToCreate(source *SiteEventGroup, siteContext *httputils.SiteContext) sitedb.CreateEventGroupParams
+
+	// goverter:context siteContext
+	// goverter:map GroupType | StringOrNil
+	// goverter:map OccurredAt | Int64OrNil
+	// goverter:map UpdatedByIdentityID | ContextIdentityID
+	// goverter:map UpdatedByIdentityName | ContextIdentityName
+	EventGroupToRegroup(source *SiteEventGroup, siteContext *httputils.SiteContext) sitedb.RegroupEventGroupParams
 
 	///////
 	// INSULIN DOSES
