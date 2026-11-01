@@ -12,12 +12,12 @@ import (
 )
 
 type FoodCollection struct {
-	named[sitedb.FoodPreset]
+	named[nightscoutmodels.Food, sitedb.FoodPreset]
 }
 
 func NewFoodCollection() CollectionStore {
 	return NewCollection[nightscoutmodels.Food, sitedb.FoodPreset](FoodCollection{
-		named[sitedb.FoodPreset]{nsutils.Food, nsutils.DBModelToRecord(nsutils.Food, nightscoutmodels.DBModelToFood)},
+		named[nightscoutmodels.Food, sitedb.FoodPreset]{nsutils.Food, nightscoutmodels.DBModelToFood},
 	})
 }
 

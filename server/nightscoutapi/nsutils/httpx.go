@@ -18,30 +18,30 @@ const (
 	Found
 )
 
-func WriteRecordV3(w http.ResponseWriter, record Record, fields []string, createdType RecordWriteType) {
+func WriteRecordV3(w http.ResponseWriter, record Document, fields []string, createdType RecordWriteType) {
 	status := http.StatusOK
 	if createdType == Created {
 		status = http.StatusCreated
 	}
-	body := map[string]any{"status": status, "result": record.SelectFields(fields, true)}
+	body := map[string]any{"status": status, "result": SelectFields(record, fields, true)}
 	if record.Identifier() != "" {
 		body["identifier"] = record.Identifier()
-		body["lastModified"] = record.SrvModified
+		body["lastModified"] = record.Modified()
 		if createdType == FoundDuplicate {
 			body["isDeduplication"] = true
 			body["deduplicatedIdentifier"] = record.Identifier()
 		}
 	}
 
-	if record.SrvModified > 0 {
-		w.Header().Set("Last-Modified", time.UnixMilli(record.SrvModified).UTC().Format(http.TimeFormat))
-		w.Header().Set("ETag", fmt.Sprintf(`W/"%d"`, record.SrvModified))
+	if record.Modified() > 0 {
+		w.Header().Set("Last-Modified", time.UnixMilli(record.Modified()).UTC().Format(http.TimeFormat))
+		w.Header().Set("ETag", fmt.Sprintf(`W/"%d"`, record.Modified()))
 	}
 
 	apiutils.WriteJSON(w, status, body)
 }
 
-func WriteRecordsV3(w http.ResponseWriter, records []Record, fields []string) {
+func WriteRecordsV3(w http.ResponseWriter, records []Document, fields []string) {
 	if len(records) == 0 {
 		apiutils.WriteJSON(w, http.StatusOK, map[string]any{"status": http.StatusOK, "result": []map[string]any{}})
 		return
@@ -49,7 +49,7 @@ func WriteRecordsV3(w http.ResponseWriter, records []Record, fields []string) {
 
 	result := make([]map[string]any, 0, len(records))
 	for _, record := range records {
-		result = append(result, record.SelectFields(fields, true))
+		result = append(result, SelectFields(record, fields, true))
 	}
 
 	writeHeadersForRecords(w, records)
@@ -57,25 +57,25 @@ func WriteRecordsV3(w http.ResponseWriter, records []Record, fields []string) {
 	apiutils.WriteJSON(w, http.StatusOK, map[string]any{"status": http.StatusOK, "result": result})
 }
 
-func WriteRecordsV1(w http.ResponseWriter, records []Record, fields []string) {
+func WriteRecordsV1(w http.ResponseWriter, records []Document, fields []string) {
 	response := make([]map[string]any, 0, len(records))
 	for _, record := range records {
-		response = append(response, record.SelectFields(fields, false))
+		response = append(response, SelectFields(record, fields, false))
 	}
 	writeHeadersForRecords(w, records)
 	apiutils.WriteJSON(w, http.StatusOK, response)
 }
 
-func WriteRecordV1(w http.ResponseWriter, record Record, fields []string) {
-	response := record.SelectFields(fields, false)
+func WriteRecordV1(w http.ResponseWriter, record Document, fields []string) {
+	response := SelectFields(record, fields, false)
 
-	w.Header().Set("Last-Modified", time.UnixMilli(record.SrvModified).UTC().Format(http.TimeFormat))
-	w.Header().Set("ETag", fmt.Sprintf(`W/"%d"`, record.SrvModified))
+	w.Header().Set("Last-Modified", time.UnixMilli(record.Modified()).UTC().Format(http.TimeFormat))
+	w.Header().Set("ETag", fmt.Sprintf(`W/"%d"`, record.Modified()))
 
 	apiutils.WriteJSON(w, http.StatusOK, response)
 }
 
-func writeHeadersForRecords(w http.ResponseWriter, records []Record) {
+func writeHeadersForRecords(w http.ResponseWriter, records []Document) {
 	// Adding Last-Modified and ETag headers for the newest record in the response
 	if len(records) == 0 {
 		return
@@ -83,8 +83,8 @@ func writeHeadersForRecords(w http.ResponseWriter, records []Record) {
 	// Adding Last-Modified and ETag headers for the newest record in the response
 	var maxSrvModified int64
 	for _, record := range records {
-		if record.SrvModified > maxSrvModified {
-			maxSrvModified = record.SrvModified
+		if record.Modified() > maxSrvModified {
+			maxSrvModified = record.Modified()
 		}
 	}
 

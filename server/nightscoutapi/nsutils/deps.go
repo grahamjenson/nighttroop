@@ -21,13 +21,13 @@ type Identity struct {
 type Store interface {
 	// Create is obvious it will create a new record in the collection and return it, or an error if it fails.
 	// If duplicate it will return the existing record and a boolean indicating it was a duplicate
-	Create(ctx context.Context, collection Collection, data map[string]any, raw bool) (Record, bool, *HTTPError)
+	Create(ctx context.Context, collection Collection, data map[string]any, raw bool) (Document, bool, *HTTPError)
 
 	// Get will retrieve a record from the collection by its identifier, or return an error if it fails.
-	Get(ctx context.Context, collection Collection, identifier string, query nsquery.Query) (Record, *HTTPError)
+	Get(ctx context.Context, collection Collection, identifier string, query nsquery.Query) (Document, *HTTPError)
 
 	// Search gets a query that will return a list of records that satifsy the query
-	Search(ctx context.Context, collection Collection, query nsquery.Query) ([]Record, *HTTPError)
+	Search(ctx context.Context, collection Collection, query nsquery.Query) ([]Document, *HTTPError)
 
 	// Delete deletes a single record (permanent is soft delete or hard delete)
 	Delete(ctx context.Context, collection Collection, identifier string, permanent bool) *HTTPError
@@ -41,11 +41,11 @@ type Store interface {
 	// Delete old record and insert new one with the same identifier
 	// return    v1 return the recrod as body v3 "body": { "lastModified": 1785972708836, "status": 200 }, on success
 	// v1 if id is not found it is just created, no checks or anything
-	Replace(ctx context.Context, collection Collection, identifier string, data map[string]any, canCreate bool, raw bool) (Record, bool, *HTTPError)
+	Replace(ctx context.Context, collection Collection, identifier string, data map[string]any, canCreate bool, raw bool) (Document, bool, *HTTPError)
 
 	// patch PATCH
 	// Patch will 404 if no record is founf of that id
-	Patch(ctx context.Context, collection Collection, identifier string, patch map[string]any, raw bool) (Record, *HTTPError)
+	Patch(ctx context.Context, collection Collection, identifier string, patch map[string]any, raw bool) (Document, *HTTPError)
 }
 
 // ParseQuery translates Nightscout v1 query parameters into the storage query

@@ -14,36 +14,28 @@ import (
 	"nighttroop.t1d.nz/utils/types"
 )
 
-type SettingsCollection struct {
-	converter func(source *settings.SettingAnyType, siteContext *httputils.SiteContext, raw bool) nsutils.Record
-}
+type SettingsCollection struct{}
 
 func NewSettingsCollection() SettingsCollection {
-	return SettingsCollection{
-		converter: ConvertFromAnyTypeToSetting,
-	}
+	return SettingsCollection{}
 }
 
-func ConvertFromAnyTypeToSetting(source *settings.SettingAnyType, context *httputils.SiteContext, raw bool) nsutils.Record {
-	if source == nil {
-		return nsutils.Record{}
-	}
+// setting is a setting as the Nightscout API shows it
+type setting struct {
+	Identifier string `json:"identifier"`
+	Value      any    `json:"value"`
+	Type       string `json:"type"`
+}
 
-	record := nsutils.Record{
-		Collection: string("settings"),
-		ID:         source.Identifier,
-		Data: map[string]any{
-			"identifier": source.Identifier,
-			"value":      source.Value,
-			"type":       source.TypeString,
-		},
-		SrvCreated:  source.CreatedAt,
-		SrvModified: source.CreatedAt,
-		Subject:     source.Subject,
-		UTCOffset:   0,
-		OccuredAt:   source.CreatedAt,
+// settingDocument is a setting as a document, changed and created when it was set
+func settingDocument(source *settings.SettingAnyType) nsutils.Document {
+	if source == nil {
+		return stored[setting]{}
 	}
-	return record
+	return stored[setting]{
+		meta:  meta{id: source.Identifier, srvCreated: source.CreatedAt, srvModified: source.CreatedAt, occurredAt: source.CreatedAt, subject: source.Subject},
+		model: setting{Identifier: source.Identifier, Value: source.Value, Type: source.TypeString},
+	}
 }
 
 // ///
@@ -51,7 +43,7 @@ func ConvertFromAnyTypeToSetting(source *settings.SettingAnyType, context *httpu
 // You have to pass an identifier along to match with the settings
 // ///
 
-func (c SettingsCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
+func (c SettingsCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (nsutils.Document, bool, *nsutils.HTTPError) {
 	var nsModel nightscoutmodels.Setting
 	err := utils.ConvertViaJSON(data, &nsModel)
 	if err != nil {
@@ -70,10 +62,10 @@ func (c SettingsCollection) Create(ctx context.Context, siteContext *httputils.S
 		return nil, false, herr
 	}
 
-	return ptr(c.converter(sm, siteContext, false)), false, nil
+	return settingDocument(sm), false, nil
 }
 
-func (c SettingsCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool, raw bool) (*nsutils.Record, bool, *nsutils.HTTPError) {
+func (c SettingsCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool, raw bool) (nsutils.Document, bool, *nsutils.HTTPError) {
 	if identifier == "" {
 		slog.ErrorContext(ctx, "setting identifier not available", "data", patch, "collection", "settings")
 		return nil, false, nsutils.ErrNotFound
@@ -104,10 +96,10 @@ func (c SettingsCollection) Replace(ctx context.Context, siteContext *httputils.
 		return nil, false, herr
 	}
 
-	return ptr(c.converter(sm, siteContext, false)), false, nil
+	return settingDocument(sm), false, nil
 }
 
-func (c SettingsCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, raw bool) (*nsutils.Record, *nsutils.HTTPError) {
+func (c SettingsCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, raw bool) (nsutils.Document, *nsutils.HTTPError) {
 	if identifier == "" {
 		slog.ErrorContext(ctx, "setting identifier not available", "data", patch, "collection", "settings")
 		return nil, nsutils.ErrNotFound
@@ -134,19 +126,23 @@ func (c SettingsCollection) Delete(ctx context.Context, siteContext *httputils.S
 	return nil
 }
 
-func (c SettingsCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (*nsutils.Record, *nsutils.HTTPError) {
+func (c SettingsCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (nsutils.Document, *nsutils.HTTPError) {
 
-	setting, err := siteContext.GetSettings().GetSettingAnyTypeByName(identifier)
+	found, err := siteContext.GetSettings().GetSettingAnyTypeByName(identifier)
 	if err != nil {
 		return nil, nsutils.ErrNotFound
 	}
 
-	return ptr(c.converter(setting, siteContext, false)), nil
+	return settingDocument(found), nil
 }
 
-func (c SettingsCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Record, *nsutils.HTTPError) {
-
-	return nsutils.CreateRecordSlice(siteContext.GetSettings().GetAllSettingAnyTypes(), c.converter, siteContext, false), nil
+func (c SettingsCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Document, *nsutils.HTTPError) {
+	all := siteContext.GetSettings().GetAllSettingAnyTypes()
+	docs := make([]nsutils.Document, len(all))
+	for i, each := range all {
+		docs[i] = settingDocument(each)
+	}
+	return docs, nil
 }
 
 func (c SettingsCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {

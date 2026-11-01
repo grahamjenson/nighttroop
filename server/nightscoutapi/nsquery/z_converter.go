@@ -21,17 +21,17 @@ func ActivitySearch(source Query) sitedb.SearchActivitiesParams {
 		xint64 := *source.DateGTE
 		sitedbSearchActivitiesParams.DateGTE = &xint64
 	}
-	if source.DateLTE != nil {
-		xint642 := *source.DateLTE
-		sitedbSearchActivitiesParams.DateLTE = &xint642
+	if source.DateGT != nil {
+		xint642 := *source.DateGT
+		sitedbSearchActivitiesParams.DateGT = &xint642
 	}
 	if source.DateEQ != nil {
 		xint643 := *source.DateEQ
 		sitedbSearchActivitiesParams.DateEQ = &xint643
 	}
-	if source.DateGT != nil {
-		xint644 := *source.DateGT
-		sitedbSearchActivitiesParams.DateGT = &xint644
+	if source.DateLTE != nil {
+		xint644 := *source.DateLTE
+		sitedbSearchActivitiesParams.DateLTE = &xint644
 	}
 	if source.DateLT != nil {
 		xint645 := *source.DateLT
@@ -144,17 +144,17 @@ func DeviceReportSearch(source Query) sitedb.SearchDeviceReportsParams {
 		xint64 := *source.DateGTE
 		sitedbSearchDeviceReportsParams.DateGTE = &xint64
 	}
-	if source.DateLTE != nil {
-		xint642 := *source.DateLTE
-		sitedbSearchDeviceReportsParams.DateLTE = &xint642
+	if source.DateGT != nil {
+		xint642 := *source.DateGT
+		sitedbSearchDeviceReportsParams.DateGT = &xint642
 	}
 	if source.DateEQ != nil {
 		xint643 := *source.DateEQ
 		sitedbSearchDeviceReportsParams.DateEQ = &xint643
 	}
-	if source.DateGT != nil {
-		xint644 := *source.DateGT
-		sitedbSearchDeviceReportsParams.DateGT = &xint644
+	if source.DateLTE != nil {
+		xint644 := *source.DateLTE
+		sitedbSearchDeviceReportsParams.DateLTE = &xint644
 	}
 	if source.DateLT != nil {
 		xint645 := *source.DateLT
@@ -227,17 +227,17 @@ func EventGroupSearch(source Query) sitedb.SearchEventGroupsParams {
 		xint64 := *source.DateGTE
 		sitedbSearchEventGroupsParams.DateGTE = &xint64
 	}
-	if source.DateLTE != nil {
-		xint642 := *source.DateLTE
-		sitedbSearchEventGroupsParams.DateLTE = &xint642
+	if source.DateGT != nil {
+		xint642 := *source.DateGT
+		sitedbSearchEventGroupsParams.DateGT = &xint642
 	}
 	if source.DateEQ != nil {
 		xint643 := *source.DateEQ
 		sitedbSearchEventGroupsParams.DateEQ = &xint643
 	}
-	if source.DateGT != nil {
-		xint644 := *source.DateGT
-		sitedbSearchEventGroupsParams.DateGT = &xint644
+	if source.DateLTE != nil {
+		xint644 := *source.DateLTE
+		sitedbSearchEventGroupsParams.DateLTE = &xint644
 	}
 	if source.DateLT != nil {
 		xint645 := *source.DateLT
@@ -409,17 +409,17 @@ func FoodIntakeSearch(source Query) sitedb.SearchFoodIntakesParams {
 		xint64 := *source.DateGTE
 		sitedbSearchFoodIntakesParams.DateGTE = &xint64
 	}
-	if source.DateLTE != nil {
-		xint642 := *source.DateLTE
-		sitedbSearchFoodIntakesParams.DateLTE = &xint642
+	if source.DateGT != nil {
+		xint642 := *source.DateGT
+		sitedbSearchFoodIntakesParams.DateGT = &xint642
 	}
 	if source.DateEQ != nil {
 		xint643 := *source.DateEQ
 		sitedbSearchFoodIntakesParams.DateEQ = &xint643
 	}
-	if source.DateGT != nil {
-		xint644 := *source.DateGT
-		sitedbSearchFoodIntakesParams.DateGT = &xint644
+	if source.DateLTE != nil {
+		xint644 := *source.DateLTE
+		sitedbSearchFoodIntakesParams.DateLTE = &xint644
 	}
 	if source.DateLT != nil {
 		xint645 := *source.DateLT
@@ -652,17 +652,17 @@ func GlucoseSearch(source Query) sitedb.SearchGlucoseReadingsParams {
 		xint64 := *source.DateGTE
 		sitedbSearchGlucoseReadingsParams.DateGTE = &xint64
 	}
-	if source.DateLTE != nil {
-		xint642 := *source.DateLTE
-		sitedbSearchGlucoseReadingsParams.DateLTE = &xint642
+	if source.DateGT != nil {
+		xint642 := *source.DateGT
+		sitedbSearchGlucoseReadingsParams.DateGT = &xint642
 	}
 	if source.DateEQ != nil {
 		xint643 := *source.DateEQ
 		sitedbSearchGlucoseReadingsParams.DateEQ = &xint643
 	}
-	if source.DateGT != nil {
-		xint644 := *source.DateGT
-		sitedbSearchGlucoseReadingsParams.DateGT = &xint644
+	if source.DateLTE != nil {
+		xint644 := *source.DateLTE
+		sitedbSearchGlucoseReadingsParams.DateLTE = &xint644
 	}
 	if source.DateLT != nil {
 		xint645 := *source.DateLT

@@ -86,7 +86,7 @@ func (ws *Websocket) dbAdd(ctx context.Context, collection nsutils.Collection, _
 			slog.InfoContext(ctx, "Websocket dbAdd refused", "collection", collection, "error", err)
 			continue
 		}
-		stored = append(stored, record.ToMap(false))
+		stored = append(stored, record.Fields(false))
 	}
 	return stored
 }
@@ -113,7 +113,7 @@ func (ws *Websocket) dbUpdateUnset(ctx context.Context, collection nsutils.Colle
 	siteContext := httputils.GetSiteContext(ctx)
 	record, err := ws.collections[collection].Get(ctx, siteContext, id, nsquery.Query{})
 	if err == nil && record != nil {
-		document := record.ToMap(false)
+		document := record.Fields(false)
 		for field := range fields {
 			delete(document, field)
 		}
