@@ -128,6 +128,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - Time in range, total daily dose, and the last sensor and site change for today, yesterday, last week and last
   month.
 - Readings are coloured and labelled low, in range or high by the alarm settings.
+- The summary's glucose readings link to the page of every reading, and each treatment's kind (e.g. Insulin) to the
+  page of that kind.
 - The summary updates live as new data arrives, and catches up after the page has been in the background.
 - A new site's empty summary links to the sync settings.
 
