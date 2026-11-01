@@ -31,9 +31,10 @@ func (db *ControlDB) RecordResources(ctx context.Context, reading livedb.CreateR
 
 	wasHigh := db.highResources(previous)
 	now := db.resourceLevels(&livedb.ResourceReading{At: reading.At, CpuPercent: reading.CPUPercent,
-		CpuPeggedSeconds: reading.CPUPeggedSeconds, MemoryPercent: reading.MemoryPercent, DiskPercent: reading.DiskPercent})
+		CpuPeggedSeconds: reading.CPUPeggedSeconds, MemoryPercent: reading.MemoryPercent,
+		MemoryTotalBytes: reading.MemoryTotalBytes, DiskPercent: reading.DiskPercent, DiskTotalBytes: reading.DiskTotalBytes})
 	for _, level := range now {
-		high := level.Value >= level.Limit
+		high := db.isHigh(level)
 		was := slices.ContainsFunc(wasHigh, func(l config.ResourceLevel) bool { return l.Resource == level.Resource })
 		switch {
 		case high && !was:
@@ -57,11 +58,22 @@ func (db *ControlDB) HighResources(ctx context.Context) []config.ResourceLevel {
 func (db *ControlDB) highResources(reading *livedb.ResourceReading) []config.ResourceLevel {
 	high := []config.ResourceLevel{}
 	for _, level := range db.resourceLevels(reading) {
-		if level.Value >= level.Limit {
+		if db.isHigh(level) {
 			high = append(high, level)
 		}
 	}
 	return high
+}
+
+// isHigh is a resource at or over its alert level, but not a disk with DiskAlertFreeGB or more still free
+func (db *ControlDB) isHigh(level config.ResourceLevel) bool {
+	if level.Resource == "disk" && level.Total != nil {
+		free := *level.Total * (100 - level.Value) / 100
+		if free >= float64(db.ServerConfig.DiskAlertFreeGB)*(1<<30) {
+			return false
+		}
+	}
+	return level.Value >= level.Limit
 }
 
 // resourceLevels are a check's resources that could be read, with their alert levels
@@ -76,13 +88,18 @@ func (db *ControlDB) resourceLevels(reading *livedb.ResourceReading) []config.Re
 		resource string
 		value    *float64
 		limit    int
+		total    *int64
 	}{
-		{"memory", reading.MemoryPercent, cfg.MemoryAlertPercent},
-		{"disk", reading.DiskPercent, cfg.DiskAlertPercent},
-		{"cpu", &pegged, cfg.CPUPeggedAlertSeconds},
+		{"memory", reading.MemoryPercent, cfg.MemoryAlertPercent, reading.MemoryTotalBytes},
+		{"disk", reading.DiskPercent, cfg.DiskAlertPercent, reading.DiskTotalBytes},
+		{"cpu", &pegged, cfg.CPUPeggedAlertSeconds, nil},
 	} {
 		if l.value != nil {
-			levels = append(levels, config.ResourceLevel{Resource: l.resource, Value: *l.value, Limit: float64(l.limit)})
+			level := config.ResourceLevel{Resource: l.resource, Value: *l.value, Limit: float64(l.limit)}
+			if l.total != nil {
+				level.Total = new(float64(*l.total))
+			}
+			levels = append(levels, level)
 		}
 	}
 	return levels

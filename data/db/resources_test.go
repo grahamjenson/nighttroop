@@ -17,14 +17,16 @@ import (
 func TestRecordResources(t *testing.T) {
 	_, controlDB := testutils.NewControlDB(t)
 	cfg := *controlDB.ServerConfig
-	cfg.MemoryAlertPercent, cfg.DiskAlertPercent, cfg.CPUPeggedAlertSeconds = 60, 60, 20
+	cfg.MemoryAlertPercent, cfg.DiskAlertPercent, cfg.CPUPeggedAlertSeconds, cfg.DiskAlertFreeGB = 60, 60, 20, 100
 	controlDB.ServerConfig = &cfg
 	ctx := context.Background()
 	start := time.Now().Add(-4 * 24 * time.Hour)
 
 	percent := func(p float64) *float64 { return &p }
+	const gb = 1 << 30
 	checks := []struct {
 		memory, disk *float64
+		diskTotal    *int64
 		pegged       int64
 		want         []string
 		high         []string
@@ -35,12 +37,15 @@ func TestRecordResources(t *testing.T) {
 		{memory: percent(50), disk: percent(61), pegged: 25, want: []string{"resource_high disk", "resource_high cpu", "resource_recovered memory"}, high: []string{"disk", "cpu"}},
 		// Memory that cannot be read, as on a Mac, is neither high nor recovered
 		{disk: percent(30), pegged: 5, want: []string{"resource_recovered disk", "resource_recovered cpu"}},
+		// A disk 87% used with 124 GB still free does not warn, but with 12 GB free it does
+		{disk: percent(87), diskTotal: new(int64(954 * gb))},
+		{disk: percent(87), diskTotal: new(int64(95 * gb)), want: []string{"resource_high disk"}, high: []string{"disk"}},
 	}
 	seen := 0
 	for i, check := range checks {
 		at := start.Add(time.Duration(i) * 24 * time.Hour)
 		require.NoError(t, controlDB.RecordResources(ctx, livedb.CreateResourceReadingParams{At: at.UnixMilli(), CPUPercent: 50,
-			CPUPeggedSeconds: check.pegged, MemoryPercent: check.memory, DiskPercent: check.disk}))
+			CPUPeggedSeconds: check.pegged, MemoryPercent: check.memory, DiskPercent: check.disk, DiskTotalBytes: check.diskTotal}))
 
 		recorded, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{Limit: 100})
 		require.NoError(t, err)
@@ -60,15 +65,18 @@ func TestRecordResources(t *testing.T) {
 		require.ElementsMatch(t, check.high, high, "check %d", i)
 	}
 
-	// The newest events say which resource and how high
-	recovered := string(events.ResourceRecovered)
+	// The newest events say which resource, how high and of what total
+	recovered, high := string(events.ResourceRecovered), string(events.ResourceHigh)
 	recorded, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{Limit: 1, Type: &recovered})
 	require.NoError(t, err)
 	require.Equal(t, `{"resource":"cpu","value":5,"limit":20}`, *recorded[0].Attributes)
+	recorded, err = controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{Limit: 1, Type: &high})
+	require.NoError(t, err)
+	require.Equal(t, `{"resource":"disk","value":87,"limit":60,"total":102005473280}`, *recorded[0].Attributes)
 
-	// Five checks a day apart, so the first is over 3 days older than the newest, and forgotten
+	// Seven checks a day apart, so the first three are over 3 days older than the newest, and forgotten
 	kept, err := controlDB.Live.Queries.ResourceReadingsSince(ctx, livedb.ResourceReadingsSinceParams{Since: 0})
 	require.NoError(t, err)
 	require.Len(t, kept, 4)
-	require.Equal(t, start.Add(24*time.Hour).UnixMilli(), kept[0].At)
+	require.Equal(t, start.Add(3*24*time.Hour).UnixMilli(), kept[0].At)
 }

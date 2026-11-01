@@ -27,6 +27,8 @@ CREATE TABLE resource_readings (
     cpu_percent REAL NOT NULL,
     cpu_pegged_seconds INTEGER NOT NULL,
     memory_percent REAL,
-    disk_percent REAL
+    memory_total_bytes INTEGER,
+    disk_percent REAL,
+    disk_total_bytes INTEGER
 ) STRICT;
 

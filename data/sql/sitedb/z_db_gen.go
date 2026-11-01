@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"sync"
+	"time"
 
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/backup"
@@ -25,7 +25,6 @@ type DB struct {
 	SQLiteDB     *sql.DB
 	ServerConfig *config.ServerConfig
 	queries      *Queries
-	prepareOnce  sync.Once
 	InMemory     bool
 
 	Path       string
@@ -68,21 +67,14 @@ func NewDB(ctx context.Context, subdomain string, serverConfig *config.ServerCon
 		return db, fmt.Errorf("sitedb Migration Error for: %s %w", path, err)
 	}
 
-	slog.Info("sitedb Migration applied successfully to " + path)
+	db.queries = New(sqldb)
 
 	return db, nil
 }
 
-// Queries prepares all the site's queries the first time it is called, rather than when the DB opens, as every
-// site's DB is opened at start. Call it before beginning a transaction, which may hold the DB's only connection.
+// Queries are the site's queries, unprepared: preparing all of them took a site's first query 30ms and kept about
+// 3.5MB of SQLite's memory for each site, while a prepared query was no faster than SQLite compiling it each time.
 func (db *DB) Queries() *Queries {
-	db.prepareOnce.Do(func() {
-		var err error
-		if db.queries, err = Prepare(context.Background(), db.SQLiteDB); err != nil {
-			slog.Error("sitedb Prepare Error, so its queries run unprepared: " + err.Error())
-			db.queries = New(db.SQLiteDB)
-		}
-	})
 	return db.queries
 }
 
@@ -261,6 +253,9 @@ func OpenSqliteDB(path string, cacheSize int) (*sql.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("cannot open sqlite db: %w", err)
 	}
+	// A connection holds its files, page cache and schema, about 1MB, so an idle one is closed, as with thousands of
+	// sites most are idle at any time. Opening one again takes a couple of milliseconds.
+	sqldb.SetConnMaxIdleTime(time.Minute)
 
 	return sqldb, nil
 }
