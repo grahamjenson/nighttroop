@@ -231,6 +231,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   retention period.
 - Old records' raw JSON is cleared after `TRUNCATE_RECORDS_AFTER_DAYS`.
 - Reads and writes are rate limited per site, identity and IP, and live sessions per site are capped.
+- An IP's rate limits, on requests, sign ins, recoveries and site creation, cover its whole IPv6 /64, so stepping
+  through the addresses of one /64 does not get fresh limits.
 - A request body larger than `MAX_REQUEST_BODY_BYTES` is refused with 413, or, when it does not say its length,
   stops being read there and is refused as a bad body.
 
