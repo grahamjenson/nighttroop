@@ -76,21 +76,21 @@ func (t *Tracker) TakeCPU() (meanPercent float64, longestPegged time.Duration) {
 	return meanPercent, longestPegged
 }
 
-// MemoryPercent is the memory used, of the container's limit when it has one, or else of the machine's
-func MemoryPercent() (float64, bool) {
-	return memoryPercent("/sys/fs/cgroup", "/proc/meminfo")
+// Memory is the bytes of memory used, of the container's limit when it has one, or else of the machine's
+func Memory() (used float64, total float64, ok bool) {
+	return memory("/sys/fs/cgroup", "/proc/meminfo")
 }
 
-func memoryPercent(cgroupDir string, meminfoPath string) (float64, bool) {
+func memory(cgroupDir string, meminfoPath string) (float64, float64, bool) {
 	limit, limitErr := readUint(cgroupDir + "/memory.max")
 	current, currentErr := readUint(cgroupDir + "/memory.current")
 	if limitErr == nil && currentErr == nil && limit > 0 {
-		return 100 * float64(current) / float64(limit), true
+		return float64(current), float64(limit), true
 	}
 	// No limit ("max"), or not a cgroup v2 container: the machine's memory, less what it can still give
 	raw, err := os.ReadFile(meminfoPath)
 	if err != nil {
-		return 0, false
+		return 0, 0, false
 	}
 	var total, available float64
 	for _, line := range strings.Split(string(raw), "\n") {
@@ -107,9 +107,9 @@ func memoryPercent(cgroupDir string, meminfoPath string) (float64, bool) {
 		}
 	}
 	if total == 0 {
-		return 0, false
+		return 0, 0, false
 	}
-	return 100 * (total - available) / total, true
+	return 1024 * (total - available), 1024 * total, true
 }
 
 func readUint(path string) (uint64, error) {
@@ -120,15 +120,15 @@ func readUint(path string) (uint64, error) {
 	return strconv.ParseUint(strings.TrimSpace(string(raw)), 10, 64)
 }
 
-// DiskPercent is the space used on dir's disk, as df counts it: of the space not kept for root
-func DiskPercent(dir string) (float64, bool) {
+// Disk is the bytes used on dir's disk, of its total, as df counts them: the space not kept for root
+func Disk(dir string) (used float64, total float64, ok bool) {
 	var disk syscall.Statfs_t
 	if syscall.Statfs(dir, &disk) != nil {
-		return 0, false
+		return 0, 0, false
 	}
-	used := float64(disk.Blocks - disk.Bfree)
-	if usable := used + float64(disk.Bavail); usable > 0 {
-		return 100 * used / usable, true
+	used = float64(disk.Blocks-disk.Bfree) * float64(disk.Bsize)
+	if total = used + float64(disk.Bavail)*float64(disk.Bsize); total > 0 {
+		return used, total, true
 	}
-	return 0, false
+	return 0, 0, false
 }

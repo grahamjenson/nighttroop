@@ -26,10 +26,12 @@ func TestSetup(t *testing.T) {
 	})
 }
 
-// TestResourceAlerts runs the resources files against a server whose alert levels are all 0, so every check warns
+// TestResourceAlerts runs the resources files against a server whose alert levels are all 0, and disk warns however
+// much is free, so every check warns
 func TestResourceAlerts(t *testing.T) {
 	alwaysHigh := func(c *config.ServerConfig) {
 		c.MemoryAlertPercent, c.DiskAlertPercent, c.CPUPeggedAlertSeconds = 0, 0, 0
+		c.DiskAlertFreeGB = 1 << 30
 	}
 	runOnOwnServer(t, "resources/alerts.bdd", "192.0.2.11", alwaysHigh, func(controlDB *db.ControlDB) map[string]any {
 		require.NoError(t, controlDB.SeedDevAdmin(t.Context()))

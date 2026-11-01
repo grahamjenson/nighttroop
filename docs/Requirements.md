@@ -93,6 +93,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   its DBs' disk, and how long its CPU stayed at 100%, sampled every 5 seconds.
 - Memory or disk at or over 60% (`MEMORY_ALERT_PERCENT`, `DISK_ALERT_PERCENT`), or the CPU at 100% for 20 seconds or
   more (`CPU_PEGGED_ALERT_SECONDS`), shows in the banner on every control page until a check finds it back under.
+- A disk with 100 GB or more free (`DISK_ALERT_FREE_GB`) never warns, however full it is.
+- The banner says the memory used and the disk free in bytes, of their totals, e.g. "Disk high: 12.0 GB free of 954.0
+  GB.", and the CPU's seconds at 100%.
 - Going over is a "Resource high" event of the server's, and coming back under a "Resource recovered" one.
 - The last 3 days of checks are kept while the server runs, and start again when it restarts. The usage page graphs
   them: mean CPU, and memory and DB disk used, with a dashed line at the level each warns at.

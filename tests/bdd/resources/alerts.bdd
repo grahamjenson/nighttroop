@@ -19,6 +19,8 @@ ASSERT_VISIBLE #control--status-banner
 ASSERT_VISIBLE #control--status-banner--disk
 ASSERT_VISIBLE #control--status-banner--cpu
 ASSERT_TEXT_VISIBLE Disk high
+// in bytes free of the disk's total, not a percent
+ASSERT_TEXT_VISIBLE GB free of
 ASSERT_TEXT_VISIBLE CPU high
 SCREENSHOT banner
 

@@ -28,16 +28,16 @@ func SetupCron(c cron.CronScheduler, cfg *config.ServerConfig, controlDB *db.Con
 func Check(ctx context.Context, cfg *config.ServerConfig, controlDB *db.ControlDB, now time.Time) error {
 	cpu, pegged := cfg.Usage.TakeCPU()
 	reading := livedb.CreateResourceReadingParams{At: now.UnixMilli(), CPUPercent: cpu, CPUPeggedSeconds: int64(pegged.Seconds())}
-	if memory, ok := usage.MemoryPercent(); ok {
-		reading.MemoryPercent = &memory
+	if used, total, ok := usage.Memory(); ok {
+		reading.MemoryPercent, reading.MemoryTotalBytes = new(100*used/total), new(int64(total))
 	}
 	// The DB folder's disk, or the working folder's before the DB folder is made
-	disk, ok := usage.DiskPercent(cfg.DBDir())
+	used, total, ok := usage.Disk(cfg.DBDir())
 	if !ok {
-		disk, ok = usage.DiskPercent(".")
+		used, total, ok = usage.Disk(".")
 	}
 	if ok {
-		reading.DiskPercent = &disk
+		reading.DiskPercent, reading.DiskTotalBytes = new(100*used/total), new(int64(total))
 	}
 	return controlDB.RecordResources(ctx, reading)
 }
