@@ -47,6 +47,13 @@
   }
 
   // Event handlers
+  // Only digits can be typed, so a letter or space leaves the slot as it was
+  document.addEventListener('beforeinput', (e) => {
+    const target = getEventTargetElement(e);
+    if (!target?.matches('[data-tui-inputotp-slot]')) return;
+    if (e.data && /\D/.test(e.data)) e.preventDefault();
+  });
+
   document.addEventListener('input', (e) => {
     const target = getEventTargetElement(e);
     if (!target?.matches('[data-tui-inputotp-slot]')) return;
@@ -55,11 +62,8 @@
     const container = slot.closest('[data-tui-inputotp]');
     if (!container) return;
 
-    // Handle space as empty
-    if (slot.value === ' ') {
-      slot.value = '';
-      return;
-    }
+    // Drop anything but digits, such as from autofill
+    slot.value = slot.value.replace(/\D/g, '');
 
     // Keep only last character
     if (slot.value.length > 1) {
@@ -136,7 +140,7 @@
     if (!container) return;
 
     const pastedData = (e.clipboardData || window.clipboardData).getData('text');
-    const chars = pastedData.replace(/\s/g, '').split('');
+    const chars = pastedData.replace(/\D/g, '').split('');
     const slots = getSlots(container);
 
     let startIndex = slots.indexOf(slot);
