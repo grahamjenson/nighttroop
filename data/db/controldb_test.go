@@ -214,6 +214,35 @@ func TestTruncateSite(t *testing.T) {
 	require.ErrorContains(t, err, "is not open")
 }
 
+// At start every live site's DB file is opened, several at once
+func TestNewControlDBOpensEverySite(t *testing.T) {
+	cfg := *testutils.GetTestServerConfig()
+	cfg.Mode = consts.Development // DBs in files, so they are there to open again
+	cfg.DataDir = t.TempDir()
+	ctx := context.Background()
+
+	controlDB, err := db.NewControlDB(ctx, &cfg)
+	require.NoError(t, err)
+	subdomains := []string{}
+	for range 10 {
+		site, err := controlDB.CreateSite(ctx)
+		require.NoError(t, err)
+		subdomains = append(subdomains, site.SiteDB.Subdomain)
+	}
+	require.NoError(t, controlDB.Close())
+
+	controlDB, err = db.NewControlDB(ctx, &cfg)
+	require.NoError(t, err)
+	require.Equal(t, 10, controlDB.GetNSitesDBs())
+	for _, subdomain := range subdomains {
+		site, _, err := controlDB.GetSite(ctx, subdomain)
+		require.NoError(t, err)
+		_, err = site.Queries().GetMostRecentProfileStore(ctx)
+		require.NoError(t, err)
+	}
+	require.NoError(t, controlDB.Close())
+}
+
 // A site whose identities cannot be made is not kept, so no live site is left without its DB
 func TestCreateSiteWhenIdentitiesFail(t *testing.T) {
 	_, controlDB := testutils.NewControlDB(t)
