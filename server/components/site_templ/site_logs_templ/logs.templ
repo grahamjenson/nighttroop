@@ -102,7 +102,7 @@ templ idDetails(id string, requestID *string, jobID *string) {
 templ EventsTable(events []*sitemodels.SiteEvent, skip int64, limit int64, eventType *string, search *string) {
 	// Sign ins are from where DB-IP estimates
 	@footer.DBIPCredit()
-	@page("events_table", "Events", "What happened to this site and the batch of sites it is backed up with, newest first.", "/logs/events", filter.PagePath("/logs/events", eventType, search), len(events), skip, limit) {
+	@page("events_table", "Events", "What happened to this site and the batch of sites it is backed up with, newest first. A search looks through the newest 10,000.", "/logs/events", filter.PagePath("/logs/events", eventType, search), len(events), skip, limit) {
 		@filter.Filter(filter.Props{ID: "site--events--filter", Path: "/logs/events", All: "All events", Types: dataevents.PersistedNames(), Selected: eventType, Search: search})
 		@table.Table(table.Props{ID: "siteEventsTable", Class: "rounded-lg border border-gray-200"}) {
 			@table.Header() {
@@ -165,7 +165,7 @@ templ EventModal(event *sitemodels.SiteEvent) {
 
 // ErrorsTable shows one page of the site's errors, the newest first
 templ ErrorsTable(errors []*sitemodels.SiteError, skip int64, limit int64, kind *string, search *string) {
-	@page("errors_table", "Errors", "What failed for this site, newest first.", "/logs/errors", filter.PagePath("/logs/errors", kind, search), len(errors), skip, limit) {
+	@page("errors_table", "Errors", "What failed for this site, newest first. A search or kind looks through the newest 10,000.", "/logs/errors", filter.PagePath("/logs/errors", kind, search), len(errors), skip, limit) {
 		@filter.Filter(filter.Props{ID: "site--errors--filter", Path: "/logs/errors", All: "All errors", Types: db.ErrorKinds, Selected: kind, Search: search})
 		@table.Table(table.Props{ID: "siteErrorsTable", Class: "rounded-lg border border-gray-200"}) {
 			@table.Header() {
@@ -209,7 +209,7 @@ templ ErrorModal(e *sitemodels.SiteError) {
 
 // LogsTable shows one page of the site's logs, the newest first
 templ LogsTable(logs []*sitemodels.SiteLog, skip int64, limit int64, search *string) {
-	@page("logs_table", "Logs", "Messages logged for this site, newest first.", "/logs/logs", filter.PagePath("/logs/logs", nil, search), len(logs), skip, limit) {
+	@page("logs_table", "Logs", "Messages logged for this site, newest first. A search looks through the newest 10,000.", "/logs/logs", filter.PagePath("/logs/logs", nil, search), len(logs), skip, limit) {
 		@filter.Filter(filter.Props{ID: "site--logs--filter", Path: "/logs/logs", Search: search})
 		@table.Table(table.Props{ID: "siteLogsTable", Class: "rounded-lg border border-gray-200"}) {
 			@table.Header() {

@@ -32,6 +32,8 @@ ASSERT_NOT_VISIBLE #siteEventsTable >> text=site_created
 ASSERT_VISIBLE #siteEventsTable >> text=Signed in
 ASSERT_VISIBLE #footer--dbip-link
 ASSERT_TEXT_VISIBLE This site
+// A search looks through only the newest events, which the page says
+ASSERT_TEXT_VISIBLE A search looks through the newest 10,000.
 // With nothing filtered there is nothing to clear
 ASSERT_NOT_VISIBLE #site--events--filter--clear
 SCREENSHOT events

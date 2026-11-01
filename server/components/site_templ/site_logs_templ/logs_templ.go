@@ -735,7 +735,7 @@ func EventsTable(events []*sitemodels.SiteEvent, skip int64, limit int64, eventT
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = page("events_table", "Events", "What happened to this site and the batch of sites it is backed up with, newest first.", "/logs/events", filter.PagePath("/logs/events", eventType, search), len(events), skip, limit).Render(templ.WithChildren(ctx, templ_7745c5c3_Var19), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = page("events_table", "Events", "What happened to this site and the batch of sites it is backed up with, newest first. A search looks through the newest 10,000.", "/logs/events", filter.PagePath("/logs/events", eventType, search), len(events), skip, limit).Render(templ.WithChildren(ctx, templ_7745c5c3_Var19), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1081,7 +1081,7 @@ func ErrorsTable(errors []*sitemodels.SiteError, skip int64, limit int64, kind *
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = page("errors_table", "Errors", "What failed for this site, newest first.", "/logs/errors", filter.PagePath("/logs/errors", kind, search), len(errors), skip, limit).Render(templ.WithChildren(ctx, templ_7745c5c3_Var41), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = page("errors_table", "Errors", "What failed for this site, newest first. A search or kind looks through the newest 10,000.", "/logs/errors", filter.PagePath("/logs/errors", kind, search), len(errors), skip, limit).Render(templ.WithChildren(ctx, templ_7745c5c3_Var41), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1467,7 +1467,7 @@ func LogsTable(logs []*sitemodels.SiteLog, skip int64, limit int64, search *stri
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = page("logs_table", "Logs", "Messages logged for this site, newest first.", "/logs/logs", filter.PagePath("/logs/logs", nil, search), len(logs), skip, limit).Render(templ.WithChildren(ctx, templ_7745c5c3_Var58), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = page("logs_table", "Logs", "Messages logged for this site, newest first. A search looks through the newest 10,000.", "/logs/logs", filter.PagePath("/logs/logs", nil, search), len(logs), skip, limit).Render(templ.WithChildren(ctx, templ_7745c5c3_Var58), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

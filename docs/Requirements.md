@@ -191,6 +191,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 
 - An admin sees the site's events (e.g. created, alarms, recoveries, credential changes), errors and logs, filtered
   by type and searched, and its batch's backups.
+- A search of the site's events, errors or logs, or a filter by error kind, looks through only its newest 10,000 of
+  each, so no search reads every row a site has; paging without one reaches every row.
 - Each of the site's own events, errors and logs shows the request or background job run it was for; its batch's
   events do not.
 - Each sign in to the site, and each refused one, is an event with the country (and city, where the server has

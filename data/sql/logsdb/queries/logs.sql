@@ -59,22 +59,32 @@ SELECT * FROM errors WHERE id = sqlc.arg('ID');
 
 -- The site's own rows, for its logs pages. SearchLogs and SearchErrors with SiteID set match the same rows, but
 -- their optional SiteID keeps SQLite from using the (site_id, id) index, so they walk every site's rows.
+--
+-- A search, or a filter that reads the attributes, looks through only the site's newest 10,000 rows: from the id of
+-- its 10,000th newest, or every row when it has fewer. A site can fill a table with its own rows, as every request
+-- logs one, and reading all of them would take a site's admin most of a second of CPU per search. Without a search
+-- the (site_id, id) index pages through every row cheaply.
 
 -- name: SearchSiteLogs :many
 -- Newest first, only those with Search in their text when it is set
-SELECT * FROM logs
-WHERE site_id = sqlc.arg('SiteID')
-AND (CAST(sqlc.narg('Search') AS TEXT) IS NULL OR instr(lower(message), lower(sqlc.narg('Search'))) > 0 OR instr(lower(attributes), lower(sqlc.narg('Search'))) > 0)
-ORDER BY id DESC
+SELECT own.* FROM logs own
+WHERE own.site_id = sqlc.arg('SiteID')
+AND own.id >= CASE WHEN CAST(sqlc.narg('Search') AS TEXT) IS NULL THEN 0 ELSE COALESCE((SELECT newest.id FROM logs newest
+  WHERE newest.site_id = sqlc.arg('SiteID') ORDER BY newest.id DESC LIMIT 1 OFFSET 9999), 0) END
+AND (CAST(sqlc.narg('Search') AS TEXT) IS NULL OR instr(lower(own.message), lower(sqlc.narg('Search'))) > 0 OR instr(lower(own.attributes), lower(sqlc.narg('Search'))) > 0)
+ORDER BY own.id DESC
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 -- name: SearchSiteErrors :many
 -- Newest first, only those of the kind Type when it is set, and only those with Search in their text when it is set
-SELECT * FROM errors
-WHERE site_id = sqlc.arg('SiteID')
-AND (CAST(sqlc.narg('Type') AS TEXT) IS NULL OR json_extract(attributes, '$.kind') = sqlc.narg('Type'))
-AND (CAST(sqlc.narg('Search') AS TEXT) IS NULL OR instr(lower(message), lower(sqlc.narg('Search'))) > 0 OR instr(lower(attributes), lower(sqlc.narg('Search'))) > 0)
-ORDER BY id DESC
+SELECT own.* FROM errors own
+WHERE own.site_id = sqlc.arg('SiteID')
+AND own.id >= CASE WHEN CAST(sqlc.narg('Search') AS TEXT) IS NULL AND CAST(sqlc.narg('Type') AS TEXT) IS NULL THEN 0
+  ELSE COALESCE((SELECT newest.id FROM errors newest WHERE newest.site_id = sqlc.arg('SiteID') ORDER BY newest.id DESC
+  LIMIT 1 OFFSET 9999), 0) END
+AND (CAST(sqlc.narg('Type') AS TEXT) IS NULL OR json_extract(own.attributes, '$.kind') = sqlc.narg('Type'))
+AND (CAST(sqlc.narg('Search') AS TEXT) IS NULL OR instr(lower(own.message), lower(sqlc.narg('Search'))) > 0 OR instr(lower(own.attributes), lower(sqlc.narg('Search'))) > 0)
+ORDER BY own.id DESC
 LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 
 -- name: SearchSiteEvents :many
@@ -82,6 +92,8 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 -- Each half reads its own index newest first and SQLite merges the two, rather than sorting all of the site's events.
 SELECT own.* FROM events own
 WHERE own.site_id = sqlc.arg('SiteID')
+AND own.id >= CASE WHEN CAST(sqlc.narg('Search') AS TEXT) IS NULL THEN 0 ELSE COALESCE((SELECT newest.id FROM events newest
+  WHERE newest.site_id = sqlc.arg('SiteID') ORDER BY newest.id DESC LIMIT 1 OFFSET 9999), 0) END
 AND (CAST(sqlc.narg('Type') AS TEXT) IS NULL OR own.name = sqlc.narg('Type'))
 AND (CAST(sqlc.narg('Search') AS TEXT) IS NULL OR instr(lower(own.name), lower(sqlc.narg('Search'))) > 0
   OR instr(lower(own.attributes), lower(sqlc.narg('Search'))) > 0)

@@ -523,18 +523,21 @@ func (q *Queries) SearchLogs(ctx context.Context, arg SearchLogsParams) ([]*Log,
 }
 
 const searchSiteErrors = `-- name: SearchSiteErrors :many
-SELECT id, site_id, message, attributes, request_id, job_id, created_at FROM errors
-WHERE site_id = ?1
-AND (CAST(?2 AS TEXT) IS NULL OR json_extract(attributes, '$.kind') = ?2)
-AND (CAST(?3 AS TEXT) IS NULL OR instr(lower(message), lower(?3)) > 0 OR instr(lower(attributes), lower(?3)) > 0)
-ORDER BY id DESC
+SELECT own.id, own.site_id, own.message, own.attributes, own.request_id, own.job_id, own.created_at FROM errors own
+WHERE own.site_id = ?1
+AND own.id >= CASE WHEN CAST(?2 AS TEXT) IS NULL AND CAST(?3 AS TEXT) IS NULL THEN 0
+  ELSE COALESCE((SELECT newest.id FROM errors newest WHERE newest.site_id = ?1 ORDER BY newest.id DESC
+  LIMIT 1 OFFSET 9999), 0) END
+AND (CAST(?3 AS TEXT) IS NULL OR json_extract(own.attributes, '$.kind') = ?3)
+AND (CAST(?2 AS TEXT) IS NULL OR instr(lower(own.message), lower(?2)) > 0 OR instr(lower(own.attributes), lower(?2)) > 0)
+ORDER BY own.id DESC
 LIMIT ?5 OFFSET ?4
 `
 
 type SearchSiteErrorsParams struct {
 	SiteID *string
-	Type   *string
 	Search *string
+	Type   *string
 	Skip   int64
 	Limit  int64
 }
@@ -543,8 +546,8 @@ type SearchSiteErrorsParams struct {
 func (q *Queries) SearchSiteErrors(ctx context.Context, arg SearchSiteErrorsParams) ([]*Error, error) {
 	rows, err := q.query(ctx, q.searchSiteErrorsStmt, searchSiteErrors,
 		arg.SiteID,
-		arg.Type,
 		arg.Search,
+		arg.Type,
 		arg.Skip,
 		arg.Limit,
 	)
@@ -580,14 +583,16 @@ func (q *Queries) SearchSiteErrors(ctx context.Context, arg SearchSiteErrorsPara
 const searchSiteEvents = `-- name: SearchSiteEvents :many
 SELECT own.id, own.site_id, own.batch, own.name, own.attributes, own.started_at, own.finished_at, own.request_id, own.job_id FROM events own
 WHERE own.site_id = ?3
-AND (CAST(?4 AS TEXT) IS NULL OR own.name = ?4)
-AND (CAST(?5 AS TEXT) IS NULL OR instr(lower(own.name), lower(?5)) > 0
-  OR instr(lower(own.attributes), lower(?5)) > 0)
+AND own.id >= CASE WHEN CAST(?4 AS TEXT) IS NULL THEN 0 ELSE COALESCE((SELECT newest.id FROM events newest
+  WHERE newest.site_id = ?3 ORDER BY newest.id DESC LIMIT 1 OFFSET 9999), 0) END
+AND (CAST(?5 AS TEXT) IS NULL OR own.name = ?5)
+AND (CAST(?4 AS TEXT) IS NULL OR instr(lower(own.name), lower(?4)) > 0
+  OR instr(lower(own.attributes), lower(?4)) > 0)
 UNION ALL
 SELECT batched.id, batched.site_id, batched.batch, batched.name, batched.attributes, batched.started_at, batched.finished_at, batched.request_id, batched.job_id FROM events batched
 WHERE batched.site_id IS NULL AND batched.batch = ?6
-AND (CAST(?4 AS TEXT) IS NULL OR batched.name = ?4)
-AND (CAST(?5 AS TEXT) IS NULL OR instr(lower(batched.name), lower(?5)) > 0)
+AND (CAST(?5 AS TEXT) IS NULL OR batched.name = ?5)
+AND (CAST(?4 AS TEXT) IS NULL OR instr(lower(batched.name), lower(?4)) > 0)
 ORDER BY id DESC
 LIMIT ?2 OFFSET ?1
 `
@@ -596,8 +601,8 @@ type SearchSiteEventsParams struct {
 	Skip   int64
 	Limit  int64
 	SiteID *string
-	Type   *string
 	Search *string
+	Type   *string
 	Batch  *string
 }
 
@@ -609,8 +614,8 @@ func (q *Queries) SearchSiteEvents(ctx context.Context, arg SearchSiteEventsPara
 		arg.Skip,
 		arg.Limit,
 		arg.SiteID,
-		arg.Type,
 		arg.Search,
+		arg.Type,
 		arg.Batch,
 	)
 	if err != nil {
@@ -646,10 +651,12 @@ func (q *Queries) SearchSiteEvents(ctx context.Context, arg SearchSiteEventsPara
 
 const searchSiteLogs = `-- name: SearchSiteLogs :many
 
-SELECT id, site_id, level, message, attributes, request_id, job_id, created_at FROM logs
-WHERE site_id = ?1
-AND (CAST(?2 AS TEXT) IS NULL OR instr(lower(message), lower(?2)) > 0 OR instr(lower(attributes), lower(?2)) > 0)
-ORDER BY id DESC
+SELECT own.id, own.site_id, own.level, own.message, own.attributes, own.request_id, own.job_id, own.created_at FROM logs own
+WHERE own.site_id = ?1
+AND own.id >= CASE WHEN CAST(?2 AS TEXT) IS NULL THEN 0 ELSE COALESCE((SELECT newest.id FROM logs newest
+  WHERE newest.site_id = ?1 ORDER BY newest.id DESC LIMIT 1 OFFSET 9999), 0) END
+AND (CAST(?2 AS TEXT) IS NULL OR instr(lower(own.message), lower(?2)) > 0 OR instr(lower(own.attributes), lower(?2)) > 0)
+ORDER BY own.id DESC
 LIMIT ?4 OFFSET ?3
 `
 
@@ -662,6 +669,11 @@ type SearchSiteLogsParams struct {
 
 // The site's own rows, for its logs pages. SearchLogs and SearchErrors with SiteID set match the same rows, but
 // their optional SiteID keeps SQLite from using the (site_id, id) index, so they walk every site's rows.
+//
+// A search, or a filter that reads the attributes, looks through only the site's newest 10,000 rows: from the id of
+// its 10,000th newest, or every row when it has fewer. A site can fill a table with its own rows, as every request
+// logs one, and reading all of them would take a site's admin most of a second of CPU per search. Without a search
+// the (site_id, id) index pages through every row cheaply.
 // Newest first, only those with Search in their text when it is set
 func (q *Queries) SearchSiteLogs(ctx context.Context, arg SearchSiteLogsParams) ([]*Log, error) {
 	rows, err := q.query(ctx, q.searchSiteLogsStmt, searchSiteLogs,
