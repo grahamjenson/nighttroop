@@ -24,9 +24,10 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, config *config.ServerConfig) fun
 
 			if err == nil {
 				slog.InfoContext(r.Context(), "Control User Logged In", "user_name", controlIdentity.Name)
-				// The status banner also warns of resources high at the last check
+				// The status banner also warns of resources high at the last check, and of sites near their limit
 				status := config.Status
 				status.HighResources = controlDB.HighResources(r.Context())
+				status.Sites, status.MaxSites = controlDB.GetNSitesDBs(), config.MaxSites
 				ctx := httputils.SetAdminControlContext(r.Context(), controlIdentity, status)
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return

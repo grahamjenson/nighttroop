@@ -48,6 +48,19 @@ func TestTestSiteBanner(t *testing.T) {
 	})
 }
 
+// TestSiteLimitBanner runs the sitelimit files against a server allowing 10 sites, 9 of which it has
+func TestSiteLimitBanner(t *testing.T) {
+	tenSites := func(c *config.ServerConfig) { c.MaxSites = 10 }
+	runOnOwnServer(t, "sitelimit/banner.bdd", "192.0.2.13", tenSites, func(controlDB *db.ControlDB) map[string]any {
+		require.NoError(t, controlDB.SeedDevAdmin(t.Context()))
+		for range 9 {
+			_, err := controlDB.CreateSite(t.Context())
+			require.NoError(t, err)
+		}
+		return nil
+	})
+}
+
 // runOnOwnServer runs one file against a server and databases of its own, from the test config as configure changes
 // it, with the values prepare gives the file. Its browser sends its own address, so its attempts do not spend
 // TestSite's login limit for 127.0.0.1, whose forwarding is trusted.
