@@ -1,0 +1,17 @@
+package testsite
+
+import "nighttroop.t1d.nz/utils/httputils"
+
+// Banner is across the top of every page of a test site, set by TEST_SITE, so nobody takes it for a real one or keeps
+// anything they need on it
+templ Banner() {
+	if httputils.TestSite(ctx) {
+		<div id="test-site-banner" role="alert" class="border-b-4 border-amber-500 bg-amber-100 px-4 py-6 text-center text-amber-800">
+			<p class="text-3xl font-extrabold uppercase tracking-wide">This is a test site</p>
+			<p class="mx-auto mt-2 max-w-3xl text-lg font-medium">
+				All data here is frequently wiped, at least every time a new version is deployed. Do not use it to manage
+				your diabetes, and do not put anything here you want to keep.
+			</p>
+		</div>
+	}
+}

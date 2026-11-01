@@ -2,6 +2,7 @@ package public_templ
 
 import (
 	"nighttroop.t1d.nz/server/components/footer"
+	"nighttroop.t1d.nz/server/components/testsite"
 	"nighttroop.t1d.nz/server/components/ui/copybutton"
 )
 
@@ -21,6 +22,7 @@ templ PublicBase() {
 			@copybutton.Script()
 		</head>
 		<body class="flex min-h-screen flex-col">
+			@testsite.Banner()
 			<div
 				id="main-content"
 				class="flex-1"

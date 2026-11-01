@@ -113,6 +113,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   site a new backup key. The key works once; a wrong key is refused without saying why.
 - A site that is never used is deleted after `DELETE_AFTER_INACTIVITY_MINS`.
 - Every page's footer links to contact, the terms of service and the privacy policy.
+- A server set up as a test site (`TEST_SITE`) says so in a large banner at the top of every page, public, site and
+  control, warning that its data is frequently wiped.
 - Every page names the browser's tab after itself, e.g. `Glucose Readings · Nighttroop`, whether it is loaded in full or
   opened from a menu; a page with no title of its own, such as the login, is named `Nighttroop`.
 - A page that shows estimated locations, such as the events pages, also links to DB-IP, whose free databases make

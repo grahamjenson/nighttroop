@@ -75,6 +75,10 @@ type ServerConfig struct {
 	// of service and privacy policy
 	SupportEmail string
 
+	// TestSite shows every page a large banner saying it is a test site whose data is wiped, so it is not taken for
+	// a real one
+	TestSite bool
+
 	// GeoIPDBPath is a DB-IP IP to City Lite database, for the city sign ins are from; without one only the country is
 	GeoIPDBPath string
 
@@ -271,6 +275,7 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		SentryDSN: configStringSelect(dotenv, "SENTRY_DSN", ""),
 
 		SupportEmail: configStringSelect(dotenv, "SUPPORT_EMAIL", DefaultSupportEmail),
+		TestSite:     configSelect(dotenv, "TEST_SITE", false, strconv.ParseBool),
 		GeoIPDBPath:  configStringSelect(dotenv, "GEOIP_DB_PATH", ""),
 
 		// security

@@ -38,6 +38,7 @@ func AddStandardMiddleware(router chi.Router, config *config.ServerConfig, contr
 	// Gzip text responses, like the pages, styles, scripts and JSON, for clients that accept it
 	router.Use(middleware.Compress(5))
 	router.Use(withSupportEmail(config.SupportEmail))
+	router.Use(withTestSite(config.TestSite))
 	router.Use(withDBIPCredit)
 }
 
@@ -70,6 +71,23 @@ func SupportEmail(ctx context.Context) string {
 		return email
 	}
 	return config.DefaultSupportEmail
+}
+
+type testSiteKey struct{}
+
+// withTestSite puts whether the server is a test site in each request's context, for its pages' banner
+func withTestSite(testSite bool) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), testSiteKey{}, testSite)))
+		})
+	}
+}
+
+// TestSite is whether the server is a test site, whose pages say its data is wiped
+func TestSite(ctx context.Context) bool {
+	testSite, _ := ctx.Value(testSiteKey{}).(bool)
+	return testSite
 }
 
 type dbipCreditKey struct{}

@@ -24,6 +24,7 @@ Limits written per minute are rates; their burst is how many can be used at once
 | `TRUSTED_PROXIES` | `127.0.0.1,::1` | Comma separated IPs or CIDR ranges of reverse proxies, such as Caddy, whose `X-Forwarded-For` is believed for the client's IP |
 | `FLY_APP_NAME` | unset | Set by Fly.io. When set, the client's IP is read from the `Fly-Client-IP` header |
 | `SUPPORT_EMAIL` | `nighttroop@t1d.nz` | Where users contact the server's operator, in every page's footer and in the terms of service and privacy policy |
+| `TEST_SITE` | `false` | `true` puts a large banner at the top of every page saying it is a test site whose data is frequently wiped, so nobody takes it for a real one, e.g. for an alpha testing environment |
 | `SENTRY_DSN` | empty | Where errors are reported. Empty turns Sentry off |
 | `GEOIP_DB_PATH` | empty; the Docker image sets it to its DB-IP IP to City Lite database | A DB-IP IP to City Lite `.mmdb` file, for the city sign ins come from. Without one, or if it cannot be opened, the built in IP to Country Lite gives only the country |
 | `ALLOWED_COUNTRIES` | empty, allowing every country | Comma separated ISO 3166-1 alpha-2 codes, e.g. `NZ,AU`, of the only countries that can create sites, sign in and recover. An address whose country is not known is allowed, and signed in sites and the Nightscout API are not limited. Every code DB-IP knows is listed beside `AllowedCountries` in `utils/config/config.go`, to copy and remove from. A code that is not two letters stops the server starting |
