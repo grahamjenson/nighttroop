@@ -267,6 +267,7 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - The TOTP step only accepts the pre-auth token from this site's own password step.
 - Every TOTP code field, on sign in, setup and the new site's code check, takes only digits; letters typed or pasted
   into it are dropped.
+- The server refuses a TOTP code that is not six digits, like a wrong one.
 - Sign-in attempts are rate limited per identity and IP; a disabled identity cannot sign in.
 - Devices use their Nightscout token, as a token, API secret or for a JWT.
 - Changing an identity's password or TOTP signs out its existing sessions.
