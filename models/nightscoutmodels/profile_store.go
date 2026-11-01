@@ -338,7 +338,8 @@ func ScheduleValuesToJSONWithUnitConversionToMGDL(svs []*ScheduleValue, units *c
 	}
 
 	for _, sv := range svs {
-		if sv.Value != nil {
+		// A null entry is kept as it is, as readers of the schedule skip it
+		if sv != nil && sv.Value != nil {
 			sv.Value = new(types.FlexibleFloat64(units.ToMGDL(sv.Value.Float64())))
 		}
 	}

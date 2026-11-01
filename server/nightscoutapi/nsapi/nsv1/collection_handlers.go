@@ -163,7 +163,8 @@ func Replace(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 		canCreate := nsutils.CollectionActionHasPermission(collection, identity, nsutils.CollectionActionCreate)
 
 		var body map[string]any
-		if err := apiutils.ReadJSON(r, &body); err != nil {
+		// A null body decodes without error to a nil map
+		if err := apiutils.ReadJSON(r, &body); err != nil || body == nil {
 			nsutils.WriteError(w, nsutils.BadDataBodyError)
 			return
 		}

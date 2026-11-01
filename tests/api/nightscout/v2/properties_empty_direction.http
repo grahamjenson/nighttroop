@@ -1,0 +1,13 @@
+INCLUDE steps/new_ns_site.steps
+
+// A newest reading with an empty direction leaves the direction out, as it has no arrow
+NAME create_entry_empty_direction_v1
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [{"type": "sgv", "sgv": 130, "date": {{ itime 0 }}, "direction": "", "device": "xDrip"}]
+ASSERT_STATUS 200
+
+NAME get_properties_empty_direction_v2
+GET http://{{ site }}/api/v2/properties/bgnow,direction?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 130 "@bgnow.last"
