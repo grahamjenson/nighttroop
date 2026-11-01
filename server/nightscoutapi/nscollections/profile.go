@@ -54,10 +54,6 @@ func (c ProfileCollection) CreateModel(q *sitedb.Queries, ctx context.Context, n
 }
 
 func (c ProfileCollection) GetDuplicate(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.ProfileStore) (*sitedb.ProfilePresetBundle, error) {
-	// Without a date every filter below is empty and would match the newest row
-	if nsModel.Date == nil {
-		return nil, nil
-	}
 	profilePresets, rerr := q.SearchProfileStores(ctx, sitedb.SearchProfileStoresParams{
 		DateEQ:   nsModel.Date.Int64p(),
 		DeviceEq: nsModel.Device.Stringp(),
@@ -85,11 +81,8 @@ func (c ProfileCollection) GetModel(q *sitedb.Queries, ctx context.Context, iden
 	return &wrapper, nil
 }
 
-func (c ProfileCollection) HardDelete(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
-	return q.HardDeleteProfileStore(ctx, sitedb.HardDeleteProfileStoreParams{ProfileStoreID: identifier})
-}
-
-func (c ProfileCollection) SoftDelete(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
+// Delete always deletes a profile store for good, as presets are not soft deleted
+func (c ProfileCollection) Delete(q *sitedb.Queries, ctx context.Context, identifier string, _ bool) (sql.Result, error) {
 	return q.HardDeleteProfileStore(ctx, sitedb.HardDeleteProfileStoreParams{ProfileStoreID: identifier})
 }
 

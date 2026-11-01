@@ -72,41 +72,24 @@ func (c EntriesCollection) CreateModel(q *sitedb.Queries, ctx context.Context, n
 }
 
 func (c EntriesCollection) GetDuplicate(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Entry) (*sitedb.GlucoseReading, error) {
-	// Without a date every filter below is empty and would match the newest row
-	if nsModel.Date == nil {
-		return nil, nil
-	}
-	glucoseReadings, rerr := q.SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{
-		DateEQ:   nsModel.Date.Int64p(),
-		DeviceEq: nsModel.Device.Stringp(),
-		Limit:    1,
-	})
-	if rerr != nil {
-		return nil, rerr
-	}
-	if len(glucoseReadings) > 0 {
-		return glucoseReadings[0], nil
-	}
-	return nil, nil
+	return first(q.SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{DateEQ: nsModel.Date.Int64p(), DeviceEq: nsModel.Device.Stringp(), Limit: 1}))
 }
 
 func (c EntriesCollection) GetModel(q *sitedb.Queries, ctx context.Context, identifier string, includeDeleted bool) (*sitedb.GlucoseReading, error) {
 	return q.GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: identifier, IncludeDeleted: includeDeleted})
 }
 
-func (c EntriesCollection) HardDelete(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
-	return q.HardDeleteGlucoseReading(ctx, sitedb.HardDeleteGlucoseReadingParams{ID: identifier})
-}
-
-func (c EntriesCollection) SoftDelete(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
+func (c EntriesCollection) Delete(q *sitedb.Queries, ctx context.Context, identifier string, permanent bool) (sql.Result, error) {
+	if permanent {
+		return q.HardDeleteGlucoseReading(ctx, sitedb.HardDeleteGlucoseReadingParams{ID: identifier})
+	}
 	return q.SoftDeleteGlucoseReading(ctx, sitedb.SoftDeleteGlucoseReadingParams{ID: identifier})
 }
 
-func (c EntriesCollection) HardDeleteType(q *sitedb.Queries, ctx context.Context, typeString string) (sql.Result, error) {
-	return q.HardDeleteGlucoseReadingsByType(ctx, sitedb.HardDeleteGlucoseReadingsByTypeParams{ReadingType: typeString})
-}
-
-func (c EntriesCollection) SoftDeleteType(q *sitedb.Queries, ctx context.Context, typeString string) (sql.Result, error) {
+func (c EntriesCollection) DeleteType(q *sitedb.Queries, ctx context.Context, typeString string, permanent bool) (sql.Result, error) {
+	if permanent {
+		return q.HardDeleteGlucoseReadingsByType(ctx, sitedb.HardDeleteGlucoseReadingsByTypeParams{ReadingType: typeString})
+	}
 	return q.SoftDeleteGlucoseReadingsByType(ctx, sitedb.SoftDeleteGlucoseReadingsByTypeParams{ReadingType: typeString})
 }
 

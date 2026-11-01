@@ -34,10 +34,6 @@ func (c ActivityCollection) Validate(nsModel nightscoutmodels.Activity, dbModel 
 	return nil
 }
 
-func (c ActivityCollection) ValidatePatch(nsModel nightscoutmodels.Activity, dbModel *sitedb.Activity) *nsutils.HTTPError {
-	return c.Validate(nsModel, dbModel)
-}
-
 func (c ActivityCollection) CreateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Activity, cc nightscoutmodels.ConverterContext, overrideIdentifier *string) (*sitedb.Activity, error) {
 	createParams := nightscoutmodels.ActivityToCreate(nsModel, cc)
 	if overrideIdentifier != nil {
@@ -50,23 +46,17 @@ func (c ActivityCollection) GetModel(q *sitedb.Queries, ctx context.Context, ide
 	return q.GetActivity(ctx, sitedb.GetActivityParams{ID: identifier, IncludeDeleted: includeDeleted})
 }
 
-func (c ActivityCollection) GetDuplicate(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Activity) (*sitedb.Activity, error) {
-	return nil, nil
-}
-
-func (c ActivityCollection) HardDelete(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
-	return q.HardDeleteActivity(ctx, sitedb.HardDeleteActivityParams{ID: identifier})
-}
-
-func (c ActivityCollection) SoftDelete(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
+func (c ActivityCollection) Delete(q *sitedb.Queries, ctx context.Context, identifier string, permanent bool) (sql.Result, error) {
+	if permanent {
+		return q.HardDeleteActivity(ctx, sitedb.HardDeleteActivityParams{ID: identifier})
+	}
 	return q.SoftDeleteActivity(ctx, sitedb.SoftDeleteActivityParams{ID: identifier})
 }
 
-func (c ActivityCollection) HardDeleteType(q *sitedb.Queries, ctx context.Context, typeString string) (sql.Result, error) {
-	return q.HardDeleteActivitiesByType(ctx, sitedb.HardDeleteActivitiesByTypeParams{ActivityType: typeString})
-}
-
-func (c ActivityCollection) SoftDeleteType(q *sitedb.Queries, ctx context.Context, typeString string) (sql.Result, error) {
+func (c ActivityCollection) DeleteType(q *sitedb.Queries, ctx context.Context, typeString string, permanent bool) (sql.Result, error) {
+	if permanent {
+		return q.HardDeleteActivitiesByType(ctx, sitedb.HardDeleteActivitiesByTypeParams{ActivityType: typeString})
+	}
 	return q.SoftDeleteActivitiesByType(ctx, sitedb.SoftDeleteActivitiesByTypeParams{ActivityType: typeString})
 }
 

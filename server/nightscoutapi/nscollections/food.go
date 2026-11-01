@@ -34,10 +34,6 @@ func (c FoodCollection) Validate(nsModel nightscoutmodels.Food, dbModel *sitedb.
 	return nil
 }
 
-func (c FoodCollection) ValidatePatch(nsModel nightscoutmodels.Food, dbModel *sitedb.FoodPreset) *nsutils.HTTPError {
-	return c.Validate(nsModel, dbModel)
-}
-
 func (c FoodCollection) CreateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Food, cc nightscoutmodels.ConverterContext, overrideIdentifier *string) (*sitedb.FoodPreset, error) {
 	createParams := nightscoutmodels.FoodToCreate(nsModel, cc)
 	if overrideIdentifier != nil {
@@ -48,43 +44,20 @@ func (c FoodCollection) CreateModel(q *sitedb.Queries, ctx context.Context, nsMo
 }
 
 func (c FoodCollection) GetDuplicate(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Food) (*sitedb.FoodPreset, error) {
-	// Without a date every filter below is empty and would match the newest row
-	if nsModel.Date == nil {
-		return nil, nil
-	}
-	foodPresets, rerr := q.SearchFoodPresets(ctx, sitedb.SearchFoodPresetsParams{
-		DateEQ:   nsModel.Date.Int64p(),
-		DeviceEq: nsModel.Device.Stringp(),
-		Limit:    1,
-	})
-	if rerr != nil {
-		return nil, rerr
-	}
-	if len(foodPresets) > 0 {
-		return foodPresets[0], nil
-	}
-	return nil, nil
+	return first(q.SearchFoodPresets(ctx, sitedb.SearchFoodPresetsParams{DateEQ: nsModel.Date.Int64p(), DeviceEq: nsModel.Device.Stringp(), Limit: 1}))
 }
 
 func (c FoodCollection) GetModel(q *sitedb.Queries, ctx context.Context, identifier string, includeDeleted bool) (*sitedb.FoodPreset, error) {
 	return q.GetFoodPreset(ctx, sitedb.GetFoodPresetParams{ID: identifier})
 }
 
-func (c FoodCollection) HardDelete(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
+// Delete always deletes a preset for good, as presets are not soft deleted
+func (c FoodCollection) Delete(q *sitedb.Queries, ctx context.Context, identifier string, _ bool) (sql.Result, error) {
 	return q.HardDeleteFoodPreset(ctx, sitedb.HardDeleteFoodPresetParams{ID: identifier})
 }
 
-// SoftDeleteDBFunc Only Hard Deletes For Presets
-func (c FoodCollection) SoftDelete(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
-	return q.HardDeleteFoodPreset(ctx, sitedb.HardDeleteFoodPresetParams{ID: identifier})
-}
-
-func (c FoodCollection) HardDeleteType(q *sitedb.Queries, ctx context.Context, typeOF string) (sql.Result, error) {
-	return q.HardDeleteFoodPresetsByType(ctx, sitedb.HardDeleteFoodPresetsByTypeParams{FoodType: &typeOF})
-}
-
-// SoftDeleteDBFunc Only Hard Deletes For Presets
-func (c FoodCollection) SoftDeleteType(q *sitedb.Queries, ctx context.Context, typeOF string) (sql.Result, error) {
+// DeleteType always deletes presets for good, as presets are not soft deleted
+func (c FoodCollection) DeleteType(q *sitedb.Queries, ctx context.Context, typeOF string, _ bool) (sql.Result, error) {
 	return q.HardDeleteFoodPresetsByType(ctx, sitedb.HardDeleteFoodPresetsByTypeParams{FoodType: &typeOF})
 }
 

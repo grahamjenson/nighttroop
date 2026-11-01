@@ -35,25 +35,41 @@ type CollectionDB[NS, DM any] interface {
 	// Validate checks a model being created, when old is nil, or replacing old
 	Validate(nsModel NS, old *DM) *nsutils.HTTPError
 	GetModel(q *sitedb.Queries, ctx context.Context, identifier string, includeDeleted bool) (*DM, error)
-	// GetDuplicate is a model already stored that the new one repeats, or nil
-	GetDuplicate(q *sitedb.Queries, ctx context.Context, nsModel NS) (*DM, error)
 	// CreateModel stores the model, with the identifier given when it is replacing one
 	CreateModel(q *sitedb.Queries, ctx context.Context, nsModel NS, cc nightscoutmodels.ConverterContext, identifier *string) (*DM, error)
 	SearchModels(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]*DM, error)
-	SoftDelete(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error)
-	HardDelete(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error)
+	// Delete deletes a model, softly or, when permanent, for good
+	Delete(q *sitedb.Queries, ctx context.Context, identifier string, permanent bool) (sql.Result, error)
+}
+
+// CollectionDeduplicator is a CollectionDB that looks for a model already stored that a new one repeats, which a
+// create returns instead. It is only asked when the new model has a date, as with nothing to match on it would find
+// the newest.
+type CollectionDeduplicator[NS, DM any] interface {
+	GetDuplicate(q *sitedb.Queries, ctx context.Context, nsModel NS) (*DM, error)
 }
 
 // CollectionPatcher is a CollectionDB that can change a model in place; without it a patch is not implemented
 type CollectionPatcher[NS, DM any] interface {
-	ValidatePatch(nsModel NS, old *DM) *nsutils.HTTPError
 	UpdateModel(q *sitedb.Queries, ctx context.Context, nsModel NS, identifier string, old *DM, cc nightscoutmodels.ConverterContext) (*DM, error)
+}
+
+// patchValidator is a CollectionPatcher that checks a patch other than as Validate checks a replace
+type patchValidator[NS, DM any] interface {
+	ValidatePatch(nsModel NS, old *DM) *nsutils.HTTPError
 }
 
 // CollectionTypeDeleter is a CollectionDB that can delete everything of one type; without it that is not implemented
 type CollectionTypeDeleter interface {
-	SoftDeleteType(q *sitedb.Queries, ctx context.Context, typeString string) (sql.Result, error)
-	HardDeleteType(q *sitedb.Queries, ctx context.Context, typeString string) (sql.Result, error)
+	DeleteType(q *sitedb.Queries, ctx context.Context, typeString string, permanent bool) (sql.Result, error)
+}
+
+// first is the first row a search found, or nil when it found none
+func first[T any](rows []*T, err error) (*T, error) {
+	if err != nil || len(rows) == 0 {
+		return nil, err
+	}
+	return rows[0], nil
 }
 
 // named is a CollectionDB's name and how it makes its database models into Nightscout models, for it to embed
@@ -147,7 +163,10 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 	}
 	defer tx.Rollback()
 
-	duplicateDBModel, err := m.GetDuplicate(q, ctx, nsModel)
+	var duplicateDBModel *DM
+	if deduplicator, ok := any(m).(CollectionDeduplicator[NS, DM]); ok && nsModel.GetDate() != nil {
+		duplicateDBModel, err = deduplicator.GetDuplicate(q, ctx, nsModel)
+	}
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to check for duplicate in database", "error", err, "collection", m.Name())
 		return nil, false, nsutils.ErrInternal
@@ -223,11 +242,11 @@ func (c Collection[NS, DM]) Delete(ctx context.Context, siteContext *httputils.S
 		slog.ErrorContext(ctx, "failed to get "+m.Name()+" to delete", "error", err)
 		return nsutils.ErrInternal
 	}
-	deleteFunc, label := m.SoftDelete, "Soft"
+	label := "Soft"
 	if permanent {
-		deleteFunc, label = m.HardDelete, "Hard"
+		label = "Hard"
 	}
-	res, err := deleteFunc(q, ctx, identifier)
+	res, err := m.Delete(q, ctx, identifier, permanent)
 	// Treatments delete with RETURNING, so a missing ID is no rows rather than 0 rows affected
 	if err == sql.ErrNoRows {
 		return nsutils.ErrNotFound
@@ -264,11 +283,7 @@ func (c Collection[NS, DM]) DeleteType(ctx context.Context, siteContext *httputi
 	}
 	defer tx.Rollback()
 
-	deleteFunc := m.SoftDeleteType
-	if permanent {
-		deleteFunc = m.HardDeleteType
-	}
-	res, err := deleteFunc(q, ctx, typeString)
+	res, err := m.DeleteType(q, ctx, typeString, permanent)
 	if err == sql.ErrNoRows {
 		return 0, nsutils.ErrNotFound
 	}
@@ -322,7 +337,7 @@ func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.
 
 	// DELETE record if we are not creating a new record
 	if !creatingNewRecord {
-		_, err := m.HardDelete(q, ctx, identifier)
+		_, err := m.Delete(q, ctx, identifier, true)
 		if err != nil {
 			slog.ErrorContext(ctx, "failed to hard delete in database", "error", err, "collection", m.Name(), "identifier", identifier)
 			return nil, false, nsutils.ErrInternal
@@ -396,7 +411,11 @@ func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.Si
 		return nil, err
 	}
 
-	if err := patcher.ValidatePatch(nsModel, updateingModel); err != nil {
+	validate := m.Validate
+	if v, ok := any(m).(patchValidator[NS, DM]); ok {
+		validate = v.ValidatePatch
+	}
+	if err := validate(nsModel, updateingModel); err != nil {
 		slog.ErrorContext(ctx, "validation failed for patching model", "error", err, "collection", m.Name())
 		return nil, err
 	}

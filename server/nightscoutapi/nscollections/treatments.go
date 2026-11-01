@@ -86,10 +86,6 @@ func (c TreatmentCollection) CreateModel(q *sitedb.Queries, ctx context.Context,
 }
 
 func (c TreatmentCollection) GetDuplicate(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Treatment) (*sitedb.EventGroupsBundle, error) {
-	// Without a date every filter below is empty and would match the newest row
-	if nsModel.Date == nil {
-		return nil, nil
-	}
 	eventGroups, rerr := q.SearchEventGroups(ctx, sitedb.SearchEventGroupsParams{
 		DateEQ:   nsModel.Date.Int64p(),
 		DeviceEq: nsModel.Device.Stringp(),
@@ -150,44 +146,25 @@ func (c TreatmentCollection) UpdateModel(q *sitedb.Queries, ctx context.Context,
 	return dbModel, nil
 }
 
-func (c TreatmentCollection) HardDelete(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
-	return hardDeleteEventGroup(ctx, q, identifier)
-}
-
-func (c TreatmentCollection) SoftDelete(q *sitedb.Queries, ctx context.Context, identifier string) (sql.Result, error) {
+func (c TreatmentCollection) Delete(q *sitedb.Queries, ctx context.Context, identifier string, permanent bool) (sql.Result, error) {
+	if permanent {
+		return hardDeleteEventGroup(ctx, q, identifier)
+	}
 	return softDeleteEventGroup(ctx, q, identifier)
 }
 
-func (c TreatmentCollection) HardDeleteType(q *sitedb.Queries, ctx context.Context, typeString string) (sql.Result, error) {
-
-	eventGroups, err := q.GetEventGroupOfTypeWithoutJoins(ctx, sitedb.GetEventGroupOfTypeWithoutJoinsParams{GroupType: typeString, IncludeDeleted: true})
+// DeleteType deletes every treatment of the type, and when permanent those already soft deleted too
+func (c TreatmentCollection) DeleteType(q *sitedb.Queries, ctx context.Context, typeString string, permanent bool) (sql.Result, error) {
+	eventGroups, err := q.GetEventGroupOfTypeWithoutJoins(ctx, sitedb.GetEventGroupOfTypeWithoutJoinsParams{GroupType: typeString, IncludeDeleted: permanent})
 	if err != nil {
 		return nil, err
 	}
-
 	for _, eg := range eventGroups {
-		if eg != nil {
-			if _, err := hardDeleteEventGroup(ctx, q, eg.ID); err != nil {
-				return nil, err
-			}
-
+		if eg == nil {
+			continue
 		}
-	}
-	return nsutils.SQLResultCustomResult{LastInsertIdInt: 0, RowsAffectedInt: int64(len(eventGroups)), Err: nil}, nil
-}
-
-func (c TreatmentCollection) SoftDeleteType(q *sitedb.Queries, ctx context.Context, typeString string) (sql.Result, error) {
-	eventGroups, err := q.GetEventGroupOfTypeWithoutJoins(ctx, sitedb.GetEventGroupOfTypeWithoutJoinsParams{GroupType: typeString})
-	if err != nil {
-		return nil, err
-	}
-
-	for _, eg := range eventGroups {
-		if eg != nil {
-			if _, err := softDeleteEventGroup(ctx, q, eg.ID); err != nil {
-				return nil, err
-			}
-
+		if _, err := c.Delete(q, ctx, eg.ID, permanent); err != nil {
+			return nil, err
 		}
 	}
 	return nsutils.SQLResultCustomResult{LastInsertIdInt: 0, RowsAffectedInt: int64(len(eventGroups)), Err: nil}, nil
