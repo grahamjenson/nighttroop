@@ -68,6 +68,13 @@ func NewDB(ctx context.Context, subdomain string, serverConfig *config.ServerCon
 	}
 
 	db.queries = New(sqldb)
+	// Every site's DB is opened at start, so the connection that migrated it is closed now rather than kept idle until
+	// connMaxIdleTime, which for thousands of sites briefly holds about 0.9MB of SQLite's memory each. One in memory
+	// keeps its connection, as closing it would lose the DB.
+	if !db.InMemory {
+		sqldb.SetMaxIdleConns(0)
+		sqldb.SetMaxIdleConns(1)
+	}
 
 	return db, nil
 }

@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/consts"
 )
 
 // A site's DB keeps at most one idle connection and closes it once unused, as each holds its own parsed schema, most of
@@ -33,4 +35,20 @@ func TestIdleConnectionsClose(t *testing.T) {
 
 	// Then that one closes, once unused
 	require.Eventually(t, func() bool { return db.Stats().OpenConnections == 0 }, 2*time.Second, 10*time.Millisecond)
+}
+
+// A site's DB is opened at start with no connection left open, as every site's is opened then, while one in memory
+// keeps its connection, which holds its data
+func TestNewDBLeavesNoConnectionOpen(t *testing.T) {
+	file, err := NewDB(t.Context(), "abcdefgh", &config.ServerConfig{Mode: consts.Development, DataDir: t.TempDir()})
+	require.NoError(t, err)
+	t.Cleanup(func() { file.Close() })
+	require.Equal(t, 0, file.SQLiteDB.Stats().OpenConnections)
+	_, err = file.Queries().AllActivities(t.Context(), AllActivitiesParams{Limit: 1})
+	require.NoError(t, err)
+
+	memory, err := NewDB(t.Context(), "abcdefgh", &config.ServerConfig{Mode: consts.Test, DataDir: t.TempDir()})
+	require.NoError(t, err)
+	t.Cleanup(func() { memory.Close() })
+	require.Equal(t, 1, memory.SQLiteDB.Stats().OpenConnections)
 }
