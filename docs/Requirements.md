@@ -244,6 +244,9 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 
 - Every site's DB is backed up to S3 in batches, and the control DB on its own, with old versions kept for a
   retention period.
+- A site not written to since its last backup is not copied again, so its DB is not opened, and a batch with the same
+  sites, none copied again, is not uploaded again until the server restarts; a write during a copy is copied the next
+  round, and a failed upload is tried again the next round.
 - A server with no control DB or site batch folder restores it from S3 on start; a download that fails or is cut off
   leaves nothing behind, so the next start downloads it again.
 - A site whose creation fails part way, such as its request being cancelled, leaves no site or identities behind.

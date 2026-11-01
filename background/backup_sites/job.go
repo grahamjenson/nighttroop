@@ -2,8 +2,14 @@ package backup_sites
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io/fs"
 	"log/slog"
+	"os"
+	"slices"
+	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -27,7 +33,12 @@ type BackupSiteJobManager struct {
 	controlDB    *db.ControlDB
 	ctx          context.Context
 	ServerConfig *config.ServerConfig
-	S3Client     *s3utils.S3Client
+	// Upload uploads a batch's backups, the S3 client's UploadFilesToS3, which tests can stand in for
+	Upload s3utils.UploadFunc
+
+	// uploaded is each batch's sorted, comma joined site IDs, kept once its upload succeeds and dropped as soon as one
+	// of its sites' backups is copied again, so while it is kept S3 has the batch as its backups are now
+	uploaded sync.Map
 
 	DeleteAfterInactivity time.Duration
 
@@ -48,7 +59,7 @@ func SetupBackupSiteJob(ctx context.Context, controlDB *db.ControlDB, config *co
 		DeleteAfterInactivity: time.Duration(config.DeleteAfterInactivityMins) * time.Minute,
 
 		BatchBackupIntervalInSeconds: config.BatchBackupIntervalInSeconds,
-		S3Client:                     s3Client,
+		Upload:                       s3Client.UploadFilesToS3,
 		ServerConfig:                 config,
 	}
 
@@ -143,7 +154,9 @@ func (b *BackupSiteJobManager) BackupToS3(ctx context.Context) {
 // ///
 
 // BackupSiteBatch backs up the sites whose IDs start with char, recording the backup as an event in the logs DB and
-// a failure as an error. It logs the sites it backs up once, then only what goes wrong.
+// a failure as an error. It logs the sites it backs up once, then only what goes wrong. A site whose backup is
+// current is not copied again, so its DB is not opened and left with an idle connection, and a batch with the same
+// sites, none copied again, since this process last uploaded it is not uploaded or recorded again.
 func (b *BackupSiteJobManager) BackupSiteBatch(ctx context.Context, char string) (err error) {
 	ctx = aslog.With(ctx, slog.String("batch", char))
 	started := time.Now()
@@ -162,38 +175,80 @@ func (b *BackupSiteJobManager) BackupSiteBatch(ctx context.Context, char string)
 		return nil
 	}
 
-	siteIDs := []string{}
-	for _, backupSite := range sites {
-		if backupSite.Subdomain != "" {
-			siteIDs = append(siteIDs, backupSite.Subdomain)
-		}
-	}
-	slog.InfoContext(ctx, "Backing up site DBs", "sites", siteIDs)
-
-	paths := []string{}
-
+	siteIDs, paths := []string{}, []string{}
 	for _, backupSite := range sites {
 		if backupSite.Subdomain == "" {
 			continue
 		}
-
 		// Have to add it anyway because we need all paths
-		err := backupSite.Backup(aslog.WithSite(ctx, backupSite.Subdomain))
-		if err != nil {
+		siteIDs = append(siteIDs, backupSite.Subdomain)
+		paths = append(paths, backupSite.BackupPath)
+		if backupIsCurrent(backupSite) {
+			continue
+		}
+		// Dropped before copying, so a round that fails after this still uploads the batch the next time
+		b.uploaded.Delete(char)
+		if err := copyBackup(aslog.WithSite(ctx, backupSite.Subdomain), backupSite); err != nil {
 			return fmt.Errorf("cannot backup site db %s: %w", backupSite.Subdomain, err)
 		}
-
-		paths = append(paths, backupSite.BackupPath)
 	}
 
-	err = b.S3Client.UploadFilesToS3(ctx, sitedb.GetS3BatchPath(char, b.ServerConfig), s3utils.SiteRetention, paths)
+	batchSites := strings.Join(slices.Sorted(slices.Values(siteIDs)), ",")
+	if last, ok := b.uploaded.Load(char); ok && last == batchSites {
+		return nil
+	}
+	slog.InfoContext(ctx, "Backing up site DBs", "sites", siteIDs)
+
+	err = b.Upload(ctx, sitedb.GetS3BatchPath(char, b.ServerConfig), s3utils.SiteRetention, paths)
 	if err != nil {
 		return fmt.Errorf("cannot sync site pool %s: %w", string(char), err)
 	}
+	b.uploaded.Store(char, batchSites)
 	b.controlDB.Logs.SiteBatchBackedUpEvent(ctx, char, len(paths), started, b.ServerConfig.Status.S3Working)
 
 	// Copy the control db to the backup location
 	return nil
+}
+
+// copySlack is how long before a copy starts its backup is dated, covering file systems that keep times to the second
+// and the kernel's coarse clock, which sets a file's time, lagging behind time.Now
+const copySlack = 5 * time.Second
+
+// copyBackup copies site's DB to its backup, dated a little before the copy started rather than when it finished. A
+// write the copy may have missed is made after the copy started, and making it sets the DB file's or its write-ahead
+// log's time to then, newer than the backup, so the next round copies the site again: no write is left out for good.
+func copyBackup(ctx context.Context, site *db.SiteDB) error {
+	dated := time.Now().Add(-copySlack)
+	err := site.Backup(ctx)
+	if err == nil {
+		err = os.Chtimes(site.BackupPath, dated, dated)
+	}
+	if err != nil {
+		// A copy that failed part way, or is dated when it finished, could pass for a current one, so it goes
+		_ = utils.DeleteFile(site.BackupPath)
+	}
+	return err
+}
+
+// backupIsCurrent is whether site's backup is dated after its DB file and write-ahead log were last written, so a
+// copy would change nothing. A time equal to the backup's could be a write it missed, so is copied again. It reads
+// only the files' times, opening no connection to the DB.
+func backupIsCurrent(site *db.SiteDB) bool {
+	backup, err := os.Stat(site.BackupPath)
+	if site.InMemory || err != nil {
+		return false
+	}
+	for _, path := range []string{site.Path, site.Path + "-wal"} {
+		info, err := os.Stat(path)
+		// The write-ahead log is removed when the DB's last connection closes, once what it held is in the DB file
+		if path != site.Path && errors.Is(err, fs.ErrNotExist) {
+			continue
+		}
+		if err != nil || !info.ModTime().Before(backup.ModTime()) {
+			return false
+		}
+	}
+	return true
 }
 
 // ///
