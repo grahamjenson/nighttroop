@@ -143,12 +143,10 @@ func (b *BackupSiteJobManager) BackupToS3(ctx context.Context) {
 // ///
 
 // BackupSiteBatch backs up the sites whose IDs start with char, recording the backup as an event in the logs DB and
-// a failure as an error
+// a failure as an error. It logs the sites it backs up once, then only what goes wrong.
 func (b *BackupSiteJobManager) BackupSiteBatch(ctx context.Context, char string) (err error) {
 	ctx = aslog.With(ctx, slog.String("batch", char))
-	trackTrim := false
 	started := time.Now()
-	defer aslog.TrackTime(ctx, started, "backup site pool "+char, &trackTrim, nil)
 	defer func() {
 		if err != nil {
 			b.controlDB.Logs.SiteBatchBackupError(ctx, char, err)
@@ -164,7 +162,13 @@ func (b *BackupSiteJobManager) BackupSiteBatch(ctx context.Context, char string)
 		return nil
 	}
 
-	slog.InfoContext(ctx, "Backing up site batch", "site_count", len(sites))
+	siteIDs := []string{}
+	for _, backupSite := range sites {
+		if backupSite.Subdomain != "" {
+			siteIDs = append(siteIDs, backupSite.Subdomain)
+		}
+	}
+	slog.InfoContext(ctx, "Backing up site DBs", "sites", siteIDs)
 
 	paths := []string{}
 
@@ -181,8 +185,6 @@ func (b *BackupSiteJobManager) BackupSiteBatch(ctx context.Context, char string)
 
 		paths = append(paths, backupSite.BackupPath)
 	}
-
-	trackTrim = len(paths) > 0
 
 	err = b.S3Client.UploadFilesToS3(ctx, sitedb.GetS3BatchPath(char, b.ServerConfig), s3utils.SiteRetention, paths)
 	if err != nil {
