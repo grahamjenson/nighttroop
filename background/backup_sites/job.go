@@ -240,8 +240,9 @@ func backupIsCurrent(site *db.SiteDB) bool {
 	}
 	for _, path := range []string{site.Path, site.Path + "-wal"} {
 		info, err := os.Stat(path)
-		// The write-ahead log is removed when the DB's last connection closes, once what it held is in the DB file
-		if path != site.Path && errors.Is(err, fs.ErrNotExist) {
+		// The write-ahead log is removed when the DB's last connection closes, once what it held is in the DB file, and is
+		// empty, though dated when it was opened, while a connection that has written nothing is open, as one that read
+		if path != site.Path && (errors.Is(err, fs.ErrNotExist) || (err == nil && info.Size() == 0)) {
 			continue
 		}
 		if err != nil || !info.ModTime().Before(backup.ModTime()) {
