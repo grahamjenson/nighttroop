@@ -10,25 +10,16 @@ import (
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/consts"
-	"nighttroop.t1d.nz/utils/httputils"
 )
 
 type EntriesCollection struct {
-	converter func(c *sitedb.GlucoseReading, siteContext *httputils.SiteContext, raw bool) nsutils.Record
+	named[sitedb.GlucoseReading]
 }
 
 func NewEntriesCollection() CollectionStore {
 	return NewCollection[nightscoutmodels.Entry, sitedb.GlucoseReading](EntriesCollection{
-		converter: nsutils.DBModelToRecord(nsutils.Entries, nightscoutmodels.DBModelToEntry),
+		named[sitedb.GlucoseReading]{nsutils.Entries, nsutils.DBModelToRecord(nsutils.Entries, nightscoutmodels.DBModelToEntry)},
 	})
-}
-
-func (c EntriesCollection) Name() string {
-	return "entries"
-}
-
-func (c EntriesCollection) Convert(dr *sitedb.GlucoseReading, siteContext *httputils.SiteContext, raw bool) nsutils.Record {
-	return c.converter(dr, siteContext, raw)
 }
 
 // Cannot change properties

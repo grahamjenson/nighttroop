@@ -54,6 +54,20 @@ type CollectionTypeDeleter interface {
 	HardDeleteType(q *sitedb.Queries, ctx context.Context, typeString string) (sql.Result, error)
 }
 
+// named is a CollectionDB's name and how it makes its database models into records, for a CollectionDB to embed
+type named[DM any] struct {
+	name    nsutils.Collection
+	convert func(*DM, *httputils.SiteContext, bool) nsutils.Record
+}
+
+func (n named[DM]) Name() string {
+	return string(n.name)
+}
+
+func (n named[DM]) Convert(dbModel *DM, siteContext *httputils.SiteContext, raw bool) nsutils.Record {
+	return n.convert(dbModel, siteContext, raw)
+}
+
 // Collection is the CollectionStore for a CollectionDB
 type Collection[NS SharedNSFields, DM SharedDBFields] struct {
 	db CollectionDB[NS, DM]

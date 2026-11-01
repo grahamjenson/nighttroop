@@ -9,25 +9,16 @@ import (
 	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
-	"nighttroop.t1d.nz/utils/httputils"
 )
 
 type ActivityCollection struct {
-	converter func(c *sitedb.Activity, siteContext *httputils.SiteContext, raw bool) nsutils.Record
+	named[sitedb.Activity]
 }
 
 func NewActivityCollection() CollectionStore {
 	return NewCollection[nightscoutmodels.Activity, sitedb.Activity](ActivityCollection{
-		converter: nsutils.DBModelToRecord(nsutils.Activity, nightscoutmodels.DBModelToActivity),
+		named[sitedb.Activity]{nsutils.Activity, nsutils.DBModelToRecord(nsutils.Activity, nightscoutmodels.DBModelToActivity)},
 	})
-}
-
-func (c ActivityCollection) Name() string {
-	return "activity"
-}
-
-func (c ActivityCollection) Convert(dr *sitedb.Activity, siteContext *httputils.SiteContext, raw bool) nsutils.Record {
-	return c.converter(dr, siteContext, raw)
 }
 
 func (c ActivityCollection) Validate(nsModel nightscoutmodels.Activity, dbModel *sitedb.Activity) *nsutils.HTTPError {

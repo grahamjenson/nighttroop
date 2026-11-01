@@ -17,19 +17,13 @@ import (
 )
 
 type ProfileCollection struct {
-	converter func(c *sitedb.ProfilePresetBundle, siteContext *httputils.SiteContext, raw bool) nsutils.Record
+	named[sitedb.ProfilePresetBundle]
 }
 
 func NewProfileCollection() CollectionStore {
-	return NewCollection[nightscoutmodels.ProfileStore, sitedb.ProfilePresetBundle](ProfileCollection{converter: nsutils.DBModelToRecord(nsutils.Profile, DBToNightscoutProfileStore)})
-}
-
-func (c ProfileCollection) Name() string {
-	return "profile"
-}
-
-func (c ProfileCollection) Convert(dr *sitedb.ProfilePresetBundle, siteContext *httputils.SiteContext, raw bool) nsutils.Record {
-	return c.converter(dr, siteContext, raw)
+	return NewCollection[nightscoutmodels.ProfileStore, sitedb.ProfilePresetBundle](ProfileCollection{
+		named[sitedb.ProfilePresetBundle]{nsutils.Profile, nsutils.DBModelToRecord(nsutils.Profile, DBToNightscoutProfileStore)},
+	})
 }
 
 func (c ProfileCollection) Validate(nsModel nightscoutmodels.ProfileStore, dbModel *sitedb.ProfilePresetBundle) *nsutils.HTTPError {

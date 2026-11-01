@@ -14,21 +14,13 @@ import (
 )
 
 type DeviceStatusCollection struct {
-	converter func(c *sitedb.DeviceReport, siteContext *httputils.SiteContext, raw bool) nsutils.Record
+	named[sitedb.DeviceReport]
 }
 
 func NewDeviceStatusCollection() CollectionStore {
 	return NewCollection[nightscoutmodels.DeviceStatus, sitedb.DeviceReport](DeviceStatusCollection{
-		converter: nsutils.DBModelToRecord(nsutils.Devicestatus, DBToNightscoutDeviceStatus),
+		named[sitedb.DeviceReport]{nsutils.Devicestatus, nsutils.DBModelToRecord(nsutils.Devicestatus, DBToNightscoutDeviceStatus)},
 	})
-}
-
-func (c DeviceStatusCollection) Name() string {
-	return "devicestatus"
-}
-
-func (c DeviceStatusCollection) Convert(dr *sitedb.DeviceReport, siteContext *httputils.SiteContext, raw bool) nsutils.Record {
-	return c.converter(dr, siteContext, raw)
 }
 
 func (c DeviceStatusCollection) Validate(nsModel nightscoutmodels.DeviceStatus, dbModel *sitedb.DeviceReport) *nsutils.HTTPError {

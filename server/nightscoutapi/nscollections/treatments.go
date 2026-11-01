@@ -15,21 +15,13 @@ import (
 )
 
 type TreatmentCollection struct {
-	converter func(c *sitedb.EventGroupsBundle, siteContext *httputils.SiteContext, raw bool) nsutils.Record
+	named[sitedb.EventGroupsBundle]
 }
 
 func NewTreatmentCollection() CollectionStore {
 	return NewCollection[nightscoutmodels.Treatment, sitedb.EventGroupsBundle](TreatmentCollection{
-		converter: nsutils.DBModelToRecord(nsutils.Treatments, DBModelToTreatment),
+		named[sitedb.EventGroupsBundle]{nsutils.Treatments, nsutils.DBModelToRecord(nsutils.Treatments, DBModelToTreatment)},
 	})
-}
-
-func (c TreatmentCollection) Name() string {
-	return "treatments"
-}
-
-func (c TreatmentCollection) Convert(dr *sitedb.EventGroupsBundle, siteContext *httputils.SiteContext, raw bool) nsutils.Record {
-	return c.converter(dr, siteContext, raw)
 }
 
 func (c TreatmentCollection) Validate(nsModel nightscoutmodels.Treatment, dbModel *sitedb.EventGroupsBundle) *nsutils.HTTPError {
