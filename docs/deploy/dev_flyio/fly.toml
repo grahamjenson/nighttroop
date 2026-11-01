@@ -1,0 +1,39 @@
+# A dev Nighttroop on Fly.io for alpha testing, open to everyone and wiped on every deploy and restart. See README.md.
+# Change HOST_NAME, and the health check's Host below with it, to your domain. The app is named when deploying.
+
+primary_region = "syd"
+
+[env]
+  MODE = "production"
+  HOST_NAME = "dev.example.com"
+  HOST_PROTOCOL = "https"
+  # The large "this is a test site" banner on every page
+  TEST_SITE = "true"
+  # On the machine's own disk, with no volume, so every deploy and restart starts empty. No S3 is set, so nothing is
+  # backed up or restored.
+  DATA_DIR = "/data"
+  # Far fewer than a real server: enough for testers, little for anyone filling it
+  MAX_SITES = "500"
+  DELETE_AFTER_INACTIVITY_MINS = "1440"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  # One machine, always on: a second would have its own empty databases, and a stopped one would lose them
+  auto_stop_machines = "off"
+  auto_start_machines = true
+  min_machines_running = 1
+
+  # The server only answers its own host name, so the check sends it
+  [[http_service.checks]]
+    grace_period = "30s"
+    interval = "15s"
+    timeout = "5s"
+    method = "GET"
+    path = "/health"
+    [http_service.checks.headers]
+      Host = "dev.example.com"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
