@@ -19,7 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"time"
+	{{ if eq .PkgName "sitedb" }}"time"{{ end }}
 
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/backup"
@@ -309,12 +309,21 @@ func OpenSqliteDB(path string, cacheSize int) (*sql.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("cannot open sqlite db: %w", err)
 	}
-	// A connection holds its files, page cache and schema, about 1MB, so an idle one is closed, as with thousands of
-	// sites most are idle at any time. Opening one again takes a couple of milliseconds.
-	sqldb.SetConnMaxIdleTime(time.Minute)
+	{{ if eq .PkgName "sitedb" }}
+	// A connection holds its files, page cache and parsed schema, about 0.6MB, and with thousands of sites most are idle
+	// at any time, so a site keeps at most one idle connection, closed once unused for connMaxIdleTime. Opening one
+	// again takes about a millisecond.
+	sqldb.SetMaxIdleConns(1)
+	sqldb.SetConnMaxIdleTime(connMaxIdleTime)
+	{{ end }}
 
 	return sqldb, nil
 }
+
+{{ if eq .PkgName "sitedb" }}
+// connMaxIdleTime is how long a site DB's connection is kept unused before it is closed
+var connMaxIdleTime = 30 * time.Second
+{{ end }}
 
 func OpenInMemorySqliteDB() (*sql.DB, error) {
 
