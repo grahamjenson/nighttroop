@@ -4,9 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"sync"
 	"time"
-
-	"github.com/alitto/pond/v2"
 
 	"nighttroop.t1d.nz/data/db"
 
@@ -132,17 +131,34 @@ type ConsumeParams struct {
 	OnEmptySleep      time.Duration
 }
 
+// Consume runs the queue's jobs on PoolSize workers until ctx is done. It only grabs as many jobs as there are free
+// workers, so a job is fetched just before it runs and its visibility timeout counts from then. Stopping waits for the
+// running jobs, not for jobs still queued.
 func (j *JobQueue) Consume(ctx context.Context, params ConsumeParams) error {
-	workers := pond.NewPool(params.PoolSize)
-	defer workers.StopAndWait()
+	// free holds a slot for each worker that is not running a job
+	poolSize := max(params.PoolSize, 1)
+	free := make(chan struct{}, poolSize)
+	for range poolSize {
+		free <- struct{}{}
+	}
+	var running sync.WaitGroup
+	defer running.Wait()
 	sleep := params.OnEmptySleep
 	if sleep == 0 {
 		sleep = 1 * time.Second
 	}
 	for {
-		// If the context gets canceled for example, stop consuming
-		if ctx.Err() != nil {
+		// Wait for a free worker, unless the context gets canceled for example, then stop consuming
+		select {
+		case <-ctx.Done():
 			return nil
+		case <-free:
+		}
+		// Only this loop takes slots, so the other free ones can be taken without waiting
+		slots := 1
+		for len(free) > 0 {
+			<-free
+			slots++
 		}
 
 		if params.VisibilityTimeout > 0 {
@@ -159,11 +175,16 @@ func (j *JobQueue) Consume(ctx context.Context, params ConsumeParams) error {
 		grabbedJobs, err := j.GrabJobs(ctx, GrabJobsParams{
 			Queue:        params.Queue,
 			ExecuteAfter: time.Now().Unix(),
-			Count:        int64(params.PoolSize),
+			Count:        int64(slots),
 		})
 
 		if err != nil {
 			return fmt.Errorf("error grabbing jobs: %w", err)
+		}
+
+		// Give back the slots no job was grabbed for
+		for range slots - len(grabbedJobs) {
+			free <- struct{}{}
 		}
 
 		if len(grabbedJobs) == 0 {
@@ -172,8 +193,12 @@ func (j *JobQueue) Consume(ctx context.Context, params ConsumeParams) error {
 		}
 
 		for _, job := range grabbedJobs {
-			job := job
-			workers.Submit(func() { runJob(ctx, j.queries, params.Worker, job) })
+			running.Add(1)
+			go func() {
+				defer running.Done()
+				defer func() { free <- struct{}{} }()
+				runJob(ctx, j.queries, params.Worker, job)
+			}()
 		}
 	}
 }
