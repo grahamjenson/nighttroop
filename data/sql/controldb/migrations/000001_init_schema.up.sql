@@ -302,3 +302,17 @@ CREATE TABLE site_sync_sources (
 
 
 
+
+-- SERVER SETTINGS
+-- The server's one row of settings, which its control admin changes
+CREATE TABLE server_settings (
+    id INTEGER PRIMARY KEY CHECK(id = 1),
+
+    -- Whether the public can create sites from the home page; a control admin always can
+    public_site_creation INTEGER NOT NULL DEFAULT 1 CHECK(public_site_creation IN (0, 1)),
+
+    updated_at INTEGER,
+    updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32)
+) STRICT;
+
+INSERT INTO server_settings (id) VALUES (1);

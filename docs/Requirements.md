@@ -39,7 +39,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - A site not written to or seen within `DISABLE_AFTER_INACTIVITY_DAYS` is marked inactive.
 - Clicking a site shows its details.
 - An admin can create a site at an ID they pick (8 lowercase letters), e.g. a vanity one; a taken ID is refused. Its
-  credentials are shown once.
+  credentials are shown once. An admin can create sites past `MAX_SITES` and while public site creation is off.
+- An admin can turn public site creation off, so sites cannot be created from the home page, and back on.
 - A site can be:
   - **disabled**, after a confirmation, so it is no longer served;
   - **archived** once disabled, uploading it to S3 (needs S3);
@@ -111,6 +112,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   check changes nothing, and a recovered site's credentials are checked the same way.
 - A new site takes the time zone and language of the browser that created it, and its country's units and formats.
 - Site creation is rate limited per IP and server wide, and refused once the server holds `MAX_SITES`.
+- While a control admin has turned public site creation off, the home page says so instead of offering to create a
+  site, and creating one is refused.
 - The public **recover page** takes a site's ID and backup key and gives the admin a new password and TOTP and the
   site a new backup key. The key works once; a wrong key is refused without saying why.
 - A site that is never used is deleted after `DELETE_AFTER_INACTIVITY_MINS`.

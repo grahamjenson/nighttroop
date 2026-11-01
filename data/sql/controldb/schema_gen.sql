@@ -20,6 +20,16 @@ CREATE TABLE control_identities (
     deleted_at INTEGER -- soft delete here, but on delete will wipe out password and such
 ) STRICT;
 
+CREATE TABLE server_settings (
+    id INTEGER PRIMARY KEY CHECK(id = 1),
+
+    -- Whether the public can create sites from the home page; a control admin always can
+    public_site_creation INTEGER NOT NULL DEFAULT 1 CHECK(public_site_creation IN (0, 1)),
+
+    updated_at INTEGER,
+    updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32)
+) STRICT;
+
 CREATE TABLE site_identities (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     site_id TEXT NOT NULL REFERENCES sites(id),

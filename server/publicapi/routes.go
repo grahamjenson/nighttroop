@@ -28,7 +28,7 @@ type CreateUserResponse struct {
 
 func GETMainPageHandler(controlDB *db.ControlDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := public_templ.CreateSite().Render(r.Context(), w)
+		err := public_templ.CreateSite(controlDB.PublicSiteCreation(r.Context())).Render(r.Context(), w)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -51,8 +51,18 @@ func POSTCreateSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig)
 			return
 		}
 
-		// Check to see if there is 10k sites and return error if there is
-		if controlDB.GetNSitesDBs() > config.MaxSites {
+		// A control admin can turn off the public creating sites, and still create them
+		if !controlDB.PublicSiteCreation(r.Context()) {
+			if httputils.GetAcceptType(r).API() {
+				apiutils.WriteJSON(w, http.StatusForbidden, map[string]string{"error": "Creating sites is turned off"})
+				return
+			}
+			http.Error(w, "Creating sites is turned off", http.StatusForbidden)
+			return
+		}
+
+		// MAX_SITES is a hard limit on the public creating sites, though not on a control admin
+		if controlDB.GetNSitesDBs() >= config.MaxSites {
 			// Plain text, as there is no page for a full server yet, unlike the rate limit's above
 			http.Error(w, "Full: Too many sites", http.StatusTooManyRequests)
 			return

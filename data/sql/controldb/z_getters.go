@@ -139,6 +139,46 @@ func (m *ControlIdentity) SetDeletedAt(v *int64) {
 }
 
 // GetID returns the ID value.
+func (m ServerSetting) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated ServerSetting.
+func (m *ServerSetting) SetID(v int64) {
+	m.ID = v
+}
+
+// GetPublicSiteCreation returns the PublicSiteCreation value.
+func (m ServerSetting) GetPublicSiteCreation() bool {
+	return m.PublicSiteCreation
+}
+
+// SetPublicSiteCreation sets the PublicSiteCreation value and returns the updated ServerSetting.
+func (m *ServerSetting) SetPublicSiteCreation(v bool) {
+	m.PublicSiteCreation = v
+}
+
+// GetUpdatedAt returns the UpdatedAt value.
+func (m ServerSetting) GetUpdatedAt() *int64 {
+	return m.UpdatedAt
+}
+
+// SetUpdatedAt sets the UpdatedAt value and returns the updated ServerSetting.
+func (m *ServerSetting) SetUpdatedAt(v *int64) {
+	m.UpdatedAt = v
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m ServerSetting) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated ServerSetting.
+func (m *ServerSetting) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
+}
+
+// GetID returns the ID value.
 func (m Site) GetID() string {
 	return m.ID
 }
@@ -1696,6 +1736,26 @@ func (m GetControlIdentityParams) GetName() string {
 // SetName sets the Name value and returns the updated GetControlIdentityParams.
 func (m *GetControlIdentityParams) SetName(v string) {
 	m.Name = v
+}
+
+// GetPublicSiteCreation returns the PublicSiteCreation value.
+func (m UpdatePublicSiteCreationParams) GetPublicSiteCreation() bool {
+	return m.PublicSiteCreation
+}
+
+// SetPublicSiteCreation sets the PublicSiteCreation value and returns the updated UpdatePublicSiteCreationParams.
+func (m *UpdatePublicSiteCreationParams) SetPublicSiteCreation(v bool) {
+	m.PublicSiteCreation = v
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m UpdatePublicSiteCreationParams) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdatePublicSiteCreationParams.
+func (m *UpdatePublicSiteCreationParams) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
 }
 
 // GetUnits returns the Units value.

@@ -6,9 +6,9 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/icon"
 )
 
-// CreateSite is the home page. Once a site is created its two steps are the page: the header shrinks to the logo and
-// name beside each other, and the rest of it is hidden
-templ CreateSite() {
+// CreateSite is the home page, whose button creates a site when the public can. Once a site is created its two steps
+// are the page: the header shrinks to the logo and name beside each other, and the rest of it is hidden
+templ CreateSite(open bool) {
 	@PublicBase() {
 		<main class="group min-h-screen flex flex-col items-center justify-center px-6 py-12 bg-gradient-to-b from-slate-100 via-slate-50 to-white has-[#public--site-info]:justify-start has-[#public--site-info]:py-6">
 			<div class="w-full max-w-3xl text-center">
@@ -25,22 +25,28 @@ templ CreateSite() {
 					Your own Nightscout-compatible site in one click. No servers, no databases, no sign-up. Create a site, save your credentials, and start syncing.
 				</p>
 				<div id="panel-content" class="mt-10 flex flex-col items-center group-has-[#public--site-info]:mt-6">
-					@button.Button(button.Props{
-						ID:    "public--create-site-button",
-						Size:  button.SizeLg,
-						Class: "h-14 px-10 rounded-full text-lg font-semibold text-white bg-brand-night hover:bg-brand-night/90 shadow-lg shadow-brand-night/30 hover:shadow-xl transition-all duration-200",
-						Attributes: templ.Attributes{
-							"hx-post":       "/site",
-							"hx-vals":       "js:{timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, language: navigator.language}",
-							"hx-target":     "#panel-content",
-							"hx-swap":       "innerHTML",
-							"hx-status:4xx": "target:#error-container",
-							"hx-status:5xx": "target:#error-container",
-						},
-					}) {
-						Create Site
+					if !open {
+						<p id="public--create-site-off" class="rounded-xl border border-slate-200 bg-white px-6 py-4 text-slate-700 shadow-sm">
+							Creating new sites is turned off on this server for now.
+						</p>
+					} else {
+						@button.Button(button.Props{
+							ID:    "public--create-site-button",
+							Size:  button.SizeLg,
+							Class: "h-14 px-10 rounded-full text-lg font-semibold text-white bg-brand-night hover:bg-brand-night/90 shadow-lg shadow-brand-night/30 hover:shadow-xl transition-all duration-200",
+							Attributes: templ.Attributes{
+								"hx-post":       "/site",
+								"hx-vals":       "js:{timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, language: navigator.language}",
+								"hx-target":     "#panel-content",
+								"hx-swap":       "innerHTML",
+								"hx-status:4xx": "target:#error-container",
+								"hx-status:5xx": "target:#error-container",
+							},
+						}) {
+							Create Site
+						}
+						<div id="error-container" class="h-8 w-full mt-2"></div>
 					}
-					<div id="error-container" class="h-8 w-full mt-2"></div>
 				</div>
 				<dl id="public--features" class="mt-12 grid gap-6 sm:grid-cols-3 text-left group-has-[#public--site-info]:hidden">
 					@feature(icon.MousePointerClick, "One click", "No account to make. Your site and its credentials are generated instantly.")

@@ -49,7 +49,7 @@ ASSERT_TEXT_VISIBLE the most recently failed first
 ASSERT_TEXT_VISIBLE Showing 1 to
 ASSERT_TEXT_VISIBLE virtual
 // A source that has failed has its failed count in red
-ASSERT_VISIBLE #controlSyncSourcesTable td:last-child span.text-red-700
+ASSERT_VISIBLE #controlSyncSourcesTable td:last-child span.text-red-700 >> nth=0
 SCREENSHOT sync_sources
 
 // Clicking a source shows its reports
