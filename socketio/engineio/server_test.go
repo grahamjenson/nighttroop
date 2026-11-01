@@ -381,6 +381,28 @@ func TestUpgradeEndsTheWaitingPoll(t *testing.T) {
 	require.ErrorContains(t, err, "400")
 }
 
+// After an upgrade a POST over polling is refused, so its packets are not handled alongside the websocket's
+func TestUpgradedSessionRefusesPosts(t *testing.T) {
+	_, ts, _ := echoServer(t, Config{})
+	sid := handshake(t, ts.URL, "4")
+	ws := upgrade(t, ts.URL, V4, sid)
+	// The session is on the websocket once a message round trips over it
+	require.NoError(t, ws.WritePacket(Packet{Type: Message, Data: "upgraded"}))
+	p, err := ws.ReadPacket()
+	require.NoError(t, err)
+	require.Equal(t, Packet{Type: Message, Data: "upgraded"}, p)
+
+	status, body := post(t, ts.URL+"/?EIO=4&transport=polling&sid="+sid, "4over polling")
+	require.Equal(t, http.StatusBadRequest, status)
+	require.JSONEq(t, `{"code":3,"message":"Bad request"}`, body)
+
+	// The posted message was never handled: the next echo is the websocket's
+	require.NoError(t, ws.WritePacket(Packet{Type: Message, Data: "over websocket"}))
+	p, err = ws.ReadPacket()
+	require.NoError(t, err)
+	require.Equal(t, Packet{Type: Message, Data: "over websocket"}, p)
+}
+
 func TestBadProbeKeepsPolling(t *testing.T) {
 	_, ts, _ := echoServer(t, Config{})
 	sid := handshake(t, ts.URL, "4")
