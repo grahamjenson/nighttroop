@@ -134,6 +134,25 @@ func (db *DB) Vacuum(ctx context.Context) error {
 	return err
 }
 
+// Schema is the SQL that made each of db's tables, indexes and triggers, so DBs made by the same migrations have the
+// same one. sqlc cannot generate a query of sqlite_master, so it is read here, with the rest of the DB's upkeep.
+func Schema(ctx context.Context, db *sql.DB) (string, error) {
+	rows, err := db.QueryContext(ctx, "SELECT sql FROM sqlite_master WHERE sql IS NOT NULL ORDER BY type, name")
+	if err != nil {
+		return "", err
+	}
+	defer rows.Close()
+	schema := ""
+	for rows.Next() {
+		var stmt string
+		if err := rows.Scan(&stmt); err != nil {
+			return "", err
+		}
+		schema += stmt + ";\n"
+	}
+	return schema, rows.Err()
+}
+
 /////
 // File paths
 /////
