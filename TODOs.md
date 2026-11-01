@@ -68,6 +68,7 @@
 ## Bugs
 
 1. Archive has a problem where they are deleting files from the db not removing from control
+1. P4: A start killed mid restore leaves its `.<folder>-restore-*` staging folder beside the DBs; remove them on start
 1. P2: A live site whose DB file is missing at start is only logged and left out; restore it from its batch backup or
    show it to the control admin
 

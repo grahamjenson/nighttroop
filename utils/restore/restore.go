@@ -64,15 +64,16 @@ func TryRestoreAllFiles(s3Client *s3utils.S3Client) error {
 	defer aslog.TrackTime(context.Background(), time.Now(), "TryRestoreAllFiles", nil, nil)
 	slog.Info("TryRestoreAllFiles")
 
-	err := TryDownloadExrtractUserDbs(s3Client)
-	// Create the rest of the folders here
-	for _, char := range utils.SITE_CHAR_SET {
-		dir := sitedb.GetBatchFolder(string(char), s3Client.ServerConfig)
-		utils.MkDirs(dir)
+	// A batch that failed is left without a folder, so the next start downloads it again
+	if err := TryDownloadExrtractUserDbs(s3Client); err != nil {
+		return fmt.Errorf("cannot try download all files: %w", err)
 	}
 
-	if err != nil {
-		return fmt.Errorf("cannot try download all files: %w", err)
+	// Create the rest of the folders here
+	for _, char := range utils.SITE_CHAR_SET {
+		if err := utils.MkDirs(sitedb.GetBatchFolder(string(char), s3Client.ServerConfig)); err != nil {
+			return err
+		}
 	}
 
 	return nil
