@@ -258,3 +258,21 @@ type UploaderStatus struct {
 	Name      *types.ShortString   `json:"name,omitempty"`
 	Timestamp *types.DateString    `json:"timestamp,omitempty"`
 }
+
+// UnmarshalJSON leaves out a battery that is not a number, like the "50 days (voltage: 285/275)" xDrip+ sends for a
+// Dexcom transmitter, rather than refusing the device status
+func (u *UploaderStatus) UnmarshalJSON(data []byte) error {
+	type Alias UploaderStatus
+	aux := struct {
+		Battery json.RawMessage `json:"battery"`
+		*Alias
+	}{Alias: (*Alias)(u)}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	var battery *types.FlexibleInt64
+	if json.Unmarshal(aux.Battery, &battery) == nil {
+		u.Battery = battery
+	}
+	return nil
+}

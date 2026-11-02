@@ -88,6 +88,7 @@ type DBModelConverter interface {
 	// goverter:context siteContext
 	// goverter:map . StartDate | ModelDateStringFromDateIntAndUTCOffset
 	// goverter:map CreatedByIdentityName Subject
+	// goverter:map CreatedByIdentityName EnteredBy
 	// goverter:map CreatedByAppName App
 	// goverter:map CreatedByDeviceName Device
 	// goverter:map ID Identifier

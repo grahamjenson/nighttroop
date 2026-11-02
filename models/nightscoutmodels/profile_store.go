@@ -22,6 +22,8 @@ type ProfileStore struct {
 	Device  *types.ShortString `json:"device,omitempty"`  // Device used for the activity
 	App     *types.ShortString `json:"app,omitempty"`     // App used for the activity
 	Subject *types.ShortString `json:"subject,omitempty"` // Subject of the activity
+	// EnteredBy is who uploaded it, as for treatments; Trio and iAPS need it to import a profile
+	EnteredBy *types.ShortString `json:"enteredBy,omitempty"`
 
 	// Date Feilds
 	StartDate *types.DateString `json:"startDate,omitempty"`

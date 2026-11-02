@@ -2,6 +2,8 @@ package jsonapi
 
 import (
 	"bytes"
+	"crypto/sha1"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -281,6 +283,16 @@ func RenderTemplate(input string, ctx map[string]any) (string, error) {
 			// utctime is offset minutes ago in UTC with no zone, as LoopFollow sends, e.g. utctime 60 for an hour ago
 			"utctime": func(offset int) string {
 				return time.Now().UTC().Add(-time.Duration(offset) * time.Minute).Format("2006-01-02T15:04:05")
+			},
+			// javatime is minutes ago as Java's yyyy-MM-dd'T'HH:mm:ss.SSSZ at +1300, as xDrip+ sends dateString
+			"javatime": func(offset int) string {
+				at := time.Now().Add(-time.Duration(offset) * time.Minute)
+				return at.In(time.FixedZone("", 13*60*60)).Format("2006-01-02T15:04:05.000-0700")
+			},
+			// sha1 is the SHA1 in hex, as a Nightscout client sends its API secret, e.g. sha1 token
+			"sha1": func(s string) string {
+				sum := sha1.Sum([]byte(s))
+				return hex.EncodeToString(sum[:])
 			},
 			"date":    func(days int) string { return templateDayTime(days, 0).Format(time.DateOnly) },
 			"daytime": func(days, minutes int) string { return templateDayTime(days, minutes).Format(time.RFC3339) },

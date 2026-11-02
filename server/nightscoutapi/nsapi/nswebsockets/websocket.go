@@ -76,9 +76,10 @@ func (ws *Websocket) siteServer(siteID string, create bool) *socketio.Server {
 	alarm := server.Of("/alarm")
 	alarm.OnConnection(ws.onAlarmConnect)
 	ws.config.Events.Subscribe(siteID, func(event events.Event) {
-		// Model changes are sent to the site's sockets, and an identity's alarms to its /alarm sockets
+		// Model changes are sent to the site's sockets, its announcements and an identity's alarms to its /alarm sockets
 		if event.Model != nil {
 			ws.broadcastChange(main, event)
+			sendAnnouncement(alarm, event)
 		}
 		if checked, ok := event.Attributes.(alarms.Checked); ok && event.Name == events.Alarm {
 			ws.sendAlarms(alarm, checked)
