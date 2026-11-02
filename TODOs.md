@@ -58,6 +58,26 @@
     1. P2: Check If-Unmodified-Since on API v3 replace and patch, in the same query as the update
     1. P4: Only write a treatment's events that changed, rather than every one on each update
     1. P4: Keep when a site's settings last changed, for API v3 lastModified
+    1. Trio and iAPS ([docs/clients/trio.md](docs/clients/trio.md)):
+        1. P0: Accept `api-secret` as the SHA1 hex of a device's token, as Trio and iAPS send only that (it is all
+           Nightscout checks), e.g. by keeping an HMAC of each token's SHA1 to look the identity up; until then
+           Trio cannot sign in
+        1. P1: Filter v1 treatments on `find[carbs][$exists]` and `find[duration][$exists]`, and on `enteredBy`
+           (`find[enteredBy]`, `find[enteredBy][$ne]` and `find[$and][n][enteredBy][$ne]`), together: Trio fails
+           to decode a carbs fetch with any treatment without carbs, and once it gets only carbs it would import
+           its own back as new ones and double them, as `enteredBy` comes back as the identity, not `Trio`; iAPS
+           takes any announcement as a remote command, not only `enteredBy` `remote`
+        1. P1: A treatment uploaded again with the same `created_at` and `eventType` but a new duration (Trio's
+           temp target and override runs, when one ends early) replaces the first, as Nightscout's v1 upsert does;
+           now the first is kept, so an ended override stays 30 days long
+        1. P2: v1 delete by query (`DELETE /api/v1/treatments.json?find[id][$eq]=`, `find[created_at][$eq]` with
+           `find[eventType][$eq]`, and entries' `find[$or]`) is a 405; Trio deletes carbs, insulin and glucose
+           this way, and the override before uploading its run, so override runs are never uploaded. It needs
+           Trio's `id` kept as the identifier, and must refuse any filter it does not know rather than ignore it
+        1. P3: v1 `find[created_at]` filters on when a record was uploaded, not Nightscout's `created_at`, when
+           it happened
+        1. P3: Keep the device status `pump.clock`, `pump.status`, `pump.bolusIncrement`, the pump battery's
+           voltage and state, and `uploader` (`battery`, `isCharging`) Trio sends, for its followers
 
 ## Bugs
 
