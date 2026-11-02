@@ -254,6 +254,12 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   default profile's or profile switch's basal at its start, in the profile's timezone, and is returned with that
   `absolute` and its `percent` as sent.
 - Duplicate uploads are ignored; values far outside real use are refused.
+- A create that names its `identifier` keeps it, and only a document with that identifier is its duplicate.
+- A create naming a deleted document's identifier, or a replace of one, replaces it whatever changed, as Juggluco
+  changes a treatment by deleting it and sending it again.
+- A treatment with `eventType` `<none>`, Nightscout careportal's treatment with no type, is a Note keeping its
+  insulin and carbs.
+- A `dateString` with Juggluco's `-03:-30` zone for half hours west of UTC is read as `-03:30`.
 
 ### Nighttroop API and client
 
