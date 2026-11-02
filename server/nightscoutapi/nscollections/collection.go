@@ -497,13 +497,11 @@ func ValidateNotChangingSharedFields[NS SharedNSFields, DM SharedDBFields](repla
 
 // begin starts a write to the site's database, which is rolled back unless it is committed
 func (c Collection[NS, DM]) begin(ctx context.Context, siteContext *httputils.SiteContext) (*sql.Tx, *sitedb.Queries, *nsutils.HTTPError) {
-	// Before the transaction, which may hold the DB's only connection that preparing its queries needs
-	q := siteContext.SiteDB.Queries()
 	tx, err := siteContext.SiteDB.SQLiteDB.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, nil, nsutils.ErrInternal
 	}
-	return tx, q.WithTx(tx), nil
+	return tx, siteContext.SiteDB.QueriesWithTx(tx), nil
 }
 
 func (c Collection[NS, DM]) commit(tx *sql.Tx, action string) *nsutils.HTTPError {

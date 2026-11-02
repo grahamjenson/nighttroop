@@ -14,10 +14,9 @@ import (
 // addReadings adds count glucose readings to the site, every step milliseconds back from newest, with IDs from 0 newest
 func addReadings(t testing.TB, siteDB *db.SiteDB, count int64, newest int64, step int64) {
 	ctx := t.Context()
-	q := siteDB.Queries()
 	tx, err := siteDB.SQLiteDB.BeginTx(ctx, nil)
 	require.NoError(t, err)
-	insert := q.WithTx(tx)
+	insert := siteDB.QueriesWithTx(tx)
 	for i := range count {
 		_, err := insert.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: fmt.Sprint(i), Mgdl: 100, ReadingType: "sgv", OccurredAt: newest - i*step, CreatedByIdentityName: "test"})
 		require.NoError(t, err)
