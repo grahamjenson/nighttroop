@@ -516,6 +516,7 @@ const softDeleteGlucoseReading = `-- name: SoftDeleteGlucoseReading :execresult
 
 UPDATE glucose_readings SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_at = MAX(updated_at + 1, CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_by_identity_name = ?1
 WHERE id = ?2 AND deleted_at IS NULL
 `
@@ -535,6 +536,7 @@ func (q *Queries) SoftDeleteGlucoseReading(ctx context.Context, arg SoftDeleteGl
 const softDeleteGlucoseReadingsByType = `-- name: SoftDeleteGlucoseReadingsByType :execresult
 UPDATE glucose_readings SET 
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_at = MAX(updated_at + 1, CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_by_identity_name = ?
 WHERE reading_type = ? AND deleted_at IS NULL
 `

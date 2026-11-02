@@ -246,6 +246,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   lastModified and settings.
 - A v3 history includes deleted documents, with `isValid` false, so apps learn of deletions; a search leaves them
   out.
+- A delete moves a document's `srvModified` and the v3 lastModified forward, so a history since an app's last sync
+  has the documents deleted after it.
 - **Socket.IO** live updates and alarms over long polling or websockets.
 - Glucose is stored in mg/dL and returned and accepted in the settings' units.
 - Duplicate uploads are ignored; values far outside real use are refused.
