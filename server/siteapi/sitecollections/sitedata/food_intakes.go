@@ -41,11 +41,7 @@ func (s *FoodIntakesCollection) CreateRow(ctx context.Context, collectionTx *sit
 	if herr := checkFoodIntake(model); herr != nil {
 		return nil, herr
 	}
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.CreateFoodIntake(ctx, sitemodels.FoodIntakeToCreate(model, siteContext))
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).CreateFoodIntake, sitemodels.FoodIntakeToCreate(model, siteContext))
 }
 
 // NewHTMXResponse is the modal to add a food intake in
@@ -67,11 +63,7 @@ func (s *FoodIntakesCollection) UpdateRow(ctx context.Context, collectionTx *sit
 		return nil, herr
 	}
 	model.ID = oldModel.ID
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.UpdateFoodIntake(ctx, sitemodels.FoodIntakeToUpdate(model, siteContext))
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).UpdateFoodIntake, sitemodels.FoodIntakeToUpdate(model, siteContext))
 }
 
 func (s *FoodIntakesCollection) UpdateHTMXResponse(model *sitemodels.SiteFoodIntake) templ.Component {

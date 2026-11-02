@@ -39,11 +39,7 @@ func (s *TempTargetsCollection) CreateRow(ctx context.Context, collectionTx *sit
 	if herr := checkTempTarget(model, siteContext); herr != nil {
 		return nil, herr
 	}
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.CreateTempTarget(ctx, sitemodels.TempTargetToCreate(model, siteContext))
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).CreateTempTarget, sitemodels.TempTargetToCreate(model, siteContext))
 }
 
 // NewHTMXResponse is the modal to add a temp target in
@@ -76,11 +72,7 @@ func (s *TempTargetsCollection) UpdateRow(ctx context.Context, collectionTx *sit
 		return nil, herr
 	}
 	model.ID = oldModel.ID
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.UpdateTempTarget(ctx, sitemodels.TempTargetToUpdate(model, siteContext))
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).UpdateTempTarget, sitemodels.TempTargetToUpdate(model, siteContext))
 }
 
 func (s *TempTargetsCollection) UpdateHTMXResponse(model *sitemodels.SiteTempTarget) templ.Component {
