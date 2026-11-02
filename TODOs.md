@@ -163,6 +163,11 @@
 1. P4: A live site left out at start, its DB missing and not restored, is only a `site_db_missing` event; mark it on
    the control sites page too
 
+## Readability
+
+1. P4: Finish splitting the request logger's `NewLoggerWithConfig` (`utils/httputils/logger.go`): pull its level
+   choice and route params into functions, and drop its always empty `baseAttributes`
+
 ## Code
 
 1. P4: Run the summary daily and profile preset `DeleteRow`s through `siteapiutils.SiteQuery`, as the other
