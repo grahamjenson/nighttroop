@@ -1,0 +1,20 @@
+// Signing in spends the login limiters, so the page has some kept
+GOTO {{ .control_url }}/login
+INPUT #name admin
+INPUT #password password
+INPUT #control--login--otp-1 123123
+CLICK #control--login-button
+ASSERT_VISIBLE #controlSitesTable
+
+// The control site shows each kind of rate limiter, how many are kept and how full the most used is
+CLICK #control--menu
+CLICK #control--rate-limits-button
+ASSERT_STATUS 200
+ASSERT_PATH /rate-limits
+ASSERT_VISIBLE #controlRateLimitsTable
+ASSERT_VISIBLE #control--rate-limits--global >> text=Every request
+ASSERT_VISIBLE #control--rate-limits--control >> text=signed out
+ASSERT_VISIBLE #control--rate-limits--login_name >> text=Logins to a name
+ASSERT_VISIBLE #control--rate-limits--login_ip >> text=Logins from an IP
+ASSERT_VISIBLE #control--rate-limits--site_download
+SCREENSHOT rate_limits

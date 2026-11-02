@@ -96,6 +96,16 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - Its CPU is the server's in the last 5 seconds as htop shows it, 100% for each core used, so up to 400% on 4 cores.
 - Only signed in requests are counted.
 
+### Rate limits
+
+- The rate limits page lists each kind of rate limiter (every request, the control site's signed out, an IP's, logins,
+  sites created, a site's and an identity's reads and writes, sync changes, identities created, downloads), refreshing
+  every 10 seconds.
+- Each shows what one is kept for (server, IP, site, identity, login name or IP on a site), its rate a minute and burst,
+  how many are kept, how much of its burst the most used one has spent, and how many would refuse a request now.
+- The most used turns amber once it has spent half its burst, and red while any would refuse.
+- Reading them spends nothing, and names no site, identity or IP.
+
 ### Resource alerts
 
 - Every 5 minutes the server checks its memory (of its container's limit, or else the machine's), the space used on
