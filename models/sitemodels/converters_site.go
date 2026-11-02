@@ -45,7 +45,7 @@ type SiteConverter interface {
 	// goverter:map ID CurrentIdentity | IsCurrentIdentity
 	// goverter:map TotpSecretEnc HasTotpSecret | HasTotpSecret
 	// goverter:map ID RecentClients | RecentClients
-	// goverter:ignore Type Password TotpSecret NSToken SiteURL
+	// goverter:ignore Type Password TotpSecret NSToken SiteURL Client NSURL
 	IdentityFromDB(source *controldb.SiteIdentity, siteContext *httputils.SiteContext) *UserIdentity
 
 	// goverter:context siteContext

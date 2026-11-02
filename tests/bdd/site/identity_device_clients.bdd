@@ -1,0 +1,27 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// A device is added for the Nightscout client it will be used in
+CLICK #site--settings-menu
+CLICK #site--settings--identities-button
+ASSERT_STATUS 200
+ASSERT_VISIBLE #identities_table label[for="client-createIdentityFormdevicesTable"]:has-text("Client")
+INPUT #name-createIdentityFormdevicesTable watch
+CLICK #client-createIdentityFormdevicesTable
+CLICK #identities_table [role="option"][data-tui-selectbox-value="nightguard"]
+CLICK "Add Device"
+ASSERT_STATUS 201
+
+// Its credentials say how to set that client up, with its URL and token filled in, and that it gets mg/dL
+ASSERT_TEXT_VISIBLE Setting up Nightguard
+ASSERT_VISIBLE #site--identities--created--guide >> text=/\?token=/
+ASSERT_VISIBLE #site--identities--created--units
+SCREENSHOT device_client_guide
+SAVE_TEXT #site--identities--created--site site_url
+SAVE_TEXT #site--identities--created--ns-token watch_token
+CLICK "I Have Saved These"
+
+// So the Nightscout API gives the device mg/dL, though the site is in mmol/L
+GOTO {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/status.json?token={{ .watch_token }}
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE mg/dl

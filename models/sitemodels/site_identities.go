@@ -25,6 +25,11 @@ type UserIdentity struct {
 	TotpSecret *string `json:"totp_secret,omitempty"`
 	NSToken    *string `json:"ns_token,omitempty"`
 	SiteURL    string  `json:"-"`
+
+	// Client is the Nightscout client a device is added for, such as aaps or nightguard, so its credentials say how to
+	// set it up, and NSURL is the site's Nightscout URL it is set up with. Only set when it is created.
+	Client string `json:"client,omitempty"`
+	NSURL  string `json:"-"`
 }
 
 type RoleOption struct {
