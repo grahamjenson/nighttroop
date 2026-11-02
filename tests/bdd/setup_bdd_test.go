@@ -48,6 +48,15 @@ func TestTestSiteBanner(t *testing.T) {
 	})
 }
 
+// TestFeedbackLinks runs the feedback files against a server with a feedback link, on its home page and every footer
+func TestFeedbackLinks(t *testing.T) {
+	feedback := func(c *config.ServerConfig) { c.FeedbackURL = "https://github.com/grahamjenson/nighttroop/issues" }
+	runOnOwnServer(t, "feedback/links.bdd", "192.0.2.14", feedback, func(controlDB *db.ControlDB) map[string]any {
+		require.NoError(t, controlDB.SeedDevAdmin(t.Context()))
+		return nil
+	})
+}
+
 // TestSiteLimitBanner runs the sitelimit files against a server allowing 10 sites, 9 of which it has
 func TestSiteLimitBanner(t *testing.T) {
 	tenSites := func(c *config.ServerConfig) { c.MaxSites = 10 }
