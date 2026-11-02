@@ -2,6 +2,8 @@ CREATE INDEX activities_occurred_at_idx ON activities(occurred_at);
 
 CREATE INDEX activities_updated_at_idx ON activities(updated_at);
 
+CREATE INDEX component_events_event_type_occurred_at_idx ON component_events(event_type, occurred_at);
+
 CREATE INDEX component_events_occurred_at_idx ON component_events(occurred_at);
 
 CREATE INDEX device_reports_device_occurred_at_idx ON device_reports(created_by_device_name, occurred_at);
@@ -10,7 +12,7 @@ CREATE INDEX device_reports_occurred_at_idx ON device_reports(occurred_at);
 
 CREATE INDEX device_reports_updated_at_idx ON device_reports(updated_at);
 
-CREATE INDEX event_groups_group_type_idx ON event_groups(group_type);
+CREATE INDEX event_groups_group_type_occurred_at_idx ON event_groups(group_type, occurred_at);
 
 CREATE INDEX event_groups_occurred_at_idx ON event_groups(occurred_at);
 

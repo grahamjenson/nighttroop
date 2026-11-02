@@ -52,6 +52,10 @@ func (ws *Websocket) handleDBWrite(event string, args []json.RawMessage, auth *a
 	if allowed, _ := httputils.WithinRateLimitAll(limiters.SitePOSTLimiter(siteContext.SiteID), limiters.IdentityPOSTLimiter(siteContext.IdentityModel.ID)); !allowed {
 		return ackResult("Too many requests")
 	}
+	// Its socket is only checked every identityRecheck, so an identity revoked since then is refused here
+	if httputils.IdentityRevoked(ctx, ws.controlDB, siteContext.IdentityModel) {
+		return ackResult("Not authorized")
+	}
 	var id string
 	if event != "dbAdd" && (json.Unmarshal(message.ID, &id) != nil || id == "") {
 		return ackResult("Missing or invalid _id")

@@ -40,8 +40,8 @@ type DBModelConverter interface {
 	// goverter:map CreatedByAppName App
 	// goverter:map CreatedByDeviceName Device
 	// goverter:map ID Identifier
-	// goverter:map Mgdl SGV   | SGVGlucoseReadingTypeToValue
-	// goverter:map Mgdl MBG   | MBGGlucoseReadingTypeToValue
+	// goverter:map . SGV   | SGVGlucoseReadingTypeToValue
+	// goverter:map . MBG   | MBGGlucoseReadingTypeToValue
 	// goverter:map Mgdl Units | UnitsToValue
 	// goverter:map OccurredAt Date
 	// goverter:map OccurredAt Mills
@@ -137,24 +137,25 @@ func ModelDateStringFromDateIntAndUTCOffset(m interface{}) *types.DateString {
 	return nil
 }
 
+// SGVGlucoseReadingTypeToValue is the sgv of any reading but a meter's. As in Nightscout an entry has one of sgv and
+// mbg, as followers like Nightguard take any entry with an sgv as a CGM reading
 // goverter:context siteContext
-func SGVGlucoseReadingTypeToValue(mgdl float64, siteContext *httputils.SiteContext) *types.FlexibleFloat64 {
-	if true { // SGV is assumed for this function
-		_, value := GetUnitsAndValue(mgdl, siteContext)
-		return value
+func SGVGlucoseReadingTypeToValue(source *sitedb.GlucoseReading, siteContext *httputils.SiteContext) *types.FlexibleFloat64 {
+	if source.ReadingType == string(MBGType) {
+		return nil
 	}
-	return nil
-
+	_, value := GetUnitsAndValue(source.Mgdl, siteContext)
+	return value
 }
 
+// MBGGlucoseReadingTypeToValue is the mbg of a meter reading only
 // goverter:context siteContext
-func MBGGlucoseReadingTypeToValue(mgdl float64, siteContext *httputils.SiteContext) *types.FlexibleFloat64 {
-	if true { // MBG is assumed for this function
-		_, value := GetUnitsAndValue(mgdl, siteContext)
-		return value
+func MBGGlucoseReadingTypeToValue(source *sitedb.GlucoseReading, siteContext *httputils.SiteContext) *types.FlexibleFloat64 {
+	if source.ReadingType != string(MBGType) {
+		return nil
 	}
-	return nil
-
+	_, value := GetUnitsAndValue(source.Mgdl, siteContext)
+	return value
 }
 
 // goverter:context siteContext

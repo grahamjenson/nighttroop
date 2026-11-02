@@ -47,7 +47,7 @@ func (ws *Websocket) onConnect(main *socketio.Namespace, socket *socketio.Socket
 
 // handleAuthorize keeps what the socket may do, and sends a socket that can read the recent data
 func (ws *Websocket) handleAuthorize(s *mainSocket, message authorizeMessage) any {
-	ctx, authorized := ws.authorize(s.socket.Request(), message.Token, message.Secret)
+	ctx, authorized := ws.authorize(s.socket, message.Token, message.Secret)
 	s.auth, s.ctx = &authorized, ctx
 
 	s.socket.Emit("connected")
@@ -67,7 +67,7 @@ func (ws *Websocket) firstDataUpdate(ctx context.Context, message authorizeMessa
 	}
 	data := ws.recentData(ctx, time.Duration(hours*float64(time.Hour)))
 	if message.Status {
-		data["status"] = nsv1.Status()
+		data["status"] = nsv1.Status(ctx)
 	}
 	return data
 }

@@ -95,14 +95,29 @@ func DBToNightscoutDeviceStatus(source *sitedb.DeviceReport, siteContext *httput
 	/////
 	// Pump
 	/////
-	pump := nightscoutmodels.PumpStatus{Manufacturer: (*types.ShortString)(source.PumpManufacturer), Model: (*types.ShortString)(source.PumpModel)}
-	if source.PumpBatteryPercent != nil {
+	// Its fields without a column, like AAPS's extended with the profile and temp basal Nightguard shows, are read
+	// from the JSON it came in, through the model so only known fields go out; the columns, kept once the JSON is
+	// cleared, fill in the rest
+	var raw struct {
+		Pump *nightscoutmodels.PumpStatus `json:"pump"`
+	}
+	pump := nightscoutmodels.PumpStatus{}
+	if source.RawJsonData != nil && json.Unmarshal([]byte(*source.RawJsonData), &raw) == nil && raw.Pump != nil {
+		pump = *raw.Pump
+	}
+	if pump.Manufacturer == nil && source.PumpManufacturer != nil {
+		pump.Manufacturer = (*types.ShortString)(source.PumpManufacturer)
+	}
+	if pump.Model == nil && source.PumpModel != nil {
+		pump.Model = (*types.ShortString)(source.PumpModel)
+	}
+	if pump.Battery == nil && source.PumpBatteryPercent != nil {
 		pump.Battery = &nightscoutmodels.PumpBattery{Percent: ptr(types.FlexibleFloat64(*source.PumpBatteryPercent))}
 	}
-	if source.PumpReservoir != nil {
+	if pump.Reservoir == nil && source.PumpReservoir != nil {
 		pump.Reservoir = ptr(types.FlexibleFloat64(*source.PumpReservoir))
 	}
-	if source.PumpClock != nil {
+	if pump.Clock == nil && source.PumpClock != nil {
 		pump.Clock = ptr(types.DateStringFromInt64AndUTCOffset(*source.PumpClock, nil))
 	}
 	if pump != (nightscoutmodels.PumpStatus{}) {

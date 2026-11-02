@@ -1,10 +1,13 @@
 package nsv1
 
 import (
+	"context"
 	"net/http"
 
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 // Versions reports the API versions exposed by this server.
@@ -58,18 +61,24 @@ func ExperimentsTest() http.HandlerFunc {
 // StatusJSON serves the v1 JSON status payload.
 func StatusJSON(store nsutils.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		apiutils.WriteJSON(w, http.StatusOK, Status())
+		apiutils.WriteJSON(w, http.StatusOK, Status(r.Context()))
 	}
 }
 
-// Status is the v1 status payload, which a websocket authorize asking for status gets too
-func Status() map[string]any {
+// Status is the v1 status payload, which a websocket authorize asking for status gets too. Its settings.units is
+// the settings' units written as Nightscout writes them, "mg/dl" or "mmol", which followers like Nightguard read
+func Status(ctx context.Context) map[string]any {
+	units := "mg/dl"
+	if siteContext := httputils.GetSiteContext(ctx); siteContext != nil && *siteContext.GetSettings().GetUnits() == consts.UnitsMMOLL {
+		units = "mmol"
+	}
 	return map[string]any{
 		"status":            "ok",
 		"apiEnabled":        true,
 		"careportalEnabled": true,
 		"settings": map[string]any{
 			"enable": false,
+			"units":  units,
 		},
 	}
 }

@@ -8,16 +8,19 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/socketio"
 	"nighttroop.t1d.nz/socketio/engineio"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -46,11 +49,11 @@ var runs atomic.Int64
 func TestSocketWritesAreRateLimited(t *testing.T) {
 	cfg := testConfig
 	// A new site and identity each run, so -count does not share their limits
-	run := runs.Add(1)
-	ctx := httputils.CreateSiteContext(context.Background(), cfg, nil, nil, nil, fmt.Sprint("site", run), "127.0.0.1", httputils.HTTPActionWrite, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
-	ctx = httputils.SetIdentityModelInSiteContext(ctx, &controldb.SiteIdentity{ID: run, Name: "phone"})
+	controlDB, identity := siteIdentity(t)
+	ctx := httputils.CreateSiteContext(context.Background(), cfg, nil, nil, nil, identity.SiteID, "127.0.0.1", httputils.HTTPActionWrite, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
+	ctx = httputils.SetIdentityModelInSiteContext(ctx, identity)
 
-	ws := &Websocket{config: cfg}
+	ws := &Websocket{config: cfg, controlDB: controlDB}
 	writes := 0
 	write := func(context.Context, nsutils.Collection, string, json.RawMessage) any {
 		writes++
@@ -64,6 +67,74 @@ func TestSocketWritesAreRateLimited(t *testing.T) {
 	}
 	require.Equal(t, ackResult("Too many requests"), ws.handleDBWrite("dbAdd", args, auth, ctx, write))
 	require.Equal(t, 3, writes)
+}
+
+// testControlDB is the control DB of every test's sites, so each identity has its own ID and rate limits
+var testControlDB = sync.OnceValues(func() (*db.ControlDB, error) { return db.NewControlDB(context.Background(), testConfig) })
+
+// siteIdentity is a new site's read only device identity
+func siteIdentity(t *testing.T) (*db.ControlDB, *controldb.SiteIdentity) {
+	controlDB, err := testControlDB()
+	require.NoError(t, err)
+	site, err := controlDB.CreateSite(t.Context())
+	require.NoError(t, err)
+	identity, err := controlDB.Queries.GetSiteIdentity(t.Context(), controldb.GetSiteIdentityParams{SiteID: site.SiteDB.Subdomain, Name: consts.FIRST_READ_ONLY_NAME})
+	require.NoError(t, err)
+	return controlDB, identity
+}
+
+// A socket is only authenticated as it authorizes, so once its identity is revoked its writes are refused and it is
+// disconnected, rather than it reading and writing the site's data until it next reconnects
+func TestSocketOfARevokedIdentityIsRefusedAndDisconnected(t *testing.T) {
+	recheck := identityRecheck
+	identityRecheck = 20 * time.Millisecond
+	t.Cleanup(func() { identityRecheck = recheck })
+	revocations := map[string]func(*db.ControlDB, *controldb.SiteIdentity) error{
+		"disabled": func(controlDB *db.ControlDB, identity *controldb.SiteIdentity) error {
+			return controlDB.Queries.UpdateSiteIdentityEnabled(t.Context(), controldb.UpdateSiteIdentityEnabledParams{Enabled: false, SiteID: identity.SiteID, ID: identity.ID})
+		},
+		"given a new password": func(controlDB *db.ControlDB, identity *controldb.SiteIdentity) error {
+			_, err := controlDB.ResetSiteIdentityPassword(t.Context(), identity, "admin")
+			return err
+		},
+		"deleted": func(controlDB *db.ControlDB, identity *controldb.SiteIdentity) error {
+			return controlDB.Queries.DeleteSiteIdentity(t.Context(), controldb.DeleteSiteIdentityParams{SiteID: identity.SiteID, ID: identity.ID})
+		},
+	}
+	for name, revoke := range revocations {
+		t.Run(name, func(t *testing.T) {
+			controlDB, identity := siteIdentity(t)
+			siteCtx := httputils.CreateSiteContext(context.Background(), testConfig, controlDB, nil, nil, identity.SiteID, "127.0.0.1", httputils.HTTPActionRead, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
+			found := func(*config.ServerConfig, context.Context, string) (*controldb.SiteIdentity, error) {
+				return identity, nil
+			}
+			ws := NewWebsocket(controlDB, testConfig, nil, found, found)
+			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { ws.ServeHTTP(w, r.WithContext(siteCtx)) }))
+			t.Cleanup(func() {
+				ws.siteServer(identity.SiteID, false).Close()
+				ts.Close()
+			})
+
+			ctx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
+			defer cancel()
+			client, err := socketio.Dial(ctx, ts.URL+"/socket.io/", engineio.V4, nil)
+			require.NoError(t, err)
+			// The default namespace's authorize reads the recent data, which this test's site has no DB for
+			require.NoError(t, client.Connect(ctx, "/alarm", nil))
+			reply, err := client.EmitWithAck(ctx, "/alarm", "subscribe", map[string]any{"accessToken": "token"})
+			require.NoError(t, err)
+			require.JSONEq(t, `{"success":true,"message":"Subscribed for alarms"}`, string(reply[0]))
+			time.Sleep(3 * identityRecheck)
+			require.True(t, client.Connected("/alarm"), "a socket whose identity is not revoked stays connected")
+			require.NoError(t, revoke(controlDB, identity))
+
+			args := []json.RawMessage{json.RawMessage(`{"collection":"treatments","data":{}}`)}
+			write := func(context.Context, nsutils.Collection, string, json.RawMessage) any { return ackResult("success") }
+			writeCtx := httputils.SetIdentityModelInSiteContext(httputils.CreateSiteContext(context.Background(), testConfig, controlDB, nil, nil, identity.SiteID, "127.0.0.1", httputils.HTTPActionWrite, httputils.AcceptTypeJSON, httputils.ContentTypeJSON), identity)
+			require.Equal(t, ackResult("Not authorized"), ws.handleDBWrite("dbAdd", args, &authorization{Write: true, WriteTreatment: true}, writeCtx, write))
+			require.Eventually(t, func() bool { return !client.Connected("/alarm") }, 2*time.Second, 10*time.Millisecond)
+		})
+	}
 }
 
 // noIdentity finds no identity, as the Nightscout API does for these tests' empty tokens

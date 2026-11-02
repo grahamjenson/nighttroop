@@ -28,6 +28,8 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config *config.ServerConfig) c
 
 	// Socket.IO clients authorize with an event, not on each request
 	r.Handle("/socket.io/", websocket)
+	// As in Nightscout, v3's version needs no token: Nightguard asks it without one to see if v3 is there
+	r.Get("/api/v3/version", nsv3.Version(store))
 
 	// make sure to check auth for JWT/token param/token URL param
 

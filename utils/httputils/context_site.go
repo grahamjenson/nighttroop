@@ -192,6 +192,14 @@ func CheckIssuedAfterCredentialsChanged(identity *controldb.SiteIdentity, issued
 	return nil
 }
 
+// IdentityRevoked is whether identity, as it was when it authenticated, has since been deleted, disabled or given
+// new credentials. A socket or event stream is not authenticated again on each message, so checks it to stop when a
+// request would be refused.
+func IdentityRevoked(ctx context.Context, controlDB *db.ControlDB, identity *controldb.SiteIdentity) bool {
+	current, err := controlDB.Queries.GetSiteIdentityByID(ctx, controldb.GetSiteIdentityByIDParams{SiteID: identity.SiteID, ID: identity.ID})
+	return err != nil || !current.Enabled || current.CredentialsChangedAt != identity.CredentialsChangedAt
+}
+
 // RecordAuthClient records the identity authenticating from the request's app and network, for its site's admin to
 // see an identity shared by several
 func RecordAuthClient(r *http.Request, identity *controldb.SiteIdentity) {
