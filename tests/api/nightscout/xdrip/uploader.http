@@ -1,0 +1,218 @@
+# xDrip+ "Nightscout Sync (REST-API)" uploads to a base URL like https://<token>@<site>/api/v1/, sending the SHA1 of
+# the token in the api-secret header (NightscoutUploader.doRESTUpload). The bodies are as NightscoutUploader builds them,
+# see docs/clients/xdrip.md.
+
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+######
+# STATUS: doStatusUpdate stores status.json and reads its version
+######
+
+NAME xdrip_status
+GET http://{{ site }}/api/v1/status.json
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "ok" "@status"
+
+######
+# ENTRIES: doRESTUploadTo posts its readings (populateV1APIBGEntry), meter readings
+# (populateV1APIMeterReadingEntry) and calibrations (populateV1APICalibrationEntry) in one array
+######
+
+// The calibration is not kept, but the readings sent with it are
+NAME xdrip_upload_entries
+POST http://{{ site }}/api/v1/entries
+H api-secret: {{ sha1 token }}
+B [
+  {"device": "xDrip-DexcomG5", "date": {{ itime 10 }}, "dateString": "{{ javatime 10 }}", "sgv": 120, "delta": -1.234,
+   "direction": "Flat", "type": "sgv", "filtered": 120000.0, "unfiltered": 121000.0, "rssi": 100, "noise": 1,
+   "sysTime": "{{ javatime 10 }}"},
+  {"device": "xDrip-DexcomG5", "date": {{ itime 5 }}, "dateString": "{{ javatime 5 }}", "sgv": 39, "delta": -6.0,
+   "direction": "NOT COMPUTABLE", "type": "sgv", "filtered": 0.0, "unfiltered": 0.0, "rssi": 100, "noise": 1,
+   "sysTime": "{{ javatime 5 }}"},
+  {"device": "xDrip-DexcomG5", "type": "mbg", "date": {{ itime 6 }}, "dateString": "{{ javatime 6 }}", "mbg": 110.0,
+   "sysTime": "{{ javatime 6 }}"},
+  {"device": "xDrip-DexcomG5", "type": "cal", "date": {{ itime 6 }}, "dateString": "{{ javatime 6 }}",
+   "slope": 1063.83, "intercept": -12345.6, "scale": 1, "sysTime": "{{ javatime 6 }}"}
+ ]
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@"
+ASSERT_EQUALS 120 "@0.sgv"
+ASSERT_EQUALS "Flat" "@0.direction"
+ASSERT_EQUALS 39 "@1.sgv"
+ASSERT_EQUALS "mbg" "@2.type"
+ASSERT_EQUALS 110 "@2.mbg"
+
+// A retry of the same batch, after a failure, is not stored twice
+NAME xdrip_upload_entries_again
+POST http://{{ site }}/api/v1/entries
+H api-secret: {{ sha1 token }}
+B [{"device": "xDrip-DexcomG5", "date": {{ dig "xdrip_upload_entries.0.date" }}, "sgv": 120, "direction": "Flat",
+    "type": "sgv", "filtered": 120000.0, "unfiltered": 121000.0, "rssi": 100, "noise": 1}]
+ASSERT_STATUS 200
+
+NAME xdrip_entries_stored
+GET http://{{ site }}/api/v1/entries.json?find[type]=sgv&count=10
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+
+######
+# DEVICE STATUS: postDeviceStatus sends one for each battery xDrip+ knows (NightscoutBatteryDevice)
+######
+
+NAME xdrip_devicestatus_phone
+POST http://{{ site }}/api/v1/devicestatus
+H api-secret: {{ sha1 token }}
+B {"device": "Google Pixel 7", "uploader": {"battery": 87, "type": "PHONE"}}
+ASSERT_STATUS 200
+
+NAME xdrip_devicestatus_phone_battery
+GET http://{{ site }}/api/v1/devicestatus.json?count=1
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Google Pixel 7" "@0.device"
+ASSERT_EQUALS 87 "@0.uploaderBattery"
+
+NAME xdrip_devicestatus_bridge
+POST http://{{ site }}/api/v1/devicestatus
+H api-secret: {{ sha1 token }}
+B {"device": "MiaoMiao", "uploader": {"battery": 60, "type": "BRIDGE"}}
+ASSERT_STATUS 200
+
+// A Dexcom transmitter's battery is text, which is not kept, but the status is
+NAME xdrip_devicestatus_transmitter
+POST http://{{ site }}/api/v1/devicestatus
+H api-secret: {{ sha1 token }}
+B {"device": "G6 Transmitter", "uploader": {"days": 50, "daysEstimate": "50 / 100", "status": "OK", "voltagea": 285,
+   "voltageb": 275, "resistance": 100, "resistance_status": "GOOD", "temperature": 30,
+   "battery": "50 days (voltage: 285/275)", "lastQueried": {{ itime 1 }}, "type": "DEXCOM_TRANSMITTER"}}
+ASSERT_STATUS 200
+ASSERT_EQUALS "G6 Transmitter" "@0.device"
+
+######
+# TREATMENTS: postTreatments upserts each one with PUT, its _id made from its uuid (uuid_to_id)
+######
+
+// A bolus with carbs has the eventType <none>
+NAME xdrip_upsert_bolus
+PUT http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B {"timestamp": {{ itime 8 }}, "eventType": "<none>", "enteredBy": "xdrip", "notes": "pizza",
+   "uuid": "8c5f0c3a-1b2d-4e6f-9a7b-0c1d2e3f4a5b", "carbs": 45.0, "insulin": 4.5,
+   "insulinInjections": "[{\"units\":4.5,\"insulin\":\"Novorapid\"}]", "created_at": "{{ time 8 }}",
+   "sysTime": "{{ javatime 8 }}", "_id": "8c5f0c3a1b2d4e6f9a7b0c1d"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "8c5f0c3a1b2d4e6f9a7b0c1d" "@_id"
+ASSERT_EQUALS "Note" "@eventType"
+ASSERT_EQUALS 4.5 "@insulin"
+ASSERT_EQUALS 45 "@carbs"
+ASSERT_EQUALS "pizza" "@notes"
+
+// Changing it in xDrip+ upserts it again, with the same _id
+NAME xdrip_upsert_bolus_changed
+PUT http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B {"timestamp": {{ itime 8 }}, "eventType": "<none>", "enteredBy": "xdrip", "notes": "pizza",
+   "uuid": "8c5f0c3a-1b2d-4e6f-9a7b-0c1d2e3f4a5b", "carbs": 50.0, "insulin": 4.5,
+   "insulinInjections": "[{\"units\":4.5,\"insulin\":\"Novorapid\"}]", "created_at": "{{ time 8 }}",
+   "sysTime": "{{ javatime 8 }}", "_id": "8c5f0c3a1b2d4e6f9a7b0c1d"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "8c5f0c3a1b2d4e6f9a7b0c1d" "@_id"
+ASSERT_EQUALS 50 "@carbs"
+
+NAME xdrip_upsert_note
+PUT http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B {"timestamp": {{ itime 30 }}, "eventType": "<none>", "enteredBy": "xdrip pos:5.23", "notes": "Walked the dog",
+   "uuid": "2f1b4c8d-3e5a-4b7c-9d0e-1f2a3b4c5d6e", "carbs": 0.0, "insulin": 0.0, "created_at": "{{ time 30 }}",
+   "sysTime": "{{ javatime 30 }}", "_id": "2f1b4c8d3e5a4b7c9d0e1f2a"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Walked the dog" "@notes"
+
+// Treatments.sensorStart
+NAME xdrip_upsert_sensor_start
+PUT http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B {"timestamp": {{ itime 60 }}, "eventType": "Sensor Start", "enteredBy": "xdrip",
+   "uuid": "1e0a3b7c-2d4f-4a6b-8c9d-0e1f2a3b4c5d", "carbs": 0.0, "insulin": 0.0, "created_at": "{{ time 60 }}",
+   "sysTime": "{{ javatime 60 }}", "_id": "1e0a3b7c2d4f4a6b8c9d0e1f"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Sensor Start" "@eventType"
+
+######
+# TREATMENT DOWNLOAD: doRESTtreatmentDownload, then NightscoutTreatments.processTreatmentResponse
+######
+
+// The If-Modified-Since header is named BROKEN- on purpose, so a server sends everything
+NAME xdrip_download_treatments
+GET http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+H BROKEN-If-Modified-Since: Thu, 01 Jan 1970 00:00:00 GMT
+ASSERT_STATUS 200
+ASSERT_EXISTS "#Last-Modified.0"
+ASSERT_EXISTS "#Etag.0"
+ASSERT_LENGTH 3 "@"
+ASSERT_EQUALS "8c5f0c3a1b2d4e6f9a7b0c1d" "@0._id"
+ASSERT_EXISTS "@0.created_at"
+ASSERT_EQUALS 4.5 "@0.insulin"
+ASSERT_EQUALS 50 "@0.carbs"
+ASSERT_EQUALS "pizza" "@0.notes"
+ASSERT_EQUALS "Walked the dog" "@1.notes"
+ASSERT_EQUALS 0 "@1.insulin"
+
+######
+# TREATMENT DELETE: postTreatments finds the _id by uuid, then deletes it
+######
+
+NAME xdrip_find_treatment_by_uuid
+GET http://{{ site }}/api/v1/treatments.json?find[uuid]=2f1b4c8d-3e5a-4b7c-9d0e-1f2a3b4c5d6e
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "2f1b4c8d3e5a4b7c9d0e1f2a" "@0._id"
+
+NAME xdrip_delete_treatment
+DELETE http://{{ site }}/api/v1/treatments/{{ dig "xdrip_find_treatment_by_uuid.0._id" }}
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+
+NAME xdrip_deleted_treatment_gone
+GET http://{{ site }}/api/v1/treatments.json?find[uuid]=2f1b4c8d-3e5a-4b7c-9d0e-1f2a3b4c5d6e
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"
+
+// The bolus is still there
+NAME xdrip_other_treatments_kept
+GET http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+
+######
+# ACTIVITY: postHeartRate, postStepsCount and postMotionTracking, only in engineering mode with
+# use_pebble_health on. Each must not fail; only the steps are kept.
+######
+
+NAME xdrip_upload_heart_rate
+POST http://{{ site }}/api/v1/activity
+H api-secret: {{ sha1 token }}
+B [{"type": "hr-bpm", "timeStamp": {{ itime 10 }}, "created_at": "{{ time 10 }}", "bpm": 72},
+   {"type": "hr-bpm", "timeStamp": {{ itime 5 }}, "created_at": "{{ time 5 }}", "bpm": 75, "accuracy": 2}]
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+
+NAME xdrip_upload_steps
+POST http://{{ site }}/api/v1/activity
+H api-secret: {{ sha1 token }}
+B [{"type": "steps-total", "timeStamp": {{ itime 10 }}, "created_at": "{{ time 10 }}", "steps": 1234}]
+ASSERT_STATUS 200
+ASSERT_EQUALS 1234 "@0.steps"
+
+NAME xdrip_upload_motion
+POST http://{{ site }}/api/v1/activity
+H api-secret: {{ sha1 token }}
+B [{"type": "motion-class", "timeStamp": {{ itime 10 }}, "created_at": "{{ time 10 }}", "class": "walking"}]
+ASSERT_STATUS 200
