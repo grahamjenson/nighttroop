@@ -30,6 +30,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 - A control admin signs in with a username, password and TOTP code, and can sign out. Tab goes from the username to the
   password to the code, skipping the button that shows the password.
+- The server's global rate limit does not stop a control admin signing in, or using the control site once signed in,
+  so they can fix whatever is using it up. The control site has its own limit at the same rate, and each address's and
+  sign in attempts' limits still apply.
 - A banner on every control page says when S3 backups or Sentry error reporting are not connected.
 - The banner also says when the server has 90% or more of the sites `MAX_SITES` allows, and when it has them all.
 - Every control page names the browser's tab after itself, e.g. `Sites · Nighttroop Control`.
