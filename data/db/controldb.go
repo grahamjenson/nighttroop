@@ -128,13 +128,16 @@ func (db *ControlDB) RestoreMissingSites(ctx context.Context, download s3utils.D
 	}
 	db.missingSites = nil
 	for batch, siteIDs := range byBatch {
-		restored, err := db.restoreFromBatch(ctx, batch, siteIDs, download)
+		// Without S3 there is nothing to download, so the start does not wait on a download that cannot work
+		var restored map[string]bool
 		reason := "not_in_backup"
-		if err != nil {
-			slog.ErrorContext(ctx, "Cannot restore missing site DBs from their batch's backup", "batch", batch, "error", err)
-			reason = "restore_failed"
-		} else if !db.ServerConfig.Status.S3Working {
+		if !db.ServerConfig.Status.S3Working {
 			reason = "s3_not_working"
+		} else if got, err := db.restoreFromBatch(ctx, batch, siteIDs, download); err != nil {
+			slog.ErrorContext(ctx, "Cannot restore missing site DBs from their batch's backup", "batch", batch, "error", err)
+			restored, reason = got, "restore_failed"
+		} else {
+			restored = got
 		}
 		for _, siteID := range siteIDs {
 			if restored[siteID] {
