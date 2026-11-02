@@ -154,66 +154,74 @@ templ Header() {
 								@icon.Settings(icon.Props{Class: "size-6 text-white"})
 							</button>
 						}
-						// As tall as the window allows, as the site's menu is, so every page in it shows without scrolling it
+						// As tall as the window allows, and two columns wide as the site's menu is, so every page in it shows without
+						// scrolling it
 						@dropdown.Content(dropdown.ContentProps{
-							Class: "w-56 max-h-[calc(100vh-5rem)]",
+							Class: "w-56 sm:w-[30rem] sm:max-w-[calc(100vw-2rem)] max-h-[calc(100vh-5rem)]",
 						}) {
-							@dropdown.Label() {
-								Security
-							}
-							@dropdown.Group() {
-								@dropdown.Item(dropdown.ItemProps{
-									Href: "#",
-								}) {
-									<span class="flex items-center">
-										@icon.UserCog(icon.Props{Class: "size-4 mr-2"})
-										Account
-									</span>
-								}
-							}
-							@dropdown.Separator()
-							@dropdown.Label() {
-								Users
-							}
-							@dropdown.Group() {
-								@menuItem("control--usage-button", "/usage", "Usage", icon.Gauge)
-								@menuItem("control--rate-limits-button", "/rate-limits", "Rate Limits", icon.Timer)
-								@menuItem("control--sites-button", "/sites", "Sites", icon.Users)
-								@menuItem("control--archived-sites-button", "/archived-sites", "Archived Sites", icon.Archive)
-								@menuItem("control--sync-sources-button", "/sync-sources", "Sync Sources", icon.RefreshCw)
-							}
-							@dropdown.Separator()
-							@dropdown.Label() {
-								Jobs
-							}
-							@dropdown.Group() {
-								@menuItem("control--job-stats-button", "/job-stats", "Job Stats", icon.ChartColumn)
-								@menuItem("control--jobs-button", "/jobs", "Jobs", icon.ListChecks)
-							}
-							@dropdown.Separator()
-							@dropdown.Label() {
-								Logs
-							}
-							@dropdown.Group() {
-								@menuItem("control--events-button", "/events", "Events", icon.Activity)
-								@menuItem("control--errors-button", "/errors", "Errors", icon.TriangleAlert)
-								@menuItem("control--logs-button", "/logs", "Logs", icon.ScrollText)
-								@dropdown.Separator()
-								@dropdown.Item(dropdown.ItemProps{
-									Href: "#",
-									Attributes: templ.Attributes{
-										"hx-post":   "/logout",
-										"hx-target": "body",
+							// Security and users on the left, and jobs, logs and logout on the right
+							<div class="sm:grid sm:grid-cols-2 sm:gap-x-1">
+								<div>
+									@dropdown.Label() {
+										Security
+									}
+									@dropdown.Group() {
+										@dropdown.Item(dropdown.ItemProps{
+											Href: "#",
+										}) {
+											<span class="flex items-center">
+												@icon.UserCog(icon.Props{Class: "size-4 mr-2"})
+												Account
+											</span>
+										}
+									}
+									@dropdown.Separator()
+									@dropdown.Label() {
+										Users
+									}
+									@dropdown.Group() {
+										@menuItem("control--usage-button", "/usage", "Usage", icon.Gauge)
+										@menuItem("control--rate-limits-button", "/rate-limits", "Rate Limits", icon.Timer)
+										@menuItem("control--sites-button", "/sites", "Sites", icon.Users)
+										@menuItem("control--archived-sites-button", "/archived-sites", "Archived Sites", icon.Archive)
+										@menuItem("control--sync-sources-button", "/sync-sources", "Sync Sources", icon.RefreshCw)
+									}
+								</div>
+								<div>
+									@dropdown.Separator(dropdown.SeparatorProps{Class: "sm:hidden"})
+									@dropdown.Label() {
+										Jobs
+									}
+									@dropdown.Group() {
+										@menuItem("control--job-stats-button", "/job-stats", "Job Stats", icon.ChartColumn)
+										@menuItem("control--jobs-button", "/jobs", "Jobs", icon.ListChecks)
+									}
+									@dropdown.Separator()
+									@dropdown.Label() {
+										Logs
+									}
+									@dropdown.Group() {
+										@menuItem("control--events-button", "/events", "Events", icon.Activity)
+										@menuItem("control--errors-button", "/errors", "Errors", icon.TriangleAlert)
+										@menuItem("control--logs-button", "/logs", "Logs", icon.ScrollText)
+										@dropdown.Separator()
+										@dropdown.Item(dropdown.ItemProps{
+											Href: "#",
+											Attributes: templ.Attributes{
+												"hx-post":   "/logout",
+												"hx-target": "body",
 
-										"hx-swap": "outerHTML",
-									},
-								}) {
-									<span class="flex items-center">
-										@icon.LogOut(icon.Props{Class: "size-4 mr-2"})
-										Logout
-									</span>
-								}
-							}
+												"hx-swap": "outerHTML",
+											},
+										}) {
+											<span class="flex items-center">
+												@icon.LogOut(icon.Props{Class: "size-4 mr-2"})
+												Logout
+											</span>
+										}
+									}
+								</div>
+							</div>
 						}
 					}
 				</div>

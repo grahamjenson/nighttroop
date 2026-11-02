@@ -28,7 +28,11 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 ### Signing in
 
-- A control admin signs in with a username, password and TOTP code, and can sign out.
+- A control admin signs in with a username, password and TOTP code, and can sign out. Tab goes from the username to the
+  password to the code, skipping the button that shows the password.
+- The server's global rate limit does not stop a control admin signing in, or using the control site once signed in,
+  so they can fix whatever is using it up. The control site has its own limit at the same rate, and each address's and
+  sign in attempts' limits still apply.
 - A banner on every control page says when S3 backups or Sentry error reporting are not connected.
 - The banner also says when the server has 90% or more of the sites `MAX_SITES` allows, and when it has them all.
 - Every control page names the browser's tab after itself, e.g. `Sites · Nighttroop Control`.
@@ -94,8 +98,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 ### Rate limits
 
-- The rate limits page lists each kind of rate limiter (every request, an IP's, logins, sites created, a site's and an
-  identity's reads and writes, sync changes, identities created, downloads), refreshing every 10 seconds.
+- The rate limits page lists each kind of rate limiter (every request, the control site's signed out, an IP's, logins,
+  sites created, a site's and an identity's reads and writes, sync changes, identities created, downloads), refreshing
+  every 10 seconds.
 - Each shows what one is kept for (server, IP, site, identity, login name or IP on a site), its rate a minute and burst,
   how many are kept, how much of its burst the most used one has spent, and how many would refuse a request now.
 - The most used turns amber once it has spent half its burst, and red while any would refuse.
@@ -299,6 +304,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - Sign-in attempts are rate limited per identity and IP; a disabled identity cannot sign in.
 - Devices use their Nightscout token, as a token, API secret or for a JWT.
 - Changing an identity's password or TOTP signs out its existing sessions.
+- A page left open after its sign in ends goes to the login page once its live updates reconnect, rather than asking
+  for them again and again.
 
 ### Users & Devices
 

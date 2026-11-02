@@ -38,11 +38,16 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, config *config.ServerConfig) fun
 			if httputils.GetAcceptType(r).API() {
 				http.Error(w, "Unauthorized: Invalid JWT token", http.StatusUnauthorized)
 			} else {
-				w.Header().Set("HX-Redirect", "/login")
-				http.Redirect(w, r, "/login", http.StatusSeeOther)
+				httputils.RedirectToLogin(w, r, "/login")
 			}
 		})
 	}
+}
+
+// SignedIn is whether the request has a control admin's valid sign in token, before the control site checks the admin
+func SignedIn(config *config.ServerConfig, r *http.Request) bool {
+	_, _, err := verifyControlJWTToken(nil, config, r)
+	return err == nil
 }
 
 func tryLoginWithJWTToken(controlDB *db.ControlDB, config *config.ServerConfig, r *http.Request) (*controldb.ControlIdentity, error) {

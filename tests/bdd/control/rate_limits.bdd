@@ -13,6 +13,7 @@ ASSERT_STATUS 200
 ASSERT_PATH /rate-limits
 ASSERT_VISIBLE #controlRateLimitsTable
 ASSERT_VISIBLE #control--rate-limits--global >> text=Every request
+ASSERT_VISIBLE #control--rate-limits--control >> text=signed out
 ASSERT_VISIBLE #control--rate-limits--login_name >> text=Logins to a name
 ASSERT_VISIBLE #control--rate-limits--login_ip >> text=Logins from an IP
 ASSERT_VISIBLE #control--rate-limits--site_download

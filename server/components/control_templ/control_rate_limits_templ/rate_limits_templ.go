@@ -18,7 +18,7 @@ import (
 
 // labels say what each kind of rate limiter limits
 var labels = map[string]string{
-	"global": "Every request", "global_ip": "Requests from an IP", "site_create": "Sites created",
+	"global": "Every request but the control site's", "control": "The control site's, signed out", "global_ip": "Requests from an IP", "site_create": "Sites created",
 	"site_create_ip": "Sites created from an IP", "login_name": "Logins to a name", "login_ip": "Logins from an IP",
 	"site_unauth": "Requests to a site before signing in", "site_get": "A site's reads", "site_post": "A site's writes",
 	"identity_get": "An identity's reads", "identity_post": "An identity's writes", "site_update_sync": "A site's sync changes",

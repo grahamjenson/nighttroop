@@ -37,6 +37,9 @@ type RateLimiters struct {
 
 	GlobalRateLimiter    *rate.Limiter // Limiter for all requestes everywhere
 	globalIPRateLimiters *lru.Cache[string, *rate.Limiter]
+	// ControlRateLimiter is the control site's own limit at the global rate, for those not signed in to it, such as
+	// its login, so a site using up the global limit cannot stop a control admin signing in to fix it
+	ControlRateLimiter *rate.Limiter
 }
 
 func newRateLimiters(config ServerConfig) *RateLimiters {
@@ -67,6 +70,7 @@ func newRateLimiters(config ServerConfig) *RateLimiters {
 
 		GlobalRateLimiter:    rate.NewLimiter(rate.Limit(float64(config.GlobalRateLimit)/60.0), config.GlobalRateBurst),
 		globalIPRateLimiters: lruMust(maxSites * maxIdentities * wiggle * 2), // If a DDOS attack wiped out this cache with unique addresses the global rate limiter would still catch it
+		ControlRateLimiter:   rate.NewLimiter(rate.Limit(float64(config.GlobalRateLimit)/60.0), config.GlobalRateBurst),
 	}
 
 }
@@ -193,6 +197,7 @@ func (r *RateLimiters) Stats(now time.Time) []RateLimiterStats {
 		limiters  []*rate.Limiter
 	}{
 		{"global", "server", float64(c.GlobalRateLimit), c.GlobalRateBurst, []*rate.Limiter{r.GlobalRateLimiter}},
+		{"control", "server", float64(c.GlobalRateLimit), c.GlobalRateBurst, []*rate.Limiter{r.ControlRateLimiter}},
 		{"global_ip", "ip", float64(c.GlobalIPPerMinuteLimit), c.GlobalIPPerMinuteBurst, r.globalIPRateLimiters.Values()},
 		{"site_create", "server", float64(c.SiteCreateGlobalPerMinuteLimit), c.SiteCreateGlobalPerMinuteBurst, []*rate.Limiter{r.SiteCreateLimiter}},
 		{"site_create_ip", "ip", c.SiteCreateIPPerMinuteLimit, c.SiteCreateIPPerMinuteBurst, r.siteCreateIpLimiter.Values()},

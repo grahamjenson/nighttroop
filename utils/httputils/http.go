@@ -77,6 +77,18 @@ func (at AcceptType) API() bool {
 	return at == AcceptTypeJSON
 }
 
+// RedirectToLogin sends a browser request that is not signed in to path. A page is sent there with a 303. An htmx
+// request or an event stream is answered 401 with HX-Redirect instead: fetch follows a 303 without showing it, so htmx
+// never saw the redirect, and a stream reconnecting got the login page as a working response and asked again at once.
+func RedirectToLogin(w http.ResponseWriter, r *http.Request, path string) {
+	w.Header().Set("HX-Redirect", path)
+	if GetAcceptType(r) == AcceptTypeHTMX || strings.Contains(r.Header.Get("Accept"), "text/event-stream") {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	http.Redirect(w, r, path, http.StatusSeeOther)
+}
+
 // ////
 // Content Type
 // ////

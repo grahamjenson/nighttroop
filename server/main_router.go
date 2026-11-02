@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/server/controlapi"
 	"nighttroop.t1d.nz/server/nightscoutapi"
 	"nighttroop.t1d.nz/server/siteapi"
 	"nighttroop.t1d.nz/utils"
@@ -34,17 +35,9 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		// Global Rate Limit
-		allowed := config.RateLimiters.GlobalRateLimiter.Allow()
-		if !allowed {
-			w.WriteHeader(http.StatusTooManyRequests)
-			slog.InfoContext(r.Context(), "Global rate limit exceeded")
-			return
-		}
-
-		// Global IP Address Rate Limit
+		// Global IP Address Rate Limit, which every request has, the control site's too
 		ctx, ipAddress := httputils.SetIPInHTTPContext(ctx, r, config.TrustedProxies)
-		allowed = httputils.GlobalIPWithinRateLimit(config, ipAddress)
+		allowed := httputils.GlobalIPWithinRateLimit(config, ipAddress)
 		if !allowed {
 			w.WriteHeader(http.StatusTooManyRequests)
 			slog.InfoContext(r.Context(), "Global IP rate limit exceeded", "ip", ipAddress)
@@ -62,6 +55,13 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 		if err != nil {
 			slog.InfoContext(r.Context(), "Main router 404 for host header", "host", host, "error", err)
 			http.NotFound(w, r)
+			return
+		}
+
+		// Global Rate Limit
+		if !globalWithinRateLimit(config, routeTarget, r) {
+			w.WriteHeader(http.StatusTooManyRequests)
+			slog.InfoContext(r.Context(), "Global rate limit exceeded", "route_target", routeTarget)
 			return
 		}
 
@@ -98,6 +98,16 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 		}
 	})
 
+}
+
+// globalWithinRateLimit limits every request to the server together, but the control site's: a control admin signed in
+// is never held up by it, so they can fix whatever is using it up, and the rest of the control site, like its login, has
+// a limit of its own
+func globalWithinRateLimit(config *config.ServerConfig, routeTarget RouteTarget, r *http.Request) bool {
+	if routeTarget != RouteTargetControl {
+		return config.RateLimiters.GlobalRateLimiter.Allow()
+	}
+	return controlapi.SignedIn(config, r) || config.RateLimiters.ControlRateLimiter.Allow()
 }
 
 func CreateSiteContext(ctx context.Context, config *config.ServerConfig, controlDB *db.ControlDB, r *http.Request, subdomain string, ipAddress string) (bool, context.Context) {
