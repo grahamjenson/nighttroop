@@ -15,7 +15,7 @@ const allDeviceReports = `-- name: AllDeviceReports :many
 SELECT id, device_battery_percent, is_device_charging, pump_state, pump_reservoir, pump_battery_percent, pump_charging_state, loop_name, configuration_settings_json, loop_settings_json, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob, loop_predictions_start_time, loop_predictions_default, loop_predictions_zt, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name FROM device_reports
 WHERE (CAST(?1 AS BOOL) IS TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
-LIMIT ?3 OFFSET ?2
+LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
 `
 
 type AllDeviceReportsParams struct {
@@ -211,7 +211,7 @@ const deviceReportsForDevice = `-- name: DeviceReportsForDevice :many
 SELECT id, device_battery_percent, is_device_charging, pump_state, pump_reservoir, pump_battery_percent, pump_charging_state, loop_name, configuration_settings_json, loop_settings_json, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob, loop_predictions_start_time, loop_predictions_default, loop_predictions_zt, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name FROM device_reports
 WHERE deleted_at IS NULL AND created_by_device_name = ?1
 ORDER BY occurred_at DESC
-LIMIT ?3 OFFSET ?2
+LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
 `
 
 type DeviceReportsForDeviceParams struct {
@@ -384,7 +384,7 @@ const recentDeviceNames = `-- name: RecentDeviceNames :many
 SELECT DISTINCT created_by_device_name FROM device_reports
 WHERE deleted_at IS NULL AND occurred_at >= ?1 AND created_by_device_name IS NOT NULL
 ORDER BY created_by_device_name
-LIMIT ?2
+LIMIT CAST(?2 AS INTEGER)
 `
 
 type RecentDeviceNamesParams struct {
@@ -441,7 +441,7 @@ WHERE
     
     AND (CAST(?18 AS BOOL) IS TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
-LIMIT ?20 OFFSET ?19
+LIMIT CAST(?20 AS INTEGER) OFFSET CAST(?19 AS INTEGER)
 `
 
 type SearchDeviceReportsParams struct {

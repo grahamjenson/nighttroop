@@ -17,7 +17,7 @@ const allProfileSwitches = `-- name: AllProfileSwitches :many
 SELECT id, name, duration_minutes, percent, timeshift, dia, units, timezone, carbs_hr, delay, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM profile_switches
 WHERE (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
-LIMIT ?3 OFFSET ?2
+LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
 `
 
 type AllProfileSwitchesParams struct {
@@ -300,7 +300,7 @@ WHERE
 
     AND (CAST(?24 AS BOOL) IS TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
-LIMIT ?26 OFFSET ?25
+LIMIT CAST(?26 AS INTEGER) OFFSET CAST(?25 AS INTEGER)
 `
 
 type SearchProfileSwitchesParams struct {
@@ -417,7 +417,7 @@ SELECT id, name, duration_minutes, percent, timeshift, dia, units, timezone, car
 WHERE profile_switches.deleted_at IS NULL AND profile_switches.occurred_at <= ?1
     AND profile_switches.occurred_at >= COALESCE((SELECT MAX(before.occurred_at) FROM profile_switches AS before WHERE before.deleted_at IS NULL AND before.duration_minutes = 0 AND before.occurred_at <= ?2), ?3)
 ORDER BY profile_switches.occurred_at DESC
-LIMIT ?4
+LIMIT CAST(?4 AS INTEGER)
 `
 
 type SearchSummaryProfileSwitchesParams struct {

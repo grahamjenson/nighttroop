@@ -78,7 +78,7 @@ SELECT CAST(COALESCE(MIN(occurred_at), 0) AS INTEGER) FROM glucose_readings WHER
 SELECT * FROM glucose_readings 
 WHERE (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
-LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 
 
@@ -118,7 +118,7 @@ WHERE
     
     AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
-LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 -- name: AlarmGlucoseReadings :many
 -- The CGM readings back to Minutes before the newest, however old it is, newest first: no data is measured from the
@@ -128,7 +128,7 @@ WHERE reading_type = 'sgv' AND deleted_at IS NULL
 AND occurred_at >= (SELECT MAX(occurred_at) FROM glucose_readings WHERE reading_type = 'sgv' AND deleted_at IS NULL)
     - CAST(sqlc.arg('Minutes') AS INTEGER) * 60000
 ORDER BY occurred_at DESC
-LIMIT sqlc.arg('Limit');
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
 
 
 --------

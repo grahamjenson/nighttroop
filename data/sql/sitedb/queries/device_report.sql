@@ -43,7 +43,7 @@ RETURNING *;
 SELECT * FROM device_reports
 WHERE (CAST(sqlc.arg('IncludeDeleted') AS BOOL) IS TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
-LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 
 -- The devices that reported since Since, for showing each device's latest reports
@@ -51,13 +51,13 @@ LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
 SELECT DISTINCT created_by_device_name FROM device_reports
 WHERE deleted_at IS NULL AND occurred_at >= sqlc.arg('Since') AND created_by_device_name IS NOT NULL
 ORDER BY created_by_device_name
-LIMIT sqlc.arg('Limit');
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
 
 -- name: DeviceReportsForDevice :many
 SELECT * FROM device_reports
 WHERE deleted_at IS NULL AND created_by_device_name = sqlc.arg('Device')
 ORDER BY occurred_at DESC
-LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 -- name: GetDeviceReport :one
 SELECT * FROM device_reports WHERE id = ? AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL);
@@ -88,7 +88,7 @@ WHERE
     
     AND (CAST(sqlc.narg('IncludeDeleted') AS BOOL) IS TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
-LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 
 --

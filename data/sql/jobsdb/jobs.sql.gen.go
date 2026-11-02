@@ -304,7 +304,7 @@ WHERE
         ORDER BY
             execute_after ASC
         LIMIT
-            ?
+            CAST(?3 AS INTEGER)
     ) RETURNING id, queue, job, job_status, execute_after, remaining_attempts, consumer_fetched_at, finished_at, deduping_key, errors, run_id, created_at, updated_at
 `
 
@@ -490,7 +490,7 @@ func (q *Queries) ResetJobs(ctx context.Context, arg ResetJobsParams) (int64, er
 const searchJobs = `-- name: SearchJobs :many
 SELECT id, queue, job, job_status, execute_after, remaining_attempts, consumer_fetched_at, finished_at, deduping_key, errors, run_id, created_at, updated_at FROM jobs
 ORDER BY id DESC
-LIMIT ?2 OFFSET ?1
+LIMIT CAST(?2 AS INTEGER) OFFSET CAST(?1 AS INTEGER)
 `
 
 type SearchJobsParams struct {

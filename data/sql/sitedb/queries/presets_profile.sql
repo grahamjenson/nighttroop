@@ -40,7 +40,7 @@ RETURNING *;
 -- name: AllProfilePresets :many
 SELECT * FROM profile_presets
 ORDER BY created_at DESC
-LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 
 -- name: GetProfilePreset :one
@@ -125,7 +125,7 @@ WITH distinct_profile_store_ids AS (
         AND (CAST(sqlc.narg('DeviceEq') AS TEXT) IS NULL OR created_by_device_name = sqlc.narg('DeviceEq'))
         AND (CAST(sqlc.narg('AppEq') AS TEXT) IS NULL OR created_by_app_name = sqlc.narg('AppEq'))
     ORDER BY occurred_at DESC
-    LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip')
+    LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER)
 )
 SELECT * FROM profile_presets
 WHERE profile_store_id IN (SELECT profile_store_id FROM distinct_profile_store_ids)
@@ -144,4 +144,4 @@ SELECT * FROM profile_presets
 WHERE profile_presets.is_default = 1 AND profile_presets.occurred_at <= sqlc.arg('Until')
     AND profile_presets.occurred_at >= COALESCE((SELECT MAX(before.occurred_at) FROM profile_presets AS before WHERE before.is_default = 1 AND before.occurred_at <= sqlc.arg('Since')), 0)
 ORDER BY profile_presets.occurred_at DESC
-LIMIT sqlc.arg('Limit');
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER);

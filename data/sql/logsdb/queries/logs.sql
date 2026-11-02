@@ -24,7 +24,7 @@ AND (CAST(sqlc.narg('Search') AS TEXT) IS NULL OR instr(lower(message), lower(sq
 AND (CAST(sqlc.narg('RequestID') AS TEXT) IS NULL OR request_id = sqlc.narg('RequestID'))
 AND (CAST(sqlc.narg('JobID') AS TEXT) IS NULL OR job_id = sqlc.narg('JobID'))
 ORDER BY id DESC
-LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 -- name: SearchEvents :many
 -- Newest first, filtered as SearchLogs is, and only those named Type when it is set
@@ -35,7 +35,7 @@ AND (CAST(sqlc.narg('Search') AS TEXT) IS NULL OR instr(lower(name), lower(sqlc.
 AND (CAST(sqlc.narg('RequestID') AS TEXT) IS NULL OR request_id = sqlc.narg('RequestID'))
 AND (CAST(sqlc.narg('JobID') AS TEXT) IS NULL OR job_id = sqlc.narg('JobID'))
 ORDER BY id DESC
-LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 -- name: SearchErrors :many
 -- Newest first, filtered as SearchLogs is, and only those of the kind Type when it is set
@@ -46,7 +46,7 @@ AND (CAST(sqlc.narg('Search') AS TEXT) IS NULL OR instr(lower(message), lower(sq
 AND (CAST(sqlc.narg('RequestID') AS TEXT) IS NULL OR request_id = sqlc.narg('RequestID'))
 AND (CAST(sqlc.narg('JobID') AS TEXT) IS NULL OR job_id = sqlc.narg('JobID'))
 ORDER BY id DESC
-LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 -- name: GetLog :one
 SELECT * FROM logs WHERE id = sqlc.arg('ID');
@@ -73,7 +73,7 @@ AND own.id >= CASE WHEN CAST(sqlc.narg('Search') AS TEXT) IS NULL THEN 0 ELSE CO
   WHERE newest.site_id = sqlc.arg('SiteID') ORDER BY newest.id DESC LIMIT 1 OFFSET 9999), 0) END
 AND (CAST(sqlc.narg('Search') AS TEXT) IS NULL OR instr(lower(own.message), lower(sqlc.narg('Search'))) > 0 OR instr(lower(own.attributes), lower(sqlc.narg('Search'))) > 0)
 ORDER BY own.id DESC
-LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 -- name: SearchSiteErrors :many
 -- Newest first, only those of the kind Type when it is set, and only those with Search in their text when it is set
@@ -85,7 +85,7 @@ AND own.id >= CASE WHEN CAST(sqlc.narg('Search') AS TEXT) IS NULL AND CAST(sqlc.
 AND (CAST(sqlc.narg('Type') AS TEXT) IS NULL OR json_extract(own.attributes, '$.kind') = sqlc.narg('Type'))
 AND (CAST(sqlc.narg('Search') AS TEXT) IS NULL OR instr(lower(own.message), lower(sqlc.narg('Search'))) > 0 OR instr(lower(own.attributes), lower(sqlc.narg('Search'))) > 0)
 ORDER BY own.id DESC
-LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 -- name: SearchSiteEvents :many
 -- Newest first, the site's own events and its batch's, which is all a site may see, only those named Type when it is set.
@@ -104,7 +104,7 @@ WHERE batched.site_id IS NULL AND batched.batch = sqlc.arg('Batch')
 AND (CAST(sqlc.narg('Type') AS TEXT) IS NULL OR batched.name = sqlc.narg('Type'))
 AND (CAST(sqlc.narg('Search') AS TEXT) IS NULL OR instr(lower(batched.name), lower(sqlc.narg('Search'))) > 0)
 ORDER BY id DESC
-LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 -- name: GetSiteEvent :one
 SELECT * FROM events
@@ -139,11 +139,11 @@ DELETE FROM errors WHERE id <= (SELECT MAX(newest.id) FROM errors newest) - CAST
 SELECT * FROM events
 WHERE site_id = sqlc.arg('SiteID') AND json_extract(attributes, '$.sync_type') = sqlc.arg('SyncType')
 ORDER BY id DESC
-LIMIT sqlc.arg('Limit');
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
 
 -- name: RecentSyncErrors :many
 -- The newest errors of one of the site's sync sources
 SELECT * FROM errors
 WHERE site_id = sqlc.arg('SiteID') AND json_extract(attributes, '$.kind') = 'sync' AND json_extract(attributes, '$.sync_type') = sqlc.arg('SyncType')
 ORDER BY id DESC
-LIMIT sqlc.arg('Limit');
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER);

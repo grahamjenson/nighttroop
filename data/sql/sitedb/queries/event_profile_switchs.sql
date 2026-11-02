@@ -43,7 +43,7 @@ RETURNING *;
 SELECT * FROM profile_switches
 WHERE (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
-LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 
 -- name: GetProfileSwitch :one
@@ -82,7 +82,7 @@ WHERE
 
     AND (CAST(sqlc.narg('IncludeDeleted') AS BOOL) IS TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
-LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 --------
 -- UPDATE
@@ -126,4 +126,4 @@ SELECT * FROM profile_switches
 WHERE profile_switches.deleted_at IS NULL AND profile_switches.occurred_at <= sqlc.arg('Until')
     AND profile_switches.occurred_at >= COALESCE((SELECT MAX(before.occurred_at) FROM profile_switches AS before WHERE before.deleted_at IS NULL AND before.duration_minutes = 0 AND before.occurred_at <= sqlc.arg('Since')), sqlc.arg('Earliest'))
 ORDER BY profile_switches.occurred_at DESC
-LIMIT sqlc.arg('Limit');
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER);

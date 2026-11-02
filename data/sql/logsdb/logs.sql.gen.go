@@ -246,7 +246,7 @@ const recentSyncErrors = `-- name: RecentSyncErrors :many
 SELECT id, site_id, message, attributes, request_id, job_id, created_at FROM errors
 WHERE site_id = ?1 AND json_extract(attributes, '$.kind') = 'sync' AND json_extract(attributes, '$.sync_type') = ?2
 ORDER BY id DESC
-LIMIT ?3
+LIMIT CAST(?3 AS INTEGER)
 `
 
 type RecentSyncErrorsParams struct {
@@ -291,7 +291,7 @@ const recentSyncEvents = `-- name: RecentSyncEvents :many
 SELECT id, site_id, batch, name, attributes, started_at, finished_at, request_id, job_id FROM events
 WHERE site_id = ?1 AND json_extract(attributes, '$.sync_type') = ?2
 ORDER BY id DESC
-LIMIT ?3
+LIMIT CAST(?3 AS INTEGER)
 `
 
 type RecentSyncEventsParams struct {
@@ -342,7 +342,7 @@ AND (CAST(?3 AS TEXT) IS NULL OR instr(lower(message), lower(?3)) > 0 OR instr(l
 AND (CAST(?4 AS TEXT) IS NULL OR request_id = ?4)
 AND (CAST(?5 AS TEXT) IS NULL OR job_id = ?5)
 ORDER BY id DESC
-LIMIT ?7 OFFSET ?6
+LIMIT CAST(?7 AS INTEGER) OFFSET CAST(?6 AS INTEGER)
 `
 
 type SearchErrorsParams struct {
@@ -403,7 +403,7 @@ AND (CAST(?3 AS TEXT) IS NULL OR instr(lower(name), lower(?3)) > 0 OR instr(lowe
 AND (CAST(?4 AS TEXT) IS NULL OR request_id = ?4)
 AND (CAST(?5 AS TEXT) IS NULL OR job_id = ?5)
 ORDER BY id DESC
-LIMIT ?7 OFFSET ?6
+LIMIT CAST(?7 AS INTEGER) OFFSET CAST(?6 AS INTEGER)
 `
 
 type SearchEventsParams struct {
@@ -466,7 +466,7 @@ AND (CAST(?2 AS TEXT) IS NULL OR instr(lower(message), lower(?2)) > 0 OR instr(l
 AND (CAST(?3 AS TEXT) IS NULL OR request_id = ?3)
 AND (CAST(?4 AS TEXT) IS NULL OR job_id = ?4)
 ORDER BY id DESC
-LIMIT ?6 OFFSET ?5
+LIMIT CAST(?6 AS INTEGER) OFFSET CAST(?5 AS INTEGER)
 `
 
 type SearchLogsParams struct {
@@ -531,7 +531,7 @@ AND own.id >= CASE WHEN CAST(?2 AS TEXT) IS NULL AND CAST(?3 AS TEXT) IS NULL TH
 AND (CAST(?3 AS TEXT) IS NULL OR json_extract(own.attributes, '$.kind') = ?3)
 AND (CAST(?2 AS TEXT) IS NULL OR instr(lower(own.message), lower(?2)) > 0 OR instr(lower(own.attributes), lower(?2)) > 0)
 ORDER BY own.id DESC
-LIMIT ?5 OFFSET ?4
+LIMIT CAST(?5 AS INTEGER) OFFSET CAST(?4 AS INTEGER)
 `
 
 type SearchSiteErrorsParams struct {
@@ -594,7 +594,7 @@ WHERE batched.site_id IS NULL AND batched.batch = ?6
 AND (CAST(?5 AS TEXT) IS NULL OR batched.name = ?5)
 AND (CAST(?4 AS TEXT) IS NULL OR instr(lower(batched.name), lower(?4)) > 0)
 ORDER BY id DESC
-LIMIT ?2 OFFSET ?1
+LIMIT CAST(?2 AS INTEGER) OFFSET CAST(?1 AS INTEGER)
 `
 
 type SearchSiteEventsParams struct {
@@ -657,7 +657,7 @@ AND own.id >= CASE WHEN CAST(?2 AS TEXT) IS NULL THEN 0 ELSE COALESCE((SELECT ne
   WHERE newest.site_id = ?1 ORDER BY newest.id DESC LIMIT 1 OFFSET 9999), 0) END
 AND (CAST(?2 AS TEXT) IS NULL OR instr(lower(own.message), lower(?2)) > 0 OR instr(lower(own.attributes), lower(?2)) > 0)
 ORDER BY own.id DESC
-LIMIT ?4 OFFSET ?3
+LIMIT CAST(?4 AS INTEGER) OFFSET CAST(?3 AS INTEGER)
 `
 
 type SearchSiteLogsParams struct {

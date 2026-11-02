@@ -16,7 +16,7 @@ const allProfilePresets = `-- name: AllProfilePresets :many
 
 SELECT id, name, profile_store_id, is_default, dia, units, timezone, carbs_hr, delay, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, loop_settings_json, raw_json_data, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM profile_presets
 ORDER BY created_at DESC
-LIMIT ?2 OFFSET ?1
+LIMIT CAST(?2 AS INTEGER) OFFSET CAST(?1 AS INTEGER)
 `
 
 type AllProfilePresetsParams struct {
@@ -424,7 +424,7 @@ WITH distinct_profile_store_ids AS (
         AND (CAST(?17 AS TEXT) IS NULL OR created_by_device_name = ?17)
         AND (CAST(?18 AS TEXT) IS NULL OR created_by_app_name = ?18)
     ORDER BY occurred_at DESC
-    LIMIT ?20 OFFSET ?19
+    LIMIT CAST(?20 AS INTEGER) OFFSET CAST(?19 AS INTEGER)
 )
 SELECT id, name, profile_store_id, is_default, dia, units, timezone, carbs_hr, delay, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, loop_settings_json, raw_json_data, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM profile_presets
 WHERE profile_store_id IN (SELECT profile_store_id FROM distinct_profile_store_ids)
@@ -530,7 +530,7 @@ SELECT id, name, profile_store_id, is_default, dia, units, timezone, carbs_hr, d
 WHERE profile_presets.is_default = 1 AND profile_presets.occurred_at <= ?1
     AND profile_presets.occurred_at >= COALESCE((SELECT MAX(before.occurred_at) FROM profile_presets AS before WHERE before.is_default = 1 AND before.occurred_at <= ?2), 0)
 ORDER BY profile_presets.occurred_at DESC
-LIMIT ?3
+LIMIT CAST(?3 AS INTEGER)
 `
 
 type SearchSummaryDefaultProfilesParams struct {

@@ -15,7 +15,7 @@ const allNotificationEvents = `-- name: AllNotificationEvents :many
 SELECT id, notification_type, title, severity, content, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM notification_events
 WHERE (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
-LIMIT ?3 OFFSET ?2
+LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
 `
 
 type AllNotificationEventsParams struct {
@@ -229,7 +229,7 @@ WHERE
     
     AND (CAST(?19 AS BOOL) IS TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
-LIMIT ?21 OFFSET ?20
+LIMIT CAST(?21 AS INTEGER) OFFSET CAST(?20 AS INTEGER)
 `
 
 type SearchNotificationEventsParams struct {

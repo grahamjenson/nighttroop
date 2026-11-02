@@ -39,7 +39,7 @@ LEFT JOIN notification_events n ON eg.notification_event_id = n.id
 
 WHERE (CAST(?1 AS BOOL) IS TRUE OR eg.deleted_at IS NULL)
 ORDER BY eg.occurred_at DESC
-LIMIT ?3 OFFSET ?2
+LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
 `
 
 type AllEventGroupsParams struct {
@@ -1194,7 +1194,7 @@ WHERE
 
     AND (CAST(?43 AS BOOL) IS TRUE OR eg.deleted_at IS NULL)
 ORDER BY eg.occurred_at DESC
-LIMIT ?45 OFFSET ?44
+LIMIT CAST(?45 AS INTEGER) OFFSET CAST(?44 AS INTEGER)
 `
 
 type SearchEventGroupsParams struct {
