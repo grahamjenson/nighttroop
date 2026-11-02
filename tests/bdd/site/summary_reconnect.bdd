@@ -33,18 +33,18 @@ ASSERT_TEXT_VISIBLE Sync Updated
 
 CLICK #site--nav--home
 ASSERT_NEW_URL
-ASSERT_TEXT_VISIBLE No glucose readings in this time
+ASSERT_VISIBLE #site--getting-started
 ASSERT_VISIBLE #site--summary--live
 
 // In the background, the summary's stream is closed, so readings the sync writes are not shown
 BACKGROUND
 RUN_BACKGROUND_JOBS
-ASSERT_TEXT_VISIBLE No glucose readings in this time
+ASSERT_VISIBLE #site--getting-started
 
 // Back in the foreground, the stream reconnects, and the summary reloads to show what it missed
 FOREGROUND
 ASSERT_VISIBLE #site--summary--live
 ASSERT_VISIBLE #site--summary--glucose--reading
-ASSERT_NOT_VISIBLE "No glucose readings in this time"
+ASSERT_NOT_VISIBLE #site--getting-started
 ASSERT_PATH /
 SCREENSHOT summary_reconnected

@@ -192,6 +192,14 @@ func parseFile(fsys fs.FS, path string) ([]Action, error) {
 			} else {
 				current = &SetCookie{TestPath: path, TestLine: lineNumber, Name: parts[0], Value: parts[1]}
 			}
+		case "WINDOW":
+			// WINDOW sets the window's size in pixels, e.g. WINDOW 390x844 for a phone, for the pages after it
+			flush()
+			var width, height int
+			if _, err := fmt.Sscanf(second, "%dx%d", &width, &height); err != nil {
+				return nil, fmt.Errorf("%s:%d: WINDOW needs a size like 390x844: %q", path, lineNumber, second)
+			}
+			current = &Window{TestPath: path, TestLine: lineNumber, Width: width, Height: height}
 		case "USER_AGENT":
 			// USER_AGENT sends the pages' requests with a User-Agent, as another app would, until one with none
 			flush()
@@ -348,6 +356,16 @@ func parseFile(fsys fs.FS, path string) ([]Action, error) {
 				TestPath: path,
 				TestLine: lineNumber,
 			})
+		case "ASSERT_FITS":
+			// ASSERT_FITS is the whole page fitting in the window, so nothing on it needs scrolling to see
+			if current == nil {
+				return nil, fmt.Errorf("assert_fits before action")
+			}
+			assertable, ok := current.(interface{ AddAssert(Assert) })
+			if !ok {
+				return nil, fmt.Errorf("current action does not support asserts")
+			}
+			assertable.AddAssert(&AssertFits{TestPath: path, TestLine: lineNumber})
 		case "ASSERT_TITLE":
 			if current == nil {
 				return nil, fmt.Errorf("assert_title before action")

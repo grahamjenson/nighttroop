@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/server/components/site_templ"
+	"nighttroop.t1d.nz/server/components/site_templ/site_summary_templ"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 
 	"nighttroop.t1d.nz/utils/apiutils"
@@ -430,4 +431,14 @@ func answer(err error, what string) *apiutils.HTTPError {
 		return apiutils.ErrNotFound
 	}
 	return apiutils.WriteError(err, what)
+}
+
+// GettingStartedHandler is the guide to setting up the site, a page for people, so it has no JSON
+func GettingStartedHandler(w http.ResponseWriter, r *http.Request) {
+	siteContext := httputils.GetSiteContext(r.Context())
+	if siteContext.AcceptType != httputils.AcceptTypeHTMX && siteContext.AcceptType != httputils.AcceptTypeHTML {
+		writeError(w, r, siteContext.AcceptType, apiutils.ErrNotFound)
+		return
+	}
+	WriteResponse(w, r, siteContext, http.StatusOK, nil, site_summary_templ.GettingStartedPage(), true)
 }

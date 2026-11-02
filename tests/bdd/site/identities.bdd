@@ -23,7 +23,20 @@ ASSERT_STATUS 201
 ASSERT_TEXT_VISIBLE I Have Saved These
 SCREENSHOT identities_device_created
 
+// Each credential has its own copy button
+ASSERT_VISIBLE #site--identities--created--password + [data-copy-button]
+ASSERT_VISIBLE #site--identities--created--ns-token + [data-copy-button]
+
+// Saying they are saved warns they are never shown again, before closing them
 CLICK "I Have Saved These"
+ASSERT_VISIBLE #site--identities--saved-warning >> text=never shown again
+ASSERT_VISIBLE #site--identities--created--password
+SCREENSHOT identities_saved_warning
+CLICK #site--identities--saved-back
+ASSERT_NOT_VISIBLE #site--identities--saved-warning
+CLICK "I Have Saved These"
+CLICK #site--identities--close
+ASSERT_NOT_VISIBLE #site--identities--created--password
 ASSERT_TEXT_VISIBLE kitchen
 
 // Opening the page again lists the new device

@@ -402,40 +402,21 @@ var treatmentEvents = []treatmentEvent{
 	notificationEvents,
 }
 
-// treatmentTypeEvents are the kinds of event each type of treatment keeps; its other fields are dropped
-var treatmentTypeEvents = map[nightscoutmodels.TreatmentEventType][]treatmentEvent{
-	nightscoutmodels.Announcement:      {glucoseReadings, notificationEvents},
-	nightscoutmodels.BGCheck:           {glucoseReadings},
-	nightscoutmodels.BolusWizard:       {glucoseReadings, insulinDoses, foodIntakes, componentEvents},
-	nightscoutmodels.CarbCorrection:    {foodIntakes},
-	nightscoutmodels.ComboBolus:        {glucoseReadings, insulinDoses, foodIntakes, componentEvents},
-	nightscoutmodels.CorrectionBolus:   {insulinDoses, glucoseReadings, componentEvents},
-	nightscoutmodels.DADAlert:          {},
-	nightscoutmodels.Exercise:          {activities},
-	nightscoutmodels.InsulinChange:     {componentEvents},
-	nightscoutmodels.MealBolus:         {glucoseReadings, insulinDoses, foodIntakes, componentEvents},
-	nightscoutmodels.Note:              {glucoseReadings, insulinDoses, foodIntakes, profileSwitches, activities, componentEvents},
-	nightscoutmodels.OpenAPSOffline:    {componentEvents},
-	nightscoutmodels.ProfileSwitch:     {profileSwitches},
-	nightscoutmodels.PumpBatteryChange: {componentEvents},
-	nightscoutmodels.Question:          {notificationEvents},
-	nightscoutmodels.SensorChange:      {componentEvents},
-	nightscoutmodels.SensorStart:       {componentEvents},
-	nightscoutmodels.SiteChange:        {componentEvents},
-	nightscoutmodels.SnackBolus:        {glucoseReadings, insulinDoses, foodIntakes, componentEvents},
-	nightscoutmodels.TempBasal:         {tempBasals, componentEvents},
-	nightscoutmodels.TemporaryTarget:   {tempTargets},
-	nightscoutmodels.TemporaryOverride: {tempTargets},
-	nightscoutmodels.SuspendPump:       {componentEvents},
-	nightscoutmodels.ResumePump:        {componentEvents},
-	nightscoutmodels.CannulaFill:       {componentEvents},
-	nightscoutmodels.Prime:             {componentEvents},
-	nightscoutmodels.ReservoirChange:   {componentEvents},
-	nightscoutmodels.Calibration:       {glucoseReadings, componentEvents},
-	nightscoutmodels.Bolus:             {insulinDoses, componentEvents},
-	nightscoutmodels.SMB:               {insulinDoses},
-	nightscoutmodels.ExternalInsulin:   {insulinDoses},
-}
+// treatmentTypeEvents are the kinds of event each type of treatment keeps, see sitemodels.EventGroupTypeKinds; its other
+// fields are dropped
+var treatmentTypeEvents = func() map[nightscoutmodels.TreatmentEventType][]treatmentEvent {
+	byField := map[string]treatmentEvent{"glucose_reading_id": glucoseReadings, "insulin_dose_id": insulinDoses,
+		"food_intake_id": foodIntakes, "temp_basal_id": tempBasals, "temp_target_id": tempTargets,
+		"profile_switch_id": profileSwitches, "component_event_id": componentEvents, "activity_id": activities,
+		"notification_event_id": notificationEvents}
+	types := map[nightscoutmodels.TreatmentEventType][]treatmentEvent{}
+	for t, fields := range sitemodels.EventGroupTypeKinds {
+		for _, field := range fields {
+			types[t] = append(types[t], byField[field])
+		}
+	}
+	return types
+}()
 
 // percentSwitchMs is how long before a temp basal a profile switch with a duration is looked for, as one still in force,
 // and percentSwitches the most switches looked at

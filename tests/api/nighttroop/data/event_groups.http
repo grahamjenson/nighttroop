@@ -127,7 +127,7 @@ SET insulin_id {{ .create_insulin_to_group.result.id }}
 // The events that can be grouped are those within an hour of now in no other group: not the temp basal, whose
 // treatment is its group, nor the deleted meal's
 NAME events_to_group
-GET http://{{ site }}/data/event-groups/choices
+GET http://{{ site }}/data/event-groups/choices?group_type=Meal+Bolus
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
@@ -138,9 +138,30 @@ ASSERT_EQUALS "food_intake_id" "@result.1.kind"
 ASSERT_EQUALS "Toast" "@result.1.detail"
 ASSERT_EQUALS false "@result.1.picked"
 
+// Only the kinds of event the type of group can have are offered: a carb correction is only food
+NAME events_for_the_type
+GET http://{{ site }}/data/event-groups/choices?group_type=Carb+Correction
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS "food_intake_id" "@result.0.kind"
+
+NAME choices_need_a_known_type
+GET http://{{ site }}/data/event-groups/choices?group_type=Nope
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 400
+
+NAME new_needs_a_known_type
+GET http://{{ site }}/data/event-groups/new?group_type=Nope
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 400
+
 // Events from a day ago are not near now
 NAME no_events_to_group_a_day_ago
-GET http://{{ site }}/data/event-groups/choices?occurred_at={{ itime 1440 }}
+GET http://{{ site }}/data/event-groups/choices?group_type=Meal+Bolus&occurred_at={{ itime 1440 }}
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
@@ -162,6 +183,22 @@ B {"group_type": "Meal Bolus"}
 ASSERT_STATUS 400
 ASSERT_EQUALS "Pick at least one event to group" "@message"
 
+NAME create_refuses_a_kind_the_type_cannot_have
+POST http://{{ site }}/data/event-groups
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"group_type": "Carb Correction", "food_intake_id": "{{ .food_id }}", "insulin_dose_id": "{{ .insulin_id }}"}
+ASSERT_STATUS 400
+ASSERT_EQUALS "Carb Correction cannot have insulin_dose_id" "@message"
+
+NAME create_refuses_an_unknown_type
+POST http://{{ site }}/data/event-groups
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"group_type": "Nope", "food_intake_id": "{{ .food_id }}"}
+ASSERT_STATUS 400
+ASSERT_EQUALS "Unknown event group type Nope" "@message"
+
 NAME create_event_group
 POST http://{{ site }}/data/event-groups
 H Authorization: Bearer {{ jwt }}
@@ -177,7 +214,7 @@ SET group_id {{ .create_event_group.result.id }}
 
 // Grouped, its events are not offered for another group, and cannot be put in one
 NAME grouped_events_not_offered
-GET http://{{ site }}/data/event-groups/choices
+GET http://{{ site }}/data/event-groups/choices?group_type=Meal+Bolus
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
@@ -193,7 +230,7 @@ ASSERT_EQUALS "An event picked is already in another event group" "@message"
 
 // Editing the group offers its own events, already picked
 NAME events_for_the_group
-GET http://{{ site }}/data/event-groups/choices?group_id={{ .group_id }}
+GET http://{{ site }}/data/event-groups/choices?group_type=Meal+Bolus&group_id={{ .group_id }}
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
@@ -223,12 +260,21 @@ ASSERT_EQUALS null "@result.insulin_dose"
 ASSERT_EQUALS "Breakfast" "@result.notes"
 
 NAME taken_out_offered_again
-GET http://{{ site }}/data/event-groups/choices
+GET http://{{ site }}/data/event-groups/choices?group_type=Meal+Bolus
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@result"
 ASSERT_EQUALS "insulin_dose_id" "@result.0.kind"
+
+// An edit without a type keeps the group's, which cannot have insulin
+NAME update_refuses_a_kind_the_type_cannot_have
+POST http://{{ site }}/data/event-groups/{{ .group_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"food_intake_id": "{{ .food_id }}", "insulin_dose_id": "{{ .insulin_id }}"}
+ASSERT_STATUS 400
+ASSERT_EQUALS "Carb Correction cannot have insulin_dose_id" "@message"
 
 NAME update_needs_an_event
 POST http://{{ site }}/data/event-groups/{{ .group_id }}

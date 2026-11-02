@@ -24,4 +24,5 @@ CLICK "Add Device"
 ASSERT_STATUS 201
 ASSERT_TEXT_VISIBLE Setting up Trio
 CLICK "I Have Saved These"
+CLICK #site--identities--close
 ASSERT_VISIBLE #devicesTable tr:has(td:text-is("trio")) >> text=PWD Phone

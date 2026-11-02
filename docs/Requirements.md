@@ -30,6 +30,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 - A control admin signs in with a username, password and TOTP code, and can sign out. Tab goes from the username to the
   password to the code, skipping the button that shows the password.
+- The control site's header, with its menu, and its status banner show only once the admin has signed in, not on the
+  login or setup page.
 - The server's global rate limit does not stop a control admin signing in, or using the control site once signed in,
   so they can fix whatever is using it up. The control site has its own limit at the same rate, and each address's and
   sign in attempts' limits still apply.
@@ -144,6 +146,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   home page asks for it under its features, each opening the link in a new tab; unset, neither shows.
 - The public pages (create, recover, terms and privacy) say above their footer that Nighttroop is not a medical device,
   gives no medical advice, and its data and alarms may be late, missing or wrong.
+- The create site page, its medical note and footer included, and the site and control login pages fit a laptop's or
+  a phone's window, so none of them needs scrolling.
 - A server set up as a test site (`TEST_SITE`) says so in a large banner at the top of every page, public, site and
   control, warning that its data is frequently wiped.
 - Every page names the browser's tab after itself, e.g. `Glucose Readings · Nighttroop`, whether it is loaded in full or
@@ -162,7 +166,17 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - The summary's glucose readings link to the page of every reading, and each treatment's kind (e.g. Insulin) to the
   page of that kind.
 - The summary updates live as new data arrives, and catches up after the page has been in the background.
-- A new site's empty summary links to the sync settings.
+- A summary with no readings in its time links to the sync settings.
+
+### Getting started
+
+- A site with no glucose for over a month, or ever, shows a guide to setting it up in place of its empty summary, until
+  readings arrive, when the summary shows them live.
+- The guide's steps each open the page they are done on: an admin gets their glucose in (the site's Nightscout URL for
+  AAPS, Trio or xDrip+, or a sync from Dexcom, LibreLinkUp or Nightscout) and adds people and devices; everyone makes
+  their settings and sets up alarms.
+- Someone who is not an admin is told the admin sets up the site's data and who can use it.
+- The guide is always at Getting Started, first in the menu.
 
 ### Data
 
@@ -182,10 +196,13 @@ deleted (after a confirmation):
 - **Site and sensor changes**
 - **Notifications**
 - **Event groups**: the treatments that came in together through the Nightscout API, with their events.
-  - An event group can also be added on the site: a Nightscout type (e.g. Meal Bolus), a time, and up to one event of
-    each kind (glucose, insulin, food, temp basal, temp target, profile switch, site or sensor change, activity and
-    notification), picked from those within an hour of the time. Changing the time lists the events near it.
-  - Clicking a group edits its type, time, notes and events; an event taken out of a group is in no group.
+  - An event group can also be added on the site: the Add Event Group menu lists the Nightscout types (e.g. Meal Bolus),
+    and each opens a modal for that type with a time and up to one event of each kind that type can have (e.g. a Meal
+    Bolus can have glucose, insulin, food and a site or sensor change, an Exercise only an activity), picked from those
+    within an hour of the time. Changing the time lists the events near it.
+  - Adding or editing a group with a kind of event its type cannot have, or of an unknown type, is refused.
+  - Clicking a group edits its type, time, notes and events; changing its type offers only the kinds of event the new
+    type can have. An event taken out of a group is in no group.
   - An event is in at most one group: events in another group are not offered, and grouping one again is refused.
   - A group added or edited on the site is a Nightscout treatment, with its events.
 - **Device statuses**: each device's latest 3 statuses, and every status a device sent.
@@ -379,10 +396,13 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 
 ### Users & Devices
 
-- An admin adds users and devices, whose credentials are shown once.
+- An admin adds users and devices, whose credentials are shown once, each with its own copy button and one to copy
+  them all. Saying they are saved warns that they are never shown again, and they close only once that is confirmed;
+  Go Back keeps them open.
 - A device is added for its client: AAPS, Trio, Loop, xDrip+, Nightguard, SugarPixel or Other. Its credentials say how
-  to set that client up, with its Nightscout URL and token filled in, and a device for any but Other has its own units
-  set to mg/dL, which those clients need, whatever the site's.
+  to set that client up, in numbered steps naming the client's menus and fields in bold, with its Nightscout URL and
+  token filled in, each with its own copy button, and a device for any but Other has its own units set to mg/dL,
+  which those clients need, whatever the site's.
 - The client is picked before the role, as a loop's device (AAPS, Trio or Loop) must be the PWD phone: picking one of
   them sets the role to PWD Phone and locks it, and the server refuses such a device with any other role.
 - An admin can turn an identity off and on, or delete it; an identity cannot lock itself out.

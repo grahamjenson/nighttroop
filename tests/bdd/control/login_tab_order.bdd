@@ -1,6 +1,9 @@
 // Tab goes from the name to the password, then to the code, skipping the button that shows the password
 GOTO {{ .control_url }}/login
 ASSERT_STATUS 200
+// Before signing in there is no header, as its menu is of pages that need a signed in admin
+ASSERT_NOT_VISIBLE #control--nav--logo
+ASSERT_NOT_VISIBLE #control--menu
 CLICK #name
 PRESS Tab
 ASSERT_VISIBLE #password:focus

@@ -2,9 +2,11 @@ package sitecollections
 
 import (
 	"net/http"
+	"slices"
 	"time"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
+	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
@@ -16,9 +18,11 @@ import (
 // eventChoicesWindow is how far either side of a group's time the events to pick from are
 const eventChoicesWindow = time.Hour
 
-// eventChoicesParams are the time to pick events near, typed in the form, and the group being edited, if it is
+// eventChoicesParams are the time to pick events near, typed in the form, the type of group, whose kinds of event are
+// offered, and the group being edited, if it is
 type eventChoicesParams struct {
 	OccurredAt int64  `json:"occurred_at"`
+	GroupType  string `json:"group_type"`
 	GroupID    string `json:"group_id"`
 }
 
@@ -31,6 +35,11 @@ func EventGroupChoicesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	var params eventChoicesParams
 	if err := utils.ConvertViaJSON(apiutils.FormToMap[eventChoicesParams](r.URL.Query(), siteContext.GetSettings().Location()), &params); err != nil {
+		writeError(w, r, siteContext.AcceptType, apiutils.ErrBadRequest)
+		return
+	}
+	kinds, ok := sitemodels.EventGroupTypeKinds[nightscoutmodels.TreatmentEventType(params.GroupType)]
+	if !ok {
 		writeError(w, r, siteContext.AcceptType, apiutils.ErrBadRequest)
 		return
 	}
@@ -61,6 +70,9 @@ func EventGroupChoicesHandler(w http.ResponseWriter, r *http.Request) {
 
 	choices := make([]*sitemodels.SiteEventChoice, 0, len(rows))
 	for _, row := range rows {
+		if !slices.Contains(kinds, row.Kind) {
+			continue
+		}
 		choice := &sitemodels.SiteEventChoice{Kind: row.Kind, ID: row.ID, OccurredAt: row.OccurredAt, Amount: row.Amount,
 			Minutes: row.Minutes, Detail: row.Detail}
 		choice.Picked = picked[row.Kind] != nil && *picked[row.Kind] == row.ID
@@ -69,5 +81,19 @@ func EventGroupChoicesHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		choices = append(choices, choice)
 	}
-	WriteResponse(w, r, siteContext, http.StatusOK, choices, site_data_templ.EventGroupChoices(params.GroupID != "", from, to, choices), false)
+	WriteResponse(w, r, siteContext, http.StatusOK, choices, site_data_templ.EventGroupChoices(params.GroupID != "", kinds, from, to, choices), false)
+}
+
+// EventGroupNewHandler is the modal to add a group of group_type in, offering only the kinds of event it can have
+func EventGroupNewHandler(w http.ResponseWriter, r *http.Request) {
+	siteContext := SiteContextFor(w, r, (&sitedata.EventGroupsCollection{}).GetName(), siteapiutils.ActionCreate)
+	if siteContext == nil {
+		return
+	}
+	groupType := r.URL.Query().Get("group_type")
+	if !slices.Contains(sitemodels.EventGroupTypes, groupType) {
+		writeError(w, r, siteContext.AcceptType, apiutils.ErrBadRequest)
+		return
+	}
+	WriteResponse(w, r, siteContext, http.StatusOK, nil, site_data_templ.EventGroupNew(groupType), true)
 }

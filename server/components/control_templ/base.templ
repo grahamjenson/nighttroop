@@ -43,8 +43,9 @@ templ ControlBase() {
 		<body class="min-h-screen flex flex-col">
 			@testsite.Banner()
 			<div id="toaster" class="mb-3"></div>
-			@Header()
+			// The header's menu and the status are for a signed in admin, so the login and setup pages have neither
 			if controlContext := httputils.GetControlContext(ctx); controlContext != nil && controlContext.IdentityModel != nil {
+				@Header()
 				@StatusBanner(controlContext.ServerStatus)
 			}
 			<div

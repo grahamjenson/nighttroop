@@ -389,6 +389,34 @@ func (r *AssertPath) ToErrorLine() string {
 }
 
 // AssertTitle checks the browser tab's title, e.g. ASSERT_TITLE Glucose Readings · Nighttroop
+// AssertFits is the page fitting in the window, wide and high, so none of it needs scrolling to see
+type AssertFits struct {
+	TestPath string
+	TestLine int
+}
+
+// fitsScript is "" when the page fits in the window, or how far it is past it
+const fitsScript = `() => {
+	const d = document.documentElement;
+	return d.scrollWidth <= innerWidth && d.scrollHeight <= innerHeight ? "" :
+		"the page is " + d.scrollWidth + "x" + d.scrollHeight + " in a " + innerWidth + "x" + innerHeight + " window";
+}`
+
+func (r *AssertFits) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
+	over, err := page.Evaluate(fitsScript)
+	if err != nil {
+		t.Fatalf("\n\n%s\n failed to measure the page: %v\n\n", r.ToErrorLine(), err)
+	}
+	if over != "" {
+		t.Fatalf("\n\n%s\n assertFits failed: %v\n\n", r.ToErrorLine(), over)
+	}
+	return nil
+}
+
+func (r *AssertFits) ToErrorLine() string {
+	return fmt.Sprintf("%s:%d: expected the page to fit in its window", r.TestPath, r.TestLine)
+}
+
 type AssertTitle struct {
 	Title string
 
