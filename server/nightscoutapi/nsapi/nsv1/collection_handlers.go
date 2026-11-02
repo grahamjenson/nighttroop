@@ -96,6 +96,11 @@ func Create(store nsutils.Store) http.HandlerFunc {
 				nsutils.WriteError(w, nsutils.BadDataBodyError)
 				return
 			}
+			// xDrip+ sends its sensor calibrations (type cal) in the same batch as its readings. They are not kept,
+			// so the readings still are.
+			if collection == nsutils.Entries && doc["type"] == "cal" {
+				continue
+			}
 
 			// A sensor calibration's slope and intercept, which xDrip sends with its finger pricks, are of no use
 			// to Nighttroop, so they are accepted and not stored

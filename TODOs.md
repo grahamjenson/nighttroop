@@ -96,6 +96,21 @@
            readings a minute apart loses its oldest past Nighttroop's 1000
         1. P4: `GET /api/v1/status.json` without credentials, which xDrip4iOS's follower service status reads, is a
            401, so it shows a fetch error; answering it would show which sites exist
+    1. P1: API v1 entries give `sgv` in the identity's or site's units, but Nightscout always gives mg/dL and the
+       xDrip+ follower reads it as a whole number of mg/dL, so on an mmol/L site it shows 6.5 mmol/L as 6 mg/dL. Give
+       mg/dL to v1 clients, or have device identities default to mg/dL ([docs/clients/xdrip.md](docs/clients/xdrip.md))
+    1. P1: Keep xDrip+'s `Sensor Stop` treatments. An unknown eventType is refused, and xDrip+ uploads its treatments
+       one at a time, stops at a refused one and marks them all done, so the treatments queued after a Sensor Stop are
+       never uploaded. Adding the type also adds it to the site's event group types, a UI change
+    1. P2: An unknown `find[...]` filter is ignored, so the search gives everything, and a client that deletes the
+       first match (as xDrip+ does by `find[uuid]`) deletes the wrong document. Give nothing for a filter on an unknown
+       field
+    1. P3: An `mbg` entry also has `sgv` in v1, so the xDrip+ follower, which reads every entry as a reading, shows a
+       finger stick as a CGM reading. Leave `sgv` off `mbg` entries
+    1. P4: Keep xDrip+'s heart rate (`type` `hr-bpm`, `bpm`) and motion (`motion-class`, `class`) activity, which are
+       accepted with only their time
+    1. P4: Give back a treatment's `enteredBy` and `uuid` as sent; xDrip+ looks for `enteredBy` starting `xdrip` to
+       skip its own, and falls back to matching time and amounts
     1. Trio and iAPS ([docs/clients/trio.md](docs/clients/trio.md)):
         1. P0: Accept `api-secret` as the SHA1 hex of a device's token, as Trio and iAPS send only that (it is all
            Nightscout checks), e.g. by keeping an HMAC of each token's SHA1 to look the identity up; until then
