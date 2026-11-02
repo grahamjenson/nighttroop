@@ -250,6 +250,15 @@
     "/api/v2/summary": {
       "get": { "operationId": "NsV2Summary", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } } }
     },
+    "/api/v2/authorization/debug/check/{permission}": {
+      "get": {
+        "operationId": "NsV2CheckPermission",
+        "summary": "Whether the token or JWT has a permission, such as api:settings:create: 200 when it has, 403 when not",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "parameters": [{ "name": "permission", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } }
+      }
+    },
     "/api/v3/version": {
       "get": { "operationId": "NsV3Version", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsV3Result" } } }
     },

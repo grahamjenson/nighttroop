@@ -1,0 +1,78 @@
+# AAPS's NSClient v3 opens <url>/alarm when it makes notifications from announcements or alarms (SocketNsConnection).
+# It subscribes with its access token and listens for announcement, alarm, urgent_alarm and clear_alarm, reading
+# level, group, title and message (NSAlarmObject). An ack is level, group and silence in milliseconds.
+# See docs/clients/aaps.md
+
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET read_token {{ .create_new_site.read_only_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+# A follower's AAPS, with a read only token
+NAME connect
+CONNECT http://{{ site }}/socket.io/?EIO=4
+NS /alarm
+T 5s
+
+NAME subscribe
+EMIT subscribe
+B {"accessToken":"{{ read_token }}"}
+ACK
+ASSERT_EQUALS true "@success"
+ASSERT_EQUALS "Subscribed for alarms" "@message"
+
+# An Announcement from the careportal is sent to every socket that can read, as Nightscout's treatment notify does
+NAME post_announcement
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+B {"eventType":"Announcement","notes":"Pump site needs changing","enteredBy":"careportal","created_at":"{{ time 0 }}"}
+ASSERT_STATUS 200
+
+NAME announcement
+WAIT announcement
+T 5s
+ASSERT_EQUALS 0 "@level"
+ASSERT_EQUALS "Announcement" "@title"
+ASSERT_EQUALS "Pump site needs changing" "@message"
+ASSERT_EQUALS "Announcement" "@group"
+ASSERT_EQUALS true "@isAnnouncement"
+
+# Other treatments are no announcement
+NAME post_note
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+B {"eventType":"Note","notes":"Lunch","enteredBy":"careportal","created_at":"{{ time 0 }}"}
+ASSERT_STATUS 200
+
+NAME no_announcement
+COLLECT announcement
+T 500ms
+ASSERT_LENGTH 0 "@"
+
+NAME bye
+DISCONNECT
+
+# A socket whose token is bad gets none
+NAME connect_bad
+CONNECT http://{{ site }}/socket.io/?EIO=4
+NS /alarm
+T 5s
+
+NAME subscribe_bad
+EMIT subscribe
+B {"accessToken":"nope-0123456789abcdef"}
+ACK
+ASSERT_EQUALS false "@success"
+
+NAME post_another_announcement
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+B {"eventType":"Announcement","notes":"Back soon","enteredBy":"careportal","created_at":"{{ time 1 }}"}
+ASSERT_STATUS 200
+
+NAME bad_gets_nothing
+COLLECT announcement
+T 500ms
+ASSERT_LENGTH 0 "@"
+
+NAME bye_bad
+DISCONNECT

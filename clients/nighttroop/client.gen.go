@@ -1225,6 +1225,9 @@ type ClientInterface interface {
 
 	NsV1Replace(ctx context.Context, collection NsCollection, identifier NsIdentifier, body NsV1ReplaceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// NsV2CheckPermission request
+	NsV2CheckPermission(ctx context.Context, permission string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// NsV2Authorize request
 	NsV2Authorize(ctx context.Context, token string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1554,6 +1557,18 @@ func (c *Client) NsV1ReplaceWithBody(ctx context.Context, collection NsCollectio
 
 func (c *Client) NsV1Replace(ctx context.Context, collection NsCollection, identifier NsIdentifier, body NsV1ReplaceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewNsV1ReplaceRequest(c.Server, collection, identifier, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV2CheckPermission(ctx context.Context, permission string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV2CheckPermissionRequest(c.Server, permission)
 	if err != nil {
 		return nil, err
 	}
@@ -2911,6 +2926,40 @@ func NewNsV1ReplaceRequestWithBody(server string, collection NsCollection, ident
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewNsV2CheckPermissionRequest generates requests for NsV2CheckPermission
+func NewNsV2CheckPermissionRequest(server string, permission string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "permission", runtime.ParamLocationPath, permission)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/authorization/debug/check/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -4545,6 +4594,9 @@ type ClientWithResponsesInterface interface {
 
 	NsV1ReplaceWithResponse(ctx context.Context, collection NsCollection, identifier NsIdentifier, body NsV1ReplaceJSONRequestBody, reqEditors ...RequestEditorFn) (*NsV1ReplaceResponse, error)
 
+	// NsV2CheckPermissionWithResponse request
+	NsV2CheckPermissionWithResponse(ctx context.Context, permission string, reqEditors ...RequestEditorFn) (*NsV2CheckPermissionResponse, error)
+
 	// NsV2AuthorizeWithResponse request
 	NsV2AuthorizeWithResponse(ctx context.Context, token string, reqEditors ...RequestEditorFn) (*NsV2AuthorizeResponse, error)
 
@@ -5003,6 +5055,29 @@ func (r NsV1ReplaceResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r NsV1ReplaceResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV2CheckPermissionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsObject
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV2CheckPermissionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV2CheckPermissionResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -5951,6 +6026,15 @@ func (c *ClientWithResponses) NsV1ReplaceWithResponse(ctx context.Context, colle
 	return ParseNsV1ReplaceResponse(rsp)
 }
 
+// NsV2CheckPermissionWithResponse request returning *NsV2CheckPermissionResponse
+func (c *ClientWithResponses) NsV2CheckPermissionWithResponse(ctx context.Context, permission string, reqEditors ...RequestEditorFn) (*NsV2CheckPermissionResponse, error) {
+	rsp, err := c.NsV2CheckPermission(ctx, permission, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV2CheckPermissionResponse(rsp)
+}
+
 // NsV2AuthorizeWithResponse request returning *NsV2AuthorizeResponse
 func (c *ClientWithResponses) NsV2AuthorizeWithResponse(ctx context.Context, token string, reqEditors ...RequestEditorFn) (*NsV2AuthorizeResponse, error) {
 	rsp, err := c.NsV2Authorize(ctx, token, reqEditors...)
@@ -6780,6 +6864,39 @@ func ParseNsV1ReplaceResponse(rsp *http.Response) (*NsV1ReplaceResponse, error) 
 	}
 
 	response := &NsV1ReplaceResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsObject
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV2CheckPermissionResponse parses an HTTP response from a NsV2CheckPermissionWithResponse call
+func ParseNsV2CheckPermissionResponse(rsp *http.Response) (*NsV2CheckPermissionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV2CheckPermissionResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}

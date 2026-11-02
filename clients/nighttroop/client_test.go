@@ -210,6 +210,9 @@ func TestNightscoutClient(t *testing.T) {
 	nsSummary, err := ns.NsV2SummaryWithResponse(ctx, auth)
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, nsSummary.StatusCode(), string(nsSummary.Body))
+	checked, err := ns.NsV2CheckPermissionWithResponse(ctx, "api:settings:create", auth)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, checked.StatusCode(), string(checked.Body))
 
 	removed, err := ns.NsV3DeleteWithResponse(ctx, nighttroop.Treatments, identifier, nil, auth)
 	require.NoError(t, err)
