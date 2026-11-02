@@ -802,15 +802,18 @@ func (q *Queries) GetEventGroup(ctx context.Context, arg GetEventGroupParams) (*
 
 const getEventGroupOfTypeWithoutJoins = `-- name: GetEventGroupOfTypeWithoutJoins :many
 SELECT id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, component_event_id, activity_id, notification_event_id, notes, reason, duration_minutes, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name from event_groups WHERE group_type = ? AND (CAST(?2 AS BOOL) IS TRUE OR deleted_at IS NULL)
+ORDER BY occurred_at DESC
+LIMIT CAST(?3 AS INTEGER)
 `
 
 type GetEventGroupOfTypeWithoutJoinsParams struct {
 	GroupType      string
 	IncludeDeleted bool
+	Limit          int64
 }
 
 func (q *Queries) GetEventGroupOfTypeWithoutJoins(ctx context.Context, arg GetEventGroupOfTypeWithoutJoinsParams) ([]*EventGroup, error) {
-	rows, err := q.query(ctx, q.getEventGroupOfTypeWithoutJoinsStmt, getEventGroupOfTypeWithoutJoins, arg.GroupType, arg.IncludeDeleted)
+	rows, err := q.query(ctx, q.getEventGroupOfTypeWithoutJoinsStmt, getEventGroupOfTypeWithoutJoins, arg.GroupType, arg.IncludeDeleted, arg.Limit)
 	if err != nil {
 		return nil, err
 	}

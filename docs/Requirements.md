@@ -282,6 +282,9 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   out, so the server still starts and the rest of its batch is still backed up.
 - Old records' raw JSON is cleared after `TRUNCATE_RECORDS_AFTER_DAYS`.
 - Reads and writes are rate limited per site, identity and IP, and live sessions per site are capped.
+- No request returns more than 1000 records, however many it asks for, through the site's pages and API, the
+  Nightscout API or its live updates, and an upload holds at most 100. Deleting a type of treatment through the
+  Nightscout API deletes at most 1000 each time, saying how many.
 - A DB serves many reads at once, so one slow read, such as a long search, does not hold up the others; writes to it
   take turns rather than fail. A busy DB keeps its connections open between reads, so requests at once do not each
   open a new one, while a quiet site's DB closes all of them.
