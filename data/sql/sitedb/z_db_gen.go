@@ -25,6 +25,7 @@ type DB struct {
 	SQLiteDB     *sql.DB
 	ServerConfig *config.ServerConfig
 	queries      *Queries
+	stmts        *stmtCache
 	InMemory     bool
 
 	Path       string
@@ -67,7 +68,8 @@ func NewDB(ctx context.Context, subdomain string, serverConfig *config.ServerCon
 		return db, fmt.Errorf("sitedb Migration Error for: %s %w", path, err)
 	}
 
-	db.queries = New(sqldb)
+	db.stmts = &stmtCache{DB: sqldb, prepareInTx: !db.InMemory}
+	db.queries = New(db.stmts)
 	// Every site's DB is opened at start, so the connection that migrated it is closed now rather than kept idle until
 	// connMaxIdleTime, which for thousands of sites briefly holds about 0.9MB of SQLite's memory each. One in memory
 	// keeps its connection, as closing it would lose the DB.
@@ -79,10 +81,16 @@ func NewDB(ctx context.Context, subdomain string, serverConfig *config.ServerCon
 	return db, nil
 }
 
-// Queries are the site's queries, unprepared: preparing all of them took a site's first query 30ms and kept about
-// 3.5MB of SQLite's memory for each site, while a prepared query was no faster than SQLite compiling it each time.
+// Queries are the site's queries, each prepared when first run, as parsing them each time was most of a busy server's
+// CPU. Preparing all of them at open kept about 3.5MB of SQLite's memory for each site, while these are prepared on each
+// connection that runs them and freed with it once idle for connMaxIdleTime, so only a busy site's queries cost memory.
 func (db *DB) Queries() *Queries {
 	return db.queries
+}
+
+// QueriesWithTx are the site's queries in tx, each run with its prepared statement on tx's connection
+func (db *DB) QueriesWithTx(tx *sql.Tx) *Queries {
+	return New(&txStmts{Tx: tx, cache: db.stmts})
 }
 
 func (db *DB) Name() string {
@@ -101,6 +109,7 @@ func (db *DB) Close() error {
 	if db == nil || db.SQLiteDB == nil {
 		return nil
 	}
+	db.stmts.Close()
 	return db.SQLiteDB.Close()
 }
 

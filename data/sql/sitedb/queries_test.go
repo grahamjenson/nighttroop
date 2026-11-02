@@ -12,9 +12,8 @@ import (
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
-// A site DB prepares its queries when Queries is first called, so many requests at once share one set of them, which
-// also run in a transaction that is rolled back or committed
-func TestSiteDBQueriesPreparedOnFirstCall(t *testing.T) {
+// Many requests at once share a site DB's queries, which also run in a transaction that is rolled back or committed
+func TestSiteDBQueriesShared(t *testing.T) {
 	db, err := sitedb.NewDB(context.Background(), "abcdefgh", testutils.GetTestServerConfig())
 	require.NoError(t, err)
 	t.Cleanup(func() { db.Close() })
@@ -44,10 +43,9 @@ func TestSiteDBQueriesPreparedOnFirstCall(t *testing.T) {
 
 	for _, commit := range []bool{false, true} {
 		id := fmt.Sprintf("tx-commit-%v", commit)
-		q := db.Queries()
 		tx, err := db.SQLiteDB.BeginTx(ctx, nil)
 		require.NoError(t, err)
-		require.NoError(t, create(q.WithTx(tx), id))
+		require.NoError(t, create(db.QueriesWithTx(tx), id))
 		if commit {
 			require.NoError(t, tx.Commit())
 		} else {
