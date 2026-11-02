@@ -103,6 +103,8 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 		LegacyID       *types.IdentifierString `json:"_id"`
 		SyncIdentifier *types.IdentifierString `json:"syncIdentifier"`
 		UUID           *types.IdentifierString `json:"uuid"`
+		// A temp basal's percent, where a profile switch's is percentage
+		TempBasalPercent *types.FlexibleFloat64 `json:"percent"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),
@@ -124,6 +126,10 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 	}
 	if t.Identifier == nil {
 		t.Identifier = aux.UUID
+	}
+
+	if t.Percent == nil {
+		t.Percent = aux.TempBasalPercent
 	}
 
 	// Set default CreatedAt (leave UTCOffset nil to be later replaces by user timezone)
