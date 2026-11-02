@@ -168,7 +168,7 @@ templ recentClients(identity *sitemodels.UserIdentity) {
 	}
 }
 
-// identityActions resets an identity's password or TOTP, turns it on or off, or deletes it. Your own identity cannot be
+// identityActions changes an identity's settings, resets its password or TOTP, turns it on or off, or deletes it. Your own identity cannot be
 // changed here; its password and TOTP are reset from the settings page.
 // The toggle's hx-vals keeps its form from being empty when unchecked, and a failed update flips it back.
 templ identityActions(identity *sitemodels.UserIdentity) {
@@ -192,6 +192,20 @@ templ identityActions(identity *sitemodels.UserIdentity) {
 			/>
 			<span class="h-5 w-9 rounded-full bg-gray-300 transition-colors peer-checked:bg-gray-900 after:absolute after:left-0.5 after:top-0.5 after:size-4 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:after:translate-x-4"></span>
 		</label>
+		@button.Button(button.Props{
+			ID:      id + "--settings",
+			Variant: button.VariantGhost,
+			Size:    button.SizeIcon,
+			Attributes: templ.Attributes{
+				"title":       "Settings",
+				"hx-get":      "/settings/identity-settings/" + strconv.FormatInt(identity.ID, 10),
+				"hx-target":   "#main-content",
+				"hx-push-url": "true",
+				"hx-swap":     "innerHTML",
+			},
+		}) {
+			@icon.UserCog(icon.Props{Class: "size-4"})
+		}
 		@resetButton(button.Props{ID: id + "--reset-password", Variant: button.VariantGhost, Size: button.SizeIcon, Disabled: identity.CurrentIdentity},
 			identity.ID, "password", "Reset password", "Reset "+identity.Name+"'s password? Its old password and Nightscout token stop working, and it is signed out.") {
 			@icon.KeyRound(icon.Props{Class: "size-4"})

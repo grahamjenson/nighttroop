@@ -2,6 +2,7 @@ package site_settings_templ
 
 import (
 	"context"
+	"strconv"
 	"strings"
 
 	"nighttroop.t1d.nz/data/sql/controldb"
@@ -56,6 +57,9 @@ type settingsPage struct {
 var (
 	generalPage = settingsPage{ID: "settings_page", Title: "Settings", IDPrefix: "site--settings--", Fields: generalFields}
 	alarmsPage  = settingsPage{ID: "alarm_settings_page", Title: "Alarms", IDPrefix: "site--alarms--", Fields: alarmFields}
+	// identityPage is another identity's general settings and alarms, which an admin changes for it
+	identityPage = settingsPage{ID: "identity_settings_page", Title: "Settings", IDPrefix: "site--identity-settings--",
+		Fields: append(append([]settingField{}, generalFields...), alarmFields...)}
 )
 
 // generalFields and alarmFields are the settings each page shows, in order; one without options is typed in
@@ -115,14 +119,18 @@ func (c settingsColumn) value(name string) *string {
 	return *c.Model.Fields()[name]
 }
 
-// settingsColumns are the site's settings for an admin, then the signed in identity's own
-func settingsColumns(page settingsPage, site *sitemodels.Settings, yours *sitemodels.Settings) []settingsColumn {
+// settingsColumns are the site's settings for an admin, then the signed in identity's own, or another identity's
+func settingsColumns(page settingsPage, site *sitemodels.Settings, yours *sitemodels.Settings, other *sitemodels.Settings) []settingsColumn {
 	columns := []settingsColumn{}
 	if site != nil {
 		columns = append(columns, settingsColumn{"Site", "Save Site Settings", site, page.IDPrefix + "site--", page.IDPrefix + "site-form", "/settings/site", "Default"})
 	}
 	if yours != nil {
 		columns = append(columns, settingsColumn{"Yours", "Save Your Settings", yours, page.IDPrefix + "identity--", page.IDPrefix + "identity-form", "/settings/identity", "Site setting"})
+	}
+	if other != nil {
+		columns = append(columns, settingsColumn{*other.IdentityName, "Save " + *other.IdentityName + "'s Settings", other, page.IDPrefix + "identity--",
+			page.IDPrefix + "identity-form", "/settings/identity-settings/" + strconv.FormatInt(*other.IdentityID, 10), "Site setting"})
 	}
 	return columns
 }
@@ -132,7 +140,7 @@ func settingsColumns(page settingsPage, site *sitemodels.Settings, yours *sitemo
 // the defaults for the site, the site's for an identity.
 // SettingsPage is the general settings, and AlarmSettingsPage the alarms: the site's to an admin, beside their own
 templ SettingsPage(site *sitemodels.Settings, yours *sitemodels.Settings) {
-	@settingsPageOf(generalPage, site, yours)
+	@settingsPageOf(generalPage, site, yours, nil)
 	if identity := signedIn(ctx); identity != nil {
 		@resetYourCredentials(identity)
 	}
@@ -216,14 +224,30 @@ templ deleteSite() {
 }
 
 templ AlarmSettingsPage(site *sitemodels.Settings, yours *sitemodels.Settings) {
-	@settingsPageOf(alarmsPage, site, yours)
+	@settingsPageOf(alarmsPage, site, yours, nil)
 }
 
-templ settingsPageOf(page settingsPage, site *sitemodels.Settings, yours *sitemodels.Settings) {
-	{{ columns := settingsColumns(page, site, yours) }}
+// pageTitle is the page's title, with whose settings they are when they are another identity's
+func pageTitle(page settingsPage, other *sitemodels.Settings) string {
+	if other != nil {
+		return *other.IdentityName + "'s Settings"
+	}
+	return page.Title
+}
+
+// IdentitySettingsPage is another identity's own settings and alarms, which an admin changes for it, such as a
+// device's units for a client that needs mg/dL
+templ IdentitySettingsPage(other *sitemodels.Settings) {
+	@settingsPageOf(identityPage, nil, nil, other)
+}
+
+templ settingsPageOf(page settingsPage, site *sitemodels.Settings, yours *sitemodels.Settings, other *sitemodels.Settings) {
+	{{ columns := settingsColumns(page, site, yours, other) }}
 	<div id={ page.ID } class="mx-auto max-w-4xl space-y-6">
-		@heading.Page(page.Title) {
-			if site != nil {
+		@heading.Page(pageTitle(page, other)) {
+			if other != nil {
+				{ *other.IdentityName }'s own settings and alarms, which only it uses, such as the units the Nightscout API gives it. Anything left on the site setting follows the site.
+			} else if site != nil {
 				The site's settings are for everyone on this site. Yours change it just for you; anything left on the site setting follows the site.
 			} else {
 				Your own settings. Anything left on the site setting follows the site.

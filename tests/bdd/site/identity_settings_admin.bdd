@@ -1,0 +1,32 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// An admin opens another identity's settings from its row, such as a device's
+CLICK #site--settings-menu
+CLICK #site--settings--identities-button
+ASSERT_STATUS 200
+CLICK #site--identities--pwd_phone--settings
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE pwd_phone's Settings
+// Its own settings and alarms, each following the site until set
+ASSERT_VISIBLE #site--identity-settings--identity--units
+ASSERT_VISIBLE #site--identity-settings--identity--alarm_low_enabled
+SCREENSHOT identity_settings
+
+// Its units are set to mg/dL, for a client that needs them, whatever the site's
+INPUT #site--identity-settings--identity--units mg/dL
+INPUT #site--identity-settings--identity--alarm_low_enabled true
+CLICK #site--identity-settings--identity--save
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Settings Saved
+SCREENSHOT identity_settings_saved
+
+// They are kept, and the admin's own settings still follow the site
+CLICK #site--settings-menu
+CLICK #site--settings--identities-button
+CLICK #site--identities--pwd_phone--settings
+ASSERT_TEXT_EQUALS #site--identity-settings--identity--units>option[selected] mg/dL
+CLICK #site--settings-menu
+CLICK #site--settings--settings-button
+ASSERT_STATUS 200
+ASSERT_TEXT_EQUALS #site--settings--identity--units>option[selected] Site setting (mmol/L)

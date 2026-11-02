@@ -40,6 +40,10 @@ type Settings struct {
 	Inherited map[string]string `json:"inherited,omitempty"`
 	// Site is the site's settings, shown beside an admin's own on the settings page
 	Site *Settings `json:"-"`
+
+	// IdentityID and IdentityName are whose settings these are, when an admin is changing another identity's
+	IdentityID   *int64  `json:"identity_id,omitempty"`
+	IdentityName *string `json:"identity_name,omitempty"`
 }
 
 // Fields are the settings by name, to read or set

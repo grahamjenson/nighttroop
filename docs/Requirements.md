@@ -375,6 +375,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 
 - An admin adds users and devices, whose credentials are shown once.
 - An admin can turn an identity off and on, or delete it; an identity cannot lock itself out.
+- An admin can change another identity's own settings and alarms from its row, such as a device's units for a client
+  that needs mg/dL on a site in mmol/L; the Nightscout API gives that device its own units.
 - Each identity lists the clients (browsers and apps) that have used it, and is marked shared when several have.
 - Identity creation is rate limited, as each hashes a password.
 

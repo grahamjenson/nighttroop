@@ -23,9 +23,11 @@ import (
 
 // SettingsCollection is a level of settings: the site's, which only admins can change,
 // or the signed in identity's own, which override the site's. Alarms shows the identity's on the alarms page.
+// Other is another identity's own, by its ID, which an admin changes for it, such as a device's units.
 type SettingsCollection struct {
 	Site   bool
 	Alarms bool
+	Other  bool
 }
 
 // settingNames are the settings the pages show so far, in order
@@ -60,6 +62,9 @@ func showSetting(setting *settings.SettingAnyType, units *consts.Units) string {
 // Shared
 // ////
 func (s *SettingsCollection) GetName() string {
+	if s.Other {
+		return "other_identity_settings"
+	}
 	if s.Site {
 		return "site_settings"
 	}
@@ -71,6 +76,9 @@ func (s *SettingsCollection) GetName() string {
 
 // GetRoute is where the collection is in its URL
 func (s *SettingsCollection) GetRoute() string {
+	if s.Other {
+		return "identity-settings"
+	}
 	if s.Site {
 		return "site"
 	}
@@ -80,11 +88,30 @@ func (s *SettingsCollection) GetRoute() string {
 	return "identity"
 }
 
-func (s *SettingsCollection) level(siteContext *httputils.SiteContext) *settings.SettingMap {
+func (s *SettingsCollection) level(siteContext *httputils.SiteContext, identity *controldb.SiteIdentity) *settings.SettingMap {
 	if s.Site {
 		return siteContext.GetSettings().SiteSettingsMap
 	}
+	if s.Other {
+		return settings.NewSettingsMap(identity, &identity.CreatedAt, new("identity"))
+	}
 	return siteContext.GetSettings().IdentitySettingsMap
+}
+
+// identity is whose settings these are: the one with the ID, of the signed in site, for Other, or the one signed in
+func (s *SettingsCollection) identity(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*controldb.SiteIdentity, error) {
+	if !s.Other {
+		return siteContext.IdentityModel, nil
+	}
+	identityID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		return nil, apiutils.ErrNotFound
+	}
+	q, err := collectionTx.Control()
+	if err != nil {
+		return nil, err
+	}
+	return q.GetSiteIdentityByID(ctx, controldb.GetSiteIdentityByIDParams{SiteID: siteContext.SiteID, ID: identityID})
 }
 
 // ////
@@ -95,11 +122,19 @@ func (s *SettingsCollection) GetRow(ctx context.Context, collectionTx *siteapiut
 	if s.Site && siteContext.IdentityModel.Role != consts.IdentityRoleAdmin {
 		return nil, apiutils.ErrForbidden
 	}
-	combined, units := siteContext.GetSettings(), siteContext.GetSettings().GetUnits()
+	identity, err := s.identity(ctx, collectionTx, id, siteContext)
+	if err != nil {
+		return nil, err
+	}
+	// A glucose is shown in the units of the identity signed in, whoever's settings these are, as its label says
+	combined, units, level := siteContext.GetSettings(), siteContext.GetSettings().GetUnits(), s.level(siteContext, identity)
 	model := &sitemodels.Settings{Inherited: map[string]string{}}
+	if s.Other {
+		model.IdentityID, model.IdentityName = &identity.ID, &identity.Name
+	}
 	fields := model.Fields()
 	for _, name := range settingNames {
-		if setting := s.level(siteContext).GetSettingAnyTypeByName(settingID(name)); setting != nil {
+		if setting := level.GetSettingAnyTypeByName(settingID(name)); setting != nil {
 			*fields[name] = new(showSetting(setting, units))
 		}
 		inherited := combined.DefaultSettingsMap.GetSettingAnyTypeByName(settingID(name))
@@ -110,7 +145,7 @@ func (s *SettingsCollection) GetRow(ctx context.Context, collectionTx *siteapiut
 	}
 
 	// An admin's settings page shows the site's settings beside their own
-	if !s.Site && siteContext.IdentityModel.Role == consts.IdentityRoleAdmin {
+	if !s.Site && !s.Other && siteContext.IdentityModel.Role == consts.IdentityRoleAdmin {
 		site, err := (&SettingsCollection{Site: true}).GetRow(ctx, collectionTx, id, siteContext)
 		if err != nil {
 			return nil, err
@@ -125,6 +160,9 @@ func (s *SettingsCollection) ToModel(row *sitemodels.Settings, _ *httputils.Site
 }
 
 func (s *SettingsCollection) GetHTMXResponse(model *sitemodels.Settings) templ.Component {
+	if s.Other {
+		return site_settings_templ.IdentitySettingsPage(model)
+	}
 	page := site_settings_templ.SettingsPage
 	if s.Alarms {
 		page = site_settings_templ.AlarmSettingsPage
@@ -141,7 +179,16 @@ func (s *SettingsCollection) GetHTMXResponse(model *sitemodels.Settings) templ.C
 
 // UpdateRow sets the values sent. An empty value clears it, so the level above applies; one not sent is left as it is.
 func (s *SettingsCollection) UpdateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, oldModel *sitemodels.Settings, model *sitemodels.Settings) (*sitemodels.Settings, error) {
-	level, subject := s.level(siteContext), new("identity")
+	// Another identity's are those of the one read, not of any ID sent
+	id := ""
+	if oldModel.IdentityID != nil {
+		id = strconv.FormatInt(*oldModel.IdentityID, 10)
+	}
+	identity, err := s.identity(ctx, collectionTx, id, siteContext)
+	if err != nil {
+		return nil, err
+	}
+	level, subject := s.level(siteContext, identity), new("identity")
 	if s.Site {
 		subject = new("site")
 	}
@@ -173,6 +220,9 @@ func (s *SettingsCollection) UpdateRow(ctx context.Context, collectionTx *siteap
 	if s.Site {
 		inEffect = &settings.CombinedSettingsMap{SiteSettingsMap: level, IdentitySettingsMap: &settings.SettingMap{}, DefaultSettingsMap: settings.DefaultSettingsMap}
 	}
+	if s.Other {
+		inEffect = &settings.CombinedSettingsMap{SiteSettingsMap: inEffect.SiteSettingsMap, IdentitySettingsMap: level, DefaultSettingsMap: settings.DefaultSettingsMap}
+	}
 	if err := inEffect.Consistent(); err != nil {
 		return nil, apiutils.ErrBadBodyWithHint(err.Error())
 	}
@@ -188,7 +238,7 @@ func (s *SettingsCollection) UpdateRow(ctx context.Context, collectionTx *siteap
 		settings.SetSettings(params, level)
 		err = q.UpdateSitesSettings(ctx, *params)
 	} else {
-		params := &controldb.UpdateSiteIdentitySettingsParams{ID: siteContext.IdentityModel.ID, SiteID: siteContext.SiteID}
+		params := &controldb.UpdateSiteIdentitySettingsParams{ID: identity.ID, SiteID: siteContext.SiteID}
 		settings.SetSettings(params, level)
 		err = q.UpdateSiteIdentitySettings(ctx, *params)
 	}
@@ -208,7 +258,7 @@ func (s *SettingsCollection) UpdateRow(ctx context.Context, collectionTx *siteap
 			siteContext.ControlDB.Logs.SiteWeekStartChangedEvent(ctx, siteContext.SiteID, siteContext.IdentityModel.Name, was, now)
 		})
 	}
-	return s.GetRow(ctx, collectionTx, "", siteContext)
+	return s.GetRow(ctx, collectionTx, id, siteContext)
 }
 
 func (s *SettingsCollection) UpdateHTMXResponse(model *sitemodels.Settings) templ.Component {
