@@ -6,6 +6,7 @@ import (
 
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/footer"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/input"
@@ -216,9 +217,15 @@ templ deleteSite() {
 }
 
 templ AlarmSettingsPage(site *sitemodels.Settings, yours *sitemodels.Settings) {
-	@settingsPageOf(alarmsPage, site, yours)
+	@settingsPageOf(alarmsPage, site, yours) {
+		@footer.MedicalNote("site--alarms--disclaimer") {
+			<strong>Alarms may be late, missing or wrong, and must not be relied on.</strong> They are not a
+			replacement for a medical device's own alarms.
+		}
+	}
 }
 
+// settingsPageOf is a page of settings, with any note, its children, under its heading
 templ settingsPageOf(page settingsPage, site *sitemodels.Settings, yours *sitemodels.Settings) {
 	{{ columns := settingsColumns(page, site, yours) }}
 	<div id={ page.ID } class="mx-auto max-w-4xl space-y-6">
@@ -229,6 +236,7 @@ templ settingsPageOf(page settingsPage, site *sitemodels.Settings, yours *sitemo
 				Your own settings. Anything left on the site setting follows the site.
 			}
 		}
+		{ children... }
 		for _, column := range columns {
 			<form
 				id={ column.FormID }

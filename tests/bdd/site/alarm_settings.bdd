@@ -12,6 +12,11 @@ CLICK #site--settings-menu
 CLICK #site--settings--alarms-button
 ASSERT_STATUS 200
 ASSERT_PATH /settings/alarms
+// Near its top it says the alarms must not be relied on
+ASSERT_VISIBLE #site--alarms--disclaimer
+ASSERT_TEXT_VISIBLE Alarms may be late, missing or wrong, and must not be relied on.
+ASSERT_TEXT_VISIBLE They are not a replacement for a medical device's own alarms.
+SCREENSHOT alarm_settings_disclaimer
 ASSERT_VISIBLE #alarm_settings_page h2:text-is("Lows")
 ASSERT_VISIBLE #alarm_settings_page h2:text-is("No Data")
 ASSERT_NOT_VISIBLE #site--alarms--site--units

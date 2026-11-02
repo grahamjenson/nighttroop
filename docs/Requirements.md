@@ -214,6 +214,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - An alarms page with urgent low, low, predicted low, high, urgent high, fast rise, fast drop, no data, low device
   battery and low reservoir alarms, each off by default.
 - The site's alarms are the default for each identity, who can change them for themselves.
+- The alarms page says near its top that alarms may be late, missing or wrong, must not be relied on, and are not a
+  replacement for a medical device's own alarms.
 - An active alarm shows in a banner under the header on every page, live, and can be snoozed.
 - Nonsense settings are refused, e.g. a high under the low.
 

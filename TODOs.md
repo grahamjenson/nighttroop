@@ -6,8 +6,6 @@
    and check a fresh server restores from those backups
 1. Test end to end with real devices: Loop, Trio, AAPS and xDrip+ uploading, follower apps (xDrip+ follower, LoopFollow,
    Nightguard) reading, and Dexcom and Libre sync
-1. Medical disclaimer: Nighttroop is not a medical device and its alarms are not to be relied on, shown when a site is
-   created and on the alarm settings
 1. Privacy policy and terms, linked from site creation: what is kept (credentials encrypted, logs), for how long, and
    who can see it
 1. A site's admin can delete their site and all its data (sites are only deleted now when unused)

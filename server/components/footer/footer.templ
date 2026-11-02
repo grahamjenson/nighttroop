@@ -24,12 +24,19 @@ templ Footer() {
 // PublicFooter is a public page's footer, with the medical disclaimer above it
 templ PublicFooter() {
 	<div class="mb-6 px-4">
-		<p id="medical-disclaimer" role="note" class="mx-auto max-w-3xl rounded-md border border-amber-400 bg-amber-100 px-4 py-3 text-center text-sm text-amber-800">
+		@MedicalNote("medical-disclaimer") {
 			<strong>Not a medical device.</strong> Nighttroop does not provide medical advice and is not a replacement for
 			proper medical care. Its data and alarms may be late, missing or wrong.
-		</p>
+		}
 	</div>
 	@Footer()
+}
+
+// MedicalNote is a short amber note, its children, of what Nighttroop is not to be relied on for
+templ MedicalNote(id string) {
+	<p id={ id } role="note" class="mx-auto max-w-3xl rounded-md border border-amber-400 bg-amber-100 px-4 py-3 text-center text-sm text-amber-800">
+		{ children... }
+	</p>
 }
 
 // DBIPCredit is on each page that shows locations from DB-IP's database, as its licence asks for a link to DB-IP
