@@ -15,7 +15,7 @@ import (
 const allSiteIdentities = `-- name: AllSiteIdentities :many
 
 
-SELECT id, site_id, name, password_hash, totp_secret_enc, role, created_at, last_seen_at, last_write_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name, enabled, credentials_changed_at, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM site_identities WHERE site_id = ?1 ORDER BY created_at DESC, id DESC
+SELECT id, site_id, name, password_hash, totp_secret_enc, role, created_at, last_seen_at, last_write_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name, enabled, credentials_changed_at, token_digest, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM site_identities WHERE site_id = ?1 ORDER BY created_at DESC, id DESC
 `
 
 type AllSiteIdentitiesParams struct {
@@ -50,6 +50,7 @@ func (q *Queries) AllSiteIdentities(ctx context.Context, arg AllSiteIdentitiesPa
 			&i.CreatedByIdentityName,
 			&i.Enabled,
 			&i.CredentialsChangedAt,
+			&i.TokenDigest,
 			&i.Units,
 			&i.Timezone,
 			&i.Language,
@@ -150,8 +151,10 @@ INSERT INTO site_identities (
     totp_secret_enc,
     role,
     created_by_identity_id,
-    created_by_identity_name
+    created_by_identity_name,
+    token_digest
 ) VALUES (
+    ?,
     ?,
     ?,
     ?,
@@ -170,6 +173,7 @@ type CreateSiteIdentityParams struct {
 	Role                  consts.IdentityRole
 	CreatedByIdentityID   int64
 	CreatedByIdentityName string
+	TokenDigest           *string
 }
 
 // -----
@@ -184,6 +188,7 @@ func (q *Queries) CreateSiteIdentity(ctx context.Context, arg CreateSiteIdentity
 		arg.Role,
 		arg.CreatedByIdentityID,
 		arg.CreatedByIdentityName,
+		arg.TokenDigest,
 	)
 	return err
 }
@@ -209,7 +214,7 @@ func (q *Queries) DeleteSiteIdentity(ctx context.Context, arg DeleteSiteIdentity
 }
 
 const getSiteIdentity = `-- name: GetSiteIdentity :one
-SELECT id, site_id, name, password_hash, totp_secret_enc, role, created_at, last_seen_at, last_write_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name, enabled, credentials_changed_at, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM site_identities WHERE site_id = ?1 AND name = ?2 LIMIT 1
+SELECT id, site_id, name, password_hash, totp_secret_enc, role, created_at, last_seen_at, last_write_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name, enabled, credentials_changed_at, token_digest, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM site_identities WHERE site_id = ?1 AND name = ?2 LIMIT 1
 `
 
 type GetSiteIdentityParams struct {
@@ -236,6 +241,7 @@ func (q *Queries) GetSiteIdentity(ctx context.Context, arg GetSiteIdentityParams
 		&i.CreatedByIdentityName,
 		&i.Enabled,
 		&i.CredentialsChangedAt,
+		&i.TokenDigest,
 		&i.Units,
 		&i.Timezone,
 		&i.Language,
@@ -285,7 +291,7 @@ func (q *Queries) GetSiteIdentity(ctx context.Context, arg GetSiteIdentityParams
 }
 
 const getSiteIdentityByID = `-- name: GetSiteIdentityByID :one
-SELECT id, site_id, name, password_hash, totp_secret_enc, role, created_at, last_seen_at, last_write_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name, enabled, credentials_changed_at, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM site_identities WHERE site_id = ?1 AND id = ?2 LIMIT 1
+SELECT id, site_id, name, password_hash, totp_secret_enc, role, created_at, last_seen_at, last_write_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name, enabled, credentials_changed_at, token_digest, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM site_identities WHERE site_id = ?1 AND id = ?2 LIMIT 1
 `
 
 type GetSiteIdentityByIDParams struct {
@@ -312,6 +318,84 @@ func (q *Queries) GetSiteIdentityByID(ctx context.Context, arg GetSiteIdentityBy
 		&i.CreatedByIdentityName,
 		&i.Enabled,
 		&i.CredentialsChangedAt,
+		&i.TokenDigest,
+		&i.Units,
+		&i.Timezone,
+		&i.Language,
+		&i.DateFormat,
+		&i.TimeFormat,
+		&i.WeekStartDay,
+		&i.BolusDiaHours,
+		&i.BolusOnsetMinutes,
+		&i.BolusPeakMinutes,
+		&i.BasalDiaHours,
+		&i.BasalOnsetMinutes,
+		&i.BasalPeakMinutes,
+		&i.DefaultInsulinSensitivity,
+		&i.DefaultCarbRatio,
+		&i.DefaultBasalRate,
+		&i.CarbMaxAbsorptionHours,
+		&i.CarbMin5mImpact,
+		&i.AlarmUrgentLowEnabled,
+		&i.RangeUrgentLowMgdl,
+		&i.AlarmLowEnabled,
+		&i.RangeLowMgdl,
+		&i.AlarmLowMinutes,
+		&i.AlarmLowPredictionEnabled,
+		&i.AlarmLowPredictionMinutes,
+		&i.AlarmHighEnabled,
+		&i.RangeHighMgdl,
+		&i.AlarmHighMinutes,
+		&i.AlarmUrgentHighEnabled,
+		&i.RangeUrgentHighMgdl,
+		&i.AlarmFastRiseEnabled,
+		&i.AlarmFastRiseMgdl,
+		&i.AlarmFastRiseMinutes,
+		&i.AlarmFastDropEnabled,
+		&i.AlarmFastDropMgdl,
+		&i.AlarmFastDropMinutes,
+		&i.AlarmNoDataEnabled,
+		&i.AlarmNoDataMinutes,
+		&i.AlarmDeviceBatteryLowEnabled,
+		&i.AlarmDeviceBatteryLowPercent,
+		&i.AlarmDeviceBatteryLowMinutes,
+		&i.AlarmDeviceBatteryLowDevicesJson,
+		&i.AlarmLowReservoirEnabled,
+		&i.AlarmLowReservoirUnits,
+		&i.NotificationsEnabled,
+	)
+	return &i, err
+}
+
+const getSiteIdentityByTokenDigest = `-- name: GetSiteIdentityByTokenDigest :one
+SELECT id, site_id, name, password_hash, totp_secret_enc, role, created_at, last_seen_at, last_write_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name, enabled, credentials_changed_at, token_digest, units, timezone, language, date_format, time_format, week_start_day, bolus_dia_hours, bolus_onset_minutes, bolus_peak_minutes, basal_dia_hours, basal_onset_minutes, basal_peak_minutes, default_insulin_sensitivity, default_carb_ratio, default_basal_rate, carb_max_absorption_hours, carb_min_5m_impact, alarm_urgent_low_enabled, range_urgent_low_mgdl, alarm_low_enabled, range_low_mgdl, alarm_low_minutes, alarm_low_prediction_enabled, alarm_low_prediction_minutes, alarm_high_enabled, range_high_mgdl, alarm_high_minutes, alarm_urgent_high_enabled, range_urgent_high_mgdl, alarm_fast_rise_enabled, alarm_fast_rise_mgdl, alarm_fast_rise_minutes, alarm_fast_drop_enabled, alarm_fast_drop_mgdl, alarm_fast_drop_minutes, alarm_no_data_enabled, alarm_no_data_minutes, alarm_device_battery_low_enabled, alarm_device_battery_low_percent, alarm_device_battery_low_minutes, alarm_device_battery_low_devices_json, alarm_low_reservoir_enabled, alarm_low_reservoir_units, notifications_enabled FROM site_identities WHERE site_id = ?1 AND token_digest = ?2 LIMIT 1
+`
+
+type GetSiteIdentityByTokenDigestParams struct {
+	SiteID      string
+	TokenDigest *string
+}
+
+func (q *Queries) GetSiteIdentityByTokenDigest(ctx context.Context, arg GetSiteIdentityByTokenDigestParams) (*SiteIdentity, error) {
+	row := q.queryRow(ctx, q.getSiteIdentityByTokenDigestStmt, getSiteIdentityByTokenDigest, arg.SiteID, arg.TokenDigest)
+	var i SiteIdentity
+	err := row.Scan(
+		&i.ID,
+		&i.SiteID,
+		&i.Name,
+		&i.PasswordHash,
+		&i.TotpSecretEnc,
+		&i.Role,
+		&i.CreatedAt,
+		&i.LastSeenAt,
+		&i.LastWriteAt,
+		&i.UpdatedByIdentityID,
+		&i.UpdatedByIdentityName,
+		&i.CreatedByIdentityID,
+		&i.CreatedByIdentityName,
+		&i.Enabled,
+		&i.CredentialsChangedAt,
+		&i.TokenDigest,
 		&i.Units,
 		&i.Timezone,
 		&i.Language,
@@ -439,14 +523,16 @@ const updateSiteIdentityPassword = `-- name: UpdateSiteIdentityPassword :execres
 UPDATE site_identities
 SET
     password_hash = ?1,
+    token_digest = ?2,
     credentials_changed_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_id = NULL,
-    updated_by_identity_name = ?2
-WHERE site_id = ?3 AND id = ?4
+    updated_by_identity_name = ?3
+WHERE site_id = ?4 AND id = ?5
 `
 
 type UpdateSiteIdentityPasswordParams struct {
 	PasswordHash          string
+	TokenDigest           *string
 	UpdatedByIdentityName *string
 	SiteID                string
 	ID                    int64
@@ -455,6 +541,7 @@ type UpdateSiteIdentityPasswordParams struct {
 func (q *Queries) UpdateSiteIdentityPassword(ctx context.Context, arg UpdateSiteIdentityPasswordParams) (sql.Result, error) {
 	return q.exec(ctx, q.updateSiteIdentityPasswordStmt, updateSiteIdentityPassword,
 		arg.PasswordHash,
+		arg.TokenDigest,
 		arg.UpdatedByIdentityName,
 		arg.SiteID,
 		arg.ID,

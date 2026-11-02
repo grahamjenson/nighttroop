@@ -2,6 +2,8 @@ package jsonapi
 
 import (
 	"bytes"
+	"crypto/sha1"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -294,6 +296,11 @@ func RenderTemplate(input string, ctx map[string]any) (string, error) {
 					}
 				}
 				return ""
+			},
+			// sha1 is a value's SHA-1 in hex, as Loop sends its API secret, e.g. H api-secret: {{ sha1 token }}
+			"sha1": func(value string) string {
+				sum := sha1.Sum([]byte(value))
+				return hex.EncodeToString(sum[:])
 			},
 		}).
 		Parse(input)

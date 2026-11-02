@@ -1,7 +1,10 @@
 package security
 
 import (
+	"crypto/sha1"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"strings"
 )
@@ -18,6 +21,25 @@ func (cfg *SecurityConfig) CreateNightscoutTokenForIdentity(subdomain, identityN
 	}
 	urlEncodedToken := base64.RawURLEncoding.EncodeToString([]byte(encryptedToken))
 	return urlEncodedToken, nil
+}
+
+// APISecretDigest is what an identity keeps to be found by its token's SHA-1 in hex, which is what Loop sends as its
+// api-secret: the SHA-256 of that SHA-1, so the digest is not itself a credential
+func APISecretDigest(tokenSHA1 string) string {
+	sum := sha256.Sum256([]byte(strings.ToLower(tokenSHA1)))
+	return hex.EncodeToString(sum[:])
+}
+
+// NightscoutTokenDigest is the APISecretDigest of a token
+func (cfg *SecurityConfig) NightscoutTokenDigest(token string) string {
+	sum := sha1.Sum([]byte(token))
+	return APISecretDigest(hex.EncodeToString(sum[:]))
+}
+
+// IsSHA1Hex is whether s is a SHA-1 in hex, which a token is not
+func IsSHA1Hex(s string) bool {
+	_, err := hex.DecodeString(s)
+	return len(s) == 2*sha1.Size && err == nil
 }
 
 func (cfg *SecurityConfig) SplitNightscoutTokenForIdentity(tokenStr string) (string, string, string, string, error) {

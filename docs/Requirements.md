@@ -240,7 +240,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - Each site has a Nightscout compatible API at `<site>.ns.<host>` for apps like AAPS, Loop, Trio and xDrip, and
   followers.
 - **v1**: entries, treatments, device statuses, profiles, food and activities, with Nightscout's filters, plus
-  status, versions, verifyauth, slice, count, times and echo.
+  status, versions, verifyauth, slice, count, times and echo, and experiments/test, which Loop calls to check its API
+  secret, 200 only for an identity that can upload treatments.
 - **v2**: authorization (a token for a JWT), properties and summary.
 - **v3**: create, read, update, patch, delete, search and history of each collection, plus version, status,
   lastModified and settings.
@@ -254,6 +255,13 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   default profile's or profile switch's basal at its start, in the profile's timezone, and is returned with that
   `absolute` and its `percent` as sent.
 - Duplicate uploads are ignored; values far outside real use are refused.
+- A v1 upload of a document with an `_id` replaces the one with that `_id`, or is created with it, as Loop sends an
+  override again with its `_id` when it changes, and deletes it by that `_id`.
+- Loop's `Temporary Override` is kept as a temp target, with its correction range and insulin needs scale factor; an
+  indefinite one lasts a week.
+- `find[created_at]` finds treatments and device statuses by when they happened, as in Nightscout, not when they were
+  uploaded.
+- v1 `profile/current` is the newest profile set itself, not a list of one, with `enteredBy`, as Loop reads it.
 
 ### Nighttroop API and client
 
@@ -314,7 +322,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   into it are dropped.
 - The server refuses a TOTP code that is not six digits, like a wrong one.
 - Sign-in attempts are rate limited per identity and IP; a disabled identity cannot sign in.
-- Devices use their Nightscout token, as a token, API secret or for a JWT.
+- Devices use their Nightscout token, as a token, API secret or for a JWT. The token's SHA-1 in hex works as the
+  `api-secret` header too, as Loop sends it, and stops working when the device's password is reset.
 - Changing an identity's password or TOTP signs out its existing sessions.
 - A page left open after its sign in ends goes to the login page once its live updates reconnect, rather than asking
   for them again and again.

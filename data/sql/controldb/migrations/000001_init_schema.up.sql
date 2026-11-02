@@ -162,6 +162,8 @@ CREATE TABLE site_identities (
     enabled INTEGER NOT NULL DEFAULT 1,
     -- credentials_changed_at is when its password or TOTP last changed, or it was made: JWTs issued before it are refused
     credentials_changed_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    -- token_digest is the SHA-256 of the SHA-1 of a device's Nightscout token, which Loop sends as its api-secret
+    token_digest TEXT CHECK(length(token_digest) <= 64),
 
     ---------------
     -- IDENTITY SETTINGS

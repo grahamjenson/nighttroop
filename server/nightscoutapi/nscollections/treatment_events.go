@@ -12,6 +12,7 @@ import (
 	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/types"
 )
 
 // treatmentEvent is one kind of event a treatment's event group can have, such as its glucose reading
@@ -229,6 +230,10 @@ var (
 				source.LowTarget = source.CorrectionRange[0]
 				source.HighTarget = source.CorrectionRange[0]
 			}
+			// An indefinite one lasts as long as a temp target can, a week
+			if source.DurationMinutes == nil && source.DurationType != nil && *source.DurationType == "indefinite" {
+				source.DurationMinutes = new(types.FlexibleInt64(7 * 24 * 60))
+			}
 			return source
 		},
 		has: func(source nightscoutmodels.Treatment) bool {
@@ -420,6 +425,7 @@ var treatmentTypeEvents = map[nightscoutmodels.TreatmentEventType][]treatmentEve
 	nightscoutmodels.SnackBolus:        {glucoseReadings, insulinDoses, foodIntakes, componentEvents},
 	nightscoutmodels.TempBasal:         {tempBasals, componentEvents},
 	nightscoutmodels.TemporaryTarget:   {tempTargets},
+	nightscoutmodels.TemporaryOverride: {tempTargets},
 	nightscoutmodels.CannulaFill:       {componentEvents},
 	nightscoutmodels.Prime:             {componentEvents},
 	nightscoutmodels.ReservoirChange:   {componentEvents},

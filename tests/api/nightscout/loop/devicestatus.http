@@ -2,60 +2,112 @@ INCLUDE steps/new_ns_site.steps
 
 ######
 # CREATE
+# NightscoutService's uploadDosingDecisionData posts an array of DeviceStatus.dictionaryRepresentation: the loop,
+# pump, uploader and override objects. Loop needs a 200 and an array of as many objects as it sent.
 ######
 NAME create_devicestatus_v1
-POST http://{{ site }}/api/v1/devicestatus?token={{ token }}
-B {
+POST http://{{ site }}/api/v1/devicestatus
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+H Accept: application/json
+B [{
     "device": "loop://iPhone",
+    "created_at": "{{ time 60 }}",
     "uploader": {
         "battery": 80,
+        "isCharging": false,
         "name": "iPhone",
-        "timestamp": "2025-05-14T02:13:21Z"
+        "timestamp": "{{ time 60 }}"
     },
     "loop": {
+        "name": "Loop",
+        "version": "3.6.0",
+        "timestamp": "{{ time 60 }}",
         "predicted": {
-            "startDate": "2025-05-14T02:13:07Z",
-            "values": [ 114, 115.88, 120.29, 123.05, 123.98, 123.57, 122.9, 121.95, 120.71, 119.17, 117.34, 115.4, 113.75, 112.21, 110.79, 109.46, 108.24, 107.1, 106.05, 105.09, 104.19, 103.37, 102.62, 101.94, 101.31, 100.74, 100.23, 99.77, 99.37, 99, 98.69, 98.41, 98.18, 97.99, 97.83, 97.7, 97.6, 97.53, 97.48, 97.46, 97.46, 97.49, 97.53, 97.58, 97.66, 97.75, 97.86, 97.98, 98.11, 98.26, 98.41, 98.57, 98.75, 98.93, 99.11, 99.26, 99.4, 99.53, 99.63, 99.72, 99.8, 99.87, 99.93, 99.97, 100.01, 100.04, 100.06, 100.08, 100.09, 100.1, 100.11, 100.11, 100.12, 100.12, 100.12, 100.12]
+            "startDate": "{{ time 60 }}",
+            "values": [ 114, 115.88, 120.29, 123.05, 123.98, 123.57, 122.9, 121.95, 120.71, 119.17, 117.34, 115.4]
         },
-        "timestamp": "2025-05-14T02:13:21Z",
         "automaticDoseRecommendation": {
             "bolusVolume": 0.05,
-            "timestamp": "2025-05-14T02:13:21Z"
+            "timestamp": "{{ time 60 }}",
+            "tempBasalAdjustment": {"rate": 0.65, "duration": 30}
         },
         "iob": {
             "iob": 1.0870623804830117,
-            "timestamp": "2025-05-14T02:10:00Z"
+            "timestamp": "{{ time 60 }}"
         },
-        "name": "Loop",
         "cob": {
             "cob": 5.0947962907626785,
-            "timestamp": "2025-05-14T02:10:00Z"
+            "timestamp": "{{ time 60 }}"
         },
         "recommendedBolus": 0.15,
         "enacted": {
-            "timestamp": "2025-05-14T02:13:13Z",
-            "rate": 0,
+            "timestamp": "{{ time 60 }}",
+            "rate": 0.65,
             "received": true,
-            "duration": 0,
-            "bolusVolume": 0
+            "duration": 30,
+            "bolusVolume": 0.05
         },
-        "version": "3.2.2.65"
+        "failureReason": "Pump communication error"
     },
     "override": {
-        "timestamp": "2025-05-14T02:13:21Z",
-        "active": false
+        "timestamp": "{{ time 60 }}",
+        "active": true,
+        "name": "🏃 Running",
+        "currentCorrectionRange": {"minValue": 140, "maxValue": 160},
+        "duration": 2700,
+        "multiplier": 0.8
     },
-    "created_at": "2025-05-14T02:13:21.000Z",
     "pump": {
         "bolusing": false,
         "secondsFromGMT": 28800,
         "manufacturer": "Insulet",
         "pumpID": "1F068529",
-        "clock": "2025-05-14T02:13:21Z",
-        "model": "Eros",
-        "suspended": false
-    },
-    "utcOffset": 0
- }
+        "clock": "{{ time 60 }}",
+        "model": "Dash",
+        "suspended": false,
+        "reservoir": 50,
+        "battery": {"percent": 75}
+    }
+ }]
 ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EXISTS "@0._id"
 ASSERT_EQUALS 1.0870623804830117 "@0.loop.iob.iob"
+ASSERT_EQUALS 50 "@0.pump.reservoir"
+
+######
+# NightscoutKit's fetchDeviceStatus (not used by Loop itself): find[created_at] between two ISO dates, and count.
+# DeviceStatus(rawValue:) needs _id, created_at as an ISO date and device, then reads the loop object: name, version
+# and timestamp, and its iob, cob, predicted, automaticDoseRecommendation, enacted and failureReason.
+# created_at is when the status was, not when it was uploaded.
+######
+NAME nightscoutkit_fetch_devicestatus
+GET http://{{ site }}/api/v1/devicestatus?find[created_at][$gte]={{ time 90 }}&find[created_at][$lte]={{ time 30 }}&count=10
+H api-secret: {{ sha1 token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS ".create_devicestatus_v1.0._id" "@0._id"
+ASSERT_EQUALS ".create_devicestatus_v1.0.created_at" "@0.created_at"
+ASSERT_EQUALS "loop://iPhone" "@0.device"
+ASSERT_EQUALS "Loop" "@0.loop.name"
+ASSERT_EQUALS "3.6.0" "@0.loop.version"
+ASSERT_EQUALS ".create_devicestatus_v1.0.loop.timestamp" "@0.loop.timestamp"
+ASSERT_EQUALS 1.0870623804830117 "@0.loop.iob.iob"
+ASSERT_EQUALS ".create_devicestatus_v1.0.loop.iob.timestamp" "@0.loop.iob.timestamp"
+ASSERT_EQUALS 5.0947962907626785 "@0.loop.cob.cob"
+ASSERT_EQUALS 114 "@0.loop.predicted.values.0"
+ASSERT_EQUALS ".create_devicestatus_v1.0.loop.predicted.startDate" "@0.loop.predicted.startDate"
+ASSERT_EQUALS 0.65 "@0.loop.automaticDoseRecommendation.tempBasalAdjustment.rate"
+ASSERT_EQUALS 0.05 "@0.loop.automaticDoseRecommendation.bolusVolume"
+ASSERT_EQUALS 0.65 "@0.loop.enacted.rate"
+ASSERT_EQUALS 30 "@0.loop.enacted.duration"
+ASSERT_EQUALS true "@0.loop.enacted.received"
+ASSERT_EQUALS "Pump communication error" "@0.loop.failureReason"
+
+NAME nightscoutkit_fetch_devicestatus_none_uploaded_now
+GET http://{{ site }}/api/v1/devicestatus?find[created_at][$gte]={{ time 20 }}&count=10
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"

@@ -141,3 +141,60 @@ ASSERT_EQUALS 180 "@result.loopSettings.overridePresets.0.targetRange.1"
 ASSERT_EQUALS 0 "@result.loopSettings.overridePresets.0.duration"
 ASSERT_EQUALS 80 "@result.loopSettings.preMealTargetRange.0"
 ASSERT_EQUALS 85 "@result.loopSettings.preMealTargetRange.1"
+
+
+######
+# NightscoutService's uploadSettingsData posts an array of ProfileSet.dictionaryRepresentation to /api/v1/profile,
+# with no _id, and needs a 200 and an array of as many objects as it sent. Its fetchStoredTherapySettings, when Loop
+# is set up from Nightscout, gets /api/v1/profile/current, which must be one profile set, not an array of them.
+# ProfileSet(rawValue:) needs _id, startDate as an ISO date, units, enteredBy, defaultProfile, store, and
+# loopSettings with dosingEnabled and overridePresets. Each profile needs its timezone as Loop sent it (ETC/GMT-12),
+# dia, and sens, carbratio, basal, target_low and target_high with timeAsSeconds and value.
+######
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+NAME loop_upload_settings
+POST http://{{ site }}/api/v1/profile
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+H Accept: application/json
+B [{"defaultProfile": "Default", "startDate": "{{ time 40 }}", "mills": "1793600000000", "units": "mg/dL", "enteredBy": "Loop", "isAPNSProduction": true,
+    "loopSettings": {"dosingEnabled": true, "overridePresets": [{"duration": 3600, "symbol": "🏃", "targetRange": [140, 160], "insulinNeedsScaleFactor": 0.8, "name": "Running"}], "minimumBGGuard": 75, "preMealTargetRange": [80, 85], "maximumBasalRatePerHour": 4, "maximumBolus": 10, "deviceToken": "abcd", "dosingStrategy": "automaticBolus", "bundleIdentifier": "com.X.loopkit.Loop"},
+    "store": {"Default": {"dia": 6, "carbs_hr": "0", "delay": "0", "timezone": "ETC/GMT-12", "target_low": [{"time": "00:00", "value": 100, "timeAsSeconds": 0}], "target_high": [{"time": "00:00", "value": 110, "timeAsSeconds": 0}], "sens": [{"time": "00:00", "value": 40, "timeAsSeconds": 0}], "basal": [{"time": "00:00", "value": 0.8, "timeAsSeconds": 0}, {"time": "06:30", "value": 1.05, "timeAsSeconds": 23400}], "carbratio": [{"time": "00:00", "value": 10, "timeAsSeconds": 0}], "units": "mg/dL"}}}]
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EXISTS "@0._id"
+
+NAME loop_fetch_current_profile
+GET http://{{ site }}/api/v1/profile/current
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS ".loop_upload_settings.0._id" "@_id"
+ASSERT_EQUALS ".loop_upload_settings.0.startDate" "@startDate"
+ASSERT_EQUALS "mg/dL" "@units"
+ASSERT_EQUALS "Default" "@defaultProfile"
+ASSERT_EXISTS "@enteredBy"
+ASSERT_EQUALS true "@loopSettings.dosingEnabled"
+ASSERT_EQUALS "Running" "@loopSettings.overridePresets.0.name"
+ASSERT_EQUALS 3600 "@loopSettings.overridePresets.0.duration"
+ASSERT_EQUALS 80 "@loopSettings.preMealTargetRange.0"
+ASSERT_EQUALS "ETC/GMT-12" "@store.Default.timezone"
+ASSERT_EQUALS 6 "@store.Default.dia"
+ASSERT_EQUALS 23400 "@store.Default.basal.1.timeAsSeconds"
+ASSERT_EQUALS 1.05 "@store.Default.basal.1.value"
+ASSERT_EQUALS 40 "@store.Default.sens.0.value"
+ASSERT_EQUALS 10 "@store.Default.carbratio.0.value"
+ASSERT_EQUALS 100 "@store.Default.target_low.0.value"
+ASSERT_EQUALS 110 "@store.Default.target_high.0.value"
+
+# NightscoutKit's fetchProfiles (not used by Loop itself): find[startDate] between two ISO dates, and count
+NAME nightscoutkit_fetch_profiles
+GET http://{{ site }}/api/v1/profiles?find[startDate][$gte]={{ time 60 }}&find[startDate][$lte]={{ time 0 }}&count=10
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS ".loop_upload_settings.0._id" "@0._id"
+ASSERT_EXISTS "@0.enteredBy"

@@ -10,8 +10,10 @@ INSERT INTO site_identities (
     totp_secret_enc,
     role,
     created_by_identity_id,
-    created_by_identity_name
+    created_by_identity_name,
+    token_digest
 ) VALUES (
+    ?,
     ?,
     ?,
     ?,
@@ -42,6 +44,9 @@ SELECT * FROM site_identities WHERE site_id = sqlc.arg('SiteID') AND name = sqlc
 
 -- name: GetSiteIdentityByID :one
 SELECT * FROM site_identities WHERE site_id = sqlc.arg('SiteID') AND id = sqlc.arg('ID') LIMIT 1;
+
+-- name: GetSiteIdentityByTokenDigest :one
+SELECT * FROM site_identities WHERE site_id = sqlc.arg('SiteID') AND token_digest = sqlc.arg('TokenDigest') LIMIT 1;
 
 
 --------
@@ -77,6 +82,7 @@ WHERE site_id = sqlc.arg('SiteID') AND id = sqlc.arg('ID');
 UPDATE site_identities
 SET
     password_hash = sqlc.arg('PasswordHash'),
+    token_digest = sqlc.narg('TokenDigest'),
     credentials_changed_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_id = NULL,
     updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')

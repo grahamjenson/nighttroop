@@ -58,6 +58,20 @@
     1. P2: Check If-Unmodified-Since on API v3 replace and patch, in the same query as the update
     1. P4: Only write a treatment's events that changed, rather than every one on each update
     1. P4: Keep when a site's settings last changed, for API v3 lastModified
+    1. P1: Replace a treatment uploaded again rather than ignore it, as Nightscout does: Loop posts a temp basal or
+       bolus again when it ends early, with the same date and `syncIdentifier`, and the first upload's duration and
+       amount are kept ([docs/clients/loop.md](docs/clients/loop.md))
+    1. P1: Hash an identifier over 36 characters rather than truncate it, before a create dedups by its identifier:
+       an Omnipod dose's `syncIdentifier` is 60 to 70 hex characters, and two temp basals of the same rate share the
+       first 36 (`tests/api/nightscout/loop/treatments.http` checks both are kept)
+    1. P2: Keep a Loop device status's `override`, `uploader` and pump `clock`, `pumpID`, `model`, `suspended` and
+       `bolusing`, which followers show; only the loop object, pump battery and reservoir are kept
+    1. P2: Loop remote commands: `POST /api/v2/notifications/loop`, sent to Loop as an Apple push to its profile's
+       `loopSettings.deviceToken`
+    1. P2: The Nightscout API's `sgv` and `mbg` are in the site's units, but NightscoutKit and most followers read them
+       as mg/dL, so on an mmol/L site they read 6.3 as 6.3 mg/dL
+    1. P3: NightscoutKit's `fetchTreatments` drops treatments without a `timestamp`, a bolus without `programmed`
+       and a temp basal without `temp`, which Nighttroop does not return
 
 ## Bugs
 

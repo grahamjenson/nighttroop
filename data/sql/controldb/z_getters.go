@@ -888,6 +888,16 @@ func (m *SiteIdentity) SetCredentialsChangedAt(v int64) {
 	m.CredentialsChangedAt = v
 }
 
+// GetTokenDigest returns the TokenDigest value.
+func (m SiteIdentity) GetTokenDigest() *string {
+	return m.TokenDigest
+}
+
+// SetTokenDigest sets the TokenDigest value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetTokenDigest(v *string) {
+	m.TokenDigest = v
+}
+
 // GetUnits returns the Units value.
 func (m SiteIdentity) GetUnits() *consts.Units {
 	return m.Units
@@ -2768,6 +2778,16 @@ func (m *CreateSiteIdentityParams) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
 }
 
+// GetTokenDigest returns the TokenDigest value.
+func (m CreateSiteIdentityParams) GetTokenDigest() *string {
+	return m.TokenDigest
+}
+
+// SetTokenDigest sets the TokenDigest value and returns the updated CreateSiteIdentityParams.
+func (m *CreateSiteIdentityParams) SetTokenDigest(v *string) {
+	m.TokenDigest = v
+}
+
 // GetSiteID returns the SiteID value.
 func (m DeleteSiteIdentityParams) GetSiteID() string {
 	return m.SiteID
@@ -2826,6 +2846,26 @@ func (m GetSiteIdentityByIDParams) GetID() int64 {
 // SetID sets the ID value and returns the updated GetSiteIdentityByIDParams.
 func (m *GetSiteIdentityByIDParams) SetID(v int64) {
 	m.ID = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m GetSiteIdentityByTokenDigestParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated GetSiteIdentityByTokenDigestParams.
+func (m *GetSiteIdentityByTokenDigestParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetTokenDigest returns the TokenDigest value.
+func (m GetSiteIdentityByTokenDigestParams) GetTokenDigest() *string {
+	return m.TokenDigest
+}
+
+// SetTokenDigest sets the TokenDigest value and returns the updated GetSiteIdentityByTokenDigestParams.
+func (m *GetSiteIdentityByTokenDigestParams) SetTokenDigest(v *string) {
+	m.TokenDigest = v
 }
 
 // GetPasswordHash returns the PasswordHash value.
@@ -2956,6 +2996,16 @@ func (m UpdateSiteIdentityPasswordParams) GetPasswordHash() string {
 // SetPasswordHash sets the PasswordHash value and returns the updated UpdateSiteIdentityPasswordParams.
 func (m *UpdateSiteIdentityPasswordParams) SetPasswordHash(v string) {
 	m.PasswordHash = v
+}
+
+// GetTokenDigest returns the TokenDigest value.
+func (m UpdateSiteIdentityPasswordParams) GetTokenDigest() *string {
+	return m.TokenDigest
+}
+
+// SetTokenDigest sets the TokenDigest value and returns the updated UpdateSiteIdentityPasswordParams.
+func (m *UpdateSiteIdentityPasswordParams) SetTokenDigest(v *string) {
+	m.TokenDigest = v
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.

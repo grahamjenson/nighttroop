@@ -42,6 +42,13 @@ func VerifyAuth(dep nsutils.Store) http.HandlerFunc {
 	}
 }
 
+// ExperimentsTest is how Loop checks its API secret when it is set up, so it needs one that can upload
+func ExperimentsTest() http.HandlerFunc {
+	return nsutils.Require("api:treatments:create", true, func(w http.ResponseWriter, r *http.Request, _ *nsutils.Identity) {
+		apiutils.WriteJSON(w, http.StatusOK, map[string]any{"status": "ok"})
+	})
+}
+
 // StatusJSON serves the v1 JSON status payload.
 func StatusJSON(store nsutils.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

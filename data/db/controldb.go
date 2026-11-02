@@ -629,24 +629,26 @@ func (db *ControlDB) CreateSiteIdentity(ctx context.Context, q *controldb.Querie
 		encTOTPSecret = encTOTPSecretRet
 	}
 
+	var nsToken, tokenDigest *string
+	if can.HaveNightscoutToken(role) {
+		token, err := security.CreateNightscoutTokenForIdentity(siteID, name, string(role), password)
+		if err != nil {
+			return nil, fmt.Errorf("cannot create nightscout token for identity: %w", err)
+		}
+		nsToken, tokenDigest = &token, new(security.NightscoutTokenDigest(token))
+	}
+
 	err = q.CreateSiteIdentity(ctx, controldb.CreateSiteIdentityParams{
 		SiteID:        siteID,
 		Name:          name,
 		PasswordHash:  hashedPassword,
 		TotpSecretEnc: encTOTPSecret,
 		Role:          role,
+		TokenDigest:   tokenDigest,
 	})
 
 	if err != nil {
 		return nil, fmt.Errorf("cannot create user identity: %w", err)
-	}
-	var nsToken *string
-	if can.HaveNightscoutToken(role) {
-		token, err := security.CreateNightscoutTokenForIdentity(siteID, name, string(role), password)
-		if err != nil {
-			return nil, fmt.Errorf("cannot create nightscout token for identity: %w", err)
-		}
-		nsToken = &token
 	}
 
 	return &IdentityValues{
@@ -663,19 +665,20 @@ func (db *ControlDB) ResetSiteIdentityPassword(ctx context.Context, identity *co
 	if err != nil {
 		return nil, fmt.Errorf("cannot generate user password: %w", err)
 	}
-	if _, err := db.Queries.UpdateSiteIdentityPassword(ctx, controldb.UpdateSiteIdentityPasswordParams{PasswordHash: hashedPassword,
-		UpdatedByIdentityName: &by, SiteID: identity.SiteID, ID: identity.ID}); err != nil {
-		return nil, err
-	}
-	db.Logs.IdentityCredentialsChangedEvent(ctx, identity.SiteID, identity.Name, "password", by)
 	values := &IdentityValues{Password: password}
+	var tokenDigest *string
 	if can.HaveNightscoutToken(identity.Role) {
 		token, err := db.ServerConfig.Security.CreateNightscoutTokenForIdentity(identity.SiteID, identity.Name, string(identity.Role), password)
 		if err != nil {
 			return nil, fmt.Errorf("cannot create nightscout token for identity: %w", err)
 		}
-		values.NSToken = &token
+		values.NSToken, tokenDigest = &token, new(db.ServerConfig.Security.NightscoutTokenDigest(token))
 	}
+	if _, err := db.Queries.UpdateSiteIdentityPassword(ctx, controldb.UpdateSiteIdentityPasswordParams{PasswordHash: hashedPassword,
+		TokenDigest: tokenDigest, UpdatedByIdentityName: &by, SiteID: identity.SiteID, ID: identity.ID}); err != nil {
+		return nil, err
+	}
+	db.Logs.IdentityCredentialsChangedEvent(ctx, identity.SiteID, identity.Name, "password", by)
 	return values, nil
 }
 
