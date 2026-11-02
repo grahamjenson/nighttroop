@@ -208,7 +208,7 @@ NightscoutKit has reads that Loop does not call, but other apps built on it may:
 | Device status `override`, `uploader`, pump `clock`, `model`, `suspended`, `bolusing` | Not supported: dropped. TODO P2 (Loop does not read them back) |
 | `POST /api/v1/profile`, `loopSettings` and `store` | Works |
 | `GET /api/v1/profile/current` as one object with `enteredBy` | Fixed in this PR (was an array, and had no `enteredBy`) |
-| NightscoutKit `find[created_at]` on treatments and device statuses | Fixed in this PR (it was the upload time, not when they happened) |
+| NightscoutKit `find[created_at]` on treatments and device statuses | Works since #514 (it was the upload time, not when they happened) |
 | NightscoutKit `fetchGlucose` | Works on an mg/dL site; on an mmol/L site `sgv` is in mmol/L. TODO P2 |
 | NightscoutKit `fetchTreatments` reading bolus and temp basal fields and `timestamp` | Not supported: no `timestamp`, `programmed` or `temp`. TODO P3 |
 | NightscoutKit `fetchProfiles` | Works |
