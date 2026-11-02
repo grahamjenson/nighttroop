@@ -16,7 +16,7 @@ func TestCPUWatch(t *testing.T) {
 	tracker := New()
 	w := &tracker.watch
 	for i, percent := range []float64{50, 99, 100, 97, 40, 100, 100} {
-		w.record(percent, at(i*5), at(i*5+5))
+		w.record(percent, 1, at(i*5), at(i*5+5))
 	}
 	mean, pegged := tracker.TakeCPU()
 	require.InDelta(t, 83.71, mean, 0.01)
@@ -26,9 +26,19 @@ func TestCPUWatch(t *testing.T) {
 	require.Zero(t, pegged)
 
 	// Still pegged after it was taken, so the run carries on from before
-	w.record(100, at(35), at(40))
+	w.record(100, 1, at(35), at(40))
 	_, pegged = tracker.TakeCPU()
 	require.Equal(t, 15*time.Second, pegged)
+
+	// As htop shows it, a percent of one core: on 4 cores, 200% is two of them busy, and only nearly all four is pegged
+	four := New()
+	for i, percent := range []float64{200, 390, 395} {
+		four.watch.record(percent, 4, at(i*5), at(i*5+5))
+	}
+	require.Equal(t, 395.0, four.Server(t.TempDir(), at(15)).CPUPercent, "the latest sample")
+	mean, pegged = four.TakeCPU()
+	require.InDelta(t, 328.33, mean, 0.01)
+	require.Equal(t, 10*time.Second, pegged, "200% of 4 cores is not pegged")
 
 	var none *Tracker
 	none.SampleCPU(at(0), 4)

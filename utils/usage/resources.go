@@ -8,12 +8,14 @@ import (
 	"time"
 )
 
-// peggedPercent is the CPU a sample counts as pegged at, as one rarely reads exactly 100%
+// peggedPercent is the CPU of each core a sample counts as pegged at, as one rarely reads exactly 100%
 const peggedPercent = 95
 
-// cpuWatch is the process's CPU sampled every few seconds between checks of the server's resources
+// cpuWatch is the process's CPU sampled every few seconds between checks of the server's resources, as htop shows it:
+// a percent of one core, so up to 100% for each core
 type cpuWatch struct {
 	last        cpuSample
+	latest      float64
 	peggedSince time.Time
 	longest     time.Duration
 	sum         float64
@@ -29,8 +31,8 @@ func processCPU() (time.Duration, bool) {
 	return time.Duration(rusage.Utime.Nano() + rusage.Stime.Nano()), true
 }
 
-// SampleCPU samples the process's CPU since its last sample, as a percent of every core, keeping how long it has been
-// pegged
+// SampleCPU samples the process's CPU since its last sample, as a percent of one core, keeping how long it has been
+// pegged, every core nearly all used
 func (t *Tracker) SampleCPU(now time.Time, cpus int) {
 	used, ok := processCPU()
 	if t == nil || !ok || cpus < 1 {
@@ -40,17 +42,18 @@ func (t *Tracker) SampleCPU(now time.Time, cpus int) {
 	defer t.mu.Unlock()
 	w := &t.watch
 	if !w.last.at.IsZero() && now.After(w.last.at) {
-		w.record(100*float64(used-w.last.used)/float64(now.Sub(w.last.at))/float64(cpus), w.last.at, now)
+		w.record(100*float64(used-w.last.used)/float64(now.Sub(w.last.at)), cpus, w.last.at, now)
 	}
 	w.last = cpuSample{at: now, used: used}
 }
 
-// record is a sample of percent from one time to the next
-func (w *cpuWatch) record(percent float64, from time.Time, to time.Time) {
+// record is a sample of percent, of one core, from one time to the next, on cpus cores
+func (w *cpuWatch) record(percent float64, cpus int, from time.Time, to time.Time) {
+	w.latest = percent
 	w.sum += percent
 	w.samples++
 	switch {
-	case percent < peggedPercent:
+	case percent < peggedPercent*float64(cpus):
 		w.peggedSince = time.Time{}
 	case w.peggedSince.IsZero():
 		w.peggedSince = from

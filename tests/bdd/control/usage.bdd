@@ -24,7 +24,9 @@ ASSERT_NOT_VISIBLE #control--usage--created-today >> text=/^0$/
 ASSERT_NOT_VISIBLE #control--usage--created-week >> text=/^0$/
 ASSERT_NOT_VISIBLE #control--usage--created-month >> text=/^0$/
 ASSERT_VISIBLE #control--usage--requests-per-site
+// The CPU is as htop shows it, 100% for each core, in the last 5 seconds
 ASSERT_VISIBLE #control--usage--cpu >> text=/%$/
+ASSERT_VISIBLE #control--usage--cpu + div >> text=/^of \d+00% for \d+ cores?, last 5 seconds$/
 // The memory is all the OS counts for the server, with SQLite's, which is outside Go's heap
 ASSERT_VISIBLE #control--usage--memory + div >> text=/in Go's heap, the rest mostly SQLite$/
 // The DBs' size, and the space left on their disk
