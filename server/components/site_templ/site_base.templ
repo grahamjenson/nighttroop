@@ -45,7 +45,8 @@ templ Base() {
 			<script src="/qrcode.js"></script>
 			<script src="/echarts.min.js"></script>
 		</head>
-		<body hx-ext="response-targets">
+		// As tall as the window, so a page that fills what is left, like the login, needs no scrolling
+		<body hx-ext="response-targets" class="flex min-h-dvh flex-col">
 			@testsite.Banner()
 			<div id="toaster" class="mb-3"></div>
 			{ children... }
