@@ -391,6 +391,9 @@
   .mt-6 {
     margin-top: calc(var(--spacing) * 6);
   }
+  .mt-auto {
+    margin-top: auto;
+  }
   .mr-2 {
     margin-right: calc(var(--spacing) * 2);
   }
@@ -1019,6 +1022,12 @@
       background-color: color-mix(in oklab, var(--color-brand-gold) 10%, transparent);
     }
   }
+  .bg-brand-gold\/20 {
+    background-color: color-mix(in srgb, #F2B53A 20%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-brand-gold) 20%, transparent);
+    }
+  }
   .bg-brand-night {
     background-color: var(--color-brand-night);
   }
@@ -1128,6 +1137,9 @@
   }
   .p-4 {
     padding: calc(var(--spacing) * 4);
+  }
+  .p-5 {
+    padding: calc(var(--spacing) * 5);
   }
   .p-6 {
     padding: calc(var(--spacing) * 6);
@@ -1449,6 +1461,12 @@
   }
   .text-white {
     color: var(--color-white);
+  }
+  .text-white\/80 {
+    color: color-mix(in srgb, #fff 80%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      color: color-mix(in oklab, var(--color-white) 80%, transparent);
+    }
   }
   .text-yellow-500 {
     color: var(--color-yellow-500);
@@ -2357,6 +2375,11 @@
   .md\:max-w-\[420px\] {
     @media (width >= 48rem) {
       max-width: 420px;
+    }
+  }
+  .md\:grid-cols-2 {
+    @media (width >= 48rem) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
   .md\:grid-cols-3 {

@@ -44,6 +44,7 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		// The summary is the home page
 		r.Get("/", store.Collection("data", "summary").Search)
 		r.Get("/summary", store.Collection("data", "summary").Search)
+		r.Get("/getting-started", sitecollections.GettingStartedHandler)
 
 		// The settings and alarms pages show the identity's own settings, and the site's to an admin. Both save to
 		// /settings/site and /settings/identity.

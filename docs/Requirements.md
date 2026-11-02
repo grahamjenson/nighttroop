@@ -164,7 +164,17 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - The summary's glucose readings link to the page of every reading, and each treatment's kind (e.g. Insulin) to the
   page of that kind.
 - The summary updates live as new data arrives, and catches up after the page has been in the background.
-- A new site's empty summary links to the sync settings.
+- A summary with no readings in its time links to the sync settings.
+
+### Getting started
+
+- A site with no glucose for over a month, or ever, shows a guide to setting it up in place of its empty summary, until
+  readings arrive, when the summary shows them live.
+- The guide's steps each open the page they are done on: an admin gets their glucose in (the site's Nightscout URL for
+  AAPS, Trio or xDrip+, or a sync from Dexcom, LibreLinkUp or Nightscout) and adds people and devices; everyone makes
+  their settings and sets up alarms.
+- Someone who is not an admin is told the admin sets up the site's data and who can use it.
+- The guide is always at Getting Started, first in the menu.
 
 ### Data
 
