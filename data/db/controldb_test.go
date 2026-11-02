@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/data/sql/logsdb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/consts"
@@ -297,4 +298,95 @@ func TestStartWhenSiteDBIsMissing(t *testing.T) {
 	batch := controlDB.GetSiteDBsFromModels(sites)
 	require.Len(t, batch, 1)
 	require.Equal(t, "keptsite", batch[0].Subdomain)
+}
+
+// A live site whose DB file is missing at start is restored, with its data, from its batch's backup, downloaded once
+// for the batch; one the backup does not have is left out, and each is a site_db_missing event the control admin sees
+func TestRestoreMissingSites(t *testing.T) {
+	cfg := *testutils.GetTestServerConfig()
+	cfg.Mode = consts.Development
+	cfg.DataDir = t.TempDir()
+	cfg.Status.S3Working = true
+	ctx := t.Context()
+	controlDB, err := db.NewControlDB(ctx, &cfg)
+	require.NoError(t, err)
+	for _, siteID := range []string{"keptsite", "kostsite", "kingsite"} {
+		_, err := controlDB.CreateSiteWithID(ctx, siteID)
+		require.NoError(t, err)
+	}
+	site, _, err := controlDB.GetSite(ctx, "kostsite")
+	require.NoError(t, err)
+	_, err = site.Queries().CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "kept", Mgdl: 120, ReadingType: "sgv", OccurredAt: 1, CreatedByIdentityName: "phone"})
+	require.NoError(t, err)
+	require.NoError(t, controlDB.Close())
+
+	// The batch's backup, in a stand in for S3, has kostsite but not kingsite
+	backup := filepath.Join(t.TempDir(), "kostsite.sqlite")
+	require.NoError(t, os.Rename(sitedb.GetPath("kostsite", &cfg), backup))
+	require.NoError(t, os.Remove(sitedb.GetPath("kingsite", &cfg)))
+	downloads := 0
+	download := func(_ context.Context, key string, outpath string) (int64, bool, error) {
+		downloads++
+		require.Equal(t, sitedb.GetS3BatchPath("k", &cfg), key)
+		data, err := os.ReadFile(backup)
+		require.NoError(t, err)
+		return int64(len(data)), true, os.WriteFile(filepath.Join(outpath, "kostsite.sqlite"), data, 0o600)
+	}
+
+	controlDB, err = db.NewControlDB(ctx, &cfg)
+	require.NoError(t, err)
+	t.Cleanup(func() { controlDB.Close() })
+	controlDB.RestoreMissingSites(ctx, download)
+	require.Equal(t, 1, downloads, "the batch is downloaded once")
+
+	site, _, err = controlDB.GetSite(ctx, "kostsite")
+	require.NoError(t, err, "the site is restored and open")
+	reading, err := site.Queries().GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: "kept"})
+	require.NoError(t, err)
+	require.Equal(t, float64(120), reading.Mgdl)
+	_, _, err = controlDB.GetSite(ctx, "kingsite")
+	require.ErrorContains(t, err, "not found in memory")
+	entries, err := os.ReadDir(filepath.Dir(sitedb.GetBatchFolder("k", &cfg)))
+	require.NoError(t, err)
+	for _, entry := range entries {
+		require.False(t, strings.HasPrefix(entry.Name(), "."), "no staging folder is left behind")
+	}
+
+	for siteID, attributes := range map[string]string{"kostsite": `{"restored":true}`, "kingsite": `{"restored":false,"reason":"not_in_backup"}`, "keptsite": ""} {
+		found, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &siteID, Type: new("site_db_missing"), Limit: 10})
+		require.NoError(t, err)
+		if attributes == "" {
+			require.Empty(t, found, siteID)
+			continue
+		}
+		require.Len(t, found, 1, siteID)
+		require.JSONEq(t, attributes, *found[0].Attributes, siteID)
+	}
+}
+
+// Without S3 a live site whose DB file is missing is left out, and the control admin sees it as a site_db_missing event
+func TestRestoreMissingSitesWithoutS3(t *testing.T) {
+	cfg := *testutils.GetTestServerConfig()
+	cfg.Mode = consts.Development
+	cfg.DataDir = t.TempDir()
+	ctx := t.Context()
+	controlDB, err := db.NewControlDB(ctx, &cfg)
+	require.NoError(t, err)
+	_, err = controlDB.CreateSiteWithID(ctx, "kostsite")
+	require.NoError(t, err)
+	require.NoError(t, controlDB.Close())
+	require.NoError(t, os.Remove(sitedb.GetPath("kostsite", &cfg)))
+
+	controlDB, err = db.NewControlDB(ctx, &cfg)
+	require.NoError(t, err)
+	t.Cleanup(func() { controlDB.Close() })
+	controlDB.RestoreMissingSites(ctx, s3utils.NewS3Client(&cfg).DownloadFilesFromS3)
+
+	_, _, err = controlDB.GetSite(ctx, "kostsite")
+	require.ErrorContains(t, err, "not found in memory")
+	siteID := "kostsite"
+	found, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &siteID, Type: new("site_db_missing"), Limit: 10})
+	require.NoError(t, err)
+	require.Len(t, found, 1)
+	require.JSONEq(t, `{"restored":false,"reason":"s3_not_working"}`, *found[0].Attributes)
 }

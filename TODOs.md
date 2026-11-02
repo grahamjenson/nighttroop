@@ -65,6 +65,6 @@
 
 ## Bugs
 
-1. P2: A live site whose DB file is missing at start is only logged and left out; restore it from its batch backup or
-   show it to the control admin
+1. P4: A live site left out at start, its DB missing and not restored, is only a `site_db_missing` event; mark it on
+   the control sites page too
 
