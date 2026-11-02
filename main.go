@@ -73,6 +73,9 @@ func run() error {
 		return fmt.Errorf("server validation failed: %w", err)
 	}
 
+	// Before any restore runs, so none of the staging folders it removes is in use
+	restore.RemoveStaging(serverConfig)
+
 	// This will download all files from S3 if they exist
 	err = restore.TryRestoreControlDB(s3Client)
 	if err != nil {
