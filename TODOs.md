@@ -6,13 +6,9 @@
    and check a fresh server restores from those backups
 1. Test end to end with real devices: Loop, Trio, AAPS and xDrip+ uploading, follower apps (xDrip+ follower, LoopFollow,
    Nightguard) reading, and Dexcom and Libre sync
-1. Privacy policy and terms, linked from site creation: what is kept (credentials encrypted, logs), for how long, and
-   who can see it
-1. A site's admin can delete their site and all its data (sites are only deleted now when unused)
 1. A way for testers to report bugs and give feedback, linked from the site
 1. A tester guide: creating a site, keeping its credentials safe (they cannot be recovered), and connecting uploaders,
    followers and sync
-1. Check the archive bug below is fixed
 
 ## Before Beta Testing
 
@@ -32,7 +28,6 @@
 1. Control UI
     1. Show bad users
     1. Block IP addresses
-    1. Show all rate limits for users
     1. Restore one site from its backup
     1. P3: Manage the control admins: list them, reset another's password or TOTP, change their role or delete one
 
@@ -67,7 +62,6 @@
 
 ## Bugs
 
-1. Archive has a problem where they are deleting files from the db not removing from control
 1. P4: A start killed mid restore leaves its `.<folder>-restore-*` staging folder beside the DBs; remove them on start
 1. P2: A live site whose DB file is missing at start is only logged and left out; restore it from its batch backup or
    show it to the control admin
