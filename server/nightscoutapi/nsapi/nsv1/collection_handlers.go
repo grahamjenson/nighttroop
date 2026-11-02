@@ -30,6 +30,11 @@ func Search(store nsutils.Store) http.HandlerFunc {
 		records := []nsutils.Document{}
 		if query.IDEq != nil {
 			record, err := store.Get(r.Context(), collection, *query.IDEq, query)
+			// A find[_id] that matches nothing is an empty search, as in Nightscout; xDrip4iOS reads it as deleted
+			if err != nil && err.Status == http.StatusNotFound && identifierOrType == "" {
+				nsutils.WriteRecordsV1(w, records, query.Fields)
+				return
+			}
 			if err != nil {
 				nsutils.WriteError(w, err)
 				return
@@ -90,6 +95,12 @@ func Create(store nsutils.Store) http.HandlerFunc {
 			if !ok {
 				nsutils.WriteError(w, nsutils.BadDataBodyError)
 				return
+			}
+
+			// A sensor calibration's slope and intercept, which xDrip sends with its finger pricks, are of no use
+			// to Nighttroop, so they are accepted and not stored
+			if collection == nsutils.Entries && doc["type"] == "cal" {
+				continue
 			}
 
 			record, _, err := store.Create(r.Context(), collection, doc, nsutils.RawParam(r))
