@@ -1,6 +1,9 @@
 package nsquery
 
-import "nighttroop.t1d.nz/data/sql/sitedb"
+import (
+	"nighttroop.t1d.nz/data/sql/sitedb"
+	"nighttroop.t1d.nz/utils/apiutils/apiquery"
+)
 
 //go:generate go tool goverter gen .
 
@@ -87,9 +90,11 @@ func GetSkipInt64(source QueryValues) int64 {
 	return source.Skip.Int64()
 }
 
+// GetLimitInt64 defaults a missing or bad limit or count to the most a search returns, and caps it there, as the site's
+// own API does
 func GetLimitInt64(source QueryValues) int64 {
-	if source.Limit == nil || *source.Limit <= 0 || *source.Limit > 1000 {
-		return 1000
+	if source.Limit == nil || *source.Limit <= 0 || *source.Limit > apiquery.MaxQueryLimit {
+		return apiquery.MaxQueryLimit
 	}
 	return source.Limit.Int64()
 }
