@@ -1,0 +1,14 @@
+// Tab goes from the name to the password, then to the code, skipping the button that shows the password
+GOTO {{ .control_url }}/login
+ASSERT_STATUS 200
+CLICK #name
+PRESS Tab
+ASSERT_VISIBLE #password:focus
+PRESS Tab
+ASSERT_VISIBLE #control--login--otp-1:focus
+SCREENSHOT login_tab_to_code
+
+// The button still shows the password when clicked
+INPUT #password password
+CLICK #password ~ button
+ASSERT_VISIBLE #password[type="text"]

@@ -44,10 +44,10 @@ SCREENSHOT event_details
 CLICK #control--event--details--close
 ASSERT_NOT_VISIBLE #control--event--details
 
-// Events can be filtered to one type, with an option for all of them
+// Events can be filtered to one type, with an option for all of them. A sync another scenario on this server made can
+// have been turned off, so the filter is shown by what it leaves out
 INPUT #control--events--filter--type sync_turned_off
 CLICK #control--events--filter--submit
-ASSERT_TEXT_VISIBLE No events here.
 ASSERT_NOT_VISIBLE #controlEventsTable >> text=Site created
 INPUT #control--events--filter--type site_created
 CLICK #control--events--filter--submit
