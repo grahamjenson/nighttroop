@@ -137,3 +137,8 @@
 1. P4: A live site left out at start, its DB missing and not restored, is only a `site_db_missing` event; mark it on
    the control sites page too
 
+## Code
+
+1. P4: Run the summary daily and profile preset `DeleteRow`s through `siteapiutils.SiteQuery`, as the other
+   site collections do, rather than opening the site queries by hand
+

@@ -37,11 +37,7 @@ func (s *GlucoseReadingsCollection) CreateRow(ctx context.Context, collectionTx 
 	if herr := checkGlucoseMgdl(params.Mgdl, siteContext); herr != nil {
 		return nil, herr
 	}
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.CreateGlucoseReading(ctx, params)
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).CreateGlucoseReading, params)
 }
 
 // NewHTMXResponse is the modal to add a glucose reading in
@@ -66,11 +62,7 @@ func (s *GlucoseReadingsCollection) UpdateRow(ctx context.Context, collectionTx 
 			return nil, herr
 		}
 	}
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.UpdateGlucoseReading(ctx, params)
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).UpdateGlucoseReading, params)
 }
 
 func (s *GlucoseReadingsCollection) UpdateHTMXResponse(model *sitemodels.SiteGlucoseReading) templ.Component {
