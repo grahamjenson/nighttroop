@@ -6,8 +6,6 @@
    and check a fresh server restores from those backups
 1. Test end to end with real devices: Loop, Trio, AAPS and xDrip+ uploading, follower apps (xDrip+ follower, LoopFollow,
    Nightguard) reading, and Dexcom and Libre sync
-1. Medical disclaimer: Nighttroop is not a medical device and its alarms are not to be relied on, shown when a site is
-   created and on the alarm settings
 1. A way for testers to report bugs and give feedback, linked from the site
 1. A tester guide: creating a site, keeping its credentials safe (they cannot be recovered), and connecting uploaders,
    followers and sync
