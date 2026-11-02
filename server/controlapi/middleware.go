@@ -45,6 +45,12 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, config *config.ServerConfig) fun
 	}
 }
 
+// SignedIn is whether the request has a control admin's valid sign in token, before the control site checks the admin
+func SignedIn(config *config.ServerConfig, r *http.Request) bool {
+	_, _, err := verifyControlJWTToken(nil, config, r)
+	return err == nil
+}
+
 func tryLoginWithJWTToken(controlDB *db.ControlDB, config *config.ServerConfig, r *http.Request) (*controldb.ControlIdentity, error) {
 	userName, role, err := verifyControlJWTToken(controlDB, config, r)
 

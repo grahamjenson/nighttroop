@@ -76,7 +76,7 @@ Limits written per minute are rates; their burst is how many can be used at once
 
 | Variable | Default | Use |
 | --- | --- | --- |
-| `GLOBAL_RATE_LIMIT` / `GLOBAL_RATE_BURST` | `100000` / `100000` | Requests to the whole server, to stop a DDoS |
+| `GLOBAL_RATE_LIMIT` / `GLOBAL_RATE_BURST` | `100000` / `100000` | Requests to the whole server, to stop a DDoS. The control site has a limit of its own at the same rate, so it can still be signed in to, and a control admin signed in is not limited by either |
 | `GLOBAL_IP_PER_MINUTE_LIMIT` / `_BURST` | `720` / `1440` | Requests from one IP, enough to manage 4 sites |
 | `SITE_LOGIN_PER_MINUTE_LIMIT` / `_BURST` | `1` / `10` | Logins to a site, to stop credential stuffing |
 | `SITE_UNAUTH_PER_MINUTE_LIMIT` / `_BURST` | `60` / `120` | Requests from one IP to a site before it authenticates, so bad tokens cannot spend the site's limit |
