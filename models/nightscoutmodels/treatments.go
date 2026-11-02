@@ -248,16 +248,17 @@ func (t *TreatmentEventType) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	// <none> is the Nightscout careportal's treatment with no type, which xDrip+ gives every bolus, carbs and note
-	if strings.TrimSpace(s) == "<none>" {
-		*t = Note
-		return nil
-	}
 	for _, et := range TreatmentEventTypes {
 		if strings.TrimSpace(s) == string(et) {
 			*t = et
 			return nil
 		}
+	}
+	// "<none>" is Nightscout's careportal's treatment with no event type, which Juggluco sends its amounts as and xDrip+
+	// gives every bolus, carbs and note, so it is a note keeping any insulin and carbs
+	if strings.EqualFold(strings.TrimSpace(s), "<none>") {
+		*t = Note
+		return nil
 	}
 	return fmt.Errorf("unknown treatment event type: %s", s)
 }

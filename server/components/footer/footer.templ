@@ -2,12 +2,19 @@ package footer
 
 import "nighttroop.t1d.nz/utils/httputils"
 
-// Footer is every page's thin footer: a mailto link to the server's support email, its terms of service and privacy
-// policy, and Nighttroop's year
+// Footer is every page's thin footer: a mailto link to the server's support email, its feedback link when it has one,
+// its terms of service and privacy policy, and Nighttroop's year
 templ Footer() {
 	<footer id="footer" class="border-t border-gray-200 bg-white py-3 text-center text-xs text-gray-500">
 		<a id="footer--contact" href={ templ.SafeURL("mailto:" + httputils.SupportEmail(ctx)) } class="hover:text-primary">contact</a>
 		<span aria-hidden="true">·</span>
+		if url := httputils.FeedbackURL(ctx); url != "" {
+			@FeedbackLink("footer--feedback", url, "hover:text-primary") {
+				feedback
+			}
+			{ " " }
+			<span aria-hidden="true">·</span>
+		}
 		<a id="footer--terms" href="/terms" class="hover:text-primary">terms of service</a>
 		<span aria-hidden="true">·</span>
 		<a id="footer--privacy" href="/privacy" class="hover:text-primary">privacy policy</a>
@@ -45,4 +52,11 @@ templ DBIPCredit() {
 templ dbipLink() {
 	<span aria-hidden="true">·</span>
 	<a id="footer--dbip-link" href="https://db-ip.com" class="hover:text-primary">IP Geolocation by DB-IP</a>
+}
+
+// FeedbackLink opens where users give feedback in a new tab
+templ FeedbackLink(id string, url string, class string) {
+	<a id={ id } href={ templ.URL(url) } target="_blank" rel="noopener noreferrer" class={ class }>
+		{ children... }
+	</a>
 }

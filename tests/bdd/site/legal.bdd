@@ -3,6 +3,9 @@ GOTO {{ server_url }}/
 ASSERT_STATUS 200
 ASSERT_VISIBLE #footer
 ASSERT_VISIBLE #footer--contact[href="mailto:nighttroop@t1d.nz"]
+// This server has no feedback link, see feedback/links.bdd for one that has
+ASSERT_NOT_VISIBLE #footer--feedback
+ASSERT_NOT_VISIBLE #public--feedback
 ASSERT_TEXT_VISIBLE Nighttroop 2026
 SCREENSHOT footer
 

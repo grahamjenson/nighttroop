@@ -140,6 +140,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   site a new backup key. The key works once; a wrong key is refused without saying why.
 - A site that is never used is deleted after `DELETE_AFTER_INACTIVITY_MINS`.
 - Every page's footer links to contact, the terms of service and the privacy policy.
+- With `FEEDBACK_URL` set, e.g. to a Google Form or GitHub issues, every page's footer also links to "feedback", and the
+  home page asks for it under its features, each opening the link in a new tab; unset, neither shows.
 - The public pages (create, recover, terms and privacy) say above their footer that Nighttroop is not a medical device,
   gives no medical advice, and its data and alarms may be late, missing or wrong.
 - A server set up as a test site (`TEST_SITE`) says so in a large banner at the top of every page, public, site and
@@ -257,9 +259,14 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - A device's Nightscout token is also taken as its SHA1 in the `api-secret` header, as xDrip+ sends the token in its
   URL; a password reset stops the old token's SHA1 working.
 - An xDrip+ upload works as it sends it (see `docs/clients/xdrip.md`): a calibration (`type` `cal`) in a batch of
-  entries is left out and the readings with it kept; a treatment with the eventType `<none>` is kept as a Note; an
-  uploader battery that is not a number is left out of its device status; `uploader.battery` is the uploader's
-  battery; and a treatment is found by its `uuid` (`find[uuid]`), sent as the `_id` or as xDrip+ makes its `_id`.
+  entries is left out and the readings with it kept; an uploader battery that is not a number is left out of its
+  device status; `uploader.battery` is the uploader's battery; and a treatment is found by its `uuid` (`find[uuid]`), sent as the `_id` or as xDrip+ makes its `_id`.
+- A create that names its `identifier` keeps it, and only a document with that identifier is its duplicate.
+- A create naming a deleted document's identifier, or a replace of one, replaces it whatever changed, as Juggluco
+  changes a treatment by deleting it and sending it again.
+- A treatment with `eventType` `<none>`, Nightscout careportal's treatment with no type, is a Note keeping its
+  insulin and carbs.
+- A `dateString` with Juggluco's `-03:-30` zone for half hours west of UTC is read as `-03:30`.
 
 ### Nighttroop API and client
 
