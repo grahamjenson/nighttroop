@@ -128,19 +128,17 @@ func DefaultConfig() Config {
 	}
 }
 
-// NewWithConfig returns a `func(http.Handler) http.Handler` (middleware) that logs requests using slog.
+// NewLoggerWithConfig returns a `func(http.Handler) http.Handler` (middleware) that logs each request once it is
+// answered, at a level from its status, with what config asks for of the request and its response
 func NewLoggerWithConfig(logger *slog.Logger, config Config) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
-			path := r.URL.Path
-			query := r.URL.RawQuery
+			path, query := r.URL.Path, r.URL.RawQuery
 
-			// dump request body
+			// The bodies are recorded, up to their max sizes, as they are read and written
 			br := newBodyReader(r.Body, RequestBodyMaxSize, config.WithRequestBody)
 			r.Body = br
-
-			// dump response body
 			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
 			var bw *bodyWriter
 			if config.WithResponseBody {
@@ -149,127 +147,107 @@ func NewLoggerWithConfig(logger *slog.Logger, config Config) func(http.Handler) 
 			}
 
 			defer func() {
-				params := map[string]string{}
-				for i, k := range chi.RouteContext(r.Context()).URLParams.Keys {
-					params[k] = chi.RouteContext(r.Context()).URLParams.Values[i]
-				}
-				path, query := redactCredentials(path, query, params)
-
-				status := ww.Status()
-				method := r.Method
-				host := r.Host
-				route := chi.RouteContext(r.Context()).RoutePattern()
 				end := time.Now()
-				latency := end.Sub(start)
-				userAgent := r.UserAgent()
-				ip := r.RemoteAddr
-				referer := r.Referer()
-
-				baseAttributes := make([]slog.Attr, 0, 3)
-				requestAttributes := make([]slog.Attr, 0, 13)
-				responseAttributes := make([]slog.Attr, 0, 6)
-
-				requestAttributes = append(requestAttributes,
-					slog.Time("time", start.UTC()),
-					slog.String("method", method),
-					slog.String("host", host),
-					slog.String("path", path),
-					slog.String("query", query),
-					slog.Any("params", params),
-					slog.String("route", route),
-					slog.String("referer", referer),
-				)
-
-				if config.WithClientIP {
-					requestAttributes = append(requestAttributes, slog.String("ip", ip))
-				}
-
-				responseAttributes = append(responseAttributes,
-					slog.Time("time", end.UTC()),
-					slog.Duration("latency", latency),
-					slog.Int("status", status),
-				)
-
-				// request body
-				requestAttributes = append(requestAttributes, slog.Int("length", br.bytes))
-				if config.WithRequestBody {
-					requestAttributes = append(requestAttributes, slog.String("body", br.body.String()))
-				}
-
-				// request headers
-				if config.WithRequestHeader {
-					kv := []any{}
-
-					for k, v := range r.Header {
-						if _, found := HiddenRequestHeaders[strings.ToLower(k)]; found {
-							continue
-						}
-						kv = append(kv, slog.Any(k, v))
-					}
-
-					requestAttributes = append(requestAttributes, slog.Group("header", kv...))
-				}
-
-				if config.WithUserAgent {
-					requestAttributes = append(requestAttributes, slog.String("user-agent", userAgent))
-				}
-
-				// response body
-				responseAttributes = append(responseAttributes, slog.Int("length", ww.BytesWritten()))
-				if config.WithResponseBody {
-					responseAttributes = append(responseAttributes, slog.String("body", bw.body.String()))
-				}
-
-				// response headers
-				if config.WithResponseHeader {
-					kv := []any{}
-
-					for k, v := range w.Header() {
-						if _, found := HiddenResponseHeaders[strings.ToLower(k)]; found {
-							continue
-						}
-						kv = append(kv, slog.Any(k, v))
-					}
-
-					responseAttributes = append(responseAttributes, slog.Group("header", kv...))
-				}
-
-				attributes := append(
-					[]slog.Attr{
-						{
-							Key:   "request",
-							Value: slog.GroupValue(requestAttributes...),
-						},
-						{
-							Key:   "response",
-							Value: slog.GroupValue(responseAttributes...),
-						},
-					},
-					baseAttributes...,
-				)
-
-				level := config.DefaultLevel
-				if status >= http.StatusInternalServerError {
-					level = config.ServerErrorLevel
-				} else if status >= http.StatusBadRequest && status < http.StatusInternalServerError {
-					level = config.ClientErrorLevel
-				}
+				params := routeParams(r)
+				path, query := redactCredentials(path, query, params)
+				status := ww.Status()
 
 				msg := strconv.Itoa(status) + ": " + http.StatusText(status)
 				if config.WithCustomMessage != nil {
 					msg = config.WithCustomMessage(ww, r)
 				}
-
 				requestLogger := logger
 				if requestLogger == nil {
 					requestLogger = slog.Default()
 				}
-				requestLogger.LogAttrs(r.Context(), level, msg, attributes...)
+				requestLogger.LogAttrs(r.Context(), config.level(status), msg,
+					slog.Attr{Key: "request", Value: slog.GroupValue(config.requestAttributes(r, start, path, query, params, br)...)},
+					slog.Attr{Key: "response", Value: slog.GroupValue(config.responseAttributes(ww, start, end, bw)...)},
+				)
 			}()
 
 			next.ServeHTTP(ww, r)
 		})
 	}
+}
+
+// level is what a request answered with status is logged at
+func (config Config) level(status int) slog.Level {
+	switch {
+	case status >= http.StatusInternalServerError:
+		return config.ServerErrorLevel
+	case status >= http.StatusBadRequest:
+		return config.ClientErrorLevel
+	}
+	return config.DefaultLevel
+}
+
+// routeParams are the request's chi URL params by name
+func routeParams(r *http.Request) map[string]string {
+	urlParams := chi.RouteContext(r.Context()).URLParams
+	params := make(map[string]string, len(urlParams.Keys))
+	for i, k := range urlParams.Keys {
+		params[k] = urlParams.Values[i]
+	}
+	return params
+}
+
+// requestAttributes are what is logged of a request: where it went, from start, and its body's length, then its client
+// IP, body, headers and user agent when config asks for them. path, query and params have had credentials redacted.
+func (config Config) requestAttributes(r *http.Request, start time.Time, path, query string, params map[string]string, br *bodyReader) []slog.Attr {
+	attributes := []slog.Attr{
+		slog.Time("time", start.UTC()),
+		slog.String("method", r.Method),
+		slog.String("host", r.Host),
+		slog.String("path", path),
+		slog.String("query", query),
+		slog.Any("params", params),
+		slog.String("route", chi.RouteContext(r.Context()).RoutePattern()),
+		slog.String("referer", r.Referer()),
+	}
+	if config.WithClientIP {
+		attributes = append(attributes, slog.String("ip", r.RemoteAddr))
+	}
+	attributes = append(attributes, slog.Int("length", br.bytes))
+	if config.WithRequestBody {
+		attributes = append(attributes, slog.String("body", br.body.String()))
+	}
+	if config.WithRequestHeader {
+		attributes = append(attributes, headerGroup(r.Header, HiddenRequestHeaders))
+	}
+	if config.WithUserAgent {
+		attributes = append(attributes, slog.String("user-agent", r.UserAgent()))
+	}
+	return attributes
+}
+
+// responseAttributes are what is logged of a response: when it ended, how long after start, its status and its
+// body's length, then its body and headers when config asks for them
+func (config Config) responseAttributes(ww middleware.WrapResponseWriter, start, end time.Time, bw *bodyWriter) []slog.Attr {
+	attributes := []slog.Attr{
+		slog.Time("time", end.UTC()),
+		slog.Duration("latency", end.Sub(start)),
+		slog.Int("status", ww.Status()),
+		slog.Int("length", ww.BytesWritten()),
+	}
+	if config.WithResponseBody {
+		attributes = append(attributes, slog.String("body", bw.body.String()))
+	}
+	if config.WithResponseHeader {
+		attributes = append(attributes, headerGroup(ww.Header(), HiddenResponseHeaders))
+	}
+	return attributes
+}
+
+// headerGroup is the headers as a log group, leaving out the hidden ones, which carry credentials
+func headerGroup(header http.Header, hidden map[string]struct{}) slog.Attr {
+	kv := []any{}
+	for k, v := range header {
+		if _, found := hidden[strings.ToLower(k)]; !found {
+			kv = append(kv, slog.Any(k, v))
+		}
+	}
+	return slog.Group("header", kv...)
 }
 
 /////
