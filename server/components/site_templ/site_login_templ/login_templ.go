@@ -45,7 +45,7 @@ func Login() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"flex h-screen flex-col justify-center items-center px-6 py-12 lg:px-8 bg-slate-50\"><div class=\"p-8 login-form-target rounded-lg shadow-2xl w-96\"><!-- Form updated with POST method --><form hx-post=\"/login\" hx-target=\"closest .login-form-target\" hx-swap=\"outerHTML\" hx-status:4xx=\"target:#toaster swap:beforeend\" hx-status:5xx=\"target:#toaster swap:beforeend\"><div class=\"text-center mb-6\"><img src=\"/logo.svg\" alt=\"\" class=\"mx-auto mb-3 size-16\"><h2 class=\"font-bold text-2xl\">NightTroop Login</h2></div><!-- Username -->")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, " <div class=\"flex flex-1 flex-col justify-center items-center px-6 py-6 lg:px-8 bg-slate-50\"><div class=\"p-8 login-form-target rounded-lg shadow-2xl w-full max-w-96\"><!-- Form updated with POST method --><form hx-post=\"/login\" hx-target=\"closest .login-form-target\" hx-swap=\"outerHTML\" hx-status:4xx=\"target:#toaster swap:beforeend\" hx-status:5xx=\"target:#toaster swap:beforeend\"><div class=\"text-center mb-6\"><img src=\"/logo.svg\" alt=\"\" class=\"mx-auto mb-3 size-16\"><h2 class=\"font-bold text-2xl\">NightTroop Login</h2></div><!-- Username -->")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -206,6 +206,7 @@ func Login() templ.Component {
 	})
 }
 
+// LoginTOTP is the login's second step, which takes the place of its first's form, so it stays in the window's middle
 func LoginTOTP() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -223,7 +224,7 @@ func LoginTOTP() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<div class=\"flex h-screen flex-col justify-center items-center px-6 py-12 lg:px-8 bg-slate-50\"><div class=\"p-8 login-form-target rounded-lg shadow-2xl w-96\"><!-- Form updated with POST method --><form id=\"otp\" hx-post=\"/login/totp\" hx-target=\"body\" hx-swap=\"outerHTML\" hx-status:4xx=\"target:#toaster swap:beforeend\" hx-status:5xx=\"target:#toaster swap:beforeend\" class=\"needs-validation\"><div class=\"text-center mb-6\"><img src=\"/logo.svg\" alt=\"\" class=\"mx-auto mb-3 size-16\"><h2 class=\"font-bold text-2xl\">NightTroop Login</h2></div><!-- TOTP -->")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<div class=\"p-8 login-form-target rounded-lg shadow-2xl w-full max-w-96\"><!-- Form updated with POST method --><form id=\"otp\" hx-post=\"/login/totp\" hx-target=\"body\" hx-swap=\"outerHTML\" hx-status:4xx=\"target:#toaster swap:beforeend\" hx-status:5xx=\"target:#toaster swap:beforeend\" class=\"needs-validation\"><div class=\"text-center mb-6\"><img src=\"/logo.svg\" alt=\"\" class=\"mx-auto mb-3 size-16\"><h2 class=\"font-bold text-2xl\">NightTroop Login</h2></div><!-- TOTP -->")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -409,7 +410,7 @@ func LoginTOTP() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</form><script>\n\t\t\t\t// Logs in as soon as the code's last digit is typed or pasted. It waits a tick for the code's slots to\n\t\t\t\t// fill its value, and does not send the same code twice, so a wrong code is not sent again on its own.\n\t\t\t\t(function () {\n\t\t\t\t\tconst form = document.getElementById(\"otp\");\n\t\t\t\t\tconst code = document.getElementById(\"otp-form\");\n\t\t\t\t\tlet sent = \"\";\n\t\t\t\t\tconst sendWhenFull = () => setTimeout(() => {\n\t\t\t\t\t\tif (/^\\d{6}$/.test(code.value) && code.value !== sent) {\n\t\t\t\t\t\t\tsent = code.value;\n\t\t\t\t\t\t\tform.requestSubmit();\n\t\t\t\t\t\t}\n\t\t\t\t\t}, 0);\n\t\t\t\t\tform.addEventListener(\"input\", sendWhenFull);\n\t\t\t\t\tform.addEventListener(\"paste\", sendWhenFull);\n\t\t\t\t})();\n\t\t\t</script></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</form><script>\n\t\t\t\t// Logs in as soon as the code's last digit is typed or pasted. It waits a tick for the code's slots to\n\t\t\t\t// fill its value, and does not send the same code twice, so a wrong code is not sent again on its own.\n\t\t\t\t(function () {\n\t\t\t\t\tconst form = document.getElementById(\"otp\");\n\t\t\t\t\tconst code = document.getElementById(\"otp-form\");\n\t\t\t\t\tlet sent = \"\";\n\t\t\t\t\tconst sendWhenFull = () => setTimeout(() => {\n\t\t\t\t\t\tif (/^\\d{6}$/.test(code.value) && code.value !== sent) {\n\t\t\t\t\t\t\tsent = code.value;\n\t\t\t\t\t\t\tform.requestSubmit();\n\t\t\t\t\t\t}\n\t\t\t\t\t}, 0);\n\t\t\t\t\tform.addEventListener(\"input\", sendWhenFull);\n\t\t\t\t\tform.addEventListener(\"paste\", sendWhenFull);\n\t\t\t\t})();\n\t\t\t</script></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

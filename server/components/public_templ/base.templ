@@ -21,11 +21,12 @@ templ PublicBase() {
 			<script src="/qrcode.js"></script>
 			@copybutton.Script()
 		</head>
-		<body class="flex min-h-screen flex-col">
+		// As tall as the window, with the page's content filling what the footer leaves, so a page that fits needs no scrolling
+		<body class="flex min-h-dvh flex-col">
 			@testsite.Banner()
 			<div
 				id="main-content"
-				class="flex-1"
+				class="flex flex-1 flex-col"
 			>
 				{ children... }
 			</div>
