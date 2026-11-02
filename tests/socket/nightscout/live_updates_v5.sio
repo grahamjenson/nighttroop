@@ -35,6 +35,7 @@ T 5s
 ASSERT_LENGTH 1 "@sgvs"
 ASSERT_EQUALS 110 "@sgvs.0.mgdl"
 ASSERT_EXISTS "@sgvs.0.mills"
+ASSERT_EQUALS null "@delta"
 
 NAME post_treatment
 POST http://{{ site }}/api/v1/treatments?token={{ token }}
