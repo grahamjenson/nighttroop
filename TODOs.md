@@ -6,8 +6,6 @@
    and check a fresh server restores from those backups
 1. Test end to end with real devices: Loop, Trio, AAPS and xDrip+ uploading, follower apps (xDrip+ follower, LoopFollow,
    Nightguard) reading, and Dexcom and Libre sync
-1. Medical disclaimer: Nighttroop is not a medical device and its alarms are not to be relied on, shown when a site is
-   created and on the alarm settings
 1. A way for testers to report bugs and give feedback, linked from the site
 1. A tester guide: creating a site, keeping its credentials safe (they cannot be recovered), and connecting uploaders,
    followers and sync
@@ -55,7 +53,12 @@
 1. P4: Keep which batches were uploaded, and with which sites, across restarts, as the first backup round after a
    restart uploads every batch again though their backups are current
 1. Nightscout API:
+    1. P1: Accept an `api-secret` that is the SHA1 hex of a device's Nightscout token, e.g. by keeping each token's
+       SHA1 when it is made or reset, as Juggluco sends on v1, its default and its only mode on Wear OS
+       ([docs/clients/juggluco.md](docs/clients/juggluco.md))
     1. P2: Check If-Unmodified-Since on API v3 replace and patch, in the same query as the update
+    1. P3: Juggluco on v1 posts up to 5000 readings in one `/api/v1/entries` request and sends the same batch again
+       until it is accepted, so a batch over the 100 record cap never uploads
     1. P4: Only write a treatment's events that changed, rather than every one on each update
     1. P4: Keep when a site's settings last changed, for API v3 lastModified
     1. P2: Nightguard reads `sgv` and `mbg` as mg/dL whatever an entry's `units`, so with mmol/L settings its

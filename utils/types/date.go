@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -107,6 +108,8 @@ func StringToTime(value string) (time.Time, error) {
 		"2006-01-02T15:04:05Z07:00",
 		"2006-01-02 15:04:05.000Z",
 	}
+	// Juggluco writes a zone west of UTC with half hours, e.g. Newfoundland's, with a second minus: -03:-30
+	value = strings.Replace(value, ":-", ":", 1)
 	for _, layout := range layouts {
 		parsed, err := time.Parse(layout, value)
 		if err == nil {
