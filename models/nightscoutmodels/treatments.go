@@ -173,6 +173,9 @@ const (
 	CorrectionBolus TreatmentEventType = "Correction Bolus"
 	MealBolus       TreatmentEventType = "Meal Bolus"
 	SnackBolus      TreatmentEventType = "Snack Bolus"
+	// Trio and iAPS send an automatic bolus as SMB, and insulin not from the pump as External Insulin
+	SMB             TreatmentEventType = "SMB"
+	ExternalInsulin TreatmentEventType = "External Insulin"
 
 	// Activity
 	Exercise TreatmentEventType = "Exercise"
@@ -237,6 +240,8 @@ var TreatmentEventTypes = []TreatmentEventType{
 	SensorStart,
 	SiteChange,
 	SnackBolus,
+	SMB,
+	ExternalInsulin,
 	TempBasal,
 	TemporaryTarget,
 	TemporaryOverride,
@@ -257,6 +262,12 @@ func (t *TreatmentEventType) UnmarshalJSON(data []byte) error {
 			*t = et
 			return nil
 		}
+	}
+	// "<none>" is Nightscout's careportal's treatment with no event type, which Juggluco sends its amounts as, so it
+	// is a note keeping any insulin and carbs
+	if strings.EqualFold(strings.TrimSpace(s), "<none>") {
+		*t = Note
+		return nil
 	}
 	return fmt.Errorf("unknown treatment event type: %s", s)
 }

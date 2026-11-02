@@ -8876,6 +8876,16 @@ func (m *GetEventGroupOfTypeWithoutJoinsParams) SetIncludeDeleted(v bool) {
 	m.IncludeDeleted = v
 }
 
+// GetLimit returns the Limit value.
+func (m GetEventGroupOfTypeWithoutJoinsParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated GetEventGroupOfTypeWithoutJoinsParams.
+func (m *GetEventGroupOfTypeWithoutJoinsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
 // GetID returns the ID value.
 func (m GetEventGroupWithoutJoinsParams) GetID() string {
 	return m.ID

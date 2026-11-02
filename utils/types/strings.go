@@ -2,6 +2,8 @@ package types
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -214,9 +216,12 @@ func (i *IdentifierString) UnmarshalJSON(data []byte) error {
 		str = fmt.Sprintf("%v", v)
 	}
 
-	// 36 fits a UUID, the same limit as identifiers in the URL and the id columns
+	// 36 fits a UUID, the same limit as identifiers in the URL and the id columns. A longer one, like a Loop dose's
+	// syncIdentifier, is hashed rather than cut, as two that start the same, Omnipod's temp basals of the same rate,
+	// would otherwise be the same identifier
 	if len(str) > 36 {
-		str = str[:36]
+		sum := sha256.Sum256([]byte(str))
+		str = hex.EncodeToString(sum[:])[:36]
 	}
 
 	if len(str) == 0 {

@@ -119,10 +119,9 @@ A dose's `syncIdentifier` is its pump event's raw data in hex (LoopKit `NewPumpE
 
 So an Omnipod identifier's first 36 characters are only the dose type, units and the start of the date: two temp
 basals of the same rate share them ("tempBasal 0.5 202"), and two boluses of the same amount in the same month share
-them ("bolus 1.0 2026-11-"). Nighttroop truncates an identifier to 36 characters (`IdentifierString`), so a create
-that dedups by its identifier, as the Juggluco branch adds, would keep only the first of each. Hashing an identifier
-over 36 characters, such as the first 36 hex characters of its SHA-256, instead of truncating it would keep them
-apart. `tests/api/nightscout/loop/treatments.http` posts two such temp basals and checks both are kept.
+them ("bolus 1.0 2026-11-"). A create dedups by its identifier, so Nighttroop keeps an identifier over 36 characters
+as the first 36 hex characters of its SHA-256, rather than truncating it, which would keep only the first of each.
+`tests/api/nightscout/loop/treatments.http` posts two such temp basals and checks both are kept.
 
 The same dose is posted again with the same `syncIdentifier` when it ends, so a dedup that keeps the first upload,
 by identifier or by date, keeps its planned duration rather than what was delivered. Replacing the stored dose on a

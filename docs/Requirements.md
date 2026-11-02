@@ -140,6 +140,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   site a new backup key. The key works once; a wrong key is refused without saying why.
 - A site that is never used is deleted after `DELETE_AFTER_INACTIVITY_MINS`.
 - Every page's footer links to contact, the terms of service and the privacy policy.
+- With `FEEDBACK_URL` set, e.g. to a Google Form or GitHub issues, every page's footer also links to "feedback", and the
+  home page asks for it under its features, each opening the link in a new tab; unset, neither shows.
 - The public pages (create, recover, terms and privacy) say above their footer that Nighttroop is not a medical device,
   gives no medical advice, and its data and alarms may be late, missing or wrong.
 - A server set up as a test site (`TEST_SITE`) says so in a large banner at the top of every page, public, site and
@@ -261,7 +263,17 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   indefinite one lasts a week.
 - `find[created_at]` finds treatments and device statuses by when they happened, as in Nightscout, not when they were
   uploaded.
+- An identifier over 36 characters, like an Omnipod dose's `syncIdentifier`, is kept as a hash of it, so two that
+  start the same are not taken as one.
 - v1 `profile/current` is the newest profile set itself, not a list of one, with `enteredBy`, as Loop reads it.
+- Trio's and iAPS's `SMB` and `External Insulin` treatments are kept as insulin doses, with their event type.
+- A profile has `enteredBy`, the identity that uploaded it, as Trio needs it to import one.
+- A create that names its `identifier` keeps it, and only a document with that identifier is its duplicate.
+- A create naming a deleted document's identifier, or a replace of one, replaces it whatever changed, as Juggluco
+  changes a treatment by deleting it and sending it again.
+- A treatment with `eventType` `<none>`, Nightscout careportal's treatment with no type, is a Note keeping its
+  insulin and carbs.
+- A `dateString` with Juggluco's `-03:-30` zone for half hours west of UTC is read as `-03:30`.
 
 ### Nighttroop API and client
 
@@ -290,6 +302,9 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   out, so the server still starts and the rest of its batch is still backed up.
 - Old records' raw JSON is cleared after `TRUNCATE_RECORDS_AFTER_DAYS`.
 - Reads and writes are rate limited per site, identity and IP, and live sessions per site are capped.
+- No request returns more than 1000 records, however many it asks for, through the site's pages and API, the
+  Nightscout API or its live updates, and an upload holds at most 100. Deleting a type of treatment through the
+  Nightscout API deletes at most 1000 each time, saying how many.
 - A DB serves many reads at once, so one slow read, such as a long search, does not hold up the others; writes to it
   take turns rather than fail. A busy DB keeps its connections open between reads, so requests at once do not each
   open a new one, while a quiet site's DB closes all of them.

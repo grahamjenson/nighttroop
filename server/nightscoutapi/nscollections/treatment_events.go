@@ -431,6 +431,8 @@ var treatmentTypeEvents = map[nightscoutmodels.TreatmentEventType][]treatmentEve
 	nightscoutmodels.ReservoirChange:   {componentEvents},
 	nightscoutmodels.Calibration:       {glucoseReadings, componentEvents},
 	nightscoutmodels.Bolus:             {insulinDoses, componentEvents},
+	nightscoutmodels.SMB:               {insulinDoses},
+	nightscoutmodels.ExternalInsulin:   {insulinDoses},
 }
 
 // percentSwitchMs is how long before a temp basal a profile switch with a duration is looked for, as one still in force,
