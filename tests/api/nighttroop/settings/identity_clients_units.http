@@ -1,0 +1,41 @@
+INCLUDE steps/new_site_admin.steps
+
+// A device added for a client that needs mg/dL has its own units set to mg/dL, whatever the site's
+NAME create_sugarpixel
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "pixel", "role": "device_read", "client": "sugarpixel"}
+ASSERT_STATUS 201
+ASSERT_EQUALS "sugarpixel" "@result.client"
+SET pixel_token {{ .create_sugarpixel.result.ns_token }}
+
+NAME sugarpixel_status_mgdl
+GET http://{{ .ns_site }}/api/v1/status.json?token={{ .pixel_token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "mg/dl" "@settings.units"
+
+// Another device follows the site, in mmol/L
+NAME create_other
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "display", "role": "device_read", "client": "other"}
+ASSERT_STATUS 201
+SET other_token {{ .create_other.result.ns_token }}
+
+NAME other_status_mmol
+GET http://{{ .ns_site }}/api/v1/status.json?token={{ .other_token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "mmol" "@settings.units"
+
+// A client that is not one of them is refused, and nothing is made
+NAME create_unknown_client
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "toaster", "role": "device_read", "client": "toaster"}
+ASSERT_STATUS 400
+ASSERT_EQUALS "Bad or missing request body: Unknown client: toaster" "@message"

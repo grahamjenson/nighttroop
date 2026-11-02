@@ -18,6 +18,7 @@ import (
 
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/settings"
 )
 
 type IdentitiesCollection struct{}
@@ -26,6 +27,10 @@ var identityRoles = []consts.IdentityRole{
 	consts.IdentityRoleAdmin, consts.IdentityRoleUser, consts.IdentityRoleUserReadOnly,
 	consts.IdentityRoleDevicePWDPhone, consts.IdentityRoleDeviceRead, consts.IdentityRoleDeviceReadWrite,
 }
+
+// mgdlClients are the Nightscout clients a device can be added for that need glucose in mg/dL, so a device added for one
+// has its own units set to mg/dL whatever the site's. Any other device, "other", follows the site.
+var mgdlClients = []string{"aaps", "trio", "loop", "xdrip", "nightguard", "sugarpixel"}
 
 // ////
 // Shared
@@ -49,6 +54,9 @@ func (s *IdentitiesCollection) CreateRow(ctx context.Context, collectionTx *site
 	role := consts.IdentityRole(model.Role)
 	if !slices.Contains(identityRoles, role) {
 		return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Unknown role: %s", model.Role))
+	}
+	if model.Client != "" && model.Client != "other" && !slices.Contains(mgdlClients, model.Client) {
+		return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Unknown client: %s", model.Client))
 	}
 
 	q, err := collectionTx.Control()
@@ -79,10 +87,30 @@ func (s *IdentitiesCollection) CreateRow(ctx context.Context, collectionTx *site
 	if herr != nil {
 		return nil, herr
 	}
+	if slices.Contains(mgdlClients, model.Client) {
+		if err := setUnitsMGDL(ctx, q, siteContext, created.ID); err != nil {
+			return nil, err
+		}
+	}
 	// Shown this once
 	created.Password, created.TotpSecret, created.NSToken = values.Password, values.TotpSecret, values.NSToken
-	created.SiteURL = siteContext.SiteDB.URL()
+	created.SiteURL, created.NSURL, created.Client = siteContext.SiteDB.URL(), siteContext.SiteDB.NSURL(), model.Client
 	return created, nil
+}
+
+// setUnitsMGDL sets the identity's own units to mg/dL, for a client that needs them, keeping its other settings
+func setUnitsMGDL(ctx context.Context, q *controldb.Queries, siteContext *httputils.SiteContext, identityID int64) error {
+	identity, err := q.GetSiteIdentityByID(ctx, controldb.GetSiteIdentityByIDParams{SiteID: siteContext.SiteID, ID: identityID})
+	if err != nil {
+		return err
+	}
+	level := settings.NewSettingsMap(identity, &identity.CreatedAt, new("identity"))
+	if err := level.SetSettingByName("units", string(consts.UnitsMGDL), nil, new("identity")); err != nil {
+		return err
+	}
+	params := &controldb.UpdateSiteIdentitySettingsParams{ID: identity.ID, SiteID: siteContext.SiteID}
+	settings.SetSettings(params, level)
+	return q.UpdateSiteIdentitySettings(ctx, *params)
 }
 
 func (s *IdentitiesCollection) CreateHTMXResponse(model *sitemodels.UserIdentity) templ.Component {

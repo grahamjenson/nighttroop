@@ -2,7 +2,9 @@ package site_settings_templ
 
 import (
 	"context"
+	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"nighttroop.t1d.nz/models/sitemodels"
@@ -26,6 +28,45 @@ import (
 var roleLabels = map[consts.IdentityRole]string{
 	consts.IdentityRoleAdmin: "Admin", consts.IdentityRoleUser: "User", consts.IdentityRoleUserReadOnly: "Read Only User",
 	consts.IdentityRoleDeviceRead: "Read", consts.IdentityRoleDeviceReadWrite: "Read+Write", consts.IdentityRoleDevicePWDPhone: "PWD Phone",
+}
+
+// deviceClient is a Nightscout client a device can be added for, with how to set it up. A step's {url} is the site's
+// Nightscout URL, {host} that without its scheme, and {token} the device's Nightscout token.
+type deviceClient struct {
+	Value, Label string
+	Steps        []string
+	// MGDL is whether it needs glucose in mg/dL, so the device's own units are set to mg/dL
+	MGDL bool
+}
+
+// deviceClients are the clients a device can be added for, Other first as the one chosen to start with
+var deviceClients = []deviceClient{
+	{"other", "Other", []string{"Give it the Nightscout URL {url} and the Nightscout token above, as its token or API secret."}, false},
+	{"aaps", "AAPS", []string{"In Config Builder, under Synchronization, turn on NSClient.", "In NSClient's settings set the Nightscout URL to {url} and the NS access token to the Nightscout token above."}, true},
+	{"trio", "Trio", []string{"In Settings, open Services, then Nightscout.", "Set the URL to {url} and the API secret to the Nightscout token above, then connect."}, true},
+	{"loop", "Loop", []string{"In Settings, open Services and add Nightscout.", "Set the site URL to {url} and the API secret to the Nightscout token above."}, true},
+	{"xdrip", "xDrip+", []string{"In Settings, open Cloud Upload, then Nightscout Sync (REST-API), and turn it on.", "Set the Base URL to https://{token}@{host}/api/v1/"}, true},
+	{"nightguard", "Nightguard", []string{"In Configuration, set the URL to {url}/?token={token}"}, true},
+	{"sugarpixel", "SugarPixel", []string{"In the SugarPixel app, choose Nightscout as its glucose source.", "Enter {url} as the Nightscout URL and the Nightscout token above as its token."}, true},
+}
+
+// clientSteps are how to set up the device's client, with its URL and token filled in, or none for a device added
+// without one
+func clientSteps(identity *sitemodels.UserIdentity) (deviceClient, []string) {
+	index := slices.IndexFunc(deviceClients, func(c deviceClient) bool { return c.Value == identity.Client })
+	if index < 0 || identity.NSToken == nil {
+		return deviceClient{}, nil
+	}
+	host := identity.NSURL
+	if _, after, ok := strings.Cut(host, "://"); ok {
+		host = after
+	}
+	fill := strings.NewReplacer("{url}", identity.NSURL, "{host}", host, "{token}", *identity.NSToken)
+	steps := []string{}
+	for _, step := range deviceClients[index].Steps {
+		steps = append(steps, fill.Replace(step))
+	}
+	return deviceClients[index], steps
 }
 
 func roleLabel(role string) string {
@@ -305,6 +346,24 @@ templ formCreateIdentity(tableid string, name string, roles []sitemodels.RoleOpt
 						}
 					}
 				}
+				if name == "Device" {
+					@field.Field("client-"+formID, "Client", "w-36") {
+						@selectbox.SelectBox() {
+							@selectbox.Trigger(selectbox.TriggerProps{ID: "client-" + formID, Name: "client", Form: formID}) {
+								@selectbox.Value(selectbox.ValueProps{Placeholder: "Client"})
+							}
+							@selectbox.Content(selectbox.ContentProps{NoSearch: true}) {
+								@selectbox.Group() {
+									for i, client := range deviceClients {
+										@selectbox.Item(selectbox.ItemProps{Value: client.Value, Selected: i == 0}) {
+											{ client.Label }
+										}
+									}
+								}
+							}
+						}
+					}
+				}
 				@form.Item(form.ItemProps{
 					Class: " items-end",
 				}) {
@@ -322,8 +381,28 @@ templ formCreateIdentity(tableid string, name string, roles []sitemodels.RoleOpt
 templ CreateIdentityResponse(url string, identity *sitemodels.UserIdentity, password string, totpSecret *string, nsToken *string) {
 	@IdentityRow(identity)
 	<div id="modal-container" class="w-full" hx-swap-oob="innerHTML">
-		@credentialsModal(url, identity.Name, password, totpSecret, nsToken, false)
+		@credentialsModal(url, identity.Name, password, totpSecret, nsToken, false) {
+			@clientGuide(identity)
+		}
 	</div>
+}
+
+// clientGuide says how to set up the client a device was added for, and that its units are mg/dL when it needs them
+templ clientGuide(identity *sitemodels.UserIdentity) {
+	{{ client, steps := clientSteps(identity) }}
+	if len(steps) > 0 {
+		<div id="site--identities--created--guide" class="mt-4 w-full space-y-2 text-left text-sm">
+			<p class="font-semibold">Setting up { client.Label }</p>
+			<ol class="list-inside list-decimal space-y-1">
+				for _, step := range steps {
+					<li class="break-all">{ step }</li>
+				}
+			</ol>
+			if client.MGDL {
+				<p id="site--identities--created--units" class="text-xs text-gray-500">{ client.Label } needs mg/dL, so this device's own units are mg/dL, whatever the site's.</p>
+			}
+		</div>
+	}
 }
 
 // IdentityReset shows an identity's new credentials once. Resetting your own signed you out, to sign in again with them.
@@ -338,6 +417,7 @@ templ credentialsModal(url string, name string, password string, totpSecret *str
 				<p id="site--identities--signed-out" class="mb-4 text-sm font-medium text-amber-800">You have been signed out. Save these, then sign in again with them.</p>
 			}
 			@createdUserInfo(url, name, password, totpSecret, nsToken)
+			{ children... }
 			if signedOut {
 				@button.Button(button.Props{ID: "site--identities--sign-in-again", Class: "mt-4", Href: "/login"}) {
 					Sign In Again
