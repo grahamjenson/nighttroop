@@ -178,6 +178,9 @@ const (
 	CorrectionBolus TreatmentEventType = "Correction Bolus"
 	MealBolus       TreatmentEventType = "Meal Bolus"
 	SnackBolus      TreatmentEventType = "Snack Bolus"
+	// Trio and iAPS send an automatic bolus as SMB, and insulin not from the pump as External Insulin
+	SMB             TreatmentEventType = "SMB"
+	ExternalInsulin TreatmentEventType = "External Insulin"
 
 	// Activity
 	Exercise TreatmentEventType = "Exercise"
@@ -240,6 +243,8 @@ var TreatmentEventTypes = []TreatmentEventType{
 	SensorStart,
 	SiteChange,
 	SnackBolus,
+	SMB,
+	ExternalInsulin,
 	TempBasal,
 	TemporaryTarget,
 	CannulaFill,

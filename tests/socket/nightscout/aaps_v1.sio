@@ -1,0 +1,58 @@
+# AAPS 3.4's NSClient (v1, removed in AAPS 4.0) is Socket.IO only: socket.io-client-java 2.1, EIO=4, on the default
+# namespace (nsclient/services/NSClientService.kt). It authorizes with client, history, status, from and secret, the
+# SHA1 of its API secret, which Nighttroop cannot check, so here the token is sent as it is (docs/clients/aaps.md).
+# It writes with dbAdd and dbUpdate, reading _id from the first of dbAdd's ack and result from dbUpdate's.
+
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME connect
+CONNECT http://{{ site }}/socket.io/?EIO=4
+T 5s
+
+# NSAuthAck reads read, write and write_treatment; AAPS writes only with write and write_treatment
+NAME authorize
+EMIT authorize
+B {"client":"Android_AAPS","history":48,"status":true,"from":0,"secret":"{{ token }}"}
+ACK
+ASSERT_EQUALS true "@read"
+ASSERT_EQUALS true "@write"
+ASSERT_EQUALS true "@write_treatment"
+
+# The first dataUpdate has status, as a dataUpdate without delta and status is an unsupported Nightscout to AAPS
+NAME first_data
+WAIT dataUpdate
+T 5s
+ASSERT_EXISTS "@status"
+ASSERT_EQUALS null "@delta"
+
+# BS.toJson for an SMB
+NAME add_smb
+EMIT dbAdd
+B {"collection":"treatments","data":{"eventType":"Correction Bolus","insulin":0.3,"created_at":"{{ time 1 }}","date":{{ itime 1 }},"type":"SMB","notes":"","isValid":true,"isSMB":true,"pumpId":4103,"pumpType":"DANA_I","pumpSerial":"AAPS1234"}}
+ACK
+ASSERT_LENGTH 1 "@"
+ASSERT_EXISTS "@0._id"
+SET smb_id {{ dig "add_smb.0._id" }}
+
+# Sent back as a delta, with mills, which AAPS reads before date
+NAME smb_added
+WAIT dataUpdate
+T 5s
+ASSERT_EQUALS true "@delta"
+ASSERT_EQUALS ".smb_id" "@treatments.0._id"
+ASSERT_EQUALS 0.3 "@treatments.0.insulin"
+ASSERT_EXISTS "@treatments.0.mills"
+
+# An update, as when AAPS invalidates it, answered with result success
+NAME invalidate_smb
+EMIT dbUpdate
+B {"collection":"treatments","_id":"{{ .smb_id }}","data":{"eventType":"Correction Bolus","insulin":0.3,"created_at":"{{ time 1 }}","date":{{ itime 1 }},"type":"SMB","notes":"","isValid":false,"isSMB":true}}
+ACK
+ASSERT_EQUALS "success" "@result"
+
+NAME bye
+DISCONNECT

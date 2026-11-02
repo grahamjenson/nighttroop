@@ -1,0 +1,83 @@
+# AAPS's NSClient v3 (plugins/sync nsclientV3/ws) is socket.io-client-java 2.1, an EIO=4 client, on <url>/storage.
+# On connect it emits subscribe with its access token, not the JWT, and its collections (NsConnectHandler), then
+# reads the ack's success. It reads colName and doc, with doc.srvModified, from create and update, and colName and
+# identifier from delete (NsFrameHandler). See docs/clients/aaps.md
+
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME connect
+CONNECT http://{{ site }}/socket.io/?EIO=4
+NS /storage
+T 5s
+
+# AAPS asks for foods and settings too; foods is not an API v3 collection, so it is left out, as Nightscout does
+NAME subscribe
+EMIT subscribe
+B {"accessToken":"{{ token }}","collections":["devicestatus","entries","profile","treatments","foods","settings"]}
+ACK
+ASSERT_EQUALS true "@success"
+ASSERT_LENGTH 5 "@collections"
+
+# A master's device status, as an AAPS client reads it live
+NAME post_devicestatus
+POST http://{{ site }}/api/v3/devicestatus?token={{ token }}
+B {"app":"AAPS","date":{{ itime 0 }},"uploaderBattery":87,"isCharging":false,"device":"openaps://samsung SM-G970F","uploader":{},"pump":{"reservoir":120.5,"battery":{"percent":75}},"openaps":{"iob":{"iob":0.5,"basaliob":0.1,"time":"{{ time 0 }}"}}}
+ASSERT_STATUS 201
+
+NAME devicestatus_created
+WAIT create
+T 5s
+ASSERT_EQUALS "devicestatus" "@colName"
+ASSERT_EQUALS ".post_devicestatus.identifier" "@doc.identifier"
+ASSERT_EXISTS "@doc.srvModified"
+ASSERT_EQUALS 87 "@doc.uploaderBattery"
+ASSERT_EQUALS 0.5 "@doc.openaps.iob.iob"
+
+# A reading, which a client takes as sgv in mg/dL
+NAME post_entry
+POST http://{{ site }}/api/v3/entries?token={{ token }}
+B {"type":"sgv","date":{{ itime 0 }},"device":"Dexcom G7","direction":"Flat","utcOffset":720,"isReadOnly":false,"isValid":true,"units":"mg/dl","sgv":120.0,"app":"AAPS"}
+ASSERT_STATUS 201
+
+NAME entry_created
+WAIT create
+T 5s
+ASSERT_EQUALS "entries" "@colName"
+ASSERT_EQUALS ".post_entry.identifier" "@doc.identifier"
+ASSERT_EQUALS "sgv" "@doc.type"
+ASSERT_EXISTS "@doc.sgv"
+ASSERT_EXISTS "@doc.date"
+ASSERT_EXISTS "@doc.srvModified"
+
+# A deleted reading is removed on the client too, by its identifier
+NAME delete_entry
+DELETE http://{{ site }}/api/v3/entries/{{ .post_entry.identifier }}?token={{ token }}
+ASSERT_STATUS 200
+
+NAME entry_deleted
+WAIT delete
+T 5s
+ASSERT_EQUALS "entries" "@colName"
+ASSERT_EQUALS ".post_entry.identifier" "@identifier"
+
+# A temp basal, as a client reads it live: with eventType, srvModified and an absolute rate
+NAME post_temp_basal
+POST http://{{ site }}/api/v3/treatments?token={{ token }}
+B {"date":{{ itime 0 }},"utcOffset":720,"isReadOnly":false,"isValid":true,"eventType":"Temp Basal","duration":30,"durationInMilliseconds":1800000,"absolute":0.5,"rate":0.5,"type":"NORMAL","app":"AAPS"}
+ASSERT_STATUS 201
+
+NAME temp_basal_created
+WAIT create
+T 5s
+ASSERT_EQUALS "treatments" "@colName"
+ASSERT_EQUALS "Temp Basal" "@doc.eventType"
+ASSERT_EQUALS 0.5 "@doc.absolute"
+ASSERT_EQUALS 1800000 "@doc.durationInMilliseconds"
+ASSERT_EXISTS "@doc.srvModified"
+
+NAME bye
+DISCONNECT

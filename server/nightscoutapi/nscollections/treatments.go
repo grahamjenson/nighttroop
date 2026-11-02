@@ -11,6 +11,7 @@ import (
 	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
+	"nighttroop.t1d.nz/utils/apiutils/apiquery"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -159,9 +160,11 @@ func (c TreatmentCollection) Delete(q *sitedb.Queries, ctx context.Context, iden
 	return softDeleteEventGroup(ctx, q, identifier)
 }
 
-// DeleteType deletes every treatment of the type, and when permanent those already soft deleted too
+// DeleteType deletes the treatments of the type, and when permanent those already soft deleted too. Each is deleted with
+// its events one at a time, so a request deletes at most a search's worth, the newest first, and says how many: the
+// rest are deleted by asking again.
 func (c TreatmentCollection) DeleteType(q *sitedb.Queries, ctx context.Context, typeString string, permanent bool) (sql.Result, error) {
-	eventGroups, err := q.GetEventGroupOfTypeWithoutJoins(ctx, sitedb.GetEventGroupOfTypeWithoutJoinsParams{GroupType: typeString, IncludeDeleted: permanent})
+	eventGroups, err := q.GetEventGroupOfTypeWithoutJoins(ctx, sitedb.GetEventGroupOfTypeWithoutJoinsParams{GroupType: typeString, IncludeDeleted: permanent, Limit: apiquery.MaxQueryLimit})
 	if err != nil {
 		return nil, err
 	}
