@@ -36,11 +36,7 @@ func (s *ComponentEventsCollection) CreateRow(ctx context.Context, collectionTx 
 	if herr := checkComponentEventType(model.EventType); herr != nil {
 		return nil, herr
 	}
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.CreateComponentEvent(ctx, sitemodels.ComponentEventToCreate(model, siteContext))
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).CreateComponentEvent, sitemodels.ComponentEventToCreate(model, siteContext))
 }
 
 // NewHTMXResponse is the modal to add a site or sensor change in
@@ -64,11 +60,7 @@ func (s *ComponentEventsCollection) UpdateRow(ctx context.Context, collectionTx 
 		}
 	}
 	model.ID = oldModel.ID
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.UpdateComponentEvent(ctx, sitemodels.ComponentEventToUpdate(model, siteContext))
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).UpdateComponentEvent, sitemodels.ComponentEventToUpdate(model, siteContext))
 }
 
 func (s *ComponentEventsCollection) UpdateHTMXResponse(model *sitemodels.SiteComponentEvent) templ.Component {

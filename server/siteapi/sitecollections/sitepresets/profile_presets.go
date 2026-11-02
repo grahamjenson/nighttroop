@@ -54,11 +54,7 @@ func (s *ProfilePresetsCollection) UpdateHTMXResponse(model *sitemodels.SiteProf
 }
 
 func (s *ProfilePresetsCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.ProfilePreset, error) {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.GetProfilePreset(ctx, sitedb.GetProfilePresetParams{ID: id})
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).GetProfilePreset, sitedb.GetProfilePresetParams{ID: id})
 }
 
 // ToModel is the site model of a row, its sensitivities and targets in the settings' units
@@ -72,11 +68,7 @@ func (s *ProfilePresetsCollection) GetHTMXResponse(model *sitemodels.SiteProfile
 }
 
 func (s *ProfilePresetsCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.ProfilePreset, error) {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.AllProfilePresets(ctx, siteapiutils.QueryToAllProfilePresets(query))
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).AllProfilePresets, siteapiutils.QueryToAllProfilePresets(query))
 }
 
 func (s *ProfilePresetsCollection) SearchHTMXResponse(models []*sitemodels.SiteProfilePreset, query *apiutils.Query) templ.Component {
@@ -85,11 +77,7 @@ func (s *ProfilePresetsCollection) SearchHTMXResponse(models []*sitemodels.SiteP
 
 // DeleteRow hard deletes the one profile, as the Nightscout API does presets, leaving the rest of its store
 func (s *ProfilePresetsCollection) DeleteRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) error {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return err
-	}
-	_, err = q.HardDeleteProfilePreset(ctx, sitedb.HardDeleteProfilePresetParams{ID: id})
+	_, err := siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).HardDeleteProfilePreset, sitedb.HardDeleteProfilePresetParams{ID: id})
 	return err
 }
 

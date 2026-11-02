@@ -68,11 +68,7 @@ func (s *ActivitiesCollection) UpdateRow(ctx context.Context, collectionTx *site
 		return nil, herr
 	}
 	model.ID = oldModel.ID
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.UpdateActivity(ctx, sitemodels.ActivityToUpdate(model, siteContext))
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).UpdateActivity, sitemodels.ActivityToUpdate(model, siteContext))
 }
 
 func (s *ActivitiesCollection) UpdateHTMXResponse(model *sitemodels.SiteActivity) templ.Component {

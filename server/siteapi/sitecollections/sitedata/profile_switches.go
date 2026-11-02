@@ -39,11 +39,7 @@ func (s *ProfileSwitchesCollection) CreateRow(ctx context.Context, collectionTx 
 	if herr := checkProfileSwitch(model); herr != nil {
 		return nil, herr
 	}
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.CreateProfileSwitch(ctx, sitemodels.ProfileSwitchToCreate(model, siteContext))
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).CreateProfileSwitch, sitemodels.ProfileSwitchToCreate(model, siteContext))
 }
 
 // NewHTMXResponse is the modal to add a profile switch in
@@ -65,11 +61,7 @@ func (s *ProfileSwitchesCollection) UpdateRow(ctx context.Context, collectionTx 
 		return nil, herr
 	}
 	model.ID = oldModel.ID
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.UpdateProfileSwitch(ctx, sitemodels.ProfileSwitchToUpdate(model, siteContext))
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).UpdateProfileSwitch, sitemodels.ProfileSwitchToUpdate(model, siteContext))
 }
 
 func (s *ProfileSwitchesCollection) UpdateHTMXResponse(model *sitemodels.SiteProfileSwitch) templ.Component {

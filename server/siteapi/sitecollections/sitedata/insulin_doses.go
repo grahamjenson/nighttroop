@@ -39,11 +39,7 @@ func (s *InsulinDosesCollection) CreateRow(ctx context.Context, collectionTx *si
 	if herr := checkInsulinDose(model); herr != nil {
 		return nil, herr
 	}
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.CreateInsulinDose(ctx, sitemodels.InsulinDoseToCreate(model, siteContext))
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).CreateInsulinDose, sitemodels.InsulinDoseToCreate(model, siteContext))
 }
 
 // NewHTMXResponse is the modal to add an insulin dose in
@@ -67,11 +63,7 @@ func (s *InsulinDosesCollection) UpdateRow(ctx context.Context, collectionTx *si
 		}
 	}
 	model.ID = oldModel.ID
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.UpdateInsulinDose(ctx, sitemodels.InsulinDoseToUpdate(model, siteContext))
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).UpdateInsulinDose, sitemodels.InsulinDoseToUpdate(model, siteContext))
 }
 
 func (s *InsulinDosesCollection) UpdateHTMXResponse(model *sitemodels.SiteInsulinDose) templ.Component {
