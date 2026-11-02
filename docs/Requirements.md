@@ -243,14 +243,18 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   followers.
 - **v1**: entries, treatments, device statuses, profiles, food and activities, with Nightscout's filters, plus
   status, versions, verifyauth, slice, count, times and echo.
-- **v2**: authorization (a token for a JWT), properties and summary.
+- **v2**: authorization (a token for a JWT, and a check of one of its permissions), properties and summary.
 - **v3**: create, read, update, patch, delete, search and history of each collection, plus version, status,
   lastModified and settings.
+- The v3 status shows what the token may do to each collection, e.g. `crud` for an uploader and `r` for a read only
+  token, so apps like AAPS only upload with a token that may write.
 - A v3 history includes deleted documents, with `isValid` false, so apps learn of deletions; a search leaves them
   out.
 - A delete moves a document's `srvModified` and the v3 lastModified forward, so a history since an app's last sync
   has the documents deleted after it.
 - **Socket.IO** live updates and alarms over long polling or websockets.
+- A new Announcement is sent to every `/alarm` socket that can read, with its notes as the message, so AAPS shows it
+  as a notification.
 - Glucose is stored in mg/dL and returned and accepted in the settings' units.
 - A temp basal sent with only a `percent` of the basal (e.g. 50 for half, 150 for 1.5x) has its rate set from the
   default profile's or profile switch's basal at its start, in the profile's timezone, and is returned with that
@@ -261,6 +265,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - An xDrip+ upload works as it sends it (see `docs/clients/xdrip.md`): a calibration (`type` `cal`) in a batch of
   entries is left out and the readings with it kept; an uploader battery that is not a number is left out of its
   device status; `uploader.battery` is the uploader's battery; and a treatment is found by its `uuid` (`find[uuid]`), sent as the `_id` or as xDrip+ makes its `_id`.
+- Trio's and iAPS's `SMB` and `External Insulin` treatments are kept as insulin doses, with their event type.
+- A profile has `enteredBy`, the identity that uploaded it, as Trio needs it to import one.
 - A create that names its `identifier` keeps it, and only a document with that identifier is its duplicate.
 - A create naming a deleted document's identifier, or a replace of one, replaces it whatever changed, as Juggluco
   changes a treatment by deleting it and sending it again.
@@ -295,6 +301,9 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   out, so the server still starts and the rest of its batch is still backed up.
 - Old records' raw JSON is cleared after `TRUNCATE_RECORDS_AFTER_DAYS`.
 - Reads and writes are rate limited per site, identity and IP, and live sessions per site are capped.
+- No request returns more than 1000 records, however many it asks for, through the site's pages and API, the
+  Nightscout API or its live updates, and an upload holds at most 100. Deleting a type of treatment through the
+  Nightscout API deletes at most 1000 each time, saying how many.
 - A DB serves many reads at once, so one slow read, such as a long search, does not hold up the others; writes to it
   take turns rather than fail. A busy DB keeps its connections open between reads, so requests at once do not each
   open a new one, while a quiet site's DB closes all of them.
