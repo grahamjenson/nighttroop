@@ -171,6 +171,8 @@ deleted (after a confirmation):
 
 - **Glucose**: CGM and meter readings with trend arrows, in the settings' units (mmol/L or mg/dL), with lows and
   highs coloured as on the summary.
+  - Adding a reading offers its type as Meter or Sensor and its trend as an arrow with its name (e.g. `↗ FortyFiveUp`),
+    as the table and its details show them.
 - **Insulin doses**
 - **Food intakes**
 - **Temp basals**, with a percent as the percent of the scheduled basal, 50 for half, never negative
