@@ -203,7 +203,7 @@ NightscoutKit has reads that Loop does not call, but other apps built on it may:
 | `POST` a `Temporary Override` | Fixed in this PR (was a 400, unknown event type); kept as a temp target, indefinite as a week |
 | An override's UUID `_id`, posted again when it changes, deleted by it | Fixed in this PR: a v1 POST with an `_id` replaces the one with it, or is created with it |
 | A dose posted again when it ends, with its final duration or amount | Not supported: the first upload is kept. TODO P1 |
-| Omnipod `syncIdentifier`s once creates dedup by identifier | Would break with the Juggluco branch: they share their first 36 characters. TODO P1, test in `loop/treatments.http` |
+| Omnipod `syncIdentifier`s once creates dedup by identifier | Fixed in this PR: an identifier over 36 characters is kept as a hash of it, so they no longer share their first 36 characters; test in `loop/treatments.http` |
 | `POST /api/v1/devicestatus`, `loop` object | Works |
 | Device status `override`, `uploader`, pump `clock`, `model`, `suspended`, `bolusing` | Not supported: dropped. TODO P2 (Loop does not read them back) |
 | `POST /api/v1/profile`, `loopSettings` and `store` | Works |
