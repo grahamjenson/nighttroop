@@ -106,14 +106,26 @@ func TestClientRoundTrip(t *testing.T) {
 	for _, version := range []int{V3, V4} {
 		for _, transport := range transports {
 			t.Run("v"+string(rune('0'+version))+" "+transport, func(t *testing.T) {
+				t.Parallel()
 				testRoundTrip(t, version, transport)
 			})
 		}
 	}
 }
 
+// roundTripConfig pings often, but leaves each ping's answer and the upgrade's probe time to outlast a loaded machine
+var roundTripConfig = Config{PingInterval: 50 * time.Millisecond, PingTimeout: 500 * time.Millisecond}
+
+// stall holds up every request, as a loaded machine can, for longer than testConfig's whole ping timeout
+const stall = 100 * time.Millisecond
+
 func testRoundTrip(t *testing.T, version int, transport string) {
-	_, ts, closed := echoServer(t, testConfig)
+	server, _, closed := echoServer(t, roundTripConfig)
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(stall)
+		server.ServeHTTP(w, r)
+	}))
+	t.Cleanup(ts.Close)
 	received := make(chan string, 10)
 	client := dial(t, ts.URL+"/socket.io/", version, transport, func(data string) { received <- data })
 
@@ -122,8 +134,8 @@ func testRoundTrip(t *testing.T, version int, transport string) {
 		require.Equal(t, msg, <-received)
 	}
 
-	// The heartbeat keeps the session open well past several ping intervals
-	time.Sleep(300 * time.Millisecond)
+	// The heartbeat keeps the session open well past the time it would close without one
+	time.Sleep(2 * (roundTripConfig.PingInterval + roundTripConfig.PingTimeout))
 	require.NoError(t, client.Send("still here"))
 	require.Equal(t, "still here", <-received)
 
