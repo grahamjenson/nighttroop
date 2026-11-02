@@ -1085,7 +1085,10 @@ func PartialTreatmentToTempBasal(source Treatment) sitedb.TempBasal {
 	if source.Absolute != nil {
 		sitedbTempBasal.Absolute = FlexibleFloat64ToFloat64(*source.Absolute)
 	}
-	sitedbTempBasal.Percent = PercentChangeToOfBasal(source.TempBasalPercent)
+	if source.TempBasalPercent != nil {
+		xfloat64 := FlexibleFloat64ToFloat64(*source.TempBasalPercent)
+		sitedbTempBasal.Percent = &xfloat64
+	}
 	if source.Notes != nil {
 		xstring := SanitizedStringToString(*source.Notes)
 		sitedbTempBasal.Notes = &xstring
@@ -1711,7 +1714,10 @@ func UpdateTempBasalToTreatment(source *sitedb.TempBasal, target *Treatment) {
 		target.Rate = &pTypesFlexibleFloat64
 		pTypesFlexibleFloat642 := types.FlexibleFloat64(source.Absolute)
 		target.Absolute = &pTypesFlexibleFloat642
-		target.TempBasalPercent = PercentOfBasalToChange(source.Percent)
+		if source.Percent != nil {
+			typesFlexibleFloat64 := types.FlexibleFloat64(*source.Percent)
+			target.TempBasalPercent = &typesFlexibleFloat64
+		}
 		if source.Notes != nil {
 			typesSanitizedString := types.SanitizedString(*source.Notes)
 			target.Notes = &typesSanitizedString

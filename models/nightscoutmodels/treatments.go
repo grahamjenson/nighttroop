@@ -63,7 +63,7 @@ type Treatment struct {
 
 	Rate     *types.FlexibleFloat64 `json:"rate,omitempty"`
 	Absolute *types.FlexibleFloat64 `json:"absolute,omitempty"`
-	// TempBasalPercent is a temp basal's percent as Nightscout has it, the change from the basal, so -50 is half of it
+	// TempBasalPercent is a temp basal's percent of the basal, so 50 is half of it, where a profile switch's is percentage
 	TempBasalPercent *types.FlexibleFloat64 `json:"percent,omitempty"`
 
 	HighTarget              *types.FlexibleFloat64   `json:"targetTop,omitempty"`
