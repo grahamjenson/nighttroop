@@ -57,3 +57,32 @@ func TestReadLimitedBodyRefusesLargeBodies(t *testing.T) {
 		})
 	}
 }
+
+// A page not signed in is sent to the login page with a 303, while an htmx request or an event stream gets a 401 with
+// HX-Redirect, as fetch follows a 303 without showing it
+func TestRedirectToLogin(t *testing.T) {
+	tests := []struct {
+		name     string
+		headers  map[string]string
+		status   int
+		location string
+	}{
+		{"a page", map[string]string{"Accept": "text/html"}, 303, "/login"},
+		{"an htmx request", map[string]string{"HX-Request": "true", "Accept": "text/html"}, 401, ""},
+		{"an event stream reconnecting", map[string]string{"HX-Request": "true", "Accept": "text/html, text/event-stream"}, 401, ""},
+		{"an event stream", map[string]string{"Accept": "text/event-stream"}, 401, ""},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			r := httptest.NewRequest("GET", "/data/alarms/events", nil)
+			for k, v := range test.headers {
+				r.Header.Set(k, v)
+			}
+			w := httptest.NewRecorder()
+			RedirectToLogin(w, r, "/login")
+			require.Equal(t, test.status, w.Code)
+			require.Equal(t, "/login", w.Header().Get("HX-Redirect"))
+			require.Equal(t, test.location, w.Header().Get("Location"))
+		})
+	}
+}

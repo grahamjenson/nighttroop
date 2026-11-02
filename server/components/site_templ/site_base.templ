@@ -29,6 +29,11 @@ templ Base() {
 			<link href="/style_gen.css" rel="stylesheet"/>
 			<script src="/htmx.js"></script>
 			<script src="/htmx_sse.js"></script>
+			<script>
+				// A live update stream refused as its sign in has ended goes to the login page, as htmx does for its own
+				// requests, rather than asking for the stream again and again
+				document.addEventListener("htmx:sse:error", (event) => { if (event.detail?.status === 401) window.location.href = "/login" });
+			</script>
 			@copybutton.Script()
 			@input.Script()
 			@label.Script()

@@ -290,6 +290,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - Sign-in attempts are rate limited per identity and IP; a disabled identity cannot sign in.
 - Devices use their Nightscout token, as a token, API secret or for a JWT.
 - Changing an identity's password or TOTP signs out its existing sessions.
+- A page left open after its sign in ends goes to the login page once its live updates reconnect, rather than asking
+  for them again and again.
 
 ### Users & Devices
 
