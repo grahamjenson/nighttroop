@@ -167,6 +167,7 @@ RETURNING *;
 -- name: SoftDeleteGlucoseReading :execresult
 UPDATE glucose_readings SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_at = MAX(updated_at + 1, CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
 WHERE id = sqlc.arg('ID') AND deleted_at IS NULL;
 
@@ -177,6 +178,7 @@ DELETE FROM glucose_readings WHERE id = ?;
 -- name: SoftDeleteGlucoseReadingsByType :execresult
 UPDATE glucose_readings SET 
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_at = MAX(updated_at + 1, CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_by_identity_name = ?
 WHERE reading_type = ? AND deleted_at IS NULL;
 

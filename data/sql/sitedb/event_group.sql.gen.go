@@ -1556,6 +1556,7 @@ const softDeleteEventGroup = `-- name: SoftDeleteEventGroup :one
 
 UPDATE event_groups SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_at = MAX(updated_at + 1, CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_by_identity_name = ?1
 WHERE id = ?2 AND deleted_at IS NULL
 RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, component_event_id, activity_id, notification_event_id, notes, reason, duration_minutes, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
@@ -1606,6 +1607,7 @@ func (q *Queries) SoftDeleteEventGroup(ctx context.Context, arg SoftDeleteEventG
 const softDeleteEventGroupsByType = `-- name: SoftDeleteEventGroupsByType :many
 UPDATE event_groups SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_at = MAX(updated_at + 1, CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_by_identity_name = ?
 WHERE group_type = ? AND deleted_at IS NULL
 RETURNING id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, component_event_id, activity_id, notification_event_id, notes, reason, duration_minutes, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name

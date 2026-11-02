@@ -56,8 +56,6 @@
    restart uploads every batch again though their backups are current
 1. Nightscout API:
     1. P2: Check If-Unmodified-Since on API v3 replace and patch, in the same query as the update
-    1. P1: A soft delete sets `updated_at` and API v3 lastModified counts deleted rows, so a history since a client's
-       last sync has documents deleted after it
     1. P4: Only write a treatment's events that changed, rather than every one on each update
     1. P4: Keep when a site's settings last changed, for API v3 lastModified
 

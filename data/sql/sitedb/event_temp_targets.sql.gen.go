@@ -336,6 +336,7 @@ const softDeleteTempTarget = `-- name: SoftDeleteTempTarget :execresult
 
 UPDATE temp_targets SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_at = MAX(updated_at + 1, CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_by_identity_name = ?1
 WHERE id = ?2 AND deleted_at IS NULL
 `
