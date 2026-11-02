@@ -262,6 +262,13 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - A new Announcement is sent to every `/alarm` socket that can read, with its notes as the message, so AAPS shows it
   as a notification.
 - Glucose is stored in mg/dL and returned and accepted in the settings' units.
+- The v1 status has the settings' units in `settings.units`, as Nightscout writes them (`mg/dl` or `mmol`).
+- The v3 version needs no token, so an app can check for v3 before it signs in.
+- An entry has an `sgv` if it is a CGM reading and an `mbg` if it is a meter reading, never both.
+- A date filter takes milliseconds with a fraction (e.g. `date$gte=1761234567890.25`), which is dropped.
+- A `created_at` filter or sort is on when it happened, as `date` is, and `srvCreated` is on when it was uploaded.
+- v3 filters take `field$eq` as well as `field`, e.g. `eventType$eq=Site Change`.
+- A device status keeps its pump's other fields, e.g. AAPS's `extended` with its profile and temp basal.
 - A temp basal sent with only a `percent` of the basal (e.g. 50 for half, 150 for 1.5x) has its rate set from the
   default profile's or profile switch's basal at its start, in the profile's timezone, and is returned with that
   `absolute` and its `percent` as sent.

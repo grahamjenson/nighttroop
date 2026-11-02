@@ -13,7 +13,6 @@ import (
 func NewNightscoutV3Router(store nsutils.Store) http.Handler {
 	r := chi.NewRouter()
 
-	r.Get("/version", Version(store))
 	r.Get("/status", nsutils.Require("api:entries:read", false, Status(store)))
 	r.Get("/test", nsutils.Require("api:entries:read", false, Test(store)))
 	r.Get("/lastmodified", nsutils.Require("api:entries:read", false, LastModified(store)))

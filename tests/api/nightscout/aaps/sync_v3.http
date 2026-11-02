@@ -489,9 +489,8 @@ ASSERT_EQUALS 87 "@result.0.uploaderBattery"
 ASSERT_EQUALS false "@result.0.isCharging"
 ASSERT_EQUALS 120.5 "@result.0.pump.reservoir"
 ASSERT_EQUALS 75 "@result.0.pump.battery.percent"
-// pump.clock, pump.status and pump.extended are not kept yet (TODOs.md). Without pump.clock an AAPS client skips the
-// pump's data (NSDeviceStatusHandler)
-ASSERT_EQUALS null "@result.0.pump.clock"
+// Without pump.clock an AAPS client skips the pump's data (NSDeviceStatusHandler)
+ASSERT_EXISTS "@result.0.pump.clock"
 ASSERT_EQUALS 110 "@result.0.openaps.suggested.eventualBG"
 ASSERT_EQUALS 0.5 "@result.0.openaps.iob.iob"
 

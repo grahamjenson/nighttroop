@@ -1,0 +1,174 @@
+INCLUDE steps/new_ns_site.steps
+
+INCLUDE steps/ns_units_mgdl.steps
+
+// Nightguard's care actions and treatment reads, from NightscoutService.createTreatment and the reads after it.
+// Every write sets date and mills to a string of milliseconds (Date.toUTCMillis), created_at to an ISO time
+// without a fraction, and app and enteredBy to "nightguard". It needs an access token to write.
+// It POSTs to v3 with a JWT and, only when v3 is not there or v1 is forced, to v1 with the token,
+// with a "now" parameter that is the text "(Function)". It takes any 2xx as done and shows anything else.
+
+NAME nightguard_jwt
+GET http://{{ site }}/api/v2/authorization/request/token={{ token }}
+ASSERT_STATUS 200
+
+//////
+// WRITE through v3
+//////
+
+// createTemporaryTarget, with the target in mg/dL whatever the units
+NAME nightguard_v3_create_temp_target
+POST http://{{ site }}/api/v3/treatments
+H Accept: application/json
+H Authorization: Bearer {{ dig "nightguard_jwt.token" }}
+B { "eventType": "Temporary Target", "duration": 60, "reason": "Activity", "targetBottom": 130, "targetTop": 130, "units": "mg/dl", "date": "{{ itime 30 }}", "app": "nightguard", "enteredBy": "nightguard", "created_at": "{{ time 30 }}", "mills": "{{ itime 30 }}" }
+ASSERT_STATUS 201
+
+// createCannulaChangeTreatment, createSensorChangeTreatment and createBatteryChangeTreatment, at the time the user picked
+NAME nightguard_v3_create_site_change
+POST http://{{ site }}/api/v3/treatments
+H Accept: application/json
+H Authorization: Bearer {{ dig "nightguard_jwt.token" }}
+B { "eventType": "Site Change", "notes": "", "carbs": null, "insulin": null, "date": "{{ itime 1440 }}", "app": "nightguard", "enteredBy": "nightguard", "created_at": "{{ time 1440 }}", "mills": "{{ itime 1440 }}" }
+ASSERT_STATUS 201
+
+NAME nightguard_v3_create_sensor_change
+POST http://{{ site }}/api/v3/treatments
+H Accept: application/json
+H Authorization: Bearer {{ dig "nightguard_jwt.token" }}
+B { "eventType": "Sensor Change", "notes": "", "carbs": null, "insulin": null, "date": "{{ itime 4320 }}", "app": "nightguard", "enteredBy": "nightguard", "created_at": "{{ time 4320 }}", "mills": "{{ itime 4320 }}" }
+ASSERT_STATUS 201
+
+NAME nightguard_v3_create_battery_change
+POST http://{{ site }}/api/v3/treatments
+H Accept: application/json
+H Authorization: Bearer {{ dig "nightguard_jwt.token" }}
+B { "eventType": "Pump Battery Change", "notes": "", "carbs": null, "insulin": null, "date": "{{ itime 14400 }}", "app": "nightguard", "enteredBy": "nightguard", "created_at": "{{ time 14400 }}", "mills": "{{ itime 14400 }}" }
+ASSERT_STATUS 201
+
+// createCarbsCorrection
+NAME nightguard_v3_create_carbs
+POST http://{{ site }}/api/v3/treatments
+H Accept: application/json
+H Authorization: Bearer {{ dig "nightguard_jwt.token" }}
+B { "eventType": "Carb Correction", "carbs": 15, "duration": 0, "date": "{{ itime 20 }}", "app": "nightguard", "enteredBy": "nightguard", "created_at": "{{ time 20 }}", "mills": "{{ itime 20 }}" }
+ASSERT_STATUS 201
+
+// A bolus from an uploader, which the main screen lists with the carbs
+NAME seed_bolus_v1
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+B { "eventType": "Correction Bolus", "insulin": 1.5, "created_at": "{{ time 25 }}", "enteredBy": "Loop" }
+ASSERT_STATUS 200
+
+//////
+// READ through v3
+//////
+
+// readLastTemporaryTarget: the newest temp target of the last day. Nightguard reads targetTop, targetBottom
+// and duration as numbers, units as a string (with "mol" in it they are mmol/L), and created_at as a string
+NAME nightguard_v3_last_temp_target
+GET http://{{ site }}/api/v3/treatments?created_at$gte={{ time 1440 }}&eventType$eq=Temporary%20Target&limit=1&sort$desc=created_at
+H Accept: application/json
+H Authorization: Bearer {{ dig "nightguard_jwt.token" }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS "Temporary Target" "@result.0.eventType"
+ASSERT_EQUALS 130 "@result.0.targetTop"
+ASSERT_EQUALS 130 "@result.0.targetBottom"
+ASSERT_EQUALS 60 "@result.0.duration"
+// Targets come back in mg/dL with no units, which Nightguard takes as mg/dL
+ASSERT_EQUALS null "@result.0.units"
+ASSERT_EQUALS ".nightguard_v3_create_temp_target.result.created_at" "@result.0.created_at"
+
+// readLastTreatementEventTimestamp, for the cannula (5 days back), sensor (14) and battery (40) ages
+NAME nightguard_v3_last_site_change
+GET http://{{ site }}/api/v3/treatments?created_at$gte={{ time 7200 }}&eventType$eq=Site%20Change&fields=created_at,date&limit=1&sort$desc=created_at
+H Accept: application/json
+H Authorization: Bearer {{ dig "nightguard_jwt.token" }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS ".nightguard_v3_create_site_change.result.created_at" "@result.0.created_at"
+ASSERT_EQUALS ".nightguard_v3_create_site_change.result.date" "@result.0.date"
+
+NAME nightguard_v3_last_sensor_change
+GET http://{{ site }}/api/v3/treatments?created_at$gte={{ time 20160 }}&eventType$eq=Sensor%20Change&fields=created_at,date&limit=1&sort$desc=created_at
+H Accept: application/json
+H Authorization: Bearer {{ dig "nightguard_jwt.token" }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS ".nightguard_v3_create_sensor_change.result.created_at" "@result.0.created_at"
+
+NAME nightguard_v3_last_battery_change
+GET http://{{ site }}/api/v3/treatments?created_at$gte={{ time 57600 }}&eventType$eq=Pump%20Battery%20Change&fields=created_at,date&limit=1&sort$desc=created_at
+H Accept: application/json
+H Authorization: Bearer {{ dig "nightguard_jwt.token" }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS ".nightguard_v3_create_battery_change.result.created_at" "@result.0.created_at"
+
+// Outside the days asked for there is nothing, and Nightguard shows the age as from now
+NAME nightguard_v3_old_battery_change
+GET http://{{ site }}/api/v3/treatments?created_at$gte={{ time 7200 }}&eventType$eq=Pump%20Battery%20Change&fields=created_at,date&limit=1&sort$desc=created_at
+H Accept: application/json
+H Authorization: Bearer {{ dig "nightguard_jwt.token" }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
+
+// readLatestTreatements: today's carbs and boluses, newest first. eventType and created_at are strings,
+// and carbs and insulin numbers
+NAME nightguard_v3_latest_treatments
+GET http://{{ site }}/api/v3/treatments?created_at$gte={{ time 120 }}&eventType$in=Carb%20Correction%7CMeal%20Bolus%7CCorrection%20Bolus%7CBolus%20Wizard&limit=500&sort$desc=created_at
+H Accept: application/json
+H Authorization: Bearer {{ dig "nightguard_jwt.token" }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result"
+ASSERT_EQUALS "Carb Correction" "@result.0.eventType"
+ASSERT_EQUALS 15 "@result.0.carbs"
+ASSERT_EQUALS "Correction Bolus" "@result.1.eventType"
+ASSERT_EQUALS 1.5 "@result.1.insulin"
+ASSERT_EXISTS "@result.1.created_at"
+
+//////
+// WRITE and READ through v1, when v3 is not there or v1 is forced
+//////
+
+// deleteTemporaryTarget: a temp target with a duration of 0
+NAME nightguard_v1_cancel_temp_target
+POST http://{{ site }}/api/v1/treatments?now=(Function)&token={{ token }}
+H Accept: application/json
+B { "eventType": "Temporary Target", "duration": 0, "reason": "Canceled", "date": "{{ itime 10 }}", "app": "nightguard", "enteredBy": "nightguard", "created_at": "{{ time 10 }}", "mills": "{{ itime 10 }}" }
+ASSERT_STATUS 200
+
+// With no targets, Nightguard shows 100 mg/dL and an end of created_at plus 0 minutes, so no temp target
+NAME nightguard_v1_last_temp_target
+GET http://{{ site }}/api/v1/treatments?count=1&find%5Bcreated_at%5D%5B$gte%5D={{ time 1440 }}&find%5BeventType%5D=Temporary%20Target&token={{ token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "Temporary Target" "@0.eventType"
+ASSERT_EQUALS 0 "@0.duration"
+ASSERT_EXISTS "@0.created_at"
+
+NAME nightguard_v1_create_site_change
+POST http://{{ site }}/api/v1/treatments?now=(Function)&token={{ token }}
+H Accept: application/json
+B { "eventType": "Site Change", "notes": "", "carbs": null, "insulin": null, "date": "{{ itime 60 }}", "app": "nightguard", "enteredBy": "nightguard", "created_at": "{{ time 60 }}", "mills": "{{ itime 60 }}" }
+ASSERT_STATUS 200
+
+NAME nightguard_v1_last_site_change
+GET http://{{ site }}/api/v1/treatments?count=1&find%5Bcreated_at%5D%5B$gte%5D={{ time 7200 }}&find%5BeventType%5D=Site%20Change&token={{ token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "Site Change" "@0.eventType"
+ASSERT_EQUALS ".nightguard_v1_create_site_change.0.created_at" "@0.created_at"
+
+NAME nightguard_v1_latest_treatments
+GET http://{{ site }}/api/v1/treatments.json?count=500&find%5Bcreated_at%5D%5B$gte%5D={{ time 120 }}&token={{ token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "Temporary Target" "@0.eventType"
+ASSERT_EQUALS "Carb Correction" "@1.eventType"
+ASSERT_EQUALS 15 "@1.carbs"
+ASSERT_EQUALS "Correction Bolus" "@2.eventType"
+ASSERT_EQUALS 1.5 "@2.insulin"

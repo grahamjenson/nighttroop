@@ -67,7 +67,7 @@ func (ws *Websocket) firstDataUpdate(ctx context.Context, message authorizeMessa
 	}
 	data := ws.recentData(ctx, time.Duration(hours*float64(time.Hour)))
 	if message.Status {
-		data["status"] = nsv1.Status()
+		data["status"] = nsv1.Status(ctx)
 	}
 	return data
 }

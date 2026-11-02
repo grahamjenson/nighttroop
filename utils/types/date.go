@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -39,6 +40,10 @@ func (d *DateInt) UnmarshalJSON(data []byte) error {
 	case string:
 		var err error
 		mills, err = strconv.ParseInt(val, 10, 64)
+		// A fraction of a millisecond is dropped, as Nightguard sends a Swift Double like "1761234567890.0"
+		if asFloat, floatErr := strconv.ParseFloat(val, 64); err != nil && floatErr == nil && !math.IsNaN(asFloat) && !math.IsInf(asFloat, 0) {
+			mills, err = int64(asFloat), nil
+		}
 		if err != nil {
 			// Try Parsing as a DateString and then converting to DateInt
 
