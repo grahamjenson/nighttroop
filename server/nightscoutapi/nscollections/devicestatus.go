@@ -90,11 +90,20 @@ func DBToNightscoutDeviceStatus(source *sitedb.DeviceReport, siteContext *httput
 	/////
 	// Pump
 	/////
+	// Its fields without a column, like AAPS's extended with the profile and temp basal Nightguard shows, are read
+	// from the JSON it came in, through the model so only known fields go out
+	var raw struct {
+		Pump *nightscoutmodels.PumpStatus `json:"pump"`
+	}
+	if source.RawJsonData != nil && json.Unmarshal([]byte(*source.RawJsonData), &raw) == nil {
+		nsModel.Pump = raw.Pump
+	}
 	if source.PumpBatteryPercent != nil {
-		nsModel.Pump = &nightscoutmodels.PumpStatus{
-			Battery: &nightscoutmodels.PumpBattery{
-				Percent: ptr(types.FlexibleFloat64(*source.PumpBatteryPercent)),
-			},
+		if nsModel.Pump == nil {
+			nsModel.Pump = &nightscoutmodels.PumpStatus{}
+		}
+		nsModel.Pump.Battery = &nightscoutmodels.PumpBattery{
+			Percent: ptr(types.FlexibleFloat64(*source.PumpBatteryPercent)),
 		}
 	}
 

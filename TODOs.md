@@ -58,6 +58,10 @@
     1. P2: Check If-Unmodified-Since on API v3 replace and patch, in the same query as the update
     1. P4: Only write a treatment's events that changed, rather than every one on each update
     1. P4: Keep when a site's settings last changed, for API v3 lastModified
+    1. P2: Nightguard reads `sgv` and `mbg` as mg/dL whatever an entry's `units`, so with mmol/L settings its
+       readings are 18 times too low and its low alarms go off; for now its identity must be set to mg/dL
+       ([docs/clients/nightguard.md](docs/clients/nightguard.md)). Make that clearer, e.g. a mg/dL Nightscout
+       units option when adding a follower device
 
 ## Bugs
 

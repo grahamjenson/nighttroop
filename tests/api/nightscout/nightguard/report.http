@@ -1,0 +1,115 @@
+INCLUDE steps/new_ns_site.steps
+
+INCLUDE steps/ns_units_mgdl.steps
+
+// Nightguard's report (ReportDataProvider) pages through entries (see entries.http), treatments and profiles.
+// Treatments page by created_at, which are ISO times, newest first and 1000 at a time, until a page is empty or
+// reaches the start. Profiles page with find[startDate][$lt] until a page is empty or reaches the start.
+
+NAME seed_profile_v1
+POST http://{{ site }}/api/v1/profile?token={{ token }}
+B {
+    "startDate": "{{ time 60 }}",
+    "defaultProfile": "Default",
+    "units": "mg/dl",
+    "store": {
+        "Default": {
+            "dia": 5,
+            "units": "mg/dl",
+            "timezone": "Pacific/Auckland",
+            "carbs_hr": 20,
+            "sens": [{"value": 110, "time": "00:00", "timeAsSeconds": 0}],
+            "target_low": [{"value": 90, "time": "00:00", "timeAsSeconds": 0}],
+            "target_high": [{"value": 110, "time": "00:00", "timeAsSeconds": 0}],
+            "carbratio": [{"value": 12, "time": "00:00", "timeAsSeconds": 0}],
+            "basal": [{"value": 0.8, "time": "00:00", "timeAsSeconds": 0}, {"value": 0.6, "time": "06:00", "timeAsSeconds": 21600}]
+        }
+    }
+ }
+ASSERT_STATUS 200
+
+NAME seed_treatments_v1
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+B [
+    { "eventType": "Meal Bolus", "carbs": 30, "insulin": 2.5, "created_at": "{{ time 50 }}", "enteredBy": "Loop" },
+    { "eventType": "Temp Basal", "absolute": 0.4, "duration": 30, "created_at": "{{ time 40 }}", "enteredBy": "Loop" },
+    { "eventType": "Temporary Target", "targetTop": 140, "targetBottom": 140, "duration": 60, "units": "mg/dl", "created_at": "{{ time 30 }}", "enteredBy": "Loop" }
+]
+ASSERT_STATUS 200
+
+NAME nightguard_jwt
+GET http://{{ site }}/api/v2/authorization/request/token={{ token }}
+ASSERT_STATUS 200
+
+//////
+// Treatments: created_at as a number (or ISO string), eventType, carbs, insulin, duration, absolute or rate,
+// percent, profile, targetBottom and targetTop (mmol/L if units has "mmol" in it), isSMB, and _id or identifier
+//////
+
+NAME nightguard_v3_report_treatments
+GET http://{{ site }}/api/v3/treatments?created_at$gte={{ time 120 }}&created_at$lt={{ time 0 }}&limit=1000&sort$desc=created_at
+H Accept: application/json
+H Authorization: Bearer {{ dig "nightguard_jwt.token" }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@result"
+ASSERT_EQUALS "Temporary Target" "@result.0.eventType"
+ASSERT_EQUALS 140 "@result.0.targetTop"
+ASSERT_EQUALS 140 "@result.0.targetBottom"
+ASSERT_EQUALS 60 "@result.0.duration"
+ASSERT_EQUALS "Temp Basal" "@result.1.eventType"
+ASSERT_EQUALS 0.4 "@result.1.absolute"
+ASSERT_EQUALS 30 "@result.1.duration"
+ASSERT_EQUALS "Meal Bolus" "@result.2.eventType"
+ASSERT_EQUALS 30 "@result.2.carbs"
+ASSERT_EQUALS 2.5 "@result.2.insulin"
+ASSERT_EXISTS "@result.2.identifier"
+ASSERT_EXISTS "@result.2.created_at"
+
+// The next page is from before the oldest it has, and an empty page ends it
+NAME nightguard_v3_report_treatments_page_2
+GET http://{{ site }}/api/v3/treatments?created_at$gte={{ time 120 }}&created_at$lt={{ dig "nightguard_v3_report_treatments.result.2.created_at" }}&limit=1000&skip=3&sort$desc=created_at
+H Accept: application/json
+H Authorization: Bearer {{ dig "nightguard_jwt.token" }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
+
+NAME nightguard_v1_report_treatments
+GET http://{{ site }}/api/v1/treatments.json?count=1000&find%5Bcreated_at%5D%5B$gte%5D={{ time 120 }}&find%5Bcreated_at%5D%5B$lt%5D={{ time 0 }}&token={{ token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@"
+ASSERT_EQUALS "Temporary Target" "@0.eventType"
+ASSERT_EQUALS "Meal Bolus" "@2.eventType"
+ASSERT_EXISTS "@2._id"
+
+//////
+// Profiles: GET /api/v1/profile.json?count=1000, with startDate (a number or ISO string), store, defaultProfile,
+// timezone and units, and in each profile dia, carbs_hr, units, timezone, and basal, carbratio, sens,
+// target_low and target_high as lists of a value number with a time "HH:MM" or timeAsSeconds
+//////
+
+NAME nightguard_v1_report_profiles
+GET http://{{ site }}/api/v1/profile.json?count=1000&token={{ token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EXISTS "@0.startDate"
+ASSERT_EQUALS "Default" "@0.defaultProfile"
+ASSERT_CONTAINS "mg" "@0.units"
+ASSERT_EQUALS 5 "@0.store.Default.dia"
+ASSERT_EQUALS 20 "@0.store.Default.carbs_hr"
+ASSERT_EQUALS "Pacific/Auckland" "@0.store.Default.timezone"
+ASSERT_EQUALS 0.8 "@0.store.Default.basal.0.value"
+ASSERT_EQUALS "00:00" "@0.store.Default.basal.0.time"
+ASSERT_EQUALS 0.6 "@0.store.Default.basal.1.value"
+ASSERT_EQUALS 21600 "@0.store.Default.basal.1.timeAsSeconds"
+ASSERT_EQUALS 12 "@0.store.Default.carbratio.0.value"
+ASSERT_EQUALS 110 "@0.store.Default.sens.0.value"
+ASSERT_EQUALS 90 "@0.store.Default.target_low.0.value"
+ASSERT_EQUALS 110 "@0.store.Default.target_high.0.value"
+
+NAME nightguard_v1_report_profiles_page_2
+GET http://{{ site }}/api/v1/profile.json?count=1000&find%5BstartDate%5D%5B$lt%5D={{ time 120 }}&token={{ token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"
