@@ -37,6 +37,10 @@ ACK
 ASSERT_LENGTH 1 "@"
 ASSERT_EXISTS "@0._id"
 SET smb_id {{ dig "add_smb.0._id" }}
+# AAPS updates a treatment with the time it was added at, which cannot change, so the update sends those back rather
+# than a minute ago again, which is later and is refused once a second has passed
+SET smb_created {{ dig "add_smb.0.created_at" }}
+SET smb_date {{ dig "add_smb.0.date" }}
 
 # Sent back as a delta, with mills, which AAPS reads before date
 NAME smb_added
@@ -50,7 +54,7 @@ ASSERT_EXISTS "@treatments.0.mills"
 # An update, as when AAPS invalidates it, answered with result success
 NAME invalidate_smb
 EMIT dbUpdate
-B {"collection":"treatments","_id":"{{ .smb_id }}","data":{"eventType":"Correction Bolus","insulin":0.3,"created_at":"{{ time 1 }}","date":{{ itime 1 }},"type":"SMB","notes":"","isValid":false,"isSMB":true}}
+B {"collection":"treatments","_id":"{{ .smb_id }}","data":{"eventType":"Correction Bolus","insulin":0.3,"created_at":"{{ .smb_created }}","date":{{ .smb_date }},"type":"SMB","notes":"","isValid":false,"isSMB":true}}
 ACK
 ASSERT_EQUALS "success" "@result"
 
