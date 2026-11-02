@@ -95,7 +95,7 @@ func NewDB(ctx context.Context, serverConfig *config.ServerConfig) (*DB, error) 
 	// keeps its connection, as closing it would lose the DB.
 	if !db.InMemory {
 		sqldb.SetMaxIdleConns(0)
-		sqldb.SetMaxIdleConns(1)
+		sqldb.SetMaxIdleConns(maxIdleConns)
 	}
 	{{ else }}
 	// Every site's DB is opened at start, so only the server's own DBs say so
@@ -316,20 +316,27 @@ func OpenSqliteDB(path string, cacheSize int) (*sql.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("cannot open sqlite db: %w", err)
 	}
-	{{ if eq .PkgName "sitedb" }}
-	// A connection holds its files, page cache and parsed schema, about 0.6MB, and with thousands of sites most are idle
-	// at any time, so a site keeps at most one idle connection, closed once unused for connMaxIdleTime. Opening one
-	// again takes about a millisecond.
-	sqldb.SetMaxIdleConns(1)
-	sqldb.SetConnMaxIdleTime(connMaxIdleTime)
-	{{ end }}
+	sqldb.SetMaxIdleConns(maxIdleConns)
+	{{ if eq .PkgName "sitedb" }}sqldb.SetConnMaxIdleTime(connMaxIdleTime){{ end }}
 
 	return sqldb, nil
 }
 
 {{ if eq .PkgName "sitedb" }}
+// maxIdleConns is how many idle connections a site's DB keeps. A connection holds its files, page cache and parsed
+// schema, about 0.6MB, and opening one runs the DSN's PRAGMAs and parses the schema again, which under load took a
+// quarter of the CPU when a site kept only one. A busy site's few requests at once reuse up to four, while a quiet site
+// closes them all once unused for connMaxIdleTime, so thousands of mostly idle sites still hold none.
+const maxIdleConns = 4
+
 // connMaxIdleTime is how long a site DB's connection is kept unused before it is closed
 var connMaxIdleTime = 30 * time.Second
+{{ else }}
+// maxIdleConns is how many idle connections the server's DB keeps. Every request uses the control DB, so with
+// database/sql's default of two, concurrent requests opened and closed connections constantly, each running the DSN's
+// PRAGMAs, parsing the schema and preparing its queries again. There are only a few of these DBs, so keeping 32 costs
+// little memory, and they are kept for the life of the server.
+const maxIdleConns = 32
 {{ end }}
 
 func OpenInMemorySqliteDB() (*sql.DB, error) {

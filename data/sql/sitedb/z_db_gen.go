@@ -73,7 +73,7 @@ func NewDB(ctx context.Context, subdomain string, serverConfig *config.ServerCon
 	// keeps its connection, as closing it would lose the DB.
 	if !db.InMemory {
 		sqldb.SetMaxIdleConns(0)
-		sqldb.SetMaxIdleConns(1)
+		sqldb.SetMaxIdleConns(maxIdleConns)
 	}
 
 	return db, nil
@@ -260,15 +260,17 @@ func OpenSqliteDB(path string, cacheSize int) (*sql.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("cannot open sqlite db: %w", err)
 	}
-
-	// A connection holds its files, page cache and parsed schema, about 0.6MB, and with thousands of sites most are idle
-	// at any time, so a site keeps at most one idle connection, closed once unused for connMaxIdleTime. Opening one
-	// again takes about a millisecond.
-	sqldb.SetMaxIdleConns(1)
+	sqldb.SetMaxIdleConns(maxIdleConns)
 	sqldb.SetConnMaxIdleTime(connMaxIdleTime)
 
 	return sqldb, nil
 }
+
+// maxIdleConns is how many idle connections a site's DB keeps. A connection holds its files, page cache and parsed
+// schema, about 0.6MB, and opening one runs the DSN's PRAGMAs and parses the schema again, which under load took a
+// quarter of the CPU when a site kept only one. A busy site's few requests at once reuse up to four, while a quiet site
+// closes them all once unused for connMaxIdleTime, so thousands of mostly idle sites still hold none.
+const maxIdleConns = 4
 
 // connMaxIdleTime is how long a site DB's connection is kept unused before it is closed
 var connMaxIdleTime = 30 * time.Second
