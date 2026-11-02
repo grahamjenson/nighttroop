@@ -89,6 +89,30 @@ func TestBackupSiteBatchCopiesAndUploadsOnlyWhatChanged(t *testing.T) {
 	require.Equal(t, unwrittenAt, backupTime(t, unwritten))
 }
 
+// A site only read since its backup is not copied again, though while its connection is open its write-ahead log is
+// there, empty, and newer than the backup
+func TestBackupSiteBatchSkipsASiteOnlyRead(t *testing.T) {
+	_, controlDB := testutils.NewControlDB(t)
+	ctx, uploads, fail := t.Context(), [][]string{}, false
+	jobs := uploadJobs(t, controlDB, &uploads, &fail)
+	read := fileSite(t, controlDB, "qaaaaaaa")
+	require.NoError(t, jobs.BackupSiteBatch(ctx, "q"))
+	readAt := backupTime(t, read)
+
+	// A read keeps its connection idle, with the empty write-ahead log it made dated now
+	read.SQLiteDB.SetMaxIdleConns(1)
+	_, err := read.Queries().SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{Limit: 1})
+	require.NoError(t, err)
+	wal, err := os.Stat(read.Path + "-wal")
+	require.NoError(t, err)
+	require.Zero(t, wal.Size())
+	require.True(t, wal.ModTime().After(readAt))
+
+	require.NoError(t, jobs.BackupSiteBatch(ctx, "q"))
+	require.Equal(t, readAt, backupTime(t, read))
+	require.Len(t, uploads, 1)
+}
+
 func TestBackupSiteBatchUploadsAgainWhenItsSitesChange(t *testing.T) {
 	_, controlDB := testutils.NewControlDB(t)
 	ctx, uploads, fail := t.Context(), [][]string{}, false
