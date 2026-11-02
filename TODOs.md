@@ -53,6 +53,27 @@
 1. P4: Keep which batches were uploaded, and with which sites, across restarts, as the first backup round after a
    restart uploads every batch again though their backups are current
 1. Nightscout API:
+    1. P1: AAPS reads an entry's `sgv` as mg/dL whatever its units, and only knows the units `mg/dl` and `mmol`, so
+       with an identity in mmol/L (the default in mmol/L countries) its readings, temp targets and profiles are read
+       wrong. Return mg/dL to Nightscout clients, or set device identities to mg/dL (docs/clients/aaps.md)
+    1. P1: Honour `sort` in searches and sort v3 history by `srvModified` oldest first, as Nightscout does. Searches
+       are always newest first, so AAPS's first load (`sort=date&date$gt=…&limit=500`, back 100 days) and its
+       history paging (`limit=500`) skip all but the newest 500 when there are more, and its profile history takes
+       the oldest store changed rather than the newest. Needs history queries ordered by `updated_at`, not a `CASE`
+       in each search's `ORDER BY`, which would stop SQLite reading the newest rows from the index
+    1. P2: A temp basal's `percent` is taken as the percent of the basal, but AAPS sends the change (`rate - 100`,
+       so -50 is half, -100 a zero temp) with the rate in U/hr; its negative percents are refused with a 400, which
+       AAPS drops for good (docs/clients/aaps.md). Decide whether AAPS's percent is read as a change
+    1. P2: Keep the fields AAPS's followers need: an effective profile switch's `original*` fields (else it is read
+       as a Note), a running mode's `mode`, `autoForced`, `reasons` and `originalDuration`, a temp basal's `type`
+       (e.g. `PUMP_SUSPEND`), a device status's `pump.clock`, `pump.status` and `pump.extended` (without `pump.clock`
+       AAPS skips the pump's data), and a calibration's `isCalibration` and `sensorMgdlAtPairing`
+    1. P2: Return a food's Nightscout `type` (`food`), `portion`, `unit` and `gi`; AAPS keeps only foods of type
+       `food`, so it loads none
+    1. P3: Accept the SHA1 of a token as the API secret on Socket.IO `authorize`, as AAPS 3.4 and older send it,
+       which needs a kept hash of each token
+    1. P4: Keep arbitrary API v3 `settings` documents and support v2 authorization roles and subjects, which AAPS 4's
+       client control (pairing and remote commands) uses
     1. P1: Accept an `api-secret` that is the SHA1 hex of a device's Nightscout token, e.g. by keeping each token's
        SHA1 when it is made or reset, as Juggluco sends on v1, its default and its only mode on Wear OS
        ([docs/clients/juggluco.md](docs/clients/juggluco.md))
