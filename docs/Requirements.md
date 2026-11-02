@@ -250,6 +250,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   has the documents deleted after it.
 - **Socket.IO** live updates and alarms over long polling or websockets.
 - Glucose is stored in mg/dL and returned and accepted in the settings' units.
+- A temp basal sent with only a `percent` (e.g. -50 for half) has its rate set from the default profile's or profile
+  switch's basal at its start, in the profile's timezone, and is returned with that `absolute` and its percent.
 - Duplicate uploads are ignored; values far outside real use are refused.
 
 ### Nighttroop API and client
@@ -269,6 +271,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   round, and a failed upload is tried again the next round.
 - A server with no control DB or site batch folder restores it from S3 on start; a download that fails or is cut off
   leaves nothing behind, so the next start downloads it again.
+- A start removes the staging folders a restore or archive killed part way left beside the DBs and backups, and nothing
+  else there.
 - A site whose creation fails part way, such as its request being cancelled, leaves no site or identities behind.
 - A site whose DB file is missing, such as one restored before its batch was backed up, is logged and left out, so the
   server still starts and the rest of its batch is still backed up.

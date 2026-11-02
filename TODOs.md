@@ -8,13 +8,9 @@
    Nightguard) reading, and Dexcom and Libre sync
 1. Medical disclaimer: Nighttroop is not a medical device and its alarms are not to be relied on, shown when a site is
    created and on the alarm settings
-1. Privacy policy and terms, linked from site creation: what is kept (credentials encrypted, logs), for how long, and
-   who can see it
-1. A site's admin can delete their site and all its data (sites are only deleted now when unused)
 1. A way for testers to report bugs and give feedback, linked from the site
 1. A tester guide: creating a site, keeping its credentials safe (they cannot be recovered), and connecting uploaders,
    followers and sync
-1. Check the archive bug below is fixed
 
 ## Before Beta Testing
 
@@ -34,7 +30,6 @@
 1. Control UI
     1. Show bad users
     1. Block IP addresses
-    1. Show all rate limits for users
     1. Restore one site from its backup
     1. P3: Manage the control admins: list them, reset another's password or TOTP, change their role or delete one
 
@@ -61,14 +56,13 @@
    restart uploads every batch again though their backups are current
 1. Nightscout API:
     1. P2: Check If-Unmodified-Since on API v3 replace and patch, in the same query as the update
-    1. P3: A temp basal sent only as a percent, given a rate from the profile's basal at the time
+    1. P4: A temp basal's percent is returned as `percentage`, a profile switch's name for it, where Nightscout has
+       `percent`
     1. P4: Only write a treatment's events that changed, rather than every one on each update
     1. P4: Keep when a site's settings last changed, for API v3 lastModified
 
 ## Bugs
 
-1. Archive has a problem where they are deleting files from the db not removing from control
-1. P4: A start killed mid restore leaves its `.<folder>-restore-*` staging folder beside the DBs; remove them on start
 1. P2: A live site whose DB file is missing at start is only logged and left out; restore it from its batch backup or
    show it to the control admin
 

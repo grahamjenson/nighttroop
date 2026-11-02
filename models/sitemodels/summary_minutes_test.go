@@ -133,3 +133,63 @@ func TestSummaryMinutes(t *testing.T) {
 		})
 	}
 }
+
+func TestPercentBasal(t *testing.T) {
+	day := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	at := func(hour, minute int) int64 {
+		return day.Add(time.Duration(hour)*time.Hour + time.Duration(minute)*time.Minute).UnixMilli()
+	}
+	str := func(s string) *string { return &s }
+	// 0.5 U/hr from midnight and 0.8 U/hr from 2am
+	basalRates := str(`[{"time":"00:00","value":0.5,"timeAsSeconds":0},{"time":"02:00","value":0.8,"timeAsSeconds":7200}]`)
+	utc := []*sitedb.ProfilePreset{{OccurredAt: day.UnixMilli() - 1000, BasalRatesJson: basalRates}}
+	// Auckland is 13 hours ahead in January, so its 2am is 13:00 UTC
+	auckland := []*sitedb.ProfilePreset{{OccurredAt: day.UnixMilli() - 1000, BasalRatesJson: basalRates, Timezone: str("Pacific/Auckland")}}
+	newYork, err := time.LoadLocation("America/New_York")
+	require.NoError(t, err)
+
+	tests := []struct {
+		name     string
+		ms       int64
+		percent  float64
+		location *time.Location
+		defaults []*sitedb.ProfilePreset
+		switches []*sitedb.ProfileSwitch
+		want     *float64
+	}{
+		{name: "without a profile there is no rate", ms: at(1, 0), percent: -50, location: time.UTC},
+		{name: "a profile uploaded after the temp basal is not in force", ms: at(1, 0), percent: -50, location: time.UTC, defaults: []*sitedb.ProfilePreset{{OccurredAt: at(2, 0), BasalRatesJson: basalRates}}},
+		{name: "a negative percent lowers the basal", ms: at(1, 0), percent: -50, location: time.UTC, defaults: utc, want: new(0.25)},
+		{name: "a positive percent raises the basal", ms: at(1, 59), percent: 50, location: time.UTC, defaults: utc, want: new(0.75)},
+		{name: "from a schedule's boundary its next rate", ms: at(2, 0), percent: 50, location: time.UTC, defaults: utc, want: new(1.2)},
+		{name: "late in the day the last rate", ms: at(23, 59), percent: 25, location: time.UTC, defaults: utc, want: new(1.0)},
+		{name: "zero percent keeps the basal", ms: at(3, 0), percent: 0, location: time.UTC, defaults: utc, want: new(0.8)},
+		{name: "minus 100 percent suspends", ms: at(3, 0), percent: -100, location: time.UTC, defaults: utc, want: new(0.0)},
+		{name: "in the profile's timezone, before its 2am", ms: at(12, 59), percent: 100, location: time.UTC, defaults: auckland, want: new(1.0)},
+		{name: "in the profile's timezone, from its 2am", ms: at(13, 0), percent: 100, location: time.UTC, defaults: auckland, want: new(1.6)},
+		{name: "a profile without a timezone is in the site's, before its 2am", ms: at(6, 59), percent: -20, location: newYork, defaults: utc, want: new(0.4)},
+		{name: "a profile without a timezone is in the site's, from its 2am", ms: at(7, 0), percent: -20, location: newYork, defaults: utc, want: new(0.64)},
+		{
+			// Shifted two hours forward, at 00:30 it is 02:30 in the profile, so 0.8 U/hr, at 200% is 1.6, less 25%
+			name: "a profile switch's percent and timeshift", ms: at(0, 30), percent: -25, location: time.UTC, defaults: utc,
+			switches: []*sitedb.ProfileSwitch{{OccurredAt: at(0, 10), BasalRatesJson: basalRates, Percent: new(200.0), Timeshift: new(int64(120))}},
+			want:     new(1.2),
+		},
+		{
+			name: "a profile switch that has ended hands back to the default", ms: at(1, 0), percent: -25, location: time.UTC, defaults: utc,
+			switches: []*sitedb.ProfileSwitch{{OccurredAt: at(0, 10), DurationMinutes: 30, Percent: new(200.0)}},
+			want:     new(0.375),
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := PercentBasal(test.ms, test.percent, test.location, test.defaults, test.switches)
+			if test.want == nil {
+				require.Nil(t, got)
+				return
+			}
+			require.NotNil(t, got)
+			require.InDelta(t, *test.want, *got, 1e-9)
+		})
+	}
+}

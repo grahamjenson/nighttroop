@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"slices"
+	"time"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/nightscoutmodels"
@@ -202,7 +203,13 @@ var (
 		has: func(source nightscoutmodels.Treatment) bool {
 			return isAssigned(source.Absolute, source.Rate, source.Percent, source.DurationMinutes)
 		},
-		partial:     nightscoutmodels.PartialTreatmentToTempBasal,
+		partial: nightscoutmodels.PartialTreatmentToTempBasal,
+		// AAPS sends its rate as rate, and Loop as absolute too
+		complete: func(source nightscoutmodels.Treatment, target *sitedb.TempBasal) {
+			if rate := nightscoutmodels.TempBasalValuePtr(source); rate != nil {
+				target.Absolute = *rate
+			}
+		},
 		toTreatment: withoutSite(nightscoutmodels.UpdateTempBasalToTreatment), mergeInto: nightscoutmodels.UpdateToTempBasal,
 		toCreate: nightscoutmodels.TempBasalCreate, create: (*sitedb.Queries).CreateTempBasal,
 		toUpdate: nightscoutmodels.TempBasalUpdate, update: (*sitedb.Queries).UpdateTempBasal,
@@ -418,4 +425,36 @@ var treatmentTypeEvents = map[nightscoutmodels.TreatmentEventType][]treatmentEve
 	nightscoutmodels.ReservoirChange:   {componentEvents},
 	nightscoutmodels.Calibration:       {glucoseReadings, componentEvents},
 	nightscoutmodels.Bolus:             {insulinDoses, componentEvents},
+}
+
+// percentSwitchMs is how long before a temp basal a profile switch with a duration is looked for, as one still in force,
+// and percentSwitches the most switches looked at
+const percentSwitchMs, percentSwitches = 7 * 24 * 60 * 60_000, 1000
+
+// percentRate sets the rate of a temp basal the treatment sends only as a percent from the profile's basal at its
+// start, see sitemodels.PercentBasal, keeping its rate when no profile has a basal then
+func percentRate(ctx context.Context, q *sitedb.Queries, treatment nightscoutmodels.Treatment, tempBasal *sitedb.TempBasal) error {
+	if tempBasal == nil || treatment.Percent == nil || nightscoutmodels.TempBasalValuePtr(treatment) != nil {
+		return nil
+	}
+	at := tempBasal.OccurredAt
+	defaults, err := q.SearchSummaryDefaultProfiles(ctx, sitedb.SearchSummaryDefaultProfilesParams{Since: at, Until: at, Limit: 1})
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to find the profile for a temp basal's percent", "error", err)
+		return err
+	}
+	switches, err := q.SearchSummaryProfileSwitches(ctx, sitedb.SearchSummaryProfileSwitchesParams{Since: at, Until: at, Earliest: at - percentSwitchMs, Limit: percentSwitches})
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to find the profile switches for a temp basal's percent", "error", err)
+		return err
+	}
+	location := time.UTC
+	if siteContext := httputils.GetSiteContext(ctx); siteContext != nil {
+		location = siteContext.GetSiteTimezone()
+	}
+	slices.Reverse(switches)
+	if rate := sitemodels.PercentBasal(at, float64(*treatment.Percent), location, defaults, switches); rate != nil {
+		tempBasal.Absolute = *rate
+	}
+	return nil
 }
