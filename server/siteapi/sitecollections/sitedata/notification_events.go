@@ -43,11 +43,7 @@ func (s *NotificationEventsCollection) CreateRow(ctx context.Context, collection
 	if herr := checkNotificationEvent(model); herr != nil {
 		return nil, herr
 	}
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.CreateNotificationEvent(ctx, sitemodels.NotificationEventToCreate(model, siteContext))
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).CreateNotificationEvent, sitemodels.NotificationEventToCreate(model, siteContext))
 }
 
 // NewHTMXResponse is the modal to add a notification in
@@ -69,11 +65,7 @@ func (s *NotificationEventsCollection) UpdateRow(ctx context.Context, collection
 		return nil, herr
 	}
 	model.ID = oldModel.ID
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.UpdateNotificationEvent(ctx, sitemodels.NotificationEventToUpdate(model, siteContext))
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).UpdateNotificationEvent, sitemodels.NotificationEventToUpdate(model, siteContext))
 }
 
 func (s *NotificationEventsCollection) UpdateHTMXResponse(model *sitemodels.SiteNotificationEvent) templ.Component {

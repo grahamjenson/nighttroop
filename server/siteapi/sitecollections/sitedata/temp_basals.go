@@ -41,11 +41,7 @@ func (s *TempBasalsCollection) CreateRow(ctx context.Context, collectionTx *site
 	if herr := checkTempBasal(model); herr != nil {
 		return nil, herr
 	}
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.CreateTempBasal(ctx, sitemodels.TempBasalToCreate(model, siteContext))
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).CreateTempBasal, sitemodels.TempBasalToCreate(model, siteContext))
 }
 
 // NewHTMXResponse is the modal to add a temp basal in
@@ -75,11 +71,7 @@ func (s *TempBasalsCollection) UpdateRow(ctx context.Context, collectionTx *site
 		return nil, herr
 	}
 	model.ID = oldModel.ID
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.UpdateTempBasal(ctx, sitemodels.TempBasalToUpdate(model, siteContext))
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).UpdateTempBasal, sitemodels.TempBasalToUpdate(model, siteContext))
 }
 
 func (s *TempBasalsCollection) UpdateHTMXResponse(model *sitemodels.SiteTempBasal) templ.Component {

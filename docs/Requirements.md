@@ -171,6 +171,8 @@ deleted (after a confirmation):
 
 - **Glucose**: CGM and meter readings with trend arrows, in the settings' units (mmol/L or mg/dL), with lows and
   highs coloured as on the summary.
+  - Adding a reading offers its type as Meter or Sensor and its trend as an arrow with its name (e.g. `↗ FortyFiveUp`),
+    as the table and its details show them.
 - **Insulin doses**
 - **Food intakes**
 - **Temp basals**, with a percent as the percent of the scheduled basal, 50 for half, never negative
@@ -243,6 +245,9 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   followers.
 - **v1**: entries, treatments, device statuses, profiles, food and activities, with Nightscout's filters, plus
   status, versions, verifyauth, slice, count, times and echo.
+- v1 `experiments/test` is `{"status":"ok"}` for an identity that can upload readings and a 401 for any other, so
+  xDrip4iOS's connection test passes with a PWD phone's token.
+- A v1 search by `find[_id]` that finds nothing, such as a deleted treatment, is an empty list, not a 404.
 - **v2**: authorization (a token for a JWT, and a check of one of its permissions), properties and summary.
 - **v3**: create, read, update, patch, delete, search and history of each collection, plus version, status,
   lastModified and settings.
@@ -268,6 +273,12 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   `uploader.battery` and `uploaderBattery`, and Loop's override in force.
 - A profile keeps Trio's remote control settings (bundle, device token, APNS environment, team and expiry) and its
   override presets, for LoopFollow's Trio Remote Control.
+- A treatment's `eventTime`, as xDrip4iOS and Nightscout's careportal send it, is its `created_at`; an eventType of
+  `Carbs` is a carb correction, and a glucoseType with the reading after a colon, like `Finger: 6.7 mmol/L`, is a
+  finger prick.
+- Entries of type `cal` (a CGM calibration's slope and intercept) are accepted and not stored, so the finger pricks
+  sent with them are kept.
+- A device status's `uploader.battery` is its uploader's battery when it has no `uploaderBattery`.
 - A device's Nightscout token is also taken as its SHA1 in the `api-secret` header, as xDrip+ sends the token in its
   URL; a password reset stops the old token's SHA1 working.
 - An xDrip+ upload works as it sends it (see `docs/clients/xdrip.md`): a calibration (`type` `cal`) in a batch of

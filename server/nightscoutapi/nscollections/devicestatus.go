@@ -137,10 +137,11 @@ func NightscoutToDBCreateDeviceReport(source nightscoutmodels.DeviceStatus, ctx 
 	if source.IsCharging != nil {
 		createParams.IsDeviceCharging = ptr(bool(*source.IsCharging))
 	}
-	// Loop, Trio and xDrip+ send the phone's battery in uploader
 	if source.UploaderBattery != nil {
 		createParams.DeviceBatteryPercent = ptr(float64(*source.UploaderBattery))
-	} else if source.Uploader != nil && source.Uploader.Battery != nil {
+	}
+	// Loop, Trio, xDrip+ and xDrip4iOS send the phone's battery in uploader
+	if source.Uploader != nil && source.Uploader.Battery != nil {
 		createParams.DeviceBatteryPercent = ptr(float64(*source.Uploader.Battery))
 	}
 	if source.OverrideRaw != nil {

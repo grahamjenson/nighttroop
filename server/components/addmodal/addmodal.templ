@@ -34,6 +34,8 @@ type Field struct {
 	Min, Max, Step string
 	// Options are a select's choices, or a text's suggestions
 	Options []string
+	// OptionLabel shows a select's option as people read it, e.g. "Meter" for mbg, when set
+	OptionLabel func(string) string
 	// Value is what a number, text, select or time starts at
 	Value string
 	// Wide takes the whole row, for notes
@@ -139,10 +141,10 @@ templ field(p Props, f Field) {
 						<option value="">None</option>
 					}
 					if f.Value != "" && !slices.Contains(f.Options, f.Value) {
-						<option value={ f.Value } selected>{ f.Value }</option>
+						<option value={ f.Value } selected>{ optionLabel(f, f.Value) }</option>
 					}
 					for _, option := range f.Options {
-						<option value={ option } selected?={ option == f.Value }>{ option }</option>
+						<option value={ option } selected?={ option == f.Value }>{ optionLabel(f, option) }</option>
 					}
 				</select>
 			case When:
@@ -161,6 +163,14 @@ templ field(p Props, f Field) {
 		}
 		<p class="mt-1 text-xs text-gray-500">{ f.Help }</p>
 	</div>
+}
+
+// optionLabel is a select's option as people read it, or as it is when the field has no OptionLabel
+func optionLabel(f Field, option string) string {
+	if f.OptionLabel == nil {
+		return option
+	}
+	return f.OptionLabel(option)
 }
 
 // textAttributes limit a text's length, and point it at its suggestions when it has some
