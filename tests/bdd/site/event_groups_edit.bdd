@@ -18,17 +18,28 @@ INPUT #site--insulin--create--occurred-at 2026-01-02T12:35
 CLICK #site--insulin--create--submit
 ASSERT_STATUS 201
 
-// Adding a group picks its type and time, then from the events within an hour of it, one of each kind
+// Adding a group picks its type from a menu, then its time, then from the events within an hour of it one of each
+// kind that type can have
 CLICK #site--settings-menu
 CLICK #site--data--event-groups-button
 ASSERT_VISIBLE #site--event-group--empty
 CLICK #site--event-group--add
+ASSERT_VISIBLE #site--event-group--add--announcement
+ASSERT_VISIBLE #site--event-group--add--bg-check
+SCREENSHOT event_group_types
+CLICK #site--event-group--add--meal-bolus
 ASSERT_VISIBLE #site--event-group--create--modal
+ASSERT_TEXT_EQUALS #site--event-group--create--submit Add Meal Bolus
 ASSERT_TEXT_VISIBLE Events within an hour of it can be picked.
 INPUT #site--event-group--create--occurred-at 2026-01-02T12:30
 CLICK #site--event-group--create--reason
 ASSERT_TEXT_VISIBLE from 2026-01-02 11:30 to 13:30
-INPUT #site--event-group--create--group-type Meal Bolus
+// A meal bolus can have glucose, insulin, food and a site change, but not a temp basal, temp target or activity
+ASSERT_VISIBLE #site--event-group--create--glucose-reading-id
+ASSERT_VISIBLE #site--event-group--create--component-event-id
+ASSERT_NOT_VISIBLE #site--event-group--create--temp-basal-id
+ASSERT_NOT_VISIBLE #site--event-group--create--temp-target-id
+ASSERT_NOT_VISIBLE #site--event-group--create--activity-id
 INPUT #site--event-group--create--food-intake-id 12:30 40 g carbs Sandwich
 INPUT #site--event-group--create--insulin-dose-id 12:35 4 U
 INPUT #site--event-group--create--notes Lunch
@@ -42,13 +53,16 @@ ASSERT_VISIBLE #eventGroupsTable >> text="Meal Bolus"
 ASSERT_VISIBLE #eventGroupsTable >> text=4 U insulin, 40 g carbs
 SCREENSHOT event_group_created
 
-// Editing a group changes its type and events; an event taken out is in no group, so can be grouped again (the
-// API tests check an event in a group is not offered for another)
+// Editing a group changes its type and events. A carb correction can only have food, so its insulin is no longer
+// offered and is taken out; an event taken out is in no group, so can be grouped again (the API tests check an event
+// in a group is not offered for another)
 CLICK #eventGroupsTable tbody tr:has(td:text-is("Meal Bolus"))
 ASSERT_VISIBLE #site--event-group--details
+ASSERT_VISIBLE #site--event-group--edit--insulin-dose-id
 INPUT #site--event-group--edit--group-type Carb Correction
-INPUT #site--event-group--edit--insulin-dose-id None
 CLICK #site--event-group--edit--reason
+ASSERT_NOT_VISIBLE #site--event-group--edit--insulin-dose-id
+ASSERT_VISIBLE #site--event-group--edit--food-intake-id
 SCREENSHOT event_group_edit
 CLICK #site--event-group--edit--submit
 ASSERT_STATUS 200
@@ -59,6 +73,8 @@ ASSERT_NOT_VISIBLE #eventGroupsTable >> text=4 U insulin, 40 g carbs
 ASSERT_VISIBLE #eventGroupsTable >> text=40 g carbs
 SCREENSHOT event_group_updated
 CLICK #site--event-group--add
+CLICK #site--event-group--add--correction-bolus
+ASSERT_NOT_VISIBLE #site--event-group--create--food-intake-id
 INPUT #site--event-group--create--occurred-at 2026-01-02T12:30
 CLICK #site--event-group--create--reason
 ASSERT_TEXT_VISIBLE from 2026-01-02 11:30 to 13:30

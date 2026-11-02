@@ -182,10 +182,13 @@ deleted (after a confirmation):
 - **Site and sensor changes**
 - **Notifications**
 - **Event groups**: the treatments that came in together through the Nightscout API, with their events.
-  - An event group can also be added on the site: a Nightscout type (e.g. Meal Bolus), a time, and up to one event of
-    each kind (glucose, insulin, food, temp basal, temp target, profile switch, site or sensor change, activity and
-    notification), picked from those within an hour of the time. Changing the time lists the events near it.
-  - Clicking a group edits its type, time, notes and events; an event taken out of a group is in no group.
+  - An event group can also be added on the site: the Add Event Group menu lists the Nightscout types (e.g. Meal Bolus),
+    and each opens a modal for that type with a time and up to one event of each kind that type can have (e.g. a Meal
+    Bolus can have glucose, insulin, food and a site or sensor change, an Exercise only an activity), picked from those
+    within an hour of the time. Changing the time lists the events near it.
+  - Adding or editing a group with a kind of event its type cannot have, or of an unknown type, is refused.
+  - Clicking a group edits its type, time, notes and events; changing its type offers only the kinds of event the new
+    type can have. An event taken out of a group is in no group.
   - An event is in at most one group: events in another group are not offered, and grouping one again is refused.
   - A group added or edited on the site is a Nightscout treatment, with its events.
 - **Device statuses**: each device's latest 3 statuses, and every status a device sent.

@@ -10,6 +10,7 @@ import (
 
 	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/sql/sitedb"
+	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
@@ -47,7 +48,7 @@ func (s *EventGroupsCollection) CreateRow(ctx context.Context, collectionTx *sit
 	if model.GroupType == "" {
 		return nil, apiutils.ErrMissingRequiredFieldWithHint("group_type")
 	}
-	if herr := checkEventsPicked(model); herr != nil {
+	if herr := checkEventsPicked(model.GroupType, model); herr != nil {
 		return nil, herr
 	}
 	q, err := collectionTx.Site()
@@ -61,11 +62,6 @@ func (s *EventGroupsCollection) CreateRow(ctx context.Context, collectionTx *sit
 	return s.GetRow(ctx, collectionTx, group.ID, siteContext)
 }
 
-// NewHTMXResponse is the modal to group events in
-func (s *EventGroupsCollection) NewHTMXResponse() templ.Component {
-	return site_data_templ.EventGroupNew()
-}
-
 func (s *EventGroupsCollection) CreateHTMXResponse(model *sitemodels.SiteEventGroup) templ.Component {
 	return site_data_templ.EventGroupCreated(model)
 }
@@ -77,7 +73,11 @@ func (s *EventGroupsCollection) CreateHTMXResponse(model *sitemodels.SiteEventGr
 // UpdateRow sets the group's events to those picked, leaving those taken out ungrouped, and its type, time, notes or
 // reason when sent
 func (s *EventGroupsCollection) UpdateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteEventGroup, model *sitemodels.SiteEventGroup) (*sitedb.EventGroupsBundle, error) {
-	if herr := checkEventsPicked(model); herr != nil {
+	groupType := model.GroupType
+	if groupType == "" {
+		groupType = oldModel.GroupType
+	}
+	if herr := checkEventsPicked(groupType, model); herr != nil {
 		return nil, herr
 	}
 	model.ID = oldModel.ID
@@ -162,11 +162,20 @@ func (s *EventGroupsCollection) DeleteHTMXResponse(model *sitemodels.SiteEventGr
 // UTIL METHODS
 ////////
 
-// checkEventsPicked makes sure a group has an event
-func checkEventsPicked(model *sitemodels.SiteEventGroup) *apiutils.HTTPError {
-	picked := []*string{model.GlucoseReadingID, model.InsulinDoseID, model.FoodIntakeID, model.TempBasalID, model.TempTargetID,
-		model.ProfileSwitchID, model.ComponentEventID, model.ActivityID, model.NotificationEventID}
-	if !slices.ContainsFunc(picked, func(id *string) bool { return id != nil }) {
+// checkEventsPicked makes sure a group has an event, and only of the kinds its type can have
+func checkEventsPicked(groupType string, model *sitemodels.SiteEventGroup) *apiutils.HTTPError {
+	kinds, ok := sitemodels.EventGroupTypeKinds[nightscoutmodels.TreatmentEventType(groupType)]
+	if !ok {
+		return &apiutils.HTTPError{Status: http.StatusBadRequest, Message: "Unknown event group type " + groupType}
+	}
+	picked := false
+	for field, id := range model.EventPicks() {
+		if id != nil && !slices.Contains(kinds, field) {
+			return &apiutils.HTTPError{Status: http.StatusBadRequest, Message: groupType + " cannot have " + field}
+		}
+		picked = picked || id != nil
+	}
+	if !picked {
 		return &apiutils.HTTPError{Status: http.StatusBadRequest, Message: "Pick at least one event to group"}
 	}
 	return nil
