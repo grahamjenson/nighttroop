@@ -102,7 +102,15 @@ func Create(store nsutils.Store) http.HandlerFunc {
 				continue
 			}
 
-			record, _, err := store.Create(r.Context(), collection, doc, nsutils.RawParam(r))
+			// As in Nightscout, a document sent with an _id replaces the one with it, as Loop sends an override again
+			// with its _id when it changes
+			var record nsutils.Document
+			var err *nsutils.HTTPError
+			if id, ok := doc["_id"].(string); ok && nsutils.ValidateIdentifierIsntBad(id) == nil {
+				record, _, err = store.Replace(r.Context(), collection, id, doc, true, nsutils.RawParam(r))
+			} else {
+				record, _, err = store.Create(r.Context(), collection, doc, nsutils.RawParam(r))
+			}
 			if err != nil {
 				nsutils.WriteError(w, err)
 				return
@@ -127,6 +135,11 @@ func Current(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 		records, err := store.Search(r.Context(), collection, query)
 		if err != nil {
 			nsutils.WriteError(w, err)
+			return
+		}
+		// As in Nightscout, the current profile is the profile set itself, which Loop reads to be set up from it
+		if collection == nsutils.Profile && len(records) > 0 {
+			nsutils.WriteRecordV1(w, records[0], query.Fields)
 			return
 		}
 		nsutils.WriteRecordsV1(w, records, query.Fields)

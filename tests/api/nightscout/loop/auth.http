@@ -1,0 +1,79 @@
+INCLUDE steps/new_site_admin.steps
+
+# Loop (NightscoutKit's NightscoutClient.callNS and checkAuth) never sends a token query or a JWT. It drops any query
+# from the site URL, and sends the SHA-1 in hex of what is in its "API Secret" field as the api-secret header, with
+# Content-Type and Accept application/json. A Nighttroop device's Nightscout token goes in that field.
+
+######
+# checkAuth: GET /api/v1/experiments/test when the Nightscout service is set up, 200 is OK and 401 unauthorized
+######
+
+NAME loop_check_auth
+GET http://{{ .ns_site }}/api/v1/experiments/test
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "ok" "@status"
+
+NAME loop_check_auth_wrong_secret
+GET http://{{ .ns_site }}/api/v1/experiments/test
+H api-secret: {{ sha1 "not the token" }}
+H Accept: application/json
+ASSERT_STATUS 401
+
+# A read only device can read with its token's SHA-1, but Loop's test is for uploading, so it is refused
+NAME loop_read_only_reads
+GET http://{{ .ns_site }}/api/v1/entries?count=1
+H api-secret: {{ sha1 .create_new_site.read_only_nstoken }}
+ASSERT_STATUS 200
+
+NAME loop_check_auth_read_only
+GET http://{{ .ns_site }}/api/v1/experiments/test
+H api-secret: {{ sha1 .create_new_site.read_only_nstoken }}
+ASSERT_STATUS 401
+
+# The token itself still works as the api-secret
+NAME check_auth_plain_token
+GET http://{{ .ns_site }}/api/v1/experiments/test
+H api-secret: {{ token }}
+ASSERT_STATUS 200
+
+# The SHA-1 of another site's token is not one of this site's
+NAME other_site
+POST http://localhost/site
+ASSERT_STATUS 200
+
+NAME loop_check_auth_other_site
+GET http://{{ .ns_site }}/api/v1/experiments/test
+H api-secret: {{ sha1 .other_site.pwd_nstoken }}
+ASSERT_STATUS 401
+
+######
+# A new password comes with a new token: its SHA-1 works and the old token's stops working
+######
+
+NAME list_identities
+GET http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "pwd_phone" "@result.1.name"
+SET pwd_id {{ dig "list_identities.result.1.id" }}
+
+NAME reset_pwd_password
+POST http://{{ site }}/settings/identities/{{ .pwd_id }}/password
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EXISTS "@result.ns_token"
+
+NAME loop_check_auth_new_token
+GET http://{{ .ns_site }}/api/v1/experiments/test
+H api-secret: {{ sha1 .reset_pwd_password.result.ns_token }}
+ASSERT_STATUS 200
+
+NAME loop_check_auth_old_token
+GET http://{{ .ns_site }}/api/v1/experiments/test
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 401

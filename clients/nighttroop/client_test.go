@@ -154,6 +154,9 @@ func TestNightscoutClient(t *testing.T) {
 	verified, err := ns.NsV1VerifyAuthWithResponse(ctx, auth)
 	require.NoError(t, err)
 	require.Equal(t, "OK", (*verified.JSON200)["message"].(map[string]any)["message"])
+	experiments, err := ns.NsV1ExperimentsTestWithResponse(ctx, auth)
+	require.NoError(t, err)
+	require.Equal(t, "ok", (*experiments.JSON200)["status"])
 
 	// v1: an entry is created, searched, the current one read, counted and deleted
 	now := time.Now().UnixMilli()
