@@ -128,17 +128,19 @@ func DefaultConfig() Config {
 	}
 }
 
-// NewLoggerWithConfig returns a `func(http.Handler) http.Handler` (middleware) that logs each request once it is
-// answered, at a level from its status, with what config asks for of the request and its response
+// NewLoggerWithConfig returns a `func(http.Handler) http.Handler` (middleware) that logs requests using slog.
 func NewLoggerWithConfig(logger *slog.Logger, config Config) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
-			path, query := r.URL.Path, r.URL.RawQuery
+			path := r.URL.Path
+			query := r.URL.RawQuery
 
-			// The bodies are recorded, up to their max sizes, as they are read and written
+			// dump request body
 			br := newBodyReader(r.Body, RequestBodyMaxSize, config.WithRequestBody)
 			r.Body = br
+
+			// dump response body
 			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
 			var bw *bodyWriter
 			if config.WithResponseBody {
@@ -147,49 +149,55 @@ func NewLoggerWithConfig(logger *slog.Logger, config Config) func(http.Handler) 
 			}
 
 			defer func() {
-				end := time.Now()
-				params := routeParams(r)
+				params := map[string]string{}
+				for i, k := range chi.RouteContext(r.Context()).URLParams.Keys {
+					params[k] = chi.RouteContext(r.Context()).URLParams.Values[i]
+				}
 				path, query := redactCredentials(path, query, params)
+
 				status := ww.Status()
+				end := time.Now()
+
+				baseAttributes := make([]slog.Attr, 0, 3)
+				requestAttributes := config.requestAttributes(r, start, path, query, params, br)
+				responseAttributes := config.responseAttributes(ww, start, end, bw)
+
+				attributes := append(
+					[]slog.Attr{
+						{
+							Key:   "request",
+							Value: slog.GroupValue(requestAttributes...),
+						},
+						{
+							Key:   "response",
+							Value: slog.GroupValue(responseAttributes...),
+						},
+					},
+					baseAttributes...,
+				)
+
+				level := config.DefaultLevel
+				if status >= http.StatusInternalServerError {
+					level = config.ServerErrorLevel
+				} else if status >= http.StatusBadRequest && status < http.StatusInternalServerError {
+					level = config.ClientErrorLevel
+				}
 
 				msg := strconv.Itoa(status) + ": " + http.StatusText(status)
 				if config.WithCustomMessage != nil {
 					msg = config.WithCustomMessage(ww, r)
 				}
+
 				requestLogger := logger
 				if requestLogger == nil {
 					requestLogger = slog.Default()
 				}
-				requestLogger.LogAttrs(r.Context(), config.level(status), msg,
-					slog.Attr{Key: "request", Value: slog.GroupValue(config.requestAttributes(r, start, path, query, params, br)...)},
-					slog.Attr{Key: "response", Value: slog.GroupValue(config.responseAttributes(ww, start, end, bw)...)},
-				)
+				requestLogger.LogAttrs(r.Context(), level, msg, attributes...)
 			}()
 
 			next.ServeHTTP(ww, r)
 		})
 	}
-}
-
-// level is what a request answered with status is logged at
-func (config Config) level(status int) slog.Level {
-	switch {
-	case status >= http.StatusInternalServerError:
-		return config.ServerErrorLevel
-	case status >= http.StatusBadRequest:
-		return config.ClientErrorLevel
-	}
-	return config.DefaultLevel
-}
-
-// routeParams are the request's chi URL params by name
-func routeParams(r *http.Request) map[string]string {
-	urlParams := chi.RouteContext(r.Context()).URLParams
-	params := make(map[string]string, len(urlParams.Keys))
-	for i, k := range urlParams.Keys {
-		params[k] = urlParams.Values[i]
-	}
-	return params
 }
 
 // requestAttributes are what is logged of a request: where it went, from start, and its body's length, then its client
