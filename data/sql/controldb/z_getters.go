@@ -2849,22 +2849,22 @@ func (m *GetSiteIdentityByIDParams) SetID(v int64) {
 }
 
 // GetSiteID returns the SiteID value.
-func (m GetSiteIdentityByNightscoutTokenDigestParams) GetSiteID() string {
+func (m GetSiteIdentityByTokenDigestParams) GetSiteID() string {
 	return m.SiteID
 }
 
-// SetSiteID sets the SiteID value and returns the updated GetSiteIdentityByNightscoutTokenDigestParams.
-func (m *GetSiteIdentityByNightscoutTokenDigestParams) SetSiteID(v string) {
+// SetSiteID sets the SiteID value and returns the updated GetSiteIdentityByTokenDigestParams.
+func (m *GetSiteIdentityByTokenDigestParams) SetSiteID(v string) {
 	m.SiteID = v
 }
 
 // GetDigest returns the Digest value.
-func (m GetSiteIdentityByNightscoutTokenDigestParams) GetDigest() *string {
+func (m GetSiteIdentityByTokenDigestParams) GetDigest() *string {
 	return m.Digest
 }
 
-// SetDigest sets the Digest value and returns the updated GetSiteIdentityByNightscoutTokenDigestParams.
-func (m *GetSiteIdentityByNightscoutTokenDigestParams) SetDigest(v *string) {
+// SetDigest sets the Digest value and returns the updated GetSiteIdentityByTokenDigestParams.
+func (m *GetSiteIdentityByTokenDigestParams) SetDigest(v *string) {
 	m.Digest = v
 }
 

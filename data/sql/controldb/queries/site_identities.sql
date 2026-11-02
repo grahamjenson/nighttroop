@@ -43,7 +43,7 @@ SELECT * FROM site_identities WHERE site_id = sqlc.arg('SiteID') AND name = sqlc
 
 
 -- The identity whose Nightscout token's SHA1 has this digest, see site_identities.nightscout_token_digest
--- name: GetSiteIdentityByNightscoutTokenDigest :one
+-- name: GetSiteIdentityByTokenDigest :one
 SELECT * FROM site_identities WHERE site_id = sqlc.arg('SiteID') AND nightscout_token_digest = sqlc.arg('Digest') LIMIT 1;
 
 -- name: GetSiteIdentityByID :one

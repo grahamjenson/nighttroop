@@ -105,7 +105,7 @@ func legacyTokenIdentity(config *config.ServerConfig, ctx context.Context, token
 
 	// xDrip+ sends the SHA1 of the token, 40 hex digits, as Nightscout clients send their API secret
 	if len(tokenParam) == 40 {
-		identity, err := siteContext.ControlDB.Queries.GetSiteIdentityByNightscoutTokenDigest(ctx, controldb.GetSiteIdentityByNightscoutTokenDigestParams{
+		identity, err := siteContext.ControlDB.Queries.GetSiteIdentityByTokenDigest(ctx, controldb.GetSiteIdentityByTokenDigestParams{
 			SiteID: siteContext.SiteID, Digest: new(security.NightscoutTokenDigest(tokenParam))})
 		if err != nil || !identity.Enabled || identity.TotpSecretEnc != "" || identity.Role == consts.IdentityRoleAdmin {
 			return nil, fmt.Errorf("no identity that can use a token has one with this SHA1: %v", err)
