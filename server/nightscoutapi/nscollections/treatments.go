@@ -59,6 +59,9 @@ func (c TreatmentCollection) ValidatePatch(nsModel nightscoutmodels.Treatment, d
 func (c TreatmentCollection) CreateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Treatment, cc nightscoutmodels.ConverterContext, overrideIdentifier *string) (*sitedb.EventGroupsBundle, error) {
 
 	tebg := TreatmentEventGroupBundle(ctx, nsModel)
+	if err := percentRate(ctx, q, nsModel, tebg.TempBasal); err != nil {
+		return nil, err
+	}
 	err := createUpdateEventGroup(ctx, q, &tebg, cc)
 	if err != nil {
 		return nil, err
@@ -121,6 +124,9 @@ func (c TreatmentCollection) UpdateModel(q *sitedb.Queries, ctx context.Context,
 	updateBundle := TreatmentEventGroupBundle(ctx, nsModel)
 
 	MergeUpdateBundle(dbModel, updateBundle)
+	if err := percentRate(ctx, q, nsModel, dbModel.TempBasal); err != nil {
+		return nil, err
+	}
 
 	// Do something with the update bundle to merge it into the dbModel
 
