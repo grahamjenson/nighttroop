@@ -241,14 +241,18 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   followers.
 - **v1**: entries, treatments, device statuses, profiles, food and activities, with Nightscout's filters, plus
   status, versions, verifyauth, slice, count, times and echo.
-- **v2**: authorization (a token for a JWT), properties and summary.
+- **v2**: authorization (a token for a JWT, and a check of one of its permissions), properties and summary.
 - **v3**: create, read, update, patch, delete, search and history of each collection, plus version, status,
   lastModified and settings.
+- The v3 status shows what the token may do to each collection, e.g. `crud` for an uploader and `r` for a read only
+  token, so apps like AAPS only upload with a token that may write.
 - A v3 history includes deleted documents, with `isValid` false, so apps learn of deletions; a search leaves them
   out.
 - A delete moves a document's `srvModified` and the v3 lastModified forward, so a history since an app's last sync
   has the documents deleted after it.
 - **Socket.IO** live updates and alarms over long polling or websockets.
+- A new Announcement is sent to every `/alarm` socket that can read, with its notes as the message, so AAPS shows it
+  as a notification.
 - Glucose is stored in mg/dL and returned and accepted in the settings' units.
 - A temp basal sent with only a `percent` of the basal (e.g. 50 for half, 150 for 1.5x) has its rate set from the
   default profile's or profile switch's basal at its start, in the profile's timezone, and is returned with that

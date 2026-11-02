@@ -8,7 +8,9 @@ import (
 	"log/slog"
 	"time"
 
+	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/livedb"
+	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/socketio"
 	"nighttroop.t1d.nz/utils/alarms"
@@ -27,6 +29,9 @@ func alarmRoom(identityID int64) string {
 	return fmt.Sprintf("AlarmReceivers-%d", identityID)
 }
 
+// announcementRoom is the room of the site's /alarm sockets that can read, which its announcements go to
+const announcementRoom = "AnnouncementReceivers"
+
 // alarmSubscribeMessage is an /alarm subscribe: an access token, or as the web app sends, a JWT or API secret
 type alarmSubscribeMessage struct {
 	AccessToken string `json:"accessToken"`
@@ -42,9 +47,11 @@ func (ws *Websocket) onAlarmConnect(socket *socketio.Socket) {
 		reply, subscribed := ws.subscribeToAlarms(socket, message.AccessToken, message.JWTToken, message.Secret)
 		if identityID != nil {
 			socket.Leave(alarmRoom(*identityID))
+			socket.Leave(announcementRoom)
 		}
 		if identityID = subscribed; identityID != nil {
 			socket.Join(alarmRoom(*identityID))
+			socket.Join(announcementRoom)
 		}
 		return reply
 	})
@@ -119,6 +126,24 @@ type alarmNotification struct {
 	Group     string       `json:"group"`
 	Timestamp int64        `json:"timestamp"`
 	Clear     bool         `json:"clear,omitempty"`
+	// IsAnnouncement marks an announcement, as Nightscout's treatment notify does
+	IsAnnouncement bool `json:"isAnnouncement,omitempty"`
+}
+
+// sendAnnouncement sends a new announcement to the site's /alarm sockets, as Nightscout does for an Announcement
+// treatment: its notes are the message, which AAPS shows as a notification
+func sendAnnouncement(namespace *socketio.Namespace, event events.Event) {
+	bundle, ok := event.Model.(*sitedb.EventGroupsBundle)
+	if !ok || event.Action != events.Created || bundle.NotificationEvent == nil || bundle.NotificationEvent.NotificationType != "announcement" {
+		return
+	}
+	n := bundle.NotificationEvent
+	message := ""
+	if n.Content != nil {
+		message = *n.Content
+	}
+	namespace.EmitTo(announcementRoom, "announcement", alarmNotification{Title: n.Title, Message: message, Group: "Announcement",
+		Timestamp: n.OccurredAt, IsAnnouncement: true})
 }
 
 // alarmTitles are each alarm's title and message, as Nightscout's simplealarms and timeago say them
