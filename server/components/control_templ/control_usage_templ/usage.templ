@@ -22,21 +22,22 @@ func count(value float64) string {
 	return fmt.Sprintf("%.1f", value)
 }
 
-// The resource graphs are drawn in a box graphW wide and graphH high, from 0% at its bottom to 100% at its top
+// The resource graphs are drawn in a box graphW wide and graphH high, from 0% at its bottom to its top percent at its
+// top: 100% for memory and disk, and 100% for each core for the CPU, as htop shows it
 const graphW, graphH = 300.0, 60.0
 
-func graphY(percent float64) float64 {
-	return graphH - graphH*min(max(percent, 0), 100)/100
+func graphY(percent float64, top float64) float64 {
+	return graphH - graphH*min(max(percent, 0), top)/top
 }
 
 // resourcePoints are a graph line's points: each check's value, placed by its time across the checks kept. A check
 // without the value, as memory on a Mac, is left out.
-func resourcePoints(model controlmodels.Usage, value func(controlmodels.ResourceReading) *float64) string {
+func resourcePoints(model controlmodels.Usage, value func(controlmodels.ResourceReading) *float64, top float64) string {
 	points := []string{}
 	for _, reading := range model.ResourceReadings {
 		if v := value(reading); v != nil {
 			x := graphW * float64(reading.At-model.ResourcesSince) / float64(max(model.Now-model.ResourcesSince, 1))
-			points = append(points, fmt.Sprintf("%.1f,%.1f", x, graphY(*v)))
+			points = append(points, fmt.Sprintf("%.1f,%.1f", x, graphY(*v, top)))
 		}
 	}
 	return strings.Join(points, " ")
@@ -91,7 +92,7 @@ templ Usage(model controlmodels.Usage) {
 			@tile("control--usage--ingested-per-site", "Ingested per site day", meanStd(model.SinceStart.IngestedPerSiteDay, display.Bytes), fmt.Sprintf("mean ± std of %d site days", model.SinceStart.IngestedPerSiteDay.N))
 		}
 		@section("Server") {
-			@tile("control--usage--cpu", "CPU", fmt.Sprintf("%.1f%%", model.Server.CPUPercent), fmt.Sprintf("of %d cores", model.Server.CPUs))
+			@tile("control--usage--cpu", "CPU", fmt.Sprintf("%.1f%%", model.Server.CPUPercent), fmt.Sprintf("of %d%% for %d cores, last 5 seconds", 100*model.Server.CPUs, model.Server.CPUs))
 			if model.Server.ResidentBytes > 0 {
 				// All the process's memory, as the OS counts it: SQLite's is outside Go's
 				@tile("control--usage--memory", "Memory", display.Bytes(float64(model.Server.ResidentBytes)), display.Bytes(float64(model.Server.HeapBytes))+" in Go's heap, the rest mostly SQLite")
@@ -108,9 +109,9 @@ templ Usage(model controlmodels.Usage) {
 				<p id="control--usage--resources-empty" class="text-sm text-gray-500">Not checked yet since the server started.</p>
 			} else {
 				<div class="grid gap-3 sm:grid-cols-3">
-					@resourceGraph(model, "cpu", "Mean CPU", cpuPercent, -1)
-					@resourceGraph(model, "memory", "Memory used", memoryPercent, model.MemoryAlertPercent)
-					@resourceGraph(model, "disk", "DB disk used", diskPercent, model.DiskAlertPercent)
+					@resourceGraph(model, "cpu", "Mean CPU", cpuPercent, -1, 100*float64(max(model.Server.CPUs, 1)))
+					@resourceGraph(model, "memory", "Memory used", memoryPercent, model.MemoryAlertPercent, 100)
+					@resourceGraph(model, "disk", "DB disk used", diskPercent, model.DiskAlertPercent, 100)
 				</div>
 			}
 		</section>
@@ -155,7 +156,7 @@ templ Usage(model controlmodels.Usage) {
 
 // resourceGraph is a small graph of a resource's percent over the checks kept, with a dashed line at the level it
 // warns at, unless alertPercent is negative
-templ resourceGraph(model controlmodels.Usage, name string, label string, value func(controlmodels.ResourceReading) *float64, alertPercent int) {
+templ resourceGraph(model controlmodels.Usage, name string, label string, value func(controlmodels.ResourceReading) *float64, alertPercent int, top float64) {
 	<div class="rounded-lg border border-gray-200 p-3">
 		<div class="flex justify-between text-xs font-semibold uppercase tracking-wide text-gray-500">
 			<span>{ label }</span>
@@ -164,9 +165,9 @@ templ resourceGraph(model controlmodels.Usage, name string, label string, value 
 		<svg id={ "control--usage--resources-" + name } viewBox={ fmt.Sprintf("0 0 %.0f %.0f", graphW, graphH) } preserveAspectRatio="none" class="mt-2 h-16 w-full overflow-visible" role="img" aria-label={ label + " over the checks kept" }>
 			<line x1="0" x2={ fmt.Sprint(graphW) } y1={ fmt.Sprint(graphH) } y2={ fmt.Sprint(graphH) } class="stroke-gray-200" vector-effect="non-scaling-stroke"></line>
 			if alertPercent >= 0 {
-				<line x1="0" x2={ fmt.Sprint(graphW) } y1={ fmt.Sprint(graphY(float64(alertPercent))) } y2={ fmt.Sprint(graphY(float64(alertPercent))) } class="stroke-amber-500" stroke-dasharray="4 3" vector-effect="non-scaling-stroke"></line>
+				<line x1="0" x2={ fmt.Sprint(graphW) } y1={ fmt.Sprint(graphY(float64(alertPercent), top)) } y2={ fmt.Sprint(graphY(float64(alertPercent), top)) } class="stroke-amber-500" stroke-dasharray="4 3" vector-effect="non-scaling-stroke"></line>
 			}
-			<polyline points={ resourcePoints(model, value) } fill="none" class="stroke-brand-night" stroke-width="1.5" vector-effect="non-scaling-stroke"></polyline>
+			<polyline points={ resourcePoints(model, value, top) } fill="none" class="stroke-brand-night" stroke-width="1.5" vector-effect="non-scaling-stroke"></polyline>
 		</svg>
 		<div class="text-xs text-gray-500">over the last 3 days, newest at the right</div>
 	</div>

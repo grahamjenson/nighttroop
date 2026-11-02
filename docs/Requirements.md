@@ -89,12 +89,13 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - Counts the sites created today, this week and this month.
 - Its memory is all the server's, as the operating system counts it (htop's RES), with SQLite's, which Go's own figures
   leave out, and says how much of it is Go's heap.
+- Its CPU is the server's in the last 5 seconds as htop shows it, 100% for each core used, so up to 400% on 4 cores.
 - Only signed in requests are counted.
 
 ### Resource alerts
 
 - Every 5 minutes the server checks its memory (of its container's limit, or else the machine's), the space used on
-  its DBs' disk, and how long its CPU stayed at 100%, sampled every 5 seconds.
+  its DBs' disk, and how long its CPU stayed at 100% of every core, sampled every 5 seconds.
 - Memory or disk at or over 60% (`MEMORY_ALERT_PERCENT`, `DISK_ALERT_PERCENT`), or the CPU at 100% for 20 seconds or
   more (`CPU_PEGGED_ALERT_SECONDS`), shows in the banner on every control page until a check finds it back under.
 - A disk with 100 GB or more free (`DISK_ALERT_FREE_GB`) never warns, however full it is.
@@ -102,7 +103,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   GB.", and the CPU's seconds at 100%.
 - Going over is a "Resource high" event of the server's, and coming back under a "Resource recovered" one.
 - The last 3 days of checks are kept while the server runs, and start again when it restarts. The usage page graphs
-  them: mean CPU, and memory and DB disk used, with a dashed line at the level each warns at.
+  them: mean CPU, up to 100% for each core as htop shows it, and memory and DB disk used, with a dashed line at the
+  level each warns at.
 
 ## Site
 

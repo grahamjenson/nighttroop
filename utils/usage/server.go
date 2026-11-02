@@ -13,8 +13,8 @@ type cpuSample struct {
 	used time.Duration
 }
 
-// Server is the server process's resources now: CPU since the last time they were read, as a percent of every core,
-// memory in bytes, the size of the DBs and the space left on their disk. ResidentBytes is all the memory the OS counts
+// Server is the server process's resources now: CPU in its latest sample, of a few seconds, as htop shows it, a percent
+// of one core, memory in bytes, the size of the DBs and the space left on their disk. ResidentBytes is all the memory the OS counts
 // for the process, which HeapBytes and SysBytes, Go's own, leave out SQLite's from.
 type Server struct {
 	CPUPercent float64 `json:"cpu_percent"`
@@ -42,18 +42,9 @@ func (t *Tracker) Server(dbDir string, now time.Time) Server {
 	}
 	server.UptimeMs = now.Sub(t.started).Milliseconds()
 
-	if used, ok := processCPU(); ok {
-		t.mu.Lock()
-		last := t.cpu
-		if last.at.IsZero() {
-			last = cpuSample{at: t.started}
-		}
-		if wall := now.Sub(last.at); wall > 0 {
-			server.CPUPercent = 100 * float64(used-last.used) / float64(wall) / float64(server.CPUs)
-		}
-		t.cpu = cpuSample{at: now, used: used}
-		t.mu.Unlock()
-	}
+	t.mu.Lock()
+	server.CPUPercent = t.watch.latest
+	t.mu.Unlock()
 
 	// The DB folder's disk, or the working folder's before the DB folder is made
 	server.DiskUsed = dirSize(dbDir)
