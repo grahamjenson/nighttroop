@@ -221,9 +221,16 @@ func OpenSqliteDB(path string, cacheSize int) (*sql.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("cannot open sqlite db: %w", err)
 	}
+	sqldb.SetMaxIdleConns(maxIdleConns)
 
 	return sqldb, nil
 }
+
+// maxIdleConns is how many idle connections the server's DB keeps. Every request uses the control DB, so with
+// database/sql's default of two, concurrent requests opened and closed connections constantly, each running the DSN's
+// PRAGMAs, parsing the schema and preparing its queries again. There are only a few of these DBs, so keeping 32 costs
+// little memory, and they are kept for the life of the server.
+const maxIdleConns = 32
 
 func OpenInMemorySqliteDB() (*sql.DB, error) {
 
