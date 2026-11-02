@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -382,40 +383,44 @@ func (db *ControlDB) SubdomainUsed(ctx context.Context, subdomain string) bool {
 	return exists
 }
 
-// UpdateSiteAndIdentityDateFlags records when the site and identity were last seen and written to, at most every
-// 10 minutes, and the site DB's size with its last write
+// UpdateSiteAndIdentityDateFlags records when the site and identity were last seen and written to, each at most every
+// 10 minutes from its own last record, and the site DB's size with its last write. It writes nothing when none is due,
+// as each write waits on the control DB's one write lock.
 func (db *ControlDB) UpdateSiteAndIdentityDateFlags(ctx context.Context, siteModel *controldb.Site, siteDB *SiteDB, identityModel *controldb.SiteIdentity, updateLastSeen bool, updateLastWrite bool) error {
-	subdomain := siteModel.ID
-
-	// Only update if not seen in 10 minutes
-	lastWriteMoreThan10MinutesAgo := siteModel.LastWriteAt == nil || time.Now().After(siteModel.LastWriteAtDate().Add(10*time.Minute))
-	lastSeenMoreThan10MinutesAgo := siteModel.LastSeenAt == nil || time.Now().After(siteModel.LastSeenAtDate().Add(10*time.Minute))
-
 	now := time.Now().UnixMilli()
-	var lastSeenAt *int64
-	var lastWriteAt *int64
-	var estimatedDBSizeKB *int64
-	if updateLastSeen && lastSeenMoreThan10MinutesAgo {
-		lastSeenAt = &now
+	var siteErr, identityErr error
+	if lastSeenAt, lastWriteAt := dueDateFlags(now, siteModel.LastSeenAt, siteModel.LastWriteAt, updateLastSeen, updateLastWrite); lastSeenAt != nil || lastWriteAt != nil {
+		var estimatedDBSizeKB *int64
+		if lastWriteAt != nil {
+			estimatedDBSizeKB = siteDB.EstimatedSizeKB()
+		}
+		siteErr = db.Queries.UpdateSiteDateFlags(ctx, controldb.UpdateSiteDateFlagsParams{
+			LastSeenAt:        lastSeenAt,
+			LastWriteAt:       lastWriteAt,
+			EstimatedDbSizeKb: estimatedDBSizeKB,
+			ID:                siteModel.ID,
+		})
 	}
-	if updateLastWrite && lastWriteMoreThan10MinutesAgo {
-		lastWriteAt = &now
-		estimatedDBSizeKB = siteDB.EstimatedSizeKB()
+	if lastSeenAt, lastWriteAt := dueDateFlags(now, identityModel.LastSeenAt, identityModel.LastWriteAt, updateLastSeen, updateLastWrite); lastSeenAt != nil || lastWriteAt != nil {
+		identityErr = db.Queries.UpdateSiteIdentityDateFlags(ctx, controldb.UpdateSiteIdentityDateFlagsParams{
+			LastSeenAt:  lastSeenAt,
+			LastWriteAt: lastWriteAt,
+			ID:          identityModel.ID,
+		})
 	}
-	db.Queries.UpdateSiteDateFlags(ctx, controldb.UpdateSiteDateFlagsParams{
-		LastSeenAt:        lastSeenAt,
-		LastWriteAt:       lastWriteAt,
-		EstimatedDbSizeKb: estimatedDBSizeKB,
-		ID:                subdomain,
-	})
+	return errors.Join(siteErr, identityErr)
+}
 
-	db.Queries.UpdateSiteIdentityDateFlags(ctx, controldb.UpdateSiteIdentityDateFlagsParams{
-		LastSeenAt:  lastSeenAt,
-		LastWriteAt: lastWriteAt,
-		ID:          identityModel.ID,
-	})
-
-	return nil
+// dueDateFlags is now, for each of the last seen and last write to record, when it was never recorded or was last
+// recorded over 10 minutes ago, and nil otherwise
+func dueDateFlags(now int64, lastSeenAt *int64, lastWriteAt *int64, updateLastSeen bool, updateLastWrite bool) (*int64, *int64) {
+	due := func(update bool, last *int64) *int64 {
+		if update && (last == nil || now > *last+(10*time.Minute).Milliseconds()) {
+			return &now
+		}
+		return nil
+	}
+	return due(updateLastSeen, lastSeenAt), due(updateLastWrite, lastWriteAt)
 }
 
 func (db *ControlDB) GetSite(ctx context.Context, subdomain string) (*SiteDB, *controldb.Site, error) {

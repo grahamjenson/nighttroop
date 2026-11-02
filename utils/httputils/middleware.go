@@ -219,7 +219,10 @@ func SiteIdentitySeenFlagsUpdateMiddleware(controlDB *db.ControlDB) func(http.Ha
 					siteContext.Config.Usage.Seen(siteContext.SiteID, siteContext.IdentityModel.ID, r.ContentLength, time.Now())
 				}
 				wasWrite := siteContext.HTTPAction == HTTPActionWrite
-				controlDB.UpdateSiteAndIdentityDateFlags(r.Context(), siteContext.SiteModel, siteContext.SiteDB, siteContext.IdentityModel, true, wasWrite)
+				// The response is sent, so a failure to record is only logged
+				if err := controlDB.UpdateSiteAndIdentityDateFlags(r.Context(), siteContext.SiteModel, siteContext.SiteDB, siteContext.IdentityModel, true, wasWrite); err != nil {
+					slog.ErrorContext(r.Context(), "Cannot update site and identity date flags", "error", err)
+				}
 			}
 		})
 	}
