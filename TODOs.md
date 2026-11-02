@@ -130,7 +130,8 @@
        mg/dL to v1 clients, or have device identities default to mg/dL ([docs/clients/xdrip.md](docs/clients/xdrip.md))
     1. P1: Keep xDrip+'s `Sensor Stop` treatments. An unknown eventType is refused, and xDrip+ uploads its treatments
        one at a time, stops at a refused one and marks them all done, so the treatments queued after a Sensor Stop are
-       never uploaded. Adding the type also adds it to the site's event group types, a UI change
+       never uploaded. Adding the type needs its kinds of event in `sitemodels.EventGroupTypeKinds`, which also adds it to
+       the site's Add Event Group menu, a UI change
     1. P2: An unknown `find[...]` filter is ignored, so the search gives everything, and a client that deletes the
        first match (as xDrip+ does by `find[uuid]`) deletes the wrong document. Give nothing for a filter on an unknown
        field
