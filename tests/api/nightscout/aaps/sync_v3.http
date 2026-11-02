@@ -1,0 +1,600 @@
+INCLUDE steps/new_ns_site.steps
+
+// AAPS reads entries' sgv as mg/dL whatever their units, so its identity has to be in mg/dL
+INCLUDE steps/ns_units_mgdl.steps
+
+// AAPS's NSClient v3 sync, as core/nssdk networking/NightscoutApi.kt sends it and NSAndroidClientImpl.kt reads the
+// answers. Bodies are as the mappers (core/nssdk mapper/*.kt) write them: nulls left out, false and 0 written, and
+// app set to AAPS on a create. See docs/clients/aaps.md
+
+////////
+// ENTRIES
+////////
+
+// GV.toNSSvgV3 then createSgv. A create is read as a RemoteCreateUpdateResponse at the top level, not in result
+NAME add_sgv
+POST http://{{ site }}/api/v3/entries
+H Authorization: Bearer {{ jwt }}
+B {
+    "type": "sgv",
+    "date": {{ itime 10 }},
+    "device": "Dexcom G7",
+    "direction": "Flat",
+    "utcOffset": 720,
+    "isReadOnly": false,
+    "isValid": true,
+    "unfiltered": 0.0,
+    "units": "mg/dl",
+    "sgv": 120.0,
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+ASSERT_EXISTS "@identifier"
+ASSERT_EXISTS "@lastModified"
+SET sgv_id {{ .add_sgv.identifier }}
+
+// The same reading again, as when AAPS resends: a 200 with the first one's identifier
+NAME add_sgv_again
+POST http://{{ site }}/api/v3/entries
+H Authorization: Bearer {{ jwt }}
+B {
+    "type": "sgv",
+    "date": {{ dig "add_sgv.result.date" }},
+    "device": "Dexcom G7",
+    "direction": "Flat",
+    "utcOffset": 720,
+    "isReadOnly": false,
+    "isValid": true,
+    "unfiltered": 0.0,
+    "units": "mg/dl",
+    "sgv": 120.0,
+    "app": "AAPS"
+ }
+ASSERT_STATUS 200
+ASSERT_EQUALS true "@isDeduplication"
+ASSERT_EQUALS ".sgv_id" "@identifier"
+
+// The first load pages forward by date (getSgvsNewerThan). RemoteEntry.toSgv needs type sgv and an sgv
+NAME sgvs_newer_than
+GET http://{{ site }}/api/v3/entries?sort=date&date$gt={{ itime 11 }}&limit=500
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS "sgv" "@result.0.type"
+ASSERT_EQUALS 120 "@result.0.sgv"
+ASSERT_EQUALS ".sgv_id" "@result.0.identifier"
+ASSERT_EQUALS "Flat" "@result.0.direction"
+ASSERT_EQUALS 720 "@result.0.utcOffset"
+ASSERT_EQUALS true "@result.0.isValid"
+ASSERT_EXISTS "@result.0.date"
+ASSERT_EXISTS "@result.0.srvModified"
+
+// Later loads ask for what changed since the last srvModified, and move on to the ETag, W/"<newest srvModified>"
+NAME sgvs_modified_since
+GET http://{{ site }}/api/v3/entries/history/{{ itime 60 }}?limit=500
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS ".sgv_id" "@result.0.identifier"
+SET sgv_etag W/"{{ dig "sgvs_modified_since.result.0.srvModified" }}"
+ASSERT_EQUALS ".sgv_etag" "#Etag.0"
+
+// updateSvg leaves out date and utcOffset, which cannot change, and sends the identifier
+NAME update_sgv
+PATCH http://{{ site }}/api/v3/entries/{{ .sgv_id }}
+H Authorization: Bearer {{ jwt }}
+B {
+    "type": "sgv",
+    "device": "Dexcom G7",
+    "direction": "FortyFiveUp",
+    "identifier": "{{ .sgv_id }}",
+    "isReadOnly": false,
+    "isValid": true,
+    "unfiltered": 0.0,
+    "units": "mg/dl",
+    "sgv": 120.0
+ }
+ASSERT_STATUS 200
+
+// An invalidated reading is deleted; a second delete is a 404, which AAPS takes as done
+NAME delete_sgv
+DELETE http://{{ site }}/api/v3/entries/{{ .sgv_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+NAME delete_sgv_again
+DELETE http://{{ site }}/api/v3/entries/{{ .sgv_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 404
+
+// The history has the deletion, isValid false, so a follower removes the reading too
+NAME sgv_deleted_in_history
+GET http://{{ site }}/api/v3/entries/history/{{ itime 60 }}?limit=500
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS ".sgv_id" "@result.0.identifier"
+ASSERT_EQUALS false "@result.0.isValid"
+ASSERT_EQUALS "FortyFiveUp" "@result.0.direction"
+
+////////
+// TREATMENTS
+////////
+
+// TB.toNSTemporaryBasal on a pump that sets percents: 120% is percent 20, the change, with the rate in U/hr.
+// isAbsolute is not sent
+NAME add_percent_temp_basal
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "date": {{ itime 30 }},
+    "utcOffset": 720,
+    "isReadOnly": false,
+    "isValid": true,
+    "eventType": "Temp Basal",
+    "pumpId": 4102,
+    "pumpType": "DANA_I",
+    "pumpSerial": "AAPS1234",
+    "duration": 30,
+    "durationInMilliseconds": 1800000,
+    "percent": 20.0,
+    "rate": 1.2,
+    "type": "NORMAL",
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+SET temp_basal_id {{ .add_percent_temp_basal.identifier }}
+
+// The temp basal is cut short when the next one starts: an update with the new duration
+NAME cut_temp_basal
+PATCH http://{{ site }}/api/v3/treatments/{{ .temp_basal_id }}
+H Authorization: Bearer {{ jwt }}
+B {
+    "identifier": "{{ .temp_basal_id }}",
+    "isReadOnly": false,
+    "isValid": true,
+    "eventType": "Temp Basal",
+    "pumpId": 4102,
+    "pumpType": "DANA_I",
+    "pumpSerial": "AAPS1234",
+    "duration": 12,
+    "durationInMilliseconds": 720000,
+    "percent": 20.0,
+    "rate": 1.2,
+    "type": "NORMAL"
+ }
+ASSERT_STATUS 200
+
+// An SMB, which AAPS tells from a normal bolus by type
+NAME add_smb
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "date": {{ itime 25 }},
+    "utcOffset": 720,
+    "isReadOnly": false,
+    "isValid": true,
+    "eventType": "Correction Bolus",
+    "pumpId": 4103,
+    "pumpType": "DANA_I",
+    "pumpSerial": "AAPS1234",
+    "insulin": 0.3,
+    "type": "SMB",
+    "isBasalInsulin": false,
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+
+// Extended carbs, with a duration
+NAME add_extended_carbs
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "date": {{ itime 20 }},
+    "utcOffset": 720,
+    "isReadOnly": false,
+    "isValid": true,
+    "eventType": "Carb Correction",
+    "carbs": 20.0,
+    "duration": 60,
+    "durationInMilliseconds": 3600000,
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+
+// TT.toNSTemporaryTarget, always in mg/dL
+NAME add_temp_target
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "date": {{ itime 15 }},
+    "units": "mg/dl",
+    "utcOffset": 720,
+    "isReadOnly": false,
+    "isValid": true,
+    "eventType": "Temporary Target",
+    "duration": 60,
+    "durationInMilliseconds": 3600000,
+    "targetTop": 140.0,
+    "targetBottom": 140.0,
+    "reason": "Activity",
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+
+// PS.toNSProfileSwitch
+NAME add_profile_switch
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "date": {{ itime 14 }},
+    "utcOffset": 720,
+    "isReadOnly": false,
+    "isValid": true,
+    "eventType": "Profile Switch",
+    "profileJson": "{\"units\":\"mg/dl\",\"dia\":5,\"timezone\":\"Pacific/Auckland\",\"sens\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":100}],\"carbratio\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":10}],\"basal\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":1}],\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":100}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":100}]}",
+    "profile": "Default(90%)",
+    "originalProfileName": "Default",
+    "originalDuration": 0,
+    "duration": 0,
+    "durationInMilliseconds": 0,
+    "timeshift": 0,
+    "percentage": 90,
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+
+// TE.toNSTherapyEvent, a fingerstick
+NAME add_bg_check
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "date": {{ itime 13 }},
+    "units": "mg/dl",
+    "utcOffset": 720,
+    "isReadOnly": false,
+    "isValid": true,
+    "eventType": "BG Check",
+    "duration": 0,
+    "durationInMilliseconds": 0,
+    "glucose": 110.0,
+    "enteredBy": "AAPS",
+    "glucoseType": "Finger",
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+
+// The first load of treatments pages forward from a time (getTreatmentsNewerThan)
+NAME treatments_newer_than
+GET http://{{ site }}/api/v3/treatments?sort=created_at&created_at$gt={{ time 60 }}&limit=500
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 6 "@result"
+
+// What RemoteTreatment.toTreatment needs of each, from the history AAPS reads after its first load. Its whole numbers
+// (duration, durationInMilliseconds, pumpId, percentage, timeshift) are read as Long or Int, so must be whole
+NAME treatments_modified_since
+GET http://{{ site }}/api/v3/treatments/history/{{ itime 60 }}?limit=500
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 6 "@result"
+ASSERT_EXISTS "#Etag.0"
+
+// A temp basal is read with absolute ahead of percent, so AAPS takes the rate it sent as an absolute rate
+NAME get_temp_basal
+GET http://{{ site }}/api/v3/treatments/{{ .temp_basal_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Temp Basal" "@result.eventType"
+ASSERT_EQUALS 1.2 "@result.absolute"
+ASSERT_EQUALS 12 "@result.duration"
+ASSERT_EQUALS 720000 "@result.durationInMilliseconds"
+// pumpId comes back as a string, which AAPS still reads into its Long (NsSdkJson.kt: a quoted number is accepted)
+ASSERT_EQUALS "4102" "@result.pumpId"
+ASSERT_EQUALS "DANA_I" "@result.pumpType"
+ASSERT_EQUALS "AAPS1234" "@result.pumpSerial"
+ASSERT_EQUALS 720 "@result.utcOffset"
+ASSERT_EQUALS true "@result.isValid"
+ASSERT_EXISTS "@result.date"
+ASSERT_EXISTS "@result.srvModified"
+
+NAME get_smb
+GET http://{{ site }}/api/v3/treatments/{{ .add_smb.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 0.3 "@result.insulin"
+ASSERT_EQUALS "SMB" "@result.type"
+ASSERT_EQUALS "4103" "@result.pumpId"
+
+NAME get_extended_carbs
+GET http://{{ site }}/api/v3/treatments/{{ .add_extended_carbs.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 20 "@result.carbs"
+// Without durationInMilliseconds AAPS takes the duration in minutes
+ASSERT_EQUALS 60 "@result.duration"
+
+// A temp target has no units, which AAPS (NSTreatment.asMgdl) takes as mg/dL, as here
+NAME get_temp_target
+GET http://{{ site }}/api/v3/treatments/{{ .add_temp_target.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 140 "@result.targetTop"
+ASSERT_EQUALS 140 "@result.targetBottom"
+ASSERT_EQUALS 3600000 "@result.durationInMilliseconds"
+ASSERT_EQUALS "Activity" "@result.reason"
+ASSERT_EQUALS null "@result.units"
+
+NAME get_profile_switch
+GET http://{{ site }}/api/v3/treatments/{{ .add_profile_switch.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Default(90%)" "@result.profile"
+ASSERT_EQUALS 90 "@result.percentage"
+ASSERT_EQUALS 0 "@result.timeshift"
+ASSERT_EXISTS "@result.profileJson"
+
+NAME get_bg_check
+GET http://{{ site }}/api/v3/treatments/{{ .add_bg_check.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 110 "@result.glucose"
+ASSERT_EQUALS "Finger" "@result.glucoseType"
+
+// An invalidated treatment is deleted, and the history then has it with isValid false
+NAME delete_smb
+DELETE http://{{ site }}/api/v3/treatments/{{ .add_smb.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+NAME smb_deleted_in_history
+GET http://{{ site }}/api/v3/treatments/history/{{ itime 60 }}?limit=500&identifier={{ .add_smb.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS false "@result.0.isValid"
+ASSERT_EQUALS 0.3 "@result.0.insulin"
+
+// EPS.toNSEffectiveProfileSwitch, a Note. AAPS reads it back only with all of profileJson, originalCustomizedName,
+// originalTimeshift, originalPercentage, originalDuration and originalEnd
+NAME add_effective_profile_switch
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "date": {{ itime 12 }},
+    "utcOffset": 720,
+    "isReadOnly": false,
+    "isValid": true,
+    "eventType": "Note",
+    "profileJson": "{\"units\":\"mg/dl\",\"dia\":5,\"timezone\":\"Pacific/Auckland\",\"sens\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":111}],\"carbratio\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":11}],\"basal\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":0.9}],\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":100}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":100}]}",
+    "originalProfileName": "Default",
+    "originalCustomizedName": "Default(90%)",
+    "originalTimeshift": 0,
+    "originalPercentage": 90,
+    "originalDuration": 0,
+    "originalEnd": {{ itime 14 }},
+    "notes": "Default(90%)",
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+
+// The original fields are not kept yet (TODOs.md), so a follower reads it as a plain Note
+NAME get_effective_profile_switch
+GET http://{{ site }}/api/v3/treatments/{{ .add_effective_profile_switch.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Note" "@result.eventType"
+ASSERT_EQUALS "Default(90%)" "@result.notes"
+ASSERT_EXISTS "@result.profileJson"
+
+// RM.toNSOfflineEvent, a running mode such as a disconnected pump
+NAME add_running_mode
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "date": {{ itime 11 }},
+    "utcOffset": 720,
+    "isReadOnly": false,
+    "isValid": true,
+    "eventType": "OpenAPS Offline",
+    "duration": 30,
+    "durationInMilliseconds": 1800000,
+    "reason": "DISCONNECT_PUMP",
+    "originalDuration": 1800000,
+    "mode": "DISCONNECTED_PUMP",
+    "autoForced": false,
+    "reasons": "",
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+
+NAME get_running_mode
+GET http://{{ site }}/api/v3/treatments/{{ .add_running_mode.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "OpenAPS Offline" "@result.eventType"
+ASSERT_EQUALS 30 "@result.duration"
+ASSERT_EQUALS "DISCONNECT_PUMP" "@result.reason"
+// mode, autoForced, reasons and originalDuration are not kept yet (TODOs.md), so a follower reads the mode as UNKNOWN
+ASSERT_EQUALS null "@result.mode"
+
+// A calibration is a marked mbg entry, which a follower reads back only with isCalibration and sensorMgdlAtPairing
+NAME add_calibration
+POST http://{{ site }}/api/v3/entries
+H Authorization: Bearer {{ jwt }}
+B {
+    "type": "mbg",
+    "date": {{ itime 9 }},
+    "device": "Dexcom G7",
+    "utcOffset": 720,
+    "isReadOnly": false,
+    "isValid": true,
+    "units": "mg/dl",
+    "mbg": 110.0,
+    "sensorMgdlAtPairing": 104.0,
+    "isCalibration": true,
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+
+NAME get_calibration
+GET http://{{ site }}/api/v3/entries/{{ .add_calibration.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "mbg" "@result.type"
+ASSERT_EQUALS 110 "@result.mbg"
+// isCalibration and sensorMgdlAtPairing are not kept yet (TODOs.md), so a follower takes it as a foreign fingerstick
+ASSERT_EQUALS null "@result.isCalibration"
+
+////////
+// DEVICE STATUS
+////////
+
+// DS.toNSDeviceStatus: uploader is written as {} when it has no battery
+NAME add_device_status
+POST http://{{ site }}/api/v3/devicestatus
+H Authorization: Bearer {{ jwt }}
+B {
+    "app": "AAPS",
+    "date": {{ itime 5 }},
+    "uploaderBattery": 87,
+    "isCharging": false,
+    "device": "openaps://samsung SM-G970F",
+    "uploader": {},
+    "pump": {
+        "clock": "{{ time 5 }}",
+        "reservoir": 120.5,
+        "battery": {"percent": 75},
+        "status": {"status": "normal", "timestamp": "{{ time 5 }}"},
+        "extended": {"Version": "4.0.0", "ActiveProfile": "Default"}
+    },
+    "openaps": {
+        "suggested": {"bg": 120, "eventualBG": 110, "reason": "COB: 0", "timestamp": "{{ time 5 }}"},
+        "iob": {"iob": 0.5, "basaliob": 0.1, "time": "{{ time 5 }}"}
+    }
+ }
+ASSERT_STATUS 201
+
+// A client loads every device status since its last: RemoteDeviceStatus needs srvModified to page, and whole numbers
+// for uploaderBattery and the pump battery's percent
+NAME device_status_modified_since
+GET http://{{ site }}/api/v3/devicestatus/history/{{ itime 60 }}?limit=500
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EXISTS "@result.0.identifier"
+ASSERT_EXISTS "@result.0.srvModified"
+ASSERT_EXISTS "@result.0.date"
+ASSERT_EQUALS 87 "@result.0.uploaderBattery"
+ASSERT_EQUALS false "@result.0.isCharging"
+ASSERT_EQUALS 120.5 "@result.0.pump.reservoir"
+ASSERT_EQUALS 75 "@result.0.pump.battery.percent"
+// Without pump.clock an AAPS client skips the pump's data (NSDeviceStatusHandler)
+ASSERT_EXISTS "@result.0.pump.clock"
+ASSERT_EQUALS 110 "@result.0.openaps.suggested.eventualBG"
+ASSERT_EQUALS 0.5 "@result.0.openaps.iob.iob"
+
+////////
+// FOOD
+////////
+
+// FD.toNSFood
+NAME add_food
+POST http://{{ site }}/api/v3/food
+H Authorization: Bearer {{ jwt }}
+B {
+    "type": "food",
+    "date": {{ itime 0 }},
+    "name": "Apple",
+    "category": "Fruit",
+    "subcategory": "Fresh",
+    "unit": "g",
+    "portion": 100.0,
+    "carbs": 12,
+    "gi": 2,
+    "energy": 218,
+    "protein": 0,
+    "fat": 0,
+    "isValid": true,
+    "isReadOnly": false,
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+
+// RemoteFood.toNSFood reads carbs, gi, energy, protein and fat as whole numbers, and keeps only a food of type food.
+// Its type, portion, unit and gi are not returned yet (TODOs.md), so AAPS loads no foods
+NAME get_foods
+GET http://{{ site }}/api/v3/food?limit=1000
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS "Apple" "@result.0.name"
+ASSERT_EQUALS "Fruit" "@result.0.category"
+ASSERT_EQUALS "Fresh" "@result.0.subcategory"
+ASSERT_EQUALS 12 "@result.0.carbs"
+ASSERT_EQUALS 218 "@result.0.energy"
+ASSERT_EXISTS "@result.0.identifier"
+ASSERT_EQUALS null "@result.0.type"
+
+////////
+// PROFILE
+////////
+
+// createProfileStore adds app AAPS to the store's JSON
+NAME add_profile_store
+POST http://{{ site }}/api/v3/profile
+H Authorization: Bearer {{ jwt }}
+B {
+    "defaultProfile": "Default",
+    "date": {{ itime 3 }},
+    "created_at": "{{ time 3 }}",
+    "startDate": "{{ time 3 }}",
+    "store": {
+        "Default": {
+            "dia": 5,
+            "carbratio": [{"time": "00:00", "timeAsSeconds": 0, "value": 10}],
+            "sens": [{"time": "00:00", "timeAsSeconds": 0, "value": 100}],
+            "basal": [{"time": "00:00", "timeAsSeconds": 0, "value": 0.8}],
+            "target_low": [{"time": "00:00", "timeAsSeconds": 0, "value": 100}],
+            "target_high": [{"time": "00:00", "timeAsSeconds": 0, "value": 110}],
+            "units": "mg/dl",
+            "timezone": "Pacific/Auckland"
+        }
+    },
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+
+// The first load takes the newest store (getLastProfileStore); ProfileStore reads defaultProfile, startDate and store
+NAME get_last_profile_store
+GET http://{{ site }}/api/v3/profile?sort$desc=date&limit=1
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS "Default" "@result.0.defaultProfile"
+ASSERT_EXISTS "@result.0.startDate"
+ASSERT_EXISTS "@result.0.srvModified"
+ASSERT_EQUALS 0.8 "@result.0.store.Default.basal.0.value"
+ASSERT_EQUALS 100 "@result.0.store.Default.sens.0.value"
+ASSERT_EQUALS 110 "@result.0.store.Default.target_high.0.value"
+
+// Later loads take the last of the stores changed since (getProfileModifiedSince, limit 10)
+NAME profile_modified_since
+GET http://{{ site }}/api/v3/profile/history/{{ itime 60 }}?limit=10
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS "Default" "@result.0.defaultProfile"
+ASSERT_EXISTS "#Etag.0"
+
+////////
+// LAST MODIFIED
+////////
+
+// LoadLastModificationRunner compares each collection's to what it has loaded, to know what to load
+NAME last_modified
+GET http://{{ site }}/api/v3/lastModified
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS ".get_last_profile_store.result.0.srvModified" "@result.collections.profile"
+ASSERT_EQUALS ".device_status_modified_since.result.0.srvModified" "@result.collections.devicestatus"

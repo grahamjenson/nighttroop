@@ -243,14 +243,18 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   followers.
 - **v1**: entries, treatments, device statuses, profiles, food and activities, with Nightscout's filters, plus
   status, versions, verifyauth, slice, count, times and echo.
-- **v2**: authorization (a token for a JWT), properties and summary.
+- **v2**: authorization (a token for a JWT, and a check of one of its permissions), properties and summary.
 - **v3**: create, read, update, patch, delete, search and history of each collection, plus version, status,
   lastModified and settings.
+- The v3 status shows what the token may do to each collection, e.g. `crud` for an uploader and `r` for a read only
+  token, so apps like AAPS only upload with a token that may write.
 - A v3 history includes deleted documents, with `isValid` false, so apps learn of deletions; a search leaves them
   out.
 - A delete moves a document's `srvModified` and the v3 lastModified forward, so a history since an app's last sync
   has the documents deleted after it.
 - **Socket.IO** live updates and alarms over long polling or websockets.
+- A new Announcement is sent to every `/alarm` socket that can read, with its notes as the message, so AAPS shows it
+  as a notification.
 - Glucose is stored in mg/dL and returned and accepted in the settings' units.
 - The v1 status has the settings' units in `settings.units`, as Nightscout writes them (`mg/dl` or `mmol`).
 - The v3 version needs no token, so an app can check for v3 before it signs in.
@@ -263,6 +267,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   default profile's or profile switch's basal at its start, in the profile's timezone, and is returned with that
   `absolute` and its `percent` as sent.
 - Duplicate uploads are ignored; values far outside real use are refused.
+- Trio's and iAPS's `SMB` and `External Insulin` treatments are kept as insulin doses, with their event type.
+- A profile has `enteredBy`, the identity that uploaded it, as Trio needs it to import one.
 - A create that names its `identifier` keeps it, and only a document with that identifier is its duplicate.
 - A create naming a deleted document's identifier, or a replace of one, replaces it whatever changed, as Juggluco
   changes a treatment by deleting it and sending it again.

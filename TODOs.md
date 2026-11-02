@@ -53,6 +53,26 @@
 1. P4: Keep which batches were uploaded, and with which sites, across restarts, as the first backup round after a
    restart uploads every batch again though their backups are current
 1. Nightscout API:
+    1. P1: AAPS reads an entry's `sgv` as mg/dL whatever its units, and only knows the units `mg/dl` and `mmol`, so
+       with an identity in mmol/L (the default in mmol/L countries) its readings, temp targets and profiles are read
+       wrong. Return mg/dL to Nightscout clients, or set device identities to mg/dL (docs/clients/aaps.md)
+    1. P1: Honour `sort` in searches and sort v3 history by `srvModified` oldest first, as Nightscout does. Searches
+       are always newest first, so AAPS's first load (`sort=date&date$gt=…&limit=500`, back 100 days) and its
+       history paging (`limit=500`) skip all but the newest 500 when there are more, and its profile history takes
+       the oldest store changed rather than the newest. Needs history queries ordered by `updated_at`, not a `CASE`
+       in each search's `ORDER BY`, which would stop SQLite reading the newest rows from the index
+    1. P2: A temp basal's `percent` is taken as the percent of the basal, but AAPS sends the change (`rate - 100`,
+       so -50 is half, -100 a zero temp) with the rate in U/hr; its negative percents are refused with a 400, which
+       AAPS drops for good (docs/clients/aaps.md). Decide whether AAPS's percent is read as a change
+    1. P2: Keep the fields AAPS's followers need: an effective profile switch's `original*` fields (else it is read
+       as a Note), a running mode's `mode`, `autoForced`, `reasons` and `originalDuration`, a temp basal's `type`
+       (e.g. `PUMP_SUSPEND`), and a calibration's `isCalibration` and `sensorMgdlAtPairing`
+    1. P2: Return a food's Nightscout `type` (`food`), `portion`, `unit` and `gi`; AAPS keeps only foods of type
+       `food`, so it loads none
+    1. P3: Accept the SHA1 of a token as the API secret on Socket.IO `authorize`, as AAPS 3.4 and older send it,
+       which needs a kept hash of each token
+    1. P4: Keep arbitrary API v3 `settings` documents and support v2 authorization roles and subjects, which AAPS 4's
+       client control (pairing and remote commands) uses
     1. P1: Accept an `api-secret` that is the SHA1 hex of a device's Nightscout token, e.g. by keeping each token's
        SHA1 when it is made or reset, as Juggluco sends on v1, its default and its only mode on Wear OS
        ([docs/clients/juggluco.md](docs/clients/juggluco.md))
@@ -65,6 +85,24 @@
        readings are 18 times too low and its low alarms go off; for now its identity must be set to mg/dL
        ([docs/clients/nightguard.md](docs/clients/nightguard.md)). Make that clearer, e.g. a mg/dL Nightscout
        units option when adding a follower device
+    1. Trio and iAPS ([docs/clients/trio.md](docs/clients/trio.md)):
+        1. P0: Accept `api-secret` as the SHA1 hex of a device's token, as Trio and iAPS send only that (it is all
+           Nightscout checks), e.g. by keeping an HMAC of each token's SHA1 to look the identity up; until then
+           Trio cannot sign in
+        1. P1: Filter v1 treatments on `find[carbs][$exists]` and `find[duration][$exists]`, and on `enteredBy`
+           (`find[enteredBy]`, `find[enteredBy][$ne]` and `find[$and][n][enteredBy][$ne]`), together: Trio fails
+           to decode a carbs fetch with any treatment without carbs, and once it gets only carbs it would import
+           its own back as new ones and double them, as `enteredBy` comes back as the identity, not `Trio`; iAPS
+           takes any announcement as a remote command, not only `enteredBy` `remote`
+        1. P1: A treatment uploaded again with the same `created_at` and `eventType` but a new duration (Trio's
+           temp target and override runs, when one ends early) replaces the first, as Nightscout's v1 upsert does;
+           now the first is kept, so an ended override stays 30 days long
+        1. P2: v1 delete by query (`DELETE /api/v1/treatments.json?find[id][$eq]=`, `find[created_at][$eq]` with
+           `find[eventType][$eq]`, and entries' `find[$or]`) is a 405; Trio deletes carbs, insulin and glucose
+           this way, and the override before uploading its run, so override runs are never uploaded. It needs
+           Trio's `id` kept as the identifier, and must refuse any filter it does not know rather than ignore it
+        1. P3: Keep the device status `pump.bolusIncrement`, the pump battery's state, and `uploader` (`battery`,
+           `isCharging`) Trio sends, for its followers
 
 ## Bugs
 
