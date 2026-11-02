@@ -43,7 +43,13 @@ ASSERT_TEXT_VISIBLE The glucose measured, in your units.
 ASSERT_TEXT_VISIBLE Required
 ASSERT_VISIBLE #site--glucose--create--reading-type
 ASSERT_VISIBLE #site--glucose--create--direction
+// Its type and trend are offered as the table shows them, not as Nightscout's mbg and sgv
+ASSERT_TEXT_EQUALS #site--glucose--create--reading-type>option[value=mbg] Meter
+ASSERT_TEXT_EQUALS #site--glucose--create--reading-type>option[value=sgv] Sensor
+ASSERT_TEXT_EQUALS #site--glucose--create--direction>option[value=FortyFiveUp] ↗ FortyFiveUp
 SCREENSHOT glucose_reading_add
+// A type is picked by what it reads as
+INPUT #site--glucose--create--reading-type Meter
 INPUT #site--glucose--create--reading 7.9
 INPUT #site--glucose--create--notes Finger prick
 CLICK #site--glucose--create--submit
