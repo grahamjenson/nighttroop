@@ -31,11 +31,13 @@ const (
 	// eventStreamBuffer is how many changes can wait to be sent; a client too slow to read them is dropped, and
 	// reconnects to read the collection again
 	eventStreamBuffer = 100
-	// eventStreamPing keeps a quiet stream open through proxies, and finds a client that has gone
-	eventStreamPing = 25 * time.Second
 	// maxEventStreamTime ends a stream, so its client reconnects and is authenticated again
 	maxEventStreamTime = time.Hour
 )
+
+// eventStreamPing keeps a quiet stream open through proxies, finds a client that has gone, and checks the stream's
+// identity has not been revoked
+var eventStreamPing = 25 * time.Second
 
 // EventsHandler streams a collection's changes as server-sent events, each named created, updated or deleted.
 // A change to one of the collection's own rows has its model as JSON, as the API answers it; any other change the
@@ -110,6 +112,10 @@ func EventsHandler[R, M any](collection CollectionBase[R, M]) http.HandlerFunc {
 			case <-end:
 				return
 			case <-ping.C:
+				// A stream is only authenticated as it opens, so it ends once its identity is revoked
+				if httputils.IdentityRevoked(r.Context(), siteContext.ControlDB, siteContext.IdentityModel) {
+					return
+				}
 				_, err = io.WriteString(w, ": ping\n\n")
 			case event := <-changes:
 				data := []byte("{}")

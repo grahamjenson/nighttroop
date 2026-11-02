@@ -179,12 +179,16 @@ func (s *Socket) OnDisconnect(handler func(reason string)) {
 
 var ErrDisconnected = errors.New("socketio: socket disconnected")
 
+// Connected is whether the socket is still connected to its namespace
+func (s *Socket) Connected() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.connected
+}
+
 // Emit sends an event to this socket
 func (s *Socket) Emit(event string, args ...any) error {
-	s.mu.Lock()
-	connected := s.connected
-	s.mu.Unlock()
-	if !connected {
+	if !s.Connected() {
 		return ErrDisconnected
 	}
 	data, err := EventData(event, args...)

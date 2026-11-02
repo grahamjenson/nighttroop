@@ -3,6 +3,7 @@ package sitecollections
 import (
 	"bufio"
 	"context"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -148,6 +149,42 @@ func TestEventsHandlerLimits(t *testing.T) {
 	// Another site has its own streams
 	resp, _ = eventStream(t, streams, "site-b", consts.IdentityRoleUser, handler)
 	require.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+// A stream ends at its next ping once its identity is disabled, as its requests would be refused
+func TestEventsHandlerEndsOnceItsIdentityIsRevoked(t *testing.T) {
+	ping := eventStreamPing
+	eventStreamPing = 20 * time.Millisecond
+	t.Cleanup(func() { eventStreamPing = ping })
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
+	siteID := site.SiteDB.Subdomain
+	identity, err := controlDB.Queries.GetSiteIdentity(t.Context(), controldb.GetSiteIdentityParams{SiteID: siteID, Name: consts.FIRST_READ_ONLY_NAME})
+	require.NoError(t, err)
+
+	handler := EventsHandler[eventRow, eventModel](eventsCollection{name: "glucose_readings"})
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := httputils.CreateSiteContext(r.Context(), &config.ServerConfig{Events: cfg.Events}, controlDB, nil, nil, siteID, "", httputils.HTTPActionRead, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
+		handler(w, r.WithContext(httputils.SetIdentityModelInSiteContext(ctx, identity)))
+	}))
+	t.Cleanup(server.Close)
+	resp, err := http.Get(server.URL)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+	stream := bufio.NewReader(resp.Body)
+	require.Equal(t, ": ping\n", nextEvent(t, stream))
+
+	require.NoError(t, controlDB.Queries.UpdateSiteIdentityEnabled(t.Context(), controldb.UpdateSiteIdentityEnabledParams{Enabled: false, SiteID: siteID, ID: identity.ID}))
+	ended := make(chan error, 1)
+	go func() {
+		_, err := io.Copy(io.Discard, stream)
+		ended <- err
+	}()
+	select {
+	case err := <-ended:
+		require.NoError(t, err)
+	case <-time.After(2 * time.Second):
+		t.Fatal("the stream of a disabled identity was not ended")
+	}
 }
 
 // ownedRow is a row an identity owns, as its alarms are
