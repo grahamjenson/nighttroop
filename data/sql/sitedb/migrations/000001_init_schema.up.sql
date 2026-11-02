@@ -368,6 +368,11 @@ CREATE TABLE device_reports (
     pump_reservoir REAL CHECK(pump_reservoir BETWEEN 0 AND 10000), -- units
     pump_battery_percent REAL CHECK(pump_battery_percent BETWEEN 0 AND 100),
     pump_charging_state TEXT CHECK(length(pump_charging_state) <= 32),
+    pump_clock INTEGER CHECK(pump_clock BETWEEN 0 AND 253402300799999), -- the pump's time when it reported
+    pump_manufacturer TEXT CHECK(length(pump_manufacturer) <= 64),
+    pump_model TEXT CHECK(length(pump_model) <= 64),
+    -- Loop's override in force
+    override_json TEXT CHECK(length(override_json) <= 2048 AND json_valid(override_json)),
 
     -- Raw Loop Settings
     loop_name TEXT CHECK( loop_name IN ('openaps', 'loop')),
@@ -463,6 +468,7 @@ CREATE TABLE profile_presets (
 
     -- loop settings
     loop_settings_json TEXT CHECK(length(loop_settings_json) <= 2048 AND json_valid(loop_settings_json)), -- some loops (e.g. Loop) store settings on the profile
+    remote_settings_json TEXT CHECK(length(remote_settings_json) <= 2048 AND json_valid(remote_settings_json)), -- Trio's remote control settings
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly
@@ -542,6 +548,9 @@ CREATE INDEX food_presets_updated_at_idx ON food_presets(updated_at);
 -- Type lookups and deletes by type, a device's reports, and a profile store's presets
 -- A type's readings by occurred_at let each alarm check find its newest CGM readings without scanning and sorting them all.
 CREATE INDEX glucose_readings_reading_type_occurred_at_idx ON glucose_readings(reading_type, occurred_at);
-CREATE INDEX event_groups_group_type_idx ON event_groups(group_type);
+-- So are a type's newest treatments and device events, which a delete by type and each Nightscout properties request
+-- find, rather than sorting all of a type, or reading every device event to find none of a type
+CREATE INDEX event_groups_group_type_occurred_at_idx ON event_groups(group_type, occurred_at);
+CREATE INDEX component_events_event_type_occurred_at_idx ON component_events(event_type, occurred_at);
 CREATE INDEX device_reports_device_occurred_at_idx ON device_reports(created_by_device_name, occurred_at);
 CREATE INDEX profile_presets_profile_store_id_idx ON profile_presets(profile_store_id);

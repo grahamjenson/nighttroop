@@ -1180,6 +1180,9 @@ type ClientInterface interface {
 	// NsV1Echo request
 	NsV1Echo(ctx context.Context, collection NsCollection, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// NsV1ExperimentsTest request
+	NsV1ExperimentsTest(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// NsV1Slice request
 	NsV1Slice(ctx context.Context, collection NsCollection, field string, pType string, prefix string, params *NsV1SliceParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1362,6 +1365,18 @@ func (c *Client) NsV1Count(ctx context.Context, collection NsCollection, params 
 
 func (c *Client) NsV1Echo(ctx context.Context, collection NsCollection, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewNsV1EchoRequest(c.Server, collection)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV1ExperimentsTest(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV1ExperimentsTestRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -2181,6 +2196,33 @@ func NewNsV1EchoRequest(server string, collection NsCollection) (*http.Request, 
 	}
 
 	operationPath := fmt.Sprintf("/api/v1/echo/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewNsV1ExperimentsTestRequest generates requests for NsV1ExperimentsTest
+func NewNsV1ExperimentsTestRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/experiments/test")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -4507,6 +4549,9 @@ type ClientWithResponsesInterface interface {
 	// NsV1EchoWithResponse request
 	NsV1EchoWithResponse(ctx context.Context, collection NsCollection, reqEditors ...RequestEditorFn) (*NsV1EchoResponse, error)
 
+	// NsV1ExperimentsTestWithResponse request
+	NsV1ExperimentsTestWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV1ExperimentsTestResponse, error)
+
 	// NsV1SliceWithResponse request
 	NsV1SliceWithResponse(ctx context.Context, collection NsCollection, field string, pType string, prefix string, params *NsV1SliceParams, reqEditors ...RequestEditorFn) (*NsV1SliceResponse, error)
 
@@ -4714,6 +4759,29 @@ func (r NsV1EchoResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r NsV1EchoResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV1ExperimentsTestResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsObject
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV1ExperimentsTestResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV1ExperimentsTestResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -5817,6 +5885,15 @@ func (c *ClientWithResponses) NsV1EchoWithResponse(ctx context.Context, collecti
 	return ParseNsV1EchoResponse(rsp)
 }
 
+// NsV1ExperimentsTestWithResponse request returning *NsV1ExperimentsTestResponse
+func (c *ClientWithResponses) NsV1ExperimentsTestWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV1ExperimentsTestResponse, error) {
+	rsp, err := c.NsV1ExperimentsTest(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV1ExperimentsTestResponse(rsp)
+}
+
 // NsV1SliceWithResponse request returning *NsV1SliceResponse
 func (c *ClientWithResponses) NsV1SliceWithResponse(ctx context.Context, collection NsCollection, field string, pType string, prefix string, params *NsV1SliceParams, reqEditors ...RequestEditorFn) (*NsV1SliceResponse, error) {
 	rsp, err := c.NsV1Slice(ctx, collection, field, pType, prefix, params, reqEditors...)
@@ -6397,6 +6474,39 @@ func ParseNsV1EchoResponse(rsp *http.Response) (*NsV1EchoResponse, error) {
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV1ExperimentsTestResponse parses an HTTP response from a NsV1ExperimentsTestWithResponse call
+func ParseNsV1ExperimentsTestResponse(rsp *http.Response) (*NsV1ExperimentsTestResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV1ExperimentsTestResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsObject
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
 
 	}
 

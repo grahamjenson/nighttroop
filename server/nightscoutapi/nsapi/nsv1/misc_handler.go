@@ -1,10 +1,13 @@
 package nsv1
 
 import (
+	"context"
 	"net/http"
 
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 // Versions reports the API versions exposed by this server.
@@ -42,21 +45,40 @@ func VerifyAuth(dep nsutils.Store) http.HandlerFunc {
 	}
 }
 
-// StatusJSON serves the v1 JSON status payload.
-func StatusJSON(store nsutils.Store) http.HandlerFunc {
+// ExperimentsTest is Nightscout's check of credentials, which xDrip4iOS makes before it uploads, so it passes for
+// an identity that can upload readings. Like Nightscout it is a 401 otherwise
+func ExperimentsTest() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		apiutils.WriteJSON(w, http.StatusOK, Status())
+		identity, err := nsutils.AuthenticateExplicit(r)
+		if err != nil || !nsutils.HasPermission(*identity, "api:entries:create") {
+			nsutils.WriteError(w, &nsutils.HTTPError{Status: http.StatusUnauthorized, Message: "Missing permission api:entries:create"})
+			return
+		}
+		apiutils.WriteJSON(w, http.StatusOK, map[string]any{"status": "ok"})
 	}
 }
 
-// Status is the v1 status payload, which a websocket authorize asking for status gets too
-func Status() map[string]any {
+// StatusJSON serves the v1 JSON status payload.
+func StatusJSON(store nsutils.Store) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		apiutils.WriteJSON(w, http.StatusOK, Status(r.Context()))
+	}
+}
+
+// Status is the v1 status payload, which a websocket authorize asking for status gets too. Its settings.units is
+// the settings' units written as Nightscout writes them, "mg/dl" or "mmol", which followers like Nightguard read
+func Status(ctx context.Context) map[string]any {
+	units := "mg/dl"
+	if siteContext := httputils.GetSiteContext(ctx); siteContext != nil && *siteContext.GetSettings().GetUnits() == consts.UnitsMMOLL {
+		units = "mmol"
+	}
 	return map[string]any{
 		"status":            "ok",
 		"apiEnabled":        true,
 		"careportalEnabled": true,
 		"settings": map[string]any{
 			"enable": false,
+			"units":  units,
 		},
 	}
 }

@@ -152,6 +152,9 @@
     "/api/v1/verifyauth": {
       "get": { "operationId": "NsV1VerifyAuth", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsObject" } } }
     },
+    "/api/v1/experiments/test": {
+      "get": { "operationId": "NsV1ExperimentsTest", "summary": "How Loop checks its API secret: 200 when it can upload treatments", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } } }
+    },
     "/api/v1/{collection}": {
       "parameters": [{ "$ref": "#/components/parameters/NsCollection" }],
       "get": {
@@ -177,7 +180,7 @@
     },
     "/api/v1/{collection}/current": {
       "parameters": [{ "$ref": "#/components/parameters/NsCollection" }],
-      "get": { "operationId": "NsV1Current", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsDocuments" }, "default": { "$ref": "#/components/responses/NsError" } } }
+      "get": { "operationId": "NsV1Current", "summary": "The newest document, in a list of one; for profile, as in Nightscout, the profile set itself", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsDocuments" }, "default": { "$ref": "#/components/responses/NsError" } } }
     },
     "/api/v1/{collection}/{identifier}": {
       "parameters": [{ "$ref": "#/components/parameters/NsCollection" }, { "$ref": "#/components/parameters/NsIdentifier" }],
@@ -257,7 +260,7 @@
       }
     },
     "/api/v3/version": {
-      "get": { "operationId": "NsV3Version", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsV3Result" } } }
+      "get": { "operationId": "NsV3Version", "security": [], "responses": { "200": { "$ref": "#/components/responses/NsV3Result" } } }
     },
     "/api/v3/status": {
       "get": { "operationId": "NsV3Status", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsV3Result" }, "default": { "$ref": "#/components/responses/NsError" } } }

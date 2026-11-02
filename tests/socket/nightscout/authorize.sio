@@ -23,15 +23,18 @@ NAME read_only_data
 WAIT dataUpdate
 ASSERT_LENGTH 0 "@sgvs"
 
-# Asking for status, as Nightscout follower apps do, puts the server's status in the first dataUpdate
+# Asking for status, as Nightscout follower apps do, puts the server's status in the first dataUpdate. A read only
+# token sent as the token, not the secret, reads too
 NAME connect_status
 CONNECT http://{{ site }}/socket.io/?EIO=4
 
 NAME authorize_status
 EMIT authorize
-B {"client":"follower","secret":"{{ read_token }}","status":true}
+B {"client":"follower","token":"{{ read_token }}","status":true}
 ACK
 ASSERT_EQUALS true "@read"
+ASSERT_EQUALS false "@write"
+ASSERT_EQUALS false "@write_treatment"
 
 NAME status_data
 WAIT dataUpdate
@@ -77,3 +80,45 @@ NAME silent_gets_nothing
 COLLECT dataUpdate
 T 500ms
 ASSERT_LENGTH 0 "@"
+
+# Another site's socket gets none of this site's writes
+NAME create_other_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET other_token {{ .create_other_site.pwd_nstoken }}
+SET other_site {{ .create_other_site.site_subdomain }}.ns.localhost
+
+NAME connect_other
+CONNECT http://{{ .other_site }}/socket.io/?EIO=4
+
+NAME authorize_other
+EMIT authorize
+B {"client":"follower","secret":"{{ .other_token }}"}
+ACK
+ASSERT_EQUALS true "@read"
+
+NAME other_data
+WAIT dataUpdate
+ASSERT_LENGTH 0 "@sgvs"
+
+NAME post_entry_for_other
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [{"type":"sgv","sgv":130,"date":{{ itime 0 }}}]
+ASSERT_STATUS 200
+
+NAME other_gets_nothing
+COLLECT dataUpdate
+T 500ms
+ASSERT_LENGTH 0 "@"
+
+# Nor does this site's token work on another site
+NAME connect_other_with_this_token
+CONNECT http://{{ .other_site }}/socket.io/?EIO=4
+
+NAME authorize_other_with_this_token
+EMIT authorize
+B {"client":"follower","secret":"{{ token }}"}
+ACK
+ASSERT_EQUALS false "@read"
+ASSERT_EQUALS false "@write"
+ASSERT_EQUALS false "@write_treatment"

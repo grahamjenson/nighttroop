@@ -144,15 +144,19 @@ func DBToNightscoutProfileStore(source *sitedb.ProfilePresetBundle, siteContext 
 func NightscoutToDBCreateProfilePreset(source nightscoutmodels.ProfileStore, ctx nightscoutmodels.ConverterContext) []sitedb.CreateProfilePresetParams {
 	createParams := []sitedb.CreateProfilePresetParams{}
 	profileStoreID := nightscoutmodels.AssignID()
-	var loopSettingsJSON *string
+	var loopSettingsJSON, remoteSettingsJSON *string
 	if source.LoopSettings != nil {
 		loopSettingsJSON = TryValueToJSON(source.LoopSettings)
+	}
+	if source.RemoteSettings != nil {
+		remoteSettingsJSON = TryValueToJSON(source.RemoteSettings)
 	}
 	defaultUnits := source.Units
 	for name, profile := range source.Store {
 		createParam := nightscoutmodels.PartialProfileStoreToCreate(source, ctx)
 		createParam.ProfileStoreID = profileStoreID
 		createParam.LoopSettingsJson = loopSettingsJSON
+		createParam.RemoteSettingsJson = remoteSettingsJSON
 		createParam.Name = string(name)
 		createParam.IsDefault = source.DefaultProfile != nil && *source.DefaultProfile == name
 

@@ -1,0 +1,166 @@
+INCLUDE steps/new_ns_site.steps
+
+// Nightguard reads glucose as mg/dL whatever an entry's units field says, so its identity must be set to mg/dL
+INCLUDE steps/ns_units_mgdl.steps
+
+// How Nightguard reads glucose, from NightscoutService.swift. It asks v3 first with a JWT, and v1 with
+// the token when v3 is not there, when the user forces v1, and alongside v3 for the current value.
+// It sorts its query parameters by name and URL-encodes "|" and the brackets of find[...].
+// sgv and mbg are read as numbers (or strings of numbers) in mg/dL, and the time from date, then dateString,
+// then mills: a number in milliseconds (or seconds, if under 1e11) or an ISO string.
+
+//////
+// SEED: a CGM's readings and a meter reading, through v1 as an uploader would
+//////
+
+NAME seed_entries_v1
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [
+    { "type": "sgv", "sgv": 120, "direction": "Flat", "date": {{ itime 15 }}, "dateString": "{{ time 15 }}", "device": "xDrip-DexcomG6" },
+    { "type": "sgv", "sgv": 126, "direction": "FortyFiveUp", "date": {{ itime 10 }}, "dateString": "{{ time 10 }}", "device": "xDrip-DexcomG6" },
+    { "type": "mbg", "mbg": 140, "date": {{ itime 7 }}, "dateString": "{{ time 7 }}", "device": "xDrip-DexcomG6" },
+    { "type": "sgv", "sgv": 131, "direction": "SingleUp", "date": {{ itime 5 }}, "dateString": "{{ time 5 }}", "device": "xDrip-DexcomG6" }
+]
+ASSERT_STATUS 200
+
+NAME nightguard_jwt
+GET http://{{ site }}/api/v2/authorization/request/token={{ token }}
+ASSERT_STATUS 200
+
+//////
+// v3: readEntriesHead, the last 48 hours of glucose. date$gte is a Double, so it has a fraction
+//////
+
+NAME nightguard_v3_entries_head
+GET http://{{ site }}/api/v3/entries?date$gte={{ itime 2880 }}.25&fields=identifier,_id,date,dateString,mills,type,sgv,mbg,direction,units&limit=500&sort$desc=date&type$in=sgv%7Cmbg
+H Accept: application/json
+H Authorization: Bearer {{ dig "nightguard_jwt.token" }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 4 "@result"
+ASSERT_EQUALS 131 "@result.0.sgv"
+ASSERT_EQUALS "sgv" "@result.0.type"
+ASSERT_EQUALS "SingleUp" "@result.0.direction"
+ASSERT_EQUALS ".seed_entries_v1.3.date" "@result.0.date"
+ASSERT_EXISTS "@result.0.identifier"
+ASSERT_EXISTS "@result.0.dateString"
+// Nightguard takes any entry with an sgv as a CGM reading and any with only an mbg as a meter reading,
+// so a meter reading must have no sgv, or it is drawn and alarmed on as the current CGM value
+ASSERT_EQUALS null "@result.0.mbg"
+ASSERT_EQUALS 140 "@result.1.mbg"
+ASSERT_EQUALS "mbg" "@result.1.type"
+ASSERT_EQUALS null "@result.1.sgv"
+ASSERT_EQUALS 126 "@result.2.sgv"
+ASSERT_EQUALS 120 "@result.3.sgv"
+
+//////
+// v3: readLatestEntriesHybrid, the newest 20 for the current value and delta
+//////
+
+NAME nightguard_v3_entries_latest
+GET http://{{ site }}/api/v3/entries?fields=identifier,_id,date,dateString,mills,type,sgv,mbg,direction,units&limit=20&sort$desc=date&type$in=sgv%7Cmbg
+H Accept: application/json
+H Authorization: Bearer {{ dig "nightguard_jwt.token" }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 4 "@result"
+ASSERT_EQUALS 131 "@result.0.sgv"
+ASSERT_EQUALS ".seed_entries_v1.3.date" "@result.0.date"
+
+// readCurrentData and readChartData ask for every type
+NAME nightguard_v3_entries_current
+GET http://{{ site }}/api/v3/entries?fields=identifier,_id,date,dateString,sgv,direction,units&limit=2&sort$desc=date
+H Accept: application/json
+H Authorization: Bearer {{ dig "nightguard_jwt.token" }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result"
+ASSERT_EQUALS 131 "@result.0.sgv"
+ASSERT_EQUALS "SingleUp" "@result.0.direction"
+ASSERT_EQUALS ".seed_entries_v1.3.date" "@result.0.date"
+
+NAME nightguard_v3_entries_chart
+GET http://{{ site }}/api/v3/entries?fields=date,sgv&limit=20&sort$desc=date
+H Accept: application/json
+H Authorization: Bearer {{ dig "nightguard_jwt.token" }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 4 "@result"
+ASSERT_EQUALS 131 "@result.0.sgv"
+ASSERT_EQUALS ".seed_entries_v1.3.date" "@result.0.date"
+
+//////
+// v3: readChartDataWithinPeriodOfTime, a day or the statistics days, a page at a time with the server's limit
+// and skip; it stops on an empty page, or a page whose oldest date is at or before date$gte
+//////
+
+NAME nightguard_v3_entries_period
+GET http://{{ site }}/api/v3/entries?date$gte={{ itime 12 }}.5&date$lt={{ itime 0 }}.5&fields=date,dateString,mills,type,sgv,mbg,direction&sort$desc=date&type$in=sgv%7Cmbg
+H Accept: application/json
+H Authorization: Bearer {{ dig "nightguard_jwt.token" }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@result"
+ASSERT_EQUALS 131 "@result.0.sgv"
+ASSERT_EQUALS 140 "@result.1.mbg"
+ASSERT_EQUALS 126 "@result.2.sgv"
+
+NAME nightguard_v3_entries_period_page_2
+GET http://{{ site }}/api/v3/entries?date$gte={{ itime 12 }}.5&date$lt={{ itime 0 }}.5&fields=date,dateString,mills,type,sgv,mbg,direction&skip=3&sort$desc=date&type$in=sgv%7Cmbg
+H Accept: application/json
+H Authorization: Bearer {{ dig "nightguard_jwt.token" }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
+
+// The report asks a page of 1000 with whole milliseconds
+NAME nightguard_v3_entries_report
+GET http://{{ site }}/api/v3/entries?date$gte={{ itime 60 }}&date$lt={{ itime 0 }}&limit=1000&sort$desc=date&type$in=sgv%7Cmbg
+H Accept: application/json
+H Authorization: Bearer {{ dig "nightguard_jwt.token" }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 4 "@result"
+
+//////
+// v1: the same reads, with the token as a query parameter
+//////
+
+NAME nightguard_v1_entries_latest
+GET http://{{ site }}/api/v1/entries.json?count=20&token={{ token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 4 "@"
+ASSERT_EQUALS 131 "@0.sgv"
+ASSERT_EQUALS "sgv" "@0.type"
+ASSERT_EQUALS "SingleUp" "@0.direction"
+ASSERT_EQUALS ".seed_entries_v1.3.date" "@0.date"
+ASSERT_EXISTS "@0._id"
+ASSERT_EXISTS "@0.dateString"
+ASSERT_EQUALS 140 "@1.mbg"
+ASSERT_EQUALS "mbg" "@1.type"
+ASSERT_EQUALS null "@1.sgv"
+ASSERT_EQUALS null "@0.mbg"
+
+NAME nightguard_v1_entries_current
+GET http://{{ site }}/api/v1/entries.json?count=2&token={{ token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS 131 "@0.sgv"
+
+// v1 has no skip, so Nightguard moves find[date][$lt] back to the oldest date it has
+NAME nightguard_v1_entries_period
+GET http://{{ site }}/api/v1/entries.json?count=1440&find%5Bdate%5D%5B$gte%5D={{ itime 12 }}.5&find%5Bdate%5D%5B$lt%5D={{ itime 0 }}.5&token={{ token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@"
+ASSERT_EQUALS 131 "@0.sgv"
+ASSERT_EQUALS 140 "@1.mbg"
+ASSERT_EQUALS 126 "@2.sgv"
+
+NAME nightguard_v1_entries_period_page_2
+GET http://{{ site }}/api/v1/entries.json?count=1440&find%5Bdate%5D%5B$gte%5D={{ itime 12 }}.5&find%5Bdate%5D%5B$lt%5D={{ dig "seed_entries_v1.1.date" }}.0&token={{ token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"
+
+NAME nightguard_v1_entries_report
+GET http://{{ site }}/api/v1/entries.json?count=1000&find%5Bdate%5D%5B$gte%5D={{ itime 60 }}&find%5Bdate%5D%5B$lt%5D={{ itime 6 }}&token={{ token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@"
+ASSERT_EQUALS 140 "@0.mbg"

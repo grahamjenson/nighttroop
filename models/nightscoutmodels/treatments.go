@@ -53,6 +53,7 @@ type Treatment struct {
 
 	DurationMinutes        *types.FlexibleInt64 `json:"duration,omitempty"`               // minutes
 	DurationInMilliseconds *types.FlexibleInt64 `json:"durationInMilliseconds,omitempty"` // minutes
+	DurationType           *types.ShortString   `json:"durationType,omitempty"`           // Loop's "indefinite" override
 
 	// Treatment-specific fields
 	Profile             *types.ShortString     `json:"profile,omitempty"`
@@ -105,6 +106,8 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 		LegacyID       *types.IdentifierString `json:"_id"`
 		SyncIdentifier *types.IdentifierString `json:"syncIdentifier"`
 		UUID           *types.IdentifierString `json:"uuid"`
+		// Nightscout stores a careportal's or xDrip4iOS's eventTime as created_at
+		EventTime *types.DateString `json:"eventTime"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),
@@ -126,6 +129,10 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 	}
 	if t.Identifier == nil {
 		t.Identifier = aux.UUID
+	}
+
+	if aux.EventTime != nil {
+		t.CreatedAt = aux.EventTime
 	}
 
 	// Set default CreatedAt (leave UTCOffset nil to be later replaces by user timezone)
@@ -183,6 +190,11 @@ const (
 	ProfileSwitch   TreatmentEventType = "Profile Switch"
 	TempBasal       TreatmentEventType = "Temp Basal"
 	TemporaryTarget TreatmentEventType = "Temporary Target"
+	// TemporaryOverride is Loop's override, kept as a temp target with its insulin needs scale factor
+	TemporaryOverride TreatmentEventType = "Temporary Override"
+	// Loop's and Trio's pump suspends and resumes
+	SuspendPump TreatmentEventType = "Suspend Pump"
+	ResumePump  TreatmentEventType = "Resume Pump"
 
 	// Device Events
 	OpenAPSOffline    TreatmentEventType = "OpenAPS Offline"
@@ -241,6 +253,9 @@ var TreatmentEventTypes = []TreatmentEventType{
 	ExternalInsulin,
 	TempBasal,
 	TemporaryTarget,
+	TemporaryOverride,
+	SuspendPump,
+	ResumePump,
 	CannulaFill,
 	Prime,
 	ReservoirChange,
@@ -253,6 +268,11 @@ func (t *TreatmentEventType) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
+	// xDrip4iOS sends carbs on their own as "Carbs"
+	if strings.TrimSpace(s) == "Carbs" {
+		*t = CarbCorrection
+		return nil
+	}
 	for _, et := range TreatmentEventTypes {
 		if strings.TrimSpace(s) == string(et) {
 			*t = et
@@ -282,7 +302,9 @@ func (t *GlucoseType) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	switch strings.ToLower(strings.TrimSpace(s)) {
+	// xDrip4iOS adds the reading after a colon, e.g. "Finger: 6.7 mmol/L"
+	kind, _, _ := strings.Cut(s, ":")
+	switch strings.ToLower(strings.TrimSpace(kind)) {
 	case "sensor":
 		*t = Sensor
 	case "finger":

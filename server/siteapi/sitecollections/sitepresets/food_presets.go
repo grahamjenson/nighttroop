@@ -37,11 +37,7 @@ func (s *FoodPresetsCollection) CreateRow(ctx context.Context, collectionTx *sit
 	if herr := checkFoodPreset(model); herr != nil {
 		return nil, herr
 	}
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.CreateFoodPreset(ctx, sitemodels.FoodPresetToCreate(model, siteContext))
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).CreateFoodPreset, sitemodels.FoodPresetToCreate(model, siteContext))
 }
 
 // NewHTMXResponse is the modal to add a food preset in
@@ -62,11 +58,7 @@ func (s *FoodPresetsCollection) UpdateRow(ctx context.Context, collectionTx *sit
 		return nil, herr
 	}
 	model.ID = oldModel.ID
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.UpdateFoodPreset(ctx, sitemodels.FoodPresetToUpdate(model, siteContext))
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).UpdateFoodPreset, sitemodels.FoodPresetToUpdate(model, siteContext))
 }
 
 func (s *FoodPresetsCollection) UpdateHTMXResponse(model *sitemodels.SiteFoodPreset) templ.Component {
@@ -74,11 +66,7 @@ func (s *FoodPresetsCollection) UpdateHTMXResponse(model *sitemodels.SiteFoodPre
 }
 
 func (s *FoodPresetsCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.FoodPreset, error) {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.GetFoodPreset(ctx, sitedb.GetFoodPresetParams{ID: id})
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).GetFoodPreset, sitedb.GetFoodPresetParams{ID: id})
 }
 
 // ToModel is the site model of a row
@@ -92,11 +80,7 @@ func (s *FoodPresetsCollection) GetHTMXResponse(model *sitemodels.SiteFoodPreset
 }
 
 func (s *FoodPresetsCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.FoodPreset, error) {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	return q.AllFoodPresets(ctx, siteapiutils.QueryToAllFoodPresets(query))
+	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).AllFoodPresets, siteapiutils.QueryToAllFoodPresets(query))
 }
 
 func (s *FoodPresetsCollection) SearchHTMXResponse(models []*sitemodels.SiteFoodPreset, query *apiutils.Query) templ.Component {
@@ -105,11 +89,7 @@ func (s *FoodPresetsCollection) SearchHTMXResponse(models []*sitemodels.SiteFood
 
 // DeleteRow hard deletes, as the Nightscout API does presets, which are not events with a history to keep
 func (s *FoodPresetsCollection) DeleteRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) error {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return err
-	}
-	_, err = q.HardDeleteFoodPreset(ctx, sitedb.HardDeleteFoodPresetParams{ID: id})
+	_, err := siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).HardDeleteFoodPreset, sitedb.HardDeleteFoodPresetParams{ID: id})
 	return err
 }
 

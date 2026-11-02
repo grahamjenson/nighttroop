@@ -171,6 +171,8 @@ deleted (after a confirmation):
 
 - **Glucose**: CGM and meter readings with trend arrows, in the settings' units (mmol/L or mg/dL), with lows and
   highs coloured as on the summary.
+  - Adding a reading offers its type as Meter or Sensor and its trend as an arrow with its name (e.g. `↗ FortyFiveUp`),
+    as the table and its details show them.
 - **Insulin doses**
 - **Food intakes**
 - **Temp basals**, with a percent as the percent of the scheduled basal, 50 for half, never negative
@@ -242,7 +244,10 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - Each site has a Nightscout compatible API at `<site>.ns.<host>` for apps like AAPS, Loop, Trio and xDrip, and
   followers.
 - **v1**: entries, treatments, device statuses, profiles, food and activities, with Nightscout's filters, plus
-  status, versions, verifyauth, slice, count, times and echo.
+  status, versions, verifyauth, slice, count, times and echo, and experiments/test.
+- v1 `experiments/test` is `{"status":"ok"}` for an identity that can upload readings and a 401 for any other, so
+  Loop's and xDrip4iOS's connection tests pass with a PWD phone's token.
+- A v1 search by `find[_id]` that finds nothing, such as a deleted treatment, is an empty list, not a 404.
 - **v2**: authorization (a token for a JWT, and a check of one of its permissions), properties and summary.
 - **v3**: create, read, update, patch, delete, search and history of each collection, plus version, status,
   lastModified and settings.
@@ -256,10 +261,38 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - A new Announcement is sent to every `/alarm` socket that can read, with its notes as the message, so AAPS shows it
   as a notification.
 - Glucose is stored in mg/dL and returned and accepted in the settings' units.
+- The v1 status has the settings' units in `settings.units`, as Nightscout writes them (`mg/dl` or `mmol`).
+- The v3 version needs no token, so an app can check for v3 before it signs in.
+- An entry has an `sgv` if it is a CGM reading and an `mbg` if it is a meter reading, never both.
+- A date filter takes milliseconds with a fraction (e.g. `date$gte=1761234567890.25`), which is dropped.
+- A `created_at` filter or sort is on when it happened, as `date` is, and `srvCreated` is on when it was uploaded.
+- v3 filters take `field$eq` as well as `field`, e.g. `eventType$eq=Site Change`.
+- A device status keeps its pump's other fields, e.g. AAPS's `extended` with its profile and temp basal.
 - A temp basal sent with only a `percent` of the basal (e.g. 50 for half, 150 for 1.5x) has its rate set from the
   default profile's or profile switch's basal at its start, in the profile's timezone, and is returned with that
   `absolute` and its `percent` as sent.
 - Duplicate uploads are ignored; values far outside real use are refused.
+- A `created_at` filter given a time with no zone, as LoopFollow sends it, reads it as UTC.
+- Loop's and Trio's Suspend Pump and Resume Pump treatments are kept.
+- A device status keeps its pump's clock, manufacturer and model, its uploader's battery, returned in both
+  `uploader.battery` and `uploaderBattery`, and Loop's override in force.
+- A profile keeps Trio's remote control settings (bundle, device token, APNS environment, team and expiry) and its
+  override presets, for LoopFollow's Trio Remote Control.
+- A v1 upload of a document with an `_id` replaces the one with that `_id`, or is created with it, as Loop sends an
+  override again with its `_id` when it changes, and deletes it by that `_id`.
+- Loop's `Temporary Override` is kept as a temp target, with its correction range and insulin needs scale factor; an
+  indefinite one lasts a week.
+- An identifier over 36 characters, like an Omnipod dose's `syncIdentifier`, is kept as a hash of it, so two that
+  start the same are not taken as one.
+- v1 `profile/current` is the newest profile set itself, not a list of one, with `enteredBy`, as Loop reads it.
+- A device's Nightscout token is also taken as its SHA1 in the `api-secret` header, as xDrip+ and Loop send it; a
+  password reset stops the old token's SHA1 working.
+- A treatment's `eventTime`, as xDrip4iOS and Nightscout's careportal send it, is its `created_at`; an eventType of
+  `Carbs` is a carb correction, and a glucoseType with the reading after a colon, like `Finger: 6.7 mmol/L`, is a
+  finger prick.
+- Entries of type `cal` (a CGM calibration's slope and intercept) are accepted and not stored, so the finger pricks
+  sent with them are kept.
+- A device status's `uploader.battery` is its uploader's battery when it has no `uploaderBattery`.
 - A device's Nightscout token is also taken as its SHA1 in the `api-secret` header, as xDrip+ sends the token in its
   URL; a password reset stops the old token's SHA1 working.
 - An xDrip+ upload works as it sends it (see `docs/clients/xdrip.md`): a calibration (`type` `cal`) in a batch of
@@ -338,6 +371,9 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - Sign-in attempts are rate limited per identity and IP; a disabled identity cannot sign in.
 - Devices use their Nightscout token, as a token, API secret or for a JWT.
 - Changing an identity's password or TOTP signs out its existing sessions.
+- Turning an identity off, deleting it or changing its password or TOTP also ends its open connections: its Socket.IO
+  writes are refused at once and its sockets are disconnected within a minute, and its live update streams end within
+  30 seconds.
 - A page left open after its sign in ends goes to the login page once its live updates reconnect, rather than asking
   for them again and again.
 

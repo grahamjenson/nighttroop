@@ -45,7 +45,7 @@ type storageSubscriber struct {
 // subscribeToStorage adds each collection the socket may read (every one when it names none) to those it is sent,
 // keeping those it had as Nightscout's rooms do, answering as Nightscout does
 func (ws *Websocket) subscribeToStorage(socket *socketio.Socket, accessToken string, collections []nsutils.Collection) map[string]any {
-	ctx, identity := ws.identity(socket.Request(), accessToken, "")
+	ctx, identity := ws.identity(socket, accessToken, "")
 	if identity == nil {
 		return map[string]any{"success": false, "message": "Missing or bad accessToken"}
 	}

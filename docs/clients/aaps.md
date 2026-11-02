@@ -183,7 +183,7 @@ token is sent as it is (`aaps_v1.sio`). Users on AAPS 3.x should use NSClient v3
 | Temp basal `type`, effective profile switch `original*`, running mode `mode` | not supported: dropped, so followers misread them; TODO P2 | `sync_v3.http` |
 | Calibrations (`isCalibration`, `sensorMgdlAtPairing`) | not supported: dropped; TODO P2 | `sync_v3.http` |
 | Device statuses: create, history with `srvModified` | works | `sync_v3.http`, `flow_v3.http` |
-| Device status `pump.clock`, `pump.status`, `pump.extended` | not supported: dropped, so AAPS followers show no pump data; TODO P2 | `sync_v3.http` |
+| Device status `pump.clock`, `pump.status`, `pump.extended` | works: the pump object is read back as sent | `sync_v3.http` |
 | Food: create | works | `sync_v3.http` |
 | Food: read | not supported: no `type: "food"`, so AAPS loads none; TODO P2 | `sync_v3.http` |
 | Profile store: create, newest, history | works (one store) | `sync_v3.http`, `flow_v3.http` |

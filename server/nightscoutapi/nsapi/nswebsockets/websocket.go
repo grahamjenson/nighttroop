@@ -35,6 +35,10 @@ const (
 	maxDeviceStatuses = 10
 )
 
+// identityRecheck is how often a socket's identity is read again, so one deleted, disabled or given new credentials
+// stops being sent the site's data
+var identityRecheck = time.Minute
+
 // Websocket is Nightscout's live updates over Socket.IO at /socket.io/. A client emits authorize with its token
 // or API secret; one that can read joins DataReceivers, gets a dataUpdate with recent data, then one for each
 // change to the site's models, however it was written.
@@ -143,8 +147,8 @@ type authorization struct {
 }
 
 // authorize finds the identity for a token, a JWT or the token given as the API secret, and what it may do
-func (ws *Websocket) authorize(r *http.Request, token, secret string) (context.Context, authorization) {
-	ctx, nsIdentity := ws.identity(r, token, secret)
+func (ws *Websocket) authorize(socket *socketio.Socket, token, secret string) (context.Context, authorization) {
+	ctx, nsIdentity := ws.identity(socket, token, secret)
 	if nsIdentity == nil {
 		return ctx, authorization{}
 	}
@@ -156,8 +160,10 @@ func (ws *Websocket) authorize(r *http.Request, token, secret string) (context.C
 	}
 }
 
-// identity is the Nightscout identity for a token, a JWT or the token given as the API secret, or nil for none
-func (ws *Websocket) identity(r *http.Request, token, secret string) (context.Context, *nsutils.Identity) {
+// identity is the Nightscout identity for a token, a JWT or the token given as the API secret, or nil for none. The
+// socket is disconnected once that identity is revoked.
+func (ws *Websocket) identity(socket *socketio.Socket, token, secret string) (context.Context, *nsutils.Identity) {
+	r := socket.Request()
 	ctx := r.Context()
 	identity, err := ws.jwtIdentity(ws.config, ctx, token)
 	if err != nil {
@@ -175,5 +181,24 @@ func (ws *Websocket) identity(r *http.Request, token, secret string) (context.Co
 		return ctx, nil
 	}
 	httputils.RecordAuthClient(r, identity)
+	ws.watchIdentity(socket, identity)
 	return httputils.SetIdentityModelInSiteContext(ctx, identity), nsIdentity
+}
+
+// watchIdentity disconnects the socket once identity, which it authorized as, is revoked, checking every
+// identityRecheck while it is connected. A socket is not authenticated again on each event, so would otherwise keep
+// reading and writing the site's data after its identity was disabled, deleted or given new credentials.
+func (ws *Websocket) watchIdentity(socket *socketio.Socket, identity *controldb.SiteIdentity) {
+	var check func()
+	check = func() {
+		if !socket.Connected() {
+			return
+		}
+		if httputils.IdentityRevoked(context.Background(), ws.controlDB, identity) {
+			socket.Disconnect()
+			return
+		}
+		time.AfterFunc(identityRecheck, check)
+	}
+	time.AfterFunc(identityRecheck, check)
 }
