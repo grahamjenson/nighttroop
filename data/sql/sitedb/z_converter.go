@@ -240,17 +240,33 @@ func DeviceReportToCreate(source DeviceReport) CreateDeviceReportParams {
 		xstring2 := *source.PumpChargingState
 		sitedbCreateDeviceReportParams.PumpChargingState = &xstring2
 	}
+	if source.PumpClock != nil {
+		xint64 := *source.PumpClock
+		sitedbCreateDeviceReportParams.PumpClock = &xint64
+	}
+	if source.PumpManufacturer != nil {
+		xstring3 := *source.PumpManufacturer
+		sitedbCreateDeviceReportParams.PumpManufacturer = &xstring3
+	}
+	if source.PumpModel != nil {
+		xstring4 := *source.PumpModel
+		sitedbCreateDeviceReportParams.PumpModel = &xstring4
+	}
+	if source.OverrideJson != nil {
+		xstring5 := *source.OverrideJson
+		sitedbCreateDeviceReportParams.OverrideJson = &xstring5
+	}
 	if source.LoopName != nil {
-		xstring3 := *source.LoopName
-		sitedbCreateDeviceReportParams.LoopName = &xstring3
+		xstring6 := *source.LoopName
+		sitedbCreateDeviceReportParams.LoopName = &xstring6
 	}
 	if source.ConfigurationSettingsJson != nil {
-		xstring4 := *source.ConfigurationSettingsJson
-		sitedbCreateDeviceReportParams.ConfigurationSettingsJson = &xstring4
+		xstring7 := *source.ConfigurationSettingsJson
+		sitedbCreateDeviceReportParams.ConfigurationSettingsJson = &xstring7
 	}
 	if source.LoopSettingsJson != nil {
-		xstring5 := *source.LoopSettingsJson
-		sitedbCreateDeviceReportParams.LoopSettingsJson = &xstring5
+		xstring8 := *source.LoopSettingsJson
+		sitedbCreateDeviceReportParams.LoopSettingsJson = &xstring8
 	}
 	if source.LoopIob != nil {
 		xfloat644 := *source.LoopIob
@@ -269,38 +285,38 @@ func DeviceReportToCreate(source DeviceReport) CreateDeviceReportParams {
 		sitedbCreateDeviceReportParams.LoopCob = &xfloat647
 	}
 	if source.LoopPredictionsStartTime != nil {
-		xint64 := *source.LoopPredictionsStartTime
-		sitedbCreateDeviceReportParams.LoopPredictionsStartTime = &xint64
+		xint642 := *source.LoopPredictionsStartTime
+		sitedbCreateDeviceReportParams.LoopPredictionsStartTime = &xint642
 	}
 	if source.LoopPredictionsDefault != nil {
-		xstring6 := *source.LoopPredictionsDefault
-		sitedbCreateDeviceReportParams.LoopPredictionsDefault = &xstring6
+		xstring9 := *source.LoopPredictionsDefault
+		sitedbCreateDeviceReportParams.LoopPredictionsDefault = &xstring9
 	}
 	if source.LoopPredictionsZt != nil {
-		xstring7 := *source.LoopPredictionsZt
-		sitedbCreateDeviceReportParams.LoopPredictionsZt = &xstring7
+		xstring10 := *source.LoopPredictionsZt
+		sitedbCreateDeviceReportParams.LoopPredictionsZt = &xstring10
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint642 := *source.UtcOffsetMinutes
-		sitedbCreateDeviceReportParams.UtcOffsetMinutes = &xint642
+		xint643 := *source.UtcOffsetMinutes
+		sitedbCreateDeviceReportParams.UtcOffsetMinutes = &xint643
 	}
 	sitedbCreateDeviceReportParams.OccurredAt = source.OccurredAt
 	if source.RawJsonData != nil {
-		xstring8 := *source.RawJsonData
-		sitedbCreateDeviceReportParams.RawJsonData = &xstring8
+		xstring11 := *source.RawJsonData
+		sitedbCreateDeviceReportParams.RawJsonData = &xstring11
 	}
 	if source.CreatedByAppName != nil {
-		xstring9 := *source.CreatedByAppName
-		sitedbCreateDeviceReportParams.CreatedByAppName = &xstring9
+		xstring12 := *source.CreatedByAppName
+		sitedbCreateDeviceReportParams.CreatedByAppName = &xstring12
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring10 := *source.CreatedByDeviceName
-		sitedbCreateDeviceReportParams.CreatedByDeviceName = &xstring10
+		xstring13 := *source.CreatedByDeviceName
+		sitedbCreateDeviceReportParams.CreatedByDeviceName = &xstring13
 	}
 	sitedbCreateDeviceReportParams.CreatedByIdentityName = source.CreatedByIdentityName
 	if source.CreatedByIdentityID != nil {
-		xint643 := *source.CreatedByIdentityID
-		sitedbCreateDeviceReportParams.CreatedByIdentityID = &xint643
+		xint644 := *source.CreatedByIdentityID
+		sitedbCreateDeviceReportParams.CreatedByIdentityID = &xint644
 	}
 	return sitedbCreateDeviceReportParams
 }
@@ -1083,22 +1099,26 @@ func ProfilePresetToCreate(source ProfilePreset) CreateProfilePresetParams {
 		xstring7 := *source.LoopSettingsJson
 		sitedbCreateProfilePresetParams.LoopSettingsJson = &xstring7
 	}
+	if source.RemoteSettingsJson != nil {
+		xstring8 := *source.RemoteSettingsJson
+		sitedbCreateProfilePresetParams.RemoteSettingsJson = &xstring8
+	}
 	sitedbCreateProfilePresetParams.OccurredAt = source.OccurredAt
 	if source.UtcOffsetMinutes != nil {
 		xint64 := *source.UtcOffsetMinutes
 		sitedbCreateProfilePresetParams.UtcOffsetMinutes = &xint64
 	}
 	if source.RawJsonData != nil {
-		xstring8 := *source.RawJsonData
-		sitedbCreateProfilePresetParams.RawJsonData = &xstring8
+		xstring9 := *source.RawJsonData
+		sitedbCreateProfilePresetParams.RawJsonData = &xstring9
 	}
 	if source.CreatedByAppName != nil {
-		xstring9 := *source.CreatedByAppName
-		sitedbCreateProfilePresetParams.CreatedByAppName = &xstring9
+		xstring10 := *source.CreatedByAppName
+		sitedbCreateProfilePresetParams.CreatedByAppName = &xstring10
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring10 := *source.CreatedByDeviceName
-		sitedbCreateProfilePresetParams.CreatedByDeviceName = &xstring10
+		xstring11 := *source.CreatedByDeviceName
+		sitedbCreateProfilePresetParams.CreatedByDeviceName = &xstring11
 	}
 	sitedbCreateProfilePresetParams.CreatedByIdentityName = source.CreatedByIdentityName
 	if source.CreatedByIdentityID != nil {

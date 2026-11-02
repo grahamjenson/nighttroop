@@ -120,6 +120,11 @@ CREATE TABLE device_reports (
     pump_reservoir REAL CHECK(pump_reservoir BETWEEN 0 AND 10000), -- units
     pump_battery_percent REAL CHECK(pump_battery_percent BETWEEN 0 AND 100),
     pump_charging_state TEXT CHECK(length(pump_charging_state) <= 32),
+    pump_clock INTEGER CHECK(pump_clock BETWEEN 0 AND 253402300799999), -- the pump's time when it reported
+    pump_manufacturer TEXT CHECK(length(pump_manufacturer) <= 64),
+    pump_model TEXT CHECK(length(pump_model) <= 64),
+    -- Loop's override in force
+    override_json TEXT CHECK(length(override_json) <= 2048 AND json_valid(override_json)),
 
     -- Raw Loop Settings
     loop_name TEXT CHECK( loop_name IN ('openaps', 'loop')),
@@ -373,6 +378,7 @@ CREATE TABLE profile_presets (
 
     -- loop settings
     loop_settings_json TEXT CHECK(length(loop_settings_json) <= 2048 AND json_valid(loop_settings_json)), -- some loops (e.g. Loop) store settings on the profile
+    remote_settings_json TEXT CHECK(length(remote_settings_json) <= 2048 AND json_valid(remote_settings_json)), -- Trio's remote control settings
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly

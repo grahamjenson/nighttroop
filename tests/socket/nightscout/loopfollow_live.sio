@@ -1,0 +1,77 @@
+# LoopFollow (Socket.IO-Client-Swift 16, EIO=4) connects with its token as a connect param, authorizes with it as
+# the secret and an hour of history, with no ack, and only reads `delta` and which collections a dataUpdate has,
+# to know which REST fetches to run now. See NightscoutSocketManager.swift and NightscoutSocketDataHandler.swift.
+
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.read_only_nstoken }}
+SET write_token {{ .create_new_site.pwd_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME connect
+CONNECT http://{{ site }}/socket.io/?EIO=4&token={{ token }}
+T 5s
+
+NAME authorize
+EMIT authorize
+B {"client":"LoopFollow","history":1,"secret":"{{ token }}"}
+
+# connected moves LoopFollow to authenticated, which slows its REST polling
+NAME connected
+WAIT connected
+T 5s
+
+# The first dataUpdate has no delta, so LoopFollow fetches everything
+NAME first_data
+WAIT dataUpdate
+T 5s
+ASSERT_EQUALS null "@delta"
+ASSERT_EXISTS "@lastUpdated"
+
+NAME post_entry
+POST http://{{ site }}/api/v1/entries?token={{ .write_token }}
+B [{"type":"sgv","sgv":120,"date":{{ itime 0 }},"direction":"Flat","device":"loop://iPhone"}]
+ASSERT_STATUS 200
+
+NAME entry_delta
+WAIT dataUpdate
+T 5s
+ASSERT_EQUALS true "@delta"
+ASSERT_LENGTH 1 "@sgvs"
+
+NAME post_devicestatus
+POST http://{{ site }}/api/v1/devicestatus?token={{ .write_token }}
+B {"device":"loop://iPhone","created_at":"{{ time 0 }}","loop":{"timestamp":"{{ time 0 }}","iob":{"iob":1.2,"timestamp":"{{ time 0 }}"}}}
+ASSERT_STATUS 200
+
+NAME devicestatus_delta
+WAIT dataUpdate
+T 5s
+ASSERT_EQUALS true "@delta"
+ASSERT_LENGTH 1 "@devicestatus"
+
+NAME post_treatment
+POST http://{{ site }}/api/v1/treatments?token={{ .write_token }}
+B [{"eventType":"Carb Correction","created_at":"{{ time 0 }}","carbs":20,"absorptionTime":180}]
+ASSERT_STATUS 200
+
+NAME treatment_delta
+WAIT dataUpdate
+T 5s
+ASSERT_EQUALS true "@delta"
+ASSERT_LENGTH 1 "@treatments"
+
+NAME post_profile
+POST http://{{ site }}/api/v1/profile?token={{ .write_token }}
+B {"defaultProfile":"Default","startDate":"{{ time 0 }}","units":"mg/dL","store":{"Default":{"timezone":"Pacific/Auckland","units":"mg/dL","basal":[{"time":"00:00","timeAsSeconds":0,"value":0.8}],"sens":[{"time":"00:00","timeAsSeconds":0,"value":45}],"carbratio":[{"time":"00:00","timeAsSeconds":0,"value":10}]}}}
+ASSERT_STATUS 200
+
+NAME profile_delta
+WAIT dataUpdate
+T 5s
+ASSERT_EQUALS true "@delta"
+ASSERT_LENGTH 1 "@profiles"
+
+NAME bye
+DISCONNECT

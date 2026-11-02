@@ -1,0 +1,37 @@
+# LoopFollow checks a site by getting status.json with ?token= (NightscoutUtils.verifyURLAndToken), and reads only
+# the status code: 200 connects, 401 is "token required" without a token or "invalid token" with one.
+# See docs/clients/loopfollow.md.
+
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET read_token {{ .create_new_site.read_only_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME status_read_token
+GET http://{{ site }}/api/v1/status.json?token={{ read_token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "ok" "@status"
+
+NAME status_no_token
+GET http://{{ site }}/api/v1/status.json
+ASSERT_STATUS 401
+
+NAME status_wrong_token
+GET http://{{ site }}/api/v1/status.json?token=readable-0123456789abcdef
+ASSERT_STATUS 401
+
+# On a 401 LoopFollow checks whether the token was really an API secret (NightscoutUtils.verifyAPISecret), with its
+# SHA-1 in api-secret, and only offers to make a token from it on a 200. Nighttroop has no API secret.
+NAME api_secret_is_not_a_secret
+GET http://{{ site }}/api/v2/authorization/subjects
+H api-secret: 3b51bc7b0f14b8bd4c5bf4a48f3f8d7d5f2a3a9b
+H Accept: application/json
+ASSERT_STATUS 401
+
+# The database size (DBSize.swift) decodes { dbsize?: {...} }; without dbsize the row is hidden
+NAME dbsize
+GET http://{{ site }}/api/v2/properties/dbsize?token={{ read_token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS null "@dbsize"
