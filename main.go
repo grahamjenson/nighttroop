@@ -92,6 +92,8 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("cannot create control db: %w", err)
 	}
+	// A live site whose DB file is missing, though its batch's folder is there, is restored from its batch's backup
+	controlDB.RestoreMissingSites(ctx, s3Client.DownloadFilesFromS3)
 	// Development has an admin to log in with; anywhere else a new server is set up with the code it prints
 	if serverConfig.IsDev() {
 		if err := controlDB.SeedDevAdmin(ctx); err != nil {

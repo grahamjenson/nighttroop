@@ -268,8 +268,11 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - A server with no control DB or site batch folder restores it from S3 on start; a download that fails or is cut off
   leaves nothing behind, so the next start downloads it again.
 - A site whose creation fails part way, such as its request being cancelled, leaves no site or identities behind.
-- A site whose DB file is missing, such as one restored before its batch was backed up, is logged and left out, so the
-  server still starts and the rest of its batch is still backed up.
+- A live site whose DB file is missing on start, though its batch's folder is there, is restored from its batch's
+  latest backup in S3, downloaded once per batch, and opened; either way it is a "Site DB missing" event the control
+  admin sees, saying whether it was restored or why not (S3 not working, not in the backup, or the restore failed).
+- A site whose DB file is missing and not restored, such as one created after its batch was last backed up, is left
+  out, so the server still starts and the rest of its batch is still backed up.
 - Old records' raw JSON is cleared after `TRUNCATE_RECORDS_AFTER_DAYS`.
 - Reads and writes are rate limited per site, identity and IP, and live sessions per site are capped.
 - A DB serves many reads at once, so one slow read, such as a long search, does not hold up the others; writes to it

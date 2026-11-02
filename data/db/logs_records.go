@@ -152,6 +152,18 @@ func (l *LogsDB) SiteDeletedEvent(ctx context.Context, siteID string, reason str
 	l.event(ctx, siteID, events.SiteDeleted, SiteDeletedAttributes{Reason: reason})
 }
 
+type SiteDBMissingAttributes struct {
+	Restored bool `json:"restored"`
+	// Reason is why a site that was not restored was not: s3_not_working, not_in_backup or restore_failed
+	Reason string `json:"reason,omitempty"`
+}
+
+// SiteDBMissingEvent records a live site's DB file missing at start, and whether it was restored from its batch's
+// backup, so the control admin can see a site left out
+func (l *LogsDB) SiteDBMissingEvent(ctx context.Context, siteID string, restored bool, reason string) {
+	l.event(ctx, siteID, events.SiteDBMissing, SiteDBMissingAttributes{Restored: restored, Reason: reason})
+}
+
 type SiteBatchBackedUpAttributes struct {
 	Batch     string `json:"batch"`
 	SiteCount int    `json:"site_count"`

@@ -25,6 +25,8 @@ const (
 	SiteBatchBackedUp Name = "site_batch_backed_up"
 	ControlBackedUp   Name = "control_backed_up"
 	SyncTurnedOff     Name = "sync_turned_off"
+	// SiteDBMissing is a live site's DB file missing at start, restored from its batch's backup or left out
+	SiteDBMissing Name = "site_db_missing"
 	// SiteAdminRecovered is the site's backup key being used to give its admin new credentials
 	SiteAdminRecovered Name = "site_admin_recovered"
 	SyncBackfilled     Name = "sync_backfilled"
@@ -52,7 +54,7 @@ const (
 )
 
 // Persisted are the events kept in the logs DB. A model change is not, as the site's DB row is its record.
-var Persisted = []Name{SiteCreated, SiteDisabled, SiteDeleted, SiteArchived, SiteHydrated, SiteTruncated, SiteBatchBackedUp, ControlBackedUp,
+var Persisted = []Name{SiteCreated, SiteDisabled, SiteDeleted, SiteArchived, SiteHydrated, SiteTruncated, SiteDBMissing, SiteBatchBackedUp, ControlBackedUp,
 	SiteAdminRecovered, IdentityCredentialsChanged, SyncTurnedOff, SyncBackfilled, SyncAdded, SiteTimezoneChanged, SiteWeekStartChanged, AlarmCreated, AlarmSnoozed, AlarmDeleted, SignedIn, SignInFailed, ResourceHigh, ResourceRecovered}
 
 // PersistedNames are the persisted events' names, to pick from
