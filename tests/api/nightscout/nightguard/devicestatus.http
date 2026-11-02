@@ -1,0 +1,77 @@
+INCLUDE steps/new_ns_site.steps
+
+INCLUDE steps/ns_units_mgdl.steps
+
+// Nightguard's pump, uploader battery, IOB, COB and delta, from NightscoutService.readDeviceStatus and
+// loadPropertiesEnrichment. Both are v1-style reads with the token as a query parameter.
+
+//////
+// SEED: an AAPS phone uploading readings and its device status
+//////
+
+NAME seed_entries_v1
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [
+    { "type": "sgv", "sgv": 120, "direction": "Flat", "date": {{ itime 6 }}, "device": "AndroidAPS-DexcomG6" },
+    { "type": "sgv", "sgv": 126, "direction": "FortyFiveUp", "date": {{ itime 1 }}, "device": "AndroidAPS-DexcomG6" }
+]
+ASSERT_STATUS 200
+
+NAME seed_devicestatus_v1
+POST http://{{ site }}/api/v1/devicestatus?token={{ token }}
+B {
+    "device": "openaps://samsung SM-G970F",
+    "created_at": "{{ time 1 }}",
+    "openaps": {
+        "iob": { "iob": 1.25, "basaliob": 0.4, "activity": 0.01, "time": "{{ time 1 }}" },
+        "suggested": { "bg": 126, "COB": 12.4, "IOB": 1.25, "eventualBG": 110, "timestamp": "{{ time 1 }}" }
+    },
+    "pump": {
+        "clock": "{{ time 1 }}",
+        "reservoir": 38,
+        "battery": { "percent": 75 },
+        "status": { "status": "normal", "timestamp": "{{ time 1 }}" },
+        "extended": {
+            "Version": "3.3.1.0",
+            "ActiveProfile": "Dash-2025",
+            "BaseBasalRate": 0.8,
+            "TempBasalAbsoluteRate": 0.4,
+            "TempBasalRemaining": 25
+        }
+    },
+    "uploaderBattery": 88,
+    "isCharging": false
+ }
+ASSERT_STATUS 200
+
+//////
+// readDeviceStatus: GET /api/v1/devicestatus.json?count=5, newest first. Nightguard takes the first with a pump:
+// reservoir as a number of units, and from extended ActiveProfile as a string, BaseBasalRate and
+// TempBasalAbsoluteRate as numbers for the temp basal percent, and TempBasalRemaining as a whole number of minutes
+//////
+
+NAME nightguard_v1_devicestatus
+GET http://{{ site }}/api/v1/devicestatus.json?count=5&token={{ token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 38 "@0.pump.reservoir"
+ASSERT_EQUALS "Dash-2025" "@0.pump.extended.ActiveProfile"
+ASSERT_EQUALS 0.8 "@0.pump.extended.BaseBasalRate"
+ASSERT_EQUALS 0.4 "@0.pump.extended.TempBasalAbsoluteRate"
+ASSERT_EQUALS 25 "@0.pump.extended.TempBasalRemaining"
+
+//////
+// loadPropertiesEnrichment: GET /api/v2/properties?token=..., with no Accept header and a 10 second timeout.
+// Each is optional: upbat.display a string like "88%", iob.display shown with a "U" after it, cob.display a number
+// (or a string of one) of grams, and delta.mgdl a number with delta.display a string like "+6"
+//////
+
+NAME nightguard_v2_properties
+GET http://{{ site }}/api/v2/properties?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "88%" "@upbat.display"
+ASSERT_EQUALS "1.25" "@iob.display"
+ASSERT_EQUALS 12.4 "@cob.display"
+ASSERT_EQUALS 6 "@delta.mgdl"
+ASSERT_EQUALS "+6" "@delta.display"

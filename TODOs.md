@@ -66,8 +66,7 @@
        AAPS drops for good (docs/clients/aaps.md). Decide whether AAPS's percent is read as a change
     1. P2: Keep the fields AAPS's followers need: an effective profile switch's `original*` fields (else it is read
        as a Note), a running mode's `mode`, `autoForced`, `reasons` and `originalDuration`, a temp basal's `type`
-       (e.g. `PUMP_SUSPEND`), a device status's `pump.clock`, `pump.status` and `pump.extended` (without `pump.clock`
-       AAPS skips the pump's data), and a calibration's `isCalibration` and `sensorMgdlAtPairing`
+       (e.g. `PUMP_SUSPEND`), and a calibration's `isCalibration` and `sensorMgdlAtPairing`
     1. P2: Return a food's Nightscout `type` (`food`), `portion`, `unit` and `gi`; AAPS keeps only foods of type
        `food`, so it loads none
     1. P3: Accept the SHA1 of a token as the API secret on Socket.IO `authorize`, as AAPS 3.4 and older send it,
@@ -93,6 +92,10 @@
        as mg/dL, so on an mmol/L site they read 6.3 as 6.3 mg/dL
     1. P3: NightscoutKit's `fetchTreatments` drops treatments without a `timestamp`, a bolus without `programmed`
        and a temp basal without `temp`, which Nighttroop does not return
+    1. P2: Nightguard reads `sgv` and `mbg` as mg/dL whatever an entry's `units`, so with mmol/L settings its
+       readings are 18 times too low and its low alarms go off; for now its identity must be set to mg/dL
+       ([docs/clients/nightguard.md](docs/clients/nightguard.md)). Make that clearer, e.g. a mg/dL Nightscout
+       units option when adding a follower device
     1. xDrip4iOS ([docs/clients/xdrip4ios.md](docs/clients/xdrip4ios.md)):
         1. P1: The tester guide says to set xDrip4iOS's identity's units to mg/dL, as its follower reads `sgv` as
            mg/dL whatever the `units`
@@ -137,6 +140,8 @@
            Trio's `id` kept as the identifier, and must refuse any filter it does not know rather than ignore it
         1. P3: Keep the device status `pump.clock`, `pump.status`, `pump.bolusIncrement`, the pump battery's
            voltage and state, and `uploader` (`battery`, `isCharging`) Trio sends, for its followers
+        1. P3: Keep the device status `pump.bolusIncrement`, the pump battery's state, and `uploader` (`battery`,
+           `isCharging`) Trio sends, for its followers
 
 ## Bugs
 

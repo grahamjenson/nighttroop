@@ -1,0 +1,68 @@
+INCLUDE steps/new_ns_site.steps
+
+// Nightguard (iOS and watchOS) is a follower: these are the calls it makes before reading data.
+// See docs/clients/nightguard.md for where each comes from in its source.
+
+//////
+// v3 support: NightscoutAPIClient.determineV3Support
+//////
+
+// GET /api/v3/version without any token. 2xx means v3 is used, 404 or 405 means v1 is used,
+// and any other status (e.g. 401) fails every read, so it must be public
+NAME nightguard_v3_version
+GET http://{{ site }}/api/v3/version
+H Accept: application/json
+ASSERT_STATUS 200
+
+//////
+// JWT: NightscoutAPIClient.obtainJWT
+//////
+
+// The access token goes in the path; Nightguard reads "token" as a non-empty string and decodes "exp" from it to cache it
+NAME nightguard_jwt
+GET http://{{ site }}/api/v2/authorization/request/token={{ token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EXISTS "@token"
+ASSERT_EXISTS "@exp"
+
+// A v3 read with the JWT as a Bearer header works
+NAME nightguard_v3_with_jwt
+GET http://{{ site }}/api/v3/entries?limit=2&sort$desc=date
+H Accept: application/json
+H Authorization: Bearer {{ dig "nightguard_jwt.token" }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
+
+// A bad JWT is a 401, which makes Nightguard drop its cached JWT and get a new one
+NAME nightguard_v3_bad_jwt
+GET http://{{ site }}/api/v3/entries?limit=2&sort$desc=date
+H Accept: application/json
+H Authorization: Bearer not-a-jwt
+ASSERT_STATUS 401
+
+// A v1 call with a bad token is a 401, which Nightguard shows as an invalid token
+NAME nightguard_v1_bad_token
+GET http://{{ site }}/api/v1/entries.json?count=2&token=not-a-token
+H Accept: application/json
+ASSERT_STATUS 401
+
+//////
+// Units: NightscoutService.readLegacyStatus
+//////
+
+// GET /api/v1/status.json?token=..., Nightguard reads settings.units as a string: with "mg" in it is mg/dL,
+// anything else is mmol/L, and no units fails the read. The default units are mmol/L
+NAME nightguard_status_mmol
+GET http://{{ site }}/api/v1/status.json?token={{ token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "mmol" "@settings.units"
+
+INCLUDE steps/ns_units_mgdl.steps
+
+NAME nightguard_status_mgdl
+GET http://{{ site }}/api/v1/status.json?token={{ token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "mg/dl" "@settings.units"

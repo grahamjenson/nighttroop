@@ -37,7 +37,14 @@ ASSERT_LENGTH 1 "@sgvs"
 ASSERT_EQUALS 100 "@sgvs.0.mgdl"
 ASSERT_EQUALS "Flat" "@sgvs.0.direction"
 ASSERT_EQUALS "xDrip-DexcomG6" "@sgvs.0.device"
+ASSERT_EXISTS "@sgvs.0.mills"
+ASSERT_EQUALS null "@delta"
 ASSERT_LENGTH 0 "@treatments"
+ASSERT_EXISTS "@mbgs"
+ASSERT_EXISTS "@cals"
+ASSERT_EXISTS "@devicestatus"
+ASSERT_EXISTS "@profiles"
+ASSERT_EXISTS "@food"
 
 NAME post_entry
 POST http://{{ site }}/api/v1/entries?token={{ token }}

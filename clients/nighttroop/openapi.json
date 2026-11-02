@@ -260,7 +260,7 @@
       }
     },
     "/api/v3/version": {
-      "get": { "operationId": "NsV3Version", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsV3Result" } } }
+      "get": { "operationId": "NsV3Version", "security": [], "responses": { "200": { "$ref": "#/components/responses/NsV3Result" } } }
     },
     "/api/v3/status": {
       "get": { "operationId": "NsV3Status", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsV3Result" }, "default": { "$ref": "#/components/responses/NsError" } } }

@@ -102,14 +102,14 @@ type QueryValues struct {
 
 // This is just much nicer to work with but the reverse is faster, so we
 var forwardLookupName = map[string][]string{
-	// created_at is when it happened, as Nightscout keeps it and Loop finds treatments and device statuses by it
-	"dategte": {"date$gte", "find[date][$gte]", "find[dateString][$gte]", "created_at$gte", "find[created_at][$gte]", "mills$gte", "find[mills][$gte]", "startDate$gte", "find[startDate][$gte]", "start$gte", "find[start][$gte]"},
-	"dategt":  {"date$gt", "find[date][$gt]", "find[dateString][$gt]", "created_at$gt", "find[created_at][$gt]", "mills$gt", "find[mills][$gt]", "startDate$gt", "find[startDate][$gt]", "start$gt", "find[start][$gt]"},
+	// A Nightscout created_at is when it happened, as it is written out, and srvCreated is when the server got it
+	"dategte": {"date$gte", "find[date][$gte]", "find[dateString][$gte]", "mills$gte", "find[mills][$gte]", "startDate$gte", "find[startDate][$gte]", "start$gte", "find[start][$gte]", "created_at$gte", "find[created_at][$gte]"},
+	"dategt":  {"date$gt", "find[date][$gt]", "find[dateString][$gt]", "mills$gt", "find[mills][$gt]", "startDate$gt", "find[startDate][$gt]", "start$gt", "find[start][$gt]", "created_at$gt", "find[created_at][$gt]"},
 
 	"dateeq": {"date$eq", "find[date][$eq]", "find[dateString][$eq]", "mills$eq", "find[mills][$eq]", "startDate$eq", "find[startDate][$eq]", "start$eq", "find[start][$eq]"},
 
-	"datelte": {"date$lte", "find[date][$lte]", "find[dateString][$lte]", "created_at$lte", "find[created_at][$lte]", "mills$lte", "find[mills][$lte]", "startDate$lte", "find[startDate][$lte]", "start$lte", "find[start][$lte]"},
-	"datelt":  {"date$lt", "find[date][$lt]", "find[dateString][$lt]", "created_at$lt", "find[created_at][$lt]", "mills$lt", "find[mills][$lt]", "startDate$lt", "find[startDate][$lt]", "start$lt", "find[start][$lt]"},
+	"datelte": {"date$lte", "find[date][$lte]", "find[dateString][$lte]", "mills$lte", "find[mills][$lte]", "startDate$lte", "find[startDate][$lte]", "start$lte", "find[start][$lte]", "created_at$lte", "find[created_at][$lte]"},
+	"datelt":  {"date$lt", "find[date][$lt]", "find[dateString][$lt]", "mills$lt", "find[mills][$lt]", "startDate$lt", "find[startDate][$lt]", "start$lt", "find[start][$lt]", "created_at$lt", "find[created_at][$lt]"},
 
 	"createdatgte": {"srvCreated$gte", "find[srvCreated][$gte]"},
 	"createdatgt":  {"srvCreated$gt", "find[srvCreated][$gt]"},
@@ -129,10 +129,11 @@ var forwardLookupName = map[string][]string{
 	"durationlte": {"duration$lte", "find[duration][$lte]", "durationMinutes$lte", "find[durationMinutes][$lte]"},
 	"durationlt":  {"duration$lt", "find[duration][$lt]", "durationMinutes$lt", "find[durationMinutes][$lt]"},
 
-	"typeeq": {"type", "find[type]", "find[type][$eq]",
-		"eventType", "find[eventType]", "find[eventType][$eq]",
-		"activityType", "find[activityType]", "find[activityType][$eq]",
-		"category", "find[category]", "find[category][$eq]",
+	// API v3 also writes it field$eq, as Nightguard asks eventType$eq
+	"typeeq": {"type", "type$eq", "find[type]", "find[type][$eq]",
+		"eventType", "eventType$eq", "find[eventType]", "find[eventType][$eq]",
+		"activityType", "activityType$eq", "find[activityType]", "find[activityType][$eq]",
+		"category", "category$eq", "find[category]", "find[category][$eq]",
 	},
 	"typeneq": {"type$ne", "find[type][$ne]",
 		"eventType$ne", "find[eventType][$ne]",
@@ -264,9 +265,9 @@ func (q *QueryValues) SortOrder() *QuerySort {
 	}
 
 	switch sortField {
-	case "date", "dateString", "mills", "startDate", "occurred_at", "start":
+	case "date", "dateString", "mills", "startDate", "occurred_at", "start", "created_at":
 		sortField = "occurred_at"
-	case "created_at", "srvCreated":
+	case "srvCreated":
 		sortField = "created_at"
 	case "updated_at", "srvModified":
 		sortField = "updated_at"

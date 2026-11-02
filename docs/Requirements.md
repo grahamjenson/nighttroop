@@ -261,6 +261,13 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - A new Announcement is sent to every `/alarm` socket that can read, with its notes as the message, so AAPS shows it
   as a notification.
 - Glucose is stored in mg/dL and returned and accepted in the settings' units.
+- The v1 status has the settings' units in `settings.units`, as Nightscout writes them (`mg/dl` or `mmol`).
+- The v3 version needs no token, so an app can check for v3 before it signs in.
+- An entry has an `sgv` if it is a CGM reading and an `mbg` if it is a meter reading, never both.
+- A date filter takes milliseconds with a fraction (e.g. `date$gte=1761234567890.25`), which is dropped.
+- A `created_at` filter or sort is on when it happened, as `date` is, and `srvCreated` is on when it was uploaded.
+- v3 filters take `field$eq` as well as `field`, e.g. `eventType$eq=Site Change`.
+- A device status keeps its pump's other fields, e.g. AAPS's `extended` with its profile and temp basal.
 - A temp basal sent with only a `percent` of the basal (e.g. 50 for half, 150 for 1.5x) has its rate set from the
   default profile's or profile switch's basal at its start, in the profile's timezone, and is returned with that
   `absolute` and its `percent` as sent.
@@ -269,8 +276,6 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   override again with its `_id` when it changes, and deletes it by that `_id`.
 - Loop's `Temporary Override` is kept as a temp target, with its correction range and insulin needs scale factor; an
   indefinite one lasts a week.
-- `find[created_at]` finds treatments and device statuses by when they happened, as in Nightscout, not when they were
-  uploaded.
 - An identifier over 36 characters, like an Omnipod dose's `syncIdentifier`, is kept as a hash of it, so two that
   start the same are not taken as one.
 - v1 `profile/current` is the newest profile set itself, not a list of one, with `enteredBy`, as Loop reads it.
@@ -360,6 +365,9 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - Sign-in attempts are rate limited per identity and IP; a disabled identity cannot sign in.
 - Devices use their Nightscout token, as a token, API secret or for a JWT.
 - Changing an identity's password or TOTP signs out its existing sessions.
+- Turning an identity off, deleting it or changing its password or TOTP also ends its open connections: its Socket.IO
+  writes are refused at once and its sockets are disconnected within a minute, and its live update streams end within
+  30 seconds.
 - A page left open after its sign in ends goes to the login page once its live updates reconnect, rather than asking
   for them again and again.
 
