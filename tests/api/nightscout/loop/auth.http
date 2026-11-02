@@ -31,7 +31,7 @@ ASSERT_STATUS 200
 NAME loop_check_auth_read_only
 GET http://{{ .ns_site }}/api/v1/experiments/test
 H api-secret: {{ sha1 .create_new_site.read_only_nstoken }}
-ASSERT_STATUS 403
+ASSERT_STATUS 401
 
 # The token itself still works as the api-secret
 NAME check_auth_plain_token

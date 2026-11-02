@@ -42,11 +42,17 @@ func VerifyAuth(dep nsutils.Store) http.HandlerFunc {
 	}
 }
 
-// ExperimentsTest is how Loop checks its API secret when it is set up, so it needs one that can upload
+// ExperimentsTest is Nightscout's check of credentials, which xDrip4iOS makes before it uploads, so it passes for
+// an identity that can upload readings. Like Nightscout it is a 401 otherwise
 func ExperimentsTest() http.HandlerFunc {
-	return nsutils.Require("api:treatments:create", true, func(w http.ResponseWriter, r *http.Request, _ *nsutils.Identity) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		identity, err := nsutils.AuthenticateExplicit(r)
+		if err != nil || !nsutils.HasPermission(*identity, "api:entries:create") {
+			nsutils.WriteError(w, &nsutils.HTTPError{Status: http.StatusUnauthorized, Message: "Missing permission api:entries:create"})
+			return
+		}
 		apiutils.WriteJSON(w, http.StatusOK, map[string]any{"status": "ok"})
-	})
+	}
 }
 
 // StatusJSON serves the v1 JSON status payload.

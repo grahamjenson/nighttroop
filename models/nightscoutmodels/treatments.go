@@ -106,6 +106,8 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 		LegacyID       *types.IdentifierString `json:"_id"`
 		SyncIdentifier *types.IdentifierString `json:"syncIdentifier"`
 		UUID           *types.IdentifierString `json:"uuid"`
+		// Nightscout stores a careportal's or xDrip4iOS's eventTime as created_at
+		EventTime *types.DateString `json:"eventTime"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),
@@ -127,6 +129,10 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 	}
 	if t.Identifier == nil {
 		t.Identifier = aux.UUID
+	}
+
+	if aux.EventTime != nil {
+		t.CreatedAt = aux.EventTime
 	}
 
 	// Set default CreatedAt (leave UTCOffset nil to be later replaces by user timezone)
@@ -257,6 +263,11 @@ func (t *TreatmentEventType) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
+	// xDrip4iOS sends carbs on their own as "Carbs"
+	if strings.TrimSpace(s) == "Carbs" {
+		*t = CarbCorrection
+		return nil
+	}
 	for _, et := range TreatmentEventTypes {
 		if strings.TrimSpace(s) == string(et) {
 			*t = et
@@ -286,7 +297,9 @@ func (t *GlucoseType) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	switch strings.ToLower(strings.TrimSpace(s)) {
+	// xDrip4iOS adds the reading after a colon, e.g. "Finger: 6.7 mmol/L"
+	kind, _, _ := strings.Cut(s, ":")
+	switch strings.ToLower(strings.TrimSpace(kind)) {
 	case "sensor":
 		*t = Sensor
 	case "finger":

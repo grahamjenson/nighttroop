@@ -90,7 +90,9 @@ ASSERT_EXISTS "@treatments.0.mills"
 
 NAME treatment_gone
 GET http://{{ site }}/api/v1/treatments?token={{ token }}&find[_id]={{ .treatment_id }}
-ASSERT_STATUS 404
+# A search that finds nothing, as in Nightscout
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"
 
 # dbAdd takes a list too, and each record is sent on
 NAME add_entries

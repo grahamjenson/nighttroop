@@ -1,0 +1,143 @@
+# xDrip4iOS (xdripswift) reading from Nightscout:
+# - NightscoutFollowManager.performDownload, as a Nightscout follower, every reading interval:
+#   GET /api/v1/entries/sgv.json?count=<n>&find[date][$gte]=<ms of its newest reading>&token=<token>
+#   (Endpoint+Nightscout.swift). n is a day's worth at one a minute and 45 s, so up to 1921, newest first.
+#   It reads only sgv (mg/dL) and date (ms), both as numbers (FollowerBgReading.init(json:)), and needs a 200
+# - NightscoutSyncManager.updateProfile: GET /api/v1/profile, decoded strictly as [NightscoutProfileResponse]
+# - NightscoutSyncManager.updateDeviceStatus: GET /api/v1/devicestatus, decoded as [NightscoutDeviceStatusResponse]
+# Both of the last two send Content-Type and Accept application/json, and the token in the query
+
+INCLUDE steps/new_ns_site.steps
+# xDrip4iOS reads sgv as mg/dL, so its identity's units are set to mg/dL (see docs/clients/xdrip4ios.md)
+INCLUDE steps/ns_units_mgdl.steps
+
+NAME setup_readings
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [
+  {"type": "sgv", "sgv": 101, "date": {{ itime 15 }}, "device": "xDrip-DexcomG6", "direction": "Flat"},
+  {"type": "sgv", "sgv": 108, "date": {{ itime 10 }}, "device": "xDrip-DexcomG6", "direction": "FortyFiveUp"},
+  {"type": "sgv", "sgv": 115.5, "date": {{ itime 5 }}, "device": "xDrip-DexcomG6", "direction": "FortyFiveUp"},
+  {"type": "mbg", "mbg": 112, "date": {{ itime 4 }}, "device": "xDrip-DexcomG6"}
+]
+ASSERT_STATUS 200
+
+#####
+# Entries
+#####
+
+# The first download, with nothing stored, asks for a day of readings
+NAME xdrip4ios_follow_first_download
+GET http://{{ site }}/api/v1/entries/sgv.json?count=1921&find[date][$gte]={{ itime 1440 }}&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_CONTAINS "application/json" "#Content-Type.0"
+# Only sgv entries, newest first, sgv in mg/dL and date in ms
+ASSERT_LENGTH 3 "@"
+ASSERT_EQUALS 115.5 "@0.sgv"
+ASSERT_EQUALS 108 "@1.sgv"
+ASSERT_EQUALS 101 "@2.sgv"
+ASSERT_EQUALS ".setup_readings.0.date" "@2.date"
+ASSERT_EQUALS ".setup_readings.2.date" "@0.date"
+
+# Later downloads start at the newest stored reading, which comes back too
+NAME xdrip4ios_follow_next_download
+GET http://{{ site }}/api/v1/entries/sgv.json?count=7&find[date][$gte]={{ dig "setup_readings.1.date" }}&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS 115.5 "@0.sgv"
+ASSERT_EQUALS 108 "@1.sgv"
+
+# With an API secret set it also sends its SHA1 as api-secret; the token in the query is still used
+NAME xdrip4ios_follow_token_and_api_secret
+GET http://{{ site }}/api/v1/entries/sgv.json?count=7&find[date][$gte]={{ dig "setup_readings.1.date" }}&token={{ token }}
+H api-secret: 2aae6c35c94fcfb415dbe95f408b9ce91ee846ed
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+
+#####
+# Profile: every field of the default profile below is required, or the whole decode fails
+#####
+
+NAME setup_profile
+POST http://{{ site }}/api/v1/profile?token={{ token }}
+B {
+    "defaultProfile": "Default",
+    "startDate": "{{ time 60 }}",
+    "enteredBy": "AAPS",
+    "units": "mg/dl",
+    "store": {
+        "Default": {
+            "dia": 5,
+            "carbratio": [{"time": "00:00", "value": 10, "timeAsSeconds": 0}, {"time": "12:00", "value": 8, "timeAsSeconds": 43200}],
+            "sens": [{"time": "00:00", "value": 45, "timeAsSeconds": 0}],
+            "basal": [{"time": "00:00", "value": 0.8, "timeAsSeconds": 0}, {"time": "06:00", "value": 1.05, "timeAsSeconds": 21600}],
+            "target_low": [{"time": "00:00", "value": 90, "timeAsSeconds": 0}],
+            "target_high": [{"time": "00:00", "value": 110, "timeAsSeconds": 0}],
+            "units": "mg/dl",
+            "timezone": "Pacific/Auckland"
+        }
+    }
+}
+ASSERT_STATUS 200
+
+NAME xdrip4ios_get_profile
+GET http://{{ site }}/api/v1/profile?token={{ token }}
+H Content-Type: application/json
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EXISTS "@0._id"
+ASSERT_EQUALS "Default" "@0.defaultProfile"
+# startDate is parsed with ISO8601DateFormatter, with or without fractional seconds
+ASSERT_EXISTS "@0.startDate"
+ASSERT_EQUALS 5 "@0.store.Default.dia"
+ASSERT_EQUALS "Pacific/Auckland" "@0.store.Default.timezone"
+# isMgDl is units, lowercased, being mg/dl
+ASSERT_EQUALS "mg/dL" "@0.store.Default.units"
+ASSERT_EQUALS "00:00" "@0.store.Default.basal.0.time"
+ASSERT_EQUALS 0 "@0.store.Default.basal.0.timeAsSeconds"
+ASSERT_EQUALS 0.8 "@0.store.Default.basal.0.value"
+ASSERT_EQUALS 21600 "@0.store.Default.basal.1.timeAsSeconds"
+ASSERT_EQUALS 1.05 "@0.store.Default.basal.1.value"
+ASSERT_EQUALS 43200 "@0.store.Default.carbratio.1.timeAsSeconds"
+ASSERT_EQUALS 8 "@0.store.Default.carbratio.1.value"
+ASSERT_EQUALS 45 "@0.store.Default.sens.0.value"
+ASSERT_EQUALS 90 "@0.store.Default.target_low.0.value"
+ASSERT_EQUALS 110 "@0.store.Default.target_high.0.value"
+
+#####
+# Device status: everything is optional, but a number given must be the type it decodes
+# (an Int for mills, uploaderBattery, pump.battery.percent and utcOffset)
+#####
+
+NAME setup_devicestatus
+POST http://{{ site }}/api/v1/devicestatus?token={{ token }}
+B {
+    "device": "openaps://samsung SM-G970F",
+    "created_at": "{{ time 2 }}",
+    "uploaderBattery": 54,
+    "isCharging": false,
+    "pump": {"reservoir": 102.5, "battery": {"percent": 75}, "clock": "{{ time 2 }}"},
+    "openaps": {
+        "iob": {"iob": 1.2, "basaliob": 0.1, "time": "{{ time 2 }}"},
+        "suggested": {"timestamp": "{{ time 2 }}", "COB": 12.5, "IOB": 1.2, "eventualBG": 120, "rate": 0.9, "duration": 30, "reason": "COB: 12.5"},
+        "enacted": {"timestamp": "{{ time 2 }}", "rate": 0.9, "duration": 30, "received": true}
+    }
+}
+ASSERT_STATUS 200
+
+NAME xdrip4ios_get_devicestatus
+GET http://{{ site }}/api/v1/devicestatus?token={{ token }}
+H Content-Type: application/json
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EXISTS "@0.created_at"
+ASSERT_EQUALS "openaps://samsung SM-G970F" "@0.device"
+ASSERT_EQUALS 54 "@0.uploaderBattery"
+ASSERT_EQUALS false "@0.isCharging"
+ASSERT_EQUALS 75 "@0.pump.battery.percent"
+ASSERT_EQUALS 102.5 "@0.pump.reservoir"
+ASSERT_EQUALS 30 "@0.openaps.enacted.duration"
+ASSERT_EQUALS 0.9 "@0.openaps.enacted.rate"
+ASSERT_EQUALS 12.5 "@0.openaps.suggested.COB"
+ASSERT_EQUALS 120 "@0.openaps.suggested.eventualBG"
