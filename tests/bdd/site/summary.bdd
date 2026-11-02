@@ -1,30 +1,14 @@
 INCLUDE steps/new_site_admin.steps
 ASSERT_PATH /
 
-// A new site's summary has nothing in it yet
+// A new site has nothing for its summary yet, so it shows the guide to setting it up instead
 ASSERT_VISIBLE #site--summary
-ASSERT_TEXT_EQUALS #site--summary--hours Last 48 hours
-ASSERT_TEXT_VISIBLE No glucose readings in this time
-ASSERT_TEXT_VISIBLE No treatments in this time
-ASSERT_TEXT_EQUALS #site--summary--iob –
-// It has no time in range today or yesterday, no insulin, and no sensor or site change
-ASSERT_TEXT_EQUALS #site--summary--time-in-range –
-ASSERT_TEXT_EQUALS #site--summary--time-in-range--yesterday Yesterday –
-ASSERT_TEXT_EQUALS #site--summary--total-daily-dose 0 U
-// nor in last week, fortnight or month, whose total daily dose is the mean of their days
-ASSERT_TEXT_EQUALS #site--summary--time-in-range--last-week Last week –
-ASSERT_TEXT_EQUALS #site--summary--time-in-range--last-fortnight Last fortnight –
-ASSERT_TEXT_EQUALS #site--summary--time-in-range--last-month Last month –
-ASSERT_TEXT_EQUALS #site--summary--total-daily-dose--last-week Last week 0 U
-ASSERT_TEXT_EQUALS #site--summary--total-daily-dose--last-fortnight Last fortnight 0 U
-ASSERT_TEXT_EQUALS #site--summary--total-daily-dose--last-month Last month 0 U
-ASSERT_TEXT_EQUALS #site--summary--sensor-started –
-ASSERT_TEXT_EQUALS #site--summary--site-changed –
-SCREENSHOT summary_empty
+ASSERT_VISIBLE #site--getting-started
+ASSERT_NOT_VISIBLE #site--summary--glucose
 
-// The empty summary links to Sync Settings, where virtual sync fills the last 30 minutes with readings, treatments
-// and device statuses
-CLICK #site--summary--sync-link
+// The guide links to Sync Settings, where virtual sync fills the last 30 minutes with readings, treatments and device
+// statuses
+CLICK #site--getting-started--sync-link
 ASSERT_STATUS 200
 ASSERT_PATH /settings/sync
 CLICK #site--settings--virtual-sync--enable

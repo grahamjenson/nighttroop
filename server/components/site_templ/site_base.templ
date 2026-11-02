@@ -126,6 +126,11 @@ templ Header() {
 						</div>
 						@dropdown.Separator()
 					}
+					// The guide to setting the site up first, so it is easy to find again
+					@dropdown.Group() {
+						@dataMenuItem("site--getting-started-button", "/getting-started", "Getting Started", icon.Rocket(icon.Props{Class: "size-4 mr-2"}))
+					}
+					@dropdown.Separator()
 					// Data on the left, and presets, settings and logout on the right, so every item fits in the window
 					<div class="sm:grid sm:grid-cols-2 sm:gap-x-1">
 						<div>

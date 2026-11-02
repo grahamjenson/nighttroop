@@ -160,7 +160,11 @@ templ Summary(summary *sitemodels.Summary) {
 			hx-target="this"
 			hx-swap="outerHTML"
 		>
-			@summaryContent(summary)
+			if isNew(summary) {
+				@GettingStarted()
+			} else {
+				@summaryContent(summary)
+			}
 		</div>
 		<div id="modal-container"></div>
 	</div>
