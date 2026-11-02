@@ -17,6 +17,7 @@ ASSERT_VISIBLE #site--identities--created--ns-token
 ASSERT_NOT_VISIBLE #site--identities--signed-out
 SCREENSHOT identity_password_reset
 CLICK "I Have Saved These"
+CLICK #site--identities--close
 ASSERT_NOT_VISIBLE #site--identities--created--password
 ASSERT_VISIBLE #site--identities--pwd_phone--reset-password
 
@@ -29,6 +30,7 @@ ASSERT_STATUS 201
 SAVE_TEXT #site--identities--created--site site_url
 SAVE_TEXT #site--identities--created--password carer_password
 CLICK "I Have Saved These"
+CLICK #site--identities--close
 
 // The settings page warns that resetting your own password or TOTP signs you out
 CLICK #site--settings-menu

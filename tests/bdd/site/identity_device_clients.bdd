@@ -12,14 +12,32 @@ CLICK #identities_table [role="option"][data-tui-selectbox-value="nightguard"]
 CLICK "Add Device"
 ASSERT_STATUS 201
 
-// Its credentials say how to set that client up, with its URL and token filled in, and that it gets mg/dL
+// Its credentials say how to set that client up: the client's menus and fields in bold, and its URL with the token
+// filled in, with a button to copy it, and that it gets mg/dL
 ASSERT_TEXT_VISIBLE Setting up Nightguard
-ASSERT_VISIBLE #site--identities--created--guide >> text=/\?token=/
+ASSERT_VISIBLE #site--identities--created--guide .font-semibold >> text=Configuration
+ASSERT_VISIBLE #site--identities--created--guide code >> text=/\?token=/
+ASSERT_VISIBLE #site--identities--created--guide code + [data-copy-button]
 ASSERT_VISIBLE #site--identities--created--units
 SCREENSHOT device_client_guide
 SAVE_TEXT #site--identities--created--site site_url
 SAVE_TEXT #site--identities--created--ns-token watch_token
 CLICK "I Have Saved These"
+CLICK #site--identities--close
+
+// A device for AAPS is told to set its URL and token, each with its own copy button
+INPUT #name-createIdentityFormdevicesTable loop_phone
+CLICK #client-createIdentityFormdevicesTable
+CLICK #identities_table [role="option"][data-tui-selectbox-value="aaps"]
+CLICK "Add Device"
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE Setting up AAPS
+ASSERT_VISIBLE #site--identities--created--guide .font-semibold >> text=NS access token
+ASSERT_VISIBLE #site--identities--created--guide-1-5 + [data-copy-button]
+ASSERT_VISIBLE #site--identities--created--guide-2-3 + [data-copy-button]
+SCREENSHOT device_client_guide_aaps
+CLICK "I Have Saved These"
+CLICK #site--identities--close
 
 // So the Nightscout API gives the device mg/dL, though the site is in mmol/L
 GOTO {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/status.json?token={{ .watch_token }}
