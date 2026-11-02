@@ -21,6 +21,17 @@ templ Footer() {
 	</footer>
 }
 
+// PublicFooter is a public page's footer, with the medical disclaimer above it
+templ PublicFooter() {
+	<div class="mb-6 px-4">
+		<p id="medical-disclaimer" role="note" class="mx-auto max-w-3xl rounded-md border border-amber-400 bg-amber-100 px-4 py-3 text-center text-sm text-amber-800">
+			<strong>Not a medical device.</strong> Nighttroop does not provide medical advice and is not a replacement for
+			proper medical care. Its data and alarms may be late, missing or wrong.
+		</p>
+	</div>
+	@Footer()
+}
+
 // DBIPCredit is on each page that shows locations from DB-IP's database, as its licence asks for a link to DB-IP
 // there. The footer is drawn after the page, so it shows the link; a part of a page sends the link to its drawn footer.
 templ DBIPCredit() {

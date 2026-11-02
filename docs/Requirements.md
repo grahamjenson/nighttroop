@@ -140,6 +140,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   site a new backup key. The key works once; a wrong key is refused without saying why.
 - A site that is never used is deleted after `DELETE_AFTER_INACTIVITY_MINS`.
 - Every page's footer links to contact, the terms of service and the privacy policy.
+- The public pages (create, recover, terms and privacy) say above their footer that Nighttroop is not a medical device,
+  gives no medical advice, and its data and alarms may be late, missing or wrong.
 - A server set up as a test site (`TEST_SITE`) says so in a large banner at the top of every page, public, site and
   control, warning that its data is frequently wiped.
 - Every page names the browser's tab after itself, e.g. `Glucose Readings · Nighttroop`, whether it is loaded in full or
