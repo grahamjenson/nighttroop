@@ -89,6 +89,10 @@ type ServerConfig struct {
 	// of service and privacy policy
 	SupportEmail string
 
+	// FeedbackURL, when set, is where users give feedback, e.g. a Google Form or GitHub issues, linked from every
+	// page's footer and the home page
+	FeedbackURL string
+
 	// TestSite shows every page a large banner saying it is a test site whose data is wiped, so it is not taken for
 	// a real one
 	TestSite bool
@@ -291,6 +295,7 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		SentryDSN: configStringSelect(dotenv, "SENTRY_DSN", ""),
 
 		SupportEmail: configStringSelect(dotenv, "SUPPORT_EMAIL", DefaultSupportEmail),
+		FeedbackURL:  configStringSelect(dotenv, "FEEDBACK_URL", ""),
 		TestSite:     configSelect(dotenv, "TEST_SITE", false, strconv.ParseBool),
 		GeoIPDBPath:  configStringSelect(dotenv, "GEOIP_DB_PATH", ""),
 
