@@ -267,6 +267,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   round, and a failed upload is tried again the next round.
 - A server with no control DB or site batch folder restores it from S3 on start; a download that fails or is cut off
   leaves nothing behind, so the next start downloads it again.
+- A start removes the staging folders a restore or archive killed part way left beside the DBs and backups, and nothing
+  else there.
 - A site whose creation fails part way, such as its request being cancelled, leaves no site or identities behind.
 - A live site whose DB file is missing on start, though its batch's folder is there, is restored from its batch's
   latest backup in S3, downloaded once per batch, and opened; either way it is a "Site DB missing" event the control

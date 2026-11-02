@@ -126,3 +126,47 @@ func TestFailedBatchDownloadIsRetried(t *testing.T) {
 	// Batches with no backup get an empty folder
 	require.DirExists(t, sitedb.GetBatchFolder("z", c.ServerConfig))
 }
+
+// A start removes the staging folders a restore or archive killed part way left beside the DBs, and nothing else
+func TestRemoveStagingRemovesOnlyStagingFolders(t *testing.T) {
+	c, _ := newClient(t)
+	cfg := c.ServerConfig
+	write := func(path string) string {
+		require.NoError(t, os.MkdirAll(filepath.Dir(path), 0o755))
+		require.NoError(t, os.WriteFile(path, []byte("x"), 0o600))
+		return path
+	}
+	dbDir, batch := cfg.DBDir(), sitedb.GetBatchFolder("a", cfg)
+	backupBatch := filepath.Dir(sitedb.GetBackupPath("abcdef", cfg))
+
+	// Made as the download and the archive make them, so the names are theirs
+	staging := []string{}
+	for dir, pattern := range map[string]string{
+		filepath.Dir(dbDir): "." + filepath.Base(dbDir) + "-restore-",
+		filepath.Dir(batch): "." + filepath.Base(batch) + "-restore-",
+		backupBatch:         ".archive-*",
+	} {
+		require.NoError(t, os.MkdirAll(dir, 0o755))
+		folder, err := os.MkdirTemp(dir, pattern)
+		require.NoError(t, err)
+		write(filepath.Join(folder, "abcdef.sqlite"))
+		staging = append(staging, folder)
+	}
+	kept := []string{
+		write(controldb.GetPath(cfg)),
+		write(sitedb.GetPath("abcdef", cfg)),
+		write(sitedb.GetBackupPath("abcdef", cfg)),
+		write(filepath.Join(cfg.DataDir, ".env")),
+		write(filepath.Join(filepath.Dir(batch), ".a-restore")),
+		write(filepath.Join(backupBatch, ".archived", "abcdef.sqlite")),
+	}
+
+	restore.RemoveStaging(cfg)
+
+	for _, folder := range staging {
+		require.NoDirExists(t, folder)
+	}
+	for _, path := range kept {
+		require.FileExists(t, path)
+	}
+}

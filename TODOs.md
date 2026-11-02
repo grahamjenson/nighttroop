@@ -64,7 +64,6 @@
 
 ## Bugs
 
-1. P4: A start killed mid restore leaves its `.<folder>-restore-*` staging folder beside the DBs; remove them on start
 1. P4: A live site left out at start, its DB missing and not restored, is only a `site_db_missing` event; mark it on
    the control sites page too
 
