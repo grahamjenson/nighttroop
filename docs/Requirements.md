@@ -254,6 +254,12 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   default profile's or profile switch's basal at its start, in the profile's timezone, and is returned with that
   `absolute` and its `percent` as sent.
 - Duplicate uploads are ignored; values far outside real use are refused.
+- A device's Nightscout token is also taken as its SHA1 in the `api-secret` header, as xDrip+ sends the token in its
+  URL; a password reset stops the old token's SHA1 working.
+- An xDrip+ upload works as it sends it (see `docs/clients/xdrip.md`): a calibration (`type` `cal`) in a batch of
+  entries is left out and the readings with it kept; a treatment with the eventType `<none>` is kept as a Note; an
+  uploader battery that is not a number is left out of its device status; `uploader.battery` is the uploader's
+  battery; and a treatment is found by its `uuid` (`find[uuid]`), sent as the `_id` or as xDrip+ makes its `_id`.
 
 ### Nighttroop API and client
 

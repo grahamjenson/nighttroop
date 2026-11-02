@@ -91,6 +91,11 @@ func Create(store nsutils.Store) http.HandlerFunc {
 				nsutils.WriteError(w, nsutils.BadDataBodyError)
 				return
 			}
+			// xDrip+ sends its sensor calibrations (type cal) in the same batch as its readings. They are not kept,
+			// so the readings still are.
+			if collection == nsutils.Entries && doc["type"] == "cal" {
+				continue
+			}
 
 			record, _, err := store.Create(r.Context(), collection, doc, nsutils.RawParam(r))
 			if err != nil {

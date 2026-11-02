@@ -248,6 +248,11 @@ func (t *TreatmentEventType) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
+	// <none> is the Nightscout careportal's treatment with no type, which xDrip+ gives every bolus, carbs and note
+	if strings.TrimSpace(s) == "<none>" {
+		*t = Note
+		return nil
+	}
 	for _, et := range TreatmentEventTypes {
 		if strings.TrimSpace(s) == string(et) {
 			*t = et

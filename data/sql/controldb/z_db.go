@@ -105,6 +105,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getSiteIdentityByIDStmt, err = db.PrepareContext(ctx, getSiteIdentityByID); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSiteIdentityByID: %w", err)
 	}
+	if q.getSiteIdentityByNightscoutTokenDigestStmt, err = db.PrepareContext(ctx, getSiteIdentityByNightscoutTokenDigest); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSiteIdentityByNightscoutTokenDigest: %w", err)
+	}
 	if q.getSiteInAnyStateStmt, err = db.PrepareContext(ctx, getSiteInAnyState); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSiteInAnyState: %w", err)
 	}
@@ -329,6 +332,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getSiteIdentityByIDStmt: %w", cerr)
 		}
 	}
+	if q.getSiteIdentityByNightscoutTokenDigestStmt != nil {
+		if cerr := q.getSiteIdentityByNightscoutTokenDigestStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSiteIdentityByNightscoutTokenDigestStmt: %w", cerr)
+		}
+	}
 	if q.getSiteInAnyStateStmt != nil {
 		if cerr := q.getSiteInAnyStateStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getSiteInAnyStateStmt: %w", cerr)
@@ -506,123 +514,125 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db                                 DBTX
-	tx                                 *sql.Tx
-	allSiteIdentitiesStmt              *sql.Stmt
-	archiveSitesStmt                   *sql.Stmt
-	countActiveIdentitiesStmt          *sql.Stmt
-	countActiveSitesStmt               *sql.Stmt
-	countSiteIdentitiesStmt            *sql.Stmt
-	countSitesByStateStmt              *sql.Stmt
-	countSitesCreatedStmt              *sql.Stmt
-	createControlIdentityStmt          *sql.Stmt
-	createSiteStmt                     *sql.Stmt
-	createSiteIdentityStmt             *sql.Stmt
-	createSyncSourceStmt               *sql.Stmt
-	deleteSiteIdentityStmt             *sql.Stmt
-	deleteSitesStmt                    *sql.Stmt
-	deleteSyncSourceStmt               *sql.Stmt
-	disableSiteStmt                    *sql.Stmt
-	disableSitesStmt                   *sql.Stmt
-	finishSyncSourceBackfillStmt       *sql.Stmt
-	getAllSitesStmt                    *sql.Stmt
-	getAllSyncSourcesForSiteStmt       *sql.Stmt
-	getBatchSitesToBackUpStmt          *sql.Stmt
-	getControlIdentityStmt             *sql.Stmt
-	getLiveAndDisabledSitesStmt        *sql.Stmt
-	getServerSettingsStmt              *sql.Stmt
-	getSiteStmt                        *sql.Stmt
-	getSiteIDsWithAlarmsStmt           *sql.Stmt
-	getSiteIdentityStmt                *sql.Stmt
-	getSiteIdentityByIDStmt            *sql.Stmt
-	getSiteInAnyStateStmt              *sql.Stmt
-	getSitesToArchiveStmt              *sql.Stmt
-	getSitesToDeleteInBatchStmt        *sql.Stmt
-	getSitesToDisableStmt              *sql.Stmt
-	getSyncReportsToRunStmt            *sql.Stmt
-	getSyncSourceStmt                  *sql.Stmt
-	hydrateSiteStmt                    *sql.Stmt
-	resetSiteAdminCredentialsStmt      *sql.Stmt
-	rotateSiteBackupKeyStmt            *sql.Stmt
-	searchArchivedSitesStmt            *sql.Stmt
-	searchSitesStmt                    *sql.Stmt
-	searchSitesByDBSizeStmt            *sql.Stmt
-	searchSitesByLastWriteStmt         *sql.Stmt
-	searchSyncSourcesStmt              *sql.Stmt
-	siteExistsStmt                     *sql.Stmt
-	startSyncSourceBackfillStmt        *sql.Stmt
-	updatePublicSiteCreationStmt       *sql.Stmt
-	updateSiteDateFlagsStmt            *sql.Stmt
-	updateSiteIdentityDateFlagsStmt    *sql.Stmt
-	updateSiteIdentityEnabledStmt      *sql.Stmt
-	updateSiteIdentityPasswordStmt     *sql.Stmt
-	updateSiteIdentitySettingsStmt     *sql.Stmt
-	updateSiteIdentityTOTPStmt         *sql.Stmt
-	updateSitesSettingsStmt            *sql.Stmt
-	updateSyncReportAttemptStmt        *sql.Stmt
-	updateSyncSourceStmt               *sql.Stmt
-	updateSyncSourceReportsFailureStmt *sql.Stmt
-	updateSyncSourceReportsSuccessStmt *sql.Stmt
+	db                                         DBTX
+	tx                                         *sql.Tx
+	allSiteIdentitiesStmt                      *sql.Stmt
+	archiveSitesStmt                           *sql.Stmt
+	countActiveIdentitiesStmt                  *sql.Stmt
+	countActiveSitesStmt                       *sql.Stmt
+	countSiteIdentitiesStmt                    *sql.Stmt
+	countSitesByStateStmt                      *sql.Stmt
+	countSitesCreatedStmt                      *sql.Stmt
+	createControlIdentityStmt                  *sql.Stmt
+	createSiteStmt                             *sql.Stmt
+	createSiteIdentityStmt                     *sql.Stmt
+	createSyncSourceStmt                       *sql.Stmt
+	deleteSiteIdentityStmt                     *sql.Stmt
+	deleteSitesStmt                            *sql.Stmt
+	deleteSyncSourceStmt                       *sql.Stmt
+	disableSiteStmt                            *sql.Stmt
+	disableSitesStmt                           *sql.Stmt
+	finishSyncSourceBackfillStmt               *sql.Stmt
+	getAllSitesStmt                            *sql.Stmt
+	getAllSyncSourcesForSiteStmt               *sql.Stmt
+	getBatchSitesToBackUpStmt                  *sql.Stmt
+	getControlIdentityStmt                     *sql.Stmt
+	getLiveAndDisabledSitesStmt                *sql.Stmt
+	getServerSettingsStmt                      *sql.Stmt
+	getSiteStmt                                *sql.Stmt
+	getSiteIDsWithAlarmsStmt                   *sql.Stmt
+	getSiteIdentityStmt                        *sql.Stmt
+	getSiteIdentityByIDStmt                    *sql.Stmt
+	getSiteIdentityByNightscoutTokenDigestStmt *sql.Stmt
+	getSiteInAnyStateStmt                      *sql.Stmt
+	getSitesToArchiveStmt                      *sql.Stmt
+	getSitesToDeleteInBatchStmt                *sql.Stmt
+	getSitesToDisableStmt                      *sql.Stmt
+	getSyncReportsToRunStmt                    *sql.Stmt
+	getSyncSourceStmt                          *sql.Stmt
+	hydrateSiteStmt                            *sql.Stmt
+	resetSiteAdminCredentialsStmt              *sql.Stmt
+	rotateSiteBackupKeyStmt                    *sql.Stmt
+	searchArchivedSitesStmt                    *sql.Stmt
+	searchSitesStmt                            *sql.Stmt
+	searchSitesByDBSizeStmt                    *sql.Stmt
+	searchSitesByLastWriteStmt                 *sql.Stmt
+	searchSyncSourcesStmt                      *sql.Stmt
+	siteExistsStmt                             *sql.Stmt
+	startSyncSourceBackfillStmt                *sql.Stmt
+	updatePublicSiteCreationStmt               *sql.Stmt
+	updateSiteDateFlagsStmt                    *sql.Stmt
+	updateSiteIdentityDateFlagsStmt            *sql.Stmt
+	updateSiteIdentityEnabledStmt              *sql.Stmt
+	updateSiteIdentityPasswordStmt             *sql.Stmt
+	updateSiteIdentitySettingsStmt             *sql.Stmt
+	updateSiteIdentityTOTPStmt                 *sql.Stmt
+	updateSitesSettingsStmt                    *sql.Stmt
+	updateSyncReportAttemptStmt                *sql.Stmt
+	updateSyncSourceStmt                       *sql.Stmt
+	updateSyncSourceReportsFailureStmt         *sql.Stmt
+	updateSyncSourceReportsSuccessStmt         *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                                 tx,
-		tx:                                 tx,
-		allSiteIdentitiesStmt:              q.allSiteIdentitiesStmt,
-		archiveSitesStmt:                   q.archiveSitesStmt,
-		countActiveIdentitiesStmt:          q.countActiveIdentitiesStmt,
-		countActiveSitesStmt:               q.countActiveSitesStmt,
-		countSiteIdentitiesStmt:            q.countSiteIdentitiesStmt,
-		countSitesByStateStmt:              q.countSitesByStateStmt,
-		countSitesCreatedStmt:              q.countSitesCreatedStmt,
-		createControlIdentityStmt:          q.createControlIdentityStmt,
-		createSiteStmt:                     q.createSiteStmt,
-		createSiteIdentityStmt:             q.createSiteIdentityStmt,
-		createSyncSourceStmt:               q.createSyncSourceStmt,
-		deleteSiteIdentityStmt:             q.deleteSiteIdentityStmt,
-		deleteSitesStmt:                    q.deleteSitesStmt,
-		deleteSyncSourceStmt:               q.deleteSyncSourceStmt,
-		disableSiteStmt:                    q.disableSiteStmt,
-		disableSitesStmt:                   q.disableSitesStmt,
-		finishSyncSourceBackfillStmt:       q.finishSyncSourceBackfillStmt,
-		getAllSitesStmt:                    q.getAllSitesStmt,
-		getAllSyncSourcesForSiteStmt:       q.getAllSyncSourcesForSiteStmt,
-		getBatchSitesToBackUpStmt:          q.getBatchSitesToBackUpStmt,
-		getControlIdentityStmt:             q.getControlIdentityStmt,
-		getLiveAndDisabledSitesStmt:        q.getLiveAndDisabledSitesStmt,
-		getServerSettingsStmt:              q.getServerSettingsStmt,
-		getSiteStmt:                        q.getSiteStmt,
-		getSiteIDsWithAlarmsStmt:           q.getSiteIDsWithAlarmsStmt,
-		getSiteIdentityStmt:                q.getSiteIdentityStmt,
-		getSiteIdentityByIDStmt:            q.getSiteIdentityByIDStmt,
-		getSiteInAnyStateStmt:              q.getSiteInAnyStateStmt,
-		getSitesToArchiveStmt:              q.getSitesToArchiveStmt,
-		getSitesToDeleteInBatchStmt:        q.getSitesToDeleteInBatchStmt,
-		getSitesToDisableStmt:              q.getSitesToDisableStmt,
-		getSyncReportsToRunStmt:            q.getSyncReportsToRunStmt,
-		getSyncSourceStmt:                  q.getSyncSourceStmt,
-		hydrateSiteStmt:                    q.hydrateSiteStmt,
-		resetSiteAdminCredentialsStmt:      q.resetSiteAdminCredentialsStmt,
-		rotateSiteBackupKeyStmt:            q.rotateSiteBackupKeyStmt,
-		searchArchivedSitesStmt:            q.searchArchivedSitesStmt,
-		searchSitesStmt:                    q.searchSitesStmt,
-		searchSitesByDBSizeStmt:            q.searchSitesByDBSizeStmt,
-		searchSitesByLastWriteStmt:         q.searchSitesByLastWriteStmt,
-		searchSyncSourcesStmt:              q.searchSyncSourcesStmt,
-		siteExistsStmt:                     q.siteExistsStmt,
-		startSyncSourceBackfillStmt:        q.startSyncSourceBackfillStmt,
-		updatePublicSiteCreationStmt:       q.updatePublicSiteCreationStmt,
-		updateSiteDateFlagsStmt:            q.updateSiteDateFlagsStmt,
-		updateSiteIdentityDateFlagsStmt:    q.updateSiteIdentityDateFlagsStmt,
-		updateSiteIdentityEnabledStmt:      q.updateSiteIdentityEnabledStmt,
-		updateSiteIdentityPasswordStmt:     q.updateSiteIdentityPasswordStmt,
-		updateSiteIdentitySettingsStmt:     q.updateSiteIdentitySettingsStmt,
-		updateSiteIdentityTOTPStmt:         q.updateSiteIdentityTOTPStmt,
-		updateSitesSettingsStmt:            q.updateSitesSettingsStmt,
-		updateSyncReportAttemptStmt:        q.updateSyncReportAttemptStmt,
-		updateSyncSourceStmt:               q.updateSyncSourceStmt,
-		updateSyncSourceReportsFailureStmt: q.updateSyncSourceReportsFailureStmt,
-		updateSyncSourceReportsSuccessStmt: q.updateSyncSourceReportsSuccessStmt,
+		db:                                         tx,
+		tx:                                         tx,
+		allSiteIdentitiesStmt:                      q.allSiteIdentitiesStmt,
+		archiveSitesStmt:                           q.archiveSitesStmt,
+		countActiveIdentitiesStmt:                  q.countActiveIdentitiesStmt,
+		countActiveSitesStmt:                       q.countActiveSitesStmt,
+		countSiteIdentitiesStmt:                    q.countSiteIdentitiesStmt,
+		countSitesByStateStmt:                      q.countSitesByStateStmt,
+		countSitesCreatedStmt:                      q.countSitesCreatedStmt,
+		createControlIdentityStmt:                  q.createControlIdentityStmt,
+		createSiteStmt:                             q.createSiteStmt,
+		createSiteIdentityStmt:                     q.createSiteIdentityStmt,
+		createSyncSourceStmt:                       q.createSyncSourceStmt,
+		deleteSiteIdentityStmt:                     q.deleteSiteIdentityStmt,
+		deleteSitesStmt:                            q.deleteSitesStmt,
+		deleteSyncSourceStmt:                       q.deleteSyncSourceStmt,
+		disableSiteStmt:                            q.disableSiteStmt,
+		disableSitesStmt:                           q.disableSitesStmt,
+		finishSyncSourceBackfillStmt:               q.finishSyncSourceBackfillStmt,
+		getAllSitesStmt:                            q.getAllSitesStmt,
+		getAllSyncSourcesForSiteStmt:               q.getAllSyncSourcesForSiteStmt,
+		getBatchSitesToBackUpStmt:                  q.getBatchSitesToBackUpStmt,
+		getControlIdentityStmt:                     q.getControlIdentityStmt,
+		getLiveAndDisabledSitesStmt:                q.getLiveAndDisabledSitesStmt,
+		getServerSettingsStmt:                      q.getServerSettingsStmt,
+		getSiteStmt:                                q.getSiteStmt,
+		getSiteIDsWithAlarmsStmt:                   q.getSiteIDsWithAlarmsStmt,
+		getSiteIdentityStmt:                        q.getSiteIdentityStmt,
+		getSiteIdentityByIDStmt:                    q.getSiteIdentityByIDStmt,
+		getSiteIdentityByNightscoutTokenDigestStmt: q.getSiteIdentityByNightscoutTokenDigestStmt,
+		getSiteInAnyStateStmt:                      q.getSiteInAnyStateStmt,
+		getSitesToArchiveStmt:                      q.getSitesToArchiveStmt,
+		getSitesToDeleteInBatchStmt:                q.getSitesToDeleteInBatchStmt,
+		getSitesToDisableStmt:                      q.getSitesToDisableStmt,
+		getSyncReportsToRunStmt:                    q.getSyncReportsToRunStmt,
+		getSyncSourceStmt:                          q.getSyncSourceStmt,
+		hydrateSiteStmt:                            q.hydrateSiteStmt,
+		resetSiteAdminCredentialsStmt:              q.resetSiteAdminCredentialsStmt,
+		rotateSiteBackupKeyStmt:                    q.rotateSiteBackupKeyStmt,
+		searchArchivedSitesStmt:                    q.searchArchivedSitesStmt,
+		searchSitesStmt:                            q.searchSitesStmt,
+		searchSitesByDBSizeStmt:                    q.searchSitesByDBSizeStmt,
+		searchSitesByLastWriteStmt:                 q.searchSitesByLastWriteStmt,
+		searchSyncSourcesStmt:                      q.searchSyncSourcesStmt,
+		siteExistsStmt:                             q.siteExistsStmt,
+		startSyncSourceBackfillStmt:                q.startSyncSourceBackfillStmt,
+		updatePublicSiteCreationStmt:               q.updatePublicSiteCreationStmt,
+		updateSiteDateFlagsStmt:                    q.updateSiteDateFlagsStmt,
+		updateSiteIdentityDateFlagsStmt:            q.updateSiteIdentityDateFlagsStmt,
+		updateSiteIdentityEnabledStmt:              q.updateSiteIdentityEnabledStmt,
+		updateSiteIdentityPasswordStmt:             q.updateSiteIdentityPasswordStmt,
+		updateSiteIdentitySettingsStmt:             q.updateSiteIdentitySettingsStmt,
+		updateSiteIdentityTOTPStmt:                 q.updateSiteIdentityTOTPStmt,
+		updateSitesSettingsStmt:                    q.updateSitesSettingsStmt,
+		updateSyncReportAttemptStmt:                q.updateSyncReportAttemptStmt,
+		updateSyncSourceStmt:                       q.updateSyncSourceStmt,
+		updateSyncSourceReportsFailureStmt:         q.updateSyncSourceReportsFailureStmt,
+		updateSyncSourceReportsSuccessStmt:         q.updateSyncSourceReportsSuccessStmt,
 	}
 }

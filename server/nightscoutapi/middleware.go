@@ -13,6 +13,7 @@ import (
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/security"
 )
 
 func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg *config.ServerConfig) func(http.Handler) http.Handler {
@@ -101,6 +102,16 @@ func legacyTokenIdentity(config *config.ServerConfig, ctx context.Context, token
 	}
 
 	siteContext := httputils.GetSiteContext(ctx)
+
+	// xDrip+ sends the SHA1 of the token, 40 hex digits, as Nightscout clients send their API secret
+	if len(tokenParam) == 40 {
+		identity, err := siteContext.ControlDB.Queries.GetSiteIdentityByNightscoutTokenDigest(ctx, controldb.GetSiteIdentityByNightscoutTokenDigestParams{
+			SiteID: siteContext.SiteID, Digest: new(security.NightscoutTokenDigest(tokenParam))})
+		if err != nil || !identity.Enabled || identity.TotpSecretEnc != "" || identity.Role == consts.IdentityRoleAdmin {
+			return nil, fmt.Errorf("no identity that can use a token has one with this SHA1: %v", err)
+		}
+		return identity, nil
+	}
 
 	tokenParamSubdomain, tokenParamName, tokenRole, tokenParamPassword, err := config.Security.SplitNightscoutTokenForIdentity(tokenParam)
 	if err != nil {
