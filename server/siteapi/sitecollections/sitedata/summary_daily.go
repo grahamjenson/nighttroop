@@ -67,7 +67,11 @@ func (s *SummaryDailyCollection) CreateRow(ctx context.Context, collectionTx *si
 }
 
 func (s *SummaryDailyCollection) DeleteRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) error {
-	_, err := siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).HardDeleteSummaryPeriod, sitedb.HardDeleteSummaryPeriodParams{Period: "day", Date: id})
+	q, err := collectionTx.Site()
+	if err != nil {
+		return err
+	}
+	_, err = q.HardDeleteSummaryPeriod(ctx, sitedb.HardDeleteSummaryPeriodParams{Period: "day", Date: id})
 	return err
 }
 
