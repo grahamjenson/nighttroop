@@ -164,7 +164,15 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 	defer tx.Rollback()
 
 	var duplicateDBModel *DM
-	if deduplicator, ok := any(m).(CollectionDeduplicator[NS, DM]); ok && nsModel.GetDate() != nil {
+	identifier := nsModel.GetIdentifier()
+	if identifier != nil && *identifier == "" {
+		identifier = nil
+	}
+	if identifier != nil {
+		if duplicateDBModel, httpErr = c.identifiedDuplicate(q, ctx, *identifier); httpErr != nil {
+			return nil, false, httpErr
+		}
+	} else if deduplicator, ok := any(m).(CollectionDeduplicator[NS, DM]); ok && nsModel.GetDate() != nil {
 		duplicateDBModel, err = deduplicator.GetDuplicate(q, ctx, nsModel)
 	}
 	if err != nil {
@@ -180,7 +188,7 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 		ctx,
 		nsModel,
 		converterContext(siteContext),
-		nil,
+		identifier,
 	)
 
 	if httpErr := c.stored(dbModel, err, "create"); httpErr != nil {
@@ -193,6 +201,31 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 
 	siteContext.PublishModelChange(events.Created, dbModel)
 	return c.document(dbModel, siteContext, raw), false, nil
+}
+
+// identifiedDuplicate is the model a create naming its identifier repeats, as in Nightscout, which keeps that
+// identifier so the client can delete or replace the document by it. Its only duplicate is the model stored with
+// it; one deleted is removed for good, as a client like Juggluco changes a document by deleting it and creating it
+// again.
+func (c Collection[NS, DM]) identifiedDuplicate(q *sitedb.Queries, ctx context.Context, identifier string) (*DM, *nsutils.HTTPError) {
+	if httpErr := nsutils.ValidateIdentifierIsntBad(identifier); httpErr != nil {
+		return nil, httpErr
+	}
+	stored, err := c.db.GetModel(q, ctx, identifier, true)
+	if err == sql.ErrNoRows || (err == nil && stored == nil) {
+		return nil, nil
+	}
+	if err == nil && (*stored).GetDeletedAt() == nil {
+		return stored, nil
+	}
+	if err == nil {
+		_, err = c.db.Delete(q, ctx, identifier, true)
+	}
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to check for a document with the identifier", "error", err, "collection", c.db.Name())
+		return nil, nsutils.ErrInternal
+	}
+	return nil, nil
 }
 
 func (c Collection[NS, DM]) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (nsutils.Document, *nsutils.HTTPError) {
@@ -344,12 +377,19 @@ func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.
 		}
 	}
 
-	if err := ValidateNotChangingSharedFields(replacingModel, nsModel, data, identifier); err != nil {
+	// As in Nightscout, a deleted document is replaced whatever changed, as a client like Juggluco changes one by
+	// deleting it and sending it again
+	checkedModel := replacingModel
+	if replacingModel != nil && (*replacingModel).GetDeletedAt() != nil {
+		checkedModel = nil
+	}
+
+	if err := ValidateNotChangingSharedFields(checkedModel, nsModel, data, identifier); err != nil {
 		slog.ErrorContext(ctx, "validation failed for replacing model", "error", err, "collection", m.Name())
 		return nil, false, err
 	}
 
-	if err := m.Validate(nsModel, replacingModel); err != nil {
+	if err := m.Validate(nsModel, checkedModel); err != nil {
 		slog.ErrorContext(ctx, "validation failed for replacing model", "error", err, "collection", m.Name())
 		return nil, false, err
 	}
