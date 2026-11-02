@@ -259,6 +259,12 @@ func (t *TreatmentEventType) UnmarshalJSON(data []byte) error {
 			return nil
 		}
 	}
+	// "<none>" is Nightscout's careportal's treatment with no event type, which Juggluco sends its amounts as, so it
+	// is a note keeping any insulin and carbs
+	if strings.EqualFold(strings.TrimSpace(s), "<none>") {
+		*t = Note
+		return nil
+	}
 	return fmt.Errorf("unknown treatment event type: %s", s)
 }
 

@@ -1,0 +1,160 @@
+# Juggluco's Nightscout uploader with "test V3" ticked, see docs/clients/juggluco.md. In this mode it sends no
+# api-secret: NightPost.gettoken swaps the secret it was given for a JWT, sent as a Bearer token on every call.
+# The bodies are copied from writev3entry (Common/src/main/cpp/net/watchserver/common.cpp) and writetreatmentV3
+# (uploadtreatment.cpp), for a Libre sensor named 3MH0058XKP. Juggluco reads nothing back but the status code.
+
+INCLUDE steps/new_ns_site.steps
+
+INCLUDE steps/ns_units_mgdl.steps
+
+// NightPost.gettoken: GET <url>/api/v2/authorization/request/<secret>, the secret as typed, with no auth header.
+// It needs a 200, then reads "token" as a string and "exp" as a long in seconds, keeping the token until exp * 1000
+NAME juggluco_gettoken
+GET http://{{ site }}/api/v2/authorization/request/{{ token }}
+ASSERT_STATUS 200
+ASSERT_EXISTS "@token"
+ASSERT_EXISTS "@exp"
+SET juggluco_jwt {{ .juggluco_gettoken.token }}
+
+######
+# Glucose: uploadCGM3 posts one reading at a time and counts 200 or 201 as sent; anything else stops the upload
+# until the uploader is next woken, and it starts again from that reading
+######
+
+NAME juggluco_post_entry_v3
+POST http://{{ site }}/api/v3/entries
+H Authorization: Bearer {{ .juggluco_jwt }}
+H Content-Type: application/json
+B {"app":"Juggluco","device":"3MH0058XKP","date":{{ dayms -1 600 }},"sgv":123,"delta":-1.500,"direction":"FortyFiveDown","type":"sgv","utcOffset":0,"identifier":"504b5838-3530-3048-50ee-1234eeeeeeee","_id":"504b583835303048501234ee"}
+ASSERT_STATUS 201
+ASSERT_EQUALS "504b5838-3530-3048-50ee-1234eeeeeeee" "@identifier"
+
+// A reading with no trend (getdeltaname of NaN) has an empty direction and a delta of 0
+NAME juggluco_post_entry_v3_no_direction
+POST http://{{ site }}/api/v3/entries
+H Authorization: Bearer {{ .juggluco_jwt }}
+H Content-Type: application/json
+B {"app":"Juggluco","device":"3MH0058XKP","date":{{ dayms -1 601 }},"sgv":125,"delta":0.000,"direction":"","type":"sgv","utcOffset":0,"identifier":"504b5838-3530-3048-50ee-1235eeeeeeee","_id":"504b583835303048501235ee"}
+ASSERT_STATUS 201
+
+// "Resend data" (Natives.resetuploader) sends every reading again, which must still be a 200 or 201
+NAME juggluco_post_entry_v3_again
+POST http://{{ site }}/api/v3/entries
+H Authorization: Bearer {{ .juggluco_jwt }}
+H Content-Type: application/json
+B {"app":"Juggluco","device":"3MH0058XKP","date":{{ dayms -1 600 }},"sgv":123,"delta":-1.500,"direction":"FortyFiveDown","type":"sgv","utcOffset":0,"identifier":"504b5838-3530-3048-50ee-1234eeeeeeee","_id":"504b583835303048501234ee"}
+ASSERT_STATUS 200
+
+NAME juggluco_entries_stored_once
+GET http://{{ site }}/api/v3/entries?date$gte={{ dayms -1 590 }}&date$lte={{ dayms -1 610 }}
+H Authorization: Bearer {{ .juggluco_jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result"
+ASSERT_EQUALS 125 "@result.0.sgv"
+ASSERT_EQUALS "" "@result.0.direction"
+ASSERT_EQUALS 123 "@result.1.sgv"
+ASSERT_EQUALS "FortyFiveDown" "@result.1.direction"
+ASSERT_EQUALS "3MH0058XKP" "@result.1.device"
+ASSERT_EQUALS "Juggluco" "@result.1.app"
+ASSERT_EQUALS "504b5838-3530-3048-50ee-1234eeeeeeee" "@result.1.identifier"
+
+######
+# Amounts: uploadtreatments sends each new or changed amount by deleting it by its identifier, ignoring the answer,
+# then posting it, which must be a 200 or 201. An amount removed in Juggluco is deleted, which must be a 200, or the
+# amounts stop uploading. Each is a treatment with eventType "<none>", sent one at a time.
+######
+
+NAME juggluco_delete_before_insulin
+DELETE http://{{ site }}/api/v3/treatments/0fffffff-ffff-ffff-ffff-12ffffffffff
+H Authorization: Bearer {{ .juggluco_jwt }}
+H Content-Type: application/json
+
+// Rapid-acting insulin, labelled with its kind in Juggluco (settings->getlabel)
+NAME juggluco_post_insulin
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ .juggluco_jwt }}
+H Content-Type: application/json
+B {"identifier":"0fffffff-ffff-ffff-ffff-12ffffffffff","_id":"ba0e12bbbbbbbbbbbbbbbbbb","date":{{ dayms -1 605 }},"utcOffset":0,"eventType":"<none>","app":"Juggluco","notes":"Rapid-Acting","insulin":4.5,"insulinType":"Novorapid"}
+ASSERT_STATUS 201
+ASSERT_EQUALS "0fffffff-ffff-ffff-ffff-12ffffffffff" "@identifier"
+
+NAME juggluco_delete_before_carbs
+DELETE http://{{ site }}/api/v3/treatments/0fffffff-ffff-ffff-ffff-13ffffffffff
+H Authorization: Bearer {{ .juggluco_jwt }}
+H Content-Type: application/json
+
+// Carbs entered at the same minute as the insulin are their own amount, not a duplicate of it
+NAME juggluco_post_carbs
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ .juggluco_jwt }}
+H Content-Type: application/json
+B {"identifier":"0fffffff-ffff-ffff-ffff-13ffffffffff","_id":"ba0e13bbbbbbbbbbbbbbbbbb","date":{{ dayms -1 605 }},"utcOffset":0,"eventType":"<none>","app":"Juggluco","carbs":30}
+ASSERT_STATUS 201
+
+// Any other kind of amount is only a note of its label and value. An amount made after jugglucoID was set has an
+// identifier from mkididV3
+NAME juggluco_post_other_amount
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ .juggluco_jwt }}
+H Content-Type: application/json
+B {"identifier":"0fff1a2b-3c4d-5e6f-7a8b-14ffffffffff","_id":"000000141a2b3c4d5e6f7a8b","date":{{ dayms -1 607 }},"utcOffset":0,"eventType":"<none>","app":"Juggluco","notes":"Walk 30"}
+ASSERT_STATUS 201
+
+NAME juggluco_insulin_by_identifier
+GET http://{{ site }}/api/v3/treatments/0fffffff-ffff-ffff-ffff-12ffffffffff
+H Authorization: Bearer {{ .juggluco_jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 4.5 "@result.insulin"
+
+NAME juggluco_carbs_by_identifier
+GET http://{{ site }}/api/v3/treatments/0fffffff-ffff-ffff-ffff-13ffffffffff
+H Authorization: Bearer {{ .juggluco_jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 30 "@result.carbs"
+
+// Changing the insulin's amount and time in Juggluco deletes it, then posts it again with the same identifier
+NAME juggluco_delete_changed_insulin
+DELETE http://{{ site }}/api/v3/treatments/0fffffff-ffff-ffff-ffff-12ffffffffff
+H Authorization: Bearer {{ .juggluco_jwt }}
+H Content-Type: application/json
+ASSERT_STATUS 200
+
+NAME juggluco_post_changed_insulin
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ .juggluco_jwt }}
+H Content-Type: application/json
+B {"identifier":"0fffffff-ffff-ffff-ffff-12ffffffffff","_id":"ba0e12bbbbbbbbbbbbbbbbbb","date":{{ dayms -1 606 }},"utcOffset":0,"eventType":"<none>","app":"Juggluco","notes":"Rapid-Acting","insulin":5,"insulinType":"Novorapid"}
+ASSERT_STATUS 201
+
+NAME juggluco_changed_insulin_by_identifier
+GET http://{{ site }}/api/v3/treatments/0fffffff-ffff-ffff-ffff-12ffffffffff
+H Authorization: Bearer {{ .juggluco_jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 5 "@result.insulin"
+ASSERT_EQUALS true "@result.isValid"
+
+// Without deleting first, a repeat is a duplicate of the one stored
+NAME juggluco_post_insulin_again
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ .juggluco_jwt }}
+H Content-Type: application/json
+B {"identifier":"0fffffff-ffff-ffff-ffff-12ffffffffff","_id":"ba0e12bbbbbbbbbbbbbbbbbb","date":{{ dayms -1 606 }},"utcOffset":0,"eventType":"<none>","app":"Juggluco","notes":"Rapid-Acting","insulin":5,"insulinType":"Novorapid"}
+ASSERT_STATUS 200
+ASSERT_EQUALS true "@isDeduplication"
+
+// Removing the carbs in Juggluco deletes them, which must be a 200
+NAME juggluco_delete_removed_carbs
+DELETE http://{{ site }}/api/v3/treatments/0fffffff-ffff-ffff-ffff-13ffffffffff
+H Authorization: Bearer {{ .juggluco_jwt }}
+H Content-Type: application/json
+ASSERT_STATUS 200
+
+NAME juggluco_treatments_after_changes
+GET http://{{ site }}/api/v3/treatments?date$gte={{ dayms -1 590 }}&date$lte={{ dayms -1 610 }}
+H Authorization: Bearer {{ .juggluco_jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result"
+ASSERT_EQUALS "Walk 30" "@result.0.notes"
+ASSERT_EQUALS "0fff1a2b-3c4d-5e6f-7a8b-14ffffffffff" "@result.0.identifier"
+ASSERT_EQUALS 5 "@result.1.insulin"
+ASSERT_EQUALS "Juggluco" "@result.1.app"

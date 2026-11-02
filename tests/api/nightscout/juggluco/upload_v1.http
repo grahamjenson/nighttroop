@@ -1,0 +1,109 @@
+# Juggluco's Nightscout uploader as it is by default, on API v1, see docs/clients/juggluco.md. Juggluco sends the
+# SHA1 hex of the secret it was given in the api-secret header (makeuploadsecret in
+# Common/src/main/cpp/net/watchserver/uploader.cpp), which Nighttroop cannot check yet, so these send the token
+# itself to check the rest works. The bodies are copied from mkuploaditem (uploader.cpp) and writetreatment
+# (common.cpp). Juggluco reads nothing back but the status code, and only a 200 counts as sent.
+
+INCLUDE steps/new_ns_site.steps
+
+INCLUDE steps/ns_units_mgdl.steps
+
+######
+# Glucose: uploadCGM posts each sensor's new readings as one array, up to 5000 of them
+######
+
+// dateString is local time, from Tdatestring; west of UTC with half hours, e.g. Newfoundland, it is written with
+// a second minus sign
+NAME juggluco_post_entries_v1
+POST http://{{ site }}/api/v1/entries
+H api-secret: {{ token }}
+H Content-Type: application/json
+B [{"type":"sgv","device":"3MH0058XKP","dateString":"{{ date -1 }}T23:00:00.000+13:00","date":{{ dayms -1 600 }},"sgv":123,"delta":-1.500,"direction":"FortyFiveDown","noise":1,"filtered":123000,"unfiltered":123000,"rssi":100},{"type":"sgv","device":"3MH0058XKP","dateString":"{{ date -1 }}T06:31:00.000-03:-30","date":{{ dayms -1 601 }},"sgv":125,"delta":0.000,"direction":"","noise":1,"filtered":125000,"unfiltered":125000,"rssi":100},{"type":"sgv","device":"3MH0058XKP","dateString":"{{ date -1 }}T10:02:00.000+00:00","date":{{ dayms -1 602 }},"sgv":128,"delta":3.000,"direction":"FortyFiveUp","noise":1,"filtered":128000,"unfiltered":128000,"rssi":100}]
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@"
+
+// "Resend data" (Natives.resetuploader) sends every reading again, which must still be a 200
+NAME juggluco_post_entries_v1_again
+POST http://{{ site }}/api/v1/entries
+H api-secret: {{ token }}
+H Content-Type: application/json
+B [{"type":"sgv","device":"3MH0058XKP","dateString":"{{ date -1 }}T23:00:00.000+13:00","date":{{ dayms -1 600 }},"sgv":123,"delta":-1.500,"direction":"FortyFiveDown","noise":1,"filtered":123000,"unfiltered":123000,"rssi":100}]
+ASSERT_STATUS 200
+
+NAME juggluco_entries_v1_stored_once
+GET http://{{ site }}/api/v1/entries?find[date][$gte]={{ dayms -1 590 }}&find[date][$lte]={{ dayms -1 610 }}
+H api-secret: {{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@"
+ASSERT_EQUALS 128 "@0.sgv"
+ASSERT_EQUALS "FortyFiveUp" "@0.direction"
+ASSERT_EQUALS "" "@1.direction"
+ASSERT_EQUALS 123 "@2.sgv"
+ASSERT_EQUALS "3MH0058XKP" "@2.device"
+
+######
+# Amounts: uploadtreatments deletes each new or changed amount by its _id, ignoring the answer, then PUTs it alone,
+# which must be a 200. An amount removed in Juggluco is deleted, which must be a 200, or the amounts stop uploading.
+######
+
+NAME juggluco_delete_before_insulin_v1
+DELETE http://{{ site }}/api/v1/treatments/ba0e12bbbbbbbbbbbbbbbbbb
+H api-secret: {{ token }}
+H Content-Type: application/json
+ASSERT_STATUS 200
+
+NAME juggluco_put_insulin_v1
+PUT http://{{ site }}/api/v1/treatments
+H api-secret: {{ token }}
+H Content-Type: application/json
+B {"_id":"ba0e12bbbbbbbbbbbbbbbbbb","date":{{ dayms -1 605 }},"eventType":"<none>","enteredBy":"Juggluco","created_at":"{{ date -1 }}T10:05:00.000Z","notes":"Rapid-Acting","carbs":null,"insulin":4.5,"insulinType":"Novorapid"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "ba0e12bbbbbbbbbbbbbbbbbb" "@_id"
+
+// Carbs at the same minute are their own amount
+NAME juggluco_put_carbs_v1
+PUT http://{{ site }}/api/v1/treatments
+H api-secret: {{ token }}
+H Content-Type: application/json
+B {"_id":"ba0e13bbbbbbbbbbbbbbbbbb","date":{{ dayms -1 605 }},"eventType":"<none>","enteredBy":"Juggluco","created_at":"{{ date -1 }}T10:05:00.000Z","carbs":30,"insulin":null}
+ASSERT_STATUS 200
+
+// An amount made after jugglucoID was set has an _id from mkidid
+NAME juggluco_put_other_amount_v1
+PUT http://{{ site }}/api/v1/treatments
+H api-secret: {{ token }}
+H Content-Type: application/json
+B {"_id":"000000141a2b3c4d5e6f7a8b","date":{{ dayms -1 607 }},"eventType":"<none>","enteredBy":"Juggluco","created_at":"{{ date -1 }}T10:07:00.000Z","notes":"Walk 30","carbs":null,"insulin":null}
+ASSERT_STATUS 200
+
+// Changing the insulin's amount and time in Juggluco deletes it, then PUTs it again with the same _id
+NAME juggluco_delete_changed_insulin_v1
+DELETE http://{{ site }}/api/v1/treatments/ba0e12bbbbbbbbbbbbbbbbbb
+H api-secret: {{ token }}
+H Content-Type: application/json
+ASSERT_STATUS 200
+
+NAME juggluco_put_changed_insulin_v1
+PUT http://{{ site }}/api/v1/treatments
+H api-secret: {{ token }}
+H Content-Type: application/json
+B {"_id":"ba0e12bbbbbbbbbbbbbbbbbb","date":{{ dayms -1 606 }},"eventType":"<none>","enteredBy":"Juggluco","created_at":"{{ date -1 }}T10:06:00.000Z","notes":"Rapid-Acting","carbs":null,"insulin":5,"insulinType":"Novorapid"}
+ASSERT_STATUS 200
+
+// Removing the carbs in Juggluco deletes them, which must be a 200
+NAME juggluco_delete_removed_carbs_v1
+DELETE http://{{ site }}/api/v1/treatments/ba0e13bbbbbbbbbbbbbbbbbb
+H api-secret: {{ token }}
+H Content-Type: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 1 "@deletedCount"
+
+NAME juggluco_treatments_v1_after_changes
+GET http://{{ site }}/api/v1/treatments?find[date][$gte]={{ dayms -1 590 }}&find[date][$lte]={{ dayms -1 610 }}
+H api-secret: {{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS "Walk 30" "@0.notes"
+ASSERT_EQUALS "000000141a2b3c4d5e6f7a8b" "@0._id"
+ASSERT_EQUALS 5 "@1.insulin"
+ASSERT_EQUALS "Rapid-Acting" "@1.notes"
