@@ -35,7 +35,7 @@ RETURNING *;
 -- name: AllFoodPresets :many
 SELECT * FROM food_presets
 ORDER BY created_at DESC
-LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 
 -- name: GetFoodPreset :one
@@ -81,7 +81,7 @@ WHERE
     AND (CAST(sqlc.narg('CarbsLTE') AS INTEGER) IS NULL OR carbs <= sqlc.narg('CarbsLTE'))
     AND (CAST(sqlc.narg('CarbsLT') AS INTEGER) IS NULL OR carbs < sqlc.narg('CarbsLT'))
 ORDER BY created_at DESC
-LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 --------
 -- UPDATE

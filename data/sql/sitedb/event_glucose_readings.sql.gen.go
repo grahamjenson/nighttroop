@@ -18,7 +18,7 @@ WHERE reading_type = 'sgv' AND deleted_at IS NULL
 AND occurred_at >= (SELECT MAX(occurred_at) FROM glucose_readings WHERE reading_type = 'sgv' AND deleted_at IS NULL)
     - CAST(?1 AS INTEGER) * 60000
 ORDER BY occurred_at DESC
-LIMIT ?2
+LIMIT CAST(?2 AS INTEGER)
 `
 
 type AlarmGlucoseReadingsParams struct {
@@ -82,7 +82,7 @@ const allGlucoseReadings = `-- name: AllGlucoseReadings :many
 SELECT id, mgdl, reading_type, units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings 
 WHERE (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
-LIMIT ?3 OFFSET ?2
+LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
 `
 
 type AllGlucoseReadingsParams struct {
@@ -398,7 +398,7 @@ WHERE
     
     AND (CAST(?27 AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
-LIMIT ?29 OFFSET ?28
+LIMIT CAST(?29 AS INTEGER) OFFSET CAST(?28 AS INTEGER)
 `
 
 type SearchGlucoseReadingsParams struct {

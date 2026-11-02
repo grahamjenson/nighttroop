@@ -15,7 +15,7 @@ const allActivities = `-- name: AllActivities :many
 SELECT id, name, activity_type, duration_minutes, calories, steps, heart_rate, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM activities
 WHERE (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
-LIMIT ?3 OFFSET ?2
+LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
 `
 
 type AllActivitiesParams struct {
@@ -264,7 +264,7 @@ WHERE
     
     AND (CAST(?28 AS BOOL) IS TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
-LIMIT ?30 OFFSET ?29
+LIMIT CAST(?30 AS INTEGER) OFFSET CAST(?29 AS INTEGER)
 `
 
 type SearchActivitiesParams struct {

@@ -15,7 +15,7 @@ const allTempTargets = `-- name: AllTempTargets :many
 SELECT id, duration_minutes, high_target_mgdl, low_target_mgdl, insulin_needs_scale_factor, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM temp_targets
 WHERE (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
-LIMIT ?3 OFFSET ?2
+LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
 `
 
 type AllTempTargetsParams struct {
@@ -232,7 +232,7 @@ WHERE
 
     AND (CAST(?23 AS BOOL) IS TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
-LIMIT ?25 OFFSET ?24
+LIMIT CAST(?25 AS INTEGER) OFFSET CAST(?24 AS INTEGER)
 `
 
 type SearchTempTargetsParams struct {

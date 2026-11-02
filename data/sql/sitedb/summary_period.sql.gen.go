@@ -73,7 +73,7 @@ WHERE
     AND (CAST(?2 AS TEXT) IS NULL OR date >= ?2)
     AND (CAST(?3 AS TEXT) IS NULL OR date <= ?3)
 ORDER BY date DESC
-LIMIT ?5 OFFSET ?4
+LIMIT CAST(?5 AS INTEGER) OFFSET CAST(?4 AS INTEGER)
 `
 
 type SearchSummaryPeriodsParams struct {

@@ -72,7 +72,7 @@ LEFT JOIN notification_events_vw n ON eg.notification_event_id = n.id
 
 WHERE (CAST(sqlc.arg('IncludeDeleted') AS BOOL) IS TRUE OR eg.deleted_at IS NULL)
 ORDER BY eg.occurred_at DESC
-LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 
 -- name: GetEventGroup :one
@@ -200,7 +200,7 @@ WHERE
 
     AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) IS TRUE OR eg.deleted_at IS NULL)
 ORDER BY eg.occurred_at DESC
-LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 --------
 -- UPDATE

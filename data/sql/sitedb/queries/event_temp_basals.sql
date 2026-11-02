@@ -29,7 +29,7 @@ RETURNING *;
 SELECT * FROM temp_basals
 WHERE (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
-LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 
 -- name: GetTempBasal :one
@@ -66,7 +66,7 @@ WHERE
 
     AND (CAST(sqlc.narg('IncludeDeleted') AS BOOL) IS TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
-LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 --------
 -- UPDATE

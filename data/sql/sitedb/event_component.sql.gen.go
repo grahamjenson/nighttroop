@@ -15,7 +15,7 @@ const allComponentEvents = `-- name: AllComponentEvents :many
 SELECT id, event_type, sensor_code, transmitter_id, pump_id, pump_serial, pump_type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name FROM component_events
 WHERE (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
-LIMIT ?3 OFFSET ?2
+LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
 `
 
 type AllComponentEventsParams struct {
@@ -286,7 +286,7 @@ WHERE
 
     AND (CAST(?22 AS BOOL) IS TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
-LIMIT ?24 OFFSET ?23
+LIMIT CAST(?24 AS INTEGER) OFFSET CAST(?23 AS INTEGER)
 `
 
 type SearchComponentEventsParams struct {

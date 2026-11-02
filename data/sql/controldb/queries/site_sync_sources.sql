@@ -6,7 +6,7 @@ SELECT * FROM site_sync_sources where type = ? AND site_id = ? LIMIT 1;
 -- The most recently failed first, then those that never failed, most recently attempted first
 SELECT * FROM site_sync_sources
 ORDER BY last_failed_sync IS NULL, last_failed_sync DESC, last_attempted_sync DESC, site_id, type
-LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 -- name: GetAllSyncSourcesForSite :many
 SELECT * FROM site_sync_sources where site_id = ?;

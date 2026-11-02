@@ -128,7 +128,7 @@ WHERE
         ORDER BY
             execute_after ASC
         LIMIT
-            ?
+            CAST(sqlc.arg('Limit') AS INTEGER)
     ) RETURNING *;
 
 -- name: ResetJobs :execrows
@@ -151,7 +151,7 @@ WHERE
 -- name: SearchJobs :many
 SELECT * FROM jobs
 ORDER BY id DESC
-LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 -- name: FindJob :one
 SELECT

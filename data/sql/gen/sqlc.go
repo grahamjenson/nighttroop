@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"strings"
 )
 
 func BuildSQLC(folder string) error {
@@ -20,6 +21,10 @@ func BuildSQLC(folder string) error {
 
 	if fileInfo, err := os.Stat(folder); err != nil || !fileInfo.IsDir() {
 		panic("Invalid folder: " + folder)
+	}
+
+	if err := checkLimitsCast(folder); err != nil {
+		return err
 	}
 
 	// execute `sqlc generate` in the folder
@@ -54,6 +59,35 @@ func joinTablesNotViews(folder string) error {
 				return err
 			}
 		}
+	}
+	return nil
+}
+
+// bareLimit is a LIMIT or OFFSET whose value is a bare bound parameter: sqlc.arg(...), sqlc.narg(...), ?, ?N or @name
+var bareLimit = regexp.MustCompile(`(?i)\b(LIMIT|OFFSET)\s+\(*\s*(sqlc\.n?arg\s*\(|\?|@\w)`)
+
+// checkLimitsCast fails if a query's LIMIT or OFFSET is a bare bound parameter rather than one wrapped in
+// CAST(... AS INTEGER). SQLite reads a bare bound LIMIT/OFFSET value while planning, which marks the statement to be
+// re-prepared whenever that parameter is bound, i.e. on every run: a search took ~8x longer. A CAST is not read while
+// planning, so the prepared statement is reused. Constant LIMITs (e.g. LIMIT 1) are fine.
+func checkLimitsCast(folder string) error {
+	files, err := filepath.Glob(filepath.Join(folder, "queries", "*.sql"))
+	if err != nil {
+		return err
+	}
+	var bare []string
+	for _, file := range files {
+		src, err := os.ReadFile(file)
+		if err != nil {
+			return err
+		}
+		for _, loc := range bareLimit.FindAllIndex(src, -1) {
+			line := bytes.Count(src[:loc[0]], []byte("\n")) + 1
+			bare = append(bare, fmt.Sprintf("%s:%d %s", file, line, strings.Join(strings.Fields(string(src[loc[0]:loc[1]])), " ")))
+		}
+	}
+	if len(bare) > 0 {
+		return fmt.Errorf("a bound LIMIT or OFFSET must be CAST(... AS INTEGER) so SQLite does not re-prepare the query on every run: %v", bare)
 	}
 	return nil
 }

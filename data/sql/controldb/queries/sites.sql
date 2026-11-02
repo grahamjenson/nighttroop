@@ -24,26 +24,26 @@ SELECT * FROM sites WHERE id = ? AND state = 'live';
 -- name: SearchSites :many
 SELECT * FROM sites
 ORDER BY created_at DESC, id
-LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 -- name: SearchSitesByLastWrite :many
 -- The longest since written to first, the first to archive; a site never written to counts from when it was made
 SELECT * FROM sites
 ORDER BY COALESCE(last_write_at, created_at) ASC, id
-LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 -- name: SearchSitesByDBSize :many
 -- The largest site DB first, the first to truncate; a site not yet measured is last
 SELECT * FROM sites
 ORDER BY estimated_db_size_kb IS NULL, estimated_db_size_kb DESC, created_at DESC, id
-LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 -- name: SearchArchivedSites :many
 -- The archived sites, which can be hydrated, the most recently archived first
 SELECT * FROM sites
 WHERE state = 'archived'
 ORDER BY archived_at DESC, id
-LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 -- name: CountActiveSites :one
 -- The live sites seen since Since, in milliseconds

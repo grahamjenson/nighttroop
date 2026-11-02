@@ -111,7 +111,7 @@ func (q *Queries) GetJobStatsDaily(ctx context.Context, arg GetJobStatsDailyPara
 const searchJobStatsDaily = `-- name: SearchJobStatsDaily :many
 SELECT day_queue_job, total_jobs, total_success, total_failed, duration_sum, duration_squared_sum, errors, failed_run_ids_json, created_at, updated_at FROM job_stats_daily
 ORDER BY day_queue_job DESC
-LIMIT ?2 OFFSET ?1
+LIMIT CAST(?2 AS INTEGER) OFFSET CAST(?1 AS INTEGER)
 `
 
 type SearchJobStatsDailyParams struct {

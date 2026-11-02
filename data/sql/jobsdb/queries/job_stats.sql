@@ -28,7 +28,7 @@ SELECT * FROM job_stats_daily;
 -- name: SearchJobStatsDaily :many
 SELECT * FROM job_stats_daily
 ORDER BY day_queue_job DESC
-LIMIT sqlc.arg('Limit') OFFSET sqlc.arg('Skip');
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 -- name: GetJobStatsDaily :one
 SELECT * FROM job_stats_daily

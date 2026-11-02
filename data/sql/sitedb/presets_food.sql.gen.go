@@ -14,7 +14,7 @@ const allFoodPresets = `-- name: AllFoodPresets :many
 
 SELECT id, name, food_type, category, subcategory, absorption_time_minutes, pre_bolus, carbs, fat, protein, fibre, energy, portions, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM food_presets
 ORDER BY created_at DESC
-LIMIT ?2 OFFSET ?1
+LIMIT CAST(?2 AS INTEGER) OFFSET CAST(?1 AS INTEGER)
 `
 
 type AllFoodPresetsParams struct {
@@ -277,7 +277,7 @@ WHERE
     AND (CAST(?26 AS INTEGER) IS NULL OR carbs <= ?26)
     AND (CAST(?27 AS INTEGER) IS NULL OR carbs < ?27)
 ORDER BY created_at DESC
-LIMIT ?29 OFFSET ?28
+LIMIT CAST(?29 AS INTEGER) OFFSET CAST(?28 AS INTEGER)
 `
 
 type SearchFoodPresetsParams struct {
