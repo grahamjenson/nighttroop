@@ -162,6 +162,9 @@ CREATE TABLE site_identities (
     enabled INTEGER NOT NULL DEFAULT 1,
     -- credentials_changed_at is when its password or TOTP last changed, or it was made: JWTs issued before it are refused
     credentials_changed_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    -- nightscout_token_digest finds the identity from the SHA1 of its Nightscout token, which xDrip+ sends as its
+    -- api-secret. It is the SHA256 of that SHA1, so it is not what is sent.
+    nightscout_token_digest TEXT CHECK(length(nightscout_token_digest) = 64),
 
     ---------------
     -- IDENTITY SETTINGS

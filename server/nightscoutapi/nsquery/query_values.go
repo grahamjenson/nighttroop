@@ -204,6 +204,14 @@ func ParseQueryValues(values url.Values) (QueryValues, error) {
 			continue
 		}
 
+		// A uuid is a treatment's identifier when it was sent without an _id. xDrip+ sends its uuid without dashes,
+		// cut to 24 characters, as the _id, and finds the treatment by its uuid to delete it.
+		if key == "find[uuid]" {
+			id := strings.ReplaceAll(vals[0], "-", "")
+			qvMap["find[_id][$in]"] = vals[0] + "|" + id[:min(len(id), 24)]
+			continue
+		}
+
 		if strings.HasSuffix(key, "[$in]") || strings.HasSuffix(key, "$in") || strings.HasSuffix(key, "$nin") || strings.HasSuffix(key, "[$nin]") {
 			qvMap[key] = strings.Join(vals, "|")
 			continue

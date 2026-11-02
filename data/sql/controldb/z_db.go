@@ -105,6 +105,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getSiteIdentityByIDStmt, err = db.PrepareContext(ctx, getSiteIdentityByID); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSiteIdentityByID: %w", err)
 	}
+	if q.getSiteIdentityByTokenDigestStmt, err = db.PrepareContext(ctx, getSiteIdentityByTokenDigest); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSiteIdentityByTokenDigest: %w", err)
+	}
 	if q.getSiteInAnyStateStmt, err = db.PrepareContext(ctx, getSiteInAnyState); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSiteInAnyState: %w", err)
 	}
@@ -329,6 +332,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getSiteIdentityByIDStmt: %w", cerr)
 		}
 	}
+	if q.getSiteIdentityByTokenDigestStmt != nil {
+		if cerr := q.getSiteIdentityByTokenDigestStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSiteIdentityByTokenDigestStmt: %w", cerr)
+		}
+	}
 	if q.getSiteInAnyStateStmt != nil {
 		if cerr := q.getSiteInAnyStateStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getSiteInAnyStateStmt: %w", cerr)
@@ -535,6 +543,7 @@ type Queries struct {
 	getSiteIDsWithAlarmsStmt           *sql.Stmt
 	getSiteIdentityStmt                *sql.Stmt
 	getSiteIdentityByIDStmt            *sql.Stmt
+	getSiteIdentityByTokenDigestStmt   *sql.Stmt
 	getSiteInAnyStateStmt              *sql.Stmt
 	getSitesToArchiveStmt              *sql.Stmt
 	getSitesToDeleteInBatchStmt        *sql.Stmt
@@ -596,6 +605,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getSiteIDsWithAlarmsStmt:           q.getSiteIDsWithAlarmsStmt,
 		getSiteIdentityStmt:                q.getSiteIdentityStmt,
 		getSiteIdentityByIDStmt:            q.getSiteIdentityByIDStmt,
+		getSiteIdentityByTokenDigestStmt:   q.getSiteIdentityByTokenDigestStmt,
 		getSiteInAnyStateStmt:              q.getSiteInAnyStateStmt,
 		getSitesToArchiveStmt:              q.getSitesToArchiveStmt,
 		getSitesToDeleteInBatchStmt:        q.getSitesToDeleteInBatchStmt,

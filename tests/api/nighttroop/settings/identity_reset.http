@@ -73,6 +73,17 @@ NAME new_ns_token_works
 GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ .admin_resets_pwd_password.result.ns_token }}
 ASSERT_STATUS 200
 
+// The SHA1 of the new token, as xDrip+ sends it, works, and of the old one does not
+NAME new_ns_token_sha1_works
+GET http://{{ .ns_site }}/api/v1/entries.json
+H api-secret: {{ sha1 .admin_resets_pwd_password.result.ns_token }}
+ASSERT_STATUS 200
+
+NAME old_ns_token_sha1_refused
+GET http://{{ .ns_site }}/api/v1/entries.json
+H api-secret: {{ sha1 .create_new_site.pwd_nstoken }}
+ASSERT_STATUS 401
+
 NAME admin_still_signed_in
 GET http://{{ site }}/settings
 H Authorization: Bearer {{ jwt }}
