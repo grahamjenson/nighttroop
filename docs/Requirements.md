@@ -171,7 +171,7 @@ deleted (after a confirmation):
   highs coloured as on the summary.
 - **Insulin doses**
 - **Food intakes**
-- **Temp basals**
+- **Temp basals**, with a percent as the percent of the scheduled basal, 50 for half, never negative
 - **Temp targets**, in the settings' units
 - **Profile switches**, with their profile's schedules to read
 - **Activities**
@@ -251,7 +251,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - **Socket.IO** live updates and alarms over long polling or websockets.
 - Glucose is stored in mg/dL and returned and accepted in the settings' units.
 - A temp basal sent with only a `percent` (e.g. -50 for half) has its rate set from the default profile's or profile
-  switch's basal at its start, in the profile's timezone, and is returned with that `absolute` and its percent.
+  switch's basal at its start, in the profile's timezone, and is returned with that `absolute` and its `percent` as
+  sent. The site keeps it as the percent of the basal, 50.
 - Duplicate uploads are ignored; values far outside real use are refused.
 
 ### Nighttroop API and client

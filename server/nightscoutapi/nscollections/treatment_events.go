@@ -201,7 +201,7 @@ var (
 			return &b.EventGroup.TempBasalID, &b.TempBasal
 		},
 		has: func(source nightscoutmodels.Treatment) bool {
-			return isAssigned(source.Absolute, source.Rate, source.Percent, source.DurationMinutes)
+			return isAssigned(source.Absolute, source.Rate, source.TempBasalPercent, source.DurationMinutes)
 		},
 		partial: nightscoutmodels.PartialTreatmentToTempBasal,
 		// AAPS sends its rate as rate, and Loop as absolute too
@@ -434,7 +434,7 @@ const percentSwitchMs, percentSwitches = 7 * 24 * 60 * 60_000, 1000
 // percentRate sets the rate of a temp basal the treatment sends only as a percent from the profile's basal at its
 // start, see sitemodels.PercentBasal, keeping its rate when no profile has a basal then
 func percentRate(ctx context.Context, q *sitedb.Queries, treatment nightscoutmodels.Treatment, tempBasal *sitedb.TempBasal) error {
-	if tempBasal == nil || treatment.Percent == nil || nightscoutmodels.TempBasalValuePtr(treatment) != nil {
+	if tempBasal == nil || tempBasal.Percent == nil || nightscoutmodels.TempBasalValuePtr(treatment) != nil {
 		return nil
 	}
 	at := tempBasal.OccurredAt
@@ -453,7 +453,7 @@ func percentRate(ctx context.Context, q *sitedb.Queries, treatment nightscoutmod
 		location = siteContext.GetSiteTimezone()
 	}
 	slices.Reverse(switches)
-	if rate := sitemodels.PercentBasal(at, float64(*treatment.Percent), location, defaults, switches); rate != nil {
+	if rate := sitemodels.PercentBasal(at, *tempBasal.Percent, location, defaults, switches); rate != nil {
 		tempBasal.Absolute = *rate
 	}
 	return nil

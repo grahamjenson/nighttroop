@@ -158,3 +158,18 @@ DELETE http://{{ site }}/data/temp-basals/not-a-temp-basal
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 404
+
+// A Nightscout percent is a change from the basal, -50 for half, and the site keeps it as the percent of the basal, 50
+NAME create_percent_treatment
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B { "eventType": "Temp Basal", "created_at": "{{ time -5 }}", "rate": 0.4, "percent": -50, "duration": 30 }
+ASSERT_STATUS 200
+ASSERT_EQUALS -50 "@0.percent"
+
+NAME list_percent_temp_basal
+GET http://{{ site }}/data/temp-basals
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 50 "@result.0.percent"
+ASSERT_EQUALS 0.4 "@result.0.absolute"

@@ -56,8 +56,6 @@
    restart uploads every batch again though their backups are current
 1. Nightscout API:
     1. P2: Check If-Unmodified-Since on API v3 replace and patch, in the same query as the update
-    1. P4: A temp basal's percent is returned as `percentage`, a profile switch's name for it, where Nightscout has
-       `percent`
     1. P4: Only write a treatment's events that changed, rather than every one on each update
     1. P4: Keep when a site's settings last changed, for API v3 lastModified
 
