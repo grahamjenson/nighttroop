@@ -583,6 +583,30 @@ func resolveAgainstPage(page playwright.Page, target string) string {
 	return resolved.String()
 }
 
+// Window sets the page's window size
+type Window struct {
+	Width, Height int
+
+	TestPath string
+	TestLine int
+}
+
+func (r *Window) ToFlatString() string {
+	return fmt.Sprintf("WINDOW %dx%d", r.Width, r.Height)
+}
+
+func (r *Window) ToErrorLine(msg string) string {
+	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
+}
+
+func (r *Window) PrintAction() {
+	fmt.Println(r.ToFlatString())
+}
+
+func (r *Window) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
+	return page, page.SetViewportSize(r.Width, r.Height)
+}
+
 // UserAgent sends the page's requests with a User-Agent, or the browser's own when it is empty
 type UserAgent struct {
 	Value string
