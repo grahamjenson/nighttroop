@@ -100,6 +100,8 @@ func StringToTime(value string) (time.Time, error) {
 		time.Layout,
 		time.DateTime,
 		time.DateOnly,
+		// LoopFollow finds treatments with UTC times that have no zone
+		"2006-01-02T15:04:05",
 		"2006-01-02T15:04:05,000Z07:00",
 		"2006-01-02T15:04:05,000-0700",
 		"2006-01-02T15:04:05.000-0700",

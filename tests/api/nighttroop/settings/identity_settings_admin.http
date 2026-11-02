@@ -1,0 +1,86 @@
+INCLUDE steps/new_site_admin.steps
+
+NAME list_identities
+GET http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "pwd_phone" "@result.1.name"
+SET pwd_id {{ dig "list_identities.result.1.id" }}
+
+// The site is in mmol/L, so the phone's Nightscout API is too
+NAME status_mmol
+GET http://{{ .ns_site }}/api/v1/status.json?token={{ token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "mmol" "@settings.units"
+
+// An admin sees another identity's own settings, nothing set yet so all following the site
+NAME get_phone_settings
+GET http://{{ site }}/settings/identity-settings/{{ .pwd_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "pwd_phone" "@result.identity_name"
+ASSERT_EQUALS null "@result.units"
+ASSERT_EQUALS "mmol/L" "@result.inherited.units"
+
+// and sets the phone's units to mg/dL, for a client that needs them, and an alarm, leaving the site in mmol/L
+NAME set_phone_units
+POST http://{{ site }}/settings/identity-settings/{{ .pwd_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"units": "mg/dL", "alarm_low_enabled": "true", "identity_id": 1}
+ASSERT_STATUS 200
+ASSERT_EQUALS "mg/dL" "@result.units"
+ASSERT_EQUALS "true" "@result.alarm_low_enabled"
+ASSERT_EQUALS "pwd_phone" "@result.identity_name"
+
+NAME status_mgdl
+GET http://{{ .ns_site }}/api/v1/status.json?token={{ token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "mg/dl" "@settings.units"
+
+// The admin's own settings and the site's are unchanged
+NAME admin_settings_unchanged
+GET http://{{ site }}/settings/identity
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS null "@result.units"
+ASSERT_EQUALS "mmol/L" "@result.inherited.units"
+
+// Nonsense settings are refused, as on an identity's own page
+NAME set_phone_bad_range
+POST http://{{ site }}/settings/identity-settings/{{ .pwd_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"range_low": "200", "range_high": "100"}
+ASSERT_STATUS 400
+
+// Only the site's own identities
+NAME get_unknown_identity_settings
+GET http://{{ site }}/settings/identity-settings/999999
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+// Only an admin changes another identity's settings
+NAME phone_jwt
+GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ token }}
+ASSERT_STATUS 200
+SET phone_jwt {{ .phone_jwt.token }}
+
+NAME phone_cannot_see_settings_of_others
+GET http://{{ site }}/settings/identity-settings/{{ .pwd_id }}
+H Authorization: Bearer {{ .phone_jwt }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME phone_cannot_change_settings_of_others
+POST http://{{ site }}/settings/identity-settings/{{ .pwd_id }}
+H Authorization: Bearer {{ .phone_jwt }}
+H Accept: application/json
+B {"units": "mmol/L"}
+ASSERT_STATUS 403

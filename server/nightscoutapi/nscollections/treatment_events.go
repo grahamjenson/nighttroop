@@ -426,6 +426,8 @@ var treatmentTypeEvents = map[nightscoutmodels.TreatmentEventType][]treatmentEve
 	nightscoutmodels.TempBasal:         {tempBasals, componentEvents},
 	nightscoutmodels.TemporaryTarget:   {tempTargets},
 	nightscoutmodels.TemporaryOverride: {tempTargets},
+	nightscoutmodels.SuspendPump:       {componentEvents},
+	nightscoutmodels.ResumePump:        {componentEvents},
 	nightscoutmodels.CannulaFill:       {componentEvents},
 	nightscoutmodels.Prime:             {componentEvents},
 	nightscoutmodels.ReservoirChange:   {componentEvents},

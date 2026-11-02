@@ -280,6 +280,10 @@ func RenderTemplate(input string, ctx map[string]any) (string, error) {
 			},
 			"time":  templateTime,
 			"itime": templateITime,
+			// utctime is offset minutes ago in UTC with no zone, as LoopFollow sends, e.g. utctime 60 for an hour ago
+			"utctime": func(offset int) string {
+				return time.Now().UTC().Add(-time.Duration(offset) * time.Minute).Format("2006-01-02T15:04:05")
+			},
 			// javatime is minutes ago as Java's yyyy-MM-dd'T'HH:mm:ss.SSSZ at +1300, as xDrip+ sends dateString
 			"javatime": func(offset int) string {
 				at := time.Now().Add(-time.Duration(offset) * time.Minute)

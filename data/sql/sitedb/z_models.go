@@ -112,6 +112,10 @@ type DeviceReport struct {
 	PumpReservoir             *float64
 	PumpBatteryPercent        *float64
 	PumpChargingState         *string
+	PumpClock                 *int64
+	PumpManufacturer          *string
+	PumpModel                 *string
+	OverrideJson              *string
 	LoopName                  *string
 	ConfigurationSettingsJson *string
 	LoopSettingsJson          *string
@@ -410,6 +414,7 @@ type ProfilePreset struct {
 	TargetsHighJson          *string
 	TargetsLowJson           *string
 	LoopSettingsJson         *string
+	RemoteSettingsJson       *string
 	RawJsonData              *string
 	UtcOffsetMinutes         *int64
 	OccurredAt               int64

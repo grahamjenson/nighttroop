@@ -1,0 +1,271 @@
+# LoopFollow following a Loop user: Loop's uploads first, then each GET LoopFollow makes, asserting the fields it
+# decodes and their types. LoopFollow decodes entries and profiles with Swift Codable, so a field with the wrong type
+# fails the whole response, and force casts treatments' timestamp/created_at (as! String) and devicestatus' pump,
+# loop and openaps (as! [String: AnyObject]?), so those must be strings and objects or missing, never null.
+# See docs/clients/loopfollow.md.
+
+INCLUDE steps/new_ns_site.steps
+
+# LoopFollow reads sgv as mg/dL whatever the units, so its identity's units must be mg/dL; in mmol/L a reading of
+# 6.7 would show as 7 mg/dL
+NAME units_mgdl
+PATCH http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+B {"value": "mg/dL"}
+ASSERT_STATUS 200
+
+######
+# Loop uploads
+######
+
+NAME loop_entries
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [
+  {"type": "sgv", "sgv": 123, "date": {{ itime 1 }}, "dateString": "{{ time 1 }}", "direction": "Flat", "trend": 4, "device": "loop://iPhone"},
+  {"type": "sgv", "sgv": 118, "date": {{ itime 6 }}, "dateString": "{{ time 6 }}", "direction": "FortyFiveUp", "trend": 3, "device": "loop://iPhone"},
+  {"type": "mbg", "mbg": 131, "date": {{ itime 9 }}, "dateString": "{{ time 9 }}", "device": "loop://iPhone"}
+]
+ASSERT_STATUS 200
+
+NAME loop_treatments
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+B [
+  {"eventType": "Note", "created_at": "{{ time 5 }}", "timestamp": "{{ time 5 }}", "enteredBy": "loop://iPhone", "notes": "Pizza night"},
+  {"eventType": "Temporary Override", "created_at": "{{ time 12 }}", "timestamp": "{{ time 12 }}", "enteredBy": "loop://iPhone", "reason": "Running", "correctionRange": [140, 160], "insulinNeedsScaleFactor": 0.8, "duration": 60, "syncIdentifier": "lf-override-1"},
+  {"eventType": "Correction Bolus", "created_at": "{{ time 20 }}", "timestamp": "{{ time 20 }}", "enteredBy": "loop://iPhone", "insulin": 0.35, "programmed": 0.35, "unabsorbed": 0, "duration": 0.01, "type": "normal", "automatic": true, "syncIdentifier": "lf-autobolus-1"},
+  {"eventType": "Correction Bolus", "created_at": "{{ time 25 }}", "timestamp": "{{ time 25 }}", "enteredBy": "loop://iPhone", "insulin": 1.5, "programmed": 1.5, "unabsorbed": 0, "duration": 0.03, "type": "normal", "automatic": false, "syncIdentifier": "lf-bolus-1", "insulinType": "Novolog"},
+  {"eventType": "Carb Correction", "created_at": "{{ time 26 }}", "timestamp": "{{ time 26 }}", "enteredBy": "loop://iPhone", "carbs": 30, "absorptionTime": 180, "foodType": "🌮", "syncIdentifier": "lf-carbs-1"},
+  {"eventType": "Temp Basal", "created_at": "{{ time 30 }}", "timestamp": "{{ time 30 }}", "enteredBy": "loop://iPhone", "rate": 0.5, "absolute": 0.5, "temp": "absolute", "duration": 30, "amount": 0.25, "automatic": true, "syncIdentifier": "lf-tb-1", "insulinType": "Novolog"},
+  {"eventType": "Resume Pump", "created_at": "{{ time 45 }}", "timestamp": "{{ time 45 }}", "enteredBy": "loop://iPhone", "syncIdentifier": "lf-resume-1"},
+  {"eventType": "Suspend Pump", "created_at": "{{ time 50 }}", "timestamp": "{{ time 50 }}", "enteredBy": "loop://iPhone", "syncIdentifier": "lf-suspend-1"},
+  {"eventType": "Site Change", "created_at": "{{ time 2000 }}", "enteredBy": "loop://iPhone"},
+  {"eventType": "Insulin Change", "created_at": "{{ time 3000 }}", "enteredBy": "loop://iPhone"},
+  {"eventType": "Sensor Start", "created_at": "{{ time 5000 }}", "enteredBy": "loop://iPhone"}
+]
+ASSERT_STATUS 200
+
+NAME loop_devicestatus
+POST http://{{ site }}/api/v1/devicestatus?token={{ token }}
+B {
+    "device": "loop://iPhone",
+    "created_at": "{{ time 2 }}",
+    "uploader": {"battery": 80, "name": "iPhone", "timestamp": "{{ time 2 }}"},
+    "pump": {"bolusing": false, "secondsFromGMT": 46800, "manufacturer": "Insulet", "pumpID": "1F068529", "clock": "{{ time 2 }}", "model": "Dash", "suspended": false, "reservoir": 85.5, "battery": {"percent": 75}},
+    "loop": {
+        "name": "Loop",
+        "version": "3.4.1",
+        "timestamp": "{{ time 2 }}",
+        "iob": {"iob": 1.0870623804830117, "timestamp": "{{ time 5 }}"},
+        "cob": {"cob": 5.0947962907626785, "timestamp": "{{ time 5 }}"},
+        "predicted": {"startDate": "{{ time 2 }}", "values": [123, 125.88, 130.29, 133.05, 133.98, 133.57, 132.9]},
+        "automaticDoseRecommendation": {"bolusVolume": 0.05, "timestamp": "{{ time 2 }}"},
+        "recommendedBolus": 0.15,
+        "enacted": {"timestamp": "{{ time 2 }}", "rate": 0.4, "received": true, "duration": 30, "bolusVolume": 0.05}
+    },
+    "override": {"timestamp": "{{ time 2 }}", "active": true, "name": "Running", "symbol": "🏃", "multiplier": 0.8, "duration": 3600, "currentCorrectionRange": {"minValue": 140, "maxValue": 160}}
+}
+ASSERT_STATUS 200
+
+NAME loop_profile
+POST http://{{ site }}/api/v1/profile?token={{ token }}
+B {
+    "defaultProfile": "Default",
+    "startDate": "{{ time 60 }}",
+    "mills": "{{ itime 60 }}",
+    "enteredBy": "Loop",
+    "units": "mg/dL",
+    "store": {"Default": {
+        "timezone": "Pacific/Auckland", "units": "mg/dL", "dia": 6, "delay": "0", "carbs_hr": "0",
+        "basal": [{"time": "00:00", "timeAsSeconds": 0, "value": 0.8}, {"time": "06:00", "timeAsSeconds": 21600, "value": 1.1}],
+        "sens": [{"time": "00:00", "timeAsSeconds": 0, "value": 40}],
+        "carbratio": [{"time": "00:00", "timeAsSeconds": 0, "value": 6.5}, {"time": "08:30", "timeAsSeconds": 30600, "value": 5.4}],
+        "target_low": [{"time": "00:00", "timeAsSeconds": 0, "value": 100}],
+        "target_high": [{"time": "00:00", "timeAsSeconds": 0, "value": 110}]
+    }},
+    "loopSettings": {
+        "dosingEnabled": true, "dosingStrategy": "automaticBolus", "maximumBasalRatePerHour": 4, "maximumBolus": 12, "minimumBGGuard": 75,
+        "bundleIdentifier": "com.ABCDE12345.loopkit.Loop", "deviceToken": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+        "overridePresets": [{"symbol": "🏃", "name": "Running", "insulinNeedsScaleFactor": 0.8, "targetRange": [140, 160], "duration": 3600}],
+        "preMealTargetRange": [80, 85]
+    }
+}
+ASSERT_STATUS 200
+
+######
+# BG: BGData.swift webLoadNSBGData, count = days x 4 uploaders x 288, since a day ago in ms, without calibrations
+######
+
+NAME bg
+GET http://{{ site }}/api/v1/entries.json?token={{ token }}&count=1152&find[date][$gte]={{ itime 1440 }}&find[type][$ne]=cal
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@"
+ASSERT_EQUALS 123 "@0.sgv"
+ASSERT_EQUALS "Flat" "@0.direction"
+ASSERT_EXISTS "@0.date"
+ASSERT_EQUALS 118 "@1.sgv"
+ASSERT_EQUALS "FortyFiveUp" "@1.direction"
+# A meter reading is decoded from mbg when sgv is missing
+ASSERT_EQUALS 131 "@2.mbg"
+
+# Stats (StatsDataFetcher.fetchBGData) asks since an ISO8601DateFormatter time
+NAME bg_stats
+GET http://{{ site }}/api/v1/entries.json?token={{ token }}&count=16128&find[dateString][$gte]={{ utctime 20160 }}Z&find[type][$ne]=cal
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@"
+
+######
+# Treatments: Treatments.swift WebLoadNSTreatments, UTC times with no zone from a day ago to 6 hours ahead
+######
+
+NAME treatments
+GET http://{{ site }}/api/v1/treatments.json?token={{ token }}&find[created_at][$gte]={{ utctime 1440 }}&find[created_at][$lte]={{ utctime -360 }}&count=5000
+ASSERT_STATUS 200
+ASSERT_LENGTH 8 "@"
+ASSERT_EQUALS "Note" "@0.eventType"
+ASSERT_EQUALS "Pizza night" "@0.notes"
+ASSERT_LENGTH 20 "@0.created_at"
+# timestamp is optional, but force cast to a String when there
+ASSERT_EQUALS null "@0.timestamp"
+# Overrides.swift: correctionRange as [Int] or targetBottom/targetTop as Int, insulinNeedsScaleFactor and duration
+ASSERT_EQUALS "Temporary Override" "@1.eventType"
+ASSERT_EQUALS 140 "@1.correctionRange.0"
+ASSERT_EQUALS 160 "@1.correctionRange.1"
+ASSERT_EQUALS 140 "@1.targetBottom"
+ASSERT_EQUALS 160 "@1.targetTop"
+ASSERT_EQUALS 0.8 "@1.insulinNeedsScaleFactor"
+ASSERT_EQUALS 60 "@1.duration"
+ASSERT_EQUALS "Running" "@1.reason"
+ASSERT_EXISTS "@1.enteredBy"
+# Bolus.swift and SMB.swift: insulin as Double
+ASSERT_EQUALS "Correction Bolus" "@2.eventType"
+ASSERT_EQUALS 0.35 "@2.insulin"
+ASSERT_EQUALS "Correction Bolus" "@3.eventType"
+ASSERT_EQUALS 1.5 "@3.insulin"
+# Carbs.swift: carbs as Double, absorptionTime as Int minutes
+ASSERT_EQUALS "Carb Correction" "@4.eventType"
+ASSERT_EQUALS 30 "@4.carbs"
+ASSERT_EQUALS 180 "@4.absorptionTime"
+# Basals.swift: absolute as Double and duration in minutes
+ASSERT_EQUALS "Temp Basal" "@5.eventType"
+ASSERT_EQUALS 0.5 "@5.absolute"
+ASSERT_EQUALS 30 "@5.duration"
+ASSERT_EQUALS "Resume Pump" "@6.eventType"
+ASSERT_EQUALS "Suspend Pump" "@7.eventType"
+ASSERT_LENGTH 20 "@7.created_at"
+
+# CAge.swift: the latest site change until now
+NAME cage
+GET http://{{ site }}/api/v1/treatments.json?token={{ token }}&find[eventType]=Site%20Change&find[created_at][$lte]={{ utctime 0 }}&count=1
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_LENGTH 20 "@0.created_at"
+
+# IAge.swift and SAge.swift: the latest insulin change and sensor start in 60 days
+NAME iage
+GET http://{{ site }}/api/v1/treatments.json?token={{ token }}&find[eventType]=Insulin%20Change&find[created_at][$gte]={{ utctime 86400 }}&find[created_at][$lte]={{ utctime 0 }}&count=1
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "Insulin Change" "@0.eventType"
+
+NAME sage
+GET http://{{ site }}/api/v1/treatments.json?token={{ token }}&find[eventType]=Sensor%20Start&find[created_at][$gte]={{ utctime 86400 }}&find[created_at][$lte]={{ utctime 0 }}&count=1
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "Sensor Start" "@0.eventType"
+
+# Treatments' created_at is when they happened, so a site change entered a day after it is still found by its time
+NAME late_site_change
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+B [{"eventType": "Site Change", "created_at": "{{ time 2880 }}", "enteredBy": "loop://iPhone"}]
+ASSERT_STATUS 200
+
+NAME cage_by_when_it_happened
+GET http://{{ site }}/api/v1/treatments.json?token={{ token }}&find[eventType]=Site%20Change&find[created_at][$gte]={{ utctime 2900 }}&find[created_at][$lte]={{ utctime 2860 }}&count=1
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+
+# The treatments list (TreatmentsView) pages back with fractional seconds, 100 at a time
+NAME treatments_page
+GET http://{{ site }}/api/v1/treatments.json?token={{ token }}&find[created_at][$gte]={{ utctime 525600 }}.000Z&find[created_at][$lt]={{ utctime 0 }}.000Z&count=100
+ASSERT_STATUS 200
+ASSERT_LENGTH 12 "@"
+ASSERT_EXISTS "@0._id"
+
+######
+# Device status: DeviceStatus.swift webLoadNSDeviceStatus and DeviceStatusLoop.swift, the latest one
+######
+
+NAME devicestatus
+GET http://{{ site }}/api/v1/devicestatus.json?token={{ token }}&count=1
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+# pump.clock is the last loop time, and the reservoir is only read with it, by an ISO8601DateFormatter with no
+# fractional seconds
+ASSERT_LENGTH 20 "@0.pump.clock"
+ASSERT_EQUALS 85.5 "@0.pump.reservoir"
+ASSERT_EQUALS "Insulet" "@0.pump.manufacturer"
+ASSERT_EQUALS "Dash" "@0.pump.model"
+ASSERT_EQUALS 75 "@0.pump.battery.percent"
+ASSERT_EQUALS 80 "@0.uploader.battery"
+ASSERT_EQUALS 1.0870623804830117 "@0.loop.iob.iob"
+ASSERT_EQUALS 5.0947962907626785 "@0.loop.cob.cob"
+ASSERT_EQUALS 123 "@0.loop.predicted.values.0"
+ASSERT_EQUALS 132.9 "@0.loop.predicted.values.6"
+ASSERT_EQUALS 0.15 "@0.loop.recommendedBolus"
+ASSERT_LENGTH 20 "@0.loop.timestamp"
+ASSERT_EXISTS "@0.loop.enacted"
+# Any failureReason, even null, shows the loop as failed
+ASSERT_EQUALS null "@0.loop.failureReason"
+ASSERT_EQUALS null "@0.openaps"
+# The override row: active, multiplier and currentCorrectionRange
+ASSERT_EQUALS true "@0.override.active"
+ASSERT_EQUALS 0.8 "@0.override.multiplier"
+ASSERT_EQUALS 140 "@0.override.currentCorrectionRange.minValue"
+ASSERT_EQUALS 160 "@0.override.currentCorrectionRange.maxValue"
+
+# A treatment's details (TreatmentsView) take the device status closest to it within 30 minutes
+NAME devicestatus_near_treatment
+GET http://{{ site }}/api/v1/devicestatus.json?token={{ token }}&find[created_at][$gte]={{ utctime 32 }}.000Z&find[created_at][$lte]={{ utctime -28 }}.000Z&count=30
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_LENGTH 20 "@0.created_at"
+ASSERT_EQUALS 1.0870623804830117 "@0.loop.iob.iob"
+
+######
+# Profile: Profile.swift webLoadNSProfile, the latest started by a minute from now, into NSProfile
+######
+
+NAME profile
+GET http://{{ site }}/api/v1/profiles.json?token={{ token }}&count=1&find[startDate][$lte]={{ utctime -1 }}.000Z
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "Default" "@0.defaultProfile"
+ASSERT_EQUALS "mg/dL" "@0.units"
+ASSERT_EXISTS "@0.startDate"
+# Profile.swift only reads a store called Default or default
+ASSERT_EQUALS "Pacific/Auckland" "@0.store.Default.timezone"
+ASSERT_EQUALS "mg/dL" "@0.store.Default.units"
+ASSERT_EQUALS 0.8 "@0.store.Default.basal.0.value"
+ASSERT_EQUALS "00:00" "@0.store.Default.basal.0.time"
+ASSERT_EQUALS 0 "@0.store.Default.basal.0.timeAsSeconds"
+ASSERT_EQUALS 21600 "@0.store.Default.basal.1.timeAsSeconds"
+ASSERT_EQUALS 40 "@0.store.Default.sens.0.value"
+ASSERT_EQUALS 5.4 "@0.store.Default.carbratio.1.value"
+ASSERT_EQUALS 30600 "@0.store.Default.carbratio.1.timeAsSeconds"
+ASSERT_EQUALS 100 "@0.store.Default.target_low.0.value"
+ASSERT_EQUALS 110 "@0.store.Default.target_high.0.value"
+# Loop APNS remote commands are sent to Loop's device token and bundle, with its override presets
+ASSERT_EQUALS "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0" "@0.loopSettings.deviceToken"
+ASSERT_EQUALS "com.ABCDE12345.loopkit.Loop" "@0.loopSettings.bundleIdentifier"
+ASSERT_EQUALS "Running" "@0.loopSettings.overridePresets.0.name"
+ASSERT_EQUALS 3600 "@0.loopSettings.overridePresets.0.duration"
+ASSERT_EQUALS 140 "@0.loopSettings.overridePresets.0.targetRange.0"
+ASSERT_EQUALS 0.8 "@0.loopSettings.overridePresets.0.insulinNeedsScaleFactor"
+ASSERT_EQUALS true "@0.loopSettings.dosingEnabled"
+ASSERT_EQUALS 12 "@0.loopSettings.maximumBolus"
+
+# The remote settings' diagnostics (RemoteSettingsViewModel.runDiagnostics) ask for up to 1000 profiles
+NAME profile_history
+GET http://{{ site }}/api/v1/profiles.json?token={{ token }}&count=1000
+ASSERT_STATUS 200
+ASSERT_EQUALS "com.ABCDE12345.loopkit.Loop" "@0.loopSettings.bundleIdentifier"

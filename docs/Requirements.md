@@ -272,6 +272,12 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   default profile's or profile switch's basal at its start, in the profile's timezone, and is returned with that
   `absolute` and its `percent` as sent.
 - Duplicate uploads are ignored; values far outside real use are refused.
+- A `created_at` filter given a time with no zone, as LoopFollow sends it, reads it as UTC.
+- Loop's and Trio's Suspend Pump and Resume Pump treatments are kept.
+- A device status keeps its pump's clock, manufacturer and model, its uploader's battery, returned in both
+  `uploader.battery` and `uploaderBattery`, and Loop's override in force.
+- A profile keeps Trio's remote control settings (bundle, device token, APNS environment, team and expiry) and its
+  override presets, for LoopFollow's Trio Remote Control.
 - A v1 upload of a document with an `_id` replaces the one with that `_id`, or is created with it, as Loop sends an
   override again with its `_id` when it changes, and deletes it by that `_id`.
 - Loop's `Temporary Override` is kept as a temp target, with its correction range and insulin needs scale factor; an
@@ -378,6 +384,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   to set that client up, with its Nightscout URL and token filled in, and a device for any but Other has its own units
   set to mg/dL, which those clients need, whatever the site's.
 - An admin can turn an identity off and on, or delete it; an identity cannot lock itself out.
+- An admin can change another identity's own settings and alarms from its row, such as a device's units for a client
+  that needs mg/dL on a site in mmol/L; the Nightscout API gives that device its own units.
 - Each identity lists the clients (browsers and apps) that have used it, and is marked shared when several have.
 - Identity creation is rate limited, as each hashes a password.
 

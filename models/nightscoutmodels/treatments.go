@@ -192,6 +192,9 @@ const (
 	TemporaryTarget TreatmentEventType = "Temporary Target"
 	// TemporaryOverride is Loop's override, kept as a temp target with its insulin needs scale factor
 	TemporaryOverride TreatmentEventType = "Temporary Override"
+	// Loop's and Trio's pump suspends and resumes
+	SuspendPump TreatmentEventType = "Suspend Pump"
+	ResumePump  TreatmentEventType = "Resume Pump"
 
 	// Device Events
 	OpenAPSOffline    TreatmentEventType = "OpenAPS Offline"
@@ -251,6 +254,8 @@ var TreatmentEventTypes = []TreatmentEventType{
 	TempBasal,
 	TemporaryTarget,
 	TemporaryOverride,
+	SuspendPump,
+	ResumePump,
 	CannulaFill,
 	Prime,
 	ReservoirChange,

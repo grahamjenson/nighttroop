@@ -73,14 +73,29 @@
        which needs a kept hash of each token
     1. P4: Keep arbitrary API v3 `settings` documents and support v2 authorization roles and subjects, which AAPS 4's
        client control (pairing and remote commands) uses
-    1. P1: Accept an `api-secret` that is the SHA1 hex of a device's Nightscout token, e.g. by keeping each token's
-       SHA1 when it is made or reset, as Juggluco sends on v1, its default and its only mode on Wear OS
-       ([docs/clients/juggluco.md](docs/clients/juggluco.md))
     1. P2: Check If-Unmodified-Since on API v3 replace and patch, in the same query as the update
     1. P3: Juggluco on v1 posts up to 5000 readings in one `/api/v1/entries` request and sends the same batch again
        until it is accepted, so a batch over the 100 record cap never uploads
     1. P4: Only write a treatment's events that changed, rather than every one on each update
     1. P4: Keep when a site's settings last changed, for API v3 lastModified
+1. LoopFollow ([docs/clients/loopfollow.md](docs/clients/loopfollow.md)):
+    1. P1: LoopFollow reads `sgv` as mg/dL, as Nightscout always sends it, so an identity in mmol/L shows 6.7 as
+       7 mg/dL with urgent low alarms; send it mg/dL (its requests say `LoopFollow` in the User-Agent) or warn
+    1. P2: Keep Loop's `automatic` on boluses, so LoopFollow shows automatic boluses as SMBs and leaves them out of
+       its bolus stats
+    1. P2: Keep Loop's `durationType: indefinite` on a Temporary Override; without it the override has duration 0,
+       which LoopFollow does not show
+    1. P3: LoopFollow asks for up to 5000 treatments and 1152 entries a day, above the 1000 a search returns, so a
+       Trio day of SMBs and temp basals, or weeks of stats, are cut to the newest 1000
+    1. P3: Add `authorized` (the JWT and permissionGroups) to status.json, with `api:treatments:create` for a
+       write identity, so LoopFollow shows "Read & Write" rather than "Read"
+    1. P4: Keep a treatment's `enteredBy`, which LoopFollow shows for overrides and temp targets, rather than the
+       identity's name
+    1. P4: Keep the pump's `pumpID`, so LoopFollow carries an Omnipod reservoir reading over statuses without one,
+       and its `bolusIncrement`, LoopFollow's remote bolus step
+    1. P4: A profile search with no filters gives only the latest store, so LoopFollow's remote diagnostics see no
+       history
+    1. P4: The Nightscout host's `/` is a 404, which LoopFollow's Nightscout tab shows; redirect it to the site
     1. P1: Replace a treatment uploaded again rather than ignore it, as Nightscout does: Loop posts a temp basal or
        bolus again when it ends early, with the same date and `syncIdentifier`, and the first upload's duration and
        amount are kept ([docs/clients/loop.md](docs/clients/loop.md))
@@ -147,6 +162,11 @@
 
 1. P4: A live site left out at start, its DB missing and not restored, is only a `site_db_missing` event; mark it on
    the control sites page too
+
+## Readability
+
+1. P4: Finish splitting the request logger's `NewLoggerWithConfig` (`utils/httputils/logger.go`): pull its level
+   choice and route params into functions, and drop its always empty `baseAttributes`
 
 ## Code
 

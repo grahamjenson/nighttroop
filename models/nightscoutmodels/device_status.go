@@ -22,6 +22,8 @@ type DeviceStatus struct {
 	OpenAPSRaw       *json.RawMessage `json:"openaps,omitempty"`
 	LoopRaw          *json.RawMessage `json:"loop,omitempty"`
 	ConfigurationRaw *json.RawMessage `json:"configuration,omitempty"`
+	// OverrideRaw is Loop's override in force
+	OverrideRaw *json.RawMessage `json:"override,omitempty"`
 
 	// Date Fields
 	Date      *types.DateInt    `json:"date,omitempty"` // Unix timestamp in milliseconds
