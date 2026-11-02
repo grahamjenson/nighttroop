@@ -2,48 +2,10 @@ package footer
 
 import "nighttroop.t1d.nz/utils/httputils"
 
-// Footer is a site or control page's thin footer: a line saying Nighttroop is not a medical device, a mailto link to
-// the server's support email, its terms of service and privacy policy, and Nighttroop's year
+// Footer is every page's thin footer: a mailto link to the server's support email, its terms of service and privacy
+// policy, and Nighttroop's year
 templ Footer() {
-	@footer(false)
-}
-
-// PublicFooter is a public page's footer, with the medical disclaimer in full above it in place of its short line
-templ PublicFooter() {
-	@MedicalDisclaimer()
-	@footer(true)
-}
-
-// MedicalDisclaimer says, in full, that Nighttroop is not a medical device, and that what it shows can be late, missing
-// or wrong, so it must not be used to make treatment decisions. The terms of service say the same at more length.
-templ MedicalDisclaimer() {
-	<section id="medical-disclaimer" role="note" aria-labelledby="medical-disclaimer--title" class="mx-auto mb-6 w-full max-w-3xl px-4">
-		<div class="rounded-md border border-amber-400 bg-amber-100 px-4 py-3 text-sm text-amber-800">
-			<h2 id="medical-disclaimer--title" class="font-semibold">Medical disclaimer</h2>
-			<p class="mt-1">
-				Nighttroop is not a medical device and does not give medical advice. The glucose readings, treatments,
-				graphs and alarms it shows come from other devices and apps, and may be late, missing or wrong.
-			</p>
-			<p class="mt-1">
-				Do not use Nighttroop to make treatment decisions, such as insulin doses. Check your glucose with your own
-				meter or CGM, rely on your medical devices' own alarms, and follow the advice of your healthcare team. In an
-				emergency, call your local emergency number.
-			</p>
-			<p class="mt-1">
-				The <a id="medical-disclaimer--terms" href="/terms" class="underline hover:text-primary">terms of service</a> say more.
-			</p>
-		</div>
-	</section>
-}
-
-templ footer(public bool) {
 	<footer id="footer" class="border-t border-gray-200 bg-white py-3 text-center text-xs text-gray-500">
-		if !public {
-			<p id="footer--medical-disclaimer" class="mx-auto mb-1 max-w-3xl px-4">
-				Nighttroop is not a medical device. Do not make treatment decisions from it: check your own meter or CGM,
-				and follow your healthcare team's advice.
-			</p>
-		}
 		<a id="footer--contact" href={ templ.SafeURL("mailto:" + httputils.SupportEmail(ctx)) } class="hover:text-primary">contact</a>
 		<span aria-hidden="true">·</span>
 		<a id="footer--terms" href="/terms" class="hover:text-primary">terms of service</a>
@@ -57,6 +19,17 @@ templ footer(public bool) {
 			}
 		</span>
 	</footer>
+}
+
+// PublicFooter is a public page's footer, with the medical disclaimer above it
+templ PublicFooter() {
+	<div class="mb-6 px-4">
+		<p id="medical-disclaimer" role="note" class="mx-auto max-w-3xl rounded-md border border-amber-400 bg-amber-100 px-4 py-3 text-center text-sm text-amber-800">
+			<strong>Not a medical device.</strong> Nighttroop does not provide medical advice and is not a replacement for
+			proper medical care. Its data and alarms may be late, missing or wrong.
+		</p>
+	</div>
+	@Footer()
 }
 
 // DBIPCredit is on each page that shows locations from DB-IP's database, as its licence asks for a link to DB-IP

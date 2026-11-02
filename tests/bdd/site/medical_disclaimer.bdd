@@ -1,11 +1,9 @@
-// The public pages say in full, above their footer, that Nighttroop is not a medical device
+// The public pages say, above their footer, that Nighttroop is not a medical device
 GOTO {{ server_url}}/
 ASSERT_STATUS 200
 ASSERT_VISIBLE #medical-disclaimer
-ASSERT_TEXT_VISIBLE Nighttroop is not a medical device and does not give medical advice
-ASSERT_TEXT_VISIBLE Do not use Nighttroop to make treatment decisions
-ASSERT_VISIBLE #medical-disclaimer--terms
-ASSERT_NOT_VISIBLE #footer--medical-disclaimer
+ASSERT_TEXT_VISIBLE Not a medical device.
+ASSERT_TEXT_VISIBLE Its data and alarms may be late, missing or wrong.
 SCREENSHOT public
 
 GOTO {{ server_url}}/recover
@@ -15,11 +13,3 @@ ASSERT_VISIBLE #medical-disclaimer
 GOTO {{ server_url}}/terms
 ASSERT_STATUS 200
 ASSERT_VISIBLE #medical-disclaimer
-
-// A site's pages say it in one line in their footer instead
-INCLUDE steps/new_site_admin.steps
-ASSERT_PATH /
-ASSERT_VISIBLE #footer--medical-disclaimer
-ASSERT_TEXT_VISIBLE Nighttroop is not a medical device. Do not make treatment decisions from it
-ASSERT_NOT_VISIBLE #medical-disclaimer
-SCREENSHOT site_footer
