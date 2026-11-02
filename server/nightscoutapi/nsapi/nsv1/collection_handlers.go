@@ -91,6 +91,11 @@ func Create(store nsutils.Store) http.HandlerFunc {
 				nsutils.WriteError(w, nsutils.BadDataBodyError)
 				return
 			}
+			// xDrip+ sends its sensor calibrations (type cal) in the same batch as its readings. They are not kept,
+			// so the readings still are.
+			if collection == nsutils.Entries && doc["type"] == "cal" {
+				continue
+			}
 
 			// As in Nightscout, a document sent with an _id replaces the one with it, as Loop sends an override again
 			// with its _id when it changes

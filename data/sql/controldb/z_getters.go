@@ -888,14 +888,14 @@ func (m *SiteIdentity) SetCredentialsChangedAt(v int64) {
 	m.CredentialsChangedAt = v
 }
 
-// GetTokenDigest returns the TokenDigest value.
-func (m SiteIdentity) GetTokenDigest() *string {
-	return m.TokenDigest
+// GetNightscoutTokenDigest returns the NightscoutTokenDigest value.
+func (m SiteIdentity) GetNightscoutTokenDigest() *string {
+	return m.NightscoutTokenDigest
 }
 
-// SetTokenDigest sets the TokenDigest value and returns the updated SiteIdentity.
-func (m *SiteIdentity) SetTokenDigest(v *string) {
-	m.TokenDigest = v
+// SetNightscoutTokenDigest sets the NightscoutTokenDigest value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetNightscoutTokenDigest(v *string) {
+	m.NightscoutTokenDigest = v
 }
 
 // GetUnits returns the Units value.
@@ -2778,14 +2778,14 @@ func (m *CreateSiteIdentityParams) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
 }
 
-// GetTokenDigest returns the TokenDigest value.
-func (m CreateSiteIdentityParams) GetTokenDigest() *string {
-	return m.TokenDigest
+// GetNightscoutTokenDigest returns the NightscoutTokenDigest value.
+func (m CreateSiteIdentityParams) GetNightscoutTokenDigest() *string {
+	return m.NightscoutTokenDigest
 }
 
-// SetTokenDigest sets the TokenDigest value and returns the updated CreateSiteIdentityParams.
-func (m *CreateSiteIdentityParams) SetTokenDigest(v *string) {
-	m.TokenDigest = v
+// SetNightscoutTokenDigest sets the NightscoutTokenDigest value and returns the updated CreateSiteIdentityParams.
+func (m *CreateSiteIdentityParams) SetNightscoutTokenDigest(v *string) {
+	m.NightscoutTokenDigest = v
 }
 
 // GetSiteID returns the SiteID value.
@@ -2858,14 +2858,14 @@ func (m *GetSiteIdentityByTokenDigestParams) SetSiteID(v string) {
 	m.SiteID = v
 }
 
-// GetTokenDigest returns the TokenDigest value.
-func (m GetSiteIdentityByTokenDigestParams) GetTokenDigest() *string {
-	return m.TokenDigest
+// GetDigest returns the Digest value.
+func (m GetSiteIdentityByTokenDigestParams) GetDigest() *string {
+	return m.Digest
 }
 
-// SetTokenDigest sets the TokenDigest value and returns the updated GetSiteIdentityByTokenDigestParams.
-func (m *GetSiteIdentityByTokenDigestParams) SetTokenDigest(v *string) {
-	m.TokenDigest = v
+// SetDigest sets the Digest value and returns the updated GetSiteIdentityByTokenDigestParams.
+func (m *GetSiteIdentityByTokenDigestParams) SetDigest(v *string) {
+	m.Digest = v
 }
 
 // GetPasswordHash returns the PasswordHash value.
@@ -2998,14 +2998,14 @@ func (m *UpdateSiteIdentityPasswordParams) SetPasswordHash(v string) {
 	m.PasswordHash = v
 }
 
-// GetTokenDigest returns the TokenDigest value.
-func (m UpdateSiteIdentityPasswordParams) GetTokenDigest() *string {
-	return m.TokenDigest
+// GetNightscoutTokenDigest returns the NightscoutTokenDigest value.
+func (m UpdateSiteIdentityPasswordParams) GetNightscoutTokenDigest() *string {
+	return m.NightscoutTokenDigest
 }
 
-// SetTokenDigest sets the TokenDigest value and returns the updated UpdateSiteIdentityPasswordParams.
-func (m *UpdateSiteIdentityPasswordParams) SetTokenDigest(v *string) {
-	m.TokenDigest = v
+// SetNightscoutTokenDigest sets the NightscoutTokenDigest value and returns the updated UpdateSiteIdentityPasswordParams.
+func (m *UpdateSiteIdentityPasswordParams) SetNightscoutTokenDigest(v *string) {
+	m.NightscoutTokenDigest = v
 }
 
 // GetUpdatedByIdentityName returns the UpdatedByIdentityName value.

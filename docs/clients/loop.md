@@ -30,7 +30,7 @@ Every request (`callNS`, line 519, and `checkAuth`, line 692) sends:
 - `Content-Type: application/json` and `Accept: application/json`, also on GETs and DELETEs
 
 There is no `token` query, `secret` query or `Authorization` header. Nightscout accepts the SHA-1 of its
-`API_SECRET`, or of an access token. Nighttroop now finds the device whose token has that SHA-1: it keeps the SHA-256
+`API_SECRET`, or of an access token. Nighttroop finds the device whose token has that SHA-1 (added with xDrip+, #512): it keeps the SHA-256
 of each device token's SHA-1, set when the token is made or its password is reset. A device made before this change
 needs its password reset once to get one.
 
@@ -194,7 +194,7 @@ NightscoutKit has reads that Loop does not call, but other apps built on it may:
 
 | Interaction | Status |
 |---|---|
-| `api-secret` as the SHA-1 of a device's token | Fixed in this PR (was a 401 for everything) |
+| `api-secret` as the SHA-1 of a device's token | Works since #512 (it was a 401 for everything) |
 | `GET /api/v1/experiments/test` | Fixed in this PR (was a 400, "invalid collection"); 403 for a read only device |
 | `POST /api/v1/entries`, as many objects back, `_id` | Works |
 | `POST /api/v1/treatments` carbs, doses, pump and CGM events, notes | Works |

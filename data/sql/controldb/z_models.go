@@ -108,7 +108,7 @@ type SiteIdentity struct {
 	CreatedByIdentityName            string
 	Enabled                          bool
 	CredentialsChangedAt             int64
-	TokenDigest                      *string
+	NightscoutTokenDigest            *string
 	Units                            *consts.Units
 	Timezone                         *string
 	Language                         *string

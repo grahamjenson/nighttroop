@@ -11,7 +11,7 @@ INSERT INTO site_identities (
     role,
     created_by_identity_id,
     created_by_identity_name,
-    token_digest
+    nightscout_token_digest
 ) VALUES (
     ?,
     ?,
@@ -42,11 +42,12 @@ SELECT COUNT(*) FROM site_identities WHERE site_id = sqlc.arg('SiteID');
 SELECT * FROM site_identities WHERE site_id = sqlc.arg('SiteID') AND name = sqlc.arg('Name') LIMIT 1;
 
 
+-- The identity whose Nightscout token's SHA1 has this digest, see site_identities.nightscout_token_digest
+-- name: GetSiteIdentityByTokenDigest :one
+SELECT * FROM site_identities WHERE site_id = sqlc.arg('SiteID') AND nightscout_token_digest = sqlc.arg('Digest') LIMIT 1;
+
 -- name: GetSiteIdentityByID :one
 SELECT * FROM site_identities WHERE site_id = sqlc.arg('SiteID') AND id = sqlc.arg('ID') LIMIT 1;
-
--- name: GetSiteIdentityByTokenDigest :one
-SELECT * FROM site_identities WHERE site_id = sqlc.arg('SiteID') AND token_digest = sqlc.arg('TokenDigest') LIMIT 1;
 
 
 --------
@@ -82,7 +83,7 @@ WHERE site_id = sqlc.arg('SiteID') AND id = sqlc.arg('ID');
 UPDATE site_identities
 SET
     password_hash = sqlc.arg('PasswordHash'),
-    token_digest = sqlc.narg('TokenDigest'),
+    nightscout_token_digest = sqlc.arg('NightscoutTokenDigest'),
     credentials_changed_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_id = NULL,
     updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')

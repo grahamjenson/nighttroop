@@ -272,6 +272,10 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - An identifier over 36 characters, like an Omnipod dose's `syncIdentifier`, is kept as a hash of it, so two that
   start the same are not taken as one.
 - v1 `profile/current` is the newest profile set itself, not a list of one, with `enteredBy`, as Loop reads it.
+- A device's Nightscout token is also taken as its SHA1 in the `api-secret` header, as xDrip+ and Loop send it; a password reset stops the old token's SHA1 working.
+- An xDrip+ upload works as it sends it (see `docs/clients/xdrip.md`): a calibration (`type` `cal`) in a batch of
+  entries is left out and the readings with it kept; an uploader battery that is not a number is left out of its
+  device status; `uploader.battery` is the uploader's battery; and a treatment is found by its `uuid` (`find[uuid]`), sent as the `_id` or as xDrip+ makes its `_id`.
 - Trio's and iAPS's `SMB` and `External Insulin` treatments are kept as insulin doses, with their event type.
 - A profile has `enteredBy`, the identity that uploaded it, as Trio needs it to import one.
 - A create that names its `identifier` keeps it, and only a document with that identifier is its duplicate.
@@ -343,8 +347,7 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   into it are dropped.
 - The server refuses a TOTP code that is not six digits, like a wrong one.
 - Sign-in attempts are rate limited per identity and IP; a disabled identity cannot sign in.
-- Devices use their Nightscout token, as a token, API secret or for a JWT. The token's SHA-1 in hex works as the
-  `api-secret` header too, as Loop sends it, and stops working when the device's password is reset.
+- Devices use their Nightscout token, as a token, API secret or for a JWT.
 - Changing an identity's password or TOTP signs out its existing sessions.
 - A page left open after its sign in ends goes to the login page once its live updates reconnect, rather than asking
   for them again and again.

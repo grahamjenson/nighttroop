@@ -629,13 +629,9 @@ func (db *ControlDB) CreateSiteIdentity(ctx context.Context, q *controldb.Querie
 		encTOTPSecret = encTOTPSecretRet
 	}
 
-	var nsToken, tokenDigest *string
-	if can.HaveNightscoutToken(role) {
-		token, err := security.CreateNightscoutTokenForIdentity(siteID, name, string(role), password)
-		if err != nil {
-			return nil, fmt.Errorf("cannot create nightscout token for identity: %w", err)
-		}
-		nsToken, tokenDigest = &token, new(security.NightscoutTokenDigest(token))
+	nsToken, digest, err := db.nightscoutToken(siteID, name, role, password)
+	if err != nil {
+		return nil, err
 	}
 
 	err = q.CreateSiteIdentity(ctx, controldb.CreateSiteIdentityParams{
@@ -644,7 +640,8 @@ func (db *ControlDB) CreateSiteIdentity(ctx context.Context, q *controldb.Querie
 		PasswordHash:  hashedPassword,
 		TotpSecretEnc: encTOTPSecret,
 		Role:          role,
-		TokenDigest:   tokenDigest,
+
+		NightscoutTokenDigest: digest,
 	})
 
 	if err != nil {
@@ -665,21 +662,30 @@ func (db *ControlDB) ResetSiteIdentityPassword(ctx context.Context, identity *co
 	if err != nil {
 		return nil, fmt.Errorf("cannot generate user password: %w", err)
 	}
-	values := &IdentityValues{Password: password}
-	var tokenDigest *string
-	if can.HaveNightscoutToken(identity.Role) {
-		token, err := db.ServerConfig.Security.CreateNightscoutTokenForIdentity(identity.SiteID, identity.Name, string(identity.Role), password)
-		if err != nil {
-			return nil, fmt.Errorf("cannot create nightscout token for identity: %w", err)
-		}
-		values.NSToken, tokenDigest = &token, new(db.ServerConfig.Security.NightscoutTokenDigest(token))
+	nsToken, digest, err := db.nightscoutToken(identity.SiteID, identity.Name, identity.Role, password)
+	if err != nil {
+		return nil, err
 	}
 	if _, err := db.Queries.UpdateSiteIdentityPassword(ctx, controldb.UpdateSiteIdentityPasswordParams{PasswordHash: hashedPassword,
-		TokenDigest: tokenDigest, UpdatedByIdentityName: &by, SiteID: identity.SiteID, ID: identity.ID}); err != nil {
+		NightscoutTokenDigest: digest, UpdatedByIdentityName: &by, SiteID: identity.SiteID, ID: identity.ID}); err != nil {
 		return nil, err
 	}
 	db.Logs.IdentityCredentialsChangedEvent(ctx, identity.SiteID, identity.Name, "password", by)
-	return values, nil
+	return &IdentityValues{Password: password, NSToken: nsToken}, nil
+}
+
+// nightscoutToken is the Nightscout token of an identity that can have one, made from its password, and the
+// digest kept to find it by the token's SHA1, see security.NightscoutTokenDigest
+func (db *ControlDB) nightscoutToken(siteID, name string, role consts.IdentityRole, password string) (*string, *string, error) {
+	if !can.HaveNightscoutToken(role) {
+		return nil, nil, nil
+	}
+	token, err := db.ServerConfig.Security.CreateNightscoutTokenForIdentity(siteID, name, string(role), password)
+	if err != nil {
+		return nil, nil, fmt.Errorf("cannot create nightscout token for identity: %w", err)
+	}
+	digest := security.NightscoutTokenDigest(security.NightscoutTokenSHA1(token))
+	return &token, &digest, nil
 }
 
 // ResetSiteIdentityTOTP gives one of a site's identities a new TOTP secret, for its authenticator app, recorded as

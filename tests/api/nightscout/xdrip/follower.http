@@ -1,0 +1,129 @@
+# The xDrip+ "Nightscout Follower" (cgm/nsfollow/NightscoutFollow.java) reads a site from a URL like
+# https://<token>@<site>, sending the SHA1 of the token in the api-secret header and its version as the User-Agent.
+# It reads sgv as a whole number of mg/dL, so the identity it uses must have its units in mg/dL.
+
+INCLUDE steps/new_site_admin.steps
+SET read_token {{ .create_new_site.read_only_nstoken }}
+
+// A read token cannot change its own settings, so the admin sets the site's units, which it inherits
+NAME site_units_to_mgdl
+POST http://{{ site }}/settings/site
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"units": "mg/dL"}
+ASSERT_STATUS 200
+
+######
+# TEST SETUP: readings, a treatment and a device status, as xDrip+ uploads them
+######
+
+NAME setup_entries
+POST http://{{ .ns_site }}/api/v1/entries
+H api-secret: {{ sha1 token }}
+B [
+  {"device": "xDrip-LibreReceiver", "date": {{ itime 15 }}, "dateString": "{{ javatime 15 }}", "sgv": 101,
+   "delta": 1.5, "direction": "Flat", "type": "sgv", "filtered": 101000.0, "unfiltered": 101000.0, "rssi": 100,
+   "noise": 1, "sysTime": "{{ javatime 15 }}"},
+  {"device": "xDrip-LibreReceiver", "date": {{ itime 10 }}, "dateString": "{{ javatime 10 }}", "sgv": 110,
+   "delta": 9.0, "direction": "FortyFiveUp", "type": "sgv", "filtered": 110000.0, "unfiltered": 110000.0,
+   "rssi": 100, "noise": 1, "sysTime": "{{ javatime 10 }}"},
+  {"device": "xDrip-LibreReceiver", "date": {{ itime 5 }}, "dateString": "{{ javatime 5 }}", "sgv": 128,
+   "delta": 18.0, "direction": "SingleUp", "type": "sgv", "filtered": 128000.0, "unfiltered": 128000.0,
+   "rssi": 100, "noise": 1, "sysTime": "{{ javatime 5 }}"}
+ ]
+ASSERT_STATUS 200
+
+NAME setup_treatment
+PUT http://{{ .ns_site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B {"timestamp": {{ itime 20 }}, "eventType": "<none>", "enteredBy": "xdrip", "uuid": "5d4c3b2a-1f0e-4d9c-8b7a-6f5e4d3c2b1a",
+   "carbs": 20.0, "insulin": 2.0, "created_at": "{{ time 20 }}", "sysTime": "{{ javatime 20 }}",
+   "_id": "5d4c3b2a1f0e4d9c8b7a6f5e"}
+ASSERT_STATUS 200
+
+NAME setup_devicestatus
+POST http://{{ .ns_site }}/api/v1/devicestatus
+H api-secret: {{ sha1 token }}
+B {"device": "Google Pixel 7", "uploader": {"battery": 64, "type": "PHONE"}}
+ASSERT_STATUS 200
+
+######
+# ENTRIES: with no reading yet, the follower gets the last 10 (getEntries), with rr to bust caches
+######
+
+NAME follower_first_entries
+GET http://{{ .ns_site }}/api/v1/entries.json?count=10&rr={{ itime 0 }}
+H api-secret: {{ sha1 read_token }}
+H User-Agent: xDrip+ 2025.04.13
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@"
+ASSERT_EQUALS 128 "@0.sgv"
+ASSERT_EQUALS "SingleUp" "@0.direction"
+ASSERT_EQUALS "sgv" "@0.type"
+ASSERT_EQUALS 1 "@0.noise"
+ASSERT_EQUALS 128000 "@0.filtered"
+ASSERT_EQUALS 128000 "@0.unfiltered"
+ASSERT_EXISTS "@0.date"
+ASSERT_EXISTS "@0._id"
+ASSERT_EQUALS 110 "@1.sgv"
+ASSERT_EQUALS 101 "@2.sgv"
+
+######
+# ENTRIES: with a reading, the follower gets those after it, at most 2880 (getEntriesSince)
+######
+
+NAME follower_entries_since
+GET http://{{ .ns_site }}/api/v1/entries.json?count=2880&find[date][$gt]={{ dig "follower_first_entries.1.date" }}&rr={{ itime 0 }}
+H api-secret: {{ sha1 read_token }}
+H User-Agent: xDrip+ 2025.04.13
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 128 "@0.sgv"
+
+NAME follower_entries_since_latest
+GET http://{{ .ns_site }}/api/v1/entries.json?count=2880&find[date][$gt]={{ dig "follower_first_entries.0.date" }}&rr={{ itime 0 }}
+H api-secret: {{ sha1 read_token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"
+
+######
+# TREATMENTS: with nsfollow_download_treatments on, at most once a minute (getTreatments)
+######
+
+NAME follower_treatments
+GET http://{{ .ns_site }}/api/v1/treatments
+H api-secret: {{ sha1 read_token }}
+H User-Agent: xDrip+ 2025.04.13
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "5d4c3b2a1f0e4d9c8b7a6f5e" "@0._id"
+ASSERT_EQUALS 20 "@0.carbs"
+ASSERT_EQUALS 2 "@0.insulin"
+ASSERT_EXISTS "@0.created_at"
+
+######
+# DEVICE STATUS: every 5 minutes, for the uploader's battery (getDeviceStatus, applyDeviceStatus)
+######
+
+NAME follower_devicestatus
+GET http://{{ .ns_site }}/api/v1/devicestatus.json?count=1
+H api-secret: {{ sha1 read_token }}
+H User-Agent: xDrip+ 2025.04.13
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 64 "@0.uploaderBattery"
+
+######
+# AUTH: a wrong secret is refused, and a read token's SHA1 cannot write
+######
+
+NAME follower_wrong_secret
+GET http://{{ .ns_site }}/api/v1/entries.json?count=10&rr={{ itime 0 }}
+H api-secret: {{ sha1 "not-a-token" }}
+ASSERT_STATUS 401
+
+NAME follower_read_token_cannot_write
+POST http://{{ .ns_site }}/api/v1/entries
+H api-secret: {{ sha1 read_token }}
+B [{"device": "xDrip-LibreReceiver", "date": {{ itime 1 }}, "sgv": 140, "type": "sgv"}]
+ASSERT_STATUS 403

@@ -103,16 +103,12 @@ func legacyTokenIdentity(config *config.ServerConfig, ctx context.Context, token
 
 	siteContext := httputils.GetSiteContext(ctx)
 
-	// Loop sends the SHA-1 of its API secret, so a token's SHA-1 finds the identity with that token, with no password
-	// to check
-	if security.IsSHA1Hex(tokenParam) {
+	// xDrip+ sends the SHA1 of the token, 40 hex digits, as Nightscout clients send their API secret
+	if len(tokenParam) == 40 {
 		identity, err := siteContext.ControlDB.Queries.GetSiteIdentityByTokenDigest(ctx, controldb.GetSiteIdentityByTokenDigestParams{
-			SiteID: siteContext.SiteID, TokenDigest: new(security.APISecretDigest(tokenParam))})
-		if err != nil || !identity.Enabled {
-			return nil, fmt.Errorf("no enabled identity has a token with that SHA-1")
-		}
-		if err := checkLegacyTokenIdentity(identity); err != nil {
-			return nil, err
+			SiteID: siteContext.SiteID, Digest: new(security.NightscoutTokenDigest(tokenParam))})
+		if err != nil || !identity.Enabled || identity.TotpSecretEnc != "" || identity.Role == consts.IdentityRoleAdmin {
+			return nil, fmt.Errorf("no identity that can use a token has one with this SHA1: %v", err)
 		}
 		return identity, nil
 	}
@@ -131,8 +127,13 @@ func legacyTokenIdentity(config *config.ServerConfig, ctx context.Context, token
 		return nil, fmt.Errorf("identity not found: %w", err)
 	}
 
-	if err := checkLegacyTokenIdentity(identity); err != nil {
-		return nil, err
+	if identity.TotpSecretEnc != "" {
+		return nil, fmt.Errorf("legacy token cannot be used for identities with TOTP enabled")
+	}
+
+	// Constraint: Not allowed to be admin and use legacy token
+	if identity.Role == consts.IdentityRoleAdmin {
+		return nil, fmt.Errorf("legacy token cannot be used for admin identities")
 	}
 
 	if !config.Security.VerifyPasswordWithCache(tokenParamPassword, identity.PasswordHash) {
@@ -140,17 +141,4 @@ func legacyTokenIdentity(config *config.ServerConfig, ctx context.Context, token
 	}
 
 	return identity, nil
-}
-
-// checkLegacyTokenIdentity refuses a Nightscout token, or its SHA-1, for an identity that must sign in more strongly
-func checkLegacyTokenIdentity(identity *controldb.SiteIdentity) error {
-	if identity.TotpSecretEnc != "" {
-		return fmt.Errorf("legacy token cannot be used for identities with TOTP enabled")
-	}
-
-	// Constraint: Not allowed to be admin and use legacy token
-	if identity.Role == consts.IdentityRoleAdmin {
-		return fmt.Errorf("legacy token cannot be used for admin identities")
-	}
-	return nil
 }

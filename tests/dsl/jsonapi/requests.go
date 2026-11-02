@@ -280,6 +280,16 @@ func RenderTemplate(input string, ctx map[string]any) (string, error) {
 			},
 			"time":  templateTime,
 			"itime": templateITime,
+			// javatime is minutes ago as Java's yyyy-MM-dd'T'HH:mm:ss.SSSZ at +1300, as xDrip+ sends dateString
+			"javatime": func(offset int) string {
+				at := time.Now().Add(-time.Duration(offset) * time.Minute)
+				return at.In(time.FixedZone("", 13*60*60)).Format("2006-01-02T15:04:05.000-0700")
+			},
+			// sha1 is the SHA1 in hex, as a Nightscout client sends its API secret, e.g. sha1 token
+			"sha1": func(s string) string {
+				sum := sha1.Sum([]byte(s))
+				return hex.EncodeToString(sum[:])
+			},
 			"date":    func(days int) string { return templateDayTime(days, 0).Format(time.DateOnly) },
 			"daytime": func(days, minutes int) string { return templateDayTime(days, minutes).Format(time.RFC3339) },
 			"dayms":   func(days, minutes int) int64 { return templateDayTime(days, minutes).UnixMilli() },
@@ -296,11 +306,6 @@ func RenderTemplate(input string, ctx map[string]any) (string, error) {
 					}
 				}
 				return ""
-			},
-			// sha1 is a value's SHA-1 in hex, as Loop sends its API secret, e.g. H api-secret: {{ sha1 token }}
-			"sha1": func(value string) string {
-				sum := sha1.Sum([]byte(value))
-				return hex.EncodeToString(sum[:])
 			},
 		}).
 		Parse(input)
