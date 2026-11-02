@@ -32,6 +32,12 @@ type UserIdentity struct {
 	NSURL  string `json:"-"`
 }
 
+// ClientRoles are the roles a device for a client must have: a loop (AAPS, Trio or Loop) uploads the treatments it
+// gives and reads the profile it loops with, so it is the PWD phone
+var ClientRoles = map[string]consts.IdentityRole{
+	"aaps": consts.IdentityRoleDevicePWDPhone, "trio": consts.IdentityRoleDevicePWDPhone, "loop": consts.IdentityRoleDevicePWDPhone,
+}
+
 type RoleOption struct {
 	Label string
 	Value consts.IdentityRole

@@ -383,6 +383,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - A device is added for its client: AAPS, Trio, Loop, xDrip+, Nightguard, SugarPixel or Other. Its credentials say how
   to set that client up, with its Nightscout URL and token filled in, and a device for any but Other has its own units
   set to mg/dL, which those clients need, whatever the site's.
+- The client is picked before the role, as a loop's device (AAPS, Trio or Loop) must be the PWD phone: picking one of
+  them sets the role to PWD Phone and locks it, and the server refuses such a device with any other role.
 - An admin can turn an identity off and on, or delete it; an identity cannot lock itself out.
 - An admin can change another identity's own settings and alarms from its row, such as a device's units for a client
   that needs mg/dL on a site in mmol/L; the Nightscout API gives that device its own units.

@@ -1,0 +1,27 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// A device's client is picked before its role, as a loop's device must be the PWD phone
+CLICK #site--settings-menu
+CLICK #site--settings--identities-button
+ASSERT_STATUS 200
+INPUT #name-createIdentityFormdevicesTable trio
+CLICK #client-createIdentityFormdevicesTable
+CLICK #identities_table [role="option"][data-tui-selectbox-value="trio"]
+ASSERT_DRAWN #select-form-createIdentityFormdevicesTable:disabled >> text=PWD Phone
+SCREENSHOT client_role_forced
+
+// Another client leaves the role to be picked
+CLICK #client-createIdentityFormdevicesTable
+CLICK #identities_table [role="option"][data-tui-selectbox-value="nightguard"]
+ASSERT_VISIBLE #select-form-createIdentityFormdevicesTable:enabled
+CLICK #client-createIdentityFormdevicesTable
+CLICK #identities_table [role="option"][data-tui-selectbox-value="trio"]
+ASSERT_DRAWN #select-form-createIdentityFormdevicesTable:disabled >> text=PWD Phone
+
+// The device is made a PWD phone
+CLICK "Add Device"
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE Setting up Trio
+CLICK "I Have Saved These"
+ASSERT_VISIBLE #devicesTable tr:has(td:text-is("trio")) >> text=PWD Phone

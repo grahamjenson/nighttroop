@@ -48,6 +48,13 @@ func (s *IdentitiesCollection) GetRoute() string {
 // CREATE
 // ////
 func (s *IdentitiesCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.UserIdentity) (*sitemodels.UserIdentity, error) {
+	// A device for a client that must have a role has it, and cannot be made with another
+	if forced, ok := sitemodels.ClientRoles[model.Client]; ok {
+		if model.Role != "" && consts.IdentityRole(model.Role) != forced {
+			return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("A %s device must have the %s role", model.Client, forced))
+		}
+		model.Role = string(forced)
+	}
 	if model.Name == "" || model.Role == "" {
 		return nil, apiutils.ErrMissingRequiredFieldWithHint("name and role")
 	}
