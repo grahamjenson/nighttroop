@@ -38,8 +38,7 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, config *config.ServerConfig) fun
 			if httputils.GetAcceptType(r).API() {
 				http.Error(w, "Unauthorized: Invalid JWT token", http.StatusUnauthorized)
 			} else {
-				w.Header().Set("HX-Redirect", "/login")
-				http.Redirect(w, r, "/login", http.StatusSeeOther)
+				httputils.RedirectToLogin(w, r, "/login")
 			}
 		})
 	}

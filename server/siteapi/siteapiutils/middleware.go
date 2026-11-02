@@ -44,8 +44,7 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, cfg *config.ServerConfig) func(h
 
 				return
 			} else {
-				w.Header().Set("HX-Redirect", "/login")
-				http.Redirect(w, r, "/login", http.StatusSeeOther)
+				httputils.RedirectToLogin(w, r, "/login")
 			}
 
 		})

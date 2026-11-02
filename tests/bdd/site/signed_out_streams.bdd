@@ -1,0 +1,14 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_PATH /
+ASSERT_VISIBLE #site--summary--live
+
+// The sign in ends while the page is open, as when it expires or the identity's password is changed
+CLEAR_COOKIE user_token
+
+// Back from the background, the page's streams reconnect without a sign in, so it goes to the login page, rather than
+// asking for its streams again and again
+BACKGROUND
+FOREGROUND
+ASSERT_PATH /login
+ASSERT_VISIBLE #site--login--name
+SCREENSHOT signed_out_streams

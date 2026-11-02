@@ -28,7 +28,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 ### Signing in
 
-- A control admin signs in with a username, password and TOTP code, and can sign out.
+- A control admin signs in with a username, password and TOTP code, and can sign out. Tab goes from the username to the
+  password to the code, skipping the button that shows the password.
 - The server's global rate limit does not stop a control admin signing in, or using the control site once signed in,
   so they can fix whatever is using it up. The control site has its own limit at the same rate, and each address's and
   sign in attempts' limits still apply.
@@ -293,6 +294,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - Sign-in attempts are rate limited per identity and IP; a disabled identity cannot sign in.
 - Devices use their Nightscout token, as a token, API secret or for a JWT.
 - Changing an identity's password or TOTP signs out its existing sessions.
+- A page left open after its sign in ends goes to the login page once its live updates reconnect, rather than asking
+  for them again and again.
 
 ### Users & Devices
 
