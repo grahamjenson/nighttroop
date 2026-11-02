@@ -30,6 +30,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 - A control admin signs in with a username, password and TOTP code, and can sign out. Tab goes from the username to the
   password to the code, skipping the button that shows the password.
+- The control site's header, with its menu, and its status banner show only once the admin has signed in, not on the
+  login or setup page.
 - The server's global rate limit does not stop a control admin signing in, or using the control site once signed in,
   so they can fix whatever is using it up. The control site has its own limit at the same rate, and each address's and
   sign in attempts' limits still apply.
