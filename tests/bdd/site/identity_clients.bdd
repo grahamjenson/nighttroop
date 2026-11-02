@@ -14,6 +14,7 @@ ASSERT_STATUS 201
 SAVE_TEXT #site--identities--created--site site_url
 SAVE_TEXT #site--identities--created--ns-token kitchen_token
 CLICK "I Have Saved These"
+CLICK #site--identities--close
 ASSERT_VISIBLE #site--identities--kitchen--clients >> text=None yet
 
 // The kitchen display and then another app both authenticate with its token

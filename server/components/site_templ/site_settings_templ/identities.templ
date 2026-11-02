@@ -2,6 +2,7 @@ package site_settings_templ
 
 import (
 	"context"
+	"fmt"
 	"slices"
 	"strconv"
 	"strings"
@@ -30,8 +31,10 @@ var roleLabels = map[consts.IdentityRole]string{
 	consts.IdentityRoleDeviceRead: "Read", consts.IdentityRoleDeviceReadWrite: "Read+Write", consts.IdentityRoleDevicePWDPhone: "PWD Phone",
 }
 
-// deviceClient is a Nightscout client a device can be added for, with how to set it up. A step's {url} is the site's
-// Nightscout URL, {host} that without its scheme, and {token} the device's Nightscout token.
+// deviceClient is a Nightscout client a device can be added for, with how to set it up. In a step, *Name* is a menu
+// or field in the client, shown in bold, and {url}, {token}, {xdrip} and {nightguard} are values to enter, shown with
+// a button to copy them: the site's Nightscout URL, the device's Nightscout token, and the URL with the token in it
+// that xDrip+ and Nightguard take.
 type deviceClient struct {
 	Value, Label string
 	Steps        []string
@@ -41,30 +44,62 @@ type deviceClient struct {
 
 // deviceClients are the clients a device can be added for, Other first as the one chosen to start with
 var deviceClients = []deviceClient{
-	{"other", "Other", []string{"Give it the Nightscout URL {url} and the Nightscout token above, as its token or API secret."}, false},
-	{"aaps", "AAPS", []string{"In Config Builder, under Synchronization, turn on NSClient.", "In NSClient's settings set the Nightscout URL to {url} and the NS access token to the Nightscout token above."}, true},
-	{"trio", "Trio", []string{"In Settings, open Services, then Nightscout.", "Set the URL to {url} and the API secret to the Nightscout token above, then connect."}, true},
-	{"loop", "Loop", []string{"In Settings, open Services and add Nightscout.", "Set the site URL to {url} and the API secret to the Nightscout token above."}, true},
-	{"xdrip", "xDrip+", []string{"In Settings, open Cloud Upload, then Nightscout Sync (REST-API), and turn it on.", "Set the Base URL to https://{token}@{host}/api/v1/"}, true},
-	{"nightguard", "Nightguard", []string{"In Configuration, set the URL to {url}/?token={token}"}, true},
-	{"sugarpixel", "SugarPixel", []string{"In the SugarPixel app, choose Nightscout as its glucose source.", "Enter {url} as the Nightscout URL and the Nightscout token above as its token."}, true},
+	{"other", "Other", []string{"Set its *Nightscout URL* to {url}", "Set its *token* or *API secret* to {token}"}, false},
+	{"aaps", "AAPS", []string{"Open *Config Builder*, and under *Synchronization* turn on *NSClient*.", "In *NSClient*'s settings, set *Nightscout URL* to {url}", "Set *NS access token* to {token}"}, true},
+	{"trio", "Trio", []string{"Open *Settings*, then *Services*, then *Nightscout*.", "Set *URL* to {url}", "Set *API secret* to {token}", "Tap *Connect*."}, true},
+	{"loop", "Loop", []string{"Open *Settings*, then *Services*, and add *Nightscout*.", "Set *Site URL* to {url}", "Set *API secret* to {token}"}, true},
+	{"xdrip", "xDrip+", []string{"Open *Settings*, then *Cloud Upload*, then *Nightscout Sync (REST-API)*, and turn it on.", "Set *Base URL* to {xdrip}"}, true},
+	{"nightguard", "Nightguard", []string{"Open *Configuration*, and set *URL* to {nightguard}"}, true},
+	{"sugarpixel", "SugarPixel", []string{"In the SugarPixel app, choose *Nightscout* as its glucose source.", "Set *Nightscout URL* to {url}", "Set its *token* to {token}"}, true},
+}
+
+// stepPart is a piece of a step: text, in bold when it names a menu or field, or a value to copy
+type stepPart struct {
+	Text  string
+	Bold  bool
+	Value bool
+}
+
+// stepParts splits a step into its text, bold names and values, filling the values in
+func stepParts(step string, values map[string]string) []stepPart {
+	parts := []stepPart{}
+	bold := false
+	for step != "" {
+		at := strings.IndexAny(step, "*{")
+		if at < 0 {
+			parts = append(parts, stepPart{Text: step, Bold: bold})
+			break
+		}
+		if at > 0 {
+			parts = append(parts, stepPart{Text: step[:at], Bold: bold})
+		}
+		if step[at] == '*' {
+			bold, step = !bold, step[at+1:]
+			continue
+		}
+		name, rest, _ := strings.Cut(step[at+1:], "}")
+		parts = append(parts, stepPart{Text: values[name], Value: true})
+		step = rest
+	}
+	return parts
 }
 
 // clientSteps are how to set up the device's client, with its URL and token filled in, or none for a device added
 // without one
-func clientSteps(identity *sitemodels.UserIdentity) (deviceClient, []string) {
+func clientSteps(identity *sitemodels.UserIdentity) (deviceClient, [][]stepPart) {
 	index := slices.IndexFunc(deviceClients, func(c deviceClient) bool { return c.Value == identity.Client })
 	if index < 0 || identity.NSToken == nil {
 		return deviceClient{}, nil
 	}
-	host := identity.NSURL
+	url, token := identity.NSURL, *identity.NSToken
+	host := url
 	if _, after, ok := strings.Cut(host, "://"); ok {
 		host = after
 	}
-	fill := strings.NewReplacer("{url}", identity.NSURL, "{host}", host, "{token}", *identity.NSToken)
-	steps := []string{}
+	values := map[string]string{"url": url, "token": token, "xdrip": "https://" + token + "@" + host + "/api/v1/", "nightguard": url + "/?token=" + token}
+	steps := [][]stepPart{}
 	for _, step := range deviceClients[index].Steps {
-		steps = append(steps, fill.Replace(step))
+		steps = append(steps, stepParts(step, values))
 	}
 	return deviceClients[index], steps
 }
@@ -393,9 +428,19 @@ templ clientGuide(identity *sitemodels.UserIdentity) {
 	if len(steps) > 0 {
 		<div id="site--identities--created--guide" class="mt-4 w-full space-y-2 text-left text-sm">
 			<p class="font-semibold">Setting up { client.Label }</p>
-			<ol class="list-inside list-decimal space-y-1">
-				for _, step := range steps {
-					<li class="break-all">{ step }</li>
+			<ol class="list-decimal space-y-2 pl-5">
+				for i, step := range steps {
+					<li>
+						for j, part := range step {
+							if part.Value {
+								@copyValue(fmt.Sprintf("site--identities--created--guide-%d-%d", i, j), part.Text)
+							} else if part.Bold {
+								<span class="font-semibold">{ part.Text }</span>
+							} else {
+								{ part.Text }
+							}
+						}
+					</li>
 				}
 			</ol>
 			if client.MGDL {
@@ -405,6 +450,14 @@ templ clientGuide(identity *sitemodels.UserIdentity) {
 	}
 }
 
+// copyValue is a value to enter in a client, in a box with a button to copy it
+templ copyValue(id string, value string) {
+	<div class="mt-1 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1">
+		<code id={ id } class="flex-1 break-all font-mono text-xs text-slate-800">{ value }</code>
+		@copybutton.CopyButton(copybutton.Props{TargetID: id})
+	</div>
+}
+
 // IdentityReset shows an identity's new credentials once. Resetting your own signed you out, to sign in again with them.
 templ IdentityReset(url string, identity *sitemodels.UserIdentity, signedOut bool) {
 	@credentialsModal(url, identity.Name, identity.Password, identity.TotpSecret, identity.NSToken, signedOut)
@@ -412,7 +465,8 @@ templ IdentityReset(url string, identity *sitemodels.UserIdentity, signedOut boo
 
 templ credentialsModal(url string, name string, password string, totpSecret *string, nsToken *string, signedOut bool) {
 	<div class="fixed inset-0 bg-black/50 flex items-center justify-center">
-		<div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md flex flex-col items-center justify-center">
+		// As tall as the window allows, scrolling when a device's set up steps make it taller
+		<div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md max-h-[calc(100vh-5rem)] overflow-y-auto flex flex-col items-center">
 			if signedOut {
 				<p id="site--identities--signed-out" class="mb-4 text-sm font-medium text-amber-800">You have been signed out. Save these, then sign in again with them.</p>
 			}
@@ -423,8 +477,41 @@ templ credentialsModal(url string, name string, password string, totpSecret *str
 					Sign In Again
 				}
 			} else {
+				@savedThese()
+			}
+		</div>
+	</div>
+}
+
+// savedThese closes the credentials, after warning that they are not shown again
+templ savedThese() {
+	<div id="site--identities--saved" class="mt-4 w-full">
+		<div class="flex justify-center">
+			@button.Button(button.Props{
+				Variant: button.VariantDestructive,
+				Attributes: templ.Attributes{
+					"hx-on:click": templ.JSUnsafeFuncCall("this.parentElement.hidden = true; this.parentElement.nextElementSibling.hidden = false"),
+				},
+			}) {
+				I Have Saved These
+			}
+		</div>
+		<div hidden class="space-y-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-800">
+			<p id="site--identities--saved-warning" class="font-medium">
+				Once closed, these credentials disappear and are never shown again. If they are lost, they can only be reset.
+			</p>
+			<div class="flex justify-end gap-2">
 				@button.Button(button.Props{
-					Class:   "mt-4",
+					ID:      "site--identities--saved-back",
+					Variant: button.VariantOutline,
+					Attributes: templ.Attributes{
+						"hx-on:click": templ.JSUnsafeFuncCall("this.parentElement.parentElement.hidden = true; this.closest('#site--identities--saved').firstElementChild.hidden = false"),
+					},
+				}) {
+					Go Back
+				}
+				@button.Button(button.Props{
+					ID:      "site--identities--close",
 					Variant: button.VariantDestructive,
 					Attributes: templ.Attributes{
 						"hx-get":    "/empty",
@@ -432,9 +519,9 @@ templ credentialsModal(url string, name string, password string, totpSecret *str
 						"hx-swap":   "innerHTML",
 					},
 				}) {
-					I Have Saved These
+					Close
 				}
-			}
+			</div>
 		</div>
 	</div>
 }
@@ -473,13 +560,13 @@ templ createdUserInfo(url string, username string, password string, totpSecret *
 			</div>
 			<!-- Monospace Content Area -->
 			<div class="p-4 font-mono text-sm text-slate-800 space-y-2 select-all bg-white">
-				<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Site:</span><span id="site--identities--created--site" class="break-all">{ url }</span></div>
-				<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Username:</span><span>{ username }</span></div>
+				@credentialRow("Site:", "site--identities--created--site", url)
+				@credentialRow("Username:", "site--identities--created--username", username)
 				if password != "" {
-					<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Password:</span><span id="site--identities--created--password" class="break-all">{ password }</span></div>
+					@credentialRow("Password:", "site--identities--created--password", password)
 				}
 				if nsToken != nil {
-					<div class="flex"><span class="w-28 shrink-0 font-medium text-slate-400 select-none">Nightscout Token:</span><span id="site--identities--created--ns-token" class="break-all">{ *nsToken }</span></div>
+					@credentialRow("Nightscout Token:", "site--identities--created--ns-token", *nsToken)
 				}
 				if totpSecret != nil {
 					<div class="flex">
@@ -510,6 +597,15 @@ templ createdUserInfo(url string, username string, password string, totpSecret *
 				}
 			</div>
 		</div>
+	</div>
+}
+
+// credentialRow is one of the credentials, with a button to copy it
+templ credentialRow(label string, id string, value string) {
+	<div class="flex items-start">
+		<span class="w-28 shrink-0 font-medium text-slate-400 select-none">{ label }</span>
+		<span id={ id } class="flex-1 break-all">{ value }</span>
+		@copybutton.CopyButton(copybutton.Props{TargetID: id})
 	</div>
 }
 

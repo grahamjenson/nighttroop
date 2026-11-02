@@ -381,10 +381,13 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 
 ### Users & Devices
 
-- An admin adds users and devices, whose credentials are shown once.
+- An admin adds users and devices, whose credentials are shown once, each with its own copy button and one to copy
+  them all. Saying they are saved warns that they are never shown again, and they close only once that is confirmed;
+  Go Back keeps them open.
 - A device is added for its client: AAPS, Trio, Loop, xDrip+, Nightguard, SugarPixel or Other. Its credentials say how
-  to set that client up, with its Nightscout URL and token filled in, and a device for any but Other has its own units
-  set to mg/dL, which those clients need, whatever the site's.
+  to set that client up, in numbered steps naming the client's menus and fields in bold, with its Nightscout URL and
+  token filled in, each with its own copy button, and a device for any but Other has its own units set to mg/dL,
+  which those clients need, whatever the site's.
 - An admin can turn an identity off and on, or delete it; an identity cannot lock itself out.
 - An admin can change another identity's own settings and alarms from its row, such as a device's units for a client
   that needs mg/dL on a site in mmol/L; the Nightscout API gives that device its own units.
