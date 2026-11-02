@@ -1,15 +1,15 @@
 INCLUDE steps/new_ns_site.steps
 
-// A temp basal sent only as a percent, a change from the basal as Nightscout has it, is the profile's basal at its start
-// changed by the percent: here 0.5 U/hr from midnight and 0.8 U/hr from 2am UTC. It is returned as it was sent.
+// A temp basal sent only as a percent is that percent of the profile's basal at its start, so 50 is half: here 0.5 U/hr
+// from midnight and 0.8 U/hr from 2am UTC. It is returned as it was sent.
 
 // Before any profile there is no basal to take the percent of, so it has no rate
 NAME percent_before_profile_v1
 POST http://{{ site }}/api/v1/treatments?token={{ token }}
-B {"eventType": "Temp Basal", "created_at": "2025-12-01T01:00:00.000Z", "percent": -50, "duration": 30}
+B {"eventType": "Temp Basal", "created_at": "2025-12-01T01:00:00.000Z", "percent": 50, "duration": 30}
 ASSERT_STATUS 200
 ASSERT_EQUALS 0 "@0.absolute"
-ASSERT_EQUALS -50 "@0.percent"
+ASSERT_EQUALS 50 "@0.percent"
 
 NAME create_percent_profile_v1
 POST http://{{ site }}/api/v1/profiles?token={{ token }}
@@ -37,23 +37,23 @@ ASSERT_STATUS 200
 
 NAME percent_temp_basal_v1
 POST http://{{ site }}/api/v1/treatments?token={{ token }}
-B {"eventType": "Temp Basal", "created_at": "2026-03-01T01:00:00.000Z", "percent": -50, "duration": 30}
+B {"eventType": "Temp Basal", "created_at": "2026-03-01T01:00:00.000Z", "percent": 50, "duration": 30}
 ASSERT_STATUS 200
 ASSERT_EQUALS 0.25 "@0.absolute"
 ASSERT_EQUALS 0.25 "@0.rate"
-ASSERT_EQUALS -50 "@0.percent"
+ASSERT_EQUALS 50 "@0.percent"
 
 NAME get_percent_temp_basal_v1
 GET http://{{ site }}/api/v1/treatments/{{ dig "percent_temp_basal_v1.0._id" }}?token={{ token }}
 ASSERT_STATUS 200
 ASSERT_EQUALS 0.25 "@0.absolute"
-ASSERT_EQUALS -50 "@0.percent"
+ASSERT_EQUALS 50 "@0.percent"
 
 // From the schedule's 2am its next rate
 NAME percent_temp_basal_v3
 POST http://{{ site }}/api/v3/treatments
 H Authorization: Bearer {{ jwt }}
-B {"eventType": "Temp Basal", "date": 1772332200000, "percent": 50, "duration": 30}
+B {"eventType": "Temp Basal", "date": 1772332200000, "percent": 150, "duration": 30}
 ASSERT_STATUS 201
 ASSERT_EQUALS 1.2 "@result.absolute"
 
@@ -62,13 +62,20 @@ GET http://{{ site }}/api/v3/treatments/{{ dig "percent_temp_basal_v3.identifier
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT_EQUALS 1.2 "@result.absolute"
-ASSERT_EQUALS 50 "@result.percent"
+ASSERT_EQUALS 150 "@result.percent"
 
 // A rate sent with the percent is kept, rather than taken from the profile
 NAME rate_and_percent_temp_basal_v3
 POST http://{{ site }}/api/v3/treatments
 H Authorization: Bearer {{ jwt }}
-B {"eventType": "Temp Basal", "date": 1772334000000, "percent": 50, "rate": 0.9, "duration": 30}
+B {"eventType": "Temp Basal", "date": 1772334000000, "percent": 150, "rate": 0.9, "duration": 30}
 ASSERT_STATUS 201
 ASSERT_EQUALS 0.9 "@result.absolute"
-ASSERT_EQUALS 50 "@result.percent"
+ASSERT_EQUALS 150 "@result.percent"
+
+// A percent is of the basal, so it is never negative
+NAME negative_percent_temp_basal_v3
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {"eventType": "Temp Basal", "date": 1772335800000, "percent": -50, "duration": 30}
+ASSERT_STATUS 400

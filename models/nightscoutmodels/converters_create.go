@@ -164,23 +164,6 @@ func TempBasalValuePtr(t Treatment) *float64 {
 	return nil
 }
 
-// PercentChangeToOfBasal is a Nightscout temp basal's percent, its change from the basal (-50 for half), as the percent
-// of the basal it gives (50), as Nighttroop keeps it
-func PercentChangeToOfBasal(change *types.FlexibleFloat64) *float64 {
-	if change == nil {
-		return nil
-	}
-	return new(float64(*change) + 100)
-}
-
-// PercentOfBasalToChange is a temp basal's percent of the basal (50) as Nightscout has it, its change from it (-50)
-func PercentOfBasalToChange(ofBasal *float64) *types.FlexibleFloat64 {
-	if ofBasal == nil {
-		return nil
-	}
-	return new(types.FlexibleFloat64(*ofBasal - 100))
-}
-
 func FlexibleFloat64ToFloat64(source types.FlexibleFloat64) float64 {
 	return float64(source)
 }
