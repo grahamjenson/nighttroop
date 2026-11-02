@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strconv"
 	"strings"
 	"testing"
 	"text/template"
@@ -280,6 +281,11 @@ func RenderTemplate(input string, ctx map[string]any) (string, error) {
 			"date":    func(days int) string { return templateDayTime(days, 0).Format(time.DateOnly) },
 			"daytime": func(days, minutes int) string { return templateDayTime(days, minutes).Format(time.RFC3339) },
 			"dayms":   func(days, minutes int) int64 { return templateDayTime(days, minutes).UnixMilli() },
+			// addms is a dug time in milliseconds plus ms, e.g. addms (dig "last.result.collections.entries") 1
+			"addms": func(dug any, ms int64) (int64, error) {
+				n, err := strconv.ParseInt(fmt.Sprint(dug), 10, 64)
+				return n + ms, err
+			},
 			"tokenByName": func(list []any, name string) string {
 				for _, item := range list {
 					m := item.(map[string]any)

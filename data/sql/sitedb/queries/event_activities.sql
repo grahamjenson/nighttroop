@@ -111,6 +111,7 @@ RETURNING *;
 -- name: SoftDeleteActivity :execresult
 UPDATE activities SET
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_at = MAX(updated_at + 1, CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
 WHERE id = sqlc.arg('ID') AND deleted_at IS NULL;
 
@@ -120,6 +121,7 @@ DELETE FROM activities WHERE id = ?;
 -- name: SoftDeleteActivitiesByType :execresult
 UPDATE activities SET 
     deleted_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_at = MAX(updated_at + 1, CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_by_identity_name = ?
 WHERE activity_type = ? AND deleted_at IS NULL;
 
