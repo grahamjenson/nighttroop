@@ -15,6 +15,8 @@ type ProfileStore struct {
 	Units          *consts.Units                 `json:"units,omitempty"`
 
 	LoopSettings *LoopSettings `json:"loopSettings,omitempty"`
+	// Trio's remote control settings are at the top of its profile
+	*RemoteSettings
 
 	// Default String Fields
 	Device  *types.ShortString `json:"device,omitempty"`  // Device used for the activity
@@ -293,6 +295,24 @@ type LoopSettings struct {
 	BundleIdentifier        *types.ShortString       `json:"bundleIdentifier,omitempty"`
 	PreMealTargetRange      []*types.FlexibleFloat64 `json:"preMealTargetRange,omitempty"`
 	OverridePresets         []*OverridePreset        `json:"overridePresets,omitempty"`
+}
+
+// RemoteSettings are where and how LoopFollow sends Trio its remote commands, and Trio's override presets
+type RemoteSettings struct {
+	BundleIdentifier *types.ShortString    `json:"bundleIdentifier,omitempty"`
+	DeviceToken      *types.ShortString    `json:"deviceToken,omitempty"`
+	IsAPNSProduction *types.FlexibleBool   `json:"isAPNSProduction,omitempty"`
+	TeamID           *types.ShortString    `json:"teamID,omitempty"`
+	ExpirationDate   *types.DateString     `json:"expirationDate,omitempty"`
+	OverridePresets  []*TrioOverridePreset `json:"overridePresets,omitempty"`
+}
+
+// TrioOverridePreset is one of Trio's override presets, with its target in mg/dL
+type TrioOverridePreset struct {
+	Name       *types.ShortString     `json:"name,omitempty"`
+	Duration   *types.FlexibleFloat64 `json:"duration,omitempty"`
+	Percentage *types.FlexibleFloat64 `json:"percentage,omitempty"`
+	Target     *types.FlexibleFloat64 `json:"target,omitempty"`
 }
 
 type OverridePreset struct {

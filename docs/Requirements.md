@@ -254,6 +254,14 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   default profile's or profile switch's basal at its start, in the profile's timezone, and is returned with that
   `absolute` and its `percent` as sent.
 - Duplicate uploads are ignored; values far outside real use are refused.
+- A `created_at` filter, such as `find[created_at][$gte]`, finds treatments and device statuses by when they happened,
+  the `created_at` they are returned with, and `srvCreated` by when they were stored; a time with no zone is UTC.
+- Loop's Temporary Override, with its correction range as the targets, Trio's SMB, and Suspend Pump and Resume Pump
+  treatments are kept.
+- A device status keeps its pump's clock, manufacturer and model, its uploader's battery, returned in both
+  `uploader.battery` and `uploaderBattery`, and Loop's override in force.
+- A profile keeps Trio's remote control settings (bundle, device token, APNS environment, team and expiry) and its
+  override presets, for LoopFollow's Trio Remote Control.
 
 ### Nighttroop API and client
 

@@ -10,6 +10,10 @@ INSERT INTO device_reports (
     pump_reservoir,
     pump_battery_percent,
     pump_charging_state,
+    pump_clock,
+    pump_manufacturer,
+    pump_model,
+    override_json,
 
     loop_name,
     configuration_settings_json,
@@ -32,7 +36,7 @@ INSERT INTO device_reports (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------

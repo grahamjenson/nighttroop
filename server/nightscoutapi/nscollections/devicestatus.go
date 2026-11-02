@@ -85,24 +85,28 @@ func DBToNightscoutDeviceStatus(source *sitedb.DeviceReport, siteContext *httput
 	}
 	if source.DeviceBatteryPercent != nil {
 		nsModel.UploaderBattery = ptr(types.FlexibleFloat64(*source.DeviceBatteryPercent))
+		// Loop and Trio send it in uploader, where LoopFollow reads it
+		nsModel.Uploader = &nightscoutmodels.UploaderStatus{Battery: ptr(types.FlexibleInt64(*source.DeviceBatteryPercent))}
+	}
+	if source.OverrideJson != nil {
+		nsModel.OverrideRaw = ptr(json.RawMessage([]byte(*source.OverrideJson)))
 	}
 
 	/////
 	// Pump
 	/////
+	pump := nightscoutmodels.PumpStatus{Manufacturer: (*types.ShortString)(source.PumpManufacturer), Model: (*types.ShortString)(source.PumpModel)}
 	if source.PumpBatteryPercent != nil {
-		nsModel.Pump = &nightscoutmodels.PumpStatus{
-			Battery: &nightscoutmodels.PumpBattery{
-				Percent: ptr(types.FlexibleFloat64(*source.PumpBatteryPercent)),
-			},
-		}
+		pump.Battery = &nightscoutmodels.PumpBattery{Percent: ptr(types.FlexibleFloat64(*source.PumpBatteryPercent))}
 	}
-
 	if source.PumpReservoir != nil {
-		if nsModel.Pump == nil {
-			nsModel.Pump = &nightscoutmodels.PumpStatus{}
-		}
-		nsModel.Pump.Reservoir = ptr(types.FlexibleFloat64(*source.PumpReservoir))
+		pump.Reservoir = ptr(types.FlexibleFloat64(*source.PumpReservoir))
+	}
+	if source.PumpClock != nil {
+		pump.Clock = ptr(types.DateStringFromInt64AndUTCOffset(*source.PumpClock, nil))
+	}
+	if pump != (nightscoutmodels.PumpStatus{}) {
+		nsModel.Pump = &pump
 	}
 
 	///////
@@ -135,6 +139,11 @@ func NightscoutToDBCreateDeviceReport(source nightscoutmodels.DeviceStatus, ctx 
 	}
 	if source.UploaderBattery != nil {
 		createParams.DeviceBatteryPercent = ptr(float64(*source.UploaderBattery))
+	} else if source.Uploader != nil && source.Uploader.Battery != nil {
+		createParams.DeviceBatteryPercent = ptr(float64(*source.Uploader.Battery))
+	}
+	if source.OverrideRaw != nil {
+		createParams.OverrideJson = ptr(string(*source.OverrideRaw))
 	}
 
 	if source.ConfigurationRaw != nil {
@@ -153,6 +162,11 @@ func NightscoutToDBCreateDeviceReport(source nightscoutmodels.DeviceStatus, ctx 
 		if source.Pump.Reservoir != nil {
 			createParams.PumpReservoir = ptr(float64(*source.Pump.Reservoir))
 		}
+		if source.Pump.Clock != nil {
+			createParams.PumpClock = source.Pump.Clock.UnixMillip()
+		}
+		createParams.PumpManufacturer = source.Pump.Manufacturer.Stringp()
+		createParams.PumpModel = source.Pump.Model.Stringp()
 	}
 
 	////
@@ -208,12 +222,6 @@ func NightscoutToDBCreateDeviceReport(source nightscoutmodels.DeviceStatus, ctx 
 
 		if source.Loop.COB != nil {
 			createParams.LoopCob = source.Loop.COB.COB.Float64p()
-		}
-
-		if source.Uploader != nil {
-			if source.Uploader.Battery != nil {
-				createParams.DeviceBatteryPercent = ptr(float64(*source.Uploader.Battery))
-			}
 		}
 
 		if source.Loop.Predicted != nil {

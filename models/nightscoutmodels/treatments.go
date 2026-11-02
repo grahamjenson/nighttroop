@@ -180,6 +180,11 @@ const (
 	ProfileSwitch   TreatmentEventType = "Profile Switch"
 	TempBasal       TreatmentEventType = "Temp Basal"
 	TemporaryTarget TreatmentEventType = "Temporary Target"
+	// Loop's override, Trio's SMB and their pump suspends and resumes
+	TemporaryOverride TreatmentEventType = "Temporary Override"
+	SMB               TreatmentEventType = "SMB"
+	SuspendPump       TreatmentEventType = "Suspend Pump"
+	ResumePump        TreatmentEventType = "Resume Pump"
 
 	// Device Events
 	OpenAPSOffline    TreatmentEventType = "OpenAPS Offline"
@@ -236,6 +241,10 @@ var TreatmentEventTypes = []TreatmentEventType{
 	SnackBolus,
 	TempBasal,
 	TemporaryTarget,
+	TemporaryOverride,
+	SMB,
+	SuspendPump,
+	ResumePump,
 	CannulaFill,
 	Prime,
 	ReservoirChange,

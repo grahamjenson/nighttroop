@@ -64,7 +64,7 @@ type DBModelConverter interface {
 	// goverter:map OccurredAt Date
 	// goverter:map . CreatedAt | ModelDateStringFromDateIntAndUTCOffset
 	//
-	// goverter:ignore IsCharging Uploader UploaderBattery Pump OpenAPS Loop OpenAPSRaw LoopRaw ConfigurationRaw Configuration
+	// goverter:ignore IsCharging Uploader UploaderBattery Pump OpenAPS Loop OpenAPSRaw LoopRaw ConfigurationRaw Configuration OverrideRaw
 	DBModelToDeviceStatus(source *sitedb.DeviceReport, siteContext *httputils.SiteContext) DeviceStatus
 
 	///////
@@ -97,6 +97,7 @@ type DBModelConverter interface {
 	// goverter:map OccurredAt Mills
 	// goverter:map Name DefaultProfile
 	// goverter:map LoopSettingsJson LoopSettings | JSONToLoopSettings
+	// goverter:map RemoteSettingsJson RemoteSettings | JSONToRemoteSettings
 	DBModelToProfileStore(source *sitedb.ProfilePreset, siteContext *httputils.SiteContext) ProfileStore
 
 	// goverter:context siteContext
@@ -220,6 +221,17 @@ func JSONToScheduleValueSliceWithUnitConversionFromMGDL(jsonStr *string, siteCon
 		}
 	}
 	return result
+}
+
+func JSONToRemoteSettings(jsonStr *string) *RemoteSettings {
+	if jsonStr == nil {
+		return nil
+	}
+	var result RemoteSettings
+	if err := json.Unmarshal([]byte(*jsonStr), &result); err != nil {
+		return nil
+	}
+	return &result
 }
 
 func JSONToLoopSettings(jsonStr *string) *LoopSettings {

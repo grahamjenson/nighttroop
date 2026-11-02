@@ -101,20 +101,21 @@ type QueryValues struct {
 }
 
 // This is just much nicer to work with but the reverse is faster, so we
+// created_at is when a treatment or device status happened, as it is returned, and srvCreated when it was stored
 var forwardLookupName = map[string][]string{
-	"dategte": {"date$gte", "find[date][$gte]", "find[dateString][$gte]", "mills$gte", "find[mills][$gte]", "startDate$gte", "find[startDate][$gte]", "start$gte", "find[start][$gte]"},
-	"dategt":  {"date$gt", "find[date][$gt]", "find[dateString][$gt]", "mills$gt", "find[mills][$gt]", "startDate$gt", "find[startDate][$gt]", "start$gt", "find[start][$gt]"},
+	"dategte": {"date$gte", "find[date][$gte]", "created_at$gte", "find[created_at][$gte]", "find[dateString][$gte]", "mills$gte", "find[mills][$gte]", "startDate$gte", "find[startDate][$gte]", "start$gte", "find[start][$gte]"},
+	"dategt":  {"date$gt", "find[date][$gt]", "created_at$gt", "find[created_at][$gt]", "find[dateString][$gt]", "mills$gt", "find[mills][$gt]", "startDate$gt", "find[startDate][$gt]", "start$gt", "find[start][$gt]"},
 
 	"dateeq": {"date$eq", "find[date][$eq]", "find[dateString][$eq]", "mills$eq", "find[mills][$eq]", "startDate$eq", "find[startDate][$eq]", "start$eq", "find[start][$eq]"},
 
-	"datelte": {"date$lte", "find[date][$lte]", "find[dateString][$lte]", "mills$lte", "find[mills][$lte]", "startDate$lte", "find[startDate][$lte]", "start$lte", "find[start][$lte]"},
-	"datelt":  {"date$lt", "find[date][$lt]", "find[dateString][$lt]", "mills$lt", "find[mills][$lt]", "startDate$lt", "find[startDate][$lt]", "start$lt", "find[start][$lt]"},
+	"datelte": {"date$lte", "find[date][$lte]", "created_at$lte", "find[created_at][$lte]", "find[dateString][$lte]", "mills$lte", "find[mills][$lte]", "startDate$lte", "find[startDate][$lte]", "start$lte", "find[start][$lte]"},
+	"datelt":  {"date$lt", "find[date][$lt]", "created_at$lt", "find[created_at][$lt]", "find[dateString][$lt]", "mills$lt", "find[mills][$lt]", "startDate$lt", "find[startDate][$lt]", "start$lt", "find[start][$lt]"},
 
-	"createdatgte": {"created_at$gte", "find[created_at][$gte]", "srvCreated$gte", "find[srvCreated][$gte]"},
-	"createdatgt":  {"created_at$gt", "find[created_at][$gt]", "srvCreated$gt", "find[srvCreated][$gt]"},
+	"createdatgte": {"srvCreated$gte", "find[srvCreated][$gte]"},
+	"createdatgt":  {"srvCreated$gt", "find[srvCreated][$gt]"},
 
-	"createdatlte": {"created_at$lte", "find[created_at][$lte]", "srvCreated$lte", "find[srvCreated][$lte]"},
-	"createdatlt":  {"created_at$lt", "find[created_at][$lt]", "srvCreated$lt", "find[srvCreated][$lt]"},
+	"createdatlte": {"srvCreated$lte", "find[srvCreated][$lte]"},
+	"createdatlt":  {"srvCreated$lt", "find[srvCreated][$lt]"},
 
 	"updatedgte": {"updated_at$gte", "find[updated_at][$gte]", "srvModified$gte", "find[srvModified][$gte]"},
 	"updatedgt":  {"updated_at$gt", "find[updated_at][$gt]", "srvModified$gt", "find[srvModified][$gt]"},

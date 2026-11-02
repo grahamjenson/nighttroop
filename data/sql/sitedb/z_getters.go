@@ -916,6 +916,46 @@ func (m *DeviceReport) SetPumpChargingState(v *string) {
 	m.PumpChargingState = v
 }
 
+// GetPumpClock returns the PumpClock value.
+func (m DeviceReport) GetPumpClock() *int64 {
+	return m.PumpClock
+}
+
+// SetPumpClock sets the PumpClock value and returns the updated DeviceReport.
+func (m *DeviceReport) SetPumpClock(v *int64) {
+	m.PumpClock = v
+}
+
+// GetPumpManufacturer returns the PumpManufacturer value.
+func (m DeviceReport) GetPumpManufacturer() *string {
+	return m.PumpManufacturer
+}
+
+// SetPumpManufacturer sets the PumpManufacturer value and returns the updated DeviceReport.
+func (m *DeviceReport) SetPumpManufacturer(v *string) {
+	m.PumpManufacturer = v
+}
+
+// GetPumpModel returns the PumpModel value.
+func (m DeviceReport) GetPumpModel() *string {
+	return m.PumpModel
+}
+
+// SetPumpModel sets the PumpModel value and returns the updated DeviceReport.
+func (m *DeviceReport) SetPumpModel(v *string) {
+	m.PumpModel = v
+}
+
+// GetOverrideJson returns the OverrideJson value.
+func (m DeviceReport) GetOverrideJson() *string {
+	return m.OverrideJson
+}
+
+// SetOverrideJson sets the OverrideJson value and returns the updated DeviceReport.
+func (m *DeviceReport) SetOverrideJson(v *string) {
+	m.OverrideJson = v
+}
+
 // GetLoopName returns the LoopName value.
 func (m DeviceReport) GetLoopName() *string {
 	return m.LoopName
@@ -3566,6 +3606,16 @@ func (m *ProfilePreset) SetLoopSettingsJson(v *string) {
 	m.LoopSettingsJson = v
 }
 
+// GetRemoteSettingsJson returns the RemoteSettingsJson value.
+func (m ProfilePreset) GetRemoteSettingsJson() *string {
+	return m.RemoteSettingsJson
+}
+
+// SetRemoteSettingsJson sets the RemoteSettingsJson value and returns the updated ProfilePreset.
+func (m *ProfilePreset) SetRemoteSettingsJson(v *string) {
+	m.RemoteSettingsJson = v
+}
+
 // GetRawJsonData returns the RawJsonData value.
 func (m ProfilePreset) GetRawJsonData() *string {
 	return m.RawJsonData
@@ -5224,6 +5274,46 @@ func (m CreateDeviceReportParams) GetPumpChargingState() *string {
 // SetPumpChargingState sets the PumpChargingState value and returns the updated CreateDeviceReportParams.
 func (m *CreateDeviceReportParams) SetPumpChargingState(v *string) {
 	m.PumpChargingState = v
+}
+
+// GetPumpClock returns the PumpClock value.
+func (m CreateDeviceReportParams) GetPumpClock() *int64 {
+	return m.PumpClock
+}
+
+// SetPumpClock sets the PumpClock value and returns the updated CreateDeviceReportParams.
+func (m *CreateDeviceReportParams) SetPumpClock(v *int64) {
+	m.PumpClock = v
+}
+
+// GetPumpManufacturer returns the PumpManufacturer value.
+func (m CreateDeviceReportParams) GetPumpManufacturer() *string {
+	return m.PumpManufacturer
+}
+
+// SetPumpManufacturer sets the PumpManufacturer value and returns the updated CreateDeviceReportParams.
+func (m *CreateDeviceReportParams) SetPumpManufacturer(v *string) {
+	m.PumpManufacturer = v
+}
+
+// GetPumpModel returns the PumpModel value.
+func (m CreateDeviceReportParams) GetPumpModel() *string {
+	return m.PumpModel
+}
+
+// SetPumpModel sets the PumpModel value and returns the updated CreateDeviceReportParams.
+func (m *CreateDeviceReportParams) SetPumpModel(v *string) {
+	m.PumpModel = v
+}
+
+// GetOverrideJson returns the OverrideJson value.
+func (m CreateDeviceReportParams) GetOverrideJson() *string {
+	return m.OverrideJson
+}
+
+// SetOverrideJson sets the OverrideJson value and returns the updated CreateDeviceReportParams.
+func (m *CreateDeviceReportParams) SetOverrideJson(v *string) {
+	m.OverrideJson = v
 }
 
 // GetLoopName returns the LoopName value.
@@ -13534,6 +13624,16 @@ func (m CreateProfilePresetParams) GetLoopSettingsJson() *string {
 // SetLoopSettingsJson sets the LoopSettingsJson value and returns the updated CreateProfilePresetParams.
 func (m *CreateProfilePresetParams) SetLoopSettingsJson(v *string) {
 	m.LoopSettingsJson = v
+}
+
+// GetRemoteSettingsJson returns the RemoteSettingsJson value.
+func (m CreateProfilePresetParams) GetRemoteSettingsJson() *string {
+	return m.RemoteSettingsJson
+}
+
+// SetRemoteSettingsJson sets the RemoteSettingsJson value and returns the updated CreateProfilePresetParams.
+func (m *CreateProfilePresetParams) SetRemoteSettingsJson(v *string) {
+	m.RemoteSettingsJson = v
 }
 
 // GetOccurredAt returns the OccurredAt value.

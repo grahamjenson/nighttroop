@@ -278,6 +278,10 @@ func RenderTemplate(input string, ctx map[string]any) (string, error) {
 			},
 			"time":  templateTime,
 			"itime": templateITime,
+			// utctime is offset minutes ago in UTC with no zone, as LoopFollow sends, e.g. utctime 60 for an hour ago
+			"utctime": func(offset int) string {
+				return time.Now().UTC().Add(-time.Duration(offset) * time.Minute).Format("2006-01-02T15:04:05")
+			},
 			"date":    func(days int) string { return templateDayTime(days, 0).Format(time.DateOnly) },
 			"daytime": func(days, minutes int) string { return templateDayTime(days, minutes).Format(time.RFC3339) },
 			"dayms":   func(days, minutes int) int64 { return templateDayTime(days, minutes).UnixMilli() },
