@@ -53,6 +53,7 @@ type Treatment struct {
 
 	DurationMinutes        *types.FlexibleInt64 `json:"duration,omitempty"`               // minutes
 	DurationInMilliseconds *types.FlexibleInt64 `json:"durationInMilliseconds,omitempty"` // minutes
+	DurationType           *types.ShortString   `json:"durationType,omitempty"`           // Loop's "indefinite" override
 
 	// Treatment-specific fields
 	Profile             *types.ShortString     `json:"profile,omitempty"`
@@ -189,6 +190,8 @@ const (
 	ProfileSwitch   TreatmentEventType = "Profile Switch"
 	TempBasal       TreatmentEventType = "Temp Basal"
 	TemporaryTarget TreatmentEventType = "Temporary Target"
+	// TemporaryOverride is Loop's override, kept as a temp target with its insulin needs scale factor
+	TemporaryOverride TreatmentEventType = "Temporary Override"
 
 	// Device Events
 	OpenAPSOffline    TreatmentEventType = "OpenAPS Offline"
@@ -247,6 +250,7 @@ var TreatmentEventTypes = []TreatmentEventType{
 	ExternalInsulin,
 	TempBasal,
 	TemporaryTarget,
+	TemporaryOverride,
 	CannulaFill,
 	Prime,
 	ReservoirChange,

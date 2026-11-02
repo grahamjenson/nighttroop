@@ -244,11 +244,10 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - Each site has a Nightscout compatible API at `<site>.ns.<host>` for apps like AAPS, Loop, Trio and xDrip, and
   followers.
 - **v1**: entries, treatments, device statuses, profiles, food and activities, with Nightscout's filters, plus
-  status, versions, verifyauth, slice, count, times and echo.
+  status, versions, verifyauth, slice, count, times and echo, and experiments/test.
 - v1 `experiments/test` is `{"status":"ok"}` for an identity that can upload readings and a 401 for any other, so
-  xDrip4iOS's connection test passes with a PWD phone's token.
+  Loop's and xDrip4iOS's connection tests pass with a PWD phone's token.
 - A v1 search by `find[_id]` that finds nothing, such as a deleted treatment, is an empty list, not a 404.
-- **v2**: authorization (a token for a JWT), properties and summary.
 - **v2**: authorization (a token for a JWT, and a check of one of its permissions), properties and summary.
 - **v3**: create, read, update, patch, delete, search and history of each collection, plus version, status,
   lastModified and settings.
@@ -273,6 +272,15 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   default profile's or profile switch's basal at its start, in the profile's timezone, and is returned with that
   `absolute` and its `percent` as sent.
 - Duplicate uploads are ignored; values far outside real use are refused.
+- A v1 upload of a document with an `_id` replaces the one with that `_id`, or is created with it, as Loop sends an
+  override again with its `_id` when it changes, and deletes it by that `_id`.
+- Loop's `Temporary Override` is kept as a temp target, with its correction range and insulin needs scale factor; an
+  indefinite one lasts a week.
+- An identifier over 36 characters, like an Omnipod dose's `syncIdentifier`, is kept as a hash of it, so two that
+  start the same are not taken as one.
+- v1 `profile/current` is the newest profile set itself, not a list of one, with `enteredBy`, as Loop reads it.
+- A device's Nightscout token is also taken as its SHA1 in the `api-secret` header, as xDrip+ and Loop send it; a
+  password reset stops the old token's SHA1 working.
 - A treatment's `eventTime`, as xDrip4iOS and Nightscout's careportal send it, is its `created_at`; an eventType of
   `Carbs` is a carb correction, and a glucoseType with the reading after a colon, like `Finger: 6.7 mmol/L`, is a
   finger prick.

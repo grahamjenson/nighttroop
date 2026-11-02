@@ -81,6 +81,17 @@
        until it is accepted, so a batch over the 100 record cap never uploads
     1. P4: Only write a treatment's events that changed, rather than every one on each update
     1. P4: Keep when a site's settings last changed, for API v3 lastModified
+    1. P1: Replace a treatment uploaded again rather than ignore it, as Nightscout does: Loop posts a temp basal or
+       bolus again when it ends early, with the same date and `syncIdentifier`, and the first upload's duration and
+       amount are kept ([docs/clients/loop.md](docs/clients/loop.md))
+    1. P2: Keep a Loop device status's `override`, `uploader` and pump `clock`, `pumpID`, `model`, `suspended` and
+       `bolusing`, which followers show; only the loop object, pump battery and reservoir are kept
+    1. P2: Loop remote commands: `POST /api/v2/notifications/loop`, sent to Loop as an Apple push to its profile's
+       `loopSettings.deviceToken`
+    1. P2: The Nightscout API's `sgv` and `mbg` are in the site's units, but NightscoutKit and most followers read them
+       as mg/dL, so on an mmol/L site they read 6.3 as 6.3 mg/dL
+    1. P3: NightscoutKit's `fetchTreatments` drops treatments without a `timestamp`, a bolus without `programmed`
+       and a temp basal without `temp`, which Nighttroop does not return
     1. P2: Nightguard reads `sgv` and `mbg` as mg/dL whatever an entry's `units`, so with mmol/L settings its
        readings are 18 times too low and its low alarms go off; for now its identity must be set to mg/dL
        ([docs/clients/nightguard.md](docs/clients/nightguard.md)). Make that clearer, e.g. a mg/dL Nightscout
@@ -115,9 +126,6 @@
     1. P4: Give back a treatment's `enteredBy` and `uuid` as sent; xDrip+ looks for `enteredBy` starting `xdrip` to
        skip its own, and falls back to matching time and amounts
     1. Trio and iAPS ([docs/clients/trio.md](docs/clients/trio.md)):
-        1. P0: Accept `api-secret` as the SHA1 hex of a device's token, as Trio and iAPS send only that (it is all
-           Nightscout checks), e.g. by keeping an HMAC of each token's SHA1 to look the identity up; until then
-           Trio cannot sign in
         1. P1: Filter v1 treatments on `find[carbs][$exists]` and `find[duration][$exists]`, and on `enteredBy`
            (`find[enteredBy]`, `find[enteredBy][$ne]` and `find[$and][n][enteredBy][$ne]`), together: Trio fails
            to decode a carbs fetch with any treatment without carbs, and once it gets only carbs it would import
@@ -130,6 +138,8 @@
            `find[eventType][$eq]`, and entries' `find[$or]`) is a 405; Trio deletes carbs, insulin and glucose
            this way, and the override before uploading its run, so override runs are never uploaded. It needs
            Trio's `id` kept as the identifier, and must refuse any filter it does not know rather than ignore it
+        1. P3: Keep the device status `pump.clock`, `pump.status`, `pump.bolusIncrement`, the pump battery's
+           voltage and state, and `uploader` (`battery`, `isCharging`) Trio sends, for its followers
         1. P3: Keep the device status `pump.bolusIncrement`, the pump battery's state, and `uploader` (`battery`,
            `isCharging`) Trio sends, for its followers
 
