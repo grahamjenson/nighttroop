@@ -3,6 +3,7 @@ package config
 import (
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -73,6 +74,37 @@ func TestIPLimitersKeyOnIPv6Slash64(t *testing.T) {
 	for name, allow := range limits {
 		for _, test := range tests {
 			require.Equal(t, test.allowed, allow(test.ip), "%s limit for %s", name, test.ip)
+		}
+	}
+}
+
+// Stats counts the limiters kept of each kind, how full the most used is and how many would refuse, without spending any
+func TestRateLimiterStats(t *testing.T) {
+	limiters := newRateLimiters(ServerConfig{
+		MaxSites: 10, MaxIdentitiesPerSite: 10, GlobalRateLimit: 60, GlobalRateBurst: 10,
+		SiteGETPerMinuteLimit: 60, SiteGETPerMinuteBurst: 4,
+	})
+	now := time.Now()
+	for range 4 {
+		require.True(t, limiters.SiteGETLimiter("busy").AllowN(now, 1))
+	}
+	require.True(t, limiters.SiteGETLimiter("quiet").AllowN(now, 1))
+
+	byName := map[string]RateLimiterStats{}
+	for _, s := range limiters.Stats(now) {
+		byName[s.Name] = s
+	}
+	require.Len(t, byName, 14)
+	require.Equal(t, RateLimiterStats{Name: "site_get", Per: "site", PerMinute: 60, Burst: 4, Tracked: 2, Limited: 1, FullestPercent: 100},
+		byName["site_get"], "busy has spent its burst, quiet a quarter")
+	require.Equal(t, RateLimiterStats{Name: "global", Per: "server", PerMinute: 60, Burst: 10, Tracked: 1}, byName["global"])
+	require.Equal(t, RateLimiterStats{Name: "site_post", Per: "site"}, byName["site_post"], "none kept yet")
+
+	// Reading them spent nothing, so a second later busy has one of its 4 back and would not refuse
+	for _, s := range limiters.Stats(now.Add(time.Second)) {
+		if s.Name == "site_get" {
+			require.Zero(t, s.Limited)
+			require.InDelta(t, 75, s.FullestPercent, 0.01)
 		}
 	}
 }

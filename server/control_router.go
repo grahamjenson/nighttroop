@@ -39,6 +39,7 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 		r.Post("/sites/{id}/identities/{identity}/password", (&controlcollections.SitesCollection{}).ResetPasswordHandler)
 		r.Post("/sites/{id}/identities/{identity}/totp", (&controlcollections.SitesCollection{}).ResetTOTPHandler)
 		r.Get("/usage", controlapi.UsageHandler)
+		r.Get("/rate-limits", controlapi.RateLimitsHandler)
 
 		// Not here yet: a site's API use per device and DB table sizes, and managing the control admins themselves,
 		// listing them, resetting another's password or TOTP, changing their role or deleting one (never the one

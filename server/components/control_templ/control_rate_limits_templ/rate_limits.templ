@@ -1,0 +1,88 @@
+package control_rate_limits_templ
+
+import (
+	"fmt"
+	"strconv"
+
+	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/config"
+)
+
+// labels say what each kind of rate limiter limits
+var labels = map[string]string{
+	"global": "Every request", "global_ip": "Requests from an IP", "site_create": "Sites created",
+	"site_create_ip": "Sites created from an IP", "login_name": "Logins to a name", "login_ip": "Logins from an IP",
+	"site_unauth": "Requests to a site before signing in", "site_get": "A site's reads", "site_post": "A site's writes",
+	"identity_get": "An identity's reads", "identity_post": "An identity's writes", "site_update_sync": "A site's sync changes",
+	"site_identity_create": "A site's identities created", "site_download": "A site's downloads",
+}
+
+// pers say what one of each kind of rate limiter is kept for
+var pers = map[string]string{"server": "Server", "ip": "IP", "site": "Site", "identity": "Identity", "login": "Login name",
+	"site_ip": "IP on a site"}
+
+// cells are a kind of rate limiter's row: what it limits, per what, its rate and burst, how many are kept, how full the
+// most used is and how many would refuse
+func cells(s config.RateLimiterStats) []string {
+	return []string{labels[s.Name], pers[s.Per], strconv.FormatFloat(s.PerMinute, 'f', -1, 64), fmt.Sprint(s.Burst),
+		fmt.Sprint(s.Tracked), fmt.Sprintf("%.0f%%", s.FullestPercent), fmt.Sprint(s.Limited)}
+}
+
+// cellClass right aligns the numbers, and colours the last two amber once the most used limiter has spent half its
+// burst, and red while any would refuse
+func cellClass(s config.RateLimiterStats, i int) string {
+	switch {
+	case i < 2:
+		return ""
+	case i < 5:
+		return "text-right tabular-nums"
+	case s.Limited > 0:
+		return "text-right tabular-nums font-semibold text-red-700"
+	case s.FullestPercent >= 50:
+		return "text-right tabular-nums font-semibold text-amber-800"
+	}
+	return "text-right tabular-nums"
+}
+
+// RateLimits shows each kind of rate limiter, its rate and burst, and how close the ones kept are to refusing
+templ RateLimits(stats []config.RateLimiterStats) {
+	<div
+		id="control--rate-limits"
+		class="mx-auto max-w-5xl space-y-6"
+		hx-get="/rate-limits"
+		hx-trigger="every 10s"
+		hx-select="#control--rate-limits"
+		hx-target="this"
+		hx-swap="outerHTML"
+	>
+		@heading.Page("Rate Limits") {
+			How close the server's rate limiters are to refusing requests, checked every 10 seconds. One is kept for each
+			server, IP, site or identity, and refills at its rate up to its burst.
+		}
+		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
+			@table.Table(table.Props{ID: "controlRateLimitsTable", Class: "rounded-lg border border-gray-200"}) {
+				@table.Header() {
+					@table.Row() {
+						for i, head := range []string{"Limiter", "Per", "Rate / min", "Burst", "Kept", "Fullest", "Refusing"} {
+							@table.Head(table.HeadProps{Class: cellClass(config.RateLimiterStats{}, i)}) {
+								{ head }
+							}
+						}
+					}
+				}
+				@table.Body() {
+					for _, s := range stats {
+						@table.Row(table.RowProps{ID: "control--rate-limits--" + s.Name}) {
+							for i, cell := range cells(s) {
+								@table.Cell(table.CellProps{Class: cellClass(s, i)}) {
+									{ cell }
+								}
+							}
+						}
+					}
+				}
+			}
+		</section>
+	</div>
+}

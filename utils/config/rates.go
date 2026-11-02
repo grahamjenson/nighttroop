@@ -6,6 +6,7 @@ import (
 	"math"
 	"net/netip"
 	"strconv"
+	"time"
 
 	lru "github.com/hashicorp/golang-lru/v2"
 	"golang.org/x/time/rate"
@@ -165,4 +166,60 @@ func (r *RateLimiters) SiteLoginAllow(subdomain string, ip string) (bool, int) {
 	remaining := int(math.Min(userTokens, ipTokens))
 
 	return userLimiter.Allow() && ipLimiter.Allow(), remaining
+}
+
+// RateLimiterStats is how close one kind of rate limiter is to refusing. One is kept for each Per: the server, an IP, a
+// site, an identity, a login name or an IP on a site; each refills at PerMinute up to Burst.
+type RateLimiterStats struct {
+	Name      string  `json:"name"`
+	Per       string  `json:"per"`
+	PerMinute float64 `json:"per_minute"`
+	Burst     int     `json:"burst"`
+	// Tracked is how many are kept, Limited how many would refuse a request now, and FullestPercent how much of its
+	// burst the most used one has spent
+	Tracked        int     `json:"tracked"`
+	Limited        int     `json:"limited"`
+	FullestPercent float64 `json:"fullest_percent"`
+}
+
+// Stats are how close each kind of rate limiter is to refusing at now, read without spending any
+func (r *RateLimiters) Stats(now time.Time) []RateLimiterStats {
+	c := r.serverConfig
+	login := float64(c.SiteLoginPerMinuteLimit)
+	kinds := []struct {
+		name, per string
+		perMinute float64
+		burst     int
+		limiters  []*rate.Limiter
+	}{
+		{"global", "server", float64(c.GlobalRateLimit), c.GlobalRateBurst, []*rate.Limiter{r.GlobalRateLimiter}},
+		{"global_ip", "ip", float64(c.GlobalIPPerMinuteLimit), c.GlobalIPPerMinuteBurst, r.globalIPRateLimiters.Values()},
+		{"site_create", "server", float64(c.SiteCreateGlobalPerMinuteLimit), c.SiteCreateGlobalPerMinuteBurst, []*rate.Limiter{r.SiteCreateLimiter}},
+		{"site_create_ip", "ip", c.SiteCreateIPPerMinuteLimit, c.SiteCreateIPPerMinuteBurst, r.siteCreateIpLimiter.Values()},
+		{"login_name", "login", login, c.SiteLoginPerMinuteBurst, r.userLoginRateLimiters.Values()},
+		{"login_ip", "ip", login, c.SiteLoginPerMinuteBurst, r.ipLoginRateLimiters.Values()},
+		{"site_unauth", "site_ip", float64(c.SiteUnauthPerMinuteLimit), c.SiteUnauthPerMinuteBurst, r.siteUnauthRateLimiters.Values()},
+		{"site_get", "site", float64(c.SiteGETPerMinuteLimit), c.SiteGETPerMinuteBurst, r.siteGETRateLimiters.Values()},
+		{"site_post", "site", float64(c.SitePOSTPerMinuteLimit), c.SitePOSTPerMinuteBurst, r.sitePOSTRateLimiters.Values()},
+		{"identity_get", "identity", float64(c.SiteGETPerMinuteLimit), c.SiteGETPerMinuteBurst, r.identityGETRateLimiters.Values()},
+		{"identity_post", "identity", float64(c.SitePOSTPerMinuteLimit), c.SitePOSTPerMinuteBurst, r.identityPOSTRateLimiters.Values()},
+		{"site_update_sync", "site", float64(c.SiteUpdateSyncPerMinuteLimit), c.SiteUpdateSyncPerMinuteBurst, r.siteUpdateSyncRateLimiters.Values()},
+		{"site_identity_create", "site", float64(c.SiteIdentityCreatePerMinuteLimit), c.SiteIdentityCreatePerMinuteBurst, r.siteIdentityCreateRateLimiters.Values()},
+		{"site_download", "site", float64(c.SiteDownloadPerMinuteLimit), c.SiteDownloadPerMinuteBurst, r.siteDownloadRateLimiters.Values()},
+	}
+	stats := make([]RateLimiterStats, 0, len(kinds))
+	for _, kind := range kinds {
+		s := RateLimiterStats{Name: kind.name, Per: kind.per, PerMinute: kind.perMinute, Burst: kind.burst, Tracked: len(kind.limiters)}
+		for _, limiter := range kind.limiters {
+			tokens := limiter.TokensAt(now)
+			if tokens < 1 {
+				s.Limited++
+			}
+			if kind.burst > 0 {
+				s.FullestPercent = max(s.FullestPercent, min(100, 100*(1-tokens/float64(kind.burst))))
+			}
+		}
+		stats = append(stats, s)
+	}
+	return stats
 }
