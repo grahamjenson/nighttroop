@@ -82,6 +82,20 @@
        until it is accepted, so a batch over the 100 record cap never uploads
     1. P4: Only write a treatment's events that changed, rather than every one on each update
     1. P4: Keep when a site's settings last changed, for API v3 lastModified
+    1. xDrip4iOS ([docs/clients/xdrip4ios.md](docs/clients/xdrip4ios.md)):
+        1. P1: The tester guide says to set xDrip4iOS's identity's units to mg/dL, as its follower reads `sgv` as
+           mg/dL whatever the `units`
+        1. P2: Return a BG Check's `glucose` as xDrip4iOS can match it: it reads it as mg/dL only when `units` is
+           exactly `mg/dl`, and as mmol/L otherwise, and matches an upload by its exact value, so Nighttroop's
+           `mg/dL` or rounded mmol/L makes it upload the BG check again each sync and add a copy in the app
+        1. P2: Delete entries by a query, `DELETE /api/v1/entries.json?find[type]=sgv&find[date][$gte]=..&find[date][$lte]=..`
+           and `find[date][$in][]=..`, which xDrip4iOS sends when a reading is deleted or readings are rebuilt
+        1. P3: A reading sent again with the same date and device, and no `_id`, replaces the stored one, as
+           xDrip4iOS's smoothing and rebuilds expect, rather than being ignored as a duplicate
+        1. P3: xDrip4iOS's history import asks for 2000 entries a day and takes fewer as the whole day, so a day of
+           readings a minute apart loses its oldest past Nighttroop's 1000
+        1. P4: `GET /api/v1/status.json` without credentials, which xDrip4iOS's follower service status reads, is a
+           401, so it shows a fetch error; answering it would show which sites exist
     1. P1: API v1 entries give `sgv` in the identity's or site's units, but Nightscout always gives mg/dL and the
        xDrip+ follower reads it as a whole number of mg/dL, so on an mmol/L site it shows 6.5 mmol/L as 6 mg/dL. Give
        mg/dL to v1 clients, or have device identities default to mg/dL ([docs/clients/xdrip.md](docs/clients/xdrip.md))
