@@ -155,6 +155,7 @@ var (
 		complete: func(source nightscoutmodels.Treatment, target *sitedb.GlucoseReading) {
 			target.ReadingType = "sgv"
 			target.Units = source.Units
+			target.SentUnits = source.SentUnits
 
 			if source.Glucose != nil {
 				target.Mgdl = target.Units.ToMGDL(float64(*source.Glucose))
@@ -171,7 +172,7 @@ var (
 				}
 			}
 		},
-		toTreatment: nightscoutmodels.UpdateGlucoseReadingToTreatment, mergeInto: nightscoutmodels.UpdateToGlucoseReading,
+		toTreatment: glucoseReadingToTreatment, mergeInto: nightscoutmodels.UpdateToGlucoseReading,
 		toCreate: nightscoutmodels.GlucoseReadingCreate, create: (*sitedb.Queries).CreateGlucoseReading,
 		toUpdate: nightscoutmodels.GlucoseReadingUpdate, update: (*sitedb.Queries).UpdateGlucoseReading,
 		delete: (*sitedb.Queries).HardDeleteGlucoseReading,
@@ -466,4 +467,19 @@ func percentRate(ctx context.Context, q *sitedb.Queries, treatment nightscoutmod
 		tempBasal.Absolute = *rate
 	}
 	return nil
+}
+
+// glucoseReadingToTreatment is a treatment's reading with its glucose in the units it was sent in, else the
+// identity's, so a client gets back what it sent
+func glucoseReadingToTreatment(source *sitedb.GlucoseReading, siteContext *httputils.SiteContext, target *nightscoutmodels.Treatment) {
+	nightscoutmodels.UpdateGlucoseReadingToTreatment(source, siteContext, target)
+	if source == nil {
+		return
+	}
+	units := source.Units
+	if units == nil {
+		units = siteContext.GetSettings().GetUnits()
+	}
+	target.Units = units
+	target.Glucose = new(types.FlexibleFloat64(units.FromMGDL(source.Mgdl)))
 }

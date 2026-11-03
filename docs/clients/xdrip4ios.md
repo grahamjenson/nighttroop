@@ -17,7 +17,7 @@ profile and the latest device statuses, to show a loop's status. It uses only RE
   Nighttroop takes only as the SHA1 of a device's token (#512), so the token works here too and anything else is a 401.
 - **Units**: set the token's identity's units to mg/dL. The follower reads `sgv` as mg/dL whatever the `units`, and
   Nighttroop returns readings in the identity's (then the site's) units, so on an mmol/L site 6.5 mmol/L is read as
-  6.5 mg/dL, and a BG check it uploaded is matched only in mg/dL (see Treatments). xDrip4iOS is not one of Add Device's clients, which set mg/dL (#524), so add it as Other and an admin sets
+  6.5 mg/dL. xDrip4iOS is not one of Add Device's clients, which set mg/dL (#524), so add it as Other and an admin sets
   its units from its row on Users & Devices (#523).
 
 ## Authentication
@@ -113,9 +113,8 @@ The response isn't read. Nighttroop keeps its `_id`, and a retry is ignored as a
    with `duration`, `duration` of an Exercise, or the event type), and `matchesTreatmentEntry` matches one to an upload
    by `created_at` to the millisecond, type, value and notes, to learn its `_id`. A treatment not matched is uploaded
    again next sync. `glucose` is read as mg/dL only when `units` is exactly `mg/dl`, and as mmol/L otherwise.
-   Nighttroop writes a treatment's `units` as Nightscout does, `mg/dl` or `mmol`, so with the identity in mg/dL a BG
-   check comes back as the mg/dL sent and is matched. In mmol/L it comes back rounded to 4 places, which is not the
-   mg/dL sent, so it is uploaded again each sync and the app adds a copy: set the identity to mg/dL.
+   Nighttroop gives a BG check back in the units it was sent in, with `units` written as sent, so it comes back as the
+   `mg/dl` value xDrip4iOS uploaded, whatever the identity's units, and is matched.
 2. **Uploads edits** (`updateTreatmentToNightscout`): `PUT /api/v1/treatments`, one treatment, with its `_id` in the
    body.
 3. **Downloads** (`getLatestTreatmentsNSResponses`): `GET /api/v1/treatments?find[created_at][$gte]=<24 hours ago>`,
@@ -195,7 +194,7 @@ more than was asked.
 | Upload treatments with `eventTime`, matched by `created_at` | Fixed in #513 (`created_at` was the time received) | `treatments.http` |
 | Upload `Carbs` | Fixed in #513 (was a 400) | `treatments.http` |
 | Upload a BG check from an mmol/L user (`Finger: 6.7 mmol/L`) | Fixed in #513 (was a 400) | `treatments.http` |
-| BG check matched and downloaded with the same value | Fixed (`units` was `mg/dL`), with the identity in mg/dL; in mmol/L it is uploaded again each sync (TODO P1) | `treatments.http` |
+| BG check matched and downloaded with the same value | Works: given back as sent, in any identity's units (`units` was `mg/dL`, or the value rounded mmol/L) | `treatments.http` |
 | Update a treatment with `PUT` | Works | `treatments.http` |
 | Download the last 24 hours of treatments | Works | `treatments.http` |
 | `find[_id]` of a deleted treatment is `[]` | Fixed in #513 (was a 404) | `treatments.http`, `tests/socket/nightscout/db_writes.sio` |

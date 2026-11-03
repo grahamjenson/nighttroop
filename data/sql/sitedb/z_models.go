@@ -261,6 +261,7 @@ type GlucoseReading struct {
 	Mgdl                  float64
 	ReadingType           string
 	Units                 *consts.Units
+	SentUnits             *string
 	MeasurementMethod     *string
 	Delta                 *float64
 	Direction             *string
@@ -289,6 +290,7 @@ type GlucoseReadingsVw struct {
 	Mgdl                  *float64
 	ReadingType           *string
 	Units                 *consts.Units
+	SentUnits             *string
 	MeasurementMethod     *string
 	Delta                 *float64
 	Direction             *string

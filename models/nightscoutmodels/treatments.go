@@ -74,6 +74,8 @@ type Treatment struct {
 	InsulinNeedsScaleFactor *types.FlexibleFloat64   `json:"insulinNeedsScaleFactor,omitempty"`
 
 	Units *consts.Units `json:"units,omitempty"`
+	// SentUnits are the units as the client wrote them, e.g. mg/dl, given back as sent; Units is what they mean
+	SentUnits *string `json:"-"`
 
 	SensorCode    *types.ShortString `json:"sensorCode,omitempty"`
 	TransmitterID *types.ShortString `json:"transmitterId,omitempty"`
@@ -108,13 +110,13 @@ type Treatment struct {
 	RawJsonData string `json:"-"`
 }
 
-// MarshalJSON writes units as Nightscout does, as xDrip4iOS reads a BG check's glucose as mg/dL only when its units
-// are exactly mg/dl, and AAPS knows only mg/dl and mmol; any spelling is read
+// MarshalJSON writes units as they were sent, e.g. mg/dl, as xDrip4iOS reads a BG check's glucose as mg/dL only when
+// its units are exactly mg/dl; ones not sent are written as Nighttroop's units
 func (t Treatment) MarshalJSON() ([]byte, error) {
 	type Alias Treatment
-	var units *string
-	if t.Units != nil {
-		units = new(t.Units.Nightscout())
+	units := t.SentUnits
+	if units == nil {
+		units = t.Units.Stringp()
 	}
 	return json.Marshal(struct {
 		Units *string `json:"units,omitempty"`
@@ -132,6 +134,8 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 		EventTime *types.DateString `json:"eventTime"`
 		// Shadows Timestamp, so a timestamp sent is not read
 		Timestamp json.RawMessage `json:"timestamp"`
+		// Shadows Units, to keep them as sent as well as what they mean
+		Units *string `json:"units"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),
@@ -143,6 +147,17 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 
 	// Raw Value
 	t.RawJsonData = string(data)
+
+	if aux.Units != nil {
+		units, err := consts.ParseUnits(*aux.Units)
+		if err != nil {
+			return err
+		}
+		t.Units = &units
+		if len(*aux.Units) <= 16 {
+			t.SentUnits = aux.Units
+		}
+	}
 
 	// Identitfiers
 	if t.Identifier == nil {

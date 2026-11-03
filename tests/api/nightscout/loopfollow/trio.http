@@ -103,7 +103,7 @@ NAME treatments
 GET http://{{ site }}/api/v1/treatments.json?token={{ token }}&find[created_at][$gte]={{ utctime 1440 }}&find[created_at][$lte]={{ utctime -360 }}&count=5000
 ASSERT_STATUS 200
 ASSERT_LENGTH 7 "@"
-# BGCheck.swift: glucose as Double, in its units
+# BGCheck.swift: glucose as Double, in its units, given back as Trio sent them
 ASSERT_EQUALS "BG Check" "@0.eventType"
 ASSERT_EQUALS 135 "@0.glucose"
 ASSERT_EQUALS "mg/dl" "@0.units"

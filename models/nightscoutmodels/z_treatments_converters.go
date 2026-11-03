@@ -527,17 +527,21 @@ func GlucoseReadingCreate(source sitedb.GlucoseReading, context ConverterContext
 	sitedbCreateGlucoseReadingParams.Mgdl = source.Mgdl
 	sitedbCreateGlucoseReadingParams.ReadingType = source.ReadingType
 	sitedbCreateGlucoseReadingParams.Units = UnitsToUnits(source.Units)
+	if source.SentUnits != nil {
+		xstring := *source.SentUnits
+		sitedbCreateGlucoseReadingParams.SentUnits = &xstring
+	}
 	if source.MeasurementMethod != nil {
-		xstring := *source.MeasurementMethod
-		sitedbCreateGlucoseReadingParams.MeasurementMethod = &xstring
+		xstring2 := *source.MeasurementMethod
+		sitedbCreateGlucoseReadingParams.MeasurementMethod = &xstring2
 	}
 	if source.Delta != nil {
 		xfloat64 := *source.Delta
 		sitedbCreateGlucoseReadingParams.Delta = &xfloat64
 	}
 	if source.Direction != nil {
-		xstring2 := *source.Direction
-		sitedbCreateGlucoseReadingParams.Direction = &xstring2
+		xstring3 := *source.Direction
+		sitedbCreateGlucoseReadingParams.Direction = &xstring3
 	}
 	if source.Noise != nil {
 		xfloat642 := *source.Noise
@@ -556,12 +560,12 @@ func GlucoseReadingCreate(source sitedb.GlucoseReading, context ConverterContext
 		sitedbCreateGlucoseReadingParams.Rssi = &xfloat645
 	}
 	if source.Notes != nil {
-		xstring3 := *source.Notes
-		sitedbCreateGlucoseReadingParams.Notes = &xstring3
+		xstring4 := *source.Notes
+		sitedbCreateGlucoseReadingParams.Notes = &xstring4
 	}
 	if source.Reason != nil {
-		xstring4 := *source.Reason
-		sitedbCreateGlucoseReadingParams.Reason = &xstring4
+		xstring5 := *source.Reason
+		sitedbCreateGlucoseReadingParams.Reason = &xstring5
 	}
 	if source.UtcOffsetMinutes != nil {
 		xint64 := *source.UtcOffsetMinutes
@@ -569,16 +573,16 @@ func GlucoseReadingCreate(source sitedb.GlucoseReading, context ConverterContext
 	}
 	sitedbCreateGlucoseReadingParams.OccurredAt = source.OccurredAt
 	if source.RawJsonData != nil {
-		xstring5 := *source.RawJsonData
-		sitedbCreateGlucoseReadingParams.RawJsonData = &xstring5
+		xstring6 := *source.RawJsonData
+		sitedbCreateGlucoseReadingParams.RawJsonData = &xstring6
 	}
 	if source.CreatedByAppName != nil {
-		xstring6 := *source.CreatedByAppName
-		sitedbCreateGlucoseReadingParams.CreatedByAppName = &xstring6
+		xstring7 := *source.CreatedByAppName
+		sitedbCreateGlucoseReadingParams.CreatedByAppName = &xstring7
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring7 := *source.CreatedByDeviceName
-		sitedbCreateGlucoseReadingParams.CreatedByDeviceName = &xstring7
+		xstring8 := *source.CreatedByDeviceName
+		sitedbCreateGlucoseReadingParams.CreatedByDeviceName = &xstring8
 	}
 	sitedbCreateGlucoseReadingParams.CreatedByIdentityName = AssignCreatedByName(context)
 	sitedbCreateGlucoseReadingParams.CreatedByIdentityID = AssignCreatedByID(context)
@@ -953,17 +957,21 @@ func PartialTreatmentToFoodIntake(source Treatment) sitedb.FoodIntake {
 func PartialTreatmentToGlucoseReading(source Treatment) sitedb.GlucoseReading {
 	var sitedbGlucoseReading sitedb.GlucoseReading
 	sitedbGlucoseReading.Units = UnitsToUnits(source.Units)
+	if source.SentUnits != nil {
+		xstring := *source.SentUnits
+		sitedbGlucoseReading.SentUnits = &xstring
+	}
 	if source.GlucoseType != nil {
-		xstring := string(*source.GlucoseType)
-		sitedbGlucoseReading.MeasurementMethod = &xstring
+		xstring2 := string(*source.GlucoseType)
+		sitedbGlucoseReading.MeasurementMethod = &xstring2
 	}
 	if source.Notes != nil {
-		xstring2 := SanitizedStringToString(*source.Notes)
-		sitedbGlucoseReading.Notes = &xstring2
+		xstring3 := SanitizedStringToString(*source.Notes)
+		sitedbGlucoseReading.Notes = &xstring3
 	}
 	if source.Reason != nil {
-		xstring3 := ShortStringToString(*source.Reason)
-		sitedbGlucoseReading.Reason = &xstring3
+		xstring4 := ShortStringToString(*source.Reason)
+		sitedbGlucoseReading.Reason = &xstring4
 	}
 	pString := source.RawJsonData
 	sitedbGlucoseReading.RawJsonData = &pString
@@ -973,12 +981,12 @@ func PartialTreatmentToGlucoseReading(source Treatment) sitedb.GlucoseReading {
 	}
 	sitedbGlucoseReading.OccurredAt = OrNow(source.Date)
 	if source.App != nil {
-		xstring4 := ShortStringToString(*source.App)
-		sitedbGlucoseReading.CreatedByAppName = &xstring4
+		xstring5 := ShortStringToString(*source.App)
+		sitedbGlucoseReading.CreatedByAppName = &xstring5
 	}
 	if source.Device != nil {
-		xstring5 := ShortStringToString(*source.Device)
-		sitedbGlucoseReading.CreatedByDeviceName = &xstring5
+		xstring6 := ShortStringToString(*source.Device)
+		sitedbGlucoseReading.CreatedByDeviceName = &xstring6
 	}
 	return sitedbGlucoseReading
 }
@@ -1619,12 +1627,15 @@ func UpdateFoodIntakeToTreatment(source *sitedb.FoodIntake, target *Treatment) {
 }
 func UpdateGlucoseReadingToTreatment(source *sitedb.GlucoseReading, context *httputils.SiteContext, target *Treatment) {
 	if source != nil {
-		target.Glucose = GlucoseReadingTypeToValue(source.Mgdl, context)
 		if source.MeasurementMethod != nil {
 			nightscoutmodelsGlucoseType := GlucoseType(*source.MeasurementMethod)
 			target.GlucoseType = &nightscoutmodelsGlucoseType
 		}
-		target.Units = UnitsToValue(source.Mgdl, context)
+		target.Units = UnitsToUnits(source.Units)
+		if source.SentUnits != nil {
+			xstring := *source.SentUnits
+			target.SentUnits = &xstring
+		}
 		if source.Notes != nil {
 			typesSanitizedString := types.SanitizedString(*source.Notes)
 			target.Notes = &typesSanitizedString
@@ -2127,17 +2138,21 @@ func UpdateToGlucoseReading(source *sitedb.GlucoseReading, target *sitedb.Glucos
 		target.Mgdl = source.Mgdl
 		target.ReadingType = source.ReadingType
 		target.Units = UnitsToUnits(source.Units)
+		if source.SentUnits != nil {
+			xstring := *source.SentUnits
+			target.SentUnits = &xstring
+		}
 		if source.MeasurementMethod != nil {
-			xstring := *source.MeasurementMethod
-			target.MeasurementMethod = &xstring
+			xstring2 := *source.MeasurementMethod
+			target.MeasurementMethod = &xstring2
 		}
 		if source.Delta != nil {
 			xfloat64 := *source.Delta
 			target.Delta = &xfloat64
 		}
 		if source.Direction != nil {
-			xstring2 := *source.Direction
-			target.Direction = &xstring2
+			xstring3 := *source.Direction
+			target.Direction = &xstring3
 		}
 		if source.Noise != nil {
 			xfloat642 := *source.Noise
@@ -2156,16 +2171,16 @@ func UpdateToGlucoseReading(source *sitedb.GlucoseReading, target *sitedb.Glucos
 			target.Rssi = &xfloat645
 		}
 		if source.Notes != nil {
-			xstring3 := *source.Notes
-			target.Notes = &xstring3
+			xstring4 := *source.Notes
+			target.Notes = &xstring4
 		}
 		if source.Reason != nil {
-			xstring4 := *source.Reason
-			target.Reason = &xstring4
+			xstring5 := *source.Reason
+			target.Reason = &xstring5
 		}
 		if source.RawJsonData != nil {
-			xstring5 := *source.RawJsonData
-			target.RawJsonData = &xstring5
+			xstring6 := *source.RawJsonData
+			target.RawJsonData = &xstring6
 		}
 		if source.DeletedAt != nil {
 			xint64 := *source.DeletedAt
@@ -2179,20 +2194,20 @@ func UpdateToGlucoseReading(source *sitedb.GlucoseReading, target *sitedb.Glucos
 		target.CreatedAt = source.CreatedAt
 		target.UpdatedAt = source.UpdatedAt
 		if source.CreatedByAppName != nil {
-			xstring6 := *source.CreatedByAppName
-			target.CreatedByAppName = &xstring6
+			xstring7 := *source.CreatedByAppName
+			target.CreatedByAppName = &xstring7
 		}
 		if source.CreatedByDeviceName != nil {
-			xstring7 := *source.CreatedByDeviceName
-			target.CreatedByDeviceName = &xstring7
+			xstring8 := *source.CreatedByDeviceName
+			target.CreatedByDeviceName = &xstring8
 		}
 		if source.UpdatedByIdentityID != nil {
 			xint643 := *source.UpdatedByIdentityID
 			target.UpdatedByIdentityID = &xint643
 		}
 		if source.UpdatedByIdentityName != nil {
-			xstring8 := *source.UpdatedByIdentityName
-			target.UpdatedByIdentityName = &xstring8
+			xstring9 := *source.UpdatedByIdentityName
+			target.UpdatedByIdentityName = &xstring9
 		}
 		if source.CreatedByIdentityID != nil {
 			xint644 := *source.CreatedByIdentityID

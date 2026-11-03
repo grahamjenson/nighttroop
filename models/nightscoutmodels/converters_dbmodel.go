@@ -160,12 +160,6 @@ func MBGGlucoseReadingTypeToValue(source *sitedb.GlucoseReading, siteContext *ht
 }
 
 // goverter:context siteContext
-func GlucoseReadingTypeToValue(mgdl float64, siteContext *httputils.SiteContext) *types.FlexibleFloat64 {
-	_, value := GetUnitsAndValue(mgdl, siteContext)
-	return value
-}
-
-// goverter:context siteContext
 func UnitsToValue(mgdl float64, siteContext *httputils.SiteContext) *consts.Units {
 	units, _ := GetUnitsAndValue(mgdl, siteContext)
 	return units

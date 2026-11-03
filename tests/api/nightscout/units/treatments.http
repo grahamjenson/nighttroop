@@ -99,7 +99,6 @@ ASSERT_CONTAINS "\"value\":5.55" "@result.profileJson"
 
 ### Glucose Settings
 
-# Units are taken in any spelling, and written as Nightscout writes them, mg/dl or mmol
 NAME create_mmol_bg_check
 POST http://{{ site }}/api/v3/treatments
 H Authorization: Bearer {{ jwt }}
@@ -112,7 +111,7 @@ B {
     "created_at": "{{ time 1 }}"
  }
 ASSERT_STATUS 201
-ASSERT_EQUALS "mmol" "@result.units"
+ASSERT_EQUALS "mmol/L" "@result.units"
 ASSERT_EQUALS 7 "@result.glucose"
 
 NAME create_mgdl_bg_check
@@ -127,8 +126,9 @@ B {
     "created_at": "{{ time 2 }}"
  }
 ASSERT_STATUS 201
-ASSERT_EQUALS "mmol" "@result.units"
-ASSERT_EQUALS 3.885 "@result.glucose"
+# A BG check comes back in the units it was sent in, written as sent, whatever the identity's units
+ASSERT_EQUALS "mg/dL" "@result.units"
+ASSERT_EQUALS 70 "@result.glucose"
 
 NAME create_unlabeled_mmol_bg_check
 POST http://{{ site }}/api/v3/treatments
@@ -141,7 +141,7 @@ B {
     "created_at": "{{ time 3 }}"
  }
 ASSERT_STATUS 201
-ASSERT_EQUALS "mmol" "@result.units"
+ASSERT_EQUALS "mmol/L" "@result.units"
 ASSERT_EQUALS 7 "@result.glucose"
 
 NAME create_unlabeled_mgdl_bg_check
@@ -155,7 +155,7 @@ B {
     "created_at": "{{ time 4 }}"
  }
 ASSERT_STATUS 201
-ASSERT_EQUALS "mmol" "@result.units"
+ASSERT_EQUALS "mmol/L" "@result.units"
 ASSERT_EQUALS 3.885 "@result.glucose"
 
 # GET
@@ -201,32 +201,33 @@ ASSERT_CONTAINS "\"value\":70" "@result.profileJson"
 ASSERT_CONTAINS "\"value\":100" "@result.profileJson"
 
 
-# Glucose 
+# Glucose: a BG check sent with units comes back in them, written as sent, whatever the identity's units; one sent
+# without is in the identity's
 
 NAME get_glucose_reading_mmol
 GET http://{{ site }}/api/v3/treatments/{{ dig "create_mmol_bg_check.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_EQUALS "mg/dl" "@result.units"
-ASSERT_EQUALS 126.126 "@result.glucose"
+ASSERT_EQUALS "mmol/L" "@result.units"
+ASSERT_EQUALS 7 "@result.glucose"
 
 NAME get_glucose_reading_mgdl
 GET http://{{ site }}/api/v3/treatments/{{ dig "create_mgdl_bg_check.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_EQUALS "mg/dl" "@result.units"
+ASSERT_EQUALS "mg/dL" "@result.units"
 ASSERT_EQUALS 70 "@result.glucose"
 
 NAME get_unlabeled_glucose_reading_mmol
 GET http://{{ site }}/api/v3/treatments/{{ dig "create_unlabeled_mmol_bg_check.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_EQUALS "mg/dl" "@result.units"
+ASSERT_EQUALS "mg/dL" "@result.units"
 ASSERT_EQUALS 126.126 "@result.glucose"
 
 NAME get_unlabeled_glucose_reading_mgdl
 GET http://{{ site }}/api/v3/treatments/{{ dig "create_unlabeled_mgdl_bg_check.result.identifier" }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_EQUALS "mg/dl" "@result.units"
+ASSERT_EQUALS "mg/dL" "@result.units"
 ASSERT_EQUALS 70 "@result.glucose"

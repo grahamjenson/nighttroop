@@ -2256,6 +2256,16 @@ func (m *GlucoseReading) SetUnits(v *consts.Units) {
 	m.Units = v
 }
 
+// GetSentUnits returns the SentUnits value.
+func (m GlucoseReading) GetSentUnits() *string {
+	return m.SentUnits
+}
+
+// SetSentUnits sets the SentUnits value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetSentUnits(v *string) {
+	m.SentUnits = v
+}
+
 // GetMeasurementMethod returns the MeasurementMethod value.
 func (m GlucoseReading) GetMeasurementMethod() *string {
 	return m.MeasurementMethod
@@ -2504,6 +2514,16 @@ func (m GlucoseReadingsVw) GetUnits() *consts.Units {
 // SetUnits sets the Units value and returns the updated GlucoseReadingsVw.
 func (m *GlucoseReadingsVw) SetUnits(v *consts.Units) {
 	m.Units = v
+}
+
+// GetSentUnits returns the SentUnits value.
+func (m GlucoseReadingsVw) GetSentUnits() *string {
+	return m.SentUnits
+}
+
+// SetSentUnits sets the SentUnits value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetSentUnits(v *string) {
+	m.SentUnits = v
 }
 
 // GetMeasurementMethod returns the MeasurementMethod value.
@@ -8014,6 +8034,16 @@ func (m CreateGlucoseReadingParams) GetUnits() *consts.Units {
 // SetUnits sets the Units value and returns the updated CreateGlucoseReadingParams.
 func (m *CreateGlucoseReadingParams) SetUnits(v *consts.Units) {
 	m.Units = v
+}
+
+// GetSentUnits returns the SentUnits value.
+func (m CreateGlucoseReadingParams) GetSentUnits() *string {
+	return m.SentUnits
+}
+
+// SetSentUnits sets the SentUnits value and returns the updated CreateGlucoseReadingParams.
+func (m *CreateGlucoseReadingParams) SetSentUnits(v *string) {
+	m.SentUnits = v
 }
 
 // GetMeasurementMethod returns the MeasurementMethod value.

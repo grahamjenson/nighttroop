@@ -68,10 +68,10 @@ func StatusJSON(store nsutils.Store) http.HandlerFunc {
 // Status is the v1 status payload, which a websocket authorize asking for status gets too. Its settings.units is
 // the settings' units written as Nightscout writes them, "mg/dl" or "mmol", which followers like Nightguard read
 func Status(ctx context.Context) map[string]any {
-	units := consts.UnitsMGDL
+	units := "mg/dl"
 	siteContext := httputils.GetSiteContext(ctx)
-	if siteContext != nil {
-		units = *siteContext.GetSettings().GetUnits()
+	if siteContext != nil && *siteContext.GetSettings().GetUnits() == consts.UnitsMMOLL {
+		units = "mmol"
 	}
 	status := map[string]any{
 		"status":            "ok",
@@ -79,7 +79,7 @@ func Status(ctx context.Context) map[string]any {
 		"careportalEnabled": true,
 		"settings": map[string]any{
 			"enable": false,
-			"units":  units.Nightscout(),
+			"units":  units,
 		},
 	}
 	if siteContext != nil && siteContext.IdentityModel != nil && siteContext.Config != nil {

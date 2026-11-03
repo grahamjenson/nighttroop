@@ -63,8 +63,7 @@
     1. P2: A control page to add, list and delete push credentials for every site, with BDD tests
 1. Nightscout API:
     1. P1: Nightscout clients (AAPS, Loop, LoopFollow, xDrip4iOS, Nightguard, the xDrip+ follower) read `sgv` and
-       `mbg`, and AAPS its temp targets and profiles, as mg/dL whatever the `units`, and xDrip4iOS matches a BG
-       check it uploaded by its exact mg/dL, so in mmol/L uploads it again each sync, but the API gives them in the
+       `mbg`, and AAPS its temp targets and profiles, as mg/dL whatever the `units`, but the API gives them in the
        identity's units, then the site's. A device added for a client in Add Device is in mg/dL (#524) and an admin
        can set any identity's units (#523), but the site's first PWD phone, a device added as Other, and LoopFollow,
        xDrip4iOS and an AAPSClient follower, which are not in Add Device's clients, still get the site's units. Add

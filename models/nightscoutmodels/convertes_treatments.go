@@ -226,8 +226,6 @@ type TreatmentsEvenetConverter interface {
 	// goverter:ignore CreatedAt
 	//
 	// goverter:ignoreMissing
-	// goverter:map Mgdl Glucose    | GlucoseReadingTypeToValue
-	// goverter:map Mgdl Units      | UnitsToValue
 	// goverter:map MeasurementMethod GlucoseType
 	UpdateGlucoseReadingToTreatment(source *sitedb.GlucoseReading, siteContext *httputils.SiteContext, target *Treatment)
 

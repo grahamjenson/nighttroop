@@ -111,8 +111,7 @@ ASSERT_EQUALS 45 "@5.duration"
 ASSERT_EQUALS 120 "@4.glucose"
 ASSERT_EQUALS "mg/dl" "@4.units"
 
-# In mmol/L a BG check comes back rounded, with units mmol, which xDrip4iOS reads as mmol/L, so 6.66 is not the
-# 120 mg/dL it uploaded and it uploads it again (see the docs)
+# In mmol/L a BG check still comes back as it was sent, 120 mg/dl, so xDrip4iOS matches it and does not upload it again
 NAME xdrip4ios_units_mmol
 PATCH http://{{ site }}/api/v3/settings/units
 H Authorization: Bearer {{ jwt }}
@@ -122,8 +121,8 @@ ASSERT_STATUS 200
 NAME xdrip4ios_download_bg_check_mmol
 GET http://{{ site }}/api/v1/treatments?find[_id]={{ dig "xdrip4ios_upload_treatments.3._id" }}&count=1&token={{ token }}
 ASSERT_STATUS 200
-ASSERT_EQUALS 6.66 "@0.glucose"
-ASSERT_EQUALS "mmol" "@0.units"
+ASSERT_EQUALS 120 "@0.glucose"
+ASSERT_EQUALS "mg/dl" "@0.units"
 
 #####
 # 5. Delete a treatment by its _id, then 4. find it gone

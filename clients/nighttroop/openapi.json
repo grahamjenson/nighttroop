@@ -539,7 +539,7 @@
           "created_at": { "type": "string" },
           "sgv": { "type": "number", "format": "double", "description": "In units" },
           "mbg": { "type": "number", "format": "double", "description": "In units" },
-          "units": { "type": "string", "description": "The units of sgv and mbg, or of a treatment's glucose, the identity's; a treatment's are written as Nightscout writes them, mg/dl or mmol" },
+          "units": { "type": "string", "description": "The units of sgv and mbg, the identity's; a treatment's glucose is in the units it was sent in, written as sent, else the identity's" },
           "direction": { "type": "string" },
           "insulin": { "type": "number", "format": "double" },
           "carbs": { "type": "number", "format": "double" },
