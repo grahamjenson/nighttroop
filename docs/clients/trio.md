@@ -123,10 +123,9 @@ arrives):
 - `uploader`: `battery`, `isCharging`
 
 Works, and `openaps` comes back whole. The pump comes back with its `clock`, `reservoir`, `battery` (`percent`,
-`voltage`), `status` (`status`, `timestamp`) and `bolusIncrement` while the JSON it was sent in is kept (then only
-the clock, battery percent and reservoir), and `uploader` with only its `battery`. The battery's `string` and
-`display`, the status's `bolusing` and `suspended`, and the uploader's `isCharging` are dropped; Trio does not read
-them back, but its followers do (TODO P3).
+`voltage`, `string`, `display`), `status` (`status`, `bolusing`, `suspended`, `timestamp`) and `bolusIncrement`
+while the JSON it was sent in is kept (then only the clock, battery percent and reservoir), and `uploader` with its
+`battery` and `isCharging`. Trio does not read them back, but its followers do.
 
 ### Profile: `POST /api/v1/profile.json`
 
@@ -244,7 +243,7 @@ Trio and iAPS use no Socket.IO, and no API v2 or v3.
 | Carbs, sensor start, note uploads | Works |
 | Temp target and override upload | Works |
 | Temp target and override run (same `created_at`, new duration) | Not supported, TODO P1 |
-| Device status upload | Works; pump `bolusing`, `suspended` and `uploader.isCharging` dropped, TODO P3 |
+| Device status upload | Works; pump `status.bolusing`, `suspended`, battery `string`, `display` and `uploader.isCharging` fixed in this PR |
 | Profile upload | Works |
 | Profile import | Works (`enteredBy`, #509) |
 | Carbs fetch (`find[carbs][$exists]`, `enteredBy` `$ne`) | Not supported, TODO P1 |

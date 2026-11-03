@@ -151,10 +151,10 @@ for each bolus decision, and each automatic dose decision with it:
   `duration` (seconds left, not minutes), `multiplier`
 
 Loop does not read any of it back. Nighttroop keeps the `loop` object, the `override` (#516), the pump's battery,
-reservoir, `clock`, `manufacturer` and `model` (#516) and the uploader's battery. The pump's other fields, such as
-`pumpID`, `suspended` and `bolusing`, are given back from the device status as it was sent until that is cleared
-when the record is old (#514). The uploader's `name`, `timestamp` and `isCharging`, and the pump's
-`reservoir_display_override` and `reservoir_level_override`, are dropped.
+reservoir, `clock`, `manufacturer` and `model` (#516) and the uploader's battery and `isCharging`. The pump's other
+fields, such as `pumpID`, `suspended` and `bolusing`, and the uploader's `name` and `timestamp`, are given back from
+the device status as it was sent until that is cleared when the record is old (#514). The pump's
+`reservoir_display_override` and `reservoir_level_override` are dropped.
 
 ## Profile: `POST /api/v1/profile` and `GET /api/v1/profile/current`
 
@@ -218,7 +218,7 @@ NightscoutKit has reads that Loop does not call, but other apps built on it may:
 | `POST /api/v1/devicestatus`, `loop` object | Works |
 | Device status `override`, uploader battery, pump `clock`, `manufacturer`, `model` | Works since #516 |
 | Device status pump `pumpID`, `suspended`, `bolusing` | Works since #514 while the status as sent is kept; dropped once it is cleared |
-| Device status uploader `name`, `timestamp`, `isCharging` | Not supported: dropped (Loop does not read them back) |
+| Device status uploader `name`, `timestamp`, `isCharging` | Fixed in this PR: `isCharging` is kept, `name` and `timestamp` while the status as sent is kept |
 | `POST /api/v1/profile`, `loopSettings` and `store` | Works |
 | `GET /api/v1/profile/current` as one object with `enteredBy` | Works since #515 (was an array, and had no `enteredBy`) |
 | NightscoutKit `find[created_at]` on treatments and device statuses | Works since #514 (it was the upload time, not when they happened) |

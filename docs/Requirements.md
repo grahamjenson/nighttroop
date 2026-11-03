@@ -307,6 +307,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - A Nightscout treatment comes back with its `created_at` as `timestamp`, a bolus with its insulin as `programmed`,
   and a temp basal with `temp` `absolute`, as Loop's NightscoutKit drops treatments without them; a `timestamp`
   sent is not read.
+- A device status keeps its uploader's `isCharging`, and, while the status as sent is kept, its uploader's `name` and
+  `timestamp` and Trio's pump `status.bolusing`, `status.suspended` and battery `string` and `display`.
 - A profile keeps Trio's remote control settings (bundle, device token, APNS environment, team and expiry) and its
   override presets, for LoopFollow's Trio Remote Control.
 - A v1 upload of a document with an `_id` replaces the one with that `_id`, or is created with it, as Loop sends an

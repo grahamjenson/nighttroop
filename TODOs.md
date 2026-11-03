@@ -91,8 +91,8 @@
        amount are kept. Trio's ended temp targets and overrides, and xDrip4iOS's re-sent readings, need the same
     1. P2: Loop remote commands: `POST /api/v2/notifications/loop`, sent to Loop as an Apple push to its profile's
        `loopSettings.deviceToken`
-    1. P4: Keep a Loop device status's uploader `name`, `timestamp` and `isCharging`; the pump's `pumpID`,
-       `suspended` and `bolusing` are given back only while the status as sent is kept
+    1. P4: Keep a Loop device status's pump `pumpID`, `suspended` and `bolusing`, and its uploader `name` and
+       `timestamp`, once the status as sent is cleared; they are given back only while it is kept
 1. xDrip4iOS ([docs/clients/xdrip4ios.md](docs/clients/xdrip4ios.md)):
     1. P2: Return a BG Check's `glucose` as xDrip4iOS can match it: it reads it as mg/dL only when `units` is
        exactly `mg/dl`, and as mmol/L otherwise, and matches an upload by its exact value, so Nighttroop's
@@ -123,8 +123,6 @@
        `find[eventType][$eq]`, and entries' `find[$or]`) is a 405; Trio deletes carbs, insulin and glucose
        this way, and the override before uploading its run, so override runs are never uploaded. It needs
        Trio's `id` kept as the identifier, and must refuse any filter it does not know rather than ignore it
-    1. P3: Keep the device status `status.bolusing` and `suspended`, the pump battery's `string` and `display`, and
-       `uploader.isCharging` Trio sends, for its followers
 
 ## Bugs
 
