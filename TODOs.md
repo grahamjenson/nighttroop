@@ -105,8 +105,6 @@
     1. P2: An unknown `find[...]` filter is ignored, so the search gives everything, and a client that deletes the
        first match (as xDrip+ does by `find[uuid]`) deletes the wrong document. Give nothing for a filter on an unknown
        field
-    1. P4: Give back a treatment's `uuid` as sent; xDrip+ matches its own by `enteredBy` starting `xdrip`, kept, and
-       falls back to matching time and amounts
 
 ## Bugs
 

@@ -1055,6 +1055,7 @@ func QueryValueToQuery(source QueryValues) Query {
 		xbool3 := typesFlexibleBoolToBool(*source.Envelope)
 		nsqueryQuery.Envelope = &xbool3
 	}
+	nsqueryQuery.UnknownFilter = GetUnknownFilter(source)
 	return nsqueryQuery
 }
 func typesDateIntToInt64(source types.DateInt) int64 {

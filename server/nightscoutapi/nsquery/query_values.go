@@ -282,6 +282,19 @@ func ParseQueryValues(values url.Values) (QueryValues, error) {
 	return qv, nil
 }
 
+// HasUnknownFilter is whether the query has a filter, a v1 find[...] or a v3 field$operator, on a field or with an
+// operator Nighttroop does not know. It matches nothing, as in Nightscout, so a client that takes the first match, as
+// xDrip+ does to delete a treatment, does not get another. Any other parameter, as xDrip+'s rr, is not a filter.
+func (q *QueryValues) HasUnknownFilter() bool {
+	for key := range q.Other {
+		isFilter := strings.HasPrefix(key, "find[") || strings.Contains(key, "$")
+		if isFilter {
+			return true
+		}
+	}
+	return false
+}
+
 func (q *QueryValues) SortOrder() *QuerySort {
 	if q == nil {
 		return nil

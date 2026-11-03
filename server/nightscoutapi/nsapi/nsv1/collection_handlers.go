@@ -28,7 +28,8 @@ func Search(store nsutils.Store) http.HandlerFunc {
 			}
 		}
 		records := []nsutils.Document{}
-		if query.IDEq != nil {
+		// A filter Nighttroop does not know is searched, which gives nothing
+		if query.IDEq != nil && !query.UnknownFilter {
 			record, err := store.Get(r.Context(), collection, *query.IDEq, query)
 			// A find[_id] that matches nothing is an empty search, as in Nightscout; xDrip4iOS reads it as deleted
 			if err != nil && err.Status == http.StatusNotFound && identifierOrType == "" {

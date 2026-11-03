@@ -216,19 +216,11 @@ func (i *IdentifierString) UnmarshalJSON(data []byte) error {
 		str = fmt.Sprintf("%v", v)
 	}
 
-	// 36 fits a UUID, the same limit as identifiers in the URL and the id columns. A longer one, like a Loop dose's
-	// syncIdentifier, is hashed rather than cut, as two that start the same, Omnipod's temp basals of the same rate,
-	// would otherwise be the same identifier
-	if len(str) > 36 {
-		sum := sha256.Sum256([]byte(str))
-		str = hex.EncodeToString(sum[:])[:36]
-	}
-
 	if len(str) == 0 {
 		return fmt.Errorf("identifier string cannot be empty")
 	}
 
-	*i = IdentifierString(str)
+	*i = *ToIdentifierString(str)
 	return nil
 }
 
@@ -239,4 +231,18 @@ func IdentifierFromJSON(data json.RawMessage) *IdentifierString {
 		return nil
 	}
 	return &id
+}
+
+// ToIdentifierString is str as an identifier, or nil when it is empty. 36 fits a UUID, the same limit as identifiers in
+// the URL and the id columns. A longer one, like a Loop dose's syncIdentifier, is hashed rather than cut, as two that
+// start the same, Omnipod's temp basals of the same rate, would otherwise be the same identifier
+func ToIdentifierString(str string) *IdentifierString {
+	if len(str) == 0 {
+		return nil
+	}
+	if len(str) > 36 {
+		sum := sha256.Sum256([]byte(str))
+		str = hex.EncodeToString(sum[:])[:36]
+	}
+	return new(IdentifierString(str))
 }
