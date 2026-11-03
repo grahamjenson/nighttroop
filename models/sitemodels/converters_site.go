@@ -1,6 +1,7 @@
 package sitemodels
 
 import (
+	"encoding/json"
 	"time"
 
 	"nighttroop.t1d.nz/data/sql/controldb"
@@ -57,6 +58,23 @@ type SiteConverter interface {
 	// goverter:context siteContext
 	// goverter:map SiteID | ContextSiteID
 	IdentityToDelete(source *UserIdentity, siteContext *httputils.SiteContext) controldb.DeleteSiteIdentityParams
+
+	///////
+	// PUSH CREDENTIALS
+	///////
+
+	// goverter:map AppsJson Apps | JSONStrings
+	// goverter:map BundleIdsJson BundleIDs | JSONStringsPtr
+	// goverter:ignore Secret
+	PushCredentialFromDB(source *controldb.PushCredential) *PushCredential
+
+	// goverter:context siteContext
+	// goverter:map SiteID | ContextSiteIDPtr
+	// goverter:map Apps AppsJson | StringsJSON
+	// goverter:map BundleIDs BundleIdsJson | StringsJSONPtr
+	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
+	// goverter:ignore SecretEnc
+	PushCredentialToCreate(source *PushCredential, siteContext *httputils.SiteContext) controldb.CreatePushCredentialParams
 
 	///////
 	// GLUCOSE READINGS
@@ -371,6 +389,43 @@ func RecentClients(id int64, siteContext *httputils.SiteContext) []authclients.C
 // goverter:context siteContext
 func ContextSiteID(siteContext *httputils.SiteContext) string {
 	return siteContext.SiteID
+}
+
+// goverter:context siteContext
+func ContextSiteIDPtr(siteContext *httputils.SiteContext) *string {
+	return &siteContext.SiteID
+}
+
+// JSONStrings is a JSON list of strings, empty when it cannot be read
+func JSONStrings(list string) []string {
+	strings := []string{}
+	_ = json.Unmarshal([]byte(list), &strings)
+	return strings
+}
+
+// JSONStringsPtr is JSONStrings, nil when there is no list
+func JSONStringsPtr(list *string) []string {
+	if list == nil {
+		return nil
+	}
+	return JSONStrings(*list)
+}
+
+// StringsJSON is strings as a JSON list
+func StringsJSON(strings []string) string {
+	if strings == nil {
+		strings = []string{}
+	}
+	b, _ := json.Marshal(strings)
+	return string(b)
+}
+
+// StringsJSONPtr is StringsJSON, nil when there are none
+func StringsJSONPtr(strings []string) *string {
+	if len(strings) == 0 {
+		return nil
+	}
+	return new(StringsJSON(strings))
 }
 
 // goverter:context siteContext

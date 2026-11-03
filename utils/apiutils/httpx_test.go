@@ -2,6 +2,7 @@ package apiutils_test
 
 import (
 	"net/url"
+	"reflect"
 	"testing"
 	"time"
 
@@ -53,5 +54,22 @@ func TestFormToMapDateTime(t *testing.T) {
 	doc := apiutils.FormToMap[model](url.Values{"occurred_at": {"2026-10-31T09:30"}}, auckland)
 	if want := time.Date(2026, 10, 31, 9, 30, 0, 0, auckland).UnixMilli(); doc["occurred_at"] != want {
 		t.Fatalf("got %v, want %v", doc["occurred_at"], want)
+	}
+}
+
+// A list is every value sent, each split at commas and spaces, as checkboxes ticked or a text of them; one not sent is
+// left out
+func TestFormToMapList(t *testing.T) {
+	type model struct {
+		Apps      []string `json:"apps"`
+		BundleIDs []string `json:"bundle_ids"`
+		Tags      []string `json:"tags"`
+	}
+	doc := apiutils.FormToMap[model](url.Values{"apps": {"loop", "trio"}, "bundle_ids": {"a.b, c.d  e.f,"}}, time.UTC)
+	if !reflect.DeepEqual(doc["apps"], []string{"loop", "trio"}) || !reflect.DeepEqual(doc["bundle_ids"], []string{"a.b", "c.d", "e.f"}) {
+		t.Fatalf("unexpected lists: %v", doc)
+	}
+	if _, sent := doc["tags"]; sent {
+		t.Fatalf("a list not sent was set: %v", doc)
 	}
 }
