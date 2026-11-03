@@ -8256,6 +8256,16 @@ func (m *SearchGlucoseReadingsParams) SetDateLT(v *int64) {
 	m.DateLT = v
 }
 
+// GetDateIn returns the DateIn value.
+func (m SearchGlucoseReadingsParams) GetDateIn() *string {
+	return m.DateIn
+}
+
+// SetDateIn sets the DateIn value and returns the updated SearchGlucoseReadingsParams.
+func (m *SearchGlucoseReadingsParams) SetDateIn(v *string) {
+	m.DateIn = v
+}
+
 // GetCreatedAtGTE returns the CreatedAtGTE value.
 func (m SearchGlucoseReadingsParams) GetCreatedAtGTE() *int64 {
 	return m.CreatedAtGTE
@@ -9614,6 +9624,46 @@ func (m SearchEventGroupsParams) GetDurationLT() *int64 {
 // SetDurationLT sets the DurationLT value and returns the updated SearchEventGroupsParams.
 func (m *SearchEventGroupsParams) SetDurationLT(v *int64) {
 	m.DurationLT = v
+}
+
+// GetCarbsExists returns the CarbsExists value.
+func (m SearchEventGroupsParams) GetCarbsExists() *bool {
+	return m.CarbsExists
+}
+
+// SetCarbsExists sets the CarbsExists value and returns the updated SearchEventGroupsParams.
+func (m *SearchEventGroupsParams) SetCarbsExists(v *bool) {
+	m.CarbsExists = v
+}
+
+// GetDurationExists returns the DurationExists value.
+func (m SearchEventGroupsParams) GetDurationExists() *bool {
+	return m.DurationExists
+}
+
+// SetDurationExists sets the DurationExists value and returns the updated SearchEventGroupsParams.
+func (m *SearchEventGroupsParams) SetDurationExists(v *bool) {
+	m.DurationExists = v
+}
+
+// GetEnteredByEq returns the EnteredByEq value.
+func (m SearchEventGroupsParams) GetEnteredByEq() *string {
+	return m.EnteredByEq
+}
+
+// SetEnteredByEq sets the EnteredByEq value and returns the updated SearchEventGroupsParams.
+func (m *SearchEventGroupsParams) SetEnteredByEq(v *string) {
+	m.EnteredByEq = v
+}
+
+// GetEnteredByNin returns the EnteredByNin value.
+func (m SearchEventGroupsParams) GetEnteredByNin() *string {
+	return m.EnteredByNin
+}
+
+// SetEnteredByNin sets the EnteredByNin value and returns the updated SearchEventGroupsParams.
+func (m *SearchEventGroupsParams) SetEnteredByNin(v *string) {
+	m.EnteredByNin = v
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.

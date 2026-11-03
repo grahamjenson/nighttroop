@@ -161,9 +161,17 @@ and asked again. Its decoding is lenient.
 
 ### Deleting and rewriting readings (master)
 
-When the user deletes a reading or smooths or rebuilds readings: `DELETE /api/v1/entries.json?find[type]=sgv` with
-`find[date][$gte]` and `find[date][$lte]`, or with up to 50 `find[date][$in][]`, reading `n`, `deletedCount` or
-`result.n`; then the new values are `POST`ed to `/api/v1/entries` without `_id`, to replace the stored ones.
+When the user deletes a reading (`deleteBgReadingFromNightscout`): `DELETE /api/v1/entries.json?find[type]=sgv` with
+`find[date][$gte]` and `find[date][$lte]`, reading `n`, `deletedCount` or `result.n`.
+
+When the user smooths or rebuilds readings (`replaceBgReadingsInNightscout`): the readings a rebuild hides are deleted
+with up to 50 `find[date][$in][]` each, then the new values are `POST`ed to `/api/v1/entries` as uploaded, but without
+`_id`, relying on Nightscout's upsert on `sysTime` and `type` to replace the stored ones. Nighttroop gives the stored
+reading of that date, type and device the new values, and leaves one sent again with the same values as it is.
+
+Nighttroop soft deletes the readings a delete finds, at most 1000 a request, and returns `deletedCount`. It takes only
+these filters (and `token`): any other, or none on the date, is a 400, so a filter it does not understand never deletes
+more than was asked.
 
 ## Quirks
 
@@ -179,7 +187,7 @@ When the user deletes a reading or smooths or rebuilds readings: `DELETE /api/v1
 | Token in the query, or in `api-secret` for the Test button | Works | `auth.http` |
 | API_SECRET's SHA1 in `api-secret` | Works when the API_SECRET is the token (#512); any other secret is a 401 | `auth.http`, `tests/api/nightscout/xdrip/` |
 | `GET /api/v1/experiments/test` | Fixed in #513 (was a 400) | `auth.http` |
-| `GET /api/v1/status.json` without credentials | Not supported, a 401 (TODO P4) | |
+| `GET /api/v1/status.json` without credentials | Won't fix: a 401, as from a Nightscout with `AUTH_DEFAULT_ROLES=denied`, so the follower service status shows a fetch error; a 200 would make LoopFollow connect without a token | `auth.http` |
 | Upload readings, and the same batch again | Works | `uploader.http` |
 | Upload calibrations (`cal` and `mbg`) | Fixed in #512 (`cal` failed the batch) | `uploader.http` |
 | Uploader battery in `uploader.battery` | Fixed in #512 (was dropped) | `uploader.http` |
@@ -196,5 +204,5 @@ When the user deletes a reading or smooths or rebuilds readings: `DELETE /api/v1
 | Profile | Works | `follower.http` |
 | Device status | Works | `follower.http` |
 | History import | Works, but a day with over 1000 readings loses its oldest, as a search gives at most 1000 by design | |
-| Delete readings by a query | Not supported (TODO P2) | |
-| Rewrite readings by posting them again | Not supported, the stored ones are kept (TODO P1) | |
+| Delete readings by a query | Works: soft deleted, at most 1000 a request (it was a 405) | `deletes.http` |
+| Rewrite readings by posting them again | Works: the stored reading takes the new values (it was kept as it was) | `rewrite.http` |

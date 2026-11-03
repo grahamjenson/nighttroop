@@ -269,9 +269,14 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - v1 `experiments/test` is `{"status":"ok"}` for an identity that can upload readings and a 401 for any other, so
   Loop's and xDrip4iOS's connection tests pass with a PWD phone's token.
 - A v1 search by `find[_id]` that finds nothing, such as a deleted treatment, is an empty list, not a 404.
+- A v1 `DELETE /api/v1/entries.json` with `find[type]` and `find[date][$gte]`, `find[date][$lte]` or
+  `find[date][$in][]`, as xDrip4iOS deletes readings, soft deletes the entries found, at most 1000 each time, saying
+  how many in `deletedCount`; any other filter, or none on the date, is a 400, and it needs a token that can delete.
 - **v2**: authorization (a token for a JWT, and a check of one of its permissions), properties and summary.
 - **v3**: create, read, update, patch, delete, search and history of each collection, plus version, status,
   lastModified and settings.
+- A v3 replace or patch with `If-Unmodified-Since` of a document changed in a later second is refused with a 412 and
+  changes nothing, checked in the same transaction as the change, so a client cannot overwrite a change it has not seen.
 - The v3 status shows what the token may do to each collection, e.g. `crud` for an uploader and `r` for a read only
   token, so apps like AAPS only upload with a token that may write.
 - A v3 history includes deleted documents, with `isValid` false, so apps learn of deletions; a search leaves them
@@ -301,6 +306,9 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   from the default profile's or profile switch's basal at its start, in the profile's timezone, so changed, and it is
   returned with that `absolute`.
 - Duplicate uploads are ignored; values far outside real use are refused.
+- An entry uploaded without an `_id` with the date, type and device of one stored takes its new value, direction and
+  raw values, as xDrip4iOS smooths readings, and followers get it as changed; one sent with the same values changes
+  nothing, not even when it was last modified.
 - A `created_at` filter given a time with no zone, as LoopFollow sends it, reads it as UTC.
 - Loop's and Trio's Suspend Pump and Resume Pump treatments are kept.
 - An activity's `type`, as xDrip+ sends it, is its activity type, a heart rate's `bpm` its heart rate and a motion's
@@ -338,8 +346,12 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   entries is left out and the readings with it kept; an uploader battery that is not a number is left out of its
   device status; `uploader.battery` is the uploader's battery; and a treatment is found by its `uuid` (`find[uuid]`), sent as the `_id` or as xDrip+ makes its `_id`.
 - Trio's and iAPS's `SMB` and `External Insulin` treatments are kept as insulin doses, with their event type.
+- xDrip+'s `Sensor Stop` treatments are kept as a site or sensor change, with their event type, so the treatments it
+  uploads after one are kept too; the site can add a Sensor Stop change and a Sensor Stop event group.
 - A profile has `enteredBy`, the identity that uploaded it, as Trio needs it to import one.
 - A treatment's `enteredBy` comes back as sent, e.g. `loop://iPhone` or `Trio`, else the identity that uploaded it.
+- Treatments can be found by whether they have `carbs` or a `duration` (`find[carbs][$exists]`), by `enteredBy`, and
+  without some `enteredBy`s (`find[enteredBy][$ne]`, repeated or under `find[$and][n]`), as Trio and iAPS fetch them.
 - A create that names its `identifier` keeps it, and only a document with that identifier is its duplicate.
 - A create naming a deleted document's identifier, or a replace of one, replaces it whatever changed, as Juggluco
   changes a treatment by deleting it and sending it again.

@@ -13,9 +13,11 @@ import (
 type ToSearchParams interface {
 
 	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:map DateIn | QueryStringArrayToString
 	// goverter:map TypeIn | QueryStringArrayToString
 	// goverter:map TypeNin | QueryStringArrayToString
 	// goverter:map IDIn | QueryStringArrayToString
+	// goverter:map EnteredByNin | QueryStringArrayToString
 	// goverter:map Fields | QueryStringArrayToArray
 	// goverter:map . HasFilters | GetHasFilters
 	// goverter:map . Skip | GetSkipInt64

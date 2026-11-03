@@ -391,6 +391,22 @@ func EventGroupSearch(source Query) sitedb.SearchEventGroupsParams {
 		xint6433 := *source.DurationLT
 		sitedbSearchEventGroupsParams.DurationLT = &xint6433
 	}
+	if source.CarbsExists != nil {
+		xbool := *source.CarbsExists
+		sitedbSearchEventGroupsParams.CarbsExists = &xbool
+	}
+	if source.DurationExists != nil {
+		xbool2 := *source.DurationExists
+		sitedbSearchEventGroupsParams.DurationExists = &xbool2
+	}
+	if source.EnteredByEq != nil {
+		xstring10 := *source.EnteredByEq
+		sitedbSearchEventGroupsParams.EnteredByEq = &xstring10
+	}
+	if source.EnteredByNin != nil {
+		xstring11 := *source.EnteredByNin
+		sitedbSearchEventGroupsParams.EnteredByNin = &xstring11
+	}
 	sitedbSearchEventGroupsParams.IncludeDeleted = source.IncludeDeleted
 	sitedbSearchEventGroupsParams.Skip = source.Skip
 	sitedbSearchEventGroupsParams.Limit = source.Limit
@@ -668,6 +684,10 @@ func GlucoseSearch(source Query) sitedb.SearchGlucoseReadingsParams {
 		xint645 := *source.DateLT
 		sitedbSearchGlucoseReadingsParams.DateLT = &xint645
 	}
+	if source.DateIn != nil {
+		xstring := *source.DateIn
+		sitedbSearchGlucoseReadingsParams.DateIn = &xstring
+	}
 	if source.CreatedAtGTE != nil {
 		xint646 := *source.CreatedAtGTE
 		sitedbSearchGlucoseReadingsParams.CreatedAtGTE = &xint646
@@ -701,36 +721,36 @@ func GlucoseSearch(source Query) sitedb.SearchGlucoseReadingsParams {
 		sitedbSearchGlucoseReadingsParams.UpdatedLT = &xint6413
 	}
 	if source.TypeEq != nil {
-		xstring := *source.TypeEq
-		sitedbSearchGlucoseReadingsParams.TypeEq = &xstring
+		xstring2 := *source.TypeEq
+		sitedbSearchGlucoseReadingsParams.TypeEq = &xstring2
 	}
 	if source.TypeNeq != nil {
-		xstring2 := *source.TypeNeq
-		sitedbSearchGlucoseReadingsParams.TypeNeq = &xstring2
+		xstring3 := *source.TypeNeq
+		sitedbSearchGlucoseReadingsParams.TypeNeq = &xstring3
 	}
 	if source.TypeIn != nil {
-		xstring3 := *source.TypeIn
-		sitedbSearchGlucoseReadingsParams.TypeIn = &xstring3
+		xstring4 := *source.TypeIn
+		sitedbSearchGlucoseReadingsParams.TypeIn = &xstring4
 	}
 	if source.TypeNin != nil {
-		xstring4 := *source.TypeNin
-		sitedbSearchGlucoseReadingsParams.TypeNin = &xstring4
+		xstring5 := *source.TypeNin
+		sitedbSearchGlucoseReadingsParams.TypeNin = &xstring5
 	}
 	if source.IDEq != nil {
-		xstring5 := *source.IDEq
-		sitedbSearchGlucoseReadingsParams.IDEq = &xstring5
+		xstring6 := *source.IDEq
+		sitedbSearchGlucoseReadingsParams.IDEq = &xstring6
 	}
 	if source.IDIn != nil {
-		xstring6 := *source.IDIn
-		sitedbSearchGlucoseReadingsParams.IDIn = &xstring6
+		xstring7 := *source.IDIn
+		sitedbSearchGlucoseReadingsParams.IDIn = &xstring7
 	}
 	if source.DeviceEq != nil {
-		xstring7 := *source.DeviceEq
-		sitedbSearchGlucoseReadingsParams.DeviceEq = &xstring7
+		xstring8 := *source.DeviceEq
+		sitedbSearchGlucoseReadingsParams.DeviceEq = &xstring8
 	}
 	if source.AppEq != nil {
-		xstring8 := *source.AppEq
-		sitedbSearchGlucoseReadingsParams.AppEq = &xstring8
+		xstring9 := *source.AppEq
+		sitedbSearchGlucoseReadingsParams.AppEq = &xstring9
 	}
 	if source.SgvEQ != nil {
 		xint6414 := *source.SgvEQ
@@ -863,6 +883,7 @@ func QueryValueToQuery(source QueryValues) Query {
 		xint645 := typesDateIntToInt64(*source.DateLT)
 		nsqueryQuery.DateLT = &xint645
 	}
+	nsqueryQuery.DateIn = QueryStringArrayToString(source.DateIn)
 	if source.CreatedAtGTE != nil {
 		xint646 := typesDateIntToInt64(*source.CreatedAtGTE)
 		nsqueryQuery.CreatedAtGTE = &xint646
@@ -1011,6 +1032,19 @@ func QueryValueToQuery(source QueryValues) Query {
 		xstring6 := typesShortStringToString(*source.NameEq)
 		nsqueryQuery.NameEq = &xstring6
 	}
+	if source.CarbsExists != nil {
+		xbool := typesFlexibleBoolToBool(*source.CarbsExists)
+		nsqueryQuery.CarbsExists = &xbool
+	}
+	if source.DurationExists != nil {
+		xbool2 := typesFlexibleBoolToBool(*source.DurationExists)
+		nsqueryQuery.DurationExists = &xbool2
+	}
+	if source.EnteredByEq != nil {
+		xstring7 := typesShortStringToString(*source.EnteredByEq)
+		nsqueryQuery.EnteredByEq = &xstring7
+	}
+	nsqueryQuery.EnteredByNin = QueryStringArrayToString(source.EnteredByNin)
 	nsqueryQuery.HasFilters = GetHasFilters(source)
 	if source.SortOrder() != nil {
 		nsqueryQuerySort := QuerySort(*source.SortOrder())
@@ -1018,8 +1052,8 @@ func QueryValueToQuery(source QueryValues) Query {
 	}
 	nsqueryQuery.Fields = QueryStringArrayToArray(source.Fields)
 	if source.Envelope != nil {
-		xbool := typesFlexibleBoolToBool(*source.Envelope)
-		nsqueryQuery.Envelope = &xbool
+		xbool3 := typesFlexibleBoolToBool(*source.Envelope)
+		nsqueryQuery.Envelope = &xbool3
 	}
 	return nsqueryQuery
 }

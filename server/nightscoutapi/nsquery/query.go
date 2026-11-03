@@ -11,6 +11,8 @@ type Query struct {
 	DateEQ  *int64 `json:"date_eq,omitempty"`
 	DateLTE *int64 `json:"date_lte,omitempty"`
 	DateLT  *int64 `json:"date_lt,omitempty"`
+	// DateIn is a JSON array of exact dates
+	DateIn *string `json:"date_in,omitempty"`
 
 	CreatedAtGTE *int64 `json:"created_at_gte,omitempty"`
 	CreatedAtGT  *int64 `json:"created_at_gt,omitempty"`
@@ -76,6 +78,11 @@ type Query struct {
 	DurationLT  *int64 `json:"duration_lt,omitempty"`
 
 	NameEq *string `json:"name_eq,omitempty"`
+
+	CarbsExists    *bool   `json:"carbs_exists,omitempty"`
+	DurationExists *bool   `json:"duration_exists,omitempty"`
+	EnteredByEq    *string `json:"entered_by_eq,omitempty"`
+	EnteredByNin   *string `json:"entered_by_nin,omitempty"`
 
 	// Util Options
 	HasFilters bool       `json:"has_filters,omitempty"`

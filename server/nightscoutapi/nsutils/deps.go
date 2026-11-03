@@ -35,6 +35,9 @@ type Store interface {
 	// DeleteType deletes all records of a given type (type can mean different things to different collections)
 	DeleteType(ctx context.Context, collection Collection, typeString string, permanent bool) (int, *HTTPError)
 
+	// DeleteQuery soft deletes what a search with the query finds, at most a search's worth, and says how many
+	DeleteQuery(ctx context.Context, collection Collection, query nsquery.Query) (int, *HTTPError)
+
 	// Replace
 	// Cant change "app" OR "event_type" fields , need to be passed and you need to check they are the same
 	// need created_at still, as well
@@ -59,6 +62,24 @@ func ParseQuery(values url.Values) (nsquery.Query, *HTTPError) {
 	q := nsquery.QueryValueToQuery(qp)
 
 	return q, nil
+}
+
+// deleteFilters are the query's keys a delete takes, those xDrip4iOS sends to delete readings
+var deleteFilters = map[string]bool{"token": true, "find[type]": true, "find[date][$gte]": true, "find[date][$lte]": true, "find[date][$in][]": true}
+
+// ParseDeleteQuery is the query of a delete, which deletes what a search with it finds. Any other key is refused, as is
+// a query without a date, so a filter not understood is never ignored to delete more than was asked.
+func ParseDeleteQuery(values url.Values) (nsquery.Query, *HTTPError) {
+	for key := range values {
+		if !deleteFilters[key] {
+			return nsquery.Query{}, ErrBadQueryError(key + " cannot be used to delete")
+		}
+	}
+	query, err := ParseQuery(values)
+	if err == nil && query.DateGTE == nil && query.DateLTE == nil && query.DateIn == nil {
+		err = ErrBadQueryError("a delete needs find[date][$gte], find[date][$lte] or find[date][$in][]")
+	}
+	return query, err
 }
 
 // ReadCollectionAndQuery is the request's collection, which its identity must be able to read, and its query.

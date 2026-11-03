@@ -26,6 +26,38 @@ type ControlIdentity struct {
 	DeletedAt             *int64
 }
 
+type PushCredential struct {
+	ID                    int64
+	SiteID                *string
+	Name                  string
+	Provider              consts.PushProvider
+	TeamOrProjectID       string
+	KeyID                 *string
+	SecretEnc             *string
+	AppsJson              string
+	BundleIdsJson         *string
+	CreatedAt             int64
+	UpdatedAt             int64
+	CreatedByIdentityName string
+	DeletedAt             *int64
+}
+
+type PushRegistration struct {
+	ID           int64
+	SiteID       string
+	IdentityID   int64
+	App          consts.PushApp
+	Provider     consts.PushProvider
+	BundleID     string
+	Production   bool
+	TokenEnc     string
+	TokenHash    string
+	CreatedAt    int64
+	UpdatedAt    int64
+	LastPushedAt *int64
+	LastError    *string
+}
+
 type ServerSetting struct {
 	ID                    int64
 	PublicSiteCreation    bool

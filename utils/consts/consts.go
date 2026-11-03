@@ -166,6 +166,27 @@ func NewSyncSourceTypeFromString(s string) (SyncSourceType, error) {
 	}
 }
 
+// PushProvider is the service a push is sent through
+type PushProvider string
+
+const (
+	PushProviderAPNs PushProvider = "apns" // Apple's, to iOS apps
+	PushProviderFCM  PushProvider = "fcm"  // Firebase's, to Android apps
+)
+
+// PushApp is an app pushes can be sent to, which decides what a push to it says
+type PushApp string
+
+const (
+	PushAppLoop       PushApp = "loop"
+	PushAppTrio       PushApp = "trio"
+	PushAppLoopFollow PushApp = "loopfollow"
+	PushAppT1DCarer   PushApp = "t1dcarer"
+)
+
+// PushApps are every app pushes can be sent to
+var PushApps = []PushApp{PushAppLoop, PushAppTrio, PushAppLoopFollow, PushAppT1DCarer}
+
 const PASSWORD_GARBAGE_VALUE = "********"
 
 const DEFAULT_RATE_LIMITING_IDENTITY_NAME = "defaultIdentity"
