@@ -92,7 +92,8 @@
 1. Loop ([docs/clients/loop.md](docs/clients/loop.md)):
     1. P1: Replace a treatment uploaded again rather than ignore it, as Nightscout does: Loop posts a temp basal or
        bolus again when it ends early, with the same date and `syncIdentifier`, and the first upload's duration and
-       amount are kept. Trio's ended temp targets and overrides, and xDrip4iOS's re-sent readings, need the same
+       amount are kept. Trio's ended temp targets and overrides need the same, as entries now have
+       (`CollectionRefresher`)
     1. P2: Loop remote commands: `POST /api/v2/notifications/loop`, sent to Loop as an Apple push to its profile's
        `loopSettings.deviceToken`, once push notifications can be sent
     1. P4: Keep a Loop device status's pump `pumpID`, `suspended` and `bolusing`, and its uploader `name` and
@@ -102,10 +103,6 @@
        exactly `mg/dl`, and as mmol/L otherwise, and matches an upload by its exact value, so Nighttroop's
        `mg/dL` or rounded mmol/L makes it upload the BG check again each sync and add a copy in the app
 1. xDrip+ ([docs/clients/xdrip.md](docs/clients/xdrip.md)):
-    1. P1: Keep xDrip+'s `Sensor Stop` treatments. An unknown eventType is refused, and xDrip+ uploads its treatments
-       one at a time, stops at a refused one and marks them all done, so the treatments queued after a Sensor Stop are
-       never uploaded. Adding the type needs its kinds of event in `sitemodels.EventGroupTypeKinds`, which also adds it to
-       the site's Add Event Group menu, a UI change
     1. P2: An unknown `find[...]` filter is ignored, so the search gives everything, and a client that deletes the
        first match (as xDrip+ does by `find[uuid]`) deletes the wrong document. Give nothing for a filter on an unknown
        field
