@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -71,6 +72,15 @@ func FormToMap[T any](form url.Values, location *time.Location) map[string]any {
 			kind = f.Type.Elem().Kind()
 		}
 		switch kind {
+		case reflect.Slice:
+			// A list is every value sent, such as each checkbox ticked, each split at commas and spaces
+			if values, sent := form[name]; sent && f.Type.Elem().Kind() == reflect.String {
+				list := []string{}
+				for _, value := range values {
+					list = append(list, strings.FieldsFunc(value, func(r rune) bool { return r == ',' || unicode.IsSpace(r) })...)
+				}
+				doc[name] = list
+			}
 		case reflect.Bool:
 			doc[name] = present && (str == "on" || str == "true" || str == "1")
 		case reflect.Int, reflect.Int64, reflect.Float64:

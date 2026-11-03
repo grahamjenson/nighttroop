@@ -248,6 +248,12 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - An admin sets the site's settings; each identity can override them for themselves.
 - An admin can **download** a snapshot of the site's DB.
 - An admin can **delete** the site, after a confirmation, which archives it to S3 and signs everyone out.
+- An admin can add, list and delete the site's **push credentials** on Settings, Push Notifications
+  (`/settings/push-credentials`): an Apple APNs key (team ID, key ID and the `.p8` file pasted in) or a Firebase
+  service account (project ID and its JSON), the apps it pushes to (`loop`, `trio`, `loopfollow`, `t1dcarer`) ticked,
+  and, optionally, the only bundle IDs it pushes to, separated by commas. A key that cannot be read, or an unknown
+  app, is refused with the modal left open; its secret is kept encrypted and never shown or returned; a site has at
+  most 5; only the site's admins can see or delete them, and a delete asks first.
 
 ### Logs
 
@@ -269,6 +275,9 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - v1 `experiments/test` is `{"status":"ok"}` for an identity that can upload readings and a 401 for any other, so
   Loop's and xDrip4iOS's connection tests pass with a PWD phone's token.
 - A v1 search by `find[_id]` that finds nothing, such as a deleted treatment, is an empty list, not a 404.
+- A search with a filter on a field or with an operator Nighttroop does not know, a v1 `find[...]` (e.g.
+  `find[notes]=x`) or a v3 `field$operator` (e.g. `notes$eq=x`), is an empty list, as nothing would match in
+  Nightscout. Any other parameter, such as xDrip+'s `rr`, is not a filter and is left out.
 - A v1 `DELETE /api/v1/entries.json` with `find[type]` and `find[date][$gte]`, `find[date][$lte]` or
   `find[date][$in][]`, as xDrip4iOS deletes readings, soft deletes the entries found, at most 1000 each time, saying
   how many in `deletedCount`; any other filter, or none on the date, is a 400, and it needs a token that can delete.
@@ -350,6 +359,7 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   uploads after one are kept too; the site can add a Sensor Stop change and a Sensor Stop event group.
 - A profile has `enteredBy`, the identity that uploaded it, as Trio needs it to import one.
 - A treatment's `enteredBy` comes back as sent, e.g. `loop://iPhone` or `Trio`, else the identity that uploaded it.
+- A treatment's `uuid` comes back as sent, as xDrip+ matches its own by it; one sent with no `_id` is its identifier.
 - Treatments can be found by whether they have `carbs` or a `duration` (`find[carbs][$exists]`), by `enteredBy`, and
   without some `enteredBy`s (`find[enteredBy][$ne]`, repeated or under `find[$and][n]`), as Trio and iAPS fetch them.
 - A create that names its `identifier` keeps it, and only a document with that identifier is its duplicate.

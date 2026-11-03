@@ -85,6 +85,8 @@ type Treatment struct {
 	Notes     *types.SanitizedString `json:"notes,omitempty"`
 	EnteredBy *types.ShortString     `json:"enteredBy,omitempty"`
 	Reason    *types.ShortString     `json:"reason,omitempty"`
+	// UUID is given back as sent, as xDrip+ matches its own treatments by it
+	UUID *types.ShortString `json:"uuid,omitempty"`
 
 	// Default String Fields
 	Device  *types.ShortString `json:"device,omitempty"`  // Device used for the activity
@@ -126,7 +128,6 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 	aux := struct {
 		LegacyID       *types.IdentifierString `json:"_id"`
 		SyncIdentifier *types.IdentifierString `json:"syncIdentifier"`
-		UUID           *types.IdentifierString `json:"uuid"`
 		// Nightscout stores a careportal's or xDrip4iOS's eventTime as created_at
 		EventTime *types.DateString `json:"eventTime"`
 		// Shadows Timestamp, so a timestamp sent is not read
@@ -150,8 +151,8 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 	if t.Identifier == nil {
 		t.Identifier = aux.SyncIdentifier
 	}
-	if t.Identifier == nil {
-		t.Identifier = aux.UUID
+	if t.Identifier == nil && t.UUID != nil {
+		t.Identifier = types.ToIdentifierString(string(*t.UUID))
 	}
 
 	if aux.EventTime != nil {
