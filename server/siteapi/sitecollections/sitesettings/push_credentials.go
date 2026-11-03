@@ -8,6 +8,7 @@ import (
 	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -78,8 +79,13 @@ func (s *PushCredentialsCollection) CreateRow(ctx context.Context, collectionTx 
 	return sitemodels.PushCredentialFromDB(credential), nil
 }
 
+// NewHTMXResponse is the modal to add a credential in
+func (s *PushCredentialsCollection) NewHTMXResponse() templ.Component {
+	return site_settings_templ.PushCredentialNew()
+}
+
 func (s *PushCredentialsCollection) CreateHTMXResponse(model *sitemodels.PushCredential) templ.Component {
-	return templ.NopComponent
+	return site_settings_templ.PushCredentialRow(model)
 }
 
 // ////
@@ -102,7 +108,7 @@ func (s *PushCredentialsCollection) GetRow(ctx context.Context, collectionTx *si
 }
 
 func (s *PushCredentialsCollection) GetHTMXResponse(model *sitemodels.PushCredential) templ.Component {
-	return templ.NopComponent
+	return site_settings_templ.PushCredentialRow(model)
 }
 
 // ///
@@ -128,7 +134,7 @@ func (s *PushCredentialsCollection) SearchRows(ctx context.Context, collectionTx
 }
 
 func (s *PushCredentialsCollection) SearchHTMXResponse(models []*sitemodels.PushCredential, query *apiutils.Query) templ.Component {
-	return templ.NopComponent
+	return site_settings_templ.PushCredentialsTable(models)
 }
 
 // ///
@@ -150,5 +156,5 @@ func (s *PushCredentialsCollection) DeleteRow(ctx context.Context, collectionTx 
 }
 
 func (s *PushCredentialsCollection) DeleteHTMXResponse(model *sitemodels.PushCredential) templ.Component {
-	return templ.NopComponent
+	return site_settings_templ.PushCredentialDeleted()
 }
