@@ -174,19 +174,6 @@ func (q *Queries) DeleteSitePushCredentials(ctx context.Context, arg DeleteSiteP
 	return err
 }
 
-const deleteSitePushRegistrations = `-- name: DeleteSitePushRegistrations :exec
-DELETE FROM push_registrations WHERE site_id = ?1
-`
-
-type DeleteSitePushRegistrationsParams struct {
-	SiteID string
-}
-
-func (q *Queries) DeleteSitePushRegistrations(ctx context.Context, arg DeleteSitePushRegistrationsParams) error {
-	_, err := q.exec(ctx, q.deleteSitePushRegistrationsStmt, deleteSitePushRegistrations, arg.SiteID)
-	return err
-}
-
 const getPushCredential = `-- name: GetPushCredential :one
 SELECT id, site_id, name, provider, team_or_project_id, key_id, secret_enc, apps_json, bundle_ids_json, created_at, updated_at, created_by_identity_name, deleted_at FROM push_credentials
 WHERE id = ?1 AND site_id IS ?2 AND deleted_at IS NULL

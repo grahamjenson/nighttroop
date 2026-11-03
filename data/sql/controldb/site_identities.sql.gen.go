@@ -193,6 +193,20 @@ func (q *Queries) CreateSiteIdentity(ctx context.Context, arg CreateSiteIdentity
 	return err
 }
 
+const deleteAllSiteIdentities = `-- name: DeleteAllSiteIdentities :exec
+DELETE FROM site_identities WHERE site_id = ?1
+`
+
+type DeleteAllSiteIdentitiesParams struct {
+	SiteID string
+}
+
+// Hard deletes all a site's identities, with their credentials and push registrations, as when it is deleted for good
+func (q *Queries) DeleteAllSiteIdentities(ctx context.Context, arg DeleteAllSiteIdentitiesParams) error {
+	_, err := q.exec(ctx, q.deleteAllSiteIdentitiesStmt, deleteAllSiteIdentities, arg.SiteID)
+	return err
+}
+
 const deleteSiteIdentity = `-- name: DeleteSiteIdentity :exec
 
 DELETE FROM site_identities

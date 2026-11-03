@@ -59,7 +59,6 @@
     1. P2: Send FCM pushes with the service account (an OAuth token from its key, then the v1 send API), as
        `push.Send` does APNs ones
     1. P2: Push alarms to each identity's registered apps when one goes off, through `push.Send`
-    1. P2: Delete a site's push credentials and registrations when the site is deleted
     1. P2: A control page to add, list and delete push credentials for every site, with BDD tests
 1. Nightscout API:
     1. P1: Nightscout clients (AAPS, Loop, LoopFollow, Nightguard, the xDrip+ follower) read `sgv` and `mbg`, and

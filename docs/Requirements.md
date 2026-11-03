@@ -56,6 +56,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   - **archived** once disabled, uploading it to S3 (needs S3);
   - **hydrated** from the archived sites page, bringing it back live;
   - **truncated** when over its DB size limit, clearing old records' raw JSON.
+- A site deleted for good, such as one never used after it was made, has its identities deleted, with their passwords,
+  TOTP secrets and devices' push tokens, and its push credentials' secrets removed; an archived site keeps them, as it
+  can be hydrated.
 
 ### A site's identities
 
