@@ -61,9 +61,6 @@
        history paging (`limit=500`) skip all but the newest 500 when there are more, and its profile history takes
        the oldest store changed rather than the newest. Needs history queries ordered by `updated_at`, not a `CASE`
        in each search's `ORDER BY`, which would stop SQLite reading the newest rows from the index
-    1. P2: A temp basal's `percent` is taken as the percent of the basal, but AAPS sends the change (`rate - 100`,
-       so -50 is half, -100 a zero temp) with the rate in U/hr; its negative percents are refused with a 400, which
-       AAPS drops for good (docs/clients/aaps.md). Decide whether AAPS's percent is read as a change
     1. P2: Keep the fields AAPS's followers need: an effective profile switch's `original*` fields (else it is read
        as a Note), a running mode's `mode`, `autoForced`, `reasons` and `originalDuration`, a temp basal's `type`
        (e.g. `PUMP_SUSPEND`), and a calibration's `isCalibration` and `sensorMgdlAtPairing`

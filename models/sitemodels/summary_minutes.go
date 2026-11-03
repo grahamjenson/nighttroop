@@ -60,7 +60,7 @@ func (p *profile) at(schedule []*SiteScheduleValue, ms int64) *float64 {
 // default profile as of that minute, overridden by a profile switch, overridden by a temp target or temp basal.
 // Defaults and switches are oldest first. A switch lasts its duration, or until the next one when it has none, and
 // one that ends hands back to the last switch without a duration. A newer temp target or temp basal replaces an older
-// one, and a temp basal's percent changes the basal by that percent.
+// one, and a temp basal's percent changes the basal by that percent, so -50 is half of it.
 func SummaryMinutes(since, until int64, units *consts.Units, location *time.Location, defaults []*sitedb.ProfilePreset, switches []*sitedb.ProfileSwitch, targets []*SiteTempTarget, basals []*SiteTempBasal) []SummaryMinute {
 	var defaultProfiles, switchProfiles []*profile
 	for _, d := range defaults {
@@ -142,7 +142,7 @@ func SummaryMinutes(since, until int64, units *consts.Units, location *time.Loca
 			case basal.Absolute != nil:
 				minute.Basal = new(*basal.Absolute)
 			case basal.Percent != nil && minute.Basal != nil:
-				minute.Basal = new(*minute.Basal * *basal.Percent / 100)
+				minute.Basal = new(*minute.Basal * (100 + *basal.Percent) / 100)
 			}
 		}
 		minutes = append(minutes, minute)
@@ -158,12 +158,13 @@ func fromMgdl(units *consts.Units, mgdl *float64) *float64 {
 	return new(units.FromMGDL(*mgdl))
 }
 
-// PercentBasal is the rate in U/hr, to 3 places, of a temp basal of percent starting at ms: percent of the profiles'
-// basal then, with a switch's percent and timeshift, so 50 is half of it. It is nil when no profile has a basal then. Defaults and switches are oldest first.
+// PercentBasal is the rate in U/hr, to 3 places, of a temp basal of percent starting at ms, as Nightscout reads one:
+// the profiles' basal then, with a switch's percent and timeshift, changed by percent, so -50 is half of it. It is nil
+// when no profile has a basal then. Defaults and switches are oldest first.
 func PercentBasal(ms int64, percent float64, location *time.Location, defaults []*sitedb.ProfilePreset, switches []*sitedb.ProfileSwitch) *float64 {
 	basal := SummaryMinutes(ms, ms, nil, location, defaults, switches, nil, nil)[0].Basal
 	if basal == nil {
 		return nil
 	}
-	return new(consts.Round(*basal*percent/100, 3))
+	return new(consts.Round(*basal*(100+percent)/100, 3))
 }

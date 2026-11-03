@@ -101,7 +101,7 @@ create, and `identifier` is sent on an update. Every treatment has `date` (ms), 
 
 ### Temp basal percent
 
-Nighttroop reads a temp basal's `percent` as the percent of the basal (50 is half). AAPS means the **change**:
+Nighttroop keeps a temp basal's `percent` as sent, as Nightscout's **change** from the basal, which is what AAPS means:
 
 - Sending, `TB.toNSTemporaryBasal` (`nsclientV3/extensions/TemporaryBasalExtension.kt:27–44`): `rate` is always the
   absolute rate in U/hr (`convertedToAbsolute`, line 34); a temp basal set in U/hr also has `absolute` (line 36); one
@@ -116,10 +116,9 @@ Nighttroop reads a temp basal's `percent` as the percent of the basal (50 is hal
   extensions/TemporaryBasalExtension.kt:23–26`) sends `rate` (absolute) and `absolute`, or `percent: rate - 100`, and
   `temporaryBasalFromJson` (lines 54–62) reads `absolute`, else `percent + 100`.
 
-On Nighttroop today: a percent at or over 0 (100% of the basal or more) is kept, with the rate AAPS sent as its
-absolute, so graphs, summaries and AAPS followers (which read `absolute` first) get the right rate, but the
-`percent` shown is wrong (20% for 120%). A negative percent (any reduction, including a zero temp) is refused with a
-400, which AAPS logs and skips for good: those temp basals are lost.
+On Nighttroop: every percent from -100 (a zero temp) up is kept as sent, with the rate AAPS sent as its absolute,
+so graphs, summaries and AAPS followers (which read `absolute` first) get the right rate. A percent sent without a
+rate is applied to the profile's basal as Nightscout does: `basal * (100 + percent) / 100`.
 
 ### Socket.IO
 
@@ -178,8 +177,7 @@ token is sent as it is (`aaps_v1.sio`). Users on AAPS 3.x should use NSClient v3
 | Entries and treatments in an identity in mmol/L | not supported: set the AAPS identity to mg/dL; TODO P1 | `units/*.http` |
 | First loads and history over 500 documents, and profile history's newest | not supported: searches are newest first and ignore `sort`; TODO P1 | — |
 | Treatments: bolus and SMB `type`, carbs, temp target, profile switch, BG check, delete in history | works | `sync_v3.http`, `flow_v3.http` |
-| Temp basal at or over 100%, its update | works, but `percent` is stored as sent (the owner's decision); TODO P2 | `sync_v3.http` |
-| Temp basal under 100% (negative `percent`) | not supported: refused with a 400 and lost; TODO P2 | `treatments/temp_basal_percent.http` |
+| Temp basal at, over or under 100% (any `percent` from -100), its update | works: `percent` is kept as sent, the change from the basal | `sync_v3.http`, `treatments/temp_basal_percent.http` |
 | Temp basal `type`, effective profile switch `original*`, running mode `mode` | not supported: dropped, so followers misread them; TODO P2 | `sync_v3.http` |
 | Calibrations (`isCalibration`, `sensorMgdlAtPairing`) | not supported: dropped; TODO P2 | `sync_v3.http` |
 | Device statuses: create, history with `srvModified` | works | `sync_v3.http`, `flow_v3.http` |

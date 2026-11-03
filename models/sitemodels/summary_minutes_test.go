@@ -103,10 +103,10 @@ func TestSummaryMinutes(t *testing.T) {
 			want:     []want{{29, new(140.0), new(150.0), new(0.5)}, {30, new(100.0), new(160.0), new(0.5)}},
 		},
 		{
-			name:     "a temp basal's rate, or its percent of the basal, overrides the basal",
+			name:     "a temp basal's rate, or its percent change, overrides the basal",
 			units:    &mgdl,
 			defaults: []*sitedb.ProfilePreset{defaultProfile},
-			basals:   []*SiteTempBasal{{OccurredAt: minute(10), DurationMinutes: 20, Absolute: new(0.0)}, {OccurredAt: minute(60), DurationMinutes: 30, Percent: new(50.0)}},
+			basals:   []*SiteTempBasal{{OccurredAt: minute(10), DurationMinutes: 20, Absolute: new(0.0)}, {OccurredAt: minute(60), DurationMinutes: 30, Percent: new(-50.0)}},
 			want:     []want{{10, new(100.0), new(160.0), new(0.0)}, {30, new(100.0), new(160.0), new(0.5)}, {60, new(100.0), new(160.0), new(0.25)}},
 		},
 		{
@@ -157,26 +157,26 @@ func TestPercentBasal(t *testing.T) {
 		switches []*sitedb.ProfileSwitch
 		want     *float64
 	}{
-		{name: "without a profile there is no rate", ms: at(1, 0), percent: 50, location: time.UTC},
-		{name: "a profile uploaded after the temp basal is not in force", ms: at(1, 0), percent: 50, location: time.UTC, defaults: []*sitedb.ProfilePreset{{OccurredAt: at(2, 0), BasalRatesJson: basalRates}}},
-		{name: "under 100 percent lowers the basal", ms: at(1, 0), percent: 50, location: time.UTC, defaults: utc, want: new(0.25)},
-		{name: "over 100 percent raises the basal", ms: at(1, 59), percent: 150, location: time.UTC, defaults: utc, want: new(0.75)},
-		{name: "from a schedule's boundary its next rate", ms: at(2, 0), percent: 150, location: time.UTC, defaults: utc, want: new(1.2)},
-		{name: "late in the day the last rate", ms: at(23, 59), percent: 125, location: time.UTC, defaults: utc, want: new(1.0)},
-		{name: "100 percent keeps the basal", ms: at(3, 0), percent: 100, location: time.UTC, defaults: utc, want: new(0.8)},
-		{name: "zero percent suspends", ms: at(3, 0), percent: 0, location: time.UTC, defaults: utc, want: new(0.0)},
-		{name: "in the profile's timezone, before its 2am", ms: at(12, 59), percent: 200, location: time.UTC, defaults: auckland, want: new(1.0)},
-		{name: "in the profile's timezone, from its 2am", ms: at(13, 0), percent: 200, location: time.UTC, defaults: auckland, want: new(1.6)},
-		{name: "a profile without a timezone is in the site's, before its 2am", ms: at(6, 59), percent: 80, location: newYork, defaults: utc, want: new(0.4)},
-		{name: "a profile without a timezone is in the site's, from its 2am", ms: at(7, 0), percent: 80, location: newYork, defaults: utc, want: new(0.64)},
+		{name: "without a profile there is no rate", ms: at(1, 0), percent: -50, location: time.UTC},
+		{name: "a profile uploaded after the temp basal is not in force", ms: at(1, 0), percent: -50, location: time.UTC, defaults: []*sitedb.ProfilePreset{{OccurredAt: at(2, 0), BasalRatesJson: basalRates}}},
+		{name: "a negative percent lowers the basal", ms: at(1, 0), percent: -50, location: time.UTC, defaults: utc, want: new(0.25)},
+		{name: "a positive percent raises the basal", ms: at(1, 59), percent: 50, location: time.UTC, defaults: utc, want: new(0.75)},
+		{name: "from a schedule's boundary its next rate", ms: at(2, 0), percent: 50, location: time.UTC, defaults: utc, want: new(1.2)},
+		{name: "late in the day the last rate", ms: at(23, 59), percent: 25, location: time.UTC, defaults: utc, want: new(1.0)},
+		{name: "zero percent keeps the basal", ms: at(3, 0), percent: 0, location: time.UTC, defaults: utc, want: new(0.8)},
+		{name: "minus 100 percent is a zero temp", ms: at(3, 0), percent: -100, location: time.UTC, defaults: utc, want: new(0.0)},
+		{name: "in the profile's timezone, before its 2am", ms: at(12, 59), percent: 100, location: time.UTC, defaults: auckland, want: new(1.0)},
+		{name: "in the profile's timezone, from its 2am", ms: at(13, 0), percent: 100, location: time.UTC, defaults: auckland, want: new(1.6)},
+		{name: "a profile without a timezone is in the site's, before its 2am", ms: at(6, 59), percent: -20, location: newYork, defaults: utc, want: new(0.4)},
+		{name: "a profile without a timezone is in the site's, from its 2am", ms: at(7, 0), percent: -20, location: newYork, defaults: utc, want: new(0.64)},
 		{
 			// Shifted two hours forward, at 00:30 it is 02:30 in the profile, so 0.8 U/hr, at 200% is 1.6, less 25%
-			name: "a profile switch's percent and timeshift", ms: at(0, 30), percent: 75, location: time.UTC, defaults: utc,
+			name: "a profile switch's percent and timeshift", ms: at(0, 30), percent: -25, location: time.UTC, defaults: utc,
 			switches: []*sitedb.ProfileSwitch{{OccurredAt: at(0, 10), BasalRatesJson: basalRates, Percent: new(200.0), Timeshift: new(int64(120))}},
 			want:     new(1.2),
 		},
 		{
-			name: "a profile switch that has ended hands back to the default", ms: at(1, 0), percent: 75, location: time.UTC, defaults: utc,
+			name: "a profile switch that has ended hands back to the default", ms: at(1, 0), percent: -25, location: time.UTC, defaults: utc,
 			switches: []*sitedb.ProfileSwitch{{OccurredAt: at(0, 10), DurationMinutes: 30, Percent: new(200.0)}},
 			want:     new(0.375),
 		},
