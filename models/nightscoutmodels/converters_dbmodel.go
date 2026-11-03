@@ -14,6 +14,9 @@ import (
 // goverter:enum:unknown @ignore
 // goverter:output:file ./z_dbmodel_converters.go
 // goverter:useZeroValueOnPointerInconsistency
+// goverter:extend nighttroop.t1d.nz/utils/types:UnitsFromEnum
+// goverter:extend nighttroop.t1d.nz/utils/types:UnitsToEnum
+// goverter:extend nighttroop.t1d.nz/utils/types:CopyUnits
 type DBModelConverter interface {
 
 	///////

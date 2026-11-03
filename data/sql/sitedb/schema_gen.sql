@@ -275,8 +275,7 @@ CREATE TABLE glucose_readings (
     -- UNIT IS ALWAYS MG/DL BECAUSE IT IS HIGHER RESOLUTION
     mgdl REAL NOT NULL CHECK(mgdl > 0 AND mgdl <= 1000),
     reading_type TEXT NOT NULL CHECK(reading_type IN ('sgv', 'mbg')) DEFAULT 'sgv', -- sgv, mbg etc
-    units TEXT CHECK(units IN ('mmol/L', 'mg/dL')), -- mg/dL, mmol/L -- the reading is always store in mgdl, but the original unit CAN also be stored
-    raw_units TEXT CHECK(length(raw_units) <= 16), -- the units as a client wrote them, e.g. mg/dl or mmol, given back as sent
+    units TEXT CHECK(length(units) <= 16), -- the units as sent, e.g. mg/dL, mg/dl or mmol, given back as sent -- the reading is always stored in mgdl
     measurement_method TEXT CHECK(length(measurement_method) <= 32), -- cgm, meter, manual, etc
 
     delta REAL CHECK(delta BETWEEN -1000 AND 1000),

@@ -3,6 +3,7 @@ package sitedb
 
 import (
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/types"
 )
 
 
@@ -2247,23 +2248,13 @@ func (m *GlucoseReading) SetReadingType(v string) {
 }
 
 // GetUnits returns the Units value.
-func (m GlucoseReading) GetUnits() *consts.Units {
+func (m GlucoseReading) GetUnits() *types.Units {
 	return m.Units
 }
 
 // SetUnits sets the Units value and returns the updated GlucoseReading.
-func (m *GlucoseReading) SetUnits(v *consts.Units) {
+func (m *GlucoseReading) SetUnits(v *types.Units) {
 	m.Units = v
-}
-
-// GetRawUnits returns the RawUnits value.
-func (m GlucoseReading) GetRawUnits() *string {
-	return m.RawUnits
-}
-
-// SetRawUnits sets the RawUnits value and returns the updated GlucoseReading.
-func (m *GlucoseReading) SetRawUnits(v *string) {
-	m.RawUnits = v
 }
 
 // GetMeasurementMethod returns the MeasurementMethod value.
@@ -2507,23 +2498,13 @@ func (m *GlucoseReadingsVw) SetReadingType(v *string) {
 }
 
 // GetUnits returns the Units value.
-func (m GlucoseReadingsVw) GetUnits() *consts.Units {
+func (m GlucoseReadingsVw) GetUnits() *types.Units {
 	return m.Units
 }
 
 // SetUnits sets the Units value and returns the updated GlucoseReadingsVw.
-func (m *GlucoseReadingsVw) SetUnits(v *consts.Units) {
+func (m *GlucoseReadingsVw) SetUnits(v *types.Units) {
 	m.Units = v
-}
-
-// GetRawUnits returns the RawUnits value.
-func (m GlucoseReadingsVw) GetRawUnits() *string {
-	return m.RawUnits
-}
-
-// SetRawUnits sets the RawUnits value and returns the updated GlucoseReadingsVw.
-func (m *GlucoseReadingsVw) SetRawUnits(v *string) {
-	m.RawUnits = v
 }
 
 // GetMeasurementMethod returns the MeasurementMethod value.
@@ -8027,23 +8008,13 @@ func (m *CreateGlucoseReadingParams) SetReadingType(v string) {
 }
 
 // GetUnits returns the Units value.
-func (m CreateGlucoseReadingParams) GetUnits() *consts.Units {
+func (m CreateGlucoseReadingParams) GetUnits() *types.Units {
 	return m.Units
 }
 
 // SetUnits sets the Units value and returns the updated CreateGlucoseReadingParams.
-func (m *CreateGlucoseReadingParams) SetUnits(v *consts.Units) {
+func (m *CreateGlucoseReadingParams) SetUnits(v *types.Units) {
 	m.Units = v
-}
-
-// GetRawUnits returns the RawUnits value.
-func (m CreateGlucoseReadingParams) GetRawUnits() *string {
-	return m.RawUnits
-}
-
-// SetRawUnits sets the RawUnits value and returns the updated CreateGlucoseReadingParams.
-func (m *CreateGlucoseReadingParams) SetRawUnits(v *string) {
-	m.RawUnits = v
 }
 
 // GetMeasurementMethod returns the MeasurementMethod value.

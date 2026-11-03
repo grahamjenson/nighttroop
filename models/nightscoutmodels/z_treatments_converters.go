@@ -5,6 +5,7 @@ package nightscoutmodels
 
 import (
 	sitedb "nighttroop.t1d.nz/data/sql/sitedb"
+	consts "nighttroop.t1d.nz/utils/consts"
 	httputils "nighttroop.t1d.nz/utils/httputils"
 	types "nighttroop.t1d.nz/utils/types"
 )
@@ -526,22 +527,18 @@ func GlucoseReadingCreate(source sitedb.GlucoseReading, context ConverterContext
 	sitedbCreateGlucoseReadingParams.ID = AssignID()
 	sitedbCreateGlucoseReadingParams.Mgdl = source.Mgdl
 	sitedbCreateGlucoseReadingParams.ReadingType = source.ReadingType
-	sitedbCreateGlucoseReadingParams.Units = UnitsToUnits(source.Units)
-	if source.RawUnits != nil {
-		xstring := *source.RawUnits
-		sitedbCreateGlucoseReadingParams.RawUnits = &xstring
-	}
+	sitedbCreateGlucoseReadingParams.Units = pTypesUnitsToPTypesUnits(source.Units)
 	if source.MeasurementMethod != nil {
-		xstring2 := *source.MeasurementMethod
-		sitedbCreateGlucoseReadingParams.MeasurementMethod = &xstring2
+		xstring := *source.MeasurementMethod
+		sitedbCreateGlucoseReadingParams.MeasurementMethod = &xstring
 	}
 	if source.Delta != nil {
 		xfloat64 := *source.Delta
 		sitedbCreateGlucoseReadingParams.Delta = &xfloat64
 	}
 	if source.Direction != nil {
-		xstring3 := *source.Direction
-		sitedbCreateGlucoseReadingParams.Direction = &xstring3
+		xstring2 := *source.Direction
+		sitedbCreateGlucoseReadingParams.Direction = &xstring2
 	}
 	if source.Noise != nil {
 		xfloat642 := *source.Noise
@@ -560,12 +557,12 @@ func GlucoseReadingCreate(source sitedb.GlucoseReading, context ConverterContext
 		sitedbCreateGlucoseReadingParams.Rssi = &xfloat645
 	}
 	if source.Notes != nil {
-		xstring4 := *source.Notes
-		sitedbCreateGlucoseReadingParams.Notes = &xstring4
+		xstring3 := *source.Notes
+		sitedbCreateGlucoseReadingParams.Notes = &xstring3
 	}
 	if source.Reason != nil {
-		xstring5 := *source.Reason
-		sitedbCreateGlucoseReadingParams.Reason = &xstring5
+		xstring4 := *source.Reason
+		sitedbCreateGlucoseReadingParams.Reason = &xstring4
 	}
 	if source.UtcOffsetMinutes != nil {
 		xint64 := *source.UtcOffsetMinutes
@@ -573,16 +570,16 @@ func GlucoseReadingCreate(source sitedb.GlucoseReading, context ConverterContext
 	}
 	sitedbCreateGlucoseReadingParams.OccurredAt = source.OccurredAt
 	if source.RawJsonData != nil {
-		xstring6 := *source.RawJsonData
-		sitedbCreateGlucoseReadingParams.RawJsonData = &xstring6
+		xstring5 := *source.RawJsonData
+		sitedbCreateGlucoseReadingParams.RawJsonData = &xstring5
 	}
 	if source.CreatedByAppName != nil {
-		xstring7 := *source.CreatedByAppName
-		sitedbCreateGlucoseReadingParams.CreatedByAppName = &xstring7
+		xstring6 := *source.CreatedByAppName
+		sitedbCreateGlucoseReadingParams.CreatedByAppName = &xstring6
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring8 := *source.CreatedByDeviceName
-		sitedbCreateGlucoseReadingParams.CreatedByDeviceName = &xstring8
+		xstring7 := *source.CreatedByDeviceName
+		sitedbCreateGlucoseReadingParams.CreatedByDeviceName = &xstring7
 	}
 	sitedbCreateGlucoseReadingParams.CreatedByIdentityName = AssignCreatedByName(context)
 	sitedbCreateGlucoseReadingParams.CreatedByIdentityID = AssignCreatedByID(context)
@@ -956,22 +953,21 @@ func PartialTreatmentToFoodIntake(source Treatment) sitedb.FoodIntake {
 }
 func PartialTreatmentToGlucoseReading(source Treatment) sitedb.GlucoseReading {
 	var sitedbGlucoseReading sitedb.GlucoseReading
-	sitedbGlucoseReading.Units = UnitsToUnits(source.Units)
-	if source.RawUnits != nil {
-		xstring := *source.RawUnits
-		sitedbGlucoseReading.RawUnits = &xstring
+	if source.Units != nil {
+		typesUnits := types.UnitsFromEnum(*source.Units)
+		sitedbGlucoseReading.Units = &typesUnits
 	}
 	if source.GlucoseType != nil {
-		xstring2 := string(*source.GlucoseType)
-		sitedbGlucoseReading.MeasurementMethod = &xstring2
+		xstring := string(*source.GlucoseType)
+		sitedbGlucoseReading.MeasurementMethod = &xstring
 	}
 	if source.Notes != nil {
-		xstring3 := SanitizedStringToString(*source.Notes)
-		sitedbGlucoseReading.Notes = &xstring3
+		xstring2 := SanitizedStringToString(*source.Notes)
+		sitedbGlucoseReading.Notes = &xstring2
 	}
 	if source.Reason != nil {
-		xstring4 := ShortStringToString(*source.Reason)
-		sitedbGlucoseReading.Reason = &xstring4
+		xstring3 := ShortStringToString(*source.Reason)
+		sitedbGlucoseReading.Reason = &xstring3
 	}
 	pString := source.RawJsonData
 	sitedbGlucoseReading.RawJsonData = &pString
@@ -981,12 +977,12 @@ func PartialTreatmentToGlucoseReading(source Treatment) sitedb.GlucoseReading {
 	}
 	sitedbGlucoseReading.OccurredAt = OrNow(source.Date)
 	if source.App != nil {
-		xstring5 := ShortStringToString(*source.App)
-		sitedbGlucoseReading.CreatedByAppName = &xstring5
+		xstring4 := ShortStringToString(*source.App)
+		sitedbGlucoseReading.CreatedByAppName = &xstring4
 	}
 	if source.Device != nil {
-		xstring6 := ShortStringToString(*source.Device)
-		sitedbGlucoseReading.CreatedByDeviceName = &xstring6
+		xstring5 := ShortStringToString(*source.Device)
+		sitedbGlucoseReading.CreatedByDeviceName = &xstring5
 	}
 	return sitedbGlucoseReading
 }
@@ -1631,11 +1627,7 @@ func UpdateGlucoseReadingToTreatment(source *sitedb.GlucoseReading, context *htt
 			nightscoutmodelsGlucoseType := GlucoseType(*source.MeasurementMethod)
 			target.GlucoseType = &nightscoutmodelsGlucoseType
 		}
-		target.Units = UnitsToUnits(source.Units)
-		if source.RawUnits != nil {
-			xstring := *source.RawUnits
-			target.RawUnits = &xstring
-		}
+		target.Units = pTypesUnitsToPConstsUnits(source.Units)
 		if source.Notes != nil {
 			typesSanitizedString := types.SanitizedString(*source.Notes)
 			target.Notes = &typesSanitizedString
@@ -2137,22 +2129,18 @@ func UpdateToGlucoseReading(source *sitedb.GlucoseReading, target *sitedb.Glucos
 	if source != nil {
 		target.Mgdl = source.Mgdl
 		target.ReadingType = source.ReadingType
-		target.Units = UnitsToUnits(source.Units)
-		if source.RawUnits != nil {
-			xstring := *source.RawUnits
-			target.RawUnits = &xstring
-		}
+		target.Units = pTypesUnitsToPTypesUnits(source.Units)
 		if source.MeasurementMethod != nil {
-			xstring2 := *source.MeasurementMethod
-			target.MeasurementMethod = &xstring2
+			xstring := *source.MeasurementMethod
+			target.MeasurementMethod = &xstring
 		}
 		if source.Delta != nil {
 			xfloat64 := *source.Delta
 			target.Delta = &xfloat64
 		}
 		if source.Direction != nil {
-			xstring3 := *source.Direction
-			target.Direction = &xstring3
+			xstring2 := *source.Direction
+			target.Direction = &xstring2
 		}
 		if source.Noise != nil {
 			xfloat642 := *source.Noise
@@ -2171,16 +2159,16 @@ func UpdateToGlucoseReading(source *sitedb.GlucoseReading, target *sitedb.Glucos
 			target.Rssi = &xfloat645
 		}
 		if source.Notes != nil {
-			xstring4 := *source.Notes
-			target.Notes = &xstring4
+			xstring3 := *source.Notes
+			target.Notes = &xstring3
 		}
 		if source.Reason != nil {
-			xstring5 := *source.Reason
-			target.Reason = &xstring5
+			xstring4 := *source.Reason
+			target.Reason = &xstring4
 		}
 		if source.RawJsonData != nil {
-			xstring6 := *source.RawJsonData
-			target.RawJsonData = &xstring6
+			xstring5 := *source.RawJsonData
+			target.RawJsonData = &xstring5
 		}
 		if source.DeletedAt != nil {
 			xint64 := *source.DeletedAt
@@ -2194,20 +2182,20 @@ func UpdateToGlucoseReading(source *sitedb.GlucoseReading, target *sitedb.Glucos
 		target.CreatedAt = source.CreatedAt
 		target.UpdatedAt = source.UpdatedAt
 		if source.CreatedByAppName != nil {
-			xstring7 := *source.CreatedByAppName
-			target.CreatedByAppName = &xstring7
+			xstring6 := *source.CreatedByAppName
+			target.CreatedByAppName = &xstring6
 		}
 		if source.CreatedByDeviceName != nil {
-			xstring8 := *source.CreatedByDeviceName
-			target.CreatedByDeviceName = &xstring8
+			xstring7 := *source.CreatedByDeviceName
+			target.CreatedByDeviceName = &xstring7
 		}
 		if source.UpdatedByIdentityID != nil {
 			xint643 := *source.UpdatedByIdentityID
 			target.UpdatedByIdentityID = &xint643
 		}
 		if source.UpdatedByIdentityName != nil {
-			xstring9 := *source.UpdatedByIdentityName
-			target.UpdatedByIdentityName = &xstring9
+			xstring8 := *source.UpdatedByIdentityName
+			target.UpdatedByIdentityName = &xstring8
 		}
 		if source.CreatedByIdentityID != nil {
 			xint644 := *source.CreatedByIdentityID
@@ -2535,4 +2523,20 @@ func UpdateToTempTarget(source *sitedb.TempTarget, target *sitedb.TempTarget) {
 		}
 		target.CreatedByIdentityName = source.CreatedByIdentityName
 	}
+}
+func pTypesUnitsToPConstsUnits(source *types.Units) *consts.Units {
+	var pConstsUnits *consts.Units
+	if source != nil {
+		constsUnits := types.UnitsToEnum((*source))
+		pConstsUnits = &constsUnits
+	}
+	return pConstsUnits
+}
+func pTypesUnitsToPTypesUnits(source *types.Units) *types.Units {
+	var pTypesUnits *types.Units
+	if source != nil {
+		typesUnits := types.CopyUnits((*source))
+		pTypesUnits = &typesUnits
+	}
+	return pTypesUnits
 }

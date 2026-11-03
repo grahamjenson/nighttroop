@@ -33,12 +33,12 @@ overrides:
       # units
       - column: "glucose_readings.units"
         go_type:
-          import: "nighttroop.t1d.nz/utils/consts"
+          import: "nighttroop.t1d.nz/utils/types"
           type: "Units"
           pointer: true
       - column: "glucose_readings_vw.units"
         go_type:
-          import: "nighttroop.t1d.nz/utils/consts"
+          import: "nighttroop.t1d.nz/utils/types"
           type: "Units"
           pointer: true
 

@@ -6,6 +6,7 @@ package sitedb
 
 import (
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/types"
 )
 
 type ActivitiesVw struct {
@@ -260,8 +261,7 @@ type GlucoseReading struct {
 	ID                    string
 	Mgdl                  float64
 	ReadingType           string
-	Units                 *consts.Units
-	RawUnits              *string
+	Units                 *types.Units
 	MeasurementMethod     *string
 	Delta                 *float64
 	Direction             *string
@@ -289,8 +289,7 @@ type GlucoseReadingsVw struct {
 	ID                    *string
 	Mgdl                  *float64
 	ReadingType           *string
-	Units                 *consts.Units
-	RawUnits              *string
+	Units                 *types.Units
 	MeasurementMethod     *string
 	Delta                 *float64
 	Direction             *string

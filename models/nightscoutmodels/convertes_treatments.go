@@ -19,6 +19,9 @@ import (
 // goverter:extend ShortStringToString
 // goverter:extend SanitizedStringToString
 // goverter:extend UnitsToUnits
+// goverter:extend nighttroop.t1d.nz/utils/types:UnitsFromEnum
+// goverter:extend nighttroop.t1d.nz/utils/types:UnitsToEnum
+// goverter:extend nighttroop.t1d.nz/utils/types:CopyUnits
 type TreatmentsEvenetConverter interface {
 
 	///////

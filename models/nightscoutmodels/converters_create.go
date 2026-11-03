@@ -24,6 +24,9 @@ type ConverterContext struct {
 // goverter:extend ShortStringToString
 // goverter:extend SanitizedStringToString
 // goverter:extend UnitsToUnits
+// goverter:extend nighttroop.t1d.nz/utils/types:UnitsFromEnum
+// goverter:extend nighttroop.t1d.nz/utils/types:UnitsToEnum
+// goverter:extend nighttroop.t1d.nz/utils/types:CopyUnits
 type CreateMapConverter interface {
 
 	///////
@@ -52,7 +55,7 @@ type CreateMapConverter interface {
 	// goverter:map CreatedByIdentityName      | AssignCreatedByName
 	// goverter:map CreatedByIdentityID | AssignCreatedByID
 	//
-	// goverter:ignore Notes Reason MeasurementMethod RawUnits
+	// goverter:ignore Notes Reason MeasurementMethod
 	// goverter:map . ReadingType | SetReadingType
 	// goverter:map Trend Delta
 	// goverter:map RSSI Rssi

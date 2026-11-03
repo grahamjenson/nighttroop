@@ -3,7 +3,10 @@
 
 package nightscoutmodels
 
-import sitedb "nighttroop.t1d.nz/data/sql/sitedb"
+import (
+	sitedb "nighttroop.t1d.nz/data/sql/sitedb"
+	types "nighttroop.t1d.nz/utils/types"
+)
 
 func ActivityToCreate(source Activity, context ConverterContext) sitedb.CreateActivityParams {
 	var sitedbCreateActivityParams sitedb.CreateActivityParams
@@ -87,7 +90,10 @@ func EntryToCreate(source Entry, context ConverterContext) sitedb.CreateGlucoseR
 		sitedbCreateGlucoseReadingParams.Mgdl = FlexibleFloat64ToFloat64(*source.Mgdl)
 	}
 	sitedbCreateGlucoseReadingParams.ReadingType = SetReadingType(source)
-	sitedbCreateGlucoseReadingParams.Units = UnitsToUnits(source.Units)
+	if source.Units != nil {
+		typesUnits := types.UnitsFromEnum(*source.Units)
+		sitedbCreateGlucoseReadingParams.Units = &typesUnits
+	}
 	if source.Trend != nil {
 		xfloat64 := FlexibleFloat64ToFloat64(*source.Trend)
 		sitedbCreateGlucoseReadingParams.Delta = &xfloat64

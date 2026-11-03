@@ -10,6 +10,7 @@ import (
 	errors "nighttroop.t1d.nz/utils/errors"
 	httputils "nighttroop.t1d.nz/utils/httputils"
 	security "nighttroop.t1d.nz/utils/security"
+	types "nighttroop.t1d.nz/utils/types"
 )
 
 func ActivityFromDB(source *sitedb.Activity) *SiteActivity {
@@ -1043,10 +1044,7 @@ func GlucoseReadingFromDB(source *sitedb.GlucoseReading, context *httputils.Site
 		sitemodelsSiteGlucoseReading.Reading = MgdlToSettingsUnits((*source).Mgdl, context)
 		sitemodelsSiteGlucoseReading.Units = ContextUnits(context)
 		sitemodelsSiteGlucoseReading.ReadingType = (*source).ReadingType
-		if (*source).Units != nil {
-			constsUnits := constsUnitsToConstsUnits(*(*source).Units)
-			sitemodelsSiteGlucoseReading.OriginalUnits = &constsUnits
-		}
+		sitemodelsSiteGlucoseReading.OriginalUnits = pTypesUnitsToPConstsUnits((*source).Units)
 		if (*source).MeasurementMethod != nil {
 			xstring := *(*source).MeasurementMethod
 			sitemodelsSiteGlucoseReading.MeasurementMethod = &xstring
@@ -1117,7 +1115,7 @@ func GlucoseReadingToCreate(source *SiteGlucoseReading, context *httputils.SiteC
 		sitedbCreateGlucoseReadingParams.ID = NewSiteDataID()
 		sitedbCreateGlucoseReadingParams.Mgdl = SettingsUnitsToMgdl((*source).Reading, context)
 		sitedbCreateGlucoseReadingParams.ReadingType = GlucoseReadingTypeOrMeter((*source).ReadingType)
-		sitedbCreateGlucoseReadingParams.Units = ContextUnits(context)
+		sitedbCreateGlucoseReadingParams.Units = ContextReadingUnits(context)
 		if (*source).MeasurementMethod != nil {
 			xstring := *(*source).MeasurementMethod
 			sitedbCreateGlucoseReadingParams.MeasurementMethod = &xstring
@@ -2166,4 +2164,12 @@ func errorsErrorListToStringList(source errors.ErrorList) []string {
 		}
 	}
 	return stringList
+}
+func pTypesUnitsToPConstsUnits(source *types.Units) *consts.Units {
+	var pConstsUnits *consts.Units
+	if source != nil {
+		constsUnits := types.UnitsToEnum((*source))
+		pConstsUnits = &constsUnits
+	}
+	return pConstsUnits
 }

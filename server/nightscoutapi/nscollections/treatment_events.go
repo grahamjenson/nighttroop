@@ -154,11 +154,16 @@ var (
 		partial: nightscoutmodels.PartialTreatmentToGlucoseReading,
 		complete: func(source nightscoutmodels.Treatment, target *sitedb.GlucoseReading) {
 			target.ReadingType = "sgv"
-			target.Units = source.Units
-			target.RawUnits = source.RawUnits
+			// The units are kept as sent, e.g. mg/dl, to be given back so
+			if source.Units != nil {
+				target.Units = &types.Units{Units: *source.Units, Sent: string(*source.Units)}
+				if source.RawUnits != nil {
+					target.Units.Sent = *source.RawUnits
+				}
+			}
 
 			if source.Glucose != nil {
-				target.Mgdl = target.Units.ToMGDL(float64(*source.Glucose))
+				target.Mgdl = source.Units.ToMGDL(float64(*source.Glucose))
 			}
 
 			if source.GlucoseType != nil {
@@ -476,9 +481,10 @@ func glucoseReadingToTreatment(source *sitedb.GlucoseReading, siteContext *httpu
 	if source == nil {
 		return
 	}
-	units := source.Units
-	if units == nil {
-		units = siteContext.GetSettings().GetUnits()
+	units := siteContext.GetSettings().GetUnits()
+	if source.Units != nil {
+		units = &source.Units.Units
+		target.RawUnits = &source.Units.Sent
 	}
 	target.Units = units
 	target.Glucose = new(types.FlexibleFloat64(units.FromMGDL(source.Mgdl)))

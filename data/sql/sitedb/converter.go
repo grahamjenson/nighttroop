@@ -4,6 +4,9 @@ package sitedb
 // goverter:output:format function
 // goverter:enum:unknown @ignore
 // goverter:output:file ./z_converter.go
+// goverter:extend nighttroop.t1d.nz/utils/types:UnitsFromEnum
+// goverter:extend nighttroop.t1d.nz/utils/types:UnitsToEnum
+// goverter:extend nighttroop.t1d.nz/utils/types:CopyUnits
 type ToCreateParams interface {
 
 	// EVENTS

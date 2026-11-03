@@ -11,6 +11,7 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/security"
+	"nighttroop.t1d.nz/utils/types"
 )
 
 // goverter:converter
@@ -18,6 +19,9 @@ import (
 // goverter:output:format function
 // goverter:output:file ./z_site_converters.go
 // goverter:useZeroValueOnPointerInconsistency
+// goverter:extend nighttroop.t1d.nz/utils/types:UnitsFromEnum
+// goverter:extend nighttroop.t1d.nz/utils/types:UnitsToEnum
+// goverter:extend nighttroop.t1d.nz/utils/types:CopyUnits
 type SiteConverter interface {
 
 	///////
@@ -89,12 +93,11 @@ type SiteConverter interface {
 	// goverter:context siteContext
 	// goverter:map ID | NewSiteDataID
 	// goverter:map Reading Mgdl | SettingsUnitsToMgdl
-	// goverter:map Units | ContextUnits
+	// goverter:map Units | ContextReadingUnits
 	// goverter:map ReadingType | GlucoseReadingTypeOrMeter
 	// goverter:map OccurredAt | OccurredAtOrNow
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
-	// goverter:ignore RawUnits
 	GlucoseReadingToCreate(source *SiteGlucoseReading, siteContext *httputils.SiteContext) sitedb.CreateGlucoseReadingParams
 
 	// goverter:context siteContext
@@ -496,6 +499,17 @@ func StringOrNil(value string) *string {
 // goverter:context siteContext
 func ContextUnits(siteContext *httputils.SiteContext) *consts.Units {
 	return siteContext.GetSettings().GetUnits()
+}
+
+// ContextReadingUnits are the units of a reading entered on the site, the site's, written as Nighttroop writes them
+//
+// goverter:context siteContext
+func ContextReadingUnits(siteContext *httputils.SiteContext) *types.Units {
+	units := ContextUnits(siteContext)
+	if units == nil {
+		return nil
+	}
+	return new(types.UnitsFromEnum(*units))
 }
 
 // goverter:context siteContext
