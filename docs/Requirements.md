@@ -338,6 +338,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - Trio's and iAPS's `SMB` and `External Insulin` treatments are kept as insulin doses, with their event type.
 - A profile has `enteredBy`, the identity that uploaded it, as Trio needs it to import one.
 - A treatment's `enteredBy` comes back as sent, e.g. `loop://iPhone` or `Trio`, else the identity that uploaded it.
+- Treatments can be found by whether they have `carbs` or a `duration` (`find[carbs][$exists]`), by `enteredBy`, and
+  without some `enteredBy`s (`find[enteredBy][$ne]`, repeated or under `find[$and][n]`), as Trio and iAPS fetch them.
 - A treatment's or entry's `id`, as Trio sends it, is its identifier when it has no `_id`.
 - v1 deletes by query (`DELETE /api/v1/treatments.json?find[...]`), with `find[$or]` alternatives, delete what the
   search finds; one with no filter, a filter Nighttroop does not know or more than 10 alternatives is a 400.
