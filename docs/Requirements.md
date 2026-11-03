@@ -275,6 +275,7 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - A delete moves a document's `srvModified` and the v3 lastModified forward, so a history since an app's last sync
   has the documents deleted after it.
 - **Socket.IO** live updates and alarms over long polling or websockets.
+- A live update sent to a site's sockets is in the site's own settings, such as its units, as it goes to every device.
 - A new Announcement is sent to every `/alarm` socket that can read, with its notes as the message, so AAPS shows it
   as a notification.
 - Glucose is stored in mg/dL and returned and accepted in the settings' units.
