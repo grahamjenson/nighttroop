@@ -101,6 +101,8 @@ A delete finds the treatment first, `GET treatments.json?find[uuid]=<uuid>`, tak
 
 Only in engineering mode with `use_pebble_health`. Arrays of up to 500 of `{"type": "hr-bpm", "timeStamp", "created_at",
 "bpm", "accuracy"}`, `{"type": "steps-total", ..., "steps"}` and `{"type": "motion-class", ..., "class"}`.
+Nighttroop keeps the `type` as the activity type, a heart rate's `bpm` as its heart rate (0 to 300) and a motion's
+`class` as its name; `accuracy` is dropped.
 
 ### Treatment download (`doRESTtreatmentDownload`, `:354`)
 
@@ -160,7 +162,7 @@ uuid, `_id`, or time within a minute with the same amounts is not added again.
 | `GET treatments.json?find[uuid]=` then `DELETE treatments/<_id>` | Fixed in #512: `find[uuid]` was ignored, so the newest treatment was deleted |
 | `GET treatments` download, `Last-Modified` and `Etag` | Works |
 | `POST activity`, steps | Works |
-| `POST activity`, heart rate and motion | Accepted, but only the time is kept (TODO P4) |
+| `POST activity`, heart rate and motion | Fixed in this PR (only the time was kept) |
 | Follower `entries.json?count=10` and `find[date][$gt]` | Works when the follower's identity is in mg/dL, as a device added for xDrip+ is (#524); in mmol/L the values are wrong |
 | Follower `treatments` | Works |
 | Follower `devicestatus.json?count=1`, `uploaderBattery` | Works |

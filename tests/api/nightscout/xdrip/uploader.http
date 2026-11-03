@@ -193,7 +193,8 @@ ASSERT_LENGTH 2 "@"
 
 ######
 # ACTIVITY: postHeartRate, postStepsCount and postMotionTracking, only in engineering mode with
-# use_pebble_health on. Each must not fail; only the steps are kept.
+# use_pebble_health on. Each must not fail; its type is kept as the activity type, a heart rate's bpm as its heart
+# rate and a motion's class as its name.
 ######
 
 NAME xdrip_upload_heart_rate
@@ -203,6 +204,16 @@ B [{"type": "hr-bpm", "timeStamp": {{ itime 10 }}, "created_at": "{{ time 10 }}"
    {"type": "hr-bpm", "timeStamp": {{ itime 5 }}, "created_at": "{{ time 5 }}", "bpm": 75, "accuracy": 2}]
 ASSERT_STATUS 200
 ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS "hr-bpm" "@0.activityType"
+ASSERT_EQUALS 72 "@0.heartRate"
+ASSERT_EQUALS 75 "@1.heartRate"
+
+// A heart rate far outside real use is refused
+NAME xdrip_upload_heart_rate_too_high
+POST http://{{ site }}/api/v1/activity
+H api-secret: {{ sha1 token }}
+B [{"type": "hr-bpm", "timeStamp": {{ itime 3 }}, "created_at": "{{ time 3 }}", "bpm": 500}]
+ASSERT_STATUS 400
 
 NAME xdrip_upload_steps
 POST http://{{ site }}/api/v1/activity
@@ -210,9 +221,20 @@ H api-secret: {{ sha1 token }}
 B [{"type": "steps-total", "timeStamp": {{ itime 10 }}, "created_at": "{{ time 10 }}", "steps": 1234}]
 ASSERT_STATUS 200
 ASSERT_EQUALS 1234 "@0.steps"
+ASSERT_EQUALS "steps-total" "@0.activityType"
 
 NAME xdrip_upload_motion
 POST http://{{ site }}/api/v1/activity
 H api-secret: {{ sha1 token }}
 B [{"type": "motion-class", "timeStamp": {{ itime 10 }}, "created_at": "{{ time 10 }}", "class": "walking"}]
 ASSERT_STATUS 200
+ASSERT_EQUALS "motion-class" "@0.activityType"
+ASSERT_EQUALS "walking" "@0.name"
+
+// They are kept, not only the time
+NAME xdrip_heart_rate_kept
+GET http://{{ site }}/api/v1/activity.json?find[activityType]=hr-bpm
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS 75 "@0.heartRate"
