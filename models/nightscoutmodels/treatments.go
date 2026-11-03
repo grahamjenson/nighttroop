@@ -110,7 +110,9 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 	type Alias Treatment
 	// We here extract some fields used by other models as a unique identfier
 	aux := struct {
-		LegacyID       *types.IdentifierString `json:"_id"`
+		LegacyID *types.IdentifierString `json:"_id"`
+		// Trio's own id, which it deletes by; one that is not an identifier is left out rather than refuse the upload
+		ID             json.RawMessage         `json:"id"`
 		SyncIdentifier *types.IdentifierString `json:"syncIdentifier"`
 		UUID           *types.IdentifierString `json:"uuid"`
 		// Nightscout stores a careportal's or xDrip4iOS's eventTime as created_at
@@ -132,6 +134,9 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 	// Identitfiers
 	if t.Identifier == nil {
 		t.Identifier = aux.LegacyID
+	}
+	if t.Identifier == nil {
+		t.Identifier = types.IdentifierFromJSON(aux.ID)
 	}
 	if t.Identifier == nil {
 		t.Identifier = aux.SyncIdentifier

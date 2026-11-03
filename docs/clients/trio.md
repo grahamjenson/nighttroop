@@ -215,8 +215,9 @@ When the user deletes a record in Trio, it deletes it from Nightscout by query (
 - `DELETE /api/v1/entries.json?find[$or][0][id][$eq]=<id>&find[$or][1][dateString][$eq]=<ISO date>`, for glucose
 - `DELETE /api/v1/treatments.json?find[created_at][$eq]=<ISO date>&find[eventType][$eq]=Exercise`, for an override
 
-Nighttroop deletes only by `_id` in the path (`/api/v1/treatments/<_id>`), so each is a 405 and nothing is deleted,
-and Trio's `id` is not kept as the identifier (TODO P2). iAPS deletes by `find[created_at][$eq]` and
+Works: Trio's `id` is kept as the identifier, so `find[id][$eq]` finds it, and a delete by query deletes what that
+search finds, each `find[$or]` alternative a search of its own. A delete with no filter, or with one Nighttroop does
+not know, is a 400 rather than delete more than was asked for. iAPS deletes by `find[created_at][$eq]` and
 `find[carbs][$exists]` or similar, the same way.
 
 ## Socket.IO
@@ -250,5 +251,5 @@ Trio and iAPS use no Socket.IO, and no API v2 or v3.
 | Temp target fetch | Works in mg/dL; own ones come back, TODO P1 |
 | Glucose fetch (Nightscout as CGM) | Works in mg/dL |
 | iAPS announcements (`find[enteredBy]=remote`) | Not supported, TODO P1 |
-| Deletes by query | Not supported, TODO P2 |
+| Deletes by query | Fixed in this PR (they were a 405) |
 | mmol/L site or identity | Not supported by Trio's fetches; a device added for Trio is in mg/dL |

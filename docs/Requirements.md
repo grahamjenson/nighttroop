@@ -338,6 +338,9 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - Trio's and iAPS's `SMB` and `External Insulin` treatments are kept as insulin doses, with their event type.
 - A profile has `enteredBy`, the identity that uploaded it, as Trio needs it to import one.
 - A treatment's `enteredBy` comes back as sent, e.g. `loop://iPhone` or `Trio`, else the identity that uploaded it.
+- A treatment's or entry's `id`, as Trio sends it, is its identifier when it has no `_id`.
+- v1 deletes by query (`DELETE /api/v1/treatments.json?find[...]`), with `find[$or]` alternatives, delete what the
+  search finds; one with no filter, a filter Nighttroop does not know or more than 10 alternatives is a 400.
 - A create that names its `identifier` keeps it, and only a document with that identifier is its duplicate.
 - A create naming a deleted document's identifier, or a replace of one, replaces it whatever changed, as Juggluco
   changes a treatment by deleting it and sending it again.

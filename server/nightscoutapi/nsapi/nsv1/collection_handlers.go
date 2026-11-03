@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/consts"
@@ -172,6 +173,51 @@ func Delete(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 				"deletedCount": deleted,
 			})
 		}
+	}
+}
+
+// maxDeleteBranches is the most find[$or] alternatives a delete has, as each is a search
+const maxDeleteBranches = 10
+
+// DeleteByQuery deletes what a query finds, as Trio deletes by find[id][$eq], by find[created_at][$eq] with
+// find[eventType][$eq], and a reading by find[$or]. Each alternative must have filters, all of them ones Nighttroop
+// knows, so a delete never takes more than was asked for, and each deletes at most what a search gives
+func DeleteByQuery(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		collection, _, err := nsutils.GetCollectionAndEnsurePermission(r, nsutils.CollectionActionDelete)
+		if err != nil {
+			nsutils.WriteError(w, err)
+			return
+		}
+		values := r.URL.Query()
+		permanent := values.Get("permanent") == "true"
+		values.Del("permanent")
+
+		branches := nsquery.OrBranches(values)
+		queries := make([]nsquery.Query, 0, len(branches))
+		for _, branch := range branches {
+			qv, parseErr := nsquery.ParseQueryValues(branch)
+			if parseErr != nil || len(qv.Other) > 0 || !qv.HasAnyFilters() || len(branches) > maxDeleteBranches {
+				nsutils.WriteError(w, nsutils.ErrBadQueryError("a delete needs filters Nighttroop knows"))
+				return
+			}
+			queries = append(queries, nsquery.QueryValueToQuery(qv))
+		}
+
+		deleted := map[string]bool{}
+		for _, query := range queries {
+			docs, searchErr := store.Search(r.Context(), collection, query)
+			if searchErr != nil {
+				nsutils.WriteError(w, searchErr)
+				return
+			}
+			for _, doc := range docs {
+				if id := doc.Identifier(); !deleted[id] && store.Delete(r.Context(), collection, id, permanent) == nil {
+					deleted[id] = true
+				}
+			}
+		}
+		apiutils.WriteJSON(w, http.StatusOK, map[string]any{"acknowledged": true, "deletedCount": len(deleted)})
 	}
 }
 

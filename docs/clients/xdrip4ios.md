@@ -161,6 +161,7 @@ and asked again. Its decoding is lenient.
 When the user deletes a reading or smooths or rebuilds readings: `DELETE /api/v1/entries.json?find[type]=sgv` with
 `find[date][$gte]` and `find[date][$lte]`, or with up to 50 `find[date][$in][]`, reading `n`, `deletedCount` or
 `result.n`; then the new values are `POST`ed to `/api/v1/entries` without `_id`, to replace the stored ones.
+Nighttroop deletes by the date range; `find[date][$in][]` is not a filter it knows, so that is a 400 (TODO P2).
 
 ## Quirks
 
@@ -193,5 +194,5 @@ When the user deletes a reading or smooths or rebuilds readings: `DELETE /api/v1
 | Profile | Works | `follower.http` |
 | Device status | Works | `follower.http` |
 | History import | Works, but a day with over 1000 readings loses its oldest, as a search gives at most 1000 by design | |
-| Delete readings by a query | Not supported (TODO P2) | |
+| Delete readings by a query | Fixed in this PR for a date range; `find[date][$in][]` is a 400 (TODO P2) | `uploader.http` |
 | Rewrite readings by posting them again | Not supported, the stored ones are kept (TODO P1) | |

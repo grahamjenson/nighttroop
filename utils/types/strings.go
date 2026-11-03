@@ -231,3 +231,12 @@ func (i *IdentifierString) UnmarshalJSON(data []byte) error {
 	*i = IdentifierString(str)
 	return nil
 }
+
+// IdentifierFromJSON is the identifier in data, or nil when there is none or it is not one
+func IdentifierFromJSON(data json.RawMessage) *IdentifierString {
+	var id IdentifierString
+	if len(data) == 0 || string(data) == "null" || json.Unmarshal(data, &id) != nil {
+		return nil
+	}
+	return &id
+}

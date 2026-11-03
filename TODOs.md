@@ -91,8 +91,8 @@
     1. P2: Return a BG Check's `glucose` as xDrip4iOS can match it: it reads it as mg/dL only when `units` is
        exactly `mg/dl`, and as mmol/L otherwise, and matches an upload by its exact value, so Nighttroop's
        `mg/dL` or rounded mmol/L makes it upload the BG check again each sync and add a copy in the app
-    1. P2: Delete entries by a query, `DELETE /api/v1/entries.json?find[type]=sgv&find[date][$gte]=..&find[date][$lte]=..`
-       and `find[date][$in][]=..`, which xDrip4iOS sends when a reading is deleted or readings are rebuilt
+    1. P2: Delete entries by a list of dates, `DELETE /api/v1/entries.json?find[type]=sgv&find[date][$in][]=..`,
+       which xDrip4iOS sends when a reading is deleted; its date range delete works, but this is a 400
     1. P4: `GET /api/v1/status.json` without credentials, which xDrip4iOS's follower service status reads, is a
        401, so it shows a fetch error; answering it would show which sites exist
 1. xDrip+ ([docs/clients/xdrip.md](docs/clients/xdrip.md)):
@@ -111,10 +111,6 @@
        to decode a carbs fetch with any treatment without carbs, and once it gets only carbs it would import
        its own back as new ones and double them, as without the `enteredBy` filters (`enteredBy` comes back as
        sent) it gets its own; iAPS takes any announcement as a remote command, not only `enteredBy` `remote`
-    1. P2: v1 delete by query (`DELETE /api/v1/treatments.json?find[id][$eq]=`, `find[created_at][$eq]` with
-       `find[eventType][$eq]`, and entries' `find[$or]`) is a 405; Trio deletes carbs, insulin and glucose
-       this way, and the override before uploading its run, so override runs are never uploaded. It needs
-       Trio's `id` kept as the identifier, and must refuse any filter it does not know rather than ignore it
 
 ## Bugs
 

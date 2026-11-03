@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/url"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"nighttroop.t1d.nz/utils/mapstructure"
@@ -106,7 +107,7 @@ var forwardLookupName = map[string][]string{
 	"dategte": {"date$gte", "find[date][$gte]", "find[dateString][$gte]", "mills$gte", "find[mills][$gte]", "startDate$gte", "find[startDate][$gte]", "start$gte", "find[start][$gte]", "created_at$gte", "find[created_at][$gte]"},
 	"dategt":  {"date$gt", "find[date][$gt]", "find[dateString][$gt]", "mills$gt", "find[mills][$gt]", "startDate$gt", "find[startDate][$gt]", "start$gt", "find[start][$gt]", "created_at$gt", "find[created_at][$gt]"},
 
-	"dateeq": {"date$eq", "find[date][$eq]", "find[dateString][$eq]", "mills$eq", "find[mills][$eq]", "startDate$eq", "find[startDate][$eq]", "start$eq", "find[start][$eq]"},
+	"dateeq": {"date$eq", "find[date][$eq]", "find[dateString][$eq]", "mills$eq", "find[mills][$eq]", "startDate$eq", "find[startDate][$eq]", "start$eq", "find[start][$eq]", "created_at$eq", "find[created_at][$eq]"},
 
 	"datelte": {"date$lte", "find[date][$lte]", "find[dateString][$lte]", "mills$lte", "find[mills][$lte]", "startDate$lte", "find[startDate][$lte]", "start$lte", "find[start][$lte]", "created_at$lte", "find[created_at][$lte]"},
 	"datelt":  {"date$lt", "find[date][$lt]", "find[dateString][$lt]", "mills$lt", "find[mills][$lt]", "startDate$lt", "find[startDate][$lt]", "start$lt", "find[start][$lt]", "created_at$lt", "find[created_at][$lt]"},
@@ -337,4 +338,35 @@ func isNonEmpty(v reflect.Value) bool {
 		// zero value check for everything else
 		return !v.IsZero()
 	}
+}
+
+// orBranch is find[$or][n][...], one of a query's alternatives
+var orBranch = regexp.MustCompile(`^find\[\$or\]\[(\d+)\](\[.+)$`)
+
+// OrBranches is a query once for each of its find[$or] alternatives, each with the query's other values, or the query
+// itself when it has none, as Trio deletes a reading by its id or its dateString
+func OrBranches(values url.Values) []url.Values {
+	common := url.Values{}
+	branches := map[string]url.Values{}
+	for key, vals := range values {
+		if m := orBranch.FindStringSubmatch(key); m != nil {
+			if branches[m[1]] == nil {
+				branches[m[1]] = url.Values{}
+			}
+			branches[m[1]]["find"+m[2]] = vals
+		} else {
+			common[key] = vals
+		}
+	}
+	if len(branches) == 0 {
+		return []url.Values{values}
+	}
+	out := make([]url.Values, 0, len(branches))
+	for _, branch := range branches {
+		for key, vals := range common {
+			branch[key] = vals
+		}
+		out = append(out, branch)
+	}
+	return out
 }
