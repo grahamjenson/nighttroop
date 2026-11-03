@@ -354,6 +354,7 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   uploads after one are kept too; the site can add a Sensor Stop change and a Sensor Stop event group.
 - A profile has `enteredBy`, the identity that uploaded it, as Trio needs it to import one.
 - A treatment's `enteredBy` comes back as sent, e.g. `loop://iPhone` or `Trio`, else the identity that uploaded it.
+- A treatment's `uuid` comes back as sent, as xDrip+ matches its own by it; one sent with no `_id` is its identifier.
 - Treatments can be found by whether they have `carbs` or a `duration` (`find[carbs][$exists]`), by `enteredBy`, and
   without some `enteredBy`s (`find[enteredBy][$ne]`, repeated or under `find[$and][n]`), as Trio and iAPS fetch them.
 - A create that names its `identifier` keeps it, and only a document with that identifier is its duplicate.

@@ -105,6 +105,8 @@ B {"timestamp": {{ itime 8 }}, "eventType": "<none>", "enteredBy": "xdrip", "not
    "sysTime": "{{ javatime 8 }}", "_id": "8c5f0c3a1b2d4e6f9a7b0c1d"}
 ASSERT_STATUS 200
 ASSERT_EQUALS "8c5f0c3a1b2d4e6f9a7b0c1d" "@_id"
+# The uuid is given back as sent, as xDrip+ matches its own treatments by it
+ASSERT_EQUALS "8c5f0c3a-1b2d-4e6f-9a7b-0c1d2e3f4a5b" "@uuid"
 ASSERT_EQUALS "Note" "@eventType"
 ASSERT_EQUALS 4.5 "@insulin"
 ASSERT_EQUALS 45 "@carbs"
@@ -191,12 +193,37 @@ ASSERT_EXISTS "#Last-Modified.0"
 ASSERT_EXISTS "#Etag.0"
 ASSERT_LENGTH 5 "@"
 ASSERT_EQUALS "8c5f0c3a1b2d4e6f9a7b0c1d" "@0._id"
+ASSERT_EQUALS "8c5f0c3a-1b2d-4e6f-9a7b-0c1d2e3f4a5b" "@0.uuid"
+ASSERT_EQUALS "xdrip" "@0.enteredBy"
 ASSERT_EXISTS "@0.created_at"
 ASSERT_EQUALS 4.5 "@0.insulin"
 ASSERT_EQUALS 50 "@0.carbs"
 ASSERT_EQUALS "pizza" "@0.notes"
 ASSERT_EQUALS "Walked the dog" "@1.notes"
+ASSERT_EQUALS "2f1b4c8d-3e5a-4b7c-9d0e-1f2a3b4c5d6e" "@1.uuid"
 ASSERT_EQUALS 0 "@1.insulin"
+
+// v3 gives the uuid back as sent too
+NAME xdrip_treatment_v3
+GET http://{{ site }}/api/v3/treatments/8c5f0c3a1b2d4e6f9a7b0c1d
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "8c5f0c3a-1b2d-4e6f-9a7b-0c1d2e3f4a5b" "@result.uuid"
+
+// A treatment sent with only a uuid has it as its identifier, and gives it back as sent
+NAME xdrip_create_uuid_only
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+B {"eventType": "<none>", "enteredBy": "xdrip", "notes": "uuid only", "uuid": "3a2b1c0d-9e8f-4a7b-8c6d-5e4f3a2b1c0d",
+   "created_at": "{{ time 40 }}"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "3a2b1c0d-9e8f-4a7b-8c6d-5e4f3a2b1c0d" "@0._id"
+ASSERT_EQUALS "3a2b1c0d-9e8f-4a7b-8c6d-5e4f3a2b1c0d" "@0.uuid"
+
+NAME xdrip_delete_uuid_only
+DELETE http://{{ site }}/api/v1/treatments/3a2b1c0d-9e8f-4a7b-8c6d-5e4f3a2b1c0d
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
 
 ######
 # TREATMENT DELETE: postTreatments finds the _id by uuid, then deletes it
@@ -208,6 +235,7 @@ H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
 ASSERT_EQUALS "2f1b4c8d3e5a4b7c9d0e1f2a" "@0._id"
+ASSERT_EQUALS "2f1b4c8d-3e5a-4b7c-9d0e-1f2a3b4c5d6e" "@0.uuid"
 
 NAME xdrip_delete_treatment
 DELETE http://{{ site }}/api/v1/treatments/{{ dig "xdrip_find_treatment_by_uuid.0._id" }}

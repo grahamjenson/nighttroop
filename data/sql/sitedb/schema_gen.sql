@@ -177,6 +177,8 @@ CREATE TABLE event_groups (
 
     -- who the app says entered it, as Nightscout keeps it, e.g. loop://iPhone or xdrip
     entered_by TEXT CHECK(length(entered_by) <= 64),
+    -- the app's own id for it, given back as sent, e.g. xDrip+'s uuid
+    uuid TEXT CHECK(length(uuid) <= 64),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
