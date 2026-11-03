@@ -30,6 +30,10 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config *config.ServerConfig) c
 	r.Handle("/socket.io/", websocket)
 	// As in Nightscout, v3's version needs no token: Nightguard asks it without one to see if v3 is there
 	r.Get("/api/v3/version", nsv3.Version(store))
+	// Nightscout serves its web app at its root, which LoopFollow's Nightscout tab opens, so it goes to the site's pages
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, config.SiteURL(httputils.GetSiteContext(r.Context()).SiteID), http.StatusFound)
+	})
 
 	// make sure to check auth for JWT/token param/token URL param
 
