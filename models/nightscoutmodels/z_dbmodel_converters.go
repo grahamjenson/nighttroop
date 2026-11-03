@@ -164,6 +164,7 @@ func DBModelToFood(source *sitedb.FoodPreset, context *httputils.SiteContext) Fo
 		nightscoutmodelsFood.Identifier = &pTypesIdentifierString
 		pTypesShortString := types.ShortString((*source).Name)
 		nightscoutmodelsFood.Name = &pTypesShortString
+		nightscoutmodelsFood.Type = FoodDocumentType(source)
 		if (*source).FoodType != nil {
 			typesShortString := types.ShortString(*(*source).FoodType)
 			nightscoutmodelsFood.FoodType = &typesShortString

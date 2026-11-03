@@ -2,6 +2,8 @@ package nightscoutmodels
 
 import (
 	"encoding/json"
+
+	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/types"
 )
 
@@ -9,6 +11,8 @@ type Food struct {
 	Identifier *types.IdentifierString `json:"identifier,omitempty"`
 
 	Name *types.ShortString `json:"name,omitempty"`
+	// Type is Nightscout's food or quickpick; Nighttroop keeps foods, and AAPS loads only those of type food
+	Type *types.ShortString `json:"type,omitempty"`
 
 	FoodType    *types.ShortString `json:"foodType,omitempty"` // Type of food
 	Category    *types.ShortString `json:"category,omitempty"`
@@ -99,4 +103,9 @@ func (t Food) GetUtcOffsetMinutes() *int64 {
 
 func (t Food) GetIdentifier() *string {
 	return t.Identifier.Stringp()
+}
+
+// FoodDocumentType is a stored food's Nightscout type, food, as Nighttroop keeps no quickpicks
+func FoodDocumentType(_ *sitedb.FoodPreset) *types.ShortString {
+	return new(types.ShortString("food"))
 }

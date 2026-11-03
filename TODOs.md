@@ -70,8 +70,7 @@
     1. P2: Keep the fields AAPS's followers need: an effective profile switch's `original*` fields (else it is read
        as a Note), a running mode's `mode`, `autoForced`, `reasons` and `originalDuration`, a temp basal's `type`
        (e.g. `PUMP_SUSPEND`), and a calibration's `isCalibration` and `sensorMgdlAtPairing`
-    1. P2: Return a food's Nightscout `type` (`food`), `portion`, `unit` and `gi`; AAPS keeps only foods of type
-       `food`, so it loads none
+    1. P4: Return a food's Nightscout `portion`, `unit` and `gi` as sent; AAPS takes 0, g and none without them
     1. P4: Keep arbitrary API v3 `settings` documents and support v2 authorization roles and subjects, which AAPS 4's
        client control (pairing and remote commands) uses
     1. P2: Check If-Unmodified-Since on API v3 replace and patch, in the same query as the update
