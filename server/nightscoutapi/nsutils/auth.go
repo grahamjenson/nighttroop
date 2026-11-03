@@ -3,7 +3,9 @@ package nsutils
 import (
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
+	"time"
 
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -113,4 +115,24 @@ func NighttroopIdentityToNightscoutIdentity(identityName string, ntid consts.Ide
 		Name:        identityName,
 		Permissions: permissions,
 	}, nil
+}
+
+// Authorization is the identity's JWT and permissions, as Nightscout gives them from /api/v2/authorization/request and
+// as status.json's authorized. LoopFollow takes an identity as one that can write only from an exact
+// api:treatments:create, not a wildcard, so that is listed when it has it
+func Authorization(siteContext *httputils.SiteContext) (map[string]any, error) {
+	identity, err := NighttroopIdentityToNightscoutIdentity(siteContext.IdentityModel.Name, siteContext.IdentityModel.Role)
+	if err != nil {
+		return nil, err
+	}
+	token, expiresAt, err := siteContext.Config.Security.GenerateUserJWTToken(siteContext.SiteID, siteContext.IdentityModel.Name, string(siteContext.IdentityModel.Role))
+	if err != nil {
+		return nil, err
+	}
+	permissions := identity.Permissions
+	if HasPermission(*identity, "api:treatments:create") {
+		permissions = append(slices.Clone(permissions), "api:treatments:create")
+	}
+	return map[string]any{"token": token, "sub": siteContext.IdentityModel.Name, "permissionGroups": [][]string{permissions},
+		"iat": time.Now().Unix(), "exp": expiresAt.Unix()}, nil
 }

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
@@ -73,25 +72,16 @@ func NightscoutAuthRoute(controlDB *db.ControlDB, config *config.ServerConfig) h
 			return
 		}
 
-		// The user should have already been verified
-		token, expiresAt, err := config.Security.GenerateUserJWTToken(siteContext.SiteID, siteContext.IdentityModel.Name, string(siteContext.IdentityModel.Role))
-		if err != nil {
-			http.Error(w, "Internal Server Error: Failed to generate JWT token", http.StatusInternalServerError)
-			return
-		}
-
 		// An identity with no Nightscout role, such as an admin, cannot use the Nightscout API
-		nsIdentity, err := nsutils.NighttroopIdentityToNightscoutIdentity(siteContext.IdentityModel.Name, siteContext.IdentityModel.Role)
-		if err != nil {
+		if _, err := nsutils.NighttroopIdentityToNightscoutIdentity(siteContext.IdentityModel.Name, siteContext.IdentityModel.Role); err != nil {
 			http.Error(w, "Forbidden: this identity cannot use the Nightscout API", http.StatusForbidden)
 			return
 		}
-		response := map[string]any{
-			"token":            token,
-			"sub":              siteContext.IdentityModel.Name,
-			"permissionGroups": [][]string{nsIdentity.Permissions},
-			"iat":              time.Now().Unix(),
-			"exp":              expiresAt.Unix(),
+		// The user should have already been verified
+		response, err := nsutils.Authorization(siteContext)
+		if err != nil {
+			http.Error(w, "Internal Server Error: Failed to generate JWT token", http.StatusInternalServerError)
+			return
 		}
 
 		jsonResponse, err := json.Marshal(response)
