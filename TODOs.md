@@ -111,8 +111,6 @@
     1. P2: An unknown `find[...]` filter is ignored, so the search gives everything, and a client that deletes the
        first match (as xDrip+ does by `find[uuid]`) deletes the wrong document. Give nothing for a filter on an unknown
        field
-    1. P4: Keep xDrip+'s heart rate (`type` `hr-bpm`, `bpm`) and motion (`motion-class`, `class`) activity, which are
-       accepted with only their time
     1. P4: Give back a treatment's `enteredBy` and `uuid` as sent; xDrip+ looks for `enteredBy` starting `xdrip` to
        skip its own, and falls back to matching time and amounts
 1. Trio and iAPS ([docs/clients/trio.md](docs/clients/trio.md)):

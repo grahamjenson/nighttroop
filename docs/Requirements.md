@@ -301,6 +301,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - Duplicate uploads are ignored; values far outside real use are refused.
 - A `created_at` filter given a time with no zone, as LoopFollow sends it, reads it as UTC.
 - Loop's and Trio's Suspend Pump and Resume Pump treatments are kept.
+- An activity's `type`, as xDrip+ sends it, is its activity type, a heart rate's `bpm` its heart rate and a motion's
+  `class` its name.
 - A device status keeps its pump's clock, manufacturer and model, its uploader's battery, returned in both
   `uploader.battery` and `uploaderBattery`, and Loop's override in force.
 - A device status keeps Trio's pump `bolusIncrement`, LoopFollow's remote bolus step, while the status as sent is kept.
