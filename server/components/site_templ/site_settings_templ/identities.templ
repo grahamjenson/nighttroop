@@ -2,6 +2,7 @@ package site_settings_templ
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"slices"
 	"strconv"
@@ -102,6 +103,15 @@ func clientSteps(identity *sitemodels.UserIdentity) (deviceClient, [][]stepPart)
 		steps = append(steps, stepParts(step, values))
 	}
 	return deviceClients[index], steps
+}
+
+// forceClientRole is the client select's change handler: a client that must have a role sets the role select to it
+// and stops it being changed, as the server refuses any other
+func forceClientRole(formID string) string {
+	roles, _ := json.Marshal(sitemodels.ClientRoles)
+	return `const role = ` + string(roles) + `[event.target.value], trigger = document.getElementById("select-form-` + formID + `");
+		if (role) { trigger.querySelector("input[type=hidden]").value = role }
+		trigger.disabled = !!role`
 }
 
 func roleLabel(role string) string {
@@ -352,6 +362,27 @@ templ formCreateIdentity(tableid string, name string, roles []sitemodels.RoleOpt
 						Required:    true,
 					})
 				}
+				// The client is picked first, as some decide the role
+				if name == "Device" {
+					@field.Field("client-"+formID, "Client", "w-36") {
+						<div onchange={ templ.JSUnsafeFuncCall(forceClientRole(formID)) }>
+							@selectbox.SelectBox() {
+								@selectbox.Trigger(selectbox.TriggerProps{ID: "client-" + formID, Name: "client", Form: formID}) {
+									@selectbox.Value(selectbox.ValueProps{Placeholder: "Client"})
+								}
+								@selectbox.Content(selectbox.ContentProps{NoSearch: true}) {
+									@selectbox.Group() {
+										for i, client := range deviceClients {
+											@selectbox.Item(selectbox.ItemProps{Value: client.Value, Selected: i == 0}) {
+												{ client.Label }
+											}
+										}
+									}
+								}
+							}
+						</div>
+					}
+				}
 				if (len(roles) == 1) {
 					<input type="hidden" name="role" value={ string(roles[0].Value) }/>
 				} else {
@@ -374,24 +405,6 @@ templ formCreateIdentity(tableid string, name string, roles []sitemodels.RoleOpt
 											Selected: i == 0,
 										}) {
 											{ role.Label }
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-				if name == "Device" {
-					@field.Field("client-"+formID, "Client", "w-36") {
-						@selectbox.SelectBox() {
-							@selectbox.Trigger(selectbox.TriggerProps{ID: "client-" + formID, Name: "client", Form: formID}) {
-								@selectbox.Value(selectbox.ValueProps{Placeholder: "Client"})
-							}
-							@selectbox.Content(selectbox.ContentProps{NoSearch: true}) {
-								@selectbox.Group() {
-									for i, client := range deviceClients {
-										@selectbox.Item(selectbox.ItemProps{Value: client.Value, Selected: i == 0}) {
-											{ client.Label }
 										}
 									}
 								}

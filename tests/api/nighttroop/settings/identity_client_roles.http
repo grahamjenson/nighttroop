@@ -1,0 +1,36 @@
+INCLUDE steps/new_site_admin.steps
+
+// A loop's device must be the PWD phone: any other role is refused, and nothing is made
+NAME trio_as_read_device
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "trio", "role": "device_read", "client": "trio"}
+ASSERT_STATUS 400
+ASSERT_EQUALS "Bad or missing request body: A trio device must have the device_pwd_phone role" "@message"
+
+// Without a role it is the PWD phone
+NAME aaps_without_role
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "aaps", "client": "aaps"}
+ASSERT_STATUS 201
+ASSERT_EQUALS "device_pwd_phone" "@result.role"
+
+NAME loop_as_pwd_phone
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "loop", "role": "device_pwd_phone", "client": "loop"}
+ASSERT_STATUS 201
+ASSERT_EQUALS "device_pwd_phone" "@result.role"
+
+// Other clients take the role they are given
+NAME nightguard_as_read_device
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "watch", "role": "device_read", "client": "nightguard"}
+ASSERT_STATUS 201
+ASSERT_EQUALS "device_read" "@result.role"
