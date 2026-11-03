@@ -122,7 +122,7 @@ dataPercentage: Int, details: {maxSize}}}`. Nighttroop has no `dbsize` and sends
 ### Nightscout tab
 
 The Nightscout tab is a web view of `<site>/?token=` (`ViewControllers/NightScoutViewController.swift`). Nighttroop
-does not serve the Nightscout web app there, so it is a 404.
+does not serve the Nightscout web app, so it sends the tab on to the site's own pages, where the user signs in.
 
 ## Socket
 
@@ -181,5 +181,5 @@ device token, bundle and team from the profile.
 | Profile Trio remote control settings and override presets | Works since #516 (they were dropped) |
 | Profile history for the remote diagnostics | Not supported (only the latest), TODO P4 |
 | `dbsize` property | Not supported (sends `{}`, the row is hidden) |
-| Nightscout tab (`/`) | Not supported (404), TODO P4 |
+| Nightscout tab (`/`) | Fixed: sent on to the site's pages |
 | Socket.IO connect, `authorize` without ack, `connected`, `dataUpdate` and deltas | Works |
