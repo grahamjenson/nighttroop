@@ -192,6 +192,6 @@ When the user deletes a reading or smooths or rebuilds readings: `DELETE /api/v1
 | Follower readings with `count` and `find[date][$gte]` | Works, with the identity in mg/dL, set by an admin (#523); not one of Add Device's mg/dL clients (TODO P1) | `follower.http` |
 | Profile | Works | `follower.http` |
 | Device status | Works | `follower.http` |
-| History import | Works, but a day with over 1000 readings loses its oldest (TODO P3) | |
+| History import | Works, but a day with over 1000 readings loses its oldest, as a search gives at most 1000 by design | |
 | Delete readings by a query | Not supported (TODO P2) | |
-| Rewrite readings by posting them again | Not supported, the stored ones are kept (TODO P3) | |
+| Rewrite readings by posting them again | Not supported, the stored ones are kept (TODO P1) | |

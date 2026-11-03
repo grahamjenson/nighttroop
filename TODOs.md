@@ -6,7 +6,6 @@
    and check a fresh server restores from those backups
 1. Test end to end with real devices: Loop, Trio, AAPS and xDrip+ uploading, follower apps (xDrip+ follower, LoopFollow,
    Nightguard) reading, and Dexcom and Libre sync
-1. A way for testers to report bugs and give feedback, linked from the site
 1. A tester guide: creating a site, keeping its credentials safe (they cannot be recovered), and connecting uploaders,
    followers and sync
 
@@ -53,9 +52,16 @@
 1. P4: Keep which batches were uploaded, and with which sites, across restarts, as the first backup round after a
    restart uploads every batch again though their backups are current
 1. Nightscout API:
-    1. P1: AAPS reads an entry's `sgv` as mg/dL whatever its units, and only knows the units `mg/dl` and `mmol`, so
-       with an identity in mmol/L (the default in mmol/L countries) its readings, temp targets and profiles are read
-       wrong. Return mg/dL to Nightscout clients, or set device identities to mg/dL (docs/clients/aaps.md)
+    1. P1: Nightscout clients (AAPS, Loop, LoopFollow, xDrip4iOS, Nightguard, the xDrip+ follower) read `sgv` and
+       `mbg`, and AAPS its temp targets and profiles, as mg/dL whatever the `units`, but the API gives them in the
+       identity's units, then the site's. A device added for a client in Add Device is in mg/dL (#524) and an admin
+       can set any identity's units (#523), but the site's first PWD phone, a device added as Other, and LoopFollow,
+       xDrip4iOS and an AAPSClient follower, which are not in Add Device's clients, still get the site's units. Add
+       them to Add Device's clients
+    1. P1: A Nightscout batch of over 100 records is refused with a 400 (`consts.MaxBatchRecords`), and Loop (up to
+       1000 a request) and Juggluco on v1 (up to 5000) send the same batch again until it is accepted, so after a
+       backlog (first set up, or about 8 hours offline) they never upload again. Take larger v1 batches in chunks, or
+       raise the cap for them (docs/clients/loop.md, docs/clients/juggluco.md)
     1. P1: Honour `sort` in searches and sort v3 history by `srvModified` oldest first, as Nightscout does. Searches
        are always newest first, so AAPS's first load (`sort=date&date$gt=…&limit=500`, back 100 days) and its
        history paging (`limit=500`) skip all but the newest 500 when there are more, and its profile history takes
@@ -69,65 +75,43 @@
        (e.g. `PUMP_SUSPEND`), and a calibration's `isCalibration` and `sensorMgdlAtPairing`
     1. P2: Return a food's Nightscout `type` (`food`), `portion`, `unit` and `gi`; AAPS keeps only foods of type
        `food`, so it loads none
-    1. P3: Accept the SHA1 of a token as the API secret on Socket.IO `authorize`, as AAPS 3.4 and older send it,
-       which needs a kept hash of each token
     1. P4: Keep arbitrary API v3 `settings` documents and support v2 authorization roles and subjects, which AAPS 4's
        client control (pairing and remote commands) uses
     1. P2: Check If-Unmodified-Since on API v3 replace and patch, in the same query as the update
-    1. P3: Juggluco on v1 posts up to 5000 readings in one `/api/v1/entries` request and sends the same batch again
-       until it is accepted, so a batch over the 100 record cap never uploads
     1. P4: Only write a treatment's events that changed, rather than every one on each update
     1. P4: Keep when a site's settings last changed, for API v3 lastModified
 1. LoopFollow ([docs/clients/loopfollow.md](docs/clients/loopfollow.md)):
-    1. P1: LoopFollow reads `sgv` as mg/dL, as Nightscout always sends it, so an identity in mmol/L shows 6.7 as
-       7 mg/dL with urgent low alarms; send it mg/dL (its requests say `LoopFollow` in the User-Agent) or warn
     1. P2: Keep Loop's `automatic` on boluses, so LoopFollow shows automatic boluses as SMBs and leaves them out of
        its bolus stats
-    1. P2: Keep Loop's `durationType: indefinite` on a Temporary Override; without it the override has duration 0,
-       which LoopFollow does not show
-    1. P3: LoopFollow asks for up to 5000 treatments and 1152 entries a day, above the 1000 a search returns, so a
-       Trio day of SMBs and temp basals, or weeks of stats, are cut to the newest 1000
+    1. P4: Keep Loop's `durationType: indefinite` on a Temporary Override, which is kept a week long (#515), so
+       LoopFollow shows it as a week rather than indefinite
     1. P3: Add `authorized` (the JWT and permissionGroups) to status.json, with `api:treatments:create` for a
        write identity, so LoopFollow shows "Read & Write" rather than "Read"
     1. P4: Keep a treatment's `enteredBy`, which LoopFollow shows for overrides and temp targets, rather than the
        identity's name
-    1. P4: Keep the pump's `pumpID`, so LoopFollow carries an Omnipod reservoir reading over statuses without one,
-       and its `bolusIncrement`, LoopFollow's remote bolus step
+    1. P4: Keep the pump's `bolusIncrement`, LoopFollow's remote bolus step
     1. P4: A profile search with no filters gives only the latest store, so LoopFollow's remote diagnostics see no
        history
     1. P4: The Nightscout host's `/` is a 404, which LoopFollow's Nightscout tab shows; redirect it to the site
+1. Loop ([docs/clients/loop.md](docs/clients/loop.md)):
     1. P1: Replace a treatment uploaded again rather than ignore it, as Nightscout does: Loop posts a temp basal or
        bolus again when it ends early, with the same date and `syncIdentifier`, and the first upload's duration and
-       amount are kept ([docs/clients/loop.md](docs/clients/loop.md))
-    1. P2: Keep a Loop device status's `override`, `uploader` and pump `clock`, `pumpID`, `model`, `suspended` and
-       `bolusing`, which followers show; only the loop object, pump battery and reservoir are kept
+       amount are kept. Trio's ended temp targets and overrides, and xDrip4iOS's re-sent readings, need the same
     1. P2: Loop remote commands: `POST /api/v2/notifications/loop`, sent to Loop as an Apple push to its profile's
        `loopSettings.deviceToken`
-    1. P2: The Nightscout API's `sgv` and `mbg` are in the site's units, but NightscoutKit and most followers read them
-       as mg/dL, so on an mmol/L site they read 6.3 as 6.3 mg/dL
     1. P3: NightscoutKit's `fetchTreatments` drops treatments without a `timestamp`, a bolus without `programmed`
        and a temp basal without `temp`, which Nighttroop does not return
-    1. P2: Nightguard reads `sgv` and `mbg` as mg/dL whatever an entry's `units`, so with mmol/L settings its
-       readings are 18 times too low and its low alarms go off; for now its identity must be set to mg/dL
-       ([docs/clients/nightguard.md](docs/clients/nightguard.md)). Make that clearer, e.g. a mg/dL Nightscout
-       units option when adding a follower device
-    1. xDrip4iOS ([docs/clients/xdrip4ios.md](docs/clients/xdrip4ios.md)):
-        1. P1: The tester guide says to set xDrip4iOS's identity's units to mg/dL, as its follower reads `sgv` as
-           mg/dL whatever the `units`
-        1. P2: Return a BG Check's `glucose` as xDrip4iOS can match it: it reads it as mg/dL only when `units` is
-           exactly `mg/dl`, and as mmol/L otherwise, and matches an upload by its exact value, so Nighttroop's
-           `mg/dL` or rounded mmol/L makes it upload the BG check again each sync and add a copy in the app
-        1. P2: Delete entries by a query, `DELETE /api/v1/entries.json?find[type]=sgv&find[date][$gte]=..&find[date][$lte]=..`
-           and `find[date][$in][]=..`, which xDrip4iOS sends when a reading is deleted or readings are rebuilt
-        1. P3: A reading sent again with the same date and device, and no `_id`, replaces the stored one, as
-           xDrip4iOS's smoothing and rebuilds expect, rather than being ignored as a duplicate
-        1. P3: xDrip4iOS's history import asks for 2000 entries a day and takes fewer as the whole day, so a day of
-           readings a minute apart loses its oldest past Nighttroop's 1000
-        1. P4: `GET /api/v1/status.json` without credentials, which xDrip4iOS's follower service status reads, is a
-           401, so it shows a fetch error; answering it would show which sites exist
-    1. P1: API v1 entries give `sgv` in the identity's or site's units, but Nightscout always gives mg/dL and the
-       xDrip+ follower reads it as a whole number of mg/dL, so on an mmol/L site it shows 6.5 mmol/L as 6 mg/dL. Give
-       mg/dL to v1 clients, or have device identities default to mg/dL ([docs/clients/xdrip.md](docs/clients/xdrip.md))
+    1. P4: Keep a Loop device status's uploader `name`, `timestamp` and `isCharging`; the pump's `pumpID`,
+       `suspended` and `bolusing` are given back only while the status as sent is kept
+1. xDrip4iOS ([docs/clients/xdrip4ios.md](docs/clients/xdrip4ios.md)):
+    1. P2: Return a BG Check's `glucose` as xDrip4iOS can match it: it reads it as mg/dL only when `units` is
+       exactly `mg/dl`, and as mmol/L otherwise, and matches an upload by its exact value, so Nighttroop's
+       `mg/dL` or rounded mmol/L makes it upload the BG check again each sync and add a copy in the app
+    1. P2: Delete entries by a query, `DELETE /api/v1/entries.json?find[type]=sgv&find[date][$gte]=..&find[date][$lte]=..`
+       and `find[date][$in][]=..`, which xDrip4iOS sends when a reading is deleted or readings are rebuilt
+    1. P4: `GET /api/v1/status.json` without credentials, which xDrip4iOS's follower service status reads, is a
+       401, so it shows a fetch error; answering it would show which sites exist
+1. xDrip+ ([docs/clients/xdrip.md](docs/clients/xdrip.md)):
     1. P1: Keep xDrip+'s `Sensor Stop` treatments. An unknown eventType is refused, and xDrip+ uploads its treatments
        one at a time, stops at a refused one and marks them all done, so the treatments queued after a Sensor Stop are
        never uploaded. Adding the type needs its kinds of event in `sitemodels.EventGroupTypeKinds`, which also adds it to
@@ -135,29 +119,22 @@
     1. P2: An unknown `find[...]` filter is ignored, so the search gives everything, and a client that deletes the
        first match (as xDrip+ does by `find[uuid]`) deletes the wrong document. Give nothing for a filter on an unknown
        field
-    1. P3: An `mbg` entry also has `sgv` in v1, so the xDrip+ follower, which reads every entry as a reading, shows a
-       finger stick as a CGM reading. Leave `sgv` off `mbg` entries
     1. P4: Keep xDrip+'s heart rate (`type` `hr-bpm`, `bpm`) and motion (`motion-class`, `class`) activity, which are
        accepted with only their time
     1. P4: Give back a treatment's `enteredBy` and `uuid` as sent; xDrip+ looks for `enteredBy` starting `xdrip` to
        skip its own, and falls back to matching time and amounts
-    1. Trio and iAPS ([docs/clients/trio.md](docs/clients/trio.md)):
-        1. P1: Filter v1 treatments on `find[carbs][$exists]` and `find[duration][$exists]`, and on `enteredBy`
-           (`find[enteredBy]`, `find[enteredBy][$ne]` and `find[$and][n][enteredBy][$ne]`), together: Trio fails
-           to decode a carbs fetch with any treatment without carbs, and once it gets only carbs it would import
-           its own back as new ones and double them, as `enteredBy` comes back as the identity, not `Trio`; iAPS
-           takes any announcement as a remote command, not only `enteredBy` `remote`
-        1. P1: A treatment uploaded again with the same `created_at` and `eventType` but a new duration (Trio's
-           temp target and override runs, when one ends early) replaces the first, as Nightscout's v1 upsert does;
-           now the first is kept, so an ended override stays 30 days long
-        1. P2: v1 delete by query (`DELETE /api/v1/treatments.json?find[id][$eq]=`, `find[created_at][$eq]` with
-           `find[eventType][$eq]`, and entries' `find[$or]`) is a 405; Trio deletes carbs, insulin and glucose
-           this way, and the override before uploading its run, so override runs are never uploaded. It needs
-           Trio's `id` kept as the identifier, and must refuse any filter it does not know rather than ignore it
-        1. P3: Keep the device status `pump.clock`, `pump.status`, `pump.bolusIncrement`, the pump battery's
-           voltage and state, and `uploader` (`battery`, `isCharging`) Trio sends, for its followers
-        1. P3: Keep the device status `pump.bolusIncrement`, the pump battery's state, and `uploader` (`battery`,
-           `isCharging`) Trio sends, for its followers
+1. Trio and iAPS ([docs/clients/trio.md](docs/clients/trio.md)):
+    1. P1: Filter v1 treatments on `find[carbs][$exists]` and `find[duration][$exists]`, and on `enteredBy`
+       (`find[enteredBy]`, `find[enteredBy][$ne]` and `find[$and][n][enteredBy][$ne]`), together: Trio fails
+       to decode a carbs fetch with any treatment without carbs, and once it gets only carbs it would import
+       its own back as new ones and double them, as `enteredBy` comes back as the identity, not `Trio`; iAPS
+       takes any announcement as a remote command, not only `enteredBy` `remote`
+    1. P2: v1 delete by query (`DELETE /api/v1/treatments.json?find[id][$eq]=`, `find[created_at][$eq]` with
+       `find[eventType][$eq]`, and entries' `find[$or]`) is a 405; Trio deletes carbs, insulin and glucose
+       this way, and the override before uploading its run, so override runs are never uploaded. It needs
+       Trio's `id` kept as the identifier, and must refuse any filter it does not know rather than ignore it
+    1. P3: Keep the device status `pump.bolusIncrement`, `status.bolusing` and `suspended`, the pump battery's
+       `string` and `display`, and `uploader.isCharging` Trio sends, for its followers
 
 ## Bugs
 
