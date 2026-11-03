@@ -118,3 +118,29 @@ func TestParseEnteredByNotIn(t *testing.T) {
 		})
 	}
 }
+
+// A find[...] filter on a field Nighttroop cannot filter on is marked, so the search matches nothing rather than ignoring
+// it and matching everything; other parameters it does not know, like a cache buster, are still ignored
+func TestParseQueryValuesUnknownFilter(t *testing.T) {
+	tests := []struct {
+		query   url.Values
+		unknown bool
+	}{
+		{url.Values{"find[noise]": {"1"}}, true},
+		{url.Values{"find[notes]": {"walk"}, "find[eventType]": {"Note"}}, true},
+		{url.Values{"find[$or][0][id][$eq]": {"1"}}, true},
+		{url.Values{"find[glucose][$exists]": {"true"}}, true},
+		{url.Values{"find[enteredBy]": {"remote"}, "find[carbs][$exists]": {"true"}, "find[$and][0][enteredBy][$ne]": {"Trio"}}, false},
+		{url.Values{"find[date][$gte]": {"2023-01-01T00:10:00Z"}, "find[type]": {"sgv"}}, false},
+		{url.Values{"find[uuid]": {"8c5f0c3a-1b2d-4e6f-9a7b-0c1d2e3f4a5b"}}, false},
+		{url.Values{"_": {"12345"}, "now": {"1"}}, false},
+	}
+	for _, test := range tests {
+		t.Run(test.query.Encode(), func(t *testing.T) {
+			query, err := ParseQueryValues(test.query)
+			require.NoError(t, err)
+			require.Equal(t, test.unknown, query.UnknownFilter)
+			require.Equal(t, test.unknown, QueryValueToQuery(query).UnknownFilter)
+		})
+	}
+}

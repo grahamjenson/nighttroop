@@ -1045,6 +1045,7 @@ func QueryValueToQuery(source QueryValues) Query {
 		nsqueryQuery.EnteredByEq = &xstring7
 	}
 	nsqueryQuery.EnteredByNin = QueryStringArrayToString(source.EnteredByNin)
+	nsqueryQuery.UnknownFilter = source.UnknownFilter
 	nsqueryQuery.HasFilters = GetHasFilters(source)
 	if source.SortOrder() != nil {
 		nsqueryQuerySort := QuerySort(*source.SortOrder())

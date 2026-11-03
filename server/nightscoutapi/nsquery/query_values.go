@@ -106,6 +106,9 @@ type QueryValues struct {
 
 	Token *string `mapstructure:"token,omitempty" json:"-"`
 
+	// UnknownFilter is a find[...] filter on a field Nighttroop cannot filter on, so the search matches nothing
+	UnknownFilter bool `mapstructure:"-" json:"-"`
+
 	Other map[string]interface{} `mapstructure:",remain"`
 }
 
@@ -277,6 +280,9 @@ func ParseQueryValues(values url.Values) (QueryValues, error) {
 
 	if len(qv.Other) > 0 {
 		slog.Warn("Unrecognized Nightscout Query Parameters", "params", qv.Other)
+	}
+	for key := range qv.Other {
+		qv.UnknownFilter = qv.UnknownFilter || strings.HasPrefix(key, "find[")
 	}
 
 	return qv, nil

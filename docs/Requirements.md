@@ -275,6 +275,9 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - v1 `experiments/test` is `{"status":"ok"}` for an identity that can upload readings and a 401 for any other, so
   Loop's and xDrip4iOS's connection tests pass with a PWD phone's token.
 - A v1 search by `find[_id]` that finds nothing, such as a deleted treatment, is an empty list, not a 404.
+- A search with a `find[...]` filter on a field Nighttroop cannot filter on finds nothing, rather than ignoring it and
+  finding everything, so a client that deletes what it finds cannot delete the wrong records. Other parameters it does
+  not know, like a cache buster, are ignored.
 - A v1 `DELETE /api/v1/entries.json` with `find[type]` and `find[date][$gte]`, `find[date][$lte]` or
   `find[date][$in][]`, as xDrip4iOS deletes readings, soft deletes the entries found, at most 1000 each time, saying
   how many in `deletedCount`; any other filter, or none on the date, is a 400, and it needs a token that can delete.

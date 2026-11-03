@@ -28,6 +28,23 @@ ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
 ASSERT_EQUALS "mbg" "@0.type"
 
+// A filter on a field Nighttroop cannot filter on matches nothing, rather than being ignored and matching everything
+NAME unknown_filter_matches_nothing
+GET http://{{ site }}/api/v1/entries?find[noise]=1&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"
+
+NAME unknown_filter_with_known_ones_matches_nothing
+GET http://{{ site }}/api/v1/entries?find[type]=sgv&find[$and][0][device][$ne]=xDrip&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"
+
+// A parameter that is not a filter, like a cache buster, is still ignored
+NAME unknown_parameter_ignored
+GET http://{{ site }}/api/v1/entries?_=12345&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+
 // History only has what changed since the time in the path
 NAME history_since_before
 GET http://{{ site }}/api/v3/entries/history/{{ itime 60 }}?token={{ token }}

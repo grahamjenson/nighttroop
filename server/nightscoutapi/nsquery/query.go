@@ -85,8 +85,12 @@ type Query struct {
 	EnteredByNin   *string `json:"entered_by_nin,omitempty"`
 
 	// Util Options
-	HasFilters bool       `json:"has_filters,omitempty"`
-	SortOrder  *QuerySort `json:"sort_order,omitempty"`
-	Fields     []string   `json:"fields,omitempty"`
-	Envelope   *bool      `json:"envelope,omitempty"`
+	// UnknownFilter is a find[...] filter on a field Nighttroop cannot filter on, which matches nothing: in Nightscout
+	// it matches only what has the field, and ignoring it would match everything, so a client that deletes the first
+	// document it finds would delete the wrong one
+	UnknownFilter bool       `json:"unknown_filter,omitempty"`
+	HasFilters    bool       `json:"has_filters,omitempty"`
+	SortOrder     *QuerySort `json:"sort_order,omitempty"`
+	Fields        []string   `json:"fields,omitempty"`
+	Envelope      *bool      `json:"envelope,omitempty"`
 }
