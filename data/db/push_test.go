@@ -149,11 +149,18 @@ func TestPushRegistrations(t *testing.T) {
 	require.Empty(t, all)
 }
 
-// A site deleted for good takes its push credentials and its devices' push tokens with it
+// A site deleted for good takes its identities, and so their devices' push tokens, and its push credentials with it.
+// The control DB is on disk, as a test's in-memory one does not enforce foreign keys, which delete the tokens.
 func TestDeleteSitesRemovesPushData(t *testing.T) {
-	_, controlDB, site := testutils.NewControlDBWithSite(t)
+	cfg := *testutils.GetTestServerConfig()
+	cfg.Mode, cfg.DataDir = consts.Development, t.TempDir()
+	controlDB, err := db.NewControlDB(t.Context(), &cfg)
+	require.NoError(t, err)
+	t.Cleanup(func() { controlDB.Close() })
+	site, err := controlDB.CreateSite(t.Context())
+	require.NoError(t, err)
 	q, siteID := controlDB.Queries, site.SiteDB.Subdomain
-	_, err := q.CreatePushCredential(t.Context(), controldb.CreatePushCredentialParams{SiteID: &siteID, Name: "mine",
+	_, err = q.CreatePushCredential(t.Context(), controldb.CreatePushCredentialParams{SiteID: &siteID, Name: "mine",
 		Provider: consts.PushProviderAPNs, TeamOrProjectID: "TEAM", SecretEnc: new("secret"), AppsJson: `["loop"]`,
 		CreatedByIdentityName: "admin"})
 	require.NoError(t, err)
@@ -172,4 +179,7 @@ func TestDeleteSitesRemovesPushData(t *testing.T) {
 	registrations, err := q.SearchPushRegistrations(t.Context(), controldb.SearchPushRegistrationsParams{SiteID: siteID, Limit: 10})
 	require.NoError(t, err)
 	require.Empty(t, registrations)
+	identities, err = q.AllSiteIdentities(t.Context(), controldb.AllSiteIdentitiesParams{SiteID: siteID})
+	require.NoError(t, err)
+	require.Empty(t, identities)
 }

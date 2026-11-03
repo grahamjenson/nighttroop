@@ -2198,16 +2198,6 @@ func (m *DeleteSitePushCredentialsParams) SetSiteID(v *string) {
 	m.SiteID = v
 }
 
-// GetSiteID returns the SiteID value.
-func (m DeleteSitePushRegistrationsParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated DeleteSitePushRegistrationsParams.
-func (m *DeleteSitePushRegistrationsParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
 // GetID returns the ID value.
 func (m GetPushCredentialParams) GetID() int64 {
 	return m.ID
@@ -3476,6 +3466,16 @@ func (m CreateSiteIdentityParams) GetNightscoutTokenDigest() *string {
 // SetNightscoutTokenDigest sets the NightscoutTokenDigest value and returns the updated CreateSiteIdentityParams.
 func (m *CreateSiteIdentityParams) SetNightscoutTokenDigest(v *string) {
 	m.NightscoutTokenDigest = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m DeleteAllSiteIdentitiesParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated DeleteAllSiteIdentitiesParams.
+func (m *DeleteAllSiteIdentitiesParams) SetSiteID(v string) {
+	m.SiteID = v
 }
 
 // GetSiteID returns the SiteID value.

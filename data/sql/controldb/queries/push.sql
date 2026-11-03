@@ -96,8 +96,6 @@ WHERE id = sqlc.arg('ID') AND site_id = sqlc.arg('SiteID')
 -- Deletes a token the push service says is no longer registered
 DELETE FROM push_registrations WHERE token_hash = sqlc.arg('TokenHash');
 
--- name: DeleteSitePushRegistrations :exec
-DELETE FROM push_registrations WHERE site_id = sqlc.arg('SiteID');
 
 -- name: RecordPush :exec
 -- Records a push sent to a registration, and its error, if it had one
