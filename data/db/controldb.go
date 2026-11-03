@@ -295,6 +295,17 @@ func (db *ControlDB) DeleteSites(ctx context.Context, subdomains []string) error
 
 	slog.Info("Deleting sites", "requested", subdomains, "deleted", deletedSubdomains)
 
+	// Its push credentials' secrets and its devices' push tokens go with it; an archived site keeps them, as it can be
+	// brought back
+	for _, subdomain := range deletedSubdomains {
+		if err := db.Queries.DeleteSitePushCredentials(ctx, controldb.DeleteSitePushCredentialsParams{SiteID: &subdomain}); err != nil {
+			return fmt.Errorf("cannot delete site %s's push credentials: %w", subdomain, err)
+		}
+		if err := db.Queries.DeleteSitePushRegistrations(ctx, controldb.DeleteSitePushRegistrationsParams{SiteID: subdomain}); err != nil {
+			return fmt.Errorf("cannot delete site %s's push registrations: %w", subdomain, err)
+		}
+	}
+
 	// Close the DB and remove from the map
 	for _, subdomain := range deletedSubdomains {
 		site := db.sites.remove(subdomain)

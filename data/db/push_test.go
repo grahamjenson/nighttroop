@@ -148,3 +148,28 @@ func TestPushRegistrations(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, all)
 }
+
+// A site deleted for good takes its push credentials and its devices' push tokens with it
+func TestDeleteSitesRemovesPushData(t *testing.T) {
+	_, controlDB, site := testutils.NewControlDBWithSite(t)
+	q, siteID := controlDB.Queries, site.SiteDB.Subdomain
+	_, err := q.CreatePushCredential(t.Context(), controldb.CreatePushCredentialParams{SiteID: &siteID, Name: "mine",
+		Provider: consts.PushProviderAPNs, TeamOrProjectID: "TEAM", SecretEnc: new("secret"), AppsJson: `["loop"]`,
+		CreatedByIdentityName: "admin"})
+	require.NoError(t, err)
+	identities, err := q.AllSiteIdentities(t.Context(), controldb.AllSiteIdentitiesParams{SiteID: siteID})
+	require.NoError(t, err)
+	_, err = q.UpsertPushRegistration(t.Context(), controldb.UpsertPushRegistrationParams{SiteID: siteID,
+		IdentityID: identities[0].ID, App: consts.PushAppLoop, Provider: consts.PushProviderAPNs, BundleID: "com.TEAM.loopkit.Loop",
+		Production: true, TokenEnc: "token", TokenHash: "c000000000000000000000000000000000000000000000000000000000000000"})
+	require.NoError(t, err)
+
+	require.NoError(t, controlDB.DeleteSites(t.Context(), []string{siteID}))
+
+	credentials, err := q.SearchPushCredentials(t.Context(), controldb.SearchPushCredentialsParams{SiteID: &siteID, Limit: 10})
+	require.NoError(t, err)
+	require.Empty(t, credentials)
+	registrations, err := q.SearchPushRegistrations(t.Context(), controldb.SearchPushRegistrationsParams{SiteID: siteID, Limit: 10})
+	require.NoError(t, err)
+	require.Empty(t, registrations)
+}

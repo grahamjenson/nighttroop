@@ -59,7 +59,6 @@
     1. P2: Send pushes with the credential `PushCredentialFor` finds: APNs with an ES256 token from the `.p8`, then FCM
        with the service account, rate limited per site, recording each push and deleting tokens the service says
        are gone
-    1. P2: Delete a site's push credentials and registrations when the site is deleted
     1. P2: Site settings and control pages to add, list and delete push credentials, with BDD tests
 1. Nightscout API:
     1. P1: Nightscout clients (AAPS, Loop, LoopFollow, xDrip4iOS, Nightguard, the xDrip+ follower) read `sgv` and
