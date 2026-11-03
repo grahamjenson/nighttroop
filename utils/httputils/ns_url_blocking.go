@@ -19,6 +19,7 @@ var blockedIPCidrs = []string{
 
 	"127.0.0.0/8",
 	"10.0.0.0/8",
+	"100.64.0.0/10", // shared address space: carrier-grade NAT, Tailscale's tailnets and Alibaba Cloud's metadata
 	"172.16.0.0/12",
 	"192.168.0.0/16",
 	"169.254.0.0/16",
