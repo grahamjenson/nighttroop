@@ -38,3 +38,41 @@ NAME history_since_after
 GET http://{{ site }}/api/v3/entries/history/{{ itime -60 }}?token={{ token }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 0 "@result"
+
+// A filter on a field Nighttroop does not know matches nothing, as in Nightscout, rather than being left out so a
+// client that takes the first match gets another document
+NAME find_unknown_field
+GET http://{{ site }}/api/v1/entries.json?find[noise]=1&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"
+
+NAME find_unknown_operator
+GET http://{{ site }}/api/v1/entries.json?find[sgv][$exists]=true&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"
+
+NAME find_unknown_field_with_id
+GET http://{{ site }}/api/v1/entries.json?find[_id]={{ dig "create_sgv_and_mbg.0._id" }}&find[noise]=1&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"
+
+NAME count_unknown_field
+GET http://{{ site }}/api/v1/count/entries/where?find[noise]=1&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 0 "@count"
+
+NAME search_unknown_field_v3
+GET http://{{ site }}/api/v3/entries?noise$eq=1&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
+
+NAME history_unknown_field_v3
+GET http://{{ site }}/api/v3/entries/history/{{ itime 60 }}?noise$eq=1&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
+
+// A parameter that is not a filter, as xDrip+'s rr, is still left out
+NAME not_a_filter
+GET http://{{ site }}/api/v1/entries.json?rr={{ itime 0 }}&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"

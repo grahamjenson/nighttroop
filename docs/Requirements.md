@@ -269,6 +269,10 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - v1 `experiments/test` is `{"status":"ok"}` for an identity that can upload readings and a 401 for any other, so
   Loop's and xDrip4iOS's connection tests pass with a PWD phone's token.
 - A v1 search by `find[_id]` that finds nothing, such as a deleted treatment, is an empty list, not a 404.
+- A search with a filter on a field or with an operator Nighttroop does not know, a v1 `find[...]` (e.g.
+  `find[notes]=x`) or a v3 `field$operator` (e.g. `notes$eq=x`), is an empty list, as nothing would match in
+  Nightscout, but for Trio's and iAPS's `enteredBy` and `find[duration][$exists]`, which are left out. Any other
+  parameter, such as xDrip+'s `rr`, is not a filter and is left out.
 - **v2**: authorization (a token for a JWT, and a check of one of its permissions), properties and summary.
 - **v3**: create, read, update, patch, delete, search and history of each collection, plus version, status,
   lastModified and settings.

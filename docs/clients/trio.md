@@ -157,10 +157,11 @@ find[carbs][$exists]=true
 Trio decodes each as `CarbsEntry`: `created_at` (date) and `carbs` (number) required; `_id`, `actualDate`, `fat`,
 `protein`, `notes`, `enteredBy`, `isFPU`, `fpuID` optional. It stores those whose time it does not have yet.
 
-Nighttroop ignores `find[carbs][$exists]` and the `enteredBy` filters, so it returns every treatment, and one
-without `carbs` fails the whole list: Trio downloads no carbs (TODO P1). Fixing only `$exists` would be worse:
-Nighttroop returns `enteredBy` as sent, `Trio`, but without the `enteredBy` filters Trio would download its own
-carbs and add them again. iAPS sends `find[enteredBy][$ne]` five times instead of `$and`.
+Nighttroop does not know `find[carbs][$exists]`, so it gives nothing, and Trio downloads no carbs (TODO P1). Before,
+it was ignored with the `enteredBy` filters and every treatment returned, and one without `carbs` failed the whole
+list, so Trio downloaded no carbs then either. Fixing only `$exists` would be worse: Nighttroop returns `enteredBy` as
+sent, `Trio`, but without the `enteredBy` filters, which are still ignored, Trio would download its own carbs and add
+them again. iAPS sends `find[enteredBy][$ne]` five times instead of `$and`.
 
 ### Temp targets: `GET /api/v1/treatments.json`
 
@@ -174,8 +175,9 @@ Trio decodes each as `TempTarget`: `_id` (string), `created_at` and `duration` (
 `targetBottom` (mg/dL), `name`, `enteredBy`, `reason`, `isPreset`, `enabled`, `halfBasalTarget` optional. It skips
 one whose `created_at` it already has, or whose `reason` is `Cancel`, and turns on the newest.
 
-Works in mg/dL, with `created_at` keeping its milliseconds. As the `enteredBy` filters are ignored, Trio also gets its
-own temp targets back; it skips them only when their `created_at` matches its own to the millisecond.
+Works in mg/dL, with `created_at` keeping its milliseconds. `find[duration][$exists]` and the `enteredBy` filters are
+ignored, not given nothing as other unknown filters are, so Trio also gets its own temp targets back; it skips them
+only when their `created_at` matches its own to the millisecond.
 
 ### Glucose, with Nightscout as the CGM: `GET /api/v1/entries/sgv.json`
 
@@ -246,7 +248,7 @@ Trio and iAPS use no Socket.IO, and no API v2 or v3.
 | Device status upload | Works; pump `status.bolusing`, `suspended`, battery `string`, `display` and `uploader.isCharging` fixed in this PR |
 | Profile upload | Works |
 | Profile import | Works (`enteredBy`, #509) |
-| Carbs fetch (`find[carbs][$exists]`, `enteredBy` `$ne`) | Not supported, TODO P1 |
+| Carbs fetch (`find[carbs][$exists]`, `enteredBy` `$ne`) | Not supported, gives nothing, TODO P1 |
 | Temp target fetch | Works in mg/dL; own ones come back, TODO P1 |
 | Glucose fetch (Nightscout as CGM) | Works in mg/dL |
 | iAPS announcements (`find[enteredBy]=remote`) | Not supported, TODO P1 |

@@ -100,15 +100,12 @@
        one at a time, stops at a refused one and marks them all done, so the treatments queued after a Sensor Stop are
        never uploaded. Adding the type needs its kinds of event in `sitemodels.EventGroupTypeKinds`, which also adds it to
        the site's Add Event Group menu, a UI change
-    1. P2: An unknown `find[...]` filter is ignored, so the search gives everything, and a client that deletes the
-       first match (as xDrip+ does by `find[uuid]`) deletes the wrong document. Give nothing for a filter on an unknown
-       field
     1. P4: Give back a treatment's `uuid` as sent; xDrip+ matches its own by `enteredBy` starting `xdrip`, kept, and
        falls back to matching time and amounts
 1. Trio and iAPS ([docs/clients/trio.md](docs/clients/trio.md)):
     1. P1: Filter v1 treatments on `find[carbs][$exists]` and `find[duration][$exists]`, and on `enteredBy`
-       (`find[enteredBy]`, `find[enteredBy][$ne]` and `find[$and][n][enteredBy][$ne]`), together: Trio fails
-       to decode a carbs fetch with any treatment without carbs, and once it gets only carbs it would import
+       (`find[enteredBy]`, `find[enteredBy][$ne]` and `find[$and][n][enteredBy][$ne]`), together: a carbs fetch
+       gives nothing, as `$exists` is unknown, and once it gets only carbs Trio would import
        its own back as new ones and double them, as without the `enteredBy` filters (`enteredBy` comes back as
        sent) it gets its own; iAPS takes any announcement as a remote command, not only `enteredBy` `remote`
     1. P2: v1 delete by query (`DELETE /api/v1/treatments.json?find[id][$eq]=`, `find[created_at][$eq]` with

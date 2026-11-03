@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/url"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"nighttroop.t1d.nz/utils/mapstructure"
@@ -244,6 +245,33 @@ func ParseQueryValues(values url.Values) (QueryValues, error) {
 	}
 
 	return qv, nil
+}
+
+// ignoredFilters are filters Nighttroop cannot apply yet (TODOs.md) that are left out of the search, as giving nothing
+// for them would leave a client without what it gets today. Trio's carbs fetch, find[carbs][$exists], is not one: a
+// treatment without carbs fails Trio's decoding of them all, so it got no carbs before either.
+var ignoredFilters = map[string]bool{
+	// Trio's temp target fetch, with find[eventType]=Temporary Target, whose treatments always have a duration
+	"find[duration][$exists]": true,
+	// Trio sends find[$and][n][enteredBy][$ne] and iAPS find[enteredBy][$ne] to leave out their own, and iAPS's
+	// announcements find[enteredBy]=remote; without them Trio would get no temp targets and iAPS no commands
+	"find[enteredBy][$ne]": true,
+	"find[enteredBy]":      true,
+}
+
+var andFilter = regexp.MustCompile(`^find\[\$and\]\[\d+\]`)
+
+// HasUnknownFilter is whether the query has a filter, a v1 find[...] or a v3 field$operator, on a field or with an
+// operator Nighttroop does not know. It matches nothing, as in Nightscout, so a client that takes the first match, as
+// xDrip+ does to delete a treatment, does not get another. Any other parameter, as xDrip+'s rr, is not a filter.
+func (q *QueryValues) HasUnknownFilter() bool {
+	for key := range q.Other {
+		isFilter := strings.HasPrefix(key, "find[") || strings.Contains(key, "$")
+		if isFilter && !ignoredFilters[andFilter.ReplaceAllString(key, "find")] {
+			return true
+		}
+	}
+	return false
 }
 
 func (q *QueryValues) SortOrder() *QuerySort {

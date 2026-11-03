@@ -166,6 +166,13 @@ ASSERT_EQUALS 0 "@1.insulin"
 # TREATMENT DELETE: postTreatments finds the _id by uuid, then deletes it
 ######
 
+// A find on a field Nighttroop does not know gives nothing, so a delete of the first match deletes nothing
+NAME xdrip_find_treatment_by_unknown_field
+GET http://{{ site }}/api/v1/treatments.json?find[uuid_v2]=2f1b4c8d-3e5a-4b7c-9d0e-1f2a3b4c5d6e
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"
+
 NAME xdrip_find_treatment_by_uuid
 GET http://{{ site }}/api/v1/treatments.json?find[uuid]=2f1b4c8d-3e5a-4b7c-9d0e-1f2a3b4c5d6e
 H api-secret: {{ sha1 token }}

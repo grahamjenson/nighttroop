@@ -96,6 +96,9 @@ func (nts *NightTroopAPIStore) Search(ctx context.Context, collection nsutils.Co
 	if err != nil {
 		return nil, err
 	}
+	if query.UnknownFilter {
+		return []nsutils.Document{}, nil
+	}
 	return collectionsStore.Search(ctx, siteContext, query)
 }
 
