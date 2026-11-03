@@ -1,0 +1,30 @@
+INCLUDE steps/new_site_admin.steps
+
+// Virtual sync fills the tables with readings and device statuses
+CLICK #site--settings-menu
+CLICK #site--settings--sync-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-sync--enable
+CLICK #site--settings--virtual-sync--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Sync Updated
+RUN_BACKGROUND_JOBS
+
+// On a phone a table wider than the window scrolls sideways in its card, so the page is no wider than the window.
+// The window is tall enough for the whole page, so fitting it checks only its width.
+WINDOW 390x1200
+GOTO /data/glucose
+ASSERT_STATUS 200
+ASSERT_VISIBLE #glucoseReadingsTable
+ASSERT_FITS
+SCREENSHOT glucose_readings_phone
+
+// A reading's delete button, past the side of the window, is scrolled to and works
+CLICK #glucoseReadingsTable tbody tr >> nth=0 >> button[title=Delete]
+ASSERT_TEXT_VISIBLE Glucose Reading Deleted
+
+GOTO /data/device-status
+ASSERT_STATUS 200
+ASSERT_VISIBLE #device_statuses table >> nth=0
+ASSERT_FITS
+SCREENSHOT device_statuses_phone
