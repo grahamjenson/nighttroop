@@ -94,7 +94,7 @@ func TestRateLimiterStats(t *testing.T) {
 	for _, s := range limiters.Stats(now) {
 		byName[s.Name] = s
 	}
-	require.Len(t, byName, 15)
+	require.Len(t, byName, 16)
 	require.Equal(t, RateLimiterStats{Name: "site_get", Per: "site", PerMinute: 60, Burst: 4, Tracked: 2, Limited: 1, FullestPercent: 100},
 		byName["site_get"], "busy has spent its burst, quiet a quarter")
 	require.Equal(t, RateLimiterStats{Name: "global", Per: "server", PerMinute: 60, Burst: 10, Tracked: 1}, byName["global"])

@@ -56,9 +56,9 @@
     1. P3: Add push credentials and registrations to `clients/nighttroop/openapi.json` and its client
     1. P3: Show an identity its push registrations on its settings page, to delete one; the collection's HTMX responses
        are empty until then
-    1. P2: Send pushes with the credential `PushCredentialFor` finds: APNs with an ES256 token from the `.p8`, then FCM
-       with the service account, rate limited per site, recording each push and deleting tokens the service says
-       are gone
+    1. P2: Send FCM pushes with the service account (an OAuth token from its key, then the v1 send API), as
+       `push.Send` does APNs ones
+    1. P2: Push alarms to each identity's registered apps when one goes off, through `push.Send`
     1. P2: Delete a site's push credentials and registrations when the site is deleted
     1. P2: A control page to add, list and delete push credentials for every site, with BDD tests
 1. Nightscout API:

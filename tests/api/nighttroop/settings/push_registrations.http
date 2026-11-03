@@ -84,6 +84,27 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 404
 
+// A test push needs a credential for the app, which the site has none of yet
+NAME test_push_without_credential
+POST http://{{ site }}/settings/push-registrations/{{ .registration_id }}/test
+H Authorization: Bearer {{ .phone_jwt }}
+H Accept: application/json
+ASSERT_STATUS 400
+ASSERT_CONTAINS "no push credential for the app loop" "@message"
+
+// Only the identity whose it is can send it a test push
+NAME admin_cannot_test_push
+POST http://{{ site }}/settings/push-registrations/{{ .registration_id }}/test
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME test_push_unknown
+POST http://{{ site }}/settings/push-registrations/999999/test
+H Authorization: Bearer {{ .phone_jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
 // What is not a registration is refused
 NAME refuse_bad_token
 POST http://{{ site }}/settings/push-registrations

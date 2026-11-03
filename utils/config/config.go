@@ -146,6 +146,9 @@ type ServerConfig struct {
 	// Each download of a site's data copies its whole DB
 	SiteDownloadPerMinuteLimit int
 	SiteDownloadPerMinuteBurst int
+	// SitePushPerMinuteLimit and Burst cap the pushes a site sends, each a request to Apple or Firebase
+	SitePushPerMinuteLimit int
+	SitePushPerMinuteBurst int
 
 	//
 	// Site Create Rate Limits
@@ -345,6 +348,8 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 
 		SiteDownloadPerMinuteLimit: configIntSelect(dotenv, "SITE_DOWNLOAD_PER_MINUTE_LIMIT", 1),
 		SiteDownloadPerMinuteBurst: configIntSelect(dotenv, "SITE_DOWNLOAD_PER_MINUTE_BURST", 3),
+		SitePushPerMinuteLimit:     configIntSelect(dotenv, "SITE_PUSH_PER_MINUTE_LIMIT", 10),
+		SitePushPerMinuteBurst:     configIntSelect(dotenv, "SITE_PUSH_PER_MINUTE_BURST", 30),
 
 		//
 		// Site Limits
