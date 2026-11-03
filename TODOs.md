@@ -52,12 +52,12 @@
 1. P4: Keep which batches were uploaded, and with which sites, across restarts, as the first backup round after a
    restart uploads every batch again though their backups are current
 1. Nightscout API:
-    1. P1: Nightscout clients (AAPS, Loop, LoopFollow, xDrip4iOS, Nightguard, the xDrip+ follower) read `sgv` and
-       `mbg`, and AAPS its temp targets and profiles, as mg/dL whatever the `units`, but the API gives them in the
-       identity's units, then the site's. A device added for a client in Add Device is in mg/dL (#524) and an admin
-       can set any identity's units (#523), but the site's first PWD phone, a device added as Other, and LoopFollow,
-       xDrip4iOS and an AAPSClient follower, which are not in Add Device's clients, still get the site's units. Add
-       them to Add Device's clients
+    1. P1: Nightscout clients (AAPS, Loop, LoopFollow, Nightguard, the xDrip+ follower) read `sgv` and `mbg`, and
+       AAPS its temp targets and profiles, as mg/dL whatever the `units`, but the API gives them in the identity's
+       units, then the site's. A device added for a client in Add Device is in mg/dL (#524) and an admin can set any
+       identity's units (#523), but the site's first PWD phone, a device added as Other, and LoopFollow and an
+       AAPSClient follower, which are not in Add Device's clients, still get the site's units. Add them to Add
+       Device's clients
     1. P1: A Nightscout batch of over 100 records is refused with a 400 (`consts.MaxBatchRecords`), and Loop (up to
        1000 a request) and Juggluco on v1 (up to 5000) send the same batch again until it is accepted, so after a
        backlog (first set up, or about 8 hours offline) they never upload again. Take larger v1 batches in chunks, or
