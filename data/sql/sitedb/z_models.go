@@ -153,6 +153,7 @@ type EventGroup struct {
 	ActivityID            *string
 	NotificationEventID   *string
 	EnteredBy             *string
+	Uuid                  *string
 	Notes                 *string
 	Reason                *string
 	DurationMinutes       *int64

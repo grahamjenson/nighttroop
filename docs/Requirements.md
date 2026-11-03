@@ -275,9 +275,17 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - v1 `experiments/test` is `{"status":"ok"}` for an identity that can upload readings and a 401 for any other, so
   Loop's and xDrip4iOS's connection tests pass with a PWD phone's token.
 - A v1 search by `find[_id]` that finds nothing, such as a deleted treatment, is an empty list, not a 404.
+- A search with a filter on a field or with an operator Nighttroop does not know, a v1 `find[...]` (e.g.
+  `find[notes]=x`) or a v3 `field$operator` (e.g. `notes$eq=x`), is an empty list, as nothing would match in
+  Nightscout. Any other parameter, such as xDrip+'s `rr`, is not a filter and is left out.
+- A v1 `DELETE /api/v1/entries.json` with `find[type]` and `find[date][$gte]`, `find[date][$lte]` or
+  `find[date][$in][]`, as xDrip4iOS deletes readings, soft deletes the entries found, at most 1000 each time, saying
+  how many in `deletedCount`; any other filter, or none on the date, is a 400, and it needs a token that can delete.
 - **v2**: authorization (a token for a JWT, and a check of one of its permissions), properties and summary.
 - **v3**: create, read, update, patch, delete, search and history of each collection, plus version, status,
   lastModified and settings.
+- A v3 replace or patch with `If-Unmodified-Since` of a document changed in a later second is refused with a 412 and
+  changes nothing, checked in the same transaction as the change, so a client cannot overwrite a change it has not seen.
 - The v3 status shows what the token may do to each collection, e.g. `crud` for an uploader and `r` for a read only
   token, so apps like AAPS only upload with a token that may write.
 - A v3 history includes deleted documents, with `isValid` false, so apps learn of deletions; a search leaves them
@@ -308,6 +316,9 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   from the default profile's or profile switch's basal at its start, in the profile's timezone, so changed, and it is
   returned with that `absolute`.
 - Duplicate uploads are ignored; values far outside real use are refused.
+- An entry uploaded without an `_id` with the date, type and device of one stored takes its new value, direction and
+  raw values, as xDrip4iOS smooths readings, and followers get it as changed; one sent with the same values changes
+  nothing, not even when it was last modified.
 - A `created_at` filter given a time with no zone, as LoopFollow sends it, reads it as UTC.
 - Loop's and Trio's Suspend Pump and Resume Pump treatments are kept.
 - An activity's `type`, as xDrip+ sends it, is its activity type, a heart rate's `bpm` its heart rate and a motion's
@@ -345,10 +356,17 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   entries is left out and the readings with it kept; an uploader battery that is not a number is left out of its
   device status; `uploader.battery` is the uploader's battery; and a treatment is found by its `uuid` (`find[uuid]`), sent as the `_id` or as xDrip+ makes its `_id`.
 - Trio's and iAPS's `SMB` and `External Insulin` treatments are kept as insulin doses, with their event type.
+- xDrip+'s `Sensor Stop` treatments are kept as a site or sensor change, with their event type, so the treatments it
+  uploads after one are kept too; the site can add a Sensor Stop change and a Sensor Stop event group.
 - A profile has `enteredBy`, the identity that uploaded it, as Trio needs it to import one.
 - A treatment's `enteredBy` comes back as sent, e.g. `loop://iPhone` or `Trio`, else the identity that uploaded it.
+- A treatment's `uuid` comes back as sent, as xDrip+ matches its own by it; one sent with no `_id` is its identifier.
 - Treatments can be found by whether they have `carbs` or a `duration` (`find[carbs][$exists]`), by `enteredBy`, and
   without some `enteredBy`s (`find[enteredBy][$ne]`, repeated or under `find[$and][n]`), as Trio and iAPS fetch them.
+- A treatment's or entry's `id`, as Trio sends it, is its identifier when it has no `_id`.
+- A v1 `DELETE /api/v1/treatments.json` or `entries.json` deletes the same way by Trio's and iAPS's filters:
+  `find[id][$eq]`, `find[created_at][$eq]` with `find[eventType][$eq]`, `find[dateString][$eq]` and
+  `find[carbs][$exists]`, and each of up to 10 `find[$or]` alternatives, every one of which needs a date or an id.
 - A create that names its `identifier` keeps it, and only a document with that identifier is its duplicate.
 - A create naming a deleted document's identifier, or a replace of one, replaces it whatever changed, as Juggluco
   changes a treatment by deleting it and sending it again.
@@ -431,10 +449,10 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - An admin adds users and devices, whose credentials are shown once, each with its own copy button and one to copy
   them all. Saying they are saved warns that they are never shown again, and they close only once that is confirmed;
   Go Back keeps them open.
-- A device is added for its client: AAPS, Trio, Loop, xDrip+, Nightguard, SugarPixel or Other. Its credentials say how
-  to set that client up, in numbered steps naming the client's menus and fields in bold, with its Nightscout URL and
-  token filled in, each with its own copy button, and a device for any but Other has its own units set to mg/dL,
-  which those clients need, whatever the site's.
+- A device is added for its client: AAPS, Trio, Loop, xDrip+, xDrip4iOS, Nightguard, SugarPixel or Other. Its
+  credentials say how to set that client up, in numbered steps naming the client's menus and fields in bold, with its
+  Nightscout URL and token filled in, each with its own copy button, and a device for any but Other has its own units
+  set to mg/dL, which those clients need, whatever the site's.
 - The client is picked before the role, as a loop's device (AAPS, Trio or Loop) must be the PWD phone: picking one of
   them sets the role to PWD Phone and locks it, and the server refuses such a device with any other role.
 - An admin can turn an identity off and on, or delete it; an identity cannot lock itself out.

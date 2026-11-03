@@ -90,6 +90,43 @@ func TestParseQueryValues(t *testing.T) {
 	}
 }
 
+// Each filter a client sends that Nighttroop does not know gives nothing; any other parameter is not a filter
+func TestHasUnknownFilter(t *testing.T) {
+	tests := []struct {
+		key     string
+		unknown bool
+	}{
+		{"find[date][$gte]", false},
+		{"date$gte", false},
+		{"sort$desc", false},
+		{"find[uuid]", false},
+		{"rr", false},
+		{"secret", false},
+		{"now", false},
+		{"find[duration][$exists]", false},
+		{"find[enteredBy]", false},
+		{"find[enteredBy][$ne]", false},
+		{"find[$and][0][enteredBy][$ne]", false},
+		{"find[$and][12][enteredBy][$ne]", false},
+		{"find[uuid_v2]", true},
+		{"find[notes]", true},
+		{"find[carbs][$exists]", false},
+		{"find[sgv][$exists]", true},
+		{"find[$and][0][notes][$ne]", true},
+		{"find[$or][0][id][$eq]", true},
+		{"find[enteredBy][$eq]", false},
+		{"notes$eq", true},
+		{"enteredBy$ne", true},
+	}
+	for _, test := range tests {
+		t.Run(test.key, func(t *testing.T) {
+			query, err := ParseQueryValues(url.Values{test.key: {"1"}})
+			require.NoError(t, err)
+			require.Equal(t, test.unknown, query.HasUnknownFilter())
+		})
+	}
+}
+
 // Trio sends each enteredBy it leaves out as find[$and][n][enteredBy][$ne] and iAPS repeats find[enteredBy][$ne],
 // encoding them twice; each is one of the $nin
 func TestParseEnteredByNotIn(t *testing.T) {
@@ -117,4 +154,21 @@ func TestParseEnteredByNotIn(t *testing.T) {
 			assert.True(t, qv.HasAnyFilters())
 		})
 	}
+}
+
+// Each find[$or] alternative is a query with the others' shared values, and one without is itself
+func TestOrBranches(t *testing.T) {
+	values := url.Values{
+		"find[$or][0][id][$eq]":         {"a"},
+		"find[$or][1][dateString][$eq]": {"2026-11-02T12:00:00.000Z"},
+		"count":                         {"1"},
+	}
+	branches := OrBranches(values)
+	assert.ElementsMatch(t, []url.Values{
+		{"find[id][$eq]": {"a"}, "count": {"1"}},
+		{"find[dateString][$eq]": {"2026-11-02T12:00:00.000Z"}, "count": {"1"}},
+	}, branches)
+
+	plain := url.Values{"find[id][$eq]": {"a"}}
+	assert.Equal(t, []url.Values{plain}, OrBranches(plain))
 }

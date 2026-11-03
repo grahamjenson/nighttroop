@@ -1,0 +1,58 @@
+INCLUDE steps/new_ns_site.steps
+
+NAME create_note
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {"eventType": "Note", "notes": "first", "date": {{ dayms -1 720 }}}
+ASSERT_STATUS 201
+SET note_id {{ dig "create_note.result.identifier" }}
+
+// A patch with If-Unmodified-Since from before the treatment last changed is refused, so a client cannot overwrite a
+// change it has not seen
+NAME patch_changed_since
+PATCH http://{{ site }}/api/v3/treatments/{{ .note_id }}
+H Authorization: Bearer {{ jwt }}
+H If-Unmodified-Since: Wed, 01 Jan 2020 00:00:00 GMT
+B {"notes": "stale patch"}
+ASSERT_STATUS 412
+
+// So is a replace
+NAME replace_changed_since
+PUT http://{{ site }}/api/v3/treatments/{{ .note_id }}
+H Authorization: Bearer {{ jwt }}
+H If-Unmodified-Since: Wed, 01 Jan 2020 00:00:00 GMT
+B {"eventType": "Note", "notes": "stale replace", "date": {{ dayms -1 720 }}}
+ASSERT_STATUS 412
+
+NAME refused_changed_nothing
+GET http://{{ site }}/api/v3/treatments/{{ .note_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "first" "@result.notes"
+
+// One from after it changed, as a client sends the Last-Modified it read, is applied, as is one without the header
+NAME patch_unchanged_since
+PATCH http://{{ site }}/api/v3/treatments/{{ .note_id }}
+H Authorization: Bearer {{ jwt }}
+H If-Unmodified-Since: Fri, 01 Jan 2100 00:00:00 GMT
+B {"notes": "patched"}
+ASSERT_STATUS 200
+
+NAME replace_unchanged_since
+PUT http://{{ site }}/api/v3/treatments/{{ .note_id }}
+H Authorization: Bearer {{ jwt }}
+H If-Unmodified-Since: Fri, 01 Jan 2100 00:00:00 GMT
+B {"eventType": "Note", "notes": "replaced", "date": {{ dayms -1 720 }}}
+ASSERT_STATUS 200
+
+NAME replace_without_header
+PUT http://{{ site }}/api/v3/treatments/{{ .note_id }}
+H Authorization: Bearer {{ jwt }}
+B {"eventType": "Note", "notes": "replaced again", "date": {{ dayms -1 720 }}}
+ASSERT_STATUS 200
+
+NAME applied
+GET http://{{ site }}/api/v3/treatments/{{ .note_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "replaced again" "@result.notes"

@@ -1,0 +1,71 @@
+# xDrip4iOS (xdripswift) rewriting readings, from NightscoutSyncManager.replaceBgReadingsInNightscout: when the user
+# smooths or rebuilds readings it POSTs them to /api/v1/entries again, without their _id, relying on Nightscout's
+# upsert of a reading on its date and type to replace the stored one's value
+
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+NAME xdrip4ios_rewrite_upload
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [
+  {"_id": "Xd4iOSrwr01aBcDeFgHiJkLm", "device": "DexcomG7", "date": {{ itime 10 }}, "dateString": "{{ time 10 }}", "type": "sgv", "sgv": 118, "direction": "Flat", "filtered": 118000, "unfiltered": 118000, "noise": 1, "sysTime": "{{ time 10 }}"},
+  {"_id": "Xd4iOSrwr02aBcDeFgHiJkLm", "device": "DexcomG7", "date": {{ itime 5 }}, "dateString": "{{ time 5 }}", "type": "sgv", "sgv": 140, "direction": "FortyFiveUp", "filtered": 140000, "unfiltered": 140000, "noise": 1, "sysTime": "{{ time 5 }}"}
+]
+ASSERT_STATUS 200
+
+NAME xdrip4ios_rewrite_synced
+GET http://{{ site }}/api/v3/lastModified
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+SET rewrite_since {{ addms (dig "xdrip4ios_rewrite_synced.result.collections.entries") 1 }}
+
+# Smoothing sends the second reading again with a new value and direction, and no _id
+NAME xdrip4ios_rewrite_smoothed
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [
+  {"device": "DexcomG7", "date": {{ itime 5 }}, "dateString": "{{ time 5 }}", "type": "sgv", "sgv": 128, "direction": "Flat", "filtered": 128000, "unfiltered": 128000, "noise": 1, "sysTime": "{{ time 5 }}"}
+]
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "Xd4iOSrwr02aBcDeFgHiJkLm" "@0._id"
+ASSERT_EQUALS 128 "@0.sgv"
+
+NAME xdrip4ios_rewrite_replaced
+GET http://{{ site }}/api/v1/entries/sgv.json?count=10&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS "Xd4iOSrwr02aBcDeFgHiJkLm" "@0._id"
+ASSERT_EQUALS 128 "@0.sgv"
+ASSERT_EQUALS "Flat" "@0.direction"
+ASSERT_EQUALS 118 "@1.sgv"
+
+# A follower syncing since before the rewrite gets the changed reading
+NAME xdrip4ios_rewrite_in_history
+GET http://{{ site }}/api/v3/entries/history/{{ .rewrite_since }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS "Xd4iOSrwr02aBcDeFgHiJkLm" "@result.0.identifier"
+ASSERT_EQUALS 128 "@result.0.sgv"
+SET rewritten_since {{ addms (dig "xdrip4ios_rewrite_in_history.result.0.srvModified") 1 }}
+
+# The same rewrite sent again changes nothing, so a follower has nothing new
+NAME xdrip4ios_rewrite_again
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [
+  {"device": "DexcomG7", "date": {{ itime 5 }}, "dateString": "{{ time 5 }}", "type": "sgv", "sgv": 128, "direction": "Flat", "filtered": 128000, "unfiltered": 128000, "noise": 1, "sysTime": "{{ time 5 }}"}
+]
+ASSERT_STATUS 200
+ASSERT_EQUALS 128 "@0.sgv"
+
+NAME xdrip4ios_rewrite_again_unchanged
+GET http://{{ site }}/api/v3/entries/history/{{ .rewritten_since }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
+
+NAME xdrip4ios_rewrite_stored_once
+GET http://{{ site }}/api/v1/entries/sgv.json?count=10&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS 128 "@0.sgv"

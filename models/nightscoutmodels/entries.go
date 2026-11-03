@@ -56,6 +56,8 @@ func (t *Entry) UnmarshalJSON(data []byte) error {
 	type Alias Entry
 	aux := struct {
 		ID *types.IdentifierString `json:"_id"`
+		// Trio's own id, which it deletes by
+		TrioID json.RawMessage `json:"id"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),
@@ -71,6 +73,9 @@ func (t *Entry) UnmarshalJSON(data []byte) error {
 	// Identitfiers
 	if t.Identifier == nil {
 		t.Identifier = aux.ID
+	}
+	if t.Identifier == nil {
+		t.Identifier = types.IdentifierFromJSON(aux.TrioID)
 	}
 
 	// Setting the value, only when sgv or mbg is given so a patch without them leaves it as it is

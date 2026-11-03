@@ -1,6 +1,7 @@
 package nsutils
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -110,4 +111,23 @@ func ParseIfUnmodifiedSince(r *http.Request) (time.Time, bool) {
 	}
 	parsed, err := time.Parse(http.TimeFormat, value)
 	return parsed, err == nil
+}
+
+type unmodifiedSinceKey struct{}
+
+// WithIfUnmodifiedSince is the request's context with its If-Unmodified-Since, for a replace or patch to check against
+// the record in the same transaction that changes it, so no change can come between
+func WithIfUnmodifiedSince(r *http.Request) context.Context {
+	if since, ok := ParseIfUnmodifiedSince(r); ok {
+		return context.WithValue(r.Context(), unmodifiedSinceKey{}, since)
+	}
+	return r.Context()
+}
+
+// ModifiedSince is whether a record last modified at modified, in milliseconds, changed after the context's
+// If-Unmodified-Since. It compares whole seconds, as the header has no finer, so a client sending back the
+// Last-Modified it was given is not refused for the milliseconds it cannot send.
+func ModifiedSince(ctx context.Context, modified int64) bool {
+	since, ok := ctx.Value(unmodifiedSinceKey{}).(time.Time)
+	return ok && modified/1000 > since.Unix()
 }
