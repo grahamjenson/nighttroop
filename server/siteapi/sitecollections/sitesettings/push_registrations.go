@@ -2,7 +2,7 @@ package sitesettings
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"strconv"
 
 	"github.com/a-h/templ"
@@ -13,9 +13,6 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/push"
 )
-
-// maxPushRegistrations is the most apps on devices an identity can have pushes sent to, far more than one person has
-const maxPushRegistrations = 10
 
 // PushRegistrationsCollection is the signed in identity's own apps on devices that pushes are sent to: an app
 // registers its token after its identity signs in. A token is encrypted and never returned; registering one again,
@@ -48,34 +45,23 @@ func (s *PushRegistrationsCollection) CreateRow(ctx context.Context, collectionT
 	if model.Token == nil {
 		return nil, apiutils.ErrMissingRequiredFieldWithHint("token")
 	}
-	if err := push.CheckRegistration(push.Registration{Provider: model.Provider, App: string(model.App), BundleID: model.BundleID,
-		Token: *model.Token}); err != nil {
+	registration := push.Registration{Provider: model.Provider, App: string(model.App), BundleID: model.BundleID,
+		Token: *model.Token, Production: model.Production}
+	if err := push.CheckRegistration(registration); err != nil {
 		return nil, apiutils.ErrBadBodyWithHint(err.Error())
 	}
-	params := sitemodels.PushRegistrationToUpsert(model, siteContext)
-	params.TokenHash = push.TokenHash(*model.Token)
-	var err error
-	if params.TokenEnc, err = siteContext.Config.Security.Encrypt(*model.Token); err != nil {
-		return nil, err
-	}
-
 	q, err := collectionTx.Control()
 	if err != nil {
 		return nil, err
 	}
-	// Counted inside the transaction, so two registrations at once cannot both pass the limit
-	count, err := q.CountPushRegistrations(ctx, controldb.CountPushRegistrationsParams{SiteID: siteContext.SiteID, IdentityID: params.IdentityID})
+	registered, err := push.Register(ctx, q, siteContext.Config.Security, siteContext.SiteID, siteContext.IdentityModel.ID, registration)
+	if errors.Is(err, push.ErrTooManyRegistrations) {
+		return nil, apiutils.ErrConstraintCheckFailedWithHint(err.Error())
+	}
 	if err != nil {
 		return nil, err
 	}
-	if count >= maxPushRegistrations {
-		return nil, apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("an identity can have pushes sent to at most %d apps", maxPushRegistrations))
-	}
-	registration, err := q.UpsertPushRegistration(ctx, params)
-	if err != nil {
-		return nil, err
-	}
-	return sitemodels.PushRegistrationFromDB(registration), nil
+	return sitemodels.PushRegistrationFromDB(registered), nil
 }
 
 func (s *PushRegistrationsCollection) CreateHTMXResponse(model *sitemodels.PushRegistration) templ.Component {

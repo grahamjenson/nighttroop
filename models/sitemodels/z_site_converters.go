@@ -1806,18 +1806,6 @@ func PushRegistrationFromDB(source *controldb.PushRegistration) *PushRegistratio
 	}
 	return pSitemodelsPushRegistration
 }
-func PushRegistrationToUpsert(source *PushRegistration, context *httputils.SiteContext) controldb.UpsertPushRegistrationParams {
-	var controldbUpsertPushRegistrationParams controldb.UpsertPushRegistrationParams
-	if source != nil {
-		controldbUpsertPushRegistrationParams.SiteID = ContextSiteID(context)
-		controldbUpsertPushRegistrationParams.IdentityID = ContextIdentityIDValue(context)
-		controldbUpsertPushRegistrationParams.App = constsPushAppToConstsPushApp((*source).App)
-		controldbUpsertPushRegistrationParams.Provider = constsPushProviderToConstsPushProvider((*source).Provider)
-		controldbUpsertPushRegistrationParams.BundleID = (*source).BundleID
-		controldbUpsertPushRegistrationParams.Production = (*source).Production
-	}
-	return controldbUpsertPushRegistrationParams
-}
 func SyncSourceFromDB(source *controldb.SiteSyncSource, context *security.SecurityConfig) (*SyncSource, error) {
 	var pSitemodelsSyncSource *SyncSource
 	if source != nil {

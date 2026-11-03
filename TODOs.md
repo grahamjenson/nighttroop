@@ -54,8 +54,6 @@
 1. Push notifications (the control DB's `push_credentials` and `push_registrations`):
     1. P2: A control collection for push credentials for every site, as the site's (`/settings/push-credentials`)
     1. P3: Add push credentials and registrations to `clients/nighttroop/openapi.json` and its client
-    1. P2: Register Loop's push token from its profile's `loopSettings.deviceToken`, `bundleIdentifier` and
-       `isAPNSProduction`, for the identity that uploads it
     1. P3: Show an identity its push registrations on its settings page, to delete one; the collection's HTMX responses
        are empty until then
     1. P2: Send pushes with the credential `PushCredentialFor` finds: APNs with an ES256 token from the `.p8`, then FCM

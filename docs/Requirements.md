@@ -300,6 +300,9 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - A `created_at` filter or sort is on when it happened, as `date` is, and `srvCreated` is on when it was uploaded.
 - v3 filters take `field$eq` as well as `field`, e.g. `eventType$eq=Site Change`.
 - A device status keeps its pump's other fields, e.g. AAPS's `extended` with its profile and temp basal.
+- A profile from Loop, with `loopSettings.deviceToken` and `bundleIdentifier`, or from Trio, with them at its top,
+  registers that app's APNs token for pushes for the identity that uploaded it, a production build unless
+  `isAPNSProduction` is false; a token that is not one is not registered, and the profile is still kept.
 - A temp basal's `percent` is Nightscout's change from the basal, as AAPS sends it (e.g. -50 for half, 20 for 1.2x,
   -100 a zero temp, never under -100), and is kept and returned as sent. Sent with only a `percent`, its rate is set
   from the default profile's or profile switch's basal at its start, in the profile's timezone, so changed, and it is
