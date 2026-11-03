@@ -234,6 +234,9 @@ type PumpStatus struct {
 type PumpBattery struct {
 	Percent *types.FlexibleFloat64 `json:"percent,omitempty"`
 	Voltage *types.FlexibleFloat64 `json:"voltage,omitempty"`
+	// Trio's battery level, e.g. normal or low, and whether to show it
+	String  *types.ShortString  `json:"string,omitempty"`
+	Display *types.FlexibleBool `json:"display,omitempty"`
 }
 
 type PumpExtended struct {
@@ -248,17 +251,20 @@ type PumpExtended struct {
 }
 
 type PumpStatusInfo struct {
-	Status    *types.ShortString `json:"status,omitempty"`
-	Timestamp *types.DateString  `json:"timestamp,omitempty"`
+	Status    *types.ShortString  `json:"status,omitempty"`
+	Bolusing  *types.FlexibleBool `json:"bolusing,omitempty"`
+	Suspended *types.FlexibleBool `json:"suspended,omitempty"`
+	Timestamp *types.DateString   `json:"timestamp,omitempty"`
 }
 
 // ///
 // Uploader
 // ///
 type UploaderStatus struct {
-	Battery   *types.FlexibleInt64 `json:"battery,omitempty"`
-	Name      *types.ShortString   `json:"name,omitempty"`
-	Timestamp *types.DateString    `json:"timestamp,omitempty"`
+	Battery    *types.FlexibleInt64 `json:"battery,omitempty"`
+	IsCharging *types.FlexibleBool  `json:"isCharging,omitempty"`
+	Name       *types.ShortString   `json:"name,omitempty"`
+	Timestamp  *types.DateString    `json:"timestamp,omitempty"`
 }
 
 // UnmarshalJSON leaves out a battery that is not a number, like the "50 days (voltage: 285/275)" xDrip+ sends for a

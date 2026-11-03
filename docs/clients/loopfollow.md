@@ -151,8 +151,9 @@ device token, bundle and team from the profile.
 - LoopFollow treats a zone in `created_at` as UTC, so times must be sent in UTC; Nighttroop always sends
   `created_at` in UTC.
 - A BG Check is also kept as a meter reading, so it is an `mbg` entry too, and LoopFollow draws it in the BG line.
-- Nighttroop returns the identity's name as `enteredBy`, and drops a treatment's `timestamp`, `automatic` and
-  `durationType`, and a device status' `uploader.isCharging`.
+- A treatment's `timestamp` is its `created_at`, a string as LoopFollow needs.
+- Nighttroop returns `enteredBy` as sent (the identity's name when none was), and drops a treatment's sent
+  `timestamp`, `automatic` and `durationType`.
 - A search returns at most 1000 records, the newest, by design, and a profile search with no filters only the latest
   store.
 
@@ -169,15 +170,16 @@ device token, bundle and team from the profile.
 | Treatments with zoneless `find[created_at]` times | Works since #516 (they were a 400) |
 | `find[created_at]` on when a treatment or device status happened | Works since #514 (it was when it was stored) |
 | Loop `Temporary Override`, Trio `SMB`, `Suspend Pump`, `Resume Pump` | Works since #515 and #516 (a batch with one was a 400) |
-| Override `durationType: indefinite` | Shown as a week long: kept with `duration` 10080 since #515, without `durationType`, TODO P4 |
+| Override `durationType: indefinite` | Fixed in this PR: kept with `duration` 10080 since #515, and given back with `durationType` `indefinite` while the override as sent is kept |
 | Bolus `automatic` | Not supported, TODO P2 |
-| Treatment `enteredBy` | Not supported (the identity's name), TODO P4 |
+| Treatment `enteredBy` | Fixed in this PR (it was the identity's name) |
 | Site, sensor and insulin ages | Works (with the zoneless fix) |
 | Device status Loop and OpenAPS objects, IOB, COB, predictions | Works |
 | Device status `pump.clock`, `manufacturer`, `model` | Works since #516 (they were dropped) |
 | Device status `pump.pumpID` | Works since #514 while the status as sent is kept, as the latest is |
 | Device status `pump.bolusIncrement` | Fixed in this PR, while the status as sent is kept, as the latest is |
 | Device status `uploader.battery` | Works since #516 (Loop's was `uploaderBattery` only, Trio's was dropped) |
+| Device status `uploader.isCharging` | Fixed in this PR (it was dropped) |
 | Device status Loop `override` | Works since #516 (it was dropped) |
 | Profile, schedules and Loop's `loopSettings` | Works |
 | Profile Trio remote control settings and override presets | Works since #516 (they were dropped) |

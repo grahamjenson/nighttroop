@@ -41,6 +41,8 @@ ASSERT_EXISTS "@0.created_at"
 ASSERT_EQUALS 4.2 "@0.insulin"
 ASSERT_EXISTS "@0._id"
 ASSERT_EXISTS "@0.utcOffset"
+# Sent without an enteredBy, it is the identity that uploaded it
+ASSERT_EQUALS "pwd_phone" "@0.enteredBy"
 
 NAME create_treatmentses_v1
 POST http://{{ site }}/api/v1/treatments?token={{ token }}

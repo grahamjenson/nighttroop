@@ -138,6 +138,12 @@ func (k eventKind[T, C, U, D]) hardDelete(ctx context.Context, q *sitedb.Queries
 	return err
 }
 
+// Loop's override with no end is indefinite, kept as long as a temp target can be, a week
+const (
+	indefinite        = "indefinite"
+	indefiniteMinutes = 7 * 24 * 60
+)
+
 var (
 	glucoseReadings = eventKind[sitedb.GlucoseReading, sitedb.CreateGlucoseReadingParams, sitedb.UpdateGlucoseReadingParams, sitedb.HardDeleteGlucoseReadingParams]{
 		name: "glucose reading",
@@ -231,8 +237,8 @@ var (
 				source.HighTarget = source.CorrectionRange[0]
 			}
 			// An indefinite one lasts as long as a temp target can, a week
-			if source.DurationMinutes == nil && source.DurationType != nil && *source.DurationType == "indefinite" {
-				source.DurationMinutes = new(types.FlexibleInt64(7 * 24 * 60))
+			if source.DurationMinutes == nil && source.DurationType != nil && *source.DurationType == indefinite {
+				source.DurationMinutes = new(types.FlexibleInt64(indefiniteMinutes))
 			}
 			return source
 		},
@@ -255,8 +261,20 @@ var (
 				target.LowTargetMgdl = source.HighTarget.Float64()
 			}
 		},
-		toTreatment: withoutSite(nightscoutmodels.UpdateTempTargetToTreatment), mergeInto: nightscoutmodels.UpdateToTempTarget,
-		toCreate: nightscoutmodels.TempTargetCreate, create: (*sitedb.Queries).CreateTempTarget,
+		// One a week long is given back as indefinite when it was sent so, as LoopFollow shows Loop's that way; only
+		// those are read from the JSON sent, while it is kept
+		toTreatment: func(event *sitedb.TempTarget, _ *httputils.SiteContext, treatment *nightscoutmodels.Treatment) {
+			nightscoutmodels.UpdateTempTargetToTreatment(event, treatment)
+			var sent struct {
+				DurationType *types.ShortString `json:"durationType"`
+			}
+			if event != nil && event.DurationMinutes == indefiniteMinutes && event.RawJsonData != nil &&
+				json.Unmarshal([]byte(*event.RawJsonData), &sent) == nil && sent.DurationType != nil && *sent.DurationType == indefinite {
+				treatment.DurationType = sent.DurationType
+			}
+		},
+		mergeInto: nightscoutmodels.UpdateToTempTarget,
+		toCreate:  nightscoutmodels.TempTargetCreate, create: (*sitedb.Queries).CreateTempTarget,
 		toUpdate: nightscoutmodels.TempTargetUpdate, update: (*sitedb.Queries).UpdateTempTarget,
 		delete: (*sitedb.Queries).HardDeleteTempTarget,
 	}

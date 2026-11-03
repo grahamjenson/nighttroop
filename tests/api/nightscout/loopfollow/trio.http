@@ -117,7 +117,7 @@ ASSERT_EQUALS 140 "@2.targetTop"
 ASSERT_EQUALS 140 "@2.targetBottom"
 ASSERT_EQUALS 60 "@2.duration"
 ASSERT_EQUALS "Activity" "@2.reason"
-ASSERT_EXISTS "@2.enteredBy"
+ASSERT_EQUALS "Trio" "@2.enteredBy"
 ASSERT_EQUALS 40 "@3.carbs"
 ASSERT_EQUALS "Bolus" "@4.eventType"
 ASSERT_EQUALS 2 "@4.insulin"
@@ -126,7 +126,7 @@ ASSERT_EQUALS 0.3 "@5.insulin"
 ASSERT_EQUALS "Temp Basal" "@6.eventType"
 ASSERT_EQUALS 1.2 "@6.absolute"
 ASSERT_LENGTH 20 "@6.created_at"
-ASSERT_EQUALS null "@6.timestamp"
+ASSERT_LENGTH 20 "@6.timestamp"
 
 NAME cage
 GET http://{{ site }}/api/v1/treatments.json?token={{ token }}&find[eventType]=Site%20Change&find[created_at][$lte]={{ utctime 0 }}&count=1
