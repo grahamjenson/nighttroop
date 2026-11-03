@@ -272,9 +272,14 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - A search with a filter on a field or with an operator Nighttroop does not know, a v1 `find[...]` (e.g.
   `find[notes]=x`) or a v3 `field$operator` (e.g. `notes$eq=x`), is an empty list, as nothing would match in
   Nightscout. Any other parameter, such as xDrip+'s `rr`, is not a filter and is left out.
+- A v1 `DELETE /api/v1/entries.json` with `find[type]` and `find[date][$gte]`, `find[date][$lte]` or
+  `find[date][$in][]`, as xDrip4iOS deletes readings, soft deletes the entries found, at most 1000 each time, saying
+  how many in `deletedCount`; any other filter, or none on the date, is a 400, and it needs a token that can delete.
 - **v2**: authorization (a token for a JWT, and a check of one of its permissions), properties and summary.
 - **v3**: create, read, update, patch, delete, search and history of each collection, plus version, status,
   lastModified and settings.
+- A v3 replace or patch with `If-Unmodified-Since` of a document changed in a later second is refused with a 412 and
+  changes nothing, checked in the same transaction as the change, so a client cannot overwrite a change it has not seen.
 - The v3 status shows what the token may do to each collection, e.g. `crud` for an uploader and `r` for a read only
   token, so apps like AAPS only upload with a token that may write.
 - A v3 history includes deleted documents, with `isValid` false, so apps learn of deletions; a search leaves them
@@ -302,6 +307,9 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   from the default profile's or profile switch's basal at its start, in the profile's timezone, so changed, and it is
   returned with that `absolute`.
 - Duplicate uploads are ignored; values far outside real use are refused.
+- An entry uploaded without an `_id` with the date, type and device of one stored takes its new value, direction and
+  raw values, as xDrip4iOS smooths readings, and followers get it as changed; one sent with the same values changes
+  nothing, not even when it was last modified.
 - A `created_at` filter given a time with no zone, as LoopFollow sends it, reads it as UTC.
 - Loop's and Trio's Suspend Pump and Resume Pump treatments are kept.
 - An activity's `type`, as xDrip+ sends it, is its activity type, a heart rate's `bpm` its heart rate and a motion's

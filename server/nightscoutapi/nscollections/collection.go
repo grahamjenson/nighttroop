@@ -12,6 +12,7 @@ import (
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils"
+	"nighttroop.t1d.nz/utils/apiutils/apiquery"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -24,6 +25,7 @@ type CollectionStore interface {
 	Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, raw bool) (nsutils.Document, *nsutils.HTTPError)
 	Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError
 	DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError)
+	DeleteQuery(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) (int, *nsutils.HTTPError)
 }
 
 // CollectionDB is a collection kept in the site's tables, like a siteapi store: NS is its Nightscout model and DM
@@ -47,6 +49,13 @@ type CollectionDB[NS, DM any] interface {
 // the newest.
 type CollectionDeduplicator[NS, DM any] interface {
 	GetDuplicate(q *sitedb.Queries, ctx context.Context, nsModel NS) (*DM, error)
+}
+
+// CollectionRefresher is a CollectionDeduplicator whose duplicate takes the values of the model repeating it, as
+// Nightscout upserts one sent again. It is the duplicate as it is now, and whether it changed, which it must not when
+// the values are the same, so a client sending a batch again changes nothing.
+type CollectionRefresher[NS, DM any] interface {
+	Refresh(q *sitedb.Queries, ctx context.Context, nsModel NS, duplicate *DM, cc nightscoutmodels.ConverterContext) (*DM, bool, error)
 }
 
 // CollectionPatcher is a CollectionDB that can change a model in place; without it a patch is not implemented
@@ -179,6 +188,9 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 		slog.ErrorContext(ctx, "failed to check for duplicate in database", "error", err, "collection", m.Name())
 		return nil, false, nsutils.ErrInternal
 	}
+	if duplicateDBModel != nil && identifier == nil {
+		return c.repeated(ctx, siteContext, tx, q, nsModel, duplicateDBModel, raw)
+	}
 	if duplicateDBModel != nil {
 		return c.document(duplicateDBModel, siteContext, raw), true, nil
 	}
@@ -201,6 +213,26 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 
 	siteContext.PublishModelChange(events.Created, dbModel)
 	return c.document(dbModel, siteContext, raw), false, nil
+}
+
+// repeated is the duplicate a create without an identifier repeats, given the create's values when the collection
+// is a CollectionRefresher
+func (c Collection[NS, DM]) repeated(ctx context.Context, siteContext *httputils.SiteContext, tx *sql.Tx, q *sitedb.Queries, nsModel NS, duplicate *DM, raw bool) (nsutils.Document, bool, *nsutils.HTTPError) {
+	refresher, ok := any(c.db).(CollectionRefresher[NS, DM])
+	if !ok {
+		return c.document(duplicate, siteContext, raw), true, nil
+	}
+	refreshed, changed, err := refresher.Refresh(q, ctx, nsModel, duplicate, converterContext(siteContext))
+	if httpErr := c.stored(refreshed, err, "refresh"); httpErr != nil {
+		return nil, false, httpErr
+	}
+	if changed {
+		if httpErr := c.commit(tx, "refresh"); httpErr != nil {
+			return nil, false, httpErr
+		}
+		siteContext.PublishModelChange(events.Updated, refreshed)
+	}
+	return c.document(refreshed, siteContext, raw), true, nil
 }
 
 // identifiedDuplicate is the model a create naming its identifier repeats, as in Nightscout, which keeps that
@@ -337,6 +369,34 @@ func (c Collection[NS, DM]) DeleteType(ctx context.Context, siteContext *httputi
 	return int(rowsAffected), nil
 }
 
+// DeleteQuery soft deletes what a search with the query finds, at most a search's worth, the newest first, and says how
+// many: the rest are deleted by asking again. Each is deleted on its own, so it is published as deleted.
+func (c Collection[NS, DM]) DeleteQuery(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) (int, *nsutils.HTTPError) {
+	tx, q, httpErr := c.begin(ctx, siteContext)
+	if httpErr != nil {
+		return 0, httpErr
+	}
+	defer tx.Rollback()
+
+	query.IncludeDeleted, query.Skip, query.Limit = false, 0, apiquery.MaxQueryLimit
+	found, err := c.db.SearchModels(q, ctx, query)
+	for i := 0; err == nil && i < len(found); i++ {
+		_, err = c.db.Delete(q, ctx, (*found[i]).GetID(), false)
+	}
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to delete by query", "error", err, "collection", c.db.Name())
+		return 0, nsutils.ErrInternal
+	}
+
+	if httpErr := c.commit(tx, "delete"); httpErr != nil {
+		return 0, httpErr
+	}
+	for _, deleted := range found {
+		siteContext.PublishModelChange(events.Deleted, deleted)
+	}
+	return len(found), nil
+}
+
 func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, data map[string]any, canCreate bool, raw bool) (nsutils.Document, bool, *nsutils.HTTPError) {
 	m := c.db
 	var nsModel NS
@@ -366,6 +426,8 @@ func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.
 	} else if err != nil {
 		slog.ErrorContext(ctx, "failed to get by ID", "error", err, "collection", m.Name(), "identifier", identifier)
 		return nil, false, nsutils.ErrInternal
+	} else if nsutils.ModifiedSince(ctx, (*replacingModel).GetUpdatedAt()) {
+		return nil, false, nsutils.ErrModifiedSince
 	}
 
 	// DELETE record if we are not creating a new record
@@ -444,6 +506,9 @@ func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.Si
 	// As in Nightscout, a deleted record is gone, so it cannot be patched
 	if updateingModel != nil && (*updateingModel).GetDeletedAt() != nil {
 		return nil, nsutils.ErrGone
+	}
+	if nsutils.ModifiedSince(ctx, (*updateingModel).GetUpdatedAt()) {
+		return nil, nsutils.ErrModifiedSince
 	}
 
 	if err := ValidateNotChangingSharedFields(updateingModel, nsModel, data, identifier); err != nil {

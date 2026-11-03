@@ -83,7 +83,6 @@
     1. P4: Return a food's Nightscout `portion`, `unit` and `gi` as sent; AAPS takes 0, g and none without them
     1. P4: Keep arbitrary API v3 `settings` documents and support v2 authorization roles and subjects, which AAPS 4's
        client control (pairing and remote commands) uses
-    1. P2: Check If-Unmodified-Since on API v3 replace and patch, in the same query as the update
     1. P4: Only write a treatment's events that changed, rather than every one on each update
     1. P4: Keep when a site's settings last changed, for API v3 lastModified
 1. LoopFollow ([docs/clients/loopfollow.md](docs/clients/loopfollow.md)):
@@ -92,7 +91,8 @@
 1. Loop ([docs/clients/loop.md](docs/clients/loop.md)):
     1. P1: Replace a treatment uploaded again rather than ignore it, as Nightscout does: Loop posts a temp basal or
        bolus again when it ends early, with the same date and `syncIdentifier`, and the first upload's duration and
-       amount are kept. Trio's ended temp targets and overrides, and xDrip4iOS's re-sent readings, need the same
+       amount are kept. Trio's ended temp targets and overrides need the same, as entries now have
+       (`CollectionRefresher`)
     1. P2: Loop remote commands: `POST /api/v2/notifications/loop`, sent to Loop as an Apple push to its profile's
        `loopSettings.deviceToken`, once push notifications can be sent
     1. P4: Keep a Loop device status's pump `pumpID`, `suspended` and `bolusing`, and its uploader `name` and
@@ -101,8 +101,6 @@
     1. P2: Return a BG Check's `glucose` as xDrip4iOS can match it: it reads it as mg/dL only when `units` is
        exactly `mg/dl`, and as mmol/L otherwise, and matches an upload by its exact value, so Nighttroop's
        `mg/dL` or rounded mmol/L makes it upload the BG check again each sync and add a copy in the app
-    1. P2: Delete entries by a query, `DELETE /api/v1/entries.json?find[type]=sgv&find[date][$gte]=..&find[date][$lte]=..`
-       and `find[date][$in][]=..`, which xDrip4iOS sends when a reading is deleted or readings are rebuilt
 1. xDrip+ ([docs/clients/xdrip.md](docs/clients/xdrip.md)):
     1. P2: An unknown `find[...]` filter is ignored, so the search gives everything, and a client that deletes the
        first match (as xDrip+ does by `find[uuid]`) deletes the wrong document. Give nothing for a filter on an unknown

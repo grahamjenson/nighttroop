@@ -55,9 +55,11 @@ var (
 var (
 	ErrNotFound = &HTTPError{Status: http.StatusNotFound, Message: "record not found"}
 
-	ErrGone         = &HTTPError{Status: http.StatusGone, Message: "record deleted"}
-	ErrInternal     = &HTTPError{Status: http.StatusInternalServerError, Message: "internal server error"}
-	ErrCannotModify = func(field string) *HTTPError {
+	ErrGone = &HTTPError{Status: http.StatusGone, Message: "record deleted"}
+	// ErrModifiedSince is a replace or patch of a record changed after the request's If-Unmodified-Since
+	ErrModifiedSince = &HTTPError{Status: http.StatusPreconditionFailed, Message: "record modified since If-Unmodified-Since"}
+	ErrInternal      = &HTTPError{Status: http.StatusInternalServerError, Message: "internal server error"}
+	ErrCannotModify  = func(field string) *HTTPError {
 		return &HTTPError{Status: http.StatusBadRequest, Message: fmt.Sprintf("Field %s cannot be modified by the client", field)}
 	}
 	ErrRecordReadOnly = &HTTPError{Status: http.StatusForbidden, Message: "record is read-only (because soft deleted)"}
