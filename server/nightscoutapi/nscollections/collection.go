@@ -420,51 +420,14 @@ func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.
 	}
 	defer tx.Rollback()
 
-	creatingNewRecord := false
-
-	// GET
-	replacingModel, err := m.GetModel(q, ctx, identifier, true)
-	if err == sql.ErrNoRows {
-		// Check no Record exists
-		if !canCreate {
-			return nil, false, nsutils.ErrNotFound
-		}
-		creatingNewRecord = true
-		replacingModel = nil
-	} else if err != nil {
-		slog.ErrorContext(ctx, "failed to get by ID", "error", err, "collection", m.Name(), "identifier", identifier)
-		return nil, false, nsutils.ErrInternal
-	} else if nsutils.ModifiedSince(ctx, (*replacingModel).GetUpdatedAt()) {
-		return nil, false, nsutils.ErrModifiedSince
+	replaced, httpErr := c.removeReplaced(ctx, q, identifier, canCreate)
+	if httpErr != nil {
+		return nil, false, httpErr
+	}
+	if httpErr := c.validateReplace(ctx, nsModel, replaced, data, identifier); httpErr != nil {
+		return nil, false, httpErr
 	}
 
-	// DELETE record if we are not creating a new record
-	if !creatingNewRecord {
-		_, err := m.Delete(q, ctx, identifier, true)
-		if err != nil {
-			slog.ErrorContext(ctx, "failed to hard delete in database", "error", err, "collection", m.Name(), "identifier", identifier)
-			return nil, false, nsutils.ErrInternal
-		}
-	}
-
-	// As in Nightscout, a deleted document is replaced whatever changed, as a client like Juggluco changes one by
-	// deleting it and sending it again
-	checkedModel := replacingModel
-	if replacingModel != nil && (*replacingModel).GetDeletedAt() != nil {
-		checkedModel = nil
-	}
-
-	if err := ValidateNotChangingSharedFields(checkedModel, nsModel, data, identifier); err != nil {
-		slog.ErrorContext(ctx, "validation failed for replacing model", "error", err, "collection", m.Name())
-		return nil, false, err
-	}
-
-	if err := m.Validate(nsModel, checkedModel); err != nil {
-		slog.ErrorContext(ctx, "validation failed for replacing model", "error", err, "collection", m.Name())
-		return nil, false, err
-	}
-
-	// CREATE
 	dbCreateModel, err := m.CreateModel(q, ctx, nsModel, converterContext(siteContext), &identifier)
 	if httpErr := c.stored(dbCreateModel, err, "replace"); httpErr != nil {
 		return nil, false, httpErr
@@ -474,6 +437,7 @@ func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.
 		return nil, false, httpErr
 	}
 
+	creatingNewRecord := replaced == nil
 	if creatingNewRecord {
 		siteContext.PublishModelChange(events.Created, dbCreateModel)
 	} else {
@@ -481,7 +445,48 @@ func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.
 	}
 	c.afterStored(ctx, siteContext, nsModel)
 	return c.document(dbCreateModel, siteContext, raw), creatingNewRecord, nil
+}
 
+// removeReplaced is the record a replace takes the place of, deleted for good so its replacement can take its
+// identifier. It is nil when there is none, so the replace creates the record, which only canCreate allows.
+func (c Collection[NS, DM]) removeReplaced(ctx context.Context, q *sitedb.Queries, identifier string, canCreate bool) (*DM, *nsutils.HTTPError) {
+	replaced, err := c.db.GetModel(q, ctx, identifier, true)
+	if err == sql.ErrNoRows {
+		if !canCreate {
+			return nil, nsutils.ErrNotFound
+		}
+		return nil, nil
+	}
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to get by ID", "error", err, "collection", c.db.Name(), "identifier", identifier)
+		return nil, nsutils.ErrInternal
+	}
+	if nsutils.ModifiedSince(ctx, (*replaced).GetUpdatedAt()) {
+		return nil, nsutils.ErrModifiedSince
+	}
+	if _, err := c.db.Delete(q, ctx, identifier, true); err != nil {
+		slog.ErrorContext(ctx, "failed to hard delete in database", "error", err, "collection", c.db.Name(), "identifier", identifier)
+		return nil, nsutils.ErrInternal
+	}
+	return replaced, nil
+}
+
+// validateReplace checks the model replacing the record replaced, which is nil when the replace creates the record.
+// As in Nightscout, a deleted document is replaced whatever changed, as a client like Juggluco changes one by
+// deleting it and sending it again.
+func (c Collection[NS, DM]) validateReplace(ctx context.Context, nsModel NS, replaced *DM, data map[string]any, identifier string) *nsutils.HTTPError {
+	if replaced != nil && (*replaced).GetDeletedAt() != nil {
+		replaced = nil
+	}
+	if err := ValidateNotChangingSharedFields(replaced, nsModel, data, identifier); err != nil {
+		slog.ErrorContext(ctx, "validation failed for replacing model", "error", err, "collection", c.db.Name())
+		return err
+	}
+	if err := c.db.Validate(nsModel, replaced); err != nil {
+		slog.ErrorContext(ctx, "validation failed for replacing model", "error", err, "collection", c.db.Name())
+		return err
+	}
+	return nil
 }
 
 func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, data map[string]any, raw bool) (nsutils.Document, *nsutils.HTTPError) {
