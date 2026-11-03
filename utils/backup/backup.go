@@ -3,6 +3,7 @@ package backup
 import (
 	"context"
 	"database/sql"
+	"database/sql/driver"
 	"fmt"
 	"log/slog"
 
@@ -29,7 +30,15 @@ func SqliteBackup(ctx context.Context, db *sql.DB, backupPath string) error {
 	defer conn.Close()
 
 	err = conn.Raw(func(driverConn any) (err error) {
-		bck, err := driverConn.(BackupConn).NewBackup(backupPath)
+		// A connection wrapped, e.g. to time its queries, backs up as the driver's own
+		if wrapped, ok := driverConn.(interface{ Unwrap() driver.Conn }); ok {
+			driverConn = wrapped.Unwrap()
+		}
+		backupConn, ok := driverConn.(BackupConn)
+		if !ok {
+			return fmt.Errorf("the db's connection, a %T, cannot back up", driverConn)
+		}
+		bck, err := backupConn.NewBackup(backupPath)
 		if err != nil {
 			return err
 		}
