@@ -69,10 +69,11 @@ func StatusJSON(store nsutils.Store) http.HandlerFunc {
 // the settings' units written as Nightscout writes them, "mg/dl" or "mmol", which followers like Nightguard read
 func Status(ctx context.Context) map[string]any {
 	units := "mg/dl"
-	if siteContext := httputils.GetSiteContext(ctx); siteContext != nil && *siteContext.GetSettings().GetUnits() == consts.UnitsMMOLL {
+	siteContext := httputils.GetSiteContext(ctx)
+	if siteContext != nil && *siteContext.GetSettings().GetUnits() == consts.UnitsMMOLL {
 		units = "mmol"
 	}
-	return map[string]any{
+	status := map[string]any{
 		"status":            "ok",
 		"apiEnabled":        true,
 		"careportalEnabled": true,
@@ -81,4 +82,10 @@ func Status(ctx context.Context) map[string]any {
 			"units":  units,
 		},
 	}
+	if siteContext != nil && siteContext.IdentityModel != nil && siteContext.Config != nil {
+		if authorized, err := nsutils.Authorization(siteContext); err == nil {
+			status["authorized"] = authorized
+		}
+	}
+	return status
 }

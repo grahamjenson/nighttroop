@@ -14,6 +14,18 @@ NAME status_read_token
 GET http://{{ site }}/api/v1/status.json?token={{ read_token }}
 ASSERT_STATUS 200
 ASSERT_EQUALS "ok" "@status"
+# On a 200 it labels the connection from authorized.permissionGroups (verifyURLAndToken): an exact "*" is Admin, an
+# exact api:treatments:create is Read & Write, and anything else is Read
+ASSERT_EXISTS "@authorized.token"
+ASSERT_LENGTH 1 "@authorized.permissionGroups.0"
+ASSERT_EQUALS "api:*:read" "@authorized.permissionGroups.0.0"
+
+NAME status_write_token
+GET http://{{ site }}/api/v1/status.json?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EXISTS "@authorized.token"
+ASSERT_EQUALS "api:*:*" "@authorized.permissionGroups.0.0"
+ASSERT_EQUALS "api:treatments:create" "@authorized.permissionGroups.0.1"
 
 NAME status_no_token
 GET http://{{ site }}/api/v1/status.json
