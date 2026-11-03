@@ -22,7 +22,8 @@ requests and check the fields it decodes.
 - After a 401, LoopFollow checks whether the token was really the API secret, with
   `GET /api/v2/authorization/subjects` and the SHA-1 of it in `api-secret` (`verifyAPISecret`), and offers to make a
   read-only token from it on a 200 (`provisionReadOnlyToken`, `POST /api/v2/authorization/subjects`). Nighttroop
-  has no API secret, so this is a 401 and LoopFollow does not offer it; give it a Nighttroop token.
+  has no API secret: it takes the SHA-1 of a device's token (#512), which a token that got a 401 is not, so this is a
+  401 and LoopFollow does not offer it; give it a Nighttroop token.
 - A read-only token is enough for everything LoopFollow does.
 - Socket.IO sends the token as the `token` connect param and as `secret` in `authorize`.
 
@@ -30,8 +31,9 @@ requests and check the fields it decodes.
 
 LoopFollow reads `sgv` and `mbg` as mg/dL whatever the units, as Nightscout always stores them
 (`Extensions/ShareClientExtension.swift`, `ShareGlucoseData`). Nighttroop sends them in the identity's units, so
-**LoopFollow's identity must be set to mg/dL**; in mmol/L a 6.7 reading is shown as 7 mg/dL. The profile is fine
-either way, as LoopFollow reads its `units`.
+**LoopFollow's identity must be set to mg/dL**; in mmol/L a 6.7 reading is shown as 7 mg/dL. LoopFollow is not one of
+Add Device's clients, so a device added for it as Other has the site's units; a site admin can set its own units to
+mg/dL from its row on Users & Devices (#523). The profile is fine either way, as LoopFollow reads its `units`.
 
 ## Calls
 
@@ -149,7 +151,8 @@ device token, bundle and team from the profile.
 - A BG Check is also kept as a meter reading, so it is an `mbg` entry too, and LoopFollow draws it in the BG line.
 - Nighttroop returns the identity's name as `enteredBy`, and drops a treatment's `timestamp`, `automatic` and
   `durationType`, and a device status' `uploader.isCharging` and `pump.bolusIncrement`.
-- A search returns at most 1000 records, and a profile search with no filters only the latest store.
+- A search returns at most 1000 records, the newest, by design, and a profile search with no filters only the latest
+  store.
 
 ## Status
 
@@ -160,21 +163,22 @@ device token, bundle and team from the profile.
 | API secret check and token provisioning (`/api/v2/authorization/subjects`) | Not supported (no API secret); a 401 |
 | Entries, `find[date]`, `find[dateString]`, `find[type][$ne]=cal` | Works with the identity in mg/dL |
 | `sgv` in mg/dL for an identity in mmol/L | Not supported, TODO P1 |
-| More than 1000 entries or treatments | Not supported, TODO P3 |
-| Treatments with zoneless `find[created_at]` times | Fixed in this PR (they were a 400) |
-| `find[created_at]` on when a treatment or device status happened | Fixed in this PR (it was when it was stored) |
-| Loop `Temporary Override`, Trio `SMB`, `Suspend Pump`, `Resume Pump` | Fixed in this PR (a batch with one was a 400) |
-| Override `durationType: indefinite` | Not supported, TODO P2 |
+| More than 1000 entries or treatments | Not supported: a search gives at most the newest 1000, by design |
+| Treatments with zoneless `find[created_at]` times | Works since #516 (they were a 400) |
+| `find[created_at]` on when a treatment or device status happened | Works since #514 (it was when it was stored) |
+| Loop `Temporary Override`, Trio `SMB`, `Suspend Pump`, `Resume Pump` | Works since #515 and #516 (a batch with one was a 400) |
+| Override `durationType: indefinite` | Shown as a week long: kept with `duration` 10080 since #515, without `durationType`, TODO P4 |
 | Bolus `automatic` | Not supported, TODO P2 |
 | Treatment `enteredBy` | Not supported (the identity's name), TODO P4 |
 | Site, sensor and insulin ages | Works (with the zoneless fix) |
 | Device status Loop and OpenAPS objects, IOB, COB, predictions | Works |
-| Device status `pump.clock`, `manufacturer`, `model` | Fixed in this PR (they were dropped) |
-| Device status `pump.pumpID`, `pump.bolusIncrement` | Not supported, TODO P4 |
-| Device status `uploader.battery` | Fixed in this PR (Loop's was `uploaderBattery` only, Trio's was dropped) |
-| Device status Loop `override` | Fixed in this PR (it was dropped) |
+| Device status `pump.clock`, `manufacturer`, `model` | Works since #516 (they were dropped) |
+| Device status `pump.pumpID` | Works since #514 while the status as sent is kept, as the latest is |
+| Device status `pump.bolusIncrement` | Not supported, TODO P4 |
+| Device status `uploader.battery` | Works since #516 (Loop's was `uploaderBattery` only, Trio's was dropped) |
+| Device status Loop `override` | Works since #516 (it was dropped) |
 | Profile, schedules and Loop's `loopSettings` | Works |
-| Profile Trio remote control settings and override presets | Fixed in this PR (they were dropped) |
+| Profile Trio remote control settings and override presets | Works since #516 (they were dropped) |
 | Profile history for the remote diagnostics | Not supported (only the latest), TODO P4 |
 | `dbsize` property | Not supported (sends `{}`, the row is hidden) |
 | Nightscout tab (`/`) | Not supported (404), TODO P4 |

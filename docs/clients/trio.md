@@ -18,18 +18,20 @@ from those and a fixed path (`/api/v1/...`), so a path or a `?token=` in the URL
 Every request sends the secret as `api-secret: <SHA1 hex of the secret>` (`String.sha1()`), as Nightscout expects for
 its `API_SECRET`. It sends no `token` parameter and no `Authorization` header, and never asks for a JWT.
 
-Nighttroop takes a device's token in `api-secret`, but not its SHA1, which it cannot check against the token. **So
-Trio cannot sign in to Nighttroop yet** (TODO P0). The tests send the token itself in `api-secret`, as the closest to
-Trio there is. Without a secret, Trio's connection check is a `GET /api/v1/treatments.json`, which Nighttroop refuses
-with a 401, as it needs a token.
+Nighttroop takes a device's token in `api-secret`, or its SHA1 (40 hex digits), which it finds by a digest of the
+SHA1 kept for each token (not for an admin or an identity with TOTP), since #512. So Trio signs in with a device's
+token as its API secret. The site's Add Device has Trio as a client (#524), which makes a PWD Phone device (#527) in
+mg/dL, with a setup guide. The tests send the token's SHA1 in `api-secret`, as Trio does. Without a secret, Trio's connection check is a `GET /api/v1/treatments.json`, which Nighttroop
+refuses with a 401, as it needs a token.
 
 ## Units
 
 Trio reads glucose (`sgv`) as mg/dL and decodes it as an integer, and temp targets' `targetTop`/`targetBottom` as
 mg/dL. Nighttroop returns both in the site's units (or the identity's). **The site, or Trio's identity, must be set
-to mg/dL**: in mmol/L a reading of 120 mg/dL comes back as 6.66, which Trio truncates to 6 mg/dL. The tests set the
-site to mg/dL. The profile is fine in either: Trio uploads it in the user's units, labelled `mg/dl` or `mmol`, and on
-import works out mmol/L from `units` or from targets of 39 or less.
+to mg/dL**: in mmol/L a reading of 120 mg/dL comes back as 6.66, which Trio truncates to 6 mg/dL. A device added for
+Trio is set to mg/dL (#524), and an admin can change an identity's units (#523). The tests set the site to mg/dL.
+The profile is fine in either: Trio uploads it in the user's units, labelled `mg/dl` or `mmol`, and on import works
+out mmol/L from `units` or from targets of 39 or less.
 
 ## Dates and types Trio reads back
 
@@ -70,7 +72,7 @@ with `created_at`, `enteredBy: "Trio"` and the event's `id`:
 | Pump alarm | `Announcement` | `duration: 30`, `notes` |
 
 Nighttroop refused `SMB` and `External Insulin` as unknown types, and as one batch holds every kind, one SMB lost
-the whole batch. **Fixed in this PR**: both are kept as insulin doses with their type.
+the whole batch. Fixed in #509: both are kept as insulin doses with their type.
 
 ### Carbs: `POST /api/v1/treatments.json`
 
@@ -120,8 +122,11 @@ arrives):
   `bolusing`, `suspended`, `timestamp`), `bolusIncrement`
 - `uploader`: `battery`, `isCharging`
 
-Works, and `openaps` comes back whole. Nighttroop keeps only the pump's `battery.percent` and `reservoir`, and not
-`uploader`; Trio does not read them back, but its followers do (TODO P3).
+Works, and `openaps` comes back whole. The pump comes back with its `clock`, `reservoir`, `battery` (`percent`,
+`voltage`) and `status` (`status`, `timestamp`) while the JSON it was sent in is kept (then only the clock, battery
+percent and reservoir), and `uploader` with only its `battery`. The pump's `bolusIncrement`, the battery's `string`
+and `display`, the status's `bolusing` and `suspended`, and the uploader's `isCharging` are dropped; Trio does not
+read them back, but its followers do (TODO P3).
 
 ### Profile: `POST /api/v1/profile.json`
 
@@ -190,7 +195,7 @@ as `FetchedNightscoutProfileStore`: `_id`, `defaultProfile`, `startDate` (string
 `created_at` (string) and `store` required, and takes `store.default`, which needs `dia`, `carbs_hr` (integer),
 `delay`, `timezone`, `units` and the five schedules of `{ time, value, timeAsSeconds }`.
 
-Nighttroop left out `enteredBy`, so the import failed. **Fixed in this PR**: a profile's `enteredBy` is the identity
+Nighttroop left out `enteredBy`, so the import failed. Fixed in #509: a profile's `enteredBy` is the identity
 that uploaded it.
 
 ### Announcements, iAPS only: `GET /api/v1/treatments.json`
@@ -225,26 +230,26 @@ Trio and iAPS use no Socket.IO, and no API v2 or v3.
 - `find[eventType]=Temporary+Target` has a literal `+` for the space, which decodes to `Temporary Target`.
 - iAPS percent-encodes its `enteredBy` values before `URLComponents` encodes them again, so `iAPS Watch` reaches the
   server as `iAPS%20Watch`.
-- `find[created_at]` filters on Nighttroop are on when the record was uploaded, not on Nightscout's `created_at`,
-  when it happened (TODO P3). For Trio's "since a day ago" this differs only for records uploaded late.
+- `find[created_at]` filters are on when the record happened, as in Nightscout (#514), and `srvCreated` on when it
+  was uploaded.
 
 ## Status
 
 | Interaction | Nighttroop |
 | --- | --- |
-| `api-secret` as the SHA1 of the secret | Not supported, TODO P0 |
+| `api-secret` as the SHA1 of the secret | Works (#512) |
 | Connection check, `POST` Note | Works |
 | Glucose upload | Works |
-| Pump history upload with `SMB` and `External Insulin` | Fixed in this PR |
+| Pump history upload with `SMB` and `External Insulin` | Works (#509) |
 | Carbs, sensor start, note uploads | Works |
 | Temp target and override upload | Works |
 | Temp target and override run (same `created_at`, new duration) | Not supported, TODO P1 |
-| Device status upload | Works; pump clock and status and uploader dropped, TODO P3 |
+| Device status upload | Works; pump `bolusIncrement`, `bolusing`, `suspended` and `uploader.isCharging` dropped, TODO P3 |
 | Profile upload | Works |
-| Profile import | Fixed in this PR (`enteredBy`) |
+| Profile import | Works (`enteredBy`, #509) |
 | Carbs fetch (`find[carbs][$exists]`, `enteredBy` `$ne`) | Not supported, TODO P1 |
 | Temp target fetch | Works in mg/dL; own ones come back, TODO P1 |
 | Glucose fetch (Nightscout as CGM) | Works in mg/dL |
 | iAPS announcements (`find[enteredBy]=remote`) | Not supported, TODO P1 |
 | Deletes by query | Not supported, TODO P2 |
-| mmol/L site or identity | Not supported by Trio's fetches; set mg/dL |
+| mmol/L site or identity | Not supported by Trio's fetches; a device added for Trio is in mg/dL |

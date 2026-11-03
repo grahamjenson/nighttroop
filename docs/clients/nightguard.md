@@ -9,9 +9,11 @@ The tests are in `tests/api/nightscout/nightguard/`.
 ## Setting it up with Nighttroop
 
 - Use the Nightscout URL `https://<site>.ns.<host>` and a device's Nightscout token.
-- **Set that token's identity to mg/dL.** Nightguard reads every `sgv` and `mbg` as mg/dL and never looks at an
+- **Its identity must be in mg/dL.** Nightguard reads every `sgv` and `mbg` as mg/dL and never looks at an
   entry's `units`, so with mmol/L settings its readings would be about 18 times too low, and its low alarms would
-  go off. To see mmol/L in the app, turn on "Manually set Units" in its settings and pick mmol/L.
+  go off. A device added for Nightguard in the site's Add Device has its units set to mg/dL (#524), and an admin
+  can set an existing device's units from its row (#523). To see mmol/L in the app, turn on "Manually set Units"
+  in its settings and pick mmol/L.
 
 ## Authentication
 
@@ -156,19 +158,19 @@ Nightscout. Its background push service is Nightguard's own, not Nightscout.
 
 | Interaction | Status |
 | --- | --- |
-| `GET /api/v3/version` without a token | Fixed in this PR: it needed a token, so every read failed |
+| `GET /api/v3/version` without a token | Fixed in #514: it needed a token, so every read failed |
 | JWT from `/api/v2/authorization/request/token=…`, Bearer on v3 | Works |
 | v1 with `?token=` | Works |
-| `status.json` `settings.units` | Fixed in this PR: it was missing, so units could not be read |
+| `status.json` `settings.units` | Fixed in #514: it was missing, so units could not be read |
 | v3 and v1 entries, with their `fields`, `type$in`, `limit`, `skip`, `count` and sort | Works |
-| Date filters with a fraction (`date$gte=…0.25`, `find[date][$lt]=…0.0`) | Fixed in this PR: they were a 400 |
-| A meter reading's entry with no `sgv` | Fixed in this PR: every entry had both, so meter readings were CGM readings |
-| Glucose in mmol/L | Not supported: Nightguard reads mg/dL only, so its identity must be set to mg/dL. TODO in `TODOs.md` |
-| `eventType$eq` on v3 treatments | Fixed in this PR: it was ignored, so the newest treatment of any type came back |
-| `created_at` filters and sort on treatments | Fixed in this PR: they were on when it was uploaded, not when it happened |
+| Date filters with a fraction (`date$gte=…0.25`, `find[date][$lt]=…0.0`) | Fixed in #514: they were a 400 |
+| A meter reading's entry with no `sgv` | Fixed in #514: every entry had both, so meter readings were CGM readings |
+| Glucose in mmol/L | Not supported: Nightguard reads mg/dL only, so a device added for Nightguard is set to mg/dL (#524) |
+| `eventType$eq` on v3 treatments | Fixed in #514: it was ignored, so the newest treatment of any type came back |
+| `created_at` filters and sort on treatments | Fixed in #514: they were on when it was uploaded, not when it happened |
 | v2 properties `upbat`, `iob`, `cob`, `delta` | Works |
 | devicestatus `pump.reservoir` | Works |
-| devicestatus `pump.extended` (profile, temp basal) | Fixed in this PR: it was dropped |
+| devicestatus `pump.extended` (profile, temp basal) | Fixed in #514: it was dropped |
 | Temp target, site, sensor and battery change reads | Works |
 | Today's carbs and boluses | Works |
 | Report treatments and profiles | Works |

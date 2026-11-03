@@ -14,10 +14,11 @@ profile and the latest device statuses, to show a loop's status. It uses only RE
   `/api/v1`, and takes a port from it (`SettingsViewNightscoutSettingsViewModel`).
 - **Token**: the PWD phone's Nightscout token to upload, or a read only device's token to only follow.
 - **API_SECRET**: leave it empty. Nighttroop has no API secret, and the app only ever sends the secret's SHA1, which
-  can't be a Nighttroop token.
+  Nighttroop takes only as the SHA1 of a device's token (#512), so the token works here too and anything else is a 401.
 - **Units**: set the token's identity's units to mg/dL. The follower reads `sgv` as mg/dL whatever the `units`, and
   Nighttroop returns readings in the identity's (then the site's) units, so on an mmol/L site 6.5 mmol/L is read as
-  6.5 mg/dL.
+  6.5 mg/dL. xDrip4iOS is not one of Add Device's clients, which set mg/dL (#524), so add it as Other and an admin sets
+  its units from its row on Users & Devices (#523).
 
 ## Authentication
 
@@ -86,7 +87,7 @@ device status's `uploaderBattery`.
 
 `uploadActiveSensorToNightscout` (and `uploadLibreLinkUpSensorStartToNightscout` for a LibreLinkUp follower):
 `POST /api/v1/treatments` with `{"_id": "..", "eventType": "Sensor Start", "created_at": "..", "enteredBy": "xDrip4iOS"}`.
-The response isn't read. Nighttroop gives it its own `_id`, and a retry is ignored as a duplicate.
+The response isn't read. Nighttroop keeps its `_id`, and a retry is ignored as a duplicate.
 
 ### Treatment sync (master, and a follower that uploads)
 
@@ -173,24 +174,24 @@ When the user deletes a reading or smooths or rebuilds readings: `DELETE /api/v1
 | Interaction | Nighttroop | Test |
 | --- | --- | --- |
 | Token in the query, or in `api-secret` for the Test button | Works | `auth.http` |
-| API_SECRET's SHA1 in `api-secret` | Not supported, by design: use the token | `auth.http` |
-| `GET /api/v1/experiments/test` | Fixed in this PR (was a 400) | `auth.http` |
+| API_SECRET's SHA1 in `api-secret` | Works when the API_SECRET is the token (#512); any other secret is a 401 | `auth.http`, `tests/api/nightscout/xdrip/` |
+| `GET /api/v1/experiments/test` | Fixed in #513 (was a 400) | `auth.http` |
 | `GET /api/v1/status.json` without credentials | Not supported, a 401 (TODO P4) | |
 | Upload readings, and the same batch again | Works | `uploader.http` |
-| Upload calibrations (`cal` and `mbg`) | Fixed in this PR (`cal` failed the batch) | `uploader.http` |
-| Uploader battery in `uploader.battery` | Fixed in this PR (was dropped) | `uploader.http` |
+| Upload calibrations (`cal` and `mbg`) | Fixed in #512 (`cal` failed the batch) | `uploader.http` |
+| Uploader battery in `uploader.battery` | Fixed in #512 (was dropped) | `uploader.http` |
 | Sensor start, and a retry | Works | `treatments.http` |
-| Upload treatments with `eventTime`, matched by `created_at` | Fixed in this PR (`created_at` was the time received) | `treatments.http` |
-| Upload `Carbs` | Fixed in this PR (was a 400) | `treatments.http` |
-| Upload a BG check from an mmol/L user (`Finger: 6.7 mmol/L`) | Fixed in this PR (was a 400) | `treatments.http` |
+| Upload treatments with `eventTime`, matched by `created_at` | Fixed in #513 (`created_at` was the time received) | `treatments.http` |
+| Upload `Carbs` | Fixed in #513 (was a 400) | `treatments.http` |
+| Upload a BG check from an mmol/L user (`Finger: 6.7 mmol/L`) | Fixed in #513 (was a 400) | `treatments.http` |
 | BG check matched and downloaded with the same value | Not supported (TODO P2) | `treatments.http` |
 | Update a treatment with `PUT` | Works | `treatments.http` |
 | Download the last 24 hours of treatments | Works | `treatments.http` |
-| `find[_id]` of a deleted treatment is `[]` | Fixed in this PR (was a 404) | `treatments.http`, `tests/socket/nightscout/db_writes.sio` |
+| `find[_id]` of a deleted treatment is `[]` | Fixed in #513 (was a 404) | `treatments.http`, `tests/socket/nightscout/db_writes.sio` |
 | Delete a treatment | Works | `treatments.http` |
-| Follower readings with `count` and `find[date][$gte]` | Works, with the identity in mg/dL (TODO P1 for the guide) | `follower.http` |
+| Follower readings with `count` and `find[date][$gte]` | Works, with the identity in mg/dL, set by an admin (#523); not one of Add Device's mg/dL clients (TODO P1) | `follower.http` |
 | Profile | Works | `follower.http` |
 | Device status | Works | `follower.http` |
-| History import | Works, but a day with over 1000 readings loses its oldest (TODO P3) | |
+| History import | Works, but a day with over 1000 readings loses its oldest, as a search gives at most 1000 by design | |
 | Delete readings by a query | Not supported (TODO P2) | |
-| Rewrite readings by posting them again | Not supported, the stored ones are kept (TODO P3) | |
+| Rewrite readings by posting them again | Not supported, the stored ones are kept (TODO P1) | |

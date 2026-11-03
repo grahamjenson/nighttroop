@@ -1,13 +1,13 @@
 // Trio's uploads, as NightscoutAPI.swift sends them, see docs/clients/trio.md
-// Trio sends its secret as the SHA1 hex of what the user typed in the api-secret header, which Nighttroop
-// cannot check yet (TODOs.md), so these send the token itself in api-secret
+// Trio sends its secret as the SHA1 hex of what the user typed in the api-secret header, so with the token as its
+// secret these send the token's SHA1 in api-secret
 INCLUDE steps/new_ns_site.steps
 INCLUDE steps/ns_units_mgdl.steps
 
 // checkConnection posts a Note, and only needs a 2xx
 NAME trio_check_connection
 POST http://{{ site }}/api/v1/treatments.json
-H api-secret: {{ token }}
+H api-secret: {{ sha1 token }}
 H Content-Type: application/json
 B {
   "eventType" : "Note",
@@ -21,7 +21,7 @@ ASSERT_EQUALS "Trio connected" "@0.notes"
 // uploadGlucose posts readings in batches of 100; a CGM reading and a manual one (GlucoseStorage.swift)
 NAME trio_upload_glucose
 POST http://{{ site }}/api/v1/entries.json
-H api-secret: {{ token }}
+H api-secret: {{ sha1 token }}
 H Content-Type: application/json
 B [
   {
@@ -53,7 +53,7 @@ ASSERT_EQUALS 130 "@1.mbg"
 // alarms (PumpHistoryStorage.swift) in one batch, so one type Nighttroop refuses loses them all
 NAME trio_upload_pump_history
 POST http://{{ site }}/api/v1/treatments.json
-H api-secret: {{ token }}
+H api-secret: {{ sha1 token }}
 H Content-Type: application/json
 B [
   { "eventType" : "SMB", "created_at" : "{{ date -1 }}T12:01:00.000Z", "enteredBy" : "Trio", "insulin" : 0.3, "id" : "A1B2C3D4-0000-0000-0000-000000000001" },
@@ -82,7 +82,7 @@ ASSERT_EQUALS "Announcement" "@7.eventType"
 // The SMB is kept as one, and counts as insulin
 NAME trio_read_smb
 GET http://{{ site }}/api/v1/treatments.json?find[eventType]=SMB
-H api-secret: {{ token }}
+H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
 ASSERT_EQUALS "SMB" "@0.eventType"
@@ -93,7 +93,7 @@ ASSERT_CONTAINS "T12:01:00Z" "@0.created_at"
 // (GlucoseStorage.swift) goes with the glucose
 NAME trio_upload_carbs_and_sensor
 POST http://{{ site }}/api/v1/treatments.json
-H api-secret: {{ token }}
+H api-secret: {{ sha1 token }}
 H Content-Type: application/json
 B [
   { "eventType" : "Carb Correction", "created_at" : "{{ date -1 }}T12:06:00.000Z", "enteredBy" : "Trio", "notes" : "pasta", "carbs" : 45, "fat" : 10, "protein" : 20, "foodType" : "pasta", "id" : "A1B2C3D4-0000-0000-0000-000000000005" },
@@ -108,7 +108,7 @@ ASSERT_EQUALS "Sensor Start" "@1.eventType"
 // uploadTempTargets posts a temp target, unlabeled, in mg/dL (TempTargetsStorage.swift)
 NAME trio_upload_temp_target
 POST http://{{ site }}/api/v1/treatments.json
-H api-secret: {{ token }}
+H api-secret: {{ sha1 token }}
 H Content-Type: application/json
 B [ { "duration" : 60, "eventType" : "Temporary Target", "created_at" : "{{ date -1 }}T13:07:00.123Z", "enteredBy" : "Trio", "notes" : "Activity", "targetTop" : 140, "targetBottom" : 140 } ]
 ASSERT_STATUS 200
@@ -120,7 +120,7 @@ ASSERT_CONTAINS "T13:07:00.123Z" "@0.created_at"
 // uploadOverrides posts an override as Exercise, 43200 minutes when it has no end (OverrideStorage.swift)
 NAME trio_upload_override
 POST http://{{ site }}/api/v1/treatments.json
-H api-secret: {{ token }}
+H api-secret: {{ sha1 token }}
 H Content-Type: application/json
 B [ { "duration" : 43200, "eventType" : "Exercise", "created_at" : "{{ date -1 }}T12:13:00.000Z", "enteredBy" : "Trio", "notes" : "Sport" } ]
 ASSERT_STATUS 200
@@ -131,7 +131,7 @@ ASSERT_EQUALS "Sport" "@0.notes"
 // uploadDeviceStatus posts the loop's state, with no created_at (NightscoutManager.performUploadDeviceStatus)
 NAME trio_upload_devicestatus
 POST http://{{ site }}/api/v1/devicestatus.json
-H api-secret: {{ token }}
+H api-secret: {{ sha1 token }}
 H Content-Type: application/json
 B {
   "device" : "Trio",
@@ -189,7 +189,7 @@ ASSERT_EQUALS 75 "@0.pump.battery.percent"
 // uploadProfiles posts the default profile with Trio's own push notification fields, and needs exactly a 200
 NAME trio_upload_profile
 POST http://{{ site }}/api/v1/profile.json
-H api-secret: {{ token }}
+H api-secret: {{ sha1 token }}
 H Content-Type: application/json
 B {
   "defaultProfile" : "default",

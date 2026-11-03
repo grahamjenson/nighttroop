@@ -1,6 +1,6 @@
 # AAPS 3.4's NSClient (v1, removed in AAPS 4.0) is Socket.IO only: socket.io-client-java 2.1, EIO=4, on the default
 # namespace (nsclient/services/NSClientService.kt). It authorizes with client, history, status, from and secret, the
-# SHA1 of its API secret, which Nighttroop cannot check, so here the token is sent as it is (docs/clients/aaps.md).
+# SHA1 of its API secret, so with the token as its API secret it sends the token's SHA1 (docs/clients/aaps.md).
 # It writes with dbAdd and dbUpdate, reading _id from the first of dbAdd's ack and result from dbUpdate's.
 
 NAME create_new_site
@@ -16,7 +16,7 @@ T 5s
 # NSAuthAck reads read, write and write_treatment; AAPS writes only with write and write_treatment
 NAME authorize
 EMIT authorize
-B {"client":"Android_AAPS","history":48,"status":true,"from":0,"secret":"{{ token }}"}
+B {"client":"Android_AAPS","history":48,"status":true,"from":0,"secret":"{{ sha1 token }}"}
 ACK
 ASSERT_EQUALS true "@read"
 ASSERT_EQUALS true "@write"

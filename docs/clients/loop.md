@@ -17,7 +17,8 @@ NightscoutKit's `Models/`, `NightscoutService.swift` and the `Extensions/` of Ni
 
 In Loop's Settings, Services, Nightscout, the user enters a **Site URL** and an **API Secret**. With Nighttroop, use
 the site's Nightscout host as the URL, `https://<site>.ns.<host>`, and the PWD phone's Nightscout token as the API
-secret.
+secret. Adding a device with the Loop client on the site's Users & Devices makes it the PWD phone with its units in
+mg/dL, and shows these steps with its URL and token (#524, #527).
 
 Only the URL's scheme, host and port are used: its path and any query, such as `?token=`, are dropped
 (`NightscoutClient.url(with:)`, line 43). So the token must go in the API Secret field.
@@ -36,8 +37,8 @@ needs its password reset once to get one.
 
 When the service is saved, `verifyConfiguration` (`NightscoutService.swift:105`) calls `checkAuth`:
 `GET /api/v1/experiments/test`. 200 is OK. 401 shows "Unauthorized". Any other status shows the status and body.
-Nighttroop answers `{"status":"ok"}`, but only for an identity that can upload treatments. So a read only device gets
-a 403 rather than being saved and then failing every upload.
+Nighttroop answers `{"status":"ok"}`, but only for an identity that can upload readings (`api:entries:create`). So a
+read only device gets a 401, "Unauthorized", rather than being saved and then failing every upload.
 
 Loop does not call `status.json`, `verifyauth` or `versions`.
 
@@ -72,6 +73,12 @@ that can have a fraction (`GlucoseEntry.swift`).
 | `isCalibration` | bool | |
 
 A nil field is left out. Loop does not keep the returned `_id`s.
+
+Loop sends everything since its last successful upload in one POST, up to `glucoseDataLimit` (1000), and the same for
+doses, carbs and pump events (`doseDataLimit`, `carbDataLimit`, `pumpEventDataLimit`, also 1000). It only moves on
+after a 200 (LoopKit `RemoteDataServicesManager.uploadGlucoseData`). Nighttroop refuses a POST of more than 100
+records with a 400, so once more than 100 are waiting, such as when the service is first added to a Loop that has
+been running, or after about 8 hours offline, Loop sends the same refused batch again, growing, and never uploads.
 
 ## Treatments: `POST`, `PUT` and `DELETE /api/v1/treatments`
 
@@ -143,8 +150,11 @@ for each bolus decision, and each automatic dose decision with it:
 - `override`: `timestamp`, `active`, and when active `name`, `currentCorrectionRange {minValue, maxValue}`,
   `duration` (seconds left, not minutes), `multiplier`
 
-Loop does not read any of it back. Nighttroop keeps the `loop` object, the pump's battery and reservoir and the
-uploader's battery; the rest is dropped.
+Loop does not read any of it back. Nighttroop keeps the `loop` object, the `override` (#516), the pump's battery,
+reservoir, `clock`, `manufacturer` and `model` (#516) and the uploader's battery. The pump's other fields, such as
+`pumpID`, `suspended` and `bolusing`, are given back from the device status as it was sent until that is cleared
+when the record is old (#514). The uploader's `name`, `timestamp` and `isCharging`, and the pump's
+`reservoir_display_override` and `reservoir_level_override`, are dropped.
 
 ## Profile: `POST /api/v1/profile` and `GET /api/v1/profile/current`
 
@@ -197,19 +207,22 @@ NightscoutKit has reads that Loop does not call, but other apps built on it may:
 | `api-secret` as the SHA-1 of a device's token | Works since #512 (it was a 401 for everything) |
 | `GET /api/v1/experiments/test` | Works since #513 (was a 400, "invalid collection"); 401 for a read only device, which Loop shows as "Unauthorized" |
 | `POST /api/v1/entries`, as many objects back, `_id` | Works |
+| A POST of more than 100 entries or treatments, which Loop sends with over 100 waiting | Not supported: a 400 over the batch cap, and Loop sends it again and never uploads. TODO P1 |
 | `POST /api/v1/treatments` carbs, doses, pump and CGM events, notes | Works |
 | `PUT /api/v1/treatments` with `_id` in the body | Works |
 | `DELETE /api/v1/treatments/<_id>` | Works |
-| `POST` a `Temporary Override` | Fixed in this PR (was a 400, unknown event type); kept as a temp target, indefinite as a week |
-| An override's UUID `_id`, posted again when it changes, deleted by it | Fixed in this PR: a v1 POST with an `_id` replaces the one with it, or is created with it |
+| `POST` a `Temporary Override` | Works since #515 (was a 400, unknown event type); kept as a temp target, indefinite as a week |
+| An override's UUID `_id`, posted again when it changes, deleted by it | Works since #515: a v1 POST with an `_id` replaces the one with it, or is created with it |
 | A dose posted again when it ends, with its final duration or amount | Not supported: the first upload is kept. TODO P1 |
-| Omnipod `syncIdentifier`s once creates dedup by identifier | Fixed in this PR: an identifier over 36 characters is kept as a hash of it, so they no longer share their first 36 characters; test in `loop/treatments.http` |
+| Omnipod `syncIdentifier`s once creates dedup by identifier | Works since #515: an identifier over 36 characters is kept as a hash of it, so they no longer share their first 36 characters; test in `loop/treatments.http` |
 | `POST /api/v1/devicestatus`, `loop` object | Works |
-| Device status `override`, `uploader`, pump `clock`, `model`, `suspended`, `bolusing` | Not supported: dropped. TODO P2 (Loop does not read them back) |
+| Device status `override`, uploader battery, pump `clock`, `manufacturer`, `model` | Works since #516 |
+| Device status pump `pumpID`, `suspended`, `bolusing` | Works since #514 while the status as sent is kept; dropped once it is cleared |
+| Device status uploader `name`, `timestamp`, `isCharging` | Not supported: dropped (Loop does not read them back) |
 | `POST /api/v1/profile`, `loopSettings` and `store` | Works |
-| `GET /api/v1/profile/current` as one object with `enteredBy` | Fixed in this PR (was an array, and had no `enteredBy`) |
+| `GET /api/v1/profile/current` as one object with `enteredBy` | Works since #515 (was an array, and had no `enteredBy`) |
 | NightscoutKit `find[created_at]` on treatments and device statuses | Works since #514 (it was the upload time, not when they happened) |
-| NightscoutKit `fetchGlucose` | Works on an mg/dL site; on an mmol/L site `sgv` is in mmol/L. TODO P2 |
+| NightscoutKit `fetchGlucose` | Works for an identity in mg/dL, as a device added for Loop is (#524); in mmol/L `sgv` is in mmol/L. TODO P1 |
 | NightscoutKit `fetchTreatments` reading bolus and temp basal fields and `timestamp` | Not supported: no `timestamp`, `programmed` or `temp`. TODO P3 |
 | NightscoutKit `fetchProfiles` | Works |
 | `POST /api/v2/notifications/loop` (remote commands) | Not supported. TODO P2 |

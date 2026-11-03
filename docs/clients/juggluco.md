@@ -158,17 +158,17 @@ So an amount changed in Juggluco, even its time, is deleted, then posted again w
 |---|---|
 | `GET /api/v2/authorization/request/<token>`, reading `token` and `exp` | Works |
 | v3 `POST /api/v3/entries`, one reading, 201 then 200 when sent again | Works |
-| v3 entries keep Juggluco's `identifier` | Fixed in this PR: a create that names its `identifier` keeps it |
-| v3 `POST /api/v3/treatments` with `eventType` `<none>` | Fixed in this PR: `<none>` is a Note, keeping insulin and carbs (was a 400) |
-| v3 `DELETE /api/v3/treatments/<identifier>` of an amount, 200 | Fixed in this PR: was a 404, as the identifier was not kept, which stopped the amounts uploading |
-| v3 insulin and carbs at the same time stored as two treatments | Fixed in this PR: with an identifier, only the same identifier is a duplicate |
-| v3 amount changed in Juggluco (delete, then post with the same identifier) | Fixed in this PR: a deleted document is replaced whatever changed |
-| v1 `api-secret` with the SHA1 of the secret | Not supported: Nighttroop takes its token itself in `api-secret`, see TODOs.md |
-| v1 `POST /api/v1/entries` with Juggluco's readings, 200 | Works with the token itself; blocked by the SHA1 `api-secret` |
-| v1 `dateString` with `-03:-30` | Fixed in this PR: read as `-03:30` (was a 400) |
-| v1 `POST /api/v1/entries` with more than 100 readings | Not supported: refused with 400 over the batch cap, see TODOs.md |
-| v1 `DELETE /api/v1/treatments/<_id>`, 200 | Works with the token itself |
-| v1 `PUT /api/v1/treatments` of one amount, 200, and a changed one after its delete | Works with the token itself; fixed in this PR for a changed time |
+| v3 entries keep Juggluco's `identifier` | Fixed in #508: a create that names its `identifier` keeps it |
+| v3 `POST /api/v3/treatments` with `eventType` `<none>` | Fixed in #508: `<none>` is a Note, keeping insulin and carbs (was a 400) |
+| v3 `DELETE /api/v3/treatments/<identifier>` of an amount, 200 | Fixed in #508: was a 404, as the identifier was not kept, which stopped the amounts uploading |
+| v3 insulin and carbs at the same time stored as two treatments | Fixed in #508: with an identifier, only the same identifier is a duplicate |
+| v3 amount changed in Juggluco (delete, then post with the same identifier) | Fixed in #508: a deleted document is replaced whatever changed |
+| v1 `api-secret` with the SHA1 of the secret | Works since #512: a 40 hex `api-secret` is the SHA1 of a device's token, not an admin's or one with TOTP |
+| v1 `POST /api/v1/entries` with Juggluco's readings, 200 | Works |
+| v1 `dateString` with `-03:-30` | Fixed in #508: read as `-03:30` (was a 400) |
+| v1 `POST /api/v1/entries` with more than 100 readings | Not supported: refused with 400 over the batch cap, TODO P1 |
+| v1 `DELETE /api/v1/treatments/<_id>`, 200 | Works |
+| v1 `PUT /api/v1/treatments` of one amount, 200, and a changed one after its delete | Works; fixed in #508 for a changed time |
 
-Tests: `tests/api/nightscout/juggluco/upload_v3.http` and `upload_v1.http`. The v1 tests send the token itself in
-`api-secret`, as Nighttroop cannot yet check its SHA1.
+Tests: `tests/api/nightscout/juggluco/upload_v3.http` and `upload_v1.http`. The v1 tests send the token's SHA1 in
+`api-secret`, as Juggluco does.
