@@ -96,6 +96,12 @@ type Treatment struct {
 	Date             *types.DateInt       `json:"date,omitempty"`       // Unix timestamp in milliseconds
 	UtcOffsetMinutes *types.FlexibleInt64 `json:"utcOffset,omitempty"`  // Minutes offset from UTC
 
+	// Given back for Loop's NightscoutKit, which drops a treatment without a timestamp, a bolus without programmed
+	// and a temp basal without temp; a timestamp sent is not read, as created_at is when it was
+	Timestamp  *types.DateString      `json:"timestamp,omitempty"`
+	Programmed *types.FlexibleFloat64 `json:"programmed,omitempty"`
+	Temp       *types.ShortString     `json:"temp,omitempty"`
+
 	// Non-JSON values to make mapping easier
 	RawJsonData string `json:"-"`
 }
@@ -109,6 +115,8 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 		UUID           *types.IdentifierString `json:"uuid"`
 		// Nightscout stores a careportal's or xDrip4iOS's eventTime as created_at
 		EventTime *types.DateString `json:"eventTime"`
+		// Shadows Timestamp, so a timestamp sent is not read
+		Timestamp json.RawMessage `json:"timestamp"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),

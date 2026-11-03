@@ -116,8 +116,9 @@ ASSERT_EQUALS 0.8 "@0.insulinNeedsScaleFactor"
 ASSERT_EQUALS 140 "@0.correctionRange.0"
 ASSERT_EQUALS 160 "@0.correctionRange.1"
 ASSERT_EQUALS "3D8B2F4C-0E9F-4B7C-86D5-2F3A4B5C6D7E" "@1._id"
-# An indefinite override is kept as the longest a temp target can be, a week
+# An indefinite override is kept as the longest a temp target can be, a week, and given back as indefinite
 ASSERT_EQUALS 10080 "@1.duration"
+ASSERT_EQUALS "indefinite" "@1.durationType"
 ASSERT_EQUALS 1.2 "@1.insulinNeedsScaleFactor"
 
 # Ended early, it is posted again with the same _id, and its fractional minutes
@@ -173,6 +174,18 @@ ASSERT_EQUALS "Correction Bolus" "@7.eventType"
 ASSERT_EXISTS "@7._id"
 ASSERT_EXISTS "@7.created_at"
 ASSERT_EXISTS "@7.enteredBy"
+# NightscoutTreatment drops one without a timestamp, a bolus without its type, insulin, programmed and duration,
+# and a temp basal without its rate, temp and duration
+ASSERT_LENGTH 20 "@7.timestamp"
+ASSERT_EQUALS "normal" "@7.type"
+ASSERT_EQUALS 1.5 "@7.insulin"
+ASSERT_EQUALS 1.5 "@7.programmed"
+ASSERT_EQUALS 0 "@7.duration"
+ASSERT_EQUALS "Temp Basal" "@6.eventType"
+ASSERT_LENGTH 20 "@6.timestamp"
+ASSERT_EQUALS 0.5 "@6.rate"
+ASSERT_EQUALS "absolute" "@6.temp"
+ASSERT_EQUALS 30 "@6.duration"
 
 NAME nightscoutkit_fetch_treatments_count
 GET http://{{ site }}/api/v1/treatments?find[created_at][$gte]={{ time 120 }}&find[created_at][$lte]={{ time 30 }}&count=2

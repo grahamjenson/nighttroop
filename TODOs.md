@@ -79,8 +79,6 @@
 1. LoopFollow ([docs/clients/loopfollow.md](docs/clients/loopfollow.md)):
     1. P2: Keep Loop's `automatic` on boluses, so LoopFollow shows automatic boluses as SMBs and leaves them out of
        its bolus stats
-    1. P4: Keep Loop's `durationType: indefinite` on a Temporary Override, which is kept a week long (#515), so
-       LoopFollow shows it as a week rather than indefinite
     1. P4: Keep a treatment's `enteredBy`, which LoopFollow shows for overrides and temp targets, rather than the
        identity's name
     1. P4: A profile search with no filters gives only the latest store, so LoopFollow's remote diagnostics see no
@@ -91,10 +89,8 @@
        amount are kept. Trio's ended temp targets and overrides, and xDrip4iOS's re-sent readings, need the same
     1. P2: Loop remote commands: `POST /api/v2/notifications/loop`, sent to Loop as an Apple push to its profile's
        `loopSettings.deviceToken`
-    1. P3: NightscoutKit's `fetchTreatments` drops treatments without a `timestamp`, a bolus without `programmed`
-       and a temp basal without `temp`, which Nighttroop does not return
-    1. P4: Keep a Loop device status's uploader `name`, `timestamp` and `isCharging`; the pump's `pumpID`,
-       `suspended` and `bolusing` are given back only while the status as sent is kept
+    1. P4: Keep a Loop device status's pump `pumpID`, `suspended` and `bolusing`, and its uploader `name` and
+       `timestamp`, once the status as sent is cleared; they are given back only while it is kept
 1. xDrip4iOS ([docs/clients/xdrip4ios.md](docs/clients/xdrip4ios.md)):
     1. P2: Return a BG Check's `glucose` as xDrip4iOS can match it: it reads it as mg/dL only when `units` is
        exactly `mg/dl`, and as mmol/L otherwise, and matches an upload by its exact value, so Nighttroop's
@@ -125,16 +121,8 @@
        `find[eventType][$eq]`, and entries' `find[$or]`) is a 405; Trio deletes carbs, insulin and glucose
        this way, and the override before uploading its run, so override runs are never uploaded. It needs
        Trio's `id` kept as the identifier, and must refuse any filter it does not know rather than ignore it
-    1. P3: Keep the device status `status.bolusing` and `suspended`, the pump battery's `string` and `display`, and
-       `uploader.isCharging` Trio sends, for its followers
 
 ## Bugs
 
 1. P4: A live site left out at start, its DB missing and not restored, is only a `site_db_missing` event; mark it on
    the control sites page too
-
-## Code
-
-1. P4: Run the summary daily and profile preset `DeleteRow`s through `siteapiutils.SiteQuery`, as the other
-   site collections do, rather than opening the site queries by hand
-
