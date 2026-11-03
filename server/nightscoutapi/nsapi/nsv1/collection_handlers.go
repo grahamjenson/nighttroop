@@ -157,21 +157,33 @@ func Delete(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 		permanent := r.URL.Query().Get("permanent") == "true"
 
 		identifierOrType := chi.URLParam(r, "identifier_or_type")
-		if identifierOrType != "" {
-			// IGNORE ANY ERROR AND JUST RETURN 0 DELETED COUNT
-			deleted := 0
-			if collection.IsTypeString(identifierOrType) {
-				if amount, err := store.DeleteType(r.Context(), collection, identifierOrType, permanent); err == nil {
-					deleted = amount
-				}
-			} else if err := store.Delete(r.Context(), collection, identifierOrType, permanent); err == nil {
-				deleted = 1
+		// IGNORE ANY ERROR AND JUST RETURN 0 DELETED COUNT, except for a delete by a query
+		deleted := 0
+		if identifierOrType == "" {
+			// Only readings are deleted by a query, as xDrip4iOS does
+			if collection != nsutils.Entries {
+				nsutils.WriteError(w, nsutils.ErrNotImplemented)
+				return
 			}
-			apiutils.WriteJSON(w, http.StatusOK, map[string]any{
-				"acknowledged": true,
-				"deletedCount": deleted,
-			})
+			query, err := nsutils.ParseDeleteQuery(r.URL.Query())
+			if err == nil {
+				deleted, err = store.DeleteQuery(r.Context(), collection, query)
+			}
+			if err != nil {
+				nsutils.WriteError(w, err)
+				return
+			}
+		} else if collection.IsTypeString(identifierOrType) {
+			if amount, err := store.DeleteType(r.Context(), collection, identifierOrType, permanent); err == nil {
+				deleted = amount
+			}
+		} else if err := store.Delete(r.Context(), collection, identifierOrType, permanent); err == nil {
+			deleted = 1
 		}
+		apiutils.WriteJSON(w, http.StatusOK, map[string]any{
+			"acknowledged": true,
+			"deletedCount": deleted,
+		})
 	}
 }
 

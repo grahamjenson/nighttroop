@@ -166,6 +166,10 @@ with up to 50 `find[date][$in][]` each, then the new values are `POST`ed to `/ap
 `_id`, relying on Nightscout's upsert on `sysTime` and `type` to replace the stored ones. Nighttroop gives the stored
 reading of that date, type and device the new values, and leaves one sent again with the same values as it is.
 
+Nighttroop soft deletes the readings a delete finds, at most 1000 a request, and returns `deletedCount`. It takes only
+these filters (and `token`): any other, or none on the date, is a 400, so a filter it does not understand never deletes
+more than was asked.
+
 ## Quirks
 
 - `enteredBy` comes back as sent, `xDrip4iOS`, as Nightscout does.
@@ -197,5 +201,5 @@ reading of that date, type and device the new values, and leaves one sent again 
 | Profile | Works | `follower.http` |
 | Device status | Works | `follower.http` |
 | History import | Works, but a day with over 1000 readings loses its oldest, as a search gives at most 1000 by design | |
-| Delete readings by a query | Not supported (TODO P2) | |
+| Delete readings by a query | Works: soft deleted, at most 1000 a request (it was a 405) | `deletes.http` |
 | Rewrite readings by posting them again | Works: the stored reading takes the new values (it was kept as it was) | `rewrite.http` |

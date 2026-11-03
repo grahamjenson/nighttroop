@@ -12,6 +12,7 @@ import (
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils"
+	"nighttroop.t1d.nz/utils/apiutils/apiquery"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -24,6 +25,7 @@ type CollectionStore interface {
 	Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, raw bool) (nsutils.Document, *nsutils.HTTPError)
 	Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError
 	DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError)
+	DeleteQuery(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) (int, *nsutils.HTTPError)
 }
 
 // CollectionDB is a collection kept in the site's tables, like a siteapi store: NS is its Nightscout model and DM
@@ -365,6 +367,34 @@ func (c Collection[NS, DM]) DeleteType(ctx context.Context, siteContext *httputi
 	}
 
 	return int(rowsAffected), nil
+}
+
+// DeleteQuery soft deletes what a search with the query finds, at most a search's worth, the newest first, and says how
+// many: the rest are deleted by asking again. Each is deleted on its own, so it is published as deleted.
+func (c Collection[NS, DM]) DeleteQuery(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) (int, *nsutils.HTTPError) {
+	tx, q, httpErr := c.begin(ctx, siteContext)
+	if httpErr != nil {
+		return 0, httpErr
+	}
+	defer tx.Rollback()
+
+	query.IncludeDeleted, query.Skip, query.Limit = false, 0, apiquery.MaxQueryLimit
+	found, err := c.db.SearchModels(q, ctx, query)
+	for i := 0; err == nil && i < len(found); i++ {
+		_, err = c.db.Delete(q, ctx, (*found[i]).GetID(), false)
+	}
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to delete by query", "error", err, "collection", c.db.Name())
+		return 0, nsutils.ErrInternal
+	}
+
+	if httpErr := c.commit(tx, "delete"); httpErr != nil {
+		return 0, httpErr
+	}
+	for _, deleted := range found {
+		siteContext.PublishModelChange(events.Deleted, deleted)
+	}
+	return len(found), nil
 }
 
 func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, data map[string]any, canCreate bool, raw bool) (nsutils.Document, bool, *nsutils.HTTPError) {
