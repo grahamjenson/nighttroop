@@ -132,8 +132,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   device's Nightscout tokens. The TOTP secret and the phone's token are not shown as text: the secret is in the copy,
   and the token has its own copy button.
 - The new site's admin login is its own step: its username and password, its TOTP secret only as a QR code, and a
-  code check. The login button is disabled until a code from the authenticator app matches; a wrong code says so. The
-  check changes nothing, and a recovered site's credentials are checked the same way.
+  code check. The login button is disabled until a code from the authenticator app matches; a wrong code says so. A
+  code is checked as soon as its sixth digit is in, with no click. The check changes nothing, and a recovered site's
+  credentials are checked the same way.
 - A new site takes the time zone and language of the browser that created it, and its country's units and formats.
 - Site creation is rate limited per IP and server wide, and refused once the server holds `MAX_SITES`.
 - While a control admin has turned public site creation off, the home page says so instead of offering to create a

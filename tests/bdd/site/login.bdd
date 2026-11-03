@@ -25,15 +25,16 @@ ASSERT_VISIBLE #public--copy-ns-token>span[data-copy-icon-check]
 CLICK #public--copy-button
 ASSERT_VISIBLE #public--copy-button>span[data-copy-icon-check]
 
-// Login is disabled until a code from the authenticator app matches the TOTP secret, and a wrong code says so
+// Login is disabled until a code from the authenticator app matches the TOTP secret, and a wrong code says so. A code is
+// checked as soon as its sixth digit is typed, with no click
 ASSERT_DRAWN #public--login-button[disabled]
-INPUT #public--site-info--totp 000000
-CLICK #public--totp-check-button
+TYPE #public--site-info--totp 000000
 ASSERT_VISIBLE #public--totp-failed
 ASSERT_DRAWN #public--login-button[disabled]
 SCREENSHOT totp_check_failed
-INPUT #public--site-info--totp 123123
-CLICK #public--totp-check-button
+PRESS Control+a
+PRESS Backspace
+TYPE #public--site-info--totp 123123
 ASSERT_VISIBLE #public--totp-checked
 ASSERT_NOT_VISIBLE #public--login-button[disabled]
 SCREENSHOT totp_checked
