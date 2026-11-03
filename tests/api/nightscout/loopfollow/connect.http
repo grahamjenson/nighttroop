@@ -8,6 +8,7 @@ ASSERT_STATUS 200
 SET token {{ .create_new_site.pwd_nstoken }}
 SET read_token {{ .create_new_site.read_only_nstoken }}
 SET site {{ .create_new_site.site_subdomain }}.ns.localhost
+SET site_url http://{{ .create_new_site.site_subdomain }}.localhost:80
 
 NAME status_read_token
 GET http://{{ site }}/api/v1/status.json?token={{ read_token }}
@@ -35,3 +36,11 @@ NAME dbsize
 GET http://{{ site }}/api/v2/properties/dbsize?token={{ read_token }}
 ASSERT_STATUS 200
 ASSERT_EQUALS null "@dbsize"
+
+# LoopFollow's Nightscout tab is a web view of the Nightscout host's root, with ?token=. There Nightscout serves its web
+# app, so Nighttroop sends it on to the site's own pages
+NAME nightscout_tab
+GET http://{{ site }}/?token={{ token }}
+H Accept: text/html
+ASSERT_STATUS 302
+ASSERT_EQUALS ".site_url" "#Location.0"

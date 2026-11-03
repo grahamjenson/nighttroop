@@ -89,7 +89,6 @@
     1. P4: Keep the pump's `bolusIncrement`, LoopFollow's remote bolus step
     1. P4: A profile search with no filters gives only the latest store, so LoopFollow's remote diagnostics see no
        history
-    1. P4: The Nightscout host's `/` is a 404, which LoopFollow's Nightscout tab shows; redirect it to the site
 1. Loop ([docs/clients/loop.md](docs/clients/loop.md)):
     1. P1: Replace a treatment uploaded again rather than ignore it, as Nightscout does: Loop posts a temp basal or
        bolus again when it ends early, with the same date and `syncIdentifier`, and the first upload's duration and
