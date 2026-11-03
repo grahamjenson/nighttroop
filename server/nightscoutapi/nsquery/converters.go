@@ -20,6 +20,7 @@ type ToSearchParams interface {
 	// goverter:map . HasFilters | GetHasFilters
 	// goverter:map . Skip | GetSkipInt64
 	// goverter:map . Limit | GetLimitInt64
+	// goverter:map . CountGiven | GetCountGiven
 	QueryValueToQuery(source QueryValues) Query
 
 	//////
@@ -97,6 +98,10 @@ func GetLimitInt64(source QueryValues) int64 {
 		return apiquery.MaxQueryLimit
 	}
 	return source.Limit.Int64()
+}
+
+func GetCountGiven(source QueryValues) bool {
+	return source.Limit != nil
 }
 
 func GetSortOrderInt64(source Query) int64 {

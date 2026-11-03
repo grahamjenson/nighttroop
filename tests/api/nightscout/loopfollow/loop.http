@@ -91,6 +91,26 @@ B {
 }
 ASSERT_STATUS 200
 
+# An older profile, for the history
+NAME loop_older_profile
+POST http://{{ site }}/api/v1/profile?token={{ token }}
+B {
+    "defaultProfile": "Default",
+    "startDate": "{{ time 2000 }}",
+    "mills": "{{ itime 2000 }}",
+    "enteredBy": "Loop",
+    "units": "mg/dL",
+    "store": {"Default": {
+        "timezone": "Pacific/Auckland", "units": "mg/dL", "dia": 6, "delay": "0", "carbs_hr": "0",
+        "basal": [{"time": "00:00", "timeAsSeconds": 0, "value": 0.7}],
+        "sens": [{"time": "00:00", "timeAsSeconds": 0, "value": 45}],
+        "carbratio": [{"time": "00:00", "timeAsSeconds": 0, "value": 7}],
+        "target_low": [{"time": "00:00", "timeAsSeconds": 0, "value": 100}],
+        "target_high": [{"time": "00:00", "timeAsSeconds": 0, "value": 110}]
+    }}
+}
+ASSERT_STATUS 200
+
 ######
 # BG: BGData.swift webLoadNSBGData, count = days x 4 uploaders x 288, since a day ago in ms, without calibrations
 ######
@@ -268,4 +288,13 @@ ASSERT_EQUALS 12 "@0.loopSettings.maximumBolus"
 NAME profile_history
 GET http://{{ site }}/api/v1/profiles.json?token={{ token }}&count=1000
 ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS "com.ABCDE12345.loopkit.Loop" "@0.loopSettings.bundleIdentifier"
+ASSERT_EQUALS 0.7 "@1.store.Default.basal.0.value"
+
+# Without a count or a filter, it is only the latest, as before
+NAME profile_latest
+GET http://{{ site }}/api/v1/profiles.json?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
 ASSERT_EQUALS "com.ABCDE12345.loopkit.Loop" "@0.loopSettings.bundleIdentifier"

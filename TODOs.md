@@ -83,8 +83,6 @@
        LoopFollow shows it as a week rather than indefinite
     1. P4: Keep a treatment's `enteredBy`, which LoopFollow shows for overrides and temp targets, rather than the
        identity's name
-    1. P4: A profile search with no filters gives only the latest store, so LoopFollow's remote diagnostics see no
-       history
 1. Loop ([docs/clients/loop.md](docs/clients/loop.md)):
     1. P1: Replace a treatment uploaded again rather than ignore it, as Nightscout does: Loop posts a temp basal or
        bolus again when it ends early, with the same date and `syncIdentifier`, and the first upload's duration and

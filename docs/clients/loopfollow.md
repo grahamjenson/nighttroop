@@ -153,8 +153,8 @@ device token, bundle and team from the profile.
 - A BG Check is also kept as a meter reading, so it is an `mbg` entry too, and LoopFollow draws it in the BG line.
 - Nighttroop returns the identity's name as `enteredBy`, and drops a treatment's `timestamp`, `automatic` and
   `durationType`, and a device status' `uploader.isCharging`.
-- A search returns at most 1000 records, the newest, by design, and a profile search with no filters only the latest
-  store.
+- A search returns at most 1000 records, the newest, by design, and a profile search with no filters and no count
+  only the latest store.
 
 ## Status
 
@@ -181,7 +181,7 @@ device token, bundle and team from the profile.
 | Device status Loop `override` | Works since #516 (it was dropped) |
 | Profile, schedules and Loop's `loopSettings` | Works |
 | Profile Trio remote control settings and override presets | Works since #516 (they were dropped) |
-| Profile history for the remote diagnostics | Not supported (only the latest), TODO P4 |
+| Profile history for the remote diagnostics | Fixed in this PR: `count` gives that many stores, newest first (it was only the latest) |
 | `dbsize` property | Not supported (sends `{}`, the row is hidden) |
 | Nightscout tab (`/`) | Fixed: sent on to the site's pages |
 | Socket.IO connect, `authorize` without ack, `connected`, `dataUpdate` and deltas | Works |

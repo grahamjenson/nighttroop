@@ -42,6 +42,8 @@ type Query struct {
 	// Limits
 	Limit int64 `json:"limit,omitempty"`
 	Skip  int64 `json:"skip,omitempty"`
+	// CountGiven is whether a limit or count was sent, as Limit is the most a search returns without one
+	CountGiven bool `json:"count_given,omitempty"`
 
 	/////
 	// MODEL SPECIFIC QUERIES
