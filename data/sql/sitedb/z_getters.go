@@ -1296,6 +1296,16 @@ func (m *EventGroup) SetEnteredBy(v *string) {
 	m.EnteredBy = v
 }
 
+// GetUuid returns the Uuid value.
+func (m EventGroup) GetUuid() *string {
+	return m.Uuid
+}
+
+// SetUuid sets the Uuid value and returns the updated EventGroup.
+func (m *EventGroup) SetUuid(v *string) {
+	m.Uuid = v
+}
+
 // GetNotes returns the Notes value.
 func (m EventGroup) GetNotes() *string {
 	return m.Notes
@@ -8256,6 +8266,16 @@ func (m *SearchGlucoseReadingsParams) SetDateLT(v *int64) {
 	m.DateLT = v
 }
 
+// GetDateIn returns the DateIn value.
+func (m SearchGlucoseReadingsParams) GetDateIn() *string {
+	return m.DateIn
+}
+
+// SetDateIn sets the DateIn value and returns the updated SearchGlucoseReadingsParams.
+func (m *SearchGlucoseReadingsParams) SetDateIn(v *string) {
+	m.DateIn = v
+}
+
 // GetCreatedAtGTE returns the CreatedAtGTE value.
 func (m SearchGlucoseReadingsParams) GetCreatedAtGTE() *int64 {
 	return m.CreatedAtGTE
@@ -8844,6 +8864,16 @@ func (m CreateEventGroupParams) GetEnteredBy() *string {
 // SetEnteredBy sets the EnteredBy value and returns the updated CreateEventGroupParams.
 func (m *CreateEventGroupParams) SetEnteredBy(v *string) {
 	m.EnteredBy = v
+}
+
+// GetUuid returns the Uuid value.
+func (m CreateEventGroupParams) GetUuid() *string {
+	return m.Uuid
+}
+
+// SetUuid sets the Uuid value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetUuid(v *string) {
+	m.Uuid = v
 }
 
 // GetOccurredAt returns the OccurredAt value.
@@ -9844,6 +9874,16 @@ func (m UpdateEventGroupParams) GetEnteredBy() *string {
 // SetEnteredBy sets the EnteredBy value and returns the updated UpdateEventGroupParams.
 func (m *UpdateEventGroupParams) SetEnteredBy(v *string) {
 	m.EnteredBy = v
+}
+
+// GetUuid returns the Uuid value.
+func (m UpdateEventGroupParams) GetUuid() *string {
+	return m.Uuid
+}
+
+// SetUuid sets the Uuid value and returns the updated UpdateEventGroupParams.
+func (m *UpdateEventGroupParams) SetUuid(v *string) {
+	m.Uuid = v
 }
 
 // GetRawJsonData returns the RawJsonData value.

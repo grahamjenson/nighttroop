@@ -61,6 +61,7 @@ func NewSiteStore() *SiteStore {
 	// Settings collections
 	siteStore.registerCollection("settings", &sitesettings.SyncSettingsCollection{})
 	siteStore.registerCollection("settings", &sitesettings.IdentitiesCollection{})
+	siteStore.registerCollection("settings", &sitesettings.PushCredentialsCollection{})
 	siteStore.registerCollection("settings", &sitesettings.SettingsCollection{Site: true})
 	siteStore.registerCollection("settings", &sitesettings.SettingsCollection{Site: false})
 	siteStore.registerCollection("settings", &sitesettings.SettingsCollection{Alarms: true})

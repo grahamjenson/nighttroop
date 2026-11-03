@@ -379,8 +379,9 @@ func (r *Input) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 		return page, err
 	}
 
-	// A date or time input splits typing across its parts, so it takes the value whole, e.g. 2026-01-02T12:30
-	if kind, err := locator.Evaluate("element => element.type", nil); err == nil && (kind == "datetime-local" || kind == "date" || kind == "time") {
+	// A date or time input splits typing across its parts, so it takes the value whole, e.g. 2026-01-02T12:30, as does a
+	// text area, which is pasted into, such as with a key
+	if kind, err := locator.Evaluate("element => element.type", nil); err == nil && (kind == "datetime-local" || kind == "date" || kind == "time" || kind == "textarea") {
 		return page, locator.Fill(value, playwright.LocatorFillOptions{Timeout: playwright.Float(actionWait)})
 	}
 

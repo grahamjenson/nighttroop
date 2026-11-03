@@ -30,7 +30,7 @@ var identityRoles = []consts.IdentityRole{
 
 // mgdlClients are the Nightscout clients a device can be added for that need glucose in mg/dL, so a device added for one
 // has its own units set to mg/dL whatever the site's. Any other device, "other", follows the site.
-var mgdlClients = []string{"aaps", "trio", "loop", "xdrip", "nightguard", "sugarpixel"}
+var mgdlClients = []string{"aaps", "trio", "loop", "xdrip", "xdrip4ios", "nightguard", "sugarpixel"}
 
 // ////
 // Shared

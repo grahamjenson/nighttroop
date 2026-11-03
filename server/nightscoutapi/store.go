@@ -96,6 +96,9 @@ func (nts *NightTroopAPIStore) Search(ctx context.Context, collection nsutils.Co
 	if err != nil {
 		return nil, err
 	}
+	if query.UnknownFilter {
+		return []nsutils.Document{}, nil
+	}
 	return collectionsStore.Search(ctx, siteContext, query)
 }
 
@@ -129,4 +132,12 @@ func (nts *NightTroopAPIStore) DeleteType(ctx context.Context, collection nsutil
 		return 0, err
 	}
 	return collectionsStore.DeleteType(ctx, siteContext, typeString, permanent)
+}
+
+func (nts *NightTroopAPIStore) DeleteQuery(ctx context.Context, collection nsutils.Collection, query nsquery.Query) (int, *nsutils.HTTPError) {
+	collectionsStore, siteContext, err := nts.collectionFor(ctx, collection)
+	if err != nil {
+		return 0, err
+	}
+	return collectionsStore.DeleteQuery(ctx, siteContext, query)
 }

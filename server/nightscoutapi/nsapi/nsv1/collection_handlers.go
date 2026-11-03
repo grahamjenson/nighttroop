@@ -28,7 +28,8 @@ func Search(store nsutils.Store) http.HandlerFunc {
 			}
 		}
 		records := []nsutils.Document{}
-		if query.IDEq != nil {
+		// A filter Nighttroop does not know is searched, which gives nothing
+		if query.IDEq != nil && !query.UnknownFilter {
 			record, err := store.Get(r.Context(), collection, *query.IDEq, query)
 			// A find[_id] that matches nothing is an empty search, as in Nightscout; xDrip4iOS reads it as deleted
 			if err != nil && err.Status == http.StatusNotFound && identifierOrType == "" {
@@ -157,21 +158,36 @@ func Delete(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 		permanent := r.URL.Query().Get("permanent") == "true"
 
 		identifierOrType := chi.URLParam(r, "identifier_or_type")
-		if identifierOrType != "" {
-			// IGNORE ANY ERROR AND JUST RETURN 0 DELETED COUNT
-			deleted := 0
-			if collection.IsTypeString(identifierOrType) {
-				if amount, err := store.DeleteType(r.Context(), collection, identifierOrType, permanent); err == nil {
-					deleted = amount
-				}
-			} else if err := store.Delete(r.Context(), collection, identifierOrType, permanent); err == nil {
-				deleted = 1
+		// IGNORE ANY ERROR AND JUST RETURN 0 DELETED COUNT, except for a delete by a query
+		deleted := 0
+		if identifierOrType == "" {
+			// Only readings and treatments are deleted by a query, as xDrip4iOS and Trio do. Each find[$or]
+			// alternative, as Trio deletes a reading by its id or its dateString, is checked before any is deleted
+			if collection != nsutils.Entries && collection != nsutils.Treatments {
+				nsutils.WriteError(w, nsutils.ErrNotImplemented)
+				return
 			}
-			apiutils.WriteJSON(w, http.StatusOK, map[string]any{
-				"acknowledged": true,
-				"deletedCount": deleted,
-			})
+			queries, err := nsutils.ParseDeleteQueries(r.URL.Query())
+			for i := 0; err == nil && i < len(queries); i++ {
+				var amount int
+				amount, err = store.DeleteQuery(r.Context(), collection, queries[i])
+				deleted += amount
+			}
+			if err != nil {
+				nsutils.WriteError(w, err)
+				return
+			}
+		} else if collection.IsTypeString(identifierOrType) {
+			if amount, err := store.DeleteType(r.Context(), collection, identifierOrType, permanent); err == nil {
+				deleted = amount
+			}
+		} else if err := store.Delete(r.Context(), collection, identifierOrType, permanent); err == nil {
+			deleted = 1
 		}
+		apiutils.WriteJSON(w, http.StatusOK, map[string]any{
+			"acknowledged": true,
+			"deletedCount": deleted,
+		})
 	}
 }
 
