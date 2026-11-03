@@ -368,37 +368,39 @@ WHERE
     -- The date filters as one range, occurred_at's CHECK where unset, so SQLite reads only that range of its index
     occurred_at BETWEEN MAX(COALESCE(CAST(?1 AS INTEGER), 0), COALESCE(CAST(?2 AS INTEGER) + 1, 0), COALESCE(CAST(?3 AS INTEGER), 0))
         AND MIN(COALESCE(CAST(?4 AS INTEGER), 253402300799999), COALESCE(CAST(?5 AS INTEGER) - 1, 253402300799999), COALESCE(?3, 253402300799999))
+    -- The exact times of readings, as xDrip4iOS deletes the readings a rebuild hides
+    AND (CAST(?6 AS TEXT) IS NULL OR occurred_at IN (SELECT CAST(value AS INTEGER) FROM json_each(?6)))
 
-    AND (CAST(?6 AS INTEGER) IS NULL OR created_at >= ?6)
-    AND (CAST(?7 AS INTEGER) IS NULL OR created_at <= ?7)
-    AND (CAST(?8 AS INTEGER) IS NULL OR created_at > ?8)
-    AND (CAST(?9 AS INTEGER) IS NULL OR created_at < ?9)
+    AND (CAST(?7 AS INTEGER) IS NULL OR created_at >= ?7)
+    AND (CAST(?8 AS INTEGER) IS NULL OR created_at <= ?8)
+    AND (CAST(?9 AS INTEGER) IS NULL OR created_at > ?9)
+    AND (CAST(?10 AS INTEGER) IS NULL OR created_at < ?10)
 
-    AND (CAST(?10 AS INTEGER) IS NULL OR updated_at >= ?10)
-    AND (CAST(?11 AS INTEGER) IS NULL OR updated_at <= ?11)
-    AND (CAST(?12 AS INTEGER) IS NULL OR updated_at > ?12)
-    AND (CAST(?13 AS INTEGER) IS NULL OR updated_at < ?13)
+    AND (CAST(?11 AS INTEGER) IS NULL OR updated_at >= ?11)
+    AND (CAST(?12 AS INTEGER) IS NULL OR updated_at <= ?12)
+    AND (CAST(?13 AS INTEGER) IS NULL OR updated_at > ?13)
+    AND (CAST(?14 AS INTEGER) IS NULL OR updated_at < ?14)
 
-    AND (CAST(?14 AS TEXT) IS NULL OR reading_type = ?14)
-    AND (CAST(?15 AS TEXT) IS NULL OR reading_type != ?15)
-    AND (CAST(?16 AS TEXT) IS NULL OR reading_type IN (SELECT value FROM json_each(?16)))
-    AND (CAST(?17 AS TEXT) IS NULL OR reading_type NOT IN (SELECT value FROM json_each(?17)))
+    AND (CAST(?15 AS TEXT) IS NULL OR reading_type = ?15)
+    AND (CAST(?16 AS TEXT) IS NULL OR reading_type != ?16)
+    AND (CAST(?17 AS TEXT) IS NULL OR reading_type IN (SELECT value FROM json_each(?17)))
+    AND (CAST(?18 AS TEXT) IS NULL OR reading_type NOT IN (SELECT value FROM json_each(?18)))
 
-    AND (CAST(?18 AS TEXT) IS NULL OR id = ?18)
-    AND (CAST(?19 AS TEXT) IS NULL OR id IN (SELECT value FROM json_each(?19)))
+    AND (CAST(?19 AS TEXT) IS NULL OR id = ?19)
+    AND (CAST(?20 AS TEXT) IS NULL OR id IN (SELECT value FROM json_each(?20)))
 
-    AND (CAST(?20 AS TEXT) IS NULL OR created_by_device_name = ?20)
-    AND (CAST(?21 AS TEXT) IS NULL OR created_by_app_name = ?21)
+    AND (CAST(?21 AS TEXT) IS NULL OR created_by_device_name = ?21)
+    AND (CAST(?22 AS TEXT) IS NULL OR created_by_app_name = ?22)
 
-    AND (CAST(?22 AS INTEGER) IS NULL OR mgdl = ?22)
-    AND (CAST(?23 AS INTEGER) IS NULL OR mgdl >= ?23)
-    AND (CAST(?24 AS INTEGER) IS NULL OR mgdl > ?24)
-    AND (CAST(?25 AS INTEGER) IS NULL OR mgdl <= ?25)
-    AND (CAST(?26 AS INTEGER) IS NULL OR mgdl < ?26)
+    AND (CAST(?23 AS INTEGER) IS NULL OR mgdl = ?23)
+    AND (CAST(?24 AS INTEGER) IS NULL OR mgdl >= ?24)
+    AND (CAST(?25 AS INTEGER) IS NULL OR mgdl > ?25)
+    AND (CAST(?26 AS INTEGER) IS NULL OR mgdl <= ?26)
+    AND (CAST(?27 AS INTEGER) IS NULL OR mgdl < ?27)
     
-    AND (CAST(?27 AS BOOL) = TRUE OR deleted_at IS NULL)
+    AND (CAST(?28 AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
-LIMIT CAST(?29 AS INTEGER) OFFSET CAST(?28 AS INTEGER)
+LIMIT CAST(?30 AS INTEGER) OFFSET CAST(?29 AS INTEGER)
 `
 
 type SearchGlucoseReadingsParams struct {
@@ -407,6 +409,7 @@ type SearchGlucoseReadingsParams struct {
 	DateEQ         *int64
 	DateLTE        *int64
 	DateLT         *int64
+	DateIn         *string
 	CreatedAtGTE   *int64
 	CreatedAtLTE   *int64
 	CreatedAtGT    *int64
@@ -440,6 +443,7 @@ func (q *Queries) SearchGlucoseReadings(ctx context.Context, arg SearchGlucoseRe
 		arg.DateEQ,
 		arg.DateLTE,
 		arg.DateLT,
+		arg.DateIn,
 		arg.CreatedAtGTE,
 		arg.CreatedAtLTE,
 		arg.CreatedAtGT,

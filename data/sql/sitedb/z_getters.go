@@ -8256,6 +8256,16 @@ func (m *SearchGlucoseReadingsParams) SetDateLT(v *int64) {
 	m.DateLT = v
 }
 
+// GetDateIn returns the DateIn value.
+func (m SearchGlucoseReadingsParams) GetDateIn() *string {
+	return m.DateIn
+}
+
+// SetDateIn sets the DateIn value and returns the updated SearchGlucoseReadingsParams.
+func (m *SearchGlucoseReadingsParams) SetDateIn(v *string) {
+	m.DateIn = v
+}
+
 // GetCreatedAtGTE returns the CreatedAtGTE value.
 func (m SearchGlucoseReadingsParams) GetCreatedAtGTE() *int64 {
 	return m.CreatedAtGTE

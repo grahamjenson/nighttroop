@@ -91,8 +91,6 @@
     1. P2: Return a BG Check's `glucose` as xDrip4iOS can match it: it reads it as mg/dL only when `units` is
        exactly `mg/dl`, and as mmol/L otherwise, and matches an upload by its exact value, so Nighttroop's
        `mg/dL` or rounded mmol/L makes it upload the BG check again each sync and add a copy in the app
-    1. P2: Delete entries by a query, `DELETE /api/v1/entries.json?find[type]=sgv&find[date][$gte]=..&find[date][$lte]=..`
-       and `find[date][$in][]=..`, which xDrip4iOS sends when a reading is deleted or readings are rebuilt
     1. P4: `GET /api/v1/status.json` without credentials, which xDrip4iOS's follower service status reads, is a
        401, so it shows a fetch error; answering it would show which sites exist
 1. xDrip+ ([docs/clients/xdrip.md](docs/clients/xdrip.md)):

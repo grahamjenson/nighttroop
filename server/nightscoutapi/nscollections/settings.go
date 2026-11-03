@@ -149,6 +149,10 @@ func (c SettingsCollection) DeleteType(ctx context.Context, siteContext *httputi
 	return 0, nsutils.ErrNotImplemented
 }
 
+func (c SettingsCollection) DeleteQuery(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) (int, *nsutils.HTTPError) {
+	return 0, nsutils.ErrNotImplemented
+}
+
 ///////
 // SETTINGS TYPE
 ///////

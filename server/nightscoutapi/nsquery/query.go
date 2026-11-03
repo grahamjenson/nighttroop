@@ -11,6 +11,8 @@ type Query struct {
 	DateEQ  *int64 `json:"date_eq,omitempty"`
 	DateLTE *int64 `json:"date_lte,omitempty"`
 	DateLT  *int64 `json:"date_lt,omitempty"`
+	// DateIn is a JSON array of exact dates
+	DateIn *string `json:"date_in,omitempty"`
 
 	CreatedAtGTE *int64 `json:"created_at_gte,omitempty"`
 	CreatedAtGT  *int64 `json:"created_at_gt,omitempty"`
