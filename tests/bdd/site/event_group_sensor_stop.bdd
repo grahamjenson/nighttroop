@@ -1,0 +1,37 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// A sensor stopped, as xDrip+ uploads it, is a change of a sensor
+CLICK #site--settings-menu
+CLICK #site--data--component-events-button
+CLICK #site--component-event--add
+INPUT #site--component-event--create--event-type Sensor Stop
+INPUT #site--component-event--create--occurred-at 2026-01-02T08:00
+INPUT #site--component-event--create--notes Sensor failed
+CLICK #site--component-event--create--submit
+ASSERT_STATUS 201
+ASSERT_VISIBLE #componentEventsTable >> text="Sensor Stop"
+
+// The Add Event Group menu offers a Sensor Stop, which can have that change
+CLICK #site--settings-menu
+CLICK #site--data--event-groups-button
+CLICK #site--event-group--add
+// The menu scrolls to show it
+CLICK_CORNER .overflow-auto:has(#site--event-group--add--sensor-stop)
+SCROLL 320
+ASSERT_VISIBLE #site--event-group--add--sensor-stop
+SCREENSHOT event_group_sensor_stop_type
+CLICK #site--event-group--add--sensor-stop
+ASSERT_VISIBLE #site--event-group--create--modal
+ASSERT_TEXT_EQUALS #site--event-group--create--submit Add Sensor Stop
+INPUT #site--event-group--create--occurred-at 2026-01-02T08:00
+CLICK #site--event-group--create--reason
+ASSERT_VISIBLE #site--event-group--create--component-event-id
+ASSERT_NOT_VISIBLE #site--event-group--create--insulin-dose-id
+INPUT #site--event-group--create--component-event-id 08:00 Sensor Stop
+CLICK #site--event-group--create--submit
+ASSERT_STATUS 201
+ASSERT_NOT_VISIBLE #site--event-group--create--modal
+ASSERT_VISIBLE #eventGroupsTable >> text="Sensor Stop"
+ASSERT_VISIBLE #eventGroupsTable >> text=site or sensor change
+SCREENSHOT event_group_sensor_stop

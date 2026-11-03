@@ -39,7 +39,30 @@ SCREENSHOT device_client_guide_aaps
 CLICK "I Have Saved These"
 CLICK #site--identities--close
 
+// A device for xDrip4iOS is told where its URL and token go, how to upload or only follow, and that it gets mg/dL
+// On a taller window, so its whole guide is in the modal
+WINDOW 1280x1000
+INPUT #name-createIdentityFormdevicesTable iphone
+CLICK #client-createIdentityFormdevicesTable
+CLICK #identities_table [role="option"][data-tui-selectbox-value="xdrip4ios"]
+CLICK "Add Device"
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE Setting up xDrip4iOS
+ASSERT_VISIBLE #site--identities--created--guide .font-semibold >> text=API_SECRET
+ASSERT_VISIBLE #site--identities--created--guide .font-semibold >> text=Follower
+ASSERT_VISIBLE #site--identities--created--guide-0-7 + [data-copy-button]
+ASSERT_VISIBLE #site--identities--created--guide-1-5 + [data-copy-button]
+ASSERT_TEXT_VISIBLE xDrip4iOS needs mg/dL
+SCREENSHOT device_client_guide_xdrip4ios
+SAVE_TEXT #site--identities--created--ns-token iphone_token
+CLICK "I Have Saved These"
+CLICK #site--identities--close
+
 // So the Nightscout API gives the device mg/dL, though the site is in mmol/L
 GOTO {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/status.json?token={{ .watch_token }}
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE mg/dl
+
+GOTO {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/status.json?token={{ .iphone_token }}
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE mg/dl

@@ -684,6 +684,10 @@ func GlucoseSearch(source Query) sitedb.SearchGlucoseReadingsParams {
 		xint645 := *source.DateLT
 		sitedbSearchGlucoseReadingsParams.DateLT = &xint645
 	}
+	if source.DateIn != nil {
+		xstring := *source.DateIn
+		sitedbSearchGlucoseReadingsParams.DateIn = &xstring
+	}
 	if source.CreatedAtGTE != nil {
 		xint646 := *source.CreatedAtGTE
 		sitedbSearchGlucoseReadingsParams.CreatedAtGTE = &xint646
@@ -717,36 +721,36 @@ func GlucoseSearch(source Query) sitedb.SearchGlucoseReadingsParams {
 		sitedbSearchGlucoseReadingsParams.UpdatedLT = &xint6413
 	}
 	if source.TypeEq != nil {
-		xstring := *source.TypeEq
-		sitedbSearchGlucoseReadingsParams.TypeEq = &xstring
+		xstring2 := *source.TypeEq
+		sitedbSearchGlucoseReadingsParams.TypeEq = &xstring2
 	}
 	if source.TypeNeq != nil {
-		xstring2 := *source.TypeNeq
-		sitedbSearchGlucoseReadingsParams.TypeNeq = &xstring2
+		xstring3 := *source.TypeNeq
+		sitedbSearchGlucoseReadingsParams.TypeNeq = &xstring3
 	}
 	if source.TypeIn != nil {
-		xstring3 := *source.TypeIn
-		sitedbSearchGlucoseReadingsParams.TypeIn = &xstring3
+		xstring4 := *source.TypeIn
+		sitedbSearchGlucoseReadingsParams.TypeIn = &xstring4
 	}
 	if source.TypeNin != nil {
-		xstring4 := *source.TypeNin
-		sitedbSearchGlucoseReadingsParams.TypeNin = &xstring4
+		xstring5 := *source.TypeNin
+		sitedbSearchGlucoseReadingsParams.TypeNin = &xstring5
 	}
 	if source.IDEq != nil {
-		xstring5 := *source.IDEq
-		sitedbSearchGlucoseReadingsParams.IDEq = &xstring5
+		xstring6 := *source.IDEq
+		sitedbSearchGlucoseReadingsParams.IDEq = &xstring6
 	}
 	if source.IDIn != nil {
-		xstring6 := *source.IDIn
-		sitedbSearchGlucoseReadingsParams.IDIn = &xstring6
+		xstring7 := *source.IDIn
+		sitedbSearchGlucoseReadingsParams.IDIn = &xstring7
 	}
 	if source.DeviceEq != nil {
-		xstring7 := *source.DeviceEq
-		sitedbSearchGlucoseReadingsParams.DeviceEq = &xstring7
+		xstring8 := *source.DeviceEq
+		sitedbSearchGlucoseReadingsParams.DeviceEq = &xstring8
 	}
 	if source.AppEq != nil {
-		xstring8 := *source.AppEq
-		sitedbSearchGlucoseReadingsParams.AppEq = &xstring8
+		xstring9 := *source.AppEq
+		sitedbSearchGlucoseReadingsParams.AppEq = &xstring9
 	}
 	if source.SgvEQ != nil {
 		xint6414 := *source.SgvEQ
@@ -879,6 +883,7 @@ func QueryValueToQuery(source QueryValues) Query {
 		xint645 := typesDateIntToInt64(*source.DateLT)
 		nsqueryQuery.DateLT = &xint645
 	}
+	nsqueryQuery.DateIn = QueryStringArrayToString(source.DateIn)
 	if source.CreatedAtGTE != nil {
 		xint646 := typesDateIntToInt64(*source.CreatedAtGTE)
 		nsqueryQuery.CreatedAtGTE = &xint646
@@ -1050,6 +1055,7 @@ func QueryValueToQuery(source QueryValues) Query {
 		xbool3 := typesFlexibleBoolToBool(*source.Envelope)
 		nsqueryQuery.Envelope = &xbool3
 	}
+	nsqueryQuery.UnknownFilter = GetUnknownFilter(source)
 	return nsqueryQuery
 }
 func typesDateIntToInt64(source types.DateInt) int64 {

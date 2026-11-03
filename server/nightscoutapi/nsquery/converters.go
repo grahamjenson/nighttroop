@@ -13,12 +13,14 @@ import (
 type ToSearchParams interface {
 
 	// goverter:useZeroValueOnPointerInconsistency
+	// goverter:map DateIn | QueryStringArrayToString
 	// goverter:map TypeIn | QueryStringArrayToString
 	// goverter:map TypeNin | QueryStringArrayToString
 	// goverter:map IDIn | QueryStringArrayToString
 	// goverter:map EnteredByNin | QueryStringArrayToString
 	// goverter:map Fields | QueryStringArrayToArray
 	// goverter:map . HasFilters | GetHasFilters
+	// goverter:map . UnknownFilter | GetUnknownFilter
 	// goverter:map . Skip | GetSkipInt64
 	// goverter:map . Limit | GetLimitInt64
 	// goverter:map . CountGiven | GetCountGiven
@@ -83,6 +85,10 @@ func QueryStringArrayToArray(source *QueryStringArray) []string {
 
 func GetHasFilters(source QueryValues) bool {
 	return source.HasAnyFilters()
+}
+
+func GetUnknownFilter(source QueryValues) bool {
+	return source.HasUnknownFilter()
 }
 
 func GetSkipInt64(source QueryValues) int64 {

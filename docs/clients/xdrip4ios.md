@@ -10,15 +10,20 @@ profile and the latest device statuses, to show a loop's status. It uses only RE
 
 ## Setting up
 
+Add a device for xDrip4iOS on Users & Devices: its credentials show these steps with its URL and token to copy, and
+its units are set to mg/dL (#524).
+
 - **URL**: the site's Nightscout host, e.g. `https://<site>.ns.<host>`. The app removes a trailing `/` and any
   `/api/v1`, and takes a port from it (`SettingsViewNightscoutSettingsViewModel`).
-- **Token**: the PWD phone's Nightscout token to upload, or a read only device's token to only follow.
-- **API_SECRET**: leave it empty. Nighttroop has no API secret, and the app only ever sends the secret's SHA1, which
-  Nighttroop takes only as the SHA1 of a device's token (#512), so the token works here too and anything else is a 401.
-- **Units**: set the token's identity's units to mg/dL. The follower reads `sgv` as mg/dL whatever the `units`, and
-  Nighttroop returns readings in the identity's (then the site's) units, so on an mmol/L site 6.5 mmol/L is read as
-  6.5 mg/dL. xDrip4iOS is not one of Add Device's clients, which set mg/dL (#524), so add it as Other and an admin sets
-  its units from its row on Users & Devices (#523).
+- **Token**: the device's Nightscout token: a PWD phone or read and write device to upload as the master, or a read
+  only device to only follow.
+- **API_SECRET**: leave it empty, or put the token here instead. Nighttroop has no API secret, and the app only ever
+  sends the secret's SHA1, which Nighttroop takes only as the SHA1 of a device's token (#512), so the token works here
+  too and anything else is a 401.
+- **Units**: mg/dL. The follower reads `sgv` as mg/dL whatever the `units`, and Nighttroop returns readings in the
+  identity's (then the site's) units, so a device added for xDrip4iOS is in mg/dL whatever the site's. A token from
+  another identity, such as the site's first PWD phone, needs its units set to mg/dL by an admin from its row on Users
+  & Devices (#523), or on an mmol/L site 6.5 mmol/L is read as 6.5 mg/dL.
 
 ## Authentication
 
@@ -158,9 +163,17 @@ and asked again. Its decoding is lenient.
 
 ### Deleting and rewriting readings (master)
 
-When the user deletes a reading or smooths or rebuilds readings: `DELETE /api/v1/entries.json?find[type]=sgv` with
-`find[date][$gte]` and `find[date][$lte]`, or with up to 50 `find[date][$in][]`, reading `n`, `deletedCount` or
-`result.n`; then the new values are `POST`ed to `/api/v1/entries` without `_id`, to replace the stored ones.
+When the user deletes a reading (`deleteBgReadingFromNightscout`): `DELETE /api/v1/entries.json?find[type]=sgv` with
+`find[date][$gte]` and `find[date][$lte]`, reading `n`, `deletedCount` or `result.n`.
+
+When the user smooths or rebuilds readings (`replaceBgReadingsInNightscout`): the readings a rebuild hides are deleted
+with up to 50 `find[date][$in][]` each, then the new values are `POST`ed to `/api/v1/entries` as uploaded, but without
+`_id`, relying on Nightscout's upsert on `sysTime` and `type` to replace the stored ones. Nighttroop gives the stored
+reading of that date, type and device the new values, and leaves one sent again with the same values as it is.
+
+Nighttroop soft deletes the readings a delete finds, at most 1000 a request, and returns `deletedCount`. It takes only
+these filters (and `token`): any other, or none on the date, is a 400, so a filter it does not understand never deletes
+more than was asked.
 
 ## Quirks
 
@@ -189,9 +202,9 @@ When the user deletes a reading or smooths or rebuilds readings: `DELETE /api/v1
 | Download the last 24 hours of treatments | Works | `treatments.http` |
 | `find[_id]` of a deleted treatment is `[]` | Fixed in #513 (was a 404) | `treatments.http`, `tests/socket/nightscout/db_writes.sio` |
 | Delete a treatment | Works | `treatments.http` |
-| Follower readings with `count` and `find[date][$gte]` | Works, with the identity in mg/dL, set by an admin (#523); not one of Add Device's mg/dL clients (TODO P1) | `follower.http` |
+| Follower readings with `count` and `find[date][$gte]` | Works, with a device added for xDrip4iOS, which is in mg/dL, or an identity an admin sets to mg/dL (#523) | `follower.http`, `tests/api/nighttroop/settings/identity_clients_units.http` |
 | Profile | Works | `follower.http` |
 | Device status | Works | `follower.http` |
 | History import | Works, but a day with over 1000 readings loses its oldest, as a search gives at most 1000 by design | |
-| Delete readings by a query | Not supported (TODO P2) | |
-| Rewrite readings by posting them again | Not supported, the stored ones are kept (TODO P1) | |
+| Delete readings by a query | Works: soft deleted, at most 1000 a request (it was a 405) | `deletes.http` |
+| Rewrite readings by posting them again | Works: the stored reading takes the new values (it was kept as it was) | `rewrite.http` |

@@ -1,0 +1,129 @@
+# xDrip4iOS (xdripswift) deleting readings by a query, from NightscoutSyncManager.deleteBgReadingEntriesAtNightscout:
+# - a reading the user deletes: DELETE /api/v1/entries.json?find[type]=sgv&find[date][$gte]=<ms>&find[date][$lte]=<ms>,
+#   half a reading interval either side of it
+# - the readings a rebuild hides: DELETE /api/v1/entries.json?find[type]=sgv&find[date][$in][]=<ms>&..., up to 50 at a time
+# It reads n, deletedCount or result.n from the response, and any 2xx is a success.
+# The token is added last to the query.
+
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+# Six readings five minutes apart, from 10:00 yesterday, and a finger prick at 10:07
+NAME xdrip4ios_deletes_upload_readings
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [
+  {"device": "DexcomG7", "date": {{ dayms -1 600 }}, "type": "sgv", "sgv": 100},
+  {"device": "DexcomG7", "date": {{ dayms -1 605 }}, "type": "sgv", "sgv": 105},
+  {"device": "DexcomG7", "date": {{ dayms -1 610 }}, "type": "sgv", "sgv": 110},
+  {"device": "DexcomG7", "date": {{ dayms -1 615 }}, "type": "sgv", "sgv": 115},
+  {"device": "DexcomG7", "date": {{ dayms -1 620 }}, "type": "sgv", "sgv": 120},
+  {"device": "DexcomG7", "date": {{ dayms -1 625 }}, "type": "sgv", "sgv": 125},
+  {"device": "DexcomG7", "date": {{ dayms -1 607 }}, "type": "mbg", "mbg": 107}
+]
+ASSERT_STATUS 200
+ASSERT_LENGTH 7 "@"
+
+# Another site has a reading at the same time, which no delete here touches
+NAME xdrip4ios_deletes_other_site
+POST http://localhost/site
+ASSERT_STATUS 200
+
+NAME xdrip4ios_deletes_other_site_reading
+POST http://{{ .xdrip4ios_deletes_other_site.site_subdomain }}.ns.localhost/api/v1/entries?token={{ .xdrip4ios_deletes_other_site.pwd_nstoken }}
+B [{"device": "DexcomG7", "date": {{ dayms -1 605 }}, "type": "sgv", "sgv": 99}]
+ASSERT_STATUS 200
+
+#####
+# A range, as when a reading is deleted
+#####
+
+NAME xdrip4ios_delete_range
+DELETE http://{{ site }}/api/v1/entries.json?find[type]=sgv&find[date][$gte]={{ dayms -1 600 }}&find[date][$lte]={{ dayms -1 610 }}&token={{ token }}
+H Content-Type: application/json
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 3 "@deletedCount"
+
+# The finger prick in the range is not an sgv, so it is kept
+NAME xdrip4ios_delete_range_kept
+GET http://{{ site }}/api/v1/entries.json?count=10&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 4 "@"
+ASSERT_EQUALS 125 "@0.sgv"
+ASSERT_EQUALS 120 "@1.sgv"
+ASSERT_EQUALS 115 "@2.sgv"
+ASSERT_EQUALS 107 "@3.mbg"
+
+# The readings are soft deleted, as every delete from a site is
+NAME xdrip4ios_delete_range_soft
+GET http://{{ site }}/api/v1/entries/sgv.json?count=10&includeDeleted=true&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 6 "@"
+
+# Asking again deletes nothing more
+NAME xdrip4ios_delete_range_again
+DELETE http://{{ site }}/api/v1/entries.json?find[type]=sgv&find[date][$gte]={{ dayms -1 600 }}&find[date][$lte]={{ dayms -1 610 }}&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 0 "@deletedCount"
+
+#####
+# Exact times, as when a rebuild hides readings, sent percent-encoded as URLComponents sends them
+#####
+
+NAME xdrip4ios_delete_in
+DELETE http://{{ site }}/api/v1/entries.json?find%5Btype%5D=sgv&find%5Bdate%5D%5B$in%5D%5B%5D={{ dayms -1 615 }}&find%5Bdate%5D%5B$in%5D%5B%5D={{ dayms -1 625 }}&find%5Bdate%5D%5B$in%5D%5B%5D={{ dayms -1 626 }}&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 2 "@deletedCount"
+
+NAME xdrip4ios_delete_in_kept
+GET http://{{ site }}/api/v1/entries/sgv.json?count=10&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 120 "@0.sgv"
+
+#####
+# Refused: a filter it does not understand, or no date, could otherwise delete more than was asked
+#####
+
+NAME xdrip4ios_delete_unknown_filter
+DELETE http://{{ site }}/api/v1/entries.json?find[type]=sgv&find[sgv][$gte]=200&find[date][$gte]={{ dayms -1 600 }}&token={{ token }}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "find[sgv][$gte]" "@message"
+
+NAME xdrip4ios_delete_no_date
+DELETE http://{{ site }}/api/v1/entries.json?find[type]=sgv&token={{ token }}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "a delete needs" "@message"
+
+NAME xdrip4ios_delete_no_query
+DELETE http://{{ site }}/api/v1/entries?token={{ token }}
+ASSERT_STATUS 400
+
+NAME xdrip4ios_delete_permanent
+DELETE http://{{ site }}/api/v1/entries.json?find[date][$gte]={{ dayms -1 600 }}&permanent=true&token={{ token }}
+ASSERT_STATUS 400
+
+NAME xdrip4ios_delete_bad_date
+DELETE http://{{ site }}/api/v1/entries.json?find[date][$gte]=yesterday&token={{ token }}
+ASSERT_STATUS 400
+
+# A token that can only read cannot delete
+NAME xdrip4ios_delete_read_only
+DELETE http://{{ site }}/api/v1/entries.json?find[date][$gte]={{ dayms -1 600 }}&token={{ dig "create_new_site.read_only_nstoken" }}
+ASSERT_STATUS 403
+
+# Only readings and treatments are deleted by a query
+NAME xdrip4ios_delete_device_statuses_by_query
+DELETE http://{{ site }}/api/v1/devicestatus.json?find[date][$gte]={{ dayms -1 600 }}&token={{ token }}
+ASSERT_STATUS 501
+
+NAME xdrip4ios_delete_refused_kept
+GET http://{{ site }}/api/v1/entries.json?count=10&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+
+# The other site's reading at 10:05 was not deleted
+NAME xdrip4ios_delete_other_site_kept
+GET http://{{ .xdrip4ios_deletes_other_site.site_subdomain }}.ns.localhost/api/v1/entries/sgv.json?count=10&token={{ .xdrip4ios_deletes_other_site.pwd_nstoken }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"

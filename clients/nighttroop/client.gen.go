@@ -311,6 +311,18 @@ type NsDateLte = int64
 // NsFields defines model for NsFields.
 type NsFields = string
 
+// NsFindDateGte defines model for NsFindDateGte.
+type NsFindDateGte = int64
+
+// NsFindDateIn defines model for NsFindDateIn.
+type NsFindDateIn = []int64
+
+// NsFindDateLte defines model for NsFindDateLte.
+type NsFindDateLte = int64
+
+// NsFindType defines model for NsFindType.
+type NsFindType = string
+
 // NsIdentifier defines model for NsIdentifier.
 type NsIdentifier = string
 
@@ -428,6 +440,21 @@ type NsV1SliceParams struct {
 type NsV1TimesParams struct {
 	// Count How many documents, at most 1000
 	Count *NsCount `form:"count,omitempty" json:"count,omitempty"`
+}
+
+// NsV1DeleteByQueryParams defines parameters for NsV1DeleteByQuery.
+type NsV1DeleteByQueryParams struct {
+	// FindType Documents of this type, such as sgv
+	FindType *NsFindType `form:"find[type],omitempty" json:"find[type],omitempty"`
+
+	// FindDateGte Documents from this time, in milliseconds
+	FindDateGte *NsFindDateGte `form:"find[date][$gte],omitempty" json:"find[date][$gte],omitempty"`
+
+	// FindDateLte Documents up to this time, in milliseconds
+	FindDateLte *NsFindDateLte `form:"find[date][$lte],omitempty" json:"find[date][$lte],omitempty"`
+
+	// FindDateIn Documents at exactly these times, in milliseconds
+	FindDateIn *NsFindDateIn `form:"find[date][$in][],omitempty" json:"find[date][$in][],omitempty"`
 }
 
 // NsV1SearchParams defines parameters for NsV1Search.
@@ -1198,6 +1225,9 @@ type ClientInterface interface {
 	// NsV1Versions request
 	NsV1Versions(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// NsV1DeleteByQuery request
+	NsV1DeleteByQuery(ctx context.Context, collection NsCollection, params *NsV1DeleteByQueryParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// NsV1Search request
 	NsV1Search(ctx context.Context, collection NsCollection, params *NsV1SearchParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1437,6 +1467,18 @@ func (c *Client) NsV1VerifyAuth(ctx context.Context, reqEditors ...RequestEditor
 
 func (c *Client) NsV1Versions(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewNsV1VersionsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV1DeleteByQuery(ctx context.Context, collection NsCollection, params *NsV1DeleteByQueryParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV1DeleteByQueryRequest(c.Server, collection, params)
 	if err != nil {
 		return nil, err
 	}
@@ -2447,6 +2489,110 @@ func NewNsV1VersionsRequest(server string) (*http.Request, error) {
 	}
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewNsV1DeleteByQueryRequest generates requests for NsV1DeleteByQuery
+func NewNsV1DeleteByQueryRequest(server string, collection NsCollection, params *NsV1DeleteByQueryParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "collection", runtime.ParamLocationPath, collection)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.FindType != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "find[type]", runtime.ParamLocationQuery, *params.FindType); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.FindDateGte != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "find[date][$gte]", runtime.ParamLocationQuery, *params.FindDateGte); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.FindDateLte != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "find[date][$lte]", runtime.ParamLocationQuery, *params.FindDateLte); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.FindDateIn != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "find[date][$in][]", runtime.ParamLocationQuery, *params.FindDateIn); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -4567,6 +4713,9 @@ type ClientWithResponsesInterface interface {
 	// NsV1VersionsWithResponse request
 	NsV1VersionsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV1VersionsResponse, error)
 
+	// NsV1DeleteByQueryWithResponse request
+	NsV1DeleteByQueryWithResponse(ctx context.Context, collection NsCollection, params *NsV1DeleteByQueryParams, reqEditors ...RequestEditorFn) (*NsV1DeleteByQueryResponse, error)
+
 	// NsV1SearchWithResponse request
 	NsV1SearchWithResponse(ctx context.Context, collection NsCollection, params *NsV1SearchParams, reqEditors ...RequestEditorFn) (*NsV1SearchResponse, error)
 
@@ -4894,6 +5043,29 @@ func (r NsV1VersionsResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r NsV1VersionsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV1DeleteByQueryResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsObject
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV1DeleteByQueryResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV1DeleteByQueryResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -5939,6 +6111,15 @@ func (c *ClientWithResponses) NsV1VersionsWithResponse(ctx context.Context, reqE
 	return ParseNsV1VersionsResponse(rsp)
 }
 
+// NsV1DeleteByQueryWithResponse request returning *NsV1DeleteByQueryResponse
+func (c *ClientWithResponses) NsV1DeleteByQueryWithResponse(ctx context.Context, collection NsCollection, params *NsV1DeleteByQueryParams, reqEditors ...RequestEditorFn) (*NsV1DeleteByQueryResponse, error) {
+	rsp, err := c.NsV1DeleteByQuery(ctx, collection, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV1DeleteByQueryResponse(rsp)
+}
+
 // NsV1SearchWithResponse request returning *NsV1SearchResponse
 func (c *ClientWithResponses) NsV1SearchWithResponse(ctx context.Context, collection NsCollection, params *NsV1SearchParams, reqEditors ...RequestEditorFn) (*NsV1SearchResponse, error) {
 	rsp, err := c.NsV1Search(ctx, collection, params, reqEditors...)
@@ -6651,6 +6832,39 @@ func ParseNsV1VersionsResponse(rsp *http.Response) (*NsV1VersionsResponse, error
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV1DeleteByQueryResponse parses an HTTP response from a NsV1DeleteByQueryWithResponse call
+func ParseNsV1DeleteByQueryResponse(rsp *http.Response) (*NsV1DeleteByQueryResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV1DeleteByQueryResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsObject
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
 
 	}
 

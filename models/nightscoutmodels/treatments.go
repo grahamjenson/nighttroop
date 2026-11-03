@@ -85,6 +85,8 @@ type Treatment struct {
 	Notes     *types.SanitizedString `json:"notes,omitempty"`
 	EnteredBy *types.ShortString     `json:"enteredBy,omitempty"`
 	Reason    *types.ShortString     `json:"reason,omitempty"`
+	// UUID is given back as sent, as xDrip+ matches its own treatments by it
+	UUID *types.ShortString `json:"uuid,omitempty"`
 
 	// Default String Fields
 	Device  *types.ShortString `json:"device,omitempty"`  // Device used for the activity
@@ -110,9 +112,10 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 	type Alias Treatment
 	// We here extract some fields used by other models as a unique identfier
 	aux := struct {
-		LegacyID       *types.IdentifierString `json:"_id"`
+		LegacyID *types.IdentifierString `json:"_id"`
+		// Trio's own id, which it deletes by; one that is not an identifier is left out rather than refuse the upload
+		ID             json.RawMessage         `json:"id"`
 		SyncIdentifier *types.IdentifierString `json:"syncIdentifier"`
-		UUID           *types.IdentifierString `json:"uuid"`
 		// Nightscout stores a careportal's or xDrip4iOS's eventTime as created_at
 		EventTime *types.DateString `json:"eventTime"`
 		// Shadows Timestamp, so a timestamp sent is not read
@@ -134,10 +137,13 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 		t.Identifier = aux.LegacyID
 	}
 	if t.Identifier == nil {
-		t.Identifier = aux.SyncIdentifier
+		t.Identifier = types.IdentifierFromJSON(aux.ID)
 	}
 	if t.Identifier == nil {
-		t.Identifier = aux.UUID
+		t.Identifier = aux.SyncIdentifier
+	}
+	if t.Identifier == nil && t.UUID != nil {
+		t.Identifier = types.ToIdentifierString(string(*t.UUID))
 	}
 
 	if aux.EventTime != nil {
@@ -210,6 +216,7 @@ const (
 	PumpBatteryChange TreatmentEventType = "Pump Battery Change"
 	SensorChange      TreatmentEventType = "Sensor Change"
 	SensorStart       TreatmentEventType = "Sensor Start"
+	SensorStop        TreatmentEventType = "Sensor Stop"
 	SiteChange        TreatmentEventType = "Site Change"
 	InsulinChange     TreatmentEventType = "Insulin Change"
 	CannulaFill       TreatmentEventType = "Cannula Fill"
@@ -256,6 +263,7 @@ var TreatmentEventTypes = []TreatmentEventType{
 	Question,
 	SensorChange,
 	SensorStart,
+	SensorStop,
 	SiteChange,
 	SnackBolus,
 	SMB,
