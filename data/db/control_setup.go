@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 
 	"nighttroop.t1d.nz/data/sql/controldb"
@@ -102,6 +103,25 @@ func (db *ControlDB) setupCodeMatches(code string) bool {
 // SeedDevAdmin sets up a development or test server with an admin of the development password and TOTP
 func (db *ControlDB) SeedDevAdmin(ctx context.Context) error {
 	_, err := db.CreateControlIdentity(ctx, consts.FIRST_ADMIN_NAME, consts.ControlRoleAdmin)
+	return db.endSeededSetup(err)
+}
+
+// SeedStagingAdmin sets up a staging server with an admin of its configured password and TOTP secret, so a staging
+// server whose data is wiped needs no setting up again. An admin it already has is kept as it is.
+func (db *ControlDB) SeedStagingAdmin(ctx context.Context) error {
+	cfg := db.ServerConfig
+	totpSecretEnc, err := cfg.Security.Encrypt(strings.ToUpper(cfg.StagingAdminTOTPSecret))
+	if err != nil {
+		return fmt.Errorf("cannot encrypt the staging admin's TOTP secret: %w", err)
+	}
+	err = db.Queries.CreateControlIdentity(ctx, controldb.CreateControlIdentityParams{Name: consts.FIRST_ADMIN_NAME,
+		PasswordHash: security.HashPassword(cfg.StagingAdminPassword, cfg.GetBcryptCost()), TotpSecretEnc: totpSecretEnc,
+		Role: consts.ControlRoleAdmin})
+	return db.endSeededSetup(err)
+}
+
+// endSeededSetup ends setup once a seeded admin is made, or was already there
+func (db *ControlDB) endSeededSetup(err error) error {
 	if err != nil && !nterrors.IsSQLUniqueViolationError(err) {
 		return err
 	}

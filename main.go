@@ -97,10 +97,16 @@ func run() error {
 	}
 	// A live site whose DB file is missing, though its batch's folder is there, is restored from its batch's backup
 	controlDB.RestoreMissingSites(ctx, s3Client.DownloadFilesFromS3)
-	// Development has an admin to log in with; anywhere else a new server is set up with the code it prints
+	// Development has an admin to log in with, and staging its configured one; anywhere else a new server is set up
+	// with the code it prints
 	if serverConfig.IsDev() {
 		if err := controlDB.SeedDevAdmin(ctx); err != nil {
 			return fmt.Errorf("cannot create the development admin: %w", err)
+		}
+	}
+	if serverConfig.IsStaging() {
+		if err := controlDB.SeedStagingAdmin(ctx); err != nil {
+			return fmt.Errorf("cannot create the staging admin: %w", err)
 		}
 	}
 	if code := controlDB.SetupCode(); code != "" {

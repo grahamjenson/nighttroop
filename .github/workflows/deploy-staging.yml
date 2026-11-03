@@ -1,0 +1,39 @@
+name: Deploy staging
+
+# Deploys each commit on main that CI passed on to the staging Nighttroop on Fly.io, which keeps its data between deploys
+# unless a migration change means a database can no longer be migrated; see docs/deploy/staging_flyio/README.md. It does nothing
+# until the repository variable STAGING_FLYIO_APP names the Fly app and the secret FLY_API_TOKEN holds a deploy token for
+# it.
+on:
+  workflow_run:
+    workflows: [CI]
+    branches: [main]
+    types: [completed]
+  workflow_dispatch:
+
+# A newer commit replaces one still deploying
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    if: >-
+      vars.STAGING_FLYIO_APP != '' && (github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The commit CI passed on, not whatever main is now
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      # From the repository's root, the build context, with the staging config. One machine, as each has its own data.
+      - run: >-
+          flyctl deploy . --app "$STAGING_FLYIO_APP" --config docs/deploy/staging_flyio/fly.toml --dockerfile Dockerfile
+          --build-target staging --remote-only --ha=false
+        env:
+          STAGING_FLYIO_APP: ${{ vars.STAGING_FLYIO_APP }}
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

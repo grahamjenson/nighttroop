@@ -13,6 +13,8 @@ const (
 	Production  ServerMode = "prod"
 	Development ServerMode = "dev"
 	Test        ServerMode = "test"
+	// Staging runs like production, but sets up its control admin from its config, so wiping its data needs no setup
+	Staging ServerMode = "staging"
 )
 
 func (mode ServerMode) Normalize() (ServerMode, error) {
@@ -23,6 +25,8 @@ func (mode ServerMode) Normalize() (ServerMode, error) {
 		return Development, nil
 	case "test":
 		return Test, nil
+	case "staging":
+		return Staging, nil
 	default:
 		return "", fmt.Errorf("unknown server mode: %s", mode)
 	}

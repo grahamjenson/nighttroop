@@ -9,7 +9,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import "nighttroop.t1d.nz/utils/httputils"
 
-// Banner is across the top of every page of a test site, set by TEST_SITE, so nobody takes it for a real one or keeps
+// Banner is across the top of every page of a staging server, a test site, so nobody takes it for a real one or keeps
 // anything they need on it
 func Banner() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {

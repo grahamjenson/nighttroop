@@ -1,15 +1,15 @@
-# A dev Nighttroop on Fly.io for alpha testing, open to everyone. Its data is kept between deploys and restarts, and
+# A staging Nighttroop on Fly.io for alpha testing, open to everyone. Its data is kept between deploys and restarts, and
 # wiped only when a migration change means a database can no longer be migrated. See README.md.
 # Change HOST_NAME, and the health check's Host below with it, to your domain. The app is named when deploying.
 
 primary_region = "syd"
 
 [env]
-  MODE = "production"
-  HOST_NAME = "dev.example.com"
+  # Runs as production does, with the "this is a test site" banner on every page, and its control admin made from the
+  # STAGING_ADMIN_PASSWORD and STAGING_ADMIN_TOTP_SECRET secrets, so a wipe never needs it set up again
+  MODE = "staging"
+  HOST_NAME = "staging.example.com"
   HOST_PROTOCOL = "https"
-  # The large "this is a test site" banner on every page
-  TEST_SITE = "true"
   # On the volume mounted below. No S3 is set, so nothing is backed up or restored.
   DATA_DIR = "/data"
   # Far fewer than a real server: enough for testers, little for anyone filling it
@@ -32,12 +32,12 @@ primary_region = "syd"
     method = "GET"
     path = "/health"
     [http_service.checks.headers]
-      Host = "dev.example.com"
+      Host = "staging.example.com"
 
-# The databases, kept between deploys. The image built with --build-target dev opens them with try_migrate_or_delete
+# The databases, kept between deploys. The image built with --build-target staging opens them with try_migrate_or_delete
 # at each start, and deletes them all if one cannot be migrated. A deploy makes the volume if there is none.
 [mounts]
-  source = "nighttroop_dev_data"
+  source = "nighttroop_staging_data"
   destination = "/data"
   initial_size = "1gb"
 
