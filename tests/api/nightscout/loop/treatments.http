@@ -116,8 +116,9 @@ ASSERT_EQUALS 0.8 "@0.insulinNeedsScaleFactor"
 ASSERT_EQUALS 140 "@0.correctionRange.0"
 ASSERT_EQUALS 160 "@0.correctionRange.1"
 ASSERT_EQUALS "3D8B2F4C-0E9F-4B7C-86D5-2F3A4B5C6D7E" "@1._id"
-# An indefinite override is kept as the longest a temp target can be, a week
+# An indefinite override is kept as the longest a temp target can be, a week, and given back as indefinite
 ASSERT_EQUALS 10080 "@1.duration"
+ASSERT_EQUALS "indefinite" "@1.durationType"
 ASSERT_EQUALS 1.2 "@1.insulinNeedsScaleFactor"
 
 # Ended early, it is posted again with the same _id, and its fractional minutes

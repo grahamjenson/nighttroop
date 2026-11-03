@@ -309,7 +309,7 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - A v1 upload of a document with an `_id` replaces the one with that `_id`, or is created with it, as Loop sends an
   override again with its `_id` when it changes, and deletes it by that `_id`.
 - Loop's `Temporary Override` is kept as a temp target, with its correction range and insulin needs scale factor; an
-  indefinite one lasts a week.
+  indefinite one lasts a week, and is given back with `durationType` `indefinite` while the override as sent is kept.
 - An identifier over 36 characters, like an Omnipod dose's `syncIdentifier`, is kept as a hash of it, so two that
   start the same are not taken as one.
 - v1 `profile/current` is the newest profile set itself, not a list of one, with `enteredBy`, as Loop reads it.
