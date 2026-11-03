@@ -224,6 +224,15 @@ func (i *IdentifierString) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// IdentifierFromJSON is the identifier in data, or nil when there is none or it is not one
+func IdentifierFromJSON(data json.RawMessage) *IdentifierString {
+	var id IdentifierString
+	if len(data) == 0 || string(data) == "null" || json.Unmarshal(data, &id) != nil {
+		return nil
+	}
+	return &id
+}
+
 // ToIdentifierString is str as an identifier, or nil when it is empty. 36 fits a UUID, the same limit as identifiers in
 // the URL and the id columns. A longer one, like a Loop dose's syncIdentifier, is hashed rather than cut, as two that
 // start the same, Omnipod's temp basals of the same rate, would otherwise be the same identifier

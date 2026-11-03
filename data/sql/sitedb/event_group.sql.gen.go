@@ -443,39 +443,39 @@ SELECT '' AS kind, '' AS id, 0 AS occurred_at, CAST(NULL AS REAL) AS amount, CAS
     CAST(NULL AS TEXT) AS detail WHERE FALSE
 UNION ALL
 SELECT 'glucose_reading_id', e.id, e.occurred_at, mgdl, NULL, reading_type FROM glucose_readings e, params p
-WHERE e.deleted_at IS NULL AND e.id NOT IN (SELECT glucose_reading_id FROM event_groups WHERE glucose_reading_id IS NOT NULL AND id != p.group_id)
+WHERE e.deleted_at IS NULL AND NOT EXISTS (SELECT 1 FROM event_groups g WHERE g.glucose_reading_id = e.id AND g.id != p.group_id)
     AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT glucose_reading_id FROM event_groups WHERE id = p.group_id))
 UNION ALL
 SELECT 'insulin_dose_id', e.id, e.occurred_at, dose, NULL, dose_type FROM insulin_doses e, params p
-WHERE e.deleted_at IS NULL AND e.id NOT IN (SELECT insulin_dose_id FROM event_groups WHERE insulin_dose_id IS NOT NULL AND id != p.group_id)
+WHERE e.deleted_at IS NULL AND NOT EXISTS (SELECT 1 FROM event_groups g WHERE g.insulin_dose_id = e.id AND g.id != p.group_id)
     AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT insulin_dose_id FROM event_groups WHERE id = p.group_id))
 UNION ALL
 SELECT 'food_intake_id', e.id, e.occurred_at, carbs, NULL, name FROM food_intakes e, params p
-WHERE e.deleted_at IS NULL AND e.id NOT IN (SELECT food_intake_id FROM event_groups WHERE food_intake_id IS NOT NULL AND id != p.group_id)
+WHERE e.deleted_at IS NULL AND NOT EXISTS (SELECT 1 FROM event_groups g WHERE g.food_intake_id = e.id AND g.id != p.group_id)
     AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT food_intake_id FROM event_groups WHERE id = p.group_id))
 UNION ALL
 SELECT 'temp_basal_id', e.id, e.occurred_at, absolute, duration_minutes, NULL FROM temp_basals e, params p
-WHERE e.deleted_at IS NULL AND e.id NOT IN (SELECT temp_basal_id FROM event_groups WHERE temp_basal_id IS NOT NULL AND id != p.group_id)
+WHERE e.deleted_at IS NULL AND NOT EXISTS (SELECT 1 FROM event_groups g WHERE g.temp_basal_id = e.id AND g.id != p.group_id)
     AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT temp_basal_id FROM event_groups WHERE id = p.group_id))
 UNION ALL
 SELECT 'temp_target_id', e.id, e.occurred_at, low_target_mgdl, duration_minutes, high_target_mgdl FROM temp_targets e, params p
-WHERE e.deleted_at IS NULL AND e.id NOT IN (SELECT temp_target_id FROM event_groups WHERE temp_target_id IS NOT NULL AND id != p.group_id)
+WHERE e.deleted_at IS NULL AND NOT EXISTS (SELECT 1 FROM event_groups g WHERE g.temp_target_id = e.id AND g.id != p.group_id)
     AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT temp_target_id FROM event_groups WHERE id = p.group_id))
 UNION ALL
 SELECT 'profile_switch_id', e.id, e.occurred_at, NULL, duration_minutes, name FROM profile_switches e, params p
-WHERE e.deleted_at IS NULL AND e.id NOT IN (SELECT profile_switch_id FROM event_groups WHERE profile_switch_id IS NOT NULL AND id != p.group_id)
+WHERE e.deleted_at IS NULL AND NOT EXISTS (SELECT 1 FROM event_groups g WHERE g.profile_switch_id = e.id AND g.id != p.group_id)
     AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT profile_switch_id FROM event_groups WHERE id = p.group_id))
 UNION ALL
 SELECT 'component_event_id', e.id, e.occurred_at, NULL, NULL, event_type FROM component_events e, params p
-WHERE e.deleted_at IS NULL AND e.id NOT IN (SELECT component_event_id FROM event_groups WHERE component_event_id IS NOT NULL AND id != p.group_id)
+WHERE e.deleted_at IS NULL AND NOT EXISTS (SELECT 1 FROM event_groups g WHERE g.component_event_id = e.id AND g.id != p.group_id)
     AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT component_event_id FROM event_groups WHERE id = p.group_id))
 UNION ALL
 SELECT 'activity_id', e.id, e.occurred_at, NULL, duration_minutes, COALESCE(name, activity_type) FROM activities e, params p
-WHERE e.deleted_at IS NULL AND e.id NOT IN (SELECT activity_id FROM event_groups WHERE activity_id IS NOT NULL AND id != p.group_id)
+WHERE e.deleted_at IS NULL AND NOT EXISTS (SELECT 1 FROM event_groups g WHERE g.activity_id = e.id AND g.id != p.group_id)
     AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT activity_id FROM event_groups WHERE id = p.group_id))
 UNION ALL
 SELECT 'notification_event_id', e.id, e.occurred_at, NULL, NULL, title FROM notification_events e, params p
-WHERE e.deleted_at IS NULL AND e.id NOT IN (SELECT notification_event_id FROM event_groups WHERE notification_event_id IS NOT NULL AND id != p.group_id)
+WHERE e.deleted_at IS NULL AND NOT EXISTS (SELECT 1 FROM event_groups g WHERE g.notification_event_id = e.id AND g.id != p.group_id)
     AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT notification_event_id FROM event_groups WHERE id = p.group_id))
 LIMIT 1000
 `
@@ -497,7 +497,8 @@ type EventsToGroupRow struct {
 
 // EventsToGroup are the events that can be put in the group with GroupID (empty for a new one): those not deleted, nor in
 // another group, from the window, and the group's own. Kind is the group's column for the event, and amount, minutes
-// and detail what tells it apart, like a dose and its type.
+// and detail what tells it apart, like a dose and its type. Whether an event is in another group is looked up by the
+// group's unique index on its column, as a NOT IN list of every group's events is read again for each event.
 // Each argument is given once, in params, as sqlc numbers an argument used in more than one select wrongly
 // sqlc types the columns by the first select, so this one, which has no rows, says which can be null
 func (q *Queries) EventsToGroup(ctx context.Context, arg EventsToGroupParams) ([]*EventsToGroupRow, error) {

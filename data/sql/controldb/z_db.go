@@ -66,6 +66,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createSyncSourceStmt, err = db.PrepareContext(ctx, createSyncSource); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateSyncSource: %w", err)
 	}
+	if q.deleteAllSiteIdentitiesStmt, err = db.PrepareContext(ctx, deleteAllSiteIdentities); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteAllSiteIdentities: %w", err)
+	}
 	if q.deletePushCredentialStmt, err = db.PrepareContext(ctx, deletePushCredential); err != nil {
 		return nil, fmt.Errorf("error preparing query DeletePushCredential: %w", err)
 	}
@@ -80,9 +83,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.deleteSitePushCredentialsStmt, err = db.PrepareContext(ctx, deleteSitePushCredentials); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteSitePushCredentials: %w", err)
-	}
-	if q.deleteSitePushRegistrationsStmt, err = db.PrepareContext(ctx, deleteSitePushRegistrations); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteSitePushRegistrations: %w", err)
 	}
 	if q.deleteSitesStmt, err = db.PrepareContext(ctx, deleteSites); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteSites: %w", err)
@@ -116,6 +116,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.getPushCredentialStmt, err = db.PrepareContext(ctx, getPushCredential); err != nil {
 		return nil, fmt.Errorf("error preparing query GetPushCredential: %w", err)
+	}
+	if q.getPushRegistrationStmt, err = db.PrepareContext(ctx, getPushRegistration); err != nil {
+		return nil, fmt.Errorf("error preparing query GetPushRegistration: %w", err)
 	}
 	if q.getServerSettingsStmt, err = db.PrepareContext(ctx, getServerSettings); err != nil {
 		return nil, fmt.Errorf("error preparing query GetServerSettings: %w", err)
@@ -309,6 +312,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createSyncSourceStmt: %w", cerr)
 		}
 	}
+	if q.deleteAllSiteIdentitiesStmt != nil {
+		if cerr := q.deleteAllSiteIdentitiesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteAllSiteIdentitiesStmt: %w", cerr)
+		}
+	}
 	if q.deletePushCredentialStmt != nil {
 		if cerr := q.deletePushCredentialStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deletePushCredentialStmt: %w", cerr)
@@ -332,11 +340,6 @@ func (q *Queries) Close() error {
 	if q.deleteSitePushCredentialsStmt != nil {
 		if cerr := q.deleteSitePushCredentialsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteSitePushCredentialsStmt: %w", cerr)
-		}
-	}
-	if q.deleteSitePushRegistrationsStmt != nil {
-		if cerr := q.deleteSitePushRegistrationsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteSitePushRegistrationsStmt: %w", cerr)
 		}
 	}
 	if q.deleteSitesStmt != nil {
@@ -392,6 +395,11 @@ func (q *Queries) Close() error {
 	if q.getPushCredentialStmt != nil {
 		if cerr := q.getPushCredentialStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getPushCredentialStmt: %w", cerr)
+		}
+	}
+	if q.getPushRegistrationStmt != nil {
+		if cerr := q.getPushRegistrationStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getPushRegistrationStmt: %w", cerr)
 		}
 	}
 	if q.getServerSettingsStmt != nil {
@@ -642,12 +650,12 @@ type Queries struct {
 	createSiteStmt                        *sql.Stmt
 	createSiteIdentityStmt                *sql.Stmt
 	createSyncSourceStmt                  *sql.Stmt
+	deleteAllSiteIdentitiesStmt           *sql.Stmt
 	deletePushCredentialStmt              *sql.Stmt
 	deletePushRegistrationStmt            *sql.Stmt
 	deletePushRegistrationByTokenHashStmt *sql.Stmt
 	deleteSiteIdentityStmt                *sql.Stmt
 	deleteSitePushCredentialsStmt         *sql.Stmt
-	deleteSitePushRegistrationsStmt       *sql.Stmt
 	deleteSitesStmt                       *sql.Stmt
 	deleteSyncSourceStmt                  *sql.Stmt
 	disableSiteStmt                       *sql.Stmt
@@ -659,6 +667,7 @@ type Queries struct {
 	getControlIdentityStmt                *sql.Stmt
 	getLiveAndDisabledSitesStmt           *sql.Stmt
 	getPushCredentialStmt                 *sql.Stmt
+	getPushRegistrationStmt               *sql.Stmt
 	getServerSettingsStmt                 *sql.Stmt
 	getSiteStmt                           *sql.Stmt
 	getSiteIDsWithAlarmsStmt              *sql.Stmt
@@ -718,12 +727,12 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		createSiteStmt:                        q.createSiteStmt,
 		createSiteIdentityStmt:                q.createSiteIdentityStmt,
 		createSyncSourceStmt:                  q.createSyncSourceStmt,
+		deleteAllSiteIdentitiesStmt:           q.deleteAllSiteIdentitiesStmt,
 		deletePushCredentialStmt:              q.deletePushCredentialStmt,
 		deletePushRegistrationStmt:            q.deletePushRegistrationStmt,
 		deletePushRegistrationByTokenHashStmt: q.deletePushRegistrationByTokenHashStmt,
 		deleteSiteIdentityStmt:                q.deleteSiteIdentityStmt,
 		deleteSitePushCredentialsStmt:         q.deleteSitePushCredentialsStmt,
-		deleteSitePushRegistrationsStmt:       q.deleteSitePushRegistrationsStmt,
 		deleteSitesStmt:                       q.deleteSitesStmt,
 		deleteSyncSourceStmt:                  q.deleteSyncSourceStmt,
 		disableSiteStmt:                       q.disableSiteStmt,
@@ -735,6 +744,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getControlIdentityStmt:                q.getControlIdentityStmt,
 		getLiveAndDisabledSitesStmt:           q.getLiveAndDisabledSitesStmt,
 		getPushCredentialStmt:                 q.getPushCredentialStmt,
+		getPushRegistrationStmt:               q.getPushRegistrationStmt,
 		getServerSettingsStmt:                 q.getServerSettingsStmt,
 		getSiteStmt:                           q.getSiteStmt,
 		getSiteIDsWithAlarmsStmt:              q.getSiteIDsWithAlarmsStmt,

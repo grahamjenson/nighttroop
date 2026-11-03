@@ -71,6 +71,7 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Get("/data/event-groups/choices", sitecollections.EventGroupChoicesHandler)
 		r.Get("/data/event-groups/new", sitecollections.EventGroupNewHandler)
 		r.Post("/settings/sync/{id}/backfill", sitecollections.BackfillHandler)
+		r.Post("/settings/push-registrations/{id}/test", sitecollections.PushTestHandler)
 		r.Post("/settings/identities/{id}/password", sitecollections.ResetIdentityPasswordHandler)
 		r.Post("/settings/identities/{id}/totp", sitecollections.ResetIdentityTOTPHandler)
 		r.Get("/settings/site/download", sitecollections.DownloadDataHandler)

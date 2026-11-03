@@ -56,6 +56,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   - **archived** once disabled, uploading it to S3 (needs S3);
   - **hydrated** from the archived sites page, bringing it back live;
   - **truncated** when over its DB size limit, clearing old records' raw JSON.
+- A site deleted for good, such as one never used after it was made, has its identities deleted, with their passwords,
+  TOTP secrets and devices' push tokens, and its push credentials' secrets removed; an archived site keeps them, as it
+  can be hydrated.
 
 ### A site's identities
 
@@ -185,7 +188,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 ### Data
 
 Each kind of data has a page with a table, newest first and paged, where records can be added, viewed, edited and
-deleted (after a confirmation):
+deleted (after a confirmation). On a phone, a table wider than the window scrolls sideways in its card, so the page
+does not:
 
 - **Glucose**: CGM and meter readings with trend arrows, in the settings' units (mmol/L or mg/dL), with lows and
   highs coloured as on the summary.
@@ -311,6 +315,9 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - A `created_at` filter or sort is on when it happened, as `date` is, and `srvCreated` is on when it was uploaded.
 - v3 filters take `field$eq` as well as `field`, e.g. `eventType$eq=Site Change`.
 - A device status keeps its pump's other fields, e.g. AAPS's `extended` with its profile and temp basal.
+- A profile from Loop, with `loopSettings.deviceToken` and `bundleIdentifier`, or from Trio, with them at its top,
+  registers that app's APNs token for pushes for the identity that uploaded it, a production build unless
+  `isAPNSProduction` is false; a token that is not one is not registered, and the profile is still kept.
 - A temp basal's `percent` is Nightscout's change from the basal, as AAPS sends it (e.g. -50 for half, 20 for 1.2x,
   -100 a zero temp, never under -100), and is kept and returned as sent. Sent with only a `percent`, its rate is set
   from the default profile's or profile switch's basal at its start, in the profile's timezone, so changed, and it is
@@ -363,6 +370,10 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - A treatment's `uuid` comes back as sent, as xDrip+ matches its own by it; one sent with no `_id` is its identifier.
 - Treatments can be found by whether they have `carbs` or a `duration` (`find[carbs][$exists]`), by `enteredBy`, and
   without some `enteredBy`s (`find[enteredBy][$ne]`, repeated or under `find[$and][n]`), as Trio and iAPS fetch them.
+- A treatment's or entry's `id`, as Trio sends it, is its identifier when it has no `_id`.
+- A v1 `DELETE /api/v1/treatments.json` or `entries.json` deletes the same way by Trio's and iAPS's filters:
+  `find[id][$eq]`, `find[created_at][$eq]` with `find[eventType][$eq]`, `find[dateString][$eq]` and
+  `find[carbs][$exists]`, and each of up to 10 `find[$or]` alternatives, every one of which needs a date or an id.
 - A create that names its `identifier` keeps it, and only a document with that identifier is its duplicate.
 - A create naming a deleted document's identifier, or a replace of one, replaces it whatever changed, as Juggluco
   changes a treatment by deleting it and sending it again.
@@ -445,10 +456,10 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - An admin adds users and devices, whose credentials are shown once, each with its own copy button and one to copy
   them all. Saying they are saved warns that they are never shown again, and they close only once that is confirmed;
   Go Back keeps them open.
-- A device is added for its client: AAPS, Trio, Loop, xDrip+, Nightguard, SugarPixel or Other. Its credentials say how
-  to set that client up, in numbered steps naming the client's menus and fields in bold, with its Nightscout URL and
-  token filled in, each with its own copy button, and a device for any but Other has its own units set to mg/dL,
-  which those clients need, whatever the site's.
+- A device is added for its client: AAPS, Trio, Loop, xDrip+, xDrip4iOS, Nightguard, SugarPixel or Other. Its
+  credentials say how to set that client up, in numbered steps naming the client's menus and fields in bold, with its
+  Nightscout URL and token filled in, each with its own copy button, and a device for any but Other has its own units
+  set to mg/dL, which those clients need, whatever the site's.
 - The client is picked before the role, as a loop's device (AAPS, Trio or Loop) must be the PWD phone: picking one of
   them sets the role to PWD Phone and locks it, and the server refuses such a device with any other role.
 - An admin can turn an identity off and on, or delete it; an identity cannot lock itself out.
@@ -468,3 +479,13 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 
 - Each identity can set its own units, time zone, language and formats over the site's.
 - Each identity has its own alarms, and snoozing one only quiets it for them.
+- Each identity, a device or user of any role, registers the apps on its devices that pushes are sent to
+  (`/settings/push-registrations`, JSON API): the app (`loop`, `trio`, `loopfollow`, `t1dcarer`), its provider (`apns`
+  or `fcm`), bundle ID, whether it is a production build, and its token, which is kept encrypted and never returned.
+  Registering a token again updates it, and from another identity moves it there; an identity has at most 10, and
+  sees and deletes only its own.
+- An identity can send a test push to one of its registrations
+  (`POST /settings/push-registrations/{id}/test`), with its site's push credential for the app, else the server's.
+  Without one it is refused, saying to add one; a token Apple says is gone deletes the registration (410); another
+  refusal says Apple's reason (502). Each push is recorded on the registration, with its error, if it had one. A site
+  sends at most `SITE_PUSH_PER_MINUTE_LIMIT` pushes a minute. Only APNs pushes are sent so far.

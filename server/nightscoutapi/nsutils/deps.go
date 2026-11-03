@@ -64,8 +64,31 @@ func ParseQuery(values url.Values) (nsquery.Query, *HTTPError) {
 	return q, nil
 }
 
-// deleteFilters are the query's keys a delete takes, those xDrip4iOS sends to delete readings
-var deleteFilters = map[string]bool{"token": true, "find[type]": true, "find[date][$gte]": true, "find[date][$lte]": true, "find[date][$in][]": true}
+// deleteFilters are the query's keys a delete takes, those xDrip4iOS sends to delete readings, and Trio and iAPS to
+// delete readings, carbs, insulin and overrides
+var deleteFilters = map[string]bool{"token": true, "find[type]": true, "find[date][$gte]": true, "find[date][$lte]": true, "find[date][$in][]": true,
+	"find[id][$eq]": true, "find[created_at][$eq]": true, "find[dateString][$eq]": true, "find[eventType][$eq]": true, "find[carbs][$exists]": true}
+
+// maxDeleteAlternatives is the most find[$or] alternatives a delete has, as each is a search
+const maxDeleteAlternatives = 10
+
+// ParseDeleteQueries is a delete's query for each of its find[$or] alternatives, or the one query without them, each
+// as ParseDeleteQuery takes it
+func ParseDeleteQueries(values url.Values) ([]nsquery.Query, *HTTPError) {
+	alternatives := nsquery.OrBranches(values)
+	if len(alternatives) > maxDeleteAlternatives {
+		return nil, ErrBadQueryError("a delete has at most 10 find[$or] alternatives")
+	}
+	queries := make([]nsquery.Query, 0, len(alternatives))
+	for _, alternative := range alternatives {
+		query, err := ParseDeleteQuery(alternative)
+		if err != nil {
+			return nil, err
+		}
+		queries = append(queries, query)
+	}
+	return queries, nil
+}
 
 // ParseDeleteQuery is the query of a delete, which deletes what a search with it finds. Any other key is refused, as is
 // a query without a date, so a filter not understood is never ignored to delete more than was asked.
@@ -76,8 +99,8 @@ func ParseDeleteQuery(values url.Values) (nsquery.Query, *HTTPError) {
 		}
 	}
 	query, err := ParseQuery(values)
-	if err == nil && query.DateGTE == nil && query.DateLTE == nil && query.DateIn == nil {
-		err = ErrBadQueryError("a delete needs find[date][$gte], find[date][$lte] or find[date][$in][]")
+	if err == nil && query.DateGTE == nil && query.DateLTE == nil && query.DateIn == nil && query.DateEQ == nil && query.IDEq == nil {
+		err = ErrBadQueryError("a delete needs find[date][$gte], find[date][$lte], find[date][$in][], a date's $eq or find[id][$eq]")
 	}
 	return query, err
 }

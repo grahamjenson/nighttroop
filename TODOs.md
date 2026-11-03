@@ -30,6 +30,10 @@
     1. Restore one site from its backup
     1. P3: Manage the control admins: list them, reset another's password or TOTP, change their role or delete one
 
+1. Site UI
+    1. P3: On a phone, Users & Devices' Add User and Add Device forms are wider than their cards, so the page scrolls
+       sideways; wrap them as the tables now scroll in theirs
+
 1. Accounts
     1. Recovering a site's admin without the initial backup key
     1. Recovering a lost control admin login, as setup only runs on a server with no control admin
@@ -53,21 +57,20 @@
    restart uploads every batch again though their backups are current
 1. Push notifications (the control DB's `push_credentials` and `push_registrations`):
     1. P2: A control collection for push credentials for every site, as the site's (`/settings/push-credentials`)
-    1. P3: Add push credentials to `clients/nighttroop/openapi.json` and its client
-    1. P2: An identity registers an app's push token, kept encrypted with its SHA-256; Loop's comes from its profile's
-       `loopSettings.deviceToken`, `bundleIdentifier` and `isAPNSProduction`
-    1. P2: Send pushes with the credential `PushCredentialFor` finds: APNs with an ES256 token from the `.p8`, then FCM
-       with the service account, rate limited per site, recording each push and deleting tokens the service says
-       are gone
-    1. P2: Delete a site's push credentials and registrations when the site is deleted
+    1. P3: Add push credentials and registrations to `clients/nighttroop/openapi.json` and its client
+    1. P3: Show an identity its push registrations on its settings page, to delete one; the collection's HTMX responses
+       are empty until then
+    1. P2: Send FCM pushes with the service account (an OAuth token from its key, then the v1 send API), as
+       `push.Send` does APNs ones
+    1. P2: Push alarms to each identity's registered apps when one goes off, through `push.Send`
     1. P2: A control page to add, list and delete push credentials for every site, with BDD tests
 1. Nightscout API:
-    1. P1: Nightscout clients (AAPS, Loop, LoopFollow, xDrip4iOS, Nightguard, the xDrip+ follower) read `sgv` and
-       `mbg`, and AAPS its temp targets and profiles, as mg/dL whatever the `units`, but the API gives them in the
-       identity's units, then the site's. A device added for a client in Add Device is in mg/dL (#524) and an admin
-       can set any identity's units (#523), but the site's first PWD phone, a device added as Other, and LoopFollow,
-       xDrip4iOS and an AAPSClient follower, which are not in Add Device's clients, still get the site's units. Add
-       them to Add Device's clients
+    1. P1: Nightscout clients (AAPS, Loop, LoopFollow, Nightguard, the xDrip+ follower) read `sgv` and `mbg`, and
+       AAPS its temp targets and profiles, as mg/dL whatever the `units`, but the API gives them in the identity's
+       units, then the site's. A device added for a client in Add Device is in mg/dL (#524) and an admin can set any
+       identity's units (#523), but the site's first PWD phone, a device added as Other, and LoopFollow and an
+       AAPSClient follower, which are not in Add Device's clients, still get the site's units. Add them to Add
+       Device's clients
     1. P1: A Nightscout batch of over 100 records is refused with a 400 (`consts.MaxBatchRecords`), and Loop (up to
        1000 a request) and Juggluco on v1 (up to 5000) send the same batch again until it is accepted, so after a
        backlog (first set up, or about 8 hours offline) they never upload again. Take larger v1 batches in chunks, or
@@ -101,11 +104,6 @@
     1. P2: An unknown `find[...]` filter is ignored, so the search gives everything, and a client that deletes the
        first match (as xDrip+ does by `find[uuid]`) deletes the wrong document. Give nothing for a filter on an unknown
        field
-1. Trio and iAPS ([docs/clients/trio.md](docs/clients/trio.md)):
-    1. P2: v1 delete by query (`DELETE /api/v1/treatments.json?find[id][$eq]=`, `find[created_at][$eq]` with
-       `find[eventType][$eq]`, and entries' `find[$or]`) is a 405; Trio deletes carbs, insulin and glucose
-       this way, and the override before uploading its run, so override runs are never uploaded. It needs
-       Trio's `id` kept as the identifier, and must refuse any filter it does not know rather than ignore it
 
 ## Bugs
 

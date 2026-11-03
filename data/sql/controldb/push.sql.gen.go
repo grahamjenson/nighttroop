@@ -174,19 +174,6 @@ func (q *Queries) DeleteSitePushCredentials(ctx context.Context, arg DeleteSiteP
 	return err
 }
 
-const deleteSitePushRegistrations = `-- name: DeleteSitePushRegistrations :exec
-DELETE FROM push_registrations WHERE site_id = ?1
-`
-
-type DeleteSitePushRegistrationsParams struct {
-	SiteID string
-}
-
-func (q *Queries) DeleteSitePushRegistrations(ctx context.Context, arg DeleteSitePushRegistrationsParams) error {
-	_, err := q.exec(ctx, q.deleteSitePushRegistrationsStmt, deleteSitePushRegistrations, arg.SiteID)
-	return err
-}
-
 const getPushCredential = `-- name: GetPushCredential :one
 SELECT id, site_id, name, provider, team_or_project_id, key_id, secret_enc, apps_json, bundle_ids_json, created_at, updated_at, created_by_identity_name, deleted_at FROM push_credentials
 WHERE id = ?1 AND site_id IS ?2 AND deleted_at IS NULL
@@ -215,6 +202,39 @@ func (q *Queries) GetPushCredential(ctx context.Context, arg GetPushCredentialPa
 		&i.UpdatedAt,
 		&i.CreatedByIdentityName,
 		&i.DeletedAt,
+	)
+	return &i, err
+}
+
+const getPushRegistration = `-- name: GetPushRegistration :one
+SELECT id, site_id, identity_id, app, provider, bundle_id, production, token_enc, token_hash, created_at, updated_at, last_pushed_at, last_error FROM push_registrations
+WHERE id = ?1 AND site_id = ?2 AND identity_id = ?3
+`
+
+type GetPushRegistrationParams struct {
+	ID         int64
+	SiteID     string
+	IdentityID int64
+}
+
+// A site's registration, if it is the identity's
+func (q *Queries) GetPushRegistration(ctx context.Context, arg GetPushRegistrationParams) (*PushRegistration, error) {
+	row := q.queryRow(ctx, q.getPushRegistrationStmt, getPushRegistration, arg.ID, arg.SiteID, arg.IdentityID)
+	var i PushRegistration
+	err := row.Scan(
+		&i.ID,
+		&i.SiteID,
+		&i.IdentityID,
+		&i.App,
+		&i.Provider,
+		&i.BundleID,
+		&i.Production,
+		&i.TokenEnc,
+		&i.TokenHash,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.LastPushedAt,
+		&i.LastError,
 	)
 	return &i, err
 }

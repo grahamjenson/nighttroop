@@ -76,6 +76,11 @@ ON CONFLICT (token_hash) DO UPDATE SET
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
 RETURNING *;
 
+-- name: GetPushRegistration :one
+-- A site's registration, if it is the identity's
+SELECT * FROM push_registrations
+WHERE id = sqlc.arg('ID') AND site_id = sqlc.arg('SiteID') AND identity_id = sqlc.arg('IdentityID');
+
 -- name: SearchPushRegistrations :many
 -- A site's registrations, or with IdentityID only that identity's, newest first
 SELECT * FROM push_registrations
@@ -96,8 +101,6 @@ WHERE id = sqlc.arg('ID') AND site_id = sqlc.arg('SiteID')
 -- Deletes a token the push service says is no longer registered
 DELETE FROM push_registrations WHERE token_hash = sqlc.arg('TokenHash');
 
--- name: DeleteSitePushRegistrations :exec
-DELETE FROM push_registrations WHERE site_id = sqlc.arg('SiteID');
 
 -- name: RecordPush :exec
 -- Records a push sent to a registration, and its error, if it had one
