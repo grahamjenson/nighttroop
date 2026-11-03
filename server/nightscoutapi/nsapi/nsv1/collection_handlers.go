@@ -161,14 +161,17 @@ func Delete(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 		// IGNORE ANY ERROR AND JUST RETURN 0 DELETED COUNT, except for a delete by a query
 		deleted := 0
 		if identifierOrType == "" {
-			// Only readings are deleted by a query, as xDrip4iOS does
-			if collection != nsutils.Entries {
+			// Only readings and treatments are deleted by a query, as xDrip4iOS and Trio do. Each find[$or]
+			// alternative, as Trio deletes a reading by its id or its dateString, is checked before any is deleted
+			if collection != nsutils.Entries && collection != nsutils.Treatments {
 				nsutils.WriteError(w, nsutils.ErrNotImplemented)
 				return
 			}
-			query, err := nsutils.ParseDeleteQuery(r.URL.Query())
-			if err == nil {
-				deleted, err = store.DeleteQuery(r.Context(), collection, query)
+			queries, err := nsutils.ParseDeleteQueries(r.URL.Query())
+			for i := 0; err == nil && i < len(queries); i++ {
+				var amount int
+				amount, err = store.DeleteQuery(r.Context(), collection, queries[i])
+				deleted += amount
 			}
 			if err != nil {
 				nsutils.WriteError(w, err)

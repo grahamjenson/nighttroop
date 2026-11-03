@@ -112,9 +112,9 @@ NAME xdrip4ios_delete_read_only
 DELETE http://{{ site }}/api/v1/entries.json?find[date][$gte]={{ dayms -1 600 }}&token={{ dig "create_new_site.read_only_nstoken" }}
 ASSERT_STATUS 403
 
-# Only readings are deleted by a query
-NAME xdrip4ios_delete_treatments_by_query
-DELETE http://{{ site }}/api/v1/treatments.json?find[date][$gte]={{ dayms -1 600 }}&token={{ token }}
+# Only readings and treatments are deleted by a query
+NAME xdrip4ios_delete_device_statuses_by_query
+DELETE http://{{ site }}/api/v1/devicestatus.json?find[date][$gte]={{ dayms -1 600 }}&token={{ token }}
 ASSERT_STATUS 501
 
 NAME xdrip4ios_delete_refused_kept

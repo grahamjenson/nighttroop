@@ -105,11 +105,6 @@
     1. P2: An unknown `find[...]` filter is ignored, so the search gives everything, and a client that deletes the
        first match (as xDrip+ does by `find[uuid]`) deletes the wrong document. Give nothing for a filter on an unknown
        field
-1. Trio and iAPS ([docs/clients/trio.md](docs/clients/trio.md)):
-    1. P2: v1 delete by query (`DELETE /api/v1/treatments.json?find[id][$eq]=`, `find[created_at][$eq]` with
-       `find[eventType][$eq]`, and entries' `find[$or]`) is a 405; Trio deletes carbs, insulin and glucose
-       this way, and the override before uploading its run, so override runs are never uploaded. It needs
-       Trio's `id` kept as the identifier, and must refuse any filter it does not know rather than ignore it
 
 ## Bugs
 

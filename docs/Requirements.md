@@ -360,6 +360,10 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - A treatment's `uuid` comes back as sent, as xDrip+ matches its own by it; one sent with no `_id` is its identifier.
 - Treatments can be found by whether they have `carbs` or a `duration` (`find[carbs][$exists]`), by `enteredBy`, and
   without some `enteredBy`s (`find[enteredBy][$ne]`, repeated or under `find[$and][n]`), as Trio and iAPS fetch them.
+- A treatment's or entry's `id`, as Trio sends it, is its identifier when it has no `_id`.
+- A v1 `DELETE /api/v1/treatments.json` or `entries.json` deletes the same way by Trio's and iAPS's filters:
+  `find[id][$eq]`, `find[created_at][$eq]` with `find[eventType][$eq]`, `find[dateString][$eq]` and
+  `find[carbs][$exists]`, and each of up to 10 `find[$or]` alternatives, every one of which needs a date or an id.
 - A create that names its `identifier` keeps it, and only a document with that identifier is its duplicate.
 - A create naming a deleted document's identifier, or a replace of one, replaces it whatever changed, as Juggluco
   changes a treatment by deleting it and sending it again.

@@ -155,3 +155,20 @@ func TestParseEnteredByNotIn(t *testing.T) {
 		})
 	}
 }
+
+// Each find[$or] alternative is a query with the others' shared values, and one without is itself
+func TestOrBranches(t *testing.T) {
+	values := url.Values{
+		"find[$or][0][id][$eq]":         {"a"},
+		"find[$or][1][dateString][$eq]": {"2026-11-02T12:00:00.000Z"},
+		"count":                         {"1"},
+	}
+	branches := OrBranches(values)
+	assert.ElementsMatch(t, []url.Values{
+		{"find[id][$eq]": {"a"}, "count": {"1"}},
+		{"find[dateString][$eq]": {"2026-11-02T12:00:00.000Z"}, "count": {"1"}},
+	}, branches)
+
+	plain := url.Values{"find[id][$eq]": {"a"}}
+	assert.Equal(t, []url.Values{plain}, OrBranches(plain))
+}
