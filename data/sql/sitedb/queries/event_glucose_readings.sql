@@ -9,7 +9,7 @@ INSERT INTO glucose_readings (
     mgdl,
     reading_type,
     units,
-    sent_units,
+    raw_units,
     measurement_method,
 
     delta,
@@ -35,7 +35,7 @@ VALUES (
     sqlc.arg('Mgdl'),
     sqlc.arg('ReadingType'),
     sqlc.arg('Units'),
-    sqlc.narg('SentUnits'),
+    sqlc.narg('RawUnits'),
     sqlc.arg('MeasurementMethod'),
 
     sqlc.arg('Delta'),

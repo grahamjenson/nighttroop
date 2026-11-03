@@ -527,9 +527,9 @@ func GlucoseReadingCreate(source sitedb.GlucoseReading, context ConverterContext
 	sitedbCreateGlucoseReadingParams.Mgdl = source.Mgdl
 	sitedbCreateGlucoseReadingParams.ReadingType = source.ReadingType
 	sitedbCreateGlucoseReadingParams.Units = UnitsToUnits(source.Units)
-	if source.SentUnits != nil {
-		xstring := *source.SentUnits
-		sitedbCreateGlucoseReadingParams.SentUnits = &xstring
+	if source.RawUnits != nil {
+		xstring := *source.RawUnits
+		sitedbCreateGlucoseReadingParams.RawUnits = &xstring
 	}
 	if source.MeasurementMethod != nil {
 		xstring2 := *source.MeasurementMethod
@@ -957,9 +957,9 @@ func PartialTreatmentToFoodIntake(source Treatment) sitedb.FoodIntake {
 func PartialTreatmentToGlucoseReading(source Treatment) sitedb.GlucoseReading {
 	var sitedbGlucoseReading sitedb.GlucoseReading
 	sitedbGlucoseReading.Units = UnitsToUnits(source.Units)
-	if source.SentUnits != nil {
-		xstring := *source.SentUnits
-		sitedbGlucoseReading.SentUnits = &xstring
+	if source.RawUnits != nil {
+		xstring := *source.RawUnits
+		sitedbGlucoseReading.RawUnits = &xstring
 	}
 	if source.GlucoseType != nil {
 		xstring2 := string(*source.GlucoseType)
@@ -1632,9 +1632,9 @@ func UpdateGlucoseReadingToTreatment(source *sitedb.GlucoseReading, context *htt
 			target.GlucoseType = &nightscoutmodelsGlucoseType
 		}
 		target.Units = UnitsToUnits(source.Units)
-		if source.SentUnits != nil {
-			xstring := *source.SentUnits
-			target.SentUnits = &xstring
+		if source.RawUnits != nil {
+			xstring := *source.RawUnits
+			target.RawUnits = &xstring
 		}
 		if source.Notes != nil {
 			typesSanitizedString := types.SanitizedString(*source.Notes)
@@ -2138,9 +2138,9 @@ func UpdateToGlucoseReading(source *sitedb.GlucoseReading, target *sitedb.Glucos
 		target.Mgdl = source.Mgdl
 		target.ReadingType = source.ReadingType
 		target.Units = UnitsToUnits(source.Units)
-		if source.SentUnits != nil {
-			xstring := *source.SentUnits
-			target.SentUnits = &xstring
+		if source.RawUnits != nil {
+			xstring := *source.RawUnits
+			target.RawUnits = &xstring
 		}
 		if source.MeasurementMethod != nil {
 			xstring2 := *source.MeasurementMethod

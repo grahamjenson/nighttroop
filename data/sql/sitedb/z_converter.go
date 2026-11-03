@@ -790,9 +790,9 @@ func GlucoseReadingToCreate(source GlucoseReading) CreateGlucoseReadingParams {
 		constsUnits := constsUnitsToConstsUnits(*source.Units)
 		sitedbCreateGlucoseReadingParams.Units = &constsUnits
 	}
-	if source.SentUnits != nil {
-		xstring := *source.SentUnits
-		sitedbCreateGlucoseReadingParams.SentUnits = &xstring
+	if source.RawUnits != nil {
+		xstring := *source.RawUnits
+		sitedbCreateGlucoseReadingParams.RawUnits = &xstring
 	}
 	if source.MeasurementMethod != nil {
 		xstring2 := *source.MeasurementMethod
@@ -1864,9 +1864,9 @@ func sitedbGlucoseReadingsVwToSitedbGlucoseReadingsVw(source GlucoseReadingsVw) 
 		constsUnits := constsUnitsToConstsUnits(*source.Units)
 		sitedbGlucoseReadingsVw.Units = &constsUnits
 	}
-	if source.SentUnits != nil {
-		xstring3 := *source.SentUnits
-		sitedbGlucoseReadingsVw.SentUnits = &xstring3
+	if source.RawUnits != nil {
+		xstring3 := *source.RawUnits
+		sitedbGlucoseReadingsVw.RawUnits = &xstring3
 	}
 	if source.MeasurementMethod != nil {
 		xstring4 := *source.MeasurementMethod

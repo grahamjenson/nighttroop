@@ -74,8 +74,8 @@ type Treatment struct {
 	InsulinNeedsScaleFactor *types.FlexibleFloat64   `json:"insulinNeedsScaleFactor,omitempty"`
 
 	Units *consts.Units `json:"units,omitempty"`
-	// SentUnits are the units as the client wrote them, e.g. mg/dl, given back as sent; Units is what they mean
-	SentUnits *string `json:"-"`
+	// RawUnits are the units as the client wrote them, e.g. mg/dl, given back as sent; Units is what they mean
+	RawUnits *string `json:"-"`
 
 	SensorCode    *types.ShortString `json:"sensorCode,omitempty"`
 	TransmitterID *types.ShortString `json:"transmitterId,omitempty"`
@@ -114,7 +114,7 @@ type Treatment struct {
 // its units are exactly mg/dl; ones not sent are written as Nighttroop's units
 func (t Treatment) MarshalJSON() ([]byte, error) {
 	type Alias Treatment
-	units := t.SentUnits
+	units := t.RawUnits
 	if units == nil {
 		units = t.Units.Stringp()
 	}
@@ -155,7 +155,7 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 		}
 		t.Units = &units
 		if len(*aux.Units) <= 16 {
-			t.SentUnits = aux.Units
+			t.RawUnits = aux.Units
 		}
 	}
 

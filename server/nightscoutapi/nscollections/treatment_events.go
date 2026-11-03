@@ -155,7 +155,7 @@ var (
 		complete: func(source nightscoutmodels.Treatment, target *sitedb.GlucoseReading) {
 			target.ReadingType = "sgv"
 			target.Units = source.Units
-			target.SentUnits = source.SentUnits
+			target.RawUnits = source.RawUnits
 
 			if source.Glucose != nil {
 				target.Mgdl = target.Units.ToMGDL(float64(*source.Glucose))

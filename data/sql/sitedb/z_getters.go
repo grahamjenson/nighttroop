@@ -2256,14 +2256,14 @@ func (m *GlucoseReading) SetUnits(v *consts.Units) {
 	m.Units = v
 }
 
-// GetSentUnits returns the SentUnits value.
-func (m GlucoseReading) GetSentUnits() *string {
-	return m.SentUnits
+// GetRawUnits returns the RawUnits value.
+func (m GlucoseReading) GetRawUnits() *string {
+	return m.RawUnits
 }
 
-// SetSentUnits sets the SentUnits value and returns the updated GlucoseReading.
-func (m *GlucoseReading) SetSentUnits(v *string) {
-	m.SentUnits = v
+// SetRawUnits sets the RawUnits value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetRawUnits(v *string) {
+	m.RawUnits = v
 }
 
 // GetMeasurementMethod returns the MeasurementMethod value.
@@ -2516,14 +2516,14 @@ func (m *GlucoseReadingsVw) SetUnits(v *consts.Units) {
 	m.Units = v
 }
 
-// GetSentUnits returns the SentUnits value.
-func (m GlucoseReadingsVw) GetSentUnits() *string {
-	return m.SentUnits
+// GetRawUnits returns the RawUnits value.
+func (m GlucoseReadingsVw) GetRawUnits() *string {
+	return m.RawUnits
 }
 
-// SetSentUnits sets the SentUnits value and returns the updated GlucoseReadingsVw.
-func (m *GlucoseReadingsVw) SetSentUnits(v *string) {
-	m.SentUnits = v
+// SetRawUnits sets the RawUnits value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetRawUnits(v *string) {
+	m.RawUnits = v
 }
 
 // GetMeasurementMethod returns the MeasurementMethod value.
@@ -8036,14 +8036,14 @@ func (m *CreateGlucoseReadingParams) SetUnits(v *consts.Units) {
 	m.Units = v
 }
 
-// GetSentUnits returns the SentUnits value.
-func (m CreateGlucoseReadingParams) GetSentUnits() *string {
-	return m.SentUnits
+// GetRawUnits returns the RawUnits value.
+func (m CreateGlucoseReadingParams) GetRawUnits() *string {
+	return m.RawUnits
 }
 
-// SetSentUnits sets the SentUnits value and returns the updated CreateGlucoseReadingParams.
-func (m *CreateGlucoseReadingParams) SetSentUnits(v *string) {
-	m.SentUnits = v
+// SetRawUnits sets the RawUnits value and returns the updated CreateGlucoseReadingParams.
+func (m *CreateGlucoseReadingParams) SetRawUnits(v *string) {
+	m.RawUnits = v
 }
 
 // GetMeasurementMethod returns the MeasurementMethod value.

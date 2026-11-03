@@ -13,7 +13,7 @@ import (
 )
 
 const alarmGlucoseReadings = `-- name: AlarmGlucoseReadings :many
-SELECT id, mgdl, reading_type, units, sent_units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings
+SELECT id, mgdl, reading_type, units, raw_units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings
 WHERE reading_type = 'sgv' AND deleted_at IS NULL
 AND occurred_at >= (SELECT MAX(occurred_at) FROM glucose_readings WHERE reading_type = 'sgv' AND deleted_at IS NULL)
     - CAST(?1 AS INTEGER) * 60000
@@ -42,7 +42,7 @@ func (q *Queries) AlarmGlucoseReadings(ctx context.Context, arg AlarmGlucoseRead
 			&i.Mgdl,
 			&i.ReadingType,
 			&i.Units,
-			&i.SentUnits,
+			&i.RawUnits,
 			&i.MeasurementMethod,
 			&i.Delta,
 			&i.Direction,
@@ -80,7 +80,7 @@ func (q *Queries) AlarmGlucoseReadings(ctx context.Context, arg AlarmGlucoseRead
 
 const allGlucoseReadings = `-- name: AllGlucoseReadings :many
 
-SELECT id, mgdl, reading_type, units, sent_units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings 
+SELECT id, mgdl, reading_type, units, raw_units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings 
 WHERE (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
@@ -110,7 +110,7 @@ func (q *Queries) AllGlucoseReadings(ctx context.Context, arg AllGlucoseReadings
 			&i.Mgdl,
 			&i.ReadingType,
 			&i.Units,
-			&i.SentUnits,
+			&i.RawUnits,
 			&i.MeasurementMethod,
 			&i.Delta,
 			&i.Direction,
@@ -153,7 +153,7 @@ INSERT INTO glucose_readings (
     mgdl,
     reading_type,
     units,
-    sent_units,
+    raw_units,
     measurement_method,
 
     delta,
@@ -199,7 +199,7 @@ VALUES (
     ?20,
     ?21
 )
-RETURNING id, mgdl, reading_type, units, sent_units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+RETURNING id, mgdl, reading_type, units, raw_units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type CreateGlucoseReadingParams struct {
@@ -207,7 +207,7 @@ type CreateGlucoseReadingParams struct {
 	Mgdl                  float64
 	ReadingType           string
 	Units                 *consts.Units
-	SentUnits             *string
+	RawUnits              *string
 	MeasurementMethod     *string
 	Delta                 *float64
 	Direction             *string
@@ -235,7 +235,7 @@ func (q *Queries) CreateGlucoseReading(ctx context.Context, arg CreateGlucoseRea
 		arg.Mgdl,
 		arg.ReadingType,
 		arg.Units,
-		arg.SentUnits,
+		arg.RawUnits,
 		arg.MeasurementMethod,
 		arg.Delta,
 		arg.Direction,
@@ -259,7 +259,7 @@ func (q *Queries) CreateGlucoseReading(ctx context.Context, arg CreateGlucoseRea
 		&i.Mgdl,
 		&i.ReadingType,
 		&i.Units,
-		&i.SentUnits,
+		&i.RawUnits,
 		&i.MeasurementMethod,
 		&i.Delta,
 		&i.Direction,
@@ -287,7 +287,7 @@ func (q *Queries) CreateGlucoseReading(ctx context.Context, arg CreateGlucoseRea
 
 const getGlucoseReading = `-- name: GetGlucoseReading :one
 
-SELECT id, mgdl, reading_type, units, sent_units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings WHERE 
+SELECT id, mgdl, reading_type, units, raw_units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings WHERE 
 (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
 AND id = ?2
 `
@@ -308,7 +308,7 @@ func (q *Queries) GetGlucoseReading(ctx context.Context, arg GetGlucoseReadingPa
 		&i.Mgdl,
 		&i.ReadingType,
 		&i.Units,
-		&i.SentUnits,
+		&i.RawUnits,
 		&i.MeasurementMethod,
 		&i.Delta,
 		&i.Direction,
@@ -371,7 +371,7 @@ func (q *Queries) OldestGlucoseReadingAt(ctx context.Context) (int64, error) {
 }
 
 const searchGlucoseReadings = `-- name: SearchGlucoseReadings :many
-SELECT id, mgdl, reading_type, units, sent_units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings
+SELECT id, mgdl, reading_type, units, raw_units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings
 WHERE
     -- The date filters as one range, occurred_at's CHECK where unset, so SQLite reads only that range of its index
     occurred_at BETWEEN MAX(COALESCE(CAST(?1 AS INTEGER), 0), COALESCE(CAST(?2 AS INTEGER) + 1, 0), COALESCE(CAST(?3 AS INTEGER), 0))
@@ -489,7 +489,7 @@ func (q *Queries) SearchGlucoseReadings(ctx context.Context, arg SearchGlucoseRe
 			&i.Mgdl,
 			&i.ReadingType,
 			&i.Units,
-			&i.SentUnits,
+			&i.RawUnits,
 			&i.MeasurementMethod,
 			&i.Delta,
 			&i.Direction,
@@ -587,7 +587,7 @@ UPDATE glucose_readings SET
     updated_by_identity_id = ?11,
     updated_by_identity_name = ?12
 WHERE id = ?13 AND deleted_at IS NULL
-RETURNING id, mgdl, reading_type, units, sent_units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+RETURNING id, mgdl, reading_type, units, raw_units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type UpdateGlucoseReadingParams struct {
@@ -631,7 +631,7 @@ func (q *Queries) UpdateGlucoseReading(ctx context.Context, arg UpdateGlucoseRea
 		&i.Mgdl,
 		&i.ReadingType,
 		&i.Units,
-		&i.SentUnits,
+		&i.RawUnits,
 		&i.MeasurementMethod,
 		&i.Delta,
 		&i.Direction,
