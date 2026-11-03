@@ -223,7 +223,7 @@ NightscoutKit has reads that Loop does not call, but other apps built on it may:
 | `GET /api/v1/profile/current` as one object with `enteredBy` | Works since #515 (was an array, and had no `enteredBy`) |
 | NightscoutKit `find[created_at]` on treatments and device statuses | Works since #514 (it was the upload time, not when they happened) |
 | NightscoutKit `fetchGlucose` | Works for an identity in mg/dL, as a device added for Loop is (#524); in mmol/L `sgv` is in mmol/L. TODO P1 |
-| NightscoutKit `fetchTreatments` reading bolus and temp basal fields and `timestamp` | Not supported: no `timestamp`, `programmed` or `temp`. TODO P3 |
+| NightscoutKit `fetchTreatments` reading bolus and temp basal fields and `timestamp` | Fixed in this PR: `timestamp` is `created_at`, `programmed` the insulin given, and `temp` `absolute` |
 | NightscoutKit `fetchProfiles` | Works |
 | `POST /api/v2/notifications/loop` (remote commands) | Not supported. TODO P2 |
 

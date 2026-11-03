@@ -13,6 +13,7 @@ import (
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/apiutils/apiquery"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/types"
 )
 
 type TreatmentCollection struct {
@@ -280,6 +281,12 @@ func DBModelToTreatment(source *sitedb.EventGroupsBundle, siteContext *httputils
 	treatment := nightscoutmodels.EventGroupToTreatment(source.EventGroup)
 	for _, event := range treatmentEvents {
 		event.addToTreatment(source, siteContext, treatment)
+	}
+	// Nighttroop keeps the insulin given and a temp basal's absolute rate, so they are what was programmed
+	treatment.Timestamp = treatment.CreatedAt
+	treatment.Programmed = treatment.Insulin
+	if treatment.Absolute != nil {
+		treatment.Temp = new(types.ShortString("absolute"))
 	}
 	return *treatment
 }

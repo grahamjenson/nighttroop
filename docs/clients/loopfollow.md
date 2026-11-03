@@ -151,7 +151,8 @@ device token, bundle and team from the profile.
 - LoopFollow treats a zone in `created_at` as UTC, so times must be sent in UTC; Nighttroop always sends
   `created_at` in UTC.
 - A BG Check is also kept as a meter reading, so it is an `mbg` entry too, and LoopFollow draws it in the BG line.
-- Nighttroop returns the identity's name as `enteredBy`, and drops a treatment's `timestamp`, `automatic` and
+- A treatment's `timestamp` is its `created_at`, a string as LoopFollow needs.
+- Nighttroop returns the identity's name as `enteredBy`, and drops a treatment's sent `timestamp`, `automatic` and
   `durationType`.
 - A search returns at most 1000 records, the newest, by design, and a profile search with no filters only the latest
   store.

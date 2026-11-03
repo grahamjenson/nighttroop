@@ -89,8 +89,6 @@
        amount are kept. Trio's ended temp targets and overrides, and xDrip4iOS's re-sent readings, need the same
     1. P2: Loop remote commands: `POST /api/v2/notifications/loop`, sent to Loop as an Apple push to its profile's
        `loopSettings.deviceToken`
-    1. P3: NightscoutKit's `fetchTreatments` drops treatments without a `timestamp`, a bolus without `programmed`
-       and a temp basal without `temp`, which Nighttroop does not return
     1. P4: Keep a Loop device status's pump `pumpID`, `suspended` and `bolusing`, and its uploader `name` and
        `timestamp`, once the status as sent is cleared; they are given back only while it is kept
 1. xDrip4iOS ([docs/clients/xdrip4ios.md](docs/clients/xdrip4ios.md)):
