@@ -60,8 +60,7 @@
        with the service account, rate limited per site, recording each push and deleting tokens the service says
        are gone
     1. P2: Delete a site's push credentials and registrations when the site is deleted
-    1. P2: Site settings and control pages to add, list and delete push credentials, with BDD tests; until then the
-       site collection's HTMX responses are empty
+    1. P2: A control page to add, list and delete push credentials for every site, with BDD tests
 1. Nightscout API:
     1. P1: Nightscout clients (AAPS, Loop, LoopFollow, xDrip4iOS, Nightguard, the xDrip+ follower) read `sgv` and
        `mbg`, and AAPS its temp targets and profiles, as mg/dL whatever the `units`, but the API gives them in the

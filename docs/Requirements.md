@@ -248,11 +248,12 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - An admin sets the site's settings; each identity can override them for themselves.
 - An admin can **download** a snapshot of the site's DB.
 - An admin can **delete** the site, after a confirmation, which archives it to S3 and signs everyone out.
-- An admin can add, list and delete the site's **push credentials** (`/settings/push-credentials`, JSON API only for
-  now): an Apple APNs key (team ID, key ID and `.p8` file) or a Firebase service account (project ID and its JSON),
-  the apps it pushes to (`loop`, `trio`, `loopfollow`, `t1dcarer`) and, optionally, the only bundle IDs it pushes to.
-  A key that cannot be read, or an unknown app, is refused; its secret is kept encrypted and never returned; a site
-  has at most 5; only the site's admins can see or delete them.
+- An admin can add, list and delete the site's **push credentials** on Settings, Push Notifications
+  (`/settings/push-credentials`): an Apple APNs key (team ID, key ID and the `.p8` file pasted in) or a Firebase
+  service account (project ID and its JSON), the apps it pushes to (`loop`, `trio`, `loopfollow`, `t1dcarer`) ticked,
+  and, optionally, the only bundle IDs it pushes to, separated by commas. A key that cannot be read, or an unknown
+  app, is refused with the modal left open; its secret is kept encrypted and never shown or returned; a site has at
+  most 5; only the site's admins can see or delete them, and a delete asks first.
 
 ### Logs
 
