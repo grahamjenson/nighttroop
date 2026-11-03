@@ -198,4 +198,4 @@ reading of that date, type and device the new values, and leaves one sent again 
 | Device status | Works | `follower.http` |
 | History import | Works, but a day with over 1000 readings loses its oldest, as a search gives at most 1000 by design | |
 | Delete readings by a query | Not supported (TODO P2) | |
-| Rewrite readings by posting them again | Fixed (the stored ones were kept) | `rewrite.http` |
+| Rewrite readings by posting them again | Works: the stored reading takes the new values (it was kept as it was) | `rewrite.http` |
