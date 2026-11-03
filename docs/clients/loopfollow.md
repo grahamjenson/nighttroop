@@ -17,8 +17,10 @@ requests and check the fields it decodes.
   `createURLRequest`). No `Authorization` or `api-secret` header is sent on reads, and no other header is set.
 - Connecting gets `/api/v1/status.json?token=` (`verifyURLAndToken`). It reads only the status code: 200 connects,
   401 is "token required" with no token or "invalid token" with one. On a 200 it also reads `authorized.token` and
-  `authorized.permissionGroups` to label the connection "Read", "Read & Write" or "Admin". Nighttroop sends no
-  `authorized`, so it shows "OK (Read)".
+  `authorized.permissionGroups` to label the connection "Read", "Read & Write" or "Admin": an exact `*` is Admin
+  and an exact `api:treatments:create` is Read & Write. Nighttroop sends `authorized` with the identity's
+  permissions, adding `api:treatments:create` for an identity that can write, so a write token shows "OK (Read &
+  Write)" and a read token "OK (Read)".
 - After a 401, LoopFollow checks whether the token was really the API secret, with
   `GET /api/v2/authorization/subjects` and the SHA-1 of it in `api-secret` (`verifyAPISecret`), and offers to make a
   read-only token from it on a 200 (`provisionReadOnlyToken`, `POST /api/v2/authorization/subjects`). Nighttroop
@@ -159,7 +161,7 @@ device token, bundle and team from the profile.
 | Interaction | Nighttroop |
 | --- | --- |
 | `status.json` to connect, 200 and 401 | Works |
-| `status.json` `authorized`, for "Read & Write" | Not supported, TODO P3 |
+| `status.json` `authorized`, for "Read & Write" | Fixed in this PR |
 | API secret check and token provisioning (`/api/v2/authorization/subjects`) | Not supported (no API secret); a 401 |
 | Entries, `find[date]`, `find[dateString]`, `find[type][$ne]=cal` | Works with the identity in mg/dL |
 | `sgv` in mg/dL for an identity in mmol/L | Not supported, TODO P1 |

@@ -3,6 +3,8 @@ package nsv1
 import (
 	"context"
 	"net/http"
+	"slices"
+	"time"
 
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/apiutils"
@@ -69,10 +71,11 @@ func StatusJSON(store nsutils.Store) http.HandlerFunc {
 // the settings' units written as Nightscout writes them, "mg/dl" or "mmol", which followers like Nightguard read
 func Status(ctx context.Context) map[string]any {
 	units := "mg/dl"
-	if siteContext := httputils.GetSiteContext(ctx); siteContext != nil && *siteContext.GetSettings().GetUnits() == consts.UnitsMMOLL {
+	siteContext := httputils.GetSiteContext(ctx)
+	if siteContext != nil && *siteContext.GetSettings().GetUnits() == consts.UnitsMMOLL {
 		units = "mmol"
 	}
-	return map[string]any{
+	status := map[string]any{
 		"status":            "ok",
 		"apiEnabled":        true,
 		"careportalEnabled": true,
@@ -81,4 +84,30 @@ func Status(ctx context.Context) map[string]any {
 			"units":  units,
 		},
 	}
+	if authorized := authorized(siteContext); authorized != nil {
+		status["authorized"] = authorized
+	}
+	return status
+}
+
+// authorized is the identity's JWT and permissions, as Nightscout's status gives them. LoopFollow takes an identity
+// as one that can write only from an exact api:treatments:create, not a wildcard, so that is listed when it has it
+func authorized(siteContext *httputils.SiteContext) map[string]any {
+	if siteContext == nil || siteContext.IdentityModel == nil || siteContext.Config == nil {
+		return nil
+	}
+	identity, err := nsutils.NighttroopIdentityToNightscoutIdentity(siteContext.IdentityModel.Name, siteContext.IdentityModel.Role)
+	if err != nil {
+		return nil
+	}
+	token, expiresAt, err := siteContext.Config.Security.GenerateUserJWTToken(siteContext.SiteID, siteContext.IdentityModel.Name, string(siteContext.IdentityModel.Role))
+	if err != nil {
+		return nil
+	}
+	permissions := identity.Permissions
+	if nsutils.HasPermission(*identity, "api:treatments:create") {
+		permissions = append(slices.Clone(permissions), "api:treatments:create")
+	}
+	return map[string]any{"token": token, "sub": siteContext.IdentityModel.Name, "permissionGroups": [][]string{permissions},
+		"iat": time.Now().Unix(), "exp": expiresAt.Unix()}
 }

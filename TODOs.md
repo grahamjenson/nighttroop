@@ -82,8 +82,6 @@
        its bolus stats
     1. P4: Keep Loop's `durationType: indefinite` on a Temporary Override, which is kept a week long (#515), so
        LoopFollow shows it as a week rather than indefinite
-    1. P3: Add `authorized` (the JWT and permissionGroups) to status.json, with `api:treatments:create` for a
-       write identity, so LoopFollow shows "Read & Write" rather than "Read"
     1. P4: Keep a treatment's `enteredBy`, which LoopFollow shows for overrides and temp targets, rather than the
        identity's name
     1. P4: Keep the pump's `bolusIncrement`, LoopFollow's remote bolus step
