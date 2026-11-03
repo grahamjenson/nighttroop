@@ -159,8 +159,8 @@ Trio decodes each as `CarbsEntry`: `created_at` (date) and `carbs` (number) requ
 
 Nighttroop ignores `find[carbs][$exists]` and the `enteredBy` filters, so it returns every treatment, and one
 without `carbs` fails the whole list: Trio downloads no carbs (TODO P1). Fixing only `$exists` would be worse:
-Nighttroop returns `enteredBy` as the identity's name (`pwd_phone`), not the `Trio` sent, so Trio would download
-its own carbs and add them again. iAPS sends `find[enteredBy][$ne]` five times instead of `$and`.
+Nighttroop returns `enteredBy` as sent, `Trio`, but without the `enteredBy` filters Trio would download its own
+carbs and add them again. iAPS sends `find[enteredBy][$ne]` five times instead of `$and`.
 
 ### Temp targets: `GET /api/v1/treatments.json`
 

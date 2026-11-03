@@ -213,7 +213,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map ID Identifier
 	// goverter:map GroupType EventType
 	// goverter:map CreatedByIdentityName Subject
-	// goverter:map CreatedByIdentityName EnteredBy
+	// goverter:map . EnteredBy | EventGroupEnteredBy
 	// goverter:map CreatedByAppName App
 	// goverter:map CreatedByDeviceName Device
 	// goverter:map OccurredAt Date
@@ -492,4 +492,13 @@ func ToCorrectionRange(source interface {
 		new(types.FlexibleFloat64(source.GetHighTargetMgdl())),
 	}
 	return correctionRange
+}
+
+// EventGroupEnteredBy is who the app said entered a treatment, as clients look for their own by it (xDrip+ one starting
+// xdrip, Trio Trio, iAPS remote), else the identity that uploaded it
+func EventGroupEnteredBy(source sitedb.EventGroup) *types.ShortString {
+	if source.EnteredBy != nil {
+		return (*types.ShortString)(source.EnteredBy)
+	}
+	return (*types.ShortString)(&source.CreatedByIdentityName)
 }

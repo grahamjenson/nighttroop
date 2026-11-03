@@ -145,7 +145,7 @@ ASSERT_EQUALS "Note" "@0.eventType"
 ASSERT_EQUALS "Pizza night" "@0.notes"
 ASSERT_LENGTH 20 "@0.created_at"
 # timestamp is optional, but force cast to a String when there
-ASSERT_EQUALS null "@0.timestamp"
+ASSERT_LENGTH 20 "@0.timestamp"
 # Overrides.swift: correctionRange as [Int] or targetBottom/targetTop as Int, insulinNeedsScaleFactor and duration
 ASSERT_EQUALS "Temporary Override" "@1.eventType"
 ASSERT_EQUALS 140 "@1.correctionRange.0"
@@ -155,7 +155,8 @@ ASSERT_EQUALS 160 "@1.targetTop"
 ASSERT_EQUALS 0.8 "@1.insulinNeedsScaleFactor"
 ASSERT_EQUALS 60 "@1.duration"
 ASSERT_EQUALS "Running" "@1.reason"
-ASSERT_EXISTS "@1.enteredBy"
+# enteredBy, shown for an override, is as sent
+ASSERT_EQUALS "loop://iPhone" "@1.enteredBy"
 # Bolus.swift and SMB.swift: insulin as Double
 ASSERT_EQUALS "Correction Bolus" "@2.eventType"
 ASSERT_EQUALS 0.35 "@2.insulin"

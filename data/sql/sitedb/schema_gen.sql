@@ -175,6 +175,9 @@ CREATE TABLE event_groups (
     activity_id TEXT UNIQUE REFERENCES activities(id) ON DELETE RESTRICT,
     notification_event_id TEXT UNIQUE REFERENCES notification_events(id) ON DELETE RESTRICT,
 
+    -- who the app says entered it, as Nightscout keeps it, e.g. loop://iPhone or xdrip
+    entered_by TEXT CHECK(length(entered_by) <= 64),
+
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
     reason TEXT CHECK(length(reason) <= 64),

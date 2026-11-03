@@ -1286,6 +1286,16 @@ func (m *EventGroup) SetNotificationEventID(v *string) {
 	m.NotificationEventID = v
 }
 
+// GetEnteredBy returns the EnteredBy value.
+func (m EventGroup) GetEnteredBy() *string {
+	return m.EnteredBy
+}
+
+// SetEnteredBy sets the EnteredBy value and returns the updated EventGroup.
+func (m *EventGroup) SetEnteredBy(v *string) {
+	m.EnteredBy = v
+}
+
 // GetNotes returns the Notes value.
 func (m EventGroup) GetNotes() *string {
 	return m.Notes
@@ -8826,6 +8836,16 @@ func (m *CreateEventGroupParams) SetDurationMinutes(v *int64) {
 	m.DurationMinutes = v
 }
 
+// GetEnteredBy returns the EnteredBy value.
+func (m CreateEventGroupParams) GetEnteredBy() *string {
+	return m.EnteredBy
+}
+
+// SetEnteredBy sets the EnteredBy value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetEnteredBy(v *string) {
+	m.EnteredBy = v
+}
+
 // GetOccurredAt returns the OccurredAt value.
 func (m CreateEventGroupParams) GetOccurredAt() int64 {
 	return m.OccurredAt
@@ -9774,6 +9794,16 @@ func (m UpdateEventGroupParams) GetReason() *string {
 // SetReason sets the Reason value and returns the updated UpdateEventGroupParams.
 func (m *UpdateEventGroupParams) SetReason(v *string) {
 	m.Reason = v
+}
+
+// GetEnteredBy returns the EnteredBy value.
+func (m UpdateEventGroupParams) GetEnteredBy() *string {
+	return m.EnteredBy
+}
+
+// SetEnteredBy sets the EnteredBy value and returns the updated UpdateEventGroupParams.
+func (m *UpdateEventGroupParams) SetEnteredBy(v *string) {
+	m.EnteredBy = v
 }
 
 // GetRawJsonData returns the RawJsonData value.

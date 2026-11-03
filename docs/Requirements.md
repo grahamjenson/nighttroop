@@ -304,6 +304,9 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - A device status keeps its pump's clock, manufacturer and model, its uploader's battery, returned in both
   `uploader.battery` and `uploaderBattery`, and Loop's override in force.
 - A device status keeps Trio's pump `bolusIncrement`, LoopFollow's remote bolus step, while the status as sent is kept.
+- A Nightscout treatment comes back with its `created_at` as `timestamp`, a bolus with its insulin as `programmed`,
+  and a temp basal with `temp` `absolute`, as Loop's NightscoutKit drops treatments without them; a `timestamp`
+  sent is not read.
 - A device status keeps its uploader's `isCharging`, and, while the status as sent is kept, its uploader's `name` and
   `timestamp` and Trio's pump `status.bolusing`, `status.suspended` and battery `string` and `display`.
 - A profile keeps Trio's remote control settings (bundle, device token, APNS environment, team and expiry) and its
@@ -311,7 +314,7 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - A v1 upload of a document with an `_id` replaces the one with that `_id`, or is created with it, as Loop sends an
   override again with its `_id` when it changes, and deletes it by that `_id`.
 - Loop's `Temporary Override` is kept as a temp target, with its correction range and insulin needs scale factor; an
-  indefinite one lasts a week.
+  indefinite one lasts a week, and is given back with `durationType` `indefinite` while the override as sent is kept.
 - An identifier over 36 characters, like an Omnipod dose's `syncIdentifier`, is kept as a hash of it, so two that
   start the same are not taken as one.
 - v1 `profile/current` is the newest profile set itself, not a list of one, with `enteredBy`, as Loop reads it.
@@ -332,6 +335,7 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   device status; `uploader.battery` is the uploader's battery; and a treatment is found by its `uuid` (`find[uuid]`), sent as the `_id` or as xDrip+ makes its `_id`.
 - Trio's and iAPS's `SMB` and `External Insulin` treatments are kept as insulin doses, with their event type.
 - A profile has `enteredBy`, the identity that uploaded it, as Trio needs it to import one.
+- A treatment's `enteredBy` comes back as sent, e.g. `loop://iPhone` or `Trio`, else the identity that uploaded it.
 - A create that names its `identifier` keeps it, and only a document with that identifier is its duplicate.
 - A create naming a deleted document's identifier, or a replace of one, replaces it whatever changed, as Juggluco
   changes a treatment by deleting it and sending it again.
