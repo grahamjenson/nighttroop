@@ -158,7 +158,7 @@ uuid, `_id`, or time within a minute with the same amounts is not added again.
 | `POST devicestatus`, Dexcom transmitter (text `battery`) | Fixed in #512: the battery is left out rather than the status refused |
 | `PUT treatments` with eventType `<none>` (bolus, carbs, note) | Fixed in #512: kept as a Note |
 | `PUT treatments`, `Sensor Start`, and again to update | Works |
-| `PUT treatments`, `Sensor Stop` | Not supported: refused, and the treatments queued after it are lost (TODO P1) |
+| `PUT treatments`, `Sensor Stop` | Fixed in this PR: it was refused, so the treatments queued after it were lost |
 | `GET treatments.json?find[uuid]=` then `DELETE treatments/<_id>` | Fixed in #512: `find[uuid]` was ignored, so the newest treatment was deleted |
 | `GET treatments` download, `Last-Modified` and `Etag` | Works |
 | `POST activity`, steps | Works |
