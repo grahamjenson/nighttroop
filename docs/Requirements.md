@@ -446,10 +446,10 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - An admin adds users and devices, whose credentials are shown once, each with its own copy button and one to copy
   them all. Saying they are saved warns that they are never shown again, and they close only once that is confirmed;
   Go Back keeps them open.
-- A device is added for its client: AAPS, Trio, Loop, xDrip+, Nightguard, SugarPixel or Other. Its credentials say how
-  to set that client up, in numbered steps naming the client's menus and fields in bold, with its Nightscout URL and
-  token filled in, each with its own copy button, and a device for any but Other has its own units set to mg/dL,
-  which those clients need, whatever the site's.
+- A device is added for its client: AAPS, Trio, Loop, xDrip+, xDrip4iOS, Nightguard, SugarPixel or Other. Its
+  credentials say how to set that client up, in numbered steps naming the client's menus and fields in bold, with its
+  Nightscout URL and token filled in, each with its own copy button, and a device for any but Other has its own units
+  set to mg/dL, which those clients need, whatever the site's.
 - The client is picked before the role, as a loop's device (AAPS, Trio or Loop) must be the PWD phone: picking one of
   them sets the role to PWD Phone and locks it, and the server refuses such a device with any other role.
 - An admin can turn an identity off and on, or delete it; an identity cannot lock itself out.

@@ -16,6 +16,23 @@ H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_EQUALS "mg/dl" "@settings.units"
 
+// So does one for xDrip4iOS, whose follower reads `sgv` as mg/dL, and it is not a loop so it can be read only
+NAME create_xdrip4ios
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "iphone", "role": "device_read", "client": "xdrip4ios"}
+ASSERT_STATUS 201
+ASSERT_EQUALS "xdrip4ios" "@result.client"
+ASSERT_EQUALS "device_read" "@result.role"
+SET xdrip4ios_token {{ .create_xdrip4ios.result.ns_token }}
+
+NAME xdrip4ios_status_mgdl
+GET http://{{ .ns_site }}/api/v1/status.json?token={{ .xdrip4ios_token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "mg/dl" "@settings.units"
+
 // Another device follows the site, in mmol/L
 NAME create_other
 POST http://{{ site }}/settings/identities
