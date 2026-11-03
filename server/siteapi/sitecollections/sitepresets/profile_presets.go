@@ -77,11 +77,7 @@ func (s *ProfilePresetsCollection) SearchHTMXResponse(models []*sitemodels.SiteP
 
 // DeleteRow hard deletes the one profile, as the Nightscout API does presets, leaving the rest of its store
 func (s *ProfilePresetsCollection) DeleteRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) error {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return err
-	}
-	_, err = q.HardDeleteProfilePreset(ctx, sitedb.HardDeleteProfilePresetParams{ID: id})
+	_, err := siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).HardDeleteProfilePreset, sitedb.HardDeleteProfilePresetParams{ID: id})
 	return err
 }
 

@@ -138,8 +138,3 @@
 1. P4: Finish splitting the request logger's `NewLoggerWithConfig` (`utils/httputils/logger.go`): pull its level
    choice and route params into functions, and drop its always empty `baseAttributes`
 
-## Code
-
-1. P4: Run the summary daily and profile preset `DeleteRow`s through `siteapiutils.SiteQuery`, as the other
-   site collections do, rather than opening the site queries by hand
-
