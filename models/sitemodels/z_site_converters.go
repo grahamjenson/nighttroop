@@ -1745,6 +1745,44 @@ func ProfileSwitchToUpdate(source *SiteProfileSwitch, context *httputils.SiteCon
 	}
 	return sitedbUpdateProfileSwitchParams
 }
+func PushCredentialFromDB(source *controldb.PushCredential) *PushCredential {
+	var pSitemodelsPushCredential *PushCredential
+	if source != nil {
+		var sitemodelsPushCredential PushCredential
+		sitemodelsPushCredential.ID = (*source).ID
+		sitemodelsPushCredential.Name = (*source).Name
+		sitemodelsPushCredential.Provider = constsPushProviderToConstsPushProvider((*source).Provider)
+		sitemodelsPushCredential.TeamOrProjectID = (*source).TeamOrProjectID
+		if (*source).KeyID != nil {
+			xstring := *(*source).KeyID
+			sitemodelsPushCredential.KeyID = &xstring
+		}
+		sitemodelsPushCredential.Apps = JSONStrings((*source).AppsJson)
+		sitemodelsPushCredential.BundleIDs = JSONStringsPtr((*source).BundleIdsJson)
+		sitemodelsPushCredential.CreatedAt = (*source).CreatedAt
+		sitemodelsPushCredential.UpdatedAt = (*source).UpdatedAt
+		sitemodelsPushCredential.CreatedByIdentityName = (*source).CreatedByIdentityName
+		pSitemodelsPushCredential = &sitemodelsPushCredential
+	}
+	return pSitemodelsPushCredential
+}
+func PushCredentialToCreate(source *PushCredential, context *httputils.SiteContext) controldb.CreatePushCredentialParams {
+	var controldbCreatePushCredentialParams controldb.CreatePushCredentialParams
+	if source != nil {
+		controldbCreatePushCredentialParams.SiteID = ContextSiteIDPtr(context)
+		controldbCreatePushCredentialParams.Name = (*source).Name
+		controldbCreatePushCredentialParams.Provider = constsPushProviderToConstsPushProvider((*source).Provider)
+		controldbCreatePushCredentialParams.TeamOrProjectID = (*source).TeamOrProjectID
+		if (*source).KeyID != nil {
+			xstring := *(*source).KeyID
+			controldbCreatePushCredentialParams.KeyID = &xstring
+		}
+		controldbCreatePushCredentialParams.AppsJson = StringsJSON((*source).Apps)
+		controldbCreatePushCredentialParams.BundleIdsJson = StringsJSONPtr((*source).BundleIDs)
+		controldbCreatePushCredentialParams.CreatedByIdentityName = ContextIdentityNameValue(context)
+	}
+	return controldbCreatePushCredentialParams
+}
 func SyncSourceFromDB(source *controldb.SiteSyncSource, context *security.SecurityConfig) (*SyncSource, error) {
 	var pSitemodelsSyncSource *SyncSource
 	if source != nil {
@@ -2081,6 +2119,17 @@ func TempTargetToUpdate(source *SiteTempTarget, context *httputils.SiteContext) 
 		sitedbUpdateTempTargetParams.ID = (*source).ID
 	}
 	return sitedbUpdateTempTargetParams
+}
+func constsPushProviderToConstsPushProvider(source consts.PushProvider) consts.PushProvider {
+	var constsPushProvider consts.PushProvider
+	switch source {
+	case consts.PushProviderAPNs:
+		constsPushProvider = consts.PushProviderAPNs
+	case consts.PushProviderFCM:
+		constsPushProvider = consts.PushProviderFCM
+	default: // ignored
+	}
+	return constsPushProvider
 }
 func constsSyncSourceTypeToConstsSyncSourceType(source consts.SyncSourceType) consts.SyncSourceType {
 	var constsSyncSourceType consts.SyncSourceType
