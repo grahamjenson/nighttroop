@@ -91,6 +91,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   dropped, and the logs then say how many.
 - Logs, events and errors can be narrowed to one site, request or background job run by its ID. An event's, error's
   or log's details link to the rows of its request and job.
+- Every DB query is timed, until its rows are read, and one that takes `SLOW_QUERY_MS` (100 ms) or longer is logged as
+  a `Slow query` with its DB, its query's name, how long it took and how many rows it gave, but never its values, and
+  the request, site and identity it was for. A write transaction waiting for the write lock is logged as `BEGIN`.
 - Each sign in to the control site, and each refused one, is an event with the country (and city, where the server
   has DB-IP's City Lite) its IP address is estimated to be from. The IP address itself is not kept.
 

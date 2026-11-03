@@ -21,6 +21,7 @@ import (
 	"log/slog"
 	{{ if eq .PkgName "sitedb" }}"time"{{ end }}
 
+	"nighttroop.t1d.nz/data/sql/sqltiming"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/backup"
 	"nighttroop.t1d.nz/utils/config"
@@ -323,7 +324,7 @@ func OpenSqliteDB(path string, cacheSize int) (*sql.DB, error) {
 	// cannot wait for a snapshot that is already stale. Read only transactions still begin deferred.
 	dsn := fmt.Sprintf("file:%s?_cache_size=%v&_journal_mode=WAL&_busy_timeout=5000&_foreign_keys=1&_txlock=immediate", path, -cacheSize)
 
-	sqldb, err := sql.Open("sqlite", dsn)
+	sqldb, err := sqltiming.Open("{{ .PkgName }}", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open sqlite db: %w", err)
 	}
@@ -352,7 +353,7 @@ const maxIdleConns = 32
 
 func OpenInMemorySqliteDB() (*sql.DB, error) {
 
-	sqldb, err := sql.Open("sqlite", ":memory:")
+	sqldb, err := sqltiming.Open("{{ .PkgName }}", ":memory:")
 	if err != nil {
 		return nil, fmt.Errorf("cannot open sqlite db: %w", err)
 	}
