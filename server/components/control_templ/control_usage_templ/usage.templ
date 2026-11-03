@@ -151,6 +151,7 @@ templ Usage(model controlmodels.Usage) {
 				}
 			}
 		</section>
+		@slowestQueries(model)
 	</div>
 }
 
@@ -188,4 +189,48 @@ templ tile(id, label, value, note string) {
 		<div id={ id } class="mt-1 text-xl font-bold tabular-nums text-gray-900">{ value }</div>
 		<div class="text-xs text-gray-500">{ note }</div>
 	</div>
+}
+
+// numberClass right aligns a column of numbers
+func numberClass(number bool) string {
+	if number {
+		return "text-right tabular-nums"
+	}
+	return ""
+}
+
+// slowestQueries are the DB queries whose sampled runs took the longest in all, where speeding one up saves the most
+templ slowestQueries(model controlmodels.Usage) {
+	<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
+		<h2 class="text-sm font-semibold text-brand-night">Slowest queries</h2>
+		<p class="mb-3 text-xs text-gray-500">{ fmt.Sprintf("By the total time of the %d%% of queries sampled since the server started", model.QuerySamplePercent) }</p>
+		@table.Table(table.Props{ID: "control--usage--queries", Class: "rounded-lg border border-gray-200"}) {
+			@table.Header() {
+				@table.Row() {
+					for i, head := range []string{"Query", "Runs", "Mean ms", "p95 ms", "Max ms", "Total ms"} {
+						@table.Head(table.HeadProps{Class: numberClass(i > 0)}) {
+							{ head }
+						}
+					}
+				}
+			}
+			@table.Body() {
+				if len(model.SlowestQueries) == 0 {
+					<tr><td colspan="6" class="p-4 text-sm text-gray-500">No queries sampled yet.</td></tr>
+				}
+				for _, q := range model.SlowestQueries {
+					@table.Row() {
+						@table.Cell(table.CellProps{Class: "font-mono text-xs"}) {
+							{ q.DB + "." + q.Query }
+						}
+						for _, value := range []string{fmt.Sprint(q.Count), fmt.Sprintf("%.1f", q.MeanMs), fmt.Sprintf("%.1f", q.P95Ms), fmt.Sprintf("%.1f", q.MaxMs), fmt.Sprintf("%.0f", q.TotalMs)} {
+							@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+								{ value }
+							}
+						}
+					}
+				}
+			}
+		}
+	</section>
 }

@@ -37,4 +37,11 @@ ASSERT_VISIBLE #control--usage--disk + div >> text=/free on disk$/
 ASSERT_VISIBLE #control--usage--routes td >> text=/^site GET \/$/
 // Only signed in requests are counted, so no static file, unmatched or public page is
 ASSERT_NOT_VISIBLE #control--usage--routes td >> text=/static files|unmatched|^public /
+// The DB queries whose sampled runs took the longest in all, by their DB and name; which they are depends on what else
+// the test server ran
+ASSERT_VISIBLE #control--usage--queries
+ASSERT_TEXT_VISIBLE Slowest queries
+ASSERT_NOT_VISIBLE #control--usage--queries td >> text=No queries sampled yet.
+ASSERT_VISIBLE #control--usage--queries td >> text=/^(site|control|jobs|logs|live)db\.\S/ >> nth=0
+ASSERT_VISIBLE #control--usage--queries th >> text=/^p95 ms$/
 SCREENSHOT usage

@@ -197,6 +197,8 @@ type ServerConfig struct {
 
 	// SlowQueryMS is how many milliseconds a DB query runs before it is logged as slow, with its name; 0 logs none
 	SlowQueryMS int
+	// QuerySamplePercent is how many in a hundred DB queries are kept in the usage page's slowest queries
+	QuerySamplePercent int
 
 	// Socket.IO Config, what one site's live update sessions may hold and send
 	SocketPingIntervalInSeconds int
@@ -363,6 +365,7 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		TruncateIntervalInSeconds: configIntSelect(dotenv, "TRUNCATE_INTERVAL_IN_SECONDS", 60),
 		LogsDBMaxRowsPerTable:     configIntSelect(dotenv, "LOGS_DB_MAX_ROWS_PER_TABLE", 100000),
 		SlowQueryMS:               configIntSelect(dotenv, "SLOW_QUERY_MS", 100),
+		QuerySamplePercent:        configIntSelect(dotenv, "QUERY_SAMPLE_PERCENT", 10),
 
 		// Archiving limits
 		DeleteAfterInactivityMins:  configIntSelect(dotenv, "DELETE_AFTER_INACTIVITY_MINS", 60*24*7), // 1 week

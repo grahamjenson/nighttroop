@@ -48,6 +48,7 @@ func run() error {
 
 	setupSentry(serverConfig)
 	sqltiming.SetSlowThreshold(time.Duration(serverConfig.SlowQueryMS) * time.Millisecond)
+	sqltiming.SetSamplePercent(serverConfig.QuerySamplePercent)
 
 	// Create a context that will be cancelled when the program receives a SIGTERM signal.
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)

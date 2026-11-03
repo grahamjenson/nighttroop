@@ -3,6 +3,7 @@ package controlmodels
 import (
 	"time"
 
+	"nighttroop.t1d.nz/data/sql/sqltiming"
 	"nighttroop.t1d.nz/utils/usage"
 )
 
@@ -28,6 +29,11 @@ type Usage struct {
 	ResourcesSince     int64             `json:"resources_since"`
 	MemoryAlertPercent int               `json:"memory_alert_percent"`
 	DiskAlertPercent   int               `json:"disk_alert_percent"`
+
+	// SlowestQueries are the DB queries whose sampled runs took the longest in all since the server started, of the
+	// QuerySamplePercent kept
+	SlowestQueries     []sqltiming.QueryStat `json:"slowest_queries"`
+	QuerySamplePercent int                   `json:"query_sample_percent"`
 }
 
 // ResourceReading is a check of the server's resources: its mean CPU since the check before and the longest it was at

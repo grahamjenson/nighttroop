@@ -62,6 +62,7 @@ Limits written per minute are rates; their burst is how many can be used at once
 | `TRUNCATE_INTERVAL_IN_SECONDS` | `60` | How often the logs DB is trimmed and the jobs are summarised |
 | `LOGS_DB_MAX_ROWS_PER_TABLE` | `100000` | How many of the newest logs, events and errors each logs DB table keeps |
 | `SLOW_QUERY_MS` | `100` | How many milliseconds a DB query (or a transaction waiting for the write lock) runs before it is logged as a `Slow query`, with its DB, its sqlc name, how long it took and how many rows it gave, but never its values; `0` logs none |
+| `QUERY_SAMPLE_PERCENT` | `10` | How many in a hundred DB queries have their time kept, from 0 to 100, for the control usage page's slowest queries: those that took the longest in all since the server started; `0` keeps none |
 | `MEMORY_ALERT_PERCENT` | `60` | The memory used, of the container's limit or else the machine's, at or over which the control site is warned |
 | `DISK_ALERT_PERCENT` | `60` | The space used on the DBs' disk at or over which the control site is warned |
 | `DISK_ALERT_FREE_GB` | `100` | The space free on the DBs' disk, in GB, at or over which the disk never warns, however full it is |

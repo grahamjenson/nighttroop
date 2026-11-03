@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/data/sql/sqltiming"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/livedb"
 	"nighttroop.t1d.nz/models/controlmodels"
@@ -16,8 +17,8 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-// usageRoutes is how many of the most asked for routes the usage page shows
-const usageRoutes = 25
+// usageRoutes is how many of the most asked for routes the usage page shows, and usageQueries of the slowest queries
+const usageRoutes, usageQueries = 25, 25
 
 // UsageHandler is how many use the server and how much, and its resources, which its page asks for every 10 seconds
 func UsageHandler(w http.ResponseWriter, r *http.Request) {
@@ -58,6 +59,7 @@ func UsageHandler(w http.ResponseWriter, r *http.Request) {
 	model.Server = config.Usage.Server(config.DBDir(), now)
 	model.ResourcesSince = now.Add(-db.KeepResourceReadings).UnixMilli()
 	model.MemoryAlertPercent, model.DiskAlertPercent = config.MemoryAlertPercent, config.DiskAlertPercent
+	model.SlowestQueries, model.QuerySamplePercent = sqltiming.Slowest(usageQueries), config.QuerySamplePercent
 	readings, err := controlContext.ControlDB.Live.Queries.ResourceReadingsSince(ctx, livedb.ResourceReadingsSinceParams{Since: model.ResourcesSince})
 	if err != nil {
 		slog.ErrorContext(r.Context(), "failed to read the server's resource checks", "error", err)

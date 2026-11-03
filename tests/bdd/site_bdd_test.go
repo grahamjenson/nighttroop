@@ -17,6 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/background"
 	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/data/sql/sqltiming"
 	"nighttroop.t1d.nz/server"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
@@ -37,6 +38,8 @@ func TestMain(m *testing.M) {
 	// Every scenario logs in from 127.0.0.1, and the shards share one config's rate limiters, so the per-IP login
 	// burst is shared across all files. They use nearly 100 attempts, so leave room for more files.
 	os.Setenv("SITE_LOGIN_PER_MINUTE_BURST", "1000")
+	// The servers here are not started by main, which samples the queries the usage page shows, so every one is
+	sqltiming.SetSamplePercent(100)
 	os.Exit(m.Run())
 }
 
