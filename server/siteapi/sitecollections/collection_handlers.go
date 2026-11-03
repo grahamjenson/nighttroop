@@ -117,54 +117,22 @@ func NewHandler[R, M any](collection CollectionNew[R, M]) http.HandlerFunc {
 // UPDATE
 ///////
 
+// UpdateHandler updates the model with the URL's id
 func UpdateHandler[R, M any](collection CollectionUpdate[R, M]) http.HandlerFunc {
-
-	return func(w http.ResponseWriter, r *http.Request) {
-
-		siteContext := SiteContextFor(w, r, collection.GetName(), siteapiutils.ActionUpdate)
-		if siteContext == nil {
-			return
-		}
-		id := chi.URLParam(r, "id")
-
-		requestModel, herr := apiutils.ExtractModelFromRequest[M](siteContext.ContentType, r)
-		if herr != nil {
-			writeError(w, r, siteContext.AcceptType, herr)
-			return
-		}
-
-		tx := siteapiutils.NewCollectionTx(r.Context(), siteContext)
-		defer tx.Rollback()
-		oldModel, _, herr := get(r.Context(), tx, collection, id, siteContext)
-		if herr == nil && oldModel == nil {
-			herr = apiutils.ErrNotFound
-		}
-		if herr != nil {
-			writeError(w, r, siteContext.AcceptType, herr)
-			return
-		}
-
-		herr = update(r.Context(), tx, collection, siteContext, oldModel, requestModel)
-		if herr = tx.Finish(herr); herr != nil {
-			writeError(w, r, siteContext.AcceptType, herr)
-			return
-		}
-
-		WriteResponse(w, r, siteContext, http.StatusOK, requestModel, collection.UpdateHTMXResponse(requestModel), false)
-	}
+	return updateHandler(collection, nil, siteapiutils.ActionUpdate)
 }
 
-/////
-// UPSERT HANDLER
-/////
-
 // UpsertHandler creates the model with the URL's id, or updates it when there is one
-
 func UpsertHandler[R, M any](collection CollectionUpsert[R, M]) http.HandlerFunc {
+	return updateHandler(collection, collection, siteapiutils.ActionCreate, siteapiutils.ActionUpdate)
+}
+
+// updateHandler updates the model with the URL's id; when there is none, creator creates it, or without one it is not found
+func updateHandler[R, M any](collection CollectionUpdate[R, M], creator CollectionCreate[R, M], actions ...siteapiutils.Action) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		siteContext := SiteContextFor(w, r, collection.GetName(), siteapiutils.ActionCreate, siteapiutils.ActionUpdate)
+		siteContext := SiteContextFor(w, r, collection.GetName(), actions...)
 		if siteContext == nil {
 			return
 		}
@@ -179,15 +147,14 @@ func UpsertHandler[R, M any](collection CollectionUpsert[R, M]) http.HandlerFunc
 		tx := siteapiutils.NewCollectionTx(r.Context(), siteContext)
 		defer tx.Rollback()
 		oldModel, _, herr := get(r.Context(), tx, collection, id, siteContext)
-		if herr != nil {
-			writeError(w, r, siteContext.AcceptType, herr)
-			return
-		}
-
-		if oldModel == nil {
-			herr = create(r.Context(), tx, collection, &id, siteContext, requestModel)
-		} else {
+		switch {
+		case herr != nil:
+		case oldModel != nil:
 			herr = update(r.Context(), tx, collection, siteContext, oldModel, requestModel)
+		case creator != nil:
+			herr = create(r.Context(), tx, creator, &id, siteContext, requestModel)
+		default:
+			herr = apiutils.ErrNotFound
 		}
 		if herr = tx.Finish(herr); herr != nil {
 			writeError(w, r, siteContext.AcceptType, herr)
