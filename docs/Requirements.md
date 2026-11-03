@@ -271,8 +271,7 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - A v1 search by `find[_id]` that finds nothing, such as a deleted treatment, is an empty list, not a 404.
 - A search with a filter on a field or with an operator Nighttroop does not know, a v1 `find[...]` (e.g.
   `find[notes]=x`) or a v3 `field$operator` (e.g. `notes$eq=x`), is an empty list, as nothing would match in
-  Nightscout, but for Trio's and iAPS's `enteredBy` and `find[duration][$exists]`, which are left out. Any other
-  parameter, such as xDrip+'s `rr`, is not a filter and is left out.
+  Nightscout. Any other parameter, such as xDrip+'s `rr`, is not a filter and is left out.
 - **v2**: authorization (a token for a JWT, and a check of one of its permissions), properties and summary.
 - **v3**: create, read, update, patch, delete, search and history of each collection, plus version, status,
   lastModified and settings.
@@ -342,6 +341,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - Trio's and iAPS's `SMB` and `External Insulin` treatments are kept as insulin doses, with their event type.
 - A profile has `enteredBy`, the identity that uploaded it, as Trio needs it to import one.
 - A treatment's `enteredBy` comes back as sent, e.g. `loop://iPhone` or `Trio`, else the identity that uploaded it.
+- Treatments can be found by whether they have `carbs` or a `duration` (`find[carbs][$exists]`), by `enteredBy`, and
+  without some `enteredBy`s (`find[enteredBy][$ne]`, repeated or under `find[$and][n]`), as Trio and iAPS fetch them.
 - A create that names its `identifier` keeps it, and only a document with that identifier is its duplicate.
 - A create naming a deleted document's identifier, or a replace of one, replaces it whatever changed, as Juggluco
   changes a treatment by deleting it and sending it again.

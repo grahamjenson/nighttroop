@@ -160,7 +160,7 @@ uuid, `_id`, or time within a minute with the same amounts is not added again.
 | `PUT treatments` with eventType `<none>` (bolus, carbs, note) | Fixed in #512: kept as a Note |
 | `PUT treatments`, `Sensor Start`, and again to update | Works |
 | `PUT treatments`, `Sensor Stop` | Not supported: refused, and the treatments queued after it are lost (TODO P1) |
-| `GET treatments.json?find[uuid]=` then `DELETE treatments/<_id>` | Fixed in #512: `find[uuid]` was ignored, so the newest treatment was deleted. Since this PR any other unknown `find[...]` gives nothing, so it deletes nothing |
+| `GET treatments.json?find[uuid]=` then `DELETE treatments/<_id>` | Fixed in #512: `find[uuid]` was ignored, so the newest treatment was deleted. Any other unknown `find[...]` now gives nothing, so it deletes nothing |
 | `GET treatments` download, `Last-Modified` and `Etag` | Works |
 | `POST activity`, steps | Works |
 | `POST activity`, heart rate and motion | Fixed in this PR (only the time was kept) |

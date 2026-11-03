@@ -391,6 +391,22 @@ func EventGroupSearch(source Query) sitedb.SearchEventGroupsParams {
 		xint6433 := *source.DurationLT
 		sitedbSearchEventGroupsParams.DurationLT = &xint6433
 	}
+	if source.CarbsExists != nil {
+		xbool := *source.CarbsExists
+		sitedbSearchEventGroupsParams.CarbsExists = &xbool
+	}
+	if source.DurationExists != nil {
+		xbool2 := *source.DurationExists
+		sitedbSearchEventGroupsParams.DurationExists = &xbool2
+	}
+	if source.EnteredByEq != nil {
+		xstring10 := *source.EnteredByEq
+		sitedbSearchEventGroupsParams.EnteredByEq = &xstring10
+	}
+	if source.EnteredByNin != nil {
+		xstring11 := *source.EnteredByNin
+		sitedbSearchEventGroupsParams.EnteredByNin = &xstring11
+	}
 	sitedbSearchEventGroupsParams.IncludeDeleted = source.IncludeDeleted
 	sitedbSearchEventGroupsParams.Skip = source.Skip
 	sitedbSearchEventGroupsParams.Limit = source.Limit
@@ -1011,6 +1027,19 @@ func QueryValueToQuery(source QueryValues) Query {
 		xstring6 := typesShortStringToString(*source.NameEq)
 		nsqueryQuery.NameEq = &xstring6
 	}
+	if source.CarbsExists != nil {
+		xbool := typesFlexibleBoolToBool(*source.CarbsExists)
+		nsqueryQuery.CarbsExists = &xbool
+	}
+	if source.DurationExists != nil {
+		xbool2 := typesFlexibleBoolToBool(*source.DurationExists)
+		nsqueryQuery.DurationExists = &xbool2
+	}
+	if source.EnteredByEq != nil {
+		xstring7 := typesShortStringToString(*source.EnteredByEq)
+		nsqueryQuery.EnteredByEq = &xstring7
+	}
+	nsqueryQuery.EnteredByNin = QueryStringArrayToString(source.EnteredByNin)
 	nsqueryQuery.HasFilters = GetHasFilters(source)
 	if source.SortOrder() != nil {
 		nsqueryQuerySort := QuerySort(*source.SortOrder())
@@ -1018,8 +1047,8 @@ func QueryValueToQuery(source QueryValues) Query {
 	}
 	nsqueryQuery.Fields = QueryStringArrayToArray(source.Fields)
 	if source.Envelope != nil {
-		xbool := typesFlexibleBoolToBool(*source.Envelope)
-		nsqueryQuery.Envelope = &xbool
+		xbool3 := typesFlexibleBoolToBool(*source.Envelope)
+		nsqueryQuery.Envelope = &xbool3
 	}
 	nsqueryQuery.UnknownFilter = GetUnknownFilter(source)
 	return nsqueryQuery

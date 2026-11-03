@@ -90,7 +90,7 @@ func TestParseQueryValues(t *testing.T) {
 	}
 }
 
-// Each filter a client sends that Nighttroop does not know gives nothing, but for those left out for a client
+// Each filter a client sends that Nighttroop does not know gives nothing; any other parameter is not a filter
 func TestHasUnknownFilter(t *testing.T) {
 	tests := []struct {
 		key     string
@@ -110,11 +110,11 @@ func TestHasUnknownFilter(t *testing.T) {
 		{"find[$and][12][enteredBy][$ne]", false},
 		{"find[uuid_v2]", true},
 		{"find[notes]", true},
-		{"find[carbs][$exists]", true},
+		{"find[carbs][$exists]", false},
 		{"find[sgv][$exists]", true},
 		{"find[$and][0][notes][$ne]", true},
 		{"find[$or][0][id][$eq]", true},
-		{"find[enteredBy][$eq]", true},
+		{"find[enteredBy][$eq]", false},
 		{"notes$eq", true},
 		{"enteredBy$ne", true},
 	}
@@ -123,6 +123,35 @@ func TestHasUnknownFilter(t *testing.T) {
 			query, err := ParseQueryValues(url.Values{test.key: {"1"}})
 			require.NoError(t, err)
 			require.Equal(t, test.unknown, query.HasUnknownFilter())
+		})
+	}
+}
+
+// Trio sends each enteredBy it leaves out as find[$and][n][enteredBy][$ne] and iAPS repeats find[enteredBy][$ne],
+// encoding them twice; each is one of the $nin
+func TestParseEnteredByNotIn(t *testing.T) {
+	tests := []struct {
+		name  string
+		query url.Values
+		want  []string
+	}{
+		{"trio $and", url.Values{"find[$and][0][enteredBy][$ne]": {"Trio"}, "find[$and][1][enteredBy][$ne]": {"iAPS"}}, []string{"Trio", "iAPS"}},
+		{"iaps repeated", url.Values{"find[enteredBy][$ne]": {"iAPS", "iAPS%20Watch"}}, []string{"iAPS", "iAPS Watch"}},
+		{"with a $nin", url.Values{"find[enteredBy][$ne]": {"Trio"}, "find[enteredBy][$nin]": {"Loop"}}, []string{"Trio", "Loop"}},
+		{"none", url.Values{"find[enteredBy]": {"remote"}}, nil},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			qv, err := ParseQueryValues(tt.query)
+			require.NoError(t, err)
+			if tt.want == nil {
+				assert.Nil(t, qv.EnteredByNin)
+				assert.Equal(t, "remote", qv.EnteredByEq.String())
+				return
+			}
+			require.NotNil(t, qv.EnteredByNin)
+			assert.ElementsMatch(t, tt.want, qv.EnteredByNin.ToArray())
+			assert.True(t, qv.HasAnyFilters())
 		})
 	}
 }

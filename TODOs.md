@@ -51,6 +51,16 @@
    and check migrations
 1. P4: Keep which batches were uploaded, and with which sites, across restarts, as the first backup round after a
    restart uploads every batch again though their backups are current
+1. Push notifications (the control DB's `push_credentials` and `push_registrations`):
+    1. P2: Collections for push credentials, a site admin's for their site and a control admin's for every site,
+       keeping the `.p8` key or service account encrypted and never returning it, with a cap on each site's
+    1. P2: An identity registers an app's push token, kept encrypted with its SHA-256; Loop's comes from its profile's
+       `loopSettings.deviceToken`, `bundleIdentifier` and `isAPNSProduction`
+    1. P2: Send pushes with the credential `PushCredentialFor` finds: APNs with an ES256 token from the `.p8`, then FCM
+       with the service account, rate limited per site, recording each push and deleting tokens the service says
+       are gone
+    1. P2: Delete a site's push credentials and registrations when the site is deleted
+    1. P2: Site settings and control pages to add, list and delete push credentials, with BDD tests
 1. Nightscout API:
     1. P1: Nightscout clients (AAPS, Loop, LoopFollow, xDrip4iOS, Nightguard, the xDrip+ follower) read `sgv` and
        `mbg`, and AAPS its temp targets and profiles, as mg/dL whatever the `units`, but the API gives them in the
@@ -84,7 +94,7 @@
        bolus again when it ends early, with the same date and `syncIdentifier`, and the first upload's duration and
        amount are kept. Trio's ended temp targets and overrides, and xDrip4iOS's re-sent readings, need the same
     1. P2: Loop remote commands: `POST /api/v2/notifications/loop`, sent to Loop as an Apple push to its profile's
-       `loopSettings.deviceToken`
+       `loopSettings.deviceToken`, once push notifications can be sent
     1. P4: Keep a Loop device status's pump `pumpID`, `suspended` and `bolusing`, and its uploader `name` and
        `timestamp`, once the status as sent is cleared; they are given back only while it is kept
 1. xDrip4iOS ([docs/clients/xdrip4ios.md](docs/clients/xdrip4ios.md)):
@@ -93,21 +103,17 @@
        `mg/dL` or rounded mmol/L makes it upload the BG check again each sync and add a copy in the app
     1. P2: Delete entries by a query, `DELETE /api/v1/entries.json?find[type]=sgv&find[date][$gte]=..&find[date][$lte]=..`
        and `find[date][$in][]=..`, which xDrip4iOS sends when a reading is deleted or readings are rebuilt
-    1. P4: `GET /api/v1/status.json` without credentials, which xDrip4iOS's follower service status reads, is a
-       401, so it shows a fetch error; answering it would show which sites exist
 1. xDrip+ ([docs/clients/xdrip.md](docs/clients/xdrip.md)):
     1. P1: Keep xDrip+'s `Sensor Stop` treatments. An unknown eventType is refused, and xDrip+ uploads its treatments
        one at a time, stops at a refused one and marks them all done, so the treatments queued after a Sensor Stop are
        never uploaded. Adding the type needs its kinds of event in `sitemodels.EventGroupTypeKinds`, which also adds it to
        the site's Add Event Group menu, a UI change
+    1. P2: An unknown `find[...]` filter is ignored, so the search gives everything, and a client that deletes the
+       first match (as xDrip+ does by `find[uuid]`) deletes the wrong document. Give nothing for a filter on an unknown
+       field
     1. P4: Give back a treatment's `uuid` as sent; xDrip+ matches its own by `enteredBy` starting `xdrip`, kept, and
        falls back to matching time and amounts
 1. Trio and iAPS ([docs/clients/trio.md](docs/clients/trio.md)):
-    1. P1: Filter v1 treatments on `find[carbs][$exists]` and `find[duration][$exists]`, and on `enteredBy`
-       (`find[enteredBy]`, `find[enteredBy][$ne]` and `find[$and][n][enteredBy][$ne]`), together: a carbs fetch
-       gives nothing, as `$exists` is unknown, and once it gets only carbs Trio would import
-       its own back as new ones and double them, as without the `enteredBy` filters (`enteredBy` comes back as
-       sent) it gets its own; iAPS takes any announcement as a remote command, not only `enteredBy` `remote`
     1. P2: v1 delete by query (`DELETE /api/v1/treatments.json?find[id][$eq]=`, `find[created_at][$eq]` with
        `find[eventType][$eq]`, and entries' `find[$or]`) is a 405; Trio deletes carbs, insulin and glucose
        this way, and the override before uploading its run, so override runs are never uploaded. It needs

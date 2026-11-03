@@ -1,3 +1,7 @@
+CREATE INDEX push_credentials_site ON push_credentials (site_id, provider) WHERE deleted_at IS NULL;
+
+CREATE INDEX push_registrations_identity ON push_registrations (site_id, identity_id);
+
 CREATE TABLE control_identities (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
 
@@ -18,6 +22,44 @@ CREATE TABLE control_identities (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32),
 
     deleted_at INTEGER -- soft delete here, but on delete will wipe out password and such
+) STRICT;
+
+CREATE TABLE push_credentials (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    site_id TEXT REFERENCES sites(id), -- NULL is for every site
+
+    name TEXT NOT NULL CHECK(length(name) <= 64),
+    provider TEXT NOT NULL CHECK(provider IN ('apns', 'fcm')),
+    team_or_project_id TEXT NOT NULL CHECK(length(team_or_project_id) <= 64), -- APNs team ID, or Firebase project ID
+    key_id TEXT CHECK(length(key_id) <= 32), -- APNs key ID; FCM has none
+    secret_enc TEXT CHECK(length(secret_enc) <= 8192), -- the .p8 key or service account JSON, encrypted; NULL once deleted
+
+    apps_json TEXT NOT NULL CHECK(length(apps_json) <= 1024 AND json_valid(apps_json)), -- the apps it pushes to, e.g. ["loop"]
+    bundle_ids_json TEXT CHECK(length(bundle_ids_json) <= 2048 AND json_valid(bundle_ids_json)), -- the only bundle IDs or package names it pushes to; NULL is any
+
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32),
+    deleted_at INTEGER
+) STRICT;
+
+CREATE TABLE push_registrations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    site_id TEXT NOT NULL REFERENCES sites(id),
+    identity_id INTEGER NOT NULL REFERENCES site_identities(id) ON DELETE CASCADE,
+
+    app TEXT NOT NULL CHECK(length(app) <= 32), -- consts.PushApp, e.g. loop
+    provider TEXT NOT NULL CHECK(provider IN ('apns', 'fcm')),
+    bundle_id TEXT NOT NULL CHECK(length(bundle_id) <= 255), -- iOS bundle ID or Android package name
+    production INTEGER NOT NULL DEFAULT 1 CHECK(production IN (0, 1)), -- APNs production, else sandbox (a development build)
+
+    token_enc TEXT NOT NULL CHECK(length(token_enc) <= 2048), -- encrypted
+    token_hash TEXT NOT NULL UNIQUE CHECK(length(token_hash) = 64), -- SHA-256 of the token, to find it without decrypting
+
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    last_pushed_at INTEGER,
+    last_error TEXT CHECK(length(last_error) <= 256)
 ) STRICT;
 
 CREATE TABLE server_settings (
