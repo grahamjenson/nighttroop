@@ -52,15 +52,15 @@
 1. P4: Keep which batches were uploaded, and with which sites, across restarts, as the first backup round after a
    restart uploads every batch again though their backups are current
 1. Push notifications (the control DB's `push_credentials` and `push_registrations`):
-    1. P2: Collections for push credentials, a site admin's for their site and a control admin's for every site,
-       keeping the `.p8` key or service account encrypted and never returning it, with a cap on each site's
+    1. P2: A control collection for push credentials for every site, as the site's (`/settings/push-credentials`)
+    1. P3: Add push credentials to `clients/nighttroop/openapi.json` and its client
     1. P2: An identity registers an app's push token, kept encrypted with its SHA-256; Loop's comes from its profile's
        `loopSettings.deviceToken`, `bundleIdentifier` and `isAPNSProduction`
     1. P2: Send pushes with the credential `PushCredentialFor` finds: APNs with an ES256 token from the `.p8`, then FCM
        with the service account, rate limited per site, recording each push and deleting tokens the service says
        are gone
     1. P2: Delete a site's push credentials and registrations when the site is deleted
-    1. P2: Site settings and control pages to add, list and delete push credentials, with BDD tests
+    1. P2: A control page to add, list and delete push credentials for every site, with BDD tests
 1. Nightscout API:
     1. P1: Nightscout clients (AAPS, Loop, LoopFollow, xDrip4iOS, Nightguard, the xDrip+ follower) read `sgv` and
        `mbg`, and AAPS its temp targets and profiles, as mg/dL whatever the `units`, but the API gives them in the
