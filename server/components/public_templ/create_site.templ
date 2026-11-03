@@ -186,10 +186,19 @@ templ CreateSiteInfo(newsite publicmodels.NewSiteInfo) {
 					height: 96,
 					correctLevel: QRCode.CorrectLevel.M
 				});
-				// A code is only digits, so a letter typed or pasted is dropped
-				document.getElementById("public--site-info--totp").addEventListener("input", (e) => {
-					e.target.value = e.target.value.replace(/\D/g, "");
-				});
+				// A code is only digits, so a letter typed or pasted is dropped, and it is checked as soon as its sixth
+				// digit is in, without a click; the same code is not sent twice on its own, so a wrong one waits for another
+				(function () {
+					const code = document.getElementById("public--site-info--totp");
+					let sent = "";
+					code.addEventListener("input", () => {
+						code.value = code.value.replace(/\D/g, "");
+						if (code.value.length === 6 && code.value !== sent) {
+							sent = code.value;
+							document.getElementById("public--totp-check").requestSubmit();
+						}
+					});
+				})();
 			</script>
 		}
 		@step("3", "Log in to your site", "With the admin password and a code from the app") {
