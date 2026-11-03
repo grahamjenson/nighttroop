@@ -141,8 +141,8 @@ func Replace(store nsutils.Store) http.HandlerFunc {
 		if !ok {
 			return
 		}
-		// If-Unmodified-Since is not checked yet, so a replace can overwrite a change made since the client read it
-		record, created, err := store.Replace(r.Context(), collection, identifier, doc, canCreate, nsutils.RawParam(r))
+		// A record changed after If-Unmodified-Since is not replaced, so a client cannot overwrite a change it has not seen
+		record, created, err := store.Replace(nsutils.WithIfUnmodifiedSince(r), collection, identifier, doc, canCreate, nsutils.RawParam(r))
 
 		if err != nil {
 			nsutils.WriteError(w, err)
@@ -169,9 +169,8 @@ func Patch(store nsutils.Store) http.HandlerFunc {
 		if !ok {
 			return
 		}
-		// If-Unmodified-Since is not checked yet, so a patch can overwrite a change made since the client read it
-
-		record, err := store.Patch(r.Context(), collection, identifier, doc, nsutils.RawParam(r))
+		// A record changed after If-Unmodified-Since is not patched, so a client cannot overwrite a change it has not seen
+		record, err := store.Patch(nsutils.WithIfUnmodifiedSince(r), collection, identifier, doc, nsutils.RawParam(r))
 
 		if err != nil {
 			nsutils.WriteError(w, err)

@@ -272,6 +272,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - **v2**: authorization (a token for a JWT, and a check of one of its permissions), properties and summary.
 - **v3**: create, read, update, patch, delete, search and history of each collection, plus version, status,
   lastModified and settings.
+- A v3 replace or patch with `If-Unmodified-Since` of a document changed in a later second is refused with a 412 and
+  changes nothing, checked in the same transaction as the change, so a client cannot overwrite a change it has not seen.
 - The v3 status shows what the token may do to each collection, e.g. `crud` for an uploader and `r` for a read only
   token, so apps like AAPS only upload with a token that may write.
 - A v3 history includes deleted documents, with `isValid` false, so apps learn of deletions; a search leaves them

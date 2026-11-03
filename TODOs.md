@@ -83,7 +83,6 @@
     1. P4: Return a food's Nightscout `portion`, `unit` and `gi` as sent; AAPS takes 0, g and none without them
     1. P4: Keep arbitrary API v3 `settings` documents and support v2 authorization roles and subjects, which AAPS 4's
        client control (pairing and remote commands) uses
-    1. P2: Check If-Unmodified-Since on API v3 replace and patch, in the same query as the update
     1. P4: Only write a treatment's events that changed, rather than every one on each update
     1. P4: Keep when a site's settings last changed, for API v3 lastModified
 1. LoopFollow ([docs/clients/loopfollow.md](docs/clients/loopfollow.md)):
