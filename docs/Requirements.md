@@ -339,6 +339,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   entries is left out and the readings with it kept; an uploader battery that is not a number is left out of its
   device status; `uploader.battery` is the uploader's battery; and a treatment is found by its `uuid` (`find[uuid]`), sent as the `_id` or as xDrip+ makes its `_id`.
 - Trio's and iAPS's `SMB` and `External Insulin` treatments are kept as insulin doses, with their event type.
+- xDrip+'s `Sensor Stop` treatments are kept as a site or sensor change, with their event type, so the treatments it
+  uploads after one are kept too; the site can add a Sensor Stop change and a Sensor Stop event group.
 - A profile has `enteredBy`, the identity that uploaded it, as Trio needs it to import one.
 - A treatment's `enteredBy` comes back as sent, e.g. `loop://iPhone` or `Trio`, else the identity that uploaded it.
 - Treatments can be found by whether they have `carbs` or a `duration` (`find[carbs][$exists]`), by `enteredBy`, and
