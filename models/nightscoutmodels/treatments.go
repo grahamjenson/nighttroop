@@ -106,6 +106,20 @@ type Treatment struct {
 	RawJsonData string `json:"-"`
 }
 
+// MarshalJSON writes units as Nightscout does, as xDrip4iOS reads a BG check's glucose as mg/dL only when its units
+// are exactly mg/dl, and AAPS knows only mg/dl and mmol; any spelling is read
+func (t Treatment) MarshalJSON() ([]byte, error) {
+	type Alias Treatment
+	var units *string
+	if t.Units != nil {
+		units = new(t.Units.Nightscout())
+	}
+	return json.Marshal(struct {
+		Units *string `json:"units,omitempty"`
+		Alias
+	}{units, Alias(t)})
+}
+
 func (t *Treatment) UnmarshalJSON(data []byte) error {
 	type Alias Treatment
 	// We here extract some fields used by other models as a unique identfier

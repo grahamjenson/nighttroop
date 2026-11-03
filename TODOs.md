@@ -53,7 +53,8 @@
    restart uploads every batch again though their backups are current
 1. Nightscout API:
     1. P1: Nightscout clients (AAPS, Loop, LoopFollow, xDrip4iOS, Nightguard, the xDrip+ follower) read `sgv` and
-       `mbg`, and AAPS its temp targets and profiles, as mg/dL whatever the `units`, but the API gives them in the
+       `mbg`, and AAPS its temp targets and profiles, as mg/dL whatever the `units`, and xDrip4iOS matches a BG
+       check it uploaded by its exact mg/dL, so in mmol/L uploads it again each sync, but the API gives them in the
        identity's units, then the site's. A device added for a client in Add Device is in mg/dL (#524) and an admin
        can set any identity's units (#523), but the site's first PWD phone, a device added as Other, and LoopFollow,
        xDrip4iOS and an AAPSClient follower, which are not in Add Device's clients, still get the site's units. Add
@@ -88,9 +89,6 @@
     1. P4: Keep a Loop device status's pump `pumpID`, `suspended` and `bolusing`, and its uploader `name` and
        `timestamp`, once the status as sent is cleared; they are given back only while it is kept
 1. xDrip4iOS ([docs/clients/xdrip4ios.md](docs/clients/xdrip4ios.md)):
-    1. P2: Return a BG Check's `glucose` as xDrip4iOS can match it: it reads it as mg/dL only when `units` is
-       exactly `mg/dl`, and as mmol/L otherwise, and matches an upload by its exact value, so Nighttroop's
-       `mg/dL` or rounded mmol/L makes it upload the BG check again each sync and add a copy in the app
     1. P2: Delete entries by a query, `DELETE /api/v1/entries.json?find[type]=sgv&find[date][$gte]=..&find[date][$lte]=..`
        and `find[date][$in][]=..`, which xDrip4iOS sends when a reading is deleted or readings are rebuilt
     1. P4: `GET /api/v1/status.json` without credentials, which xDrip4iOS's follower service status reads, is a

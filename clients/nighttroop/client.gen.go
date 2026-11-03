@@ -244,7 +244,7 @@ type NsDocument struct {
 	SrvModified *int64   `json:"srvModified,omitempty"`
 	Type        *string  `json:"type,omitempty"`
 
-	// Units The units of sgv and mbg, the identity's
+	// Units The units of sgv and mbg, or of a treatment's glucose, the identity's; a treatment's are written as Nightscout writes them, mg/dl or mmol
 	Units                *string                `json:"units,omitempty"`
 	UtcOffset            *int64                 `json:"utcOffset,omitempty"`
 	AdditionalProperties map[string]interface{} `json:"-"`

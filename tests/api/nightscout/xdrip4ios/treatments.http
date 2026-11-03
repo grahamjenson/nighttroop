@@ -9,6 +9,8 @@
 # Bodies are TreatmentEntry.dictionaryRepresentationForNightscoutUpload
 
 INCLUDE steps/new_ns_site.steps
+# A BG check's glucose is matched in mg/dL, so its identity's units are set to mg/dL (see docs/clients/xdrip4ios.md)
+INCLUDE steps/ns_units_mgdl.steps
 
 #####
 # 1. Upload new treatments
@@ -48,9 +50,9 @@ ASSERT_EQUALS "Exercise" "@2.eventType"
 ASSERT_EQUALS 45 "@2.duration"
 ASSERT_CONTAINS "T00:04:00" "@3.created_at"
 ASSERT_EQUALS "BG Check" "@3.eventType"
-# Glucose comes back in the site's units, so the app's exact match on 120 mg/dL fails (see the TODO)
-ASSERT_EQUALS 6.66 "@3.glucose"
-ASSERT_EQUALS "mmol/L" "@3.units"
+# matchesTreatmentEntry reads glucose as mg/dL only when units is exactly mg/dl, then matches the exact value
+ASSERT_EQUALS 120 "@3.glucose"
+ASSERT_EQUALS "mg/dl" "@3.units"
 ASSERT_EQUALS "Note" "@4.eventType"
 ASSERT_EQUALS "xdrip4ios note" "@4.notes"
 ASSERT_EQUALS "Site Change" "@5.eventType"
@@ -106,6 +108,22 @@ ASSERT_CONTAINS "T00:01:00.123" "@7.created_at"
 ASSERT_EQUALS 3 "@7.insulin"
 ASSERT_EQUALS 30 "@6.carbs"
 ASSERT_EQUALS 45 "@5.duration"
+ASSERT_EQUALS 120 "@4.glucose"
+ASSERT_EQUALS "mg/dl" "@4.units"
+
+# In mmol/L a BG check comes back rounded, with units mmol, which xDrip4iOS reads as mmol/L, so 6.66 is not the
+# 120 mg/dL it uploaded and it uploads it again (see the docs)
+NAME xdrip4ios_units_mmol
+PATCH http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+B {"value": "mmol/L"}
+ASSERT_STATUS 200
+
+NAME xdrip4ios_download_bg_check_mmol
+GET http://{{ site }}/api/v1/treatments?find[_id]={{ dig "xdrip4ios_upload_treatments.3._id" }}&count=1&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 6.66 "@0.glucose"
+ASSERT_EQUALS "mmol" "@0.units"
 
 #####
 # 5. Delete a treatment by its _id, then 4. find it gone

@@ -14,8 +14,8 @@ The tests are `tests/api/nightscout/aaps/*.http` and `tests/socket/nightscout/aa
   (`nsclientV3/extensions/GlucoseValueExtension.kt` `NSSgvV3.toGV`). It knows only the units `mg/dl` and `mmol`
   (`core/nssdk/.../localmodel/entry/NsUnits.kt`, and `GlucoseUnit.fromText` in `core/data`); anything else, such
   as Nighttroop's `mmol/L`, is read as mg/dL. Nighttroop returns glucose in the identity's units, so on an identity
-  in mmol/L an AAPS follower reads a 6.0 mmol/L reading as 6 mg/dL, and temp targets, BG checks and profiles the
-  same. Uploads are fine either way: AAPS labels them `mg/dl`. A device added for AAPS in the site's Add Device is
+  in mmol/L an AAPS follower reads a 6.0 mmol/L reading as 6 mg/dL, and temp targets and profiles the same. A
+  treatment's `units`, such as a BG check's, are written `mg/dl` or `mmol`, as Nightscout writes them. Uploads are fine either way: AAPS labels them `mg/dl`. A device added for AAPS in the site's Add Device is
   set to mg/dL (#524), and an admin can change any identity's units (#523). The tests set mg/dL first
   (`ns_units_mgdl.steps`).
 - The URL is the site's Nightscout host. AAPS adds `https://` when it has no scheme and `/api/` after it

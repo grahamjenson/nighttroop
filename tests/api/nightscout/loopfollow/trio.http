@@ -106,7 +106,7 @@ ASSERT_LENGTH 7 "@"
 # BGCheck.swift: glucose as Double, in its units
 ASSERT_EQUALS "BG Check" "@0.eventType"
 ASSERT_EQUALS 135 "@0.glucose"
-ASSERT_EQUALS "mg/dL" "@0.units"
+ASSERT_EQUALS "mg/dl" "@0.units"
 # Overrides.swift: a Trio override's name is in notes
 ASSERT_EQUALS "Exercise" "@1.eventType"
 ASSERT_EQUALS "Walk" "@1.notes"

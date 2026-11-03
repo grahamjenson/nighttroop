@@ -66,6 +66,14 @@ func (u *Units) Stringp() *string {
 	return &str
 }
 
+// Nightscout is the units as Nightscout writes them, "mg/dl" or "mmol", the only ones AAPS knows
+func (u Units) Nightscout() string {
+	if u == UnitsMMOLL {
+		return "mmol"
+	}
+	return "mg/dl"
+}
+
 func (u *Units) FromMGDL(mgdl float64) float64 {
 	if u == nil {
 		u = new(UnitsMGDL)

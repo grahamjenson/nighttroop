@@ -286,6 +286,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   as a notification.
 - Glucose is stored in mg/dL and returned and accepted in the settings' units.
 - The v1 status has the settings' units in `settings.units`, as Nightscout writes them (`mg/dl` or `mmol`).
+- A treatment's `units`, such as a BG check's, are written as Nightscout writes them (`mg/dl` or `mmol`), so
+  xDrip4iOS reads a BG check in mg/dL as mg/dL; any spelling, such as `mg/dL` or `mmol/L`, is accepted.
 - The v1 status has `authorized` with a JWT and the token's permissions, with `api:treatments:create` for one that
   can write, so LoopFollow shows a read token as "Read" and a write token as "Read & Write".
 - The v3 version needs no token, so an app can check for v3 before it signs in.
