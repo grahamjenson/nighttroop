@@ -1296,6 +1296,16 @@ func (m *EventGroup) SetEnteredBy(v *string) {
 	m.EnteredBy = v
 }
 
+// GetUuid returns the Uuid value.
+func (m EventGroup) GetUuid() *string {
+	return m.Uuid
+}
+
+// SetUuid sets the Uuid value and returns the updated EventGroup.
+func (m *EventGroup) SetUuid(v *string) {
+	m.Uuid = v
+}
+
 // GetNotes returns the Notes value.
 func (m EventGroup) GetNotes() *string {
 	return m.Notes
@@ -8846,6 +8856,16 @@ func (m *CreateEventGroupParams) SetEnteredBy(v *string) {
 	m.EnteredBy = v
 }
 
+// GetUuid returns the Uuid value.
+func (m CreateEventGroupParams) GetUuid() *string {
+	return m.Uuid
+}
+
+// SetUuid sets the Uuid value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetUuid(v *string) {
+	m.Uuid = v
+}
+
 // GetOccurredAt returns the OccurredAt value.
 func (m CreateEventGroupParams) GetOccurredAt() int64 {
 	return m.OccurredAt
@@ -9804,6 +9824,16 @@ func (m UpdateEventGroupParams) GetEnteredBy() *string {
 // SetEnteredBy sets the EnteredBy value and returns the updated UpdateEventGroupParams.
 func (m *UpdateEventGroupParams) SetEnteredBy(v *string) {
 	m.EnteredBy = v
+}
+
+// GetUuid returns the Uuid value.
+func (m UpdateEventGroupParams) GetUuid() *string {
+	return m.Uuid
+}
+
+// SetUuid sets the Uuid value and returns the updated UpdateEventGroupParams.
+func (m *UpdateEventGroupParams) SetUuid(v *string) {
+	m.Uuid = v
 }
 
 // GetRawJsonData returns the RawJsonData value.
