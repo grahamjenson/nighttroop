@@ -89,4 +89,7 @@ type Query struct {
 	SortOrder  *QuerySort `json:"sort_order,omitempty"`
 	Fields     []string   `json:"fields,omitempty"`
 	Envelope   *bool      `json:"envelope,omitempty"`
+
+	// UnknownFilter is whether a filter is on a field or with an operator Nighttroop does not know, so nothing matches
+	UnknownFilter bool `json:"unknown_filter,omitempty"`
 }
