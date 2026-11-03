@@ -2,6 +2,7 @@ package config
 
 import (
 	"bufio"
+	"encoding/base32"
 	"flag"
 	"fmt"
 	"log/slog"
@@ -96,6 +97,11 @@ type ServerConfig struct {
 	// TestSite shows every page a large banner saying it is a test site whose data is wiped, so it is not taken for
 	// a real one
 	TestSite bool
+
+	// StagingAdminPassword and StagingAdminTOTPSecret, in staging, are the control admin made when it starts without
+	// one, so wiping its data never needs it set up again. The TOTP secret is base32, as authenticator apps take it.
+	StagingAdminPassword   string
+	StagingAdminTOTPSecret string
 
 	// GeoIPDBPath is a DB-IP IP to City Lite database, for the city sign ins are from; without one only the country is
 	GeoIPDBPath string
@@ -296,7 +302,10 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 
 		SupportEmail: configStringSelect(dotenv, "SUPPORT_EMAIL", DefaultSupportEmail),
 		FeedbackURL:  configStringSelect(dotenv, "FEEDBACK_URL", ""),
-		TestSite:     configSelect(dotenv, "TEST_SITE", false, strconv.ParseBool),
+		TestSite:     configSelect(dotenv, "TEST_SITE", mode == consts.Staging, strconv.ParseBool),
+
+		StagingAdminPassword:   configStringSelect(dotenv, "STAGING_ADMIN_PASSWORD", ""),
+		StagingAdminTOTPSecret: configStringSelect(dotenv, "STAGING_ADMIN_TOTP_SECRET", ""),
 		GeoIPDBPath:  configStringSelect(dotenv, "GEOIP_DB_PATH", ""),
 
 		// security
@@ -433,6 +442,10 @@ func (config *ServerConfig) IsTest() bool {
 	return config.Mode == consts.Test
 }
 
+func (config *ServerConfig) IsStaging() bool {
+	return config.Mode == consts.Staging
+}
+
 func (config *ServerConfig) IsDevOrTest() bool {
 	return config.IsDev() || config.IsTest()
 }
@@ -462,6 +475,23 @@ func (config *ServerConfig) ValidateClean() error {
 		return fmt.Errorf("http is only allowed in development or test mode")
 	}
 
+	if config.IsStaging() {
+		return validateStagingAdmin(config.StagingAdminPassword, config.StagingAdminTOTPSecret)
+	}
+
+	return nil
+}
+
+// validateStagingAdmin refuses a staging admin whose password is short, or whose TOTP secret is not base32 of at
+// least 16 characters (80 bits), the least authenticator apps take
+func validateStagingAdmin(password, totpSecret string) error {
+	if len(password) < 16 {
+		return fmt.Errorf("staging needs STAGING_ADMIN_PASSWORD of at least 16 characters")
+	}
+	key, err := base32.StdEncoding.WithPadding(base32.NoPadding).DecodeString(strings.ToUpper(strings.TrimRight(totpSecret, "=")))
+	if err != nil || len(key) < 10 {
+		return fmt.Errorf("staging needs STAGING_ADMIN_TOTP_SECRET of at least 16 base32 characters")
+	}
 	return nil
 }
 
@@ -621,7 +651,7 @@ func readDotEnvFile(filename string) (map[string]string, error) {
 func printServerConfig(config ServerConfig) {
 	// This is a concise printing of all non-secure information at startup
 	slog.Info("Server Config",
-		"Mode", map[consts.ServerMode]string{consts.Production: "Production", consts.Development: "Development", consts.Test: "Test"}[config.Mode],
+		"Mode", map[consts.ServerMode]string{consts.Production: "Production", consts.Development: "Development", consts.Test: "Test", consts.Staging: "Staging"}[config.Mode],
 		"Host", fmt.Sprintf("%s://%s:%d", config.HostProtocol, config.HostName, config.HostPort),
 		"S3", fmt.Sprintf("%s/%s", config.S3URL, config.S3Bucket),
 		"TrustedProxies", config.TrustedProxies,

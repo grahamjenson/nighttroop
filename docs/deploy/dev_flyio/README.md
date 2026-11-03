@@ -8,8 +8,10 @@ try the newest code.
 - **It keeps its data until a migration change breaks it.** The databases are on a volume, so they last through
   deploys and restarts. When a new version changes a migration so an old database can no longer be migrated, that deploy wipes
   them and starts empty, so a tester never hits data the new version cannot read. Nothing is backed up.
-- **It says so on every page.** `TEST_SITE` puts a large banner at the top of every page, so nobody mistakes it for a
-  real site or keeps anything they need on it.
+- **It says so on every page.** It runs in `staging` mode, which puts a large banner at the top of every page, so
+  nobody mistakes it for a real site or keeps anything they need on it.
+- **Its control plane never needs setting up.** Staging makes the control admin from two secrets you set once, so you
+  sign in with the same password and authenticator code after every deploy, even one that wipes the data.
 
 It is not for real use. For a server that keeps its data, see [the Hostinger guide](../hostinger.md).
 
@@ -29,7 +31,7 @@ The files this guide uses:
 5. [Deploy it the first time](#3-deploy-it-the-first-time)
 6. [Point your domain at it](#4-point-your-domain-at-it)
 7. [Deploy every commit on main](#5-deploy-every-commit-on-main)
-8. [Set up the control plane](#6-set-up-the-control-plane)
+8. [Sign in to the control plane](#6-sign-in-to-the-control-plane)
 9. [Day to day](#day-to-day)
 10. [Troubleshooting](#troubleshooting)
 
@@ -104,7 +106,23 @@ fly apps create nighttroop-dev-yourname
    fly secrets set --app nighttroop-dev-yourname --stage KEY_SETS="$(go run scripts/keysets/create_keysets.go)"
    ```
 
-3. **Optionally**, add more settings from [the config reference](../../config.md):
+3. **Choose the control admin's password and TOTP secret, and store them as secrets.**
+   - Staging won't start without them. They are the control admin's for good, so save both in your password manager
+     and add the TOTP secret to your authenticator app.
+   - The password needs at least 16 characters, and the TOTP secret at least 16 base32 characters (`A`–`Z`, `2`–`7`).
+     This makes both and prints them to save, then sets them:
+
+   ```sh
+   PASSWORD="$(openssl rand -base64 24)"
+   TOTP_SECRET="$(python3 -c 'import base64,os; print(base64.b32encode(os.urandom(20)).decode())')"
+   echo "Control admin password: $PASSWORD"; echo "TOTP secret: $TOTP_SECRET"
+   fly secrets set --app nighttroop-dev-yourname --stage \
+     STAGING_ADMIN_PASSWORD="$PASSWORD" STAGING_ADMIN_TOTP_SECRET="$TOTP_SECRET"
+   ```
+
+   - Never put them in `fly.toml`: the server is open to everyone, and this is its control plane.
+
+4. **Optionally**, add more settings from [the config reference](../../config.md):
    - non-secret ones in `fly.toml`'s `[env]`;
    - secret ones with `fly secrets set --stage`, e.g. `SENTRY_DSN`, to see the testers' errors.
 
@@ -125,7 +143,7 @@ fly deploy . --app nighttroop-dev-yourname --config docs/deploy/dev_flyio/fly.to
 Check it is up:
 
 - [ ] `fly status --app nighttroop-dev-yourname` shows one machine, `started`, with its check passing.
-- [ ] `fly logs --app nighttroop-dev-yourname` shows the server listening, and the setup code.
+- [ ] `fly logs --app nighttroop-dev-yourname` shows the server listening, in `Staging` mode.
 
 ## 4. Point your domain at it
 
@@ -187,21 +205,17 @@ time CI finishes on a push to `main`.
 To stop deploying, delete the `DEV_FLYIO_APP` variable. To stop the server too, run
 `fly scale count 0 --app nighttroop-dev-yourname`, or `fly apps destroy nighttroop-dev-yourname` to remove it.
 
-## 6. Set up the control plane
+## 6. Sign in to the control plane
 
-The first deploy, and any deploy that wipes the databases, starts an empty server, so its control plane needs setting
-up again then. Testers don't need it; you only need it to see the server's sites, jobs and logs.
+Testers don't need it; you only need it to see the server's sites, jobs and logs.
 
-1. Find the setup code in the logs:
+1. Open <https://control.dev.example.com>.
+2. Sign in as `admin`, with `STAGING_ADMIN_PASSWORD` and a code from the authenticator app you gave
+   `STAGING_ADMIN_TOTP_SECRET`.
 
-   ```sh
-   fly logs --app nighttroop-dev-yourname | grep -A1 "SET UP NIGHTTROOP"
-   ```
-
-   - The code is printed on every start until setup is done, so `fly machine restart` shows it again.
-2. Open <https://control.dev.example.com/setup> and enter the code.
-3. Save the admin's password and add the TOTP secret to your authenticator app, then finish setup.
-   - A password manager entry for the dev server can be overwritten each time.
+The admin is made whenever the server starts without one, so it is the same after every deploy, even one that wipes
+the databases. Changing the secrets doesn't change an admin the server already has: wipe it by hand (see below) to make
+the admin again from the new ones.
 
 ## Day to day
 

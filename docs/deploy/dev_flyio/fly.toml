@@ -5,11 +5,11 @@
 primary_region = "syd"
 
 [env]
-  MODE = "production"
+  # Runs as production does, with the "this is a test site" banner on every page, and its control admin made from the
+  # STAGING_ADMIN_PASSWORD and STAGING_ADMIN_TOTP_SECRET secrets, so a wipe never needs it set up again
+  MODE = "staging"
   HOST_NAME = "dev.example.com"
   HOST_PROTOCOL = "https"
-  # The large "this is a test site" banner on every page
-  TEST_SITE = "true"
   # On the volume mounted below. No S3 is set, so nothing is backed up or restored.
   DATA_DIR = "/data"
   # Far fewer than a real server: enough for testers, little for anyone filling it

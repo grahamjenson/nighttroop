@@ -18,6 +18,10 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   set it up. Wrong codes are rate limited.
 - The setup page shows the control admin's username, password and TOTP secret (with a QR code) once, and saves the
   admin only when a code from that TOTP secret is entered.
+- A staging server (`MODE=staging`) is never set up: it starts with the control admin `admin` of its
+  `STAGING_ADMIN_PASSWORD` and `STAGING_ADMIN_TOTP_SECRET`, made again whenever its data is wiped, and will not start
+  without them. Otherwise it runs as production does, its site admins getting their own random credentials, and shows
+  the test site banner.
 
 ### Limiting a server to some countries
 
