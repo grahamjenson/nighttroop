@@ -176,7 +176,7 @@ When the user deletes a reading or smooths or rebuilds readings: `DELETE /api/v1
 | Token in the query, or in `api-secret` for the Test button | Works | `auth.http` |
 | API_SECRET's SHA1 in `api-secret` | Works when the API_SECRET is the token (#512); any other secret is a 401 | `auth.http`, `tests/api/nightscout/xdrip/` |
 | `GET /api/v1/experiments/test` | Fixed in #513 (was a 400) | `auth.http` |
-| `GET /api/v1/status.json` without credentials | Not supported, a 401 (TODO P4) | |
+| `GET /api/v1/status.json` without credentials | Won't fix: a 401, as from a Nightscout with `AUTH_DEFAULT_ROLES=denied`, so the follower service status shows a fetch error; a 200 would make LoopFollow connect without a token | `auth.http` |
 | Upload readings, and the same batch again | Works | `uploader.http` |
 | Upload calibrations (`cal` and `mbg`) | Fixed in #512 (`cal` failed the batch) | `uploader.http` |
 | Uploader battery in `uploader.battery` | Fixed in #512 (was dropped) | `uploader.http` |

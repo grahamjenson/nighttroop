@@ -1216,10 +1216,16 @@ WHERE
     AND (CAST(?41 AS INTEGER) IS NULL OR a.duration_minutes <= ?41 OR tb.duration_minutes <= ?41 OR tt.duration_minutes <= ?41 OR ps.duration_minutes <= ?41)
     AND (CAST(?42 AS INTEGER) IS NULL OR a.duration_minutes < ?42 OR tb.duration_minutes < ?42 OR tt.duration_minutes < ?42 OR ps.duration_minutes < ?42)
 
+    -- Trio's carbs and temp targets have a carbs or a duration, and who entered one is as sent, else the identity
+    AND (CAST(?43 AS BOOL) IS NULL OR (fi.carbs IS NOT NULL) = ?43)
+    AND (CAST(?44 AS BOOL) IS NULL OR (COALESCE(eg.duration_minutes, a.duration_minutes, tb.duration_minutes, tt.duration_minutes, ps.duration_minutes) IS NOT NULL) = ?44)
+    AND (CAST(?45 AS TEXT) IS NULL OR COALESCE(eg.entered_by, eg.created_by_identity_name) = ?45)
+    AND (CAST(?46 AS TEXT) IS NULL OR COALESCE(eg.entered_by, eg.created_by_identity_name) NOT IN (SELECT value FROM json_each(?46)))
 
-    AND (CAST(?43 AS BOOL) IS TRUE OR eg.deleted_at IS NULL)
+
+    AND (CAST(?47 AS BOOL) IS TRUE OR eg.deleted_at IS NULL)
 ORDER BY eg.occurred_at DESC
-LIMIT CAST(?45 AS INTEGER) OFFSET CAST(?44 AS INTEGER)
+LIMIT CAST(?49 AS INTEGER) OFFSET CAST(?48 AS INTEGER)
 `
 
 type SearchEventGroupsParams struct {
@@ -1265,6 +1271,10 @@ type SearchEventGroupsParams struct {
 	DurationGT     *int64
 	DurationLTE    *int64
 	DurationLT     *int64
+	CarbsExists    *bool
+	DurationExists *bool
+	EnteredByEq    *string
+	EnteredByNin   *string
 	IncludeDeleted bool
 	Skip           int64
 	Limit          int64
@@ -1327,6 +1337,10 @@ func (q *Queries) SearchEventGroups(ctx context.Context, arg SearchEventGroupsPa
 		arg.DurationGT,
 		arg.DurationLTE,
 		arg.DurationLT,
+		arg.CarbsExists,
+		arg.DurationExists,
+		arg.EnteredByEq,
+		arg.EnteredByNin,
 		arg.IncludeDeleted,
 		arg.Skip,
 		arg.Limit,
