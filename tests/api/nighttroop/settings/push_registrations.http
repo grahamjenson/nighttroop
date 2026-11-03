@@ -1,0 +1,146 @@
+// An identity registers the apps on its devices that pushes are sent to, and sees and deletes only its own
+INCLUDE steps/new_site_admin.steps
+
+// The PWD phone and a read only device sign in with their Nightscout tokens
+NAME phone_jwt
+GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ token }}
+ASSERT_STATUS 200
+SET phone_jwt {{ .phone_jwt.token }}
+
+NAME create_viewer_device
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "kitchen", "role": "device_read"}
+ASSERT_STATUS 201
+
+NAME viewer_jwt
+GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ .create_viewer_device.result.ns_token }}
+ASSERT_STATUS 200
+SET viewer_jwt {{ .viewer_jwt.token }}
+
+NAME no_registrations
+GET http://{{ site }}/settings/push-registrations
+H Authorization: Bearer {{ .phone_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
+
+// Loop on the phone registers its APNs device token; the token is never returned
+NAME register_loop
+POST http://{{ site }}/settings/push-registrations
+H Authorization: Bearer {{ .phone_jwt }}
+H Accept: application/json
+B {"app": "loop", "provider": "apns", "bundle_id": "com.TEAM123456.loopkit.Loop", "production": true, "token": "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90"}
+ASSERT_STATUS 201
+ASSERT_EQUALS "loop" "@result.app"
+ASSERT_EQUALS "apns" "@result.provider"
+ASSERT_EQUALS "com.TEAM123456.loopkit.Loop" "@result.bundle_id"
+ASSERT_EQUALS true "@result.production"
+ASSERT_EQUALS null "@result.token"
+SET registration_id {{ .register_loop.result.id }}
+
+// Registering the same token again updates it, rather than adding another
+NAME register_loop_again
+POST http://{{ site }}/settings/push-registrations
+H Authorization: Bearer {{ .phone_jwt }}
+H Accept: application/json
+B {"app": "loop", "provider": "apns", "bundle_id": "com.TEAM123456.loopkit.Loop", "production": false, "token": "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90"}
+ASSERT_STATUS 201
+ASSERT_EQUALS false "@result.production"
+
+NAME phone_registrations
+GET http://{{ site }}/settings/push-registrations
+H Authorization: Bearer {{ .phone_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS null "@result.0.token"
+
+NAME get_registration
+GET http://{{ site }}/settings/push-registrations/{{ .registration_id }}
+H Authorization: Bearer {{ .phone_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "loop" "@result.app"
+
+// Another identity, even the admin, cannot see or delete it
+NAME admin_registrations
+GET http://{{ site }}/settings/push-registrations
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
+
+NAME admin_cannot_get
+GET http://{{ site }}/settings/push-registrations/{{ .registration_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME admin_cannot_delete
+DELETE http://{{ site }}/settings/push-registrations/{{ .registration_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+// What is not a registration is refused
+NAME refuse_bad_token
+POST http://{{ site }}/settings/push-registrations
+H Authorization: Bearer {{ .phone_jwt }}
+H Accept: application/json
+B {"app": "loop", "provider": "apns", "bundle_id": "com.TEAM123456.loopkit.Loop", "token": "not hex"}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "device token in hex" "@message"
+
+NAME refuse_unknown_app
+POST http://{{ site }}/settings/push-registrations
+H Authorization: Bearer {{ .phone_jwt }}
+H Accept: application/json
+B {"app": "nope", "provider": "apns", "bundle_id": "com.TEAM123456.loopkit.Loop", "token": "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90"}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "unknown app" "@message"
+
+NAME refuse_no_token
+POST http://{{ site }}/settings/push-registrations
+H Authorization: Bearer {{ .phone_jwt }}
+H Accept: application/json
+B {"app": "loop", "provider": "apns", "bundle_id": "com.TEAM123456.loopkit.Loop"}
+ASSERT_STATUS 400
+
+// A read only device can register, as a follower that only reads still has alarms pushed to it; the same token moves
+// to the identity that registered it last
+NAME viewer_takes_the_token
+POST http://{{ site }}/settings/push-registrations
+H Authorization: Bearer {{ .viewer_jwt }}
+H Accept: application/json
+B {"app": "t1dcarer", "provider": "apns", "bundle_id": "nz.t1d.carer", "production": true, "token": "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90"}
+ASSERT_STATUS 201
+ASSERT_EQUALS "t1dcarer" "@result.app"
+
+NAME phone_has_none
+GET http://{{ site }}/settings/push-registrations
+H Authorization: Bearer {{ .phone_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
+
+NAME viewer_has_it
+GET http://{{ site }}/settings/push-registrations/{{ .registration_id }}
+H Authorization: Bearer {{ .viewer_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "t1dcarer" "@result.app"
+
+// Deleting it stops pushes to it, as when the app signs out
+NAME viewer_deletes
+DELETE http://{{ site }}/settings/push-registrations/{{ .registration_id }}
+H Authorization: Bearer {{ .viewer_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME deleted_registration
+GET http://{{ site }}/settings/push-registrations/{{ .registration_id }}
+H Authorization: Bearer {{ .viewer_jwt }}
+H Accept: application/json
+ASSERT_STATUS 404

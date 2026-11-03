@@ -117,6 +117,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getPushCredentialStmt, err = db.PrepareContext(ctx, getPushCredential); err != nil {
 		return nil, fmt.Errorf("error preparing query GetPushCredential: %w", err)
 	}
+	if q.getPushRegistrationStmt, err = db.PrepareContext(ctx, getPushRegistration); err != nil {
+		return nil, fmt.Errorf("error preparing query GetPushRegistration: %w", err)
+	}
 	if q.getServerSettingsStmt, err = db.PrepareContext(ctx, getServerSettings); err != nil {
 		return nil, fmt.Errorf("error preparing query GetServerSettings: %w", err)
 	}
@@ -394,6 +397,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getPushCredentialStmt: %w", cerr)
 		}
 	}
+	if q.getPushRegistrationStmt != nil {
+		if cerr := q.getPushRegistrationStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getPushRegistrationStmt: %w", cerr)
+		}
+	}
 	if q.getServerSettingsStmt != nil {
 		if cerr := q.getServerSettingsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getServerSettingsStmt: %w", cerr)
@@ -659,6 +667,7 @@ type Queries struct {
 	getControlIdentityStmt                *sql.Stmt
 	getLiveAndDisabledSitesStmt           *sql.Stmt
 	getPushCredentialStmt                 *sql.Stmt
+	getPushRegistrationStmt               *sql.Stmt
 	getServerSettingsStmt                 *sql.Stmt
 	getSiteStmt                           *sql.Stmt
 	getSiteIDsWithAlarmsStmt              *sql.Stmt
@@ -735,6 +744,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getControlIdentityStmt:                q.getControlIdentityStmt,
 		getLiveAndDisabledSitesStmt:           q.getLiveAndDisabledSitesStmt,
 		getPushCredentialStmt:                 q.getPushCredentialStmt,
+		getPushRegistrationStmt:               q.getPushRegistrationStmt,
 		getServerSettingsStmt:                 q.getServerSettingsStmt,
 		getSiteStmt:                           q.getSiteStmt,
 		getSiteIDsWithAlarmsStmt:              q.getSiteIDsWithAlarmsStmt,
