@@ -152,7 +152,7 @@ device token, bundle and team from the profile.
   `created_at` in UTC.
 - A BG Check is also kept as a meter reading, so it is an `mbg` entry too, and LoopFollow draws it in the BG line.
 - Nighttroop returns the identity's name as `enteredBy`, and drops a treatment's `timestamp`, `automatic` and
-  `durationType`, and a device status' `uploader.isCharging` and `pump.bolusIncrement`.
+  `durationType`, and a device status' `uploader.isCharging`.
 - A search returns at most 1000 records, the newest, by design, and a profile search with no filters only the latest
   store.
 
@@ -176,7 +176,7 @@ device token, bundle and team from the profile.
 | Device status Loop and OpenAPS objects, IOB, COB, predictions | Works |
 | Device status `pump.clock`, `manufacturer`, `model` | Works since #516 (they were dropped) |
 | Device status `pump.pumpID` | Works since #514 while the status as sent is kept, as the latest is |
-| Device status `pump.bolusIncrement` | Not supported, TODO P4 |
+| Device status `pump.bolusIncrement` | Fixed in this PR, while the status as sent is kept, as the latest is |
 | Device status `uploader.battery` | Works since #516 (Loop's was `uploaderBattery` only, Trio's was dropped) |
 | Device status Loop `override` | Works since #516 (it was dropped) |
 | Profile, schedules and Loop's `loopSettings` | Works |

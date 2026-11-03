@@ -302,6 +302,7 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - Loop's and Trio's Suspend Pump and Resume Pump treatments are kept.
 - A device status keeps its pump's clock, manufacturer and model, its uploader's battery, returned in both
   `uploader.battery` and `uploaderBattery`, and Loop's override in force.
+- A device status keeps Trio's pump `bolusIncrement`, LoopFollow's remote bolus step, while the status as sent is kept.
 - A profile keeps Trio's remote control settings (bundle, device token, APNS environment, team and expiry) and its
   override presets, for LoopFollow's Trio Remote Control.
 - A v1 upload of a document with an `_id` replaces the one with that `_id`, or is created with it, as Loop sends an

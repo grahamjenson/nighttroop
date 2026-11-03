@@ -227,6 +227,8 @@ type PumpStatus struct {
 	PumpID         *types.ShortString     `json:"pumpID,omitempty"`
 	Model          *types.ShortString     `json:"model,omitempty"`
 	Suspended      *types.FlexibleBool    `json:"suspended,omitempty"`
+	// Trio's smallest bolus step, which LoopFollow uses for remote boluses
+	BolusIncrement *types.FlexibleFloat64 `json:"bolusIncrement,omitempty"`
 }
 
 type PumpBattery struct {

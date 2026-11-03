@@ -44,7 +44,7 @@ B {
     "device": "Trio",
     "created_at": "{{ time 1 }}",
     "uploader": {"battery": 63},
-    "pump": {"clock": "{{ time 1 }}", "battery": {"percent": 75}, "reservoir": 120.5, "status": {"status": "normal", "bolusing": false, "suspended": false, "timestamp": "{{ time 1 }}"}},
+    "pump": {"clock": "{{ time 1 }}", "battery": {"percent": 75}, "reservoir": 120.5, "status": {"status": "normal", "bolusing": false, "suspended": false, "timestamp": "{{ time 1 }}"}, "bolusIncrement": 0.05},
     "openaps": {
         "version": "0.6.0",
         "iob": {"iob": 2.31, "basaliob": 0.42, "bolusiob": 1.89, "activity": 0.0123, "time": "{{ time 1 }}"},
@@ -144,6 +144,8 @@ ASSERT_EQUALS "Trio" "@0.device"
 ASSERT_LENGTH 20 "@0.pump.clock"
 ASSERT_EQUALS 120.5 "@0.pump.reservoir"
 ASSERT_EQUALS 75 "@0.pump.battery.percent"
+# pump.bolusIncrement is the remote bolus step
+ASSERT_EQUALS 0.05 "@0.pump.bolusIncrement"
 ASSERT_EQUALS 63 "@0.uploader.battery"
 ASSERT_EQUALS null "@0.loop"
 ASSERT_EQUALS null "@0.openaps.failureReason"

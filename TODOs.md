@@ -84,7 +84,6 @@
        LoopFollow shows it as a week rather than indefinite
     1. P4: Keep a treatment's `enteredBy`, which LoopFollow shows for overrides and temp targets, rather than the
        identity's name
-    1. P4: Keep the pump's `bolusIncrement`, LoopFollow's remote bolus step
     1. P4: A profile search with no filters gives only the latest store, so LoopFollow's remote diagnostics see no
        history
 1. Loop ([docs/clients/loop.md](docs/clients/loop.md)):
@@ -127,8 +126,8 @@
        `find[eventType][$eq]`, and entries' `find[$or]`) is a 405; Trio deletes carbs, insulin and glucose
        this way, and the override before uploading its run, so override runs are never uploaded. It needs
        Trio's `id` kept as the identifier, and must refuse any filter it does not know rather than ignore it
-    1. P3: Keep the device status `pump.bolusIncrement`, `status.bolusing` and `suspended`, the pump battery's
-       `string` and `display`, and `uploader.isCharging` Trio sends, for its followers
+    1. P3: Keep the device status `status.bolusing` and `suspended`, the pump battery's `string` and `display`, and
+       `uploader.isCharging` Trio sends, for its followers
 
 ## Bugs
 
