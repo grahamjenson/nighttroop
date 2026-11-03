@@ -51,6 +51,12 @@ type CollectionDeduplicator[NS, DM any] interface {
 	GetDuplicate(q *sitedb.Queries, ctx context.Context, nsModel NS) (*DM, error)
 }
 
+// CollectionStored is a CollectionDB that does more once a model created, replaced or refreshed is stored, outside its
+// transaction, such as keeping what it says in the control DB
+type CollectionStored[NS any] interface {
+	Stored(ctx context.Context, siteContext *httputils.SiteContext, nsModel NS)
+}
+
 // CollectionRefresher is a CollectionDeduplicator whose duplicate takes the values of the model repeating it, as
 // Nightscout upserts one sent again. It is the duplicate as it is now, and whether it changed, which it must not when
 // the values are the same, so a client sending a batch again changes nothing.
@@ -212,6 +218,7 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 	}
 
 	siteContext.PublishModelChange(events.Created, dbModel)
+	c.afterStored(ctx, siteContext, nsModel)
 	return c.document(dbModel, siteContext, raw), false, nil
 }
 
@@ -231,6 +238,7 @@ func (c Collection[NS, DM]) repeated(ctx context.Context, siteContext *httputils
 			return nil, false, httpErr
 		}
 		siteContext.PublishModelChange(events.Updated, refreshed)
+		c.afterStored(ctx, siteContext, nsModel)
 	}
 	return c.document(refreshed, siteContext, raw), true, nil
 }
@@ -471,6 +479,7 @@ func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.
 	} else {
 		siteContext.PublishModelChange(events.Updated, dbCreateModel)
 	}
+	c.afterStored(ctx, siteContext, nsModel)
 	return c.document(dbCreateModel, siteContext, raw), creatingNewRecord, nil
 
 }
@@ -636,4 +645,11 @@ func (c Collection[NS, DM]) stored(dbModel *DM, err error, action string) *nsuti
 // converterContext is who is making a change, which a stored model records
 func converterContext(siteContext *httputils.SiteContext) nightscoutmodels.ConverterContext {
 	return nightscoutmodels.ConverterContext{IdentityID: siteContext.IdentityModel.ID, IdentityName: siteContext.IdentityModel.Name}
+}
+
+// afterStored has the collection do what more it does once the model is stored, if it does any
+func (c Collection[NS, DM]) afterStored(ctx context.Context, siteContext *httputils.SiteContext, nsModel NS) {
+	if after, ok := any(c.db).(CollectionStored[NS]); ok {
+		after.Stored(ctx, siteContext, nsModel)
+	}
 }

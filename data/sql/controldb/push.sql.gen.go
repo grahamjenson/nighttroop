@@ -206,6 +206,39 @@ func (q *Queries) GetPushCredential(ctx context.Context, arg GetPushCredentialPa
 	return &i, err
 }
 
+const getPushRegistration = `-- name: GetPushRegistration :one
+SELECT id, site_id, identity_id, app, provider, bundle_id, production, token_enc, token_hash, created_at, updated_at, last_pushed_at, last_error FROM push_registrations
+WHERE id = ?1 AND site_id = ?2 AND identity_id = ?3
+`
+
+type GetPushRegistrationParams struct {
+	ID         int64
+	SiteID     string
+	IdentityID int64
+}
+
+// A site's registration, if it is the identity's
+func (q *Queries) GetPushRegistration(ctx context.Context, arg GetPushRegistrationParams) (*PushRegistration, error) {
+	row := q.queryRow(ctx, q.getPushRegistrationStmt, getPushRegistration, arg.ID, arg.SiteID, arg.IdentityID)
+	var i PushRegistration
+	err := row.Scan(
+		&i.ID,
+		&i.SiteID,
+		&i.IdentityID,
+		&i.App,
+		&i.Provider,
+		&i.BundleID,
+		&i.Production,
+		&i.TokenEnc,
+		&i.TokenHash,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.LastPushedAt,
+		&i.LastError,
+	)
+	return &i, err
+}
+
 const pushCredentialFor = `-- name: PushCredentialFor :one
 SELECT id, site_id, name, provider, team_or_project_id, key_id, secret_enc, apps_json, bundle_ids_json, created_at, updated_at, created_by_identity_name, deleted_at FROM push_credentials
 WHERE (site_id = ?1 OR site_id IS NULL) AND provider = ?2 AND deleted_at IS NULL

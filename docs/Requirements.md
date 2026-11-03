@@ -311,6 +311,9 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - A `created_at` filter or sort is on when it happened, as `date` is, and `srvCreated` is on when it was uploaded.
 - v3 filters take `field$eq` as well as `field`, e.g. `eventType$eq=Site Change`.
 - A device status keeps its pump's other fields, e.g. AAPS's `extended` with its profile and temp basal.
+- A profile from Loop, with `loopSettings.deviceToken` and `bundleIdentifier`, or from Trio, with them at its top,
+  registers that app's APNs token for pushes for the identity that uploaded it, a production build unless
+  `isAPNSProduction` is false; a token that is not one is not registered, and the profile is still kept.
 - A temp basal's `percent` is Nightscout's change from the basal, as AAPS sends it (e.g. -50 for half, 20 for 1.2x,
   -100 a zero temp, never under -100), and is kept and returned as sent. Sent with only a `percent`, its rate is set
   from the default profile's or profile switch's basal at its start, in the profile's timezone, so changed, and it is
@@ -472,3 +475,13 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 
 - Each identity can set its own units, time zone, language and formats over the site's.
 - Each identity has its own alarms, and snoozing one only quiets it for them.
+- Each identity, a device or user of any role, registers the apps on its devices that pushes are sent to
+  (`/settings/push-registrations`, JSON API): the app (`loop`, `trio`, `loopfollow`, `t1dcarer`), its provider (`apns`
+  or `fcm`), bundle ID, whether it is a production build, and its token, which is kept encrypted and never returned.
+  Registering a token again updates it, and from another identity moves it there; an identity has at most 10, and
+  sees and deletes only its own.
+- An identity can send a test push to one of its registrations
+  (`POST /settings/push-registrations/{id}/test`), with its site's push credential for the app, else the server's.
+  Without one it is refused, saying to add one; a token Apple says is gone deletes the registration (410); another
+  refusal says Apple's reason (502). Each push is recorded on the registration, with its error, if it had one. A site
+  sends at most `SITE_PUSH_PER_MINUTE_LIMIT` pushes a minute. Only APNs pushes are sent so far.

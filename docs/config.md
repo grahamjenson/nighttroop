@@ -89,6 +89,7 @@ Limits written per minute are rates; their burst is how many can be used at once
 | `SITE_UPDATE_SYNC_PER_MINUTE_LIMIT` / `_BURST` | `1` / `4` | A site's changes to its sync settings |
 | `SITE_IDENTITY_CREATE_PER_MINUTE_LIMIT` / `_BURST` | `1` / `5` | A site's new identities and its credential resets, each of which hashes a password with bcrypt or makes a TOTP secret |
 | `SITE_DOWNLOAD_PER_MINUTE_LIMIT` / `_BURST` | `1` / `3` | A site's data downloads, each of which copies its whole DB |
+| `SITE_PUSH_PER_MINUTE_LIMIT` / `_BURST` | `10` / `30` | A site's pushes to its devices' apps, each a request to Apple or Firebase |
 
 ## Socket.IO live updates
 

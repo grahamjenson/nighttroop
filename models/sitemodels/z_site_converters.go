@@ -1783,6 +1783,29 @@ func PushCredentialToCreate(source *PushCredential, context *httputils.SiteConte
 	}
 	return controldbCreatePushCredentialParams
 }
+func PushRegistrationFromDB(source *controldb.PushRegistration) *PushRegistration {
+	var pSitemodelsPushRegistration *PushRegistration
+	if source != nil {
+		var sitemodelsPushRegistration PushRegistration
+		sitemodelsPushRegistration.ID = (*source).ID
+		sitemodelsPushRegistration.App = constsPushAppToConstsPushApp((*source).App)
+		sitemodelsPushRegistration.Provider = constsPushProviderToConstsPushProvider((*source).Provider)
+		sitemodelsPushRegistration.BundleID = (*source).BundleID
+		sitemodelsPushRegistration.Production = (*source).Production
+		sitemodelsPushRegistration.CreatedAt = (*source).CreatedAt
+		sitemodelsPushRegistration.UpdatedAt = (*source).UpdatedAt
+		if (*source).LastPushedAt != nil {
+			xint64 := *(*source).LastPushedAt
+			sitemodelsPushRegistration.LastPushedAt = &xint64
+		}
+		if (*source).LastError != nil {
+			xstring := *(*source).LastError
+			sitemodelsPushRegistration.LastError = &xstring
+		}
+		pSitemodelsPushRegistration = &sitemodelsPushRegistration
+	}
+	return pSitemodelsPushRegistration
+}
 func SyncSourceFromDB(source *controldb.SiteSyncSource, context *security.SecurityConfig) (*SyncSource, error) {
 	var pSitemodelsSyncSource *SyncSource
 	if source != nil {
@@ -2119,6 +2142,21 @@ func TempTargetToUpdate(source *SiteTempTarget, context *httputils.SiteContext) 
 		sitedbUpdateTempTargetParams.ID = (*source).ID
 	}
 	return sitedbUpdateTempTargetParams
+}
+func constsPushAppToConstsPushApp(source consts.PushApp) consts.PushApp {
+	var constsPushApp consts.PushApp
+	switch source {
+	case consts.PushAppLoop:
+		constsPushApp = consts.PushAppLoop
+	case consts.PushAppLoopFollow:
+		constsPushApp = consts.PushAppLoopFollow
+	case consts.PushAppT1DCarer:
+		constsPushApp = consts.PushAppT1DCarer
+	case consts.PushAppTrio:
+		constsPushApp = consts.PushAppTrio
+	default: // ignored
+	}
+	return constsPushApp
 }
 func constsPushProviderToConstsPushProvider(source consts.PushProvider) consts.PushProvider {
 	var constsPushProvider consts.PushProvider

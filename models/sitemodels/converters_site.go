@@ -77,6 +77,13 @@ type SiteConverter interface {
 	PushCredentialToCreate(source *PushCredential, siteContext *httputils.SiteContext) controldb.CreatePushCredentialParams
 
 	///////
+	// PUSH REGISTRATIONS
+	///////
+
+	// goverter:ignore Token
+	PushRegistrationFromDB(source *controldb.PushRegistration) *PushRegistration
+
+	///////
 	// GLUCOSE READINGS
 	///////
 

@@ -2218,6 +2218,36 @@ func (m *GetPushCredentialParams) SetSiteID(v *string) {
 	m.SiteID = v
 }
 
+// GetID returns the ID value.
+func (m GetPushRegistrationParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated GetPushRegistrationParams.
+func (m *GetPushRegistrationParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m GetPushRegistrationParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated GetPushRegistrationParams.
+func (m *GetPushRegistrationParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetIdentityID returns the IdentityID value.
+func (m GetPushRegistrationParams) GetIdentityID() int64 {
+	return m.IdentityID
+}
+
+// SetIdentityID sets the IdentityID value and returns the updated GetPushRegistrationParams.
+func (m *GetPushRegistrationParams) SetIdentityID(v int64) {
+	m.IdentityID = v
+}
+
 // GetSiteID returns the SiteID value.
 func (m PushCredentialForParams) GetSiteID() *string {
 	return m.SiteID
