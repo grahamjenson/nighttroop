@@ -75,6 +75,11 @@ ASSERT_LENGTH 1 "@"
 ASSERT_EXISTS "@0._id"
 ASSERT_EQUALS 1.0870623804830117 "@0.loop.iob.iob"
 ASSERT_EQUALS 50 "@0.pump.reservoir"
+# LoopFollow shows the phone's battery and whether it is charging
+ASSERT_EQUALS 80 "@0.uploader.battery"
+ASSERT_EQUALS false "@0.uploader.isCharging"
+ASSERT_EQUALS "iPhone" "@0.uploader.name"
+ASSERT_EXISTS "@0.uploader.timestamp"
 
 ######
 # NightscoutKit's fetchDeviceStatus (not used by Loop itself): find[created_at] between two ISO dates, and count.

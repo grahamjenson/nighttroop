@@ -85,8 +85,6 @@ func DBToNightscoutDeviceStatus(source *sitedb.DeviceReport, siteContext *httput
 	}
 	if source.DeviceBatteryPercent != nil {
 		nsModel.UploaderBattery = ptr(types.FlexibleFloat64(*source.DeviceBatteryPercent))
-		// Loop and Trio send it in uploader, where LoopFollow reads it
-		nsModel.Uploader = &nightscoutmodels.UploaderStatus{Battery: ptr(types.FlexibleInt64(*source.DeviceBatteryPercent))}
 	}
 	if source.OverrideJson != nil {
 		nsModel.OverrideRaw = ptr(json.RawMessage([]byte(*source.OverrideJson)))
@@ -99,11 +97,28 @@ func DBToNightscoutDeviceStatus(source *sitedb.DeviceReport, siteContext *httput
 	// from the JSON it came in, through the model so only known fields go out; the columns, kept once the JSON is
 	// cleared, fill in the rest
 	var raw struct {
-		Pump *nightscoutmodels.PumpStatus `json:"pump"`
+		Pump     *nightscoutmodels.PumpStatus     `json:"pump"`
+		Uploader *nightscoutmodels.UploaderStatus `json:"uploader"`
 	}
 	pump := nightscoutmodels.PumpStatus{}
-	if source.RawJsonData != nil && json.Unmarshal([]byte(*source.RawJsonData), &raw) == nil && raw.Pump != nil {
-		pump = *raw.Pump
+	uploader := nightscoutmodels.UploaderStatus{}
+	if source.RawJsonData != nil && json.Unmarshal([]byte(*source.RawJsonData), &raw) == nil {
+		if raw.Pump != nil {
+			pump = *raw.Pump
+		}
+		if raw.Uploader != nil {
+			uploader = *raw.Uploader
+		}
+	}
+	// Loop and Trio send the phone's battery and charging in uploader, where LoopFollow reads them
+	if uploader.Battery == nil && source.DeviceBatteryPercent != nil {
+		uploader.Battery = ptr(types.FlexibleInt64(*source.DeviceBatteryPercent))
+	}
+	if uploader.IsCharging == nil && source.IsDeviceCharging != nil {
+		uploader.IsCharging = ptr(types.FlexibleBool(*source.IsDeviceCharging))
+	}
+	if uploader != (nightscoutmodels.UploaderStatus{}) {
+		nsModel.Uploader = &uploader
 	}
 	if pump.Manufacturer == nil && source.PumpManufacturer != nil {
 		pump.Manufacturer = (*types.ShortString)(source.PumpManufacturer)
@@ -158,6 +173,9 @@ func NightscoutToDBCreateDeviceReport(source nightscoutmodels.DeviceStatus, ctx 
 	// Loop, Trio, xDrip+ and xDrip4iOS send the phone's battery in uploader
 	if source.Uploader != nil && source.Uploader.Battery != nil {
 		createParams.DeviceBatteryPercent = ptr(float64(*source.Uploader.Battery))
+	}
+	if source.Uploader != nil && source.Uploader.IsCharging != nil {
+		createParams.IsDeviceCharging = ptr(bool(*source.Uploader.IsCharging))
 	}
 	if source.OverrideRaw != nil {
 		createParams.OverrideJson = ptr(string(*source.OverrideRaw))
