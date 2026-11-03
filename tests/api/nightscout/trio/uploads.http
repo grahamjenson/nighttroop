@@ -185,6 +185,12 @@ ASSERT_EQUALS "closed" "@0.openaps.dosingMode"
 ASSERT_EQUALS "0.6.0" "@0.openaps.version"
 ASSERT_EQUALS 150.5 "@0.pump.reservoir"
 ASSERT_EQUALS 75 "@0.pump.battery.percent"
+# Trio's followers read the pump's state and battery level, and whether the phone is charging
+ASSERT_EQUALS "normal" "@0.pump.battery.string"
+ASSERT_EQUALS false "@0.pump.battery.display"
+ASSERT_EQUALS false "@0.pump.status.bolusing"
+ASSERT_EQUALS false "@0.pump.status.suspended"
+ASSERT_EQUALS false "@0.uploader.isCharging"
 
 // uploadProfiles posts the default profile with Trio's own push notification fields, and needs exactly a 200
 NAME trio_upload_profile
