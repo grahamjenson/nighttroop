@@ -149,39 +149,15 @@ func NewLoggerWithConfig(logger *slog.Logger, config Config) func(http.Handler) 
 			}
 
 			defer func() {
-				params := map[string]string{}
-				for i, k := range chi.RouteContext(r.Context()).URLParams.Keys {
-					params[k] = chi.RouteContext(r.Context()).URLParams.Values[i]
-				}
+				params := routeParams(r)
 				path, query := redactCredentials(path, query, params)
 
 				status := ww.Status()
-				end := time.Now()
-
-				baseAttributes := make([]slog.Attr, 0, 3)
-				requestAttributes := config.requestAttributes(r, start, path, query, params, br)
-				responseAttributes := config.responseAttributes(ww, start, end, bw)
-
-				attributes := append(
-					[]slog.Attr{
-						{
-							Key:   "request",
-							Value: slog.GroupValue(requestAttributes...),
-						},
-						{
-							Key:   "response",
-							Value: slog.GroupValue(responseAttributes...),
-						},
-					},
-					baseAttributes...,
-				)
-
-				level := config.DefaultLevel
-				if status >= http.StatusInternalServerError {
-					level = config.ServerErrorLevel
-				} else if status >= http.StatusBadRequest && status < http.StatusInternalServerError {
-					level = config.ClientErrorLevel
+				attributes := []slog.Attr{
+					{Key: "request", Value: slog.GroupValue(config.requestAttributes(r, start, path, query, params, br)...)},
+					{Key: "response", Value: slog.GroupValue(config.responseAttributes(ww, start, time.Now(), bw)...)},
 				}
+				level := config.level(status)
 
 				msg := strconv.Itoa(status) + ": " + http.StatusText(status)
 				if config.WithCustomMessage != nil {
@@ -202,6 +178,27 @@ func NewLoggerWithConfig(logger *slog.Logger, config Config) func(http.Handler) 
 
 // requestAttributes are what is logged of a request: where it went, from start, and its body's length, then its client
 // IP, body, headers and user agent when config asks for them. path, query and params have had credentials redacted.
+// routeParams is the request's chi route params by name
+func routeParams(r *http.Request) map[string]string {
+	params := map[string]string{}
+	routeContext := chi.RouteContext(r.Context())
+	for i, k := range routeContext.URLParams.Keys {
+		params[k] = routeContext.URLParams.Values[i]
+	}
+	return params
+}
+
+// level is the level a response with status is logged at
+func (config Config) level(status int) slog.Level {
+	switch {
+	case status >= http.StatusInternalServerError:
+		return config.ServerErrorLevel
+	case status >= http.StatusBadRequest:
+		return config.ClientErrorLevel
+	}
+	return config.DefaultLevel
+}
+
 func (config Config) requestAttributes(r *http.Request, start time.Time, path, query string, params map[string]string, br *bodyReader) []slog.Attr {
 	attributes := []slog.Attr{
 		slog.Time("time", start.UTC()),
