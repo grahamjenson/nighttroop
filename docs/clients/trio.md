@@ -133,7 +133,9 @@ When the user saves a schedule (`uploadProfiles`): `{ defaultProfile: "default",
 store: { default: { dia, carbs_hr, delay, timezone, target_low, target_high, sens, basal, carbratio, units } },
 bundleIdentifier, deviceToken, isAPNSProduction, overridePresets, teamID, expirationDate }`. Each schedule entry is
 `{ time: "HH:mm", value, timeAsSeconds }`. `units` is `mg/dl` or `mmol`. The push fields let LoopFollow and Trio's
-remote control send it Apple push notifications; Nighttroop does not keep them. Needs exactly a 200. Works.
+remote control send it Apple push notifications; Nighttroop registers `deviceToken`, `bundleIdentifier` and
+`isAPNSProduction` as a `trio` push registration for the identity that uploaded it (`/settings/push-registrations`).
+Needs exactly a 200. Works.
 
 ## Fetches
 

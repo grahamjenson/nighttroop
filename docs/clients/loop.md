@@ -166,6 +166,10 @@ the device status as it was sent until that is cleared when the record is old (#
 `timezone` as `ETC/GMT±N`, `units`, and `sens`, `carbratio`, `basal`, `target_low` and `target_high` as
 `[{time, value, timeAsSeconds}]`.
 
+Nighttroop registers `loopSettings.deviceToken` and `bundleIdentifier`, with `isAPNSProduction`, as a `loop` push
+registration for the identity that uploaded the profile (`/settings/push-registrations`), for remote commands once
+Nighttroop sends them.
+
 When Loop is set up from Nightscout, `fetchStoredTherapySettings` (line 370) gets `/api/v1/profile/current`, which
 it reads as one object, not an array (`fetchCurrentProfile`, line 166). `ProfileSet(rawValue:)` needs `_id`,
 `startDate`, `units`, `enteredBy`, `defaultProfile`, `store` and `loopSettings` with `dosingEnabled` and
