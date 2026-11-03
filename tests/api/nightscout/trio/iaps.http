@@ -32,12 +32,21 @@ H Content-Type: application/json
 B { "eventType" : "Announcement", "created_at" : "{{ date -1 }}T12:30:00.000Z", "enteredBy" : "remote", "notes" : "looping: false" }
 ASSERT_STATUS 200
 
-// fetchAnnouncement: Announcement needs created_at, enteredBy and notes, the command
+// An announcement that is not a command, as iAPS uploads its pump's
+NAME iaps_pump_announcement
+POST http://{{ site }}/api/v1/treatments.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B { "eventType" : "Announcement", "created_at" : "{{ date -1 }}T12:35:00.000Z", "enteredBy" : "iAPS", "notes" : "Battery low" }
+ASSERT_STATUS 200
+
+// fetchAnnouncement: Announcement needs created_at, enteredBy and notes, the command; only those entered by remote are
+// commands
 NAME iaps_fetch_announcements
 GET http://{{ site }}/api/v1/treatments.json?find[eventType]=Announcement&find[enteredBy]=remote&find[created_at][$gte]={{ date -1 }}T12:00:00.000Z
 H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
 ASSERT_CONTAINS "T12:30:00Z" "@0.created_at"
-ASSERT_EXISTS "@0.enteredBy"
+ASSERT_EQUALS "remote" "@0.enteredBy"
 ASSERT_EQUALS "looping: false" "@0.notes"

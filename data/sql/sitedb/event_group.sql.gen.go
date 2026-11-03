@@ -1172,43 +1172,47 @@ WHERE
 
     AND (CAST(?22 AS TEXT) IS NULL OR fi.name = ?22 OR a.name = ?22 OR ps.name = ?22)
 
+    -- who entered it, as sent; a treatment without it is not entered by any of a $nin, as in Nightscout
+    AND (CAST(?23 AS TEXT) IS NULL OR eg.entered_by = ?23)
+    AND (CAST(?24 AS TEXT) IS NULL OR eg.entered_by IS NULL OR eg.entered_by NOT IN (SELECT value FROM json_each(?24)))
+
 
     -- glucose readings
-    AND (CAST(?23 AS INTEGER) IS NULL OR gr.mgdl = ?23)
-    AND (CAST(?24 AS INTEGER) IS NULL OR gr.mgdl >= ?24)
-    AND (CAST(?25 AS INTEGER) IS NULL OR gr.mgdl > ?25)
-    AND (CAST(?26 AS INTEGER) IS NULL OR gr.mgdl <= ?26)
-    AND (CAST(?27 AS INTEGER) IS NULL OR gr.mgdl < ?27)
+    AND (CAST(?25 AS INTEGER) IS NULL OR gr.mgdl = ?25)
+    AND (CAST(?26 AS INTEGER) IS NULL OR gr.mgdl >= ?26)
+    AND (CAST(?27 AS INTEGER) IS NULL OR gr.mgdl > ?27)
+    AND (CAST(?28 AS INTEGER) IS NULL OR gr.mgdl <= ?28)
+    AND (CAST(?29 AS INTEGER) IS NULL OR gr.mgdl < ?29)
     
     -- food intake
 
-    AND (CAST(?28 AS INTEGER) IS NULL OR fi.carbs = ?28)
-    AND (CAST(?29 AS INTEGER) IS NULL OR fi.carbs >= ?29)
-    AND (CAST(?30 AS INTEGER) IS NULL OR fi.carbs > ?30)
-    AND (CAST(?31 AS INTEGER) IS NULL OR fi.carbs <= ?31)
-    AND (CAST(?32 AS INTEGER) IS NULL OR fi.carbs < ?32)
+    AND (CAST(?30 AS INTEGER) IS NULL OR fi.carbs = ?30)
+    AND (CAST(?31 AS INTEGER) IS NULL OR fi.carbs >= ?31)
+    AND (CAST(?32 AS INTEGER) IS NULL OR fi.carbs > ?32)
+    AND (CAST(?33 AS INTEGER) IS NULL OR fi.carbs <= ?33)
+    AND (CAST(?34 AS INTEGER) IS NULL OR fi.carbs < ?34)
     
 
     -- insulin doses
-    AND (CAST(?33 AS INTEGER) IS NULL OR idose.dose = ?33)
-    AND (CAST(?34 AS INTEGER) IS NULL OR idose.dose >= ?34)
-    AND (CAST(?35 AS INTEGER) IS NULL OR idose.dose > ?35)
-    AND (CAST(?36 AS INTEGER) IS NULL OR idose.dose <= ?36)
-    AND (CAST(?37 AS INTEGER) IS NULL OR idose.dose < ?37)
+    AND (CAST(?35 AS INTEGER) IS NULL OR idose.dose = ?35)
+    AND (CAST(?36 AS INTEGER) IS NULL OR idose.dose >= ?36)
+    AND (CAST(?37 AS INTEGER) IS NULL OR idose.dose > ?37)
+    AND (CAST(?38 AS INTEGER) IS NULL OR idose.dose <= ?38)
+    AND (CAST(?39 AS INTEGER) IS NULL OR idose.dose < ?39)
 
 
 
     -- range values
-    AND (CAST(?38 AS INTEGER) IS NULL OR a.duration_minutes = ?38 OR tb.duration_minutes = ?38 OR tt.duration_minutes = ?38 OR ps.duration_minutes = ?38)
-    AND (CAST(?39 AS INTEGER) IS NULL OR a.duration_minutes >= ?39 OR tb.duration_minutes >= ?39 OR tt.duration_minutes >= ?39 OR ps.duration_minutes >= ?39)
-    AND (CAST(?40 AS INTEGER) IS NULL OR a.duration_minutes > ?40 OR tb.duration_minutes > ?40 OR tt.duration_minutes > ?40 OR ps.duration_minutes > ?40)
-    AND (CAST(?41 AS INTEGER) IS NULL OR a.duration_minutes <= ?41 OR tb.duration_minutes <= ?41 OR tt.duration_minutes <= ?41 OR ps.duration_minutes <= ?41)
-    AND (CAST(?42 AS INTEGER) IS NULL OR a.duration_minutes < ?42 OR tb.duration_minutes < ?42 OR tt.duration_minutes < ?42 OR ps.duration_minutes < ?42)
+    AND (CAST(?40 AS INTEGER) IS NULL OR a.duration_minutes = ?40 OR tb.duration_minutes = ?40 OR tt.duration_minutes = ?40 OR ps.duration_minutes = ?40)
+    AND (CAST(?41 AS INTEGER) IS NULL OR a.duration_minutes >= ?41 OR tb.duration_minutes >= ?41 OR tt.duration_minutes >= ?41 OR ps.duration_minutes >= ?41)
+    AND (CAST(?42 AS INTEGER) IS NULL OR a.duration_minutes > ?42 OR tb.duration_minutes > ?42 OR tt.duration_minutes > ?42 OR ps.duration_minutes > ?42)
+    AND (CAST(?43 AS INTEGER) IS NULL OR a.duration_minutes <= ?43 OR tb.duration_minutes <= ?43 OR tt.duration_minutes <= ?43 OR ps.duration_minutes <= ?43)
+    AND (CAST(?44 AS INTEGER) IS NULL OR a.duration_minutes < ?44 OR tb.duration_minutes < ?44 OR tt.duration_minutes < ?44 OR ps.duration_minutes < ?44)
 
 
-    AND (CAST(?43 AS BOOL) IS TRUE OR eg.deleted_at IS NULL)
+    AND (CAST(?45 AS BOOL) IS TRUE OR eg.deleted_at IS NULL)
 ORDER BY eg.occurred_at DESC
-LIMIT CAST(?45 AS INTEGER) OFFSET CAST(?44 AS INTEGER)
+LIMIT CAST(?47 AS INTEGER) OFFSET CAST(?46 AS INTEGER)
 `
 
 type SearchEventGroupsParams struct {
@@ -1234,6 +1238,8 @@ type SearchEventGroupsParams struct {
 	DeviceEq       *string
 	AppEq          *string
 	NameEq         *string
+	EnteredByEq    *string
+	EnteredByNin   *string
 	SgvEQ          *int64
 	SgvGTE         *int64
 	SgvGT          *int64
@@ -1296,6 +1302,8 @@ func (q *Queries) SearchEventGroups(ctx context.Context, arg SearchEventGroupsPa
 		arg.DeviceEq,
 		arg.AppEq,
 		arg.NameEq,
+		arg.EnteredByEq,
+		arg.EnteredByNin,
 		arg.SgvEQ,
 		arg.SgvGTE,
 		arg.SgvGT,

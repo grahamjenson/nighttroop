@@ -9416,6 +9416,26 @@ func (m *SearchEventGroupsParams) SetNameEq(v *string) {
 	m.NameEq = v
 }
 
+// GetEnteredByEq returns the EnteredByEq value.
+func (m SearchEventGroupsParams) GetEnteredByEq() *string {
+	return m.EnteredByEq
+}
+
+// SetEnteredByEq sets the EnteredByEq value and returns the updated SearchEventGroupsParams.
+func (m *SearchEventGroupsParams) SetEnteredByEq(v *string) {
+	m.EnteredByEq = v
+}
+
+// GetEnteredByNin returns the EnteredByNin value.
+func (m SearchEventGroupsParams) GetEnteredByNin() *string {
+	return m.EnteredByNin
+}
+
+// SetEnteredByNin sets the EnteredByNin value and returns the updated SearchEventGroupsParams.
+func (m *SearchEventGroupsParams) SetEnteredByNin(v *string) {
+	m.EnteredByNin = v
+}
+
 // GetSgvEQ returns the SgvEQ value.
 func (m SearchEventGroupsParams) GetSgvEQ() *int64 {
 	return m.SgvEQ

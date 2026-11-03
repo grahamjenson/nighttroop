@@ -157,10 +157,9 @@ find[carbs][$exists]=true
 Trio decodes each as `CarbsEntry`: `created_at` (date) and `carbs` (number) required; `_id`, `actualDate`, `fat`,
 `protein`, `notes`, `enteredBy`, `isFPU`, `fpuID` optional. It stores those whose time it does not have yet.
 
-Nighttroop ignores `find[carbs][$exists]` and the `enteredBy` filters, so it returns every treatment, and one
-without `carbs` fails the whole list: Trio downloads no carbs (TODO P1). Fixing only `$exists` would be worse:
-Nighttroop returns `enteredBy` as sent, `Trio`, but without the `enteredBy` filters Trio would download its own
-carbs and add them again. iAPS sends `find[enteredBy][$ne]` five times instead of `$and`.
+Works: Nighttroop returns only treatments with `carbs` (`$exists` as `carbs` at least 0), and none entered by any of
+the `$ne`s, so not Trio's own, which it would add again. A treatment without `enteredBy` is entered by none of them,
+as in Nightscout. iAPS sends `find[enteredBy][$ne]` five times instead of `$and`, which Nighttroop takes the same way.
 
 ### Temp targets: `GET /api/v1/treatments.json`
 
@@ -174,8 +173,8 @@ Trio decodes each as `TempTarget`: `_id` (string), `created_at` and `duration` (
 `targetBottom` (mg/dL), `name`, `enteredBy`, `reason`, `isPreset`, `enabled`, `halfBasalTarget` optional. It skips
 one whose `created_at` it already has, or whose `reason` is `Cancel`, and turns on the newest.
 
-Works in mg/dL, with `created_at` keeping its milliseconds. As the `enteredBy` filters are ignored, Trio also gets its
-own temp targets back; it skips them only when their `created_at` matches its own to the millisecond.
+Works in mg/dL, with `created_at` keeping its milliseconds, and only temp targets with a `duration` that Trio did not
+enter itself.
 
 ### Glucose, with Nightscout as the CGM: `GET /api/v1/entries/sgv.json`
 
@@ -203,8 +202,7 @@ iAPS takes remote commands (`bolus: 1`, `meal: 20,5,5`, `looping: false`, `overr
 announcements: `find[eventType]=Announcement&find[enteredBy]=remote&find[created_at][$gte]=<ISO date>`. It decodes
 `created_at`, `enteredBy` and `notes`, all required. Trio dropped this for Apple push notifications.
 
-Nighttroop ignores `find[enteredBy]`, so iAPS sees every announcement as a possible command, including the pump
-alarms it uploads itself (which do not parse as commands) (TODO P1).
+Works: only announcements entered by `remote` come back, not the pump alarms iAPS uploads itself.
 
 ## Deletes
 
@@ -246,9 +244,9 @@ Trio and iAPS use no Socket.IO, and no API v2 or v3.
 | Device status upload | Works; pump `status.bolusing`, `suspended`, battery `string`, `display` and `uploader.isCharging` fixed in this PR |
 | Profile upload | Works |
 | Profile import | Works (`enteredBy`, #509) |
-| Carbs fetch (`find[carbs][$exists]`, `enteredBy` `$ne`) | Not supported, TODO P1 |
-| Temp target fetch | Works in mg/dL; own ones come back, TODO P1 |
+| Carbs fetch (`find[carbs][$exists]`, `enteredBy` `$ne`) | Works |
+| Temp target fetch | Works in mg/dL, without its own |
 | Glucose fetch (Nightscout as CGM) | Works in mg/dL |
-| iAPS announcements (`find[enteredBy]=remote`) | Not supported, TODO P1 |
+| iAPS announcements (`find[enteredBy]=remote`) | Works |
 | Deletes by query | Not supported, TODO P2 |
 | mmol/L site or identity | Not supported by Trio's fetches; a device added for Trio is in mg/dL |

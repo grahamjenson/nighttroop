@@ -42,11 +42,20 @@ NAME trio_upload_carbs
 POST http://{{ site }}/api/v1/treatments.json
 H api-secret: {{ sha1 token }}
 H Content-Type: application/json
-B [ { "eventType" : "Carb Correction", "created_at" : "{{ date -1 }}T12:06:00.000Z", "enteredBy" : "Trio", "notes" : "pasta", "carbs" : 45, "fat" : 10, "protein" : 20, "foodType" : "pasta", "id" : "A1B2C3D4-0000-0000-0000-000000000005" } ]
+B [ { "eventType" : "Carb Correction", "created_at" : "{{ date -1 }}T12:05:00.000Z", "enteredBy" : "Trio", "notes" : "toast", "carbs" : 20, "id" : "A1B2C3D4-0000-0000-0000-000000000004" } ]
 ASSERT_STATUS 200
 
-// fetchCarbs: CarbsEntry needs created_at and carbs, and reads _id, fat, protein, notes and enteredBy
-// Nighttroop does not yet filter on find[carbs][$exists] or enteredBy (TODOs.md), so this site has only carbs
+// Carbs and a bolus from someone else, e.g. Nightscout's careportal
+NAME trio_remote_carbs_and_bolus
+POST http://{{ site }}/api/v1/treatments.json
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+B [ { "eventType" : "Carb Correction", "created_at" : "{{ date -1 }}T12:06:00.000Z", "enteredBy" : "careportal", "notes" : "pasta", "carbs" : 45, "fat" : 10, "protein" : 20 },
+    { "eventType" : "Correction Bolus", "created_at" : "{{ date -1 }}T12:07:00.000Z", "enteredBy" : "careportal", "insulin" : 1.5 } ]
+ASSERT_STATUS 200
+
+// fetchCarbs: CarbsEntry needs created_at and carbs, and reads _id, fat, protein, notes and enteredBy. Only treatments
+// with carbs, and none Trio or another loop entered, so neither its own carbs, which it would import again, nor the bolus
 NAME trio_fetch_carbs
 GET http://{{ site }}/api/v1/treatments.json?find[carbs][$exists]=true&find[$and][0][enteredBy][$ne]=Trio&find[$and][1][enteredBy][$ne]=AndroidAPS&find[$and][2][enteredBy][$ne]=openaps://AndroidAPS&find[$and][3][enteredBy][$ne]=iAPS&find[$and][4][enteredBy][$ne]=loop://iPhone&find[created_at][$gt]={{ date -1 }}T11:00:00.000Z
 H api-secret: {{ sha1 token }}
@@ -58,17 +67,18 @@ ASSERT_EQUALS 45 "@0.carbs"
 ASSERT_EQUALS 10 "@0.fat"
 ASSERT_EQUALS 20 "@0.protein"
 ASSERT_EQUALS "pasta" "@0.notes"
-ASSERT_EXISTS "@0.enteredBy"
+ASSERT_EQUALS "careportal" "@0.enteredBy"
 
 NAME trio_upload_temp_target
 POST http://{{ site }}/api/v1/treatments.json
 H api-secret: {{ sha1 token }}
 H Content-Type: application/json
-B [ { "duration" : 60, "eventType" : "Temporary Target", "created_at" : "{{ date -1 }}T13:07:00.123Z", "enteredBy" : "Trio", "notes" : "Activity", "targetTop" : 140, "targetBottom" : 140 } ]
+B [ { "duration" : 30, "eventType" : "Temporary Target", "created_at" : "{{ date -1 }}T13:05:00.000Z", "enteredBy" : "Trio", "notes" : "Eating soon", "targetTop" : 80, "targetBottom" : 80 },
+    { "duration" : 60, "eventType" : "Temporary Target", "created_at" : "{{ date -1 }}T13:07:00.123Z", "enteredBy" : "careportal", "notes" : "Activity", "targetTop" : 140, "targetBottom" : 140 } ]
 ASSERT_STATUS 200
 
 // fetchTempTargets: TempTarget needs _id, created_at and duration, and reads targetTop and targetBottom as mg/dL;
-// Trio skips one whose created_at it already has, so the milliseconds must come back as sent
+// Trio skips one whose created_at it already has, so the milliseconds must come back as sent. Its own are left out.
 NAME trio_fetch_temp_targets
 GET http://{{ site }}/api/v1/treatments.json?find[eventType]=Temporary+Target&find[duration][$exists]=true&find[$and][0][enteredBy][$ne]=Trio&find[$and][1][enteredBy][$ne]=AndroidAPS&find[$and][2][enteredBy][$ne]=openaps://AndroidAPS&find[$and][3][enteredBy][$ne]=iAPS&find[$and][4][enteredBy][$ne]=loop://iPhone&find[created_at][$gt]={{ date -1 }}T11:00:00.000Z
 H api-secret: {{ sha1 token }}
@@ -79,7 +89,7 @@ ASSERT_CONTAINS "T13:07:00.123Z" "@0.created_at"
 ASSERT_EQUALS 60 "@0.duration"
 ASSERT_EQUALS 140 "@0.targetTop"
 ASSERT_EQUALS 140 "@0.targetBottom"
-ASSERT_EXISTS "@0.enteredBy"
+ASSERT_EQUALS "careportal" "@0.enteredBy"
 
 NAME trio_upload_profile
 POST http://{{ site }}/api/v1/profile.json

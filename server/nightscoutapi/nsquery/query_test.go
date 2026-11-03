@@ -89,3 +89,29 @@ func TestParseQueryValues(t *testing.T) {
 		})
 	}
 }
+
+// Trio and iAPS filter treatments by who entered them, each $ne alone or in a $and adding to a $nin, and on whether
+// they have carbs or a duration, a number at least 0
+func TestParseQueryValuesTrioFilters(t *testing.T) {
+	query, err := ParseQueryValues(url.Values{
+		"find[carbs][$exists]": {"true"}, "find[duration][$exists]": {"true"},
+		"find[$and][0][enteredBy][$ne]": {"Trio"}, "find[$and][1][enteredBy][$ne]": {"iAPS"}, "find[enteredBy][$ne]": {"loop://iPhone"},
+	})
+	require.NoError(t, err)
+	require.ElementsMatch(t, []string{"Trio", "iAPS", "loop://iPhone"}, query.EnteredByNin.ToArray())
+	require.Equal(t, int64(0), int64(*query.CarbsGTE))
+	require.Equal(t, int64(0), int64(*query.DurationGTE))
+	require.Empty(t, query.Other)
+	require.True(t, query.HasAnyFilters())
+
+	query, err = ParseQueryValues(url.Values{"find[enteredBy]": {"remote"}, "find[carbs][$exists]": {"true"}, "find[carbs][$gte]": {"10"}})
+	require.NoError(t, err)
+	require.Equal(t, "remote", query.EnteredByEq.String())
+	require.Equal(t, int64(10), int64(*query.CarbsGTE), "a $gte sent is kept over the $exists")
+
+	// Only $exists=true is a filter it knows
+	query, err = ParseQueryValues(url.Values{"find[carbs][$exists]": {"false"}})
+	require.NoError(t, err)
+	require.Nil(t, query.CarbsGTE)
+	require.Contains(t, query.Other, "find[carbs][$exists]")
+}

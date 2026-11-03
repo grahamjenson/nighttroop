@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/url"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"nighttroop.t1d.nz/utils/mapstructure"
@@ -77,6 +78,10 @@ type QueryValues struct {
 	DurationLT  *types.FlexibleInt64 `mapstructure:"durationlt,omitempty" json:"durationlt,omitempty"`
 
 	NameEq *types.ShortString `mapstructure:"nameeq,omitempty" json:"nameeq,omitempty"`
+
+	// Who entered a treatment, as Trio and iAPS filter on it, every $ne together a $nin
+	EnteredByEq  *types.ShortString `mapstructure:"enteredbyeq,omitempty" json:"enteredbyeq,omitempty"`
+	EnteredByNin *QueryStringArray  `mapstructure:"enteredbynin,omitempty" json:"enteredbynin,omitempty"`
 
 	// Altering Return values or structure
 	// Limits
@@ -175,8 +180,18 @@ var forwardLookupName = map[string][]string{
 		"subject", "find[subject]", "find[subject][$eq]",
 	},
 
+	"enteredbyeq":  {"enteredBy", "enteredBy$eq", "find[enteredBy]", "find[enteredBy][$eq]"},
+	"enteredbynin": {"enteredBy$nin", "find[enteredBy][$nin]"},
+
 	"limit": {"limit", "count"},
 }
+
+// enteredByNe is a find[enteredBy][$ne] alone or in a find[$and], as Trio sends one for each of its own kinds
+var enteredByNe = regexp.MustCompile(`^(enteredBy\$ne|find\[enteredBy\]\[\$ne\]|find\[\$and\]\[\d+\]\[enteredBy\]\[\$ne\])$`)
+
+// existsAsGTE is a find[field][$exists]=true on a number, which only a document with the number has, so is the number
+// being at least 0, as Trio asks for treatments with carbs or a duration
+var existsAsGTE = map[string]string{"find[carbs][$exists]": "find[carbs][$gte]", "find[duration][$exists]": "find[duration][$gte]"}
 
 // Built once at startup; filling it lazily raced when the first requests arrived together
 var reverseLookupName = func() map[string]string {
@@ -191,8 +206,20 @@ var reverseLookupName = func() map[string]string {
 
 func ParseQueryValues(values url.Values) (QueryValues, error) {
 	qvMap := map[string]string{}
+	enteredByNin := []string{}
 	for key, vals := range values {
 		if len(vals) == 0 {
+			continue
+		}
+
+		if enteredByNe.MatchString(key) || key == "find[enteredBy][$nin]" || key == "enteredBy$nin" {
+			enteredByNin = append(enteredByNin, vals...)
+			continue
+		}
+		if gte, ok := existsAsGTE[key]; ok && vals[0] == "true" {
+			if _, set := values[gte]; !set {
+				qvMap[gte] = "0"
+			}
 			continue
 		}
 
@@ -222,6 +249,9 @@ func ParseQueryValues(values url.Values) (QueryValues, error) {
 		}
 		qvMap[key] = vals[0]
 
+	}
+	if len(enteredByNin) > 0 {
+		qvMap["find[enteredBy][$nin]"] = strings.Join(enteredByNin, "|")
 	}
 
 	var qv QueryValues

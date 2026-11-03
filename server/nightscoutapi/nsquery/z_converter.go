@@ -311,6 +311,14 @@ func EventGroupSearch(source Query) sitedb.SearchEventGroupsParams {
 		xstring9 := *source.NameEq
 		sitedbSearchEventGroupsParams.NameEq = &xstring9
 	}
+	if source.EnteredByEq != nil {
+		xstring10 := *source.EnteredByEq
+		sitedbSearchEventGroupsParams.EnteredByEq = &xstring10
+	}
+	if source.EnteredByNin != nil {
+		xstring11 := *source.EnteredByNin
+		sitedbSearchEventGroupsParams.EnteredByNin = &xstring11
+	}
 	if source.SgvEQ != nil {
 		xint6414 := *source.SgvEQ
 		sitedbSearchEventGroupsParams.SgvEQ = &xint6414
@@ -1011,6 +1019,11 @@ func QueryValueToQuery(source QueryValues) Query {
 		xstring6 := typesShortStringToString(*source.NameEq)
 		nsqueryQuery.NameEq = &xstring6
 	}
+	if source.EnteredByEq != nil {
+		xstring7 := typesShortStringToString(*source.EnteredByEq)
+		nsqueryQuery.EnteredByEq = &xstring7
+	}
+	nsqueryQuery.EnteredByNin = QueryStringArrayToString(source.EnteredByNin)
 	nsqueryQuery.HasFilters = GetHasFilters(source)
 	if source.SortOrder() != nil {
 		nsqueryQuerySort := QuerySort(*source.SortOrder())

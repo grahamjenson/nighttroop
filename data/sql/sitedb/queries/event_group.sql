@@ -167,6 +167,10 @@ WHERE
 
     AND (CAST(sqlc.narg('NameEq') AS TEXT) IS NULL OR fi.name = sqlc.narg('NameEq') OR a.name = sqlc.narg('NameEq') OR ps.name = sqlc.narg('NameEq'))
 
+    -- who entered it, as sent; a treatment without it is not entered by any of a $nin, as in Nightscout
+    AND (CAST(sqlc.narg('EnteredByEq') AS TEXT) IS NULL OR eg.entered_by = sqlc.narg('EnteredByEq'))
+    AND (CAST(sqlc.narg('EnteredByNin') AS TEXT) IS NULL OR eg.entered_by IS NULL OR eg.entered_by NOT IN (SELECT value FROM json_each(sqlc.narg('EnteredByNin'))))
+
 
     -- glucose readings
     AND (CAST(sqlc.narg('SgvEQ') AS INTEGER) IS NULL OR gr.mgdl = sqlc.narg('SgvEQ'))
