@@ -366,6 +366,8 @@ func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.
 	} else if err != nil {
 		slog.ErrorContext(ctx, "failed to get by ID", "error", err, "collection", m.Name(), "identifier", identifier)
 		return nil, false, nsutils.ErrInternal
+	} else if nsutils.ModifiedSince(ctx, (*replacingModel).GetUpdatedAt()) {
+		return nil, false, nsutils.ErrModifiedSince
 	}
 
 	// DELETE record if we are not creating a new record
@@ -444,6 +446,9 @@ func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.Si
 	// As in Nightscout, a deleted record is gone, so it cannot be patched
 	if updateingModel != nil && (*updateingModel).GetDeletedAt() != nil {
 		return nil, nsutils.ErrGone
+	}
+	if nsutils.ModifiedSince(ctx, (*updateingModel).GetUpdatedAt()) {
+		return nil, nsutils.ErrModifiedSince
 	}
 
 	if err := ValidateNotChangingSharedFields(updateingModel, nsModel, data, identifier); err != nil {
