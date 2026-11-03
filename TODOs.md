@@ -79,8 +79,6 @@
 1. LoopFollow ([docs/clients/loopfollow.md](docs/clients/loopfollow.md)):
     1. P2: Keep Loop's `automatic` on boluses, so LoopFollow shows automatic boluses as SMBs and leaves them out of
        its bolus stats
-    1. P4: Keep Loop's `durationType: indefinite` on a Temporary Override, which is kept a week long (#515), so
-       LoopFollow shows it as a week rather than indefinite
     1. P4: Keep a treatment's `enteredBy`, which LoopFollow shows for overrides and temp targets, rather than the
        identity's name
     1. P4: A profile search with no filters gives only the latest store, so LoopFollow's remote diagnostics see no
