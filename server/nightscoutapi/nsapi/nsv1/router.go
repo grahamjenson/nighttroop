@@ -56,8 +56,8 @@ func registerCollectionRoutes(r *chi.Mux, store nsutils.Store) {
 	r.Put("/{collection}/{identifier}.json", Replace(store))
 
 	// DELETE
-	r.Delete("/{collection}", DeleteByQuery(store))
-	r.Delete("/{collection}.json", DeleteByQuery(store))
+	r.Delete("/{collection}", Delete(store))
+	r.Delete("/{collection}.json", Delete(store))
 	r.Delete("/{collection}/{identifier_or_type}", Delete(store))
 	r.Delete("/{collection}/{identifier_or_type}.json", Delete(store))
 

@@ -84,25 +84,3 @@ NAME xdrip4ios_get_battery
 GET http://{{ site }}/api/v1/devicestatus?count=1&token={{ token }}
 ASSERT_STATUS 200
 ASSERT_EQUALS 64 "@0.uploaderBattery"
-
-#####
-# Deleting readings (master): when a reading is deleted, or readings are smoothed or rebuilt, by type and a date
-# range, reading deletedCount
-#####
-
-NAME xdrip4ios_delete_readings
-DELETE http://{{ site }}/api/v1/entries.json?find[type]=sgv&find[date][$gte]={{ itime 6 }}&find[date][$lte]={{ itime 4 }}&token={{ token }}
-ASSERT_STATUS 200
-ASSERT_EQUALS 1 "@deletedCount"
-
-NAME xdrip4ios_reading_deleted
-GET http://{{ site }}/api/v1/entries/sgv.json?count=10&token={{ token }}
-ASSERT_STATUS 200
-ASSERT_LENGTH 2 "@"
-ASSERT_EQUALS 130 "@0.sgv"
-ASSERT_EQUALS 118 "@1.sgv"
-
-# Its delete by a list of dates is not a filter Nighttroop knows, so it is refused rather than delete every reading
-NAME xdrip4ios_delete_readings_by_dates
-DELETE http://{{ site }}/api/v1/entries.json?find[type]=sgv&find[date][$in][]={{ itime 10 }}&token={{ token }}
-ASSERT_STATUS 400

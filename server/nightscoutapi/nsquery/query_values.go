@@ -23,6 +23,8 @@ type QueryValues struct {
 	DateLTE *types.DateInt `mapstructure:"datelte,omitempty" json:"datelte,omitempty"`
 	DateLT  *types.DateInt `mapstructure:"datelt,omitempty" json:"datelt,omitempty"`
 
+	DateIn *QueryStringArray `mapstructure:"datein,omitempty" json:"datein,omitempty"`
+
 	CreatedAtGTE *types.DateInt `mapstructure:"createdatgte,omitempty" json:"createdatgte,omitempty"`
 	CreatedAtGT  *types.DateInt `mapstructure:"createdatgt,omitempty" json:"createdatgt,omitempty"`
 
@@ -118,6 +120,8 @@ var forwardLookupName = map[string][]string{
 	"datelte": {"date$lte", "find[date][$lte]", "find[dateString][$lte]", "mills$lte", "find[mills][$lte]", "startDate$lte", "find[startDate][$lte]", "start$lte", "find[start][$lte]", "created_at$lte", "find[created_at][$lte]"},
 	"datelt":  {"date$lt", "find[date][$lt]", "find[dateString][$lt]", "mills$lt", "find[mills][$lt]", "startDate$lt", "find[startDate][$lt]", "start$lt", "find[start][$lt]", "created_at$lt", "find[created_at][$lt]"},
 
+	"datein": {"date$in", "find[date][$in]"},
+
 	"createdatgte": {"srvCreated$gte", "find[srvCreated][$gte]"},
 	"createdatgt":  {"srvCreated$gt", "find[srvCreated][$gt]"},
 
@@ -211,6 +215,8 @@ func ParseQueryValues(values url.Values) (QueryValues, error) {
 		if len(vals) == 0 {
 			continue
 		}
+		// A key ending [] is a list, as xDrip4iOS sends find[date][$in][]
+		key = strings.TrimSuffix(key, "[]")
 
 		// Each $ne on enteredBy is one of a $nin; iAPS encodes them twice, so iAPS%20Watch is iAPS Watch
 		if enteredByNe.MatchString(key) {

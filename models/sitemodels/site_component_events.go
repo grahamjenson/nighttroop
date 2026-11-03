@@ -5,6 +5,7 @@ import "nighttroop.t1d.nz/models/nightscoutmodels"
 // ComponentEventTypes are the Nightscout device events that change a sensor, site or pump part
 var ComponentEventTypes = []string{
 	nightscoutmodels.SensorStart.String(),
+	nightscoutmodels.SensorStop.String(),
 	nightscoutmodels.SensorChange.String(),
 	nightscoutmodels.SiteChange.String(),
 	nightscoutmodels.CannulaFill.String(),

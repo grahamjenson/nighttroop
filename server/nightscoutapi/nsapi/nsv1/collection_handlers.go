@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/consts"
@@ -158,66 +157,36 @@ func Delete(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 		permanent := r.URL.Query().Get("permanent") == "true"
 
 		identifierOrType := chi.URLParam(r, "identifier_or_type")
-		if identifierOrType != "" {
-			// IGNORE ANY ERROR AND JUST RETURN 0 DELETED COUNT
-			deleted := 0
-			if collection.IsTypeString(identifierOrType) {
-				if amount, err := store.DeleteType(r.Context(), collection, identifierOrType, permanent); err == nil {
-					deleted = amount
-				}
-			} else if err := store.Delete(r.Context(), collection, identifierOrType, permanent); err == nil {
-				deleted = 1
-			}
-			apiutils.WriteJSON(w, http.StatusOK, map[string]any{
-				"acknowledged": true,
-				"deletedCount": deleted,
-			})
-		}
-	}
-}
-
-// maxDeleteBranches is the most find[$or] alternatives a delete has, as each is a search
-const maxDeleteBranches = 10
-
-// DeleteByQuery deletes what a query finds, as Trio deletes by find[id][$eq], by find[created_at][$eq] with
-// find[eventType][$eq], and a reading by find[$or]. Each alternative must have filters, all of them ones Nighttroop
-// knows, so a delete never takes more than was asked for, and each deletes at most what a search gives
-func DeleteByQuery(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		collection, _, err := nsutils.GetCollectionAndEnsurePermission(r, nsutils.CollectionActionDelete)
-		if err != nil {
-			nsutils.WriteError(w, err)
-			return
-		}
-		values := r.URL.Query()
-		permanent := values.Get("permanent") == "true"
-		values.Del("permanent")
-
-		branches := nsquery.OrBranches(values)
-		queries := make([]nsquery.Query, 0, len(branches))
-		for _, branch := range branches {
-			qv, parseErr := nsquery.ParseQueryValues(branch)
-			if parseErr != nil || len(qv.Other) > 0 || !qv.HasAnyFilters() || len(branches) > maxDeleteBranches {
-				nsutils.WriteError(w, nsutils.ErrBadQueryError("a delete needs filters Nighttroop knows"))
+		// IGNORE ANY ERROR AND JUST RETURN 0 DELETED COUNT, except for a delete by a query
+		deleted := 0
+		if identifierOrType == "" {
+			// Only readings and treatments are deleted by a query, as xDrip4iOS and Trio do. Each find[$or]
+			// alternative, as Trio deletes a reading by its id or its dateString, is checked before any is deleted
+			if collection != nsutils.Entries && collection != nsutils.Treatments {
+				nsutils.WriteError(w, nsutils.ErrNotImplemented)
 				return
 			}
-			queries = append(queries, nsquery.QueryValueToQuery(qv))
-		}
-
-		deleted := map[string]bool{}
-		for _, query := range queries {
-			docs, searchErr := store.Search(r.Context(), collection, query)
-			if searchErr != nil {
-				nsutils.WriteError(w, searchErr)
+			queries, err := nsutils.ParseDeleteQueries(r.URL.Query())
+			for i := 0; err == nil && i < len(queries); i++ {
+				var amount int
+				amount, err = store.DeleteQuery(r.Context(), collection, queries[i])
+				deleted += amount
+			}
+			if err != nil {
+				nsutils.WriteError(w, err)
 				return
 			}
-			for _, doc := range docs {
-				if id := doc.Identifier(); !deleted[id] && store.Delete(r.Context(), collection, id, permanent) == nil {
-					deleted[id] = true
-				}
+		} else if collection.IsTypeString(identifierOrType) {
+			if amount, err := store.DeleteType(r.Context(), collection, identifierOrType, permanent); err == nil {
+				deleted = amount
 			}
+		} else if err := store.Delete(r.Context(), collection, identifierOrType, permanent); err == nil {
+			deleted = 1
 		}
-		apiutils.WriteJSON(w, http.StatusOK, map[string]any{"acknowledged": true, "deletedCount": len(deleted)})
+		apiutils.WriteJSON(w, http.StatusOK, map[string]any{
+			"acknowledged": true,
+			"deletedCount": deleted,
+		})
 	}
 }
 

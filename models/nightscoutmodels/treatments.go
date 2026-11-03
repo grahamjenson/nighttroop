@@ -215,6 +215,7 @@ const (
 	PumpBatteryChange TreatmentEventType = "Pump Battery Change"
 	SensorChange      TreatmentEventType = "Sensor Change"
 	SensorStart       TreatmentEventType = "Sensor Start"
+	SensorStop        TreatmentEventType = "Sensor Stop"
 	SiteChange        TreatmentEventType = "Site Change"
 	InsulinChange     TreatmentEventType = "Insulin Change"
 	CannulaFill       TreatmentEventType = "Cannula Fill"
@@ -261,6 +262,7 @@ var TreatmentEventTypes = []TreatmentEventType{
 	Question,
 	SensorChange,
 	SensorStart,
+	SensorStop,
 	SiteChange,
 	SnackBolus,
 	SMB,

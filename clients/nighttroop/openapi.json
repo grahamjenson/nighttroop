@@ -176,6 +176,13 @@
         "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
         "requestBody": { "$ref": "#/components/requestBodies/NsDocument" },
         "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } }
+      },
+      "delete": {
+        "operationId": "NsV1DeleteByQuery",
+        "summary": "Soft deletes the entries a search with the query finds, at most 1000, as xDrip4iOS deletes readings; only entries, and any other filter or one without a date is a 400",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/NsFindType" }, { "$ref": "#/components/parameters/NsFindDateGte" }, { "$ref": "#/components/parameters/NsFindDateLte" }, { "$ref": "#/components/parameters/NsFindDateIn" }],
+        "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } }
       }
     },
     "/api/v1/{collection}/current": {
@@ -342,6 +349,10 @@
       "NsFields": { "name": "fields", "in": "query", "description": "Comma separated fields to return", "schema": { "type": "string" } },
       "NsDateGte": { "name": "date$gte", "in": "query", "description": "Documents from this time, in milliseconds", "schema": { "type": "integer", "format": "int64" } },
       "NsDateLte": { "name": "date$lte", "in": "query", "description": "Documents up to this time, in milliseconds", "schema": { "type": "integer", "format": "int64" } },
+      "NsFindType": { "name": "find[type]", "in": "query", "description": "Documents of this type, such as sgv", "schema": { "type": "string" } },
+      "NsFindDateGte": { "name": "find[date][$gte]", "in": "query", "description": "Documents from this time, in milliseconds", "schema": { "type": "integer", "format": "int64" } },
+      "NsFindDateLte": { "name": "find[date][$lte]", "in": "query", "description": "Documents up to this time, in milliseconds", "schema": { "type": "integer", "format": "int64" } },
+      "NsFindDateIn": { "name": "find[date][$in][]", "in": "query", "description": "Documents at exactly these times, in milliseconds", "schema": { "type": "array", "items": { "type": "integer", "format": "int64" } } },
       "NsPermanent": { "name": "permanent", "in": "query", "description": "Deletes the row instead of marking it deleted", "schema": { "type": "boolean" } }
     },
     "requestBodies": {

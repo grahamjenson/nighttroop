@@ -212,10 +212,10 @@ When the user deletes a record in Trio, it deletes it from Nightscout by query (
 - `DELETE /api/v1/entries.json?find[$or][0][id][$eq]=<id>&find[$or][1][dateString][$eq]=<ISO date>`, for glucose
 - `DELETE /api/v1/treatments.json?find[created_at][$eq]=<ISO date>&find[eventType][$eq]=Exercise`, for an override
 
-Works: Trio's `id` is kept as the identifier, so `find[id][$eq]` finds it, and a delete by query deletes what that
-search finds, each `find[$or]` alternative a search of its own. A delete with no filter, or with one Nighttroop does
-not know, is a 400 rather than delete more than was asked for. iAPS deletes by `find[created_at][$eq]` and
-`find[carbs][$exists]` or similar, the same way.
+Works: Trio's `id` is kept as the identifier, so `find[id][$eq]` finds it, and a delete by query soft deletes what
+that search finds, at most 1000 a request, each `find[$or]` alternative a search of its own. Each alternative needs
+a date or an id, and a filter Nighttroop does not take for a delete is a 400, rather than delete more than was asked
+for. iAPS deletes by `find[created_at][$eq]` and `find[carbs][$exists]` or similar, the same way.
 
 ## Socket.IO
 

@@ -19,7 +19,7 @@ const (
 // adminStores change who can use the site and where its data comes from, or show how the server is running it, so
 // only admins touch them
 var adminStores = map[string]bool{
-	"identities": true, "sync_settings": true, "site_settings": true, "other_identity_settings": true,
+	"identities": true, "sync_settings": true, "site_settings": true, "other_identity_settings": true, "push_credentials": true,
 	"site_events": true, "site_errors": true, "site_logs": true,
 }
 

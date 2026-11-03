@@ -70,6 +70,7 @@ var EventGroupTypeKinds = map[nightscoutmodels.TreatmentEventType][]string{
 	nightscoutmodels.Question:          {"notification_event_id"},
 	nightscoutmodels.SensorChange:      {"component_event_id"},
 	nightscoutmodels.SensorStart:       {"component_event_id"},
+	nightscoutmodels.SensorStop:        {"component_event_id"},
 	nightscoutmodels.SiteChange:        {"component_event_id"},
 	nightscoutmodels.SnackBolus:        {"glucose_reading_id", "insulin_dose_id", "food_intake_id", "component_event_id"},
 	nightscoutmodels.TempBasal:         {"temp_basal_id", "component_event_id"},
