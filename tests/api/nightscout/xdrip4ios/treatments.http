@@ -68,7 +68,8 @@ NAME xdrip4ios_upload_sensor_start
 POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {"_id": "aB3dE5fG7hI9jK1lM3nO5pQ7", "eventType": "Sensor Start", "created_at": "{{ date 0 }}T00:08:00.000Z", "enteredBy": "xDrip4iOS"}
 ASSERT_STATUS 200
-# Only a 2xx is needed; Nighttroop gives the treatment its own _id
+# Only a 2xx is needed; the treatment keeps the _id sent
+ASSERT_EQUALS "aB3dE5fG7hI9jK1lM3nO5pQ7" "@0._id"
 ASSERT_EQUALS "Sensor Start" "@0.eventType"
 
 # A retry of the same sensor start, when the response was lost, succeeds without a second one

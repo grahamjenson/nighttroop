@@ -1,7 +1,7 @@
 # xDrip4iOS (xdripswift) authentication and connection checks.
 # The settings take a URL, an API_SECRET and a token. Every request sends the token as ?token=, and the
 # API_SECRET as its lowercase hex SHA1 in an api-secret header (String.sha1()).
-# Nighttroop has no API secret, so a site's Nightscout token goes in the app's token setting.
+# Nighttroop has no API secret, so a site's Nightscout token goes in the app's token setting, or its API_SECRET.
 # - SettingsViewNightscoutSettingsViewModel.testNightscoutCredentials (the Test button):
 #   GET /api/v1/experiments/test with api-secret: the SHA1 of the API_SECRET, or else the token itself.
 #   2xx is verified, 401 is "API_SECRET is not valid" or "Token is not valid"
@@ -26,7 +26,13 @@ H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_EQUALS "ok" "@status"
 
-# An API_SECRET's SHA1 is not a Nighttroop token, so the app says the API_SECRET is not valid
+# With the token as the API_SECRET, its SHA1 finds the device
+NAME xdrip4ios_settings_test_token_as_api_secret
+GET http://{{ site }}/api/v1/experiments/test
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+
+# The SHA1 of any other API_SECRET is no device's token, so the app says the API_SECRET is not valid
 NAME xdrip4ios_settings_test_api_secret_sha1
 GET http://{{ site }}/api/v1/experiments/test
 H api-secret: 2aae6c35c94fcfb415dbe95f408b9ce91ee846ed

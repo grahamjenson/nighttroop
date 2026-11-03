@@ -15,11 +15,14 @@ The tests are `tests/api/nightscout/aaps/*.http` and `tests/socket/nightscout/aa
   (`core/nssdk/.../localmodel/entry/NsUnits.kt`, and `GlucoseUnit.fromText` in `core/data`); anything else, such
   as Nighttroop's `mmol/L`, is read as mg/dL. Nighttroop returns glucose in the identity's units, so on an identity
   in mmol/L an AAPS follower reads a 6.0 mmol/L reading as 6 mg/dL, and temp targets, BG checks and profiles the
-  same. Uploads are fine either way: AAPS labels them `mg/dl`. The tests set mg/dL first (`ns_units_mgdl.steps`).
+  same. Uploads are fine either way: AAPS labels them `mg/dl`. A device added for AAPS in the site's Add Device is
+  set to mg/dL (#524), and an admin can change any identity's units (#523). The tests set mg/dL first
+  (`ns_units_mgdl.steps`).
 - The URL is the site's Nightscout host. AAPS adds `https://` when it has no scheme and `/api/` after it
   (`core/nssdk/.../networking/NsUrl.kt:21`).
-- The token is a Nighttroop identity token. A master (the phone with the pump) needs one that may write. A
-  follower (AAPSClient) can use a read only one.
+- The token is a Nighttroop identity token. A master (the phone with the pump) needs one that may write; a device
+  added for AAPS is always the PWD Phone (#527). A follower (AAPSClient) can use a read only one, added as Other,
+  so its units must be set to mg/dL.
 
 ## NSClient v3 (AAPS 4.0, and 3.x when "Use API v3" is chosen)
 
@@ -142,8 +145,8 @@ AAPS uses socket.io-client-java 2.1.2 (an `EIO=4` client) on two namespaces of t
 - A PATCH or DELETE that answers 404 is taken as done; any other status stops the upload queue until it works.
 - `pumpId` comes back from Nighttroop as a string; AAPS reads it into its `Long` anyway.
 - A create's `identifier` must be at the top level of the answer, not only in `result`.
-- Nighttroop's `created_at$gt` is when the treatment reached the server, where Nightscout's is the treatment's
-  time; for an app uploading as it goes these are close.
+- Nighttroop's `created_at$gt` is the treatment's time, as Nightscout's (#514); `srvCreated$gt` is when it reached
+  the server.
 - The first load goes back 100 days, in pages of 500.
 
 ## NSClient v1 (AAPS 3.4 and older)
@@ -161,9 +164,9 @@ Socket.IO only, no REST: socket.io-client-java 2.1.2 on the site's default names
   (`nsclient/acks/NSAddAck.kt`), and `dbUpdate` `{collection, _id, data}`, reading `result: "success"`
   (`nsclient/acks/NSUpdateAck.kt`). It acks alarms with `ack` as v3 does (line 630).
 
-**AAPS 3.4 cannot authorize with Nighttroop**: it always sends the SHA1 of what is in its API secret field, and
-Nighttroop keeps only a slow hash of each token, so it cannot match it. Everything after authorize works when the
-token is sent as it is (`aaps_v1.sio`). Users on AAPS 3.x should use NSClient v3.
+AAPS 3.4 always sends the SHA1 of what is in its API secret field. Nighttroop finds a token by its SHA1, as for
+`api-secret` (#512), so AAPS 3.4 authorizes with a device's token as its API secret; `aaps_v1.sio` sends the token's
+SHA1, as AAPS does.
 
 ## Status on Nighttroop
 
@@ -171,11 +174,11 @@ token is sent as it is (`aaps_v1.sio`). Users on AAPS 3.x should use NSClient v3
 | --- | --- | --- |
 | JWT from `/api/v2/authorization/request/<token>`, 401 without one, 401 for a bad token | works | `auth_v3.http` |
 | `/api/v3/status` fields | works | `auth_v3.http` |
-| `/api/v3/status` permissions of a read only token | fixed in this PR (was always `crud`, so AAPS tried to upload with a read only token) | `auth_v3.http` `read_status` |
-| `/api/v2/authorization/debug/check/<permission>` | fixed in this PR (was a 404, which would fail AAPS's status once it showed real permissions) | `auth_v3.http` |
+| `/api/v3/status` permissions of a read only token | fixed in #511 (was always `crud`, so AAPS tried to upload with a read only token) | `auth_v3.http` `read_status` |
+| `/api/v2/authorization/debug/check/<permission>` | fixed in #511 (was a 404, which would fail AAPS's status once it showed real permissions) | `auth_v3.http` |
 | `/api/v3/lastModified` | works | `auth_v3.http`, `sync_v3.http` |
 | Entries: create, duplicate, search by date, history with `ETag`, patch, delete, deletion in history | works | `sync_v3.http` |
-| Entries and treatments in an identity in mmol/L | not supported: set the AAPS identity to mg/dL; TODO P1 | `units/*.http` |
+| Entries and treatments in an identity in mmol/L | not supported: a device added for AAPS is in mg/dL (#524), others must be set to it; TODO P1 | `units/*.http`, `identity_clients_units.http` |
 | First loads and history over 500 documents, and profile history's newest | not supported: searches are newest first and ignore `sort`; TODO P1 | — |
 | Treatments: bolus and SMB `type`, carbs, temp target, profile switch, BG check, delete in history | works | `sync_v3.http`, `flow_v3.http` |
 | Temp basal at or over 100%, its update | works, but `percent` is stored as sent (the owner's decision); TODO P2 | `sync_v3.http` |
@@ -189,7 +192,7 @@ token is sent as it is (`aaps_v1.sio`). Users on AAPS 3.x should use NSClient v3
 | Profile store: create, newest, history | works (one store) | `sync_v3.http`, `flow_v3.http` |
 | `/storage` subscribe, `create`, `update`, `delete` | works | `aaps_storage.sio`, `storage.sio` |
 | `/alarm` subscribe, alarms, `clear_alarm`, `ack` | works | `alarm.sio`, `aaps_alarm.sio` |
-| `/alarm` `announcement` | fixed in this PR (was never sent) | `aaps_alarm.sio` |
+| `/alarm` `announcement` | fixed in #511 (was never sent) | `aaps_alarm.sio` |
 | Client control: `settings` documents, v2 roles and subjects | not supported; TODO P4 | — |
-| v1 `authorize` with the SHA1 of the secret | not supported; TODO P3 | — |
-| v1 `authorize` payload, `dataUpdate`, `dbAdd`, `dbUpdate` | works with the token as it is | `aaps_v1.sio`, `db_writes.sio` |
+| v1 `authorize` with the SHA1 of the secret | works (#512) | `aaps_v1.sio` |
+| v1 `authorize` payload, `dataUpdate`, `dbAdd`, `dbUpdate` | works | `aaps_v1.sio`, `db_writes.sio` |

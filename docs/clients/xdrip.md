@@ -132,12 +132,14 @@ uuid, `_id`, or time within a minute with the same amounts is not added again.
 - **Units.** xDrip+ sends mg/dL with no `units`; Nighttroop takes a value over 30 as mg/dL, so readings of 30 mg/dL or
   less would be taken as mmol/L (xDrip+ sends 39 for a sensor's LOW). The follower reads `sgv` as mg/dL, but Nighttroop
   gives it in the identity's units, then the site's. A follower on an mmol/L site shows 6.5 mmol/L as 6 mg/dL, so set
-  the site, or the identity the follower uses, to mg/dL.
+  the site, or the identity the follower uses, to mg/dL. A device added for xDrip+ in the site's Add Device has its
+  units set to mg/dL (#524), and an admin can set an existing device's units from its row (#523).
 - `dateString` has an offset without a colon (`+1300`), and wins over `date` when there is no `utcOffset`; both are
   the same time.
 - The returned treatment has `enteredBy` as the identity's name, no `uuid`, no `insulinInjections`, and eventType
   `Note` for `<none>`. xDrip+ then matches its own by time and amounts, not by `enteredBy`.
-- An `mbg` entry has `sgv` too, so the follower takes a finger stick as a reading.
+- An `mbg` entry has no `sgv` (#514), as in Nightscout, but the follower takes every entry as a reading
+  (`cgm/nsfollow/EntryProcessor.java`), so a finger stick becomes a reading of 0, as it would from Nightscout.
 - A search gives at most 1000, newest first; the follower asks for 2880.
 - `rr` is an unknown query parameter, which is logged and ignored.
 
@@ -145,23 +147,23 @@ uuid, `_id`, or time within a minute with the same amounts is not added again.
 
 | Interaction | Status |
 | --- | --- |
-| `api-secret` as the SHA1 of a device token (uploader and follower) | Fixed in this PR |
+| `api-secret` as the SHA1 of a device token (uploader and follower) | Fixed in #512 |
 | Old API (`/api/` without `/v1/`, no secret, `doLegacyRESTUploadTo`) | Not supported: Nighttroop refuses writes without a token |
 | `GET status.json` | Works (no `version`, read as allowed) |
 | `POST entries` of `sgv` and `mbg` | Works, duplicates ignored |
-| `POST entries` with a `cal` | Fixed in this PR: the calibration is left out, so the batch is not refused |
-| `POST devicestatus`, phone and bridge battery | Fixed in this PR: `uploader.battery` was only kept for Loop |
-| `POST devicestatus`, Dexcom transmitter (text `battery`) | Fixed in this PR: the battery is left out rather than the status refused |
-| `PUT treatments` with eventType `<none>` (bolus, carbs, note) | Fixed in this PR: kept as a Note |
+| `POST entries` with a `cal` | Fixed in #512: the calibration is left out, so the batch is not refused |
+| `POST devicestatus`, phone and bridge battery | Fixed in #512: `uploader.battery` was only kept for Loop |
+| `POST devicestatus`, Dexcom transmitter (text `battery`) | Fixed in #512: the battery is left out rather than the status refused |
+| `PUT treatments` with eventType `<none>` (bolus, carbs, note) | Fixed in #512: kept as a Note |
 | `PUT treatments`, `Sensor Start`, and again to update | Works |
 | `PUT treatments`, `Sensor Stop` | Not supported: refused, and the treatments queued after it are lost (TODO P1) |
-| `GET treatments.json?find[uuid]=` then `DELETE treatments/<_id>` | Fixed in this PR: `find[uuid]` was ignored, so the newest treatment was deleted |
+| `GET treatments.json?find[uuid]=` then `DELETE treatments/<_id>` | Fixed in #512: `find[uuid]` was ignored, so the newest treatment was deleted |
 | `GET treatments` download, `Last-Modified` and `Etag` | Works |
 | `POST activity`, steps | Works |
 | `POST activity`, heart rate and motion | Accepted, but only the time is kept (TODO P4) |
-| Follower `entries.json?count=10` and `find[date][$gt]` | Works when the follower's identity is in mg/dL; in mmol/L the values are wrong (TODO P1) |
+| Follower `entries.json?count=10` and `find[date][$gt]` | Works when the follower's identity is in mg/dL, as a device added for xDrip+ is (#524); in mmol/L the values are wrong |
 | Follower `treatments` | Works |
 | Follower `devicestatus.json?count=1`, `uploaderBattery` | Works |
-| Follower takes `mbg` entries as readings | Not supported: they carry `sgv` (TODO P3) |
+| Follower takes `mbg` entries as readings | As in Nightscout: since #514 they carry only `mbg`, so the follower reads `sgv` 0 |
 | `enteredBy` and `uuid` given back as sent | Not supported: matched by time instead (TODO P4) |
 | Socket.IO | Not used |
