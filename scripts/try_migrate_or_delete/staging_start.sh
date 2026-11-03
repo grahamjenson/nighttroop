@@ -1,5 +1,5 @@
 #!/bin/sh
-# Starts the dev server on Fly.io (docs/deploy/dev_flyio), whose databases are kept on a volume between deploys. It runs
+# Starts the staging server on Fly.io (docs/deploy/staging_flyio), whose databases are kept on a volume between deploys. It runs
 # as root, as Fly mounts the volume owned by root: it gives the volume to the server's user, migrates the databases or,
 # if one cannot be, deletes them all, then runs the server as that user.
 set -e

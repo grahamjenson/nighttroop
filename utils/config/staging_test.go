@@ -7,7 +7,7 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 )
 
-// Staging runs like production, shows the test site banner unless told not to, and will not start without its admin
+// Staging runs like production, always shows the test site banner, and will not start without its admin
 func TestStagingConfig(t *testing.T) {
 	cfg, err := readServerConfig(consts.Staging, map[string]string{"HOST_PROTOCOL": "https"})
 	require.NoError(t, err)
@@ -16,11 +16,17 @@ func TestStagingConfig(t *testing.T) {
 	require.True(t, cfg.TestSite)
 	require.ErrorContains(t, cfg.ValidateClean(), "STAGING_ADMIN_PASSWORD")
 
-	cfg, err = readServerConfig(consts.Staging, map[string]string{"HOST_PROTOCOL": "https", "TEST_SITE": "false",
+	cfg, err = readServerConfig(consts.Staging, map[string]string{"HOST_PROTOCOL": "https",
 		"STAGING_ADMIN_PASSWORD": "a long staging password", "STAGING_ADMIN_TOTP_SECRET": "JBSWY3DPEHPK3PXP"})
 	require.NoError(t, err)
-	require.False(t, cfg.TestSite)
+	require.True(t, cfg.TestSite)
 	require.NoError(t, cfg.ValidateClean())
+
+	// TEST_SITE is no longer a setting, so a .env file that sets it is refused as unknown
+	dotenv := map[string]string{"HOST_PROTOCOL": "https", "TEST_SITE": "false"}
+	_, err = readServerConfig(consts.Staging, dotenv)
+	require.NoError(t, err)
+	require.Error(t, rejectUnknownVariables(dotenv))
 
 	// Production has no staging admin, and needs none
 	cfg, err = readServerConfig(consts.Production, map[string]string{"HOST_PROTOCOL": "https"})

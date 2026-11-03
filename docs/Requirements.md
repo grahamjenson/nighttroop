@@ -20,8 +20,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   admin only when a code from that TOTP secret is entered.
 - A staging server (`MODE=staging`) is never set up: it starts with the control admin `admin` of its
   `STAGING_ADMIN_PASSWORD` and `STAGING_ADMIN_TOTP_SECRET`, made again whenever its data is wiped, and will not start
-  without them. Otherwise it runs as production does, its site admins getting their own random credentials, and shows
-  the test site banner.
+  without them. Otherwise it runs as production does, its site admins getting their own random credentials.
 
 ### Limiting a server to some countries
 
@@ -152,7 +151,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   gives no medical advice, and its data and alarms may be late, missing or wrong.
 - The create site page, its medical note and footer included, and the site and control login pages fit a laptop's or
   a phone's window, so none of them needs scrolling.
-- A server set up as a test site (`TEST_SITE`) says so in a large banner at the top of every page, public, site and
+- A staging server (`MODE=staging`) says it is a test site in a large banner at the top of every page, public, site and
   control, warning that its data is frequently wiped.
 - Every page names the browser's tab after itself, e.g. `Glucose Readings · Nighttroop`, whether it is loaded in full or
   opened from a menu; a page with no title of its own, such as the login, is named `Nighttroop`.

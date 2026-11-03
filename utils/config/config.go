@@ -95,7 +95,7 @@ type ServerConfig struct {
 	FeedbackURL string
 
 	// TestSite shows every page a large banner saying it is a test site whose data is wiped, so it is not taken for
-	// a real one
+	// a real one: a staging server always is
 	TestSite bool
 
 	// StagingAdminPassword and StagingAdminTOTPSecret, in staging, are the control admin made when it starts without
@@ -302,7 +302,7 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 
 		SupportEmail: configStringSelect(dotenv, "SUPPORT_EMAIL", DefaultSupportEmail),
 		FeedbackURL:  configStringSelect(dotenv, "FEEDBACK_URL", ""),
-		TestSite:     configSelect(dotenv, "TEST_SITE", mode == consts.Staging, strconv.ParseBool),
+		TestSite:     mode == consts.Staging,
 
 		StagingAdminPassword:   configStringSelect(dotenv, "STAGING_ADMIN_PASSWORD", ""),
 		StagingAdminTOTPSecret: configStringSelect(dotenv, "STAGING_ADMIN_TOTP_SECRET", ""),

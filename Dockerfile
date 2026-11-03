@@ -1,6 +1,6 @@
 # The server is one static binary, as its SQLite is pure Go. It runs on Alpine for its CA certificates and busybox
 # wget, which the health check uses. The keyset tool is built beside it, so a server needs no Go to make keys, and
-# try_migrate_or_delete, which the dev server opens its databases with before it starts.
+# try_migrate_or_delete, which the staging server opens its databases with before it starts.
 FROM golang:1.27-alpine AS build
 WORKDIR /src
 COPY go.mod go.sum ./
@@ -37,13 +37,13 @@ HEALTHCHECK --interval=10s --timeout=5s --start-period=120s --retries=3 \
     CMD wget -q -O /dev/null --header "Host: ${HOST_NAME}" "http://127.0.0.1:${HOST_PORT}/health" || exit 1
 ENTRYPOINT ["nighttroop"]
 
-# The dev server on Fly.io (docs/deploy/dev_flyio), built with --build-target dev. It starts as root to take over its
+# The staging server on Fly.io (docs/deploy/staging_flyio), built with --build-target staging. It starts as root to take over its
 # volume and delete its databases when one can no longer be migrated, then runs the server as nighttroop.
-FROM server AS dev
+FROM server AS staging
 USER root
 RUN apk add --no-cache su-exec
-COPY scripts/try_migrate_or_delete/dev_start.sh /usr/local/bin/dev_start
-ENTRYPOINT ["dev_start"]
+COPY scripts/try_migrate_or_delete/staging_start.sh /usr/local/bin/staging_start
+ENTRYPOINT ["staging_start"]
 
 # The server, the image built by default
 FROM server
