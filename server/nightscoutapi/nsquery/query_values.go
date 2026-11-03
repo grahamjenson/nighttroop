@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/url"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"nighttroop.t1d.nz/utils/mapstructure"
@@ -79,6 +80,12 @@ type QueryValues struct {
 	DurationLT  *types.FlexibleInt64 `mapstructure:"durationlt,omitempty" json:"durationlt,omitempty"`
 
 	NameEq *types.ShortString `mapstructure:"nameeq,omitempty" json:"nameeq,omitempty"`
+
+	// Trio's carbs and temp targets fetches, and who entered a treatment, as Trio and iAPS leave out their own
+	CarbsExists    *types.FlexibleBool `mapstructure:"carbsexists,omitempty" json:"carbsexists,omitempty"`
+	DurationExists *types.FlexibleBool `mapstructure:"durationexists,omitempty" json:"durationexists,omitempty"`
+	EnteredByEq    *types.ShortString  `mapstructure:"enteredbyeq,omitempty" json:"enteredbyeq,omitempty"`
+	EnteredByNin   *QueryStringArray   `mapstructure:"enteredbynin,omitempty" json:"enteredbynin,omitempty"`
 
 	// Altering Return values or structure
 	// Limits
@@ -179,8 +186,16 @@ var forwardLookupName = map[string][]string{
 		"subject", "find[subject]", "find[subject][$eq]",
 	},
 
+	"carbsexists":    {"carbs$exists", "find[carbs][$exists]"},
+	"durationexists": {"duration$exists", "find[duration][$exists]"},
+	"enteredbyeq":    {"enteredBy", "enteredBy$eq", "find[enteredBy]", "find[enteredBy][$eq]"},
+	"enteredbynin":   {"enteredBy$nin", "find[enteredBy][$nin]"},
+
 	"limit": {"limit", "count"},
 }
+
+// enteredByNe is a $ne on enteredBy, which Trio sends as find[$and][n][enteredBy][$ne] and iAPS repeated
+var enteredByNe = regexp.MustCompile(`^find(\[\$and\]\[\d+\])?\[enteredBy\]\[\$ne\]$`)
 
 // Built once at startup; filling it lazily raced when the first requests arrived together
 var reverseLookupName = func() map[string]string {
@@ -195,12 +210,24 @@ var reverseLookupName = func() map[string]string {
 
 func ParseQueryValues(values url.Values) (QueryValues, error) {
 	qvMap := map[string]string{}
+	notEnteredBy := []string{}
 	for key, vals := range values {
 		if len(vals) == 0 {
 			continue
 		}
 		// A key ending [] is a list, as xDrip4iOS sends find[date][$in][]
 		key = strings.TrimSuffix(key, "[]")
+
+		// Each $ne on enteredBy is one of a $nin; iAPS encodes them twice, so iAPS%20Watch is iAPS Watch
+		if enteredByNe.MatchString(key) {
+			for _, val := range vals {
+				if unescaped, err := url.PathUnescape(val); err == nil {
+					val = unescaped
+				}
+				notEnteredBy = append(notEnteredBy, val)
+			}
+			continue
+		}
 
 		// Speciial Handling of fields that can be repeated in the query string, like fields[] and find[identifier][$in]
 		// Comma Seperated Values can just be patched on
@@ -228,6 +255,9 @@ func ParseQueryValues(values url.Values) (QueryValues, error) {
 		}
 		qvMap[key] = vals[0]
 
+	}
+	if len(notEnteredBy) > 0 {
+		qvMap["find[enteredBy][$nin]"] = strings.Join(append(notEnteredBy, qvMap["find[enteredBy][$nin]"]), "|")
 	}
 
 	var qv QueryValues

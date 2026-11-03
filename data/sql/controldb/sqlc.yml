@@ -57,6 +57,23 @@ overrides:
           import: "nighttroop.t1d.nz/utils/consts"
           type: "ControlRole"
       
+      # Push
+      - column: "push_credentials.provider"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "PushProvider"
+      - column: "push_registrations.provider"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "PushProvider"
+      - column: "push_registrations.app"
+        go_type:
+          import: "nighttroop.t1d.nz/utils/consts"
+          type: "PushApp"
+      - column: "push_registrations.production"
+        go_type:
+          type: "bool"
+
       # Site Identities
       - column: "site_identities.enabled"
         go_type:

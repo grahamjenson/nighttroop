@@ -89,3 +89,32 @@ func TestParseQueryValues(t *testing.T) {
 		})
 	}
 }
+
+// Trio sends each enteredBy it leaves out as find[$and][n][enteredBy][$ne] and iAPS repeats find[enteredBy][$ne],
+// encoding them twice; each is one of the $nin
+func TestParseEnteredByNotIn(t *testing.T) {
+	tests := []struct {
+		name  string
+		query url.Values
+		want  []string
+	}{
+		{"trio $and", url.Values{"find[$and][0][enteredBy][$ne]": {"Trio"}, "find[$and][1][enteredBy][$ne]": {"iAPS"}}, []string{"Trio", "iAPS"}},
+		{"iaps repeated", url.Values{"find[enteredBy][$ne]": {"iAPS", "iAPS%20Watch"}}, []string{"iAPS", "iAPS Watch"}},
+		{"with a $nin", url.Values{"find[enteredBy][$ne]": {"Trio"}, "find[enteredBy][$nin]": {"Loop"}}, []string{"Trio", "Loop"}},
+		{"none", url.Values{"find[enteredBy]": {"remote"}}, nil},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			qv, err := ParseQueryValues(tt.query)
+			require.NoError(t, err)
+			if tt.want == nil {
+				assert.Nil(t, qv.EnteredByNin)
+				assert.Equal(t, "remote", qv.EnteredByEq.String())
+				return
+			}
+			require.NotNil(t, qv.EnteredByNin)
+			assert.ElementsMatch(t, tt.want, qv.EnteredByNin.ToArray())
+			assert.True(t, qv.HasAnyFilters())
+		})
+	}
+}

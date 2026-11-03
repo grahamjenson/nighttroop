@@ -139,6 +139,266 @@ func (m *ControlIdentity) SetDeletedAt(v *int64) {
 }
 
 // GetID returns the ID value.
+func (m PushCredential) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated PushCredential.
+func (m *PushCredential) SetID(v int64) {
+	m.ID = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m PushCredential) GetSiteID() *string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated PushCredential.
+func (m *PushCredential) SetSiteID(v *string) {
+	m.SiteID = v
+}
+
+// GetName returns the Name value.
+func (m PushCredential) GetName() string {
+	return m.Name
+}
+
+// SetName sets the Name value and returns the updated PushCredential.
+func (m *PushCredential) SetName(v string) {
+	m.Name = v
+}
+
+// GetProvider returns the Provider value.
+func (m PushCredential) GetProvider() consts.PushProvider {
+	return m.Provider
+}
+
+// SetProvider sets the Provider value and returns the updated PushCredential.
+func (m *PushCredential) SetProvider(v consts.PushProvider) {
+	m.Provider = v
+}
+
+// GetTeamOrProjectID returns the TeamOrProjectID value.
+func (m PushCredential) GetTeamOrProjectID() string {
+	return m.TeamOrProjectID
+}
+
+// SetTeamOrProjectID sets the TeamOrProjectID value and returns the updated PushCredential.
+func (m *PushCredential) SetTeamOrProjectID(v string) {
+	m.TeamOrProjectID = v
+}
+
+// GetKeyID returns the KeyID value.
+func (m PushCredential) GetKeyID() *string {
+	return m.KeyID
+}
+
+// SetKeyID sets the KeyID value and returns the updated PushCredential.
+func (m *PushCredential) SetKeyID(v *string) {
+	m.KeyID = v
+}
+
+// GetSecretEnc returns the SecretEnc value.
+func (m PushCredential) GetSecretEnc() *string {
+	return m.SecretEnc
+}
+
+// SetSecretEnc sets the SecretEnc value and returns the updated PushCredential.
+func (m *PushCredential) SetSecretEnc(v *string) {
+	m.SecretEnc = v
+}
+
+// GetAppsJson returns the AppsJson value.
+func (m PushCredential) GetAppsJson() string {
+	return m.AppsJson
+}
+
+// SetAppsJson sets the AppsJson value and returns the updated PushCredential.
+func (m *PushCredential) SetAppsJson(v string) {
+	m.AppsJson = v
+}
+
+// GetBundleIdsJson returns the BundleIdsJson value.
+func (m PushCredential) GetBundleIdsJson() *string {
+	return m.BundleIdsJson
+}
+
+// SetBundleIdsJson sets the BundleIdsJson value and returns the updated PushCredential.
+func (m *PushCredential) SetBundleIdsJson(v *string) {
+	m.BundleIdsJson = v
+}
+
+// GetCreatedAt returns the CreatedAt value.
+func (m PushCredential) GetCreatedAt() int64 {
+	return m.CreatedAt
+}
+
+// SetCreatedAt sets the CreatedAt value and returns the updated PushCredential.
+func (m *PushCredential) SetCreatedAt(v int64) {
+	m.CreatedAt = v
+}
+
+// GetUpdatedAt returns the UpdatedAt value.
+func (m PushCredential) GetUpdatedAt() int64 {
+	return m.UpdatedAt
+}
+
+// SetUpdatedAt sets the UpdatedAt value and returns the updated PushCredential.
+func (m *PushCredential) SetUpdatedAt(v int64) {
+	m.UpdatedAt = v
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m PushCredential) GetCreatedByIdentityName() string {
+	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated PushCredential.
+func (m *PushCredential) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
+}
+
+// GetDeletedAt returns the DeletedAt value.
+func (m PushCredential) GetDeletedAt() *int64 {
+	return m.DeletedAt
+}
+
+// SetDeletedAt sets the DeletedAt value and returns the updated PushCredential.
+func (m *PushCredential) SetDeletedAt(v *int64) {
+	m.DeletedAt = v
+}
+
+// GetID returns the ID value.
+func (m PushRegistration) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated PushRegistration.
+func (m *PushRegistration) SetID(v int64) {
+	m.ID = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m PushRegistration) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated PushRegistration.
+func (m *PushRegistration) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetIdentityID returns the IdentityID value.
+func (m PushRegistration) GetIdentityID() int64 {
+	return m.IdentityID
+}
+
+// SetIdentityID sets the IdentityID value and returns the updated PushRegistration.
+func (m *PushRegistration) SetIdentityID(v int64) {
+	m.IdentityID = v
+}
+
+// GetApp returns the App value.
+func (m PushRegistration) GetApp() consts.PushApp {
+	return m.App
+}
+
+// SetApp sets the App value and returns the updated PushRegistration.
+func (m *PushRegistration) SetApp(v consts.PushApp) {
+	m.App = v
+}
+
+// GetProvider returns the Provider value.
+func (m PushRegistration) GetProvider() consts.PushProvider {
+	return m.Provider
+}
+
+// SetProvider sets the Provider value and returns the updated PushRegistration.
+func (m *PushRegistration) SetProvider(v consts.PushProvider) {
+	m.Provider = v
+}
+
+// GetBundleID returns the BundleID value.
+func (m PushRegistration) GetBundleID() string {
+	return m.BundleID
+}
+
+// SetBundleID sets the BundleID value and returns the updated PushRegistration.
+func (m *PushRegistration) SetBundleID(v string) {
+	m.BundleID = v
+}
+
+// GetProduction returns the Production value.
+func (m PushRegistration) GetProduction() bool {
+	return m.Production
+}
+
+// SetProduction sets the Production value and returns the updated PushRegistration.
+func (m *PushRegistration) SetProduction(v bool) {
+	m.Production = v
+}
+
+// GetTokenEnc returns the TokenEnc value.
+func (m PushRegistration) GetTokenEnc() string {
+	return m.TokenEnc
+}
+
+// SetTokenEnc sets the TokenEnc value and returns the updated PushRegistration.
+func (m *PushRegistration) SetTokenEnc(v string) {
+	m.TokenEnc = v
+}
+
+// GetTokenHash returns the TokenHash value.
+func (m PushRegistration) GetTokenHash() string {
+	return m.TokenHash
+}
+
+// SetTokenHash sets the TokenHash value and returns the updated PushRegistration.
+func (m *PushRegistration) SetTokenHash(v string) {
+	m.TokenHash = v
+}
+
+// GetCreatedAt returns the CreatedAt value.
+func (m PushRegistration) GetCreatedAt() int64 {
+	return m.CreatedAt
+}
+
+// SetCreatedAt sets the CreatedAt value and returns the updated PushRegistration.
+func (m *PushRegistration) SetCreatedAt(v int64) {
+	m.CreatedAt = v
+}
+
+// GetUpdatedAt returns the UpdatedAt value.
+func (m PushRegistration) GetUpdatedAt() int64 {
+	return m.UpdatedAt
+}
+
+// SetUpdatedAt sets the UpdatedAt value and returns the updated PushRegistration.
+func (m *PushRegistration) SetUpdatedAt(v int64) {
+	m.UpdatedAt = v
+}
+
+// GetLastPushedAt returns the LastPushedAt value.
+func (m PushRegistration) GetLastPushedAt() *int64 {
+	return m.LastPushedAt
+}
+
+// SetLastPushedAt sets the LastPushedAt value and returns the updated PushRegistration.
+func (m *PushRegistration) SetLastPushedAt(v *int64) {
+	m.LastPushedAt = v
+}
+
+// GetLastError returns the LastError value.
+func (m PushRegistration) GetLastError() *string {
+	return m.LastError
+}
+
+// SetLastError sets the LastError value and returns the updated PushRegistration.
+func (m *PushRegistration) SetLastError(v *string) {
+	m.LastError = v
+}
+
+// GetID returns the ID value.
 func (m ServerSetting) GetID() int64 {
 	return m.ID
 }
@@ -1746,6 +2006,436 @@ func (m GetControlIdentityParams) GetName() string {
 // SetName sets the Name value and returns the updated GetControlIdentityParams.
 func (m *GetControlIdentityParams) SetName(v string) {
 	m.Name = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m CountPushCredentialsParams) GetSiteID() *string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated CountPushCredentialsParams.
+func (m *CountPushCredentialsParams) SetSiteID(v *string) {
+	m.SiteID = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m CountPushRegistrationsParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated CountPushRegistrationsParams.
+func (m *CountPushRegistrationsParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetIdentityID returns the IdentityID value.
+func (m CountPushRegistrationsParams) GetIdentityID() int64 {
+	return m.IdentityID
+}
+
+// SetIdentityID sets the IdentityID value and returns the updated CountPushRegistrationsParams.
+func (m *CountPushRegistrationsParams) SetIdentityID(v int64) {
+	m.IdentityID = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m CreatePushCredentialParams) GetSiteID() *string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated CreatePushCredentialParams.
+func (m *CreatePushCredentialParams) SetSiteID(v *string) {
+	m.SiteID = v
+}
+
+// GetName returns the Name value.
+func (m CreatePushCredentialParams) GetName() string {
+	return m.Name
+}
+
+// SetName sets the Name value and returns the updated CreatePushCredentialParams.
+func (m *CreatePushCredentialParams) SetName(v string) {
+	m.Name = v
+}
+
+// GetProvider returns the Provider value.
+func (m CreatePushCredentialParams) GetProvider() consts.PushProvider {
+	return m.Provider
+}
+
+// SetProvider sets the Provider value and returns the updated CreatePushCredentialParams.
+func (m *CreatePushCredentialParams) SetProvider(v consts.PushProvider) {
+	m.Provider = v
+}
+
+// GetTeamOrProjectID returns the TeamOrProjectID value.
+func (m CreatePushCredentialParams) GetTeamOrProjectID() string {
+	return m.TeamOrProjectID
+}
+
+// SetTeamOrProjectID sets the TeamOrProjectID value and returns the updated CreatePushCredentialParams.
+func (m *CreatePushCredentialParams) SetTeamOrProjectID(v string) {
+	m.TeamOrProjectID = v
+}
+
+// GetKeyID returns the KeyID value.
+func (m CreatePushCredentialParams) GetKeyID() *string {
+	return m.KeyID
+}
+
+// SetKeyID sets the KeyID value and returns the updated CreatePushCredentialParams.
+func (m *CreatePushCredentialParams) SetKeyID(v *string) {
+	m.KeyID = v
+}
+
+// GetSecretEnc returns the SecretEnc value.
+func (m CreatePushCredentialParams) GetSecretEnc() *string {
+	return m.SecretEnc
+}
+
+// SetSecretEnc sets the SecretEnc value and returns the updated CreatePushCredentialParams.
+func (m *CreatePushCredentialParams) SetSecretEnc(v *string) {
+	m.SecretEnc = v
+}
+
+// GetAppsJson returns the AppsJson value.
+func (m CreatePushCredentialParams) GetAppsJson() string {
+	return m.AppsJson
+}
+
+// SetAppsJson sets the AppsJson value and returns the updated CreatePushCredentialParams.
+func (m *CreatePushCredentialParams) SetAppsJson(v string) {
+	m.AppsJson = v
+}
+
+// GetBundleIdsJson returns the BundleIdsJson value.
+func (m CreatePushCredentialParams) GetBundleIdsJson() *string {
+	return m.BundleIdsJson
+}
+
+// SetBundleIdsJson sets the BundleIdsJson value and returns the updated CreatePushCredentialParams.
+func (m *CreatePushCredentialParams) SetBundleIdsJson(v *string) {
+	m.BundleIdsJson = v
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m CreatePushCredentialParams) GetCreatedByIdentityName() string {
+	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreatePushCredentialParams.
+func (m *CreatePushCredentialParams) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
+}
+
+// GetID returns the ID value.
+func (m DeletePushCredentialParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated DeletePushCredentialParams.
+func (m *DeletePushCredentialParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m DeletePushCredentialParams) GetSiteID() *string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated DeletePushCredentialParams.
+func (m *DeletePushCredentialParams) SetSiteID(v *string) {
+	m.SiteID = v
+}
+
+// GetID returns the ID value.
+func (m DeletePushRegistrationParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated DeletePushRegistrationParams.
+func (m *DeletePushRegistrationParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m DeletePushRegistrationParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated DeletePushRegistrationParams.
+func (m *DeletePushRegistrationParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetIdentityID returns the IdentityID value.
+func (m DeletePushRegistrationParams) GetIdentityID() *int64 {
+	return m.IdentityID
+}
+
+// SetIdentityID sets the IdentityID value and returns the updated DeletePushRegistrationParams.
+func (m *DeletePushRegistrationParams) SetIdentityID(v *int64) {
+	m.IdentityID = v
+}
+
+// GetTokenHash returns the TokenHash value.
+func (m DeletePushRegistrationByTokenHashParams) GetTokenHash() string {
+	return m.TokenHash
+}
+
+// SetTokenHash sets the TokenHash value and returns the updated DeletePushRegistrationByTokenHashParams.
+func (m *DeletePushRegistrationByTokenHashParams) SetTokenHash(v string) {
+	m.TokenHash = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m DeleteSitePushCredentialsParams) GetSiteID() *string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated DeleteSitePushCredentialsParams.
+func (m *DeleteSitePushCredentialsParams) SetSiteID(v *string) {
+	m.SiteID = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m DeleteSitePushRegistrationsParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated DeleteSitePushRegistrationsParams.
+func (m *DeleteSitePushRegistrationsParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetID returns the ID value.
+func (m GetPushCredentialParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated GetPushCredentialParams.
+func (m *GetPushCredentialParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m GetPushCredentialParams) GetSiteID() *string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated GetPushCredentialParams.
+func (m *GetPushCredentialParams) SetSiteID(v *string) {
+	m.SiteID = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m PushCredentialForParams) GetSiteID() *string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated PushCredentialForParams.
+func (m *PushCredentialForParams) SetSiteID(v *string) {
+	m.SiteID = v
+}
+
+// GetProvider returns the Provider value.
+func (m PushCredentialForParams) GetProvider() consts.PushProvider {
+	return m.Provider
+}
+
+// SetProvider sets the Provider value and returns the updated PushCredentialForParams.
+func (m *PushCredentialForParams) SetProvider(v consts.PushProvider) {
+	m.Provider = v
+}
+
+// GetApp returns the App value.
+func (m PushCredentialForParams) GetApp() string {
+	return m.App
+}
+
+// SetApp sets the App value and returns the updated PushCredentialForParams.
+func (m *PushCredentialForParams) SetApp(v string) {
+	m.App = v
+}
+
+// GetBundleID returns the BundleID value.
+func (m PushCredentialForParams) GetBundleID() string {
+	return m.BundleID
+}
+
+// SetBundleID sets the BundleID value and returns the updated PushCredentialForParams.
+func (m *PushCredentialForParams) SetBundleID(v string) {
+	m.BundleID = v
+}
+
+// GetLastError returns the LastError value.
+func (m RecordPushParams) GetLastError() *string {
+	return m.LastError
+}
+
+// SetLastError sets the LastError value and returns the updated RecordPushParams.
+func (m *RecordPushParams) SetLastError(v *string) {
+	m.LastError = v
+}
+
+// GetID returns the ID value.
+func (m RecordPushParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated RecordPushParams.
+func (m *RecordPushParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m SearchPushCredentialsParams) GetSiteID() *string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated SearchPushCredentialsParams.
+func (m *SearchPushCredentialsParams) SetSiteID(v *string) {
+	m.SiteID = v
+}
+
+// GetSkip returns the Skip value.
+func (m SearchPushCredentialsParams) GetSkip() int64 {
+	return m.Skip
+}
+
+// SetSkip sets the Skip value and returns the updated SearchPushCredentialsParams.
+func (m *SearchPushCredentialsParams) SetSkip(v int64) {
+	m.Skip = v
+}
+
+// GetLimit returns the Limit value.
+func (m SearchPushCredentialsParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated SearchPushCredentialsParams.
+func (m *SearchPushCredentialsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m SearchPushRegistrationsParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated SearchPushRegistrationsParams.
+func (m *SearchPushRegistrationsParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetIdentityID returns the IdentityID value.
+func (m SearchPushRegistrationsParams) GetIdentityID() *int64 {
+	return m.IdentityID
+}
+
+// SetIdentityID sets the IdentityID value and returns the updated SearchPushRegistrationsParams.
+func (m *SearchPushRegistrationsParams) SetIdentityID(v *int64) {
+	m.IdentityID = v
+}
+
+// GetSkip returns the Skip value.
+func (m SearchPushRegistrationsParams) GetSkip() int64 {
+	return m.Skip
+}
+
+// SetSkip sets the Skip value and returns the updated SearchPushRegistrationsParams.
+func (m *SearchPushRegistrationsParams) SetSkip(v int64) {
+	m.Skip = v
+}
+
+// GetLimit returns the Limit value.
+func (m SearchPushRegistrationsParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated SearchPushRegistrationsParams.
+func (m *SearchPushRegistrationsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m UpsertPushRegistrationParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated UpsertPushRegistrationParams.
+func (m *UpsertPushRegistrationParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetIdentityID returns the IdentityID value.
+func (m UpsertPushRegistrationParams) GetIdentityID() int64 {
+	return m.IdentityID
+}
+
+// SetIdentityID sets the IdentityID value and returns the updated UpsertPushRegistrationParams.
+func (m *UpsertPushRegistrationParams) SetIdentityID(v int64) {
+	m.IdentityID = v
+}
+
+// GetApp returns the App value.
+func (m UpsertPushRegistrationParams) GetApp() consts.PushApp {
+	return m.App
+}
+
+// SetApp sets the App value and returns the updated UpsertPushRegistrationParams.
+func (m *UpsertPushRegistrationParams) SetApp(v consts.PushApp) {
+	m.App = v
+}
+
+// GetProvider returns the Provider value.
+func (m UpsertPushRegistrationParams) GetProvider() consts.PushProvider {
+	return m.Provider
+}
+
+// SetProvider sets the Provider value and returns the updated UpsertPushRegistrationParams.
+func (m *UpsertPushRegistrationParams) SetProvider(v consts.PushProvider) {
+	m.Provider = v
+}
+
+// GetBundleID returns the BundleID value.
+func (m UpsertPushRegistrationParams) GetBundleID() string {
+	return m.BundleID
+}
+
+// SetBundleID sets the BundleID value and returns the updated UpsertPushRegistrationParams.
+func (m *UpsertPushRegistrationParams) SetBundleID(v string) {
+	m.BundleID = v
+}
+
+// GetProduction returns the Production value.
+func (m UpsertPushRegistrationParams) GetProduction() bool {
+	return m.Production
+}
+
+// SetProduction sets the Production value and returns the updated UpsertPushRegistrationParams.
+func (m *UpsertPushRegistrationParams) SetProduction(v bool) {
+	m.Production = v
+}
+
+// GetTokenEnc returns the TokenEnc value.
+func (m UpsertPushRegistrationParams) GetTokenEnc() string {
+	return m.TokenEnc
+}
+
+// SetTokenEnc sets the TokenEnc value and returns the updated UpsertPushRegistrationParams.
+func (m *UpsertPushRegistrationParams) SetTokenEnc(v string) {
+	m.TokenEnc = v
+}
+
+// GetTokenHash returns the TokenHash value.
+func (m UpsertPushRegistrationParams) GetTokenHash() string {
+	return m.TokenHash
+}
+
+// SetTokenHash sets the TokenHash value and returns the updated UpsertPushRegistrationParams.
+func (m *UpsertPushRegistrationParams) SetTokenHash(v string) {
+	m.TokenHash = v
 }
 
 // GetPublicSiteCreation returns the PublicSiteCreation value.

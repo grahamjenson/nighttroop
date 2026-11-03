@@ -79,6 +79,11 @@ type Query struct {
 
 	NameEq *string `json:"name_eq,omitempty"`
 
+	CarbsExists    *bool   `json:"carbs_exists,omitempty"`
+	DurationExists *bool   `json:"duration_exists,omitempty"`
+	EnteredByEq    *string `json:"entered_by_eq,omitempty"`
+	EnteredByNin   *string `json:"entered_by_nin,omitempty"`
+
 	// Util Options
 	HasFilters bool       `json:"has_filters,omitempty"`
 	SortOrder  *QuerySort `json:"sort_order,omitempty"`
