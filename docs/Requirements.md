@@ -279,6 +279,7 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - A delete moves a document's `srvModified` and the v3 lastModified forward, so a history since an app's last sync
   has the documents deleted after it.
 - **Socket.IO** live updates and alarms over long polling or websockets.
+- A Nightscout food has `type` `food`, as AAPS loads only foods of that type.
 - The Nightscout host's root, which LoopFollow's Nightscout tab opens, goes to the site's own pages.
 - A live update sent to a site's sockets is in the site's own settings, such as its units, as it goes to every device.
 - A new Announcement is sent to every `/alarm` socket that can read, with its notes as the message, so AAPS shows it

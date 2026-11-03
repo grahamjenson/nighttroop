@@ -522,7 +522,7 @@ B {
 ASSERT_STATUS 201
 
 // RemoteFood.toNSFood reads carbs, gi, energy, protein and fat as whole numbers, and keeps only a food of type food.
-// Its type, portion, unit and gi are not returned yet (TODOs.md), so AAPS loads no foods
+// Its portion and unit have defaults (0 and g), and its gi is not returned yet
 NAME get_foods
 GET http://{{ site }}/api/v3/food?limit=1000
 H Authorization: Bearer {{ jwt }}
@@ -534,7 +534,7 @@ ASSERT_EQUALS "Fresh" "@result.0.subcategory"
 ASSERT_EQUALS 12 "@result.0.carbs"
 ASSERT_EQUALS 218 "@result.0.energy"
 ASSERT_EXISTS "@result.0.identifier"
-ASSERT_EQUALS null "@result.0.type"
+ASSERT_EQUALS "food" "@result.0.type"
 
 ////////
 // PROFILE

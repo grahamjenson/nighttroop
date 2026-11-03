@@ -186,7 +186,7 @@ SHA1, as AAPS does.
 | Device statuses: create, history with `srvModified` | works | `sync_v3.http`, `flow_v3.http` |
 | Device status `pump.clock`, `pump.status`, `pump.extended` | works: the pump object is read back as sent | `sync_v3.http` |
 | Food: create | works | `sync_v3.http` |
-| Food: read | not supported: no `type: "food"`, so AAPS loads none; TODO P2 | `sync_v3.http` |
+| Food: read | works: each food has `type` `food`; its `portion`, `unit` and `gi` are not kept yet, TODO P4 | `sync_v3.http` |
 | Profile store: create, newest, history | works (one store) | `sync_v3.http`, `flow_v3.http` |
 | `/storage` subscribe, `create`, `update`, `delete` | works | `aaps_storage.sio`, `storage.sio` |
 | `/alarm` subscribe, alarms, `clear_alarm`, `ack` | works | `alarm.sio`, `aaps_alarm.sio` |
