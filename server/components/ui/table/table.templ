@@ -58,15 +58,19 @@ templ Table(props ...Props) {
 	if len(props) > 0 {
 		{{ p = props[0] }}
 	}
-	<table
-		if p.ID != "" {
-			id={ p.ID }
-		}
-		class={ utils.TwMerge("w-full caption-bottom text-sm", p.Class) }
-		{ p.Attributes... }
-	>
-		{ children... }
-	</table>
+	// A table wider than its card, as on a phone, scrolls sideways in it rather than widening the page. It is relative
+	// so its absolutely placed parts, like a screen reader's label, scroll with it too.
+	<div class="relative w-full overflow-x-auto">
+		<table
+			if p.ID != "" {
+				id={ p.ID }
+			}
+			class={ utils.TwMerge("w-full caption-bottom text-sm", p.Class) }
+			{ p.Attributes... }
+		>
+			{ children... }
+		</table>
+	</div>
 }
 
 templ Header(props ...HeaderProps) {

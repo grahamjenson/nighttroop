@@ -185,7 +185,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 ### Data
 
 Each kind of data has a page with a table, newest first and paged, where records can be added, viewed, edited and
-deleted (after a confirmation):
+deleted (after a confirmation). On a phone, a table wider than the window scrolls sideways in its card, so the page
+does not:
 
 - **Glucose**: CGM and meter readings with trend arrows, in the settings' units (mmol/L or mg/dL), with lows and
   highs coloured as on the summary.
