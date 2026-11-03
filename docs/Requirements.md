@@ -193,7 +193,7 @@ deleted (after a confirmation):
     as the table and its details show them.
 - **Insulin doses**
 - **Food intakes**
-- **Temp basals**, with a percent as the percent of the scheduled basal, 50 for half, never negative
+- **Temp basals**, with a percent as Nightscout's change from the scheduled basal, -50 for half, -100 a zero temp
 - **Temp targets**, in the settings' units
 - **Profile switches**, with their profile's schedules to read
 - **Activities**
@@ -290,9 +290,10 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - A `created_at` filter or sort is on when it happened, as `date` is, and `srvCreated` is on when it was uploaded.
 - v3 filters take `field$eq` as well as `field`, e.g. `eventType$eq=Site Change`.
 - A device status keeps its pump's other fields, e.g. AAPS's `extended` with its profile and temp basal.
-- A temp basal sent with only a `percent` of the basal (e.g. 50 for half, 150 for 1.5x) has its rate set from the
-  default profile's or profile switch's basal at its start, in the profile's timezone, and is returned with that
-  `absolute` and its `percent` as sent.
+- A temp basal's `percent` is Nightscout's change from the basal, as AAPS sends it (e.g. -50 for half, 20 for 1.2x,
+  -100 a zero temp, never under -100), and is kept and returned as sent. Sent with only a `percent`, its rate is set
+  from the default profile's or profile switch's basal at its start, in the profile's timezone, so changed, and it is
+  returned with that `absolute`.
 - Duplicate uploads are ignored; values far outside real use are refused.
 - A `created_at` filter given a time with no zone, as LoopFollow sends it, reads it as UTC.
 - Loop's and Trio's Suspend Pump and Resume Pump treatments are kept.

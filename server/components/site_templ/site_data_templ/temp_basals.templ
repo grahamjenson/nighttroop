@@ -78,7 +78,7 @@ var tempBasalFields = []addmodal.Field{
 	{Name: "absolute", Label: "Rate (U/hr)", Help: "The basal rate given instead, 0 for a suspend.", Required: true, Min: "0", Max: "50", Step: "any"},
 	{Name: "duration_minutes", Label: "Duration (minutes)", Help: "How long it runs for.", Required: true, Min: "1", Max: "1440", Step: "1"},
 	{Name: "occurred_at", Label: "When", Help: "When it started, in your timezone. Blank is now.", Kind: addmodal.When},
-	{Name: "percent", Label: "Percent (%)", Help: "Its rate as a percent of the scheduled basal, e.g. 50 for half, when it was set as one.", Min: "0", Max: "1000", Step: "any"},
+	{Name: "percent", Label: "Percent (%)", Help: "Its change from the scheduled basal, e.g. -50 for half, when it was set as one.", Min: "-100", Max: "1000", Step: "any"},
 	{Name: "reason", Label: "Reason", Help: "Why it was set, e.g. exercise.", Kind: addmodal.Text, Max: "64"},
 	{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
 }
