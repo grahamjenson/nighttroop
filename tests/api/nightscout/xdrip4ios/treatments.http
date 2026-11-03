@@ -36,8 +36,8 @@ ASSERT_EXISTS "@0._id"
 ASSERT_CONTAINS "T00:01:00.123" "@0.created_at"
 ASSERT_EQUALS "Bolus" "@0.eventType"
 ASSERT_EQUALS 2.5 "@0.insulin"
-# enteredBy is the identity's name, which the app then keeps as the treatment's enteredBy
-ASSERT_EQUALS "pwd_phone" "@0.enteredBy"
+# enteredBy is as sent, which the app keeps as the treatment's enteredBy, so it does not see it as changed
+ASSERT_EQUALS "xDrip4iOS" "@0.enteredBy"
 # A carbs or insulin field, even 0, adds a carbs or insulin treatment in the app, so a bolus has no carbs
 ASSERT_EQUALS null "@0.carbs"
 ASSERT_CONTAINS "T00:02:00.456" "@1.created_at"

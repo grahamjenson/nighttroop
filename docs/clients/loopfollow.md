@@ -152,8 +152,8 @@ device token, bundle and team from the profile.
   `created_at` in UTC.
 - A BG Check is also kept as a meter reading, so it is an `mbg` entry too, and LoopFollow draws it in the BG line.
 - A treatment's `timestamp` is its `created_at`, a string as LoopFollow needs.
-- Nighttroop returns the identity's name as `enteredBy`, and drops a treatment's sent `timestamp`, `automatic` and
-  `durationType`.
+- Nighttroop returns `enteredBy` as sent (the identity's name when none was), and drops a treatment's sent
+  `timestamp`, `automatic` and `durationType`.
 - A search returns at most 1000 records, the newest, by design, and a profile search with no filters only the latest
   store.
 
@@ -172,7 +172,7 @@ device token, bundle and team from the profile.
 | Loop `Temporary Override`, Trio `SMB`, `Suspend Pump`, `Resume Pump` | Works since #515 and #516 (a batch with one was a 400) |
 | Override `durationType: indefinite` | Fixed in this PR: kept with `duration` 10080 since #515, and given back with `durationType` `indefinite` while the override as sent is kept |
 | Bolus `automatic` | Not supported, TODO P2 |
-| Treatment `enteredBy` | Not supported (the identity's name), TODO P4 |
+| Treatment `enteredBy` | Fixed in this PR (it was the identity's name) |
 | Site, sensor and insulin ages | Works (with the zoneless fix) |
 | Device status Loop and OpenAPS objects, IOB, COB, predictions | Works |
 | Device status `pump.clock`, `manufacturer`, `model` | Works since #516 (they were dropped) |

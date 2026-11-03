@@ -135,7 +135,8 @@ ASSERT_EQUALS 160 "@1.targetTop"
 ASSERT_EQUALS 0.8 "@1.insulinNeedsScaleFactor"
 ASSERT_EQUALS 60 "@1.duration"
 ASSERT_EQUALS "Running" "@1.reason"
-ASSERT_EXISTS "@1.enteredBy"
+# enteredBy, shown for an override, is as sent
+ASSERT_EQUALS "loop://iPhone" "@1.enteredBy"
 # Bolus.swift and SMB.swift: insulin as Double
 ASSERT_EQUALS "Correction Bolus" "@2.eventType"
 ASSERT_EQUALS 0.35 "@2.insulin"

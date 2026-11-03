@@ -79,8 +79,6 @@
 1. LoopFollow ([docs/clients/loopfollow.md](docs/clients/loopfollow.md)):
     1. P2: Keep Loop's `automatic` on boluses, so LoopFollow shows automatic boluses as SMBs and leaves them out of
        its bolus stats
-    1. P4: Keep a treatment's `enteredBy`, which LoopFollow shows for overrides and temp targets, rather than the
-       identity's name
     1. P4: A profile search with no filters gives only the latest store, so LoopFollow's remote diagnostics see no
        history
 1. Loop ([docs/clients/loop.md](docs/clients/loop.md)):
@@ -109,14 +107,14 @@
        field
     1. P4: Keep xDrip+'s heart rate (`type` `hr-bpm`, `bpm`) and motion (`motion-class`, `class`) activity, which are
        accepted with only their time
-    1. P4: Give back a treatment's `enteredBy` and `uuid` as sent; xDrip+ looks for `enteredBy` starting `xdrip` to
-       skip its own, and falls back to matching time and amounts
+    1. P4: Give back a treatment's `uuid` as sent; xDrip+ matches its own by `enteredBy` starting `xdrip`, kept, and
+       falls back to matching time and amounts
 1. Trio and iAPS ([docs/clients/trio.md](docs/clients/trio.md)):
     1. P1: Filter v1 treatments on `find[carbs][$exists]` and `find[duration][$exists]`, and on `enteredBy`
        (`find[enteredBy]`, `find[enteredBy][$ne]` and `find[$and][n][enteredBy][$ne]`), together: Trio fails
        to decode a carbs fetch with any treatment without carbs, and once it gets only carbs it would import
-       its own back as new ones and double them, as `enteredBy` comes back as the identity, not `Trio`; iAPS
-       takes any announcement as a remote command, not only `enteredBy` `remote`
+       its own back as new ones and double them, as without the `enteredBy` filters (`enteredBy` comes back as
+       sent) it gets its own; iAPS takes any announcement as a remote command, not only `enteredBy` `remote`
     1. P2: v1 delete by query (`DELETE /api/v1/treatments.json?find[id][$eq]=`, `find[created_at][$eq]` with
        `find[eventType][$eq]`, and entries' `find[$or]`) is a 405; Trio deletes carbs, insulin and glucose
        this way, and the override before uploading its run, so override runs are never uploaded. It needs
