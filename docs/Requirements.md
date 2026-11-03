@@ -477,3 +477,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   or `fcm`), bundle ID, whether it is a production build, and its token, which is kept encrypted and never returned.
   Registering a token again updates it, and from another identity moves it there; an identity has at most 10, and
   sees and deletes only its own.
+- An identity can send a test push to one of its registrations
+  (`POST /settings/push-registrations/{id}/test`), with its site's push credential for the app, else the server's.
+  Without one it is refused, saying to add one; a token Apple says is gone deletes the registration (410); another
+  refusal says Apple's reason (502). Each push is recorded on the registration, with its error, if it had one. A site
+  sends at most `SITE_PUSH_PER_MINUTE_LIMIT` pushes a minute. Only APNs pushes are sent so far.

@@ -31,6 +31,7 @@ type RateLimiters struct {
 	siteUpdateSyncRateLimiters     *lru.Cache[string, *rate.Limiter]
 	siteIdentityCreateRateLimiters *lru.Cache[string, *rate.Limiter]
 	siteDownloadRateLimiters       *lru.Cache[string, *rate.Limiter]
+	sitePushRateLimiters           *lru.Cache[string, *rate.Limiter]
 
 	SiteCreateLimiter   *rate.Limiter
 	siteCreateIpLimiter *lru.Cache[string, *rate.Limiter]
@@ -64,6 +65,7 @@ func newRateLimiters(config ServerConfig) *RateLimiters {
 		siteUpdateSyncRateLimiters:     lruMust(maxSites * wiggle),
 		siteIdentityCreateRateLimiters: lruMust(maxSites * wiggle),
 		siteDownloadRateLimiters:       lruMust(maxSites * wiggle),
+		sitePushRateLimiters:           lruMust(maxSites * wiggle),
 
 		SiteCreateLimiter:   rate.NewLimiter(rate.Limit(float64(config.SiteCreateGlobalPerMinuteLimit)/60.0), config.SiteCreateGlobalPerMinuteBurst),
 		siteCreateIpLimiter: lruMust(maxSites * wiggle),
@@ -153,6 +155,12 @@ func (r *RateLimiters) SiteDownloadLimiter(subdomain string) *rate.Limiter {
 	return r.getOrCreateLimiter(r.siteDownloadRateLimiters, subdomain, float64(r.serverConfig.SiteDownloadPerMinuteLimit), r.serverConfig.SiteDownloadPerMinuteBurst)
 }
 
+// SitePushLimiter is a site's budget of pushes, each a request to Apple or Firebase, so a site cannot use the server to
+// send them without end
+func (r *RateLimiters) SitePushLimiter(subdomain string) *rate.Limiter {
+	return r.getOrCreateLimiter(r.sitePushRateLimiters, subdomain, float64(r.serverConfig.SitePushPerMinuteLimit), r.serverConfig.SitePushPerMinuteBurst)
+}
+
 // SiteUnauthLimiter is one IP's budget on a site before it authenticates: 401s and Socket.IO handshakes spend it, not the site's own limit
 func (r *RateLimiters) SiteUnauthLimiter(subdomain string, ip string) *rate.Limiter {
 	return r.getOrCreateLimiter(r.siteUnauthRateLimiters, subdomain+":"+ipKey(ip), float64(r.serverConfig.SiteUnauthPerMinuteLimit), r.serverConfig.SiteUnauthPerMinuteBurst)
@@ -211,6 +219,7 @@ func (r *RateLimiters) Stats(now time.Time) []RateLimiterStats {
 		{"site_update_sync", "site", float64(c.SiteUpdateSyncPerMinuteLimit), c.SiteUpdateSyncPerMinuteBurst, r.siteUpdateSyncRateLimiters.Values()},
 		{"site_identity_create", "site", float64(c.SiteIdentityCreatePerMinuteLimit), c.SiteIdentityCreatePerMinuteBurst, r.siteIdentityCreateRateLimiters.Values()},
 		{"site_download", "site", float64(c.SiteDownloadPerMinuteLimit), c.SiteDownloadPerMinuteBurst, r.siteDownloadRateLimiters.Values()},
+		{"site_push", "site", float64(c.SitePushPerMinuteLimit), c.SitePushPerMinuteBurst, r.sitePushRateLimiters.Values()},
 	}
 	stats := make([]RateLimiterStats, 0, len(kinds))
 	for _, kind := range kinds {
