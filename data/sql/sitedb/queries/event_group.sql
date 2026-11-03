@@ -200,6 +200,12 @@ WHERE
     AND (CAST(sqlc.narg('DurationLTE') AS INTEGER) IS NULL OR a.duration_minutes <= sqlc.narg('DurationLTE') OR tb.duration_minutes <= sqlc.narg('DurationLTE') OR tt.duration_minutes <= sqlc.narg('DurationLTE') OR ps.duration_minutes <= sqlc.narg('DurationLTE'))
     AND (CAST(sqlc.narg('DurationLT') AS INTEGER) IS NULL OR a.duration_minutes < sqlc.narg('DurationLT') OR tb.duration_minutes < sqlc.narg('DurationLT') OR tt.duration_minutes < sqlc.narg('DurationLT') OR ps.duration_minutes < sqlc.narg('DurationLT'))
 
+    -- Trio's carbs and temp targets have a carbs or a duration, and who entered one is as sent, else the identity
+    AND (CAST(sqlc.narg('CarbsExists') AS BOOL) IS NULL OR (fi.carbs IS NOT NULL) = sqlc.narg('CarbsExists'))
+    AND (CAST(sqlc.narg('DurationExists') AS BOOL) IS NULL OR (COALESCE(eg.duration_minutes, a.duration_minutes, tb.duration_minutes, tt.duration_minutes, ps.duration_minutes) IS NOT NULL) = sqlc.narg('DurationExists'))
+    AND (CAST(sqlc.narg('EnteredByEq') AS TEXT) IS NULL OR COALESCE(eg.entered_by, eg.created_by_identity_name) = sqlc.narg('EnteredByEq'))
+    AND (CAST(sqlc.narg('EnteredByNin') AS TEXT) IS NULL OR COALESCE(eg.entered_by, eg.created_by_identity_name) NOT IN (SELECT value FROM json_each(sqlc.narg('EnteredByNin'))))
+
 
     AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) IS TRUE OR eg.deleted_at IS NULL)
 ORDER BY eg.occurred_at DESC
