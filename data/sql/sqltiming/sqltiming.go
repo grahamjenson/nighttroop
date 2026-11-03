@@ -8,7 +8,11 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"log/slog"
+	"math"
+	"math/rand/v2"
+	"sort"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -151,9 +155,11 @@ func (r *timedRows) Close() error {
 	return err
 }
 
-// record logs a query that took at least the slow threshold, with how many rows it gave, or -1 for one that gives none
+// record logs a query that took at least the slow threshold, with how many rows it gave, or -1 for one that gives none,
+// and keeps a sample of every query's times
 func record(ctx context.Context, db, name string, start time.Time, rows int) {
 	took := time.Since(start)
+	sample(db, name, took)
 	if slow := slowNanos.Load(); slow > 0 && took >= time.Duration(slow) {
 		slog.WarnContext(ctx, "Slow query", "db", db, "query", name, "ms", took.Milliseconds(), "rows", rows)
 	}
@@ -175,4 +181,82 @@ func Name(query string) string {
 	}
 	words := strings.Fields(query)
 	return strings.ToUpper(strings.Join(words[:min(2, len(words))], " "))
+}
+
+// samplePercent is how many in a hundred queries are kept in the stats
+var samplePercent atomic.Int64
+
+// SetSamplePercent sets how many in a hundred queries are kept in the stats; 0 keeps none
+func SetSamplePercent(percent int) {
+	samplePercent.Store(int64(percent))
+}
+
+// bucketsMs are the upper bounds, in milliseconds, of the times a query's sampled runs are counted in, for its p95
+var bucketsMs = [...]float64{0.1, 0.25, 0.5, 1, 2.5, 5, 10, 25, 50, 100, 250, 500, 1000, 2500, math.Inf(1)}
+
+// queryStats is a query's sampled runs: how many, their total and longest time, and how many took up to each bucket
+type queryStats struct {
+	count      int64
+	total, max time.Duration
+	buckets    [len(bucketsMs)]int64
+}
+
+// stats is each DB's queries' sampled runs since the server started, by DB and query name
+var stats = struct {
+	sync.Mutex
+	byQuery map[[2]string]*queryStats
+}{byQuery: map[[2]string]*queryStats{}}
+
+// sample keeps one in a hundred queries' times for every samplePercent
+func sample(db, name string, took time.Duration) {
+	if percent := samplePercent.Load(); percent <= 0 || rand.Int64N(100) >= percent {
+		return
+	}
+	stats.Lock()
+	defer stats.Unlock()
+	s := stats.byQuery[[2]string{db, name}]
+	if s == nil {
+		s = &queryStats{}
+		stats.byQuery[[2]string{db, name}] = s
+	}
+	s.count++
+	s.total += took
+	s.max = max(s.max, took)
+	s.buckets[sort.SearchFloat64s(bucketsMs[:], ms(took))]++
+}
+
+// QueryStat is a query's sampled runs since the server started: how many, and their total, mean, 95th percentile (the
+// upper bound of the times it is among, at most the longest) and longest time, in milliseconds
+type QueryStat struct {
+	DB      string  `json:"db"`
+	Query   string  `json:"query"`
+	Count   int64   `json:"count"`
+	TotalMs float64 `json:"total_ms"`
+	MeanMs  float64 `json:"mean_ms"`
+	P95Ms   float64 `json:"p95_ms"`
+	MaxMs   float64 `json:"max_ms"`
+}
+
+// Slowest are the limit queries whose sampled runs took the longest in all, longest first, as where time is spent
+func Slowest(limit int) []QueryStat {
+	stats.Lock()
+	defer stats.Unlock()
+	slowest := make([]QueryStat, 0, len(stats.byQuery))
+	for key, s := range stats.byQuery {
+		p95, need, seen := ms(s.max), (s.count*95+99)/100, int64(0)
+		for i, n := range s.buckets {
+			if seen += n; seen >= need {
+				p95 = min(bucketsMs[i], p95)
+				break
+			}
+		}
+		slowest = append(slowest, QueryStat{DB: key[0], Query: key[1], Count: s.count, TotalMs: ms(s.total),
+			MeanMs: ms(s.total) / float64(s.count), P95Ms: p95, MaxMs: ms(s.max)})
+	}
+	sort.Slice(slowest, func(i, j int) bool { return slowest[i].TotalMs > slowest[j].TotalMs })
+	return slowest[:min(limit, len(slowest))]
+}
+
+func ms(d time.Duration) float64 {
+	return float64(d) / float64(time.Millisecond)
 }

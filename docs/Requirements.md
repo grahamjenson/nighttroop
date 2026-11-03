@@ -106,6 +106,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   leave out, and says how much of it is Go's heap.
 - Its CPU is the server's in the last 5 seconds as htop shows it, 100% for each core used, so up to 400% on 4 cores.
 - Only signed in requests are counted.
+- Shows the 25 slowest DB queries, by the total time of the `QUERY_SAMPLE_PERCENT` (10%) of queries sampled since the
+  server started, each by its DB and name, with how many runs were sampled and their mean, 95th percentile, longest and
+  total milliseconds.
 
 ### Rate limits
 

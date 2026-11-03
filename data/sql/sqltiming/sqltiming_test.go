@@ -105,3 +105,58 @@ func BenchmarkPreparedQuery(b *testing.B) {
 		})
 	}
 }
+
+// sampling is samplePercent for the test, with no stats from before it
+func sampling(t *testing.T, percent int) {
+	reset := func() {
+		stats.Lock()
+		stats.byQuery = map[[2]string]*queryStats{}
+		stats.Unlock()
+	}
+	reset()
+	SetSamplePercent(percent)
+	t.Cleanup(func() { SetSamplePercent(0); reset() })
+}
+
+// The queries that took longest in all come first, with how many runs were sampled, their mean, 95th percentile (the
+// bucket it is in, at most the longest) and longest
+func TestSlowest(t *testing.T) {
+	sampling(t, 100)
+	for range 20 {
+		sample("sitedb", "GetSite", time.Millisecond)
+	}
+	sample("sitedb", "GetSite", 300*time.Millisecond)
+	sample("controldb", "SearchSites", 50*time.Millisecond)
+	sample("controldb", "SearchSites", 50*time.Millisecond)
+
+	slowest := Slowest(10)
+	require.Equal(t, []QueryStat{
+		{DB: "sitedb", Query: "GetSite", Count: 21, TotalMs: 320, MeanMs: 320.0 / 21, P95Ms: 1, MaxMs: 300},
+		{DB: "controldb", Query: "SearchSites", Count: 2, TotalMs: 100, MeanMs: 50, P95Ms: 50, MaxMs: 50},
+	}, slowest)
+	require.Len(t, Slowest(1), 1)
+}
+
+// None are kept with sampling off, and every query a DB runs is with it at 100%
+func TestSampling(t *testing.T) {
+	db, err := Open("testdb", ":memory:")
+	require.NoError(t, err)
+	defer db.Close()
+	query := func() {
+		var one int
+		require.NoError(t, db.QueryRowContext(t.Context(), "-- name: One :one\nSELECT 1").Scan(&one))
+	}
+
+	sampling(t, 0)
+	query()
+	require.Empty(t, Slowest(10))
+
+	sampling(t, 100)
+	query()
+	query()
+	slowest := Slowest(10)
+	require.Len(t, slowest, 1)
+	require.Equal(t, "testdb", slowest[0].DB)
+	require.Equal(t, "One", slowest[0].Query)
+	require.Equal(t, int64(2), slowest[0].Count)
+}
