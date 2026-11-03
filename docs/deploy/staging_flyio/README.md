@@ -13,8 +13,6 @@ try the newest code.
 - **Its control plane never needs setting up.** Staging makes the control admin from two secrets you set once, so you
   sign in with the same password and authenticator code after every deploy, even one that wipes the data.
 
-It is not for real use. For a server that keeps its data, see [the Hostinger guide](../hostinger.md).
-
 The files this guide uses:
 
 | File | What it is |
