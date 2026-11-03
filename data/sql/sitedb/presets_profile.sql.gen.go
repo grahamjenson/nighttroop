@@ -436,7 +436,7 @@ WITH distinct_profile_store_ids AS (
 )
 SELECT id, name, profile_store_id, is_default, dia, units, timezone, carbs_hr, delay, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, loop_settings_json, remote_settings_json, raw_json_data, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM profile_presets
 WHERE profile_store_id IN (SELECT profile_store_id FROM distinct_profile_store_ids)
-ORDER BY created_at DESC
+ORDER BY occurred_at DESC, created_at DESC
 `
 
 type SearchProfileStoresParams struct {
@@ -462,6 +462,7 @@ type SearchProfileStoresParams struct {
 	Limit        int64
 }
 
+// Newest first by when each store starts, as Nightscout sorts profiles by startDate
 func (q *Queries) SearchProfileStores(ctx context.Context, arg SearchProfileStoresParams) ([]*ProfilePreset, error) {
 	rows, err := q.query(ctx, q.searchProfileStoresStmt, searchProfileStores,
 		arg.DateGTE,

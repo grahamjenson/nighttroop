@@ -93,7 +93,8 @@ func (c ProfileCollection) Delete(q *sitedb.Queries, ctx context.Context, identi
 func (c ProfileCollection) SearchModels(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]*sitedb.ProfilePresetBundle, error) {
 	var profilePresets []*sitedb.ProfilePreset
 	var err error
-	if !query.HasFilters {
+	// With a count, as LoopFollow's remote diagnostics send, it is that many of the newest stores, as Nightscout gives
+	if !query.HasFilters && !query.CountGiven {
 		profilePresets, err = q.GetMostRecentProfileStore(ctx)
 	} else {
 		profilePresets, err = q.SearchProfileStores(ctx, nsquery.ProfileStoreSearch(query))

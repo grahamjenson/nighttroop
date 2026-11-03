@@ -128,9 +128,10 @@ WITH distinct_profile_store_ids AS (
     ORDER BY occurred_at DESC
     LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER)
 )
+-- Newest first by when each store starts, as Nightscout sorts profiles by startDate
 SELECT * FROM profile_presets
 WHERE profile_store_id IN (SELECT profile_store_id FROM distinct_profile_store_ids)
-ORDER BY created_at DESC;
+ORDER BY occurred_at DESC, created_at DESC;
 
 
 --------

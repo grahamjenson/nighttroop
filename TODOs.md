@@ -79,8 +79,6 @@
 1. LoopFollow ([docs/clients/loopfollow.md](docs/clients/loopfollow.md)):
     1. P2: Keep Loop's `automatic` on boluses, so LoopFollow shows automatic boluses as SMBs and leaves them out of
        its bolus stats
-    1. P4: A profile search with no filters gives only the latest store, so LoopFollow's remote diagnostics see no
-       history
 1. Loop ([docs/clients/loop.md](docs/clients/loop.md)):
     1. P1: Replace a treatment uploaded again rather than ignore it, as Nightscout does: Loop posts a temp basal or
        bolus again when it ends early, with the same date and `syncIdentifier`, and the first upload's duration and
