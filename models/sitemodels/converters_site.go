@@ -77,6 +77,19 @@ type SiteConverter interface {
 	PushCredentialToCreate(source *PushCredential, siteContext *httputils.SiteContext) controldb.CreatePushCredentialParams
 
 	///////
+	// PUSH REGISTRATIONS
+	///////
+
+	// goverter:ignore Token
+	PushRegistrationFromDB(source *controldb.PushRegistration) *PushRegistration
+
+	// goverter:context siteContext
+	// goverter:map SiteID | ContextSiteID
+	// goverter:map IdentityID | ContextIdentityIDValue
+	// goverter:ignore TokenEnc TokenHash
+	PushRegistrationToUpsert(source *PushRegistration, siteContext *httputils.SiteContext) controldb.UpsertPushRegistrationParams
+
+	///////
 	// GLUCOSE READINGS
 	///////
 
@@ -426,6 +439,11 @@ func StringsJSONPtr(strings []string) *string {
 		return nil
 	}
 	return new(StringsJSON(strings))
+}
+
+// goverter:context siteContext
+func ContextIdentityIDValue(siteContext *httputils.SiteContext) int64 {
+	return siteContext.IdentityModel.ID
 }
 
 // goverter:context siteContext

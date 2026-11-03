@@ -23,8 +23,9 @@ var adminStores = map[string]bool{
 	"site_events": true, "site_errors": true, "site_logs": true,
 }
 
-// ownStores are the signed in identity's own settings and alarms, which any identity may read and change
-var ownStores = map[string]bool{"identity_settings": true, "alarms": true}
+// ownStores are the signed in identity's own settings, alarms and push registrations, which any identity may read and
+// change
+var ownStores = map[string]bool{"identity_settings": true, "alarms": true, "push_registrations": true}
 
 // readOnlyRoles may only read the site's data
 var readOnlyRoles = map[consts.IdentityRole]bool{consts.IdentityRoleUserReadOnly: true, consts.IdentityRoleDeviceRead: true}

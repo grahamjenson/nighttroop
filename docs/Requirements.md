@@ -469,3 +469,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 
 - Each identity can set its own units, time zone, language and formats over the site's.
 - Each identity has its own alarms, and snoozing one only quiets it for them.
+- Each identity, a device or user of any role, registers the apps on its devices that pushes are sent to
+  (`/settings/push-registrations`, JSON API): the app (`loop`, `trio`, `loopfollow`, `t1dcarer`), its provider (`apns`
+  or `fcm`), bundle ID, whether it is a production build, and its token, which is kept encrypted and never returned.
+  Registering a token again updates it, and from another identity moves it there; an identity has at most 10, and
+  sees and deletes only its own.
