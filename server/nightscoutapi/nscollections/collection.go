@@ -49,6 +49,13 @@ type CollectionDeduplicator[NS, DM any] interface {
 	GetDuplicate(q *sitedb.Queries, ctx context.Context, nsModel NS) (*DM, error)
 }
 
+// CollectionRefresher is a CollectionDeduplicator whose duplicate takes the values of the model repeating it, as
+// Nightscout upserts one sent again. It is the duplicate as it is now, and whether it changed, which it must not when
+// the values are the same, so a client sending a batch again changes nothing.
+type CollectionRefresher[NS, DM any] interface {
+	Refresh(q *sitedb.Queries, ctx context.Context, nsModel NS, duplicate *DM, cc nightscoutmodels.ConverterContext) (*DM, bool, error)
+}
+
 // CollectionPatcher is a CollectionDB that can change a model in place; without it a patch is not implemented
 type CollectionPatcher[NS, DM any] interface {
 	UpdateModel(q *sitedb.Queries, ctx context.Context, nsModel NS, identifier string, old *DM, cc nightscoutmodels.ConverterContext) (*DM, error)
@@ -179,6 +186,9 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 		slog.ErrorContext(ctx, "failed to check for duplicate in database", "error", err, "collection", m.Name())
 		return nil, false, nsutils.ErrInternal
 	}
+	if duplicateDBModel != nil && identifier == nil {
+		return c.repeated(ctx, siteContext, tx, q, nsModel, duplicateDBModel, raw)
+	}
 	if duplicateDBModel != nil {
 		return c.document(duplicateDBModel, siteContext, raw), true, nil
 	}
@@ -201,6 +211,26 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 
 	siteContext.PublishModelChange(events.Created, dbModel)
 	return c.document(dbModel, siteContext, raw), false, nil
+}
+
+// repeated is the duplicate a create without an identifier repeats, given the create's values when the collection
+// is a CollectionRefresher
+func (c Collection[NS, DM]) repeated(ctx context.Context, siteContext *httputils.SiteContext, tx *sql.Tx, q *sitedb.Queries, nsModel NS, duplicate *DM, raw bool) (nsutils.Document, bool, *nsutils.HTTPError) {
+	refresher, ok := any(c.db).(CollectionRefresher[NS, DM])
+	if !ok {
+		return c.document(duplicate, siteContext, raw), true, nil
+	}
+	refreshed, changed, err := refresher.Refresh(q, ctx, nsModel, duplicate, converterContext(siteContext))
+	if httpErr := c.stored(refreshed, err, "refresh"); httpErr != nil {
+		return nil, false, httpErr
+	}
+	if changed {
+		if httpErr := c.commit(tx, "refresh"); httpErr != nil {
+			return nil, false, httpErr
+		}
+		siteContext.PublishModelChange(events.Updated, refreshed)
+	}
+	return c.document(refreshed, siteContext, raw), true, nil
 }
 
 // identifiedDuplicate is the model a create naming its identifier repeats, as in Nightscout, which keeps that

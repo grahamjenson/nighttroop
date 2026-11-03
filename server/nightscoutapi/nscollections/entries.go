@@ -75,6 +75,26 @@ func (c EntriesCollection) GetDuplicate(q *sitedb.Queries, ctx context.Context, 
 	return first(q.SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{DateEQ: nsModel.Date.Int64p(), DeviceEq: nsModel.Device.Stringp(), Limit: 1}))
 }
 
+// Refresh gives a reading sent again the values it was sent with, as Nightscout upserts a reading on its date and type:
+// xDrip4iOS smooths and rebuilds readings by sending them again without their _id. One of another type, or sent with
+// the values it has, is left as it is.
+func (c EntriesCollection) Refresh(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Entry, stored *sitedb.GlucoseReading, cc nightscoutmodels.ConverterContext) (*sitedb.GlucoseReading, bool, error) {
+	p := nightscoutmodels.EntryToUpdate(nsModel, cc)
+	if nightscoutmodels.SetReadingType(nsModel) != stored.ReadingType || (kept(p.Mgdl, &stored.Mgdl) && kept(p.Delta, stored.Delta) &&
+		kept(p.Direction, stored.Direction) && kept(p.Noise, stored.Noise) && kept(p.Filtered, stored.Filtered) &&
+		kept(p.Unfiltered, stored.Unfiltered) && kept(p.Rssi, stored.Rssi)) {
+		return stored, false, nil
+	}
+	p.ID = stored.ID
+	updated, err := q.UpdateGlucoseReading(ctx, p)
+	return updated, true, err
+}
+
+// kept is whether a value sent leaves the stored one as it is, as one not sent does
+func kept[T comparable](sent *T, stored *T) bool {
+	return sent == nil || (stored != nil && *sent == *stored)
+}
+
 func (c EntriesCollection) GetModel(q *sitedb.Queries, ctx context.Context, identifier string, includeDeleted bool) (*sitedb.GlucoseReading, error) {
 	return q.GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: identifier, IncludeDeleted: includeDeleted})
 }

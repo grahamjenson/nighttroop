@@ -299,6 +299,9 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   from the default profile's or profile switch's basal at its start, in the profile's timezone, so changed, and it is
   returned with that `absolute`.
 - Duplicate uploads are ignored; values far outside real use are refused.
+- An entry uploaded without an `_id` with the date, type and device of one stored takes its new value, direction and
+  raw values, as xDrip4iOS smooths readings, and followers get it as changed; one sent with the same values changes
+  nothing, not even when it was last modified.
 - A `created_at` filter given a time with no zone, as LoopFollow sends it, reads it as UTC.
 - Loop's and Trio's Suspend Pump and Resume Pump treatments are kept.
 - An activity's `type`, as xDrip+ sends it, is its activity type, a heart rate's `bpm` its heart rate and a motion's
