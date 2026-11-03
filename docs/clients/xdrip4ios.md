@@ -164,7 +164,7 @@ When the user deletes a reading or smooths or rebuilds readings: `DELETE /api/v1
 
 ## Quirks
 
-- `enteredBy` comes back as the identity's name, e.g. `pwd_phone`, which the app then takes as the treatment's.
+- `enteredBy` comes back as sent, `xDrip4iOS`, as Nightscout does.
 - Carbs come back as a `Carb Correction`; the app reads carbs from `carbs` whatever the event type.
 - An `sgv` under 30 with no `units` is read by Nighttroop as mmol/L. A CGM's readings don't go that low.
 - The history import asks for 2000 entries, more than Nighttroop's 1000, so it doesn't split a day with more.

@@ -18,6 +18,7 @@ INSERT INTO event_groups (
     notes,
     reason,
     duration_minutes,
+    entered_by,
 
     occurred_at,
     utc_offset_minutes,
@@ -27,7 +28,7 @@ INSERT INTO event_groups (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -222,6 +223,7 @@ UPDATE event_groups SET
 
     notes = COALESCE(sqlc.narg('Notes'), notes),
     reason = COALESCE(sqlc.narg('Reason'), reason),
+    entered_by = COALESCE(sqlc.narg('EnteredBy'), entered_by),
 
     raw_json_data = json_patch(
         COALESCE(raw_json_data, '{}'),
