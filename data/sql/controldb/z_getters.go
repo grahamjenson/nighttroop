@@ -2088,6 +2088,16 @@ func (m *CountPushRegistrationsParams) SetIdentityID(v int64) {
 	m.IdentityID = v
 }
 
+// GetTokenHash returns the TokenHash value.
+func (m CountPushRegistrationsParams) GetTokenHash() string {
+	return m.TokenHash
+}
+
+// SetTokenHash sets the TokenHash value and returns the updated CountPushRegistrationsParams.
+func (m *CountPushRegistrationsParams) SetTokenHash(v string) {
+	m.TokenHash = v
+}
+
 // GetSiteID returns the SiteID value.
 func (m CreatePushCredentialParams) GetSiteID() *string {
 	return m.SiteID
@@ -2228,6 +2238,16 @@ func (m *DeletePushRegistrationParams) SetIdentityID(v *int64) {
 	m.IdentityID = v
 }
 
+// GetSiteID returns the SiteID value.
+func (m DeletePushRegistrationByTokenHashParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated DeletePushRegistrationByTokenHashParams.
+func (m *DeletePushRegistrationByTokenHashParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
 // GetTokenHash returns the TokenHash value.
 func (m DeletePushRegistrationByTokenHashParams) GetTokenHash() string {
 	return m.TokenHash
@@ -2366,6 +2386,26 @@ func (m RecordPushParams) GetID() int64 {
 // SetID sets the ID value and returns the updated RecordPushParams.
 func (m *RecordPushParams) SetID(v int64) {
 	m.ID = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m RecordPushParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated RecordPushParams.
+func (m *RecordPushParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetTokenHash returns the TokenHash value.
+func (m RecordPushParams) GetTokenHash() string {
+	return m.TokenHash
+}
+
+// SetTokenHash sets the TokenHash value and returns the updated RecordPushParams.
+func (m *RecordPushParams) SetTokenHash(v string) {
+	m.TokenHash = v
 }
 
 // GetSiteID returns the SiteID value.
