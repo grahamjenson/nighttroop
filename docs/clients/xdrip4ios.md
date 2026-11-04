@@ -24,7 +24,8 @@ its units are set to mg/dL (#524).
   identity's (then the site's) units, so a device added for xDrip4iOS is in mg/dL whatever the site's. A token from
   another identity, such as the site's first PWD phone, needs its units set to mg/dL by an admin from its row on Users
   & Devices (#523), or on an mmol/L site 6.5 mmol/L is read as 6.5 mg/dL. A device added for xDrip4iOS also has the
-  Nightscout API write mg/dL as `mg/dl`, which another identity's admin can set as "Nightscout API writes mg/dL as".
+  Nightscout API write mg/dL as `mg/dl`, which an admin can set for another identity with `units_mgdl_label` through
+  the settings endpoint.
 
 ## Authentication
 

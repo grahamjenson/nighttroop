@@ -65,9 +65,6 @@ var (
 // generalFields and alarmFields are the settings each page shows, in order; one without options is typed in
 var generalFields = []settingField{
 	{Name: "units", Label: "Units", Options: []string{"mmol/L", "mg/dL"}},
-	// How the Nightscout API writes each units, for a client that reads only one spelling
-	{Name: "units_mgdl_label", Label: "Nightscout API writes mg/dL as", Options: settings.UnitsMgdlLabels},
-	{Name: "units_mmol_label", Label: "Nightscout API writes mmol/L as", Options: settings.UnitsMmolLabels},
 	{Name: "timezone", Label: "Timezone"},
 	{Name: "language", Label: "Language"},
 	{Name: "date_format", Label: "Date Format", Options: settings.DateFormats},

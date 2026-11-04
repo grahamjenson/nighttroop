@@ -52,6 +52,16 @@ GET http://{{ .ns_site }}/api/v1/treatments.json?token={{ .other_token }}
 ASSERT_STATUS 200
 ASSERT_EQUALS "mmol" "@0.units"
 
+// The labels are set only through the settings endpoint, so saving the settings page, which sends only its own
+// settings, leaves them as they are
+NAME site_saves_page_settings
+POST http://{{ site }}/settings/site
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"units": "mmol/L", "timezone": "Pacific/Auckland"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "mmol" "@result.units_mmol_label"
+
 // The xDrip4iOS device is still mg/dl, its own setting
 NAME xdrip4ios_still_reads_mg_dl
 GET http://{{ .ns_site }}/api/v1/treatments.json?token={{ .xdrip4ios_token }}
