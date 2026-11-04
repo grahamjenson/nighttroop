@@ -237,6 +237,8 @@ type TreatmentsEvenetConverter interface {
 	//
 	// goverter:map Dose Insulin
 	// goverter:map DoseType Type
+	// goverter:map SplitNow SplitNow | MultiplierToPercentage
+	// goverter:map SplitExt SplitExt | MultiplierToPercentage
 	UpdateInsulinDoseToTreatment(source *sitedb.InsulinDose, target *Treatment)
 
 	// goverter:update target
@@ -366,6 +368,8 @@ type TreatmentsEvenetConverter interface {
 	//
 	// goverter:map Insulin Dose
 	// goverter:map Type DoseType
+	// goverter:map SplitNow SplitNow | PercentageToMultiplier
+	// goverter:map SplitExt SplitExt | PercentageToMultiplier
 	PartialTreatmentToInsulinDose(source Treatment) sitedb.InsulinDose
 
 	// goverter:ignore ID DeletedAt CreatedAt CreatedByIdentityName CreatedByIdentityID UpdatedAt UpdatedByIdentityName UpdatedByIdentityID

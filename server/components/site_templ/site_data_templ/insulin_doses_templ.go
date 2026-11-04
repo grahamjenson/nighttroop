@@ -338,8 +338,8 @@ var insulinDoseFields = []addmodal.Field{
 	{Name: "occurred_at", Label: "When", Help: "When it was given, in your timezone. Blank is now.", Kind: addmodal.When},
 	{Name: "dose_type", Label: "Type", Help: "How it was given, e.g. normal, or SMB for a loop's small automatic bolus.", Kind: addmodal.Text, Max: "32", Options: []string{"normal", "SMB"}},
 	{Name: "reason", Label: "Reason", Help: "Why it was given, e.g. a correction or a meal.", Kind: addmodal.Text, Max: "64"},
-	{Name: "split_now", Label: "Given at once (%)", Help: "For a combo bolus, the percent of it given straight away.", Min: "0", Max: "100", Step: "any"},
-	{Name: "split_ext", Label: "Extended (%)", Help: "For a combo bolus, the percent of it given over time.", Min: "0", Max: "100", Step: "any"},
+	{Name: "split_now", Label: "Given at once (×)", Help: "For a combo bolus, the fraction of it given straight away, e.g. 0.7.", Min: "0", Max: "1", Step: "any"},
+	{Name: "split_ext", Label: "Extended (×)", Help: "For a combo bolus, the fraction of it given over time, e.g. 0.3.", Min: "0", Max: "1", Step: "any"},
 	{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
 }
 

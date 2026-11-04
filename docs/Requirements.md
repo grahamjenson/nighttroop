@@ -201,7 +201,7 @@ does not:
   highs coloured as on the summary.
   - Adding a reading offers its type as Meter or Sensor and its trend as an arrow with its name (e.g. `↗ FortyFiveUp`),
     as the table and its details show them.
-- **Insulin doses**
+- **Insulin doses**, with a combo bolus's split as the fractions given at once and over time, 0.7 for 70%
 - **Food intakes**
 - **Temp basals**, with the rate given in U/hr and a multiplier of the scheduled basal, 0.5 for half, 0 a zero temp
 - **Temp targets**, in the settings' units
@@ -327,6 +327,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   registers that app's APNs token for pushes for the identity that uploaded it, a production build unless
   `isAPNSProduction` is false; a token that is not one is not registered, and the profile is still kept.
 - A profile switch's `percentage` is kept as a multiplier of the profile's insulin (120 as 1.2) and returned as sent.
+- A combo bolus's `splitNow` and `splitExt` are kept as the fractions given at once and over time (70 as 0.7) and
+  returned as sent.
 - A temp basal is sent with its rate in U/hr as `rate` or `absolute`, its `percent`, or both. Its `percent` is
   Nightscout's change from the basal, as AAPS sends it (e.g. -50 for half, 20 for 1.2x, -100 a zero temp, never under
   -100), kept as a multiplier of the basal (0.5, 1.2, 0). The one not sent is set from the default profile's or
