@@ -25,9 +25,9 @@ SCREENSHOT temp_basals
 CLICK #tempBasalsTable tbody tr >> nth=0
 ASSERT_VISIBLE #site--temp-basal--details
 ASSERT_TEXT_VISIBLE virtual_sync
-// Only what it has is listed: virtual sync sets an absolute rate, not a percent
+// Only what it has is listed: virtual sync sets an absolute, not a rate of the basal
 ASSERT_VISIBLE #site--temp-basal--details dt:text-is("Device")
-ASSERT_NOT_VISIBLE #site--temp-basal--details dt:text-is("Percent")
+ASSERT_NOT_VISIBLE #site--temp-basal--details dt:text-is("Times the basal")
 // Its raw data is folded away until asked for
 ASSERT_VISIBLE #site--temp-basal--details--raw
 ASSERT_NOT_VISIBLE #site--temp-basal--details--raw pre
@@ -45,19 +45,19 @@ CLICK #site--temp-basal--add
 ASSERT_VISIBLE #site--temp-basal--create--modal
 ASSERT_TEXT_VISIBLE The basal rate given instead, 0 for a suspend.
 ASSERT_TEXT_VISIBLE Required
-ASSERT_VISIBLE #site--temp-basal--create--percent
-// Its percent is Nightscout's change from the basal, so a temp basal under it is negative
-ASSERT_TEXT_VISIBLE Its change from the scheduled basal, e.g. -50 for half
+ASSERT_VISIBLE #site--temp-basal--create--rate
+// Its rate is how many times the scheduled basal, so a temp basal under it is under 1
+ASSERT_TEXT_VISIBLE How many times the scheduled basal, e.g. 0.5 for half
 INPUT #site--temp-basal--create--absolute 1.25
 INPUT #site--temp-basal--create--duration-minutes 45
-INPUT #site--temp-basal--create--percent -30
+INPUT #site--temp-basal--create--rate 0.7
 INPUT #site--temp-basal--create--notes Sick day
 CLICK #site--temp-basal--create--notes
 SCREENSHOT temp_basal_add
 CLICK #site--temp-basal--create--submit
 ASSERT_STATUS 201
 ASSERT_TEXT_VISIBLE 1.25
-ASSERT_VISIBLE #tempBasalsTable td:text-is("-30")
+ASSERT_VISIBLE #tempBasalsTable td:text-is("0.7")
 SCREENSHOT temp_basal_created
 
 // Its details can be edited, which updates its row

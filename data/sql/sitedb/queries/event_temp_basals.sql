@@ -6,7 +6,7 @@ INSERT INTO temp_basals (
     id,
     duration_minutes,
     absolute,
-    percent,
+    rate,
     notes,
     reason,
 
@@ -76,7 +76,7 @@ LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER
 UPDATE temp_basals SET
     duration_minutes = COALESCE(sqlc.narg('DurationMinutes'), duration_minutes),
     absolute = COALESCE(sqlc.narg('Absolute'), absolute),
-    percent = COALESCE(sqlc.narg('Percent'), percent),
+    rate = COALESCE(sqlc.narg('Rate'), rate),
 
     notes = COALESCE(sqlc.narg('Notes'), notes),
     reason = COALESCE(sqlc.narg('Reason'), reason),

@@ -159,7 +159,8 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 404
 
-// A Nightscout percent is the change from the basal, -50 for half, as AAPS sends it, and the site keeps it as sent
+// A Nightscout percent is the change from the basal, -50 for half, as AAPS sends it, which the site keeps as a rate of
+// the basal, 0.5, and the Nightscout API returns as sent
 NAME create_percent_treatment
 POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
 B { "eventType": "Temp Basal", "created_at": "{{ time -5 }}", "rate": 0.4, "percent": -50, "duration": 30 }
@@ -171,5 +172,5 @@ GET http://{{ site }}/data/temp-basals
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS -50 "@result.0.percent"
+ASSERT_EQUALS 0.5 "@result.0.rate"
 ASSERT_EQUALS 0.4 "@result.0.absolute"

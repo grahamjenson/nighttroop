@@ -164,6 +164,22 @@ func TempBasalValuePtr(t Treatment) *float64 {
 	return nil
 }
 
+// PercentToRate is a temp basal's times the scheduled basal from Nightscout's percent change from it, so -50 is 0.5
+func PercentToRate(percent *types.FlexibleFloat64) *float64 {
+	if percent == nil {
+		return nil
+	}
+	return new(consts.Round(1+float64(*percent)/100, 5))
+}
+
+// RateToPercent is Nightscout's percent change from the basal of a temp basal's times the scheduled basal
+func RateToPercent(rate *float64) *types.FlexibleFloat64 {
+	if rate == nil {
+		return nil
+	}
+	return new(types.FlexibleFloat64(consts.Round((*rate-1)*100, 3)))
+}
+
 func FlexibleFloat64ToFloat64(source types.FlexibleFloat64) float64 {
 	return float64(source)
 }

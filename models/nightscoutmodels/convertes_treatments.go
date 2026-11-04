@@ -252,7 +252,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map Absolute Rate
 	// goverter:map DurationMinutes DurationInMilliseconds | MinutesToMilliseconds
 	// goverter:ignore Percent
-	// goverter:map Percent TempBasalPercent
+	// goverter:map Rate TempBasalPercent | RateToPercent
 	UpdateTempBasalToTreatment(source *sitedb.TempBasal, target *Treatment)
 
 	// goverter:update target
@@ -388,7 +388,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map Date OccurredAt | OrNow
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
-	// goverter:map TempBasalPercent Percent
+	// goverter:map TempBasalPercent Rate | PercentToRate
 	PartialTreatmentToTempBasal(source Treatment) sitedb.TempBasal
 
 	// goverter:ignore ID DeletedAt CreatedAt CreatedByIdentityName CreatedByIdentityID UpdatedAt UpdatedByIdentityName UpdatedByIdentityID

@@ -203,7 +203,7 @@ does not:
     as the table and its details show them.
 - **Insulin doses**
 - **Food intakes**
-- **Temp basals**, with a percent as Nightscout's change from the scheduled basal, -50 for half, -100 a zero temp
+- **Temp basals**, with a rate as how many times the scheduled basal, 0.5 for half, 0 a zero temp
 - **Temp targets**, in the settings' units
 - **Profile switches**, with their profile's schedules to read
 - **Activities**
@@ -327,9 +327,11 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   registers that app's APNs token for pushes for the identity that uploaded it, a production build unless
   `isAPNSProduction` is false; a token that is not one is not registered, and the profile is still kept.
 - A temp basal's `percent` is Nightscout's change from the basal, as AAPS sends it (e.g. -50 for half, 20 for 1.2x,
-  -100 a zero temp, never under -100), and is kept and returned as sent. Sent with only a `percent`, its rate is set
-  from the default profile's or profile switch's basal at its start, in the profile's timezone, so changed, and it is
-  returned with that `absolute`.
+  -100 a zero temp, never under -100), kept as a rate of the basal (0.5, 1.2, 0) and returned as sent. Sent with only
+  a `percent`, its absolute is set from the default profile's or profile switch's basal at its start, in the
+  profile's timezone, times the rate, and it is returned with that `absolute`.
+- The summary's basal during a temp basal with a rate is each minute's scheduled basal times the rate, so it follows
+  the schedule, and otherwise its absolute.
 - Duplicate uploads are ignored; values far outside real use are refused.
 - An entry uploaded without an `_id` with the date, type and device of one stored takes its new value, direction and
   raw values, as xDrip4iOS smooths readings, and followers get it as changed; one sent with the same values changes

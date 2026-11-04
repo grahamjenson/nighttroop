@@ -514,7 +514,7 @@ type TempBasal struct {
 	ID                    string
 	DurationMinutes       int64
 	Absolute              float64
-	Percent               *float64
+	Rate                  *float64
 	Notes                 *string
 	Reason                *string
 	RawJsonData           *string
@@ -535,7 +535,7 @@ type TempBasalsVw struct {
 	ID                    *string
 	DurationMinutes       *int64
 	Absolute              *float64
-	Percent               *float64
+	Rate                  *float64
 	Notes                 *string
 	Reason                *string
 	RawJsonData           *string

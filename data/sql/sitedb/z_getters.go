@@ -4486,14 +4486,14 @@ func (m *TempBasal) SetAbsolute(v float64) {
 	m.Absolute = v
 }
 
-// GetPercent returns the Percent value.
-func (m TempBasal) GetPercent() *float64 {
-	return m.Percent
+// GetRate returns the Rate value.
+func (m TempBasal) GetRate() *float64 {
+	return m.Rate
 }
 
-// SetPercent sets the Percent value and returns the updated TempBasal.
-func (m *TempBasal) SetPercent(v *float64) {
-	m.Percent = v
+// SetRate sets the Rate value and returns the updated TempBasal.
+func (m *TempBasal) SetRate(v *float64) {
+	m.Rate = v
 }
 
 // GetNotes returns the Notes value.
@@ -4666,14 +4666,14 @@ func (m *TempBasalsVw) SetAbsolute(v *float64) {
 	m.Absolute = v
 }
 
-// GetPercent returns the Percent value.
-func (m TempBasalsVw) GetPercent() *float64 {
-	return m.Percent
+// GetRate returns the Rate value.
+func (m TempBasalsVw) GetRate() *float64 {
+	return m.Rate
 }
 
-// SetPercent sets the Percent value and returns the updated TempBasalsVw.
-func (m *TempBasalsVw) SetPercent(v *float64) {
-	m.Percent = v
+// SetRate sets the Rate value and returns the updated TempBasalsVw.
+func (m *TempBasalsVw) SetRate(v *float64) {
+	m.Rate = v
 }
 
 // GetNotes returns the Notes value.
@@ -11846,14 +11846,14 @@ func (m *CreateTempBasalParams) SetAbsolute(v float64) {
 	m.Absolute = v
 }
 
-// GetPercent returns the Percent value.
-func (m CreateTempBasalParams) GetPercent() *float64 {
-	return m.Percent
+// GetRate returns the Rate value.
+func (m CreateTempBasalParams) GetRate() *float64 {
+	return m.Rate
 }
 
-// SetPercent sets the Percent value and returns the updated CreateTempBasalParams.
-func (m *CreateTempBasalParams) SetPercent(v *float64) {
-	m.Percent = v
+// SetRate sets the Rate value and returns the updated CreateTempBasalParams.
+func (m *CreateTempBasalParams) SetRate(v *float64) {
+	m.Rate = v
 }
 
 // GetNotes returns the Notes value.
@@ -12266,14 +12266,14 @@ func (m *UpdateTempBasalParams) SetAbsolute(v *float64) {
 	m.Absolute = v
 }
 
-// GetPercent returns the Percent value.
-func (m UpdateTempBasalParams) GetPercent() *float64 {
-	return m.Percent
+// GetRate returns the Rate value.
+func (m UpdateTempBasalParams) GetRate() *float64 {
+	return m.Rate
 }
 
-// SetPercent sets the Percent value and returns the updated UpdateTempBasalParams.
-func (m *UpdateTempBasalParams) SetPercent(v *float64) {
-	m.Percent = v
+// SetRate sets the Rate value and returns the updated UpdateTempBasalParams.
+func (m *UpdateTempBasalParams) SetRate(v *float64) {
+	m.Rate = v
 }
 
 // GetNotes returns the Notes value.

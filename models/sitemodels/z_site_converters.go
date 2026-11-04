@@ -1925,9 +1925,9 @@ func TempBasalFromDB(source *sitedb.TempBasal) *SiteTempBasal {
 		sitemodelsSiteTempBasal.DurationMinutes = (*source).DurationMinutes
 		pFloat64 := (*source).Absolute
 		sitemodelsSiteTempBasal.Absolute = &pFloat64
-		if (*source).Percent != nil {
-			xfloat64 := *(*source).Percent
-			sitemodelsSiteTempBasal.Percent = &xfloat64
+		if (*source).Rate != nil {
+			xfloat64 := *(*source).Rate
+			sitemodelsSiteTempBasal.Rate = &xfloat64
 		}
 		if (*source).Notes != nil {
 			xstring := *(*source).Notes
@@ -1973,9 +1973,9 @@ func TempBasalToCreate(source *SiteTempBasal, context *httputils.SiteContext) si
 		if (*source).Absolute != nil {
 			sitedbCreateTempBasalParams.Absolute = *(*source).Absolute
 		}
-		if (*source).Percent != nil {
-			xfloat64 := *(*source).Percent
-			sitedbCreateTempBasalParams.Percent = &xfloat64
+		if (*source).Rate != nil {
+			xfloat64 := *(*source).Rate
+			sitedbCreateTempBasalParams.Rate = &xfloat64
 		}
 		if (*source).Notes != nil {
 			xstring := *(*source).Notes
@@ -2015,9 +2015,9 @@ func TempBasalToUpdate(source *SiteTempBasal, context *httputils.SiteContext) si
 			xfloat64 := *(*source).Absolute
 			sitedbUpdateTempBasalParams.Absolute = &xfloat64
 		}
-		if (*source).Percent != nil {
-			xfloat642 := *(*source).Percent
-			sitedbUpdateTempBasalParams.Percent = &xfloat642
+		if (*source).Rate != nil {
+			xfloat642 := *(*source).Rate
+			sitedbUpdateTempBasalParams.Rate = &xfloat642
 		}
 		if (*source).Notes != nil {
 			xstring := *(*source).Notes

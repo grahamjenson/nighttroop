@@ -440,10 +440,10 @@ var treatmentTypeEvents = func() map[nightscoutmodels.TreatmentEventType][]treat
 // and percentSwitches the most switches looked at
 const percentSwitchMs, percentSwitches = 7 * 24 * 60 * 60_000, 1000
 
-// percentRate sets the rate of a temp basal the treatment sends only as a percent from the profile's basal at its
-// start, see sitemodels.PercentBasal, keeping its rate when no profile has a basal then
+// percentRate sets the absolute of a temp basal the treatment sends only as a percent from the profile's basal at its
+// start, see sitemodels.RateBasal, keeping its absolute when no profile has a basal then
 func percentRate(ctx context.Context, q *sitedb.Queries, treatment nightscoutmodels.Treatment, tempBasal *sitedb.TempBasal) error {
-	if tempBasal == nil || tempBasal.Percent == nil || nightscoutmodels.TempBasalValuePtr(treatment) != nil {
+	if tempBasal == nil || tempBasal.Rate == nil || nightscoutmodels.TempBasalValuePtr(treatment) != nil {
 		return nil
 	}
 	at := tempBasal.OccurredAt
@@ -462,7 +462,7 @@ func percentRate(ctx context.Context, q *sitedb.Queries, treatment nightscoutmod
 		location = siteContext.GetSiteTimezone()
 	}
 	slices.Reverse(switches)
-	if rate := sitemodels.PercentBasal(at, *tempBasal.Percent, location, defaults, switches); rate != nil {
+	if rate := sitemodels.RateBasal(at, *tempBasal.Rate, location, defaults, switches); rate != nil {
 		tempBasal.Absolute = *rate
 	}
 	return nil

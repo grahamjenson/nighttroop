@@ -5,7 +5,8 @@ type SiteTempBasal struct {
 	DurationMinutes int64  `json:"duration_minutes"`
 	// Absolute is U/hr, a pointer so 0, a suspended basal, can be sent
 	Absolute              *float64 `json:"absolute"`
-	Percent               *float64 `json:"percent"`
+	// Rate is how many times the scheduled basal, so 0.5 is half and 0 a zero temp
+	Rate                  *float64 `json:"rate"`
 	Notes                 *string  `json:"notes"`
 	Reason                *string  `json:"reason"`
 	RawJsonData           *string  `json:"raw_json_data"`
