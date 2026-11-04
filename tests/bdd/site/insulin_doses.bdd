@@ -21,6 +21,8 @@ ASSERT_TEXT_VISIBLE Units of insulin given.
 ASSERT_TEXT_VISIBLE Required
 ASSERT_VISIBLE #site--insulin--create--occurred-at
 ASSERT_VISIBLE #site--insulin--create--split-now
+// A combo bolus's split is the fraction of it given at once
+ASSERT_TEXT_VISIBLE the fraction of it given straight away, e.g. 0.7
 SCREENSHOT insulin_dose_add
 
 // A dose added goes to the top of the table, at the time it was given, with its type and reason, and the modal closes

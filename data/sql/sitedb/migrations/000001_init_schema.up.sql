@@ -51,8 +51,8 @@ CREATE TABLE insulin_doses (
     dose REAL NOT NULL CHECK(dose BETWEEN -500 AND 500), -- units, negative takes insulin back off IOB
     dose_type TEXT CHECK(length(dose_type) <= 32),
     
-    split_now REAL CHECK(split_now BETWEEN 0 AND 100), -- percent
-    split_ext REAL CHECK(split_ext BETWEEN 0 AND 100),
+    split_now REAL CHECK(split_now BETWEEN 0 AND 1), -- the fraction of a combo bolus given at once, Nightscout's splitNow / 100
+    split_ext REAL CHECK(split_ext BETWEEN 0 AND 1), -- the fraction given over time, Nightscout's splitExt / 100
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),

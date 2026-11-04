@@ -167,3 +167,50 @@ DELETE http://{{ site }}/data/insulin/not-a-dose
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 404
+
+//////
+// COMBO BOLUS SPLIT
+//////
+
+// A combo bolus's Nightscout splitNow and splitExt are percents, kept as the fractions given at once and over time,
+// and returned by the Nightscout API as sent
+NAME create_combo_bolus_treatment
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B { "eventType": "Combo Bolus", "created_at": "{{ time -5 }}", "insulin": 3, "splitNow": 70, "splitExt": 30, "duration": 60 }
+ASSERT_STATUS 200
+ASSERT_EQUALS 70 "@0.splitNow"
+ASSERT_EQUALS 30 "@0.splitExt"
+
+NAME list_combo_bolus
+GET http://{{ site }}/data/insulin
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 0.7 "@result.0.split_now"
+ASSERT_EQUALS 0.3 "@result.0.split_ext"
+
+NAME create_split_dose
+POST http://{{ site }}/data/insulin
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"dose": 2, "split_now": 0.6, "split_ext": 0.4}
+ASSERT_STATUS 201
+ASSERT_EQUALS 0.6 "@result.split_now"
+ASSERT_EQUALS 0.4 "@result.split_ext"
+
+// A split is a fraction, so a percent is refused, also when it is all that is changed
+NAME create_split_dose_as_percent
+POST http://{{ site }}/data/insulin
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"dose": 2, "split_now": 70}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "split_now must be from 0 to 1" "@message"
+
+NAME update_split_as_percent
+POST http://{{ site }}/data/insulin/{{ .create_split_dose.result.id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"split_ext": 30}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "split_ext must be from 0 to 1" "@message"

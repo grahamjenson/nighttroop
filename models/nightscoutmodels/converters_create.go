@@ -221,7 +221,8 @@ func UnitsToUnits(source *consts.Units) *consts.Units {
 	return &constsUnits
 }
 
-// PercentageToMultiplier is a profile switch's times the profile's insulin from Nightscout's percentage, so 120 is 1.2
+// PercentageToMultiplier is a multiplier from Nightscout's percentage of a whole, so 120 is 1.2, as a profile switch's
+// percentage of the profile's insulin and a combo bolus's split
 func PercentageToMultiplier(percentage *types.FlexibleFloat64) *float64 {
 	if percentage == nil {
 		return nil
@@ -229,7 +230,7 @@ func PercentageToMultiplier(percentage *types.FlexibleFloat64) *float64 {
 	return new(consts.Round(float64(*percentage)/100, 5))
 }
 
-// MultiplierToPercentage is Nightscout's percentage of a profile switch's times the profile's insulin
+// MultiplierToPercentage is Nightscout's percentage of a whole from a multiplier, see PercentageToMultiplier
 func MultiplierToPercentage(multiplier *float64) *types.FlexibleFloat64 {
 	if multiplier == nil {
 		return nil

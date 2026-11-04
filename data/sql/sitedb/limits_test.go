@@ -26,6 +26,10 @@ func TestSiteDataLimits(t *testing.T) {
 			_, err := q.CreateInsulinDose(ctx, sitedb.CreateInsulinDoseParams{ID: id, Dose: v, OccurredAt: now, CreatedByIdentityName: "test"})
 			return err
 		}, []float64{-10, 0.05, 500}, []float64{1000, -1000}},
+		{"combo bolus split", func(id string, v float64) error {
+			_, err := q.CreateInsulinDose(ctx, sitedb.CreateInsulinDoseParams{ID: id, Dose: 1, SplitNow: &v, SplitExt: &v, OccurredAt: now, CreatedByIdentityName: "test"})
+			return err
+		}, []float64{0, 0.5, 1}, []float64{70, -0.1}},
 		{"carbs", func(id string, v float64) error {
 			_, err := q.CreateFoodIntake(ctx, sitedb.CreateFoodIntakeParams{ID: id, Carbs: &v, OccurredAt: now, CreatedByIdentityName: "test"})
 			return err

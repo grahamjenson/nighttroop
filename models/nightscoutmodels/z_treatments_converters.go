@@ -991,14 +991,8 @@ func PartialTreatmentToInsulinDose(source Treatment) sitedb.InsulinDose {
 		xstring := ShortStringToString(*source.Type)
 		sitedbInsulinDose.DoseType = &xstring
 	}
-	if source.SplitNow != nil {
-		xfloat64 := FlexibleFloat64ToFloat64(*source.SplitNow)
-		sitedbInsulinDose.SplitNow = &xfloat64
-	}
-	if source.SplitExt != nil {
-		xfloat642 := FlexibleFloat64ToFloat64(*source.SplitExt)
-		sitedbInsulinDose.SplitExt = &xfloat642
-	}
+	sitedbInsulinDose.SplitNow = PercentageToMultiplier(source.SplitNow)
+	sitedbInsulinDose.SplitExt = PercentageToMultiplier(source.SplitExt)
 	if source.Notes != nil {
 		xstring2 := SanitizedStringToString(*source.Notes)
 		sitedbInsulinDose.Notes = &xstring2
@@ -1640,14 +1634,8 @@ func UpdateInsulinDoseToTreatment(source *sitedb.InsulinDose, target *Treatment)
 	if source != nil {
 		pTypesFlexibleFloat64 := types.FlexibleFloat64(source.Dose)
 		target.Insulin = &pTypesFlexibleFloat64
-		if source.SplitNow != nil {
-			typesFlexibleFloat64 := types.FlexibleFloat64(*source.SplitNow)
-			target.SplitNow = &typesFlexibleFloat64
-		}
-		if source.SplitExt != nil {
-			typesFlexibleFloat642 := types.FlexibleFloat64(*source.SplitExt)
-			target.SplitExt = &typesFlexibleFloat642
-		}
+		target.SplitNow = MultiplierToPercentage(source.SplitNow)
+		target.SplitExt = MultiplierToPercentage(source.SplitExt)
 		if source.DoseType != nil {
 			typesShortString := types.ShortString(*source.DoseType)
 			target.Type = &typesShortString

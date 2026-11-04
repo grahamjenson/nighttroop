@@ -1,6 +1,7 @@
 package sitedata
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 
@@ -57,10 +58,13 @@ func (s *InsulinDosesCollection) CreateHTMXResponse(model *sitemodels.SiteInsuli
 
 // UpdateRow changes a dose's units, type, notes or reason; anything not sent stays as it is
 func (s *InsulinDosesCollection) UpdateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteInsulinDose, model *sitemodels.SiteInsulinDose) (*sitedb.InsulinDose, error) {
-	if model.Dose != 0 {
-		if herr := checkInsulinDose(model); herr != nil {
-			return nil, herr
-		}
+	// Check the dose as it will be once the fields sent are changed
+	merged := *model
+	if merged.Dose == 0 {
+		merged.Dose = oldModel.Dose
+	}
+	if herr := checkInsulinDose(&merged); herr != nil {
+		return nil, herr
 	}
 	model.ID = oldModel.ID
 	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).UpdateInsulinDose, sitemodels.InsulinDoseToUpdate(model, siteContext))
@@ -120,5 +124,5 @@ func checkInsulinDose(model *sitemodels.SiteInsulinDose) *apiutils.HTTPError {
 	if model.Dose == 0 || model.Dose < -maxInsulinDoseUnits || model.Dose > maxInsulinDoseUnits {
 		return apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("dose must not be 0, and must be from -%d to %d units", maxInsulinDoseUnits, maxInsulinDoseUnits))
 	}
-	return nil
+	return cmp.Or(apiutils.CheckRange("split_now", model.SplitNow, 0, 1, ""), apiutils.CheckRange("split_ext", model.SplitExt, 0, 1, ""))
 }
