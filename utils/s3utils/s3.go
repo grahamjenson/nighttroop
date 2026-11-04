@@ -91,6 +91,46 @@ func NewS3Client(config *config.ServerConfig) *S3Client {
 	return c
 }
 
+// startWaits are how long Start waits after each failed test before testing again, about half a minute in all, so a
+// network still coming up as the server starts is not a failure
+var startWaits = []time.Duration{2 * time.Second, 4 * time.Second, 8 * time.Second, 16 * time.Second}
+
+// Start turns S3 on when S3_URL is set: it tests uploading to the bucket, again after each of startWaits, and gives the
+// last error when none works, as a server that cannot reach its backups must not start, possibly empty, and upload
+// that over them. Without S3_URL, S3 is off: nothing is tried, restored or backed up.
+func (c *S3Client) Start(ctx context.Context) error {
+	return c.start(ctx, c.TestS3Client, startWaits)
+}
+
+func (c *S3Client) start(ctx context.Context, test func(context.Context) error, waits []time.Duration) error {
+	if c.Endpoint == "" {
+		slog.Info("S3_URL is not set, so S3 is off: nothing is restored on start or backed up")
+		return nil
+	}
+	err := test(ctx)
+	for _, wait := range waits {
+		if err == nil {
+			break
+		}
+		slog.Warn("S3 is not working yet, testing it again", "wait", wait, "error", err)
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(wait):
+		}
+		err = test(ctx)
+	}
+	if err != nil {
+		return fmt.Errorf("S3_URL is set but S3 is not working: %w", err)
+	}
+	c.ServerConfig.Status.S3Working = true
+	// Without versioning each backup replaces the last, which is worth an error but not stopping backups
+	if err := c.ConfigureVersioning(ctx); err != nil {
+		slog.Error("S3 versioning is not set up, so each backup replaces the last", "error", err)
+	}
+	return nil
+}
+
 func (c *S3Client) TestS3Client(ctx context.Context) error {
 	testKey := c.TestObjectPath()
 	randomGen := utils.NextSiteSubdomain(false)

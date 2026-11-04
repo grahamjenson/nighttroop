@@ -41,7 +41,7 @@ Limits written per minute are rates; their burst is how many can be used at once
 
 | Variable | Default | Use |
 | --- | --- | --- |
-| `S3_URL` | `http://localhost:9000` | The S3 compatible endpoint backups and archives upload to. If it fails its startup test, there is no restore on start, no backup upload, and sites cannot be deleted |
+| `S3_URL` | none | The S3 compatible endpoint backups and archives upload to, e.g. `http://localhost:9000` for the docker-compose MinIO. Unset or empty, S3 is off: there is no restore on start, no backup upload, and sites cannot be deleted. Set, the server tests uploading to it at startup, again over about half a minute, and does not start if it never works |
 | `S3_BUCKET` | `mybucket` | The bucket. Versioning and lifecycle rules are turned on for it at startup |
 | `S3_ACCESS_KEY` | `minioadmin` | The S3 access key ID |
 | `S3_SECRET_KEY` | `minioadmin` | The S3 secret key |
