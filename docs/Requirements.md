@@ -415,6 +415,9 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 
 ### Backups and limits
 
+- S3 is off without `S3_URL`, with nothing restored on start or backed up. With it, the server tests uploading to S3
+  at startup, again over about half a minute, and does not start if it never works, so a server that cannot reach
+  its backups never starts empty and backs that up over them.
 - Every site's DB is backed up to S3 in batches, and the control DB on its own, with old versions kept for a
   retention period.
 - A site not written to since its last backup is not copied again, so its DB is not opened, and a batch with the same

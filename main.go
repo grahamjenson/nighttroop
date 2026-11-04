@@ -59,15 +59,9 @@ func run() error {
 	//
 	s3Client := s3utils.NewS3Client(serverConfig)
 
-	// S3 is optional: without it there is no restore on start or backup upload
-	if err := s3Client.TestS3Client(ctx); err != nil {
-		slog.Warn("S3 is not working, running without S3 restore or backups", "error", err)
-	} else {
-		serverConfig.Status.S3Working = true
-		// Without versioning each backup replaces the last, which is worth an error but not stopping backups
-		if err := s3Client.ConfigureVersioning(ctx); err != nil {
-			slog.Error("S3 versioning is not set up, so each backup replaces the last", "error", err)
-		}
+	// S3 is off without S3_URL; with it, the server only starts once S3 works
+	if err := s3Client.Start(ctx); err != nil {
+		return err
 	}
 
 	// Run some tests to make sure the server is setup properly

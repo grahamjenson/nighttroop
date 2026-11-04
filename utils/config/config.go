@@ -301,7 +301,7 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 
 		// s3 config
 		S3Bucket:          configStringSelect(dotenv, "S3_BUCKET", "mybucket"),
-		S3URL:             configStringSelect(dotenv, "S3_URL", "http://localhost:9000"),
+		S3URL:             configStringSelect(dotenv, "S3_URL", ""),
 		S3AccessKeyID:     configStringSelect(dotenv, "S3_ACCESS_KEY", "minioadmin"),
 		S3AccessSecretKey: configStringSelect(dotenv, "S3_SECRET_KEY", "minioadmin"),
 

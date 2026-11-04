@@ -62,7 +62,7 @@ of your own domain:
   - **Each deploy stops the server for a minute or so.** The volume can only be attached to one machine, so Fly stops
     the old one before the new one starts, opens every database, and passes its health check. Pages and apps get
     errors until it is back.
-- **No S3.** `S3_URL` is left unset, so the S3 check fails at startup. Then:
+- **No S3.** `S3_URL` is left unset, so S3 is off. Then:
   - nothing is restored on start and nothing is backed up;
   - the control plane warns that S3 is not connected, which is expected here;
   - sites cannot be deleted, as deleting archives a site to S3 first. The next deploy removes them anyway.
