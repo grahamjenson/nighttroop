@@ -151,6 +151,9 @@ CREATE TABLE site_identities (
     password_hash TEXT NOT NULL CHECK(length(password_hash) <= 128),
     totp_secret_enc TEXT NOT NULL CHECK(length(totp_secret_enc) <= 128),
     role TEXT NOT NULL CHECK(length(role) <= 32),
+    -- client is the app a device was added for, e.g. aaps or loop, or other, so its settings can be changed by app;
+    -- null for a user or a site's first devices
+    client TEXT CHECK(length(client) <= 32),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     
     last_seen_at INTEGER,

@@ -1078,6 +1078,16 @@ func (m *SiteIdentity) SetRole(v consts.IdentityRole) {
 	m.Role = v
 }
 
+// GetClient returns the Client value.
+func (m SiteIdentity) GetClient() *string {
+	return m.Client
+}
+
+// SetClient sets the Client value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetClient(v *string) {
+	m.Client = v
+}
+
 // GetCreatedAt returns the CreatedAt value.
 func (m SiteIdentity) GetCreatedAt() int64 {
 	return m.CreatedAt
@@ -3546,6 +3556,16 @@ func (m CreateSiteIdentityParams) GetRole() consts.IdentityRole {
 // SetRole sets the Role value and returns the updated CreateSiteIdentityParams.
 func (m *CreateSiteIdentityParams) SetRole(v consts.IdentityRole) {
 	m.Role = v
+}
+
+// GetClient returns the Client value.
+func (m CreateSiteIdentityParams) GetClient() *string {
+	return m.Client
+}
+
+// SetClient sets the Client value and returns the updated CreateSiteIdentityParams.
+func (m *CreateSiteIdentityParams) SetClient(v *string) {
+	m.Client = v
 }
 
 // GetCreatedByIdentityID returns the CreatedByIdentityID value.

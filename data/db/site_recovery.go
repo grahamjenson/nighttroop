@@ -68,7 +68,7 @@ func (db *ControlDB) RecoverSiteAdmin(ctx context.Context, siteID string, backup
 	}
 	if n, err := reset.RowsAffected(); err != nil || n == 0 {
 		// The admin was deleted, so it is made again, with credentials of its own
-		created, err := db.CreateSiteIdentity(ctx, q, siteID, name, consts.IdentityRoleAdmin)
+		created, err := db.CreateSiteIdentity(ctx, q, siteID, name, consts.IdentityRoleAdmin, nil)
 		if err != nil {
 			return nil, fmt.Errorf("cannot make the admin again: %w", err)
 		}

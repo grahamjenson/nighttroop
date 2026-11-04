@@ -133,6 +133,7 @@ type SiteIdentity struct {
 	PasswordHash                     string
 	TotpSecretEnc                    string
 	Role                             consts.IdentityRole
+	Client                           *string
 	CreatedAt                        int64
 	LastSeenAt                       *int64
 	LastWriteAt                      *int64

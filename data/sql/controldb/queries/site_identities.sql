@@ -9,10 +9,12 @@ INSERT INTO site_identities (
     password_hash,
     totp_secret_enc,
     role,
+    client,
     created_by_identity_id,
     created_by_identity_name,
     nightscout_token_digest
 ) VALUES (
+    ?,
     ?,
     ?,
     ?,

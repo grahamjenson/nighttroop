@@ -26,8 +26,9 @@ type UserIdentity struct {
 	NSToken    *string `json:"ns_token,omitempty"`
 	SiteURL    string  `json:"-"`
 
-	// Client is the Nightscout client a device is added for, such as aaps or nightguard, so its credentials say how to
-	// set it up, and NSURL is the site's Nightscout URL it is set up with. Only set when it is created.
+	// Client is the app a device was added for, such as aaps or nightguard, or other, kept so its credentials say how to
+	// set it up and its settings can be changed by app; empty for a user or a site's first devices. NSURL is the site's
+	// Nightscout URL it is set up with, only set when it is created.
 	Client string `json:"client,omitempty"`
 	NSURL  string `json:"-"`
 }
