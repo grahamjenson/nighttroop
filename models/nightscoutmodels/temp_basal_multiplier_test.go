@@ -10,7 +10,7 @@ import (
 // A Nightscout percent is kept as a multiplier of the basal and returned as the same percent
 func TestPercentToMultiplier(t *testing.T) {
 	tests := []struct {
-		name          string
+		name                string
 		percent, multiplier float64
 	}{
 		{name: "half", percent: -50, multiplier: 0.5},
