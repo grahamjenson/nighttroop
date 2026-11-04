@@ -68,8 +68,8 @@ func SummaryMinutes(since, until int64, units *consts.Units, location *time.Loca
 	}
 	for _, s := range switches {
 		p := newProfile(s.OccurredAt, s.DurationMinutes, s.Timezone, s.TargetsLowJson, s.TargetsHighJson, s.BasalRatesJson, location)
-		if s.Percent != nil {
-			p.basalScale = *s.Percent / 100
+		if s.Multiplier != nil {
+			p.basalScale = *s.Multiplier
 		}
 		if s.Timeshift != nil {
 			p.shift = *s.Timeshift * 60

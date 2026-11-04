@@ -55,10 +55,10 @@ func TestSiteDataLimits(t *testing.T) {
 			_, err := q.CreateDeviceReport(ctx, sitedb.CreateDeviceReportParams{ID: id, LoopIob: &v, OccurredAt: now, CreatedByIdentityName: "test"})
 			return err
 		}, []float64{-3, 20}, []float64{5000}},
-		{"profile switch percent", func(id string, v float64) error {
-			_, err := q.CreateProfileSwitch(ctx, sitedb.CreateProfileSwitchParams{ID: id, Name: id, Percent: &v, OccurredAt: now, CreatedByIdentityName: "test"})
+		{"profile switch multiplier", func(id string, v float64) error {
+			_, err := q.CreateProfileSwitch(ctx, sitedb.CreateProfileSwitchParams{ID: id, Name: id, Multiplier: &v, OccurredAt: now, CreatedByIdentityName: "test"})
 			return err
-		}, []float64{100}, []float64{5000, -1}},
+		}, []float64{0, 1, 10}, []float64{50, -1}},
 		{"occurred at", func(id string, v float64) error {
 			_, err := q.CreateInsulinDose(ctx, sitedb.CreateInsulinDoseParams{ID: id, Dose: 1, OccurredAt: int64(v), CreatedByIdentityName: "test"})
 			return err

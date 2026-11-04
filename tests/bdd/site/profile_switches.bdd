@@ -32,10 +32,10 @@ CLICK #site--profile-switch--add
 ASSERT_VISIBLE #site--profile-switch--create--modal
 ASSERT_TEXT_VISIBLE The name of the profile switched to.
 ASSERT_TEXT_VISIBLE Required
-ASSERT_VISIBLE #site--profile-switch--create--percent[value="100"]
+ASSERT_VISIBLE #site--profile-switch--create--multiplier[value="1"]
 SCREENSHOT profile_switch_add
 INPUT #site--profile-switch--create--name Sick Day
-INPUT #site--profile-switch--create--percent 120
+INPUT #site--profile-switch--create--multiplier 1.2
 INPUT #site--profile-switch--create--notes Flu
 CLICK #site--profile-switch--create--submit
 ASSERT_STATUS 201
@@ -45,14 +45,14 @@ SCREENSHOT profile_switches
 // Clicking the virtual profile switch shows all its details, its schedules only to read
 CLICK #profileSwitchesTable tbody tr >> nth=1
 ASSERT_VISIBLE #site--profile-switch--details
-ASSERT_TEXT_VISIBLE Virtual at 100%
+ASSERT_TEXT_VISIBLE Virtual at 1×
 ASSERT_VISIBLE #site--profile-switch--details--basal-rates
 ASSERT_VISIBLE #site--profile-switch--details--targets-high
 ASSERT_TEXT_VISIBLE virtual_sync
 SCREENSHOT profile_switch_details
 
-// The name, percent, shift, minutes and notes can be edited
-INPUT #site--profile-switch--edit--percent 80
+// The name, multiplier, shift, minutes and notes can be edited
+INPUT #site--profile-switch--edit--multiplier 0.8
 INPUT #site--profile-switch--edit--timeshift 60
 INPUT #site--profile-switch--edit--duration 120
 INPUT #site--profile-switch--edit--notes Exercise
@@ -64,7 +64,7 @@ SCREENSHOT profile_switch_updated
 
 CLICK #profileSwitchesTable tbody tr >> nth=1
 ASSERT_VISIBLE #site--profile-switch--details
-ASSERT_TEXT_VISIBLE Virtual at 80%
+ASSERT_TEXT_VISIBLE Virtual at 0.8×
 ASSERT_TEXT_VISIBLE Exercise
 CLICK #site--profile-switch--details--close
 ASSERT_NOT_VISIBLE #site--profile-switch--details

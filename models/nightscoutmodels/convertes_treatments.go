@@ -280,6 +280,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map Name Profile
 	// goverter:map . ProfileJSON | ToProfileJSON
 	// goverter:map DurationMinutes DurationInMilliseconds | MinutesToMilliseconds
+	// goverter:map Multiplier Percent | MultiplierToPercentage
 	UpdateProfileSwitchToTreatment(source *sitedb.ProfileSwitch, siteContext *httputils.SiteContext, target *Treatment)
 
 	// goverter:update target
@@ -382,6 +383,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map Device CreatedByDeviceName
 	//
 	// goverter:ignore Dia Units Timezone CarbsHr Delay CarbRatiosJson InsulinSensitivitiesJson  BasalRatesJson TargetsHighJson TargetsLowJson
+	// goverter:map Percent Multiplier | PercentageToMultiplier
 	PartialTreatmentToProfileSwitch(source Treatment) sitedb.ProfileSwitch
 
 	// goverter:ignore ID DeletedAt CreatedAt CreatedByIdentityName CreatedByIdentityID UpdatedAt UpdatedByIdentityName UpdatedByIdentityID

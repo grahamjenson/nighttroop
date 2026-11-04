@@ -61,14 +61,14 @@ func TestSummaryMinutes(t *testing.T) {
 			units:    &mgdl,
 			defaults: []*sitedb.ProfilePreset{defaultProfile},
 			// Shifted two hours forward, at 00:30 it is 02:30 in the profile, so 0.8 U/hr, at 50%
-			switches: []*sitedb.ProfileSwitch{{OccurredAt: minute(30), TargetsLowJson: targets("110"), TargetsHighJson: targets("140"), BasalRatesJson: basalRates, Percent: new(50.0), Timeshift: new(int64(120))}},
+			switches: []*sitedb.ProfileSwitch{{OccurredAt: minute(30), TargetsLowJson: targets("110"), TargetsHighJson: targets("140"), BasalRatesJson: basalRates, Multiplier: new(0.5), Timeshift: new(int64(120))}},
 			want:     []want{{29, new(100.0), new(160.0), new(0.5)}, {30, new(110.0), new(140.0), new(0.4)}},
 		},
 		{
 			name:     "a switch without schedules keeps the default's, at its percent",
 			units:    &mgdl,
 			defaults: []*sitedb.ProfilePreset{defaultProfile},
-			switches: []*sitedb.ProfileSwitch{{OccurredAt: minute(30), Percent: new(200.0)}},
+			switches: []*sitedb.ProfileSwitch{{OccurredAt: minute(30), Multiplier: new(2.0)}},
 			want:     []want{{30, new(100.0), new(160.0), new(1.0)}},
 		},
 		{
@@ -175,13 +175,13 @@ func TestBasalAt(t *testing.T) {
 		{name: "a profile without a timezone is in the site's, from its 2am", ms: at(7, 0), location: newYork, defaults: utc, want: new(0.8)},
 		{
 			// Shifted two hours forward, at 00:30 it is 02:30 in the profile, so 0.8 U/hr, at 200% is 1.6
-			name: "a profile switch's percent and timeshift", ms: at(0, 30), location: time.UTC, defaults: utc,
-			switches: []*sitedb.ProfileSwitch{{OccurredAt: at(0, 10), BasalRatesJson: basalRates, Percent: new(200.0), Timeshift: new(int64(120))}},
+			name: "a profile switch's multiplier and timeshift", ms: at(0, 30), location: time.UTC, defaults: utc,
+			switches: []*sitedb.ProfileSwitch{{OccurredAt: at(0, 10), BasalRatesJson: basalRates, Multiplier: new(2.0), Timeshift: new(int64(120))}},
 			want:     new(1.6),
 		},
 		{
 			name: "a profile switch that has ended hands back to the default", ms: at(1, 0), location: time.UTC, defaults: utc,
-			switches: []*sitedb.ProfileSwitch{{OccurredAt: at(0, 10), DurationMinutes: 30, Percent: new(200.0)}},
+			switches: []*sitedb.ProfileSwitch{{OccurredAt: at(0, 10), DurationMinutes: 30, Multiplier: new(2.0)}},
 			want:     new(0.5),
 		},
 	}
