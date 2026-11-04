@@ -118,3 +118,17 @@ func TestAPNsRefusals(t *testing.T) {
 		})
 	}
 }
+
+// A push that cannot reach Apple says why, without the device token that is in its URL
+func TestAPNsUnreachableHidesToken(t *testing.T) {
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	require.NoError(t, err)
+	server := httptest.NewServer(http.NotFoundHandler())
+	server.Close()
+	apns := &APNs{Client: server.Client(), Host: server.URL}
+	token := strings.Repeat("ab", 32)
+	err = apns.Send(t.Context(), Signer{ID: 1, TeamID: "TEAM123456", KeyID: "ABC123DEFG", Key: key}, token,
+		"com.TEAM123456.loopkit.Loop", true, []byte(`{}`))
+	require.ErrorContains(t, err, "cannot reach Apple's push service")
+	require.NotContains(t, err.Error(), token)
+}

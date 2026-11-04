@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"sync"
 	"time"
 )
@@ -72,6 +73,10 @@ func (a *APNs) Send(ctx context.Context, signer Signer, deviceToken string, topi
 	req.Header.Set("apns-topic", topic)
 	req.Header.Set("apns-push-type", "alert")
 	resp, err := a.Client.Do(req)
+	if urlErr, ok := errors.AsType[*url.Error](err); ok {
+		// Its URL has the device token, which is never shown, so only what went wrong is kept
+		err = urlErr.Err
+	}
 	if err != nil {
 		return fmt.Errorf("cannot reach Apple's push service: %w", err)
 	}

@@ -63,6 +63,13 @@
        `push.Send` does APNs ones
     1. P2: Push alarms to each identity's registered apps when one goes off, through `push.Send`
     1. P2: A control page to add, list and delete push credentials for every site, with BDD tests
+    1. P2: Before any server credential (one with no site) is added: use it only for tokens its app registered itself,
+       require its bundle IDs, and limit pushes across the server, as any site could otherwise push to any token
+    1. P2: Decide whether Loop's and Trio's device tokens stay in plaintext in their profiles, which every reader of
+       the site gets from the Nightscout profile API, as LoopFollow needs them
+    1. P3: Register a profile's app in one immediate transaction, as two uploads at once can pass the 10 limit
+    1. P3: Keep a registration's `last_error` when a profile registers the same token again, rather than clearing it
+    1. P3: Cap a site's deleted push credentials too, or delete them for good, as only live ones are counted
 1. Nightscout API:
     1. P1: Nightscout clients (AAPS, Loop, LoopFollow, Nightguard, the xDrip+ follower) read `sgv` and `mbg`, and
        AAPS its temp targets and profiles, as mg/dL whatever the `units`, but the API gives them in the identity's

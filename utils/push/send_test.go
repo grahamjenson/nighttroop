@@ -7,6 +7,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"encoding/pem"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -87,4 +88,31 @@ func TestSend(t *testing.T) {
 	status, reason = http.StatusGone, "Unregistered"
 	require.ErrorIs(t, push.Send(t.Context(), q, sec, registration, alert), push.ErrTokenGone)
 	require.Empty(t, stored())
+}
+
+// A token in upper case is the same token, and an identity with the most registrations can still register one of
+// them again, as Loop does with each profile it uploads
+func TestRegisterAgain(t *testing.T) {
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
+	q, siteID := controlDB.Queries, site.SiteDB.Subdomain
+	identities, err := q.AllSiteIdentities(t.Context(), controldb.AllSiteIdentitiesParams{SiteID: siteID})
+	require.NoError(t, err)
+	register := func(token string) (*controldb.PushRegistration, error) {
+		return push.Register(t.Context(), q, cfg.Security, siteID, identities[0].ID, push.Registration{Provider: consts.PushProviderAPNs,
+			App: "loop", BundleID: "com.TEAM123456.loopkit.Loop", Token: token, Production: true})
+	}
+	first, err := register(strings.Repeat("ab", 32))
+	require.NoError(t, err)
+	again, err := register(strings.Repeat("AB", 32))
+	require.NoError(t, err)
+	require.Equal(t, first.ID, again.ID)
+
+	for i := 1; i < push.MaxRegistrations; i++ {
+		_, err := register(fmt.Sprintf("%064x", i))
+		require.NoError(t, err)
+	}
+	_, err = register(strings.Repeat("cd", 32))
+	require.ErrorIs(t, err, push.ErrTooManyRegistrations)
+	_, err = register(strings.Repeat("ab", 32))
+	require.NoError(t, err)
 }

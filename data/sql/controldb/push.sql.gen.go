@@ -27,16 +27,19 @@ func (q *Queries) CountPushCredentials(ctx context.Context, arg CountPushCredent
 }
 
 const countPushRegistrations = `-- name: CountPushRegistrations :one
-SELECT COUNT(*) FROM push_registrations WHERE site_id = ?1 AND identity_id = ?2
+SELECT COUNT(*) FROM push_registrations
+WHERE site_id = ?1 AND identity_id = ?2 AND token_hash != ?3
 `
 
 type CountPushRegistrationsParams struct {
 	SiteID     string
 	IdentityID int64
+	TokenHash  string
 }
 
+// The identity's registrations but the token's, which registering it again only updates
 func (q *Queries) CountPushRegistrations(ctx context.Context, arg CountPushRegistrationsParams) (int64, error) {
-	row := q.queryRow(ctx, q.countPushRegistrationsStmt, countPushRegistrations, arg.SiteID, arg.IdentityID)
+	row := q.queryRow(ctx, q.countPushRegistrationsStmt, countPushRegistrations, arg.SiteID, arg.IdentityID, arg.TokenHash)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -143,16 +146,17 @@ func (q *Queries) DeletePushRegistration(ctx context.Context, arg DeletePushRegi
 }
 
 const deletePushRegistrationByTokenHash = `-- name: DeletePushRegistrationByTokenHash :exec
-DELETE FROM push_registrations WHERE token_hash = ?1
+DELETE FROM push_registrations WHERE site_id = ?1 AND token_hash = ?2
 `
 
 type DeletePushRegistrationByTokenHashParams struct {
+	SiteID    string
 	TokenHash string
 }
 
-// Deletes a token the push service says is no longer registered
+// Deletes a site's token the push service says is no longer registered
 func (q *Queries) DeletePushRegistrationByTokenHash(ctx context.Context, arg DeletePushRegistrationByTokenHashParams) error {
-	_, err := q.exec(ctx, q.deletePushRegistrationByTokenHashStmt, deletePushRegistrationByTokenHash, arg.TokenHash)
+	_, err := q.exec(ctx, q.deletePushRegistrationByTokenHashStmt, deletePushRegistrationByTokenHash, arg.SiteID, arg.TokenHash)
 	return err
 }
 
@@ -318,17 +322,24 @@ const recordPush = `-- name: RecordPush :exec
 UPDATE push_registrations SET
     last_pushed_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     last_error = ?1
-WHERE id = ?2
+WHERE id = ?2 AND site_id = ?3 AND token_hash = ?4
 `
 
 type RecordPushParams struct {
 	LastError *string
 	ID        int64
+	SiteID    string
+	TokenHash string
 }
 
-// Records a push sent to a registration, and its error, if it had one
+// Records a push sent to a registration, and its error, if it had one, unless its token has changed since
 func (q *Queries) RecordPush(ctx context.Context, arg RecordPushParams) error {
-	_, err := q.exec(ctx, q.recordPushStmt, recordPush, arg.LastError, arg.ID)
+	_, err := q.exec(ctx, q.recordPushStmt, recordPush,
+		arg.LastError,
+		arg.ID,
+		arg.SiteID,
+		arg.TokenHash,
+	)
 	return err
 }
 
@@ -563,8 +574,7 @@ VALUES (
     ?1, ?2, ?3, ?4, ?5,
     ?6, ?7, ?8
 )
-ON CONFLICT (token_hash) DO UPDATE SET
-    site_id = excluded.site_id,
+ON CONFLICT (site_id, token_hash) DO UPDATE SET
     identity_id = excluded.identity_id,
     app = excluded.app,
     provider = excluded.provider,
@@ -590,7 +600,7 @@ type UpsertPushRegistrationParams struct {
 // --------------------
 // PUSH REGISTRATIONS
 // --------------------
-// Registers a token, moving it to this identity if another had it, as the app was signed in again
+// Registers a token, moving it to this identity if another of the site's had it, as the app was signed in again
 func (q *Queries) UpsertPushRegistration(ctx context.Context, arg UpsertPushRegistrationParams) (*PushRegistration, error) {
 	row := q.queryRow(ctx, q.upsertPushRegistrationStmt, upsertPushRegistration,
 		arg.SiteID,

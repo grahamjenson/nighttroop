@@ -58,14 +58,13 @@ LIMIT 1;
 ----------------------
 
 -- name: UpsertPushRegistration :one
--- Registers a token, moving it to this identity if another had it, as the app was signed in again
+-- Registers a token, moving it to this identity if another of the site's had it, as the app was signed in again
 INSERT INTO push_registrations (site_id, identity_id, app, provider, bundle_id, production, token_enc, token_hash)
 VALUES (
     sqlc.arg('SiteID'), sqlc.arg('IdentityID'), sqlc.arg('App'), sqlc.arg('Provider'), sqlc.arg('BundleID'),
     sqlc.arg('Production'), sqlc.arg('TokenEnc'), sqlc.arg('TokenHash')
 )
-ON CONFLICT (token_hash) DO UPDATE SET
-    site_id = excluded.site_id,
+ON CONFLICT (site_id, token_hash) DO UPDATE SET
     identity_id = excluded.identity_id,
     app = excluded.app,
     provider = excluded.provider,
@@ -110,7 +109,9 @@ LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
 SELECT * FROM push_registrations WHERE id = sqlc.arg('ID');
 
 -- name: CountPushRegistrations :one
-SELECT COUNT(*) FROM push_registrations WHERE site_id = sqlc.arg('SiteID') AND identity_id = sqlc.arg('IdentityID');
+-- The identity's registrations but the token's, which registering it again only updates
+SELECT COUNT(*) FROM push_registrations
+WHERE site_id = sqlc.arg('SiteID') AND identity_id = sqlc.arg('IdentityID') AND token_hash != sqlc.arg('TokenHash');
 
 -- name: DeletePushRegistration :execrows
 -- Deletes a site's registration, or with IdentityID only if it is that identity's
@@ -119,13 +120,13 @@ WHERE id = sqlc.arg('ID') AND site_id = sqlc.arg('SiteID')
   AND identity_id = COALESCE(sqlc.narg('IdentityID'), identity_id);
 
 -- name: DeletePushRegistrationByTokenHash :exec
--- Deletes a token the push service says is no longer registered
-DELETE FROM push_registrations WHERE token_hash = sqlc.arg('TokenHash');
+-- Deletes a site's token the push service says is no longer registered
+DELETE FROM push_registrations WHERE site_id = sqlc.arg('SiteID') AND token_hash = sqlc.arg('TokenHash');
 
 
 -- name: RecordPush :exec
--- Records a push sent to a registration, and its error, if it had one
+-- Records a push sent to a registration, and its error, if it had one, unless its token has changed since
 UPDATE push_registrations SET
     last_pushed_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     last_error = sqlc.narg('LastError')
-WHERE id = sqlc.arg('ID');
+WHERE id = sqlc.arg('ID') AND site_id = sqlc.arg('SiteID') AND token_hash = sqlc.arg('TokenHash');

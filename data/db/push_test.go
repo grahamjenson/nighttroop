@@ -138,8 +138,26 @@ func TestPushRegistrations(t *testing.T) {
 	require.NoError(t, err)
 	require.Zero(t, rows)
 
-	require.NoError(t, q.RecordPush(t.Context(), controldb.RecordPushParams{ID: moved.ID, LastError: new("BadDeviceToken")}))
-	require.NoError(t, q.DeletePushRegistrationByTokenHash(t.Context(), controldb.DeletePushRegistrationByTokenHashParams{TokenHash: hashA}))
+	// Another site registering the same token has its own row, so it cannot take this site's, nor delete it when the
+	// push service says the token is gone
+	other, err := controlDB.CreateSite(t.Context())
+	require.NoError(t, err)
+	otherIdentities, err := q.AllSiteIdentities(t.Context(), controldb.AllSiteIdentitiesParams{SiteID: other.SiteDB.Subdomain})
+	require.NoError(t, err)
+	taken, err := q.UpsertPushRegistration(t.Context(), controldb.UpsertPushRegistrationParams{SiteID: other.SiteDB.Subdomain,
+		IdentityID: otherIdentities[0].ID, App: consts.PushAppLoop, Provider: consts.PushProviderAPNs, BundleID: "com.TEAM.loopkit.Loop",
+		Production: true, TokenEnc: "token", TokenHash: hashA})
+	require.NoError(t, err)
+	require.NotEqual(t, moved.ID, taken.ID)
+	require.NoError(t, q.DeletePushRegistrationByTokenHash(t.Context(), controldb.DeletePushRegistrationByTokenHashParams{SiteID: other.SiteDB.Subdomain, TokenHash: hashA}))
+	require.Len(t, byIdentity(second), 1)
+
+	// A push is recorded on its own site's row alone, and only while it has the token pushed to
+	require.NoError(t, q.RecordPush(t.Context(), controldb.RecordPushParams{ID: moved.ID, SiteID: other.SiteDB.Subdomain, TokenHash: hashA, LastError: new("BadDeviceToken")}))
+	require.Nil(t, byIdentity(second)[0].LastError)
+	require.NoError(t, q.RecordPush(t.Context(), controldb.RecordPushParams{ID: moved.ID, SiteID: siteID, TokenHash: hashA, LastError: new("BadDeviceToken")}))
+	require.Equal(t, "BadDeviceToken", *byIdentity(second)[0].LastError)
+	require.NoError(t, q.DeletePushRegistrationByTokenHash(t.Context(), controldb.DeletePushRegistrationByTokenHashParams{SiteID: siteID, TokenHash: hashA}))
 	require.Empty(t, byIdentity(second))
 
 	// Deleting the identity deletes its registrations
