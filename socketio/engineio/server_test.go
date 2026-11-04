@@ -3,6 +3,7 @@ package engineio
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -144,19 +145,40 @@ func testRoundTrip(t *testing.T, version int, transport string) {
 	<-client.Done()
 }
 
+// A client that opens a session and never pings (v3) or answers pings (v4) is closed, over polling or a websocket, and
+// its session is forgotten
 func TestSessionClosesWithoutHeartbeat(t *testing.T) {
-	for _, version := range []string{"3", "4"} {
-		t.Run("v"+version, func(t *testing.T) {
-			server, ts, closed := echoServer(t, testConfig)
-			// A client that never pings (v3) or answers pings (v4)
-			sid := handshake(t, ts.URL, version)
-			require.Equal(t, "ping timeout", <-closed)
-			require.Equal(t, 0, server.Count())
+	tests := []struct {
+		transport string
+		open      func(t *testing.T, base string, version int) (sid string)
+	}{
+		{"polling", func(t *testing.T, base string, version int) string { return handshake(t, base, fmt.Sprint(version)) }},
+		{"websocket", func(t *testing.T, base string, version int) string {
+			ws, err := DialWebSocket(context.Background(), base, version, "")
+			require.NoError(t, err)
+			t.Cleanup(func() { ws.Close() })
+			p, err := ws.ReadPacket()
+			require.NoError(t, err)
+			require.Equal(t, Open, p.Type)
+			var open openPayload
+			require.NoError(t, json.Unmarshal([]byte(p.Data), &open))
+			return open.SID
+		}},
+	}
+	for _, test := range tests {
+		for _, version := range []int{V3, V4} {
+			t.Run(fmt.Sprintf("%s v%d", test.transport, version), func(t *testing.T) {
+				server, ts, closed := echoServer(t, testConfig)
+				sid := test.open(t, ts.URL, version)
+				require.NotEmpty(t, sid)
+				require.Equal(t, "ping timeout", <-closed)
+				require.Equal(t, 0, server.Count())
 
-			status, body := get(t, ts.URL+"/?EIO="+version+"&transport=polling&sid="+sid)
-			require.Equal(t, http.StatusBadRequest, status)
-			require.JSONEq(t, `{"code":1,"message":"Session ID unknown"}`, body)
-		})
+				status, body := get(t, fmt.Sprintf("%s/?EIO=%d&transport=polling&sid=%s", ts.URL, version, sid))
+				require.Equal(t, http.StatusBadRequest, status)
+				require.JSONEq(t, `{"code":1,"message":"Session ID unknown"}`, body)
+			})
+		}
 	}
 }
 
@@ -430,21 +452,4 @@ func TestBadProbeKeepsPolling(t *testing.T) {
 	require.Equal(t, http.StatusOK, status)
 	_, body := get(t, url)
 	require.Equal(t, "4still polling", body)
-}
-
-func TestWebSocketSessionClosesWithoutHeartbeat(t *testing.T) {
-	for _, version := range []int{V3, V4} {
-		t.Run("v"+string(rune('0'+version)), func(t *testing.T) {
-			server, ts, closed := echoServer(t, testConfig)
-			// A client that opens a session and never pings (v3) or answers pings (v4)
-			ws, err := DialWebSocket(context.Background(), ts.URL, version, "")
-			require.NoError(t, err)
-			defer ws.Close()
-			p, err := ws.ReadPacket()
-			require.NoError(t, err)
-			require.Equal(t, Open, p.Type)
-			require.Equal(t, "ping timeout", <-closed)
-			require.Equal(t, 0, server.Count())
-		})
-	}
 }
