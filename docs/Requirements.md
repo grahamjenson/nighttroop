@@ -471,6 +471,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   mg/dL as `mg/dl`, as it reads a BG check's glucose as mg/dL only when its units are exactly that.
 - The client is picked before the role, as a loop's device (AAPS, Trio or Loop) must be the PWD phone: picking one of
   them sets the role to PWD Phone and locks it, and the server refuses such a device with any other role.
+- A device keeps the client it was added for, e.g. `loop` or `other`, given back as its `client`, so its settings can
+  later be changed for every device of a client; a user and a site's first devices have none.
 - An admin can turn an identity off and on, or delete it; an identity cannot lock itself out.
 - An admin can change another identity's own settings and alarms from its row, such as a device's units for a client
   that needs mg/dL on a site in mmol/L; the Nightscout API gives that device its own units.

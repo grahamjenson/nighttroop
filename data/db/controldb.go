@@ -580,7 +580,7 @@ func (db *ControlDB) createSiteRows(ctx context.Context, subdomain string, backu
 
 func (db *ControlDB) createSiteDefaultIdentities(ctx context.Context, q *controldb.Queries, subdomain string) (*IdentityValues, *IdentityValues, *IdentityValues, error) {
 	// Create Default Admin User
-	adminIdentity, err := db.CreateSiteIdentity(ctx, q, subdomain, consts.FIRST_ADMIN_NAME, consts.IdentityRoleAdmin)
+	adminIdentity, err := db.CreateSiteIdentity(ctx, q, subdomain, consts.FIRST_ADMIN_NAME, consts.IdentityRoleAdmin, nil)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("Failed to Create Default Admin User:	 %w", err)
 	}
@@ -590,7 +590,7 @@ func (db *ControlDB) createSiteDefaultIdentities(ctx context.Context, q *control
 
 	// Create Default PWD User (Able to write data on the ns API)
 
-	pwdIdentity, err := db.CreateSiteIdentity(ctx, q, subdomain, consts.FIRST_PWD_NAME, consts.IdentityRoleDevicePWDPhone)
+	pwdIdentity, err := db.CreateSiteIdentity(ctx, q, subdomain, consts.FIRST_PWD_NAME, consts.IdentityRoleDevicePWDPhone, nil)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("Failed to Create Default PWD User:	 %w", err)
 	}
@@ -599,7 +599,7 @@ func (db *ControlDB) createSiteDefaultIdentities(ctx context.Context, q *control
 	}
 
 	// Create Default Read-Only User
-	readOnlyIdentity, err := db.CreateSiteIdentity(ctx, q, subdomain, consts.FIRST_READ_ONLY_NAME, consts.IdentityRoleDeviceRead)
+	readOnlyIdentity, err := db.CreateSiteIdentity(ctx, q, subdomain, consts.FIRST_READ_ONLY_NAME, consts.IdentityRoleDeviceRead, nil)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("Failed to Create Default Read-Only User:	 %w", err)
 	}
@@ -617,7 +617,8 @@ type IdentityValues struct {
 }
 
 // CreateSiteIdentity writes with q, so a caller can pass the queries of its transaction
-func (db *ControlDB) CreateSiteIdentity(ctx context.Context, q *controldb.Queries, siteID string, name string, role consts.IdentityRole) (*IdentityValues, error) {
+// CreateSiteIdentity makes an identity on the site, with the app it is for when it is a device added for one
+func (db *ControlDB) CreateSiteIdentity(ctx context.Context, q *controldb.Queries, siteID string, name string, role consts.IdentityRole, client *string) (*IdentityValues, error) {
 
 	security := db.ServerConfig.Security
 	hostname := db.ServerConfig.HostName
@@ -651,6 +652,7 @@ func (db *ControlDB) CreateSiteIdentity(ctx context.Context, q *controldb.Querie
 		PasswordHash:  hashedPassword,
 		TotpSecretEnc: encTOTPSecret,
 		Role:          role,
+		Client:        client,
 
 		NightscoutTokenDigest: digest,
 	})

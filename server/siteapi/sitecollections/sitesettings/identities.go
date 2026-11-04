@@ -88,7 +88,12 @@ func (s *IdentitiesCollection) CreateRow(ctx context.Context, collectionTx *site
 		return nil, apiutils.ErrRateLimitExceeded(seconds)
 	}
 
-	values, err := siteContext.ControlDB.CreateSiteIdentity(ctx, q, siteContext.SiteID, model.Name, role)
+	// The app a device is for is kept, so its settings can later be changed for every device of an app
+	var client *string
+	if model.Client != "" {
+		client = &model.Client
+	}
+	values, err := siteContext.ControlDB.CreateSiteIdentity(ctx, q, siteContext.SiteID, model.Name, role, client)
 	if err != nil {
 		// Names are unique per site
 		return nil, err
@@ -105,7 +110,7 @@ func (s *IdentitiesCollection) CreateRow(ctx context.Context, collectionTx *site
 	}
 	// Shown this once
 	created.Password, created.TotpSecret, created.NSToken = values.Password, values.TotpSecret, values.NSToken
-	created.SiteURL, created.NSURL, created.Client = siteContext.SiteDB.URL(), siteContext.SiteDB.NSURL(), model.Client
+	created.SiteURL, created.NSURL = siteContext.SiteDB.URL(), siteContext.SiteDB.NSURL()
 	return created, nil
 }
 

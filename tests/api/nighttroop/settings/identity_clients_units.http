@@ -56,3 +56,33 @@ H Accept: application/json
 B {"name": "toaster", "role": "device_read", "client": "toaster"}
 ASSERT_STATUS 400
 ASSERT_EQUALS "Bad or missing request body: Unknown client: toaster" "@message"
+
+// The app each device was added for is kept, so its settings can later be changed for every device of an app
+NAME get_sugarpixel
+GET http://{{ site }}/settings/identities/{{ .create_sugarpixel.result.id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "sugarpixel" "@result.client"
+
+NAME get_other
+GET http://{{ site }}/settings/identities/{{ .create_other.result.id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "other" "@result.client"
+
+// A user and the site's first devices were added for no app; newest first, after the three devices above
+NAME list_identities
+GET http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 6 "@result"
+ASSERT_EQUALS "xdrip4ios" "@result.1.client"
+ASSERT_EQUALS "read_only" "@result.3.name"
+ASSERT_EQUALS null "@result.3.client"
+ASSERT_EQUALS "pwd_phone" "@result.4.name"
+ASSERT_EQUALS null "@result.4.client"
+ASSERT_EQUALS "admin" "@result.5.name"
+ASSERT_EQUALS null "@result.5.client"
