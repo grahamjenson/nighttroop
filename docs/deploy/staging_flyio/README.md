@@ -35,15 +35,15 @@ The files this guide uses:
 
 ## How it works
 
-Nighttroop serves several kinds of host names from one domain. Here the staging server uses `staging.example.com`, a subdomain
+Nighttroop serves several kinds of host names from one domain. Here the staging server uses `staging.nighttroop.nz`, a subdomain
 of your own domain:
 
 | Host | What it serves |
 | --- | --- |
-| `staging.example.com` | The public page, where testers create sites |
-| `control.staging.example.com` | The control plane, for you |
-| `<site>.staging.example.com` | Each site |
-| `<site>.ns.staging.example.com` | Each site's Nightscout-compatible API, for apps like AAPS and Loop |
+| `staging.nighttroop.nz` | The public page, where testers create sites |
+| `control.staging.nighttroop.nz` | The control plane, for you |
+| `<site>.staging.nighttroop.nz` | Each site |
+| `<site>.ns.staging.nighttroop.nz` | Each site's Nightscout-compatible API, for apps like AAPS and Loop |
 
 - **One machine, which stops when idle.** It runs the image built from the repository's `Dockerfile`, on one shared
   CPU with 256 MB of memory and 512 MB of swap.
@@ -85,7 +85,7 @@ of your own domain:
 - **A Fly.io account** with a payment method. One small machine that stops when idle, and its 1 GB volume, cost a few
   dollars a month at most.
 - **[`flyctl`](https://fly.io/docs/flyctl/install/)** installed and logged in (`fly auth login`).
-- **A domain whose DNS you can change**, for `staging.example.com` and its wildcards.
+- **A domain whose DNS you can change**, for `staging.nighttroop.nz` and its wildcards.
   - A `fly.dev` name won't work, as Nighttroop needs wildcard subdomains.
 - **Go**, to make the keys (or any machine with this repository checked out).
 - **Admin access to this GitHub repository**, to add a variable and a secret.
@@ -165,20 +165,20 @@ Check it is up:
    fly ips list --app nighttroop-staging
    ```
 
-2. **Add DNS records at your DNS provider.** Point `staging.example.com`, `*.staging.example.com` and `*.ns.staging.example.com`
+2. **Add DNS records at your DNS provider.** Point `staging.nighttroop.nz`, `*.staging.nighttroop.nz` and `*.ns.staging.nighttroop.nz`
    at those addresses: an `A` record to the IPv4 address and an `AAAA` record to the IPv6 address for each.
-3. **Ask Fly for certificates.** A wildcard covers only one level, so `*.ns.staging.example.com` needs its own. Quote the
+3. **Ask Fly for certificates.** A wildcard covers only one level, so `*.ns.staging.nighttroop.nz` needs its own. Quote the
    wildcards so the shell leaves the `*` alone:
 
    ```sh
-   fly certs add staging.example.com --app nighttroop-staging
-   fly certs add "*.staging.example.com" --app nighttroop-staging
-   fly certs add "*.ns.staging.example.com" --app nighttroop-staging
+   fly certs add staging.nighttroop.nz --app nighttroop-staging
+   fly certs add "*.staging.nighttroop.nz" --app nighttroop-staging
+   fly certs add "*.ns.staging.nighttroop.nz" --app nighttroop-staging
    ```
 
 4. **Prove you own the wildcards.** Let's Encrypt only issues a wildcard to whoever controls the domain's DNS.
-   1. Run `fly certs show "*.staging.example.com"` (and the same for `*.ns.staging.example.com`). It shows a `CNAME` for
-      `_acme-challenge.staging.example.com` (and `_acme-challenge.ns.staging.example.com`).
+   1. Run `fly certs show "*.staging.nighttroop.nz"` (and the same for `*.ns.staging.nighttroop.nz`). It shows a `CNAME` for
+      `_acme-challenge.staging.nighttroop.nz` (and `_acme-challenge.ns.staging.nighttroop.nz`).
    2. Add those records exactly as shown.
    3. Remove any old `TXT` record at the same `_acme-challenge` names.
    4. If your DNS provider proxies records, e.g. Cloudflare, don't proxy these.
@@ -187,8 +187,8 @@ Check it is up:
 
 Check it works:
 
-- [ ] `curl https://staging.example.com/health` prints `{"status":"ok"}`.
-- [ ] <https://staging.example.com> shows the public page with the **THIS IS A TEST SITE** banner.
+- [ ] `curl https://staging.nighttroop.nz/health` prints `{"status":"ok"}`.
+- [ ] <https://staging.nighttroop.nz> shows the public page with the **THIS IS A TEST SITE** banner.
 
 ## 5. Deploy every commit on main
 
@@ -219,7 +219,7 @@ To stop deploying, delete the `STAGING_FLYIO_APP` variable. To stop the server t
 
 Testers don't need it; you only need it to see the server's sites, jobs and logs.
 
-1. Open <https://control.staging.example.com>.
+1. Open <https://control.staging.nighttroop.nz>.
 2. Sign in as `admin`, with `STAGING_ADMIN_PASSWORD` and a code from the authenticator app you gave
    `STAGING_ADMIN_TOTP_SECRET`.
 
