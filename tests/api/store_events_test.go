@@ -105,3 +105,47 @@ func TestSummaryEventsOnAlarmChanges(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "event: deleted\n", event)
 }
+
+// An identity streaming its push registrations' changes is sent its own, not another identity's apps and devices
+func TestPushRegistrationEventsStreamToTheirIdentityAlone(t *testing.T) {
+	config, controlDB, site := testutils.NewControlDBWithSite(t)
+	ts := httptest.NewServer(server.GetMainHandler(controlDB, config))
+	t.Cleanup(ts.Close)
+	subdomain := site.SiteDB.Subdomain
+	client := testutils.HostClient(ts)
+
+	request := func(identity string, role consts.IdentityRole, method, path, body string) *http.Response {
+		jwt, _, err := config.Security.GenerateUserJWTToken(subdomain, identity, string(role))
+		require.NoError(t, err)
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		t.Cleanup(cancel)
+		req, err := http.NewRequestWithContext(ctx, method, "http://"+subdomain+".localhost"+path, strings.NewReader(body))
+		require.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer "+jwt)
+		req.Header.Set("Accept", "application/json")
+		req.Header.Set("Content-Type", "application/json")
+		resp, err := client.Do(req)
+		require.NoError(t, err)
+		t.Cleanup(func() { resp.Body.Close() })
+		return resp
+	}
+	register := func(identity string, role consts.IdentityRole, bundleID, token string) {
+		resp := request(identity, role, http.MethodPost, "/settings/push-registrations", `{"app": "loop", "provider": "apns", "bundle_id": "`+
+			bundleID+`", "production": true, "token": "`+token+`"}`)
+		require.Equal(t, http.StatusCreated, resp.StatusCode)
+	}
+
+	resp := request(consts.FIRST_READ_ONLY_NAME, consts.IdentityRoleDeviceRead, http.MethodGet, "/settings/push-registrations/events", "")
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+	stream := bufio.NewReader(resp.Body)
+
+	// The phone registering its Loop is not streamed to the read only device; the device registering its own is
+	register(consts.FIRST_PWD_NAME, consts.IdentityRoleDevicePWDPhone, "com.PHONE12345.loopkit.Loop", strings.Repeat("a1", 32))
+	register(consts.FIRST_READ_ONLY_NAME, consts.IdentityRoleDeviceRead, "com.KITCHEN123.loopkit.Loop", strings.Repeat("b2", 32))
+	event, err := stream.ReadString('\n')
+	require.NoError(t, err)
+	require.Equal(t, "event: created\n", event)
+	data, err := stream.ReadString('\n')
+	require.NoError(t, err)
+	require.Contains(t, data, `"bundle_id":"com.KITCHEN123.loopkit.Loop"`)
+}
