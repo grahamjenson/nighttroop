@@ -212,16 +212,16 @@ func (q *Queries) GetPushCredential(ctx context.Context, arg GetPushCredentialPa
 
 const getPushRegistration = `-- name: GetPushRegistration :one
 SELECT id, site_id, identity_id, app, provider, bundle_id, production, token_enc, token_hash, created_at, updated_at, last_pushed_at, last_error FROM push_registrations
-WHERE id = ?1 AND site_id = ?2 AND identity_id = ?3
+WHERE id = ?1 AND site_id = ?2 AND identity_id = COALESCE(?3, identity_id)
 `
 
 type GetPushRegistrationParams struct {
 	ID         int64
 	SiteID     string
-	IdentityID int64
+	IdentityID *int64
 }
 
-// A site's registration, if it is the identity's
+// A site's registration, or with IdentityID only if it is that identity's
 func (q *Queries) GetPushRegistration(ctx context.Context, arg GetPushRegistrationParams) (*PushRegistration, error) {
 	row := q.queryRow(ctx, q.getPushRegistrationStmt, getPushRegistration, arg.ID, arg.SiteID, arg.IdentityID)
 	var i PushRegistration
@@ -407,6 +407,65 @@ func (q *Queries) SearchPushRegistrations(ctx context.Context, arg SearchPushReg
 			&i.UpdatedAt,
 			&i.LastPushedAt,
 			&i.LastError,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const searchPushRegistrationsWithIdentity = `-- name: SearchPushRegistrationsWithIdentity :many
+SELECT push_registrations.id, push_registrations.site_id, push_registrations.identity_id, push_registrations.app, push_registrations.provider, push_registrations.bundle_id, push_registrations.production, push_registrations.token_enc, push_registrations.token_hash, push_registrations.created_at, push_registrations.updated_at, push_registrations.last_pushed_at, push_registrations.last_error, site_identities.name AS identity_name
+FROM push_registrations JOIN site_identities ON site_identities.id = push_registrations.identity_id
+WHERE push_registrations.site_id = ?1
+  AND push_registrations.identity_id = COALESCE(?2, push_registrations.identity_id)
+ORDER BY push_registrations.id DESC
+LIMIT CAST(?3 AS INTEGER)
+`
+
+type SearchPushRegistrationsWithIdentityParams struct {
+	SiteID     string
+	IdentityID *int64
+	Limit      int64
+}
+
+type SearchPushRegistrationsWithIdentityRow struct {
+	PushRegistration PushRegistration
+	IdentityName     string
+}
+
+// A site's registrations with their identities' names, or with IdentityID only that identity's, newest first
+func (q *Queries) SearchPushRegistrationsWithIdentity(ctx context.Context, arg SearchPushRegistrationsWithIdentityParams) ([]*SearchPushRegistrationsWithIdentityRow, error) {
+	rows, err := q.query(ctx, q.searchPushRegistrationsWithIdentityStmt, searchPushRegistrationsWithIdentity, arg.SiteID, arg.IdentityID, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*SearchPushRegistrationsWithIdentityRow
+	for rows.Next() {
+		var i SearchPushRegistrationsWithIdentityRow
+		if err := rows.Scan(
+			&i.PushRegistration.ID,
+			&i.PushRegistration.SiteID,
+			&i.PushRegistration.IdentityID,
+			&i.PushRegistration.App,
+			&i.PushRegistration.Provider,
+			&i.PushRegistration.BundleID,
+			&i.PushRegistration.Production,
+			&i.PushRegistration.TokenEnc,
+			&i.PushRegistration.TokenHash,
+			&i.PushRegistration.CreatedAt,
+			&i.PushRegistration.UpdatedAt,
+			&i.PushRegistration.LastPushedAt,
+			&i.PushRegistration.LastError,
+			&i.IdentityName,
 		); err != nil {
 			return nil, err
 		}

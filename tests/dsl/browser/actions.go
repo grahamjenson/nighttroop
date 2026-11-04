@@ -97,6 +97,54 @@ func (r *Goto) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (
 }
 
 //////
+// POST
+//////
+
+// Post sends URL its JSON Body from the page, with the page's cookies, failing the test unless it succeeds
+type Post struct {
+	URL  string
+	Body string
+
+	TestPath string
+	TestLine int
+}
+
+func (r *Post) ToFlatString() string {
+	return fmt.Sprintf("POST %s %s", r.URL, r.Body)
+}
+
+func (r *Post) ToErrorLine(msg string) string {
+	if msg == "" {
+		return fmt.Sprintf("%s:%d: %s", r.TestPath, r.TestLine, r.ToFlatString())
+	}
+	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
+}
+
+func (r *Post) PrintAction() {
+	fmt.Println(r.ToFlatString())
+}
+
+func (r *Post) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
+	url, err := renderTemplate(r.URL, ctx)
+	if err != nil {
+		t.Fatalf("%s: %v", r.ToErrorLine("Error Rendering URL"), err)
+	}
+	body, err := renderTemplate(r.Body, ctx)
+	if err != nil {
+		t.Fatalf("%s: %v", r.ToErrorLine("Error Rendering Body"), err)
+	}
+	status, err := page.Evaluate(`async ([url, body]) => (await fetch(url, {method: "POST", body,
+		headers: {"Content-Type": "application/json", "Accept": "application/json"}})).status`, []any{resolveAgainstPage(page, url), body})
+	if err != nil {
+		t.Fatalf("%s: %v", r.ToErrorLine("Error with POST"), err)
+	}
+	if code, ok := status.(int); !ok || code >= 400 {
+		t.Fatalf("%s: status %v", r.ToErrorLine("POST failed"), status)
+	}
+	return page, nil
+}
+
+//////
 // CLICK
 //////
 

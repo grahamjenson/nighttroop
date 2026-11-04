@@ -1791,6 +1791,7 @@ func PushRegistrationFromDB(source *controldb.PushRegistration) *PushRegistratio
 	if source != nil {
 		var sitemodelsPushRegistration PushRegistration
 		sitemodelsPushRegistration.ID = (*source).ID
+		sitemodelsPushRegistration.IdentityID = (*source).IdentityID
 		sitemodelsPushRegistration.App = constsPushAppToConstsPushApp((*source).App)
 		sitemodelsPushRegistration.Provider = constsPushProviderToConstsPushProvider((*source).Provider)
 		sitemodelsPushRegistration.BundleID = (*source).BundleID

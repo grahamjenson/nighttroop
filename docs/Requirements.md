@@ -504,7 +504,11 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   registering the same token has its own, so no site can take or change another's. An APNs token is the same in upper
   or lower case. An identity has at most 10, though it can always register one of them again, and sees, streams the
   changes to (`/settings/push-registrations/events`) and deletes only its own.
-- An identity can send a test push to one of its registrations
+- Settings, Push Devices (`/settings/push-devices`) lists the apps registered for pushes, with whose they are, the app
+  and its service, its bundle ID, whether it is a development build, when it registered, and its last push and error;
+  never its token. An admin sees every identity's on the site, and anyone else only their own. Each has a Test button,
+  which sends it a test push and shows its new last push, or a toast with why it failed.
+- An identity can send a test push to one of its registrations, and an admin to any of the site's
   (`POST /settings/push-registrations/{id}/test`), with its site's push credential for the app, else the server's.
   Without one it is refused, saying to add one; a token Apple says is gone deletes the registration (410); another
   refusal says Apple's reason (502), and one that cannot reach Apple why, never with the device token. Each push is

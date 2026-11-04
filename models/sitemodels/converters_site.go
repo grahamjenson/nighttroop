@@ -80,7 +80,7 @@ type SiteConverter interface {
 	// PUSH REGISTRATIONS
 	///////
 
-	// goverter:ignore Token
+	// goverter:ignore Token IdentityName
 	PushRegistrationFromDB(source *controldb.PushRegistration) *PushRegistration
 
 	///////

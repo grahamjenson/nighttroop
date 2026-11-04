@@ -2309,12 +2309,12 @@ func (m *GetPushRegistrationParams) SetSiteID(v string) {
 }
 
 // GetIdentityID returns the IdentityID value.
-func (m GetPushRegistrationParams) GetIdentityID() int64 {
+func (m GetPushRegistrationParams) GetIdentityID() *int64 {
 	return m.IdentityID
 }
 
 // SetIdentityID sets the IdentityID value and returns the updated GetPushRegistrationParams.
-func (m *GetPushRegistrationParams) SetIdentityID(v int64) {
+func (m *GetPushRegistrationParams) SetIdentityID(v *int64) {
 	m.IdentityID = v
 }
 
@@ -2465,6 +2465,36 @@ func (m SearchPushRegistrationsParams) GetLimit() int64 {
 
 // SetLimit sets the Limit value and returns the updated SearchPushRegistrationsParams.
 func (m *SearchPushRegistrationsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m SearchPushRegistrationsWithIdentityParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated SearchPushRegistrationsWithIdentityParams.
+func (m *SearchPushRegistrationsWithIdentityParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetIdentityID returns the IdentityID value.
+func (m SearchPushRegistrationsWithIdentityParams) GetIdentityID() *int64 {
+	return m.IdentityID
+}
+
+// SetIdentityID sets the IdentityID value and returns the updated SearchPushRegistrationsWithIdentityParams.
+func (m *SearchPushRegistrationsWithIdentityParams) SetIdentityID(v *int64) {
+	m.IdentityID = v
+}
+
+// GetLimit returns the Limit value.
+func (m SearchPushRegistrationsWithIdentityParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated SearchPushRegistrationsWithIdentityParams.
+func (m *SearchPushRegistrationsWithIdentityParams) SetLimit(v int64) {
 	m.Limit = v
 }
 
