@@ -35,9 +35,13 @@ func TestSiteDataLimits(t *testing.T) {
 			return err
 		}, []float64{39, 1000}, []float64{0, 1001}},
 		{"temp basal rate", func(id string, v float64) error {
-			_, err := q.CreateTempBasal(ctx, sitedb.CreateTempBasalParams{ID: id, DurationMinutes: 30, Absolute: v, OccurredAt: now, CreatedByIdentityName: "test"})
+			_, err := q.CreateTempBasal(ctx, sitedb.CreateTempBasalParams{ID: id, DurationMinutes: 30, Rate: v, OccurredAt: now, CreatedByIdentityName: "test"})
 			return err
 		}, []float64{0, 35}, []float64{-1, 1000}},
+		{"temp basal multiplier", func(id string, v float64) error {
+			_, err := q.CreateTempBasal(ctx, sitedb.CreateTempBasalParams{ID: id, DurationMinutes: 30, Multiplier: &v, OccurredAt: now, CreatedByIdentityName: "test"})
+			return err
+		}, []float64{0, 11}, []float64{-0.1, 12}},
 		{"temp target duration", func(id string, v float64) error {
 			_, err := q.CreateTempTarget(ctx, sitedb.CreateTempTargetParams{ID: id, DurationMinutes: int64(v), HighTargetMgdl: 140, LowTargetMgdl: 120, OccurredAt: now, CreatedByIdentityName: "test"})
 			return err

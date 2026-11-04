@@ -356,15 +356,15 @@ func TempBasalNew() templ.Component {
 
 // tempBasalFields are what a temp basal has that a person can type in
 var tempBasalFields = []addmodal.Field{
-	{Name: "absolute", Label: "Rate (U/hr)", Help: "The basal rate given instead, 0 for a suspend.", Required: true, Min: "0", Max: "50", Step: "any"},
+	{Name: "rate", Label: "Rate (U/hr)", Help: "The basal rate given instead, 0 for a suspend.", Required: true, Min: "0", Max: "50", Step: "any"},
 	{Name: "duration_minutes", Label: "Duration (minutes)", Help: "How long it runs for.", Required: true, Min: "1", Max: "1440", Step: "1"},
 	{Name: "occurred_at", Label: "When", Help: "When it started, in your timezone. Blank is now.", Kind: addmodal.When},
-	{Name: "rate", Label: "Times the basal (×)", Help: "How many times the scheduled basal, e.g. 0.5 for half, when it was set as a percent.", Min: "0", Max: "11", Step: "any"},
+	{Name: "multiplier", Label: "Times the basal (×)", Help: "How many times the scheduled basal, e.g. 0.5 for half, when it was set as a percent.", Min: "0", Max: "11", Step: "any"},
 	{Name: "reason", Label: "Reason", Help: "Why it was set, e.g. exercise.", Kind: addmodal.Text, Max: "64"},
 	{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
 }
 
-func tempBasalInputs(id string, absolute string, duration string, notes string) templ.Component {
+func tempBasalInputs(id string, rate string, duration string, notes string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -394,11 +394,11 @@ func tempBasalInputs(id string, absolute string, duration string, notes string) 
 			}
 			ctx = templ.InitializeContext(ctx)
 			templ_7745c5c3_Err = input.Input(input.Props{
-				ID:          id + "--absolute",
+				ID:          id + "--rate",
 				Type:        input.TypeNumber,
-				Name:        "absolute",
+				Name:        "rate",
 				Placeholder: "U/hr",
-				Value:       absolute,
+				Value:       rate,
 				Required:    true,
 				Attributes:  templ.Attributes{"step": "any", "min": "0", "max": "50"},
 			}).Render(ctx, templ_7745c5c3_Buffer)
@@ -407,7 +407,7 @@ func tempBasalInputs(id string, absolute string, duration string, notes string) 
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = field.Field(id+"--absolute", "Rate (U/hr)", "w-28").Render(templ.WithChildren(ctx, templ_7745c5c3_Var16), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = field.Field(id+"--rate", "Rate (U/hr)", "w-28").Render(templ.WithChildren(ctx, templ_7745c5c3_Var16), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -538,9 +538,9 @@ func tempBasalRow(tempBasal *sitemodels.SiteTempBasal) templ.Component {
 				}
 				ctx = templ.InitializeContext(ctx)
 				var templ_7745c5c3_Var24 string
-				templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(tempBasal.Absolute))
+				templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(tempBasal.Rate))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_basals.templ`, Line: 130, Col: 31}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_basals.templ`, Line: 130, Col: 27}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 				if templ_7745c5c3_Err != nil {
@@ -565,9 +565,9 @@ func tempBasalRow(tempBasal *sitemodels.SiteTempBasal) templ.Component {
 				}
 				ctx = templ.InitializeContext(ctx)
 				var templ_7745c5c3_Var26 string
-				templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(tempBasal.Rate))
+				templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(tempBasal.Multiplier))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_basals.templ`, Line: 133, Col: 27}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_basals.templ`, Line: 133, Col: 33}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 				if templ_7745c5c3_Err != nil {
@@ -800,7 +800,7 @@ func TempBasalModal(tempBasal *sitemodels.SiteTempBasal) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = tempBasalInputs("site--temp-basal--edit", orDash(tempBasal.Absolute), fmt.Sprint(tempBasal.DurationMinutes), orEmpty(tempBasal.Notes)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = tempBasalInputs("site--temp-basal--edit", orDash(tempBasal.Rate), fmt.Sprint(tempBasal.DurationMinutes), orEmpty(tempBasal.Notes)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -830,7 +830,7 @@ func TempBasalModal(tempBasal *sitemodels.SiteTempBasal) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = readingDetail("Times the basal", orDash(tempBasal.Rate)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = readingDetail("Times the basal", orDash(tempBasal.Multiplier)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -888,7 +888,7 @@ func TempBasalModal(tempBasal *sitemodels.SiteTempBasal) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = modal.Modal(modal.Props{ID: "site--temp-basal--details", Title: fmt.Sprintf("%s U/hr for %d minutes", orDash(tempBasal.Absolute), tempBasal.DurationMinutes), Subtitle: formatReadingDate(ctx, tempBasal.OccurredAt)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var36), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = modal.Modal(modal.Props{ID: "site--temp-basal--details", Title: fmt.Sprintf("%s U/hr for %d minutes", orDash(tempBasal.Rate), tempBasal.DurationMinutes), Subtitle: formatReadingDate(ctx, tempBasal.OccurredAt)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var36), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

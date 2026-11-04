@@ -182,8 +182,8 @@ CREATE TABLE temp_basals (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
 
     duration_minutes INTEGER NOT NULL CHECK(duration_minutes BETWEEN 0 AND 10080), -- at most a week
-    absolute REAL NOT NULL CHECK(absolute BETWEEN 0 AND 100), -- units an hour
-    rate REAL CHECK(rate BETWEEN 0 AND 11), -- times the scheduled basal, so 0.5 is half and 0 a zero temp, from Nightscout's percent; optional, but absolute is not
+    rate REAL NOT NULL CHECK(rate BETWEEN 0 AND 100), -- the units an hour given while it runs
+    multiplier REAL CHECK(multiplier BETWEEN 0 AND 11), -- times the scheduled basal at its start, so 0.5 is half and 0 a zero temp; optional, but rate is not
     
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),

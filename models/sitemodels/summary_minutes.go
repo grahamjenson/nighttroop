@@ -60,7 +60,7 @@ func (p *profile) at(schedule []*SiteScheduleValue, ms int64) *float64 {
 // default profile as of that minute, overridden by a profile switch, overridden by a temp target or temp basal.
 // Defaults and switches are oldest first. A switch lasts its duration, or until the next one when it has none, and
 // one that ends hands back to the last switch without a duration. A newer temp target or temp basal replaces an older
-// one, and a temp basal's rate is times the scheduled basal, so 0.5 is half of it, else its absolute is the basal.
+// one, and a temp basal's rate, the U/hr given, is the basal.
 func SummaryMinutes(since, until int64, units *consts.Units, location *time.Location, defaults []*sitedb.ProfilePreset, switches []*sitedb.ProfileSwitch, targets []*SiteTempTarget, basals []*SiteTempBasal) []SummaryMinute {
 	var defaultProfiles, switchProfiles []*profile
 	for _, d := range defaults {
@@ -138,11 +138,8 @@ func SummaryMinutes(since, until int64, units *consts.Units, location *time.Loca
 			minute.LowTarget, minute.HighTarget = new(target.LowTarget), new(target.HighTarget)
 		}
 		if basal != nil && ms < basal.OccurredAt+basal.DurationMinutes*60_000 {
-			switch {
-			case basal.Rate != nil && minute.Basal != nil:
-				minute.Basal = new(*minute.Basal * *basal.Rate)
-			case basal.Absolute != nil:
-				minute.Basal = new(*basal.Absolute)
+			if basal.Rate != nil {
+				minute.Basal = new(*basal.Rate)
 			}
 		}
 		minutes = append(minutes, minute)
@@ -158,13 +155,9 @@ func fromMgdl(units *consts.Units, mgdl *float64) *float64 {
 	return new(units.FromMGDL(*mgdl))
 }
 
-// RateBasal is the absolute in U/hr, to 3 places, of a temp basal of rate starting at ms, as Nightscout reads one:
-// the profiles' basal then, with a switch's percent and timeshift, times rate, so 0.5 is half of it. It is nil when
-// no profile has a basal then. Defaults and switches are oldest first.
-func RateBasal(ms int64, rate float64, location *time.Location, defaults []*sitedb.ProfilePreset, switches []*sitedb.ProfileSwitch) *float64 {
-	basal := SummaryMinutes(ms, ms, nil, location, defaults, switches, nil, nil)[0].Basal
-	if basal == nil {
-		return nil
-	}
-	return new(consts.Round(*basal*rate, 3))
+// BasalAt is the profiles' scheduled basal in U/hr at ms, with a switch's percent and timeshift, as Nightscout reads
+// one for a temp basal starting then. It is nil when no profile has a basal then. Defaults and switches are oldest
+// first.
+func BasalAt(ms int64, location *time.Location, defaults []*sitedb.ProfilePreset, switches []*sitedb.ProfileSwitch) *float64 {
+	return SummaryMinutes(ms, ms, nil, location, defaults, switches, nil, nil)[0].Basal
 }

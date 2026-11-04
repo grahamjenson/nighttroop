@@ -4476,24 +4476,24 @@ func (m *TempBasal) SetDurationMinutes(v int64) {
 	m.DurationMinutes = v
 }
 
-// GetAbsolute returns the Absolute value.
-func (m TempBasal) GetAbsolute() float64 {
-	return m.Absolute
-}
-
-// SetAbsolute sets the Absolute value and returns the updated TempBasal.
-func (m *TempBasal) SetAbsolute(v float64) {
-	m.Absolute = v
-}
-
 // GetRate returns the Rate value.
-func (m TempBasal) GetRate() *float64 {
+func (m TempBasal) GetRate() float64 {
 	return m.Rate
 }
 
 // SetRate sets the Rate value and returns the updated TempBasal.
-func (m *TempBasal) SetRate(v *float64) {
+func (m *TempBasal) SetRate(v float64) {
 	m.Rate = v
+}
+
+// GetMultiplier returns the Multiplier value.
+func (m TempBasal) GetMultiplier() *float64 {
+	return m.Multiplier
+}
+
+// SetMultiplier sets the Multiplier value and returns the updated TempBasal.
+func (m *TempBasal) SetMultiplier(v *float64) {
+	m.Multiplier = v
 }
 
 // GetNotes returns the Notes value.
@@ -4656,16 +4656,6 @@ func (m *TempBasalsVw) SetDurationMinutes(v *int64) {
 	m.DurationMinutes = v
 }
 
-// GetAbsolute returns the Absolute value.
-func (m TempBasalsVw) GetAbsolute() *float64 {
-	return m.Absolute
-}
-
-// SetAbsolute sets the Absolute value and returns the updated TempBasalsVw.
-func (m *TempBasalsVw) SetAbsolute(v *float64) {
-	m.Absolute = v
-}
-
 // GetRate returns the Rate value.
 func (m TempBasalsVw) GetRate() *float64 {
 	return m.Rate
@@ -4674,6 +4664,16 @@ func (m TempBasalsVw) GetRate() *float64 {
 // SetRate sets the Rate value and returns the updated TempBasalsVw.
 func (m *TempBasalsVw) SetRate(v *float64) {
 	m.Rate = v
+}
+
+// GetMultiplier returns the Multiplier value.
+func (m TempBasalsVw) GetMultiplier() *float64 {
+	return m.Multiplier
+}
+
+// SetMultiplier sets the Multiplier value and returns the updated TempBasalsVw.
+func (m *TempBasalsVw) SetMultiplier(v *float64) {
+	m.Multiplier = v
 }
 
 // GetNotes returns the Notes value.
@@ -11836,24 +11836,24 @@ func (m *CreateTempBasalParams) SetDurationMinutes(v int64) {
 	m.DurationMinutes = v
 }
 
-// GetAbsolute returns the Absolute value.
-func (m CreateTempBasalParams) GetAbsolute() float64 {
-	return m.Absolute
-}
-
-// SetAbsolute sets the Absolute value and returns the updated CreateTempBasalParams.
-func (m *CreateTempBasalParams) SetAbsolute(v float64) {
-	m.Absolute = v
-}
-
 // GetRate returns the Rate value.
-func (m CreateTempBasalParams) GetRate() *float64 {
+func (m CreateTempBasalParams) GetRate() float64 {
 	return m.Rate
 }
 
 // SetRate sets the Rate value and returns the updated CreateTempBasalParams.
-func (m *CreateTempBasalParams) SetRate(v *float64) {
+func (m *CreateTempBasalParams) SetRate(v float64) {
 	m.Rate = v
+}
+
+// GetMultiplier returns the Multiplier value.
+func (m CreateTempBasalParams) GetMultiplier() *float64 {
+	return m.Multiplier
+}
+
+// SetMultiplier sets the Multiplier value and returns the updated CreateTempBasalParams.
+func (m *CreateTempBasalParams) SetMultiplier(v *float64) {
+	m.Multiplier = v
 }
 
 // GetNotes returns the Notes value.
@@ -12256,16 +12256,6 @@ func (m *UpdateTempBasalParams) SetDurationMinutes(v *int64) {
 	m.DurationMinutes = v
 }
 
-// GetAbsolute returns the Absolute value.
-func (m UpdateTempBasalParams) GetAbsolute() *float64 {
-	return m.Absolute
-}
-
-// SetAbsolute sets the Absolute value and returns the updated UpdateTempBasalParams.
-func (m *UpdateTempBasalParams) SetAbsolute(v *float64) {
-	m.Absolute = v
-}
-
 // GetRate returns the Rate value.
 func (m UpdateTempBasalParams) GetRate() *float64 {
 	return m.Rate
@@ -12274,6 +12264,16 @@ func (m UpdateTempBasalParams) GetRate() *float64 {
 // SetRate sets the Rate value and returns the updated UpdateTempBasalParams.
 func (m *UpdateTempBasalParams) SetRate(v *float64) {
 	m.Rate = v
+}
+
+// GetMultiplier returns the Multiplier value.
+func (m UpdateTempBasalParams) GetMultiplier() *float64 {
+	return m.Multiplier
+}
+
+// SetMultiplier sets the Multiplier value and returns the updated UpdateTempBasalParams.
+func (m *UpdateTempBasalParams) SetMultiplier(v *float64) {
+	m.Multiplier = v
 }
 
 // GetNotes returns the Notes value.

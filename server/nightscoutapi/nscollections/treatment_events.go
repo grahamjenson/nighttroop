@@ -11,6 +11,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/types"
 )
@@ -214,7 +215,7 @@ var (
 		// AAPS sends its rate as rate, and Loop as absolute too
 		complete: func(source nightscoutmodels.Treatment, target *sitedb.TempBasal) {
 			if rate := nightscoutmodels.TempBasalValuePtr(source); rate != nil {
-				target.Absolute = *rate
+				target.Rate = *rate
 			}
 		},
 		toTreatment: withoutSite(nightscoutmodels.UpdateTempBasalToTreatment), mergeInto: nightscoutmodels.UpdateToTempBasal,
@@ -440,10 +441,15 @@ var treatmentTypeEvents = func() map[nightscoutmodels.TreatmentEventType][]treat
 // and percentSwitches the most switches looked at
 const percentSwitchMs, percentSwitches = 7 * 24 * 60 * 60_000, 1000
 
-// percentRate sets the absolute of a temp basal the treatment sends only as a percent from the profile's basal at its
-// start, see sitemodels.RateBasal, keeping its absolute when no profile has a basal then
-func percentRate(ctx context.Context, q *sitedb.Queries, treatment nightscoutmodels.Treatment, tempBasal *sitedb.TempBasal) error {
-	if tempBasal == nil || tempBasal.Rate == nil || nightscoutmodels.TempBasalValuePtr(treatment) != nil {
+// maxMultiplier is the most times the basal a temp basal keeps, as Nightscout's 1000 percent
+const maxMultiplier = 11
+
+// fillTempBasal sets what the treatment doesn't send of a temp basal's rate in U/hr and its multiplier, from the other
+// and the profile's basal at its start, see sitemodels.BasalAt, keeping them as they are when no profile has a basal
+// then
+func fillTempBasal(ctx context.Context, q *sitedb.Queries, treatment nightscoutmodels.Treatment, tempBasal *sitedb.TempBasal) error {
+	sentRate, sentPercent := nightscoutmodels.TempBasalValuePtr(treatment) != nil, treatment.TempBasalPercent != nil
+	if tempBasal == nil || sentRate == sentPercent || (sentPercent && tempBasal.Multiplier == nil) {
 		return nil
 	}
 	at := tempBasal.OccurredAt
@@ -462,8 +468,14 @@ func percentRate(ctx context.Context, q *sitedb.Queries, treatment nightscoutmod
 		location = siteContext.GetSiteTimezone()
 	}
 	slices.Reverse(switches)
-	if rate := sitemodels.RateBasal(at, *tempBasal.Rate, location, defaults, switches); rate != nil {
-		tempBasal.Absolute = *rate
+	basal := sitemodels.BasalAt(at, location, defaults, switches)
+	switch {
+	case basal == nil:
+	case sentPercent:
+		tempBasal.Rate = consts.Round(*basal**tempBasal.Multiplier, 3)
+	// A rate far over the basal, as a temp basal set over a basal of nearly nothing, has no multiplier kept
+	case *basal > 0 && tempBasal.Rate <= maxMultiplier**basal:
+		tempBasal.Multiplier = new(consts.Round(tempBasal.Rate / *basal, 5))
 	}
 	return nil
 }

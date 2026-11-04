@@ -18,7 +18,7 @@ SELECT
     gr.id, gr.mgdl, gr.reading_type, gr.units, gr.measurement_method, gr.delta, gr.direction, gr.noise, gr.filtered, gr.unfiltered, gr.rssi, gr.notes, gr.reason, gr.raw_json_data, gr.deleted_at, gr.utc_offset_minutes, gr.occurred_at, gr.created_at, gr.updated_at, gr.created_by_app_name, gr.created_by_device_name, gr.updated_by_identity_id, gr.updated_by_identity_name, gr.created_by_identity_id, gr.created_by_identity_name,
     idose.id, idose.dose, idose.dose_type, idose.split_now, idose.split_ext, idose.notes, idose.reason, idose.raw_json_data, idose.deleted_at, idose.utc_offset_minutes, idose.occurred_at, idose.created_at, idose.updated_at, idose.created_by_app_name, idose.created_by_device_name, idose.updated_by_identity_id, idose.updated_by_identity_name, idose.created_by_identity_id, idose.created_by_identity_name,
     fi.id, fi.name, fi.food_type, fi.category, fi.subcategory, fi.absorption_time_minutes, fi.pre_bolus, fi.carbs, fi.fat, fi.protein, fi.fibre, fi.energy, fi.portions, fi.notes, fi.reason, fi.raw_json_data, fi.deleted_at, fi.utc_offset_minutes, fi.occurred_at, fi.created_at, fi.updated_at, fi.created_by_app_name, fi.created_by_device_name, fi.updated_by_identity_id, fi.updated_by_identity_name, fi.created_by_identity_id, fi.created_by_identity_name,
-    tb.id, tb.duration_minutes, tb.absolute, tb.rate, tb.notes, tb.reason, tb.raw_json_data, tb.deleted_at, tb.utc_offset_minutes, tb.occurred_at, tb.created_at, tb.updated_at, tb.created_by_app_name, tb.created_by_device_name, tb.updated_by_identity_id, tb.updated_by_identity_name, tb.created_by_identity_id, tb.created_by_identity_name,
+    tb.id, tb.duration_minutes, tb.rate, tb.multiplier, tb.notes, tb.reason, tb.raw_json_data, tb.deleted_at, tb.utc_offset_minutes, tb.occurred_at, tb.created_at, tb.updated_at, tb.created_by_app_name, tb.created_by_device_name, tb.updated_by_identity_id, tb.updated_by_identity_name, tb.created_by_identity_id, tb.created_by_identity_name,
     tt.id, tt.duration_minutes, tt.high_target_mgdl, tt.low_target_mgdl, tt.insulin_needs_scale_factor, tt.notes, tt.reason, tt.raw_json_data, tt.deleted_at, tt.utc_offset_minutes, tt.occurred_at, tt.created_at, tt.updated_at, tt.created_by_app_name, tt.created_by_device_name, tt.updated_by_identity_id, tt.updated_by_identity_name, tt.created_by_identity_id, tt.created_by_identity_name,
     ps.id, ps.name, ps.duration_minutes, ps.percent, ps.timeshift, ps.dia, ps.units, ps.timezone, ps.carbs_hr, ps.delay, ps.carb_ratios_json, ps.insulin_sensitivities_json, ps.basal_rates_json, ps.targets_high_json, ps.targets_low_json, ps.notes, ps.reason, ps.raw_json_data, ps.deleted_at, ps.utc_offset_minutes, ps.occurred_at, ps.created_at, ps.updated_at, ps.created_by_app_name, ps.created_by_device_name, ps.updated_by_identity_id, ps.updated_by_identity_name, ps.created_by_identity_id, ps.created_by_identity_name,
     ce.id, ce.event_type, ce.sensor_code, ce.transmitter_id, ce.pump_id, ce.pump_serial, ce.pump_type, ce.notes, ce.reason, ce.raw_json_data, ce.deleted_at, ce.utc_offset_minutes, ce.occurred_at, ce.created_at, ce.updated_at, ce.updated_by_identity_id, ce.updated_by_identity_name, ce.created_by_app_name, ce.created_by_device_name, ce.created_by_identity_id, ce.created_by_identity_name,
@@ -174,8 +174,8 @@ func (q *Queries) AllEventGroups(ctx context.Context, arg AllEventGroupsParams) 
 			&i.FoodIntakesVw.CreatedByIdentityName,
 			&i.TempBasalsVw.ID,
 			&i.TempBasalsVw.DurationMinutes,
-			&i.TempBasalsVw.Absolute,
 			&i.TempBasalsVw.Rate,
+			&i.TempBasalsVw.Multiplier,
 			&i.TempBasalsVw.Notes,
 			&i.TempBasalsVw.Reason,
 			&i.TempBasalsVw.RawJsonData,
@@ -454,7 +454,7 @@ SELECT 'food_intake_id', e.id, e.occurred_at, carbs, NULL, name FROM food_intake
 WHERE e.deleted_at IS NULL AND NOT EXISTS (SELECT 1 FROM event_groups g WHERE g.food_intake_id = e.id AND g.id != p.group_id)
     AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT food_intake_id FROM event_groups WHERE id = p.group_id))
 UNION ALL
-SELECT 'temp_basal_id', e.id, e.occurred_at, absolute, duration_minutes, NULL FROM temp_basals e, params p
+SELECT 'temp_basal_id', e.id, e.occurred_at, rate, duration_minutes, NULL FROM temp_basals e, params p
 WHERE e.deleted_at IS NULL AND NOT EXISTS (SELECT 1 FROM event_groups g WHERE g.temp_basal_id = e.id AND g.id != p.group_id)
     AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT temp_basal_id FROM event_groups WHERE id = p.group_id))
 UNION ALL
@@ -540,7 +540,7 @@ SELECT
     gr.id, gr.mgdl, gr.reading_type, gr.units, gr.measurement_method, gr.delta, gr.direction, gr.noise, gr.filtered, gr.unfiltered, gr.rssi, gr.notes, gr.reason, gr.raw_json_data, gr.deleted_at, gr.utc_offset_minutes, gr.occurred_at, gr.created_at, gr.updated_at, gr.created_by_app_name, gr.created_by_device_name, gr.updated_by_identity_id, gr.updated_by_identity_name, gr.created_by_identity_id, gr.created_by_identity_name,
     idose.id, idose.dose, idose.dose_type, idose.split_now, idose.split_ext, idose.notes, idose.reason, idose.raw_json_data, idose.deleted_at, idose.utc_offset_minutes, idose.occurred_at, idose.created_at, idose.updated_at, idose.created_by_app_name, idose.created_by_device_name, idose.updated_by_identity_id, idose.updated_by_identity_name, idose.created_by_identity_id, idose.created_by_identity_name,
     fi.id, fi.name, fi.food_type, fi.category, fi.subcategory, fi.absorption_time_minutes, fi.pre_bolus, fi.carbs, fi.fat, fi.protein, fi.fibre, fi.energy, fi.portions, fi.notes, fi.reason, fi.raw_json_data, fi.deleted_at, fi.utc_offset_minutes, fi.occurred_at, fi.created_at, fi.updated_at, fi.created_by_app_name, fi.created_by_device_name, fi.updated_by_identity_id, fi.updated_by_identity_name, fi.created_by_identity_id, fi.created_by_identity_name,
-    tb.id, tb.duration_minutes, tb.absolute, tb.rate, tb.notes, tb.reason, tb.raw_json_data, tb.deleted_at, tb.utc_offset_minutes, tb.occurred_at, tb.created_at, tb.updated_at, tb.created_by_app_name, tb.created_by_device_name, tb.updated_by_identity_id, tb.updated_by_identity_name, tb.created_by_identity_id, tb.created_by_identity_name,
+    tb.id, tb.duration_minutes, tb.rate, tb.multiplier, tb.notes, tb.reason, tb.raw_json_data, tb.deleted_at, tb.utc_offset_minutes, tb.occurred_at, tb.created_at, tb.updated_at, tb.created_by_app_name, tb.created_by_device_name, tb.updated_by_identity_id, tb.updated_by_identity_name, tb.created_by_identity_id, tb.created_by_identity_name,
     tt.id, tt.duration_minutes, tt.high_target_mgdl, tt.low_target_mgdl, tt.insulin_needs_scale_factor, tt.notes, tt.reason, tt.raw_json_data, tt.deleted_at, tt.utc_offset_minutes, tt.occurred_at, tt.created_at, tt.updated_at, tt.created_by_app_name, tt.created_by_device_name, tt.updated_by_identity_id, tt.updated_by_identity_name, tt.created_by_identity_id, tt.created_by_identity_name,
     ps.id, ps.name, ps.duration_minutes, ps.percent, ps.timeshift, ps.dia, ps.units, ps.timezone, ps.carbs_hr, ps.delay, ps.carb_ratios_json, ps.insulin_sensitivities_json, ps.basal_rates_json, ps.targets_high_json, ps.targets_low_json, ps.notes, ps.reason, ps.raw_json_data, ps.deleted_at, ps.utc_offset_minutes, ps.occurred_at, ps.created_at, ps.updated_at, ps.created_by_app_name, ps.created_by_device_name, ps.updated_by_identity_id, ps.updated_by_identity_name, ps.created_by_identity_id, ps.created_by_identity_name,
     ce.id, ce.event_type, ce.sensor_code, ce.transmitter_id, ce.pump_id, ce.pump_serial, ce.pump_type, ce.notes, ce.reason, ce.raw_json_data, ce.deleted_at, ce.utc_offset_minutes, ce.occurred_at, ce.created_at, ce.updated_at, ce.updated_by_identity_id, ce.updated_by_identity_name, ce.created_by_app_name, ce.created_by_device_name, ce.created_by_identity_id, ce.created_by_identity_name,
@@ -684,8 +684,8 @@ func (q *Queries) GetEventGroup(ctx context.Context, arg GetEventGroupParams) (*
 		&i.FoodIntakesVw.CreatedByIdentityName,
 		&i.TempBasalsVw.ID,
 		&i.TempBasalsVw.DurationMinutes,
-		&i.TempBasalsVw.Absolute,
 		&i.TempBasalsVw.Rate,
+		&i.TempBasalsVw.Multiplier,
 		&i.TempBasalsVw.Notes,
 		&i.TempBasalsVw.Reason,
 		&i.TempBasalsVw.RawJsonData,
@@ -1135,7 +1135,7 @@ SELECT
     gr.id, gr.mgdl, gr.reading_type, gr.units, gr.measurement_method, gr.delta, gr.direction, gr.noise, gr.filtered, gr.unfiltered, gr.rssi, gr.notes, gr.reason, gr.raw_json_data, gr.deleted_at, gr.utc_offset_minutes, gr.occurred_at, gr.created_at, gr.updated_at, gr.created_by_app_name, gr.created_by_device_name, gr.updated_by_identity_id, gr.updated_by_identity_name, gr.created_by_identity_id, gr.created_by_identity_name,
     idose.id, idose.dose, idose.dose_type, idose.split_now, idose.split_ext, idose.notes, idose.reason, idose.raw_json_data, idose.deleted_at, idose.utc_offset_minutes, idose.occurred_at, idose.created_at, idose.updated_at, idose.created_by_app_name, idose.created_by_device_name, idose.updated_by_identity_id, idose.updated_by_identity_name, idose.created_by_identity_id, idose.created_by_identity_name,
     fi.id, fi.name, fi.food_type, fi.category, fi.subcategory, fi.absorption_time_minutes, fi.pre_bolus, fi.carbs, fi.fat, fi.protein, fi.fibre, fi.energy, fi.portions, fi.notes, fi.reason, fi.raw_json_data, fi.deleted_at, fi.utc_offset_minutes, fi.occurred_at, fi.created_at, fi.updated_at, fi.created_by_app_name, fi.created_by_device_name, fi.updated_by_identity_id, fi.updated_by_identity_name, fi.created_by_identity_id, fi.created_by_identity_name,
-    tb.id, tb.duration_minutes, tb.absolute, tb.rate, tb.notes, tb.reason, tb.raw_json_data, tb.deleted_at, tb.utc_offset_minutes, tb.occurred_at, tb.created_at, tb.updated_at, tb.created_by_app_name, tb.created_by_device_name, tb.updated_by_identity_id, tb.updated_by_identity_name, tb.created_by_identity_id, tb.created_by_identity_name,
+    tb.id, tb.duration_minutes, tb.rate, tb.multiplier, tb.notes, tb.reason, tb.raw_json_data, tb.deleted_at, tb.utc_offset_minutes, tb.occurred_at, tb.created_at, tb.updated_at, tb.created_by_app_name, tb.created_by_device_name, tb.updated_by_identity_id, tb.updated_by_identity_name, tb.created_by_identity_id, tb.created_by_identity_name,
     tt.id, tt.duration_minutes, tt.high_target_mgdl, tt.low_target_mgdl, tt.insulin_needs_scale_factor, tt.notes, tt.reason, tt.raw_json_data, tt.deleted_at, tt.utc_offset_minutes, tt.occurred_at, tt.created_at, tt.updated_at, tt.created_by_app_name, tt.created_by_device_name, tt.updated_by_identity_id, tt.updated_by_identity_name, tt.created_by_identity_id, tt.created_by_identity_name,
     ps.id, ps.name, ps.duration_minutes, ps.percent, ps.timeshift, ps.dia, ps.units, ps.timezone, ps.carbs_hr, ps.delay, ps.carb_ratios_json, ps.insulin_sensitivities_json, ps.basal_rates_json, ps.targets_high_json, ps.targets_low_json, ps.notes, ps.reason, ps.raw_json_data, ps.deleted_at, ps.utc_offset_minutes, ps.occurred_at, ps.created_at, ps.updated_at, ps.created_by_app_name, ps.created_by_device_name, ps.updated_by_identity_id, ps.updated_by_identity_name, ps.created_by_identity_id, ps.created_by_identity_name,
     ce.id, ce.event_type, ce.sensor_code, ce.transmitter_id, ce.pump_id, ce.pump_serial, ce.pump_type, ce.notes, ce.reason, ce.raw_json_data, ce.deleted_at, ce.utc_offset_minutes, ce.occurred_at, ce.created_at, ce.updated_at, ce.updated_by_identity_id, ce.updated_by_identity_name, ce.created_by_app_name, ce.created_by_device_name, ce.created_by_identity_id, ce.created_by_identity_name,
@@ -1455,8 +1455,8 @@ func (q *Queries) SearchEventGroups(ctx context.Context, arg SearchEventGroupsPa
 			&i.FoodIntakesVw.CreatedByIdentityName,
 			&i.TempBasalsVw.ID,
 			&i.TempBasalsVw.DurationMinutes,
-			&i.TempBasalsVw.Absolute,
 			&i.TempBasalsVw.Rate,
+			&i.TempBasalsVw.Multiplier,
 			&i.TempBasalsVw.Notes,
 			&i.TempBasalsVw.Reason,
 			&i.TempBasalsVw.RawJsonData,

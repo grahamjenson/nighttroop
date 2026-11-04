@@ -84,7 +84,7 @@ func treatments(s *sitemodels.Summary) []treatment {
 		list = append(list, treatment{t.OccurredAt, "Temp Target", "/data/temp-targets", detail})
 	}
 	for _, b := range s.TempBasals {
-		list = append(list, treatment{b.OccurredAt, "Temp Basal", "/data/temp-basals", fmt.Sprintf("%s for %d min", value(b.Absolute, " U/hr"), b.DurationMinutes)})
+		list = append(list, treatment{b.OccurredAt, "Temp Basal", "/data/temp-basals", fmt.Sprintf("%s for %d min", value(b.Rate, " U/hr"), b.DurationMinutes)})
 	}
 	sort.SliceStable(list, func(i, j int) bool { return list[i].At > list[j].At })
 	return list
