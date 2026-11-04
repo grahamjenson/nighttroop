@@ -170,6 +170,7 @@ func setupSentry(serverConfig *config.ServerConfig) {
 	}
 	err := sentry.Init(sentry.ClientOptions{
 		Dsn:           serverConfig.SentryDSN,
+		Environment:   serverConfig.Deployment,
 		EnableTracing: false,
 		BeforeSend:    httputils.RedactSentryEvent,
 	})

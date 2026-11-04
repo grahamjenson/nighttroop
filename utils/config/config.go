@@ -86,6 +86,10 @@ type ServerConfig struct {
 	// sentry
 	SentryDSN string
 
+	// Deployment names this server among those running Nighttroop, e.g. one of several staging servers, as Sentry's
+	// environment its errors are reported under
+	Deployment string
+
 	// SupportEmail is where users contact the server's operator, linked from every page's footer and in the terms
 	// of service and privacy policy
 	SupportEmail string
@@ -306,7 +310,8 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		S3AccessSecretKey: configStringSelect(dotenv, "S3_SECRET_KEY", "minioadmin"),
 
 		// sentry
-		SentryDSN: configStringSelect(dotenv, "SENTRY_DSN", ""),
+		SentryDSN:  configStringSelect(dotenv, "SENTRY_DSN", ""),
+		Deployment: configStringSelect(dotenv, "DEPLOYMENT", "development"),
 
 		SupportEmail: configStringSelect(dotenv, "SUPPORT_EMAIL", DefaultSupportEmail),
 		FeedbackURL:  configStringSelect(dotenv, "FEEDBACK_URL", ""),
@@ -664,6 +669,7 @@ func printServerConfig(config ServerConfig) {
 	// This is a concise printing of all non-secure information at startup
 	slog.Info("Server Config",
 		"Mode", map[consts.ServerMode]string{consts.Production: "Production", consts.Development: "Development", consts.Test: "Test", consts.Staging: "Staging"}[config.Mode],
+		"Deployment", config.Deployment,
 		"Host", fmt.Sprintf("%s://%s:%d", config.HostProtocol, config.HostName, config.HostPort),
 		"S3", fmt.Sprintf("%s/%s", config.S3URL, config.S3Bucket),
 		"TrustedProxies", config.TrustedProxies,
