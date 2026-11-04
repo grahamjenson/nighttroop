@@ -2249,6 +2249,16 @@ func (m *DeleteSitePushCredentialsParams) SetSiteID(v *string) {
 }
 
 // GetID returns the ID value.
+func (m GetAnySitePushRegistrationParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated GetAnySitePushRegistrationParams.
+func (m *GetAnySitePushRegistrationParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetID returns the ID value.
 func (m GetPushCredentialParams) GetID() int64 {
 	return m.ID
 }
@@ -2356,6 +2366,26 @@ func (m RecordPushParams) GetID() int64 {
 // SetID sets the ID value and returns the updated RecordPushParams.
 func (m *RecordPushParams) SetID(v int64) {
 	m.ID = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m SearchAllPushRegistrationsParams) GetSiteID() *string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated SearchAllPushRegistrationsParams.
+func (m *SearchAllPushRegistrationsParams) SetSiteID(v *string) {
+	m.SiteID = v
+}
+
+// GetLimit returns the Limit value.
+func (m SearchAllPushRegistrationsParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated SearchAllPushRegistrationsParams.
+func (m *SearchAllPushRegistrationsParams) SetLimit(v int64) {
+	m.Limit = v
 }
 
 // GetSiteID returns the SiteID value.

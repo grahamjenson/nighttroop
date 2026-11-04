@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/data/sql/sqltiming"
+	"nighttroop.t1d.nz/utils/push"
 	"nighttroop.t1d.nz/utils/usage"
 )
 
@@ -22,6 +23,8 @@ type Usage struct {
 	SitesCreatedWeek  int64 `json:"sites_created_week"`
 	SitesCreatedMonth int64 `json:"sites_created_month"`
 	SinceStart           usage.Snapshot `json:"since_start"`
+	// Pushes are the push notifications sent since midnight and Monday, in UTC, counted since the server started
+	Pushes push.Counts `json:"pushes"`
 	Server               usage.Server   `json:"server"`
 	// ResourceReadings are the checks of the server's resources since ResourcesSince, oldest first, kept while it
 	// runs, and the levels memory and disk warn at

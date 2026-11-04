@@ -82,6 +82,15 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - Lists every site's sync sources, the most recently attempted first, with failed counts in red.
 - Clicking a source shows its sync reports.
 
+### Push devices
+
+- Lists every site's apps registered for pushes (`/push-devices`), newest first, at most 500, or one site's with
+  `?site=`: its site, identity, app and service, bundle ID, whether it is a development build, when it registered, and
+  its last push and error, never its token.
+- A control admin can send any of them a test push with its Test button (`POST /push-devices/{id}/test`), within its
+  site's push limit, seeing its new last push or why it failed; a read only control identity sees no Test buttons and
+  is refused (403).
+
 ### Logs
 
 - Every site's and the server's events, newest first, with readable names, when each started and how long it took.
@@ -102,6 +111,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - Shows active sites and users, use since start, the server's resources and the most used routes, refreshing every
   10 seconds.
 - Counts the sites created today, this week and this month.
+- Counts the push notifications sent today and this week, since midnight and Monday UTC, and how many of them failed,
+  in memory since the server started.
 - Its memory is all the server's, as the operating system counts it (htop's RES), with SQLite's, which Go's own figures
   leave out, and says how much of it is Go's heap.
 - Its CPU is the server's in the last 5 seconds as htop shows it, 100% for each core used, so up to 400% on 4 cores.

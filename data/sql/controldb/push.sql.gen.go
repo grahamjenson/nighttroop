@@ -174,6 +174,36 @@ func (q *Queries) DeleteSitePushCredentials(ctx context.Context, arg DeleteSiteP
 	return err
 }
 
+const getAnySitePushRegistration = `-- name: GetAnySitePushRegistration :one
+SELECT id, site_id, identity_id, app, provider, bundle_id, production, token_enc, token_hash, created_at, updated_at, last_pushed_at, last_error FROM push_registrations WHERE id = ?1
+`
+
+type GetAnySitePushRegistrationParams struct {
+	ID int64
+}
+
+// Any site's registration, for the control site
+func (q *Queries) GetAnySitePushRegistration(ctx context.Context, arg GetAnySitePushRegistrationParams) (*PushRegistration, error) {
+	row := q.queryRow(ctx, q.getAnySitePushRegistrationStmt, getAnySitePushRegistration, arg.ID)
+	var i PushRegistration
+	err := row.Scan(
+		&i.ID,
+		&i.SiteID,
+		&i.IdentityID,
+		&i.App,
+		&i.Provider,
+		&i.BundleID,
+		&i.Production,
+		&i.TokenEnc,
+		&i.TokenHash,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.LastPushedAt,
+		&i.LastError,
+	)
+	return &i, err
+}
+
 const getPushCredential = `-- name: GetPushCredential :one
 SELECT id, site_id, name, provider, team_or_project_id, key_id, secret_enc, apps_json, bundle_ids_json, created_at, updated_at, created_by_identity_name, deleted_at FROM push_credentials
 WHERE id = ?1 AND site_id IS ?2 AND deleted_at IS NULL
@@ -300,6 +330,63 @@ type RecordPushParams struct {
 func (q *Queries) RecordPush(ctx context.Context, arg RecordPushParams) error {
 	_, err := q.exec(ctx, q.recordPushStmt, recordPush, arg.LastError, arg.ID)
 	return err
+}
+
+const searchAllPushRegistrations = `-- name: SearchAllPushRegistrations :many
+SELECT push_registrations.id, push_registrations.site_id, push_registrations.identity_id, push_registrations.app, push_registrations.provider, push_registrations.bundle_id, push_registrations.production, push_registrations.token_enc, push_registrations.token_hash, push_registrations.created_at, push_registrations.updated_at, push_registrations.last_pushed_at, push_registrations.last_error, site_identities.name AS identity_name
+FROM push_registrations JOIN site_identities ON site_identities.id = push_registrations.identity_id
+WHERE push_registrations.site_id = COALESCE(?1, push_registrations.site_id)
+ORDER BY push_registrations.id DESC
+LIMIT CAST(?2 AS INTEGER)
+`
+
+type SearchAllPushRegistrationsParams struct {
+	SiteID *string
+	Limit  int64
+}
+
+type SearchAllPushRegistrationsRow struct {
+	PushRegistration PushRegistration
+	IdentityName     string
+}
+
+// Every site's registrations, or with SiteID one site's, with their identities' names, newest first, for the control site
+func (q *Queries) SearchAllPushRegistrations(ctx context.Context, arg SearchAllPushRegistrationsParams) ([]*SearchAllPushRegistrationsRow, error) {
+	rows, err := q.query(ctx, q.searchAllPushRegistrationsStmt, searchAllPushRegistrations, arg.SiteID, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*SearchAllPushRegistrationsRow
+	for rows.Next() {
+		var i SearchAllPushRegistrationsRow
+		if err := rows.Scan(
+			&i.PushRegistration.ID,
+			&i.PushRegistration.SiteID,
+			&i.PushRegistration.IdentityID,
+			&i.PushRegistration.App,
+			&i.PushRegistration.Provider,
+			&i.PushRegistration.BundleID,
+			&i.PushRegistration.Production,
+			&i.PushRegistration.TokenEnc,
+			&i.PushRegistration.TokenHash,
+			&i.PushRegistration.CreatedAt,
+			&i.PushRegistration.UpdatedAt,
+			&i.PushRegistration.LastPushedAt,
+			&i.PushRegistration.LastError,
+			&i.IdentityName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const searchPushCredentials = `-- name: SearchPushCredentials :many
