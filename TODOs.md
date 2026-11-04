@@ -30,10 +30,6 @@
     1. Restore one site from its backup
     1. P3: Manage the control admins: list them, reset another's password or TOTP, change their role or delete one
 
-1. Site UI
-    1. P3: On a phone, Users & Devices' Add User and Add Device forms are wider than their cards, so the page scrolls
-       sideways; wrap them as the tables now scroll in theirs
-
 1. Accounts
     1. Recovering a site's admin without the initial backup key
     1. Recovering a lost control admin login, as setup only runs on a server with no control admin
