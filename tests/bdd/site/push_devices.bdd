@@ -1,0 +1,28 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// No app has registered for pushes on a new site
+CLICK #site--settings-menu
+ASSERT_VISIBLE #site--settings--push-devices-button
+CLICK #site--settings--push-devices-button
+ASSERT_STATUS 200
+ASSERT_PATH /settings/push-devices
+ASSERT_VISIBLE #site--push-device--empty
+SCREENSHOT push_devices_empty
+
+// Loop registers its APNs token once signed in, and the admin sees whose it is, without the token
+POST /settings/push-registrations {"app": "loop", "provider": "apns", "bundle_id": "com.TEAM123456.loopkit.Loop", "production": false, "token": "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90"}
+CLICK #site--settings-menu
+CLICK #site--settings--push-devices-button
+ASSERT_STATUS 200
+ASSERT_NOT_VISIBLE #site--push-device--empty
+ASSERT_VISIBLE #pushDevicesTable >> text="admin"
+ASSERT_VISIBLE #pushDevicesTable >> text="com.TEAM123456.loopkit.Loop"
+ASSERT_VISIBLE #pushDevicesTable >> text="Development build"
+ASSERT_NOT_VISIBLE #pushDevicesTable >> text="a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90"
+SCREENSHOT push_devices
+
+// Testing it needs a push credential for its app, which the site has none of, so it says where to add one
+CLICK #pushDevicesTable tbody tr >> text="Test"
+ASSERT_TEXT_VISIBLE no push credential for the app loop: add one in Push Notifications
+SCREENSHOT push_device_test_without_credential

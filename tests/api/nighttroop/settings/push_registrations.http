@@ -92,12 +92,45 @@ H Accept: application/json
 ASSERT_STATUS 400
 ASSERT_CONTAINS "no push credential for the app loop" "@message"
 
-// Only the identity whose it is can send it a test push
-NAME admin_cannot_test_push
+// An admin can send any of the site's registrations a test push, as from Push Devices, but another identity cannot
+NAME admin_test_push
 POST http://{{ site }}/settings/push-registrations/{{ .registration_id }}/test
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
+ASSERT_STATUS 400
+ASSERT_CONTAINS "no push credential for the app loop" "@message"
+
+NAME viewer_cannot_test_push
+POST http://{{ site }}/settings/push-registrations/{{ .registration_id }}/test
+H Authorization: Bearer {{ .viewer_jwt }}
+H Accept: application/json
 ASSERT_STATUS 404
+
+// Push Devices lists the registrations with whose they are: the site's to an admin, and its own to anyone else
+NAME phone_push_devices
+GET http://{{ site }}/settings/push-devices
+H Authorization: Bearer {{ .phone_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS "pwd_phone" "@result.0.identity_name"
+ASSERT_EQUALS "loop" "@result.0.app"
+ASSERT_EQUALS null "@result.0.token"
+
+NAME admin_push_devices
+GET http://{{ site }}/settings/push-devices
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS "pwd_phone" "@result.0.identity_name"
+
+NAME viewer_push_devices
+GET http://{{ site }}/settings/push-devices
+H Authorization: Bearer {{ .viewer_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
 
 NAME test_push_unknown
 POST http://{{ site }}/settings/push-registrations/999999/test

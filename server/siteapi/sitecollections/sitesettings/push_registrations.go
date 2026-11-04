@@ -82,7 +82,7 @@ func (s *PushRegistrationsCollection) GetRow(ctx context.Context, collectionTx *
 		return nil, err
 	}
 	return q.GetPushRegistration(ctx, controldb.GetPushRegistrationParams{ID: registrationID, SiteID: siteContext.SiteID,
-		IdentityID: siteContext.IdentityModel.ID})
+		IdentityID: &siteContext.IdentityModel.ID})
 }
 
 func (s *PushRegistrationsCollection) GetHTMXResponse(model *sitemodels.PushRegistration) templ.Component {
