@@ -31,9 +31,10 @@ func (s *PushRegistrationsCollection) GetRoute() string {
 	return "push-registrations"
 }
 
-// ToModel is the registration: it is converted as it is read, so its row is its model
-func (s *PushRegistrationsCollection) ToModel(row *sitemodels.PushRegistration, _ *httputils.SiteContext) *sitemodels.PushRegistration {
-	return row
+// ToModel is the registration without its token. Its row has the identity it is for, so its changes are streamed to
+// that identity alone.
+func (s *PushRegistrationsCollection) ToModel(row *controldb.PushRegistration, _ *httputils.SiteContext) *sitemodels.PushRegistration {
+	return sitemodels.PushRegistrationFromDB(row)
 }
 
 // ////
@@ -41,7 +42,7 @@ func (s *PushRegistrationsCollection) ToModel(row *sitemodels.PushRegistration, 
 // ////
 
 // CreateRow registers the app's token for the signed in identity, of the site the request is for
-func (s *PushRegistrationsCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.PushRegistration) (*sitemodels.PushRegistration, error) {
+func (s *PushRegistrationsCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.PushRegistration) (*controldb.PushRegistration, error) {
 	if model.Token == nil {
 		return nil, apiutils.ErrMissingRequiredFieldWithHint("token")
 	}
@@ -61,7 +62,7 @@ func (s *PushRegistrationsCollection) CreateRow(ctx context.Context, collectionT
 	if err != nil {
 		return nil, err
 	}
-	return sitemodels.PushRegistrationFromDB(registered), nil
+	return registered, nil
 }
 
 func (s *PushRegistrationsCollection) CreateHTMXResponse(model *sitemodels.PushRegistration) templ.Component {
@@ -71,7 +72,7 @@ func (s *PushRegistrationsCollection) CreateHTMXResponse(model *sitemodels.PushR
 // ////
 // Get Model
 // /////
-func (s *PushRegistrationsCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitemodels.PushRegistration, error) {
+func (s *PushRegistrationsCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*controldb.PushRegistration, error) {
 	registrationID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		return nil, apiutils.ErrNotFound
@@ -80,12 +81,8 @@ func (s *PushRegistrationsCollection) GetRow(ctx context.Context, collectionTx *
 	if err != nil {
 		return nil, err
 	}
-	registration, err := q.GetPushRegistration(ctx, controldb.GetPushRegistrationParams{ID: registrationID, SiteID: siteContext.SiteID,
+	return q.GetPushRegistration(ctx, controldb.GetPushRegistrationParams{ID: registrationID, SiteID: siteContext.SiteID,
 		IdentityID: siteContext.IdentityModel.ID})
-	if err != nil {
-		return nil, err
-	}
-	return sitemodels.PushRegistrationFromDB(registration), nil
 }
 
 func (s *PushRegistrationsCollection) GetHTMXResponse(model *sitemodels.PushRegistration) templ.Component {
@@ -97,21 +94,13 @@ func (s *PushRegistrationsCollection) GetHTMXResponse(model *sitemodels.PushRegi
 // ///
 
 // SearchRows is the signed in identity's registrations, newest first
-func (s *PushRegistrationsCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.PushRegistration, error) {
+func (s *PushRegistrationsCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*controldb.PushRegistration, error) {
 	q, err := collectionTx.Control()
 	if err != nil {
 		return nil, err
 	}
-	registrations, err := q.SearchPushRegistrations(ctx, controldb.SearchPushRegistrationsParams{SiteID: siteContext.SiteID,
+	return q.SearchPushRegistrations(ctx, controldb.SearchPushRegistrationsParams{SiteID: siteContext.SiteID,
 		IdentityID: &siteContext.IdentityModel.ID, Skip: query.Skip, Limit: query.Limit})
-	if err != nil {
-		return nil, err
-	}
-	models := make([]*sitemodels.PushRegistration, 0, len(registrations))
-	for _, registration := range registrations {
-		models = append(models, sitemodels.PushRegistrationFromDB(registration))
-	}
-	return models, nil
 }
 
 func (s *PushRegistrationsCollection) SearchHTMXResponse(models []*sitemodels.PushRegistration, query *apiutils.Query) templ.Component {
