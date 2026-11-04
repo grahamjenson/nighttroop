@@ -513,7 +513,11 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   or `fcm`), bundle ID, whether it is a production build, and its token, which is kept encrypted and never returned.
   Registering a token again updates it, and from another identity moves it there; an identity has at most 10, and
   sees, streams the changes to (`/settings/push-registrations/events`) and deletes only its own.
-- An identity can send a test push to one of its registrations
+- Settings, Push Devices (`/settings/push-devices`) lists the apps registered for pushes, with whose they are, the app
+  and its service, its bundle ID, whether it is a development build, when it registered, and its last push and error;
+  never its token. An admin sees every identity's on the site, and anyone else only their own. Each has a Test button,
+  which sends it a test push and shows its new last push, or a toast with why it failed.
+- An identity can send a test push to one of its registrations, and an admin to any of the site's
   (`POST /settings/push-registrations/{id}/test`), with its site's push credential for the app, else the server's.
   Without one it is refused, saying to add one; a token Apple says is gone deletes the registration (410); another
   refusal says Apple's reason (502). Each push is recorded on the registration, with its error, if it had one. A site

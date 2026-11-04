@@ -38,8 +38,9 @@ func PushDevicesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	devices := make([]*controlmodels.PushRegistration, 0, len(rows))
 	for _, row := range rows {
-		devices = append(devices, &controlmodels.PushRegistration{PushRegistration: sitemodels.PushRegistrationFromDB(&row.PushRegistration),
-			SiteID: row.PushRegistration.SiteID, IdentityName: row.IdentityName})
+		registration := sitemodels.PushRegistrationFromDB(&row.PushRegistration)
+		registration.IdentityName = row.IdentityName
+		devices = append(devices, &controlmodels.PushRegistration{PushRegistration: registration, SiteID: row.PushRegistration.SiteID})
 	}
 	admin := controlContext.IdentityModel.Role == consts.ControlRoleAdmin
 	controlcollections.WriteResponse(w, r, acceptType, http.StatusOK, devices, control_push_templ.PushDevices(devices, admin))

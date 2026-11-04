@@ -6,6 +6,5 @@ import "nighttroop.t1d.nz/models/sitemodels"
 // control site, which sees every site's
 type PushRegistration struct {
 	*sitemodels.PushRegistration
-	SiteID       string `json:"site_id"`
-	IdentityName string `json:"identity_name"`
+	SiteID string `json:"site_id"`
 }

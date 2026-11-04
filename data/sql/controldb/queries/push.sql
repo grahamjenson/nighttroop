@@ -77,9 +77,9 @@ ON CONFLICT (token_hash) DO UPDATE SET
 RETURNING *;
 
 -- name: GetPushRegistration :one
--- A site's registration, if it is the identity's
+-- A site's registration, or with IdentityID only if it is that identity's
 SELECT * FROM push_registrations
-WHERE id = sqlc.arg('ID') AND site_id = sqlc.arg('SiteID') AND identity_id = sqlc.arg('IdentityID');
+WHERE id = sqlc.arg('ID') AND site_id = sqlc.arg('SiteID') AND identity_id = COALESCE(sqlc.narg('IdentityID'), identity_id);
 
 -- name: SearchPushRegistrations :many
 -- A site's registrations, or with IdentityID only that identity's, newest first
@@ -87,6 +87,15 @@ SELECT * FROM push_registrations
 WHERE site_id = sqlc.arg('SiteID') AND identity_id = COALESCE(sqlc.narg('IdentityID'), identity_id)
 ORDER BY id DESC
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
+
+-- name: SearchPushRegistrationsWithIdentity :many
+-- A site's registrations with their identities' names, or with IdentityID only that identity's, newest first
+SELECT sqlc.embed(push_registrations), site_identities.name AS identity_name
+FROM push_registrations JOIN site_identities ON site_identities.id = push_registrations.identity_id
+WHERE push_registrations.site_id = sqlc.arg('SiteID')
+  AND push_registrations.identity_id = COALESCE(sqlc.narg('IdentityID'), push_registrations.identity_id)
+ORDER BY push_registrations.id DESC
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
 
 -- name: SearchAllPushRegistrations :many
 -- Every site's registrations, or with SiteID one site's, with their identities' names, newest first, for the control site

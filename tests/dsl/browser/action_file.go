@@ -87,6 +87,14 @@ func parseFile(fsys fs.FS, path string) ([]Action, error) {
 				URL:      second,
 				Asserts:  []Assert{},
 			}
+		case "POST":
+			// POST sends a path a JSON body from the page, signed in as it is, e.g. as an app registers itself
+			flush()
+			parts := strings.SplitN(second, " ", 2)
+			if len(parts) != 2 {
+				return nil, fmt.Errorf("%s:%d: POST needs a path and a JSON body", path, lineNumber)
+			}
+			current = &Post{TestPath: path, TestLine: lineNumber, URL: parts[0], Body: parts[1]}
 		case "CLICK":
 			flush()
 
