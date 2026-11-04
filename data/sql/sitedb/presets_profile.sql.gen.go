@@ -207,8 +207,7 @@ FROM profile_presets
 WHERE profile_store_id = (
     SELECT profile_store_id
     FROM profile_presets
-    GROUP BY profile_store_id
-    ORDER BY MAX(occurred_at) DESC
+    ORDER BY occurred_at DESC
     LIMIT 1
 ) ORDER BY is_default DESC
 `
@@ -219,6 +218,7 @@ WHERE profile_store_id = (
 // ------
 // READ
 // ------
+// The store with the newest preset, found through occurred_at's index rather than grouping every preset by store
 func (q *Queries) GetMostRecentProfileStore(ctx context.Context) ([]*ProfilePreset, error) {
 	rows, err := q.query(ctx, q.getMostRecentProfileStoreStmt, getMostRecentProfileStore)
 	if err != nil {

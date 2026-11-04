@@ -64,8 +64,8 @@ func (s *TempBasalsCollection) UpdateRow(ctx context.Context, collectionTx *site
 	if model.DurationMinutes != 0 {
 		merged.DurationMinutes = model.DurationMinutes
 	}
-	if model.Absolute != nil {
-		merged.Absolute = model.Absolute
+	if model.Rate != nil {
+		merged.Rate = model.Rate
 	}
 	if herr := checkTempBasal(&merged); herr != nil {
 		return nil, herr
@@ -126,8 +126,8 @@ func (s *TempBasalsCollection) DeleteHTMXResponse(model *sitemodels.SiteTempBasa
 
 // checkTempBasal keeps the rate to what a pump can deliver, and the duration to a day
 func checkTempBasal(model *sitemodels.SiteTempBasal) *apiutils.HTTPError {
-	if model.Absolute == nil || *model.Absolute < 0 || *model.Absolute > maxTempBasalUnitsPerHour {
-		return apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("absolute must be from 0 to %d U/hr", maxTempBasalUnitsPerHour))
+	if model.Rate == nil || *model.Rate < 0 || *model.Rate > maxTempBasalUnitsPerHour {
+		return apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("rate must be from 0 to %d U/hr", maxTempBasalUnitsPerHour))
 	}
 	if model.DurationMinutes <= 0 || model.DurationMinutes > maxTempBasalMinutes {
 		return apiutils.ErrConstraintCheckFailedWithHint(fmt.Sprintf("duration must be more than 0 and at most %d minutes", maxTempBasalMinutes))
