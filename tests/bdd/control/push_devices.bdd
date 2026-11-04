@@ -1,0 +1,26 @@
+GOTO {{ .control_url }}/login
+ASSERT_STATUS 200
+INPUT #name admin
+INPUT #password password
+INPUT #control--login--otp-1 123123
+CLICK #control--login-button
+ASSERT_VISIBLE #control--nav--logo
+
+// Push Devices is every site's apps registered for pushes, never with their tokens
+CLICK #control--menu
+ASSERT_VISIBLE #control--push-devices-button
+CLICK #control--push-devices-button
+ASSERT_STATUS 200
+ASSERT_PATH /push-devices
+ASSERT_TEXT_VISIBLE never with their tokens
+ASSERT_VISIBLE #control--push-devices--table
+SCREENSHOT push_devices
+
+// The usage page counts the pushes sent today and this week, and how many failed
+CLICK #control--menu
+CLICK #control--usage-button
+ASSERT_PATH /usage
+ASSERT_VISIBLE #control--usage--pushes-today
+ASSERT_VISIBLE #control--usage--pushes-week
+ASSERT_TEXT_VISIBLE failed, since Monday UTC
+SCREENSHOT usage_pushes

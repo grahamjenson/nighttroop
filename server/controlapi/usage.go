@@ -15,6 +15,7 @@ import (
 	"nighttroop.t1d.nz/server/controlapi/controlcollections"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/push"
 )
 
 // usageRoutes is how many of the most asked for routes the usage page shows, and usageQueries of the slowest queries
@@ -56,6 +57,7 @@ func UsageHandler(w http.ResponseWriter, r *http.Request) {
 		model.SitesByState[state.State] = state.Count
 	}
 	model.SinceStart = config.Usage.Snapshot(now, usageRoutes)
+	model.Pushes = push.CountsAt(now)
 	model.Server = config.Usage.Server(config.DBDir(), now)
 	model.ResourcesSince = now.Add(-db.KeepResourceReadings).UnixMilli()
 	model.MemoryAlertPercent, model.DiskAlertPercent = config.MemoryAlertPercent, config.DiskAlertPercent

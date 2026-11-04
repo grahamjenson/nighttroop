@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/consts"
@@ -34,6 +35,7 @@ func Send(ctx context.Context, q *controldb.Queries, sec *security.SecurityConfi
 		return err
 	}
 	err = send(ctx, sec, credential, registration, alert)
+	countPush(time.Now(), err)
 	if errors.Is(err, ErrTokenGone) {
 		if deleteErr := q.DeletePushRegistrationByTokenHash(ctx, controldb.DeletePushRegistrationByTokenHashParams{TokenHash: registration.TokenHash}); deleteErr != nil {
 			return errors.Join(err, deleteErr)

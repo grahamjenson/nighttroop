@@ -105,6 +105,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getAllSyncSourcesForSiteStmt, err = db.PrepareContext(ctx, getAllSyncSourcesForSite); err != nil {
 		return nil, fmt.Errorf("error preparing query GetAllSyncSourcesForSite: %w", err)
 	}
+	if q.getAnySitePushRegistrationStmt, err = db.PrepareContext(ctx, getAnySitePushRegistration); err != nil {
+		return nil, fmt.Errorf("error preparing query GetAnySitePushRegistration: %w", err)
+	}
 	if q.getBatchSitesToBackUpStmt, err = db.PrepareContext(ctx, getBatchSitesToBackUp); err != nil {
 		return nil, fmt.Errorf("error preparing query GetBatchSitesToBackUp: %w", err)
 	}
@@ -170,6 +173,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.rotateSiteBackupKeyStmt, err = db.PrepareContext(ctx, rotateSiteBackupKey); err != nil {
 		return nil, fmt.Errorf("error preparing query RotateSiteBackupKey: %w", err)
+	}
+	if q.searchAllPushRegistrationsStmt, err = db.PrepareContext(ctx, searchAllPushRegistrations); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchAllPushRegistrations: %w", err)
 	}
 	if q.searchArchivedSitesStmt, err = db.PrepareContext(ctx, searchArchivedSites); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchArchivedSites: %w", err)
@@ -380,6 +386,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getAllSyncSourcesForSiteStmt: %w", cerr)
 		}
 	}
+	if q.getAnySitePushRegistrationStmt != nil {
+		if cerr := q.getAnySitePushRegistrationStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getAnySitePushRegistrationStmt: %w", cerr)
+		}
+	}
 	if q.getBatchSitesToBackUpStmt != nil {
 		if cerr := q.getBatchSitesToBackUpStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getBatchSitesToBackUpStmt: %w", cerr)
@@ -488,6 +499,11 @@ func (q *Queries) Close() error {
 	if q.rotateSiteBackupKeyStmt != nil {
 		if cerr := q.rotateSiteBackupKeyStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing rotateSiteBackupKeyStmt: %w", cerr)
+		}
+	}
+	if q.searchAllPushRegistrationsStmt != nil {
+		if cerr := q.searchAllPushRegistrationsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchAllPushRegistrationsStmt: %w", cerr)
 		}
 	}
 	if q.searchArchivedSitesStmt != nil {
@@ -671,6 +687,7 @@ type Queries struct {
 	finishSyncSourceBackfillStmt            *sql.Stmt
 	getAllSitesStmt                         *sql.Stmt
 	getAllSyncSourcesForSiteStmt            *sql.Stmt
+	getAnySitePushRegistrationStmt          *sql.Stmt
 	getBatchSitesToBackUpStmt               *sql.Stmt
 	getControlIdentityStmt                  *sql.Stmt
 	getLiveAndDisabledSitesStmt             *sql.Stmt
@@ -693,6 +710,7 @@ type Queries struct {
 	recordPushStmt                          *sql.Stmt
 	resetSiteAdminCredentialsStmt           *sql.Stmt
 	rotateSiteBackupKeyStmt                 *sql.Stmt
+	searchAllPushRegistrationsStmt          *sql.Stmt
 	searchArchivedSitesStmt                 *sql.Stmt
 	searchPushCredentialsStmt               *sql.Stmt
 	searchPushRegistrationsStmt             *sql.Stmt
@@ -749,6 +767,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		finishSyncSourceBackfillStmt:            q.finishSyncSourceBackfillStmt,
 		getAllSitesStmt:                         q.getAllSitesStmt,
 		getAllSyncSourcesForSiteStmt:            q.getAllSyncSourcesForSiteStmt,
+		getAnySitePushRegistrationStmt:          q.getAnySitePushRegistrationStmt,
 		getBatchSitesToBackUpStmt:               q.getBatchSitesToBackUpStmt,
 		getControlIdentityStmt:                  q.getControlIdentityStmt,
 		getLiveAndDisabledSitesStmt:             q.getLiveAndDisabledSitesStmt,
@@ -771,6 +790,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		recordPushStmt:                          q.recordPushStmt,
 		resetSiteAdminCredentialsStmt:           q.resetSiteAdminCredentialsStmt,
 		rotateSiteBackupKeyStmt:                 q.rotateSiteBackupKeyStmt,
+		searchAllPushRegistrationsStmt:          q.searchAllPushRegistrationsStmt,
 		searchArchivedSitesStmt:                 q.searchArchivedSitesStmt,
 		searchPushCredentialsStmt:               q.searchPushCredentialsStmt,
 		searchPushRegistrationsStmt:             q.searchPushRegistrationsStmt,
