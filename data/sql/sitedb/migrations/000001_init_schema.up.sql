@@ -182,8 +182,8 @@ CREATE TABLE temp_basals (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
 
     duration_minutes INTEGER NOT NULL CHECK(duration_minutes BETWEEN 0 AND 10080), -- at most a week
-    absolute REAL NOT NULL CHECK(absolute BETWEEN 0 AND 100), -- units an hour
-    percent REAL CHECK(percent BETWEEN -100 AND 1000), -- Nightscout's change from the basal, so -50 is half and -100 a zero temp; optional, but absolute is not
+    rate REAL NOT NULL CHECK(rate BETWEEN 0 AND 100), -- the units an hour given while it runs
+    multiplier REAL CHECK(multiplier BETWEEN 0 AND 11), -- times the scheduled basal at its start, so 0.5 is half and 0 a zero temp; optional, but rate is not
     
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
@@ -549,6 +549,7 @@ CREATE INDEX activities_updated_at_idx ON activities(updated_at);
 CREATE INDEX event_groups_updated_at_idx ON event_groups(updated_at);
 CREATE INDEX device_reports_updated_at_idx ON device_reports(updated_at);
 CREATE INDEX food_presets_updated_at_idx ON food_presets(updated_at);
+CREATE INDEX profile_presets_updated_at_idx ON profile_presets(updated_at);
 
 -- Type lookups and deletes by type, a device's reports, and a profile store's presets
 -- A type's readings by occurred_at let each alarm check find its newest CGM readings without scanning and sorting them all.

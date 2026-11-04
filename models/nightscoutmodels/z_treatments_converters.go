@@ -1098,13 +1098,10 @@ func PartialTreatmentToTempBasal(source Treatment) sitedb.TempBasal {
 	if source.DurationMinutes != nil {
 		sitedbTempBasal.DurationMinutes = FlexibleInt64ToInt64(*source.DurationMinutes)
 	}
-	if source.Absolute != nil {
-		sitedbTempBasal.Absolute = FlexibleFloat64ToFloat64(*source.Absolute)
+	if source.Rate != nil {
+		sitedbTempBasal.Rate = FlexibleFloat64ToFloat64(*source.Rate)
 	}
-	if source.TempBasalPercent != nil {
-		xfloat64 := FlexibleFloat64ToFloat64(*source.TempBasalPercent)
-		sitedbTempBasal.Percent = &xfloat64
-	}
+	sitedbTempBasal.Multiplier = PercentToMultiplier(source.TempBasalPercent)
 	if source.Notes != nil {
 		xstring := SanitizedStringToString(*source.Notes)
 		sitedbTempBasal.Notes = &xstring
@@ -1297,10 +1294,10 @@ func TempBasalCreate(source sitedb.TempBasal, context ConverterContext) sitedb.C
 	var sitedbCreateTempBasalParams sitedb.CreateTempBasalParams
 	sitedbCreateTempBasalParams.ID = AssignID()
 	sitedbCreateTempBasalParams.DurationMinutes = source.DurationMinutes
-	sitedbCreateTempBasalParams.Absolute = source.Absolute
-	if source.Percent != nil {
-		xfloat64 := *source.Percent
-		sitedbCreateTempBasalParams.Percent = &xfloat64
+	sitedbCreateTempBasalParams.Rate = source.Rate
+	if source.Multiplier != nil {
+		xfloat64 := *source.Multiplier
+		sitedbCreateTempBasalParams.Multiplier = &xfloat64
 	}
 	if source.Notes != nil {
 		xstring := *source.Notes
@@ -1335,11 +1332,11 @@ func TempBasalUpdate(source sitedb.TempBasal, context ConverterContext) sitedb.U
 	var sitedbUpdateTempBasalParams sitedb.UpdateTempBasalParams
 	pInt64 := source.DurationMinutes
 	sitedbUpdateTempBasalParams.DurationMinutes = &pInt64
-	pFloat64 := source.Absolute
-	sitedbUpdateTempBasalParams.Absolute = &pFloat64
-	if source.Percent != nil {
-		xfloat64 := *source.Percent
-		sitedbUpdateTempBasalParams.Percent = &xfloat64
+	pFloat64 := source.Rate
+	sitedbUpdateTempBasalParams.Rate = &pFloat64
+	if source.Multiplier != nil {
+		xfloat64 := *source.Multiplier
+		sitedbUpdateTempBasalParams.Multiplier = &xfloat64
 	}
 	if source.Notes != nil {
 		xstring := *source.Notes
@@ -1731,14 +1728,11 @@ func UpdateTempBasalToTreatment(source *sitedb.TempBasal, target *Treatment) {
 		pTypesFlexibleInt64 := types.FlexibleInt64(source.DurationMinutes)
 		target.DurationMinutes = &pTypesFlexibleInt64
 		target.DurationInMilliseconds = MinutesToMilliseconds(source.DurationMinutes)
-		pTypesFlexibleFloat64 := types.FlexibleFloat64(source.Absolute)
+		pTypesFlexibleFloat64 := types.FlexibleFloat64(source.Rate)
 		target.Rate = &pTypesFlexibleFloat64
-		pTypesFlexibleFloat642 := types.FlexibleFloat64(source.Absolute)
+		pTypesFlexibleFloat642 := types.FlexibleFloat64(source.Rate)
 		target.Absolute = &pTypesFlexibleFloat642
-		if source.Percent != nil {
-			typesFlexibleFloat64 := types.FlexibleFloat64(*source.Percent)
-			target.TempBasalPercent = &typesFlexibleFloat64
-		}
+		target.TempBasalPercent = MultiplierToPercent(source.Multiplier)
 		if source.Notes != nil {
 			typesSanitizedString := types.SanitizedString(*source.Notes)
 			target.Notes = &typesSanitizedString
@@ -2409,10 +2403,10 @@ func UpdateToProfileSwitch(source *sitedb.ProfileSwitch, target *sitedb.ProfileS
 func UpdateToTempBasal(source *sitedb.TempBasal, target *sitedb.TempBasal) {
 	if source != nil {
 		target.DurationMinutes = source.DurationMinutes
-		target.Absolute = source.Absolute
-		if source.Percent != nil {
-			xfloat64 := *source.Percent
-			target.Percent = &xfloat64
+		target.Rate = source.Rate
+		if source.Multiplier != nil {
+			xfloat64 := *source.Multiplier
+			target.Multiplier = &xfloat64
 		}
 		if source.Notes != nil {
 			xstring := *source.Notes

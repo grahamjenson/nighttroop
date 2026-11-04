@@ -25,7 +25,7 @@ H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_LENGTH 2 "@result"
 ASSERT_EQUALS "Temp Basal" "@result.0.group_type"
-ASSERT_EQUALS 0.85 "@result.0.temp_basal.absolute"
+ASSERT_EQUALS 0.85 "@result.0.temp_basal.rate"
 ASSERT_EQUALS "Meal Bolus" "@result.1.group_type"
 ASSERT_EQUALS 4 "@result.1.insulin_dose.dose"
 ASSERT_EQUALS 40 "@result.1.food_intake.carbs"

@@ -353,7 +353,7 @@ templ formCreateIdentity(tableid string, name string, roles []sitemodels.RoleOpt
 			hx-status:4xx="target:#toaster"
 			hx-status:5xx="target:#toaster"
 		>
-			<div class="flex w-x1 justify-end items-end gap-2">
+			<div class="flex flex-wrap justify-end items-end gap-2">
 				@field.Field("name-"+formID, "Name", "w-24") {
 					@input.Input(input.Props{
 						ID:          "name-" + formID,

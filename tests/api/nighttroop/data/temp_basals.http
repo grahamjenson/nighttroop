@@ -19,7 +19,7 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS 0.85 "@result.0.absolute"
+ASSERT_EQUALS 0.85 "@result.0.rate"
 ASSERT_EQUALS 60 "@result.0.duration_minutes"
 
 //////
@@ -31,9 +31,9 @@ NAME create_temp_basal
 POST http://{{ site }}/data/temp-basals
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
-B {"absolute": 1.2, "duration_minutes": 30, "notes": "Sick day", "id": "chosen-id", "created_by_identity_name": "someone else"}
+B {"rate": 1.2, "duration_minutes": 30, "notes": "Sick day", "id": "chosen-id", "created_by_identity_name": "someone else"}
 ASSERT_STATUS 201
-ASSERT_EQUALS 1.2 "@result.absolute"
+ASSERT_EQUALS 1.2 "@result.rate"
 ASSERT_EQUALS 30 "@result.duration_minutes"
 ASSERT_EQUALS "Sick day" "@result.notes"
 ASSERT_EQUALS "pwd_phone" "@result.created_by_identity_name"
@@ -51,7 +51,7 @@ GET http://{{ site }}/data/temp-basals/{{ .created_id }}
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS 1.2 "@result.absolute"
+ASSERT_EQUALS 1.2 "@result.rate"
 
 // Newest first, so the one starting now is before the one from the Nightscout API
 NAME first_page
@@ -60,7 +60,7 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS 1.2 "@result.0.absolute"
+ASSERT_EQUALS 1.2 "@result.0.rate"
 
 NAME second_page
 GET http://{{ site }}/data/temp-basals?limit=1&skip=1
@@ -68,28 +68,28 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS 0.85 "@result.0.absolute"
+ASSERT_EQUALS 0.85 "@result.0.rate"
 
-NAME create_temp_basal_without_absolute
+NAME create_temp_basal_without_rate
 POST http://{{ site }}/data/temp-basals
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"duration_minutes": 30}
 ASSERT_STATUS 400
-ASSERT_CONTAINS "absolute must be from 0" "@message"
+ASSERT_CONTAINS "rate must be from 0" "@message"
 
 NAME create_temp_basal_too_high
 POST http://{{ site }}/data/temp-basals
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
-B {"absolute": 500, "duration_minutes": 30}
+B {"rate": 500, "duration_minutes": 30}
 ASSERT_STATUS 400
 
 NAME create_temp_basal_too_long
 POST http://{{ site }}/data/temp-basals
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
-B {"absolute": 1, "duration_minutes": 2000}
+B {"rate": 1, "duration_minutes": 2000}
 ASSERT_STATUS 400
 ASSERT_CONTAINS "duration must be more than 0" "@message"
 
@@ -100,7 +100,7 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"notes": "Exercise"}
 ASSERT_STATUS 200
-ASSERT_EQUALS 1.2 "@result.absolute"
+ASSERT_EQUALS 1.2 "@result.rate"
 ASSERT_EQUALS 30 "@result.duration_minutes"
 ASSERT_EQUALS "Exercise" "@result.notes"
 ASSERT_EQUALS "pwd_phone" "@result.updated_by_identity_name"
@@ -110,9 +110,9 @@ NAME update_temp_basal_to_zero
 POST http://{{ site }}/data/temp-basals/{{ .created_id }}
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
-B {"absolute": 0, "duration_minutes": 45}
+B {"rate": 0, "duration_minutes": 45}
 ASSERT_STATUS 200
-ASSERT_EQUALS 0 "@result.absolute"
+ASSERT_EQUALS 0 "@result.rate"
 ASSERT_EQUALS 45 "@result.duration_minutes"
 ASSERT_EQUALS "Exercise" "@result.notes"
 
@@ -120,7 +120,7 @@ NAME update_temp_basal_too_high
 POST http://{{ site }}/data/temp-basals/{{ .created_id }}
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
-B {"absolute": 500}
+B {"rate": 500}
 ASSERT_STATUS 400
 
 NAME update_unknown_temp_basal
@@ -159,7 +159,8 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 404
 
-// A Nightscout percent is the change from the basal, -50 for half, as AAPS sends it, and the site keeps it as sent
+// A Nightscout percent is the change from the basal, -50 for half, as AAPS sends it, which the site keeps as a multiplier
+// of the basal, 0.5, and the Nightscout API returns as sent
 NAME create_percent_treatment
 POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
 B { "eventType": "Temp Basal", "created_at": "{{ time -5 }}", "rate": 0.4, "percent": -50, "duration": 30 }
@@ -171,5 +172,5 @@ GET http://{{ site }}/data/temp-basals
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS -50 "@result.0.percent"
-ASSERT_EQUALS 0.4 "@result.0.absolute"
+ASSERT_EQUALS 0.5 "@result.0.multiplier"
+ASSERT_EQUALS 0.4 "@result.0.rate"

@@ -24,7 +24,7 @@ func BenchmarkEventsToGroup(b *testing.B) {
 			ReadingType: "sgv", OccurredAt: i * fiveMinutes, CreatedByIdentityName: "test"})
 		require.NoError(b, err)
 		_, err = insert.CreateTempBasal(ctx, sitedb.CreateTempBasalParams{ID: fmt.Sprint("t", i), DurationMinutes: 30,
-			Absolute: 1, OccurredAt: i * fiveMinutes, CreatedByIdentityName: "test"})
+			Rate: 1, OccurredAt: i * fiveMinutes, CreatedByIdentityName: "test"})
 		require.NoError(b, err)
 		_, err = insert.CreateEventGroup(ctx, sitedb.CreateEventGroupParams{ID: fmt.Sprint("g", i), GroupType: "Temp Basal",
 			TempBasalID: new(fmt.Sprint("t", i)), OccurredAt: i * fiveMinutes, CreatedByIdentityName: "test"})

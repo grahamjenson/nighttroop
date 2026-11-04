@@ -3,9 +3,10 @@ package sitemodels
 type SiteTempBasal struct {
 	ID              string `json:"id"`
 	DurationMinutes int64  `json:"duration_minutes"`
-	// Absolute is U/hr, a pointer so 0, a suspended basal, can be sent
-	Absolute              *float64 `json:"absolute"`
-	Percent               *float64 `json:"percent"`
+	// Rate is the U/hr given while it runs, a pointer so 0, a suspended basal, can be sent
+	Rate *float64 `json:"rate"`
+	// Multiplier is how many times the scheduled basal at its start, so 0.5 is half and 0 a zero temp
+	Multiplier            *float64 `json:"multiplier"`
 	Notes                 *string  `json:"notes"`
 	Reason                *string  `json:"reason"`
 	RawJsonData           *string  `json:"raw_json_data"`

@@ -38,6 +38,8 @@ CREATE INDEX profile_presets_occurred_at_idx ON profile_presets(occurred_at);
 
 CREATE INDEX profile_presets_profile_store_id_idx ON profile_presets(profile_store_id);
 
+CREATE INDEX profile_presets_updated_at_idx ON profile_presets(updated_at);
+
 CREATE INDEX profile_switches_occurred_at_idx ON profile_switches(occurred_at);
 
 CREATE INDEX temp_basals_occurred_at_idx ON temp_basals(occurred_at);
@@ -468,8 +470,8 @@ CREATE TABLE temp_basals (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
 
     duration_minutes INTEGER NOT NULL CHECK(duration_minutes BETWEEN 0 AND 10080), -- at most a week
-    absolute REAL NOT NULL CHECK(absolute BETWEEN 0 AND 100), -- units an hour
-    percent REAL CHECK(percent BETWEEN -100 AND 1000), -- Nightscout's change from the basal, so -50 is half and -100 a zero temp; optional, but absolute is not
+    rate REAL NOT NULL CHECK(rate BETWEEN 0 AND 100), -- the units an hour given while it runs
+    multiplier REAL CHECK(multiplier BETWEEN 0 AND 11), -- times the scheduled basal at its start, so 0.5 is half and 0 a zero temp; optional, but rate is not
     
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),

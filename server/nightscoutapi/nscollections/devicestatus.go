@@ -204,74 +204,68 @@ func NightscoutToDBCreateDeviceReport(source nightscoutmodels.DeviceStatus, ctx 
 		createParams.PumpModel = source.Pump.Model.Stringp()
 	}
 
-	////
-	// OpenAPS
-	////
+	// Loop's are set last, so a status with both keeps Loop's settings, IOB, COB and predictions over OpenAPS's
 	if source.OpenAPS != nil {
-		createParams.LoopSettingsJson = ptr(string(*source.OpenAPSRaw))
-
-		createParams.LoopName = ptr("openaps")
-		if source.OpenAPS.IOB != nil {
-			createParams.LoopIob = source.OpenAPS.IOB.IOB.Float64p()
-			createParams.LoopIobBasal = source.OpenAPS.IOB.BasalIOB.Float64p()
-			if source.OpenAPS.IOB.IOB != nil && source.OpenAPS.IOB.BasalIOB != nil {
-				createParams.LoopIobTreatment = ptr(source.OpenAPS.IOB.IOB.Float64() - source.OpenAPS.IOB.BasalIOB.Float64())
-			}
-		}
-
-		if source.OpenAPS.Suggested != nil {
-			createParams.LoopCob = source.OpenAPS.Suggested.COB.Float64p()
-
-			if source.OpenAPS.Suggested.Timestamp != nil {
-				createParams.LoopPredictionsStartTime = source.OpenAPS.Suggested.Timestamp.UnixMillip()
-			}
-			if source.OpenAPS.Suggested.PredBGs != nil {
-				if source.OpenAPS.Suggested.PredBGs.IOB != nil {
-					out, err := json.Marshal(source.OpenAPS.Suggested.PredBGs.IOB)
-					if err == nil {
-						createParams.LoopPredictionsDefault = ptr(string(out))
-					}
-				}
-
-				if source.OpenAPS.Suggested.PredBGs.ZT != nil {
-					out, err := json.Marshal(source.OpenAPS.Suggested.PredBGs.ZT)
-					if err == nil {
-						createParams.LoopPredictionsZt = ptr(string(out))
-					}
-				}
-
-			}
-		}
-
+		setOpenAPSColumns(&createParams, source.OpenAPS, *source.OpenAPSRaw)
 	}
-
-	/////
-	// Loop
-	/////
 	if source.Loop != nil {
-		createParams.LoopSettingsJson = ptr(string(*source.LoopRaw))
-		createParams.LoopName = ptr("loop")
-		if source.Loop.IOB != nil {
-			createParams.LoopIob = source.Loop.IOB.IOB.Float64p()
-		}
-
-		if source.Loop.COB != nil {
-			createParams.LoopCob = source.Loop.COB.COB.Float64p()
-		}
-
-		if source.Loop.Predicted != nil {
-			if source.Loop.Predicted.Values != nil {
-				out, err := json.Marshal(source.Loop.Predicted.Values)
-				if err == nil {
-					createParams.LoopPredictionsDefault = ptr(string(out))
-				}
-			}
-			if source.Loop.Predicted.StartDate != nil {
-				createParams.LoopPredictionsStartTime = source.Loop.Predicted.StartDate.UnixMillip()
-			}
-		}
-
+		setLoopColumns(&createParams, source.Loop, *source.LoopRaw)
 	}
 
 	return createParams
+}
+
+// setOpenAPSColumns keeps an OpenAPS loop's settings, IOB, COB and predictions
+func setOpenAPSColumns(params *sitedb.CreateDeviceReportParams, openAPS *nightscoutmodels.OpenAPSStatus, raw json.RawMessage) {
+	params.LoopSettingsJson = ptr(string(raw))
+	params.LoopName = ptr("openaps")
+	if iob := openAPS.IOB; iob != nil {
+		params.LoopIob = iob.IOB.Float64p()
+		params.LoopIobBasal = iob.BasalIOB.Float64p()
+		// The IOB not from basal is from treatments
+		if iob.IOB != nil && iob.BasalIOB != nil {
+			params.LoopIobTreatment = ptr(iob.IOB.Float64() - iob.BasalIOB.Float64())
+		}
+	}
+
+	suggested := openAPS.Suggested
+	if suggested == nil {
+		return
+	}
+	params.LoopCob = suggested.COB.Float64p()
+	if suggested.Timestamp != nil {
+		params.LoopPredictionsStartTime = suggested.Timestamp.UnixMillip()
+	}
+	if suggested.PredBGs != nil {
+		setPredictions(&params.LoopPredictionsDefault, suggested.PredBGs.IOB)
+		setPredictions(&params.LoopPredictionsZt, suggested.PredBGs.ZT)
+	}
+}
+
+// setLoopColumns keeps Loop's settings, IOB, COB and predictions
+func setLoopColumns(params *sitedb.CreateDeviceReportParams, loop *nightscoutmodels.LoopStatus, raw json.RawMessage) {
+	params.LoopSettingsJson = ptr(string(raw))
+	params.LoopName = ptr("loop")
+	if loop.IOB != nil {
+		params.LoopIob = loop.IOB.IOB.Float64p()
+	}
+	if loop.COB != nil {
+		params.LoopCob = loop.COB.COB.Float64p()
+	}
+	if predicted := loop.Predicted; predicted != nil {
+		setPredictions(&params.LoopPredictionsDefault, predicted.Values)
+		if predicted.StartDate != nil {
+			params.LoopPredictionsStartTime = predicted.StartDate.UnixMillip()
+		}
+	}
+}
+
+// setPredictions sets a predictions column to the predicted glucoses as JSON, and leaves it as it is when none are sent
+func setPredictions(column **string, predicted []*types.FlexibleFloat64) {
+	if predicted == nil {
+		return
+	}
+	if out, err := json.Marshal(predicted); err == nil {
+		*column = ptr(string(out))
+	}
 }

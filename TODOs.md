@@ -30,16 +30,15 @@
     1. Restore one site from its backup
     1. P3: Manage the control admins: list them, reset another's password or TOTP, change their role or delete one
 
-1. Site UI
-    1. P3: On a phone, Users & Devices' Add User and Add Device forms are wider than their cards, so the page scrolls
-       sideways; wrap them as the tables now scroll in theirs
-
 1. Accounts
     1. Recovering a site's admin without the initial backup key
     1. Recovering a lost control admin login, as setup only runs on a server with no control admin
 
 1. Security
     1. Testing deploy with rolling to a new keyset, moving to a new encrypted keyset.
+    1. P2: Every settings change, the site's and each identity's own, is the same `sitemodels.Settings` row, so
+       `/settings/identity/events` and `/settings/alarms/events` stream any identity another's settings and the site's.
+       Stream an identity only its own and, to an admin, the site's, as push registrations now are
     1. P3: Refresh the built in DB-IP country database (`utils/geoip/dbip-country-lite.mmdb`) each month or two, as
        DB-IP updates it monthly; the Docker image's city database is fetched fresh on each build.
 
