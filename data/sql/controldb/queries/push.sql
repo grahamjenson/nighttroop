@@ -96,6 +96,18 @@ WHERE push_registrations.site_id = sqlc.arg('SiteID')
 ORDER BY push_registrations.id DESC
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
 
+-- name: SearchAllPushRegistrations :many
+-- Every site's registrations, or with SiteID one site's, with their identities' names, newest first, for the control site
+SELECT sqlc.embed(push_registrations), site_identities.name AS identity_name
+FROM push_registrations JOIN site_identities ON site_identities.id = push_registrations.identity_id
+WHERE push_registrations.site_id = COALESCE(sqlc.narg('SiteID'), push_registrations.site_id)
+ORDER BY push_registrations.id DESC
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
+
+-- name: GetAnySitePushRegistration :one
+-- Any site's registration, for the control site
+SELECT * FROM push_registrations WHERE id = sqlc.arg('ID');
+
 -- name: CountPushRegistrations :one
 -- The identity's registrations but the token's, which registering it again only updates
 SELECT COUNT(*) FROM push_registrations

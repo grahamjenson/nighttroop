@@ -1,0 +1,141 @@
+package control_push_templ
+
+import (
+	"strconv"
+	"time"
+
+	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/server/components/ui/toast"
+)
+
+// formatDate shows an optional time in ms, or Never when it is not set
+func formatDate(ms *int64) string {
+	if ms == nil || *ms == 0 {
+		return "Never"
+	}
+	return time.UnixMilli(*ms).UTC().Format("2006-01-02 15:04:05")
+}
+
+// PushDevices is every site's apps registered for pushes, newest first, with whose they are, and for an admin a button
+// to test each
+templ PushDevices(devices []*controlmodels.PushRegistration, admin bool) {
+	<div id="control--push-devices" class="mx-auto max-w-6xl space-y-6">
+		@heading.Page("Push Devices") {
+			The apps on every site's phones that pushes are sent to, newest first, never with their tokens. Times are UTC.
+		}
+		@table.Table(table.Props{ID: "control--push-devices--table", Class: "rounded-lg border border-gray-200"}) {
+			@table.Header() {
+				@table.Row() {
+					@table.Head() {
+						Site
+					}
+					@table.Head() {
+						Identity
+					}
+					@table.Head() {
+						App
+					}
+					@table.Head() {
+						Bundle ID
+					}
+					@table.Head() {
+						Registered
+					}
+					@table.Head() {
+						Last Push
+					}
+					if admin {
+						@table.Head() {
+							<span class="sr-only">Actions</span>
+						}
+					}
+				}
+			}
+			@table.Body() {
+				if len(devices) == 0 {
+					<tr id="control--push-devices--empty"><td colspan="7" class="p-4 text-sm text-gray-500">No apps have registered for pushes yet.</td></tr>
+				}
+				for _, device := range devices {
+					@pushDeviceRow(device, admin)
+				}
+			}
+		}
+	</div>
+}
+
+templ pushDeviceRow(device *controlmodels.PushRegistration, admin bool) {
+	{{ id := "control--push-device--" + strconv.FormatInt(device.ID, 10) }}
+	@table.Row(table.RowProps{ID: id}) {
+		@table.Cell() {
+			{ device.SiteID }
+		}
+		@table.Cell() {
+			{ device.IdentityName }
+		}
+		@table.Cell() {
+			{ string(device.App) }
+			<span class="block text-xs text-gray-500">{ string(device.Provider) }</span>
+		}
+		@table.Cell() {
+			{ device.BundleID }
+			if !device.Production {
+				<span class="block text-xs text-gray-500">Development build</span>
+			}
+		}
+		@table.Cell() {
+			{ formatDate(&device.CreatedAt) }
+		}
+		@pushDeviceStatus(device.PushRegistration)
+		if admin {
+			@table.Cell() {
+				<div class="flex justify-end">
+					@button.Button(button.Props{
+						ID:      id + "--test",
+						Variant: button.VariantOutline,
+						Size:    button.SizeSm,
+						Attributes: templ.Attributes{
+							"hx-post":       "/push-devices/" + strconv.FormatInt(device.ID, 10) + "/test",
+							"hx-target":     "#" + id + "--status",
+							"hx-swap":       "outerHTML",
+							"hx-status:4xx": "target:#toaster swap:beforeend",
+							"hx-status:5xx": "target:#toaster swap:beforeend",
+						},
+					}) {
+						Test
+					}
+				</div>
+			}
+		}
+	}
+}
+
+// pushDeviceStatus is when the registration was last pushed to, and the push's error, if it had one
+templ pushDeviceStatus(registration *sitemodels.PushRegistration) {
+	@table.Cell(table.CellProps{ID: "control--push-device--" + strconv.FormatInt(registration.ID, 10) + "--status"}) {
+		{ formatDate(registration.LastPushedAt) }
+		if registration.LastError != nil {
+			<span class="block text-xs text-red-600">{ *registration.LastError }</span>
+		}
+	}
+}
+
+// PushDeviceTested is the registration's status after a test push reached its push service, and a toast saying so
+templ PushDeviceTested(registration *sitemodels.PushRegistration) {
+	@pushDeviceStatus(registration)
+	<div hx-swap-oob="beforeend:#toaster">
+		@toast.Toast(toast.Props{
+			Title:         "Success",
+			Description:   "Test push sent to " + string(registration.App),
+			Variant:       toast.VariantSuccess,
+			Position:      toast.PositionTopCenter,
+			Duration:      5000,
+			Dismissible:   true,
+			Icon:          true,
+			ShowIndicator: true,
+		})
+	</div>
+}
