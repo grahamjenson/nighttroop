@@ -1,0 +1,129 @@
+package site_settings_templ
+
+import (
+	"strconv"
+
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/server/components/ui/toast"
+)
+
+// PushDevices is the apps on devices that pushes are sent to, with whose they are and a button to test each: the
+// site's for an admin, and the identity's own for anyone else
+templ PushDevices(registrations []*sitemodels.PushRegistration, admin bool) {
+	<div id="push_devices_table" class="mx-auto max-w-5xl space-y-6">
+		@heading.Page("Push Devices") {
+			if admin {
+				The apps on your site's phones that pushes are sent to, for every user and device. Test one to send it a
+				notification and see it arrives.
+			} else {
+				The apps on your phones that pushes are sent to. Test one to send it a notification and see it arrives.
+			}
+		}
+		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
+			@table.Table(table.Props{ID: "pushDevicesTable", Class: "rounded-lg border border-gray-200"}) {
+				@table.Header() {
+					@table.Row() {
+						@table.Head() {
+							Identity
+						}
+						@table.Head() {
+							App
+						}
+						@table.Head() {
+							Bundle ID
+						}
+						@table.Head() {
+							Registered
+						}
+						@table.Head() {
+							Last Push
+						}
+						@table.Head() {
+							<span class="sr-only">Actions</span>
+						}
+					}
+				}
+				@table.Body() {
+					if len(registrations) == 0 {
+						<tr id="site--push-device--empty"><td colspan="6" class="p-4 text-sm text-gray-500">No apps have registered for pushes yet.</td></tr>
+					}
+					for _, registration := range registrations {
+						@pushDeviceRow(registration)
+					}
+				}
+			}
+		</section>
+	</div>
+}
+
+// pushDeviceRow is a registration, without its token, and a button to send it a test push
+templ pushDeviceRow(registration *sitemodels.PushRegistration) {
+	{{ id := "site--push-device--" + strconv.FormatInt(registration.ID, 10) }}
+	@table.Row(table.RowProps{ID: id}) {
+		@table.Cell() {
+			{ registration.IdentityName }
+		}
+		@table.Cell() {
+			{ string(registration.App) }
+			<span class="block text-xs text-gray-500">{ pushProviders[string(registration.Provider)] }</span>
+		}
+		@table.Cell() {
+			{ registration.BundleID }
+			if !registration.Production {
+				<span class="block text-xs text-gray-500">Development build</span>
+			}
+		}
+		@table.Cell() {
+			{ formatIdentityDate(ctx, &registration.CreatedAt) }
+		}
+		@pushDeviceStatus(registration)
+		@table.Cell() {
+			<div class="flex justify-end">
+				@button.Button(button.Props{
+					ID:      id + "--test",
+					Variant: button.VariantOutline,
+					Size:    button.SizeSm,
+					Attributes: templ.Attributes{
+						"hx-post":       "/settings/push-registrations/" + strconv.FormatInt(registration.ID, 10) + "/test",
+						"hx-target":     "#" + id + "--status",
+						"hx-swap":       "outerHTML",
+						"hx-status:4xx": "target:#toaster swap:beforeend",
+						"hx-status:5xx": "target:#toaster swap:beforeend",
+					},
+				}) {
+					Test
+				}
+			</div>
+		}
+	}
+}
+
+// pushDeviceStatus is when the registration was last pushed to, and the push's error, if it had one
+templ pushDeviceStatus(registration *sitemodels.PushRegistration) {
+	@table.Cell(table.CellProps{ID: "site--push-device--" + strconv.FormatInt(registration.ID, 10) + "--status"}) {
+		{ formatIdentityDate(ctx, registration.LastPushedAt) }
+		if registration.LastError != nil {
+			<span class="block text-xs text-red-600">{ *registration.LastError }</span>
+		}
+	}
+}
+
+// PushDeviceTested is the registration's status after a test push reached its push service, and a toast saying so
+templ PushDeviceTested(registration *sitemodels.PushRegistration) {
+	@pushDeviceStatus(registration)
+	<div hx-swap-oob="beforeend:#toaster">
+		@toast.Toast(toast.Props{
+			Title:         "Success",
+			Description:   "Test push sent to " + string(registration.App),
+			Variant:       toast.VariantSuccess,
+			Position:      toast.PositionTopCenter,
+			Duration:      5000,
+			Dismissible:   true,
+			Icon:          true,
+			ShowIndicator: true,
+		})
+	</div>
+}

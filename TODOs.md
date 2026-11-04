@@ -57,8 +57,8 @@
 1. Push notifications (the control DB's `push_credentials` and `push_registrations`):
     1. P2: A control collection for push credentials for every site, as the site's (`/settings/push-credentials`)
     1. P3: Add push credentials and registrations to `clients/nighttroop/openapi.json` and its client
-    1. P3: Show an identity its push registrations on its settings page, to delete one; the collection's HTMX responses
-       are empty until then
+    1. P3: A delete button on Push Devices (`/settings/push-devices`), for an identity's own registrations and an
+       admin's for the site's; the push registrations collection's HTMX responses are empty until then
     1. P2: Send FCM pushes with the service account (an OAuth token from its key, then the v1 send API), as
        `push.Send` does APNs ones
     1. P2: Push alarms to each identity's registered apps when one goes off, through `push.Send`
