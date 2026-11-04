@@ -269,7 +269,7 @@ SELECT 'food_intake_id', e.id, e.occurred_at, carbs, NULL, name FROM food_intake
 WHERE e.deleted_at IS NULL AND NOT EXISTS (SELECT 1 FROM event_groups g WHERE g.food_intake_id = e.id AND g.id != p.group_id)
     AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT food_intake_id FROM event_groups WHERE id = p.group_id))
 UNION ALL
-SELECT 'temp_basal_id', e.id, e.occurred_at, absolute, duration_minutes, NULL FROM temp_basals e, params p
+SELECT 'temp_basal_id', e.id, e.occurred_at, rate, duration_minutes, NULL FROM temp_basals e, params p
 WHERE e.deleted_at IS NULL AND NOT EXISTS (SELECT 1 FROM event_groups g WHERE g.temp_basal_id = e.id AND g.id != p.group_id)
     AND (e.occurred_at BETWEEN p.from_ms AND p.to_ms OR e.id = (SELECT temp_basal_id FROM event_groups WHERE id = p.group_id))
 UNION ALL

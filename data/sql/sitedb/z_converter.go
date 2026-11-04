@@ -1302,10 +1302,10 @@ func TempBasalToCreate(source TempBasal) CreateTempBasalParams {
 	var sitedbCreateTempBasalParams CreateTempBasalParams
 	sitedbCreateTempBasalParams.ID = source.ID
 	sitedbCreateTempBasalParams.DurationMinutes = source.DurationMinutes
-	sitedbCreateTempBasalParams.Absolute = source.Absolute
-	if source.Percent != nil {
-		xfloat64 := *source.Percent
-		sitedbCreateTempBasalParams.Percent = &xfloat64
+	sitedbCreateTempBasalParams.Rate = source.Rate
+	if source.Multiplier != nil {
+		xfloat64 := *source.Multiplier
+		sitedbCreateTempBasalParams.Multiplier = &xfloat64
 	}
 	if source.Notes != nil {
 		xstring := *source.Notes
@@ -1343,11 +1343,11 @@ func TempBasalToUpdate(source TempBasal) UpdateTempBasalParams {
 	var sitedbUpdateTempBasalParams UpdateTempBasalParams
 	pInt64 := source.DurationMinutes
 	sitedbUpdateTempBasalParams.DurationMinutes = &pInt64
-	pFloat64 := source.Absolute
-	sitedbUpdateTempBasalParams.Absolute = &pFloat64
-	if source.Percent != nil {
-		xfloat64 := *source.Percent
-		sitedbUpdateTempBasalParams.Percent = &xfloat64
+	pFloat64 := source.Rate
+	sitedbUpdateTempBasalParams.Rate = &pFloat64
+	if source.Multiplier != nil {
+		xfloat64 := *source.Multiplier
+		sitedbUpdateTempBasalParams.Multiplier = &xfloat64
 	}
 	if source.Notes != nil {
 		xstring := *source.Notes
@@ -2236,13 +2236,13 @@ func sitedbTempBasalsVwToSitedbTempBasalsVw(source TempBasalsVw) TempBasalsVw {
 		xint64 := *source.DurationMinutes
 		sitedbTempBasalsVw.DurationMinutes = &xint64
 	}
-	if source.Absolute != nil {
-		xfloat64 := *source.Absolute
-		sitedbTempBasalsVw.Absolute = &xfloat64
+	if source.Rate != nil {
+		xfloat64 := *source.Rate
+		sitedbTempBasalsVw.Rate = &xfloat64
 	}
-	if source.Percent != nil {
-		xfloat642 := *source.Percent
-		sitedbTempBasalsVw.Percent = &xfloat642
+	if source.Multiplier != nil {
+		xfloat642 := *source.Multiplier
+		sitedbTempBasalsVw.Multiplier = &xfloat642
 	}
 	if source.Notes != nil {
 		xstring2 := *source.Notes

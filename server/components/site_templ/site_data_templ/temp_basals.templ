@@ -36,7 +36,7 @@ templ TempBasalsTable(tempBasals []*sitemodels.SiteTempBasal, skip int64, limit 
 							U/hr
 						}
 						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-							Percent
+							× Basal
 						}
 						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
 							Minutes
@@ -75,22 +75,22 @@ templ TempBasalNew() {
 
 // tempBasalFields are what a temp basal has that a person can type in
 var tempBasalFields = []addmodal.Field{
-	{Name: "absolute", Label: "Rate (U/hr)", Help: "The basal rate given instead, 0 for a suspend.", Required: true, Min: "0", Max: "50", Step: "any"},
+	{Name: "rate", Label: "Rate (U/hr)", Help: "The basal rate given instead, 0 for a suspend.", Required: true, Min: "0", Max: "50", Step: "any"},
 	{Name: "duration_minutes", Label: "Duration (minutes)", Help: "How long it runs for.", Required: true, Min: "1", Max: "1440", Step: "1"},
 	{Name: "occurred_at", Label: "When", Help: "When it started, in your timezone. Blank is now.", Kind: addmodal.When},
-	{Name: "percent", Label: "Percent (%)", Help: "Its change from the scheduled basal, e.g. -50 for half, when it was set as one.", Min: "-100", Max: "1000", Step: "any"},
+	{Name: "multiplier", Label: "Times the basal (×)", Help: "How many times the scheduled basal, e.g. 0.5 for half, when it was set as a percent.", Min: "0", Max: "11", Step: "any"},
 	{Name: "reason", Label: "Reason", Help: "Why it was set, e.g. exercise.", Kind: addmodal.Text, Max: "64"},
 	{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Wide: true},
 }
 
-templ tempBasalInputs(id string, absolute string, duration string, notes string) {
-	@field.Field(id+"--absolute", "Rate (U/hr)", "w-28") {
+templ tempBasalInputs(id string, rate string, duration string, notes string) {
+	@field.Field(id+"--rate", "Rate (U/hr)", "w-28") {
 		@input.Input(input.Props{
-			ID:          id + "--absolute",
+			ID:          id + "--rate",
 			Type:        input.TypeNumber,
-			Name:        "absolute",
+			Name:        "rate",
 			Placeholder: "U/hr",
-			Value:       absolute,
+			Value:       rate,
 			Required:    true,
 			Attributes:  templ.Attributes{"step": "any", "min": "0", "max": "50"},
 		})
@@ -127,10 +127,10 @@ templ tempBasalRow(tempBasal *sitemodels.SiteTempBasal) {
 			{ formatReadingDate(ctx, tempBasal.OccurredAt) }
 		}
 		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
-			{ orDash(tempBasal.Absolute) }
+			{ orDash(tempBasal.Rate) }
 		}
 		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
-			{ orDash(tempBasal.Percent) }
+			{ orDash(tempBasal.Multiplier) }
 		}
 		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ fmt.Sprint(tempBasal.DurationMinutes) }
@@ -167,7 +167,7 @@ templ tempBasalRow(tempBasal *sitemodels.SiteTempBasal) {
 }
 
 templ TempBasalModal(tempBasal *sitemodels.SiteTempBasal) {
-	@modal.Modal(modal.Props{ID: "site--temp-basal--details", Title: fmt.Sprintf("%s U/hr for %d minutes", orDash(tempBasal.Absolute), tempBasal.DurationMinutes), Subtitle: formatReadingDate(ctx, tempBasal.OccurredAt)}) {
+	@modal.Modal(modal.Props{ID: "site--temp-basal--details", Title: fmt.Sprintf("%s U/hr for %d minutes", orDash(tempBasal.Rate), tempBasal.DurationMinutes), Subtitle: formatReadingDate(ctx, tempBasal.OccurredAt)}) {
 		<form
 			id="site--temp-basal--edit"
 			class="mt-4 flex items-end gap-2"
@@ -177,13 +177,13 @@ templ TempBasalModal(tempBasal *sitemodels.SiteTempBasal) {
 			hx-status:4xx="target:#toaster swap:beforeend"
 			hx-status:5xx="target:#toaster swap:beforeend"
 		>
-			@tempBasalInputs("site--temp-basal--edit", orDash(tempBasal.Absolute), fmt.Sprint(tempBasal.DurationMinutes), orEmpty(tempBasal.Notes))
+			@tempBasalInputs("site--temp-basal--edit", orDash(tempBasal.Rate), fmt.Sprint(tempBasal.DurationMinutes), orEmpty(tempBasal.Notes))
 			@button.Button(button.Props{ID: "site--temp-basal--edit--submit", Type: button.TypeSubmit}) {
 				Save
 			}
 		</form>
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-			@readingDetail("Percent", orDash(tempBasal.Percent))
+			@readingDetail("Times the basal", orDash(tempBasal.Multiplier))
 			@readingDetail("Notes", orDash(tempBasal.Notes))
 			@readingDetail("Reason", orDash(tempBasal.Reason))
 			@modal.Section("Record")

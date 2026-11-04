@@ -104,7 +104,7 @@ create, and `identifier` is sent on an update. Every treatment has `date` (ms), 
 
 ### Temp basal percent
 
-Nighttroop keeps a temp basal's `percent` as sent, as Nightscout's **change** from the basal, which is what AAPS means:
+Nighttroop reads a temp basal's `percent` as Nightscout's **change** from the basal, which is what AAPS means:
 
 - Sending, `TB.toNSTemporaryBasal` (`nsclientV3/extensions/TemporaryBasalExtension.kt:27–44`): `rate` is always the
   absolute rate in U/hr (`convertedToAbsolute`, line 34); a temp basal set in U/hr also has `absolute` (line 36); one
@@ -119,9 +119,11 @@ Nighttroop keeps a temp basal's `percent` as sent, as Nightscout's **change** fr
   extensions/TemporaryBasalExtension.kt:23–26`) sends `rate` (absolute) and `absolute`, or `percent: rate - 100`, and
   `temporaryBasalFromJson` (lines 54–62) reads `absolute`, else `percent + 100`.
 
-On Nighttroop: every percent from -100 (a zero temp) up is kept as sent, with the rate AAPS sent as its absolute,
-so graphs, summaries and AAPS followers (which read `absolute` first) get the right rate. A percent sent without a
-rate is applied to the profile's basal as Nightscout does: `basal * (100 + percent) / 100`.
+On Nighttroop: a temp basal keeps its `rate` in U/hr and a `multiplier` of the basal, so every percent from -100 (a
+zero temp) up is kept as `1 + percent / 100` (0.5 for -50) and returned as the same percent. The rate AAPS sent is
+kept as its rate, which AAPS followers read first as `absolute`; a percent sent without one gets the profile's basal
+at its start times the multiplier, as Nightscout does, and a rate sent without a percent gets its percent the same
+way. Every temp basal is returned with `rate`, `absolute` and, when it has one, `percent`.
 
 ### Socket.IO
 
@@ -180,7 +182,7 @@ SHA1, as AAPS does.
 | Entries and treatments in an identity in mmol/L | not supported: a device added for AAPS is in mg/dL (#524), others must be set to it; TODO P1 | `units/*.http`, `identity_clients_units.http` |
 | First loads and history over 500 documents, and profile history's newest | not supported: searches are newest first and ignore `sort`; TODO P1 | — |
 | Treatments: bolus and SMB `type`, carbs, temp target, profile switch, BG check, delete in history | works | `sync_v3.http`, `flow_v3.http` |
-| Temp basal at, over or under 100% (any `percent` from -100), its update | works: `percent` is kept as sent, the change from the basal | `sync_v3.http`, `treatments/temp_basal_percent.http` |
+| Temp basal at, over or under 100% (any `percent` from -100), its update | works: `percent`, the change from the basal, is kept as a multiplier of it and returned as sent | `sync_v3.http`, `treatments/temp_basal_percent.http` |
 | Temp basal `type`, effective profile switch `original*`, running mode `mode` | not supported: dropped, so followers misread them; TODO P2 | `sync_v3.http` |
 | Calibrations (`isCalibration`, `sensorMgdlAtPairing`) | not supported: dropped; TODO P2 | `sync_v3.http` |
 | Device statuses: create, history with `srvModified` | works | `sync_v3.http`, `flow_v3.http` |

@@ -40,7 +40,7 @@ func eventGroupEvents(group *sitemodels.SiteEventGroup) []string {
 		events = append(events, fmt.Sprintf("%s g carbs", orDash(f.Carbs)))
 	}
 	if b := group.TempBasal; b != nil {
-		events = append(events, fmt.Sprintf("%s U/hr temp basal for %d min", orDash(b.Absolute), b.DurationMinutes))
+		events = append(events, fmt.Sprintf("%s U/hr temp basal for %d min", orDash(b.Rate), b.DurationMinutes))
 	}
 	if t := group.TempTarget; t != nil {
 		events = append(events, fmt.Sprintf("%s–%s %s temp target for %d min", formatGlucose(t.LowTarget, t.Units), formatGlucose(t.HighTarget, t.Units), orDash(t.Units), t.DurationMinutes))
