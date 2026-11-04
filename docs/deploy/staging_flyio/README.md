@@ -45,7 +45,16 @@ of your own domain:
 | `<site>.staging.example.com` | Each site |
 | `<site>.ns.staging.example.com` | Each site's Nightscout-compatible API, for apps like AAPS and Loop |
 
-- **One machine.** It runs the image built from the repository's `Dockerfile`, always on.
+- **One machine, which stops when idle.** It runs the image built from the repository's `Dockerfile`, on one shared
+  CPU with 256 MB of memory and 512 MB of swap.
+  - Fly stops it once nothing has used it for a few minutes, and starts it again on the next request. That request
+    waits for it to start: a couple of seconds for 500 sites, plus Fly booting the machine. The data stays on the
+    volume.
+  - While it is stopped nothing runs: no Dexcom, Libre or Nightscout syncs, virtual sync, deleting inactive sites or
+    resource checks. They run again once it starts. A phone uploading every few minutes, or an open page, keeps it
+    running.
+  - Measured with 500 sites, it uses about 50 MB with none in use, and 1.5 MB more for each site used in the last 30
+    seconds, so it holds about 130 sites in use at once before it swaps.
   - Fly's proxy ends HTTPS and forwards to the server on port 3000.
   - Nighttroop reads the visitor's IP from Fly's `Fly-Client-IP` header, because Fly sets `FLY_APP_NAME`.
   - There is only one machine because each machine would have its own databases.
@@ -73,7 +82,8 @@ of your own domain:
 
 ## What you need
 
-- **A Fly.io account** with a payment method. One small, always-on machine costs a few dollars a month.
+- **A Fly.io account** with a payment method. One small machine that stops when idle, and its 1 GB volume, cost a few
+  dollars a month at most.
 - **[`flyctl`](https://fly.io/docs/flyctl/install/)** installed and logged in (`fly auth login`).
 - **A domain whose DNS you can change**, for `staging.example.com` and its wildcards.
   - A `fly.dev` name won't work, as Nighttroop needs wildcard subdomains.
@@ -235,7 +245,8 @@ the admin again from the new ones.
   ```
 - **If it is struggling:**
   - the control plane's usage page shows memory and CPU;
-  - `fly scale memory 1024 --app nighttroop-staging` gives it more memory.
+  - `fly scale memory 512 --app nighttroop-staging` gives it more memory;
+  - to keep it running, set `auto_stop_machines = "off"` and `min_machines_running = 1` in `fly.toml`.
 
 ## Troubleshooting
 
