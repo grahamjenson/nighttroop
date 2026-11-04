@@ -83,13 +83,13 @@ DELETE FROM profile_presets WHERE id = ?;
 -- READ
 --------
 -- name: GetMostRecentProfileStore :many
+-- The store with the newest preset, found through occurred_at's index rather than grouping every preset by store
 SELECT *
 FROM profile_presets
 WHERE profile_store_id = (
     SELECT profile_store_id
     FROM profile_presets
-    GROUP BY profile_store_id
-    ORDER BY MAX(occurred_at) DESC
+    ORDER BY occurred_at DESC
     LIMIT 1
 ) ORDER BY is_default DESC;
 

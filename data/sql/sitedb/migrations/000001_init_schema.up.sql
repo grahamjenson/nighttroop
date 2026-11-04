@@ -549,6 +549,7 @@ CREATE INDEX activities_updated_at_idx ON activities(updated_at);
 CREATE INDEX event_groups_updated_at_idx ON event_groups(updated_at);
 CREATE INDEX device_reports_updated_at_idx ON device_reports(updated_at);
 CREATE INDEX food_presets_updated_at_idx ON food_presets(updated_at);
+CREATE INDEX profile_presets_updated_at_idx ON profile_presets(updated_at);
 
 -- Type lookups and deletes by type, a device's reports, and a profile store's presets
 -- A type's readings by occurred_at let each alarm check find its newest CGM readings without scanning and sorting them all.

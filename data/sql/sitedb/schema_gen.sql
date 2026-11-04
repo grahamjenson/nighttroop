@@ -38,6 +38,8 @@ CREATE INDEX profile_presets_occurred_at_idx ON profile_presets(occurred_at);
 
 CREATE INDEX profile_presets_profile_store_id_idx ON profile_presets(profile_store_id);
 
+CREATE INDEX profile_presets_updated_at_idx ON profile_presets(updated_at);
+
 CREATE INDEX profile_switches_occurred_at_idx ON profile_switches(occurred_at);
 
 CREATE INDEX temp_basals_occurred_at_idx ON temp_basals(occurred_at);
