@@ -8,6 +8,8 @@ primary_region = "syd"
   # Runs as production does, with the "this is a test site" banner on every page, and its control admin made from the
   # STAGING_ADMIN_PASSWORD and STAGING_ADMIN_TOTP_SECRET secrets, so a wipe never needs it set up again
   MODE = "staging"
+  # Its name in Sentry; a deploy names it after its Fly app (--env DEPLOYMENT=<app>), so each staging server has its own
+  DEPLOYMENT = "staging"
   HOST_NAME = "staging.nighttroop.nz"
   HOST_PROTOCOL = "https"
   # On the volume mounted below. No S3 is set, so nothing is backed up or restored.

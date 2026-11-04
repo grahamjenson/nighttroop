@@ -33,7 +33,7 @@ jobs:
       # From the repository's root, the build context, with the staging config. One machine, as each has its own data.
       - run: >-
           flyctl deploy . --app "$STAGING_FLYIO_APP" --config docs/deploy/staging_flyio/fly.toml --dockerfile Dockerfile
-          --build-target staging --remote-only --ha=false
+          --build-target staging --remote-only --ha=false --env DEPLOYMENT="$STAGING_FLYIO_APP"
         env:
           STAGING_FLYIO_APP: ${{ vars.STAGING_FLYIO_APP }}
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

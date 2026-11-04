@@ -39,6 +39,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   so they can fix whatever is using it up. The control site has its own limit at the same rate, and each address's and
   sign in attempts' limits still apply.
 - A banner on every control page says when S3 backups or Sentry error reporting are not connected.
+- Errors reported to Sentry are under the server's `DEPLOYMENT` (`development` unless set) as their environment, so each
+  of several servers, e.g. staging ones, has its own; a staging server on Fly.io is named after its app.
 - The banner also says when the server has 90% or more of the sites `MAX_SITES` allows, and when it has them all.
 - Every control page names the browser's tab after itself, e.g. `Sites · Nighttroop Control`.
 

@@ -130,13 +130,15 @@ From the repository's root:
 
 ```sh
 fly deploy . --app nighttroop-staging --config docs/deploy/staging_flyio/fly.toml --dockerfile Dockerfile \
-  --build-target staging --ha=false
+  --build-target staging --ha=false --env DEPLOYMENT=nighttroop-staging
 ```
 
 - **The leading `.`** makes the repository's root the build context. The `--config` and `--dockerfile` paths are
   relative to it.
 - **`--build-target staging`** builds the staging image, which checks the databases on the volume before the server starts.
 - **`--ha=false`** keeps it to one machine. Fly makes two by default, and each would have its own databases.
+- **`--env DEPLOYMENT=nighttroop-staging`** names the server after its app, so with Sentry set up its errors are
+  reported under that environment, apart from any other staging server's. The workflow does the same.
 
 Check it is up:
 
