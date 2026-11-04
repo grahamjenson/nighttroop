@@ -4,12 +4,15 @@ package sitemodels
 // this level, so the level above applies: the site's for an identity, the defaults for the site.
 // Units is a string, not consts.Units, so an empty value can clear it.
 type Settings struct {
-	Units        *string `json:"units"`
-	Timezone     *string `json:"timezone"`
-	Language     *string `json:"language"`
-	DateFormat   *string `json:"date_format"`
-	TimeFormat   *string `json:"time_format"`
-	WeekStartDay *string `json:"week_start_day"`
+	Units *string `json:"units"`
+	// How the Nightscout API writes each units, e.g. mg/dl for xDrip4iOS
+	UnitsMgdlLabel *string `json:"units_mgdl_label"`
+	UnitsMmolLabel *string `json:"units_mmol_label"`
+	Timezone       *string `json:"timezone"`
+	Language       *string `json:"language"`
+	DateFormat     *string `json:"date_format"`
+	TimeFormat     *string `json:"time_format"`
+	WeekStartDay   *string `json:"week_start_day"`
 
 	// The alarms, each turned on with true or off with false, with the range's glucose it is under or over, or rises or
 	// drops by, in the settings' units, and the minutes it must last or rise or drop over
@@ -49,7 +52,8 @@ type Settings struct {
 // Fields are the settings by name, to read or set
 func (s *Settings) Fields() map[string]**string {
 	return map[string]**string{
-		"units": &s.Units, "timezone": &s.Timezone, "language": &s.Language,
+		"units": &s.Units, "units_mgdl_label": &s.UnitsMgdlLabel, "units_mmol_label": &s.UnitsMmolLabel,
+		"timezone": &s.Timezone, "language": &s.Language,
 		"date_format": &s.DateFormat, "time_format": &s.TimeFormat, "week_start_day": &s.WeekStartDay,
 		"alarm_urgent_low_enabled": &s.AlarmUrgentLowEnabled, "range_urgent_low": &s.RangeUrgentLow,
 		"alarm_low_enabled": &s.AlarmLowEnabled, "range_low": &s.RangeLow, "alarm_low_minutes": &s.AlarmLowMinutes,

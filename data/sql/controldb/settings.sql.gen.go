@@ -16,74 +16,78 @@ const updateSiteIdentitySettings = `-- name: UpdateSiteIdentitySettings :exec
 UPDATE site_identities SET
     -- IDENTITY SETTINGS
     units = ?1,
+    units_mgdl_label = ?2,
+    units_mmol_label = ?3,
 
     -- DATE
-    timezone = ?2,
-    language = ?3,
-    date_format = ?4,
-    time_format = ?5,
-    week_start_day = ?6,
+    timezone = ?4,
+    language = ?5,
+    date_format = ?6,
+    time_format = ?7,
+    week_start_day = ?8,
 
     -- INSULIN
-    bolus_dia_hours = ?7,
-    bolus_onset_minutes = ?8,
-    bolus_peak_minutes = ?9,
+    bolus_dia_hours = ?9,
+    bolus_onset_minutes = ?10,
+    bolus_peak_minutes = ?11,
 
-    basal_dia_hours = ?10,
-    basal_onset_minutes = ?11,
-    basal_peak_minutes = ?12,
+    basal_dia_hours = ?12,
+    basal_onset_minutes = ?13,
+    basal_peak_minutes = ?14,
 
-    default_insulin_sensitivity = ?13,
-    default_carb_ratio = ?14,
-    default_basal_rate = ?15,
+    default_insulin_sensitivity = ?15,
+    default_carb_ratio = ?16,
+    default_basal_rate = ?17,
 
     -- CARBS
-    carb_max_absorption_hours = ?16,
-    carb_min_5m_impact = ?17,
+    carb_max_absorption_hours = ?18,
+    carb_min_5m_impact = ?19,
 
 
     -- ALERTS
-    alarm_urgent_low_enabled = ?18,
-    range_urgent_low_mgdl = ?19,
+    alarm_urgent_low_enabled = ?20,
+    range_urgent_low_mgdl = ?21,
 
-    alarm_low_enabled = ?20,
-    range_low_mgdl = ?21,
-    alarm_low_minutes = ?22,
-    alarm_low_prediction_enabled = ?23,
-    alarm_low_prediction_minutes = ?24,
+    alarm_low_enabled = ?22,
+    range_low_mgdl = ?23,
+    alarm_low_minutes = ?24,
+    alarm_low_prediction_enabled = ?25,
+    alarm_low_prediction_minutes = ?26,
 
-    alarm_high_enabled = ?25,
-    range_high_mgdl = ?26,
-    alarm_high_minutes = ?27,
-    alarm_urgent_high_enabled = ?28,
-    range_urgent_high_mgdl = ?29,
+    alarm_high_enabled = ?27,
+    range_high_mgdl = ?28,
+    alarm_high_minutes = ?29,
+    alarm_urgent_high_enabled = ?30,
+    range_urgent_high_mgdl = ?31,
 
-    alarm_fast_rise_enabled = ?30,
-    alarm_fast_rise_mgdl = ?31,
-    alarm_fast_rise_minutes = ?32,
+    alarm_fast_rise_enabled = ?32,
+    alarm_fast_rise_mgdl = ?33,
+    alarm_fast_rise_minutes = ?34,
 
-    alarm_fast_drop_enabled = ?33,
-    alarm_fast_drop_mgdl = ?34,
-    alarm_fast_drop_minutes = ?35,
+    alarm_fast_drop_enabled = ?35,
+    alarm_fast_drop_mgdl = ?36,
+    alarm_fast_drop_minutes = ?37,
 
-    alarm_no_data_enabled = ?36,
-    alarm_no_data_minutes = ?37,
+    alarm_no_data_enabled = ?38,
+    alarm_no_data_minutes = ?39,
 
-    alarm_device_battery_low_enabled = ?38,
-    alarm_device_battery_low_percent = ?39,
-    alarm_device_battery_low_minutes = ?40,
-    alarm_device_battery_low_devices_json = ?41,
+    alarm_device_battery_low_enabled = ?40,
+    alarm_device_battery_low_percent = ?41,
+    alarm_device_battery_low_minutes = ?42,
+    alarm_device_battery_low_devices_json = ?43,
 
-    alarm_low_reservoir_enabled = ?42,
-    alarm_low_reservoir_units = ?43,
+    alarm_low_reservoir_enabled = ?44,
+    alarm_low_reservoir_units = ?45,
 
     -- NOTIFICATIONS
-    notifications_enabled = ?44
-WHERE id = ?45 AND site_id = ?46
+    notifications_enabled = ?46
+WHERE id = ?47 AND site_id = ?48
 `
 
 type UpdateSiteIdentitySettingsParams struct {
 	Units                            *consts.Units
+	UnitsMgdlLabel                   *string
+	UnitsMmolLabel                   *string
 	Timezone                         *string
 	Language                         *string
 	DateFormat                       *string
@@ -134,6 +138,8 @@ type UpdateSiteIdentitySettingsParams struct {
 func (q *Queries) UpdateSiteIdentitySettings(ctx context.Context, arg UpdateSiteIdentitySettingsParams) error {
 	_, err := q.exec(ctx, q.updateSiteIdentitySettingsStmt, updateSiteIdentitySettings,
 		arg.Units,
+		arg.UnitsMgdlLabel,
+		arg.UnitsMmolLabel,
 		arg.Timezone,
 		arg.Language,
 		arg.DateFormat,
@@ -187,74 +193,78 @@ const updateSitesSettings = `-- name: UpdateSitesSettings :exec
 UPDATE sites SET
     -- IDENTITY SETTINGS
     units = ?1,
+    units_mgdl_label = ?2,
+    units_mmol_label = ?3,
 
     -- DATE
-    timezone = ?2,
-    language = ?3,
-    date_format = ?4,
-    time_format = ?5,
-    week_start_day = ?6,
+    timezone = ?4,
+    language = ?5,
+    date_format = ?6,
+    time_format = ?7,
+    week_start_day = ?8,
 
     -- INSULIN
-    bolus_dia_hours = ?7,
-    bolus_onset_minutes = ?8,
-    bolus_peak_minutes = ?9,
+    bolus_dia_hours = ?9,
+    bolus_onset_minutes = ?10,
+    bolus_peak_minutes = ?11,
 
-    basal_dia_hours = ?10,
-    basal_onset_minutes = ?11,
-    basal_peak_minutes = ?12,
+    basal_dia_hours = ?12,
+    basal_onset_minutes = ?13,
+    basal_peak_minutes = ?14,
 
-    default_insulin_sensitivity = ?13,
-    default_carb_ratio = ?14,
-    default_basal_rate = ?15,
+    default_insulin_sensitivity = ?15,
+    default_carb_ratio = ?16,
+    default_basal_rate = ?17,
 
     -- CARBS
-    carb_max_absorption_hours = ?16,
-    carb_min_5m_impact = ?17,
+    carb_max_absorption_hours = ?18,
+    carb_min_5m_impact = ?19,
 
 
     -- ALERTS
-    alarm_urgent_low_enabled = ?18,
-    range_urgent_low_mgdl = ?19,
+    alarm_urgent_low_enabled = ?20,
+    range_urgent_low_mgdl = ?21,
 
-    alarm_low_enabled = ?20,
-    range_low_mgdl = ?21,
-    alarm_low_minutes = ?22,
-    alarm_low_prediction_enabled = ?23,
-    alarm_low_prediction_minutes = ?24,
+    alarm_low_enabled = ?22,
+    range_low_mgdl = ?23,
+    alarm_low_minutes = ?24,
+    alarm_low_prediction_enabled = ?25,
+    alarm_low_prediction_minutes = ?26,
 
-    alarm_high_enabled = ?25,
-    range_high_mgdl = ?26,
-    alarm_high_minutes = ?27,
-    alarm_urgent_high_enabled = ?28,
-    range_urgent_high_mgdl = ?29,
+    alarm_high_enabled = ?27,
+    range_high_mgdl = ?28,
+    alarm_high_minutes = ?29,
+    alarm_urgent_high_enabled = ?30,
+    range_urgent_high_mgdl = ?31,
 
-    alarm_fast_rise_enabled = ?30,
-    alarm_fast_rise_mgdl = ?31,
-    alarm_fast_rise_minutes = ?32,
+    alarm_fast_rise_enabled = ?32,
+    alarm_fast_rise_mgdl = ?33,
+    alarm_fast_rise_minutes = ?34,
 
-    alarm_fast_drop_enabled = ?33,
-    alarm_fast_drop_mgdl = ?34,
-    alarm_fast_drop_minutes = ?35,
+    alarm_fast_drop_enabled = ?35,
+    alarm_fast_drop_mgdl = ?36,
+    alarm_fast_drop_minutes = ?37,
 
-    alarm_no_data_enabled = ?36,
-    alarm_no_data_minutes = ?37,
+    alarm_no_data_enabled = ?38,
+    alarm_no_data_minutes = ?39,
 
-    alarm_device_battery_low_enabled = ?38,
-    alarm_device_battery_low_percent = ?39,
-    alarm_device_battery_low_minutes = ?40,
-    alarm_device_battery_low_devices_json = ?41,
+    alarm_device_battery_low_enabled = ?40,
+    alarm_device_battery_low_percent = ?41,
+    alarm_device_battery_low_minutes = ?42,
+    alarm_device_battery_low_devices_json = ?43,
 
-    alarm_low_reservoir_enabled = ?42,
-    alarm_low_reservoir_units = ?43,
+    alarm_low_reservoir_enabled = ?44,
+    alarm_low_reservoir_units = ?45,
 
     -- NOTIFICATIONS
-    notifications_enabled = ?44
-WHERE id = ?45
+    notifications_enabled = ?46
+WHERE id = ?47
 `
 
 type UpdateSitesSettingsParams struct {
 	Units                            *consts.Units
+	UnitsMgdlLabel                   *string
+	UnitsMmolLabel                   *string
 	Timezone                         *string
 	Language                         *string
 	DateFormat                       *string
@@ -304,6 +314,8 @@ type UpdateSitesSettingsParams struct {
 func (q *Queries) UpdateSitesSettings(ctx context.Context, arg UpdateSitesSettingsParams) error {
 	_, err := q.exec(ctx, q.updateSitesSettingsStmt, updateSitesSettings,
 		arg.Units,
+		arg.UnitsMgdlLabel,
+		arg.UnitsMmolLabel,
 		arg.Timezone,
 		arg.Language,
 		arg.DateFormat,

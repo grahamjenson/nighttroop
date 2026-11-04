@@ -23,7 +23,8 @@ its units are set to mg/dL (#524).
 - **Units**: mg/dL. The follower reads `sgv` as mg/dL whatever the `units`, and Nighttroop returns readings in the
   identity's (then the site's) units, so a device added for xDrip4iOS is in mg/dL whatever the site's. A token from
   another identity, such as the site's first PWD phone, needs its units set to mg/dL by an admin from its row on Users
-  & Devices (#523), or on an mmol/L site 6.5 mmol/L is read as 6.5 mg/dL.
+  & Devices (#523), or on an mmol/L site 6.5 mmol/L is read as 6.5 mg/dL. A device added for xDrip4iOS also has the
+  Nightscout API write mg/dL as `mg/dl`, which another identity's admin can set as "Nightscout API writes mg/dL as".
 
 ## Authentication
 
@@ -197,7 +198,7 @@ more than was asked.
 | Upload treatments with `eventTime`, matched by `created_at` | Fixed in #513 (`created_at` was the time received) | `treatments.http` |
 | Upload `Carbs` | Fixed in #513 (was a 400) | `treatments.http` |
 | Upload a BG check from an mmol/L user (`Finger: 6.7 mmol/L`) | Fixed in #513 (was a 400) | `treatments.http` |
-| BG check matched and downloaded with the same value | Not supported (TODO P2) | `treatments.http` |
+| BG check matched and downloaded with the same value | Fixed in this PR: a device added for xDrip4iOS has the Nightscout API write mg/dL as `mg/dl`, so a BG check comes back as the `120` `mg/dl` it sent | `tests/api/nighttroop/settings/units_labels.http` |
 | Update a treatment with `PUT` | Works | `treatments.http` |
 | Download the last 24 hours of treatments | Works | `treatments.http` |
 | `find[_id]` of a deleted treatment is `[]` | Fixed in #513 (was a 404) | `treatments.http`, `tests/socket/nightscout/db_writes.sio` |

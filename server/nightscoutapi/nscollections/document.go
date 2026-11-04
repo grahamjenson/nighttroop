@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/utils"
+	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 // stored is a collection's Nightscout model, or the JSON it was sent as when that is asked for, with the server's
@@ -13,6 +15,8 @@ type stored[NS any] struct {
 	meta
 	model NS
 	raw   map[string]any
+	// unitsLabels are how the identity's settings write units, by Nighttroop's, when they differ
+	unitsLabels map[string]string
 }
 
 // meta are the fields the server keeps for every document
@@ -42,6 +46,9 @@ func (s stored[NS]) Fields(v3 bool) map[string]any {
 	out := maps.Clone(s.raw)
 	if out == nil {
 		out, _ = utils.ToMap(&s.model)
+		if units, ok := out["units"].(string); ok && s.unitsLabels[units] != "" {
+			out["units"] = s.unitsLabels[units]
+		}
 	}
 	if out == nil {
 		out = map[string]any{}
@@ -63,4 +70,19 @@ func (s stored[NS]) Fields(v3 bool) map[string]any {
 		delete(out, "identifier")
 	}
 	return out
+}
+
+// unitsLabels are how the identity's settings write each units in the Nightscout API, where it is not as Nighttroop
+// writes them, as xDrip4iOS reads a BG check's glucose as mg/dL only when its units are mg/dl
+func unitsLabels(siteContext *httputils.SiteContext) map[string]string {
+	if siteContext == nil {
+		return nil
+	}
+	labels := map[string]string{}
+	for _, units := range []consts.Units{consts.UnitsMGDL, consts.UnitsMMOLL} {
+		if label := siteContext.GetSettings().GetUnitsLabel(units); label != string(units) {
+			labels[string(units)] = label
+		}
+	}
+	return labels
 }

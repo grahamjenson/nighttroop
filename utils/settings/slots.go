@@ -35,6 +35,8 @@ func (s settingSlot[T]) parseValidate(value any, createdAt *int64, subject *stri
 func (m *SettingMap) slots() []slot {
 	return []slot{
 		slotOf(Units, &m.Units),
+		slotOf(UnitsMgdlLabel, &m.UnitsMgdlLabel),
+		slotOf(UnitsMmolLabel, &m.UnitsMmolLabel),
 		slotOf(Timezone, &m.Timezone),
 		slotOf(Language, &m.Language),
 		slotOf(DateFormat, &m.DateFormat),

@@ -7,6 +7,8 @@ import (
 
 type SettingMap struct {
 	Units                            *Setting[consts.Units]
+	UnitsMgdlLabel                   *Setting[string]
+	UnitsMmolLabel                   *Setting[string]
 	Timezone                         *Setting[string]
 	Language                         *Setting[string]
 	DateFormat                       *Setting[string]
@@ -54,6 +56,8 @@ type SettingMap struct {
 
 var DefaultSettingsMap = &SettingMap{
 	Units:                            NewDefaultSetting(Units),
+	UnitsMgdlLabel:                   NewDefaultSetting(UnitsMgdlLabel),
+	UnitsMmolLabel:                   NewDefaultSetting(UnitsMmolLabel),
 	Timezone:                         NewDefaultSetting(Timezone),
 	Language:                         NewDefaultSetting(Language),
 	DateFormat:                       NewDefaultSetting(DateFormat),
@@ -103,6 +107,8 @@ var DefaultSettingsMap = &SettingMap{
 func NewSettingsMap(g SettingsGetter, createdAt *int64, subject *string) *SettingMap {
 	s := &SettingMap{
 		Units:                            NewSetting(Units, g.GetUnits(), createdAt, subject),
+		UnitsMgdlLabel:                   NewSetting(UnitsMgdlLabel, g.GetUnitsMgdlLabel(), createdAt, subject),
+		UnitsMmolLabel:                   NewSetting(UnitsMmolLabel, g.GetUnitsMmolLabel(), createdAt, subject),
 		Timezone:                         NewSetting(Timezone, g.GetTimezone(), createdAt, subject),
 		Language:                         NewSetting(Language, g.GetLanguage(), createdAt, subject),
 		DateFormat:                       NewSetting(DateFormat, g.GetDateFormat(), createdAt, subject),
@@ -190,6 +196,32 @@ func (m *SettingMap) SetLanguage(v *string) {
 
 	m.Language = NewSetting(Language, v, nil, nil)
 
+}
+
+// GetUnitsMgdlLabel returns the UnitsMgdlLabel value.
+func (m SettingMap) GetUnitsMgdlLabel() *string {
+	if m.UnitsMgdlLabel == nil {
+		return nil
+	}
+	return ptr(m.UnitsMgdlLabel.Value)
+}
+
+// SetUnitsMgdlLabel sets the UnitsMgdlLabel value.
+func (m *SettingMap) SetUnitsMgdlLabel(v *string) {
+	m.UnitsMgdlLabel = NewSetting(UnitsMgdlLabel, v, nil, nil)
+}
+
+// GetUnitsMmolLabel returns the UnitsMmolLabel value.
+func (m SettingMap) GetUnitsMmolLabel() *string {
+	if m.UnitsMmolLabel == nil {
+		return nil
+	}
+	return ptr(m.UnitsMmolLabel.Value)
+}
+
+// SetUnitsMmolLabel sets the UnitsMmolLabel value.
+func (m *SettingMap) SetUnitsMmolLabel(v *string) {
+	m.UnitsMmolLabel = NewSetting(UnitsMmolLabel, v, nil, nil)
 }
 
 // GetDateFormat returns the DateFormat value.

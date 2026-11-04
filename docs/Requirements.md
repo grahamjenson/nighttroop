@@ -256,7 +256,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 
 ### Settings
 
-- General settings: units, time zone, language, date and time format, week start, insulin and carb defaults.
+- General settings: units, how the Nightscout API writes them, time zone, language, date and time format, week start,
+  insulin and carb defaults.
 - An admin sets the site's settings; each identity can override them for themselves.
 - An admin can **download** a snapshot of the site's DB.
 - An admin can **delete** the site, after a confirmation, which archives it to S3 and signs everyone out.
@@ -312,6 +313,9 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   as a notification.
 - Glucose is stored in mg/dL and returned and accepted in the settings' units.
 - The v1 status has the settings' units in `settings.units`, as Nightscout writes them (`mg/dl` or `mmol`).
+- The settings say how the Nightscout API writes each units in a document's `units`: mg/dL as `mg/dL` or `mg/dl`, and
+  mmol/L as `mmol/L` or `mmol`, Nighttroop's way by default. Units are stored as Nighttroop's, and any of these is
+  read.
 - The v1 status has `authorized` with a JWT and the token's permissions, with `api:treatments:create` for one that
   can write, so LoopFollow shows a read token as "Read" and a write token as "Read & Write".
 - The v3 version needs no token, so an app can check for v3 before it signs in.
@@ -464,7 +468,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - A device is added for its client: AAPS, Trio, Loop, xDrip+, xDrip4iOS, Nightguard, SugarPixel or Other. Its
   credentials say how to set that client up, in numbered steps naming the client's menus and fields in bold, with its
   Nightscout URL and token filled in, each with its own copy button, and a device for any but Other has its own units
-  set to mg/dL, which those clients need, whatever the site's.
+  set to mg/dL, which those clients need, whatever the site's. One for xDrip4iOS also has the Nightscout API write
+  mg/dL as `mg/dl`, as it reads a BG check's glucose as mg/dL only when its units are exactly that.
 - The client is picked before the role, as a loop's device (AAPS, Trio or Loop) must be the PWD phone: picking one of
   them sets the role to PWD Phone and locks it, and the server refuses such a device with any other role.
 - An admin can turn an identity off and on, or delete it; an identity cannot lock itself out.
