@@ -500,10 +500,13 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - Each identity, a device or user of any role, registers the apps on its devices that pushes are sent to
   (`/settings/push-registrations`, JSON API): the app (`loop`, `trio`, `loopfollow`, `t1dcarer`), its provider (`apns`
   or `fcm`), bundle ID, whether it is a production build, and its token, which is kept encrypted and never returned.
-  Registering a token again updates it, and from another identity moves it there; an identity has at most 10, and
-  sees, streams the changes to (`/settings/push-registrations/events`) and deletes only its own.
+  Registering a token again updates it, and from another of the site's identities moves it there; another site
+  registering the same token has its own, so no site can take or change another's. An APNs token is the same in upper
+  or lower case. An identity has at most 10, though it can always register one of them again, and sees, streams the
+  changes to (`/settings/push-registrations/events`) and deletes only its own.
 - An identity can send a test push to one of its registrations
   (`POST /settings/push-registrations/{id}/test`), with its site's push credential for the app, else the server's.
   Without one it is refused, saying to add one; a token Apple says is gone deletes the registration (410); another
-  refusal says Apple's reason (502). Each push is recorded on the registration, with its error, if it had one. A site
-  sends at most `SITE_PUSH_PER_MINUTE_LIMIT` pushes a minute. Only APNs pushes are sent so far.
+  refusal says Apple's reason (502), and one that cannot reach Apple why, never with the device token. Each push is
+  recorded on the registration, with its error, if it had one, and a token Apple says is gone is deleted from its own
+  site alone. A site sends at most `SITE_PUSH_PER_MINUTE_LIMIT` pushes a minute. Only APNs pushes are sent so far.

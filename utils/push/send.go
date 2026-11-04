@@ -35,7 +35,7 @@ func Send(ctx context.Context, q *controldb.Queries, sec *security.SecurityConfi
 	}
 	err = send(ctx, sec, credential, registration, alert)
 	if errors.Is(err, ErrTokenGone) {
-		if deleteErr := q.DeletePushRegistrationByTokenHash(ctx, controldb.DeletePushRegistrationByTokenHashParams{TokenHash: registration.TokenHash}); deleteErr != nil {
+		if deleteErr := q.DeletePushRegistrationByTokenHash(ctx, controldb.DeletePushRegistrationByTokenHashParams{SiteID: registration.SiteID, TokenHash: registration.TokenHash}); deleteErr != nil {
 			return errors.Join(err, deleteErr)
 		}
 		return err
@@ -44,7 +44,7 @@ func Send(ctx context.Context, q *controldb.Queries, sec *security.SecurityConfi
 	if err != nil {
 		lastError = new(err.Error()[:min(len(err.Error()), 256)])
 	}
-	if recordErr := q.RecordPush(ctx, controldb.RecordPushParams{ID: registration.ID, LastError: lastError}); recordErr != nil {
+	if recordErr := q.RecordPush(ctx, controldb.RecordPushParams{ID: registration.ID, SiteID: registration.SiteID, TokenHash: registration.TokenHash, LastError: lastError}); recordErr != nil {
 		return errors.Join(err, recordErr)
 	}
 	return err

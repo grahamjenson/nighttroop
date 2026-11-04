@@ -342,7 +342,8 @@ CREATE TABLE push_credentials (
 CREATE INDEX push_credentials_site ON push_credentials (site_id, provider) WHERE deleted_at IS NULL;
 
 -- An app on a device that an identity has pushes sent to. Its token addresses that app on that device, and changes
--- when the app is installed again; one is registered to the last identity that sent it.
+-- when the app is installed again; one is registered to the last of its site's identities that sent it, and another
+-- site registering it has its own row, so no site can take another's.
 CREATE TABLE push_registrations (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     site_id TEXT NOT NULL REFERENCES sites(id),
@@ -354,12 +355,14 @@ CREATE TABLE push_registrations (
     production INTEGER NOT NULL DEFAULT 1 CHECK(production IN (0, 1)), -- APNs production, else sandbox (a development build)
 
     token_enc TEXT NOT NULL CHECK(length(token_enc) <= 2048), -- encrypted
-    token_hash TEXT NOT NULL UNIQUE CHECK(length(token_hash) = 64), -- SHA-256 of the token, to find it without decrypting
+    token_hash TEXT NOT NULL CHECK(length(token_hash) = 64), -- SHA-256 of the token, in lower case, to find it without decrypting
 
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     last_pushed_at INTEGER,
-    last_error TEXT CHECK(length(last_error) <= 256)
+    last_error TEXT CHECK(length(last_error) <= 256),
+
+    UNIQUE (site_id, token_hash)
 ) STRICT;
 
 CREATE INDEX push_registrations_identity ON push_registrations (site_id, identity_id);
