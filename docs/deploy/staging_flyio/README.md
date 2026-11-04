@@ -82,11 +82,11 @@ of your own domain:
 
 ## 1. Create the app
 
-Pick a name for the app. Fly app names are global, e.g. `nighttroop-staging-yourname`. Then create it without deploying,
+Pick a name for the app. Fly app names are global, e.g. `nighttroop-staging`. Then create it without deploying,
 from the repository's root:
 
 ```sh
-fly apps create nighttroop-staging-yourname
+fly apps create nighttroop-staging
 ```
 
 ## 2. Configure it
@@ -101,7 +101,7 @@ fly apps create nighttroop-staging-yourname
    - As nothing is kept, losing them loses nothing: make new ones whenever you like.
 
    ```sh
-   fly secrets set --app nighttroop-staging-yourname --stage KEY_SETS="$(go run scripts/keysets/create_keysets.go)"
+   fly secrets set --app nighttroop-staging --stage KEY_SETS="$(go run scripts/keysets/create_keysets.go)"
    ```
 
 3. **Choose the control admin's password and TOTP secret, and store them as secrets.**
@@ -114,7 +114,7 @@ fly apps create nighttroop-staging-yourname
    PASSWORD="$(openssl rand -base64 24)"
    TOTP_SECRET="$(python3 -c 'import base64,os; print(base64.b32encode(os.urandom(20)).decode())')"
    echo "Control admin password: $PASSWORD"; echo "TOTP secret: $TOTP_SECRET"
-   fly secrets set --app nighttroop-staging-yourname --stage \
+   fly secrets set --app nighttroop-staging --stage \
      STAGING_ADMIN_PASSWORD="$PASSWORD" STAGING_ADMIN_TOTP_SECRET="$TOTP_SECRET"
    ```
 
@@ -129,7 +129,7 @@ fly apps create nighttroop-staging-yourname
 From the repository's root:
 
 ```sh
-fly deploy . --app nighttroop-staging-yourname --config docs/deploy/staging_flyio/fly.toml --dockerfile Dockerfile \
+fly deploy . --app nighttroop-staging --config docs/deploy/staging_flyio/fly.toml --dockerfile Dockerfile \
   --build-target staging --ha=false
 ```
 
@@ -140,17 +140,17 @@ fly deploy . --app nighttroop-staging-yourname --config docs/deploy/staging_flyi
 
 Check it is up:
 
-- [ ] `fly status --app nighttroop-staging-yourname` shows one machine, `started`, with its check passing.
-- [ ] `fly logs --app nighttroop-staging-yourname` shows the server listening, in `Staging` mode.
+- [ ] `fly status --app nighttroop-staging` shows one machine, `started`, with its check passing.
+- [ ] `fly logs --app nighttroop-staging` shows the server listening, in `Staging` mode.
 
 ## 4. Point your domain at it
 
 1. **Give the app IP addresses:**
 
    ```sh
-   fly ips allocate-v4 --shared --app nighttroop-staging-yourname
-   fly ips allocate-v6 --app nighttroop-staging-yourname
-   fly ips list --app nighttroop-staging-yourname
+   fly ips allocate-v4 --shared --app nighttroop-staging
+   fly ips allocate-v6 --app nighttroop-staging
+   fly ips list --app nighttroop-staging
    ```
 
 2. **Add DNS records at your DNS provider.** Point `staging.example.com`, `*.staging.example.com` and `*.ns.staging.example.com`
@@ -159,9 +159,9 @@ Check it is up:
    wildcards so the shell leaves the `*` alone:
 
    ```sh
-   fly certs add staging.example.com --app nighttroop-staging-yourname
-   fly certs add "*.staging.example.com" --app nighttroop-staging-yourname
-   fly certs add "*.ns.staging.example.com" --app nighttroop-staging-yourname
+   fly certs add staging.example.com --app nighttroop-staging
+   fly certs add "*.staging.example.com" --app nighttroop-staging
+   fly certs add "*.ns.staging.example.com" --app nighttroop-staging
    ```
 
 4. **Prove you own the wildcards.** Let's Encrypt only issues a wildcard to whoever controls the domain's DNS.
@@ -170,7 +170,7 @@ Check it is up:
    2. Add those records exactly as shown.
    3. Remove any old `TXT` record at the same `_acme-challenge` names.
    4. If your DNS provider proxies records, e.g. Cloudflare, don't proxy these.
-5. **Wait until every certificate is ready.** Run `fly certs list --app nighttroop-staging-yourname` until each says
+5. **Wait until every certificate is ready.** Run `fly certs list --app nighttroop-staging` until each says
    `Ready`, usually a few minutes.
 
 Check it works:
@@ -191,17 +191,17 @@ time CI finishes on a push to `main`.
   1. Make a deploy token for the app:
 
      ```sh
-     fly tokens create deploy --app nighttroop-staging-yourname
+     fly tokens create deploy --app nighttroop-staging
      ```
 
   2. In the repository's **Settings → Secrets and variables → Actions**:
      - add the secret **`FLY_API_TOKEN`**, holding the whole token, including its `FlyV1 ` prefix;
-     - add the variable **`STAGING_FLYIO_APP`**, holding the app's name, e.g. `nighttroop-staging-yourname`.
+     - add the variable **`STAGING_FLYIO_APP`**, holding the app's name, e.g. `nighttroop-staging`.
   3. To deploy now, without waiting for a commit, run **Deploy staging** from the repository's **Actions** tab
      (**Run workflow**). A manual run deploys the head of `main`.
 
 To stop deploying, delete the `STAGING_FLYIO_APP` variable. To stop the server too, run
-`fly scale count 0 --app nighttroop-staging-yourname`, or `fly apps destroy nighttroop-staging-yourname` to remove it.
+`fly scale count 0 --app nighttroop-staging`, or `fly apps destroy nighttroop-staging` to remove it.
 
 ## 6. Sign in to the control plane
 
@@ -223,17 +223,17 @@ the admin again from the new ones.
     again.
 - **Testing with realistic data:** testers can turn on virtual sync in a site's sync settings, instead of syncing a
   real Dexcom, Libre or Nightscout account.
-- **What is running:** `fly releases --app nighttroop-staging-yourname` lists each deploy, newest first. The workflow run on
+- **What is running:** `fly releases --app nighttroop-staging` lists each deploy, newest first. The workflow run on
   the **Actions** tab names its commit.
 - **Wiping it by hand:** remove the databases, then restart the server, which starts empty:
 
   ```sh
-  fly ssh console --app nighttroop-staging-yourname -C "rm -rf /data/db /data/backup"
-  fly machine restart --app nighttroop-staging-yourname
+  fly ssh console --app nighttroop-staging -C "rm -rf /data/db /data/backup"
+  fly machine restart --app nighttroop-staging
   ```
 - **If it is struggling:**
   - the control plane's usage page shows memory and CPU;
-  - `fly scale memory 1024 --app nighttroop-staging-yourname` gives it more memory.
+  - `fly scale memory 1024 --app nighttroop-staging` gives it more memory.
 
 ## Troubleshooting
 
@@ -259,7 +259,7 @@ A deploy wipes the databases when a migration change means one can no longer be 
 
 ### There are two machines, and pages show different data
 
-Each machine has its own databases. Remove the extra one with `fly scale count 1 --app nighttroop-staging-yourname`, and
+Each machine has its own databases. Remove the extra one with `fly scale count 1 --app nighttroop-staging`, and
 deploy with `--ha=false`, as the workflow does.
 
 ### The Deploy staging workflow is skipped

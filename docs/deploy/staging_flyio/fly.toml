@@ -8,7 +8,7 @@ primary_region = "syd"
   # Runs as production does, with the "this is a test site" banner on every page, and its control admin made from the
   # STAGING_ADMIN_PASSWORD and STAGING_ADMIN_TOTP_SECRET secrets, so a wipe never needs it set up again
   MODE = "staging"
-  HOST_NAME = "staging.example.com"
+  HOST_NAME = "staging.nighttroop.nz"
   HOST_PROTOCOL = "https"
   # On the volume mounted below. No S3 is set, so nothing is backed up or restored.
   DATA_DIR = "/data"
@@ -32,7 +32,7 @@ primary_region = "syd"
     method = "GET"
     path = "/health"
     [http_service.checks.headers]
-      Host = "staging.example.com"
+      Host = "staging.nighttroop.nz"
 
 # The databases, kept between deploys. The image built with --build-target staging opens them with try_migrate_or_delete
 # at each start, and deletes them all if one cannot be migrated. A deploy makes the volume if there is none.
