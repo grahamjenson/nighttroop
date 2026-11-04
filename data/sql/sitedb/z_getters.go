@@ -3776,14 +3776,14 @@ func (m *ProfileSwitch) SetDurationMinutes(v int64) {
 	m.DurationMinutes = v
 }
 
-// GetPercent returns the Percent value.
-func (m ProfileSwitch) GetPercent() *float64 {
-	return m.Percent
+// GetMultiplier returns the Multiplier value.
+func (m ProfileSwitch) GetMultiplier() *float64 {
+	return m.Multiplier
 }
 
-// SetPercent sets the Percent value and returns the updated ProfileSwitch.
-func (m *ProfileSwitch) SetPercent(v *float64) {
-	m.Percent = v
+// SetMultiplier sets the Multiplier value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetMultiplier(v *float64) {
+	m.Multiplier = v
 }
 
 // GetTimeshift returns the Timeshift value.
@@ -4066,14 +4066,14 @@ func (m *ProfileSwitchesVw) SetDurationMinutes(v *int64) {
 	m.DurationMinutes = v
 }
 
-// GetPercent returns the Percent value.
-func (m ProfileSwitchesVw) GetPercent() *float64 {
-	return m.Percent
+// GetMultiplier returns the Multiplier value.
+func (m ProfileSwitchesVw) GetMultiplier() *float64 {
+	return m.Multiplier
 }
 
-// SetPercent sets the Percent value and returns the updated ProfileSwitchesVw.
-func (m *ProfileSwitchesVw) SetPercent(v *float64) {
-	m.Percent = v
+// SetMultiplier sets the Multiplier value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetMultiplier(v *float64) {
+	m.Multiplier = v
 }
 
 // GetTimeshift returns the Timeshift value.
@@ -11126,14 +11126,14 @@ func (m *CreateProfileSwitchParams) SetDurationMinutes(v int64) {
 	m.DurationMinutes = v
 }
 
-// GetPercent returns the Percent value.
-func (m CreateProfileSwitchParams) GetPercent() *float64 {
-	return m.Percent
+// GetMultiplier returns the Multiplier value.
+func (m CreateProfileSwitchParams) GetMultiplier() *float64 {
+	return m.Multiplier
 }
 
-// SetPercent sets the Percent value and returns the updated CreateProfileSwitchParams.
-func (m *CreateProfileSwitchParams) SetPercent(v *float64) {
-	m.Percent = v
+// SetMultiplier sets the Multiplier value and returns the updated CreateProfileSwitchParams.
+func (m *CreateProfileSwitchParams) SetMultiplier(v *float64) {
+	m.Multiplier = v
 }
 
 // GetDia returns the Dia value.
@@ -11706,14 +11706,14 @@ func (m *UpdateProfileSwitchParams) SetDurationMinutes(v *int64) {
 	m.DurationMinutes = v
 }
 
-// GetPercent returns the Percent value.
-func (m UpdateProfileSwitchParams) GetPercent() *float64 {
-	return m.Percent
+// GetMultiplier returns the Multiplier value.
+func (m UpdateProfileSwitchParams) GetMultiplier() *float64 {
+	return m.Multiplier
 }
 
-// SetPercent sets the Percent value and returns the updated UpdateProfileSwitchParams.
-func (m *UpdateProfileSwitchParams) SetPercent(v *float64) {
-	m.Percent = v
+// SetMultiplier sets the Multiplier value and returns the updated UpdateProfileSwitchParams.
+func (m *UpdateProfileSwitchParams) SetMultiplier(v *float64) {
+	m.Multiplier = v
 }
 
 // GetTimeshift returns the Timeshift value.

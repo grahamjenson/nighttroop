@@ -1063,10 +1063,7 @@ func PartialTreatmentToProfileSwitch(source Treatment) sitedb.ProfileSwitch {
 	if source.DurationMinutes != nil {
 		sitedbProfileSwitch.DurationMinutes = FlexibleInt64ToInt64(*source.DurationMinutes)
 	}
-	if source.Percent != nil {
-		xfloat64 := FlexibleFloat64ToFloat64(*source.Percent)
-		sitedbProfileSwitch.Percent = &xfloat64
-	}
+	sitedbProfileSwitch.Multiplier = PercentageToMultiplier(source.Percent)
 	if source.Timeshift != nil {
 		xint64 := FlexibleInt64ToInt64(*source.Timeshift)
 		sitedbProfileSwitch.Timeshift = &xint64
@@ -1178,9 +1175,9 @@ func ProfileSwitchCreate(source sitedb.ProfileSwitch, context ConverterContext) 
 	sitedbCreateProfileSwitchParams.ID = AssignID()
 	sitedbCreateProfileSwitchParams.Name = source.Name
 	sitedbCreateProfileSwitchParams.DurationMinutes = source.DurationMinutes
-	if source.Percent != nil {
-		xfloat64 := *source.Percent
-		sitedbCreateProfileSwitchParams.Percent = &xfloat64
+	if source.Multiplier != nil {
+		xfloat64 := *source.Multiplier
+		sitedbCreateProfileSwitchParams.Multiplier = &xfloat64
 	}
 	if source.Dia != nil {
 		xfloat642 := *source.Dia
@@ -1258,9 +1255,9 @@ func ProfileSwitchUpdate(source sitedb.ProfileSwitch, context ConverterContext) 
 	sitedbUpdateProfileSwitchParams.Name = &pString
 	pInt64 := source.DurationMinutes
 	sitedbUpdateProfileSwitchParams.DurationMinutes = &pInt64
-	if source.Percent != nil {
-		xfloat64 := *source.Percent
-		sitedbUpdateProfileSwitchParams.Percent = &xfloat64
+	if source.Multiplier != nil {
+		xfloat64 := *source.Multiplier
+		sitedbUpdateProfileSwitchParams.Multiplier = &xfloat64
 	}
 	if source.Timeshift != nil {
 		xint64 := *source.Timeshift
@@ -1706,10 +1703,7 @@ func UpdateProfileSwitchToTreatment(source *sitedb.ProfileSwitch, context *httpu
 		pTypesShortString2 := types.ShortString(source.Name)
 		target.Profile = &pTypesShortString2
 		target.ProfileJSON = ToProfileJSON(source, context)
-		if source.Percent != nil {
-			typesFlexibleFloat64 := types.FlexibleFloat64(*source.Percent)
-			target.Percent = &typesFlexibleFloat64
-		}
+		target.Percent = MultiplierToPercentage(source.Multiplier)
 		if source.Timeshift != nil {
 			typesFlexibleInt64 := types.FlexibleInt64(*source.Timeshift)
 			target.Timeshift = &typesFlexibleInt64
@@ -2321,9 +2315,9 @@ func UpdateToProfileSwitch(source *sitedb.ProfileSwitch, target *sitedb.ProfileS
 	if source != nil {
 		target.Name = source.Name
 		target.DurationMinutes = source.DurationMinutes
-		if source.Percent != nil {
-			xfloat64 := *source.Percent
-			target.Percent = &xfloat64
+		if source.Multiplier != nil {
+			xfloat64 := *source.Multiplier
+			target.Multiplier = &xfloat64
 		}
 		if source.Timeshift != nil {
 			xint64 := *source.Timeshift

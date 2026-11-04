@@ -20,7 +20,7 @@ H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@result"
 ASSERT_EQUALS "Weekend" "@result.0.name"
-ASSERT_EQUALS 110 "@result.0.percent"
+ASSERT_EQUALS 1.1 "@result.0.multiplier"
 ASSERT_EQUALS -60 "@result.0.timeshift"
 ASSERT_EQUALS 60 "@result.0.duration_minutes"
 ASSERT_EQUALS 5 "@result.0.dia"
@@ -36,10 +36,10 @@ NAME create_profile_switch
 POST http://{{ site }}/data/profile-switches
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
-B {"name": "Sick Day", "percent": 120, "timeshift": 30, "duration_minutes": 0, "notes": "Flu", "id": "chosen-id", "created_by_identity_name": "someone else"}
+B {"name": "Sick Day", "multiplier": 1.2, "timeshift": 30, "duration_minutes": 0, "notes": "Flu", "id": "chosen-id", "created_by_identity_name": "someone else"}
 ASSERT_STATUS 201
 ASSERT_EQUALS "Sick Day" "@result.name"
-ASSERT_EQUALS 120 "@result.percent"
+ASSERT_EQUALS 1.2 "@result.multiplier"
 ASSERT_EQUALS 30 "@result.timeshift"
 ASSERT_EQUALS 0 "@result.duration_minutes"
 ASSERT_EQUALS "Flu" "@result.notes"
@@ -81,7 +81,7 @@ NAME create_profile_switch_no_name
 POST http://{{ site }}/data/profile-switches
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
-B {"percent": 100}
+B {"multiplier": 1}
 ASSERT_STATUS 400
 ASSERT_CONTAINS "name is required" "@message"
 
@@ -93,13 +93,13 @@ B {"name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 ASSERT_STATUS 400
 ASSERT_CONTAINS "name must be at most 64 characters" "@message"
 
-NAME create_profile_switch_bad_percent
+NAME create_profile_switch_bad_multiplier
 POST http://{{ site }}/data/profile-switches
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
-B {"name": "Huge", "percent": 1000}
+B {"name": "Huge", "multiplier": 10}
 ASSERT_STATUS 400
-ASSERT_CONTAINS "percent must be from 10 to 500" "@message"
+ASSERT_CONTAINS "multiplier must be from 0.1 to 5" "@message"
 
 NAME create_profile_switch_bad_timeshift
 POST http://{{ site }}/data/profile-switches
@@ -122,20 +122,20 @@ NAME update_profile_switch
 POST http://{{ site }}/data/profile-switches/{{ .ns_id }}
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
-B {"percent": 90, "timeshift": 0, "duration_minutes": 0}
+B {"multiplier": 0.9, "timeshift": 0, "duration_minutes": 0}
 ASSERT_STATUS 200
 ASSERT_EQUALS "Weekend" "@result.name"
-ASSERT_EQUALS 90 "@result.percent"
+ASSERT_EQUALS 0.9 "@result.multiplier"
 ASSERT_EQUALS 0 "@result.timeshift"
 ASSERT_EQUALS 0 "@result.duration_minutes"
 ASSERT_CONTAINS "0.8" "@result.basal_rates_json"
 ASSERT_EQUALS "pwd_phone" "@result.updated_by_identity_name"
 
-NAME update_profile_switch_bad_percent
+NAME update_profile_switch_bad_multiplier
 POST http://{{ site }}/data/profile-switches/{{ .created_id }}
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
-B {"percent": 5}
+B {"multiplier": 0.05}
 ASSERT_STATUS 400
 
 NAME update_unknown_profile_switch

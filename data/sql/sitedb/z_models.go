@@ -434,7 +434,7 @@ type ProfileSwitch struct {
 	ID                       string
 	Name                     string
 	DurationMinutes          int64
-	Percent                  *float64
+	Multiplier               *float64
 	Timeshift                *int64
 	Dia                      *float64
 	Units                    *consts.Units
@@ -466,7 +466,7 @@ type ProfileSwitchesVw struct {
 	ID                       *string
 	Name                     *string
 	DurationMinutes          *int64
-	Percent                  *float64
+	Multiplier               *float64
 	Timeshift                *int64
 	Dia                      *float64
 	Units                    *consts.Units

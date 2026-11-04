@@ -235,14 +235,14 @@ CREATE TABLE temp_targets (
 
 CREATE VIEW temp_targets_vw AS SELECT temp_targets.* FROM (SELECT NULL WHERE FALSE) dummy FULL JOIN temp_targets ON TRUE;
 
--- Profile Switches are tricksy, they have a percent, but the values stored in here already contain that percent
+-- Profile Switches are tricksy, they have a multiplier, but the values stored in here already contain that multiplier
 CREATE TABLE profile_switches (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
     name TEXT NOT NULL CHECK(length(name) <= 64),
     
     -- Profile Switch Specific
     duration_minutes INTEGER NOT NULL default 0 CHECK(duration_minutes BETWEEN 0 AND 525600), -- at most a year, and 0 means it is forever unless another profile overrides it
-    percent REAL default 100 CHECK(percent BETWEEN 0 AND 1000),
+    multiplier REAL default 1 CHECK(multiplier BETWEEN 0 AND 10), -- times the profile's insulin, Nightscout's percentage / 100
     timeshift INTEGER default 0 CHECK(timeshift BETWEEN -1440 AND 1440), -- in minutes, e.g. 60 means the profile is shifted forward by 1 hour
 
     -- Profile Stuff

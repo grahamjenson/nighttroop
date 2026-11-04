@@ -410,7 +410,7 @@ CREATE TABLE profile_switches (
     
     -- Profile Switch Specific
     duration_minutes INTEGER NOT NULL default 0 CHECK(duration_minutes BETWEEN 0 AND 525600), -- at most a year, and 0 means it is forever unless another profile overrides it
-    percent REAL default 100 CHECK(percent BETWEEN 0 AND 1000),
+    multiplier REAL default 1 CHECK(multiplier BETWEEN 0 AND 10), -- times the profile's insulin, Nightscout's percentage / 100
     timeshift INTEGER default 0 CHECK(timeshift BETWEEN -1440 AND 1440), -- in minutes, e.g. 60 means the profile is shifted forward by 1 hour
 
     -- Profile Stuff

@@ -120,7 +120,7 @@ func checkProfileSwitch(model *sitemodels.SiteProfileSwitch) *apiutils.HTTPError
 		return apiutils.ErrConstraintCheckFailedWithHint("name must be at most 64 characters")
 	}
 	if herr := cmp.Or(
-		apiutils.CheckRange("percent", model.Percent, 10, 500, ""),
+		apiutils.CheckRange("multiplier", model.Multiplier, 0.1, 5, ""),
 		apiutils.CheckRange("timeshift", model.Timeshift, -24*60, 24*60, "minutes"),
 	); herr != nil {
 		return herr

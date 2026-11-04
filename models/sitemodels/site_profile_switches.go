@@ -6,8 +6,9 @@ type SiteProfileSwitch struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 	// DurationMinutes is a pointer so 0, until the next switch, can be sent
-	DurationMinutes *int64   `json:"duration_minutes"`
-	Percent         *float64 `json:"percent"`
+	DurationMinutes *int64 `json:"duration_minutes"`
+	// Multiplier is how many times the profile's insulin, so 1.2 is 120%
+	Multiplier *float64 `json:"multiplier"`
 	// Timeshift is in minutes, e.g. 60 shifts the profile forward an hour
 	Timeshift *int64 `json:"timeshift"`
 	// The profile's settings and schedules are only read on the site

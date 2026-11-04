@@ -1167,9 +1167,9 @@ func ProfileSwitchToCreate(source ProfileSwitch) CreateProfileSwitchParams {
 	sitedbCreateProfileSwitchParams.ID = source.ID
 	sitedbCreateProfileSwitchParams.Name = source.Name
 	sitedbCreateProfileSwitchParams.DurationMinutes = source.DurationMinutes
-	if source.Percent != nil {
-		xfloat64 := *source.Percent
-		sitedbCreateProfileSwitchParams.Percent = &xfloat64
+	if source.Multiplier != nil {
+		xfloat64 := *source.Multiplier
+		sitedbCreateProfileSwitchParams.Multiplier = &xfloat64
 	}
 	if source.Dia != nil {
 		xfloat642 := *source.Dia
@@ -1253,9 +1253,9 @@ func ProfileSwitchToUpdate(source ProfileSwitch) UpdateProfileSwitchParams {
 	sitedbUpdateProfileSwitchParams.Name = &pString
 	pInt64 := source.DurationMinutes
 	sitedbUpdateProfileSwitchParams.DurationMinutes = &pInt64
-	if source.Percent != nil {
-		xfloat64 := *source.Percent
-		sitedbUpdateProfileSwitchParams.Percent = &xfloat64
+	if source.Multiplier != nil {
+		xfloat64 := *source.Multiplier
+		sitedbUpdateProfileSwitchParams.Multiplier = &xfloat64
 	}
 	if source.Timeshift != nil {
 		xint64 := *source.Timeshift
@@ -2120,9 +2120,9 @@ func sitedbProfileSwitchesVwToSitedbProfileSwitchesVw(source ProfileSwitchesVw) 
 		xint64 := *source.DurationMinutes
 		sitedbProfileSwitchesVw.DurationMinutes = &xint64
 	}
-	if source.Percent != nil {
-		xfloat64 := *source.Percent
-		sitedbProfileSwitchesVw.Percent = &xfloat64
+	if source.Multiplier != nil {
+		xfloat64 := *source.Multiplier
+		sitedbProfileSwitchesVw.Multiplier = &xfloat64
 	}
 	if source.Timeshift != nil {
 		xint642 := *source.Timeshift

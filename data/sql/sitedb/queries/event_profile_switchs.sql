@@ -6,7 +6,7 @@ INSERT INTO profile_switches (
     id,
     name,
     duration_minutes,
-    percent,
+    multiplier,
 
     dia,
     units,
@@ -92,7 +92,7 @@ LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER
 UPDATE profile_switches SET
     name = COALESCE(sqlc.narg('Name'), name),
     duration_minutes = COALESCE(sqlc.narg('DurationMinutes'), duration_minutes),
-    percent = COALESCE(sqlc.narg('Percent'), percent),
+    multiplier = COALESCE(sqlc.narg('Multiplier'), multiplier),
     timeshift = COALESCE(sqlc.narg('Timeshift'), timeshift),
     notes = COALESCE(sqlc.narg('Notes'), notes),
     reason = COALESCE(sqlc.narg('Reason'), reason),
