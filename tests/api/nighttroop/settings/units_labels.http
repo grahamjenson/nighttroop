@@ -1,0 +1,78 @@
+INCLUDE steps/new_site_admin.steps
+
+// A BG check, as xDrip4iOS uploads one: in mg/dL, written mg/dl
+NAME upload_bg_check
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+H Accept: application/json
+B {"enteredBy": "xDrip4iOS", "eventTime": "{{ time 5 }}", "eventType": "BG Check", "glucose": 120, "glucoseType": "Finger", "units": "mg/dl"}
+ASSERT_STATUS 200
+
+// A device added for xDrip4iOS is in mg/dL, written mg/dl, as it reads a BG check's glucose as mg/dL only when its
+// units are exactly mg/dl, and matches its own upload by its value
+NAME create_xdrip4ios
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "iphone", "role": "device_read", "client": "xdrip4ios"}
+ASSERT_STATUS 201
+SET xdrip4ios_token {{ .create_xdrip4ios.result.ns_token }}
+
+NAME xdrip4ios_reads_mg_dl
+GET http://{{ .ns_site }}/api/v1/treatments.json?token={{ .xdrip4ios_token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "BG Check" "@0.eventType"
+ASSERT_EQUALS 120 "@0.glucose"
+ASSERT_EQUALS "mg/dl" "@0.units"
+
+// Another device follows the site, in mmol/L written as Nighttroop does
+NAME create_other
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "display", "role": "device_read", "client": "other"}
+ASSERT_STATUS 201
+SET other_token {{ .create_other.result.ns_token }}
+
+NAME other_reads_mmol_l
+GET http://{{ .ns_site }}/api/v1/treatments.json?token={{ .other_token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "mmol/L" "@0.units"
+
+// The site can write mmol/L as mmol for every identity that follows it
+NAME site_writes_mmol
+POST http://{{ site }}/settings/site
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"units_mmol_label": "mmol"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "mmol" "@result.units_mmol_label"
+
+NAME other_reads_mmol
+GET http://{{ .ns_site }}/api/v1/treatments.json?token={{ .other_token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "mmol" "@0.units"
+
+// The labels are set only through the settings endpoint, so saving the settings page, which sends only its own
+// settings, leaves them as they are
+NAME site_saves_page_settings
+POST http://{{ site }}/settings/site
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"units": "mmol/L", "timezone": "Pacific/Auckland"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "mmol" "@result.units_mmol_label"
+
+// The xDrip4iOS device is still mg/dl, its own setting
+NAME xdrip4ios_still_reads_mg_dl
+GET http://{{ .ns_site }}/api/v1/treatments.json?token={{ .xdrip4ios_token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "mg/dl" "@0.units"
+
+// Only the spellings offered can be set
+NAME bad_mgdl_label
+POST http://{{ site }}/settings/identity
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"units_mgdl_label": "milligrams"}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "invalid mg/dL label" "@message"

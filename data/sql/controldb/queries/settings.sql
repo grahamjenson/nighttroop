@@ -3,6 +3,8 @@
 UPDATE site_identities SET
     -- IDENTITY SETTINGS
     units = sqlc.narg('Units'),
+    units_mgdl_label = sqlc.narg('UnitsMgdlLabel'),
+    units_mmol_label = sqlc.narg('UnitsMmolLabel'),
 
     -- DATE
     timezone = sqlc.narg('Timezone'),
@@ -73,6 +75,8 @@ WHERE id = sqlc.arg('ID') AND site_id = sqlc.arg('SiteID');
 UPDATE sites SET
     -- IDENTITY SETTINGS
     units = sqlc.narg('Units'),
+    units_mgdl_label = sqlc.narg('UnitsMgdlLabel'),
+    units_mmol_label = sqlc.narg('UnitsMmolLabel'),
 
     -- DATE
     timezone = sqlc.narg('Timezone'),

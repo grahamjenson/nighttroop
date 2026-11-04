@@ -151,7 +151,7 @@ func (c Collection[NS, DM]) document(dbModel *DM, siteContext *httputils.SiteCon
 	if raw && rawJSON != nil && json.Unmarshal([]byte(*rawJSON), &doc.raw) == nil && doc.raw != nil {
 		return doc
 	}
-	doc.raw, doc.model = nil, c.db.ToNS(dbModel, siteContext)
+	doc.raw, doc.model, doc.unitsLabels = nil, c.db.ToNS(dbModel, siteContext), unitsLabels(siteContext)
 	return doc
 }
 

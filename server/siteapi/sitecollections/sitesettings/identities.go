@@ -32,6 +32,10 @@ var identityRoles = []consts.IdentityRole{
 // has its own units set to mg/dL whatever the site's. Any other device, "other", follows the site.
 var mgdlClients = []string{"aaps", "trio", "loop", "xdrip", "xdrip4ios", "nightguard", "sugarpixel"}
 
+// clientMgdlLabels are how a client needs the Nightscout API to write mg/dL, where it is not mg/dL: xDrip4iOS reads a
+// BG check's glucose as mg/dL only when its units are exactly mg/dl, and otherwise uploads it again
+var clientMgdlLabels = map[string]string{"xdrip4ios": "mg/dl"}
+
 // ////
 // Shared
 // ////
@@ -95,7 +99,7 @@ func (s *IdentitiesCollection) CreateRow(ctx context.Context, collectionTx *site
 		return nil, herr
 	}
 	if slices.Contains(mgdlClients, model.Client) {
-		if err := setUnitsMGDL(ctx, q, siteContext, created.ID); err != nil {
+		if err := setUnitsMGDL(ctx, q, siteContext, created.ID, model.Client); err != nil {
 			return nil, err
 		}
 	}
@@ -105,8 +109,9 @@ func (s *IdentitiesCollection) CreateRow(ctx context.Context, collectionTx *site
 	return created, nil
 }
 
-// setUnitsMGDL sets the identity's own units to mg/dL, for a client that needs them, keeping its other settings
-func setUnitsMGDL(ctx context.Context, q *controldb.Queries, siteContext *httputils.SiteContext, identityID int64) error {
+// setUnitsMGDL sets the identity's own units to mg/dL, written as client needs, for a client that needs them, keeping
+// its other settings
+func setUnitsMGDL(ctx context.Context, q *controldb.Queries, siteContext *httputils.SiteContext, identityID int64, client string) error {
 	identity, err := q.GetSiteIdentityByID(ctx, controldb.GetSiteIdentityByIDParams{SiteID: siteContext.SiteID, ID: identityID})
 	if err != nil {
 		return err
@@ -114,6 +119,11 @@ func setUnitsMGDL(ctx context.Context, q *controldb.Queries, siteContext *httput
 	level := settings.NewSettingsMap(identity, &identity.CreatedAt, new("identity"))
 	if err := level.SetSettingByName("units", string(consts.UnitsMGDL), nil, new("identity")); err != nil {
 		return err
+	}
+	if label, ok := clientMgdlLabels[client]; ok {
+		if err := level.SetSettingByName("units_mgdl_label", label, nil, new("identity")); err != nil {
+			return err
+		}
 	}
 	params := &controldb.UpdateSiteIdentitySettingsParams{ID: identity.ID, SiteID: siteContext.SiteID}
 	settings.SetSettings(params, level)

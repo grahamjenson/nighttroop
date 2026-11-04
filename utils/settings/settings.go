@@ -77,6 +77,14 @@ func (m *CombinedSettingsMap) GetRangeHighMgdl() *int64 {
 	return first(m.IdentitySettingsMap.GetRangeHighMgdl(), m.SiteSettingsMap.GetRangeHighMgdl(), m.DefaultSettingsMap.GetRangeHighMgdl())
 }
 
+// GetUnitsLabel is how the Nightscout API writes units, the identity's, then the site's, then Nighttroop's own
+func (m *CombinedSettingsMap) GetUnitsLabel(units consts.Units) string {
+	if units == consts.UnitsMMOLL {
+		return *first(m.IdentitySettingsMap.GetUnitsMmolLabel(), m.SiteSettingsMap.GetUnitsMmolLabel(), m.DefaultSettingsMap.GetUnitsMmolLabel())
+	}
+	return *first(m.IdentitySettingsMap.GetUnitsMgdlLabel(), m.SiteSettingsMap.GetUnitsMgdlLabel(), m.DefaultSettingsMap.GetUnitsMgdlLabel())
+}
+
 // GetTimezone is the identity's timezone, then the site's, then the default UTC
 func (m *CombinedSettingsMap) GetTimezone() *string {
 	return first(

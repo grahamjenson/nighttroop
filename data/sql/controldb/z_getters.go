@@ -568,6 +568,26 @@ func (m *Site) SetUnits(v *consts.Units) {
 	m.Units = v
 }
 
+// GetUnitsMgdlLabel returns the UnitsMgdlLabel value.
+func (m Site) GetUnitsMgdlLabel() *string {
+	return m.UnitsMgdlLabel
+}
+
+// SetUnitsMgdlLabel sets the UnitsMgdlLabel value and returns the updated Site.
+func (m *Site) SetUnitsMgdlLabel(v *string) {
+	m.UnitsMgdlLabel = v
+}
+
+// GetUnitsMmolLabel returns the UnitsMmolLabel value.
+func (m Site) GetUnitsMmolLabel() *string {
+	return m.UnitsMmolLabel
+}
+
+// SetUnitsMmolLabel sets the UnitsMmolLabel value and returns the updated Site.
+func (m *Site) SetUnitsMmolLabel(v *string) {
+	m.UnitsMmolLabel = v
+}
+
 // GetTimezone returns the Timezone value.
 func (m Site) GetTimezone() *string {
 	return m.Timezone
@@ -1166,6 +1186,26 @@ func (m SiteIdentity) GetUnits() *consts.Units {
 // SetUnits sets the Units value and returns the updated SiteIdentity.
 func (m *SiteIdentity) SetUnits(v *consts.Units) {
 	m.Units = v
+}
+
+// GetUnitsMgdlLabel returns the UnitsMgdlLabel value.
+func (m SiteIdentity) GetUnitsMgdlLabel() *string {
+	return m.UnitsMgdlLabel
+}
+
+// SetUnitsMgdlLabel sets the UnitsMgdlLabel value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetUnitsMgdlLabel(v *string) {
+	m.UnitsMgdlLabel = v
+}
+
+// GetUnitsMmolLabel returns the UnitsMmolLabel value.
+func (m SiteIdentity) GetUnitsMmolLabel() *string {
+	return m.UnitsMmolLabel
+}
+
+// SetUnitsMmolLabel sets the UnitsMmolLabel value and returns the updated SiteIdentity.
+func (m *SiteIdentity) SetUnitsMmolLabel(v *string) {
+	m.UnitsMmolLabel = v
 }
 
 // GetTimezone returns the Timezone value.
@@ -2488,6 +2528,26 @@ func (m *UpdateSiteIdentitySettingsParams) SetUnits(v *consts.Units) {
 	m.Units = v
 }
 
+// GetUnitsMgdlLabel returns the UnitsMgdlLabel value.
+func (m UpdateSiteIdentitySettingsParams) GetUnitsMgdlLabel() *string {
+	return m.UnitsMgdlLabel
+}
+
+// SetUnitsMgdlLabel sets the UnitsMgdlLabel value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m *UpdateSiteIdentitySettingsParams) SetUnitsMgdlLabel(v *string) {
+	m.UnitsMgdlLabel = v
+}
+
+// GetUnitsMmolLabel returns the UnitsMmolLabel value.
+func (m UpdateSiteIdentitySettingsParams) GetUnitsMmolLabel() *string {
+	return m.UnitsMmolLabel
+}
+
+// SetUnitsMmolLabel sets the UnitsMmolLabel value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m *UpdateSiteIdentitySettingsParams) SetUnitsMmolLabel(v *string) {
+	m.UnitsMmolLabel = v
+}
+
 // GetTimezone returns the Timezone value.
 func (m UpdateSiteIdentitySettingsParams) GetTimezone() *string {
 	return m.Timezone
@@ -2946,6 +3006,26 @@ func (m UpdateSitesSettingsParams) GetUnits() *consts.Units {
 // SetUnits sets the Units value and returns the updated UpdateSitesSettingsParams.
 func (m *UpdateSitesSettingsParams) SetUnits(v *consts.Units) {
 	m.Units = v
+}
+
+// GetUnitsMgdlLabel returns the UnitsMgdlLabel value.
+func (m UpdateSitesSettingsParams) GetUnitsMgdlLabel() *string {
+	return m.UnitsMgdlLabel
+}
+
+// SetUnitsMgdlLabel sets the UnitsMgdlLabel value and returns the updated UpdateSitesSettingsParams.
+func (m *UpdateSitesSettingsParams) SetUnitsMgdlLabel(v *string) {
+	m.UnitsMgdlLabel = v
+}
+
+// GetUnitsMmolLabel returns the UnitsMmolLabel value.
+func (m UpdateSitesSettingsParams) GetUnitsMmolLabel() *string {
+	return m.UnitsMmolLabel
+}
+
+// SetUnitsMmolLabel sets the UnitsMmolLabel value and returns the updated UpdateSitesSettingsParams.
+func (m *UpdateSitesSettingsParams) SetUnitsMmolLabel(v *string) {
+	m.UnitsMmolLabel = v
 }
 
 // GetTimezone returns the Timezone value.

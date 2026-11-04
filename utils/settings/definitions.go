@@ -43,6 +43,10 @@ var (
 	DateFormats   = []string{"YYYY/MM/DD", "DD/MM/YYYY", "MM/DD/YYYY", "YYYY-MM-DD", "DD-MM-YYYY", "MM-DD-YYYY"}
 	TimeFormats   = []string{"HH:mm:ss", "hh:mm:ss a", "HH:mm", "hh:mm a"}
 	WeekStartDays = []string{"monday", "sunday"}
+	// The ways the Nightscout API can write each units, as a client may read only one: xDrip4iOS reads a BG check's
+	// glucose as mg/dL only when its units are exactly mg/dl
+	UnitsMgdlLabels = []string{"mg/dL", "mg/dl"}
+	UnitsMmolLabels = []string{"mmol/L", "mmol"}
 )
 
 var Units = &SettingDefinition[consts.Units]{
@@ -90,6 +94,32 @@ var Language = &SettingDefinition[string]{
 		}
 		return nil
 	},
+}
+
+var UnitsMgdlLabel = &SettingDefinition[string]{
+	Identifier:   "units_mgdl_label",
+	TypeString:   "string",
+	Default:      string(consts.UnitsMGDL),
+	ParseFunc:    ParseString,
+	ValidateFunc: oneOf("mg/dL label", UnitsMgdlLabels),
+}
+
+var UnitsMmolLabel = &SettingDefinition[string]{
+	Identifier:   "units_mmol_label",
+	TypeString:   "string",
+	Default:      string(consts.UnitsMMOLL),
+	ParseFunc:    ParseString,
+	ValidateFunc: oneOf("mmol/L label", UnitsMmolLabels),
+}
+
+// oneOf validates a setting that must be one of options
+func oneOf(name string, options []string) func(string) error {
+	return func(value string) error {
+		if !slices.Contains(options, value) {
+			return fmt.Errorf("invalid %s: %v - must be in %v", name, value, quoted(options))
+		}
+		return nil
+	}
 }
 
 var DateFormat = &SettingDefinition[string]{

@@ -30,8 +30,8 @@ type SettingsCollection struct {
 	Other  bool
 }
 
-// settingNames are the settings the pages show so far, in order
-var settingNames = []string{"units", "timezone", "language", "date_format", "time_format", "week_start_day",
+// settingNames are the settings the pages show so far, in order, and the units labels, which only the endpoint sets
+var settingNames = []string{"units", "units_mgdl_label", "units_mmol_label", "timezone", "language", "date_format", "time_format", "week_start_day",
 	"alarm_urgent_low_enabled", "range_urgent_low", "alarm_low_enabled", "range_low", "alarm_low_minutes",
 	"alarm_low_prediction_enabled", "alarm_low_prediction_minutes",
 	"alarm_high_enabled", "range_high", "alarm_high_minutes", "alarm_urgent_high_enabled", "range_urgent_high",
