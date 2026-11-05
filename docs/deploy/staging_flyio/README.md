@@ -198,7 +198,9 @@ time CI finishes on a push to `main`.
 - **When CI passed,** it checks out that commit and deploys it with the same command as above, building the image on
   Fly's builders.
 - **When CI failed,** that commit is not deployed, so testers keep the last version that passed.
-- **When a newer commit arrives mid-deploy,** it cancels the older deploy.
+- **When commits pass CI mid-deploy,** the deploy running is left to finish, and they wait as a single run, each
+  newer one replacing the one waiting. Once it is done, only the newest of them is deployed, so a burst of merges is one
+  more deploy rather than one each.
 - **It does nothing until you turn it on:**
   1. Make a deploy token for the app:
 

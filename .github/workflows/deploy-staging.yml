@@ -11,10 +11,12 @@ on:
     types: [completed]
   workflow_dispatch:
 
-# A newer commit replaces one still deploying
+# One deploy at a time: one running is left to finish, and the commits that pass CI meanwhile wait as a single run, each
+# newer one replacing the one waiting, so they are deployed together, as the newest of them, once it is done. A run
+# waiting uses no Actions minutes.
 concurrency:
   group: deploy-staging
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   deploy:
