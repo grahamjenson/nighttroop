@@ -20,7 +20,7 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 	static.AddStaticRoutes(r)
 
 	r.Get("/login", controlapi.GETLoginPageHandler())
-	publicapi.FooterRoutes(r)
+	publicapi.FooterRoutes(r, config)
 
 	r.With(httputils.AllowedCountriesMiddleware(config)).Post("/login", controlapi.POSTLogin(controlDB, config))
 

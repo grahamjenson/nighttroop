@@ -176,6 +176,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - The API docs, at `/api-docs` on every host, show the OpenAPI schema, `/openapi.json`, with Redoc in the site's
   colours: a menu and search of every endpoint, each with how it is signed in to, its parameters, body, responses and
   samples of them, and a link to download the schema. The page loads no images from anywhere else.
+- Each endpoint in the API docs, and in the schema served, gives the host it is on, on this server: `POST /site` the
+  public host (e.g. `https://staging.nighttroop.nz`), the Nightscout API a site's Nightscout host
+  (`https://{site_id}.ns.staging.nighttroop.nz`), and the rest a site's host (`https://{site_id}.staging.nighttroop.nz`).
 - With `FEEDBACK_URL` set, e.g. to a Google Form or GitHub issues, every page's footer also links to "feedback", and the
   home page asks for it under its features, each opening the link in a new tab; unset, neither shows.
 - The public pages (create, recover, terms and privacy) say above their footer that Nighttroop is not a medical device,

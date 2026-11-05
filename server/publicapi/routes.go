@@ -120,11 +120,13 @@ func POSTCreateSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig)
 }
 
 // FooterRoutes serves what every page's footer links to: the terms of service and privacy policy, with the server's
-// support email, and the API docs with the OpenAPI schema they show, so every host's footer links to its own copies
-func FooterRoutes(r chi.Router) {
+// support email, and the API docs with the OpenAPI schema they show, its servers on this server's host, so every
+// host's footer links to its own copies
+func FooterRoutes(r chi.Router, config *config.ServerConfig) {
+	schema := nighttroop.OpenAPIOn(config.LinkURL)
 	r.Get("/openapi.json", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write(nighttroop.OpenAPI)
+		_, _ = w.Write(schema)
 	})
 	r.Get("/api-docs", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
