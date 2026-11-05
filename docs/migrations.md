@@ -31,6 +31,11 @@ migration:
    So a migration that narrows a CHECK, or a down migration that cannot take its version's rows, fails here rather
    than on a deploy. A CHECK it cannot read is not tried at its limit, and one its rows break fails the check, naming
    the table; teach `migration_check.go` the new form.
+   Each step up or down must also keep every row of a table there before and after, in the columns it had before and
+   after, so a migration that loses rows, or makes a table again with its columns in another order and copies them
+   with `SELECT *`, fails. A migration that means to change a table's rows says so with a line
+   `-- changes rows of <table>`. Each text column's rows are made of its own letter so swapped text columns differ;
+   numbers are not, as CHECKs compare them across columns, so name the columns copied when any are swapped.
 3. Prefer additive changes: a new table, or a new column that can be NULL or has a default. A build cannot open a DB
    a newer build migrated, so an additive change is the one a rollback copes with best.
 
