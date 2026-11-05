@@ -2,35 +2,14 @@ package browser
 
 import (
 	"fmt"
-	"io/fs"
-	"path/filepath"
 	"strconv"
 	"strings"
 
 	"nighttroop.t1d.nz/tests/dsl/script"
 )
 
-// ParseActionFile reads the actions of the file at path in fsys, and of the files it INCLUDEs
-func ParseActionFile(fsys fs.FS, path string) (*ActionFile, error) {
-	actions, err := parseFile(fsys, path)
-	if err != nil {
-		return nil, err
-	}
-
-	// name is the file name without folders or extension
-	name := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
-	return &ActionFile{
-		Name:    name,
-		Actions: actions,
-	}, nil
-}
-
-func parseFile(fsys fs.FS, path string) ([]Action, error) {
-	lines, err := script.ReadLines(fsys, path)
-	if err != nil {
-		return nil, err
-	}
-
+// ParseLines is the actions of a file's lines, each starting one, with the asserts after it
+func ParseLines(lines []script.Line) ([]Action, error) {
 	var actions []Action
 	var current Action
 
@@ -131,26 +110,6 @@ func parseFile(fsys fs.FS, path string) ([]Action, error) {
 				TestPath: path,
 				TestLine: lineNumber,
 				Locator:  selector,
-				Value:    value,
-			}
-		case "SET":
-			flush()
-
-			parts := strings.SplitN(second, " ", 2)
-			if len(parts) != 2 {
-				return nil, fmt.Errorf("expected exactly two values")
-			}
-
-			key, value := parts[0], parts[1]
-
-			if value == "" {
-				return nil, fmt.Errorf("empty set value")
-			}
-
-			current = &Set{
-				TestPath: path,
-				TestLine: lineNumber,
-				Key:      key,
 				Value:    value,
 			}
 		case "SAVE_COOKIE", "SET_COOKIE":

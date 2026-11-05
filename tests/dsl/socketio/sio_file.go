@@ -27,7 +27,9 @@ type File struct {
 
 // Step is one NAME block
 type Step struct {
-	Name   string
+	Name string
+	// Path and Line are where the step is, which is an INCLUDEd file for its steps
+	Path   string
 	Line   int
 	Verb   string // CONNECT, EMIT, WAIT, COLLECT, DISCONNECT, RUN_BACKGROUND_JOBS or an HTTP method
 	Target string // the URL for CONNECT and HTTP, the event for EMIT, WAIT and COLLECT
@@ -56,16 +58,13 @@ func (f *File) Events() []string {
 	return events
 }
 
-func ParseFile(contents string, path string) (*File, error) {
-	lines, err := script.SplitLines([]byte(contents), path, nil)
-	if err != nil {
-		return nil, err
-	}
+// ParseLines is the steps of a file's lines, which a .http file's are too, as each is a NAME with an HTTP verb
+func ParseLines(lines []script.Line, path string) (*File, error) {
 	file := &File{Path: path}
 	var current *Step
 	inBody := false
 	for _, l := range lines {
-		line, first, second, lineNumber := l.Text, l.First, l.Rest, l.Number
+		line, first, second, lineNumber, path := l.Text, l.First, l.Rest, l.Number, l.Path
 		fail := func(format string, args ...any) error {
 			return fmt.Errorf("%s:%d: %s", path, lineNumber, fmt.Sprintf(format, args...))
 		}
@@ -88,10 +87,10 @@ func ParseFile(contents string, path string) (*File, error) {
 			if second == "" {
 				return nil, fail("empty step name")
 			}
-			current = &Step{Name: second, Line: lineNumber, Headers: http.Header{}}
+			current = &Step{Name: second, Path: path, Line: lineNumber, Headers: http.Header{}}
 			file.Steps = append(file.Steps, current)
 		case first == "RUN_BACKGROUND_JOBS":
-			file.Steps = append(file.Steps, &Step{Name: first, Line: lineNumber, Verb: first})
+			file.Steps = append(file.Steps, &Step{Name: first, Path: path, Line: lineNumber, Verb: first})
 			current = nil
 		case slices.Contains(socketVerbs, first) || slices.Contains(httpVerbs, first):
 			if current.Verb != "" {
@@ -135,16 +134,16 @@ func ParseFile(contents string, path string) (*File, error) {
 	}
 	for _, step := range file.Steps {
 		if step.Verb == "" {
-			return nil, fmt.Errorf("%s:%d: step %s has no verb", path, step.Line, step.Name)
+			return nil, fmt.Errorf("%s:%d: step %s has no verb", step.Path, step.Line, step.Name)
 		}
 		if step.Ack && step.Verb != "EMIT" {
-			return nil, fmt.Errorf("%s:%d: ACK is only for EMIT", path, step.Line)
+			return nil, fmt.Errorf("%s:%d: ACK is only for EMIT", step.Path, step.Line)
 		}
 		if step.Args && step.Verb != "EMIT" {
-			return nil, fmt.Errorf("%s:%d: ARGS is only for EMIT", path, step.Line)
+			return nil, fmt.Errorf("%s:%d: ARGS is only for EMIT", step.Path, step.Line)
 		}
 		if step.NS != "" && step.Verb != "CONNECT" {
-			return nil, fmt.Errorf("%s:%d: NS is only for CONNECT", path, step.Line)
+			return nil, fmt.Errorf("%s:%d: NS is only for CONNECT", step.Path, step.Line)
 		}
 	}
 	return file, nil

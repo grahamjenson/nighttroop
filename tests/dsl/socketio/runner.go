@@ -26,7 +26,7 @@ const (
 	defaultCollect = time.Second
 )
 
-// Runner runs a file's steps in order, with one Socket.IO connection at a time
+// Runner runs a file's steps one at a time with Step, keeping one Socket.IO connection open between them until Close
 type Runner struct {
 	// Server is what CONNECT and HTTP steps reach, whatever their URL's host, so the Host header still picks the site
 	Server *httptest.Server
@@ -40,33 +40,45 @@ type Runner struct {
 	arrived   chan struct{}
 }
 
-// Run runs the file, failing the test at the first step that cannot finish
-func (r *Runner) Run(t *testing.T, file *File, ctx map[string]any) {
-	defer r.disconnect()
-	for _, step := range file.Steps {
-		fmt.Printf("=============== %s: %s %s ================\n", step.Name, step.Verb, step.Target)
-		output, err := r.run(t, file, step, ctx)
-		if err != nil {
-			t.Fatalf("%s:%d: %s %s: %v", file.Path, step.Line, step.Verb, step.Target, err)
+// Step runs one of the file's steps, keeping its connection open for the next, and fails the test if it cannot
+// finish. The file says which events a connection listens for.
+func (r *Runner) Step(t *testing.T, file *File, step *Step, ctx map[string]any) {
+	t.Helper()
+	fmt.Printf("=============== %s: %s %s ================\n", step.Name, step.Verb, step.Target)
+	output, err := r.run(t, file, step, ctx)
+	if err != nil {
+		t.Fatalf("%s:%d: %s %s: %v", step.Path, step.Line, step.Verb, step.Target, err)
+	}
+	if step.Verb == "RUN_BACKGROUND_JOBS" || isHTTP(step.Verb) {
+		return
+	}
+	pretty, _ := jsonapi.MarshalJsonWithoutEscapeHTML(output)
+	fmt.Printf("GOT: %s\n", pretty)
+	ctx[step.Name] = output
+	for _, set := range step.Sets {
+		if err := set.Set(ctx); err != nil {
+			t.Fatalf("%s:%d: %v", step.Path, step.Line, err)
 		}
-		if step.Verb == "RUN_BACKGROUND_JOBS" || isHTTP(step.Verb) {
-			continue
-		}
-		pretty, _ := jsonapi.MarshalJsonWithoutEscapeHTML(output)
-		fmt.Printf("GOT: %s\n", pretty)
-		ctx[step.Name] = output
-		for _, set := range step.Sets {
-			if err := set.Set(ctx); err != nil {
-				t.Fatalf("%s:%d: %v", file.Path, step.Line, err)
-			}
-		}
-		for _, assert := range step.Asserts {
-			assert.Execute(t, step.Name, 0, output, nil, ctx)
-		}
+	}
+	for _, assert := range step.Asserts {
+		assert.Execute(t, step.Name, 0, output, nil, ctx)
 	}
 }
 
+// Close ends the connection, if there is one
+func (r *Runner) Close() {
+	r.disconnect()
+}
+
 func isHTTP(verb string) bool { return slices.Contains(httpVerbs, verb) }
+
+// Request is an HTTP step's request, or nil for any other step
+func (s *Step) Request() *jsonapi.Request {
+	if !isHTTP(s.Verb) {
+		return nil
+	}
+	return &jsonapi.Request{Name: s.Name, Method: s.Verb, URL: s.Target, Headers: s.Headers, Body: s.Body, Asserts: s.Asserts, Sets: s.Sets}
+}
 
 func (r *Runner) run(t *testing.T, file *File, step *Step, ctx map[string]any) (any, error) {
 	timeout := step.Timeout
@@ -84,9 +96,8 @@ func (r *Runner) run(t *testing.T, file *File, step *Step, ctx map[string]any) (
 		return nil, nil
 	}
 	if isHTTP(step.Verb) {
-		request := &jsonapi.Request{Name: step.Name, Method: step.Verb, URL: step.Target, Headers: step.Headers, Body: step.Body, Asserts: step.Asserts, Sets: step.Sets}
-		_, err := request.ExecuteRequest(t, jsonapi.Client(r.Server), ctx)
-		return nil, err
+		step.Request().Run(t, jsonapi.Client(r.Server), ctx)
+		return nil, nil
 	}
 
 	if r.client == nil {

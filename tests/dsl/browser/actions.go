@@ -19,11 +19,6 @@ type Action interface {
 	Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error)
 }
 
-type ActionFile struct {
-	Name    string
-	Actions []Action
-}
-
 //////////////////
 // ACTIONS
 //////////////////
@@ -446,37 +441,6 @@ func (r *Input) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 	}
 
 	// Implement the execution logic for the Input action here
-	return page, nil
-}
-
-// ///
-// SET
-// ///
-type Set struct {
-	Key   string
-	Value string
-
-	TestPath string
-	TestLine int
-}
-
-func (r *Set) ToFlatString() string {
-	return fmt.Sprintf("SET %s %s", r.Key, r.Value)
-}
-
-func (r *Set) ToErrorLine(msg string) string {
-	if msg == "" {
-		return fmt.Sprintf("%s:%d: %s", r.TestPath, r.TestLine, r.ToFlatString())
-	}
-	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
-}
-
-func (r *Set) PrintAction() {
-	fmt.Println(r.ToFlatString())
-}
-
-func (r *Set) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
-	// Implement the execution logic for the Set action here
 	return page, nil
 }
 

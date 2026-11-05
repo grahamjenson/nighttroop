@@ -16,11 +16,6 @@ import (
 	"nighttroop.t1d.nz/tests/dsl/script"
 )
 
-type RequestFile struct {
-	Name     string
-	Requests []*Request
-}
-
 type Set struct {
 	Key   string
 	Value string
@@ -44,13 +39,8 @@ type Request struct {
 
 	Asserts []Assert
 	Sets    []Set
-
-	// RunBackgroundJobs marks a RUN_BACKGROUND_JOBS step, which runs every background and cron job instead of a request
-	RunBackgroundJobs bool
 }
 
-// Run runs the file's requests in order against handler, each seeing the values the ones before it SET in ctx,
-// and calls runBackgroundJobs for each RUN_BACKGROUND_JOBS. Each request and its response are printed.
 // Client sends a file's requests to the test server ts, whatever their host, as they are written: it follows no
 // redirect, so a step sees the response it got, and asks for no compression, so the headers asserted are the server's
 func Client(ts *httptest.Server) *http.Client {
@@ -60,35 +50,27 @@ func Client(ts *httptest.Server) *http.Client {
 	return client
 }
 
-// Run sends the file's requests in order with client, and runs runBackgroundJobs for each RUN_BACKGROUND_JOBS
-func (f *RequestFile) Run(t *testing.T, client *http.Client, ctx map[string]any, runBackgroundJobs func()) {
+// Run sends the request with client, its values filled in from ctx, and keeps its response in ctx for the steps
+// after it, failing the test if it cannot be sent. The request and its response are printed.
+func (r *Request) Run(t *testing.T, client *http.Client, ctx map[string]any) {
 	t.Helper()
-	for _, request := range f.Requests {
-		if request.RunBackgroundJobs {
-			fmt.Println("=============== RUN_BACKGROUND_JOBS ================")
-			runBackgroundJobs()
-			continue
-		}
-
-		fmt.Printf("\n=============== %s  ================\n\n", request.Name)
-		request.PrintRequest()
-		var err error
-		if ctx, err = request.ExecuteRequest(t, client, ctx); err != nil {
-			t.Fatalf("failed to execute request: %v, method: %s, url: %s", err, request.Method, request.URL)
-		}
-
-		fmt.Printf("\nSTATUS CODE: %d\n", ctx[request.Name+"_status"])
-		var buf bytes.Buffer
-		encoder := json.NewEncoder(&buf)
-		encoder.SetEscapeHTML(false)
-		encoder.SetIndent("", "  ")
-		if err := encoder.Encode(ctx[request.Name]); err != nil {
-			fmt.Printf("RESPONSE: %s and failed to format response: %v\n", ctx[request.Name], err)
-		} else {
-			fmt.Printf("RESPONSE:\n%s", buf.String())
-		}
-		fmt.Println("===============================")
+	fmt.Printf("\n=============== %s  ================\n\n", r.Name)
+	r.PrintRequest()
+	if _, err := r.ExecuteRequest(t, client, ctx); err != nil {
+		t.Fatalf("failed to execute request: %v, method: %s, url: %s", err, r.Method, r.URL)
 	}
+
+	fmt.Printf("\nSTATUS CODE: %d\n", ctx[r.Name+"_status"])
+	var buf bytes.Buffer
+	encoder := json.NewEncoder(&buf)
+	encoder.SetEscapeHTML(false)
+	encoder.SetIndent("", "  ")
+	if err := encoder.Encode(ctx[r.Name]); err != nil {
+		fmt.Printf("RESPONSE: %s and failed to format response: %v\n", ctx[r.Name], err)
+	} else {
+		fmt.Printf("RESPONSE:\n%s", buf.String())
+	}
+	fmt.Println("===============================")
 }
 
 func (r *Request) ToFlatString() string {

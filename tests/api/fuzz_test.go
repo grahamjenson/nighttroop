@@ -16,7 +16,7 @@ import (
 	"testing"
 
 	"nighttroop.t1d.nz/server"
-	"nighttroop.t1d.nz/tests/dsl/jsonapi"
+	"nighttroop.t1d.nz/tests/dsl/flow"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/testutils"
 )
@@ -42,12 +42,12 @@ func FuzzRequestFiles(f *testing.F) {
 			return nil
 		}
 
-		requestFile, err := jsonapi.ParseRequestFile(embeddedFiles, path)
+		requestFlow, err := flow.Parse(embeddedFiles, path)
 		if err != nil {
 			return nil
 		}
 
-		for _, requests := range requestFile.Requests {
+		for _, requests := range requestFlow.API.Steps {
 			if requests.Body == nil {
 				continue
 			}
