@@ -1876,6 +1876,10 @@ func SyncSourceFromDB(source *controldb.SiteSyncSource, context *security.Securi
 		}
 		sitemodelsSyncSource.TotalBackfills = (*source).TotalBackfills
 		sitemodelsSyncSource.TotalRecords = (*source).TotalRecords
+		if (*source).LastSyncRecords != nil {
+			xint6411 := *(*source).LastSyncRecords
+			sitemodelsSyncSource.LastSyncRecords = &xint6411
+		}
 		pSitemodelsSyncSource = &sitemodelsSyncSource
 	}
 	return pSitemodelsSyncSource, nil

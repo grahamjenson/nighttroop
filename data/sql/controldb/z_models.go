@@ -219,6 +219,8 @@ type SiteSyncSource struct {
 	TotalSyncs                 *int64
 	TotalSuccessfulSyncs       *int64
 	TotalFailedSyncs           *int64
+	TotalRecords               int64
+	LastSyncRecords            *int64
 	ConsecutiveSuccessfulSyncs *int64
 	ConsecutiveFailedSyncs     *int64
 	PreviousSyncErrors         errors.ErrorList
@@ -226,7 +228,6 @@ type SiteSyncSource struct {
 	SuccessEma                 *float64
 	FailureEma                 *float64
 	LastSyncDuration           *int64
-	TotalRecords               int64
 }
 
 type SqliteSequence struct {

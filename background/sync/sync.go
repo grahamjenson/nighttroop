@@ -76,8 +76,9 @@ func (b *SyncJobManager) SyncUserData(syncInfo *SyncJobInfo) error {
 	if added > 0 {
 		b.controlDB.Logs.SyncAddedEvent(syncInfo.ctx, syncInfo.SiteID, syncInfo.Type, added)
 	}
+	records := int64(added)
 	updateError := b.controlDB.Queries.UpdateSyncSourceReportsSuccess(syncInfo.ctx, controldb.UpdateSyncSourceReportsSuccessParams{
-		Records:   int64(added),
+		Records:   &records,
 		ElapsedMs: &elapsedTimeMS,
 		Type:      syncInfo.Type,
 		SiteID:    syncInfo.SiteID,

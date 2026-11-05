@@ -29,8 +29,10 @@ type SyncSource struct {
 	LastBackfillRecords       *int64  `json:"last_backfill_records"`
 	LastBackfillError         *string `json:"last_backfill_error"`
 	TotalBackfills            int64   `json:"total_backfills"`
-	// TotalRecords are the records its syncs and backfills have added in all
-	TotalRecords int64 `json:"total_records"`
+	// TotalRecords are the records its syncs and backfills have added in all, and LastSyncRecords those its last
+	// successful sync added
+	TotalRecords    int64  `json:"total_records"`
+	LastSyncRecords *int64 `json:"last_sync_records"`
 	// RecentEvents and RecentErrors are the newest of the source's events and errors from the logs DB
 	RecentEvents []*SiteEvent `json:"recent_events,omitempty"`
 	RecentErrors []*SiteError `json:"recent_errors,omitempty"`

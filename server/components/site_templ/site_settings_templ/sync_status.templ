@@ -52,6 +52,13 @@ templ syncStatus(source *sitemodels.SyncSource, name string) {
 				@syncStat(name, "records", "Records pulled in") {
 					{ fmt.Sprintf("%d", source.TotalRecords) }
 				}
+				@syncStat(name, "last-records", "Last sync pulled in") {
+					if source.LastSyncRecords != nil {
+						{ fmt.Sprintf("%d records", *source.LastSyncRecords) }
+					} else {
+						-
+					}
+				}
 				@syncStat(name, "backfill", "Last backfill") {
 					if source.TotalBackfills == 0 {
 						Never

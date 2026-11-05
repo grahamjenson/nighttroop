@@ -224,6 +224,8 @@ CREATE TABLE site_sync_sources (
     total_syncs INTEGER DEFAULT 0,
     total_successful_syncs INTEGER DEFAULT 0,
     total_failed_syncs INTEGER DEFAULT 0,
+    total_records INTEGER NOT NULL DEFAULT 0, -- the records its syncs and backfills have added in all
+    last_sync_records INTEGER, -- the records its last successful sync added
 
     consecutive_successful_syncs INTEGER DEFAULT 0,
     consecutive_failed_syncs INTEGER DEFAULT 0,
@@ -237,7 +239,7 @@ CREATE TABLE site_sync_sources (
     failure_ema REAL,
     
     -- Duration of last sync in ms
-    last_sync_duration INTEGER, total_records INTEGER NOT NULL DEFAULT 0,
+    last_sync_duration INTEGER,
 
     -- Unique contraint of site_id and type
     UNIQUE(site_id, type)

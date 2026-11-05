@@ -1908,6 +1908,26 @@ func (m *SiteSyncSource) SetTotalFailedSyncs(v *int64) {
 	m.TotalFailedSyncs = v
 }
 
+// GetTotalRecords returns the TotalRecords value.
+func (m SiteSyncSource) GetTotalRecords() int64 {
+	return m.TotalRecords
+}
+
+// SetTotalRecords sets the TotalRecords value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetTotalRecords(v int64) {
+	m.TotalRecords = v
+}
+
+// GetLastSyncRecords returns the LastSyncRecords value.
+func (m SiteSyncSource) GetLastSyncRecords() *int64 {
+	return m.LastSyncRecords
+}
+
+// SetLastSyncRecords sets the LastSyncRecords value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetLastSyncRecords(v *int64) {
+	m.LastSyncRecords = v
+}
+
 // GetConsecutiveSuccessfulSyncs returns the ConsecutiveSuccessfulSyncs value.
 func (m SiteSyncSource) GetConsecutiveSuccessfulSyncs() *int64 {
 	return m.ConsecutiveSuccessfulSyncs
@@ -1976,16 +1996,6 @@ func (m SiteSyncSource) GetLastSyncDuration() *int64 {
 // SetLastSyncDuration sets the LastSyncDuration value and returns the updated SiteSyncSource.
 func (m *SiteSyncSource) SetLastSyncDuration(v *int64) {
 	m.LastSyncDuration = v
-}
-
-// GetTotalRecords returns the TotalRecords value.
-func (m SiteSyncSource) GetTotalRecords() int64 {
-	return m.TotalRecords
-}
-
-// SetTotalRecords sets the TotalRecords value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetTotalRecords(v int64) {
-	m.TotalRecords = v
 }
 
 // GetName returns the Name value.
@@ -4379,12 +4389,12 @@ func (m *UpdateSyncSourceReportsFailureParams) SetSiteID(v string) {
 }
 
 // GetRecords returns the Records value.
-func (m UpdateSyncSourceReportsSuccessParams) GetRecords() int64 {
+func (m UpdateSyncSourceReportsSuccessParams) GetRecords() *int64 {
 	return m.Records
 }
 
 // SetRecords sets the Records value and returns the updated UpdateSyncSourceReportsSuccessParams.
-func (m *UpdateSyncSourceReportsSuccessParams) SetRecords(v int64) {
+func (m *UpdateSyncSourceReportsSuccessParams) SetRecords(v *int64) {
 	m.Records = v
 }
 

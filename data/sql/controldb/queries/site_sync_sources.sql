@@ -121,7 +121,8 @@ SET
     -- Counters
     total_syncs = total_syncs + 1,
     total_successful_syncs = total_successful_syncs + 1,
-    total_records = total_records + sqlc.arg('Records'),
+    total_records = total_records + COALESCE(sqlc.arg('Records'), 0),
+    last_sync_records = sqlc.arg('Records'),
     
     consecutive_successful_syncs = consecutive_successful_syncs + 1,
     consecutive_failed_syncs = 0,
