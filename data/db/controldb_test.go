@@ -336,7 +336,7 @@ func TestRestoreMissingSites(t *testing.T) {
 	controlDB, err = db.NewControlDB(ctx, &cfg)
 	require.NoError(t, err)
 	t.Cleanup(func() { controlDB.Close() })
-	controlDB.RestoreMissingSites(ctx, download)
+	require.NoError(t, controlDB.RestoreMissingSites(ctx, download))
 	require.Equal(t, 1, downloads, "the batch is downloaded once")
 
 	site, _, err = controlDB.GetSite(ctx, "kostsite")
@@ -380,7 +380,7 @@ func TestRestoreMissingSitesWithoutS3(t *testing.T) {
 	controlDB, err = db.NewControlDB(ctx, &cfg)
 	require.NoError(t, err)
 	t.Cleanup(func() { controlDB.Close() })
-	controlDB.RestoreMissingSites(ctx, s3utils.NewS3Client(&cfg).DownloadFilesFromS3)
+	require.NoError(t, controlDB.RestoreMissingSites(ctx, s3utils.NewS3Client(&cfg).DownloadFilesFromS3))
 
 	_, _, err = controlDB.GetSite(ctx, "kostsite")
 	require.ErrorContains(t, err, "not found in memory")
@@ -389,4 +389,36 @@ func TestRestoreMissingSitesWithoutS3(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, found, 1)
 	require.JSONEq(t, `{"restored":false,"reason":"s3_not_working"}`, *found[0].Attributes)
+}
+
+// A missing site restored from its batch's backup that cannot be opened, as when its migration fails, stops the start,
+// as a site that is there and cannot be opened does, so a release that cannot open it is rolled back
+func TestRestoredSiteThatCannotOpenStopsTheStart(t *testing.T) {
+	cfg := *testutils.GetTestServerConfig()
+	cfg.Mode, cfg.DataDir, cfg.Status.S3Working = consts.Development, t.TempDir(), true
+	ctx := t.Context()
+	controlDB, err := db.NewControlDB(ctx, &cfg)
+	require.NoError(t, err)
+	_, err = controlDB.CreateSiteWithID(ctx, "kostsite")
+	require.NoError(t, err)
+	require.NoError(t, controlDB.Close())
+
+	// Its backup is one a failed migration left dirty
+	backup := filepath.Join(t.TempDir(), "kostsite.sqlite")
+	require.NoError(t, os.Rename(sitedb.GetPath("kostsite", &cfg), backup))
+	raw, err := sql.Open("sqlite", backup)
+	require.NoError(t, err)
+	_, err = raw.Exec("UPDATE schema_migrations SET dirty = 1")
+	require.NoError(t, err)
+	require.NoError(t, raw.Close())
+	download := func(_ context.Context, _ string, outpath string) (int64, bool, error) {
+		data, err := os.ReadFile(backup)
+		require.NoError(t, err)
+		return int64(len(data)), true, os.WriteFile(filepath.Join(outpath, "kostsite.sqlite"), data, 0o600)
+	}
+
+	controlDB, err = db.NewControlDB(ctx, &cfg)
+	require.NoError(t, err)
+	t.Cleanup(func() { controlDB.Close() })
+	require.ErrorIs(t, controlDB.RestoreMissingSites(ctx, download), db.ErrRestoredSiteCannotOpen)
 }
