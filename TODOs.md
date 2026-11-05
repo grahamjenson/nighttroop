@@ -57,9 +57,9 @@
 1. P4: Keep which batches were uploaded, and with which sites, across restarts, as the first backup round after a
    restart uploads every batch again though their backups are current
 1. Migrations (from the audit of what happens when one fails):
-    1. P0: A start where a site cannot be opened still comes up, without it, once Docker restarts it, and `/health`
-       says ok, so `update.sh` keeps the release rather than rolling it back. Fail the start and `/health` instead,
-       and never upload a batch backup that leaves out a live site, which S3's latest would then not have
+    1. P1: A live site whose DB file is missing, and not restored from its batch's backup, still lets the server come up
+       without it and `/health` say ok, so `update.sh` keeps the release rather than rolling it back. Its batch is no
+       longer uploaded without it, so S3's latest keeps the site
     1. P0: At the first production deploy, freeze the migrations: add `data/sql/MIGRATIONS_FROZEN`, so CI refuses a
        change to a migration on main, and add numbered migrations from then on (docs/migrations.md). Then add a test
        that the last release's DBs migrate to the current schema
