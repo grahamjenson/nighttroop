@@ -7,7 +7,8 @@ CLICK #site--settings--sync-button
 ASSERT_STATUS 200
 INPUT #site--settings--nightscout-sync--url http://will_not_pass_the_test.test
 INPUT #site--settings--nightscout-sync--password not_a_token
-CLICK #site--settings--nightscout-sync--enable
+CLICK #site--settings--nightscout-sync--url
+ASSERT_VISIBLE #site--settings--nightscout-sync--enable:checked
 CLICK #site--settings--nightscout-sync--submit
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Sync Updated
