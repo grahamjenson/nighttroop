@@ -56,7 +56,8 @@ jobs:
           git add -N .
           git diff --exit-code || { echo "::error::go generate ./... changed files; run it and commit"; exit 1; }
 
-  # A migration on the base branch has run on DBs, so a change to it would only reach new ones; see docs/migrations.md
+  # Once the migrations are frozen, at the first production deploy, a migration on the base branch has run on DBs, so a
+  # change to it would only reach new ones; see docs/migrations.md
   migrations:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest

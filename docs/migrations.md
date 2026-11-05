@@ -4,14 +4,23 @@ Each DB's schema is made by the numbered SQL files in its `data/sql/<db>/migrati
 [golang-migrate](https://github.com/golang-migrate/migrate) each time the server opens the DB. A DB keeps the version
 it reached in its `schema_migrations` table and only runs the files numbered after it.
 
-## Never change a migration that is on main
+## Until the first production deploy: `000001` can change
 
-A DB at version 1 never runs `000001` again, so a change to it only reaches DBs made afterwards. Every DB made before
-keeps the old schema: an older control DB cannot start ("no such column"), and an older site's DB fails some queries
-or keeps rules, like a `CHECK`, the code no longer expects. CI fails a pull request that changes, deletes or renames
-a migration that is on its base branch (`scripts/check_migrations.sh`, which can be run locally the same way).
+Until then each DB's whole schema is its `000001_init_schema.up.sql`, and a schema change edits it. Staging, the only
+server with data, deletes its DBs when one cannot be migrated and prepared (`scripts/try_migrate_or_delete`), so it
+starts again from the new `000001`. A change that leaves every query working, like a changed `CHECK`, does not reset
+it, so staging keeps the old rule until its DBs are reset.
 
-To change a schema, add the next migration:
+## From the first production deploy: never change a migration that is on main
+
+A DB at version 1 never runs `000001` again, so a change to it would only reach DBs made afterwards. Every DB made
+before would keep the old schema: an older control DB cannot start ("no such column"), and an older site's DB fails
+some queries or keeps rules, like a `CHECK`, the code no longer expects.
+
+So the first production deploy freezes the migrations: it adds `data/sql/MIGRATIONS_FROZEN`. Once that is on a pull
+request's base branch, CI fails the pull request when it changes, deletes or renames a migration on the base branch
+(`scripts/check_migrations.sh`, which can be run locally the same way). From then on, to change a schema, add the next
+migration:
 
 1. Add `data/sql/<db>/migrations/00000N_<what>.up.sql`, numbered after the last, and its `00000N_<what>.down.sql`.
    `go generate` migrates down as a check, so each needs a down file; it can be empty when the change cannot be undone.
