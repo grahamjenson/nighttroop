@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"slices"
@@ -29,9 +28,7 @@ const (
 
 // Runner runs a file's steps in order, with one Socket.IO connection at a time
 type Runner struct {
-	// Handler answers HTTP steps directly, as in .http tests
-	Handler http.Handler
-	// Server is what CONNECT dials, whatever its URL's host, so the Host header still picks the site
+	// Server is what CONNECT and HTTP steps reach, whatever their URL's host, so the Host header still picks the site
 	Server *httptest.Server
 	// RunBackgroundJobs runs every background job, for RUN_BACKGROUND_JOBS
 	RunBackgroundJobs func()
@@ -88,7 +85,7 @@ func (r *Runner) run(t *testing.T, file *File, step *Step, ctx map[string]any) (
 	}
 	if isHTTP(step.Verb) {
 		request := &jsonapi.Request{Name: step.Name, Method: step.Verb, URL: step.Target, Headers: step.Headers, Body: step.Body, Asserts: step.Asserts, Sets: step.Sets}
-		_, err := request.ExecuteRequest(t, r.Handler, ctx)
+		_, err := request.ExecuteRequest(t, jsonapi.Client(r.Server), ctx)
 		return nil, err
 	}
 

@@ -4,11 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
+
+	"nighttroop.t1d.nz/utils/testutils"
 
 	"nighttroop.t1d.nz/tests/dsl/script"
 )
@@ -48,7 +51,17 @@ type Request struct {
 
 // Run runs the file's requests in order against handler, each seeing the values the ones before it SET in ctx,
 // and calls runBackgroundJobs for each RUN_BACKGROUND_JOBS. Each request and its response are printed.
-func (f *RequestFile) Run(t *testing.T, handler http.Handler, ctx map[string]any, runBackgroundJobs func()) {
+// Client sends a file's requests to the test server ts, whatever their host, as they are written: it follows no
+// redirect, so a step sees the response it got, and asks for no compression, so the headers asserted are the server's
+func Client(ts *httptest.Server) *http.Client {
+	client := testutils.HostClient(ts)
+	client.Transport.(*http.Transport).DisableCompression = true
+	client.CheckRedirect = func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
+	return client
+}
+
+// Run sends the file's requests in order with client, and runs runBackgroundJobs for each RUN_BACKGROUND_JOBS
+func (f *RequestFile) Run(t *testing.T, client *http.Client, ctx map[string]any, runBackgroundJobs func()) {
 	t.Helper()
 	for _, request := range f.Requests {
 		if request.RunBackgroundJobs {
@@ -60,7 +73,7 @@ func (f *RequestFile) Run(t *testing.T, handler http.Handler, ctx map[string]any
 		fmt.Printf("\n=============== %s  ================\n\n", request.Name)
 		request.PrintRequest()
 		var err error
-		if ctx, err = request.ExecuteRequest(t, handler, ctx); err != nil {
+		if ctx, err = request.ExecuteRequest(t, client, ctx); err != nil {
 			t.Fatalf("failed to execute request: %v, method: %s, url: %s", err, request.Method, request.URL)
 		}
 
@@ -170,36 +183,40 @@ func (r *Request) buildRealRequest(ctx map[string]any) (*Request, error) {
 	}, nil
 }
 
-func (r *Request) ExecuteRequest(t *testing.T, handler http.Handler, context map[string]any) (outContext map[string]any, err error) {
+func (r *Request) ExecuteRequest(t *testing.T, client *http.Client, context map[string]any) (outContext map[string]any, err error) {
 
 	r, err = r.buildRealRequest(context)
 	if err != nil {
 		return context, err
 	}
 
-	defer func() {
-		if recovered := recover(); recovered != nil {
-			err = fmt.Errorf("httptest.NewRequest panicked: %v", recovered)
-		}
-	}()
-
 	rawBody := ""
 	if r.Body != nil {
 		rawBody = *r.Body
 	}
 
-	req := httptest.NewRequest(r.Method, r.URL, strings.NewReader(rawBody))
+	req, err := http.NewRequestWithContext(t.Context(), r.Method, r.URL, strings.NewReader(rawBody))
+	if err != nil {
+		return context, fmt.Errorf("request %s is not a request: %w", r.Name, err)
+	}
 	for k, vv := range r.Headers {
 		for _, v := range vv {
 			req.Header.Add(k, v)
 		}
 	}
 
-	rr := httptest.NewRecorder()
-	handler.ServeHTTP(rr, req)
+	res, err := client.Do(req)
+	if err != nil {
+		return context, fmt.Errorf("request %s failed: %w", r.Name, err)
+	}
+	defer res.Body.Close()
+	sent, err := io.ReadAll(res.Body)
+	if err != nil {
+		return context, fmt.Errorf("request %s response could not be read: %w", r.Name, err)
+	}
 
 	var out any
-	bodyOut := rr.Body.String()
+	bodyOut := string(sent)
 	if err := json.NewDecoder(strings.NewReader(bodyOut)).Decode(&out); err != nil {
 		fmt.Println("failed to decode json for", r.Name, "error:", err)
 	}
@@ -207,10 +224,9 @@ func (r *Request) ExecuteRequest(t *testing.T, handler http.Handler, context map
 		return context, fmt.Errorf("request %s response body is not valid JSON: %v", r.Name, err)
 	}
 
-	// Result has the headers that were sent; rr.Header() also has ones set too late to be sent
-	headers := rr.Result().Header
+	headers := res.Header
 	context[r.Name] = out
-	context[r.Name+"_status"] = rr.Code
+	context[r.Name+"_status"] = res.StatusCode
 	context[r.Name+"_headers"] = headers
 
 	// EXECUTE THE SETS
@@ -223,7 +239,7 @@ func (r *Request) ExecuteRequest(t *testing.T, handler http.Handler, context map
 
 	// EXECUTE THE ASSERTS
 	for _, assert := range r.Asserts {
-		assert.Execute(t, r.Name, rr.Code, out, headers, context)
+		assert.Execute(t, r.Name, res.StatusCode, out, headers, context)
 	}
 
 	return context, nil
