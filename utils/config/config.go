@@ -433,7 +433,7 @@ func rejectUnknownVariables(dotenv map[string]string) error {
 func (config *ServerConfig) setHostURLs() {
 	config.HostNameWithPort = fmt.Sprintf("%s:%d", config.HostName, config.HostPort)
 	config.HostURL = fmt.Sprintf("%s://%s", config.HostProtocol, config.HostName)
-	config.HostURLWithPort = fmt.Sprintf("%s://%s:%d", config.HostProtocol, config.HostName, config.HostPort)
+	config.HostURLWithPort = config.LinkURL("")
 }
 
 // startServices builds what the server shares across requests from the config, e.g. its rate limiters and keys
@@ -705,19 +705,33 @@ func (config *ServerConfig) IsHTTPS() bool {
 	return config.HostProtocol == "https"
 }
 
+// LinkURL is the address of the host, or of its subdomain when there is one, as links give it. Behind HTTPS it has no
+// port, as the server only serves HTTP on HOST_PORT behind a proxy that takes HTTPS on 443; in development it is
+// reached directly on HOST_PORT.
+func (config *ServerConfig) LinkURL(subdomain string) string {
+	host := config.HostName
+	if subdomain != "" {
+		host = subdomain + "." + host
+	}
+	if !config.IsHTTPS() {
+		host = fmt.Sprintf("%s:%d", host, config.HostPort)
+	}
+	return config.HostProtocol + "://" + host
+}
+
 // RecoverURL is the public page a site's backup key gets a new admin login on
 func (config *ServerConfig) RecoverURL() string {
-	return fmt.Sprintf("%s://%s:%d/recover", config.HostProtocol, config.HostName, config.HostPort)
+	return config.LinkURL("") + "/recover"
 }
 
 // SiteURL is the address of the site with the subdomain
 func (config *ServerConfig) SiteURL(subdomain string) string {
-	return fmt.Sprintf("%s://%s.%s:%d", config.HostProtocol, subdomain, config.HostName, config.HostPort)
+	return config.LinkURL(subdomain)
 }
 
 // SetupURL is the control site's page a new server is set up on
 func (config *ServerConfig) SetupURL() string {
-	return fmt.Sprintf("%s://control.%s:%d/setup", config.HostProtocol, config.HostName, config.HostPort)
+	return config.LinkURL("control") + "/setup"
 }
 
 // ParseTrustedProxies reads comma separated IPs or CIDR ranges, e.g. "127.0.0.1,::1,172.30.0.0/24"
