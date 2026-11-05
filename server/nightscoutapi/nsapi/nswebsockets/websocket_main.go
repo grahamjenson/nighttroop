@@ -45,9 +45,14 @@ func (ws *Websocket) onConnect(main *socketio.Namespace, socket *socketio.Socket
 	socket.On("loadRetro", func(_ []json.RawMessage, ack func(...any)) { ws.handleLoadRetro(s, ack) })
 }
 
-// handleAuthorize keeps what the socket may do, and sends a socket that can read the recent data
+// handleAuthorize keeps what the socket may do, and sends a socket that can read the recent data. As in Nightscout,
+// a token that is no one's is disconnected unanswered, while a wrong API secret is answered that it can do nothing.
 func (ws *Websocket) handleAuthorize(s *mainSocket, message authorizeMessage) any {
-	ctx, authorized := ws.authorize(s.socket, message.Token, message.Secret)
+	ctx, authorized, found := ws.authorize(s.socket, message.Token, message.Secret)
+	if !found && message.Token != "" {
+		s.socket.Disconnect()
+		return nil
+	}
 	s.auth, s.ctx = &authorized, ctx
 
 	s.socket.Emit("connected")

@@ -75,8 +75,8 @@ type recorder interface {
 }
 
 // broadcastChange sends a changed model of the site to its DataReceivers as a delta dataUpdate, and to its /storage
-// subscribers, when it is a Nightscout record
-func (ws *Websocket) broadcastChange(main *socketio.Namespace, event events.Event) {
+// subscribers, when it is a Nightscout record, and a new treatment to its /alarm sockets as a notification
+func (ws *Websocket) broadcastChange(main, alarm *socketio.Namespace, event events.Event) {
 	// An event is sent after the request that made it, so it has a context of its own
 	ctx := context.Background()
 	siteDB, siteModel, err := ws.controlDB.GetSite(ctx, event.SiteID)
@@ -92,6 +92,9 @@ func (ws *Websocket) broadcastChange(main *socketio.Namespace, event events.Even
 		if record, ok := r.Record(event.Model, siteContext); ok {
 			ws.sendDataUpdate(main, collection, record, event.Action)
 			ws.sendToStorage(siteDB, siteModel, event, collection, r)
+			if collection == nsutils.Treatments && event.Action == events.Created {
+				sendTreatmentNotification(alarm, record)
+			}
 			return
 		}
 	}
