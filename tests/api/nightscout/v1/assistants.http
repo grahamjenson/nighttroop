@@ -1,0 +1,99 @@
+// Nightscout's Alexa skill and Google Home action ask /api/v1/alexa and /api/v1/googlehome for the glucose, delta,
+// IOB, COB and uploader battery, said in the site's units, mmol/L for a new site
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET read_token {{ .create_new_site.read_only_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME alexa_no_data
+POST http://{{ site }}/api/v1/alexa?token={{ token }}
+B {"version": "1.0", "session": {"new": true}, "request": {"type": "IntentRequest", "locale": "en-US", "intent": {"name": "NSStatus"}}}
+ASSERT_STATUS 200
+ASSERT_EQUALS "That value is unknown at the moment. Please see your Nightscout site for more details. You have no insulin on board." "@response.outputSpeech.text"
+
+NAME post_entries
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [{"type": "sgv", "sgv": 100, "direction": "FortyFiveUp", "date": {{ itime 5 }}}, {"type": "sgv", "sgv": 110, "direction": "FortyFiveUp", "date": {{ itime 0 }}}]
+ASSERT_STATUS 200
+
+NAME post_devicestatus
+POST http://{{ site }}/api/v1/devicestatus?token={{ token }}
+B {"device": "loop://iPhone", "created_at": "{{ time 0 }}", "uploader": {"battery": 55}, "loop": {"name": "Loop", "timestamp": "{{ time 0 }}", "iob": {"iob": 1.2, "timestamp": "{{ time 0 }}"}, "cob": {"cob": 20, "timestamp": "{{ time 0 }}"}}}
+ASSERT_STATUS 200
+
+NAME alexa_launch
+POST http://{{ site }}/api/v1/alexa?token={{ token }}
+B {"version": "1.0", "session": {"new": true}, "request": {"type": "LaunchRequest", "locale": "en-US"}}
+ASSERT_STATUS 200
+ASSERT_EQUALS "1.0" "@version"
+ASSERT_EQUALS "Welcome to Nightscout" "@response.card.title"
+ASSERT_EQUALS "What would you like to check on Nightscout?" "@response.outputSpeech.text"
+ASSERT_EQUALS "What would you like to check on Nightscout?" "@response.reprompt.outputSpeech.text"
+ASSERT_EQUALS false "@response.shouldEndSession"
+
+NAME alexa_status
+POST http://{{ site }}/api/v1/alexa?token={{ read_token }}
+B {"version": "1.0", "session": {"new": true}, "request": {"type": "IntentRequest", "locale": "en-US", "intent": {"name": "NSStatus"}}}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Full Status" "@response.card.title"
+ASSERT_EQUALS "6.1 and slightly rising as of a few seconds ago. You have 1.20 units of insulin on board." "@response.card.content"
+ASSERT_EQUALS "PlainText" "@response.outputSpeech.type"
+ASSERT_EQUALS true "@response.shouldEndSession"
+
+NAME alexa_metric_delta
+POST http://{{ site }}/api/v1/alexa?token={{ token }}
+B {"version": "1.0", "session": {"new": true}, "request": {"type": "IntentRequest", "locale": "en-US", "intent": {"name": "MetricNow", "slots": {"metric": {"name": "metric", "resolutions": {"resolutionsPerAuthority": [{"status": {"code": "ER_SUCCESS_MATCH"}, "values": [{"value": {"name": "delta"}}]}]}}}}}}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Blood Glucose Delta" "@response.card.title"
+ASSERT_EQUALS "Your delta was +0.6 between a few seconds ago and 5 minutes ago." "@response.outputSpeech.text"
+
+NAME alexa_metric_cob
+POST http://{{ site }}/api/v1/alexa?token={{ token }}
+B {"version": "1.0", "session": {"new": true}, "request": {"type": "IntentRequest", "locale": "en-US", "intent": {"name": "MetricNow", "slots": {"metric": {"name": "metric", "resolutions": {"resolutionsPerAuthority": [{"status": {"code": "ER_SUCCESS_MATCH"}, "values": [{"value": {"name": "cob"}}]}]}}}}}}
+ASSERT_STATUS 200
+ASSERT_EQUALS "You have 20 carbohydrates on board" "@response.outputSpeech.text"
+
+NAME alexa_metric_no_match
+POST http://{{ site }}/api/v1/alexa?token={{ token }}
+B {"version": "1.0", "session": {"new": true}, "request": {"type": "IntentRequest", "locale": "en-US", "intent": {"name": "MetricNow", "slots": {"metric": {"name": "metric", "resolutions": {"resolutionsPerAuthority": [{"status": {"code": "ER_SUCCESS_NO_MATCH"}}]}}}}}}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Unknown Intent" "@response.card.title"
+ASSERT_EQUALS "I'm sorry, I don't know what you're asking for." "@response.outputSpeech.text"
+
+NAME alexa_session_ended
+POST http://{{ site }}/api/v1/alexa?token={{ token }}
+B {"version": "1.0", "session": {"new": false}, "request": {"type": "SessionEndedRequest", "locale": "en-US"}}
+ASSERT_STATUS 200
+
+NAME alexa_no_token
+POST http://{{ site }}/api/v1/alexa
+B {"version": "1.0", "session": {"new": true}, "request": {"type": "IntentRequest", "locale": "en-US", "intent": {"name": "NSStatus"}}}
+ASSERT_STATUS 401
+
+NAME googlehome_metric_bg
+POST http://{{ site }}/api/v1/googlehome?token={{ read_token }}
+B {"queryResult": {"intent": {"displayName": "MetricNow"}, "parameters": {"metric": "bg"}, "languageCode": "en"}}
+ASSERT_STATUS 200
+ASSERT_EQUALS false "@payload.google.expectUserResponse"
+ASSERT_EQUALS "6.1 and slightly rising as of a few seconds ago." "@payload.google.richResponse.items.0.simpleResponse.textToSpeech"
+
+NAME googlehome_metric_iob
+POST http://{{ site }}/api/v1/googlehome?token={{ token }}
+B {"queryResult": {"intent": {"displayName": "MetricNow"}, "parameters": {"metric": "iob"}, "languageCode": "en"}}
+ASSERT_STATUS 200
+ASSERT_EQUALS "You have 1.20 units of insulin on board" "@payload.google.richResponse.items.0.simpleResponse.textToSpeech"
+
+NAME googlehome_uploader_battery
+POST http://{{ site }}/api/v1/googlehome?token={{ token }}
+B {"queryResult": {"intent": {"displayName": "UploaderBattery"}, "parameters": {}, "languageCode": "en"}}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Your uploader battery is at 55%" "@payload.google.richResponse.items.0.simpleResponse.textToSpeech"
+
+NAME googlehome_unknown_intent
+POST http://{{ site }}/api/v1/googlehome?token={{ token }}
+B {"queryResult": {"intent": {"displayName": "NotAnIntent"}, "parameters": {}, "languageCode": "en"}}
+ASSERT_STATUS 200
+ASSERT_EQUALS true "@payload.google.expectUserResponse"
+ASSERT_EQUALS "I'm sorry, I don't know what you're asking for." "@payload.google.richResponse.items.0.simpleResponse.textToSpeech"
