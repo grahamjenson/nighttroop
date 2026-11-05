@@ -134,16 +134,18 @@ templ Summary(summary *sitemodels.Summary) {
 	<div id="site--summary" class="w-full space-y-4 py-4">
 		<div class="flex flex-wrap items-center justify-between gap-2">
 			<div>
-				<h1 class="text-2xl font-bold">Summary</h1>
+				<div class="flex items-center gap-2">
+					<h1 class="text-2xl font-bold">Summary</h1>
+					<span
+						id="site--summary--live"
+						class="hidden text-sm font-medium text-primary"
+						hx-sse:connect="/data/summary/events"
+						hx-on::sse:after:connection="this.classList.remove('hidden'); if (this.dataset.connected) htmx.trigger(this, 'reconnected'); this.dataset.connected = 'true'"
+						hx-on::sse:close="this.classList.add('hidden')"
+						hx-on::sse:error="this.classList.add('hidden')"
+					>● Live</span>
+				</div>
 				<span id="site--summary--hours" class="text-sm text-gray-500">{ fmt.Sprintf("Last %d hours", summary.Hours) }</span>
-				<span
-					id="site--summary--live"
-					class="ml-2 hidden text-sm font-medium text-primary"
-					hx-sse:connect="/data/summary/events"
-					hx-on::sse:after:connection="this.classList.remove('hidden'); if (this.dataset.connected) htmx.trigger(this, 'reconnected'); this.dataset.connected = 'true'"
-					hx-on::sse:close="this.classList.add('hidden')"
-					hx-on::sse:error="this.classList.add('hidden')"
-				>● Live</span>
 			</div>
 			<div class="flex gap-1">
 				for _, r := range ranges {

@@ -194,7 +194,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - Readings are coloured and labelled low, in range or high by the alarm settings.
 - The summary's glucose readings link to the page of every reading, and each treatment's kind (e.g. Insulin) to the
   page of that kind.
-- The summary updates live as new data arrives, and catches up after the page has been in the background.
+- The summary updates live as new data arrives, and catches up after the page has been in the background. While it
+  does, ● Live shows beside its title.
 - A summary with no readings in its time links to the sync settings.
 
 ### Getting started
@@ -263,7 +264,7 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - A working source can be backfilled with the days before its oldest reading.
 - The sync page shows how each source has synced, how often, its backfill and its recent events.
 - The sync page updates as each sync or backfill finishes, showing its new errors, stats and events without reloading,
-  leaving a form being edited as it is and an opened history open.
+  leaving a form being edited as it is and an opened history open. While it does, ● Live shows beside its title.
 - Sync credentials are encrypted at rest.
 - A Nightscout sync on this server's host, or on a private, local or shared (carrier-grade NAT or Tailscale) address,
   is refused when saved and as it connects.
