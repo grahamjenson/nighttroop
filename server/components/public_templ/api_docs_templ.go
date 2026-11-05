@@ -7,10 +7,8 @@ package public_templ
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "nighttroop.t1d.nz/server/assets/docs"
-
-// APIDocs is the API's documentation, generated from its OpenAPI schema, /openapi.json, by go generate (gen/docs):
-// every endpoint with its parameters, body and responses, then every schema they use
+// APIDocs is the API's documentation, Redoc's page of its OpenAPI schema, /openapi.json: a menu of every endpoint
+// and a search beside them, each with its parameters, body, responses and an example, in the site's colours
 func APIDocs() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -40,15 +38,7 @@ func APIDocs() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<article id=\"api-docs\" class=\"mx-auto w-full max-w-5xl px-4 py-10 text-sm leading-6 text-gray-700 [&_a]:text-primary [&_a]:underline [&_code]:rounded [&_code]:bg-gray-100 [&_code]:px-1 [&_code]:font-mono [&_code]:text-xs [&_h1]:mb-4 [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:text-brand-night [&_h2]:mb-2 [&_h2]:mt-10 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-brand-night [&_h3]:mt-4 [&_h3]:font-semibold [&_h3]:text-brand-night [&_li]:mt-1 [&_p]:mt-3 [&_section]:border-t [&_section]:border-gray-200 [&_small]:text-sm [&_small]:font-normal [&_small]:text-gray-500 [&_table]:mt-2 [&_table]:w-full [&_table]:text-left [&_td]:border-t [&_td]:border-gray-100 [&_td]:py-1 [&_td]:pr-4 [&_td]:align-top [&_th]:pr-4 [&_th]:font-medium [&_th]:text-gray-500 [&_ul]:mt-2\">")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templ.Raw(docs.APIDocs).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</article>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"api-docs\" class=\"w-full flex-1\"></div><script src=\"/redoc.standalone.js\"></script> <script>\n\t\t\tRedoc.init(\"/openapi.json\", {\n\t\t\t\texpandResponses: \"200\",\n\t\t\t\ttheme: {\n\t\t\t\t\tcolors: { primary: { main: \"#10203F\" } },\n\t\t\t\t\ttypography: {\n\t\t\t\t\t\tfontFamily: \"ui-sans-serif, system-ui, sans-serif\",\n\t\t\t\t\t\theadings: { fontFamily: \"ui-sans-serif, system-ui, sans-serif\" },\n\t\t\t\t\t\tcode: { fontFamily: \"ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace\" },\n\t\t\t\t\t},\n\t\t\t\t\tsidebar: { backgroundColor: \"#f9fafb\", activeTextColor: \"#10203F\" },\n\t\t\t\t\trightPanel: { backgroundColor: \"#10203F\" },\n\t\t\t\t},\n\t\t\t}, document.getElementById(\"api-docs\"))\n\t\t</script>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

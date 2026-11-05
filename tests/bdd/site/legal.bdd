@@ -26,19 +26,24 @@ ASSERT_TEXT_VISIBLE Consent by Sending Data
 ASSERT_VISIBLE #legal a[href="mailto:nighttroop@t1d.nz"] >> nth=0
 SCREENSHOT privacy
 
-// The API docs, generated from the OpenAPI schema, list each endpoint, link to it and to the schemas it uses, and link
-// to download the schema
+// The API docs, Redoc's page of the OpenAPI schema, have a menu of each endpoint that goes to it, with its body,
+// responses and samples, and a link to download the schema
 CLICK #footer--api-docs
 ASSERT_NEW_PAGE
 ASSERT_PATH /api-docs
-ASSERT_VISIBLE #api-docs h1:has-text("Nighttroop API")
-ASSERT_VISIBLE #api-docs--download[href="/openapi.json"]
-CLICK #api-docs a[href="#Login"]
-ASSERT_VISIBLE #Login h2:has-text("POST /login")
-ASSERT_TEXT_VISIBLE Signs an admin
-CLICK #Login a[href="#schema-LoginToken"]
-ASSERT_VISIBLE #schema-LoginToken
+ASSERT_VISIBLE #api-docs h1:has-text("Nighttroop")
+ASSERT_VISIBLE #api-docs a[download][href$="/openapi.json"]
+CLICK #api-docs li[data-item-id="operation/Login"] label
+ASSERT_VISIBLE #api-docs [id="operation/Login"] h2:has-text("Signs an admin")
+ASSERT_VISIBLE #api-docs [id="operation/Login"] :text("Request samples")
+ASSERT_VISIBLE #api-docs [id="operation/Login"] :text("expires_at") >> nth=0
 SCREENSHOT api_docs
+
+// Its search finds endpoints by name
+CLICK .search-input
+INPUT .search-input Glucose
+CLICK .search-input
+ASSERT_VISIBLE #api-docs [data-role="search:results"] :text("ListGlucoseReadings")
 
 // A site's pages have the footer too, linking to the site's own copies
 INCLUDE steps/new_site_admin.steps
@@ -50,4 +55,4 @@ ASSERT_TEXT_VISIBLE PRIVACY POLICY
 CLICK #footer--api-docs
 ASSERT_NEW_PAGE
 ASSERT_PATH /api-docs
-ASSERT_VISIBLE #api-docs h1:has-text("Nighttroop API")
+ASSERT_VISIBLE #api-docs h1:has-text("Nighttroop")
