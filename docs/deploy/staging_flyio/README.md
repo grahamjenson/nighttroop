@@ -3,8 +3,9 @@
 This guide runs a staging Nighttroop on [Fly.io](https://fly.io) for alpha testing. It is open to everyone, so testers can
 try the newest code.
 
-- **It runs every commit on `main`.** Each time CI passes on `main`, a GitHub Actions workflow builds that commit and
-  deploys it.
+- **It runs the newest commit on `main`, within about half an hour.** Every 30 minutes a GitHub Actions workflow
+  deploys the newest commit on `main` that CI passed on, unless it is already running, rather than deploying every
+  merge.
 - **It keeps its data until a migration change breaks it.** The databases are on a volume, so they last through
   deploys and restarts. When a new version changes a migration so an old database can no longer be migrated, that deploy wipes
   them and starts empty, so a tester never hits data the new version cannot read. Nothing is backed up.
@@ -18,7 +19,7 @@ The files this guide uses:
 | File | What it is |
 | --- | --- |
 | [`fly.toml`](fly.toml) | The Fly.io config for the staging server |
-| [`.github/workflows/deploy-staging.yml`](../../../.github/workflows/deploy-staging.yml) | The workflow that deploys each commit on `main` CI passed on |
+| [`.github/workflows/deploy-staging.yml`](../../../.github/workflows/deploy-staging.yml) | The workflow that deploys the newest commit on `main` CI passed on, every 30 minutes |
 
 ## Contents
 
@@ -28,7 +29,7 @@ The files this guide uses:
 4. [Configure it](#2-configure-it)
 5. [Deploy it the first time](#3-deploy-it-the-first-time)
 6. [Point your domain at it](#4-point-your-domain-at-it)
-7. [Deploy every commit on main](#5-deploy-every-commit-on-main)
+7. [Deploy the newest commit on main](#5-deploy-the-newest-commit-on-main)
 8. [Sign in to the control plane](#6-sign-in-to-the-control-plane)
 9. [Day to day](#day-to-day)
 10. [Troubleshooting](#troubleshooting)
@@ -190,15 +191,21 @@ Check it works:
 - [ ] `curl https://staging.nighttroop.nz/health` prints `{"status":"ok"}`.
 - [ ] <https://staging.nighttroop.nz> shows the public page with the **THIS IS A TEST SITE** banner.
 
-## 5. Deploy every commit on main
+## 5. Deploy the newest commit on main
 
-The **Deploy staging** workflow ([`.github/workflows/deploy-staging.yml`](../../../.github/workflows/deploy-staging.yml)) runs each
-time CI finishes on a push to `main`.
+The **Deploy staging** workflow ([`.github/workflows/deploy-staging.yml`](../../../.github/workflows/deploy-staging.yml)) runs every
+30 minutes, at 7 and 37 minutes past the hour, so staging is at most about half an hour behind `main` without a deploy
+for every merge.
 
-- **When CI passed,** it checks out that commit and deploys it with the same command as above, building the image on
-  Fly's builders.
-- **When CI failed,** that commit is not deployed, so testers keep the last version that passed.
-- **When a newer commit arrives mid-deploy,** it cancels the older deploy.
+- **It deploys the newest commit on `main` CI passed on.** It checks that commit out and deploys it with the same
+  command as above, building the image on Fly's builders. A commit CI failed on, or hasn't finished, is not deployed,
+  so testers keep the last version that passed.
+- **When that commit is already deployed,** the run stops after a few seconds. A small Actions cache entry, saved after
+  each deploy, marks what is deployed; one unused for a week is evicted, which only means one more deploy of the same
+  commit.
+- **Cost:** each run is billed as at least a minute, so the checks alone are about 48 minutes a day, plus a few minutes
+  for each deploy. Change the `cron` line to run less often, e.g. `'7 * * * *'` for hourly.
+- **A run that starts mid-deploy** waits for it to finish rather than cancelling it.
 - **It does nothing until you turn it on:**
   1. Make a deploy token for the app:
 
@@ -209,8 +216,8 @@ time CI finishes on a push to `main`.
   2. In the repository's **Settings → Secrets and variables → Actions**:
      - add the secret **`FLY_API_TOKEN`**, holding the whole token, including its `FlyV1 ` prefix;
      - add the variable **`STAGING_FLYIO_APP`**, holding the app's name, e.g. `nighttroop-staging`.
-  3. To deploy now, without waiting for a commit, run **Deploy staging** from the repository's **Actions** tab
-     (**Run workflow**). A manual run deploys the head of `main`.
+  3. To deploy now, without waiting for the next run, run **Deploy staging** from the repository's **Actions** tab
+     (**Run workflow**). A manual run deploys the newest commit on `main` CI passed on, even if it is already deployed.
 
 To stop deploying, delete the `STAGING_FLYIO_APP` variable. To stop the server too, run
 `fly scale count 0 --app nighttroop-staging`, or `fly apps destroy nighttroop-staging` to remove it.
@@ -277,5 +284,6 @@ deploy with `--ha=false`, as the workflow does.
 
 ### The Deploy staging workflow is skipped
 
-- It runs only after CI passes on a push to `main`, and only when the `STAGING_FLYIO_APP` variable is set.
-- A run that fails with `unauthorized` needs a new `FLY_API_TOKEN`, from [step 5](#5-deploy-every-commit-on-main).
+- It runs every 30 minutes and only when the `STAGING_FLYIO_APP` variable is set, and it deploys only a commit CI
+  passed on that isn't already deployed. GitHub may run a scheduled workflow a little late when it is busy.
+- A run that fails with `unauthorized` needs a new `FLY_API_TOKEN`, from [step 5](#5-deploy-the-newest-commit-on-main).
