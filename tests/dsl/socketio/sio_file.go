@@ -8,12 +8,13 @@
 package socketio
 
 import (
-	"bufio"
 	"fmt"
 	"net/http"
 	"slices"
 	"strings"
 	"time"
+
+	"nighttroop.t1d.nz/tests/dsl/script"
 
 	"nighttroop.t1d.nz/tests/dsl/jsonapi"
 )
@@ -56,17 +57,15 @@ func (f *File) Events() []string {
 }
 
 func ParseFile(contents string, path string) (*File, error) {
+	lines, err := script.SplitLines([]byte(contents), path, nil)
+	if err != nil {
+		return nil, err
+	}
 	file := &File{Path: path}
 	var current *Step
 	inBody := false
-	scanner := bufio.NewScanner(strings.NewReader(contents))
-	for lineNumber := 1; scanner.Scan(); lineNumber++ {
-		line := strings.TrimSpace(scanner.Text())
-		if line == "" || strings.HasPrefix(line, "#") || strings.HasPrefix(line, "//") {
-			continue
-		}
-		first, second, _ := strings.Cut(line, " ")
-		second = strings.TrimSpace(second)
+	for _, l := range lines {
+		line, first, second, lineNumber := l.Text, l.First, l.Rest, l.Number
 		fail := func(format string, args ...any) error {
 			return fmt.Errorf("%s:%d: %s", path, lineNumber, fmt.Sprintf(format, args...))
 		}
@@ -133,9 +132,6 @@ func ParseFile(contents string, path string) (*File, error) {
 		default:
 			return nil, fail("unknown line %q", line)
 		}
-	}
-	if err := scanner.Err(); err != nil {
-		return nil, err
 	}
 	for _, step := range file.Steps {
 		if step.Verb == "" {

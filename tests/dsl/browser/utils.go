@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"io"
 	"strings"
-	"text/template"
-	"time"
 
 	"github.com/mxschmitt/playwright-go"
 	"golang.org/x/net/html"
@@ -92,51 +90,6 @@ func PrettifyHTML(input string) string {
 	}
 
 	return buf.String()
-}
-
-func renderTemplate(input string, ctx map[string]any) (string, error) {
-	tmpl, err := template.New("req").
-		Option("missingkey=error").
-		Funcs(template.FuncMap{
-			"server_url": func() string {
-				return ctx["server_url"].(string)
-			},
-			"site": func() string {
-				if v, ok := ctx["site"]; ok && v != nil {
-					return ctx["site"].(string)
-				}
-				return ctx["default_site"].(string)
-			},
-			// now is the time in a timezone, e.g. {{ now "Pacific/Auckland" "2006-01-02 15:" }}
-			"now": func(zone string, layout string) (string, error) {
-				location, err := time.LoadLocation(zone)
-				if err != nil {
-					return "", err
-				}
-				return time.Now().In(location).Format(layout), nil
-			},
-			// replace is s with each old replaced by new, e.g. {{ replace ".localhost" ".ns.localhost" .site_url }}
-			"replace": func(old, new, s string) string {
-				return strings.ReplaceAll(s, old, new)
-			},
-			"jwt": func() string {
-				if v, ok := ctx["jwt"]; ok && v != nil {
-					return ctx["jwt"].(string)
-				}
-				return ctx["default_jwt"].(string)
-			},
-		}).
-		Parse(input)
-	if err != nil {
-		return "", err
-	}
-
-	var buf bytes.Buffer
-	if err := tmpl.Execute(&buf, ctx); err != nil {
-		return "", err
-	}
-
-	return buf.String(), nil
 }
 
 func getLocator(expected any, page playwright.Page) playwright.Locator {

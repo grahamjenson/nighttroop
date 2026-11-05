@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"nighttroop.t1d.nz/tests/dsl/script"
+
 	"github.com/mxschmitt/playwright-go"
 )
 
@@ -59,7 +61,7 @@ func (r *Goto) AddAssert(assert Assert) {
 
 func (r *Goto) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
 
-	url, err := renderTemplate(r.URL, ctx)
+	url, err := script.Render(r.URL, ctx)
 	if err != nil {
 		t.Fatalf(
 			"\n\n GOTO FAILED \n %s: %v \n\n",
@@ -125,11 +127,11 @@ func (r *Post) PrintAction() {
 }
 
 func (r *Post) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
-	url, err := renderTemplate(r.URL, ctx)
+	url, err := script.Render(r.URL, ctx)
 	if err != nil {
 		t.Fatalf("%s: %v", r.ToErrorLine("Error Rendering URL"), err)
 	}
-	body, err := renderTemplate(r.Body, ctx)
+	body, err := script.Render(r.Body, ctx)
 	if err != nil {
 		t.Fatalf("%s: %v", r.ToErrorLine("Error Rendering Body"), err)
 	}
@@ -416,7 +418,7 @@ func (r *Input) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 	}
 
 	// The value can be one saved earlier, e.g. INPUT #key {{ .backup_key }}
-	value, err := renderTemplate(r.Value, ctx)
+	value, err := script.Render(r.Value, ctx)
 	if err != nil {
 		t.Fatalf("\n\n %s: %v \n\n", r.ToErrorLine("Error Rendering value"), err)
 	}
@@ -540,7 +542,7 @@ func (r *SetCookie) PrintAction() {
 }
 
 func (r *SetCookie) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
-	value, err := renderTemplate(r.Value, ctx)
+	value, err := script.Render(r.Value, ctx)
 	if err != nil {
 		t.Fatalf("\n\n %s: %v \n\n", r.ToErrorLine("Error Rendering value"), err)
 	}

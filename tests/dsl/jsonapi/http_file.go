@@ -1,14 +1,14 @@
 package jsonapi
 
 import (
-	"bufio"
 	"fmt"
 	"io/fs"
 	"net/http"
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
+
+	"nighttroop.t1d.nz/tests/dsl/script"
 )
 
 // ParseRequestFile reads the requests of the file at path in fsys, and of the files it INCLUDEs
@@ -27,63 +27,24 @@ func ParseRequestFile(fsys fs.FS, path string) (*RequestFile, error) {
 }
 
 func parseFile(fsys fs.FS, path string) ([]*Request, error) {
-	file, err := fsys.Open(path)
+	lines, err := script.ReadLines(fsys, path)
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
-	scanner := bufio.NewScanner(file)
 
 	var requests []*Request
 	var current *Request
 
-	fmt.Println("Parsing request file:", path)
 	flush := func() {
 		if current != nil {
 			requests = append(requests, current)
 			current = nil
 		}
 	}
-	lineNumber := 0
 	inBody := false
-	for scanner.Scan() {
-		lineNumber += 1
-		raw := scanner.Text()
-		line := strings.TrimSpace(raw)
-
-		if line == "" {
-			continue
-		}
-
-		// Continuation of body
-
-		if strings.HasPrefix(line, "#") || strings.HasPrefix(line, "//") {
-			continue
-		}
-
-		split := strings.SplitN(line, " ", 2)
-		if len(split) == 0 {
-			continue
-		}
-		second := ""
-		if len(split) > 1 {
-			second = strings.TrimSpace(split[1])
-		}
-		first := strings.TrimSpace(split[0])
-
+	for _, l := range lines {
+		line, first, second, lineNumber, path := l.Text, l.First, l.Rest, l.Number, l.Path
 		switch first {
-		case "INCLUDE":
-			// Another file's requests, e.g. creating a site and getting its JWT, run here as if written out
-			inBody = false
-			flush()
-			included, err := parseFile(fsys, second)
-			if err != nil {
-				return nil, fmt.Errorf("%s:%d: INCLUDE %s: %w", path, lineNumber, second, err)
-			}
-			// A SET or assert after it goes on its last request
-			if len(included) > 0 {
-				requests, current = append(requests, included[:len(included)-1]...), included[len(included)-1]
-			}
 		case "NAME":
 			inBody = false
 			flush()
@@ -176,10 +137,6 @@ func parseFile(fsys fs.FS, path string) ([]*Request, error) {
 
 	flush()
 
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-
 	return requests, nil
 }
 
@@ -222,53 +179,4 @@ func ParseAssert(first, second, path string, lineNumber int) (Assert, bool, erro
 		return AssertLength{Path: path, Line: lineNumber, Expected: int(length), Actual: actual}, true, nil
 	}
 	return nil, false, nil
-}
-
-func templateTime(offset int) string {
-	// top of the minute
-	t := time.Now().Add(-time.Duration(offset) * time.Minute)
-	return t.Format(time.RFC3339)
-}
-
-// templateDayTime is minutes after midnight, in UTC, the day days from today, e.g. daytime -1 720 for noon yesterday
-func templateDayTime(days, minutes int) time.Time {
-	now := time.Now().UTC()
-	return time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC).AddDate(0, 0, days).Add(time.Duration(minutes) * time.Minute)
-}
-
-func templateITime(offset int) int64 {
-	// top of the minute
-	t := time.Now().Add(-time.Duration(offset) * time.Minute)
-	return t.UnixMilli()
-}
-
-func templateDig(root any, path string) any {
-
-	parts := strings.Split(path, ".")
-	var cur = root
-
-	for _, p := range parts {
-		switch v := cur.(type) {
-
-		case map[string]any:
-			next, ok := v[p]
-			if !ok {
-				return nil
-			}
-			cur = next
-
-		case []any:
-			// allow numeric indexing into slices
-			i, err := strconv.Atoi(p)
-			if err != nil || i < 0 || i >= len(v) {
-				return nil
-			}
-			cur = v[i]
-
-		default:
-			return nil
-		}
-	}
-
-	return cur
 }
