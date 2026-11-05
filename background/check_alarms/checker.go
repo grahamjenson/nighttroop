@@ -110,34 +110,17 @@ func (c *Checker) Check(ctx context.Context, all bool) error {
 
 // checkSite checks each of a site's enabled identities' alarms, forgetting those of any identity gone
 func (c *Checker) checkSite(ctx context.Context, siteID string, now int64) error {
-	live := c.controlDB.Live.Queries
-	keptRows, err := live.SiteAlarms(ctx, livedb.SiteAlarmsParams{SiteID: siteID})
+	kept, err := c.loadKept(ctx, siteID)
 	if err != nil {
 		return err
 	}
-	kept := map[int64]keptAlarms{}
-	for _, row := range keptRows {
-		if kept[row.IdentityID] == nil {
-			kept[row.IdentityID] = keptAlarms{}
-		}
-		kept[row.IdentityID][row.Type] = row
-	}
-
 	siteDB, site, err := c.controlDB.GetSite(ctx, siteID)
 	if err != nil || site == nil || siteDB == nil {
 		return errors.Join(err, c.forget(ctx, kept, nil))
 	}
-	identities, err := c.controlDB.Queries.AllSiteIdentities(ctx, controldb.AllSiteIdentitiesParams{SiteID: siteID})
+	turnedOn, err := c.alarmsToCheck(ctx, siteID, site, kept)
 	if err != nil {
 		return err
-	}
-
-	turnedOn := map[int64][]alarms.Alarm{}
-	for _, identity := range identities {
-		on := alarms.FromSettings(settings.NewCombinedSettingsMap(site, identity))
-		if identity.Enabled && (len(on) > 0 || kept[identity.ID] != nil) {
-			turnedOn[identity.ID] = on
-		}
 	}
 	if err := c.forget(ctx, kept, turnedOn); err != nil || len(turnedOn) == 0 {
 		return err
@@ -145,16 +128,9 @@ func (c *Checker) checkSite(ctx context.Context, siteID string, now int64) error
 	if err := giveDeviceStatuses(ctx, siteDB.Queries(), turnedOn); err != nil {
 		return err
 	}
-
-	rows, err := siteDB.Queries().AlarmGlucoseReadings(ctx, sitedb.AlarmGlucoseReadingsParams{Minutes: settings.MaxAlarmMinutes, Limit: maxReadings})
+	readings, err := alarmReadings(ctx, siteDB.Queries())
 	if err != nil {
 		return err
-	}
-	// The same glucose from more than one source is one reading, so it counts once
-	cleaned := glucose.CleanReadings(rows)
-	readings := make([]alarms.Reading, len(cleaned))
-	for i, c := range cleaned {
-		readings[i] = alarms.Reading{At: c.Row.OccurredAt, Mgdl: c.Row.Mgdl}
 	}
 
 	var errs []error
@@ -165,17 +141,74 @@ func (c *Checker) checkSite(ctx context.Context, siteID string, now int64) error
 		if len(checked.Notifications) > 0 || !slices.Equal(checked.Alerting, checked.WasAlerting) {
 			c.events.Publish(siteID, events.Event{Name: events.Alarm, SiteID: siteID, Attributes: checked, StartedAt: time.UnixMilli(now)})
 		}
-		for _, t := range alarms.Types {
-			s, keep := result.State[t]
-			row := &livedb.Alarm{SiteID: siteID, IdentityID: identityID, Type: t, ActiveSince: s.ActiveSince, NotifiedAt: s.NotifiedAt,
-				SnoozedUntil: s.SnoozedUntil, Alerting: slices.Contains(checked.Alerting, t)}
-			if keep {
-				errs = append(errs, live.UpsertAlarm(ctx, livedb.UpsertAlarmParams(*row)))
-			} else if last[t] != nil {
-				errs = append(errs, live.DeleteAlarm(ctx, livedb.DeleteAlarmParams{SiteID: siteID, IdentityID: identityID, Type: t, SnoozedUntil: last[t].SnoozedUntil}))
-			}
-			c.publishChange(ctx, siteID, last[t], row)
+		errs = append(errs, c.keep(ctx, siteID, identityID, last, result.State, checked.Alerting))
+	}
+	return errors.Join(errs...)
+}
+
+// loadKept reads a site's alarms kept in the live DB from its last check, by identity
+func (c *Checker) loadKept(ctx context.Context, siteID string) (map[int64]keptAlarms, error) {
+	rows, err := c.controlDB.Live.Queries.SiteAlarms(ctx, livedb.SiteAlarmsParams{SiteID: siteID})
+	if err != nil {
+		return nil, err
+	}
+	kept := map[int64]keptAlarms{}
+	for _, row := range rows {
+		if kept[row.IdentityID] == nil {
+			kept[row.IdentityID] = keptAlarms{}
 		}
+		kept[row.IdentityID][row.Type] = row
+	}
+	return kept, nil
+}
+
+// alarmsToCheck are the alarms of each of a site's enabled identities, by identity: those its settings turn on,
+// and none for one that turned them all off but still has some kept, so they are cleared
+func (c *Checker) alarmsToCheck(ctx context.Context, siteID string, site *controldb.Site, kept map[int64]keptAlarms) (map[int64][]alarms.Alarm, error) {
+	identities, err := c.controlDB.Queries.AllSiteIdentities(ctx, controldb.AllSiteIdentitiesParams{SiteID: siteID})
+	if err != nil {
+		return nil, err
+	}
+	turnedOn := map[int64][]alarms.Alarm{}
+	for _, identity := range identities {
+		on := alarms.FromSettings(settings.NewCombinedSettingsMap(site, identity))
+		if identity.Enabled && (len(on) > 0 || kept[identity.ID] != nil) {
+			turnedOn[identity.ID] = on
+		}
+	}
+	return turnedOn, nil
+}
+
+// alarmReadings are a site's glucose readings over the longest alarm, the same glucose from more than one source
+// counting once
+func alarmReadings(ctx context.Context, q *sitedb.Queries) ([]alarms.Reading, error) {
+	rows, err := q.AlarmGlucoseReadings(ctx, sitedb.AlarmGlucoseReadingsParams{Minutes: settings.MaxAlarmMinutes, Limit: maxReadings})
+	if err != nil {
+		return nil, err
+	}
+	cleaned := glucose.CleanReadings(rows)
+	readings := make([]alarms.Reading, len(cleaned))
+	for i, clean := range cleaned {
+		readings[i] = alarms.Reading{At: clean.Row.OccurredAt, Mgdl: clean.Row.Mgdl}
+	}
+	return readings, nil
+}
+
+// keep saves an identity's checked state in the live DB for its next check, upserting each alarm with a state and
+// deleting those kept from the last check without one, and publishes each alarm's change
+func (c *Checker) keep(ctx context.Context, siteID string, identityID int64, last keptAlarms, state alarms.State, alerting []alarms.Type) error {
+	live := c.controlDB.Live.Queries
+	var errs []error
+	for _, t := range alarms.Types {
+		s, keep := state[t]
+		row := &livedb.Alarm{SiteID: siteID, IdentityID: identityID, Type: t, ActiveSince: s.ActiveSince, NotifiedAt: s.NotifiedAt,
+			SnoozedUntil: s.SnoozedUntil, Alerting: slices.Contains(alerting, t)}
+		if keep {
+			errs = append(errs, live.UpsertAlarm(ctx, livedb.UpsertAlarmParams(*row)))
+		} else if last[t] != nil {
+			errs = append(errs, live.DeleteAlarm(ctx, livedb.DeleteAlarmParams{SiteID: siteID, IdentityID: identityID, Type: t, SnoozedUntil: last[t].SnoozedUntil}))
+		}
+		c.publishChange(ctx, siteID, last[t], row)
 	}
 	return errors.Join(errs...)
 }
