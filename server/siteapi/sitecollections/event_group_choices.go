@@ -52,7 +52,7 @@ func EventGroupChoicesHandler(w http.ResponseWriter, r *http.Request) {
 	picked := map[string]*string{}
 	if params.GroupID != "" {
 		group, err := q.GetEventGroupWithoutJoins(r.Context(), sitedb.GetEventGroupWithoutJoinsParams{ID: params.GroupID})
-		if herr := answer(err, "event_groups"); herr != nil {
+		if herr := apiutils.ErrorFor(err, "event_groups"); herr != nil {
 			writeError(w, r, siteContext.AcceptType, herr)
 			return
 		}
@@ -63,7 +63,7 @@ func EventGroupChoicesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	from, to := at.Add(-eventChoicesWindow).UnixMilli(), at.Add(eventChoicesWindow).UnixMilli()
 	rows, err := q.EventsToGroup(r.Context(), sitedb.EventsToGroupParams{GroupID: params.GroupID, From: from, To: to})
-	if herr := answer(err, "event_groups"); herr != nil {
+	if herr := apiutils.ErrorFor(err, "event_groups"); herr != nil {
 		writeError(w, r, siteContext.AcceptType, herr)
 		return
 	}
