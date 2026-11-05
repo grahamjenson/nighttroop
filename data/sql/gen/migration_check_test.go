@@ -144,3 +144,15 @@ INSERT INTO settings (id) VALUES (1);`)
 	require.NoError(t, db.QueryRow(`SELECT COUNT(*) FROM settings`).Scan(&settings))
 	require.Equal(t, 1, settings)
 }
+
+// A table of only a row ID gets its rows too
+func TestSeedLimitsTableOfOnlyARowID(t *testing.T) {
+	db := openTestDB(t)
+	_, err := db.Exec(`CREATE TABLE ids (id INTEGER PRIMARY KEY) STRICT;`)
+	require.NoError(t, err)
+	require.NoError(t, SeedLimits(db))
+
+	var count int
+	require.NoError(t, db.QueryRow(`SELECT COUNT(*) FROM ids`).Scan(&count))
+	require.Equal(t, 2, count)
+}

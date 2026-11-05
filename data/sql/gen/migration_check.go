@@ -257,7 +257,12 @@ func SeedLimits(db *sql.DB) error {
 				values = append(values, value)
 			}
 			marks := strings.TrimSuffix(strings.Repeat("?, ", len(values)), ", ")
-			result, err := db.Exec(fmt.Sprintf(`INSERT INTO "%s" (%s) VALUES (%s)`, table, strings.Join(names, ", "), marks), values...)
+			insert := fmt.Sprintf(`INSERT INTO "%s" (%s) VALUES (%s)`, table, strings.Join(names, ", "), marks)
+			// A table of only a row ID has no column to give
+			if len(names) == 0 {
+				insert = fmt.Sprintf(`INSERT INTO "%s" DEFAULT VALUES`, table)
+			}
+			result, err := db.Exec(insert, values...)
 			if err != nil && strings.Contains(err.Error(), "UNIQUE constraint failed") {
 				continue
 			}
