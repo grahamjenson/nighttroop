@@ -90,6 +90,7 @@ func Login() templ.Component {
 					Name:        "name",
 					Placeholder: "admin",
 					Required:    true,
+					Attributes:  templ.Attributes{"autocomplete": "username", "autocapitalize": "none"},
 				}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -146,6 +147,7 @@ func Login() templ.Component {
 					Name:        "password",
 					Placeholder: "••••••••",
 					Required:    true,
+					Attributes:  templ.Attributes{"autocomplete": "current-password"},
 				}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err

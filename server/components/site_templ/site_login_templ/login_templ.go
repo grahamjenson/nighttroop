@@ -95,6 +95,7 @@ func Login() templ.Component {
 						"autocapitalize": "none",
 						"autocorrect":    "off",
 						"autofocus":      "true",
+						"autocomplete":   "username",
 					},
 				}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
@@ -152,6 +153,7 @@ func Login() templ.Component {
 					Name:        "password",
 					Placeholder: "••••••••",
 					Required:    true,
+					Attributes:  templ.Attributes{"autocomplete": "current-password"},
 				}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
