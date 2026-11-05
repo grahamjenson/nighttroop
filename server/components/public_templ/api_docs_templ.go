@@ -7,8 +7,10 @@ package public_templ
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-// APIDocs shows the API's OpenAPI schema, /openapi.json, as documentation, drawn by Redoc
-// (https://github.com/Redocly/redoc, redoc.standalone.js from its npm package, MIT licensed) in Nighttroop's colours
+import "nighttroop.t1d.nz/server/assets/docs"
+
+// APIDocs is the API's documentation, generated from its OpenAPI schema, /openapi.json, by go generate (gen/docs):
+// every endpoint with its parameters, body and responses, then every schema they use
 func APIDocs() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -38,7 +40,15 @@ func APIDocs() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"api-docs\" class=\"flex-1\"><redoc spec-url=\"/openapi.json\" theme='{\"colors\":{\"primary\":{\"main\":\"#10203F\"}},\"sidebar\":{\"backgroundColor\":\"#F9FAFB\"}}'></redoc></div><script src=\"/redoc.standalone.js\"></script>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<article id=\"api-docs\" class=\"mx-auto w-full max-w-5xl px-4 py-10 text-sm leading-6 text-gray-700 [&_a]:text-primary [&_a]:underline [&_code]:rounded [&_code]:bg-gray-100 [&_code]:px-1 [&_code]:font-mono [&_code]:text-xs [&_h1]:mb-4 [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:text-brand-night [&_h2]:mb-2 [&_h2]:mt-10 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-brand-night [&_h3]:mt-4 [&_h3]:font-semibold [&_h3]:text-brand-night [&_li]:mt-1 [&_p]:mt-3 [&_section]:border-t [&_section]:border-gray-200 [&_small]:text-sm [&_small]:font-normal [&_small]:text-gray-500 [&_table]:mt-2 [&_table]:w-full [&_table]:text-left [&_td]:border-t [&_td]:border-gray-100 [&_td]:py-1 [&_td]:pr-4 [&_td]:align-top [&_th]:pr-4 [&_th]:font-medium [&_th]:text-gray-500 [&_ul]:mt-2\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.Raw(docs.APIDocs).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</article>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
