@@ -14,7 +14,9 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
+	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitesettings"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -211,4 +213,42 @@ func TestEventsHandlerStreamsAnIdentitysOwnRowsToItAlone(t *testing.T) {
 	bus.Publish("site-a", events.Event{SiteID: "site-a", Action: events.Created, Model: &ownedRow{IdentityID: 7}})
 	bus.Publish("site-a", events.Event{SiteID: "site-a", Action: events.Updated, Model: &ownedRow{IdentityID: 0}})
 	require.Equal(t, "event: updated\ndata: {\"IdentityID\":0}\n", nextEvent(t, stream))
+}
+
+// Settings changes are streamed only to whom they may be shown: an identity's own to it, the site's to an admin, and
+// any identity's to an admin's stream of other identities' settings
+func TestEventsHandlerStreamsSettingsToWhoseTheyAre(t *testing.T) {
+	// The stream's identity has ID 0
+	own, other := int64(0), int64(7)
+	changes := map[string]*sitemodels.Settings{
+		"site": {Units: new("site")}, "other": {Units: new("other"), OwnerID: &other}, "own": {Units: new("own"), OwnerID: &own},
+	}
+	tests := []struct {
+		name       string
+		collection *sitesettings.SettingsCollection
+		role       consts.IdentityRole
+		// published are the changes made, the last always streamed, and want those streamed
+		published, want []string
+	}{
+		{"a user's own", &sitesettings.SettingsCollection{}, consts.IdentityRoleUser, []string{"site", "other", "own"}, []string{"own"}},
+		{"a read only device's own", &sitesettings.SettingsCollection{}, consts.IdentityRoleDeviceRead, []string{"other", "site", "own"}, []string{"own"}},
+		{"a user's alarms", &sitesettings.SettingsCollection{Alarms: true}, consts.IdentityRoleUser, []string{"site", "other", "own"}, []string{"own"}},
+		{"an admin's own and the site's", &sitesettings.SettingsCollection{}, consts.IdentityRoleAdmin, []string{"other", "site", "own"}, []string{"site", "own"}},
+		{"an admin's alarms and the site's", &sitesettings.SettingsCollection{Alarms: true}, consts.IdentityRoleAdmin, []string{"other", "site", "own"}, []string{"site", "own"}},
+		{"the site's", &sitesettings.SettingsCollection{Site: true}, consts.IdentityRoleAdmin, []string{"other", "own", "site"}, []string{"site"}},
+		{"other identities'", &sitesettings.SettingsCollection{Other: true}, consts.IdentityRoleAdmin, []string{"site", "own", "other"}, []string{"own", "other"}},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			streams := newStreams(t)
+			resp, stream := eventStream(t, streams, "site-a", test.role, EventsHandler(test.collection))
+			require.Equal(t, http.StatusOK, resp.StatusCode)
+			for _, change := range test.published {
+				streams.bus.Publish("site-a", events.Event{SiteID: "site-a", Action: events.Updated, Model: changes[change]})
+			}
+			for _, want := range test.want {
+				require.True(t, strings.HasPrefix(nextEvent(t, stream), "event: updated\ndata: {\"units\":\""+want+"\""), "want %s", want)
+			}
+		})
+	}
 }

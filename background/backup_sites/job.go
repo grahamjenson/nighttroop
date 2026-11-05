@@ -256,6 +256,11 @@ func backupIsCurrent(site *db.SiteDB) bool {
 // DB queries
 // ////
 
+// ErrSiteNotOpen is a live site left out of its batch because its DB is not open. Uploading the batch without it would
+// make S3's latest backup of the batch lack a live site, so the batch is not uploaded.
+var ErrSiteNotOpen = errors.New("a live site is not open")
+
+// GetSiteBatch is the open DBs of the live and disabled sites in batch char, or ErrSiteNotOpen if any is not open
 func GetSiteBatch(ctx context.Context, controlDB *db.ControlDB, char string) ([]*db.SiteDB, error) {
 
 	sites := []*db.SiteDB{}
@@ -266,7 +271,11 @@ func GetSiteBatch(ctx context.Context, controlDB *db.ControlDB, char string) ([]
 		return sites, fmt.Errorf("cannot query sites: %w", err)
 	}
 
-	return controlDB.GetSiteDBsFromModels(res), nil
+	open := controlDB.GetSiteDBsFromModels(res)
+	if len(open) != len(res) {
+		return open, fmt.Errorf("%w: %d of %d sites in batch %s", ErrSiteNotOpen, len(res)-len(open), len(res), char)
+	}
+	return open, nil
 }
 
 // GetNeverUsedSites retrieves sites that have never been logged into

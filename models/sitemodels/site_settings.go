@@ -47,6 +47,9 @@ type Settings struct {
 	// IdentityID and IdentityName are whose settings these are, when an admin is changing another identity's
 	IdentityID   *int64  `json:"identity_id,omitempty"`
 	IdentityName *string `json:"identity_name,omitempty"`
+	// OwnerID is the identity whose own settings these are, or nil for the site's, so a change to them is streamed
+	// only to whom they may be shown
+	OwnerID *int64 `json:"-"`
 }
 
 // Fields are the settings by name, to read or set

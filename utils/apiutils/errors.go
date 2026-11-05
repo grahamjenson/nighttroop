@@ -1,6 +1,8 @@
 package apiutils
 
 import (
+	"database/sql"
+	"errors"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -87,13 +89,20 @@ var (
 	}
 )
 
-// WriteError is the error for a failed create or update of what, e.g. "glucose reading":
-// the database refusing a value says why, anything else is logged
-func WriteError(err error, what string) *HTTPError {
-	if utilerrors.IsSQLUniqueViolationError(err) {
+// ErrorFor is the response to an error reading or writing what, e.g. "glucose_readings": nil for none, its own
+// HTTPError, not found for a missing row, or the database refusing a value says why; anything else is logged
+func ErrorFor(err error, what string) *HTTPError {
+	var herr *HTTPError
+	switch {
+	case err == nil:
+		return nil
+	case errors.As(err, &herr):
+		return herr
+	case errors.Is(err, sql.ErrNoRows):
+		return ErrNotFound
+	case utilerrors.IsSQLUniqueViolationError(err):
 		return ErrUniqueConstraintViolation
-	}
-	if utilerrors.IsSQLConstraintCheck(err) {
+	case utilerrors.IsSQLConstraintCheck(err):
 		return ErrConstraintCheckFailedWithHint(err.Error())
 	}
 	slog.Error("Error writing "+what, "error", err)
