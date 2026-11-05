@@ -55,7 +55,10 @@ ASSERT_NOT_VISIBLE #site--summary--cob >> text="–"
 ASSERT_VISIBLE #site--summary--time-in-range >> text=/^\d+(\.\d)?%$/
 ASSERT_VISIBLE #site--summary--total-daily-dose >> text=/^\d+(\.\d+)? U$/
 ASSERT_NOT_VISIBLE #site--summary--total-daily-dose >> text="0 U"
-ASSERT_VISIBLE #site--summary--sensor-started >> text=/^\d+m ago$/
+// A tile's and a device's units are smaller and grey beside their numbers
+ASSERT_VISIBLE #site--summary--total-daily-dose span.text-gray-500 >> text="U"
+ASSERT_VISIBLE #site--summary--devices dd span.text-gray-500 >> text="%" >> nth=0
+ASSERT_VISIBLE #site--summary--sensor-started >> text=/^(just now|\d+ minutes? ago)$/
 ASSERT_TEXT_EQUALS #site--summary--site-changed –
 ASSERT_VISIBLE #site--summary--treatments >> text=Temp Basal
 ASSERT_VISIBLE #site--summary--treatments >> text=Temp Target
@@ -66,10 +69,11 @@ ASSERT_NOT_VISIBLE #site--summary--treatments >> text=virtual://nighttroop
 ASSERT_VISIBLE #site--summary--devices >> text=virtual://nighttroop
 ASSERT_VISIBLE #site--summary--devices >> text=virtual://carer-phone
 
-// The latest glucose, each reading and each treatment say how long ago they were, all within the last half hour here
-ASSERT_VISIBLE #site--summary--glucose--ago >> text=/^\d+m ago$/
-ASSERT_VISIBLE #site--summary--readings tbody tr >> nth=0 >> text=/^\d+m ago$/
-ASSERT_VISIBLE #site--summary--treatments tbody tr >> nth=0 >> text=/^\d+m ago$/
+// The latest glucose, each reading and each treatment say how long ago they were, in words, all within the last half
+// hour here
+ASSERT_VISIBLE #site--summary--glucose--ago >> text=/^(just now|\d+ minutes? ago)$/
+ASSERT_VISIBLE #site--summary--readings tbody tr >> nth=0 >> text=/^(just now|\d+ minutes? ago)$/
+ASSERT_VISIBLE #site--summary--treatments tbody tr >> nth=0 >> text=/^(just now|\d+ minutes? ago)$/
 
 // ECharts draws the graph as an SVG in the browser: carbs and insulin are labelled by their markers, with the rows named down the side.
 // These are checked as drawn, as labels can be drawn over each other (virtual sync's meal can be at nearly the same time as

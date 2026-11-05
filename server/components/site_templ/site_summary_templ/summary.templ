@@ -2,7 +2,9 @@ package site_summary_templ
 
 import (
 	"fmt"
+	"regexp"
 	"sort"
+	"strings"
 	"time"
 
 	"nighttroop.t1d.nz/models/sitemodels"
@@ -88,7 +90,15 @@ func ago(ms *int64) string {
 	if ms == nil {
 		return "–"
 	}
-	return display.TimeAgo(*ms, time.Now())
+	return display.RoundedAgo(*ms, time.Now())
+}
+
+// numbersAndUnits splits a tile's text into its numbers and the words between them, as "2", " days ", "1", " hour ago"
+var numbersAndUnits = regexp.MustCompile(`[\d.–]+|[^\d.–]+`)
+
+// isUnit is whether a part of a tile's text is words, not a number or a dash
+func isUnit(part string) bool {
+	return strings.Trim(part, "0123456789.–") != ""
 }
 
 func orDash(v *string) string {
@@ -230,7 +240,7 @@ templ glucoseHero(summary *sitemodels.Summary) {
 						<span id="site--summary--glucose--range" class={ "ml-2 text-2xl font-bold", rangeColours[outOfRange] }>{ outOfRange }</span>
 					}
 				</div>
-				<div id="site--summary--glucose--ago" class="mt-1 text-sm text-gray-500" title={ site_data_templ.FormatDate(ctx, latest.OccurredAt) }>{ display.TimeAgo(latest.OccurredAt, time.Now()) }</div>
+				<div id="site--summary--glucose--ago" class="mt-1 text-sm text-gray-500" title={ site_data_templ.FormatDate(ctx, latest.OccurredAt) }>{ display.RoundedAgo(latest.OccurredAt, time.Now()) }</div>
 			</div>
 		} else {
 			<div>
@@ -258,9 +268,24 @@ templ tile(id, label, text string, ic func(...icon.Props) templ.Component) {
 			@ic(icon.Props{Class: "size-4"})
 			{ label }
 		</div>
-		<div id={ id } class="mt-1 text-2xl font-bold tabular-nums text-gray-900">{ text }</div>
+		<div id={ id } class="mt-1 text-2xl font-bold tabular-nums text-gray-900">
+			@numbers(text, "text-sm font-medium text-gray-500")
+		</div>
 		{ children... }
 	</div>
+}
+
+// numbers shows a value's numbers as they are and its units, as in "0.7 U" or "2 days 1 hour ago", smaller and grey;
+// text with no number, as "just now", is shown as it is
+templ numbers(text, unitClass string) {
+	{{ parts := numbersAndUnits.FindAllString(text, -1) }}
+	for _, part := range parts {
+		if len(parts) > 1 && isUnit(part) {
+			<span class={ unitClass }>{ part }</span>
+		} else {
+			{ part }
+		}
+	}
 }
 
 // previous is a day tile's value for yesterday, or the mean day of last week or month, under today's
@@ -279,7 +304,7 @@ templ deviceCard(status *sitemodels.SiteDeviceStatus) {
 	>
 		<div class="flex items-baseline justify-between gap-2">
 			<span class="truncate font-semibold text-brand-night">{ orDash(status.CreatedByDeviceName) }</span>
-			<span class="whitespace-nowrap text-xs text-gray-500" title={ site_data_templ.FormatDate(ctx, status.OccurredAt) }>{ display.TimeAgo(status.OccurredAt, time.Now()) }</span>
+			<span class="whitespace-nowrap text-xs text-gray-500" title={ site_data_templ.FormatDate(ctx, status.OccurredAt) }>{ display.RoundedAgo(status.OccurredAt, time.Now()) }</span>
 		</div>
 		<dl class="mt-2 grid grid-cols-3 gap-x-3 gap-y-1 text-sm">
 			@detail("Phone", value(status.DeviceBatteryPercent, "%"))
@@ -294,7 +319,9 @@ templ deviceCard(status *sitemodels.SiteDeviceStatus) {
 templ detail(label, text string) {
 	<div>
 		<dt class="text-xs text-gray-500">{ label }</dt>
-		<dd class="font-medium tabular-nums">{ text }</dd>
+		<dd class="font-medium tabular-nums">
+			@numbers(text, "text-xs font-normal text-gray-500")
+		</dd>
 	</div>
 }
 
@@ -341,7 +368,7 @@ templ treatmentsTable(list []treatment) {
 			for _, t := range list {
 				@table.Row() {
 					@table.Cell() {
-						<span class="whitespace-nowrap" title={ site_data_templ.FormatDate(ctx, t.At) }>{ display.TimeAgo(t.At, time.Now()) }</span>
+						<span class="whitespace-nowrap" title={ site_data_templ.FormatDate(ctx, t.At) }>{ display.RoundedAgo(t.At, time.Now()) }</span>
 					}
 					@table.Cell() {
 						@pageLink("", t.Path, "whitespace-nowrap font-medium text-primary underline") {
@@ -367,7 +394,7 @@ templ readingsTable(summary *sitemodels.Summary) {
 			for _, r := range readings {
 				@table.Row() {
 					@table.Cell() {
-						<span class="whitespace-nowrap" title={ site_data_templ.FormatDate(ctx, r.OccurredAt) }>{ display.TimeAgo(r.OccurredAt, time.Now()) }</span>
+						<span class="whitespace-nowrap" title={ site_data_templ.FormatDate(ctx, r.OccurredAt) }>{ display.RoundedAgo(r.OccurredAt, time.Now()) }</span>
 					}
 					@table.Cell() {
 						<span class={ "font-medium tabular-nums", rangeColours[glucoseRange(summary, r.Reading)] }>{ site_data_templ.FormatGlucose(r.Reading, r.Units) }</span> { arrow(r.Direction) }

@@ -58,6 +58,32 @@ func TestTimeAgo(t *testing.T) {
 	}
 }
 
+func TestRoundedAgo(t *testing.T) {
+	now := time.Date(2026, 10, 26, 12, 0, 0, 0, time.UTC)
+	tests := []struct {
+		before time.Duration
+		want   string
+	}{
+		{30 * time.Second, "just now"},
+		{-10 * time.Minute, "just now"},
+		{time.Minute, "1 minute ago"},
+		{59*time.Minute + 59*time.Second, "59 minutes ago"},
+		{time.Hour + 29*time.Minute, "1 hour ago"},
+		{time.Hour + 30*time.Minute, "2 hours ago"},
+		{23*time.Hour + 29*time.Minute, "23 hours ago"},
+		{23*time.Hour + 30*time.Minute, "1 day ago"},
+		{24*time.Hour + 30*time.Minute, "1 day 1 hour ago"},
+		{48*time.Hour + 49*time.Minute, "2 days 1 hour ago"},
+		{48*time.Hour + 45*time.Minute, "2 days 1 hour ago"},
+		{9*24*time.Hour + 23*time.Hour + 50*time.Minute, "10 days ago"},
+	}
+	for _, tt := range tests {
+		if got := RoundedAgo(now.Add(-tt.before).UnixMilli(), now); got != tt.want {
+			t.Errorf("RoundedAgo(%s before) = %q, want %q", tt.before, got, tt.want)
+		}
+	}
+}
+
 func TestDuration(t *testing.T) {
 	for in, want := range map[int64]string{
 		0:          "0 ms",

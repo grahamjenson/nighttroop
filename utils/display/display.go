@@ -39,6 +39,36 @@ func TimeAgo(ms int64, now time.Time) string {
 	return fmt.Sprintf("%dm ago", minutes)
 }
 
+// RoundedAgo is how long before now the time in ms was, in words, and to the nearest hour once it is an hour or more:
+// "just now", "1 minute ago", "45 minutes ago", "3 hours ago", "1 day ago" or "2 days 1 hour ago". A time after now,
+// as from a phone's clock running fast, is "just now".
+func RoundedAgo(ms int64, now time.Time) string {
+	since := now.Sub(time.UnixMilli(ms))
+	switch {
+	case since < time.Minute:
+		return "just now"
+	case since < time.Hour:
+		return count(int(since.Minutes()), "minute") + " ago"
+	}
+	hours := int(since.Round(time.Hour).Hours())
+	days := hours / 24
+	switch {
+	case days == 0:
+		return count(hours, "hour") + " ago"
+	case hours%24 == 0:
+		return count(days, "day") + " ago"
+	}
+	return count(days, "day") + " " + count(hours%24, "hour") + " ago"
+}
+
+// count is n of a unit, as "1 day" or "2 days"
+func count(n int, unit string) string {
+	if n == 1 {
+		return "1 " + unit
+	}
+	return fmt.Sprintf("%d %ss", n, unit)
+}
+
 // Duration is how long ms milliseconds is, as "250 ms", "1.5 s", "2 min 5 s" or "3 h 20 min", leaving off a
 // second part of 0, as in "2 min" or "3 h"
 func Duration(ms int64) string {
