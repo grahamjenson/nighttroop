@@ -247,8 +247,10 @@ func GetS3Path(serverConfig *config.ServerConfig) string {
 {{ end }}
 
 
+// Migrations are the DB's migrations, in their migrations folder
+//
 //go:embed migrations/*.sql
-var migrations embed.FS
+var Migrations embed.FS
 
 func MigrateUp(db *sql.DB) error {
 	driver, err := sqlite.WithInstance(db, &sqlite.Config{})
@@ -256,7 +258,7 @@ func MigrateUp(db *sql.DB) error {
 		return err
 	}
 
-	d, err := iofs.New(migrations, "migrations")
+	d, err := iofs.New(Migrations, "migrations")
 	if err != nil {
 		return err
 	}
@@ -285,7 +287,7 @@ func MigrateDown(db *sql.DB) error {
 		return err
 	}
 
-	d, err := iofs.New(migrations, "migrations")
+	d, err := iofs.New(Migrations, "migrations")
 	if err != nil {
 		return err
 	}
