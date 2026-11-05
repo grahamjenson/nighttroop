@@ -17,7 +17,7 @@ func NewPublicRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.R
 
 	r.Get("/", publicapi.GETMainPageHandler(controlDB))
 	r.Get("/health", publicapi.GETHealthHandler(controlDB))
-	publicapi.FooterRoutes(r)
+	publicapi.FooterRoutes(r, config)
 
 	// Creating a site, signing in and recovering are limited to the server's ALLOWED_COUNTRIES
 	r.With(httputils.AllowedCountriesMiddleware(config)).Post("/site", publicapi.POSTCreateSiteHandler(controlDB, config))
