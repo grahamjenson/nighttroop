@@ -1,0 +1,58 @@
+INCLUDE steps/new_site_admin.steps
+
+// Virtual sync writes the last 30 minutes of glucose readings, 6 of them, on its first run
+CLICK #site--settings-menu
+CLICK #site--settings--sync-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-sync--enable
+CLICK #site--settings--virtual-sync--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Sync Updated
+RUN_BACKGROUND_JOBS
+
+GOTO /data/glucose
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 6
+
+// A modal is a dialog named by its title, which takes the focus, and Escape gives the focus back to what opened it
+CLICK #site--glucose--add
+ASSERT_VISIBLE #site--glucose--create--modal [role=dialog][aria-modal=true][aria-labelledby="site--glucose--create--modal--title"]:focus
+ASSERT_TEXT_EQUALS #site--glucose--create--modal--title Add Reading
+PRESS Escape
+ASSERT_NOT_VISIBLE #site--glucose--create--modal
+ASSERT_VISIBLE #site--glucose--add:focus
+
+// Tab goes on to the newest reading's row, outlined as focused
+PRESS Tab
+ASSERT_VISIBLE #glucoseReadingsTable tbody tr:first-child:focus
+SCREENSHOT reading_row_focused
+
+// Enter opens its details, which take the focus, so Tab goes to their first input
+PRESS Enter
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--glucose--details [role=dialog]:focus
+PRESS Tab
+ASSERT_VISIBLE #site--glucose--edit--reading:focus
+SCREENSHOT reading_details_focused
+
+// Escape closes them, back on the row
+PRESS Escape
+ASSERT_NOT_VISIBLE #site--glucose--details
+ASSERT_VISIBLE #glucoseReadingsTable tbody tr:first-child:focus
+
+// Saving an edit with Enter replaces the row, and the focus goes back to the new row
+PRESS Enter
+ASSERT_VISIBLE #site--glucose--details
+INPUT #site--glucose--edit--notes Typed with a keyboard
+PRESS Enter
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Glucose Reading Updated
+ASSERT_NOT_VISIBLE #site--glucose--details
+ASSERT_VISIBLE #glucoseReadingsTable tbody tr:first-child:focus
+
+// Enter on the row's delete button deletes it (the test accepts), without opening its details
+PRESS Tab
+ASSERT_VISIBLE #glucoseReadingsTable tbody tr:first-child button[title=Delete]:focus
+PRESS Enter
+ASSERT_TEXT_VISIBLE Glucose Reading Deleted
+ASSERT_NOT_VISIBLE #site--glucose--details

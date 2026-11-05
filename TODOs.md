@@ -52,6 +52,10 @@
 1. P4: Tag each endpoint in `clients/nighttroop/openapi.json` (site, data, settings, Nightscout), so the API docs'
    menu groups its 51 endpoints, and give each a summary, as those without one are listed by their operation ID
 1. Performance testing (cost estimate for running full node)
+1. Accessibility:
+    1. P3: Keep Tab inside an open modal (`modal.Modal`), as past its Close button it goes on to the page behind
+    1. P4: Show an identity's new credentials (`credentialsModal`) in a `modal.Modal`, so it is a dialog that takes
+       the focus too
 1. P3: Open a site's DB when it is first used rather than every site's at start, as each still takes ~2ms to open
    and check migrations
 1. P4: Keep which batches were uploaded, and with which sites, across restarts, as the first backup round after a

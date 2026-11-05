@@ -13,6 +13,9 @@ type Props struct {
 
 // Modal shows its children over the page in #modal-container. Close, Escape or pressing beside it empties the container.
 // Its body scrolls when it is taller than the window, keeping its actions and Close in view.
+// It is a dialog named by its title, which takes the focus when it opens, so Tab goes through its form and a screen
+// reader reads it, and gives the focus back to what opened it, such as a row, when it closes. That is found again by
+// its ID when it was replaced, as an edited row is.
 templ Modal(p Props) {
 	<div
 		id={ p.ID }
@@ -21,10 +24,19 @@ templ Modal(p Props) {
 		hx-target="#modal-container"
 		hx-swap="innerHTML"
 		hx-trigger="mousedown from:self, keyup[key=='Escape'] from:body"
+		hx-on::after:init="if (event.target === this) this.opener = document.activeElement"
+		hx-on::before:cleanup="if (event.target === this && this.opener) (document.getElementById(this.opener.id) || this.opener).focus()"
 	>
-		<div class="flex max-h-full w-full max-w-2xl flex-col rounded-lg bg-white shadow-lg">
+		<div
+			role="dialog"
+			aria-modal="true"
+			aria-labelledby={ p.ID + "--title" }
+			tabindex="-1"
+			autofocus
+			class="flex max-h-full w-full max-w-2xl flex-col rounded-lg bg-white shadow-lg outline-none"
+		>
 			<div class="overflow-y-auto px-6 pt-6">
-				<h2 class="text-lg font-semibold">{ p.Title }</h2>
+				<h2 id={ p.ID + "--title" } class="text-lg font-semibold">{ p.Title }</h2>
 				if p.Subtitle != "" {
 					<p class="text-sm text-gray-500">{ p.Subtitle }</p>
 				}

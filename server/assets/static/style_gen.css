@@ -2042,6 +2042,14 @@
       background-color: var(--accent);
     }
   }
+  .focus-visible\:bg-muted\/50 {
+    &:focus-visible {
+      background-color: var(--muted);
+      @supports (color: color-mix(in lab, red, red)) {
+        background-color: color-mix(in oklab, var(--muted) 50%, transparent);
+      }
+    }
+  }
   .focus-visible\:text-accent-foreground {
     &:focus-visible {
       color: var(--accent-foreground);
@@ -2083,6 +2091,22 @@
       @supports (color: color-mix(in lab, red, red)) {
         --tw-ring-color: color-mix(in oklab, var(--ring) 50%, transparent);
       }
+    }
+  }
+  .focus-visible\:outline-2 {
+    &:focus-visible {
+      outline-style: var(--tw-outline-style);
+      outline-width: 2px;
+    }
+  }
+  .focus-visible\:-outline-offset-2 {
+    &:focus-visible {
+      outline-offset: calc(2px * -1);
+    }
+  }
+  .focus-visible\:outline-ring {
+    &:focus-visible {
+      outline-color: var(--ring);
     }
   }
   .focus-visible\:outline-none {
