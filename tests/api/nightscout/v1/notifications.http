@@ -1,0 +1,47 @@
+// Nightscout's v1 notifications: a follower acks an alarm with a level, group and silence time, as the /alarm
+// socket's ack does, and the admin's notices
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET read_token {{ .create_new_site.read_only_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME ack_notifications
+GET http://{{ site }}/api/v1/notifications/ack?token={{ token }}&level=2&group=default&time=60000
+ASSERT_STATUS 200
+
+// A follower with a read only token acks its own alarms
+NAME ack_notifications_read_only
+GET http://{{ site }}/api/v1/notifications/ack?token={{ read_token }}&level=1&group=Time%20Ago&time=60000
+ASSERT_STATUS 200
+
+NAME ack_notifications_no_token
+GET http://{{ site }}/api/v1/notifications/ack?level=2&group=default&time=60000
+ASSERT_STATUS 401
+
+// The ack snoozed the PWD phone's alarms of the default group, up to urgent, and the follower's no data alarm
+NAME login_admin
+POST http://{{ .create_new_site.site_subdomain }}.localhost/login
+H Accept: application/json
+B {"name": "admin", "password": "{{ .create_new_site.api_key }}", "totp": "123123"}
+ASSERT_STATUS 200
+SET admin_jwt {{ .login_admin.token }}
+
+NAME ack_snoozed_events
+GET http://{{ .create_new_site.site_subdomain }}.localhost/logs/events?type=alarm_snoozed
+H Authorization: Bearer {{ .admin_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result"
+ASSERT_EQUALS "nightscout" "@result.0.attributes.by"
+ASSERT_EQUALS "no_data" "@result.0.attributes.types.0"
+ASSERT_EQUALS "nightscout" "@result.1.attributes.by"
+ASSERT_LENGTH 8 "@result.1.attributes.types"
+
+NAME admin_notifies
+GET http://{{ site }}/api/v1/adminnotifies?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 200 "@status"
+ASSERT_LENGTH 0 "@message.notifies"
+ASSERT_EQUALS 0 "@message.notifyCount"

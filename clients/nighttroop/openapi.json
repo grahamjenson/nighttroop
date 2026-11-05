@@ -183,6 +183,20 @@
         "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } }
       }
     },
+    "/api/v1/notifications/ack": {
+      "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
+      "get": {
+        "operationId": "NsV1AckNotifications",
+        "summary": "Snoozes the identity's alarms in a group up to a level, as the /alarm socket's ack does",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "parameters": [{ "name": "level", "in": "query", "schema": { "type": "integer" } }, { "name": "group", "in": "query", "schema": { "type": "string" } }, { "name": "time", "in": "query", "description": "How long to snooze for, in milliseconds", "schema": { "type": "integer", "format": "int64" } }],
+        "responses": { "200": { "description": "OK", "content": { "text/plain": { "schema": { "type": "string" } } } }, "default": { "$ref": "#/components/responses/NsError" } }
+      }
+    },
+    "/api/v1/adminnotifies": {
+      "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
+      "get": { "operationId": "NsV1AdminNotifies", "summary": "Notices for the site's admin, of which there are none", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsObject" } } }
+    },
     "/pebble": {
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
       "get": {
