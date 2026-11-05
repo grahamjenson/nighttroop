@@ -4,7 +4,9 @@ import (
 	"log/slog"
 	"time"
 
+	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/errors"
 )
@@ -83,8 +85,17 @@ func (b *SyncJobManager) SyncUserData(syncInfo *SyncJobInfo) error {
 		slog.ErrorContext(syncInfo.ctx, "error updating sync source report with success", "error", updateError)
 		return updateError
 	}
+	b.publishSyncSource(syncInfo.SiteID, syncInfo.Type)
 
 	return nil
+}
+
+// publishSyncSource says a site's sync source has new stats or errors, so its sync settings page shows them as they
+// change. Only its type is sent: the page reads the source again.
+func (b *SyncJobManager) publishSyncSource(siteID string, sourceType consts.SyncSourceType) {
+	if b.config != nil && b.config.Events != nil {
+		b.config.Events.Publish(siteID, events.ModelChange(siteID, events.Updated, &sitemodels.SyncSource{Type: sourceType}))
+	}
 }
 
 // recordSyncFailure stores the failure so the source backs off, and in the logs DB's errors. The message is
@@ -105,4 +116,5 @@ func (b *SyncJobManager) recordSyncFailure(syncInfo *SyncJobInfo, err error, ela
 	if updateError != nil {
 		slog.ErrorContext(syncInfo.ctx, "error updating sync source report with failure", "error", updateError)
 	}
+	b.publishSyncSource(syncInfo.SiteID, syncInfo.Type)
 }

@@ -255,6 +255,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - A failing source syncs less often, and says when it failed and why.
 - A working source can be backfilled with the days before its oldest reading.
 - The sync page shows how each source has synced, how often, its backfill and its recent events.
+- The sync page updates as each sync or backfill finishes, showing its new errors, stats and events without reloading,
+  leaving a form being edited as it is and an opened history open.
 - Sync credentials are encrypted at rest.
 - A Nightscout sync on this server's host, or on a private, local or shared (carrier-grade NAT or Tailscale) address,
   is refused when saved and as it connects.
