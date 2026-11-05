@@ -111,7 +111,9 @@ func (b *SyncJobManager) backfill(syncInfo *SyncJobInfo, backfill BackfillParams
 	}
 	b.controlDB.Logs.SyncBackfilledEvent(recordCtx, syncInfo.SiteID, syncInfo.Type, started, backfill.From, backfill.To, records, err)
 	durationMs, added := time.Since(started).Milliseconds(), int64(records)
-	return b.controlDB.Queries.FinishSyncSourceBackfill(recordCtx, controldb.FinishSyncSourceBackfillParams{DurationMs: &durationMs, Records: &added, Error: message, Type: syncInfo.Type, SiteID: syncInfo.SiteID})
+	err = b.controlDB.Queries.FinishSyncSourceBackfill(recordCtx, controldb.FinishSyncSourceBackfillParams{DurationMs: &durationMs, Records: &added, Error: message, Type: syncInfo.Type, SiteID: syncInfo.SiteID})
+	b.publishSyncSource(syncInfo.SiteID, syncInfo.Type)
+	return err
 }
 
 // backfillNightscout copies each collection's documents dated from from to to, newest first a page at a time

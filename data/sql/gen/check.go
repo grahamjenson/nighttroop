@@ -7,13 +7,17 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"io/fs"
 	"log"
+	"os"
+	"path/filepath"
 	"reflect"
 	"slices"
 	"strings"
 
 	_ "modernc.org/sqlite"
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/data/sql/gen"
 	"nighttroop.t1d.nz/data/sql/jobsdb"
 	"nighttroop.t1d.nz/data/sql/livedb"
 	"nighttroop.t1d.nz/data/sql/logsdb"
@@ -121,6 +125,35 @@ func main() {
 
 	if err := checkMigrateDownDB(liveDB); err != nil {
 		log.Fatalf("%scheck migrate down live DB failed: %v %s", topwrapper, err, bottomwrapper)
+	}
+
+	////////
+	/// CHECK MIGRATIONS WITH ROWS AT THEIR LIMITS
+	////////
+	// Each DB on disk, opened as the server opens it, with foreign keys on
+	dir, err := os.MkdirTemp("", "check-migrations-")
+	if err != nil {
+		log.Fatalf("%scannot make a folder to check migrations in: %v %s", topwrapper, err, bottomwrapper)
+	}
+	defer os.RemoveAll(dir)
+	for _, d := range []struct {
+		name       string
+		migrations fs.FS
+		open       func(string, int) (*sql.DB, error)
+	}{
+		{"site", sitedb.Migrations, sitedb.OpenSqliteDB},
+		{"control", controldb.Migrations, controldb.OpenSqliteDB},
+		{"jobs", jobsdb.Migrations, jobsdb.OpenSqliteDB},
+		{"logs", logsdb.Migrations, logsdb.OpenSqliteDB},
+		{"live", livedb.Migrations, livedb.OpenSqliteDB},
+	} {
+		db, err := d.open(filepath.Join(dir, d.name+".sqlite"), 0)
+		if err == nil {
+			err = gen.CheckMigrationsWithData(d.migrations, db)
+		}
+		if err != nil {
+			log.Fatalf("%scheck migrations of the %s DB with rows at their limits failed: %v %s", topwrapper, d.name, err, bottomwrapper)
+		}
 	}
 }
 

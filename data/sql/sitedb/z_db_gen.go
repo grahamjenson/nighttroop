@@ -189,8 +189,10 @@ func GetS3ArchivePath(subdomain string, serverConfig *config.ServerConfig) strin
 	return fmt.Sprintf("%s/archive/site/%s/%s.tar.lz4.enc", serverConfig.HostName, batch, subdomain)
 }
 
+// Migrations are the DB's migrations, in their migrations folder
+//
 //go:embed migrations/*.sql
-var migrations embed.FS
+var Migrations embed.FS
 
 func MigrateUp(db *sql.DB) error {
 	driver, err := sqlite.WithInstance(db, &sqlite.Config{})
@@ -198,7 +200,7 @@ func MigrateUp(db *sql.DB) error {
 		return err
 	}
 
-	d, err := iofs.New(migrations, "migrations")
+	d, err := iofs.New(Migrations, "migrations")
 	if err != nil {
 		return err
 	}
@@ -227,7 +229,7 @@ func MigrateDown(db *sql.DB) error {
 		return err
 	}
 
-	d, err := iofs.New(migrations, "migrations")
+	d, err := iofs.New(Migrations, "migrations")
 	if err != nil {
 		return err
 	}

@@ -42,6 +42,7 @@ templ SyncSettingsPartial(syncSettings []*sitemodels.SyncSource) {
 		@heading.Page("Sync Settings") {
 			Choose where Nighttroop syncs your glucose data from.
 		}
+		@syncLive()
 		@NightscoutSyncForm(findSyncSource(syncSettings, consts.SyncSourceTypeNightscout))
 		@DexcomSyncForm(findSyncSource(syncSettings, consts.SyncSourceTypeDexcom))
 		@LibreSyncForm(findSyncSource(syncSettings, consts.SyncSourceTypeLibre))
@@ -49,15 +50,41 @@ templ SyncSettingsPartial(syncSettings []*sitemodels.SyncSource) {
 	</div>
 }
 
+// syncLive keeps each source's errors and status up to date: the sync settings' stream sends an event as a sync or
+// backfill finishes, and the page is read again, swapping in only the parts marked data-sync-live, so a form being
+// edited is left as it is. A history the user opened stays open, and the page is read again when the stream
+// reconnects, as changes may have been missed while it was not.
+templ syncLive() {
+	<span
+		id="site--settings--sync--live"
+		class="hidden text-sm font-medium text-primary"
+		hx-sse:connect="/settings/sync/events"
+		hx-on::sse:after:connection="this.classList.remove('hidden'); if (this.dataset.connected) htmx.trigger(this, 'reconnected'); this.dataset.connected = 'true'"
+		hx-on::sse:close="this.classList.add('hidden')"
+		hx-on::sse:error="this.classList.add('hidden')"
+	>● Live</span>
+	<div
+		id="site--settings--sync--refresh"
+		hx-get="/settings/sync"
+		hx-trigger="created from:#site--settings--sync--live delay:1s, updated from:#site--settings--sync--live delay:1s, deleted from:#site--settings--sync--live delay:1s, reconnected from:#site--settings--sync--live"
+		hx-select-oob="[data-sync-live]"
+		hx-swap="none"
+		hx-on::before:request="this.opened = [...document.querySelectorAll('[data-sync-live] details[open]')].map(d => d.id)"
+		hx-on::finally:request="(this.opened || []).forEach(id => document.getElementById(id)?.setAttribute('open', ''))"
+	></div>
+}
+
 // SyncErrors shows why the last sync failed, e.g. that the first sync failed so syncing was turned off
 templ SyncErrors(source *sitemodels.SyncSource, name string) {
-	if source != nil && len(source.PreviousSyncErrors) > 0 {
-		<div id={ "site--settings--" + name + "-sync--errors" } class="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-			for _, syncError := range source.PreviousSyncErrors {
-				<p>{ syncError }</p>
-			}
-		</div>
-	}
+	<div id={ "site--settings--" + name + "-sync--errors-live" } data-sync-live>
+		if source != nil && len(source.PreviousSyncErrors) > 0 {
+			<div id={ "site--settings--" + name + "-sync--errors" } class="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+				for _, syncError := range source.PreviousSyncErrors {
+					<p>{ syncError }</p>
+				}
+			</div>
+		}
+	</div>
 }
 
 templ DexcomSyncForm(dexcomSyncSettings *sitemodels.SyncSource) {
