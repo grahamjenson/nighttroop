@@ -3,10 +3,10 @@ package footer
 import "nighttroop.t1d.nz/utils/httputils"
 
 // Footer is every page's thin footer: a mailto link to the server's support email, its feedback link when it has one,
-// its terms of service, privacy policy and API docs, and Nighttroop's year. Each link opens in a new tab, so what the
-// user was doing stays open.
+// its terms of service, privacy policy and API docs, and Nighttroop's year, spaced apart and wrapping on a narrow
+// screen. Each link opens in a new tab, so what the user was doing stays open.
 templ Footer() {
-	<footer id="footer" class="border-t border-gray-200 bg-white py-3 text-center text-xs text-gray-500">
+	<footer id="footer" class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 border-t border-gray-200 bg-white px-4 py-3 text-xs text-gray-500">
 		@NewTabLink("footer--contact", "mailto:"+httputils.SupportEmail(ctx), "hover:text-primary") {
 			contact
 		}
@@ -15,7 +15,6 @@ templ Footer() {
 			@NewTabLink("footer--feedback", url, "hover:text-primary") {
 				feedback
 			}
-			{ " " }
 			<span aria-hidden="true">·</span>
 		}
 		@NewTabLink("footer--terms", "/terms", "hover:text-primary") {
@@ -31,7 +30,7 @@ templ Footer() {
 		}
 		<span aria-hidden="true">·</span>
 		<span>Nighttroop 2026</span>
-		<span id="footer--dbip">
+		<span id="footer--dbip" class="contents">
 			if httputils.DBIPCredited(ctx) {
 				@dbipLink()
 			}
