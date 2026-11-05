@@ -214,6 +214,8 @@ does not:
   highs coloured as on the summary.
   - Adding a reading offers its type as Meter or Sensor and its trend as an arrow with its name (e.g. `↗ FortyFiveUp`),
     as the table and its details show them.
+  - Above the first page, the last 10 days' glucose are small graphs on the same scale, oldest first, each with the
+    range shaded and its time in range; the last is today so far, from its clean readings.
 - **Insulin doses**, with a combo bolus's split as the fractions given at once and over time, 0.7 for 70%
 - **Food intakes**
 - **Temp basals**, with the rate given in U/hr and a multiplier of the scheduled basal, 0.5 for half, 0 a zero temp

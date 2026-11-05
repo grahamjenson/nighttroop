@@ -9,6 +9,7 @@ import (
 	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/consts"
@@ -46,8 +47,23 @@ func (s *SummaryDailyCollection) GetRow(ctx context.Context, collectionTx *sitea
 	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).GetSummaryPeriod, sitedb.GetSummaryPeriodParams{Period: "day", Date: id})
 }
 
+// SearchRows is the kept days, newest first, after today so far on the first page, built from its clean readings and
+// not kept, as it is not over
 func (s *SummaryDailyCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.SummaryPeriod, error) {
-	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).SearchSummaryPeriods, sitedb.SearchSummaryPeriodsParams{Period: "day", Limit: query.Limit, Skip: query.Skip})
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
+	if query.Skip > 0 {
+		return q.SearchSummaryPeriods(ctx, sitedb.SearchSummaryPeriodsParams{Period: "day", Limit: query.Limit, Skip: query.Skip - 1})
+	}
+	now := time.Now()
+	today, err := buildSummaryDaily(ctx, q, siteContext, LocalDate(now, siteContext.GetSiteTimezone(), 0), now.UnixMilli())
+	if err != nil {
+		return nil, err
+	}
+	days, err := q.SearchSummaryPeriods(ctx, sitedb.SearchSummaryPeriodsParams{Period: "day", Limit: query.Limit - 1})
+	return append([]*sitedb.SummaryPeriod{today}, days...), err
 }
 
 // CreateRow builds the model's date again, a day before today in the site's timezone and no more than a year ago
@@ -71,13 +87,14 @@ func (s *SummaryDailyCollection) DeleteRow(ctx context.Context, collectionTx *si
 	return err
 }
 
-// The days are only read as JSON for now, so pages get nothing
+// A day is only read as JSON for now, so pages get nothing
 func (s *SummaryDailyCollection) GetHTMXResponse(*sitemodels.SiteSummaryDaily) templ.Component {
 	return templ.NopComponent
 }
 
-func (s *SummaryDailyCollection) SearchHTMXResponse([]*sitemodels.SiteSummaryDaily, *apiutils.Query) templ.Component {
-	return templ.NopComponent
+// SearchHTMXResponse is the days' glucose as small graphs, which the glucose readings page shows
+func (s *SummaryDailyCollection) SearchHTMXResponse(models []*sitemodels.SiteSummaryDaily, _ *apiutils.Query) templ.Component {
+	return site_data_templ.GlucoseDays(models)
 }
 
 func (s *SummaryDailyCollection) CreateHTMXResponse(*sitemodels.SiteSummaryDaily) templ.Component {
