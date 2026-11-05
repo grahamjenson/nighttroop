@@ -36,9 +36,8 @@
 
 1. Security
     1. Testing deploy with rolling to a new keyset, moving to a new encrypted keyset.
-    1. P2: Every settings change, the site's and each identity's own, is the same `sitemodels.Settings` row, so
-       `/settings/identity/events` and `/settings/alarms/events` stream any identity another's settings and the site's.
-       Stream an identity only its own and, to an admin, the site's, as push registrations now are
+    1. P4: A change to the site's settings is not streamed to a non-admin's `/settings/identity/events`, though its
+       inherited values change; send it `{}`, as the summary is sent other models' changes, rather than the site's
     1. P3: Refresh the built in DB-IP country database (`utils/geoip/dbip-country-lite.mmdb`) each month or two, as
        DB-IP updates it monthly; the Docker image's city database is fetched fresh on each build.
 
