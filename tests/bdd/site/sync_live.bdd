@@ -16,6 +16,8 @@ ASSERT_TEXT_VISIBLE Sync Updated
 RUN_BACKGROUND_JOBS
 ASSERT_VISIBLE #site--settings--virtual-sync--status--last-success:has-text("just now")
 ASSERT_VISIBLE #site--settings--virtual-sync--status--totals:has-text("1 worked")
+// with the records it pulled in, in all
+ASSERT_VISIBLE #site--settings--virtual-sync--status--records >> text=/^[1-9][0-9]*$/
 
 // A history that is open stays open as a backfill finishes, and shows it
 CLICK #site--settings--virtual-sync--history summary

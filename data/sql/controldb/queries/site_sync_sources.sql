@@ -96,6 +96,7 @@ UPDATE site_sync_sources SET
     last_backfill_finished_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     last_backfill_duration = sqlc.arg('DurationMs'),
     last_backfill_records = sqlc.arg('Records'),
+    total_records = total_records + COALESCE(sqlc.arg('Records'), 0),
     last_backfill_error = sqlc.narg('Error')
 WHERE type = sqlc.arg('Type') AND site_id = sqlc.arg('SiteID');
 
@@ -120,6 +121,7 @@ SET
     -- Counters
     total_syncs = total_syncs + 1,
     total_successful_syncs = total_successful_syncs + 1,
+    total_records = total_records + sqlc.arg('Records'),
     
     consecutive_successful_syncs = consecutive_successful_syncs + 1,
     consecutive_failed_syncs = 0,

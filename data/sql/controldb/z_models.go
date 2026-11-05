@@ -226,6 +226,7 @@ type SiteSyncSource struct {
 	SuccessEma                 *float64
 	FailureEma                 *float64
 	LastSyncDuration           *int64
+	TotalRecords               int64
 }
 
 type SqliteSequence struct {

@@ -49,6 +49,9 @@ templ syncStatus(source *sitemodels.SyncSource, name string) {
 						<span class="text-red-700">{ fmt.Sprintf("(the last %d in a row)", count(source.ConsecutiveFailedSyncs)) }</span>
 					}
 				}
+				@syncStat(name, "records", "Records pulled in") {
+					{ fmt.Sprintf("%d", source.TotalRecords) }
+				}
 				@syncStat(name, "backfill", "Last backfill") {
 					if source.TotalBackfills == 0 {
 						Never

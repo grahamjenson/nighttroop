@@ -1978,6 +1978,16 @@ func (m *SiteSyncSource) SetLastSyncDuration(v *int64) {
 	m.LastSyncDuration = v
 }
 
+// GetTotalRecords returns the TotalRecords value.
+func (m SiteSyncSource) GetTotalRecords() int64 {
+	return m.TotalRecords
+}
+
+// SetTotalRecords sets the TotalRecords value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetTotalRecords(v int64) {
+	m.TotalRecords = v
+}
+
 // GetName returns the Name value.
 func (m SqliteSequence) GetName() interface{} {
 	return m.Name
@@ -4366,6 +4376,16 @@ func (m UpdateSyncSourceReportsFailureParams) GetSiteID() string {
 // SetSiteID sets the SiteID value and returns the updated UpdateSyncSourceReportsFailureParams.
 func (m *UpdateSyncSourceReportsFailureParams) SetSiteID(v string) {
 	m.SiteID = v
+}
+
+// GetRecords returns the Records value.
+func (m UpdateSyncSourceReportsSuccessParams) GetRecords() int64 {
+	return m.Records
+}
+
+// SetRecords sets the Records value and returns the updated UpdateSyncSourceReportsSuccessParams.
+func (m *UpdateSyncSourceReportsSuccessParams) SetRecords(v int64) {
+	m.Records = v
 }
 
 // GetElapsedMs returns the ElapsedMs value.

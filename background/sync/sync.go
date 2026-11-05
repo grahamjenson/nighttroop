@@ -77,6 +77,7 @@ func (b *SyncJobManager) SyncUserData(syncInfo *SyncJobInfo) error {
 		b.controlDB.Logs.SyncAddedEvent(syncInfo.ctx, syncInfo.SiteID, syncInfo.Type, added)
 	}
 	updateError := b.controlDB.Queries.UpdateSyncSourceReportsSuccess(syncInfo.ctx, controldb.UpdateSyncSourceReportsSuccessParams{
+		Records:   int64(added),
 		ElapsedMs: &elapsedTimeMS,
 		Type:      syncInfo.Type,
 		SiteID:    syncInfo.SiteID,

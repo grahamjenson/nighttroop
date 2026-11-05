@@ -237,7 +237,7 @@ CREATE TABLE site_sync_sources (
     failure_ema REAL,
     
     -- Duration of last sync in ms
-    last_sync_duration INTEGER,
+    last_sync_duration INTEGER, total_records INTEGER NOT NULL DEFAULT 0,
 
     -- Unique contraint of site_id and type
     UNIQUE(site_id, type)
