@@ -10,7 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 import "nighttroop.t1d.nz/utils/httputils"
 
 // Footer is every page's thin footer: a mailto link to the server's support email, its feedback link when it has one,
-// its terms of service and privacy policy, and Nighttroop's year
+// its terms of service, privacy policy and API docs, and Nighttroop's year
 func Footer() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -82,7 +82,7 @@ func Footer() templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<a id=\"footer--terms\" href=\"/terms\" class=\"hover:text-primary\">terms of service</a> <span aria-hidden=\"true\">·</span> <a id=\"footer--privacy\" href=\"/privacy\" class=\"hover:text-primary\">privacy policy</a> <span aria-hidden=\"true\">·</span> <span>Nighttroop 2026</span> <span id=\"footer--dbip\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<a id=\"footer--terms\" href=\"/terms\" class=\"hover:text-primary\">terms of service</a> <span aria-hidden=\"true\">·</span> <a id=\"footer--privacy\" href=\"/privacy\" class=\"hover:text-primary\">privacy policy</a> <span aria-hidden=\"true\">·</span> <a id=\"footer--api-docs\" href=\"/api-docs\" class=\"hover:text-primary\">API docs</a> <span aria-hidden=\"true\">·</span> <span>Nighttroop 2026</span> <span id=\"footer--dbip\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -222,7 +222,7 @@ func FeedbackLink(id string, url string, class string) templ.Component {
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templruntime.NewAttributeExpression(id).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `footer/footer.templ`, Line: 59, Col: 11}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `footer/footer.templ`, Line: 61, Col: 11}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 			if templ_7745c5c3_Err != nil {
@@ -235,7 +235,7 @@ func FeedbackLink(id string, url string, class string) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.URL(url)).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `footer/footer.templ`, Line: 59, Col: 35}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `footer/footer.templ`, Line: 61, Col: 35}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 			if templ_7745c5c3_Err != nil {

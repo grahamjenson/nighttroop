@@ -133,6 +133,16 @@ var StaticQrcodeJs []byte
 var StaticQrcodeJsETag = generateETag([]byte(StaticQrcodeJs))
 var StaticQrcodeJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticQrcodeJs) })
 
+//go:embed redoc.standalone.js
+var StaticRedocStandaloneJs []byte
+var StaticRedocStandaloneJsETag = generateETag([]byte(StaticRedocStandaloneJs))
+var StaticRedocStandaloneJsGzip = sync.OnceValue(func() []byte { return gzipped(StaticRedocStandaloneJs) })
+
+//go:embed redoc.standalone.js.LICENSE.txt
+var StaticRedocStandaloneJsLicenseTxt []byte
+var StaticRedocStandaloneJsLicenseTxtETag = generateETag([]byte(StaticRedocStandaloneJsLicenseTxt))
+var StaticRedocStandaloneJsLicenseTxtGzip = sync.OnceValue(func() []byte { return gzipped(StaticRedocStandaloneJsLicenseTxt) })
+
 //go:embed robots.txt
 var StaticRobotsTxt []byte
 var StaticRobotsTxtETag = generateETag([]byte(StaticRobotsTxt))
@@ -235,6 +245,12 @@ func AddStaticRoutes(r chi.Router) error {
 	})
 	r.Get("/qrcode.js", func(w http.ResponseWriter, r *http.Request) {
 		serve(w, r, "qrcode.js", "text/javascript; charset=utf-8", StaticQrcodeJsETag, StaticQrcodeJs, StaticQrcodeJsGzip)
+	})
+	r.Get("/redoc.standalone.js", func(w http.ResponseWriter, r *http.Request) {
+		serve(w, r, "redoc.standalone.js", "text/javascript; charset=utf-8", StaticRedocStandaloneJsETag, StaticRedocStandaloneJs, StaticRedocStandaloneJsGzip)
+	})
+	r.Get("/redoc.standalone.js.LICENSE.txt", func(w http.ResponseWriter, r *http.Request) {
+		serve(w, r, "redoc.standalone.js.LICENSE.txt", "text/plain; charset=utf-8", StaticRedocStandaloneJsLicenseTxtETag, StaticRedocStandaloneJsLicenseTxt, StaticRedocStandaloneJsLicenseTxtGzip)
 	})
 	r.Get("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
 		serve(w, r, "robots.txt", "text/plain; charset=utf-8", StaticRobotsTxtETag, StaticRobotsTxt, StaticRobotsTxtGzip)

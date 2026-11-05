@@ -1,0 +1,15 @@
+package public_templ
+
+// APIDocs shows the API's OpenAPI schema, /openapi.json, as documentation, drawn by Redoc
+// (https://github.com/Redocly/redoc, redoc.standalone.js from its npm package, MIT licensed) in Nighttroop's colours
+templ APIDocs() {
+	@PublicBase() {
+		<div id="api-docs" class="flex-1">
+			<redoc
+				spec-url="/openapi.json"
+				theme='{"colors":{"primary":{"main":"#10203F"}},"sidebar":{"backgroundColor":"#F9FAFB"}}'
+			></redoc>
+		</div>
+		<script src="/redoc.standalone.js"></script>
+	}
+}

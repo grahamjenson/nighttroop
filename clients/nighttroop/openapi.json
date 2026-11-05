@@ -3,7 +3,7 @@
   "info": {
     "title": "Nighttroop",
     "version": "0.1.0",
-    "description": "Nighttroop's JSON API. POST /site is on the public host (https://<host>); /api/... is the Nightscout API, on a site's Nightscout host (https://<site>.ns.<host>); everything else is on a site's host (https://<site>.<host>) with a JWT from POST /login. Times are milliseconds since the epoch, and glucose is in the units of the signed in identity's settings; a Nightscout document says its units in its units field."
+    "description": "Nighttroop's JSON API. POST /site is on the public host (`https://<host>`); /api/... is the Nightscout API, on a site's Nightscout host (`https://<site>.ns.<host>`); everything else is on a site's host (`https://<site>.<host>`) with a JWT from POST /login. Times are milliseconds since the epoch, and glucose is in the units of the signed in identity's settings; a Nightscout document says its units in its units field."
   },
   "security": [{ "bearerAuth": [] }],
   "paths": {
@@ -408,7 +408,7 @@
         "type": "object",
         "required": ["token", "expires_at"],
         "properties": {
-          "token": { "type": "string", "description": "A JWT, sent as Authorization: Bearer <token>" },
+          "token": { "type": "string", "description": "A JWT, sent as `Authorization: Bearer <token>`" },
           "expires_at": { "type": "string", "format": "date-time" }
         }
       },
@@ -518,7 +518,7 @@
       "NsAuthorization": {
         "type": "object",
         "properties": {
-          "token": { "type": "string", "description": "A JWT, sent as Authorization: Bearer <token>" },
+          "token": { "type": "string", "description": "A JWT, sent as `Authorization: Bearer <token>`" },
           "sub": { "type": "string" },
           "permissionGroups": { "type": "array", "items": { "type": "array", "items": { "type": "string" } } },
           "iat": { "type": "integer", "format": "int64" },

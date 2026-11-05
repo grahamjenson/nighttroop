@@ -6,6 +6,7 @@ import (
 	"runtime"
 
 	"github.com/go-chi/chi/v5"
+	"nighttroop.t1d.nz/clients/nighttroop"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/publicmodels"
@@ -118,9 +119,19 @@ func POSTCreateSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig)
 	}
 }
 
-// LegalRoutes serves the terms of service and privacy policy, with the server's support email, so every host's footer
-// links to its own /terms and /privacy
-func LegalRoutes(r chi.Router) {
+// FooterRoutes serves what every page's footer links to: the terms of service and privacy policy, with the server's
+// support email, and the API docs with the OpenAPI schema they show, so every host's footer links to its own copies
+func FooterRoutes(r chi.Router) {
+	r.Get("/openapi.json", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write(nighttroop.OpenAPI)
+	})
+	r.Get("/api-docs", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		if err := public_templ.APIDocs().Render(r.Context(), w); err != nil {
+			slog.ErrorContext(r.Context(), "failed to render the API docs", "error", err)
+		}
+	})
 	for path, document := range map[string]string{"/terms": docs.TermsOfService, "/privacy": docs.PrivacyPolicy} {
 		r.Get(path, func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")

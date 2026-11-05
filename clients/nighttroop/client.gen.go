@@ -204,7 +204,7 @@ type LoginRequest struct {
 type LoginToken struct {
 	ExpiresAt time.Time `json:"expires_at"`
 
-	// Token A JWT, sent as Authorization: Bearer <token>
+	// Token A JWT, sent as `Authorization: Bearer <token>`
 	Token string `json:"token"`
 }
 
@@ -215,7 +215,7 @@ type NsAuthorization struct {
 	PermissionGroups *[][]string `json:"permissionGroups,omitempty"`
 	Sub              *string     `json:"sub,omitempty"`
 
-	// Token A JWT, sent as Authorization: Bearer <token>
+	// Token A JWT, sent as `Authorization: Bearer <token>`
 	Token *string `json:"token,omitempty"`
 }
 

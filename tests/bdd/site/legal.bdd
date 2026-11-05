@@ -1,4 +1,4 @@
-// Every page's footer links to contact, the support email, and the terms of service and privacy policy
+// Every page's footer links to contact, the support email, the terms of service, privacy policy and API docs
 GOTO {{ server_url }}/
 ASSERT_STATUS 200
 ASSERT_VISIBLE #footer
@@ -23,9 +23,20 @@ ASSERT_TEXT_VISIBLE Consent by Sending Data
 ASSERT_VISIBLE #legal a[href="mailto:nighttroop@t1d.nz"] >> nth=0
 SCREENSHOT privacy
 
+// The API docs draw the OpenAPI schema with Redoc, with a link to download it
+CLICK #footer--api-docs
+ASSERT_PATH /api-docs
+ASSERT_VISIBLE #api-docs h1:has-text("Nighttroop")
+ASSERT_VISIBLE #api-docs a[download]
+ASSERT_TEXT_VISIBLE Creates a site, on the public host
+// Not screenshotted: the whole page is over 40,000 pixels tall, and changes with every change to the API
+
 // A site's pages have the footer too, linking to the site's own copies
 INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE #footer
 CLICK #footer--privacy
 ASSERT_PATH /privacy
 ASSERT_TEXT_VISIBLE PRIVACY POLICY
+CLICK #footer--api-docs
+ASSERT_PATH /api-docs
+ASSERT_VISIBLE #api-docs h1:has-text("Nighttroop")
