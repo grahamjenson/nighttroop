@@ -59,6 +59,7 @@ func TestBackfillStartsOneAtATimeAndRecordsWhatItDid(t *testing.T) {
 	require.Equal(t, backfill.To, *s.LastBackfillTo)
 	require.NotNil(t, s.LastBackfillDuration)
 	require.Greater(t, *s.LastBackfillRecords, int64(len(readings)), "readings, device statuses and treatments")
+	require.Equal(t, *s.LastBackfillRecords, s.TotalRecords, "its records are added to the source's total")
 	events, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &siteID, Limit: 10})
 	require.NoError(t, err)
 	require.Equal(t, "sync_backfilled", events[0].Name)

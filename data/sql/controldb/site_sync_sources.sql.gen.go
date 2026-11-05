@@ -84,6 +84,7 @@ UPDATE site_sync_sources SET
     last_backfill_finished_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     last_backfill_duration = ?1,
     last_backfill_records = ?2,
+    total_records = total_records + COALESCE(?2, 0),
     last_backfill_error = ?3
 WHERE type = ?4 AND site_id = ?5
 `
@@ -108,7 +109,7 @@ func (q *Queries) FinishSyncSourceBackfill(ctx context.Context, arg FinishSyncSo
 }
 
 const getAllSyncSourcesForSite = `-- name: GetAllSyncSourcesForSite :many
-SELECT site_id, type, url_or_username_enc, password_enc, region, created_at, updated_at, enabled, first_successful_sync_time, backfill_started_at, last_backfill_from, last_backfill_to, last_backfill_finished_at, last_backfill_duration, last_backfill_records, last_backfill_error, total_backfills, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_errors, total_ema, success_ema, failure_ema, last_sync_duration FROM site_sync_sources where site_id = ?
+SELECT site_id, type, url_or_username_enc, password_enc, region, created_at, updated_at, enabled, first_successful_sync_time, backfill_started_at, last_backfill_from, last_backfill_to, last_backfill_finished_at, last_backfill_duration, last_backfill_records, last_backfill_error, total_backfills, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, total_records, last_sync_records, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_errors, total_ema, success_ema, failure_ema, last_sync_duration FROM site_sync_sources where site_id = ?
 `
 
 type GetAllSyncSourcesForSiteParams struct {
@@ -150,6 +151,8 @@ func (q *Queries) GetAllSyncSourcesForSite(ctx context.Context, arg GetAllSyncSo
 			&i.TotalSyncs,
 			&i.TotalSuccessfulSyncs,
 			&i.TotalFailedSyncs,
+			&i.TotalRecords,
+			&i.LastSyncRecords,
 			&i.ConsecutiveSuccessfulSyncs,
 			&i.ConsecutiveFailedSyncs,
 			&i.PreviousSyncErrors,
@@ -174,7 +177,7 @@ func (q *Queries) GetAllSyncSourcesForSite(ctx context.Context, arg GetAllSyncSo
 const getSyncReportsToRun = `-- name: GetSyncReportsToRun :many
 
 
-SELECT us.site_id, us.type, us.url_or_username_enc, us.password_enc, us.region, us.created_at, us.updated_at, us.enabled, us.first_successful_sync_time, us.backfill_started_at, us.last_backfill_from, us.last_backfill_to, us.last_backfill_finished_at, us.last_backfill_duration, us.last_backfill_records, us.last_backfill_error, us.total_backfills, us.sync_interval_seconds_reason, us.sync_interval_seconds, us.last_attempted_sync, us.last_successful_sync, us.last_failed_sync, us.total_syncs, us.total_successful_syncs, us.total_failed_syncs, us.consecutive_successful_syncs, us.consecutive_failed_syncs, us.previous_sync_errors, us.total_ema, us.success_ema, us.failure_ema, us.last_sync_duration FROM site_sync_sources us
+SELECT us.site_id, us.type, us.url_or_username_enc, us.password_enc, us.region, us.created_at, us.updated_at, us.enabled, us.first_successful_sync_time, us.backfill_started_at, us.last_backfill_from, us.last_backfill_to, us.last_backfill_finished_at, us.last_backfill_duration, us.last_backfill_records, us.last_backfill_error, us.total_backfills, us.sync_interval_seconds_reason, us.sync_interval_seconds, us.last_attempted_sync, us.last_successful_sync, us.last_failed_sync, us.total_syncs, us.total_successful_syncs, us.total_failed_syncs, us.total_records, us.last_sync_records, us.consecutive_successful_syncs, us.consecutive_failed_syncs, us.previous_sync_errors, us.total_ema, us.success_ema, us.failure_ema, us.last_sync_duration FROM site_sync_sources us
 JOIN sites u ON u.id = us.site_id
 WHERE us.enabled = 1
   AND u.deleted_at IS NULL
@@ -231,6 +234,8 @@ func (q *Queries) GetSyncReportsToRun(ctx context.Context) ([]*SiteSyncSource, e
 			&i.TotalSyncs,
 			&i.TotalSuccessfulSyncs,
 			&i.TotalFailedSyncs,
+			&i.TotalRecords,
+			&i.LastSyncRecords,
 			&i.ConsecutiveSuccessfulSyncs,
 			&i.ConsecutiveFailedSyncs,
 			&i.PreviousSyncErrors,
@@ -253,7 +258,7 @@ func (q *Queries) GetSyncReportsToRun(ctx context.Context) ([]*SiteSyncSource, e
 }
 
 const getSyncSource = `-- name: GetSyncSource :one
-SELECT site_id, type, url_or_username_enc, password_enc, region, created_at, updated_at, enabled, first_successful_sync_time, backfill_started_at, last_backfill_from, last_backfill_to, last_backfill_finished_at, last_backfill_duration, last_backfill_records, last_backfill_error, total_backfills, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_errors, total_ema, success_ema, failure_ema, last_sync_duration FROM site_sync_sources where type = ? AND site_id = ? LIMIT 1
+SELECT site_id, type, url_or_username_enc, password_enc, region, created_at, updated_at, enabled, first_successful_sync_time, backfill_started_at, last_backfill_from, last_backfill_to, last_backfill_finished_at, last_backfill_duration, last_backfill_records, last_backfill_error, total_backfills, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, total_records, last_sync_records, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_errors, total_ema, success_ema, failure_ema, last_sync_duration FROM site_sync_sources where type = ? AND site_id = ? LIMIT 1
 `
 
 type GetSyncSourceParams struct {
@@ -290,6 +295,8 @@ func (q *Queries) GetSyncSource(ctx context.Context, arg GetSyncSourceParams) (*
 		&i.TotalSyncs,
 		&i.TotalSuccessfulSyncs,
 		&i.TotalFailedSyncs,
+		&i.TotalRecords,
+		&i.LastSyncRecords,
 		&i.ConsecutiveSuccessfulSyncs,
 		&i.ConsecutiveFailedSyncs,
 		&i.PreviousSyncErrors,
@@ -302,7 +309,7 @@ func (q *Queries) GetSyncSource(ctx context.Context, arg GetSyncSourceParams) (*
 }
 
 const searchSyncSources = `-- name: SearchSyncSources :many
-SELECT site_id, type, url_or_username_enc, password_enc, region, created_at, updated_at, enabled, first_successful_sync_time, backfill_started_at, last_backfill_from, last_backfill_to, last_backfill_finished_at, last_backfill_duration, last_backfill_records, last_backfill_error, total_backfills, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_errors, total_ema, success_ema, failure_ema, last_sync_duration FROM site_sync_sources
+SELECT site_id, type, url_or_username_enc, password_enc, region, created_at, updated_at, enabled, first_successful_sync_time, backfill_started_at, last_backfill_from, last_backfill_to, last_backfill_finished_at, last_backfill_duration, last_backfill_records, last_backfill_error, total_backfills, sync_interval_seconds_reason, sync_interval_seconds, last_attempted_sync, last_successful_sync, last_failed_sync, total_syncs, total_successful_syncs, total_failed_syncs, total_records, last_sync_records, consecutive_successful_syncs, consecutive_failed_syncs, previous_sync_errors, total_ema, success_ema, failure_ema, last_sync_duration FROM site_sync_sources
 ORDER BY last_failed_sync IS NULL, last_failed_sync DESC, last_attempted_sync DESC, site_id, type
 LIMIT CAST(?2 AS INTEGER) OFFSET CAST(?1 AS INTEGER)
 `
@@ -348,6 +355,8 @@ func (q *Queries) SearchSyncSources(ctx context.Context, arg SearchSyncSourcesPa
 			&i.TotalSyncs,
 			&i.TotalSuccessfulSyncs,
 			&i.TotalFailedSyncs,
+			&i.TotalRecords,
+			&i.LastSyncRecords,
 			&i.ConsecutiveSuccessfulSyncs,
 			&i.ConsecutiveFailedSyncs,
 			&i.PreviousSyncErrors,
@@ -521,6 +530,8 @@ SET
     -- Counters
     total_syncs = total_syncs + 1,
     total_successful_syncs = total_successful_syncs + 1,
+    total_records = total_records + COALESCE(?1, 0),
+    last_sync_records = ?1,
     
     consecutive_successful_syncs = consecutive_successful_syncs + 1,
     consecutive_failed_syncs = 0,
@@ -531,30 +542,36 @@ SET
     sync_interval_seconds_reason = 'default',
 
     -- Timing
-    last_sync_duration = ?1,
+    last_sync_duration = ?2,
 
     success_ema = CASE
-        WHEN success_ema IS NULL THEN CAST(?1 AS REAL)
-        ELSE (0.2 * CAST(?1 AS REAL))
+        WHEN success_ema IS NULL THEN CAST(?2 AS REAL)
+        ELSE (0.2 * CAST(?2 AS REAL))
             + (0.8 * success_ema)
     END,
 
     total_ema = CASE
-        WHEN total_ema IS NULL THEN CAST(?1 AS REAL)
-        ELSE (0.2 * CAST(?1 AS REAL))
+        WHEN total_ema IS NULL THEN CAST(?2 AS REAL)
+        ELSE (0.2 * CAST(?2 AS REAL))
             + (0.8 * total_ema)
     END
 
-WHERE type = ?2 AND site_id = ?3
+WHERE type = ?3 AND site_id = ?4
 `
 
 type UpdateSyncSourceReportsSuccessParams struct {
+	Records   *int64
 	ElapsedMs *int64
 	Type      consts.SyncSourceType
 	SiteID    string
 }
 
 func (q *Queries) UpdateSyncSourceReportsSuccess(ctx context.Context, arg UpdateSyncSourceReportsSuccessParams) error {
-	_, err := q.exec(ctx, q.updateSyncSourceReportsSuccessStmt, updateSyncSourceReportsSuccess, arg.ElapsedMs, arg.Type, arg.SiteID)
+	_, err := q.exec(ctx, q.updateSyncSourceReportsSuccessStmt, updateSyncSourceReportsSuccess,
+		arg.Records,
+		arg.ElapsedMs,
+		arg.Type,
+		arg.SiteID,
+	)
 	return err
 }

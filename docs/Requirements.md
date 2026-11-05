@@ -274,7 +274,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   to forget; a click on the box, before or after, is kept, and a saved source's box is never changed.
 - A failing source syncs less often, and says when it failed and why.
 - A working source can be backfilled with the days before its oldest reading.
-- The sync page shows how each source has synced, how often, its backfill and its recent events.
+- The sync page shows how each source has synced, how often, the records it has pulled in, in all, from its syncs
+  and backfills, and in its last sync, its backfill and its recent events.
 - The sync page updates as each sync or backfill finishes, showing its new errors, stats and events without reloading,
   leaving a form being edited as it is and an opened history open. While it does, ● Live shows beside its title.
 - Sync credentials are encrypted at rest.

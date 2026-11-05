@@ -14,7 +14,8 @@ import (
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
-// A sync that adds records records a sync_added event with how many, and one that adds none records nothing
+// A sync that adds records records a sync_added event with how many, keeps them as its source's last sync's records,
+// and adds them to its total; one that adds none records no event
 func TestSyncThatAddsRecordsRecordsAnEvent(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	q, ctx, siteID := controlDB.Queries, t.Context(), site.SiteDB.Subdomain
@@ -40,6 +41,13 @@ func TestSyncThatAddsRecordsRecordsAnEvent(t *testing.T) {
 	require.NoError(t, q.CreateSyncSource(ctx, controldb.CreateSyncSourceParams{SiteID: siteID, Type: consts.SyncSourceTypeDexcom, UrlOrUsernameEnc: &username, PasswordEnc: &password, Enabled: true}))
 	require.NoError(t, jobs.SyncSource(ctx, sync.SyncJobParams{SiteID: siteID, Type: consts.SyncSourceTypeDexcom}))
 	require.Empty(t, added())
+	source := func(typ consts.SyncSourceType) *controldb.SiteSyncSource {
+		source, err := q.GetSyncSource(ctx, controldb.GetSyncSourceParams{SiteID: siteID, Type: typ})
+		require.NoError(t, err)
+		return source
+	}
+	require.Zero(t, source(consts.SyncSourceTypeDexcom).TotalRecords)
+	require.Equal(t, int64(0), *source(consts.SyncSourceTypeDexcom).LastSyncRecords)
 
 	// The virtual sync's first sync fills the last 30 minutes, so it adds records
 	require.NoError(t, q.CreateSyncSource(ctx, controldb.CreateSyncSourceParams{SiteID: siteID, Type: consts.SyncSourceTypeVirtual, Enabled: true}))
@@ -53,4 +61,12 @@ func TestSyncThatAddsRecordsRecordsAnEvent(t *testing.T) {
 	require.NoError(t, json.Unmarshal([]byte(events[0]), &attributes))
 	require.Equal(t, "virtual", attributes.SyncType)
 	require.Positive(t, attributes.Records)
+	virtual := source(consts.SyncSourceTypeVirtual)
+	require.Equal(t, int64(attributes.Records), virtual.TotalRecords)
+	require.Equal(t, int64(attributes.Records), *virtual.LastSyncRecords)
+
+	// The next sync's records are its last, and are added to the total
+	require.NoError(t, jobs.SyncSource(ctx, sync.SyncJobParams{SiteID: siteID, Type: consts.SyncSourceTypeVirtual}))
+	next := source(consts.SyncSourceTypeVirtual)
+	require.Equal(t, virtual.TotalRecords+*next.LastSyncRecords, next.TotalRecords)
 }

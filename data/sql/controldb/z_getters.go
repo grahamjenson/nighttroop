@@ -1908,6 +1908,26 @@ func (m *SiteSyncSource) SetTotalFailedSyncs(v *int64) {
 	m.TotalFailedSyncs = v
 }
 
+// GetTotalRecords returns the TotalRecords value.
+func (m SiteSyncSource) GetTotalRecords() int64 {
+	return m.TotalRecords
+}
+
+// SetTotalRecords sets the TotalRecords value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetTotalRecords(v int64) {
+	m.TotalRecords = v
+}
+
+// GetLastSyncRecords returns the LastSyncRecords value.
+func (m SiteSyncSource) GetLastSyncRecords() *int64 {
+	return m.LastSyncRecords
+}
+
+// SetLastSyncRecords sets the LastSyncRecords value and returns the updated SiteSyncSource.
+func (m *SiteSyncSource) SetLastSyncRecords(v *int64) {
+	m.LastSyncRecords = v
+}
+
 // GetConsecutiveSuccessfulSyncs returns the ConsecutiveSuccessfulSyncs value.
 func (m SiteSyncSource) GetConsecutiveSuccessfulSyncs() *int64 {
 	return m.ConsecutiveSuccessfulSyncs
@@ -4366,6 +4386,16 @@ func (m UpdateSyncSourceReportsFailureParams) GetSiteID() string {
 // SetSiteID sets the SiteID value and returns the updated UpdateSyncSourceReportsFailureParams.
 func (m *UpdateSyncSourceReportsFailureParams) SetSiteID(v string) {
 	m.SiteID = v
+}
+
+// GetRecords returns the Records value.
+func (m UpdateSyncSourceReportsSuccessParams) GetRecords() *int64 {
+	return m.Records
+}
+
+// SetRecords sets the Records value and returns the updated UpdateSyncSourceReportsSuccessParams.
+func (m *UpdateSyncSourceReportsSuccessParams) SetRecords(v *int64) {
+	m.Records = v
 }
 
 // GetElapsedMs returns the ElapsedMs value.
