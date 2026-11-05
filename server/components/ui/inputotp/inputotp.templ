@@ -157,6 +157,8 @@ templ Slot(props ...SlotProps) {
 			}
 			data-tui-inputotp-index={ strconv.Itoa(p.Index) }
 			data-tui-inputotp-slot
+			// A code from an authenticator app, so password managers neither fill a name in nor save it
+			autocomplete="one-time-code"
 			{ p.Attributes... }
 		/>
 	</div>

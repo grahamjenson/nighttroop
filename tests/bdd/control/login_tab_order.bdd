@@ -4,6 +4,10 @@ ASSERT_STATUS 200
 // Before signing in there is no header, as its menu is of pages that need a signed in admin
 ASSERT_NOT_VISIBLE #control--nav--logo
 ASSERT_NOT_VISIBLE #control--menu
+// Password managers fill the name and password, never the code, which is one-time
+ASSERT_VISIBLE #name[autocomplete="username"]
+ASSERT_VISIBLE #password[autocomplete="current-password"]
+ASSERT_VISIBLE #control--login--otp-1[autocomplete="one-time-code"]
 CLICK #name
 PRESS Tab
 ASSERT_VISIBLE #password:focus

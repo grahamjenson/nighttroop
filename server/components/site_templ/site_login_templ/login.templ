@@ -43,6 +43,7 @@ templ Login() {
 								"autocapitalize": "none",
 								"autocorrect":    "off",
 								"autofocus":      "true",
+								"autocomplete":   "username",
 							},
 						})
 					}
@@ -60,6 +61,7 @@ templ Login() {
 							Name:        "password",
 							Placeholder: "••••••••",
 							Required:    true,
+							Attributes:  templ.Attributes{"autocomplete": "current-password"},
 						})
 					}
 					<div class="mt-4"></div>

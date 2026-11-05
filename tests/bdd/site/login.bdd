@@ -45,6 +45,9 @@ ASSERT_PATH /login
 // PUT IN THE WRONG password
 ASSERT_VISIBLE #site--login--name
 ASSERT_VISIBLE #site--login--password
+// Password managers fill the name and password, and the code later is one-time, never a name
+ASSERT_VISIBLE #site--login--name[autocomplete="username"]
+ASSERT_VISIBLE #site--login--password[autocomplete="current-password"]
 INPUT #site--login--name admin
 INPUT #site--login--password wrongpassword
 
@@ -61,6 +64,7 @@ INPUT #site--login--password password
 CLICK #site--login-button
 ASSERT_STATUS 200
 ASSERT_VISIBLE #site--login--otp-1
+ASSERT_VISIBLE #site--login--otp-1[autocomplete="one-time-code"]
 ASSERT_PATH /login
 
 CLICK #site--login-totp-button
