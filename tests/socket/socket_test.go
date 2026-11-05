@@ -42,7 +42,6 @@ func TestSocketIO(t *testing.T) {
 				t.Fatalf("failed to parse: %v", err)
 			}
 			runner := &socketio.Runner{
-				Handler:           router,
 				Server:            ts,
 				RunBackgroundJobs: func() { backgroundJobs.RunAllNow(context.Background()) },
 			}

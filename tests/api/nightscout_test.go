@@ -5,6 +5,7 @@ import (
 	"embed"
 	_ "embed"
 	"io/fs"
+	"net/http/httptest"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -38,6 +39,9 @@ func TestNS(t *testing.T) {
 	backgroundJobs := background.NewBackGroundManager(context.Background(), controlDB, config, s3utils.NewS3Client(config))
 
 	testutils.DumpOnFailure(t, controlDB, "test_ns")
+	ts := httptest.NewServer(router)
+	t.Cleanup(ts.Close)
+	client := jsonapi.Client(ts)
 
 	err = fs.WalkDir(embeddedFiles, ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil || d.IsDir() || filepath.Ext(path) != ".http" {
@@ -48,7 +52,7 @@ func TestNS(t *testing.T) {
 			if err != nil {
 				t.Fatalf("failed to parse request file: %v", err)
 			}
-			requestFile.Run(t, router, map[string]any{
+			requestFile.Run(t, client, map[string]any{
 				"default_site":  siteInformation.SiteDB.Subdomain + ".ns.localhost",
 				"default_token": siteInformation.PwdNSToken,
 				"default_jwt":   defaultJwt,
