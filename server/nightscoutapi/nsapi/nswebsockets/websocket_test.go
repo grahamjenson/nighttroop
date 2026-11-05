@@ -202,3 +202,31 @@ func TestSocketAuthorizeIsRateLimited(t *testing.T) {
 	require.False(t, second.Connected(socketio.DefaultNamespace))
 	require.True(t, first.Connected(socketio.DefaultNamespace))
 }
+
+// As in Nightscout, an authorize with a token that is no one's is disconnected unanswered, while one with a wrong
+// API secret, or none, is answered that it can do nothing
+func TestSocketAuthorizeWithABadTokenDisconnects(t *testing.T) {
+	run := runs.Add(1)
+	siteCtx := httputils.CreateSiteContext(context.Background(), testConfig, nil, nil, nil, fmt.Sprint("site", run), "127.0.0.1", httputils.HTTPActionRead, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
+	ts := siteSocketServer(t, testConfig, siteCtx)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	for _, message := range []map[string]any{{"secret": "not the secret"}, {"token": "not-a-real-token"}} {
+		client, err := socketio.Dial(ctx, ts.URL+"/socket.io/", engineio.V4, nil)
+		require.NoError(t, err)
+		require.NoError(t, client.Connect(ctx, socketio.DefaultNamespace, nil))
+		short, cancelShort := context.WithTimeout(ctx, 500*time.Millisecond)
+		reply, err := client.EmitWithAck(short, socketio.DefaultNamespace, "authorize", message)
+		cancelShort()
+		if message["token"] == nil {
+			require.NoError(t, err)
+			require.JSONEq(t, `{"read":false,"write":false,"write_treatment":false}`, string(reply[0]))
+			require.True(t, client.Connected(socketio.DefaultNamespace))
+		} else {
+			require.ErrorIs(t, err, context.DeadlineExceeded)
+			require.False(t, client.Connected(socketio.DefaultNamespace))
+		}
+		client.Close()
+	}
+}

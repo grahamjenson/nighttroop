@@ -346,6 +346,11 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - A live update sent to a site's sockets is in the site's own settings, such as its units, as it goes to every device.
 - A new Announcement is sent to every `/alarm` socket that can read, with its notes as the message, so AAPS shows it
   as a notification.
+- Any other new treatment from the last 10 minutes, except a Temp Basal or Temporary Override, is sent to every
+  `/alarm` socket that can read as a `notification`, titled with its event type and saying who entered it and its
+  notes, as Nightscout's treatment notify does.
+- A Socket.IO `authorize` with a token that is no one's is disconnected unanswered, as Nightscout does; a wrong API
+  secret is answered that it can do nothing.
 - Glucose is stored in mg/dL and returned and accepted in the settings' units.
 - The v1 status has the settings' units in `settings.units`, as Nightscout writes them (`mg/dl` or `mmol`).
 - The settings `units_mgdl_label` and `units_mmol_label`, set only through the settings endpoint, say how the

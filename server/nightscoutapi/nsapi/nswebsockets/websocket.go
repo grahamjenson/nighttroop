@@ -82,7 +82,7 @@ func (ws *Websocket) siteServer(siteID string, create bool) *socketio.Server {
 	ws.config.Events.Subscribe(siteID, func(event events.Event) {
 		// Model changes are sent to the site's sockets, its announcements and an identity's alarms to its /alarm sockets
 		if event.Model != nil {
-			ws.broadcastChange(main, event)
+			ws.broadcastChange(main, alarm, event)
 			sendAnnouncement(alarm, event)
 		}
 		if checked, ok := event.Attributes.(alarms.Checked); ok && event.Name == events.Alarm {
@@ -115,7 +115,7 @@ func acknowledge(ack func(...any), reply any) {
 
 // onCredentials handles a socket's event that checks credentials, as authorize and the subscribes do. A client
 // sends one, so past maxAuthorizeAttempts, or over the site's read limit, the socket is disconnected; otherwise its
-// first argument, decoded as M, is handled and the reply is the ack.
+// first argument, decoded as M, is handled and the reply is the ack, unless handling it disconnected the socket.
 func onCredentials[M any](ws *Websocket, socket *socketio.Socket, event string, handle func(message M) any) {
 	attempts := 0
 	socket.On(event, func(args []json.RawMessage, ack func(...any)) {
@@ -128,7 +128,9 @@ func onCredentials[M any](ws *Websocket, socket *socketio.Socket, event string, 
 		if len(args) > 0 {
 			json.Unmarshal(args[0], &message)
 		}
-		acknowledge(ack, handle(message))
+		if reply := handle(message); socket.Connected() {
+			acknowledge(ack, reply)
+		}
 	})
 }
 
@@ -146,18 +148,19 @@ type authorization struct {
 	WriteTreatment bool `json:"write_treatment"`
 }
 
-// authorize finds the identity for a token, a JWT or the token given as the API secret, and what it may do
-func (ws *Websocket) authorize(socket *socketio.Socket, token, secret string) (context.Context, authorization) {
+// authorize finds the identity for a token, a JWT or the token given as the API secret, and what it may do. It is
+// false when there is no such identity.
+func (ws *Websocket) authorize(socket *socketio.Socket, token, secret string) (context.Context, authorization, bool) {
 	ctx, nsIdentity := ws.identity(socket, token, secret)
 	if nsIdentity == nil {
-		return ctx, authorization{}
+		return ctx, authorization{}, false
 	}
 
 	return ctx, authorization{
 		Read:           nsutils.HasPermission(*nsIdentity, "api:*:read"),
 		Write:          nsutils.HasPermission(*nsIdentity, "api:*:create"),
 		WriteTreatment: nsutils.HasPermission(*nsIdentity, "api:treatments:create"),
-	}
+	}, true
 }
 
 // identity is the Nightscout identity for a token, a JWT or the token given as the API secret, or nil for none. The
