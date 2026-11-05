@@ -31,6 +31,8 @@ func registerMiscRoutes(r *chi.Mux, store nsutils.Store) {
 	r.Get("/versions.json", Versions())
 	r.Get("/verifyauth", VerifyAuth(store))
 	r.Get("/experiments/test", ExperimentsTest())
+	r.Get("/notifications/ack", AckNotifications())
+	r.Get("/adminnotifies", AdminNotifies())
 }
 
 func registerCollectionRoutes(r *chi.Mux, store nsutils.Store) {
