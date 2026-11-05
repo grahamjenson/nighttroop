@@ -1,0 +1,24 @@
+INCLUDE steps/new_ns_site.steps
+
+// AAPS uploads a therapy event when its settings are exported, with the eventType "SettingsExport". It is kept and
+// read back as a note, as it has nothing to dose, rather than refused on every sync and backfill.
+NAME add_settings_export
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "date": {{ itime 10 }},
+    "utcOffset": 720,
+    "isReadOnly": false,
+    "isValid": true,
+    "eventType": "SettingsExport",
+    "notes": "Settings exported",
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+
+NAME get_settings_export
+GET http://{{ site }}/api/v3/treatments/{{ .add_settings_export.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Note" "@result.eventType"
+ASSERT_EQUALS "Settings exported" "@result.notes"
