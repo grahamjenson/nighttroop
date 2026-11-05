@@ -1,7 +1,5 @@
 package sitedb
 
-import "nighttroop.t1d.nz/utils"
-
 /////////
 // Event Group Stuff
 /////////
@@ -115,50 +113,4 @@ func (model *EventGroupsBundle) GetAllSubEvents() []SubEventInterface {
 		subEvents = append(subEvents, model.NotificationEvent)
 	}
 	return subEvents
-}
-
-func GetEventGroupToEventGroupsBundle(source GetEventGroupRow) EventGroupsBundle {
-	egb := EventGroupsBundle{
-		EventGroup: source.EventGroup,
-	}
-
-	if source.GlucoseReadingsVw.ID != nil {
-		utils.ConvertViaJSON(source.GlucoseReadingsVw, &egb.GlucoseReading)
-	}
-
-	if source.InsulinDosesVw.ID != nil {
-		utils.ConvertViaJSON(source.InsulinDosesVw, &egb.InsulinDose)
-
-	}
-
-	if source.FoodIntakesVw.ID != nil {
-		utils.ConvertViaJSON(source.FoodIntakesVw, &egb.FoodIntake)
-	}
-
-	if source.TempBasalsVw.ID != nil {
-		utils.ConvertViaJSON(source.TempBasalsVw, &egb.TempBasal)
-	}
-
-	if source.TempTargetsVw.ID != nil {
-		utils.ConvertViaJSON(source.TempTargetsVw, &egb.TempTarget)
-	}
-
-	if source.ProfileSwitchesVw.ID != nil {
-		utils.ConvertViaJSON(source.ProfileSwitchesVw, &egb.ProfileSwitch)
-
-	}
-
-	if source.ComponentEventsVw.ID != nil {
-		utils.ConvertViaJSON(source.ComponentEventsVw, &egb.ComponentEvent)
-	}
-
-	if source.ActivitiesVw.ID != nil {
-		utils.ConvertViaJSON(source.ActivitiesVw, &egb.Activity)
-	}
-
-	if source.NotificationEventsVw.ID != nil {
-		utils.ConvertViaJSON(source.NotificationEventsVw, &egb.NotificationEvent)
-	}
-
-	return egb
 }

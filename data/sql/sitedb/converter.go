@@ -54,4 +54,25 @@ type ToCreateParams interface {
 	//goverter:map . EventGroup
 	//goverter:ignore GlucoseReading InsulinDose FoodIntake TempBasal TempTarget ProfileSwitch ComponentEvent Activity NotificationEvent
 	EventGroupToEventGroupsBundle(source EventGroup) EventGroupsBundle
+
+	// EVENT GROUP EVENTS: each event its row joins, through the event's view, whose every column can be NULL, as the
+	// event's own row. Copied field by field, rather than through JSON, as every treatment read makes them.
+	// goverter:useZeroValueOnPointerInconsistency
+	GlucoseReadingFromView(source GlucoseReadingsVw) GlucoseReading
+	// goverter:useZeroValueOnPointerInconsistency
+	InsulinDoseFromView(source InsulinDosesVw) InsulinDose
+	// goverter:useZeroValueOnPointerInconsistency
+	FoodIntakeFromView(source FoodIntakesVw) FoodIntake
+	// goverter:useZeroValueOnPointerInconsistency
+	TempBasalFromView(source TempBasalsVw) TempBasal
+	// goverter:useZeroValueOnPointerInconsistency
+	TempTargetFromView(source TempTargetsVw) TempTarget
+	// goverter:useZeroValueOnPointerInconsistency
+	ProfileSwitchFromView(source ProfileSwitchesVw) ProfileSwitch
+	// goverter:useZeroValueOnPointerInconsistency
+	ComponentEventFromView(source ComponentEventsVw) ComponentEvent
+	// goverter:useZeroValueOnPointerInconsistency
+	ActivityFromView(source ActivitiesVw) Activity
+	// goverter:useZeroValueOnPointerInconsistency
+	NotificationEventFromView(source NotificationEventsVw) NotificationEvent
 }
