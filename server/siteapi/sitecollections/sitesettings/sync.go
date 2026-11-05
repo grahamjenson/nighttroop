@@ -178,11 +178,12 @@ func (s *SyncSettingsCollection) GetRow(ctx context.Context, collectionTx *sitea
 		SiteID: siteContext.SiteID,
 	})
 
+	// None yet is not an error: saving a sync source the site has not got creates it
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
 	if err != nil {
 		slog.ErrorContext(ctx, "Error fetching sync source", "error", err)
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
 		return nil, apiutils.ErrBadBody
 	}
 	if model == nil {
