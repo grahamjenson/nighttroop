@@ -1,0 +1,136 @@
+# Nightscout's /alarm namespace, ported from socket_v3_alarm_levels.sio and socket_v3_alarm.sio in
+# https://github.com/grahamjenson/nightscout_compatibility_test
+# Each assert is what Nightscout answered there, from its results/nightscout/socket_v3_alarm*, numbered as those
+# files are. Where nighttroop differs it is left out:
+#   - its alarms are the identity's, off until turned on, not the AR2 forecast's, so their titles and messages differ
+#   - notifications have no plugin, key or notifyhash
+
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME jwtauth
+GET http://{{ site }}/api/v2/authorization/request/token={{ token }}
+ASSERT_STATUS 200
+SET jwt {{ .jwtauth.token }}
+
+# Nightscout's are on with ALARM_TYPES, nighttroop's when the identity turns them on
+NAME low_prediction_on
+PATCH http://{{ site }}/api/v3/settings/alarm_low_prediction_enabled
+H Authorization: Bearer {{ jwt }}
+B { "value": true }
+ASSERT_STATUS 200
+
+NAME urgent_low_on
+PATCH http://{{ site }}/api/v3/settings/alarm_urgent_low_enabled
+H Authorization: Bearer {{ jwt }}
+B { "value": true }
+ASSERT_STATUS 200
+
+NAME alarm_levels_connect
+CONNECT http://{{ site }}/socket.io/?EIO=4
+NS /alarm
+T 5s
+
+NAME alarm_levels_subscribe
+EMIT subscribe
+B {"accessToken": "{{ token }}"}
+ACK
+ASSERT_EQUALS true "@success"
+ASSERT_EQUALS "Subscribed for alarms" "@message"
+
+# A slow fall to 70 mg/dL forecasts a low, a warning
+NAME alarm_levels_falling_entries
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [{"type": "sgv", "sgv": 90, "date": {{ itime 15 }}, "device": "alarm-test"}, {"type": "sgv", "sgv": 82, "date": {{ itime 10 }}, "device": "alarm-test"}, {"type": "sgv", "sgv": 75, "date": {{ itime 5 }}, "device": "alarm-test"}, {"type": "sgv", "sgv": 70, "date": {{ itime 0 }}, "device": "alarm-test"}]
+ASSERT_STATUS 200
+
+RUN_BACKGROUND_JOBS
+
+# 006.alarm_levels_warning
+NAME alarm_levels_warning
+WAIT alarm
+T 5s
+ASSERT_EQUALS 1 "@level"
+ASSERT_EQUALS "default" "@group"
+
+# A drop to 45 mg/dL is urgent
+NAME alarm_levels_low_entry
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [{"type": "sgv", "sgv": 45, "date": {{ itime 0 }}, "device": "alarm-test"}]
+ASSERT_STATUS 200
+
+RUN_BACKGROUND_JOBS
+
+# 008.alarm_levels_urgent
+NAME alarm_levels_urgent
+WAIT urgent_alarm
+T 5s
+ASSERT_EQUALS 2 "@level"
+ASSERT_EQUALS "default" "@group"
+
+# Acknowledging the urgent alarm clears it for every client
+NAME alarm_levels_ack
+EMIT ack
+ARGS [2, "default", 60000]
+
+RUN_BACKGROUND_JOBS
+
+# 010.alarm_levels_clear
+NAME alarm_levels_clear
+WAIT clear_alarm
+T 5s
+ASSERT_EQUALS true "@clear"
+ASSERT_EQUALS "default" "@group"
+ASSERT_EQUALS "All Clear" "@title"
+
+# Other treatments are sent as info notifications
+NAME alarm_levels_note
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+B {"eventType": "Note", "notes": "alarm levels note", "enteredBy": "alarm-test"}
+ASSERT_STATUS 200
+
+# 012.alarm_levels_notification
+NAME alarm_levels_notification
+WAIT notification
+T 5s
+ASSERT_EQUALS 0 "@level"
+ASSERT_EQUALS "Note" "@title"
+ASSERT_EQUALS "default" "@group"
+ASSERT_EQUALS "\nEntered By: alarm-test\nNotes: alarm levels note" "@message"
+
+# An announcement is no notification, and nor is an old treatment or a temp basal
+NAME alarm_create_announcement
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+B {"eventType": "Announcement", "notes": "socket test announcement", "isAnnouncement": true, "enteredBy": "socket-test"}
+ASSERT_STATUS 200
+
+# 004.alarm_announcement
+NAME alarm_announcement
+WAIT announcement
+T 5s
+ASSERT_EQUALS 0 "@level"
+ASSERT_EQUALS "Announcement" "@title"
+ASSERT_EQUALS "socket test announcement" "@message"
+ASSERT_EQUALS "Announcement" "@group"
+ASSERT_EQUALS true "@isAnnouncement"
+
+NAME old_note
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+B {"eventType": "Note", "notes": "an hour ago", "created_at": "{{ time 60 }}"}
+ASSERT_STATUS 200
+
+NAME temp_basal
+POST http://{{ site }}/api/v1/treatments?token={{ token }}
+B {"eventType": "Temp Basal", "duration": 30, "absolute": 0.5, "created_at": "{{ time 0 }}"}
+ASSERT_STATUS 200
+
+NAME no_more_notifications
+COLLECT notification
+T 500ms
+ASSERT_LENGTH 0 "@"
+
+NAME alarm_levels_disconnect
+DISCONNECT

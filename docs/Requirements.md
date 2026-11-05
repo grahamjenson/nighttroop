@@ -323,6 +323,10 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - `/pebble` has the newest `count` readings (1 by default, at most 1000) from the last two days for Pebble and other
   watch faces, each glucose a string in the `units` asked for (`mmol` or `mg/dl`) or the settings' units, with its
   trend number, and the newest with the delta, the uploader's battery and IOB, as Nightscout's has them.
+- v1 `alexa` and `googlehome` answer Nightscout's Alexa skill and Google Home action, for an identity that can read:
+  `NSStatus`, `UploaderBattery` and `MetricNow` of bg, delta, iob, cob and uploader battery, said as Nightscout says
+  them in the settings' units. An Alexa launch is welcomed and keeps listening, and an unknown intent or metric is
+  answered that it is not known, with Google Home listening for another.
 - v1 `experiments/test` is `{"status":"ok"}` for an identity that can upload readings and a 401 for any other, so
   Loop's and xDrip4iOS's connection tests pass with a PWD phone's token.
 - A v1 search by `find[_id]` that finds nothing, such as a deleted treatment, is an empty list, not a 404.
@@ -349,6 +353,11 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - A live update sent to a site's sockets is in the site's own settings, such as its units, as it goes to every device.
 - A new Announcement is sent to every `/alarm` socket that can read, with its notes as the message, so AAPS shows it
   as a notification.
+- Any other new treatment from the last 10 minutes, except a Temp Basal or Temporary Override, is sent to every
+  `/alarm` socket that can read as a `notification`, titled with its event type and saying who entered it and its
+  notes, as Nightscout's treatment notify does.
+- A Socket.IO `authorize` with a token that is no one's is disconnected unanswered, as Nightscout does; a wrong API
+  secret is answered that it can do nothing.
 - Glucose is stored in mg/dL and returned and accepted in the settings' units.
 - The v1 status has the settings' units in `settings.units`, as Nightscout writes them (`mg/dl` or `mmol`).
 - The settings `units_mgdl_label` and `units_mmol_label`, set only through the settings endpoint, say how the

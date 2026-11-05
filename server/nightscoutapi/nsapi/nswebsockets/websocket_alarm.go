@@ -6,11 +6,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"slices"
 	"time"
 
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/livedb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
+	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/socketio"
 	"nighttroop.t1d.nz/utils/alarms"
@@ -144,6 +146,42 @@ func sendAnnouncement(namespace *socketio.Namespace, event events.Event) {
 	}
 	namespace.EmitTo(announcementRoom, "announcement", alarmNotification{Title: n.Title, Message: message, Group: "Announcement",
 		Timestamp: n.OccurredAt, IsAnnouncement: true})
+}
+
+// notifyWithin is how recent a new treatment must be to be notified, as in Nightscout's treatment notify
+const notifyWithin = 10 * time.Minute
+
+// unnotifiedTypes are the treatments Nightscout's treatment notify sends no notification for, the announcements
+// having their own
+var unnotifiedTypes = []string{"", string(nightscoutmodels.Announcement), string(nightscoutmodels.TempBasal), string(nightscoutmodels.TemporaryOverride)}
+
+// treatmentLines are the fields a treatment notification's message has, with their labels and units
+var treatmentLines = [][3]string{{"glucose", "BG", ""}, {"reason", "Reason", ""}, {"carbs", "Carbs", "g"}, {"insulin", "Insulin", "U"},
+	{"duration", "Duration", " min"}, {"percent", "Percent", "%"}, {"absolute", "Value", ""}, {"enteredBy", "Entered By", ""}, {"notes", "Notes", ""}}
+
+// sendTreatmentNotification sends a new treatment to the site's /alarm sockets as Nightscout's treatment notify does,
+// when it is recent and not an announcement: an info notification titled with its event type, saying what it was
+func sendTreatmentNotification(namespace *socketio.Namespace, record nsutils.Document) {
+	fields := record.Fields(false)
+	eventType, _ := fields["eventType"].(string)
+	ago := time.Since(time.UnixMilli(record.OccurredAt()))
+	if slices.Contains(unnotifiedTypes, eventType) || ago < 0 || ago >= notifyWithin {
+		return
+	}
+	message := ""
+	for _, line := range treatmentLines {
+		if value := fields[line[0]]; value != nil && value != "" && value != 0.0 {
+			message += fmt.Sprintf("\n%s: %v%s", line[1], value, line[2])
+			if glucoseType, ok := fields["glucoseType"].(string); ok && line[0] == "glucose" {
+				message += " (" + glucoseType + ")"
+			}
+		}
+	}
+	if eventType == string(nightscoutmodels.TemporaryTarget) && fields["duration"] == 0.0 {
+		eventType, message = eventType+" Cancel", "Canceled"
+	}
+	namespace.EmitTo(announcementRoom, "notification", alarmNotification{Title: eventType, Message: message, Group: "default",
+		Timestamp: record.OccurredAt()})
 }
 
 // alarmTitles are each alarm's title and message, as Nightscout's simplealarms and timeago say them

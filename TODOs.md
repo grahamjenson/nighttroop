@@ -87,6 +87,9 @@
     1. P3: Keep a registration's `last_error` when a profile registers the same token again, rather than clearing it
     1. P3: Cap a site's deleted push credentials too, or delete them for good, as only live ones are counted
 1. Nightscout API:
+    1. P4: The Alexa and Google Home intents have Nightscout's bg, delta, iob, cob and uploader battery, but not its
+       basal, raw bg, forecast, pump reservoir and battery, CGM status, db size, LastLoop and InsulinRemaining, nor
+       the temp basal in NSStatus (`nsv2/assistants.go`)
     1. P1: Nightscout clients (AAPS, Loop, LoopFollow, Nightguard, the xDrip+ follower) read `sgv` and `mbg`, and
        AAPS its temp targets and profiles, as mg/dL whatever the `units`, but the API gives them in the identity's
        units, then the site's. A device added for a client in Add Device is in mg/dL (#524) and an admin can set any
