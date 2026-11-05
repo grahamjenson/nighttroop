@@ -1,0 +1,60 @@
+# Migrations
+
+Each DB's schema is made by the numbered SQL files in its `data/sql/<db>/migrations` folder, run in order with
+[golang-migrate](https://github.com/golang-migrate/migrate) each time the server opens the DB. A DB keeps the version
+it reached in its `schema_migrations` table and only runs the files numbered after it.
+
+## Never change a migration that is on main
+
+A DB at version 1 never runs `000001` again, so a change to it only reaches DBs made afterwards. Every DB made before
+keeps the old schema: an older control DB cannot start ("no such column"), and an older site's DB fails some queries
+or keeps rules, like a `CHECK`, the code no longer expects. CI fails a pull request that changes, deletes or renames
+a migration that is on its base branch (`scripts/check_migrations.sh`, which can be run locally the same way).
+
+To change a schema, add the next migration:
+
+1. Add `data/sql/<db>/migrations/00000N_<what>.up.sql`, numbered after the last, and its `00000N_<what>.down.sql`.
+   `go generate` migrates down as a check, so each needs a down file; it can be empty when the change cannot be undone.
+2. Run `go generate ./...`, which applies every migration in order to make `schema_gen.sql` for sqlc.
+3. Prefer additive changes: a new table, or a new column that can be NULL or has a default. A build cannot open a DB
+   a newer build migrated, so an additive change is the one a rollback copes with best.
+
+## What a migration runs in
+
+Each file runs in one transaction, on a connection with foreign keys on. A statement that fails rolls the whole
+file back, but golang-migrate has already marked the version dirty, and every open of a dirty DB fails ("Dirty
+database version N"). As the file was rolled back, none of N was applied: once its bug is fixed, the DB can be
+forced back to version N-1 and migrated again.
+
+## Changing a table
+
+SQLite cannot change a column or a `CHECK` in place, so the table is made again. The usual way, renaming a new table
+over the old one, fails here: the transaction cannot turn foreign keys off, and tables such as `event_groups`
+reference the event tables `ON DELETE RESTRICT`. Instead, in one migration:
+
+```sql
+-- Foreign keys are checked at commit, when every row referenced is back
+PRAGMA defer_foreign_keys = ON;
+CREATE TEMP TABLE temp_basals_copy AS SELECT * FROM temp_basals;
+DROP TABLE temp_basals;
+CREATE TABLE temp_basals (...);              -- its new definition, under its own name
+INSERT INTO temp_basals SELECT * FROM temp_basals_copy;
+DROP TABLE temp_basals_copy;
+CREATE INDEX temp_basals_occurred_at_idx ON temp_basals(occurred_at);  -- dropping the table dropped its indexes
+```
+
+The table is made again under its own name, so views that select from it, like `temp_basals_vw`, still work, and
+rows that reference it still do. Columns copied with `SELECT *` must be in the same order in the new definition; name
+them otherwise.
+
+## When a migration fails on a deploy
+
+- **A DB that cannot be opened stops the start**, as does a missing site restored from its backup that cannot be:
+  its files are kept, and with `update.sh` the release is rolled back, putting `./data` back from the copy it made.
+- **Fix forward**: a new release with a fixed or new migration opens the kept DBs. A dirty one is first forced back
+  to the version before the one that failed, e.g. `sqlite3 <db> "UPDATE schema_migrations SET version = N-1, dirty = 0"`
+  with the server stopped.
+- **Rolling back after a migration ran** needs `./backups/data-*.tar.gz` from `update.sh`, or S3's backups, as the
+  older build cannot open DBs at the newer version, and loses what was written since.
+- **Staging** (`scripts/try_migrate_or_delete`) deletes every DB when one cannot be migrated and prepared, so it starts
+  empty rather than with only some.
