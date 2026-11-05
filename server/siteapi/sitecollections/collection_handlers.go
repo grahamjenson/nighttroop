@@ -331,7 +331,7 @@ func get[R, M any](ctx context.Context, tx *siteapiutils.CollectionTx, collectio
 	if errors.Is(err, sql.ErrNoRows) || (err == nil && row == nil) {
 		return nil, nil, nil
 	}
-	if herr := answer(err, collection.GetName()); herr != nil {
+	if herr := apiutils.ErrorFor(err, collection.GetName()); herr != nil {
 		return nil, nil, herr
 	}
 	return collection.ToModel(row, siteContext), row, nil
@@ -339,7 +339,7 @@ func get[R, M any](ctx context.Context, tx *siteapiutils.CollectionTx, collectio
 
 func search[R, M any](ctx context.Context, tx *siteapiutils.CollectionTx, collection CollectionSearch[R, M], query *apiutils.Query, siteContext *httputils.SiteContext) ([]*M, *apiutils.HTTPError) {
 	rows, err := collection.SearchRows(ctx, tx, query, siteContext)
-	if herr := answer(err, collection.GetName()); herr != nil {
+	if herr := apiutils.ErrorFor(err, collection.GetName()); herr != nil {
 		return nil, herr
 	}
 	models := make([]*M, 0, len(rows))
@@ -352,7 +352,7 @@ func search[R, M any](ctx context.Context, tx *siteapiutils.CollectionTx, collec
 func create[R, M any](ctx context.Context, tx *siteapiutils.CollectionTx, collection CollectionCreate[R, M], id *string, siteContext *httputils.SiteContext, model *M) *apiutils.HTTPError {
 
 	row, err := collection.CreateRow(ctx, tx, id, siteContext, model)
-	if herr := answer(err, collection.GetName()); herr != nil {
+	if herr := apiutils.ErrorFor(err, collection.GetName()); herr != nil {
 		return herr
 	}
 	reportChange(tx, events.Created, row)
@@ -363,7 +363,7 @@ func create[R, M any](ctx context.Context, tx *siteapiutils.CollectionTx, collec
 func update[R, M any](ctx context.Context, tx *siteapiutils.CollectionTx, collection CollectionUpdate[R, M], siteContext *httputils.SiteContext, oldModel *M, model *M) *apiutils.HTTPError {
 
 	row, err := collection.UpdateRow(ctx, tx, siteContext, oldModel, model)
-	if herr := answer(err, collection.GetName()); herr != nil {
+	if herr := apiutils.ErrorFor(err, collection.GetName()); herr != nil {
 		return herr
 	}
 	reportChange(tx, events.Updated, row)
@@ -374,7 +374,7 @@ func update[R, M any](ctx context.Context, tx *siteapiutils.CollectionTx, collec
 // delete deletes the row read as the model, so the change can say what was deleted
 func delete[R, M any](ctx context.Context, siteContext *httputils.SiteContext, tx *siteapiutils.CollectionTx, collection CollectionDelete[R, M], id string, row *R) *apiutils.HTTPError {
 
-	if herr := answer(collection.DeleteRow(ctx, tx, id, siteContext), collection.GetName()); herr != nil {
+	if herr := apiutils.ErrorFor(collection.DeleteRow(ctx, tx, id, siteContext), collection.GetName()); herr != nil {
 		return herr
 	}
 	reportChange(tx, events.Deleted, row)
@@ -384,20 +384,6 @@ func delete[R, M any](ctx context.Context, siteContext *httputils.SiteContext, t
 // reportChange reports a change to the site's own rows, to be published once the transaction commits, only to the site
 func reportChange[R any](tx *siteapiutils.CollectionTx, action events.Action, row *R) {
 	tx.ReportChange(action, row)
-}
-
-// answer is the response to a store's error: its own, not found for a missing row, or the database's
-func answer(err error, what string) *apiutils.HTTPError {
-	var herr *apiutils.HTTPError
-	switch {
-	case err == nil:
-		return nil
-	case errors.As(err, &herr):
-		return herr
-	case errors.Is(err, sql.ErrNoRows):
-		return apiutils.ErrNotFound
-	}
-	return apiutils.WriteError(err, what)
 }
 
 // GettingStartedHandler is the guide to setting up the site, a page for people, so it has no JSON
