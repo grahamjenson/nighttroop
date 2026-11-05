@@ -139,7 +139,9 @@ func (b *SyncJobManager) backfillNightscout(ctx context.Context, syncInfo *SyncJ
 			if err != nil {
 				return added, err
 			}
-			if len(docs) < c.backfillPage {
+			// A page reaching back before from has all the range, and the next would ask for documents dated after from
+			// and before its oldest, which none are and which a Nightscout server can search until the backfill times out
+			if len(docs) < c.backfillPage || oldest < from.UnixMilli() {
 				break
 			}
 			// The next page includes the oldest date, so documents sharing it are not missed, unless the whole page had it

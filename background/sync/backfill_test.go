@@ -156,3 +156,34 @@ func TestOldestDate(t *testing.T) {
 		require.Equal(t, test.oldest, oldestDate(test.docs, 1000), test.name)
 	}
 }
+
+// A Nightscout server can return a document dated before the backfill's start, e.g. a device status whose date is
+// not what it filters on. The backfill stops there, rather than asking for documents dated after its start and
+// before that one, which none can be, and which a Nightscout server can search until the backfill times out.
+func TestNightscoutBackfillStopsAtAPageOlderThanItsStart(t *testing.T) {
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
+	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.SyncSourceTypeNightscout
+	jobs := SetupSyncJobManager(cfg, controlDB)
+	enc := func(s string) *string {
+		v, err := cfg.Security.Encrypt(s)
+		require.NoError(t, err)
+		return &v
+	}
+	// A full page of statuses from the last day, and one from a month ago; the fake server returns it for any dates
+	statuses := []any{map[string]any{"device": "openaps://phone", "date": float64(time.Now().Add(-30 * 24 * time.Hour).UnixMilli())}}
+	for i := 1; i < 50; i++ {
+		statuses = append(statuses, map[string]any{"device": "openaps://phone", "date": float64(time.Now().Add(-time.Duration(i) * time.Minute).UnixMilli())})
+	}
+	nightscout_client.TestDocuments = map[string][]any{"devicestatus": statuses}
+	t.Cleanup(func() { nightscout_client.TestDocuments = map[string][]any{} })
+	require.NoError(t, q.CreateSyncSource(ctx, controldb.CreateSyncSourceParams{SiteID: siteID, Type: typ, UrlOrUsernameEnc: enc(nightscout_client.TestValidURL), PasswordEnc: enc("token"), Enabled: true}))
+
+	backfill, err := BackfillRange(ctx, site.SiteDB, typ, 7)
+	require.NoError(t, err)
+	require.NoError(t, QueueBackfill(ctx, controlDB, siteID, typ, backfill))
+	require.NoError(t, jobs.SyncSource(ctx, SyncJobParams{SiteID: siteID, Type: typ, Backfill: &backfill}))
+
+	s, err := q.GetSyncSource(ctx, controldb.GetSyncSourceParams{SiteID: siteID, Type: typ})
+	require.NoError(t, err)
+	require.Nil(t, s.LastBackfillError, "the backfill stops at the page older than its start")
+}
