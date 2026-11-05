@@ -5,10 +5,11 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"nighttroop.t1d.nz/tests/dsl/script"
 )
 
 func TestParseFile(t *testing.T) {
-	file, err := ParseFile(`
+	file, err := parse(`
 # a comment
 NAME connect
 CONNECT http://{{ site }}/socket.io/?EIO=3
@@ -40,7 +41,7 @@ ASSERT_STATUS 200
 
 NAME bye
 DISCONNECT
-`, "test.sio")
+`)
 	require.NoError(t, err)
 	require.Len(t, file.Steps, 7)
 
@@ -77,8 +78,17 @@ func TestParseFileErrors(t *testing.T) {
 	}
 	for name, contents := range tests {
 		t.Run(name, func(t *testing.T) {
-			_, err := ParseFile(contents, "test.sio")
+			_, err := parse(contents)
 			require.ErrorContains(t, err, "test.sio")
 		})
 	}
+}
+
+// parse is the steps of a .sio file's contents
+func parse(contents string) (*File, error) {
+	lines, err := script.SplitLines([]byte(contents), "test.sio", nil)
+	if err != nil {
+		return nil, err
+	}
+	return ParseLines(lines, "test.sio")
 }

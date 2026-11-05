@@ -17,6 +17,7 @@ import (
 	"testing"
 
 	"nighttroop.t1d.nz/server"
+	"nighttroop.t1d.nz/tests/dsl/flow"
 	"nighttroop.t1d.nz/tests/dsl/jsonapi"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/testutils"
@@ -166,12 +167,12 @@ func collectEndpoints(tb testing.TB) []*endpoint {
 		if err != nil || d.IsDir() || filepath.Ext(path) != ".http" {
 			return err
 		}
-		requestFile, err := jsonapi.ParseRequestFile(embeddedFiles, path)
+		requestFlow, err := flow.Parse(embeddedFiles, path)
 		if err != nil {
 			return nil
 		}
-		for _, request := range requestFile.Requests {
-			e := parseEndpoint(request)
+		for _, step := range requestFlow.API.Steps {
+			e := parseEndpoint(step.Request())
 			if e == nil {
 				continue
 			}
@@ -192,9 +193,9 @@ func collectEndpoints(tb testing.TB) []*endpoint {
 	return endpoints
 }
 
-// parseEndpoint is a request's endpoint, or nil when it is skipped or not a request
+// parseEndpoint is a request's endpoint, or nil when it is skipped or not a request, as a step that is not HTTP has none
 func parseEndpoint(request *jsonapi.Request) *endpoint {
-	if request.RunBackgroundJobs || request.Method == "" {
+	if request == nil {
 		return nil
 	}
 	rest, ok := strings.CutPrefix(request.URL, "http://")

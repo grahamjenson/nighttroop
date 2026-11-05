@@ -11,7 +11,7 @@ import (
 
 	"nighttroop.t1d.nz/background"
 	"nighttroop.t1d.nz/server"
-	"nighttroop.t1d.nz/tests/dsl/socketio"
+	"nighttroop.t1d.nz/tests/dsl/flow"
 	"nighttroop.t1d.nz/utils/s3utils"
 	"nighttroop.t1d.nz/utils/testutils"
 )
@@ -33,19 +33,15 @@ func TestSocketIO(t *testing.T) {
 			return err
 		}
 		t.Run(strings.TrimPrefix(path, "nightscout/"), func(t *testing.T) {
-			contents, err := embeddedFiles.ReadFile(path)
-			if err != nil {
-				t.Fatalf("failed to read %s: %v", path, err)
-			}
-			file, err := socketio.ParseFile(string(contents), path)
+			socketFlow, err := flow.Parse(embeddedFiles, path)
 			if err != nil {
 				t.Fatalf("failed to parse: %v", err)
 			}
-			runner := &socketio.Runner{
+			runner := &flow.Runner{
 				Server:            ts,
 				RunBackgroundJobs: func() { backgroundJobs.RunAllNow(context.Background()) },
 			}
-			runner.Run(t, file, map[string]any{
+			runner.Run(t, socketFlow, map[string]any{
 				"default_site":  site.SiteDB.Subdomain + ".ns.localhost",
 				"default_token": site.PwdNSToken,
 			})

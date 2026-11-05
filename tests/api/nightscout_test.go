@@ -12,7 +12,7 @@ import (
 
 	"nighttroop.t1d.nz/background"
 	"nighttroop.t1d.nz/server"
-	"nighttroop.t1d.nz/tests/dsl/jsonapi"
+	"nighttroop.t1d.nz/tests/dsl/flow"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/s3utils"
 	"nighttroop.t1d.nz/utils/testutils"
@@ -41,22 +41,22 @@ func TestNS(t *testing.T) {
 	testutils.DumpOnFailure(t, controlDB, "test_ns")
 	ts := httptest.NewServer(router)
 	t.Cleanup(ts.Close)
-	client := jsonapi.Client(ts)
 
 	err = fs.WalkDir(embeddedFiles, ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil || d.IsDir() || filepath.Ext(path) != ".http" {
 			return err
 		}
 		t.Run(strings.TrimPrefix(path, "nightscout/"), func(t *testing.T) {
-			requestFile, err := jsonapi.ParseRequestFile(embeddedFiles, path)
+			requestFlow, err := flow.Parse(embeddedFiles, path)
 			if err != nil {
 				t.Fatalf("failed to parse request file: %v", err)
 			}
-			requestFile.Run(t, client, map[string]any{
+			runner := &flow.Runner{Server: ts, RunBackgroundJobs: func() { backgroundJobs.RunAllNow(context.Background()) }}
+			runner.Run(t, requestFlow, map[string]any{
 				"default_site":  siteInformation.SiteDB.Subdomain + ".ns.localhost",
 				"default_token": siteInformation.PwdNSToken,
 				"default_jwt":   defaultJwt,
-			}, func() { backgroundJobs.RunAllNow(context.Background()) })
+			})
 		})
 		return nil
 	})
