@@ -44,7 +44,7 @@ func Login() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, " <div class=\"flex flex-col justify-center items-center px-6 py-6 lg:px-8\"><div class=\"p-8 login-form-target rounded-lg shadow-2xl w-full max-w-96\"><!-- Form updated with POST method --><form hx-post=\"/login\" hx-target=\"closest .login-form-target\" hx-swap=\"outerHTML\" hx-status:4xx=\"target:#error-container\" hx-status:5xx=\"target:#error-container\"><div class=\"text-center mb-6\"><img src=\"/logo.svg\" alt=\"\" class=\"mx-auto mb-3 size-16\"><h2 class=\"font-bold text-2xl\">NightTroop Login</h2></div><!-- Username -->")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, " <div class=\"flex flex-col justify-center items-center px-6 py-6 lg:px-8\"><div class=\"p-8 login-form-target rounded-lg shadow-2xl w-full max-w-96\"><!-- Form updated with POST method --><form id=\"otp\" hx-post=\"/login\" hx-target=\"closest .login-form-target\" hx-swap=\"outerHTML\" hx-status:4xx=\"target:#error-container\" hx-status:5xx=\"target:#error-container\"><div class=\"text-center mb-6\"><img src=\"/logo.svg\" alt=\"\" class=\"mx-auto mb-3 size-16\"><h2 class=\"font-bold text-2xl\">NightTroop Login</h2></div><!-- Username -->")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -338,7 +338,7 @@ func Login() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</form></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</form><script>\n\t\t\t\t\t// Logs in as soon as the code's last digit is typed or pasted, once the name and password are in. It\n\t\t\t\t\t// waits a tick for the code's slots to fill its value, and does not send the same code twice, so a\n\t\t\t\t\t// wrong code is not sent again on its own.\n\t\t\t\t\t(function () {\n\t\t\t\t\t\tconst form = document.getElementById(\"otp\");\n\t\t\t\t\t\tconst code = document.getElementById(\"otp-form\");\n\t\t\t\t\t\tconst filled = (id) => document.getElementById(id).value !== \"\";\n\t\t\t\t\t\tlet sent = \"\";\n\t\t\t\t\t\tconst sendWhenFull = () => setTimeout(() => {\n\t\t\t\t\t\t\tif (/^\\d{6}$/.test(code.value) && code.value !== sent && filled(\"name\") && filled(\"password\")) {\n\t\t\t\t\t\t\t\tsent = code.value;\n\t\t\t\t\t\t\t\tform.requestSubmit();\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t}, 0);\n\t\t\t\t\t\t// Only the code's own slots, so typing the name or password does not send it\n\t\t\t\t\t\tconst slots = document.getElementById(\"otp-form-container\");\n\t\t\t\t\t\tslots.addEventListener(\"input\", sendWhenFull);\n\t\t\t\t\t\tslots.addEventListener(\"paste\", sendWhenFull);\n\t\t\t\t\t})();\n\t\t\t\t</script></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

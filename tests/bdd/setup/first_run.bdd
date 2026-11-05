@@ -43,8 +43,7 @@ CLICK #control--setup--login
 ASSERT_PATH /login
 INPUT #name admin
 INPUT #password password
-INPUT #control--login--otp-1 123123
-CLICK #control--login-button
+TYPE #control--login--otp-1 123123
 ASSERT_VISIBLE #control--nav--logo
 
 // Setup is done, so its page is gone and the public site can be used

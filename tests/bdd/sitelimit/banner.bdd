@@ -2,8 +2,7 @@
 GOTO {{ .control_url }}/login
 INPUT #name admin
 INPUT #password password
-INPUT #control--login--otp-1 123123
-CLICK #control--login-button
+TYPE #control--login--otp-1 123123
 ASSERT_VISIBLE #control--nav--logo
 ASSERT_VISIBLE #control--status-banner--sites
 ASSERT_TEXT_VISIBLE Sites near their limit

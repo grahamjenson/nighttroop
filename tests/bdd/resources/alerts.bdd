@@ -2,8 +2,7 @@
 GOTO {{ .control_url }}/login
 INPUT #name admin
 INPUT #password password
-INPUT #control--login--otp-1 123123
-CLICK #control--login-button
+TYPE #control--login--otp-1 123123
 ASSERT_VISIBLE #control--nav--logo
 // Its resources have not been checked yet, so there is nothing to warn of
 ASSERT_NOT_VISIBLE #control--status-banner--disk

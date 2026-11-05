@@ -2,8 +2,7 @@ GOTO {{ .control_url }}/login
 ASSERT_STATUS 200
 INPUT #name admin
 INPUT #password password
-INPUT #control--login--otp-1 123123
-CLICK #control--login-button
+TYPE #control--login--otp-1 123123
 ASSERT_VISIBLE #control--nav--logo
 
 // An admin can create a site at an ID they pick, such as a vanity one for a special user
