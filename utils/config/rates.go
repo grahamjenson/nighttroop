@@ -5,7 +5,9 @@ import (
 	"encoding/hex"
 	"math"
 	"net/netip"
+	"slices"
 	"strconv"
+	"sync"
 	"time"
 
 	lru "github.com/hashicorp/golang-lru/v2"
@@ -15,7 +17,8 @@ import (
 // This contains all rate limiters in the system
 // This might be more efficient if joined together, but right now this is fine
 type RateLimiters struct {
-	serverConfig ServerConfig
+	// rates are each rate limit's rate, from the env unless a control admin set it
+	rates *rateSettings
 
 	userLoginRateLimiters *lru.Cache[string, *rate.Limiter]
 	ipLoginRateLimiters   *lru.Cache[string, *rate.Limiter]
@@ -48,8 +51,12 @@ func newRateLimiters(config ServerConfig) *RateLimiters {
 	maxIdentities := config.MaxIdentitiesPerSite
 	wiggle := 2
 	// We are using the hashicorp LRU to make sure that we dont run out of memory if all users with all identitys are hitting us always
+	settings := rateDefaults(config)
+	defaultRate := func(name string) Rate {
+		return settings[slices.IndexFunc(settings, func(s RateSetting) bool { return s.Name == name })].Rate
+	}
 	return &RateLimiters{
-		serverConfig: config,
+		rates: &rateSettings{settings: settings},
 
 		userLoginRateLimiters: lruMust(maxSites * maxIdentities * wiggle),
 		ipLoginRateLimiters:   lruMust(maxSites * maxIdentities * wiggle * 2),
@@ -67,12 +74,12 @@ func newRateLimiters(config ServerConfig) *RateLimiters {
 		siteDownloadRateLimiters:       lruMust(maxSites * wiggle),
 		sitePushRateLimiters:           lruMust(maxSites * wiggle),
 
-		SiteCreateLimiter:   rate.NewLimiter(rate.Limit(float64(config.SiteCreateGlobalPerMinuteLimit)/60.0), config.SiteCreateGlobalPerMinuteBurst),
+		SiteCreateLimiter:   defaultRate("site_create").limiter(),
 		siteCreateIpLimiter: lruMust(maxSites * wiggle),
 
-		GlobalRateLimiter:    rate.NewLimiter(rate.Limit(float64(config.GlobalRateLimit)/60.0), config.GlobalRateBurst),
+		GlobalRateLimiter:    defaultRate("global").limiter(),
 		globalIPRateLimiters: lruMust(maxSites * maxIdentities * wiggle * 2), // If a DDOS attack wiped out this cache with unique addresses the global rate limiter would still catch it
-		ControlRateLimiter:   rate.NewLimiter(rate.Limit(float64(config.GlobalRateLimit)/60.0), config.GlobalRateBurst),
+		ControlRateLimiter:   defaultRate("global").limiter(),
 	}
 
 }
@@ -86,13 +93,13 @@ func lruMust(maxEntries int) *lru.Cache[string, *rate.Limiter] {
 	return cache
 }
 
-func (r *RateLimiters) getOrCreateLimiter(limiters *lru.Cache[string, *rate.Limiter], key string, rps float64, burst int) *rate.Limiter {
+func (r *RateLimiters) getOrCreateLimiter(limiters *lru.Cache[string, *rate.Limiter], key string, name string) *rate.Limiter {
 	// Keys come from user input (e.g. a login name), so hash them to keep every entry a fixed size
 	sum := sha256.Sum256([]byte(key))
 	key = hex.EncodeToString(sum[:])
 	limiter, exists := limiters.Get(key)
 	if !exists {
-		limiter = rate.NewLimiter(rate.Limit(rps/60.0), burst)
+		limiter = r.rate(name).limiter()
 		limiters.Add(key, limiter)
 	}
 	return limiter
@@ -113,11 +120,11 @@ func ipKey(ip string) string {
 }
 
 func (r *RateLimiters) GetGlobalIPRateLimiter(ipAddress string) *rate.Limiter {
-	return r.getOrCreateLimiter(r.globalIPRateLimiters, ipKey(ipAddress), float64(r.serverConfig.GlobalIPPerMinuteLimit), r.serverConfig.GlobalIPPerMinuteBurst)
+	return r.getOrCreateLimiter(r.globalIPRateLimiters, ipKey(ipAddress), "global_ip")
 }
 
 func (r *RateLimiters) GetSiteCreateIPRateLimiter(ipAddress string) *rate.Limiter {
-	return r.getOrCreateLimiter(r.siteCreateIpLimiter, ipKey(ipAddress), r.serverConfig.SiteCreateIPPerMinuteLimit, r.serverConfig.SiteCreateIPPerMinuteBurst)
+	return r.getOrCreateLimiter(r.siteCreateIpLimiter, ipKey(ipAddress), "site_create_ip")
 }
 
 // //
@@ -125,50 +132,50 @@ func (r *RateLimiters) GetSiteCreateIPRateLimiter(ipAddress string) *rate.Limite
 // //
 
 func (r *RateLimiters) IdentityGETLimiter(identityID int64) *rate.Limiter {
-	return r.getOrCreateLimiter(r.identityGETRateLimiters, strconv.FormatInt(identityID, 10), float64(r.serverConfig.SiteGETPerMinuteLimit), r.serverConfig.SiteGETPerMinuteBurst)
+	return r.getOrCreateLimiter(r.identityGETRateLimiters, strconv.FormatInt(identityID, 10), "site_get")
 }
 
 func (r *RateLimiters) IdentityPOSTLimiter(identityID int64) *rate.Limiter {
 
-	return r.getOrCreateLimiter(r.identityPOSTRateLimiters, strconv.FormatInt(identityID, 10), float64(r.serverConfig.SitePOSTPerMinuteLimit), r.serverConfig.SitePOSTPerMinuteBurst)
+	return r.getOrCreateLimiter(r.identityPOSTRateLimiters, strconv.FormatInt(identityID, 10), "site_post")
 }
 
 func (r *RateLimiters) SiteGETLimiter(subdomain string) *rate.Limiter {
 
-	return r.getOrCreateLimiter(r.siteGETRateLimiters, subdomain, float64(r.serverConfig.SiteGETPerMinuteLimit), r.serverConfig.SiteGETPerMinuteBurst)
+	return r.getOrCreateLimiter(r.siteGETRateLimiters, subdomain, "site_get")
 }
 
 func (r *RateLimiters) SitePOSTLimiter(subdomain string) *rate.Limiter {
 
-	return r.getOrCreateLimiter(r.sitePOSTRateLimiters, subdomain, float64(r.serverConfig.SitePOSTPerMinuteLimit), r.serverConfig.SitePOSTPerMinuteBurst)
+	return r.getOrCreateLimiter(r.sitePOSTRateLimiters, subdomain, "site_post")
 }
 
 func (r *RateLimiters) SiteUpdateSyncLimiter(subdomain string) *rate.Limiter {
-	return r.getOrCreateLimiter(r.siteUpdateSyncRateLimiters, subdomain, float64(r.serverConfig.SiteUpdateSyncPerMinuteLimit), r.serverConfig.SiteUpdateSyncPerMinuteBurst)
+	return r.getOrCreateLimiter(r.siteUpdateSyncRateLimiters, subdomain, "site_update_sync")
 }
 
 func (r *RateLimiters) SiteIdentityCreateLimiter(subdomain string) *rate.Limiter {
-	return r.getOrCreateLimiter(r.siteIdentityCreateRateLimiters, subdomain, float64(r.serverConfig.SiteIdentityCreatePerMinuteLimit), r.serverConfig.SiteIdentityCreatePerMinuteBurst)
+	return r.getOrCreateLimiter(r.siteIdentityCreateRateLimiters, subdomain, "site_identity_create")
 }
 
 func (r *RateLimiters) SiteDownloadLimiter(subdomain string) *rate.Limiter {
-	return r.getOrCreateLimiter(r.siteDownloadRateLimiters, subdomain, float64(r.serverConfig.SiteDownloadPerMinuteLimit), r.serverConfig.SiteDownloadPerMinuteBurst)
+	return r.getOrCreateLimiter(r.siteDownloadRateLimiters, subdomain, "site_download")
 }
 
 // SitePushLimiter is a site's budget of pushes, each a request to Apple or Firebase, so a site cannot use the server to
 // send them without end
 func (r *RateLimiters) SitePushLimiter(subdomain string) *rate.Limiter {
-	return r.getOrCreateLimiter(r.sitePushRateLimiters, subdomain, float64(r.serverConfig.SitePushPerMinuteLimit), r.serverConfig.SitePushPerMinuteBurst)
+	return r.getOrCreateLimiter(r.sitePushRateLimiters, subdomain, "site_push")
 }
 
 // SiteUnauthLimiter is one IP's budget on a site before it authenticates: 401s and Socket.IO handshakes spend it, not the site's own limit
 func (r *RateLimiters) SiteUnauthLimiter(subdomain string, ip string) *rate.Limiter {
-	return r.getOrCreateLimiter(r.siteUnauthRateLimiters, subdomain+":"+ipKey(ip), float64(r.serverConfig.SiteUnauthPerMinuteLimit), r.serverConfig.SiteUnauthPerMinuteBurst)
+	return r.getOrCreateLimiter(r.siteUnauthRateLimiters, subdomain+":"+ipKey(ip), "site_unauth")
 }
 
 func (r *RateLimiters) SiteLoginAllow(subdomain string, ip string) (bool, int) {
-	userLimiter := r.getOrCreateLimiter(r.userLoginRateLimiters, subdomain, float64(r.serverConfig.SiteLoginPerMinuteLimit), r.serverConfig.SiteLoginPerMinuteBurst)
-	ipLimiter := r.getOrCreateLimiter(r.ipLoginRateLimiters, ipKey(ip), float64(r.serverConfig.SiteLoginPerMinuteLimit), r.serverConfig.SiteLoginPerMinuteBurst)
+	userLimiter := r.getOrCreateLimiter(r.userLoginRateLimiters, subdomain, "login")
+	ipLimiter := r.getOrCreateLimiter(r.ipLoginRateLimiters, ipKey(ip), "login")
 
 	// Calculate tokens remaining
 	userTokens := userLimiter.Tokens()
@@ -194,43 +201,137 @@ type RateLimiterStats struct {
 	FullestPercent float64 `json:"fullest_percent"`
 }
 
+// Rate is a rate limit: a limiter refills PerMinute a minute, up to Burst
+type Rate struct {
+	PerMinute float64 `json:"per_minute"`
+	Burst     int     `json:"burst"`
+}
+
+func (r Rate) limiter() *rate.Limiter { return rate.NewLimiter(rate.Limit(r.PerMinute/60.0), r.Burst) }
+
+// Valid is a rate that lets requests through, under limits far above any server's
+func (r Rate) Valid() bool {
+	return r.PerMinute > 0 && r.PerMinute <= 1e9 && r.Burst >= 1 && r.Burst <= 1e9
+}
+
+// rateSettings are read under lock as one can change while requests are limited. It is kept by pointer, so a copy of
+// the RateLimiters, as a test makes to swap a limiter, has the same.
+type rateSettings struct {
+	lock     sync.RWMutex
+	settings []RateSetting
+}
+
+// RateSetting is a rate limit a control admin can change. Its Default is from the env variables named Env, with
+// _LIMIT and _BURST, and Rate is what it is now: the Default unless Set by a control admin.
+type RateSetting struct {
+	Name    string `json:"name"`
+	Env     string `json:"env"`
+	Default Rate   `json:"default"`
+	Rate    Rate   `json:"rate"`
+	Set     bool   `json:"set"`
+}
+
+func rateDefaults(c ServerConfig) []RateSetting {
+	settings := []RateSetting{
+		{Name: "global", Env: "GLOBAL_RATE", Default: Rate{float64(c.GlobalRateLimit), c.GlobalRateBurst}},
+		{Name: "global_ip", Env: "GLOBAL_IP_PER_MINUTE", Default: Rate{float64(c.GlobalIPPerMinuteLimit), c.GlobalIPPerMinuteBurst}},
+		{Name: "site_create", Env: "SITE_CREATE_GLOBAL_PER_MINUTE", Default: Rate{float64(c.SiteCreateGlobalPerMinuteLimit), c.SiteCreateGlobalPerMinuteBurst}},
+		{Name: "site_create_ip", Env: "SITE_CREATE_IP_PER_MINUTE", Default: Rate{c.SiteCreateIPPerMinuteLimit, c.SiteCreateIPPerMinuteBurst}},
+		{Name: "login", Env: "SITE_LOGIN_PER_MINUTE", Default: Rate{float64(c.SiteLoginPerMinuteLimit), c.SiteLoginPerMinuteBurst}},
+		{Name: "site_unauth", Env: "SITE_UNAUTH_PER_MINUTE", Default: Rate{float64(c.SiteUnauthPerMinuteLimit), c.SiteUnauthPerMinuteBurst}},
+		{Name: "site_get", Env: "SITE_GET_PER_MINUTE", Default: Rate{float64(c.SiteGETPerMinuteLimit), c.SiteGETPerMinuteBurst}},
+		{Name: "site_post", Env: "SITE_POST_PER_MINUTE", Default: Rate{float64(c.SitePOSTPerMinuteLimit), c.SitePOSTPerMinuteBurst}},
+		{Name: "site_update_sync", Env: "SITE_UPDATE_SYNC_PER_MINUTE", Default: Rate{float64(c.SiteUpdateSyncPerMinuteLimit), c.SiteUpdateSyncPerMinuteBurst}},
+		{Name: "site_identity_create", Env: "SITE_IDENTITY_CREATE_PER_MINUTE", Default: Rate{float64(c.SiteIdentityCreatePerMinuteLimit), c.SiteIdentityCreatePerMinuteBurst}},
+		{Name: "site_download", Env: "SITE_DOWNLOAD_PER_MINUTE", Default: Rate{float64(c.SiteDownloadPerMinuteLimit), c.SiteDownloadPerMinuteBurst}},
+		{Name: "site_push", Env: "SITE_PUSH_PER_MINUTE", Default: Rate{float64(c.SitePushPerMinuteLimit), c.SitePushPerMinuteBurst}},
+	}
+	for i := range settings {
+		settings[i].Rate = settings[i].Default
+	}
+	return settings
+}
+
+// rate is the named rate limit's rate now
+func (r *RateLimiters) rate(name string) Rate {
+	r.rates.lock.RLock()
+	defer r.rates.lock.RUnlock()
+	return r.rates.settings[slices.IndexFunc(r.rates.settings, func(s RateSetting) bool { return s.Name == name })].Rate
+}
+
+// Settings are each rate limit, its env default and its rate now
+func (r *RateLimiters) Settings() []RateSetting {
+	r.rates.lock.RLock()
+	defer r.rates.lock.RUnlock()
+	return slices.Clone(r.rates.settings)
+}
+
+// SetRates uses the rates a control admin set, by name, in place of the env's, for every limiter kept and made: one
+// that is not valid, or is the env's, is left out, so the env's is used. It is the rates set, to keep.
+func (r *RateLimiters) SetRates(rates map[string]Rate) map[string]Rate {
+	r.rates.lock.Lock()
+	set := map[string]Rate{}
+	for i, setting := range r.rates.settings {
+		given, ok := rates[setting.Name]
+		r.rates.settings[i].Set = ok && given.Valid() && given != setting.Default
+		r.rates.settings[i].Rate = setting.Default
+		if r.rates.settings[i].Set {
+			r.rates.settings[i].Rate, set[setting.Name] = given, given
+		}
+	}
+	r.rates.lock.Unlock()
+	for _, kind := range r.kinds() {
+		current := r.rate(kind.setting)
+		for _, limiter := range kind.limiters {
+			limiter.SetLimit(rate.Limit(current.PerMinute / 60.0))
+			limiter.SetBurst(current.Burst)
+		}
+	}
+	return set
+}
+
+// limiterKind is one kind of rate limiter: what it is named on the rate limits page, what one is kept for, the rate
+// limit setting it is limited by, and those kept
+type limiterKind struct {
+	name, per, setting string
+	limiters           []*rate.Limiter
+}
+
+func (r *RateLimiters) kinds() []limiterKind {
+	return []limiterKind{
+		{"global", "server", "global", []*rate.Limiter{r.GlobalRateLimiter}},
+		{"control", "server", "global", []*rate.Limiter{r.ControlRateLimiter}},
+		{"global_ip", "ip", "global_ip", r.globalIPRateLimiters.Values()},
+		{"site_create", "server", "site_create", []*rate.Limiter{r.SiteCreateLimiter}},
+		{"site_create_ip", "ip", "site_create_ip", r.siteCreateIpLimiter.Values()},
+		{"login_name", "login", "login", r.userLoginRateLimiters.Values()},
+		{"login_ip", "ip", "login", r.ipLoginRateLimiters.Values()},
+		{"site_unauth", "site_ip", "site_unauth", r.siteUnauthRateLimiters.Values()},
+		{"site_get", "site", "site_get", r.siteGETRateLimiters.Values()},
+		{"site_post", "site", "site_post", r.sitePOSTRateLimiters.Values()},
+		{"identity_get", "identity", "site_get", r.identityGETRateLimiters.Values()},
+		{"identity_post", "identity", "site_post", r.identityPOSTRateLimiters.Values()},
+		{"site_update_sync", "site", "site_update_sync", r.siteUpdateSyncRateLimiters.Values()},
+		{"site_identity_create", "site", "site_identity_create", r.siteIdentityCreateRateLimiters.Values()},
+		{"site_download", "site", "site_download", r.siteDownloadRateLimiters.Values()},
+		{"site_push", "site", "site_push", r.sitePushRateLimiters.Values()},
+	}
+}
+
 // Stats are how close each kind of rate limiter is to refusing at now, read without spending any
 func (r *RateLimiters) Stats(now time.Time) []RateLimiterStats {
-	c := r.serverConfig
-	login := float64(c.SiteLoginPerMinuteLimit)
-	kinds := []struct {
-		name, per string
-		perMinute float64
-		burst     int
-		limiters  []*rate.Limiter
-	}{
-		{"global", "server", float64(c.GlobalRateLimit), c.GlobalRateBurst, []*rate.Limiter{r.GlobalRateLimiter}},
-		{"control", "server", float64(c.GlobalRateLimit), c.GlobalRateBurst, []*rate.Limiter{r.ControlRateLimiter}},
-		{"global_ip", "ip", float64(c.GlobalIPPerMinuteLimit), c.GlobalIPPerMinuteBurst, r.globalIPRateLimiters.Values()},
-		{"site_create", "server", float64(c.SiteCreateGlobalPerMinuteLimit), c.SiteCreateGlobalPerMinuteBurst, []*rate.Limiter{r.SiteCreateLimiter}},
-		{"site_create_ip", "ip", c.SiteCreateIPPerMinuteLimit, c.SiteCreateIPPerMinuteBurst, r.siteCreateIpLimiter.Values()},
-		{"login_name", "login", login, c.SiteLoginPerMinuteBurst, r.userLoginRateLimiters.Values()},
-		{"login_ip", "ip", login, c.SiteLoginPerMinuteBurst, r.ipLoginRateLimiters.Values()},
-		{"site_unauth", "site_ip", float64(c.SiteUnauthPerMinuteLimit), c.SiteUnauthPerMinuteBurst, r.siteUnauthRateLimiters.Values()},
-		{"site_get", "site", float64(c.SiteGETPerMinuteLimit), c.SiteGETPerMinuteBurst, r.siteGETRateLimiters.Values()},
-		{"site_post", "site", float64(c.SitePOSTPerMinuteLimit), c.SitePOSTPerMinuteBurst, r.sitePOSTRateLimiters.Values()},
-		{"identity_get", "identity", float64(c.SiteGETPerMinuteLimit), c.SiteGETPerMinuteBurst, r.identityGETRateLimiters.Values()},
-		{"identity_post", "identity", float64(c.SitePOSTPerMinuteLimit), c.SitePOSTPerMinuteBurst, r.identityPOSTRateLimiters.Values()},
-		{"site_update_sync", "site", float64(c.SiteUpdateSyncPerMinuteLimit), c.SiteUpdateSyncPerMinuteBurst, r.siteUpdateSyncRateLimiters.Values()},
-		{"site_identity_create", "site", float64(c.SiteIdentityCreatePerMinuteLimit), c.SiteIdentityCreatePerMinuteBurst, r.siteIdentityCreateRateLimiters.Values()},
-		{"site_download", "site", float64(c.SiteDownloadPerMinuteLimit), c.SiteDownloadPerMinuteBurst, r.siteDownloadRateLimiters.Values()},
-		{"site_push", "site", float64(c.SitePushPerMinuteLimit), c.SitePushPerMinuteBurst, r.sitePushRateLimiters.Values()},
-	}
+	kinds := r.kinds()
 	stats := make([]RateLimiterStats, 0, len(kinds))
 	for _, kind := range kinds {
-		s := RateLimiterStats{Name: kind.name, Per: kind.per, PerMinute: kind.perMinute, Burst: kind.burst, Tracked: len(kind.limiters)}
+		current := r.rate(kind.setting)
+		s := RateLimiterStats{Name: kind.name, Per: kind.per, PerMinute: current.PerMinute, Burst: current.Burst, Tracked: len(kind.limiters)}
 		for _, limiter := range kind.limiters {
 			tokens := limiter.TokensAt(now)
 			if tokens < 1 {
 				s.Limited++
 			}
-			if kind.burst > 0 {
-				s.FullestPercent = max(s.FullestPercent, min(100, 100*(1-tokens/float64(kind.burst))))
+			if current.Burst > 0 {
+				s.FullestPercent = max(s.FullestPercent, min(100, 100*(1-tokens/float64(current.Burst))))
 			}
 		}
 		stats = append(stats, s)

@@ -40,6 +40,7 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 		r.Post("/sites/{id}/identities/{identity}/totp", (&controlcollections.SitesCollection{}).ResetTOTPHandler)
 		r.Get("/usage", controlapi.UsageHandler)
 		r.Get("/rate-limits", controlapi.RateLimitsHandler)
+		r.Post("/rate-limits", controlapi.SetRateLimitsHandler)
 		r.Get("/push-devices", controlapi.PushDevicesHandler)
 		r.Post("/push-devices/{id}/test", controlapi.PushTestHandler)
 

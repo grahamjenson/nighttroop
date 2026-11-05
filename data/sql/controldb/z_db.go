@@ -210,6 +210,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updatePublicSiteCreationStmt, err = db.PrepareContext(ctx, updatePublicSiteCreation); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdatePublicSiteCreation: %w", err)
 	}
+	if q.updateRateLimitsStmt, err = db.PrepareContext(ctx, updateRateLimits); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateRateLimits: %w", err)
+	}
 	if q.updateSiteDateFlagsStmt, err = db.PrepareContext(ctx, updateSiteDateFlags); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSiteDateFlags: %w", err)
 	}
@@ -561,6 +564,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updatePublicSiteCreationStmt: %w", cerr)
 		}
 	}
+	if q.updateRateLimitsStmt != nil {
+		if cerr := q.updateRateLimitsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateRateLimitsStmt: %w", cerr)
+		}
+	}
 	if q.updateSiteDateFlagsStmt != nil {
 		if cerr := q.updateSiteDateFlagsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateSiteDateFlagsStmt: %w", cerr)
@@ -722,6 +730,7 @@ type Queries struct {
 	siteExistsStmt                          *sql.Stmt
 	startSyncSourceBackfillStmt             *sql.Stmt
 	updatePublicSiteCreationStmt            *sql.Stmt
+	updateRateLimitsStmt                    *sql.Stmt
 	updateSiteDateFlagsStmt                 *sql.Stmt
 	updateSiteIdentityDateFlagsStmt         *sql.Stmt
 	updateSiteIdentityEnabledStmt           *sql.Stmt
@@ -802,6 +811,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		siteExistsStmt:                          q.siteExistsStmt,
 		startSyncSourceBackfillStmt:             q.startSyncSourceBackfillStmt,
 		updatePublicSiteCreationStmt:            q.updatePublicSiteCreationStmt,
+		updateRateLimitsStmt:                    q.updateRateLimitsStmt,
 		updateSiteDateFlagsStmt:                 q.updateSiteDateFlagsStmt,
 		updateSiteIdentityDateFlagsStmt:         q.updateSiteIdentityDateFlagsStmt,
 		updateSiteIdentityEnabledStmt:           q.updateSiteIdentityEnabledStmt,

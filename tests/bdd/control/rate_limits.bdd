@@ -18,3 +18,24 @@ ASSERT_VISIBLE #control--rate-limits--login_name >> text=Logins to a name
 ASSERT_VISIBLE #control--rate-limits--login_ip >> text=Logins from an IP
 ASSERT_VISIBLE #control--rate-limits--site_download
 SCREENSHOT rate_limits
+
+// An admin sets a rate limit in place of its env variable's, and every limiter of its kind uses it at once
+ASSERT_VISIBLE #control--rate-settings--site_push >> text=SITE_PUSH_PER_MINUTE_LIMIT/_BURST
+INPUT #control--rate-settings--site_push--per_minute 20
+INPUT #control--rate-settings--site_push--burst 40
+CLICK #control--rate-settings--save
+ASSERT_TEXT_VISIBLE Rate limits saved
+ASSERT_VISIBLE #control--rate-settings--site_push >> text=set here
+ASSERT_VISIBLE #control--rate-limits--site_push td:nth-child(4):has-text("40")
+SCREENSHOT rate_limits_set
+
+// A rate that would refuse every request is refused
+INPUT #control--rate-settings--site_push--burst 0
+CLICK #control--rate-settings--save
+ASSERT_TEXT_VISIBLE site_push needs a rate above 0
+
+// Setting it back to its env default uses the env's again
+INPUT #control--rate-settings--site_push--per_minute 10
+INPUT #control--rate-settings--site_push--burst 30
+CLICK #control--rate-settings--save
+ASSERT_NOT_VISIBLE #control--rate-settings--site_push >> text=set here

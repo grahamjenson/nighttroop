@@ -61,6 +61,7 @@ type PushRegistration struct {
 type ServerSetting struct {
 	ID                    int64
 	PublicSiteCreation    bool
+	RateLimitsJson        string
 	UpdatedAt             *int64
 	UpdatedByIdentityName *string
 }

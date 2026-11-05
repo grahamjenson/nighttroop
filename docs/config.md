@@ -80,6 +80,9 @@ Limits written per minute are rates; their burst is how many can be used at once
 
 ## Rate limits
 
+Each is a default: a control admin can set any of them on the control site's Rate Limits page, which is kept in the
+control DB's server settings and used in place of the env's from then on, until it is set back to the env's.
+
 | Variable | Default | Use |
 | --- | --- | --- |
 | `GLOBAL_RATE_LIMIT` / `GLOBAL_RATE_BURST` | `100000` / `100000` | Requests to the whole server, to stop a DDoS. The control site has a limit of its own at the same rate, so it can still be signed in to, and a control admin signed in is not limited by either |

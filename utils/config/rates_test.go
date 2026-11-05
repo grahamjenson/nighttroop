@@ -108,3 +108,44 @@ func TestRateLimiterStats(t *testing.T) {
 		}
 	}
 }
+
+// A rate a control admin sets is used by the limiters already kept and those made after, until it is set back
+func TestSetRatesChangesEveryLimiterOfItsKind(t *testing.T) {
+	limiters := newRateLimiters(ServerConfig{
+		MaxSites: 10, MaxIdentitiesPerSite: 10,
+		SiteDownloadPerMinuteLimit: 1, SiteDownloadPerMinuteBurst: 1, SitePOSTPerMinuteLimit: 60, SitePOSTPerMinuteBurst: 10,
+	})
+	kept := limiters.SiteDownloadLimiter("kept")
+	require.True(t, kept.Allow())
+	require.False(t, kept.Allow())
+
+	tests := []struct {
+		name  string
+		rates map[string]Rate
+		set   map[string]Rate
+		burst int
+	}{
+		{"a rate set is used", map[string]Rate{"site_download": {PerMinute: 60, Burst: 3}}, map[string]Rate{"site_download": {60, 3}}, 3},
+		{"one that would refuse every request is not", map[string]Rate{"site_download": {PerMinute: 0, Burst: 3}}, map[string]Rate{}, 1},
+		{"nor is the env's own, or an unknown one", map[string]Rate{"site_download": {1, 1}, "nope": {5, 5}}, map[string]Rate{}, 1},
+		{"one left out is the env's again", map[string]Rate{}, map[string]Rate{}, 1},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.set, limiters.SetRates(tt.rates))
+			require.Equal(t, tt.burst, kept.Burst())
+			require.Equal(t, tt.burst, limiters.SiteDownloadLimiter("new").Burst())
+			setting := limiters.Settings()[10]
+			require.Equal(t, "site_download", setting.Name)
+			require.Equal(t, len(tt.set) > 0, setting.Set)
+			require.Equal(t, Rate{1, 1}, setting.Default)
+			// Other kinds keep the env's
+			require.Equal(t, 10, limiters.SitePOSTLimiter("site").Burst())
+		})
+	}
+	for _, s := range limiters.Stats(time.Now()) {
+		if s.Name == "site_download" {
+			require.Equal(t, 1, s.Burst)
+		}
+	}
+}
