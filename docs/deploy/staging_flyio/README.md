@@ -3,8 +3,8 @@
 This guide runs a staging Nighttroop on [Fly.io](https://fly.io) for alpha testing. It is open to everyone, so testers can
 try the newest code.
 
-- **It runs every commit on `main`.** Each time CI passes on `main`, a GitHub Actions workflow builds that commit and
-  deploys it.
+- **It runs every commit on `main`.** Each push to `main` is built and deployed by a GitHub Actions workflow, without
+  waiting for CI, as each commit passed CI on its pull request.
 - **It keeps its data until a migration change breaks it.** The databases are on a volume, so they last through
   deploys and restarts. When a new version changes a migration so an old database can no longer be migrated, that deploy wipes
   them and starts empty, so a tester never hits data the new version cannot read. Nothing is backed up.
@@ -18,7 +18,7 @@ The files this guide uses:
 | File | What it is |
 | --- | --- |
 | [`fly.toml`](fly.toml) | The Fly.io config for the staging server |
-| [`.github/workflows/deploy-staging.yml`](../../../.github/workflows/deploy-staging.yml) | The workflow that deploys each commit on `main` CI passed on |
+| [`.github/workflows/deploy-staging.yml`](../../../.github/workflows/deploy-staging.yml) | The workflow that deploys each push to `main` |
 
 ## Contents
 
@@ -192,13 +192,13 @@ Check it works:
 
 ## 5. Deploy every commit on main
 
-The **Deploy staging** workflow ([`.github/workflows/deploy-staging.yml`](../../../.github/workflows/deploy-staging.yml)) runs each
-time CI finishes on a push to `main`.
+The **Deploy staging** workflow ([`.github/workflows/deploy-staging.yml`](../../../.github/workflows/deploy-staging.yml)) runs on
+each push to `main`.
 
-- **When CI passed,** it checks out that commit and deploys it with the same command as above, building the image on
-  Fly's builders.
-- **When CI failed,** that commit is not deployed, so testers keep the last version that passed.
-- **When commits pass CI mid-deploy,** the deploy running is left to finish, and they wait as a single run, each
+- **It doesn't wait for CI.** What reaches `main` passed CI on its pull request, so staging gets it about 5 minutes
+  sooner. CI still runs on `main`, and its badge in the README goes red if it fails there.
+- **A commit that doesn't build** fails to deploy, and testers keep the last version that did.
+- **When commits are pushed mid-deploy,** the deploy running is left to finish, and they wait as a single run, each
   newer one replacing the one waiting. Once it is done, only the newest of them is deployed, so a burst of merges is one
   more deploy rather than one each.
 - **It does nothing until you turn it on:**
@@ -279,5 +279,5 @@ deploy with `--ha=false`, as the workflow does.
 
 ### The Deploy staging workflow is skipped
 
-- It runs only after CI passes on a push to `main`, and only when the `STAGING_FLYIO_APP` variable is set.
+- It runs on each push to `main`, and only when the `STAGING_FLYIO_APP` variable is set.
 - A run that fails with `unauthorized` needs a new `FLY_API_TOKEN`, from [step 5](#5-deploy-every-commit-on-main).

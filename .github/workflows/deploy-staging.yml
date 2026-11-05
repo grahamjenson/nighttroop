@@ -1,34 +1,27 @@
 name: Deploy staging
 
-# Deploys each commit on main that CI passed on to the staging Nighttroop on Fly.io, which keeps its data between deploys
-# unless a migration change means a database can no longer be migrated; see docs/deploy/staging_flyio/README.md. It does nothing
-# until the repository variable STAGING_FLYIO_APP names the Fly app and the secret FLY_API_TOKEN holds a deploy token for
-# it.
+# Deploys each push to main to the staging Nighttroop on Fly.io, without waiting for CI: what reaches main passed CI on
+# its pull request, and a commit that does not build fails to deploy, leaving the last one running. Staging keeps its
+# data between deploys unless a migration change means a database can no longer be migrated; see
+# docs/deploy/staging_flyio/README.md. It does nothing until the repository variable STAGING_FLYIO_APP names the Fly
+# app and the secret FLY_API_TOKEN holds a deploy token for it.
 on:
-  workflow_run:
-    workflows: [CI]
+  push:
     branches: [main]
-    types: [completed]
   workflow_dispatch:
-
-# One deploy at a time: one running is left to finish, and the commits that pass CI meanwhile wait as a single run, each
-# newer one replacing the one waiting, so they are deployed together, as the newest of them, once it is done. A run
-# waiting uses no Actions minutes.
-concurrency:
-  group: deploy-staging
-  cancel-in-progress: false
 
 jobs:
   deploy:
-    if: >-
-      vars.STAGING_FLYIO_APP != '' && (github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'))
+    if: vars.STAGING_FLYIO_APP != ''
+    # One deploy at a time: one running is left to finish, and the pushes meanwhile wait as a single run, each newer one
+    # replacing the one waiting, so they are deployed together, as the newest of them, once it is done. On the job, so a
+    # run that skips it never takes the place of one waiting. A run waiting uses no Actions minutes.
+    concurrency:
+      group: deploy-staging
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          # The commit CI passed on, not whatever main is now
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - uses: superfly/flyctl-actions/setup-flyctl@master
 
