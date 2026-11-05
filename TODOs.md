@@ -130,11 +130,6 @@
        `loopSettings.deviceToken`, once push notifications can be sent
     1. P4: Keep a Loop device status's pump `pumpID`, `suspended` and `bolusing`, and its uploader `name` and
        `timestamp`, once the status as sent is cleared; they are given back only while it is kept
-1. xDrip4iOS ([docs/clients/xdrip4ios.md](docs/clients/xdrip4ios.md)):
-1. xDrip+ ([docs/clients/xdrip.md](docs/clients/xdrip.md)):
-    1. P2: An unknown `find[...]` filter is ignored, so the search gives everything, and a client that deletes the
-       first match (as xDrip+ does by `find[uuid]`) deletes the wrong document. Give nothing for a filter on an unknown
-       field
 
 ## Bugs
 
@@ -142,7 +137,6 @@
    the control sites page too
 1. P2: A site's Nightscout API is limited to `SITE_UNAUTH_PER_MINUTE_LIMIT` (60 a minute) from one IP even with a
    valid token, as the unauthenticated limit runs before auth on every Nightscout request, not only on failed ones
-1. P2: AAPS sends `SettingsExport` treatments, which are refused as an unknown event type (Sentry NIGHTTROOP-6)
 1. P3: When the server is busy, uploads from devices are refused as often as page loads; give Nightscout writes their
    own share of the requests in flight, so glucose keeps arriving
 1. P3: A cancelled or timed out request is logged as an error at each layer it passes, sending several Sentry events
