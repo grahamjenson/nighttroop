@@ -1,9 +1,11 @@
 package sync
 
 import (
+	stderrors "errors"
 	"log/slog"
 	"time"
 
+	"nighttroop.t1d.nz/clients/dexcom_client"
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/sitemodels"
@@ -67,7 +69,12 @@ func (b *SyncJobManager) SyncUserData(syncInfo *SyncJobInfo) error {
 	elapsedTimeMS := time.Since(startTime).Milliseconds()
 
 	if err != nil {
-		slog.ErrorContext(syncInfo.ctx, "error syncing user data", "error", err)
+		// A source refusing its login is its owner's to fix on the sync page, which shows the error, not the server's
+		level := slog.LevelError
+		if stderrors.Is(err, dexcom_client.ErrLoginRefused) {
+			level = slog.LevelWarn
+		}
+		slog.Log(syncInfo.ctx, level, "error syncing user data", "error", err)
 		b.recordSyncFailure(syncInfo, err, elapsedTimeMS)
 		return err
 	}
