@@ -75,7 +75,8 @@ func (c *ConsumerSupervisor) loop() {
 			VisibilityTimeout: 60, // Max time a job can take before being reset to be failed or retried
 		})
 
-		if err != nil {
+		// Stopping cancels what the consumer was doing, which is not an error, as servers stop when they scale to zero
+		if err != nil && c.consumerContext.Err() == nil {
 			slog.Error("QueueConsumer exited with error", "error", err, "queue", c.queueName)
 		}
 

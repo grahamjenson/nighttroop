@@ -161,3 +161,22 @@ func TestConsumeOnlyFetchesJobsAWorkerIsFreeFor(t *testing.T) {
 	stop()
 	<-consumed // stopping can cancel a query, so it may return that error, but it does return
 }
+
+// Stopping a consumer cancels what it was doing, e.g. resetting jobs, which is not an error to report: servers stop
+// whenever they scale to zero
+func TestStoppingAConsumerLogsNoError(t *testing.T) {
+	_, controlDB := testutils.NewControlDB(t)
+	var buf bytes.Buffer
+	before := slog.Default()
+	slog.SetDefault(slog.New(slog.NewTextHandler(&buf, nil)))
+	t.Cleanup(func() { slog.SetDefault(before) })
+
+	// Stopped before it starts, its first query is canceled, unless it sees it is stopped first
+	for range 20 {
+		consumer := liteq.NewConsumerSupervisor(liteq.New(controlDB), "stopping", 1, func(context.Context, *jobsdb.Job) error { return nil })
+		consumer.Stop()
+		consumer.Start()
+		consumer.Wait()
+	}
+	require.NotContains(t, buf.String(), "level=ERROR")
+}
