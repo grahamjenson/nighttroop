@@ -452,6 +452,10 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   out, so the server still starts and the rest of its batch is still backed up.
 - Old records' raw JSON is cleared after `TRUNCATE_RECORDS_AFTER_DAYS`.
 - Reads and writes are rate limited per site, identity and IP, and live sessions per site are capped.
+- Past the requests the server can work on at once (`REQUESTS_IN_FLIGHT_PER_CPU`) and a short queue
+  (`REQUESTS_BACKLOG_PER_CPU`, waiting up to 5 seconds), a request is refused at once with 503 and `Retry-After`, so a
+  server that falls behind answers what it can rather than every request timing out. The health check, live updates
+  and Socket.IO connections are never refused this way.
 - No request returns more than 1000 records, however many it asks for, through the site's pages and API, the
   Nightscout API or its live updates, and an upload holds at most 100. Deleting a type of treatment through the
   Nightscout API deletes at most 1000 each time, saying how many.

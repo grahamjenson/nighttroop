@@ -68,6 +68,10 @@ type ServerConfig struct {
 	HostProtocol string // http or https, used for generating links.
 	// MaxRequestBodyBytes is the largest request body read, so a huge upload cannot exhaust memory while it is decoded
 	MaxRequestBodyBytes int64
+	// RequestsInFlightPerCPU and RequestsBacklogPerCPU are how many requests a CPU works on at once, and how many more
+	// wait for one to finish, before the rest are refused as the server is busy
+	RequestsInFlightPerCPU int
+	RequestsBacklogPerCPU  int
 
 	// Some common Host URLs cached here so we dont fmt.Sprintf them all the time
 	HostNameWithPort string
@@ -299,6 +303,9 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		HostProtocol: configStringSelect(dotenv, "HOST_PROTOCOL", "https"),
 		// Far above an uploader's batch of 100 records
 		MaxRequestBodyBytes: int64(configIntSelect(dotenv, "MAX_REQUEST_BODY_BYTES", 4000000)),
+		// A request takes a CPU tens of milliseconds, so this many at once is a second or so of work queued
+		RequestsInFlightPerCPU: configIntSelect(dotenv, "REQUESTS_IN_FLIGHT_PER_CPU", 16),
+		RequestsBacklogPerCPU:  configIntSelect(dotenv, "REQUESTS_BACKLOG_PER_CPU", 64),
 
 		// Filesystem
 		DataDir: configStringSelect(dotenv, "DATA_DIR", "./.dbs"),
@@ -674,6 +681,8 @@ func printServerConfig(config ServerConfig) {
 		"S3", fmt.Sprintf("%s/%s", config.S3URL, config.S3Bucket),
 		"TrustedProxies", config.TrustedProxies,
 		"MaxRequestBodyBytes", config.MaxRequestBodyBytes,
+		"RequestsInFlightPerCPU", config.RequestsInFlightPerCPU,
+		"RequestsBacklogPerCPU", config.RequestsBacklogPerCPU,
 		"GlobalRateLimit r/s", config.GlobalRateLimit,
 		"GlobalRateBurst", config.GlobalRateBurst,
 		"SiteGETPerMinuteLimit r/s", config.SiteGETPerMinuteLimit,

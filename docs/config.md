@@ -19,6 +19,7 @@ Limits written per minute are rates; their burst is how many can be used at once
 | `HOST_NAME` | `nt.local.t1d.nz` | The domain sites are subdomains of, e.g. `abc.nt.local.t1d.nz`, used in links and cookies |
 | `HOST_PORT` | `3000` | The port the server listens on. Links to sites, such as the create site page's login, have no port with `HOST_PROTOCOL` `https`, as a proxy takes HTTPS on 443; with `http` they have this port |
 | `MAX_REQUEST_BODY_BYTES` | `4000000` | The largest request body the server reads, far above an uploader's batch of 100 records. A larger body is refused with 413 |
+| `REQUESTS_IN_FLIGHT_PER_CPU` / `REQUESTS_BACKLOG_PER_CPU` | `16` / `64` | Requests each CPU works on at once, and more that wait up to 5 seconds for one to finish. Past those a request is refused at once with 503 and `Retry-After`, so a server that falls behind, such as when its CPU is throttled, answers what it can rather than every request timing out. The health check, live updates and Socket.IO are not counted |
 | `HOST_PROTOCOL` | `https` | `http` or `https`, used in links and cookies. `http` is only allowed in development and test |
 | `DATA_DIR` | `./.dbs` | Where the SQLite DBs (`db/`) and backups waiting to upload (`backup/`) are kept |
 | `TRUSTED_PROXIES` | `127.0.0.1,::1` | Comma separated IPs or CIDR ranges of reverse proxies, such as Caddy, whose `X-Forwarded-For` is believed for the client's IP |
