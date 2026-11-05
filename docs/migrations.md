@@ -36,7 +36,10 @@ migration:
 
 ## What a migration runs in
 
-Each file runs in one transaction, on a connection with foreign keys on. A statement that fails rolls the whole
+Each file runs in one transaction, on a connection with foreign keys on. So `go generate` fails a migration that runs
+a PRAGMA other than `PRAGMA defer_foreign_keys`: in a transaction some do nothing without an error, such as
+`PRAGMA foreign_keys = OFF`, and the rest, such as `ignore_check_constraints`, last past the migration on its
+connection, which the server goes on to use. `BEGIN`, `COMMIT` and `VACUUM` fail the migration already. A statement that fails rolls the whole
 file back, but golang-migrate has already marked the version dirty, and every open of a dirty DB fails ("Dirty
 database version N"). As the file was rolled back, none of N was applied: once its bug is fixed, the DB can be
 forced back to version N-1 and migrated again.
