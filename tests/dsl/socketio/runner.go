@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	"nighttroop.t1d.nz/tests/dsl/script"
+
 	socket "nighttroop.t1d.nz/socketio"
 	"nighttroop.t1d.nz/socketio/engineio"
 	"nighttroop.t1d.nz/tests/dsl/jsonapi"
@@ -93,7 +95,7 @@ func (r *Runner) run(t *testing.T, file *File, step *Step, ctx map[string]any) (
 	if r.client == nil {
 		return nil, fmt.Errorf("not connected")
 	}
-	event, err := jsonapi.RenderTemplate(step.Target, ctx)
+	event, err := script.Render(step.Target, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +135,7 @@ func (r *Runner) run(t *testing.T, file *File, step *Step, ctx map[string]any) (
 // the body as v5's auth, and listens for the events the file uses
 func (r *Runner) connect(ctx map[string]any, events []string, step *Step, timeout time.Duration) error {
 	r.disconnect()
-	rawURL, err := jsonapi.RenderTemplate(step.Target, ctx)
+	rawURL, err := script.Render(step.Target, ctx)
 	if err != nil {
 		return err
 	}
@@ -213,7 +215,7 @@ func (r *Runner) body(step *Step, ctx map[string]any) ([]any, error) {
 	if step.Body == nil {
 		return nil, nil
 	}
-	rendered, err := jsonapi.RenderTemplate(*step.Body, ctx)
+	rendered, err := script.Render(*step.Body, ctx)
 	if err != nil {
 		return nil, err
 	}

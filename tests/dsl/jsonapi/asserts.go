@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"nighttroop.t1d.nz/tests/dsl/script"
 )
 
 type Assert interface {
@@ -180,16 +182,16 @@ func normalizeStringSearch(expected, localResult any, headers map[string]any, ct
 	if s, ok := expected.(string); ok {
 		if strings.HasPrefix(s, ".") {
 			// look up in the context
-			expected = templateDig(ctx, s[1:])
+			expected = script.Dig(ctx, s[1:])
 		} else if strings.HasPrefix(s, "@") {
 			if s == "@" {
 				return localResult
 			}
 			// look up in localResult
-			expected = templateDig(localResult, s[1:])
+			expected = script.Dig(localResult, s[1:])
 		} else if strings.HasPrefix(s, "#") {
 			// look up in headers
-			expected = templateDig(headers, s[1:])
+			expected = script.Dig(headers, s[1:])
 		}
 	}
 

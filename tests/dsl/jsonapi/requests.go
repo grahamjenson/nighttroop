@@ -2,18 +2,15 @@ package jsonapi
 
 import (
 	"bytes"
-	"crypto/sha1"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"strconv"
 	"strings"
 	"testing"
-	"text/template"
-	"time"
+
+	"nighttroop.t1d.nz/tests/dsl/script"
 )
 
 type RequestFile struct {
@@ -27,7 +24,7 @@ type Set struct {
 }
 
 func (r *Set) Set(ctx map[string]any) error {
-	renderedValue, err := RenderTemplate(r.Value, ctx)
+	renderedValue, err := script.Render(r.Value, ctx)
 	if err != nil {
 		return fmt.Errorf("failed to render template for set %s: %v", r.Key, err)
 	}
@@ -119,7 +116,7 @@ func (r *Request) AddSet(set Set) {
 }
 
 func (r *Request) buildRealRequest(ctx map[string]any) (*Request, error) {
-	url, err := RenderTemplate(r.URL, ctx)
+	url, err := script.Render(r.URL, ctx)
 	if err != nil {
 		return nil, fmt.Errorf("request %s url render failed: %w", r.Name, err)
 	}
@@ -127,7 +124,7 @@ func (r *Request) buildRealRequest(ctx map[string]any) (*Request, error) {
 	// ---- render body ----
 	bodyStr := ""
 	if r.Body != nil {
-		bodyStr, err = RenderTemplate(string(*r.Body), ctx)
+		bodyStr, err = script.Render(string(*r.Body), ctx)
 		if err != nil {
 			return nil, fmt.Errorf("request %s body render failed: %w", r.Name, err)
 		}
@@ -145,7 +142,7 @@ func (r *Request) buildRealRequest(ctx map[string]any) (*Request, error) {
 	renderedHeaders := make(http.Header)
 	for k, vv := range r.Headers {
 		for _, v := range vv {
-			renderedValue, err := RenderTemplate(v, ctx)
+			renderedValue, err := script.Render(v, ctx)
 			if err != nil {
 				return nil, fmt.Errorf("request %s header %s render failed: %w", r.Name, k, err)
 			}
@@ -230,97 +227,4 @@ func (r *Request) ExecuteRequest(t *testing.T, handler http.Handler, context map
 	}
 
 	return context, nil
-}
-
-// RenderTemplate fills in a step's {{ }} values from the context, with helpers like site, token and dig
-func RenderTemplate(input string, ctx map[string]any) (string, error) {
-	tmpl, err := template.New("req").
-		Option("missingkey=error").
-		Funcs(template.FuncMap{
-			"dig": func(path string) any {
-				dug := templateDig(ctx, path)
-				switch dug.(type) {
-				case nil:
-					return "no_value"
-				case string:
-					return dug.(string)
-				case float64:
-					return fmt.Sprintf("%.0f", dug.(float64))
-				case int:
-					return dug.(int)
-				case bool:
-					return dug.(bool)
-				default:
-					return dug
-				}
-			},
-			"site": func() string {
-				if v, ok := ctx["site"]; ok && v != nil {
-					return ctx["site"].(string)
-				}
-				return ctx["default_site"].(string)
-			},
-			"token": func() string {
-				if v, ok := ctx["token"]; ok && v != nil {
-					return ctx["token"].(string)
-				}
-				return ctx["default_token"].(string)
-			},
-			"read_token": func() string {
-				return ctx["read_token"].(string)
-			},
-			"jwt": func() string {
-				if v, ok := ctx["jwt"]; ok && v != nil {
-					return ctx["jwt"].(string)
-				}
-				return ctx["default_jwt"].(string)
-			},
-			"read_jwt": func() string {
-				return ctx["read_jwt"].(string)
-			},
-			"time":  templateTime,
-			"itime": templateITime,
-			// utctime is offset minutes ago in UTC with no zone, as LoopFollow sends, e.g. utctime 60 for an hour ago
-			"utctime": func(offset int) string {
-				return time.Now().UTC().Add(-time.Duration(offset) * time.Minute).Format("2006-01-02T15:04:05")
-			},
-			// javatime is minutes ago as Java's yyyy-MM-dd'T'HH:mm:ss.SSSZ at +1300, as xDrip+ sends dateString
-			"javatime": func(offset int) string {
-				at := time.Now().Add(-time.Duration(offset) * time.Minute)
-				return at.In(time.FixedZone("", 13*60*60)).Format("2006-01-02T15:04:05.000-0700")
-			},
-			// sha1 is the SHA1 in hex, as a Nightscout client sends its API secret, e.g. sha1 token
-			"sha1": func(s string) string {
-				sum := sha1.Sum([]byte(s))
-				return hex.EncodeToString(sum[:])
-			},
-			"date":    func(days int) string { return templateDayTime(days, 0).Format(time.DateOnly) },
-			"daytime": func(days, minutes int) string { return templateDayTime(days, minutes).Format(time.RFC3339) },
-			"dayms":   func(days, minutes int) int64 { return templateDayTime(days, minutes).UnixMilli() },
-			// addms is a dug time in milliseconds plus ms, e.g. addms (dig "last.result.collections.entries") 1
-			"addms": func(dug any, ms int64) (int64, error) {
-				n, err := strconv.ParseInt(fmt.Sprint(dug), 10, 64)
-				return n + ms, err
-			},
-			"tokenByName": func(list []any, name string) string {
-				for _, item := range list {
-					m := item.(map[string]any)
-					if m["name"] == name {
-						return m["accessToken"].(string)
-					}
-				}
-				return ""
-			},
-		}).
-		Parse(input)
-	if err != nil {
-		return "", err
-	}
-
-	var buf bytes.Buffer
-	if err := tmpl.Execute(&buf, ctx); err != nil {
-		return "", err
-	}
-
-	return buf.String(), nil
 }

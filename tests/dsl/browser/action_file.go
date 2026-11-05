@@ -1,12 +1,13 @@
 package browser
 
 import (
-	"bufio"
 	"fmt"
 	"io/fs"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"nighttroop.t1d.nz/tests/dsl/script"
 )
 
 // ParseActionFile reads the actions of the file at path in fsys, and of the files it INCLUDEs
@@ -25,59 +26,23 @@ func ParseActionFile(fsys fs.FS, path string) (*ActionFile, error) {
 }
 
 func parseFile(fsys fs.FS, path string) ([]Action, error) {
-	file, err := fsys.Open(path)
+	lines, err := script.ReadLines(fsys, path)
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
-	scanner := bufio.NewScanner(file)
 
 	var actions []Action
 	var current Action
 
-	fmt.Println("Parsing action file:", path)
 	flush := func() {
 		if current != nil {
 			actions = append(actions, current)
 			current = nil
 		}
 	}
-	lineNumber := 0
-	for scanner.Scan() {
-		lineNumber += 1
-		raw := scanner.Text()
-		line := strings.TrimSpace(raw)
-
-		if line == "" {
-			continue
-		}
-
-		if strings.HasPrefix(line, "#") || strings.HasPrefix(line, "//") {
-			continue
-		}
-
-		split := strings.SplitN(line, " ", 2)
-		if len(split) == 0 {
-			continue
-		}
-		second := ""
-		if len(split) > 1 {
-			second = strings.TrimSpace(split[1])
-		}
-		first := strings.TrimSpace(split[0])
-
+	for _, l := range lines {
+		first, second, lineNumber, path := l.First, l.Rest, l.Number, l.Path
 		switch first {
-		case "INCLUDE":
-			// Another file's steps, e.g. creating a site and logging in, run here as if written out
-			flush()
-			included, err := parseFile(fsys, second)
-			if err != nil {
-				return nil, fmt.Errorf("%s:%d: INCLUDE %s: %w", path, lineNumber, second, err)
-			}
-			// Asserts after it check the page its last step left
-			if len(included) > 0 {
-				actions, current = append(actions, included[:len(included)-1]...), included[len(included)-1]
-			}
 		case "GOTO":
 			flush()
 
@@ -390,16 +355,12 @@ func parseFile(fsys fs.FS, path string) ([]Action, error) {
 				TestLine: lineNumber,
 			})
 		default:
-			return nil, fmt.Errorf("unknown line: %q", line)
+			return nil, fmt.Errorf("unknown line: %q", l.Text)
 		}
 
 	}
 
 	flush()
-
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
 
 	return actions, nil
 }
