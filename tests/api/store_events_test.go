@@ -149,3 +149,43 @@ func TestPushRegistrationEventsStreamToTheirIdentityAlone(t *testing.T) {
 	require.NoError(t, err)
 	require.Contains(t, data, `"bundle_id":"com.KITCHEN123.loopkit.Loop"`)
 }
+
+// An identity streaming its settings' changes is sent its own, not the site's or another identity's
+func TestSettingsEventsStreamToTheirIdentityAlone(t *testing.T) {
+	config, controlDB, site := testutils.NewControlDBWithSite(t)
+	ts := httptest.NewServer(server.GetMainHandler(controlDB, config))
+	t.Cleanup(ts.Close)
+	subdomain := site.SiteDB.Subdomain
+	client := testutils.HostClient(ts)
+
+	request := func(identity string, role consts.IdentityRole, method, path, body string) *http.Response {
+		jwt, _, err := config.Security.GenerateUserJWTToken(subdomain, identity, string(role))
+		require.NoError(t, err)
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		t.Cleanup(cancel)
+		req, err := http.NewRequestWithContext(ctx, method, "http://"+subdomain+".localhost"+path, strings.NewReader(body))
+		require.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer "+jwt)
+		req.Header.Set("Accept", "application/json")
+		req.Header.Set("Content-Type", "application/json")
+		resp, err := client.Do(req)
+		require.NoError(t, err)
+		t.Cleanup(func() { resp.Body.Close() })
+		require.Equal(t, http.StatusOK, resp.StatusCode)
+		return resp
+	}
+
+	stream := bufio.NewReader(request(consts.FIRST_READ_ONLY_NAME, consts.IdentityRoleDeviceRead, http.MethodGet, "/settings/identity/events", "").Body)
+
+	// The admin changing the site's settings and the phone its own are not streamed to the read only device; the
+	// device changing its own is
+	request(consts.FIRST_ADMIN_NAME, consts.IdentityRoleAdmin, http.MethodPost, "/settings/site", `{"timezone": "Pacific/Chatham"}`)
+	request(consts.FIRST_PWD_NAME, consts.IdentityRoleDevicePWDPhone, http.MethodPost, "/settings/identity", `{"timezone": "Asia/Tokyo"}`)
+	request(consts.FIRST_READ_ONLY_NAME, consts.IdentityRoleDeviceRead, http.MethodPost, "/settings/identity", `{"timezone": "Europe/Paris"}`)
+	event, err := stream.ReadString('\n')
+	require.NoError(t, err)
+	require.Equal(t, "event: updated\n", event)
+	data, err := stream.ReadString('\n')
+	require.NoError(t, err)
+	require.Contains(t, data, `"timezone":"Europe/Paris"`)
+}

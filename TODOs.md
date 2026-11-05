@@ -36,9 +36,8 @@
 
 1. Security
     1. Testing deploy with rolling to a new keyset, moving to a new encrypted keyset.
-    1. P2: Every settings change, the site's and each identity's own, is the same `sitemodels.Settings` row, so
-       `/settings/identity/events` and `/settings/alarms/events` stream any identity another's settings and the site's.
-       Stream an identity only its own and, to an admin, the site's, as push registrations now are
+    1. P4: A change to the site's settings is not streamed to a non-admin's `/settings/identity/events`, though its
+       inherited values change; send it `{}`, as the summary is sent other models' changes, rather than the site's
     1. P3: Refresh the built in DB-IP country database (`utils/geoip/dbip-country-lite.mmdb`) each month or two, as
        DB-IP updates it monthly; the Docker image's city database is fetched fresh on each build.
 
@@ -56,14 +55,17 @@
     1. P3: Keep Tab inside an open modal (`modal.Modal`), as past its Close button it goes on to the page behind
     1. P4: Show an identity's new credentials (`credentialsModal`) in a `modal.Modal`, so it is a dialog that takes
        the focus too
+1. P3: Make a Nightscout document's fields without JSON: `stored.Fields` (`nscollections/document.go`) marshals each
+   record's model and reads it back as a map (`utils.ToMap`) before the response is marshalled again, about 40% of
+   the CPU of a 288 entry `/api/v1/entries` search
 1. P3: Open a site's DB when it is first used rather than every site's at start, as each still takes ~2ms to open
    and check migrations
 1. P4: Keep which batches were uploaded, and with which sites, across restarts, as the first backup round after a
    restart uploads every batch again though their backups are current
 1. Migrations (from the audit of what happens when one fails):
-    1. P0: A start where a site cannot be opened still comes up, without it, once Docker restarts it, and `/health`
-       says ok, so `update.sh` keeps the release rather than rolling it back. Fail the start and `/health` instead,
-       and never upload a batch backup that leaves out a live site, which S3's latest would then not have
+    1. P1: A live site whose DB file is missing, and not restored from its batch's backup, still lets the server come up
+       without it and `/health` say ok, so `update.sh` keeps the release rather than rolling it back. Its batch is no
+       longer uploaded without it, so S3's latest keeps the site
     1. P0: At the first production deploy, freeze the migrations: add `data/sql/MIGRATIONS_FROZEN`, so CI refuses a
        change to a migration on main, and add numbered migrations from then on (docs/migrations.md). Then add a test
        that the last release's DBs migrate to the current schema

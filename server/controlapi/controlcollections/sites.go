@@ -206,7 +206,7 @@ func (s *SitesCollection) TruncateHandler(w http.ResponseWriter, r *http.Request
 	if herr == nil {
 		started := time.Now()
 		sizeKB, err := controlContext.ControlDB.TruncateSite(r.Context(), site.ID)
-		if herr = answer(err, s.GetName()); herr == nil {
+		if herr = apiutils.ErrorFor(err, s.GetName()); herr == nil {
 			controlContext.ControlDB.Logs.SiteTruncatedEvent(r.Context(), site.ID, controlContext.IdentityModel.Name, started, site.EstimatedDbSizeKb, sizeKB)
 			site, herr = get(r.Context(), s, site.ID, controlContext)
 		}

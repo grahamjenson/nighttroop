@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/background/backup_sites"
 	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/logsdb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/consts"
@@ -194,4 +195,17 @@ func TestDeleteUnusedSitesRecordsEvent(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "site_deleted", events[0].Name)
 	require.Equal(t, `{"reason":"unused"}`, *events[0].Attributes)
+}
+
+// A batch is not uploaded without a live site that is not open, as S3's latest backup of it would then lack that site
+func TestBackupSiteBatchNotUploadedWithoutALiveSiteNotOpen(t *testing.T) {
+	_, controlDB := testutils.NewControlDB(t)
+	ctx, uploads, fail := t.Context(), [][]string{}, false
+	jobs := uploadJobs(t, controlDB, &uploads, &fail)
+	fileSite(t, controlDB, "qaaaaaaa")
+	_, err := controlDB.Queries.CreateSite(ctx, controldb.CreateSiteParams{ID: "qbbbbbbb", BackupKeyHash: "hash"})
+	require.NoError(t, err)
+
+	require.ErrorIs(t, jobs.BackupSiteBatch(ctx, "q"), backup_sites.ErrSiteNotOpen)
+	require.Empty(t, uploads)
 }

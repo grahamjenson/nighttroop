@@ -11,6 +11,7 @@ import (
 	"nighttroop.t1d.nz/utils/apiutils"
 
 	"github.com/a-h/templ"
+	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
@@ -129,6 +130,9 @@ func (s *SettingsCollection) GetRow(ctx context.Context, collectionTx *siteapiut
 	// A glucose is shown in the units of the identity signed in, whoever's settings these are, as its label says
 	combined, units, level := siteContext.GetSettings(), siteContext.GetSettings().GetUnits(), s.level(siteContext, identity)
 	model := &sitemodels.Settings{Inherited: map[string]string{}}
+	if !s.Site {
+		model.OwnerID = &identity.ID
+	}
 	if s.Other {
 		model.IdentityID, model.IdentityName = &identity.ID, &identity.Name
 	}
@@ -153,6 +157,25 @@ func (s *SettingsCollection) GetRow(ctx context.Context, collectionTx *siteapiut
 		model.Site = site
 	}
 	return model, nil
+}
+
+// Watches is whether a settings change is streamed to the identity: every level is the same model, so its own
+// settings and alarms are only its own changes and, for an admin, the site's, beside which an admin's are shown.
+// The site's and other identities' are the admins' alone, as reading them is.
+func (s *SettingsCollection) Watches(event events.Event, siteContext *httputils.SiteContext) bool {
+	changed, ok := event.Model.(*sitemodels.Settings)
+	if !ok {
+		return false
+	}
+	switch {
+	case s.Site:
+		return changed.OwnerID == nil
+	case s.Other:
+		return changed.OwnerID != nil
+	case changed.OwnerID == nil:
+		return siteContext.IdentityModel.Role == consts.IdentityRoleAdmin
+	}
+	return *changed.OwnerID == siteContext.IdentityModel.ID
 }
 
 func (s *SettingsCollection) ToModel(row *sitemodels.Settings, _ *httputils.SiteContext) *sitemodels.Settings {
