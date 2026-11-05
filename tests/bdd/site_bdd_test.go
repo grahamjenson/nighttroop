@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -63,11 +64,9 @@ func TestSite(t *testing.T) {
 
 	paths := []string{}
 	err = fs.WalkDir(embeddedFiles, ".", func(path string, d fs.DirEntry, err error) error {
-		// The setup, resources, testsite, sitelimit and feedback files need servers of their own, see TestSetup,
-		// TestResourceAlerts, TestTestSiteBanner, TestSiteLimitBanner and TestFeedbackLinks
-		ownServer := strings.HasPrefix(path, "setup/") || strings.HasPrefix(path, "resources/") || strings.HasPrefix(path, "testsite/") ||
-			strings.HasPrefix(path, "sitelimit/") || strings.HasPrefix(path, "feedback/")
-		if err == nil && !d.IsDir() && filepath.Ext(path) == ".bdd" && !ownServer {
+		// The ownServers need servers of their own, see TestOwnServer
+		onOwnServer := slices.ContainsFunc(ownServers, func(own ownServer) bool { return own.path == path })
+		if err == nil && !d.IsDir() && filepath.Ext(path) == ".bdd" && !onOwnServer {
 			paths = append(paths, path)
 		}
 		return err
