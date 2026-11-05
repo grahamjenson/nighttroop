@@ -3,23 +3,32 @@ package footer
 import "nighttroop.t1d.nz/utils/httputils"
 
 // Footer is every page's thin footer: a mailto link to the server's support email, its feedback link when it has one,
-// its terms of service, privacy policy and API docs, and Nighttroop's year
+// its terms of service, privacy policy and API docs, and Nighttroop's year. Each link opens in a new tab, so what the
+// user was doing stays open.
 templ Footer() {
 	<footer id="footer" class="border-t border-gray-200 bg-white py-3 text-center text-xs text-gray-500">
-		<a id="footer--contact" href={ templ.SafeURL("mailto:" + httputils.SupportEmail(ctx)) } class="hover:text-primary">contact</a>
+		@NewTabLink("footer--contact", "mailto:"+httputils.SupportEmail(ctx), "hover:text-primary") {
+			contact
+		}
 		<span aria-hidden="true">·</span>
 		if url := httputils.FeedbackURL(ctx); url != "" {
-			@FeedbackLink("footer--feedback", url, "hover:text-primary") {
+			@NewTabLink("footer--feedback", url, "hover:text-primary") {
 				feedback
 			}
 			{ " " }
 			<span aria-hidden="true">·</span>
 		}
-		<a id="footer--terms" href="/terms" class="hover:text-primary">terms of service</a>
+		@NewTabLink("footer--terms", "/terms", "hover:text-primary") {
+			terms of service
+		}
 		<span aria-hidden="true">·</span>
-		<a id="footer--privacy" href="/privacy" class="hover:text-primary">privacy policy</a>
+		@NewTabLink("footer--privacy", "/privacy", "hover:text-primary") {
+			privacy policy
+		}
 		<span aria-hidden="true">·</span>
-		<a id="footer--api-docs" href="/api-docs" class="hover:text-primary">API docs</a>
+		@NewTabLink("footer--api-docs", "/api-docs", "hover:text-primary") {
+			API docs
+		}
 		<span aria-hidden="true">·</span>
 		<span>Nighttroop 2026</span>
 		<span id="footer--dbip">
@@ -53,11 +62,13 @@ templ DBIPCredit() {
 
 templ dbipLink() {
 	<span aria-hidden="true">·</span>
-	<a id="footer--dbip-link" href="https://db-ip.com" class="hover:text-primary">IP Geolocation by DB-IP</a>
+	@NewTabLink("footer--dbip-link", "https://db-ip.com", "hover:text-primary") {
+		IP Geolocation by DB-IP
+	}
 }
 
-// FeedbackLink opens where users give feedback in a new tab
-templ FeedbackLink(id string, url string, class string) {
+// NewTabLink is a link that opens in a new tab
+templ NewTabLink(id string, url string, class string) {
 	<a id={ id } href={ templ.URL(url) } target="_blank" rel="noopener noreferrer" class={ class }>
 		{ children... }
 	</a>
