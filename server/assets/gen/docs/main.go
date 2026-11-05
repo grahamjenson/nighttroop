@@ -1,5 +1,5 @@
-// docs renders the terms of service and privacy policy from their Markdown into HTML, in docs/docs.gen.go, so the
-// server serves them without parsing Markdown. Run from server/assets.
+// docs renders the terms of service and privacy policy from their Markdown, and the API docs from the OpenAPI schema,
+// into HTML, in docs/docs.gen.go, so the server serves them without parsing either. Run from server/assets.
 package main
 
 import (
@@ -30,6 +30,8 @@ func main() {
 		}
 		fmt.Fprintf(&out, "// %s is %s as HTML\nconst %s = %q\n\n", doc.name, doc.file, doc.name, html.String())
 	}
+	apiDocsHTML := apiDocs(filepath.Join("..", "..", "clients", "nighttroop", "openapi.json"))
+	fmt.Fprintf(&out, "// APIDocs is clients/nighttroop/openapi.json as HTML\nconst APIDocs = %q\n", apiDocsHTML)
 	formatted, err := format.Source(out.Bytes())
 	if err != nil {
 		log.Fatal(err)

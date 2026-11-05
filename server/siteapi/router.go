@@ -26,7 +26,7 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		// Before sign in only the IP is known, so an IP spamming logins cannot spend the site's own limit
 		r.Use(httputils.SiteUnauthRateLimitMiddleware(config))
 		r.Get("/login", sitelogin.GETLoginPageHandler())
-		publicapi.LegalRoutes(r)
+		publicapi.FooterRoutes(r)
 		r.With(httputils.AllowedCountriesMiddleware(config)).Post("/login", sitelogin.POSTLogin(controlDB, config))
 		r.With(httputils.AllowedCountriesMiddleware(config)).Post("/login/totp", sitelogin.POSTLoginTOTP(controlDB, config))
 		// The backup key proves ownership, giving the site's admin new credentials

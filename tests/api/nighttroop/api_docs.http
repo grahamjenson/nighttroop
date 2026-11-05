@@ -1,0 +1,22 @@
+// Every host serves the OpenAPI schema its API docs show, so a client or a person can read it
+NAME get_openapi
+GET http://localhost/openapi.json
+ASSERT_STATUS 200
+ASSERT_EQUALS "application/json" "#Content-Type.0"
+ASSERT_EQUALS "Nighttroop" "@info.title"
+ASSERT_EXISTS "@paths./site"
+
+NAME create_site_for_api_docs
+POST http://localhost/site
+ASSERT_STATUS 200
+
+NAME get_site_openapi
+GET http://{{ .create_site_for_api_docs.site_subdomain }}.localhost/openapi.json
+ASSERT_STATUS 200
+ASSERT_EQUALS "Nighttroop" "@info.title"
+
+// The docs page, generated from it, is served as HTML
+NAME get_api_docs
+GET http://localhost/api-docs
+ASSERT_STATUS 200
+ASSERT_EQUALS "text/html; charset=utf-8" "#Content-Type.0"

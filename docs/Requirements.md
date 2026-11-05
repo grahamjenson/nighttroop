@@ -167,7 +167,10 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - The public **recover page** takes a site's ID and backup key and gives the admin a new password and TOTP and the
   site a new backup key. The key works once; a wrong key is refused without saying why.
 - A site that is never used is deleted after `DELETE_AFTER_INACTIVITY_MINS`.
-- Every page's footer links to contact, the terms of service and the privacy policy.
+- Every page's footer links to contact, the terms of service, the privacy policy and the API docs.
+- The API docs, at `/api-docs` on every host, show the OpenAPI schema, `/openapi.json`, as a page generated from it by
+  `go generate`: each endpoint with how it is signed in to, its parameters, body and responses, then each schema, linked
+  to each other, and a link to download the schema.
 - With `FEEDBACK_URL` set, e.g. to a Google Form or GitHub issues, every page's footer also links to "feedback", and the
   home page asks for it under its features, each opening the link in a new tab; unset, neither shows.
 - The public pages (create, recover, terms and privacy) say above their footer that Nighttroop is not a medical device,
