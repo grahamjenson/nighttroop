@@ -422,6 +422,7 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   changes a treatment by deleting it and sending it again.
 - A treatment with `eventType` `<none>`, Nightscout careportal's treatment with no type, is a Note keeping its
   insulin and carbs.
+- A treatment with AAPS's `eventType` `SettingsExport`, sent when its settings are exported, is a Note.
 - A `dateString` with Juggluco's `-03:-30` zone for half hours west of UTC is read as `-03:30`.
 
 ### Nighttroop API and client

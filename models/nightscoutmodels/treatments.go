@@ -302,6 +302,11 @@ func (t *TreatmentEventType) UnmarshalJSON(data []byte) error {
 		*t = Note
 		return nil
 	}
+	// AAPS records exporting its settings as a "SettingsExport", which has nothing to dose, so it is a note
+	if strings.TrimSpace(s) == "SettingsExport" {
+		*t = Note
+		return nil
+	}
 	return fmt.Errorf("unknown treatment event type: %s", s)
 }
 
