@@ -557,6 +557,9 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 
 - Each identity can set its own units, time zone, language and formats over the site's.
 - Each identity has its own alarms, and snoozing one only quiets it for them.
+- Streaming the changes to an identity's settings (`/settings/identity/events`) or alarm settings
+  (`/settings/alarms/events`) sends only its own, and to an admin the site's too; the site's
+  (`/settings/site/events`) and other identities' (`/settings/identity-settings/events`) stream only to an admin.
 - Each identity, a device or user of any role, registers the apps on its devices that pushes are sent to
   (`/settings/push-registrations`, JSON API): the app (`loop`, `trio`, `loopfollow`, `t1dcarer`), its provider (`apns`
   or `fcm`), bundle ID, whether it is a production build, and its token, which is kept encrypted and never returned.
