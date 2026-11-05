@@ -169,9 +169,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - A site that is never used is deleted after `DELETE_AFTER_INACTIVITY_MINS`.
 - Every page's footer links to contact, the terms of service, the privacy policy and the API docs, and each footer link
   opens in a new tab, so the page the user was on stays open.
-- The API docs, at `/api-docs` on every host, show the OpenAPI schema, `/openapi.json`, as a page generated from it by
-  `go generate`: each endpoint with how it is signed in to, its parameters, body and responses, then each schema, linked
-  to each other, and a link to download the schema.
+- The API docs, at `/api-docs` on every host, show the OpenAPI schema, `/openapi.json`, with Redoc in the site's
+  colours: a menu and search of every endpoint, each with how it is signed in to, its parameters, body, responses and
+  samples of them, and a link to download the schema. The page loads no images from anywhere else.
 - With `FEEDBACK_URL` set, e.g. to a Google Form or GitHub issues, every page's footer also links to "feedback", and the
   home page asks for it under its features, each opening the link in a new tab; unset, neither shows.
 - The public pages (create, recover, terms and privacy) say above their footer that Nighttroop is not a medical device,

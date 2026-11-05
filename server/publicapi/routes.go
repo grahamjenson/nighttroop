@@ -128,6 +128,8 @@ func FooterRoutes(r chi.Router) {
 	})
 	r.Get("/api-docs", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		// Redoc shows Redocly's logo from their CDN, which would tell them who reads the docs: images are only our own
+		w.Header().Set("Content-Security-Policy", "img-src 'self' data:")
 		if err := public_templ.APIDocs().Render(r.Context(), w); err != nil {
 			slog.ErrorContext(r.Context(), "failed to render the API docs", "error", err)
 		}
