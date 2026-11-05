@@ -28,7 +28,7 @@ func (c ProfileCollection) Stored(ctx context.Context, siteContext *httputils.Si
 	if remote != nil && remote.IsAPNSProduction != nil {
 		registration.Production = bool(*remote.IsAPNSProduction)
 	}
-	if _, err := push.Register(ctx, siteContext.ControlDB.Queries, siteContext.Config.Security, siteContext.SiteID,
+	if _, err := push.RegisterAlone(ctx, siteContext.ControlDB, siteContext.Config.Security, siteContext.SiteID,
 		siteContext.IdentityModel.ID, registration); err != nil {
 		slog.WarnContext(ctx, "Cannot register a profile's app for pushes", "app", registration.App, "error", err)
 	}

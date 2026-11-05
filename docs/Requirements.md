@@ -577,8 +577,8 @@ focus back to the row or button that opened it.
   or `fcm`), bundle ID, whether it is a production build, and its token, which is kept encrypted and never returned.
   Registering a token again updates it, and from another of the site's identities moves it there; another site
   registering the same token has its own, so no site can take or change another's. An APNs token is the same in upper
-  or lower case. An identity has at most 10, though it can always register one of them again, and sees, streams the
-  changes to (`/settings/push-registrations/events`) and deletes only its own.
+  or lower case. An identity has at most 10, even from profiles uploaded at once, though it can always register one
+  of them again, and sees, streams the changes to (`/settings/push-registrations/events`) and deletes only its own.
 - Settings, Push Devices (`/settings/push-devices`) lists the apps registered for pushes, with whose they are, the app
   and its service, its bundle ID, whether it is a development build, when it registered, and its last push and error;
   never its token. An admin sees every identity's on the site, and anyone else only their own. Each has a Test button,

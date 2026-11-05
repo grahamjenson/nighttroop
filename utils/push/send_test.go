@@ -11,9 +11,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/push"
@@ -115,4 +117,34 @@ func TestRegisterAgain(t *testing.T) {
 	require.ErrorIs(t, err, push.ErrTooManyRegistrations)
 	_, err = register(strings.Repeat("ab", 32))
 	require.NoError(t, err)
+}
+
+// Profiles uploaded at once register their apps one at a time, so together they cannot pass an identity's most. The
+// control DB is on disk, with a connection for each, as the server's is.
+func TestRegisterAloneKeepsTheMost(t *testing.T) {
+	cfg := *testutils.GetTestServerConfig()
+	cfg.Mode, cfg.DataDir = consts.Development, t.TempDir()
+	controlDB, err := db.NewControlDB(t.Context(), &cfg)
+	require.NoError(t, err)
+	t.Cleanup(func() { controlDB.Close() })
+	site, err := controlDB.CreateSite(t.Context())
+	require.NoError(t, err)
+	siteID := site.SiteDB.Subdomain
+	identities, err := controlDB.Queries.AllSiteIdentities(t.Context(), controldb.AllSiteIdentitiesParams{SiteID: siteID})
+	require.NoError(t, err)
+
+	var uploads sync.WaitGroup
+	for i := range 3 * push.MaxRegistrations {
+		uploads.Go(func() {
+			_, _ = push.RegisterAlone(t.Context(), controlDB, cfg.Security, siteID, identities[0].ID, push.Registration{
+				Provider: consts.PushProviderAPNs, App: "loop", BundleID: "com.TEAM123456.loopkit.Loop",
+				Token: fmt.Sprintf("%064x", i+1), Production: true})
+		})
+	}
+	uploads.Wait()
+
+	registered, err := controlDB.Queries.SearchPushRegistrations(t.Context(), controldb.SearchPushRegistrationsParams{SiteID: siteID,
+		IdentityID: &identities[0].ID, Limit: 100})
+	require.NoError(t, err)
+	require.Len(t, registered, push.MaxRegistrations)
 }
