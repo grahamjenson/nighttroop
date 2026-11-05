@@ -69,7 +69,7 @@ func (s *SitesCollection) resetIdentity(w http.ResponseWriter, r *http.Request, 
 	if err == nil {
 		values, err = reset(r.Context(), controlContext.ControlDB, identity, controlContext.IdentityModel.Name)
 	}
-	if herr := answer(err, "site identities"); herr != nil {
+	if herr := apiutils.ErrorFor(err, "site identities"); herr != nil {
 		herr.Write(acceptType, w)
 		return
 	}

@@ -62,7 +62,7 @@ func SearchHandler[R, M any](collection CollectionSearch[R, M]) http.HandlerFunc
 			query = &apiutils.Query{}
 		}
 		rows, err := collection.SearchRows(r.Context(), query, controlContext)
-		if herr := answer(err, collection.GetName()); herr != nil {
+		if herr := apiutils.ErrorFor(err, collection.GetName()); herr != nil {
 			herr.Write(acceptType, w)
 			return
 		}
@@ -109,7 +109,7 @@ func UpdateHandler[R, M any](collection CollectionUpdate[R, M]) http.HandlerFunc
 		}
 		if herr == nil {
 			row, err := collection.UpdateRow(r.Context(), controlContext, oldModel, requestModel)
-			if herr = answer(err, collection.GetName()); herr == nil {
+			if herr = apiutils.ErrorFor(err, collection.GetName()); herr == nil {
 				*requestModel = *collection.ToModel(row)
 			}
 		}
@@ -131,24 +131,10 @@ func get[R, M any](ctx context.Context, collection CollectionBase[R, M], id stri
 	if errors.Is(err, sql.ErrNoRows) || (err == nil && row == nil) {
 		return nil, nil
 	}
-	if herr := answer(err, collection.GetName()); herr != nil {
+	if herr := apiutils.ErrorFor(err, collection.GetName()); herr != nil {
 		return nil, herr
 	}
 	return collection.ToModel(row), nil
-}
-
-// answer is the response to a collection's error: its own, not found for a missing row, or the database's
-func answer(err error, what string) *apiutils.HTTPError {
-	var herr *apiutils.HTTPError
-	switch {
-	case err == nil:
-		return nil
-	case errors.As(err, &herr):
-		return herr
-	case errors.Is(err, sql.ErrNoRows):
-		return apiutils.ErrNotFound
-	}
-	return apiutils.WriteError(err, what)
 }
 
 // WriteResponse sends HTMX the component, a browser the component in a full page, and anything else the model as JSON
