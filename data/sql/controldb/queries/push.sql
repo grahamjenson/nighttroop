@@ -58,7 +58,8 @@ LIMIT 1;
 ----------------------
 
 -- name: UpsertPushRegistration :one
--- Registers a token, moving it to this identity if another of the site's had it, as the app was signed in again
+-- Registers a token, moving it to this identity if another of the site's had it, as the app was signed in again. The
+-- same registration again, as each upload of a Loop or Trio profile is, keeps its last push's error.
 INSERT INTO push_registrations (site_id, identity_id, app, provider, bundle_id, production, token_enc, token_hash)
 VALUES (
     sqlc.arg('SiteID'), sqlc.arg('IdentityID'), sqlc.arg('App'), sqlc.arg('Provider'), sqlc.arg('BundleID'),
@@ -71,7 +72,9 @@ ON CONFLICT (site_id, token_hash) DO UPDATE SET
     bundle_id = excluded.bundle_id,
     production = excluded.production,
     token_enc = excluded.token_enc,
-    last_error = NULL,
+    last_error = CASE WHEN push_registrations.identity_id = excluded.identity_id AND push_registrations.app = excluded.app
+        AND push_registrations.provider = excluded.provider AND push_registrations.bundle_id = excluded.bundle_id
+        AND push_registrations.production = excluded.production THEN push_registrations.last_error END,
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
 RETURNING *;
 
