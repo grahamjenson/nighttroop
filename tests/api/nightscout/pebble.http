@@ -1,0 +1,46 @@
+// Pebble and other watch faces read /pebble: the newest readings, as strings in the units asked for, with the delta on
+// the newest
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET token {{ .create_new_site.pwd_nstoken }}
+SET read_token {{ .create_new_site.read_only_nstoken }}
+SET site {{ .create_new_site.site_subdomain }}.ns.localhost
+
+NAME pebble_empty
+GET http://{{ site }}/pebble?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@bgs"
+ASSERT_LENGTH 0 "@cals"
+ASSERT_EXISTS "@status.0.now"
+
+NAME post_entries
+POST http://{{ site }}/api/v1/entries?token={{ token }}
+B [{"type": "sgv", "sgv": 100, "direction": "Flat", "date": {{ itime 10 }}}, {"type": "sgv", "sgv": 110, "direction": "FortyFiveUp", "date": {{ itime 5 }}}, {"type": "sgv", "sgv": 120, "direction": "SingleUp", "date": {{ itime 0 }}}]
+ASSERT_STATUS 200
+
+// In the site's units, mmol/L for a new site
+NAME pebble
+GET http://{{ site }}/pebble?token={{ read_token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@bgs"
+ASSERT_EQUALS "6.7" "@bgs.0.sgv"
+ASSERT_EQUALS 2 "@bgs.0.trend"
+ASSERT_EQUALS "SingleUp" "@bgs.0.direction"
+ASSERT_EQUALS 0.6 "@bgs.0.bgdelta"
+ASSERT_EXISTS "@bgs.0.datetime"
+
+NAME pebble_count_mgdl
+GET http://{{ site }}/pebble?token={{ token }}&count=3&units=mg/dl
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@bgs"
+ASSERT_EQUALS "120" "@bgs.0.sgv"
+ASSERT_EQUALS 10 "@bgs.0.bgdelta"
+ASSERT_EQUALS "110" "@bgs.1.sgv"
+ASSERT_EQUALS 3 "@bgs.1.trend"
+ASSERT_EQUALS "100" "@bgs.2.sgv"
+ASSERT_EQUALS 4 "@bgs.2.trend"
+
+NAME pebble_no_token
+GET http://{{ site }}/pebble
+ASSERT_STATUS 401

@@ -55,6 +55,8 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config *config.ServerConfig) c
 		r.Mount("/api/v1", v1Router)
 		r.Mount("/api/v2", v2Router)
 		r.Mount("/api/v3", v3Router)
+		// Pebble and other watch faces read the newest readings at the host's /pebble
+		r.Get("/pebble", nsutils.Require("api:*:read", true, nsv2.Pebble()))
 
 		r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 			slog.InfoContext(r.Context(), "Nightscout router 404 for path", "path", r.URL.Path)

@@ -573,6 +573,15 @@ type ListInsulinDosesParams struct {
 	Skip  *Skip  `form:"skip,omitempty" json:"skip,omitempty"`
 }
 
+// NsPebbleParams defines parameters for NsPebble.
+type NsPebbleParams struct {
+	// Count How many readings, 1 by default
+	Count *int `form:"count,omitempty" json:"count,omitempty"`
+
+	// Units mmol or mg/dl, the settings' units by default
+	Units *string `form:"units,omitempty" json:"units,omitempty"`
+}
+
 // GetSummaryParams defines parameters for GetSummary.
 type GetSummaryParams struct {
 	Hours *int64 `form:"hours,omitempty" json:"hours,omitempty"`
@@ -1411,6 +1420,9 @@ type ClientInterface interface {
 
 	Login(ctx context.Context, body LoginJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// NsPebble request
+	NsPebble(ctx context.Context, params *NsPebbleParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// CreateSite request
 	CreateSite(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -2224,6 +2236,18 @@ func (c *Client) LoginWithBody(ctx context.Context, contentType string, body io.
 
 func (c *Client) Login(ctx context.Context, body LoginJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewLoginRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsPebble(ctx context.Context, params *NsPebbleParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsPebbleRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -4867,6 +4891,71 @@ func NewLoginRequestWithBody(server string, contentType string, body io.Reader) 
 	return req, nil
 }
 
+// NewNsPebbleRequest generates requests for NsPebble
+func NewNsPebbleRequest(server string, params *NsPebbleParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/pebble")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Count != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "count", runtime.ParamLocationQuery, *params.Count); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Units != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "units", runtime.ParamLocationQuery, *params.Units); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewCreateSiteRequest generates requests for CreateSite
 func NewCreateSiteRequest(server string) (*http.Request, error) {
 	var err error
@@ -5174,6 +5263,9 @@ type ClientWithResponsesInterface interface {
 	LoginWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LoginResponse, error)
 
 	LoginWithResponse(ctx context.Context, body LoginJSONRequestBody, reqEditors ...RequestEditorFn) (*LoginResponse, error)
+
+	// NsPebbleWithResponse request
+	NsPebbleWithResponse(ctx context.Context, params *NsPebbleParams, reqEditors ...RequestEditorFn) (*NsPebbleResponse, error)
 
 	// CreateSiteWithResponse request
 	CreateSiteWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*CreateSiteResponse, error)
@@ -6396,6 +6488,29 @@ func (r LoginResponse) StatusCode() int {
 	return 0
 }
 
+type NsPebbleResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsObject
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsPebbleResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsPebbleResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type CreateSiteResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -7037,6 +7152,15 @@ func (c *ClientWithResponses) LoginWithResponse(ctx context.Context, body LoginJ
 		return nil, err
 	}
 	return ParseLoginResponse(rsp)
+}
+
+// NsPebbleWithResponse request returning *NsPebbleResponse
+func (c *ClientWithResponses) NsPebbleWithResponse(ctx context.Context, params *NsPebbleParams, reqEditors ...RequestEditorFn) (*NsPebbleResponse, error) {
+	rsp, err := c.NsPebble(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsPebbleResponse(rsp)
 }
 
 // CreateSiteWithResponse request returning *CreateSiteResponse
@@ -8761,6 +8885,39 @@ func ParseLoginResponse(rsp *http.Response) (*LoginResponse, error) {
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsPebbleResponse parses an HTTP response from a NsPebbleWithResponse call
+func ParseNsPebbleResponse(rsp *http.Response) (*NsPebbleResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsPebbleResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsObject
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
