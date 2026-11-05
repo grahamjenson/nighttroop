@@ -15,6 +15,23 @@ import (
 	"nighttroop.t1d.nz/utils/usage"
 )
 
+// requestTimeout cancels a request that has taken too long
+var requestTimeout = 30 * time.Second
+
+// timeoutUnlessLongLived cancels a request after requestTimeout, but not one held open on purpose, as a live update's
+// event stream or a Socket.IO connection, which end themselves: the timeout cut each stream off after 30 seconds, so
+// its page reconnected and read everything again
+func timeoutUnlessLongLived(next http.Handler) http.Handler {
+	timed := middleware.Timeout(requestTimeout)(next)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if LongLived(r) {
+			next.ServeHTTP(w, r)
+			return
+		}
+		timed.ServeHTTP(w, r)
+	})
+}
+
 // AddStandardMiddleware adds what every router has, recording its server errors in the logs DB when there is one
 func AddStandardMiddleware(router chi.Router, config *config.ServerConfig, controlDB *db.ControlDB) {
 	router.Use(middleware.RequestID)
@@ -34,7 +51,7 @@ func AddStandardMiddleware(router chi.Router, config *config.ServerConfig, contr
 	router.Use(NewLogger(nil))
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.RequestSize(500 * 1024)) // 500KB max body size, should be enough for any request and prevents abuse
-	router.Use(middleware.Timeout(30 * time.Second))
+	router.Use(timeoutUnlessLongLived)
 	// Gzip text responses, like the pages, styles, scripts and JSON, for clients that accept it
 	router.Use(middleware.Compress(5))
 	router.Use(withSupportEmail(config.SupportEmail))

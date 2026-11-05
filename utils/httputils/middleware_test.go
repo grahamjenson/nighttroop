@@ -165,3 +165,28 @@ func TestRequestLogsCarryRequestSiteAndIdentity(t *testing.T) {
 		require.Equal(t, string(consts.IdentityRoleUser), lines[msg]["role"], msg)
 	}
 }
+
+// A request is cancelled once it has taken too long, but an event stream, held open on purpose, is not
+func TestTimeoutSparesEventStreams(t *testing.T) {
+	timeout := requestTimeout
+	requestTimeout = 50 * time.Millisecond
+	t.Cleanup(func() { requestTimeout = timeout })
+	router := chi.NewRouter()
+	AddStandardMiddleware(router, &config.ServerConfig{}, nil)
+	router.Get("/wait", func(w http.ResponseWriter, r *http.Request) {
+		select {
+		case <-r.Context().Done():
+			_, _ = io.WriteString(w, "cancelled")
+		case <-time.After(500 * time.Millisecond):
+			_, _ = io.WriteString(w, "finished")
+		}
+	})
+
+	for accept, want := range map[string]string{"text/html": "cancelled", "text/event-stream": "finished"} {
+		r := httptest.NewRequest(http.MethodGet, "/wait", nil)
+		r.Header.Set("Accept", accept)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, r)
+		assert.Equal(t, want, w.Body.String(), accept)
+	}
+}
