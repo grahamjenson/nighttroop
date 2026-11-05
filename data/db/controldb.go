@@ -118,10 +118,16 @@ func (db *ControlDB) fillSites(ctx context.Context) error {
 	return g.Wait()
 }
 
+// ErrRestoredSiteCannotOpen is a site restored from its batch's backup whose DB cannot be opened, as when it cannot be
+// migrated, which stops the start as a site that is there and cannot be opened does
+var ErrRestoredSiteCannotOpen = errors.New("a restored site's DB cannot be opened")
+
 // RestoreMissingSites restores each live site whose DB file was missing at start from its batch's latest backup,
 // downloaded once per batch with download, and opens it. Each is recorded as a site_db_missing event, so the control
-// admin sees a site the backup could not bring back, which is still left out.
-func (db *ControlDB) RestoreMissingSites(ctx context.Context, download s3utils.DownloadFunc) {
+// admin sees a site the backup could not bring back, which is still left out. A restored site that cannot be opened is
+// ErrRestoredSiteCannotOpen, so the start fails and a release that cannot open it is rolled back rather than kept.
+func (db *ControlDB) RestoreMissingSites(ctx context.Context, download s3utils.DownloadFunc) error {
+	var cannotOpen error
 	byBatch := map[string][]string{}
 	for _, siteID := range db.missingSites {
 		byBatch[siteID[:1]] = append(byBatch[siteID[:1]], siteID)
@@ -136,6 +142,9 @@ func (db *ControlDB) RestoreMissingSites(ctx context.Context, download s3utils.D
 		} else if got, err := db.restoreFromBatch(ctx, batch, siteIDs, download); err != nil {
 			slog.ErrorContext(ctx, "Cannot restore missing site DBs from their batch's backup", "batch", batch, "error", err)
 			restored, reason = got, "restore_failed"
+			if errors.Is(err, ErrRestoredSiteCannotOpen) {
+				cannotOpen = errors.Join(cannotOpen, err)
+			}
 		} else {
 			restored = got
 		}
@@ -148,6 +157,7 @@ func (db *ControlDB) RestoreMissingSites(ctx context.Context, download s3utils.D
 			}
 		}
 	}
+	return cannotOpen
 }
 
 // restoreFromBatch downloads batch's latest backup beside its folder, moves into place each of siteIDs' DBs it has,
@@ -175,7 +185,7 @@ func (db *ControlDB) restoreFromBatch(ctx context.Context, batch string, siteIDs
 		}
 		siteDB, err := NewSiteDB(ctx, siteID, db.ServerConfig)
 		if err != nil {
-			return restored, fmt.Errorf("cannot open restored site %s: %w", siteID, err)
+			return restored, fmt.Errorf("%w: %s: %w", ErrRestoredSiteCannotOpen, siteID, err)
 		}
 		db.sites.add(siteDB)
 		restored[siteID] = true

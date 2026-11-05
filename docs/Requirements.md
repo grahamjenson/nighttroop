@@ -435,6 +435,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - A live site whose DB file is missing on start, though its batch's folder is there, is restored from its batch's
   latest backup in S3, downloaded once per batch, and opened; either way it is a "Site DB missing" event the control
   admin sees, saying whether it was restored or why not (S3 not working, not in the backup, or the restore failed).
+  A site restored that cannot be opened, as when its migration fails, stops the start, as a site that is there and
+  cannot be opened does, so `update.sh` rolls back a release that cannot open it rather than keeping it without the site.
 - A site whose DB file is missing and not restored, such as one created after its batch was last backed up, is left
   out, so the server still starts and the rest of its batch is still backed up.
 - Old records' raw JSON is cleared after `TRUNCATE_RECORDS_AFTER_DAYS`.
