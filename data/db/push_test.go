@@ -157,6 +157,12 @@ func TestPushRegistrations(t *testing.T) {
 	require.Nil(t, byIdentity(second)[0].LastError)
 	require.NoError(t, q.RecordPush(t.Context(), controldb.RecordPushParams{ID: moved.ID, SiteID: siteID, TokenHash: hashA, LastError: new("BadDeviceToken")}))
 	require.Equal(t, "BadDeviceToken", *byIdentity(second)[0].LastError)
+	// The same registration again, as each profile upload is, keeps the error; one for another identity clears it
+	again := register(second, hashA)
+	require.NotNil(t, again.LastError)
+	require.Equal(t, "BadDeviceToken", *again.LastError)
+	require.Nil(t, register(first, hashA).LastError)
+	register(second, hashA)
 	require.NoError(t, q.DeletePushRegistrationByTokenHash(t.Context(), controldb.DeletePushRegistrationByTokenHashParams{SiteID: siteID, TokenHash: hashA}))
 	require.Empty(t, byIdentity(second))
 

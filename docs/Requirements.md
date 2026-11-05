@@ -585,5 +585,5 @@ focus back to the row or button that opened it.
   (`POST /settings/push-registrations/{id}/test`), with its site's push credential for the app, else the server's.
   Without one it is refused, saying to add one; a token Apple says is gone deletes the registration (410); another
   refusal says Apple's reason (502), and one that cannot reach Apple why, never with the device token. Each push is
-  recorded on the registration, with its error, if it had one, and a token Apple says is gone is deleted from its own
-  site alone. A site sends at most `SITE_PUSH_PER_MINUTE_LIMIT` pushes a minute. Only APNs pushes are sent so far.
+  recorded on the registration, with its error, if it had one, which the same registration again, as each upload of
+  a Loop or Trio profile is, keeps, and a token Apple says is gone is deleted from its own site alone. A site sends at most `SITE_PUSH_PER_MINUTE_LIMIT` pushes a minute. Only APNs pushes are sent so far.
