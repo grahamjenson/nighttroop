@@ -260,6 +260,11 @@ Adding a record on a data page opens a modal of all the fields a person can type
 units, whether it is required, with its limits, and a dropdown or suggestions for its types. Its time is typed in the
 settings' timezone, and is now when left blank; other fields left blank are not set.
 
+Without a mouse, Tab reaches each record's row in a table, here and on the control pages, outlined in gold, and Enter
+opens its details; Enter on its delete button deletes it without opening them. A modal takes the focus when it opens,
+so Tab goes on to its fields and a screen reader reads its title, and closing it (Escape, Close or saving) gives the
+focus back to the row or button that opened it.
+
 ### Presets
 
 - **Food presets**: added in a modal of all their fields, as data is, viewed, edited and deleted.

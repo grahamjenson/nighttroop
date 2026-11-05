@@ -51,6 +51,10 @@
 1. P4: Tag each endpoint in `clients/nighttroop/openapi.json` (site, data, settings, Nightscout), so the API docs'
    menu groups its 51 endpoints, and give each a summary, as those without one are listed by their operation ID
 1. Performance testing (cost estimate for running full node)
+1. Accessibility:
+    1. P3: Keep Tab inside an open modal (`modal.Modal`), as past its Close button it goes on to the page behind
+    1. P4: Show an identity's new credentials (`credentialsModal`) in a `modal.Modal`, so it is a dialog that takes
+       the focus too
 1. P3: Make a Nightscout document's fields without JSON: `stored.Fields` (`nscollections/document.go`) marshals each
    record's model and reads it back as a map (`utils.ToMap`) before the response is marshalled again, about 40% of
    the CPU of a 288 entry `/api/v1/entries` search
