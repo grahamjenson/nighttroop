@@ -17,10 +17,8 @@ import (
 // This contains all rate limiters in the system
 // This might be more efficient if joined together, but right now this is fine
 type RateLimiters struct {
-	// settings are each rate limit's rate, from the env unless a control admin set it, read under lock as one can
-	// change while requests are limited
-	lock     sync.RWMutex
-	settings []RateSetting
+	// rates are each rate limit's rate, from the env unless a control admin set it
+	rates *rateSettings
 
 	userLoginRateLimiters *lru.Cache[string, *rate.Limiter]
 	ipLoginRateLimiters   *lru.Cache[string, *rate.Limiter]
@@ -58,7 +56,7 @@ func newRateLimiters(config ServerConfig) *RateLimiters {
 		return settings[slices.IndexFunc(settings, func(s RateSetting) bool { return s.Name == name })].Rate
 	}
 	return &RateLimiters{
-		settings: settings,
+		rates: &rateSettings{settings: settings},
 
 		userLoginRateLimiters: lruMust(maxSites * maxIdentities * wiggle),
 		ipLoginRateLimiters:   lruMust(maxSites * maxIdentities * wiggle * 2),
@@ -216,6 +214,13 @@ func (r Rate) Valid() bool {
 	return r.PerMinute > 0 && r.PerMinute <= 1e9 && r.Burst >= 1 && r.Burst <= 1e9
 }
 
+// rateSettings are read under lock as one can change while requests are limited. It is kept by pointer, so a copy of
+// the RateLimiters, as a test makes to swap a limiter, has the same.
+type rateSettings struct {
+	lock     sync.RWMutex
+	settings []RateSetting
+}
+
 // RateSetting is a rate limit a control admin can change. Its Default is from the env variables named Env, with
 // _LIMIT and _BURST, and Rate is what it is now: the Default unless Set by a control admin.
 type RateSetting struct {
@@ -249,32 +254,32 @@ func rateDefaults(c ServerConfig) []RateSetting {
 
 // rate is the named rate limit's rate now
 func (r *RateLimiters) rate(name string) Rate {
-	r.lock.RLock()
-	defer r.lock.RUnlock()
-	return r.settings[slices.IndexFunc(r.settings, func(s RateSetting) bool { return s.Name == name })].Rate
+	r.rates.lock.RLock()
+	defer r.rates.lock.RUnlock()
+	return r.rates.settings[slices.IndexFunc(r.rates.settings, func(s RateSetting) bool { return s.Name == name })].Rate
 }
 
 // Settings are each rate limit, its env default and its rate now
 func (r *RateLimiters) Settings() []RateSetting {
-	r.lock.RLock()
-	defer r.lock.RUnlock()
-	return slices.Clone(r.settings)
+	r.rates.lock.RLock()
+	defer r.rates.lock.RUnlock()
+	return slices.Clone(r.rates.settings)
 }
 
 // SetRates uses the rates a control admin set, by name, in place of the env's, for every limiter kept and made: one
 // that is not valid, or is the env's, is left out, so the env's is used. It is the rates set, to keep.
 func (r *RateLimiters) SetRates(rates map[string]Rate) map[string]Rate {
-	r.lock.Lock()
+	r.rates.lock.Lock()
 	set := map[string]Rate{}
-	for i, setting := range r.settings {
+	for i, setting := range r.rates.settings {
 		given, ok := rates[setting.Name]
-		r.settings[i].Set = ok && given.Valid() && given != setting.Default
-		r.settings[i].Rate = setting.Default
-		if r.settings[i].Set {
-			r.settings[i].Rate, set[setting.Name] = given, given
+		r.rates.settings[i].Set = ok && given.Valid() && given != setting.Default
+		r.rates.settings[i].Rate = setting.Default
+		if r.rates.settings[i].Set {
+			r.rates.settings[i].Rate, set[setting.Name] = given, given
 		}
 	}
-	r.lock.Unlock()
+	r.rates.lock.Unlock()
 	for _, kind := range r.kinds() {
 		current := r.rate(kind.setting)
 		for _, limiter := range kind.limiters {
