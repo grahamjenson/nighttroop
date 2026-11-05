@@ -1,79 +1,41 @@
 name: Deploy staging
 
-# Every half hour, deploys the newest commit on main that CI passed on to the staging Nighttroop on Fly.io, unless that
-# commit is already deployed, so staging is at most about half an hour behind main without a deploy for every merge.
-# Staging keeps its data between deploys unless a migration change means a database can no longer be migrated; see
-# docs/deploy/staging_flyio/README.md. It does nothing until the repository variable STAGING_FLYIO_APP names the Fly app
-# and the secret FLY_API_TOKEN holds a deploy token for it.
+# Deploys each commit on main that CI passed on to the staging Nighttroop on Fly.io, which keeps its data between deploys
+# unless a migration change means a database can no longer be migrated; see docs/deploy/staging_flyio/README.md. It does nothing
+# until the repository variable STAGING_FLYIO_APP names the Fly app and the secret FLY_API_TOKEN holds a deploy token for
+# it.
 on:
-  # Off the hour, when GitHub delays scheduled runs the least
-  schedule:
-    - cron: '7,37 * * * *'
+  workflow_run:
+    workflows: [CI]
+    branches: [main]
+    types: [completed]
   workflow_dispatch:
 
-# One deploy at a time; a run that starts mid-deploy waits for it rather than cancelling it
+# One deploy at a time: one running is left to finish, and the commits that pass CI meanwhile wait as a single run, each
+# newer one replacing the one waiting, so they are deployed together, as the newest of them, once it is done. A run
+# waiting uses no Actions minutes.
 concurrency:
   group: deploy-staging
   cancel-in-progress: false
 
-permissions:
-  contents: read
-  actions: read
-
 jobs:
   deploy:
-    if: vars.STAGING_FLYIO_APP != ''
+    if: >-
+      vars.STAGING_FLYIO_APP != '' && (github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'))
     runs-on: ubuntu-latest
     steps:
-      - name: Find main's newest commit CI passed on
-        id: commit
-        run: |
-          sha=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci.yml --branch main --event push --status success \
-            --limit 1 --json headSha --jq '.[0].headSha // ""')
-          echo "sha=$sha" >> "$GITHUB_OUTPUT"
-          echo "Newest commit on main CI passed on: ${sha:-none}"
-        env:
-          GH_TOKEN: ${{ github.token }}
-
-      # A tiny cache entry saved after each deploy marks the commit as deployed, so a run with nothing new stops here,
-      # after a few seconds. Entries unused for a week are evicted, which only means one more deploy of the same commit.
-      - name: Check whether it is deployed
-        id: deployed
-        if: steps.commit.outputs.sha != ''
-        uses: actions/cache/restore@v4
-        with:
-          path: .deployed
-          key: staging-deployed-${{ steps.commit.outputs.sha }}
-          lookup-only: true
-
-      # A manual run deploys even a commit that is already deployed
-      - name: Decide
-        id: decide
-        run: echo "deploy=${{ steps.commit.outputs.sha != '' && (github.event_name == 'workflow_dispatch' || steps.deployed.outputs.cache-hit != 'true') }}" >> "$GITHUB_OUTPUT"
-
       - uses: actions/checkout@v4
-        if: steps.decide.outputs.deploy == 'true'
         with:
-          ref: ${{ steps.commit.outputs.sha }}
+          # The commit CI passed on, not whatever main is now
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - uses: superfly/flyctl-actions/setup-flyctl@master
-        if: steps.decide.outputs.deploy == 'true'
 
       # From the repository's root, the build context, with the staging config. One machine, as each has its own data.
-      - if: steps.decide.outputs.deploy == 'true'
-        run: >-
+      - run: >-
           flyctl deploy . --app "$STAGING_FLYIO_APP" --config docs/deploy/staging_flyio/fly.toml --dockerfile Dockerfile
           --build-target staging --remote-only --ha=false --env DEPLOYMENT="$STAGING_FLYIO_APP"
         env:
           STAGING_FLYIO_APP: ${{ vars.STAGING_FLYIO_APP }}
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-
-      - name: Mark it deployed
-        if: steps.decide.outputs.deploy == 'true'
-        run: mkdir -p .deployed && echo "${{ steps.commit.outputs.sha }}" > .deployed/sha
-
-      - uses: actions/cache/save@v4
-        if: steps.decide.outputs.deploy == 'true'
-        with:
-          path: .deployed
-          key: staging-deployed-${{ steps.commit.outputs.sha }}
