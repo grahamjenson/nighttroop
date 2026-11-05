@@ -58,10 +58,9 @@
     1. P0: A start where a site cannot be opened still comes up, without it, once Docker restarts it, and `/health`
        says ok, so `update.sh` keeps the release rather than rolling it back. Fail the start and `/health` instead,
        and never upload a batch backup that leaves out a live site, which S3's latest would then not have
-    1. P0: Schema changes edit `000001_init_schema.up.sql` in place, which a DB already at version 1 never runs again:
-       an older control DB cannot start ("no such column") and an older site's DB fails some queries or keeps old
-       CHECKs. Add numbered migrations, a CI check that a migration on main never changes, and a test that the last
-       release's DBs migrate to the current schema
+    1. P0: At the first production deploy, freeze the migrations: add `data/sql/MIGRATIONS_FROZEN`, so CI refuses a
+       change to a migration on main, and add numbered migrations from then on (docs/migrations.md). Then add a test
+       that the last release's DBs migrate to the current schema
     1. P1: A migration that fails leaves its DB dirty, which every open refuses. Each runs in a transaction, so a dirty
        version N had none of N applied: force it back to N-1 and try again, or report it plainly
     1. P1: A build cannot open a DB a newer one migrated, so rolling back needs `update.sh`'s copy of `./data`, losing
