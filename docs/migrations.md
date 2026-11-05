@@ -24,6 +24,10 @@ migration:
 
 1. Add `data/sql/<db>/migrations/00000N_<what>.up.sql`, numbered after the last, and its `00000N_<what>.down.sql`.
    `go generate` migrates down as a check, so each needs a down file; it can be empty when the change cannot be undone.
+   A DB only runs migrations numbered after its version, so one numbered at or before the last on the base branch, as
+   when another pull request's migration merged first, would never run on DBs already past it. CI fails a pull
+   request that adds one (`scripts/check_migrations.sh`, frozen or not); renumber it after the last. CI only runs on a
+   push, so bring the base branch in, or re-run the check, before merging when another migration merged meanwhile.
 2. Run `go generate ./...`, which applies every migration in order to make `schema_gen.sql` for sqlc. It also checks
    the migrations with rows in (`data/sql/gen/migration_check.go`): at each version it adds rows with every column at
    the largest and the smallest its CHECKs allow, the longest text, both ends of a range, the first and last of a list,
