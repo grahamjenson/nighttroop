@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -521,22 +522,27 @@ func dueDateFlags(now int64, lastSeenAt *int64, lastWriteAt *int64, updateLastSe
 	return due(updateLastSeen, lastSeenAt), due(updateLastWrite, lastWriteAt)
 }
 
+// ErrSiteNotFound is a site there is not, or whose DB is not open, as against one that cannot be looked up now
+var ErrSiteNotFound = errors.New("site not found")
+
 func (db *ControlDB) GetSite(ctx context.Context, subdomain string) (*SiteDB, *controldb.Site, error) {
 	// Check if site exists in the db
 	model, err := db.Queries.GetSite(ctx, controldb.GetSiteParams{
 		ID: subdomain,
 	})
-
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil, ErrSiteNotFound
+	}
 	if err != nil {
 		return nil, nil, fmt.Errorf("Cannot get site from db: %w", err)
 	}
 	if model.ID == "" {
-		return nil, nil, fmt.Errorf("site not found")
+		return nil, nil, ErrSiteNotFound
 	}
 
 	siteDB := db.sites.get(subdomain)
 	if siteDB == nil {
-		return nil, nil, fmt.Errorf("Cannot get SiteDB from memory: site not found in memory")
+		return nil, nil, fmt.Errorf("Cannot get SiteDB from memory: %w in memory", ErrSiteNotFound)
 	}
 	return siteDB, model, nil
 }

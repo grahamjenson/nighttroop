@@ -24,7 +24,7 @@ func ShedLoad(inFlight int, backlog int, wait time.Duration, exempt func(*http.R
 			case waiting <- struct{}{}:
 				defer func() { <-waiting }()
 			default:
-				refuseBusy(w, r, "backlog full")
+				RefuseBusy(w, r, "backlog full")
 				return
 			}
 			timer := time.NewTimer(wait)
@@ -34,14 +34,15 @@ func ShedLoad(inFlight int, backlog int, wait time.Duration, exempt func(*http.R
 				defer func() { <-working }()
 				next.ServeHTTP(w, r)
 			case <-timer.C:
-				refuseBusy(w, r, "waited too long")
+				RefuseBusy(w, r, "waited too long")
 			case <-r.Context().Done():
 			}
 		})
 	}
 }
 
-func refuseBusy(w http.ResponseWriter, r *http.Request, why string) {
+// RefuseBusy answers 503, to try again in a few seconds, as when the server cannot answer the request in time
+func RefuseBusy(w http.ResponseWriter, r *http.Request, why string) {
 	slog.InfoContext(r.Context(), "Server busy, request refused", "why", why, "path", r.URL.Path)
 	w.Header().Set("Retry-After", "5")
 	http.Error(w, "Server busy, try again shortly", http.StatusServiceUnavailable)
