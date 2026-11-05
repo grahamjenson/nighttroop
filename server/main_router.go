@@ -7,7 +7,9 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"runtime"
 	"strings"
+	"time"
 
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server/controlapi"
@@ -32,7 +34,11 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 		validHostnames = append(validHostnames, "localhost", "127.0.0.1")
 	}
 
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	// Past what the server can work on at once, requests are refused rather than all queueing until they time out
+	cpus := runtime.GOMAXPROCS(0)
+	shed := httputils.ShedLoad(config.RequestsInFlightPerCPU*cpus, config.RequestsBacklogPerCPU*cpus, 5*time.Second, httputils.LongLived)
+
+	return shed(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
 		// Global IP Address Rate Limit, which every request has, the control site's too
@@ -96,7 +102,7 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 			slog.InfoContext(r.Context(), "Main router 404 for subdomain", "host", r.Host, "siteSubdomain", siteSubdomain, "routeTarget", routeTarget)
 			http.NotFound(w, r)
 		}
-	})
+	}))
 
 }
 
