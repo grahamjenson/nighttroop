@@ -10,6 +10,7 @@ import (
 	"slices"
 	"strings"
 
+	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/security"
@@ -97,4 +98,19 @@ func Register(ctx context.Context, q *controldb.Queries, security *security.Secu
 	return q.UpsertPushRegistration(ctx, controldb.UpsertPushRegistrationParams{SiteID: siteID, IdentityID: identityID,
 		App: consts.PushApp(r.App), Provider: r.Provider, BundleID: r.BundleID, Production: r.Production, TokenEnc: tokenEnc,
 		TokenHash: tokenHash})
+}
+
+// RegisterAlone is Register in a write transaction of its own, so the identity's registrations are counted and the new
+// one kept with no other write between: two profiles uploaded at once could otherwise both pass MaxRegistrations
+func RegisterAlone(ctx context.Context, controlDB *db.ControlDB, security *security.SecurityConfig, siteID string, identityID int64, r Registration) (*controldb.PushRegistration, error) {
+	tx, err := controlDB.SQLiteDB.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = tx.Rollback() }()
+	registered, err := Register(ctx, controlDB.Queries.WithTx(tx), security, siteID, identityID, r)
+	if err != nil {
+		return nil, err
+	}
+	return registered, tx.Commit()
 }
