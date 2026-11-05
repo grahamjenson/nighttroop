@@ -5,8 +5,8 @@ CLICK #site--settings-menu
 CLICK #site--settings--sync-button
 ASSERT_STATUS 200
 ASSERT_PATH /settings/sync
-// The page listens for its syncs' changes
-ASSERT_VISIBLE #site--settings--sync--live
+// The page listens for its syncs' changes, shown Live beside its title
+ASSERT_VISIBLE #mainForm h1 + #site--settings--sync--live
 
 CLICK #site--settings--virtual-sync--enable
 CLICK #site--settings--virtual-sync--submit
