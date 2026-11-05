@@ -54,6 +54,21 @@
    and check migrations
 1. P4: Keep which batches were uploaded, and with which sites, across restarts, as the first backup round after a
    restart uploads every batch again though their backups are current
+1. Migrations (from the audit of what happens when one fails):
+    1. P0: A start where a site cannot be opened still comes up, without it, once Docker restarts it, and `/health`
+       says ok, so `update.sh` keeps the release rather than rolling it back. Fail the start and `/health` instead,
+       and never upload a batch backup that leaves out a live site, which S3's latest would then not have
+    1. P0: Schema changes edit `000001_init_schema.up.sql` in place, which a DB already at version 1 never runs again:
+       an older control DB cannot start ("no such column") and an older site's DB fails some queries or keeps old
+       CHECKs. Add numbered migrations, a CI check that a migration on main never changes, and a test that the last
+       release's DBs migrate to the current schema
+    1. P1: A migration that fails leaves its DB dirty, which every open refuses. Each runs in a transaction, so a dirty
+       version N had none of N applied: force it back to N-1 and try again, or report it plainly
+    1. P1: A build cannot open a DB a newer one migrated, so rolling back needs `update.sh`'s copy of `./data`, losing
+       what was written since. Keep migrations additive, and let a build open a DB one additive version newer
+    1. P2: Document changing a table: SQLite rebuilds it, which needs `PRAGMA defer_foreign_keys = ON` in the
+       migration's transaction, as `event_groups` references the event tables `ON DELETE RESTRICT`; test migrations
+       on a DB with data, and have staging compare the whole schema rather than only preparing queries
 1. Push notifications (the control DB's `push_credentials` and `push_registrations`):
     1. P2: A control collection for push credentials for every site, as the site's (`/settings/push-credentials`)
     1. P3: Add push credentials and registrations to `clients/nighttroop/openapi.json` and its client

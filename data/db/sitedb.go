@@ -23,9 +23,10 @@ type SiteDB struct {
 func NewSiteDB(ctx context.Context, subdomain string, cfg *config.ServerConfig) (*SiteDB, error) {
 	rawDB, err := sitedb.NewDB(ctx, subdomain, cfg)
 	if err != nil {
-		// NewDB returns the DB when it opened but failed later, so the half made file can be removed
+		// NewDB returns the DB when it opened but failed later, such as in a migration. Its file is kept, as an existing
+		// site's DB that cannot be opened is still its data, to open again once fixed; createSite removes a new one.
 		if rawDB != nil {
-			rawDB.TryCloseAndDelete()
+			rawDB.Close()
 		}
 		return nil, fmt.Errorf("cannot open site db: %s %w", subdomain, err)
 	}

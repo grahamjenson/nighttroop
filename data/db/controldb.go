@@ -245,6 +245,8 @@ func (db *ControlDB) createSite(ctx context.Context, subdomain string) (*SiteCre
 
 	siteDB, err := NewSiteDB(ctx, subdomain, db.ServerConfig)
 	if err != nil {
+		// Nothing of the new site was kept, so its half made DB file goes too
+		_ = utils.DeleteFiles([]string{sitedb.GetPath(subdomain, db.ServerConfig), sitedb.GetBackupPath(subdomain, db.ServerConfig)})
 		return nil, fmt.Errorf("Site DB Creation Error: %w", err)
 	}
 
@@ -378,6 +380,8 @@ func (db *ControlDB) HydrateSite(ctx context.Context, subdomain string, download
 	}
 	siteDB, err := NewSiteDB(ctx, subdomain, db.ServerConfig)
 	if err != nil {
+		// The archive is still in S3, so the copy downloaded from it goes
+		_ = utils.DeleteFiles([]string{path})
 		return err
 	}
 	result, err := db.Queries.HydrateSite(ctx, controldb.HydrateSiteParams{ID: subdomain})
