@@ -1,5 +1,10 @@
 # Nighttroop
 
+[![CI](https://github.com/grahamjenson/nighttroop/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/grahamjenson/nighttroop/actions/workflows/ci.yml)
+
+**Test it out** on the staging server, <https://staging.nighttroop.nz>, which runs the newest `main`. Its data is wiped
+now and then, so keep nothing on it you need.
+
 Nighttroop is a multi user rewrite of Nightscout.
 Its core goals are to be:
 
