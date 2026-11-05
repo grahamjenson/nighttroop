@@ -421,6 +421,9 @@ type GlucoseReadingBody = GlucoseReading
 // InsulinDoseBody defines model for InsulinDoseBody.
 type InsulinDoseBody = InsulinDose
 
+// NsV1AlexaJSONBody defines parameters for NsV1Alexa.
+type NsV1AlexaJSONBody map[string]interface{}
+
 // NsV1CountParams defines parameters for NsV1Count.
 type NsV1CountParams struct {
 	// DateGte Documents from this time, in milliseconds
@@ -429,6 +432,9 @@ type NsV1CountParams struct {
 	// DateLte Documents up to this time, in milliseconds
 	DateLte *NsDateLte `form:"date$lte,omitempty" json:"date$lte,omitempty"`
 }
+
+// NsV1GoogleHomeJSONBody defines parameters for NsV1GoogleHome.
+type NsV1GoogleHomeJSONBody map[string]interface{}
 
 // NsV1AckNotificationsParams defines parameters for NsV1AckNotifications.
 type NsV1AckNotificationsParams struct {
@@ -571,6 +577,12 @@ type ListInsulinDosesParams struct {
 type GetSummaryParams struct {
 	Hours *int64 `form:"hours,omitempty" json:"hours,omitempty"`
 }
+
+// NsV1AlexaJSONRequestBody defines body for NsV1Alexa for application/json ContentType.
+type NsV1AlexaJSONRequestBody NsV1AlexaJSONBody
+
+// NsV1GoogleHomeJSONRequestBody defines body for NsV1GoogleHome for application/json ContentType.
+type NsV1GoogleHomeJSONRequestBody NsV1GoogleHomeJSONBody
 
 // NsV1CreateJSONRequestBody defines body for NsV1Create for application/json ContentType.
 type NsV1CreateJSONRequestBody = NsV1CreateJSONBody
@@ -1213,6 +1225,11 @@ type ClientInterface interface {
 	// NsV1AdminNotifies request
 	NsV1AdminNotifies(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// NsV1AlexaWithBody request with any body
+	NsV1AlexaWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	NsV1Alexa(ctx context.Context, body NsV1AlexaJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// NsV1Count request
 	NsV1Count(ctx context.Context, collection NsCollection, params *NsV1CountParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1221,6 +1238,11 @@ type ClientInterface interface {
 
 	// NsV1ExperimentsTest request
 	NsV1ExperimentsTest(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NsV1GoogleHomeWithBody request with any body
+	NsV1GoogleHomeWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	NsV1GoogleHome(ctx context.Context, body NsV1GoogleHomeJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// NsV1AckNotifications request
 	NsV1AckNotifications(ctx context.Context, params *NsV1AckNotificationsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1408,6 +1430,30 @@ func (c *Client) NsV1AdminNotifies(ctx context.Context, reqEditors ...RequestEdi
 	return c.Client.Do(req)
 }
 
+func (c *Client) NsV1AlexaWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV1AlexaRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV1Alexa(ctx context.Context, body NsV1AlexaJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV1AlexaRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) NsV1Count(ctx context.Context, collection NsCollection, params *NsV1CountParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewNsV1CountRequest(c.Server, collection, params)
 	if err != nil {
@@ -1434,6 +1480,30 @@ func (c *Client) NsV1Echo(ctx context.Context, collection NsCollection, reqEdito
 
 func (c *Client) NsV1ExperimentsTest(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewNsV1ExperimentsTestRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV1GoogleHomeWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV1GoogleHomeRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) NsV1GoogleHome(ctx context.Context, body NsV1GoogleHomeJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNsV1GoogleHomeRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2215,6 +2285,46 @@ func NewNsV1AdminNotifiesRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
+// NewNsV1AlexaRequest calls the generic NsV1Alexa builder with application/json body
+func NewNsV1AlexaRequest(server string, body NsV1AlexaJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewNsV1AlexaRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewNsV1AlexaRequestWithBody generates requests for NsV1Alexa with any type of body
+func NewNsV1AlexaRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/alexa")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewNsV1CountRequest generates requests for NsV1Count
 func NewNsV1CountRequest(server string, collection NsCollection, params *NsV1CountParams) (*http.Request, error) {
 	var err error
@@ -2344,6 +2454,46 @@ func NewNsV1ExperimentsTestRequest(server string) (*http.Request, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewNsV1GoogleHomeRequest calls the generic NsV1GoogleHome builder with application/json body
+func NewNsV1GoogleHomeRequest(server string, body NsV1GoogleHomeJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewNsV1GoogleHomeRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewNsV1GoogleHomeRequestWithBody generates requests for NsV1GoogleHome with any type of body
+func NewNsV1GoogleHomeRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/googlehome")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -4839,6 +4989,11 @@ type ClientWithResponsesInterface interface {
 	// NsV1AdminNotifiesWithResponse request
 	NsV1AdminNotifiesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV1AdminNotifiesResponse, error)
 
+	// NsV1AlexaWithBodyWithResponse request with any body
+	NsV1AlexaWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NsV1AlexaResponse, error)
+
+	NsV1AlexaWithResponse(ctx context.Context, body NsV1AlexaJSONRequestBody, reqEditors ...RequestEditorFn) (*NsV1AlexaResponse, error)
+
 	// NsV1CountWithResponse request
 	NsV1CountWithResponse(ctx context.Context, collection NsCollection, params *NsV1CountParams, reqEditors ...RequestEditorFn) (*NsV1CountResponse, error)
 
@@ -4847,6 +5002,11 @@ type ClientWithResponsesInterface interface {
 
 	// NsV1ExperimentsTestWithResponse request
 	NsV1ExperimentsTestWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV1ExperimentsTestResponse, error)
+
+	// NsV1GoogleHomeWithBodyWithResponse request with any body
+	NsV1GoogleHomeWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NsV1GoogleHomeResponse, error)
+
+	NsV1GoogleHomeWithResponse(ctx context.Context, body NsV1GoogleHomeJSONRequestBody, reqEditors ...RequestEditorFn) (*NsV1GoogleHomeResponse, error)
 
 	// NsV1AckNotificationsWithResponse request
 	NsV1AckNotificationsWithResponse(ctx context.Context, params *NsV1AckNotificationsParams, reqEditors ...RequestEditorFn) (*NsV1AckNotificationsResponse, error)
@@ -5044,6 +5204,29 @@ func (r NsV1AdminNotifiesResponse) StatusCode() int {
 	return 0
 }
 
+type NsV1AlexaResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsObject
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV1AlexaResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV1AlexaResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type NsV1CountResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -5106,6 +5289,29 @@ func (r NsV1ExperimentsTestResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r NsV1ExperimentsTestResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type NsV1GoogleHomeResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NsObject
+	JSONDefault  *NsError
+}
+
+// Status returns HTTPResponse.Status
+func (r NsV1GoogleHomeResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NsV1GoogleHomeResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -6245,6 +6451,23 @@ func (c *ClientWithResponses) NsV1AdminNotifiesWithResponse(ctx context.Context,
 	return ParseNsV1AdminNotifiesResponse(rsp)
 }
 
+// NsV1AlexaWithBodyWithResponse request with arbitrary body returning *NsV1AlexaResponse
+func (c *ClientWithResponses) NsV1AlexaWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NsV1AlexaResponse, error) {
+	rsp, err := c.NsV1AlexaWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV1AlexaResponse(rsp)
+}
+
+func (c *ClientWithResponses) NsV1AlexaWithResponse(ctx context.Context, body NsV1AlexaJSONRequestBody, reqEditors ...RequestEditorFn) (*NsV1AlexaResponse, error) {
+	rsp, err := c.NsV1Alexa(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV1AlexaResponse(rsp)
+}
+
 // NsV1CountWithResponse request returning *NsV1CountResponse
 func (c *ClientWithResponses) NsV1CountWithResponse(ctx context.Context, collection NsCollection, params *NsV1CountParams, reqEditors ...RequestEditorFn) (*NsV1CountResponse, error) {
 	rsp, err := c.NsV1Count(ctx, collection, params, reqEditors...)
@@ -6270,6 +6493,23 @@ func (c *ClientWithResponses) NsV1ExperimentsTestWithResponse(ctx context.Contex
 		return nil, err
 	}
 	return ParseNsV1ExperimentsTestResponse(rsp)
+}
+
+// NsV1GoogleHomeWithBodyWithResponse request with arbitrary body returning *NsV1GoogleHomeResponse
+func (c *ClientWithResponses) NsV1GoogleHomeWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NsV1GoogleHomeResponse, error) {
+	rsp, err := c.NsV1GoogleHomeWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV1GoogleHomeResponse(rsp)
+}
+
+func (c *ClientWithResponses) NsV1GoogleHomeWithResponse(ctx context.Context, body NsV1GoogleHomeJSONRequestBody, reqEditors ...RequestEditorFn) (*NsV1GoogleHomeResponse, error) {
+	rsp, err := c.NsV1GoogleHome(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNsV1GoogleHomeResponse(rsp)
 }
 
 // NsV1AckNotificationsWithResponse request returning *NsV1AckNotificationsResponse
@@ -6843,6 +7083,39 @@ func ParseNsV1AdminNotifiesResponse(rsp *http.Response) (*NsV1AdminNotifiesRespo
 	return response, nil
 }
 
+// ParseNsV1AlexaResponse parses an HTTP response from a NsV1AlexaWithResponse call
+func ParseNsV1AlexaResponse(rsp *http.Response) (*NsV1AlexaResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV1AlexaResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsObject
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseNsV1CountResponse parses an HTTP response from a NsV1CountWithResponse call
 func ParseNsV1CountResponse(rsp *http.Response) (*NsV1CountResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -6911,6 +7184,39 @@ func ParseNsV1ExperimentsTestResponse(rsp *http.Response) (*NsV1ExperimentsTestR
 	}
 
 	response := &NsV1ExperimentsTestResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsObject
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNsV1GoogleHomeResponse parses an HTTP response from a NsV1GoogleHomeWithResponse call
+func ParseNsV1GoogleHomeResponse(rsp *http.Response) (*NsV1GoogleHomeResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NsV1GoogleHomeResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}

@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"nighttroop.t1d.nz/server/nightscoutapi/nsapi/nsv2"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 )
 
@@ -33,6 +34,9 @@ func registerMiscRoutes(r *chi.Mux, store nsutils.Store) {
 	r.Get("/experiments/test", ExperimentsTest())
 	r.Get("/notifications/ack", AckNotifications())
 	r.Get("/adminnotifies", AdminNotifies())
+	// Nightscout's Alexa skill and Google Home action ask for the site's glucose, IOB and such
+	r.Post("/alexa", nsutils.Require("api:*:read", true, nsv2.Alexa()))
+	r.Post("/googlehome", nsutils.Require("api:*:read", true, nsv2.GoogleHome()))
 }
 
 func registerCollectionRoutes(r *chi.Mux, store nsutils.Store) {
