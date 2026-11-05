@@ -9,8 +9,7 @@ GOTO {{ .control_url }}/login
 ASSERT_STATUS 200
 INPUT #name admin
 INPUT #password password
-INPUT #control--login--otp-1 123123
-CLICK #control--login-button
+TYPE #control--login--otp-1 123123
 ASSERT_VISIBLE #controlSitesTable
 
 // The menu is two columns, as the site's is: security and users on the left, and jobs, logs and logout on the right,

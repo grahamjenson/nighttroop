@@ -8,8 +8,7 @@ GOTO {{ .control_url }}/login
 ASSERT_STATUS 200
 INPUT #name admin
 INPUT #password password
-INPUT #control--login--otp-1 123123
-CLICK #control--login-button
+TYPE #control--login--otp-1 123123
 ASSERT_VISIBLE #control--nav--logo
 
 // The dashboard is the list of sites. A site not written to or seen in DISABLE_AFTER_INACTIVITY_DAYS, 0 in tests, is

@@ -6,8 +6,7 @@ ASSERT_NOT_VISIBLE #control--status-banner
 // Signed in, the test server has no S3 or Sentry, so the banner names both
 INPUT #name admin
 INPUT #password password
-INPUT #control--login--otp-1 123123
-CLICK #control--login-button
+TYPE #control--login--otp-1 123123
 ASSERT_VISIBLE #controlSitesTable
 ASSERT_VISIBLE #control--status-banner
 ASSERT_VISIBLE #control--status-banner--s3

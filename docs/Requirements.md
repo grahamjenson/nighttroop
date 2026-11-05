@@ -33,6 +33,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 - A control admin signs in with a username, password and TOTP code, and can sign out. Tab goes from the username to the
   password to the code, skipping the button that shows the password.
+- The control login is sent as soon as the code's sixth digit is typed or pasted, once the username and password are in,
+  as the site's is; a code typed before them waits for Log In, and a wrong code is said to be wrong and not sent again.
 - The control site's header, with its menu, and its status banner show only once the admin has signed in, not on the
   login or setup page.
 - The server's global rate limit does not stop a control admin signing in, or using the control site once signed in,

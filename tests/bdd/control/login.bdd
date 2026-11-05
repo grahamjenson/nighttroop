@@ -1,0 +1,19 @@
+// The control login is sent as soon as the code's last digit is in, once the name and password are. A wrong code is
+// said to be wrong, and not sent again on its own.
+GOTO {{ .control_url }}/login
+ASSERT_STATUS 200
+INPUT #name admin
+INPUT #password password
+TYPE #control--login--otp-1 000000
+ASSERT_TEXT_VISIBLE Invalid credentials
+ASSERT_PATH /login
+
+// A code typed before the password is not sent: it waits for the password and Log In
+GOTO {{ .control_url }}/login
+ASSERT_STATUS 200
+INPUT #name admin
+TYPE #control--login--otp-1 123123
+ASSERT_PATH /login
+ASSERT_NOT_VISIBLE #control--nav--logo
+ASSERT_NOT_VISIBLE "Invalid credentials"
+SCREENSHOT code_before_password

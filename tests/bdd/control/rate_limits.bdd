@@ -2,8 +2,7 @@
 GOTO {{ .control_url }}/login
 INPUT #name admin
 INPUT #password password
-INPUT #control--login--otp-1 123123
-CLICK #control--login-button
+TYPE #control--login--otp-1 123123
 ASSERT_VISIBLE #controlSitesTable
 
 // The control site shows each kind of rate limiter, how many are kept and how full the most used is

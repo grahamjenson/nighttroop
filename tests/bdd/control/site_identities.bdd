@@ -2,8 +2,7 @@ GOTO {{ .control_url }}/login
 ASSERT_STATUS 200
 INPUT #name admin
 INPUT #password password
-INPUT #control--login--otp-1 123123
-CLICK #control--login-button
+TYPE #control--login--otp-1 123123
 ASSERT_VISIBLE #control--nav--logo
 
 // A site's details list its identities: who they are, whether they log in with TOTP, and when each was last seen.

@@ -15,6 +15,7 @@ templ Login() {
 			<div class="p-8 login-form-target rounded-lg shadow-2xl w-full max-w-96">
 				<!-- Form updated with POST method -->
 				<form
+					id="otp"
 					hx-post="/login"
 					hx-target="closest .login-form-target"
 					hx-swap="outerHTML"
@@ -108,6 +109,27 @@ templ Login() {
 						Log In
 					}
 				</form>
+				<script>
+					// Logs in as soon as the code's last digit is typed or pasted, once the name and password are in. It
+					// waits a tick for the code's slots to fill its value, and does not send the same code twice, so a
+					// wrong code is not sent again on its own.
+					(function () {
+						const form = document.getElementById("otp");
+						const code = document.getElementById("otp-form");
+						const filled = (id) => document.getElementById(id).value !== "";
+						let sent = "";
+						const sendWhenFull = () => setTimeout(() => {
+							if (/^\d{6}$/.test(code.value) && code.value !== sent && filled("name") && filled("password")) {
+								sent = code.value;
+								form.requestSubmit();
+							}
+						}, 0);
+						// Only the code's own slots, so typing the name or password does not send it
+						const slots = document.getElementById("otp-form-container");
+						slots.addEventListener("input", sendWhenFull);
+						slots.addEventListener("paste", sendWhenFull);
+					})();
+				</script>
 			</div>
 		</div>
 	}
