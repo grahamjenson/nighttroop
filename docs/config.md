@@ -17,7 +17,7 @@ Limits written per minute are rates; their burst is how many can be used at once
 | --- | --- | --- |
 | `MODE` | `development`, or `test` under `go test` | `development`, `test`, `production` or `staging`. Picks the `.env` file (`staging` reads `.env`, as production does), and dev and test use cheap bcrypt, fixed site names and fixed keys. `staging` runs as production does, but makes its control admin from `STAGING_ADMIN_PASSWORD` and `STAGING_ADMIN_TOTP_SECRET` instead of being set up, and puts a large banner at the top of every page saying it is a test site whose data is frequently wiped |
 | `HOST_NAME` | `nt.local.t1d.nz` | The domain sites are subdomains of, e.g. `abc.nt.local.t1d.nz`, used in links and cookies |
-| `HOST_PORT` | `3000` | The port the server listens on |
+| `HOST_PORT` | `3000` | The port the server listens on. Links to sites, such as the create site page's login, have no port with `HOST_PROTOCOL` `https`, as a proxy takes HTTPS on 443; with `http` they have this port |
 | `MAX_REQUEST_BODY_BYTES` | `4000000` | The largest request body the server reads, far above an uploader's batch of 100 records. A larger body is refused with 413 |
 | `HOST_PROTOCOL` | `https` | `http` or `https`, used in links and cookies. `http` is only allowed in development and test |
 | `DATA_DIR` | `./.dbs` | Where the SQLite DBs (`db/`) and backups waiting to upload (`backup/`) are kept |
