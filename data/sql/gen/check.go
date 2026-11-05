@@ -147,6 +147,9 @@ func main() {
 		{"logs", logsdb.Migrations, logsdb.OpenSqliteDB},
 		{"live", livedb.Migrations, livedb.OpenSqliteDB},
 	} {
+		if err := gen.LintMigrations(d.migrations); err != nil {
+			log.Fatalf("%smigrations of the %s DB: %v %s", topwrapper, d.name, err, bottomwrapper)
+		}
 		db, err := d.open(filepath.Join(dir, d.name+".sqlite"), 0)
 		if err == nil {
 			err = gen.CheckMigrationsWithData(d.migrations, db)
