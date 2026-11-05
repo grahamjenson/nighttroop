@@ -135,9 +135,14 @@ func TestConsumeOnlyFetchesJobsAWorkerIsFreeFor(t *testing.T) {
 		consumed <- queue.Consume(ctx, liteq.ConsumeParams{Queue: queueName, PoolSize: 1, Worker: worker, OnEmptySleep: time.Millisecond})
 	}()
 
+	// Never and Eventually check in a goroutine, and return without waiting for a check still running, so the last
+	// one's can run after stop() cancels ctx. A failed read is -1, which fails a check that is waited on, rather than
+	// failing the test from that goroutine.
 	countStatus := func(status string) int {
 		jobs, err := controlDB.Jobs.Queries.SearchJobs(ctx, jobsdb.SearchJobsParams{Limit: count})
-		require.NoError(t, err)
+		if err != nil {
+			return -1
+		}
 		n := 0
 		for _, job := range jobs {
 			if job.JobStatus == status {
