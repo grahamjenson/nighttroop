@@ -24,7 +24,13 @@ migration:
 
 1. Add `data/sql/<db>/migrations/00000N_<what>.up.sql`, numbered after the last, and its `00000N_<what>.down.sql`.
    `go generate` migrates down as a check, so each needs a down file; it can be empty when the change cannot be undone.
-2. Run `go generate ./...`, which applies every migration in order to make `schema_gen.sql` for sqlc.
+2. Run `go generate ./...`, which applies every migration in order to make `schema_gen.sql` for sqlc. It also checks
+   the migrations with rows in (`data/sql/gen/migration_check.go`): at each version it adds rows with every column at
+   the largest and the smallest its CHECKs allow, the longest text, both ends of a range, the first and last of a list,
+   then migrates down a version and up again, and finally down to nothing, all on a DB on disk with foreign keys on.
+   So a migration that narrows a CHECK, or a down migration that cannot take its version's rows, fails here rather
+   than on a deploy. A CHECK it cannot read is not tried at its limit, and one its rows break fails the check, naming
+   the table; teach `migration_check.go` the new form.
 3. Prefer additive changes: a new table, or a new column that can be NULL or has a default. A build cannot open a DB
    a newer build migrated, so an additive change is the one a rollback copes with best.
 
