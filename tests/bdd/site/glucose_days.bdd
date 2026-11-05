@@ -1,0 +1,43 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// Virtual sync writes its last 30 minutes, then a backfill the day before them (tests backfill a day)
+CLICK #site--settings-menu
+CLICK #site--settings--sync-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-sync--enable
+CLICK #site--settings--virtual-sync--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Sync Updated
+RUN_BACKGROUND_JOBS
+CLICK #site--settings--virtual-sync--backfill
+ASSERT_TEXT_VISIBLE Backfilling Virtual
+RUN_BACKGROUND_JOBS
+
+// A new timezone, at the same midnight, builds the last 7 days again with the backfilled readings in them
+CLICK #site--settings-menu
+CLICK #site--settings--settings-button
+ASSERT_STATUS 200
+INPUT #site--settings--site--timezone Etc/UTC
+CLICK #site--settings--site--save
+ASSERT_TEXT_VISIBLE Settings Saved
+RUN_BACKGROUND_JOBS
+
+// The readings page shows each day's glucose as a small graph, oldest first, ending with today so far from its
+// clean readings: the 7 days kept and today. The page is opened afresh, so no toasts cover them.
+GOTO /data/glucose?limit=10
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--glucose--days
+ASSERT_TEXT_VISIBLE Last 8 days
+ASSERT_VISIBLE #site--glucose--days li:last-child >> text=Today
+// Today and yesterday have readings drawn over the range, and their time in range
+ASSERT_DRAWN #site--glucose--days li:last-child svg rect >> nth=1
+ASSERT_DRAWN #site--glucose--days li >> nth=-2 >> svg rect >> nth=1
+ASSERT_VISIBLE #site--glucose--days li:last-child [title="Time in range"]
+SCREENSHOT glucose_days
+
+// The days are only on the first page of readings
+GOTO /data/glucose?skip=100
+ASSERT_STATUS 200
+ASSERT_VISIBLE #glucoseReadingsTable
+ASSERT_NOT_VISIBLE #site--glucose--days

@@ -1,14 +1,17 @@
 // Signed in as the site's admin, who can also change its timezone
 INCLUDE steps/new_site_admin.steps
 SET yesterday {{ date -1 }}
+SET today {{ date 0 }}
 
-// A new site has no days
+// A new site has no days kept, only today so far, with no glucose
 NAME no_summary_days
 GET http://{{ site }}/data/summary-daily
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 0 "@result"
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS ".today" "@result.0.date"
+ASSERT_EQUALS null "@result.0.time_in_range"
 
 // Yesterday, in the site's default UTC: a reading in range at noon, one over the range high (180 mg/dL by default) 5 minutes later,
 // a 2 U bolus and 30 g of carbs, and a reading today that is not yesterday's
@@ -48,9 +51,21 @@ ASSERT_EXISTS "@result.glucose.144"
 ASSERT_EXISTS "@result.glucose.145"
 ASSERT_EQUALS null "@result.glucose.146"
 
-// The days are searched newest first, and a day is got by its date
+// The days are searched newest first, after today so far built from its clean readings, its one reading low, and a
+// day is got by its date
 NAME search_summary_days
 GET http://{{ site }}/data/summary-daily
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result"
+ASSERT_EQUALS ".today" "@result.0.date"
+ASSERT_EQUALS 0 "@result.0.time_in_range"
+ASSERT_EQUALS ".yesterday" "@result.1.date"
+
+// Today is only on the first page
+NAME search_summary_days_skip
+GET http://{{ site }}/data/summary-daily?skip=1
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
@@ -133,8 +148,8 @@ GET http://{{ site }}/data/summary-daily
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS "UTC" "@result.0.timezone"
+ASSERT_LENGTH 2 "@result"
+ASSERT_EQUALS "UTC" "@result.1.timezone"
 
 RUN_BACKGROUND_JOBS
 
@@ -143,6 +158,6 @@ GET http://{{ site }}/data/summary-daily
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 7 "@result"
+ASSERT_LENGTH 8 "@result"
 ASSERT_EQUALS "Pacific/Auckland" "@result.0.timezone"
-ASSERT_EQUALS "Pacific/Auckland" "@result.6.timezone"
+ASSERT_EQUALS "Pacific/Auckland" "@result.7.timezone"

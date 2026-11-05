@@ -1118,6 +1118,21 @@
     --tw-gradient-to: var(--color-white);
     --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
   }
+  .fill-glucose-high {
+    fill: var(--color-glucose-high);
+  }
+  .fill-glucose-in-range {
+    fill: var(--color-glucose-in-range);
+  }
+  .fill-glucose-in-range\/10 {
+    fill: color-mix(in srgb, #10203F 10%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      fill: color-mix(in oklab, var(--color-glucose-in-range) 10%, transparent);
+    }
+  }
+  .fill-glucose-low {
+    fill: var(--color-glucose-low);
+  }
   .stroke-amber-500 {
     stroke: var(--color-amber-500);
   }

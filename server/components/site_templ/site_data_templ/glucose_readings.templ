@@ -58,13 +58,19 @@ func glucoseInputAttributes(ctx context.Context) templ.Attributes {
 // glucoseRangeColours colour a reading below or above the range settings as the summary does
 var glucoseRangeColours = map[string]string{"Low": "font-medium text-glucose-low", "High": "font-medium text-glucose-high"}
 
+// glucoseRangeBounds are the range settings, low and high, in the settings' units
+func glucoseRangeBounds(ctx context.Context) (float64, float64) {
+	settings, units := httputils.GetSiteContext(ctx).GetSettings(), glucoseUnits(ctx)
+	return units.FromMGDL(float64(*settings.GetRangeLowMgdl())), units.FromMGDL(float64(*settings.GetRangeHighMgdl()))
+}
+
 // glucoseRange is "Low" or "High" for a reading, in the settings' units, below or above the range settings
 func glucoseRange(ctx context.Context, reading float64) string {
-	settings, units := httputils.GetSiteContext(ctx).GetSettings(), glucoseUnits(ctx)
+	low, high := glucoseRangeBounds(ctx)
 	switch {
-	case reading < units.FromMGDL(float64(*settings.GetRangeLowMgdl())):
+	case reading < low:
 		return "Low"
-	case reading > units.FromMGDL(float64(*settings.GetRangeHighMgdl())):
+	case reading > high:
 		return "High"
 	}
 	return ""
@@ -101,6 +107,9 @@ templ GlucoseReadingsTable(readings []*sitemodels.SiteGlucoseReading, skip int64
 	<div id="glucose_readings_table" class="mx-auto max-w-5xl space-y-6">
 		@heading.Page("Glucose Readings") {
 			Newest first. Click a reading to see all its details.
+		}
+		if skip == 0 {
+			<div id="site--glucose--days-loading" hx-get="/data/summary-daily?limit=10" hx-trigger="load" hx-swap="outerHTML"></div>
 		}
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			@addmodal.Open("site--glucose--add", "/data/glucose/new", "Add Reading")
