@@ -320,6 +320,10 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   followers.
 - **v1**: entries, treatments, device statuses, profiles, food and activities, with Nightscout's filters, plus
   status, versions, verifyauth, slice, count, times and echo, and experiments/test.
+- v1 `alexa` and `googlehome` answer Nightscout's Alexa skill and Google Home action, for an identity that can read:
+  `NSStatus`, `UploaderBattery` and `MetricNow` of bg, delta, iob, cob and uploader battery, said as Nightscout says
+  them in the settings' units. An Alexa launch is welcomed and keeps listening, and an unknown intent or metric is
+  answered that it is not known, with Google Home listening for another.
 - v1 `experiments/test` is `{"status":"ok"}` for an identity that can upload readings and a 401 for any other, so
   Loop's and xDrip4iOS's connection tests pass with a PWD phone's token.
 - A v1 search by `find[_id]` that finds nothing, such as a deleted treatment, is an empty list, not a 404.
