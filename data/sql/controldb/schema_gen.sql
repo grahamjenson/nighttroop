@@ -69,6 +69,8 @@ CREATE TABLE server_settings (
 
     -- Whether the public can create sites from the home page; a control admin always can
     public_site_creation INTEGER NOT NULL DEFAULT 1 CHECK(public_site_creation IN (0, 1)),
+    -- The rate limits a control admin set, by name, each {"per_minute": n, "burst": n}, used in place of the env's
+    rate_limits_json TEXT NOT NULL DEFAULT '{}' CHECK(length(rate_limits_json) <= 4096 AND json_valid(rate_limits_json)),
 
     updated_at INTEGER,
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32)

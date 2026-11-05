@@ -10,7 +10,7 @@ import (
 )
 
 const getServerSettings = `-- name: GetServerSettings :one
-SELECT id, public_site_creation, updated_at, updated_by_identity_name FROM server_settings WHERE id = 1
+SELECT id, public_site_creation, rate_limits_json, updated_at, updated_by_identity_name FROM server_settings WHERE id = 1
 `
 
 func (q *Queries) GetServerSettings(ctx context.Context) (*ServerSetting, error) {
@@ -19,6 +19,7 @@ func (q *Queries) GetServerSettings(ctx context.Context) (*ServerSetting, error)
 	err := row.Scan(
 		&i.ID,
 		&i.PublicSiteCreation,
+		&i.RateLimitsJson,
 		&i.UpdatedAt,
 		&i.UpdatedByIdentityName,
 	)
@@ -40,5 +41,23 @@ type UpdatePublicSiteCreationParams struct {
 
 func (q *Queries) UpdatePublicSiteCreation(ctx context.Context, arg UpdatePublicSiteCreationParams) error {
 	_, err := q.exec(ctx, q.updatePublicSiteCreationStmt, updatePublicSiteCreation, arg.PublicSiteCreation, arg.UpdatedByIdentityName)
+	return err
+}
+
+const updateRateLimits = `-- name: UpdateRateLimits :exec
+UPDATE server_settings SET
+    rate_limits_json = ?1,
+    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
+    updated_by_identity_name = ?2
+WHERE id = 1
+`
+
+type UpdateRateLimitsParams struct {
+	RateLimitsJson        string
+	UpdatedByIdentityName *string
+}
+
+func (q *Queries) UpdateRateLimits(ctx context.Context, arg UpdateRateLimitsParams) error {
+	_, err := q.exec(ctx, q.updateRateLimitsStmt, updateRateLimits, arg.RateLimitsJson, arg.UpdatedByIdentityName)
 	return err
 }

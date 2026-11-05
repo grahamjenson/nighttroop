@@ -418,6 +418,16 @@ func (m *ServerSetting) SetPublicSiteCreation(v bool) {
 	m.PublicSiteCreation = v
 }
 
+// GetRateLimitsJson returns the RateLimitsJson value.
+func (m ServerSetting) GetRateLimitsJson() string {
+	return m.RateLimitsJson
+}
+
+// SetRateLimitsJson sets the RateLimitsJson value and returns the updated ServerSetting.
+func (m *ServerSetting) SetRateLimitsJson(v string) {
+	m.RateLimitsJson = v
+}
+
 // GetUpdatedAt returns the UpdatedAt value.
 func (m ServerSetting) GetUpdatedAt() *int64 {
 	return m.UpdatedAt
@@ -2625,6 +2635,26 @@ func (m UpdatePublicSiteCreationParams) GetUpdatedByIdentityName() *string {
 
 // SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdatePublicSiteCreationParams.
 func (m *UpdatePublicSiteCreationParams) SetUpdatedByIdentityName(v *string) {
+	m.UpdatedByIdentityName = v
+}
+
+// GetRateLimitsJson returns the RateLimitsJson value.
+func (m UpdateRateLimitsParams) GetRateLimitsJson() string {
+	return m.RateLimitsJson
+}
+
+// SetRateLimitsJson sets the RateLimitsJson value and returns the updated UpdateRateLimitsParams.
+func (m *UpdateRateLimitsParams) SetRateLimitsJson(v string) {
+	m.RateLimitsJson = v
+}
+
+// GetUpdatedByIdentityName returns the UpdatedByIdentityName value.
+func (m UpdateRateLimitsParams) GetUpdatedByIdentityName() *string {
+	return m.UpdatedByIdentityName
+}
+
+// SetUpdatedByIdentityName sets the UpdatedByIdentityName value and returns the updated UpdateRateLimitsParams.
+func (m *UpdateRateLimitsParams) SetUpdatedByIdentityName(v *string) {
 	m.UpdatedByIdentityName = v
 }
 

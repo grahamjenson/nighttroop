@@ -132,6 +132,10 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   how many are kept, how much of its burst the most used one has spent, and how many would refuse a request now.
 - The most used turns amber once it has spent half its burst, and red while any would refuse.
 - Reading them spends nothing, and names no site, identity or IP.
+- Above them, each rate limit shows its env variables and their default, and its rate and burst now. A control admin can
+  change any and save: every limiter of its kind, those kept and those made after, uses it at once, it says "set here",
+  and the server uses it again from each start. One set back to its env default, or left blank, uses the env's from
+  then on. A rate of 0 or less, or a burst under 1, is refused, and other control identities only see the rates.
 
 ### Resource alerts
 

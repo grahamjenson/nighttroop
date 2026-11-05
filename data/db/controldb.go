@@ -81,6 +81,10 @@ func NewControlDB(ctx context.Context, serverConfig *config.ServerConfig) (*Cont
 		return nil, fmt.Errorf("cannot check for the control admin: %w", err)
 	}
 
+	if err := controlDB.LoadRateLimits(ctx); err != nil {
+		return nil, fmt.Errorf("cannot load the rate limits: %w", err)
+	}
+
 	// This will go over all non-deleted sites and add them to the control db sites
 	if err := controlDB.fillSites(ctx); err != nil {
 		return nil, fmt.Errorf("cannot fill sites: %w", err)
