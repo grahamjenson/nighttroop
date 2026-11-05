@@ -2,28 +2,18 @@ package nswebsockets
 
 import (
 	"cmp"
-	"context"
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"slices"
 	"time"
 
 	"nighttroop.t1d.nz/data/events"
-	"nighttroop.t1d.nz/data/sql/livedb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/socketio"
 	"nighttroop.t1d.nz/utils/alarms"
 	"nighttroop.t1d.nz/utils/httputils"
-)
-
-const (
-	// defaultSilence is how long an ack without a silence time snoozes for, Nightscout's shortest choice
-	defaultSilence = 30 * time.Minute
-	// maxSilence is the longest an ack snoozes for, so one cannot silence an alarm for good
-	maxSilence = 24 * time.Hour
 )
 
 // alarmRoom is the room of an identity's /alarm sockets that can read, which its alarms go to
@@ -86,14 +76,8 @@ func (ws *Websocket) subscribeToAlarms(socket *socketio.Socket, accessToken, jwt
 	return reply, &httputils.GetSiteContext(ctx).IdentityModel.ID
 }
 
-// snoozeAlarms is Nightscout's ack of a level, group and silence time in milliseconds: it snoozes the identity's
-// alarms in that group up to that level, which the alarm checker stops alerting on its next check, and records the
-// snooze in the logs DB's events. It is a write, so within the site's write limit, as each records an event.
+// snoozeAlarms is Nightscout's ack of a level, group and silence time in milliseconds, its arguments
 func (ws *Websocket) snoozeAlarms(socket *socketio.Socket, identityID int64, args []json.RawMessage) {
-	ctx := socket.Request().Context()
-	if allowed, _ := httputils.WithinRateLimitAll(ws.config.RateLimiters.SitePOSTLimiter(httputils.GetSiteContext(ctx).SiteID)); !allowed {
-		return
-	}
 	var level alarms.Level
 	var group string
 	var silenceMs int64
@@ -102,22 +86,7 @@ func (ws *Websocket) snoozeAlarms(socket *socketio.Socket, identityID int64, arg
 			json.Unmarshal(args[i], into)
 		}
 	}
-	silence := min(cmp.Or(time.Duration(max(silenceMs, 0))*time.Millisecond, defaultSilence), maxSilence)
-	siteID, until := httputils.GetSiteContext(ctx).SiteID, time.Now().Add(silence).UnixMilli()
-	var snoozed []string
-	for _, t := range alarms.Types {
-		if t.Level() <= level && alarmGroup(t) == group {
-			snooze := livedb.SnoozeAlarmParams{SiteID: siteID, IdentityID: identityID, Type: t, Until: until}
-			if err := ws.controlDB.Live.Queries.SnoozeAlarm(context.Background(), snooze); err != nil {
-				slog.Error("cannot snooze alarm", "error", err)
-				continue
-			}
-			snoozed = append(snoozed, string(t))
-		}
-	}
-	if len(snoozed) > 0 {
-		ws.controlDB.Logs.AlarmSnoozedEvent(context.Background(), siteID, identityID, snoozed, until, "nightscout")
-	}
+	nsutils.SnoozeAlarms(httputils.GetSiteContext(socket.Request().Context()), identityID, level, group, silenceMs)
 }
 
 // alarmNotification is a Nightscout notification, as its /alarm sockets get them
@@ -197,14 +166,6 @@ var alarmTitles = map[alarms.Type][2]string{
 	alarms.DeviceBattery: {"Device battery low", "A device's battery is low, or it has stopped reporting"},
 }
 
-// alarmGroup is Nightscout's group for an alarm: Time Ago for no data, and default for the glucose alarms
-func alarmGroup(t alarms.Type) string {
-	if t == alarms.NoData {
-		return "Time Ago"
-	}
-	return "default"
-}
-
 // sendAlarms sends an identity's checked alarms to its /alarm sockets as Nightscout does: an alarm, or urgent_alarm
 // when urgent, for each that starts or repeats, and clear_alarm once none is alerting. Nightscout's clients show one
 // alarm, so when the loudest alerting one changes without notifying, as when an urgent alarm clears or is snoozed
@@ -251,5 +212,5 @@ func sendAlarm(namespace *socketio.Namespace, room string, t alarms.Type, at int
 		event = "urgent_alarm"
 	}
 	title := alarmTitles[t]
-	namespace.EmitTo(room, event, alarmNotification{Level: t.Level(), Title: title[0], Message: title[1], Group: alarmGroup(t), Timestamp: at})
+	namespace.EmitTo(room, event, alarmNotification{Level: t.Level(), Title: title[0], Message: title[1], Group: nsutils.AlarmGroup(t), Timestamp: at})
 }

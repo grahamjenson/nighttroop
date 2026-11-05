@@ -319,7 +319,10 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - Each site has a Nightscout compatible API at `<site>.ns.<host>` for apps like AAPS, Loop, Trio and xDrip, and
   followers.
 - **v1**: entries, treatments, device statuses, profiles, food and activities, with Nightscout's filters, plus
-  status, versions, verifyauth, slice, count, times and echo, and experiments/test.
+  status, versions, verifyauth, slice, count, times and echo, experiments/test, notifications/ack and adminnotifies.
+- v1 `notifications/ack?level=&group=&time=` snoozes the identity's alarms in that group up to that level for `time`
+  milliseconds, as the `/alarm` socket's ack does, and answers `OK`; any identity that can read may ack its own.
+- v1 `adminnotifies` has no notices, as Nighttroop has none of Nightscout's settings to warn its admin about.
 - v1 `alexa` and `googlehome` answer Nightscout's Alexa skill and Google Home action, for an identity that can read:
   `NSStatus`, `UploaderBattery` and `MetricNow` of bg, delta, iob, cob and uploader battery, said as Nightscout says
   them in the settings' units. An Alexa launch is welcomed and keeps listening, and an unknown intent or metric is
