@@ -1,13 +1,16 @@
 package socketio
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"slices"
 	"strconv"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -36,8 +39,9 @@ type Runner struct {
 	client    *socket.Client
 	namespace string // the namespace CONNECT joined, which EMIT and the events use
 	mu        sync.Mutex
-	received  map[string][]any // events not yet waited for or collected
+	received  map[string][]any // events, the socket's and the streams', not yet waited for or collected
 	arrived   chan struct{}
+	streams   []context.CancelFunc // the STREAMs open, each ended by Close
 }
 
 // Step runs one of the file's steps, keeping its connection open for the next, and fails the test if it cannot
@@ -65,9 +69,24 @@ func (r *Runner) Step(t *testing.T, file *File, step *Step, ctx map[string]any) 
 	}
 }
 
-// Close ends the connection, if there is one
+// Close ends the connection, if there is one, and every STREAM
 func (r *Runner) Close() {
 	r.disconnect()
+	for _, end := range r.streams {
+		end()
+	}
+	r.streams = nil
+}
+
+// receive queues an event, from the socket or a stream, for a WAIT or COLLECT
+func (r *Runner) receive(event string, value any) {
+	r.mu.Lock()
+	r.received[event] = append(r.received[event], value)
+	r.mu.Unlock()
+	select {
+	case r.arrived <- struct{}{}:
+	default:
+	}
 }
 
 func isHTTP(verb string) bool { return slices.Contains(httpVerbs, verb) }
@@ -94,14 +113,16 @@ func (r *Runner) run(t *testing.T, file *File, step *Step, ctx map[string]any) (
 	case "DISCONNECT":
 		r.disconnect()
 		return nil, nil
+	case "STREAM":
+		return nil, r.stream(ctx, step, timeout)
 	}
 	if isHTTP(step.Verb) {
 		step.Request().Run(t, jsonapi.Client(r.Server), ctx)
 		return nil, nil
 	}
 
-	if r.client == nil {
-		return nil, fmt.Errorf("not connected")
+	if r.received == nil {
+		return nil, fmt.Errorf("not connected, and no stream open")
 	}
 	event, err := script.Render(step.Target, ctx)
 	if err != nil {
@@ -109,6 +130,9 @@ func (r *Runner) run(t *testing.T, file *File, step *Step, ctx map[string]any) (
 	}
 	switch step.Verb {
 	case "EMIT":
+		if r.client == nil {
+			return nil, fmt.Errorf("not connected")
+		}
 		args, err := r.body(step, ctx)
 		if err != nil {
 			return nil, err
@@ -169,17 +193,15 @@ func (r *Runner) connect(ctx map[string]any, events []string, step *Step, timeou
 		r.namespace = step.NS
 	}
 	client := socket.NewClient(version)
-	r.received, r.arrived = map[string][]any{}, make(chan struct{}, 1)
+	r.listen()
+	r.mu.Lock()
+	// A new connection starts with none of the last one's events, though a stream's are kept
 	for _, event := range events {
-		client.On(r.namespace, event, func(args []json.RawMessage) {
-			r.mu.Lock()
-			r.received[event] = append(r.received[event], value(args))
-			r.mu.Unlock()
-			select {
-			case r.arrived <- struct{}{}:
-			default:
-			}
-		})
+		delete(r.received, event)
+	}
+	r.mu.Unlock()
+	for _, event := range events {
+		client.On(r.namespace, event, func(args []json.RawMessage) { r.receive(event, value(args)) })
 	}
 	if err := client.Open(dialCtx, rawURL, testutils.HostClient(r.Server)); err != nil {
 		return err
@@ -254,4 +276,64 @@ func value(args []json.RawMessage) any {
 		return values[0]
 	}
 	return values
+}
+
+// listen starts the queue of events, if it has not
+func (r *Runner) listen() {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if r.received == nil {
+		r.received, r.arrived = map[string][]any{}, make(chan struct{}, 1)
+	}
+}
+
+// stream opens the URL's server-sent events with the step's headers, and queues each event by its name, its data
+// as JSON when it is, until Close. It fails unless the stream is open within the timeout.
+func (r *Runner) stream(ctx map[string]any, step *Step, timeout time.Duration) error {
+	request, err := (&jsonapi.Request{Name: step.Name, Method: http.MethodGet, URL: step.Target, Headers: step.Headers}).Render(ctx)
+	if err != nil {
+		return err
+	}
+	streamCtx, end := context.WithCancel(context.Background())
+	req, err := http.NewRequestWithContext(streamCtx, http.MethodGet, request.URL, nil)
+	if err != nil {
+		end()
+		return err
+	}
+	req.Header = request.Headers
+	req.Header.Set("Accept", "text/event-stream")
+	opened := time.AfterFunc(timeout, end)
+	res, err := jsonapi.Client(r.Server).Do(req)
+	opened.Stop()
+	if err != nil {
+		end()
+		return err
+	}
+	if res.StatusCode != http.StatusOK {
+		res.Body.Close()
+		end()
+		return fmt.Errorf("stream answered %d", res.StatusCode)
+	}
+	r.listen()
+	r.streams = append(r.streams, end)
+	go func() {
+		defer res.Body.Close()
+		event, data := "message", ""
+		scanner := bufio.NewScanner(res.Body)
+		for scanner.Scan() {
+			line := scanner.Text()
+			switch {
+			case strings.HasPrefix(line, "event:"):
+				event = strings.TrimSpace(strings.TrimPrefix(line, "event:"))
+			case strings.HasPrefix(line, "data:"):
+				data += strings.TrimSpace(strings.TrimPrefix(line, "data:"))
+			case line == "" && data != "":
+				var parsed any = data
+				_ = json.Unmarshal([]byte(data), &parsed)
+				r.receive(event, parsed)
+				event, data = "message", ""
+			}
+		}
+	}()
+	return nil
 }

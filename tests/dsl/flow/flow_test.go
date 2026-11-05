@@ -93,3 +93,31 @@ ASSERT_EQUALS "abcdefgh.ns.localhost" "@host"
 	require.Equal(t, 1, ran)
 	require.Equal(t, "hello-again", ctx["second"].(map[string]any)["said"])
 }
+
+// A STREAM's events are queued by name, their data as JSON, for a WAIT, with comments, as its pings are, skipped
+func TestRunStream(t *testing.T) {
+	fsys := fstest.MapFS{"api/stream.flow": {Data: []byte(`NAME readings
+STREAM http://abcdefgh.localhost/data/glucose/events
+H Authorization: Bearer token
+
+NAME created
+WAIT created
+ASSERT_EQUALS 120 "@sgv"
+
+NAME second
+WAIT created
+ASSERT_EQUALS 130 "@sgv"
+`)}}
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, "text/event-stream", r.Header.Get("Accept"))
+		require.Equal(t, "Bearer token", r.Header.Get("Authorization"))
+		w.Header().Set("Content-Type", "text/event-stream")
+		_, _ = w.Write([]byte(": ping\n\nevent: created\ndata: {\"sgv\": 120}\n\nevent: created\ndata: {\"sgv\": 130}\n\n"))
+		w.(http.Flusher).Flush()
+		<-r.Context().Done()
+	}))
+	t.Cleanup(ts.Close)
+	stream, err := Parse(fsys, "api/stream.flow")
+	require.NoError(t, err)
+	(&Runner{Server: ts}).Run(t, stream, map[string]any{})
+}

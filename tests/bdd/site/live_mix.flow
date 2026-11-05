@@ -1,0 +1,59 @@
+// A .flow mixes API calls, a Nightscout socket, a page's live updates stream and the site's pages: a reading added on
+// the page reaches the socket and the stream listening for it
+
+// The site is made through the API, and its admin signs in for a JWT
+NAME create_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET site {{ .create_site.site_subdomain }}.ns.localhost
+SET token {{ .create_site.pwd_nstoken }}
+SET site_url {{ replace "127.0.0.1" (printf "%s.localhost" .create_site.site_subdomain) server_url }}
+
+NAME login
+POST http://{{ .create_site.site_subdomain }}.localhost/login
+B {"name": "admin", "password": "password", "totp": "123123"}
+ASSERT_STATUS 200
+
+// The glucose readings' live updates, as the readings page streams them, and the Nightscout web app's socket listen
+NAME readings
+STREAM http://{{ .create_site.site_subdomain }}.localhost/data/glucose/events
+H Authorization: Bearer {{ .login.token }}
+
+NAME connect
+CONNECT http://{{ site }}/socket.io/?EIO=4
+
+NAME authorize
+EMIT authorize
+B {"client":"web","token":"{{ token }}","history":1}
+ACK
+ASSERT_EQUALS true "@read"
+
+NAME first_data
+WAIT dataUpdate
+
+// The admin signs in on the site's page and adds a meter reading there
+GOTO {{ .site_url }}/login
+INPUT #site--login--name admin
+INPUT #site--login--password password
+CLICK #site--login-button
+ASSERT_VISIBLE #site--login--otp-1
+TYPE #site--login--otp-1 123123
+ASSERT_NEW_URL
+CLICK #site--settings-menu
+CLICK #site--data--glucose-button
+CLICK #site--glucose--add
+ASSERT_VISIBLE #site--glucose--create--modal
+INPUT #site--glucose--create--reading-type Meter
+INPUT #site--glucose--create--reading 7.9
+CLICK #site--glucose--create--submit
+ASSERT_STATUS 201
+
+// The stream sends it as created, in the admin's units, and the socket sends it to the web app as a meter reading
+NAME created
+WAIT created
+ASSERT_EQUALS 7.9 "@reading"
+ASSERT_EQUALS "mbg" "@reading_type"
+
+NAME socket_update
+WAIT dataUpdate
+ASSERT_LENGTH 1 "@mbgs"

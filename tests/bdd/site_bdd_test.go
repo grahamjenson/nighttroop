@@ -66,7 +66,7 @@ func TestSite(t *testing.T) {
 	err = fs.WalkDir(embeddedFiles, ".", func(path string, d fs.DirEntry, err error) error {
 		// The ownServers need servers of their own, see TestOwnServer
 		onOwnServer := slices.ContainsFunc(ownServers, func(own ownServer) bool { return own.path == path })
-		if err == nil && !d.IsDir() && filepath.Ext(path) == ".bdd" && !onOwnServer {
+		if err == nil && !d.IsDir() && (filepath.Ext(path) == ".bdd" || filepath.Ext(path) == ".flow") && !onOwnServer {
 			paths = append(paths, path)
 		}
 		return err
@@ -137,7 +137,7 @@ func runScenarios(t *testing.T, browser playwright.Browser, config *config.Serve
 		// Accept confirm dialogs, so tests can click buttons with hx-confirm
 		context.OnDialog(func(dialog playwright.Dialog) { _ = dialog.Accept() })
 
-		RunTheActionFileAsATest(t, "site", path, context, backgroundJobs, map[string]any{
+		RunTheActionFileAsATest(t, "site", path, server, context, backgroundJobs, map[string]any{
 			"server_url":    server.URL,
 			"control_url":   strings.Replace(server.URL, "127.0.0.1", "control.localhost", 1),
 			"default_site":  siteInformation.SiteDB.Subdomain + ".ns.localhost",

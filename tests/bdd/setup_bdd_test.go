@@ -107,6 +107,6 @@ func runOnOwnServer(t *testing.T, browser playwright.Browser, root string, own o
 	for key, value := range values {
 		actionContext[key] = value
 	}
-	RunTheActionFileAsATest(t, root, own.path, browserContext, backgroundJobs, actionContext)
+	RunTheActionFileAsATest(t, root, own.path, ts, browserContext, backgroundJobs, actionContext)
 	browserContext.Close()
 }

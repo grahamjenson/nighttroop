@@ -2,6 +2,7 @@ package bdd_test
 
 import (
 	"fmt"
+	"net/http/httptest"
 	"strings"
 	"testing"
 
@@ -11,11 +12,13 @@ import (
 	"nighttroop.t1d.nz/tests/dsl/flow"
 )
 
-// RunTheActionFileAsATest runs the action file at path, its templates filled from actionContext
-func RunTheActionFileAsATest(t *testing.T, root string, path string, context playwright.BrowserContext, backgroundJobs *background.BackGroundManager, actionContext map[string]any) {
+// RunTheActionFileAsATest runs the .bdd or .flow file at path, its templates filled from actionContext, its API and
+// socket steps sent to server
+func RunTheActionFileAsATest(t *testing.T, root string, path string, server *httptest.Server, context playwright.BrowserContext, backgroundJobs *background.BackGroundManager, actionContext map[string]any) {
 	removeNightscout := strings.TrimPrefix(path, root+"/")
 	t.Run(removeNightscout, func(t *testing.T) {
 		runner := &flow.Runner{
+			Server:            server,
 			RunBackgroundJobs: func() { backgroundJobs.RunAllNow(t.Context()) },
 			NewPage:           context.NewPage,
 		}
