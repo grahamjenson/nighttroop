@@ -491,6 +491,8 @@ focus back to the row or button that opened it.
   (`REQUESTS_BACKLOG_PER_CPU`, waiting up to 5 seconds), a request is refused at once with 503 and `Retry-After`, so a
   server that falls behind answers what it can rather than every request timing out. The health check, live updates
   and Socket.IO connections are never refused this way.
+- A request for a site there is not is 404, but one whose site cannot be looked up, as when the server is too busy to
+  answer in time, is 503 with `Retry-After`, so an uploader tries again rather than take its URL as wrong.
 - No request returns more than 1000 records, however many it asks for, through the site's pages and API, the
   Nightscout API or its live updates, and an upload holds at most 100. Deleting a type of treatment through the
   Nightscout API deletes at most 1000 each time, saying how many.

@@ -3,6 +3,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net"
@@ -84,20 +85,9 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 			public.ServeHTTP(w, r.WithContext(ctx))
 		case RouteTargetNightscout:
 			// so <siteid>.ns.domain routes to the nightscout compatible API
-			if exists, ctx := CreateSiteContext(ctx, config, controlDB, r, siteSubdomain, ipAddress); exists {
-				nightscoutRouter.ServeHTTP(w, r.WithContext(ctx))
-			} else {
-				slog.InfoContext(r.Context(), "Main router 404 for nightscout subdomain", "subdomain", siteSubdomain)
-				http.NotFound(w, r)
-			}
+			serveSite(ctx, w, r, nightscoutRouter, config, controlDB, siteSubdomain, ipAddress)
 		case RouteTargetSite:
-			// Attach userdb and model to the context
-			if exists, ctx := CreateSiteContext(ctx, config, controlDB, r, siteSubdomain, ipAddress); exists {
-				siteRouter.ServeHTTP(w, r.WithContext(ctx))
-			} else {
-				slog.InfoContext(r.Context(), "Main router 404 for subdomain", "subdomain", siteSubdomain)
-				http.NotFound(w, r)
-			}
+			serveSite(ctx, w, r, siteRouter, config, controlDB, siteSubdomain, ipAddress)
 		default:
 			slog.InfoContext(r.Context(), "Main router 404 for subdomain", "host", r.Host, "siteSubdomain", siteSubdomain, "routeTarget", routeTarget)
 			http.NotFound(w, r)
@@ -116,16 +106,22 @@ func globalWithinRateLimit(config *config.ServerConfig, routeTarget RouteTarget,
 	return controlapi.SignedIn(config, r) || config.RateLimiters.ControlRateLimiter.Allow()
 }
 
-func CreateSiteContext(ctx context.Context, config *config.ServerConfig, controlDB *db.ControlDB, r *http.Request, subdomain string, ipAddress string) (bool, context.Context) {
+// serveSite serves a request for a site with its context: 404 for a site there is not, but 503 when it cannot be
+// looked up, as when the server is too busy to answer in time, so an uploader tries again rather than take its URL as
+// wrong
+func serveSite(ctx context.Context, w http.ResponseWriter, r *http.Request, router http.Handler, config *config.ServerConfig, controlDB *db.ControlDB, subdomain string, ipAddress string) {
 	siteDB, siteModel, err := controlDB.GetSite(ctx, subdomain)
-	if err != nil {
-		slog.InfoContext(ctx, "Error getting site for subdomain", "subdomain", subdomain, "error", err)
-		return false, nil
+	if errors.Is(err, db.ErrSiteNotFound) {
+		slog.InfoContext(ctx, "Main router 404 for subdomain", "subdomain", subdomain, "error", err)
+		http.NotFound(w, r)
+		return
 	}
-
+	if err != nil {
+		httputils.RefuseBusy(w, r.WithContext(ctx), "cannot look up the site: "+err.Error())
+		return
+	}
 	ctx = httputils.CreateSiteContext(ctx, config, controlDB, siteDB, siteModel, subdomain, ipAddress, httputils.GetHTTPAction(r), httputils.GetAcceptType(r), httputils.GetContentType(r))
-
-	return true, ctx
+	router.ServeHTTP(w, r.WithContext(ctx))
 }
 
 type RouteTarget int

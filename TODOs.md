@@ -140,8 +140,6 @@
 
 1. P4: A live site left out at start, its DB missing and not restored, is only a `site_db_missing` event; mark it on
    the control sites page too
-1. P2: Under overload a site whose lookup times out is answered 404, as if it did not exist, which an uploader may take
-   as a wrong URL; answer 503 instead
 1. P2: A site's Nightscout API is limited to `SITE_UNAUTH_PER_MINUTE_LIMIT` (60 a minute) from one IP even with a
    valid token, as the unauthenticated limit runs before auth on every Nightscout request, not only on failed ones
 1. P2: AAPS sends `SettingsExport` treatments, which are refused as an unknown event type (Sentry NIGHTTROOP-6)
