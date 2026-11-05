@@ -163,6 +163,16 @@
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
       "get": { "operationId": "NsV1ExperimentsTest", "summary": "How Loop checks its API secret: 200 when it can upload treatments", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } } }
     },
+    "/pebble": {
+      "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
+      "get": {
+        "operationId": "NsPebble",
+        "summary": "The newest readings for Pebble and other watch faces, as strings in the units asked for",
+        "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
+        "parameters": [{ "name": "count", "in": "query", "description": "How many readings, 1 by default", "schema": { "type": "integer", "minimum": 1, "maximum": 1000 } }, { "name": "units", "in": "query", "description": "mmol or mg/dl, the settings' units by default", "schema": { "type": "string" } }],
+        "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } }
+      }
+    },
     "/api/v1/{collection}": {
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
       "parameters": [{ "$ref": "#/components/parameters/NsCollection" }],

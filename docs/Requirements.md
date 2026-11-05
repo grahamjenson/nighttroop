@@ -320,6 +320,9 @@ settings' timezone, and is now when left blank; other fields left blank are not 
   followers.
 - **v1**: entries, treatments, device statuses, profiles, food and activities, with Nightscout's filters, plus
   status, versions, verifyauth, slice, count, times and echo, and experiments/test.
+- `/pebble` has the newest `count` readings (1 by default, at most 1000) from the last two days for Pebble and other
+  watch faces, each glucose a string in the `units` asked for (`mmol` or `mg/dl`) or the settings' units, with its
+  trend number, and the newest with the delta, the uploader's battery and IOB, as Nightscout's has them.
 - v1 `experiments/test` is `{"status":"ok"}` for an identity that can upload readings and a 401 for any other, so
   Loop's and xDrip4iOS's connection tests pass with a PWD phone's token.
 - A v1 search by `find[_id]` that finds nothing, such as a deleted treatment, is an empty list, not a 404.
