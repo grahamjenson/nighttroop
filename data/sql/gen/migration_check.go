@@ -4,13 +4,16 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/sqlite"
+	"github.com/golang-migrate/migrate/v4/source"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 )
 
@@ -18,8 +21,9 @@ import (
 // every column at the largest and the smallest values the CHECKs allow, see SeedLimits, then migrates down a version
 // and up again, and adds them again; the first version, which makes the whole schema, is not migrated down until last.
 // So a migration that cannot take what an earlier version allowed, such as one narrowing a CHECK, or a
-// down migration that cannot take what its version allowed, fails here rather than on a deploy. Last it migrates down
-// to nothing, with all the rows in. db should be opened as the server opens it, with foreign keys on.
+// down migration that cannot take what its version allowed, fails here rather than on a deploy, as does one that
+// loses or changes a row, see migrateKeepingRows. Last it migrates down to nothing, with all the rows in. db should be
+// opened as the server opens it, with foreign keys on.
 func CheckMigrationsWithData(migrations fs.FS, db *sql.DB) error {
 	source, err := iofs.New(migrations, "migrations")
 	if err != nil {
@@ -57,7 +61,7 @@ func CheckMigrationsWithData(migrations fs.FS, db *sql.DB) error {
 			if step.n == 0 {
 				err = SeedLimits(db)
 			} else {
-				err = m.Steps(step.n)
+				err = migrateKeepingRows(m, source, db, version, step.n)
 			}
 			if err != nil {
 				return fmt.Errorf("migrating %s version %d: %w", step.what, version, err)
@@ -66,6 +70,130 @@ func CheckMigrationsWithData(migrations fs.FS, db *sql.DB) error {
 	}
 	if err := m.Down(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		return fmt.Errorf("migrating down with rows at their limits: %w", err)
+	}
+	return nil
+}
+
+var changesRows = regexp.MustCompile(`(?m)^--\s*changes rows of\s+(\w+)`)
+
+// migrateKeepingRows migrates n steps, up to or down from version, and fails if a table there before and after lost a
+// row or changed one in the columns it had before and after, such as a table made again with its columns in another
+// order and its rows copied with SELECT *. A migration that means to change a table's rows says so with a line
+// "-- changes rows of <table>".
+func migrateKeepingRows(m *migrate.Migrate, migrations source.Driver, db *sql.DB, version uint, n int) error {
+	before, err := tableRows(db)
+	if err != nil {
+		return err
+	}
+	if err := m.Steps(n); err != nil {
+		return err
+	}
+	after, err := tableRows(db)
+	if err != nil {
+		return err
+	}
+	read := migrations.ReadUp
+	if n < 0 {
+		read = migrations.ReadDown
+	}
+	file, _, err := read(version)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	text, err := io.ReadAll(file)
+	if err != nil {
+		return err
+	}
+	changed := map[string]bool{}
+	for _, match := range changesRows.FindAllStringSubmatch(string(text), -1) {
+		changed[match[1]] = true
+	}
+	for table, rows := range before {
+		if later, ok := after[table]; ok && !changed[table] {
+			if row := missingRow(rows, later); row != nil {
+				return fmt.Errorf("a row of %s was lost or changed: %v; a migration that means to change its rows says so with a line \"-- changes rows of %s\"", table, shortened(row), table)
+			}
+		}
+	}
+	return nil
+}
+
+// contents are a table's columns, but not those it generates, and its rows
+type contents struct {
+	columns []string
+	rows    []map[string]any
+}
+
+// tableRows are the rows of every table
+func tableRows(db *sql.DB) (map[string]contents, error) {
+	tables, err := seedOrder(db)
+	if err != nil {
+		return nil, err
+	}
+	all := map[string]contents{}
+	for _, table := range tables {
+		columns, err := tableColumns(db, table)
+		if err != nil {
+			return nil, err
+		}
+		t := contents{}
+		for _, c := range columns {
+			t.columns = append(t.columns, `"`+c.name+`"`)
+		}
+		result, err := db.Query(fmt.Sprintf(`SELECT %s FROM "%s"`, strings.Join(t.columns, ", "), table))
+		if err != nil {
+			return nil, err
+		}
+		for result.Next() {
+			values := make([]any, len(t.columns))
+			pointers := make([]any, len(t.columns))
+			for i := range values {
+				pointers[i] = &values[i]
+			}
+			if err := result.Scan(pointers...); err != nil {
+				result.Close()
+				return nil, err
+			}
+			row := map[string]any{}
+			for i, name := range t.columns {
+				row[name] = values[i]
+			}
+			t.rows = append(t.rows, row)
+		}
+		result.Close()
+		if err := result.Err(); err != nil {
+			return nil, err
+		}
+		all[table] = t
+	}
+	return all, nil
+}
+
+// missingRow is a row before that after does not have, in the columns both have, or nil
+func missingRow(before, after contents) map[string]any {
+	both := []string{}
+	for _, name := range before.columns {
+		if slices.Contains(after.columns, name) {
+			both = append(both, name)
+		}
+	}
+	key := func(row map[string]any) string {
+		values := []string{}
+		for _, name := range both {
+			values = append(values, fmt.Sprintf("%v", row[name]))
+		}
+		return strings.Join(values, "\x00")
+	}
+	count := map[string]int{}
+	for _, row := range after.rows {
+		count[key(row)]++
+	}
+	for _, row := range before.rows {
+		if count[key(row)] == 0 {
+			return row
+		}
+		count[key(row)]--
 	}
 	return nil
 }
@@ -114,11 +242,11 @@ func SeedLimits(db *sql.DB) error {
 		added[table] = map[bool]map[string]any{}
 		for _, largest := range []bool{true, false} {
 			row, names, values := map[string]any{}, []string{}, []any{}
-			for _, c := range columns {
+			for i, c := range columns {
 				if c.rowid {
 					continue
 				}
-				value := c.limit(largest)
+				value := c.limit(largest, i)
 				if c.parent != "" {
 					if value, err = parentKey(db, added, c, largest); err != nil {
 						return err
@@ -147,8 +275,10 @@ func SeedLimits(db *sql.DB) error {
 	return nil
 }
 
-// limit is the column's largest or smallest value
-func (c column) limit(largest bool) any {
+// limit is the column's largest or smallest value. A text with no exact value is made of a letter for its column i, so
+// text columns swapped by a migration hold different rows, see migrateKeepingRows. A number is not, as CHECKs such as
+// finished_at >= started_at compare one column with another.
+func (c column) limit(largest bool, i int) any {
 	switch {
 	case c.equals != "":
 		return literal(c.equals)
@@ -163,9 +293,9 @@ func (c column) limit(largest bool) any {
 	}
 	switch c.kind {
 	case "TEXT":
-		length, char := max(c.minLen, 1), "a"
+		length, char := max(c.minLen, 1), string(rune('a'+i%26))
 		if largest {
-			length, char = max(c.maxLen, length), "z"
+			length, char = max(c.maxLen, length), string(rune('z'-i%26))
 		}
 		if c.len > 0 {
 			length = c.len

@@ -2,6 +2,7 @@ package gen
 
 import (
 	"database/sql"
+	"maps"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -42,45 +43,62 @@ func TestCheckMigrationsWithData(t *testing.T) {
 		"000001_t.up.sql":   `CREATE TABLE t (id INTEGER PRIMARY KEY, name TEXT NOT NULL CHECK(length(name) <= 10)) STRICT;`,
 		"000001_t.down.sql": `DROP TABLE t;`,
 	}
-	with := func(files map[string]string) map[string]string {
-		all := map[string]string{}
-		for name, sql := range first {
-			all[name] = sql
-		}
-		for name, sql := range files {
-			all[name] = sql
+	with := func(more ...map[string]string) map[string]string {
+		all := maps.Clone(first)
+		for _, files := range more {
+			maps.Copy(all, files)
 		}
 		return all
+	}
+	// t made again with its columns in another order, and its rows copied with SELECT *, which swaps name and nick
+	swapped := `PRAGMA defer_foreign_keys = ON;
+CREATE TEMP TABLE t_copy AS SELECT * FROM t;
+DROP TABLE t;
+CREATE TABLE t (id INTEGER PRIMARY KEY, nick TEXT NOT NULL DEFAULT 'nick', name TEXT NOT NULL CHECK(length(name) <= 10)) STRICT;
+INSERT INTO t SELECT * FROM t_copy;
+DROP TABLE t_copy;`
+	withNick := map[string]string{
+		"000002_nick.up.sql":   `ALTER TABLE t ADD COLUMN nick TEXT NOT NULL DEFAULT 'nick';`,
+		"000002_nick.down.sql": `ALTER TABLE t DROP COLUMN nick;`,
 	}
 	tests := []struct {
 		name  string
 		files map[string]string
-		err   string
+		errs  []string
 	}{
-		{"one migration", first, ""},
+		{"one migration", first, nil},
 		{"a migration that widens a CHECK, but narrows it again going down", with(map[string]string{"000002_wider.up.sql": rebuild("20"), "000002_wider.down.sql": rebuild("10")}),
-			"migrating down from version 2"},
+			[]string{"migrating down from version 2", "CHECK constraint failed"}},
 		{"a migration that narrows a CHECK", with(map[string]string{"000002_narrower.up.sql": rebuild("5"), "000002_narrower.down.sql": rebuild("10")}),
-			"migrating up to version 2"},
+			[]string{"migrating up to version 2", "CHECK constraint failed"}},
 		{"a migration that adds a table", with(map[string]string{
 			"000002_u.up.sql":   `CREATE TABLE u (id TEXT PRIMARY KEY CHECK(length(id) <= 8), t_id INTEGER REFERENCES t(id)) STRICT;`,
 			"000002_u.down.sql": `DROP TABLE u;`,
-		}), ""},
+		}), nil},
+		{"a migration that adds a column", with(withNick), nil},
+		{"a migration that makes a table again keeping its rows", with(map[string]string{"000002_same.up.sql": rebuild("10"), "000002_same.down.sql": rebuild("10")}), nil},
+		{"a migration that swaps columns", with(withNick, map[string]string{"000003_swap.up.sql": swapped, "000003_swap.down.sql": ""}),
+			[]string{"migrating up to version 3", "a row of t was lost or changed"}},
+		{"a migration that loses rows", with(map[string]string{"000002_lose.up.sql": `DELETE FROM t WHERE length(name) > 5;`, "000002_lose.down.sql": ""}),
+			[]string{"migrating up to version 2", "a row of t was lost or changed"}},
+		{"a migration that says it changes rows", with(map[string]string{"000002_lose.up.sql": "-- changes rows of t\nDELETE FROM t WHERE length(name) > 5;", "000002_lose.down.sql": ""}), nil},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := CheckMigrationsWithData(migrations(tt.files), openTestDB(t))
-			if tt.err == "" {
+			if tt.errs == nil {
 				require.NoError(t, err)
 				return
 			}
-			require.ErrorContains(t, err, tt.err)
-			require.ErrorContains(t, err, "CHECK constraint failed")
+			for _, want := range tt.errs {
+				require.ErrorContains(t, err, want)
+			}
 		})
 	}
 }
 
-// Each column is at the largest and the smallest its CHECKs allow, and a foreign key at its parent's row at the same end
+// Each column is at the largest and the smallest its CHECKs allow, and a foreign key at its parent's row at the same end.
+// A text with no exact value is made of a letter for its column, so columns swapped hold different rows.
 func TestSeedLimits(t *testing.T) {
 	db := openTestDB(t)
 	_, err := db.Exec(`
@@ -117,8 +135,8 @@ INSERT INTO settings (id) VALUES (1);`)
 	}
 	require.NoError(t, rows.Close())
 	require.Equal(t, []row{
-		{strings.Repeat("z", 8), strings.Repeat("z", 12), "zzzz", "archived", `"zzzzzzzz"`, 90, 2.5},
-		{"a", "a", "aaaa", "live", `"a"`, -5, 0},
+		{strings.Repeat("z", 8), strings.Repeat("x", 12), "wwww", "archived", `"ssssssss"`, 90, 2.5},
+		{"a", "c", "dddd", "live", `"h"`, -5, 0},
 	}, got)
 
 	// A table of one row keeps it
