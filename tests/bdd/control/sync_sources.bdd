@@ -26,7 +26,9 @@ ASSERT_TEXT_VISIBLE Sync Updated
 // A Nightscout sync with details that do not work, so a source has failed
 INPUT #site--settings--nightscout-sync--url         http://will_not_pass_the_test.test
 INPUT #site--settings--nightscout-sync--password    not_a_token
-CLICK #site--settings--nightscout-sync--enable
+// Typing a new source's details turns it on
+CLICK #site--settings--nightscout-sync--url
+ASSERT_VISIBLE #site--settings--nightscout-sync--enable:checked
 CLICK #site--settings--nightscout-sync--submit
 ASSERT_TEXT_VISIBLE Sync Updated
 RUN_BACKGROUND_JOBS

@@ -36,8 +36,15 @@ ASSERT_VISIBLE #site--settings--nightscout-sync--password
 ASSERT_VISIBLE #site--settings--nightscout-sync--delete
 ASSERT_VISIBLE #site--settings--nightscout-sync--submit
 
+// Typing a new source's details turns it on, as it is easy to forget; unticking it then keeps it off while typing on
 INPUT #site--settings--nightscout-sync--url         http://will_not_pass_the_test.test
+CLICK #site--settings--nightscout-sync--url
+ASSERT_VISIBLE #site--settings--nightscout-sync--enable:checked
+CLICK #site--settings--nightscout-sync--enable
+ASSERT_VISIBLE #site--settings--nightscout-sync--enable:not(:checked)
 INPUT #site--settings--nightscout-sync--password    not_a_token
+CLICK #site--settings--nightscout-sync--url
+ASSERT_VISIBLE #site--settings--nightscout-sync--enable:not(:checked)
 
 CLICK #site--settings--nightscout-sync--submit
 ASSERT_STATUS 200
@@ -86,6 +93,8 @@ ASSERT_VISIBLE #site--settings--dexcom-sync--region:has(option[value="OUS"]:chec
 INPUT #site--settings--dexcom-sync--username valid-dexcom-user
 INPUT #site--settings--dexcom-sync--password dex-pass
 INPUT #site--settings--dexcom-sync--region US
+CLICK #site--settings--dexcom-sync--username
+ASSERT_VISIBLE #site--settings--dexcom-sync--enable:checked
 CLICK #site--settings--dexcom-sync--submit
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Sync Updated

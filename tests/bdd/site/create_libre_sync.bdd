@@ -42,7 +42,9 @@ ASSERT_VISIBLE #site--settings--libre-sync--submit
 INPUT #site--settings--libre-sync--email follower@example.com
 INPUT #site--settings--libre-sync--password libre-pass
 INPUT #site--settings--libre-sync--region EU
-CLICK #site--settings--libre-sync--enable
+// Typing a new source's details turns it on, as it is easy to forget
+CLICK #site--settings--libre-sync--email
+ASSERT_VISIBLE #site--settings--libre-sync--enable:checked
 CLICK #site--settings--libre-sync--submit
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Sync Updated

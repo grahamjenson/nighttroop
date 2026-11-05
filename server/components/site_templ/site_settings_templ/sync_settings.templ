@@ -26,6 +26,17 @@ func findSyncSource(
 	return nil
 }
 
+// enableOnFirstInput ticks a new source's Enable Sync as its details are first typed in, as it is easy to forget and
+// then wonder why nothing syncs. A click on the box itself first, or after, is left as it is, and a saved source's
+// box is never changed.
+func enableOnFirstInput(source *sitemodels.SyncSource) templ.Attributes {
+	if source != nil {
+		return nil
+	}
+	return templ.Attributes{"oninput": templ.JSUnsafeFuncCall("if (this.dataset.enableTouched) return; this.dataset.enableTouched = 'true'; " +
+		"if (event.target.name !== 'enabled') this.querySelector('[name=enabled]').checked = true")}
+}
+
 templ SyncSettingsPartial(syncSettings []*sitemodels.SyncSource) {
 	<div id="mainForm" class="mx-auto max-w-5xl">
 		@heading.Page("Sync Settings") {
@@ -52,6 +63,7 @@ templ SyncErrors(source *sitemodels.SyncSource, name string) {
 templ DexcomSyncForm(dexcomSyncSettings *sitemodels.SyncSource) {
 	<form
 		hx-post="/settings/sync/dexcom"
+		{ enableOnFirstInput(dexcomSyncSettings)... }
 		hx-target="#toaster"
 		hx-swap="beforeend"
 		hx-status:4xx="target:#toaster swap:beforeend"
@@ -184,6 +196,7 @@ templ DexcomSyncForm(dexcomSyncSettings *sitemodels.SyncSource) {
 templ LibreSyncForm(libreSyncSettings *sitemodels.SyncSource) {
 	<form
 		hx-post="/settings/sync/libre"
+		{ enableOnFirstInput(libreSyncSettings)... }
 		hx-target="#toaster"
 		hx-swap="beforeend"
 		hx-status:4xx="target:#toaster swap:beforeend"
@@ -314,6 +327,7 @@ templ LibreSyncForm(libreSyncSettings *sitemodels.SyncSource) {
 templ NightscoutSyncForm(nightscoutSyncSettings *sitemodels.SyncSource) {
 	<form
 		hx-post="/settings/sync/nightscout"
+		{ enableOnFirstInput(nightscoutSyncSettings)... }
 		hx-target="#toaster"
 		hx-swap="beforeend"
 		hx-status:4xx="target:#toaster swap:beforeend"

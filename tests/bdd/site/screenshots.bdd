@@ -50,6 +50,8 @@ ASSERT_VISIBLE #site--settings--nightscout-sync--submit
 
 INPUT #site--settings--nightscout-sync--url         http://will_not_pass_the_test.test
 INPUT #site--settings--nightscout-sync--password    not_a_token
+// Typing turned it on; it stays off here, as its details do not work
+CLICK #site--settings--nightscout-sync--enable
 
 CLICK #site--settings--nightscout-sync--submit
 ASSERT_STATUS 200

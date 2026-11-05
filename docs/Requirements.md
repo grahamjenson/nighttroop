@@ -252,6 +252,8 @@ settings' timezone, and is now when left blank; other fields left blank are not 
 - A site can pull data from **Dexcom** (with its region), **LibreLinkUp** (with its region) or another
   **Nightscout** site, or from **virtual sync**, which makes realistic test data.
 - Saving does not check the details: the first sync does, and turns syncing off and says why if it fails.
+- Typing the details of a Dexcom, LibreLinkUp or Nightscout source not yet saved ticks its Enable Sync, as it is easy
+  to forget; a click on the box, before or after, is kept, and a saved source's box is never changed.
 - A failing source syncs less often, and says when it failed and why.
 - A working source can be backfilled with the days before its oldest reading.
 - The sync page shows how each source has synced, how often, its backfill and its recent events.
