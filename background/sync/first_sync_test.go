@@ -1,6 +1,8 @@
 package sync_test
 
 import (
+	"bytes"
+	"log/slog"
 	"testing"
 	"time"
 
@@ -85,4 +87,26 @@ func TestFailedFirstSyncDisablesTheSource(t *testing.T) {
 	// Deleting clears it, so a deleted source does not keep its first successful sync time
 	require.NoError(t, q.DeleteSyncSource(ctx, controldb.DeleteSyncSourceParams{SiteID: siteID, Type: typ}))
 	require.Nil(t, get().FirstSuccessfulSyncTime)
+}
+
+// Dexcom refusing a source's username or password is its owner's to fix on the sync page, which says why, so it is a
+// warning and not an error, which would go to Sentry
+func TestARefusedDexcomLoginIsAWarning(t *testing.T) {
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
+	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.SyncSourceTypeDexcom
+	jobs := sync.SetupSyncJobManager(cfg, controlDB)
+	enc := func(s string) *string {
+		v, err := cfg.Security.Encrypt(s)
+		require.NoError(t, err)
+		return &v
+	}
+	var buf bytes.Buffer
+	before := slog.Default()
+	slog.SetDefault(slog.New(slog.NewTextHandler(&buf, nil)))
+	t.Cleanup(func() { slog.SetDefault(before) })
+
+	require.NoError(t, q.CreateSyncSource(ctx, controldb.CreateSyncSourceParams{SiteID: siteID, Type: typ, UrlOrUsernameEnc: enc("bad-user"), PasswordEnc: enc("pass"), Enabled: true}))
+	require.Error(t, jobs.SyncSource(ctx, sync.SyncJobParams{SiteID: siteID, Type: typ}))
+	require.Contains(t, buf.String(), `level=WARN msg="error syncing user data"`)
+	require.NotContains(t, buf.String(), "level=ERROR")
 }

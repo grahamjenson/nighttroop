@@ -3,6 +3,7 @@ package dexcom_client
 import (
 	"bytes"
 	"compress/gzip"
+	"errors"
 	"context"
 	"net/http"
 	"net/http/httptest"
@@ -99,4 +100,31 @@ func TestDecodeEGVsRefusesTooManyEGVs(t *testing.T) {
 	egvs, err = decodeEGVs([]byte(tooMany))
 	require.Error(t, err)
 	require.Nil(t, egvs)
+}
+
+// Dexcom answers a username or password it does not know with a 500 and a code, which is the account owner's to fix,
+// so it is ErrLoginRefused; any other failed login is not
+func TestLoginRefusedIsAnAccountDexcomDoesNotKnow(t *testing.T) {
+	tests := []struct {
+		name    string
+		body    string
+		refused bool
+	}{
+		{"a wrong password", `{"Code":"AccountPasswordInvalid","Message":"Publisher account password failed"}`, true},
+		{"an unknown account", `{"Code":"SSO_AuthenticateAccountNotFound","Message":"Account not found"}`, true},
+		{"a wrong password by SSO", `{"Code":"SSO_AuthenticatePasswordInvalid","Message":"Password not valid"}`, true},
+		{"too many attempts", `{"Code":"SSO_AuthenticateMaxAttemptsExceeed","Message":"Max attempts"}`, true},
+		{"Dexcom failing", `{"Code":"SSO_InternalError","Message":"Internal error"}`, false},
+		{"no code", `Service Unavailable`, false},
+	}
+	for _, test := range tests {
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+			_, _ = w.Write([]byte(test.body))
+		}))
+		_, err := liveClient(srv.URL).authenticate(context.Background())
+		srv.Close()
+		require.Error(t, err, test.name)
+		require.Equal(t, test.refused, errors.Is(err, ErrLoginRefused), test.name)
+	}
 }

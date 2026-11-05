@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -86,14 +87,25 @@ func responseError(what string, resp *http.Response) error {
 		return fmt.Errorf("%s failed: upstream redirected, status=%d", what, resp.StatusCode)
 	}
 	body, _ := io.ReadAll(io.LimitReader(resp.Body, 100))
+	for _, code := range loginRefusedCodes {
+		if bytes.Contains(body, []byte(`"Code":"`+code+`"`)) {
+			return fmt.Errorf("%s failed: %w (%s)", what, ErrLoginRefused, code)
+		}
+	}
 	return fmt.Errorf("%s failed: status=%d body=%q", what, resp.StatusCode, body)
 }
+
+// ErrLoginRefused is Dexcom not knowing the account's username or password, which its owner fixes on the sync page
+var ErrLoginRefused = errors.New("Dexcom refused the username or password")
+
+// loginRefusedCodes are the codes Dexcom answers a username or password it does not know with
+var loginRefusedCodes = []string{"AccountPasswordInvalid", "SSO_AuthenticateAccountNotFound", "SSO_AuthenticatePasswordInvalid", "SSO_AuthenticateMaxAttemptsExceeed"}
 
 // Login authenticates and stores the Dexcom session ID.
 func (c *Client) Login(ctx context.Context) error {
 	if testing.Testing() {
 		if c.username != TestValidUsername {
-			return fmt.Errorf("dexcom authentication failed: invalid username or password")
+			return fmt.Errorf("dexcom authentication failed: %w", ErrLoginRefused)
 		}
 		c.sessionID = testSessionID
 		return nil
