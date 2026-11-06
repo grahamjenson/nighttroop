@@ -1,4 +1,4 @@
-INCLUDE steps/new_site_admin.steps
+INCLUDE steps/new_site_admin_pages.steps
 ASSERT_VISIBLE "Nighttroop"
 
 // The admin is listed with the browser it logged in from
