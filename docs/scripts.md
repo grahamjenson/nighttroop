@@ -43,6 +43,7 @@ go run ./cmd/nighttroop-script --host staging.nighttroop.nz --root scripts/stagi
 - **Background jobs:** a script with `RUN_BACKGROUND_JOBS` is refused, as only a test's own server can run its jobs at once. On staging, data is written through the API instead, as a phone would.
 - **Browser steps** need Playwright's Chromium (`go run github.com/mxschmitt/playwright-go/cmd/playwright install chromium`). `--headed` shows the browser, `--timeout` is how long each step waits, and screenshots, `SCREENSHOT`'s and a failed script's, go to `--out`.
 - **Running tests:** each script runs as a test, so `-test.v` prints every step and its response, and `-test.run` picks which scripts run.
+- **A screenshot of every browser step**, into `allScreenshots`, is taken with `FLOW_STEP_SCREENSHOTS=1`, in a script run or `go test ./tests/bdd/`, to see where a test went wrong. It about doubles a browser test's time, so it is off otherwise, even with `-v`.
 
 `scripts/staging` has three:
 
