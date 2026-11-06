@@ -1,5 +1,7 @@
 package nsquery
 
+import "encoding/json"
+
 // Because we cant support all mongo queries and filters
 // Nighttroop is just going to enumerate and translate all queries into a limited set of supported queries
 
@@ -92,4 +94,12 @@ type Query struct {
 
 	// UnknownFilter is whether a filter is on a field or with an operator Nighttroop does not know, so nothing matches
 	UnknownFilter bool `json:"unknown_filter,omitempty"`
+}
+
+// DatesOnly is whether the query filters on nothing but the date range, whatever it asks of the documents found
+func (q Query) DatesOnly() bool {
+	q.DateGTE, q.DateGT, q.DateEQ, q.DateLTE, q.DateLT, q.IncludeDeleted, q.Raw = nil, nil, nil, nil, nil, false, false
+	q.Limit, q.Skip, q.CountGiven, q.HasFilters, q.SortOrder, q.Fields, q.Envelope = 0, 0, false, false, nil, nil, nil
+	others, err := json.Marshal(q)
+	return err == nil && string(others) == "{}"
 }

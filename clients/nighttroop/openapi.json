@@ -414,7 +414,7 @@
       "NsCollection": { "name": "collection", "in": "path", "required": true, "schema": { "type": "string", "enum": ["entries", "treatments", "devicestatus", "profile", "food", "settings", "activity"] } },
       "NsIdentifier": { "name": "identifier", "in": "path", "required": true, "schema": { "type": "string" } },
       "NsCount": { "name": "count", "in": "query", "description": "How many documents, at most 1000", "schema": { "type": "integer", "format": "int64" } },
-      "NsSort": { "name": "sort", "in": "query", "description": "A field to sort by, ascending", "schema": { "type": "string" } },
+      "NsSort": { "name": "sort", "in": "query", "description": "A field to sort by, ascending. On the date (date, created_at, mills, ...) the search is the oldest first; with a filter other than the date a page can have fewer than limit. Other fields are the newest first", "schema": { "type": "string" } },
       "NsSortDesc": { "name": "sort$desc", "in": "query", "description": "A field to sort by, descending", "schema": { "type": "string" } },
       "NsFields": { "name": "fields", "in": "query", "description": "Comma separated fields to return", "schema": { "type": "string" } },
       "NsDateGte": { "name": "date$gte", "in": "query", "description": "Documents from this time, in milliseconds", "schema": { "type": "integer", "format": "int64" } },

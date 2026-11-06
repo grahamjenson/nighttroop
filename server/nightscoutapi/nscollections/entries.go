@@ -120,6 +120,10 @@ func (c EntriesCollection) UpdateModel(q *sitedb.Queries, ctx context.Context, n
 	return q.UpdateGlucoseReading(ctx, updateParams)
 }
 
+func (c EntriesCollection) AscendingIDs(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]string, error) {
+	return q.GlucoseReadingAscendingIDs(ctx, nsquery.GlucoseAscending(query))
+}
+
 func (c EntriesCollection) SearchModels(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]*sitedb.GlucoseReading, error) {
 	if !query.HasFilters {
 		return q.AllGlucoseReadings(ctx, nsquery.GlucoseAll(query))

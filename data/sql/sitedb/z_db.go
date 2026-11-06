@@ -24,6 +24,9 @@ func New(db DBTX) *Queries {
 func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	q := Queries{db: db}
 	var err error
+	if q.activityAscendingIDsStmt, err = db.PrepareContext(ctx, activityAscendingIDs); err != nil {
+		return nil, fmt.Errorf("error preparing query ActivityAscendingIDs: %w", err)
+	}
 	if q.alarmGlucoseReadingsStmt, err = db.PrepareContext(ctx, alarmGlucoseReadings); err != nil {
 		return nil, fmt.Errorf("error preparing query AlarmGlucoseReadings: %w", err)
 	}
@@ -147,11 +150,20 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deleteSummaryPeriodsStmt, err = db.PrepareContext(ctx, deleteSummaryPeriods); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteSummaryPeriods: %w", err)
 	}
+	if q.deviceReportAscendingIDsStmt, err = db.PrepareContext(ctx, deviceReportAscendingIDs); err != nil {
+		return nil, fmt.Errorf("error preparing query DeviceReportAscendingIDs: %w", err)
+	}
 	if q.deviceReportsForDeviceStmt, err = db.PrepareContext(ctx, deviceReportsForDevice); err != nil {
 		return nil, fmt.Errorf("error preparing query DeviceReportsForDevice: %w", err)
 	}
+	if q.eventGroupAscendingIDsStmt, err = db.PrepareContext(ctx, eventGroupAscendingIDs); err != nil {
+		return nil, fmt.Errorf("error preparing query EventGroupAscendingIDs: %w", err)
+	}
 	if q.eventsToGroupStmt, err = db.PrepareContext(ctx, eventsToGroup); err != nil {
 		return nil, fmt.Errorf("error preparing query EventsToGroup: %w", err)
+	}
+	if q.foodPresetAscendingIDsStmt, err = db.PrepareContext(ctx, foodPresetAscendingIDs); err != nil {
+		return nil, fmt.Errorf("error preparing query FoodPresetAscendingIDs: %w", err)
 	}
 	if q.getActivityStmt, err = db.PrepareContext(ctx, getActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query GetActivity: %w", err)
@@ -212,6 +224,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.getTempTargetStmt, err = db.PrepareContext(ctx, getTempTarget); err != nil {
 		return nil, fmt.Errorf("error preparing query GetTempTarget: %w", err)
+	}
+	if q.glucoseReadingAscendingIDsStmt, err = db.PrepareContext(ctx, glucoseReadingAscendingIDs); err != nil {
+		return nil, fmt.Errorf("error preparing query GlucoseReadingAscendingIDs: %w", err)
 	}
 	if q.hardDeleteActivitiesByTypeStmt, err = db.PrepareContext(ctx, hardDeleteActivitiesByType); err != nil {
 		return nil, fmt.Errorf("error preparing query HardDeleteActivitiesByType: %w", err)
@@ -278,6 +293,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.oldestGlucoseReadingAtStmt, err = db.PrepareContext(ctx, oldestGlucoseReadingAt); err != nil {
 		return nil, fmt.Errorf("error preparing query OldestGlucoseReadingAt: %w", err)
+	}
+	if q.profileStoreAscendingIDsStmt, err = db.PrepareContext(ctx, profileStoreAscendingIDs); err != nil {
+		return nil, fmt.Errorf("error preparing query ProfileStoreAscendingIDs: %w", err)
 	}
 	if q.recentDeviceNamesStmt, err = db.PrepareContext(ctx, recentDeviceNames); err != nil {
 		return nil, fmt.Errorf("error preparing query RecentDeviceNames: %w", err)
@@ -425,6 +443,11 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 
 func (q *Queries) Close() error {
 	var err error
+	if q.activityAscendingIDsStmt != nil {
+		if cerr := q.activityAscendingIDsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing activityAscendingIDsStmt: %w", cerr)
+		}
+	}
 	if q.alarmGlucoseReadingsStmt != nil {
 		if cerr := q.alarmGlucoseReadingsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing alarmGlucoseReadingsStmt: %w", cerr)
@@ -630,14 +653,29 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing deleteSummaryPeriodsStmt: %w", cerr)
 		}
 	}
+	if q.deviceReportAscendingIDsStmt != nil {
+		if cerr := q.deviceReportAscendingIDsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deviceReportAscendingIDsStmt: %w", cerr)
+		}
+	}
 	if q.deviceReportsForDeviceStmt != nil {
 		if cerr := q.deviceReportsForDeviceStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deviceReportsForDeviceStmt: %w", cerr)
 		}
 	}
+	if q.eventGroupAscendingIDsStmt != nil {
+		if cerr := q.eventGroupAscendingIDsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing eventGroupAscendingIDsStmt: %w", cerr)
+		}
+	}
 	if q.eventsToGroupStmt != nil {
 		if cerr := q.eventsToGroupStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing eventsToGroupStmt: %w", cerr)
+		}
+	}
+	if q.foodPresetAscendingIDsStmt != nil {
+		if cerr := q.foodPresetAscendingIDsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing foodPresetAscendingIDsStmt: %w", cerr)
 		}
 	}
 	if q.getActivityStmt != nil {
@@ -738,6 +776,11 @@ func (q *Queries) Close() error {
 	if q.getTempTargetStmt != nil {
 		if cerr := q.getTempTargetStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getTempTargetStmt: %w", cerr)
+		}
+	}
+	if q.glucoseReadingAscendingIDsStmt != nil {
+		if cerr := q.glucoseReadingAscendingIDsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing glucoseReadingAscendingIDsStmt: %w", cerr)
 		}
 	}
 	if q.hardDeleteActivitiesByTypeStmt != nil {
@@ -848,6 +891,11 @@ func (q *Queries) Close() error {
 	if q.oldestGlucoseReadingAtStmt != nil {
 		if cerr := q.oldestGlucoseReadingAtStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing oldestGlucoseReadingAtStmt: %w", cerr)
+		}
+	}
+	if q.profileStoreAscendingIDsStmt != nil {
+		if cerr := q.profileStoreAscendingIDsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing profileStoreAscendingIDsStmt: %w", cerr)
 		}
 	}
 	if q.recentDeviceNamesStmt != nil {
@@ -1124,6 +1172,7 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 type Queries struct {
 	db                                          DBTX
 	tx                                          *sql.Tx
+	activityAscendingIDsStmt                    *sql.Stmt
 	alarmGlucoseReadingsStmt                    *sql.Stmt
 	allActivitiesStmt                           *sql.Stmt
 	allComponentEventsStmt                      *sql.Stmt
@@ -1165,8 +1214,11 @@ type Queries struct {
 	createTempBasalStmt                         *sql.Stmt
 	createTempTargetStmt                        *sql.Stmt
 	deleteSummaryPeriodsStmt                    *sql.Stmt
+	deviceReportAscendingIDsStmt                *sql.Stmt
 	deviceReportsForDeviceStmt                  *sql.Stmt
+	eventGroupAscendingIDsStmt                  *sql.Stmt
 	eventsToGroupStmt                           *sql.Stmt
+	foodPresetAscendingIDsStmt                  *sql.Stmt
 	getActivityStmt                             *sql.Stmt
 	getComponentEventStmt                       *sql.Stmt
 	getComponentEventByTypeStmt                 *sql.Stmt
@@ -1187,6 +1239,7 @@ type Queries struct {
 	getSummaryPeriodStmt                        *sql.Stmt
 	getTempBasalStmt                            *sql.Stmt
 	getTempTargetStmt                           *sql.Stmt
+	glucoseReadingAscendingIDsStmt              *sql.Stmt
 	hardDeleteActivitiesByTypeStmt              *sql.Stmt
 	hardDeleteActivityStmt                      *sql.Stmt
 	hardDeleteComponentEventStmt                *sql.Stmt
@@ -1209,6 +1262,7 @@ type Queries struct {
 	hardDeleteTempTargetStmt                    *sql.Stmt
 	lastModifiedCollectionsStmt                 *sql.Stmt
 	oldestGlucoseReadingAtStmt                  *sql.Stmt
+	profileStoreAscendingIDsStmt                *sql.Stmt
 	recentDeviceNamesStmt                       *sql.Stmt
 	regroupEventGroupStmt                       *sql.Stmt
 	searchActivitiesStmt                        *sql.Stmt
@@ -1262,6 +1316,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
 		db:                                          tx,
 		tx:                                          tx,
+		activityAscendingIDsStmt:                    q.activityAscendingIDsStmt,
 		alarmGlucoseReadingsStmt:                    q.alarmGlucoseReadingsStmt,
 		allActivitiesStmt:                           q.allActivitiesStmt,
 		allComponentEventsStmt:                      q.allComponentEventsStmt,
@@ -1303,8 +1358,11 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		createTempBasalStmt:                         q.createTempBasalStmt,
 		createTempTargetStmt:                        q.createTempTargetStmt,
 		deleteSummaryPeriodsStmt:                    q.deleteSummaryPeriodsStmt,
+		deviceReportAscendingIDsStmt:                q.deviceReportAscendingIDsStmt,
 		deviceReportsForDeviceStmt:                  q.deviceReportsForDeviceStmt,
+		eventGroupAscendingIDsStmt:                  q.eventGroupAscendingIDsStmt,
 		eventsToGroupStmt:                           q.eventsToGroupStmt,
+		foodPresetAscendingIDsStmt:                  q.foodPresetAscendingIDsStmt,
 		getActivityStmt:                             q.getActivityStmt,
 		getComponentEventStmt:                       q.getComponentEventStmt,
 		getComponentEventByTypeStmt:                 q.getComponentEventByTypeStmt,
@@ -1325,6 +1383,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getSummaryPeriodStmt:                        q.getSummaryPeriodStmt,
 		getTempBasalStmt:                            q.getTempBasalStmt,
 		getTempTargetStmt:                           q.getTempTargetStmt,
+		glucoseReadingAscendingIDsStmt:              q.glucoseReadingAscendingIDsStmt,
 		hardDeleteActivitiesByTypeStmt:              q.hardDeleteActivitiesByTypeStmt,
 		hardDeleteActivityStmt:                      q.hardDeleteActivityStmt,
 		hardDeleteComponentEventStmt:                q.hardDeleteComponentEventStmt,
@@ -1347,6 +1406,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		hardDeleteTempTargetStmt:                    q.hardDeleteTempTargetStmt,
 		lastModifiedCollectionsStmt:                 q.lastModifiedCollectionsStmt,
 		oldestGlucoseReadingAtStmt:                  q.oldestGlucoseReadingAtStmt,
+		profileStoreAscendingIDsStmt:                q.profileStoreAscendingIDsStmt,
 		recentDeviceNamesStmt:                       q.recentDeviceNamesStmt,
 		regroupEventGroupStmt:                       q.regroupEventGroupStmt,
 		searchActivitiesStmt:                        q.searchActivitiesStmt,

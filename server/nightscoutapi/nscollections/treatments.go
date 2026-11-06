@@ -180,6 +180,10 @@ func (c TreatmentCollection) DeleteType(q *sitedb.Queries, ctx context.Context, 
 	return nsutils.SQLResultCustomResult{LastInsertIdInt: 0, RowsAffectedInt: int64(len(eventGroups)), Err: nil}, nil
 }
 
+func (c TreatmentCollection) AscendingIDs(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]string, error) {
+	return q.EventGroupAscendingIDs(ctx, nsquery.EventGroupAscending(query))
+}
+
 func (c TreatmentCollection) SearchModels(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]*sitedb.EventGroupsBundle, error) {
 	eventGroups, err := q.SearchEventGroups(ctx, nsquery.EventGroupSearch(query))
 	if err != nil {

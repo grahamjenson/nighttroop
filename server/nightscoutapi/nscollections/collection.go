@@ -1,10 +1,12 @@
 package nscollections
 
 import (
+	"cmp"
 	"context"
 	"database/sql"
 	"encoding/json"
 	"log/slog"
+	"slices"
 
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/sitedb"
@@ -40,6 +42,8 @@ type CollectionDB[NS, DM any] interface {
 	// CreateModel stores the model, with the identifier given when it is replacing one
 	CreateModel(q *sitedb.Queries, ctx context.Context, nsModel NS, cc nightscoutmodels.ConverterContext, identifier *string) (*DM, error)
 	SearchModels(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]*DM, error)
+	// AscendingIDs are the identifiers of the models in the query's dates, the oldest first, paged as it asks
+	AscendingIDs(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]string, error)
 	// Delete deletes a model, softly or, when permanent, for good
 	Delete(q *sitedb.Queries, ctx context.Context, identifier string, permanent bool) (sql.Result, error)
 }
@@ -285,7 +289,11 @@ func (c Collection[NS, DM]) Get(ctx context.Context, siteContext *httputils.Site
 }
 
 func (c Collection[NS, DM]) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Document, *nsutils.HTTPError) {
-	models, err := c.db.SearchModels(siteContext.SiteDB.Queries(), ctx, query)
+	search := c.db.SearchModels
+	if query.SortOrder != nil && *query.SortOrder == nsquery.SortOccurredAtAsc {
+		search = c.ascending
+	}
+	models, err := search(siteContext.SiteDB.Queries(), ctx, query)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to search the database", "error", err, "collection", c.db.Name())
 		return nil, nsutils.ErrInternal
@@ -295,6 +303,37 @@ func (c Collection[NS, DM]) Search(ctx context.Context, siteContext *httputils.S
 		docs[i] = c.document(model, siteContext, query.Raw)
 	}
 	return docs, nil
+}
+
+// ascending is what a search sorted by date finds, the oldest first, as AAPS pages forward by date. The identifiers in
+// the dates searched are read from the date's index, the oldest first, then each by its primary key. A query with
+// other filters searches for those identifiers with them instead, so a page has fewer than its limit when some of
+// them do not match.
+func (c Collection[NS, DM]) ascending(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]*DM, error) {
+	ids, err := c.db.AscendingIDs(q, ctx, query)
+	if err != nil || len(ids) == 0 {
+		return nil, err
+	}
+	if !query.DatesOnly() {
+		idIn, _ := json.Marshal(ids)
+		query.IDIn, query.Skip, query.HasFilters = new(string(idIn)), 0, true
+		models, err := c.db.SearchModels(q, ctx, query)
+		slices.SortStableFunc(models, func(a, b *DM) int { return cmp.Compare((*a).GetOccurredAt(), (*b).GetOccurredAt()) })
+		return models, err
+	}
+	models := make([]*DM, 0, len(ids))
+	for _, id := range ids {
+		// One deleted for good since its identifier was read is left out
+		model, err := c.db.GetModel(q, ctx, id, query.IncludeDeleted)
+		if err == sql.ErrNoRows || (err == nil && model == nil) {
+			continue
+		}
+		if err != nil {
+			return nil, err
+		}
+		models = append(models, model)
+	}
+	return models, nil
 }
 
 func (c Collection[NS, DM]) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {

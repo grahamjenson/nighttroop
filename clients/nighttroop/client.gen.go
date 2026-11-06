@@ -478,7 +478,7 @@ type NsV1SearchParams struct {
 	Count *NsCount `form:"count,omitempty" json:"count,omitempty"`
 	Skip  *Skip    `form:"skip,omitempty" json:"skip,omitempty"`
 
-	// Sort A field to sort by, ascending
+	// Sort A field to sort by, ascending. On the date (date, created_at, mills, ...) the search is the oldest first; with a filter other than the date a page can have fewer than limit. Other fields are the newest first
 	Sort *NsSort `form:"sort,omitempty" json:"sort,omitempty"`
 
 	// SortDesc A field to sort by, descending
@@ -518,7 +518,7 @@ type NsV3SearchParams struct {
 	Limit *Limit `form:"limit,omitempty" json:"limit,omitempty"`
 	Skip  *Skip  `form:"skip,omitempty" json:"skip,omitempty"`
 
-	// Sort A field to sort by, ascending
+	// Sort A field to sort by, ascending. On the date (date, created_at, mills, ...) the search is the oldest first; with a filter other than the date a page can have fewer than limit. Other fields are the newest first
 	Sort *NsSort `form:"sort,omitempty" json:"sort,omitempty"`
 
 	// SortDesc A field to sort by, descending

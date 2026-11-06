@@ -15,6 +15,33 @@ func ActivityAll(source Query) sitedb.AllActivitiesParams {
 	sitedbAllActivitiesParams.Limit = source.Limit
 	return sitedbAllActivitiesParams
 }
+func ActivityAscending(source Query) sitedb.ActivityAscendingIDsParams {
+	var sitedbActivityAscendingIDsParams sitedb.ActivityAscendingIDsParams
+	if source.DateGTE != nil {
+		xint64 := *source.DateGTE
+		sitedbActivityAscendingIDsParams.DateGTE = &xint64
+	}
+	if source.DateGT != nil {
+		xint642 := *source.DateGT
+		sitedbActivityAscendingIDsParams.DateGT = &xint642
+	}
+	if source.DateEQ != nil {
+		xint643 := *source.DateEQ
+		sitedbActivityAscendingIDsParams.DateEQ = &xint643
+	}
+	if source.DateLTE != nil {
+		xint644 := *source.DateLTE
+		sitedbActivityAscendingIDsParams.DateLTE = &xint644
+	}
+	if source.DateLT != nil {
+		xint645 := *source.DateLT
+		sitedbActivityAscendingIDsParams.DateLT = &xint645
+	}
+	sitedbActivityAscendingIDsParams.IncludeDeleted = source.IncludeDeleted
+	sitedbActivityAscendingIDsParams.Skip = source.Skip
+	sitedbActivityAscendingIDsParams.Limit = source.Limit
+	return sitedbActivityAscendingIDsParams
+}
 func ActivitySearch(source Query) sitedb.SearchActivitiesParams {
 	var sitedbSearchActivitiesParams sitedb.SearchActivitiesParams
 	if source.DateGTE != nil {
@@ -138,6 +165,33 @@ func DeviceReportAll(source Query) sitedb.AllDeviceReportsParams {
 	sitedbAllDeviceReportsParams.Limit = source.Limit
 	return sitedbAllDeviceReportsParams
 }
+func DeviceReportAscending(source Query) sitedb.DeviceReportAscendingIDsParams {
+	var sitedbDeviceReportAscendingIDsParams sitedb.DeviceReportAscendingIDsParams
+	if source.DateGTE != nil {
+		xint64 := *source.DateGTE
+		sitedbDeviceReportAscendingIDsParams.DateGTE = &xint64
+	}
+	if source.DateGT != nil {
+		xint642 := *source.DateGT
+		sitedbDeviceReportAscendingIDsParams.DateGT = &xint642
+	}
+	if source.DateEQ != nil {
+		xint643 := *source.DateEQ
+		sitedbDeviceReportAscendingIDsParams.DateEQ = &xint643
+	}
+	if source.DateLTE != nil {
+		xint644 := *source.DateLTE
+		sitedbDeviceReportAscendingIDsParams.DateLTE = &xint644
+	}
+	if source.DateLT != nil {
+		xint645 := *source.DateLT
+		sitedbDeviceReportAscendingIDsParams.DateLT = &xint645
+	}
+	sitedbDeviceReportAscendingIDsParams.IncludeDeleted = source.IncludeDeleted
+	sitedbDeviceReportAscendingIDsParams.Skip = source.Skip
+	sitedbDeviceReportAscendingIDsParams.Limit = source.Limit
+	return sitedbDeviceReportAscendingIDsParams
+}
 func DeviceReportSearch(source Query) sitedb.SearchDeviceReportsParams {
 	var sitedbSearchDeviceReportsParams sitedb.SearchDeviceReportsParams
 	if source.DateGTE != nil {
@@ -220,6 +274,33 @@ func EventGroupAll(source Query) sitedb.AllEventGroupsParams {
 	sitedbAllEventGroupsParams.Skip = source.Skip
 	sitedbAllEventGroupsParams.Limit = source.Limit
 	return sitedbAllEventGroupsParams
+}
+func EventGroupAscending(source Query) sitedb.EventGroupAscendingIDsParams {
+	var sitedbEventGroupAscendingIDsParams sitedb.EventGroupAscendingIDsParams
+	if source.DateGTE != nil {
+		xint64 := *source.DateGTE
+		sitedbEventGroupAscendingIDsParams.DateGTE = &xint64
+	}
+	if source.DateGT != nil {
+		xint642 := *source.DateGT
+		sitedbEventGroupAscendingIDsParams.DateGT = &xint642
+	}
+	if source.DateEQ != nil {
+		xint643 := *source.DateEQ
+		sitedbEventGroupAscendingIDsParams.DateEQ = &xint643
+	}
+	if source.DateLTE != nil {
+		xint644 := *source.DateLTE
+		sitedbEventGroupAscendingIDsParams.DateLTE = &xint644
+	}
+	if source.DateLT != nil {
+		xint645 := *source.DateLT
+		sitedbEventGroupAscendingIDsParams.DateLT = &xint645
+	}
+	sitedbEventGroupAscendingIDsParams.IncludeDeleted = source.IncludeDeleted
+	sitedbEventGroupAscendingIDsParams.Skip = source.Skip
+	sitedbEventGroupAscendingIDsParams.Limit = source.Limit
+	return sitedbEventGroupAscendingIDsParams
 }
 func EventGroupSearch(source Query) sitedb.SearchEventGroupsParams {
 	var sitedbSearchEventGroupsParams sitedb.SearchEventGroupsParams
@@ -541,6 +622,32 @@ func FoodPresetAll(source Query) sitedb.AllFoodPresetsParams {
 	sitedbAllFoodPresetsParams.Limit = source.Limit
 	return sitedbAllFoodPresetsParams
 }
+func FoodPresetAscending(source Query) sitedb.FoodPresetAscendingIDsParams {
+	var sitedbFoodPresetAscendingIDsParams sitedb.FoodPresetAscendingIDsParams
+	if source.DateGTE != nil {
+		xint64 := *source.DateGTE
+		sitedbFoodPresetAscendingIDsParams.DateGTE = &xint64
+	}
+	if source.DateGT != nil {
+		xint642 := *source.DateGT
+		sitedbFoodPresetAscendingIDsParams.DateGT = &xint642
+	}
+	if source.DateEQ != nil {
+		xint643 := *source.DateEQ
+		sitedbFoodPresetAscendingIDsParams.DateEQ = &xint643
+	}
+	if source.DateLTE != nil {
+		xint644 := *source.DateLTE
+		sitedbFoodPresetAscendingIDsParams.DateLTE = &xint644
+	}
+	if source.DateLT != nil {
+		xint645 := *source.DateLT
+		sitedbFoodPresetAscendingIDsParams.DateLT = &xint645
+	}
+	sitedbFoodPresetAscendingIDsParams.Skip = source.Skip
+	sitedbFoodPresetAscendingIDsParams.Limit = source.Limit
+	return sitedbFoodPresetAscendingIDsParams
+}
 func FoodPresetSearch(source Query) sitedb.SearchFoodPresetsParams {
 	var sitedbSearchFoodPresetsParams sitedb.SearchFoodPresetsParams
 	if source.DateGTE != nil {
@@ -662,6 +769,33 @@ func GlucoseAll(source Query) sitedb.AllGlucoseReadingsParams {
 	sitedbAllGlucoseReadingsParams.Limit = source.Limit
 	return sitedbAllGlucoseReadingsParams
 }
+func GlucoseAscending(source Query) sitedb.GlucoseReadingAscendingIDsParams {
+	var sitedbGlucoseReadingAscendingIDsParams sitedb.GlucoseReadingAscendingIDsParams
+	if source.DateGTE != nil {
+		xint64 := *source.DateGTE
+		sitedbGlucoseReadingAscendingIDsParams.DateGTE = &xint64
+	}
+	if source.DateGT != nil {
+		xint642 := *source.DateGT
+		sitedbGlucoseReadingAscendingIDsParams.DateGT = &xint642
+	}
+	if source.DateEQ != nil {
+		xint643 := *source.DateEQ
+		sitedbGlucoseReadingAscendingIDsParams.DateEQ = &xint643
+	}
+	if source.DateLTE != nil {
+		xint644 := *source.DateLTE
+		sitedbGlucoseReadingAscendingIDsParams.DateLTE = &xint644
+	}
+	if source.DateLT != nil {
+		xint645 := *source.DateLT
+		sitedbGlucoseReadingAscendingIDsParams.DateLT = &xint645
+	}
+	sitedbGlucoseReadingAscendingIDsParams.IncludeDeleted = source.IncludeDeleted
+	sitedbGlucoseReadingAscendingIDsParams.Skip = source.Skip
+	sitedbGlucoseReadingAscendingIDsParams.Limit = source.Limit
+	return sitedbGlucoseReadingAscendingIDsParams
+}
 func GlucoseSearch(source Query) sitedb.SearchGlucoseReadingsParams {
 	var sitedbSearchGlucoseReadingsParams sitedb.SearchGlucoseReadingsParams
 	if source.DateGTE != nil {
@@ -782,6 +916,32 @@ func ProfilePresetsAll(source Query) sitedb.AllProfilePresetsParams {
 	sitedbAllProfilePresetsParams.Skip = source.Skip
 	sitedbAllProfilePresetsParams.Limit = source.Limit
 	return sitedbAllProfilePresetsParams
+}
+func ProfileStoreAscending(source Query) sitedb.ProfileStoreAscendingIDsParams {
+	var sitedbProfileStoreAscendingIDsParams sitedb.ProfileStoreAscendingIDsParams
+	if source.DateGTE != nil {
+		xint64 := *source.DateGTE
+		sitedbProfileStoreAscendingIDsParams.DateGTE = &xint64
+	}
+	if source.DateGT != nil {
+		xint642 := *source.DateGT
+		sitedbProfileStoreAscendingIDsParams.DateGT = &xint642
+	}
+	if source.DateEQ != nil {
+		xint643 := *source.DateEQ
+		sitedbProfileStoreAscendingIDsParams.DateEQ = &xint643
+	}
+	if source.DateLTE != nil {
+		xint644 := *source.DateLTE
+		sitedbProfileStoreAscendingIDsParams.DateLTE = &xint644
+	}
+	if source.DateLT != nil {
+		xint645 := *source.DateLT
+		sitedbProfileStoreAscendingIDsParams.DateLT = &xint645
+	}
+	sitedbProfileStoreAscendingIDsParams.Skip = source.Skip
+	sitedbProfileStoreAscendingIDsParams.Limit = source.Limit
+	return sitedbProfileStoreAscendingIDsParams
 }
 func ProfileStoreSearch(source Query) sitedb.SearchProfileStoresParams {
 	var sitedbSearchProfileStoresParams sitedb.SearchProfileStoresParams

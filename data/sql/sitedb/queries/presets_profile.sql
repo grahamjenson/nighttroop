@@ -98,6 +98,13 @@ SELECT * FROM profile_presets WHERE profile_store_id = ? ORDER BY is_default DES
 
 
 
+-- name: ProfileStoreAscendingIDs :many
+-- The stores in the dates searched, the oldest first, from occurred_at's index, for a search sorted by date
+SELECT profile_store_id FROM profile_presets
+WHERE occurred_at BETWEEN MAX(COALESCE(CAST(sqlc.narg('DateGTE') AS INTEGER), 0), COALESCE(CAST(sqlc.narg('DateGT') AS INTEGER) + 1, 0), COALESCE(CAST(sqlc.narg('DateEQ') AS INTEGER), 0))
+    AND MIN(COALESCE(CAST(sqlc.narg('DateLTE') AS INTEGER), 253402300799999), COALESCE(CAST(sqlc.narg('DateLT') AS INTEGER) - 1, 253402300799999), COALESCE(sqlc.narg('DateEQ'), 253402300799999))
+GROUP BY profile_store_id ORDER BY MIN(occurred_at) LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
+
 -- name: SearchProfileStores :many
 WITH distinct_profile_store_ids AS (
     SELECT DISTINCT profile_store_id FROM profile_presets

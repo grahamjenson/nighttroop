@@ -53,7 +53,7 @@ page, and AAPS then asks for the same page again for ever.
 | Each sync, first | `GET /api/v3/status` | `version`, `apiVersion`, `srvDate`, `storage.{storage,version}` and `apiPermissions` with all six collections, each a string of `c`, `r`, `u`, `d` (`RemoteStatusResponse`). A master uploads only when all six are `crud`, a client when it may read all and create and update `settings` (`localmodel/ApiPermissions.kt`, `NSClientV3Plugin.kt:534`) |
 | Status not full | `GET /api/v2/authorization/debug/check/api:settings:create` and `…:update` | 200 is yes, 401 or 403 no, anything else fails the status (`NSAndroidClientImpl.kt:119`) |
 | Each sync | `GET /api/v3/lastModified` | `collections.{devicestatus,entries,profile,treatments,foods,settings}` as numbers; it reads `foods`, not Nightscout's `food`, so that one is always 0 (`remotemodel/LastModified.kt`) |
-| First load of entries | `GET /api/v3/entries?sort=date&date$gt=<ms>&limit=500` from 100 days ago (`NSClientV3Plugin.kt:185,232`), then from the newest `date` it got | `type` must be `sgv`, `sgv`, `date`, `identifier`, `direction`, `utcOffset`, `isValid`, `srvModified` (`mapper/SvgMapper.kt`) |
+| First load of entries | `GET /api/v3/entries?sort=date&date$gt=<ms>&limit=500` from 100 days ago (`NSClientV3Plugin.kt:185,232`), then from the newest `date` it got. As it sends no other filter, each page is a full 500, the oldest first | `type` must be `sgv`, `sgv`, `date`, `identifier`, `direction`, `utcOffset`, `isValid`, `srvModified` (`mapper/SvgMapper.kt`) |
 | Later loads of entries | `GET /api/v3/entries/history/<ms>?limit=500`, from the last `ETag` | the same, `isValid: false` for a deletion, and the `ETag` header `W/"<ms>"`, read by position (`NsHttpResponse.kt:58`), as the next `<ms>`. It stops when the ETag does not move (`workers/LoadBgRunner.kt`) |
 | A reading or calibration | `POST /api/v3/entries` | 200 or 201 and `identifier`. A 400 with "Bad or missing utcOffset field" is sent again with `utcOffset: 0` (`NSAndroidClientImpl.kt:226`) |
 | Reading changed / invalidated | `PATCH /api/v3/entries/<id>` without `date` and `utcOffset` / `DELETE /api/v3/entries/<id>` | 2xx, or 404, which it takes as done (line 259) |
@@ -177,7 +177,8 @@ SHA1, as AAPS does.
 | `/api/v3/lastModified` | works | `auth_v3.http`, `sync_v3.http` |
 | Entries: create, duplicate, search by date, history with `ETag`, patch, delete, deletion in history | works | `sync_v3.http` |
 | Entries and treatments in an identity in mmol/L | works: the Nightscout API always gives them in mg/dL | `units/*.http` |
-| First loads and history over 500 documents, and profile history's newest | not supported: searches are newest first and ignore `sort`; TODO P1 | — |
+| First loads over 500 documents | works: a search sorted by date is the oldest first | `first_load_paging.http` |
+| History over 500 documents, and profile history's newest | not supported: history is the newest date first; TODO P1 | — |
 | Treatments: bolus and SMB `type`, carbs, temp target, profile switch, BG check, delete in history | works | `sync_v3.http`, `flow_v3.http` |
 | Temp basal at, over or under 100% (any `percent` from -100), its update | works: `percent`, the change from the basal, is kept as a multiplier of it and returned as sent | `sync_v3.http`, `treatments/temp_basal_percent.http` |
 | Temp basal `type`, effective profile switch `original*`, running mode `mode` | not supported: dropped, so followers misread them; TODO P2 | `sync_v3.http` |
