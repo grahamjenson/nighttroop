@@ -73,11 +73,27 @@ SCREENSHOT device_client_guide_t1dcarer
 CLICK "I Have Saved These"
 CLICK #site--identities--close
 
+// A device for any other client gets mg/dL too, as Nightscout clients expect
+INPUT #name-createIdentityFormdevicesTable display
+CLICK #client-createIdentityFormdevicesTable
+CLICK #identities_table [role="option"][data-tui-selectbox-value="other"]
+CLICK "Add Device"
+ASSERT_STATUS 201
+ASSERT_VISIBLE #site--identities--created--units >> text=This device's own units are mg/dL
+SCREENSHOT device_client_guide_other
+SAVE_TEXT #site--identities--created--ns-token display_token
+CLICK "I Have Saved These"
+CLICK #site--identities--close
+
 // So the Nightscout API gives the device mg/dL, though the site is in mmol/L
 GOTO {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/status.json?token={{ .watch_token }}
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE mg/dl
 
 GOTO {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/status.json?token={{ .iphone_token }}
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE mg/dl
+
+GOTO {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/status.json?token={{ .display_token }}
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE mg/dl

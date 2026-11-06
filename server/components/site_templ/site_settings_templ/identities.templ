@@ -460,6 +460,8 @@ templ clientGuide(identity *sitemodels.UserIdentity) {
 			</ol>
 			if client.MGDL {
 				<p id="site--identities--created--units" class="text-xs text-gray-500">{ client.Label } needs mg/dL, so this device's own units are mg/dL, whatever the site's.</p>
+			} else {
+				<p id="site--identities--created--units" class="text-xs text-gray-500">This device's own units are mg/dL, whatever the site's, as Nightscout clients expect. Its row's settings can change them.</p>
 			}
 		</div>
 	}

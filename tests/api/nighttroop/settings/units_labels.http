@@ -24,17 +24,9 @@ ASSERT_EQUALS "BG Check" "@0.eventType"
 ASSERT_EQUALS 120 "@0.glucose"
 ASSERT_EQUALS "mg/dl" "@0.units"
 
-// Another device follows the site, in mmol/L written as Nighttroop does
-NAME create_other
-POST http://{{ site }}/settings/identities
-H Authorization: Bearer {{ jwt }}
-H Accept: application/json
-B {"name": "display", "role": "device_read", "client": "other"}
-ASSERT_STATUS 201
-SET other_token {{ .create_other.result.ns_token }}
-
-NAME other_reads_mmol_l
-GET http://{{ .ns_site }}/api/v1/treatments.json?token={{ .other_token }}
+// The site's first phone follows the site, in mmol/L written as Nighttroop does
+NAME phone_reads_mmol_l
+GET http://{{ .ns_site }}/api/v1/treatments.json?token={{ token }}
 ASSERT_STATUS 200
 ASSERT_EQUALS "mmol/L" "@0.units"
 
@@ -47,8 +39,8 @@ B {"units_mmol_label": "mmol"}
 ASSERT_STATUS 200
 ASSERT_EQUALS "mmol" "@result.units_mmol_label"
 
-NAME other_reads_mmol
-GET http://{{ .ns_site }}/api/v1/treatments.json?token={{ .other_token }}
+NAME phone_reads_mmol
+GET http://{{ .ns_site }}/api/v1/treatments.json?token={{ token }}
 ASSERT_STATUS 200
 ASSERT_EQUALS "mmol" "@0.units"
 

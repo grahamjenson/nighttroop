@@ -28,9 +28,8 @@ var identityRoles = []consts.IdentityRole{
 	consts.IdentityRoleDevicePWDPhone, consts.IdentityRoleDeviceRead, consts.IdentityRoleDeviceReadWrite,
 }
 
-// mgdlClients are the Nightscout clients a device can be added for that need glucose in mg/dL, so a device added for one
-// has its own units set to mg/dL whatever the site's. Any other device, "other", follows the site.
-var mgdlClients = []string{"aaps", "trio", "loop", "xdrip", "xdrip4ios", "nightguard", "sugarpixel", "t1dcarer"}
+// deviceClients are the Nightscout clients a device can be added for, besides "other"
+var deviceClients = []string{"aaps", "trio", "loop", "xdrip", "xdrip4ios", "nightguard", "sugarpixel", "t1dcarer"}
 
 // clientMgdlLabels are how a client needs the Nightscout API to write mg/dL, where it is not mg/dL: xDrip4iOS reads a
 // BG check's glucose as mg/dL only when its units are exactly mg/dl, and otherwise uploads it again
@@ -66,7 +65,7 @@ func (s *IdentitiesCollection) CreateRow(ctx context.Context, collectionTx *site
 	if !slices.Contains(identityRoles, role) {
 		return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Unknown role: %s", model.Role))
 	}
-	if model.Client != "" && model.Client != "other" && !slices.Contains(mgdlClients, model.Client) {
+	if model.Client != "" && model.Client != "other" && !slices.Contains(deviceClients, model.Client) {
 		return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Unknown client: %s", model.Client))
 	}
 
@@ -103,7 +102,8 @@ func (s *IdentitiesCollection) CreateRow(ctx context.Context, collectionTx *site
 	if herr != nil {
 		return nil, herr
 	}
-	if slices.Contains(mgdlClients, model.Client) {
+	// A device has its own units set to mg/dL whatever the site's, as Nightscout clients expect, and most need
+	if role.GetType() == consts.IdentityTypeDevice {
 		if err := setUnitsMGDL(ctx, q, siteContext, created.ID, model.Client); err != nil {
 			return nil, err
 		}
@@ -114,8 +114,7 @@ func (s *IdentitiesCollection) CreateRow(ctx context.Context, collectionTx *site
 	return created, nil
 }
 
-// setUnitsMGDL sets the identity's own units to mg/dL, written as client needs, for a client that needs them, keeping
-// its other settings
+// setUnitsMGDL sets the identity's own units to mg/dL, written as its client needs, keeping its other settings
 func setUnitsMGDL(ctx context.Context, q *controldb.Queries, siteContext *httputils.SiteContext, identityID int64, client string) error {
 	identity, err := q.GetSiteIdentityByID(ctx, controldb.GetSiteIdentityByIDParams{SiteID: siteContext.SiteID, ID: identityID})
 	if err != nil {

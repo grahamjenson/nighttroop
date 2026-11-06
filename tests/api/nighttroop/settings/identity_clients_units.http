@@ -49,7 +49,7 @@ H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_EQUALS "mg/dl" "@settings.units"
 
-// Another device follows the site, in mmol/L
+// A device for any other client is in mg/dL too, as Nightscout clients expect, though the site is in mmol/L
 NAME create_other
 POST http://{{ site }}/settings/identities
 H Authorization: Bearer {{ jwt }}
@@ -58,8 +58,15 @@ B {"name": "display", "role": "device_read", "client": "other"}
 ASSERT_STATUS 201
 SET other_token {{ .create_other.result.ns_token }}
 
-NAME other_status_mmol
+NAME other_status_mg_dl
 GET http://{{ .ns_site }}/api/v1/status.json?token={{ .other_token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "mg/dl" "@settings.units"
+
+// The site's first phone follows the site, in mmol/L
+NAME phone_status_mmol
+GET http://{{ .ns_site }}/api/v1/status.json?token={{ token }}
 H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_EQUALS "mmol" "@settings.units"
