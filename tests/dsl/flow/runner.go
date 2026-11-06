@@ -3,10 +3,16 @@ package flow
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/mxschmitt/playwright-go"
 )
+
+// StepScreenshots is whether a screenshot is taken after every browser step, into allScreenshots, which about doubles
+// a browser test's time. It is set by FLOW_STEP_SCREENSHOTS, rather than go test -v, as -json, gotestsum and editors
+// run tests verbosely too.
+var StepScreenshots = os.Getenv("FLOW_STEP_SCREENSHOTS") != ""
 
 // Runner runs a flow's steps in order, all with the same context, so each sees what those before it got
 type Runner struct {
@@ -62,8 +68,7 @@ func (r *Runner) browse(t *testing.T, path string, i int, action Action, ctx map
 		t.Fatalf("page is nil after executing action: %s", action.ToFlatString())
 	}
 	r.Page = next
-	// A screenshot of every step is slow, so only take them with go test -v
-	if testing.Verbose() {
+	if StepScreenshots {
 		screenshotPath, err := ScreenshotPage(r.Page, "allScreenshots", path, fmt.Sprintf("%03d", i))
 		if err != nil {
 			t.Fatalf("failed to take screenshot: %v", err)
