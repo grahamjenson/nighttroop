@@ -124,5 +124,3 @@
 
 1. P4: A live site left out at start, its DB missing and not restored, is only a `site_db_missing` event; mark it on
    the control sites page too
-1. P3: When the server is busy, uploads from devices are refused as often as page loads; give Nightscout writes their
-   own share of the requests in flight, so glucose keeps arriving
