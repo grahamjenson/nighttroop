@@ -39,6 +39,12 @@ func SiteUnauthWithinRateLimit(serverConfig *config.ServerConfig, r *http.Reques
 	return WithinRateLimitAll(serverConfig.RateLimiters.SiteUnauthLimiter(siteContext.SiteID, siteContext.IPAddress))
 }
 
+// SiteUnauthSpent is whether an IP has no unauthenticated budget left on the site, without spending any of it
+func SiteUnauthSpent(serverConfig *config.ServerConfig, r *http.Request) bool {
+	siteContext := GetSiteContext(r.Context())
+	return serverConfig.RateLimiters.SiteUnauthLimiter(siteContext.SiteID, siteContext.IPAddress).Tokens() < 1
+}
+
 // //////
 // Once We know Who the user is then we can apply user-specific rate limiting
 // //////

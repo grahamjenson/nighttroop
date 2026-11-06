@@ -21,6 +21,13 @@ func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg *config.ServerConfig)
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 
+			// An IP out of its unauthenticated budget is refused before its token is checked, which can cost a bcrypt
+			if httputils.SiteUnauthSpent(cfg, r) {
+				w.WriteHeader(http.StatusTooManyRequests)
+				slog.InfoContext(ctx, "Site unauthenticated rate limit exceeded")
+				return
+			}
+
 			identityModel, keepGoing, err := tryAuthWithJWTToken(cfg, r)
 			if err == nil {
 
@@ -33,6 +40,8 @@ func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg *config.ServerConfig)
 			// If the JWT token is present but incorrect we need to stop
 			if !keepGoing {
 				slog.InfoContext(r.Context(), "JWT Auth Failed for Nightscout API", "error", err.Error())
+				// A failed auth spends the IP's budget on the site, as an authenticated request does not
+				httputils.SiteUnauthWithinRateLimit(cfg, r)
 				http.Error(w, "Unauthorized: Invalid JWT token", http.StatusUnauthorized)
 				return
 			}
@@ -48,6 +57,7 @@ func NightscoutAuthMiddleware(controlDB *db.ControlDB, cfg *config.ServerConfig)
 			}
 
 			slog.InfoContext(r.Context(), "JWT and Legacy Token Auth Failed for Nightscout API", "error", err.Error())
+			httputils.SiteUnauthWithinRateLimit(cfg, r)
 			http.Error(w, "Unauthorized: No valid authentication method found", http.StatusUnauthorized)
 		})
 	}

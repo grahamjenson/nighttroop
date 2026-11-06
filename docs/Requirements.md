@@ -511,6 +511,9 @@ focus back to the row or button that opened it.
   out, so the server still starts and the rest of its batch is still backed up.
 - Old records' raw JSON is cleared after `TRUNCATE_RECORDS_AFTER_DAYS`.
 - Reads and writes are rate limited per site, identity and IP, and live sessions per site are capped.
+- A Nightscout request that fails auth, or needs none, spends its IP's budget on the site
+  (`SITE_UNAUTH_PER_MINUTE_LIMIT`); one with a valid token does not, so a device uploading often from one IP is limited
+  only by its site and identity. An IP that has spent it is refused before its token is checked.
 - Past the requests the server can work on at once (`REQUESTS_IN_FLIGHT_PER_CPU`) and a short queue
   (`REQUESTS_BACKLOG_PER_CPU`, waiting up to 5 seconds), a request is refused at once with 503 and `Retry-After`, so a
   server that falls behind answers what it can rather than every request timing out. The health check, live updates

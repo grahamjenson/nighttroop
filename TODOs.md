@@ -134,8 +134,6 @@
 
 1. P4: A live site left out at start, its DB missing and not restored, is only a `site_db_missing` event; mark it on
    the control sites page too
-1. P2: A site's Nightscout API is limited to `SITE_UNAUTH_PER_MINUTE_LIMIT` (60 a minute) from one IP even with a
-   valid token, as the unauthenticated limit runs before auth on every Nightscout request, not only on failed ones
 1. P3: When the server is busy, uploads from devices are refused as often as page loads; give Nightscout writes their
    own share of the requests in flight, so glucose keeps arriving
 1. P3: A cancelled or timed out request is logged as an error at each layer it passes, sending several Sentry events
