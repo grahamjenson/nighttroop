@@ -25,6 +25,13 @@ type CollectionEvents interface {
 	Watches(event events.Event, siteContext *httputils.SiteContext) bool
 }
 
+// CollectionEventsHidden is a collection whose stream is told of some changes to its own rows it may not read, as a
+// non-admin's settings are of the site's, which they inherit; those are sent as {}
+type CollectionEventsHidden interface {
+	// Hides is whether a change to one of the collection's own rows is sent as {} to the identity streaming it
+	Hides(event events.Event, siteContext *httputils.SiteContext) bool
+}
+
 const (
 	// maxEventStreamsPerSite stops one site holding open as many connections as it likes
 	maxEventStreamsPerSite = 20
@@ -49,6 +56,10 @@ func EventsHandler[R, M any](collection CollectionBase[R, M]) http.HandlerFunc {
 	}
 	if c, ok := collection.(CollectionEvents); ok {
 		watches = c.Watches
+	}
+	hides := func(events.Event, *httputils.SiteContext) bool { return false }
+	if c, ok := collection.(CollectionEventsHidden); ok {
+		hides = c.Hides
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -119,7 +130,7 @@ func EventsHandler[R, M any](collection CollectionBase[R, M]) http.HandlerFunc {
 				_, err = io.WriteString(w, ": ping\n\n")
 			case event := <-changes:
 				data := []byte("{}")
-				if row, own := event.Model.(*R); own {
+				if row, own := event.Model.(*R); own && !hides(event, siteContext) {
 					if data, err = json.Marshal(collection.ToModel(row, siteContext)); err != nil {
 						return
 					}

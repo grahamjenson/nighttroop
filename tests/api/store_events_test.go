@@ -150,7 +150,8 @@ func TestPushRegistrationEventsStreamToTheirIdentityAlone(t *testing.T) {
 	require.Contains(t, data, `"bundle_id":"com.KITCHEN123.loopkit.Loop"`)
 }
 
-// An identity streaming its settings' changes is sent its own, not the site's or another identity's
+// An identity streaming its settings' changes is sent its own, not another identity's, and told the site's changed,
+// which it inherits, without being sent them unless it is an admin
 func TestSettingsEventsStreamToTheirIdentityAlone(t *testing.T) {
 	config, controlDB, site := testutils.NewControlDBWithSite(t)
 	ts := httptest.NewServer(server.GetMainHandler(controlDB, config))
@@ -177,15 +178,25 @@ func TestSettingsEventsStreamToTheirIdentityAlone(t *testing.T) {
 
 	stream := bufio.NewReader(request(consts.FIRST_READ_ONLY_NAME, consts.IdentityRoleDeviceRead, http.MethodGet, "/settings/identity/events", "").Body)
 
-	// The admin changing the site's settings and the phone its own are not streamed to the read only device; the
-	// device changing its own is
+	next := func() (string, string) {
+		event, err := stream.ReadString('\n')
+		require.NoError(t, err)
+		data, err := stream.ReadString('\n')
+		require.NoError(t, err)
+		_, err = stream.ReadString('\n')
+		require.NoError(t, err)
+		return event, data
+	}
+
+	// The admin changing the site's settings is streamed to the read only device as {}; the phone changing its own is
+	// not; the device changing its own is, with them
 	request(consts.FIRST_ADMIN_NAME, consts.IdentityRoleAdmin, http.MethodPost, "/settings/site", `{"timezone": "Pacific/Chatham"}`)
 	request(consts.FIRST_PWD_NAME, consts.IdentityRoleDevicePWDPhone, http.MethodPost, "/settings/identity", `{"timezone": "Asia/Tokyo"}`)
 	request(consts.FIRST_READ_ONLY_NAME, consts.IdentityRoleDeviceRead, http.MethodPost, "/settings/identity", `{"timezone": "Europe/Paris"}`)
-	event, err := stream.ReadString('\n')
-	require.NoError(t, err)
+	event, data := next()
 	require.Equal(t, "event: updated\n", event)
-	data, err := stream.ReadString('\n')
-	require.NoError(t, err)
+	require.Equal(t, "data: {}\n", data)
+	event, data = next()
+	require.Equal(t, "event: updated\n", event)
 	require.Contains(t, data, `"timezone":"Europe/Paris"`)
 }

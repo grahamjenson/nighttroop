@@ -227,12 +227,13 @@ func TestEventsHandlerStreamsSettingsToWhoseTheyAre(t *testing.T) {
 		name       string
 		collection *sitesettings.SettingsCollection
 		role       consts.IdentityRole
-		// published are the changes made, the last always streamed, and want those streamed
+		// published are the changes made, the last always streamed, and want those streamed, {} for one told of but
+		// not shown
 		published, want []string
 	}{
-		{"a user's own", &sitesettings.SettingsCollection{}, consts.IdentityRoleUser, []string{"site", "other", "own"}, []string{"own"}},
-		{"a read only device's own", &sitesettings.SettingsCollection{}, consts.IdentityRoleDeviceRead, []string{"other", "site", "own"}, []string{"own"}},
-		{"a user's alarms", &sitesettings.SettingsCollection{Alarms: true}, consts.IdentityRoleUser, []string{"site", "other", "own"}, []string{"own"}},
+		{"a user's own and that the site's changed", &sitesettings.SettingsCollection{}, consts.IdentityRoleUser, []string{"site", "other", "own"}, []string{"{}", "own"}},
+		{"a read only device's own and that the site's changed", &sitesettings.SettingsCollection{}, consts.IdentityRoleDeviceRead, []string{"other", "site", "own"}, []string{"{}", "own"}},
+		{"a user's alarms and that the site's changed", &sitesettings.SettingsCollection{Alarms: true}, consts.IdentityRoleUser, []string{"site", "other", "own"}, []string{"{}", "own"}},
 		{"an admin's own and the site's", &sitesettings.SettingsCollection{}, consts.IdentityRoleAdmin, []string{"other", "site", "own"}, []string{"site", "own"}},
 		{"an admin's alarms and the site's", &sitesettings.SettingsCollection{Alarms: true}, consts.IdentityRoleAdmin, []string{"other", "site", "own"}, []string{"site", "own"}},
 		{"the site's", &sitesettings.SettingsCollection{Site: true}, consts.IdentityRoleAdmin, []string{"other", "own", "site"}, []string{"site"}},
@@ -247,6 +248,10 @@ func TestEventsHandlerStreamsSettingsToWhoseTheyAre(t *testing.T) {
 				streams.bus.Publish("site-a", events.Event{SiteID: "site-a", Action: events.Updated, Model: changes[change]})
 			}
 			for _, want := range test.want {
+				if want == "{}" {
+					require.True(t, strings.HasPrefix(nextEvent(t, stream), "event: updated\ndata: {}\n"), "want {}")
+					continue
+				}
 				require.True(t, strings.HasPrefix(nextEvent(t, stream), "event: updated\ndata: {\"units\":\""+want+"\""), "want %s", want)
 			}
 		})
