@@ -134,7 +134,7 @@ func (b *SyncJobManager) backfillNightscout(ctx context.Context, syncInfo *SyncJ
 				return added, fmt.Errorf("NightscoutBackfill Error: %w", err)
 			}
 			oldest := oldestDate(docs, before)
-			created, err := b.createNightscoutDocuments(ctx, syncInfo, c.collection, docs)
+			created, err := b.createNightscoutDocuments(ctx, syncInfo, c.collection, docs, false)
 			added += created
 			if err != nil {
 				return added, err

@@ -59,6 +59,9 @@ func documentsEndpoint(nsURL string, collection string, gteDate int64, lteDate i
 	}
 	return endpoint
 }
+func currentProfileEndpoint(nsURL string) string {
+	return fmt.Sprintf("%s/api/v1/profile/current", nsURL)
+}
 func lastModifiedEndpoint(nsURL string) string {
 	return fmt.Sprintf("%s/api/v3/lastModified", nsURL)
 }
@@ -125,7 +128,10 @@ func (c *Client) doRequest(
 	// Only TestValidURL is faked: a test that sets a JWT and an httptest URL goes over HTTP.
 	if testing.Testing() && c.baseURL == TestValidURL {
 		if url == lastModifiedEndpoint(c.baseURL) {
-			return map[string]any{"result": map[string]any{"collections": map[string]any{"entries": float64(TestLastModified), "treatments": float64(TestLastModified), "devicestatus": float64(TestLastModified)}}}, nil
+			return map[string]any{"result": map[string]any{"collections": map[string]any{"entries": float64(TestLastModified), "treatments": float64(TestLastModified), "devicestatus": float64(TestLastModified), "profile": float64(TestLastModified)}}}, nil
+		}
+		if url == currentProfileEndpoint(c.baseURL) {
+			return map[string]any{"result": append([]any{}, TestDocuments["profile"]...)}, nil
 		}
 		collection, _, _ := strings.Cut(strings.TrimPrefix(url, c.baseURL+"/api/v3/"), "?")
 		return map[string]any{"result": append([]any{}, TestDocuments[collection]...)}, nil
@@ -167,17 +173,26 @@ func (c *Client) doRequest(
 	return parseResult(resp.Body)
 }
 
-// parseResult decodes a Nightscout response body of at most maxResponseBytes into a map.
+// parseResult decodes a Nightscout response body of at most maxResponseBytes into a map. A v1 list, as another
+// Nighttroop gives its current profile, is the map's result, as v3 gives one.
 func parseResult(body io.Reader) (map[string]any, error) {
 	data, err := httputils.ReadLimitedBody(body, maxResponseBytes)
 	if err != nil {
 		return nil, err
 	}
-	var result map[string]any
+	var result any
 	if err := json.Unmarshal(data, &result); err != nil {
 		return nil, err
 	}
-	return result, nil
+	switch result := result.(type) {
+	case map[string]any:
+		return result, nil
+	case []any:
+		return map[string]any{"result": result}, nil
+	case nil:
+		return map[string]any{}, nil
+	}
+	return nil, fmt.Errorf("NSClient response is not an object or a list")
 }
 
 type JWTAuthResponse struct {
@@ -274,6 +289,26 @@ func (c *Client) GetLastModified(ctx context.Context) (map[string]int64, error) 
 //
 // DOCUMENTS
 //
+
+// GetCurrentProfile returns the newest profile store, by its startDate, however it was saved, or nil when there is
+// none. Nightscout gives it as an object, and another Nighttroop as a list of it.
+func (c *Client) GetCurrentProfile(ctx context.Context) (map[string]any, error) {
+	resp, err := c.doRequest(ctx, http.MethodGet, currentProfileEndpoint(c.baseURL))
+	if err != nil {
+		return nil, fmt.Errorf("NSClient Get Current Profile Error %s: %w", c.baseURL, err)
+	}
+	if list, ok := resp["result"].([]any); ok {
+		profiles, err := documentsFromResult(list)
+		if err != nil || len(profiles) == 0 {
+			return nil, err
+		}
+		return profiles[0], nil
+	}
+	if _, ok := resp["store"]; !ok {
+		return nil, nil
+	}
+	return resp, nil
+}
 
 // GetDocuments returns up to count of a collection's newest documents, such as entries or treatments, dated from
 // afterTime, and up to beforeTime unless it is zero
