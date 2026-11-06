@@ -182,7 +182,7 @@ func ArchivedSitesTable(sites []*controlmodels.Site, skip int64, limit int64) te
 							}()
 						}
 						ctx = templ.InitializeContext(ctx)
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "DB Size (KB)")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "DB Size (MB)")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
@@ -414,7 +414,7 @@ func archivedSiteRow(site *controlmodels.Site) templ.Component {
 				}
 				ctx = templ.InitializeContext(ctx)
 				var templ_7745c5c3_Var22 string
-				templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(site.EstimatedDbSizeKb))
+				templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(sizeMB(site.EstimatedDbSizeKb))
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/archived_sites.templ`, Line: 68, Col: 35}
 				}

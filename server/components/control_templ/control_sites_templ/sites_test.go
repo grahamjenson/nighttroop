@@ -29,3 +29,21 @@ func TestSiteModalTruncate(t *testing.T) {
 		})
 	}
 }
+
+// A site's DB size, kept in KB, is shown in MB
+func TestSizeMB(t *testing.T) {
+	size := func(kb int64) *int64 { return &kb }
+	for _, test := range []struct {
+		kb   *int64
+		want string
+	}{
+		{nil, "-"},
+		{size(0), "0.00"},
+		{size(40), "0.04"},
+		{size(1024), "1.00"},
+		{size(3000), "2.93"},
+		{size(512000), "500.00"},
+	} {
+		require.Equal(t, test.want, sizeMB(test.kb))
+	}
+}
