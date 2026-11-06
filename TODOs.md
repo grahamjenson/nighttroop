@@ -1,13 +1,10 @@
 # TODOs
 
-## Before Alpha Testing
+## Alpha Testing
 
-1. Deploy a staging server ([docs/deploy/hostinger.md](docs/deploy/hostinger.md)) with S3 backups and `SENTRY_DSN` set,
-   and check a fresh server restores from those backups
-1. Test end to end with real devices: Loop, Trio, AAPS and xDrip+ uploading, follower apps (xDrip+ follower, LoopFollow,
+1. Point real deivces at Loop, Trio, AAPS and xDrip+ uploading, follower apps (xDrip+ follower, LoopFollow,
    Nightguard) reading, and Dexcom and Libre sync
-1. A tester guide: creating a site, keeping its credentials safe (they cannot be recovered), and connecting uploaders,
-   followers and sync
+1. Automated Testing of the staging, create site, do a bunch of stuff
 
 ## Before Beta Testing
 
@@ -47,9 +44,8 @@
 
 ## Before First Release:
 
-1. Think about Translations
+1. Translations
 1. Docs hosting
-1. Fuzz testing beyond the API (`tests/api/fuzz_test.go`)
 1. P3: Add event groups (list, get, add, edit, delete and the events to group) to `clients/nighttroop/openapi.json`
    and its client
 1. P4: Tag each endpoint in `clients/nighttroop/openapi.json` (site, data, settings, Nightscout), so the API docs'
