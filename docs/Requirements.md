@@ -397,7 +397,9 @@ focus back to the row or button that opened it.
 - An entry uploaded without an `_id` with the date, type and device of one stored takes its new value, direction and
   raw values, as xDrip4iOS smooths readings, and followers get it as changed; one sent with the same values changes
   nothing, not even when it was last modified.
-- A `created_at` filter given a time with no zone, as LoopFollow sends it, reads it as UTC.
+- A `created_at` filter given a time with no zone, as LoopFollow sends it, reads it as UTC. So does one given only to
+  the minute, such as `find[created_at][$gte]=2026-11-06T04:46`, as some clients send it; to the minute with a zone,
+  it is that time in its zone.
 - Loop's and Trio's Suspend Pump and Resume Pump treatments are kept.
 - An activity's `type`, as xDrip+ sends it, is its activity type, a heart rate's `bpm` its heart rate and a motion's
   `class` its name.
