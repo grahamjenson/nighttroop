@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/mxschmitt/playwright-go"
 	"github.com/stretchr/testify/require"
@@ -64,4 +65,33 @@ func TestPathAssertWaitsForThePage(t *testing.T) {
 	_, err = page.Goto(server.URL + "/first")
 	require.NoError(t, err)
 	require.NoError(t, (&AssertPath{URLPath: "/next"}).Execute(t, map[string]any{}, page, nil))
+}
+
+// The first "Settings" is in a closed menu, and the second is shown, as on a page with a settings menu, and a toast
+// covers the button for half a second, as one does after a save
+const hiddenFirstPage = `<html><body>
+<nav hidden><a>Settings</a></nav>
+<h1>Settings</h1>
+<button id="save" style="position: absolute; top: 0">Save</button>
+<div id="toast" style="position: absolute; top: 0; width: 200px; height: 50px; background: white">Saved</div>
+<script>setTimeout(() => document.getElementById("toast").remove(), 500)</script>
+</body></html>`
+
+// A visible match is found as soon as it is shown, without waiting for the hidden one before it, and a covered element
+// is waited for until it is uncovered
+func TestVisibleAssertsWaitOnlyAsLongAsNeeded(t *testing.T) {
+	pw, err := playwright.Run()
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = pw.Stop() })
+	browser, err := pw.Chromium.Launch()
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = browser.Close() })
+
+	page, err := browser.NewPage()
+	require.NoError(t, err)
+	require.NoError(t, page.SetContent(hiddenFirstPage))
+	start := time.Now()
+	require.NoError(t, (&AssertTextVisible{Text: "Settings"}).Execute(t, map[string]any{}, page, nil))
+	require.Less(t, time.Since(start), time.Second)
+	require.NoError(t, (&AssertVisible{Locator: "#save"}).Execute(t, map[string]any{}, page, nil))
 }
