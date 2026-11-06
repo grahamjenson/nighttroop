@@ -32,6 +32,11 @@ func inactive(ctx context.Context, site *controlmodels.Site) bool {
 	return site.Inactive(controlContext.ControlDB.ServerConfig.DisableAfterInactivityDays, time.Now())
 }
 
+// dbMissing is whether a live site was left out at start, its DB missing and not restored, so it is not served
+func dbMissing(site *controlmodels.Site) bool {
+	return site.State == "live" && site.DbMissingAt != nil
+}
+
 // isAdmin is whether the control identity is an admin, who can create sites
 func isAdmin(ctx context.Context) bool {
 	controlContext := httputils.GetControlContext(ctx)
@@ -246,6 +251,9 @@ templ siteRow(site *controlmodels.Site) {
 			if inactive(ctx, site) {
 				<span id={ "control--site--" + site.ID + "--inactive" } class="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800">inactive</span>
 			}
+			if dbMissing(site) {
+				<span id={ "control--site--" + site.ID + "--db-missing" } title={ "Not served since " + formatDate(site.DbMissingAt) } class="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-800">DB missing</span>
+			}
 		}
 		@table.Cell() {
 			{ formatDate(&site.CreatedAt) }
@@ -280,6 +288,9 @@ templ SiteModal(site *controlmodels.Site) {
 			@siteDetail("Disabled", formatDate(site.DisabledAt))
 			@siteDetail("Archived", formatDate(site.ArchivedAt))
 			@siteDetail("Deleted", formatDate(site.DeletedAt))
+			if dbMissing(site) {
+				@siteDetail("DB Missing, Not Served Since", formatDate(site.DbMissingAt))
+			}
 		</dl>
 		<div id="control--site--identities" hx-get={ "/sites/" + site.ID + "/identities" } hx-trigger="load" hx-swap="innerHTML"></div>
 	}

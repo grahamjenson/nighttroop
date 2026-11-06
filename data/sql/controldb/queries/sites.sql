@@ -75,6 +75,13 @@ SELECT id FROM sites WHERE state = 'live' AND (
 -- name: GetLiveAndDisabledSites :many
 SELECT * FROM sites WHERE state IN ('live', 'disabled');
 
+-- name: MarkSitesDBMissing :exec
+-- The sites a start left out, as their DBs are missing, keeping when each was first, and no other
+UPDATE sites
+SET db_missing_at = CASE WHEN id IN (SELECT value FROM json_each(sqlc.arg('IDs')))
+    THEN COALESCE(db_missing_at, CAST(unixepoch('subsec') * 1000 AS INTEGER)) END
+WHERE db_missing_at IS NOT NULL OR id IN (SELECT value FROM json_each(sqlc.arg('IDs')));
+
 
 -- name: GetSitesToDisable :many
 -- @param last_seen_at INT

@@ -15,6 +15,8 @@ type Site struct {
 	DisabledAt        *int64 `json:"disabled_at"`
 	ArchivedAt        *int64 `json:"archived_at"`
 	DeletedAt         *int64 `json:"deleted_at"`
+	// DbMissingAt is when a start found the live site's DB missing and could not restore it, so it is not served
+	DbMissingAt *int64 `json:"db_missing_at"`
 }
 
 // Inactive is whether the site has not been written to, or not been seen, in the days before now; one never written

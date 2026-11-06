@@ -365,6 +365,7 @@ func TestRestoreMissingSites(t *testing.T) {
 }
 
 // Without S3 a live site whose DB file is missing is left out, and the control admin sees it as a site_db_missing event
+// and marked on the sites page, until a start finds it is no longer missing
 func TestRestoreMissingSitesWithoutS3(t *testing.T) {
 	cfg := *testutils.GetTestServerConfig()
 	cfg.Mode = consts.Development
@@ -389,6 +390,15 @@ func TestRestoreMissingSitesWithoutS3(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, found, 1)
 	require.JSONEq(t, `{"restored":false,"reason":"s3_not_working"}`, *found[0].Attributes)
+	site, err := controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: siteID})
+	require.NoError(t, err)
+	require.NotNil(t, site.DbMissingAt)
+
+	// A start with none missing unmarks it
+	require.NoError(t, controlDB.RestoreMissingSites(ctx, s3utils.NewS3Client(&cfg).DownloadFilesFromS3))
+	site, err = controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: siteID})
+	require.NoError(t, err)
+	require.Nil(t, site.DbMissingAt)
 }
 
 // A missing site restored from its batch's backup that cannot be opened, as when its migration fails, stops the start,

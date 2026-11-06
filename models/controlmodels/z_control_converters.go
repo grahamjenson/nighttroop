@@ -279,6 +279,10 @@ func SiteFromDB(source *controldb.Site) *Site {
 			xint647 := *(*source).DeletedAt
 			controlmodelsSite.DeletedAt = &xint647
 		}
+		if (*source).DbMissingAt != nil {
+			xint648 := *(*source).DbMissingAt
+			controlmodelsSite.DbMissingAt = &xint648
+		}
 		pControlmodelsSite = &controlmodelsSite
 	}
 	return pControlmodelsSite

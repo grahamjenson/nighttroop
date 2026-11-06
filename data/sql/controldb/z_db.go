@@ -162,6 +162,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.hydrateSiteStmt, err = db.PrepareContext(ctx, hydrateSite); err != nil {
 		return nil, fmt.Errorf("error preparing query HydrateSite: %w", err)
 	}
+	if q.markSitesDBMissingStmt, err = db.PrepareContext(ctx, markSitesDBMissing); err != nil {
+		return nil, fmt.Errorf("error preparing query MarkSitesDBMissing: %w", err)
+	}
 	if q.pushCredentialForStmt, err = db.PrepareContext(ctx, pushCredentialFor); err != nil {
 		return nil, fmt.Errorf("error preparing query PushCredentialFor: %w", err)
 	}
@@ -484,6 +487,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing hydrateSiteStmt: %w", cerr)
 		}
 	}
+	if q.markSitesDBMissingStmt != nil {
+		if cerr := q.markSitesDBMissingStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing markSitesDBMissingStmt: %w", cerr)
+		}
+	}
 	if q.pushCredentialForStmt != nil {
 		if cerr := q.pushCredentialForStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing pushCredentialForStmt: %w", cerr)
@@ -714,6 +722,7 @@ type Queries struct {
 	getSyncReportsToRunStmt                 *sql.Stmt
 	getSyncSourceStmt                       *sql.Stmt
 	hydrateSiteStmt                         *sql.Stmt
+	markSitesDBMissingStmt                  *sql.Stmt
 	pushCredentialForStmt                   *sql.Stmt
 	recordPushStmt                          *sql.Stmt
 	resetSiteAdminCredentialsStmt           *sql.Stmt
@@ -795,6 +804,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getSyncReportsToRunStmt:                 q.getSyncReportsToRunStmt,
 		getSyncSourceStmt:                       q.getSyncSourceStmt,
 		hydrateSiteStmt:                         q.hydrateSiteStmt,
+		markSitesDBMissingStmt:                  q.markSitesDBMissingStmt,
 		pushCredentialForStmt:                   q.pushCredentialForStmt,
 		recordPushStmt:                          q.recordPushStmt,
 		resetSiteAdminCredentialsStmt:           q.resetSiteAdminCredentialsStmt,

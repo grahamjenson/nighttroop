@@ -568,6 +568,16 @@ func (m *Site) SetDeletedAt(v *int64) {
 	m.DeletedAt = v
 }
 
+// GetDbMissingAt returns the DbMissingAt value.
+func (m Site) GetDbMissingAt() *int64 {
+	return m.DbMissingAt
+}
+
+// SetDbMissingAt sets the DbMissingAt value and returns the updated Site.
+func (m *Site) SetDbMissingAt(v *int64) {
+	m.DbMissingAt = v
+}
+
 // GetUnits returns the Units value.
 func (m Site) GetUnits() *consts.Units {
 	return m.Units
@@ -4606,6 +4616,16 @@ func (m HydrateSiteParams) GetID() string {
 // SetID sets the ID value and returns the updated HydrateSiteParams.
 func (m *HydrateSiteParams) SetID(v string) {
 	m.ID = v
+}
+
+// GetIDs returns the IDs value.
+func (m MarkSitesDBMissingParams) GetIDs() interface{} {
+	return m.IDs
+}
+
+// SetIDs sets the IDs value and returns the updated MarkSitesDBMissingParams.
+func (m *MarkSitesDBMissingParams) SetIDs(v interface{}) {
+	m.IDs = v
 }
 
 // GetNewHash returns the NewHash value.

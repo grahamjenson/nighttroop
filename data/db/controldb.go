@@ -133,6 +133,7 @@ var ErrRestoredSiteCannotOpen = errors.New("a restored site's DB cannot be opene
 // ErrRestoredSiteCannotOpen, so the start fails and a release that cannot open it is rolled back rather than kept.
 func (db *ControlDB) RestoreMissingSites(ctx context.Context, download s3utils.DownloadFunc) error {
 	var cannotOpen error
+	leftOut := []string{}
 	byBatch := map[string][]string{}
 	for _, siteID := range db.missingSites {
 		byBatch[siteID[:1]] = append(byBatch[siteID[:1]], siteID)
@@ -159,8 +160,14 @@ func (db *ControlDB) RestoreMissingSites(ctx context.Context, download s3utils.D
 				db.Logs.SiteDBMissingEvent(aslog.WithSite(ctx, siteID), siteID, true, "")
 			} else {
 				db.Logs.SiteDBMissingEvent(aslog.WithSite(ctx, siteID), siteID, false, reason)
+				leftOut = append(leftOut, siteID)
 			}
 		}
+	}
+	// The control sites page marks those left out, and no longer marks one whose DB is back
+	ids, _ := json.Marshal(leftOut)
+	if err := db.Queries.MarkSitesDBMissing(ctx, controldb.MarkSitesDBMissingParams{IDs: string(ids)}); err != nil {
+		slog.ErrorContext(ctx, "Cannot mark the sites whose DBs are missing", "error", err)
 	}
 	return cannotOpen
 }

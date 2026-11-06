@@ -52,6 +52,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   sites and a site's details, with its DB size limit.
 - Sites can be ordered by how long since they were last written to (the first to archive) or by DB size.
 - A site not written to or seen within `DISABLE_AFTER_INACTIVITY_DAYS` is marked inactive.
+- A live site left out at start, its DB missing and not restored, is marked "DB missing", and its details say since
+  when it has not been served, until a start opens its DB again.
 - Clicking a site shows its details.
 - An admin can create a site at an ID they pick (8 lowercase letters), e.g. a vanity one; a taken ID is refused. Its
   credentials are shown once. An admin can create sites past `MAX_SITES` and while public site creation is off.

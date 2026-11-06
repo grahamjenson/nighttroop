@@ -42,6 +42,8 @@ CREATE TABLE sites (
     disabled_at INTEGER,
     archived_at INTEGER,
     deleted_at INTEGER,
+    -- a start found the live site's DB missing and could not restore it, so it is not served; NULL once it opens
+    db_missing_at INTEGER,
 
     ---------------
     -- SITE SETTINGS

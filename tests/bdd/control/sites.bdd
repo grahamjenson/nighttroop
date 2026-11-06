@@ -32,6 +32,8 @@ ASSERT_TEXT_VISIBLE Never
 // States are capitalised like the rest of the table
 ASSERT_VISIBLE #controlSitesTable td >> text=/^Live/ >> nth=0
 ASSERT_NOT_VISIBLE #controlSitesTable td >> text=/^live/
+// A site whose DB opened at start is not marked as missing it; one left out is (a unit test, as DBs here are in memory)
+ASSERT_NOT_VISIBLE "DB missing"
 SCREENSHOT sites
 
 // The sites can be ordered by how long since they were written to, the first to archive, or by DB size
@@ -54,6 +56,7 @@ ASSERT_VISIBLE #control--site--details
 ASSERT_TEXT_VISIBLE Last Write
 // A site within its DB size limit cannot be truncated
 ASSERT_NOT_VISIBLE #control--site--truncate
+ASSERT_NOT_VISIBLE "DB Missing, Not Served Since"
 SCREENSHOT site_details
 
 CLICK #control--site--details--close

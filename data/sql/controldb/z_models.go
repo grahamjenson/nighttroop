@@ -79,6 +79,7 @@ type Site struct {
 	DisabledAt                       *int64
 	ArchivedAt                       *int64
 	DeletedAt                        *int64
+	DbMissingAt                      *int64
 	Units                            *consts.Units
 	UnitsMgdlLabel                   *string
 	UnitsMmolLabel                   *string
