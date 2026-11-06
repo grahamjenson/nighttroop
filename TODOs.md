@@ -38,6 +38,10 @@
     1. Testing deploy with rolling to a new keyset, moving to a new encrypted keyset.
     1. P4: A change to the site's settings is not streamed to a non-admin's `/settings/identity/events`, though its
        inherited values change; send it `{}`, as the summary is sent other models' changes, rather than the site's
+    1. P2: Download the logs DB from the control site, so staging's captured requests (`CAPTURE_REQUESTS`) can be
+       read and turned into tests
+    1. P3: Capture each Socket.IO message on staging, as `CAPTURE_REQUESTS` keeps a websocket's upgrade but not its
+       messages
     1. P3: Refresh the built in DB-IP country database (`utils/geoip/dbip-country-lite.mmdb`) each month or two, as
        DB-IP updates it monthly; the Docker image's city database is fetched fresh on each build.
 

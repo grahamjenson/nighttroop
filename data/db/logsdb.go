@@ -1,6 +1,7 @@
 package db
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -27,10 +28,12 @@ type LogsDB struct {
 	stopOnce   sync.Once
 }
 
-// maxMessageLength and maxAttributesLength are the longest message and attributes JSON the tables keep
+// maxMessageLength and maxAttributesLength are the longest message and attributes JSON the tables keep, but for a
+// captured request's, which can be up to maxCaptureLength
 const (
 	maxMessageLength    = 1024
 	maxAttributesLength = 4096
+	maxCaptureLength    = 262144
 )
 
 func NewLogsDB(ctx context.Context, cfg *config.ServerConfig) (*LogsDB, error) {
@@ -111,6 +114,21 @@ func (l *LogsDB) Log(ctx context.Context, siteID *string, level LogLevel, messag
 	requestID, jobID := aslog.IDs(ctx)
 	l.record("log", l.Queries.InsertLog(ctx, logsdb.InsertLogParams{SiteID: siteID, Level: string(level), Message: truncate(message), Attributes: attributesJSON(attrs),
 		RequestID: orNil(requestID), JobID: orNil(jobID), CreatedAt: time.Now().UnixMilli()}))
+}
+
+// Capture records a request and its response, with their headers and bodies, as an info log with attributes of up
+// to maxCaptureLength. A page's HTML is kept as it is, not with each < and > escaped, which would make it far longer.
+func (l *LogsDB) Capture(ctx context.Context, siteID *string, message string, attributes map[string]any) {
+	var raw bytes.Buffer
+	encoder := json.NewEncoder(&raw)
+	encoder.SetEscapeHTML(false)
+	captured := `{"truncated":true}`
+	if encoder.Encode(attributes) == nil && raw.Len() <= maxCaptureLength {
+		captured = strings.TrimSuffix(raw.String(), "\n")
+	}
+	requestID, jobID := aslog.IDs(ctx)
+	l.record("capture", l.Queries.InsertLog(ctx, logsdb.InsertLogParams{SiteID: siteID, Level: string(LogLevelInfo), Message: truncate(message),
+		Attributes: &captured, RequestID: orNil(requestID), JobID: orNil(jobID), CreatedAt: time.Now().UnixMilli()}))
 }
 
 // publish sends an event through the server's events, and keeps it in the events table when it is persisted

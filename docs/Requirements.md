@@ -107,6 +107,11 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - Every DB query is timed, until its rows are read, and one that takes `SLOW_QUERY_MS` (100 ms) or longer is logged as
   a `Slow query` with its DB, its query's name, how long it took and how many rows it gave, but never its values, and
   the request, site and identity it was for. A write transaction waiting for the write lock is logged as `BEGIN`.
+- A staging server with `CAPTURE_REQUESTS=true` keeps each request and its response as a `Captured <method> <path>`
+  log, with its site, identity, IP address, status, how long it took, and its headers and bodies, each body up to
+  64 KB, as text or, when it is not text, base64. Authorization, cookies, API secrets, tokens and passwords are
+  `REDACTED` in its headers, query, path and JSON or form bodies. A page's styles, scripts, images and fonts are not
+  kept, nor the bodies of event streams and Socket.IO connections. Any other server keeps none.
 - Each sign in to the control site, and each refused one, is an event with the country (and city, where the server
   has DB-IP's City Lite) its IP address is estimated to be from. The IP address itself is not kept.
 

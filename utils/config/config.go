@@ -106,6 +106,10 @@ type ServerConfig struct {
 	// a real one: a staging server always is
 	TestSite bool
 
+	// CaptureRequests, in staging, keeps every request and its response, with their headers and bodies, as a log in
+	// the logs DB, to see and download what clients such as Loop, AAPS and Trio send
+	CaptureRequests bool
+
 	// StagingAdminPassword and StagingAdminTOTPSecret, in staging, are the control admin made when it starts without
 	// one, so wiping its data never needs it set up again. The TOTP secret is base32, as authenticator apps take it.
 	StagingAdminPassword   string
@@ -323,6 +327,8 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		SupportEmail: configStringSelect(dotenv, "SUPPORT_EMAIL", DefaultSupportEmail),
 		FeedbackURL:  configStringSelect(dotenv, "FEEDBACK_URL", ""),
 		TestSite:     mode == consts.Staging,
+		// Read in every mode, but only on in staging, as it keeps sites' data in the logs
+		CaptureRequests: configStringSelect(dotenv, "CAPTURE_REQUESTS", "") == "true" && mode == consts.Staging,
 
 		StagingAdminPassword:   configStringSelect(dotenv, "STAGING_ADMIN_PASSWORD", ""),
 		StagingAdminTOTPSecret: configStringSelect(dotenv, "STAGING_ADMIN_TOTP_SECRET", ""),
@@ -677,6 +683,7 @@ func printServerConfig(config ServerConfig) {
 	slog.Info("Server Config",
 		"Mode", map[consts.ServerMode]string{consts.Production: "Production", consts.Development: "Development", consts.Test: "Test", consts.Staging: "Staging"}[config.Mode],
 		"Deployment", config.Deployment,
+		"CaptureRequests", config.CaptureRequests,
 		"Host", fmt.Sprintf("%s://%s:%d", config.HostProtocol, config.HostName, config.HostPort),
 		"S3", fmt.Sprintf("%s/%s", config.S3URL, config.S3Bucket),
 		"TrustedProxies", config.TrustedProxies,

@@ -67,6 +67,11 @@ func deleteKey(attrs []slog.Attr, key string) []slog.Attr {
 	return kept
 }
 
+// Attrs are what is logged with ctx, such as its request's site and identity once they are known
+func Attrs(ctx context.Context) []slog.Attr {
+	return attrsOf(ctx)
+}
+
 func attrsOf(ctx context.Context) []slog.Attr {
 	if ctx == nil {
 		return nil

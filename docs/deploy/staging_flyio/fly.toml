@@ -14,6 +14,8 @@ swap_size_mb = 512
   MODE = "staging"
   # Its name in Sentry; a deploy names it after its Fly app (--env DEPLOYMENT=<app>), so each staging server has its own
   DEPLOYMENT = "staging"
+  # Keeps every request and its response, credentials redacted, as a log in the logs DB, to see what clients send
+  CAPTURE_REQUESTS = "true"
   HOST_NAME = "staging.nighttroop.nz"
   HOST_PROTOCOL = "https"
   # On the volume mounted below. No S3 is set, so nothing is backed up or restored.
