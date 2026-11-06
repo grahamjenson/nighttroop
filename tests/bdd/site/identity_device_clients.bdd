@@ -58,6 +58,21 @@ SAVE_TEXT #site--identities--created--ns-token iphone_token
 CLICK "I Have Saved These"
 CLICK #site--identities--close
 
+// A device for T1D Carer is told where its URL and token go, each with its own copy button, and that it gets mg/dL
+INPUT #name-createIdentityFormdevicesTable carer_phone
+CLICK #client-createIdentityFormdevicesTable
+CLICK #identities_table [role="option"][data-tui-selectbox-value="t1dcarer"]
+CLICK "Add Device"
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE Setting up T1D Carer
+ASSERT_VISIBLE #site--identities--created--guide .font-semibold >> text=Nightscout URL
+ASSERT_VISIBLE #site--identities--created--guide-1-3 + [data-copy-button]
+ASSERT_VISIBLE #site--identities--created--guide-2-3 + [data-copy-button]
+ASSERT_TEXT_VISIBLE T1D Carer needs mg/dL
+SCREENSHOT device_client_guide_t1dcarer
+CLICK "I Have Saved These"
+CLICK #site--identities--close
+
 // So the Nightscout API gives the device mg/dL, though the site is in mmol/L
 GOTO {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/status.json?token={{ .watch_token }}
 ASSERT_STATUS 200

@@ -543,8 +543,8 @@ focus back to the row or button that opened it.
 - An admin adds users and devices, whose credentials are shown once, each with its own copy button and one to copy
   them all. Saying they are saved warns that they are never shown again, and they close only once that is confirmed;
   Go Back keeps them open.
-- A device is added for its client: AAPS, Trio, Loop, xDrip+, xDrip4iOS, Nightguard, SugarPixel or Other. Its
-  credentials say how to set that client up, in numbered steps naming the client's menus and fields in bold, with its
+- A device is added for its client: AAPS, Trio, Loop, xDrip+, xDrip4iOS, Nightguard, SugarPixel, T1D Carer or Other.
+  Its credentials say how to set that client up, in numbered steps naming the client's menus and fields in bold, with its
   Nightscout URL and token filled in, each with its own copy button, and a device for any but Other has its own units
   set to mg/dL, which those clients need, whatever the site's. One for xDrip4iOS also has the Nightscout API write
   mg/dL as `mg/dl`, as it reads a BG check's glucose as mg/dL only when its units are exactly that.

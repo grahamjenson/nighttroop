@@ -30,7 +30,7 @@ var identityRoles = []consts.IdentityRole{
 
 // mgdlClients are the Nightscout clients a device can be added for that need glucose in mg/dL, so a device added for one
 // has its own units set to mg/dL whatever the site's. Any other device, "other", follows the site.
-var mgdlClients = []string{"aaps", "trio", "loop", "xdrip", "xdrip4ios", "nightguard", "sugarpixel"}
+var mgdlClients = []string{"aaps", "trio", "loop", "xdrip", "xdrip4ios", "nightguard", "sugarpixel", "t1dcarer"}
 
 // clientMgdlLabels are how a client needs the Nightscout API to write mg/dL, where it is not mg/dL: xDrip4iOS reads a
 // BG check's glucose as mg/dL only when its units are exactly mg/dl, and otherwise uploads it again
