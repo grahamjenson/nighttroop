@@ -3,7 +3,7 @@
   "info": {
     "title": "Nighttroop",
     "version": "0.1.0",
-    "description": "Nighttroop's JSON API. Each endpoint gives the host it is on: POST /site is on the public host; /api/... is the Nightscout API, on a site's Nightscout host; everything else is on a site's host, with a JWT from POST /login. Times are milliseconds since the epoch, and glucose is in the units of the signed in identity's settings; a Nightscout document says its units in its units field."
+    "description": "Nighttroop's JSON API. Each endpoint gives the host it is on: POST /site is on the public host; /api/... is the Nightscout API, on a site's Nightscout host; everything else is on a site's host, with a JWT from POST /login. Times are milliseconds since the epoch, and glucose is in the units of the signed in identity's settings, except on the Nightscout API, which always gives it in mg/dL, as Nightscout does; a Nightscout document says its units in its units field."
   },
   "security": [{ "bearerAuth": [] }],
   "servers": [{ "url": "https://{site_id}.nighttroop.example", "description": "A site's host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
@@ -203,7 +203,7 @@
         "operationId": "NsPebble",
         "summary": "The newest readings for Pebble and other watch faces, as strings in the units asked for",
         "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
-        "parameters": [{ "name": "count", "in": "query", "description": "How many readings, 1 by default", "schema": { "type": "integer", "minimum": 1, "maximum": 1000 } }, { "name": "units", "in": "query", "description": "mmol or mg/dl, the settings' units by default", "schema": { "type": "string" } }],
+        "parameters": [{ "name": "count", "in": "query", "description": "How many readings, 1 by default", "schema": { "type": "integer", "minimum": 1, "maximum": 1000 } }, { "name": "units", "in": "query", "description": "mmol or mg/dl, the identity's own units by default", "schema": { "type": "string" } }],
         "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } }
       }
     },
@@ -609,7 +609,7 @@
           "created_at": { "type": "string" },
           "sgv": { "type": "number", "format": "double", "description": "In units" },
           "mbg": { "type": "number", "format": "double", "description": "In units" },
-          "units": { "type": "string", "description": "The units of sgv and mbg, the identity's" },
+          "units": { "type": "string", "description": "The units of sgv and mbg, always mg/dL" },
           "direction": { "type": "string" },
           "insulin": { "type": "number", "format": "double" },
           "carbs": { "type": "number", "format": "double" },

@@ -20,12 +20,10 @@ its units are set to mg/dL (#524).
 - **API_SECRET**: leave it empty, or put the token here instead. Nighttroop has no API secret, and the app only ever
   sends the secret's SHA1, which Nighttroop takes only as the SHA1 of a device's token (#512), so the token works here
   too and anything else is a 401.
-- **Units**: mg/dL. The follower reads `sgv` as mg/dL whatever the `units`, and Nighttroop returns readings in the
-  identity's (then the site's) units, so a device added for xDrip4iOS is in mg/dL whatever the site's. A token from
-  another identity, such as the site's first PWD phone, needs its units set to mg/dL by an admin from its row on Users
-  & Devices (#523), or on an mmol/L site 6.5 mmol/L is read as 6.5 mg/dL. A device added for xDrip4iOS also has the
-  Nightscout API write mg/dL as `mg/dl`, which an admin can set for another identity with `units_mgdl_label` through
-  the settings endpoint.
+- **Units**: mg/dL. The follower reads `sgv` as mg/dL whatever the `units`, and the Nightscout API always gives
+  readings in mg/dL, whatever the identity's or site's units. A device added for xDrip4iOS also has the Nightscout API
+  write mg/dL as `mg/dl`, which an admin can set for another identity with `units_mgdl_label` through the settings
+  endpoint.
 
 ## Authentication
 

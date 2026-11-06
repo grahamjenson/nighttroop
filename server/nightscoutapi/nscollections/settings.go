@@ -128,7 +128,7 @@ func (c SettingsCollection) Delete(ctx context.Context, siteContext *httputils.S
 
 func (c SettingsCollection) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (nsutils.Document, *nsutils.HTTPError) {
 
-	found, err := siteContext.GetSettings().GetSettingAnyTypeByName(identifier)
+	found, err := siteContext.GetOwnSettings().GetSettingAnyTypeByName(identifier)
 	if err != nil {
 		return nil, nsutils.ErrNotFound
 	}
@@ -137,7 +137,7 @@ func (c SettingsCollection) Get(ctx context.Context, siteContext *httputils.Site
 }
 
 func (c SettingsCollection) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Document, *nsutils.HTTPError) {
-	all := siteContext.GetSettings().GetAllSettingAnyTypes()
+	all := siteContext.GetOwnSettings().GetAllSettingAnyTypes()
 	docs := make([]nsutils.Document, len(all))
 	for i, each := range all {
 		docs[i] = settingDocument(each)
@@ -210,7 +210,7 @@ func (s *SettingAny) GetRawJsonData() *string {
 }
 
 func UpdateIndividualSetting(ctx context.Context, siteContext *httputils.SiteContext, identifier string, value any) (*settings.SettingAnyType, *nsutils.HTTPError) {
-	settingsMap := siteContext.GetSettings()
+	settingsMap := siteContext.GetOwnSettings()
 	identitySettingsMap := settingsMap.IdentitySettingsMap
 
 	err := identitySettingsMap.SetSettingByName(identifier, value, &siteContext.IdentityModel.CreatedAt, ptr("identity"))

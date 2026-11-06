@@ -1693,7 +1693,6 @@ func UpdateProfileSwitchToTreatment(source *sitedb.ProfileSwitch, context *httpu
 			typesFlexibleInt64 := types.FlexibleInt64(*source.Timeshift)
 			target.Timeshift = &typesFlexibleInt64
 		}
-		target.Units = UnitsToUnits(source.Units)
 		if source.Notes != nil {
 			typesSanitizedString := types.SanitizedString(*source.Notes)
 			target.Notes = &typesSanitizedString

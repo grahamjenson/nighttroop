@@ -13,6 +13,8 @@ ASSERT_EQUALS "string" "@result.type"
 # Treatments
 #########
 
+# The Nightscout API gives treatments' glucose and profile targets in mg/dL, whatever the identity's units
+
 
 
 ### Profile Switchs
@@ -33,9 +35,9 @@ B {
     "created_at": "{{ time 0 }}"
  }
 ASSERT_STATUS 201
-ASSERT_CONTAINS "\"units\":\"mmol/L\"" "@result.profileJson"
-ASSERT_CONTAINS "\"value\":6" "@result.profileJson"
-ASSERT_CONTAINS "\"value\":8" "@result.profileJson"
+ASSERT_CONTAINS "\"units\":\"mg/dL\"" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":108.108" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":144.144" "@result.profileJson"
 
 NAME create_mgdl_profile_switch
 POST http://{{ site }}/api/v3/treatments
@@ -53,9 +55,9 @@ B {
     "created_at": "{{ time 1 }}"
  }
 ASSERT_STATUS 201
-ASSERT_CONTAINS "\"units\":\"mmol/L\"" "@result.profileJson"
-ASSERT_CONTAINS "\"value\":3.885" "@result.profileJson"
-ASSERT_CONTAINS "\"value\":5.55" "@result.profileJson"
+ASSERT_CONTAINS "\"units\":\"mg/dL\"" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":70" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":100" "@result.profileJson"
 
 NAME create_unlabeled_mmol_profile_switch
 POST http://{{ site }}/api/v3/treatments
@@ -73,9 +75,9 @@ B {
     "created_at": "{{ time 2 }}"
  }
 ASSERT_STATUS 201
-ASSERT_CONTAINS "\"units\":\"mmol/L\"" "@result.profileJson"
-ASSERT_CONTAINS "\"value\":6" "@result.profileJson"
-ASSERT_CONTAINS "\"value\":8" "@result.profileJson"
+ASSERT_CONTAINS "\"units\":\"mg/dL\"" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":108.108" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":144.144" "@result.profileJson"
 
 NAME create_unlabeled_mgdl_profile_switch
 POST http://{{ site }}/api/v3/treatments
@@ -93,9 +95,9 @@ B {
     "created_at": "{{ time 3 }}"
  }
 ASSERT_STATUS 201
-ASSERT_CONTAINS "\"units\":\"mmol/L\"" "@result.profileJson"
-ASSERT_CONTAINS "\"value\":3.885" "@result.profileJson"
-ASSERT_CONTAINS "\"value\":5.55" "@result.profileJson"
+ASSERT_CONTAINS "\"units\":\"mg/dL\"" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":70" "@result.profileJson"
+ASSERT_CONTAINS "\"value\":100" "@result.profileJson"
 
 ### Glucose Settings
 
@@ -111,8 +113,8 @@ B {
     "created_at": "{{ time 1 }}"
  }
 ASSERT_STATUS 201
-ASSERT_EQUALS "mmol/L" "@result.units"
-ASSERT_EQUALS 7 "@result.glucose"
+ASSERT_EQUALS "mg/dL" "@result.units"
+ASSERT_EQUALS 126.126 "@result.glucose"
 
 NAME create_mgdl_bg_check
 POST http://{{ site }}/api/v3/treatments
@@ -126,8 +128,8 @@ B {
     "created_at": "{{ time 2 }}"
  }
 ASSERT_STATUS 201
-ASSERT_EQUALS "mmol/L" "@result.units"
-ASSERT_EQUALS 3.885 "@result.glucose"
+ASSERT_EQUALS "mg/dL" "@result.units"
+ASSERT_EQUALS 70 "@result.glucose"
 
 NAME create_unlabeled_mmol_bg_check
 POST http://{{ site }}/api/v3/treatments
@@ -140,8 +142,8 @@ B {
     "created_at": "{{ time 3 }}"
  }
 ASSERT_STATUS 201
-ASSERT_EQUALS "mmol/L" "@result.units"
-ASSERT_EQUALS 7 "@result.glucose"
+ASSERT_EQUALS "mg/dL" "@result.units"
+ASSERT_EQUALS 126.126 "@result.glucose"
 
 NAME create_unlabeled_mgdl_bg_check
 POST http://{{ site }}/api/v3/treatments
@@ -154,8 +156,8 @@ B {
     "created_at": "{{ time 4 }}"
  }
 ASSERT_STATUS 201
-ASSERT_EQUALS "mmol/L" "@result.units"
-ASSERT_EQUALS 3.885 "@result.glucose"
+ASSERT_EQUALS "mg/dL" "@result.units"
+ASSERT_EQUALS 70 "@result.glucose"
 
 # GET
 

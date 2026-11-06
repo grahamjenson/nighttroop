@@ -22,6 +22,8 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config *config.ServerConfig) c
 
 	r := chi.NewRouter()
 	httputils.AddStandardMiddleware(r, config, controlDB)
+	// Nightscout's clients read glucose as mg/dL whatever its units, so the API always reads and writes mg/dL
+	r.Use(httputils.MgdlUnitsMiddleware)
 	// Before auth only the IP is known, so an IP spamming bad tokens cannot spend the site's own limit
 	r.Use(httputils.SiteUnauthRateLimitMiddleware(config))
 

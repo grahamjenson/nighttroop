@@ -94,12 +94,8 @@
     1. P4: The Alexa and Google Home intents have Nightscout's bg, delta, iob, cob and uploader battery, but not its
        basal, raw bg, forecast, pump reservoir and battery, CGM status, db size, LastLoop and InsulinRemaining, nor
        the temp basal in NSStatus (`nsv2/assistants.go`)
-    1. P1: Nightscout clients (AAPS, Loop, LoopFollow, Nightguard, the xDrip+ follower) read `sgv` and `mbg`, and
-       AAPS its temp targets and profiles, as mg/dL whatever the `units`, but the API gives them in the identity's
-       units, then the site's. A device added for a client in Add Device is in mg/dL (#524) and an admin can set any
-       identity's units (#523), but the site's first PWD phone, a device added as Other, and LoopFollow and an
-       AAPSClient follower, which are not in Add Device's clients, still get the site's units. Add them to Add
-       Device's clients
+    1. P4: The Nightscout API gives glucose only in mg/dL, so the `units_mmol_label` setting no longer changes what it
+       writes. Drop it from the settings, the `sites` and `site_identities` columns and their queries
     1. P1: A Nightscout batch of over 100 records is refused with a 400 (`consts.MaxBatchRecords`), and Loop (up to
        1000 a request) and Juggluco on v1 (up to 5000) send the same batch again until it is accepted, so after a
        backlog (first set up, or about 8 hours offline) they never upload again. Take larger v1 batches in chunks, or

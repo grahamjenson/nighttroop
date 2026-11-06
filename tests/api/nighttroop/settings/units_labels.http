@@ -24,7 +24,7 @@ ASSERT_EQUALS "BG Check" "@0.eventType"
 ASSERT_EQUALS 120 "@0.glucose"
 ASSERT_EQUALS "mg/dl" "@0.units"
 
-// Another device follows the site, in mmol/L written as Nighttroop does
+// Another device reads mg/dL too, whatever the site's mmol/L, written as Nighttroop does
 NAME create_other
 POST http://{{ site }}/settings/identities
 H Authorization: Bearer {{ jwt }}
@@ -33,12 +33,13 @@ B {"name": "display", "role": "device_read", "client": "other"}
 ASSERT_STATUS 201
 SET other_token {{ .create_other.result.ns_token }}
 
-NAME other_reads_mmol_l
+NAME other_reads_mg_dl
 GET http://{{ .ns_site }}/api/v1/treatments.json?token={{ .other_token }}
 ASSERT_STATUS 200
-ASSERT_EQUALS "mmol/L" "@0.units"
+ASSERT_EQUALS 120 "@0.glucose"
+ASSERT_EQUALS "mg/dL" "@0.units"
 
-// The site can write mmol/L as mmol for every identity that follows it
+// The site can still set how mmol/L is written, which no glucose is in now the API gives it in mg/dL
 NAME site_writes_mmol
 POST http://{{ site }}/settings/site
 H Authorization: Bearer {{ jwt }}
@@ -47,10 +48,10 @@ B {"units_mmol_label": "mmol"}
 ASSERT_STATUS 200
 ASSERT_EQUALS "mmol" "@result.units_mmol_label"
 
-NAME other_reads_mmol
+NAME other_still_reads_mg_dl
 GET http://{{ .ns_site }}/api/v1/treatments.json?token={{ .other_token }}
 ASSERT_STATUS 200
-ASSERT_EQUALS "mmol" "@0.units"
+ASSERT_EQUALS "mg/dL" "@0.units"
 
 // The labels are set only through the settings endpoint, so saving the settings page, which sends only its own
 // settings, leaves them as they are

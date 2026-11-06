@@ -41,7 +41,7 @@ func answerIntent(r *http.Request, intent, metric string) assistantAnswer {
 	siteContext := httputils.GetSiteContext(r.Context())
 	now := time.Now()
 	properties := Properties(r.Context(), siteContext.SiteDB.Queries(), now)
-	units := *siteContext.GetSettings().GetUnits()
+	units := *siteContext.GetOwnSettings().GetUnits()
 	// Whole mg/dL, or mmol/L to one decimal
 	decimals := 0
 	if units == consts.UnitsMMOLL {
