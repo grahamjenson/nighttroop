@@ -14,8 +14,12 @@ import (
 	"github.com/mxschmitt/playwright-go"
 )
 
+// ScreenshotDir is where screenshots are kept, each in a folder of its kind: the repository's .test from a test
+// package's folder, or the folder a script run is given
+var ScreenshotDir = filepath.Join("..", "..", ".test")
+
 func ScreenshotPage(page playwright.Page, foldername string, testPath string, name string) (string, error) {
-	root := filepath.Join("..", "..", ".test", foldername)
+	root := filepath.Join(ScreenshotDir, foldername)
 
 	dir := filepath.Join(root, strings.TrimSuffix(testPath, filepath.Ext(testPath)))
 	if err := os.MkdirAll(dir, 0o755); err != nil {

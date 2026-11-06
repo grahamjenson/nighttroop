@@ -272,7 +272,11 @@ func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 	case r.Scroll != nil:
 		err = page.Mouse().Wheel(0, float64(*r.Scroll))
 	case r.Text != "":
-		err = locator.PressSequentially(r.Text, playwright.LocatorPressSequentiallyOptions{Timeout: playwright.Float(actionWait)})
+		// TYPE's text is filled in like INPUT's value, as a TOTP code made from a site's secret is
+		var text string
+		if text, err = script.Render(r.Text, ctx); err == nil {
+			err = locator.PressSequentially(text, playwright.LocatorPressSequentiallyOptions{Timeout: playwright.Float(actionWait)})
+		}
 	case r.Corner:
 		err = locator.Click(playwright.LocatorClickOptions{Timeout: playwright.Float(actionWait), Position: &playwright.Position{X: 2, Y: 2}})
 	default:

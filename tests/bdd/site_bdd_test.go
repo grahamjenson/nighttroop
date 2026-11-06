@@ -139,6 +139,8 @@ func runScenarios(t *testing.T, browser playwright.Browser, config *config.Serve
 
 		RunTheActionFileAsATest(t, "site", path, server, context, backgroundJobs, map[string]any{
 			"server_url":    server.URL,
+			"scheme":        "http",
+			"host":          fmt.Sprintf("localhost:%d", port),
 			"control_url":   strings.Replace(server.URL, "127.0.0.1", "control.localhost", 1),
 			"default_site":  siteInformation.SiteDB.Subdomain + ".ns.localhost",
 			"default_token": siteInformation.PwdNSToken,

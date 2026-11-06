@@ -2,6 +2,7 @@ package bdd_test
 
 import (
 	"context"
+	"fmt"
 	"net/http/httptest"
 	"net/url"
 	"strconv"
@@ -102,6 +103,8 @@ func runOnOwnServer(t *testing.T, browser playwright.Browser, root string, own o
 	browserContext.SetDefaultTimeout(1000)
 	actionContext := map[string]any{
 		"server_url":  ts.URL,
+		"scheme":      "http",
+		"host":        fmt.Sprintf("localhost:%d", config.HostPort),
 		"control_url": strings.Replace(ts.URL, "127.0.0.1", "control.localhost", 1),
 	}
 	for key, value := range values {

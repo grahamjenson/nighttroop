@@ -7,7 +7,6 @@ POST http://localhost/site
 ASSERT_STATUS 200
 SET site {{ .create_site.site_subdomain }}.ns.localhost
 SET token {{ .create_site.pwd_nstoken }}
-SET site_url {{ replace "127.0.0.1" (printf "%s.localhost" .create_site.site_subdomain) server_url }}
 
 NAME login
 POST http://{{ .create_site.site_subdomain }}.localhost/login
@@ -33,7 +32,7 @@ WAIT dataUpdate
 
 // The admin signs in on the site's page and adds a meter reading there
 BROWSE
-GOTO {{ .site_url }}/login
+GOTO {{ site_url .create_site.site_subdomain }}/login
 INPUT #site--login--name admin
 INPUT #site--login--password password
 CLICK #site--login-button

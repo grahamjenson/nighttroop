@@ -10,6 +10,7 @@ import (
 	"nighttroop.t1d.nz/background"
 	"nighttroop.t1d.nz/tests/dsl/browser"
 	"nighttroop.t1d.nz/tests/dsl/flow"
+	"nighttroop.t1d.nz/tests/dsl/jsonapi"
 )
 
 // RunTheActionFileAsATest runs the .bdd or .flow file at path, its templates filled from actionContext, its API and
@@ -18,7 +19,7 @@ func RunTheActionFileAsATest(t *testing.T, root string, path string, server *htt
 	removeNightscout := strings.TrimPrefix(path, root+"/")
 	t.Run(removeNightscout, func(t *testing.T) {
 		runner := &flow.Runner{
-			Server:            server,
+			Client:            jsonapi.Client(server),
 			RunBackgroundJobs: func() { backgroundJobs.RunAllNow(t.Context()) },
 			NewPage:           context.NewPage,
 		}
