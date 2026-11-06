@@ -24,6 +24,11 @@ func TestTOTPValidateOnlyTakesSixDigits(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	devCode, err := totp.GenerateCode("FakeTOTPSecretForDevOnly", time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	tests := []struct {
 		name   string
 		token  string
@@ -37,6 +42,7 @@ func TestTOTPValidateOnlyTakesSixDigits(t *testing.T) {
 		{"too short", code[:5], secret, false},
 		{"empty", "", secret, false},
 		{"the dev code", "123123", "FakeTOTPSecretForDevOnly", true},
+		{"the dev secret's code now", devCode, "FakeTOTPSecretForDevOnly", true},
 		{"letters for the dev secret", "abcabc", "FakeTOTPSecretForDevOnly", false},
 	}
 	for _, test := range tests {

@@ -22,12 +22,12 @@ A line `HTTP` or `BROWSE` switches the lines after it:
   - `WAIT <event>` and `COLLECT <event>`, for an event from the socket or a stream, such as `created`;
   - or `RUN_BACKGROUND_JOBS`.
 - **Browser steps** are written as in a `.bdd` file: `GOTO`, `CLICK`, `INPUT`, `TYPE` and the rest.
-- **Asserts and `SET`** after a step check or keep what it got.
+- **Asserts and `SET`** after a step check or keep what it got. In the browser, `SAVE_TEXT <locator> <key>` keeps an element's text as `{{ .key }}`, and `SAVE_VALUE <locator> <key>` an input's value, though it is hidden, as the TOTP secret behind a new site's QR code (`#public--site-info--totp-secret`) is.
 - **Where a file starts:** a `.bdd` file starts with browser steps and any other with HTTP ones. A `.steps` file goes on as the file that `INCLUDE`s it was, and a switch in an included file lasts until it ends.
 - **Values** are filled in from `{{ }}`:
   - `{{ .name.field }}` is from an earlier step, and `{{ dig "name.0.field" }}` too;
   - `{{ site_url "abcdefgh" }}` is a site's address, and `{{ server_url }}` the server's;
-  - `{{ totp .create_site.totp_secret }}` is the code an authenticator app shows now;
+  - `{{ totp .create_site.totp_secret }}` is the code an authenticator app shows now, made when the step runs, so a later step's is the code then. A dev or test server takes the code its dev TOTP secret makes, as well as `123123`, so a script making codes runs on one as on staging;
   - `{{ env "PASSWORD" }}` is an environment variable.
 
 ## Running one against staging
@@ -44,7 +44,13 @@ go run ./cmd/nighttroop-script --host staging.nighttroop.nz --root scripts/stagi
 - **Browser steps** need Playwright's Chromium (`go run github.com/mxschmitt/playwright-go/cmd/playwright install chromium`). `--headed` shows the browser, `--timeout` is how long each step waits, and screenshots, `SCREENSHOT`'s and a failed script's, go to `--out`.
 - **Running tests:** each script runs as a test, so `-test.v` prints every step and its response, and `-test.run` picks which scripts run.
 
-`scripts/staging` has two:
+`scripts/staging` has three:
+
+- **`create_site.flow`** creates a site from the home page as a person would: it saves the admin's password and TOTP secret from the page, checks a code made from the secret, signs in with another and screenshots the credentials and the summary:
+
+```
+go run ./cmd/nighttroop-script --host staging.nighttroop.nz --root scripts/staging --out screenshots create_site.flow
+```
 
 - **`new_site.flow`** makes a site with an hour of readings, a meal bolus and a phone's status, and prints the site's credentials in its `create_site` response.
 - **`sign_in.flow`** signs in to a site's page with them and screenshots its summary:

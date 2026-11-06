@@ -1,0 +1,28 @@
+// Creates a site from the home page as a person would, sets up its admin's authenticator from the TOTP secret behind
+// its QR code, signs in with a code made from it and screenshots the summary. The credentials are screenshotted too,
+// to sign in again with sign_in.flow:
+//   go run ./cmd/nighttroop-script --host staging.nighttroop.nz --root scripts/staging --out screenshots create_site.flow
+BROWSE
+GOTO {{ server_url }}/
+CLICK #public--create-site-button
+ASSERT_VISIBLE #public--site-info--password
+SCREENSHOT credentials
+SAVE_TEXT #public--site-info--password password
+SAVE_VALUE #public--site-info--totp-secret totp_secret
+
+// The authenticator app's code is checked, as its sixth digit is typed
+TYPE #public--site-info--totp {{ totp .totp_secret }}
+ASSERT_VISIBLE #public--totp-checked
+CLICK #public--login-button
+ASSERT_NEW_PAGE
+ASSERT_PATH /login
+
+// Then signs in with the password and a code made now
+INPUT #site--login--name admin
+INPUT #site--login--password {{ .password }}
+CLICK #site--login-button
+ASSERT_VISIBLE #site--login--otp-1
+TYPE #site--login--otp-1 {{ totp .totp_secret }}
+ASSERT_NEW_URL
+ASSERT_VISIBLE #site--summary
+SCREENSHOT summary

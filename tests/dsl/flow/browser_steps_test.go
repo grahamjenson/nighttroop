@@ -72,3 +72,20 @@ func parseBrowser(fsys fs.FS, path string) ([]Action, error) {
 	}
 	return ParseBrowserLines(lines)
 }
+
+func TestSaveValueKeepsAnInputsValue(t *testing.T) {
+	fsys := fstest.MapFS{
+		"site/save.bdd": {Data: []byte("GOTO /\nSAVE_TEXT #password password\nSAVE_VALUE #totp-secret totp_secret\n")},
+		"site/bad.bdd":  {Data: []byte("GOTO /\nSAVE_VALUE #totp-secret\n")},
+	}
+
+	file, err := parseBrowser(fsys, "site/save.bdd")
+	require.NoError(t, err)
+	require.Len(t, file, 3)
+	require.False(t, file[1].(*SaveText).Value)
+	require.Equal(t, &SaveText{TestPath: "site/save.bdd", TestLine: 3, Locator: "#totp-secret", Key: "totp_secret", Value: true}, file[2])
+	require.Equal(t, "SAVE_VALUE #totp-secret totp_secret", file[2].ToFlatString())
+
+	_, err = parseBrowser(fsys, "site/bad.bdd")
+	require.ErrorContains(t, err, "site/bad.bdd:2: expected a locator and a key")
+}
