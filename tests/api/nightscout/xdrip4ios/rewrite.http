@@ -5,11 +5,16 @@
 INCLUDE steps/new_ns_site.steps
 INCLUDE steps/ns_units_mgdl.steps
 
+# The rewrite sends the second reading's own time again, as xDrip4iOS does, not a time made again, which a second
+# later would differ and add a reading rather than replace it
+SET rewrite_ms {{ itime 5 }}
+SET rewrite_at {{ time 5 }}
+
 NAME xdrip4ios_rewrite_upload
 POST http://{{ site }}/api/v1/entries?token={{ token }}
 B [
   {"_id": "Xd4iOSrwr01aBcDeFgHiJkLm", "device": "DexcomG7", "date": {{ itime 10 }}, "dateString": "{{ time 10 }}", "type": "sgv", "sgv": 118, "direction": "Flat", "filtered": 118000, "unfiltered": 118000, "noise": 1, "sysTime": "{{ time 10 }}"},
-  {"_id": "Xd4iOSrwr02aBcDeFgHiJkLm", "device": "DexcomG7", "date": {{ itime 5 }}, "dateString": "{{ time 5 }}", "type": "sgv", "sgv": 140, "direction": "FortyFiveUp", "filtered": 140000, "unfiltered": 140000, "noise": 1, "sysTime": "{{ time 5 }}"}
+  {"_id": "Xd4iOSrwr02aBcDeFgHiJkLm", "device": "DexcomG7", "date": {{ .rewrite_ms }}, "dateString": "{{ .rewrite_at }}", "type": "sgv", "sgv": 140, "direction": "FortyFiveUp", "filtered": 140000, "unfiltered": 140000, "noise": 1, "sysTime": "{{ .rewrite_at }}"}
 ]
 ASSERT_STATUS 200
 
@@ -23,7 +28,7 @@ SET rewrite_since {{ addms (dig "xdrip4ios_rewrite_synced.result.collections.ent
 NAME xdrip4ios_rewrite_smoothed
 POST http://{{ site }}/api/v1/entries?token={{ token }}
 B [
-  {"device": "DexcomG7", "date": {{ itime 5 }}, "dateString": "{{ time 5 }}", "type": "sgv", "sgv": 128, "direction": "Flat", "filtered": 128000, "unfiltered": 128000, "noise": 1, "sysTime": "{{ time 5 }}"}
+  {"device": "DexcomG7", "date": {{ .rewrite_ms }}, "dateString": "{{ .rewrite_at }}", "type": "sgv", "sgv": 128, "direction": "Flat", "filtered": 128000, "unfiltered": 128000, "noise": 1, "sysTime": "{{ .rewrite_at }}"}
 ]
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
@@ -53,7 +58,7 @@ SET rewritten_since {{ addms (dig "xdrip4ios_rewrite_in_history.result.0.srvModi
 NAME xdrip4ios_rewrite_again
 POST http://{{ site }}/api/v1/entries?token={{ token }}
 B [
-  {"device": "DexcomG7", "date": {{ itime 5 }}, "dateString": "{{ time 5 }}", "type": "sgv", "sgv": 128, "direction": "Flat", "filtered": 128000, "unfiltered": 128000, "noise": 1, "sysTime": "{{ time 5 }}"}
+  {"device": "DexcomG7", "date": {{ .rewrite_ms }}, "dateString": "{{ .rewrite_at }}", "type": "sgv", "sgv": 128, "direction": "Flat", "filtered": 128000, "unfiltered": 128000, "noise": 1, "sysTime": "{{ .rewrite_at }}"}
 ]
 ASSERT_STATUS 200
 ASSERT_EQUALS 128 "@0.sgv"
