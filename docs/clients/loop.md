@@ -76,9 +76,9 @@ A nil field is left out. Loop does not keep the returned `_id`s.
 
 Loop sends everything since its last successful upload in one POST, up to `glucoseDataLimit` (1000), and the same for
 doses, carbs and pump events (`doseDataLimit`, `carbDataLimit`, `pumpEventDataLimit`, also 1000). It only moves on
-after a 200 (LoopKit `RemoteDataServicesManager.uploadGlucoseData`). Nighttroop refuses a POST of more than 100
-records with a 400, so once more than 100 are waiting, such as when the service is first added to a Loop that has
-been running, or after about 8 hours offline, Loop sends the same refused batch again, growing, and never uploads.
+after a 200 (LoopKit `RemoteDataServicesManager.uploadGlucoseData`). Nighttroop takes a v1 POST of up to 5000
+records, so the backlog when the service is first added to a Loop that has been running, or after hours offline, is
+accepted; each 100 records past the first cost a write against the site's and identity's rate limits.
 
 ## Treatments: `POST`, `PUT` and `DELETE /api/v1/treatments`
 
@@ -211,7 +211,7 @@ NightscoutKit has reads that Loop does not call, but other apps built on it may:
 | `api-secret` as the SHA-1 of a device's token | Works since #512 (it was a 401 for everything) |
 | `GET /api/v1/experiments/test` | Works since #513 (was a 400, "invalid collection"); 401 for a read only device, which Loop shows as "Unauthorized" |
 | `POST /api/v1/entries`, as many objects back, `_id` | Works |
-| A POST of more than 100 entries or treatments, which Loop sends with over 100 waiting | Not supported: a 400 over the batch cap, and Loop sends it again and never uploads. TODO P1 |
+| A POST of more than 100 entries or treatments, which Loop sends with over 100 waiting | Works: a v1 POST takes up to 5000 (it was a 400 over 100, and Loop never uploaded again) |
 | `POST /api/v1/treatments` carbs, doses, pump and CGM events, notes | Works |
 | `PUT /api/v1/treatments` with `_id` in the body | Works |
 | `DELETE /api/v1/treatments/<_id>` | Works |

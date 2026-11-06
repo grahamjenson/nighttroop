@@ -96,10 +96,6 @@
        the temp basal in NSStatus (`nsv2/assistants.go`)
     1. P4: The Nightscout API gives glucose only in mg/dL, so the `units_mmol_label` setting no longer changes what it
        writes. Drop it from the settings, the `sites` and `site_identities` columns and their queries
-    1. P1: A Nightscout batch of over 100 records is refused with a 400 (`consts.MaxBatchRecords`), and Loop (up to
-       1000 a request) and Juggluco on v1 (up to 5000) send the same batch again until it is accepted, so after a
-       backlog (first set up, or about 8 hours offline) they never upload again. Take larger v1 batches in chunks, or
-       raise the cap for them (docs/clients/loop.md, docs/clients/juggluco.md)
     1. P1: Honour `sort` in searches and sort v3 history by `srvModified` oldest first, as Nightscout does. Searches
        are always newest first, so AAPS's first load (`sort=date&date$gt=…&limit=500`, back 100 days) and its
        history paging (`limit=500`) skip all but the newest 500 when there are more, and its profile history takes

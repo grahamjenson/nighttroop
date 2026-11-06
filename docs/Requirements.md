@@ -521,7 +521,9 @@ focus back to the row or button that opened it.
 - A request for a site there is not is 404, but one whose site cannot be looked up, as when the server is too busy to
   answer in time, is 503 with `Retry-After`, so an uploader tries again rather than take its URL as wrong.
 - No request returns more than 1000 records, however many it asks for, through the site's pages and API, the
-  Nightscout API or its live updates, and an upload holds at most 100. Deleting a type of treatment through the
+  Nightscout API or its live updates. A v1 upload holds at most 5000, as Juggluco and Loop send their backlog in one
+  batch, each 100 past the first costing a write against the site's and identity's limits; a live update's upload
+  holds at most 100. Deleting a type of treatment through the
   Nightscout API deletes at most 1000 each time, saying how many.
 - A DB serves many reads at once, so one slow read, such as a long search, does not hold up the others; writes to it
   take turns rather than fail. A busy DB keeps its connections open between reads, so requests at once do not each

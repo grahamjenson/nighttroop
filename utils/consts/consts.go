@@ -191,8 +191,12 @@ const PASSWORD_GARBAGE_VALUE = "********"
 
 const DEFAULT_RATE_LIMITING_IDENTITY_NAME = "defaultIdentity"
 
-// MaxBatchRecords caps the records in one Nightscout batch POST or socket dbAdd, matching the uploaders' batch sizes
+// MaxBatchRecords caps the records in one socket dbAdd, and is how many records of a v1 batch POST cost one write
 const MaxBatchRecords = 100
+
+// MaxV1BatchRecords caps the records in one v1 batch POST: Loop sends up to 1000 and Juggluco up to 5000 after a
+// backlog, sending the same batch again until it is accepted
+const MaxV1BatchRecords = 5000
 
 // MaxProfilesPerStore caps the profiles in one profile store, far above any real set of presets
 const MaxProfilesPerStore = 20
