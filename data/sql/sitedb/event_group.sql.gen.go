@@ -436,7 +436,7 @@ func (q *Queries) CreateEventGroup(ctx context.Context, arg CreateEventGroupPara
 
 const eventGroupHistoryIDs = `-- name: EventGroupHistoryIDs :many
 SELECT id FROM event_groups WHERE updated_at >= ?1
-ORDER BY updated_at LIMIT CAST(?2 AS INTEGER)
+ORDER BY updated_at, occurred_at, id LIMIT CAST(?2 AS INTEGER)
 `
 
 type EventGroupHistoryIDsParams struct {
@@ -444,7 +444,8 @@ type EventGroupHistoryIDsParams struct {
 	Limit int64
 }
 
-// The treatments changed since Since, deleted ones too, the oldest change first, from updated_at's index, for API v3 history
+// The treatments changed since Since, deleted ones too, the oldest change first, then by date and id as History sorts them, from updated_at's index, for API v3
+// history
 func (q *Queries) EventGroupHistoryIDs(ctx context.Context, arg EventGroupHistoryIDsParams) ([]string, error) {
 	rows, err := q.query(ctx, q.eventGroupHistoryIDsStmt, eventGroupHistoryIDs, arg.Since, arg.Limit)
 	if err != nil {

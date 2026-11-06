@@ -12,7 +12,7 @@ import (
 
 const activityHistoryIDs = `-- name: ActivityHistoryIDs :many
 SELECT id FROM activities WHERE updated_at >= ?1
-ORDER BY updated_at LIMIT CAST(?2 AS INTEGER)
+ORDER BY updated_at, occurred_at, id LIMIT CAST(?2 AS INTEGER)
 `
 
 type ActivityHistoryIDsParams struct {
@@ -20,7 +20,8 @@ type ActivityHistoryIDsParams struct {
 	Limit int64
 }
 
-// The activities changed since Since, deleted ones too, the oldest change first, from updated_at's index, for API v3 history
+// The activities changed since Since, deleted ones too, the oldest change first, then by date and id as History sorts them, from updated_at's index, for API v3
+// history
 func (q *Queries) ActivityHistoryIDs(ctx context.Context, arg ActivityHistoryIDsParams) ([]string, error) {
 	rows, err := q.query(ctx, q.activityHistoryIDsStmt, activityHistoryIDs, arg.Since, arg.Limit)
 	if err != nil {

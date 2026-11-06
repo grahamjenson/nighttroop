@@ -406,7 +406,7 @@ func (q *Queries) HardDeleteProfileStore(ctx context.Context, arg HardDeleteProf
 
 const profileStoreHistoryIDs = `-- name: ProfileStoreHistoryIDs :many
 SELECT profile_store_id FROM profile_presets WHERE updated_at >= ?1
-GROUP BY profile_store_id ORDER BY MAX(updated_at) LIMIT CAST(?2 AS INTEGER)
+GROUP BY profile_store_id ORDER BY MAX(updated_at), MIN(occurred_at), profile_store_id LIMIT CAST(?2 AS INTEGER)
 `
 
 type ProfileStoreHistoryIDsParams struct {
@@ -414,7 +414,8 @@ type ProfileStoreHistoryIDsParams struct {
 	Limit int64
 }
 
-// The stores changed since Since, the oldest change first, from updated_at's index, for API v3 history
+// The stores changed since Since, the oldest change first, then by date and id as History sorts them, from updated_at's index, for API v3
+// history
 func (q *Queries) ProfileStoreHistoryIDs(ctx context.Context, arg ProfileStoreHistoryIDsParams) ([]string, error) {
 	rows, err := q.query(ctx, q.profileStoreHistoryIDsStmt, profileStoreHistoryIDs, arg.Since, arg.Limit)
 	if err != nil {

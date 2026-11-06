@@ -174,7 +174,7 @@ func (q *Queries) CreateFoodPreset(ctx context.Context, arg CreateFoodPresetPara
 
 const foodPresetHistoryIDs = `-- name: FoodPresetHistoryIDs :many
 SELECT id FROM food_presets WHERE updated_at >= ?1
-ORDER BY updated_at LIMIT CAST(?2 AS INTEGER)
+ORDER BY updated_at, created_at, id LIMIT CAST(?2 AS INTEGER)
 `
 
 type FoodPresetHistoryIDsParams struct {
@@ -182,7 +182,8 @@ type FoodPresetHistoryIDsParams struct {
 	Limit int64
 }
 
-// The foods changed since Since, the oldest change first, from updated_at's index, for API v3 history
+// The foods changed since Since, the oldest change first, then by date and id as History sorts them, from updated_at's index, for API v3
+// history
 func (q *Queries) FoodPresetHistoryIDs(ctx context.Context, arg FoodPresetHistoryIDsParams) ([]string, error) {
 	rows, err := q.query(ctx, q.foodPresetHistoryIDsStmt, foodPresetHistoryIDs, arg.Since, arg.Limit)
 	if err != nil {

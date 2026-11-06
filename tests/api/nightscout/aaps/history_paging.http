@@ -27,6 +27,9 @@ H Authorization: Bearer {{ jwt }}
 B { "type": "sgv", "sgv": 120, "date": {{ itime 10 }}, "device": "Dexcom G7", "app": "AAPS" }
 ASSERT_STATUS 201
 
+// Changes made in one millisecond are sorted by date, so the change waits to be a later one, as it would be
+SLEEP 5ms
+
 NAME change_oldest_sgv
 PATCH http://{{ site }}/api/v3/entries/{{ .add_oldest_sgv.identifier }}
 H Authorization: Bearer {{ jwt }}
@@ -85,6 +88,8 @@ POST http://{{ site }}/api/v3/treatments
 H Authorization: Bearer {{ jwt }}
 B { "eventType": "Carb Correction", "carbs": 30, "date": {{ itime 10 }}, "app": "AAPS" }
 ASSERT_STATUS 201
+
+SLEEP 5ms
 
 NAME delete_oldest_carbs
 DELETE http://{{ site }}/api/v3/treatments/{{ .add_oldest_carbs.identifier }}

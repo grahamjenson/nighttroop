@@ -229,7 +229,7 @@ func (q *Queries) CreateDeviceReport(ctx context.Context, arg CreateDeviceReport
 
 const deviceReportHistoryIDs = `-- name: DeviceReportHistoryIDs :many
 SELECT id FROM device_reports WHERE updated_at >= ?1
-ORDER BY updated_at LIMIT CAST(?2 AS INTEGER)
+ORDER BY updated_at, occurred_at, id LIMIT CAST(?2 AS INTEGER)
 `
 
 type DeviceReportHistoryIDsParams struct {
@@ -237,7 +237,8 @@ type DeviceReportHistoryIDsParams struct {
 	Limit int64
 }
 
-// The reports changed since Since, deleted ones too, the oldest change first, from updated_at's index, for API v3 history
+// The reports changed since Since, deleted ones too, the oldest change first, then by date and id as History sorts them, from updated_at's index, for API v3
+// history
 func (q *Queries) DeviceReportHistoryIDs(ctx context.Context, arg DeviceReportHistoryIDsParams) ([]string, error) {
 	rows, err := q.query(ctx, q.deviceReportHistoryIDsStmt, deviceReportHistoryIDs, arg.Since, arg.Limit)
 	if err != nil {

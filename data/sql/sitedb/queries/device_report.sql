@@ -68,9 +68,10 @@ SELECT * FROM device_reports WHERE id = ? AND (CAST(sqlc.arg('IncludeDeleted') A
 
 
 -- name: DeviceReportHistoryIDs :many
--- The reports changed since Since, deleted ones too, the oldest change first, from updated_at's index, for API v3 history
+-- The reports changed since Since, deleted ones too, the oldest change first, then by date and id as History sorts them, from updated_at's index, for API v3
+-- history
 SELECT id FROM device_reports WHERE updated_at >= sqlc.arg('Since')
-ORDER BY updated_at LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
+ORDER BY updated_at, occurred_at, id LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
 
 -- name: SearchDeviceReports :many
 SELECT * FROM device_reports

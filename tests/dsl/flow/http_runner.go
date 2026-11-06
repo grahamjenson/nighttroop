@@ -65,7 +65,7 @@ func (r *httpRunner) Step(t *testing.T, file *HTTPFile, step *HTTPStep, ctx map[
 	if err != nil {
 		t.Fatalf("%s:%d: %s %s: %v", step.Path, step.Line, step.Verb, step.Target, err)
 	}
-	if step.Verb == "RUN_BACKGROUND_JOBS" || isHTTP(step.Verb) {
+	if step.Verb == "RUN_BACKGROUND_JOBS" || step.Verb == "SLEEP" || isHTTP(step.Verb) {
 		return
 	}
 	pretty, _ := MarshalJsonWithoutEscapeHTML(output)
@@ -119,6 +119,9 @@ func (r *httpRunner) run(t *testing.T, file *HTTPFile, step *HTTPStep, ctx map[s
 	switch step.Verb {
 	case "RUN_BACKGROUND_JOBS":
 		r.RunBackgroundJobs()
+		return nil, nil
+	case "SLEEP":
+		time.Sleep(step.Timeout)
 		return nil, nil
 	case "CONNECT":
 		return nil, r.connect(ctx, file.Events(), step, timeout)

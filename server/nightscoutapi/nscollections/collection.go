@@ -324,9 +324,11 @@ func (c Collection[NS, DM]) History(ctx context.Context, siteContext *httputils.
 		slog.ErrorContext(ctx, "failed to read the history", "error", err, "collection", c.db.Name())
 		return nil, nsutils.ErrInternal
 	}
-	// Nightscout sorts history by srvModified, then date
+	// Nightscout sorts history by srvModified, then date; then the identifier, as its HistoryIDs query does, so a page
+	// a limit cuts off among changes made in the same millisecond is the first of them in this order
 	slices.SortStableFunc(models, func(a, b *DM) int {
-		return cmp.Or(cmp.Compare((*a).GetUpdatedAt(), (*b).GetUpdatedAt()), cmp.Compare((*a).GetOccurredAt(), (*b).GetOccurredAt()))
+		return cmp.Or(cmp.Compare((*a).GetUpdatedAt(), (*b).GetUpdatedAt()), cmp.Compare((*a).GetOccurredAt(), (*b).GetOccurredAt()),
+			cmp.Compare((*a).GetID(), (*b).GetID()))
 	})
 	return c.documents(models, siteContext, query.Raw), nil
 }
