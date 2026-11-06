@@ -87,17 +87,16 @@ With the glucose: `{ eventType: "Sensor Start", created_at, enteredBy, notes }`.
 When one starts (`TempTargetsStorage.getTempTargetsNotYetUploadedToNightscout`): `{ eventType: "Temporary Target",
 created_at, duration, enteredBy, notes (its name), targetTop, targetBottom }`, the targets in mg/dL with no `units`.
 When one ends early its run is posted again with the same `created_at` and its real `duration`
-(`getTempTargetRunsNotYetUploadedToNightscout`). Nightscout replaces the first (its v1 upsert on `created_at` and
-`eventType`); Nighttroop takes it as a duplicate and keeps the first, so the temp target keeps its full length
-(TODO P1).
+(`getTempTargetRunsNotYetUploadedToNightscout`). As in Nightscout (its v1 upsert on `created_at` and `eventType`),
+it replaces the first, so the temp target keeps its real length.
 
 ### Overrides: `POST /api/v1/treatments.json`
 
 When one starts (`OverrideStorage.getOverridesNotYetUploadedToNightscout`): `{ eventType: "Exercise", created_at,
 duration, enteredBy, notes (its name) }`, with `duration: 43200` (30 days) when it has no end. If its duration
 changed, Trio first deletes the one uploaded (below). When it ends, Trio deletes the first entry and posts the run
-with its real duration (`uploadOverrideRuns`). The delete is a 405 on Nighttroop, so Trio stops there and the run is
-never uploaded; an override with no end stays 30 days long (TODO P1, P2).
+with its real duration (`uploadOverrideRuns`). Both work: the delete by query soft deletes the first, and a run
+posted with the same `created_at` while the first is kept replaces it.
 
 ### Notes: `POST /api/v1/treatments.json`
 
@@ -240,7 +239,7 @@ Trio and iAPS use no Socket.IO, and no API v2 or v3.
 | Pump history upload with `SMB` and `External Insulin` | Works (#509) |
 | Carbs, sensor start, note uploads | Works |
 | Temp target and override upload | Works |
-| Temp target and override run (same `created_at`, new duration) | Not supported, TODO P1 |
+| Temp target and override run (same `created_at`, new duration) | Fixed in this PR: it replaces the first, as in Nightscout |
 | Device status upload | Works; pump `status.bolusing`, `suspended`, battery `string`, `display` and `uploader.isCharging` fixed in this PR |
 | Profile upload | Works |
 | Profile import | Works (`enteredBy`, #509) |
