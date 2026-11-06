@@ -26,6 +26,7 @@ import (
 	"strings"
 	{{ if eq .PkgName "sitedb" }}"time"{{ end }}
 
+	"nighttroop.t1d.nz/data/sql/migrateup"
 	"nighttroop.t1d.nz/data/sql/sqltiming"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/backup"
@@ -264,7 +265,7 @@ func MigrateUp(db *sql.DB) error {
 	return MigrateUpWith(db, Migrations)
 }
 
-// MigrateUpWith migrates db up with migrations, then records the oldest version whose build can use it: one before
+// MigrateUpWith migrates db up with migrations, as migrateup.Up does, then records the oldest version whose build can use it: one before
 // their newest when that is additive. A DB past their newest, which a newer build migrated, is used as it is when that
 // build recorded that their newest can use it, and refused otherwise, see docs/migrations.md.
 func MigrateUpWith(db *sql.DB, migrations fs.FS) error {
@@ -310,8 +311,8 @@ func MigrateUpWith(db *sql.DB, migrations fs.FS) error {
 		return nil
 	}
 
-	err = m.Up()
-	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
+	// Migrating up first forces back a DB a failed migration left dirty
+	if err := migrateup.Up("{{.PkgName}}", db, migrations); err != nil {
 		return err
 	}
 

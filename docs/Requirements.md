@@ -500,8 +500,11 @@ focus back to the row or button that opened it.
 - A start removes the staging folders a restore or archive killed part way left beside the DBs and backups, and nothing
   else there.
 - A site whose creation fails part way, such as its request being cancelled, leaves no site or identities behind.
-- A site's DB that cannot be opened at start, as when its migration fails and leaves it dirty, keeps its file and its
-  backup, so a fixed deploy opens it with its data.
+- A site's DB that cannot be opened at start, as when its migration keeps failing, keeps its file and its backup, so
+  a fixed deploy opens it with its data.
+- A DB (control, site, jobs, logs or live) a migration failed on is forced back to the version before that migration
+  when next opened, logged as a warning naming the DB and both versions, and migrated again; if the migration fails
+  again, the error names the DB, the migration and why it failed.
 - A live site whose DB file is missing on start, though its batch's folder is there, is restored from its batch's
   latest backup in S3, downloaded once per batch, and opened; either way it is a "Site DB missing" event the control
   admin sees, saying whether it was restored or why not (S3 not working, not in the backup, or the restore failed).
@@ -511,7 +514,8 @@ focus back to the row or button that opened it.
   are, keeping what was written since; one older than that, or than a migration not marked additive, does not start,
   saying the DB is at a version it cannot use.
 - A site whose DB file is missing and not restored, such as one created after its batch was last backed up, is left
-  out, so the server still starts and the rest of its batch is still backed up.
+  out, so the server still starts, but `/health` is 503 `unavailable`, never saying which site, until a start opens
+  it, so `update.sh` rolls back a release that starts without it. Its batch is not uploaded without it.
 - Old records' raw JSON is cleared after `TRUNCATE_RECORDS_AFTER_DAYS`.
 - Reads and writes are rate limited per site, identity and IP, and live sessions per site are capped.
 - A Nightscout request that fails auth, or needs none, spends its IP's budget on the site
@@ -520,7 +524,8 @@ focus back to the row or button that opened it.
 - Past the requests the server can work on at once (`REQUESTS_IN_FLIGHT_PER_CPU`) and a short queue
   (`REQUESTS_BACKLOG_PER_CPU`, waiting up to 5 seconds), a request is refused at once with 503 and `Retry-After`, so a
   server that falls behind answers what it can rather than every request timing out. The health check, live updates
-  and Socket.IO connections are never refused this way.
+  and Socket.IO connections are never refused this way. A quarter of each is kept for uploads to the Nightscout API,
+  so glucose keeps arriving while page loads and reads fill the rest.
 - A request for a site there is not is 404, but one whose site cannot be looked up, as when the server is too busy to
   answer in time, is 503 with `Retry-After`, so an uploader tries again rather than take its URL as wrong.
 - No request returns more than 1000 records, however many it asks for, through the site's pages and API, the

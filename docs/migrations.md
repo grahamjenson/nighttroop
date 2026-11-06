@@ -63,9 +63,18 @@ Each file runs in one transaction, on a connection with foreign keys on. So `go 
 a PRAGMA other than `PRAGMA defer_foreign_keys`: in a transaction some do nothing without an error, such as
 `PRAGMA foreign_keys = OFF`, and the rest, such as `ignore_check_constraints`, last past the migration on its
 connection, which the server goes on to use. `BEGIN`, `COMMIT` and `VACUUM` fail the migration already. A statement that fails rolls the whole
-file back, but golang-migrate has already marked the version dirty, and every open of a dirty DB fails ("Dirty
-database version N"). As the file was rolled back, none of N was applied: once its bug is fixed, the DB can be
-forced back to version N-1 and migrated again.
+file back, but golang-migrate has already marked the version dirty, and refuses to migrate a dirty DB. As the file was
+rolled back, none of N was applied, so each open of a DB dirty at N forces it back to version N-1 (or to none, when N
+is the first), logs a warning naming the DB and both versions, and migrates it again
+(`data/sql/migrateup`). A migration that still fails stops the open with an error naming the DB, the migration and
+why it failed. A DB dirty at a version its build has no migration for is not forced back, as which was applied is not
+known.
+
+The one case this gets wrong: golang-migrate clears the dirty mark after the file's transaction commits, so a server
+that dies between the two leaves N applied but marked dirty, and the next open runs N again. A migration of only
+`CREATE`s then fails on what it already made, and stops the open with that error to fix by hand; one that changes rows,
+such as an `UPDATE`, would change them twice. Keep a migration that changes rows safe to run twice, e.g. with a
+`WHERE` that only matches rows it has not changed yet.
 
 ## Changing a table
 
@@ -92,9 +101,8 @@ them otherwise.
 
 - **A DB that cannot be opened stops the start**, as does a missing site restored from its backup that cannot be:
   its files are kept, and with `update.sh` the release is rolled back, putting `./data` back from the copy it made.
-- **Fix forward**: a new release with a fixed or new migration opens the kept DBs. A dirty one is first forced back
-  to the version before the one that failed, e.g. `sqlite3 <db> "UPDATE schema_migrations SET version = N-1, dirty = 0"`
-  with the server stopped.
+- **Fix forward**: a new release with a fixed or new migration opens the kept DBs. One the failed migration left
+  dirty is forced back to the version before it and migrated again on its own, so nothing needs to be done by hand.
 - **Rolling back after a migration ran** keeps the DBs when the release rolled back to is the one before an additive
   migration. Otherwise it needs `./backups/data-*.tar.gz` from `update.sh`, or S3's backups, as the older build cannot
   open DBs at the newer version, and loses what was written since.
