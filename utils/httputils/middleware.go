@@ -62,6 +62,10 @@ func AddStandardMiddleware(router chi.Router, config *config.ServerConfig, contr
 	router.Use(withFeedbackURL(config.FeedbackURL))
 	router.Use(withTestSite(config.TestSite))
 	router.Use(withDBIPCredit)
+	if controlDB != nil && config.CaptureRequests {
+		// Inside the compression, so the response body is captured as the handler wrote it
+		router.Use(CaptureRequests(controlDB.Logs))
+	}
 }
 
 // withRequestLogAttrs logs the request's ID, and its site's, with everything logged with its context; the identity is

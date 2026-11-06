@@ -35,6 +35,27 @@ func TestStagingConfig(t *testing.T) {
 	require.NoError(t, cfg.ValidateClean())
 }
 
+// Requests are captured only on a staging server set to capture them: production ignores the setting
+func TestCaptureRequestsOnlyInStaging(t *testing.T) {
+	tests := []struct {
+		mode    consts.ServerMode
+		capture string
+		want    bool
+	}{
+		{consts.Staging, "true", true},
+		{consts.Staging, "", false},
+		{consts.Production, "true", false},
+		{consts.Development, "true", false},
+	}
+	for _, tt := range tests {
+		dotenv := map[string]string{"HOST_PROTOCOL": "https", "CAPTURE_REQUESTS": tt.capture}
+		cfg, err := readServerConfig(tt.mode, dotenv)
+		require.NoError(t, err)
+		require.Equal(t, tt.want, cfg.CaptureRequests, "%s with CAPTURE_REQUESTS=%q", tt.mode, tt.capture)
+		require.NoError(t, rejectUnknownVariables(dotenv))
+	}
+}
+
 // Staging needs its admin's credentials, a long password and a TOTP secret an authenticator app takes
 func TestValidateStagingAdmin(t *testing.T) {
 	tests := []struct {

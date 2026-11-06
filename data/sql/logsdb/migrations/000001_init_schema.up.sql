@@ -1,13 +1,15 @@
 -- Logs, events and errors from around the server, each optionally about a site, and the request or background job run
 -- it was for. This DB is not backed up, and a cron job trims each table to its newest LOGS_DB_MAX_ROWS_PER_TABLE rows.
--- Every slog log is kept in logs, written in batches.
+-- Every slog log is kept in logs, written in batches. A log's attributes can be up to 256 KB, so a staging server
+-- capturing requests (CAPTURE_REQUESTS) keeps each one's headers and bodies in one log; every other log keeps its
+-- attributes within 4 KB, as the code limits them.
 
 CREATE TABLE logs (
     id INTEGER PRIMARY KEY,
     site_id TEXT CHECK(length(site_id) <= 32),
     level TEXT NOT NULL CHECK(level IN ('debug', 'info', 'warn', 'error')),
     message TEXT NOT NULL CHECK(length(message) <= 1024),
-    attributes TEXT CHECK(length(attributes) <= 4096 AND json_valid(attributes)),
+    attributes TEXT CHECK(length(attributes) <= 262144 AND json_valid(attributes)),
     request_id TEXT CHECK(length(request_id) <= 64),
     job_id TEXT CHECK(length(job_id) <= 32),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
