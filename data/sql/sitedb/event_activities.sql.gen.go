@@ -10,6 +10,40 @@ import (
 	"database/sql"
 )
 
+const activityHistoryIDs = `-- name: ActivityHistoryIDs :many
+SELECT id FROM activities WHERE updated_at >= ?1
+ORDER BY updated_at LIMIT CAST(?2 AS INTEGER)
+`
+
+type ActivityHistoryIDsParams struct {
+	Since int64
+	Limit int64
+}
+
+// The activities changed since Since, deleted ones too, the oldest change first, from updated_at's index, for API v3 history
+func (q *Queries) ActivityHistoryIDs(ctx context.Context, arg ActivityHistoryIDsParams) ([]string, error) {
+	rows, err := q.query(ctx, q.activityHistoryIDsStmt, activityHistoryIDs, arg.Since, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const allActivities = `-- name: AllActivities :many
 
 SELECT id, name, activity_type, duration_minutes, calories, steps, heart_rate, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM activities

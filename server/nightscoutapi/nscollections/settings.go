@@ -145,6 +145,11 @@ func (c SettingsCollection) Search(ctx context.Context, siteContext *httputils.S
 	return docs, nil
 }
 
+// History is every setting, as their changes are not kept
+func (c SettingsCollection) History(ctx context.Context, siteContext *httputils.SiteContext, since int64, query nsquery.Query) ([]nsutils.Document, *nsutils.HTTPError) {
+	return c.Search(ctx, siteContext, query)
+}
+
 func (c SettingsCollection) DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError) {
 	return 0, nsutils.ErrNotImplemented
 }

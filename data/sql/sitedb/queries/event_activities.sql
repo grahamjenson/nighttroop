@@ -39,6 +39,11 @@ LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER
 SELECT * FROM activities WHERE id = ? AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL);
 
 
+-- name: ActivityHistoryIDs :many
+-- The activities changed since Since, deleted ones too, the oldest change first, from updated_at's index, for API v3 history
+SELECT id FROM activities WHERE updated_at >= sqlc.arg('Since')
+ORDER BY updated_at LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
+
 -- name: SearchActivities :many
 SELECT * FROM activities
 WHERE

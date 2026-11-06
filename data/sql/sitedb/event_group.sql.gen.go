@@ -434,6 +434,40 @@ func (q *Queries) CreateEventGroup(ctx context.Context, arg CreateEventGroupPara
 	return &i, err
 }
 
+const eventGroupHistoryIDs = `-- name: EventGroupHistoryIDs :many
+SELECT id FROM event_groups WHERE updated_at >= ?1
+ORDER BY updated_at LIMIT CAST(?2 AS INTEGER)
+`
+
+type EventGroupHistoryIDsParams struct {
+	Since int64
+	Limit int64
+}
+
+// The treatments changed since Since, deleted ones too, the oldest change first, from updated_at's index, for API v3 history
+func (q *Queries) EventGroupHistoryIDs(ctx context.Context, arg EventGroupHistoryIDsParams) ([]string, error) {
+	rows, err := q.query(ctx, q.eventGroupHistoryIDsStmt, eventGroupHistoryIDs, arg.Since, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const eventsToGroup = `-- name: EventsToGroup :many
 WITH params AS (
     SELECT CAST(?1 AS TEXT) AS group_id, CAST(?2 AS INTEGER) AS from_ms,

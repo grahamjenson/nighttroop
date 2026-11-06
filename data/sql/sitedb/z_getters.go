@@ -5506,6 +5506,26 @@ func (m *CreateDeviceReportParams) SetCreatedByIdentityID(v *int64) {
 	m.CreatedByIdentityID = v
 }
 
+// GetSince returns the Since value.
+func (m DeviceReportHistoryIDsParams) GetSince() int64 {
+	return m.Since
+}
+
+// SetSince sets the Since value and returns the updated DeviceReportHistoryIDsParams.
+func (m *DeviceReportHistoryIDsParams) SetSince(v int64) {
+	m.Since = v
+}
+
+// GetLimit returns the Limit value.
+func (m DeviceReportHistoryIDsParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated DeviceReportHistoryIDsParams.
+func (m *DeviceReportHistoryIDsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
 // GetDevice returns the Device value.
 func (m DeviceReportsForDeviceParams) GetDevice() *string {
 	return m.Device
@@ -5844,6 +5864,26 @@ func (m UpdateDeviceReportParams) GetID() string {
 // SetID sets the ID value and returns the updated UpdateDeviceReportParams.
 func (m *UpdateDeviceReportParams) SetID(v string) {
 	m.ID = v
+}
+
+// GetSince returns the Since value.
+func (m ActivityHistoryIDsParams) GetSince() int64 {
+	return m.Since
+}
+
+// SetSince sets the Since value and returns the updated ActivityHistoryIDsParams.
+func (m *ActivityHistoryIDsParams) SetSince(v int64) {
+	m.Since = v
+}
+
+// GetLimit returns the Limit value.
+func (m ActivityHistoryIDsParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated ActivityHistoryIDsParams.
+func (m *ActivityHistoryIDsParams) SetLimit(v int64) {
+	m.Limit = v
 }
 
 // GetIncludeDeleted returns the IncludeDeleted value.
@@ -8196,6 +8236,26 @@ func (m *GetGlucoseReadingParams) SetID(v string) {
 	m.ID = v
 }
 
+// GetSince returns the Since value.
+func (m GlucoseReadingHistoryIDsParams) GetSince() int64 {
+	return m.Since
+}
+
+// SetSince sets the Since value and returns the updated GlucoseReadingHistoryIDsParams.
+func (m *GlucoseReadingHistoryIDsParams) SetSince(v int64) {
+	m.Since = v
+}
+
+// GetLimit returns the Limit value.
+func (m GlucoseReadingHistoryIDsParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated GlucoseReadingHistoryIDsParams.
+func (m *GlucoseReadingHistoryIDsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
 // GetID returns the ID value.
 func (m HardDeleteGlucoseReadingParams) GetID() string {
 	return m.ID
@@ -8944,6 +9004,26 @@ func (m CreateEventGroupParams) GetCreatedByIdentityID() *int64 {
 // SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated CreateEventGroupParams.
 func (m *CreateEventGroupParams) SetCreatedByIdentityID(v *int64) {
 	m.CreatedByIdentityID = v
+}
+
+// GetSince returns the Since value.
+func (m EventGroupHistoryIDsParams) GetSince() int64 {
+	return m.Since
+}
+
+// SetSince sets the Since value and returns the updated EventGroupHistoryIDsParams.
+func (m *EventGroupHistoryIDsParams) SetSince(v int64) {
+	m.Since = v
+}
+
+// GetLimit returns the Limit value.
+func (m EventGroupHistoryIDsParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated EventGroupHistoryIDsParams.
+func (m *EventGroupHistoryIDsParams) SetLimit(v int64) {
+	m.Limit = v
 }
 
 // GetGroupID returns the GroupID value.
@@ -13096,6 +13176,26 @@ func (m *CreateFoodPresetParams) SetCreatedByIdentityID(v *int64) {
 	m.CreatedByIdentityID = v
 }
 
+// GetSince returns the Since value.
+func (m FoodPresetHistoryIDsParams) GetSince() int64 {
+	return m.Since
+}
+
+// SetSince sets the Since value and returns the updated FoodPresetHistoryIDsParams.
+func (m *FoodPresetHistoryIDsParams) SetSince(v int64) {
+	m.Since = v
+}
+
+// GetLimit returns the Limit value.
+func (m FoodPresetHistoryIDsParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated FoodPresetHistoryIDsParams.
+func (m *FoodPresetHistoryIDsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
 // GetID returns the ID value.
 func (m GetFoodPresetParams) GetID() string {
 	return m.ID
@@ -13864,6 +13964,26 @@ func (m HardDeleteProfileStoreParams) GetProfileStoreID() string {
 // SetProfileStoreID sets the ProfileStoreID value and returns the updated HardDeleteProfileStoreParams.
 func (m *HardDeleteProfileStoreParams) SetProfileStoreID(v string) {
 	m.ProfileStoreID = v
+}
+
+// GetSince returns the Since value.
+func (m ProfileStoreHistoryIDsParams) GetSince() int64 {
+	return m.Since
+}
+
+// SetSince sets the Since value and returns the updated ProfileStoreHistoryIDsParams.
+func (m *ProfileStoreHistoryIDsParams) SetSince(v int64) {
+	m.Since = v
+}
+
+// GetLimit returns the Limit value.
+func (m ProfileStoreHistoryIDsParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated ProfileStoreHistoryIDsParams.
+func (m *ProfileStoreHistoryIDsParams) SetLimit(v int64) {
+	m.Limit = v
 }
 
 // GetDateGTE returns the DateGTE value.

@@ -1,10 +1,12 @@
 package nscollections
 
 import (
+	"cmp"
 	"context"
 	"database/sql"
 	"encoding/json"
 	"log/slog"
+	"slices"
 
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/sitedb"
@@ -21,6 +23,8 @@ type CollectionStore interface {
 	Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (nsutils.Document, bool, *nsutils.HTTPError)
 	Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (nsutils.Document, *nsutils.HTTPError)
 	Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Document, *nsutils.HTTPError)
+	// History is what changed since, deleted too, the oldest change first, as API v3 history
+	History(ctx context.Context, siteContext *httputils.SiteContext, since int64, query nsquery.Query) ([]nsutils.Document, *nsutils.HTTPError)
 	Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool, raw bool) (nsutils.Document, bool, *nsutils.HTTPError)
 	Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, raw bool) (nsutils.Document, *nsutils.HTTPError)
 	Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError
@@ -40,6 +44,8 @@ type CollectionDB[NS, DM any] interface {
 	// CreateModel stores the model, with the identifier given when it is replacing one
 	CreateModel(q *sitedb.Queries, ctx context.Context, nsModel NS, cc nightscoutmodels.ConverterContext, identifier *string) (*DM, error)
 	SearchModels(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]*DM, error)
+	// HistoryIDs are the identifiers of at most limit models changed since, deleted too, the oldest change first
+	HistoryIDs(q *sitedb.Queries, ctx context.Context, since, limit int64) ([]string, error)
 	// Delete deletes a model, softly or, when permanent, for good
 	Delete(q *sitedb.Queries, ctx context.Context, identifier string, permanent bool) (sql.Result, error)
 }
@@ -290,11 +296,48 @@ func (c Collection[NS, DM]) Search(ctx context.Context, siteContext *httputils.S
 		slog.ErrorContext(ctx, "failed to search the database", "error", err, "collection", c.db.Name())
 		return nil, nsutils.ErrInternal
 	}
+	return c.documents(models, siteContext, query.Raw), nil
+}
+
+// History finds what changed in updated_at's index, then reads each by its primary key, so a page starts from since
+// however old what changed is. A query with filters of its own searches for what changed with them instead, which
+// reads through the dates searched.
+func (c Collection[NS, DM]) History(ctx context.Context, siteContext *httputils.SiteContext, since int64, query nsquery.Query) ([]nsutils.Document, *nsutils.HTTPError) {
+	q := siteContext.SiteDB.Queries()
+	ids, err := c.db.HistoryIDs(q, ctx, since, query.Limit)
+	models := make([]*DM, 0, len(ids))
+	if err == nil && query.HasFilters && len(ids) > 0 {
+		idIn, _ := json.Marshal(ids)
+		query.IDIn, query.Skip, query.IncludeDeleted = new(string(idIn)), 0, true
+		models, err = c.db.SearchModels(q, ctx, query)
+	}
+	for i := 0; err == nil && !query.HasFilters && i < len(ids); i++ {
+		// One deleted for good since its identifier was read is left out
+		model, getErr := c.db.GetModel(q, ctx, ids[i], true)
+		if getErr == nil && model != nil {
+			models = append(models, model)
+		} else if getErr != sql.ErrNoRows {
+			err = getErr
+		}
+	}
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to read the history", "error", err, "collection", c.db.Name())
+		return nil, nsutils.ErrInternal
+	}
+	// Nightscout sorts history by srvModified, then date
+	slices.SortStableFunc(models, func(a, b *DM) int {
+		return cmp.Or(cmp.Compare((*a).GetUpdatedAt(), (*b).GetUpdatedAt()), cmp.Compare((*a).GetOccurredAt(), (*b).GetOccurredAt()))
+	})
+	return c.documents(models, siteContext, query.Raw), nil
+}
+
+// documents are the database models as this collection's documents
+func (c Collection[NS, DM]) documents(models []*DM, siteContext *httputils.SiteContext, raw bool) []nsutils.Document {
 	docs := make([]nsutils.Document, len(models))
 	for i, model := range models {
-		docs[i] = c.document(model, siteContext, query.Raw)
+		docs[i] = c.document(model, siteContext, raw)
 	}
-	return docs, nil
+	return docs
 }
 
 func (c Collection[NS, DM]) Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError {

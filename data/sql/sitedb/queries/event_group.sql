@@ -110,6 +110,11 @@ WHERE eg.id = ? AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR eg.delet
 
 
 
+-- name: EventGroupHistoryIDs :many
+-- The treatments changed since Since, deleted ones too, the oldest change first, from updated_at's index, for API v3 history
+SELECT id FROM event_groups WHERE updated_at >= sqlc.arg('Since')
+ORDER BY updated_at LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
+
 -- name: SearchEventGroups :many
 SELECT
     -- It would be awesome if sqlc worked with embed null objects

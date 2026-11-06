@@ -1,0 +1,146 @@
+INCLUDE steps/new_ns_site.steps
+
+// AAPS's later loads page /history/<since>?limit=500, moving since on to the ETag, the newest srvModified it got, and
+// stop when the ETag does not move (workers/LoadBgRunner.kt). History is the oldest change first, as in Nightscout, so
+// every page follows on from the last, here with a limit of 2. See docs/clients/aaps.md
+
+////////
+// ENTRIES
+////////
+
+// Made oldest date first, and the oldest changed again last, so srvModified's order is neither date's nor creation's
+NAME add_oldest_sgv
+POST http://{{ site }}/api/v3/entries
+H Authorization: Bearer {{ jwt }}
+B { "type": "sgv", "sgv": 100, "date": {{ itime 30 }}, "device": "Dexcom G7", "app": "AAPS" }
+ASSERT_STATUS 201
+
+NAME add_middle_sgv
+POST http://{{ site }}/api/v3/entries
+H Authorization: Bearer {{ jwt }}
+B { "type": "sgv", "sgv": 110, "date": {{ itime 20 }}, "device": "Dexcom G7", "app": "AAPS" }
+ASSERT_STATUS 201
+
+NAME add_newest_sgv
+POST http://{{ site }}/api/v3/entries
+H Authorization: Bearer {{ jwt }}
+B { "type": "sgv", "sgv": 120, "date": {{ itime 10 }}, "device": "Dexcom G7", "app": "AAPS" }
+ASSERT_STATUS 201
+
+NAME change_oldest_sgv
+PATCH http://{{ site }}/api/v3/entries/{{ .add_oldest_sgv.identifier }}
+H Authorization: Bearer {{ jwt }}
+B { "type": "sgv", "sgv": 101 }
+ASSERT_STATUS 200
+
+NAME sgv_history_first_page
+GET http://{{ site }}/api/v3/entries/history/{{ itime 60 }}?limit=2
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result"
+ASSERT_EQUALS ".add_middle_sgv.identifier" "@result.0.identifier"
+ASSERT_EQUALS ".add_newest_sgv.identifier" "@result.1.identifier"
+SET sgv_etag W/"{{ dig "sgv_history_first_page.result.1.srvModified" }}"
+ASSERT_EQUALS ".sgv_etag" "#Etag.0"
+
+// From the ETag, which is the newest srvModified got, and is got again
+NAME sgv_history_second_page
+GET http://{{ site }}/api/v3/entries/history/{{ dig "sgv_history_first_page.result.1.srvModified" }}?limit=2
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result"
+ASSERT_EQUALS ".add_newest_sgv.identifier" "@result.0.identifier"
+ASSERT_EQUALS ".add_oldest_sgv.identifier" "@result.1.identifier"
+ASSERT_EQUALS 101 "@result.1.sgv"
+
+// The last page has only the newest change, so the ETag does not move and AAPS stops
+NAME sgv_history_last_page
+GET http://{{ site }}/api/v3/entries/history/{{ dig "sgv_history_second_page.result.1.srvModified" }}?limit=2
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS ".add_oldest_sgv.identifier" "@result.0.identifier"
+SET last_sgv_etag W/"{{ dig "sgv_history_second_page.result.1.srvModified" }}"
+ASSERT_EQUALS ".last_sgv_etag" "#Etag.0"
+
+////////
+// TREATMENTS
+////////
+
+// The oldest is deleted last, so it comes last, with isValid false
+NAME add_oldest_carbs
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B { "eventType": "Carb Correction", "carbs": 10, "date": {{ itime 30 }}, "app": "AAPS" }
+ASSERT_STATUS 201
+
+NAME add_middle_carbs
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B { "eventType": "Carb Correction", "carbs": 20, "date": {{ itime 20 }}, "app": "AAPS" }
+ASSERT_STATUS 201
+
+NAME add_newest_carbs
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B { "eventType": "Carb Correction", "carbs": 30, "date": {{ itime 10 }}, "app": "AAPS" }
+ASSERT_STATUS 201
+
+NAME delete_oldest_carbs
+DELETE http://{{ site }}/api/v3/treatments/{{ .add_oldest_carbs.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+
+NAME carbs_history_first_page
+GET http://{{ site }}/api/v3/treatments/history/{{ itime 60 }}?limit=2
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result"
+ASSERT_EQUALS 20 "@result.0.carbs"
+ASSERT_EQUALS 30 "@result.1.carbs"
+
+NAME carbs_history_last_page
+GET http://{{ site }}/api/v3/treatments/history/{{ dig "carbs_history_first_page.result.1.srvModified" }}?limit=2
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result"
+ASSERT_EQUALS 30 "@result.0.carbs"
+ASSERT_EQUALS 10 "@result.1.carbs"
+ASSERT_EQUALS false "@result.1.isValid"
+
+////////
+// PROFILE
+////////
+
+// AAPS takes the last store in its profile history (getProfileModifiedSince, limit 10) as the newest
+NAME add_older_profile_store
+POST http://{{ site }}/api/v3/profile
+H Authorization: Bearer {{ jwt }}
+B {
+    "defaultProfile": "Older",
+    "date": {{ itime 30 }},
+    "startDate": "{{ time 30 }}",
+    "store": { "Older": { "dia": 5, "basal": [{"time": "00:00", "timeAsSeconds": 0, "value": 0.8}], "units": "mg/dl" } },
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+
+NAME add_newer_profile_store
+POST http://{{ site }}/api/v3/profile
+H Authorization: Bearer {{ jwt }}
+B {
+    "defaultProfile": "Newer",
+    "date": {{ itime 10 }},
+    "startDate": "{{ time 10 }}",
+    "store": { "Newer": { "dia": 5, "basal": [{"time": "00:00", "timeAsSeconds": 0, "value": 0.9}], "units": "mg/dl" } },
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+
+NAME profile_history_last_is_newest
+GET http://{{ site }}/api/v3/profile/history/{{ itime 60 }}?limit=10
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result"
+ASSERT_EQUALS "Older" "@result.0.defaultProfile"
+ASSERT_EQUALS "Newer" "@result.1.defaultProfile"
