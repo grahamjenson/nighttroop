@@ -61,9 +61,6 @@
 1. P4: Keep which batches were uploaded, and with which sites, across restarts, as the first backup round after a
    restart uploads every batch again though their backups are current
 1. Migrations (from the audit of what happens when one fails):
-    1. P1: A live site whose DB file is missing, and not restored from its batch's backup, still lets the server come up
-       without it and `/health` say ok, so `update.sh` keeps the release rather than rolling it back. Its batch is no
-       longer uploaded without it, so S3's latest keeps the site
     1. P0: At the first production deploy, freeze the migrations: add `data/sql/MIGRATIONS_FROZEN`, so CI refuses a
        change to a migration on main, and add numbered migrations from then on (docs/migrations.md). Then add a test
        that the last release's DBs migrate to the current schema
@@ -124,5 +121,7 @@
 
 1. P4: A live site left out at start, its DB missing and not restored, is only a `site_db_missing` event; mark it on
    the control sites page too
+1. P3: Deleting a live site whose DB is missing (`DeleteSites`) deletes it but answers `site not found`, and `/health`
+   stays unavailable (`SitesMissing`) until a restart; delete it cleanly and let `/health` be ok again
 1. P3: When the server is busy, uploads from devices are refused as often as page loads; give Nightscout writes their
    own share of the requests in flight, so glucose keeps arriving

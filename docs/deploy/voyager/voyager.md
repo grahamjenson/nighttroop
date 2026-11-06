@@ -430,6 +430,9 @@ Look at `docker compose logs nighttroop`:
 
 - **Still starting after a while:** a first start on a new VPS restores from S3, which takes longer the more data there
   is. Give it a few minutes.
+- **`Site DB is missing, so the site is not opened`:** a live site's database file is missing and was not restored
+  from its batch's backup in S3, which the Control Events page shows as a "Site DB missing" event, so the health check
+  fails until a start opens it. Put its file back, such as from a copy in `./backups`, and restart.
 
 ### The `172.30.0.0/24` network is already used on the VPS
 
