@@ -518,7 +518,8 @@ focus back to the row or button that opened it.
 - Past the requests the server can work on at once (`REQUESTS_IN_FLIGHT_PER_CPU`) and a short queue
   (`REQUESTS_BACKLOG_PER_CPU`, waiting up to 5 seconds), a request is refused at once with 503 and `Retry-After`, so a
   server that falls behind answers what it can rather than every request timing out. The health check, live updates
-  and Socket.IO connections are never refused this way.
+  and Socket.IO connections are never refused this way. A quarter of each is kept for uploads to the Nightscout API,
+  so glucose keeps arriving while page loads and reads fill the rest.
 - A request for a site there is not is 404, but one whose site cannot be looked up, as when the server is too busy to
   answer in time, is 503 with `Retry-After`, so an uploader tries again rather than take its URL as wrong.
 - No request returns more than 1000 records, however many it asks for, through the site's pages and API, the

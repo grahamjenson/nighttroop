@@ -123,5 +123,3 @@
    the control sites page too
 1. P3: Deleting a live site whose DB is missing (`DeleteSites`) deletes it but answers `site not found`, and `/health`
    stays unavailable (`SitesMissing`) until a restart; delete it cleanly and let `/health` be ok again
-1. P3: When the server is busy, uploads from devices are refused as often as page loads; give Nightscout writes their
-   own share of the requests in flight, so glucose keeps arriving
