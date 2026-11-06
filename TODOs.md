@@ -64,8 +64,6 @@
     1. P0: At the first production deploy, freeze the migrations: add `data/sql/MIGRATIONS_FROZEN`, so CI refuses a
        change to a migration on main, and add numbered migrations from then on (docs/migrations.md). Then add a test
        that the last release's DBs migrate to the current schema
-    1. P1: A migration that fails leaves its DB dirty, which every open refuses. Each runs in a transaction, so a dirty
-       version N had none of N applied: force it back to N-1 and try again, or report it plainly
     1. P1: A build cannot open a DB a newer one migrated, so rolling back needs `update.sh`'s copy of `./data`, losing
        what was written since. Keep migrations additive, and let a build open a DB one additive version newer
     1. P2: Document changing a table: SQLite rebuilds it, which needs `PRAGMA defer_foreign_keys = ON` in the

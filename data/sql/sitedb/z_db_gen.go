@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"time"
 
+	"nighttroop.t1d.nz/data/sql/migrateup"
 	"nighttroop.t1d.nz/data/sql/sqltiming"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/backup"
@@ -194,33 +195,9 @@ func GetS3ArchivePath(subdomain string, serverConfig *config.ServerConfig) strin
 //go:embed migrations/*.sql
 var Migrations embed.FS
 
+// MigrateUp migrates db up, first forcing back one a failed migration left dirty
 func MigrateUp(db *sql.DB) error {
-	driver, err := sqlite.WithInstance(db, &sqlite.Config{})
-	if err != nil {
-		return err
-	}
-
-	d, err := iofs.New(Migrations, "migrations")
-	if err != nil {
-		return err
-	}
-
-	m, err := migrate.NewWithInstance(
-		"iofs",
-		d,
-		"sqlite",
-		driver,
-	)
-	if err != nil {
-		return err
-	}
-
-	err = m.Up()
-	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
-		return err
-	}
-
-	return nil
+	return migrateup.Up("sitedb", db, Migrations)
 }
 
 func MigrateDown(db *sql.DB) error {
