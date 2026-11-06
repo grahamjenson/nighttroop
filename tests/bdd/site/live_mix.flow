@@ -1,5 +1,5 @@
 // A .flow mixes API calls, a Nightscout socket, a page's live updates stream and the site's pages: a reading added on
-// the page reaches the socket and the stream listening for it
+// the page reaches the socket and the stream listening for it. It starts with HTTP steps; BROWSE and HTTP switch.
 
 // The site is made through the API, and its admin signs in for a JWT
 NAME create_site
@@ -32,6 +32,7 @@ NAME first_data
 WAIT dataUpdate
 
 // The admin signs in on the site's page and adds a meter reading there
+BROWSE
 GOTO {{ .site_url }}/login
 INPUT #site--login--name admin
 INPUT #site--login--password password
@@ -49,6 +50,7 @@ CLICK #site--glucose--create--submit
 ASSERT_STATUS 201
 
 // The stream sends it as created, in the admin's units, and the socket sends it to the web app as a meter reading
+HTTP
 NAME created
 WAIT created
 ASSERT_EQUALS 7.9 "@reading"

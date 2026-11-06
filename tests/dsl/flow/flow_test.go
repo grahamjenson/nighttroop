@@ -19,16 +19,22 @@ func TestParseMixes(t *testing.T) {
 		"api/list.http":    {Data: []byte("INCLUDE steps/site.steps\nSET site {{ .create_site.subdomain }}\n\nNAME list\nGET http://localhost/list?token={{ token }}\nASSERT_STATUS 200\n")},
 		"api/missing.http": {Data: []byte("NAME list\nGET http://localhost/list\nINCLUDE steps/missing.steps\n")},
 		"site/mixed.flow": {Data: []byte(`INCLUDE steps/site.steps
+BROWSE
 GOTO {{ server_url }}/
 ASSERT_VISIBLE #site--login
 POST /settings/push-registrations {"app": "loop"}
+HTTP
 NAME connect
 CONNECT http://{{ site }}/socket.io/?EIO=3
 NAME updated
 WAIT dataUpdate
+BROWSE
 CLICK #site--nav--home
 ASSERT_PATH /
 `)},
+		// A .steps file goes on in the mode it was included in, each time, and its own switch ends with it
+		"steps/home.steps": {Data: []byte("GOTO {{ server_url }}/\nHTTP\nNAME health\nGET http://localhost/health\n")},
+		"site/twice.flow": {Data: []byte("BROWSE\nINCLUDE steps/home.steps\nCLICK #site--nav--home\nHTTP\nINCLUDE steps/site.steps\n")},
 	}
 
 	list, err := Parse(fsys, "api/list.http")
@@ -41,21 +47,30 @@ ASSERT_PATH /
 
 	mixed, err := Parse(fsys, "site/mixed.flow")
 	require.NoError(t, err)
+	require.Equal(t, []string{"POST", "GOTO {{ server_url }}/", `POST /settings/push-registrations {"app": "loop"}`, "CONNECT", "WAIT",
+		"CLICK #site--nav--home"}, kinds(mixed))
+	require.IsType(t, &browser.Goto{}, mixed.Steps[1].Browser)
+	require.Equal(t, []string{"dataUpdate"}, mixed.API.Events())
+
+	twice, err := Parse(fsys, "site/twice.flow")
+	require.NoError(t, err)
+	require.Equal(t, []string{"GOTO {{ server_url }}/", "GET", "CLICK #site--nav--home", "POST"}, kinds(twice))
+
+	_, err = Parse(fsys, "api/missing.http")
+	require.ErrorContains(t, err, "api/missing.http:3: INCLUDE steps/missing.steps")
+}
+
+// kinds is each of the flow's steps, an API step by its verb and a browser one by its line
+func kinds(flow *Flow) []string {
 	kinds := []string{}
-	for _, step := range mixed.Steps {
+	for _, step := range flow.Steps {
 		if step.API != nil {
 			kinds = append(kinds, step.API.Verb)
 		} else {
 			kinds = append(kinds, step.Browser.ToFlatString())
 		}
 	}
-	require.Equal(t, []string{"POST", "GOTO {{ server_url }}/", `POST /settings/push-registrations {"app": "loop"}`, "CONNECT", "WAIT",
-		"CLICK #site--nav--home"}, kinds)
-	require.IsType(t, &browser.Goto{}, mixed.Steps[1].Browser)
-	require.Equal(t, []string{"dataUpdate"}, mixed.API.Events())
-
-	_, err = Parse(fsys, "api/missing.http")
-	require.ErrorContains(t, err, "api/missing.http:3: INCLUDE steps/missing.steps")
+	return kinds
 }
 
 // Each step sees what those before it SET, a RUN_BACKGROUND_JOBS runs the jobs, and a request is sent as written:
