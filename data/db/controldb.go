@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"golang.org/x/sync/errgroup"
@@ -44,6 +45,8 @@ type ControlDB struct {
 	setup setup
 	// missingSites are the live sites whose DB files were missing at start, for RestoreMissingSites
 	missingSites []string
+	// sitesMissing is whether a live site's DB file was missing at start and not restored, for SitesMissing
+	sitesMissing atomic.Bool
 }
 
 func NewControlDB(ctx context.Context, serverConfig *config.ServerConfig) (*ControlDB, error) {
@@ -109,6 +112,7 @@ func (db *ControlDB) fillSites(ctx context.Context) error {
 		if !utils.FileExists(sitedb.GetPath(model.ID, db.ServerConfig)) {
 			slog.ErrorContext(ctx, "Site DB is missing, so the site is not opened", "site_id", model.ID)
 			db.missingSites = append(db.missingSites, model.ID)
+			db.sitesMissing.Store(true)
 			continue
 		}
 		g.Go(func() error {
@@ -129,10 +133,12 @@ var ErrRestoredSiteCannotOpen = errors.New("a restored site's DB cannot be opene
 
 // RestoreMissingSites restores each live site whose DB file was missing at start from its batch's latest backup,
 // downloaded once per batch with download, and opens it. Each is recorded as a site_db_missing event, so the control
-// admin sees a site the backup could not bring back, which is still left out. A restored site that cannot be opened is
+// admin sees a site the backup could not bring back, which is still left out, and is SitesMissing so the health check
+// is not ok and a release that starts without it is rolled back. A restored site that cannot be opened is
 // ErrRestoredSiteCannotOpen, so the start fails and a release that cannot open it is rolled back rather than kept.
 func (db *ControlDB) RestoreMissingSites(ctx context.Context, download s3utils.DownloadFunc) error {
 	var cannotOpen error
+	missing := false
 	byBatch := map[string][]string{}
 	for _, siteID := range db.missingSites {
 		byBatch[siteID[:1]] = append(byBatch[siteID[:1]], siteID)
@@ -158,11 +164,19 @@ func (db *ControlDB) RestoreMissingSites(ctx context.Context, download s3utils.D
 				slog.InfoContext(ctx, "Missing site DB restored from its batch's backup", "site_id", siteID)
 				db.Logs.SiteDBMissingEvent(aslog.WithSite(ctx, siteID), siteID, true, "")
 			} else {
+				missing = true
 				db.Logs.SiteDBMissingEvent(aslog.WithSite(ctx, siteID), siteID, false, reason)
 			}
 		}
 	}
+	db.sitesMissing.Store(missing)
 	return cannotOpen
+}
+
+// SitesMissing is whether a live site's DB file was missing at start and not restored, so the site is left out until
+// a start finds it
+func (db *ControlDB) SitesMissing() bool {
+	return db.sitesMissing.Load()
 }
 
 // restoreFromBatch downloads batch's latest backup beside its folder, moves into place each of siteIDs' DBs it has,
