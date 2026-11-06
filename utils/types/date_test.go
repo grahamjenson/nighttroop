@@ -32,3 +32,13 @@ func TestDateStringUnmarshalNumbers(t *testing.T) {
 		})
 	}
 }
+
+// A time to the minute, as some clients find treatments since, is UTC without a zone, or in its zone with one
+func TestStringToTimeToTheMinute(t *testing.T) {
+	want := time.Date(2025, 3, 4, 10, 30, 0, 0, time.UTC)
+	for _, value := range []string{"2025-03-04T10:30", "2025-03-04T23:30+13:00", "2025-03-04T10:30Z"} {
+		got, err := types.StringToTime(value)
+		require.NoError(t, err, value)
+		require.True(t, want.Equal(got), "%s is %s", value, got)
+	}
+}
