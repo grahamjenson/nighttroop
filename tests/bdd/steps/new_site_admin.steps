@@ -1,23 +1,22 @@
-// Creates a site, then logs in to it as its admin, on the page the login opens
-GOTO {{ server_url}}/
+// Creates a site and signs in as its admin through the API, which is much quicker than the pages, then opens its
+// summary with the admin's cookie. Creating a site and signing in on the pages is tested in login.bdd,
+// getting_started.bdd and totp_security.bdd. The site takes the browser's time zone and language, as the home page's
+// button would give it.
+HTTP
+NAME create_new_site
+POST {{ server_url }}/site?timezone=UTC&language=en
+ASSERT_STATUS 200
+SET site_url {{ .scheme }}://{{ .create_new_site.site_subdomain }}.{{ .host }}
+
+NAME login_admin
+POST {{ .site_url }}/login
+H Accept: application/json
+B {"name": "admin", "password": "{{ .create_new_site.api_key }}", "totp": "123123"}
 ASSERT_STATUS 200
 
-CLICK "Create Site"
+// A cookie is set on the page open, so the browser first opens a small file of the site's
+BROWSE
+GOTO {{ .site_url }}/logo.svg
+SET_COOKIE user_token {{ .login_admin.token }}
+GOTO {{ .site_url }}/
 ASSERT_STATUS 200
-
-// Login is offered once a code from the authenticator app has been checked
-INPUT #public--site-info--totp 123123
-CLICK #public--totp-check-button
-ASSERT_VISIBLE #public--totp-checked
-CLICK #public--login-button
-ASSERT_NEW_PAGE
-
-INPUT #site--login--name admin
-INPUT #site--login--password password
-
-CLICK #site--login-button
-ASSERT_STATUS 200
-
-ASSERT_VISIBLE #site--login--otp-1
-TYPE #site--login--otp-1 123123
-ASSERT_NEW_URL
