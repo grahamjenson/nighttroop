@@ -1,0 +1,14 @@
+// Signs in to a site's page as its admin, with a code its TOTP secret makes now, and screenshots its summary, e.g. for
+// a site new_site.flow made, its subdomain, password (api_key) and TOTP secret given in the environment:
+//   SITE=abcdefgh PASSWORD=... TOTP_SECRET=... go run ./cmd/nighttroop-script --host staging.nighttroop.nz \
+//     --root scripts/staging --out screenshots sign_in.flow
+BROWSE
+GOTO {{ site_url (env "SITE") }}/login
+INPUT #site--login--name admin
+INPUT #site--login--password {{ env "PASSWORD" }}
+CLICK #site--login-button
+ASSERT_VISIBLE #site--login--otp-1
+TYPE #site--login--otp-1 {{ totp (env "TOTP_SECRET") }}
+ASSERT_NEW_URL
+ASSERT_VISIBLE #site--summary
+SCREENSHOT summary

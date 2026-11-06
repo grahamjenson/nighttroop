@@ -2,7 +2,7 @@ package flow
 
 import (
 	"fmt"
-	"net/http/httptest"
+	"net/http"
 	"testing"
 
 	"github.com/mxschmitt/playwright-go"
@@ -12,8 +12,8 @@ import (
 
 // Runner runs a flow's steps in order, all with the same context, so each sees what those before it got
 type Runner struct {
-	// Server is what API and socket steps reach, whatever their URL's host, so the Host header still picks the site
-	Server *httptest.Server
+	// Client sends the HTTP steps' requests, as jsonapi.Client does to a test server, whatever their URL's host
+	Client *http.Client
 	// RunBackgroundJobs runs every background job, for RUN_BACKGROUND_JOBS
 	RunBackgroundJobs func()
 	// NewPage opens the page for the flow's first browser step
@@ -26,7 +26,7 @@ type Runner struct {
 // browser steps between its API steps.
 func (r *Runner) Run(t *testing.T, flow *Flow, ctx map[string]any) {
 	t.Helper()
-	api := &socketio.Runner{Server: r.Server, RunBackgroundJobs: r.RunBackgroundJobs}
+	api := &socketio.Runner{Client: r.Client, RunBackgroundJobs: r.RunBackgroundJobs}
 	defer api.Close()
 	for i, step := range flow.Steps {
 		if step.API != nil {

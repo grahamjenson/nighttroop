@@ -4,6 +4,7 @@ import (
 	"testing"
 	"testing/fstest"
 
+	"github.com/pquerna/otp/totp"
 	"github.com/stretchr/testify/require"
 )
 
@@ -32,8 +33,11 @@ func TestReadLines(t *testing.T) {
 
 // One set of helpers fills in every kind of script's values
 func TestRender(t *testing.T) {
+	t.Setenv("SCRIPT_TEST_PASSWORD", "hunter2")
 	ctx := map[string]any{
 		"server_url":   "http://127.0.0.1:1234",
+		"scheme":       "https",
+		"host":         "staging.example.com",
 		"default_site": "abcdefgh.ns.localhost",
 		"created":      map[string]any{"entries": []any{map[string]any{"sgv": 120.0}}},
 	}
@@ -51,4 +55,10 @@ func TestRender(t *testing.T) {
 	}
 	_, err := Render("{{ .missing }}", ctx)
 	require.Error(t, err)
+	_, err = Render(`{{ env "SCRIPT_TEST_UNSET" }}`, ctx)
+	require.ErrorContains(t, err, "SCRIPT_TEST_UNSET is not set")
+	// A TOTP code is six digits that the secret validates now
+	code, err := Render(`{{ totp "JBSWY3DPEHPK3PXP" }}`, ctx)
+	require.NoError(t, err)
+	require.True(t, totp.Validate(code, "JBSWY3DPEHPK3PXP"))
 }

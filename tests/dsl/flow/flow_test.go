@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/tests/dsl/browser"
+	"nighttroop.t1d.nz/tests/dsl/jsonapi"
 )
 
 // A .http file's NAME blocks are API steps, an INCLUDE's SET goes on its last step, and browser lines in between
@@ -34,7 +35,7 @@ ASSERT_PATH /
 `)},
 		// A .steps file goes on in the mode it was included in, each time, and its own switch ends with it
 		"steps/home.steps": {Data: []byte("GOTO {{ server_url }}/\nHTTP\nNAME health\nGET http://localhost/health\n")},
-		"site/twice.flow": {Data: []byte("BROWSE\nINCLUDE steps/home.steps\nCLICK #site--nav--home\nHTTP\nINCLUDE steps/site.steps\n")},
+		"site/twice.flow":  {Data: []byte("BROWSE\nINCLUDE steps/home.steps\nCLICK #site--nav--home\nHTTP\nINCLUDE steps/site.steps\n")},
 	}
 
 	list, err := Parse(fsys, "api/list.http")
@@ -104,7 +105,7 @@ ASSERT_EQUALS "abcdefgh.ns.localhost" "@host"
 	require.NoError(t, err)
 	ran := 0
 	ctx := map[string]any{}
-	(&Runner{Server: ts, RunBackgroundJobs: func() { ran++ }}).Run(t, echo, ctx)
+	(&Runner{Client: jsonapi.Client(ts), RunBackgroundJobs: func() { ran++ }}).Run(t, echo, ctx)
 	require.Equal(t, 1, ran)
 	require.Equal(t, "hello-again", ctx["second"].(map[string]any)["said"])
 }
@@ -134,5 +135,5 @@ ASSERT_EQUALS 130 "@sgv"
 	t.Cleanup(ts.Close)
 	stream, err := Parse(fsys, "api/stream.flow")
 	require.NoError(t, err)
-	(&Runner{Server: ts}).Run(t, stream, map[string]any{})
+	(&Runner{Client: jsonapi.Client(ts)}).Run(t, stream, map[string]any{})
 }

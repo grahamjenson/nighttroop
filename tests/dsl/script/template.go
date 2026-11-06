@@ -5,10 +5,13 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"text/template"
 	"time"
+
+	"github.com/pquerna/otp/totp"
 )
 
 // Render fills in a step's {{ }} values from the context, with helpers like site, token, dig and server_url
@@ -59,6 +62,23 @@ func Render(input string, ctx map[string]any) (string, error) {
 			},
 			"server_url": func() string {
 				return ctx["server_url"].(string)
+			},
+			// site_url is a site's address on the server, from the context's scheme and host, e.g. site_url "abcdefgh"
+			// for http://abcdefgh.localhost:1234 in a test, or https://abcdefgh.staging.nighttroop.nz on staging
+			"site_url": func(subdomain string) string {
+				return fmt.Sprintf("%s://%s.%s", ctx["scheme"], subdomain, ctx["host"])
+			},
+			// totp is the code an authenticator app shows now for a TOTP secret, as a new site's totp_secret
+			"totp": func(secret string) (string, error) {
+				return totp.GenerateCode(secret, time.Now())
+			},
+			// env is an environment variable, e.g. a password given to the script, and an error when it is not set
+			"env": func(key string) (string, error) {
+				value, ok := os.LookupEnv(key)
+				if !ok {
+					return "", fmt.Errorf("%s is not set", key)
+				}
+				return value, nil
 			},
 			// now is the time in a timezone, e.g. {{ now "Pacific/Auckland" "2006-01-02 15:" }}
 			"now": func(zone string, layout string) (string, error) {

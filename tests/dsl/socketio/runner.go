@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"net/url"
 	"slices"
 	"strconv"
@@ -20,7 +19,6 @@ import (
 	socket "nighttroop.t1d.nz/socketio"
 	"nighttroop.t1d.nz/socketio/engineio"
 	"nighttroop.t1d.nz/tests/dsl/jsonapi"
-	"nighttroop.t1d.nz/utils/testutils"
 )
 
 const (
@@ -31,8 +29,8 @@ const (
 
 // Runner runs a file's steps one at a time with Step, keeping one Socket.IO connection open between them until Close
 type Runner struct {
-	// Server is what CONNECT and HTTP steps reach, whatever their URL's host, so the Host header still picks the site
-	Server *httptest.Server
+	// Client sends the HTTP steps' requests, and CONNECT's and STREAM's, as jsonapi.Client does to a test server
+	Client *http.Client
 	// RunBackgroundJobs runs every background job, for RUN_BACKGROUND_JOBS
 	RunBackgroundJobs func()
 
@@ -117,7 +115,7 @@ func (r *Runner) run(t *testing.T, file *File, step *Step, ctx map[string]any) (
 		return nil, r.stream(ctx, step, timeout)
 	}
 	if isHTTP(step.Verb) {
-		step.Request().Run(t, jsonapi.Client(r.Server), ctx)
+		step.Request().Run(t, r.Client, ctx)
 		return nil, nil
 	}
 
@@ -203,7 +201,7 @@ func (r *Runner) connect(ctx map[string]any, events []string, step *Step, timeou
 	for _, event := range events {
 		client.On(r.namespace, event, func(args []json.RawMessage) { r.receive(event, value(args)) })
 	}
-	if err := client.Open(dialCtx, rawURL, testutils.HostClient(r.Server)); err != nil {
+	if err := client.Open(dialCtx, rawURL, r.Client); err != nil {
 		return err
 	}
 	r.client = client
@@ -303,7 +301,7 @@ func (r *Runner) stream(ctx map[string]any, step *Step, timeout time.Duration) e
 	req.Header = request.Headers
 	req.Header.Set("Accept", "text/event-stream")
 	opened := time.AfterFunc(timeout, end)
-	res, err := jsonapi.Client(r.Server).Do(req)
+	res, err := r.Client.Do(req)
 	opened.Stop()
 	if err != nil {
 		end()
