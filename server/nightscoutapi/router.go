@@ -24,16 +24,18 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config *config.ServerConfig) c
 	httputils.AddStandardMiddleware(r, config, controlDB)
 	// Nightscout's clients read glucose as mg/dL whatever its units, so the API always reads and writes mg/dL
 	r.Use(httputils.MgdlUnitsMiddleware)
-	// Before auth only the IP is known, so an IP spamming bad tokens cannot spend the site's own limit
-	r.Use(httputils.SiteUnauthRateLimitMiddleware(config))
-
-	// Socket.IO clients authorize with an event, not on each request
-	r.Handle("/socket.io/", websocket)
-	// As in Nightscout, v3's version needs no token: Nightguard asks it without one to see if v3 is there
-	r.Get("/api/v3/version", nsv3.Version(store))
-	// Nightscout serves its web app at its root, which LoopFollow's Nightscout tab opens, so it goes to the site's pages
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, config.SiteURL(httputils.GetSiteContext(r.Context()).SiteID), http.StatusFound)
+	// Requests with no token are limited by their IP, so an IP spamming them cannot spend the site's own limit; requests
+	// with one spend it only if their auth fails, so a device's uploads are not limited as if it had no token
+	r.Group(func(r chi.Router) {
+		r.Use(httputils.SiteUnauthRateLimitMiddleware(config))
+		// Socket.IO clients authorize with an event, not on each request
+		r.Handle("/socket.io/", websocket)
+		// As in Nightscout, v3's version needs no token: Nightguard asks it without one to see if v3 is there
+		r.Get("/api/v3/version", nsv3.Version(store))
+		// Nightscout serves its web app at its root, which LoopFollow's Nightscout tab opens, so it goes to the site's pages
+		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+			http.Redirect(w, r, config.SiteURL(httputils.GetSiteContext(r.Context()).SiteID), http.StatusFound)
+		})
 	})
 
 	// make sure to check auth for JWT/token param/token URL param
