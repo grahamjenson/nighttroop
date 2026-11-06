@@ -64,7 +64,29 @@ func (b *SyncJobManager) syncNightscout(syncInfo *SyncJobInfo) (int, error) {
 		}
 		nsc.lastModified[c.collection] = modified
 	}
+	// A profile store is used long after it starts, so its newest is read whenever the profiles change, not by date
+	if modified := lastModified[string(nsutils.Profile)]; changedSince(nsc.lastModified[nsutils.Profile], modified) {
+		profileAdded, err := b.syncNightscoutProfile(ctx, nsc, syncInfo)
+		added += profileAdded
+		if err != nil {
+			return added, err
+		}
+		nsc.lastModified[nsutils.Profile] = modified
+	}
 	return added, nil
+}
+
+// syncNightscoutProfile copies the newest profile store into the site, returning 1 when it was new
+func (b *SyncJobManager) syncNightscoutProfile(ctx context.Context, nsc *nightscoutClient, syncInfo *SyncJobInfo) (int, error) {
+	profile, err := nsc.GetCurrentProfile(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("NightscoutSync Error: %w", err)
+	}
+	if profile == nil {
+		return 0, nil
+	}
+	// Nightscout's profile editor saves an edit to the same document, so it replaces the copy of it
+	return b.createNightscoutDocuments(ctx, syncInfo, nsutils.Profile, []map[string]any{profile}, true)
 }
 
 // nightscoutCollections are what a Nightscout sync reads, and at most how many of each one's newest documents
@@ -86,12 +108,13 @@ func (b *SyncJobManager) syncNightscoutCollection(ctx context.Context, nsc *nigh
 	if err != nil {
 		return 0, fmt.Errorf("NightscoutSync Error: %w", err)
 	}
-	return b.createNightscoutDocuments(ctx, syncInfo, collection, docs)
+	return b.createNightscoutDocuments(ctx, syncInfo, collection, docs, false)
 }
 
 // createNightscoutDocuments copies documents into the site, returning how many were new. Documents a site refuses,
 // such as a treatment with an eventType it does not know, are skipped and logged once, so they do not fail every sync.
-func (b *SyncJobManager) createNightscoutDocuments(ctx context.Context, syncInfo *SyncJobInfo, collection nsutils.Collection, docs []map[string]any) (int, error) {
+// With replace, a document with an _id replaces the site's copy of it, so a change to it is copied too.
+func (b *SyncJobManager) createNightscoutDocuments(ctx context.Context, syncInfo *SyncJobInfo, collection nsutils.Collection, docs []map[string]any, replace bool) (int, error) {
 	// REMOVE WRITE ONLY COLUMNS
 	for _, doc := range docs {
 		delete(doc, "srvCreated")
@@ -106,7 +129,15 @@ func (b *SyncJobManager) createNightscoutDocuments(ctx context.Context, syncInfo
 	siteContext := syncInfo.Site.siteContext("nightscout_sync")
 	added, skipped, reason := 0, 0, ""
 	for _, doc := range docs {
-		_, duplicateFound, herr := collectionStore.Create(ctx, siteContext, doc, false)
+		var duplicateFound bool
+		var herr *nsutils.HTTPError
+		if identifier, _ := doc["_id"].(string); replace && identifier != "" {
+			var created bool
+			_, created, herr = collectionStore.Replace(ctx, siteContext, identifier, doc, true, false)
+			duplicateFound = !created
+		} else {
+			_, duplicateFound, herr = collectionStore.Create(ctx, siteContext, doc, false)
+		}
 		if herr != nil && herr.Status < http.StatusInternalServerError {
 			skipped, reason = skipped+1, herr.Message
 			continue

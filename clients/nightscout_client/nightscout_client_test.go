@@ -192,3 +192,25 @@ func TestRequestsRefreshAJWTCloseToExpiring(t *testing.T) {
 		})
 	}
 }
+
+// Nightscout gives its current profile as an object and another Nighttroop as a list of it, and one with none gives
+// null, so a site with no profiles copies nothing
+func TestGetCurrentProfile(t *testing.T) {
+	for body, want := range map[string]map[string]any{
+		`{"_id":"a","defaultProfile":"Default","store":{"Default":{}}}`:   {"_id": "a", "defaultProfile": "Default", "store": map[string]any{"Default": map[string]any{}}},
+		`[{"_id":"b","defaultProfile":"Default","store":{"Default":{}}}]`: {"_id": "b", "defaultProfile": "Default", "store": map[string]any{"Default": map[string]any{}}},
+		`[]`:   nil,
+		`null`: nil,
+		`{}`:   nil,
+	} {
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			require.Equal(t, "/api/v1/profile/current", r.URL.Path)
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(body))
+		}))
+		profile, err := liveClient(srv.URL).GetCurrentProfile(context.Background())
+		srv.Close()
+		require.NoError(t, err, body)
+		require.Equal(t, want, profile, body)
+	}
+}

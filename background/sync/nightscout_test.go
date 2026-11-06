@@ -43,7 +43,7 @@ func TestNightscoutSyncRemembersWhenCollectionsWereModified(t *testing.T) {
 		return &v
 	}
 	all := func(modified int64) map[nsutils.Collection]int64 {
-		return map[nsutils.Collection]int64{nsutils.Entries: modified, nsutils.Treatments: modified, nsutils.Devicestatus: modified}
+		return map[nsutils.Collection]int64{nsutils.Entries: modified, nsutils.Treatments: modified, nsutils.Devicestatus: modified, nsutils.Profile: modified}
 	}
 	client := func() *nightscoutClient {
 		c, _ := jobs.nightscoutClients.Get(siteID)
@@ -54,7 +54,7 @@ func TestNightscoutSyncRemembersWhenCollectionsWereModified(t *testing.T) {
 		return client().lastModified
 	}
 
-	// A sync reads entries, treatments and device statuses and its client remembers when Nightscout says each was last modified
+	// A sync reads entries, treatments, device statuses and profiles and its client remembers when Nightscout says each was last modified
 	require.NoError(t, q.CreateSyncSource(ctx, controldb.CreateSyncSourceParams{SiteID: siteID, Type: typ, UrlOrUsernameEnc: enc(nightscout_client.TestValidURL), PasswordEnc: enc("token"), Enabled: true}))
 	require.Equal(t, all(nightscout_client.TestLastModified), runSync())
 
@@ -161,4 +161,60 @@ func TestNightscoutSyncCopiesEntriesTreatmentsAndDeviceStatuses(t *testing.T) {
 	require.Len(t, logs, 1)
 	require.Equal(t, "skipped Nightscout documents the site refused", logs[0].Message)
 	require.Contains(t, *logs[0].Attributes, `"collection":"treatments"`)
+}
+
+// A profile store is used long after it starts, so the newest is copied whenever the profiles change, however old, as
+// Nightscout's profile editor saves it through v1, without a date
+func TestNightscoutSyncCopiesTheCurrentProfile(t *testing.T) {
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
+	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.SyncSourceTypeNightscout
+	jobs := SetupSyncJobManager(cfg, controlDB)
+	enc := func(s string) *string {
+		v, err := cfg.Security.Encrypt(s)
+		require.NoError(t, err)
+		return &v
+	}
+	startDate := time.Now().Add(-30 * 24 * time.Hour).UTC().Format(time.RFC3339)
+	nightscout_client.TestDocuments = map[string][]any{"profile": {map[string]any{
+		"_id": "6553f1b2c4a1e2d3f4a5b6c7", "defaultProfile": "Default", "startDate": startDate, "created_at": startDate,
+		"mills": float64(time.Now().Add(-30 * 24 * time.Hour).UnixMilli()), "units": "mg/dl", "srvModified": float64(time.Now().UnixMilli()),
+		"store": map[string]any{"Default": map[string]any{
+			"dia": 5, "units": "mg/dl", "timezone": "Pacific/Auckland",
+			"basal":       []any{map[string]any{"time": "00:00", "value": 0.8, "timeAsSeconds": 0}},
+			"carbratio":   []any{map[string]any{"time": "00:00", "value": 10, "timeAsSeconds": 0}},
+			"sens":        []any{map[string]any{"time": "00:00", "value": 50, "timeAsSeconds": 0}},
+			"target_low":  []any{map[string]any{"time": "00:00", "value": 90, "timeAsSeconds": 0}},
+			"target_high": []any{map[string]any{"time": "00:00", "value": 120, "timeAsSeconds": 0}},
+		}},
+	}}}
+	t.Cleanup(func() { nightscout_client.TestDocuments = map[string][]any{} })
+	profileStores := func() []*sitedb.ProfilePreset {
+		stores, err := site.SiteDB.Queries().GetMostRecentProfileStore(ctx)
+		require.NoError(t, err)
+		return stores
+	}
+
+	require.NoError(t, q.CreateSyncSource(ctx, controldb.CreateSyncSourceParams{SiteID: siteID, Type: typ, UrlOrUsernameEnc: enc(nightscout_client.TestValidURL), PasswordEnc: enc("token"), Enabled: true}))
+	require.NoError(t, jobs.SyncSource(ctx, SyncJobParams{SiteID: siteID, Type: typ}))
+	stores := profileStores()
+	require.Len(t, stores, 1)
+	require.Equal(t, "Default", stores[0].Name)
+	require.True(t, stores[0].IsDefault)
+
+	// Read again, as when the Nightscout's lastModified moves for another profile change, it is not copied twice
+	c, _ := jobs.nightscoutClients.Get(siteID)
+	c.lastModified = map[nsutils.Collection]int64{}
+	require.NoError(t, jobs.SyncSource(ctx, SyncJobParams{SiteID: siteID, Type: typ}))
+	require.Len(t, profileStores(), 1)
+	require.Equal(t, stores[0].ProfileStoreID, profileStores()[0].ProfileStoreID)
+
+	// Nightscout's profile editor saves an edit to the same document, which replaces the copy of it
+	doc := nightscout_client.TestDocuments["profile"][0].(map[string]any)
+	doc["store"].(map[string]any)["Default"].(map[string]any)["basal"] = []any{map[string]any{"time": "00:00", "value": 0.9, "timeAsSeconds": 0}}
+	c.lastModified = map[nsutils.Collection]int64{}
+	require.NoError(t, jobs.SyncSource(ctx, SyncJobParams{SiteID: siteID, Type: typ}))
+	edited := profileStores()
+	require.Len(t, edited, 1)
+	require.Equal(t, stores[0].ProfileStoreID, edited[0].ProfileStoreID)
+	require.JSONEq(t, `[{"time":"00:00","timeAsSeconds":0,"value":0.9}]`, *edited[0].BasalRatesJson)
 }
