@@ -83,7 +83,7 @@ func (ws *Websocket) broadcastChange(main, alarm *socketio.Namespace, event even
 	if err != nil {
 		return
 	}
-	siteContext := httputils.GetSiteContext(httputils.CreateSiteContext(ctx, ws.config, ws.controlDB, siteDB, siteModel, event.SiteID, "", httputils.HTTPActionRead, httputils.AcceptTypeJSON, httputils.ContentTypeJSON))
+	siteContext := httputils.GetSiteContext(httputils.SetMgdlUnits(httputils.CreateSiteContext(ctx, ws.config, ws.controlDB, siteDB, siteModel, event.SiteID, "", httputils.HTTPActionRead, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)))
 	for collection, store := range ws.collections {
 		r, ok := store.(recorder)
 		if !ok {

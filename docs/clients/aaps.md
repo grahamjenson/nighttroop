@@ -10,19 +10,16 @@ The tests are `tests/api/nightscout/aaps/*.http` and `tests/socket/nightscout/aa
 
 ## Setup AAPS needs on Nighttroop
 
-- **The AAPS identity must be in mg/dL.** AAPS reads an entry's `sgv` as mg/dL and ignores its `units`
+- **Glucose is mg/dL.** AAPS reads an entry's `sgv` as mg/dL and ignores its `units`
   (`nsclientV3/extensions/GlucoseValueExtension.kt` `NSSgvV3.toGV`). It knows only the units `mg/dl` and `mmol`
   (`core/nssdk/.../localmodel/entry/NsUnits.kt`, and `GlucoseUnit.fromText` in `core/data`); anything else, such
-  as Nighttroop's `mmol/L`, is read as mg/dL. Nighttroop returns glucose in the identity's units, so on an identity
-  in mmol/L an AAPS follower reads a 6.0 mmol/L reading as 6 mg/dL, and temp targets, BG checks and profiles the
-  same. Uploads are fine either way: AAPS labels them `mg/dl`. A device added for AAPS in the site's Add Device is
-  set to mg/dL (#524), and an admin can change any identity's units (#523). The tests set mg/dL first
-  (`ns_units_mgdl.steps`).
+  as Nighttroop's `mmol/L`, is read as mg/dL. The Nightscout API always gives glucose, temp targets, BG checks and
+  profiles in mg/dL, as Nightscout does, whatever the identity's or site's units. Uploads are fine either way: AAPS
+  labels them `mg/dl`.
 - The URL is the site's Nightscout host. AAPS adds `https://` when it has no scheme and `/api/` after it
   (`core/nssdk/.../networking/NsUrl.kt:21`).
 - The token is a Nighttroop identity token. A master (the phone with the pump) needs one that may write; a device
-  added for AAPS is always the PWD Phone (#527). A follower (AAPSClient) can use a read only one, added as Other,
-  so its units must be set to mg/dL.
+  added for AAPS is always the PWD Phone (#527). A follower (AAPSClient) can use a read only one, added as Other.
 
 ## NSClient v3 (AAPS 4.0, and 3.x when "Use API v3" is chosen)
 
@@ -179,7 +176,7 @@ SHA1, as AAPS does.
 | `/api/v2/authorization/debug/check/<permission>` | fixed in #511 (was a 404, which would fail AAPS's status once it showed real permissions) | `auth_v3.http` |
 | `/api/v3/lastModified` | works | `auth_v3.http`, `sync_v3.http` |
 | Entries: create, duplicate, search by date, history with `ETag`, patch, delete, deletion in history | works | `sync_v3.http` |
-| Entries and treatments in an identity in mmol/L | not supported: a device added for AAPS is in mg/dL (#524), others must be set to it; TODO P1 | `units/*.http`, `identity_clients_units.http` |
+| Entries and treatments in an identity in mmol/L | works: the Nightscout API always gives them in mg/dL | `units/*.http` |
 | First loads and history over 500 documents, and profile history's newest | not supported: searches are newest first and ignore `sort`; TODO P1 | — |
 | Treatments: bolus and SMB `type`, carbs, temp target, profile switch, BG check, delete in history | works | `sync_v3.http`, `flow_v3.http` |
 | Temp basal at, over or under 100% (any `percent` from -100), its update | works: `percent`, the change from the basal, is kept as a multiplier of it and returned as sent | `sync_v3.http`, `treatments/temp_basal_percent.http` |

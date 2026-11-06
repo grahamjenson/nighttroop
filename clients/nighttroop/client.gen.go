@@ -244,7 +244,7 @@ type NsDocument struct {
 	SrvModified *int64   `json:"srvModified,omitempty"`
 	Type        *string  `json:"type,omitempty"`
 
-	// Units The units of sgv and mbg, the identity's
+	// Units The units of sgv and mbg, always mg/dL
 	Units                *string                `json:"units,omitempty"`
 	UtcOffset            *int64                 `json:"utcOffset,omitempty"`
 	AdditionalProperties map[string]interface{} `json:"-"`
@@ -578,7 +578,7 @@ type NsPebbleParams struct {
 	// Count How many readings, 1 by default
 	Count *int `form:"count,omitempty" json:"count,omitempty"`
 
-	// Units mmol or mg/dl, the settings' units by default
+	// Units mmol or mg/dl, the identity's own units by default
 	Units *string `form:"units,omitempty" json:"units,omitempty"`
 }
 

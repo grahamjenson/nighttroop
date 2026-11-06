@@ -9,11 +9,9 @@ The tests are in `tests/api/nightscout/nightguard/`.
 ## Setting it up with Nighttroop
 
 - Use the Nightscout URL `https://<site>.ns.<host>` and a device's Nightscout token.
-- **Its identity must be in mg/dL.** Nightguard reads every `sgv` and `mbg` as mg/dL and never looks at an
-  entry's `units`, so with mmol/L settings its readings would be about 18 times too low, and its low alarms would
-  go off. A device added for Nightguard in the site's Add Device has its units set to mg/dL (#524), and an admin
-  can set an existing device's units from its row (#523). To see mmol/L in the app, turn on "Manually set Units"
-  in its settings and pick mmol/L.
+- **Glucose is mg/dL.** Nightguard reads every `sgv` and `mbg` as mg/dL and never looks at an entry's `units`,
+  and the Nightscout API always gives them in mg/dL. The app shows them in the status's `settings.units`, the
+  identity's own, so a device on an mmol/L site shows mmol/L.
 
 ## Authentication
 

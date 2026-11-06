@@ -276,7 +276,8 @@ type TreatmentsEvenetConverter interface {
 
 	// goverter:context siteContext
 	// goverter:update target
-	// goverter:ignore CreatedAt
+	// The treatment's units are its glucose's: the profile's are in its profileJson
+	// goverter:ignore CreatedAt Units
 	// goverter:ignoreMissing
 	//
 	// goverter:map Name Profile

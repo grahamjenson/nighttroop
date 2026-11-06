@@ -66,11 +66,12 @@ func StatusJSON(store nsutils.Store) http.HandlerFunc {
 }
 
 // Status is the v1 status payload, which a websocket authorize asking for status gets too. Its settings.units is
-// the settings' units written as Nightscout writes them, "mg/dl" or "mmol", which followers like Nightguard read
+// the identity's own units written as Nightscout writes them, "mg/dl" or "mmol", which followers like Nightguard show
+// glucose in, though the API always gives it in mg/dL, as Nightscout does
 func Status(ctx context.Context) map[string]any {
 	units := "mg/dl"
 	siteContext := httputils.GetSiteContext(ctx)
-	if siteContext != nil && *siteContext.GetSettings().GetUnits() == consts.UnitsMMOLL {
+	if siteContext != nil && *siteContext.GetOwnSettings().GetUnits() == consts.UnitsMMOLL {
 		units = "mmol"
 	}
 	status := map[string]any{

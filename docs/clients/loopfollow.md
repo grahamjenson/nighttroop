@@ -32,10 +32,8 @@ requests and check the fields it decodes.
 ## Glucose units
 
 LoopFollow reads `sgv` and `mbg` as mg/dL whatever the units, as Nightscout always stores them
-(`Extensions/ShareClientExtension.swift`, `ShareGlucoseData`). Nighttroop sends them in the identity's units, so
-**LoopFollow's identity must be set to mg/dL**; in mmol/L a 6.7 reading is shown as 7 mg/dL. LoopFollow is not one of
-Add Device's clients, so a device added for it as Other has the site's units; a site admin can set its own units to
-mg/dL from its row on Users & Devices (#523). The profile is fine either way, as LoopFollow reads its `units`.
+(`Extensions/ShareClientExtension.swift`, `ShareGlucoseData`). The Nightscout API always gives them in mg/dL, so a
+device added for it as Other works on an mmol/L site. The profile is in mg/dL too, with its `units`.
 
 ## Calls
 

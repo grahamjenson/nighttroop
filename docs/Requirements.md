@@ -360,7 +360,8 @@ focus back to the row or button that opened it.
 - **Socket.IO** live updates and alarms over long polling or websockets.
 - A Nightscout food has `type` `food`, as AAPS loads only foods of that type.
 - The Nightscout host's root, which LoopFollow's Nightscout tab opens, goes to the site's own pages.
-- A live update sent to a site's sockets is in the site's own settings, such as its units, as it goes to every device.
+- A live update sent to a site's sockets is in the site's own settings, such as its time zone, as it goes to every
+  device, with glucose in mg/dL.
 - A new Announcement is sent to every `/alarm` socket that can read, with its notes as the message, so AAPS shows it
   as a notification.
 - Any other new treatment from the last 10 minutes, except a Temp Basal or Temporary Override, is sent to every
@@ -368,11 +369,16 @@ focus back to the row or button that opened it.
   notes, as Nightscout's treatment notify does.
 - A Socket.IO `authorize` with a token that is no one's is disconnected unanswered, as Nightscout does; a wrong API
   secret is answered that it can do nothing.
-- Glucose is stored in mg/dL and returned and accepted in the settings' units.
-- The v1 status has the settings' units in `settings.units`, as Nightscout writes them (`mg/dl` or `mmol`).
+- Glucose is stored in mg/dL and always returned in mg/dL, whatever the identity's or site's units, as Nightscout's
+  clients read `sgv`, `mbg`, a treatment's `glucose` and a profile's targets as mg/dL: entries, treatments, profiles
+  and their `units`, over HTTP and Socket.IO. It is accepted in the units sent with it, or guessed from its value.
+- The v1 status has the identity's own units in `settings.units`, as Nightscout writes them (`mg/dl` or `mmol`), so
+  followers show glucose in them, and `/pebble` and the virtual assistants say it in them; the v3 settings are the
+  identity's own, units included.
 - The settings `units_mgdl_label` and `units_mmol_label`, set only through the settings endpoint, say how the
   Nightscout API writes each units in a document's `units`: mg/dL as `mg/dL` or `mg/dl`, and mmol/L as `mmol/L` or
-  `mmol`, Nighttroop's way by default. Units are stored as Nighttroop's, and any of these is read.
+  `mmol`, Nighttroop's way by default, though only mg/dL is written. Units are stored as Nighttroop's, and any of these
+  is read.
 - The v1 status has `authorized` with a JWT and the token's permissions, with `api:treatments:create` for one that
   can write, so LoopFollow shows a read token as "Read" and a write token as "Read & Write".
 - The v3 version needs no token, so an app can check for v3 before it signs in.
@@ -544,8 +550,8 @@ focus back to the row or button that opened it.
 - A device is added for its client: AAPS, Trio, Loop, xDrip+, xDrip4iOS, Nightguard, SugarPixel or Other. Its
   credentials say how to set that client up, in numbered steps naming the client's menus and fields in bold, with its
   Nightscout URL and token filled in, each with its own copy button, and a device for any but Other has its own units
-  set to mg/dL, which those clients need, whatever the site's. One for xDrip4iOS also has the Nightscout API write
-  mg/dL as `mg/dl`, as it reads a BG check's glucose as mg/dL only when its units are exactly that.
+  set to mg/dL. One for xDrip4iOS also has the Nightscout API write mg/dL as `mg/dl`, as it reads a BG check's glucose
+  as mg/dL only when its units are exactly that.
 - The client is picked before the role, as a loop's device (AAPS, Trio or Loop) must be the PWD phone: picking one of
   them sets the role to PWD Phone and locks it, and the server refuses such a device with any other role.
 - A device keeps the client it was added for, e.g. `loop` or `other`, given back as its `client`, so its settings can
@@ -553,8 +559,8 @@ focus back to the row or button that opened it.
 - On a phone, the Add User and Add Device forms wrap in their cards, so every input and button can be seen and tapped
   without scrolling sideways.
 - An admin can turn an identity off and on, or delete it; an identity cannot lock itself out.
-- An admin can change another identity's own settings and alarms from its row, such as a device's units for a client
-  that needs mg/dL on a site in mmol/L; the Nightscout API gives that device its own units.
+- An admin can change another identity's own settings and alarms from its row, such as a device's units, which its
+  Nightscout status gives followers to show glucose in.
 - Each identity lists the clients (browsers and apps) that have used it, and is marked shared when several have.
 - Identity creation is rate limited, as each hashes a password.
 

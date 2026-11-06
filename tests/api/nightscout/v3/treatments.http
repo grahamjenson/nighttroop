@@ -24,7 +24,7 @@ B {
 ASSERT_STATUS 201
 ASSERT_EQUALS "Bolus Wizard" "@result.eventType"
 ASSERT_EXISTS "@result.created_at"
-ASSERT_EQUALS 15 "@result.glucose"
+ASSERT_EQUALS 270.27 "@result.glucose"
 ASSERT_EQUALS "Sensor" "@result.glucoseType"
 ASSERT_EQUALS 46 "@result.carbs"
 ASSERT_EQUALS 1.54 "@result.insulin"

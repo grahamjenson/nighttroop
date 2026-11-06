@@ -48,3 +48,30 @@ ASSERT_STATUS 400
 
 
 
+
+# Though the API gives glucose in mg/dL, the identity keeps its own units: setting another setting leaves them as they
+# are, and the status says them, so followers show glucose in them
+NAME set_units_back_to_mmol
+PATCH http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+B {"value":  "mmol/L"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "mmol/L" "@result.value"
+
+NAME set_timezone
+PATCH http://{{ site }}/api/v3/settings/timezone
+H Authorization: Bearer {{ jwt }}
+B {"value":  "Pacific/Auckland"}
+ASSERT_STATUS 200
+
+NAME units_still_mmol
+GET http://{{ site }}/api/v3/settings/units
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "mmol/L" "@result.value"
+
+NAME status_says_mmol
+GET http://{{ site }}/api/v1/status.json
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "mmol" "@settings.units"

@@ -27,10 +27,8 @@ refuses with a 401, as it needs a token.
 ## Units
 
 Trio reads glucose (`sgv`) as mg/dL and decodes it as an integer, and temp targets' `targetTop`/`targetBottom` as
-mg/dL. Nighttroop returns both in the site's units (or the identity's). **The site, or Trio's identity, must be set
-to mg/dL**: in mmol/L a reading of 120 mg/dL comes back as 6.66, which Trio truncates to 6 mg/dL. A device added for
-Trio is set to mg/dL (#524), and an admin can change an identity's units (#523). The tests set the site to mg/dL.
-The profile is fine in either: Trio uploads it in the user's units, labelled `mg/dl` or `mmol`, and on import works
+mg/dL. The Nightscout API always gives both in mg/dL, whatever the identity's or site's units, so a reading of 120
+mg/dL comes back as 120 on an mmol/L site too. The profile is fine either way: Trio uploads it in the user's units, labelled `mg/dl` or `mmol`, and on import works
 out mmol/L from `units` or from targets of 39 or less.
 
 ## Dates and types Trio reads back

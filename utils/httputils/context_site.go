@@ -38,6 +38,26 @@ type SiteContext struct {
 	settings *settings.CombinedSettingsMap
 	// siteSettings are the site's own settings over the defaults, without the identity's
 	siteSettings *settings.CombinedSettingsMap
+	// mgdl is whether glucose is always in mg/dL, whatever the identity's or site's units, and mgdlSettings the
+	// settings in effect with them
+	mgdl         bool
+	mgdlSettings *settings.CombinedSettingsMap
+}
+
+// SetMgdlUnits makes glucose read and written in the context always mg/dL, whatever the identity's or site's units,
+// as Nightscout's API has it: its clients read sgv, mbg and targets as mg/dL whatever the units
+func SetMgdlUnits(ctx context.Context) context.Context {
+	if siteContext := GetSiteContext(ctx); siteContext != nil {
+		siteContext.mgdl, siteContext.mgdlSettings = true, nil
+	}
+	return ctx
+}
+
+// MgdlUnitsMiddleware gives every request glucose in mg/dL, as SetMgdlUnits does
+func MgdlUnitsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		next.ServeHTTP(w, r.WithContext(SetMgdlUnits(r.Context())))
+	})
 }
 
 func GetSiteContext(ctx context.Context) *SiteContext {
@@ -87,6 +107,7 @@ func (s *SiteContext) PublishModelChange(action events.Action, model any) {
 func SetIdentityModelInSiteContext(ctx context.Context, identityModel *controldb.SiteIdentity) context.Context {
 	siteContext := GetSiteContext(ctx)
 	siteContext.IdentityModel = identityModel
+	siteContext.mgdlSettings = nil
 	if identityModel != nil {
 		aslog.AddAttrs(ctx, slog.Int64("identity_id", identityModel.ID), slog.String("identity_name", identityModel.Name), slog.String("role", string(identityModel.Role)))
 	}
@@ -98,6 +119,27 @@ func SetIdentityModelInSiteContext(ctx context.Context, identityModel *controldb
 // /////
 
 func (sc *SiteContext) GetSettings() *settings.CombinedSettingsMap {
+	if !sc.mgdl {
+		return sc.settingsInEffect()
+	}
+	if sc.mgdlSettings == nil {
+		inEffect := sc.settingsInEffect()
+		identity := *inEffect.IdentitySettingsMap
+		identity.SetUnits(new(consts.UnitsMGDL))
+		sc.mgdlSettings = &settings.CombinedSettingsMap{SiteSettingsMap: inEffect.SiteSettingsMap, IdentitySettingsMap: &identity,
+			DefaultSettingsMap: inEffect.DefaultSettingsMap}
+	}
+	return sc.mgdlSettings
+}
+
+// GetOwnSettings are the settings as the identity and site have them, their own units even where glucose is always
+// mg/dL: for showing glucose in those units, and for reading and writing the settings themselves
+func (sc *SiteContext) GetOwnSettings() *settings.CombinedSettingsMap {
+	return sc.settingsInEffect()
+}
+
+// settingsInEffect are the identity's settings over the site's over the defaults, or the site's without an identity
+func (sc *SiteContext) settingsInEffect() *settings.CombinedSettingsMap {
 	// Without a signed in identity, such as for a live update sent to a site's sockets, the site's own settings are in
 	// effect, rather than the defaults
 	if sc.SiteModel != nil && sc.IdentityModel == nil {

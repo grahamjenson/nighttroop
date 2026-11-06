@@ -56,7 +56,7 @@ B {
   }
 ASSERT_STATUS 201
 ASSERT_EQUALS "Default" "@result.defaultProfile"
-ASSERT_EQUALS "mmol/L" "@result.units"
+ASSERT_EQUALS "mg/dL" "@result.units"
 ASSERT_EQUALS "US/Eastern" "@result.store.Default.timezone"
 ASSERT_EQUALS 0.35 "@result.store.Default.basal.0.value"
 ASSERT_EQUALS "Pacific/Honolulu" "@result.store.Work.timezone"
@@ -369,7 +369,7 @@ B {
   }
 ASSERT_STATUS 201
 ASSERT_EQUALS "ArmDash-2025" "@result.defaultProfile"
-ASSERT_EQUALS "mmol/L" "@result.store.ArmDash-2025.units"
+ASSERT_EQUALS "mg/dL" "@result.store.ArmDash-2025.units"
 ASSERT_EQUALS "Pacific/Auckland" "@result.store.ArmDash-2025.timezone"
 
 
@@ -383,7 +383,7 @@ GET http://{{ site }}/api/v3/profiles/{{ dig "create_profile_v3.result.identifie
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT_EQUALS "Default" "@result.defaultProfile"
-ASSERT_EQUALS "mmol/L" "@result.units"
+ASSERT_EQUALS "mg/dL" "@result.units"
 ASSERT_EQUALS "US/Eastern" "@result.store.Default.timezone"
 ASSERT_EQUALS 0.35 "@result.store.Default.basal.0.value"
 ASSERT_EQUALS "Pacific/Honolulu" "@result.store.Work.timezone"

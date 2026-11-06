@@ -132,10 +132,8 @@ uuid, `_id`, or time within a minute with the same amounts is not added again.
 ## Quirks
 
 - **Units.** xDrip+ sends mg/dL with no `units`; Nighttroop takes a value over 30 as mg/dL, so readings of 30 mg/dL or
-  less would be taken as mmol/L (xDrip+ sends 39 for a sensor's LOW). The follower reads `sgv` as mg/dL, but Nighttroop
-  gives it in the identity's units, then the site's. A follower on an mmol/L site shows 6.5 mmol/L as 6 mg/dL, so set
-  the site, or the identity the follower uses, to mg/dL. A device added for xDrip+ in the site's Add Device has its
-  units set to mg/dL (#524), and an admin can set an existing device's units from its row (#523).
+  less would be taken as mmol/L (xDrip+ sends 39 for a sensor's LOW). The follower reads `sgv` as mg/dL, which
+  the Nightscout API always gives it in, whatever the identity's or site's units.
 - `dateString` has an offset without a colon (`+1300`), and wins over `date` when there is no `utcOffset`; both are
   the same time.
 - The returned treatment has `enteredBy` and `uuid` as sent, so xDrip+ matches its own by them, but no
