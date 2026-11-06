@@ -22,6 +22,8 @@ ASSERT_EXISTS "@0._id"
 ASSERT_EQUALS 20 "@0.carbs"
 ASSERT_EQUALS 180 "@0.absorptionTime"
 SET carbs_id {{ dig "loop_create_carbs.0._id" }}
+# The update sends the carbs' own time back, as Loop does, not a time made again, which a second later would differ
+SET carbs_at {{ dig "loop_create_carbs.0.created_at" }}
 
 # NightscoutClient.modifyTreatments: PUT /api/v1/treatments with the _id in the body
 NAME loop_update_carbs
@@ -29,7 +31,7 @@ PUT http://{{ site }}/api/v1/treatments
 H api-secret: {{ sha1 token }}
 H Content-Type: application/json
 H Accept: application/json
-B {"_id": "{{ .carbs_id }}", "created_at": "{{ time 70 }}", "timestamp": "{{ time 70 }}", "enteredBy": "loop://iPhone", "eventType": "Carb Correction", "carbs": 25, "absorptionTime": 120, "foodType": "🍕", "syncIdentifier": "6B9F1A1C-2D3E-4F50-8A1B-2C3D4E5F6071", "userEnteredAt": "{{ time 70 }}", "userLastModifiedAt": "{{ time 65 }}"}
+B {"_id": "{{ .carbs_id }}", "created_at": "{{ .carbs_at }}", "timestamp": "{{ .carbs_at }}", "enteredBy": "loop://iPhone", "eventType": "Carb Correction", "carbs": 25, "absorptionTime": 120, "foodType": "🍕", "syncIdentifier": "6B9F1A1C-2D3E-4F50-8A1B-2C3D4E5F6071", "userEnteredAt": "{{ .carbs_at }}", "userLastModifiedAt": "{{ time 65 }}"}
 ASSERT_STATUS 200
 ASSERT_EQUALS ".carbs_id" "@_id"
 ASSERT_EQUALS 25 "@carbs"
