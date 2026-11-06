@@ -80,6 +80,27 @@ func IdentityHTTPWithinRateLimit(serverConfig *config.ServerConfig, r *http.Requ
 	return WithinRateLimitAll(limiter)
 }
 
+// ExtraWritesWithinRateLimit spends n more writes from the site's and its identity's limits, as for a batch of many
+// records, spending none unless both have them all now
+func ExtraWritesWithinRateLimit(r *http.Request, n int) bool {
+	siteContext := GetSiteContext(r.Context())
+	if n <= 0 {
+		return true
+	}
+	if siteContext.IdentityModel == nil {
+		return false
+	}
+	now := time.Now()
+	site := siteContext.Config.RateLimiters.SitePOSTLimiter(siteContext.SiteID).ReserveN(now, n)
+	identity := siteContext.Config.RateLimiters.IdentityPOSTLimiter(siteContext.IdentityModel.ID).ReserveN(now, n)
+	if site.OK() && identity.OK() && site.DelayFrom(now) == 0 && identity.DelayFrom(now) == 0 {
+		return true
+	}
+	site.CancelAt(now)
+	identity.CancelAt(now)
+	return false
+}
+
 func UserUpdateSyncWithinRateLimit(siteContext *SiteContext) (bool, int) {
 
 	userSubdomain := siteContext.SiteID

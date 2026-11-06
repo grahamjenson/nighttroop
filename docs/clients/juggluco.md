@@ -166,7 +166,7 @@ So an amount changed in Juggluco, even its time, is deleted, then posted again w
 | v1 `api-secret` with the SHA1 of the secret | Works since #512: a 40 hex `api-secret` is the SHA1 of a device's token, not an admin's or one with TOTP |
 | v1 `POST /api/v1/entries` with Juggluco's readings, 200 | Works |
 | v1 `dateString` with `-03:-30` | Fixed in #508: read as `-03:30` (was a 400) |
-| v1 `POST /api/v1/entries` with more than 100 readings | Not supported: refused with 400 over the batch cap, TODO P1 |
+| v1 `POST /api/v1/entries` with more than 100 readings | Works: a v1 POST takes up to 5000 (it was a 400 over 100) |
 | v1 `DELETE /api/v1/treatments/<_id>`, 200 | Works |
 | v1 `PUT /api/v1/treatments` of one amount, 200, and a changed one after its delete | Works; fixed in #508 for a changed time |
 

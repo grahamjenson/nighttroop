@@ -8,6 +8,7 @@ import (
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 func Search(store nsutils.Store) http.HandlerFunc {
@@ -83,9 +84,14 @@ func Create(store nsutils.Store) http.HandlerFunc {
 			return
 		}
 
-		// Each record costs a duplicate check, a transaction and a fan-out, so cap a batch before storing any of it
-		if len(arrayOfModels) > consts.MaxBatchRecords {
+		// Each record costs a duplicate check, a transaction and a fan-out, so cap a batch before storing any of it, and
+		// have each MaxBatchRecords past the first cost a write, so a large batch is limited as a run of small ones
+		if len(arrayOfModels) > consts.MaxV1BatchRecords {
 			nsutils.WriteError(w, nsutils.ErrTooManyRecords)
+			return
+		}
+		if !httputils.ExtraWritesWithinRateLimit(r, (len(arrayOfModels)-1)/consts.MaxBatchRecords) {
+			nsutils.WriteError(w, nsutils.ErrTooManyBatchWrites)
 			return
 		}
 
