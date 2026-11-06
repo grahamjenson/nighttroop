@@ -14,6 +14,8 @@ type Runner struct {
 	Client *http.Client
 	// RunBackgroundJobs runs every background job, for RUN_BACKGROUND_JOBS
 	RunBackgroundJobs func()
+	// NewSocket makes a Socket.IO client speaking that Engine.IO version, for CONNECT
+	NewSocket func(eio int) Socket
 	// NewPage opens the page for the flow's first browser step
 	NewPage func() (playwright.Page, error)
 	// Page is the page the browser steps are on, nil until the first opens it
@@ -24,7 +26,7 @@ type Runner struct {
 // browser steps between its API steps.
 func (r *Runner) Run(t *testing.T, flow *Flow, ctx map[string]any) {
 	t.Helper()
-	api := &httpRunner{Client: r.Client, RunBackgroundJobs: r.RunBackgroundJobs}
+	api := &httpRunner{Client: r.Client, RunBackgroundJobs: r.RunBackgroundJobs, NewSocket: r.NewSocket}
 	defer api.Close()
 	for i, step := range flow.Steps {
 		if step.API != nil {

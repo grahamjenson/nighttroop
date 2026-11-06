@@ -11,6 +11,7 @@ import (
 
 	"nighttroop.t1d.nz/background"
 	"nighttroop.t1d.nz/server"
+	"nighttroop.t1d.nz/socketio"
 	"nighttroop.t1d.nz/tests/dsl/flow"
 	"nighttroop.t1d.nz/utils/s3utils"
 	"nighttroop.t1d.nz/utils/testutils"
@@ -40,6 +41,7 @@ func TestSocketIO(t *testing.T) {
 			runner := &flow.Runner{
 				Client:            flow.Client(ts),
 				RunBackgroundJobs: func() { backgroundJobs.RunAllNow(context.Background()) },
+				NewSocket:         func(eio int) flow.Socket { return socketio.NewClient(eio) },
 			}
 			runner.Run(t, socketFlow, map[string]any{
 				"default_site":  site.SiteDB.Subdomain + ".ns.localhost",

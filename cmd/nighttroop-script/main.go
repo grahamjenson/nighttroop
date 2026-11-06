@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/mxschmitt/playwright-go"
+	"nighttroop.t1d.nz/socketio"
 	"nighttroop.t1d.nz/tests/dsl/flow"
 )
 
@@ -84,7 +85,11 @@ func run(t *testing.T, fsys fs.FS, path string, client *http.Client, s settings)
 	for key, value := range s.vars {
 		ctx[key] = value
 	}
-	runner := &flow.Runner{Client: client, NewPage: func() (playwright.Page, error) { return newPage(t, s) }}
+	runner := &flow.Runner{
+		Client:    client,
+		NewSocket: func(eio int) flow.Socket { return socketio.NewClient(eio) },
+		NewPage:   func() (playwright.Page, error) { return newPage(t, s) },
+	}
 	t.Cleanup(func() {
 		if t.Failed() && runner.Page != nil {
 			if screenshot, err := flow.ScreenshotPage(runner.Page, "failed", path, "failed"); err == nil {

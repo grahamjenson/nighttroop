@@ -13,16 +13,31 @@ import (
 	"sync"
 	"testing"
 	"time"
-
-	socket "nighttroop.t1d.nz/socketio"
-	"nighttroop.t1d.nz/socketio/engineio"
 )
 
 const (
 	defaultTimeout = 5 * time.Second
 	// defaultCollect is how long COLLECT listens without a T
 	defaultCollect = time.Second
+	// defaultNamespace is the namespace CONNECT joins without an NS
+	defaultNamespace = "/"
+	// defaultEIO is the Engine.IO version CONNECT speaks without an EIO in its URL
+	defaultEIO = 4
 )
+
+// Socket is a Socket.IO client, which CONNECT opens and EMIT, WAIT and COLLECT use
+type Socket interface {
+	// On handles the namespace's event, registered before the connection opens
+	On(namespace, event string, handler func(args []json.RawMessage))
+	// Open opens the Engine.IO connection to the URL, sending its requests with the HTTP client
+	Open(ctx context.Context, rawURL string, httpClient *http.Client) error
+	// Connect joins the namespace, sending auth
+	Connect(ctx context.Context, namespace string, auth any) error
+	Emit(namespace, event string, args ...any) error
+	// EmitWithAck sends the event and waits for its acknowledgement's arguments
+	EmitWithAck(ctx context.Context, namespace, event string, args ...any) ([]json.RawMessage, error)
+	Close() error
+}
 
 // httpRunner runs a file's steps one at a time with Step, keeping one Socket.IO connection open between them until Close
 type httpRunner struct {
@@ -30,8 +45,10 @@ type httpRunner struct {
 	Client *http.Client
 	// RunBackgroundJobs runs every background job, for RUN_BACKGROUND_JOBS
 	RunBackgroundJobs func()
+	// NewSocket makes a Socket.IO client speaking that Engine.IO version, for CONNECT
+	NewSocket func(eio int) Socket
 
-	client    *socket.Client
+	client    Socket
 	namespace string // the namespace CONNECT joined, which EMIT and the events use
 	mu        sync.Mutex
 	received  map[string][]any // events, the socket's and the streams', not yet waited for or collected
@@ -170,7 +187,10 @@ func (r *httpRunner) connect(ctx map[string]any, events []string, step *HTTPStep
 	if err != nil {
 		return err
 	}
-	version := engineio.V4
+	if r.NewSocket == nil {
+		return fmt.Errorf("no Socket.IO client: the runner has no NewSocket")
+	}
+	version := defaultEIO
 	if eio := u.Query().Get("EIO"); eio != "" {
 		if version, err = strconv.Atoi(eio); err != nil {
 			return fmt.Errorf("bad EIO %q", eio)
@@ -183,11 +203,11 @@ func (r *httpRunner) connect(ctx map[string]any, events []string, step *HTTPStep
 
 	dialCtx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	r.namespace = socket.DefaultNamespace
+	r.namespace = defaultNamespace
 	if step.NS != "" {
 		r.namespace = step.NS
 	}
-	client := socket.NewClient(version)
+	client := r.NewSocket(version)
 	r.listen()
 	r.mu.Lock()
 	// A new connection starts with none of the last one's events, though a stream's are kept

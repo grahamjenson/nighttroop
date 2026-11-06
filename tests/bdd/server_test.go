@@ -8,6 +8,7 @@ import (
 
 	"github.com/mxschmitt/playwright-go"
 	"nighttroop.t1d.nz/background"
+	"nighttroop.t1d.nz/socketio"
 	"nighttroop.t1d.nz/tests/dsl/flow"
 )
 
@@ -20,6 +21,7 @@ func RunTheActionFileAsATest(t *testing.T, root string, path string, server *htt
 			Client:            flow.Client(server),
 			RunBackgroundJobs: func() { backgroundJobs.RunAllNow(t.Context()) },
 			NewPage:           context.NewPage,
+			NewSocket:         func(eio int) flow.Socket { return socketio.NewClient(eio) },
 		}
 		// Always keep a screenshot of the page a failing file stopped on
 		t.Cleanup(func() {

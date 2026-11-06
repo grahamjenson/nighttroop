@@ -2,16 +2,16 @@ package flow
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
-
-	"nighttroop.t1d.nz/utils/testutils"
 )
 
 type Set struct {
@@ -42,8 +42,11 @@ type Request struct {
 // Client sends a file's requests to the test server ts, whatever their host, as they are written: it follows no
 // redirect, so a step sees the response it got, and asks for no compression, so the headers asserted are the server's
 func Client(ts *httptest.Server) *http.Client {
-	client := testutils.HostClient(ts)
-	client.Transport.(*http.Transport).DisableCompression = true
+	addr := ts.Listener.Addr().String()
+	dial := func(ctx context.Context, network, _ string) (net.Conn, error) {
+		return (&net.Dialer{}).DialContext(ctx, network, addr)
+	}
+	client := &http.Client{Transport: &http.Transport{DialContext: dial, DisableCompression: true}}
 	client.CheckRedirect = func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
 	return client
 }
