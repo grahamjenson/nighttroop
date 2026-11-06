@@ -23,9 +23,7 @@ import (
 	"time"
 
 	"github.com/mxschmitt/playwright-go"
-	"nighttroop.t1d.nz/tests/dsl/browser"
 	"nighttroop.t1d.nz/tests/dsl/flow"
-	"nighttroop.t1d.nz/tests/dsl/jsonapi"
 )
 
 // settings is how scripts are run, from the command line
@@ -41,7 +39,7 @@ func main() {
 	flag.StringVar(&s.host, "host", "", "the server's host name, with its port if not the scheme's, e.g. staging.nighttroop.nz")
 	flag.StringVar(&s.scheme, "scheme", "https", "http or https")
 	root := flag.String("root", ".", "the folder the scripts, and the files they INCLUDE, are in")
-	flag.StringVar(&browser.ScreenshotDir, "out", "script-screenshots", "the folder for screenshots, SCREENSHOT's and a failed script's")
+	flag.StringVar(&flow.ScreenshotDir, "out", "script-screenshots", "the folder for screenshots, SCREENSHOT's and a failed script's")
 	flag.DurationVar(&s.timeout, "timeout", 10*time.Second, "how long a browser step waits for the page")
 	flag.BoolVar(&s.headed, "headed", false, "show the browser as it runs")
 	flag.Func("var", "KEY=VALUE, set as {{ .KEY }} in every script; may be given more than once", func(kv string) error {
@@ -59,7 +57,7 @@ func main() {
 		flag.PrintDefaults()
 		os.Exit(2)
 	}
-	fsys, client := os.DirFS(*root), jsonapi.RemoteClient(s.scheme, s.host)
+	fsys, client := os.DirFS(*root), flow.RemoteClient(s.scheme, s.host)
 	tests := []testing.InternalTest{}
 	for _, path := range flag.Args() {
 		tests = append(tests, testing.InternalTest{Name: path, F: func(t *testing.T) { run(t, fsys, path, client, s) }})
@@ -89,7 +87,7 @@ func run(t *testing.T, fsys fs.FS, path string, client *http.Client, s settings)
 	runner := &flow.Runner{Client: client, NewPage: func() (playwright.Page, error) { return newPage(t, s) }}
 	t.Cleanup(func() {
 		if t.Failed() && runner.Page != nil {
-			if screenshot, err := browser.ScreenshotPage(runner.Page, "failed", path, "failed"); err == nil {
+			if screenshot, err := flow.ScreenshotPage(runner.Page, "failed", path, "failed"); err == nil {
 				t.Logf("Failure screenshot saved to: %s", screenshot)
 			}
 		}
@@ -100,7 +98,7 @@ func run(t *testing.T, fsys fs.FS, path string, client *http.Client, s settings)
 // refuseBackgroundJobs refuses a script with RUN_BACKGROUND_JOBS, which only a test's own server can run at once
 func refuseBackgroundJobs(script *flow.Flow) error {
 	for _, step := range script.Steps {
-		_, browsing := step.Browser.(*browser.RunBackgroundJobs)
+		_, browsing := step.Browser.(*flow.RunBackgroundJobs)
 		if browsing || (step.API != nil && step.API.Verb == "RUN_BACKGROUND_JOBS") {
 			return fmt.Errorf("%s: RUN_BACKGROUND_JOBS runs a test server's jobs at once, so it cannot run against another server", script.Path)
 		}

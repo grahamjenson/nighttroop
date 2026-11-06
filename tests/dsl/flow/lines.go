@@ -1,6 +1,7 @@
-// Package script is what the .http, .sio and .bdd test files share: reading their lines, with each file they INCLUDE
+// Lines and templates are what the .http, .sio and .bdd test files share: reading their lines, with each file they INCLUDE
 // in its place, and filling in their {{ }} values
-package script
+
+package flow
 
 import (
 	"bufio"

@@ -1,15 +1,14 @@
-package socketio
+package flow
 
 import (
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"nighttroop.t1d.nz/tests/dsl/script"
 )
 
 func TestParseFile(t *testing.T) {
-	file, err := parse(`
+	file, err := parseHTTP(`
 # a comment
 NAME connect
 CONNECT http://{{ site }}/socket.io/?EIO=3
@@ -78,17 +77,17 @@ func TestParseFileErrors(t *testing.T) {
 	}
 	for name, contents := range tests {
 		t.Run(name, func(t *testing.T) {
-			_, err := parse(contents)
+			_, err := parseHTTP(contents)
 			require.ErrorContains(t, err, "test.sio")
 		})
 	}
 }
 
-// parse is the steps of a .sio file's contents
-func parse(contents string) (*File, error) {
-	lines, err := script.SplitLines([]byte(contents), "test.sio", nil)
+// parseHTTP is the steps of a .sio file's contents
+func parseHTTP(contents string) (*HTTPFile, error) {
+	lines, err := SplitLines([]byte(contents), "test.sio", nil)
 	if err != nil {
 		return nil, err
 	}
-	return ParseLines(lines, "test.sio")
+	return ParseHTTPLines(lines, "test.sio")
 }

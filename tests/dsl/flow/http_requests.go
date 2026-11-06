@@ -1,4 +1,4 @@
-package jsonapi
+package flow
 
 import (
 	"bytes"
@@ -12,8 +12,6 @@ import (
 	"testing"
 
 	"nighttroop.t1d.nz/utils/testutils"
-
-	"nighttroop.t1d.nz/tests/dsl/script"
 )
 
 type Set struct {
@@ -22,7 +20,7 @@ type Set struct {
 }
 
 func (r *Set) Set(ctx map[string]any) error {
-	renderedValue, err := script.Render(r.Value, ctx)
+	renderedValue, err := Render(r.Value, ctx)
 	if err != nil {
 		return fmt.Errorf("failed to render template for set %s: %v", r.Key, err)
 	}
@@ -37,7 +35,7 @@ type Request struct {
 	Headers http.Header
 	Body    *string
 
-	Asserts []Assert
+	Asserts []HTTPAssert
 	Sets    []Set
 }
 
@@ -102,7 +100,7 @@ func (r *Request) PrintRequest() {
 	}
 }
 
-func (r *Request) AddAssert(assert Assert) {
+func (r *Request) AddAssert(assert HTTPAssert) {
 	r.Asserts = append(r.Asserts, assert)
 }
 
@@ -112,7 +110,7 @@ func (r *Request) AddSet(set Set) {
 
 // Render is the request with its URL, body and headers filled in from ctx, sending JSON unless a header says not
 func (r *Request) Render(ctx map[string]any) (*Request, error) {
-	url, err := script.Render(r.URL, ctx)
+	url, err := Render(r.URL, ctx)
 	if err != nil {
 		return nil, fmt.Errorf("request %s url render failed: %w", r.Name, err)
 	}
@@ -120,7 +118,7 @@ func (r *Request) Render(ctx map[string]any) (*Request, error) {
 	// ---- render body ----
 	bodyStr := ""
 	if r.Body != nil {
-		bodyStr, err = script.Render(string(*r.Body), ctx)
+		bodyStr, err = Render(string(*r.Body), ctx)
 		if err != nil {
 			return nil, fmt.Errorf("request %s body render failed: %w", r.Name, err)
 		}
@@ -138,7 +136,7 @@ func (r *Request) Render(ctx map[string]any) (*Request, error) {
 	renderedHeaders := make(http.Header)
 	for k, vv := range r.Headers {
 		for _, v := range vv {
-			renderedValue, err := script.Render(v, ctx)
+			renderedValue, err := Render(v, ctx)
 			if err != nil {
 				return nil, fmt.Errorf("request %s header %s render failed: %w", r.Name, k, err)
 			}

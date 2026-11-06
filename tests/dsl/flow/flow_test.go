@@ -8,8 +8,6 @@ import (
 	"testing/fstest"
 
 	"github.com/stretchr/testify/require"
-	"nighttroop.t1d.nz/tests/dsl/browser"
-	"nighttroop.t1d.nz/tests/dsl/jsonapi"
 )
 
 // A .http file's NAME blocks are API steps, an INCLUDE's SET goes on its last step, and browser lines in between
@@ -50,7 +48,7 @@ ASSERT_PATH /
 	require.NoError(t, err)
 	require.Equal(t, []string{"POST", "GOTO {{ server_url }}/", `POST /settings/push-registrations {"app": "loop"}`, "CONNECT", "WAIT",
 		"CLICK #site--nav--home"}, kinds(mixed))
-	require.IsType(t, &browser.Goto{}, mixed.Steps[1].Browser)
+	require.IsType(t, &Goto{}, mixed.Steps[1].Browser)
 	require.Equal(t, []string{"dataUpdate"}, mixed.API.Events())
 
 	twice, err := Parse(fsys, "site/twice.flow")
@@ -105,7 +103,7 @@ ASSERT_EQUALS "abcdefgh.ns.localhost" "@host"
 	require.NoError(t, err)
 	ran := 0
 	ctx := map[string]any{}
-	(&Runner{Client: jsonapi.Client(ts), RunBackgroundJobs: func() { ran++ }}).Run(t, echo, ctx)
+	(&Runner{Client: Client(ts), RunBackgroundJobs: func() { ran++ }}).Run(t, echo, ctx)
 	require.Equal(t, 1, ran)
 	require.Equal(t, "hello-again", ctx["second"].(map[string]any)["said"])
 }
@@ -135,5 +133,5 @@ ASSERT_EQUALS 130 "@sgv"
 	t.Cleanup(ts.Close)
 	stream, err := Parse(fsys, "api/stream.flow")
 	require.NoError(t, err)
-	(&Runner{Client: jsonapi.Client(ts)}).Run(t, stream, map[string]any{})
+	(&Runner{Client: Client(ts)}).Run(t, stream, map[string]any{})
 }

@@ -10,16 +10,12 @@ import (
 	"io/fs"
 	"path/filepath"
 	"slices"
-
-	"nighttroop.t1d.nz/tests/dsl/browser"
-	"nighttroop.t1d.nz/tests/dsl/script"
-	"nighttroop.t1d.nz/tests/dsl/socketio"
 )
 
 // Step is one step of a flow: an API or socket step, or a browser action
 type Step struct {
-	API     *socketio.Step
-	Browser browser.Action
+	API     *HTTPStep
+	Browser Action
 }
 
 // Flow is a parsed script
@@ -27,16 +23,16 @@ type Flow struct {
 	Path  string
 	Steps []Step
 	// API has every API and socket step, so a socket connection listens for every event the flow waits for
-	API *socketio.File
+	API *HTTPFile
 }
 
 // Parse reads the flow at path in fsys, and the files it INCLUDEs
 func Parse(fsys fs.FS, path string) (*Flow, error) {
-	lines, err := script.ReadLines(fsys, path)
+	lines, err := ReadLines(fsys, path)
 	if err != nil {
 		return nil, err
 	}
-	flow := &Flow{Path: path, API: &socketio.File{Path: path}}
+	flow := &Flow{Path: path, API: &HTTPFile{Path: path}}
 	// files is a frame for each file the line being read is in, the outermost first: its path, its last line and
 	// whether its lines, from its start or its last HTTP or BROWSE, are browser steps
 	type file struct {
@@ -46,19 +42,19 @@ func Parse(fsys fs.FS, path string) (*Flow, error) {
 	}
 	var files []file
 	isBrowser := false
-	var run []script.Line
+	var run []Line
 	add := func() error {
 		if len(run) == 0 {
 			return nil
 		}
 		if isBrowser {
-			actions, err := browser.ParseLines(run)
+			actions, err := ParseBrowserLines(run)
 			for _, action := range actions {
 				flow.Steps = append(flow.Steps, Step{Browser: action})
 			}
 			return err
 		}
-		file, err := socketio.ParseLines(run, path)
+		file, err := ParseHTTPLines(run, path)
 		if err != nil {
 			return err
 		}

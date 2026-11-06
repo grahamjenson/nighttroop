@@ -1,4 +1,4 @@
-package jsonapi
+package flow
 
 import (
 	"net/http"

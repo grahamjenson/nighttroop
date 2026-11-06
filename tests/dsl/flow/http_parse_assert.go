@@ -1,4 +1,4 @@
-package jsonapi
+package flow
 
 import (
 	"fmt"
@@ -6,14 +6,14 @@ import (
 )
 
 // ParseAssert is the assert on an ASSERT_* line, and false when the line is not one
-func ParseAssert(first, second, path string, lineNumber int) (Assert, bool, error) {
+func ParseAssert(first, second, path string, lineNumber int) (HTTPAssert, bool, error) {
 	switch first {
 	case "ASSERT_STATUS":
 		statusCode, err := strconv.Atoi(second)
 		if err != nil {
 			return nil, true, fmt.Errorf("invalid assert_status: %q", second)
 		}
-		return AssertStatus{Path: path, Line: lineNumber, Code: statusCode}, true, nil
+		return HTTPAssertStatus{Path: path, Line: lineNumber, Code: statusCode}, true, nil
 
 	case "ASSERT_EQUALS", "ASSERT_CONTAINS":
 		expected, actual, err := parseAssertArgs(second)

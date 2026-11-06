@@ -1,15 +1,13 @@
-package browser
+package flow
 
 import (
 	"fmt"
 	"strconv"
 	"strings"
-
-	"nighttroop.t1d.nz/tests/dsl/script"
 )
 
-// ParseLines is the actions of a file's lines, each starting one, with the asserts after it
-func ParseLines(lines []script.Line) ([]Action, error) {
+// ParseBrowserLines is the actions of a file's lines, each starting one, with the asserts after it
+func ParseBrowserLines(lines []Line) ([]Action, error) {
 	var actions []Action
 	var current Action
 
@@ -29,7 +27,7 @@ func ParseLines(lines []script.Line) ([]Action, error) {
 				TestPath: path,
 				TestLine: lineNumber,
 				URL:      second,
-				Asserts:  []Assert{},
+				Asserts:  []BrowserAssert{},
 			}
 		case "POST":
 			// POST sends a path a JSON body from the page, signed in as it is, e.g. as an app registers itself
@@ -46,7 +44,7 @@ func ParseLines(lines []script.Line) ([]Action, error) {
 				TestPath: path,
 				TestLine: lineNumber,
 				Locator:  second,
-				Asserts:  []Assert{},
+				Asserts:  []BrowserAssert{},
 			}
 		case "CLICK_CORNER", "PRESS":
 			flush()
@@ -54,7 +52,7 @@ func ParseLines(lines []script.Line) ([]Action, error) {
 			if second == "" {
 				return nil, fmt.Errorf("%s needs a value", first)
 			}
-			click := &Click{TestPath: path, TestLine: lineNumber, Asserts: []Assert{}}
+			click := &Click{TestPath: path, TestLine: lineNumber, Asserts: []BrowserAssert{}}
 			if first == "PRESS" {
 				click.Key = second
 			} else {
@@ -69,7 +67,7 @@ func ParseLines(lines []script.Line) ([]Action, error) {
 			if len(parts) != 2 || parts[1] == "" {
 				return nil, fmt.Errorf("TYPE needs a locator and a value")
 			}
-			current = &Click{TestPath: path, TestLine: lineNumber, Asserts: []Assert{}, Locator: parts[0], Text: parts[1]}
+			current = &Click{TestPath: path, TestLine: lineNumber, Asserts: []BrowserAssert{}, Locator: parts[0], Text: parts[1]}
 		case "SCROLL":
 			// SCROLL turns the mouse wheel by a number of pixels, down or up when negative, so asserts can check what
 			// scrolling shows or hides
@@ -78,11 +76,11 @@ func ParseLines(lines []script.Line) ([]Action, error) {
 			if err != nil {
 				return nil, fmt.Errorf("%s:%d: SCROLL needs a number of pixels: %q", path, lineNumber, second)
 			}
-			current = &Click{TestPath: path, TestLine: lineNumber, Asserts: []Assert{}, Scroll: &pixels}
+			current = &Click{TestPath: path, TestLine: lineNumber, Asserts: []BrowserAssert{}, Scroll: &pixels}
 		case "BACKGROUND", "FOREGROUND":
 			// BACKGROUND hides the page, as a browser does a tab in the background, until FOREGROUND shows it again
 			flush()
-			current = &Click{TestPath: path, TestLine: lineNumber, Asserts: []Assert{}, Hidden: new(first == "BACKGROUND")}
+			current = &Click{TestPath: path, TestLine: lineNumber, Asserts: []BrowserAssert{}, Hidden: new(first == "BACKGROUND")}
 		case "CLICK_BACK", "CLICK_FORWARD":
 			flush()
 
@@ -90,7 +88,7 @@ func ParseLines(lines []script.Line) ([]Action, error) {
 				TestPath: path,
 				TestLine: lineNumber,
 				History:  strings.ToLower(strings.TrimPrefix(first, "CLICK_")),
-				Asserts:  []Assert{},
+				Asserts:  []BrowserAssert{},
 			}
 		case "INPUT":
 			flush()
@@ -156,7 +154,7 @@ func ParseLines(lines []script.Line) ([]Action, error) {
 			if current == nil {
 				return nil, fmt.Errorf("screenshot before action")
 			}
-			assertable, ok := current.(interface{ AddAssert(Assert) })
+			assertable, ok := current.(interface{ AddAssert(BrowserAssert) })
 			if !ok {
 				return nil, fmt.Errorf("current action does not support asserts")
 			}
@@ -170,7 +168,7 @@ func ParseLines(lines []script.Line) ([]Action, error) {
 			if current == nil {
 				return nil, fmt.Errorf("assert_status before action")
 			}
-			assertable, ok := current.(interface{ AddAssert(Assert) })
+			assertable, ok := current.(interface{ AddAssert(BrowserAssert) })
 			if !ok {
 				return nil, fmt.Errorf("current action does not support asserts")
 			}
@@ -178,7 +176,7 @@ func ParseLines(lines []script.Line) ([]Action, error) {
 			if err != nil {
 				return nil, fmt.Errorf("invalid assert_status: %q", second)
 			}
-			assertable.AddAssert(&AssertStatus{
+			assertable.AddAssert(&BrowserAssertStatus{
 				TestPath: path,
 				TestLine: lineNumber,
 				Code:     statusCode,
@@ -188,7 +186,7 @@ func ParseLines(lines []script.Line) ([]Action, error) {
 			if current == nil {
 				return nil, fmt.Errorf("assert_visible before action")
 			}
-			assertable, ok := current.(interface{ AddAssert(Assert) })
+			assertable, ok := current.(interface{ AddAssert(BrowserAssert) })
 			if !ok {
 				return nil, fmt.Errorf("current action does not support asserts")
 			}
@@ -202,7 +200,7 @@ func ParseLines(lines []script.Line) ([]Action, error) {
 			if current == nil {
 				return nil, fmt.Errorf("assert_not_visible before action")
 			}
-			assertable, ok := current.(interface{ AddAssert(Assert) })
+			assertable, ok := current.(interface{ AddAssert(BrowserAssert) })
 			if !ok {
 				return nil, fmt.Errorf("current action does not support asserts")
 			}
@@ -215,7 +213,7 @@ func ParseLines(lines []script.Line) ([]Action, error) {
 			if current == nil {
 				return nil, fmt.Errorf("assert_text_visible before action")
 			}
-			assertable, ok := current.(interface{ AddAssert(Assert) })
+			assertable, ok := current.(interface{ AddAssert(BrowserAssert) })
 			if !ok {
 				return nil, fmt.Errorf("current action does not support asserts")
 			}
@@ -234,7 +232,7 @@ func ParseLines(lines []script.Line) ([]Action, error) {
 				return nil, fmt.Errorf("expected exactly two values")
 			}
 
-			assertable, ok := current.(interface{ AddAssert(Assert) })
+			assertable, ok := current.(interface{ AddAssert(BrowserAssert) })
 			if !ok {
 				return nil, fmt.Errorf("current action does not support asserts")
 			}
@@ -250,7 +248,7 @@ func ParseLines(lines []script.Line) ([]Action, error) {
 				return nil, fmt.Errorf("assert_new_page before action")
 			}
 
-			assertable, ok := current.(interface{ AddAssert(Assert) })
+			assertable, ok := current.(interface{ AddAssert(BrowserAssert) })
 			if !ok {
 				return nil, fmt.Errorf("current action does not support asserts")
 			}
@@ -264,7 +262,7 @@ func ParseLines(lines []script.Line) ([]Action, error) {
 				return nil, fmt.Errorf("assert_new_url before action")
 			}
 
-			assertable, ok := current.(interface{ AddAssert(Assert) })
+			assertable, ok := current.(interface{ AddAssert(BrowserAssert) })
 			if !ok {
 				return nil, fmt.Errorf("current action does not support asserts")
 			}
@@ -278,7 +276,7 @@ func ParseLines(lines []script.Line) ([]Action, error) {
 				return nil, fmt.Errorf("assert_path before action")
 			}
 
-			assertable, ok := current.(interface{ AddAssert(Assert) })
+			assertable, ok := current.(interface{ AddAssert(BrowserAssert) })
 			if !ok {
 				return nil, fmt.Errorf("current action does not support asserts")
 			}
@@ -293,7 +291,7 @@ func ParseLines(lines []script.Line) ([]Action, error) {
 			if current == nil {
 				return nil, fmt.Errorf("assert_fits before action")
 			}
-			assertable, ok := current.(interface{ AddAssert(Assert) })
+			assertable, ok := current.(interface{ AddAssert(BrowserAssert) })
 			if !ok {
 				return nil, fmt.Errorf("current action does not support asserts")
 			}
@@ -303,7 +301,7 @@ func ParseLines(lines []script.Line) ([]Action, error) {
 				return nil, fmt.Errorf("assert_title before action")
 			}
 
-			assertable, ok := current.(interface{ AddAssert(Assert) })
+			assertable, ok := current.(interface{ AddAssert(BrowserAssert) })
 			if !ok {
 				return nil, fmt.Errorf("current action does not support asserts")
 			}
