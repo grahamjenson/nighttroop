@@ -3,6 +3,8 @@ package aslog
 import (
 	"bytes"
 	"context"
+	"errors"
+	"fmt"
 	"log/slog"
 	"strings"
 	"testing"
@@ -64,4 +66,31 @@ func TestJobAndSiteContexts(t *testing.T) {
 	require.Equal(t, 1, strings.Count(lines[0], "site_id="))
 	require.Contains(t, lines[0], "site_id=carol")
 	require.NotEqual(t, jobID(lines[0]), jobID(lines[1]))
+}
+
+// An error that is its context being cancelled or timing out is logged as a warning, so Sentry is not sent one for
+// each layer of a request a client left; any other error, and a cancellation at a lower level, are left as they are
+func TestCancellationIsAWarning(t *testing.T) {
+	var logs bytes.Buffer
+	logger := slog.New(ContextHandler{slog.NewTextHandler(&logs, nil)})
+	tests := []struct {
+		name  string
+		log   func()
+		level string
+	}{
+		{"cancelled", func() { logger.Error("Error writing glucose", "error", context.Canceled) }, "WARN"},
+		{"wrapped timeout", func() {
+			logger.Error("failed to search the database", "error", fmt.Errorf("searching: %w", context.DeadlineExceeded))
+		}, "WARN"},
+		{"other error", func() { logger.Error("failed to map data", "error", errors.New("unknown event type")) }, "ERROR"},
+		{"no error", func() { logger.Error("something failed") }, "ERROR"},
+		{"cancelled info", func() { logger.Info("stopped", "error", context.Canceled) }, "INFO"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			logs.Reset()
+			test.log()
+			require.Contains(t, logs.String(), "level="+test.level+" ")
+		})
+	}
 }

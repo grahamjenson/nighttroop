@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"log/slog"
 	"sync"
 )
@@ -92,8 +93,25 @@ type ContextHandler struct {
 }
 
 func (h ContextHandler) Handle(ctx context.Context, record slog.Record) error {
+	if record.Level >= slog.LevelError && cancelled(record) {
+		record.Level = slog.LevelWarn
+	}
 	record.AddAttrs(attrsOf(ctx)...)
 	return h.Handler.Handle(ctx, record)
+}
+
+// cancelled is whether the record's error is its context being cancelled or timing out, as when a client goes away or
+// a request takes too long. That is not a fault of the code logging it, and each layer the request passed logs it,
+// so it is a warning, kept in the logs but not sent to Sentry as an error for each layer.
+func cancelled(record slog.Record) bool {
+	found := false
+	record.Attrs(func(attr slog.Attr) bool {
+		if err, ok := attr.Value.Any().(error); ok {
+			found = errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded)
+		}
+		return !found
+	})
+	return found
 }
 
 func (h ContextHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
