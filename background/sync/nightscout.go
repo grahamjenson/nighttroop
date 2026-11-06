@@ -115,11 +115,13 @@ func (b *SyncJobManager) syncNightscoutCollection(ctx context.Context, nsc *nigh
 // such as a treatment with an eventType it does not know, are skipped and logged once, so they do not fail every sync.
 // With replace, a document with an _id replaces the site's copy of it, so a change to it is copied too.
 func (b *SyncJobManager) createNightscoutDocuments(ctx context.Context, syncInfo *SyncJobInfo, collection nsutils.Collection, docs []map[string]any, replace bool) (int, error) {
-	// REMOVE WRITE ONLY COLUMNS
+	// REMOVE WRITE ONLY COLUMNS, which that Nightscout set. Its subject is who saved the document there, not the sync
+	// that copies it here, so a replace would be refused as changing it.
 	for _, doc := range docs {
 		delete(doc, "srvCreated")
 		delete(doc, "srvModified")
 		delete(doc, "modifiedBy")
+		delete(doc, "subject")
 	}
 
 	collectionStore, ok := b.nightscoutStore.GetStore(collection)
