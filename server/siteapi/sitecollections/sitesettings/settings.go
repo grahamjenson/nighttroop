@@ -160,7 +160,7 @@ func (s *SettingsCollection) GetRow(ctx context.Context, collectionTx *siteapiut
 }
 
 // Watches is whether a settings change is streamed to the identity: every level is the same model, so its own
-// settings and alarms are only its own changes and, for an admin, the site's, beside which an admin's are shown.
+// settings and alarms are only its own changes and the site's, which it inherits and an admin's are shown beside.
 // The site's and other identities' are the admins' alone, as reading them is.
 func (s *SettingsCollection) Watches(event events.Event, siteContext *httputils.SiteContext) bool {
 	changed, ok := event.Model.(*sitemodels.Settings)
@@ -173,9 +173,16 @@ func (s *SettingsCollection) Watches(event events.Event, siteContext *httputils.
 	case s.Other:
 		return changed.OwnerID != nil
 	case changed.OwnerID == nil:
-		return siteContext.IdentityModel.Role == consts.IdentityRoleAdmin
+		return true
 	}
 	return *changed.OwnerID == siteContext.IdentityModel.ID
+}
+
+// Hides is whether a settings change is sent as {}: the site's, to a non-admin, who cannot read them but whose
+// inherited settings have changed
+func (s *SettingsCollection) Hides(event events.Event, siteContext *httputils.SiteContext) bool {
+	changed, ok := event.Model.(*sitemodels.Settings)
+	return ok && changed.OwnerID == nil && siteContext.IdentityModel.Role != consts.IdentityRoleAdmin
 }
 
 func (s *SettingsCollection) ToModel(row *sitemodels.Settings, _ *httputils.SiteContext) *sitemodels.Settings {
