@@ -656,12 +656,17 @@ func (r *UserAgent) Execute(t *testing.T, page playwright.Page, ctx map[string]a
 type SaveText struct {
 	Locator string
 	Key     string
+	// Value keeps the input's value, for SAVE_VALUE, rather than its text
+	Value bool
 
 	TestPath string
 	TestLine int
 }
 
 func (r *SaveText) ToFlatString() string {
+	if r.Value {
+		return fmt.Sprintf("SAVE_VALUE %s %s", r.Locator, r.Key)
+	}
 	return fmt.Sprintf("SAVE_TEXT %s %s", r.Locator, r.Key)
 }
 
@@ -674,7 +679,14 @@ func (r *SaveText) PrintAction() {
 }
 
 func (r *SaveText) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
-	text, err := page.Locator(r.Locator).InnerText()
+	locator := page.Locator(r.Locator)
+	var text string
+	var err error
+	if r.Value {
+		text, err = locator.InputValue()
+	} else {
+		text, err = locator.InnerText()
+	}
 	if err != nil {
 		return nil, fmt.Errorf("%s", r.ToErrorLine(err.Error()))
 	}

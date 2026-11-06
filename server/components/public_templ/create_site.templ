@@ -163,7 +163,7 @@ templ CreateSiteInfo(newsite publicmodels.NewSiteInfo) {
 					hx-swap="innerHTML"
 				>
 					<input type="hidden" name="site" value={ newsite.SiteID() }/>
-					<input type="hidden" name="secret" value={ newsite.AdminTotpSecret }/>
+					<input type="hidden" id="public--site-info--totp-secret" name="secret" value={ newsite.AdminTotpSecret }/>
 					<input
 						id="public--site-info--totp"
 						name="totp"

@@ -134,13 +134,15 @@ func ParseBrowserLines(lines []Line) ([]Action, error) {
 			// USER_AGENT sends the pages' requests with a User-Agent, as another app would, until one with none
 			flush()
 			current = &UserAgent{TestPath: path, TestLine: lineNumber, Value: second}
-		case "SAVE_TEXT":
+		case "SAVE_TEXT", "SAVE_VALUE":
+			// SAVE_TEXT keeps an element's text as a value for the steps after it, and SAVE_VALUE an input's value,
+			// though it is hidden, as a TOTP secret only shown as a QR code is
 			flush()
 			parts := strings.SplitN(second, " ", 2)
 			if len(parts) != 2 {
 				return nil, fmt.Errorf("%s:%d: expected a locator and a key", path, lineNumber)
 			}
-			current = &SaveText{TestPath: path, TestLine: lineNumber, Locator: parts[0], Key: parts[1]}
+			current = &SaveText{TestPath: path, TestLine: lineNumber, Locator: parts[0], Key: parts[1], Value: first == "SAVE_VALUE"}
 		case "CLEAR_COOKIE":
 			flush()
 

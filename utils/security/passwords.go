@@ -56,8 +56,10 @@ func (cfg *SecurityConfig) TOTPValidate(token, secret string) bool {
 	if !totpCode.MatchString(token) {
 		return false
 	}
-	if cfg.IsDevOrTest() && secret == *cfg.DevelopmentDangerousHardcodedAdminTOTPSecret {
-		return token == *cfg.DevelopmentDangerousHardcodedAdminTOTPCode
+	// The dev secret also takes the code it makes now, so a script that makes codes from the secret it is shown runs
+	// on a dev or test server as it does on staging
+	if cfg.IsDevOrTest() && secret == *cfg.DevelopmentDangerousHardcodedAdminTOTPSecret && token == *cfg.DevelopmentDangerousHardcodedAdminTOTPCode {
+		return true
 	}
 	return totp.Validate(token, secret)
 }

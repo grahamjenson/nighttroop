@@ -3,9 +3,12 @@ package main
 import (
 	"io/fs"
 	"net/http/httptest"
+	"net/url"
 	"os"
+	"strconv"
 	"testing"
 	"testing/fstest"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/server"
@@ -19,6 +22,22 @@ func TestNewSiteScript(t *testing.T) {
 	ts := httptest.NewServer(server.GetMainHandler(controlDB, config))
 	t.Cleanup(ts.Close)
 	run(t, os.DirFS("../../scripts/staging"), "new_site.flow", flow.Client(ts), settings{scheme: "http", host: "localhost"})
+}
+
+// create_site.flow makes a site from the home page and signs in to it with codes made from its TOTP secret, in Chromium
+func TestCreateSiteScript(t *testing.T) {
+	config, controlDB, _ := testutils.NewControlDBWithSite(t)
+	ts := httptest.NewServer(server.GetMainHandler(controlDB, config))
+	t.Cleanup(ts.Close)
+	// The new site's links are to its subdomain of the test server, which Chromium finds on localhost
+	u, err := url.Parse(ts.URL)
+	require.NoError(t, err)
+	config.HostName = "localhost"
+	config.HostPort, err = strconv.Atoi(u.Port())
+	require.NoError(t, err)
+	flow.ScreenshotDir = t.TempDir()
+	host := "localhost:" + u.Port()
+	run(t, os.DirFS("../../scripts/staging"), "create_site.flow", flow.Client(ts), settings{scheme: "http", host: host, timeout: 5 * time.Second})
 }
 
 // Every staging script parses, and none needs a test server's background jobs
