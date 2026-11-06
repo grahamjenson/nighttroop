@@ -97,7 +97,9 @@ var (
 
 // Too Many Rows Errors
 var (
-	ErrTooManyRecords  = &HTTPError{Status: http.StatusBadRequest, Message: fmt.Sprintf("Too many records: at most %d per request", consts.MaxBatchRecords)}
+	ErrTooManyRecords  = &HTTPError{Status: http.StatusBadRequest, Message: fmt.Sprintf("Too many records: at most %d per request", consts.MaxV1BatchRecords)}
+	// ErrTooManyBatchWrites is a batch that would take the site or identity past its limit on writes
+	ErrTooManyBatchWrites = &HTTPError{Status: http.StatusTooManyRequests, Message: "Too many records written: send them again shortly"}
 	ErrTooManyProfiles = &HTTPError{Status: http.StatusBadRequest, Message: fmt.Sprintf("Too many profiles: at most %d in a store", consts.MaxProfilesPerStore)}
 )
 

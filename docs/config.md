@@ -18,7 +18,7 @@ Limits written per minute are rates; their burst is how many can be used at once
 | `MODE` | `development`, or `test` under `go test` | `development`, `test`, `production` or `staging`. Picks the `.env` file (`staging` reads `.env`, as production does), and dev and test use cheap bcrypt, fixed site names and fixed keys. `staging` runs as production does, but makes its control admin from `STAGING_ADMIN_PASSWORD` and `STAGING_ADMIN_TOTP_SECRET` instead of being set up, and puts a large banner at the top of every page saying it is a test site whose data is frequently wiped |
 | `HOST_NAME` | `nt.local.t1d.nz` | The domain sites are subdomains of, e.g. `abc.nt.local.t1d.nz`, used in links and cookies |
 | `HOST_PORT` | `3000` | The port the server listens on. Links to sites, such as the create site page's login, have no port with `HOST_PROTOCOL` `https`, as a proxy takes HTTPS on 443; with `http` they have this port |
-| `MAX_REQUEST_BODY_BYTES` | `4000000` | The largest request body the server reads, far above an uploader's batch of 100 records. A larger body is refused with 413 |
+| `MAX_REQUEST_BODY_BYTES` | `4000000` | The largest request body the server reads, above an uploader's largest batch, Juggluco's 5000 readings. A larger body is refused with 413 |
 | `REQUESTS_IN_FLIGHT_PER_CPU` | `16` | Requests each CPU works on at once. Past these and the backlog a request is refused at once with 503 and `Retry-After`, so a server that falls behind, such as when its CPU is throttled, answers what it can rather than every request timing out. The health check, live updates and Socket.IO are not counted. A quarter of these, and of the backlog, is kept for writes to the Nightscout API, so device uploads are not refused for page loads |
 | `REQUESTS_BACKLOG_PER_CPU` | `64` | Requests for each CPU that wait, up to 5 seconds, for one in flight to finish, once `REQUESTS_IN_FLIGHT_PER_CPU` are being worked on. One that waits longer, or arrives with the backlog full, is refused at once with 503 and `Retry-After` |
 | `HOST_PROTOCOL` | `https` | `http` or `https`, used in links and cookies. `http` is only allowed in development and test |
@@ -90,7 +90,7 @@ control DB's server settings and used in place of the env's from then on, until 
 | `GLOBAL_RATE_LIMIT` / `GLOBAL_RATE_BURST` | `100000` / `100000` | Requests to the whole server, to stop a DDoS. The control site has a limit of its own at the same rate, so it can still be signed in to, and a control admin signed in is not limited by either |
 | `GLOBAL_IP_PER_MINUTE_LIMIT` / `_BURST` | `720` / `1440` | Requests from one IP, enough to manage 4 sites |
 | `SITE_LOGIN_PER_MINUTE_LIMIT` / `_BURST` | `1` / `10` | Logins to a site, to stop credential stuffing |
-| `SITE_UNAUTH_PER_MINUTE_LIMIT` / `_BURST` | `60` / `120` | Requests from one IP to a site before it authenticates, so bad tokens cannot spend the site's limit |
+| `SITE_UNAUTH_PER_MINUTE_LIMIT` / `_BURST` | `60` / `120` | Requests from one IP to a site that fail auth or need none, so bad tokens cannot spend the site's limit |
 | `SITE_CREATE_GLOBAL_PER_MINUTE_LIMIT` / `_BURST` | `7` / `20` | Sites created on the whole server |
 | `SITE_CREATE_IP_PER_MINUTE_LIMIT` / `_BURST` | `0.1` / `1` | Sites created from one IP, one every 10 minutes |
 | `SITE_GET_PER_MINUTE_LIMIT` / `_BURST` | `180` / `360` | A site's authenticated reads |

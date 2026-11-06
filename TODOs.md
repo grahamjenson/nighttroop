@@ -1,13 +1,10 @@
 # TODOs
 
-## Before Alpha Testing
+## Alpha Testing
 
-1. Deploy a staging server ([docs/deploy/hostinger.md](docs/deploy/hostinger.md)) with S3 backups and `SENTRY_DSN` set,
-   and check a fresh server restores from those backups
-1. Test end to end with real devices: Loop, Trio, AAPS and xDrip+ uploading, follower apps (xDrip+ follower, LoopFollow,
+1. Point real deivces at Loop, Trio, AAPS and xDrip+ uploading, follower apps (xDrip+ follower, LoopFollow,
    Nightguard) reading, and Dexcom and Libre sync
-1. A tester guide: creating a site, keeping its credentials safe (they cannot be recovered), and connecting uploaders,
-   followers and sync
+1. Automated Testing of the staging, create site, do a bunch of stuff
 
 ## Before Beta Testing
 
@@ -36,8 +33,6 @@
 
 1. Security
     1. Testing deploy with rolling to a new keyset, moving to a new encrypted keyset.
-    1. P4: A change to the site's settings is not streamed to a non-admin's `/settings/identity/events`, though its
-       inherited values change; send it `{}`, as the summary is sent other models' changes, rather than the site's
     1. P2: Download the logs DB from the control site, so staging's captured requests (`CAPTURE_REQUESTS`) can be
        read and turned into tests
     1. P3: Capture each Socket.IO message on staging, as `CAPTURE_REQUESTS` keeps a websocket's upgrade but not its
@@ -47,9 +42,8 @@
 
 ## Before First Release:
 
-1. Think about Translations
+1. Translations
 1. Docs hosting
-1. Fuzz testing beyond the API (`tests/api/fuzz_test.go`)
 1. P3: Add event groups (list, get, add, edit, delete and the events to group) to `clients/nighttroop/openapi.json`
    and its client
 1. P4: Tag each endpoint in `clients/nighttroop/openapi.json` (site, data, settings, Nightscout), so the API docs'
@@ -100,10 +94,6 @@
        the temp basal in NSStatus (`nsv2/assistants.go`)
     1. P4: The Nightscout API gives glucose only in mg/dL, so the `units_mmol_label` setting no longer changes what it
        writes. Drop it from the settings, the `sites` and `site_identities` columns and their queries
-    1. P1: A Nightscout batch of over 100 records is refused with a 400 (`consts.MaxBatchRecords`), and Loop (up to
-       1000 a request) and Juggluco on v1 (up to 5000) send the same batch again until it is accepted, so after a
-       backlog (first set up, or about 8 hours offline) they never upload again. Take larger v1 batches in chunks, or
-       raise the cap for them (docs/clients/loop.md, docs/clients/juggluco.md)
     1. P1: Honour `sort` in searches and sort v3 history by `srvModified` oldest first, as Nightscout does. Searches
        are always newest first, so AAPS's first load (`sort=date&date$gt=…&limit=500`, back 100 days) and its
        history paging (`limit=500`) skip all but the newest 500 when there are more, and its profile history takes
@@ -134,7 +124,3 @@
 
 1. P4: A live site left out at start, its DB missing and not restored, is only a `site_db_missing` event; mark it on
    the control sites page too
-1. P2: A site's Nightscout API is limited to `SITE_UNAUTH_PER_MINUTE_LIMIT` (60 a minute) from one IP even with a
-   valid token, as the unauthenticated limit runs before auth on every Nightscout request, not only on failed ones
-1. P3: A cancelled or timed out request is logged as an error at each layer it passes, sending several Sentry events
-   for one request; log context cancellation below error

@@ -39,6 +39,12 @@ func SiteUnauthWithinRateLimit(serverConfig *config.ServerConfig, r *http.Reques
 	return WithinRateLimitAll(serverConfig.RateLimiters.SiteUnauthLimiter(siteContext.SiteID, siteContext.IPAddress))
 }
 
+// SiteUnauthSpent is whether an IP has no unauthenticated budget left on the site, without spending any of it
+func SiteUnauthSpent(serverConfig *config.ServerConfig, r *http.Request) bool {
+	siteContext := GetSiteContext(r.Context())
+	return serverConfig.RateLimiters.SiteUnauthLimiter(siteContext.SiteID, siteContext.IPAddress).Tokens() < 1
+}
+
 // //////
 // Once We know Who the user is then we can apply user-specific rate limiting
 // //////
@@ -78,6 +84,27 @@ func IdentityHTTPWithinRateLimit(serverConfig *config.ServerConfig, r *http.Requ
 	}
 
 	return WithinRateLimitAll(limiter)
+}
+
+// ExtraWritesWithinRateLimit spends n more writes from the site's and its identity's limits, as for a batch of many
+// records, spending none unless both have them all now
+func ExtraWritesWithinRateLimit(r *http.Request, n int) bool {
+	siteContext := GetSiteContext(r.Context())
+	if n <= 0 {
+		return true
+	}
+	if siteContext.IdentityModel == nil {
+		return false
+	}
+	now := time.Now()
+	site := siteContext.Config.RateLimiters.SitePOSTLimiter(siteContext.SiteID).ReserveN(now, n)
+	identity := siteContext.Config.RateLimiters.IdentityPOSTLimiter(siteContext.IdentityModel.ID).ReserveN(now, n)
+	if site.OK() && identity.OK() && site.DelayFrom(now) == 0 && identity.DelayFrom(now) == 0 {
+		return true
+	}
+	site.CancelAt(now)
+	identity.CancelAt(now)
+	return false
 }
 
 func UserUpdateSyncWithinRateLimit(siteContext *SiteContext) (bool, int) {
