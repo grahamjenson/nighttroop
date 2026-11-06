@@ -56,6 +56,12 @@ is the first), logs a warning naming the DB and both versions, and migrates it a
 why it failed. A DB dirty at a version its build has no migration for is not forced back, as which was applied is not
 known.
 
+The one case this gets wrong: golang-migrate clears the dirty mark after the file's transaction commits, so a server
+that dies between the two leaves N applied but marked dirty, and the next open runs N again. A migration of only
+`CREATE`s then fails on what it already made, and stops the open with that error to fix by hand; one that changes rows,
+such as an `UPDATE`, would change them twice. Keep a migration that changes rows safe to run twice, e.g. with a
+`WHERE` that only matches rows it has not changed yet.
+
 ## Changing a table
 
 SQLite cannot change a column or a `CHECK` in place, so the table is made again. The usual way, renaming a new table
