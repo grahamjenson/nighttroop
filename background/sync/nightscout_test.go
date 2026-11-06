@@ -164,7 +164,8 @@ func TestNightscoutSyncCopiesEntriesTreatmentsAndDeviceStatuses(t *testing.T) {
 }
 
 // A profile store is used long after it starts, so the newest is copied whenever the profiles change, however old, as
-// Nightscout's profile editor saves it through v1, without a date
+// Nightscout's profile editor saves it through v1, without a date. An edit is copied though it was saved by another
+// subject on that Nightscout than the sync that made the site's copy.
 func TestNightscoutSyncCopiesTheCurrentProfile(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.SyncSourceTypeNightscout
@@ -178,6 +179,8 @@ func TestNightscoutSyncCopiesTheCurrentProfile(t *testing.T) {
 	nightscout_client.TestDocuments = map[string][]any{"profile": {map[string]any{
 		"_id": "6553f1b2c4a1e2d3f4a5b6c7", "defaultProfile": "Default", "startDate": startDate, "created_at": startDate,
 		"mills": float64(time.Now().Add(-30 * 24 * time.Hour).UnixMilli()), "units": "mg/dl", "srvModified": float64(time.Now().UnixMilli()),
+		// Who saved it on that Nightscout, which the site's copy does not keep, as the sync made it
+		"subject": "admin",
 		"store": map[string]any{"Default": map[string]any{
 			"dia": 5, "units": "mg/dl", "timezone": "Pacific/Auckland",
 			"basal":       []any{map[string]any{"time": "00:00", "value": 0.8, "timeAsSeconds": 0}},

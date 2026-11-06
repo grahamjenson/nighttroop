@@ -300,7 +300,7 @@ focus back to the row or button that opened it.
 - Sync credentials are encrypted at rest.
 - A Nightscout sync copies the newest readings, treatments and device statuses, and the current profile store
   whenever the Nightscout's profiles change, however long ago it started; an edit to it in Nightscout's profile
-  editor replaces the copy, and a new one is added beside it.
+  editor replaces the copy, whoever saved it there, and a new one is added beside it.
 - A Nightscout sync on this server's host, or on a private, local or shared (carrier-grade NAT or Tailscale) address,
   is refused when saved and as it connects.
 
