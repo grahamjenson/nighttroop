@@ -16,6 +16,22 @@ H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_EQUALS "mg/dl" "@settings.units"
 
+// So does one for T1D Carer
+NAME create_t1dcarer
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "carer_phone", "role": "device_read", "client": "t1dcarer"}
+ASSERT_STATUS 201
+ASSERT_EQUALS "t1dcarer" "@result.client"
+SET carer_token {{ .create_t1dcarer.result.ns_token }}
+
+NAME t1dcarer_status_mgdl
+GET http://{{ .ns_site }}/api/v1/status.json?token={{ .carer_token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "mg/dl" "@settings.units"
+
 // So does one for xDrip4iOS, whose follower reads `sgv` as mg/dL, and it is not a loop so it can be read only
 NAME create_xdrip4ios
 POST http://{{ site }}/settings/identities
@@ -72,17 +88,18 @@ H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_EQUALS "other" "@result.client"
 
-// A user and the site's first devices were added for no app; newest first, after the three devices above
+// A user and the site's first devices were added for no app; newest first, after the four devices above
 NAME list_identities
 GET http://{{ site }}/settings/identities
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 6 "@result"
+ASSERT_LENGTH 7 "@result"
 ASSERT_EQUALS "xdrip4ios" "@result.1.client"
-ASSERT_EQUALS "read_only" "@result.3.name"
-ASSERT_EQUALS null "@result.3.client"
-ASSERT_EQUALS "pwd_phone" "@result.4.name"
+ASSERT_EQUALS "t1dcarer" "@result.2.client"
+ASSERT_EQUALS "read_only" "@result.4.name"
 ASSERT_EQUALS null "@result.4.client"
-ASSERT_EQUALS "admin" "@result.5.name"
+ASSERT_EQUALS "pwd_phone" "@result.5.name"
 ASSERT_EQUALS null "@result.5.client"
+ASSERT_EQUALS "admin" "@result.6.name"
+ASSERT_EQUALS null "@result.6.client"
