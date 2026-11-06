@@ -102,6 +102,12 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - Every log the server writes is kept in the logs too, written in batches, without IP addresses. Logs, events and
   errors keep the `request_id` or `job_id` they were for. Logs held for writing are capped at 1 MB; past that they are
   dropped, and the logs then say how many.
+- A request refused for what it sent (a 400, 405, 413 or 422), from any API or page, is an error of kind `client`:
+  its status, method and route pattern (never its path or query, which can carry a token), why it was refused as its
+  response said, its request ID, and the identity, role and User-Agent that sent it. It is reported to Sentry as a
+  warning, grouped by status, route and reason, with the role and User-Agent but not the identity's name. The same
+  one of a site is recorded at most once a minute, and at most 20 of a site's a minute, so a client repeating bad
+  requests cannot fill the errors or Sentry. Missing credentials, permissions, records and rate limits are not.
 - Logs, events and errors can be narrowed to one site, request or background job run by its ID. An event's, error's
   or log's details link to the rows of its request and job.
 - Every DB query is timed, until its rows are read, and one that takes `SLOW_QUERY_MS` (100 ms) or longer is logged as
@@ -316,7 +322,8 @@ focus back to the row or button that opened it.
 ### Logs
 
 - An admin sees the site's events (e.g. created, alarms, recoveries, credential changes), errors and logs, filtered
-  by type and searched, and its batch's backups.
+  by type and searched, and its batch's backups. Its errors include its requests refused for what they sent (kind
+  `client`), with why, and which identity and app sent them, so the admin can see what a client gets wrong.
 - A search of the site's events, errors or logs, or a filter by error kind, looks through only its newest 10,000 of
   each, so no search reads every row a site has; paging without one reaches every row.
 - Each of the site's own events, errors and logs shows the request or background job run it was for; its batch's
