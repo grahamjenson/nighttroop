@@ -1,0 +1,42 @@
+INCLUDE steps/new_site_admin.steps
+
+// A client sending what the site refuses, such as AAPS with a bad entry, shows on the site's errors, with why, the
+// route, the identity and the app, so the admin can see what is going wrong; a token in its URL is not kept
+NAME bad_entry
+POST http://{{ .ns_site }}/api/v1/entries?token={{ token }}
+H User-Agent: AAPS/3.3.1
+B [{"type": "sgv", "sgv": 120, "direction": "Much too long a direction to be a real one", "date": {{ itime 0 }}}]
+ASSERT_STATUS 400
+
+NAME bad_collection
+GET http://{{ .ns_site }}/api/v1/notacollection?token={{ token }}
+ASSERT_STATUS 400
+
+NAME client_errors
+GET http://{{ site }}/logs/errors?type=client
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result"
+ASSERT_EQUALS "400 Bad Request: invalid collection" "@result.0.message"
+ASSERT_EQUALS "client" "@result.0.attributes.kind"
+ASSERT_EQUALS "/api/v1/{collection}" "@result.0.attributes.route"
+ASSERT_CONTAINS "length(direction) <= 16" "@result.1.message"
+ASSERT_EQUALS 400 "@result.1.attributes.status"
+ASSERT_EQUALS "POST" "@result.1.attributes.method"
+ASSERT_EQUALS "pwd_phone" "@result.1.attributes.identity"
+ASSERT_EQUALS "device_pwd_phone" "@result.1.attributes.role"
+ASSERT_EQUALS "AAPS/3.3.1" "@result.1.attributes.client"
+ASSERT_EXISTS "@result.1.request_id"
+
+// The same bad request again within a minute is not recorded again, so a client repeating it cannot fill the errors
+NAME bad_collection_again
+GET http://{{ .ns_site }}/api/v1/notacollection?token={{ token }}
+ASSERT_STATUS 400
+
+NAME client_errors_once
+GET http://{{ site }}/logs/errors?type=client
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result"

@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -21,6 +22,7 @@ type ErrorKind string
 
 const (
 	ErrorKindServer          ErrorKind = "server"
+	ErrorKindClient          ErrorKind = "client"
 	ErrorKindSync            ErrorKind = "sync"
 	ErrorKindSiteBatchBackup ErrorKind = "site_batch_backup"
 	ErrorKindControlBackup   ErrorKind = "control_backup"
@@ -28,7 +30,7 @@ const (
 
 // ErrorKinds are every error's kind, to pick from
 var ErrorKinds = []string{
-	string(ErrorKindServer), string(ErrorKindSync), string(ErrorKindSiteBatchBackup), string(ErrorKindControlBackup),
+	string(ErrorKindServer), string(ErrorKindClient), string(ErrorKindSync), string(ErrorKindSiteBatchBackup), string(ErrorKindControlBackup),
 }
 
 // LogLevel is how much a log matters
@@ -268,6 +270,31 @@ type ServerErrorAttributes struct {
 // ServerError records a response with a 5xx status, by its route's pattern as a path can carry a token
 func (l *LogsDB) ServerError(ctx context.Context, siteID *string, status int, method string, route string, requestID string) {
 	l.error(ctx, siteID, fmt.Errorf("%d %s", status, http.StatusText(status)), ServerErrorAttributes{Kind: ErrorKindServer, Status: status, Method: method, Route: route, RequestID: requestID})
+}
+
+// ClientErrorAttributes are what a request refused for what it sent was, and who sent it: its identity, and the app
+// it said it was in its User-Agent
+type ClientErrorAttributes struct {
+	Kind      ErrorKind `json:"kind"`
+	Status    int       `json:"status"`
+	Method    string    `json:"method"`
+	Route     string    `json:"route"`
+	RequestID string    `json:"request_id"`
+	Reason    string    `json:"reason,omitempty"`
+	Identity  string    `json:"identity,omitempty"`
+	Role      string    `json:"role,omitempty"`
+	Client    string    `json:"client,omitempty"`
+}
+
+// ClientError records a response refusing a request for what it sent, such as a 400, with why, by its route's
+// pattern as a path can carry a token
+func (l *LogsDB) ClientError(ctx context.Context, siteID *string, attributes ClientErrorAttributes) {
+	attributes.Kind = ErrorKindClient
+	message := fmt.Sprintf("%d %s", attributes.Status, http.StatusText(attributes.Status))
+	if attributes.Reason != "" {
+		message += ": " + attributes.Reason
+	}
+	l.error(ctx, siteID, errors.New(message), attributes)
 }
 
 type SyncErrorAttributes struct {

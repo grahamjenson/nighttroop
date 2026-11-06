@@ -54,6 +54,10 @@ func AddStandardMiddleware(router chi.Router, config *config.ServerConfig, contr
 	router.Use(timeoutUnlessLongLived)
 	// Gzip text responses, like the pages, styles, scripts and JSON, for clients that accept it
 	router.Use(middleware.Compress(5))
+	if controlDB != nil {
+		// Inside the compression, so it reads why a request was refused as it was written
+		router.Use(RecordClientErrors(controlDB.Logs))
+	}
 	router.Use(withSupportEmail(config.SupportEmail))
 	router.Use(withFeedbackURL(config.FeedbackURL))
 	router.Use(withTestSite(config.TestSite))
