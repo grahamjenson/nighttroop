@@ -1,6 +1,11 @@
 package server
 
-import "testing"
+import (
+	"net/http/httptest"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+)
 
 func TestGetRouteTargetFromSubdomain(t *testing.T) {
 	const host = "nt.example.com"
@@ -47,5 +52,28 @@ func TestGetRouteTargetFromSubdomain(t *testing.T) {
 				t.Fatalf("got subdomain %q, want subdomain %q", subdomain, tt.subdomain)
 			}
 		})
+	}
+}
+
+// Only writes through a site's Nightscout API, a device's uploads, get the share of a busy server kept for them
+func TestNightscoutWrite(t *testing.T) {
+	allowed := []string{"nt.example.com"}
+	tests := []struct {
+		method string
+		host   string
+		want   bool
+	}{
+		{"POST", "abcdefgh.ns.nt.example.com", true},
+		{"PUT", "abcdefgh.ns.nt.example.com:443", true},
+		{"DELETE", "abcdefgh.ns.nt.example.com", true},
+		{"GET", "abcdefgh.ns.nt.example.com", false},
+		{"POST", "abcdefgh.nt.example.com", false},
+		{"POST", "control.nt.example.com", false},
+		{"POST", "abcdefgh.ns.evil.com", false},
+	}
+	for _, tt := range tests {
+		r := httptest.NewRequest(tt.method, "/api/v1/entries", nil)
+		r.Host = tt.host
+		require.Equal(t, tt.want, nightscoutWrite(r, allowed), "%s %s", tt.method, tt.host)
 	}
 }

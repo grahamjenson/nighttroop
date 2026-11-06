@@ -54,3 +54,21 @@ func LongLived(r *http.Request) bool {
 	return r.URL.Path == "/health" || strings.HasPrefix(r.URL.Path, "/socket.io/") ||
 		strings.Contains(r.Header.Get("Accept"), "text/event-stream")
 }
+
+// ShedLoadReserving is ShedLoad keeping a quarter of its requests, in flight and waiting, for those reserved, such as
+// uploads from devices, so they are still worked on while the others, such as page loads, fill the rest
+func ShedLoadReserving(inFlight int, backlog int, wait time.Duration, exempt func(*http.Request) bool, reserved func(*http.Request) bool) func(http.Handler) http.Handler {
+	keptInFlight, keptBacklog := max(inFlight/4, 1), max(backlog/4, 1)
+	forReserved := ShedLoad(keptInFlight, keptBacklog, wait, exempt)
+	forRest := ShedLoad(max(inFlight-keptInFlight, 1), max(backlog-keptBacklog, 0), wait, exempt)
+	return func(next http.Handler) http.Handler {
+		reservedNext, restNext := forReserved(next), forRest(next)
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if reserved(r) {
+				reservedNext.ServeHTTP(w, r)
+				return
+			}
+			restNext.ServeHTTP(w, r)
+		})
+	}
+}

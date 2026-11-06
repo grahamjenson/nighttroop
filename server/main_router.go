@@ -35,9 +35,11 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 		validHostnames = append(validHostnames, "localhost", "127.0.0.1")
 	}
 
-	// Past what the server can work on at once, requests are refused rather than all queueing until they time out
+	// Past what the server can work on at once, requests are refused rather than all queueing until they time out. Uploads
+	// to the Nightscout API keep a share to themselves, so glucose keeps arriving while page loads fill the rest
 	cpus := runtime.GOMAXPROCS(0)
-	shed := httputils.ShedLoad(config.RequestsInFlightPerCPU*cpus, config.RequestsBacklogPerCPU*cpus, 5*time.Second, httputils.LongLived)
+	upload := func(r *http.Request) bool { return nightscoutWrite(r, validHostnames) }
+	shed := httputils.ShedLoadReserving(config.RequestsInFlightPerCPU*cpus, config.RequestsBacklogPerCPU*cpus, 5*time.Second, httputils.LongLived, upload)
 
 	return shed(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -94,6 +96,19 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 		}
 	}))
 
+}
+
+// nightscoutWrite is whether a request writes through a site's Nightscout API, as a device uploading its readings does
+func nightscoutWrite(r *http.Request, validHostnames []string) bool {
+	if r.Method == http.MethodGet || r.Method == http.MethodHead || r.Method == http.MethodOptions {
+		return false
+	}
+	host, _, err := net.SplitHostPort(r.Host)
+	if err != nil {
+		host = r.Host
+	}
+	target, _, err := GetRouteTargetFromSubdomain(host, validHostnames)
+	return err == nil && target == RouteTargetNightscout
 }
 
 // globalWithinRateLimit limits every request to the server together, but the control site's: a control admin signed in
