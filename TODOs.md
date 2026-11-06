@@ -111,10 +111,6 @@
     1. P2: Keep Loop's `automatic` on boluses, so LoopFollow shows automatic boluses as SMBs and leaves them out of
        its bolus stats
 1. Loop ([docs/clients/loop.md](docs/clients/loop.md)):
-    1. P1: Replace a treatment uploaded again rather than ignore it, as Nightscout does: Loop posts a temp basal or
-       bolus again when it ends early, with the same date and `syncIdentifier`, and the first upload's duration and
-       amount are kept. Trio's ended temp targets and overrides need the same, as entries now have
-       (`CollectionRefresher`)
     1. P2: Loop remote commands: `POST /api/v2/notifications/loop`, sent to Loop as an Apple push to its profile's
        `loopSettings.deviceToken`, once push notifications can be sent
     1. P4: Keep a Loop device status's pump `pumpID`, `suspended` and `bolusing`, and its uploader `name` and

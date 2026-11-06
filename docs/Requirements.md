@@ -416,6 +416,9 @@ focus back to the row or button that opened it.
 - A temp basal is always returned with its `rate` and `absolute`, both its U/hr, and its `percent` when it has one.
 - The summary's basal during a temp basal is its rate.
 - Duplicate uploads are ignored; values far outside real use are refused.
+- A treatment uploaded again with the date and type of one stored, or its identifier and date, replaces it, keeping its
+  `_id`, as Loop sends a temp basal or bolus again when it ends and Trio a temp target or override run; followers get
+  it as changed, and one sent again as it was stored changes nothing.
 - An entry uploaded without an `_id` with the date, type and device of one stored takes its new value, direction and
   raw values, as xDrip4iOS smooths readings, and followers get it as changed; one sent with the same values changes
   nothing, not even when it was last modified.

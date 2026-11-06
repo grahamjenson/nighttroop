@@ -194,7 +194,8 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 		slog.ErrorContext(ctx, "failed to check for duplicate in database", "error", err, "collection", m.Name())
 		return nil, false, nsutils.ErrInternal
 	}
-	if duplicateDBModel != nil && identifier == nil {
+	// One naming its identifier repeats its duplicate only with the same date, as Loop sends a dose again when it ends
+	if duplicateDBModel != nil && (identifier == nil || (nsModel.GetDate() != nil && *nsModel.GetDate() == (*duplicateDBModel).GetOccurredAt())) {
 		return c.repeated(ctx, siteContext, tx, q, nsModel, duplicateDBModel, raw)
 	}
 	if duplicateDBModel != nil {
@@ -222,8 +223,7 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 	return c.document(dbModel, siteContext, raw), false, nil
 }
 
-// repeated is the duplicate a create without an identifier repeats, given the create's values when the collection
-// is a CollectionRefresher
+// repeated is the duplicate a create repeats, given the create's values when the collection is a CollectionRefresher
 func (c Collection[NS, DM]) repeated(ctx context.Context, siteContext *httputils.SiteContext, tx *sql.Tx, q *sitedb.Queries, nsModel NS, duplicate *DM, raw bool) (nsutils.Document, bool, *nsutils.HTTPError) {
 	refresher, ok := any(c.db).(CollectionRefresher[NS, DM])
 	if !ok {

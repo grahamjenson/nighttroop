@@ -92,6 +92,82 @@ ASSERT_LENGTH 2 "@"
 ASSERT_EQUALS 30 "@0.duration"
 ASSERT_EQUALS 5 "@1.duration"
 
+# A dose still going, a bolus being delivered or a temp basal, is posted with what was planned, and posted again with
+# the same date and syncIdentifier when it ends (InsulinDeliveryStore.addDoseEntries). As in Nightscout, the second
+# replaces the first, so a dose ended early keeps what was delivered.
+SET bolus_at {{ time 200 }}
+SET temp_basal_at {{ time 199 }}
+
+NAME loop_create_doses_going
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+H Accept: application/json
+B [
+    {"created_at": "{{ .bolus_at }}", "timestamp": "{{ .bolus_at }}", "enteredBy": "loop://iPhone", "eventType": "Correction Bolus", "type": "normal", "insulin": 2, "programmed": 2, "unabsorbed": 0, "duration": 1, "automatic": false, "syncIdentifier": "626f6c757320322e3020323032362d31312d30325430353a30303a30305a", "insulinType": "Humalog"},
+    {"created_at": "{{ .temp_basal_at }}", "timestamp": "{{ .temp_basal_at }}", "enteredBy": "loop://iPhone", "eventType": "Temp Basal", "temp": "absolute", "rate": 1.2, "absolute": 1.2, "duration": 30, "amount": 0.6, "automatic": true, "syncIdentifier": "74656d70426173616c20312e3220323032362d31312d30325430353a30313a30305a", "insulinType": "Humalog"}
+  ]
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS 2 "@0.insulin"
+ASSERT_EQUALS 30 "@1.duration"
+SET bolus_id {{ dig "loop_create_doses_going.0._id" }}
+SET temp_basal_id {{ dig "loop_create_doses_going.1._id" }}
+
+NAME loop_create_doses_ended
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+H Accept: application/json
+B [
+    {"created_at": "{{ .bolus_at }}", "timestamp": "{{ .bolus_at }}", "enteredBy": "loop://iPhone", "eventType": "Correction Bolus", "type": "normal", "insulin": 0.8, "programmed": 2, "unabsorbed": 0, "duration": 0.4, "automatic": false, "syncIdentifier": "626f6c757320322e3020323032362d31312d30325430353a30303a30305a", "insulinType": "Humalog"},
+    {"created_at": "{{ .temp_basal_at }}", "timestamp": "{{ .temp_basal_at }}", "enteredBy": "loop://iPhone", "eventType": "Temp Basal", "temp": "absolute", "rate": 1.2, "absolute": 1.2, "duration": 10, "amount": 0.2, "automatic": true, "syncIdentifier": "74656d70426173616c20312e3220323032362d31312d30325430353a30313a30305a", "insulinType": "Humalog"}
+  ]
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS ".bolus_id" "@0._id"
+ASSERT_EQUALS 0.8 "@0.insulin"
+ASSERT_EQUALS ".temp_basal_id" "@1._id"
+ASSERT_EQUALS 10 "@1.duration"
+
+NAME doses_ended_replaced_not_duplicated
+GET http://{{ site }}/api/v1/treatments?find[created_at][$gte]={{ time 201 }}&find[created_at][$lte]={{ time 198 }}&count=10
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS ".temp_basal_id" "@0._id"
+ASSERT_EQUALS 10 "@0.duration"
+ASSERT_EQUALS 1.2 "@0.rate"
+ASSERT_EQUALS ".bolus_id" "@1._id"
+ASSERT_EQUALS 0.8 "@1.insulin"
+
+NAME doses_ended_modified
+GET http://{{ site }}/api/v3/treatments/{{ .temp_basal_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 10 "@result.duration"
+SET doses_ended_since {{ addms (dig "doses_ended_modified.result.srvModified") 1 }}
+
+# The ended doses sent again, as they were, change nothing
+NAME loop_create_doses_ended_again
+POST http://{{ site }}/api/v1/treatments
+H api-secret: {{ sha1 token }}
+H Content-Type: application/json
+H Accept: application/json
+B [
+    {"created_at": "{{ .bolus_at }}", "timestamp": "{{ .bolus_at }}", "enteredBy": "loop://iPhone", "eventType": "Correction Bolus", "type": "normal", "insulin": 0.8, "programmed": 2, "unabsorbed": 0, "duration": 0.4, "automatic": false, "syncIdentifier": "626f6c757320322e3020323032362d31312d30325430353a30303a30305a", "insulinType": "Humalog"},
+    {"created_at": "{{ .temp_basal_at }}", "timestamp": "{{ .temp_basal_at }}", "enteredBy": "loop://iPhone", "eventType": "Temp Basal", "temp": "absolute", "rate": 1.2, "absolute": 1.2, "duration": 10, "amount": 0.2, "automatic": true, "syncIdentifier": "74656d70426173616c20312e3220323032362d31312d30325430353a30313a30305a", "insulinType": "Humalog"}
+  ]
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS 10 "@1.duration"
+
+NAME doses_ended_again_unchanged
+GET http://{{ site }}/api/v3/treatments/history/{{ .doses_ended_since }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
+
 ######
 # Overrides (OverrideTreatment): Loop sets _id to the override's syncIdentifier, a UUID, and posts it again when it
 # changes, such as ending early. It deletes an override by that UUID.
