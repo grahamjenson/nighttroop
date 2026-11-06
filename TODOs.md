@@ -46,8 +46,6 @@
 1. Think about Translations
 1. Docs hosting
 1. Fuzz testing beyond the API (`tests/api/fuzz_test.go`)
-1. P4: Release the test script package (`tests/dsl/flow`) as its own tool: it still imports nighttroop's Socket.IO
-   client (`socketio`) and `utils/testutils.HostClient`
 1. P3: Add event groups (list, get, add, edit, delete and the events to group) to `clients/nighttroop/openapi.json`
    and its client
 1. P4: Tag each endpoint in `clients/nighttroop/openapi.json` (site, data, settings, Nightscout), so the API docs'

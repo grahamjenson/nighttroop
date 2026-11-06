@@ -7,6 +7,10 @@ The API, Socket.IO and browser tests are scripts, read by one parser in one pack
 - `.bdd` files (`tests/bdd`) drive the pages in Chromium,
 - `.flow` files mix all three, e.g. `tests/bdd/site/live_mix.flow`.
 
+The package imports nothing from nighttroop, so it can be used on its own: a `flow.Runner` is given its HTTP
+client, a Socket.IO client for CONNECT (`NewSocket`, nighttroop's `socketio.NewClient` here) and a page for the
+browser steps.
+
 ## Writing one
 
 A line `HTTP` or `BROWSE` switches the lines after it:

@@ -118,7 +118,7 @@ A unit test is preferred if:
 
 
 - If an Site tests depends on having clean data, create their own site `POST http://localhost/site`
-- Socket.IO `.sio` tests in `tests/socket` use the `.http` lines plus `CONNECT`, `EMIT` (with `ACK`), `WAIT`, `COLLECT` and `DISCONNECT`, with `B` for a body and `T` for a time; see `tests/dsl/socketio`.
+- Socket.IO `.sio` tests in `tests/socket` use the `.http` lines plus `CONNECT`, `EMIT` (with `ACK`), `WAIT`, `COLLECT` and `DISCONNECT`, with `B` for a body and `T` for a time; see `tests/dsl/flow`.
 - BDD tests get realistic data by enabling virtual sync and running `RUN_BACKGROUND_JOBS` rather than spending a lot of cycles browsing to specific pages to enter data.
 - For a bug fix, show the new test fails without the fix.
 - Run the full `go test ./...` before opening a PR.
