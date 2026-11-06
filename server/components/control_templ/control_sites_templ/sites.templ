@@ -89,7 +89,7 @@ templ SitesTable(sites []*controlmodels.Site, skip int64, limit int64, order str
 							Last Write
 						}
 						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-							DB Size (KB)
+							DB Size (MB)
 						}
 					}
 				}
@@ -257,7 +257,7 @@ templ siteRow(site *controlmodels.Site) {
 			<span title={ formatDate(site.LastWriteAt) }>{ display.Ago(site.LastWriteAt, time.Now()) }</span>
 		}
 		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
-			{ orDash(site.EstimatedDbSizeKb) }
+			{ sizeMB(site.EstimatedDbSizeKb) }
 			if site.Oversized() {
 				<span class="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-800">over limit</span>
 			}
@@ -272,8 +272,8 @@ templ SiteModal(site *controlmodels.Site) {
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@siteDetail("State", display.Name(site.State))
 			@siteDetail("Batch", site.Batch)
-			@siteDetail("DB Size Limit (KB)", orDash(site.MaxDbSizeKbLimit))
-			@siteDetail("DB Size (KB)", orDash(site.EstimatedDbSizeKb))
+			@siteDetail("DB Size Limit (MB)", sizeMB(site.MaxDbSizeKbLimit))
+			@siteDetail("DB Size (MB)", sizeMB(site.EstimatedDbSizeKb))
 			@siteDetail("Created", formatDate(&site.CreatedAt))
 			@siteDetail("Last Seen", formatDate(site.LastSeenAt))
 			@siteDetail("Last Write", formatDate(site.LastWriteAt))
@@ -336,11 +336,12 @@ templ siteActions(site *controlmodels.Site) {
 
 var siteDetail = modal.Detail
 
-func orDash(value *int64) string {
-	if value == nil {
+// sizeMB is a size kept in KB as MB, to two places so a small site's is not 0, or - if it is not known
+func sizeMB(kb *int64) string {
+	if kb == nil {
 		return "-"
 	}
-	return fmt.Sprint(*value)
+	return fmt.Sprintf("%.2f", float64(*kb)/1024)
 }
 
 // SiteUpdated replaces the site's row, closes its details and shows a toast saying it is disabled or archived

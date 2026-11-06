@@ -287,7 +287,7 @@ func SitesTable(sites []*controlmodels.Site, skip int64, limit int64, order stri
 							}()
 						}
 						ctx = templ.InitializeContext(ctx)
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "DB Size (KB)")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "DB Size (MB)")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
@@ -962,7 +962,7 @@ func siteRow(site *controlmodels.Site) templ.Component {
 				}
 				ctx = templ.InitializeContext(ctx)
 				var templ_7745c5c3_Var42 string
-				templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(site.EstimatedDbSizeKb))
+				templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(sizeMB(site.EstimatedDbSizeKb))
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 260, Col: 35}
 				}
@@ -1047,11 +1047,11 @@ func SiteModal(site *controlmodels.Site) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = siteDetail("DB Size Limit (KB)", orDash(site.MaxDbSizeKbLimit)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = siteDetail("DB Size Limit (MB)", sizeMB(site.MaxDbSizeKbLimit)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = siteDetail("DB Size (KB)", orDash(site.EstimatedDbSizeKb)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = siteDetail("DB Size (MB)", sizeMB(site.EstimatedDbSizeKb)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1305,11 +1305,12 @@ func siteActions(site *controlmodels.Site) templ.Component {
 
 var siteDetail = modal.Detail
 
-func orDash(value *int64) string {
-	if value == nil {
+// sizeMB is a size kept in KB as MB, to two places so a small site's is not 0, or - if it is not known
+func sizeMB(kb *int64) string {
+	if kb == nil {
 		return "-"
 	}
-	return fmt.Sprint(*value)
+	return fmt.Sprintf("%.2f", float64(*kb)/1024)
 }
 
 // SiteUpdated replaces the site's row, closes its details and shows a toast saying it is disabled or archived

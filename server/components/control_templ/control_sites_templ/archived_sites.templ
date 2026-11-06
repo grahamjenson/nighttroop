@@ -33,7 +33,7 @@ templ ArchivedSitesTable(sites []*controlmodels.Site, skip int64, limit int64) {
 							Last Seen
 						}
 						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-							DB Size (KB)
+							DB Size (MB)
 						}
 						@table.Head() {
 						}
@@ -65,7 +65,7 @@ templ archivedSiteRow(site *controlmodels.Site) {
 			<span title={ formatDate(site.LastSeenAt) }>{ display.Ago(site.LastSeenAt, time.Now()) }</span>
 		}
 		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
-			{ orDash(site.EstimatedDbSizeKb) }
+			{ sizeMB(site.EstimatedDbSizeKb) }
 		}
 		@table.Cell(table.CellProps{Class: "text-right"}) {
 			<form

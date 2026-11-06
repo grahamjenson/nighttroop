@@ -26,7 +26,7 @@ ASSERT_PATH /sites
 ASSERT_TITLE Sites · Nighttroop Control
 ASSERT_VISIBLE #controlSitesTable
 ASSERT_TEXT_VISIBLE Showing 1 to
-ASSERT_TEXT_VISIBLE DB Size (KB)
+ASSERT_TEXT_VISIBLE DB Size (MB)
 // A site no one has used yet was never seen or written to
 ASSERT_TEXT_VISIBLE Never
 // States are capitalised like the rest of the table
