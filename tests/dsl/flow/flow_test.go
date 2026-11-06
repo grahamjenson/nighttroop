@@ -19,16 +19,22 @@ func TestParseMixes(t *testing.T) {
 		"api/list.http":    {Data: []byte("INCLUDE steps/site.steps\nSET site {{ .create_site.subdomain }}\n\nNAME list\nGET http://localhost/list?token={{ token }}\nASSERT_STATUS 200\n")},
 		"api/missing.http": {Data: []byte("NAME list\nGET http://localhost/list\nINCLUDE steps/missing.steps\n")},
 		"site/mixed.flow": {Data: []byte(`INCLUDE steps/site.steps
+BROWSE
 GOTO {{ server_url }}/
 ASSERT_VISIBLE #site--login
 POST /settings/push-registrations {"app": "loop"}
+HTTP
 NAME connect
 CONNECT http://{{ site }}/socket.io/?EIO=3
 NAME updated
 WAIT dataUpdate
+BROWSE
 CLICK #site--nav--home
 ASSERT_PATH /
 `)},
+		// A .steps file goes on in the mode it was included in, each time, and its own switch ends with it
+		"steps/home.steps": {Data: []byte("GOTO {{ server_url }}/\nHTTP\nNAME health\nGET http://localhost/health\n")},
+		"site/twice.flow": {Data: []byte("BROWSE\nINCLUDE steps/home.steps\nCLICK #site--nav--home\nHTTP\nINCLUDE steps/site.steps\n")},
 	}
 
 	list, err := Parse(fsys, "api/list.http")
@@ -41,21 +47,30 @@ ASSERT_PATH /
 
 	mixed, err := Parse(fsys, "site/mixed.flow")
 	require.NoError(t, err)
+	require.Equal(t, []string{"POST", "GOTO {{ server_url }}/", `POST /settings/push-registrations {"app": "loop"}`, "CONNECT", "WAIT",
+		"CLICK #site--nav--home"}, kinds(mixed))
+	require.IsType(t, &browser.Goto{}, mixed.Steps[1].Browser)
+	require.Equal(t, []string{"dataUpdate"}, mixed.API.Events())
+
+	twice, err := Parse(fsys, "site/twice.flow")
+	require.NoError(t, err)
+	require.Equal(t, []string{"GOTO {{ server_url }}/", "GET", "CLICK #site--nav--home", "POST"}, kinds(twice))
+
+	_, err = Parse(fsys, "api/missing.http")
+	require.ErrorContains(t, err, "api/missing.http:3: INCLUDE steps/missing.steps")
+}
+
+// kinds is each of the flow's steps, an API step by its verb and a browser one by its line
+func kinds(flow *Flow) []string {
 	kinds := []string{}
-	for _, step := range mixed.Steps {
+	for _, step := range flow.Steps {
 		if step.API != nil {
 			kinds = append(kinds, step.API.Verb)
 		} else {
 			kinds = append(kinds, step.Browser.ToFlatString())
 		}
 	}
-	require.Equal(t, []string{"POST", "GOTO {{ server_url }}/", `POST /settings/push-registrations {"app": "loop"}`, "CONNECT", "WAIT",
-		"CLICK #site--nav--home"}, kinds)
-	require.IsType(t, &browser.Goto{}, mixed.Steps[1].Browser)
-	require.Equal(t, []string{"dataUpdate"}, mixed.API.Events())
-
-	_, err = Parse(fsys, "api/missing.http")
-	require.ErrorContains(t, err, "api/missing.http:3: INCLUDE steps/missing.steps")
+	return kinds
 }
 
 // Each step sees what those before it SET, a RUN_BACKGROUND_JOBS runs the jobs, and a request is sent as written:
@@ -92,4 +107,32 @@ ASSERT_EQUALS "abcdefgh.ns.localhost" "@host"
 	(&Runner{Server: ts, RunBackgroundJobs: func() { ran++ }}).Run(t, echo, ctx)
 	require.Equal(t, 1, ran)
 	require.Equal(t, "hello-again", ctx["second"].(map[string]any)["said"])
+}
+
+// A STREAM's events are queued by name, their data as JSON, for a WAIT, with comments, as its pings are, skipped
+func TestRunStream(t *testing.T) {
+	fsys := fstest.MapFS{"api/stream.flow": {Data: []byte(`NAME readings
+STREAM http://abcdefgh.localhost/data/glucose/events
+H Authorization: Bearer token
+
+NAME created
+WAIT created
+ASSERT_EQUALS 120 "@sgv"
+
+NAME second
+WAIT created
+ASSERT_EQUALS 130 "@sgv"
+`)}}
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, "text/event-stream", r.Header.Get("Accept"))
+		require.Equal(t, "Bearer token", r.Header.Get("Authorization"))
+		w.Header().Set("Content-Type", "text/event-stream")
+		_, _ = w.Write([]byte(": ping\n\nevent: created\ndata: {\"sgv\": 120}\n\nevent: created\ndata: {\"sgv\": 130}\n\n"))
+		w.(http.Flusher).Flush()
+		<-r.Context().Done()
+	}))
+	t.Cleanup(ts.Close)
+	stream, err := Parse(fsys, "api/stream.flow")
+	require.NoError(t, err)
+	(&Runner{Server: ts}).Run(t, stream, map[string]any{})
 }

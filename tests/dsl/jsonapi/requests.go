@@ -110,7 +110,8 @@ func (r *Request) AddSet(set Set) {
 	r.Sets = append(r.Sets, set)
 }
 
-func (r *Request) buildRealRequest(ctx map[string]any) (*Request, error) {
+// Render is the request with its URL, body and headers filled in from ctx, sending JSON unless a header says not
+func (r *Request) Render(ctx map[string]any) (*Request, error) {
 	url, err := script.Render(r.URL, ctx)
 	if err != nil {
 		return nil, fmt.Errorf("request %s url render failed: %w", r.Name, err)
@@ -167,7 +168,7 @@ func (r *Request) buildRealRequest(ctx map[string]any) (*Request, error) {
 
 func (r *Request) ExecuteRequest(t *testing.T, client *http.Client, context map[string]any) (outContext map[string]any, err error) {
 
-	r, err = r.buildRealRequest(context)
+	r, err = r.Render(context)
 	if err != nil {
 		return context, err
 	}

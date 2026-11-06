@@ -19,8 +19,8 @@ func TestReadLines(t *testing.T) {
 	require.Equal(t, []Line{
 		{Path: "main.http", Number: 2, Text: "NAME first", First: "NAME", Rest: "first"},
 		{Path: "main.http", Number: 4, Text: "GET http://{{ site }}/x", First: "GET", Rest: "http://{{ site }}/x"},
-		{Path: "steps/login.steps", Number: 1, Text: "NAME login", First: "NAME", Rest: "login"},
-		{Path: "steps/login.steps", Number: 2, Text: "POST http://{{ site }}/login", First: "POST", Rest: "http://{{ site }}/login"},
+		{Path: "steps/login.steps", From: []string{"main.http"}, Number: 1, Text: "NAME login", First: "NAME", Rest: "login"},
+		{Path: "steps/login.steps", From: []string{"main.http"}, Number: 2, Text: "POST http://{{ site }}/login", First: "POST", Rest: "http://{{ site }}/login"},
 		{Path: "main.http", Number: 7, Text: "ASSERT_STATUS 200", First: "ASSERT_STATUS", Rest: "200"},
 	}, lines)
 

@@ -1,6 +1,8 @@
 // Package socketio runs .sio files: Socket.IO tests written like .http ones. Each NAME starts a step, which is
 // one of the verbs CONNECT <url>, EMIT <event> (with ACK to wait for its acknowledgement), WAIT <event>,
-// COLLECT <event>, DISCONNECT, an HTTP request (GET <url> and so on) or RUN_BACKGROUND_JOBS.
+// COLLECT <event>, DISCONNECT, STREAM <url>, an HTTP request (GET <url> and so on) or RUN_BACKGROUND_JOBS.
+// STREAM opens a page's live updates, server-sent events, with its H headers, and WAIT and COLLECT take its events
+// by name, such as created, as they do the socket's.
 // NS is the namespace CONNECT joins (/ by default), which the steps after it use.
 // B is the step's body (CONNECT's auth, EMIT's argument, a request's JSON), and ARGS a JSON list of EMIT's
 // arguments, for an event that takes more than one, as Nightscout's ack does. T is how long it may take (e.g. 5s),
@@ -44,7 +46,7 @@ type Step struct {
 	Sets    []jsonapi.Set
 }
 
-var socketVerbs = []string{"CONNECT", "EMIT", "WAIT", "COLLECT", "DISCONNECT"}
+var socketVerbs = []string{"CONNECT", "EMIT", "WAIT", "COLLECT", "DISCONNECT", "STREAM"}
 var httpVerbs = []string{"GET", "POST", "PUT", "PATCH", "DELETE"}
 
 // Events are the events the file waits for or collects, which a connection must listen for

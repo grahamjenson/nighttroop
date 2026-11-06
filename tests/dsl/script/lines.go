@@ -7,13 +7,16 @@ import (
 	"bytes"
 	"fmt"
 	"io/fs"
+	"slices"
 	"strings"
 )
 
 // Line is one line of a script that is not blank or a comment, split into its first word and the rest
 type Line struct {
 	// Path is the file the line is in, which is an INCLUDEd file's for its lines
-	Path   string
+	Path string
+	// From is the files that INCLUDEd the line's file, the outermost first, and none for the file read
+	From   []string
 	Number int
 	// Text is the whole line, trimmed
 	Text  string
@@ -34,6 +37,11 @@ func ReadLines(fsys fs.FS, path string) ([]Line, error) {
 // INCLUDE line is the lines of the file it names in fsys, as if written out there, so what follows goes on from the
 // included file's last line; with no fsys an INCLUDE is refused.
 func SplitLines(contents []byte, path string, fsys fs.FS) ([]Line, error) {
+	return splitLines(contents, path, fsys, nil)
+}
+
+// splitLines is SplitLines for a file the files from INCLUDEd
+func splitLines(contents []byte, path string, fsys fs.FS, from []string) ([]Line, error) {
 	var lines []Line
 	scanner := bufio.NewScanner(bytes.NewReader(contents))
 	for number := 1; scanner.Scan(); number++ {
@@ -44,13 +52,17 @@ func SplitLines(contents []byte, path string, fsys fs.FS) ([]Line, error) {
 		first, rest, _ := strings.Cut(text, " ")
 		rest = strings.TrimSpace(rest)
 		if first != "INCLUDE" {
-			lines = append(lines, Line{Path: path, Number: number, Text: text, First: first, Rest: rest})
+			lines = append(lines, Line{Path: path, From: from, Number: number, Text: text, First: first, Rest: rest})
 			continue
 		}
 		if fsys == nil {
 			return nil, fmt.Errorf("%s:%d: INCLUDE %s: no files to include from", path, number, rest)
 		}
-		included, err := ReadLines(fsys, rest)
+		contents, err := fs.ReadFile(fsys, rest)
+		if err != nil {
+			return nil, fmt.Errorf("%s:%d: INCLUDE %s: %w", path, number, rest, err)
+		}
+		included, err := splitLines(contents, rest, fsys, append(slices.Clone(from), path))
 		if err != nil {
 			return nil, fmt.Errorf("%s:%d: INCLUDE %s: %w", path, number, rest, err)
 		}
