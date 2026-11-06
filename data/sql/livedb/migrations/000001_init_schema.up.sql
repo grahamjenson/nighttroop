@@ -41,3 +41,9 @@ CREATE TABLE resource_readings (
     disk_percent REAL,
     disk_total_bytes INTEGER
 ) STRICT;
+
+-- The oldest version of these migrations whose build can use the DB at each version, see docs/migrations.md
+CREATE TABLE schema_compatibility (
+    version INTEGER PRIMARY KEY,
+    oldest_version INTEGER NOT NULL
+) STRICT;

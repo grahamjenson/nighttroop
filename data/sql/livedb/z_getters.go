@@ -206,6 +206,26 @@ func (m *ResourceReading) SetDiskTotalBytes(v *int64) {
 	m.DiskTotalBytes = v
 }
 
+// GetVersion returns the Version value.
+func (m SchemaCompatibility) GetVersion() int64 {
+	return m.Version
+}
+
+// SetVersion sets the Version value and returns the updated SchemaCompatibility.
+func (m *SchemaCompatibility) SetVersion(v int64) {
+	m.Version = v
+}
+
+// GetOldestVersion returns the OldestVersion value.
+func (m SchemaCompatibility) GetOldestVersion() int64 {
+	return m.OldestVersion
+}
+
+// SetOldestVersion sets the OldestVersion value and returns the updated SchemaCompatibility.
+func (m *SchemaCompatibility) SetOldestVersion(v int64) {
+	m.OldestVersion = v
+}
+
 // GetSiteID returns the SiteID value.
 func (m DeleteAlarmParams) GetSiteID() string {
 	return m.SiteID
@@ -594,5 +614,35 @@ func (m ResourceReadingsSinceParams) GetSince() int64 {
 // SetSince sets the Since value and returns the updated ResourceReadingsSinceParams.
 func (m *ResourceReadingsSinceParams) SetSince(v int64) {
 	m.Since = v
+}
+
+// GetVersion returns the Version value.
+func (m GetSchemaCompatibilityParams) GetVersion() int64 {
+	return m.Version
+}
+
+// SetVersion sets the Version value and returns the updated GetSchemaCompatibilityParams.
+func (m *GetSchemaCompatibilityParams) SetVersion(v int64) {
+	m.Version = v
+}
+
+// GetVersion returns the Version value.
+func (m SetSchemaCompatibilityParams) GetVersion() int64 {
+	return m.Version
+}
+
+// SetVersion sets the Version value and returns the updated SetSchemaCompatibilityParams.
+func (m *SetSchemaCompatibilityParams) SetVersion(v int64) {
+	m.Version = v
+}
+
+// GetOldestVersion returns the OldestVersion value.
+func (m SetSchemaCompatibilityParams) GetOldestVersion() int64 {
+	return m.OldestVersion
+}
+
+// SetOldestVersion sets the OldestVersion value and returns the updated SetSchemaCompatibilityParams.
+func (m *SetSchemaCompatibilityParams) SetOldestVersion(v int64) {
+	m.OldestVersion = v
 }
 

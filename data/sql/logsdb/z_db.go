@@ -33,6 +33,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getLogStmt, err = db.PrepareContext(ctx, getLog); err != nil {
 		return nil, fmt.Errorf("error preparing query GetLog: %w", err)
 	}
+	if q.getSchemaCompatibilityStmt, err = db.PrepareContext(ctx, getSchemaCompatibility); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSchemaCompatibility: %w", err)
+	}
 	if q.getSiteErrorStmt, err = db.PrepareContext(ctx, getSiteError); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSiteError: %w", err)
 	}
@@ -75,6 +78,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.searchSiteLogsStmt, err = db.PrepareContext(ctx, searchSiteLogs); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchSiteLogs: %w", err)
 	}
+	if q.setSchemaCompatibilityStmt, err = db.PrepareContext(ctx, setSchemaCompatibility); err != nil {
+		return nil, fmt.Errorf("error preparing query SetSchemaCompatibility: %w", err)
+	}
 	if q.trimErrorsStmt, err = db.PrepareContext(ctx, trimErrors); err != nil {
 		return nil, fmt.Errorf("error preparing query TrimErrors: %w", err)
 	}
@@ -102,6 +108,11 @@ func (q *Queries) Close() error {
 	if q.getLogStmt != nil {
 		if cerr := q.getLogStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getLogStmt: %w", cerr)
+		}
+	}
+	if q.getSchemaCompatibilityStmt != nil {
+		if cerr := q.getSchemaCompatibilityStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSchemaCompatibilityStmt: %w", cerr)
 		}
 	}
 	if q.getSiteErrorStmt != nil {
@@ -174,6 +185,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing searchSiteLogsStmt: %w", cerr)
 		}
 	}
+	if q.setSchemaCompatibilityStmt != nil {
+		if cerr := q.setSchemaCompatibilityStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing setSchemaCompatibilityStmt: %w", cerr)
+		}
+	}
 	if q.trimErrorsStmt != nil {
 		if cerr := q.trimErrorsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing trimErrorsStmt: %w", cerr)
@@ -226,53 +242,57 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db                   DBTX
-	tx                   *sql.Tx
-	getErrorStmt         *sql.Stmt
-	getEventStmt         *sql.Stmt
-	getLogStmt           *sql.Stmt
-	getSiteErrorStmt     *sql.Stmt
-	getSiteEventStmt     *sql.Stmt
-	getSiteLogStmt       *sql.Stmt
-	insertErrorStmt      *sql.Stmt
-	insertEventStmt      *sql.Stmt
-	insertLogStmt        *sql.Stmt
-	recentSyncErrorsStmt *sql.Stmt
-	recentSyncEventsStmt *sql.Stmt
-	searchErrorsStmt     *sql.Stmt
-	searchEventsStmt     *sql.Stmt
-	searchLogsStmt       *sql.Stmt
-	searchSiteErrorsStmt *sql.Stmt
-	searchSiteEventsStmt *sql.Stmt
-	searchSiteLogsStmt   *sql.Stmt
-	trimErrorsStmt       *sql.Stmt
-	trimEventsStmt       *sql.Stmt
-	trimLogsStmt         *sql.Stmt
+	db                         DBTX
+	tx                         *sql.Tx
+	getErrorStmt               *sql.Stmt
+	getEventStmt               *sql.Stmt
+	getLogStmt                 *sql.Stmt
+	getSchemaCompatibilityStmt *sql.Stmt
+	getSiteErrorStmt           *sql.Stmt
+	getSiteEventStmt           *sql.Stmt
+	getSiteLogStmt             *sql.Stmt
+	insertErrorStmt            *sql.Stmt
+	insertEventStmt            *sql.Stmt
+	insertLogStmt              *sql.Stmt
+	recentSyncErrorsStmt       *sql.Stmt
+	recentSyncEventsStmt       *sql.Stmt
+	searchErrorsStmt           *sql.Stmt
+	searchEventsStmt           *sql.Stmt
+	searchLogsStmt             *sql.Stmt
+	searchSiteErrorsStmt       *sql.Stmt
+	searchSiteEventsStmt       *sql.Stmt
+	searchSiteLogsStmt         *sql.Stmt
+	setSchemaCompatibilityStmt *sql.Stmt
+	trimErrorsStmt             *sql.Stmt
+	trimEventsStmt             *sql.Stmt
+	trimLogsStmt               *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                   tx,
-		tx:                   tx,
-		getErrorStmt:         q.getErrorStmt,
-		getEventStmt:         q.getEventStmt,
-		getLogStmt:           q.getLogStmt,
-		getSiteErrorStmt:     q.getSiteErrorStmt,
-		getSiteEventStmt:     q.getSiteEventStmt,
-		getSiteLogStmt:       q.getSiteLogStmt,
-		insertErrorStmt:      q.insertErrorStmt,
-		insertEventStmt:      q.insertEventStmt,
-		insertLogStmt:        q.insertLogStmt,
-		recentSyncErrorsStmt: q.recentSyncErrorsStmt,
-		recentSyncEventsStmt: q.recentSyncEventsStmt,
-		searchErrorsStmt:     q.searchErrorsStmt,
-		searchEventsStmt:     q.searchEventsStmt,
-		searchLogsStmt:       q.searchLogsStmt,
-		searchSiteErrorsStmt: q.searchSiteErrorsStmt,
-		searchSiteEventsStmt: q.searchSiteEventsStmt,
-		searchSiteLogsStmt:   q.searchSiteLogsStmt,
-		trimErrorsStmt:       q.trimErrorsStmt,
-		trimEventsStmt:       q.trimEventsStmt,
-		trimLogsStmt:         q.trimLogsStmt,
+		db:                         tx,
+		tx:                         tx,
+		getErrorStmt:               q.getErrorStmt,
+		getEventStmt:               q.getEventStmt,
+		getLogStmt:                 q.getLogStmt,
+		getSchemaCompatibilityStmt: q.getSchemaCompatibilityStmt,
+		getSiteErrorStmt:           q.getSiteErrorStmt,
+		getSiteEventStmt:           q.getSiteEventStmt,
+		getSiteLogStmt:             q.getSiteLogStmt,
+		insertErrorStmt:            q.insertErrorStmt,
+		insertEventStmt:            q.insertEventStmt,
+		insertLogStmt:              q.insertLogStmt,
+		recentSyncErrorsStmt:       q.recentSyncErrorsStmt,
+		recentSyncEventsStmt:       q.recentSyncEventsStmt,
+		searchErrorsStmt:           q.searchErrorsStmt,
+		searchEventsStmt:           q.searchEventsStmt,
+		searchLogsStmt:             q.searchLogsStmt,
+		searchSiteErrorsStmt:       q.searchSiteErrorsStmt,
+		searchSiteEventsStmt:       q.searchSiteEventsStmt,
+		searchSiteLogsStmt:         q.searchSiteLogsStmt,
+		setSchemaCompatibilityStmt: q.setSchemaCompatibilityStmt,
+		trimErrorsStmt:             q.trimErrorsStmt,
+		trimEventsStmt:             q.trimEventsStmt,
+		trimLogsStmt:               q.trimLogsStmt,
 	}
 }

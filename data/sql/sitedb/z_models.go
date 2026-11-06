@@ -494,6 +494,11 @@ type ProfileSwitchesVw struct {
 	CreatedByIdentityName    *string
 }
 
+type SchemaCompatibility struct {
+	Version       int64
+	OldestVersion int64
+}
+
 type SummaryPeriod struct {
 	Period          string
 	Date            string

@@ -36,3 +36,8 @@ type ResourceReading struct {
 	DiskPercent      *float64
 	DiskTotalBytes   *int64
 }
+
+type SchemaCompatibility struct {
+	Version       int64
+	OldestVersion int64
+}

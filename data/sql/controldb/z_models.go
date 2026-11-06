@@ -58,6 +58,11 @@ type PushRegistration struct {
 	LastError    *string
 }
 
+type SchemaCompatibility struct {
+	Version       int64
+	OldestVersion int64
+}
+
 type ServerSetting struct {
 	ID                    int64
 	PublicSiteCreation    bool

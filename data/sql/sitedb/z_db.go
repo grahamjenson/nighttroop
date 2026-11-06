@@ -204,6 +204,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getProfileSwitchStmt, err = db.PrepareContext(ctx, getProfileSwitch); err != nil {
 		return nil, fmt.Errorf("error preparing query GetProfileSwitch: %w", err)
 	}
+	if q.getSchemaCompatibilityStmt, err = db.PrepareContext(ctx, getSchemaCompatibility); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSchemaCompatibility: %w", err)
+	}
 	if q.getSummaryPeriodStmt, err = db.PrepareContext(ctx, getSummaryPeriod); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSummaryPeriod: %w", err)
 	}
@@ -332,6 +335,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.searchTempTargetsStmt, err = db.PrepareContext(ctx, searchTempTargets); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchTempTargets: %w", err)
+	}
+	if q.setSchemaCompatibilityStmt, err = db.PrepareContext(ctx, setSchemaCompatibility); err != nil {
+		return nil, fmt.Errorf("error preparing query SetSchemaCompatibility: %w", err)
 	}
 	if q.softDeleteActivitiesByTypeStmt, err = db.PrepareContext(ctx, softDeleteActivitiesByType); err != nil {
 		return nil, fmt.Errorf("error preparing query SoftDeleteActivitiesByType: %w", err)
@@ -725,6 +731,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getProfileSwitchStmt: %w", cerr)
 		}
 	}
+	if q.getSchemaCompatibilityStmt != nil {
+		if cerr := q.getSchemaCompatibilityStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSchemaCompatibilityStmt: %w", cerr)
+		}
+	}
 	if q.getSummaryPeriodStmt != nil {
 		if cerr := q.getSummaryPeriodStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getSummaryPeriodStmt: %w", cerr)
@@ -938,6 +949,11 @@ func (q *Queries) Close() error {
 	if q.searchTempTargetsStmt != nil {
 		if cerr := q.searchTempTargetsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing searchTempTargetsStmt: %w", cerr)
+		}
+	}
+	if q.setSchemaCompatibilityStmt != nil {
+		if cerr := q.setSchemaCompatibilityStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing setSchemaCompatibilityStmt: %w", cerr)
 		}
 	}
 	if q.softDeleteActivitiesByTypeStmt != nil {
@@ -1184,6 +1200,7 @@ type Queries struct {
 	getProfilePresetStmt                        *sql.Stmt
 	getProfileStoreStmt                         *sql.Stmt
 	getProfileSwitchStmt                        *sql.Stmt
+	getSchemaCompatibilityStmt                  *sql.Stmt
 	getSummaryPeriodStmt                        *sql.Stmt
 	getTempBasalStmt                            *sql.Stmt
 	getTempTargetStmt                           *sql.Stmt
@@ -1227,6 +1244,7 @@ type Queries struct {
 	searchSummaryProfileSwitchesStmt            *sql.Stmt
 	searchTempBasalsStmt                        *sql.Stmt
 	searchTempTargetsStmt                       *sql.Stmt
+	setSchemaCompatibilityStmt                  *sql.Stmt
 	softDeleteActivitiesByTypeStmt              *sql.Stmt
 	softDeleteActivityStmt                      *sql.Stmt
 	softDeleteComponentEventStmt                *sql.Stmt
@@ -1322,6 +1340,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getProfilePresetStmt:                        q.getProfilePresetStmt,
 		getProfileStoreStmt:                         q.getProfileStoreStmt,
 		getProfileSwitchStmt:                        q.getProfileSwitchStmt,
+		getSchemaCompatibilityStmt:                  q.getSchemaCompatibilityStmt,
 		getSummaryPeriodStmt:                        q.getSummaryPeriodStmt,
 		getTempBasalStmt:                            q.getTempBasalStmt,
 		getTempTargetStmt:                           q.getTempTargetStmt,
@@ -1365,6 +1384,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		searchSummaryProfileSwitchesStmt:            q.searchSummaryProfileSwitchesStmt,
 		searchTempBasalsStmt:                        q.searchTempBasalsStmt,
 		searchTempTargetsStmt:                       q.searchTempTargetsStmt,
+		setSchemaCompatibilityStmt:                  q.setSchemaCompatibilityStmt,
 		softDeleteActivitiesByTypeStmt:              q.softDeleteActivitiesByTypeStmt,
 		softDeleteActivityStmt:                      q.softDeleteActivityStmt,
 		softDeleteComponentEventStmt:                q.softDeleteComponentEventStmt,

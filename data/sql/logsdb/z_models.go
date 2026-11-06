@@ -36,3 +36,8 @@ type Log struct {
 	JobID      *string
 	CreatedAt  int64
 }
+
+type SchemaCompatibility struct {
+	Version       int64
+	OldestVersion int64
+}

@@ -69,8 +69,8 @@
        that the last release's DBs migrate to the current schema
     1. P1: A migration that fails leaves its DB dirty, which every open refuses. Each runs in a transaction, so a dirty
        version N had none of N applied: force it back to N-1 and try again, or report it plainly
-    1. P1: A build cannot open a DB a newer one migrated, so rolling back needs `update.sh`'s copy of `./data`, losing
-       what was written since. Keep migrations additive, and let a build open a DB one additive version newer
+    1. P3: A release one additive migration back can use the newer DBs as they are (docs/migrations.md), but a
+       rollback by `update.sh` still puts back its copy of `./data`; add a way to start the previous image keeping it
     1. P2: Document changing a table: SQLite rebuilds it, which needs `PRAGMA defer_foreign_keys = ON` in the
        migration's transaction, as `event_groups` references the event tables `ON DELETE RESTRICT`; test migrations
        on a DB with data, and have staging compare the whole schema rather than only preparing queries

@@ -51,3 +51,9 @@ CREATE TABLE errors (
 CREATE INDEX errors_site ON errors (site_id, id);
 CREATE INDEX errors_request ON errors (request_id) WHERE request_id IS NOT NULL;
 CREATE INDEX errors_job ON errors (job_id) WHERE job_id IS NOT NULL;
+
+-- The oldest version of these migrations whose build can use the DB at each version, see docs/migrations.md
+CREATE TABLE schema_compatibility (
+    version INTEGER PRIMARY KEY,
+    oldest_version INTEGER NOT NULL
+) STRICT;

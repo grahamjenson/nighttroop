@@ -242,6 +242,26 @@ func (m *Log) SetCreatedAt(v int64) {
 	m.CreatedAt = v
 }
 
+// GetVersion returns the Version value.
+func (m SchemaCompatibility) GetVersion() int64 {
+	return m.Version
+}
+
+// SetVersion sets the Version value and returns the updated SchemaCompatibility.
+func (m *SchemaCompatibility) SetVersion(v int64) {
+	m.Version = v
+}
+
+// GetOldestVersion returns the OldestVersion value.
+func (m SchemaCompatibility) GetOldestVersion() int64 {
+	return m.OldestVersion
+}
+
+// SetOldestVersion sets the OldestVersion value and returns the updated SchemaCompatibility.
+func (m *SchemaCompatibility) SetOldestVersion(v int64) {
+	m.OldestVersion = v
+}
+
 // GetID returns the ID value.
 func (m GetErrorParams) GetID() int64 {
 	return m.ID
@@ -980,5 +1000,35 @@ func (m TrimLogsParams) GetKeep() int64 {
 // SetKeep sets the Keep value and returns the updated TrimLogsParams.
 func (m *TrimLogsParams) SetKeep(v int64) {
 	m.Keep = v
+}
+
+// GetVersion returns the Version value.
+func (m GetSchemaCompatibilityParams) GetVersion() int64 {
+	return m.Version
+}
+
+// SetVersion sets the Version value and returns the updated GetSchemaCompatibilityParams.
+func (m *GetSchemaCompatibilityParams) SetVersion(v int64) {
+	m.Version = v
+}
+
+// GetVersion returns the Version value.
+func (m SetSchemaCompatibilityParams) GetVersion() int64 {
+	return m.Version
+}
+
+// SetVersion sets the Version value and returns the updated SetSchemaCompatibilityParams.
+func (m *SetSchemaCompatibilityParams) SetVersion(v int64) {
+	m.Version = v
+}
+
+// GetOldestVersion returns the OldestVersion value.
+func (m SetSchemaCompatibilityParams) GetOldestVersion() int64 {
+	return m.OldestVersion
+}
+
+// SetOldestVersion sets the OldestVersion value and returns the updated SetSchemaCompatibilityParams.
+func (m *SetSchemaCompatibilityParams) SetOldestVersion(v int64) {
+	m.OldestVersion = v
 }
 

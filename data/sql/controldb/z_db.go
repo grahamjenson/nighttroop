@@ -123,6 +123,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getPushRegistrationStmt, err = db.PrepareContext(ctx, getPushRegistration); err != nil {
 		return nil, fmt.Errorf("error preparing query GetPushRegistration: %w", err)
 	}
+	if q.getSchemaCompatibilityStmt, err = db.PrepareContext(ctx, getSchemaCompatibility); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSchemaCompatibility: %w", err)
+	}
 	if q.getServerSettingsStmt, err = db.PrepareContext(ctx, getServerSettings); err != nil {
 		return nil, fmt.Errorf("error preparing query GetServerSettings: %w", err)
 	}
@@ -200,6 +203,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.searchSyncSourcesStmt, err = db.PrepareContext(ctx, searchSyncSources); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchSyncSources: %w", err)
+	}
+	if q.setSchemaCompatibilityStmt, err = db.PrepareContext(ctx, setSchemaCompatibility); err != nil {
+		return nil, fmt.Errorf("error preparing query SetSchemaCompatibility: %w", err)
 	}
 	if q.siteExistsStmt, err = db.PrepareContext(ctx, siteExists); err != nil {
 		return nil, fmt.Errorf("error preparing query SiteExists: %w", err)
@@ -419,6 +425,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getPushRegistrationStmt: %w", cerr)
 		}
 	}
+	if q.getSchemaCompatibilityStmt != nil {
+		if cerr := q.getSchemaCompatibilityStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSchemaCompatibilityStmt: %w", cerr)
+		}
+	}
 	if q.getServerSettingsStmt != nil {
 		if cerr := q.getServerSettingsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getServerSettingsStmt: %w", cerr)
@@ -547,6 +558,11 @@ func (q *Queries) Close() error {
 	if q.searchSyncSourcesStmt != nil {
 		if cerr := q.searchSyncSourcesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing searchSyncSourcesStmt: %w", cerr)
+		}
+	}
+	if q.setSchemaCompatibilityStmt != nil {
+		if cerr := q.setSchemaCompatibilityStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing setSchemaCompatibilityStmt: %w", cerr)
 		}
 	}
 	if q.siteExistsStmt != nil {
@@ -701,6 +717,7 @@ type Queries struct {
 	getLiveAndDisabledSitesStmt             *sql.Stmt
 	getPushCredentialStmt                   *sql.Stmt
 	getPushRegistrationStmt                 *sql.Stmt
+	getSchemaCompatibilityStmt              *sql.Stmt
 	getServerSettingsStmt                   *sql.Stmt
 	getSiteStmt                             *sql.Stmt
 	getSiteIDsWithAlarmsStmt                *sql.Stmt
@@ -727,6 +744,7 @@ type Queries struct {
 	searchSitesByDBSizeStmt                 *sql.Stmt
 	searchSitesByLastWriteStmt              *sql.Stmt
 	searchSyncSourcesStmt                   *sql.Stmt
+	setSchemaCompatibilityStmt              *sql.Stmt
 	siteExistsStmt                          *sql.Stmt
 	startSyncSourceBackfillStmt             *sql.Stmt
 	updatePublicSiteCreationStmt            *sql.Stmt
@@ -782,6 +800,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getLiveAndDisabledSitesStmt:             q.getLiveAndDisabledSitesStmt,
 		getPushCredentialStmt:                   q.getPushCredentialStmt,
 		getPushRegistrationStmt:                 q.getPushRegistrationStmt,
+		getSchemaCompatibilityStmt:              q.getSchemaCompatibilityStmt,
 		getServerSettingsStmt:                   q.getServerSettingsStmt,
 		getSiteStmt:                             q.getSiteStmt,
 		getSiteIDsWithAlarmsStmt:                q.getSiteIDsWithAlarmsStmt,
@@ -808,6 +827,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		searchSitesByDBSizeStmt:                 q.searchSitesByDBSizeStmt,
 		searchSitesByLastWriteStmt:              q.searchSitesByLastWriteStmt,
 		searchSyncSourcesStmt:                   q.searchSyncSourcesStmt,
+		setSchemaCompatibilityStmt:              q.setSchemaCompatibilityStmt,
 		siteExistsStmt:                          q.siteExistsStmt,
 		startSyncSourceBackfillStmt:             q.startSyncSourceBackfillStmt,
 		updatePublicSiteCreationStmt:            q.updatePublicSiteCreationStmt,

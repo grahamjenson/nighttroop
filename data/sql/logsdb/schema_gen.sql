@@ -51,3 +51,8 @@ CREATE TABLE logs (
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
 ) STRICT;
 
+CREATE TABLE schema_compatibility (
+    version INTEGER PRIMARY KEY,
+    oldest_version INTEGER NOT NULL
+) STRICT;
+

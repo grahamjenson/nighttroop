@@ -507,6 +507,9 @@ focus back to the row or button that opened it.
   admin sees, saying whether it was restored or why not (S3 not working, not in the backup, or the restore failed).
   A site restored that cannot be opened, as when its migration fails, stops the start, as a site that is there and
   cannot be opened does, so `update.sh` rolls back a release that cannot open it rather than keeping it without the site.
+- A release one migration older than the DBs, when that migration is marked `-- additive`, starts with them as they
+  are, keeping what was written since; one older than that, or than a migration not marked additive, does not start,
+  saying the DB is at a version it cannot use.
 - A site whose DB file is missing and not restored, such as one created after its batch was last backed up, is left
   out, so the server still starts and the rest of its batch is still backed up.
 - Old records' raw JSON is cleared after `TRUNCATE_RECORDS_AFTER_DAYS`.

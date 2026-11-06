@@ -7,7 +7,12 @@ import (
 	"embed"
 	"errors"
 	"fmt"
+	"io/fs"
 	"log/slog"
+	"path"
+	"regexp"
+	"strconv"
+	"strings"
 
 	"nighttroop.t1d.nz/data/sql/sqltiming"
 	"nighttroop.t1d.nz/utils"
@@ -146,13 +151,23 @@ func GetS3Path(serverConfig *config.ServerConfig) string {
 //go:embed migrations/*.sql
 var Migrations embed.FS
 
+// additive marks a migration that only adds to the schema, so a build without it can still use the DB
+var additive = regexp.MustCompile("(?m)^-- additive$")
+
 func MigrateUp(db *sql.DB) error {
+	return MigrateUpWith(db, Migrations)
+}
+
+// MigrateUpWith migrates db up with migrations, then records the oldest version whose build can use it: one before
+// their newest when that is additive. A DB past their newest, which a newer build migrated, is used as it is when that
+// build recorded that their newest can use it, and refused otherwise, see docs/migrations.md.
+func MigrateUpWith(db *sql.DB, migrations fs.FS) error {
 	driver, err := sqlite.WithInstance(db, &sqlite.Config{})
 	if err != nil {
 		return err
 	}
 
-	d, err := iofs.New(Migrations, "migrations")
+	d, err := iofs.New(migrations, "migrations")
 	if err != nil {
 		return err
 	}
@@ -167,11 +182,45 @@ func MigrateUp(db *sql.DB) error {
 		return err
 	}
 
+	ups, err := fs.Glob(migrations, "migrations/*.up.sql")
+	if err != nil || len(ups) == 0 {
+		return fmt.Errorf("no migrations: %w", err)
+	}
+	newest, err := strconv.ParseInt(strings.SplitN(path.Base(ups[len(ups)-1]), "_", 2)[0], 10, 64)
+	if err != nil {
+		return err
+	}
+
+	ctx := context.Background()
+	queries := New(db)
+	if version, dirty, err := m.Version(); err == nil && !dirty && int64(version) > newest {
+		oldest, err := queries.GetSchemaCompatibility(ctx, GetSchemaCompatibilityParams{Version: int64(version)})
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return err
+		}
+		if err != nil || oldest > newest {
+			return fmt.Errorf("the DB is at version %d, which this build, at %d, cannot use; roll back with update.sh's copy of ./data", version, newest)
+		}
+		return nil
+	}
+
 	err = m.Up()
 	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		return err
 	}
 
+	text, err := fs.ReadFile(migrations, ups[len(ups)-1])
+	if err != nil {
+		return err
+	}
+	oldest := newest
+	if additive.Match(text) {
+		oldest--
+	}
+	recorded, err := queries.GetSchemaCompatibility(ctx, GetSchemaCompatibilityParams{Version: newest})
+	if err != nil || recorded != oldest {
+		return queries.SetSchemaCompatibility(ctx, SetSchemaCompatibilityParams{Version: newest, OldestVersion: oldest})
+	}
 	return nil
 }
 

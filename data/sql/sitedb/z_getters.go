@@ -4326,6 +4326,26 @@ func (m *ProfileSwitchesVw) SetCreatedByIdentityName(v *string) {
 	m.CreatedByIdentityName = v
 }
 
+// GetVersion returns the Version value.
+func (m SchemaCompatibility) GetVersion() int64 {
+	return m.Version
+}
+
+// SetVersion sets the Version value and returns the updated SchemaCompatibility.
+func (m *SchemaCompatibility) SetVersion(v int64) {
+	m.Version = v
+}
+
+// GetOldestVersion returns the OldestVersion value.
+func (m SchemaCompatibility) GetOldestVersion() int64 {
+	return m.OldestVersion
+}
+
+// SetOldestVersion sets the OldestVersion value and returns the updated SchemaCompatibility.
+func (m *SchemaCompatibility) SetOldestVersion(v int64) {
+	m.OldestVersion = v
+}
+
 // GetPeriod returns the Period value.
 func (m SummaryPeriod) GetPeriod() string {
 	return m.Period
@@ -14144,6 +14164,36 @@ func (m UpdateProfilePresetParams) GetID() string {
 // SetID sets the ID value and returns the updated UpdateProfilePresetParams.
 func (m *UpdateProfilePresetParams) SetID(v string) {
 	m.ID = v
+}
+
+// GetVersion returns the Version value.
+func (m GetSchemaCompatibilityParams) GetVersion() int64 {
+	return m.Version
+}
+
+// SetVersion sets the Version value and returns the updated GetSchemaCompatibilityParams.
+func (m *GetSchemaCompatibilityParams) SetVersion(v int64) {
+	m.Version = v
+}
+
+// GetVersion returns the Version value.
+func (m SetSchemaCompatibilityParams) GetVersion() int64 {
+	return m.Version
+}
+
+// SetVersion sets the Version value and returns the updated SetSchemaCompatibilityParams.
+func (m *SetSchemaCompatibilityParams) SetVersion(v int64) {
+	m.Version = v
+}
+
+// GetOldestVersion returns the OldestVersion value.
+func (m SetSchemaCompatibilityParams) GetOldestVersion() int64 {
+	return m.OldestVersion
+}
+
+// SetOldestVersion sets the OldestVersion value and returns the updated SetSchemaCompatibilityParams.
+func (m *SetSchemaCompatibilityParams) SetOldestVersion(v int64) {
+	m.OldestVersion = v
 }
 
 // GetPeriod returns the Period value.

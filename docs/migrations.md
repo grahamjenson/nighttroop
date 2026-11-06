@@ -40,8 +40,22 @@ migration:
    with `SELECT *`, fails. A migration that means to change a table's rows says so with a line
    `-- changes rows of <table>`. Each text column's rows are made of its own letter so swapped text columns differ;
    numbers are not, as CHECKs compare them across columns, so name the columns copied when any are swapped.
-3. Prefer additive changes: a new table, or a new column that can be NULL or has a default. A build cannot open a DB
-   a newer build migrated, so an additive change is the one a rollback copes with best.
+3. Prefer additive changes: a new table, index or view, or a new column that can be NULL or has a default, and mark
+   the up file with a line `-- additive`. A release rolled back past it then keeps the DBs as they are, with what was
+   written since (see [Opening a DB a newer build migrated](#opening-a-db-a-newer-build-migrated)). `go generate`
+   fails an additive migration that runs anything but `CREATE TABLE`, `CREATE INDEX`, `CREATE VIEW` and
+   `ALTER TABLE ... ADD`, so not a `DROP`, a rename, a changed row, a unique index, a trigger or a table made again,
+   as a changed `CHECK` needs; or that references a table without `ON DELETE CASCADE` or `SET NULL`, as the older
+   build would fail to delete a row the newer one's rows reference. A new column's `CHECK` should only test itself and
+   pass its default, as the older build's rows leave it at that.
+
+## Opening a DB a newer build migrated
+
+Each DB's `schema_compatibility` table records, for the version a build migrated it to, the oldest version whose build
+can use it: the version before, when that version's migration is additive, or the version itself. A build opening a
+DB past its newest migration, as after a rollback, uses it as it is, without migrating, when that version's row says
+its newest can, so only one additive migration newer. Otherwise it refuses, and the server does not start: "the DB is
+at version N, which this build, at M, cannot use". The newer build opens the DB again as it left it.
 
 ## What a migration runs in
 
@@ -81,7 +95,8 @@ them otherwise.
 - **Fix forward**: a new release with a fixed or new migration opens the kept DBs. A dirty one is first forced back
   to the version before the one that failed, e.g. `sqlite3 <db> "UPDATE schema_migrations SET version = N-1, dirty = 0"`
   with the server stopped.
-- **Rolling back after a migration ran** needs `./backups/data-*.tar.gz` from `update.sh`, or S3's backups, as the
-  older build cannot open DBs at the newer version, and loses what was written since.
+- **Rolling back after a migration ran** keeps the DBs when the release rolled back to is the one before an additive
+  migration. Otherwise it needs `./backups/data-*.tar.gz` from `update.sh`, or S3's backups, as the older build cannot
+  open DBs at the newer version, and loses what was written since.
 - **Staging** (`scripts/try_migrate_or_delete`) deletes every DB when one cannot be migrated and prepared, so it starts
   empty rather than with only some.

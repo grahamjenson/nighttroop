@@ -42,6 +42,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getIdentityAlarmStmt, err = db.PrepareContext(ctx, getIdentityAlarm); err != nil {
 		return nil, fmt.Errorf("error preparing query GetIdentityAlarm: %w", err)
 	}
+	if q.getSchemaCompatibilityStmt, err = db.PrepareContext(ctx, getSchemaCompatibility); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSchemaCompatibility: %w", err)
+	}
 	if q.identityAlarmsStmt, err = db.PrepareContext(ctx, identityAlarms); err != nil {
 		return nil, fmt.Errorf("error preparing query IdentityAlarms: %w", err)
 	}
@@ -53,6 +56,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.resourceReadingsSinceStmt, err = db.PrepareContext(ctx, resourceReadingsSince); err != nil {
 		return nil, fmt.Errorf("error preparing query ResourceReadingsSince: %w", err)
+	}
+	if q.setSchemaCompatibilityStmt, err = db.PrepareContext(ctx, setSchemaCompatibility); err != nil {
+		return nil, fmt.Errorf("error preparing query SetSchemaCompatibility: %w", err)
 	}
 	if q.siteAlarmsStmt, err = db.PrepareContext(ctx, siteAlarms); err != nil {
 		return nil, fmt.Errorf("error preparing query SiteAlarms: %w", err)
@@ -101,6 +107,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getIdentityAlarmStmt: %w", cerr)
 		}
 	}
+	if q.getSchemaCompatibilityStmt != nil {
+		if cerr := q.getSchemaCompatibilityStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSchemaCompatibilityStmt: %w", cerr)
+		}
+	}
 	if q.identityAlarmsStmt != nil {
 		if cerr := q.identityAlarmsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing identityAlarmsStmt: %w", cerr)
@@ -119,6 +130,11 @@ func (q *Queries) Close() error {
 	if q.resourceReadingsSinceStmt != nil {
 		if cerr := q.resourceReadingsSinceStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing resourceReadingsSinceStmt: %w", cerr)
+		}
+	}
+	if q.setSchemaCompatibilityStmt != nil {
+		if cerr := q.setSchemaCompatibilityStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing setSchemaCompatibilityStmt: %w", cerr)
 		}
 	}
 	if q.siteAlarmsStmt != nil {
@@ -186,10 +202,12 @@ type Queries struct {
 	deleteAlarmStmt                  *sql.Stmt
 	deleteResourceReadingsBeforeStmt *sql.Stmt
 	getIdentityAlarmStmt             *sql.Stmt
+	getSchemaCompatibilityStmt       *sql.Stmt
 	identityAlarmsStmt               *sql.Stmt
 	latestResourceReadingStmt        *sql.Stmt
 	openConnectionStmt               *sql.Stmt
 	resourceReadingsSinceStmt        *sql.Stmt
+	setSchemaCompatibilityStmt       *sql.Stmt
 	siteAlarmsStmt                   *sql.Stmt
 	snoozeAlarmStmt                  *sql.Stmt
 	snoozedAlertingSiteIDsStmt       *sql.Stmt
@@ -206,10 +224,12 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		deleteAlarmStmt:                  q.deleteAlarmStmt,
 		deleteResourceReadingsBeforeStmt: q.deleteResourceReadingsBeforeStmt,
 		getIdentityAlarmStmt:             q.getIdentityAlarmStmt,
+		getSchemaCompatibilityStmt:       q.getSchemaCompatibilityStmt,
 		identityAlarmsStmt:               q.identityAlarmsStmt,
 		latestResourceReadingStmt:        q.latestResourceReadingStmt,
 		openConnectionStmt:               q.openConnectionStmt,
 		resourceReadingsSinceStmt:        q.resourceReadingsSinceStmt,
+		setSchemaCompatibilityStmt:       q.setSchemaCompatibilityStmt,
 		siteAlarmsStmt:                   q.siteAlarmsStmt,
 		snoozeAlarmStmt:                  q.snoozeAlarmStmt,
 		snoozedAlertingSiteIDsStmt:       q.snoozedAlertingSiteIDsStmt,

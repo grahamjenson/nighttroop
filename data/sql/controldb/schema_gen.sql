@@ -64,6 +64,11 @@ CREATE TABLE push_registrations (
     UNIQUE (site_id, token_hash)
 ) STRICT;
 
+CREATE TABLE schema_compatibility (
+    version INTEGER PRIMARY KEY,
+    oldest_version INTEGER NOT NULL
+) STRICT;
+
 CREATE TABLE server_settings (
     id INTEGER PRIMARY KEY CHECK(id = 1),
 

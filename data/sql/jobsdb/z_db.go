@@ -48,6 +48,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getJobsToBeSummarisedStmt, err = db.PrepareContext(ctx, getJobsToBeSummarised); err != nil {
 		return nil, fmt.Errorf("error preparing query GetJobsToBeSummarised: %w", err)
 	}
+	if q.getSchemaCompatibilityStmt, err = db.PrepareContext(ctx, getSchemaCompatibility); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSchemaCompatibility: %w", err)
+	}
 	if q.insertFailedCronJobStmt, err = db.PrepareContext(ctx, insertFailedCronJob); err != nil {
 		return nil, fmt.Errorf("error preparing query InsertFailedCronJob: %w", err)
 	}
@@ -71,6 +74,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.searchJobsStmt, err = db.PrepareContext(ctx, searchJobs); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchJobs: %w", err)
+	}
+	if q.setSchemaCompatibilityStmt, err = db.PrepareContext(ctx, setSchemaCompatibility); err != nil {
+		return nil, fmt.Errorf("error preparing query SetSchemaCompatibility: %w", err)
 	}
 	if q.updateJobStatsDailyStmt, err = db.PrepareContext(ctx, updateJobStatsDaily); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateJobStatsDaily: %w", err)
@@ -120,6 +126,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getJobsToBeSummarisedStmt: %w", cerr)
 		}
 	}
+	if q.getSchemaCompatibilityStmt != nil {
+		if cerr := q.getSchemaCompatibilityStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSchemaCompatibilityStmt: %w", cerr)
+		}
+	}
 	if q.insertFailedCronJobStmt != nil {
 		if cerr := q.insertFailedCronJobStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing insertFailedCronJobStmt: %w", cerr)
@@ -158,6 +169,11 @@ func (q *Queries) Close() error {
 	if q.searchJobsStmt != nil {
 		if cerr := q.searchJobsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing searchJobsStmt: %w", cerr)
+		}
+	}
+	if q.setSchemaCompatibilityStmt != nil {
+		if cerr := q.setSchemaCompatibilityStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing setSchemaCompatibilityStmt: %w", cerr)
 		}
 	}
 	if q.updateJobStatsDailyStmt != nil {
@@ -212,6 +228,7 @@ type Queries struct {
 	findJobStmt                     *sql.Stmt
 	getJobStatsDailyStmt            *sql.Stmt
 	getJobsToBeSummarisedStmt       *sql.Stmt
+	getSchemaCompatibilityStmt      *sql.Stmt
 	insertFailedCronJobStmt         *sql.Stmt
 	insertSuccessfulCronJobStmt     *sql.Stmt
 	markJobsForConsumerStmt         *sql.Stmt
@@ -220,6 +237,7 @@ type Queries struct {
 	resetJobsStmt                   *sql.Stmt
 	searchJobStatsDailyStmt         *sql.Stmt
 	searchJobsStmt                  *sql.Stmt
+	setSchemaCompatibilityStmt      *sql.Stmt
 	updateJobStatsDailyStmt         *sql.Stmt
 }
 
@@ -235,6 +253,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		findJobStmt:                     q.findJobStmt,
 		getJobStatsDailyStmt:            q.getJobStatsDailyStmt,
 		getJobsToBeSummarisedStmt:       q.getJobsToBeSummarisedStmt,
+		getSchemaCompatibilityStmt:      q.getSchemaCompatibilityStmt,
 		insertFailedCronJobStmt:         q.insertFailedCronJobStmt,
 		insertSuccessfulCronJobStmt:     q.insertSuccessfulCronJobStmt,
 		markJobsForConsumerStmt:         q.markJobsForConsumerStmt,
@@ -243,6 +262,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		resetJobsStmt:                   q.resetJobsStmt,
 		searchJobStatsDailyStmt:         q.searchJobStatsDailyStmt,
 		searchJobsStmt:                  q.searchJobsStmt,
+		setSchemaCompatibilityStmt:      q.setSchemaCompatibilityStmt,
 		updateJobStatsDailyStmt:         q.updateJobStatsDailyStmt,
 	}
 }

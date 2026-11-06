@@ -236,6 +236,26 @@ func (m *JobStatsDaily) SetUpdatedAt(v int64) {
 	m.UpdatedAt = v
 }
 
+// GetVersion returns the Version value.
+func (m SchemaCompatibility) GetVersion() int64 {
+	return m.Version
+}
+
+// SetVersion sets the Version value and returns the updated SchemaCompatibility.
+func (m *SchemaCompatibility) SetVersion(v int64) {
+	m.Version = v
+}
+
+// GetOldestVersion returns the OldestVersion value.
+func (m SchemaCompatibility) GetOldestVersion() int64 {
+	return m.OldestVersion
+}
+
+// SetOldestVersion sets the OldestVersion value and returns the updated SchemaCompatibility.
+func (m *SchemaCompatibility) SetOldestVersion(v int64) {
+	m.OldestVersion = v
+}
+
 // GetDayQueueJob returns the DayQueueJob value.
 func (m EnsureJobStatsDailyForGroupParams) GetDayQueueJob() string {
 	return m.DayQueueJob
@@ -654,5 +674,35 @@ func (m SearchJobsParams) GetLimit() int64 {
 // SetLimit sets the Limit value and returns the updated SearchJobsParams.
 func (m *SearchJobsParams) SetLimit(v int64) {
 	m.Limit = v
+}
+
+// GetVersion returns the Version value.
+func (m GetSchemaCompatibilityParams) GetVersion() int64 {
+	return m.Version
+}
+
+// SetVersion sets the Version value and returns the updated GetSchemaCompatibilityParams.
+func (m *GetSchemaCompatibilityParams) SetVersion(v int64) {
+	m.Version = v
+}
+
+// GetVersion returns the Version value.
+func (m SetSchemaCompatibilityParams) GetVersion() int64 {
+	return m.Version
+}
+
+// SetVersion sets the Version value and returns the updated SetSchemaCompatibilityParams.
+func (m *SetSchemaCompatibilityParams) SetVersion(v int64) {
+	m.Version = v
+}
+
+// GetOldestVersion returns the OldestVersion value.
+func (m SetSchemaCompatibilityParams) GetOldestVersion() int64 {
+	return m.OldestVersion
+}
+
+// SetOldestVersion sets the OldestVersion value and returns the updated SetSchemaCompatibilityParams.
+func (m *SetSchemaCompatibilityParams) SetOldestVersion(v int64) {
+	m.OldestVersion = v
 }
 

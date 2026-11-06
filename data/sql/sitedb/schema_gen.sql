@@ -447,6 +447,11 @@ CREATE TABLE profile_switches (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
 ) STRICT;
 
+CREATE TABLE schema_compatibility (
+    version INTEGER PRIMARY KEY,
+    oldest_version INTEGER NOT NULL
+) STRICT;
+
 CREATE TABLE summary_period (
     period TEXT NOT NULL CHECK(period IN ('day', 'week', 'fortnight', 'month')),
     date TEXT NOT NULL CHECK(length(date) = 10),

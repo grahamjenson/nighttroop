@@ -36,3 +36,8 @@ type JobStatsDaily struct {
 	CreatedAt          int64
 	UpdatedAt          int64
 }
+
+type SchemaCompatibility struct {
+	Version       int64
+	OldestVersion int64
+}

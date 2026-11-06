@@ -32,3 +32,8 @@ CREATE TABLE resource_readings (
     disk_total_bytes INTEGER
 ) STRICT;
 
+CREATE TABLE schema_compatibility (
+    version INTEGER PRIMARY KEY,
+    oldest_version INTEGER NOT NULL
+) STRICT;
+

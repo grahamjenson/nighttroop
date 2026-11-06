@@ -560,3 +560,9 @@ CREATE INDEX event_groups_group_type_occurred_at_idx ON event_groups(group_type,
 CREATE INDEX component_events_event_type_occurred_at_idx ON component_events(event_type, occurred_at);
 CREATE INDEX device_reports_device_occurred_at_idx ON device_reports(created_by_device_name, occurred_at);
 CREATE INDEX profile_presets_profile_store_id_idx ON profile_presets(profile_store_id);
+
+-- The oldest version of these migrations whose build can use the DB at each version, see docs/migrations.md
+CREATE TABLE schema_compatibility (
+    version INTEGER PRIMARY KEY,
+    oldest_version INTEGER NOT NULL
+) STRICT;
