@@ -403,7 +403,8 @@ func TestRestoredSiteThatCannotOpenStopsTheStart(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, controlDB.Close())
 
-	// Its backup is one a failed migration left dirty
+	// Its backup is dirty at a migration it already has, so migrating it again fails, as a migration that keeps failing
+	// does
 	backup := filepath.Join(t.TempDir(), "kostsite.sqlite")
 	require.NoError(t, os.Rename(sitedb.GetPath("kostsite", &cfg), backup))
 	raw, err := sql.Open("sqlite", backup)
