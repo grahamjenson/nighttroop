@@ -12,7 +12,6 @@ import (
 	"nighttroop.t1d.nz/background"
 	"nighttroop.t1d.nz/server"
 	"nighttroop.t1d.nz/tests/dsl/flow"
-	"nighttroop.t1d.nz/tests/dsl/jsonapi"
 	"nighttroop.t1d.nz/utils/s3utils"
 	"nighttroop.t1d.nz/utils/testutils"
 )
@@ -39,7 +38,7 @@ func TestSocketIO(t *testing.T) {
 				t.Fatalf("failed to parse: %v", err)
 			}
 			runner := &flow.Runner{
-				Client:            jsonapi.Client(ts),
+				Client:            flow.Client(ts),
 				RunBackgroundJobs: func() { backgroundJobs.RunAllNow(context.Background()) },
 			}
 			runner.Run(t, socketFlow, map[string]any{

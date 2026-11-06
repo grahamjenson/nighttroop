@@ -8,9 +8,7 @@ import (
 
 	"github.com/mxschmitt/playwright-go"
 	"nighttroop.t1d.nz/background"
-	"nighttroop.t1d.nz/tests/dsl/browser"
 	"nighttroop.t1d.nz/tests/dsl/flow"
-	"nighttroop.t1d.nz/tests/dsl/jsonapi"
 )
 
 // RunTheActionFileAsATest runs the .bdd or .flow file at path, its templates filled from actionContext, its API and
@@ -19,14 +17,14 @@ func RunTheActionFileAsATest(t *testing.T, root string, path string, server *htt
 	removeNightscout := strings.TrimPrefix(path, root+"/")
 	t.Run(removeNightscout, func(t *testing.T) {
 		runner := &flow.Runner{
-			Client:            jsonapi.Client(server),
+			Client:            flow.Client(server),
 			RunBackgroundJobs: func() { backgroundJobs.RunAllNow(t.Context()) },
 			NewPage:           context.NewPage,
 		}
 		// Always keep a screenshot of the page a failing file stopped on
 		t.Cleanup(func() {
 			if t.Failed() && runner.Page != nil {
-				if screenshotPath, err := browser.ScreenshotPage(runner.Page, "allScreenshots", path, "failed"); err == nil {
+				if screenshotPath, err := flow.ScreenshotPage(runner.Page, "allScreenshots", path, "failed"); err == nil {
 					t.Logf("Failure screenshot saved to: %s", screenshotPath)
 				}
 			}

@@ -1,4 +1,4 @@
-package browser
+package flow
 
 import (
 	"io/fs"
@@ -6,7 +6,6 @@ import (
 	"testing/fstest"
 
 	"github.com/stretchr/testify/require"
-	"nighttroop.t1d.nz/tests/dsl/script"
 )
 
 func TestIncludeRunsAnotherFilesSteps(t *testing.T) {
@@ -16,7 +15,7 @@ func TestIncludeRunsAnotherFilesSteps(t *testing.T) {
 		"site/missing.bdd":  {Data: []byte("CLICK #start\nINCLUDE steps/missing.steps\n")},
 	}
 
-	file, err := parse(fsys, "site/home.bdd")
+	file, err := parseBrowser(fsys, "site/home.bdd")
 	require.NoError(t, err)
 	require.Len(t, file, 3)
 	require.IsType(t, &Goto{}, file[0])
@@ -26,7 +25,7 @@ func TestIncludeRunsAnotherFilesSteps(t *testing.T) {
 	require.Len(t, login.Asserts, 2)
 	require.Equal(t, "#next", file[2].(*Click).Locator)
 
-	_, err = parse(fsys, "site/missing.bdd")
+	_, err = parseBrowser(fsys, "site/missing.bdd")
 	require.ErrorContains(t, err, "site/missing.bdd:2: INCLUDE steps/missing.steps")
 }
 
@@ -36,7 +35,7 @@ func TestScrollTurnsTheWheelByPixels(t *testing.T) {
 		"site/bad.bdd":    {Data: []byte("GOTO /\nSCROLL down\n")},
 	}
 
-	file, err := parse(fsys, "site/scroll.bdd")
+	file, err := parseBrowser(fsys, "site/scroll.bdd")
 	require.NoError(t, err)
 	require.Len(t, file, 3)
 	down := file[1].(*Click)
@@ -44,7 +43,7 @@ func TestScrollTurnsTheWheelByPixels(t *testing.T) {
 	require.Len(t, down.Asserts, 1)
 	require.Equal(t, "SCROLL -100", file[2].ToFlatString())
 
-	_, err = parse(fsys, "site/bad.bdd")
+	_, err = parseBrowser(fsys, "site/bad.bdd")
 	require.ErrorContains(t, err, "site/bad.bdd:2: SCROLL needs a number of pixels")
 }
 
@@ -54,22 +53,22 @@ func TestTitleAssertKeepsTheWholeTitle(t *testing.T) {
 		"site/bad.bdd":   {Data: []byte("ASSERT_TITLE Nighttroop\n")},
 	}
 
-	file, err := parse(fsys, "site/title.bdd")
+	file, err := parseBrowser(fsys, "site/title.bdd")
 	require.NoError(t, err)
 	require.Len(t, file, 1)
 	asserts := file[0].(*Goto).Asserts
 	require.Len(t, asserts, 1)
 	require.Equal(t, "Glucose Readings · Nighttroop", asserts[0].(*AssertTitle).Title)
 
-	_, err = parse(fsys, "site/bad.bdd")
+	_, err = parseBrowser(fsys, "site/bad.bdd")
 	require.ErrorContains(t, err, "assert_title before action")
 }
 
-// parse is the actions of the file at path in fsys
-func parse(fsys fs.FS, path string) ([]Action, error) {
-	lines, err := script.ReadLines(fsys, path)
+// parseBrowser is the actions of the file at path in fsys
+func parseBrowser(fsys fs.FS, path string) ([]Action, error) {
+	lines, err := ReadLines(fsys, path)
 	if err != nil {
 		return nil, err
 	}
-	return ParseLines(lines)
+	return ParseBrowserLines(lines)
 }

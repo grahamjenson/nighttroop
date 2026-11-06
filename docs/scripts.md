@@ -1,6 +1,6 @@
 # Test scripts
 
-The API, Socket.IO and browser tests are scripts, read by one parser (`tests/dsl/flow`):
+The API, Socket.IO and browser tests are scripts, read by one parser in one package (`tests/dsl/flow`):
 
 - `.http` files (`tests/api`) send API requests,
 - `.sio` files (`tests/socket`) also open Socket.IO connections and live update streams,

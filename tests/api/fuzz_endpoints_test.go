@@ -18,7 +18,6 @@ import (
 
 	"nighttroop.t1d.nz/server"
 	"nighttroop.t1d.nz/tests/dsl/flow"
-	"nighttroop.t1d.nz/tests/dsl/jsonapi"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/testutils"
 )
@@ -194,7 +193,7 @@ func collectEndpoints(tb testing.TB) []*endpoint {
 }
 
 // parseEndpoint is a request's endpoint, or nil when it is skipped or not a request, as a step that is not HTTP has none
-func parseEndpoint(request *jsonapi.Request) *endpoint {
+func parseEndpoint(request *flow.Request) *endpoint {
 	if request == nil {
 		return nil
 	}

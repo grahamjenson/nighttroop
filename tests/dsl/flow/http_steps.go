@@ -1,4 +1,4 @@
-// Package socketio runs .sio files: Socket.IO tests written like .http ones. Each NAME starts a step, which is
+// HTTP steps are written as .sio files are: Socket.IO tests written like .http ones. Each NAME starts a step, which is
 // one of the verbs CONNECT <url>, EMIT <event> (with ACK to wait for its acknowledgement), WAIT <event>,
 // COLLECT <event>, DISCONNECT, STREAM <url>, an HTTP request (GET <url> and so on) or RUN_BACKGROUND_JOBS.
 // STREAM opens a page's live updates, server-sent events, with its H headers, and WAIT and COLLECT take its events
@@ -7,7 +7,8 @@
 // B is the step's body (CONNECT's auth, EMIT's argument, a request's JSON), and ARGS a JSON list of EMIT's
 // arguments, for an event that takes more than one, as Nightscout's ack does. T is how long it may take (e.g. 5s),
 // and SET and ASSERT_* work on what the step got as they do in .http files.
-package socketio
+
+package flow
 
 import (
 	"fmt"
@@ -15,20 +16,16 @@ import (
 	"slices"
 	"strings"
 	"time"
-
-	"nighttroop.t1d.nz/tests/dsl/script"
-
-	"nighttroop.t1d.nz/tests/dsl/jsonapi"
 )
 
-// File is a parsed .sio file
-type File struct {
+// HTTPFile is a parsed .sio file
+type HTTPFile struct {
 	Path  string
-	Steps []*Step
+	Steps []*HTTPStep
 }
 
-// Step is one NAME block
-type Step struct {
+// HTTPStep is one NAME block
+type HTTPStep struct {
 	Name string
 	// Path and Line are where the step is, which is an INCLUDEd file for its steps
 	Path   string
@@ -42,15 +39,15 @@ type Step struct {
 	Headers http.Header
 	Ack     bool
 	Timeout time.Duration
-	Asserts []jsonapi.Assert
-	Sets    []jsonapi.Set
+	Asserts []HTTPAssert
+	Sets    []Set
 }
 
 var socketVerbs = []string{"CONNECT", "EMIT", "WAIT", "COLLECT", "DISCONNECT", "STREAM"}
 var httpVerbs = []string{"GET", "POST", "PUT", "PATCH", "DELETE"}
 
 // Events are the events the file waits for or collects, which a connection must listen for
-func (f *File) Events() []string {
+func (f *HTTPFile) Events() []string {
 	var events []string
 	for _, step := range f.Steps {
 		if (step.Verb == "WAIT" || step.Verb == "COLLECT") && !slices.Contains(events, step.Target) {
@@ -60,10 +57,10 @@ func (f *File) Events() []string {
 	return events
 }
 
-// ParseLines is the steps of a file's lines, which a .http file's are too, as each is a NAME with an HTTP verb
-func ParseLines(lines []script.Line, path string) (*File, error) {
-	file := &File{Path: path}
-	var current *Step
+// ParseHTTPLines is the steps of a file's lines, which a .http file's are too, as each is a NAME with an HTTP verb
+func ParseHTTPLines(lines []Line, path string) (*HTTPFile, error) {
+	file := &HTTPFile{Path: path}
+	var current *HTTPStep
 	inBody := false
 	for _, l := range lines {
 		line, first, second, lineNumber, path := l.Text, l.First, l.Rest, l.Number, l.Path
@@ -79,7 +76,7 @@ func ParseLines(lines []script.Line, path string) (*File, error) {
 		}
 		inBody = false
 
-		assert, isAssert, err := jsonapi.ParseAssert(first, second, path, lineNumber)
+		assert, isAssert, err := ParseAssert(first, second, path, lineNumber)
 		switch {
 		case err != nil:
 			return nil, err
@@ -89,10 +86,10 @@ func ParseLines(lines []script.Line, path string) (*File, error) {
 			if second == "" {
 				return nil, fail("empty step name")
 			}
-			current = &Step{Name: second, Path: path, Line: lineNumber, Headers: http.Header{}}
+			current = &HTTPStep{Name: second, Path: path, Line: lineNumber, Headers: http.Header{}}
 			file.Steps = append(file.Steps, current)
 		case first == "RUN_BACKGROUND_JOBS":
-			file.Steps = append(file.Steps, &Step{Name: first, Path: path, Line: lineNumber, Verb: first})
+			file.Steps = append(file.Steps, &HTTPStep{Name: first, Path: path, Line: lineNumber, Verb: first})
 			current = nil
 		case slices.Contains(socketVerbs, first) || slices.Contains(httpVerbs, first):
 			if current.Verb != "" {
@@ -129,7 +126,7 @@ func ParseLines(lines []script.Line, path string) (*File, error) {
 			if !found {
 				return nil, fail("invalid SET %q", second)
 			}
-			current.Sets = append(current.Sets, jsonapi.Set{Key: key, Value: strings.TrimSpace(value)})
+			current.Sets = append(current.Sets, Set{Key: key, Value: strings.TrimSpace(value)})
 		default:
 			return nil, fail("unknown line %q", line)
 		}
@@ -153,7 +150,7 @@ func ParseLines(lines []script.Line, path string) (*File, error) {
 
 // isKeyword is whether a line starts with something other than more of a body
 func isKeyword(first string) bool {
-	_, isAssert, _ := jsonapi.ParseAssert(first, "", "", 0)
+	_, isAssert, _ := ParseAssert(first, "", "", 0)
 	return isAssert || slices.Contains(socketVerbs, first) || slices.Contains(httpVerbs, first) ||
 		slices.Contains([]string{"NAME", "RUN_BACKGROUND_JOBS", "ACK", "NS", "T", "B", "ARGS", "H", "SET"}, first)
 }

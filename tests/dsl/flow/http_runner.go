@@ -1,4 +1,4 @@
-package socketio
+package flow
 
 import (
 	"bufio"
@@ -14,11 +14,8 @@ import (
 	"testing"
 	"time"
 
-	"nighttroop.t1d.nz/tests/dsl/script"
-
 	socket "nighttroop.t1d.nz/socketio"
 	"nighttroop.t1d.nz/socketio/engineio"
-	"nighttroop.t1d.nz/tests/dsl/jsonapi"
 )
 
 const (
@@ -27,9 +24,9 @@ const (
 	defaultCollect = time.Second
 )
 
-// Runner runs a file's steps one at a time with Step, keeping one Socket.IO connection open between them until Close
-type Runner struct {
-	// Client sends the HTTP steps' requests, and CONNECT's and STREAM's, as jsonapi.Client does to a test server
+// httpRunner runs a file's steps one at a time with Step, keeping one Socket.IO connection open between them until Close
+type httpRunner struct {
+	// Client sends the HTTP steps' requests, and CONNECT's and STREAM's, as Client does to a test server
 	Client *http.Client
 	// RunBackgroundJobs runs every background job, for RUN_BACKGROUND_JOBS
 	RunBackgroundJobs func()
@@ -44,7 +41,7 @@ type Runner struct {
 
 // Step runs one of the file's steps, keeping its connection open for the next, and fails the test if it cannot
 // finish. The file says which events a connection listens for.
-func (r *Runner) Step(t *testing.T, file *File, step *Step, ctx map[string]any) {
+func (r *httpRunner) Step(t *testing.T, file *HTTPFile, step *HTTPStep, ctx map[string]any) {
 	t.Helper()
 	fmt.Printf("=============== %s: %s %s ================\n", step.Name, step.Verb, step.Target)
 	output, err := r.run(t, file, step, ctx)
@@ -54,7 +51,7 @@ func (r *Runner) Step(t *testing.T, file *File, step *Step, ctx map[string]any) 
 	if step.Verb == "RUN_BACKGROUND_JOBS" || isHTTP(step.Verb) {
 		return
 	}
-	pretty, _ := jsonapi.MarshalJsonWithoutEscapeHTML(output)
+	pretty, _ := MarshalJsonWithoutEscapeHTML(output)
 	fmt.Printf("GOT: %s\n", pretty)
 	ctx[step.Name] = output
 	for _, set := range step.Sets {
@@ -68,7 +65,7 @@ func (r *Runner) Step(t *testing.T, file *File, step *Step, ctx map[string]any) 
 }
 
 // Close ends the connection, if there is one, and every STREAM
-func (r *Runner) Close() {
+func (r *httpRunner) Close() {
 	r.disconnect()
 	for _, end := range r.streams {
 		end()
@@ -77,7 +74,7 @@ func (r *Runner) Close() {
 }
 
 // receive queues an event, from the socket or a stream, for a WAIT or COLLECT
-func (r *Runner) receive(event string, value any) {
+func (r *httpRunner) receive(event string, value any) {
 	r.mu.Lock()
 	r.received[event] = append(r.received[event], value)
 	r.mu.Unlock()
@@ -90,14 +87,14 @@ func (r *Runner) receive(event string, value any) {
 func isHTTP(verb string) bool { return slices.Contains(httpVerbs, verb) }
 
 // Request is an HTTP step's request, or nil for any other step
-func (s *Step) Request() *jsonapi.Request {
+func (s *HTTPStep) Request() *Request {
 	if !isHTTP(s.Verb) {
 		return nil
 	}
-	return &jsonapi.Request{Name: s.Name, Method: s.Verb, URL: s.Target, Headers: s.Headers, Body: s.Body, Asserts: s.Asserts, Sets: s.Sets}
+	return &Request{Name: s.Name, Method: s.Verb, URL: s.Target, Headers: s.Headers, Body: s.Body, Asserts: s.Asserts, Sets: s.Sets}
 }
 
-func (r *Runner) run(t *testing.T, file *File, step *Step, ctx map[string]any) (any, error) {
+func (r *httpRunner) run(t *testing.T, file *HTTPFile, step *HTTPStep, ctx map[string]any) (any, error) {
 	timeout := step.Timeout
 	if timeout == 0 {
 		timeout = defaultTimeout
@@ -122,7 +119,7 @@ func (r *Runner) run(t *testing.T, file *File, step *Step, ctx map[string]any) (
 	if r.received == nil {
 		return nil, fmt.Errorf("not connected, and no stream open")
 	}
-	event, err := script.Render(step.Target, ctx)
+	event, err := Render(step.Target, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -163,9 +160,9 @@ func (r *Runner) run(t *testing.T, file *File, step *Step, ctx map[string]any) (
 
 // connect opens the URL's Socket.IO connection, speaking the EIO version in its query (4 by default) and sending
 // the body as v5's auth, and listens for the events the file uses
-func (r *Runner) connect(ctx map[string]any, events []string, step *Step, timeout time.Duration) error {
+func (r *httpRunner) connect(ctx map[string]any, events []string, step *HTTPStep, timeout time.Duration) error {
 	r.disconnect()
-	rawURL, err := script.Render(step.Target, ctx)
+	rawURL, err := Render(step.Target, ctx)
 	if err != nil {
 		return err
 	}
@@ -212,7 +209,7 @@ func (r *Runner) connect(ctx map[string]any, events []string, step *Step, timeou
 	return client.Connect(dialCtx, r.namespace, connectAuth)
 }
 
-func (r *Runner) disconnect() {
+func (r *httpRunner) disconnect() {
 	if r.client != nil {
 		r.client.Close()
 		r.client = nil
@@ -220,7 +217,7 @@ func (r *Runner) disconnect() {
 }
 
 // wait takes the oldest event of that name not yet waited for or collected
-func (r *Runner) wait(event string, timeout time.Duration) (any, error) {
+func (r *httpRunner) wait(event string, timeout time.Duration) (any, error) {
 	deadline := time.After(timeout)
 	for {
 		r.mu.Lock()
@@ -239,11 +236,11 @@ func (r *Runner) wait(event string, timeout time.Duration) (any, error) {
 }
 
 // body is the step's B, rendered and parsed as the one JSON argument it sends
-func (r *Runner) body(step *Step, ctx map[string]any) ([]any, error) {
+func (r *httpRunner) body(step *HTTPStep, ctx map[string]any) ([]any, error) {
 	if step.Body == nil {
 		return nil, nil
 	}
-	rendered, err := script.Render(*step.Body, ctx)
+	rendered, err := Render(*step.Body, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -277,7 +274,7 @@ func value(args []json.RawMessage) any {
 }
 
 // listen starts the queue of events, if it has not
-func (r *Runner) listen() {
+func (r *httpRunner) listen() {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if r.received == nil {
@@ -287,8 +284,8 @@ func (r *Runner) listen() {
 
 // stream opens the URL's server-sent events with the step's headers, and queues each event by its name, its data
 // as JSON when it is, until Close. It fails unless the stream is open within the timeout.
-func (r *Runner) stream(ctx map[string]any, step *Step, timeout time.Duration) error {
-	request, err := (&jsonapi.Request{Name: step.Name, Method: http.MethodGet, URL: step.Target, Headers: step.Headers}).Render(ctx)
+func (r *httpRunner) stream(ctx map[string]any, step *HTTPStep, timeout time.Duration) error {
+	request, err := (&Request{Name: step.Name, Method: http.MethodGet, URL: step.Target, Headers: step.Headers}).Render(ctx)
 	if err != nil {
 		return err
 	}

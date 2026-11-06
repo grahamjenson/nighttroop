@@ -1,4 +1,4 @@
-package jsonapi
+package flow
 
 import (
 	"bytes"
@@ -9,11 +9,9 @@ import (
 	"strconv"
 	"strings"
 	"testing"
-
-	"nighttroop.t1d.nz/tests/dsl/script"
 )
 
-type Assert interface {
+type HTTPAssert interface {
 	Execute(t *testing.T, name string, statusCode int, output any, headers http.Header, ctx map[string]any) error
 }
 
@@ -21,13 +19,13 @@ type Assert interface {
 // Status
 ///////
 
-type AssertStatus struct {
+type HTTPAssertStatus struct {
 	Path string
 	Line int
 	Code int
 }
 
-func (a AssertStatus) Execute(t *testing.T, name string, statusCode int, output any, headers http.Header, ctx map[string]any) error {
+func (a HTTPAssertStatus) Execute(t *testing.T, name string, statusCode int, output any, headers http.Header, ctx map[string]any) error {
 	outputRaw, _ := MarshalJsonWithoutEscapeHTML(output)
 
 	message := fmt.Sprintf("request %s expected status %d but got %d with body %v", name, a.Code, statusCode, string(outputRaw))
@@ -182,16 +180,16 @@ func normalizeStringSearch(expected, localResult any, headers map[string]any, ct
 	if s, ok := expected.(string); ok {
 		if strings.HasPrefix(s, ".") {
 			// look up in the context
-			expected = script.Dig(ctx, s[1:])
+			expected = Dig(ctx, s[1:])
 		} else if strings.HasPrefix(s, "@") {
 			if s == "@" {
 				return localResult
 			}
 			// look up in localResult
-			expected = script.Dig(localResult, s[1:])
+			expected = Dig(localResult, s[1:])
 		} else if strings.HasPrefix(s, "#") {
 			// look up in headers
-			expected = script.Dig(headers, s[1:])
+			expected = Dig(headers, s[1:])
 		}
 	}
 

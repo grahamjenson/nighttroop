@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/server"
 	"nighttroop.t1d.nz/tests/dsl/flow"
-	"nighttroop.t1d.nz/tests/dsl/jsonapi"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -19,7 +18,7 @@ func TestNewSiteScript(t *testing.T) {
 	config, controlDB, _ := testutils.NewControlDBWithSite(t)
 	ts := httptest.NewServer(server.GetMainHandler(controlDB, config))
 	t.Cleanup(ts.Close)
-	run(t, os.DirFS("../../scripts/staging"), "new_site.flow", jsonapi.Client(ts), settings{scheme: "http", host: "localhost"})
+	run(t, os.DirFS("../../scripts/staging"), "new_site.flow", flow.Client(ts), settings{scheme: "http", host: "localhost"})
 }
 
 // Every staging script parses, and none needs a test server's background jobs

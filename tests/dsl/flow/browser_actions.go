@@ -1,4 +1,4 @@
-package browser
+package flow
 
 import (
 	"fmt"
@@ -6,8 +6,6 @@ import (
 	"strings"
 	"testing"
 	"time"
-
-	"nighttroop.t1d.nz/tests/dsl/script"
 
 	"github.com/mxschmitt/playwright-go"
 )
@@ -29,7 +27,7 @@ type Action interface {
 type Goto struct {
 	URL string
 
-	Asserts []Assert
+	Asserts []BrowserAssert
 
 	TestPath string
 	TestLine int
@@ -50,13 +48,13 @@ func (r *Goto) PrintAction() {
 	fmt.Println(r.ToFlatString())
 }
 
-func (r *Goto) AddAssert(assert Assert) {
+func (r *Goto) AddAssert(assert BrowserAssert) {
 	r.Asserts = append(r.Asserts, assert)
 }
 
 func (r *Goto) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
 
-	url, err := script.Render(r.URL, ctx)
+	url, err := Render(r.URL, ctx)
 	if err != nil {
 		t.Fatalf(
 			"\n\n GOTO FAILED \n %s: %v \n\n",
@@ -122,11 +120,11 @@ func (r *Post) PrintAction() {
 }
 
 func (r *Post) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
-	url, err := script.Render(r.URL, ctx)
+	url, err := Render(r.URL, ctx)
 	if err != nil {
 		t.Fatalf("%s: %v", r.ToErrorLine("Error Rendering URL"), err)
 	}
-	body, err := script.Render(r.Body, ctx)
+	body, err := Render(r.Body, ctx)
 	if err != nil {
 		t.Fatalf("%s: %v", r.ToErrorLine("Error Rendering Body"), err)
 	}
@@ -161,7 +159,7 @@ type Click struct {
 	// Scroll turns the mouse wheel by this many pixels, down or up when negative, as a user scrolls the page, for SCROLL
 	Scroll *int
 
-	Asserts []Assert
+	Asserts []BrowserAssert
 
 	TestPath string
 	TestLine int
@@ -194,7 +192,7 @@ func (r *Click) PrintAction() {
 	fmt.Println(r.ToFlatString())
 }
 
-func (r *Click) AddAssert(assert Assert) {
+func (r *Click) AddAssert(assert BrowserAssert) {
 	r.Asserts = append(r.Asserts, assert)
 }
 
@@ -214,7 +212,7 @@ func (r *Click) NeedsResponseOrPage() (bool, bool) {
 
 	for _, a := range r.Asserts {
 		// if there is a AssertResponse assert, we need a response
-		_, ok := a.(*AssertStatus)
+		_, ok := a.(*BrowserAssertStatus)
 		if ok {
 			return true, false
 		}
@@ -274,7 +272,7 @@ func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 	case r.Text != "":
 		// TYPE's text is filled in like INPUT's value, as a TOTP code made from a site's secret is
 		var text string
-		if text, err = script.Render(r.Text, ctx); err == nil {
+		if text, err = Render(r.Text, ctx); err == nil {
 			err = locator.PressSequentially(text, playwright.LocatorPressSequentiallyOptions{Timeout: playwright.Float(actionWait)})
 		}
 	case r.Corner:
@@ -298,7 +296,7 @@ func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 	needsResponse, needsPage, needsURL := false, false, false
 	for _, a := range r.Asserts {
 		switch a.(type) {
-		case *AssertStatus:
+		case *BrowserAssertStatus:
 			needsResponse = true
 		case *AssertNewPage:
 			needsPage = true
@@ -417,7 +415,7 @@ func (r *Input) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 	}
 
 	// The value can be one saved earlier, e.g. INPUT #key {{ .backup_key }}
-	value, err := script.Render(r.Value, ctx)
+	value, err := Render(r.Value, ctx)
 	if err != nil {
 		t.Fatalf("\n\n %s: %v \n\n", r.ToErrorLine("Error Rendering value"), err)
 	}
@@ -510,7 +508,7 @@ func (r *SetCookie) PrintAction() {
 }
 
 func (r *SetCookie) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
-	value, err := script.Render(r.Value, ctx)
+	value, err := Render(r.Value, ctx)
 	if err != nil {
 		t.Fatalf("\n\n %s: %v \n\n", r.ToErrorLine("Error Rendering value"), err)
 	}
@@ -557,13 +555,13 @@ func (r *ClearCookie) Execute(t *testing.T, page playwright.Page, ctx map[string
 
 // RunBackgroundJobs runs every background and cron job once. The test runner does the work, as it owns the jobs.
 type RunBackgroundJobs struct {
-	Asserts []Assert
+	Asserts []BrowserAssert
 
 	TestPath string
 	TestLine int
 }
 
-func (r *RunBackgroundJobs) AddAssert(assert Assert) {
+func (r *RunBackgroundJobs) AddAssert(assert BrowserAssert) {
 	r.Asserts = append(r.Asserts, assert)
 }
 

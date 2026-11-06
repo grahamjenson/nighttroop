@@ -1,4 +1,4 @@
-package browser
+package flow
 
 import (
 	"fmt"
@@ -8,8 +8,6 @@ import (
 	"strings"
 	"testing"
 	"time"
-
-	"nighttroop.t1d.nz/tests/dsl/script"
 
 	"github.com/mxschmitt/playwright-go"
 )
@@ -51,7 +49,7 @@ func ScreenshotPage(page playwright.Page, foldername string, testPath string, na
 // ASSERTS
 // //////////////////////
 
-type Assert interface {
+type BrowserAssert interface {
 	Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error
 }
 
@@ -82,7 +80,7 @@ type AssertTextVisible struct {
 }
 
 func (r *AssertTextVisible) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
-	text, err := script.Render(r.Text, ctx)
+	text, err := Render(r.Text, ctx)
 	if err != nil {
 		t.Fatalf("%s: %v", r.ToErrorLine(), err)
 	}
@@ -301,14 +299,14 @@ func (r *AssertTextEquals) ToErrorLine() string {
 // ASSERT STATUS
 // ////
 
-type AssertStatus struct {
+type BrowserAssertStatus struct {
 	Code int
 
 	TestPath string
 	TestLine int
 }
 
-func (r *AssertStatus) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
+func (r *BrowserAssertStatus) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
 
 	if len(resps) == 0 {
 		t.Fatalf("\n\n%s\n assertStatus failed: response is nil\n\n", r.ToErrorLine())
@@ -331,7 +329,7 @@ func (r *AssertStatus) Execute(t *testing.T, ctx map[string]any, page playwright
 	return nil
 }
 
-func (r *AssertStatus) ToErrorLine() string {
+func (r *BrowserAssertStatus) ToErrorLine() string {
 	return fmt.Sprintf("%s:%d: expected status code %d", r.TestPath, r.TestLine, r.Code)
 }
 
