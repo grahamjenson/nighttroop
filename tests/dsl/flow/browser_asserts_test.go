@@ -114,7 +114,13 @@ func TestNotVisibleWaitsForEveryMatchToGo(t *testing.T) {
 	page, err := browser.NewPage()
 	require.NoError(t, err)
 	require.NoError(t, page.SetContent(swappedRowsPage))
-	started := time.Now()
+	// Both rows are shown before the swap, so the assert finds several, as a strict WaitFor refused at once
+	rows, err := page.Locator("#events >> text=Site created").Count()
+	require.NoError(t, err)
+	require.Equal(t, 2, rows)
 	require.NoError(t, (&AssertNotVisible{Locator: "#events >> text=Site created"}).Execute(t, map[string]any{}, page, nil))
-	require.GreaterOrEqual(t, time.Since(started), 400*time.Millisecond, "it waited for the swap")
+	// It passed by waiting for the swap, not by finding nothing before it
+	swapped, err := page.Locator("#events >> text=Sync turned off").IsVisible()
+	require.NoError(t, err)
+	require.True(t, swapped)
 }
