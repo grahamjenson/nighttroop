@@ -130,9 +130,9 @@ them ("bolus 1.0 2026-11-"). A create dedups by its identifier, so Nighttroop ke
 as the first 36 hex characters of its SHA-256, rather than truncating it, which would keep only the first of each.
 `tests/api/nightscout/loop/treatments.http` posts two such temp basals and checks both are kept.
 
-The same dose is posted again with the same `syncIdentifier` when it ends, so a dedup that keeps the first upload,
-by identifier or by date, keeps its planned duration rather than what was delivered. Replacing the stored dose on a
-repeat upload, as Nightscout does, would fix both.
+The same dose is posted again with the same `syncIdentifier` and date when it ends, and, as in Nightscout, replaces
+the stored dose, keeping its `_id`, so a dose ended early keeps what was delivered rather than what was planned. One
+sent again as it was stored changes nothing.
 
 ## Device status: `POST /api/v1/devicestatus`
 
@@ -217,7 +217,7 @@ NightscoutKit has reads that Loop does not call, but other apps built on it may:
 | `DELETE /api/v1/treatments/<_id>` | Works |
 | `POST` a `Temporary Override` | Works since #515 (was a 400, unknown event type); kept as a temp target, indefinite as a week, given back with `durationType` `indefinite` |
 | An override's UUID `_id`, posted again when it changes, deleted by it | Works since #515: a v1 POST with an `_id` replaces the one with it, or is created with it |
-| A dose posted again when it ends, with its final duration or amount | Not supported: the first upload is kept. TODO P1 |
+| A dose posted again when it ends, with its final duration or amount | Fixed in this PR: it replaces the first upload, as in Nightscout; test in `loop/treatments.http` |
 | Omnipod `syncIdentifier`s once creates dedup by identifier | Works since #515: an identifier over 36 characters is kept as a hash of it, so they no longer share their first 36 characters; test in `loop/treatments.http` |
 | `POST /api/v1/devicestatus`, `loop` object | Works |
 | Device status `override`, uploader battery, pump `clock`, `manufacturer`, `model` | Works since #516 |

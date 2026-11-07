@@ -178,7 +178,7 @@ SHA1, as AAPS does.
 | Entries: create, duplicate, search by date, history with `ETag`, patch, delete, deletion in history | works | `sync_v3.http` |
 | Entries and treatments in an identity in mmol/L | works: the Nightscout API always gives them in mg/dL | `units/*.http` |
 | First loads over 500 documents | works: a search sorted by date is the oldest first | `first_load_paging.http` |
-| History over 500 documents, and profile history's newest | not supported: history is the newest date first; TODO P1 | — |
+| History over 500 documents, and profile history's newest | works: history is the oldest `srvModified` first | `history_paging.http` |
 | Treatments: bolus and SMB `type`, carbs, temp target, profile switch, BG check, delete in history | works | `sync_v3.http`, `flow_v3.http` |
 | Temp basal at, over or under 100% (any `percent` from -100), its update | works: `percent`, the change from the basal, is kept as a multiplier of it and returned as sent | `sync_v3.http`, `treatments/temp_basal_percent.http` |
 | Temp basal `type`, effective profile switch `original*`, running mode `mode` | not supported: dropped, so followers misread them; TODO P2 | `sync_v3.http` |
@@ -187,7 +187,7 @@ SHA1, as AAPS does.
 | Device status `pump.clock`, `pump.status`, `pump.extended` | works: the pump object is read back as sent | `sync_v3.http` |
 | Food: create | works | `sync_v3.http` |
 | Food: read | works: each food has `type` `food`; its `portion`, `unit` and `gi` are not kept yet, TODO P4 | `sync_v3.http` |
-| Profile store: create, newest, history | works (one store) | `sync_v3.http`, `flow_v3.http` |
+| Profile store: create, newest, history | works | `sync_v3.http`, `flow_v3.http`, `history_paging.http` |
 | `/storage` subscribe, `create`, `update`, `delete` | works | `aaps_storage.sio`, `storage.sio` |
 | `/alarm` subscribe, alarms, `clear_alarm`, `ack` | works | `alarm.sio`, `aaps_alarm.sio` |
 | `/alarm` `announcement` | fixed in #511 (was never sent) | `aaps_alarm.sio` |

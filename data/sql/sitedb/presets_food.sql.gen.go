@@ -221,6 +221,41 @@ func (q *Queries) FoodPresetAscendingIDs(ctx context.Context, arg FoodPresetAsce
 	return items, nil
 }
 
+const foodPresetHistoryIDs = `-- name: FoodPresetHistoryIDs :many
+SELECT id FROM food_presets WHERE updated_at >= ?1
+ORDER BY updated_at, created_at, id LIMIT CAST(?2 AS INTEGER)
+`
+
+type FoodPresetHistoryIDsParams struct {
+	Since int64
+	Limit int64
+}
+
+// The foods changed since Since, the oldest change first, then by date and id as History sorts them, from updated_at's index, for API v3
+// history
+func (q *Queries) FoodPresetHistoryIDs(ctx context.Context, arg FoodPresetHistoryIDsParams) ([]string, error) {
+	rows, err := q.query(ctx, q.foodPresetHistoryIDsStmt, foodPresetHistoryIDs, arg.Since, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getFoodPreset = `-- name: GetFoodPreset :one
 SELECT id, name, food_type, category, subcategory, absorption_time_minutes, pre_bolus, carbs, fat, protein, fibre, energy, portions, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM food_presets WHERE id = ?
 `

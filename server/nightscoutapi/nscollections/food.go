@@ -72,6 +72,10 @@ func (c FoodCollection) AscendingIDs(q *sitedb.Queries, ctx context.Context, que
 	return q.FoodPresetAscendingIDs(ctx, nsquery.FoodPresetAscending(query))
 }
 
+func (c FoodCollection) HistoryIDs(q *sitedb.Queries, ctx context.Context, since, limit int64) ([]string, error) {
+	return q.FoodPresetHistoryIDs(ctx, sitedb.FoodPresetHistoryIDsParams{Since: since, Limit: limit})
+}
+
 func (c FoodCollection) SearchModels(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]*sitedb.FoodPreset, error) {
 	if !query.HasFilters {
 		return q.AllFoodPresets(ctx, nsquery.FoodPresetAll(query))

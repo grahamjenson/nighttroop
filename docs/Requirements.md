@@ -210,7 +210,15 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 - The home page summarises the site: the latest glucose with how long ago it was, the loop's IOB and COB, every
   treatment, and each device's latest status.
-- A graph of glucose with carbs and insulin marked, over 6 hours to a week.
+- A graph of glucose with carbs and insulin marked, over 6 hours to a week, drawn on one grid as Carer draws it:
+  - The urgent range and the range shaded across it, with the low and high as dashed lines.
+  - The targets in force shaded over them.
+  - Readings as dots, coloured low, in range or high, joined by a thin line broken where readings are over 15
+    minutes apart.
+  - The basal in force along the bottom, its highest rate labelled on the right.
+  - Carbs as triangles pointing up above insulin as triangles pointing down, each labelled, the latest kept where
+    labels overlap; a loop's SMBs are smaller, fainter and not labelled.
+  - A legend of insulin, SMB, carbs and basal, and a tooltip of each reading and treatment.
 - Time in range, total daily dose, and the last sensor and site change for today, yesterday, last week and last
   month.
 - Readings are coloured and labelled low, in range or high by the alarm settings.
@@ -371,6 +379,9 @@ focus back to the row or button that opened it.
   token, so apps like AAPS only upload with a token that may write.
 - A v3 history includes deleted documents, with `isValid` false, so apps learn of deletions; a search leaves them
   out.
+- A v3 history is the documents with a `srvModified` at or after its time, the oldest first, then by date, as in
+  Nightscout, at most its `limit`, and its `ETag` is the newest `srvModified`, so an app paging from the `ETag`, as
+  AAPS does, gets every change, and the last profile store in a profile history is the newest changed.
 - A delete moves a document's `srvModified` and the v3 lastModified forward, so a history since an app's last sync
   has the documents deleted after it.
 - **Socket.IO** live updates and alarms over long polling or websockets.
@@ -420,6 +431,9 @@ focus back to the row or button that opened it.
 - A temp basal is always returned with its `rate` and `absolute`, both its U/hr, and its `percent` when it has one.
 - The summary's basal during a temp basal is its rate.
 - Duplicate uploads are ignored; values far outside real use are refused.
+- A treatment uploaded again with the date and type of one stored, or its identifier and date, replaces it, keeping its
+  `_id`, as Loop sends a temp basal or bolus again when it ends and Trio a temp target or override run; followers get
+  it as changed, and one sent again as it was stored changes nothing.
 - An entry uploaded without an `_id` with the date, type and device of one stored takes its new value, direction and
   raw values, as xDrip4iOS smooths readings, and followers get it as changed; one sent with the same values changes
   nothing, not even when it was last modified.
@@ -504,15 +518,19 @@ focus back to the row or button that opened it.
 - A start removes the staging folders a restore or archive killed part way left beside the DBs and backups, and nothing
   else there.
 - A site whose creation fails part way, such as its request being cancelled, leaves no site or identities behind.
-- A site's DB that cannot be opened at start, as when its migration fails and leaves it dirty, keeps its file and its
-  backup, so a fixed deploy opens it with its data.
+- A site's DB that cannot be opened at start, as when its migration keeps failing, keeps its file and its backup, so
+  a fixed deploy opens it with its data.
+- A DB (control, site, jobs, logs or live) a migration failed on is forced back to the version before that migration
+  when next opened, logged as a warning naming the DB and both versions, and migrated again; if the migration fails
+  again, the error names the DB, the migration and why it failed.
 - A live site whose DB file is missing on start, though its batch's folder is there, is restored from its batch's
   latest backup in S3, downloaded once per batch, and opened; either way it is a "Site DB missing" event the control
   admin sees, saying whether it was restored or why not (S3 not working, not in the backup, or the restore failed).
   A site restored that cannot be opened, as when its migration fails, stops the start, as a site that is there and
   cannot be opened does, so `update.sh` rolls back a release that cannot open it rather than keeping it without the site.
 - A site whose DB file is missing and not restored, such as one created after its batch was last backed up, is left
-  out, so the server still starts and the rest of its batch is still backed up.
+  out, so the server still starts, but `/health` is 503 `unavailable`, never saying which site, until a start opens
+  it, so `update.sh` rolls back a release that starts without it. Its batch is not uploaded without it.
 - Old records' raw JSON is cleared after `TRUNCATE_RECORDS_AFTER_DAYS`.
 - Reads and writes are rate limited per site, identity and IP, and live sessions per site are capped.
 - A Nightscout request that fails auth, or needs none, spends its IP's budget on the site

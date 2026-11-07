@@ -276,6 +276,8 @@ type Summary struct {
 	InsulinDoses         *[]InsulinDose         `json:"insulin_doses,omitempty"`
 	RangeHigh            *float64               `json:"range_high,omitempty"`
 	RangeLow             *float64               `json:"range_low,omitempty"`
+	RangeUrgentHigh      *float64               `json:"range_urgent_high,omitempty"`
+	RangeUrgentLow       *float64               `json:"range_urgent_low,omitempty"`
 	Since                *int64                 `json:"since,omitempty"`
 	Units                *Units                 `json:"units,omitempty"`
 	AdditionalProperties map[string]interface{} `json:"-"`
@@ -1058,6 +1060,22 @@ func (a *Summary) UnmarshalJSON(b []byte) error {
 		delete(object, "range_low")
 	}
 
+	if raw, found := object["range_urgent_high"]; found {
+		err = json.Unmarshal(raw, &a.RangeUrgentHigh)
+		if err != nil {
+			return fmt.Errorf("error reading 'range_urgent_high': %w", err)
+		}
+		delete(object, "range_urgent_high")
+	}
+
+	if raw, found := object["range_urgent_low"]; found {
+		err = json.Unmarshal(raw, &a.RangeUrgentLow)
+		if err != nil {
+			return fmt.Errorf("error reading 'range_urgent_low': %w", err)
+		}
+		delete(object, "range_urgent_low")
+	}
+
 	if raw, found := object["since"]; found {
 		err = json.Unmarshal(raw, &a.Since)
 		if err != nil {
@@ -1132,6 +1150,20 @@ func (a Summary) MarshalJSON() ([]byte, error) {
 		object["range_low"], err = json.Marshal(a.RangeLow)
 		if err != nil {
 			return nil, fmt.Errorf("error marshaling 'range_low': %w", err)
+		}
+	}
+
+	if a.RangeUrgentHigh != nil {
+		object["range_urgent_high"], err = json.Marshal(a.RangeUrgentHigh)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'range_urgent_high': %w", err)
+		}
+	}
+
+	if a.RangeUrgentLow != nil {
+		object["range_urgent_low"], err = json.Marshal(a.RangeUrgentLow)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'range_urgent_low': %w", err)
 		}
 	}
 

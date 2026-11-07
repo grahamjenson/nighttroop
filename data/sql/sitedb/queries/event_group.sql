@@ -118,6 +118,12 @@ WHERE occurred_at BETWEEN MAX(COALESCE(CAST(sqlc.narg('DateGTE') AS INTEGER), 0)
     AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
+-- name: EventGroupHistoryIDs :many
+-- The treatments changed since Since, deleted ones too, the oldest change first, then by date and id as History sorts them, from updated_at's index, for API v3
+-- history
+SELECT id FROM event_groups WHERE updated_at >= sqlc.arg('Since')
+ORDER BY updated_at, occurred_at, id LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
+
 -- name: SearchEventGroups :many
 SELECT
     -- It would be awesome if sqlc worked with embed null objects

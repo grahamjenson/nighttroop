@@ -23,6 +23,8 @@ type CollectionStore interface {
 	Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (nsutils.Document, bool, *nsutils.HTTPError)
 	Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (nsutils.Document, *nsutils.HTTPError)
 	Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Document, *nsutils.HTTPError)
+	// History is what changed since, deleted too, the oldest change first, as API v3 history
+	History(ctx context.Context, siteContext *httputils.SiteContext, since int64, query nsquery.Query) ([]nsutils.Document, *nsutils.HTTPError)
 	Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool, raw bool) (nsutils.Document, bool, *nsutils.HTTPError)
 	Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, raw bool) (nsutils.Document, *nsutils.HTTPError)
 	Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError
@@ -44,6 +46,8 @@ type CollectionDB[NS, DM any] interface {
 	SearchModels(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]*DM, error)
 	// AscendingIDs are the identifiers of the models in the query's dates, the oldest first, paged as it asks
 	AscendingIDs(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]string, error)
+	// HistoryIDs are the identifiers of at most limit models changed since, deleted too, the oldest change first
+	HistoryIDs(q *sitedb.Queries, ctx context.Context, since, limit int64) ([]string, error)
 	// Delete deletes a model, softly or, when permanent, for good
 	Delete(q *sitedb.Queries, ctx context.Context, identifier string, permanent bool) (sql.Result, error)
 }
@@ -198,7 +202,8 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 		slog.ErrorContext(ctx, "failed to check for duplicate in database", "error", err, "collection", m.Name())
 		return nil, false, nsutils.ErrInternal
 	}
-	if duplicateDBModel != nil && identifier == nil {
+	// One naming its identifier repeats its duplicate only with the same date, as Loop sends a dose again when it ends
+	if duplicateDBModel != nil && (identifier == nil || (nsModel.GetDate() != nil && *nsModel.GetDate() == (*duplicateDBModel).GetOccurredAt())) {
 		return c.repeated(ctx, siteContext, tx, q, nsModel, duplicateDBModel, raw)
 	}
 	if duplicateDBModel != nil {
@@ -226,8 +231,7 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 	return c.document(dbModel, siteContext, raw), false, nil
 }
 
-// repeated is the duplicate a create without an identifier repeats, given the create's values when the collection
-// is a CollectionRefresher
+// repeated is the duplicate a create repeats, given the create's values when the collection is a CollectionRefresher
 func (c Collection[NS, DM]) repeated(ctx context.Context, siteContext *httputils.SiteContext, tx *sql.Tx, q *sitedb.Queries, nsModel NS, duplicate *DM, raw bool) (nsutils.Document, bool, *nsutils.HTTPError) {
 	refresher, ok := any(c.db).(CollectionRefresher[NS, DM])
 	if !ok {
@@ -298,11 +302,44 @@ func (c Collection[NS, DM]) Search(ctx context.Context, siteContext *httputils.S
 		slog.ErrorContext(ctx, "failed to search the database", "error", err, "collection", c.db.Name())
 		return nil, nsutils.ErrInternal
 	}
+	return c.documents(models, siteContext, query.Raw), nil
+}
+
+// History finds what changed in updated_at's index, then reads each by its primary key, so a page starts from since
+// however old what changed is. A query with filters of its own searches for what changed with them instead, which
+// reads through the dates searched.
+func (c Collection[NS, DM]) History(ctx context.Context, siteContext *httputils.SiteContext, since int64, query nsquery.Query) ([]nsutils.Document, *nsutils.HTTPError) {
+	q := siteContext.SiteDB.Queries()
+	ids, err := c.db.HistoryIDs(q, ctx, since, query.Limit)
+	models := make([]*DM, 0, len(ids))
+	if err == nil && query.HasFilters && len(ids) > 0 {
+		idIn, _ := json.Marshal(ids)
+		query.IDIn, query.Skip, query.IncludeDeleted = new(string(idIn)), 0, true
+		models, err = c.db.SearchModels(q, ctx, query)
+	}
+	if err == nil && !query.HasFilters {
+		models, err = c.byKey(q, ctx, ids, true)
+	}
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to read the history", "error", err, "collection", c.db.Name())
+		return nil, nsutils.ErrInternal
+	}
+	// Nightscout sorts history by srvModified, then date; then the identifier, as its HistoryIDs query does, so a page
+	// a limit cuts off among changes made in the same millisecond is the first of them in this order
+	slices.SortStableFunc(models, func(a, b *DM) int {
+		return cmp.Or(cmp.Compare((*a).GetUpdatedAt(), (*b).GetUpdatedAt()), cmp.Compare((*a).GetOccurredAt(), (*b).GetOccurredAt()),
+			cmp.Compare((*a).GetID(), (*b).GetID()))
+	})
+	return c.documents(models, siteContext, query.Raw), nil
+}
+
+// documents are the database models as this collection's documents
+func (c Collection[NS, DM]) documents(models []*DM, siteContext *httputils.SiteContext, raw bool) []nsutils.Document {
 	docs := make([]nsutils.Document, len(models))
 	for i, model := range models {
-		docs[i] = c.document(model, siteContext, query.Raw)
+		docs[i] = c.document(model, siteContext, raw)
 	}
-	return docs, nil
+	return docs
 }
 
 // ascending is what a search sorted by date finds, the oldest first, as AAPS pages forward by date. The identifiers in
@@ -321,10 +358,15 @@ func (c Collection[NS, DM]) ascending(q *sitedb.Queries, ctx context.Context, qu
 		slices.SortStableFunc(models, func(a, b *DM) int { return cmp.Compare((*a).GetOccurredAt(), (*b).GetOccurredAt()) })
 		return models, err
 	}
+	return c.byKey(q, ctx, ids, query.IncludeDeleted)
+}
+
+// byKey are the models with identifiers ids, in their order, each read by its primary key. One deleted for good since
+// its identifier was read is left out.
+func (c Collection[NS, DM]) byKey(q *sitedb.Queries, ctx context.Context, ids []string, includeDeleted bool) ([]*DM, error) {
 	models := make([]*DM, 0, len(ids))
 	for _, id := range ids {
-		// One deleted for good since its identifier was read is left out
-		model, err := c.db.GetModel(q, ctx, id, query.IncludeDeleted)
+		model, err := c.db.GetModel(q, ctx, id, includeDeleted)
 		if err == sql.ErrNoRows || (err == nil && model == nil) {
 			continue
 		}

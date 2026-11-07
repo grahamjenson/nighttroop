@@ -61,14 +61,9 @@
 1. P4: Keep which batches were uploaded, and with which sites, across restarts, as the first backup round after a
    restart uploads every batch again though their backups are current
 1. Migrations (from the audit of what happens when one fails):
-    1. P1: A live site whose DB file is missing, and not restored from its batch's backup, still lets the server come up
-       without it and `/health` say ok, so `update.sh` keeps the release rather than rolling it back. Its batch is no
-       longer uploaded without it, so S3's latest keeps the site
     1. P0: At the first production deploy, freeze the migrations: add `data/sql/MIGRATIONS_FROZEN`, so CI refuses a
        change to a migration on main, and add numbered migrations from then on (docs/migrations.md). Then add a test
        that the last release's DBs migrate to the current schema
-    1. P1: A migration that fails leaves its DB dirty, which every open refuses. Each runs in a transaction, so a dirty
-       version N had none of N applied: force it back to N-1 and try again, or report it plainly
     1. P1: A build cannot open a DB a newer one migrated, so rolling back needs `update.sh`'s copy of `./data`, losing
        what was written since. Keep migrations additive, and let a build open a DB one additive version newer
     1. P2: Document changing a table: SQLite rebuilds it, which needs `PRAGMA defer_foreign_keys = ON` in the
@@ -94,9 +89,6 @@
        the temp basal in NSStatus (`nsv2/assistants.go`)
     1. P4: The Nightscout API gives glucose only in mg/dL, so the `units_mmol_label` setting no longer changes what it
        writes. Drop it from the settings, the `sites` and `site_identities` columns and their queries
-    1. P1: Sort v3 history by `srvModified` oldest first, as Nightscout does. History is newest date first, so AAPS's
-       history paging (`limit=500`) skips all but the newest 500 when there are more, and its profile history takes
-       the oldest store changed rather than the newest. Needs history queries ordered by `updated_at`
     1. P4: A search sorted by date with a filter other than the date picks its page by the dates alone, then filters
        it, so a page can be short, and empty when none of it matches although later ones do. No app sends such a
        search yet; filtering in the oldest first query would need each search's filters there too
@@ -112,10 +104,6 @@
     1. P2: Keep Loop's `automatic` on boluses, so LoopFollow shows automatic boluses as SMBs and leaves them out of
        its bolus stats
 1. Loop ([docs/clients/loop.md](docs/clients/loop.md)):
-    1. P1: Replace a treatment uploaded again rather than ignore it, as Nightscout does: Loop posts a temp basal or
-       bolus again when it ends early, with the same date and `syncIdentifier`, and the first upload's duration and
-       amount are kept. Trio's ended temp targets and overrides need the same, as entries now have
-       (`CollectionRefresher`)
     1. P2: Loop remote commands: `POST /api/v2/notifications/loop`, sent to Loop as an Apple push to its profile's
        `loopSettings.deviceToken`, once push notifications can be sent
     1. P4: Keep a Loop device status's pump `pumpID`, `suspended` and `bolusing`, and its uploader `name` and
@@ -125,3 +113,5 @@
 
 1. P4: A live site left out at start, its DB missing and not restored, is only a `site_db_missing` event; mark it on
    the control sites page too
+1. P3: Deleting a live site whose DB is missing (`DeleteSites`) deletes it but answers `site not found`, and `/health`
+   stays unavailable (`SitesMissing`) until a restart; delete it cleanly and let `/health` be ok again

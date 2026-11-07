@@ -336,8 +336,10 @@ func TestRestoreMissingSites(t *testing.T) {
 	controlDB, err = db.NewControlDB(ctx, &cfg)
 	require.NoError(t, err)
 	t.Cleanup(func() { controlDB.Close() })
+	require.True(t, controlDB.SitesMissing())
 	require.NoError(t, controlDB.RestoreMissingSites(ctx, download))
 	require.Equal(t, 1, downloads, "the batch is downloaded once")
+	require.True(t, controlDB.SitesMissing(), "kingsite is not in the backup, so it is still missing")
 
 	site, _, err = controlDB.GetSite(ctx, "kostsite")
 	require.NoError(t, err, "the site is restored and open")
@@ -381,6 +383,7 @@ func TestRestoreMissingSitesWithoutS3(t *testing.T) {
 	require.NoError(t, err)
 	t.Cleanup(func() { controlDB.Close() })
 	require.NoError(t, controlDB.RestoreMissingSites(ctx, s3utils.NewS3Client(&cfg).DownloadFilesFromS3))
+	require.True(t, controlDB.SitesMissing())
 
 	_, _, err = controlDB.GetSite(ctx, "kostsite")
 	require.ErrorContains(t, err, "not found in memory")
@@ -389,6 +392,32 @@ func TestRestoreMissingSitesWithoutS3(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, found, 1)
 	require.JSONEq(t, `{"restored":false,"reason":"s3_not_working"}`, *found[0].Attributes)
+}
+
+// A server whose missing sites are all restored from their batch's backup has none missing, so its health check is ok
+func TestRestoreAllMissingSites(t *testing.T) {
+	cfg := *testutils.GetTestServerConfig()
+	cfg.Mode, cfg.DataDir, cfg.Status.S3Working = consts.Development, t.TempDir(), true
+	ctx := t.Context()
+	controlDB, err := db.NewControlDB(ctx, &cfg)
+	require.NoError(t, err)
+	_, err = controlDB.CreateSiteWithID(ctx, "kostsite")
+	require.NoError(t, err)
+	require.False(t, controlDB.SitesMissing())
+	require.NoError(t, controlDB.Close())
+
+	backup := filepath.Join(t.TempDir(), "kostsite.sqlite")
+	require.NoError(t, os.Rename(sitedb.GetPath("kostsite", &cfg), backup))
+	download := func(_ context.Context, _ string, outpath string) (int64, bool, error) {
+		return 0, true, os.Rename(backup, filepath.Join(outpath, "kostsite.sqlite"))
+	}
+
+	controlDB, err = db.NewControlDB(ctx, &cfg)
+	require.NoError(t, err)
+	t.Cleanup(func() { controlDB.Close() })
+	require.True(t, controlDB.SitesMissing())
+	require.NoError(t, controlDB.RestoreMissingSites(ctx, download))
+	require.False(t, controlDB.SitesMissing())
 }
 
 // A missing site restored from its batch's backup that cannot be opened, as when its migration fails, stops the start,
@@ -403,7 +432,8 @@ func TestRestoredSiteThatCannotOpenStopsTheStart(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, controlDB.Close())
 
-	// Its backup is one a failed migration left dirty
+	// Its backup is dirty at a migration it already has, so migrating it again fails, as a migration that keeps failing
+	// does
 	backup := filepath.Join(t.TempDir(), "kostsite.sqlite")
 	require.NoError(t, os.Rename(sitedb.GetPath("kostsite", &cfg), backup))
 	raw, err := sql.Open("sqlite", backup)

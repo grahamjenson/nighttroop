@@ -12,8 +12,8 @@ import (
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
-// A site's DB that cannot be opened at start, as when a migration of it failed and left it dirty, is kept, so once it
-// is fixed the next start opens it with its data
+// A site's DB that cannot be opened at start, as when a migration of it keeps failing, is kept, so once it is fixed the
+// next start opens it with its data
 func TestSiteThatCannotOpenIsKept(t *testing.T) {
 	cfg := *testutils.GetTestServerConfig()
 	cfg.Mode, cfg.DataDir = consts.Development, t.TempDir()
@@ -33,10 +33,11 @@ func TestSiteThatCannotOpenIsKept(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	// What a migration that failed part way leaves
+	// Dirty at a migration it already has, so forced back and migrated again, the migration fails, as one that keeps
+	// failing does
 	setDirty(true)
 	_, err = db.NewControlDB(t.Context(), &cfg)
-	require.ErrorContains(t, err, "Dirty database version")
+	require.ErrorContains(t, err, "sitedb migration 1 failed: SQL logic error: table glucose_readings already exists")
 	require.True(t, utils.FileExists(path), "the site's DB is kept")
 	require.True(t, utils.FileExists(backupPath), "and its backup")
 

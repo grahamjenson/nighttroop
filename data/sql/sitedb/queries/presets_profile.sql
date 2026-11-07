@@ -105,6 +105,12 @@ WHERE occurred_at BETWEEN MAX(COALESCE(CAST(sqlc.narg('DateGTE') AS INTEGER), 0)
     AND MIN(COALESCE(CAST(sqlc.narg('DateLTE') AS INTEGER), 253402300799999), COALESCE(CAST(sqlc.narg('DateLT') AS INTEGER) - 1, 253402300799999), COALESCE(sqlc.narg('DateEQ'), 253402300799999))
 GROUP BY profile_store_id ORDER BY MIN(occurred_at) LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
+-- name: ProfileStoreHistoryIDs :many
+-- The stores changed since Since, the oldest change first, then by date and id as History sorts them, from updated_at's index, for API v3
+-- history
+SELECT profile_store_id FROM profile_presets WHERE updated_at >= sqlc.arg('Since')
+GROUP BY profile_store_id ORDER BY MAX(updated_at), MIN(occurred_at), profile_store_id LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
+
 -- name: SearchProfileStores :many
 WITH distinct_profile_store_ids AS (
     SELECT DISTINCT profile_store_id FROM profile_presets

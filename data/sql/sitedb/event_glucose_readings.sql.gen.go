@@ -378,6 +378,41 @@ func (q *Queries) GlucoseReadingAscendingIDs(ctx context.Context, arg GlucoseRea
 	return items, nil
 }
 
+const glucoseReadingHistoryIDs = `-- name: GlucoseReadingHistoryIDs :many
+SELECT id FROM glucose_readings WHERE updated_at >= ?1
+ORDER BY updated_at, occurred_at, id LIMIT CAST(?2 AS INTEGER)
+`
+
+type GlucoseReadingHistoryIDsParams struct {
+	Since int64
+	Limit int64
+}
+
+// The readings changed since Since, deleted ones too, the oldest change first, then by date and id as History sorts them, from updated_at's index, for API v3
+// history
+func (q *Queries) GlucoseReadingHistoryIDs(ctx context.Context, arg GlucoseReadingHistoryIDsParams) ([]string, error) {
+	rows, err := q.query(ctx, q.glucoseReadingHistoryIDsStmt, glucoseReadingHistoryIDs, arg.Since, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const hardDeleteGlucoseReading = `-- name: HardDeleteGlucoseReading :execresult
 DELETE FROM glucose_readings WHERE id = ?
 `

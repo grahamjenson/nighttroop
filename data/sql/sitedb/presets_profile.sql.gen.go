@@ -453,6 +453,41 @@ func (q *Queries) ProfileStoreAscendingIDs(ctx context.Context, arg ProfileStore
 	return items, nil
 }
 
+const profileStoreHistoryIDs = `-- name: ProfileStoreHistoryIDs :many
+SELECT profile_store_id FROM profile_presets WHERE updated_at >= ?1
+GROUP BY profile_store_id ORDER BY MAX(updated_at), MIN(occurred_at), profile_store_id LIMIT CAST(?2 AS INTEGER)
+`
+
+type ProfileStoreHistoryIDsParams struct {
+	Since int64
+	Limit int64
+}
+
+// The stores changed since Since, the oldest change first, then by date and id as History sorts them, from updated_at's index, for API v3
+// history
+func (q *Queries) ProfileStoreHistoryIDs(ctx context.Context, arg ProfileStoreHistoryIDsParams) ([]string, error) {
+	rows, err := q.query(ctx, q.profileStoreHistoryIDsStmt, profileStoreHistoryIDs, arg.Since, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var profile_store_id string
+		if err := rows.Scan(&profile_store_id); err != nil {
+			return nil, err
+		}
+		items = append(items, profile_store_id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const searchProfileStores = `-- name: SearchProfileStores :many
 WITH distinct_profile_store_ids AS (
     SELECT DISTINCT profile_store_id FROM profile_presets
