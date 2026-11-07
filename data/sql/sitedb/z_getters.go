@@ -1306,6 +1306,46 @@ func (m *EventGroup) SetUuid(v *string) {
 	m.Uuid = v
 }
 
+// GetMode returns the Mode value.
+func (m EventGroup) GetMode() *string {
+	return m.Mode
+}
+
+// SetMode sets the Mode value and returns the updated EventGroup.
+func (m *EventGroup) SetMode(v *string) {
+	m.Mode = v
+}
+
+// GetAutoForced returns the AutoForced value.
+func (m EventGroup) GetAutoForced() *bool {
+	return m.AutoForced
+}
+
+// SetAutoForced sets the AutoForced value and returns the updated EventGroup.
+func (m *EventGroup) SetAutoForced(v *bool) {
+	m.AutoForced = v
+}
+
+// GetReasons returns the Reasons value.
+func (m EventGroup) GetReasons() *string {
+	return m.Reasons
+}
+
+// SetReasons sets the Reasons value and returns the updated EventGroup.
+func (m *EventGroup) SetReasons(v *string) {
+	m.Reasons = v
+}
+
+// GetOriginalDurationMs returns the OriginalDurationMs value.
+func (m EventGroup) GetOriginalDurationMs() *int64 {
+	return m.OriginalDurationMs
+}
+
+// SetOriginalDurationMs sets the OriginalDurationMs value and returns the updated EventGroup.
+func (m *EventGroup) SetOriginalDurationMs(v *int64) {
+	m.OriginalDurationMs = v
+}
+
 // GetNotes returns the Notes value.
 func (m EventGroup) GetNotes() *string {
 	return m.Notes
@@ -9176,6 +9216,46 @@ func (m *CreateEventGroupParams) SetUuid(v *string) {
 	m.Uuid = v
 }
 
+// GetMode returns the Mode value.
+func (m CreateEventGroupParams) GetMode() *string {
+	return m.Mode
+}
+
+// SetMode sets the Mode value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetMode(v *string) {
+	m.Mode = v
+}
+
+// GetAutoForced returns the AutoForced value.
+func (m CreateEventGroupParams) GetAutoForced() *bool {
+	return m.AutoForced
+}
+
+// SetAutoForced sets the AutoForced value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetAutoForced(v *bool) {
+	m.AutoForced = v
+}
+
+// GetReasons returns the Reasons value.
+func (m CreateEventGroupParams) GetReasons() *string {
+	return m.Reasons
+}
+
+// SetReasons sets the Reasons value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetReasons(v *string) {
+	m.Reasons = v
+}
+
+// GetOriginalDurationMs returns the OriginalDurationMs value.
+func (m CreateEventGroupParams) GetOriginalDurationMs() *int64 {
+	return m.OriginalDurationMs
+}
+
+// SetOriginalDurationMs sets the OriginalDurationMs value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetOriginalDurationMs(v *int64) {
+	m.OriginalDurationMs = v
+}
+
 // GetOccurredAt returns the OccurredAt value.
 func (m CreateEventGroupParams) GetOccurredAt() int64 {
 	return m.OccurredAt
@@ -10284,6 +10364,46 @@ func (m UpdateEventGroupParams) GetUuid() *string {
 // SetUuid sets the Uuid value and returns the updated UpdateEventGroupParams.
 func (m *UpdateEventGroupParams) SetUuid(v *string) {
 	m.Uuid = v
+}
+
+// GetMode returns the Mode value.
+func (m UpdateEventGroupParams) GetMode() *string {
+	return m.Mode
+}
+
+// SetMode sets the Mode value and returns the updated UpdateEventGroupParams.
+func (m *UpdateEventGroupParams) SetMode(v *string) {
+	m.Mode = v
+}
+
+// GetAutoForced returns the AutoForced value.
+func (m UpdateEventGroupParams) GetAutoForced() *bool {
+	return m.AutoForced
+}
+
+// SetAutoForced sets the AutoForced value and returns the updated UpdateEventGroupParams.
+func (m *UpdateEventGroupParams) SetAutoForced(v *bool) {
+	m.AutoForced = v
+}
+
+// GetReasons returns the Reasons value.
+func (m UpdateEventGroupParams) GetReasons() *string {
+	return m.Reasons
+}
+
+// SetReasons sets the Reasons value and returns the updated UpdateEventGroupParams.
+func (m *UpdateEventGroupParams) SetReasons(v *string) {
+	m.Reasons = v
+}
+
+// GetOriginalDurationMs returns the OriginalDurationMs value.
+func (m UpdateEventGroupParams) GetOriginalDurationMs() *int64 {
+	return m.OriginalDurationMs
+}
+
+// SetOriginalDurationMs sets the OriginalDurationMs value and returns the updated UpdateEventGroupParams.
+func (m *UpdateEventGroupParams) SetOriginalDurationMs(v *int64) {
+	m.OriginalDurationMs = v
 }
 
 // GetRawJsonData returns the RawJsonData value.

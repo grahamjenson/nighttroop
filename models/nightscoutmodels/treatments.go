@@ -62,6 +62,12 @@ type Treatment struct {
 	Percent             *types.FlexibleFloat64 `json:"percentage,omitempty"`
 	Timeshift           *types.FlexibleInt64   `json:"timeshift,omitempty"`
 
+	// AAPS's running mode, e.g. DISCONNECTED_PUMP, whether the loop forced it, why, and how long it was to last in ms
+	Mode               *types.ShortString     `json:"mode,omitempty"`
+	AutoForced         *bool                  `json:"autoForced,omitempty"`
+	Reasons            *types.SanitizedString `json:"reasons,omitempty"`
+	OriginalDurationMs *types.FlexibleInt64   `json:"originalDuration,omitempty"`
+
 	Rate     *types.FlexibleFloat64 `json:"rate,omitempty"`
 	Absolute *types.FlexibleFloat64 `json:"absolute,omitempty"`
 	// TempBasalPercent is a temp basal's change from the basal in percent, as Nightscout has it, so -50 is half of it and
