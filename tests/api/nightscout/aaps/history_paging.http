@@ -8,12 +8,16 @@ INCLUDE steps/new_ns_site.steps
 // ENTRIES
 ////////
 
-// Made oldest date first, and the oldest changed again last, so srvModified's order is neither date's nor creation's
+// Made oldest date first, and the oldest changed again last, so srvModified's order is neither date's nor creation's.
+// Changes made in one millisecond are sorted by date, and a page from a srvModified has every change made then, so
+// each write waits a little to be made in a later millisecond than the last, as they would be
 NAME add_oldest_sgv
 POST http://{{ site }}/api/v3/entries
 H Authorization: Bearer {{ jwt }}
 B { "type": "sgv", "sgv": 100, "date": {{ itime 30 }}, "device": "Dexcom G7", "app": "AAPS" }
 ASSERT_STATUS 201
+
+SLEEP 5ms
 
 NAME add_middle_sgv
 POST http://{{ site }}/api/v3/entries
@@ -21,13 +25,14 @@ H Authorization: Bearer {{ jwt }}
 B { "type": "sgv", "sgv": 110, "date": {{ itime 20 }}, "device": "Dexcom G7", "app": "AAPS" }
 ASSERT_STATUS 201
 
+SLEEP 5ms
+
 NAME add_newest_sgv
 POST http://{{ site }}/api/v3/entries
 H Authorization: Bearer {{ jwt }}
 B { "type": "sgv", "sgv": 120, "date": {{ itime 10 }}, "device": "Dexcom G7", "app": "AAPS" }
 ASSERT_STATUS 201
 
-// Changes made in one millisecond are sorted by date, so the change waits to be a later one, as it would be
 SLEEP 5ms
 
 NAME change_oldest_sgv
@@ -77,11 +82,15 @@ H Authorization: Bearer {{ jwt }}
 B { "eventType": "Carb Correction", "carbs": 10, "date": {{ itime 30 }}, "app": "AAPS" }
 ASSERT_STATUS 201
 
+SLEEP 5ms
+
 NAME add_middle_carbs
 POST http://{{ site }}/api/v3/treatments
 H Authorization: Bearer {{ jwt }}
 B { "eventType": "Carb Correction", "carbs": 20, "date": {{ itime 20 }}, "app": "AAPS" }
 ASSERT_STATUS 201
+
+SLEEP 5ms
 
 NAME add_newest_carbs
 POST http://{{ site }}/api/v3/treatments
@@ -129,6 +138,8 @@ B {
     "app": "AAPS"
  }
 ASSERT_STATUS 201
+
+SLEEP 5ms
 
 NAME add_newer_profile_store
 POST http://{{ site }}/api/v3/profile
