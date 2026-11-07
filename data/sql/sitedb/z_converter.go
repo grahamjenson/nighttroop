@@ -182,37 +182,18 @@ func ComponentEventFromView(source ComponentEventsVw) ComponentEvent {
 	if source.EventType != nil {
 		sitedbComponentEvent.EventType = *source.EventType
 	}
-	if source.SensorCode != nil {
-		xstring := *source.SensorCode
-		sitedbComponentEvent.SensorCode = &xstring
-	}
-	if source.TransmitterID != nil {
-		xstring2 := *source.TransmitterID
-		sitedbComponentEvent.TransmitterID = &xstring2
-	}
-	if source.PumpID != nil {
-		xstring3 := *source.PumpID
-		sitedbComponentEvent.PumpID = &xstring3
-	}
-	if source.PumpSerial != nil {
-		xstring4 := *source.PumpSerial
-		sitedbComponentEvent.PumpSerial = &xstring4
-	}
-	if source.PumpType != nil {
-		xstring5 := *source.PumpType
-		sitedbComponentEvent.PumpType = &xstring5
-	}
+	sitedbComponentEvent.OtherAttributes = typesComponentEventOtherToTypesComponentEventOther(source.OtherAttributes)
 	if source.Notes != nil {
-		xstring6 := *source.Notes
-		sitedbComponentEvent.Notes = &xstring6
+		xstring := *source.Notes
+		sitedbComponentEvent.Notes = &xstring
 	}
 	if source.Reason != nil {
-		xstring7 := *source.Reason
-		sitedbComponentEvent.Reason = &xstring7
+		xstring2 := *source.Reason
+		sitedbComponentEvent.Reason = &xstring2
 	}
 	if source.RawJsonData != nil {
-		xstring8 := *source.RawJsonData
-		sitedbComponentEvent.RawJsonData = &xstring8
+		xstring3 := *source.RawJsonData
+		sitedbComponentEvent.RawJsonData = &xstring3
 	}
 	if source.DeletedAt != nil {
 		xint64 := *source.DeletedAt
@@ -236,16 +217,16 @@ func ComponentEventFromView(source ComponentEventsVw) ComponentEvent {
 		sitedbComponentEvent.UpdatedByIdentityID = &xint643
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring9 := *source.UpdatedByIdentityName
-		sitedbComponentEvent.UpdatedByIdentityName = &xstring9
+		xstring4 := *source.UpdatedByIdentityName
+		sitedbComponentEvent.UpdatedByIdentityName = &xstring4
 	}
 	if source.CreatedByAppName != nil {
-		xstring10 := *source.CreatedByAppName
-		sitedbComponentEvent.CreatedByAppName = &xstring10
+		xstring5 := *source.CreatedByAppName
+		sitedbComponentEvent.CreatedByAppName = &xstring5
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring11 := *source.CreatedByDeviceName
-		sitedbComponentEvent.CreatedByDeviceName = &xstring11
+		xstring6 := *source.CreatedByDeviceName
+		sitedbComponentEvent.CreatedByDeviceName = &xstring6
 	}
 	if source.CreatedByIdentityID != nil {
 		xint644 := *source.CreatedByIdentityID
@@ -260,33 +241,14 @@ func ComponentEventToCreate(source ComponentEvent) CreateComponentEventParams {
 	var sitedbCreateComponentEventParams CreateComponentEventParams
 	sitedbCreateComponentEventParams.ID = source.ID
 	sitedbCreateComponentEventParams.EventType = source.EventType
-	if source.SensorCode != nil {
-		xstring := *source.SensorCode
-		sitedbCreateComponentEventParams.SensorCode = &xstring
-	}
-	if source.TransmitterID != nil {
-		xstring2 := *source.TransmitterID
-		sitedbCreateComponentEventParams.TransmitterID = &xstring2
-	}
-	if source.PumpID != nil {
-		xstring3 := *source.PumpID
-		sitedbCreateComponentEventParams.PumpID = &xstring3
-	}
-	if source.PumpSerial != nil {
-		xstring4 := *source.PumpSerial
-		sitedbCreateComponentEventParams.PumpSerial = &xstring4
-	}
-	if source.PumpType != nil {
-		xstring5 := *source.PumpType
-		sitedbCreateComponentEventParams.PumpType = &xstring5
-	}
+	sitedbCreateComponentEventParams.OtherAttributes = typesComponentEventOtherToTypesComponentEventOther(source.OtherAttributes)
 	if source.Notes != nil {
-		xstring6 := *source.Notes
-		sitedbCreateComponentEventParams.Notes = &xstring6
+		xstring := *source.Notes
+		sitedbCreateComponentEventParams.Notes = &xstring
 	}
 	if source.Reason != nil {
-		xstring7 := *source.Reason
-		sitedbCreateComponentEventParams.Reason = &xstring7
+		xstring2 := *source.Reason
+		sitedbCreateComponentEventParams.Reason = &xstring2
 	}
 	if source.UtcOffsetMinutes != nil {
 		xint64 := *source.UtcOffsetMinutes
@@ -294,16 +256,16 @@ func ComponentEventToCreate(source ComponentEvent) CreateComponentEventParams {
 	}
 	sitedbCreateComponentEventParams.OccurredAt = source.OccurredAt
 	if source.RawJsonData != nil {
-		xstring8 := *source.RawJsonData
-		sitedbCreateComponentEventParams.RawJsonData = &xstring8
+		xstring3 := *source.RawJsonData
+		sitedbCreateComponentEventParams.RawJsonData = &xstring3
 	}
 	if source.CreatedByAppName != nil {
-		xstring9 := *source.CreatedByAppName
-		sitedbCreateComponentEventParams.CreatedByAppName = &xstring9
+		xstring4 := *source.CreatedByAppName
+		sitedbCreateComponentEventParams.CreatedByAppName = &xstring4
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring10 := *source.CreatedByDeviceName
-		sitedbCreateComponentEventParams.CreatedByDeviceName = &xstring10
+		xstring5 := *source.CreatedByDeviceName
+		sitedbCreateComponentEventParams.CreatedByDeviceName = &xstring5
 	}
 	sitedbCreateComponentEventParams.CreatedByIdentityName = source.CreatedByIdentityName
 	if source.CreatedByIdentityID != nil {
@@ -316,33 +278,26 @@ func ComponentEventToUpdate(source ComponentEvent) UpdateComponentEventParams {
 	var sitedbUpdateComponentEventParams UpdateComponentEventParams
 	pString := source.EventType
 	sitedbUpdateComponentEventParams.EventType = &pString
-	if source.SensorCode != nil {
-		xstring := *source.SensorCode
-		sitedbUpdateComponentEventParams.SensorCode = &xstring
-	}
-	if source.TransmitterID != nil {
-		xstring2 := *source.TransmitterID
-		sitedbUpdateComponentEventParams.TransmitterID = &xstring2
-	}
+	sitedbUpdateComponentEventParams.OtherAttributes = ComponentEventOtherJSON(source.OtherAttributes)
 	if source.Notes != nil {
-		xstring3 := *source.Notes
-		sitedbUpdateComponentEventParams.Notes = &xstring3
+		xstring := *source.Notes
+		sitedbUpdateComponentEventParams.Notes = &xstring
 	}
 	if source.Reason != nil {
-		xstring4 := *source.Reason
-		sitedbUpdateComponentEventParams.Reason = &xstring4
+		xstring2 := *source.Reason
+		sitedbUpdateComponentEventParams.Reason = &xstring2
 	}
 	if source.RawJsonData != nil {
-		xstring5 := *source.RawJsonData
-		sitedbUpdateComponentEventParams.RawJsonData = &xstring5
+		xstring3 := *source.RawJsonData
+		sitedbUpdateComponentEventParams.RawJsonData = &xstring3
 	}
 	if source.UpdatedByIdentityID != nil {
 		xint64 := *source.UpdatedByIdentityID
 		sitedbUpdateComponentEventParams.UpdatedByIdentityID = &xint64
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring6 := *source.UpdatedByIdentityName
-		sitedbUpdateComponentEventParams.UpdatedByIdentityName = &xstring6
+		xstring4 := *source.UpdatedByIdentityName
+		sitedbUpdateComponentEventParams.UpdatedByIdentityName = &xstring4
 	}
 	sitedbUpdateComponentEventParams.ID = source.ID
 	return sitedbUpdateComponentEventParams
@@ -2331,37 +2286,18 @@ func sitedbComponentEventsVwToSitedbComponentEventsVw(source ComponentEventsVw) 
 		xstring2 := *source.EventType
 		sitedbComponentEventsVw.EventType = &xstring2
 	}
-	if source.SensorCode != nil {
-		xstring3 := *source.SensorCode
-		sitedbComponentEventsVw.SensorCode = &xstring3
-	}
-	if source.TransmitterID != nil {
-		xstring4 := *source.TransmitterID
-		sitedbComponentEventsVw.TransmitterID = &xstring4
-	}
-	if source.PumpID != nil {
-		xstring5 := *source.PumpID
-		sitedbComponentEventsVw.PumpID = &xstring5
-	}
-	if source.PumpSerial != nil {
-		xstring6 := *source.PumpSerial
-		sitedbComponentEventsVw.PumpSerial = &xstring6
-	}
-	if source.PumpType != nil {
-		xstring7 := *source.PumpType
-		sitedbComponentEventsVw.PumpType = &xstring7
-	}
+	sitedbComponentEventsVw.OtherAttributes = typesComponentEventOtherToTypesComponentEventOther(source.OtherAttributes)
 	if source.Notes != nil {
-		xstring8 := *source.Notes
-		sitedbComponentEventsVw.Notes = &xstring8
+		xstring3 := *source.Notes
+		sitedbComponentEventsVw.Notes = &xstring3
 	}
 	if source.Reason != nil {
-		xstring9 := *source.Reason
-		sitedbComponentEventsVw.Reason = &xstring9
+		xstring4 := *source.Reason
+		sitedbComponentEventsVw.Reason = &xstring4
 	}
 	if source.RawJsonData != nil {
-		xstring10 := *source.RawJsonData
-		sitedbComponentEventsVw.RawJsonData = &xstring10
+		xstring5 := *source.RawJsonData
+		sitedbComponentEventsVw.RawJsonData = &xstring5
 	}
 	if source.DeletedAt != nil {
 		xint64 := *source.DeletedAt
@@ -2388,24 +2324,24 @@ func sitedbComponentEventsVwToSitedbComponentEventsVw(source ComponentEventsVw) 
 		sitedbComponentEventsVw.UpdatedByIdentityID = &xint646
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring11 := *source.UpdatedByIdentityName
-		sitedbComponentEventsVw.UpdatedByIdentityName = &xstring11
+		xstring6 := *source.UpdatedByIdentityName
+		sitedbComponentEventsVw.UpdatedByIdentityName = &xstring6
 	}
 	if source.CreatedByAppName != nil {
-		xstring12 := *source.CreatedByAppName
-		sitedbComponentEventsVw.CreatedByAppName = &xstring12
+		xstring7 := *source.CreatedByAppName
+		sitedbComponentEventsVw.CreatedByAppName = &xstring7
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring13 := *source.CreatedByDeviceName
-		sitedbComponentEventsVw.CreatedByDeviceName = &xstring13
+		xstring8 := *source.CreatedByDeviceName
+		sitedbComponentEventsVw.CreatedByDeviceName = &xstring8
 	}
 	if source.CreatedByIdentityID != nil {
 		xint647 := *source.CreatedByIdentityID
 		sitedbComponentEventsVw.CreatedByIdentityID = &xint647
 	}
 	if source.CreatedByIdentityName != nil {
-		xstring14 := *source.CreatedByIdentityName
-		sitedbComponentEventsVw.CreatedByIdentityName = &xstring14
+		xstring9 := *source.CreatedByIdentityName
+		sitedbComponentEventsVw.CreatedByIdentityName = &xstring9
 	}
 	return sitedbComponentEventsVw
 }
@@ -3196,6 +3132,30 @@ func typesActivityOtherToTypesActivityOther(source types.ActivityOther) types.Ac
 		typesActivityOther.HeartRate = &xint643
 	}
 	return typesActivityOther
+}
+func typesComponentEventOtherToTypesComponentEventOther(source types.ComponentEventOther) types.ComponentEventOther {
+	var typesComponentEventOther types.ComponentEventOther
+	if source.SensorCode != nil {
+		xstring := *source.SensorCode
+		typesComponentEventOther.SensorCode = &xstring
+	}
+	if source.TransmitterID != nil {
+		xstring2 := *source.TransmitterID
+		typesComponentEventOther.TransmitterID = &xstring2
+	}
+	if source.PumpID != nil {
+		xstring3 := *source.PumpID
+		typesComponentEventOther.PumpID = &xstring3
+	}
+	if source.PumpSerial != nil {
+		xstring4 := *source.PumpSerial
+		typesComponentEventOther.PumpSerial = &xstring4
+	}
+	if source.PumpType != nil {
+		xstring5 := *source.PumpType
+		typesComponentEventOther.PumpType = &xstring5
+	}
+	return typesComponentEventOther
 }
 func typesGlucoseReadingOtherToTypesGlucoseReadingOther(source types.GlucoseReadingOther) types.GlucoseReadingOther {
 	var typesGlucoseReadingOther types.GlucoseReadingOther
