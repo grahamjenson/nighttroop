@@ -126,55 +126,24 @@ func FoodToCreate(source Food, context ConverterContext) sitedb.CreateFoodPreset
 		xstring := ShortStringToString(*source.FoodType)
 		sitedbCreateFoodPresetParams.FoodType = &xstring
 	}
-	if source.Category != nil {
-		xstring2 := ShortStringToString(*source.Category)
-		sitedbCreateFoodPresetParams.Category = &xstring2
-	}
-	if source.Subcategory != nil {
-		xstring3 := ShortStringToString(*source.Subcategory)
-		sitedbCreateFoodPresetParams.Subcategory = &xstring3
-	}
 	if source.AbsorptionTimeMinutes != nil {
 		xint64 := FlexibleInt64ToInt64(*source.AbsorptionTimeMinutes)
 		sitedbCreateFoodPresetParams.AbsorptionTimeMinutes = &xint64
 	}
-	if source.PreBolus != nil {
-		xfloat64 := FlexibleFloat64ToFloat64(*source.PreBolus)
-		sitedbCreateFoodPresetParams.PreBolus = &xfloat64
-	}
-	if source.Portions != nil {
-		xfloat642 := FlexibleFloat64ToFloat64(*source.Portions)
-		sitedbCreateFoodPresetParams.Portions = &xfloat642
-	}
 	if source.Carbs != nil {
-		xfloat643 := FlexibleFloat64ToFloat64(*source.Carbs)
-		sitedbCreateFoodPresetParams.Carbs = &xfloat643
+		xfloat64 := FlexibleFloat64ToFloat64(*source.Carbs)
+		sitedbCreateFoodPresetParams.Carbs = &xfloat64
 	}
-	if source.Fat != nil {
-		xfloat644 := FlexibleFloat64ToFloat64(*source.Fat)
-		sitedbCreateFoodPresetParams.Fat = &xfloat644
-	}
-	if source.Protein != nil {
-		xfloat645 := FlexibleFloat64ToFloat64(*source.Protein)
-		sitedbCreateFoodPresetParams.Protein = &xfloat645
-	}
-	if source.Fibre != nil {
-		xfloat646 := FlexibleFloat64ToFloat64(*source.Fibre)
-		sitedbCreateFoodPresetParams.Fibre = &xfloat646
-	}
-	if source.Energy != nil {
-		xfloat647 := FlexibleFloat64ToFloat64(*source.Energy)
-		sitedbCreateFoodPresetParams.Energy = &xfloat647
-	}
+	sitedbCreateFoodPresetParams.OtherAttributes = FoodOther(source)
 	pString := source.RawJsonData
 	sitedbCreateFoodPresetParams.RawJsonData = &pString
 	if source.App != nil {
-		xstring4 := ShortStringToString(*source.App)
-		sitedbCreateFoodPresetParams.CreatedByAppName = &xstring4
+		xstring2 := ShortStringToString(*source.App)
+		sitedbCreateFoodPresetParams.CreatedByAppName = &xstring2
 	}
 	if source.Device != nil {
-		xstring5 := ShortStringToString(*source.Device)
-		sitedbCreateFoodPresetParams.CreatedByDeviceName = &xstring5
+		xstring3 := ShortStringToString(*source.Device)
+		sitedbCreateFoodPresetParams.CreatedByDeviceName = &xstring3
 	}
 	sitedbCreateFoodPresetParams.CreatedByIdentityName = AssignCreatedByName(context)
 	sitedbCreateFoodPresetParams.CreatedByIdentityID = AssignCreatedByID(context)

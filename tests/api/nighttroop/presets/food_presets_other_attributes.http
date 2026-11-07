@@ -1,0 +1,98 @@
+INCLUDE steps/new_site.steps
+
+// A food's fields beyond its carbs are kept in its food preset's other attributes and given back
+NAME create_food
+POST http://{{ .ns_site }}/api/v1/food?token={{ token }}
+B {"name": "Pizza", "carbs": 45, "foodType": "Takeaway", "category": "Fast Food", "subcategory": "Italian", "fat": 10, "protein": 20, "fibre": 5, "energy": 300, "portions": 2, "preBolus": 10}
+ASSERT_STATUS 200
+SET food_id {{ dig "create_food.0._id" }}
+
+NAME read_food
+GET http://{{ .ns_site }}/api/v1/food/{{ .food_id }}?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 45 "@0.carbs"
+ASSERT_EQUALS "Takeaway" "@0.foodType"
+ASSERT_EQUALS "Fast Food" "@0.category"
+ASSERT_EQUALS "Italian" "@0.subcategory"
+ASSERT_EQUALS 10 "@0.fat"
+ASSERT_EQUALS 20 "@0.protein"
+ASSERT_EQUALS 5 "@0.fibre"
+ASSERT_EQUALS 300 "@0.energy"
+ASSERT_EQUALS 2 "@0.portions"
+ASSERT_EQUALS 10 "@0.preBolus"
+
+NAME read_food_v3
+GET http://{{ .ns_site }}/api/v3/food/{{ .food_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Fast Food" "@result.category"
+ASSERT_EQUALS 300 "@result.energy"
+ASSERT_EQUALS 10 "@result.preBolus"
+
+NAME read_site_preset
+GET http://{{ site }}/presets/food/{{ .food_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "Takeaway" "@result.food_type"
+ASSERT_EQUALS "Fast Food" "@result.category"
+ASSERT_EQUALS "Italian" "@result.subcategory"
+ASSERT_EQUALS 10 "@result.fat"
+ASSERT_EQUALS 20 "@result.protein"
+ASSERT_EQUALS 5 "@result.fibre"
+ASSERT_EQUALS 300 "@result.energy"
+ASSERT_EQUALS 2 "@result.portions"
+ASSERT_EQUALS 10 "@result.pre_bolus"
+
+// Updating one of them leaves the others as they were
+NAME update_fat
+POST http://{{ site }}/presets/food/{{ .food_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"fat": 15}
+ASSERT_STATUS 200
+ASSERT_EQUALS 15 "@result.fat"
+ASSERT_EQUALS 20 "@result.protein"
+ASSERT_EQUALS "Fast Food" "@result.category"
+ASSERT_EQUALS 10 "@result.pre_bolus"
+ASSERT_EQUALS 45 "@result.carbs"
+
+// And so does a food patched with just one of them
+NAME patch_pre_bolus
+PATCH http://{{ .ns_site }}/api/v3/food/{{ .food_id }}
+H Authorization: Bearer {{ jwt }}
+B {"preBolus": 20}
+ASSERT_STATUS 200
+
+NAME read_patched
+GET http://{{ .ns_site }}/api/v1/food/{{ .food_id }}?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 20 "@0.preBolus"
+ASSERT_EQUALS 15 "@0.fat"
+ASSERT_EQUALS 20 "@0.protein"
+ASSERT_EQUALS 5 "@0.fibre"
+ASSERT_EQUALS 300 "@0.energy"
+ASSERT_EQUALS 2 "@0.portions"
+ASSERT_EQUALS "Italian" "@0.subcategory"
+ASSERT_EQUALS 45 "@0.carbs"
+
+// Each is still refused far outside real use, as a column of its own was
+NAME pre_bolus_out_of_range
+POST http://{{ .ns_site }}/api/v1/food?token={{ token }}
+B {"name": "Slow", "carbs": 10, "preBolus": 5000}
+ASSERT_STATUS 400
+
+NAME energy_out_of_range
+POST http://{{ site }}/presets/food/{{ .food_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"energy": 90000}
+ASSERT_STATUS 400
+
+// A category of 65 letters, one more than its column allowed
+NAME category_too_long
+POST http://{{ site }}/presets/food/{{ .food_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"category": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+ASSERT_STATUS 400

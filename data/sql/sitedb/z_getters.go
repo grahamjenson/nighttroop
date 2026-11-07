@@ -2067,26 +2067,6 @@ func (m *FoodPreset) SetFoodType(v *string) {
 	m.FoodType = v
 }
 
-// GetCategory returns the Category value.
-func (m FoodPreset) GetCategory() *string {
-	return m.Category
-}
-
-// SetCategory sets the Category value and returns the updated FoodPreset.
-func (m *FoodPreset) SetCategory(v *string) {
-	m.Category = v
-}
-
-// GetSubcategory returns the Subcategory value.
-func (m FoodPreset) GetSubcategory() *string {
-	return m.Subcategory
-}
-
-// SetSubcategory sets the Subcategory value and returns the updated FoodPreset.
-func (m *FoodPreset) SetSubcategory(v *string) {
-	m.Subcategory = v
-}
-
 // GetAbsorptionTimeMinutes returns the AbsorptionTimeMinutes value.
 func (m FoodPreset) GetAbsorptionTimeMinutes() *int64 {
 	return m.AbsorptionTimeMinutes
@@ -2095,16 +2075,6 @@ func (m FoodPreset) GetAbsorptionTimeMinutes() *int64 {
 // SetAbsorptionTimeMinutes sets the AbsorptionTimeMinutes value and returns the updated FoodPreset.
 func (m *FoodPreset) SetAbsorptionTimeMinutes(v *int64) {
 	m.AbsorptionTimeMinutes = v
-}
-
-// GetPreBolus returns the PreBolus value.
-func (m FoodPreset) GetPreBolus() *float64 {
-	return m.PreBolus
-}
-
-// SetPreBolus sets the PreBolus value and returns the updated FoodPreset.
-func (m *FoodPreset) SetPreBolus(v *float64) {
-	m.PreBolus = v
 }
 
 // GetCarbs returns the Carbs value.
@@ -2117,54 +2087,14 @@ func (m *FoodPreset) SetCarbs(v *float64) {
 	m.Carbs = v
 }
 
-// GetFat returns the Fat value.
-func (m FoodPreset) GetFat() *float64 {
-	return m.Fat
+// GetOtherAttributes returns the OtherAttributes value.
+func (m FoodPreset) GetOtherAttributes() types.FoodPresetOther {
+	return m.OtherAttributes
 }
 
-// SetFat sets the Fat value and returns the updated FoodPreset.
-func (m *FoodPreset) SetFat(v *float64) {
-	m.Fat = v
-}
-
-// GetProtein returns the Protein value.
-func (m FoodPreset) GetProtein() *float64 {
-	return m.Protein
-}
-
-// SetProtein sets the Protein value and returns the updated FoodPreset.
-func (m *FoodPreset) SetProtein(v *float64) {
-	m.Protein = v
-}
-
-// GetFibre returns the Fibre value.
-func (m FoodPreset) GetFibre() *float64 {
-	return m.Fibre
-}
-
-// SetFibre sets the Fibre value and returns the updated FoodPreset.
-func (m *FoodPreset) SetFibre(v *float64) {
-	m.Fibre = v
-}
-
-// GetEnergy returns the Energy value.
-func (m FoodPreset) GetEnergy() *float64 {
-	return m.Energy
-}
-
-// SetEnergy sets the Energy value and returns the updated FoodPreset.
-func (m *FoodPreset) SetEnergy(v *float64) {
-	m.Energy = v
-}
-
-// GetPortions returns the Portions value.
-func (m FoodPreset) GetPortions() *float64 {
-	return m.Portions
-}
-
-// SetPortions sets the Portions value and returns the updated FoodPreset.
-func (m *FoodPreset) SetPortions(v *float64) {
-	m.Portions = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated FoodPreset.
+func (m *FoodPreset) SetOtherAttributes(v types.FoodPresetOther) {
+	m.OtherAttributes = v
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -13667,26 +13597,6 @@ func (m *CreateFoodPresetParams) SetFoodType(v *string) {
 	m.FoodType = v
 }
 
-// GetCategory returns the Category value.
-func (m CreateFoodPresetParams) GetCategory() *string {
-	return m.Category
-}
-
-// SetCategory sets the Category value and returns the updated CreateFoodPresetParams.
-func (m *CreateFoodPresetParams) SetCategory(v *string) {
-	m.Category = v
-}
-
-// GetSubcategory returns the Subcategory value.
-func (m CreateFoodPresetParams) GetSubcategory() *string {
-	return m.Subcategory
-}
-
-// SetSubcategory sets the Subcategory value and returns the updated CreateFoodPresetParams.
-func (m *CreateFoodPresetParams) SetSubcategory(v *string) {
-	m.Subcategory = v
-}
-
 // GetAbsorptionTimeMinutes returns the AbsorptionTimeMinutes value.
 func (m CreateFoodPresetParams) GetAbsorptionTimeMinutes() *int64 {
 	return m.AbsorptionTimeMinutes
@@ -13695,26 +13605,6 @@ func (m CreateFoodPresetParams) GetAbsorptionTimeMinutes() *int64 {
 // SetAbsorptionTimeMinutes sets the AbsorptionTimeMinutes value and returns the updated CreateFoodPresetParams.
 func (m *CreateFoodPresetParams) SetAbsorptionTimeMinutes(v *int64) {
 	m.AbsorptionTimeMinutes = v
-}
-
-// GetPreBolus returns the PreBolus value.
-func (m CreateFoodPresetParams) GetPreBolus() *float64 {
-	return m.PreBolus
-}
-
-// SetPreBolus sets the PreBolus value and returns the updated CreateFoodPresetParams.
-func (m *CreateFoodPresetParams) SetPreBolus(v *float64) {
-	m.PreBolus = v
-}
-
-// GetPortions returns the Portions value.
-func (m CreateFoodPresetParams) GetPortions() *float64 {
-	return m.Portions
-}
-
-// SetPortions sets the Portions value and returns the updated CreateFoodPresetParams.
-func (m *CreateFoodPresetParams) SetPortions(v *float64) {
-	m.Portions = v
 }
 
 // GetCarbs returns the Carbs value.
@@ -13727,44 +13617,14 @@ func (m *CreateFoodPresetParams) SetCarbs(v *float64) {
 	m.Carbs = v
 }
 
-// GetFat returns the Fat value.
-func (m CreateFoodPresetParams) GetFat() *float64 {
-	return m.Fat
+// GetOtherAttributes returns the OtherAttributes value.
+func (m CreateFoodPresetParams) GetOtherAttributes() types.FoodPresetOther {
+	return m.OtherAttributes
 }
 
-// SetFat sets the Fat value and returns the updated CreateFoodPresetParams.
-func (m *CreateFoodPresetParams) SetFat(v *float64) {
-	m.Fat = v
-}
-
-// GetProtein returns the Protein value.
-func (m CreateFoodPresetParams) GetProtein() *float64 {
-	return m.Protein
-}
-
-// SetProtein sets the Protein value and returns the updated CreateFoodPresetParams.
-func (m *CreateFoodPresetParams) SetProtein(v *float64) {
-	m.Protein = v
-}
-
-// GetFibre returns the Fibre value.
-func (m CreateFoodPresetParams) GetFibre() *float64 {
-	return m.Fibre
-}
-
-// SetFibre sets the Fibre value and returns the updated CreateFoodPresetParams.
-func (m *CreateFoodPresetParams) SetFibre(v *float64) {
-	m.Fibre = v
-}
-
-// GetEnergy returns the Energy value.
-func (m CreateFoodPresetParams) GetEnergy() *float64 {
-	return m.Energy
-}
-
-// SetEnergy sets the Energy value and returns the updated CreateFoodPresetParams.
-func (m *CreateFoodPresetParams) SetEnergy(v *float64) {
-	m.Energy = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated CreateFoodPresetParams.
+func (m *CreateFoodPresetParams) SetOtherAttributes(v types.FoodPresetOther) {
+	m.OtherAttributes = v
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -14247,26 +14107,6 @@ func (m *UpdateFoodPresetParams) SetFoodType(v *string) {
 	m.FoodType = v
 }
 
-// GetCategory returns the Category value.
-func (m UpdateFoodPresetParams) GetCategory() *string {
-	return m.Category
-}
-
-// SetCategory sets the Category value and returns the updated UpdateFoodPresetParams.
-func (m *UpdateFoodPresetParams) SetCategory(v *string) {
-	m.Category = v
-}
-
-// GetSubcategory returns the Subcategory value.
-func (m UpdateFoodPresetParams) GetSubcategory() *string {
-	return m.Subcategory
-}
-
-// SetSubcategory sets the Subcategory value and returns the updated UpdateFoodPresetParams.
-func (m *UpdateFoodPresetParams) SetSubcategory(v *string) {
-	m.Subcategory = v
-}
-
 // GetAbsorptionTimeMinutes returns the AbsorptionTimeMinutes value.
 func (m UpdateFoodPresetParams) GetAbsorptionTimeMinutes() *int64 {
 	return m.AbsorptionTimeMinutes
@@ -14275,26 +14115,6 @@ func (m UpdateFoodPresetParams) GetAbsorptionTimeMinutes() *int64 {
 // SetAbsorptionTimeMinutes sets the AbsorptionTimeMinutes value and returns the updated UpdateFoodPresetParams.
 func (m *UpdateFoodPresetParams) SetAbsorptionTimeMinutes(v *int64) {
 	m.AbsorptionTimeMinutes = v
-}
-
-// GetPreBolus returns the PreBolus value.
-func (m UpdateFoodPresetParams) GetPreBolus() *float64 {
-	return m.PreBolus
-}
-
-// SetPreBolus sets the PreBolus value and returns the updated UpdateFoodPresetParams.
-func (m *UpdateFoodPresetParams) SetPreBolus(v *float64) {
-	m.PreBolus = v
-}
-
-// GetPortions returns the Portions value.
-func (m UpdateFoodPresetParams) GetPortions() *float64 {
-	return m.Portions
-}
-
-// SetPortions sets the Portions value and returns the updated UpdateFoodPresetParams.
-func (m *UpdateFoodPresetParams) SetPortions(v *float64) {
-	m.Portions = v
 }
 
 // GetCarbs returns the Carbs value.
@@ -14307,44 +14127,14 @@ func (m *UpdateFoodPresetParams) SetCarbs(v *float64) {
 	m.Carbs = v
 }
 
-// GetFat returns the Fat value.
-func (m UpdateFoodPresetParams) GetFat() *float64 {
-	return m.Fat
+// GetOtherAttributes returns the OtherAttributes value.
+func (m UpdateFoodPresetParams) GetOtherAttributes() *string {
+	return m.OtherAttributes
 }
 
-// SetFat sets the Fat value and returns the updated UpdateFoodPresetParams.
-func (m *UpdateFoodPresetParams) SetFat(v *float64) {
-	m.Fat = v
-}
-
-// GetProtein returns the Protein value.
-func (m UpdateFoodPresetParams) GetProtein() *float64 {
-	return m.Protein
-}
-
-// SetProtein sets the Protein value and returns the updated UpdateFoodPresetParams.
-func (m *UpdateFoodPresetParams) SetProtein(v *float64) {
-	m.Protein = v
-}
-
-// GetFibre returns the Fibre value.
-func (m UpdateFoodPresetParams) GetFibre() *float64 {
-	return m.Fibre
-}
-
-// SetFibre sets the Fibre value and returns the updated UpdateFoodPresetParams.
-func (m *UpdateFoodPresetParams) SetFibre(v *float64) {
-	m.Fibre = v
-}
-
-// GetEnergy returns the Energy value.
-func (m UpdateFoodPresetParams) GetEnergy() *float64 {
-	return m.Energy
-}
-
-// SetEnergy sets the Energy value and returns the updated UpdateFoodPresetParams.
-func (m *UpdateFoodPresetParams) SetEnergy(v *float64) {
-	m.Energy = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated UpdateFoodPresetParams.
+func (m *UpdateFoodPresetParams) SetOtherAttributes(v *string) {
+	m.OtherAttributes = v
 }
 
 // GetRawJsonData returns the RawJsonData value.

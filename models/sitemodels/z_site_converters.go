@@ -851,44 +851,44 @@ func FoodPresetFromDB(source *sitedb.FoodPreset) *SiteFoodPreset {
 			xstring := *(*source).FoodType
 			sitemodelsSiteFoodPreset.FoodType = &xstring
 		}
-		if (*source).Category != nil {
-			xstring2 := *(*source).Category
+		if (*source).OtherAttributes.Category != nil {
+			xstring2 := *(*source).OtherAttributes.Category
 			sitemodelsSiteFoodPreset.Category = &xstring2
 		}
-		if (*source).Subcategory != nil {
-			xstring3 := *(*source).Subcategory
+		if (*source).OtherAttributes.Subcategory != nil {
+			xstring3 := *(*source).OtherAttributes.Subcategory
 			sitemodelsSiteFoodPreset.Subcategory = &xstring3
 		}
 		if (*source).AbsorptionTimeMinutes != nil {
 			xint64 := *(*source).AbsorptionTimeMinutes
 			sitemodelsSiteFoodPreset.AbsorptionTimeMinutes = &xint64
 		}
-		if (*source).PreBolus != nil {
-			xfloat64 := *(*source).PreBolus
+		if (*source).OtherAttributes.PreBolus != nil {
+			xfloat64 := *(*source).OtherAttributes.PreBolus
 			sitemodelsSiteFoodPreset.PreBolus = &xfloat64
 		}
 		if (*source).Carbs != nil {
 			xfloat642 := *(*source).Carbs
 			sitemodelsSiteFoodPreset.Carbs = &xfloat642
 		}
-		if (*source).Fat != nil {
-			xfloat643 := *(*source).Fat
+		if (*source).OtherAttributes.Fat != nil {
+			xfloat643 := *(*source).OtherAttributes.Fat
 			sitemodelsSiteFoodPreset.Fat = &xfloat643
 		}
-		if (*source).Protein != nil {
-			xfloat644 := *(*source).Protein
+		if (*source).OtherAttributes.Protein != nil {
+			xfloat644 := *(*source).OtherAttributes.Protein
 			sitemodelsSiteFoodPreset.Protein = &xfloat644
 		}
-		if (*source).Fibre != nil {
-			xfloat645 := *(*source).Fibre
+		if (*source).OtherAttributes.Fibre != nil {
+			xfloat645 := *(*source).OtherAttributes.Fibre
 			sitemodelsSiteFoodPreset.Fibre = &xfloat645
 		}
-		if (*source).Energy != nil {
-			xfloat646 := *(*source).Energy
+		if (*source).OtherAttributes.Energy != nil {
+			xfloat646 := *(*source).OtherAttributes.Energy
 			sitemodelsSiteFoodPreset.Energy = &xfloat646
 		}
-		if (*source).Portions != nil {
-			xfloat647 := *(*source).Portions
+		if (*source).OtherAttributes.Portions != nil {
+			xfloat647 := *(*source).OtherAttributes.Portions
 			sitemodelsSiteFoodPreset.Portions = &xfloat647
 		}
 		if (*source).RawJsonData != nil {
@@ -925,53 +925,22 @@ func FoodPresetToCreate(source *SiteFoodPreset, context *httputils.SiteContext) 
 			xstring := *(*source).FoodType
 			sitedbCreateFoodPresetParams.FoodType = &xstring
 		}
-		if (*source).Category != nil {
-			xstring2 := *(*source).Category
-			sitedbCreateFoodPresetParams.Category = &xstring2
-		}
-		if (*source).Subcategory != nil {
-			xstring3 := *(*source).Subcategory
-			sitedbCreateFoodPresetParams.Subcategory = &xstring3
-		}
 		if (*source).AbsorptionTimeMinutes != nil {
 			xint64 := *(*source).AbsorptionTimeMinutes
 			sitedbCreateFoodPresetParams.AbsorptionTimeMinutes = &xint64
 		}
-		if (*source).PreBolus != nil {
-			xfloat64 := *(*source).PreBolus
-			sitedbCreateFoodPresetParams.PreBolus = &xfloat64
-		}
-		if (*source).Portions != nil {
-			xfloat642 := *(*source).Portions
-			sitedbCreateFoodPresetParams.Portions = &xfloat642
-		}
 		if (*source).Carbs != nil {
-			xfloat643 := *(*source).Carbs
-			sitedbCreateFoodPresetParams.Carbs = &xfloat643
+			xfloat64 := *(*source).Carbs
+			sitedbCreateFoodPresetParams.Carbs = &xfloat64
 		}
-		if (*source).Fat != nil {
-			xfloat644 := *(*source).Fat
-			sitedbCreateFoodPresetParams.Fat = &xfloat644
-		}
-		if (*source).Protein != nil {
-			xfloat645 := *(*source).Protein
-			sitedbCreateFoodPresetParams.Protein = &xfloat645
-		}
-		if (*source).Fibre != nil {
-			xfloat646 := *(*source).Fibre
-			sitedbCreateFoodPresetParams.Fibre = &xfloat646
-		}
-		if (*source).Energy != nil {
-			xfloat647 := *(*source).Energy
-			sitedbCreateFoodPresetParams.Energy = &xfloat647
-		}
+		sitedbCreateFoodPresetParams.OtherAttributes = FoodPresetOther(source)
 		if (*source).CreatedByAppName != nil {
-			xstring4 := *(*source).CreatedByAppName
-			sitedbCreateFoodPresetParams.CreatedByAppName = &xstring4
+			xstring2 := *(*source).CreatedByAppName
+			sitedbCreateFoodPresetParams.CreatedByAppName = &xstring2
 		}
 		if (*source).CreatedByDeviceName != nil {
-			xstring5 := *(*source).CreatedByDeviceName
-			sitedbCreateFoodPresetParams.CreatedByDeviceName = &xstring5
+			xstring3 := *(*source).CreatedByDeviceName
+			sitedbCreateFoodPresetParams.CreatedByDeviceName = &xstring3
 		}
 		sitedbCreateFoodPresetParams.CreatedByIdentityName = ContextIdentityNameValue(context)
 		sitedbCreateFoodPresetParams.CreatedByIdentityID = ContextIdentityID(context)
@@ -989,46 +958,15 @@ func FoodPresetToUpdate(source *SiteFoodPreset, context *httputils.SiteContext) 
 			xstring2 := *(*source).FoodType
 			sitedbUpdateFoodPresetParams.FoodType = &xstring2
 		}
-		if (*source).Category != nil {
-			xstring3 := *(*source).Category
-			sitedbUpdateFoodPresetParams.Category = &xstring3
-		}
-		if (*source).Subcategory != nil {
-			xstring4 := *(*source).Subcategory
-			sitedbUpdateFoodPresetParams.Subcategory = &xstring4
-		}
 		if (*source).AbsorptionTimeMinutes != nil {
 			xint64 := *(*source).AbsorptionTimeMinutes
 			sitedbUpdateFoodPresetParams.AbsorptionTimeMinutes = &xint64
 		}
-		if (*source).PreBolus != nil {
-			xfloat64 := *(*source).PreBolus
-			sitedbUpdateFoodPresetParams.PreBolus = &xfloat64
-		}
-		if (*source).Portions != nil {
-			xfloat642 := *(*source).Portions
-			sitedbUpdateFoodPresetParams.Portions = &xfloat642
-		}
 		if (*source).Carbs != nil {
-			xfloat643 := *(*source).Carbs
-			sitedbUpdateFoodPresetParams.Carbs = &xfloat643
+			xfloat64 := *(*source).Carbs
+			sitedbUpdateFoodPresetParams.Carbs = &xfloat64
 		}
-		if (*source).Fat != nil {
-			xfloat644 := *(*source).Fat
-			sitedbUpdateFoodPresetParams.Fat = &xfloat644
-		}
-		if (*source).Protein != nil {
-			xfloat645 := *(*source).Protein
-			sitedbUpdateFoodPresetParams.Protein = &xfloat645
-		}
-		if (*source).Fibre != nil {
-			xfloat646 := *(*source).Fibre
-			sitedbUpdateFoodPresetParams.Fibre = &xfloat646
-		}
-		if (*source).Energy != nil {
-			xfloat647 := *(*source).Energy
-			sitedbUpdateFoodPresetParams.Energy = &xfloat647
-		}
+		sitedbUpdateFoodPresetParams.OtherAttributes = FoodPresetOtherJSON(source)
 		sitedbUpdateFoodPresetParams.UpdatedByIdentityID = ContextIdentityID(context)
 		sitedbUpdateFoodPresetParams.UpdatedByIdentityName = ContextIdentityName(context)
 		sitedbUpdateFoodPresetParams.ID = (*source).ID

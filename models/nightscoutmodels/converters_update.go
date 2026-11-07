@@ -49,6 +49,7 @@ type UpdateMapConverter interface {
 	// goverter:map Identifier ID
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
 	// goverter:map UpdatedByIdentityID | AssignUpdatedByID
+	// goverter:map . OtherAttributes | FoodOtherJSON
 	//
 	// goverter:ignore
 	FoodToUpdate(source Food, ctx ConverterContext) sitedb.UpdateFoodPresetParams
