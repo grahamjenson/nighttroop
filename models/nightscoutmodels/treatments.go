@@ -70,6 +70,12 @@ type Treatment struct {
 	OriginalDurationMs     *types.FlexibleInt64 `json:"originalDuration,omitempty"`
 	OriginalEnd            *types.FlexibleInt64 `json:"originalEnd,omitempty"`
 
+	// AAPS's running mode, e.g. DISCONNECTED_PUMP, whether the loop forced it and why; how long it was to last, in ms,
+	// is OriginalDurationMs above, which a profile switch has too
+	Mode       *types.ShortString     `json:"mode,omitempty"`
+	AutoForced *bool                  `json:"autoForced,omitempty"`
+	Reasons    *types.SanitizedString `json:"reasons,omitempty"`
+
 	Rate     *types.FlexibleFloat64 `json:"rate,omitempty"`
 	Absolute *types.FlexibleFloat64 `json:"absolute,omitempty"`
 	// TempBasalPercent is a temp basal's change from the basal in percent, as Nightscout has it, so -50 is half of it and

@@ -29,6 +29,9 @@ overrides:
       - column: "device_reports.is_device_charging"
         go_type:
           type: "*bool"
+      - column: "event_groups.auto_forced"
+        go_type:
+          type: "*bool"
       - column: "glucose_readings.is_calibration"
         go_type:
           type: "*bool"

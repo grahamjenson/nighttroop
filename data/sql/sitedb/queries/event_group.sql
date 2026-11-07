@@ -20,6 +20,10 @@ INSERT INTO event_groups (
     duration_minutes,
     entered_by,
     uuid,
+    mode,
+    auto_forced,
+    reasons,
+    original_duration_ms,
 
     occurred_at,
     utc_offset_minutes,
@@ -29,7 +33,7 @@ INSERT INTO event_groups (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -246,6 +250,10 @@ UPDATE event_groups SET
     reason = COALESCE(sqlc.narg('Reason'), reason),
     entered_by = COALESCE(sqlc.narg('EnteredBy'), entered_by),
     uuid = COALESCE(sqlc.narg('Uuid'), uuid),
+    mode = COALESCE(sqlc.narg('Mode'), mode),
+    auto_forced = COALESCE(sqlc.narg('AutoForced'), auto_forced),
+    reasons = COALESCE(sqlc.narg('Reasons'), reasons),
+    original_duration_ms = COALESCE(sqlc.narg('OriginalDurationMs'), original_duration_ms),
 
     raw_json_data = json_patch(
         COALESCE(raw_json_data, '{}'),

@@ -528,8 +528,66 @@ ASSERT_STATUS 200
 ASSERT_EQUALS "OpenAPS Offline" "@result.eventType"
 ASSERT_EQUALS 30 "@result.duration"
 ASSERT_EQUALS "DISCONNECT_PUMP" "@result.reason"
-// mode, autoForced, reasons and originalDuration are not kept yet (TODOs.md), so a follower reads the mode as UNKNOWN
-ASSERT_EQUALS null "@result.mode"
+// mode, autoForced, reasons and originalDuration come back as sent, so a follower reads the mode, not UNKNOWN
+ASSERT_EQUALS "DISCONNECTED_PUMP" "@result.mode"
+ASSERT_EQUALS false "@result.autoForced"
+ASSERT_EQUALS "" "@result.reasons"
+ASSERT_EQUALS 1800000 "@result.originalDuration"
+
+// A running mode the loop forced, with its reasons
+NAME add_forced_running_mode
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "date": {{ itime 10 }},
+    "utcOffset": 720,
+    "isReadOnly": false,
+    "isValid": true,
+    "eventType": "OpenAPS Offline",
+    "duration": 60,
+    "durationInMilliseconds": 3600000,
+    "originalDuration": 3600000,
+    "mode": "CLOSED_LOOP_LGS",
+    "autoForced": true,
+    "reasons": "Low glucose suspend: max IOB is 0",
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+
+// AAPS updates the whole treatment when the mode ends early; one without a field keeps it
+NAME end_forced_running_mode
+PATCH http://{{ site }}/api/v3/treatments/{{ .add_forced_running_mode.identifier }}
+H Authorization: Bearer {{ jwt }}
+B {
+    "identifier": "{{ .add_forced_running_mode.identifier }}",
+    "isReadOnly": false,
+    "isValid": true,
+    "eventType": "OpenAPS Offline",
+    "duration": 20,
+    "durationInMilliseconds": 1200000,
+    "mode": "CLOSED_LOOP_LGS",
+    "autoForced": true
+ }
+ASSERT_STATUS 200
+
+NAME get_forced_running_mode
+GET http://{{ site }}/api/v3/treatments/{{ .add_forced_running_mode.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "CLOSED_LOOP_LGS" "@result.mode"
+ASSERT_EQUALS true "@result.autoForced"
+ASSERT_EQUALS "Low glucose suspend: max IOB is 0" "@result.reasons"
+ASSERT_EQUALS 3600000 "@result.originalDuration"
+
+// AAPS 3.4's NSClient v1 reads them too
+NAME get_forced_running_mode_v1
+GET http://{{ site }}/api/v1/treatments/{{ .add_forced_running_mode.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "CLOSED_LOOP_LGS" "@0.mode"
+ASSERT_EQUALS true "@0.autoForced"
+ASSERT_EQUALS "Low glucose suspend: max IOB is 0" "@0.reasons"
+ASSERT_EQUALS 3600000 "@0.originalDuration"
 
 // A calibration is a marked mbg entry, which a follower reads back only with isCalibration and sensorMgdlAtPairing
 NAME add_calibration

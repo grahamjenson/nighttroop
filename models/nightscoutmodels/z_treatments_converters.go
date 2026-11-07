@@ -245,22 +245,38 @@ func EventGroupCreate(source sitedb.EventGroup, context ConverterContext) sitedb
 		xstring13 := *source.Uuid
 		sitedbCreateEventGroupParams.Uuid = &xstring13
 	}
+	if source.Mode != nil {
+		xstring14 := *source.Mode
+		sitedbCreateEventGroupParams.Mode = &xstring14
+	}
+	if source.AutoForced != nil {
+		xbool := *source.AutoForced
+		sitedbCreateEventGroupParams.AutoForced = &xbool
+	}
+	if source.Reasons != nil {
+		xstring15 := *source.Reasons
+		sitedbCreateEventGroupParams.Reasons = &xstring15
+	}
+	if source.OriginalDurationMs != nil {
+		xint642 := *source.OriginalDurationMs
+		sitedbCreateEventGroupParams.OriginalDurationMs = &xint642
+	}
 	sitedbCreateEventGroupParams.OccurredAt = source.OccurredAt
 	if source.UtcOffsetMinutes != nil {
-		xint642 := *source.UtcOffsetMinutes
-		sitedbCreateEventGroupParams.UtcOffsetMinutes = &xint642
+		xint643 := *source.UtcOffsetMinutes
+		sitedbCreateEventGroupParams.UtcOffsetMinutes = &xint643
 	}
 	if source.RawJsonData != nil {
-		xstring14 := *source.RawJsonData
-		sitedbCreateEventGroupParams.RawJsonData = &xstring14
+		xstring16 := *source.RawJsonData
+		sitedbCreateEventGroupParams.RawJsonData = &xstring16
 	}
 	if source.CreatedByAppName != nil {
-		xstring15 := *source.CreatedByAppName
-		sitedbCreateEventGroupParams.CreatedByAppName = &xstring15
+		xstring17 := *source.CreatedByAppName
+		sitedbCreateEventGroupParams.CreatedByAppName = &xstring17
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring16 := *source.CreatedByDeviceName
-		sitedbCreateEventGroupParams.CreatedByDeviceName = &xstring16
+		xstring18 := *source.CreatedByDeviceName
+		sitedbCreateEventGroupParams.CreatedByDeviceName = &xstring18
 	}
 	sitedbCreateEventGroupParams.CreatedByIdentityName = AssignCreatedByName(context)
 	sitedbCreateEventGroupParams.CreatedByIdentityID = AssignCreatedByID(context)
@@ -276,26 +292,42 @@ func EventGroupToTreatment(source sitedb.EventGroup) *Treatment {
 		typesFlexibleInt64 := types.FlexibleInt64(*source.DurationMinutes)
 		nightscoutmodelsTreatment.DurationMinutes = &typesFlexibleInt64
 	}
+	if source.OriginalDurationMs != nil {
+		typesFlexibleInt642 := types.FlexibleInt64(*source.OriginalDurationMs)
+		nightscoutmodelsTreatment.OriginalDurationMs = &typesFlexibleInt642
+	}
+	if source.Mode != nil {
+		typesShortString := types.ShortString(*source.Mode)
+		nightscoutmodelsTreatment.Mode = &typesShortString
+	}
+	if source.AutoForced != nil {
+		xbool := *source.AutoForced
+		nightscoutmodelsTreatment.AutoForced = &xbool
+	}
+	if source.Reasons != nil {
+		typesSanitizedString := types.SanitizedString(*source.Reasons)
+		nightscoutmodelsTreatment.Reasons = &typesSanitizedString
+	}
 	if source.Notes != nil {
-		typesSanitizedString := types.SanitizedString(*source.Notes)
-		nightscoutmodelsTreatment.Notes = &typesSanitizedString
+		typesSanitizedString2 := types.SanitizedString(*source.Notes)
+		nightscoutmodelsTreatment.Notes = &typesSanitizedString2
 	}
 	nightscoutmodelsTreatment.EnteredBy = EventGroupEnteredBy(source)
 	if source.Reason != nil {
-		typesShortString := types.ShortString(*source.Reason)
-		nightscoutmodelsTreatment.Reason = &typesShortString
+		typesShortString2 := types.ShortString(*source.Reason)
+		nightscoutmodelsTreatment.Reason = &typesShortString2
 	}
 	if source.Uuid != nil {
-		typesShortString2 := types.ShortString(*source.Uuid)
-		nightscoutmodelsTreatment.UUID = &typesShortString2
+		typesShortString3 := types.ShortString(*source.Uuid)
+		nightscoutmodelsTreatment.UUID = &typesShortString3
 	}
 	if source.CreatedByDeviceName != nil {
-		typesShortString3 := types.ShortString(*source.CreatedByDeviceName)
-		nightscoutmodelsTreatment.Device = &typesShortString3
+		typesShortString4 := types.ShortString(*source.CreatedByDeviceName)
+		nightscoutmodelsTreatment.Device = &typesShortString4
 	}
 	if source.CreatedByAppName != nil {
-		typesShortString4 := types.ShortString(*source.CreatedByAppName)
-		nightscoutmodelsTreatment.App = &typesShortString4
+		typesShortString5 := types.ShortString(*source.CreatedByAppName)
+		nightscoutmodelsTreatment.App = &typesShortString5
 	}
 	pTypesShortString := types.ShortString(source.CreatedByIdentityName)
 	nightscoutmodelsTreatment.Subject = &pTypesShortString
@@ -303,8 +335,8 @@ func EventGroupToTreatment(source sitedb.EventGroup) *Treatment {
 	pTypesDateInt := types.DateInt(source.OccurredAt)
 	nightscoutmodelsTreatment.Date = &pTypesDateInt
 	if source.UtcOffsetMinutes != nil {
-		typesFlexibleInt642 := types.FlexibleInt64(*source.UtcOffsetMinutes)
-		nightscoutmodelsTreatment.UtcOffsetMinutes = &typesFlexibleInt642
+		typesFlexibleInt643 := types.FlexibleInt64(*source.UtcOffsetMinutes)
+		nightscoutmodelsTreatment.UtcOffsetMinutes = &typesFlexibleInt643
 	}
 	if source.RawJsonData != nil {
 		nightscoutmodelsTreatment.RawJsonData = *source.RawJsonData
@@ -365,9 +397,25 @@ func EventGroupUpdate(source sitedb.EventGroup, context ConverterContext) sitedb
 		xstring13 := *source.Uuid
 		sitedbUpdateEventGroupParams.Uuid = &xstring13
 	}
+	if source.Mode != nil {
+		xstring14 := *source.Mode
+		sitedbUpdateEventGroupParams.Mode = &xstring14
+	}
+	if source.AutoForced != nil {
+		xbool := *source.AutoForced
+		sitedbUpdateEventGroupParams.AutoForced = &xbool
+	}
+	if source.Reasons != nil {
+		xstring15 := *source.Reasons
+		sitedbUpdateEventGroupParams.Reasons = &xstring15
+	}
+	if source.OriginalDurationMs != nil {
+		xint64 := *source.OriginalDurationMs
+		sitedbUpdateEventGroupParams.OriginalDurationMs = &xint64
+	}
 	if source.RawJsonData != nil {
-		xstring14 := *source.RawJsonData
-		sitedbUpdateEventGroupParams.RawJsonData = &xstring14
+		xstring16 := *source.RawJsonData
+		sitedbUpdateEventGroupParams.RawJsonData = &xstring16
 	}
 	sitedbUpdateEventGroupParams.UpdatedByIdentityID = AssignUpdatedByID(context)
 	sitedbUpdateEventGroupParams.UpdatedByIdentityName = AssignUpdatedByName(context)
@@ -1538,32 +1586,48 @@ func TreatmentToEventGroup(source Treatment) sitedb.EventGroup {
 		xstring2 := ShortStringToString(*source.UUID)
 		sitedbEventGroup.Uuid = &xstring2
 	}
+	if source.Mode != nil {
+		xstring3 := ShortStringToString(*source.Mode)
+		sitedbEventGroup.Mode = &xstring3
+	}
+	if source.AutoForced != nil {
+		xbool := *source.AutoForced
+		sitedbEventGroup.AutoForced = &xbool
+	}
+	if source.Reasons != nil {
+		xstring4 := SanitizedStringToString(*source.Reasons)
+		sitedbEventGroup.Reasons = &xstring4
+	}
+	if source.OriginalDurationMs != nil {
+		xint64 := FlexibleInt64ToInt64(*source.OriginalDurationMs)
+		sitedbEventGroup.OriginalDurationMs = &xint64
+	}
 	if source.Notes != nil {
-		xstring3 := SanitizedStringToString(*source.Notes)
-		sitedbEventGroup.Notes = &xstring3
+		xstring5 := SanitizedStringToString(*source.Notes)
+		sitedbEventGroup.Notes = &xstring5
 	}
 	if source.Reason != nil {
-		xstring4 := ShortStringToString(*source.Reason)
-		sitedbEventGroup.Reason = &xstring4
+		xstring6 := ShortStringToString(*source.Reason)
+		sitedbEventGroup.Reason = &xstring6
 	}
 	if source.DurationMinutes != nil {
-		xint64 := FlexibleInt64ToInt64(*source.DurationMinutes)
-		sitedbEventGroup.DurationMinutes = &xint64
+		xint642 := FlexibleInt64ToInt64(*source.DurationMinutes)
+		sitedbEventGroup.DurationMinutes = &xint642
 	}
 	pString := source.RawJsonData
 	sitedbEventGroup.RawJsonData = &pString
 	if source.UtcOffsetMinutes != nil {
-		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		sitedbEventGroup.UtcOffsetMinutes = &xint642
+		xint643 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		sitedbEventGroup.UtcOffsetMinutes = &xint643
 	}
 	sitedbEventGroup.OccurredAt = OrNow(source.Date)
 	if source.App != nil {
-		xstring5 := ShortStringToString(*source.App)
-		sitedbEventGroup.CreatedByAppName = &xstring5
+		xstring7 := ShortStringToString(*source.App)
+		sitedbEventGroup.CreatedByAppName = &xstring7
 	}
 	if source.Device != nil {
-		xstring6 := ShortStringToString(*source.Device)
-		sitedbEventGroup.CreatedByDeviceName = &xstring6
+		xstring8 := ShortStringToString(*source.Device)
+		sitedbEventGroup.CreatedByDeviceName = &xstring8
 	}
 	return sitedbEventGroup
 }
@@ -2096,52 +2160,68 @@ func UpdateToEventGroup(source sitedb.EventGroup, target *sitedb.EventGroup) {
 		xstring11 := *source.Uuid
 		target.Uuid = &xstring11
 	}
+	if source.Mode != nil {
+		xstring12 := *source.Mode
+		target.Mode = &xstring12
+	}
+	if source.AutoForced != nil {
+		xbool := *source.AutoForced
+		target.AutoForced = &xbool
+	}
+	if source.Reasons != nil {
+		xstring13 := *source.Reasons
+		target.Reasons = &xstring13
+	}
+	if source.OriginalDurationMs != nil {
+		xint64 := *source.OriginalDurationMs
+		target.OriginalDurationMs = &xint64
+	}
 	if source.Notes != nil {
-		xstring12 := *source.Notes
-		target.Notes = &xstring12
+		xstring14 := *source.Notes
+		target.Notes = &xstring14
 	}
 	if source.Reason != nil {
-		xstring13 := *source.Reason
-		target.Reason = &xstring13
+		xstring15 := *source.Reason
+		target.Reason = &xstring15
 	}
 	if source.DurationMinutes != nil {
-		xint64 := *source.DurationMinutes
-		target.DurationMinutes = &xint64
+		xint642 := *source.DurationMinutes
+		target.DurationMinutes = &xint642
 	}
 	if source.RawJsonData != nil {
-		xstring14 := *source.RawJsonData
-		target.RawJsonData = &xstring14
+		xstring16 := *source.RawJsonData
+		target.RawJsonData = &xstring16
 	}
 	if source.DeletedAt != nil {
-		xint642 := *source.DeletedAt
-		target.DeletedAt = &xint642
+		xint643 := *source.DeletedAt
+		target.DeletedAt = &xint643
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint643 := *source.UtcOffsetMinutes
-		target.UtcOffsetMinutes = &xint643
+		xint644 := *source.UtcOffsetMinutes
+		target.UtcOffsetMinutes = &xint644
 	}
 	target.OccurredAt = source.OccurredAt
 	target.CreatedAt = source.CreatedAt
 	target.UpdatedAt = source.UpdatedAt
 	if source.CreatedByAppName != nil {
-		xstring15 := *source.CreatedByAppName
-		target.CreatedByAppName = &xstring15
+		xstring17 := *source.CreatedByAppName
+		target.CreatedByAppName = &xstring17
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring16 := *source.CreatedByDeviceName
-		target.CreatedByDeviceName = &xstring16
+		xstring18 := *source.CreatedByDeviceName
+		target.CreatedByDeviceName = &xstring18
 	}
 	if source.UpdatedByIdentityID != nil {
-		xint644 := *source.UpdatedByIdentityID
-		target.UpdatedByIdentityID = &xint644
+		xint645 := *source.UpdatedByIdentityID
+		target.UpdatedByIdentityID = &xint645
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring17 := *source.UpdatedByIdentityName
-		target.UpdatedByIdentityName = &xstring17
+		xstring19 := *source.UpdatedByIdentityName
+		target.UpdatedByIdentityName = &xstring19
 	}
 	if source.CreatedByIdentityID != nil {
-		xint645 := *source.CreatedByIdentityID
-		target.CreatedByIdentityID = &xint645
+		xint646 := *source.CreatedByIdentityID
+		target.CreatedByIdentityID = &xint646
 	}
 	target.CreatedByIdentityName = source.CreatedByIdentityName
 }

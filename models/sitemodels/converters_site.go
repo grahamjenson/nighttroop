@@ -270,7 +270,8 @@ type SiteConverter interface {
 	// goverter:map OccurredAt | OccurredAtOrNow
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
-	// goverter:ignore EnteredBy Uuid
+	// The site does not set AAPS's running mode
+	// goverter:ignore EnteredBy Uuid Mode AutoForced Reasons OriginalDurationMs
 	EventGroupToCreate(source *SiteEventGroup, siteContext *httputils.SiteContext) sitedb.CreateEventGroupParams
 
 	// goverter:context siteContext

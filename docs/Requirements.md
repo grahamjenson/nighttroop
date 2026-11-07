@@ -453,6 +453,9 @@ focus back to the row or button that opened it.
   from, `originalProfileName`, `originalCustomizedName`, `originalTimeshift`, `originalPercentage`,
   `originalDuration` and `originalEnd`, and returns them as sent through v1 and v3, so AAPS's followers read an
   effective profile switch as one; an update without one keeps it.
+- AAPS's running mode, an `OpenAPS Offline`, keeps its `mode` (e.g. `DISCONNECTED_PUMP`), `autoForced`, `reasons` and
+  `originalDuration` (ms) and returns them as sent through v1 and v3, so AAPS's followers read its mode; an update
+  without one keeps it.
 - A combo bolus's `splitNow` and `splitExt` are kept as the fractions given at once and over time (70 as 0.7) and
   returned as sent.
 - A temp basal is sent with its rate in U/hr as `rate` or `absolute`, its `percent`, or both. Its `percent` is
