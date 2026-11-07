@@ -19,6 +19,8 @@ SCREENSHOT site_created
 // have copied
 ASSERT_NOT_VISIBLE #public--site-info--totp-secret
 ASSERT_VISIBLE #qrcode
+// The QR code holds the otpauth:// URI an authenticator app adds an account from, not the bare secret it can't
+ASSERT_VISIBLE #qrcode[title^="otpauth://totp/Nighttroop:admin@"][title*="?issuer=Nighttroop&secret="]
 ASSERT_NOT_VISIBLE #public--site-info--ns-token
 CLICK #public--copy-ns-token
 ASSERT_VISIBLE #public--copy-ns-token>span[data-copy-icon-check]

@@ -9,6 +9,7 @@ import (
 	"nighttroop.t1d.nz/server/components/control_templ/control_setup_templ"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/security"
 )
 
 // GETSetupPageHandler asks for the setup code a new server printed to its logs
@@ -31,7 +32,7 @@ func POSTSetupHandler(controlDB *db.ControlDB, config *config.ServerConfig) http
 		}
 		// The answer is credentials, which nothing between should keep
 		w.Header().Set("Cache-Control", "no-store")
-		control_setup_templ.SetupCredentials(admin.Name, admin.Password, admin.TotpSecret, r.FormValue("code")).Render(r.Context(), w)
+		control_setup_templ.SetupCredentials(admin.Name, admin.Password, admin.TotpSecret, security.TOTPURI(admin.Name, config.SetupURL(), admin.TotpSecret), r.FormValue("code")).Render(r.Context(), w)
 	}
 }
 

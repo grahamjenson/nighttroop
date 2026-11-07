@@ -2,15 +2,30 @@ package security
 
 import (
 	"fmt"
+	"net/url"
 	"regexp"
 
 	"github.com/pquerna/otp/totp"
 	"golang.org/x/crypto/bcrypt"
 )
 
+// TOTPIssuer names Nighttroop in an authenticator app
+const TOTPIssuer = "Nighttroop"
+
+// TOTPURI is the otpauth:// URI a QR code holds for an authenticator app to add secret, as an account named name at
+// siteURL's host, so each server's and site's logins are told apart. An app cannot add one from the bare secret.
+func TOTPURI(name, siteURL, secret string) string {
+	account := name
+	if u, err := url.Parse(siteURL); err == nil && u.Host != "" {
+		account += "@" + u.Host
+	}
+	query := url.Values{"secret": {secret}, "issuer": {TOTPIssuer}}
+	return (&url.URL{Scheme: "otpauth", Host: "totp", Path: "/" + TOTPIssuer + ":" + account, RawQuery: query.Encode()}).String()
+}
+
 func (cfg *SecurityConfig) TOTPGenerate(accountName string) (totpSecret, totpEncSecret string, err error) {
 	totpKey, err := totp.Generate(totp.GenerateOpts{
-		Issuer:      "NightTroop",
+		Issuer:      TOTPIssuer,
 		AccountName: fmt.Sprintf("%s@%s", accountName, cfg.HostName),
 	})
 

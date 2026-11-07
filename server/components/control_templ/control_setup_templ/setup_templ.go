@@ -131,7 +131,7 @@ func Setup() templ.Component {
 
 // SetupCredentials shows the control admin's login, which is saved once a code from its TOTP secret is entered. It,
 // and SetupComplete, clear the error a wrong code left.
-func SetupCredentials(name, password, totpSecret, code string) templ.Component {
+func SetupCredentials(name, password, totpSecret, totpURI, code string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -168,9 +168,9 @@ func SetupCredentials(name, password, totpSecret, code string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Var7, templ_7745c5c3_Err := templruntime.ScriptContentInsideStringLiteral(totpSecret)
+		templ_7745c5c3_Var7, templ_7745c5c3_Err := templruntime.ScriptContentInsideStringLiteral(totpURI)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_setup_templ/setup.templ`, Line: 54, Col: 87}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_setup_templ/setup.templ`, Line: 54, Col: 84}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
