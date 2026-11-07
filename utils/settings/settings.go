@@ -87,6 +87,12 @@ func (m *CombinedSettingsMap) GetRangeUrgentHighMgdl() *int64 {
 	return first(m.IdentitySettingsMap.GetRangeUrgentHighMgdl(), m.SiteSettingsMap.GetRangeUrgentHighMgdl(), m.DefaultSettingsMap.GetRangeUrgentHighMgdl())
 }
 
+// GetAlarmNoDataMinutes is how long without a reading is no data, the identity's, then the site's, then the default,
+// whether or not its alarm is on
+func (m *CombinedSettingsMap) GetAlarmNoDataMinutes() *int64 {
+	return first(m.IdentitySettingsMap.GetAlarmNoDataMinutes(), m.SiteSettingsMap.GetAlarmNoDataMinutes(), m.DefaultSettingsMap.GetAlarmNoDataMinutes())
+}
+
 // GetUnitsLabel is how the Nightscout API writes units, the identity's, then the site's, then Nighttroop's own
 func (m *CombinedSettingsMap) GetUnitsLabel(units consts.Units) string {
 	if units == consts.UnitsMMOLL {
