@@ -23,6 +23,14 @@ sql:
 overrides:
   go:
     overrides:
+      - column: "activities.other_attributes"
+        go_type:
+          import: "nighttroop.t1d.nz/data/types"
+          type: "ActivityOther"
+      - column: "activities_vw.other_attributes"
+        go_type:
+          import: "nighttroop.t1d.nz/data/types"
+          type: "ActivityOther"
       - column: "profile_presets.is_default"
         go_type:
           type: "bool"
@@ -40,12 +48,14 @@ overrides:
         go_type:
           import: "nighttroop.t1d.nz/data/types"
           type: "GlucoseReadingOther"
-      - column: "insulin_doses.automatic"
+      - column: "insulin_doses.other_attributes"
         go_type:
-          type: "*bool"
-      - column: "insulin_doses_vw.automatic"
+          import: "nighttroop.t1d.nz/data/types"
+          type: "InsulinDoseOther"
+      - column: "insulin_doses_vw.other_attributes"
         go_type:
-          type: "*bool"
+          import: "nighttroop.t1d.nz/data/types"
+          type: "InsulinDoseOther"
 
       # units
       - column: "glucose_readings.units"

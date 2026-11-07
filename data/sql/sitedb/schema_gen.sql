@@ -53,10 +53,13 @@ CREATE TABLE activities (
     activity_type TEXT NOT NULL CHECK(length(activity_type) <= 32) default 'exercise',
 
     duration_minutes INTEGER CHECK(duration_minutes BETWEEN 0 AND 10080), -- at most a week
-    calories INTEGER CHECK(calories BETWEEN 0 AND 50000),
-    steps INTEGER CHECK(steps BETWEEN 0 AND 1000000),
-    heart_rate INTEGER CHECK(heart_rate BETWEEN 0 AND 300),
 
+    -- What only some apps send, a JSON object (types.ActivityOther) NULL for most activities: what a fitness tracker
+    -- or watch measured of it (calories, steps, heart_rate), such as xDrip+'s. A field that is not there passes its check.
+    other_attributes TEXT CHECK(length(other_attributes) <= 128 AND json_valid(other_attributes)
+        AND json_extract(other_attributes, '$.calories') BETWEEN 0 AND 50000
+        AND json_extract(other_attributes, '$.steps') BETWEEN 0 AND 1000000
+        AND json_extract(other_attributes, '$.heart_rate') BETWEEN 0 AND 300),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
@@ -326,9 +329,14 @@ CREATE TABLE insulin_doses (
     dose REAL NOT NULL CHECK(dose BETWEEN -500 AND 500), -- units, negative takes insulin back off IOB
     dose_type TEXT CHECK(length(dose_type) <= 32),
     
-    split_now REAL CHECK(split_now BETWEEN 0 AND 1), -- the fraction of a combo bolus given at once, Nightscout's splitNow / 100
-    split_ext REAL CHECK(split_ext BETWEEN 0 AND 1), -- the fraction given over time, Nightscout's splitExt / 100
-    automatic INTEGER CHECK(automatic IN (0, 1)), -- whether a loop gave it, Loop's automatic, as LoopFollow shows it as an SMB
+
+    -- What only some apps send, a JSON object (types.InsulinDoseOther) NULL for most doses: a combo bolus's split, the
+    -- fraction given at once (split_now, Nightscout's splitNow / 100) and over time (split_ext, its splitExt / 100), and
+    -- whether a loop gave it (automatic, Loop's, as LoopFollow shows it as an SMB). A field that is not there passes its check.
+    other_attributes TEXT CHECK(length(other_attributes) <= 256 AND json_valid(other_attributes)
+        AND json_extract(other_attributes, '$.split_now') BETWEEN 0 AND 1
+        AND json_extract(other_attributes, '$.split_ext') BETWEEN 0 AND 1
+        AND json_extract(other_attributes, '$.automatic') IN (0, 1)),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),

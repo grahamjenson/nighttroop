@@ -19,18 +19,7 @@ func ActivityToCreate(source Activity, context ConverterContext) sitedb.CreateAc
 		xint64 := FlexibleInt64ToInt64(*source.DurationMinutes)
 		sitedbCreateActivityParams.DurationMinutes = &xint64
 	}
-	if source.Calories != nil {
-		xint642 := FlexibleInt64ToInt64(*source.Calories)
-		sitedbCreateActivityParams.Calories = &xint642
-	}
-	if source.Steps != nil {
-		xint643 := FlexibleInt64ToInt64(*source.Steps)
-		sitedbCreateActivityParams.Steps = &xint643
-	}
-	if source.HeartRate != nil {
-		xint644 := FlexibleInt64ToInt64(*source.HeartRate)
-		sitedbCreateActivityParams.HeartRate = &xint644
-	}
+	sitedbCreateActivityParams.OtherAttributes = ActivityOther(source)
 	if source.Notes != nil {
 		xstring2 := SanitizedStringToString(*source.Notes)
 		sitedbCreateActivityParams.Notes = &xstring2
@@ -41,8 +30,8 @@ func ActivityToCreate(source Activity, context ConverterContext) sitedb.CreateAc
 	}
 	sitedbCreateActivityParams.OccurredAt = OrNow(source.Date)
 	if source.UtcOffsetMinutes != nil {
-		xint645 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		sitedbCreateActivityParams.UtcOffsetMinutes = &xint645
+		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		sitedbCreateActivityParams.UtcOffsetMinutes = &xint642
 	}
 	pString := source.RawJsonData
 	sitedbCreateActivityParams.RawJsonData = &pString
