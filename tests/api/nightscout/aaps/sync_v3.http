@@ -333,6 +333,9 @@ ASSERT_EQUALS "Default(90%)" "@result.profile"
 ASSERT_EQUALS 90 "@result.percentage"
 ASSERT_EQUALS 0 "@result.timeshift"
 ASSERT_EXISTS "@result.profileJson"
+// A follower names the switch by its originalProfileName, else by profile, and takes its originalDuration
+ASSERT_EQUALS "Default" "@result.originalProfileName"
+ASSERT_EQUALS 0 "@result.originalDuration"
 
 NAME get_bg_check
 GET http://{{ site }}/api/v3/treatments/{{ .add_bg_check.identifier }}
@@ -372,13 +375,13 @@ B {
     "originalTimeshift": 0,
     "originalPercentage": 90,
     "originalDuration": 0,
-    "originalEnd": {{ itime 14 }},
+    "originalEnd": 1767225600000,
     "notes": "Default(90%)",
     "app": "AAPS"
  }
 ASSERT_STATUS 201
 
-// The original fields are not kept yet (TODOs.md), so a follower reads it as a plain Note
+// The original fields come back as sent, so a follower reads it as an effective profile switch, not a plain Note
 NAME get_effective_profile_switch
 GET http://{{ site }}/api/v3/treatments/{{ .add_effective_profile_switch.identifier }}
 H Authorization: Bearer {{ jwt }}
@@ -386,6 +389,54 @@ ASSERT_STATUS 200
 ASSERT_EQUALS "Note" "@result.eventType"
 ASSERT_EQUALS "Default(90%)" "@result.notes"
 ASSERT_EXISTS "@result.profileJson"
+ASSERT_EQUALS "Default" "@result.originalProfileName"
+ASSERT_EQUALS "Default(90%)" "@result.originalCustomizedName"
+ASSERT_EQUALS 0 "@result.originalTimeshift"
+ASSERT_EQUALS 90 "@result.originalPercentage"
+ASSERT_EQUALS 0 "@result.originalDuration"
+ASSERT_EQUALS 1767225600000 "@result.originalEnd"
+
+// AAPS updates the whole treatment; one without an original field keeps it
+NAME patch_effective_profile_switch
+PATCH http://{{ site }}/api/v3/treatments/{{ .add_effective_profile_switch.identifier }}
+H Authorization: Bearer {{ jwt }}
+B {
+    "identifier": "{{ .add_effective_profile_switch.identifier }}",
+    "isReadOnly": false,
+    "isValid": true,
+    "eventType": "Note",
+    "profileJson": "{\"units\":\"mg/dl\",\"dia\":5,\"timezone\":\"Pacific/Auckland\",\"sens\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":111}],\"carbratio\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":11}],\"basal\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":0.9}],\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":100}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":100}]}",
+    "originalCustomizedName": "Default(90%)",
+    "originalTimeshift": 3600000,
+    "originalPercentage": 90,
+    "originalDuration": 3600000,
+    "originalEnd": 1767225600000,
+    "notes": "Default(90%)",
+    "app": "AAPS"
+ }
+ASSERT_STATUS 200
+
+NAME get_patched_effective_profile_switch
+GET http://{{ site }}/api/v3/treatments/{{ .add_effective_profile_switch.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Default" "@result.originalProfileName"
+ASSERT_EQUALS 3600000 "@result.originalTimeshift"
+ASSERT_EQUALS 90 "@result.originalPercentage"
+ASSERT_EQUALS 3600000 "@result.originalDuration"
+ASSERT_EQUALS 1767225600000 "@result.originalEnd"
+
+// AAPS 3.4's NSClient v1 reads the same fields
+NAME get_effective_profile_switch_v1
+GET http://{{ site }}/api/v1/treatments/{{ .add_effective_profile_switch.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Default" "@0.originalProfileName"
+ASSERT_EQUALS "Default(90%)" "@0.originalCustomizedName"
+ASSERT_EQUALS 3600000 "@0.originalTimeshift"
+ASSERT_EQUALS 90 "@0.originalPercentage"
+ASSERT_EQUALS 3600000 "@0.originalDuration"
+ASSERT_EQUALS 1767225600000 "@0.originalEnd"
 
 // RM.toNSOfflineEvent, a running mode such as a disconnected pump
 NAME add_running_mode

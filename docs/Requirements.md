@@ -447,6 +447,10 @@ focus back to the row or button that opened it.
   registers that app's APNs token for pushes for the identity that uploaded it, a production build unless
   `isAPNSProduction` is false; a token that is not one is not registered, and the profile is still kept.
 - A profile switch's `percentage` is kept as a multiplier of the profile's insulin (120 as 1.2) and returned as sent.
+- A profile switch, or AAPS's effective profile switch (a Note with a `profileJson`), keeps the switch it was made
+  from, `originalProfileName`, `originalCustomizedName`, `originalTimeshift`, `originalPercentage`,
+  `originalDuration` and `originalEnd`, and returns them as sent through v1 and v3, so AAPS's followers read an
+  effective profile switch as one; an update without one keeps it.
 - A combo bolus's `splitNow` and `splitExt` are kept as the fractions given at once and over time (70 as 0.7) and
   returned as sent.
 - A temp basal is sent with its rate in U/hr as `rate` or `absolute`, its `percent`, or both. Its `percent` is

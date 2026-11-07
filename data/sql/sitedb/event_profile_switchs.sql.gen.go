@@ -14,7 +14,7 @@ import (
 
 const allProfileSwitches = `-- name: AllProfileSwitches :many
 
-SELECT id, name, duration_minutes, multiplier, timeshift, dia, units, timezone, carbs_hr, delay, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM profile_switches
+SELECT id, name, duration_minutes, multiplier, timeshift, original_profile_name, original_customized_name, original_timeshift_ms, original_percentage, original_duration_ms, original_end, dia, units, timezone, carbs_hr, delay, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM profile_switches
 WHERE (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
@@ -44,6 +44,12 @@ func (q *Queries) AllProfileSwitches(ctx context.Context, arg AllProfileSwitches
 			&i.DurationMinutes,
 			&i.Multiplier,
 			&i.Timeshift,
+			&i.OriginalProfileName,
+			&i.OriginalCustomizedName,
+			&i.OriginalTimeshiftMs,
+			&i.OriginalPercentage,
+			&i.OriginalDurationMs,
+			&i.OriginalEnd,
 			&i.Dia,
 			&i.Units,
 			&i.Timezone,
@@ -95,7 +101,13 @@ INSERT INTO profile_switches (
     carbs_hr,
     delay,
     timeshift,
-    
+    original_profile_name,
+    original_customized_name,
+    original_timeshift_ms,
+    original_percentage,
+    original_duration_ms,
+    original_end,
+
     carb_ratios_json,
     insulin_sensitivities_json,
     basal_rates_json,
@@ -113,8 +125,8 @@ INSERT INTO profile_switches (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, name, duration_minutes, multiplier, timeshift, dia, units, timezone, carbs_hr, delay, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, name, duration_minutes, multiplier, timeshift, original_profile_name, original_customized_name, original_timeshift_ms, original_percentage, original_duration_ms, original_end, dia, units, timezone, carbs_hr, delay, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type CreateProfileSwitchParams struct {
@@ -128,6 +140,12 @@ type CreateProfileSwitchParams struct {
 	CarbsHr                  *float64
 	Delay                    *float64
 	Timeshift                *int64
+	OriginalProfileName      *string
+	OriginalCustomizedName   *string
+	OriginalTimeshiftMs      *int64
+	OriginalPercentage       *int64
+	OriginalDurationMs       *int64
+	OriginalEnd              *int64
 	CarbRatiosJson           *string
 	InsulinSensitivitiesJson *string
 	BasalRatesJson           *string
@@ -159,6 +177,12 @@ func (q *Queries) CreateProfileSwitch(ctx context.Context, arg CreateProfileSwit
 		arg.CarbsHr,
 		arg.Delay,
 		arg.Timeshift,
+		arg.OriginalProfileName,
+		arg.OriginalCustomizedName,
+		arg.OriginalTimeshiftMs,
+		arg.OriginalPercentage,
+		arg.OriginalDurationMs,
+		arg.OriginalEnd,
 		arg.CarbRatiosJson,
 		arg.InsulinSensitivitiesJson,
 		arg.BasalRatesJson,
@@ -181,6 +205,12 @@ func (q *Queries) CreateProfileSwitch(ctx context.Context, arg CreateProfileSwit
 		&i.DurationMinutes,
 		&i.Multiplier,
 		&i.Timeshift,
+		&i.OriginalProfileName,
+		&i.OriginalCustomizedName,
+		&i.OriginalTimeshiftMs,
+		&i.OriginalPercentage,
+		&i.OriginalDurationMs,
+		&i.OriginalEnd,
 		&i.Dia,
 		&i.Units,
 		&i.Timezone,
@@ -210,7 +240,7 @@ func (q *Queries) CreateProfileSwitch(ctx context.Context, arg CreateProfileSwit
 }
 
 const getProfileSwitch = `-- name: GetProfileSwitch :one
-SELECT id, name, duration_minutes, multiplier, timeshift, dia, units, timezone, carbs_hr, delay, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM profile_switches WHERE id = ? AND (CAST(?2 AS BOOL) = TRUE OR deleted_at IS NULL)
+SELECT id, name, duration_minutes, multiplier, timeshift, original_profile_name, original_customized_name, original_timeshift_ms, original_percentage, original_duration_ms, original_end, dia, units, timezone, carbs_hr, delay, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM profile_switches WHERE id = ? AND (CAST(?2 AS BOOL) = TRUE OR deleted_at IS NULL)
 `
 
 type GetProfileSwitchParams struct {
@@ -227,6 +257,12 @@ func (q *Queries) GetProfileSwitch(ctx context.Context, arg GetProfileSwitchPara
 		&i.DurationMinutes,
 		&i.Multiplier,
 		&i.Timeshift,
+		&i.OriginalProfileName,
+		&i.OriginalCustomizedName,
+		&i.OriginalTimeshiftMs,
+		&i.OriginalPercentage,
+		&i.OriginalDurationMs,
+		&i.OriginalEnd,
 		&i.Dia,
 		&i.Units,
 		&i.Timezone,
@@ -268,7 +304,7 @@ func (q *Queries) HardDeleteProfileSwitch(ctx context.Context, arg HardDeletePro
 }
 
 const searchProfileSwitches = `-- name: SearchProfileSwitches :many
-SELECT id, name, duration_minutes, multiplier, timeshift, dia, units, timezone, carbs_hr, delay, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM profile_switches
+SELECT id, name, duration_minutes, multiplier, timeshift, original_profile_name, original_customized_name, original_timeshift_ms, original_percentage, original_duration_ms, original_end, dia, units, timezone, carbs_hr, delay, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM profile_switches
 WHERE
     -- The date filters as one range, occurred_at's CHECK where unset, so SQLite reads only that range of its index
     occurred_at BETWEEN MAX(COALESCE(CAST(?1 AS INTEGER), 0), COALESCE(CAST(?2 AS INTEGER) + 1, 0), COALESCE(CAST(?3 AS INTEGER), 0))
@@ -374,6 +410,12 @@ func (q *Queries) SearchProfileSwitches(ctx context.Context, arg SearchProfileSw
 			&i.DurationMinutes,
 			&i.Multiplier,
 			&i.Timeshift,
+			&i.OriginalProfileName,
+			&i.OriginalCustomizedName,
+			&i.OriginalTimeshiftMs,
+			&i.OriginalPercentage,
+			&i.OriginalDurationMs,
+			&i.OriginalEnd,
 			&i.Dia,
 			&i.Units,
 			&i.Timezone,
@@ -413,7 +455,7 @@ func (q *Queries) SearchProfileSwitches(ctx context.Context, arg SearchProfileSw
 }
 
 const searchSummaryProfileSwitches = `-- name: SearchSummaryProfileSwitches :many
-SELECT id, name, duration_minutes, multiplier, timeshift, dia, units, timezone, carbs_hr, delay, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM profile_switches
+SELECT id, name, duration_minutes, multiplier, timeshift, original_profile_name, original_customized_name, original_timeshift_ms, original_percentage, original_duration_ms, original_end, dia, units, timezone, carbs_hr, delay, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM profile_switches
 WHERE profile_switches.deleted_at IS NULL AND profile_switches.occurred_at <= ?1
     AND profile_switches.occurred_at >= COALESCE((SELECT MAX(before.occurred_at) FROM profile_switches AS before WHERE before.deleted_at IS NULL AND before.duration_minutes = 0 AND before.occurred_at <= ?2), ?3)
 ORDER BY profile_switches.occurred_at DESC
@@ -449,6 +491,12 @@ func (q *Queries) SearchSummaryProfileSwitches(ctx context.Context, arg SearchSu
 			&i.DurationMinutes,
 			&i.Multiplier,
 			&i.Timeshift,
+			&i.OriginalProfileName,
+			&i.OriginalCustomizedName,
+			&i.OriginalTimeshiftMs,
+			&i.OriginalPercentage,
+			&i.OriginalDurationMs,
+			&i.OriginalEnd,
 			&i.Dia,
 			&i.Units,
 			&i.Timezone,
@@ -515,31 +563,43 @@ UPDATE profile_switches SET
     duration_minutes = COALESCE(?2, duration_minutes),
     multiplier = COALESCE(?3, multiplier),
     timeshift = COALESCE(?4, timeshift),
-    notes = COALESCE(?5, notes),
-    reason = COALESCE(?6, reason),
+    original_profile_name = COALESCE(?5, original_profile_name),
+    original_customized_name = COALESCE(?6, original_customized_name),
+    original_timeshift_ms = COALESCE(?7, original_timeshift_ms),
+    original_percentage = COALESCE(?8, original_percentage),
+    original_duration_ms = COALESCE(?9, original_duration_ms),
+    original_end = COALESCE(?10, original_end),
+    notes = COALESCE(?11, notes),
+    reason = COALESCE(?12, reason),
 
     raw_json_data = json_patch(
         COALESCE(raw_json_data, '{}'),
-        COALESCE(CAST(?7 AS TEXT), '{}')
+        COALESCE(CAST(?13 AS TEXT), '{}')
     ),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_id = ?8,
-    updated_by_identity_name = ?9
-WHERE id = ?10 AND deleted_at IS NULL
-RETURNING id, name, duration_minutes, multiplier, timeshift, dia, units, timezone, carbs_hr, delay, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+    updated_by_identity_id = ?14,
+    updated_by_identity_name = ?15
+WHERE id = ?16 AND deleted_at IS NULL
+RETURNING id, name, duration_minutes, multiplier, timeshift, original_profile_name, original_customized_name, original_timeshift_ms, original_percentage, original_duration_ms, original_end, dia, units, timezone, carbs_hr, delay, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type UpdateProfileSwitchParams struct {
-	Name                  *string
-	DurationMinutes       *int64
-	Multiplier            *float64
-	Timeshift             *int64
-	Notes                 *string
-	Reason                *string
-	RawJsonData           *string
-	UpdatedByIdentityID   *int64
-	UpdatedByIdentityName *string
-	ID                    string
+	Name                   *string
+	DurationMinutes        *int64
+	Multiplier             *float64
+	Timeshift              *int64
+	OriginalProfileName    *string
+	OriginalCustomizedName *string
+	OriginalTimeshiftMs    *int64
+	OriginalPercentage     *int64
+	OriginalDurationMs     *int64
+	OriginalEnd            *int64
+	Notes                  *string
+	Reason                 *string
+	RawJsonData            *string
+	UpdatedByIdentityID    *int64
+	UpdatedByIdentityName  *string
+	ID                     string
 }
 
 // ------
@@ -551,6 +611,12 @@ func (q *Queries) UpdateProfileSwitch(ctx context.Context, arg UpdateProfileSwit
 		arg.DurationMinutes,
 		arg.Multiplier,
 		arg.Timeshift,
+		arg.OriginalProfileName,
+		arg.OriginalCustomizedName,
+		arg.OriginalTimeshiftMs,
+		arg.OriginalPercentage,
+		arg.OriginalDurationMs,
+		arg.OriginalEnd,
 		arg.Notes,
 		arg.Reason,
 		arg.RawJsonData,
@@ -565,6 +631,12 @@ func (q *Queries) UpdateProfileSwitch(ctx context.Context, arg UpdateProfileSwit
 		&i.DurationMinutes,
 		&i.Multiplier,
 		&i.Timeshift,
+		&i.OriginalProfileName,
+		&i.OriginalCustomizedName,
+		&i.OriginalTimeshiftMs,
+		&i.OriginalPercentage,
+		&i.OriginalDurationMs,
+		&i.OriginalEnd,
 		&i.Dia,
 		&i.Units,
 		&i.Timezone,
