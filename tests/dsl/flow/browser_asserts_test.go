@@ -95,3 +95,26 @@ func TestVisibleAssertsWaitOnlyAsLongAsNeeded(t *testing.T) {
 	require.Less(t, time.Since(start), time.Second)
 	require.NoError(t, (&AssertVisible{Locator: "#save"}).Execute(t, map[string]any{}, page, nil))
 }
+
+// Two rows match until half a second after the page loads, when they are swapped out, as a filter's HTMX swap removes
+// the rows it leaves out
+const swappedRowsPage = `<html><body><table id="events"><tr><td>Site created</td></tr><tr><td>Site created</td></tr></table>
+<script>setTimeout(() => { document.getElementById("events").innerHTML = '<tr><td>Sync turned off</td></tr>' }, 500)</script>
+</body></html>`
+
+// ASSERT_NOT_VISIBLE waits for every match to go, not refusing a locator that finds several before the swap
+func TestNotVisibleWaitsForEveryMatchToGo(t *testing.T) {
+	pw, err := playwright.Run()
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = pw.Stop() })
+	browser, err := pw.Chromium.Launch()
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = browser.Close() })
+
+	page, err := browser.NewPage()
+	require.NoError(t, err)
+	require.NoError(t, page.SetContent(swappedRowsPage))
+	started := time.Now()
+	require.NoError(t, (&AssertNotVisible{Locator: "#events >> text=Site created"}).Execute(t, map[string]any{}, page, nil))
+	require.GreaterOrEqual(t, time.Since(started), 400*time.Millisecond, "it waited for the swap")
+}
