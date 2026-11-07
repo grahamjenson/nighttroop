@@ -53,6 +53,7 @@ CREATE TABLE insulin_doses (
     
     split_now REAL CHECK(split_now BETWEEN 0 AND 1), -- the fraction of a combo bolus given at once, Nightscout's splitNow / 100
     split_ext REAL CHECK(split_ext BETWEEN 0 AND 1), -- the fraction given over time, Nightscout's splitExt / 100
+    automatic INTEGER CHECK(automatic IN (0, 1)), -- whether a loop gave it, Loop's automatic, as LoopFollow shows it as an SMB
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),

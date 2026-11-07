@@ -487,6 +487,8 @@ focus back to the row or button that opened it.
   entries is left out and the readings with it kept; an uploader battery that is not a number is left out of its
   device status; `uploader.battery` is the uploader's battery; and a treatment is found by its `uuid` (`find[uuid]`), sent as the `_id` or as xDrip+ makes its `_id`.
 - Trio's and iAPS's `SMB` and `External Insulin` treatments are kept as insulin doses, with their event type.
+- A Loop bolus's `automatic` comes back as sent, true or false, through API v1 and v3, so LoopFollow shows an
+  automatic bolus as an SMB and leaves it out of its bolus stats.
 - xDrip+'s `Sensor Stop` treatments are kept as a site or sensor change, with their event type, so the treatments it
   uploads after one are kept too; the site can add a Sensor Stop change and a Sensor Stop event group.
 - A profile has `enteredBy`, the identity that uploaded it, as Trio needs it to import one.

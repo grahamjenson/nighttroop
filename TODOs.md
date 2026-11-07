@@ -12,6 +12,8 @@
     1. P3: Reports: the AGP's percentiles at a time in a tooltip
     1. Time below and above range, as well as time in range
     1. Small multiples Daily
+    1. P3: Give an insulin dose's `automatic` in the site API, and draw a Loop bolus with it as an SMB on the summary
+       graph, as Trio's `SMB` treatments are
 
 1. Alarms:
     1. Push notifications to phones, as alarms now only reach an open site page or a Nightscout socket client
@@ -110,9 +112,6 @@
        client control (pairing and remote commands) uses
     1. P4: Only write a treatment's events that changed, rather than every one on each update
     1. P4: Keep when a site's settings last changed, for API v3 lastModified
-1. LoopFollow ([docs/clients/loopfollow.md](docs/clients/loopfollow.md)):
-    1. P2: Keep Loop's `automatic` on boluses, so LoopFollow shows automatic boluses as SMBs and leaves them out of
-       its bolus stats
 1. Loop ([docs/clients/loop.md](docs/clients/loop.md)):
     1. P2: Loop remote commands: `POST /api/v2/notifications/loop`, sent to Loop as an Apple push to its profile's
        `loopSettings.deviceToken`, once push notifications can be sent
