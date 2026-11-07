@@ -542,9 +542,6 @@
   .h-px {
     height: 1px;
   }
-  .max-h-24 {
-    max-height: calc(var(--spacing) * 24);
-  }
   .max-h-48 {
     max-height: calc(var(--spacing) * 48);
   }
@@ -731,9 +728,6 @@
   }
   .grid-cols-3 {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-  .grid-cols-4 {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
   .grid-cols-\[8rem_1fr\] {
     grid-template-columns: 8rem 1fr;
