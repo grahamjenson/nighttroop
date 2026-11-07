@@ -8,11 +8,13 @@ package sitedb
 import (
 	"context"
 	"database/sql"
+
+	"nighttroop.t1d.nz/data/types"
 )
 
 const allFoodIntakes = `-- name: AllFoodIntakes :many
 
-SELECT id, name, food_type, category, subcategory, absorption_time_minutes, pre_bolus, carbs, fat, protein, fibre, energy, portions, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM food_intakes
+SELECT id, name, food_type, absorption_time_minutes, carbs, other_attributes, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM food_intakes
 WHERE (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
@@ -40,16 +42,9 @@ func (q *Queries) AllFoodIntakes(ctx context.Context, arg AllFoodIntakesParams) 
 			&i.ID,
 			&i.Name,
 			&i.FoodType,
-			&i.Category,
-			&i.Subcategory,
 			&i.AbsorptionTimeMinutes,
-			&i.PreBolus,
 			&i.Carbs,
-			&i.Fat,
-			&i.Protein,
-			&i.Fibre,
-			&i.Energy,
-			&i.Portions,
+			&i.OtherAttributes,
 			&i.Notes,
 			&i.Reason,
 			&i.RawJsonData,
@@ -83,17 +78,10 @@ INSERT INTO food_intakes (
     id,
     name,
     food_type,
-    category,
-    subcategory,
 
     absorption_time_minutes,
-    pre_bolus,
     carbs,
-    fat,
-    protein,
-    fibre,
-    energy,
-    portions,
+    other_attributes,
 
     notes,
     reason,
@@ -106,24 +94,17 @@ INSERT INTO food_intakes (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, name, food_type, category, subcategory, absorption_time_minutes, pre_bolus, carbs, fat, protein, fibre, energy, portions, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, name, food_type, absorption_time_minutes, carbs, other_attributes, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type CreateFoodIntakeParams struct {
 	ID                    string
 	Name                  *string
 	FoodType              *string
-	Category              *string
-	Subcategory           *string
 	AbsorptionTimeMinutes *int64
-	PreBolus              *float64
 	Carbs                 *float64
-	Fat                   *float64
-	Protein               *float64
-	Fibre                 *float64
-	Energy                *float64
-	Portions              *float64
+	OtherAttributes       types.FoodIntakeOther
 	Notes                 *string
 	Reason                *string
 	UtcOffsetMinutes      *int64
@@ -143,16 +124,9 @@ func (q *Queries) CreateFoodIntake(ctx context.Context, arg CreateFoodIntakePara
 		arg.ID,
 		arg.Name,
 		arg.FoodType,
-		arg.Category,
-		arg.Subcategory,
 		arg.AbsorptionTimeMinutes,
-		arg.PreBolus,
 		arg.Carbs,
-		arg.Fat,
-		arg.Protein,
-		arg.Fibre,
-		arg.Energy,
-		arg.Portions,
+		arg.OtherAttributes,
 		arg.Notes,
 		arg.Reason,
 		arg.UtcOffsetMinutes,
@@ -168,16 +142,9 @@ func (q *Queries) CreateFoodIntake(ctx context.Context, arg CreateFoodIntakePara
 		&i.ID,
 		&i.Name,
 		&i.FoodType,
-		&i.Category,
-		&i.Subcategory,
 		&i.AbsorptionTimeMinutes,
-		&i.PreBolus,
 		&i.Carbs,
-		&i.Fat,
-		&i.Protein,
-		&i.Fibre,
-		&i.Energy,
-		&i.Portions,
+		&i.OtherAttributes,
 		&i.Notes,
 		&i.Reason,
 		&i.RawJsonData,
@@ -197,7 +164,7 @@ func (q *Queries) CreateFoodIntake(ctx context.Context, arg CreateFoodIntakePara
 }
 
 const getFoodIntake = `-- name: GetFoodIntake :one
-SELECT id, name, food_type, category, subcategory, absorption_time_minutes, pre_bolus, carbs, fat, protein, fibre, energy, portions, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM food_intakes WHERE id = ? AND (CAST(?2 AS BOOL) = TRUE OR deleted_at IS NULL)
+SELECT id, name, food_type, absorption_time_minutes, carbs, other_attributes, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM food_intakes WHERE id = ? AND (CAST(?2 AS BOOL) = TRUE OR deleted_at IS NULL)
 `
 
 type GetFoodIntakeParams struct {
@@ -212,16 +179,9 @@ func (q *Queries) GetFoodIntake(ctx context.Context, arg GetFoodIntakeParams) (*
 		&i.ID,
 		&i.Name,
 		&i.FoodType,
-		&i.Category,
-		&i.Subcategory,
 		&i.AbsorptionTimeMinutes,
-		&i.PreBolus,
 		&i.Carbs,
-		&i.Fat,
-		&i.Protein,
-		&i.Fibre,
-		&i.Energy,
-		&i.Portions,
+		&i.OtherAttributes,
 		&i.Notes,
 		&i.Reason,
 		&i.RawJsonData,
@@ -265,7 +225,7 @@ func (q *Queries) HardDeleteFoodIntakesByType(ctx context.Context, arg HardDelet
 }
 
 const searchFoodIntakes = `-- name: SearchFoodIntakes :many
-SELECT id, name, food_type, category, subcategory, absorption_time_minutes, pre_bolus, carbs, fat, protein, fibre, energy, portions, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM food_intakes
+SELECT id, name, food_type, absorption_time_minutes, carbs, other_attributes, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM food_intakes
 WHERE
     -- The date filters as one range, occurred_at's CHECK where unset, so SQLite reads only that range of its index
     occurred_at BETWEEN MAX(COALESCE(CAST(?1 AS INTEGER), 0), COALESCE(CAST(?2 AS INTEGER) + 1, 0), COALESCE(CAST(?3 AS INTEGER), 0))
@@ -382,16 +342,9 @@ func (q *Queries) SearchFoodIntakes(ctx context.Context, arg SearchFoodIntakesPa
 			&i.ID,
 			&i.Name,
 			&i.FoodType,
-			&i.Category,
-			&i.Subcategory,
 			&i.AbsorptionTimeMinutes,
-			&i.PreBolus,
 			&i.Carbs,
-			&i.Fat,
-			&i.Protein,
-			&i.Fibre,
-			&i.Energy,
-			&i.Portions,
+			&i.OtherAttributes,
 			&i.Notes,
 			&i.Reason,
 			&i.RawJsonData,
@@ -463,46 +416,37 @@ const updateFoodIntake = `-- name: UpdateFoodIntake :one
 UPDATE food_intakes SET
     name = COALESCE(?1, name),
     food_type = COALESCE(?2, food_type),
-    category = COALESCE(?3, category),
-    subcategory = COALESCE(?4, subcategory),
 
-    carbs = COALESCE(?5, carbs),
-    fat = COALESCE(?6, fat),
-    protein = COALESCE(?7, protein),
-    fibre = COALESCE(?8, fibre),
-    energy = COALESCE(?9, energy),
-    absorption_time_minutes = COALESCE(?10, absorption_time_minutes),
-    pre_bolus = COALESCE(?11, pre_bolus),
-    portions = COALESCE(?12, portions),
+    carbs = COALESCE(?3, carbs),
+    absorption_time_minutes = COALESCE(?4, absorption_time_minutes),
+    -- The fields sent, as JSON (types.OtherJSON), are merged into those kept, so one not sent stays as it is, as a
+    -- column of its own would
+    other_attributes = NULLIF(json_patch(
+        COALESCE(other_attributes, '{}'),
+        COALESCE(CAST(?5 AS TEXT), '{}')
+    ), '{}'),
 
-    notes = COALESCE(?13, notes),
-    reason = COALESCE(?14, reason),
+    notes = COALESCE(?6, notes),
+    reason = COALESCE(?7, reason),
 
 
     raw_json_data = json_patch(
         COALESCE(raw_json_data, '{}'),
-        COALESCE(CAST(?15 AS TEXT), '{}')
+        COALESCE(CAST(?8 AS TEXT), '{}')
     ),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_id = ?16,
-    updated_by_identity_name = ?17
-WHERE id = ?18 AND deleted_at IS NULL
-RETURNING id, name, food_type, category, subcategory, absorption_time_minutes, pre_bolus, carbs, fat, protein, fibre, energy, portions, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+    updated_by_identity_id = ?9,
+    updated_by_identity_name = ?10
+WHERE id = ?11 AND deleted_at IS NULL
+RETURNING id, name, food_type, absorption_time_minutes, carbs, other_attributes, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type UpdateFoodIntakeParams struct {
 	Name                  *string
 	FoodType              *string
-	Category              *string
-	Subcategory           *string
 	Carbs                 *float64
-	Fat                   *float64
-	Protein               *float64
-	Fibre                 *float64
-	Energy                *float64
 	AbsorptionTimeMinutes *int64
-	PreBolus              *float64
-	Portions              *float64
+	OtherAttributes       *string
 	Notes                 *string
 	Reason                *string
 	RawJsonData           *string
@@ -518,16 +462,9 @@ func (q *Queries) UpdateFoodIntake(ctx context.Context, arg UpdateFoodIntakePara
 	row := q.queryRow(ctx, q.updateFoodIntakeStmt, updateFoodIntake,
 		arg.Name,
 		arg.FoodType,
-		arg.Category,
-		arg.Subcategory,
 		arg.Carbs,
-		arg.Fat,
-		arg.Protein,
-		arg.Fibre,
-		arg.Energy,
 		arg.AbsorptionTimeMinutes,
-		arg.PreBolus,
-		arg.Portions,
+		arg.OtherAttributes,
 		arg.Notes,
 		arg.Reason,
 		arg.RawJsonData,
@@ -540,16 +477,9 @@ func (q *Queries) UpdateFoodIntake(ctx context.Context, arg UpdateFoodIntakePara
 		&i.ID,
 		&i.Name,
 		&i.FoodType,
-		&i.Category,
-		&i.Subcategory,
 		&i.AbsorptionTimeMinutes,
-		&i.PreBolus,
 		&i.Carbs,
-		&i.Fat,
-		&i.Protein,
-		&i.Fibre,
-		&i.Energy,
-		&i.Portions,
+		&i.OtherAttributes,
 		&i.Notes,
 		&i.Reason,
 		&i.RawJsonData,
