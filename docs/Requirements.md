@@ -71,6 +71,10 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   are never shown.
 - An admin can reset an identity's password (shown once, with a device's new Nightscout token) or TOTP secret. Each
   reset signs out the identity's existing sessions and is recorded as an event.
+- An admin can sign in to a site as any of its identities, after confirming: they get a link that opens the site in a
+  new tab signed in as it, with its role, for the hour a sign in lasts. The link works once, within a minute, on its
+  own site only. The site records a "Signed in by control" event, with the identity and the control admin, which its
+  admins see on its Events page. Read-only control identities cannot.
 
 ### Background jobs
 

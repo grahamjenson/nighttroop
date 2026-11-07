@@ -80,6 +80,17 @@ func (l *LogsDB) SignedInEvent(ctx context.Context, siteID string, identityName 
 	l.event(ctx, siteID, events.SignedIn, SignInAttributes{IdentityName: identityName, From: from})
 }
 
+// SignedInByControlAttributes are the identity a control admin signed in to a site as, and the admin
+type SignedInByControlAttributes struct {
+	IdentityName string `json:"identity_name"`
+	By           string `json:"by"`
+}
+
+// SignedInByControlEvent records the control admin by signing in to the site as its identity, so its admins can see they did
+func (l *LogsDB) SignedInByControlEvent(ctx context.Context, siteID string, identityName string, by string) {
+	l.event(ctx, siteID, events.SignedInByControl, SignedInByControlAttributes{IdentityName: identityName, By: by})
+}
+
 // SignInFailedEvent records a refused sign in, without the name tried, which may not be an identity's
 func (l *LogsDB) SignInFailedEvent(ctx context.Context, siteID string, from geoip.Location) {
 	l.event(ctx, siteID, events.SignInFailed, SignInAttributes{From: from})

@@ -29,3 +29,18 @@ SCREENSHOT site_identity_password_reset
 CLICK #control--site--identities--table tr:has-text("admin") [id$="--reset-totp"]
 ASSERT_STATUS 200
 ASSERT_VISIBLE #control--site--identity-reset dt >> text=TOTP secret
+
+// An admin can sign in to the site as one of its identities: asked first (the test accepts), they get a link, good
+// once and for a minute, which opens the site signed in as it
+CLICK #control--site--identities--table tr:has-text("admin") [id$="--reset-assume"]
+ASSERT_STATUS 200
+ASSERT_VISIBLE #control--site--identity-assume--link >> text=Open the site as admin
+SCREENSHOT site_identity_assume
+CLICK #control--site--identity-assume--link
+ASSERT_NEW_PAGE
+ASSERT_PATH /
+ASSERT_VISIBLE #site--summary
+
+// The site's events show the control admin signed in as it
+GOTO /logs/events
+ASSERT_TEXT_VISIBLE Signed in by control

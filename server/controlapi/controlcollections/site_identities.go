@@ -3,6 +3,7 @@ package controlcollections
 import (
 	"context"
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
@@ -11,6 +12,7 @@ import (
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/server/components/control_templ/control_sites_templ"
 	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -55,16 +57,7 @@ func (s *SitesCollection) ResetTOTPHandler(w http.ResponseWriter, r *http.Reques
 // the new ones
 func (s *SitesCollection) resetIdentity(w http.ResponseWriter, r *http.Request, reset func(context.Context, *db.ControlDB, *controldb.SiteIdentity, string) (*db.IdentityValues, error)) {
 	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
-	if controlContext.IdentityModel.Role != consts.ControlRoleAdmin {
-		apiutils.ErrForbidden.Write(acceptType, w)
-		return
-	}
-	identityID, err := strconv.ParseInt(chi.URLParam(r, "identity"), 10, 64)
-	if err != nil {
-		apiutils.ErrNotFound.Write(acceptType, w)
-		return
-	}
-	identity, err := controlContext.ControlDB.Queries.GetSiteIdentityByID(r.Context(), controldb.GetSiteIdentityByIDParams{SiteID: chi.URLParam(r, "id"), ID: identityID})
+	identity, err := adminsSiteIdentity(r)
 	var values *db.IdentityValues
 	if err == nil {
 		values, err = reset(r.Context(), controlContext.ControlDB, identity, controlContext.IdentityModel.Name)
@@ -78,4 +71,36 @@ func (s *SitesCollection) resetIdentity(w http.ResponseWriter, r *http.Request, 
 		credentials.Password = &values.Password
 	}
 	WriteResponse(w, r, acceptType, http.StatusOK, credentials, control_sites_templ.SiteIdentityReset(credentials))
+}
+
+// AssumeHandler gives an admin a link, good once and for a minute, that signs them in to the site as its identity in
+// the URL. The site records that they did on its events. Only admins can.
+func (s *SitesCollection) AssumeHandler(cfg *config.ServerConfig) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
+		identity, err := adminsSiteIdentity(r)
+		var token string
+		if err == nil {
+			token, err = cfg.Security.GenerateAssumeJWTToken(identity.SiteID, identity.Name, controlContext.IdentityModel.Name)
+		}
+		if herr := apiutils.ErrorFor(err, "site identities"); herr != nil {
+			herr.Write(acceptType, w)
+			return
+		}
+		link := &controlmodels.SiteIdentityAssume{Name: identity.Name, URL: cfg.SiteURL(identity.SiteID) + "/login/assume?token=" + url.QueryEscape(token)}
+		WriteResponse(w, r, acceptType, http.StatusOK, link, control_sites_templ.SiteIdentityAssume(link))
+	}
+}
+
+// adminsSiteIdentity is the site's identity in the URL, for an admin only
+func adminsSiteIdentity(r *http.Request) (*controldb.SiteIdentity, error) {
+	controlContext := httputils.GetControlContext(r.Context())
+	if controlContext.IdentityModel.Role != consts.ControlRoleAdmin {
+		return nil, apiutils.ErrForbidden
+	}
+	identityID, err := strconv.ParseInt(chi.URLParam(r, "identity"), 10, 64)
+	if err != nil {
+		return nil, apiutils.ErrNotFound
+	}
+	return controlContext.ControlDB.Queries.GetSiteIdentityByID(r.Context(), controldb.GetSiteIdentityByIDParams{SiteID: chi.URLParam(r, "id"), ID: identityID})
 }
