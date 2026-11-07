@@ -241,17 +241,38 @@ type AssertNotVisible struct {
 	TestLine int
 }
 
-// Execute waits for the element to be hidden or gone, as an HTMX swap can take a moment
+// Execute waits up to visibleWait for every element the locator finds to be hidden or gone, as an HTMX swap can take
+// a moment. Several can match until the swap, such as the rows a filter is about to remove, which a strict WaitFor
+// refused at once rather than waiting for.
 func (r *AssertNotVisible) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
 	locator := getLocator(r.Locator, page)
 	if locator == nil {
 		t.Fatalf("\n\n%s\n getLocator returned nil for rawLocator: %v\n\n", r.ToErrorLine(), r.Locator)
 	}
-	if err := locator.WaitFor(playwright.LocatorWaitForOptions{State: playwright.WaitForSelectorStateHidden}); err != nil {
-		html, _ := page.Content()
-		t.Fatalf("\n\n%s\n assertNotVisible failed: %v\n\n%s\n\n", r.ToErrorLine(), err, PrettifyHTML(html))
+	for deadline := time.Now().Add(visibleWait * time.Millisecond); ; time.Sleep(50 * time.Millisecond) {
+		visible, err := anyVisible(locator)
+		if err == nil && !visible {
+			return nil
+		}
+		if time.Now().After(deadline) {
+			html, _ := page.Content()
+			t.Fatalf("\n\n%s\n assertNotVisible failed: still visible after %dms (%v)\n\n%s\n\n", r.ToErrorLine(), visibleWait, err, PrettifyHTML(html))
+		}
 	}
-	return nil
+}
+
+// anyVisible is whether any element the locator finds is visible
+func anyVisible(locator playwright.Locator) (bool, error) {
+	all, err := locator.All()
+	if err != nil {
+		return false, err
+	}
+	for _, element := range all {
+		if visible, err := element.IsVisible(); err != nil || visible {
+			return visible, err
+		}
+	}
+	return false, nil
 }
 
 func (r *AssertNotVisible) ToErrorLine() string {

@@ -234,6 +234,8 @@ type SiteConverter interface {
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
 	// goverter:ignore Dia Units Timezone CarbsHr Delay CarbRatiosJson InsulinSensitivitiesJson BasalRatesJson TargetsHighJson TargetsLowJson
+	// The site does not set what AAPS's switch was made from
+	// goverter:ignore OriginalProfileName OriginalCustomizedName OriginalTimeshiftMs OriginalPercentage OriginalDurationMs OriginalEnd
 	ProfileSwitchToCreate(source *SiteProfileSwitch, siteContext *httputils.SiteContext) sitedb.CreateProfileSwitchParams
 
 	// goverter:context siteContext
@@ -241,6 +243,7 @@ type SiteConverter interface {
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
 	// goverter:ignore RawJsonData
+	// goverter:ignore OriginalProfileName OriginalCustomizedName OriginalTimeshiftMs OriginalPercentage OriginalDurationMs OriginalEnd
 	ProfileSwitchToUpdate(source *SiteProfileSwitch, siteContext *httputils.SiteContext) sitedb.UpdateProfileSwitchParams
 
 	///////
@@ -286,13 +289,15 @@ type SiteConverter interface {
 	// goverter:map OccurredAt | OccurredAtOrNow
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
+	// Only a loop's upload says whether a dose was automatic, not the site
+	// goverter:ignore Automatic
 	InsulinDoseToCreate(source *SiteInsulinDose, siteContext *httputils.SiteContext) sitedb.CreateInsulinDoseParams
 
 	// goverter:context siteContext
 	// goverter:map Dose | Float64OrNil
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
-	// goverter:ignore RawJsonData
+	// goverter:ignore RawJsonData Automatic
 	InsulinDoseToUpdate(source *SiteInsulinDose, siteContext *httputils.SiteContext) sitedb.UpdateInsulinDoseParams
 
 	///////

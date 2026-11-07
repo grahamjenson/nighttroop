@@ -44,6 +44,8 @@ type Treatment struct {
 	SplitExt *types.FlexibleFloat64 `json:"splitExt,omitempty"`
 	// additional: a bolus's type, e.g. SMB, or AAPS's temp basal's, e.g. PUMP_SUSPEND
 	Type *types.ShortString `json:"type,omitempty"`
+	// Automatic is a bolus a loop gave, given back as sent, as LoopFollow shows one as an SMB
+	Automatic *bool `json:"automatic,omitempty"`
 
 	// Exercise
 	ActivityType *types.ShortString   `json:"activityType,omitempty"` // Type of activity
@@ -61,6 +63,12 @@ type Treatment struct {
 	ProfileJSON         *types.LongJSONString  `json:"profileJson,omitempty"`
 	Percent             *types.FlexibleFloat64 `json:"percentage,omitempty"`
 	Timeshift           *types.FlexibleInt64   `json:"timeshift,omitempty"`
+	// The AAPS switch a profile switch, or an effective one (a Note), was made from; its times are in milliseconds
+	OriginalCustomizedName *types.ShortString   `json:"originalCustomizedName,omitempty"`
+	OriginalTimeshiftMs    *types.FlexibleInt64 `json:"originalTimeshift,omitempty"`
+	OriginalPercentage     *types.FlexibleInt64 `json:"originalPercentage,omitempty"`
+	OriginalDurationMs     *types.FlexibleInt64 `json:"originalDuration,omitempty"`
+	OriginalEnd            *types.FlexibleInt64 `json:"originalEnd,omitempty"`
 
 	Rate     *types.FlexibleFloat64 `json:"rate,omitempty"`
 	Absolute *types.FlexibleFloat64 `json:"absolute,omitempty"`

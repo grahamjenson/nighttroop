@@ -53,6 +53,7 @@ CREATE TABLE insulin_doses (
     
     split_now REAL CHECK(split_now BETWEEN 0 AND 1), -- the fraction of a combo bolus given at once, Nightscout's splitNow / 100
     split_ext REAL CHECK(split_ext BETWEEN 0 AND 1), -- the fraction given over time, Nightscout's splitExt / 100
+    automatic INTEGER CHECK(automatic IN (0, 1)), -- whether a loop gave it, Loop's automatic, as LoopFollow shows it as an SMB
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
@@ -245,6 +246,14 @@ CREATE TABLE profile_switches (
     duration_minutes INTEGER NOT NULL default 0 CHECK(duration_minutes BETWEEN 0 AND 525600), -- at most a year, and 0 means it is forever unless another profile overrides it
     multiplier REAL default 1 CHECK(multiplier BETWEEN 0 AND 10), -- times the profile's insulin, Nightscout's percentage / 100
     timeshift INTEGER default 0 CHECK(timeshift BETWEEN -1440 AND 1440), -- in minutes, e.g. 60 means the profile is shifted forward by 1 hour
+
+    -- AAPS's switch it was made from, which its followers read an effective profile switch (a Note) by
+    original_profile_name TEXT CHECK(length(original_profile_name) <= 64),
+    original_customized_name TEXT CHECK(length(original_customized_name) <= 64),
+    original_timeshift_ms INTEGER CHECK(original_timeshift_ms BETWEEN -86400000 AND 86400000),
+    original_percentage INTEGER CHECK(original_percentage BETWEEN 0 AND 1000),
+    original_duration_ms INTEGER CHECK(original_duration_ms BETWEEN 0 AND 31536000000), -- at most a year
+    original_end INTEGER CHECK(original_end BETWEEN 0 AND 253402300799999),
 
     -- Profile Stuff
     dia REAL CHECK(dia BETWEEN 0 AND 24), -- in hours

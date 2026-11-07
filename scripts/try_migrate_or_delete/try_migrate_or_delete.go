@@ -1,5 +1,6 @@
-// try_migrate_or_delete opens each database in a data folder as the server does, migrating it and preparing its
-// queries, once for each schema the site databases have, so a dev server can keep its data between deploys. If any cannot be opened, as when a migration was edited
+// try_migrate_or_delete opens each database in a data folder as the server does, migrating it, checking its schema
+// and preparing its queries, once for the site databases, so a dev server can keep its data between deploys. If any
+// cannot be opened, or its schema is not the one its migrations make on a new database, as when a migration was edited
 // rather than added, it deletes all of them, and their backups, so the server starts empty rather than with only some.
 // The live DB is only ever in memory, so it has none.
 //
@@ -13,6 +14,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"nighttroop.t1d.nz/data/sql/controldb"
@@ -21,17 +23,71 @@ import (
 	"nighttroop.t1d.nz/data/sql/sitedb"
 )
 
-// opener opens a kind of DB at a path as the server does, migrating it and preparing its queries
+// opener opens a kind of DB at a path as the server does, migrating it, checking its schema and preparing its queries
 type opener func(ctx context.Context, path string) error
 
-func open[Q interface{ Close() error }](openDB func(string, int) (*sql.DB, error), migrate func(*sql.DB) error, prepare func(context.Context, *sql.DB) (Q, error)) opener {
+// kind is how a kind of DB is opened on disk and in memory, migrated, and its schema read
+type kind struct {
+	openDB    func(string, int) (*sql.DB, error)
+	openNewDB func() (*sql.DB, error)
+	migrate   func(*sql.DB) error
+	schema    func(context.Context, *sql.DB) (string, error)
+	newSchema string // the schema its migrations make on a new DB, once read
+}
+
+// checkSchema fails when db's schema is not the one k's migrations make on a new DB in memory, as a DB made before a
+// migration was edited keeps the old one even when every query still works on it, such as with a changed CHECK
+func (k *kind) checkSchema(ctx context.Context, db *sql.DB) error {
+	if k.newSchema == "" {
+		newDB, err := k.openNewDB()
+		if err != nil {
+			return err
+		}
+		defer newDB.Close()
+		if err := k.migrate(newDB); err != nil {
+			return err
+		}
+		if k.newSchema, err = k.schema(ctx, newDB); err != nil {
+			return err
+		}
+	}
+	schema, err := k.schema(ctx, db)
+	if err != nil {
+		return err
+	}
+	if schema == k.newSchema {
+		return nil
+	}
+	return fmt.Errorf("its schema is not the one its migrations make: %s", difference(schema, k.newSchema))
+}
+
+// difference is a statement in one schema and not the other, to say why they differ
+func difference(schema, newSchema string) string {
+	stmts, newStmts := strings.SplitAfter(schema, ";\n"), strings.SplitAfter(newSchema, ";\n")
+	for _, stmt := range stmts {
+		if !slices.Contains(newStmts, stmt) {
+			return fmt.Sprintf("it has %q", stmt)
+		}
+	}
+	for _, stmt := range newStmts {
+		if !slices.Contains(stmts, stmt) {
+			return fmt.Sprintf("it has no %q", stmt)
+		}
+	}
+	return "its statements are in another order"
+}
+
+func open[Q interface{ Close() error }](k *kind, prepare func(context.Context, *sql.DB) (Q, error)) opener {
 	return func(ctx context.Context, path string) error {
-		db, err := openDB(path, 0)
+		db, err := k.openDB(path, 0)
 		if err != nil {
 			return err
 		}
 		defer db.Close()
-		if err := migrate(db); err != nil {
+		if err := k.migrate(db); err != nil {
+			return err
+		}
+		if err := k.checkSchema(ctx, db); err != nil {
 			return err
 		}
 		queries, err := prepare(ctx, db)
@@ -44,30 +100,30 @@ func open[Q interface{ Close() error }](openDB func(string, int) (*sql.DB, error
 
 // openers are the DBs kept on disk by name
 var openers = map[string]opener{
-	"controldb": open(controldb.OpenSqliteDB, controldb.MigrateUp, func(ctx context.Context, db *sql.DB) (*controldb.Queries, error) { return controldb.Prepare(ctx, db) }),
-	"jobsdb":    open(jobsdb.OpenSqliteDB, jobsdb.MigrateUp, func(ctx context.Context, db *sql.DB) (*jobsdb.Queries, error) { return jobsdb.Prepare(ctx, db) }),
-	"logsdb":    open(logsdb.OpenSqliteDB, logsdb.MigrateUp, func(ctx context.Context, db *sql.DB) (*logsdb.Queries, error) { return logsdb.Prepare(ctx, db) }),
-	"sitedb":    open(sitedb.OpenSqliteDB, sitedb.MigrateUp, prepareSite),
+	"controldb": open(&kind{openDB: controldb.OpenSqliteDB, openNewDB: controldb.OpenInMemorySqliteDB, migrate: controldb.MigrateUp, schema: controldb.Schema},
+		func(ctx context.Context, db *sql.DB) (*controldb.Queries, error) { return controldb.Prepare(ctx, db) }),
+	"jobsdb": open(&kind{openDB: jobsdb.OpenSqliteDB, openNewDB: jobsdb.OpenInMemorySqliteDB, migrate: jobsdb.MigrateUp, schema: jobsdb.Schema},
+		func(ctx context.Context, db *sql.DB) (*jobsdb.Queries, error) { return jobsdb.Prepare(ctx, db) }),
+	"logsdb": open(&kind{openDB: logsdb.OpenSqliteDB, openNewDB: logsdb.OpenInMemorySqliteDB, migrate: logsdb.MigrateUp, schema: logsdb.Schema},
+		func(ctx context.Context, db *sql.DB) (*logsdb.Queries, error) { return logsdb.Prepare(ctx, db) }),
+	"sitedb": open(&kind{openDB: sitedb.OpenSqliteDB, openNewDB: sitedb.OpenInMemorySqliteDB, migrate: sitedb.MigrateUp, schema: sitedb.Schema},
+		prepareSite),
 }
 
-// preparedSiteSchemas are the site DB schemas whose queries have been prepared. There can be thousands of sites, most
-// with the same schema, and preparing is most of the time opening one takes.
-var preparedSiteSchemas = map[string]bool{}
+// sitePrepared is whether a site DB's queries have been prepared. There can be thousands of sites, every one with the
+// schema checkSchema checked, and preparing is most of the time opening one takes.
+var sitePrepared bool
 
-// prepareSite prepares a site DB's queries, unless one with the same schema has been
+// prepareSite prepares a site DB's queries, unless another's have been
 func prepareSite(ctx context.Context, db *sql.DB) (*sitedb.Queries, error) {
-	schema, err := sitedb.Schema(ctx, db)
-	if err != nil {
-		return nil, err
-	}
-	if preparedSiteSchemas[schema] {
+	if sitePrepared {
 		return sitedb.New(db), nil
 	}
 	queries, err := sitedb.Prepare(ctx, db)
 	if err != nil {
 		return nil, err
 	}
-	preparedSiteSchemas[schema] = true
+	sitePrepared = true
 	return queries, nil
 }
 

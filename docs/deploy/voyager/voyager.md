@@ -350,7 +350,9 @@ sudo ./update.sh ghcr.io/grahamjenson/nighttroop:v1.2.3
 
 `update.sh` uses the compose file `.env` names, so it runs `voyager.compose.yml` here. It pulls the new image, keeps
 the running one, copies `./data` while Nighttroop is stopped, starts the new version, and rolls back to the previous
-image and data if the new one isn't healthy within 3 minutes.
+image and data if the new one isn't healthy within 3 minutes. That rollback loses nothing, as a version that isn't
+healthy has served nothing. Once a new version has served, fix forward: update to one that fixes the problem, as going
+back to an earlier one means putting back an old copy of `./data` and losing everything written since.
 
 What each step does, its exit codes, what a rollback can't undo, and how to roll back by hand are in
 [the Hostinger guide's update section](hostinger.md#updating-nighttroop-safely); they are the same here.
