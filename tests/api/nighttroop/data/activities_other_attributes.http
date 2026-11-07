@@ -1,0 +1,53 @@
+INCLUDE steps/new_site.steps
+
+// What a fitness tracker or watch measured of an activity is kept in its other attributes and given back
+NAME create_activity
+POST http://{{ .ns_site }}/api/v1/activity?token={{ token }}
+B {"activityType": "walking", "created_at": "{{ time 5 }}", "calories": 350, "steps": 4000, "heartRate": 110}
+ASSERT_STATUS 200
+SET activity_id {{ dig "create_activity.0._id" }}
+
+NAME read_activity
+GET http://{{ .ns_site }}/api/v1/activity?token={{ token }}&find[_id]={{ .activity_id }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 350 "@0.calories"
+ASSERT_EQUALS 4000 "@0.steps"
+ASSERT_EQUALS 110 "@0.heartRate"
+
+NAME read_site_activity
+GET http://{{ site }}/data/activities/{{ .activity_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 350 "@result.calories"
+ASSERT_EQUALS 4000 "@result.steps"
+ASSERT_EQUALS 110 "@result.heart_rate"
+
+// Updating one of them leaves the others as they were
+NAME update_steps
+POST http://{{ site }}/data/activities/{{ .activity_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"steps": 5000}
+ASSERT_STATUS 200
+ASSERT_EQUALS 5000 "@result.steps"
+ASSERT_EQUALS 350 "@result.calories"
+ASSERT_EQUALS 110 "@result.heart_rate"
+
+NAME read_updated
+GET http://{{ .ns_site }}/api/v1/activity?token={{ token }}&find[_id]={{ .activity_id }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 5000 "@0.steps"
+ASSERT_EQUALS 350 "@0.calories"
+ASSERT_EQUALS 110 "@0.heartRate"
+
+// Each is still refused far outside real use, as a column of its own was
+NAME heart_rate_out_of_range
+POST http://{{ .ns_site }}/api/v1/activity?token={{ token }}
+B {"activityType": "walking", "heartRate": 900}
+ASSERT_STATUS 400
+
+NAME calories_out_of_range
+POST http://{{ .ns_site }}/api/v1/activity?token={{ token }}
+B {"activityType": "walking", "calories": 90000}
+ASSERT_STATUS 400

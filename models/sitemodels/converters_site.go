@@ -171,6 +171,9 @@ type SiteConverter interface {
 	// ACTIVITIES
 	///////
 
+	// goverter:map OtherAttributes.Calories Calories
+	// goverter:map OtherAttributes.Steps Steps
+	// goverter:map OtherAttributes.HeartRate HeartRate
 	ActivityFromDB(source *sitedb.Activity) *SiteActivity
 
 	// goverter:context siteContext
@@ -178,6 +181,7 @@ type SiteConverter interface {
 	// goverter:map OccurredAt | OccurredAtOrNow
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
+	// goverter:map . OtherAttributes | ActivityOther
 	ActivityToCreate(source *SiteActivity, siteContext *httputils.SiteContext) sitedb.CreateActivityParams
 
 	// goverter:context siteContext
@@ -185,6 +189,7 @@ type SiteConverter interface {
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
 	// goverter:ignore RawJsonData
+	// goverter:map . OtherAttributes | ActivityOtherJSON
 	ActivityToUpdate(source *SiteActivity, siteContext *httputils.SiteContext) sitedb.UpdateActivityParams
 
 	///////

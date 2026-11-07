@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/sql/sitedb"
+	"nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -52,7 +53,7 @@ func TestSiteDataLimits(t *testing.T) {
 		}, []float64{0, 10080}, []float64{-1, 20000}},
 		{"heart rate", func(id string, v float64) error {
 			hr := int64(v)
-			_, err := q.CreateActivity(ctx, sitedb.CreateActivityParams{ID: id, ActivityType: "exercise", HeartRate: &hr, OccurredAt: now, CreatedByIdentityName: "test"})
+			_, err := q.CreateActivity(ctx, sitedb.CreateActivityParams{ID: id, ActivityType: "exercise", OtherAttributes: types.ActivityOther{HeartRate: &hr}, OccurredAt: now, CreatedByIdentityName: "test"})
 			return err
 		}, []float64{60}, []float64{1000, -1}},
 		{"loop IOB", func(id string, v float64) error {

@@ -129,10 +129,13 @@ CREATE TABLE activities (
     activity_type TEXT NOT NULL CHECK(length(activity_type) <= 32) default 'exercise',
 
     duration_minutes INTEGER CHECK(duration_minutes BETWEEN 0 AND 10080), -- at most a week
-    calories INTEGER CHECK(calories BETWEEN 0 AND 50000),
-    steps INTEGER CHECK(steps BETWEEN 0 AND 1000000),
-    heart_rate INTEGER CHECK(heart_rate BETWEEN 0 AND 300),
 
+    -- What only some apps send, a JSON object (types.ActivityOther) NULL for most activities: what a fitness tracker
+    -- or watch measured of it (calories, steps, heart_rate), such as xDrip+'s. A field that is not there passes its check.
+    other_attributes TEXT CHECK(length(other_attributes) <= 128 AND json_valid(other_attributes)
+        AND json_extract(other_attributes, '$.calories') BETWEEN 0 AND 50000
+        AND json_extract(other_attributes, '$.steps') BETWEEN 0 AND 1000000
+        AND json_extract(other_attributes, '$.heart_rate') BETWEEN 0 AND 300),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),

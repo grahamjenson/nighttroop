@@ -26,16 +26,16 @@ func ActivityFromDB(source *sitedb.Activity) *SiteActivity {
 			xint64 := *(*source).DurationMinutes
 			sitemodelsSiteActivity.DurationMinutes = &xint64
 		}
-		if (*source).Calories != nil {
-			xint642 := *(*source).Calories
+		if (*source).OtherAttributes.Calories != nil {
+			xint642 := *(*source).OtherAttributes.Calories
 			sitemodelsSiteActivity.Calories = &xint642
 		}
-		if (*source).Steps != nil {
-			xint643 := *(*source).Steps
+		if (*source).OtherAttributes.Steps != nil {
+			xint643 := *(*source).OtherAttributes.Steps
 			sitemodelsSiteActivity.Steps = &xint643
 		}
-		if (*source).HeartRate != nil {
-			xint644 := *(*source).HeartRate
+		if (*source).OtherAttributes.HeartRate != nil {
+			xint644 := *(*source).OtherAttributes.HeartRate
 			sitemodelsSiteActivity.HeartRate = &xint644
 		}
 		if (*source).Notes != nil {
@@ -87,18 +87,7 @@ func ActivityToCreate(source *SiteActivity, context *httputils.SiteContext) site
 			xint64 := *(*source).DurationMinutes
 			sitedbCreateActivityParams.DurationMinutes = &xint64
 		}
-		if (*source).Calories != nil {
-			xint642 := *(*source).Calories
-			sitedbCreateActivityParams.Calories = &xint642
-		}
-		if (*source).Steps != nil {
-			xint643 := *(*source).Steps
-			sitedbCreateActivityParams.Steps = &xint643
-		}
-		if (*source).HeartRate != nil {
-			xint644 := *(*source).HeartRate
-			sitedbCreateActivityParams.HeartRate = &xint644
-		}
+		sitedbCreateActivityParams.OtherAttributes = ActivityOther(source)
 		if (*source).Notes != nil {
 			xstring2 := *(*source).Notes
 			sitedbCreateActivityParams.Notes = &xstring2
@@ -109,8 +98,8 @@ func ActivityToCreate(source *SiteActivity, context *httputils.SiteContext) site
 		}
 		sitedbCreateActivityParams.OccurredAt = OccurredAtOrNow((*source).OccurredAt)
 		if (*source).UtcOffsetMinutes != nil {
-			xint645 := *(*source).UtcOffsetMinutes
-			sitedbCreateActivityParams.UtcOffsetMinutes = &xint645
+			xint642 := *(*source).UtcOffsetMinutes
+			sitedbCreateActivityParams.UtcOffsetMinutes = &xint642
 		}
 		if (*source).RawJsonData != nil {
 			xstring4 := *(*source).RawJsonData
@@ -141,18 +130,7 @@ func ActivityToUpdate(source *SiteActivity, context *httputils.SiteContext) site
 			xint64 := *(*source).DurationMinutes
 			sitedbUpdateActivityParams.DurationMinutes = &xint64
 		}
-		if (*source).Calories != nil {
-			xint642 := *(*source).Calories
-			sitedbUpdateActivityParams.Calories = &xint642
-		}
-		if (*source).Steps != nil {
-			xint643 := *(*source).Steps
-			sitedbUpdateActivityParams.Steps = &xint643
-		}
-		if (*source).HeartRate != nil {
-			xint644 := *(*source).HeartRate
-			sitedbUpdateActivityParams.HeartRate = &xint644
-		}
+		sitedbUpdateActivityParams.OtherAttributes = ActivityOtherJSON(source)
 		if (*source).Notes != nil {
 			xstring2 := *(*source).Notes
 			sitedbUpdateActivityParams.Notes = &xstring2

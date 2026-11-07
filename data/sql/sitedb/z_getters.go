@@ -47,34 +47,14 @@ func (m *ActivitiesVw) SetDurationMinutes(v *int64) {
 	m.DurationMinutes = v
 }
 
-// GetCalories returns the Calories value.
-func (m ActivitiesVw) GetCalories() *int64 {
-	return m.Calories
+// GetOtherAttributes returns the OtherAttributes value.
+func (m ActivitiesVw) GetOtherAttributes() types.ActivityOther {
+	return m.OtherAttributes
 }
 
-// SetCalories sets the Calories value and returns the updated ActivitiesVw.
-func (m *ActivitiesVw) SetCalories(v *int64) {
-	m.Calories = v
-}
-
-// GetSteps returns the Steps value.
-func (m ActivitiesVw) GetSteps() *int64 {
-	return m.Steps
-}
-
-// SetSteps sets the Steps value and returns the updated ActivitiesVw.
-func (m *ActivitiesVw) SetSteps(v *int64) {
-	m.Steps = v
-}
-
-// GetHeartRate returns the HeartRate value.
-func (m ActivitiesVw) GetHeartRate() *int64 {
-	return m.HeartRate
-}
-
-// SetHeartRate sets the HeartRate value and returns the updated ActivitiesVw.
-func (m *ActivitiesVw) SetHeartRate(v *int64) {
-	m.HeartRate = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated ActivitiesVw.
+func (m *ActivitiesVw) SetOtherAttributes(v types.ActivityOther) {
+	m.OtherAttributes = v
 }
 
 // GetNotes returns the Notes value.
@@ -257,34 +237,14 @@ func (m *Activity) SetDurationMinutes(v *int64) {
 	m.DurationMinutes = v
 }
 
-// GetCalories returns the Calories value.
-func (m Activity) GetCalories() *int64 {
-	return m.Calories
+// GetOtherAttributes returns the OtherAttributes value.
+func (m Activity) GetOtherAttributes() types.ActivityOther {
+	return m.OtherAttributes
 }
 
-// SetCalories sets the Calories value and returns the updated Activity.
-func (m *Activity) SetCalories(v *int64) {
-	m.Calories = v
-}
-
-// GetSteps returns the Steps value.
-func (m Activity) GetSteps() *int64 {
-	return m.Steps
-}
-
-// SetSteps sets the Steps value and returns the updated Activity.
-func (m *Activity) SetSteps(v *int64) {
-	m.Steps = v
-}
-
-// GetHeartRate returns the HeartRate value.
-func (m Activity) GetHeartRate() *int64 {
-	return m.HeartRate
-}
-
-// SetHeartRate sets the HeartRate value and returns the updated Activity.
-func (m *Activity) SetHeartRate(v *int64) {
-	m.HeartRate = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated Activity.
+func (m *Activity) SetOtherAttributes(v types.ActivityOther) {
+	m.OtherAttributes = v
 }
 
 // GetNotes returns the Notes value.
@@ -6257,34 +6217,14 @@ func (m *CreateActivityParams) SetDurationMinutes(v *int64) {
 	m.DurationMinutes = v
 }
 
-// GetCalories returns the Calories value.
-func (m CreateActivityParams) GetCalories() *int64 {
-	return m.Calories
+// GetOtherAttributes returns the OtherAttributes value.
+func (m CreateActivityParams) GetOtherAttributes() types.ActivityOther {
+	return m.OtherAttributes
 }
 
-// SetCalories sets the Calories value and returns the updated CreateActivityParams.
-func (m *CreateActivityParams) SetCalories(v *int64) {
-	m.Calories = v
-}
-
-// GetSteps returns the Steps value.
-func (m CreateActivityParams) GetSteps() *int64 {
-	return m.Steps
-}
-
-// SetSteps sets the Steps value and returns the updated CreateActivityParams.
-func (m *CreateActivityParams) SetSteps(v *int64) {
-	m.Steps = v
-}
-
-// GetHeartRate returns the HeartRate value.
-func (m CreateActivityParams) GetHeartRate() *int64 {
-	return m.HeartRate
-}
-
-// SetHeartRate sets the HeartRate value and returns the updated CreateActivityParams.
-func (m *CreateActivityParams) SetHeartRate(v *int64) {
-	m.HeartRate = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated CreateActivityParams.
+func (m *CreateActivityParams) SetOtherAttributes(v types.ActivityOther) {
+	m.OtherAttributes = v
 }
 
 // GetNotes returns the Notes value.
@@ -6787,34 +6727,14 @@ func (m *UpdateActivityParams) SetDurationMinutes(v *int64) {
 	m.DurationMinutes = v
 }
 
-// GetCalories returns the Calories value.
-func (m UpdateActivityParams) GetCalories() *int64 {
-	return m.Calories
+// GetOtherAttributes returns the OtherAttributes value.
+func (m UpdateActivityParams) GetOtherAttributes() *string {
+	return m.OtherAttributes
 }
 
-// SetCalories sets the Calories value and returns the updated UpdateActivityParams.
-func (m *UpdateActivityParams) SetCalories(v *int64) {
-	m.Calories = v
-}
-
-// GetSteps returns the Steps value.
-func (m UpdateActivityParams) GetSteps() *int64 {
-	return m.Steps
-}
-
-// SetSteps sets the Steps value and returns the updated UpdateActivityParams.
-func (m *UpdateActivityParams) SetSteps(v *int64) {
-	m.Steps = v
-}
-
-// GetHeartRate returns the HeartRate value.
-func (m UpdateActivityParams) GetHeartRate() *int64 {
-	return m.HeartRate
-}
-
-// SetHeartRate sets the HeartRate value and returns the updated UpdateActivityParams.
-func (m *UpdateActivityParams) SetHeartRate(v *int64) {
-	m.HeartRate = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated UpdateActivityParams.
+func (m *UpdateActivityParams) SetOtherAttributes(v *string) {
+	m.OtherAttributes = v
 }
 
 // GetNotes returns the Notes value.
