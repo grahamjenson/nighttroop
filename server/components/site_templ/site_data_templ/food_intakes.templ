@@ -165,7 +165,7 @@ templ FoodIntakeModal(foodIntake *sitemodels.SiteFoodIntake) {
 	@modal.Modal(modal.Props{ID: "site--food--details", Title: fmt.Sprintf("%s g carbs", orDash(foodIntake.Carbs)), Subtitle: formatReadingDate(ctx, foodIntake.OccurredAt)}) {
 		<form
 			id="site--food--edit"
-			class="mt-4 flex items-end gap-2"
+			class="mt-4 flex flex-wrap items-end gap-2"
 			hx-post={ "/data/food/" + foodIntake.ID }
 			hx-target={ "#site--food--" + foodIntake.ID }
 			hx-swap="outerHTML"

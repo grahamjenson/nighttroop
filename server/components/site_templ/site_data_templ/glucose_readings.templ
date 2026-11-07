@@ -254,7 +254,7 @@ templ GlucoseReadingModal(reading *sitemodels.SiteGlucoseReading) {
 	@modal.Modal(modal.Props{ID: "site--glucose--details", Title: formatGlucose(reading.Reading, reading.Units) + " " + orDash(reading.Units), Subtitle: formatReadingDate(ctx, reading.OccurredAt)}) {
 		<form
 			id="site--glucose--edit"
-			class="mt-4 flex items-end gap-2"
+			class="mt-4 flex flex-wrap items-end gap-2"
 			hx-post={ "/data/glucose/" + reading.ID }
 			hx-target={ "#site--glucose--" + reading.ID }
 			hx-swap="outerHTML"

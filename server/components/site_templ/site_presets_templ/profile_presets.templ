@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
@@ -137,16 +138,16 @@ templ ProfilePresetModal(profile *sitemodels.SiteProfilePreset) {
 	@modal.Modal(modal.Props{ID: "presets--profiles--details", Title: orDash(profile.Name), Subtitle: formatDate(ctx, profile.OccurredAt)}) {
 		<form
 			id="presets--profiles--edit"
-			class="mt-4 flex items-center gap-2"
+			class="mt-4 flex flex-wrap items-end gap-2"
 			hx-post={ "/presets/profiles/" + profile.ID }
 			hx-target={ "#presets--profiles--" + profile.ID }
 			hx-swap="outerHTML"
 			hx-status:4xx="target:#toaster swap:beforeend"
 			hx-status:5xx="target:#toaster swap:beforeend"
 		>
-			<div class="w-64">
+			@field.Field("presets--profiles--edit--name", "Name", "w-64") {
 				@input.Input(input.Props{ID: "presets--profiles--edit--name", Name: "name", Placeholder: "Name", Value: orEmpty(profile.Name), Required: true, Attributes: templ.Attributes{"maxlength": "64"}})
-			</div>
+			}
 			@button.Button(button.Props{ID: "presets--profiles--edit--submit", Type: button.TypeSubmit}) {
 				Rename
 			}
