@@ -54,23 +54,27 @@ func Send(ctx context.Context, q *controldb.Queries, sec *security.SecurityConfi
 
 // send pushes the alert with the credential, its secret and the registration's token decrypted
 func send(ctx context.Context, sec *security.SecurityConfig, credential *controldb.PushCredential, registration *controldb.PushRegistration, alert Alert) error {
-	if credential.Provider != consts.PushProviderAPNs {
-		return fmt.Errorf("pushes through %s are not sent yet", credential.Provider)
-	}
-	if credential.SecretEnc == nil || credential.KeyID == nil {
+	if credential.SecretEnc == nil || (credential.Provider == consts.PushProviderAPNs && credential.KeyID == nil) {
 		return ErrNoCredential
 	}
-	p8, err := sec.Decrypt(*credential.SecretEnc)
+	secret, err := sec.Decrypt(*credential.SecretEnc)
 	if err != nil {
 		return fmt.Errorf("cannot decrypt the push credential: %w", err)
-	}
-	key, err := APNsKey(p8)
-	if err != nil {
-		return err
 	}
 	token, err := sec.Decrypt(registration.TokenEnc)
 	if err != nil {
 		return fmt.Errorf("cannot decrypt the push token: %w", err)
+	}
+	if credential.Provider == consts.PushProviderFCM {
+		message, _ := json.Marshal(map[string]any{"message": map[string]any{"token": token, "notification": alert}})
+		return DefaultFCM.Send(ctx, credential.ID, secret, credential.TeamOrProjectID, message)
+	}
+	if credential.Provider != consts.PushProviderAPNs {
+		return fmt.Errorf("pushes through %s are not sent", credential.Provider)
+	}
+	key, err := APNsKey(secret)
+	if err != nil {
+		return err
 	}
 	payload, _ := json.Marshal(map[string]any{"aps": map[string]any{"alert": alert, "sound": "default"}})
 	signer := Signer{ID: credential.ID, TeamID: credential.TeamOrProjectID, KeyID: *credential.KeyID, Key: key}

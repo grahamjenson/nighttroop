@@ -655,7 +655,11 @@ focus back to the row or button that opened it.
   which sends it a test push and shows its new last push, or a toast with why it failed.
 - An identity can send a test push to one of its registrations, and an admin to any of the site's
   (`POST /settings/push-registrations/{id}/test`), with its site's push credential for the app, else the server's.
-  Without one it is refused, saying to add one; a token Apple says is gone deletes the registration (410); another
-  refusal says Apple's reason (502), and one that cannot reach Apple why, never with the device token. Each push is
+  Without one it is refused, saying to add one; a token Apple says is gone, or Firebase says is `UNREGISTERED`,
+  deletes the registration (410); another refusal says Apple's or Firebase's reason (502), and one that cannot reach
+  them why, never with the device token. Each push is
   recorded on the registration, with its error, if it had one, which the same registration again, as each upload of
-  a Loop or Trio profile is, keeps, and a token Apple says is gone is deleted from its own site alone. A site sends at most `SITE_PUSH_PER_MINUTE_LIMIT` pushes a minute. Only APNs pushes are sent so far.
+  a Loop or Trio profile is, keeps, and a token Apple says is gone is deleted from its own site alone. A site sends at most `SITE_PUSH_PER_MINUTE_LIMIT` pushes a minute.
+- An FCM push is sent with the Firebase service account's OAuth token, got with a JWT its key signs from Google's
+  token endpoint, never the `token_uri` in its JSON, and used again until five minutes before it expires; the key and
+  tokens are never logged or shown. A service account Google refuses says Google's reason (502).

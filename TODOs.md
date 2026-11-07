@@ -84,8 +84,6 @@
     1. P3: Add push credentials and registrations to `clients/nighttroop/openapi.json` and its client
     1. P3: A delete button on Push Devices (`/settings/push-devices`), for an identity's own registrations and an
        admin's for the site's; the push registrations collection's HTMX responses are empty until then
-    1. P2: Send FCM pushes with the service account (an OAuth token from its key, then the v1 send API), as
-       `push.Send` does APNs ones
     1. P2: Push alarms to each identity's registered apps when one goes off, through `push.Send`
     1. P2: A control page to add, list and delete push credentials for every site, with BDD tests
     1. P2: Before any server credential (one with no site) is added: use it only for tokens its app registered itself,
