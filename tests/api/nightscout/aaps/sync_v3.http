@@ -293,6 +293,7 @@ ASSERT_EQUALS 720000 "@result.durationInMilliseconds"
 ASSERT_EQUALS "4102" "@result.pumpId"
 ASSERT_EQUALS "DANA_I" "@result.pumpType"
 ASSERT_EQUALS "AAPS1234" "@result.pumpSerial"
+ASSERT_EQUALS "NORMAL" "@result.type"
 ASSERT_EQUALS 720 "@result.utcOffset"
 ASSERT_EQUALS true "@result.isValid"
 ASSERT_EXISTS "@result.date"
@@ -354,6 +355,67 @@ ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@result"
 ASSERT_EQUALS false "@result.0.isValid"
 ASSERT_EQUALS 0.3 "@result.0.insulin"
+
+// A suspended pump is a zero temp basal of type PUMP_SUSPEND, which a follower shows as a suspend, not a temp basal
+NAME add_pump_suspend
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "date": {{ itime 24 }},
+    "utcOffset": 720,
+    "isReadOnly": false,
+    "isValid": true,
+    "eventType": "Temp Basal",
+    "pumpId": 4104,
+    "pumpType": "DANA_I",
+    "pumpSerial": "AAPS1234",
+    "duration": 60,
+    "durationInMilliseconds": 3600000,
+    "rate": 0.0,
+    "absolute": 0.0,
+    "type": "PUMP_SUSPEND",
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+
+NAME get_pump_suspend
+GET http://{{ site }}/api/v3/treatments/{{ .add_pump_suspend.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Temp Basal" "@result.eventType"
+ASSERT_EQUALS "PUMP_SUSPEND" "@result.type"
+ASSERT_EQUALS 0 "@result.absolute"
+ASSERT_EQUALS 60 "@result.duration"
+
+// AAPS updates the whole treatment; one without a type keeps it
+NAME cut_pump_suspend
+PATCH http://{{ site }}/api/v3/treatments/{{ .add_pump_suspend.identifier }}
+H Authorization: Bearer {{ jwt }}
+B {
+    "identifier": "{{ .add_pump_suspend.identifier }}",
+    "isReadOnly": false,
+    "isValid": true,
+    "eventType": "Temp Basal",
+    "duration": 20,
+    "durationInMilliseconds": 1200000,
+    "rate": 0.0,
+    "absolute": 0.0
+ }
+ASSERT_STATUS 200
+
+NAME get_cut_pump_suspend
+GET http://{{ site }}/api/v3/treatments/{{ .add_pump_suspend.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "PUMP_SUSPEND" "@result.type"
+ASSERT_EQUALS 20 "@result.duration"
+
+// AAPS 3.4's NSClient v1 reads the type too
+NAME get_pump_suspend_v1
+GET http://{{ site }}/api/v1/treatments/{{ .add_pump_suspend.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "PUMP_SUSPEND" "@0.type"
 
 // EPS.toNSEffectiveProfileSwitch, a Note. AAPS reads it back only with all of profileJson, originalCustomizedName,
 // originalTimeshift, originalPercentage, originalDuration and originalEnd

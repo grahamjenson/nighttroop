@@ -42,7 +42,7 @@ type Treatment struct {
 	Insulin  *types.FlexibleFloat64 `json:"insulin,omitempty"`
 	SplitNow *types.FlexibleFloat64 `json:"splitNow,omitempty"`
 	SplitExt *types.FlexibleFloat64 `json:"splitExt,omitempty"`
-	// additional
+	// additional: a bolus's type, e.g. SMB, or AAPS's temp basal's, e.g. PUMP_SUSPEND
 	Type *types.ShortString `json:"type,omitempty"`
 
 	// Exercise
