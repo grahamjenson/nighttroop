@@ -1,0 +1,61 @@
+INCLUDE steps/new_site.steps
+
+// The AAPS switch a profile switch was made from is kept in its other attributes and given back
+NAME create_treatment
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B { "eventType": "Profile Switch", "created_at": "{{ time -5 }}", "app": "AAPS", "profile": "Default(110%)", "percentage": 110, "duration": 30, "originalProfileName": "Default", "originalCustomizedName": "Default (110%)", "originalTimeshift": 3600000, "originalPercentage": 110, "originalDuration": 1800000, "originalEnd": 1767225600000 }
+ASSERT_STATUS 200
+SET treatment_id {{ dig "create_treatment.0._id" }}
+
+NAME read_treatment
+GET http://{{ .ns_site }}/api/v1/treatments.json?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Default" "@0.originalProfileName"
+ASSERT_EQUALS "Default (110%)" "@0.originalCustomizedName"
+ASSERT_EQUALS 3600000 "@0.originalTimeshift"
+ASSERT_EQUALS 110 "@0.originalPercentage"
+ASSERT_EQUALS 1800000 "@0.originalDuration"
+ASSERT_EQUALS 1767225600000 "@0.originalEnd"
+ASSERT_EQUALS 110 "@0.percentage"
+
+// Updating one of them leaves the others as they were; a patch changes the switch when it names its profile
+NAME update_original_percentage
+PATCH http://{{ .ns_site }}/api/v3/treatments/{{ .treatment_id }}
+H Authorization: Bearer {{ jwt }}
+B { "profile": "Default(110%)", "originalPercentage": 120 }
+ASSERT_STATUS 200
+
+NAME read_updated
+GET http://{{ .ns_site }}/api/v1/treatments/{{ .treatment_id }}?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 120 "@0.originalPercentage"
+ASSERT_EQUALS "Default" "@0.originalProfileName"
+ASSERT_EQUALS "Default (110%)" "@0.originalCustomizedName"
+ASSERT_EQUALS 3600000 "@0.originalTimeshift"
+ASSERT_EQUALS 1800000 "@0.originalDuration"
+ASSERT_EQUALS 1767225600000 "@0.originalEnd"
+ASSERT_EQUALS 110 "@0.percentage"
+
+// A timeshift and duration of 0 are kept
+NAME create_no_timeshift
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B { "eventType": "Profile Switch", "created_at": "{{ time -10 }}", "app": "AAPS", "profile": "Default", "originalProfileName": "Default", "originalTimeshift": 0, "originalDuration": 0 }
+ASSERT_STATUS 200
+SET no_timeshift_id {{ dig "create_no_timeshift.0._id" }}
+
+NAME read_no_timeshift
+GET http://{{ .ns_site }}/api/v1/treatments/{{ .no_timeshift_id }}?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 0 "@0.originalTimeshift"
+ASSERT_EQUALS 0 "@0.originalDuration"
+
+// Each is still refused far outside real use, as a column of its own was
+NAME original_percentage_out_of_range
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B { "eventType": "Profile Switch", "created_at": "{{ time 10 }}", "app": "AAPS", "profile": "Default", "originalPercentage": 2000 }
+ASSERT_STATUS 400
+
+NAME original_timeshift_out_of_range
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B { "eventType": "Profile Switch", "created_at": "{{ time 15 }}", "app": "AAPS", "profile": "Default", "originalTimeshift": 90000000 }
+ASSERT_STATUS 400
