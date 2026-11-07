@@ -19,7 +19,7 @@ import (
 // goverter:extend ShortStringToString
 // goverter:extend SanitizedStringToString
 // goverter:extend UnitsToUnits
-// goverter:extend nighttroop.t1d.nz/data/sql/sitedb:GlucoseReadingOtherJSON
+// goverter:extend nighttroop.t1d.nz/data/sql/sitedb:.*OtherJSON
 type TreatmentsEvenetConverter interface {
 
 	///////
@@ -215,7 +215,11 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map GroupType EventType
 	// goverter:map CreatedByIdentityName Subject
 	// goverter:map . EnteredBy | EventGroupEnteredBy
-	// goverter:map Uuid UUID
+	// goverter:map OtherAttributes.Uuid UUID
+	// goverter:map OtherAttributes.Mode Mode
+	// goverter:map OtherAttributes.AutoForced AutoForced
+	// goverter:map OtherAttributes.Reasons Reasons
+	// goverter:map OtherAttributes.OriginalDurationMs OriginalDurationMs
 	// goverter:map CreatedByAppName App
 	// goverter:map CreatedByDeviceName Device
 	// goverter:map OccurredAt Date
@@ -426,7 +430,7 @@ type TreatmentsEvenetConverter interface {
 	//
 	// goverter:ignore GlucoseReadingID InsulinDoseID FoodIntakeID TempBasalID TempTargetID ProfileSwitchID ComponentEventID ActivityID NotificationEventID
 	// goverter:map EventType GroupType
-	// goverter:map UUID Uuid
+	// goverter:map . OtherAttributes | TreatmentEventGroupOther
 	TreatmentToEventGroup(source Treatment) sitedb.EventGroup
 }
 

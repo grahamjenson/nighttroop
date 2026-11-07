@@ -29,9 +29,10 @@ overrides:
       - column: "device_reports.is_device_charging"
         go_type:
           type: "*bool"
-      - column: "event_groups.auto_forced"
+      - column: "event_groups.other_attributes"
         go_type:
-          type: "*bool"
+          import: "nighttroop.t1d.nz/data/types"
+          type: "EventGroupOther"
       - column: "glucose_readings.other_attributes"
         go_type:
           import: "nighttroop.t1d.nz/data/types"
