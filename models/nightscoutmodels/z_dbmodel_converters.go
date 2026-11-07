@@ -114,28 +114,28 @@ func DBModelToEntry(source *sitedb.GlucoseReading, context *httputils.SiteContex
 			nightscoutmodelsEntry.Trend = &typesFlexibleFloat64
 		}
 		nightscoutmodelsEntry.Units = UnitsToValue((*source).Mgdl, context)
-		if (*source).Filtered != nil {
-			typesFlexibleFloat642 := types.FlexibleFloat64(*(*source).Filtered)
+		if (*source).OtherAttributes.Filtered != nil {
+			typesFlexibleFloat642 := types.FlexibleFloat64(*(*source).OtherAttributes.Filtered)
 			nightscoutmodelsEntry.Filtered = &typesFlexibleFloat642
 		}
-		if (*source).Unfiltered != nil {
-			typesFlexibleFloat643 := types.FlexibleFloat64(*(*source).Unfiltered)
+		if (*source).OtherAttributes.Unfiltered != nil {
+			typesFlexibleFloat643 := types.FlexibleFloat64(*(*source).OtherAttributes.Unfiltered)
 			nightscoutmodelsEntry.Unfiltered = &typesFlexibleFloat643
 		}
-		if (*source).Rssi != nil {
-			typesFlexibleFloat644 := types.FlexibleFloat64(*(*source).Rssi)
+		if (*source).OtherAttributes.Rssi != nil {
+			typesFlexibleFloat644 := types.FlexibleFloat64(*(*source).OtherAttributes.Rssi)
 			nightscoutmodelsEntry.RSSI = &typesFlexibleFloat644
 		}
-		if (*source).Noise != nil {
-			typesFlexibleFloat645 := types.FlexibleFloat64(*(*source).Noise)
+		if (*source).OtherAttributes.Noise != nil {
+			typesFlexibleFloat645 := types.FlexibleFloat64(*(*source).OtherAttributes.Noise)
 			nightscoutmodelsEntry.Noise = &typesFlexibleFloat645
 		}
-		if (*source).IsCalibration != nil {
-			xbool := *(*source).IsCalibration
+		if (*source).OtherAttributes.IsCalibration != nil {
+			xbool := *(*source).OtherAttributes.IsCalibration
 			nightscoutmodelsEntry.IsCalibration = &xbool
 		}
-		if (*source).SensorMgdlAtPairing != nil {
-			typesFlexibleFloat646 := types.FlexibleFloat64(*(*source).SensorMgdlAtPairing)
+		if (*source).OtherAttributes.SensorMgdlAtPairing != nil {
+			typesFlexibleFloat646 := types.FlexibleFloat64(*(*source).OtherAttributes.SensorMgdlAtPairing)
 			nightscoutmodelsEntry.SensorMgdlAtPairing = &typesFlexibleFloat646
 		}
 		pTypesDateInt := types.DateInt((*source).OccurredAt)

@@ -79,10 +79,10 @@ func (c EntriesCollection) GetDuplicate(q *sitedb.Queries, ctx context.Context, 
 // xDrip4iOS smooths and rebuilds readings by sending them again without their _id. One of another type, or sent with
 // the values it has, is left as it is.
 func (c EntriesCollection) Refresh(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Entry, stored *sitedb.GlucoseReading, cc nightscoutmodels.ConverterContext) (*sitedb.GlucoseReading, bool, error) {
-	p := nightscoutmodels.EntryToUpdate(nsModel, cc)
+	p, sent, other := nightscoutmodels.EntryToUpdate(nsModel, cc), nightscoutmodels.EntryOther(nsModel), stored.OtherAttributes
 	if nightscoutmodels.SetReadingType(nsModel) != stored.ReadingType || (kept(p.Mgdl, &stored.Mgdl) && kept(p.Delta, stored.Delta) &&
-		kept(p.Direction, stored.Direction) && kept(p.Noise, stored.Noise) && kept(p.Filtered, stored.Filtered) &&
-		kept(p.Unfiltered, stored.Unfiltered) && kept(p.Rssi, stored.Rssi)) {
+		kept(p.Direction, stored.Direction) && kept(sent.Noise, other.Noise) && kept(sent.Filtered, other.Filtered) &&
+		kept(sent.Unfiltered, other.Unfiltered) && kept(sent.Rssi, other.Rssi)) {
 		return stored, false, nil
 	}
 	p.ID = stored.ID

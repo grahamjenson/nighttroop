@@ -9,11 +9,12 @@ import (
 	"context"
 	"database/sql"
 
+	"nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils/consts"
 )
 
 const alarmGlucoseReadings = `-- name: AlarmGlucoseReadings :many
-SELECT id, mgdl, reading_type, units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, is_calibration, sensor_mgdl_at_pairing, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings
+SELECT id, mgdl, reading_type, units, measurement_method, delta, direction, other_attributes, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings
 WHERE reading_type = 'sgv' AND deleted_at IS NULL
 AND occurred_at >= (SELECT MAX(occurred_at) FROM glucose_readings WHERE reading_type = 'sgv' AND deleted_at IS NULL)
     - CAST(?1 AS INTEGER) * 60000
@@ -45,12 +46,7 @@ func (q *Queries) AlarmGlucoseReadings(ctx context.Context, arg AlarmGlucoseRead
 			&i.MeasurementMethod,
 			&i.Delta,
 			&i.Direction,
-			&i.Noise,
-			&i.Filtered,
-			&i.Unfiltered,
-			&i.Rssi,
-			&i.IsCalibration,
-			&i.SensorMgdlAtPairing,
+			&i.OtherAttributes,
 			&i.Notes,
 			&i.Reason,
 			&i.RawJsonData,
@@ -81,7 +77,7 @@ func (q *Queries) AlarmGlucoseReadings(ctx context.Context, arg AlarmGlucoseRead
 
 const allGlucoseReadings = `-- name: AllGlucoseReadings :many
 
-SELECT id, mgdl, reading_type, units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, is_calibration, sensor_mgdl_at_pairing, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings 
+SELECT id, mgdl, reading_type, units, measurement_method, delta, direction, other_attributes, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings 
 WHERE (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
@@ -114,12 +110,7 @@ func (q *Queries) AllGlucoseReadings(ctx context.Context, arg AllGlucoseReadings
 			&i.MeasurementMethod,
 			&i.Delta,
 			&i.Direction,
-			&i.Noise,
-			&i.Filtered,
-			&i.Unfiltered,
-			&i.Rssi,
-			&i.IsCalibration,
-			&i.SensorMgdlAtPairing,
+			&i.OtherAttributes,
 			&i.Notes,
 			&i.Reason,
 			&i.RawJsonData,
@@ -159,12 +150,7 @@ INSERT INTO glucose_readings (
 
     delta,
     direction,
-    noise,
-    filtered,
-    unfiltered,
-    rssi,
-    is_calibration,
-    sensor_mgdl_at_pairing,
+    other_attributes,
 
     notes,
     reason,
@@ -186,23 +172,18 @@ VALUES (
     ?6,
     ?7,
     ?8,
+
     ?9,
     ?10,
     ?11,
     ?12,
     ?13,
-
     ?14,
     ?15,
     ?16,
-    ?17,
-    ?18,
-    ?19,
-    ?20,
-    ?21,
-    ?22
+    ?17
 )
-RETURNING id, mgdl, reading_type, units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, is_calibration, sensor_mgdl_at_pairing, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+RETURNING id, mgdl, reading_type, units, measurement_method, delta, direction, other_attributes, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type CreateGlucoseReadingParams struct {
@@ -213,12 +194,7 @@ type CreateGlucoseReadingParams struct {
 	MeasurementMethod     *string
 	Delta                 *float64
 	Direction             *string
-	Noise                 *float64
-	Filtered              *float64
-	Unfiltered            *float64
-	Rssi                  *float64
-	IsCalibration         *bool
-	SensorMgdlAtPairing   *float64
+	OtherAttributes       types.GlucoseReadingOther
 	Notes                 *string
 	Reason                *string
 	UtcOffsetMinutes      *int64
@@ -242,12 +218,7 @@ func (q *Queries) CreateGlucoseReading(ctx context.Context, arg CreateGlucoseRea
 		arg.MeasurementMethod,
 		arg.Delta,
 		arg.Direction,
-		arg.Noise,
-		arg.Filtered,
-		arg.Unfiltered,
-		arg.Rssi,
-		arg.IsCalibration,
-		arg.SensorMgdlAtPairing,
+		arg.OtherAttributes,
 		arg.Notes,
 		arg.Reason,
 		arg.UtcOffsetMinutes,
@@ -267,12 +238,7 @@ func (q *Queries) CreateGlucoseReading(ctx context.Context, arg CreateGlucoseRea
 		&i.MeasurementMethod,
 		&i.Delta,
 		&i.Direction,
-		&i.Noise,
-		&i.Filtered,
-		&i.Unfiltered,
-		&i.Rssi,
-		&i.IsCalibration,
-		&i.SensorMgdlAtPairing,
+		&i.OtherAttributes,
 		&i.Notes,
 		&i.Reason,
 		&i.RawJsonData,
@@ -293,7 +259,7 @@ func (q *Queries) CreateGlucoseReading(ctx context.Context, arg CreateGlucoseRea
 
 const getGlucoseReading = `-- name: GetGlucoseReading :one
 
-SELECT id, mgdl, reading_type, units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, is_calibration, sensor_mgdl_at_pairing, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings WHERE 
+SELECT id, mgdl, reading_type, units, measurement_method, delta, direction, other_attributes, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings WHERE 
 (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
 AND id = ?2
 `
@@ -317,12 +283,7 @@ func (q *Queries) GetGlucoseReading(ctx context.Context, arg GetGlucoseReadingPa
 		&i.MeasurementMethod,
 		&i.Delta,
 		&i.Direction,
-		&i.Noise,
-		&i.Filtered,
-		&i.Unfiltered,
-		&i.Rssi,
-		&i.IsCalibration,
-		&i.SensorMgdlAtPairing,
+		&i.OtherAttributes,
 		&i.Notes,
 		&i.Reason,
 		&i.RawJsonData,
@@ -465,7 +426,7 @@ func (q *Queries) OldestGlucoseReadingAt(ctx context.Context) (int64, error) {
 }
 
 const searchGlucoseReadings = `-- name: SearchGlucoseReadings :many
-SELECT id, mgdl, reading_type, units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, is_calibration, sensor_mgdl_at_pairing, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings
+SELECT id, mgdl, reading_type, units, measurement_method, delta, direction, other_attributes, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings
 WHERE
     -- The date filters as one range, occurred_at's CHECK where unset, so SQLite reads only that range of its index
     occurred_at BETWEEN MAX(COALESCE(CAST(?1 AS INTEGER), 0), COALESCE(CAST(?2 AS INTEGER) + 1, 0), COALESCE(CAST(?3 AS INTEGER), 0))
@@ -586,12 +547,7 @@ func (q *Queries) SearchGlucoseReadings(ctx context.Context, arg SearchGlucoseRe
 			&i.MeasurementMethod,
 			&i.Delta,
 			&i.Direction,
-			&i.Noise,
-			&i.Filtered,
-			&i.Unfiltered,
-			&i.Rssi,
-			&i.IsCalibration,
-			&i.SensorMgdlAtPairing,
+			&i.OtherAttributes,
 			&i.Notes,
 			&i.Reason,
 			&i.RawJsonData,
@@ -665,38 +621,33 @@ UPDATE glucose_readings SET
 
     delta = COALESCE(?2, delta),
     direction = COALESCE(?3, direction),
-    noise = COALESCE(?4, noise),
-    filtered = COALESCE(?5, filtered),
-    unfiltered = COALESCE(?6, unfiltered),
-    rssi = COALESCE(?7, rssi),
-    is_calibration = COALESCE(?8, is_calibration),
-    sensor_mgdl_at_pairing = COALESCE(?9, sensor_mgdl_at_pairing),
+    -- The fields sent, as JSON (types.OtherJSON), are merged into those kept, so one not sent stays as it is, as a
+    -- column of its own would
+    other_attributes = NULLIF(json_patch(
+        COALESCE(other_attributes, '{}'),
+        COALESCE(CAST(?4 AS TEXT), '{}')
+    ), '{}'),
 
-    notes = COALESCE(?10, notes),
-    reason = COALESCE(?11, reason),
+    notes = COALESCE(?5, notes),
+    reason = COALESCE(?6, reason),
 
 
     raw_json_data = json_patch(
         COALESCE(raw_json_data, '{}'),
-        COALESCE(CAST(?12 AS TEXT), '{}')
+        COALESCE(CAST(?7 AS TEXT), '{}')
     ),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_id = ?13,
-    updated_by_identity_name = ?14
-WHERE id = ?15 AND deleted_at IS NULL
-RETURNING id, mgdl, reading_type, units, measurement_method, delta, direction, noise, filtered, unfiltered, rssi, is_calibration, sensor_mgdl_at_pairing, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+    updated_by_identity_id = ?8,
+    updated_by_identity_name = ?9
+WHERE id = ?10 AND deleted_at IS NULL
+RETURNING id, mgdl, reading_type, units, measurement_method, delta, direction, other_attributes, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type UpdateGlucoseReadingParams struct {
 	Mgdl                  *float64
 	Delta                 *float64
 	Direction             *string
-	Noise                 *float64
-	Filtered              *float64
-	Unfiltered            *float64
-	Rssi                  *float64
-	IsCalibration         *bool
-	SensorMgdlAtPairing   *float64
+	OtherAttributes       *string
 	Notes                 *string
 	Reason                *string
 	RawJsonData           *string
@@ -713,12 +664,7 @@ func (q *Queries) UpdateGlucoseReading(ctx context.Context, arg UpdateGlucoseRea
 		arg.Mgdl,
 		arg.Delta,
 		arg.Direction,
-		arg.Noise,
-		arg.Filtered,
-		arg.Unfiltered,
-		arg.Rssi,
-		arg.IsCalibration,
-		arg.SensorMgdlAtPairing,
+		arg.OtherAttributes,
 		arg.Notes,
 		arg.Reason,
 		arg.RawJsonData,
@@ -735,12 +681,7 @@ func (q *Queries) UpdateGlucoseReading(ctx context.Context, arg UpdateGlucoseRea
 		&i.MeasurementMethod,
 		&i.Delta,
 		&i.Direction,
-		&i.Noise,
-		&i.Filtered,
-		&i.Unfiltered,
-		&i.Rssi,
-		&i.IsCalibration,
-		&i.SensorMgdlAtPairing,
+		&i.OtherAttributes,
 		&i.Notes,
 		&i.Reason,
 		&i.RawJsonData,

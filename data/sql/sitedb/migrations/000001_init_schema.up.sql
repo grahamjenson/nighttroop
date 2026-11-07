@@ -17,14 +17,18 @@ CREATE TABLE glucose_readings (
 
     delta REAL CHECK(delta BETWEEN -1000 AND 1000),
     direction TEXT CHECK(length(direction) <= 16),
-    noise REAL CHECK(noise BETWEEN -1000 AND 1000),
-    filtered REAL CHECK(filtered BETWEEN 0 AND 10000000), -- raw sensor values can be in the hundreds of thousands
-    unfiltered REAL CHECK(unfiltered BETWEEN 0 AND 10000000),
-    rssi REAL CHECK(rssi BETWEEN -1000 AND 1000),
 
-    -- An mbg AAPS calibrated its sensor with, and the sensor's reading then
-    is_calibration INTEGER CHECK(is_calibration IN (0, 1)),
-    sensor_mgdl_at_pairing REAL CHECK(sensor_mgdl_at_pairing > 0 AND sensor_mgdl_at_pairing <= 1000),
+    -- What only some apps send, a JSON object (types.GlucoseReadingOther) NULL for most readings: a CGM's raw signal,
+    -- from xDrip+ and its followers (noise, filtered, unfiltered, rssi; raw values can be in the hundreds of thousands),
+    -- and an mbg AAPS calibrated its sensor with (is_calibration), and the sensor's reading then (sensor_mgdl_at_pairing).
+    -- A field that is not there passes its check.
+    other_attributes TEXT CHECK(length(other_attributes) <= 1024 AND json_valid(other_attributes)
+        AND json_extract(other_attributes, '$.noise') BETWEEN -1000 AND 1000
+        AND json_extract(other_attributes, '$.filtered') BETWEEN 0 AND 10000000
+        AND json_extract(other_attributes, '$.unfiltered') BETWEEN 0 AND 10000000
+        AND json_extract(other_attributes, '$.rssi') BETWEEN -1000 AND 1000
+        AND json_extract(other_attributes, '$.is_calibration') IN (0, 1)
+        AND json_extract(other_attributes, '$.sensor_mgdl_at_pairing') > 0 AND json_extract(other_attributes, '$.sensor_mgdl_at_pairing') <= 1000),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),

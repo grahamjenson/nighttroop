@@ -1059,20 +1059,20 @@ func GlucoseReadingFromDB(source *sitedb.GlucoseReading, context *httputils.Site
 			xstring2 := *(*source).Direction
 			sitemodelsSiteGlucoseReading.Direction = &xstring2
 		}
-		if (*source).Noise != nil {
-			xfloat642 := *(*source).Noise
+		if (*source).OtherAttributes.Noise != nil {
+			xfloat642 := *(*source).OtherAttributes.Noise
 			sitemodelsSiteGlucoseReading.Noise = &xfloat642
 		}
-		if (*source).Filtered != nil {
-			xfloat643 := *(*source).Filtered
+		if (*source).OtherAttributes.Filtered != nil {
+			xfloat643 := *(*source).OtherAttributes.Filtered
 			sitemodelsSiteGlucoseReading.Filtered = &xfloat643
 		}
-		if (*source).Unfiltered != nil {
-			xfloat644 := *(*source).Unfiltered
+		if (*source).OtherAttributes.Unfiltered != nil {
+			xfloat644 := *(*source).OtherAttributes.Unfiltered
 			sitemodelsSiteGlucoseReading.Unfiltered = &xfloat644
 		}
-		if (*source).Rssi != nil {
-			xfloat645 := *(*source).Rssi
+		if (*source).OtherAttributes.Rssi != nil {
+			xfloat645 := *(*source).OtherAttributes.Rssi
 			sitemodelsSiteGlucoseReading.Rssi = &xfloat645
 		}
 		if (*source).Notes != nil {
@@ -1130,22 +1130,7 @@ func GlucoseReadingToCreate(source *SiteGlucoseReading, context *httputils.SiteC
 			xstring2 := *(*source).Direction
 			sitedbCreateGlucoseReadingParams.Direction = &xstring2
 		}
-		if (*source).Noise != nil {
-			xfloat642 := *(*source).Noise
-			sitedbCreateGlucoseReadingParams.Noise = &xfloat642
-		}
-		if (*source).Filtered != nil {
-			xfloat643 := *(*source).Filtered
-			sitedbCreateGlucoseReadingParams.Filtered = &xfloat643
-		}
-		if (*source).Unfiltered != nil {
-			xfloat644 := *(*source).Unfiltered
-			sitedbCreateGlucoseReadingParams.Unfiltered = &xfloat644
-		}
-		if (*source).Rssi != nil {
-			xfloat645 := *(*source).Rssi
-			sitedbCreateGlucoseReadingParams.Rssi = &xfloat645
-		}
+		sitedbCreateGlucoseReadingParams.OtherAttributes = GlucoseReadingOther(source)
 		if (*source).Notes != nil {
 			xstring3 := *(*source).Notes
 			sitedbCreateGlucoseReadingParams.Notes = &xstring3
@@ -1188,22 +1173,7 @@ func GlucoseReadingToUpdate(source *SiteGlucoseReading, context *httputils.SiteC
 			xstring := *(*source).Direction
 			sitedbUpdateGlucoseReadingParams.Direction = &xstring
 		}
-		if (*source).Noise != nil {
-			xfloat642 := *(*source).Noise
-			sitedbUpdateGlucoseReadingParams.Noise = &xfloat642
-		}
-		if (*source).Filtered != nil {
-			xfloat643 := *(*source).Filtered
-			sitedbUpdateGlucoseReadingParams.Filtered = &xfloat643
-		}
-		if (*source).Unfiltered != nil {
-			xfloat644 := *(*source).Unfiltered
-			sitedbUpdateGlucoseReadingParams.Unfiltered = &xfloat644
-		}
-		if (*source).Rssi != nil {
-			xfloat645 := *(*source).Rssi
-			sitedbUpdateGlucoseReadingParams.Rssi = &xfloat645
-		}
+		sitedbUpdateGlucoseReadingParams.OtherAttributes = GlucoseReadingOtherJSON(source)
 		if (*source).Notes != nil {
 			xstring2 := *(*source).Notes
 			sitedbUpdateGlucoseReadingParams.Notes = &xstring2

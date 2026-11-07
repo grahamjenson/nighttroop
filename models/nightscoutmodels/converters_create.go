@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
+	datatypes "nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/types"
@@ -55,7 +56,7 @@ type CreateMapConverter interface {
 	// goverter:ignore Notes Reason MeasurementMethod
 	// goverter:map . ReadingType | SetReadingType
 	// goverter:map Trend Delta
-	// goverter:map RSSI Rssi
+	// goverter:map . OtherAttributes | EntryOther
 	EntryToCreate(source Entry, ctx ConverterContext) sitedb.CreateGlucoseReadingParams
 
 	///////
@@ -236,4 +237,18 @@ func MultiplierToPercentage(multiplier *float64) *types.FlexibleFloat64 {
 		return nil
 	}
 	return new(types.FlexibleFloat64(consts.Round(*multiplier*100, 3)))
+}
+
+// EntryOther is what only some apps send of an entry, kept in its reading's other attributes. It is written out, not
+// generated, as a generated converter cannot be called from this package's own code, which goverter compiles first.
+func EntryOther(source Entry) datatypes.GlucoseReadingOther {
+	return datatypes.GlucoseReadingOther{Noise: source.Noise.Float64p(), Filtered: source.Filtered.Float64p(),
+		Unfiltered: source.Unfiltered.Float64p(), Rssi: source.RSSI.Float64p(), IsCalibration: source.IsCalibration,
+		SensorMgdlAtPairing: source.SensorMgdlAtPairing.Float64p()}
+}
+
+// EntryOtherJSON is what only some apps send of an entry, as JSON for an update to merge into its reading's other
+// attributes
+func EntryOtherJSON(source Entry) *string {
+	return datatypes.OtherJSON(EntryOther(source))
 }

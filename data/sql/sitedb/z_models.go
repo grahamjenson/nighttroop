@@ -5,6 +5,7 @@
 package sitedb
 
 import (
+	"nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils/consts"
 )
 
@@ -268,12 +269,7 @@ type GlucoseReading struct {
 	MeasurementMethod     *string
 	Delta                 *float64
 	Direction             *string
-	Noise                 *float64
-	Filtered              *float64
-	Unfiltered            *float64
-	Rssi                  *float64
-	IsCalibration         *bool
-	SensorMgdlAtPairing   *float64
+	OtherAttributes       types.GlucoseReadingOther
 	Notes                 *string
 	Reason                *string
 	RawJsonData           *string
@@ -298,12 +294,7 @@ type GlucoseReadingsVw struct {
 	MeasurementMethod     *string
 	Delta                 *float64
 	Direction             *string
-	Noise                 *float64
-	Filtered              *float64
-	Unfiltered            *float64
-	Rssi                  *float64
-	IsCalibration         *bool
-	SensorMgdlAtPairing   *float64
+	OtherAttributes       types.GlucoseReadingOther
 	Notes                 *string
 	Reason                *string
 	RawJsonData           *string
