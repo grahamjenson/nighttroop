@@ -1,6 +1,7 @@
 package site_summary_templ
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"sort"
@@ -15,6 +16,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 // directionArrows are the Nightscout trend directions as arrows
@@ -242,15 +244,41 @@ templ summaryContent(summary *sitemodels.Summary) {
 	</section>
 }
 
+// staleAfterMinutes is how old the latest reading can be before the summary says there is none: the no data alarm's
+// minutes, from the settings in effect, or 15 without them
+func staleAfterMinutes(ctx context.Context) int64 {
+	if siteContext := httputils.GetSiteContext(ctx); siteContext != nil {
+		if minutes := siteContext.GetSettings().GetAlarmNoDataMinutes(); minutes != nil {
+			return *minutes
+		}
+	}
+	return 15
+}
+
+// staleFor is how long ago, in whole minutes, a reading older than staleAfterMinutes was taken, and "" for one newer
+func staleFor(ctx context.Context, occurredAt int64, now time.Time) string {
+	age := now.Sub(time.UnixMilli(occurredAt)).Truncate(time.Minute)
+	if age < time.Duration(staleAfterMinutes(ctx))*time.Minute {
+		return ""
+	}
+	return display.Duration(age.Milliseconds())
+}
+
 templ glucoseHero(summary *sitemodels.Summary) {
 	<div id="site--summary--glucose" class="flex flex-wrap items-end justify-between gap-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
 		if len(summary.GlucoseReadings) > 0 {
 			{{ latest := summary.GlucoseReadings[0] }}
-			{{ outOfRange := glucoseRange(summary, latest.Reading) }}
+			{{ outOfRange, stale := glucoseRange(summary, latest.Reading), staleFor(ctx, latest.OccurredAt, time.Now()) }}
 			<div>
-				<div class="text-sm font-semibold uppercase tracking-wide text-gray-500">Glucose</div>
+				<div class="flex items-center gap-2">
+					<span class="text-sm font-semibold uppercase tracking-wide text-gray-500">Glucose</span>
+					if stale != "" {
+						<span id="site--summary--glucose--stale" class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">No reading for { stale }</span>
+					}
+				</div>
 				<div class="flex items-baseline gap-2">
-					<span id="site--summary--glucose--reading" class={ "text-6xl font-extrabold tracking-tight", rangeColours[outOfRange] }>{ site_data_templ.FormatGlucose(latest.Reading, latest.Units) }</span>
+					// An old reading is grey, as it may no longer be the glucose
+					<span id="site--summary--glucose--reading" class={ "text-6xl font-extrabold tracking-tight", templ.KV(rangeColours[outOfRange], stale == ""), templ.KV("text-gray-400", stale != "") }>{ site_data_templ.FormatGlucose(latest.Reading, latest.Units) }</span>
 					<span class="text-lg text-gray-500">{ unitsText(latest.Units) }</span>
 					<span class="ml-2 text-4xl text-gray-700">{ arrow(latest.Direction) }</span>
 					if outOfRange != "" {
