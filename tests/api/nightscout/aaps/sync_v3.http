@@ -443,8 +443,65 @@ H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT_EQUALS "mbg" "@result.type"
 ASSERT_EQUALS 110 "@result.mbg"
-// isCalibration and sensorMgdlAtPairing are not kept yet (TODOs.md), so a follower takes it as a foreign fingerstick
+// isCalibration and sensorMgdlAtPairing come back as sent, so a follower takes it as a calibration, not a fingerstick
+ASSERT_EQUALS true "@result.isCalibration"
+ASSERT_EQUALS 104 "@result.sensorMgdlAtPairing"
+
+// AAPS updates the whole entry; one without them keeps them
+NAME patch_calibration
+PATCH http://{{ site }}/api/v3/entries/{{ .add_calibration.identifier }}
+H Authorization: Bearer {{ jwt }}
+B {
+    "type": "mbg",
+    "device": "Dexcom G7",
+    "identifier": "{{ .add_calibration.identifier }}",
+    "isReadOnly": false,
+    "isValid": true,
+    "units": "mg/dl",
+    "mbg": 112.0
+ }
+ASSERT_STATUS 200
+
+NAME get_patched_calibration
+GET http://{{ site }}/api/v3/entries/{{ .add_calibration.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 112 "@result.mbg"
+ASSERT_EQUALS true "@result.isCalibration"
+ASSERT_EQUALS 104 "@result.sensorMgdlAtPairing"
+
+// AAPS 3.4's NSClient v1 reads them too
+NAME get_calibration_v1
+GET http://{{ site }}/api/v1/entries/{{ .add_calibration.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS true "@0.isCalibration"
+ASSERT_EQUALS 104 "@0.sensorMgdlAtPairing"
+
+// A fingerstick, an mbg without them, has neither
+NAME add_fingerstick_entry
+POST http://{{ site }}/api/v3/entries
+H Authorization: Bearer {{ jwt }}
+B {
+    "type": "mbg",
+    "date": {{ itime 8 }},
+    "device": "Contour",
+    "utcOffset": 720,
+    "isReadOnly": false,
+    "isValid": true,
+    "units": "mg/dl",
+    "mbg": 120.0,
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+
+NAME get_fingerstick_entry
+GET http://{{ site }}/api/v3/entries/{{ .add_fingerstick_entry.identifier }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 120 "@result.mbg"
 ASSERT_EQUALS null "@result.isCalibration"
+ASSERT_EQUALS null "@result.sensorMgdlAtPairing"
 
 ////////
 // DEVICE STATUS
