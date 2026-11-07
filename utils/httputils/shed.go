@@ -48,11 +48,15 @@ func RefuseBusy(w http.ResponseWriter, r *http.Request, why string) {
 	http.Error(w, "Server busy, try again shortly", http.StatusServiceUnavailable)
 }
 
-// LongLived is a request held open, a live update or a Socket.IO connection, or the health check, which must answer
-// while the server is busy so it is not taken for down
+// ControlLogsDBPath is the control site's download of the logs DB, which can take minutes to copy and send
+const ControlLogsDBPath = "/logs-db"
+
+// LongLived is a request held open, a live update, a Socket.IO connection or the control site's download of the logs
+// DB, or the health check, which must answer while the server is busy so it is not taken for down
 func LongLived(r *http.Request) bool {
 	return r.URL.Path == "/health" || strings.HasPrefix(r.URL.Path, "/socket.io/") ||
-		strings.Contains(r.Header.Get("Accept"), "text/event-stream")
+		strings.Contains(r.Header.Get("Accept"), "text/event-stream") ||
+		(r.URL.Path == ControlLogsDBPath && strings.HasPrefix(r.Host, "control."))
 }
 
 // ShedLoadReserving is ShedLoad keeping a quarter of its requests, in flight and waiting, for those reserved, such as

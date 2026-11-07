@@ -35,8 +35,6 @@
 
 1. Security
     1. Testing deploy with rolling to a new keyset, moving to a new encrypted keyset.
-    1. P2: Download the logs DB from the control site, so staging's captured requests (`CAPTURE_REQUESTS`) can be
-       read and turned into tests
     1. P3: Capture each Socket.IO message on staging, as `CAPTURE_REQUESTS` keeps a websocket's upgrade but not its
        messages
     1. P3: Refresh the built in DB-IP country database (`utils/geoip/dbip-country-lite.mmdb`) each month or two, as

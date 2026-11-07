@@ -1,6 +1,8 @@
 package control_logs_templ
 
 import (
+	"context"
+
 	"nighttroop.t1d.nz/data/db"
 	dataevents "nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/server/components/filter"
@@ -13,9 +15,12 @@ import (
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/apiutils/apiquery"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 func formatDate(ms int64) string {
@@ -47,12 +52,31 @@ func attributes(raw json.RawMessage) string {
 	return string(indented)
 }
 
-// page heads a page of rows with its title and description, and pages it
+// isAdmin is whether the control identity is an admin, who can download the logs DB
+func isAdmin(ctx context.Context) bool {
+	controlContext := httputils.GetControlContext(ctx)
+	return controlContext != nil && controlContext.IdentityModel != nil && controlContext.IdentityModel.Role == consts.ControlRoleAdmin
+}
+
+// page heads a page of rows with its title and description, and for an admin a download of the whole logs DB, and
+// pages it
 templ page(id string, title string, description string, path string, pagePath string, count int, skip int64, limit int64) {
 	<div id={ id } class="mx-auto max-w-5xl space-y-6">
-		@heading.Page(title) {
-			{ description }
-		}
+		<div class="flex flex-wrap items-start justify-between gap-4">
+			@heading.Page(title) {
+				{ description }
+			}
+			if isAdmin(ctx) {
+				@button.Button(button.Props{
+					ID:         "control--logs-db--download",
+					Href:       "/logs-db",
+					Variant:    button.VariantOutline,
+					Attributes: templ.Attributes{"download": "", "title": "A copy of the logs DB, with every site's events, errors and logs, as one SQLite file"},
+				}) {
+					Download Logs DB
+				}
+			}
+		</div>
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			{ children... }
 			@pager.Pager(pager.Props{ID: "control-" + path, Path: pagePath, Count: count, Skip: skip, Limit: limit})
