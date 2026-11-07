@@ -9,6 +9,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"nighttroop.t1d.nz/models/controlmodels"
@@ -27,20 +28,31 @@ func formatDate(ms *int64) string {
 	return time.UnixMilli(*ms).Format("2006-01-02 15:04:05")
 }
 
-// orDash shows an optional number, or a dash when it is not set
-func orDash[T int64 | float64](value *T) string {
+// orDash shows an optional count or duration as a whole number, e.g. 12345, or a dash when it is not set
+func orDash(value *int64) string {
 	if value == nil {
 		return "-"
 	}
-	return fmt.Sprintf("%.4g", float64(*value))
+	return strconv.FormatInt(*value, 10)
 }
 
-// state is whether the source is off, failing or syncing
+// averageOrDash shows an optional average to one decimal place, e.g. 12345.7, or a dash when it is not set
+func averageOrDash(value *float64) string {
+	if value == nil {
+		return "-"
+	}
+	return strconv.FormatFloat(*value, 'f', 1, 64)
+}
+
+// state is whether the source is off, was turned off after failing, is failing or is syncing
 func state(source *controlmodels.SyncSource) string {
+	failing := source.ConsecutiveFailedSyncs != nil && *source.ConsecutiveFailedSyncs > 0
 	switch {
+	case !source.Enabled && failing:
+		return "disabled after failing"
 	case !source.Enabled:
 		return "disabled"
-	case source.ConsecutiveFailedSyncs != nil && *source.ConsecutiveFailedSyncs > 0:
+	case failing:
 		return "failing"
 	}
 	return "syncing"
@@ -50,6 +62,8 @@ func stateClass(source *controlmodels.SyncSource) string {
 	switch state(source) {
 	case "failing":
 		return "font-medium text-red-700"
+	case "disabled after failing":
+		return "font-medium text-amber-800"
 	case "disabled":
 		return "text-gray-500"
 	}
@@ -406,7 +420,7 @@ func syncSourceRow(source *controlmodels.SyncSource) templ.Component {
 				var templ_7745c5c3_Var17 string
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(source.SiteID)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sync_sources_templ/sync_sources.templ`, Line: 118, Col: 18}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sync_sources_templ/sync_sources.templ`, Line: 132, Col: 18}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 				if templ_7745c5c3_Err != nil {
@@ -433,7 +447,7 @@ func syncSourceRow(source *controlmodels.SyncSource) templ.Component {
 				var templ_7745c5c3_Var19 string
 				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(string(source.Type))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sync_sources_templ/sync_sources.templ`, Line: 121, Col: 24}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sync_sources_templ/sync_sources.templ`, Line: 135, Col: 24}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 				if templ_7745c5c3_Err != nil {
@@ -500,7 +514,7 @@ func syncSourceRow(source *controlmodels.SyncSource) templ.Component {
 				var templ_7745c5c3_Var23 string
 				templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(state(source))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sync_sources_templ/sync_sources.templ`, Line: 124, Col: 53}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sync_sources_templ/sync_sources.templ`, Line: 138, Col: 53}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 				if templ_7745c5c3_Err != nil {
@@ -535,7 +549,7 @@ func syncSourceRow(source *controlmodels.SyncSource) templ.Component {
 				var templ_7745c5c3_Var25 string
 				templ_7745c5c3_Var25, templ_7745c5c3_Err = templruntime.NewAttributeExpression(formatDate(source.LastAttemptedSync)).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sync_sources_templ/sync_sources.templ`, Line: 127, Col: 53}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sync_sources_templ/sync_sources.templ`, Line: 141, Col: 53}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var25)
 				if templ_7745c5c3_Err != nil {
@@ -548,7 +562,7 @@ func syncSourceRow(source *controlmodels.SyncSource) templ.Component {
 				var templ_7745c5c3_Var26 string
 				templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(source.LastAttemptedSync, time.Now()))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sync_sources_templ/sync_sources.templ`, Line: 127, Col: 107}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sync_sources_templ/sync_sources.templ`, Line: 141, Col: 107}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 				if templ_7745c5c3_Err != nil {
@@ -583,7 +597,7 @@ func syncSourceRow(source *controlmodels.SyncSource) templ.Component {
 				var templ_7745c5c3_Var28 string
 				templ_7745c5c3_Var28, templ_7745c5c3_Err = templruntime.NewAttributeExpression(formatDate(source.LastSuccessfulSync)).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sync_sources_templ/sync_sources.templ`, Line: 130, Col: 54}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sync_sources_templ/sync_sources.templ`, Line: 144, Col: 54}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var28)
 				if templ_7745c5c3_Err != nil {
@@ -596,7 +610,7 @@ func syncSourceRow(source *controlmodels.SyncSource) templ.Component {
 				var templ_7745c5c3_Var29 string
 				templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(source.LastSuccessfulSync, time.Now()))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sync_sources_templ/sync_sources.templ`, Line: 130, Col: 109}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sync_sources_templ/sync_sources.templ`, Line: 144, Col: 109}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 				if templ_7745c5c3_Err != nil {
@@ -627,7 +641,7 @@ func syncSourceRow(source *controlmodels.SyncSource) templ.Component {
 				var templ_7745c5c3_Var31 string
 				templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(source.TotalSuccessfulSyncs))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sync_sources_templ/sync_sources.templ`, Line: 133, Col: 40}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sync_sources_templ/sync_sources.templ`, Line: 147, Col: 40}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 				if templ_7745c5c3_Err != nil {
@@ -694,7 +708,7 @@ func syncSourceRow(source *controlmodels.SyncSource) templ.Component {
 				var templ_7745c5c3_Var35 string
 				templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(source.TotalFailedSyncs))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sync_sources_templ/sync_sources.templ`, Line: 136, Col: 72}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sync_sources_templ/sync_sources.templ`, Line: 150, Col: 72}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 				if templ_7745c5c3_Err != nil {
@@ -823,15 +837,15 @@ func SyncSourceModal(source *controlmodels.SyncSource) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = syncSourceDetail("Total EMA", orDash(source.TotalEma)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = syncSourceDetail("Total EMA", averageOrDash(source.TotalEma)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = syncSourceDetail("Success EMA", orDash(source.SuccessEma)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = syncSourceDetail("Success EMA", averageOrDash(source.SuccessEma)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = syncSourceDetail("Failure EMA", orDash(source.FailureEma)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = syncSourceDetail("Failure EMA", averageOrDash(source.FailureEma)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -857,7 +871,7 @@ func SyncSourceModal(source *controlmodels.SyncSource) templ.Component {
 					var templ_7745c5c3_Var38 string
 					templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(e)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sync_sources_templ/sync_sources.templ`, Line: 172, Col: 30}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sync_sources_templ/sync_sources.templ`, Line: 186, Col: 30}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 					if templ_7745c5c3_Err != nil {
