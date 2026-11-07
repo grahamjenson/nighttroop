@@ -1,0 +1,63 @@
+INCLUDE steps/new_site.steps
+
+// What only some apps send of a sensor or pump change, its sensor's code and transmitter and its pump's ID, serial and
+// type, is kept in its other attributes and given back
+NAME create_treatment
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B {"eventType": "Sensor Change", "created_at": "{{ time 5 }}", "sensorCode": "ABC123", "transmitterId": "XYZ789", "pumpId": "PUMP123", "pumpSerial": "SERIAL123", "pumpType": "Omnipod"}
+ASSERT_STATUS 200
+
+NAME read_treatment
+GET http://{{ .ns_site }}/api/v1/treatments.json?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "ABC123" "@0.sensorCode"
+ASSERT_EQUALS "XYZ789" "@0.transmitterId"
+ASSERT_EQUALS "PUMP123" "@0.pumpId"
+ASSERT_EQUALS "SERIAL123" "@0.pumpSerial"
+ASSERT_EQUALS "Omnipod" "@0.pumpType"
+
+NAME read_site_events
+GET http://{{ site }}/data/component-events
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS "ABC123" "@result.0.sensor_code"
+ASSERT_EQUALS "XYZ789" "@result.0.transmitter_id"
+ASSERT_EQUALS "PUMP123" "@result.0.pump_id"
+ASSERT_EQUALS "SERIAL123" "@result.0.pump_serial"
+ASSERT_EQUALS "Omnipod" "@result.0.pump_type"
+SET event_id {{ dig "read_site_events.result.0.id" }}
+
+// Updating one of them leaves the others as they were
+NAME update_pump_serial
+POST http://{{ site }}/data/component-events/{{ .event_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"pump_serial": "SERIAL456"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "SERIAL456" "@result.pump_serial"
+ASSERT_EQUALS "ABC123" "@result.sensor_code"
+ASSERT_EQUALS "XYZ789" "@result.transmitter_id"
+ASSERT_EQUALS "PUMP123" "@result.pump_id"
+ASSERT_EQUALS "Omnipod" "@result.pump_type"
+
+NAME read_updated
+GET http://{{ .ns_site }}/api/v1/treatments.json?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "SERIAL456" "@0.pumpSerial"
+ASSERT_EQUALS "ABC123" "@0.sensorCode"
+ASSERT_EQUALS "Omnipod" "@0.pumpType"
+
+// Each is still refused past its length, as a column of its own was
+NAME pump_serial_too_long
+POST http://{{ site }}/data/component-events/{{ .event_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"pump_serial": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+ASSERT_STATUS 400
+
+NAME pump_id_too_long
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B {"eventType": "Site Change", "pumpId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+ASSERT_STATUS 400
