@@ -39,7 +39,8 @@ func deviceHistoryURL(device string, skip int64, limit int64) string {
 	return fmt.Sprintf("/data/device-status?device=%s&skip=%d&limit=%d", url.QueryEscape(device), skip, limit)
 }
 
-// withUnit shows an optional value, to at most two decimal places, with its unit, or a dash when it is not set
+// withUnit shows an optional value, to at most two decimal places, with its unit (none in a table, whose header has
+// it), or a dash when it is not set
 func withUnit(value *float64, unit string) string {
 	if value == nil {
 		return "-"
@@ -124,19 +125,19 @@ templ deviceStatusTable(id string, statuses []*sitemodels.SiteDeviceStatus) {
 					Time
 				}
 				@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-					Phone
+					Phone battery (%)
 				}
 				@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-					Reservoir
+					Reservoir (U)
 				}
 				@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-					Pump
+					Pump battery (%)
 				}
 				@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-					IOB
+					IOB (U)
 				}
 				@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-					COB
+					COB (g)
 				}
 				@table.Head() {
 					<span class="sr-only">Actions</span>
@@ -170,19 +171,19 @@ templ deviceStatusRow(status *sitemodels.SiteDeviceStatus) {
 			{ formatReadingDate(ctx, status.OccurredAt) }
 		}
 		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
-			{ withUnit(status.DeviceBatteryPercent, "%") }
+			{ withUnit(status.DeviceBatteryPercent, "") }
 		}
 		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
-			{ withUnit(status.PumpReservoir, " U") }
+			{ withUnit(status.PumpReservoir, "") }
 		}
 		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
-			{ withUnit(status.PumpBatteryPercent, "%") }
+			{ withUnit(status.PumpBatteryPercent, "") }
 		}
 		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
-			{ withUnit(status.LoopIob, " U") }
+			{ withUnit(status.LoopIob, "") }
 		}
 		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
-			{ withUnit(status.LoopCob, " g") }
+			{ withUnit(status.LoopCob, "") }
 		}
 		@table.Cell() {
 			<div class="flex justify-end">

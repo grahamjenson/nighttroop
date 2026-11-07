@@ -135,7 +135,7 @@ templ tempBasalRow(tempBasal *sitemodels.SiteTempBasal) {
 		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ fmt.Sprint(tempBasal.DurationMinutes) }
 		}
-		@table.Cell() {
+		@table.Cell(notesCell) {
 			{ orDash(tempBasal.Reason) }
 		}
 		@table.Cell() {

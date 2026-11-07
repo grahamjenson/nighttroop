@@ -20,6 +20,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   admin only when a code from that TOTP secret is entered.
 - Every TOTP QR code (the setup page, a new site's admin, a new or reset identity) scans into an authenticator app as an
   account: it holds an `otpauth://totp` URI issued by Nighttroop, for the name at its site's or control plane's host.
+- Under each TOTP QR code it says to scan it with an authenticator app, linking in a new tab to Google Authenticator,
+  Microsoft Authenticator and 2FAS.
 - A staging server (`MODE=staging`) is never set up: it starts with the control admin `admin` of its
   `STAGING_ADMIN_PASSWORD` and `STAGING_ADMIN_TOTP_SECRET`, made again whenever its data is wiped, and will not start
   without them. Otherwise it runs as production does, its site admins getting their own random credentials.
@@ -268,6 +270,11 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   glucose over the AGP of the 7 days to it. A report with no glucose says so instead.
 - Day, Week, Fortnight and Month open the report of that kind ending on the report's last day, or today; Previous and
   Next open the one before and after, disabled past today or a year ago. Back and forward move between reports.
+- Daily dose, next to the period buttons, opens the daily dose report at `/reports/tdd`: a bar of each kept day before
+  today, back a year, with insulin, oldest first, dated in the site's timezone; today is left out as it is not over.
+- A day with no insulin has no bar and is not counted. Hovering a bar shows its date and daily dose in U.
+- The daily dose report shows how many days have insulin and their mean, lowest and highest daily dose, and says when
+  there are no days with insulin yet. Day, Week, Fortnight and Month open those reports ending yesterday.
 
 ### Getting started
 
@@ -283,7 +290,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 Each kind of data has a page with a table, newest first and paged, where records can be added, viewed, edited and
 deleted (after a confirmation). On a phone, a table wider than the window scrolls sideways in its card, so the page
-does not:
+does not, and its cells stay on one line, so a time or a value and its unit never break apart; only notes wrap:
 
 - **Glucose**: CGM and meter readings with trend arrows, in the settings' units (mmol/L or mg/dL), with lows and
   highs coloured as on the summary and marked L or H, read out as Low or High, so they are not shown by colour alone.
@@ -309,7 +316,8 @@ does not:
     type can have. An event taken out of a group is in no group.
   - An event is in at most one group: events in another group are not offered, and grouping one again is refused.
   - A group added or edited on the site is a Nightscout treatment, with its events.
-- **Device statuses**: each device's latest 3 statuses, and every status a device sent.
+- **Device statuses**: each device's latest 3 statuses, and every status a device sent, with each column's unit in its
+  header, e.g. Phone battery (%), Reservoir (U), IOB (U) and COB (g).
 
 Every value written to a site, from its pages, the Nightscout API or a sync, has a broad limit far outside real use,
 e.g. a bolus of at most 500 units or 1000 g of carbs, and a date from 1970 to the year 9999. Insulin and food can be

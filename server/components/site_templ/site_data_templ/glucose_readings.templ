@@ -106,6 +106,9 @@ func directionDetail(direction *string) string {
 }
 
 // orDash shows an optional value, or a dash when it is not set
+// notesCell is a table cell of free text, like notes, which wraps where every other cell keeps to one line
+var notesCell = table.CellProps{Class: "min-w-48 whitespace-normal"}
+
 func orDash[T any](value *T) string {
 	if value == nil {
 		return "-"

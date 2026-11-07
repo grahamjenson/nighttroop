@@ -119,7 +119,7 @@ templ insulinDoseRow(insulinDose *sitemodels.SiteInsulinDose) {
 		@table.Cell() {
 			{ orDash(insulinDose.DoseType) }
 		}
-		@table.Cell() {
+		@table.Cell(notesCell) {
 			{ orDash(insulinDose.Notes) }
 		}
 		@table.Cell() {

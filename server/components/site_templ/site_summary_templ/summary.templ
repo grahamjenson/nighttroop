@@ -390,14 +390,14 @@ templ treatmentsTable(list []treatment) {
 			for _, t := range list {
 				@table.Row() {
 					@table.Cell() {
-						<span class="whitespace-nowrap" title={ site_data_templ.FormatDate(ctx, t.At) }>{ display.RoundedAgo(t.At, time.Now()) }</span>
+						<span title={ site_data_templ.FormatDate(ctx, t.At) }>{ display.RoundedAgo(t.At, time.Now()) }</span>
 					}
 					@table.Cell() {
-						@pageLink("", t.Path, "whitespace-nowrap font-medium text-primary underline") {
+						@pageLink("", t.Path, "font-medium text-primary underline") {
 							{ t.Kind }
 						}
 					}
-					@table.Cell() {
+					@table.Cell(table.CellProps{Class: "whitespace-normal"}) {
 						{ t.Detail }
 					}
 				}
@@ -429,7 +429,7 @@ templ insulinCarbsTable(list []intake) {
 			for _, i := range list {
 				@table.Row() {
 					@table.Cell() {
-						<span class="whitespace-nowrap" title={ site_data_templ.FormatDate(ctx, i.At) }>{ display.RoundedAgo(i.At, time.Now()) }</span>
+						<span title={ site_data_templ.FormatDate(ctx, i.At) }>{ display.RoundedAgo(i.At, time.Now()) }</span>
 					}
 					@table.Cell(table.CellProps{Class: "text-right font-medium tabular-nums"}) {
 						if i.SMB {

@@ -1,0 +1,35 @@
+package authenticator
+
+import "nighttroop.t1d.nz/server/components/footer"
+
+// apps are a few free authenticator apps, for iPhone and Android, that add an account from a TOTP QR code
+var apps = []struct{ id, name, url string }{
+	{"google", "Google Authenticator", "https://support.google.com/accounts/answer/1066447"},
+	{"microsoft", "Microsoft Authenticator", "https://www.microsoft.com/en-us/security/mobile-authenticator-app"},
+	{"2fas", "2FAS", "https://2fas.com"},
+}
+
+// before is what goes before the i-th app's name in the list: a comma, or "or" before the last
+func before(i int) string {
+	switch {
+	case i == 0:
+		return "Scan with an authenticator app, such as "
+	case i == len(apps)-1:
+		return " or "
+	default:
+		return ", "
+	}
+}
+
+// ScanHint is the caption under a TOTP QR code: scan it with an authenticator app, linking to a few in new tabs. Its
+// links are id--google, id--microsoft and id--2fas.
+templ ScanHint(id string) {
+	<p id={ id } class="max-w-xs text-center font-sans text-xs text-slate-500">
+		for i, app := range apps {
+			{ before(i) }
+			@footer.NewTabLink(id+"--"+app.id, app.url, "whitespace-nowrap text-primary underline hover:no-underline") {
+				{ app.name }
+			}
+		}
+	</p>
+}

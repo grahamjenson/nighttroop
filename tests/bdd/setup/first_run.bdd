@@ -19,6 +19,8 @@ ASSERT_VISIBLE #control--setup--password
 ASSERT_VISIBLE #control--setup--totp-secret
 // Its QR code holds the otpauth:// URI an authenticator app adds the control admin from
 ASSERT_VISIBLE #control--setup--qrcode[title^="otpauth://totp/Nighttroop:"][title*="@control."][title*="?issuer=Nighttroop&secret="]
+ASSERT_TEXT_VISIBLE Scan with an authenticator app, such as
+ASSERT_VISIBLE #control--setup--authenticator--google[target="_blank"]
 ASSERT_NOT_VISIBLE #control--setup--error
 SCREENSHOT credentials
 

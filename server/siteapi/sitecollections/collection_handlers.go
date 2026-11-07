@@ -11,7 +11,9 @@ import (
 	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/events"
+	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ"
+	"nighttroop.t1d.nz/server/components/site_templ/site_reports_templ"
 	"nighttroop.t1d.nz/server/components/site_templ/site_summary_templ"
 	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitedata"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
@@ -397,6 +399,25 @@ func ReportsHandler(get http.HandlerFunc) http.HandlerFunc {
 		}
 		get(w, r)
 	}
+}
+
+// TDDReportHandler is the daily dose report of the kept days before today, a page for people, so it has no JSON
+func TDDReportHandler(w http.ResponseWriter, r *http.Request) {
+	siteContext := SiteContextFor(w, r, (&sitedata.SummaryDailyCollection{}).GetName(), siteapiutils.ActionSearch)
+	if siteContext == nil {
+		return
+	}
+	if siteContext.AcceptType != httputils.AcceptTypeHTMX && siteContext.AcceptType != httputils.AcceptTypeHTML {
+		writeError(w, r, siteContext.AcceptType, apiutils.ErrNotFound)
+		return
+	}
+	rows, err := sitedata.PastSummaryDays(r.Context(), siteContext.SiteDB.Queries(), siteContext.GetSiteTimezone(), time.Now())
+	days, herr := apiutils.Searched(rows, err, "summary_daily", apiutils.WithContext(sitemodels.SummaryDailyFromDB, siteContext))
+	if herr != nil {
+		writeError(w, r, siteContext.AcceptType, herr)
+		return
+	}
+	WriteResponse(w, r, siteContext, http.StatusOK, nil, site_reports_templ.TDDReport(days), true)
 }
 
 func GettingStartedHandler(w http.ResponseWriter, r *http.Request) {
