@@ -22,18 +22,7 @@ func ActivityCreate(source sitedb.Activity, context ConverterContext) sitedb.Cre
 		xint64 := *source.DurationMinutes
 		sitedbCreateActivityParams.DurationMinutes = &xint64
 	}
-	if source.Calories != nil {
-		xint642 := *source.Calories
-		sitedbCreateActivityParams.Calories = &xint642
-	}
-	if source.Steps != nil {
-		xint643 := *source.Steps
-		sitedbCreateActivityParams.Steps = &xint643
-	}
-	if source.HeartRate != nil {
-		xint644 := *source.HeartRate
-		sitedbCreateActivityParams.HeartRate = &xint644
-	}
+	sitedbCreateActivityParams.OtherAttributes = typesActivityOtherToTypesActivityOther(source.OtherAttributes)
 	if source.Notes != nil {
 		xstring2 := *source.Notes
 		sitedbCreateActivityParams.Notes = &xstring2
@@ -44,8 +33,8 @@ func ActivityCreate(source sitedb.Activity, context ConverterContext) sitedb.Cre
 	}
 	sitedbCreateActivityParams.OccurredAt = source.OccurredAt
 	if source.UtcOffsetMinutes != nil {
-		xint645 := *source.UtcOffsetMinutes
-		sitedbCreateActivityParams.UtcOffsetMinutes = &xint645
+		xint642 := *source.UtcOffsetMinutes
+		sitedbCreateActivityParams.UtcOffsetMinutes = &xint642
 	}
 	if source.RawJsonData != nil {
 		xstring4 := *source.RawJsonData
@@ -75,18 +64,7 @@ func ActivityUpdate(source sitedb.Activity, context ConverterContext) sitedb.Upd
 		xint64 := *source.DurationMinutes
 		sitedbUpdateActivityParams.DurationMinutes = &xint64
 	}
-	if source.Calories != nil {
-		xint642 := *source.Calories
-		sitedbUpdateActivityParams.Calories = &xint642
-	}
-	if source.Steps != nil {
-		xint643 := *source.Steps
-		sitedbUpdateActivityParams.Steps = &xint643
-	}
-	if source.HeartRate != nil {
-		xint644 := *source.HeartRate
-		sitedbUpdateActivityParams.HeartRate = &xint644
-	}
+	sitedbUpdateActivityParams.OtherAttributes = sitedb.ActivityOtherJSON(source.OtherAttributes)
 	if source.Notes != nil {
 		xstring2 := *source.Notes
 		sitedbUpdateActivityParams.Notes = &xstring2
@@ -618,18 +596,7 @@ func InsulinDoseCreate(source sitedb.InsulinDose, context ConverterContext) site
 		xstring := *source.DoseType
 		sitedbCreateInsulinDoseParams.DoseType = &xstring
 	}
-	if source.SplitNow != nil {
-		xfloat64 := *source.SplitNow
-		sitedbCreateInsulinDoseParams.SplitNow = &xfloat64
-	}
-	if source.SplitExt != nil {
-		xfloat642 := *source.SplitExt
-		sitedbCreateInsulinDoseParams.SplitExt = &xfloat642
-	}
-	if source.Automatic != nil {
-		xbool := *source.Automatic
-		sitedbCreateInsulinDoseParams.Automatic = &xbool
-	}
+	sitedbCreateInsulinDoseParams.OtherAttributes = typesInsulinDoseOtherToTypesInsulinDoseOther(source.OtherAttributes)
 	if source.Notes != nil {
 		xstring2 := *source.Notes
 		sitedbCreateInsulinDoseParams.Notes = &xstring2
@@ -667,18 +634,7 @@ func InsulinDoseUpdate(source sitedb.InsulinDose, context ConverterContext) site
 	}
 	pFloat64 := source.Dose
 	sitedbUpdateInsulinDoseParams.Dose = &pFloat64
-	if source.SplitNow != nil {
-		xfloat64 := *source.SplitNow
-		sitedbUpdateInsulinDoseParams.SplitNow = &xfloat64
-	}
-	if source.SplitExt != nil {
-		xfloat642 := *source.SplitExt
-		sitedbUpdateInsulinDoseParams.SplitExt = &xfloat642
-	}
-	if source.Automatic != nil {
-		xbool := *source.Automatic
-		sitedbUpdateInsulinDoseParams.Automatic = &xbool
-	}
+	sitedbUpdateInsulinDoseParams.OtherAttributes = sitedb.InsulinDoseOtherJSON(source.OtherAttributes)
 	if source.Notes != nil {
 		xstring2 := *source.Notes
 		sitedbUpdateInsulinDoseParams.Notes = &xstring2
@@ -777,18 +733,7 @@ func PartialTreatmentToActivity(source Treatment) sitedb.Activity {
 		xint64 := FlexibleInt64ToInt64(*source.DurationMinutes)
 		sitedbActivity.DurationMinutes = &xint64
 	}
-	if source.Calories != nil {
-		xint642 := FlexibleInt64ToInt64(*source.Calories)
-		sitedbActivity.Calories = &xint642
-	}
-	if source.Steps != nil {
-		xint643 := FlexibleInt64ToInt64(*source.Steps)
-		sitedbActivity.Steps = &xint643
-	}
-	if source.HeartRate != nil {
-		xint644 := FlexibleInt64ToInt64(*source.HeartRate)
-		sitedbActivity.HeartRate = &xint644
-	}
+	sitedbActivity.OtherAttributes = TreatmentActivityOther(source)
 	if source.Notes != nil {
 		xstring2 := SanitizedStringToString(*source.Notes)
 		sitedbActivity.Notes = &xstring2
@@ -800,8 +745,8 @@ func PartialTreatmentToActivity(source Treatment) sitedb.Activity {
 	pString := source.RawJsonData
 	sitedbActivity.RawJsonData = &pString
 	if source.UtcOffsetMinutes != nil {
-		xint645 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		sitedbActivity.UtcOffsetMinutes = &xint645
+		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		sitedbActivity.UtcOffsetMinutes = &xint642
 	}
 	sitedbActivity.OccurredAt = OrNow(source.Date)
 	if source.App != nil {
@@ -980,12 +925,7 @@ func PartialTreatmentToInsulinDose(source Treatment) sitedb.InsulinDose {
 		xstring := ShortStringToString(*source.Type)
 		sitedbInsulinDose.DoseType = &xstring
 	}
-	sitedbInsulinDose.SplitNow = PercentageToMultiplier(source.SplitNow)
-	sitedbInsulinDose.SplitExt = PercentageToMultiplier(source.SplitExt)
-	if source.Automatic != nil {
-		xbool := *source.Automatic
-		sitedbInsulinDose.Automatic = &xbool
-	}
+	sitedbInsulinDose.OtherAttributes = TreatmentInsulinDoseOther(source)
 	if source.Notes != nil {
 		xstring2 := SanitizedStringToString(*source.Notes)
 		sitedbInsulinDose.Notes = &xstring2
@@ -1537,16 +1477,16 @@ func UpdateActivityToTreatment(source *sitedb.Activity, target *Treatment) {
 		}
 		pTypesShortString := types.ShortString(source.ActivityType)
 		target.ActivityType = &pTypesShortString
-		if source.Steps != nil {
-			typesFlexibleInt64 := types.FlexibleInt64(*source.Steps)
+		if source.OtherAttributes.Steps != nil {
+			typesFlexibleInt64 := types.FlexibleInt64(*source.OtherAttributes.Steps)
 			target.Steps = &typesFlexibleInt64
 		}
-		if source.Calories != nil {
-			typesFlexibleInt642 := types.FlexibleInt64(*source.Calories)
+		if source.OtherAttributes.Calories != nil {
+			typesFlexibleInt642 := types.FlexibleInt64(*source.OtherAttributes.Calories)
 			target.Calories = &typesFlexibleInt642
 		}
-		if source.HeartRate != nil {
-			typesFlexibleInt643 := types.FlexibleInt64(*source.HeartRate)
+		if source.OtherAttributes.HeartRate != nil {
+			typesFlexibleInt643 := types.FlexibleInt64(*source.OtherAttributes.HeartRate)
 			target.HeartRate = &typesFlexibleInt643
 		}
 		if source.DurationMinutes != nil {
@@ -1708,14 +1648,14 @@ func UpdateInsulinDoseToTreatment(source *sitedb.InsulinDose, target *Treatment)
 	if source != nil {
 		pTypesFlexibleFloat64 := types.FlexibleFloat64(source.Dose)
 		target.Insulin = &pTypesFlexibleFloat64
-		target.SplitNow = MultiplierToPercentage(source.SplitNow)
-		target.SplitExt = MultiplierToPercentage(source.SplitExt)
+		target.SplitNow = MultiplierToPercentage(source.OtherAttributes.SplitNow)
+		target.SplitExt = MultiplierToPercentage(source.OtherAttributes.SplitExt)
 		if source.DoseType != nil {
 			typesShortString := types.ShortString(*source.DoseType)
 			target.Type = &typesShortString
 		}
-		if source.Automatic != nil {
-			xbool := *source.Automatic
+		if source.OtherAttributes.Automatic != nil {
+			xbool := *source.OtherAttributes.Automatic
 			target.Automatic = &xbool
 		}
 		if source.Notes != nil {
@@ -1885,18 +1825,7 @@ func UpdateToActivity(source *sitedb.Activity, target *sitedb.Activity) {
 			xint64 := *source.DurationMinutes
 			target.DurationMinutes = &xint64
 		}
-		if source.Calories != nil {
-			xint642 := *source.Calories
-			target.Calories = &xint642
-		}
-		if source.Steps != nil {
-			xint643 := *source.Steps
-			target.Steps = &xint643
-		}
-		if source.HeartRate != nil {
-			xint644 := *source.HeartRate
-			target.HeartRate = &xint644
-		}
+		target.OtherAttributes = typesActivityOtherToTypesActivityOther(source.OtherAttributes)
 		if source.Notes != nil {
 			xstring2 := *source.Notes
 			target.Notes = &xstring2
@@ -1910,12 +1839,12 @@ func UpdateToActivity(source *sitedb.Activity, target *sitedb.Activity) {
 			target.RawJsonData = &xstring4
 		}
 		if source.DeletedAt != nil {
-			xint645 := *source.DeletedAt
-			target.DeletedAt = &xint645
+			xint642 := *source.DeletedAt
+			target.DeletedAt = &xint642
 		}
 		if source.UtcOffsetMinutes != nil {
-			xint646 := *source.UtcOffsetMinutes
-			target.UtcOffsetMinutes = &xint646
+			xint643 := *source.UtcOffsetMinutes
+			target.UtcOffsetMinutes = &xint643
 		}
 		target.OccurredAt = source.OccurredAt
 		target.CreatedAt = source.CreatedAt
@@ -1929,16 +1858,16 @@ func UpdateToActivity(source *sitedb.Activity, target *sitedb.Activity) {
 			target.CreatedByDeviceName = &xstring6
 		}
 		if source.UpdatedByIdentityID != nil {
-			xint647 := *source.UpdatedByIdentityID
-			target.UpdatedByIdentityID = &xint647
+			xint644 := *source.UpdatedByIdentityID
+			target.UpdatedByIdentityID = &xint644
 		}
 		if source.UpdatedByIdentityName != nil {
 			xstring7 := *source.UpdatedByIdentityName
 			target.UpdatedByIdentityName = &xstring7
 		}
 		if source.CreatedByIdentityID != nil {
-			xint648 := *source.CreatedByIdentityID
-			target.CreatedByIdentityID = &xint648
+			xint645 := *source.CreatedByIdentityID
+			target.CreatedByIdentityID = &xint645
 		}
 		target.CreatedByIdentityName = source.CreatedByIdentityName
 	}
@@ -2271,18 +2200,7 @@ func UpdateToInsulinDose(source *sitedb.InsulinDose, target *sitedb.InsulinDose)
 			xstring := *source.DoseType
 			target.DoseType = &xstring
 		}
-		if source.SplitNow != nil {
-			xfloat64 := *source.SplitNow
-			target.SplitNow = &xfloat64
-		}
-		if source.SplitExt != nil {
-			xfloat642 := *source.SplitExt
-			target.SplitExt = &xfloat642
-		}
-		if source.Automatic != nil {
-			xbool := *source.Automatic
-			target.Automatic = &xbool
-		}
+		target.OtherAttributes = typesInsulinDoseOtherToTypesInsulinDoseOther(source.OtherAttributes)
 		if source.Notes != nil {
 			xstring2 := *source.Notes
 			target.Notes = &xstring2
@@ -2616,6 +2534,22 @@ func UpdateToTempTarget(source *sitedb.TempTarget, target *sitedb.TempTarget) {
 		target.CreatedByIdentityName = source.CreatedByIdentityName
 	}
 }
+func typesActivityOtherToTypesActivityOther(source types1.ActivityOther) types1.ActivityOther {
+	var typesActivityOther types1.ActivityOther
+	if source.Calories != nil {
+		xint64 := *source.Calories
+		typesActivityOther.Calories = &xint64
+	}
+	if source.Steps != nil {
+		xint642 := *source.Steps
+		typesActivityOther.Steps = &xint642
+	}
+	if source.HeartRate != nil {
+		xint643 := *source.HeartRate
+		typesActivityOther.HeartRate = &xint643
+	}
+	return typesActivityOther
+}
 func typesEventGroupOtherToTypesEventGroupOther(source types1.EventGroupOther) types1.EventGroupOther {
 	var typesEventGroupOther types1.EventGroupOther
 	if source.Uuid != nil {
@@ -2667,4 +2601,20 @@ func typesGlucoseReadingOtherToTypesGlucoseReadingOther(source types1.GlucoseRea
 		typesGlucoseReadingOther.SensorMgdlAtPairing = &xfloat645
 	}
 	return typesGlucoseReadingOther
+}
+func typesInsulinDoseOtherToTypesInsulinDoseOther(source types1.InsulinDoseOther) types1.InsulinDoseOther {
+	var typesInsulinDoseOther types1.InsulinDoseOther
+	if source.SplitNow != nil {
+		xfloat64 := *source.SplitNow
+		typesInsulinDoseOther.SplitNow = &xfloat64
+	}
+	if source.SplitExt != nil {
+		xfloat642 := *source.SplitExt
+		typesInsulinDoseOther.SplitExt = &xfloat642
+	}
+	if source.Automatic != nil {
+		xbool := *source.Automatic
+		typesInsulinDoseOther.Automatic = &xbool
+	}
+	return typesInsulinDoseOther
 }

@@ -19,18 +19,7 @@ func ActivityToUpdate(source Activity, context ConverterContext) sitedb.UpdateAc
 		xint64 := FlexibleInt64ToInt64(*source.DurationMinutes)
 		sitedbUpdateActivityParams.DurationMinutes = &xint64
 	}
-	if source.Calories != nil {
-		xint642 := FlexibleInt64ToInt64(*source.Calories)
-		sitedbUpdateActivityParams.Calories = &xint642
-	}
-	if source.Steps != nil {
-		xint643 := FlexibleInt64ToInt64(*source.Steps)
-		sitedbUpdateActivityParams.Steps = &xint643
-	}
-	if source.HeartRate != nil {
-		xint644 := FlexibleInt64ToInt64(*source.HeartRate)
-		sitedbUpdateActivityParams.HeartRate = &xint644
-	}
+	sitedbUpdateActivityParams.OtherAttributes = ActivityOtherJSON(source)
 	if source.Notes != nil {
 		xstring3 := SanitizedStringToString(*source.Notes)
 		sitedbUpdateActivityParams.Notes = &xstring3
