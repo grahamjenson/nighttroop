@@ -21,6 +21,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - A staging server (`MODE=staging`) is never set up: it starts with the control admin `admin` of its
   `STAGING_ADMIN_PASSWORD` and `STAGING_ADMIN_TOTP_SECRET`, made again whenever its data is wiped, and will not start
   without them. Otherwise it runs as production does, its site admins getting their own random credentials.
+- A staging deploy wipes every DB, and their backups, when one cannot be migrated and prepared, or its schema is not
+  the one the migrations make on a new DB, as after a migration's `CHECK` was edited, and keeps them otherwise.
 
 ### Limiting a server to some countries
 

@@ -180,7 +180,6 @@ func (db *DB) Vacuum(ctx context.Context) error {
 	return err
 }
 
-{{ if eq .PkgName "sitedb" }}
 // Schema is the SQL that made each of db's tables, indexes and triggers, so DBs made by the same migrations have the
 // same one. sqlc cannot generate a query of sqlite_master, so it is read here, with the rest of the DB's upkeep.
 func Schema(ctx context.Context, db *sql.DB) (string, error) {
@@ -199,7 +198,6 @@ func Schema(ctx context.Context, db *sql.DB) (string, error) {
 	}
 	return schema, rows.Err()
 }
-{{ end }}
 
 /////
 // File paths
