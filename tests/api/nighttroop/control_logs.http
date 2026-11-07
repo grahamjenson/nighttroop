@@ -88,3 +88,18 @@ NAME list_logs_without_login
 GET http://control.localhost/logs
 H Accept: application/json
 ASSERT_STATUS 401
+
+// The control admin downloads the whole logs DB, as one SQLite file, to read its captured requests
+NAME download_logs_db
+GET http://control.localhost/logs-db
+H Authorization: Bearer {{ .control_jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "application/vnd.sqlite3" "#Content-Type.0"
+ASSERT_CONTAINS "attachment; filename=\"logs-" "#Content-Disposition.0"
+ASSERT_CONTAINS "sqlite\"" "#Content-Disposition.0"
+
+// It holds every site's logs, so no one signed out can
+NAME download_logs_db_without_login
+GET http://control.localhost/logs-db
+H Accept: application/json
+ASSERT_STATUS 401

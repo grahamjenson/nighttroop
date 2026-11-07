@@ -1,0 +1,61 @@
+INCLUDE steps/control_login.steps
+
+NAME create_new_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET site_id {{ .create_new_site.site_subdomain }}
+SET site {{ .create_new_site.site_subdomain }}.localhost
+
+NAME create_other_site
+POST http://localhost/site
+ASSERT_STATUS 200
+SET other_site_id {{ .create_other_site.site_subdomain }}
+
+NAME list_identities
+GET http://control.localhost/sites/{{ .site_id }}/identities
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "admin" "@result.2.name"
+SET admin_id {{ (index .list_identities.result 2).id }}
+
+// A control admin gets a link that signs them in to the site as one of its identities
+NAME assume_admin
+POST http://control.localhost/sites/{{ .site_id }}/identities/{{ .admin_id }}/assume
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "admin" "@result.name"
+ASSERT_CONTAINS "/login/assume?token=" "@result.url"
+
+NAME follow_link
+GET {{ .assume_admin.result.url }}
+ASSERT_STATUS 200
+
+// It works only once
+NAME follow_link_again
+GET {{ .assume_admin.result.url }}
+ASSERT_STATUS 401
+
+// An identity is only found in its own site (TestAssumeJWTToken checks a link for one site does not sign in to another)
+NAME assume_other_sites_identity
+POST http://control.localhost/sites/{{ .other_site_id }}/identities/{{ .admin_id }}/assume
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+// The site's admins see a control admin signed in as their identity, and which
+NAME login_admin
+POST http://{{ .site }}/login
+H Accept: application/json
+B {"name": "admin", "password": "{{ .create_new_site.api_key }}", "totp": "123123"}
+ASSERT_STATUS 200
+
+NAME assumed_events
+GET http://{{ .site }}/logs/events?type=signed_in_by_control
+H Authorization: Bearer {{ .login_admin.token }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS "admin" "@result.0.attributes.identity_name"
+ASSERT_EQUALS "admin" "@result.0.attributes.by"

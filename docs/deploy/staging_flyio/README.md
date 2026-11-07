@@ -6,8 +6,9 @@ try the newest code.
 - **It runs every commit on `main`.** Each push to `main` is built and deployed by a GitHub Actions workflow, without
   waiting for CI, as each commit passed CI on its pull request.
 - **It keeps its data until a migration change breaks it.** The databases are on a volume, so they last through
-  deploys and restarts. When a new version changes a migration so an old database can no longer be migrated, that deploy wipes
-  them and starts empty, so a tester never hits data the new version cannot read. Nothing is backed up.
+  deploys and restarts. When a new version changes a migration, so an old database can no longer be migrated or has
+  another schema than a new one would, that deploy wipes them and starts empty, so a tester never hits data the new
+  version cannot read, or rules it no longer has. Nothing is backed up.
 - **It says so on every page.** It runs in `staging` mode, which puts a large banner at the top of every page, so
   nobody mistakes it for a real site or keeps anything they need on it.
 - **Its control plane never needs setting up.** Staging makes the control admin from two secrets you set once, so you
@@ -63,11 +64,13 @@ of your own domain:
     `/data` to the server's user, and runs the server as that user.
   - Before the server starts, `try_migrate_or_delete`
     ([`scripts/try_migrate_or_delete`](../../../scripts/try_migrate_or_delete/try_migrate_or_delete.go)) opens each
-    database as the server does: it migrates it and prepares its queries. As there can be thousands of sites, a site
-    database's queries are only prepared when no other with the same schema has had them prepared.
-  - If any cannot be opened, as when a migration was edited rather than added, it deletes them all, `/data/db` and
-    `/data/backup`, and the server starts empty. The logs say `deleting every database, as one cannot be migrated`,
-    with the database and why.
+    database as the server does: it migrates it, checks its schema is the one the migrations make on a new database,
+    and prepares its queries. As there can be thousands of sites, only the first site database's queries are prepared,
+    as every other has the same schema.
+  - If any cannot be opened, or has another schema, as when a migration was edited rather than added, even only to
+    change a `CHECK` every query still works with, it deletes them all, `/data/db` and `/data/backup`, and the server
+    starts empty. The logs say `deleting every database, as one cannot be migrated`, with the database and why, such
+    as the statement its schema has that a new one doesn't.
   - **Each deploy stops the server for a minute or so.** The volume can only be attached to one machine, so Fly stops
     the old one before the new one starts, opens every database, and passes its health check. Pages and apps get
     errors until it is back.
@@ -266,7 +269,8 @@ the admin again from the new ones.
 
 ### Testers' data is gone
 
-A deploy wipes the databases when a migration change means one can no longer be migrated.
+A deploy wipes the databases when a migration change means one can no longer be migrated, or its schema is not the one
+the migrations now make.
 
 - `fly logs` says `deleting every database, as one cannot be migrated`, with the database and why.
 - `fly releases` shows which deploy it was.

@@ -2806,6 +2806,16 @@ func (m *InsulinDose) SetSplitExt(v *float64) {
 	m.SplitExt = v
 }
 
+// GetAutomatic returns the Automatic value.
+func (m InsulinDose) GetAutomatic() *bool {
+	return m.Automatic
+}
+
+// SetAutomatic sets the Automatic value and returns the updated InsulinDose.
+func (m *InsulinDose) SetAutomatic(v *bool) {
+	m.Automatic = v
+}
+
 // GetNotes returns the Notes value.
 func (m InsulinDose) GetNotes() *string {
 	return m.Notes
@@ -2994,6 +3004,16 @@ func (m InsulinDosesVw) GetSplitExt() *float64 {
 // SetSplitExt sets the SplitExt value and returns the updated InsulinDosesVw.
 func (m *InsulinDosesVw) SetSplitExt(v *float64) {
 	m.SplitExt = v
+}
+
+// GetAutomatic returns the Automatic value.
+func (m InsulinDosesVw) GetAutomatic() *bool {
+	return m.Automatic
+}
+
+// SetAutomatic sets the Automatic value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetAutomatic(v *bool) {
+	m.Automatic = v
 }
 
 // GetNotes returns the Notes value.
@@ -10526,6 +10546,16 @@ func (m *CreateInsulinDoseParams) SetSplitExt(v *float64) {
 	m.SplitExt = v
 }
 
+// GetAutomatic returns the Automatic value.
+func (m CreateInsulinDoseParams) GetAutomatic() *bool {
+	return m.Automatic
+}
+
+// SetAutomatic sets the Automatic value and returns the updated CreateInsulinDoseParams.
+func (m *CreateInsulinDoseParams) SetAutomatic(v *bool) {
+	m.Automatic = v
+}
+
 // GetNotes returns the Notes value.
 func (m CreateInsulinDoseParams) GetNotes() *string {
 	return m.Notes
@@ -10994,6 +11024,16 @@ func (m UpdateInsulinDoseParams) GetSplitExt() *float64 {
 // SetSplitExt sets the SplitExt value and returns the updated UpdateInsulinDoseParams.
 func (m *UpdateInsulinDoseParams) SetSplitExt(v *float64) {
 	m.SplitExt = v
+}
+
+// GetAutomatic returns the Automatic value.
+func (m UpdateInsulinDoseParams) GetAutomatic() *bool {
+	return m.Automatic
+}
+
+// SetAutomatic sets the Automatic value and returns the updated UpdateInsulinDoseParams.
+func (m *UpdateInsulinDoseParams) SetAutomatic(v *bool) {
+	m.Automatic = v
 }
 
 // GetNotes returns the Notes value.

@@ -8,8 +8,9 @@ it reached in its `schema_migrations` table and only runs the files numbered aft
 
 Until then each DB's whole schema is its `000001_init_schema.up.sql`, and a schema change edits it. Staging, the only
 server with data, deletes its DBs when one cannot be migrated and prepared (`scripts/try_migrate_or_delete`), so it
-starts again from the new `000001`. A change that leaves every query working, like a changed `CHECK`, does not reset
-it, so staging keeps the old rule until its DBs are reset.
+starts again from the new `000001`. It also deletes them when one's schema (each table, index, trigger and view's SQL
+in `sqlite_master`) is not the one the migrations make on a new DB, so a change that leaves every query working, like
+a changed `CHECK` or even a changed comment in a `CREATE TABLE`, resets staging too, rather than leaving it the old rule.
 
 ## From the first production deploy: never change a migration that is on main
 
@@ -41,7 +42,9 @@ migration:
    `-- changes rows of <table>`. Each text column's rows are made of its own letter so swapped text columns differ;
    numbers are not, as CHECKs compare them across columns, so name the columns copied when any are swapped.
 3. Prefer additive changes: a new table, or a new column that can be NULL or has a default. A build cannot open a DB
-   a newer build migrated, so an additive change is the one a rollback copes with best.
+   a newer build migrated, so once a release has served, a problem with it is fixed forward, not rolled back (see
+   [When a migration fails on a deploy](#when-a-migration-fails-on-a-deploy)), and an additive change is the easiest
+   to fix forward from.
 
 ## What a migration runs in
 
@@ -81,7 +84,8 @@ CREATE INDEX temp_basals_occurred_at_idx ON temp_basals(occurred_at);  -- droppi
 
 The table is made again under its own name, so views that select from it, like `temp_basals_vw`, still work, and
 rows that reference it still do. Columns copied with `SELECT *` must be in the same order in the new definition; name
-them otherwise.
+them otherwise. `go generate` runs the migration on a DB with rows in it (step 2 above), so a rebuild that loses rows,
+or copies them into the wrong columns, fails there rather than on a deploy.
 
 ## When a migration fails on a deploy
 
@@ -89,9 +93,14 @@ them otherwise.
   backup, or restored and cannot be opened: the server serves nothing, so no data is written that a rollback would
   lose. Its files are kept, and with `update.sh` the release is rolled back, putting `./data` back from the copy it
   made. The error names the DB or the sites.
-- **Fix forward**: a new release with a fixed or new migration opens the kept DBs. One the failed migration left
-  dirty is forced back to the version before it and migrated again on its own, so nothing needs to be done by hand.
-- **Rolling back after a migration ran** needs `./backups/data-*.tar.gz` from `update.sh`, or S3's backups, as the
-  older build cannot open DBs at the newer version, and loses what was written since.
-- **Staging** (`scripts/try_migrate_or_delete`) deletes every DB when one cannot be migrated and prepared, so it starts
-  empty rather than with only some.
+- **A rollback is only safe before the new release has served.** `update.sh` does it on its own: the server only
+  serves once every DB is opened and migrated, so a release whose migration fails is never healthy, takes no data,
+  and its rollback loses nothing.
+- **After the new release has served, fix forward**: release a fixed or new migration, or a fix to the code, rather
+  than putting back `./data`. The older build cannot open DBs a newer one migrated, so going back needs
+  `./backups/data-*.tar.gz` from `update.sh`, or S3's backups, and loses everything written since.
+- **Fixing forward after a failed migration**: a new release with a fixed or new migration opens the kept DBs. One the
+  failed migration left dirty is forced back to the version before it and migrated again on its own, so nothing needs
+  to be done by hand.
+- **Staging** (`scripts/try_migrate_or_delete`) deletes every DB when one cannot be migrated and prepared, or its schema
+  is not the one the migrations make on a new DB, so it starts empty rather than with only some, or with old rules.

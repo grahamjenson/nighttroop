@@ -21,6 +21,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - A staging server (`MODE=staging`) is never set up: it starts with the control admin `admin` of its
   `STAGING_ADMIN_PASSWORD` and `STAGING_ADMIN_TOTP_SECRET`, made again whenever its data is wiped, and will not start
   without them. Otherwise it runs as production does, its site admins getting their own random credentials.
+- A staging deploy wipes every DB, and their backups, when one cannot be migrated and prepared, or its schema is not
+  the one the migrations make on a new DB, as after a migration's `CHECK` was edited, and keeps them otherwise.
 
 ### Limiting a server to some countries
 
@@ -67,10 +69,15 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 ### A site's identities
 
-- A site's details list its identities: who they are, whether they use TOTP, and when each was last seen. Secrets
-  are never shown.
+- Each site has its own page, `/sites/{id}/inspect`, linked from its details as "Inspect its identities", with its
+  details and a table of every one of its identities: who they are, whether they use TOTP, and when each was last
+  seen. Secrets are never shown.
 - An admin can reset an identity's password (shown once, with a device's new Nightscout token) or TOTP secret. Each
   reset signs out the identity's existing sessions and is recorded as an event.
+- An admin can sign in to a site as any of its identities with its Sign in as button, after confirming: a new tab opens
+  the site signed in as it, with its role, for the hour a sign in lasts. Control sends the tab to a link to the site
+  that works once, within a minute, on its own site only, which sets its sign in cookie. The site records a "Signed in by control" event, with the identity and the control admin, which its
+  admins see on its Events page. Read-only control identities cannot.
 
 ### Background jobs
 
@@ -111,6 +118,12 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   requests cannot fill the errors or Sentry. Missing credentials, permissions, records and rate limits are not.
 - Logs, events and errors can be narrowed to one site, request or background job run by its ID. An event's, error's
   or log's details link to the rows of its request and job.
+- A control admin can download the whole logs DB, as one SQLite file `logs-<time>.sqlite`, with Download Logs DB on
+  the events, errors and logs pages (`GET /logs-db`), e.g. to turn staging's captured requests into tests. It is a
+  consistent copy while logs are written, made beside the DBs' backups in `DATA_DIR` and deleted once sent, and is not
+  cut off by the 30 second request timeout however large it is. A read only control identity sees no
+  button and is refused (403), one signed out is refused (401), and a download while another is being sent is
+  refused (429).
 - Every DB query is timed, until its rows are read, and one that takes `SLOW_QUERY_MS` (100 ms) or longer is logged as
   a `Slow query` with its DB, its query's name, how long it took and how many rows it gave, but never its values, and
   the request, site and identity it was for. A write transaction waiting for the write lock is logged as `BEGIN`.
@@ -118,7 +131,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   log, with its site, identity, IP address, status, how long it took, and its headers and bodies, each body up to
   64 KB, as text or, when it is not text, base64. Authorization, cookies, API secrets, tokens and passwords are
   `REDACTED` in its headers, query, path and JSON or form bodies. A page's styles, scripts, images and fonts are not
-  kept, nor the bodies of event streams and Socket.IO connections. Any other server keeps none.
+  kept, nor the bodies of event streams, Socket.IO connections and downloads of the logs DB. Any other server keeps
+  none.
 - Each sign in to the control site, and each refused one, is an event with the country (and city, where the server
   has DB-IP's City Lite) its IP address is estimated to be from. The IP address itself is not kept.
 
@@ -490,6 +504,8 @@ focus back to the row or button that opened it.
   entries is left out and the readings with it kept; an uploader battery that is not a number is left out of its
   device status; `uploader.battery` is the uploader's battery; and a treatment is found by its `uuid` (`find[uuid]`), sent as the `_id` or as xDrip+ makes its `_id`.
 - Trio's and iAPS's `SMB` and `External Insulin` treatments are kept as insulin doses, with their event type.
+- A Loop bolus's `automatic` comes back as sent, true or false, through API v1 and v3, so LoopFollow shows an
+  automatic bolus as an SMB and leaves it out of its bolus stats.
 - xDrip+'s `Sensor Stop` treatments are kept as a site or sensor change, with their event type, so the treatments it
   uploads after one are kept too; the site can add a Sensor Stop change and a Sensor Stop event group.
 - A profile has `enteredBy`, the identity that uploaded it, as Trio needs it to import one.

@@ -322,6 +322,7 @@ type InsulinDose struct {
 	DoseType              *string
 	SplitNow              *float64
 	SplitExt              *float64
+	Automatic             *bool
 	Notes                 *string
 	Reason                *string
 	RawJsonData           *string
@@ -344,6 +345,7 @@ type InsulinDosesVw struct {
 	DoseType              *string
 	SplitNow              *float64
 	SplitExt              *float64
+	Automatic             *bool
 	Notes                 *string
 	Reason                *string
 	RawJsonData           *string

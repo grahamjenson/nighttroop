@@ -403,10 +403,18 @@ You can change its defaults with environment variables:
 
 Delete `./data-failed-*` folders once you are sure you don't need them; the script doesn't.
 
+### Fix forward once a new version has served
+
+The script's rollback loses nothing, as a new version that is not healthy has served nothing. Once a new version is
+healthy and has served, don't roll back: update again to a version that fixes the problem. An earlier version can't
+open databases a newer one migrated, so going back means putting back an old copy of `./data`, and losing everything
+written since.
+
 ### Rolling back by hand
 
-To go back to an earlier version, use the copy of `./data` made just before that version was replaced. Its databases
-are in the format that version expects.
+Only as a last resort, to go back to an earlier version, use the copy of `./data` made just before that version was
+replaced. Its databases are in the format that version expects, and everything written since is lost; move it aside,
+as below, if you need it.
 
 ```sh
 cd /opt/nighttroop

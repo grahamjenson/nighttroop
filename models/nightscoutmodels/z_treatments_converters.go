@@ -693,6 +693,10 @@ func InsulinDoseCreate(source sitedb.InsulinDose, context ConverterContext) site
 		xfloat642 := *source.SplitExt
 		sitedbCreateInsulinDoseParams.SplitExt = &xfloat642
 	}
+	if source.Automatic != nil {
+		xbool := *source.Automatic
+		sitedbCreateInsulinDoseParams.Automatic = &xbool
+	}
 	if source.Notes != nil {
 		xstring2 := *source.Notes
 		sitedbCreateInsulinDoseParams.Notes = &xstring2
@@ -737,6 +741,10 @@ func InsulinDoseUpdate(source sitedb.InsulinDose, context ConverterContext) site
 	if source.SplitExt != nil {
 		xfloat642 := *source.SplitExt
 		sitedbUpdateInsulinDoseParams.SplitExt = &xfloat642
+	}
+	if source.Automatic != nil {
+		xbool := *source.Automatic
+		sitedbUpdateInsulinDoseParams.Automatic = &xbool
 	}
 	if source.Notes != nil {
 		xstring2 := *source.Notes
@@ -1041,6 +1049,10 @@ func PartialTreatmentToInsulinDose(source Treatment) sitedb.InsulinDose {
 	}
 	sitedbInsulinDose.SplitNow = PercentageToMultiplier(source.SplitNow)
 	sitedbInsulinDose.SplitExt = PercentageToMultiplier(source.SplitExt)
+	if source.Automatic != nil {
+		xbool := *source.Automatic
+		sitedbInsulinDose.Automatic = &xbool
+	}
 	if source.Notes != nil {
 		xstring2 := SanitizedStringToString(*source.Notes)
 		sitedbInsulinDose.Notes = &xstring2
@@ -1704,6 +1716,10 @@ func UpdateInsulinDoseToTreatment(source *sitedb.InsulinDose, target *Treatment)
 			typesShortString := types.ShortString(*source.DoseType)
 			target.Type = &typesShortString
 		}
+		if source.Automatic != nil {
+			xbool := *source.Automatic
+			target.Automatic = &xbool
+		}
 		if source.Notes != nil {
 			typesSanitizedString := types.SanitizedString(*source.Notes)
 			target.Notes = &typesSanitizedString
@@ -2270,6 +2286,10 @@ func UpdateToInsulinDose(source *sitedb.InsulinDose, target *sitedb.InsulinDose)
 		if source.SplitExt != nil {
 			xfloat642 := *source.SplitExt
 			target.SplitExt = &xfloat642
+		}
+		if source.Automatic != nil {
+			xbool := *source.Automatic
+			target.Automatic = &xbool
 		}
 		if source.Notes != nil {
 			xstring2 := *source.Notes

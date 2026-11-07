@@ -32,6 +32,12 @@ overrides:
       - column: "event_groups.auto_forced"
         go_type:
           type: "*bool"
+      - column: "insulin_doses.automatic"
+        go_type:
+          type: "*bool"
+      - column: "insulin_doses_vw.automatic"
+        go_type:
+          type: "*bool"
 
       # units
       - column: "glucose_readings.units"

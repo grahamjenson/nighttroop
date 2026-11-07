@@ -54,6 +54,8 @@ ASSERT_VISIBLE #control--site--details
 ASSERT_TEXT_VISIBLE Last Write
 // A site within its DB size limit cannot be truncated
 ASSERT_NOT_VISIBLE #control--site--truncate
+// Its own page, with its identities, is linked from its details
+ASSERT_VISIBLE #control--site--inspect
 SCREENSHOT site_details
 
 CLICK #control--site--details--close

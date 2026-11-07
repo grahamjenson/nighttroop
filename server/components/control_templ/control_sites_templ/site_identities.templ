@@ -13,14 +13,15 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-// canReset is whether the control identity is an admin, who can reset a site identity's password or TOTP
+// canReset is whether the control identity is an admin, who can reset a site identity's password or TOTP, or sign in
+// as it
 func canReset(ctx context.Context) bool {
 	controlContext := httputils.GetControlContext(ctx)
 	return controlContext != nil && controlContext.IdentityModel != nil && controlContext.IdentityModel.Role == consts.ControlRoleAdmin
 }
 
-// SiteIdentities is a site's identities, in its details, with buttons for an admin to reset one's password, or its TOTP
-// when it logs in with one. The new credentials are shown above the table, once.
+// SiteIdentities is a site's identities, with buttons for an admin to reset one's password, or its TOTP when it logs in
+// with one, or sign in to the site as it. The new credentials are shown above the table, once.
 templ SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) {
 	<h3 class="mt-6 text-sm font-semibold text-brand-night">Identities</h3>
 	<div id="control--site--identities--reset"></div>
@@ -44,7 +45,7 @@ templ SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) {
 				}
 				if canReset(ctx) {
 					@table.Head() {
-						Reset
+						Actions
 					}
 				}
 			}
@@ -73,6 +74,7 @@ templ SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) {
 							if identity.HasTotp {
 								@resetButton(siteID, identity, "totp", "TOTP", "Give "+identity.Name+" a new TOTP secret? Codes from their authenticator app stop working.")
 							}
+							@assumeButton(siteID, identity)
 						}
 					}
 				}
@@ -121,4 +123,21 @@ templ SiteIdentityReset(credentials *controlmodels.SiteIdentityCredentials) {
 			}
 		</dl>
 	</div>
+}
+
+// assumeButton signs the admin in to the site as an identity, after asking to confirm, in a new tab: control sends the
+// tab on to a link to the site, good once and for a minute, which signs it in
+templ assumeButton(siteID string, identity *controlmodels.SiteIdentity) {
+	<form
+		method="post"
+		action={ templ.SafeURL(fmt.Sprintf("/sites/%s/identities/%d/assume", siteID, identity.ID)) }
+		target="_blank"
+		data-confirm={ "Sign in to the site as " + identity.Name + "? The site's events will show you did." }
+		onsubmit="return confirm(this.dataset.confirm)"
+	>
+		@button.Button(button.Props{ID: fmt.Sprintf("control--site--identity--%d--assume", identity.ID), Type: button.TypeSubmit,
+			Variant: button.VariantOutline, Size: button.SizeSm}) {
+			Sign in as
+		}
+	</form>
 }

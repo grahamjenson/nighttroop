@@ -44,6 +44,8 @@ type Treatment struct {
 	SplitExt *types.FlexibleFloat64 `json:"splitExt,omitempty"`
 	// additional
 	Type *types.ShortString `json:"type,omitempty"`
+	// Automatic is a bolus a loop gave, given back as sent, as LoopFollow shows one as an SMB
+	Automatic *bool `json:"automatic,omitempty"`
 
 	// Exercise
 	ActivityType *types.ShortString   `json:"activityType,omitempty"` // Type of activity
