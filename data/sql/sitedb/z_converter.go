@@ -629,57 +629,26 @@ func FoodIntakeFromView(source FoodIntakesVw) FoodIntake {
 		xstring2 := *source.FoodType
 		sitedbFoodIntake.FoodType = &xstring2
 	}
-	if source.Category != nil {
-		xstring3 := *source.Category
-		sitedbFoodIntake.Category = &xstring3
-	}
-	if source.Subcategory != nil {
-		xstring4 := *source.Subcategory
-		sitedbFoodIntake.Subcategory = &xstring4
-	}
 	if source.AbsorptionTimeMinutes != nil {
 		xint64 := *source.AbsorptionTimeMinutes
 		sitedbFoodIntake.AbsorptionTimeMinutes = &xint64
 	}
-	if source.PreBolus != nil {
-		xfloat64 := *source.PreBolus
-		sitedbFoodIntake.PreBolus = &xfloat64
-	}
 	if source.Carbs != nil {
-		xfloat642 := *source.Carbs
-		sitedbFoodIntake.Carbs = &xfloat642
+		xfloat64 := *source.Carbs
+		sitedbFoodIntake.Carbs = &xfloat64
 	}
-	if source.Fat != nil {
-		xfloat643 := *source.Fat
-		sitedbFoodIntake.Fat = &xfloat643
-	}
-	if source.Protein != nil {
-		xfloat644 := *source.Protein
-		sitedbFoodIntake.Protein = &xfloat644
-	}
-	if source.Fibre != nil {
-		xfloat645 := *source.Fibre
-		sitedbFoodIntake.Fibre = &xfloat645
-	}
-	if source.Energy != nil {
-		xfloat646 := *source.Energy
-		sitedbFoodIntake.Energy = &xfloat646
-	}
-	if source.Portions != nil {
-		xfloat647 := *source.Portions
-		sitedbFoodIntake.Portions = &xfloat647
-	}
+	sitedbFoodIntake.OtherAttributes = typesFoodIntakeOtherToTypesFoodIntakeOther(source.OtherAttributes)
 	if source.Notes != nil {
-		xstring5 := *source.Notes
-		sitedbFoodIntake.Notes = &xstring5
+		xstring3 := *source.Notes
+		sitedbFoodIntake.Notes = &xstring3
 	}
 	if source.Reason != nil {
-		xstring6 := *source.Reason
-		sitedbFoodIntake.Reason = &xstring6
+		xstring4 := *source.Reason
+		sitedbFoodIntake.Reason = &xstring4
 	}
 	if source.RawJsonData != nil {
-		xstring7 := *source.RawJsonData
-		sitedbFoodIntake.RawJsonData = &xstring7
+		xstring5 := *source.RawJsonData
+		sitedbFoodIntake.RawJsonData = &xstring5
 	}
 	if source.DeletedAt != nil {
 		xint642 := *source.DeletedAt
@@ -699,20 +668,20 @@ func FoodIntakeFromView(source FoodIntakesVw) FoodIntake {
 		sitedbFoodIntake.UpdatedAt = *source.UpdatedAt
 	}
 	if source.CreatedByAppName != nil {
-		xstring8 := *source.CreatedByAppName
-		sitedbFoodIntake.CreatedByAppName = &xstring8
+		xstring6 := *source.CreatedByAppName
+		sitedbFoodIntake.CreatedByAppName = &xstring6
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring9 := *source.CreatedByDeviceName
-		sitedbFoodIntake.CreatedByDeviceName = &xstring9
+		xstring7 := *source.CreatedByDeviceName
+		sitedbFoodIntake.CreatedByDeviceName = &xstring7
 	}
 	if source.UpdatedByIdentityID != nil {
 		xint644 := *source.UpdatedByIdentityID
 		sitedbFoodIntake.UpdatedByIdentityID = &xint644
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring10 := *source.UpdatedByIdentityName
-		sitedbFoodIntake.UpdatedByIdentityName = &xstring10
+		xstring8 := *source.UpdatedByIdentityName
+		sitedbFoodIntake.UpdatedByIdentityName = &xstring8
 	}
 	if source.CreatedByIdentityID != nil {
 		xint645 := *source.CreatedByIdentityID
@@ -734,53 +703,22 @@ func FoodIntakeToCreate(source FoodIntake) CreateFoodIntakeParams {
 		xstring2 := *source.FoodType
 		sitedbCreateFoodIntakeParams.FoodType = &xstring2
 	}
-	if source.Category != nil {
-		xstring3 := *source.Category
-		sitedbCreateFoodIntakeParams.Category = &xstring3
-	}
-	if source.Subcategory != nil {
-		xstring4 := *source.Subcategory
-		sitedbCreateFoodIntakeParams.Subcategory = &xstring4
-	}
 	if source.AbsorptionTimeMinutes != nil {
 		xint64 := *source.AbsorptionTimeMinutes
 		sitedbCreateFoodIntakeParams.AbsorptionTimeMinutes = &xint64
 	}
-	if source.PreBolus != nil {
-		xfloat64 := *source.PreBolus
-		sitedbCreateFoodIntakeParams.PreBolus = &xfloat64
-	}
 	if source.Carbs != nil {
-		xfloat642 := *source.Carbs
-		sitedbCreateFoodIntakeParams.Carbs = &xfloat642
+		xfloat64 := *source.Carbs
+		sitedbCreateFoodIntakeParams.Carbs = &xfloat64
 	}
-	if source.Fat != nil {
-		xfloat643 := *source.Fat
-		sitedbCreateFoodIntakeParams.Fat = &xfloat643
-	}
-	if source.Protein != nil {
-		xfloat644 := *source.Protein
-		sitedbCreateFoodIntakeParams.Protein = &xfloat644
-	}
-	if source.Fibre != nil {
-		xfloat645 := *source.Fibre
-		sitedbCreateFoodIntakeParams.Fibre = &xfloat645
-	}
-	if source.Energy != nil {
-		xfloat646 := *source.Energy
-		sitedbCreateFoodIntakeParams.Energy = &xfloat646
-	}
-	if source.Portions != nil {
-		xfloat647 := *source.Portions
-		sitedbCreateFoodIntakeParams.Portions = &xfloat647
-	}
+	sitedbCreateFoodIntakeParams.OtherAttributes = typesFoodIntakeOtherToTypesFoodIntakeOther(source.OtherAttributes)
 	if source.Notes != nil {
-		xstring5 := *source.Notes
-		sitedbCreateFoodIntakeParams.Notes = &xstring5
+		xstring3 := *source.Notes
+		sitedbCreateFoodIntakeParams.Notes = &xstring3
 	}
 	if source.Reason != nil {
-		xstring6 := *source.Reason
-		sitedbCreateFoodIntakeParams.Reason = &xstring6
+		xstring4 := *source.Reason
+		sitedbCreateFoodIntakeParams.Reason = &xstring4
 	}
 	if source.UtcOffsetMinutes != nil {
 		xint642 := *source.UtcOffsetMinutes
@@ -788,16 +726,16 @@ func FoodIntakeToCreate(source FoodIntake) CreateFoodIntakeParams {
 	}
 	sitedbCreateFoodIntakeParams.OccurredAt = source.OccurredAt
 	if source.RawJsonData != nil {
-		xstring7 := *source.RawJsonData
-		sitedbCreateFoodIntakeParams.RawJsonData = &xstring7
+		xstring5 := *source.RawJsonData
+		sitedbCreateFoodIntakeParams.RawJsonData = &xstring5
 	}
 	if source.CreatedByAppName != nil {
-		xstring8 := *source.CreatedByAppName
-		sitedbCreateFoodIntakeParams.CreatedByAppName = &xstring8
+		xstring6 := *source.CreatedByAppName
+		sitedbCreateFoodIntakeParams.CreatedByAppName = &xstring6
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring9 := *source.CreatedByDeviceName
-		sitedbCreateFoodIntakeParams.CreatedByDeviceName = &xstring9
+		xstring7 := *source.CreatedByDeviceName
+		sitedbCreateFoodIntakeParams.CreatedByDeviceName = &xstring7
 	}
 	sitedbCreateFoodIntakeParams.CreatedByIdentityName = source.CreatedByIdentityName
 	if source.CreatedByIdentityID != nil {
@@ -816,65 +754,34 @@ func FoodIntakeToUpdate(source FoodIntake) UpdateFoodIntakeParams {
 		xstring2 := *source.FoodType
 		sitedbUpdateFoodIntakeParams.FoodType = &xstring2
 	}
-	if source.Category != nil {
-		xstring3 := *source.Category
-		sitedbUpdateFoodIntakeParams.Category = &xstring3
-	}
-	if source.Subcategory != nil {
-		xstring4 := *source.Subcategory
-		sitedbUpdateFoodIntakeParams.Subcategory = &xstring4
-	}
 	if source.Carbs != nil {
 		xfloat64 := *source.Carbs
 		sitedbUpdateFoodIntakeParams.Carbs = &xfloat64
-	}
-	if source.Fat != nil {
-		xfloat642 := *source.Fat
-		sitedbUpdateFoodIntakeParams.Fat = &xfloat642
-	}
-	if source.Protein != nil {
-		xfloat643 := *source.Protein
-		sitedbUpdateFoodIntakeParams.Protein = &xfloat643
-	}
-	if source.Fibre != nil {
-		xfloat644 := *source.Fibre
-		sitedbUpdateFoodIntakeParams.Fibre = &xfloat644
-	}
-	if source.Energy != nil {
-		xfloat645 := *source.Energy
-		sitedbUpdateFoodIntakeParams.Energy = &xfloat645
 	}
 	if source.AbsorptionTimeMinutes != nil {
 		xint64 := *source.AbsorptionTimeMinutes
 		sitedbUpdateFoodIntakeParams.AbsorptionTimeMinutes = &xint64
 	}
-	if source.PreBolus != nil {
-		xfloat646 := *source.PreBolus
-		sitedbUpdateFoodIntakeParams.PreBolus = &xfloat646
-	}
-	if source.Portions != nil {
-		xfloat647 := *source.Portions
-		sitedbUpdateFoodIntakeParams.Portions = &xfloat647
-	}
+	sitedbUpdateFoodIntakeParams.OtherAttributes = FoodIntakeOtherJSON(source.OtherAttributes)
 	if source.Notes != nil {
-		xstring5 := *source.Notes
-		sitedbUpdateFoodIntakeParams.Notes = &xstring5
+		xstring3 := *source.Notes
+		sitedbUpdateFoodIntakeParams.Notes = &xstring3
 	}
 	if source.Reason != nil {
-		xstring6 := *source.Reason
-		sitedbUpdateFoodIntakeParams.Reason = &xstring6
+		xstring4 := *source.Reason
+		sitedbUpdateFoodIntakeParams.Reason = &xstring4
 	}
 	if source.RawJsonData != nil {
-		xstring7 := *source.RawJsonData
-		sitedbUpdateFoodIntakeParams.RawJsonData = &xstring7
+		xstring5 := *source.RawJsonData
+		sitedbUpdateFoodIntakeParams.RawJsonData = &xstring5
 	}
 	if source.UpdatedByIdentityID != nil {
 		xint642 := *source.UpdatedByIdentityID
 		sitedbUpdateFoodIntakeParams.UpdatedByIdentityID = &xint642
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring8 := *source.UpdatedByIdentityName
-		sitedbUpdateFoodIntakeParams.UpdatedByIdentityName = &xstring8
+		xstring6 := *source.UpdatedByIdentityName
+		sitedbUpdateFoodIntakeParams.UpdatedByIdentityName = &xstring6
 	}
 	sitedbUpdateFoodIntakeParams.ID = source.ID
 	return sitedbUpdateFoodIntakeParams
@@ -2473,57 +2380,26 @@ func sitedbFoodIntakesVwToSitedbFoodIntakesVw(source FoodIntakesVw) FoodIntakesV
 		xstring3 := *source.FoodType
 		sitedbFoodIntakesVw.FoodType = &xstring3
 	}
-	if source.Category != nil {
-		xstring4 := *source.Category
-		sitedbFoodIntakesVw.Category = &xstring4
-	}
-	if source.Subcategory != nil {
-		xstring5 := *source.Subcategory
-		sitedbFoodIntakesVw.Subcategory = &xstring5
-	}
 	if source.AbsorptionTimeMinutes != nil {
 		xint64 := *source.AbsorptionTimeMinutes
 		sitedbFoodIntakesVw.AbsorptionTimeMinutes = &xint64
 	}
-	if source.PreBolus != nil {
-		xfloat64 := *source.PreBolus
-		sitedbFoodIntakesVw.PreBolus = &xfloat64
-	}
 	if source.Carbs != nil {
-		xfloat642 := *source.Carbs
-		sitedbFoodIntakesVw.Carbs = &xfloat642
+		xfloat64 := *source.Carbs
+		sitedbFoodIntakesVw.Carbs = &xfloat64
 	}
-	if source.Fat != nil {
-		xfloat643 := *source.Fat
-		sitedbFoodIntakesVw.Fat = &xfloat643
-	}
-	if source.Protein != nil {
-		xfloat644 := *source.Protein
-		sitedbFoodIntakesVw.Protein = &xfloat644
-	}
-	if source.Fibre != nil {
-		xfloat645 := *source.Fibre
-		sitedbFoodIntakesVw.Fibre = &xfloat645
-	}
-	if source.Energy != nil {
-		xfloat646 := *source.Energy
-		sitedbFoodIntakesVw.Energy = &xfloat646
-	}
-	if source.Portions != nil {
-		xfloat647 := *source.Portions
-		sitedbFoodIntakesVw.Portions = &xfloat647
-	}
+	sitedbFoodIntakesVw.OtherAttributes = typesFoodIntakeOtherToTypesFoodIntakeOther(source.OtherAttributes)
 	if source.Notes != nil {
-		xstring6 := *source.Notes
-		sitedbFoodIntakesVw.Notes = &xstring6
+		xstring4 := *source.Notes
+		sitedbFoodIntakesVw.Notes = &xstring4
 	}
 	if source.Reason != nil {
-		xstring7 := *source.Reason
-		sitedbFoodIntakesVw.Reason = &xstring7
+		xstring5 := *source.Reason
+		sitedbFoodIntakesVw.Reason = &xstring5
 	}
 	if source.RawJsonData != nil {
-		xstring8 := *source.RawJsonData
-		sitedbFoodIntakesVw.RawJsonData = &xstring8
+		xstring6 := *source.RawJsonData
+		sitedbFoodIntakesVw.RawJsonData = &xstring6
 	}
 	if source.DeletedAt != nil {
 		xint642 := *source.DeletedAt
@@ -2546,28 +2422,28 @@ func sitedbFoodIntakesVwToSitedbFoodIntakesVw(source FoodIntakesVw) FoodIntakesV
 		sitedbFoodIntakesVw.UpdatedAt = &xint646
 	}
 	if source.CreatedByAppName != nil {
-		xstring9 := *source.CreatedByAppName
-		sitedbFoodIntakesVw.CreatedByAppName = &xstring9
+		xstring7 := *source.CreatedByAppName
+		sitedbFoodIntakesVw.CreatedByAppName = &xstring7
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring10 := *source.CreatedByDeviceName
-		sitedbFoodIntakesVw.CreatedByDeviceName = &xstring10
+		xstring8 := *source.CreatedByDeviceName
+		sitedbFoodIntakesVw.CreatedByDeviceName = &xstring8
 	}
 	if source.UpdatedByIdentityID != nil {
 		xint647 := *source.UpdatedByIdentityID
 		sitedbFoodIntakesVw.UpdatedByIdentityID = &xint647
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring11 := *source.UpdatedByIdentityName
-		sitedbFoodIntakesVw.UpdatedByIdentityName = &xstring11
+		xstring9 := *source.UpdatedByIdentityName
+		sitedbFoodIntakesVw.UpdatedByIdentityName = &xstring9
 	}
 	if source.CreatedByIdentityID != nil {
 		xint648 := *source.CreatedByIdentityID
 		sitedbFoodIntakesVw.CreatedByIdentityID = &xint648
 	}
 	if source.CreatedByIdentityName != nil {
-		xstring12 := *source.CreatedByIdentityName
-		sitedbFoodIntakesVw.CreatedByIdentityName = &xstring12
+		xstring10 := *source.CreatedByIdentityName
+		sitedbFoodIntakesVw.CreatedByIdentityName = &xstring10
 	}
 	return sitedbFoodIntakesVw
 }
@@ -3156,6 +3032,42 @@ func typesComponentEventOtherToTypesComponentEventOther(source types.ComponentEv
 		typesComponentEventOther.PumpType = &xstring5
 	}
 	return typesComponentEventOther
+}
+func typesFoodIntakeOtherToTypesFoodIntakeOther(source types.FoodIntakeOther) types.FoodIntakeOther {
+	var typesFoodIntakeOther types.FoodIntakeOther
+	if source.Category != nil {
+		xstring := *source.Category
+		typesFoodIntakeOther.Category = &xstring
+	}
+	if source.Subcategory != nil {
+		xstring2 := *source.Subcategory
+		typesFoodIntakeOther.Subcategory = &xstring2
+	}
+	if source.Fat != nil {
+		xfloat64 := *source.Fat
+		typesFoodIntakeOther.Fat = &xfloat64
+	}
+	if source.Protein != nil {
+		xfloat642 := *source.Protein
+		typesFoodIntakeOther.Protein = &xfloat642
+	}
+	if source.Fibre != nil {
+		xfloat643 := *source.Fibre
+		typesFoodIntakeOther.Fibre = &xfloat643
+	}
+	if source.Energy != nil {
+		xfloat644 := *source.Energy
+		typesFoodIntakeOther.Energy = &xfloat644
+	}
+	if source.Portions != nil {
+		xfloat645 := *source.Portions
+		typesFoodIntakeOther.Portions = &xfloat645
+	}
+	if source.PreBolus != nil {
+		xfloat646 := *source.PreBolus
+		typesFoodIntakeOther.PreBolus = &xfloat646
+	}
+	return typesFoodIntakeOther
 }
 func typesGlucoseReadingOtherToTypesGlucoseReadingOther(source types.GlucoseReadingOther) types.GlucoseReadingOther {
 	var typesGlucoseReadingOther types.GlucoseReadingOther
