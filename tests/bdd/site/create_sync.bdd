@@ -78,7 +78,7 @@ SCREENSHOT sync_first_sync_failed
 CLICK #site--settings--nightscout-sync--delete
 ASSERT_TEXT_VISIBLE Sync Deleted
 ASSERT_PATH /settings/sync
-ASSERT_TEXT_VISIBLE Sync Settings
+ASSERT_TITLE Sync · Nighttroop
 ASSERT_NOT_VISIBLE #site--settings--nightscout-sync--errors
 ASSERT_VISIBLE #site--settings--nightscout-sync--url:not([value*="will_not_pass"])
 
