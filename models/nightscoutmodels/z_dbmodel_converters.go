@@ -25,16 +25,16 @@ func DBModelToActivity(source *sitedb.Activity, context *httputils.SiteContext) 
 			typesFlexibleInt64 := types.FlexibleInt64(*(*source).DurationMinutes)
 			nightscoutmodelsActivity.DurationMinutes = &typesFlexibleInt64
 		}
-		if (*source).Steps != nil {
-			typesFlexibleInt642 := types.FlexibleInt64(*(*source).Steps)
+		if (*source).OtherAttributes.Steps != nil {
+			typesFlexibleInt642 := types.FlexibleInt64(*(*source).OtherAttributes.Steps)
 			nightscoutmodelsActivity.Steps = &typesFlexibleInt642
 		}
-		if (*source).Calories != nil {
-			typesFlexibleInt643 := types.FlexibleInt64(*(*source).Calories)
+		if (*source).OtherAttributes.Calories != nil {
+			typesFlexibleInt643 := types.FlexibleInt64(*(*source).OtherAttributes.Calories)
 			nightscoutmodelsActivity.Calories = &typesFlexibleInt643
 		}
-		if (*source).HeartRate != nil {
-			typesFlexibleInt644 := types.FlexibleInt64(*(*source).HeartRate)
+		if (*source).OtherAttributes.HeartRate != nil {
+			typesFlexibleInt644 := types.FlexibleInt64(*(*source).OtherAttributes.HeartRate)
 			nightscoutmodelsActivity.HeartRate = &typesFlexibleInt644
 		}
 		if (*source).Notes != nil {

@@ -25,6 +25,7 @@ type UpdateMapConverter interface {
 	// goverter:map UpdatedByIdentityID | AssignUpdatedByID
 	//
 	// goverter:ignore Reason
+	// goverter:map . OtherAttributes | ActivityOtherJSON
 	ActivityToUpdate(source Activity, ctx ConverterContext) sitedb.UpdateActivityParams
 
 	///////

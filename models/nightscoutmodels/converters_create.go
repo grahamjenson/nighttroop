@@ -38,7 +38,7 @@ type CreateMapConverter interface {
 	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	// goverter:map CreatedByIdentityID | AssignCreatedByID
-	//
+	// goverter:map . OtherAttributes | ActivityOther
 	ActivityToCreate(source Activity, ctx ConverterContext) sitedb.CreateActivityParams
 
 	///////
