@@ -65,21 +65,38 @@ type treatment struct {
 	Detail string
 }
 
-// treatments are the summary's insulin, food, temp targets and temp basals in one list, newest first
-func treatments(s *sitemodels.Summary) []treatment {
+// otherTreatments are the summary's treatments besides insulin and carbs, its temp targets and temp basals, in one
+// list, newest first
+func otherTreatments(s *sitemodels.Summary) []treatment {
 	list := []treatment{}
-	for _, d := range s.InsulinDoses {
-		list = append(list, treatment{d.OccurredAt, "Insulin", "/data/insulin", value(&d.Dose, " U")})
-	}
-	for _, f := range s.FoodIntakes {
-		list = append(list, treatment{f.OccurredAt, "Food", "/data/food", value(f.Carbs, " g carbs")})
-	}
 	for _, t := range s.TempTargets {
 		detail := fmt.Sprintf("%s–%s %s for %d min", site_data_templ.FormatGlucose(t.LowTarget, t.Units), site_data_templ.FormatGlucose(t.HighTarget, t.Units), unitsText(t.Units), t.DurationMinutes)
 		list = append(list, treatment{t.OccurredAt, "Temp Target", "/data/temp-targets", detail})
 	}
 	for _, b := range s.TempBasals {
 		list = append(list, treatment{b.OccurredAt, "Temp Basal", "/data/temp-basals", fmt.Sprintf("%s for %d min", value(b.Rate, " U/hr"), b.DurationMinutes)})
+	}
+	sort.SliceStable(list, func(i, j int) bool { return list[i].At > list[j].At })
+	return list
+}
+
+// intake is a dose of insulin or a meal's carbs, at a time in milliseconds, with SMB set for a loop's small bolus
+type intake struct {
+	At             int64
+	Insulin, Carbs string
+	SMB            bool
+}
+
+// insulinAndCarbs are the summary's doses and carbs in one list, newest first, each in its own column
+func insulinAndCarbs(s *sitemodels.Summary) []intake {
+	list := []intake{}
+	for _, d := range s.InsulinDoses {
+		list = append(list, intake{At: d.OccurredAt, Insulin: value(&d.Dose, " U"), SMB: isSMB(d)})
+	}
+	for _, f := range s.FoodIntakes {
+		if f.Carbs != nil {
+			list = append(list, intake{At: f.OccurredAt, Carbs: value(f.Carbs, " g")})
+		}
 	}
 	sort.SliceStable(list, func(i, j int) bool { return list[i].At > list[j].At })
 	return list
@@ -211,11 +228,11 @@ templ summaryContent(summary *sitemodels.Summary) {
 		@Graph(summary)
 	</section>
 	<div class="grid gap-4 lg:grid-cols-2">
-		@section("Treatments", "", "", "") {
-			@treatmentsTable(treatments(summary))
+		@section("Insulin & Carbs", "", "", "") {
+			@insulinCarbsTable(insulinAndCarbs(summary))
 		}
-		@section("Glucose Readings", "site--summary--all-readings", "All readings", "/data/glucose") {
-			@readingsTable(summary)
+		@section("Other Treatments", "", "", "") {
+			@treatmentsTable(otherTreatments(summary))
 		}
 	</div>
 	<section id="site--summary--devices" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -240,7 +257,12 @@ templ glucoseHero(summary *sitemodels.Summary) {
 						<span id="site--summary--glucose--range" class={ "ml-2 text-2xl font-bold", rangeColours[outOfRange] }>{ outOfRange }</span>
 					}
 				</div>
-				<div id="site--summary--glucose--ago" class="mt-1 text-sm text-gray-500" title={ site_data_templ.FormatDate(ctx, latest.OccurredAt) }>{ display.RoundedAgo(latest.OccurredAt, time.Now()) }</div>
+				<div class="mt-1 flex gap-3 text-sm">
+					<span id="site--summary--glucose--ago" class="text-gray-500" title={ site_data_templ.FormatDate(ctx, latest.OccurredAt) }>{ display.RoundedAgo(latest.OccurredAt, time.Now()) }</span>
+					@pageLink("site--summary--all-readings", "/data/glucose", "text-primary underline") {
+						All readings
+					}
+				</div>
 			</div>
 		} else {
 			<div>
@@ -363,7 +385,7 @@ templ treatmentsTable(list []treatment) {
 	@table.Table(table.Props{ID: "site--summary--treatments"}) {
 		@table.Body() {
 			if len(list) == 0 {
-				<tr><td class="p-4 text-sm text-gray-500">No treatments in this time.</td></tr>
+				<tr><td class="p-4 text-sm text-gray-500">No temp targets or temp basals in this time.</td></tr>
 			}
 			for _, t := range list {
 				@table.Row() {
@@ -384,20 +406,39 @@ templ treatmentsTable(list []treatment) {
 	}
 }
 
-templ readingsTable(summary *sitemodels.Summary) {
-	{{ readings := summary.GlucoseReadings }}
-	@table.Table(table.Props{ID: "site--summary--readings"}) {
-		@table.Body() {
-			if len(readings) == 0 {
-				<tr><td class="p-4 text-sm text-gray-500">No glucose readings in this time.</td></tr>
+// insulinCarbsTable is each dose and meal's carbs, newest first, with how long ago it was; a loop's SMBs are marked
+templ insulinCarbsTable(list []intake) {
+	@table.Table(table.Props{ID: "site--summary--insulin-carbs"}) {
+		@table.Header() {
+			@table.Row() {
+				@table.Head() {
+					When
+				}
+				@table.Head(table.HeadProps{Class: "text-right"}) {
+					Insulin
+				}
+				@table.Head(table.HeadProps{Class: "text-right"}) {
+					Carbs
+				}
 			}
-			for _, r := range readings {
+		}
+		@table.Body() {
+			if len(list) == 0 {
+				<tr><td colspan="3" class="p-4 text-sm text-gray-500">No insulin or carbs in this time.</td></tr>
+			}
+			for _, i := range list {
 				@table.Row() {
 					@table.Cell() {
-						<span class="whitespace-nowrap" title={ site_data_templ.FormatDate(ctx, r.OccurredAt) }>{ display.RoundedAgo(r.OccurredAt, time.Now()) }</span>
+						<span class="whitespace-nowrap" title={ site_data_templ.FormatDate(ctx, i.At) }>{ display.RoundedAgo(i.At, time.Now()) }</span>
 					}
-					@table.Cell() {
-						<span class={ "font-medium tabular-nums", rangeColours[glucoseRange(summary, r.Reading)] }>{ site_data_templ.FormatGlucose(r.Reading, r.Units) }</span> { arrow(r.Direction) }
+					@table.Cell(table.CellProps{Class: "text-right font-medium tabular-nums"}) {
+						if i.SMB {
+							<span class="mr-2 text-xs text-gray-500">SMB</span>
+						}
+						@numbers(i.Insulin, "text-xs font-normal text-gray-500")
+					}
+					@table.Cell(table.CellProps{Class: "text-right font-medium tabular-nums"}) {
+						@numbers(i.Carbs, "text-xs font-normal text-gray-500")
 					}
 				}
 			}
