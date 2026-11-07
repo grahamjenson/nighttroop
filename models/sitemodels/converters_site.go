@@ -101,13 +101,15 @@ type SiteConverter interface {
 	// goverter:map OccurredAt | OccurredAtOrNow
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
+	// The site does not set AAPS's calibrations
+	// goverter:ignore IsCalibration SensorMgdlAtPairing
 	GlucoseReadingToCreate(source *SiteGlucoseReading, siteContext *httputils.SiteContext) sitedb.CreateGlucoseReadingParams
 
 	// goverter:context siteContext
 	// goverter:map Reading Mgdl | SettingsUnitsToMgdlOrNil
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
-	// goverter:ignore RawJsonData
+	// goverter:ignore RawJsonData IsCalibration SensorMgdlAtPairing
 	GlucoseReadingToUpdate(source *SiteGlucoseReading, siteContext *httputils.SiteContext) sitedb.UpdateGlucoseReadingParams
 
 	///////

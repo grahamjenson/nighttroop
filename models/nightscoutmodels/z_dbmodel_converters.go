@@ -130,6 +130,14 @@ func DBModelToEntry(source *sitedb.GlucoseReading, context *httputils.SiteContex
 			typesFlexibleFloat645 := types.FlexibleFloat64(*(*source).Noise)
 			nightscoutmodelsEntry.Noise = &typesFlexibleFloat645
 		}
+		if (*source).IsCalibration != nil {
+			xbool := *(*source).IsCalibration
+			nightscoutmodelsEntry.IsCalibration = &xbool
+		}
+		if (*source).SensorMgdlAtPairing != nil {
+			typesFlexibleFloat646 := types.FlexibleFloat64(*(*source).SensorMgdlAtPairing)
+			nightscoutmodelsEntry.SensorMgdlAtPairing = &typesFlexibleFloat646
+		}
 		pTypesDateInt := types.DateInt((*source).OccurredAt)
 		nightscoutmodelsEntry.Date = &pTypesDateInt
 		nightscoutmodelsEntry.DateString = ModelDateStringFromDateIntAndUTCOffset((*source))

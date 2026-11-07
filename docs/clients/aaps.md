@@ -185,7 +185,7 @@ SHA1, as AAPS does.
 | Profile switch and effective profile switch `original*` | works: kept with the switch and returned as sent, so a follower reads an effective profile switch as one, not a Note | `sync_v3.http` |
 | Temp basal `type` (e.g. `PUMP_SUSPEND`) | works: kept and returned as sent, so a follower shows a suspended pump as one | `sync_v3.http` |
 | Running mode `mode`, `autoForced`, `reasons`, `originalDuration` | works: kept with the treatment and returned as sent, so a follower reads its mode, not UNKNOWN | `sync_v3.http` |
-| Calibrations (`isCalibration`, `sensorMgdlAtPairing`) | not supported: dropped; TODO P2 | `sync_v3.http` |
+| Calibrations (`isCalibration`, `sensorMgdlAtPairing`) | works: kept with the mbg and returned as sent, so a follower reads a calibration as one | `sync_v3.http` |
 | Device statuses: create, history with `srvModified` | works | `sync_v3.http`, `flow_v3.http` |
 | Device status `pump.clock`, `pump.status`, `pump.extended` | works: the pump object is read back as sent | `sync_v3.http` |
 | Food: create | works | `sync_v3.http` |

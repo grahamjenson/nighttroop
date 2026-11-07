@@ -293,6 +293,9 @@ CREATE TABLE glucose_readings (
     unfiltered REAL CHECK(unfiltered BETWEEN 0 AND 10000000),
     rssi REAL CHECK(rssi BETWEEN -1000 AND 1000),
 
+    -- An mbg AAPS calibrated its sensor with, and the sensor's reading then
+    is_calibration INTEGER CHECK(is_calibration IN (0, 1)),
+    sensor_mgdl_at_pairing REAL CHECK(sensor_mgdl_at_pairing > 0 AND sensor_mgdl_at_pairing <= 1000),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
