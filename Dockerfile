@@ -1,6 +1,7 @@
 # The server is one static binary, as its SQLite is pure Go. It runs on Alpine for its CA certificates and busybox
 # wget, which the health check uses. The keyset tool is built beside it, so a server needs no Go to make keys, and
-# try_migrate_or_delete, which the staging server opens its databases with before it starts.
+# try_migrate_or_delete, which the staging server opens its databases with before it starts, and sites, which checks a
+# stopped server's databases when a site stops its start (docs/deploy/hostinger/hostinger.md).
 FROM golang:1.27-alpine AS build
 WORKDIR /src
 COPY go.mod go.sum ./
@@ -8,7 +9,8 @@ RUN go mod download
 COPY . .
 RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/nighttroop main.go && \
     CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/create_keysets scripts/keysets/create_keysets.go && \
-    CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/try_migrate_or_delete ./scripts/try_migrate_or_delete
+    CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/try_migrate_or_delete ./scripts/try_migrate_or_delete && \
+    CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/sites ./scripts/sites
 
 # DB-IP's free IP to City Lite (CC BY 4.0), this month's or last month's, for the city each sign in is from. If it
 # cannot be downloaded the image is still built, and the server knows only countries, from its built in database.

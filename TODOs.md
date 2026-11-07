@@ -67,8 +67,10 @@
     1. P1: Tools for a start stopped by a site: a live site's DB that is missing and not restored, cannot be opened, or
        fails its migration stops the server (so no data is written that a rollback would lose), and `update.sh` rolls
        back. Fixing it now means a shell on the server. Add commands, run against the stopped server's data, to:
-        1. List what stopped the start: each such site, why (missing, cannot open, which migration failed and its
-           error), and its last backups in `./backups` and S3
+        1. Done: `sites check` (`scripts/sites`) lists what stopped the start: each such site, why, and its last
+           backup in the data folder. Still to list: its batch's last backup in S3 (with the download, as both need
+           S3), and which of `update.sh`'s copies in `./backups` have it, which the container cannot see as it mounts
+           only `./data` (the deploy docs show `tar -tzvf` for now)
         1. Download a site's DB, and its batch's backups from S3, to inspect it with `sqlite3`, e.g. try its
            migrations on a copy without changing it
         1. Reset it: restore its DB from a chosen backup, or force a dirty one back a version, or disable or delete the

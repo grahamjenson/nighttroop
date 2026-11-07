@@ -430,9 +430,29 @@ Look at `docker compose logs nighttroop`:
 
 - **Still starting after a while:** a first start on a new VPS restores from S3, which takes longer the more data there
   is. Give it a few minutes.
-- **`Site DB is missing, so the site is not opened`:** a live site's database file is missing and was not restored
-  from its batch's backup in S3, so the server does not start (`live sites' DBs are missing and were not restored:`
-  names them). Put its file back, such as from a copy in `./backups`, and restart.
+- **`Site DB is missing, so the site is not opened`, `cannot fill sites` or `cannot open site db`:** a site stops the
+  start; see [A site stops the start](#a-site-stops-the-start).
+
+### A site stops the start
+
+A live or disabled site whose database is missing and not restored from S3, cannot be opened, or fails its migration
+stops the server starting, so it never serves without the site, and `update.sh` rolls back. To see which sites, and
+why, run the `sites check` command in the image that failed, with Nighttroop stopped or rolled back:
+
+```sh
+cd /opt/nighttroop
+NIGHTTROOP_IMAGE=ghcr.io/grahamjenson/nighttroop:v1.2.3 docker compose run --rm --no-deps --entrypoint sites nighttroop check
+```
+
+- **It changes nothing:** it copies each database, opened read only, and opens and migrates the copy, as the server
+  would. Without `NIGHTTROOP_IMAGE` it checks with the version `.env` runs.
+- **What it prints:** each site that stops the start, why (its database is missing, cannot be opened, or which
+  migration failed and its error), and when its last backup in `./data/backup` was made. It exits `1`, or `0` saying
+  every site opens.
+- **The copies `update.sh` made** are in `./backups`. Whether one has a site's database (its batch is the site's
+  first letter) is shown by `tar -tzvf backups/data-<time>.tar.gz data/db/site/<batch>/<site>.sqlite`.
+- **Fixing it:** put a site's file back, such as from one of those copies, into `./data/db/site/<batch>/`, owned by
+  `10001`, run the check again, then start the new version again with `update.sh`.
 
 ### The `172.30.0.0/24` network is already used on the VPS
 
