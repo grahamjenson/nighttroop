@@ -103,3 +103,16 @@ GOTO {{ .control_url }}/archived-sites
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE No archived sites.
 SCREENSHOT archived_sites
+
+// On a phone the sites page is no wider than the window: the order buttons, the create form and the public site
+// creation card wrap, and the table scrolls sideways in its card. The window is tall enough for a page of two sites,
+// as other tests make sites too, so fitting it checks only its width.
+WINDOW 390x1400
+GOTO {{ .control_url }}/sites?limit=2
+ASSERT_STATUS 200
+ASSERT_VISIBLE #controlSitesTable
+ASSERT_VISIBLE #control--sites--order-db_size
+ASSERT_VISIBLE #control--sites--create--submit
+ASSERT_VISIBLE #control--sites--public-creation--toggle
+ASSERT_FITS
+SCREENSHOT sites_phone

@@ -63,6 +63,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - Sites can be ordered by how long since they were last written to (the first to archive) or by DB size.
 - A site not written to or seen within `DISABLE_AFTER_INACTIVITY_DAYS` is marked inactive.
 - Clicking a site shows its details.
+- On a phone the sites page is no wider than the window: the order buttons, the create form and the public site
+  creation card wrap, and the table scrolls sideways in its card.
 - An admin can create a site at an ID they pick (8 lowercase letters), e.g. a vanity one; a taken ID is refused. Its
   credentials are shown once. An admin can create sites past `MAX_SITES` and while public site creation is off.
 - An admin can turn public site creation off, so sites cannot be created from the home page, and back on.
