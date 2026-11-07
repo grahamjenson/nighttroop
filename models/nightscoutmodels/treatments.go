@@ -61,6 +61,12 @@ type Treatment struct {
 	ProfileJSON         *types.LongJSONString  `json:"profileJson,omitempty"`
 	Percent             *types.FlexibleFloat64 `json:"percentage,omitempty"`
 	Timeshift           *types.FlexibleInt64   `json:"timeshift,omitempty"`
+	// The AAPS switch a profile switch, or an effective one (a Note), was made from; its times are in milliseconds
+	OriginalCustomizedName *types.ShortString   `json:"originalCustomizedName,omitempty"`
+	OriginalTimeshiftMs    *types.FlexibleInt64 `json:"originalTimeshift,omitempty"`
+	OriginalPercentage     *types.FlexibleInt64 `json:"originalPercentage,omitempty"`
+	OriginalDurationMs     *types.FlexibleInt64 `json:"originalDuration,omitempty"`
+	OriginalEnd            *types.FlexibleInt64 `json:"originalEnd,omitempty"`
 
 	Rate     *types.FlexibleFloat64 `json:"rate,omitempty"`
 	Absolute *types.FlexibleFloat64 `json:"absolute,omitempty"`

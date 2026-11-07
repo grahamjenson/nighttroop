@@ -102,9 +102,9 @@
     1. P4: A search sorted by date with a filter other than the date picks its page by the dates alone, then filters
        it, so a page can be short, and empty when none of it matches although later ones do. No app sends such a
        search yet; filtering in the oldest first query would need each search's filters there too
-    1. P2: Keep the fields AAPS's followers need: an effective profile switch's `original*` fields (else it is read
-       as a Note), a running mode's `mode`, `autoForced`, `reasons` and `originalDuration`, a temp basal's `type`
-       (e.g. `PUMP_SUSPEND`), and a calibration's `isCalibration` and `sensorMgdlAtPairing`
+    1. P2: Keep the fields AAPS's followers need: a running mode's `mode`, `autoForced`, `reasons` and
+       `originalDuration`, a temp basal's `type` (e.g. `PUMP_SUSPEND`), and a calibration's `isCalibration` and
+       `sensorMgdlAtPairing`
     1. P4: Return a food's Nightscout `portion`, `unit` and `gi` as sent; AAPS takes 0, g and none without them
     1. P4: Keep arbitrary API v3 `settings` documents and support v2 authorization roles and subjects, which AAPS 4's
        client control (pairing and remote commands) uses

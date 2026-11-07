@@ -1062,28 +1062,52 @@ func PartialTreatmentToProfileSwitch(source Treatment) sitedb.ProfileSwitch {
 		xint64 := FlexibleInt64ToInt64(*source.Timeshift)
 		sitedbProfileSwitch.Timeshift = &xint64
 	}
+	if source.OriginalProfileName != nil {
+		xstring := ShortStringToString(*source.OriginalProfileName)
+		sitedbProfileSwitch.OriginalProfileName = &xstring
+	}
+	if source.OriginalCustomizedName != nil {
+		xstring2 := ShortStringToString(*source.OriginalCustomizedName)
+		sitedbProfileSwitch.OriginalCustomizedName = &xstring2
+	}
+	if source.OriginalTimeshiftMs != nil {
+		xint642 := FlexibleInt64ToInt64(*source.OriginalTimeshiftMs)
+		sitedbProfileSwitch.OriginalTimeshiftMs = &xint642
+	}
+	if source.OriginalPercentage != nil {
+		xint643 := FlexibleInt64ToInt64(*source.OriginalPercentage)
+		sitedbProfileSwitch.OriginalPercentage = &xint643
+	}
+	if source.OriginalDurationMs != nil {
+		xint644 := FlexibleInt64ToInt64(*source.OriginalDurationMs)
+		sitedbProfileSwitch.OriginalDurationMs = &xint644
+	}
+	if source.OriginalEnd != nil {
+		xint645 := FlexibleInt64ToInt64(*source.OriginalEnd)
+		sitedbProfileSwitch.OriginalEnd = &xint645
+	}
 	if source.Notes != nil {
-		xstring := SanitizedStringToString(*source.Notes)
-		sitedbProfileSwitch.Notes = &xstring
+		xstring3 := SanitizedStringToString(*source.Notes)
+		sitedbProfileSwitch.Notes = &xstring3
 	}
 	if source.Reason != nil {
-		xstring2 := ShortStringToString(*source.Reason)
-		sitedbProfileSwitch.Reason = &xstring2
+		xstring4 := ShortStringToString(*source.Reason)
+		sitedbProfileSwitch.Reason = &xstring4
 	}
 	pString := source.RawJsonData
 	sitedbProfileSwitch.RawJsonData = &pString
 	if source.UtcOffsetMinutes != nil {
-		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
-		sitedbProfileSwitch.UtcOffsetMinutes = &xint642
+		xint646 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
+		sitedbProfileSwitch.UtcOffsetMinutes = &xint646
 	}
 	sitedbProfileSwitch.OccurredAt = OrNow(source.Date)
 	if source.App != nil {
-		xstring3 := ShortStringToString(*source.App)
-		sitedbProfileSwitch.CreatedByAppName = &xstring3
+		xstring5 := ShortStringToString(*source.App)
+		sitedbProfileSwitch.CreatedByAppName = &xstring5
 	}
 	if source.Device != nil {
-		xstring4 := ShortStringToString(*source.Device)
-		sitedbProfileSwitch.CreatedByDeviceName = &xstring4
+		xstring6 := ShortStringToString(*source.Device)
+		sitedbProfileSwitch.CreatedByDeviceName = &xstring6
 	}
 	return sitedbProfileSwitch
 }
@@ -1191,50 +1215,74 @@ func ProfileSwitchCreate(source sitedb.ProfileSwitch, context ConverterContext) 
 		xint64 := *source.Timeshift
 		sitedbCreateProfileSwitchParams.Timeshift = &xint64
 	}
+	if source.OriginalProfileName != nil {
+		xstring2 := *source.OriginalProfileName
+		sitedbCreateProfileSwitchParams.OriginalProfileName = &xstring2
+	}
+	if source.OriginalCustomizedName != nil {
+		xstring3 := *source.OriginalCustomizedName
+		sitedbCreateProfileSwitchParams.OriginalCustomizedName = &xstring3
+	}
+	if source.OriginalTimeshiftMs != nil {
+		xint642 := *source.OriginalTimeshiftMs
+		sitedbCreateProfileSwitchParams.OriginalTimeshiftMs = &xint642
+	}
+	if source.OriginalPercentage != nil {
+		xint643 := *source.OriginalPercentage
+		sitedbCreateProfileSwitchParams.OriginalPercentage = &xint643
+	}
+	if source.OriginalDurationMs != nil {
+		xint644 := *source.OriginalDurationMs
+		sitedbCreateProfileSwitchParams.OriginalDurationMs = &xint644
+	}
+	if source.OriginalEnd != nil {
+		xint645 := *source.OriginalEnd
+		sitedbCreateProfileSwitchParams.OriginalEnd = &xint645
+	}
 	if source.CarbRatiosJson != nil {
-		xstring2 := *source.CarbRatiosJson
-		sitedbCreateProfileSwitchParams.CarbRatiosJson = &xstring2
+		xstring4 := *source.CarbRatiosJson
+		sitedbCreateProfileSwitchParams.CarbRatiosJson = &xstring4
 	}
 	if source.InsulinSensitivitiesJson != nil {
-		xstring3 := *source.InsulinSensitivitiesJson
-		sitedbCreateProfileSwitchParams.InsulinSensitivitiesJson = &xstring3
+		xstring5 := *source.InsulinSensitivitiesJson
+		sitedbCreateProfileSwitchParams.InsulinSensitivitiesJson = &xstring5
 	}
 	if source.BasalRatesJson != nil {
-		xstring4 := *source.BasalRatesJson
-		sitedbCreateProfileSwitchParams.BasalRatesJson = &xstring4
+		xstring6 := *source.BasalRatesJson
+		sitedbCreateProfileSwitchParams.BasalRatesJson = &xstring6
 	}
 	if source.TargetsHighJson != nil {
-		xstring5 := *source.TargetsHighJson
-		sitedbCreateProfileSwitchParams.TargetsHighJson = &xstring5
+		xstring7 := *source.TargetsHighJson
+		sitedbCreateProfileSwitchParams.TargetsHighJson = &xstring7
 	}
 	if source.TargetsLowJson != nil {
-		xstring6 := *source.TargetsLowJson
-		sitedbCreateProfileSwitchParams.TargetsLowJson = &xstring6
+		xstring8 := *source.TargetsLowJson
+		sitedbCreateProfileSwitchParams.TargetsLowJson = &xstring8
 	}
 	if source.Notes != nil {
-		xstring7 := *source.Notes
-		sitedbCreateProfileSwitchParams.Notes = &xstring7
+		xstring9 := *source.Notes
+		sitedbCreateProfileSwitchParams.Notes = &xstring9
 	}
 	if source.Reason != nil {
-		xstring8 := *source.Reason
-		sitedbCreateProfileSwitchParams.Reason = &xstring8
+		xstring10 := *source.Reason
+		sitedbCreateProfileSwitchParams.Reason = &xstring10
 	}
 	if source.UtcOffsetMinutes != nil {
-		xint642 := *source.UtcOffsetMinutes
-		sitedbCreateProfileSwitchParams.UtcOffsetMinutes = &xint642
+		xint646 := *source.UtcOffsetMinutes
+		sitedbCreateProfileSwitchParams.UtcOffsetMinutes = &xint646
 	}
 	sitedbCreateProfileSwitchParams.OccurredAt = source.OccurredAt
 	if source.RawJsonData != nil {
-		xstring9 := *source.RawJsonData
-		sitedbCreateProfileSwitchParams.RawJsonData = &xstring9
+		xstring11 := *source.RawJsonData
+		sitedbCreateProfileSwitchParams.RawJsonData = &xstring11
 	}
 	if source.CreatedByAppName != nil {
-		xstring10 := *source.CreatedByAppName
-		sitedbCreateProfileSwitchParams.CreatedByAppName = &xstring10
+		xstring12 := *source.CreatedByAppName
+		sitedbCreateProfileSwitchParams.CreatedByAppName = &xstring12
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring11 := *source.CreatedByDeviceName
-		sitedbCreateProfileSwitchParams.CreatedByDeviceName = &xstring11
+		xstring13 := *source.CreatedByDeviceName
+		sitedbCreateProfileSwitchParams.CreatedByDeviceName = &xstring13
 	}
 	sitedbCreateProfileSwitchParams.CreatedByIdentityName = AssignCreatedByName(context)
 	sitedbCreateProfileSwitchParams.CreatedByIdentityID = AssignCreatedByID(context)
@@ -1254,17 +1302,41 @@ func ProfileSwitchUpdate(source sitedb.ProfileSwitch, context ConverterContext) 
 		xint64 := *source.Timeshift
 		sitedbUpdateProfileSwitchParams.Timeshift = &xint64
 	}
+	if source.OriginalProfileName != nil {
+		xstring := *source.OriginalProfileName
+		sitedbUpdateProfileSwitchParams.OriginalProfileName = &xstring
+	}
+	if source.OriginalCustomizedName != nil {
+		xstring2 := *source.OriginalCustomizedName
+		sitedbUpdateProfileSwitchParams.OriginalCustomizedName = &xstring2
+	}
+	if source.OriginalTimeshiftMs != nil {
+		xint642 := *source.OriginalTimeshiftMs
+		sitedbUpdateProfileSwitchParams.OriginalTimeshiftMs = &xint642
+	}
+	if source.OriginalPercentage != nil {
+		xint643 := *source.OriginalPercentage
+		sitedbUpdateProfileSwitchParams.OriginalPercentage = &xint643
+	}
+	if source.OriginalDurationMs != nil {
+		xint644 := *source.OriginalDurationMs
+		sitedbUpdateProfileSwitchParams.OriginalDurationMs = &xint644
+	}
+	if source.OriginalEnd != nil {
+		xint645 := *source.OriginalEnd
+		sitedbUpdateProfileSwitchParams.OriginalEnd = &xint645
+	}
 	if source.Notes != nil {
-		xstring := *source.Notes
-		sitedbUpdateProfileSwitchParams.Notes = &xstring
+		xstring3 := *source.Notes
+		sitedbUpdateProfileSwitchParams.Notes = &xstring3
 	}
 	if source.Reason != nil {
-		xstring2 := *source.Reason
-		sitedbUpdateProfileSwitchParams.Reason = &xstring2
+		xstring4 := *source.Reason
+		sitedbUpdateProfileSwitchParams.Reason = &xstring4
 	}
 	if source.RawJsonData != nil {
-		xstring3 := *source.RawJsonData
-		sitedbUpdateProfileSwitchParams.RawJsonData = &xstring3
+		xstring5 := *source.RawJsonData
+		sitedbUpdateProfileSwitchParams.RawJsonData = &xstring5
 	}
 	sitedbUpdateProfileSwitchParams.UpdatedByIdentityID = AssignUpdatedByID(context)
 	sitedbUpdateProfileSwitchParams.UpdatedByIdentityName = AssignUpdatedByName(context)
@@ -1687,23 +1759,47 @@ func UpdateProfileSwitchToTreatment(source *sitedb.ProfileSwitch, context *httpu
 		target.DurationInMilliseconds = MinutesToMilliseconds(source.DurationMinutes)
 		pTypesShortString2 := types.ShortString(source.Name)
 		target.Profile = &pTypesShortString2
+		if source.OriginalProfileName != nil {
+			typesShortString := types.ShortString(*source.OriginalProfileName)
+			target.OriginalProfileName = &typesShortString
+		}
 		target.ProfileJSON = ToProfileJSON(source, context)
 		target.Percent = MultiplierToPercentage(source.Multiplier)
 		if source.Timeshift != nil {
 			typesFlexibleInt64 := types.FlexibleInt64(*source.Timeshift)
 			target.Timeshift = &typesFlexibleInt64
 		}
+		if source.OriginalCustomizedName != nil {
+			typesShortString2 := types.ShortString(*source.OriginalCustomizedName)
+			target.OriginalCustomizedName = &typesShortString2
+		}
+		if source.OriginalTimeshiftMs != nil {
+			typesFlexibleInt642 := types.FlexibleInt64(*source.OriginalTimeshiftMs)
+			target.OriginalTimeshiftMs = &typesFlexibleInt642
+		}
+		if source.OriginalPercentage != nil {
+			typesFlexibleInt643 := types.FlexibleInt64(*source.OriginalPercentage)
+			target.OriginalPercentage = &typesFlexibleInt643
+		}
+		if source.OriginalDurationMs != nil {
+			typesFlexibleInt644 := types.FlexibleInt64(*source.OriginalDurationMs)
+			target.OriginalDurationMs = &typesFlexibleInt644
+		}
+		if source.OriginalEnd != nil {
+			typesFlexibleInt645 := types.FlexibleInt64(*source.OriginalEnd)
+			target.OriginalEnd = &typesFlexibleInt645
+		}
 		if source.Notes != nil {
 			typesSanitizedString := types.SanitizedString(*source.Notes)
 			target.Notes = &typesSanitizedString
 		}
 		if source.Reason != nil {
-			typesShortString := types.ShortString(*source.Reason)
-			target.Reason = &typesShortString
+			typesShortString3 := types.ShortString(*source.Reason)
+			target.Reason = &typesShortString3
 		}
 		if source.UtcOffsetMinutes != nil {
-			typesFlexibleInt642 := types.FlexibleInt64(*source.UtcOffsetMinutes)
-			target.UtcOffsetMinutes = &typesFlexibleInt642
+			typesFlexibleInt646 := types.FlexibleInt64(*source.UtcOffsetMinutes)
+			target.UtcOffsetMinutes = &typesFlexibleInt646
 		}
 		if source.RawJsonData != nil {
 			target.RawJsonData = *source.RawJsonData
@@ -2304,14 +2400,38 @@ func UpdateToProfileSwitch(source *sitedb.ProfileSwitch, target *sitedb.ProfileS
 			xint64 := *source.Timeshift
 			target.Timeshift = &xint64
 		}
+		if source.OriginalProfileName != nil {
+			xstring := *source.OriginalProfileName
+			target.OriginalProfileName = &xstring
+		}
+		if source.OriginalCustomizedName != nil {
+			xstring2 := *source.OriginalCustomizedName
+			target.OriginalCustomizedName = &xstring2
+		}
+		if source.OriginalTimeshiftMs != nil {
+			xint642 := *source.OriginalTimeshiftMs
+			target.OriginalTimeshiftMs = &xint642
+		}
+		if source.OriginalPercentage != nil {
+			xint643 := *source.OriginalPercentage
+			target.OriginalPercentage = &xint643
+		}
+		if source.OriginalDurationMs != nil {
+			xint644 := *source.OriginalDurationMs
+			target.OriginalDurationMs = &xint644
+		}
+		if source.OriginalEnd != nil {
+			xint645 := *source.OriginalEnd
+			target.OriginalEnd = &xint645
+		}
 		if source.Dia != nil {
 			xfloat642 := *source.Dia
 			target.Dia = &xfloat642
 		}
 		target.Units = UnitsToUnits(source.Units)
 		if source.Timezone != nil {
-			xstring := *source.Timezone
-			target.Timezone = &xstring
+			xstring3 := *source.Timezone
+			target.Timezone = &xstring3
 		}
 		if source.CarbsHr != nil {
 			xfloat643 := *source.CarbsHr
@@ -2322,67 +2442,67 @@ func UpdateToProfileSwitch(source *sitedb.ProfileSwitch, target *sitedb.ProfileS
 			target.Delay = &xfloat644
 		}
 		if source.CarbRatiosJson != nil {
-			xstring2 := *source.CarbRatiosJson
-			target.CarbRatiosJson = &xstring2
+			xstring4 := *source.CarbRatiosJson
+			target.CarbRatiosJson = &xstring4
 		}
 		if source.InsulinSensitivitiesJson != nil {
-			xstring3 := *source.InsulinSensitivitiesJson
-			target.InsulinSensitivitiesJson = &xstring3
+			xstring5 := *source.InsulinSensitivitiesJson
+			target.InsulinSensitivitiesJson = &xstring5
 		}
 		if source.BasalRatesJson != nil {
-			xstring4 := *source.BasalRatesJson
-			target.BasalRatesJson = &xstring4
+			xstring6 := *source.BasalRatesJson
+			target.BasalRatesJson = &xstring6
 		}
 		if source.TargetsHighJson != nil {
-			xstring5 := *source.TargetsHighJson
-			target.TargetsHighJson = &xstring5
+			xstring7 := *source.TargetsHighJson
+			target.TargetsHighJson = &xstring7
 		}
 		if source.TargetsLowJson != nil {
-			xstring6 := *source.TargetsLowJson
-			target.TargetsLowJson = &xstring6
+			xstring8 := *source.TargetsLowJson
+			target.TargetsLowJson = &xstring8
 		}
 		if source.Notes != nil {
-			xstring7 := *source.Notes
-			target.Notes = &xstring7
+			xstring9 := *source.Notes
+			target.Notes = &xstring9
 		}
 		if source.Reason != nil {
-			xstring8 := *source.Reason
-			target.Reason = &xstring8
+			xstring10 := *source.Reason
+			target.Reason = &xstring10
 		}
 		if source.RawJsonData != nil {
-			xstring9 := *source.RawJsonData
-			target.RawJsonData = &xstring9
+			xstring11 := *source.RawJsonData
+			target.RawJsonData = &xstring11
 		}
 		if source.DeletedAt != nil {
-			xint642 := *source.DeletedAt
-			target.DeletedAt = &xint642
+			xint646 := *source.DeletedAt
+			target.DeletedAt = &xint646
 		}
 		if source.UtcOffsetMinutes != nil {
-			xint643 := *source.UtcOffsetMinutes
-			target.UtcOffsetMinutes = &xint643
+			xint647 := *source.UtcOffsetMinutes
+			target.UtcOffsetMinutes = &xint647
 		}
 		target.OccurredAt = source.OccurredAt
 		target.CreatedAt = source.CreatedAt
 		target.UpdatedAt = source.UpdatedAt
 		if source.CreatedByAppName != nil {
-			xstring10 := *source.CreatedByAppName
-			target.CreatedByAppName = &xstring10
+			xstring12 := *source.CreatedByAppName
+			target.CreatedByAppName = &xstring12
 		}
 		if source.CreatedByDeviceName != nil {
-			xstring11 := *source.CreatedByDeviceName
-			target.CreatedByDeviceName = &xstring11
+			xstring13 := *source.CreatedByDeviceName
+			target.CreatedByDeviceName = &xstring13
 		}
 		if source.UpdatedByIdentityID != nil {
-			xint644 := *source.UpdatedByIdentityID
-			target.UpdatedByIdentityID = &xint644
+			xint648 := *source.UpdatedByIdentityID
+			target.UpdatedByIdentityID = &xint648
 		}
 		if source.UpdatedByIdentityName != nil {
-			xstring12 := *source.UpdatedByIdentityName
-			target.UpdatedByIdentityName = &xstring12
+			xstring14 := *source.UpdatedByIdentityName
+			target.UpdatedByIdentityName = &xstring14
 		}
 		if source.CreatedByIdentityID != nil {
-			xint645 := *source.CreatedByIdentityID
-			target.CreatedByIdentityID = &xint645
+			xint649 := *source.CreatedByIdentityID
+			target.CreatedByIdentityID = &xint649
 		}
 		target.CreatedByIdentityName = source.CreatedByIdentityName
 	}
