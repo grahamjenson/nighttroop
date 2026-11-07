@@ -119,7 +119,7 @@ templ eventGroupRow(eventGroup *sitemodels.SiteEventGroup) {
 		@table.Cell() {
 			{ strings.Join(eventGroupEvents(eventGroup), ", ") }
 		}
-		@table.Cell() {
+		@table.Cell(notesCell) {
 			{ orDash(eventGroup.Notes) }
 		}
 		@table.Cell() {
