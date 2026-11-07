@@ -655,6 +655,9 @@ focus back to the row or button that opened it.
 - An admin adds users and devices, whose credentials are shown once, each with its own copy button and one to copy
   them all. Saying they are saved warns that they are never shown again, and they close only once that is confirmed;
   Go Back keeps them open.
+- Adding a user starts on the User role, so one added without choosing a role is a User, not an Admin; the server
+  refuses an identity sent with no role.
+- Picking the role a select already has keeps it, rather than leaving the select empty.
 - A device is added for its client: AAPS, Trio, Loop, xDrip+, xDrip4iOS, Nightguard, SugarPixel, T1D Carer or Other.
   Its credentials say how to set that client up, in numbered steps naming the client's menus and fields in bold, with its
   Nightscout URL and token filled in, each with its own copy button, and a device for any but Other has its own units

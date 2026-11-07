@@ -145,7 +145,8 @@ templ IdentitesTable(users []*sitemodels.UserIdentity, devices []*sitemodels.Use
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			<h2 class="mb-3 text-lg font-semibold">Admins & Users</h2>
 			@buildIdentityTable("usersTable", users)
-			@formCreateIdentity("usersTable", "User", []sitemodels.RoleOption{{Label: "Admin", Value: consts.IdentityRoleAdmin}, {Label: "User", Value: consts.IdentityRoleUser}, {Label: "Read Only User", Value: consts.IdentityRoleUserReadOnly}})
+			// The first role is picked to start with, so a user added without choosing one is a User, not an Admin
+			@formCreateIdentity("usersTable", "User", []sitemodels.RoleOption{{Label: "User", Value: consts.IdentityRoleUser}, {Label: "Read Only User", Value: consts.IdentityRoleUserReadOnly}, {Label: "Admin", Value: consts.IdentityRoleAdmin}})
 		</section>
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			<h2 class="mb-3 text-lg font-semibold">Devices</h2>
