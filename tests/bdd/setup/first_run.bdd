@@ -4,11 +4,11 @@ ASSERT_PATH /setup
 ASSERT_VISIBLE #control--setup--code
 SCREENSHOT setup
 
-// A wrong setup code is refused
+// A wrong setup code is refused, in an error toast
 INPUT #control--setup--code notthecode
 CLICK #control--setup--submit
 ASSERT_STATUS 401
-ASSERT_VISIBLE #control--setup--error
+ASSERT_VISIBLE #toaster [data-tui-toast][data-variant="error"]:has-text("That is not the setup code in the server's logs.")
 SCREENSHOT wrong_code
 
 // The code from the server's logs shows the control admin's login, with its TOTP secret's QR code
@@ -21,14 +21,13 @@ ASSERT_VISIBLE #control--setup--totp-secret
 ASSERT_VISIBLE #control--setup--qrcode[title^="otpauth://totp/Nighttroop:"][title*="@control."][title*="?issuer=Nighttroop&secret="]
 ASSERT_TEXT_VISIBLE Scan with an authenticator app, such as
 ASSERT_VISIBLE #control--setup--authenticator--google[target="_blank"]
-ASSERT_NOT_VISIBLE #control--setup--error
 SCREENSHOT credentials
 
 // It is only saved with a code from that TOTP secret, so the login cannot be lost unsaved
 INPUT #control--setup--otp-1 111111
 CLICK #control--setup--confirm
 ASSERT_STATUS 401
-ASSERT_VISIBLE #control--setup--error
+ASSERT_VISIBLE #toaster [data-tui-toast][data-variant="error"]:has-text("That code is not from the TOTP secret shown.")
 
 // Entering the setup code again shows a new login to save, its code boxes empty. Tests' TOTP codes are always 123123
 GOTO {{ .control_url }}/setup
@@ -39,14 +38,13 @@ INPUT #control--setup--otp-1 123123
 CLICK #control--setup--confirm
 ASSERT_STATUS 200
 ASSERT_VISIBLE #control--setup--complete
-ASSERT_NOT_VISIBLE #control--setup--error
 SCREENSHOT complete
 
 // The control admin logs in with it, and tests' passwords are always password
 CLICK #control--setup--login
 ASSERT_PATH /login
-INPUT #name admin
-INPUT #password password
+INPUT #control--login--name admin
+INPUT #control--login--password password
 TYPE #control--login--otp-1 123123
 ASSERT_VISIBLE #control--nav--logo
 

@@ -7,6 +7,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/form"
 	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/inputotp"
+	"nighttroop.t1d.nz/server/components/ui/toast"
 )
 
 // Setup is a new server's first page, asking for the setup code it printed to its logs
@@ -14,7 +15,7 @@ templ Setup() {
 	@control_templ.ControlBase() {
 		<div class="flex flex-col items-center px-6 py-12 bg-slate-50">
 			<div class="setup-target p-8 rounded-lg shadow-2xl w-full max-w-lg bg-white">
-				<form hx-post="/setup" hx-target="closest .setup-target" hx-swap="outerHTML" hx-status:4xx="target:#error-container swap:innerHTML" hx-status:5xx="target:#error-container swap:innerHTML" class="space-y-4">
+				<form hx-post="/setup" hx-target="closest .setup-target" hx-swap="outerHTML" hx-status:4xx="target:#toaster swap:beforeend" hx-status:5xx="target:#toaster swap:beforeend" class="space-y-4">
 					<div class="text-center">
 						<img src="/logo.svg" alt="" class="mx-auto mb-3 size-16"/>
 						<h2 class="font-bold text-2xl">Set up NightTroop</h2>
@@ -38,10 +39,8 @@ templ Setup() {
 	}
 }
 
-// SetupCredentials shows the control admin's login, which is saved once a code from its TOTP secret is entered. It,
-// and SetupComplete, clear the error a wrong code left.
+// SetupCredentials shows the control admin's login, which is saved once a code from its TOTP secret is entered
 templ SetupCredentials(name, password, totpSecret, totpURI, code string) {
-	<div hx-swap-oob="innerHTML:#error-container"></div>
 	<div class="setup-target p-8 rounded-lg shadow-2xl w-full max-w-lg bg-white space-y-4">
 		<h2 class="font-bold text-2xl">Save the control admin's login</h2>
 		<p class="text-sm text-slate-600">It is shown once. Add the TOTP secret to your authenticator app, then enter its code to finish.</p>
@@ -57,7 +56,7 @@ templ SetupCredentials(name, password, totpSecret, totpURI, code string) {
 		<script type="text/javascript">
 			new QRCode(document.getElementById("control--setup--qrcode"), { text: "{{ totpURI }}", width: 128, height: 128 });
 		</script>
-		<form hx-post="/setup/confirm" hx-target="closest .setup-target" hx-swap="outerHTML" hx-status:4xx="target:#error-container swap:innerHTML" hx-status:5xx="target:#error-container swap:innerHTML" class="space-y-4">
+		<form hx-post="/setup/confirm" hx-target="closest .setup-target" hx-swap="outerHTML" hx-status:4xx="target:#toaster swap:beforeend" hx-status:5xx="target:#toaster swap:beforeend" class="space-y-4">
 			<input type="hidden" name="code" value={ code }/>
 			@form.Item() {
 				@form.Label(form.LabelProps{For: "control--setup--otp"}) {
@@ -83,7 +82,6 @@ templ SetupCredentials(name, password, totpSecret, totpURI, code string) {
 }
 
 templ SetupComplete() {
-	<div hx-swap-oob="innerHTML:#error-container"></div>
 	<div id="control--setup--complete" class="setup-target p-8 rounded-lg shadow-2xl w-full max-w-lg bg-white space-y-4 text-center">
 		<h2 class="font-bold text-2xl">NightTroop is set up</h2>
 		<p class="text-sm text-slate-600">Log in with the control admin's login to start creating sites.</p>
@@ -93,8 +91,9 @@ templ SetupComplete() {
 	</div>
 }
 
+// SetupFailed is a refused setup code's toast, or a refused TOTP code's
 templ SetupFailed(message string) {
-	<p id="control--setup--error" class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{ message }</p>
+	@toast.Toast(toast.Props{Description: message, Variant: toast.VariantError, Position: toast.PositionTopCenter, Dismissible: true, Icon: true})
 }
 
 templ row(id, label, value string) {

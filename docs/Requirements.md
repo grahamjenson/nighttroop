@@ -15,7 +15,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - A new server has no control admin, so every page goes to `control.<host>/setup` and the APIs answer that it is not
   set up, until the admin is made. Only the health check works.
 - The server prints a one-time setup code to its logs; the setup page asks for it, so only whoever runs the server can
-  set it up. Wrong codes are rate limited.
+  set it up. Wrong codes are rate limited. A wrong setup or TOTP code is said to be wrong in an error toast.
 - The setup page shows the control admin's username, password and TOTP secret (with a QR code) once, and saves the
   admin only when a code from that TOTP secret is entered.
 - Every TOTP QR code (the setup page, a new site's admin, a new or reset identity) scans into an authenticator app as an
@@ -41,6 +41,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   password to the code, skipping the button that shows the password.
 - The control login is sent as soon as the code's sixth digit is typed or pasted, once the username and password are in,
   as the site's is; a code typed before them waits for Log In, and a wrong code is said to be wrong and not sent again.
+- A failed control login says, in an error toast, "Wrong name, password or code. Codes change every 30 seconds, so use
+  the newest one.", or that there were too many login attempts, and marks the inputs invalid until it is sent again.
+  The inputs have no placeholders, and are not marked invalid before then.
 - The control site's header, with its menu, and its status banner show only once the admin has signed in, not on the
   login or setup page.
 - The server's global rate limit does not stop a control admin signing in, or using the control site once signed in,
