@@ -248,7 +248,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   - A legend of insulin, SMB, carbs and basal, and a tooltip of each reading and treatment.
 - Time in range, total daily dose, and the last sensor and site change for today, yesterday, last week and last
   month.
-- Readings are coloured and labelled low, in range or high by the alarm settings.
+- Readings are coloured and labelled low, in range or high by the alarm settings; high text is a darker amber than
+  the graph's, so it can be read.
 - A latest glucose older than the no data alarm's minutes (20 by default) is grey, with an amber badge saying how
   long there has been no reading, as "No reading for 45 min".
 - The summary says how long ago things were in words, to the nearest hour once over an hour, as "45 minutes ago" or
@@ -294,7 +295,7 @@ deleted (after a confirmation). On a phone, a table wider than the window scroll
 does not, and its cells stay on one line, so a time or a value and its unit never break apart; only notes wrap:
 
 - **Glucose**: CGM and meter readings with trend arrows, in the settings' units (mmol/L or mg/dL), with lows and
-  highs coloured as on the summary.
+  highs coloured as on the summary and marked L or H, read out as Low or High, so they are not shown by colour alone.
   - Adding a reading offers its type as Meter or Sensor and its trend as an arrow with its name (e.g. `↗ FortyFiveUp`),
     as the table and its details show them.
   - Above the first page, the last 10 days' glucose are small graphs on the same scale, oldest first, each with the

@@ -59,7 +59,7 @@ func glucoseInputAttributes(ctx context.Context) templ.Attributes {
 }
 
 // glucoseRangeColours colour a reading below or above the range settings as the summary does
-var glucoseRangeColours = map[string]string{"Low": "font-medium text-glucose-low", "High": "font-medium text-glucose-high"}
+var glucoseRangeColours = map[string]string{"Low": "font-medium text-glucose-low", "High": "font-medium text-glucose-high-text"}
 
 // glucoseRangeBounds are the range settings, low and high, in the settings' units
 func glucoseRangeBounds(ctx context.Context) (float64, float64) {
@@ -87,6 +87,14 @@ func glucoseReadingCell(ctx context.Context, reading float64) table.CellProps {
 		props.Attributes = templ.Attributes{"title": outOfRange}
 	}
 	return props
+}
+
+// glucoseRangeMarker marks an out of range reading in words, not only colour: H or L beside it, read out as High or Low
+templ glucoseRangeMarker(outOfRange string) {
+	if outOfRange != "" {
+		<span class="ml-1 text-xs font-semibold" aria-hidden="true">{ outOfRange[:1] }</span>
+		<span class="sr-only">{ outOfRange }</span>
+	}
 }
 
 // directionDetail is a reading's trend as its arrow and Nightscout's name for it, like "↗ FortyFiveUp"
@@ -215,6 +223,7 @@ templ glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) {
 		}
 		@table.Cell(glucoseReadingCell(ctx, reading.Reading)) {
 			{ formatGlucose(reading.Reading, reading.Units) }
+			@glucoseRangeMarker(glucoseRange(ctx, reading.Reading))
 		}
 		@table.Cell() {
 			{ display.ReadingType(reading.ReadingType) }

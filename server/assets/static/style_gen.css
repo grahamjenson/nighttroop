@@ -96,6 +96,7 @@
     --color-indigo-500: oklch(58.5% 0.233 277.117);
     --color-glucose-low: oklch(57.7% 0.245 27.325);
     --color-glucose-high: oklch(76.9% 0.188 70.08);
+    --color-glucose-high-text: oklch(47.3% 0.137 46.201);
     --color-glucose-in-range: #10203F;
     --color-green-50: oklch(98.2% 0.018 155.826);
     --color-green-200: oklch(92.5% 0.084 155.995);
@@ -1403,8 +1404,8 @@
   .text-destructive {
     color: var(--destructive);
   }
-  .text-glucose-high {
-    color: var(--color-glucose-high);
+  .text-glucose-high-text {
+    color: var(--color-glucose-high-text);
   }
   .text-glucose-in-range {
     color: var(--color-glucose-in-range);
