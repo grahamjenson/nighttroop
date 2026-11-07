@@ -36,6 +36,10 @@ type Entry struct {
 	Noise      *types.FlexibleFloat64 `json:"noise,omitempty"`
 	SysTime    *types.DateString      `json:"sysTime,omitempty"`
 
+	// AAPS's calibration is an mbg with isCalibration, and the sensor's reading then in mg/dL
+	IsCalibration       *bool                  `json:"isCalibration,omitempty"`
+	SensorMgdlAtPairing *types.FlexibleFloat64 `json:"sensorMgdlAtPairing,omitempty"`
+
 	// Date fields
 	Date             *types.DateInt       `json:"date,omitempty"`
 	DateString       *types.DateString    `json:"dateString,omitempty"`

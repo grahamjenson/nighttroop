@@ -435,6 +435,8 @@ focus back to the row or button that opened it.
   can write, so LoopFollow shows a read token as "Read" and a write token as "Read & Write".
 - The v3 version needs no token, so an app can check for v3 before it signs in.
 - An entry has an `sgv` if it is a CGM reading and an `mbg` if it is a meter reading, never both.
+- An `mbg` entry keeps AAPS's `isCalibration` and `sensorMgdlAtPairing` (in mg/dL) and returns them as sent through
+  v1 and v3, so AAPS's followers read a calibration as one; an update without them keeps them.
 - A date filter takes milliseconds with a fraction (e.g. `date$gte=1761234567890.25`), which is dropped.
 - A `created_at` filter or sort is on when it happened, as `date` is, and `srvCreated` is on when it was uploaded.
 - A v1 or v3 search with `sort` on the date (e.g. `sort=date`, `sort=created_at`) is the oldest first, paged with its

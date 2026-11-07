@@ -17,7 +17,8 @@ INSERT INTO glucose_readings (
     filtered,
     unfiltered,
     rssi,
-
+    is_calibration,
+    sensor_mgdl_at_pairing,
 
     notes,
     reason,
@@ -42,6 +43,8 @@ VALUES (
     sqlc.arg('Filtered'),
     sqlc.arg('Unfiltered'),
     sqlc.arg('Rssi'),
+    sqlc.narg('IsCalibration'),
+    sqlc.narg('SensorMgdlAtPairing'),
 
     sqlc.arg('Notes'),
     sqlc.arg('Reason'),
@@ -161,6 +164,8 @@ UPDATE glucose_readings SET
     filtered = COALESCE(sqlc.narg('Filtered'), filtered),
     unfiltered = COALESCE(sqlc.narg('Unfiltered'), unfiltered),
     rssi = COALESCE(sqlc.narg('Rssi'), rssi),
+    is_calibration = COALESCE(sqlc.narg('IsCalibration'), is_calibration),
+    sensor_mgdl_at_pairing = COALESCE(sqlc.narg('SensorMgdlAtPairing'), sensor_mgdl_at_pairing),
 
     notes = COALESCE(sqlc.narg('Notes'), notes),
     reason = COALESCE(sqlc.narg('Reason'), reason),

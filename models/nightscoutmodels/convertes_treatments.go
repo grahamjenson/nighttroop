@@ -358,7 +358,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
 	//
-	// goverter:ignore Mgdl Delta Direction Noise Filtered Unfiltered Rssi ReadingType
+	// goverter:ignore Mgdl Delta Direction Noise Filtered Unfiltered Rssi ReadingType IsCalibration SensorMgdlAtPairing
 	// goverter:map GlucoseType MeasurementMethod
 	PartialTreatmentToGlucoseReading(source Treatment) sitedb.GlucoseReading
 

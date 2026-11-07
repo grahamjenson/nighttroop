@@ -112,6 +112,14 @@ func EntryToCreate(source Entry, context ConverterContext) sitedb.CreateGlucoseR
 		xfloat645 := FlexibleFloat64ToFloat64(*source.RSSI)
 		sitedbCreateGlucoseReadingParams.Rssi = &xfloat645
 	}
+	if source.IsCalibration != nil {
+		xbool := *source.IsCalibration
+		sitedbCreateGlucoseReadingParams.IsCalibration = &xbool
+	}
+	if source.SensorMgdlAtPairing != nil {
+		xfloat646 := FlexibleFloat64ToFloat64(*source.SensorMgdlAtPairing)
+		sitedbCreateGlucoseReadingParams.SensorMgdlAtPairing = &xfloat646
+	}
 	if source.UtcOffsetMinutes != nil {
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		sitedbCreateGlucoseReadingParams.UtcOffsetMinutes = &xint64

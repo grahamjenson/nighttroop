@@ -15,7 +15,7 @@ SELECT
     -- see here https://github.com/sqlc-dev/sqlc/issues/2348
     eg.id, eg.group_type, eg.glucose_reading_id, eg.insulin_dose_id, eg.food_intake_id, eg.temp_basal_id, eg.temp_target_id, eg.profile_switch_id, eg.component_event_id, eg.activity_id, eg.notification_event_id, eg.entered_by, eg.uuid, eg.notes, eg.reason, eg.duration_minutes, eg.raw_json_data, eg.deleted_at, eg.utc_offset_minutes, eg.occurred_at, eg.created_at, eg.updated_at, eg.created_by_app_name, eg.created_by_device_name, eg.updated_by_identity_id, eg.updated_by_identity_name, eg.created_by_identity_id, eg.created_by_identity_name,
     
-    gr.id, gr.mgdl, gr.reading_type, gr.units, gr.measurement_method, gr.delta, gr.direction, gr.noise, gr.filtered, gr.unfiltered, gr.rssi, gr.notes, gr.reason, gr.raw_json_data, gr.deleted_at, gr.utc_offset_minutes, gr.occurred_at, gr.created_at, gr.updated_at, gr.created_by_app_name, gr.created_by_device_name, gr.updated_by_identity_id, gr.updated_by_identity_name, gr.created_by_identity_id, gr.created_by_identity_name,
+    gr.id, gr.mgdl, gr.reading_type, gr.units, gr.measurement_method, gr.delta, gr.direction, gr.noise, gr.filtered, gr.unfiltered, gr.rssi, gr.is_calibration, gr.sensor_mgdl_at_pairing, gr.notes, gr.reason, gr.raw_json_data, gr.deleted_at, gr.utc_offset_minutes, gr.occurred_at, gr.created_at, gr.updated_at, gr.created_by_app_name, gr.created_by_device_name, gr.updated_by_identity_id, gr.updated_by_identity_name, gr.created_by_identity_id, gr.created_by_identity_name,
     idose.id, idose.dose, idose.dose_type, idose.split_now, idose.split_ext, idose.automatic, idose.notes, idose.reason, idose.raw_json_data, idose.deleted_at, idose.utc_offset_minutes, idose.occurred_at, idose.created_at, idose.updated_at, idose.created_by_app_name, idose.created_by_device_name, idose.updated_by_identity_id, idose.updated_by_identity_name, idose.created_by_identity_id, idose.created_by_identity_name,
     fi.id, fi.name, fi.food_type, fi.category, fi.subcategory, fi.absorption_time_minutes, fi.pre_bolus, fi.carbs, fi.fat, fi.protein, fi.fibre, fi.energy, fi.portions, fi.notes, fi.reason, fi.raw_json_data, fi.deleted_at, fi.utc_offset_minutes, fi.occurred_at, fi.created_at, fi.updated_at, fi.created_by_app_name, fi.created_by_device_name, fi.updated_by_identity_id, fi.updated_by_identity_name, fi.created_by_identity_id, fi.created_by_identity_name,
     tb.id, tb.duration_minutes, tb.rate, tb.multiplier, tb.type, tb.notes, tb.reason, tb.raw_json_data, tb.deleted_at, tb.utc_offset_minutes, tb.occurred_at, tb.created_at, tb.updated_at, tb.created_by_app_name, tb.created_by_device_name, tb.updated_by_identity_id, tb.updated_by_identity_name, tb.created_by_identity_id, tb.created_by_identity_name,
@@ -112,6 +112,8 @@ func (q *Queries) AllEventGroups(ctx context.Context, arg AllEventGroupsParams) 
 			&i.GlucoseReadingsVw.Filtered,
 			&i.GlucoseReadingsVw.Unfiltered,
 			&i.GlucoseReadingsVw.Rssi,
+			&i.GlucoseReadingsVw.IsCalibration,
+			&i.GlucoseReadingsVw.SensorMgdlAtPairing,
 			&i.GlucoseReadingsVw.Notes,
 			&i.GlucoseReadingsVw.Reason,
 			&i.GlucoseReadingsVw.RawJsonData,
@@ -632,7 +634,7 @@ SELECT
     -- see here https://github.com/sqlc-dev/sqlc/issues/2348
     eg.id, eg.group_type, eg.glucose_reading_id, eg.insulin_dose_id, eg.food_intake_id, eg.temp_basal_id, eg.temp_target_id, eg.profile_switch_id, eg.component_event_id, eg.activity_id, eg.notification_event_id, eg.entered_by, eg.uuid, eg.notes, eg.reason, eg.duration_minutes, eg.raw_json_data, eg.deleted_at, eg.utc_offset_minutes, eg.occurred_at, eg.created_at, eg.updated_at, eg.created_by_app_name, eg.created_by_device_name, eg.updated_by_identity_id, eg.updated_by_identity_name, eg.created_by_identity_id, eg.created_by_identity_name,
     
-    gr.id, gr.mgdl, gr.reading_type, gr.units, gr.measurement_method, gr.delta, gr.direction, gr.noise, gr.filtered, gr.unfiltered, gr.rssi, gr.notes, gr.reason, gr.raw_json_data, gr.deleted_at, gr.utc_offset_minutes, gr.occurred_at, gr.created_at, gr.updated_at, gr.created_by_app_name, gr.created_by_device_name, gr.updated_by_identity_id, gr.updated_by_identity_name, gr.created_by_identity_id, gr.created_by_identity_name,
+    gr.id, gr.mgdl, gr.reading_type, gr.units, gr.measurement_method, gr.delta, gr.direction, gr.noise, gr.filtered, gr.unfiltered, gr.rssi, gr.is_calibration, gr.sensor_mgdl_at_pairing, gr.notes, gr.reason, gr.raw_json_data, gr.deleted_at, gr.utc_offset_minutes, gr.occurred_at, gr.created_at, gr.updated_at, gr.created_by_app_name, gr.created_by_device_name, gr.updated_by_identity_id, gr.updated_by_identity_name, gr.created_by_identity_id, gr.created_by_identity_name,
     idose.id, idose.dose, idose.dose_type, idose.split_now, idose.split_ext, idose.automatic, idose.notes, idose.reason, idose.raw_json_data, idose.deleted_at, idose.utc_offset_minutes, idose.occurred_at, idose.created_at, idose.updated_at, idose.created_by_app_name, idose.created_by_device_name, idose.updated_by_identity_id, idose.updated_by_identity_name, idose.created_by_identity_id, idose.created_by_identity_name,
     fi.id, fi.name, fi.food_type, fi.category, fi.subcategory, fi.absorption_time_minutes, fi.pre_bolus, fi.carbs, fi.fat, fi.protein, fi.fibre, fi.energy, fi.portions, fi.notes, fi.reason, fi.raw_json_data, fi.deleted_at, fi.utc_offset_minutes, fi.occurred_at, fi.created_at, fi.updated_at, fi.created_by_app_name, fi.created_by_device_name, fi.updated_by_identity_id, fi.updated_by_identity_name, fi.created_by_identity_id, fi.created_by_identity_name,
     tb.id, tb.duration_minutes, tb.rate, tb.multiplier, tb.type, tb.notes, tb.reason, tb.raw_json_data, tb.deleted_at, tb.utc_offset_minutes, tb.occurred_at, tb.created_at, tb.updated_at, tb.created_by_app_name, tb.created_by_device_name, tb.updated_by_identity_id, tb.updated_by_identity_name, tb.created_by_identity_id, tb.created_by_identity_name,
@@ -717,6 +719,8 @@ func (q *Queries) GetEventGroup(ctx context.Context, arg GetEventGroupParams) (*
 		&i.GlucoseReadingsVw.Filtered,
 		&i.GlucoseReadingsVw.Unfiltered,
 		&i.GlucoseReadingsVw.Rssi,
+		&i.GlucoseReadingsVw.IsCalibration,
+		&i.GlucoseReadingsVw.SensorMgdlAtPairing,
 		&i.GlucoseReadingsVw.Notes,
 		&i.GlucoseReadingsVw.Reason,
 		&i.GlucoseReadingsVw.RawJsonData,
@@ -1235,7 +1239,7 @@ SELECT
     -- see here https://github.com/sqlc-dev/sqlc/issues/2348
     eg.id, eg.group_type, eg.glucose_reading_id, eg.insulin_dose_id, eg.food_intake_id, eg.temp_basal_id, eg.temp_target_id, eg.profile_switch_id, eg.component_event_id, eg.activity_id, eg.notification_event_id, eg.entered_by, eg.uuid, eg.notes, eg.reason, eg.duration_minutes, eg.raw_json_data, eg.deleted_at, eg.utc_offset_minutes, eg.occurred_at, eg.created_at, eg.updated_at, eg.created_by_app_name, eg.created_by_device_name, eg.updated_by_identity_id, eg.updated_by_identity_name, eg.created_by_identity_id, eg.created_by_identity_name,
     
-    gr.id, gr.mgdl, gr.reading_type, gr.units, gr.measurement_method, gr.delta, gr.direction, gr.noise, gr.filtered, gr.unfiltered, gr.rssi, gr.notes, gr.reason, gr.raw_json_data, gr.deleted_at, gr.utc_offset_minutes, gr.occurred_at, gr.created_at, gr.updated_at, gr.created_by_app_name, gr.created_by_device_name, gr.updated_by_identity_id, gr.updated_by_identity_name, gr.created_by_identity_id, gr.created_by_identity_name,
+    gr.id, gr.mgdl, gr.reading_type, gr.units, gr.measurement_method, gr.delta, gr.direction, gr.noise, gr.filtered, gr.unfiltered, gr.rssi, gr.is_calibration, gr.sensor_mgdl_at_pairing, gr.notes, gr.reason, gr.raw_json_data, gr.deleted_at, gr.utc_offset_minutes, gr.occurred_at, gr.created_at, gr.updated_at, gr.created_by_app_name, gr.created_by_device_name, gr.updated_by_identity_id, gr.updated_by_identity_name, gr.created_by_identity_id, gr.created_by_identity_name,
     idose.id, idose.dose, idose.dose_type, idose.split_now, idose.split_ext, idose.automatic, idose.notes, idose.reason, idose.raw_json_data, idose.deleted_at, idose.utc_offset_minutes, idose.occurred_at, idose.created_at, idose.updated_at, idose.created_by_app_name, idose.created_by_device_name, idose.updated_by_identity_id, idose.updated_by_identity_name, idose.created_by_identity_id, idose.created_by_identity_name,
     fi.id, fi.name, fi.food_type, fi.category, fi.subcategory, fi.absorption_time_minutes, fi.pre_bolus, fi.carbs, fi.fat, fi.protein, fi.fibre, fi.energy, fi.portions, fi.notes, fi.reason, fi.raw_json_data, fi.deleted_at, fi.utc_offset_minutes, fi.occurred_at, fi.created_at, fi.updated_at, fi.created_by_app_name, fi.created_by_device_name, fi.updated_by_identity_id, fi.updated_by_identity_name, fi.created_by_identity_id, fi.created_by_identity_name,
     tb.id, tb.duration_minutes, tb.rate, tb.multiplier, tb.type, tb.notes, tb.reason, tb.raw_json_data, tb.deleted_at, tb.utc_offset_minutes, tb.occurred_at, tb.created_at, tb.updated_at, tb.created_by_app_name, tb.created_by_device_name, tb.updated_by_identity_id, tb.updated_by_identity_name, tb.created_by_identity_id, tb.created_by_identity_name,
@@ -1496,6 +1500,8 @@ func (q *Queries) SearchEventGroups(ctx context.Context, arg SearchEventGroupsPa
 			&i.GlucoseReadingsVw.Filtered,
 			&i.GlucoseReadingsVw.Unfiltered,
 			&i.GlucoseReadingsVw.Rssi,
+			&i.GlucoseReadingsVw.IsCalibration,
+			&i.GlucoseReadingsVw.SensorMgdlAtPairing,
 			&i.GlucoseReadingsVw.Notes,
 			&i.GlucoseReadingsVw.Reason,
 			&i.GlucoseReadingsVw.RawJsonData,

@@ -268,6 +268,8 @@ type GlucoseReading struct {
 	Filtered              *float64
 	Unfiltered            *float64
 	Rssi                  *float64
+	IsCalibration         *bool
+	SensorMgdlAtPairing   *float64
 	Notes                 *string
 	Reason                *string
 	RawJsonData           *string
@@ -296,6 +298,8 @@ type GlucoseReadingsVw struct {
 	Filtered              *float64
 	Unfiltered            *float64
 	Rssi                  *float64
+	IsCalibration         *bool
+	SensorMgdlAtPairing   *float64
 	Notes                 *string
 	Reason                *string
 	RawJsonData           *string

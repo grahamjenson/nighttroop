@@ -2326,6 +2326,26 @@ func (m *GlucoseReading) SetRssi(v *float64) {
 	m.Rssi = v
 }
 
+// GetIsCalibration returns the IsCalibration value.
+func (m GlucoseReading) GetIsCalibration() *bool {
+	return m.IsCalibration
+}
+
+// SetIsCalibration sets the IsCalibration value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetIsCalibration(v *bool) {
+	m.IsCalibration = v
+}
+
+// GetSensorMgdlAtPairing returns the SensorMgdlAtPairing value.
+func (m GlucoseReading) GetSensorMgdlAtPairing() *float64 {
+	return m.SensorMgdlAtPairing
+}
+
+// SetSensorMgdlAtPairing sets the SensorMgdlAtPairing value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetSensorMgdlAtPairing(v *float64) {
+	m.SensorMgdlAtPairing = v
+}
+
 // GetNotes returns the Notes value.
 func (m GlucoseReading) GetNotes() *string {
 	return m.Notes
@@ -2574,6 +2594,26 @@ func (m GlucoseReadingsVw) GetRssi() *float64 {
 // SetRssi sets the Rssi value and returns the updated GlucoseReadingsVw.
 func (m *GlucoseReadingsVw) SetRssi(v *float64) {
 	m.Rssi = v
+}
+
+// GetIsCalibration returns the IsCalibration value.
+func (m GlucoseReadingsVw) GetIsCalibration() *bool {
+	return m.IsCalibration
+}
+
+// SetIsCalibration sets the IsCalibration value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetIsCalibration(v *bool) {
+	m.IsCalibration = v
+}
+
+// GetSensorMgdlAtPairing returns the SensorMgdlAtPairing value.
+func (m GlucoseReadingsVw) GetSensorMgdlAtPairing() *float64 {
+	return m.SensorMgdlAtPairing
+}
+
+// SetSensorMgdlAtPairing sets the SensorMgdlAtPairing value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetSensorMgdlAtPairing(v *float64) {
+	m.SensorMgdlAtPairing = v
 }
 
 // GetNotes returns the Notes value.
@@ -8446,6 +8486,26 @@ func (m *CreateGlucoseReadingParams) SetRssi(v *float64) {
 	m.Rssi = v
 }
 
+// GetIsCalibration returns the IsCalibration value.
+func (m CreateGlucoseReadingParams) GetIsCalibration() *bool {
+	return m.IsCalibration
+}
+
+// SetIsCalibration sets the IsCalibration value and returns the updated CreateGlucoseReadingParams.
+func (m *CreateGlucoseReadingParams) SetIsCalibration(v *bool) {
+	m.IsCalibration = v
+}
+
+// GetSensorMgdlAtPairing returns the SensorMgdlAtPairing value.
+func (m CreateGlucoseReadingParams) GetSensorMgdlAtPairing() *float64 {
+	return m.SensorMgdlAtPairing
+}
+
+// SetSensorMgdlAtPairing sets the SensorMgdlAtPairing value and returns the updated CreateGlucoseReadingParams.
+func (m *CreateGlucoseReadingParams) SetSensorMgdlAtPairing(v *float64) {
+	m.SensorMgdlAtPairing = v
+}
+
 // GetNotes returns the Notes value.
 func (m CreateGlucoseReadingParams) GetNotes() *string {
 	return m.Notes
@@ -9084,6 +9144,26 @@ func (m UpdateGlucoseReadingParams) GetRssi() *float64 {
 // SetRssi sets the Rssi value and returns the updated UpdateGlucoseReadingParams.
 func (m *UpdateGlucoseReadingParams) SetRssi(v *float64) {
 	m.Rssi = v
+}
+
+// GetIsCalibration returns the IsCalibration value.
+func (m UpdateGlucoseReadingParams) GetIsCalibration() *bool {
+	return m.IsCalibration
+}
+
+// SetIsCalibration sets the IsCalibration value and returns the updated UpdateGlucoseReadingParams.
+func (m *UpdateGlucoseReadingParams) SetIsCalibration(v *bool) {
+	m.IsCalibration = v
+}
+
+// GetSensorMgdlAtPairing returns the SensorMgdlAtPairing value.
+func (m UpdateGlucoseReadingParams) GetSensorMgdlAtPairing() *float64 {
+	return m.SensorMgdlAtPairing
+}
+
+// SetSensorMgdlAtPairing sets the SensorMgdlAtPairing value and returns the updated UpdateGlucoseReadingParams.
+func (m *UpdateGlucoseReadingParams) SetSensorMgdlAtPairing(v *float64) {
+	m.SensorMgdlAtPairing = v
 }
 
 // GetNotes returns the Notes value.
