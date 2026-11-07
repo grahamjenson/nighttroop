@@ -19,7 +19,7 @@ import (
 // goverter:extend ShortStringToString
 // goverter:extend SanitizedStringToString
 // goverter:extend UnitsToUnits
-// goverter:extend nighttroop.t1d.nz/data/sql/sitedb:GlucoseReadingOtherJSON
+// goverter:extend nighttroop.t1d.nz/data/sql/sitedb:.*OtherJSON
 type TreatmentsEvenetConverter interface {
 
 	///////
@@ -285,6 +285,12 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map . ProfileJSON | ToProfileJSON
 	// goverter:map DurationMinutes DurationInMilliseconds | MinutesToMilliseconds
 	// goverter:map Multiplier Percent | MultiplierToPercentage
+	// goverter:map OtherAttributes.OriginalProfileName OriginalProfileName
+	// goverter:map OtherAttributes.OriginalCustomizedName OriginalCustomizedName
+	// goverter:map OtherAttributes.OriginalTimeshiftMs OriginalTimeshiftMs
+	// goverter:map OtherAttributes.OriginalPercentage OriginalPercentage
+	// goverter:map OtherAttributes.OriginalDurationMs OriginalDurationMs
+	// goverter:map OtherAttributes.OriginalEnd OriginalEnd
 	UpdateProfileSwitchToTreatment(source *sitedb.ProfileSwitch, siteContext *httputils.SiteContext, target *Treatment)
 
 	// goverter:update target
@@ -390,6 +396,7 @@ type TreatmentsEvenetConverter interface {
 	//
 	// goverter:ignore Dia Units Timezone CarbsHr Delay CarbRatiosJson InsulinSensitivitiesJson  BasalRatesJson TargetsHighJson TargetsLowJson
 	// goverter:map Percent Multiplier | PercentageToMultiplier
+	// goverter:map . OtherAttributes | TreatmentProfileSwitchOther
 	PartialTreatmentToProfileSwitch(source Treatment) sitedb.ProfileSwitch
 
 	// goverter:ignore ID DeletedAt CreatedAt CreatedByIdentityName CreatedByIdentityID UpdatedAt UpdatedByIdentityName UpdatedByIdentityID
