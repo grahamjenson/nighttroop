@@ -47,6 +47,21 @@ ASSERT_NOT_VISIBLE #site--component-event--details
 ASSERT_TEXT_VISIBLE Right arm
 SCREENSHOT component_event_updated
 
+// On a phone the edit form wraps in its modal, so each input, with its label, and Save can be seen and tapped
+WINDOW 390x844
+CLICK #componentEventsTable tbody tr >> nth=1
+ASSERT_VISIBLE #site--component-event--details
+ASSERT_VISIBLE #site--component-event--edit label[for=site--component-event--edit--sensor-code] >> text=Sensor code
+ASSERT_VISIBLE #site--component-event--edit label[for=site--component-event--edit--transmitter-id] >> text=Transmitter ID
+ASSERT_VISIBLE #site--component-event--edit label[for=site--component-event--edit--notes] >> text=Notes
+// Notes wraps onto a line below the sensor code, rather than all of them squashing into one row
+ASSERT_VISIBLE #site--component-event--edit--notes:below(#site--component-event--edit--sensor-code)
+ASSERT_VISIBLE #site--component-event--edit--submit
+SCREENSHOT component_event_details_phone
+CLICK #site--component-event--details--close
+ASSERT_NOT_VISIBLE #site--component-event--details
+WINDOW 1280x720
+
 // A page of one change pages through them, newest first
 GOTO /data/component-events?limit=1
 ASSERT_STATUS 200

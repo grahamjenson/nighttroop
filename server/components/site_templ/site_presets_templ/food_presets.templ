@@ -160,7 +160,7 @@ templ FoodPresetModal(foodPreset *sitemodels.SiteFoodPreset) {
 	@modal.Modal(modal.Props{ID: "presets--food--details", Title: orDash(foodPreset.Name)}) {
 		<form
 			id="presets--food--edit"
-			class="mt-4 flex items-end gap-2"
+			class="mt-4 flex flex-wrap items-end gap-2"
 			hx-post={ "/presets/food/" + foodPreset.ID }
 			hx-target={ "#presets--food--" + foodPreset.ID }
 			hx-swap="outerHTML"

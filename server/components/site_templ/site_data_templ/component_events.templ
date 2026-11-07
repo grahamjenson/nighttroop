@@ -3,6 +3,7 @@ package site_data_templ
 import (
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/addmodal"
+	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
@@ -146,22 +147,22 @@ templ ComponentEventModal(event *sitemodels.SiteComponentEvent) {
 	@modal.Modal(modal.Props{ID: "site--component-event--details", Title: event.EventType, Subtitle: formatReadingDate(ctx, event.OccurredAt)}) {
 		<form
 			id="site--component-event--edit"
-			class="mt-4 flex items-center gap-2"
+			class="mt-4 flex flex-wrap items-end gap-2"
 			hx-post={ "/data/component-events/" + event.ID }
 			hx-target={ "#site--component-event--" + event.ID }
 			hx-swap="outerHTML"
 			hx-status:4xx="target:#toaster swap:beforeend"
 			hx-status:5xx="target:#toaster swap:beforeend"
 		>
-			<div class="w-40">
+			@field.Field("site--component-event--edit--sensor-code", "Sensor code", "w-40") {
 				@input.Input(input.Props{ID: "site--component-event--edit--sensor-code", Name: "sensor_code", Placeholder: "Sensor Code", Value: orEmpty(event.SensorCode), Attributes: templ.Attributes{"maxlength": "64"}})
-			</div>
-			<div class="w-40">
+			}
+			@field.Field("site--component-event--edit--transmitter-id", "Transmitter ID", "w-40") {
 				@input.Input(input.Props{ID: "site--component-event--edit--transmitter-id", Name: "transmitter_id", Placeholder: "Transmitter ID", Value: orEmpty(event.TransmitterID), Attributes: templ.Attributes{"maxlength": "64"}})
-			</div>
-			<div class="w-64">
+			}
+			@field.Field("site--component-event--edit--notes", "Notes", "w-64") {
 				@input.Input(input.Props{ID: "site--component-event--edit--notes", Name: "notes", Placeholder: "Notes", Value: orEmpty(event.Notes)})
-			</div>
+			}
 			@button.Button(button.Props{ID: "site--component-event--edit--submit", Type: button.TypeSubmit}) {
 				Save
 			}

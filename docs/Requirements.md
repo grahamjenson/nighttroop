@@ -327,6 +327,9 @@ Adding a record on a data page opens a modal of all the fields a person can type
 units, whether it is required, with its limits, and a dropdown or suggestions for its types. Its time is typed in the
 settings' timezone, and is now when left blank; other fields left blank are not set.
 
+A record's details, on a data or presets page, edit it in a form whose every input is labelled, which wraps onto more
+lines on a phone so each input and Save can be seen and tapped.
+
 Without a mouse, Tab reaches each record's row in a table, here and on the control pages, outlined in gold, and Enter
 opens its details; Enter on its delete button deletes it without opening them. A modal takes the focus when it opens,
 so Tab goes on to its fields and a screen reader reads its title, and closing it (Escape, Close or saving) gives the
@@ -657,6 +660,9 @@ focus back to the row or button that opened it.
 - An admin adds users and devices, whose credentials are shown once, each with its own copy button and one to copy
   them all. Saying they are saved warns that they are never shown again, and they close only once that is confirmed;
   Go Back keeps them open.
+- Adding a user starts on the User role, so one added without choosing a role is a User, not an Admin; the server
+  refuses an identity sent with no role.
+- Picking the role a select already has keeps it, rather than leaving the select empty.
 - A device is added for its client: AAPS, Trio, Loop, xDrip+, xDrip4iOS, Nightguard, SugarPixel, T1D Carer or Other.
   Its credentials say how to set that client up, in numbered steps naming the client's menus and fields in bold, with its
   Nightscout URL and token filled in, each with its own copy button, and a device for any but Other has its own units
@@ -671,6 +677,8 @@ focus back to the row or button that opened it.
 - An admin can turn an identity off and on, or delete it; an identity cannot lock itself out.
 - An admin can change another identity's own settings and alarms from its row, such as a device's units, which its
   Nightscout status gives followers to show glucose in.
+- Another identity's glucose settings are labelled, shown, followed from the site's and typed in its own units, or the
+  site's when it has none, not the admin's.
 - Each identity lists the clients (browsers and apps) that have used it, and is marked shared when several have.
 - Identity creation is rate limited, as each hashes a password.
 

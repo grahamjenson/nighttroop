@@ -170,7 +170,7 @@ templ TempBasalModal(tempBasal *sitemodels.SiteTempBasal) {
 	@modal.Modal(modal.Props{ID: "site--temp-basal--details", Title: fmt.Sprintf("%s U/hr for %d minutes", orDash(tempBasal.Rate), tempBasal.DurationMinutes), Subtitle: formatReadingDate(ctx, tempBasal.OccurredAt)}) {
 		<form
 			id="site--temp-basal--edit"
-			class="mt-4 flex items-end gap-2"
+			class="mt-4 flex flex-wrap items-end gap-2"
 			hx-post={ "/data/temp-basals/" + tempBasal.ID }
 			hx-target={ "#site--temp-basal--" + tempBasal.ID }
 			hx-swap="outerHTML"

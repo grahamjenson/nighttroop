@@ -156,7 +156,7 @@ templ NotificationEventModal(event *sitemodels.SiteNotificationEvent) {
 	@modal.Modal(modal.Props{ID: "site--notification--details", Title: fmt.Sprintf("%s: %s", event.NotificationType, event.Title), Subtitle: formatReadingDate(ctx, event.OccurredAt)}) {
 		<form
 			id="site--notification--edit"
-			class="mt-4 flex items-end gap-2"
+			class="mt-4 flex flex-wrap items-end gap-2"
 			hx-post={ "/data/notifications/" + event.ID }
 			hx-target={ "#site--notification--" + event.ID }
 			hx-swap="outerHTML"
