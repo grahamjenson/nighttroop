@@ -152,7 +152,7 @@ templ tempTargetRow(tempTarget *sitemodels.SiteTempTarget) {
 		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ fmt.Sprint(tempTarget.DurationMinutes) }
 		}
-		@table.Cell() {
+		@table.Cell(notesCell) {
 			{ orDash(tempTarget.Reason) }
 		}
 		@table.Cell() {
@@ -187,7 +187,7 @@ templ TempTargetModal(tempTarget *sitemodels.SiteTempTarget) {
 	@modal.Modal(modal.Props{ID: "site--temp-target--details", Title: fmt.Sprintf("%s to %s %s for %d minutes", formatGlucose(tempTarget.LowTarget, tempTarget.Units), formatGlucose(tempTarget.HighTarget, tempTarget.Units), orDash(tempTarget.Units), tempTarget.DurationMinutes), Subtitle: formatReadingDate(ctx, tempTarget.OccurredAt)}) {
 		<form
 			id="site--temp-target--edit"
-			class="mt-4 flex items-end gap-2"
+			class="mt-4 flex flex-wrap items-end gap-2"
 			hx-post={ "/data/temp-targets/" + tempTarget.ID }
 			hx-target={ "#site--temp-target--" + tempTarget.ID }
 			hx-swap="outerHTML"

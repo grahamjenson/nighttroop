@@ -99,6 +99,16 @@ func (s *SettingsCollection) level(siteContext *httputils.SiteContext, identity 
 	return siteContext.GetSettings().IdentitySettingsMap
 }
 
+// glucoseUnits are the units a glucose setting is shown and typed in, as its label says: another identity's are in its
+// own units, or the site's it follows, and the site's and the signed in identity's own are in the signed in identity's
+func (s *SettingsCollection) glucoseUnits(siteContext *httputils.SiteContext, level *settings.SettingMap) *consts.Units {
+	combined := siteContext.GetSettings()
+	if s.Other {
+		return (&settings.CombinedSettingsMap{SiteSettingsMap: combined.SiteSettingsMap, IdentitySettingsMap: level, DefaultSettingsMap: combined.DefaultSettingsMap}).GetUnits()
+	}
+	return combined.GetUnits()
+}
+
 // identity is whose settings these are: the one with the ID, of the signed in site, for Other, or the one signed in
 func (s *SettingsCollection) identity(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*controldb.SiteIdentity, error) {
 	if !s.Other {
@@ -127,8 +137,8 @@ func (s *SettingsCollection) GetRow(ctx context.Context, collectionTx *siteapiut
 	if err != nil {
 		return nil, err
 	}
-	// A glucose is shown in the units of the identity signed in, whoever's settings these are, as its label says
-	combined, units, level := siteContext.GetSettings(), siteContext.GetSettings().GetUnits(), s.level(siteContext, identity)
+	combined, level := siteContext.GetSettings(), s.level(siteContext, identity)
+	units := s.glucoseUnits(siteContext, level)
 	model := &sitemodels.Settings{Inherited: map[string]string{}}
 	if !s.Site {
 		model.OwnerID = &identity.ID
@@ -222,7 +232,8 @@ func (s *SettingsCollection) UpdateRow(ctx context.Context, collectionTx *siteap
 	if s.Site {
 		subject = new("site")
 	}
-	sent, units := model.Fields(), siteContext.GetSettings().GetUnits()
+	// Units before any change sent, as the glucose sent was typed in those the page showed
+	sent, units := model.Fields(), s.glucoseUnits(siteContext, level)
 	for _, name := range settingNames {
 		if *sent[name] == nil {
 			continue

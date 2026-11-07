@@ -137,7 +137,7 @@ templ activityRow(activity *sitemodels.SiteActivity) {
 		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ orDash(activity.DurationMinutes) }
 		}
-		@table.Cell() {
+		@table.Cell(notesCell) {
 			{ orDash(activity.Notes) }
 		}
 		@table.Cell() {
@@ -172,7 +172,7 @@ templ ActivityModal(activity *sitemodels.SiteActivity) {
 	@modal.Modal(modal.Props{ID: "site--activity--details", Title: fmt.Sprintf("%s: %s", activity.ActivityType, orDash(activity.Name)), Subtitle: formatReadingDate(ctx, activity.OccurredAt)}) {
 		<form
 			id="site--activity--edit"
-			class="mt-4 flex items-end gap-2"
+			class="mt-4 flex flex-wrap items-end gap-2"
 			hx-post={ "/data/activities/" + activity.ID }
 			hx-target={ "#site--activity--" + activity.ID }
 			hx-swap="outerHTML"

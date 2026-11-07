@@ -154,6 +154,8 @@ templ Row(props ...RowProps) {
 	</tr>
 }
 
+// Head and Cell keep their text on one line, so a time or a value and its unit never break apart on a phone; a table
+// too wide for its card scrolls sideways instead. A cell of free text, like notes, can wrap with whitespace-normal.
 templ Head(props ...HeadProps) {
 	{{ var p HeadProps }}
 	if len(props) > 0 {
@@ -165,7 +167,7 @@ templ Head(props ...HeadProps) {
 		}
 		class={
 			utils.TwMerge(
-				"h-10 px-2 text-left align-middle font-medium text-muted-foreground",
+				"h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-muted-foreground",
 				"[&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
 				p.Class,
 			),
@@ -187,7 +189,7 @@ templ Cell(props ...CellProps) {
 		}
 		class={
 			utils.TwMerge(
-				"p-2 align-middle",
+				"p-2 align-middle whitespace-nowrap",
 				"[&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
 				p.Class,
 			),

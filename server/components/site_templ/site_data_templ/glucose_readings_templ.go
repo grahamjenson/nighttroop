@@ -105,6 +105,9 @@ func directionDetail(direction *string) string {
 }
 
 // orDash shows an optional value, or a dash when it is not set
+// notesCell is a table cell of free text, like notes, which wraps where every other cell keeps to one line
+var notesCell = table.CellProps{Class: "min-w-48 whitespace-normal"}
+
 func orDash[T any](value *T) string {
 	if value == nil {
 		return "-"
@@ -243,7 +246,7 @@ func GlucoseReadingsTable(readings []*sitemodels.SiteGlucoseReading, skip int64,
 						var templ_7745c5c3_Var8 string
 						templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(string(*glucoseUnits(ctx)))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 129, Col: 35}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 132, Col: 35}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 						if templ_7745c5c3_Err != nil {
@@ -567,7 +570,7 @@ func glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) templ.Component {
 				var templ_7745c5c3_Var21 string
 				templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(formatReadingDate(ctx, reading.OccurredAt))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 211, Col: 47}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 214, Col: 47}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 				if templ_7745c5c3_Err != nil {
@@ -594,7 +597,7 @@ func glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) templ.Component {
 				var templ_7745c5c3_Var23 string
 				templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(formatGlucose(reading.Reading, reading.Units))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 214, Col: 50}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 217, Col: 50}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 				if templ_7745c5c3_Err != nil {
@@ -621,7 +624,7 @@ func glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) templ.Component {
 				var templ_7745c5c3_Var25 string
 				templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(display.ReadingType(reading.ReadingType))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 217, Col: 45}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 220, Col: 45}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 				if templ_7745c5c3_Err != nil {
@@ -652,7 +655,7 @@ func glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) templ.Component {
 				var templ_7745c5c3_Var27 string
 				templ_7745c5c3_Var27, templ_7745c5c3_Err = templruntime.NewAttributeExpression(orDash(reading.Direction)).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 220, Col: 42}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 223, Col: 42}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var27)
 				if templ_7745c5c3_Err != nil {
@@ -665,7 +668,7 @@ func glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) templ.Component {
 				var templ_7745c5c3_Var28 string
 				templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(display.Direction(reading.Direction))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 220, Col: 83}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 223, Col: 83}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 				if templ_7745c5c3_Err != nil {
@@ -696,7 +699,7 @@ func glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) templ.Component {
 				var templ_7745c5c3_Var30 string
 				templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(reading.CreatedByDeviceName))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 223, Col: 40}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 226, Col: 40}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 				if templ_7745c5c3_Err != nil {
@@ -818,14 +821,14 @@ func GlucoseReadingModal(reading *sitemodels.SiteGlucoseReading) templ.Component
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<form id=\"site--glucose--edit\" class=\"mt-4 flex items-end gap-2\" hx-post=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<form id=\"site--glucose--edit\" class=\"mt-4 flex flex-wrap items-end gap-2\" hx-post=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var35 string
 			templ_7745c5c3_Var35, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/data/glucose/" + reading.ID).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 255, Col: 42}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 258, Col: 42}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var35)
 			if templ_7745c5c3_Err != nil {
@@ -838,7 +841,7 @@ func GlucoseReadingModal(reading *sitemodels.SiteGlucoseReading) templ.Component
 			var templ_7745c5c3_Var36 string
 			templ_7745c5c3_Var36, templ_7745c5c3_Err = templruntime.NewAttributeExpression("#site--glucose--" + reading.ID).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 256, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_readings.templ`, Line: 259, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var36)
 			if templ_7745c5c3_Err != nil {

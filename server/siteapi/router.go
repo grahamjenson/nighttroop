@@ -49,6 +49,8 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Get("/getting-started", sitecollections.GettingStartedHandler)
 		// Reports are of a day, week, fortnight or month, the week with yesterday in it at first
 		r.Get("/reports", sitecollections.ReportsHandler(store.Collection("data", "summary-periods").Get))
+		// The daily dose report is its own page; "tdd" names no period, so no period's report is hidden by it
+		r.Get("/reports/tdd", sitecollections.TDDReportHandler)
 		r.Get("/reports/{id}", store.Collection("data", "summary-periods").Get)
 
 		// The settings and alarms pages show the identity's own settings, and the site's to an admin. Both save to

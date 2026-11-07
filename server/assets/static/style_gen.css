@@ -652,6 +652,9 @@
   .min-w-0 {
     min-width: calc(var(--spacing) * 0);
   }
+  .min-w-48 {
+    min-width: calc(var(--spacing) * 48);
+  }
   .min-w-\[8rem\] {
     min-width: 8rem;
   }
@@ -1971,6 +1974,13 @@
     &:hover {
       @media (hover: hover) {
         color: var(--color-slate-900);
+      }
+    }
+  }
+  .hover\:no-underline {
+    &:hover {
+      @media (hover: hover) {
+        text-decoration-line: none;
       }
     }
   }

@@ -10,6 +10,7 @@
 
 1. Reports/Derived Values:
     1. P3: Reports: the AGP's percentiles at a time in a tooltip
+    1. P4: Reports: the daily dose report split into bolus and basal, and today so far marked as such
     1. Time below and above range, as well as time in range
     1. Small multiples Daily
     1. P3: Give an insulin dose's `automatic` in the site API, and draw a Loop bolus with it as an SMB on the summary
@@ -53,6 +54,8 @@
     1. P3: Keep Tab inside an open modal (`modal.Modal`), as past its Close button it goes on to the page behind
     1. P4: Show an identity's new credentials (`credentialsModal`) in a `modal.Modal`, so it is a dialog that takes
        the focus too
+1. P3: Build the details modals' edit forms from their `addmodal` fields, as `EventGroupModal` does, so they edit every
+   field the add form has with the same labels and help, and delete the `*Inputs` templs
 1. P3: Make a Nightscout document's fields without JSON: `stored.Fields` (`nscollections/document.go`) marshals each
    record's model and reads it back as a map (`utils.ToMap`) before the response is marshalled again, about 40% of
    the CPU of a 288 entry `/api/v1/entries` search

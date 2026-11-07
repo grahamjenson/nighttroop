@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/authenticator"
 	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
@@ -144,7 +145,8 @@ templ IdentitesTable(users []*sitemodels.UserIdentity, devices []*sitemodels.Use
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			<h2 class="mb-3 text-lg font-semibold">Admins & Users</h2>
 			@buildIdentityTable("usersTable", users)
-			@formCreateIdentity("usersTable", "User", []sitemodels.RoleOption{{Label: "Admin", Value: consts.IdentityRoleAdmin}, {Label: "User", Value: consts.IdentityRoleUser}, {Label: "Read Only User", Value: consts.IdentityRoleUserReadOnly}})
+			// The first role is picked to start with, so a user added without choosing one is a User, not an Admin
+			@formCreateIdentity("usersTable", "User", []sitemodels.RoleOption{{Label: "User", Value: consts.IdentityRoleUser}, {Label: "Read Only User", Value: consts.IdentityRoleUserReadOnly}, {Label: "Admin", Value: consts.IdentityRoleAdmin}})
 		</section>
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			<h2 class="mb-3 text-lg font-semibold">Devices</h2>
@@ -596,7 +598,7 @@ templ createdUserInfo(url string, username string, password string, totpSecret *
 							<!-- Right: QR block -->
 							<div class="flex flex-col items-center gap-2">
 								<div id="qrcode" class="p-2 bg-white rounded-lg shadow-sm border border-slate-200"></div>
-								<span class="text-xs text-slate-400">Scan with authenticator</span>
+								@authenticator.ScanHint("site--identities--created--authenticator")
 							</div>
 						</div>
 						<script type="text/javascript">

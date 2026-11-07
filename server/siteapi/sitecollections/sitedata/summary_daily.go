@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"slices"
 	"time"
 
 	"github.com/a-h/templ"
@@ -103,6 +104,14 @@ func (s *SummaryDailyCollection) CreateHTMXResponse(*sitemodels.SiteSummaryDaily
 
 func (s *SummaryDailyCollection) DeleteHTMXResponse(*sitemodels.SiteSummaryDaily) templ.Component {
 	return templ.NopComponent
+}
+
+// PastSummaryDays are the site's kept days before today, from a year ago, oldest first
+func PastSummaryDays(ctx context.Context, q *sitedb.Queries, location *time.Location, now time.Time) ([]*sitedb.SummaryPeriod, error) {
+	from, to := LocalDate(now, location, -summaryDailyMaxDays), LocalDate(now, location, -1)
+	days, err := q.SearchSummaryPeriods(ctx, sitedb.SearchSummaryPeriodsParams{Period: "day", DateGTE: &from, DateLTE: &to, Limit: summaryDailyMaxDays})
+	slices.Reverse(days)
+	return days, err
 }
 
 // LocalDate is the date days from now's, in location's time

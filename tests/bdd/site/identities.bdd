@@ -16,6 +16,16 @@ ASSERT_VISIBLE #identities_table label[for="select-form-createIdentityFormusersT
 ASSERT_VISIBLE #identities_table label[for="name-createIdentityFormdevicesTable"]:has-text("Name")
 SCREENSHOT identities
 
+// Adding a user without choosing a role makes a User, not an Admin
+ASSERT_TEXT_EQUALS #select-form-createIdentityFormusersTable User
+INPUT #name-createIdentityFormusersTable nurse
+CLICK "Add User"
+ASSERT_STATUS 201
+CLICK "I Have Saved These"
+CLICK #site--identities--close
+ASSERT_TEXT_EQUALS #usersTable>tbody>tr:has-text("nurse")>td:nth-child(2) User
+SCREENSHOT identities_user_created
+
 // Adding a device shows its credentials once
 INPUT #name-createIdentityFormdevicesTable kitchen
 CLICK "Add Device"
