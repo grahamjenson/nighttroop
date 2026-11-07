@@ -65,15 +65,9 @@
        change to a migration on main, and add numbered migrations from then on (docs/migrations.md). Then add a test
        that the last release's DBs migrate to the current schema, comparing each DB's `Schema` with a new one's as
        `scripts/try_migrate_or_delete` does
-    1. P1: Tools for a start stopped by a site: a live site's DB that is missing and not restored, cannot be opened, or
-       fails its migration stops the server (so no data is written that a rollback would lose), and `update.sh` rolls
-       back. Fixing it now means a shell on the server. Add commands, run against the stopped server's data, to:
-        1. List what stopped the start: each such site, why (missing, cannot open, which migration failed and its
-           error), and its last backups in `./backups` and S3
-        1. Download a site's DB, and its batch's backups from S3, to inspect it with `sqlite3`, e.g. try its
-           migrations on a copy without changing it
-        1. Reset it: restore its DB from a chosen backup, or force a dirty one back a version, or disable or delete the
-           site in the control DB, recording an event saying who did what, so the next start opens every site again
+    1. P1: Decide the deploy tools from the gaps in `docs/deploy.md`, which lists each way a deploy can fail and what
+       fixes it, starting with a site that stops the start (seeing why, trying a fix on a copy, and restoring,
+       forcing back, disabling or deleting it) and a missing control DB starting a new server in setup
 1. Push notifications (the control DB's `push_credentials` and `push_registrations`):
     1. P2: A control collection for push credentials for every site, as the site's (`/settings/push-credentials`)
     1. P3: Add push credentials and registrations to `clients/nighttroop/openapi.json` and its client
