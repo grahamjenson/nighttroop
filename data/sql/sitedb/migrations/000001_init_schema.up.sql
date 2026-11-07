@@ -58,9 +58,14 @@ CREATE TABLE insulin_doses (
     dose REAL NOT NULL CHECK(dose BETWEEN -500 AND 500), -- units, negative takes insulin back off IOB
     dose_type TEXT CHECK(length(dose_type) <= 32),
     
-    split_now REAL CHECK(split_now BETWEEN 0 AND 1), -- the fraction of a combo bolus given at once, Nightscout's splitNow / 100
-    split_ext REAL CHECK(split_ext BETWEEN 0 AND 1), -- the fraction given over time, Nightscout's splitExt / 100
-    automatic INTEGER CHECK(automatic IN (0, 1)), -- whether a loop gave it, Loop's automatic, as LoopFollow shows it as an SMB
+
+    -- What only some apps send, a JSON object (types.InsulinDoseOther) NULL for most doses: a combo bolus's split, the
+    -- fraction given at once (split_now, Nightscout's splitNow / 100) and over time (split_ext, its splitExt / 100), and
+    -- whether a loop gave it (automatic, Loop's, as LoopFollow shows it as an SMB). A field that is not there passes its check.
+    other_attributes TEXT CHECK(length(other_attributes) <= 256 AND json_valid(other_attributes)
+        AND json_extract(other_attributes, '$.split_now') BETWEEN 0 AND 1
+        AND json_extract(other_attributes, '$.split_ext') BETWEEN 0 AND 1
+        AND json_extract(other_attributes, '$.automatic') IN (0, 1)),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),

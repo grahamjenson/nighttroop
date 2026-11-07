@@ -2727,34 +2727,14 @@ func (m *InsulinDose) SetDoseType(v *string) {
 	m.DoseType = v
 }
 
-// GetSplitNow returns the SplitNow value.
-func (m InsulinDose) GetSplitNow() *float64 {
-	return m.SplitNow
+// GetOtherAttributes returns the OtherAttributes value.
+func (m InsulinDose) GetOtherAttributes() types.InsulinDoseOther {
+	return m.OtherAttributes
 }
 
-// SetSplitNow sets the SplitNow value and returns the updated InsulinDose.
-func (m *InsulinDose) SetSplitNow(v *float64) {
-	m.SplitNow = v
-}
-
-// GetSplitExt returns the SplitExt value.
-func (m InsulinDose) GetSplitExt() *float64 {
-	return m.SplitExt
-}
-
-// SetSplitExt sets the SplitExt value and returns the updated InsulinDose.
-func (m *InsulinDose) SetSplitExt(v *float64) {
-	m.SplitExt = v
-}
-
-// GetAutomatic returns the Automatic value.
-func (m InsulinDose) GetAutomatic() *bool {
-	return m.Automatic
-}
-
-// SetAutomatic sets the Automatic value and returns the updated InsulinDose.
-func (m *InsulinDose) SetAutomatic(v *bool) {
-	m.Automatic = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated InsulinDose.
+func (m *InsulinDose) SetOtherAttributes(v types.InsulinDoseOther) {
+	m.OtherAttributes = v
 }
 
 // GetNotes returns the Notes value.
@@ -2927,34 +2907,14 @@ func (m *InsulinDosesVw) SetDoseType(v *string) {
 	m.DoseType = v
 }
 
-// GetSplitNow returns the SplitNow value.
-func (m InsulinDosesVw) GetSplitNow() *float64 {
-	return m.SplitNow
+// GetOtherAttributes returns the OtherAttributes value.
+func (m InsulinDosesVw) GetOtherAttributes() types.InsulinDoseOther {
+	return m.OtherAttributes
 }
 
-// SetSplitNow sets the SplitNow value and returns the updated InsulinDosesVw.
-func (m *InsulinDosesVw) SetSplitNow(v *float64) {
-	m.SplitNow = v
-}
-
-// GetSplitExt returns the SplitExt value.
-func (m InsulinDosesVw) GetSplitExt() *float64 {
-	return m.SplitExt
-}
-
-// SetSplitExt sets the SplitExt value and returns the updated InsulinDosesVw.
-func (m *InsulinDosesVw) SetSplitExt(v *float64) {
-	m.SplitExt = v
-}
-
-// GetAutomatic returns the Automatic value.
-func (m InsulinDosesVw) GetAutomatic() *bool {
-	return m.Automatic
-}
-
-// SetAutomatic sets the Automatic value and returns the updated InsulinDosesVw.
-func (m *InsulinDosesVw) SetAutomatic(v *bool) {
-	m.Automatic = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetOtherAttributes(v types.InsulinDoseOther) {
+	m.OtherAttributes = v
 }
 
 // GetNotes returns the Notes value.
@@ -10547,34 +10507,14 @@ func (m *CreateInsulinDoseParams) SetDoseType(v *string) {
 	m.DoseType = v
 }
 
-// GetSplitNow returns the SplitNow value.
-func (m CreateInsulinDoseParams) GetSplitNow() *float64 {
-	return m.SplitNow
+// GetOtherAttributes returns the OtherAttributes value.
+func (m CreateInsulinDoseParams) GetOtherAttributes() types.InsulinDoseOther {
+	return m.OtherAttributes
 }
 
-// SetSplitNow sets the SplitNow value and returns the updated CreateInsulinDoseParams.
-func (m *CreateInsulinDoseParams) SetSplitNow(v *float64) {
-	m.SplitNow = v
-}
-
-// GetSplitExt returns the SplitExt value.
-func (m CreateInsulinDoseParams) GetSplitExt() *float64 {
-	return m.SplitExt
-}
-
-// SetSplitExt sets the SplitExt value and returns the updated CreateInsulinDoseParams.
-func (m *CreateInsulinDoseParams) SetSplitExt(v *float64) {
-	m.SplitExt = v
-}
-
-// GetAutomatic returns the Automatic value.
-func (m CreateInsulinDoseParams) GetAutomatic() *bool {
-	return m.Automatic
-}
-
-// SetAutomatic sets the Automatic value and returns the updated CreateInsulinDoseParams.
-func (m *CreateInsulinDoseParams) SetAutomatic(v *bool) {
-	m.Automatic = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated CreateInsulinDoseParams.
+func (m *CreateInsulinDoseParams) SetOtherAttributes(v types.InsulinDoseOther) {
+	m.OtherAttributes = v
 }
 
 // GetNotes returns the Notes value.
@@ -11027,34 +10967,14 @@ func (m *UpdateInsulinDoseParams) SetDose(v *float64) {
 	m.Dose = v
 }
 
-// GetSplitNow returns the SplitNow value.
-func (m UpdateInsulinDoseParams) GetSplitNow() *float64 {
-	return m.SplitNow
+// GetOtherAttributes returns the OtherAttributes value.
+func (m UpdateInsulinDoseParams) GetOtherAttributes() *string {
+	return m.OtherAttributes
 }
 
-// SetSplitNow sets the SplitNow value and returns the updated UpdateInsulinDoseParams.
-func (m *UpdateInsulinDoseParams) SetSplitNow(v *float64) {
-	m.SplitNow = v
-}
-
-// GetSplitExt returns the SplitExt value.
-func (m UpdateInsulinDoseParams) GetSplitExt() *float64 {
-	return m.SplitExt
-}
-
-// SetSplitExt sets the SplitExt value and returns the updated UpdateInsulinDoseParams.
-func (m *UpdateInsulinDoseParams) SetSplitExt(v *float64) {
-	m.SplitExt = v
-}
-
-// GetAutomatic returns the Automatic value.
-func (m UpdateInsulinDoseParams) GetAutomatic() *bool {
-	return m.Automatic
-}
-
-// SetAutomatic sets the Automatic value and returns the updated UpdateInsulinDoseParams.
-func (m *UpdateInsulinDoseParams) SetAutomatic(v *bool) {
-	m.Automatic = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated UpdateInsulinDoseParams.
+func (m *UpdateInsulinDoseParams) SetOtherAttributes(v *string) {
+	m.OtherAttributes = v
 }
 
 // GetNotes returns the Notes value.

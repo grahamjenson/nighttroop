@@ -19,7 +19,7 @@ import (
 // goverter:extend ShortStringToString
 // goverter:extend SanitizedStringToString
 // goverter:extend UnitsToUnits
-// goverter:extend nighttroop.t1d.nz/data/sql/sitedb:GlucoseReadingOtherJSON
+// goverter:extend nighttroop.t1d.nz/data/sql/sitedb:.*OtherJSON
 type TreatmentsEvenetConverter interface {
 
 	///////
@@ -238,8 +238,9 @@ type TreatmentsEvenetConverter interface {
 	//
 	// goverter:map Dose Insulin
 	// goverter:map DoseType Type
-	// goverter:map SplitNow SplitNow | MultiplierToPercentage
-	// goverter:map SplitExt SplitExt | MultiplierToPercentage
+	// goverter:map OtherAttributes.SplitNow SplitNow | MultiplierToPercentage
+	// goverter:map OtherAttributes.SplitExt SplitExt | MultiplierToPercentage
+	// goverter:map OtherAttributes.Automatic Automatic
 	UpdateInsulinDoseToTreatment(source *sitedb.InsulinDose, target *Treatment)
 
 	// goverter:update target
@@ -370,8 +371,7 @@ type TreatmentsEvenetConverter interface {
 	//
 	// goverter:map Insulin Dose
 	// goverter:map Type DoseType
-	// goverter:map SplitNow SplitNow | PercentageToMultiplier
-	// goverter:map SplitExt SplitExt | PercentageToMultiplier
+	// goverter:map . OtherAttributes | TreatmentInsulinDoseOther
 	PartialTreatmentToInsulinDose(source Treatment) sitedb.InsulinDose
 
 	// goverter:ignore ID DeletedAt CreatedAt CreatedByIdentityName CreatedByIdentityID UpdatedAt UpdatedByIdentityName UpdatedByIdentityID

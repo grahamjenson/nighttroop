@@ -290,6 +290,8 @@ type SiteConverter interface {
 	// INSULIN DOSES
 	///////
 
+	// goverter:map OtherAttributes.SplitNow SplitNow
+	// goverter:map OtherAttributes.SplitExt SplitExt
 	InsulinDoseFromDB(source *sitedb.InsulinDose) *SiteInsulinDose
 
 	// goverter:context siteContext
@@ -297,15 +299,15 @@ type SiteConverter interface {
 	// goverter:map OccurredAt | OccurredAtOrNow
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
-	// Only a loop's upload says whether a dose was automatic, not the site
-	// goverter:ignore Automatic
+	// goverter:map . OtherAttributes | InsulinDoseOther
 	InsulinDoseToCreate(source *SiteInsulinDose, siteContext *httputils.SiteContext) sitedb.CreateInsulinDoseParams
 
 	// goverter:context siteContext
 	// goverter:map Dose | Float64OrNil
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
-	// goverter:ignore RawJsonData Automatic
+	// goverter:ignore RawJsonData
+	// goverter:map . OtherAttributes | InsulinDoseOtherJSON
 	InsulinDoseToUpdate(source *SiteInsulinDose, siteContext *httputils.SiteContext) sitedb.UpdateInsulinDoseParams
 
 	///////

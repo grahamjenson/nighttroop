@@ -6,9 +6,7 @@ INSERT INTO insulin_doses (
     id,
     dose,
     dose_type,
-    split_now, 
-    split_ext,
-    automatic,
+    other_attributes,
 
     notes,
     reason,
@@ -21,7 +19,7 @@ INSERT INTO insulin_doses (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -85,9 +83,12 @@ LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER
 UPDATE insulin_doses SET
     dose_type = COALESCE(sqlc.narg('DoseType'), dose_type),
     dose = COALESCE(sqlc.narg('Dose'), dose),
-    split_now = COALESCE(sqlc.narg('SplitNow'), split_now),
-    split_ext = COALESCE(sqlc.narg('SplitExt'), split_ext),
-    automatic = COALESCE(sqlc.narg('Automatic'), automatic),
+    -- The fields sent, as JSON (types.OtherJSON), are merged into those kept, so one not sent stays as it is, as a
+    -- column of its own would
+    other_attributes = NULLIF(json_patch(
+        COALESCE(other_attributes, '{}'),
+        COALESCE(CAST(sqlc.narg('OtherAttributes') AS TEXT), '{}')
+    ), '{}'),
     notes = COALESCE(sqlc.narg('Notes'), notes),
     reason = COALESCE(sqlc.narg('Reason'), reason),
 
