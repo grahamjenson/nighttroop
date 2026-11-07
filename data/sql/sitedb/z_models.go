@@ -14,9 +14,7 @@ type ActivitiesVw struct {
 	Name                  *string
 	ActivityType          *string
 	DurationMinutes       *int64
-	Calories              *int64
-	Steps                 *int64
-	HeartRate             *int64
+	OtherAttributes       types.ActivityOther
 	Notes                 *string
 	Reason                *string
 	RawJsonData           *string
@@ -38,9 +36,7 @@ type Activity struct {
 	Name                  *string
 	ActivityType          string
 	DurationMinutes       *int64
-	Calories              *int64
-	Steps                 *int64
-	HeartRate             *int64
+	OtherAttributes       types.ActivityOther
 	Notes                 *string
 	Reason                *string
 	RawJsonData           *string

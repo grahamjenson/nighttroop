@@ -299,6 +299,9 @@ type TreatmentsEvenetConverter interface {
 	// goverter:ignoreMissing
 	//
 	// goverter:map DurationMinutes DurationInMilliseconds | MinutesToMilliseconds
+	// goverter:map OtherAttributes.Calories Calories
+	// goverter:map OtherAttributes.Steps Steps
+	// goverter:map OtherAttributes.HeartRate HeartRate
 	UpdateActivityToTreatment(source *sitedb.Activity, target *Treatment)
 
 	//////
@@ -417,6 +420,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map Date OccurredAt | OrNow
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
+	// goverter:map . OtherAttributes | TreatmentActivityOther
 	PartialTreatmentToActivity(source Treatment) sitedb.Activity
 
 	// goverter:ignore ID DeletedAt CreatedAt CreatedByIdentityName CreatedByIdentityID UpdatedAt UpdatedByIdentityName UpdatedByIdentityID

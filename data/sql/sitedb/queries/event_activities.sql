@@ -7,9 +7,7 @@ INSERT INTO activities (
     name,
     activity_type,
     duration_minutes,
-    calories,
-    steps,
-    heart_rate,
+    other_attributes,
     notes,
     reason, 
 
@@ -21,7 +19,7 @@ INSERT INTO activities (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -102,9 +100,12 @@ UPDATE activities SET
     name = COALESCE(sqlc.narg('Name'), name),
     activity_type = COALESCE(sqlc.narg('ActivityType'), activity_type),
     duration_minutes = COALESCE(sqlc.narg('DurationMinutes'), duration_minutes),
-    calories = COALESCE(sqlc.narg('Calories'), calories),
-    steps = COALESCE(sqlc.narg('Steps'), steps),
-    heart_rate = COALESCE(sqlc.narg('HeartRate'), heart_rate),
+    -- The fields sent, as JSON (types.OtherJSON), are merged into those kept, so one not sent stays as it is, as a
+    -- column of its own would
+    other_attributes = NULLIF(json_patch(
+        COALESCE(other_attributes, '{}'),
+        COALESCE(CAST(sqlc.narg('OtherAttributes') AS TEXT), '{}')
+    ), '{}'),
     notes = COALESCE(sqlc.narg('Notes'), notes),
     reason = COALESCE(sqlc.narg('Reason'), reason),
 
