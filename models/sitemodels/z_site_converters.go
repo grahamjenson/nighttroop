@@ -173,24 +173,24 @@ func ComponentEventFromDB(source *sitedb.ComponentEvent) *SiteComponentEvent {
 		var sitemodelsSiteComponentEvent SiteComponentEvent
 		sitemodelsSiteComponentEvent.ID = (*source).ID
 		sitemodelsSiteComponentEvent.EventType = (*source).EventType
-		if (*source).SensorCode != nil {
-			xstring := *(*source).SensorCode
+		if (*source).OtherAttributes.SensorCode != nil {
+			xstring := *(*source).OtherAttributes.SensorCode
 			sitemodelsSiteComponentEvent.SensorCode = &xstring
 		}
-		if (*source).TransmitterID != nil {
-			xstring2 := *(*source).TransmitterID
+		if (*source).OtherAttributes.TransmitterID != nil {
+			xstring2 := *(*source).OtherAttributes.TransmitterID
 			sitemodelsSiteComponentEvent.TransmitterID = &xstring2
 		}
-		if (*source).PumpID != nil {
-			xstring3 := *(*source).PumpID
+		if (*source).OtherAttributes.PumpID != nil {
+			xstring3 := *(*source).OtherAttributes.PumpID
 			sitemodelsSiteComponentEvent.PumpID = &xstring3
 		}
-		if (*source).PumpSerial != nil {
-			xstring4 := *(*source).PumpSerial
+		if (*source).OtherAttributes.PumpSerial != nil {
+			xstring4 := *(*source).OtherAttributes.PumpSerial
 			sitemodelsSiteComponentEvent.PumpSerial = &xstring4
 		}
-		if (*source).PumpType != nil {
-			xstring5 := *(*source).PumpType
+		if (*source).OtherAttributes.PumpType != nil {
+			xstring5 := *(*source).OtherAttributes.PumpType
 			sitemodelsSiteComponentEvent.PumpType = &xstring5
 		}
 		if (*source).Notes != nil {
@@ -234,33 +234,14 @@ func ComponentEventToCreate(source *SiteComponentEvent, context *httputils.SiteC
 	if source != nil {
 		sitedbCreateComponentEventParams.ID = NewSiteDataID()
 		sitedbCreateComponentEventParams.EventType = (*source).EventType
-		if (*source).SensorCode != nil {
-			xstring := *(*source).SensorCode
-			sitedbCreateComponentEventParams.SensorCode = &xstring
-		}
-		if (*source).TransmitterID != nil {
-			xstring2 := *(*source).TransmitterID
-			sitedbCreateComponentEventParams.TransmitterID = &xstring2
-		}
-		if (*source).PumpID != nil {
-			xstring3 := *(*source).PumpID
-			sitedbCreateComponentEventParams.PumpID = &xstring3
-		}
-		if (*source).PumpSerial != nil {
-			xstring4 := *(*source).PumpSerial
-			sitedbCreateComponentEventParams.PumpSerial = &xstring4
-		}
-		if (*source).PumpType != nil {
-			xstring5 := *(*source).PumpType
-			sitedbCreateComponentEventParams.PumpType = &xstring5
-		}
+		sitedbCreateComponentEventParams.OtherAttributes = ComponentEventOther(source)
 		if (*source).Notes != nil {
-			xstring6 := *(*source).Notes
-			sitedbCreateComponentEventParams.Notes = &xstring6
+			xstring := *(*source).Notes
+			sitedbCreateComponentEventParams.Notes = &xstring
 		}
 		if (*source).Reason != nil {
-			xstring7 := *(*source).Reason
-			sitedbCreateComponentEventParams.Reason = &xstring7
+			xstring2 := *(*source).Reason
+			sitedbCreateComponentEventParams.Reason = &xstring2
 		}
 		if (*source).UtcOffsetMinutes != nil {
 			xint64 := *(*source).UtcOffsetMinutes
@@ -268,16 +249,16 @@ func ComponentEventToCreate(source *SiteComponentEvent, context *httputils.SiteC
 		}
 		sitedbCreateComponentEventParams.OccurredAt = OccurredAtOrNow((*source).OccurredAt)
 		if (*source).RawJsonData != nil {
-			xstring8 := *(*source).RawJsonData
-			sitedbCreateComponentEventParams.RawJsonData = &xstring8
+			xstring3 := *(*source).RawJsonData
+			sitedbCreateComponentEventParams.RawJsonData = &xstring3
 		}
 		if (*source).CreatedByAppName != nil {
-			xstring9 := *(*source).CreatedByAppName
-			sitedbCreateComponentEventParams.CreatedByAppName = &xstring9
+			xstring4 := *(*source).CreatedByAppName
+			sitedbCreateComponentEventParams.CreatedByAppName = &xstring4
 		}
 		if (*source).CreatedByDeviceName != nil {
-			xstring10 := *(*source).CreatedByDeviceName
-			sitedbCreateComponentEventParams.CreatedByDeviceName = &xstring10
+			xstring5 := *(*source).CreatedByDeviceName
+			sitedbCreateComponentEventParams.CreatedByDeviceName = &xstring5
 		}
 		sitedbCreateComponentEventParams.CreatedByIdentityName = ContextIdentityNameValue(context)
 		sitedbCreateComponentEventParams.CreatedByIdentityID = ContextIdentityID(context)
@@ -288,21 +269,14 @@ func ComponentEventToUpdate(source *SiteComponentEvent, context *httputils.SiteC
 	var sitedbUpdateComponentEventParams sitedb.UpdateComponentEventParams
 	if source != nil {
 		sitedbUpdateComponentEventParams.EventType = StringOrNil((*source).EventType)
-		if (*source).SensorCode != nil {
-			xstring := *(*source).SensorCode
-			sitedbUpdateComponentEventParams.SensorCode = &xstring
-		}
-		if (*source).TransmitterID != nil {
-			xstring2 := *(*source).TransmitterID
-			sitedbUpdateComponentEventParams.TransmitterID = &xstring2
-		}
+		sitedbUpdateComponentEventParams.OtherAttributes = ComponentEventOtherJSON(source)
 		if (*source).Notes != nil {
-			xstring3 := *(*source).Notes
-			sitedbUpdateComponentEventParams.Notes = &xstring3
+			xstring := *(*source).Notes
+			sitedbUpdateComponentEventParams.Notes = &xstring
 		}
 		if (*source).Reason != nil {
-			xstring4 := *(*source).Reason
-			sitedbUpdateComponentEventParams.Reason = &xstring4
+			xstring2 := *(*source).Reason
+			sitedbUpdateComponentEventParams.Reason = &xstring2
 		}
 		sitedbUpdateComponentEventParams.UpdatedByIdentityID = ContextIdentityID(context)
 		sitedbUpdateComponentEventParams.UpdatedByIdentityName = ContextIdentityName(context)

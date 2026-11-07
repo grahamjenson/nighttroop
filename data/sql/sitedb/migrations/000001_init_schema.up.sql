@@ -301,12 +301,15 @@ CREATE TABLE component_events (
 
     event_type TEXT NOT NULL CHECK(length(event_type) <= 32), -- same event type as event_group
 
-    sensor_code TEXT CHECK(length(sensor_code) <= 64),
-    transmitter_id TEXT CHECK(length(transmitter_id) <= 64),
-
-    pump_id TEXT CHECK(length(pump_id) <= 32),
-    pump_serial TEXT CHECK(length(pump_serial) <= 32),
-    pump_type TEXT CHECK(length(pump_type) <= 64),
+    -- What only some apps send, a JSON object (types.ComponentEventOther) NULL for most events: a sensor's code and
+    -- transmitter (sensor_code, transmitter_id), and the pump's ID, serial and type (pump_id, pump_serial, pump_type).
+    -- A field that is not there passes its check.
+    other_attributes TEXT CHECK(length(other_attributes) <= 1024 AND json_valid(other_attributes)
+        AND length(json_extract(other_attributes, '$.sensor_code')) <= 64
+        AND length(json_extract(other_attributes, '$.transmitter_id')) <= 64
+        AND length(json_extract(other_attributes, '$.pump_id')) <= 32
+        AND length(json_extract(other_attributes, '$.pump_serial')) <= 32
+        AND length(json_extract(other_attributes, '$.pump_type')) <= 64),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),

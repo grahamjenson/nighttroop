@@ -19,7 +19,7 @@ import (
 // goverter:extend ShortStringToString
 // goverter:extend SanitizedStringToString
 // goverter:extend UnitsToUnits
-// goverter:extend nighttroop.t1d.nz/data/sql/sitedb:GlucoseReadingOtherJSON
+// goverter:extend nighttroop.t1d.nz/data/sql/sitedb:.*OtherJSON
 type TreatmentsEvenetConverter interface {
 
 	///////
@@ -291,6 +291,11 @@ type TreatmentsEvenetConverter interface {
 	// goverter:ignore CreatedAt
 	// goverter:ignoreMissing
 	//
+	// goverter:map OtherAttributes.SensorCode SensorCode
+	// goverter:map OtherAttributes.TransmitterID TransmitterID
+	// goverter:map OtherAttributes.PumpID PumpID
+	// goverter:map OtherAttributes.PumpSerial PumpSerial
+	// goverter:map OtherAttributes.PumpType PumpType
 	UpdateComponentEventToTreatment(source *sitedb.ComponentEvent, target *Treatment)
 
 	// goverter:update target
@@ -411,6 +416,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map Date OccurredAt | OrNow
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
+	// goverter:map . OtherAttributes | TreatmentComponentEventOther
 	PartialTreatmentToComponentEvent(source Treatment) sitedb.ComponentEvent
 
 	// goverter:ignore ID DeletedAt CreatedAt CreatedByIdentityName CreatedByIdentityID UpdatedAt UpdatedByIdentityName UpdatedByIdentityID

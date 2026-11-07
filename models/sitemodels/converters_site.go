@@ -191,6 +191,11 @@ type SiteConverter interface {
 	// COMPONENT EVENTS
 	///////
 
+	// goverter:map OtherAttributes.SensorCode SensorCode
+	// goverter:map OtherAttributes.TransmitterID TransmitterID
+	// goverter:map OtherAttributes.PumpID PumpID
+	// goverter:map OtherAttributes.PumpSerial PumpSerial
+	// goverter:map OtherAttributes.PumpType PumpType
 	ComponentEventFromDB(source *sitedb.ComponentEvent) *SiteComponentEvent
 
 	// goverter:context siteContext
@@ -198,6 +203,7 @@ type SiteConverter interface {
 	// goverter:map OccurredAt | OccurredAtOrNow
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
+	// goverter:map . OtherAttributes | ComponentEventOther
 	ComponentEventToCreate(source *SiteComponentEvent, siteContext *httputils.SiteContext) sitedb.CreateComponentEventParams
 
 	// goverter:context siteContext
@@ -205,6 +211,7 @@ type SiteConverter interface {
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
 	// goverter:ignore RawJsonData
+	// goverter:map . OtherAttributes | ComponentEventOtherJSON
 	ComponentEventToUpdate(source *SiteComponentEvent, siteContext *httputils.SiteContext) sitedb.UpdateComponentEventParams
 
 	///////
