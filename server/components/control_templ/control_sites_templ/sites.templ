@@ -265,10 +265,28 @@ templ siteRow(site *controlmodels.Site) {
 	}
 }
 
-// SiteModal shows a site's details, and lets an admin disable it while it is live and inactive, and archive it once
-// it is disabled
+// SiteModal shows a site's details, with a link to its own page and its identities, and lets an admin disable it while
+// it is live and inactive, and archive it once it is disabled
 templ SiteModal(site *controlmodels.Site) {
 	@modal.Modal(modal.Props{ID: "control--site--details", Title: site.ID, Actions: siteActions(site)}) {
+		@siteDetails(site)
+		<a id="control--site--inspect" href={ templ.SafeURL("/sites/" + site.ID + "/inspect") } class="mt-4 inline-block text-sm font-medium text-primary underline">Inspect its identities</a>
+	}
+}
+
+// SiteInspect is a site's own page: its details, and its identities, which an admin can reset or sign in to the site as
+templ SiteInspect(inspect *controlmodels.SiteInspect) {
+	<div id="control--site--inspect-page" class="mx-auto max-w-5xl space-y-6">
+		@heading.Page(inspect.Site.ID) {
+			Inspect the site: its details and every one of its identities.
+		}
+		@siteDetails(inspect.Site)
+		@SiteIdentities(inspect.Site.ID, inspect.Identities)
+	</div>
+}
+
+// siteDetails is what is known of a site, never its data or secrets
+templ siteDetails(site *controlmodels.Site) {
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@siteDetail("State", display.Name(site.State))
 			@siteDetail("Batch", site.Batch)
@@ -281,8 +299,6 @@ templ SiteModal(site *controlmodels.Site) {
 			@siteDetail("Archived", formatDate(site.ArchivedAt))
 			@siteDetail("Deleted", formatDate(site.DeletedAt))
 		</dl>
-		<div id="control--site--identities" hx-get={ "/sites/" + site.ID + "/identities" } hx-trigger="load" hx-swap="innerHTML"></div>
-	}
 }
 
 // siteActions are the buttons for what an admin can do to a site: disable it once no one has used it for a while,

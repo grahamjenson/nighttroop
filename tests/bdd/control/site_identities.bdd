@@ -5,10 +5,11 @@ INPUT #password password
 TYPE #control--login--otp-1 123123
 ASSERT_VISIBLE #control--nav--logo
 
-// A site's details list its identities: who they are, whether they log in with TOTP, and when each was last seen.
-// Resetting gives the same development password and TOTP secret in tests, so the shard's site is used.
-GOTO {{ .control_url }}/sites/{{ replace ".ns.localhost" "" .default_site }}
+// A site's own page lists its details and identities: who they are, whether they log in with TOTP, and when each was
+// last seen. Resetting gives the same development password and TOTP secret in tests, so the shard's site is used.
+GOTO {{ .control_url }}/sites/{{ replace ".ns.localhost" "" .default_site }}/inspect
 ASSERT_STATUS 200
+ASSERT_VISIBLE #control--site--inspect-page
 ASSERT_VISIBLE #control--site--identities--table
 ASSERT_VISIBLE #control--site--identities--table td >> text=pwd_phone
 ASSERT_VISIBLE #control--site--identities--table td >> text=read_only
@@ -29,3 +30,15 @@ SCREENSHOT site_identity_password_reset
 CLICK #control--site--identities--table tr:has-text("admin") [id$="--reset-totp"]
 ASSERT_STATUS 200
 ASSERT_VISIBLE #control--site--identity-reset dt >> text=TOTP secret
+
+// An admin can sign in to the site as one of its identities: asked first (the test accepts), a new tab opens the site
+// signed in as it
+SCREENSHOT site_inspect
+CLICK #control--site--identities--table tr:has-text("admin") [id$="--assume"]
+ASSERT_NEW_PAGE
+ASSERT_PATH /
+ASSERT_VISIBLE #site--summary
+
+// The site's events show the control admin signed in as it
+GOTO /logs/events
+ASSERT_TEXT_VISIBLE Signed in by control

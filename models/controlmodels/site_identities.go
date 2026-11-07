@@ -26,6 +26,18 @@ type SiteIdentityCredentials struct {
 	TotpSecret *string `json:"totp_secret,omitempty"`
 }
 
+// SiteIdentityAssume is a link a control admin follows, once and within a minute, to sign in to a site as its identity
+type SiteIdentityAssume struct {
+	Name string `json:"name"`
+	URL  string `json:"url"`
+}
+
+// SiteInspect is a site's own page in control: its details and its identities
+type SiteInspect struct {
+	Site       *Site           `json:"site"`
+	Identities []*SiteIdentity `json:"identities"`
+}
+
 // HasSecret is whether an encrypted secret is set
 func HasSecret(encrypted string) bool {
 	return encrypted != ""

@@ -67,10 +67,15 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 ### A site's identities
 
-- A site's details list its identities: who they are, whether they use TOTP, and when each was last seen. Secrets
-  are never shown.
+- Each site has its own page, `/sites/{id}/inspect`, linked from its details as "Inspect its identities", with its
+  details and a table of every one of its identities: who they are, whether they use TOTP, and when each was last
+  seen. Secrets are never shown.
 - An admin can reset an identity's password (shown once, with a device's new Nightscout token) or TOTP secret. Each
   reset signs out the identity's existing sessions and is recorded as an event.
+- An admin can sign in to a site as any of its identities with its Sign in as button, after confirming: a new tab opens
+  the site signed in as it, with its role, for the hour a sign in lasts. Control sends the tab to a link to the site
+  that works once, within a minute, on its own site only, which sets its sign in cookie. The site records a "Signed in by control" event, with the identity and the control admin, which its
+  admins see on its Events page. Read-only control identities cannot.
 
 ### Background jobs
 
