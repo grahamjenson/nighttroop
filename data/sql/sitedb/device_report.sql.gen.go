@@ -227,6 +227,58 @@ func (q *Queries) CreateDeviceReport(ctx context.Context, arg CreateDeviceReport
 	return &i, err
 }
 
+const deviceReportAscendingIDs = `-- name: DeviceReportAscendingIDs :many
+SELECT id FROM device_reports
+WHERE occurred_at BETWEEN MAX(COALESCE(CAST(?1 AS INTEGER), 0), COALESCE(CAST(?2 AS INTEGER) + 1, 0), COALESCE(CAST(?3 AS INTEGER), 0))
+    AND MIN(COALESCE(CAST(?4 AS INTEGER), 253402300799999), COALESCE(CAST(?5 AS INTEGER) - 1, 253402300799999), COALESCE(?3, 253402300799999))
+    AND (CAST(?6 AS BOOL) = TRUE OR deleted_at IS NULL)
+ORDER BY occurred_at LIMIT CAST(?8 AS INTEGER) OFFSET CAST(?7 AS INTEGER)
+`
+
+type DeviceReportAscendingIDsParams struct {
+	DateGTE        *int64
+	DateGT         *int64
+	DateEQ         *int64
+	DateLTE        *int64
+	DateLT         *int64
+	IncludeDeleted bool
+	Skip           int64
+	Limit          int64
+}
+
+// The reports in the dates searched, the oldest first, from occurred_at's index, for a search sorted by date
+func (q *Queries) DeviceReportAscendingIDs(ctx context.Context, arg DeviceReportAscendingIDsParams) ([]string, error) {
+	rows, err := q.query(ctx, q.deviceReportAscendingIDsStmt, deviceReportAscendingIDs,
+		arg.DateGTE,
+		arg.DateGT,
+		arg.DateEQ,
+		arg.DateLTE,
+		arg.DateLT,
+		arg.IncludeDeleted,
+		arg.Skip,
+		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const deviceReportHistoryIDs = `-- name: DeviceReportHistoryIDs :many
 SELECT id FROM device_reports WHERE updated_at >= ?1
 ORDER BY updated_at, occurred_at, id LIMIT CAST(?2 AS INTEGER)

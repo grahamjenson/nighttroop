@@ -5506,6 +5506,86 @@ func (m *CreateDeviceReportParams) SetCreatedByIdentityID(v *int64) {
 	m.CreatedByIdentityID = v
 }
 
+// GetDateGTE returns the DateGTE value.
+func (m DeviceReportAscendingIDsParams) GetDateGTE() *int64 {
+	return m.DateGTE
+}
+
+// SetDateGTE sets the DateGTE value and returns the updated DeviceReportAscendingIDsParams.
+func (m *DeviceReportAscendingIDsParams) SetDateGTE(v *int64) {
+	m.DateGTE = v
+}
+
+// GetDateGT returns the DateGT value.
+func (m DeviceReportAscendingIDsParams) GetDateGT() *int64 {
+	return m.DateGT
+}
+
+// SetDateGT sets the DateGT value and returns the updated DeviceReportAscendingIDsParams.
+func (m *DeviceReportAscendingIDsParams) SetDateGT(v *int64) {
+	m.DateGT = v
+}
+
+// GetDateEQ returns the DateEQ value.
+func (m DeviceReportAscendingIDsParams) GetDateEQ() *int64 {
+	return m.DateEQ
+}
+
+// SetDateEQ sets the DateEQ value and returns the updated DeviceReportAscendingIDsParams.
+func (m *DeviceReportAscendingIDsParams) SetDateEQ(v *int64) {
+	m.DateEQ = v
+}
+
+// GetDateLTE returns the DateLTE value.
+func (m DeviceReportAscendingIDsParams) GetDateLTE() *int64 {
+	return m.DateLTE
+}
+
+// SetDateLTE sets the DateLTE value and returns the updated DeviceReportAscendingIDsParams.
+func (m *DeviceReportAscendingIDsParams) SetDateLTE(v *int64) {
+	m.DateLTE = v
+}
+
+// GetDateLT returns the DateLT value.
+func (m DeviceReportAscendingIDsParams) GetDateLT() *int64 {
+	return m.DateLT
+}
+
+// SetDateLT sets the DateLT value and returns the updated DeviceReportAscendingIDsParams.
+func (m *DeviceReportAscendingIDsParams) SetDateLT(v *int64) {
+	m.DateLT = v
+}
+
+// GetIncludeDeleted returns the IncludeDeleted value.
+func (m DeviceReportAscendingIDsParams) GetIncludeDeleted() bool {
+	return m.IncludeDeleted
+}
+
+// SetIncludeDeleted sets the IncludeDeleted value and returns the updated DeviceReportAscendingIDsParams.
+func (m *DeviceReportAscendingIDsParams) SetIncludeDeleted(v bool) {
+	m.IncludeDeleted = v
+}
+
+// GetSkip returns the Skip value.
+func (m DeviceReportAscendingIDsParams) GetSkip() int64 {
+	return m.Skip
+}
+
+// SetSkip sets the Skip value and returns the updated DeviceReportAscendingIDsParams.
+func (m *DeviceReportAscendingIDsParams) SetSkip(v int64) {
+	m.Skip = v
+}
+
+// GetLimit returns the Limit value.
+func (m DeviceReportAscendingIDsParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated DeviceReportAscendingIDsParams.
+func (m *DeviceReportAscendingIDsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
 // GetSince returns the Since value.
 func (m DeviceReportHistoryIDsParams) GetSince() int64 {
 	return m.Since
@@ -5864,6 +5944,86 @@ func (m UpdateDeviceReportParams) GetID() string {
 // SetID sets the ID value and returns the updated UpdateDeviceReportParams.
 func (m *UpdateDeviceReportParams) SetID(v string) {
 	m.ID = v
+}
+
+// GetDateGTE returns the DateGTE value.
+func (m ActivityAscendingIDsParams) GetDateGTE() *int64 {
+	return m.DateGTE
+}
+
+// SetDateGTE sets the DateGTE value and returns the updated ActivityAscendingIDsParams.
+func (m *ActivityAscendingIDsParams) SetDateGTE(v *int64) {
+	m.DateGTE = v
+}
+
+// GetDateGT returns the DateGT value.
+func (m ActivityAscendingIDsParams) GetDateGT() *int64 {
+	return m.DateGT
+}
+
+// SetDateGT sets the DateGT value and returns the updated ActivityAscendingIDsParams.
+func (m *ActivityAscendingIDsParams) SetDateGT(v *int64) {
+	m.DateGT = v
+}
+
+// GetDateEQ returns the DateEQ value.
+func (m ActivityAscendingIDsParams) GetDateEQ() *int64 {
+	return m.DateEQ
+}
+
+// SetDateEQ sets the DateEQ value and returns the updated ActivityAscendingIDsParams.
+func (m *ActivityAscendingIDsParams) SetDateEQ(v *int64) {
+	m.DateEQ = v
+}
+
+// GetDateLTE returns the DateLTE value.
+func (m ActivityAscendingIDsParams) GetDateLTE() *int64 {
+	return m.DateLTE
+}
+
+// SetDateLTE sets the DateLTE value and returns the updated ActivityAscendingIDsParams.
+func (m *ActivityAscendingIDsParams) SetDateLTE(v *int64) {
+	m.DateLTE = v
+}
+
+// GetDateLT returns the DateLT value.
+func (m ActivityAscendingIDsParams) GetDateLT() *int64 {
+	return m.DateLT
+}
+
+// SetDateLT sets the DateLT value and returns the updated ActivityAscendingIDsParams.
+func (m *ActivityAscendingIDsParams) SetDateLT(v *int64) {
+	m.DateLT = v
+}
+
+// GetIncludeDeleted returns the IncludeDeleted value.
+func (m ActivityAscendingIDsParams) GetIncludeDeleted() bool {
+	return m.IncludeDeleted
+}
+
+// SetIncludeDeleted sets the IncludeDeleted value and returns the updated ActivityAscendingIDsParams.
+func (m *ActivityAscendingIDsParams) SetIncludeDeleted(v bool) {
+	m.IncludeDeleted = v
+}
+
+// GetSkip returns the Skip value.
+func (m ActivityAscendingIDsParams) GetSkip() int64 {
+	return m.Skip
+}
+
+// SetSkip sets the Skip value and returns the updated ActivityAscendingIDsParams.
+func (m *ActivityAscendingIDsParams) SetSkip(v int64) {
+	m.Skip = v
+}
+
+// GetLimit returns the Limit value.
+func (m ActivityAscendingIDsParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated ActivityAscendingIDsParams.
+func (m *ActivityAscendingIDsParams) SetLimit(v int64) {
+	m.Limit = v
 }
 
 // GetSince returns the Since value.
@@ -8236,6 +8396,86 @@ func (m *GetGlucoseReadingParams) SetID(v string) {
 	m.ID = v
 }
 
+// GetDateGTE returns the DateGTE value.
+func (m GlucoseReadingAscendingIDsParams) GetDateGTE() *int64 {
+	return m.DateGTE
+}
+
+// SetDateGTE sets the DateGTE value and returns the updated GlucoseReadingAscendingIDsParams.
+func (m *GlucoseReadingAscendingIDsParams) SetDateGTE(v *int64) {
+	m.DateGTE = v
+}
+
+// GetDateGT returns the DateGT value.
+func (m GlucoseReadingAscendingIDsParams) GetDateGT() *int64 {
+	return m.DateGT
+}
+
+// SetDateGT sets the DateGT value and returns the updated GlucoseReadingAscendingIDsParams.
+func (m *GlucoseReadingAscendingIDsParams) SetDateGT(v *int64) {
+	m.DateGT = v
+}
+
+// GetDateEQ returns the DateEQ value.
+func (m GlucoseReadingAscendingIDsParams) GetDateEQ() *int64 {
+	return m.DateEQ
+}
+
+// SetDateEQ sets the DateEQ value and returns the updated GlucoseReadingAscendingIDsParams.
+func (m *GlucoseReadingAscendingIDsParams) SetDateEQ(v *int64) {
+	m.DateEQ = v
+}
+
+// GetDateLTE returns the DateLTE value.
+func (m GlucoseReadingAscendingIDsParams) GetDateLTE() *int64 {
+	return m.DateLTE
+}
+
+// SetDateLTE sets the DateLTE value and returns the updated GlucoseReadingAscendingIDsParams.
+func (m *GlucoseReadingAscendingIDsParams) SetDateLTE(v *int64) {
+	m.DateLTE = v
+}
+
+// GetDateLT returns the DateLT value.
+func (m GlucoseReadingAscendingIDsParams) GetDateLT() *int64 {
+	return m.DateLT
+}
+
+// SetDateLT sets the DateLT value and returns the updated GlucoseReadingAscendingIDsParams.
+func (m *GlucoseReadingAscendingIDsParams) SetDateLT(v *int64) {
+	m.DateLT = v
+}
+
+// GetIncludeDeleted returns the IncludeDeleted value.
+func (m GlucoseReadingAscendingIDsParams) GetIncludeDeleted() bool {
+	return m.IncludeDeleted
+}
+
+// SetIncludeDeleted sets the IncludeDeleted value and returns the updated GlucoseReadingAscendingIDsParams.
+func (m *GlucoseReadingAscendingIDsParams) SetIncludeDeleted(v bool) {
+	m.IncludeDeleted = v
+}
+
+// GetSkip returns the Skip value.
+func (m GlucoseReadingAscendingIDsParams) GetSkip() int64 {
+	return m.Skip
+}
+
+// SetSkip sets the Skip value and returns the updated GlucoseReadingAscendingIDsParams.
+func (m *GlucoseReadingAscendingIDsParams) SetSkip(v int64) {
+	m.Skip = v
+}
+
+// GetLimit returns the Limit value.
+func (m GlucoseReadingAscendingIDsParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated GlucoseReadingAscendingIDsParams.
+func (m *GlucoseReadingAscendingIDsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
 // GetSince returns the Since value.
 func (m GlucoseReadingHistoryIDsParams) GetSince() int64 {
 	return m.Since
@@ -9004,6 +9244,86 @@ func (m CreateEventGroupParams) GetCreatedByIdentityID() *int64 {
 // SetCreatedByIdentityID sets the CreatedByIdentityID value and returns the updated CreateEventGroupParams.
 func (m *CreateEventGroupParams) SetCreatedByIdentityID(v *int64) {
 	m.CreatedByIdentityID = v
+}
+
+// GetDateGTE returns the DateGTE value.
+func (m EventGroupAscendingIDsParams) GetDateGTE() *int64 {
+	return m.DateGTE
+}
+
+// SetDateGTE sets the DateGTE value and returns the updated EventGroupAscendingIDsParams.
+func (m *EventGroupAscendingIDsParams) SetDateGTE(v *int64) {
+	m.DateGTE = v
+}
+
+// GetDateGT returns the DateGT value.
+func (m EventGroupAscendingIDsParams) GetDateGT() *int64 {
+	return m.DateGT
+}
+
+// SetDateGT sets the DateGT value and returns the updated EventGroupAscendingIDsParams.
+func (m *EventGroupAscendingIDsParams) SetDateGT(v *int64) {
+	m.DateGT = v
+}
+
+// GetDateEQ returns the DateEQ value.
+func (m EventGroupAscendingIDsParams) GetDateEQ() *int64 {
+	return m.DateEQ
+}
+
+// SetDateEQ sets the DateEQ value and returns the updated EventGroupAscendingIDsParams.
+func (m *EventGroupAscendingIDsParams) SetDateEQ(v *int64) {
+	m.DateEQ = v
+}
+
+// GetDateLTE returns the DateLTE value.
+func (m EventGroupAscendingIDsParams) GetDateLTE() *int64 {
+	return m.DateLTE
+}
+
+// SetDateLTE sets the DateLTE value and returns the updated EventGroupAscendingIDsParams.
+func (m *EventGroupAscendingIDsParams) SetDateLTE(v *int64) {
+	m.DateLTE = v
+}
+
+// GetDateLT returns the DateLT value.
+func (m EventGroupAscendingIDsParams) GetDateLT() *int64 {
+	return m.DateLT
+}
+
+// SetDateLT sets the DateLT value and returns the updated EventGroupAscendingIDsParams.
+func (m *EventGroupAscendingIDsParams) SetDateLT(v *int64) {
+	m.DateLT = v
+}
+
+// GetIncludeDeleted returns the IncludeDeleted value.
+func (m EventGroupAscendingIDsParams) GetIncludeDeleted() bool {
+	return m.IncludeDeleted
+}
+
+// SetIncludeDeleted sets the IncludeDeleted value and returns the updated EventGroupAscendingIDsParams.
+func (m *EventGroupAscendingIDsParams) SetIncludeDeleted(v bool) {
+	m.IncludeDeleted = v
+}
+
+// GetSkip returns the Skip value.
+func (m EventGroupAscendingIDsParams) GetSkip() int64 {
+	return m.Skip
+}
+
+// SetSkip sets the Skip value and returns the updated EventGroupAscendingIDsParams.
+func (m *EventGroupAscendingIDsParams) SetSkip(v int64) {
+	m.Skip = v
+}
+
+// GetLimit returns the Limit value.
+func (m EventGroupAscendingIDsParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated EventGroupAscendingIDsParams.
+func (m *EventGroupAscendingIDsParams) SetLimit(v int64) {
+	m.Limit = v
 }
 
 // GetSince returns the Since value.
@@ -13176,6 +13496,76 @@ func (m *CreateFoodPresetParams) SetCreatedByIdentityID(v *int64) {
 	m.CreatedByIdentityID = v
 }
 
+// GetDateGTE returns the DateGTE value.
+func (m FoodPresetAscendingIDsParams) GetDateGTE() *int64 {
+	return m.DateGTE
+}
+
+// SetDateGTE sets the DateGTE value and returns the updated FoodPresetAscendingIDsParams.
+func (m *FoodPresetAscendingIDsParams) SetDateGTE(v *int64) {
+	m.DateGTE = v
+}
+
+// GetDateGT returns the DateGT value.
+func (m FoodPresetAscendingIDsParams) GetDateGT() *int64 {
+	return m.DateGT
+}
+
+// SetDateGT sets the DateGT value and returns the updated FoodPresetAscendingIDsParams.
+func (m *FoodPresetAscendingIDsParams) SetDateGT(v *int64) {
+	m.DateGT = v
+}
+
+// GetDateEQ returns the DateEQ value.
+func (m FoodPresetAscendingIDsParams) GetDateEQ() *int64 {
+	return m.DateEQ
+}
+
+// SetDateEQ sets the DateEQ value and returns the updated FoodPresetAscendingIDsParams.
+func (m *FoodPresetAscendingIDsParams) SetDateEQ(v *int64) {
+	m.DateEQ = v
+}
+
+// GetDateLTE returns the DateLTE value.
+func (m FoodPresetAscendingIDsParams) GetDateLTE() *int64 {
+	return m.DateLTE
+}
+
+// SetDateLTE sets the DateLTE value and returns the updated FoodPresetAscendingIDsParams.
+func (m *FoodPresetAscendingIDsParams) SetDateLTE(v *int64) {
+	m.DateLTE = v
+}
+
+// GetDateLT returns the DateLT value.
+func (m FoodPresetAscendingIDsParams) GetDateLT() *int64 {
+	return m.DateLT
+}
+
+// SetDateLT sets the DateLT value and returns the updated FoodPresetAscendingIDsParams.
+func (m *FoodPresetAscendingIDsParams) SetDateLT(v *int64) {
+	m.DateLT = v
+}
+
+// GetSkip returns the Skip value.
+func (m FoodPresetAscendingIDsParams) GetSkip() int64 {
+	return m.Skip
+}
+
+// SetSkip sets the Skip value and returns the updated FoodPresetAscendingIDsParams.
+func (m *FoodPresetAscendingIDsParams) SetSkip(v int64) {
+	m.Skip = v
+}
+
+// GetLimit returns the Limit value.
+func (m FoodPresetAscendingIDsParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated FoodPresetAscendingIDsParams.
+func (m *FoodPresetAscendingIDsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
 // GetSince returns the Since value.
 func (m FoodPresetHistoryIDsParams) GetSince() int64 {
 	return m.Since
@@ -13964,6 +14354,76 @@ func (m HardDeleteProfileStoreParams) GetProfileStoreID() string {
 // SetProfileStoreID sets the ProfileStoreID value and returns the updated HardDeleteProfileStoreParams.
 func (m *HardDeleteProfileStoreParams) SetProfileStoreID(v string) {
 	m.ProfileStoreID = v
+}
+
+// GetDateGTE returns the DateGTE value.
+func (m ProfileStoreAscendingIDsParams) GetDateGTE() *int64 {
+	return m.DateGTE
+}
+
+// SetDateGTE sets the DateGTE value and returns the updated ProfileStoreAscendingIDsParams.
+func (m *ProfileStoreAscendingIDsParams) SetDateGTE(v *int64) {
+	m.DateGTE = v
+}
+
+// GetDateGT returns the DateGT value.
+func (m ProfileStoreAscendingIDsParams) GetDateGT() *int64 {
+	return m.DateGT
+}
+
+// SetDateGT sets the DateGT value and returns the updated ProfileStoreAscendingIDsParams.
+func (m *ProfileStoreAscendingIDsParams) SetDateGT(v *int64) {
+	m.DateGT = v
+}
+
+// GetDateEQ returns the DateEQ value.
+func (m ProfileStoreAscendingIDsParams) GetDateEQ() *int64 {
+	return m.DateEQ
+}
+
+// SetDateEQ sets the DateEQ value and returns the updated ProfileStoreAscendingIDsParams.
+func (m *ProfileStoreAscendingIDsParams) SetDateEQ(v *int64) {
+	m.DateEQ = v
+}
+
+// GetDateLTE returns the DateLTE value.
+func (m ProfileStoreAscendingIDsParams) GetDateLTE() *int64 {
+	return m.DateLTE
+}
+
+// SetDateLTE sets the DateLTE value and returns the updated ProfileStoreAscendingIDsParams.
+func (m *ProfileStoreAscendingIDsParams) SetDateLTE(v *int64) {
+	m.DateLTE = v
+}
+
+// GetDateLT returns the DateLT value.
+func (m ProfileStoreAscendingIDsParams) GetDateLT() *int64 {
+	return m.DateLT
+}
+
+// SetDateLT sets the DateLT value and returns the updated ProfileStoreAscendingIDsParams.
+func (m *ProfileStoreAscendingIDsParams) SetDateLT(v *int64) {
+	m.DateLT = v
+}
+
+// GetSkip returns the Skip value.
+func (m ProfileStoreAscendingIDsParams) GetSkip() int64 {
+	return m.Skip
+}
+
+// SetSkip sets the Skip value and returns the updated ProfileStoreAscendingIDsParams.
+func (m *ProfileStoreAscendingIDsParams) SetSkip(v int64) {
+	m.Skip = v
+}
+
+// GetLimit returns the Limit value.
+func (m ProfileStoreAscendingIDsParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated ProfileStoreAscendingIDsParams.
+func (m *ProfileStoreAscendingIDsParams) SetLimit(v int64) {
+	m.Limit = v
 }
 
 // GetSince returns the Since value.

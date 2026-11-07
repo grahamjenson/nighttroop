@@ -404,6 +404,55 @@ func (q *Queries) HardDeleteProfileStore(ctx context.Context, arg HardDeleteProf
 	return q.exec(ctx, q.hardDeleteProfileStoreStmt, hardDeleteProfileStore, arg.ProfileStoreID)
 }
 
+const profileStoreAscendingIDs = `-- name: ProfileStoreAscendingIDs :many
+SELECT profile_store_id FROM profile_presets
+WHERE occurred_at BETWEEN MAX(COALESCE(CAST(?1 AS INTEGER), 0), COALESCE(CAST(?2 AS INTEGER) + 1, 0), COALESCE(CAST(?3 AS INTEGER), 0))
+    AND MIN(COALESCE(CAST(?4 AS INTEGER), 253402300799999), COALESCE(CAST(?5 AS INTEGER) - 1, 253402300799999), COALESCE(?3, 253402300799999))
+GROUP BY profile_store_id ORDER BY MIN(occurred_at) LIMIT CAST(?7 AS INTEGER) OFFSET CAST(?6 AS INTEGER)
+`
+
+type ProfileStoreAscendingIDsParams struct {
+	DateGTE *int64
+	DateGT  *int64
+	DateEQ  *int64
+	DateLTE *int64
+	DateLT  *int64
+	Skip    int64
+	Limit   int64
+}
+
+// The stores in the dates searched, the oldest first, from occurred_at's index, for a search sorted by date
+func (q *Queries) ProfileStoreAscendingIDs(ctx context.Context, arg ProfileStoreAscendingIDsParams) ([]string, error) {
+	rows, err := q.query(ctx, q.profileStoreAscendingIDsStmt, profileStoreAscendingIDs,
+		arg.DateGTE,
+		arg.DateGT,
+		arg.DateEQ,
+		arg.DateLTE,
+		arg.DateLT,
+		arg.Skip,
+		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var profile_store_id string
+		if err := rows.Scan(&profile_store_id); err != nil {
+			return nil, err
+		}
+		items = append(items, profile_store_id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const profileStoreHistoryIDs = `-- name: ProfileStoreHistoryIDs :many
 SELECT profile_store_id FROM profile_presets WHERE updated_at >= ?1
 GROUP BY profile_store_id ORDER BY MAX(updated_at), MIN(occurred_at), profile_store_id LIMIT CAST(?2 AS INTEGER)

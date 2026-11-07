@@ -89,9 +89,9 @@
        the temp basal in NSStatus (`nsv2/assistants.go`)
     1. P4: The Nightscout API gives glucose only in mg/dL, so the `units_mmol_label` setting no longer changes what it
        writes. Drop it from the settings, the `sites` and `site_identities` columns and their queries
-    1. P1: Honour an ascending `sort` in searches, as Nightscout does. Searches are always newest first, so AAPS's
-       first load (`sort=date&date$gt=…&limit=500`, back 100 days) skips all but the newest 500 when there are more.
-       Not with a `CASE` in each search's `ORDER BY`, which would stop SQLite reading the newest rows from the index
+    1. P4: A search sorted by date with a filter other than the date picks its page by the dates alone, then filters
+       it, so a page can be short, and empty when none of it matches although later ones do. No app sends such a
+       search yet; filtering in the oldest first query would need each search's filters there too
     1. P2: Keep the fields AAPS's followers need: an effective profile switch's `original*` fields (else it is read
        as a Note), a running mode's `mode`, `autoForced`, `reasons` and `originalDuration`, a temp basal's `type`
        (e.g. `PUMP_SUSPEND`), and a calibration's `isCalibration` and `sensorMgdlAtPairing`

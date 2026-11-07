@@ -172,3 +172,29 @@ func TestOrBranches(t *testing.T) {
 	plain := url.Values{"find[id][$eq]": {"a"}}
 	assert.Equal(t, []url.Values{plain}, OrBranches(plain))
 }
+
+// A search sorted by date reads each document found by its key only when nothing but the date is filtered on
+func TestQuery_DatesOnly(t *testing.T) {
+	tests := []struct {
+		query string
+		want  bool
+	}{
+		{"", true},
+		{"sort=date&limit=500", true},
+		{"sort=date&date$gt=1778970005948&limit=500&skip=10&fields=date,sgv", true},
+		{"sort=created_at&created_at$gt=2026-05-16T22:20:07.238Z&created_at$lte=2026-05-17T22:20:07.238Z", true},
+		{"sort=date&date$gt=1778970005948&type=sgv", false},
+		{"sort=date&identifier=abc", false},
+		{"sort=date&srvCreated$gt=1778970005948", false},
+		{"sort=date&eventType=Note", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.query, func(t *testing.T) {
+			values, err := url.ParseQuery(tt.query)
+			require.NoError(t, err)
+			qv, err := ParseQueryValues(values)
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, QueryValueToQuery(qv).DatesOnly())
+		})
+	}
+}

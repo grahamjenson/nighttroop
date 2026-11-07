@@ -1,0 +1,120 @@
+INCLUDE steps/new_ns_site.steps
+
+// AAPS's first load pages forward by date, from 100 days back (NSClientV3Plugin.kt:185,232): `sort=date&date$gt=` for
+// entries and `sort=created_at&created_at$gt=` for treatments, each with limit 500, then again from the newest date it
+// got, until a page is empty. A search sorted so is the oldest first, so every page follows on from the last, here
+// with a limit of 2. See docs/clients/aaps.md
+
+////////
+// ENTRIES
+////////
+
+// Made newest date first, so neither the order made nor srvModified's is the date's
+NAME add_newest_sgv
+POST http://{{ site }}/api/v3/entries
+H Authorization: Bearer {{ jwt }}
+B { "type": "sgv", "sgv": 120, "date": {{ itime 10 }}, "device": "Dexcom G7", "app": "AAPS" }
+ASSERT_STATUS 201
+
+NAME add_middle_sgv
+POST http://{{ site }}/api/v3/entries
+H Authorization: Bearer {{ jwt }}
+B { "type": "sgv", "sgv": 110, "date": {{ itime 20 }}, "device": "Dexcom G7", "app": "AAPS" }
+ASSERT_STATUS 201
+
+NAME add_calibration
+POST http://{{ site }}/api/v3/entries
+H Authorization: Bearer {{ jwt }}
+B { "type": "mbg", "mbg": 105, "date": {{ itime 25 }}, "device": "Dexcom G7", "app": "AAPS" }
+ASSERT_STATUS 201
+
+NAME add_oldest_sgv
+POST http://{{ site }}/api/v3/entries
+H Authorization: Bearer {{ jwt }}
+B { "type": "sgv", "sgv": 100, "date": {{ itime 30 }}, "device": "Dexcom G7", "app": "AAPS" }
+ASSERT_STATUS 201
+
+NAME entries_first_page
+GET http://{{ site }}/api/v3/entries?sort=date&date$gt={{ itime 60 }}&limit=2
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result"
+ASSERT_EQUALS ".add_oldest_sgv.identifier" "@result.0.identifier"
+ASSERT_EQUALS ".add_calibration.identifier" "@result.1.identifier"
+
+NAME entries_second_page
+GET http://{{ site }}/api/v3/entries?sort=date&date$gt={{ dig "entries_first_page.result.1.date" }}&limit=2
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result"
+ASSERT_EQUALS ".add_middle_sgv.identifier" "@result.0.identifier"
+ASSERT_EQUALS ".add_newest_sgv.identifier" "@result.1.identifier"
+
+NAME entries_last_page
+GET http://{{ site }}/api/v3/entries?sort=date&date$gt={{ dig "entries_second_page.result.1.date" }}&limit=2
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
+
+// With a filter other than the date, the page is the oldest that match of the page the dates alone would have, so it
+// can be short: here the calibration is the second of the oldest 2, so only the oldest reading comes. Still in order,
+// so paging from it goes on to the rest
+NAME sgvs_first_page
+GET http://{{ site }}/api/v3/entries?sort=date&date$gt={{ itime 60 }}&type=sgv&limit=2
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS ".add_oldest_sgv.identifier" "@result.0.identifier"
+
+NAME sgvs_second_page
+GET http://{{ site }}/api/v3/entries?sort=date&date$gt={{ dig "sgvs_first_page.result.0.date" }}&type=sgv&limit=2
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS ".add_middle_sgv.identifier" "@result.0.identifier"
+
+// Sorted newest first, as other apps ask, it is as before
+NAME entries_newest_first
+GET http://{{ site }}/api/v3/entries?sort$desc=date&limit=2
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result"
+ASSERT_EQUALS ".add_newest_sgv.identifier" "@result.0.identifier"
+ASSERT_EQUALS ".add_middle_sgv.identifier" "@result.1.identifier"
+
+////////
+// TREATMENTS
+////////
+
+NAME add_newest_carbs
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B { "eventType": "Carb Correction", "carbs": 30, "created_at": "{{ time 10 }}", "app": "AAPS" }
+ASSERT_STATUS 201
+
+NAME add_middle_carbs
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B { "eventType": "Carb Correction", "carbs": 20, "created_at": "{{ time 20 }}", "app": "AAPS" }
+ASSERT_STATUS 201
+
+NAME add_oldest_carbs
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B { "eventType": "Carb Correction", "carbs": 10, "created_at": "{{ time 30 }}", "app": "AAPS" }
+ASSERT_STATUS 201
+
+NAME treatments_first_page
+GET http://{{ site }}/api/v3/treatments?sort=created_at&created_at$gt={{ time 60 }}&limit=2
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result"
+ASSERT_EQUALS 10 "@result.0.carbs"
+ASSERT_EQUALS 20 "@result.1.carbs"
+
+NAME treatments_last_page
+GET http://{{ site }}/api/v3/treatments?sort=created_at&created_at$gt={{ dig "treatments_first_page.result.1.created_at" }}&limit=2
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS 30 "@result.0.carbs"

@@ -67,6 +67,10 @@ func (c ActivityCollection) UpdateModel(q *sitedb.Queries, ctx context.Context, 
 	return q.UpdateActivity(ctx, updateParams)
 }
 
+func (c ActivityCollection) AscendingIDs(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]string, error) {
+	return q.ActivityAscendingIDs(ctx, nsquery.ActivityAscending(query))
+}
+
 func (c ActivityCollection) HistoryIDs(q *sitedb.Queries, ctx context.Context, since, limit int64) ([]string, error) {
 	return q.ActivityHistoryIDs(ctx, sitedb.ActivityHistoryIDsParams{Since: since, Limit: limit})
 }

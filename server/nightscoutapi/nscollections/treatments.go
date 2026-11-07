@@ -196,6 +196,10 @@ func (c TreatmentCollection) DeleteType(q *sitedb.Queries, ctx context.Context, 
 	return nsutils.SQLResultCustomResult{LastInsertIdInt: 0, RowsAffectedInt: int64(len(eventGroups)), Err: nil}, nil
 }
 
+func (c TreatmentCollection) AscendingIDs(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]string, error) {
+	return q.EventGroupAscendingIDs(ctx, nsquery.EventGroupAscending(query))
+}
+
 func (c TreatmentCollection) HistoryIDs(q *sitedb.Queries, ctx context.Context, since, limit int64) ([]string, error) {
 	return q.EventGroupHistoryIDs(ctx, sitedb.EventGroupHistoryIDsParams{Since: since, Limit: limit})
 }
