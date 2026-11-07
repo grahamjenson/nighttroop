@@ -271,8 +271,8 @@
       });
     }
     
-    // Toggle this item
-    item.setAttribute('data-tui-selectbox-selected', (!isSelected).toString());
+    // Toggle this item; picking a single select's item again keeps it, rather than leaving nothing picked
+    item.setAttribute('data-tui-selectbox-selected', (!isMultiple || !isSelected).toString());
     
     // Update display
     updateDisplayValue(trigger);
