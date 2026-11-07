@@ -1132,13 +1132,17 @@ func PartialTreatmentToTempBasal(source Treatment) sitedb.TempBasal {
 		sitedbTempBasal.Rate = FlexibleFloat64ToFloat64(*source.Rate)
 	}
 	sitedbTempBasal.Multiplier = PercentToMultiplier(source.TempBasalPercent)
+	if source.Type != nil {
+		xstring := ShortStringToString(*source.Type)
+		sitedbTempBasal.Type = &xstring
+	}
 	if source.Notes != nil {
-		xstring := SanitizedStringToString(*source.Notes)
-		sitedbTempBasal.Notes = &xstring
+		xstring2 := SanitizedStringToString(*source.Notes)
+		sitedbTempBasal.Notes = &xstring2
 	}
 	if source.Reason != nil {
-		xstring2 := ShortStringToString(*source.Reason)
-		sitedbTempBasal.Reason = &xstring2
+		xstring3 := ShortStringToString(*source.Reason)
+		sitedbTempBasal.Reason = &xstring3
 	}
 	pString := source.RawJsonData
 	sitedbTempBasal.RawJsonData = &pString
@@ -1148,12 +1152,12 @@ func PartialTreatmentToTempBasal(source Treatment) sitedb.TempBasal {
 	}
 	sitedbTempBasal.OccurredAt = OrNow(source.Date)
 	if source.App != nil {
-		xstring3 := ShortStringToString(*source.App)
-		sitedbTempBasal.CreatedByAppName = &xstring3
+		xstring4 := ShortStringToString(*source.App)
+		sitedbTempBasal.CreatedByAppName = &xstring4
 	}
 	if source.Device != nil {
-		xstring4 := ShortStringToString(*source.Device)
-		sitedbTempBasal.CreatedByDeviceName = &xstring4
+		xstring5 := ShortStringToString(*source.Device)
+		sitedbTempBasal.CreatedByDeviceName = &xstring5
 	}
 	return sitedbTempBasal
 }
@@ -1377,13 +1381,17 @@ func TempBasalCreate(source sitedb.TempBasal, context ConverterContext) sitedb.C
 		xfloat64 := *source.Multiplier
 		sitedbCreateTempBasalParams.Multiplier = &xfloat64
 	}
+	if source.Type != nil {
+		xstring := *source.Type
+		sitedbCreateTempBasalParams.Type = &xstring
+	}
 	if source.Notes != nil {
-		xstring := *source.Notes
-		sitedbCreateTempBasalParams.Notes = &xstring
+		xstring2 := *source.Notes
+		sitedbCreateTempBasalParams.Notes = &xstring2
 	}
 	if source.Reason != nil {
-		xstring2 := *source.Reason
-		sitedbCreateTempBasalParams.Reason = &xstring2
+		xstring3 := *source.Reason
+		sitedbCreateTempBasalParams.Reason = &xstring3
 	}
 	if source.UtcOffsetMinutes != nil {
 		xint64 := *source.UtcOffsetMinutes
@@ -1391,16 +1399,16 @@ func TempBasalCreate(source sitedb.TempBasal, context ConverterContext) sitedb.C
 	}
 	sitedbCreateTempBasalParams.OccurredAt = source.OccurredAt
 	if source.RawJsonData != nil {
-		xstring3 := *source.RawJsonData
-		sitedbCreateTempBasalParams.RawJsonData = &xstring3
+		xstring4 := *source.RawJsonData
+		sitedbCreateTempBasalParams.RawJsonData = &xstring4
 	}
 	if source.CreatedByAppName != nil {
-		xstring4 := *source.CreatedByAppName
-		sitedbCreateTempBasalParams.CreatedByAppName = &xstring4
+		xstring5 := *source.CreatedByAppName
+		sitedbCreateTempBasalParams.CreatedByAppName = &xstring5
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring5 := *source.CreatedByDeviceName
-		sitedbCreateTempBasalParams.CreatedByDeviceName = &xstring5
+		xstring6 := *source.CreatedByDeviceName
+		sitedbCreateTempBasalParams.CreatedByDeviceName = &xstring6
 	}
 	sitedbCreateTempBasalParams.CreatedByIdentityName = AssignCreatedByName(context)
 	sitedbCreateTempBasalParams.CreatedByIdentityID = AssignCreatedByID(context)
@@ -1416,17 +1424,21 @@ func TempBasalUpdate(source sitedb.TempBasal, context ConverterContext) sitedb.U
 		xfloat64 := *source.Multiplier
 		sitedbUpdateTempBasalParams.Multiplier = &xfloat64
 	}
+	if source.Type != nil {
+		xstring := *source.Type
+		sitedbUpdateTempBasalParams.Type = &xstring
+	}
 	if source.Notes != nil {
-		xstring := *source.Notes
-		sitedbUpdateTempBasalParams.Notes = &xstring
+		xstring2 := *source.Notes
+		sitedbUpdateTempBasalParams.Notes = &xstring2
 	}
 	if source.Reason != nil {
-		xstring2 := *source.Reason
-		sitedbUpdateTempBasalParams.Reason = &xstring2
+		xstring3 := *source.Reason
+		sitedbUpdateTempBasalParams.Reason = &xstring3
 	}
 	if source.RawJsonData != nil {
-		xstring3 := *source.RawJsonData
-		sitedbUpdateTempBasalParams.RawJsonData = &xstring3
+		xstring4 := *source.RawJsonData
+		sitedbUpdateTempBasalParams.RawJsonData = &xstring4
 	}
 	sitedbUpdateTempBasalParams.UpdatedByIdentityID = AssignUpdatedByID(context)
 	sitedbUpdateTempBasalParams.UpdatedByIdentityName = AssignUpdatedByName(context)
@@ -1824,6 +1836,10 @@ func UpdateProfileSwitchToTreatment(source *sitedb.ProfileSwitch, context *httpu
 }
 func UpdateTempBasalToTreatment(source *sitedb.TempBasal, target *Treatment) {
 	if source != nil {
+		if source.Type != nil {
+			typesShortString := types.ShortString(*source.Type)
+			target.Type = &typesShortString
+		}
 		pTypesFlexibleInt64 := types.FlexibleInt64(source.DurationMinutes)
 		target.DurationMinutes = &pTypesFlexibleInt64
 		target.DurationInMilliseconds = MinutesToMilliseconds(source.DurationMinutes)
@@ -1837,8 +1853,8 @@ func UpdateTempBasalToTreatment(source *sitedb.TempBasal, target *Treatment) {
 			target.Notes = &typesSanitizedString
 		}
 		if source.Reason != nil {
-			typesShortString := types.ShortString(*source.Reason)
-			target.Reason = &typesShortString
+			typesShortString2 := types.ShortString(*source.Reason)
+			target.Reason = &typesShortString2
 		}
 		if source.UtcOffsetMinutes != nil {
 			typesFlexibleInt64 := types.FlexibleInt64(*source.UtcOffsetMinutes)
@@ -2535,17 +2551,21 @@ func UpdateToTempBasal(source *sitedb.TempBasal, target *sitedb.TempBasal) {
 			xfloat64 := *source.Multiplier
 			target.Multiplier = &xfloat64
 		}
+		if source.Type != nil {
+			xstring := *source.Type
+			target.Type = &xstring
+		}
 		if source.Notes != nil {
-			xstring := *source.Notes
-			target.Notes = &xstring
+			xstring2 := *source.Notes
+			target.Notes = &xstring2
 		}
 		if source.Reason != nil {
-			xstring2 := *source.Reason
-			target.Reason = &xstring2
+			xstring3 := *source.Reason
+			target.Reason = &xstring3
 		}
 		if source.RawJsonData != nil {
-			xstring3 := *source.RawJsonData
-			target.RawJsonData = &xstring3
+			xstring4 := *source.RawJsonData
+			target.RawJsonData = &xstring4
 		}
 		if source.DeletedAt != nil {
 			xint64 := *source.DeletedAt
@@ -2559,20 +2579,20 @@ func UpdateToTempBasal(source *sitedb.TempBasal, target *sitedb.TempBasal) {
 		target.CreatedAt = source.CreatedAt
 		target.UpdatedAt = source.UpdatedAt
 		if source.CreatedByAppName != nil {
-			xstring4 := *source.CreatedByAppName
-			target.CreatedByAppName = &xstring4
+			xstring5 := *source.CreatedByAppName
+			target.CreatedByAppName = &xstring5
 		}
 		if source.CreatedByDeviceName != nil {
-			xstring5 := *source.CreatedByDeviceName
-			target.CreatedByDeviceName = &xstring5
+			xstring6 := *source.CreatedByDeviceName
+			target.CreatedByDeviceName = &xstring6
 		}
 		if source.UpdatedByIdentityID != nil {
 			xint643 := *source.UpdatedByIdentityID
 			target.UpdatedByIdentityID = &xint643
 		}
 		if source.UpdatedByIdentityName != nil {
-			xstring6 := *source.UpdatedByIdentityName
-			target.UpdatedByIdentityName = &xstring6
+			xstring7 := *source.UpdatedByIdentityName
+			target.UpdatedByIdentityName = &xstring7
 		}
 		if source.CreatedByIdentityID != nil {
 			xint644 := *source.CreatedByIdentityID

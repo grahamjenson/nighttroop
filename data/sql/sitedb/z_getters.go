@@ -4636,6 +4636,16 @@ func (m *TempBasal) SetMultiplier(v *float64) {
 	m.Multiplier = v
 }
 
+// GetType returns the Type value.
+func (m TempBasal) GetType() *string {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated TempBasal.
+func (m *TempBasal) SetType(v *string) {
+	m.Type = v
+}
+
 // GetNotes returns the Notes value.
 func (m TempBasal) GetNotes() *string {
 	return m.Notes
@@ -4814,6 +4824,16 @@ func (m TempBasalsVw) GetMultiplier() *float64 {
 // SetMultiplier sets the Multiplier value and returns the updated TempBasalsVw.
 func (m *TempBasalsVw) SetMultiplier(v *float64) {
 	m.Multiplier = v
+}
+
+// GetType returns the Type value.
+func (m TempBasalsVw) GetType() *string {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated TempBasalsVw.
+func (m *TempBasalsVw) SetType(v *string) {
+	m.Type = v
 }
 
 // GetNotes returns the Notes value.
@@ -12536,6 +12556,16 @@ func (m *CreateTempBasalParams) SetMultiplier(v *float64) {
 	m.Multiplier = v
 }
 
+// GetType returns the Type value.
+func (m CreateTempBasalParams) GetType() *string {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated CreateTempBasalParams.
+func (m *CreateTempBasalParams) SetType(v *string) {
+	m.Type = v
+}
+
 // GetNotes returns the Notes value.
 func (m CreateTempBasalParams) GetNotes() *string {
 	return m.Notes
@@ -12954,6 +12984,16 @@ func (m UpdateTempBasalParams) GetMultiplier() *float64 {
 // SetMultiplier sets the Multiplier value and returns the updated UpdateTempBasalParams.
 func (m *UpdateTempBasalParams) SetMultiplier(v *float64) {
 	m.Multiplier = v
+}
+
+// GetType returns the Type value.
+func (m UpdateTempBasalParams) GetType() *string {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated UpdateTempBasalParams.
+func (m *UpdateTempBasalParams) SetType(v *string) {
+	m.Type = v
 }
 
 // GetNotes returns the Notes value.
