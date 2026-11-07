@@ -2,64 +2,43 @@ package httputils
 
 import (
 	"context"
-	"net"
 	"net/http"
 	"net/netip"
 	"os"
-	"slices"
-	"strings"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
-const ipAddressKey = "ip_address"
-
-// SetIPInHTTPContext is the client's IP, from X-Forwarded-For only when the request came through a trusted proxy
-func SetIPInHTTPContext(ctx context.Context, r *http.Request, trustedProxies []netip.Prefix) (context.Context, string) {
-	ip := getIPAddressFromRequest(r, trustedProxies)
-	return context.WithValue(ctx, ipAddressKey, ip), ip
+// ClientIP sets each request's client IP, which GetIPFromHTTPContext reads, with chi's middlewares: the TCP peer;
+// from a trusted proxy, the X-Forwarded-For hop before the trusted ones; and on Fly.io its Fly-Client-IP header
+func ClientIP(trustedProxies []netip.Prefix) func(http.Handler) http.Handler {
+	chain := chi.Chain(middleware.ClientIPFromRemoteAddr)
+	if len(trustedProxies) > 0 {
+		prefixes := make([]string, len(trustedProxies))
+		for i, prefix := range trustedProxies {
+			prefixes[i] = prefix.String()
+		}
+		chain = append(chain, middleware.ClientIPFromXFF(prefixes...))
+	}
+	if os.Getenv("FLY_APP_NAME") != "" {
+		chain = append(chain, middleware.ClientIPFromHeader("Fly-Client-IP"))
+	}
+	return chain.Handler
 }
 
+// GetIPFromHTTPContext is the client IP ClientIP set, or empty without one
 func GetIPFromHTTPContext(ctx context.Context) string {
 	if ctx == nil {
 		return ""
 	}
-	if ip, ok := ctx.Value(ipAddressKey).(string); ok {
-		return ip
-	}
-	return ""
+	return middleware.GetClientIP(ctx)
 }
 
-func getIPAddressFromRequest(r *http.Request, trustedProxies []netip.Prefix) string {
-	host, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err != nil {
-		host = r.RemoteAddr
-	}
-
-	// If we are deployed on Fly.io then use the Fly-Client-IP header
-	if os.Getenv("FLY_APP_NAME") != "" {
-		if ip := strings.TrimSpace(r.Header.Get("Fly-Client-IP")); ip != "" {
-			return ip
-		}
-	}
-
-	// If it is a trusted proxy then we can accept the X-Forwarded For
-	if isTrustedProxy(host, trustedProxies) {
-		// Check X-Forwarded-For header first (in case of reverse proxy)
-		xForwardedFor := r.Header.Get("X-Forwarded-For")
-		if xForwardedFor != "" {
-			// Use the last IP, the one our proxy appended; earlier ones can be set by the client
-			ips := strings.Split(xForwardedFor, ",")
-			return strings.TrimSpace(ips[len(ips)-1])
-		}
-	}
-
-	return host
-}
-
-func isTrustedProxy(host string, trustedProxies []netip.Prefix) bool {
-	addr, err := netip.ParseAddr(host)
-	if err != nil {
-		return false
-	}
-	addr = addr.Unmap()
-	return slices.ContainsFunc(trustedProxies, func(p netip.Prefix) bool { return p.Contains(addr) })
+// WithClientIP is the request's context with its TCP peer as its client IP, as ClientIP sets it with no proxies, for a
+// request a handler is given without the main router, as in a test
+func WithClientIP(r *http.Request) context.Context {
+	ctx := r.Context()
+	ClientIP(nil)(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) { ctx = r.Context() })).ServeHTTP(nil, r)
+	return ctx
 }
