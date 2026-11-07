@@ -6,18 +6,10 @@ INSERT INTO food_presets (
     id,
     name,
     food_type,
-    category,
-    subcategory,
 
-    
     absorption_time_minutes,
-    pre_bolus,
-    portions,
     carbs,
-    fat,
-    protein,
-    fibre,
-    energy,
+    other_attributes,
 
     raw_json_data,
     created_by_app_name,
@@ -25,7 +17,7 @@ INSERT INTO food_presets (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -104,17 +96,15 @@ LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER
 UPDATE food_presets SET
     name = COALESCE(sqlc.narg('Name'), name),
     food_type = COALESCE(sqlc.narg('FoodType'), food_type),
-    category = COALESCE(sqlc.narg('Category'), category),
-    subcategory = COALESCE(sqlc.narg('Subcategory'), subcategory),
 
     absorption_time_minutes = COALESCE(sqlc.narg('AbsorptionTimeMinutes'), absorption_time_minutes),
-    pre_bolus = COALESCE(sqlc.narg('PreBolus'), pre_bolus),
-    portions = COALESCE(sqlc.narg('Portions'), portions),
     carbs = COALESCE(sqlc.narg('Carbs'), carbs),
-    fat = COALESCE(sqlc.narg('Fat'), fat),
-    protein = COALESCE(sqlc.narg('Protein'), protein),
-    fibre = COALESCE(sqlc.narg('Fibre'), fibre),
-    energy = COALESCE(sqlc.narg('Energy'), energy),
+    -- The fields sent, as JSON (types.OtherJSON), are merged into those kept, so one not sent stays as it is, as a
+    -- column of its own would
+    other_attributes = NULLIF(json_patch(
+        COALESCE(other_attributes, '{}'),
+        COALESCE(CAST(sqlc.narg('OtherAttributes') AS TEXT), '{}')
+    ), '{}'),
 
     raw_json_data = json_patch(
         COALESCE(raw_json_data, '{}'),

@@ -87,6 +87,14 @@ type DBModelConverter interface {
 	// goverter:ignore Unit GI HideAfterUse Hidden Position
 	// goverter:map CreatedAt Date
 	// goverter:map . Type | FoodDocumentType
+	// goverter:map OtherAttributes.Category Category
+	// goverter:map OtherAttributes.Subcategory Subcategory
+	// goverter:map OtherAttributes.Fat Fat
+	// goverter:map OtherAttributes.Protein Protein
+	// goverter:map OtherAttributes.Fibre Fibre
+	// goverter:map OtherAttributes.Energy Energy
+	// goverter:map OtherAttributes.Portions Portions
+	// goverter:map OtherAttributes.PreBolus PreBolus
 	DBModelToFood(source *sitedb.FoodPreset, siteContext *httputils.SiteContext) Food
 
 	///////

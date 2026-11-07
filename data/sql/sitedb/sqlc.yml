@@ -118,3 +118,9 @@ overrides:
           import: "nighttroop.t1d.nz/utils/consts"
           type: "Units"
           pointer: true
+
+      # other attributes
+      - column: "food_presets.other_attributes"
+        go_type:
+          import: "nighttroop.t1d.nz/data/types"
+          type: "FoodPresetOther"

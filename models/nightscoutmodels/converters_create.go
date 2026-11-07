@@ -69,6 +69,7 @@ type CreateMapConverter interface {
 	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	// goverter:map CreatedByIdentityID | AssignCreatedByID
+	// goverter:map . OtherAttributes | FoodOther
 	//
 	FoodToCreate(source Food, ctx ConverterContext) sitedb.CreateFoodPresetParams
 

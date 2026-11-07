@@ -177,44 +177,44 @@ func DBModelToFood(source *sitedb.FoodPreset, context *httputils.SiteContext) Fo
 			typesShortString := types.ShortString(*(*source).FoodType)
 			nightscoutmodelsFood.FoodType = &typesShortString
 		}
-		if (*source).Category != nil {
-			typesShortString2 := types.ShortString(*(*source).Category)
+		if (*source).OtherAttributes.Category != nil {
+			typesShortString2 := types.ShortString(*(*source).OtherAttributes.Category)
 			nightscoutmodelsFood.Category = &typesShortString2
 		}
-		if (*source).Subcategory != nil {
-			typesShortString3 := types.ShortString(*(*source).Subcategory)
+		if (*source).OtherAttributes.Subcategory != nil {
+			typesShortString3 := types.ShortString(*(*source).OtherAttributes.Subcategory)
 			nightscoutmodelsFood.Subcategory = &typesShortString3
 		}
 		if (*source).AbsorptionTimeMinutes != nil {
 			typesFlexibleInt64 := types.FlexibleInt64(*(*source).AbsorptionTimeMinutes)
 			nightscoutmodelsFood.AbsorptionTimeMinutes = &typesFlexibleInt64
 		}
-		if (*source).PreBolus != nil {
-			typesFlexibleFloat64 := types.FlexibleFloat64(*(*source).PreBolus)
+		if (*source).OtherAttributes.PreBolus != nil {
+			typesFlexibleFloat64 := types.FlexibleFloat64(*(*source).OtherAttributes.PreBolus)
 			nightscoutmodelsFood.PreBolus = &typesFlexibleFloat64
 		}
 		if (*source).Carbs != nil {
 			typesFlexibleFloat642 := types.FlexibleFloat64(*(*source).Carbs)
 			nightscoutmodelsFood.Carbs = &typesFlexibleFloat642
 		}
-		if (*source).Fat != nil {
-			typesFlexibleFloat643 := types.FlexibleFloat64(*(*source).Fat)
+		if (*source).OtherAttributes.Fat != nil {
+			typesFlexibleFloat643 := types.FlexibleFloat64(*(*source).OtherAttributes.Fat)
 			nightscoutmodelsFood.Fat = &typesFlexibleFloat643
 		}
-		if (*source).Protein != nil {
-			typesFlexibleFloat644 := types.FlexibleFloat64(*(*source).Protein)
+		if (*source).OtherAttributes.Protein != nil {
+			typesFlexibleFloat644 := types.FlexibleFloat64(*(*source).OtherAttributes.Protein)
 			nightscoutmodelsFood.Protein = &typesFlexibleFloat644
 		}
-		if (*source).Fibre != nil {
-			typesFlexibleFloat645 := types.FlexibleFloat64(*(*source).Fibre)
+		if (*source).OtherAttributes.Fibre != nil {
+			typesFlexibleFloat645 := types.FlexibleFloat64(*(*source).OtherAttributes.Fibre)
 			nightscoutmodelsFood.Fibre = &typesFlexibleFloat645
 		}
-		if (*source).Energy != nil {
-			typesFlexibleFloat646 := types.FlexibleFloat64(*(*source).Energy)
+		if (*source).OtherAttributes.Energy != nil {
+			typesFlexibleFloat646 := types.FlexibleFloat64(*(*source).OtherAttributes.Energy)
 			nightscoutmodelsFood.Energy = &typesFlexibleFloat646
 		}
-		if (*source).Portions != nil {
-			typesFlexibleFloat647 := types.FlexibleFloat64(*(*source).Portions)
+		if (*source).OtherAttributes.Portions != nil {
+			typesFlexibleFloat647 := types.FlexibleFloat64(*(*source).OtherAttributes.Portions)
 			nightscoutmodelsFood.Portions = &typesFlexibleFloat647
 		}
 		if (*source).CreatedByDeviceName != nil {

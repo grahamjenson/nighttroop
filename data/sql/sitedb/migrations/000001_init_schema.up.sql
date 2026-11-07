@@ -469,18 +469,23 @@ CREATE TABLE food_presets (
     name TEXT NOT NULL CHECK(length(name) <= 64),
 
     food_type TEXT CHECK(length(food_type) <= 32),     
-    category TEXT CHECK(length(category) <= 64),
-    subcategory TEXT CHECK(length(subcategory) <= 64),
 
     absorption_time_minutes INTEGER CHECK(absorption_time_minutes BETWEEN 0 AND 1440),
-    pre_bolus REAL CHECK(pre_bolus BETWEEN -1440 AND 1440), -- minutes
 
     carbs REAL CHECK(carbs BETWEEN -1000 AND 1000), -- grams, negative takes back too much
-    fat REAL CHECK(fat BETWEEN -1000 AND 1000),
-    protein REAL CHECK(protein BETWEEN -1000 AND 1000),
-    fibre REAL CHECK(fibre BETWEEN -1000 AND 1000),
-    energy REAL CHECK(energy BETWEEN -20000 AND 20000), -- kcal or kJ
-    portions REAL CHECK(portions BETWEEN -1000 AND 1000),
+
+    -- What only some apps send, a JSON object (types.FoodPresetOther) NULL for most foods: Nightscout's food fields,
+    -- its category and subcategory, the grams of fat, protein and fibre, the energy (kcal or kJ), the portions, and
+    -- the minutes bolused before eating (pre_bolus). A field that is not there passes its check.
+    other_attributes TEXT CHECK(length(other_attributes) <= 1024 AND json_valid(other_attributes)
+        AND length(json_extract(other_attributes, '$.category')) <= 64
+        AND length(json_extract(other_attributes, '$.subcategory')) <= 64
+        AND json_extract(other_attributes, '$.fat') BETWEEN -1000 AND 1000
+        AND json_extract(other_attributes, '$.protein') BETWEEN -1000 AND 1000
+        AND json_extract(other_attributes, '$.fibre') BETWEEN -1000 AND 1000
+        AND json_extract(other_attributes, '$.energy') BETWEEN -20000 AND 20000
+        AND json_extract(other_attributes, '$.portions') BETWEEN -1000 AND 1000
+        AND json_extract(other_attributes, '$.pre_bolus') BETWEEN -1440 AND 1440),
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly
