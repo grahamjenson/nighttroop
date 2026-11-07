@@ -669,6 +669,8 @@ focus back to the row or button that opened it.
 - An admin can turn an identity off and on, or delete it; an identity cannot lock itself out.
 - An admin can change another identity's own settings and alarms from its row, such as a device's units, which its
   Nightscout status gives followers to show glucose in.
+- Another identity's glucose settings are labelled, shown, followed from the site's and typed in its own units, or the
+  site's when it has none, not the admin's.
 - Each identity lists the clients (browsers and apps) that have used it, and is marked shared when several have.
 - Identity creation is rate limited, as each hashes a password.
 

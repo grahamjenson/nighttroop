@@ -42,6 +42,16 @@ H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_EQUALS "mg/dl" "@settings.units"
 
+// Its glucose settings are now shown and typed in its own units, mg/dL, not the admin's mmol/L
+NAME set_phone_range_low
+POST http://{{ site }}/settings/identity-settings/{{ .pwd_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"range_low": "80"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "80" "@result.range_low"
+ASSERT_EQUALS "180" "@result.inherited.range_high"
+
 // The admin's own settings and the site's are unchanged
 NAME admin_settings_unchanged
 GET http://{{ site }}/settings/identity
