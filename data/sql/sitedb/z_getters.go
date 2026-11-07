@@ -407,54 +407,14 @@ func (m *ComponentEvent) SetEventType(v string) {
 	m.EventType = v
 }
 
-// GetSensorCode returns the SensorCode value.
-func (m ComponentEvent) GetSensorCode() *string {
-	return m.SensorCode
+// GetOtherAttributes returns the OtherAttributes value.
+func (m ComponentEvent) GetOtherAttributes() types.ComponentEventOther {
+	return m.OtherAttributes
 }
 
-// SetSensorCode sets the SensorCode value and returns the updated ComponentEvent.
-func (m *ComponentEvent) SetSensorCode(v *string) {
-	m.SensorCode = v
-}
-
-// GetTransmitterID returns the TransmitterID value.
-func (m ComponentEvent) GetTransmitterID() *string {
-	return m.TransmitterID
-}
-
-// SetTransmitterID sets the TransmitterID value and returns the updated ComponentEvent.
-func (m *ComponentEvent) SetTransmitterID(v *string) {
-	m.TransmitterID = v
-}
-
-// GetPumpID returns the PumpID value.
-func (m ComponentEvent) GetPumpID() *string {
-	return m.PumpID
-}
-
-// SetPumpID sets the PumpID value and returns the updated ComponentEvent.
-func (m *ComponentEvent) SetPumpID(v *string) {
-	m.PumpID = v
-}
-
-// GetPumpSerial returns the PumpSerial value.
-func (m ComponentEvent) GetPumpSerial() *string {
-	return m.PumpSerial
-}
-
-// SetPumpSerial sets the PumpSerial value and returns the updated ComponentEvent.
-func (m *ComponentEvent) SetPumpSerial(v *string) {
-	m.PumpSerial = v
-}
-
-// GetPumpType returns the PumpType value.
-func (m ComponentEvent) GetPumpType() *string {
-	return m.PumpType
-}
-
-// SetPumpType sets the PumpType value and returns the updated ComponentEvent.
-func (m *ComponentEvent) SetPumpType(v *string) {
-	m.PumpType = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated ComponentEvent.
+func (m *ComponentEvent) SetOtherAttributes(v types.ComponentEventOther) {
+	m.OtherAttributes = v
 }
 
 // GetNotes returns the Notes value.
@@ -617,54 +577,14 @@ func (m *ComponentEventsVw) SetEventType(v *string) {
 	m.EventType = v
 }
 
-// GetSensorCode returns the SensorCode value.
-func (m ComponentEventsVw) GetSensorCode() *string {
-	return m.SensorCode
+// GetOtherAttributes returns the OtherAttributes value.
+func (m ComponentEventsVw) GetOtherAttributes() types.ComponentEventOther {
+	return m.OtherAttributes
 }
 
-// SetSensorCode sets the SensorCode value and returns the updated ComponentEventsVw.
-func (m *ComponentEventsVw) SetSensorCode(v *string) {
-	m.SensorCode = v
-}
-
-// GetTransmitterID returns the TransmitterID value.
-func (m ComponentEventsVw) GetTransmitterID() *string {
-	return m.TransmitterID
-}
-
-// SetTransmitterID sets the TransmitterID value and returns the updated ComponentEventsVw.
-func (m *ComponentEventsVw) SetTransmitterID(v *string) {
-	m.TransmitterID = v
-}
-
-// GetPumpID returns the PumpID value.
-func (m ComponentEventsVw) GetPumpID() *string {
-	return m.PumpID
-}
-
-// SetPumpID sets the PumpID value and returns the updated ComponentEventsVw.
-func (m *ComponentEventsVw) SetPumpID(v *string) {
-	m.PumpID = v
-}
-
-// GetPumpSerial returns the PumpSerial value.
-func (m ComponentEventsVw) GetPumpSerial() *string {
-	return m.PumpSerial
-}
-
-// SetPumpSerial sets the PumpSerial value and returns the updated ComponentEventsVw.
-func (m *ComponentEventsVw) SetPumpSerial(v *string) {
-	m.PumpSerial = v
-}
-
-// GetPumpType returns the PumpType value.
-func (m ComponentEventsVw) GetPumpType() *string {
-	return m.PumpType
-}
-
-// SetPumpType sets the PumpType value and returns the updated ComponentEventsVw.
-func (m *ComponentEventsVw) SetPumpType(v *string) {
-	m.PumpType = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated ComponentEventsVw.
+func (m *ComponentEventsVw) SetOtherAttributes(v types.ComponentEventOther) {
+	m.OtherAttributes = v
 }
 
 // GetNotes returns the Notes value.
@@ -6767,54 +6687,14 @@ func (m *CreateComponentEventParams) SetEventType(v string) {
 	m.EventType = v
 }
 
-// GetSensorCode returns the SensorCode value.
-func (m CreateComponentEventParams) GetSensorCode() *string {
-	return m.SensorCode
+// GetOtherAttributes returns the OtherAttributes value.
+func (m CreateComponentEventParams) GetOtherAttributes() types.ComponentEventOther {
+	return m.OtherAttributes
 }
 
-// SetSensorCode sets the SensorCode value and returns the updated CreateComponentEventParams.
-func (m *CreateComponentEventParams) SetSensorCode(v *string) {
-	m.SensorCode = v
-}
-
-// GetTransmitterID returns the TransmitterID value.
-func (m CreateComponentEventParams) GetTransmitterID() *string {
-	return m.TransmitterID
-}
-
-// SetTransmitterID sets the TransmitterID value and returns the updated CreateComponentEventParams.
-func (m *CreateComponentEventParams) SetTransmitterID(v *string) {
-	m.TransmitterID = v
-}
-
-// GetPumpID returns the PumpID value.
-func (m CreateComponentEventParams) GetPumpID() *string {
-	return m.PumpID
-}
-
-// SetPumpID sets the PumpID value and returns the updated CreateComponentEventParams.
-func (m *CreateComponentEventParams) SetPumpID(v *string) {
-	m.PumpID = v
-}
-
-// GetPumpSerial returns the PumpSerial value.
-func (m CreateComponentEventParams) GetPumpSerial() *string {
-	return m.PumpSerial
-}
-
-// SetPumpSerial sets the PumpSerial value and returns the updated CreateComponentEventParams.
-func (m *CreateComponentEventParams) SetPumpSerial(v *string) {
-	m.PumpSerial = v
-}
-
-// GetPumpType returns the PumpType value.
-func (m CreateComponentEventParams) GetPumpType() *string {
-	return m.PumpType
-}
-
-// SetPumpType sets the PumpType value and returns the updated CreateComponentEventParams.
-func (m *CreateComponentEventParams) SetPumpType(v *string) {
-	m.PumpType = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated CreateComponentEventParams.
+func (m *CreateComponentEventParams) SetOtherAttributes(v types.ComponentEventOther) {
+	m.OtherAttributes = v
 }
 
 // GetNotes returns the Notes value.
@@ -7217,24 +7097,14 @@ func (m *UpdateComponentEventParams) SetEventType(v *string) {
 	m.EventType = v
 }
 
-// GetSensorCode returns the SensorCode value.
-func (m UpdateComponentEventParams) GetSensorCode() *string {
-	return m.SensorCode
+// GetOtherAttributes returns the OtherAttributes value.
+func (m UpdateComponentEventParams) GetOtherAttributes() *string {
+	return m.OtherAttributes
 }
 
-// SetSensorCode sets the SensorCode value and returns the updated UpdateComponentEventParams.
-func (m *UpdateComponentEventParams) SetSensorCode(v *string) {
-	m.SensorCode = v
-}
-
-// GetTransmitterID returns the TransmitterID value.
-func (m UpdateComponentEventParams) GetTransmitterID() *string {
-	return m.TransmitterID
-}
-
-// SetTransmitterID sets the TransmitterID value and returns the updated UpdateComponentEventParams.
-func (m *UpdateComponentEventParams) SetTransmitterID(v *string) {
-	m.TransmitterID = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated UpdateComponentEventParams.
+func (m *UpdateComponentEventParams) SetOtherAttributes(v *string) {
+	m.OtherAttributes = v
 }
 
 // GetNotes returns the Notes value.
