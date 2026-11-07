@@ -174,7 +174,10 @@ func setupSentry(serverConfig *config.ServerConfig) {
 		Dsn:           serverConfig.SentryDSN,
 		Environment:   serverConfig.Deployment,
 		EnableTracing: false,
-		BeforeSend:    httputils.RedactSentryEvent,
+		// Each event is searchable by what is logged with it, such as its site and identity, then cleared of tokens
+		BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+			return httputils.RedactSentryEvent(aslog.SentryEvent(event), hint)
+		},
 	})
 	if err != nil {
 		slog.Warn("Sentry is not working, running without error reporting", "error", err)
