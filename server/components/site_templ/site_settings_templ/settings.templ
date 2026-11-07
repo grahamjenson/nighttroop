@@ -275,30 +275,40 @@ templ settingsPageOf(page settingsPage, site *sitemodels.Settings, yours *sitemo
 				hx-status:5xx="target:#toaster swap:beforeend"
 			></form>
 		}
-		<div class={ "grid items-center gap-4 rounded-xl border border-gray-200 p-4 shadow-sm", templ.KV("grid-cols-[8rem_minmax(0,1fr)_minmax(0,1fr)]", len(columns) == 2), templ.KV("grid-cols-[8rem_minmax(0,1fr)]", len(columns) == 1) }>
-			<span></span>
+		// On a phone each setting's label is above its controls, the site's and yours each named, and from sm up the
+		// columns are side by side under their titles
+		<div class={ "grid grid-cols-1 gap-2 rounded-xl border border-gray-200 p-4 shadow-sm sm:items-center sm:gap-4", templ.KV("sm:grid-cols-[8rem_minmax(0,1fr)_minmax(0,1fr)]", len(columns) == 2), templ.KV("sm:grid-cols-[8rem_minmax(0,1fr)]", len(columns) == 1) }>
+			<span class="hidden sm:block"></span>
 			for _, column := range columns {
-				<span class="text-sm font-semibold">{ column.Title }</span>
+				<span class={ "text-sm font-semibold", templ.KV("hidden sm:block", len(columns) == 2) }>{ column.Title }</span>
 			}
 			for _, field := range page.Fields {
 				if field.Section != "" {
 					<h2 class="col-span-full mt-2 border-t border-gray-200 pt-4 text-sm font-semibold text-brand-night">{ field.Section }</h2>
 				}
 				// Every column has the same units, as another identity's, which has its own, is alone on its page
-				<span class="text-sm font-medium">{ fieldLabel(ctx, columns[0], field) }</span>
+				<span class="mt-2 text-sm font-medium sm:mt-0">{ fieldLabel(ctx, columns[0], field) }</span>
 				if field.Name == "timezone" {
 					@timezoneSuggestions()
 				}
 				for _, column := range columns {
-					@settingControl(column, field)
+					<div class="flex items-start gap-2">
+						if len(columns) == 2 {
+							<span class="w-12 shrink-0 py-2.5 text-xs font-semibold text-gray-600 sm:hidden">{ column.Title }</span>
+						}
+						<div class="min-w-0 flex-1">
+							@settingControl(column, field)
+						</div>
+					</div>
 				}
 			}
-			<span></span>
+			<span class="hidden sm:block"></span>
 			for _, column := range columns {
-				<div class="flex justify-end">
+				<div class="mt-2 flex justify-end sm:mt-0">
 					@button.Button(button.Props{
 						ID:         column.IDPrefix + "save",
 						Type:       button.TypeSubmit,
+						Class:      "h-auto min-h-9 w-full whitespace-normal sm:w-auto",
 						Attributes: templ.Attributes{"form": column.FormID},
 					}) {
 						{ column.Save }
