@@ -379,6 +379,9 @@ focus back to the row or button that opened it.
   token, so apps like AAPS only upload with a token that may write.
 - A v3 history includes deleted documents, with `isValid` false, so apps learn of deletions; a search leaves them
   out.
+- A v3 history is the documents with a `srvModified` at or after its time, the oldest first, then by date, as in
+  Nightscout, at most its `limit`, and its `ETag` is the newest `srvModified`, so an app paging from the `ETag`, as
+  AAPS does, gets every change, and the last profile store in a profile history is the newest changed.
 - A delete moves a document's `srvModified` and the v3 lastModified forward, so a history since an app's last sync
   has the documents deleted after it.
 - **Socket.IO** live updates and alarms over long polling or websockets.

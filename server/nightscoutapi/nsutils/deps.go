@@ -29,6 +29,9 @@ type Store interface {
 	// Search gets a query that will return a list of records that satifsy the query
 	Search(ctx context.Context, collection Collection, query nsquery.Query) ([]Document, *HTTPError)
 
+	// History is what changed since, deleted too, the oldest change first
+	History(ctx context.Context, collection Collection, since int64, query nsquery.Query) ([]Document, *HTTPError)
+
 	// Delete deletes a single record (permanent is soft delete or hard delete)
 	Delete(ctx context.Context, collection Collection, identifier string, permanent bool) *HTTPError
 

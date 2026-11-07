@@ -43,6 +43,12 @@ SELECT * FROM food_presets WHERE id = ?;
 
 
 
+-- name: FoodPresetHistoryIDs :many
+-- The foods changed since Since, the oldest change first, then by date and id as History sorts them, from updated_at's index, for API v3
+-- history
+SELECT id FROM food_presets WHERE updated_at >= sqlc.arg('Since')
+ORDER BY updated_at, created_at, id LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
+
 -- name: SearchFoodPresets :many
 SELECT * FROM food_presets
 WHERE

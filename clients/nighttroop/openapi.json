@@ -367,6 +367,7 @@
       "get": {
         "operationId": "NsV3History",
         "summary": "The documents changed since a time, the oldest change first, including deletions",
+        "description": "The documents with a srvModified at or after since, the oldest srvModified first, then by date, deleted ones with isValid false. The ETag is the newest srvModified, which the next page starts from.",
         "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
         "parameters": [{ "name": "since", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" } }, { "$ref": "#/components/parameters/Limit" }],
         "responses": { "200": { "$ref": "#/components/responses/NsV3Documents" }, "default": { "$ref": "#/components/responses/NsError" } }

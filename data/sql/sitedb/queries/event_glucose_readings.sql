@@ -82,6 +82,12 @@ LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER
 
 
 
+-- name: GlucoseReadingHistoryIDs :many
+-- The readings changed since Since, deleted ones too, the oldest change first, then by date and id as History sorts them, from updated_at's index, for API v3
+-- history
+SELECT id FROM glucose_readings WHERE updated_at >= sqlc.arg('Since')
+ORDER BY updated_at, occurred_at, id LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
+
 -- name: SearchGlucoseReadings :many
 SELECT * FROM glucose_readings
 WHERE

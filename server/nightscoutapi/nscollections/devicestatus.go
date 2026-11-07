@@ -58,6 +58,10 @@ func (c DeviceStatusCollection) UpdateModel(q *sitedb.Queries, ctx context.Conte
 	return q.UpdateDeviceReport(ctx, updateParams)
 }
 
+func (c DeviceStatusCollection) HistoryIDs(q *sitedb.Queries, ctx context.Context, since, limit int64) ([]string, error) {
+	return q.DeviceReportHistoryIDs(ctx, sitedb.DeviceReportHistoryIDsParams{Since: since, Limit: limit})
+}
+
 func (c DeviceStatusCollection) SearchModels(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]*sitedb.DeviceReport, error) {
 	if !query.HasFilters {
 		return q.AllDeviceReports(ctx, nsquery.DeviceReportAll(query))

@@ -112,13 +112,9 @@ func History(store nsutils.Store) http.HandlerFunc {
 			return
 		}
 
-		query.UpdatedGTE = new(since)
-		// History returns deleted documents too (isValid false), so clients learn of deletions
-		query.IncludeDeleted = true
-		// HasFilters was worked out when the query was parsed, so it must be set for a filter added after
-		query.HasFilters = true
-
-		records, err := store.Search(r.Context(), collection, query)
+		// History returns deleted documents too (isValid false), so clients learn of deletions, the oldest change
+		// first, so a client paging from the newest srvModified it got gets them all
+		records, err := store.History(r.Context(), collection, since, query)
 		if err != nil {
 			nsutils.WriteError(w, err)
 			return

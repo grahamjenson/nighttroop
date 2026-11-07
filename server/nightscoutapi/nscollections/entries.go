@@ -120,6 +120,10 @@ func (c EntriesCollection) UpdateModel(q *sitedb.Queries, ctx context.Context, n
 	return q.UpdateGlucoseReading(ctx, updateParams)
 }
 
+func (c EntriesCollection) HistoryIDs(q *sitedb.Queries, ctx context.Context, since, limit int64) ([]string, error) {
+	return q.GlucoseReadingHistoryIDs(ctx, sitedb.GlucoseReadingHistoryIDsParams{Since: since, Limit: limit})
+}
+
 func (c EntriesCollection) SearchModels(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]*sitedb.GlucoseReading, error) {
 	if !query.HasFilters {
 		return q.AllGlucoseReadings(ctx, nsquery.GlucoseAll(query))
