@@ -447,6 +447,10 @@ focus back to the row or button that opened it.
   registers that app's APNs token for pushes for the identity that uploaded it, a production build unless
   `isAPNSProduction` is false; a token that is not one is not registered, and the profile is still kept.
 - A profile switch's `percentage` is kept as a multiplier of the profile's insulin (120 as 1.2) and returned as sent.
+- A profile switch, or AAPS's effective profile switch (a Note with a `profileJson`), keeps the switch it was made
+  from, `originalProfileName`, `originalCustomizedName`, `originalTimeshift`, `originalPercentage`,
+  `originalDuration` and `originalEnd`, and returns them as sent through v1 and v3, so AAPS's followers read an
+  effective profile switch as one; an update without one keeps it.
 - AAPS's running mode, an `OpenAPS Offline`, keeps its `mode` (e.g. `DISCONNECTED_PUMP`), `autoForced`, `reasons` and
   `originalDuration` (ms) and returns them as sent through v1 and v3, so AAPS's followers read its mode; an update
   without one keeps it.
@@ -674,7 +678,11 @@ focus back to the row or button that opened it.
   which sends it a test push and shows its new last push, or a toast with why it failed.
 - An identity can send a test push to one of its registrations, and an admin to any of the site's
   (`POST /settings/push-registrations/{id}/test`), with its site's push credential for the app, else the server's.
-  Without one it is refused, saying to add one; a token Apple says is gone deletes the registration (410); another
-  refusal says Apple's reason (502), and one that cannot reach Apple why, never with the device token. Each push is
+  Without one it is refused, saying to add one; a token Apple says is gone, or Firebase says is `UNREGISTERED`,
+  deletes the registration (410); another refusal says Apple's or Firebase's reason (502), and one that cannot reach
+  them why, never with the device token. Each push is
   recorded on the registration, with its error, if it had one, which the same registration again, as each upload of
-  a Loop or Trio profile is, keeps, and a token Apple says is gone is deleted from its own site alone. A site sends at most `SITE_PUSH_PER_MINUTE_LIMIT` pushes a minute. Only APNs pushes are sent so far.
+  a Loop or Trio profile is, keeps, and a token Apple says is gone is deleted from its own site alone. A site sends at most `SITE_PUSH_PER_MINUTE_LIMIT` pushes a minute.
+- An FCM push is sent with the Firebase service account's OAuth token, got with a JWT its key signs from Google's
+  token endpoint, never the `token_uri` in its JSON, and used again until five minutes before it expires; the key and
+  tokens are never logged or shown. A service account Google refuses says Google's reason (502).

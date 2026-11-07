@@ -63,12 +63,18 @@ type Treatment struct {
 	ProfileJSON         *types.LongJSONString  `json:"profileJson,omitempty"`
 	Percent             *types.FlexibleFloat64 `json:"percentage,omitempty"`
 	Timeshift           *types.FlexibleInt64   `json:"timeshift,omitempty"`
+	// The AAPS switch a profile switch, or an effective one (a Note), was made from; its times are in milliseconds
+	OriginalCustomizedName *types.ShortString   `json:"originalCustomizedName,omitempty"`
+	OriginalTimeshiftMs    *types.FlexibleInt64 `json:"originalTimeshift,omitempty"`
+	OriginalPercentage     *types.FlexibleInt64 `json:"originalPercentage,omitempty"`
+	OriginalDurationMs     *types.FlexibleInt64 `json:"originalDuration,omitempty"`
+	OriginalEnd            *types.FlexibleInt64 `json:"originalEnd,omitempty"`
 
-	// AAPS's running mode, e.g. DISCONNECTED_PUMP, whether the loop forced it, why, and how long it was to last in ms
-	Mode               *types.ShortString     `json:"mode,omitempty"`
-	AutoForced         *bool                  `json:"autoForced,omitempty"`
-	Reasons            *types.SanitizedString `json:"reasons,omitempty"`
-	OriginalDurationMs *types.FlexibleInt64   `json:"originalDuration,omitempty"`
+	// AAPS's running mode, e.g. DISCONNECTED_PUMP, whether the loop forced it and why; how long it was to last, in ms,
+	// is OriginalDurationMs above, which a profile switch has too
+	Mode       *types.ShortString     `json:"mode,omitempty"`
+	AutoForced *bool                  `json:"autoForced,omitempty"`
+	Reasons    *types.SanitizedString `json:"reasons,omitempty"`
 
 	Rate     *types.FlexibleFloat64 `json:"rate,omitempty"`
 	Absolute *types.FlexibleFloat64 `json:"absolute,omitempty"`

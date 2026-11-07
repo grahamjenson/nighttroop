@@ -79,8 +79,6 @@
     1. P3: Add push credentials and registrations to `clients/nighttroop/openapi.json` and its client
     1. P3: A delete button on Push Devices (`/settings/push-devices`), for an identity's own registrations and an
        admin's for the site's; the push registrations collection's HTMX responses are empty until then
-    1. P2: Send FCM pushes with the service account (an OAuth token from its key, then the v1 send API), as
-       `push.Send` does APNs ones
     1. P2: Push alarms to each identity's registered apps when one goes off, through `push.Send`
     1. P2: A control page to add, list and delete push credentials for every site, with BDD tests
     1. P2: Before any server credential (one with no site) is added: use it only for tokens its app registered itself,
@@ -97,9 +95,8 @@
     1. P4: A search sorted by date with a filter other than the date picks its page by the dates alone, then filters
        it, so a page can be short, and empty when none of it matches although later ones do. No app sends such a
        search yet; filtering in the oldest first query would need each search's filters there too
-    1. P2: Keep the fields AAPS's followers need: an effective profile switch's `original*` fields (else it is read
-       as a Note), a temp basal's `type` (e.g. `PUMP_SUSPEND`), and a calibration's `isCalibration` and
-       `sensorMgdlAtPairing`
+    1. P2: Keep the fields AAPS's followers need: a temp basal's `type` (e.g. `PUMP_SUSPEND`), and a calibration's
+       `isCalibration` and `sensorMgdlAtPairing`
     1. P4: Return a food's Nightscout `portion`, `unit` and `gi` as sent; AAPS takes 0, g and none without them
     1. P4: Keep arbitrary API v3 `settings` documents and support v2 authorization roles and subjects, which AAPS 4's
        client control (pairing and remote commands) uses

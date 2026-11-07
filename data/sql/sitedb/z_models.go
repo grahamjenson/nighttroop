@@ -442,6 +442,12 @@ type ProfileSwitch struct {
 	DurationMinutes          int64
 	Multiplier               *float64
 	Timeshift                *int64
+	OriginalProfileName      *string
+	OriginalCustomizedName   *string
+	OriginalTimeshiftMs      *int64
+	OriginalPercentage       *int64
+	OriginalDurationMs       *int64
+	OriginalEnd              *int64
 	Dia                      *float64
 	Units                    *consts.Units
 	Timezone                 *string
@@ -474,6 +480,12 @@ type ProfileSwitchesVw struct {
 	DurationMinutes          *int64
 	Multiplier               *float64
 	Timeshift                *int64
+	OriginalProfileName      *string
+	OriginalCustomizedName   *string
+	OriginalTimeshiftMs      *int64
+	OriginalPercentage       *int64
+	OriginalDurationMs       *int64
+	OriginalEnd              *int64
 	Dia                      *float64
 	Units                    *consts.Units
 	Timezone                 *string
