@@ -189,14 +189,17 @@ CREATE TABLE event_groups (
 
     -- who the app says entered it, as Nightscout keeps it, e.g. loop://iPhone or xdrip
     entered_by TEXT CHECK(length(entered_by) <= 64),
-    -- the app's own id for it, given back as sent, e.g. xDrip+'s uuid
-    uuid TEXT CHECK(length(uuid) <= 64),
-    -- AAPS's running mode (an OpenAPS Offline), e.g. DISCONNECTED_PUMP, whether the loop forced it and why, and how
-    -- long it was to last in milliseconds
-    mode TEXT CHECK(length(mode) <= 64),
-    auto_forced INTEGER CHECK(auto_forced IN (0, 1)),
-    reasons TEXT CHECK(length(reasons) <= 1024),
-    original_duration_ms INTEGER CHECK(original_duration_ms BETWEEN 0 AND 31536000000), -- at most a year
+    -- What only some apps send, a JSON object (types.EventGroupOther) NULL for most treatments: the app's own id for
+    -- it, given back as sent, e.g. xDrip+'s uuid, and AAPS's running mode (an OpenAPS Offline), e.g. DISCONNECTED_PUMP,
+    -- whether the loop forced it (auto_forced) and why (reasons), and how long it was to last in milliseconds, at most
+    -- a year (original_duration_ms). A field that is not there passes its check. entered_by stays a column, as Trio
+    -- filters on it every minute.
+    other_attributes TEXT CHECK(length(other_attributes) <= 2048 AND json_valid(other_attributes)
+        AND length(json_extract(other_attributes, '$.uuid')) <= 64
+        AND length(json_extract(other_attributes, '$.mode')) <= 64
+        AND json_extract(other_attributes, '$.auto_forced') IN (0, 1)
+        AND length(json_extract(other_attributes, '$.reasons')) <= 1024
+        AND json_extract(other_attributes, '$.original_duration_ms') BETWEEN 0 AND 31536000000),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),

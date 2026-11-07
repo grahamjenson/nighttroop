@@ -19,11 +19,7 @@ INSERT INTO event_groups (
     reason,
     duration_minutes,
     entered_by,
-    uuid,
-    mode,
-    auto_forced,
-    reasons,
-    original_duration_ms,
+    other_attributes,
 
     occurred_at,
     utc_offset_minutes,
@@ -33,7 +29,7 @@ INSERT INTO event_groups (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -249,11 +245,12 @@ UPDATE event_groups SET
     notes = COALESCE(sqlc.narg('Notes'), notes),
     reason = COALESCE(sqlc.narg('Reason'), reason),
     entered_by = COALESCE(sqlc.narg('EnteredBy'), entered_by),
-    uuid = COALESCE(sqlc.narg('Uuid'), uuid),
-    mode = COALESCE(sqlc.narg('Mode'), mode),
-    auto_forced = COALESCE(sqlc.narg('AutoForced'), auto_forced),
-    reasons = COALESCE(sqlc.narg('Reasons'), reasons),
-    original_duration_ms = COALESCE(sqlc.narg('OriginalDurationMs'), original_duration_ms),
+    -- The fields sent, as JSON (types.OtherJSON), are merged into those kept, so one not sent stays as it is, as a
+    -- column of its own would
+    other_attributes = NULLIF(json_patch(
+        COALESCE(other_attributes, '{}'),
+        COALESCE(CAST(sqlc.narg('OtherAttributes') AS TEXT), '{}')
+    ), '{}'),
 
     raw_json_data = json_patch(
         COALESCE(raw_json_data, '{}'),
