@@ -1,0 +1,67 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_PATH /
+
+// The menu opens the reports, at first of the week with yesterday in it, which a new site has no glucose for
+CLICK #site--settings-menu
+CLICK #site--reports-button
+ASSERT_STATUS 200
+ASSERT_PATH /reports
+ASSERT_TITLE Reports · Nighttroop
+ASSERT_VISIBLE #site--reports--no-glucose
+ASSERT_TEXT_EQUALS #site--reports--days 0
+ASSERT_TEXT_EQUALS #site--reports--time-in-range –
+
+// Virtual sync fills the last 30 minutes with readings, treatments and device statuses
+CLICK #site--settings-menu
+CLICK #site--settings--sync-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-sync--enable
+CLICK #site--settings--virtual-sync--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Sync Updated
+RUN_BACKGROUND_JOBS
+
+// Today's report draws its glucose over the AGP of the 7 days to it, with the range behind them. Today has data, and
+// there is no report after it.
+GOTO /reports/day-{{ date 0 }}
+ASSERT_STATUS 200
+ASSERT_TEXT_EQUALS #site--reports--days 1
+ASSERT_VISIBLE #site--reports--time-in-range >> text=/^\d+(\.\d)?%$/
+ASSERT_DRAWN #site--reports--agp svg
+ASSERT_DRAWN #site--reports--agp >> text=5–95%
+ASSERT_DRAWN #site--reports--agp >> text=25–75%
+ASSERT_DRAWN #site--reports--agp >> text=Median
+ASSERT_DRAWN #site--reports--agp >> text=Glucose
+ASSERT_DRAWN #site--reports--next[disabled]
+SCREENSHOT report_day
+
+// The other periods ending on the same day have today so far in them, with no glucose line of their own
+CLICK #site--reports--period-week
+ASSERT_STATUS 200
+ASSERT_NEW_URL
+ASSERT_DRAWN #site--reports--agp >> text=Median
+ASSERT_NOT_VISIBLE #site--reports--agp >> text=Glucose
+SCREENSHOT report_week
+CLICK #site--reports--period-fortnight
+ASSERT_STATUS 200
+ASSERT_DRAWN #site--reports--agp >> text=Median
+CLICK #site--reports--period-month
+ASSERT_STATUS 200
+ASSERT_DRAWN #site--reports--agp >> text=Median
+ASSERT_DRAWN #site--reports--next[disabled]
+SCREENSHOT report_month
+
+// The month before has no glucose, and back returns to this one
+CLICK #site--reports--previous
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--reports--no-glucose
+ASSERT_NOT_VISIBLE #site--reports--next[disabled]
+CLICK_BACK
+ASSERT_STATUS 200
+ASSERT_DRAWN #site--reports--agp >> text=Median
+
+// A report that is not a period, or is in the future, is not found
+GOTO /reports/year-{{ date 0 }}
+ASSERT_STATUS 404
+GOTO /reports/day-{{ date 1 }}
+ASSERT_STATUS 404

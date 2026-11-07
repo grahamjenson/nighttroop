@@ -12,6 +12,7 @@ import (
 	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/site_templ/site_reports_templ"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -96,7 +97,7 @@ func SummaryPeriodAt(ctx context.Context, q *sitedb.Queries, siteContext *httput
 	return day, nil
 }
 
-// A period is only read as JSON for now, so pages get nothing
-func (s *SummaryPeriodsCollection) GetHTMXResponse(*sitemodels.SiteSummaryPeriod) templ.Component {
-	return templ.NopComponent
+// GetHTMXResponse is the period's report, which the reports page shows
+func (s *SummaryPeriodsCollection) GetHTMXResponse(model *sitemodels.SiteSummaryPeriod) templ.Component {
+	return site_reports_templ.Report(model)
 }
