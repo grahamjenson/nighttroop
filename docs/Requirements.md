@@ -233,11 +233,17 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   - Carbs as triangles pointing up above insulin as triangles pointing down, each labelled, the latest kept where
     labels overlap; a loop's SMBs are smaller, fainter and not labelled.
   - A legend of insulin, SMB, carbs and basal, and a tooltip of each reading and treatment.
-- Time in range, total daily dose, and the last sensor and site change for today, yesterday, last week and last
-  month.
+- Under the graph, two large tables:
+  - Insulin & Carbs: each dose and meal's carbs, newest first, with how long ago it was; a loop's SMBs are marked
+    SMB. It scrolls past the height of the window.
+  - Today & Yesterday: time in range and total daily dose for each day, then what is in force now: the loop's IOB and
+    COB, the basal, the target, the range, the pump's reservoir, the phone's battery, and when the sensor was started
+    and the site changed.
+- Under them, two smaller tables of every treatment and every glucose reading. Last week's, fortnight's and month's
+  time in range and dose are on the Reports page.
 - Readings are coloured and labelled low, in range or high by the alarm settings.
 - The summary says how long ago things were in words, to the nearest hour once over an hour, as "45 minutes ago" or
-  "2 days 1 hour ago", and its tiles and devices show units smaller and grey beside their numbers.
+  "2 days 1 hour ago", and its tables and devices show units smaller and grey beside their numbers.
 - The summary's glucose readings link to the page of every reading, and each treatment's kind (e.g. Insulin) to the
   page of that kind.
 - The summary updates live as new data arrives, and catches up after the page has been in the background. While it

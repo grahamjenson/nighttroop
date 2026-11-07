@@ -48,7 +48,9 @@ INPUT #site--component-event--create--event-type Sensor Start
 CLICK #site--component-event--create--submit
 ASSERT_STATUS 201
 
-// The summary shows the latest glucose, the loop's IOB and COB, every treatment and each device's latest status
+// The summary shows the latest glucose and the graph, then two large tables, of the insulin and carbs and of today's and
+// yesterday's numbers with those in force now, then the smaller tables of every treatment and reading, and each
+// device's latest status
 CLICK #site--nav--home
 ASSERT_NEW_URL
 ASSERT_PATH /
@@ -56,12 +58,22 @@ ASSERT_VISIBLE #site--summary--glucose--reading
 SCREENSHOT summary
 ASSERT_NOT_VISIBLE #site--summary--iob >> text="–"
 ASSERT_NOT_VISIBLE #site--summary--cob >> text="–"
-// Today's readings have a time in range, its insulin a total daily dose with the dose given, and the sensor was
-// started minutes ago, but the site has not been changed
+// Today's readings have a time in range, its insulin a total daily dose with the dose given, beside yesterday's, which
+// has no readings, and the sensor was started minutes ago, but the site has not been changed
 ASSERT_VISIBLE #site--summary--time-in-range >> text=/^\d+(\.\d)?%$/
+ASSERT_TEXT_EQUALS #site--summary--time-in-range--yesterday –
 ASSERT_VISIBLE #site--summary--total-daily-dose >> text=/^\d+(\.\d+)? U$/
 ASSERT_NOT_VISIBLE #site--summary--total-daily-dose >> text="0 U"
-// A tile's and a device's units are smaller and grey beside their numbers
+ASSERT_VISIBLE #site--summary--total-daily-dose--yesterday >> text=/^\d+(\.\d+)? U$/
+// Now, virtual sync's temp basal and temp target are in force, within the range settings
+ASSERT_VISIBLE #site--summary--basal >> text=/^[\d.]+ U\/hr$/
+ASSERT_VISIBLE #site--summary--target >> text=/^[\d.]+–[\d.]+ mmol\/L$/
+ASSERT_VISIBLE #site--summary--range >> text=/^[\d.]+–[\d.]+ mmol\/L$/
+// The insulin and carbs table has the dose and snack given now, newest first, and marks the loop's SMB
+ASSERT_VISIBLE #site--summary--insulin-carbs tbody tr >> nth=0 >> text=SMB
+ASSERT_VISIBLE #site--summary--insulin-carbs td >> text=/^\s*2\.5\sU$/
+ASSERT_VISIBLE #site--summary--insulin-carbs td >> text=/^\s*15\sg$/
+// A table's and a device's units are smaller and grey beside their numbers
 ASSERT_VISIBLE #site--summary--total-daily-dose span.text-gray-500 >> text="U"
 ASSERT_VISIBLE #site--summary--devices dd span.text-gray-500 >> text="%" >> nth=0
 ASSERT_VISIBLE #site--summary--sensor-started >> text=/^(just now|\d+ minutes? ago)$/

@@ -11,7 +11,6 @@ import (
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
-	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/display"
@@ -83,6 +82,44 @@ func treatments(s *sitemodels.Summary) []treatment {
 	}
 	sort.SliceStable(list, func(i, j int) bool { return list[i].At > list[j].At })
 	return list
+}
+
+// intake is a dose of insulin or a meal's carbs, at a time in milliseconds, with SMB set for a loop's small bolus
+type intake struct {
+	At             int64
+	Insulin, Carbs string
+	SMB            bool
+}
+
+// insulinAndCarbs are the summary's doses and carbs in one list, newest first, each in its own column
+func insulinAndCarbs(s *sitemodels.Summary) []intake {
+	list := []intake{}
+	for _, d := range s.InsulinDoses {
+		list = append(list, intake{At: d.OccurredAt, Insulin: value(&d.Dose, " U"), SMB: isSMB(d)})
+	}
+	for _, f := range s.FoodIntakes {
+		if f.Carbs != nil {
+			list = append(list, intake{At: f.OccurredAt, Carbs: value(f.Carbs, " g")})
+		}
+	}
+	sort.SliceStable(list, func(i, j int) bool { return list[i].At > list[j].At })
+	return list
+}
+
+// currentMinute is the targets and basal in force now, the summary's last minute up to now
+func currentMinute(s *sitemodels.Summary) sitemodels.SummaryMinute {
+	if len(s.Minutes) == 0 {
+		return sitemodels.SummaryMinute{}
+	}
+	return s.Minutes[max(0, min(len(s.Minutes)-1, int((time.Now().UnixMilli()-s.Since)/60_000)))]
+}
+
+// glucoseSpan is a low to high glucose with its units, as 5.5–6.7 mmol/L, or a dash when either is not set
+func glucoseSpan(low, high *float64, units *consts.Units) string {
+	if low == nil || high == nil {
+		return "–"
+	}
+	return site_data_templ.FormatGlucose(*low, units) + "–" + site_data_templ.FormatGlucose(*high, units) + " " + unitsText(units)
 }
 
 // ago is how long ago ms was, or a dash when it is not set
@@ -182,39 +219,27 @@ templ Summary(summary *sitemodels.Summary) {
 	</div>
 }
 
-// summaryContent is everything in the summary below its header, which reloads as the summary's data changes
+// summaryContent is everything in the summary below its header, which reloads as the summary's data changes: the
+// latest glucose and the graph, then two large tables, of the insulin and carbs and of today's and yesterday's
+// numbers with those now, as Carer shows them, and under them the smaller tables of every treatment and reading
 templ summaryContent(summary *sitemodels.Summary) {
 	@glucoseHero(summary)
-	<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-		@tile("site--summary--iob", "Insulin on board", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.LoopIob }, " U"), icon.Syringe)
-		@tile("site--summary--cob", "Carbs on board", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.LoopCob }, " g"), icon.Utensils)
-		@tile("site--summary--reservoir", "Reservoir", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.PumpReservoir }, " U"), icon.Gauge)
-		@tile("site--summary--phone-battery", "Phone battery", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.DeviceBatteryPercent }, "%"), icon.Smartphone)
-	</div>
-	<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-		@tile("site--summary--time-in-range", "Time in range", value(summary.Today.TimeInRange, "%"), icon.Target) {
-			@previous("site--summary--time-in-range--yesterday", "Yesterday", value(summary.Yesterday.TimeInRange, "%"))
-			@previous("site--summary--time-in-range--last-week", "Last week", value(summary.LastWeek.TimeInRange, "%"))
-			@previous("site--summary--time-in-range--last-fortnight", "Last fortnight", value(summary.LastFortnight.TimeInRange, "%"))
-			@previous("site--summary--time-in-range--last-month", "Last month", value(summary.LastMonth.TimeInRange, "%"))
-		}
-		@tile("site--summary--total-daily-dose", "Total daily dose", value(&summary.Today.TotalDailyDose, " U"), icon.Droplet) {
-			@previous("site--summary--total-daily-dose--yesterday", "Yesterday", value(&summary.Yesterday.TotalDailyDose, " U"))
-			@previous("site--summary--total-daily-dose--last-week", "Last week", value(&summary.LastWeek.TotalDailyDose, " U"))
-			@previous("site--summary--total-daily-dose--last-fortnight", "Last fortnight", value(&summary.LastFortnight.TotalDailyDose, " U"))
-			@previous("site--summary--total-daily-dose--last-month", "Last month", value(&summary.LastMonth.TotalDailyDose, " U"))
-		}
-		@tile("site--summary--sensor-started", "Sensor started", ago(summary.SensorStartedAt), icon.Activity)
-		@tile("site--summary--site-changed", "Site changed", ago(summary.SiteChangedAt), icon.Bandage)
-	</div>
 	<section class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
 		@Graph(summary)
 	</section>
 	<div class="grid gap-4 lg:grid-cols-2">
-		@section("Treatments", "", "", "") {
+		@section("Insulin & Carbs", "", "", "", "max-h-[calc(100vh-5rem)]") {
+			@insulinCarbsTable(insulinAndCarbs(summary))
+		}
+		@section("Today & Yesterday", "", "", "", "") {
+			@daysTable(summary)
+		}
+	</div>
+	<div class="grid gap-4 lg:grid-cols-2">
+		@section("Treatments", "", "", "", "max-h-64") {
 			@treatmentsTable(treatments(summary))
 		}
-		@section("Glucose Readings", "site--summary--all-readings", "All readings", "/data/glucose") {
+		@section("Glucose Readings", "site--summary--all-readings", "All readings", "/data/glucose", "max-h-64") {
 			@readingsTable(summary)
 		}
 	</div>
@@ -223,6 +248,97 @@ templ summaryContent(summary *sitemodels.Summary) {
 			@deviceCard(status)
 		}
 	</section>
+}
+
+// insulinCarbsTable is each dose and meal large, newest first, with how long ago it was; a loop's SMBs are marked
+templ insulinCarbsTable(list []intake) {
+	@table.Table(table.Props{ID: "site--summary--insulin-carbs", Class: "text-base sm:text-lg"}) {
+		@heads("When", "Insulin", "Carbs")
+		@table.Body() {
+			if len(list) == 0 {
+				<tr><td colspan="3" class="p-4 text-sm text-gray-500">No insulin or carbs in this time.</td></tr>
+			}
+			for _, i := range list {
+				@table.Row() {
+					@table.Cell(table.CellProps{Class: "whitespace-nowrap text-sm text-gray-600"}) {
+						<span title={ site_data_templ.FormatDate(ctx, i.At) }>{ display.RoundedAgo(i.At, time.Now()) }</span>
+					}
+					@table.Cell(table.CellProps{Class: "text-right font-bold tabular-nums text-primary"}) {
+						if i.SMB {
+							<span class="mr-2 text-xs font-medium text-gray-500">SMB</span>
+						}
+						@numbers(i.Insulin, "text-sm font-medium text-gray-500")
+					}
+					@table.Cell(table.CellProps{Class: "text-right font-bold tabular-nums text-gray-900"}) {
+						@numbers(i.Carbs, "text-sm font-medium text-gray-500")
+					}
+				}
+			}
+		}
+	}
+}
+
+// daysTable is today's and yesterday's time in range and total daily dose, then what is in force now: the loop's IOB
+// and COB, the basal, target and range, the pump's reservoir, the phone's battery, and the sensor and site's ages
+templ daysTable(summary *sitemodels.Summary) {
+	{{ minute := currentMinute(summary) }}
+	{{ loop := func(get func(*sitemodels.SiteDeviceStatus) *float64, unit string) string { return loopValue(summary.Loop, get, unit) } }}
+	@table.Table(table.Props{ID: "site--summary--days", Class: "text-base sm:text-lg"}) {
+		@heads("", "Today", "Yesterday")
+		@table.Body() {
+			@dayRow("time-in-range", "Time in range", value(summary.Today.TimeInRange, "%"), value(summary.Yesterday.TimeInRange, "%"))
+			@dayRow("total-daily-dose", "Total daily dose", value(&summary.Today.TotalDailyDose, " U"), value(&summary.Yesterday.TotalDailyDose, " U"))
+			<tr class="border-b"><th colspan="3" class="h-10 px-2 pt-4 text-left font-medium text-muted-foreground">Now</th></tr>
+			@nowRow("iob", "Insulin on board", loop(func(s *sitemodels.SiteDeviceStatus) *float64 { return s.LoopIob }, " U"))
+			@nowRow("cob", "Carbs on board", loop(func(s *sitemodels.SiteDeviceStatus) *float64 { return s.LoopCob }, " g"))
+			@nowRow("basal", "Basal", value(minute.Basal, " U/hr"))
+			@nowRow("target", "Target", glucoseSpan(minute.LowTarget, minute.HighTarget, summary.Units))
+			@nowRow("range", "Range", glucoseSpan(&summary.RangeLow, &summary.RangeHigh, summary.Units))
+			@nowRow("reservoir", "Reservoir", loop(func(s *sitemodels.SiteDeviceStatus) *float64 { return s.PumpReservoir }, " U"))
+			@nowRow("phone-battery", "Phone battery", loop(func(s *sitemodels.SiteDeviceStatus) *float64 { return s.DeviceBatteryPercent }, "%"))
+			@nowRow("sensor-started", "Sensor started", ago(summary.SensorStartedAt))
+			@nowRow("site-changed", "Site changed", ago(summary.SiteChangedAt))
+		}
+	}
+}
+
+// heads are a large table's column names, the first on the left and the rest, of numbers, on the right
+templ heads(labels ...string) {
+	@table.Header() {
+		@table.Row() {
+			for i, label := range labels {
+				@table.Head(table.HeadProps{Class: map[bool]string{true: "text-right"}[i > 0]}) {
+					{ label }
+				}
+			}
+		}
+	}
+}
+
+templ dayRow(id, label, today, yesterday string) {
+	@table.Row() {
+		@table.Cell(table.CellProps{Class: "text-sm text-gray-600"}) {
+			{ label }
+		}
+		@table.Cell(table.CellProps{ID: "site--summary--" + id, Class: "text-right font-bold tabular-nums text-gray-900"}) {
+			@numbers(today, "text-sm font-medium text-gray-500")
+		}
+		@table.Cell(table.CellProps{ID: "site--summary--" + id + "--yesterday", Class: "text-right font-bold tabular-nums text-gray-600"}) {
+			@numbers(yesterday, "text-sm font-medium text-gray-500")
+		}
+	}
+}
+
+// nowRow is a value in force now, across both days' columns
+templ nowRow(id, label, text string) {
+	@table.Row() {
+		@table.Cell(table.CellProps{Class: "text-sm text-gray-600"}) {
+			{ label }
+		}
+		@table.Cell(table.CellProps{ID: "site--summary--" + id, Class: "text-right font-bold tabular-nums text-gray-900", Attributes: templ.Attributes{"colspan": "2"}}) {
+			@numbers(text, "text-sm font-medium text-gray-500")
+		}
+	}
 }
 
 templ glucoseHero(summary *sitemodels.Summary) {
@@ -262,19 +378,6 @@ templ glucoseHero(summary *sitemodels.Summary) {
 	</div>
 }
 
-templ tile(id, label, text string, ic func(...icon.Props) templ.Component) {
-	<div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-		<div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
-			@ic(icon.Props{Class: "size-4"})
-			{ label }
-		</div>
-		<div id={ id } class="mt-1 text-2xl font-bold tabular-nums text-gray-900">
-			@numbers(text, "text-sm font-medium text-gray-500")
-		</div>
-		{ children... }
-	</div>
-}
-
 // numbers shows a value's numbers as they are and its units, as in "0.7 U" or "2 days 1 hour ago", smaller and grey;
 // text with no number, as "just now", is shown as it is
 templ numbers(text, unitClass string) {
@@ -286,11 +389,6 @@ templ numbers(text, unitClass string) {
 			{ part }
 		}
 	}
-}
-
-// previous is a day tile's value for yesterday, or the mean day of last week or month, under today's
-templ previous(id, label, text string) {
-	<div id={ id } class="text-xs text-gray-500">{ label } { text }</div>
 }
 
 // deviceCard is a device's latest status; clicking it opens all its details
@@ -342,8 +440,9 @@ templ pageLink(id, path, class string) {
 	</a>
 }
 
-// section is a titled list on the summary, with a link to the page of all its records when it has one
-templ section(title, linkID, linkText, path string) {
+// section is a titled list on the summary, with a link to the page of all its records when it has one, scrolling
+// past height
+templ section(title, linkID, linkText, path, height string) {
 	<section class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
 		<div class="mb-2 flex items-baseline justify-between gap-2">
 			<h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">{ title }</h2>
@@ -353,14 +452,14 @@ templ section(title, linkID, linkText, path string) {
 				}
 			}
 		</div>
-		<div class="max-h-96 overflow-y-auto">
+		<div class={ height, "overflow-y-auto" }>
 			{ children... }
 		</div>
 	</section>
 }
 
 templ treatmentsTable(list []treatment) {
-	@table.Table(table.Props{ID: "site--summary--treatments"}) {
+	@table.Table(table.Props{ID: "site--summary--treatments", Class: "text-xs"}) {
 		@table.Body() {
 			if len(list) == 0 {
 				<tr><td class="p-4 text-sm text-gray-500">No treatments in this time.</td></tr>
@@ -386,7 +485,7 @@ templ treatmentsTable(list []treatment) {
 
 templ readingsTable(summary *sitemodels.Summary) {
 	{{ readings := summary.GlucoseReadings }}
-	@table.Table(table.Props{ID: "site--summary--readings"}) {
+	@table.Table(table.Props{ID: "site--summary--readings", Class: "text-xs"}) {
 		@table.Body() {
 			if len(readings) == 0 {
 				<tr><td class="p-4 text-sm text-gray-500">No glucose readings in this time.</td></tr>
