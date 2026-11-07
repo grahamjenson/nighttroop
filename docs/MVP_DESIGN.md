@@ -1,4 +1,4 @@
-# NightTroop Design
+# Nighttroop Design
 
 This document is the stories I want the user and the admin to experience when using Nighttroop for the MVP.
 

@@ -2,6 +2,7 @@
 GOTO {{ server_url }}/
 ASSERT_PATH /setup
 ASSERT_VISIBLE #control--setup--code
+ASSERT_VISIBLE .setup-target h2:text-is("Set up Nighttroop")
 SCREENSHOT setup
 
 // A wrong setup code is refused
@@ -39,6 +40,7 @@ INPUT #control--setup--otp-1 123123
 CLICK #control--setup--confirm
 ASSERT_STATUS 200
 ASSERT_VISIBLE #control--setup--complete
+ASSERT_VISIBLE #control--setup--complete h2:text-is("Nighttroop is set up")
 ASSERT_NOT_VISIBLE #control--setup--error
 SCREENSHOT complete
 
@@ -49,6 +51,7 @@ INPUT #name admin
 INPUT #password password
 TYPE #control--login--otp-1 123123
 ASSERT_VISIBLE #control--nav--logo
+ASSERT_VISIBLE .uppercase:text-is("Nighttroop Control")
 
 // Setup is done, so its page is gone and the public site can be used
 GOTO {{ .control_url }}/setup
