@@ -53,15 +53,11 @@ overrides:
       - column: "device_reports.is_device_charging"
         go_type:
           type: "*bool"
-<<<<<<< HEAD
       - column: "device_reports.other_attributes"
         go_type:
           import: "nighttroop.t1d.nz/data/types"
           type: "DeviceReportOther"
-      - column: "event_groups.auto_forced"
-=======
       - column: "event_groups.other_attributes"
->>>>>>> origin/main
         go_type:
           import: "nighttroop.t1d.nz/data/types"
           type: "EventGroupOther"
