@@ -2,6 +2,7 @@
 package sitedb
 
 import (
+	"nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils/consts"
 )
 
@@ -2326,64 +2327,14 @@ func (m *GlucoseReading) SetDirection(v *string) {
 	m.Direction = v
 }
 
-// GetNoise returns the Noise value.
-func (m GlucoseReading) GetNoise() *float64 {
-	return m.Noise
+// GetOtherAttributes returns the OtherAttributes value.
+func (m GlucoseReading) GetOtherAttributes() types.GlucoseReadingOther {
+	return m.OtherAttributes
 }
 
-// SetNoise sets the Noise value and returns the updated GlucoseReading.
-func (m *GlucoseReading) SetNoise(v *float64) {
-	m.Noise = v
-}
-
-// GetFiltered returns the Filtered value.
-func (m GlucoseReading) GetFiltered() *float64 {
-	return m.Filtered
-}
-
-// SetFiltered sets the Filtered value and returns the updated GlucoseReading.
-func (m *GlucoseReading) SetFiltered(v *float64) {
-	m.Filtered = v
-}
-
-// GetUnfiltered returns the Unfiltered value.
-func (m GlucoseReading) GetUnfiltered() *float64 {
-	return m.Unfiltered
-}
-
-// SetUnfiltered sets the Unfiltered value and returns the updated GlucoseReading.
-func (m *GlucoseReading) SetUnfiltered(v *float64) {
-	m.Unfiltered = v
-}
-
-// GetRssi returns the Rssi value.
-func (m GlucoseReading) GetRssi() *float64 {
-	return m.Rssi
-}
-
-// SetRssi sets the Rssi value and returns the updated GlucoseReading.
-func (m *GlucoseReading) SetRssi(v *float64) {
-	m.Rssi = v
-}
-
-// GetIsCalibration returns the IsCalibration value.
-func (m GlucoseReading) GetIsCalibration() *bool {
-	return m.IsCalibration
-}
-
-// SetIsCalibration sets the IsCalibration value and returns the updated GlucoseReading.
-func (m *GlucoseReading) SetIsCalibration(v *bool) {
-	m.IsCalibration = v
-}
-
-// GetSensorMgdlAtPairing returns the SensorMgdlAtPairing value.
-func (m GlucoseReading) GetSensorMgdlAtPairing() *float64 {
-	return m.SensorMgdlAtPairing
-}
-
-// SetSensorMgdlAtPairing sets the SensorMgdlAtPairing value and returns the updated GlucoseReading.
-func (m *GlucoseReading) SetSensorMgdlAtPairing(v *float64) {
-	m.SensorMgdlAtPairing = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetOtherAttributes(v types.GlucoseReadingOther) {
+	m.OtherAttributes = v
 }
 
 // GetNotes returns the Notes value.
@@ -2596,64 +2547,14 @@ func (m *GlucoseReadingsVw) SetDirection(v *string) {
 	m.Direction = v
 }
 
-// GetNoise returns the Noise value.
-func (m GlucoseReadingsVw) GetNoise() *float64 {
-	return m.Noise
+// GetOtherAttributes returns the OtherAttributes value.
+func (m GlucoseReadingsVw) GetOtherAttributes() types.GlucoseReadingOther {
+	return m.OtherAttributes
 }
 
-// SetNoise sets the Noise value and returns the updated GlucoseReadingsVw.
-func (m *GlucoseReadingsVw) SetNoise(v *float64) {
-	m.Noise = v
-}
-
-// GetFiltered returns the Filtered value.
-func (m GlucoseReadingsVw) GetFiltered() *float64 {
-	return m.Filtered
-}
-
-// SetFiltered sets the Filtered value and returns the updated GlucoseReadingsVw.
-func (m *GlucoseReadingsVw) SetFiltered(v *float64) {
-	m.Filtered = v
-}
-
-// GetUnfiltered returns the Unfiltered value.
-func (m GlucoseReadingsVw) GetUnfiltered() *float64 {
-	return m.Unfiltered
-}
-
-// SetUnfiltered sets the Unfiltered value and returns the updated GlucoseReadingsVw.
-func (m *GlucoseReadingsVw) SetUnfiltered(v *float64) {
-	m.Unfiltered = v
-}
-
-// GetRssi returns the Rssi value.
-func (m GlucoseReadingsVw) GetRssi() *float64 {
-	return m.Rssi
-}
-
-// SetRssi sets the Rssi value and returns the updated GlucoseReadingsVw.
-func (m *GlucoseReadingsVw) SetRssi(v *float64) {
-	m.Rssi = v
-}
-
-// GetIsCalibration returns the IsCalibration value.
-func (m GlucoseReadingsVw) GetIsCalibration() *bool {
-	return m.IsCalibration
-}
-
-// SetIsCalibration sets the IsCalibration value and returns the updated GlucoseReadingsVw.
-func (m *GlucoseReadingsVw) SetIsCalibration(v *bool) {
-	m.IsCalibration = v
-}
-
-// GetSensorMgdlAtPairing returns the SensorMgdlAtPairing value.
-func (m GlucoseReadingsVw) GetSensorMgdlAtPairing() *float64 {
-	return m.SensorMgdlAtPairing
-}
-
-// SetSensorMgdlAtPairing sets the SensorMgdlAtPairing value and returns the updated GlucoseReadingsVw.
-func (m *GlucoseReadingsVw) SetSensorMgdlAtPairing(v *float64) {
-	m.SensorMgdlAtPairing = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetOtherAttributes(v types.GlucoseReadingOther) {
+	m.OtherAttributes = v
 }
 
 // GetNotes returns the Notes value.
@@ -8486,64 +8387,14 @@ func (m *CreateGlucoseReadingParams) SetDirection(v *string) {
 	m.Direction = v
 }
 
-// GetNoise returns the Noise value.
-func (m CreateGlucoseReadingParams) GetNoise() *float64 {
-	return m.Noise
+// GetOtherAttributes returns the OtherAttributes value.
+func (m CreateGlucoseReadingParams) GetOtherAttributes() types.GlucoseReadingOther {
+	return m.OtherAttributes
 }
 
-// SetNoise sets the Noise value and returns the updated CreateGlucoseReadingParams.
-func (m *CreateGlucoseReadingParams) SetNoise(v *float64) {
-	m.Noise = v
-}
-
-// GetFiltered returns the Filtered value.
-func (m CreateGlucoseReadingParams) GetFiltered() *float64 {
-	return m.Filtered
-}
-
-// SetFiltered sets the Filtered value and returns the updated CreateGlucoseReadingParams.
-func (m *CreateGlucoseReadingParams) SetFiltered(v *float64) {
-	m.Filtered = v
-}
-
-// GetUnfiltered returns the Unfiltered value.
-func (m CreateGlucoseReadingParams) GetUnfiltered() *float64 {
-	return m.Unfiltered
-}
-
-// SetUnfiltered sets the Unfiltered value and returns the updated CreateGlucoseReadingParams.
-func (m *CreateGlucoseReadingParams) SetUnfiltered(v *float64) {
-	m.Unfiltered = v
-}
-
-// GetRssi returns the Rssi value.
-func (m CreateGlucoseReadingParams) GetRssi() *float64 {
-	return m.Rssi
-}
-
-// SetRssi sets the Rssi value and returns the updated CreateGlucoseReadingParams.
-func (m *CreateGlucoseReadingParams) SetRssi(v *float64) {
-	m.Rssi = v
-}
-
-// GetIsCalibration returns the IsCalibration value.
-func (m CreateGlucoseReadingParams) GetIsCalibration() *bool {
-	return m.IsCalibration
-}
-
-// SetIsCalibration sets the IsCalibration value and returns the updated CreateGlucoseReadingParams.
-func (m *CreateGlucoseReadingParams) SetIsCalibration(v *bool) {
-	m.IsCalibration = v
-}
-
-// GetSensorMgdlAtPairing returns the SensorMgdlAtPairing value.
-func (m CreateGlucoseReadingParams) GetSensorMgdlAtPairing() *float64 {
-	return m.SensorMgdlAtPairing
-}
-
-// SetSensorMgdlAtPairing sets the SensorMgdlAtPairing value and returns the updated CreateGlucoseReadingParams.
-func (m *CreateGlucoseReadingParams) SetSensorMgdlAtPairing(v *float64) {
-	m.SensorMgdlAtPairing = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated CreateGlucoseReadingParams.
+func (m *CreateGlucoseReadingParams) SetOtherAttributes(v types.GlucoseReadingOther) {
+	m.OtherAttributes = v
 }
 
 // GetNotes returns the Notes value.
@@ -9146,64 +8997,14 @@ func (m *UpdateGlucoseReadingParams) SetDirection(v *string) {
 	m.Direction = v
 }
 
-// GetNoise returns the Noise value.
-func (m UpdateGlucoseReadingParams) GetNoise() *float64 {
-	return m.Noise
+// GetOtherAttributes returns the OtherAttributes value.
+func (m UpdateGlucoseReadingParams) GetOtherAttributes() *string {
+	return m.OtherAttributes
 }
 
-// SetNoise sets the Noise value and returns the updated UpdateGlucoseReadingParams.
-func (m *UpdateGlucoseReadingParams) SetNoise(v *float64) {
-	m.Noise = v
-}
-
-// GetFiltered returns the Filtered value.
-func (m UpdateGlucoseReadingParams) GetFiltered() *float64 {
-	return m.Filtered
-}
-
-// SetFiltered sets the Filtered value and returns the updated UpdateGlucoseReadingParams.
-func (m *UpdateGlucoseReadingParams) SetFiltered(v *float64) {
-	m.Filtered = v
-}
-
-// GetUnfiltered returns the Unfiltered value.
-func (m UpdateGlucoseReadingParams) GetUnfiltered() *float64 {
-	return m.Unfiltered
-}
-
-// SetUnfiltered sets the Unfiltered value and returns the updated UpdateGlucoseReadingParams.
-func (m *UpdateGlucoseReadingParams) SetUnfiltered(v *float64) {
-	m.Unfiltered = v
-}
-
-// GetRssi returns the Rssi value.
-func (m UpdateGlucoseReadingParams) GetRssi() *float64 {
-	return m.Rssi
-}
-
-// SetRssi sets the Rssi value and returns the updated UpdateGlucoseReadingParams.
-func (m *UpdateGlucoseReadingParams) SetRssi(v *float64) {
-	m.Rssi = v
-}
-
-// GetIsCalibration returns the IsCalibration value.
-func (m UpdateGlucoseReadingParams) GetIsCalibration() *bool {
-	return m.IsCalibration
-}
-
-// SetIsCalibration sets the IsCalibration value and returns the updated UpdateGlucoseReadingParams.
-func (m *UpdateGlucoseReadingParams) SetIsCalibration(v *bool) {
-	m.IsCalibration = v
-}
-
-// GetSensorMgdlAtPairing returns the SensorMgdlAtPairing value.
-func (m UpdateGlucoseReadingParams) GetSensorMgdlAtPairing() *float64 {
-	return m.SensorMgdlAtPairing
-}
-
-// SetSensorMgdlAtPairing sets the SensorMgdlAtPairing value and returns the updated UpdateGlucoseReadingParams.
-func (m *UpdateGlucoseReadingParams) SetSensorMgdlAtPairing(v *float64) {
-	m.SensorMgdlAtPairing = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated UpdateGlucoseReadingParams.
+func (m *UpdateGlucoseReadingParams) SetOtherAttributes(v *string) {
+	m.OtherAttributes = v
 }
 
 // GetNotes returns the Notes value.

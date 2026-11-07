@@ -48,7 +48,12 @@ type DBModelConverter interface {
 	// goverter:map . DateString | ModelDateStringFromDateIntAndUTCOffset
 	// goverter:map ReadingType Type
 	// goverter:map Delta Trend
-	// goverter:map Rssi RSSI
+	// goverter:map OtherAttributes.Noise Noise
+	// goverter:map OtherAttributes.Filtered Filtered
+	// goverter:map OtherAttributes.Unfiltered Unfiltered
+	// goverter:map OtherAttributes.Rssi RSSI
+	// goverter:map OtherAttributes.IsCalibration IsCalibration
+	// goverter:map OtherAttributes.SensorMgdlAtPairing SensorMgdlAtPairing
 	DBModelToEntry(source *sitedb.GlucoseReading, siteContext *httputils.SiteContext) Entry
 
 	///////

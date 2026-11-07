@@ -96,30 +96,7 @@ func EntryToCreate(source Entry, context ConverterContext) sitedb.CreateGlucoseR
 		xstring := *source.Direction
 		sitedbCreateGlucoseReadingParams.Direction = &xstring
 	}
-	if source.Noise != nil {
-		xfloat642 := FlexibleFloat64ToFloat64(*source.Noise)
-		sitedbCreateGlucoseReadingParams.Noise = &xfloat642
-	}
-	if source.Filtered != nil {
-		xfloat643 := FlexibleFloat64ToFloat64(*source.Filtered)
-		sitedbCreateGlucoseReadingParams.Filtered = &xfloat643
-	}
-	if source.Unfiltered != nil {
-		xfloat644 := FlexibleFloat64ToFloat64(*source.Unfiltered)
-		sitedbCreateGlucoseReadingParams.Unfiltered = &xfloat644
-	}
-	if source.RSSI != nil {
-		xfloat645 := FlexibleFloat64ToFloat64(*source.RSSI)
-		sitedbCreateGlucoseReadingParams.Rssi = &xfloat645
-	}
-	if source.IsCalibration != nil {
-		xbool := *source.IsCalibration
-		sitedbCreateGlucoseReadingParams.IsCalibration = &xbool
-	}
-	if source.SensorMgdlAtPairing != nil {
-		xfloat646 := FlexibleFloat64ToFloat64(*source.SensorMgdlAtPairing)
-		sitedbCreateGlucoseReadingParams.SensorMgdlAtPairing = &xfloat646
-	}
+	sitedbCreateGlucoseReadingParams.OtherAttributes = EntryOther(source)
 	if source.UtcOffsetMinutes != nil {
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		sitedbCreateGlucoseReadingParams.UtcOffsetMinutes = &xint64

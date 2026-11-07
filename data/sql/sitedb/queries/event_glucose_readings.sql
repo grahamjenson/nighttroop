@@ -13,12 +13,7 @@ INSERT INTO glucose_readings (
 
     delta,
     direction,
-    noise,
-    filtered,
-    unfiltered,
-    rssi,
-    is_calibration,
-    sensor_mgdl_at_pairing,
+    other_attributes,
 
     notes,
     reason,
@@ -39,12 +34,7 @@ VALUES (
 
     sqlc.arg('Delta'),
     sqlc.arg('Direction'),
-    sqlc.arg('Noise'),
-    sqlc.arg('Filtered'),
-    sqlc.arg('Unfiltered'),
-    sqlc.arg('Rssi'),
-    sqlc.narg('IsCalibration'),
-    sqlc.narg('SensorMgdlAtPairing'),
+    sqlc.arg('OtherAttributes'),
 
     sqlc.arg('Notes'),
     sqlc.arg('Reason'),
@@ -160,12 +150,12 @@ UPDATE glucose_readings SET
 
     delta = COALESCE(sqlc.narg('Delta'), delta),
     direction = COALESCE(sqlc.narg('Direction'), direction),
-    noise = COALESCE(sqlc.narg('Noise'), noise),
-    filtered = COALESCE(sqlc.narg('Filtered'), filtered),
-    unfiltered = COALESCE(sqlc.narg('Unfiltered'), unfiltered),
-    rssi = COALESCE(sqlc.narg('Rssi'), rssi),
-    is_calibration = COALESCE(sqlc.narg('IsCalibration'), is_calibration),
-    sensor_mgdl_at_pairing = COALESCE(sqlc.narg('SensorMgdlAtPairing'), sensor_mgdl_at_pairing),
+    -- The fields sent, as JSON (types.OtherJSON), are merged into those kept, so one not sent stays as it is, as a
+    -- column of its own would
+    other_attributes = NULLIF(json_patch(
+        COALESCE(other_attributes, '{}'),
+        COALESCE(CAST(sqlc.narg('OtherAttributes') AS TEXT), '{}')
+    ), '{}'),
 
     notes = COALESCE(sqlc.narg('Notes'), notes),
     reason = COALESCE(sqlc.narg('Reason'), reason),

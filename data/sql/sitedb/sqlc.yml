@@ -32,12 +32,14 @@ overrides:
       - column: "event_groups.auto_forced"
         go_type:
           type: "*bool"
-      - column: "glucose_readings.is_calibration"
+      - column: "glucose_readings.other_attributes"
         go_type:
-          type: "*bool"
-      - column: "glucose_readings_vw.is_calibration"
+          import: "nighttroop.t1d.nz/data/types"
+          type: "GlucoseReadingOther"
+      - column: "glucose_readings_vw.other_attributes"
         go_type:
-          type: "*bool"
+          import: "nighttroop.t1d.nz/data/types"
+          type: "GlucoseReadingOther"
       - column: "insulin_doses.automatic"
         go_type:
           type: "*bool"

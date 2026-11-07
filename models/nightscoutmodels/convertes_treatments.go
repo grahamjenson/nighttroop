@@ -19,6 +19,7 @@ import (
 // goverter:extend ShortStringToString
 // goverter:extend SanitizedStringToString
 // goverter:extend UnitsToUnits
+// goverter:extend nighttroop.t1d.nz/data/sql/sitedb:GlucoseReadingOtherJSON
 type TreatmentsEvenetConverter interface {
 
 	///////
@@ -358,7 +359,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
 	//
-	// goverter:ignore Mgdl Delta Direction Noise Filtered Unfiltered Rssi ReadingType IsCalibration SensorMgdlAtPairing
+	// goverter:ignore Mgdl Delta Direction OtherAttributes ReadingType
 	// goverter:map GlucoseType MeasurementMethod
 	PartialTreatmentToGlucoseReading(source Treatment) sitedb.GlucoseReading
 

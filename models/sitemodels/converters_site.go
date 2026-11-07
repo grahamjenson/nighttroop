@@ -6,6 +6,7 @@ import (
 
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
+	"nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/authclients"
 	"nighttroop.t1d.nz/utils/consts"
@@ -91,6 +92,10 @@ type SiteConverter interface {
 	// goverter:map Mgdl Reading | MgdlToSettingsUnits
 	// goverter:map Units OriginalUnits
 	// goverter:map Units | ContextUnits
+	// goverter:map OtherAttributes.Noise Noise
+	// goverter:map OtherAttributes.Filtered Filtered
+	// goverter:map OtherAttributes.Unfiltered Unfiltered
+	// goverter:map OtherAttributes.Rssi Rssi
 	GlucoseReadingFromDB(source *sitedb.GlucoseReading, siteContext *httputils.SiteContext) *SiteGlucoseReading
 
 	// goverter:context siteContext
@@ -101,15 +106,15 @@ type SiteConverter interface {
 	// goverter:map OccurredAt | OccurredAtOrNow
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
-	// The site does not set AAPS's calibrations
-	// goverter:ignore IsCalibration SensorMgdlAtPairing
+	// goverter:map . OtherAttributes | GlucoseReadingOther
 	GlucoseReadingToCreate(source *SiteGlucoseReading, siteContext *httputils.SiteContext) sitedb.CreateGlucoseReadingParams
 
 	// goverter:context siteContext
 	// goverter:map Reading Mgdl | SettingsUnitsToMgdlOrNil
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
-	// goverter:ignore RawJsonData IsCalibration SensorMgdlAtPairing
+	// goverter:ignore RawJsonData
+	// goverter:map . OtherAttributes | GlucoseReadingOtherJSON
 	GlucoseReadingToUpdate(source *SiteGlucoseReading, siteContext *httputils.SiteContext) sitedb.UpdateGlucoseReadingParams
 
 	///////
@@ -528,4 +533,16 @@ func SettingsUnitsToMgdl(value float64, siteContext *httputils.SiteContext) floa
 // goverter:context siteContext
 func SettingsUnitsToMgdlOrNil(value float64, siteContext *httputils.SiteContext) *float64 {
 	return Float64OrNil(SettingsUnitsToMgdl(value, siteContext))
+}
+
+// GlucoseReadingOther is a reading's CGM fields the site sends, kept in its other attributes. The site does not set
+// AAPS's calibrations. It is written out, as a generated converter cannot be called from this package's own code.
+func GlucoseReadingOther(source *SiteGlucoseReading) types.GlucoseReadingOther {
+	return types.GlucoseReadingOther{Noise: source.Noise, Filtered: source.Filtered, Unfiltered: source.Unfiltered, Rssi: source.Rssi}
+}
+
+// GlucoseReadingOtherJSON is a reading's CGM fields the site sends, as JSON for an update to merge into its other
+// attributes
+func GlucoseReadingOtherJSON(source *SiteGlucoseReading) *string {
+	return types.OtherJSON(GlucoseReadingOther(source))
 }

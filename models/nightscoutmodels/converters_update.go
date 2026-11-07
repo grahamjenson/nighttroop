@@ -38,7 +38,7 @@ type UpdateMapConverter interface {
 	//
 	// goverter:ignore Notes Reason
 	// goverter:map Trend Delta
-	// goverter:map RSSI Rssi
+	// goverter:map . OtherAttributes | EntryOtherJSON
 	EntryToUpdate(source Entry, ctx ConverterContext) sitedb.UpdateGlucoseReadingParams
 
 	///////
