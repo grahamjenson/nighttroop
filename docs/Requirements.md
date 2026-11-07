@@ -267,6 +267,11 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   glucose over the AGP of the 7 days to it. A report with no glucose says so instead.
 - Day, Week, Fortnight and Month open the report of that kind ending on the report's last day, or today; Previous and
   Next open the one before and after, disabled past today or a year ago. Back and forward move between reports.
+- Daily dose, next to the period buttons, opens the daily dose report at `/reports/tdd`: a bar of each kept day before
+  today, back a year, with insulin, oldest first, dated in the site's timezone; today is left out as it is not over.
+- A day with no insulin has no bar and is not counted. Hovering a bar shows its date and daily dose in U.
+- The daily dose report shows how many days have insulin and their mean, lowest and highest daily dose, and says when
+  there are no days with insulin yet. Day, Week, Fortnight and Month open those reports ending yesterday.
 
 ### Getting started
 
