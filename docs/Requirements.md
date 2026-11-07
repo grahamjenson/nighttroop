@@ -21,6 +21,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - A staging server (`MODE=staging`) is never set up: it starts with the control admin `admin` of its
   `STAGING_ADMIN_PASSWORD` and `STAGING_ADMIN_TOTP_SECRET`, made again whenever its data is wiped, and will not start
   without them. Otherwise it runs as production does, its site admins getting their own random credentials.
+- A staging deploy wipes every DB, and their backups, when one cannot be migrated and prepared, or its schema is not
+  the one the migrations make on a new DB, as after a migration's `CHECK` was edited, and keeps them otherwise.
 
 ### Limiting a server to some countries
 
@@ -67,10 +69,15 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 ### A site's identities
 
-- A site's details list its identities: who they are, whether they use TOTP, and when each was last seen. Secrets
-  are never shown.
+- Each site has its own page, `/sites/{id}/inspect`, linked from its details as "Inspect its identities", with its
+  details and a table of every one of its identities: who they are, whether they use TOTP, and when each was last
+  seen. Secrets are never shown.
 - An admin can reset an identity's password (shown once, with a device's new Nightscout token) or TOTP secret. Each
   reset signs out the identity's existing sessions and is recorded as an event.
+- An admin can sign in to a site as any of its identities with its Sign in as button, after confirming: a new tab opens
+  the site signed in as it, with its role, for the hour a sign in lasts. Control sends the tab to a link to the site
+  that works once, within a minute, on its own site only, which sets its sign in cookie. The site records a "Signed in by control" event, with the identity and the control admin, which its
+  admins see on its Events page. Read-only control identities cannot.
 
 ### Background jobs
 
@@ -489,6 +496,8 @@ focus back to the row or button that opened it.
   entries is left out and the readings with it kept; an uploader battery that is not a number is left out of its
   device status; `uploader.battery` is the uploader's battery; and a treatment is found by its `uuid` (`find[uuid]`), sent as the `_id` or as xDrip+ makes its `_id`.
 - Trio's and iAPS's `SMB` and `External Insulin` treatments are kept as insulin doses, with their event type.
+- A Loop bolus's `automatic` comes back as sent, true or false, through API v1 and v3, so LoopFollow shows an
+  automatic bolus as an SMB and leaves it out of its bolus stats.
 - xDrip+'s `Sensor Stop` treatments are kept as a site or sensor change, with their event type, so the treatments it
   uploads after one are kept too; the site can add a Sensor Stop change and a Sensor Stop event group.
 - A profile has `enteredBy`, the identity that uploaded it, as Trio needs it to import one.

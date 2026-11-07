@@ -157,11 +157,14 @@ ASSERT_EQUALS 60 "@1.duration"
 ASSERT_EQUALS "Running" "@1.reason"
 # enteredBy, shown for an override, is as sent
 ASSERT_EQUALS "loop://iPhone" "@1.enteredBy"
-# Bolus.swift and SMB.swift: insulin as Double
+# Bolus.swift and SMB.swift: insulin as Double, and automatic as sent, as an automatic one is an SMB and left out of
+# the bolus stats
 ASSERT_EQUALS "Correction Bolus" "@2.eventType"
 ASSERT_EQUALS 0.35 "@2.insulin"
+ASSERT_EQUALS true "@2.automatic"
 ASSERT_EQUALS "Correction Bolus" "@3.eventType"
 ASSERT_EQUALS 1.5 "@3.insulin"
+ASSERT_EQUALS false "@3.automatic"
 # Carbs.swift: carbs as Double, absorptionTime as Int minutes
 ASSERT_EQUALS "Carb Correction" "@4.eventType"
 ASSERT_EQUALS 30 "@4.carbs"
@@ -173,6 +176,18 @@ ASSERT_EQUALS 30 "@5.duration"
 ASSERT_EQUALS "Resume Pump" "@6.eventType"
 ASSERT_EQUALS "Suspend Pump" "@7.eventType"
 ASSERT_LENGTH 20 "@7.created_at"
+
+# automatic is as sent through API v3 too
+NAME treatments_v3_automatic
+GET http://{{ site }}/api/v3/treatments?eventType$eq=Correction%20Bolus&sort$desc=created_at
+H Accept: application/json
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result"
+ASSERT_EQUALS 0.35 "@result.0.insulin"
+ASSERT_EQUALS true "@result.0.automatic"
+ASSERT_EQUALS 1.5 "@result.1.insulin"
+ASSERT_EQUALS false "@result.1.automatic"
 
 # CAge.swift: the latest site change until now
 NAME cage
