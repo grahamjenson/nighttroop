@@ -222,8 +222,11 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 ### Summary
 
-- The home page summarises the site: the latest glucose with how long ago it was, the loop's IOB and COB, every
-  treatment, and each device's latest status.
+- The home page summarises the site: the latest glucose with how long ago it was, the loop's IOB and COB, the
+  treatments, and each device's latest status.
+- Under the graph, an Insulin & Carbs table lists each dose and meal's carbs, newest first, with how long ago it was,
+  in an Insulin and a Carbs column; a loop's SMBs are marked SMB. Beside it, Other Treatments lists the temp targets
+  and temp basals.
 - A graph of glucose with carbs and insulin marked, over 6 hours to a week, drawn on one grid as Carer draws it. A
   site opens on the last 6 hours, and its range buttons choose 6 hours, 24 hours, 48 hours or a week:
   - The urgent range and the range shaded across it, with the low and high as dashed lines.
@@ -239,8 +242,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - Readings are coloured and labelled low, in range or high by the alarm settings.
 - The summary says how long ago things were in words, to the nearest hour once over an hour, as "45 minutes ago" or
   "2 days 1 hour ago", and its tiles and devices show units smaller and grey beside their numbers.
-- The summary's glucose readings link to the page of every reading, and each treatment's kind (e.g. Insulin) to the
-  page of that kind.
+- The summary's latest glucose links to the page of every reading, and each other treatment's kind (e.g. Temp Basal)
+  to the page of that kind.
 - The summary updates live as new data arrives, and catches up after the page has been in the background. While it
   does, ● Live shows beside its title.
 - A page's live updates stay connected for up to an hour, not cut off by the 30 second request timeout, so an open

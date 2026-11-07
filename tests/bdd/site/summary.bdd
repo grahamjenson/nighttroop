@@ -48,8 +48,8 @@ INPUT #site--component-event--create--event-type Sensor Start
 CLICK #site--component-event--create--submit
 ASSERT_STATUS 201
 
-// The summary shows the latest glucose, the loop's IOB and COB, every treatment and each device's latest status, over
-// the last 6 hours unless a range is chosen
+// The summary shows the latest glucose, the loop's IOB and COB, the insulin and carbs, the other treatments and each
+// device's latest status, over the last 6 hours unless a range is chosen
 CLICK #site--nav--home
 ASSERT_NEW_URL
 ASSERT_PATH /
@@ -68,19 +68,25 @@ ASSERT_VISIBLE #site--summary--total-daily-dose span.text-gray-500 >> text="U"
 ASSERT_VISIBLE #site--summary--devices dd span.text-gray-500 >> text="%" >> nth=0
 ASSERT_VISIBLE #site--summary--sensor-started >> text=/^(just now|\d+ minutes? ago)$/
 ASSERT_TEXT_EQUALS #site--summary--site-changed –
+// The other treatments are virtual sync's temp basal and temp target, and no insulin or food
 ASSERT_VISIBLE #site--summary--treatments >> text=Temp Basal
 ASSERT_VISIBLE #site--summary--treatments >> text=Temp Target
-ASSERT_VISIBLE #site--summary--readings tbody tr >> nth=5
-// The readings and treatments are just when and what they were, not the device they came from
-ASSERT_NOT_VISIBLE #site--summary--readings >> text=virtual://nighttroop
+ASSERT_NOT_VISIBLE #site--summary--treatments >> text=Insulin
+ASSERT_NOT_VISIBLE #site--summary--treatments >> text=Food
+// The insulin and carbs table has the dose and snack given now, newest first, the newest the loop's SMB, marked so
+ASSERT_VISIBLE #site--summary--insulin-carbs tbody tr >> nth=0 >> text=SMB
+ASSERT_VISIBLE #site--summary--insulin-carbs td >> text=/^\s*2\.5\sU$/
+ASSERT_VISIBLE #site--summary--insulin-carbs td >> text=/^\s*15\sg$/
+// The tables are just when and what they were, not the device they came from
+ASSERT_NOT_VISIBLE #site--summary--insulin-carbs >> text=virtual://nighttroop
 ASSERT_NOT_VISIBLE #site--summary--treatments >> text=virtual://nighttroop
 ASSERT_VISIBLE #site--summary--devices >> text=virtual://nighttroop
 ASSERT_VISIBLE #site--summary--devices >> text=virtual://carer-phone
 
-// The latest glucose, each reading and each treatment say how long ago they were, in words, all within the last half
+// The latest glucose, each dose and meal, and each other treatment say how long ago they were, in words, all within the last half
 // hour here
 ASSERT_VISIBLE #site--summary--glucose--ago >> text=/^(just now|\d+ minutes? ago)$/
-ASSERT_VISIBLE #site--summary--readings tbody tr >> nth=0 >> text=/^(just now|\d+ minutes? ago)$/
+ASSERT_VISIBLE #site--summary--insulin-carbs tbody tr >> nth=0 >> text=/^(just now|\d+ minutes? ago)$/
 ASSERT_VISIBLE #site--summary--treatments tbody tr >> nth=0 >> text=/^(just now|\d+ minutes? ago)$/
 
 // ECharts draws the graph as an SVG in the browser, on one grid as Carer draws it: carbs and insulin are labelled by their
@@ -113,8 +119,8 @@ CLICK_BACK
 ASSERT_STATUS 200
 ASSERT_TEXT_EQUALS #site--summary--hours Last 48 hours
 
-// The readings link to the page of every reading, and each treatment to the page of its kind, and back returns to the
-// summary
+// The latest glucose links to the page of every reading, and each other treatment to the page of its kind, and back
+// returns to the summary
 CLICK #site--summary--all-readings
 ASSERT_STATUS 200
 ASSERT_PATH /data/glucose
@@ -122,10 +128,10 @@ ASSERT_VISIBLE #glucoseReadingsTable
 CLICK_BACK
 ASSERT_STATUS 200
 ASSERT_TEXT_EQUALS #site--summary--hours Last 48 hours
-CLICK #site--summary--treatments a >> text="Insulin" >> nth=0
+CLICK #site--summary--treatments a >> text="Temp Basal" >> nth=0
 ASSERT_STATUS 200
-ASSERT_PATH /data/insulin
-ASSERT_VISIBLE #insulinDosesTable >> text=2.5
+ASSERT_PATH /data/temp-basals
+ASSERT_VISIBLE #tempBasalsTable
 CLICK_BACK
 ASSERT_STATUS 200
 ASSERT_TEXT_EQUALS #site--summary--hours Last 48 hours
