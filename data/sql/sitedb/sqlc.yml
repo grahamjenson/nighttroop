@@ -26,6 +26,14 @@ overrides:
       - column: "profile_presets.is_default"
         go_type:
           type: "bool"
+      - column: "food_intakes.other_attributes"
+        go_type:
+          import: "nighttroop.t1d.nz/data/types"
+          type: "FoodIntakeOther"
+      - column: "food_intakes_vw.other_attributes"
+        go_type:
+          import: "nighttroop.t1d.nz/data/types"
+          type: "FoodIntakeOther"
       - column: "device_reports.is_device_charging"
         go_type:
           type: "*bool"

@@ -180,16 +180,9 @@ type FoodIntake struct {
 	ID                    string
 	Name                  *string
 	FoodType              *string
-	Category              *string
-	Subcategory           *string
 	AbsorptionTimeMinutes *int64
-	PreBolus              *float64
 	Carbs                 *float64
-	Fat                   *float64
-	Protein               *float64
-	Fibre                 *float64
-	Energy                *float64
-	Portions              *float64
+	OtherAttributes       types.FoodIntakeOther
 	Notes                 *string
 	Reason                *string
 	RawJsonData           *string
@@ -210,16 +203,9 @@ type FoodIntakesVw struct {
 	ID                    *string
 	Name                  *string
 	FoodType              *string
-	Category              *string
-	Subcategory           *string
 	AbsorptionTimeMinutes *int64
-	PreBolus              *float64
 	Carbs                 *float64
-	Fat                   *float64
-	Protein               *float64
-	Fibre                 *float64
-	Energy                *float64
-	Portions              *float64
+	OtherAttributes       types.FoodIntakeOther
 	Notes                 *string
 	Reason                *string
 	RawJsonData           *string

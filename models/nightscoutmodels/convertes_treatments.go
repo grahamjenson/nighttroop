@@ -19,7 +19,7 @@ import (
 // goverter:extend ShortStringToString
 // goverter:extend SanitizedStringToString
 // goverter:extend UnitsToUnits
-// goverter:extend nighttroop.t1d.nz/data/sql/sitedb:GlucoseReadingOtherJSON
+// goverter:extend nighttroop.t1d.nz/data/sql/sitedb:.*OtherJSON
 type TreatmentsEvenetConverter interface {
 
 	///////
@@ -246,6 +246,14 @@ type TreatmentsEvenetConverter interface {
 	// goverter:ignore CreatedAt
 	// goverter:ignoreMissing
 	//
+	// goverter:map OtherAttributes.Category Category
+	// goverter:map OtherAttributes.Subcategory Subcategory
+	// goverter:map OtherAttributes.Fat Fat
+	// goverter:map OtherAttributes.Protein Protein
+	// goverter:map OtherAttributes.Fibre Fibre
+	// goverter:map OtherAttributes.Energy Energy
+	// goverter:map OtherAttributes.Portions Portions
+	// goverter:map OtherAttributes.PreBolus PreBolus
 	UpdateFoodIntakeToTreatment(source *sitedb.FoodIntake, target *Treatment)
 
 	// goverter:update target
@@ -352,6 +360,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map Date OccurredAt | OrNow
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
+	// goverter:map . OtherAttributes | TreatmentFoodIntakeOther
 	PartialTreatmentToFoodIntake(source Treatment) sitedb.FoodIntake
 
 	// goverter:ignore ID DeletedAt CreatedAt CreatedByIdentityName CreatedByIdentityID UpdatedAt UpdatedByIdentityName UpdatedByIdentityID
