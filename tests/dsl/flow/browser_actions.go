@@ -421,14 +421,14 @@ func (r *Input) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 	}
 
 	// A select can't be typed into, so pick the option with this value, or else this label, as when its value is an ID
-	if tag, err := locator.Evaluate("element => element.tagName", nil); err == nil && tag == "SELECT" {
+	if tag, err := locator.Evaluate("element => element.tagName", nil, playwright.LocatorEvaluateOptions{Timeout: readWait}); err == nil && tag == "SELECT" {
 		_, err = locator.SelectOption(playwright.SelectOptionValues{ValuesOrLabels: &[]string{value}}, playwright.LocatorSelectOptionOptions{Timeout: playwright.Float(actionWait)})
 		return page, err
 	}
 
 	// A date or time input splits typing across its parts, so it takes the value whole, e.g. 2026-01-02T12:30, as does a
 	// text area, which is pasted into, such as with a key
-	if kind, err := locator.Evaluate("element => element.type", nil); err == nil && (kind == "datetime-local" || kind == "date" || kind == "time" || kind == "textarea") {
+	if kind, err := locator.Evaluate("element => element.type", nil, playwright.LocatorEvaluateOptions{Timeout: readWait}); err == nil && (kind == "datetime-local" || kind == "date" || kind == "time" || kind == "textarea") {
 		return page, locator.Fill(value, playwright.LocatorFillOptions{Timeout: playwright.Float(actionWait)})
 	}
 
@@ -437,7 +437,7 @@ func (r *Input) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 		return nil, err
 	}
 	// Use this instead of Fill to simulate typing each key sequentially
-	err = locator.PressSequentially(value)
+	err = locator.PressSequentially(value, playwright.LocatorPressSequentiallyOptions{Timeout: playwright.Float(actionWait)})
 	if err != nil {
 		return nil, err
 	}
@@ -683,9 +683,9 @@ func (r *SaveText) Execute(t *testing.T, page playwright.Page, ctx map[string]an
 	var text string
 	var err error
 	if r.Value {
-		text, err = locator.InputValue()
+		text, err = locator.InputValue(playwright.LocatorInputValueOptions{Timeout: readWait})
 	} else {
-		text, err = locator.InnerText()
+		text, err = locator.InnerText(playwright.LocatorInnerTextOptions{Timeout: readWait})
 	}
 	if err != nil {
 		return nil, fmt.Errorf("%s", r.ToErrorLine(err.Error()))

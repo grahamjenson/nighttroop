@@ -124,3 +124,54 @@ func TestNotVisibleWaitsForEveryMatchToGo(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, swapped)
 }
+
+// The page shows its heading and a select a second and a half after it loads: longer than the 1s default timeout the
+// BDD tests set, as a busy CI runner can take to answer even for an element already on the page
+const slowPage = `<html><body><script>
+setTimeout(() => { document.body.innerHTML = '<h1 id="slow">Nighttroop</h1>' +
+	'<select id="pick"><option value="a">A</option><option value="b">B</option></select>' }, 1500)
+</script></body></html>`
+
+// An assert or action reading an element waits as long as one finding it, not the browser's 1s default, so a slow
+// runner does not fail it
+func TestReadsWaitPastTheDefaultTimeout(t *testing.T) {
+	pw, err := playwright.Run()
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = pw.Stop() })
+	browser, err := pw.Chromium.Launch()
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = browser.Close() })
+
+	tests := []struct {
+		name string
+		run  func(t *testing.T, page playwright.Page) error
+	}{
+		{"ASSERT_TEXT_EQUALS", func(t *testing.T, page playwright.Page) error {
+			return (&AssertTextEquals{Locator: "#slow", Text: "Nighttroop"}).Execute(t, map[string]any{}, page, nil)
+		}},
+		{"SAVE_TEXT", func(t *testing.T, page playwright.Page) error {
+			ctx := map[string]any{}
+			_, err := (&SaveText{Locator: "#slow", Key: "heading"}).Execute(t, page, ctx)
+			require.Equal(t, "Nighttroop", ctx["heading"])
+			return err
+		}},
+		// A select is picked from rather than typed into, which needs its tag read in time
+		{"INPUT a select", func(t *testing.T, page playwright.Page) error {
+			if _, err := (&Input{Locator: "#pick", Value: "b"}).Execute(t, page, map[string]any{}); err != nil {
+				return err
+			}
+			value, err := page.Locator("#pick").InputValue()
+			require.Equal(t, "b", value)
+			return err
+		}},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			page, err := browser.NewPage()
+			require.NoError(t, err)
+			page.SetDefaultTimeout(1000)
+			require.NoError(t, page.SetContent(slowPage))
+			require.NoError(t, test.run(t, page))
+		})
+	}
+}
