@@ -34,8 +34,8 @@ func (s *SummaryCollection) GetRoute() string {
 	return "summary"
 }
 
-// defaultHours is how far back the summary goes when the request does not say
-const defaultHours = 48
+// defaultHours is how far back the summary goes when the request does not say, as when a site is signed in to
+const defaultHours = 6
 
 // maxRows caps each list at a week of readings five minutes apart
 const maxRows = 7 * 24 * 12

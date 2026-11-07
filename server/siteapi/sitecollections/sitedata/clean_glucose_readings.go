@@ -44,13 +44,16 @@ func (s *CleanGlucoseReadingsCollection) ToModel(row *sitemodels.SiteCleanGlucos
 	return row
 }
 
+// cleanReadingsDefaultHours is how far back the cleaned readings go when the request does not say
+const cleanReadingsDefaultHours = 48
+
 // SearchRows is the cleaned readings of the last hours, 48 when not given, newest first, paged by limit and skip
 func (s *CleanGlucoseReadingsCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.SiteCleanGlucoseReading, error) {
 	q, err := collectionTx.Site()
 	if err != nil {
 		return nil, err
 	}
-	hours := int64(defaultHours)
+	hours := int64(cleanReadingsDefaultHours)
 	if query.Hours != nil {
 		hours = *query.Hours
 	}

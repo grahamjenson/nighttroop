@@ -48,11 +48,13 @@ INPUT #site--component-event--create--event-type Sensor Start
 CLICK #site--component-event--create--submit
 ASSERT_STATUS 201
 
-// The summary shows the latest glucose, the loop's IOB and COB, every treatment and each device's latest status
+// The summary shows the latest glucose, the loop's IOB and COB, every treatment and each device's latest status, over
+// the last 6 hours unless a range is chosen
 CLICK #site--nav--home
 ASSERT_NEW_URL
 ASSERT_PATH /
 ASSERT_VISIBLE #site--summary--glucose--reading
+ASSERT_TEXT_EQUALS #site--summary--hours Last 6 hours
 SCREENSHOT summary
 ASSERT_NOT_VISIBLE #site--summary--iob >> text="–"
 ASSERT_NOT_VISIBLE #site--summary--cob >> text="–"
@@ -99,17 +101,17 @@ ASSERT_DRAWN #site--summary--graph >> text=Basal
 ASSERT_NOT_VISIBLE #site--summary--graph >> text=0.35U
 
 // The range buttons show the summary over 6 hours to a week, and back returns to the range before
-CLICK #site--summary--range-6
+CLICK #site--summary--range-48
 ASSERT_STATUS 200
-ASSERT_TEXT_EQUALS #site--summary--hours Last 6 hours
+ASSERT_TEXT_EQUALS #site--summary--hours Last 48 hours
 ASSERT_VISIBLE #site--summary--graph >> text=2.5U
-SCREENSHOT summary_6_hours
+SCREENSHOT summary_48_hours
 CLICK #site--summary--range-168
 ASSERT_STATUS 200
 ASSERT_TEXT_EQUALS #site--summary--hours Last 168 hours
 CLICK_BACK
 ASSERT_STATUS 200
-ASSERT_TEXT_EQUALS #site--summary--hours Last 6 hours
+ASSERT_TEXT_EQUALS #site--summary--hours Last 48 hours
 
 // The readings link to the page of every reading, and each treatment to the page of its kind, and back returns to the
 // summary
@@ -119,14 +121,14 @@ ASSERT_PATH /data/glucose
 ASSERT_VISIBLE #glucoseReadingsTable
 CLICK_BACK
 ASSERT_STATUS 200
-ASSERT_TEXT_EQUALS #site--summary--hours Last 6 hours
+ASSERT_TEXT_EQUALS #site--summary--hours Last 48 hours
 CLICK #site--summary--treatments a >> text="Insulin" >> nth=0
 ASSERT_STATUS 200
 ASSERT_PATH /data/insulin
 ASSERT_VISIBLE #insulinDosesTable >> text=2.5
 CLICK_BACK
 ASSERT_STATUS 200
-ASSERT_TEXT_EQUALS #site--summary--hours Last 6 hours
+ASSERT_TEXT_EQUALS #site--summary--hours Last 48 hours
 
 // A device opens its latest status's details
 CLICK #site--summary--devices >> text=virtual://nighttroop

@@ -35,7 +35,7 @@
     "/summary": {
       "get": {
         "operationId": "GetSummary",
-        "summary": "The site's summary over the last hours (48 by default, a week at most)",
+        "summary": "The site's summary over the last hours (6 by default, a week at most)",
         "parameters": [{ "name": "hours", "in": "query", "schema": { "type": "integer", "format": "int64" } }],
         "responses": {
           "200": { "description": "The summary, as a list of one", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SummaryList" } } } },
