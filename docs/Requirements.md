@@ -224,7 +224,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 - The home page summarises the site: the latest glucose with how long ago it was, the loop's IOB and COB, every
   treatment, and each device's latest status.
-- A graph of glucose with carbs and insulin marked, over 6 hours to a week, drawn on one grid as Carer draws it:
+- A graph of glucose with carbs and insulin marked, over 6 hours to a week, drawn on one grid as Carer draws it. A
+  site opens on the last 6 hours, and its range buttons choose 6 hours, 24 hours, 48 hours or a week:
   - The urgent range and the range shaded across it, with the low and high as dashed lines.
   - The targets in force shaded over them.
   - Readings as dots, coloured low, in range or high, joined by a thin line broken where readings are over 15
