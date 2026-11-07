@@ -23,11 +23,11 @@ func TestGlucoseHeroColoursItsRange(t *testing.T) {
 	}{
 		{"low in mmol/L", 3.5, &mmol, "text-glucose-low", "Low"},
 		{"in range in mmol/L", 6.5, &mmol, "text-glucose-in-range", ""},
-		{"high in mmol/L", 11.2, &mmol, "text-glucose-high", "High"},
+		{"high in mmol/L", 11.2, &mmol, "text-glucose-high-text", "High"},
 		{"low in mg/dL", 63, &mgdl, "text-glucose-low", "Low"},
 		{"at the low alarm in mg/dL", 70, &mgdl, "text-glucose-in-range", ""},
 		{"at the high alarm in mg/dL", 180, &mgdl, "text-glucose-in-range", ""},
-		{"high in mg/dL", 181, &mgdl, "text-glucose-high", "High"},
+		{"high in mg/dL", 181, &mgdl, "text-glucose-high-text", "High"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

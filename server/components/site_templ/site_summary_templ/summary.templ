@@ -31,8 +31,8 @@ func arrow(direction *string) string {
 }
 
 // rangeColours colour a reading below the low alarm, above the high alarm and between them with the theme's glucose
-// colours, as the graph colours its dots
-var rangeColours = map[string]string{"Low": "text-glucose-low", "High": "text-glucose-high", "": "text-glucose-in-range"}
+// colours, as the graph colours its dots, but high in the darker amber that can be read as text
+var rangeColours = map[string]string{"Low": "text-glucose-low", "High": "text-glucose-high-text", "": "text-glucose-in-range"}
 
 // value shows an optional number with its unit, or a dash when it is not set
 func value(v *float64, unit string) string {

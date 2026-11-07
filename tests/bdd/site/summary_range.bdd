@@ -17,7 +17,8 @@ ASSERT_VISIBLE #site--summary--glucose--reading.text-glucose-low
 ASSERT_TEXT_EQUALS #site--summary--glucose--range Low
 SCREENSHOT summary_low
 
-// One over the high alarm (180 mg/dL by default) is coloured high and says High
+// One over the high alarm (180 mg/dL by default) is coloured high, in a darker amber than the graph's to read as text,
+// and says High
 CLICK #site--settings-menu
 CLICK #site--data--glucose-button
 ASSERT_STATUS 200
@@ -29,7 +30,7 @@ CLICK #site--nav--home
 ASSERT_NEW_URL
 ASSERT_PATH /
 ASSERT_TEXT_EQUALS #site--summary--glucose--reading 12.5
-ASSERT_VISIBLE #site--summary--glucose--reading.text-glucose-high
+ASSERT_VISIBLE #site--summary--glucose--reading.text-glucose-high-text
 ASSERT_TEXT_EQUALS #site--summary--glucose--range High
 SCREENSHOT summary_high
 
