@@ -214,16 +214,9 @@ type FoodPreset struct {
 	ID                    string
 	Name                  string
 	FoodType              *string
-	Category              *string
-	Subcategory           *string
 	AbsorptionTimeMinutes *int64
-	PreBolus              *float64
 	Carbs                 *float64
-	Fat                   *float64
-	Protein               *float64
-	Fibre                 *float64
-	Energy                *float64
-	Portions              *float64
+	OtherAttributes       types.FoodPresetOther
 	RawJsonData           *string
 	CreatedAt             int64
 	UpdatedAt             int64

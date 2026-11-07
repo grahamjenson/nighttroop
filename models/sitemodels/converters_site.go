@@ -354,6 +354,14 @@ type SiteConverter interface {
 	// FOOD PRESETS
 	///////
 
+	// goverter:map OtherAttributes.Category Category
+	// goverter:map OtherAttributes.Subcategory Subcategory
+	// goverter:map OtherAttributes.Fat Fat
+	// goverter:map OtherAttributes.Protein Protein
+	// goverter:map OtherAttributes.Fibre Fibre
+	// goverter:map OtherAttributes.Energy Energy
+	// goverter:map OtherAttributes.Portions Portions
+	// goverter:map OtherAttributes.PreBolus PreBolus
 	FoodPresetFromDB(source *sitedb.FoodPreset) *SiteFoodPreset
 
 	// goverter:context siteContext
@@ -361,12 +369,14 @@ type SiteConverter interface {
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
 	// goverter:ignore RawJsonData
+	// goverter:map . OtherAttributes | FoodPresetOther
 	FoodPresetToCreate(source *SiteFoodPreset, siteContext *httputils.SiteContext) sitedb.CreateFoodPresetParams
 
 	// goverter:context siteContext
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
 	// goverter:ignore RawJsonData
+	// goverter:map . OtherAttributes | FoodPresetOtherJSON
 	FoodPresetToUpdate(source *SiteFoodPreset, siteContext *httputils.SiteContext) sitedb.UpdateFoodPresetParams
 
 	///////
