@@ -249,6 +249,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - Time in range, total daily dose, and the last sensor and site change for today, yesterday, last week and last
   month.
 - Readings are coloured and labelled low, in range or high by the alarm settings.
+- A latest glucose older than the no data alarm's minutes (20 by default) is grey, with an amber badge saying how
+  long there has been no reading, as "No reading for 45 min".
 - The summary says how long ago things were in words, to the nearest hour once over an hour, as "45 minutes ago" or
   "2 days 1 hour ago", and its tiles and devices show units smaller and grey beside their numbers.
 - The summary's latest glucose links to the page of every reading, and each other treatment's kind (e.g. Temp Basal)
