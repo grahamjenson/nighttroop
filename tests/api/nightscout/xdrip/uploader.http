@@ -95,14 +95,20 @@ ASSERT_EQUALS "G6 Transmitter" "@0.device"
 # TREATMENTS: postTreatments upserts each one with PUT, its _id made from its uuid (uuid_to_id)
 ######
 
+# The bolus's times are set once, as xDrip+ sends the same ones when it upserts it again. Made again, a second
+# later they would differ, and changing a treatment's date is refused
+SET bolus_ms {{ itime 8 }}
+SET bolus_at {{ time 8 }}
+SET bolus_java {{ javatime 8 }}
+
 // A bolus with carbs has the eventType <none>
 NAME xdrip_upsert_bolus
 PUT http://{{ site }}/api/v1/treatments
 H api-secret: {{ sha1 token }}
-B {"timestamp": {{ itime 8 }}, "eventType": "<none>", "enteredBy": "xdrip", "notes": "pizza",
+B {"timestamp": {{ .bolus_ms }}, "eventType": "<none>", "enteredBy": "xdrip", "notes": "pizza",
    "uuid": "8c5f0c3a-1b2d-4e6f-9a7b-0c1d2e3f4a5b", "carbs": 45.0, "insulin": 4.5,
-   "insulinInjections": "[{\"units\":4.5,\"insulin\":\"Novorapid\"}]", "created_at": "{{ time 8 }}",
-   "sysTime": "{{ javatime 8 }}", "_id": "8c5f0c3a1b2d4e6f9a7b0c1d"}
+   "insulinInjections": "[{\"units\":4.5,\"insulin\":\"Novorapid\"}]", "created_at": "{{ .bolus_at }}",
+   "sysTime": "{{ .bolus_java }}", "_id": "8c5f0c3a1b2d4e6f9a7b0c1d"}
 ASSERT_STATUS 200
 ASSERT_EQUALS "8c5f0c3a1b2d4e6f9a7b0c1d" "@_id"
 # The uuid is given back as sent, as xDrip+ matches its own treatments by it
@@ -116,10 +122,10 @@ ASSERT_EQUALS "pizza" "@notes"
 NAME xdrip_upsert_bolus_changed
 PUT http://{{ site }}/api/v1/treatments
 H api-secret: {{ sha1 token }}
-B {"timestamp": {{ itime 8 }}, "eventType": "<none>", "enteredBy": "xdrip", "notes": "pizza",
+B {"timestamp": {{ .bolus_ms }}, "eventType": "<none>", "enteredBy": "xdrip", "notes": "pizza",
    "uuid": "8c5f0c3a-1b2d-4e6f-9a7b-0c1d2e3f4a5b", "carbs": 50.0, "insulin": 4.5,
-   "insulinInjections": "[{\"units\":4.5,\"insulin\":\"Novorapid\"}]", "created_at": "{{ time 8 }}",
-   "sysTime": "{{ javatime 8 }}", "_id": "8c5f0c3a1b2d4e6f9a7b0c1d"}
+   "insulinInjections": "[{\"units\":4.5,\"insulin\":\"Novorapid\"}]", "created_at": "{{ .bolus_at }}",
+   "sysTime": "{{ .bolus_java }}", "_id": "8c5f0c3a1b2d4e6f9a7b0c1d"}
 ASSERT_STATUS 200
 ASSERT_EQUALS "8c5f0c3a1b2d4e6f9a7b0c1d" "@_id"
 ASSERT_EQUALS 50 "@carbs"
