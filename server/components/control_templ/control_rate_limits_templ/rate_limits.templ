@@ -145,7 +145,7 @@ templ RateSettings(settings []config.RateSetting, admin bool) {
 						@table.Cell(table.CellProps{Class: "font-mono text-xs"}) {
 							{ s.Env + "_LIMIT/_BURST" }
 						}
-						@table.Cell(table.CellProps{Class: "whitespace-nowrap tabular-nums"}) {
+						@table.Cell(table.CellProps{Class: "tabular-nums"}) {
 							{ number(s.Default.PerMinute) + ", " + fmt.Sprint(s.Default.Burst) }
 						}
 						for _, field := range []struct{ name, value string }{{"per_minute", number(s.Rate.PerMinute)}, {"burst", fmt.Sprint(s.Rate.Burst)}} {

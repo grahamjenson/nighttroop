@@ -130,7 +130,7 @@ templ foodIntakeRow(foodIntake *sitemodels.SiteFoodIntake) {
 		@table.Cell() {
 			{ orDash(foodIntake.Name) }
 		}
-		@table.Cell() {
+		@table.Cell(notesCell) {
 			{ orDash(foodIntake.Notes) }
 		}
 		@table.Cell() {
