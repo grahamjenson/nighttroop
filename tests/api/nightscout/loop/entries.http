@@ -5,6 +5,11 @@ INCLUDE steps/ns_units_mgdl.steps
 # out. date is a double of milliseconds, which can have a fraction. Loop needs a 200 and an array of as many objects
 # as it sent, or it uploads them again.
 
+# The second reading's time is made once, as the upload sent again below sends it again: one made again a second later
+# would be another reading
+SET second_ms {{ itime 5 }}
+SET second_at {{ time 5 }}
+
 NAME loop_upload_glucose
 POST http://{{ site }}/api/v1/entries
 H api-secret: {{ sha1 token }}
@@ -12,7 +17,7 @@ H Content-Type: application/json
 H Accept: application/json
 B [
     {"date": {{ itime 10 }}.456, "dateString": "{{ time 10 }}", "device": "Dexcom G7 Dexcom 1A2B3C", "type": "sgv", "sgv": 114, "trend": 4, "direction": "Flat", "trendRate": 0.1, "isCalibration": false},
-    {"date": {{ itime 5 }}, "dateString": "{{ time 5 }}", "device": "loop://iPhone", "type": "sgv", "sgv": 39, "trend": 7, "direction": "DoubleDown", "trendRate": -3.5, "isCalibration": false},
+    {"date": {{ .second_ms }}, "dateString": "{{ .second_at }}", "device": "loop://iPhone", "type": "sgv", "sgv": 39, "trend": 7, "direction": "DoubleDown", "trendRate": -3.5, "isCalibration": false},
     {"date": {{ itime 4 }}, "dateString": "{{ time 4 }}", "device": "loop://iPhone", "type": "mbg", "mbg": 120.5, "isCalibration": false}
   ]
 ASSERT_STATUS 200
@@ -26,7 +31,7 @@ ASSERT_EQUALS 120.5 "@2.mbg"
 NAME loop_upload_glucose_again
 POST http://{{ site }}/api/v1/entries
 H api-secret: {{ sha1 token }}
-B [{"date": {{ itime 5 }}, "dateString": "{{ time 5 }}", "device": "loop://iPhone", "type": "sgv", "sgv": 39, "trend": 7, "direction": "DoubleDown", "trendRate": -3.5, "isCalibration": false}]
+B [{"date": {{ .second_ms }}, "dateString": "{{ .second_at }}", "device": "loop://iPhone", "type": "sgv", "sgv": 39, "trend": 7, "direction": "DoubleDown", "trendRate": -3.5, "isCalibration": false}]
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
 ASSERT_EQUALS ".loop_upload_glucose.1._id" "@0._id"
