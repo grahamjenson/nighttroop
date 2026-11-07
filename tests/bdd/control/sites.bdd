@@ -110,7 +110,9 @@ SCREENSHOT archived_sites
 WINDOW 390x1400
 GOTO {{ .control_url }}/sites?limit=2
 ASSERT_STATUS 200
-ASSERT_VISIBLE #controlSitesTable
+// The table can be wider than its card, which scrolls it, so its first cell is checked rather than the whole table,
+// whose centre may be scrolled out of view
+ASSERT_VISIBLE #controlSitesTable tbody td >> nth=0
 ASSERT_VISIBLE #control--sites--order-db_size
 ASSERT_VISIBLE #control--sites--create--submit
 ASSERT_VISIBLE #control--sites--public-creation--toggle
