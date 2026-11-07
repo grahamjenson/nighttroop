@@ -232,6 +232,17 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   summary is not read again every 30 seconds.
 - A summary with no readings in its time links to the sync settings.
 
+### Reports
+
+- Reports, from the menu, show the week with yesterday in it at first, and a report of any day, week, fortnight or
+  month from today back a year is at `/reports/{period}-{date}`.
+- A report says which days it covers, and its days with data, time in range, mean daily dose and mean daily carbs.
+- Its ambulatory glucose profile (AGP) over a day from midnight shades the 5th to 95th and 25th to 75th percentiles,
+  with the median as a line, over the range shaded with its low and high dashed. A day's report draws the day's
+  glucose over the AGP of the 7 days to it. A report with no glucose says so instead.
+- Day, Week, Fortnight and Month open the report of that kind ending on the report's last day, or today; Previous and
+  Next open the one before and after, disabled past today or a year ago. Back and forward move between reports.
+
 ### Getting started
 
 - A site with no glucose for over a month, or ever, shows a guide to setting it up in place of its empty summary, until
@@ -500,6 +511,11 @@ focus back to the row or button that opened it.
 - Every site page is also a JSON API, with a JWT from signing in.
 - A Go client, `clients/nighttroop`, is generated from its OpenAPI schema. It can create a site, sign in, read the
   summary, and list, read, add, edit and delete glucose readings, insulin doses and food intakes.
+- `GET /data/summary-periods/{period}-{date}` reads the day, week, fortnight or month with that date in it, from today
+  back a year, in the site's timezone and from its week start day: its days with data, time in range, daily dose and
+  carbs, glucose every 5 minutes, and AGP (the 5th, 25th, 50th, 75th and 95th percentiles each 15 minutes from
+  midnight). A day's AGP is of the 7 days to it. A period not kept is built from the kept days in it, and today so
+  far while it is not over; a day not kept is built from its data; and neither is kept. Any other id, or a date out of range, is not found.
 - The client also calls every Nightscout API v1, v2 and v3 endpoint on a site's Nightscout host, with a device's
   Nightscout token or the JWT it is exchanged for.
 

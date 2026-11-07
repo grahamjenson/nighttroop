@@ -9,7 +9,7 @@
 ## Before Beta Testing
 
 1. Reports/Derived Values:
-    1. AGP
+    1. P3: Reports: the AGP's percentiles at a time in a tooltip
     1. Time below and above range, as well as time in range
     1. Small multiples Daily
 

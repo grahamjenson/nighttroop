@@ -444,6 +444,10 @@ func Header() templ.Component {
 						}()
 					}
 					ctx = templ.InitializeContext(ctx)
+					templ_7745c5c3_Err = dataMenuItem("site--reports-button", "/reports", "Reports", icon.ChartLine(icon.Props{Class: "size-4 mr-2"})).Render(ctx, templ_7745c5c3_Buffer)
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
 					templ_7745c5c3_Err = dataMenuItem("site--data--glucose-button", "/data/glucose", "Glucose Readings", icon.Droplet(icon.Props{Class: "size-4 mr-2"})).Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -800,7 +804,7 @@ func NotFound(message string) templ.Component {
 		var templ_7745c5c3_Var25 string
 		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(message)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_base.templ`, Line: 222, Col: 66}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_base.templ`, Line: 223, Col: 66}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 		if templ_7745c5c3_Err != nil {

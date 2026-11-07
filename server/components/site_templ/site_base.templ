@@ -139,6 +139,7 @@ templ Header() {
 								Data
 							}
 							@dropdown.Group() {
+								@dataMenuItem("site--reports-button", "/reports", "Reports", icon.ChartLine(icon.Props{Class: "size-4 mr-2"}))
 								@dataMenuItem("site--data--glucose-button", "/data/glucose", "Glucose Readings", icon.Droplet(icon.Props{Class: "size-4 mr-2"}))
 								@dataMenuItem("site--data--insulin-button", "/data/insulin", "Insulin Doses", icon.Syringe(icon.Props{Class: "size-4 mr-2"}))
 								@dataMenuItem("site--data--food-button", "/data/food", "Food Intakes", icon.Utensils(icon.Props{Class: "size-4 mr-2"}))
