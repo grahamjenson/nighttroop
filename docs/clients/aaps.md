@@ -79,7 +79,8 @@ create, and `identifier` is sent on an update. Every treatment has `date` (ms), 
 
 - **Bolus** (`Meal Bolus`, `Correction Bolus`): `insulin`, `type` (`NORMAL`, `SMB`, `PRIMING`), `isBasalInsulin`.
 - **Carbs** (`Carb Correction`, `Meal Bolus`): `carbs`, `duration` (min), `durationInMilliseconds`.
-- **Temp Basal**: see [Temp basal percent](#temp-basal-percent).
+- **Temp Basal**: `type` (`NORMAL`, `EMULATED_PUMP_SUSPEND`, `PUMP_SUSPEND`, `SUPERBOLUS`, `FAKE_EXTENDED`); see
+  [Temp basal percent](#temp-basal-percent).
 - **Temporary Target**: `targetTop`, `targetBottom` in mg/dL with `units: "mg/dl"`, `reason`, `duration`,
   `durationInMilliseconds`.
 - **Profile Switch**: `profile`, `profileJson` (a JSON string), `originalProfileName`, `originalDuration`,
@@ -182,8 +183,8 @@ SHA1, as AAPS does.
 | Treatments: bolus and SMB `type`, carbs, temp target, profile switch, BG check, delete in history | works | `sync_v3.http`, `flow_v3.http` |
 | Temp basal at, over or under 100% (any `percent` from -100), its update | works: `percent`, the change from the basal, is kept as a multiplier of it and returned as sent | `sync_v3.http`, `treatments/temp_basal_percent.http` |
 | Profile switch and effective profile switch `original*` | works: kept with the switch and returned as sent, so a follower reads an effective profile switch as one, not a Note | `sync_v3.http` |
+| Temp basal `type` (e.g. `PUMP_SUSPEND`) | works: kept and returned as sent, so a follower shows a suspended pump as one | `sync_v3.http` |
 | Running mode `mode`, `autoForced`, `reasons`, `originalDuration` | works: kept with the treatment and returned as sent, so a follower reads its mode, not UNKNOWN | `sync_v3.http` |
-| Temp basal `type` | not supported: dropped, so followers misread them; TODO P2 | `sync_v3.http` |
 | Calibrations (`isCalibration`, `sensorMgdlAtPairing`) | not supported: dropped; TODO P2 | `sync_v3.http` |
 | Device statuses: create, history with `srvModified` | works | `sync_v3.http`, `flow_v3.http` |
 | Device status `pump.clock`, `pump.status`, `pump.extended` | works: the pump object is read back as sent | `sync_v3.http` |
