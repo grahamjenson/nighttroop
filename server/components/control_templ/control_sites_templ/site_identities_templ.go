@@ -27,8 +27,8 @@ func canReset(ctx context.Context) bool {
 	return controlContext != nil && controlContext.IdentityModel != nil && controlContext.IdentityModel.Role == consts.ControlRoleAdmin
 }
 
-// SiteIdentities is a site's identities, in its details, with buttons for an admin to reset one's password, or its TOTP
-// when it logs in with one, or sign in as it. The new credentials, or the link to sign in, are shown above the table.
+// SiteIdentities is a site's identities, with buttons for an admin to reset one's password, or its TOTP when it logs in
+// with one, or sign in to the site as it. The new credentials are shown above the table, once.
 func SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -461,7 +461,7 @@ func SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) tem
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
-								templ_7745c5c3_Err = resetButton(siteID, identity, "assume", "Sign in as", "Sign in to the site as "+identity.Name+"? The site's events will show you did.").Render(ctx, templ_7745c5c3_Buffer)
+								templ_7745c5c3_Err = assumeButton(siteID, identity).Render(ctx, templ_7745c5c3_Buffer)
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
@@ -502,7 +502,7 @@ func yesNo(yes bool) string {
 	return "No"
 }
 
-// resetButton does what to an identity, resetting its password or totp or signing in as it, after asking to confirm
+// resetButton resets what of an identity, its password or totp, after asking to confirm
 func resetButton(siteID string, identity *controlmodels.SiteIdentity, what string, label string, confirm string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -647,8 +647,9 @@ func SiteIdentityReset(credentials *controlmodels.SiteIdentityCredentials) templ
 	})
 }
 
-// SiteIdentityAssume is a link that signs the admin in to the site as an identity, in a new tab, once and within a minute
-func SiteIdentityAssume(link *controlmodels.SiteIdentityAssume) templ.Component {
+// assumeButton signs the admin in to the site as an identity, after asking to confirm, in a new tab: control sends the
+// tab on to a link to the site, good once and for a minute, which signs it in
+func assumeButton(siteID string, identity *controlmodels.SiteIdentity) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -665,33 +666,60 @@ func SiteIdentityAssume(link *controlmodels.SiteIdentityAssume) templ.Component 
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<div id=\"control--site--identity-assume\" class=\"mt-2 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-700\"><a id=\"control--site--identity-assume--link\" href=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<form method=\"post\" action=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var34 string
-		templ_7745c5c3_Var34, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.SafeURL(link.URL)).ResolveURL(ctx)
+		templ_7745c5c3_Var34, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.SafeURL(fmt.Sprintf("/sites/%s/identities/%d/assume", siteID, identity.ID))).ResolveURL(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 131, Col: 77}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 133, Col: 92}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var34)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "\" target=\"_blank\" rel=\"noopener\" class=\"font-semibold underline\">Open the site as ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "\" target=\"_blank\" data-confirm=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var35 string
-		templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(link.Name)
+		templ_7745c5c3_Var35, templ_7745c5c3_Err = templruntime.NewAttributeExpression("Sign in to the site as " + identity.Name + "? The site's events will show you did.").Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 131, Col: 171}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/site_identities.templ`, Line: 135, Col: 101}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var35)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "</a>: the link works once, for a minute, and the site's events will show you used it.</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "\" onsubmit=\"return confirm(this.dataset.confirm)\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Var36 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+			if !templ_7745c5c3_IsBuffer {
+				defer func() {
+					templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+					if templ_7745c5c3_Err == nil {
+						templ_7745c5c3_Err = templ_7745c5c3_BufErr
+					}
+				}()
+			}
+			ctx = templ.InitializeContext(ctx)
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "Sign in as")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			return nil
+		})
+		templ_7745c5c3_Err = button.Button(button.Props{ID: fmt.Sprintf("control--site--identity--%d--assume", identity.ID), Type: button.TypeSubmit,
+			Variant: button.VariantOutline, Size: button.SizeSm}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var36), templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "</form>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

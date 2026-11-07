@@ -20,8 +20,8 @@ func canReset(ctx context.Context) bool {
 	return controlContext != nil && controlContext.IdentityModel != nil && controlContext.IdentityModel.Role == consts.ControlRoleAdmin
 }
 
-// SiteIdentities is a site's identities, in its details, with buttons for an admin to reset one's password, or its TOTP
-// when it logs in with one, or sign in as it. The new credentials, or the link to sign in, are shown above the table.
+// SiteIdentities is a site's identities, with buttons for an admin to reset one's password, or its TOTP when it logs in
+// with one, or sign in to the site as it. The new credentials are shown above the table, once.
 templ SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) {
 	<h3 class="mt-6 text-sm font-semibold text-brand-night">Identities</h3>
 	<div id="control--site--identities--reset"></div>
@@ -74,7 +74,7 @@ templ SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) {
 							if identity.HasTotp {
 								@resetButton(siteID, identity, "totp", "TOTP", "Give "+identity.Name+" a new TOTP secret? Codes from their authenticator app stop working.")
 							}
-							@resetButton(siteID, identity, "assume", "Sign in as", "Sign in to the site as "+identity.Name+"? The site's events will show you did.")
+							@assumeButton(siteID, identity)
 						}
 					}
 				}
@@ -90,7 +90,7 @@ func yesNo(yes bool) string {
 	return "No"
 }
 
-// resetButton does what to an identity, resetting its password or totp or signing in as it, after asking to confirm
+// resetButton resets what of an identity, its password or totp, after asking to confirm
 templ resetButton(siteID string, identity *controlmodels.SiteIdentity, what string, label string, confirm string) {
 	<form
 		hx-post={ fmt.Sprintf("/sites/%s/identities/%d/%s", siteID, identity.ID, what) }
@@ -125,9 +125,19 @@ templ SiteIdentityReset(credentials *controlmodels.SiteIdentityCredentials) {
 	</div>
 }
 
-// SiteIdentityAssume is a link that signs the admin in to the site as an identity, in a new tab, once and within a minute
-templ SiteIdentityAssume(link *controlmodels.SiteIdentityAssume) {
-	<div id="control--site--identity-assume" class="mt-2 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-700">
-		<a id="control--site--identity-assume--link" href={ templ.SafeURL(link.URL) } target="_blank" rel="noopener" class="font-semibold underline">Open the site as { link.Name }</a>: the link works once, for a minute, and the site's events will show you used it.
-	</div>
+// assumeButton signs the admin in to the site as an identity, after asking to confirm, in a new tab: control sends the
+// tab on to a link to the site, good once and for a minute, which signs it in
+templ assumeButton(siteID string, identity *controlmodels.SiteIdentity) {
+	<form
+		method="post"
+		action={ templ.SafeURL(fmt.Sprintf("/sites/%s/identities/%d/assume", siteID, identity.ID)) }
+		target="_blank"
+		data-confirm={ "Sign in to the site as " + identity.Name + "? The site's events will show you did." }
+		onsubmit="return confirm(this.dataset.confirm)"
+	>
+		@button.Button(button.Props{ID: fmt.Sprintf("control--site--identity--%d--assume", identity.ID), Type: button.TypeSubmit,
+			Variant: button.VariantOutline, Size: button.SizeSm}) {
+			Sign in as
+		}
+	</form>
 }

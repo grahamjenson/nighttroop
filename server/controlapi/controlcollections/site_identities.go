@@ -17,23 +17,43 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-// IdentitiesHandler is a site's identities, newest first, for its details
+// IdentitiesHandler is a site's identities, newest first
 func (s *SitesCollection) IdentitiesHandler(w http.ResponseWriter, r *http.Request) {
-	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
-	site, herr := get(r.Context(), s, chi.URLParam(r, "id"), controlContext)
-	if herr == nil && site == nil {
-		herr = apiutils.ErrNotFound
-	}
-	var identities []*controlmodels.SiteIdentity
-	if herr == nil {
-		rows, err := controlContext.ControlDB.Queries.AllSiteIdentities(r.Context(), controldb.AllSiteIdentitiesParams{SiteID: site.ID})
-		identities, herr = apiutils.Searched(rows, err, "site identities", controlmodels.SiteIdentityFromDB)
-	}
+	acceptType := httputils.GetAcceptType(r)
+	site, identities, herr := s.siteIdentities(r)
 	if herr != nil {
 		herr.Write(acceptType, w)
 		return
 	}
 	WriteResponse(w, r, acceptType, http.StatusOK, identities, control_sites_templ.SiteIdentities(site.ID, identities))
+}
+
+// InspectHandler is a site's own page: its details and every one of its identities, newest first, which an admin can
+// reset or sign in to the site as
+func (s *SitesCollection) InspectHandler(w http.ResponseWriter, r *http.Request) {
+	acceptType := httputils.GetAcceptType(r)
+	site, identities, herr := s.siteIdentities(r)
+	if herr != nil {
+		herr.Write(acceptType, w)
+		return
+	}
+	inspect := &controlmodels.SiteInspect{Site: site, Identities: identities}
+	WriteResponse(w, r, acceptType, http.StatusOK, inspect, control_sites_templ.SiteInspect(inspect))
+}
+
+// siteIdentities is the site in the URL and its identities, newest first
+func (s *SitesCollection) siteIdentities(r *http.Request) (*controlmodels.Site, []*controlmodels.SiteIdentity, *apiutils.HTTPError) {
+	controlContext := httputils.GetControlContext(r.Context())
+	site, herr := get(r.Context(), s, chi.URLParam(r, "id"), controlContext)
+	if herr == nil && site == nil {
+		herr = apiutils.ErrNotFound
+	}
+	if herr != nil {
+		return nil, nil, herr
+	}
+	rows, err := controlContext.ControlDB.Queries.AllSiteIdentities(r.Context(), controldb.AllSiteIdentitiesParams{SiteID: site.ID})
+	identities, herr := apiutils.Searched(rows, err, "site identities", controlmodels.SiteIdentityFromDB)
+	return site, identities, herr
 }
 
 // ResetPasswordHandler gives a site's identity a new random password, shown once. Only admins can.
@@ -73,8 +93,9 @@ func (s *SitesCollection) resetIdentity(w http.ResponseWriter, r *http.Request, 
 	WriteResponse(w, r, acceptType, http.StatusOK, credentials, control_sites_templ.SiteIdentityReset(credentials))
 }
 
-// AssumeHandler gives an admin a link, good once and for a minute, that signs them in to the site as its identity in
-// the URL. The site records that they did on its events. Only admins can.
+// AssumeHandler sends an admin's browser, in the new tab its form opens, to a link, good once and for a minute, that
+// signs them in to the site as its identity in the URL, or answers the API with the link. The site records that they
+// did on its events. Only admins can.
 func (s *SitesCollection) AssumeHandler(cfg *config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
@@ -88,7 +109,11 @@ func (s *SitesCollection) AssumeHandler(cfg *config.ServerConfig) http.HandlerFu
 			return
 		}
 		link := &controlmodels.SiteIdentityAssume{Name: identity.Name, URL: cfg.SiteURL(identity.SiteID) + "/login/assume?token=" + url.QueryEscape(token)}
-		WriteResponse(w, r, acceptType, http.StatusOK, link, control_sites_templ.SiteIdentityAssume(link))
+		if acceptType.API() {
+			apiutils.WriteModelJSON(w, http.StatusOK, link)
+			return
+		}
+		http.Redirect(w, r, link.URL, http.StatusSeeOther)
 	}
 }
 

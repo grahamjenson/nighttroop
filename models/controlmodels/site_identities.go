@@ -32,6 +32,12 @@ type SiteIdentityAssume struct {
 	URL  string `json:"url"`
 }
 
+// SiteInspect is a site's own page in control: its details and its identities
+type SiteInspect struct {
+	Site       *Site           `json:"site"`
+	Identities []*SiteIdentity `json:"identities"`
+}
+
 // HasSecret is whether an encrypted secret is set
 func HasSecret(encrypted string) bool {
 	return encrypted != ""
