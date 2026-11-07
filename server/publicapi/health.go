@@ -7,11 +7,11 @@ import (
 	"nighttroop.t1d.nz/utils/apiutils"
 )
 
-// GETHealthHandler is whether the server is up, its control DB answers and no live site's DB was left out at start, for
-// Docker's health check and deploys, so update.sh rolls back a release that starts without a site. It never says which.
+// GETHealthHandler is whether the server is up and its control DB answers, for Docker's health check and deploys. A
+// server is only up once every live site's DB is opened and migrated, so update.sh rolls back a release that cannot.
 func GETHealthHandler(controlDB *db.ControlDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if controlDB.SitesMissing() || controlDB.SQLiteDB.PingContext(r.Context()) != nil {
+		if controlDB.SQLiteDB.PingContext(r.Context()) != nil {
 			apiutils.WriteJSON(w, http.StatusServiceUnavailable, map[string]string{"status": "unavailable"})
 			return
 		}

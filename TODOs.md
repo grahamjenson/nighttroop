@@ -64,8 +64,18 @@
     1. P0: At the first production deploy, freeze the migrations: add `data/sql/MIGRATIONS_FROZEN`, so CI refuses a
        change to a migration on main, and add numbered migrations from then on (docs/migrations.md). Then add a test
        that the last release's DBs migrate to the current schema
-    1. P1: A build cannot open a DB a newer one migrated, so rolling back needs `update.sh`'s copy of `./data`, losing
-       what was written since. Keep migrations additive, and let a build open a DB one additive version newer
+    1. P1: Tools for a start stopped by a site: a live site's DB that is missing and not restored, cannot be opened, or
+       fails its migration stops the server (so no data is written that a rollback would lose), and `update.sh` rolls
+       back. Fixing it now means a shell on the server. Add commands, run against the stopped server's data, to:
+        1. List what stopped the start: each such site, why (missing, cannot open, which migration failed and its
+           error), and its last backups in `./backups` and S3
+        1. Download a site's DB, and its batch's backups from S3, to inspect it with `sqlite3`, e.g. try its
+           migrations on a copy without changing it
+        1. Reset it: restore its DB from a chosen backup, or force a dirty one back a version, or disable or delete the
+           site in the control DB, recording an event saying who did what, so the next start opens every site again
+    1. P2: Rolling back after a release has served needs `update.sh`'s copy of `./data`, losing what was written since,
+       as a build cannot open a DB a newer one migrated. Fix forward instead: a release whose migration fails is never
+       healthy and takes no data, so its rollback loses nothing
     1. P2: Document changing a table: SQLite rebuilds it, which needs `PRAGMA defer_foreign_keys = ON` in the
        migration's transaction, as `event_groups` references the event tables `ON DELETE RESTRICT`; test migrations
        on a DB with data, and have staging compare the whole schema rather than only preparing queries
@@ -111,7 +121,3 @@
 
 ## Bugs
 
-1. P4: A live site left out at start, its DB missing and not restored, is only a `site_db_missing` event; mark it on
-   the control sites page too
-1. P3: Deleting a live site whose DB is missing (`DeleteSites`) deletes it but answers `site not found`, and `/health`
-   stays unavailable (`SitesMissing`) until a restart; delete it cleanly and let `/health` be ok again

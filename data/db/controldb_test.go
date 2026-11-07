@@ -301,7 +301,8 @@ func TestStartWhenSiteDBIsMissing(t *testing.T) {
 }
 
 // A live site whose DB file is missing at start is restored, with its data, from its batch's backup, downloaded once
-// for the batch; one the backup does not have is left out, and each is a site_db_missing event the control admin sees
+// for the batch; one the backup does not have stops the start, named in its error, and each is a site_db_missing event
+// the control admin sees
 func TestRestoreMissingSites(t *testing.T) {
 	cfg := *testutils.GetTestServerConfig()
 	cfg.Mode = consts.Development
@@ -336,10 +337,11 @@ func TestRestoreMissingSites(t *testing.T) {
 	controlDB, err = db.NewControlDB(ctx, &cfg)
 	require.NoError(t, err)
 	t.Cleanup(func() { controlDB.Close() })
-	require.True(t, controlDB.SitesMissing())
-	require.NoError(t, controlDB.RestoreMissingSites(ctx, download))
+	err = controlDB.RestoreMissingSites(ctx, download)
+	require.ErrorIs(t, err, db.ErrSitesMissing, "kingsite is not in the backup, so the start stops")
+	require.ErrorContains(t, err, "kingsite")
+	require.NotContains(t, err.Error(), "kostsite")
 	require.Equal(t, 1, downloads, "the batch is downloaded once")
-	require.True(t, controlDB.SitesMissing(), "kingsite is not in the backup, so it is still missing")
 
 	site, _, err = controlDB.GetSite(ctx, "kostsite")
 	require.NoError(t, err, "the site is restored and open")
@@ -366,7 +368,8 @@ func TestRestoreMissingSites(t *testing.T) {
 	}
 }
 
-// Without S3 a live site whose DB file is missing is left out, and the control admin sees it as a site_db_missing event
+// Without S3 a live site whose DB file is missing stops the start, and the control admin sees it as a site_db_missing
+// event
 func TestRestoreMissingSitesWithoutS3(t *testing.T) {
 	cfg := *testutils.GetTestServerConfig()
 	cfg.Mode = consts.Development
@@ -382,8 +385,9 @@ func TestRestoreMissingSitesWithoutS3(t *testing.T) {
 	controlDB, err = db.NewControlDB(ctx, &cfg)
 	require.NoError(t, err)
 	t.Cleanup(func() { controlDB.Close() })
-	require.NoError(t, controlDB.RestoreMissingSites(ctx, s3utils.NewS3Client(&cfg).DownloadFilesFromS3))
-	require.True(t, controlDB.SitesMissing())
+	err = controlDB.RestoreMissingSites(ctx, s3utils.NewS3Client(&cfg).DownloadFilesFromS3)
+	require.ErrorIs(t, err, db.ErrSitesMissing)
+	require.ErrorContains(t, err, "kostsite")
 
 	_, _, err = controlDB.GetSite(ctx, "kostsite")
 	require.ErrorContains(t, err, "not found in memory")
@@ -394,7 +398,7 @@ func TestRestoreMissingSitesWithoutS3(t *testing.T) {
 	require.JSONEq(t, `{"restored":false,"reason":"s3_not_working"}`, *found[0].Attributes)
 }
 
-// A server whose missing sites are all restored from their batch's backup has none missing, so its health check is ok
+// A server whose missing sites are all restored from their batch's backup starts
 func TestRestoreAllMissingSites(t *testing.T) {
 	cfg := *testutils.GetTestServerConfig()
 	cfg.Mode, cfg.DataDir, cfg.Status.S3Working = consts.Development, t.TempDir(), true
@@ -403,7 +407,6 @@ func TestRestoreAllMissingSites(t *testing.T) {
 	require.NoError(t, err)
 	_, err = controlDB.CreateSiteWithID(ctx, "kostsite")
 	require.NoError(t, err)
-	require.False(t, controlDB.SitesMissing())
 	require.NoError(t, controlDB.Close())
 
 	backup := filepath.Join(t.TempDir(), "kostsite.sqlite")
@@ -415,9 +418,9 @@ func TestRestoreAllMissingSites(t *testing.T) {
 	controlDB, err = db.NewControlDB(ctx, &cfg)
 	require.NoError(t, err)
 	t.Cleanup(func() { controlDB.Close() })
-	require.True(t, controlDB.SitesMissing())
 	require.NoError(t, controlDB.RestoreMissingSites(ctx, download))
-	require.False(t, controlDB.SitesMissing())
+	_, _, err = controlDB.GetSite(ctx, "kostsite")
+	require.NoError(t, err, "the site is restored and open")
 }
 
 // A missing site restored from its batch's backup that cannot be opened, as when its migration fails, stops the start,

@@ -366,8 +366,9 @@ The script:
 3. **Stops Nighttroop**, which uploads a last backup to S3 on the way down (it allows two minutes).
 4. **Copies `./data`** to `./backups/data-<time>.tar.gz` while nothing is writing to it.
 5. **Starts the new image** and waits up to 3 minutes for its health check to pass.
-   - The health check asks the server's `/health`, which answers once the control database does, and fails while a
-     live site's database is missing and could not be restored.
+   - The health check asks the server's `/health`, which answers once the control database does. The server only
+     starts serving once every live site's database is opened and migrated, so a release that cannot open one is
+     never healthy, and takes no data before it is rolled back.
 6. **If it is healthy, it is done.** It keeps the newest 5 backups and previous images and deletes older ones.
 7. **If it isn't healthy, it rolls back:**
    1. prints the new version's last logs;
@@ -484,8 +485,8 @@ Look at `docker compose logs nighttroop`:
 - **Still starting after a while:** a first start on a new VPS restores from S3, which takes longer the more data there
   is. Give it a few minutes.
 - **`Site DB is missing, so the site is not opened`:** a live site's database file is missing and was not restored
-  from its batch's backup in S3, which the Control Events page shows as a "Site DB missing" event, so the health check
-  fails until a start opens it. Put its file back, such as from a copy in `./backups`, and restart.
+  from its batch's backup in S3, so the server does not start (`live sites' DBs are missing and were not restored:`
+  names them). Put its file back, such as from a copy in `./backups`, and restart.
 
 ### Everyone seems to share one IP address
 

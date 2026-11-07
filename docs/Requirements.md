@@ -528,9 +528,10 @@ focus back to the row or button that opened it.
   admin sees, saying whether it was restored or why not (S3 not working, not in the backup, or the restore failed).
   A site restored that cannot be opened, as when its migration fails, stops the start, as a site that is there and
   cannot be opened does, so `update.sh` rolls back a release that cannot open it rather than keeping it without the site.
-- A site whose DB file is missing and not restored, such as one created after its batch was last backed up, is left
-  out, so the server still starts, but `/health` is 503 `unavailable`, never saying which site, until a start opens
-  it, so `update.sh` rolls back a release that starts without it. Its batch is not uploaded without it.
+- A live site whose DB file is missing and not restored, such as one created after its batch was last backed up,
+  stops the start, naming the site in the error, as a site that cannot be opened or migrated does: the server never
+  serves, so takes no data, until every live site is opened and migrated, and `update.sh` rolls back a release that
+  cannot. Its batch is not uploaded without it.
 - Old records' raw JSON is cleared after `TRUNCATE_RECORDS_AFTER_DAYS`.
 - Reads and writes are rate limited per site, identity and IP, and live sessions per site are capped.
 - A Nightscout request that fails auth, or needs none, spends its IP's budget on the site
