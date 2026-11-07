@@ -238,8 +238,9 @@ type TreatmentsEvenetConverter interface {
 	//
 	// goverter:map Dose Insulin
 	// goverter:map DoseType Type
-	// goverter:map SplitNow SplitNow | MultiplierToPercentage
-	// goverter:map SplitExt SplitExt | MultiplierToPercentage
+	// goverter:map OtherAttributes.SplitNow SplitNow | MultiplierToPercentage
+	// goverter:map OtherAttributes.SplitExt SplitExt | MultiplierToPercentage
+	// goverter:map OtherAttributes.Automatic Automatic
 	UpdateInsulinDoseToTreatment(source *sitedb.InsulinDose, target *Treatment)
 
 	// goverter:update target
@@ -306,6 +307,9 @@ type TreatmentsEvenetConverter interface {
 	// goverter:ignoreMissing
 	//
 	// goverter:map DurationMinutes DurationInMilliseconds | MinutesToMilliseconds
+	// goverter:map OtherAttributes.Calories Calories
+	// goverter:map OtherAttributes.Steps Steps
+	// goverter:map OtherAttributes.HeartRate HeartRate
 	UpdateActivityToTreatment(source *sitedb.Activity, target *Treatment)
 
 	//////
@@ -379,8 +383,7 @@ type TreatmentsEvenetConverter interface {
 	//
 	// goverter:map Insulin Dose
 	// goverter:map Type DoseType
-	// goverter:map SplitNow SplitNow | PercentageToMultiplier
-	// goverter:map SplitExt SplitExt | PercentageToMultiplier
+	// goverter:map . OtherAttributes | TreatmentInsulinDoseOther
 	PartialTreatmentToInsulinDose(source Treatment) sitedb.InsulinDose
 
 	// goverter:ignore ID DeletedAt CreatedAt CreatedByIdentityName CreatedByIdentityID UpdatedAt UpdatedByIdentityName UpdatedByIdentityID
@@ -426,6 +429,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map Date OccurredAt | OrNow
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
+	// goverter:map . OtherAttributes | TreatmentActivityOther
 	PartialTreatmentToActivity(source Treatment) sitedb.Activity
 
 	// goverter:ignore ID DeletedAt CreatedAt CreatedByIdentityName CreatedByIdentityID UpdatedAt UpdatedByIdentityName UpdatedByIdentityID

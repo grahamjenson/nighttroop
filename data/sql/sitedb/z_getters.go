@@ -47,34 +47,14 @@ func (m *ActivitiesVw) SetDurationMinutes(v *int64) {
 	m.DurationMinutes = v
 }
 
-// GetCalories returns the Calories value.
-func (m ActivitiesVw) GetCalories() *int64 {
-	return m.Calories
+// GetOtherAttributes returns the OtherAttributes value.
+func (m ActivitiesVw) GetOtherAttributes() types.ActivityOther {
+	return m.OtherAttributes
 }
 
-// SetCalories sets the Calories value and returns the updated ActivitiesVw.
-func (m *ActivitiesVw) SetCalories(v *int64) {
-	m.Calories = v
-}
-
-// GetSteps returns the Steps value.
-func (m ActivitiesVw) GetSteps() *int64 {
-	return m.Steps
-}
-
-// SetSteps sets the Steps value and returns the updated ActivitiesVw.
-func (m *ActivitiesVw) SetSteps(v *int64) {
-	m.Steps = v
-}
-
-// GetHeartRate returns the HeartRate value.
-func (m ActivitiesVw) GetHeartRate() *int64 {
-	return m.HeartRate
-}
-
-// SetHeartRate sets the HeartRate value and returns the updated ActivitiesVw.
-func (m *ActivitiesVw) SetHeartRate(v *int64) {
-	m.HeartRate = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated ActivitiesVw.
+func (m *ActivitiesVw) SetOtherAttributes(v types.ActivityOther) {
+	m.OtherAttributes = v
 }
 
 // GetNotes returns the Notes value.
@@ -257,34 +237,14 @@ func (m *Activity) SetDurationMinutes(v *int64) {
 	m.DurationMinutes = v
 }
 
-// GetCalories returns the Calories value.
-func (m Activity) GetCalories() *int64 {
-	return m.Calories
+// GetOtherAttributes returns the OtherAttributes value.
+func (m Activity) GetOtherAttributes() types.ActivityOther {
+	return m.OtherAttributes
 }
 
-// SetCalories sets the Calories value and returns the updated Activity.
-func (m *Activity) SetCalories(v *int64) {
-	m.Calories = v
-}
-
-// GetSteps returns the Steps value.
-func (m Activity) GetSteps() *int64 {
-	return m.Steps
-}
-
-// SetSteps sets the Steps value and returns the updated Activity.
-func (m *Activity) SetSteps(v *int64) {
-	m.Steps = v
-}
-
-// GetHeartRate returns the HeartRate value.
-func (m Activity) GetHeartRate() *int64 {
-	return m.HeartRate
-}
-
-// SetHeartRate sets the HeartRate value and returns the updated Activity.
-func (m *Activity) SetHeartRate(v *int64) {
-	m.HeartRate = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated Activity.
+func (m *Activity) SetOtherAttributes(v types.ActivityOther) {
+	m.OtherAttributes = v
 }
 
 // GetNotes returns the Notes value.
@@ -2587,34 +2547,14 @@ func (m *InsulinDose) SetDoseType(v *string) {
 	m.DoseType = v
 }
 
-// GetSplitNow returns the SplitNow value.
-func (m InsulinDose) GetSplitNow() *float64 {
-	return m.SplitNow
+// GetOtherAttributes returns the OtherAttributes value.
+func (m InsulinDose) GetOtherAttributes() types.InsulinDoseOther {
+	return m.OtherAttributes
 }
 
-// SetSplitNow sets the SplitNow value and returns the updated InsulinDose.
-func (m *InsulinDose) SetSplitNow(v *float64) {
-	m.SplitNow = v
-}
-
-// GetSplitExt returns the SplitExt value.
-func (m InsulinDose) GetSplitExt() *float64 {
-	return m.SplitExt
-}
-
-// SetSplitExt sets the SplitExt value and returns the updated InsulinDose.
-func (m *InsulinDose) SetSplitExt(v *float64) {
-	m.SplitExt = v
-}
-
-// GetAutomatic returns the Automatic value.
-func (m InsulinDose) GetAutomatic() *bool {
-	return m.Automatic
-}
-
-// SetAutomatic sets the Automatic value and returns the updated InsulinDose.
-func (m *InsulinDose) SetAutomatic(v *bool) {
-	m.Automatic = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated InsulinDose.
+func (m *InsulinDose) SetOtherAttributes(v types.InsulinDoseOther) {
+	m.OtherAttributes = v
 }
 
 // GetNotes returns the Notes value.
@@ -2787,34 +2727,14 @@ func (m *InsulinDosesVw) SetDoseType(v *string) {
 	m.DoseType = v
 }
 
-// GetSplitNow returns the SplitNow value.
-func (m InsulinDosesVw) GetSplitNow() *float64 {
-	return m.SplitNow
+// GetOtherAttributes returns the OtherAttributes value.
+func (m InsulinDosesVw) GetOtherAttributes() types.InsulinDoseOther {
+	return m.OtherAttributes
 }
 
-// SetSplitNow sets the SplitNow value and returns the updated InsulinDosesVw.
-func (m *InsulinDosesVw) SetSplitNow(v *float64) {
-	m.SplitNow = v
-}
-
-// GetSplitExt returns the SplitExt value.
-func (m InsulinDosesVw) GetSplitExt() *float64 {
-	return m.SplitExt
-}
-
-// SetSplitExt sets the SplitExt value and returns the updated InsulinDosesVw.
-func (m *InsulinDosesVw) SetSplitExt(v *float64) {
-	m.SplitExt = v
-}
-
-// GetAutomatic returns the Automatic value.
-func (m InsulinDosesVw) GetAutomatic() *bool {
-	return m.Automatic
-}
-
-// SetAutomatic sets the Automatic value and returns the updated InsulinDosesVw.
-func (m *InsulinDosesVw) SetAutomatic(v *bool) {
-	m.Automatic = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetOtherAttributes(v types.InsulinDoseOther) {
+	m.OtherAttributes = v
 }
 
 // GetNotes returns the Notes value.
@@ -6117,34 +6037,14 @@ func (m *CreateActivityParams) SetDurationMinutes(v *int64) {
 	m.DurationMinutes = v
 }
 
-// GetCalories returns the Calories value.
-func (m CreateActivityParams) GetCalories() *int64 {
-	return m.Calories
+// GetOtherAttributes returns the OtherAttributes value.
+func (m CreateActivityParams) GetOtherAttributes() types.ActivityOther {
+	return m.OtherAttributes
 }
 
-// SetCalories sets the Calories value and returns the updated CreateActivityParams.
-func (m *CreateActivityParams) SetCalories(v *int64) {
-	m.Calories = v
-}
-
-// GetSteps returns the Steps value.
-func (m CreateActivityParams) GetSteps() *int64 {
-	return m.Steps
-}
-
-// SetSteps sets the Steps value and returns the updated CreateActivityParams.
-func (m *CreateActivityParams) SetSteps(v *int64) {
-	m.Steps = v
-}
-
-// GetHeartRate returns the HeartRate value.
-func (m CreateActivityParams) GetHeartRate() *int64 {
-	return m.HeartRate
-}
-
-// SetHeartRate sets the HeartRate value and returns the updated CreateActivityParams.
-func (m *CreateActivityParams) SetHeartRate(v *int64) {
-	m.HeartRate = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated CreateActivityParams.
+func (m *CreateActivityParams) SetOtherAttributes(v types.ActivityOther) {
+	m.OtherAttributes = v
 }
 
 // GetNotes returns the Notes value.
@@ -6647,34 +6547,14 @@ func (m *UpdateActivityParams) SetDurationMinutes(v *int64) {
 	m.DurationMinutes = v
 }
 
-// GetCalories returns the Calories value.
-func (m UpdateActivityParams) GetCalories() *int64 {
-	return m.Calories
+// GetOtherAttributes returns the OtherAttributes value.
+func (m UpdateActivityParams) GetOtherAttributes() *string {
+	return m.OtherAttributes
 }
 
-// SetCalories sets the Calories value and returns the updated UpdateActivityParams.
-func (m *UpdateActivityParams) SetCalories(v *int64) {
-	m.Calories = v
-}
-
-// GetSteps returns the Steps value.
-func (m UpdateActivityParams) GetSteps() *int64 {
-	return m.Steps
-}
-
-// SetSteps sets the Steps value and returns the updated UpdateActivityParams.
-func (m *UpdateActivityParams) SetSteps(v *int64) {
-	m.Steps = v
-}
-
-// GetHeartRate returns the HeartRate value.
-func (m UpdateActivityParams) GetHeartRate() *int64 {
-	return m.HeartRate
-}
-
-// SetHeartRate sets the HeartRate value and returns the updated UpdateActivityParams.
-func (m *UpdateActivityParams) SetHeartRate(v *int64) {
-	m.HeartRate = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated UpdateActivityParams.
+func (m *UpdateActivityParams) SetOtherAttributes(v *string) {
+	m.OtherAttributes = v
 }
 
 // GetNotes returns the Notes value.
@@ -10267,34 +10147,14 @@ func (m *CreateInsulinDoseParams) SetDoseType(v *string) {
 	m.DoseType = v
 }
 
-// GetSplitNow returns the SplitNow value.
-func (m CreateInsulinDoseParams) GetSplitNow() *float64 {
-	return m.SplitNow
+// GetOtherAttributes returns the OtherAttributes value.
+func (m CreateInsulinDoseParams) GetOtherAttributes() types.InsulinDoseOther {
+	return m.OtherAttributes
 }
 
-// SetSplitNow sets the SplitNow value and returns the updated CreateInsulinDoseParams.
-func (m *CreateInsulinDoseParams) SetSplitNow(v *float64) {
-	m.SplitNow = v
-}
-
-// GetSplitExt returns the SplitExt value.
-func (m CreateInsulinDoseParams) GetSplitExt() *float64 {
-	return m.SplitExt
-}
-
-// SetSplitExt sets the SplitExt value and returns the updated CreateInsulinDoseParams.
-func (m *CreateInsulinDoseParams) SetSplitExt(v *float64) {
-	m.SplitExt = v
-}
-
-// GetAutomatic returns the Automatic value.
-func (m CreateInsulinDoseParams) GetAutomatic() *bool {
-	return m.Automatic
-}
-
-// SetAutomatic sets the Automatic value and returns the updated CreateInsulinDoseParams.
-func (m *CreateInsulinDoseParams) SetAutomatic(v *bool) {
-	m.Automatic = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated CreateInsulinDoseParams.
+func (m *CreateInsulinDoseParams) SetOtherAttributes(v types.InsulinDoseOther) {
+	m.OtherAttributes = v
 }
 
 // GetNotes returns the Notes value.
@@ -10747,34 +10607,14 @@ func (m *UpdateInsulinDoseParams) SetDose(v *float64) {
 	m.Dose = v
 }
 
-// GetSplitNow returns the SplitNow value.
-func (m UpdateInsulinDoseParams) GetSplitNow() *float64 {
-	return m.SplitNow
+// GetOtherAttributes returns the OtherAttributes value.
+func (m UpdateInsulinDoseParams) GetOtherAttributes() *string {
+	return m.OtherAttributes
 }
 
-// SetSplitNow sets the SplitNow value and returns the updated UpdateInsulinDoseParams.
-func (m *UpdateInsulinDoseParams) SetSplitNow(v *float64) {
-	m.SplitNow = v
-}
-
-// GetSplitExt returns the SplitExt value.
-func (m UpdateInsulinDoseParams) GetSplitExt() *float64 {
-	return m.SplitExt
-}
-
-// SetSplitExt sets the SplitExt value and returns the updated UpdateInsulinDoseParams.
-func (m *UpdateInsulinDoseParams) SetSplitExt(v *float64) {
-	m.SplitExt = v
-}
-
-// GetAutomatic returns the Automatic value.
-func (m UpdateInsulinDoseParams) GetAutomatic() *bool {
-	return m.Automatic
-}
-
-// SetAutomatic sets the Automatic value and returns the updated UpdateInsulinDoseParams.
-func (m *UpdateInsulinDoseParams) SetAutomatic(v *bool) {
-	m.Automatic = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated UpdateInsulinDoseParams.
+func (m *UpdateInsulinDoseParams) SetOtherAttributes(v *string) {
+	m.OtherAttributes = v
 }
 
 // GetNotes returns the Notes value.

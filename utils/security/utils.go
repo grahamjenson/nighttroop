@@ -36,8 +36,9 @@ func SecureRandomString(length int, charset string) string {
 	for i := 0; i < length; i++ {
 		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
 		if err != nil {
+			// Never fall back to a predictable generator: this makes credentials and keys
 			slog.Error("Error generating secure random number", "error", err)
-			return InsecureRandomString(length, charset)
+			panic("security: crypto/rand failed: " + err.Error())
 		}
 		bytes[i] = charset[num.Int64()]
 	}
