@@ -434,6 +434,93 @@ func (q *Queries) CreateEventGroup(ctx context.Context, arg CreateEventGroupPara
 	return &i, err
 }
 
+const eventGroupAscendingIDs = `-- name: EventGroupAscendingIDs :many
+SELECT id FROM event_groups
+WHERE occurred_at BETWEEN MAX(COALESCE(CAST(?1 AS INTEGER), 0), COALESCE(CAST(?2 AS INTEGER) + 1, 0), COALESCE(CAST(?3 AS INTEGER), 0))
+    AND MIN(COALESCE(CAST(?4 AS INTEGER), 253402300799999), COALESCE(CAST(?5 AS INTEGER) - 1, 253402300799999), COALESCE(?3, 253402300799999))
+    AND (CAST(?6 AS BOOL) = TRUE OR deleted_at IS NULL)
+ORDER BY occurred_at LIMIT CAST(?8 AS INTEGER) OFFSET CAST(?7 AS INTEGER)
+`
+
+type EventGroupAscendingIDsParams struct {
+	DateGTE        *int64
+	DateGT         *int64
+	DateEQ         *int64
+	DateLTE        *int64
+	DateLT         *int64
+	IncludeDeleted bool
+	Skip           int64
+	Limit          int64
+}
+
+// The treatments in the dates searched, the oldest first, from occurred_at's index, for a search sorted by date
+func (q *Queries) EventGroupAscendingIDs(ctx context.Context, arg EventGroupAscendingIDsParams) ([]string, error) {
+	rows, err := q.query(ctx, q.eventGroupAscendingIDsStmt, eventGroupAscendingIDs,
+		arg.DateGTE,
+		arg.DateGT,
+		arg.DateEQ,
+		arg.DateLTE,
+		arg.DateLT,
+		arg.IncludeDeleted,
+		arg.Skip,
+		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const eventGroupHistoryIDs = `-- name: EventGroupHistoryIDs :many
+SELECT id FROM event_groups WHERE updated_at >= ?1
+ORDER BY updated_at, occurred_at, id LIMIT CAST(?2 AS INTEGER)
+`
+
+type EventGroupHistoryIDsParams struct {
+	Since int64
+	Limit int64
+}
+
+// The treatments changed since Since, deleted ones too, the oldest change first, then by date and id as History sorts them, from updated_at's index, for API v3
+// history
+func (q *Queries) EventGroupHistoryIDs(ctx context.Context, arg EventGroupHistoryIDsParams) ([]string, error) {
+	rows, err := q.query(ctx, q.eventGroupHistoryIDsStmt, eventGroupHistoryIDs, arg.Since, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const eventsToGroup = `-- name: EventsToGroup :many
 WITH params AS (
     SELECT CAST(?1 AS TEXT) AS group_id, CAST(?2 AS INTEGER) AS from_ms,

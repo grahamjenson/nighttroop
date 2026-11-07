@@ -11,6 +11,9 @@ type Summary struct {
 	// RangeLow and RangeHigh are the range settings' low and high, in Units: a reading below or above is out of range
 	RangeLow  float64 `json:"range_low"`
 	RangeHigh float64 `json:"range_high"`
+	// RangeUrgentLow and RangeUrgentHigh are the range settings' urgent low and high, in Units
+	RangeUrgentLow  float64 `json:"range_urgent_low"`
+	RangeUrgentHigh float64 `json:"range_urgent_high"`
 
 	// GlucoseReadings are cleaned, the same glucose from more than one source kept once
 	GlucoseReadings []*SiteCleanGlucoseReading `json:"glucose_readings"`

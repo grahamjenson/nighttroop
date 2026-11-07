@@ -90,6 +90,14 @@ func (c ProfileCollection) Delete(q *sitedb.Queries, ctx context.Context, identi
 	return q.HardDeleteProfileStore(ctx, sitedb.HardDeleteProfileStoreParams{ProfileStoreID: identifier})
 }
 
+func (c ProfileCollection) AscendingIDs(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]string, error) {
+	return q.ProfileStoreAscendingIDs(ctx, nsquery.ProfileStoreAscending(query))
+}
+
+func (c ProfileCollection) HistoryIDs(q *sitedb.Queries, ctx context.Context, since, limit int64) ([]string, error) {
+	return q.ProfileStoreHistoryIDs(ctx, sitedb.ProfileStoreHistoryIDsParams{Since: since, Limit: limit})
+}
+
 func (c ProfileCollection) SearchModels(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]*sitedb.ProfilePresetBundle, error) {
 	var profilePresets []*sitedb.ProfilePreset
 	var err error

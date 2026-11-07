@@ -32,6 +32,12 @@ CLICK #site--insulin--add
 INPUT #site--insulin--create--dose 2.5
 CLICK #site--insulin--create--submit
 ASSERT_STATUS 201
+// And a loop's small automatic bolus
+CLICK #site--insulin--add
+INPUT #site--insulin--create--dose 0.35
+INPUT #site--insulin--create--dose-type SMB
+CLICK #site--insulin--create--submit
+ASSERT_STATUS 201
 
 // A sensor started now
 CLICK #site--settings-menu
@@ -75,16 +81,22 @@ ASSERT_VISIBLE #site--summary--glucose--ago >> text=/^(just now|\d+ minutes? ago
 ASSERT_VISIBLE #site--summary--readings tbody tr >> nth=0 >> text=/^(just now|\d+ minutes? ago)$/
 ASSERT_VISIBLE #site--summary--treatments tbody tr >> nth=0 >> text=/^(just now|\d+ minutes? ago)$/
 
-// ECharts draws the graph as an SVG in the browser: carbs and insulin are labelled by their markers, with the rows named down the side.
-// These are checked as drawn, as labels can be drawn over each other (virtual sync's meal can be at nearly the same time as
-// the one added here), and the sticky header can cover them once the page scrolls. Drawn also checks each is inside the
-// graph, as the labels of a dose and a meal given just now are drawn right of markers at the graph's right edge.
+// ECharts draws the graph as an SVG in the browser, on one grid as Carer draws it: carbs and insulin are labelled by their
+// markers above the readings, the basal's highest rate is marked on the right, and the legend names the treatments and
+// basal. These are checked as drawn, as labels can be drawn over each other (virtual sync's meal can be at nearly the
+// same time as the one added here), and the sticky header can cover them once the page scrolls. Drawn also checks each
+// is inside the graph, as the labels of a dose and a meal given just now are drawn right of markers at the graph's
+// right edge.
 ASSERT_DRAWN #site--summary--graph svg
 ASSERT_DRAWN #site--summary--graph >> text=15g
 ASSERT_DRAWN #site--summary--graph >> text=2.5U
+ASSERT_DRAWN #site--summary--graph >> text=/^[\d.]+ U\/hr$/
 ASSERT_DRAWN #site--summary--graph >> text=Carbs
 ASSERT_DRAWN #site--summary--graph >> text=Insulin
+ASSERT_DRAWN #site--summary--graph >> text=SMB
 ASSERT_DRAWN #site--summary--graph >> text=Basal
+// SMBs come every few minutes, so their markers are not labelled
+ASSERT_NOT_VISIBLE #site--summary--graph >> text=0.35U
 
 // The range buttons show the summary over 6 hours to a week, and back returns to the range before
 CLICK #site--summary--range-6
