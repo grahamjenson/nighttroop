@@ -37,6 +37,9 @@ func formatReadingDate(ctx context.Context, ms int64) string {
 // FormatGlucose and FormatDate show glucose and times the same way on other pages
 var FormatGlucose, FormatDate = formatGlucose, formatReadingDate
 
+// RangeBounds are the range settings, low and high, in the settings' units, for other pages' graphs
+var RangeBounds = glucoseRangeBounds
+
 // glucoseUnits are the units glucose is shown and typed in, from the identity's, site's or default settings
 func glucoseUnits(ctx context.Context) *consts.Units {
 	return sitemodels.ContextUnits(httputils.GetSiteContext(ctx))
