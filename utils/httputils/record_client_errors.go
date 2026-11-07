@@ -16,6 +16,7 @@ import (
 	lru "github.com/hashicorp/golang-lru/v2"
 	"golang.org/x/time/rate"
 	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/utils/aslog"
 )
 
 const (
@@ -121,7 +122,7 @@ func clip(text string) string {
 }
 
 // reportClientError sends a client error to Sentry, when it is set up, as a warning grouped by its status, route and
-// reason, tagged with the identity's role and the client, but not the identity, whose name a site chose
+// reason, tagged with the identity's role and the client, and with its request's site and identity, as an error is
 func reportClientError(r *http.Request, attributes db.ClientErrorAttributes) {
 	hub := sentry.GetHubFromContext(r.Context())
 	if hub == nil {
@@ -129,6 +130,7 @@ func reportClientError(r *http.Request, attributes db.ClientErrorAttributes) {
 	}
 	hub.WithScope(func(scope *sentry.Scope) {
 		scope.SetLevel(sentry.LevelWarning)
+		scope.SetContext("extra", aslog.SentryContext(r.Context()))
 		scope.SetTags(map[string]string{"kind": "client_error", "status": strconv.Itoa(attributes.Status), "route": attributes.Route,
 			"role": attributes.Role, "client": attributes.Client})
 		scope.SetFingerprint([]string{"client_error", strconv.Itoa(attributes.Status), attributes.Method, attributes.Route, attributes.Reason})

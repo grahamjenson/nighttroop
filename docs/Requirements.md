@@ -47,6 +47,10 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - A banner on every control page says when S3 backups or Sentry error reporting are not connected.
 - Errors reported to Sentry are under the server's `DEPLOYMENT` (`development` unless set) as their environment, so each
   of several servers, e.g. staging ones, has its own; a staging server on Fly.io is named after its app.
+- An error reported to Sentry can be searched and counted by what it was logged with: tagged with its site, identity,
+  role, request ID, background job and run, sync type, and request method and route (never its path, which can carry a
+  token); its identity is its user (`<site>/<id>`, or `control/<id>`, named by the identity's name); and its request's
+  method and route are its transaction. Its stack trace ends at the code that logged it, without slog's frames.
 - The banner also says when the server has 90% or more of the sites `MAX_SITES` allows, and when it has them all.
 - Every control page names the browser's tab after itself, e.g. `Sites · Nighttroop Control`.
 
@@ -115,7 +119,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - A request refused for what it sent (a 400, 405, 413 or 422), from any API or page, is an error of kind `client`:
   its status, method and route pattern (never its path or query, which can carry a token), why it was refused as its
   response said, its request ID, and the identity, role and User-Agent that sent it. It is reported to Sentry as a
-  warning, grouped by status, route and reason, with the role and User-Agent but not the identity's name. The same
+  warning, grouped by status, route and reason, with the role and User-Agent, and the site and identity as an
+  error's are. The same
   one of a site is recorded at most once a minute, and at most 20 of a site's a minute, so a client repeating bad
   requests cannot fill the errors or Sentry. Missing credentials, permissions, records and rate limits are not.
 - Logs, events and errors can be narrowed to one site, request or background job run by its ID. An event's, error's

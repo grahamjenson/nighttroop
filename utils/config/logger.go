@@ -1,6 +1,7 @@
 package config
 
 import (
+	"context"
 	"log/slog"
 	"os"
 
@@ -28,8 +29,10 @@ func setupLogging(mode consts.ServerMode) {
 		Level: slog.LevelDebug, // Set minimum log level
 	})
 
+	// The request's route is read as each error is logged, as it is only known once the request is routed
 	sentryHandler := slogsentry.Option{
-		Level: slog.LevelError, // Only send errors to Sentry
+		Level:           slog.LevelError, // Only send errors to Sentry
+		AttrFromContext: []func(context.Context) []slog.Attr{aslog.SentryRoute},
 	}.NewSentryHandler()
 
 	slog.SetDefault(slog.New(aslog.ContextHandler{Handler: slogmulti.Fanout(jsonHandler, sentryHandler, buffer)}))
