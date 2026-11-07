@@ -95,12 +95,24 @@ var alarmFields = []settingField{
 	{Name: "alarm_no_data_minutes", Label: "No Data For Minutes"},
 }
 
-// fieldLabel is a setting's label, with the units of one that is a glucose
-func fieldLabel(ctx context.Context, field settingField) string {
-	if units := httputils.GetSiteContext(ctx).GetSettings().GetUnits(); field.Glucose && units != nil {
-		return field.Label + " (" + string(*units) + ")"
+// fieldLabel is a setting's label in a column, with the units of one that is a glucose
+func fieldLabel(ctx context.Context, column settingsColumn, field settingField) string {
+	if units := columnUnits(ctx, column); field.Glucose && units != "" {
+		return field.Label + " (" + units + ")"
 	}
 	return field.Label
+}
+
+// columnUnits are the units a column's glucose settings are in, as the server shows and reads them: another identity's
+// own, or the site's it follows, and otherwise the signed in identity's
+func columnUnits(ctx context.Context, column settingsColumn) string {
+	if column.Model.IdentityID != nil {
+		if own := column.value("units"); own != nil {
+			return *own
+		}
+		return column.Model.Inherited["units"]
+	}
+	return settingValue(httputils.GetSiteContext(ctx).GetSettings().GetUnits().Stringp())
 }
 
 // optionLabel is how a setting's option reads, the week's days capitalised as names are and an alarm On or Off,
@@ -272,7 +284,8 @@ templ settingsPageOf(page settingsPage, site *sitemodels.Settings, yours *sitemo
 				if field.Section != "" {
 					<h2 class="col-span-full mt-2 border-t border-gray-200 pt-4 text-sm font-semibold text-brand-night">{ field.Section }</h2>
 				}
-				<span class="text-sm font-medium">{ fieldLabel(ctx, field) }</span>
+				// Every column has the same units, as another identity's, which has its own, is alone on its page
+				<span class="text-sm font-medium">{ fieldLabel(ctx, columns[0], field) }</span>
 				if field.Name == "timezone" {
 					@timezoneSuggestions()
 				}
@@ -299,7 +312,7 @@ templ settingsPageOf(page settingsPage, site *sitemodels.Settings, yours *sitemo
 // settingControl is one setting in one column, a select or a text input, belonging to the column's form
 templ settingControl(column settingsColumn, field settingField) {
 	{{ value, placeholder := column.value(field.Name), column.Inherited + " (" + optionLabel(field, column.Model.Inherited[field.Name]) + ")" }}
-	{{ label := fieldLabel(ctx, field) + " (" + column.Title + ")" }}
+	{{ label := fieldLabel(ctx, column, field) + " (" + column.Title + ")" }}
 	if field.Options != nil {
 		<select id={ column.IDPrefix + field.Name } name={ field.Name } form={ column.FormID } aria-label={ label } class="h-9 w-full rounded-md border border-gray-200 bg-white px-3 text-sm">
 			<option value="" selected?={ value == nil }>{ placeholder }</option>
