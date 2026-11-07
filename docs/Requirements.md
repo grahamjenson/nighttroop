@@ -291,7 +291,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 Each kind of data has a page with a table, newest first and paged, where records can be added, viewed, edited and
 deleted (after a confirmation). On a phone, a table wider than the window scrolls sideways in its card, so the page
-does not:
+does not, and its cells stay on one line, so a time or a value and its unit never break apart; only notes wrap:
 
 - **Glucose**: CGM and meter readings with trend arrows, in the settings' units (mmol/L or mg/dL), with lows and
   highs coloured as on the summary.
@@ -317,7 +317,8 @@ does not:
     type can have. An event taken out of a group is in no group.
   - An event is in at most one group: events in another group are not offered, and grouping one again is refused.
   - A group added or edited on the site is a Nightscout treatment, with its events.
-- **Device statuses**: each device's latest 3 statuses, and every status a device sent.
+- **Device statuses**: each device's latest 3 statuses, and every status a device sent, with each column's unit in its
+  header, e.g. Phone battery (%), Reservoir (U), IOB (U) and COB (g).
 
 Every value written to a site, from its pages, the Nightscout API or a sync, has a broad limit far outside real use,
 e.g. a bolus of at most 500 units or 1000 g of carbs, and a date from 1970 to the year 9999. Insulin and food can be

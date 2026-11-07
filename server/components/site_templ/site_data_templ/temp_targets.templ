@@ -152,7 +152,7 @@ templ tempTargetRow(tempTarget *sitemodels.SiteTempTarget) {
 		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ fmt.Sprint(tempTarget.DurationMinutes) }
 		}
-		@table.Cell() {
+		@table.Cell(notesCell) {
 			{ orDash(tempTarget.Reason) }
 		}
 		@table.Cell() {

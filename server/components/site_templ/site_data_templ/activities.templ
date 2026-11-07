@@ -137,7 +137,7 @@ templ activityRow(activity *sitemodels.SiteActivity) {
 		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ orDash(activity.DurationMinutes) }
 		}
-		@table.Cell() {
+		@table.Cell(notesCell) {
 			{ orDash(activity.Notes) }
 		}
 		@table.Cell() {

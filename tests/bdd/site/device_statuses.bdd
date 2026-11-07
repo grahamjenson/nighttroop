@@ -27,8 +27,9 @@ ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE virtual://nighttroop
 ASSERT_VISIBLE #deviceStatusTable-0 tbody tr >> nth=2
 ASSERT_NOT_VISIBLE #deviceStatusTable-0 tbody tr >> nth=3
-// Values like IOB are shown to at most two decimal places, never with a sum's floating point noise
-ASSERT_NOT_VISIBLE #main-content >> text=/\d\.\d{3,}/
+// Values like IOB are shown to at most two decimal places, never with a sum's floating point noise. Each cell is
+// checked alone, as a row's text runs its cells' numbers together now that their units are in the headers.
+ASSERT_NOT_VISIBLE #main-content td >> text=/\d\.\d{3,}/
 SCREENSHOT device_statuses
 
 // Clicking a status shows all its details: the loop's phone (listed after the carer's, by name) reports the pump

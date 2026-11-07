@@ -17,6 +17,9 @@ GOTO /data/glucose
 ASSERT_STATUS 200
 ASSERT_VISIBLE #glucoseReadingsTable
 ASSERT_FITS
+// Its cells keep to one line, so a time or a value and its unit never break apart
+ASSERT_VISIBLE #glucoseReadingsTable thead th.whitespace-nowrap >> nth=0
+ASSERT_VISIBLE #glucoseReadingsTable tbody tr >> nth=0 >> td.whitespace-nowrap >> nth=0
 SCREENSHOT glucose_readings_phone
 
 // A reading's delete button, past the side of the window, is scrolled to and works
@@ -25,6 +28,14 @@ ASSERT_TEXT_VISIBLE Glucose Reading Deleted
 
 GOTO /data/device-status
 ASSERT_STATUS 200
-ASSERT_VISIBLE #device_statuses table >> nth=0
+// Its tables are wider than their cards, so check their first cell, the time, rather than the whole table
+ASSERT_VISIBLE #deviceStatusTable-0 tbody tr >> nth=0 >> td >> nth=0
 ASSERT_FITS
+// Device status gives its units once, in the column headers, rather than in every cell
+ASSERT_TEXT_EQUALS #deviceStatusTable-1>thead>tr>th:nth-child(2) Phone battery (%)
+ASSERT_TEXT_EQUALS #deviceStatusTable-1>thead>tr>th:nth-child(3) Reservoir (U)
+ASSERT_TEXT_EQUALS #deviceStatusTable-1>thead>tr>th:nth-child(4) Pump battery (%)
+ASSERT_TEXT_EQUALS #deviceStatusTable-1>thead>tr>th:nth-child(5) IOB (U)
+ASSERT_TEXT_EQUALS #deviceStatusTable-1>thead>tr>th:nth-child(6) COB (g)
+ASSERT_NOT_VISIBLE #deviceStatusTable-1 tbody td >> text=/ U$|%$/
 SCREENSHOT device_statuses_phone

@@ -111,7 +111,7 @@ templ componentEventRow(event *sitemodels.SiteComponentEvent) {
 		@table.Cell() {
 			{ componentDetail(event) }
 		}
-		@table.Cell() {
+		@table.Cell(notesCell) {
 			{ orDash(event.Notes) }
 		}
 		@table.Cell() {
