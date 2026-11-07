@@ -111,6 +111,11 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   requests cannot fill the errors or Sentry. Missing credentials, permissions, records and rate limits are not.
 - Logs, events and errors can be narrowed to one site, request or background job run by its ID. An event's, error's
   or log's details link to the rows of its request and job.
+- A control admin can download the whole logs DB, as one SQLite file `logs-<time>.sqlite`, with Download Logs DB on
+  the events, errors and logs pages (`GET /logs-db`), e.g. to turn staging's captured requests into tests. It is a
+  consistent copy while logs are written, and its temp file is deleted once sent. A read only control identity sees no
+  button and is refused (403), one signed out is refused (401), and a download while another is being sent is
+  refused (429).
 - Every DB query is timed, until its rows are read, and one that takes `SLOW_QUERY_MS` (100 ms) or longer is logged as
   a `Slow query` with its DB, its query's name, how long it took and how many rows it gave, but never its values, and
   the request, site and identity it was for. A write transaction waiting for the write lock is logged as `BEGIN`.
