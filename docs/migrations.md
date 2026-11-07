@@ -85,8 +85,10 @@ them otherwise.
 
 ## When a migration fails on a deploy
 
-- **A DB that cannot be opened stops the start**, as does a missing site restored from its backup that cannot be:
-  its files are kept, and with `update.sh` the release is rolled back, putting `./data` back from the copy it made.
+- **A DB that cannot be opened stops the start**, as does a live site's DB that is missing and not restored from its
+  backup, or restored and cannot be opened: the server serves nothing, so no data is written that a rollback would
+  lose. Its files are kept, and with `update.sh` the release is rolled back, putting `./data` back from the copy it
+  made. The error names the DB or the sites.
 - **Fix forward**: a new release with a fixed or new migration opens the kept DBs. One the failed migration left
   dirty is forced back to the version before it and migrated again on its own, so nothing needs to be done by hand.
 - **Rolling back after a migration ran** needs `./backups/data-*.tar.gz` from `update.sh`, or S3's backups, as the
