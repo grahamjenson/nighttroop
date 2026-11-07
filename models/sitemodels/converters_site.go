@@ -326,6 +326,14 @@ type SiteConverter interface {
 	// FOOD INTAKES
 	///////
 
+	// goverter:map OtherAttributes.Category Category
+	// goverter:map OtherAttributes.Subcategory Subcategory
+	// goverter:map OtherAttributes.Fat Fat
+	// goverter:map OtherAttributes.Protein Protein
+	// goverter:map OtherAttributes.Fibre Fibre
+	// goverter:map OtherAttributes.Energy Energy
+	// goverter:map OtherAttributes.Portions Portions
+	// goverter:map OtherAttributes.PreBolus PreBolus
 	FoodIntakeFromDB(source *sitedb.FoodIntake) *SiteFoodIntake
 
 	// goverter:context siteContext
@@ -333,12 +341,14 @@ type SiteConverter interface {
 	// goverter:map OccurredAt | OccurredAtOrNow
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
+	// goverter:map . OtherAttributes | FoodIntakeOther
 	FoodIntakeToCreate(source *SiteFoodIntake, siteContext *httputils.SiteContext) sitedb.CreateFoodIntakeParams
 
 	// goverter:context siteContext
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
 	// goverter:ignore RawJsonData
+	// goverter:map . OtherAttributes | FoodIntakeOtherJSON
 	FoodIntakeToUpdate(source *SiteFoodIntake, siteContext *httputils.SiteContext) sitedb.UpdateFoodIntakeParams
 
 	///////
