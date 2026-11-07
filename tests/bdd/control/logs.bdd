@@ -91,6 +91,8 @@ CLICK #control--menu
 CLICK #control--events-button
 INPUT #control--events--filter--type site_created
 CLICK #control--events--filter--submit
+// The sign in's event going shows the filtered events are in, so the click opens a site created one
+ASSERT_NOT_VISIBLE #controlEventsTable >> text=Signed in
 CLICK #controlEventsTable tbody tr >> nth=0
 ASSERT_VISIBLE #control--event--request-id
 SCREENSHOT event_request
