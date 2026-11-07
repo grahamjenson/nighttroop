@@ -1,0 +1,74 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_PATH /
+
+// The reports open the daily dose report, which a new site has no past days for
+CLICK #site--settings-menu
+CLICK #site--reports-button
+ASSERT_STATUS 200
+CLICK #site--reports--tdd-button
+ASSERT_STATUS 200
+ASSERT_NEW_URL
+ASSERT_PATH /reports/tdd
+ASSERT_TITLE Daily dose · Nighttroop
+ASSERT_VISIBLE #site--reports--tdd--empty
+ASSERT_TEXT_EQUALS #site--reports--tdd--days 0
+ASSERT_TEXT_EQUALS #site--reports--tdd--mean –
+
+// Virtual sync writes its last 30 minutes, then each backfill the day before its oldest reading (tests backfill a
+// day), with doses and the basal in force, so three backfills fill the last three days
+CLICK #site--settings-menu
+CLICK #site--settings--sync-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-sync--enable
+CLICK #site--settings--virtual-sync--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Sync Updated
+RUN_BACKGROUND_JOBS
+CLICK #site--settings--virtual-sync--backfill
+ASSERT_TEXT_VISIBLE Backfilling Virtual
+RUN_BACKGROUND_JOBS
+CLICK #site--settings--virtual-sync--backfill
+ASSERT_TEXT_VISIBLE Backfilling Virtual
+RUN_BACKGROUND_JOBS
+CLICK #site--settings--virtual-sync--backfill
+ASSERT_TEXT_VISIBLE Backfilling Virtual
+RUN_BACKGROUND_JOBS
+
+// A new timezone builds the last 7 days again, with the backfilled doses in them
+CLICK #site--settings-menu
+CLICK #site--settings--settings-button
+ASSERT_STATUS 200
+INPUT #site--settings--site--timezone Etc/UTC
+CLICK #site--settings--site--save
+ASSERT_TEXT_VISIBLE Settings Saved
+RUN_BACKGROUND_JOBS
+
+// The report draws a bar of each past day with insulin, today left out as it is not over, with their mean, lowest and
+// highest daily dose
+GOTO /reports/tdd
+ASSERT_STATUS 200
+ASSERT_NOT_VISIBLE #site--reports--tdd--empty
+ASSERT_DRAWN #site--reports--tdd--chart svg
+ASSERT_DRAWN #site--reports--tdd--chart >> text=/^\d+ U$/ >> nth=-1
+ASSERT_VISIBLE #site--reports--tdd--days >> text=/^[34]$/
+ASSERT_VISIBLE #site--reports--tdd--mean >> text=/^\d+(\.\d+)? U$/
+ASSERT_VISIBLE #site--reports--tdd--lowest >> text=/^\d+(\.\d+)? U$/
+ASSERT_VISIBLE #site--reports--tdd--highest >> text=/^\d+(\.\d+)? U$/
+ASSERT_VISIBLE #site--reports--tdd-button.bg-primary
+SCREENSHOT report_tdd
+
+// The period buttons go back to the reports of the week with yesterday in it
+CLICK #site--reports--period-week
+ASSERT_STATUS 200
+ASSERT_NEW_URL
+ASSERT_VISIBLE #site--reports--period-week.bg-primary
+ASSERT_VISIBLE #site--reports--days
+
+// On a phone the report is no wider than the window, its buttons wrapping. The window is tall enough for the whole
+// page, so fitting it checks only its width.
+WINDOW 390x1200
+GOTO /reports/tdd
+ASSERT_STATUS 200
+ASSERT_DRAWN #site--reports--tdd--chart svg
+ASSERT_FITS
+SCREENSHOT report_tdd_phone
