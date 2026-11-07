@@ -34,6 +34,14 @@ overrides:
       - column: "profile_presets.is_default"
         go_type:
           type: "bool"
+      - column: "component_events.other_attributes"
+        go_type:
+          import: "nighttroop.t1d.nz/data/types"
+          type: "ComponentEventOther"
+      - column: "component_events_vw.other_attributes"
+        go_type:
+          import: "nighttroop.t1d.nz/data/types"
+          type: "ComponentEventOther"
       - column: "device_reports.is_device_charging"
         go_type:
           type: "*bool"

@@ -5,11 +5,7 @@
 INSERT INTO component_events (
     id,
     event_type,
-    sensor_code,
-    transmitter_id,
-    pump_id,
-    pump_serial,
-    pump_type,
+    other_attributes,
     notes,
     reason,
 
@@ -21,7 +17,7 @@ INSERT INTO component_events (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -88,8 +84,12 @@ LIMIT 1;
 -- name: UpdateComponentEvent :one
 UPDATE component_events SET
     event_type = COALESCE(sqlc.narg('EventType'), event_type),
-    sensor_code = COALESCE(sqlc.narg('SensorCode'), sensor_code),
-    transmitter_id = COALESCE(sqlc.narg('TransmitterID'), transmitter_id),
+    -- The fields sent, as JSON (types.OtherJSON), are merged into those kept, so one not sent stays as it is, as a
+    -- column of its own would
+    other_attributes = NULLIF(json_patch(
+        COALESCE(other_attributes, '{}'),
+        COALESCE(CAST(sqlc.narg('OtherAttributes') AS TEXT), '{}')
+    ), '{}'),
     notes = COALESCE(sqlc.narg('Notes'), notes),
     reason = COALESCE(sqlc.narg('Reason'), reason),
 

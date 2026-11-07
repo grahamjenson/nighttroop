@@ -56,11 +56,7 @@ type Activity struct {
 type ComponentEvent struct {
 	ID                    string
 	EventType             string
-	SensorCode            *string
-	TransmitterID         *string
-	PumpID                *string
-	PumpSerial            *string
-	PumpType              *string
+	OtherAttributes       types.ComponentEventOther
 	Notes                 *string
 	Reason                *string
 	RawJsonData           *string
@@ -80,11 +76,7 @@ type ComponentEvent struct {
 type ComponentEventsVw struct {
 	ID                    *string
 	EventType             *string
-	SensorCode            *string
-	TransmitterID         *string
-	PumpID                *string
-	PumpSerial            *string
-	PumpType              *string
+	OtherAttributes       types.ComponentEventOther
 	Notes                 *string
 	Reason                *string
 	RawJsonData           *string
