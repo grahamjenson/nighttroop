@@ -36,6 +36,8 @@ ASSERT_TEXT_VISIBLE Basal (U/h)
 ASSERT_TEXT_VISIBLE Low Target (mmol/L)
 // Its schedules make it the tallest details, which scroll leaving Close where it can be clicked
 ASSERT_VISIBLE #presets--profiles--details--close
+// Its name's input is labelled
+ASSERT_VISIBLE #presets--profiles--edit label[for=presets--profiles--edit--name] >> text=Name
 SCREENSHOT profile_details
 INPUT #presets--profiles--edit--name Everyday
 CLICK #presets--profiles--edit--submit

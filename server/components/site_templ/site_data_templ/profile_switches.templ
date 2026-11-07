@@ -204,7 +204,7 @@ templ ProfileSwitchModal(profileSwitch *sitemodels.SiteProfileSwitch) {
 	@modal.Modal(modal.Props{ID: "site--profile-switch--details", Title: fmt.Sprintf("%s at %s×", profileSwitch.Name, orDash(profileSwitch.Multiplier)), Subtitle: formatReadingDate(ctx, profileSwitch.OccurredAt)}) {
 		<form
 			id="site--profile-switch--edit"
-			class="mt-4 flex items-end gap-2"
+			class="mt-4 flex flex-wrap items-end gap-2"
 			hx-post={ "/data/profile-switches/" + profileSwitch.ID }
 			hx-target={ "#site--profile-switch--" + profileSwitch.ID }
 			hx-swap="outerHTML"

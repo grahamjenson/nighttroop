@@ -154,7 +154,7 @@ templ InsulinDoseModal(insulinDose *sitemodels.SiteInsulinDose) {
 	@modal.Modal(modal.Props{ID: "site--insulin--details", Title: fmt.Sprintf("%v units", insulinDose.Dose), Subtitle: formatReadingDate(ctx, insulinDose.OccurredAt)}) {
 		<form
 			id="site--insulin--edit"
-			class="mt-4 flex items-end gap-2"
+			class="mt-4 flex flex-wrap items-end gap-2"
 			hx-post={ "/data/insulin/" + insulinDose.ID }
 			hx-target={ "#site--insulin--" + insulinDose.ID }
 			hx-swap="outerHTML"
