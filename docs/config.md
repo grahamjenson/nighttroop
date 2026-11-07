@@ -23,8 +23,8 @@ Limits written per minute are rates; their burst is how many can be used at once
 | `REQUESTS_BACKLOG_PER_CPU` | `64` | Requests for each CPU that wait, up to 5 seconds, for one in flight to finish, once `REQUESTS_IN_FLIGHT_PER_CPU` are being worked on. One that waits longer, or arrives with the backlog full, is refused at once with 503 and `Retry-After` |
 | `HOST_PROTOCOL` | `https` | `http` or `https`, used in links and cookies. `http` is only allowed in development and test |
 | `DATA_DIR` | `./.dbs` | Where the SQLite DBs (`db/`) and backups waiting to upload (`backup/`) are kept |
-| `TRUSTED_PROXIES` | `127.0.0.1,::1` | Comma separated IPs or CIDR ranges of reverse proxies, such as Caddy, whose `X-Forwarded-For` is believed for the client's IP |
-| `FLY_APP_NAME` | unset | Set by Fly.io. When set, the client's IP is read from the `Fly-Client-IP` header |
+| `TRUSTED_PROXIES` | `127.0.0.1,::1` | Comma separated IPs or CIDR ranges of reverse proxies, such as Caddy, whose `X-Forwarded-For` is believed for the client's IP: the client is the last hop before these proxies |
+| `FLY_APP_NAME` | unset | Set by Fly.io. When set, the client's IP is read from the `Fly-Client-IP` header, unless it is not an IP |
 | `SUPPORT_EMAIL` | `nighttroop@t1d.nz` | Where users contact the server's operator, in every page's footer and in the terms of service and privacy policy |
 | `FEEDBACK_URL` | | Where users give feedback, e.g. a Google Form or GitHub issues; when set, linked from every page's footer and the home page |
 | `STAGING_ADMIN_PASSWORD` | empty | Required in staging, and only used there: the control admin's password, at least 16 characters. Keep it a secret, never in a committed file |

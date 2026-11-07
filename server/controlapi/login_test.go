@@ -1,7 +1,6 @@
 package controlapi
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -44,8 +43,7 @@ func TestControlLoginRejectsLongNameBeforeRateLimit(t *testing.T) {
 			r := httptest.NewRequest("POST", "/login", strings.NewReader(tt.body))
 			r.RemoteAddr = tt.ip + ":1234"
 			r.Header.Set("Content-Type", tt.contentType)
-			ctx, _ := httputils.SetIPInHTTPContext(context.Background(), r, nil)
-			r = r.WithContext(ctx)
+			r = r.WithContext(httputils.WithClientIP(r))
 
 			w := httptest.NewRecorder()
 			POSTLogin(nil, testConfig)(w, r)
