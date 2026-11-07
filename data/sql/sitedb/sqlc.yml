@@ -96,6 +96,14 @@ overrides:
           import: "nighttroop.t1d.nz/utils/consts"
           type: "Units"
           pointer: true
+      - column: "profile_switches.other_attributes"
+        go_type:
+          import: "nighttroop.t1d.nz/data/types"
+          type: "ProfileSwitchOther"
+      - column: "profile_switches_vw.other_attributes"
+        go_type:
+          import: "nighttroop.t1d.nz/data/types"
+          type: "ProfileSwitchOther"
 
       - column: "profile_presets.units"
         go_type:
