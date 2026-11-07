@@ -98,6 +98,9 @@ All treatments have `created_at` and `timestamp` (the same ISO date), `enteredBy
 
 `enteredBy` is `loop://<iPhone name>`, or `Loop` / `Loop (via remote command)` for an override.
 
+A bolus's `automatic` is kept with its insulin dose and given back as sent, through API v1 and v3, as LoopFollow
+shows an automatic bolus as an SMB. A temp basal's is not kept.
+
 How each is changed or removed:
 
 - **Carbs** are posted with no `_id`. Loop keeps each returned `_id` against the carb's `syncIdentifier`
