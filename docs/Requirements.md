@@ -20,6 +20,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   admin only when a code from that TOTP secret is entered.
 - Every TOTP QR code (the setup page, a new site's admin, a new or reset identity) scans into an authenticator app as an
   account: it holds an `otpauth://totp` URI issued by Nighttroop, for the name at its site's or control plane's host.
+- Under each TOTP QR code it says to scan it with an authenticator app, linking in a new tab to Google Authenticator,
+  Microsoft Authenticator and 2FAS.
 - A staging server (`MODE=staging`) is never set up: it starts with the control admin `admin` of its
   `STAGING_ADMIN_PASSWORD` and `STAGING_ADMIN_TOTP_SECRET`, made again whenever its data is wiped, and will not start
   without them. Otherwise it runs as production does, its site admins getting their own random credentials.
