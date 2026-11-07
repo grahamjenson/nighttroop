@@ -550,8 +550,9 @@ focus back to the row or button that opened it.
   cannot. Its batch is not uploaded without it.
 - `sites check`, run in the server's image against its data, lists each live or disabled site that stops the start:
   its DB missing, one that cannot be opened, or the migration that fails and its error, with when its last backup in
-  the data folder was made, and exits 1; with none, it says every site opens and exits 0. It changes no DB, migrating
-  a copy of each, and checks the control DB the same way first.
+  the data folder was made and when its batch was last backed up to S3 (or that it has none, or that S3 is off or not
+  working), and exits 1; with none, it says every site opens and exits 0. It changes no DB, migrating a copy of each,
+  and checks the control DB the same way first.
 - Old records' raw JSON is cleared after `TRUNCATE_RECORDS_AFTER_DAYS`.
 - Reads and writes are rate limited per site, identity and IP, and live sessions per site are capped.
 - A Nightscout request that fails auth, or needs none, spends its IP's budget on the site

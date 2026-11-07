@@ -501,7 +501,8 @@ NIGHTTROOP_IMAGE=ghcr.io/grahamjenson/nighttroop:v1.2.3 docker compose run --rm 
 - **It changes nothing:** it copies each database, opened read only, and opens and migrates the copy, as the server
   would. Without `NIGHTTROOP_IMAGE` it checks with the version `.env` runs.
 - **What it prints:** each site that stops the start, why (its database is missing, cannot be opened, or which
-  migration failed and its error), and when its last backup in `./data/backup` was made. It exits `1`, or `0` saying
+  migration failed and its error), when its last backup in `./data/backup` was made, and when its batch was last
+  backed up to S3 (or that there is no backup there, or that S3 is off or not working). It exits `1`, or `0` saying
   every site opens.
 - **The copies `update.sh` made** are in `./backups`. Whether one has a site's database (its batch is the site's
   first letter) is shown by `tar -tzvf backups/data-<time>.tar.gz data/db/site/<batch>/<site>.sqlite`.

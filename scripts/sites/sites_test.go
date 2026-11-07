@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"crypto/sha256"
+	"errors"
 	"os"
 	"strings"
 	"testing"
@@ -17,11 +19,26 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 )
 
+// made is when the stand-in S3 says batch b's backup was uploaded
+var made = time.Date(2026, 11, 6, 10, 0, 0, 0, time.UTC)
+
+// lastS3 stands in for S3, as the server's S3 tests do: it has batch b's backup, cannot be reached for batch c's and
+// has no others
+func lastS3(_ context.Context, key string) (*time.Time, error) {
+	switch key {
+	case "nighttroop.test/backup/b.tar.lz4.enc":
+		return &made, nil
+	case "nighttroop.test/backup/c.tar.lz4.enc":
+		return nil, errors.New("S3 is down")
+	}
+	return nil, nil
+}
+
 // runCheck is what check writes, and whether it says the start is stopped
 func runCheck(t *testing.T, cfg *config.ServerConfig) (string, bool) {
 	t.Helper()
 	var out strings.Builder
-	stopped, err := check(t.Context(), cfg, &out)
+	stopped, err := check(t.Context(), cfg, lastS3, &out)
 	require.NoError(t, err)
 	return out.String(), stopped
 }
@@ -48,7 +65,8 @@ func dbFiles(t *testing.T, path string) [2][32]byte {
 
 func TestCheck(t *testing.T) {
 	ctx := t.Context()
-	cfg := &config.ServerConfig{Mode: consts.Development, DataDir: t.TempDir()}
+	cfg := &config.ServerConfig{Mode: consts.Development, DataDir: t.TempDir(), HostName: "nighttroop.test"}
+	cfg.Status.S3Working = true
 	out, stopped := runCheck(t, cfg)
 	require.False(t, stopped)
 	require.Contains(t, out, "There is no control DB")
@@ -67,7 +85,6 @@ func TestCheck(t *testing.T) {
 	backupPath := sitedb.GetBackupPath("bcdefghi", cfg)
 	require.NoError(t, os.MkdirAll(strings.TrimSuffix(backupPath, "/bcdefghi.sqlite"), 0o700))
 	require.NoError(t, os.WriteFile(backupPath, []byte("a backup"), 0o600))
-	made := time.Date(2026, 11, 6, 10, 0, 0, 0, time.UTC)
 	require.NoError(t, os.Chtimes(backupPath, made, made))
 	// A disabled site whose DB is not a DB
 	newSite(t, cfg, control, "cdefghij").Close()
@@ -86,10 +103,20 @@ func TestCheck(t *testing.T) {
 	require.True(t, stopped, out)
 	require.NotContains(t, out, "abcdefgh", "a site that opens does not stop the start")
 	require.Contains(t, out, "site bcdefghi (live): its DB is missing, so the start stops unless its batch's backup in S3 has it\n"+
-		"  backup in the data folder: "+backupPath+", made 2026-11-06T10:00:00Z\n")
+		"  backup in the data folder: "+backupPath+", made 2026-11-06T10:00:00Z\n"+
+		"  backup in S3: nighttroop.test/backup/b.tar.lz4.enc, made 2026-11-06T10:00:00Z\n")
 	require.Regexp(t, `site cdefghij \(disabled\): cannot open: .*file is not a database.*\n`+
-		`  backup in the data folder: none\n`, out)
-	require.Regexp(t, `site defghijk \(live\): sitedb migration 1 failed: .*already exists.*\n`, out)
+		`  backup in the data folder: none\n  backup in S3: not known: S3 is down\n`, out)
+	require.Regexp(t, `site defghijk \(live\): sitedb migration 1 failed: .*already exists.*\n`+
+		`  backup in the data folder: none\n  backup in S3: none at nighttroop.test/backup/d.tar.lz4.enc\n`, out)
+
+	// Without S3 working, what it has is not known
+	cfg.Status.S3Working = false
+	out, _ = runCheck(t, cfg)
+	require.Contains(t, out, "site bcdefghi (live): its DB is missing, so the start stops unless its batch's backup in S3 has it\n"+
+		"  backup in the data folder: "+backupPath+", made 2026-11-06T10:00:00Z\n"+
+		"  backup in S3: not known, as S3 is off or not working\n")
+	cfg.Status.S3Working = true
 
 	require.Equal(t, before, dbFiles(t, dirty.Path), "the check migrated a copy, so the site's DB is not changed")
 
@@ -99,6 +126,7 @@ func TestCheck(t *testing.T) {
 	require.NoError(t, utils.DeleteFile(controldb.GetPath(cfg)+"-wal"))
 	out, stopped = runCheck(t, cfg)
 	require.True(t, stopped, out)
-	require.Regexp(t, `^control DB: cannot open: .*file is not a database`, out)
+	require.Regexp(t, `^control DB: cannot open: .*file is not a database.*\n  backup in the data folder: none\n`+
+		`  backup in S3: none at nighttroop.test/backup/controldb.tar.lz4.enc\n`, out)
 	require.NotContains(t, out, "site ")
 }

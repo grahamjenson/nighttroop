@@ -305,6 +305,22 @@ func (c *S3Client) uploadStreamToS3(ctx context.Context, key string, retention R
 // DOWNLOAD METHODS
 ////
 
+// LastModified is when the object at key was last uploaded, or nil when there is none or S3 is not working
+func (c *S3Client) LastModified(ctx context.Context, key string) (*time.Time, error) {
+	if !c.ServerConfig.Status.S3Working {
+		return nil, nil
+	}
+	out, err := c.s3.HeadObject(ctx, &s3.HeadObjectInput{Bucket: aws.String(c.Bucket), Key: aws.String(key)})
+	var notFound *types.NotFound
+	if errors.As(err, &notFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("cannot head object in s3: %w", err)
+	}
+	return out.LastModified, nil
+}
+
 func (c *S3Client) DownloadFilesFromS3(ctx context.Context, key string, outpath string) (int64, bool, error) {
 	if !c.ServerConfig.Status.S3Working {
 		return 0, false, nil

@@ -4,8 +4,8 @@
 //
 // check lists what stops the start: the control DB, or a live or disabled site's DB, that cannot be opened or
 // migrated, and a site whose DB is missing, which the start restores only from its batch's backup in S3, each with
-// its last backup in the data folder. It changes nothing, migrating a copy of each DB, and exits 1 when something
-// stops the start.
+// its last backups in the data folder and S3. It changes nothing, migrating a copy of each DB, and exits 1 when
+// something stops the start.
 package main
 
 import (
@@ -24,7 +24,11 @@ import (
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/backup"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/s3utils"
 )
+
+// lastModified is when the S3 object at a key was last uploaded, or nil when there is none
+type lastModified func(ctx context.Context, key string) (*time.Time, error)
 
 func main() {
 	stopped, err := run(context.Background())
@@ -45,12 +49,17 @@ func run(ctx context.Context) (bool, error) {
 	if flag.Arg(0) != "check" {
 		return false, errors.New("usage: sites check")
 	}
-	return check(ctx, cfg, os.Stdout)
+	s3Client := s3utils.NewS3Client(cfg)
+	// Without S3 the check still runs, only not saying what S3 has
+	if err := s3Client.Start(ctx); err != nil {
+		fmt.Fprintln(os.Stderr, "sites: S3's backups are not listed:", err)
+	}
+	return check(ctx, cfg, s3Client.LastModified, os.Stdout)
 }
 
-// check writes to out what stops a server with cfg's data starting, with each one's last backup, and is whether
-// anything does
-func check(ctx context.Context, cfg *config.ServerConfig, out io.Writer) (bool, error) {
+// check writes to out what stops a server with cfg's data starting, with each one's last backups, lastS3 saying when
+// one was made in S3, and is whether anything does
+func check(ctx context.Context, cfg *config.ServerConfig, lastS3 lastModified, out io.Writer) (bool, error) {
 	tmp, err := os.MkdirTemp("", "sites-check-")
 	if err != nil {
 		return false, err
@@ -63,7 +72,7 @@ func check(ctx context.Context, cfg *config.ServerConfig, out io.Writer) (bool, 
 	}
 	control, err := openCopy(ctx, controldb.GetPath(cfg), filepath.Join(tmp, "controldb.sqlite"), controldb.OpenSqliteDB, controldb.MigrateUp)
 	if err != nil {
-		report(out, "control DB", err.Error(), controldb.GetBackupPath(cfg))
+		report(out, "control DB", err.Error(), controldb.GetBackupPath(cfg), s3Backup(ctx, cfg, lastS3, controldb.GetS3Path(cfg)))
 		return true, nil
 	}
 	defer control.Close()
@@ -83,7 +92,8 @@ func check(ctx context.Context, cfg *config.ServerConfig, out io.Writer) (bool, 
 			why = err.Error()
 		}
 		stopped = true
-		report(out, fmt.Sprintf("site %s (%s)", site.ID, site.State), why, sitedb.GetBackupPath(site.ID, cfg))
+		s3 := s3Backup(ctx, cfg, lastS3, sitedb.GetS3BatchPath(site.ID[:1], cfg))
+		report(out, fmt.Sprintf("site %s (%s)", site.ID, site.State), why, sitedb.GetBackupPath(site.ID, cfg), s3)
 	}
 	if !stopped {
 		fmt.Fprintf(out, "Every one of the %d live and disabled sites opens and migrates\n", len(sites))
@@ -123,11 +133,26 @@ func openCopy(ctx context.Context, path, copyPath string, open func(string, int)
 	return db, nil
 }
 
-// report writes what stops the start, why, and when its backup in the data folder was made
-func report(out io.Writer, name, why, backupPath string) {
+// s3Backup says when the backup at key in S3 was made, or why that is not known
+func s3Backup(ctx context.Context, cfg *config.ServerConfig, lastS3 lastModified, key string) string {
+	if !cfg.Status.S3Working {
+		return "not known, as S3 is off or not working"
+	}
+	modified, err := lastS3(ctx, key)
+	if err != nil {
+		return "not known: " + err.Error()
+	}
+	if modified == nil {
+		return "none at " + key
+	}
+	return key + ", made " + modified.UTC().Format(time.RFC3339)
+}
+
+// report writes what stops the start, why, when its backup in the data folder was made and its backup in S3
+func report(out io.Writer, name, why, backupPath, s3 string) {
 	local := "none"
 	if info, err := os.Stat(backupPath); err == nil {
 		local = backupPath + ", made " + info.ModTime().UTC().Format(time.RFC3339)
 	}
-	fmt.Fprintf(out, "%s: %s\n  backup in the data folder: %s\n", name, why, local)
+	fmt.Fprintf(out, "%s: %s\n  backup in the data folder: %s\n  backup in S3: %s\n", name, why, local, s3)
 }

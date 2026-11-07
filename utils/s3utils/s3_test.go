@@ -20,6 +20,10 @@ func TestS3IsSkippedWhenNotWorking(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, found)
 	require.Zero(t, size)
+
+	modified, err := c.LastModified(context.Background(), "key")
+	require.NoError(t, err)
+	require.Nil(t, modified)
 }
 
 func TestRetentionRules(t *testing.T) {
