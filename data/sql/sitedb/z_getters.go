@@ -3427,64 +3427,14 @@ func (m *ProfileSwitch) SetTimeshift(v *int64) {
 	m.Timeshift = v
 }
 
-// GetOriginalProfileName returns the OriginalProfileName value.
-func (m ProfileSwitch) GetOriginalProfileName() *string {
-	return m.OriginalProfileName
+// GetOtherAttributes returns the OtherAttributes value.
+func (m ProfileSwitch) GetOtherAttributes() types.ProfileSwitchOther {
+	return m.OtherAttributes
 }
 
-// SetOriginalProfileName sets the OriginalProfileName value and returns the updated ProfileSwitch.
-func (m *ProfileSwitch) SetOriginalProfileName(v *string) {
-	m.OriginalProfileName = v
-}
-
-// GetOriginalCustomizedName returns the OriginalCustomizedName value.
-func (m ProfileSwitch) GetOriginalCustomizedName() *string {
-	return m.OriginalCustomizedName
-}
-
-// SetOriginalCustomizedName sets the OriginalCustomizedName value and returns the updated ProfileSwitch.
-func (m *ProfileSwitch) SetOriginalCustomizedName(v *string) {
-	m.OriginalCustomizedName = v
-}
-
-// GetOriginalTimeshiftMs returns the OriginalTimeshiftMs value.
-func (m ProfileSwitch) GetOriginalTimeshiftMs() *int64 {
-	return m.OriginalTimeshiftMs
-}
-
-// SetOriginalTimeshiftMs sets the OriginalTimeshiftMs value and returns the updated ProfileSwitch.
-func (m *ProfileSwitch) SetOriginalTimeshiftMs(v *int64) {
-	m.OriginalTimeshiftMs = v
-}
-
-// GetOriginalPercentage returns the OriginalPercentage value.
-func (m ProfileSwitch) GetOriginalPercentage() *int64 {
-	return m.OriginalPercentage
-}
-
-// SetOriginalPercentage sets the OriginalPercentage value and returns the updated ProfileSwitch.
-func (m *ProfileSwitch) SetOriginalPercentage(v *int64) {
-	m.OriginalPercentage = v
-}
-
-// GetOriginalDurationMs returns the OriginalDurationMs value.
-func (m ProfileSwitch) GetOriginalDurationMs() *int64 {
-	return m.OriginalDurationMs
-}
-
-// SetOriginalDurationMs sets the OriginalDurationMs value and returns the updated ProfileSwitch.
-func (m *ProfileSwitch) SetOriginalDurationMs(v *int64) {
-	m.OriginalDurationMs = v
-}
-
-// GetOriginalEnd returns the OriginalEnd value.
-func (m ProfileSwitch) GetOriginalEnd() *int64 {
-	return m.OriginalEnd
-}
-
-// SetOriginalEnd sets the OriginalEnd value and returns the updated ProfileSwitch.
-func (m *ProfileSwitch) SetOriginalEnd(v *int64) {
-	m.OriginalEnd = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetOtherAttributes(v types.ProfileSwitchOther) {
+	m.OtherAttributes = v
 }
 
 // GetDia returns the Dia value.
@@ -3777,64 +3727,14 @@ func (m *ProfileSwitchesVw) SetTimeshift(v *int64) {
 	m.Timeshift = v
 }
 
-// GetOriginalProfileName returns the OriginalProfileName value.
-func (m ProfileSwitchesVw) GetOriginalProfileName() *string {
-	return m.OriginalProfileName
+// GetOtherAttributes returns the OtherAttributes value.
+func (m ProfileSwitchesVw) GetOtherAttributes() types.ProfileSwitchOther {
+	return m.OtherAttributes
 }
 
-// SetOriginalProfileName sets the OriginalProfileName value and returns the updated ProfileSwitchesVw.
-func (m *ProfileSwitchesVw) SetOriginalProfileName(v *string) {
-	m.OriginalProfileName = v
-}
-
-// GetOriginalCustomizedName returns the OriginalCustomizedName value.
-func (m ProfileSwitchesVw) GetOriginalCustomizedName() *string {
-	return m.OriginalCustomizedName
-}
-
-// SetOriginalCustomizedName sets the OriginalCustomizedName value and returns the updated ProfileSwitchesVw.
-func (m *ProfileSwitchesVw) SetOriginalCustomizedName(v *string) {
-	m.OriginalCustomizedName = v
-}
-
-// GetOriginalTimeshiftMs returns the OriginalTimeshiftMs value.
-func (m ProfileSwitchesVw) GetOriginalTimeshiftMs() *int64 {
-	return m.OriginalTimeshiftMs
-}
-
-// SetOriginalTimeshiftMs sets the OriginalTimeshiftMs value and returns the updated ProfileSwitchesVw.
-func (m *ProfileSwitchesVw) SetOriginalTimeshiftMs(v *int64) {
-	m.OriginalTimeshiftMs = v
-}
-
-// GetOriginalPercentage returns the OriginalPercentage value.
-func (m ProfileSwitchesVw) GetOriginalPercentage() *int64 {
-	return m.OriginalPercentage
-}
-
-// SetOriginalPercentage sets the OriginalPercentage value and returns the updated ProfileSwitchesVw.
-func (m *ProfileSwitchesVw) SetOriginalPercentage(v *int64) {
-	m.OriginalPercentage = v
-}
-
-// GetOriginalDurationMs returns the OriginalDurationMs value.
-func (m ProfileSwitchesVw) GetOriginalDurationMs() *int64 {
-	return m.OriginalDurationMs
-}
-
-// SetOriginalDurationMs sets the OriginalDurationMs value and returns the updated ProfileSwitchesVw.
-func (m *ProfileSwitchesVw) SetOriginalDurationMs(v *int64) {
-	m.OriginalDurationMs = v
-}
-
-// GetOriginalEnd returns the OriginalEnd value.
-func (m ProfileSwitchesVw) GetOriginalEnd() *int64 {
-	return m.OriginalEnd
-}
-
-// SetOriginalEnd sets the OriginalEnd value and returns the updated ProfileSwitchesVw.
-func (m *ProfileSwitchesVw) SetOriginalEnd(v *int64) {
-	m.OriginalEnd = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetOtherAttributes(v types.ProfileSwitchOther) {
+	m.OtherAttributes = v
 }
 
 // GetDia returns the Dia value.
@@ -11137,64 +11037,14 @@ func (m *CreateProfileSwitchParams) SetTimeshift(v *int64) {
 	m.Timeshift = v
 }
 
-// GetOriginalProfileName returns the OriginalProfileName value.
-func (m CreateProfileSwitchParams) GetOriginalProfileName() *string {
-	return m.OriginalProfileName
+// GetOtherAttributes returns the OtherAttributes value.
+func (m CreateProfileSwitchParams) GetOtherAttributes() types.ProfileSwitchOther {
+	return m.OtherAttributes
 }
 
-// SetOriginalProfileName sets the OriginalProfileName value and returns the updated CreateProfileSwitchParams.
-func (m *CreateProfileSwitchParams) SetOriginalProfileName(v *string) {
-	m.OriginalProfileName = v
-}
-
-// GetOriginalCustomizedName returns the OriginalCustomizedName value.
-func (m CreateProfileSwitchParams) GetOriginalCustomizedName() *string {
-	return m.OriginalCustomizedName
-}
-
-// SetOriginalCustomizedName sets the OriginalCustomizedName value and returns the updated CreateProfileSwitchParams.
-func (m *CreateProfileSwitchParams) SetOriginalCustomizedName(v *string) {
-	m.OriginalCustomizedName = v
-}
-
-// GetOriginalTimeshiftMs returns the OriginalTimeshiftMs value.
-func (m CreateProfileSwitchParams) GetOriginalTimeshiftMs() *int64 {
-	return m.OriginalTimeshiftMs
-}
-
-// SetOriginalTimeshiftMs sets the OriginalTimeshiftMs value and returns the updated CreateProfileSwitchParams.
-func (m *CreateProfileSwitchParams) SetOriginalTimeshiftMs(v *int64) {
-	m.OriginalTimeshiftMs = v
-}
-
-// GetOriginalPercentage returns the OriginalPercentage value.
-func (m CreateProfileSwitchParams) GetOriginalPercentage() *int64 {
-	return m.OriginalPercentage
-}
-
-// SetOriginalPercentage sets the OriginalPercentage value and returns the updated CreateProfileSwitchParams.
-func (m *CreateProfileSwitchParams) SetOriginalPercentage(v *int64) {
-	m.OriginalPercentage = v
-}
-
-// GetOriginalDurationMs returns the OriginalDurationMs value.
-func (m CreateProfileSwitchParams) GetOriginalDurationMs() *int64 {
-	return m.OriginalDurationMs
-}
-
-// SetOriginalDurationMs sets the OriginalDurationMs value and returns the updated CreateProfileSwitchParams.
-func (m *CreateProfileSwitchParams) SetOriginalDurationMs(v *int64) {
-	m.OriginalDurationMs = v
-}
-
-// GetOriginalEnd returns the OriginalEnd value.
-func (m CreateProfileSwitchParams) GetOriginalEnd() *int64 {
-	return m.OriginalEnd
-}
-
-// SetOriginalEnd sets the OriginalEnd value and returns the updated CreateProfileSwitchParams.
-func (m *CreateProfileSwitchParams) SetOriginalEnd(v *int64) {
-	m.OriginalEnd = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated CreateProfileSwitchParams.
+func (m *CreateProfileSwitchParams) SetOtherAttributes(v types.ProfileSwitchOther) {
+	m.OtherAttributes = v
 }
 
 // GetCarbRatiosJson returns the CarbRatiosJson value.
@@ -11727,64 +11577,14 @@ func (m *UpdateProfileSwitchParams) SetTimeshift(v *int64) {
 	m.Timeshift = v
 }
 
-// GetOriginalProfileName returns the OriginalProfileName value.
-func (m UpdateProfileSwitchParams) GetOriginalProfileName() *string {
-	return m.OriginalProfileName
+// GetOtherAttributes returns the OtherAttributes value.
+func (m UpdateProfileSwitchParams) GetOtherAttributes() *string {
+	return m.OtherAttributes
 }
 
-// SetOriginalProfileName sets the OriginalProfileName value and returns the updated UpdateProfileSwitchParams.
-func (m *UpdateProfileSwitchParams) SetOriginalProfileName(v *string) {
-	m.OriginalProfileName = v
-}
-
-// GetOriginalCustomizedName returns the OriginalCustomizedName value.
-func (m UpdateProfileSwitchParams) GetOriginalCustomizedName() *string {
-	return m.OriginalCustomizedName
-}
-
-// SetOriginalCustomizedName sets the OriginalCustomizedName value and returns the updated UpdateProfileSwitchParams.
-func (m *UpdateProfileSwitchParams) SetOriginalCustomizedName(v *string) {
-	m.OriginalCustomizedName = v
-}
-
-// GetOriginalTimeshiftMs returns the OriginalTimeshiftMs value.
-func (m UpdateProfileSwitchParams) GetOriginalTimeshiftMs() *int64 {
-	return m.OriginalTimeshiftMs
-}
-
-// SetOriginalTimeshiftMs sets the OriginalTimeshiftMs value and returns the updated UpdateProfileSwitchParams.
-func (m *UpdateProfileSwitchParams) SetOriginalTimeshiftMs(v *int64) {
-	m.OriginalTimeshiftMs = v
-}
-
-// GetOriginalPercentage returns the OriginalPercentage value.
-func (m UpdateProfileSwitchParams) GetOriginalPercentage() *int64 {
-	return m.OriginalPercentage
-}
-
-// SetOriginalPercentage sets the OriginalPercentage value and returns the updated UpdateProfileSwitchParams.
-func (m *UpdateProfileSwitchParams) SetOriginalPercentage(v *int64) {
-	m.OriginalPercentage = v
-}
-
-// GetOriginalDurationMs returns the OriginalDurationMs value.
-func (m UpdateProfileSwitchParams) GetOriginalDurationMs() *int64 {
-	return m.OriginalDurationMs
-}
-
-// SetOriginalDurationMs sets the OriginalDurationMs value and returns the updated UpdateProfileSwitchParams.
-func (m *UpdateProfileSwitchParams) SetOriginalDurationMs(v *int64) {
-	m.OriginalDurationMs = v
-}
-
-// GetOriginalEnd returns the OriginalEnd value.
-func (m UpdateProfileSwitchParams) GetOriginalEnd() *int64 {
-	return m.OriginalEnd
-}
-
-// SetOriginalEnd sets the OriginalEnd value and returns the updated UpdateProfileSwitchParams.
-func (m *UpdateProfileSwitchParams) SetOriginalEnd(v *int64) {
-	m.OriginalEnd = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated UpdateProfileSwitchParams.
+func (m *UpdateProfileSwitchParams) SetOtherAttributes(v *string) {
+	m.OtherAttributes = v
 }
 
 // GetNotes returns the Notes value.

@@ -14,12 +14,7 @@ INSERT INTO profile_switches (
     carbs_hr,
     delay,
     timeshift,
-    original_profile_name,
-    original_customized_name,
-    original_timeshift_ms,
-    original_percentage,
-    original_duration_ms,
-    original_end,
+    other_attributes,
 
     carb_ratios_json,
     insulin_sensitivities_json,
@@ -38,7 +33,7 @@ INSERT INTO profile_switches (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -100,12 +95,12 @@ UPDATE profile_switches SET
     duration_minutes = COALESCE(sqlc.narg('DurationMinutes'), duration_minutes),
     multiplier = COALESCE(sqlc.narg('Multiplier'), multiplier),
     timeshift = COALESCE(sqlc.narg('Timeshift'), timeshift),
-    original_profile_name = COALESCE(sqlc.narg('OriginalProfileName'), original_profile_name),
-    original_customized_name = COALESCE(sqlc.narg('OriginalCustomizedName'), original_customized_name),
-    original_timeshift_ms = COALESCE(sqlc.narg('OriginalTimeshiftMs'), original_timeshift_ms),
-    original_percentage = COALESCE(sqlc.narg('OriginalPercentage'), original_percentage),
-    original_duration_ms = COALESCE(sqlc.narg('OriginalDurationMs'), original_duration_ms),
-    original_end = COALESCE(sqlc.narg('OriginalEnd'), original_end),
+    -- The fields sent, as JSON (types.OtherJSON), are merged into those kept, so one not sent stays as it is, as a
+    -- column of its own would
+    other_attributes = NULLIF(json_patch(
+        COALESCE(other_attributes, '{}'),
+        COALESCE(CAST(sqlc.narg('OtherAttributes') AS TEXT), '{}')
+    ), '{}'),
     notes = COALESCE(sqlc.narg('Notes'), notes),
     reason = COALESCE(sqlc.narg('Reason'), reason),
 

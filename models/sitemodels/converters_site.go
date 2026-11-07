@@ -254,15 +254,14 @@ type SiteConverter interface {
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
 	// goverter:ignore Dia Units Timezone CarbsHr Delay CarbRatiosJson InsulinSensitivitiesJson BasalRatesJson TargetsHighJson TargetsLowJson
 	// The site does not set what AAPS's switch was made from
-	// goverter:ignore OriginalProfileName OriginalCustomizedName OriginalTimeshiftMs OriginalPercentage OriginalDurationMs OriginalEnd
+	// goverter:ignore OtherAttributes
 	ProfileSwitchToCreate(source *SiteProfileSwitch, siteContext *httputils.SiteContext) sitedb.CreateProfileSwitchParams
 
 	// goverter:context siteContext
 	// goverter:map Name | StringOrNil
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
-	// goverter:ignore RawJsonData
-	// goverter:ignore OriginalProfileName OriginalCustomizedName OriginalTimeshiftMs OriginalPercentage OriginalDurationMs OriginalEnd
+	// goverter:ignore RawJsonData OtherAttributes
 	ProfileSwitchToUpdate(source *SiteProfileSwitch, siteContext *httputils.SiteContext) sitedb.UpdateProfileSwitchParams
 
 	///////
