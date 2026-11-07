@@ -27,7 +27,9 @@ type DBModelConverter interface {
 	// goverter:map CreatedByDeviceName Device
 	// goverter:map ID Identifier
 	// goverter:map OccurredAt Date
-	//
+	// goverter:map OtherAttributes.Calories Calories
+	// goverter:map OtherAttributes.Steps Steps
+	// goverter:map OtherAttributes.HeartRate HeartRate
 	DBModelToActivity(source *sitedb.Activity, siteContext *httputils.SiteContext) Activity
 
 	///////
