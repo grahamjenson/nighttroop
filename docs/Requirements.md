@@ -113,7 +113,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   or log's details link to the rows of its request and job.
 - A control admin can download the whole logs DB, as one SQLite file `logs-<time>.sqlite`, with Download Logs DB on
   the events, errors and logs pages (`GET /logs-db`), e.g. to turn staging's captured requests into tests. It is a
-  consistent copy while logs are written, and its temp file is deleted once sent. A read only control identity sees no
+  consistent copy while logs are written, made beside the DBs' backups in `DATA_DIR` and deleted once sent, and is not
+  cut off by the 30 second request timeout however large it is. A read only control identity sees no
   button and is refused (403), one signed out is refused (401), and a download while another is being sent is
   refused (429).
 - Every DB query is timed, until its rows are read, and one that takes `SLOW_QUERY_MS` (100 ms) or longer is logged as
@@ -123,7 +124,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   log, with its site, identity, IP address, status, how long it took, and its headers and bodies, each body up to
   64 KB, as text or, when it is not text, base64. Authorization, cookies, API secrets, tokens and passwords are
   `REDACTED` in its headers, query, path and JSON or form bodies. A page's styles, scripts, images and fonts are not
-  kept, nor the bodies of event streams and Socket.IO connections. Any other server keeps none.
+  kept, nor the bodies of event streams, Socket.IO connections and downloads of the logs DB. Any other server keeps
+  none.
 - Each sign in to the control site, and each refused one, is an event with the country (and city, where the server
   has DB-IP's City Lite) its IP address is estimated to be from. The IP address itself is not kept.
 

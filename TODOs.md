@@ -35,8 +35,6 @@
     1. Testing deploy with rolling to a new keyset, moving to a new encrypted keyset.
     1. P3: Capture each Socket.IO message on staging, as `CAPTURE_REQUESTS` keeps a websocket's upgrade but not its
        messages
-    1. P4: Leave the control site's download of the logs DB (`GET /logs-db`) out of `CAPTURE_REQUESTS`, as each keeps
-       64 KB of the SQLite file, as base64, in the logs DB it is a copy of
     1. P3: Refresh the built in DB-IP country database (`utils/geoip/dbip-country-lite.mmdb`) each month or two, as
        DB-IP updates it monthly; the Docker image's city database is fetched fresh on each build.
 

@@ -166,27 +166,35 @@ func TestRequestLogsCarryRequestSiteAndIdentity(t *testing.T) {
 	}
 }
 
-// A request is cancelled once it has taken too long, but an event stream, held open on purpose, is not
+// A request is cancelled once it has taken too long, but an event stream, held open on purpose, or the control site's
+// download of the logs DB, which can take minutes, is not
 func TestTimeoutSparesEventStreams(t *testing.T) {
 	timeout := requestTimeout
 	requestTimeout = 50 * time.Millisecond
 	t.Cleanup(func() { requestTimeout = timeout })
 	router := chi.NewRouter()
 	AddStandardMiddleware(router, &config.ServerConfig{}, nil)
-	router.Get("/wait", func(w http.ResponseWriter, r *http.Request) {
+	wait := func(w http.ResponseWriter, r *http.Request) {
 		select {
 		case <-r.Context().Done():
 			_, _ = io.WriteString(w, "cancelled")
 		case <-time.After(500 * time.Millisecond):
 			_, _ = io.WriteString(w, "finished")
 		}
-	})
+	}
+	router.Get("/wait", wait)
+	router.Get(ControlLogsDBPath, wait)
 
-	for accept, want := range map[string]string{"text/html": "cancelled", "text/event-stream": "finished"} {
-		r := httptest.NewRequest(http.MethodGet, "/wait", nil)
-		r.Header.Set("Accept", accept)
+	for _, test := range []struct{ host, path, accept, want string }{
+		{"example.com", "/wait", "text/html", "cancelled"},
+		{"example.com", "/wait", "text/event-stream", "finished"},
+		{"control.example.com", ControlLogsDBPath, "*/*", "finished"},
+		{"site.example.com", ControlLogsDBPath, "*/*", "cancelled"},
+	} {
+		r := httptest.NewRequest(http.MethodGet, "http://"+test.host+test.path, nil)
+		r.Header.Set("Accept", test.accept)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, r)
-		assert.Equal(t, want, w.Body.String(), accept)
+		assert.Equal(t, test.want, w.Body.String(), test.host+test.path+" "+test.accept)
 	}
 }

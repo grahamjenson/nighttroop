@@ -5,9 +5,11 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
+	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/backup"
 	"nighttroop.t1d.nz/utils/consts"
@@ -27,7 +29,8 @@ const logsDBWriteTimeout = 10 * time.Minute
 
 // LogsDBHandler sends the control admin a copy of the logs DB, as logs-<time>.sqlite, to read the requests staging
 // captured. It is copied with SQLite's backup API, so it is consistent while logs are written, into a temp file that is
-// deleted once sent. It holds every site's logs, so only an admin can.
+// deleted once sent. It holds every site's logs, so only an admin can. It is long lived (httputils.LongLived), so a
+// large one is not cut off by the request timeout.
 func LogsDBHandler(w http.ResponseWriter, r *http.Request) {
 	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
 	if controlContext.IdentityModel.Role != consts.ControlRoleAdmin {
@@ -40,11 +43,18 @@ func LogsDBHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer downloadingLogsDB.Unlock()
 
-	file, err := os.CreateTemp("", "logs-download-*.sqlite")
+	// Copied beside the logs DB's backup path, which is otherwise unused, on the same disk as the DBs rather than a
+	// small temp dir
+	logs := controlContext.ControlDB.Logs
+	err := utils.MkParentDirs(logs.BackupPath)
+	var file *os.File
+	if err == nil {
+		file, err = os.CreateTemp(filepath.Dir(logs.BackupPath), ".logs-download-*.sqlite")
+	}
 	if err == nil {
 		defer os.Remove(file.Name())
 		defer file.Close()
-		err = backup.SqliteBackup(r.Context(), controlContext.ControlDB.Logs.SQLiteDB, file.Name())
+		err = backup.SqliteBackup(r.Context(), logs.SQLiteDB, file.Name())
 	}
 	if err != nil {
 		slog.ErrorContext(r.Context(), "failed to copy the logs DB", "error", err)
