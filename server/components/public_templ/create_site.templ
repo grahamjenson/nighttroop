@@ -5,7 +5,9 @@ import (
 	"nighttroop.t1d.nz/server/components/footer"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/security"
 )
 
 // CreateSite is the home page, whose button creates a site when the public can. Once a site is created its two steps
@@ -181,7 +183,7 @@ templ CreateSiteInfo(newsite publicmodels.NewSiteInfo) {
 			</div>
 			<script type="text/javascript">
 				new QRCode(document.getElementById("qrcode"), {
-					text: "{{ newsite.AdminTotpSecret }}",
+					text: "{{ security.TOTPURI(consts.FIRST_ADMIN_NAME, newsite.URL, newsite.AdminTotpSecret) }}",
 					width: 96,
 					height: 96,
 					correctLevel: QRCode.CorrectLevel.M

@@ -45,6 +45,8 @@ SCREENSHOT settings_credentials
 CLICK #site--settings--reset-totp
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE You have been signed out
+// The new secret's QR code holds the otpauth:// URI an authenticator app adds it from
+ASSERT_VISIBLE #qrcode[title^="otpauth://totp/Nighttroop:admin@"][title*="?issuer=Nighttroop&secret="]
 ASSERT_NOT_VISIBLE #site--identities--created--password
 SCREENSHOT settings_totp_reset
 CLICK #site--identities--sign-in-again

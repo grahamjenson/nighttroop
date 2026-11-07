@@ -39,7 +39,7 @@ templ Setup() {
 
 // SetupCredentials shows the control admin's login, which is saved once a code from its TOTP secret is entered. It,
 // and SetupComplete, clear the error a wrong code left.
-templ SetupCredentials(name, password, totpSecret, code string) {
+templ SetupCredentials(name, password, totpSecret, totpURI, code string) {
 	<div hx-swap-oob="innerHTML:#error-container"></div>
 	<div class="setup-target p-8 rounded-lg shadow-2xl w-full max-w-lg bg-white space-y-4">
 		<h2 class="font-bold text-2xl">Save the control admin's login</h2>
@@ -51,7 +51,7 @@ templ SetupCredentials(name, password, totpSecret, code string) {
 		</dl>
 		<div id="control--setup--qrcode" class="mx-auto w-fit p-2 rounded-lg border border-slate-200"></div>
 		<script type="text/javascript">
-			new QRCode(document.getElementById("control--setup--qrcode"), { text: "{{ totpSecret }}", width: 128, height: 128 });
+			new QRCode(document.getElementById("control--setup--qrcode"), { text: "{{ totpURI }}", width: 128, height: 128 });
 		</script>
 		<form hx-post="/setup/confirm" hx-target="closest .setup-target" hx-swap="outerHTML" hx-status:4xx="target:#error-container swap:innerHTML" hx-status:5xx="target:#error-container swap:innerHTML" class="space-y-4">
 			<input type="hidden" name="code" value={ code }/>

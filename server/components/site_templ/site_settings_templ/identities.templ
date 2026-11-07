@@ -24,6 +24,7 @@ import (
 	"nighttroop.t1d.nz/utils/authclients"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/security"
 )
 
 // roleLabels match the role names in the create forms
@@ -600,7 +601,7 @@ templ createdUserInfo(url string, username string, password string, totpSecret *
 						</div>
 						<script type="text/javascript">
 							var qrcode = new QRCode(document.getElementById("qrcode"), {
-								text: "{{ totpSecret }}",
+								text: "{{ security.TOTPURI(username, url, *totpSecret) }}",
 								width: 128,
 								height: 128,
 								colorDark: "#000000",
