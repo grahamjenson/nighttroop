@@ -1244,12 +1244,12 @@ func InsulinDoseFromDB(source *sitedb.InsulinDose) *SiteInsulinDose {
 			xstring := *(*source).DoseType
 			sitemodelsSiteInsulinDose.DoseType = &xstring
 		}
-		if (*source).SplitNow != nil {
-			xfloat64 := *(*source).SplitNow
+		if (*source).OtherAttributes.SplitNow != nil {
+			xfloat64 := *(*source).OtherAttributes.SplitNow
 			sitemodelsSiteInsulinDose.SplitNow = &xfloat64
 		}
-		if (*source).SplitExt != nil {
-			xfloat642 := *(*source).SplitExt
+		if (*source).OtherAttributes.SplitExt != nil {
+			xfloat642 := *(*source).OtherAttributes.SplitExt
 			sitemodelsSiteInsulinDose.SplitExt = &xfloat642
 		}
 		if (*source).Notes != nil {
@@ -1297,14 +1297,7 @@ func InsulinDoseToCreate(source *SiteInsulinDose, context *httputils.SiteContext
 			xstring := *(*source).DoseType
 			sitedbCreateInsulinDoseParams.DoseType = &xstring
 		}
-		if (*source).SplitNow != nil {
-			xfloat64 := *(*source).SplitNow
-			sitedbCreateInsulinDoseParams.SplitNow = &xfloat64
-		}
-		if (*source).SplitExt != nil {
-			xfloat642 := *(*source).SplitExt
-			sitedbCreateInsulinDoseParams.SplitExt = &xfloat642
-		}
+		sitedbCreateInsulinDoseParams.OtherAttributes = InsulinDoseOther(source)
 		if (*source).Notes != nil {
 			xstring2 := *(*source).Notes
 			sitedbCreateInsulinDoseParams.Notes = &xstring2
@@ -1343,14 +1336,7 @@ func InsulinDoseToUpdate(source *SiteInsulinDose, context *httputils.SiteContext
 			sitedbUpdateInsulinDoseParams.DoseType = &xstring
 		}
 		sitedbUpdateInsulinDoseParams.Dose = Float64OrNil((*source).Dose)
-		if (*source).SplitNow != nil {
-			xfloat64 := *(*source).SplitNow
-			sitedbUpdateInsulinDoseParams.SplitNow = &xfloat64
-		}
-		if (*source).SplitExt != nil {
-			xfloat642 := *(*source).SplitExt
-			sitedbUpdateInsulinDoseParams.SplitExt = &xfloat642
-		}
+		sitedbUpdateInsulinDoseParams.OtherAttributes = InsulinDoseOtherJSON(source)
 		if (*source).Notes != nil {
 			xstring2 := *(*source).Notes
 			sitedbUpdateInsulinDoseParams.Notes = &xstring2

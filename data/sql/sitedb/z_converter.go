@@ -1271,18 +1271,7 @@ func InsulinDoseFromView(source InsulinDosesVw) InsulinDose {
 		xstring := *source.DoseType
 		sitedbInsulinDose.DoseType = &xstring
 	}
-	if source.SplitNow != nil {
-		xfloat64 := *source.SplitNow
-		sitedbInsulinDose.SplitNow = &xfloat64
-	}
-	if source.SplitExt != nil {
-		xfloat642 := *source.SplitExt
-		sitedbInsulinDose.SplitExt = &xfloat642
-	}
-	if source.Automatic != nil {
-		xbool := *source.Automatic
-		sitedbInsulinDose.Automatic = &xbool
-	}
+	sitedbInsulinDose.OtherAttributes = typesInsulinDoseOtherToTypesInsulinDoseOther(source.OtherAttributes)
 	if source.Notes != nil {
 		xstring2 := *source.Notes
 		sitedbInsulinDose.Notes = &xstring2
@@ -1345,18 +1334,7 @@ func InsulinDoseToCreate(source InsulinDose) CreateInsulinDoseParams {
 		xstring := *source.DoseType
 		sitedbCreateInsulinDoseParams.DoseType = &xstring
 	}
-	if source.SplitNow != nil {
-		xfloat64 := *source.SplitNow
-		sitedbCreateInsulinDoseParams.SplitNow = &xfloat64
-	}
-	if source.SplitExt != nil {
-		xfloat642 := *source.SplitExt
-		sitedbCreateInsulinDoseParams.SplitExt = &xfloat642
-	}
-	if source.Automatic != nil {
-		xbool := *source.Automatic
-		sitedbCreateInsulinDoseParams.Automatic = &xbool
-	}
+	sitedbCreateInsulinDoseParams.OtherAttributes = typesInsulinDoseOtherToTypesInsulinDoseOther(source.OtherAttributes)
 	if source.Notes != nil {
 		xstring2 := *source.Notes
 		sitedbCreateInsulinDoseParams.Notes = &xstring2
@@ -1397,18 +1375,7 @@ func InsulinDoseToUpdate(source InsulinDose) UpdateInsulinDoseParams {
 	}
 	pFloat64 := source.Dose
 	sitedbUpdateInsulinDoseParams.Dose = &pFloat64
-	if source.SplitNow != nil {
-		xfloat64 := *source.SplitNow
-		sitedbUpdateInsulinDoseParams.SplitNow = &xfloat64
-	}
-	if source.SplitExt != nil {
-		xfloat642 := *source.SplitExt
-		sitedbUpdateInsulinDoseParams.SplitExt = &xfloat642
-	}
-	if source.Automatic != nil {
-		xbool := *source.Automatic
-		sitedbUpdateInsulinDoseParams.Automatic = &xbool
-	}
+	sitedbUpdateInsulinDoseParams.OtherAttributes = InsulinDoseOtherJSON(source.OtherAttributes)
 	if source.Notes != nil {
 		xstring2 := *source.Notes
 		sitedbUpdateInsulinDoseParams.Notes = &xstring2
@@ -2815,18 +2782,7 @@ func sitedbInsulinDosesVwToSitedbInsulinDosesVw(source InsulinDosesVw) InsulinDo
 		xstring2 := *source.DoseType
 		sitedbInsulinDosesVw.DoseType = &xstring2
 	}
-	if source.SplitNow != nil {
-		xfloat642 := *source.SplitNow
-		sitedbInsulinDosesVw.SplitNow = &xfloat642
-	}
-	if source.SplitExt != nil {
-		xfloat643 := *source.SplitExt
-		sitedbInsulinDosesVw.SplitExt = &xfloat643
-	}
-	if source.Automatic != nil {
-		xbool := *source.Automatic
-		sitedbInsulinDosesVw.Automatic = &xbool
-	}
+	sitedbInsulinDosesVw.OtherAttributes = typesInsulinDoseOtherToTypesInsulinDoseOther(source.OtherAttributes)
 	if source.Notes != nil {
 		xstring3 := *source.Notes
 		sitedbInsulinDosesVw.Notes = &xstring3
@@ -3296,4 +3252,20 @@ func typesGlucoseReadingOtherToTypesGlucoseReadingOther(source types.GlucoseRead
 		typesGlucoseReadingOther.SensorMgdlAtPairing = &xfloat645
 	}
 	return typesGlucoseReadingOther
+}
+func typesInsulinDoseOtherToTypesInsulinDoseOther(source types.InsulinDoseOther) types.InsulinDoseOther {
+	var typesInsulinDoseOther types.InsulinDoseOther
+	if source.SplitNow != nil {
+		xfloat64 := *source.SplitNow
+		typesInsulinDoseOther.SplitNow = &xfloat64
+	}
+	if source.SplitExt != nil {
+		xfloat642 := *source.SplitExt
+		typesInsulinDoseOther.SplitExt = &xfloat642
+	}
+	if source.Automatic != nil {
+		xbool := *source.Automatic
+		typesInsulinDoseOther.Automatic = &xbool
+	}
+	return typesInsulinDoseOther
 }

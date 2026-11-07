@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/sql/sitedb"
+	"nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -27,7 +28,7 @@ func TestSiteDataLimits(t *testing.T) {
 			return err
 		}, []float64{-10, 0.05, 500}, []float64{1000, -1000}},
 		{"combo bolus split", func(id string, v float64) error {
-			_, err := q.CreateInsulinDose(ctx, sitedb.CreateInsulinDoseParams{ID: id, Dose: 1, SplitNow: &v, SplitExt: &v, OccurredAt: now, CreatedByIdentityName: "test"})
+			_, err := q.CreateInsulinDose(ctx, sitedb.CreateInsulinDoseParams{ID: id, Dose: 1, OtherAttributes: types.InsulinDoseOther{SplitNow: &v, SplitExt: &v}, OccurredAt: now, CreatedByIdentityName: "test"})
 			return err
 		}, []float64{0, 0.5, 1}, []float64{70, -0.1}},
 		{"carbs", func(id string, v float64) error {
