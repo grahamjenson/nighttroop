@@ -4,6 +4,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"crypto/rsa"
 	"crypto/x509"
 	"encoding/json"
 	"encoding/pem"
@@ -90,6 +91,75 @@ func TestSend(t *testing.T) {
 	status, reason = http.StatusGone, "Unregistered"
 	require.ErrorIs(t, push.Send(t.Context(), q, sec, registration, alert), push.ErrTokenGone)
 	require.Empty(t, stored())
+}
+
+// Send pushes through Firebase with the site's service account, never sending its JWT to the token_uri in its JSON,
+// records it, and deletes a token Firebase says is unregistered
+func TestSendFCM(t *testing.T) {
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
+	q, siteID, sec := controlDB.Queries, site.SiteDB.Subdomain, cfg.Security
+	identities, err := q.AllSiteIdentities(t.Context(), controldb.AllSiteIdentitiesParams{SiteID: siteID})
+	require.NoError(t, err)
+
+	elsewhere := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("the service account's token_uri was used")
+	}))
+	t.Cleanup(elsewhere.Close)
+	errorCode, pushed := "", ""
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/token" {
+			_ = json.NewEncoder(w).Encode(map[string]any{"access_token": "access", "expires_in": 3600})
+			return
+		}
+		var body struct {
+			Message struct {
+				Token        string     `json:"token"`
+				Notification push.Alert `json:"notification"`
+			} `json:"message"`
+		}
+		_ = json.NewDecoder(r.Body).Decode(&body)
+		pushed = r.URL.Path + " " + body.Message.Token + " " + body.Message.Notification.Body
+		if errorCode != "" {
+			w.WriteHeader(http.StatusNotFound)
+			_ = json.NewEncoder(w).Encode(map[string]any{"error": map[string]any{"status": "NOT_FOUND",
+				"details": []map[string]string{{"errorCode": errorCode}}}})
+		}
+	}))
+	t.Cleanup(server.Close)
+	defaultFCM := push.DefaultFCM
+	push.DefaultFCM = &push.FCM{Client: server.Client(), Host: server.URL, TokenURL: server.URL + "/token"}
+	t.Cleanup(func() { push.DefaultFCM = defaultFCM })
+
+	token := strings.Repeat("f", 40) + ":APA91b" + strings.Repeat("x", 100)
+	registration, err := push.Register(t.Context(), q, sec, siteID, identities[0].ID, push.Registration{Provider: consts.PushProviderFCM,
+		App: "t1dcarer", BundleID: "nz.t1d.carer", Token: token})
+	require.NoError(t, err)
+	key, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.NoError(t, err)
+	der, err := x509.MarshalPKCS8PrivateKey(key)
+	require.NoError(t, err)
+	account, _ := json.Marshal(map[string]string{"type": "service_account", "project_id": "t1d-carer", "private_key_id": "key1",
+		"client_email": "push@t1d-carer.iam.gserviceaccount.com", "token_uri": elsewhere.URL,
+		"private_key": string(pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: der}))})
+	secretEnc, err := sec.Encrypt(string(account))
+	require.NoError(t, err)
+	_, err = q.CreatePushCredential(t.Context(), controldb.CreatePushCredentialParams{SiteID: &siteID, Name: "T1D Carer",
+		Provider: consts.PushProviderFCM, TeamOrProjectID: "t1d-carer", SecretEnc: &secretEnc, AppsJson: `["t1dcarer"]`,
+		CreatedByIdentityName: "admin"})
+	require.NoError(t, err)
+
+	alert := push.Alert{Title: "Nighttroop", Body: "Test"}
+	require.NoError(t, push.Send(t.Context(), q, sec, registration, alert))
+	require.Equal(t, "/v1/projects/t1d-carer/messages:send "+token+" Test", pushed)
+	found, err := q.SearchPushRegistrations(t.Context(), controldb.SearchPushRegistrationsParams{SiteID: siteID, Limit: 10})
+	require.NoError(t, err)
+	require.NotNil(t, found[0].LastPushedAt)
+
+	errorCode = "UNREGISTERED"
+	require.ErrorIs(t, push.Send(t.Context(), q, sec, registration, alert), push.ErrTokenGone)
+	found, err = q.SearchPushRegistrations(t.Context(), controldb.SearchPushRegistrationsParams{SiteID: siteID, Limit: 10})
+	require.NoError(t, err)
+	require.Empty(t, found)
 }
 
 // A token in upper case is the same token, and an identity with the most registrations can still register one of

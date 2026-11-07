@@ -44,6 +44,7 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 		r.Get("/rate-limits", controlapi.RateLimitsHandler)
 		r.Post("/rate-limits", controlapi.SetRateLimitsHandler)
 		r.Get("/push-devices", controlapi.PushDevicesHandler)
+		r.Get(httputils.ControlLogsDBPath, controlapi.LogsDBHandler)
 		r.Post("/push-devices/{id}/test", controlapi.PushTestHandler)
 
 		// Not here yet: a site's API use per device and DB table sizes, and managing the control admins themselves,

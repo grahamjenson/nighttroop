@@ -32,6 +32,7 @@ func TestCaptureRequests(t *testing.T) {
 	router.Post("/api/v1/treatments", echo)
 	router.Get("/api/v2/authorization/request/{token}", echo)
 	router.Get("/style.css", echo)
+	router.Get(ControlLogsDBPath, echo)
 
 	big := strings.Repeat("a", maxCapturedBody+10)
 	tests := []struct {
@@ -56,6 +57,8 @@ func TestCaptureRequests(t *testing.T) {
 		{name: "a page's HTML is kept as it is", method: http.MethodPost, path: "/api/v1/treatments", contentType: "text/html", body: "<p>a & b</p>",
 			message: "Captured POST /api/v1/treatments", has: []string{`"text":"<p>a & b</p>"`}},
 		{name: "a page's style is not captured", method: http.MethodGet, path: "/style.css", contentType: "text/css", body: "body{}"},
+		{name: "a download of the logs DB is captured without its bodies", method: http.MethodGet, path: "http://control.example.com" + ControlLogsDBPath,
+			contentType: "application/vnd.sqlite3", body: "\xff\xfe", message: "Captured GET " + ControlLogsDBPath, has: []string{`"status":200`}, hidden: []string{"//4="}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -118,6 +118,12 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   requests cannot fill the errors or Sentry. Missing credentials, permissions, records and rate limits are not.
 - Logs, events and errors can be narrowed to one site, request or background job run by its ID. An event's, error's
   or log's details link to the rows of its request and job.
+- A control admin can download the whole logs DB, as one SQLite file `logs-<time>.sqlite`, with Download Logs DB on
+  the events, errors and logs pages (`GET /logs-db`), e.g. to turn staging's captured requests into tests. It is a
+  consistent copy while logs are written, made beside the DBs' backups in `DATA_DIR` and deleted once sent, and is not
+  cut off by the 30 second request timeout however large it is. A read only control identity sees no
+  button and is refused (403), one signed out is refused (401), and a download while another is being sent is
+  refused (429).
 - Every DB query is timed, until its rows are read, and one that takes `SLOW_QUERY_MS` (100 ms) or longer is logged as
   a `Slow query` with its DB, its query's name, how long it took and how many rows it gave, but never its values, and
   the request, site and identity it was for. A write transaction waiting for the write lock is logged as `BEGIN`.
@@ -125,7 +131,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   log, with its site, identity, IP address, status, how long it took, and its headers and bodies, each body up to
   64 KB, as text or, when it is not text, base64. Authorization, cookies, API secrets, tokens and passwords are
   `REDACTED` in its headers, query, path and JSON or form bodies. A page's styles, scripts, images and fonts are not
-  kept, nor the bodies of event streams and Socket.IO connections. Any other server keeps none.
+  kept, nor the bodies of event streams, Socket.IO connections and downloads of the logs DB. Any other server keeps
+  none.
 - Each sign in to the control site, and each refused one, is an event with the country (and city, where the server
   has DB-IP's City Lite) its IP address is estimated to be from. The IP address itself is not kept.
 
@@ -442,6 +449,10 @@ focus back to the row or button that opened it.
   registers that app's APNs token for pushes for the identity that uploaded it, a production build unless
   `isAPNSProduction` is false; a token that is not one is not registered, and the profile is still kept.
 - A profile switch's `percentage` is kept as a multiplier of the profile's insulin (120 as 1.2) and returned as sent.
+- A profile switch, or AAPS's effective profile switch (a Note with a `profileJson`), keeps the switch it was made
+  from, `originalProfileName`, `originalCustomizedName`, `originalTimeshift`, `originalPercentage`,
+  `originalDuration` and `originalEnd`, and returns them as sent through v1 and v3, so AAPS's followers read an
+  effective profile switch as one; an update without one keeps it.
 - A combo bolus's `splitNow` and `splitExt` are kept as the fractions given at once and over time (70 as 0.7) and
   returned as sent.
 - A temp basal is sent with its rate in U/hr as `rate` or `absolute`, its `percent`, or both. Its `percent` is
@@ -666,7 +677,11 @@ focus back to the row or button that opened it.
   which sends it a test push and shows its new last push, or a toast with why it failed.
 - An identity can send a test push to one of its registrations, and an admin to any of the site's
   (`POST /settings/push-registrations/{id}/test`), with its site's push credential for the app, else the server's.
-  Without one it is refused, saying to add one; a token Apple says is gone deletes the registration (410); another
-  refusal says Apple's reason (502), and one that cannot reach Apple why, never with the device token. Each push is
+  Without one it is refused, saying to add one; a token Apple says is gone, or Firebase says is `UNREGISTERED`,
+  deletes the registration (410); another refusal says Apple's or Firebase's reason (502), and one that cannot reach
+  them why, never with the device token. Each push is
   recorded on the registration, with its error, if it had one, which the same registration again, as each upload of
-  a Loop or Trio profile is, keeps, and a token Apple says is gone is deleted from its own site alone. A site sends at most `SITE_PUSH_PER_MINUTE_LIMIT` pushes a minute. Only APNs pushes are sent so far.
+  a Loop or Trio profile is, keeps, and a token Apple says is gone is deleted from its own site alone. A site sends at most `SITE_PUSH_PER_MINUTE_LIMIT` pushes a minute.
+- An FCM push is sent with the Firebase service account's OAuth token, got with a JWT its key signs from Google's
+  token endpoint, never the `token_uri` in its JSON, and used again until five minutes before it expires; the key and
+  tokens are never logged or shown. A service account Google refuses says Google's reason (502).
