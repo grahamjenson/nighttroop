@@ -232,6 +232,14 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   summary is not read again every 30 seconds.
 - A summary with no readings in its time links to the sync settings.
 
+### Reports
+
+- Reports, from the menu, show the week with yesterday in it at first, and a report of any day, week, fortnight or
+  month from today back a year is at `/reports/{period}-{date}`.
+- A report says which days it covers, and its days with data, time in range, mean daily dose and mean daily carbs.
+- Day, Week, Fortnight and Month open the report of that kind ending on the report's last day, or today; Previous and
+  Next open the one before and after, disabled past today or a year ago. Back and forward move between reports.
+
 ### Getting started
 
 - A site with no glucose for over a month, or ever, shows a guide to setting it up in place of its empty summary, until

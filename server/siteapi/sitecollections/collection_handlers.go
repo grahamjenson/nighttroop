@@ -6,12 +6,14 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/server/components/site_templ"
 	"nighttroop.t1d.nz/server/components/site_templ/site_summary_templ"
+	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitedata"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 
 	"nighttroop.t1d.nz/utils/apiutils"
@@ -387,6 +389,16 @@ func reportChange[R any](tx *siteapiutils.CollectionTx, action events.Action, ro
 }
 
 // GettingStartedHandler is the guide to setting up the site, a page for people, so it has no JSON
+// ReportsHandler is get's reports page of the week with yesterday in it, in the site's timezone
+func ReportsHandler(get http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if siteContext := httputils.GetSiteContext(r.Context()); siteContext != nil {
+			chi.RouteContext(r.Context()).URLParams.Add("id", "week-"+sitedata.LocalDate(time.Now(), siteContext.GetSiteTimezone(), -1))
+		}
+		get(w, r)
+	}
+}
+
 func GettingStartedHandler(w http.ResponseWriter, r *http.Request) {
 	siteContext := httputils.GetSiteContext(r.Context())
 	if siteContext.AcceptType != httputils.AcceptTypeHTMX && siteContext.AcceptType != httputils.AcceptTypeHTML {
