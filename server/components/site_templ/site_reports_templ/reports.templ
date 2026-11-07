@@ -54,8 +54,8 @@ func value(v *float64, unit string) string {
 	return fmt.Sprintf("%g%s", *v, unit)
 }
 
-// Report is the reports page of a day, week, fortnight or month: its days with data, time in range, daily dose and
-// carbs, with buttons to the report of another kind of period ending on the same day, and to the period before and after
+// Report is the reports page of a day, week, fortnight or month: its time in range, daily dose and carbs, and its AGP,
+// with buttons to the report of another kind of period ending on the same day, and to the period before and after
 templ Report(p *sitemodels.SiteSummaryPeriod) {
 	{{ first, last := days(ctx, p) }}
 	@heading.Title("Reports")
@@ -85,6 +85,19 @@ templ Report(p *sitemodels.SiteSummaryPeriod) {
 			@stat("site--reports--daily-dose", "Daily dose", value(&p.TotalDailyDose, " U"))
 			@stat("site--reports--daily-carbs", "Daily carbs", value(&p.TotalDailyCarbs, " g"))
 		</dl>
+		<section class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+			<h2 class="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">Ambulatory glucose profile</h2>
+			if hasGlucose(p) {
+				{{ low, high := site_data_templ.RangeBounds(ctx) }}
+				{{ chart := agp(p, low, high) }}
+				<div id="site--reports--agp" class="h-90 w-full text-xs">
+					<div id={ chart.ChartID } class="h-full w-full"></div>
+					@templ.Raw(chart.RenderSnippet().Script)
+				</div>
+			} else {
+				<p id="site--reports--no-glucose" class="text-sm text-gray-500">No glucose in this { p.Period }.</p>
+			}
+		</section>
 	</div>
 }
 

@@ -237,6 +237,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - Reports, from the menu, show the week with yesterday in it at first, and a report of any day, week, fortnight or
   month from today back a year is at `/reports/{period}-{date}`.
 - A report says which days it covers, and its days with data, time in range, mean daily dose and mean daily carbs.
+- Its ambulatory glucose profile (AGP) over a day from midnight shades the 5th to 95th and 25th to 75th percentiles,
+  with the median as a line, over the range shaded with its low and high dashed. A day's report draws the day's
+  glucose over the AGP of the 7 days to it. A report with no glucose says so instead.
 - Day, Week, Fortnight and Month open the report of that kind ending on the report's last day, or today; Previous and
   Next open the one before and after, disabled past today or a year ago. Back and forward move between reports.
 
