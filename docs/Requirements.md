@@ -62,7 +62,11 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   sites and a site's details, with its DB size limit.
 - Sites can be ordered by how long since they were last written to (the first to archive) or by DB size.
 - A site not written to or seen within `DISABLE_AFTER_INACTIVITY_DAYS` is marked inactive.
-- Clicking a site shows its details.
+- Clicking a site opens its own page, `/sites/{id}`, and the browser's back button returns to the sites. The page shows
+  its details (state, batch, DB size and its limit, when it was created, last seen, last written to, disabled, archived
+  or deleted), its identities, and its latest 10 events and 10 errors, each opening its details, with a link to all of
+  them filtered to the site. An API client asking for `/sites/{id}` gets the site.
+- An admin sees the buttons for what can be done to the site on its page, and its page shows the change once done.
 - An admin can create a site at an ID they pick (8 lowercase letters), e.g. a vanity one; a taken ID is refused. Its
   credentials are shown once. An admin can create sites past `MAX_SITES` and while public site creation is off.
 - An admin can turn public site creation off, so sites cannot be created from the home page, and back on.
@@ -77,9 +81,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 ### A site's identities
 
-- Each site has its own page, `/sites/{id}/inspect`, linked from its details as "Inspect its identities", with its
-  details and a table of every one of its identities: who they are, whether they use TOTP, and when each was last
-  seen. Secrets are never shown.
+- A site's page has a table of every one of its identities: who they are, whether they use TOTP, and when each was
+  last seen. Secrets are never shown.
 - An admin can reset an identity's password (shown once, with a device's new Nightscout token) or TOTP secret. Each
   reset signs out the identity's existing sessions and is recorded as an event.
 - An admin can sign in to a site as any of its identities with its Sign in as button, after confirming: a new tab opens

@@ -9,9 +9,9 @@ import (
 	"nighttroop.t1d.nz/models/controlmodels"
 )
 
-// TestSiteModalTruncate checks the Truncate button shows only for a site over its DB size limit, which the browser
+// TestSiteActionsTruncate checks the Truncate button shows only for a site over its DB size limit, which the browser
 // tests cannot make as their DBs are in memory
-func TestSiteModalTruncate(t *testing.T) {
+func TestSiteActionsTruncate(t *testing.T) {
 	size := func(kb int64) *int64 { return &kb }
 	for _, test := range []struct {
 		name     string
@@ -24,7 +24,7 @@ func TestSiteModalTruncate(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			var buf bytes.Buffer
 			site := &controlmodels.Site{ID: "site", State: "live", EstimatedDbSizeKb: test.sizeKB, MaxDbSizeKbLimit: size(3000)}
-			require.NoError(t, SiteModal(site).Render(context.Background(), &buf))
+			require.NoError(t, siteActions(site).Render(context.Background(), &buf))
 			require.Equal(t, test.truncate, bytes.Contains(buf.Bytes(), []byte(`id="control--site--truncate"`)), buf.String())
 		})
 	}

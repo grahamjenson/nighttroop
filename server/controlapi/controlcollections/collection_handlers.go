@@ -30,6 +30,12 @@ type CollectionGet[R, M any] interface {
 	GetHTMXResponse(model *M) templ.Component
 }
 
+// CollectionPage is a collection whose rows each have a page of their own, which PageHandler serves at /route/{id}
+// in place of CollectionGet's
+type CollectionPage interface {
+	PageHandler(w http.ResponseWriter, r *http.Request)
+}
+
 type CollectionSearch[R, M any] interface {
 	CollectionBase[R, M]
 

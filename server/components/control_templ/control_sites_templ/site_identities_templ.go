@@ -46,7 +46,7 @@ func SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) tem
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<h3 class=\"mt-6 text-sm font-semibold text-brand-night\">Identities</h3><div id=\"control--site--identities--reset\"></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<h3 class=\"text-sm font-semibold text-brand-night\">Identities</h3><div id=\"control--site--identities--reset\"></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -8,6 +8,7 @@ import (
 
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/models/publicmodels"
+	"nighttroop.t1d.nz/server/components/control_templ/control_logs_templ"
 	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
@@ -58,7 +59,7 @@ var siteOrders = []struct{ order, label string }{
 templ SitesTable(sites []*controlmodels.Site, skip int64, limit int64, order string) {
 	<div id="sites_table" class="mx-auto max-w-5xl space-y-6">
 		@heading.Page("Sites") {
-			Every site. Click a site to see its details.
+			Every site. Click a site to open its page.
 		}
 		if isAdmin(ctx) {
 			@createSiteForm()
@@ -233,9 +234,10 @@ templ siteRow(site *controlmodels.Site) {
 		ID:    "control--site--" + site.ID,
 		Class: "cursor-pointer",
 		Attributes: templ.Attributes{
-			"hx-get":    "/sites/" + site.ID,
-			"hx-target": "#modal-container",
-			"hx-swap":   "innerHTML",
+			"hx-get":      "/sites/" + site.ID,
+			"hx-target":   "#main-content",
+			"hx-push-url": "true",
+			"hx-swap":     "innerHTML",
 		},
 	}) {
 		@table.Cell() {
@@ -265,29 +267,48 @@ templ siteRow(site *controlmodels.Site) {
 	}
 }
 
-// SiteModal shows a site's details, with a link to its own page and its identities, and lets an admin disable it while
-// it is live and inactive, and archive it once it is disabled
-templ SiteModal(site *controlmodels.Site) {
-	@modal.Modal(modal.Props{ID: "control--site--details", Title: site.ID, Actions: siteActions(site)}) {
-		@siteDetails(site)
-		<a id="control--site--inspect" href={ templ.SafeURL("/sites/" + site.ID + "/inspect") } class="mt-4 inline-block text-sm font-medium text-primary underline">Inspect its identities</a>
-	}
+// SitePage is a site's own page: its details, such as its DB size, with buttons for what an admin can do to it, its
+// identities, which an admin can reset or sign in to the site as, and its latest events and errors
+templ SitePage(page *controlmodels.SitePage) {
+	<div id="control--site--page" class="mx-auto max-w-5xl space-y-6">
+		@heading.Page(page.Site.ID) {
+			The site's details, its identities, and its latest events and errors.
+		}
+		<section id="control--site--details" class="rounded-xl border border-gray-200 p-4 shadow-sm">
+			@siteDetails(page.Site)
+			if isAdmin(ctx) {
+				<div id="control--site--actions" class="mt-4 flex flex-wrap gap-2 empty:hidden">
+					@siteActions(page.Site)
+				</div>
+			}
+		</section>
+		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
+			@SiteIdentities(page.Site.ID, page.Identities)
+		</section>
+		@latest("events", "Latest Events", "/events?site_id="+page.Site.ID) {
+			@control_logs_templ.EventsList("control--site--events--table", page.Events)
+		}
+		@latest("errors", "Latest Errors", "/errors?site_id="+page.Site.ID) {
+			@control_logs_templ.ErrorsList("control--site--errors--table", page.Errors)
+		}
+		<div id="modal-container"></div>
+	</div>
 }
 
-// SiteInspect is a site's own page: its details, and its identities, which an admin can reset or sign in to the site as
-templ SiteInspect(inspect *controlmodels.SiteInspect) {
-	<div id="control--site--inspect-page" class="mx-auto max-w-5xl space-y-6">
-		@heading.Page(inspect.Site.ID) {
-			Inspect the site: its details and every one of its identities.
-		}
-		@siteDetails(inspect.Site)
-		@SiteIdentities(inspect.Site.ID, inspect.Identities)
-	</div>
+// latest is a section of a site's latest rows of one kind, linking to all of them
+templ latest(id string, title string, all string) {
+	<section id={ "control--site--" + id } class="rounded-xl border border-gray-200 p-4 shadow-sm">
+		<div class="mb-2 flex items-center justify-between">
+			<h3 class="text-sm font-semibold text-brand-night">{ title }</h3>
+			<a id={ "control--site--" + id + "--all" } href={ templ.SafeURL(all) } hx-get={ all } hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML" class="text-sm text-primary underline">See all</a>
+		</div>
+		{ children... }
+	</section>
 }
 
 // siteDetails is what is known of a site, never its data or secrets
 templ siteDetails(site *controlmodels.Site) {
-		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+		<dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@siteDetail("State", display.Name(site.State))
 			@siteDetail("Batch", site.Batch)
 			@siteDetail("DB Size Limit (MB)", sizeMB(site.MaxDbSizeKbLimit))
@@ -307,8 +328,8 @@ templ siteActions(site *controlmodels.Site) {
 	if inactive(ctx, site) {
 		<form
 			hx-post={ "/sites/" + site.ID }
-			hx-target={ "#control--site--" + site.ID }
-			hx-swap="outerHTML"
+			hx-target="#main-content"
+			hx-swap="innerHTML"
 			hx-confirm="Disable this site? It will stop being served."
 			hx-status:4xx="target:#toaster swap:beforeend"
 			hx-status:5xx="target:#toaster swap:beforeend"
@@ -322,8 +343,8 @@ templ siteActions(site *controlmodels.Site) {
 	if site.Oversized() {
 		<form
 			hx-post={ "/sites/" + site.ID + "/truncate" }
-			hx-target={ "#control--site--" + site.ID }
-			hx-swap="outerHTML"
+			hx-target="#main-content"
+			hx-swap="innerHTML"
 			hx-confirm="Truncate this site? The raw JSON kept of what its old records were sent is cleared, but all its data is kept."
 			hx-status:4xx="target:#toaster swap:beforeend"
 			hx-status:5xx="target:#toaster swap:beforeend"
@@ -336,8 +357,8 @@ templ siteActions(site *controlmodels.Site) {
 	if site.State == "disabled" {
 		<form
 			hx-post={ "/sites/" + site.ID }
-			hx-target={ "#control--site--" + site.ID }
-			hx-swap="outerHTML"
+			hx-target="#main-content"
+			hx-swap="innerHTML"
 			hx-confirm="Archive this site? Its data is uploaded to S3 and deleted here."
 			hx-status:4xx="target:#toaster swap:beforeend"
 			hx-status:5xx="target:#toaster swap:beforeend"
@@ -360,7 +381,7 @@ func sizeMB(kb *int64) string {
 	return fmt.Sprintf("%.2f", float64(*kb)/1024)
 }
 
-// SiteUpdated replaces the site's row, closes its details and shows a toast saying it is disabled or archived
+// SiteUpdated shows the site's page again, with a toast saying it is disabled or archived
 templ SiteUpdated(site *controlmodels.Site) {
 	@siteChanged(site, map[string]string{"disabled": "Site Disabled", "archived": "Site Archived"}[site.State])
 }
@@ -369,9 +390,9 @@ templ SiteTruncated(site *controlmodels.Site) {
 	@siteChanged(site, "Site Truncated")
 }
 
+// siteChanged loads the site's page again, as it changed, with a toast saying how
 templ siteChanged(site *controlmodels.Site, description string) {
-	@siteRow(site)
-	<div id="modal-container" hx-swap-oob="innerHTML"></div>
+	<div hx-get={ "/sites/" + site.ID } hx-trigger="load" hx-target="#main-content" hx-swap="innerHTML"></div>
 	<div hx-swap-oob="beforeend:#toaster">
 		@toast.Toast(toast.Props{
 			Title:       "Success",
