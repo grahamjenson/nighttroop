@@ -13,6 +13,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 // numberOr is an optional number for an input, or what not setting it means
@@ -190,17 +191,9 @@ templ profileSwitchRow(profileSwitch *sitemodels.SiteProfileSwitch) {
 	}
 }
 
-// profileSwitchSchedule shows one of the profile's schedules, when it has it
-templ profileSwitchSchedule(id string, label string, schedule *string) {
-	if schedule != nil {
-		<div>
-			<h3 class="text-sm text-gray-500">{ label }</h3>
-			<pre id={ "site--profile-switch--details--" + id } class="mt-1 max-h-24 overflow-auto whitespace-pre-wrap break-all rounded bg-gray-50 p-2 text-xs">{ *schedule }</pre>
-		</div>
-	}
-}
-
 templ ProfileSwitchModal(profileSwitch *sitemodels.SiteProfileSwitch) {
+	{{ siteContext, units := httputils.GetSiteContext(ctx), glucoseUnits(ctx) }}
+	{{ unitsLabel := orEmpty(units.Stringp()) }}
 	@modal.Modal(modal.Props{ID: "site--profile-switch--details", Title: fmt.Sprintf("%s at %s×", profileSwitch.Name, orDash(profileSwitch.Multiplier)), Subtitle: formatReadingDate(ctx, profileSwitch.OccurredAt)}) {
 		<form
 			id="site--profile-switch--edit"
@@ -216,12 +209,19 @@ templ ProfileSwitchModal(profileSwitch *sitemodels.SiteProfileSwitch) {
 				Save
 			}
 		</form>
-		<dl class="mt-4 grid grid-cols-4 gap-x-4 gap-y-1 text-sm">
+		<div id="site--profile-switch--details--schedules" class="mt-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-5">
+			@ProfileSchedule("site--profile-switch--details--basal-rates", "Basal (U/h)", sitemodels.ScheduleFromJSON(profileSwitch.BasalRatesJson), ScheduleValue)
+			@ProfileSchedule("site--profile-switch--details--carb-ratios", "Carb Ratio (g/U)", sitemodels.ScheduleFromJSON(profileSwitch.CarbRatiosJson), ScheduleValue)
+			@ProfileSchedule("site--profile-switch--details--sensitivities", "Sensitivity ("+unitsLabel+"/U)", sitemodels.SensitivityScheduleFromJSON(profileSwitch.InsulinSensitivitiesJson, profileSwitch.Units, siteContext), GlucoseValue(units))
+			@ProfileSchedule("site--profile-switch--details--targets-low", "Low Target ("+unitsLabel+")", sitemodels.GlucoseScheduleFromJSON(profileSwitch.TargetsLowJson, siteContext), GlucoseValue(units))
+			@ProfileSchedule("site--profile-switch--details--targets-high", "High Target ("+unitsLabel+")", sitemodels.GlucoseScheduleFromJSON(profileSwitch.TargetsHighJson, siteContext), GlucoseValue(units))
+		</div>
+		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@readingDetail("Times the insulin", orDash(profileSwitch.Multiplier))
 			@readingDetail("Shift (minutes)", orDash(profileSwitch.Timeshift))
 			@readingDetail("Minutes", orDash(profileSwitch.DurationMinutes))
 			@readingDetail("DIA (hours)", orDash(profileSwitch.Dia))
-			@readingDetail("Units", orDash(profileSwitch.Units))
+			@readingDetail("Profile Units", orDash(profileSwitch.Units))
 			@readingDetail("Timezone", orDash(profileSwitch.Timezone))
 			@readingDetail("Carbs per Hour", orDash(profileSwitch.CarbsHr))
 			@readingDetail("Delay", orDash(profileSwitch.Delay))
@@ -237,13 +237,6 @@ templ ProfileSwitchModal(profileSwitch *sitemodels.SiteProfileSwitch) {
 			@readingDetail("Updated", formatReadingDate(ctx, profileSwitch.UpdatedAt))
 			@readingDetail("Updated By", orDash(profileSwitch.UpdatedByIdentityName))
 		</dl>
-		<div class="mt-4 grid grid-cols-3 gap-2">
-			@profileSwitchSchedule("basal-rates", "Basal Rates", profileSwitch.BasalRatesJson)
-			@profileSwitchSchedule("carb-ratios", "Carb Ratios", profileSwitch.CarbRatiosJson)
-			@profileSwitchSchedule("insulin-sensitivities", "Insulin Sensitivities", profileSwitch.InsulinSensitivitiesJson)
-			@profileSwitchSchedule("targets-low", "Low Targets", profileSwitch.TargetsLowJson)
-			@profileSwitchSchedule("targets-high", "High Targets", profileSwitch.TargetsHighJson)
-		</div>
 		@modal.RawJSON("site--profile-switch--details--raw", profileSwitch.RawJsonData)
 	}
 }

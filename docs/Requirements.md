@@ -295,6 +295,8 @@ does not:
 - **Temp basals**, with the rate given in U/hr and a multiplier of the scheduled basal, 0.5 for half, 0 a zero temp
 - **Temp targets**, in the settings' units
 - **Profile switches**, with their profile's schedules to read, and a multiplier of its insulin, 1.2 for 120%
+  - A profile switch's details show its profile's basal, carb ratio, sensitivity and target schedules as tables, as
+    profiles do, with sensitivities and targets in the settings' units and the units in the headings.
 - **Activities**
 - **Site and sensor changes**
 - **Notifications**
