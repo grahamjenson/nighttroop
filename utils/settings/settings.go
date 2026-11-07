@@ -77,6 +77,16 @@ func (m *CombinedSettingsMap) GetRangeHighMgdl() *int64 {
 	return first(m.IdentitySettingsMap.GetRangeHighMgdl(), m.SiteSettingsMap.GetRangeHighMgdl(), m.DefaultSettingsMap.GetRangeHighMgdl())
 }
 
+// GetRangeUrgentLowMgdl is the urgent low in mg/dL, the identity's, then the site's, then the default, whether or not its alarm is on
+func (m *CombinedSettingsMap) GetRangeUrgentLowMgdl() *int64 {
+	return first(m.IdentitySettingsMap.GetRangeUrgentLowMgdl(), m.SiteSettingsMap.GetRangeUrgentLowMgdl(), m.DefaultSettingsMap.GetRangeUrgentLowMgdl())
+}
+
+// GetRangeUrgentHighMgdl is the urgent high in mg/dL, the identity's, then the site's, then the default, whether or not its alarm is on
+func (m *CombinedSettingsMap) GetRangeUrgentHighMgdl() *int64 {
+	return first(m.IdentitySettingsMap.GetRangeUrgentHighMgdl(), m.SiteSettingsMap.GetRangeUrgentHighMgdl(), m.DefaultSettingsMap.GetRangeUrgentHighMgdl())
+}
+
 // GetUnitsLabel is how the Nightscout API writes units, the identity's, then the site's, then Nighttroop's own
 func (m *CombinedSettingsMap) GetUnitsLabel(units consts.Units) string {
 	if units == consts.UnitsMMOLL {

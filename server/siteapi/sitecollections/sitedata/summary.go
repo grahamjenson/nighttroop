@@ -104,6 +104,8 @@ func getSummary(ctx context.Context, tx *siteapiutils.CollectionTx, hours int64,
 	settings := siteContext.GetSettings()
 	summary.RangeLow = summary.Units.FromMGDL(float64(*settings.GetRangeLowMgdl()))
 	summary.RangeHigh = summary.Units.FromMGDL(float64(*settings.GetRangeHighMgdl()))
+	summary.RangeUrgentLow = summary.Units.FromMGDL(float64(*settings.GetRangeUrgentLowMgdl()))
+	summary.RangeUrgentHigh = summary.Units.FromMGDL(float64(*settings.GetRangeUrgentHighMgdl()))
 	// A false IncludeDeleted leaves out deleted rows in these searches
 	excludeDeleted := false
 

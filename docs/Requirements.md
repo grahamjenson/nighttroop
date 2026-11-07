@@ -210,7 +210,15 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 - The home page summarises the site: the latest glucose with how long ago it was, the loop's IOB and COB, every
   treatment, and each device's latest status.
-- A graph of glucose with carbs and insulin marked, over 6 hours to a week.
+- A graph of glucose with carbs and insulin marked, over 6 hours to a week, drawn on one grid as Carer draws it:
+  - The urgent range and the range shaded across it, with the low and high as dashed lines.
+  - The targets in force shaded over them.
+  - Readings as dots, coloured low, in range or high, joined by a thin line broken where readings are over 15
+    minutes apart.
+  - The basal in force along the bottom, its highest rate labelled on the right.
+  - Carbs as triangles pointing up above insulin as triangles pointing down, each labelled, the latest kept where
+    labels overlap; a loop's SMBs are smaller, fainter and not labelled.
+  - A legend of insulin, SMB, carbs and basal, and a tooltip of each reading and treatment.
 - Time in range, total daily dose, and the last sensor and site change for today, yesterday, last week and last
   month.
 - Readings are coloured and labelled low, in range or high by the alarm settings.
