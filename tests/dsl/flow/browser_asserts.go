@@ -154,6 +154,10 @@ const screenshotWait = 10000
 // longer than the 1s default, which a busy CI runner can take for a transition to settle
 const actionWait = visibleWait
 
+// readWait is the timeout of reading an element an assert or action has found, such as its text: longer than the 1s
+// default, which a busy CI runner can take to answer even for an element on the page
+var readWait = playwright.Float(visibleWait)
+
 // waitForVisible waits until any element the locator finds is visible, or visibleWait passes. It waits for a visible
 // one, not the first, as the first can stay hidden, as a text in a closed menu does, while another is shown.
 // It never fails: the assert after it checks, and fails with the page it found.
@@ -207,7 +211,7 @@ func (r *AssertVisible) Execute(t *testing.T, ctx map[string]any, page playwrigh
 		t.Fatalf("\n\n%s\n assertVisible failed: expected value to be visible for locator: %s\n\n%s\n\n", r.ToErrorLine(), r.Locator, prettyOutput)
 	}
 	if r.Drawn {
-		inside, err := locator.Evaluate(insideGraphScript, nil)
+		inside, err := locator.Evaluate(insideGraphScript, nil, playwright.LocatorEvaluateOptions{Timeout: readWait})
 		if err != nil {
 			t.Fatalf("\n\n%s\n failed to check locator is inside its graph: %v, error: %v\n\n%s\n\n", r.ToErrorLine(), r.Locator, err, prettyOutput)
 		}
@@ -217,10 +221,10 @@ func (r *AssertVisible) Execute(t *testing.T, ctx map[string]any, page playwrigh
 		return nil
 	}
 	// It can be covered for a moment, as by a toast or a modal closing, so it is checked until visibleWait passes
-	clickable, err := locator.Evaluate(clickableScript, nil)
+	clickable, err := locator.Evaluate(clickableScript, nil, playwright.LocatorEvaluateOptions{Timeout: readWait})
 	for deadline := time.Now().Add(visibleWait * time.Millisecond); err == nil && clickable != true && time.Now().Before(deadline); {
 		time.Sleep(50 * time.Millisecond)
-		clickable, err = locator.Evaluate(clickableScript, nil)
+		clickable, err = locator.Evaluate(clickableScript, nil, playwright.LocatorEvaluateOptions{Timeout: readWait})
 	}
 	if err != nil {
 		t.Fatalf("\n\n%s\n failed to check locator can be clicked: %v, error: %v\n\n%s\n\n", r.ToErrorLine(), r.Locator, err, prettyOutput)
@@ -308,7 +312,7 @@ func (r *AssertTextEquals) Execute(t *testing.T, ctx map[string]any, page playwr
 	if locator == nil {
 		t.Fatalf("\n\n%s\n getLocator returned nil for rawLocator: %v\n\n%s\n\n", r.ToErrorLine(), r.Locator, prettyOutput)
 	}
-	innerText, err := locator.InnerText()
+	innerText, err := locator.InnerText(playwright.LocatorInnerTextOptions{Timeout: readWait})
 	if err != nil {
 		t.Fatalf("\n\n%s\n failed to get inner text for locator: %v, error: %v\n\n%s\n\n", r.ToErrorLine(), r.Locator, err, prettyOutput)
 	}
