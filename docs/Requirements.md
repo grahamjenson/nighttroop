@@ -460,6 +460,8 @@ focus back to the row or button that opened it.
   -100), kept as a multiplier of the basal (0.5, 1.2, 0). The one not sent is set from the default profile's or
   profile switch's basal at its start, in the profile's timezone; a rate over 11 times it keeps no percent.
 - A temp basal is always returned with its `rate` and `absolute`, both its U/hr, and its `percent` when it has one.
+- A temp basal keeps AAPS's `type`, e.g. `NORMAL` or `PUMP_SUSPEND` for a suspended pump, and returns it as sent
+  through v1 and v3, so AAPS's followers show a suspend as one; an update without it keeps it.
 - The summary's basal during a temp basal is its rate.
 - Duplicate uploads are ignored; values far outside real use are refused.
 - A treatment uploaded again with the date and type of one stored, or its identifier and date, replaces it, keeping its

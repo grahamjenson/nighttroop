@@ -1,7 +1,6 @@
 package sitelogin
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -48,8 +47,7 @@ func TestLoginRejectsLongNameBeforeRateLimit(t *testing.T) {
 			r.RemoteAddr = tt.ip + ":1234"
 			r.Header.Set("Content-Type", tt.contentType)
 			r.Header.Set("Accept", tt.accept)
-			ctx, _ := httputils.SetIPInHTTPContext(context.Background(), r, nil)
-			ctx = httputils.CreateSiteContext(ctx, testConfig, nil, nil, nil, "site"+tt.name, tt.ip, httputils.HTTPActionWrite, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
+			ctx := httputils.CreateSiteContext(httputils.WithClientIP(r), testConfig, nil, nil, nil, "site"+tt.name, tt.ip, httputils.HTTPActionWrite, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
 			r = r.WithContext(ctx)
 
 			w := httptest.NewRecorder()
@@ -97,8 +95,7 @@ func TestLoginTOTPRefusesPreAuthFromBeforeAReset(t *testing.T) {
 		r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		r.Header.Set("Accept", "text/htmx")
 		r.AddCookie(&http.Cookie{Name: security.PRE_AUTH_TOKEN_COOKIE, Value: token})
-		ctx, _ := httputils.SetIPInHTTPContext(context.Background(), r, nil)
-		ctx = httputils.CreateSiteContext(ctx, testConfig, controlDB, site.SiteDB, nil, siteID, ip, httputils.HTTPActionWrite, httputils.AcceptTypeHTMX, httputils.ContentTypeForm)
+		ctx := httputils.CreateSiteContext(httputils.WithClientIP(r), testConfig, controlDB, site.SiteDB, nil, siteID, ip, httputils.HTTPActionWrite, httputils.AcceptTypeHTMX, httputils.ContentTypeForm)
 		w := httptest.NewRecorder()
 		POSTLoginTOTP(controlDB, testConfig)(w, r.WithContext(ctx))
 

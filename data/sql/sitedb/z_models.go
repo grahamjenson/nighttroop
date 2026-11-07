@@ -533,6 +533,7 @@ type TempBasal struct {
 	DurationMinutes       int64
 	Rate                  float64
 	Multiplier            *float64
+	Type                  *string
 	Notes                 *string
 	Reason                *string
 	RawJsonData           *string
@@ -554,6 +555,7 @@ type TempBasalsVw struct {
 	DurationMinutes       *int64
 	Rate                  *float64
 	Multiplier            *float64
+	Type                  *string
 	Notes                 *string
 	Reason                *string
 	RawJsonData           *string

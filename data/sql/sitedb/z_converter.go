@@ -2048,17 +2048,21 @@ func TempBasalFromView(source TempBasalsVw) TempBasal {
 		xfloat64 := *source.Multiplier
 		sitedbTempBasal.Multiplier = &xfloat64
 	}
+	if source.Type != nil {
+		xstring := *source.Type
+		sitedbTempBasal.Type = &xstring
+	}
 	if source.Notes != nil {
-		xstring := *source.Notes
-		sitedbTempBasal.Notes = &xstring
+		xstring2 := *source.Notes
+		sitedbTempBasal.Notes = &xstring2
 	}
 	if source.Reason != nil {
-		xstring2 := *source.Reason
-		sitedbTempBasal.Reason = &xstring2
+		xstring3 := *source.Reason
+		sitedbTempBasal.Reason = &xstring3
 	}
 	if source.RawJsonData != nil {
-		xstring3 := *source.RawJsonData
-		sitedbTempBasal.RawJsonData = &xstring3
+		xstring4 := *source.RawJsonData
+		sitedbTempBasal.RawJsonData = &xstring4
 	}
 	if source.DeletedAt != nil {
 		xint64 := *source.DeletedAt
@@ -2078,20 +2082,20 @@ func TempBasalFromView(source TempBasalsVw) TempBasal {
 		sitedbTempBasal.UpdatedAt = *source.UpdatedAt
 	}
 	if source.CreatedByAppName != nil {
-		xstring4 := *source.CreatedByAppName
-		sitedbTempBasal.CreatedByAppName = &xstring4
+		xstring5 := *source.CreatedByAppName
+		sitedbTempBasal.CreatedByAppName = &xstring5
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring5 := *source.CreatedByDeviceName
-		sitedbTempBasal.CreatedByDeviceName = &xstring5
+		xstring6 := *source.CreatedByDeviceName
+		sitedbTempBasal.CreatedByDeviceName = &xstring6
 	}
 	if source.UpdatedByIdentityID != nil {
 		xint643 := *source.UpdatedByIdentityID
 		sitedbTempBasal.UpdatedByIdentityID = &xint643
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring6 := *source.UpdatedByIdentityName
-		sitedbTempBasal.UpdatedByIdentityName = &xstring6
+		xstring7 := *source.UpdatedByIdentityName
+		sitedbTempBasal.UpdatedByIdentityName = &xstring7
 	}
 	if source.CreatedByIdentityID != nil {
 		xint644 := *source.CreatedByIdentityID
@@ -2111,13 +2115,17 @@ func TempBasalToCreate(source TempBasal) CreateTempBasalParams {
 		xfloat64 := *source.Multiplier
 		sitedbCreateTempBasalParams.Multiplier = &xfloat64
 	}
+	if source.Type != nil {
+		xstring := *source.Type
+		sitedbCreateTempBasalParams.Type = &xstring
+	}
 	if source.Notes != nil {
-		xstring := *source.Notes
-		sitedbCreateTempBasalParams.Notes = &xstring
+		xstring2 := *source.Notes
+		sitedbCreateTempBasalParams.Notes = &xstring2
 	}
 	if source.Reason != nil {
-		xstring2 := *source.Reason
-		sitedbCreateTempBasalParams.Reason = &xstring2
+		xstring3 := *source.Reason
+		sitedbCreateTempBasalParams.Reason = &xstring3
 	}
 	if source.UtcOffsetMinutes != nil {
 		xint64 := *source.UtcOffsetMinutes
@@ -2125,16 +2133,16 @@ func TempBasalToCreate(source TempBasal) CreateTempBasalParams {
 	}
 	sitedbCreateTempBasalParams.OccurredAt = source.OccurredAt
 	if source.RawJsonData != nil {
-		xstring3 := *source.RawJsonData
-		sitedbCreateTempBasalParams.RawJsonData = &xstring3
+		xstring4 := *source.RawJsonData
+		sitedbCreateTempBasalParams.RawJsonData = &xstring4
 	}
 	if source.CreatedByAppName != nil {
-		xstring4 := *source.CreatedByAppName
-		sitedbCreateTempBasalParams.CreatedByAppName = &xstring4
+		xstring5 := *source.CreatedByAppName
+		sitedbCreateTempBasalParams.CreatedByAppName = &xstring5
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring5 := *source.CreatedByDeviceName
-		sitedbCreateTempBasalParams.CreatedByDeviceName = &xstring5
+		xstring6 := *source.CreatedByDeviceName
+		sitedbCreateTempBasalParams.CreatedByDeviceName = &xstring6
 	}
 	sitedbCreateTempBasalParams.CreatedByIdentityName = source.CreatedByIdentityName
 	if source.CreatedByIdentityID != nil {
@@ -2153,25 +2161,29 @@ func TempBasalToUpdate(source TempBasal) UpdateTempBasalParams {
 		xfloat64 := *source.Multiplier
 		sitedbUpdateTempBasalParams.Multiplier = &xfloat64
 	}
+	if source.Type != nil {
+		xstring := *source.Type
+		sitedbUpdateTempBasalParams.Type = &xstring
+	}
 	if source.Notes != nil {
-		xstring := *source.Notes
-		sitedbUpdateTempBasalParams.Notes = &xstring
+		xstring2 := *source.Notes
+		sitedbUpdateTempBasalParams.Notes = &xstring2
 	}
 	if source.Reason != nil {
-		xstring2 := *source.Reason
-		sitedbUpdateTempBasalParams.Reason = &xstring2
+		xstring3 := *source.Reason
+		sitedbUpdateTempBasalParams.Reason = &xstring3
 	}
 	if source.RawJsonData != nil {
-		xstring3 := *source.RawJsonData
-		sitedbUpdateTempBasalParams.RawJsonData = &xstring3
+		xstring4 := *source.RawJsonData
+		sitedbUpdateTempBasalParams.RawJsonData = &xstring4
 	}
 	if source.UpdatedByIdentityID != nil {
 		xint64 := *source.UpdatedByIdentityID
 		sitedbUpdateTempBasalParams.UpdatedByIdentityID = &xint64
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring4 := *source.UpdatedByIdentityName
-		sitedbUpdateTempBasalParams.UpdatedByIdentityName = &xstring4
+		xstring5 := *source.UpdatedByIdentityName
+		sitedbUpdateTempBasalParams.UpdatedByIdentityName = &xstring5
 	}
 	sitedbUpdateTempBasalParams.ID = source.ID
 	return sitedbUpdateTempBasalParams
@@ -3156,17 +3168,21 @@ func sitedbTempBasalsVwToSitedbTempBasalsVw(source TempBasalsVw) TempBasalsVw {
 		xfloat642 := *source.Multiplier
 		sitedbTempBasalsVw.Multiplier = &xfloat642
 	}
+	if source.Type != nil {
+		xstring2 := *source.Type
+		sitedbTempBasalsVw.Type = &xstring2
+	}
 	if source.Notes != nil {
-		xstring2 := *source.Notes
-		sitedbTempBasalsVw.Notes = &xstring2
+		xstring3 := *source.Notes
+		sitedbTempBasalsVw.Notes = &xstring3
 	}
 	if source.Reason != nil {
-		xstring3 := *source.Reason
-		sitedbTempBasalsVw.Reason = &xstring3
+		xstring4 := *source.Reason
+		sitedbTempBasalsVw.Reason = &xstring4
 	}
 	if source.RawJsonData != nil {
-		xstring4 := *source.RawJsonData
-		sitedbTempBasalsVw.RawJsonData = &xstring4
+		xstring5 := *source.RawJsonData
+		sitedbTempBasalsVw.RawJsonData = &xstring5
 	}
 	if source.DeletedAt != nil {
 		xint642 := *source.DeletedAt
@@ -3189,28 +3205,28 @@ func sitedbTempBasalsVwToSitedbTempBasalsVw(source TempBasalsVw) TempBasalsVw {
 		sitedbTempBasalsVw.UpdatedAt = &xint646
 	}
 	if source.CreatedByAppName != nil {
-		xstring5 := *source.CreatedByAppName
-		sitedbTempBasalsVw.CreatedByAppName = &xstring5
+		xstring6 := *source.CreatedByAppName
+		sitedbTempBasalsVw.CreatedByAppName = &xstring6
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring6 := *source.CreatedByDeviceName
-		sitedbTempBasalsVw.CreatedByDeviceName = &xstring6
+		xstring7 := *source.CreatedByDeviceName
+		sitedbTempBasalsVw.CreatedByDeviceName = &xstring7
 	}
 	if source.UpdatedByIdentityID != nil {
 		xint647 := *source.UpdatedByIdentityID
 		sitedbTempBasalsVw.UpdatedByIdentityID = &xint647
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring7 := *source.UpdatedByIdentityName
-		sitedbTempBasalsVw.UpdatedByIdentityName = &xstring7
+		xstring8 := *source.UpdatedByIdentityName
+		sitedbTempBasalsVw.UpdatedByIdentityName = &xstring8
 	}
 	if source.CreatedByIdentityID != nil {
 		xint648 := *source.CreatedByIdentityID
 		sitedbTempBasalsVw.CreatedByIdentityID = &xint648
 	}
 	if source.CreatedByIdentityName != nil {
-		xstring8 := *source.CreatedByIdentityName
-		sitedbTempBasalsVw.CreatedByIdentityName = &xstring8
+		xstring9 := *source.CreatedByIdentityName
+		sitedbTempBasalsVw.CreatedByIdentityName = &xstring9
 	}
 	return sitedbTempBasalsVw
 }
