@@ -8,7 +8,15 @@ import (
 	"nighttroop.t1d.nz/models/nightscoutmodels"
 )
 
-// loopColumns are the device report's columns a loop's status sets
+// rawText is JSON kept as sent, as text, or nil when none was
+func rawText(raw json.RawMessage) *string {
+	if raw == nil {
+		return nil
+	}
+	return ptr(string(raw))
+}
+
+// loopColumns are the device report's columns and other attributes a loop's status sets
 type loopColumns struct {
 	Name, Settings, Predictions, PredictionsZt *string
 	IOB, IOBBasal, IOBTreatment, COB           *float64
@@ -48,10 +56,11 @@ func TestNightscoutToDBCreateDeviceReportLoopColumns(t *testing.T) {
 			var status nightscoutmodels.DeviceStatus
 			require.NoError(t, json.Unmarshal([]byte(tt.status), &status))
 			got := NightscoutToDBCreateDeviceReport(status, nightscoutmodels.ConverterContext{})
+			other := got.OtherAttributes
 			require.Equal(t, tt.want, loopColumns{
-				Name: got.LoopName, Settings: got.LoopSettingsJson, Predictions: got.LoopPredictionsDefault, PredictionsZt: got.LoopPredictionsZt,
-				IOB: got.LoopIob, IOBBasal: got.LoopIobBasal, IOBTreatment: got.LoopIobTreatment, COB: got.LoopCob,
-				PredictionsStartTime: got.LoopPredictionsStartTime,
+				Name: other.LoopName, Settings: rawText(other.LoopSettings), Predictions: rawText(other.LoopPredictionsDefault),
+				PredictionsZt: rawText(other.LoopPredictionsZt), IOB: got.LoopIob, IOBBasal: got.LoopIobBasal,
+				IOBTreatment: got.LoopIobTreatment, COB: got.LoopCob, PredictionsStartTime: other.LoopPredictionsStartTime,
 			})
 		})
 	}

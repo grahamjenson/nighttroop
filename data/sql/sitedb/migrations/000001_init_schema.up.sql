@@ -419,16 +419,6 @@ CREATE TABLE device_reports (
     pump_reservoir REAL CHECK(pump_reservoir BETWEEN 0 AND 10000), -- units
     pump_battery_percent REAL CHECK(pump_battery_percent BETWEEN 0 AND 100),
     pump_charging_state TEXT CHECK(length(pump_charging_state) <= 32),
-    pump_clock INTEGER CHECK(pump_clock BETWEEN 0 AND 253402300799999), -- the pump's time when it reported
-    pump_manufacturer TEXT CHECK(length(pump_manufacturer) <= 64),
-    pump_model TEXT CHECK(length(pump_model) <= 64),
-    -- Loop's override in force
-    override_json TEXT CHECK(length(override_json) <= 2048 AND json_valid(override_json)),
-
-    -- Raw Loop Settings
-    loop_name TEXT CHECK( loop_name IN ('openaps', 'loop')),
-    configuration_settings_json TEXT CHECK(length(configuration_settings_json) <= 8192 AND json_valid(configuration_settings_json)),
-    loop_settings_json TEXT CHECK(length(loop_settings_json) <= 8192 AND json_valid(loop_settings_json)), -- some loops (e.g. Loop) store settings on the profile
 
     -- Extracted Loop Settings that will be useful for reporting and analysis
     loop_iob REAL CHECK(loop_iob BETWEEN -1000 AND 1000),
@@ -436,10 +426,24 @@ CREATE TABLE device_reports (
     loop_iob_treatment REAL CHECK(loop_iob_treatment BETWEEN -1000 AND 1000),
     loop_cob REAL CHECK(loop_cob BETWEEN -1000 AND 2000),
 
-    loop_predictions_start_time INTEGER CHECK(loop_predictions_start_time BETWEEN 0 AND 253402300799999),
-    loop_predictions_default TEXT CHECK(length(loop_predictions_default) <= 2048 AND json_valid(loop_predictions_default)), -- iob for openaps, normal for loop
-    loop_predictions_zt TEXT CHECK(length(loop_predictions_zt) <= 2048 AND json_valid(loop_predictions_zt)),
-    
+    -- What only some apps send, a JSON object (types.DeviceReportOther) NULL for most reports: the pump's time when it
+    -- reported (pump_clock), its manufacturer and model, Loop's override in force (override), and the loop's raw
+    -- settings: which loop it is (loop_name), its configuration and settings as sent (configuration_settings,
+    -- loop_settings), and its predicted glucoses from when (loop_predictions_start_time, the default predictions being
+    -- iob for openaps and normal for loop, and openaps's zt). The JSON ones are kept as JSON. A field that is not there
+    -- passes its check; the total fits each one's limit added together.
+    other_attributes TEXT CHECK(length(other_attributes) <= 23040 AND json_valid(other_attributes)
+        AND json_extract(other_attributes, '$.pump_clock') BETWEEN 0 AND 253402300799999
+        AND length(json_extract(other_attributes, '$.pump_manufacturer')) <= 64
+        AND length(json_extract(other_attributes, '$.pump_model')) <= 64
+        AND length(json_extract(other_attributes, '$.override')) <= 2048
+        AND json_extract(other_attributes, '$.loop_name') IN ('openaps', 'loop')
+        AND length(json_extract(other_attributes, '$.configuration_settings')) <= 8192
+        AND length(json_extract(other_attributes, '$.loop_settings')) <= 8192
+        AND json_extract(other_attributes, '$.loop_predictions_start_time') BETWEEN 0 AND 253402300799999
+        AND length(json_extract(other_attributes, '$.loop_predictions_default')) <= 2048
+        AND length(json_extract(other_attributes, '$.loop_predictions_zt')) <= 2048),
+
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly
 

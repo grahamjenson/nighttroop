@@ -402,6 +402,7 @@ type SiteConverter interface {
 	// DEVICE STATUSES
 	///////
 
+	// goverter:map OtherAttributes.LoopName LoopName
 	DeviceStatusFromDB(source *sitedb.DeviceReport) *SiteDeviceStatus
 
 	///////

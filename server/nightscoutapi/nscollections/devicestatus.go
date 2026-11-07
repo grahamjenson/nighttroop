@@ -94,8 +94,9 @@ func DBToNightscoutDeviceStatus(source *sitedb.DeviceReport, siteContext *httput
 	if source.DeviceBatteryPercent != nil {
 		nsModel.UploaderBattery = ptr(types.FlexibleFloat64(*source.DeviceBatteryPercent))
 	}
-	if source.OverrideJson != nil {
-		nsModel.OverrideRaw = ptr(json.RawMessage([]byte(*source.OverrideJson)))
+	other := source.OtherAttributes
+	if other.Override != nil {
+		nsModel.OverrideRaw = &other.Override
 	}
 
 	/////
@@ -128,11 +129,11 @@ func DBToNightscoutDeviceStatus(source *sitedb.DeviceReport, siteContext *httput
 	if uploader != (nightscoutmodels.UploaderStatus{}) {
 		nsModel.Uploader = &uploader
 	}
-	if pump.Manufacturer == nil && source.PumpManufacturer != nil {
-		pump.Manufacturer = (*types.ShortString)(source.PumpManufacturer)
+	if pump.Manufacturer == nil && other.PumpManufacturer != nil {
+		pump.Manufacturer = (*types.ShortString)(other.PumpManufacturer)
 	}
-	if pump.Model == nil && source.PumpModel != nil {
-		pump.Model = (*types.ShortString)(source.PumpModel)
+	if pump.Model == nil && other.PumpModel != nil {
+		pump.Model = (*types.ShortString)(other.PumpModel)
 	}
 	if pump.Battery == nil && source.PumpBatteryPercent != nil {
 		pump.Battery = &nightscoutmodels.PumpBattery{Percent: ptr(types.FlexibleFloat64(*source.PumpBatteryPercent))}
@@ -140,8 +141,8 @@ func DBToNightscoutDeviceStatus(source *sitedb.DeviceReport, siteContext *httput
 	if pump.Reservoir == nil && source.PumpReservoir != nil {
 		pump.Reservoir = ptr(types.FlexibleFloat64(*source.PumpReservoir))
 	}
-	if pump.Clock == nil && source.PumpClock != nil {
-		pump.Clock = ptr(types.DateStringFromInt64AndUTCOffset(*source.PumpClock, nil))
+	if pump.Clock == nil && other.PumpClock != nil {
+		pump.Clock = ptr(types.DateStringFromInt64AndUTCOffset(*other.PumpClock, nil))
 	}
 	if pump != (nightscoutmodels.PumpStatus{}) {
 		nsModel.Pump = &pump
@@ -150,16 +151,16 @@ func DBToNightscoutDeviceStatus(source *sitedb.DeviceReport, siteContext *httput
 	///////
 	/// Extracting Loop values
 	///////
-	if source.ConfigurationSettingsJson != nil {
-		nsModel.ConfigurationRaw = ptr(json.RawMessage([]byte(*source.ConfigurationSettingsJson)))
+	if other.ConfigurationSettings != nil {
+		nsModel.ConfigurationRaw = &other.ConfigurationSettings
 	}
 
-	if source.LoopName != nil && source.LoopSettingsJson != nil {
-		switch *source.LoopName {
+	if other.LoopName != nil && other.LoopSettings != nil {
+		switch *other.LoopName {
 		case "openaps":
-			nsModel.OpenAPSRaw = ptr(json.RawMessage([]byte(*source.LoopSettingsJson)))
+			nsModel.OpenAPSRaw = &other.LoopSettings
 		case "loop":
-			nsModel.LoopRaw = ptr(json.RawMessage([]byte(*source.LoopSettingsJson)))
+			nsModel.LoopRaw = &other.LoopSettings
 		}
 	}
 
@@ -186,11 +187,11 @@ func NightscoutToDBCreateDeviceReport(source nightscoutmodels.DeviceStatus, ctx 
 		createParams.IsDeviceCharging = ptr(bool(*source.Uploader.IsCharging))
 	}
 	if source.OverrideRaw != nil {
-		createParams.OverrideJson = ptr(string(*source.OverrideRaw))
+		createParams.OtherAttributes.Override = *source.OverrideRaw
 	}
 
 	if source.ConfigurationRaw != nil {
-		createParams.ConfigurationSettingsJson = ptr(string(*source.ConfigurationRaw))
+		createParams.OtherAttributes.ConfigurationSettings = *source.ConfigurationRaw
 	}
 
 	/////
@@ -206,10 +207,10 @@ func NightscoutToDBCreateDeviceReport(source nightscoutmodels.DeviceStatus, ctx 
 			createParams.PumpReservoir = ptr(float64(*source.Pump.Reservoir))
 		}
 		if source.Pump.Clock != nil {
-			createParams.PumpClock = source.Pump.Clock.UnixMillip()
+			createParams.OtherAttributes.PumpClock = source.Pump.Clock.UnixMillip()
 		}
-		createParams.PumpManufacturer = source.Pump.Manufacturer.Stringp()
-		createParams.PumpModel = source.Pump.Model.Stringp()
+		createParams.OtherAttributes.PumpManufacturer = source.Pump.Manufacturer.Stringp()
+		createParams.OtherAttributes.PumpModel = source.Pump.Model.Stringp()
 	}
 
 	// Loop's are set last, so a status with both keeps Loop's settings, IOB, COB and predictions over OpenAPS's
@@ -225,8 +226,8 @@ func NightscoutToDBCreateDeviceReport(source nightscoutmodels.DeviceStatus, ctx 
 
 // setOpenAPSColumns keeps an OpenAPS loop's settings, IOB, COB and predictions
 func setOpenAPSColumns(params *sitedb.CreateDeviceReportParams, openAPS *nightscoutmodels.OpenAPSStatus, raw json.RawMessage) {
-	params.LoopSettingsJson = ptr(string(raw))
-	params.LoopName = ptr("openaps")
+	params.OtherAttributes.LoopSettings = raw
+	params.OtherAttributes.LoopName = ptr("openaps")
 	if iob := openAPS.IOB; iob != nil {
 		params.LoopIob = iob.IOB.Float64p()
 		params.LoopIobBasal = iob.BasalIOB.Float64p()
@@ -242,18 +243,18 @@ func setOpenAPSColumns(params *sitedb.CreateDeviceReportParams, openAPS *nightsc
 	}
 	params.LoopCob = suggested.COB.Float64p()
 	if suggested.Timestamp != nil {
-		params.LoopPredictionsStartTime = suggested.Timestamp.UnixMillip()
+		params.OtherAttributes.LoopPredictionsStartTime = suggested.Timestamp.UnixMillip()
 	}
 	if suggested.PredBGs != nil {
-		setPredictions(&params.LoopPredictionsDefault, suggested.PredBGs.IOB)
-		setPredictions(&params.LoopPredictionsZt, suggested.PredBGs.ZT)
+		setPredictions(&params.OtherAttributes.LoopPredictionsDefault, suggested.PredBGs.IOB)
+		setPredictions(&params.OtherAttributes.LoopPredictionsZt, suggested.PredBGs.ZT)
 	}
 }
 
 // setLoopColumns keeps Loop's settings, IOB, COB and predictions
 func setLoopColumns(params *sitedb.CreateDeviceReportParams, loop *nightscoutmodels.LoopStatus, raw json.RawMessage) {
-	params.LoopSettingsJson = ptr(string(raw))
-	params.LoopName = ptr("loop")
+	params.OtherAttributes.LoopSettings = raw
+	params.OtherAttributes.LoopName = ptr("loop")
 	if loop.IOB != nil {
 		params.LoopIob = loop.IOB.IOB.Float64p()
 	}
@@ -261,19 +262,20 @@ func setLoopColumns(params *sitedb.CreateDeviceReportParams, loop *nightscoutmod
 		params.LoopCob = loop.COB.COB.Float64p()
 	}
 	if predicted := loop.Predicted; predicted != nil {
-		setPredictions(&params.LoopPredictionsDefault, predicted.Values)
+		setPredictions(&params.OtherAttributes.LoopPredictionsDefault, predicted.Values)
 		if predicted.StartDate != nil {
-			params.LoopPredictionsStartTime = predicted.StartDate.UnixMillip()
+			params.OtherAttributes.LoopPredictionsStartTime = predicted.StartDate.UnixMillip()
 		}
 	}
 }
 
-// setPredictions sets a predictions column to the predicted glucoses as JSON, and leaves it as it is when none are sent
-func setPredictions(column **string, predicted []*types.FlexibleFloat64) {
+// setPredictions sets a report's predictions to the predicted glucoses as JSON, and leaves them as they are when none
+// are sent
+func setPredictions(predictions *json.RawMessage, predicted []*types.FlexibleFloat64) {
 	if predicted == nil {
 		return
 	}
 	if out, err := json.Marshal(predicted); err == nil {
-		*column = ptr(string(out))
+		*predictions = out
 	}
 }

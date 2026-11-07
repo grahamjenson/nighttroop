@@ -1,0 +1,70 @@
+INCLUDE steps/new_site.steps
+
+// What only some apps send of a device status, such as Loop's pump, override, settings and predictions, is kept in its
+// other attributes, its JSON as JSON, and given back
+NAME create_status
+POST http://{{ .ns_site }}/api/v1/devicestatus?token={{ token }}
+B [{ "device": "loop://iPhone", "created_at": "{{ time 1 }}",
+     "loop": { "name": "Loop", "iob": { "iob": 1.5 }, "cob": { "cob": 12 },
+               "predicted": { "startDate": "{{ time 1 }}", "values": [114, 116.5, 120] } },
+     "override": { "active": true, "name": "Running", "multiplier": 0.8 },
+     "configuration": { "bolusIncrement": 0.05 },
+     "pump": { "manufacturer": "Insulet", "model": "Dash", "clock": "{{ time 1 }}", "reservoir": 50 } }]
+ASSERT_STATUS 200
+SET status_id {{ dig "create_status.0._id" }}
+
+NAME read_status
+GET http://{{ .ns_site }}/api/v1/devicestatus.json?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Insulet" "@0.pump.manufacturer"
+ASSERT_EQUALS "Dash" "@0.pump.model"
+ASSERT_EXISTS "@0.pump.clock"
+ASSERT_EQUALS true "@0.override.active"
+ASSERT_EQUALS 0.8 "@0.override.multiplier"
+ASSERT_EQUALS 0.05 "@0.configuration.bolusIncrement"
+ASSERT_EQUALS 1.5 "@0.loop.iob.iob"
+ASSERT_EQUALS 116.5 "@0.loop.predicted.values.1"
+
+// The loop's name says which loop the latest status is from, for its IOB and the site's summary
+NAME properties_source
+GET http://{{ .ns_site }}/api/v2/properties?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Loop" "@iob.source"
+ASSERT_EQUALS 1.5 "@iob.iob"
+
+NAME site_status
+GET http://{{ site }}/data/device-status/{{ .status_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "loop" "@result.loop_name"
+ASSERT_EQUALS 1.5 "@result.loop_iob"
+
+NAME site_summary_loop
+GET http://{{ site }}/summary
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "loop" "@result.0.loop.loop_name"
+
+// An update leaves them as they were
+NAME update_status
+PATCH http://{{ .ns_site }}/api/v3/devicestatus/{{ .status_id }}
+H Authorization: Bearer {{ jwt }}
+B { "pump": { "reservoir": 40 } }
+ASSERT_STATUS 200
+
+NAME read_updated
+GET http://{{ .ns_site }}/api/v1/devicestatus.json?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 40 "@0.pump.reservoir"
+ASSERT_EQUALS "Dash" "@0.pump.model"
+ASSERT_EQUALS true "@0.override.active"
+ASSERT_EQUALS 0.05 "@0.configuration.bolusIncrement"
+ASSERT_EQUALS 114 "@0.loop.predicted.values.0"
+
+// Each is still refused far outside real use, as a column of its own was: an override over 2048 characters
+NAME override_too_long
+POST http://{{ .ns_site }}/api/v1/devicestatus?token={{ token }}
+B [{ "device": "loop://iPhone", "created_at": "{{ time 2 }}", "override": { "active": true, "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" } }]
+ASSERT_STATUS 400

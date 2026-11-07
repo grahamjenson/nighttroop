@@ -4,6 +4,7 @@
 package sitedb
 
 import (
+	jsontext "encoding/json/jsontext"
 	types "nighttroop.t1d.nz/data/types"
 	consts "nighttroop.t1d.nz/utils/consts"
 )
@@ -329,34 +330,6 @@ func DeviceReportToCreate(source DeviceReport) CreateDeviceReportParams {
 		xstring2 := *source.PumpChargingState
 		sitedbCreateDeviceReportParams.PumpChargingState = &xstring2
 	}
-	if source.PumpClock != nil {
-		xint64 := *source.PumpClock
-		sitedbCreateDeviceReportParams.PumpClock = &xint64
-	}
-	if source.PumpManufacturer != nil {
-		xstring3 := *source.PumpManufacturer
-		sitedbCreateDeviceReportParams.PumpManufacturer = &xstring3
-	}
-	if source.PumpModel != nil {
-		xstring4 := *source.PumpModel
-		sitedbCreateDeviceReportParams.PumpModel = &xstring4
-	}
-	if source.OverrideJson != nil {
-		xstring5 := *source.OverrideJson
-		sitedbCreateDeviceReportParams.OverrideJson = &xstring5
-	}
-	if source.LoopName != nil {
-		xstring6 := *source.LoopName
-		sitedbCreateDeviceReportParams.LoopName = &xstring6
-	}
-	if source.ConfigurationSettingsJson != nil {
-		xstring7 := *source.ConfigurationSettingsJson
-		sitedbCreateDeviceReportParams.ConfigurationSettingsJson = &xstring7
-	}
-	if source.LoopSettingsJson != nil {
-		xstring8 := *source.LoopSettingsJson
-		sitedbCreateDeviceReportParams.LoopSettingsJson = &xstring8
-	}
 	if source.LoopIob != nil {
 		xfloat644 := *source.LoopIob
 		sitedbCreateDeviceReportParams.LoopIob = &xfloat644
@@ -373,39 +346,28 @@ func DeviceReportToCreate(source DeviceReport) CreateDeviceReportParams {
 		xfloat647 := *source.LoopCob
 		sitedbCreateDeviceReportParams.LoopCob = &xfloat647
 	}
-	if source.LoopPredictionsStartTime != nil {
-		xint642 := *source.LoopPredictionsStartTime
-		sitedbCreateDeviceReportParams.LoopPredictionsStartTime = &xint642
-	}
-	if source.LoopPredictionsDefault != nil {
-		xstring9 := *source.LoopPredictionsDefault
-		sitedbCreateDeviceReportParams.LoopPredictionsDefault = &xstring9
-	}
-	if source.LoopPredictionsZt != nil {
-		xstring10 := *source.LoopPredictionsZt
-		sitedbCreateDeviceReportParams.LoopPredictionsZt = &xstring10
-	}
+	sitedbCreateDeviceReportParams.OtherAttributes = typesDeviceReportOtherToTypesDeviceReportOther(source.OtherAttributes)
 	if source.UtcOffsetMinutes != nil {
-		xint643 := *source.UtcOffsetMinutes
-		sitedbCreateDeviceReportParams.UtcOffsetMinutes = &xint643
+		xint64 := *source.UtcOffsetMinutes
+		sitedbCreateDeviceReportParams.UtcOffsetMinutes = &xint64
 	}
 	sitedbCreateDeviceReportParams.OccurredAt = source.OccurredAt
 	if source.RawJsonData != nil {
-		xstring11 := *source.RawJsonData
-		sitedbCreateDeviceReportParams.RawJsonData = &xstring11
+		xstring3 := *source.RawJsonData
+		sitedbCreateDeviceReportParams.RawJsonData = &xstring3
 	}
 	if source.CreatedByAppName != nil {
-		xstring12 := *source.CreatedByAppName
-		sitedbCreateDeviceReportParams.CreatedByAppName = &xstring12
+		xstring4 := *source.CreatedByAppName
+		sitedbCreateDeviceReportParams.CreatedByAppName = &xstring4
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring13 := *source.CreatedByDeviceName
-		sitedbCreateDeviceReportParams.CreatedByDeviceName = &xstring13
+		xstring5 := *source.CreatedByDeviceName
+		sitedbCreateDeviceReportParams.CreatedByDeviceName = &xstring5
 	}
 	sitedbCreateDeviceReportParams.CreatedByIdentityName = source.CreatedByIdentityName
 	if source.CreatedByIdentityID != nil {
-		xint644 := *source.CreatedByIdentityID
-		sitedbCreateDeviceReportParams.CreatedByIdentityID = &xint644
+		xint642 := *source.CreatedByIdentityID
+		sitedbCreateDeviceReportParams.CreatedByIdentityID = &xint642
 	}
 	return sitedbCreateDeviceReportParams
 }
@@ -1937,6 +1899,16 @@ func constsUnitsToConstsUnits(source consts.Units) consts.Units {
 	}
 	return constsUnits
 }
+func jsontextValueToJsontextValue(source jsontext.Value) jsontext.Value {
+	var jsontextValue jsontext.Value
+	if source != nil {
+		jsontextValue = make(jsontext.Value, len(source))
+		for i := 0; i < len(source); i++ {
+			jsontextValue[i] = source[i]
+		}
+	}
+	return jsontextValue
+}
 func sitedbActivitiesVwToSitedbActivitiesVw(source ActivitiesVw) ActivitiesVw {
 	var sitedbActivitiesVw ActivitiesVw
 	if source.ID != nil {
@@ -2821,6 +2793,35 @@ func typesComponentEventOtherToTypesComponentEventOther(source types.ComponentEv
 		typesComponentEventOther.PumpType = &xstring5
 	}
 	return typesComponentEventOther
+}
+func typesDeviceReportOtherToTypesDeviceReportOther(source types.DeviceReportOther) types.DeviceReportOther {
+	var typesDeviceReportOther types.DeviceReportOther
+	if source.PumpClock != nil {
+		xint64 := *source.PumpClock
+		typesDeviceReportOther.PumpClock = &xint64
+	}
+	if source.PumpManufacturer != nil {
+		xstring := *source.PumpManufacturer
+		typesDeviceReportOther.PumpManufacturer = &xstring
+	}
+	if source.PumpModel != nil {
+		xstring2 := *source.PumpModel
+		typesDeviceReportOther.PumpModel = &xstring2
+	}
+	typesDeviceReportOther.Override = jsontextValueToJsontextValue(source.Override)
+	if source.LoopName != nil {
+		xstring3 := *source.LoopName
+		typesDeviceReportOther.LoopName = &xstring3
+	}
+	typesDeviceReportOther.ConfigurationSettings = jsontextValueToJsontextValue(source.ConfigurationSettings)
+	typesDeviceReportOther.LoopSettings = jsontextValueToJsontextValue(source.LoopSettings)
+	if source.LoopPredictionsStartTime != nil {
+		xint642 := *source.LoopPredictionsStartTime
+		typesDeviceReportOther.LoopPredictionsStartTime = &xint642
+	}
+	typesDeviceReportOther.LoopPredictionsDefault = jsontextValueToJsontextValue(source.LoopPredictionsDefault)
+	typesDeviceReportOther.LoopPredictionsZt = jsontextValueToJsontextValue(source.LoopPredictionsZt)
+	return typesDeviceReportOther
 }
 func typesEventGroupOtherToTypesEventGroupOther(source types.EventGroupOther) types.EventGroupOther {
 	var typesEventGroupOther types.EventGroupOther

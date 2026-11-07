@@ -797,76 +797,6 @@ func (m *DeviceReport) SetPumpChargingState(v *string) {
 	m.PumpChargingState = v
 }
 
-// GetPumpClock returns the PumpClock value.
-func (m DeviceReport) GetPumpClock() *int64 {
-	return m.PumpClock
-}
-
-// SetPumpClock sets the PumpClock value and returns the updated DeviceReport.
-func (m *DeviceReport) SetPumpClock(v *int64) {
-	m.PumpClock = v
-}
-
-// GetPumpManufacturer returns the PumpManufacturer value.
-func (m DeviceReport) GetPumpManufacturer() *string {
-	return m.PumpManufacturer
-}
-
-// SetPumpManufacturer sets the PumpManufacturer value and returns the updated DeviceReport.
-func (m *DeviceReport) SetPumpManufacturer(v *string) {
-	m.PumpManufacturer = v
-}
-
-// GetPumpModel returns the PumpModel value.
-func (m DeviceReport) GetPumpModel() *string {
-	return m.PumpModel
-}
-
-// SetPumpModel sets the PumpModel value and returns the updated DeviceReport.
-func (m *DeviceReport) SetPumpModel(v *string) {
-	m.PumpModel = v
-}
-
-// GetOverrideJson returns the OverrideJson value.
-func (m DeviceReport) GetOverrideJson() *string {
-	return m.OverrideJson
-}
-
-// SetOverrideJson sets the OverrideJson value and returns the updated DeviceReport.
-func (m *DeviceReport) SetOverrideJson(v *string) {
-	m.OverrideJson = v
-}
-
-// GetLoopName returns the LoopName value.
-func (m DeviceReport) GetLoopName() *string {
-	return m.LoopName
-}
-
-// SetLoopName sets the LoopName value and returns the updated DeviceReport.
-func (m *DeviceReport) SetLoopName(v *string) {
-	m.LoopName = v
-}
-
-// GetConfigurationSettingsJson returns the ConfigurationSettingsJson value.
-func (m DeviceReport) GetConfigurationSettingsJson() *string {
-	return m.ConfigurationSettingsJson
-}
-
-// SetConfigurationSettingsJson sets the ConfigurationSettingsJson value and returns the updated DeviceReport.
-func (m *DeviceReport) SetConfigurationSettingsJson(v *string) {
-	m.ConfigurationSettingsJson = v
-}
-
-// GetLoopSettingsJson returns the LoopSettingsJson value.
-func (m DeviceReport) GetLoopSettingsJson() *string {
-	return m.LoopSettingsJson
-}
-
-// SetLoopSettingsJson sets the LoopSettingsJson value and returns the updated DeviceReport.
-func (m *DeviceReport) SetLoopSettingsJson(v *string) {
-	m.LoopSettingsJson = v
-}
-
 // GetLoopIob returns the LoopIob value.
 func (m DeviceReport) GetLoopIob() *float64 {
 	return m.LoopIob
@@ -907,34 +837,14 @@ func (m *DeviceReport) SetLoopCob(v *float64) {
 	m.LoopCob = v
 }
 
-// GetLoopPredictionsStartTime returns the LoopPredictionsStartTime value.
-func (m DeviceReport) GetLoopPredictionsStartTime() *int64 {
-	return m.LoopPredictionsStartTime
+// GetOtherAttributes returns the OtherAttributes value.
+func (m DeviceReport) GetOtherAttributes() types.DeviceReportOther {
+	return m.OtherAttributes
 }
 
-// SetLoopPredictionsStartTime sets the LoopPredictionsStartTime value and returns the updated DeviceReport.
-func (m *DeviceReport) SetLoopPredictionsStartTime(v *int64) {
-	m.LoopPredictionsStartTime = v
-}
-
-// GetLoopPredictionsDefault returns the LoopPredictionsDefault value.
-func (m DeviceReport) GetLoopPredictionsDefault() *string {
-	return m.LoopPredictionsDefault
-}
-
-// SetLoopPredictionsDefault sets the LoopPredictionsDefault value and returns the updated DeviceReport.
-func (m *DeviceReport) SetLoopPredictionsDefault(v *string) {
-	m.LoopPredictionsDefault = v
-}
-
-// GetLoopPredictionsZt returns the LoopPredictionsZt value.
-func (m DeviceReport) GetLoopPredictionsZt() *string {
-	return m.LoopPredictionsZt
-}
-
-// SetLoopPredictionsZt sets the LoopPredictionsZt value and returns the updated DeviceReport.
-func (m *DeviceReport) SetLoopPredictionsZt(v *string) {
-	m.LoopPredictionsZt = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated DeviceReport.
+func (m *DeviceReport) SetOtherAttributes(v types.DeviceReportOther) {
+	m.OtherAttributes = v
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -4927,76 +4837,6 @@ func (m *CreateDeviceReportParams) SetPumpChargingState(v *string) {
 	m.PumpChargingState = v
 }
 
-// GetPumpClock returns the PumpClock value.
-func (m CreateDeviceReportParams) GetPumpClock() *int64 {
-	return m.PumpClock
-}
-
-// SetPumpClock sets the PumpClock value and returns the updated CreateDeviceReportParams.
-func (m *CreateDeviceReportParams) SetPumpClock(v *int64) {
-	m.PumpClock = v
-}
-
-// GetPumpManufacturer returns the PumpManufacturer value.
-func (m CreateDeviceReportParams) GetPumpManufacturer() *string {
-	return m.PumpManufacturer
-}
-
-// SetPumpManufacturer sets the PumpManufacturer value and returns the updated CreateDeviceReportParams.
-func (m *CreateDeviceReportParams) SetPumpManufacturer(v *string) {
-	m.PumpManufacturer = v
-}
-
-// GetPumpModel returns the PumpModel value.
-func (m CreateDeviceReportParams) GetPumpModel() *string {
-	return m.PumpModel
-}
-
-// SetPumpModel sets the PumpModel value and returns the updated CreateDeviceReportParams.
-func (m *CreateDeviceReportParams) SetPumpModel(v *string) {
-	m.PumpModel = v
-}
-
-// GetOverrideJson returns the OverrideJson value.
-func (m CreateDeviceReportParams) GetOverrideJson() *string {
-	return m.OverrideJson
-}
-
-// SetOverrideJson sets the OverrideJson value and returns the updated CreateDeviceReportParams.
-func (m *CreateDeviceReportParams) SetOverrideJson(v *string) {
-	m.OverrideJson = v
-}
-
-// GetLoopName returns the LoopName value.
-func (m CreateDeviceReportParams) GetLoopName() *string {
-	return m.LoopName
-}
-
-// SetLoopName sets the LoopName value and returns the updated CreateDeviceReportParams.
-func (m *CreateDeviceReportParams) SetLoopName(v *string) {
-	m.LoopName = v
-}
-
-// GetConfigurationSettingsJson returns the ConfigurationSettingsJson value.
-func (m CreateDeviceReportParams) GetConfigurationSettingsJson() *string {
-	return m.ConfigurationSettingsJson
-}
-
-// SetConfigurationSettingsJson sets the ConfigurationSettingsJson value and returns the updated CreateDeviceReportParams.
-func (m *CreateDeviceReportParams) SetConfigurationSettingsJson(v *string) {
-	m.ConfigurationSettingsJson = v
-}
-
-// GetLoopSettingsJson returns the LoopSettingsJson value.
-func (m CreateDeviceReportParams) GetLoopSettingsJson() *string {
-	return m.LoopSettingsJson
-}
-
-// SetLoopSettingsJson sets the LoopSettingsJson value and returns the updated CreateDeviceReportParams.
-func (m *CreateDeviceReportParams) SetLoopSettingsJson(v *string) {
-	m.LoopSettingsJson = v
-}
-
 // GetLoopIob returns the LoopIob value.
 func (m CreateDeviceReportParams) GetLoopIob() *float64 {
 	return m.LoopIob
@@ -5037,34 +4877,14 @@ func (m *CreateDeviceReportParams) SetLoopCob(v *float64) {
 	m.LoopCob = v
 }
 
-// GetLoopPredictionsStartTime returns the LoopPredictionsStartTime value.
-func (m CreateDeviceReportParams) GetLoopPredictionsStartTime() *int64 {
-	return m.LoopPredictionsStartTime
+// GetOtherAttributes returns the OtherAttributes value.
+func (m CreateDeviceReportParams) GetOtherAttributes() types.DeviceReportOther {
+	return m.OtherAttributes
 }
 
-// SetLoopPredictionsStartTime sets the LoopPredictionsStartTime value and returns the updated CreateDeviceReportParams.
-func (m *CreateDeviceReportParams) SetLoopPredictionsStartTime(v *int64) {
-	m.LoopPredictionsStartTime = v
-}
-
-// GetLoopPredictionsDefault returns the LoopPredictionsDefault value.
-func (m CreateDeviceReportParams) GetLoopPredictionsDefault() *string {
-	return m.LoopPredictionsDefault
-}
-
-// SetLoopPredictionsDefault sets the LoopPredictionsDefault value and returns the updated CreateDeviceReportParams.
-func (m *CreateDeviceReportParams) SetLoopPredictionsDefault(v *string) {
-	m.LoopPredictionsDefault = v
-}
-
-// GetLoopPredictionsZt returns the LoopPredictionsZt value.
-func (m CreateDeviceReportParams) GetLoopPredictionsZt() *string {
-	return m.LoopPredictionsZt
-}
-
-// SetLoopPredictionsZt sets the LoopPredictionsZt value and returns the updated CreateDeviceReportParams.
-func (m *CreateDeviceReportParams) SetLoopPredictionsZt(v *string) {
-	m.LoopPredictionsZt = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated CreateDeviceReportParams.
+func (m *CreateDeviceReportParams) SetOtherAttributes(v types.DeviceReportOther) {
+	m.OtherAttributes = v
 }
 
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
