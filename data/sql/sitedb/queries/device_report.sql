@@ -10,23 +10,13 @@ INSERT INTO device_reports (
     pump_reservoir,
     pump_battery_percent,
     pump_charging_state,
-    pump_clock,
-    pump_manufacturer,
-    pump_model,
-    override_json,
 
-    loop_name,
-    configuration_settings_json,
-    loop_settings_json,
-    
     loop_iob,
     loop_iob_basal,
     loop_iob_treatment,
     loop_cob,
 
-    loop_predictions_start_time,
-    loop_predictions_default,
-    loop_predictions_zt,
+    other_attributes,
 
     utc_offset_minutes,
     occurred_at,
@@ -36,7 +26,7 @@ INSERT INTO device_reports (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -117,7 +107,9 @@ SELECT * from device_reports
 WHERE 
     deleted_at IS NULL AND 
     occurred_at >= CAST(unixepoch('subsec') * 1000 AS INTEGER) - 1200000 AND
-    loop_name IS NOT NULL
+    -- Only the last 20 minutes' reports are read, from occurred_at's index, so reading the loop's name from the JSON
+    -- is a handful of rows
+    json_extract(other_attributes, '$.loop_name') IS NOT NULL
 ORDER BY occurred_at DESC
 LIMIT 1;
 
