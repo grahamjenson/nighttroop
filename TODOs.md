@@ -9,7 +9,7 @@
 ## Before Beta Testing
 
 1. Reports/Derived Values:
-    1. AGP
+    1. AGP: the summary periods API serves it; a Reports page to show it for days, weeks, fortnights and months
     1. Time below and above range, as well as time in range
     1. Small multiples Daily
 

@@ -53,6 +53,7 @@ func NewSiteStore() *SiteStore {
 	siteStore.registerCollection("data", &sitedata.DeviceStatusesCollection{})
 	siteStore.registerCollection("data", &sitedata.AlarmsCollection{})
 	siteStore.registerCollection("data", &sitedata.SummaryDailyCollection{})
+	siteStore.registerCollection("data", &sitedata.SummaryPeriodsCollection{})
 
 	// Presets collections
 	siteStore.registerCollection("presets", &sitepresets.FoodPresetsCollection{})

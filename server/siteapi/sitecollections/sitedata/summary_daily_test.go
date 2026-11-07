@@ -52,3 +52,34 @@ func TestLastPeriodStart(t *testing.T) {
 		})
 	}
 }
+
+func TestPeriodStartAndEnd(t *testing.T) {
+	auckland, _ := time.LoadLocation("Pacific/Auckland")
+	// A Wednesday afternoon in UTC, already Thursday in Auckland
+	at := time.Date(2026, 10, 28, 15, 0, 0, 0, time.UTC)
+	tests := []struct {
+		period, weekStart string
+		location          *time.Location
+		start, end        string
+	}{
+		{"day", "monday", time.UTC, "2026-10-28", "2026-10-29"},
+		{"day", "monday", auckland, "2026-10-29", "2026-10-30"},
+		{"week", "monday", time.UTC, "2026-10-26", "2026-11-02"},
+		{"week", "sunday", time.UTC, "2026-10-25", "2026-11-01"},
+		// 2026-10-26 starts a fortnight from Monday, and 2026-10-25 one from Sunday
+		{"fortnight", "monday", time.UTC, "2026-10-26", "2026-11-09"},
+		{"fortnight", "sunday", time.UTC, "2026-10-25", "2026-11-08"},
+		{"month", "monday", time.UTC, "2026-10-01", "2026-11-01"},
+	}
+	for _, tt := range tests {
+		start := PeriodStart(tt.period, at, tt.location, tt.weekStart)
+		end := PeriodEnd(tt.period, start)
+		if start.Format(time.DateOnly) != tt.start || end.Format(time.DateOnly) != tt.end || start.Location() != tt.location || start.Hour() != 0 {
+			t.Errorf("%s from %s in %s is %v to %v, want %s to %s", tt.period, tt.weekStart, tt.location, start, end, tt.start, tt.end)
+		}
+	}
+	// A fortnight's second week is in the fortnight that started the week before
+	if got := PeriodStart("fortnight", at.AddDate(0, 0, 7), time.UTC, "monday").Format(time.DateOnly); got != "2026-10-26" {
+		t.Errorf("the fortnight's second week starts it on %s, want 2026-10-26", got)
+	}
+}

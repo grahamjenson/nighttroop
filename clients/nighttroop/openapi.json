@@ -127,6 +127,17 @@
         "responses": { "200": { "$ref": "#/components/responses/Deleted" }, "default": { "$ref": "#/components/responses/Error" } }
       }
     },
+    "/data/summary-periods/{id}": {
+      "get": {
+        "operationId": "GetSummaryPeriod",
+        "summary": "A day, week, fortnight or month of the site's data with its AGP, built from its kept days when not kept itself",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "description": "The period and a date in it, from today back a year, like week-2026-01-31", "schema": { "type": "string" } }],
+        "responses": {
+          "200": { "description": "The period", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "$ref": "#/components/schemas/SummaryPeriod" } } } } } },
+          "default": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
     "/api/v2/authorization/request/{token}": {
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
       "get": {
@@ -569,6 +580,24 @@
             }
           }
         ]
+      },
+      "SummaryPeriod": {
+        "type": "object",
+        "description": "A period from start until end, named by its first date. Its time in range, daily dose and daily carbs are the means of its days with data, and its glucose the mean of those days every 5 minutes from midnight. Its AGP is each 15 minutes from midnight the 5th, 25th, 50th, 75th and 95th percentiles of its days' glucose, empty when there was none; a day's is of the 7 days to it.",
+        "properties": {
+          "period": { "type": "string", "enum": ["day", "week", "fortnight", "month"] },
+          "date": { "type": "string", "format": "date" },
+          "timezone": { "type": "string" },
+          "start": { "type": "integer", "format": "int64" },
+          "end": { "type": "integer", "format": "int64" },
+          "days": { "type": "integer", "format": "int64", "description": "How many of its days have data" },
+          "time_in_range": { "type": "number", "format": "double", "nullable": true },
+          "total_daily_dose": { "type": "number", "format": "double" },
+          "total_daily_carbs": { "type": "number", "format": "double" },
+          "glucose": { "type": "array", "items": { "type": "number", "format": "double", "nullable": true } },
+          "agp": { "type": "array", "items": { "type": "array", "items": { "type": "number", "format": "double" } } },
+          "units": { "$ref": "#/components/schemas/Units" }
+        }
       },
       "Summary": {
         "type": "object",

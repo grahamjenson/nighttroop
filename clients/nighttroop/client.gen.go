@@ -15,12 +15,21 @@ import (
 	"time"
 
 	"github.com/oapi-codegen/runtime"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 const (
 	BearerAuthScopes  = "bearerAuth.Scopes"
 	NsApiSecretScopes = "nsApiSecret.Scopes"
 	NsTokenScopes     = "nsToken.Scopes"
+)
+
+// Defines values for SummaryPeriodPeriod.
+const (
+	Day       SummaryPeriodPeriod = "day"
+	Fortnight SummaryPeriodPeriod = "fortnight"
+	Month     SummaryPeriodPeriod = "month"
+	Week      SummaryPeriodPeriod = "week"
 )
 
 // Defines values for Units.
@@ -288,6 +297,27 @@ type SummaryList struct {
 	Result *[]Summary `json:"result,omitempty"`
 	Status *int       `json:"status,omitempty"`
 }
+
+// SummaryPeriod A period from start until end, named by its first date. Its time in range, daily dose and daily carbs are the means of its days with data, and its glucose the mean of those days every 5 minutes from midnight. Its AGP is each 15 minutes from midnight the 5th, 25th, 50th, 75th and 95th percentiles of its days' glucose, empty when there was none; a day's is of the 7 days to it.
+type SummaryPeriod struct {
+	Agp  *[][]float64        `json:"agp,omitempty"`
+	Date *openapi_types.Date `json:"date,omitempty"`
+
+	// Days How many of its days have data
+	Days            *int64               `json:"days,omitempty"`
+	End             *int64               `json:"end,omitempty"`
+	Glucose         *[]float64           `json:"glucose,omitempty"`
+	Period          *SummaryPeriodPeriod `json:"period,omitempty"`
+	Start           *int64               `json:"start,omitempty"`
+	TimeInRange     *float64             `json:"time_in_range"`
+	Timezone        *string              `json:"timezone,omitempty"`
+	TotalDailyCarbs *float64             `json:"total_daily_carbs,omitempty"`
+	TotalDailyDose  *float64             `json:"total_daily_dose,omitempty"`
+	Units           *Units               `json:"units,omitempty"`
+}
+
+// SummaryPeriodPeriod defines model for SummaryPeriod.Period.
+type SummaryPeriodPeriod string
 
 // Units defines model for Units.
 type Units string
@@ -1447,6 +1477,9 @@ type ClientInterface interface {
 
 	UpdateInsulinDose(ctx context.Context, id Id, body UpdateInsulinDoseJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetSummaryPeriod request
+	GetSummaryPeriod(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// LoginWithBody request with any body
 	LoginWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -2244,6 +2277,18 @@ func (c *Client) UpdateInsulinDoseWithBody(ctx context.Context, id Id, contentTy
 
 func (c *Client) UpdateInsulinDose(ctx context.Context, id Id, body UpdateInsulinDoseJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewUpdateInsulinDoseRequest(c.Server, id, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetSummaryPeriod(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetSummaryPeriodRequest(c.Server, id)
 	if err != nil {
 		return nil, err
 	}
@@ -4883,6 +4928,40 @@ func NewUpdateInsulinDoseRequestWithBody(server string, id Id, contentType strin
 	return req, nil
 }
 
+// NewGetSummaryPeriodRequest generates requests for GetSummaryPeriod
+func NewGetSummaryPeriodRequest(server string, id string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/data/summary-periods/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewLoginRequest calls the generic Login builder with application/json body
 func NewLoginRequest(server string, body LoginJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -5290,6 +5369,9 @@ type ClientWithResponsesInterface interface {
 	UpdateInsulinDoseWithBodyWithResponse(ctx context.Context, id Id, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateInsulinDoseResponse, error)
 
 	UpdateInsulinDoseWithResponse(ctx context.Context, id Id, body UpdateInsulinDoseJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateInsulinDoseResponse, error)
+
+	// GetSummaryPeriodWithResponse request
+	GetSummaryPeriodWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetSummaryPeriodResponse, error)
 
 	// LoginWithBodyWithResponse request with any body
 	LoginWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LoginResponse, error)
@@ -6497,6 +6579,33 @@ func (r UpdateInsulinDoseResponse) StatusCode() int {
 	return 0
 }
 
+type GetSummaryPeriodResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Result A period from start until end, named by its first date. Its time in range, daily dose and daily carbs are the means of its days with data, and its glucose the mean of those days every 5 minutes from midnight. Its AGP is each 15 minutes from midnight the 5th, 25th, 50th, 75th and 95th percentiles of its days' glucose, empty when there was none; a day's is of the 7 days to it.
+		Result *SummaryPeriod `json:"result,omitempty"`
+		Status *int           `json:"status,omitempty"`
+	}
+	JSONDefault *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r GetSummaryPeriodResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetSummaryPeriodResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type LoginResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -7167,6 +7276,15 @@ func (c *ClientWithResponses) UpdateInsulinDoseWithResponse(ctx context.Context,
 		return nil, err
 	}
 	return ParseUpdateInsulinDoseResponse(rsp)
+}
+
+// GetSummaryPeriodWithResponse request returning *GetSummaryPeriodResponse
+func (c *ClientWithResponses) GetSummaryPeriodWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetSummaryPeriodResponse, error) {
+	rsp, err := c.GetSummaryPeriod(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetSummaryPeriodResponse(rsp)
 }
 
 // LoginWithBodyWithResponse request with arbitrary body returning *LoginResponse
@@ -8877,6 +8995,43 @@ func ParseUpdateInsulinDoseResponse(rsp *http.Response) (*UpdateInsulinDoseRespo
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest InsulinDoseResult
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetSummaryPeriodResponse parses an HTTP response from a GetSummaryPeriodWithResponse call
+func ParseGetSummaryPeriodResponse(rsp *http.Response) (*GetSummaryPeriodResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetSummaryPeriodResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Result A period from start until end, named by its first date. Its time in range, daily dose and daily carbs are the means of its days with data, and its glucose the mean of those days every 5 minutes from midnight. Its AGP is each 15 minutes from midnight the 5th, 25th, 50th, 75th and 95th percentiles of its days' glucose, empty when there was none; a day's is of the 7 days to it.
+			Result *SummaryPeriod `json:"result,omitempty"`
+			Status *int           `json:"status,omitempty"`
+		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

@@ -1,0 +1,97 @@
+INCLUDE steps/new_site_admin.steps
+SET yesterday {{ date -1 }}
+
+// Yesterday, in the site's default UTC: a reading in range at noon and one over the range high 5 minutes later
+NAME post_readings
+POST http://{{ .ns_site }}/api/v1/entries?token={{ token }}
+B [{"type":"sgv","sgv":120,"date":{{ dayms -1 720 }}},{"type":"sgv","sgv":250,"date":{{ dayms -1 725 }}}]
+ASSERT_STATUS 200
+
+// A day not kept yet is built from its data: its glucose every 5 minutes, and its AGP of the 7 days to it each 15
+// minutes from midnight, the 5th, 25th, 50th, 75th and 95th percentiles, none where there was no glucose
+NAME get_day
+GET http://{{ site }}/data/summary-periods/day-{{ date -1 }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "day" "@result.period"
+ASSERT_EQUALS ".yesterday" "@result.date"
+ASSERT_EQUALS 50 "@result.time_in_range"
+ASSERT_LENGTH 288 "@result.glucose"
+ASSERT_EXISTS "@result.glucose.144"
+ASSERT_LENGTH 96 "@result.agp"
+ASSERT_LENGTH 0 "@result.agp.0"
+ASSERT_LENGTH 5 "@result.agp.48"
+
+// Today so far is a day too, with no data
+NAME get_today
+GET http://{{ site }}/data/summary-periods/day-{{ date 0 }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS null "@result.time_in_range"
+ASSERT_EQUALS 0 "@result.days"
+
+// Once yesterday is kept, its week, fortnight and month are built from it, named by their first date, with their
+// AGP; the week's starts on a Monday by default, within 6 days of yesterday
+NAME build_yesterday
+POST http://{{ site }}/data/summary-daily
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"date": "{{ date -1 }}"}
+ASSERT_STATUS 201
+
+NAME get_week
+GET http://{{ site }}/data/summary-periods/week-{{ date -1 }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "week" "@result.period"
+ASSERT_EQUALS 1 "@result.days"
+ASSERT_EQUALS 50 "@result.time_in_range"
+ASSERT_LENGTH 288 "@result.glucose"
+ASSERT_LENGTH 96 "@result.agp"
+ASSERT_LENGTH 5 "@result.agp.48"
+
+NAME get_fortnight
+GET http://{{ site }}/data/summary-periods/fortnight-{{ date -1 }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "fortnight" "@result.period"
+ASSERT_EQUALS 1 "@result.days"
+ASSERT_LENGTH 5 "@result.agp.48"
+
+NAME get_month
+GET http://{{ site }}/data/summary-periods/month-{{ date -1 }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "month" "@result.period"
+ASSERT_EQUALS 1 "@result.days"
+ASSERT_LENGTH 5 "@result.agp.48"
+
+// An id that is not a period and a date, or a date in the future or over a year ago, is not found
+NAME get_not_a_period
+GET http://{{ site }}/data/summary-periods/year-{{ date -1 }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME get_not_a_date
+GET http://{{ site }}/data/summary-periods/week-yesterday
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME get_tomorrow
+GET http://{{ site }}/data/summary-periods/day-{{ date 1 }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME get_over_a_year_ago
+GET http://{{ site }}/data/summary-periods/month-{{ date -400 }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
