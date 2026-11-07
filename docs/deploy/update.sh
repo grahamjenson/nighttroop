@@ -9,6 +9,11 @@
 # 3. Starts the new image and waits for its health check, which asks the server's /health
 # 4. If it is not healthy, puts back ./data from that copy and starts the previous image again
 #
+# That rollback loses nothing: the server only serves once every database is opened and migrated, so a version that
+# is not healthy has taken no data. Once a new version has served, fix forward with another update rather than
+# putting back a copy of ./data, as an earlier version cannot open databases a newer one migrated, and everything
+# written since the copy would be lost.
+#
 # HEALTH_TIMEOUT (seconds, default 180) is how long the new version has to be healthy; KEEP_BACKUPS (default 5) is how
 # many copies of ./data, and previous images, are kept. COMPOSE_FILE is the compose file, as for docker compose: the
 # one .env names, or hostinger.compose.yml.

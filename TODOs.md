@@ -63,7 +63,8 @@
 1. Migrations (from the audit of what happens when one fails):
     1. P0: At the first production deploy, freeze the migrations: add `data/sql/MIGRATIONS_FROZEN`, so CI refuses a
        change to a migration on main, and add numbered migrations from then on (docs/migrations.md). Then add a test
-       that the last release's DBs migrate to the current schema
+       that the last release's DBs migrate to the current schema, comparing each DB's `Schema` with a new one's as
+       `scripts/try_migrate_or_delete` does
     1. P1: Tools for a start stopped by a site: a live site's DB that is missing and not restored, cannot be opened, or
        fails its migration stops the server (so no data is written that a rollback would lose), and `update.sh` rolls
        back. Fixing it now means a shell on the server. Add commands, run against the stopped server's data, to:
@@ -73,12 +74,6 @@
            migrations on a copy without changing it
         1. Reset it: restore its DB from a chosen backup, or force a dirty one back a version, or disable or delete the
            site in the control DB, recording an event saying who did what, so the next start opens every site again
-    1. P2: Rolling back after a release has served needs `update.sh`'s copy of `./data`, losing what was written since,
-       as a build cannot open a DB a newer one migrated. Fix forward instead: a release whose migration fails is never
-       healthy and takes no data, so its rollback loses nothing
-    1. P2: Document changing a table: SQLite rebuilds it, which needs `PRAGMA defer_foreign_keys = ON` in the
-       migration's transaction, as `event_groups` references the event tables `ON DELETE RESTRICT`; test migrations
-       on a DB with data, and have staging compare the whole schema rather than only preparing queries
 1. Push notifications (the control DB's `push_credentials` and `push_registrations`):
     1. P2: A control collection for push credentials for every site, as the site's (`/settings/push-credentials`)
     1. P3: Add push credentials and registrations to `clients/nighttroop/openapi.json` and its client
