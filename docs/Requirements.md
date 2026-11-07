@@ -496,8 +496,8 @@ focus back to the row or button that opened it.
 - `GET /data/summary-periods/{period}-{date}` reads the day, week, fortnight or month with that date in it, from today
   back a year, in the site's timezone and from its week start day: its days with data, time in range, daily dose and
   carbs, glucose every 5 minutes, and AGP (the 5th, 25th, 50th, 75th and 95th percentiles each 15 minutes from
-  midnight). A day's AGP is of the 7 days to it. A period not kept is built from the kept days in it, a day not kept
-  from its data, and neither is kept. Any other id, or a date out of range, is not found.
+  midnight). A day's AGP is of the 7 days to it. A period not kept is built from the kept days in it, and today so
+  far while it is not over; a day not kept is built from its data; and neither is kept. Any other id, or a date out of range, is not found.
 - The client also calls every Nightscout API v1, v2 and v3 endpoint on a site's Nightscout host, with a device's
   Nightscout token or the JWT it is exchanged for.
 

@@ -196,8 +196,8 @@ func LastSummaryPeriod(ctx context.Context, q *sitedb.Queries, siteContext *http
 }
 
 // summaryPeriodFrom is the site's week, fortnight or month from start, and whether it was built, built from the days
-// kept in it if not
-func summaryPeriodFrom(ctx context.Context, q *sitedb.Queries, period string, start time.Time) (*sitedb.SummaryPeriod, bool, error) {
+// kept in it, and any more days given, if not
+func summaryPeriodFrom(ctx context.Context, q *sitedb.Queries, period string, start time.Time, more ...*sitedb.SummaryPeriod) (*sitedb.SummaryPeriod, bool, error) {
 	date := start.Format(time.DateOnly)
 	row, err := q.GetSummaryPeriod(ctx, sitedb.GetSummaryPeriodParams{Period: period, Date: date})
 	if !errors.Is(err, sql.ErrNoRows) {
@@ -209,7 +209,7 @@ func summaryPeriodFrom(ctx context.Context, q *sitedb.Queries, period string, st
 	if err != nil {
 		return nil, false, err
 	}
-	return sitemodels.NewSummaryPeriod(period, date, start.Location().String(), start.UnixMilli(), end.UnixMilli(), days), false, nil
+	return sitemodels.NewSummaryPeriod(period, date, start.Location().String(), start.UnixMilli(), end.UnixMilli(), append(days, more...)), false, nil
 }
 
 // BuildLastSummaryPeriods builds and keeps the site's last whole week, fortnight and month, when they are not yet built

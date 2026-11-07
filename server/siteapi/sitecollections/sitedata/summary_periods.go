@@ -62,11 +62,20 @@ func (s *SummaryPeriodsCollection) GetRow(ctx context.Context, collectionTx *sit
 }
 
 // SummaryPeriodAt is the site's day, week, fortnight or month with at in it. A day not kept, as today is not, is built
-// from its data up to now, and its AGP is of the 7 days to it.
+// from its data up to now, and its AGP is of the 7 days to it. A period not over has today so far in it too.
 func SummaryPeriodAt(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, period string, at time.Time, now time.Time) (*sitedb.SummaryPeriod, error) {
-	start := PeriodStart(period, at, siteContext.GetSiteTimezone(), siteContext.GetSiteWeekStartDay())
+	location := siteContext.GetSiteTimezone()
+	start := PeriodStart(period, at, location, siteContext.GetSiteWeekStartDay())
 	if period != "day" {
-		row, _, err := summaryPeriodFrom(ctx, q, period, start)
+		var today []*sitedb.SummaryPeriod
+		if now.Before(PeriodEnd(period, start)) {
+			day, err := buildSummaryDaily(ctx, q, siteContext, LocalDate(now, location, 0), now.UnixMilli())
+			if err != nil {
+				return nil, err
+			}
+			today = append(today, day)
+		}
+		row, _, err := summaryPeriodFrom(ctx, q, period, start, today...)
 		return row, err
 	}
 	date := start.Format(time.DateOnly)
