@@ -6,7 +6,7 @@ ASSERT_VISIBLE #site--summary
 ASSERT_VISIBLE #site--getting-started
 ASSERT_NOT_VISIBLE #site--summary--glucose
 
-// The guide links to Sync Settings, where virtual sync fills the last 30 minutes with readings, treatments and device
+// The guide links to Sync, where virtual sync fills the last 30 minutes with readings, treatments and device
 // statuses
 CLICK #site--getting-started--sync-link
 ASSERT_STATUS 200

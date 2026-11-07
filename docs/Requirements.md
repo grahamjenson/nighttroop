@@ -390,6 +390,9 @@ focus back to the row or button that opened it.
   token, so apps like AAPS only upload with a token that may write.
 - A v3 history includes deleted documents, with `isValid` false, so apps learn of deletions; a search leaves them
   out.
+- A v3 history is the documents with a `srvModified` at or after its time, the oldest first, then by date, as in
+  Nightscout, at most its `limit`, and its `ETag` is the newest `srvModified`, so an app paging from the `ETag`, as
+  AAPS does, gets every change, and the last profile store in a profile history is the newest changed.
 - A delete moves a document's `srvModified` and the v3 lastModified forward, so a history since an app's last sync
   has the documents deleted after it.
 - **Socket.IO** live updates and alarms over long polling or websockets.
@@ -420,6 +423,10 @@ focus back to the row or button that opened it.
 - An entry has an `sgv` if it is a CGM reading and an `mbg` if it is a meter reading, never both.
 - A date filter takes milliseconds with a fraction (e.g. `date$gte=1761234567890.25`), which is dropped.
 - A `created_at` filter or sort is on when it happened, as `date` is, and `srvCreated` is on when it was uploaded.
+- A v1 or v3 search with `sort` on the date (e.g. `sort=date`, `sort=created_at`) is the oldest first, paged with its
+  `limit` and `skip`, so an app paging forward from the newest date it got, as AAPS does, gets every document; any
+  other search is the newest first. With a filter other than the date, a page is those that match of the page the
+  dates alone would give, so it can have fewer than its `limit`, still in order.
 - v3 filters take `field$eq` as well as `field`, e.g. `eventType$eq=Site Change`.
 - A device status keeps its pump's other fields, e.g. AAPS's `extended` with its profile and temp basal.
 - A profile from Loop, with `loopSettings.deviceToken` and `bundleIdentifier`, or from Trio, with them at its top,

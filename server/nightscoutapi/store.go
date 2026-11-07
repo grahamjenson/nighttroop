@@ -102,6 +102,17 @@ func (nts *NightTroopAPIStore) Search(ctx context.Context, collection nsutils.Co
 	return collectionsStore.Search(ctx, siteContext, query)
 }
 
+func (nts *NightTroopAPIStore) History(ctx context.Context, collection nsutils.Collection, since int64, query nsquery.Query) ([]nsutils.Document, *nsutils.HTTPError) {
+	collectionsStore, siteContext, err := nts.collectionFor(ctx, collection)
+	if err != nil {
+		return nil, err
+	}
+	if query.UnknownFilter {
+		return []nsutils.Document{}, nil
+	}
+	return collectionsStore.History(ctx, siteContext, since, query)
+}
+
 func (nts *NightTroopAPIStore) Replace(ctx context.Context, collection nsutils.Collection, identifier string, patch map[string]any, canCreate bool, raw bool) (nsutils.Document, bool, *nsutils.HTTPError) {
 	collectionsStore, siteContext, err := nts.collectionFor(ctx, collection)
 	if err != nil {

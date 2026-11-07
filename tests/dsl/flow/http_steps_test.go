@@ -25,6 +25,8 @@ SET read {{ .authorize.read }}
 
 RUN_BACKGROUND_JOBS
 
+SLEEP 5ms
+
 NAME updates
 COLLECT dataUpdate
 ASSERT_LENGTH 1 "@"
@@ -42,7 +44,7 @@ NAME bye
 DISCONNECT
 `)
 	require.NoError(t, err)
-	require.Len(t, file.Steps, 7)
+	require.Len(t, file.Steps, 8)
 
 	connect, authorize, jobs := file.Steps[0], file.Steps[1], file.Steps[2]
 	require.Equal(t, "CONNECT", connect.Verb)
@@ -55,8 +57,10 @@ DISCONNECT
 	require.Len(t, authorize.Asserts, 1)
 	require.Len(t, authorize.Sets, 1)
 	require.Equal(t, "RUN_BACKGROUND_JOBS", jobs.Verb)
-	require.Equal(t, "{{ token }}", file.Steps[5].Headers.Get("api-secret"))
-	require.Equal(t, "DISCONNECT", file.Steps[6].Verb)
+	require.Equal(t, "SLEEP", file.Steps[3].Verb)
+	require.Equal(t, 5*time.Millisecond, file.Steps[3].Timeout)
+	require.Equal(t, "{{ token }}", file.Steps[6].Headers.Get("api-secret"))
+	require.Equal(t, "DISCONNECT", file.Steps[7].Verb)
 	require.Equal(t, []string{"dataUpdate"}, file.Events())
 }
 
@@ -74,6 +78,8 @@ func TestParseFileErrors(t *testing.T) {
 		"unknown line":             "NAME wait\nWAIT dataUpdate\nLISTEN dataUpdate",
 		"empty NAME":               "NAME",
 		"bad header":               "NAME get\nGET http://x/\nH no colon",
+		"bad SLEEP":                "SLEEP soon",
+		"SLEEP too long":           "SLEEP 2s",
 	}
 	for name, contents := range tests {
 		t.Run(name, func(t *testing.T) {

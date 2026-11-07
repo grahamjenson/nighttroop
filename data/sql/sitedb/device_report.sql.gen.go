@@ -227,6 +227,93 @@ func (q *Queries) CreateDeviceReport(ctx context.Context, arg CreateDeviceReport
 	return &i, err
 }
 
+const deviceReportAscendingIDs = `-- name: DeviceReportAscendingIDs :many
+SELECT id FROM device_reports
+WHERE occurred_at BETWEEN MAX(COALESCE(CAST(?1 AS INTEGER), 0), COALESCE(CAST(?2 AS INTEGER) + 1, 0), COALESCE(CAST(?3 AS INTEGER), 0))
+    AND MIN(COALESCE(CAST(?4 AS INTEGER), 253402300799999), COALESCE(CAST(?5 AS INTEGER) - 1, 253402300799999), COALESCE(?3, 253402300799999))
+    AND (CAST(?6 AS BOOL) = TRUE OR deleted_at IS NULL)
+ORDER BY occurred_at LIMIT CAST(?8 AS INTEGER) OFFSET CAST(?7 AS INTEGER)
+`
+
+type DeviceReportAscendingIDsParams struct {
+	DateGTE        *int64
+	DateGT         *int64
+	DateEQ         *int64
+	DateLTE        *int64
+	DateLT         *int64
+	IncludeDeleted bool
+	Skip           int64
+	Limit          int64
+}
+
+// The reports in the dates searched, the oldest first, from occurred_at's index, for a search sorted by date
+func (q *Queries) DeviceReportAscendingIDs(ctx context.Context, arg DeviceReportAscendingIDsParams) ([]string, error) {
+	rows, err := q.query(ctx, q.deviceReportAscendingIDsStmt, deviceReportAscendingIDs,
+		arg.DateGTE,
+		arg.DateGT,
+		arg.DateEQ,
+		arg.DateLTE,
+		arg.DateLT,
+		arg.IncludeDeleted,
+		arg.Skip,
+		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const deviceReportHistoryIDs = `-- name: DeviceReportHistoryIDs :many
+SELECT id FROM device_reports WHERE updated_at >= ?1
+ORDER BY updated_at, occurred_at, id LIMIT CAST(?2 AS INTEGER)
+`
+
+type DeviceReportHistoryIDsParams struct {
+	Since int64
+	Limit int64
+}
+
+// The reports changed since Since, deleted ones too, the oldest change first, then by date and id as History sorts them, from updated_at's index, for API v3
+// history
+func (q *Queries) DeviceReportHistoryIDs(ctx context.Context, arg DeviceReportHistoryIDsParams) ([]string, error) {
+	rows, err := q.query(ctx, q.deviceReportHistoryIDsStmt, deviceReportHistoryIDs, arg.Since, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const deviceReportsForDevice = `-- name: DeviceReportsForDevice :many
 SELECT id, device_battery_percent, is_device_charging, pump_state, pump_reservoir, pump_battery_percent, pump_charging_state, pump_clock, pump_manufacturer, pump_model, override_json, loop_name, configuration_settings_json, loop_settings_json, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob, loop_predictions_start_time, loop_predictions_default, loop_predictions_zt, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name FROM device_reports
 WHERE deleted_at IS NULL AND created_by_device_name = ?1

@@ -1,6 +1,7 @@
 // HTTP steps are written as .sio files are: Socket.IO tests written like .http ones. Each NAME starts a step, which is
 // one of the verbs CONNECT <url>, EMIT <event> (with ACK to wait for its acknowledgement), WAIT <event>,
-// COLLECT <event>, DISCONNECT, STREAM <url>, an HTTP request (GET <url> and so on) or RUN_BACKGROUND_JOBS.
+// COLLECT <event>, DISCONNECT, STREAM <url>, an HTTP request (GET <url> and so on), RUN_BACKGROUND_JOBS or
+// SLEEP <duration> (e.g. SLEEP 5ms), which waits, so writes either side of it are changed at different times.
 // STREAM opens a page's live updates, server-sent events, with its H headers, and WAIT and COLLECT take its events
 // by name, such as created, as they do the socket's.
 // NS is the namespace CONNECT joins (/ by default), which the steps after it use.
@@ -67,7 +68,7 @@ func ParseHTTPLines(lines []Line, path string) (*HTTPFile, error) {
 		fail := func(format string, args ...any) error {
 			return fmt.Errorf("%s:%d: %s", path, lineNumber, fmt.Sprintf(format, args...))
 		}
-		if first != "NAME" && first != "RUN_BACKGROUND_JOBS" && current == nil && !inBody {
+		if first != "NAME" && first != "RUN_BACKGROUND_JOBS" && first != "SLEEP" && current == nil && !inBody {
 			return nil, fail("%s before NAME", first)
 		}
 		if inBody && !isKeyword(first) {
@@ -90,6 +91,13 @@ func ParseHTTPLines(lines []Line, path string) (*HTTPFile, error) {
 			file.Steps = append(file.Steps, current)
 		case first == "RUN_BACKGROUND_JOBS":
 			file.Steps = append(file.Steps, &HTTPStep{Name: first, Path: path, Line: lineNumber, Verb: first})
+			current = nil
+		case first == "SLEEP":
+			wait, err := time.ParseDuration(second)
+			if err != nil || wait <= 0 || wait > time.Second {
+				return nil, fail("SLEEP needs a duration up to 1s, e.g. SLEEP 5ms")
+			}
+			file.Steps = append(file.Steps, &HTTPStep{Name: first, Path: path, Line: lineNumber, Verb: first, Timeout: wait})
 			current = nil
 		case slices.Contains(socketVerbs, first) || slices.Contains(httpVerbs, first):
 			if current.Verb != "" {
@@ -152,5 +160,5 @@ func ParseHTTPLines(lines []Line, path string) (*HTTPFile, error) {
 func isKeyword(first string) bool {
 	_, isAssert, _ := ParseAssert(first, "", "", 0)
 	return isAssert || slices.Contains(socketVerbs, first) || slices.Contains(httpVerbs, first) ||
-		slices.Contains([]string{"NAME", "RUN_BACKGROUND_JOBS", "ACK", "NS", "T", "B", "ARGS", "H", "SET"}, first)
+		slices.Contains([]string{"NAME", "RUN_BACKGROUND_JOBS", "SLEEP", "ACK", "NS", "T", "B", "ARGS", "H", "SET"}, first)
 }

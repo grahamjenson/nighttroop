@@ -39,7 +39,7 @@ func enableOnFirstInput(source *sitemodels.SyncSource) templ.Attributes {
 
 templ SyncSettingsPartial(syncSettings []*sitemodels.SyncSource) {
 	<div id="mainForm" class="mx-auto max-w-5xl">
-		@heading.PageBeside("Sync Settings", syncLiveBadge()) {
+		@heading.PageBeside("Sync", syncLiveBadge()) {
 			Choose where Nighttroop syncs your glucose data from.
 		}
 		@syncLive()

@@ -32,6 +32,7 @@ type ToSearchParams interface {
 
 	GlucoseAll(source Query) sitedb.AllGlucoseReadingsParams
 	GlucoseSearch(source Query) sitedb.SearchGlucoseReadingsParams
+	GlucoseAscending(source Query) sitedb.GlucoseReadingAscendingIDsParams
 
 	//////
 	// Activities
@@ -39,6 +40,7 @@ type ToSearchParams interface {
 
 	ActivityAll(source Query) sitedb.AllActivitiesParams
 	ActivitySearch(source Query) sitedb.SearchActivitiesParams
+	ActivityAscending(source Query) sitedb.ActivityAscendingIDsParams
 
 	//////
 	// DEVICE REPORTS
@@ -46,6 +48,7 @@ type ToSearchParams interface {
 
 	DeviceReportAll(source Query) sitedb.AllDeviceReportsParams
 	DeviceReportSearch(source Query) sitedb.SearchDeviceReportsParams
+	DeviceReportAscending(source Query) sitedb.DeviceReportAscendingIDsParams
 
 	//////
 	// FoodPresets
@@ -53,6 +56,7 @@ type ToSearchParams interface {
 
 	FoodPresetAll(source Query) sitedb.AllFoodPresetsParams
 	FoodPresetSearch(source Query) sitedb.SearchFoodPresetsParams
+	FoodPresetAscending(source Query) sitedb.FoodPresetAscendingIDsParams
 	//////
 	// FoodIntake
 	//////
@@ -66,6 +70,7 @@ type ToSearchParams interface {
 
 	EventGroupAll(source Query) sitedb.AllEventGroupsParams
 	EventGroupSearch(source Query) sitedb.SearchEventGroupsParams
+	EventGroupAscending(source Query) sitedb.EventGroupAscendingIDsParams
 
 	///////
 	// Profiles Presets
@@ -73,6 +78,7 @@ type ToSearchParams interface {
 
 	ProfilePresetsAll(source Query) sitedb.AllProfilePresetsParams
 	ProfileStoreSearch(source Query) sitedb.SearchProfileStoresParams
+	ProfileStoreAscending(source Query) sitedb.ProfileStoreAscendingIDsParams
 }
 
 func QueryStringArrayToString(source *QueryStringArray) *string {
