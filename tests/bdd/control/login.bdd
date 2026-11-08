@@ -1,20 +1,32 @@
-// The control login is sent as soon as the code's last digit is in, once the name and password are. A wrong code is
-// said to be wrong, and not sent again on its own.
+// The login's inputs have no placeholders, which look like values already typed, and are not marked invalid before
+// a login has failed
 GOTO {{ .control_url }}/login
 ASSERT_STATUS 200
 ASSERT_VISIBLE .login-form-target h2:text-is("Nighttroop Login")
-INPUT #name admin
-INPUT #password password
+ASSERT_VISIBLE #control--login--name:not([placeholder])
+ASSERT_VISIBLE #control--login--password:not([placeholder])
+ASSERT_NOT_VISIBLE #control--login--name[aria-invalid="true"]
+ASSERT_NOT_VISIBLE #control--login--otp-1[aria-invalid="true"]
+
+// The control login is sent as soon as the code's last digit is in, once the name and password are. A wrong code is
+// said to be wrong in an error toast, which says codes change, its inputs are marked invalid, and it is not sent again
+// on its own.
+INPUT #control--login--name admin
+INPUT #control--login--password password
 TYPE #control--login--otp-1 000000
-ASSERT_TEXT_VISIBLE Invalid credentials
+ASSERT_VISIBLE #toaster [data-tui-toast][data-variant="error"]:has-text("Wrong name, password or code. Codes change every 30 seconds")
+ASSERT_VISIBLE #control--login--name[aria-invalid="true"]
+ASSERT_VISIBLE #control--login--password[aria-invalid="true"]
+ASSERT_VISIBLE #control--login--otp-1[aria-invalid="true"]
 ASSERT_PATH /login
+SCREENSHOT wrong_code
 
 // A code typed before the password is not sent: it waits for the password and Log In
 GOTO {{ .control_url }}/login
 ASSERT_STATUS 200
-INPUT #name admin
+INPUT #control--login--name admin
 TYPE #control--login--otp-1 123123
 ASSERT_PATH /login
 ASSERT_NOT_VISIBLE #control--nav--logo
-ASSERT_NOT_VISIBLE "Invalid credentials"
+ASSERT_NOT_VISIBLE #toaster [data-tui-toast]
 SCREENSHOT code_before_password

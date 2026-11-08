@@ -2,23 +2,11 @@ package errors
 
 import (
 	"fmt"
-	"log/slog"
-	"net/http"
 	"runtime"
 	"strings"
 )
 
-// We have a very generic error to not give any hints about how far through it was rejected
-func GenericAdminLoginError(w http.ResponseWriter, r *http.Request, err error, args ...any) {
-	allArgs := append([]any{
-		"error", err,
-		"stack", LocalStack(),
-	}, args...)
-	slog.InfoContext(r.Context(), "Control User Login Failed", allArgs...)
-	http.Error(w, "Invalid credentials", http.StatusUnauthorized)
-
-}
-
+// LocalStack is where in Nighttroop's code its caller was called from, e.g. the handler a login failed in, for its log
 func LocalStack() string {
 	const depth = 32
 	pcs := make([]uintptr, depth)

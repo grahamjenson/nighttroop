@@ -5,17 +5,17 @@ ASSERT_STATUS 200
 ASSERT_NOT_VISIBLE #control--nav--logo
 ASSERT_NOT_VISIBLE #control--menu
 // Password managers fill the name and password, never the code, which is one-time
-ASSERT_VISIBLE #name[autocomplete="username"]
-ASSERT_VISIBLE #password[autocomplete="current-password"]
+ASSERT_VISIBLE #control--login--name[autocomplete="username"]
+ASSERT_VISIBLE #control--login--password[autocomplete="current-password"]
 ASSERT_VISIBLE #control--login--otp-1[autocomplete="one-time-code"]
-CLICK #name
+CLICK #control--login--name
 PRESS Tab
-ASSERT_VISIBLE #password:focus
+ASSERT_VISIBLE #control--login--password:focus
 PRESS Tab
 ASSERT_VISIBLE #control--login--otp-1:focus
 SCREENSHOT login_tab_to_code
 
 // The button still shows the password when clicked
-INPUT #password password
-CLICK #password ~ button
-ASSERT_VISIBLE #password[type="text"]
+INPUT #control--login--password password
+CLICK #control--login--password ~ button
+ASSERT_VISIBLE #control--login--password[type="text"]

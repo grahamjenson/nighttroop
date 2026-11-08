@@ -1,7 +1,7 @@
 // The control admin signs in to a server whose resource alert levels are all 0
 GOTO {{ .control_url }}/login
-INPUT #name admin
-INPUT #password password
+INPUT #control--login--name admin
+INPUT #control--login--password password
 TYPE #control--login--otp-1 123123
 ASSERT_VISIBLE #control--nav--logo
 // Its resources have not been checked yet, so there is nothing to warn of

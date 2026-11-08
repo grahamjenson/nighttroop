@@ -65,7 +65,7 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 		case httputils.ContentTypeJSON:
 			var creds LoginRequest
 			if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
-				errors.GenericAdminLoginError(w, r, fmt.Errorf("invalid JSON payload: %w", err))
+				loginFailed(w, r, http.StatusUnauthorized, wrongLogin, fmt.Errorf("invalid JSON payload: %w", err))
 				return
 			}
 
@@ -75,7 +75,7 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 		case httputils.ContentTypeForm:
 
 			if err := r.ParseForm(); err != nil {
-				errors.GenericAdminLoginError(w, r, fmt.Errorf("invalid form data: %w", err))
+				loginFailed(w, r, http.StatusUnauthorized, wrongLogin, fmt.Errorf("invalid form data: %w", err))
 				return
 			}
 
@@ -83,19 +83,19 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 			password = r.FormValue("password")
 			totpToken = r.FormValue("totp")
 		default:
-			errors.GenericAdminLoginError(w, r, fmt.Errorf("unsupported Content-Type: %s", string(contentType)))
+			loginFailed(w, r, http.StatusUnauthorized, wrongLogin, fmt.Errorf("unsupported Content-Type: %s", string(contentType)))
 			return
 		}
 
 		// Reject names no identity can have before they reach the rate limiter, which keys on them
 		if utf8.RuneCountInString(username) > consts.MAX_IDENTITY_NAME_LENGTH {
-			errors.GenericAdminLoginError(w, r, fmt.Errorf("username longer than %d characters", consts.MAX_IDENTITY_NAME_LENGTH))
+			loginFailed(w, r, http.StatusUnauthorized, wrongLogin, fmt.Errorf("username longer than %d characters", consts.MAX_IDENTITY_NAME_LENGTH))
 			return
 		}
 
 		allowedToAttempt, _ := httputils.ControlLoginAttemptsWithinRateLimit(config, r, username)
 		if !allowedToAttempt {
-			http.Error(w, "Too many login attempts Wait a bit", http.StatusTooManyRequests)
+			loginFailed(w, r, http.StatusTooManyRequests, tooManyLogins, fmt.Errorf("too many login attempts"))
 			return
 		}
 
@@ -104,14 +104,14 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 		admin, err := loginTheControlUser(r.Context(), controlDB, config, username, password, totpToken)
 		if err != nil {
 			controlDB.Logs.SignInFailedEvent(r.Context(), "", from)
-			errors.GenericAdminLoginError(w, r, fmt.Errorf("invalid credentials: %w", err))
+			loginFailed(w, r, http.StatusUnauthorized, wrongLogin, fmt.Errorf("invalid credentials: %w", err))
 			return
 		}
 		controlDB.Logs.SignedInEvent(r.Context(), "", admin.Name, from)
 
 		tokenString, expiresAt, err := config.Security.GenerateControlJWTToken(admin.Name, string(admin.Role))
 		if err != nil {
-			errors.GenericAdminLoginError(w, r, fmt.Errorf("failed to generate JWT token: %w", err))
+			loginFailed(w, r, http.StatusUnauthorized, wrongLogin, fmt.Errorf("failed to generate JWT token: %w", err))
 			return
 		}
 
@@ -130,6 +130,26 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 		slog.InfoContext(r.Context(), "Admin logged in", "admin", admin.Name, "role", admin.Role)
 		w.Header().Set("HX-Redirect", "/")
 
+	}
+}
+
+// The messages a failed login answers with, which never say how far through it got
+const (
+	wrongLogin    = "Wrong name, password or code. Codes change every 30 seconds, so use the newest one."
+	tooManyLogins = "Too many login attempts. Wait a minute, then try again."
+)
+
+// loginFailed logs why a login failed, and answers with the status and message: as a toast for the login page, or as
+// text for the API
+func loginFailed(w http.ResponseWriter, r *http.Request, status int, message string, err error) {
+	slog.InfoContext(r.Context(), "Control User Login Failed", "error", err, "stack", errors.LocalStack())
+	if httputils.GetAcceptType(r) != httputils.AcceptTypeHTMX {
+		http.Error(w, message, status)
+		return
+	}
+	w.WriteHeader(status)
+	if err := control_login_templ.LoginError(message).Render(r.Context(), w); err != nil {
+		slog.ErrorContext(r.Context(), "Failed to render the login error", "error", err)
 	}
 }
 

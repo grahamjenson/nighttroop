@@ -1,7 +1,7 @@
 // The control admin signs in to a server with 9 of the 10 sites MAX_SITES allows, so every control page warns of it
 GOTO {{ .control_url }}/login
-INPUT #name admin
-INPUT #password password
+INPUT #control--login--name admin
+INPUT #control--login--password password
 TYPE #control--login--otp-1 123123
 ASSERT_VISIBLE #control--nav--logo
 ASSERT_VISIBLE #control--status-banner--sites

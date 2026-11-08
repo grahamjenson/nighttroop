@@ -14,6 +14,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/form"
 	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/inputotp"
+	"nighttroop.t1d.nz/server/components/ui/toast"
 )
 
 // Setup is a new server's first page, asking for the setup code it printed to its logs
@@ -46,7 +47,7 @@ func Setup() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"flex flex-col items-center px-6 py-12 bg-slate-50\"><div class=\"setup-target p-8 rounded-lg shadow-2xl w-full max-w-lg bg-white\"><form hx-post=\"/setup\" hx-target=\"closest .setup-target\" hx-swap=\"outerHTML\" hx-status:4xx=\"target:#error-container swap:innerHTML\" hx-status:5xx=\"target:#error-container swap:innerHTML\" class=\"space-y-4\"><div class=\"text-center\"><img src=\"/logo.svg\" alt=\"\" class=\"mx-auto mb-3 size-16\"><h2 class=\"font-bold text-2xl\">Set up Nighttroop</h2></div><p class=\"text-sm text-slate-600\">Nothing can be used until the control admin is made. The server printed a setup code to its logs when it started; with Docker, find it with <code class=\"font-mono\">docker compose logs nighttroop</code>.</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"flex flex-col items-center px-6 py-12 bg-slate-50\"><div class=\"setup-target p-8 rounded-lg shadow-2xl w-full max-w-lg bg-white\"><form hx-post=\"/setup\" hx-target=\"closest .setup-target\" hx-swap=\"outerHTML\" hx-status:4xx=\"target:#toaster swap:beforeend\" hx-status:5xx=\"target:#toaster swap:beforeend\" class=\"space-y-4\"><div class=\"text-center\"><img src=\"/logo.svg\" alt=\"\" class=\"mx-auto mb-3 size-16\"><h2 class=\"font-bold text-2xl\">Set up Nighttroop</h2></div><p class=\"text-sm text-slate-600\">Nothing can be used until the control admin is made. The server printed a setup code to its logs when it started; with Docker, find it with <code class=\"font-mono\">docker compose logs nighttroop</code>.</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -130,8 +131,7 @@ func Setup() templ.Component {
 	})
 }
 
-// SetupCredentials shows the control admin's login, which is saved once a code from its TOTP secret is entered. It,
-// and SetupComplete, clear the error a wrong code left.
+// SetupCredentials shows the control admin's login, which is saved once a code from its TOTP secret is entered
 func SetupCredentials(name, password, totpSecret, totpURI, code string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -149,7 +149,7 @@ func SetupCredentials(name, password, totpSecret, totpURI, code string) templ.Co
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div hx-swap-oob=\"innerHTML:#error-container\"></div><div class=\"setup-target p-8 rounded-lg shadow-2xl w-full max-w-lg bg-white space-y-4\"><h2 class=\"font-bold text-2xl\">Save the control admin's login</h2><p class=\"text-sm text-slate-600\">It is shown once. Add the TOTP secret to your authenticator app, then enter its code to finish.</p><dl class=\"divide-y divide-slate-100 rounded-lg border border-slate-200 font-mono text-sm\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"setup-target p-8 rounded-lg shadow-2xl w-full max-w-lg bg-white space-y-4\"><h2 class=\"font-bold text-2xl\">Save the control admin's login</h2><p class=\"text-sm text-slate-600\">It is shown once. Add the TOTP secret to your authenticator app, then enter its code to finish.</p><dl class=\"divide-y divide-slate-100 rounded-lg border border-slate-200 font-mono text-sm\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -179,20 +179,20 @@ func SetupCredentials(name, password, totpSecret, totpURI, code string) templ.Co
 		}
 		templ_7745c5c3_Var7, templ_7745c5c3_Err := templruntime.ScriptContentInsideStringLiteral(totpURI)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_setup_templ/setup.templ`, Line: 58, Col: 84}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_setup_templ/setup.templ`, Line: 57, Col: 84}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\", width: 128, height: 128 });\n\t\t</script><form hx-post=\"/setup/confirm\" hx-target=\"closest .setup-target\" hx-swap=\"outerHTML\" hx-status:4xx=\"target:#error-container swap:innerHTML\" hx-status:5xx=\"target:#error-container swap:innerHTML\" class=\"space-y-4\"><input type=\"hidden\" name=\"code\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\", width: 128, height: 128 });\n\t\t</script><form hx-post=\"/setup/confirm\" hx-target=\"closest .setup-target\" hx-swap=\"outerHTML\" hx-status:4xx=\"target:#toaster swap:beforeend\" hx-status:5xx=\"target:#toaster swap:beforeend\" class=\"space-y-4\"><input type=\"hidden\" name=\"code\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templruntime.NewAttributeExpression(code).Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_setup_templ/setup.templ`, Line: 61, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_setup_templ/setup.templ`, Line: 60, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 		if templ_7745c5c3_Err != nil {
@@ -353,7 +353,7 @@ func SetupComplete() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div hx-swap-oob=\"innerHTML:#error-container\"></div><div id=\"control--setup--complete\" class=\"setup-target p-8 rounded-lg shadow-2xl w-full max-w-lg bg-white space-y-4 text-center\"><h2 class=\"font-bold text-2xl\">Nighttroop is set up</h2><p class=\"text-sm text-slate-600\">Log in with the control admin's login to start creating sites.</p>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div id=\"control--setup--complete\" class=\"setup-target p-8 rounded-lg shadow-2xl w-full max-w-lg bg-white space-y-4 text-center\"><h2 class=\"font-bold text-2xl\">Nighttroop is set up</h2><p class=\"text-sm text-slate-600\">Log in with the control admin's login to start creating sites.</p>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -387,6 +387,7 @@ func SetupComplete() templ.Component {
 	})
 }
 
+// SetupFailed is a refused setup code's toast, or a refused TOTP code's
 func SetupFailed(message string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -404,20 +405,7 @@ func SetupFailed(message string) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<p id=\"control--setup--error\" class=\"rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700\" role=\"alert\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var17 string
-		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(message)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_setup_templ/setup.templ`, Line: 97, Col: 135}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</p>")
+		templ_7745c5c3_Err = toast.Toast(toast.Props{Description: message, Variant: toast.VariantError, Position: toast.PositionTopCenter, Dismissible: true, Icon: true}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -442,46 +430,46 @@ func row(id, label, value string) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<div class=\"grid grid-cols-[8rem_1fr] gap-1 px-4 py-3\"><dt class=\"text-slate-400\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div class=\"grid grid-cols-[8rem_1fr] gap-1 px-4 py-3\"><dt class=\"text-slate-400\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var18 string
+		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(label)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_setup_templ/setup.templ`, Line: 101, Col: 36}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</dt><dd id=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var19 string
-		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(label)
+		templ_7745c5c3_Var19, templ_7745c5c3_Err = templruntime.NewAttributeExpression("control--setup--" + id).Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_setup_templ/setup.templ`, Line: 102, Col: 36}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_setup_templ/setup.templ`, Line: 102, Col: 34}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</dt><dd id=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "\" class=\"break-all text-slate-800 select-all\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var20 string
-		templ_7745c5c3_Var20, templ_7745c5c3_Err = templruntime.NewAttributeExpression("control--setup--" + id).Resolve(ctx)
+		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(value)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_setup_templ/setup.templ`, Line: 103, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_setup_templ/setup.templ`, Line: 102, Col: 88}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var20)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "\" class=\"break-all text-slate-800 select-all\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var21 string
-		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(value)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_setup_templ/setup.templ`, Line: 103, Col: 88}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</dd></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</dd></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
