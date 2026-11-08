@@ -1075,7 +1075,7 @@ func usedClass(percent int64) string {
 	case percent > 100:
 		return "text-red-600"
 	case percent >= 80:
-		return "text-amber-600"
+		return "text-amber-800"
 	}
 	return "text-gray-500"
 }
