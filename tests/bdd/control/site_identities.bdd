@@ -15,8 +15,10 @@ ASSERT_VISIBLE #control--site--identities--table td >> text=pwd_phone
 ASSERT_VISIBLE #control--site--identities--table td >> text=read_only
 SCREENSHOT site_identities
 
-// Only an identity that logs in with TOTP can have it reset
+// Each identity's actions are named and line up in columns: only an identity that logs in with TOTP can have it reset
 ASSERT_NOT_VISIBLE #control--site--identities--table tr:has-text("pwd_phone") [id$="--reset-totp"]
+ASSERT_VISIBLE #control--site--identities--table tr:has-text("admin") [id$="--reset-password"]:text-is("Reset password")
+ASSERT_VISIBLE #control--site--identities--table tr:has-text("admin") [id$="--reset-totp"]:text-is("Reset TOTP")
 
 // Resetting the admin's password asks first (the test accepts), then shows the new one, once
 CLICK #control--site--identities--table tr:has-text("admin") [id$="--reset-password"]

@@ -85,7 +85,10 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
     long since its last error;
   - its identities, and its latest 10 events and 10 errors, each opening its details, with a link to all of them
     filtered to the site.
-- An admin sees the buttons for what can be done to the site on its page, and its page shows the change once done.
+- A site's page has an Actions grid of what can be done to it: Open Site, and for an admin Disable, Truncate and
+  Archive. Each says what it does, and has its button when it can be done, or says when it would be offered (e.g.
+  Truncate while over its DB size limit, Archive once disabled). Its page shows the change once done.
+- The sites page has the Create a site and Public site creation cards side by side, each saying what it does.
 - On a phone the sites page is no wider than the window: the order buttons, the create form and the public site
   creation card wrap, and the table scrolls sideways in its card.
 - An admin can create a site at an ID they pick (8 lowercase letters), e.g. a vanity one; a taken ID is refused. Its
@@ -106,7 +109,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - A site's page has a table of every one of its identities: who they are, whether they use TOTP, and when each was
   last seen. Secrets are never shown.
 - An admin can reset an identity's password (shown once, with a device's new Nightscout token) or TOTP secret. Each
-  reset signs out the identity's existing sessions and is recorded as an event.
+  reset signs out the identity's existing sessions and is recorded as an event. Each identity's Reset password,
+  Reset TOTP and Sign in as buttons line up in their own columns.
 - An admin can sign in to a site as any of its identities with its Sign in as button, after confirming: a new tab opens
   the site signed in as it, with its role, for the hour a sign in lasts. Control sends the tab to a link to the site
   that works once, within a minute, on its own site only, which sets its sign in cookie. The site records a "Signed in by control" event, with the identity and the control admin, which its

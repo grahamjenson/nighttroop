@@ -6,12 +6,15 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
-// TestSiteActionsTruncate checks the Truncate button shows only for a site over its DB size limit, which the browser
-// tests cannot make as their DBs are in memory
+// TestSiteActionsTruncate checks the Truncate button shows only for a site over its DB size limit, and otherwise when it
+// would be offered, which the browser tests cannot make as their DBs are in memory
 func TestSiteActionsTruncate(t *testing.T) {
 	size := func(kb int64) *int64 { return &kb }
 	for _, test := range []struct {
@@ -25,8 +28,11 @@ func TestSiteActionsTruncate(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			var buf bytes.Buffer
 			site := &controlmodels.Site{ID: "site", State: "live", EstimatedDbSizeKb: test.sizeKB, MaxDbSizeKbLimit: size(3000)}
-			require.NoError(t, siteActions(site).Render(context.Background(), &buf))
+			admin := httputils.SetAdminControlContext(httputils.CreateControlContext(context.Background(), nil, "", 0),
+				&controldb.ControlIdentity{Role: consts.ControlRoleAdmin}, config.ServerStatus{})
+			require.NoError(t, siteActions(site).Render(admin, &buf))
 			require.Equal(t, test.truncate, bytes.Contains(buf.Bytes(), []byte(`id="control--site--truncate"`)), buf.String())
+			require.Equal(t, !test.truncate, bytes.Contains(buf.Bytes(), []byte("Offered while it is over its DB size limit.")), buf.String())
 		})
 	}
 }

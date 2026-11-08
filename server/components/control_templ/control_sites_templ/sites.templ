@@ -65,8 +65,10 @@ templ SitesTable(sites []*controlmodels.Site, skip int64, limit int64, order str
 			Every site. Click a site to open its page.
 		}
 		if isAdmin(ctx) {
-			@createSiteForm()
-			@PublicSiteCreation(httputils.GetControlContext(ctx).ControlDB.PublicSiteCreation(ctx))
+			<div class="grid gap-4 md:grid-cols-2">
+				@createSiteForm()
+				@PublicSiteCreation(httputils.GetControlContext(ctx).ControlDB.PublicSiteCreation(ctx))
+			</div>
 		}
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			<div id="control--sites--order" class="mb-4 flex flex-wrap justify-end gap-2">
@@ -149,32 +151,35 @@ templ sitesPageButton(id string, label string, skip int64, limit int64, order st
 templ createSiteForm() {
 	<form
 		id="control--sites--create"
-		class="flex flex-wrap items-end gap-2 rounded-xl border border-gray-200 p-4 shadow-sm"
+		class="flex flex-col gap-3 rounded-xl border border-gray-200 p-4 shadow-sm"
 		hx-post="/sites"
 		hx-target="#modal-container"
 		hx-swap="innerHTML"
 		hx-status:4xx="target:#toaster swap:beforeend"
 		hx-status:5xx="target:#toaster swap:beforeend"
 	>
-		@field.Field("control--sites--create--id", fmt.Sprintf("New site ID (%d lowercase letters)", utils.SITE_ID_LENGTH), "w-full sm:w-64") {
-			@input.Input(input.Props{
-				ID:          "control--sites--create--id",
-				Name:        "id",
-				Placeholder: "mynewnts",
-				Required:    true,
-				Attributes: templ.Attributes{
-					"pattern": fmt.Sprintf("[a-z]{%d}", utils.SITE_ID_LENGTH), "minlength": utils.SITE_ID_LENGTH, "maxlength": utils.SITE_ID_LENGTH,
-					"title": fmt.Sprintf("%d lowercase letters, a to z", utils.SITE_ID_LENGTH), "autocomplete": "off", "spellcheck": "false",
-					"autocapitalize": "none",
-					// Capitals are lowered and anything but a to z is dropped as it is typed or pasted, so only letters
-					// a site ID can have ever go in
-					"oninput": templ.JSUnsafeFuncCall("this.value = this.value.toLowerCase().replace(/[^a-z]/g, '')"),
-				},
-			})
-		}
-		@button.Button(button.Props{ID: "control--sites--create--submit", Type: button.TypeSubmit}) {
-			Create Site
-		}
+		@actionTitle("Create a site", icon.Plus, "At an ID you pick, such as a vanity one, shown with its credentials once.")
+		<div class="flex flex-wrap items-end gap-2">
+			@field.Field("control--sites--create--id", fmt.Sprintf("New site ID (%d lowercase letters)", utils.SITE_ID_LENGTH), "w-full sm:w-64") {
+				@input.Input(input.Props{
+					ID:          "control--sites--create--id",
+					Name:        "id",
+					Placeholder: "mynewnts",
+					Required:    true,
+					Attributes: templ.Attributes{
+						"pattern": fmt.Sprintf("[a-z]{%d}", utils.SITE_ID_LENGTH), "minlength": utils.SITE_ID_LENGTH, "maxlength": utils.SITE_ID_LENGTH,
+						"title": fmt.Sprintf("%d lowercase letters, a to z", utils.SITE_ID_LENGTH), "autocomplete": "off", "spellcheck": "false",
+						"autocapitalize": "none",
+						// Capitals are lowered and anything but a to z is dropped as it is typed or pasted, so only letters
+						// a site ID can have ever go in
+						"oninput": templ.JSUnsafeFuncCall("this.value = this.value.toLowerCase().replace(/[^a-z]/g, '')"),
+					},
+				})
+			}
+			@button.Button(button.Props{ID: "control--sites--create--submit", Type: button.TypeSubmit}) {
+				Create Site
+			}
+		</div>
 	</form>
 }
 
@@ -183,21 +188,22 @@ templ createSiteForm() {
 templ PublicSiteCreation(on bool) {
 	<form
 		id="control--sites--public-creation"
-		class="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-gray-200 p-4 shadow-sm"
+		class="flex flex-col gap-3 rounded-xl border border-gray-200 p-4 shadow-sm"
 		hx-post="/settings"
 		hx-swap="outerHTML"
 		hx-status:4xx="target:#toaster swap:beforeend"
 		hx-status:5xx="target:#toaster swap:beforeend"
 	>
 		<input type="hidden" name="public_site_creation" value={ strconv.FormatBool(!on) }/>
-		<p id="control--sites--public-creation--state" class="text-sm text-gray-700">
+		@actionTitle("Public site creation", icon.Globe, "")
+		<p id="control--sites--public-creation--state" class="flex-1 text-sm text-gray-500">
 			if on {
 				The public can create sites from the home page.
 			} else {
 				Public site creation is off: the home page cannot create sites, but an admin can create them here.
 			}
 		</p>
-		@button.Button(button.Props{ID: "control--sites--public-creation--toggle", Type: button.TypeSubmit, Variant: button.VariantOutline}) {
+		@button.Button(button.Props{ID: "control--sites--public-creation--toggle", Type: button.TypeSubmit, Variant: button.VariantOutline, Class: "w-fit"}) {
 			if on {
 				Turn Off Public Site Creation
 			} else {
@@ -357,41 +363,27 @@ func siteURL(ctx context.Context, siteID string) string {
 	return controlContext.ControlDB.ServerConfig.SiteURL(siteID)
 }
 
-// SitePage is a site's own page, laid out like a site's summary: its state and when it changed, with buttons for what
-// an admin can do to it, its DB size against its limit, tiles of when it was last used, its identities and its last
+// SitePage is a site's own page, laid out like a site's summary: its state and when it changed, a grid of what can be
+// done to it, its DB size against its limit, tiles of when it was last used, its identities and its last
 // error, then its identities, which an admin can reset or sign in to the site as, and its latest events and errors
 templ SitePage(page *controlmodels.SitePage) {
 	{{ site := page.Site }}
 	@heading.Title(site.ID)
 	<div id="control--site--page" class="mx-auto w-full max-w-5xl space-y-4 py-4">
-		<div class="flex flex-wrap items-start justify-between gap-3">
-			<div>
-				<div class="flex flex-wrap items-center gap-2">
-					<h1 class="font-mono text-2xl font-bold">{ site.ID }</h1>
-					<span id="control--site--state" class={ "rounded-full px-2 py-0.5 text-xs font-medium", stateClass(site.State) }>{ display.Name(site.State) }</span>
-					if inactive(ctx, site) {
-						<span id="control--site--inactive" class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">Inactive</span>
-					}
-					if site.Oversized() {
-						<span id="control--site--over-limit" class="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">Over limit</span>
-					}
-				</div>
-				<p id="control--site--lifecycle" class="mt-1 text-sm text-gray-500">{ lifecycle(site) }</p>
-			</div>
+		<div>
 			<div class="flex flex-wrap items-center gap-2">
-				if url := siteURL(ctx, site.ID); url != "" && site.State == "live" {
-					@footer.NewTabLink("control--site--open", url, "inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium shadow-sm hover:bg-gray-50") {
-						Open Site
-						@icon.ExternalLink(icon.Props{Class: "size-4"})
-					}
+				<h1 class="font-mono text-2xl font-bold">{ site.ID }</h1>
+				<span id="control--site--state" class={ "rounded-full px-2 py-0.5 text-xs font-medium", stateClass(site.State) }>{ display.Name(site.State) }</span>
+				if inactive(ctx, site) {
+					<span id="control--site--inactive" class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">Inactive</span>
 				}
-				if isAdmin(ctx) {
-					<div id="control--site--actions" class="flex flex-wrap gap-2 empty:hidden">
-						@siteActions(site)
-					</div>
+				if site.Oversized() {
+					<span id="control--site--over-limit" class="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">Over limit</span>
 				}
 			</div>
+			<p id="control--site--lifecycle" class="mt-1 text-sm text-gray-500">{ lifecycle(site) }</p>
 		</div>
+		@siteActions(site)
 		@dbSize(site)
 		<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
 			@stat.Tile("control--site--last-seen", "Last seen", ago(site.LastSeenAt), icon.Eye)
@@ -445,53 +437,99 @@ templ dbSize(site *controlmodels.Site) {
 	</div>
 }
 
-// siteActions are the buttons for what an admin can do to a site: disable it once no one has used it for a while,
-// truncate it while it is over its DB size limit, and archive it once it is disabled
+// siteActions are a grid of what can be done to the site, each saying what it does: open it, and for an admin, disable
+// it once no one has used it for a while, truncate it while it is over its DB size limit, and archive it once it is
+// disabled. One that cannot be done yet says when it can, in place of its button.
 templ siteActions(site *controlmodels.Site) {
-	if inactive(ctx, site) {
-		<form
-			hx-post={ "/sites/" + site.ID }
-			hx-target="#main-content"
-			hx-swap="innerHTML"
-			hx-confirm="Disable this site? It will stop being served."
-			hx-status:4xx="target:#toaster swap:beforeend"
-			hx-status:5xx="target:#toaster swap:beforeend"
-		>
-			<input type="hidden" name="state" value="disabled"/>
-			@button.Button(button.Props{ID: "control--site--disable", Type: button.TypeSubmit, Variant: button.VariantDestructive}) {
-				Disable
+	<section id="control--site--actions" class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+		<h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">Actions</h2>
+		<div class="grid gap-3 sm:grid-cols-2">
+			{{ url := siteURL(ctx, site.ID) }}
+			@actionCard("control--site--action-open", "Open Site", "Opens the site in a new tab.", unless(url != "" && site.State == "live", "Only a live site is served."), icon.ExternalLink) {
+				@footer.NewTabLink("control--site--open", url, "inline-flex w-full items-center justify-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium shadow-sm hover:bg-gray-50") {
+					Open Site
+					@icon.ExternalLink(icon.Props{Class: "size-4"})
+				}
 			}
-		</form>
-	}
-	if site.Oversized() {
-		<form
-			hx-post={ "/sites/" + site.ID + "/truncate" }
-			hx-target="#main-content"
-			hx-swap="innerHTML"
-			hx-confirm="Truncate this site? The raw JSON kept of what its old records were sent is cleared, but all its data is kept."
-			hx-status:4xx="target:#toaster swap:beforeend"
-			hx-status:5xx="target:#toaster swap:beforeend"
-		>
-			@button.Button(button.Props{ID: "control--site--truncate", Type: button.TypeSubmit, Variant: button.VariantDestructive}) {
-				Truncate
+			if isAdmin(ctx) {
+				@actionCard("control--site--action-disable", "Disable", "Stops serving the site. Its data is kept.", unless(inactive(ctx, site), disableWhen(ctx, site)), icon.Ban) {
+					@siteActionForm("/sites/"+site.ID, "disabled", "Disable this site? It will stop being served.", "control--site--disable", "Disable")
+				}
+				@actionCard("control--site--action-truncate", "Truncate", "Clears the raw JSON kept of what its old records were sent. All its data is kept.", unless(site.Oversized(), "Offered while it is over its DB size limit."), icon.Scissors) {
+					@siteActionForm("/sites/"+site.ID+"/truncate", "", "Truncate this site? The raw JSON kept of what its old records were sent is cleared, but all its data is kept.", "control--site--truncate", "Truncate")
+				}
+				@actionCard("control--site--action-archive", "Archive", "Uploads its data to S3 and deletes it here.", unless(site.State == "disabled", "Offered once it is disabled."), icon.Archive) {
+					@siteActionForm("/sites/"+site.ID, "archived", "Archive this site? Its data is uploaded to S3 and deleted here.", "control--site--archive", "Archive")
+				}
 			}
-		</form>
+		</div>
+	</section>
+}
+
+// unless is why an action cannot be done, or nothing when it can
+func unless(can bool, why string) string {
+	if can {
+		return ""
 	}
+	return why
+}
+
+// disableWhen is when a site that is not inactive could be disabled
+func disableWhen(ctx context.Context, site *controlmodels.Site) string {
+	controlContext := httputils.GetControlContext(ctx)
 	if site.State == "disabled" {
-		<form
-			hx-post={ "/sites/" + site.ID }
-			hx-target="#main-content"
-			hx-swap="innerHTML"
-			hx-confirm="Archive this site? Its data is uploaded to S3 and deleted here."
-			hx-status:4xx="target:#toaster swap:beforeend"
-			hx-status:5xx="target:#toaster swap:beforeend"
-		>
-			<input type="hidden" name="state" value="archived"/>
-			@button.Button(button.Props{ID: "control--site--archive", Type: button.TypeSubmit, Variant: button.VariantDestructive}) {
-				Archive
-			}
-		</form>
+		return "It is already disabled."
 	}
+	if site.State != "live" || controlContext == nil || controlContext.ControlDB == nil {
+		return "Only a live site can be disabled."
+	}
+	return fmt.Sprintf("Offered once no one has used it for %d days.", controlContext.ControlDB.ServerConfig.DisableAfterInactivityDays)
+}
+
+// actionCard is one action: its name, what it does, and its button, or when it cannot be done, why not
+templ actionCard(id, title, description, unavailable string, ic func(...icon.Props) templ.Component) {
+	<div id={ id } class="flex flex-col gap-2 rounded-lg border border-gray-200 p-3">
+		<div class="flex-1">
+			@actionTitle(title, ic, description)
+		</div>
+		if unavailable != "" {
+			<p class="text-xs text-gray-500">{ unavailable }</p>
+		} else {
+			{ children... }
+		}
+	</div>
+}
+
+// actionTitle names an action with its icon, and says what it does when there is more to say
+templ actionTitle(title string, ic func(...icon.Props) templ.Component, description string) {
+	<div>
+		<div class="flex items-center gap-2 text-sm font-semibold text-gray-900">
+			@ic(icon.Props{Class: "size-4"})
+			{ title }
+		</div>
+		if description != "" {
+			<p class="mt-1 text-sm text-gray-500">{ description }</p>
+		}
+	</div>
+}
+
+// siteActionForm posts an action on the site, after asking to confirm, setting its state when there is one to set
+templ siteActionForm(path, state, confirm, id, label string) {
+	<form
+		hx-post={ path }
+		hx-target="#main-content"
+		hx-swap="innerHTML"
+		hx-confirm={ confirm }
+		hx-status:4xx="target:#toaster swap:beforeend"
+		hx-status:5xx="target:#toaster swap:beforeend"
+	>
+		if state != "" {
+			<input type="hidden" name="state" value={ state }/>
+		}
+		@button.Button(button.Props{ID: id, Type: button.TypeSubmit, Variant: button.VariantDestructive, Class: "w-full"}) {
+			{ label }
+		}
+	</form>
 }
 
 var siteDetail = modal.Detail
