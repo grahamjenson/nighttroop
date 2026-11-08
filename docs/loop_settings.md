@@ -43,6 +43,7 @@ they are either way.
 - **A backfill**, such as a profile from last week sent today, is compared with the settings in force last week, not
   today's, so it adds a row only when it really differs from that time.
 - **Settings over 8 KB** are not kept, but the record they came in is still kept.
+- **Empty settings**, such as the `configuration: {}` AAPS sends in some statuses, count as none sent, not a change.
 
 It runs in the same transaction as the record, so a failed write keeps neither.
 

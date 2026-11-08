@@ -60,8 +60,14 @@ func TestRecordLoopSettings(t *testing.T) {
 	_, err := q.GetLoopSettingsAt(ctx, sitedb.GetLoopSettingsAtParams{App: loopApp, At: 100})
 	require.Error(t, err, "nothing is in force before the first")
 
+	// Empty settings, as AAPS sends in some statuses, are none sent, so they are not a change
+	id, err := recordLoopSettings(q, ctx, loopApp, fromProfile, &nightscoutmodels.LoopSettings{}, 5000, nil)
+	require.NoError(t, err)
+	require.Nil(t, id)
+	require.JSONEq(t, `{"maximumBolus":5}`, inForce(loopApp, 5000).SettingsJson)
+
 	// Settings too large to keep have no row
-	id, err := recordLoopSettings(q, ctx, aapsApp, fromDeviceStatus, map[string]string{"big": string(make([]byte, loopSettingsLimit))}, 1000, nil)
+	id, err = recordLoopSettings(q, ctx, aapsApp, fromDeviceStatus, map[string]string{"big": string(make([]byte, loopSettingsLimit))}, 1000, nil)
 	require.NoError(t, err)
 	require.Nil(t, id)
 }
