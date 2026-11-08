@@ -708,6 +708,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   through the addresses of one /64 does not get fresh limits.
 - A request body larger than `MAX_REQUEST_BODY_BYTES` is refused with 413, or, when it does not say its length,
   stops being read there and is refused as a bad body.
+- A request whose headers hold more than 64 KiB, far above a browser's cookies or an uploader's token, is refused with
+  431, so no connection holds more of them.
 
 ## Identity
 

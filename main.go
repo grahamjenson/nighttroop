@@ -186,15 +186,26 @@ func setupSentry(serverConfig *config.ServerConfig) {
 	serverConfig.Status.SentryWorking = true
 }
 
+// maxHeaderBytes is the most a request's headers may hold, far above a browser's cookies or an uploader's token, so a
+// client cannot make each connection hold Go's default of 1 MB. Larger headers are refused with 431.
+const maxHeaderBytes = 64 << 10
+
+// newHTTPServer is the server for handler on addr, with the limits every connection to it has
+func newHTTPServer(addr string, handler http.Handler) *http.Server {
+	return &http.Server{
+		Addr:           addr,
+		Handler:        handler,
+		ReadTimeout:    5 * time.Second,  // Max time to read the entire request
+		WriteTimeout:   10 * time.Second, // Max time to write the response
+		IdleTimeout:    120 * time.Second,
+		MaxHeaderBytes: maxHeaderBytes,
+	}
+}
+
 func setupHTTP(controlDB *db.ControlDB, serverConfig *config.ServerConfig) *http.Server {
 	// The outer most layer is CORS and CSRF protection, so no state changing in GET requests
-	httpServer := &http.Server{
-		Addr:         fmt.Sprintf(":%d", serverConfig.HostPort),
-		Handler:      server.WithCrossOriginProtection(server.GetMainHandler(controlDB, serverConfig)),
-		ReadTimeout:  5 * time.Second,  // Max time to read the entire request
-		WriteTimeout: 10 * time.Second, // Max time to write the response
-		IdleTimeout:  120 * time.Second,
-	}
+	httpServer := newHTTPServer(fmt.Sprintf(":%d", serverConfig.HostPort),
+		server.WithCrossOriginProtection(server.GetMainHandler(controlDB, serverConfig)))
 
 	go func() {
 		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
