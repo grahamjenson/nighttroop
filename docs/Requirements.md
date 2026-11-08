@@ -249,7 +249,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   - The basal in force along the bottom, its highest rate labelled on the right.
   - Carbs as triangles pointing up above insulin as triangles pointing down, each labelled, the latest kept where
     labels overlap; a loop's SMBs are smaller, fainter and not labelled.
-  - A legend of insulin, SMB, carbs and basal, and a tooltip of each reading and treatment.
+  - A legend of insulin and SMB (triangles pointing down), carbs (pointing up) and basal (an outlined area), each
+    drawn as on the graph, and a tooltip of each reading and treatment.
 - Time in range, total daily dose, and the last sensor and site change for today, yesterday, last week and last
   month.
 - Readings are coloured and labelled low, in range or high by the alarm settings; high text is a darker amber than

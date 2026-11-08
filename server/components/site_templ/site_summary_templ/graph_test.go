@@ -198,3 +198,22 @@ func TestGraphInTheLocationsTime(t *testing.T) {
 	require.EqualValues(t, now+13*time.Hour.Milliseconds(), point[0])
 	require.Contains(t, chart.JSFunctions.Fns, types.FuncStr("%MY_ECHARTS%.setOption({useUTC: true});"))
 }
+
+// The key under the graph draws each as the graph does: insulin and SMBs as triangles pointing down, carbs as ones
+// pointing up, and the basal as an outlined area, not the line through a circle a legend draws for a line by default
+func TestGraphLegendDrawsEachAsTheGraphDoes(t *testing.T) {
+	now := time.Date(2026, 1, 2, 12, 0, 0, 0, time.UTC).UnixMilli()
+	got := option(t, &sitemodels.Summary{Hours: 6, Since: now - 6*time.Hour.Milliseconds(), Units: new(consts.UnitsMGDL)}, now)
+	icons := map[string]any{}
+	for _, item := range got["legend"].(map[string]any)["data"].([]any) {
+		icons[item.(map[string]any)["name"].(string)] = item.(map[string]any)["icon"]
+	}
+	require.Equal(t, map[string]any{"Insulin": pointingDown, "SMB": pointingDown, "Carbs": pointingUp, "Basal": "rect"}, icons)
+	// Each names a series of the graph, so clicking it hides that series
+	for name := range icons {
+		require.NotNil(t, series(got, name), name)
+	}
+	// Insulin points down on the graph too, and carbs up
+	require.Equal(t, "triangle", series(got, "Insulin")["symbol"])
+	require.Equal(t, "triangle", series(got, "Carbs")["symbol"])
+}
