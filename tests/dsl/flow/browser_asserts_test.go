@@ -3,6 +3,7 @@ package flow
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -172,6 +173,41 @@ func TestReadsWaitPastTheDefaultTimeout(t *testing.T) {
 			page.SetDefaultTimeout(1000)
 			require.NoError(t, page.SetContent(slowPage))
 			require.NoError(t, test.run(t, page))
+		})
+	}
+}
+
+// ASSERT_FITS finds a page wider or taller than its window, and a button pushed past the window's left edge, which the
+// page cannot scroll to, but not one in a box that scrolls sideways
+func TestFitsFindsWhatIsCutOff(t *testing.T) {
+	pw, err := playwright.Run()
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = pw.Stop() })
+	browser, err := pw.Chromium.Launch()
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = browser.Close() })
+
+	buttons := `<div style="display:flex;justify-content:flex-end"><button id="first" style="flex:none;width:300px">First</button>` +
+		`<button style="flex:none;width:300px">Second</button></div>`
+	tests := []struct {
+		name string
+		body string
+		want string
+	}{
+		{name: "fits", body: `<p>Nighttroop</p>`, want: ""},
+		{name: "too wide", body: `<div style="width:500px">Nighttroop</div>`, want: "the page is 500x400 in a 400x400 window"},
+		{name: "pushed past the left", body: buttons, want: "#first is cut off 200px past the left of the window"},
+		{name: "in a box that scrolls", body: `<div style="overflow-x:auto">` + buttons + `</div>`, want: ""},
+		{name: "wrapped", body: strings.Replace(buttons, "display:flex;", "display:flex;flex-wrap:wrap;", 1), want: ""},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			page, err := browser.NewPage(playwright.BrowserNewPageOptions{Viewport: &playwright.Size{Width: 400, Height: 400}})
+			require.NoError(t, err)
+			require.NoError(t, page.SetContent(`<html><body style="margin:0">`+test.body+`</body></html>`))
+			cut, err := page.Evaluate(fitsScript)
+			require.NoError(t, err)
+			require.Equal(t, test.want, cut)
 		})
 	}
 }

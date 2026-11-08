@@ -115,7 +115,7 @@ func SitesTable(sites []*controlmodels.Site, skip int64, limit int64, order stri
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<section class=\"rounded-xl border border-gray-200 p-4 shadow-sm\"><div id=\"control--sites--order\" class=\"mb-4 flex justify-end gap-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<section class=\"rounded-xl border border-gray-200 p-4 shadow-sm\"><div id=\"control--sites--order\" class=\"mb-4 flex flex-wrap justify-end gap-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -450,7 +450,7 @@ func createSiteForm() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<form id=\"control--sites--create\" class=\"flex items-end gap-2 rounded-xl border border-gray-200 p-4 shadow-sm\" hx-post=\"/sites\" hx-target=\"#modal-container\" hx-swap=\"innerHTML\" hx-status:4xx=\"target:#toaster swap:beforeend\" hx-status:5xx=\"target:#toaster swap:beforeend\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<form id=\"control--sites--create\" class=\"flex flex-wrap items-end gap-2 rounded-xl border border-gray-200 p-4 shadow-sm\" hx-post=\"/sites\" hx-target=\"#modal-container\" hx-swap=\"innerHTML\" hx-status:4xx=\"target:#toaster swap:beforeend\" hx-status:5xx=\"target:#toaster swap:beforeend\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -481,7 +481,7 @@ func createSiteForm() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = field.Field("control--sites--create--id", fmt.Sprintf("New site ID (%d lowercase letters)", utils.SITE_ID_LENGTH), "w-64").Render(templ.WithChildren(ctx, templ_7745c5c3_Var17), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = field.Field("control--sites--create--id", fmt.Sprintf("New site ID (%d lowercase letters)", utils.SITE_ID_LENGTH), "w-full sm:w-64").Render(templ.WithChildren(ctx, templ_7745c5c3_Var17), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -534,7 +534,7 @@ func PublicSiteCreation(on bool) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<form id=\"control--sites--public-creation\" class=\"flex items-center justify-between gap-4 rounded-xl border border-gray-200 p-4 shadow-sm\" hx-post=\"/settings\" hx-swap=\"outerHTML\" hx-status:4xx=\"target:#toaster swap:beforeend\" hx-status:5xx=\"target:#toaster swap:beforeend\"><input type=\"hidden\" name=\"public_site_creation\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<form id=\"control--sites--public-creation\" class=\"flex flex-wrap items-center justify-between gap-4 rounded-xl border border-gray-200 p-4 shadow-sm\" hx-post=\"/settings\" hx-swap=\"outerHTML\" hx-status:4xx=\"target:#toaster swap:beforeend\" hx-status:5xx=\"target:#toaster swap:beforeend\"><input type=\"hidden\" name=\"public_site_creation\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

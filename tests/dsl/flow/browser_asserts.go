@@ -430,11 +430,23 @@ type AssertFits struct {
 	TestLine int
 }
 
-// fitsScript is "" when the page fits in the window, or how far it is past it
+// fitsScript is "" when the page fits in the window, or how far it is past it. The page cannot scroll to what is
+// pushed past its left edge, as by a row of buttons pushed to the right, so that is cut off, unless a box it is in
+// scrolls or clips it
 const fitsScript = `() => {
 	const d = document.documentElement;
-	return d.scrollWidth <= innerWidth && d.scrollHeight <= innerHeight ? "" :
-		"the page is " + d.scrollWidth + "x" + d.scrollHeight + " in a " + innerWidth + "x" + innerHeight + " window";
+	if (d.scrollWidth > innerWidth || d.scrollHeight > innerHeight) {
+		return "the page is " + d.scrollWidth + "x" + d.scrollHeight + " in a " + innerWidth + "x" + innerHeight + " window";
+	}
+	const cut = [...document.body.querySelectorAll("*")].find(el => {
+		const r = el.getBoundingClientRect();
+		if (r.width === 0 || r.left > -1 || !el.checkVisibility({visibilityProperty: true, opacityProperty: true})) return false;
+		for (let box = el.parentElement; box !== null; box = box.parentElement) {
+			if (getComputedStyle(box).overflowX !== "visible") return false;
+		}
+		return true;
+	});
+	return cut === undefined ? "" : (cut.id ? "#" + cut.id : cut.tagName) + " is cut off " + Math.round(-cut.getBoundingClientRect().left) + "px past the left of the window";
 }`
 
 func (r *AssertFits) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
