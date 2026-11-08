@@ -21,6 +21,9 @@ var ScreenshotDir = filepath.Join("..", "..", ".test")
 // the page, which keeps their text readable in a file about half the size
 const ScreenshotScale = 0.75
 
+// maxScreenshotBytes is the most a screenshot's file may be, as each is committed
+const maxScreenshotBytes = 1 << 20
+
 func ScreenshotPage(page playwright.Page, foldername string, testPath string, name string) (string, error) {
 	root := filepath.Join(ScreenshotDir, foldername)
 
@@ -32,22 +35,23 @@ func ScreenshotPage(page playwright.Page, foldername string, testPath string, na
 	if _, err := page.Evaluate("document.fonts.ready"); err != nil {
 		return "", err
 	}
-	// A full page screenshot draws the sticky header where the window is scrolled to, part way down the page, so it is
-	// taken from the top of the page, with the header at the top, and the page scrolled back after
-	scrolled, err := page.Evaluate("() => { const y = window.scrollY; window.scrollTo(0, 0); return y; }")
-	if err != nil {
-		return "", err
-	}
-	defer page.Evaluate("y => window.scrollTo(0, y)", scrolled)
-	_, err = page.Screenshot(playwright.PageScreenshotOptions{
-		Path:       playwright.String(filepath.Join(dir, name+".png")),
-		FullPage:   playwright.Bool(true),
+	// Only the window is taken, as it is scrolled, not the whole page, so a long page's screenshot stays the size of a
+	// screen
+	path := filepath.Join(dir, name+".png")
+	if _, err := page.Screenshot(playwright.PageScreenshotOptions{
+		Path:       playwright.String(path),
 		Animations: playwright.ScreenshotAnimationsDisabled,
 		Caret:      playwright.ScreenshotCaretHide,
-		// A full page screenshot can take longer than the 1s default on a busy CI runner
+		// A screenshot can take longer than the 1s default on a busy CI runner
 		Timeout: playwright.Float(screenshotWait),
-	})
-	return filepath.Join(dir, name+".png"), err
+	}); err != nil {
+		return path, err
+	}
+	info, err := os.Stat(path)
+	if err == nil && info.Size() > maxScreenshotBytes {
+		err = fmt.Errorf("screenshot %s is %d bytes, over the most a screenshot may be, %d", path, info.Size(), maxScreenshotBytes)
+	}
+	return path, err
 }
 
 // /////////////////////
