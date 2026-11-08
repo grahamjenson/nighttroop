@@ -129,12 +129,27 @@ templ Header() {
 						</div>
 						@dropdown.Separator()
 					}
-					// The identity's own account first, which also has the guide to setting the site up
-					@dropdown.Group() {
+					// The identity's own account first, which also has the guide to setting the site up, with logout beside it,
+					// so the columns below fit in the window
+					@dropdown.Group(dropdown.GroupProps{Class: "sm:grid sm:grid-cols-2 sm:gap-x-1"}) {
 						@dataMenuItem("site--settings--account-button", "/settings/account", "My Account", icon.User(icon.Props{Class: "size-4 mr-2"}))
+						@dropdown.Item(dropdown.ItemProps{
+							ID:   "site--settings--logout-button",
+							Href: "#",
+							Attributes: templ.Attributes{
+								"hx-post":   "/logout",
+								"hx-target": "body",
+								"hx-swap":   "outerHTML",
+							},
+						}) {
+							<span class="flex items-center">
+								@icon.LogOut(icon.Props{Class: "size-4 mr-2"})
+								Logout
+							</span>
+						}
 					}
 					@dropdown.Separator()
-					// Data, with its presets, on the left, and reports, settings and logout on the right, so every item fits in
+					// Data, with its presets, on the left, and reports, settings and logs on the right, so every item fits in
 					// the window
 					<div class="sm:grid sm:grid-cols-2 sm:gap-x-1">
 						<div>
@@ -187,21 +202,6 @@ templ Header() {
 								@dataMenuItem("site--logs--events-button", "/logs/events", "Events", icon.Activity(icon.Props{Class: "size-4 mr-2"}))
 								@dataMenuItem("site--logs--errors-button", "/logs/errors", "Errors", icon.TriangleAlert(icon.Props{Class: "size-4 mr-2"}))
 								@dataMenuItem("site--logs--logs-button", "/logs/logs", "Logs", icon.ScrollText(icon.Props{Class: "size-4 mr-2"}))
-							}
-							@dropdown.Separator()
-							@dropdown.Item(dropdown.ItemProps{
-								ID:   "site--settings--logout-button",
-								Href: "#",
-								Attributes: templ.Attributes{
-									"hx-post":   "/logout",
-									"hx-target": "body",
-									"hx-swap":   "outerHTML",
-								},
-							}) {
-								<span class="flex items-center">
-									@icon.LogOut(icon.Props{Class: "size-4 mr-2"})
-									Logout
-								</span>
 							}
 						</div>
 					</div>

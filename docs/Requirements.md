@@ -785,6 +785,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 
 ### My Account
 
+- The menu's top row has My Account and Logout beside each other, above Data on the left and Reports, Settings and
+  Logs on the right, so every item fits in a laptop's window without scrolling the menu.
 - My Account, at the top of the menu, says who is signed in and with which role, opens the guide to setting up the
   site (not on control's), and lists its
   passkeys: when each was added and last used. Only an identity that signs in to the website has it.
