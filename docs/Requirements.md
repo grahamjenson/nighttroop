@@ -100,6 +100,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 ### Sync sources
 
 - Lists every site's sync sources, the most recently attempted first, with failed counts in red.
+- A source turned off after failing says "disabled after failing" in amber.
+- Counts and durations are whole numbers, e.g. 12345, never 1.234e+04, and the averages (EMAs) have one decimal place.
 - Clicking a source shows its sync reports.
 
 ### Push devices
