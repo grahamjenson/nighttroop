@@ -135,6 +135,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createInsulinDoseStmt, err = db.PrepareContext(ctx, createInsulinDose); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateInsulinDose: %w", err)
 	}
+	if q.createLoopSettingsStmt, err = db.PrepareContext(ctx, createLoopSettings); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateLoopSettings: %w", err)
+	}
 	if q.createNotificationEventStmt, err = db.PrepareContext(ctx, createNotificationEvent); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateNotificationEvent: %w", err)
 	}
@@ -212,6 +215,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.getLatestDeviceReportWithPWDInformationStmt, err = db.PrepareContext(ctx, getLatestDeviceReportWithPWDInformation); err != nil {
 		return nil, fmt.Errorf("error preparing query GetLatestDeviceReportWithPWDInformation: %w", err)
+	}
+	if q.getLoopSettingsAtStmt, err = db.PrepareContext(ctx, getLoopSettingsAt); err != nil {
+		return nil, fmt.Errorf("error preparing query GetLoopSettingsAt: %w", err)
 	}
 	if q.getMostRecentProfileStoreStmt, err = db.PrepareContext(ctx, getMostRecentProfileStore); err != nil {
 		return nil, fmt.Errorf("error preparing query GetMostRecentProfileStore: %w", err)
@@ -646,6 +652,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createInsulinDoseStmt: %w", cerr)
 		}
 	}
+	if q.createLoopSettingsStmt != nil {
+		if cerr := q.createLoopSettingsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createLoopSettingsStmt: %w", cerr)
+		}
+	}
 	if q.createNotificationEventStmt != nil {
 		if cerr := q.createNotificationEventStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createNotificationEventStmt: %w", cerr)
@@ -774,6 +785,11 @@ func (q *Queries) Close() error {
 	if q.getLatestDeviceReportWithPWDInformationStmt != nil {
 		if cerr := q.getLatestDeviceReportWithPWDInformationStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getLatestDeviceReportWithPWDInformationStmt: %w", cerr)
+		}
+	}
+	if q.getLoopSettingsAtStmt != nil {
+		if cerr := q.getLoopSettingsAtStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getLoopSettingsAtStmt: %w", cerr)
 		}
 	}
 	if q.getMostRecentProfileStoreStmt != nil {
@@ -1257,6 +1273,7 @@ type Queries struct {
 	createFoodPresetStmt                        *sql.Stmt
 	createGlucoseReadingStmt                    *sql.Stmt
 	createInsulinDoseStmt                       *sql.Stmt
+	createLoopSettingsStmt                      *sql.Stmt
 	createNotificationEventStmt                 *sql.Stmt
 	createProfilePresetStmt                     *sql.Stmt
 	createProfileSwitchStmt                     *sql.Stmt
@@ -1283,6 +1300,7 @@ type Queries struct {
 	getGlucoseReadingStmt                       *sql.Stmt
 	getInsulinDoseStmt                          *sql.Stmt
 	getLatestDeviceReportWithPWDInformationStmt *sql.Stmt
+	getLoopSettingsAtStmt                       *sql.Stmt
 	getMostRecentProfileStoreStmt               *sql.Stmt
 	getNotificationEventStmt                    *sql.Stmt
 	getProfilePresetStmt                        *sql.Stmt
@@ -1407,6 +1425,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		createFoodPresetStmt:                        q.createFoodPresetStmt,
 		createGlucoseReadingStmt:                    q.createGlucoseReadingStmt,
 		createInsulinDoseStmt:                       q.createInsulinDoseStmt,
+		createLoopSettingsStmt:                      q.createLoopSettingsStmt,
 		createNotificationEventStmt:                 q.createNotificationEventStmt,
 		createProfilePresetStmt:                     q.createProfilePresetStmt,
 		createProfileSwitchStmt:                     q.createProfileSwitchStmt,
@@ -1433,6 +1452,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getGlucoseReadingStmt:                       q.getGlucoseReadingStmt,
 		getInsulinDoseStmt:                          q.getInsulinDoseStmt,
 		getLatestDeviceReportWithPWDInformationStmt: q.getLatestDeviceReportWithPWDInformationStmt,
+		getLoopSettingsAtStmt:                       q.getLoopSettingsAtStmt,
 		getMostRecentProfileStoreStmt:               q.getMostRecentProfileStoreStmt,
 		getNotificationEventStmt:                    q.getNotificationEventStmt,
 		getProfilePresetStmt:                        q.getProfilePresetStmt,

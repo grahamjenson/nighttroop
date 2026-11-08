@@ -33,6 +33,12 @@ func (c DeviceStatusCollection) CreateModel(q *sitedb.Queries, ctx context.Conte
 	if overrideIdentifier != nil {
 		createParams.ID = *overrideIdentifier
 	}
+	// AAPS's configuration is kept apart too, only when it changes
+	if nsModel.Configuration != nil {
+		if _, err := recordLoopSettings(q, ctx, aapsApp, fromDeviceStatus, nsModel.Configuration, createParams.OccurredAt, createParams.CreatedByDeviceName); err != nil {
+			return nil, err
+		}
+	}
 
 	return q.CreateDeviceReport(ctx, createParams)
 }

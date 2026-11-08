@@ -32,6 +32,8 @@ CREATE INDEX glucose_readings_updated_at_idx ON glucose_readings(updated_at);
 
 CREATE INDEX insulin_doses_occurred_at_idx ON insulin_doses(occurred_at);
 
+CREATE INDEX loop_settings_app_occurred_at_idx ON loop_settings(app, occurred_at);
+
 CREATE INDEX notification_events_occurred_at_idx ON notification_events(occurred_at);
 
 CREATE INDEX profile_presets_occurred_at_idx ON profile_presets(occurred_at);
@@ -375,6 +377,16 @@ CREATE TABLE insulin_doses (
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
     created_by_identity_id INTEGER,
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
+) STRICT;
+
+CREATE TABLE loop_settings (
+    id INTEGER PRIMARY KEY,
+    app TEXT NOT NULL CHECK(app IN ('loop', 'trio', 'aaps')),
+    source TEXT NOT NULL CHECK(source IN ('profile', 'devicestatus')),
+    settings_json TEXT NOT NULL CHECK(length(settings_json) <= 8192 AND json_valid(settings_json)),
+    occurred_at INTEGER NOT NULL CHECK(occurred_at BETWEEN 0 AND 253402300799999),
+    created_by_device_name TEXT CHECK(length(created_by_device_name) <= 64),
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
 ) STRICT;
 
 CREATE TABLE notification_events (

@@ -463,6 +463,21 @@ CREATE TABLE device_reports (
 ) STRICT;
 
 
+-- loop_settings are a loop app's settings, a row each time they change rather than each time they are sent: Loop's
+-- (loopSettings) and Trio's (its remote settings) from their profiles, and AAPS's configuration from its device
+-- statuses. occurred_at is when the record they came in was from, so an app's settings in force at a time are its
+-- last row at or before it. See docs/loop_settings.md.
+CREATE TABLE loop_settings (
+    id INTEGER PRIMARY KEY,
+    app TEXT NOT NULL CHECK(app IN ('loop', 'trio', 'aaps')),
+    source TEXT NOT NULL CHECK(source IN ('profile', 'devicestatus')),
+    settings_json TEXT NOT NULL CHECK(length(settings_json) <= 8192 AND json_valid(settings_json)),
+    occurred_at INTEGER NOT NULL CHECK(occurred_at BETWEEN 0 AND 253402300799999),
+    created_by_device_name TEXT CHECK(length(created_by_device_name) <= 64),
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
+) STRICT;
+CREATE INDEX loop_settings_app_occurred_at_idx ON loop_settings(app, occurred_at);
+
 ----------
 -- PRESETS are user defined templates for the event types
 ----------

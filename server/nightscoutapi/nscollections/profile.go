@@ -54,6 +54,18 @@ func (c ProfileCollection) CreateModel(q *sitedb.Queries, ctx context.Context, n
 		}
 		ret = append(ret, dbModel)
 	}
+	// Loop's and Trio's settings are kept apart too, each only when it changes
+	sent := nightscoutmodels.PartialProfileStoreToCreate(nsModel, cc)
+	if nsModel.LoopSettings != nil {
+		if _, err := recordLoopSettings(q, ctx, loopApp, fromProfile, nsModel.LoopSettings, sent.OccurredAt, sent.CreatedByDeviceName); err != nil {
+			return nil, err
+		}
+	}
+	if nsModel.RemoteSettings != nil {
+		if _, err := recordLoopSettings(q, ctx, trioApp, fromProfile, nsModel.RemoteSettings, sent.OccurredAt, sent.CreatedByDeviceName); err != nil {
+			return nil, err
+		}
+	}
 	return &ret, nil
 }
 

@@ -2598,6 +2598,76 @@ func (m *InsulinDosesVw) SetCreatedByIdentityName(v *string) {
 }
 
 // GetID returns the ID value.
+func (m LoopSetting) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated LoopSetting.
+func (m *LoopSetting) SetID(v int64) {
+	m.ID = v
+}
+
+// GetApp returns the App value.
+func (m LoopSetting) GetApp() string {
+	return m.App
+}
+
+// SetApp sets the App value and returns the updated LoopSetting.
+func (m *LoopSetting) SetApp(v string) {
+	m.App = v
+}
+
+// GetSource returns the Source value.
+func (m LoopSetting) GetSource() string {
+	return m.Source
+}
+
+// SetSource sets the Source value and returns the updated LoopSetting.
+func (m *LoopSetting) SetSource(v string) {
+	m.Source = v
+}
+
+// GetSettingsJson returns the SettingsJson value.
+func (m LoopSetting) GetSettingsJson() string {
+	return m.SettingsJson
+}
+
+// SetSettingsJson sets the SettingsJson value and returns the updated LoopSetting.
+func (m *LoopSetting) SetSettingsJson(v string) {
+	m.SettingsJson = v
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m LoopSetting) GetOccurredAt() int64 {
+	return m.OccurredAt
+}
+
+// SetOccurredAt sets the OccurredAt value and returns the updated LoopSetting.
+func (m *LoopSetting) SetOccurredAt(v int64) {
+	m.OccurredAt = v
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m LoopSetting) GetCreatedByDeviceName() *string {
+	return m.CreatedByDeviceName
+}
+
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated LoopSetting.
+func (m *LoopSetting) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
+}
+
+// GetCreatedAt returns the CreatedAt value.
+func (m LoopSetting) GetCreatedAt() int64 {
+	return m.CreatedAt
+}
+
+// SetCreatedAt sets the CreatedAt value and returns the updated LoopSetting.
+func (m *LoopSetting) SetCreatedAt(v int64) {
+	m.CreatedAt = v
+}
+
+// GetID returns the ID value.
 func (m NotificationEvent) GetID() string {
 	return m.ID
 }
@@ -12475,6 +12545,76 @@ func (m UpdateTempTargetParams) GetID() string {
 // SetID sets the ID value and returns the updated UpdateTempTargetParams.
 func (m *UpdateTempTargetParams) SetID(v string) {
 	m.ID = v
+}
+
+// GetApp returns the App value.
+func (m CreateLoopSettingsParams) GetApp() string {
+	return m.App
+}
+
+// SetApp sets the App value and returns the updated CreateLoopSettingsParams.
+func (m *CreateLoopSettingsParams) SetApp(v string) {
+	m.App = v
+}
+
+// GetSource returns the Source value.
+func (m CreateLoopSettingsParams) GetSource() string {
+	return m.Source
+}
+
+// SetSource sets the Source value and returns the updated CreateLoopSettingsParams.
+func (m *CreateLoopSettingsParams) SetSource(v string) {
+	m.Source = v
+}
+
+// GetSettingsJson returns the SettingsJson value.
+func (m CreateLoopSettingsParams) GetSettingsJson() string {
+	return m.SettingsJson
+}
+
+// SetSettingsJson sets the SettingsJson value and returns the updated CreateLoopSettingsParams.
+func (m *CreateLoopSettingsParams) SetSettingsJson(v string) {
+	m.SettingsJson = v
+}
+
+// GetOccurredAt returns the OccurredAt value.
+func (m CreateLoopSettingsParams) GetOccurredAt() int64 {
+	return m.OccurredAt
+}
+
+// SetOccurredAt sets the OccurredAt value and returns the updated CreateLoopSettingsParams.
+func (m *CreateLoopSettingsParams) SetOccurredAt(v int64) {
+	m.OccurredAt = v
+}
+
+// GetCreatedByDeviceName returns the CreatedByDeviceName value.
+func (m CreateLoopSettingsParams) GetCreatedByDeviceName() *string {
+	return m.CreatedByDeviceName
+}
+
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated CreateLoopSettingsParams.
+func (m *CreateLoopSettingsParams) SetCreatedByDeviceName(v *string) {
+	m.CreatedByDeviceName = v
+}
+
+// GetApp returns the App value.
+func (m GetLoopSettingsAtParams) GetApp() string {
+	return m.App
+}
+
+// SetApp sets the App value and returns the updated GetLoopSettingsAtParams.
+func (m *GetLoopSettingsAtParams) SetApp(v string) {
+	m.App = v
+}
+
+// GetAt returns the At value.
+func (m GetLoopSettingsAtParams) GetAt() int64 {
+	return m.At
+}
+
+// SetAt sets the At value and returns the updated GetLoopSettingsAtParams.
+func (m *GetLoopSettingsAtParams) SetAt(v int64) {
+	m.At = v
 }
 
 // GetSkip returns the Skip value.

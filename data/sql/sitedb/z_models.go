@@ -307,6 +307,16 @@ type InsulinDosesVw struct {
 	CreatedByIdentityName *string
 }
 
+type LoopSetting struct {
+	ID                  int64
+	App                 string
+	Source              string
+	SettingsJson        string
+	OccurredAt          int64
+	CreatedByDeviceName *string
+	CreatedAt           int64
+}
+
 type NotificationEvent struct {
 	ID                    string
 	NotificationType      string
