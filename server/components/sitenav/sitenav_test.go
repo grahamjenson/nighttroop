@@ -102,7 +102,7 @@ func TestSearchText(t *testing.T) {
 		{"bgl", []string{"site--data--glucose-button"}},
 		{"blood sugar", []string{"site--data--glucose-button"}},
 		{"bolus", []string{"site--data--insulin-button", "site--presets--food-button"}},
-		{"carbs", []string{"site--data--food-button", "site--reports--summaries-button", "site--presets--food-button"}},
+		{"carbs", []string{"site--data--food-button", "site--presets--food-button", "site--reports--summaries-button"}},
 		{"timezone", []string{"site--settings--settings-button"}},
 		{"iob", []string{"site--data--device-status-button"}},
 		{"total daily dose", []string{"site--reports--tdd-menu-button"}},
