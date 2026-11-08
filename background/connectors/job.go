@@ -108,14 +108,14 @@ func SetupConnectorJobManager(config *config.ServerConfig, controlDB *db.Control
 	libreClients, _ := lru.New[string, *libreClient](maxNightscoutClients)
 
 	jobs := &ConnectorJobManager{
-		controlDB:             controlDB,
-		security:              config.Security,
-		config:                config,
+		controlDB:                  controlDB,
+		security:                   config.Security,
+		config:                     config,
 		ConnectorIntervalInSeconds: config.ConnectorIntervalInSeconds,
 		BackgroundConnectorWorkers: config.BackgroundConnectorWorkers,
-		nightscoutStore:       nightscoutapi.NewNightTroopAPIStore(controlDB, config),
-		nightscoutClients:     nightscoutClients,
-		libreClients:          libreClients,
+		nightscoutStore:            nightscoutapi.NewNightTroopAPIStore(controlDB, config),
+		nightscoutClients:          nightscoutClients,
+		libreClients:               libreClients,
 	}
 
 	return jobs

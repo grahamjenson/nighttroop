@@ -31,10 +31,10 @@ type RateLimiters struct {
 	identityPOSTRateLimiters *lru.Cache[string, *rate.Limiter]
 	sitePOSTRateLimiters     *lru.Cache[string, *rate.Limiter]
 
-	siteUpdateConnectorsRateLimiters     *lru.Cache[string, *rate.Limiter]
-	siteIdentityCreateRateLimiters *lru.Cache[string, *rate.Limiter]
-	siteDownloadRateLimiters       *lru.Cache[string, *rate.Limiter]
-	sitePushRateLimiters           *lru.Cache[string, *rate.Limiter]
+	siteUpdateConnectorsRateLimiters *lru.Cache[string, *rate.Limiter]
+	siteIdentityCreateRateLimiters   *lru.Cache[string, *rate.Limiter]
+	siteDownloadRateLimiters         *lru.Cache[string, *rate.Limiter]
+	sitePushRateLimiters             *lru.Cache[string, *rate.Limiter]
 
 	SiteCreateLimiter   *rate.Limiter
 	siteCreateIpLimiter *lru.Cache[string, *rate.Limiter]
@@ -69,10 +69,10 @@ func newRateLimiters(config ServerConfig) *RateLimiters {
 		identityPOSTRateLimiters: lruMust(maxSites * maxIdentities * wiggle),
 		sitePOSTRateLimiters:     lruMust(maxSites * wiggle),
 
-		siteUpdateConnectorsRateLimiters:     lruMust(maxSites * wiggle),
-		siteIdentityCreateRateLimiters: lruMust(maxSites * wiggle),
-		siteDownloadRateLimiters:       lruMust(maxSites * wiggle),
-		sitePushRateLimiters:           lruMust(maxSites * wiggle),
+		siteUpdateConnectorsRateLimiters: lruMust(maxSites * wiggle),
+		siteIdentityCreateRateLimiters:   lruMust(maxSites * wiggle),
+		siteDownloadRateLimiters:         lruMust(maxSites * wiggle),
+		sitePushRateLimiters:             lruMust(maxSites * wiggle),
 
 		SiteCreateLimiter:   defaultRate("site_create").limiter(),
 		siteCreateIpLimiter: lruMust(maxSites * wiggle),
