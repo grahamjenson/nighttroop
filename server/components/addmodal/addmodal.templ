@@ -19,7 +19,19 @@ const (
 	Select
 	// When is a date and time in the timezone times are shown in, or now when left blank
 	When
+	// Percent is a number typed in as a percent and sent as the fraction its model keeps, e.g. 120 as 1.2
+	Percent
 )
+
+// MultiplierHelp is every percent multiplier's help, so they are all explained the same way
+const MultiplierHelp = "A percent above 0: 100% is as it is, 120% is 1.2 times."
+
+// percentsToFractions sends each Percent input's value as the fraction its model keeps, e.g. 120 as 1.2
+const percentsToFractions = "for (const input of this.querySelectorAll('[data-percent]')) { const value = ctx.request.body.get(input.name); " +
+	"if (value) ctx.request.body.set(input.name, Math.round(value * 100) / 10000) } "
+
+// PercentsToFractions is for a form of its own with Percent inputs, such as a details modal's edit form
+var PercentsToFractions = templ.Attributes{"hx-on::config:request": templ.JSUnsafeFuncCall(percentsToFractions)}
 
 // Field is one of a model's fields in its add modal
 type Field struct {
@@ -108,7 +120,7 @@ func swap(p Props) string {
 // empty the modal container. Only the form's own request closes it, not one of an input's within it, like loading what
 // can be picked. A table's pager.Empty row hides itself once a row is added.
 var formHandlers = templ.Attributes{
-	"hx-on::config:request": templ.JSUnsafeFuncCall("for (const [name, value] of [...ctx.request.body]) { if (value === '') ctx.request.body.delete(name) }"),
+	"hx-on::config:request": templ.JSUnsafeFuncCall(percentsToFractions + "for (const [name, value] of [...ctx.request.body]) { if (value === '') ctx.request.body.delete(name) }"),
 	"hx-on::after:request":  templ.JSUnsafeFuncCall("if (event.target === this && ctx.response.status < 400) { document.getElementById('modal-container').innerHTML = '' }"),
 }
 
@@ -147,6 +159,8 @@ templ field(p Props, f Field) {
 				@input.Input(input.Props{ID: id, Name: f.Name, Type: input.TypeDateTime, Value: f.Value})
 			case Number:
 				@input.Input(input.Props{ID: id, Name: f.Name, Type: input.TypeNumber, Value: f.Value, Required: f.Required, Attributes: templ.Attributes{"step": f.Step, "min": f.Min, "max": f.Max}})
+			case Percent:
+				@input.Input(input.Props{ID: id, Name: f.Name, Type: input.TypeNumber, Value: f.Value, Required: f.Required, Attributes: templ.Attributes{"step": "any", "min": f.Min, "max": f.Max, "data-percent": true}})
 			default:
 				@input.Input(input.Props{ID: id, Name: f.Name, Value: f.Value, Required: f.Required, Attributes: textAttributes(f, id)})
 				if len(f.Options) > 0 {

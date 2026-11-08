@@ -3,6 +3,7 @@ package site_data_templ
 import (
 	"context"
 	"fmt"
+	"math"
 	"strconv"
 	"time"
 
@@ -114,6 +115,14 @@ func orDash[T any](value *T) string {
 		return "-"
 	}
 	return fmt.Sprint(*value)
+}
+
+// percentOr is a fraction as the percent it is typed in as, e.g. 1.2 as 120, or unset when it has none
+func percentOr(fraction *float64, unset string) string {
+	if fraction == nil {
+		return unset
+	}
+	return fmt.Sprint(math.Round(*fraction*10000) / 100)
 }
 
 // GlucoseReadingsTable shows one page of readings, newest first, with buttons to the pages either side

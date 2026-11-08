@@ -27,7 +27,7 @@ ASSERT_VISIBLE #site--temp-basal--details
 ASSERT_TEXT_VISIBLE virtual_sync
 // Only what it has is listed: virtual sync sets a rate, not a multiplier of the basal
 ASSERT_VISIBLE #site--temp-basal--details dt:text-is("Device")
-ASSERT_NOT_VISIBLE #site--temp-basal--details dt:text-is("Times the basal")
+ASSERT_NOT_VISIBLE #site--temp-basal--details dt:text-is("Basal (%)")
 // Its raw data is folded away until asked for
 ASSERT_VISIBLE #site--temp-basal--details--raw
 ASSERT_NOT_VISIBLE #site--temp-basal--details--raw pre
@@ -46,18 +46,20 @@ ASSERT_VISIBLE #site--temp-basal--create--modal
 ASSERT_TEXT_VISIBLE The basal rate given instead, 0 for a suspend.
 ASSERT_TEXT_VISIBLE Required
 ASSERT_VISIBLE #site--temp-basal--create--multiplier
-// Its multiplier is how many times the scheduled basal, so a temp basal under it is under 1
-ASSERT_TEXT_VISIBLE How many times the scheduled basal, e.g. 0.5 for half
+// Its multiplier of the scheduled basal is typed in as a percent above 0, so a temp basal under it is under 100%
+ASSERT_TEXT_VISIBLE Basal (%)
+ASSERT_TEXT_VISIBLE A percent above 0: 100% is as it is, 120% is 1.2 times.
+ASSERT_VISIBLE #site--temp-basal--create--multiplier[min="1"][max="1100"]
 INPUT #site--temp-basal--create--rate 1.25
 INPUT #site--temp-basal--create--duration-minutes 45
-INPUT #site--temp-basal--create--multiplier 0.7
+INPUT #site--temp-basal--create--multiplier 70
 INPUT #site--temp-basal--create--notes Sick day
 CLICK #site--temp-basal--create--notes
 SCREENSHOT temp_basal_add
 CLICK #site--temp-basal--create--submit
 ASSERT_STATUS 201
 ASSERT_TEXT_VISIBLE 1.25
-ASSERT_VISIBLE #tempBasalsTable td:text-is("0.7")
+ASSERT_VISIBLE #tempBasalsTable td:text-is("70")
 SCREENSHOT temp_basal_created
 
 // Its details can be edited, which updates its row
