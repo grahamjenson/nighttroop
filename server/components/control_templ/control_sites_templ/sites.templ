@@ -9,12 +9,15 @@ import (
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/models/publicmodels"
 	"nighttroop.t1d.nz/server/components/control_templ/control_logs_templ"
+	"nighttroop.t1d.nz/server/components/footer"
 	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/public_templ"
+	"nighttroop.t1d.nz/server/components/stat"
 	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/server/components/ui/toast"
@@ -267,59 +270,175 @@ templ siteRow(site *controlmodels.Site) {
 	}
 }
 
-// SitePage is a site's own page: its details, such as its DB size, with buttons for what an admin can do to it, its
-// identities, which an admin can reset or sign in to the site as, and its latest events and errors
+// stateClasses colour a site's state badge: live in the theme's colour, disabled as a warning, and gone grey
+var stateClasses = map[string]string{"live": "bg-primary/10 text-primary", "disabled": "bg-amber-100 text-amber-800"}
+
+func stateClass(state string) string {
+	if class, ok := stateClasses[state]; ok {
+		return class
+	}
+	return "bg-gray-100 text-gray-700"
+}
+
+// lifecycle is when the site was made, its batch, and when it was disabled, archived or deleted, if it was
+func lifecycle(site *controlmodels.Site) string {
+	text := "Created " + formatDate(&site.CreatedAt) + " · Batch " + site.Batch
+	for _, at := range []struct {
+		what string
+		ms   *int64
+	}{{"Disabled", site.DisabledAt}, {"Archived", site.ArchivedAt}, {"Deleted", site.DeletedAt}} {
+		if at.ms != nil {
+			text += " · " + at.what + " " + formatDate(at.ms)
+		}
+	}
+	return text
+}
+
+// usedPercent is how much of its DB size limit the site uses, when both are known
+func usedPercent(site *controlmodels.Site) (int64, bool) {
+	if site.EstimatedDbSizeKb == nil || site.MaxDbSizeKbLimit == nil || *site.MaxDbSizeKbLimit <= 0 {
+		return 0, false
+	}
+	return *site.EstimatedDbSizeKb * 100 / *site.MaxDbSizeKbLimit, true
+}
+
+// barClass colours the DB size bar: red over the limit, amber nearing it
+func barClass(percent int64) string {
+	switch {
+	case percent > 100:
+		return "bg-red-500"
+	case percent >= 80:
+		return "bg-amber-500"
+	}
+	return "bg-primary"
+}
+
+// ago is how long ago a time in ms was, or Never
+func ago(ms *int64) string {
+	return display.Ago(ms, time.Now())
+}
+
+// identityTypes are how many of the identities are people (admins and users) and how many devices
+func identityTypes(identities []*controlmodels.SiteIdentity) string {
+	devices := 0
+	for _, identity := range identities {
+		if identity.Role.GetType() == consts.IdentityTypeDevice {
+			devices++
+		}
+	}
+	people, peopleWord, devicesWord := len(identities)-devices, "people", "devices"
+	if people == 1 {
+		peopleWord = "person"
+	}
+	if devices == 1 {
+		devicesWord = "device"
+	}
+	return fmt.Sprintf("%d %s, %d %s", people, peopleWord, devices, devicesWord)
+}
+
+// lastError is how long ago the site's latest error was, or None
+func lastError(errors []*controlmodels.Error) string {
+	if len(errors) == 0 {
+		return "None"
+	}
+	return ago(&errors[0].CreatedAt)
+}
+
+// siteURL is the site's own address, to open it
+func siteURL(ctx context.Context, siteID string) string {
+	controlContext := httputils.GetControlContext(ctx)
+	if controlContext == nil || controlContext.ControlDB == nil {
+		return ""
+	}
+	return controlContext.ControlDB.ServerConfig.SiteURL(siteID)
+}
+
+// SitePage is a site's own page, laid out like a site's summary: its state and when it changed, with buttons for what
+// an admin can do to it, its DB size against its limit, tiles of when it was last used, its identities and its last
+// error, then its identities, which an admin can reset or sign in to the site as, and its latest events and errors
 templ SitePage(page *controlmodels.SitePage) {
-	<div id="control--site--page" class="mx-auto max-w-5xl space-y-6">
-		@heading.Page(page.Site.ID) {
-			The site's details, its identities, and its latest events and errors.
-		}
-		<section id="control--site--details" class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			@siteDetails(page.Site)
-			if isAdmin(ctx) {
-				<div id="control--site--actions" class="mt-4 flex flex-wrap gap-2 empty:hidden">
-					@siteActions(page.Site)
+	{{ site := page.Site }}
+	@heading.Title(site.ID)
+	<div id="control--site--page" class="mx-auto w-full max-w-5xl space-y-4 py-4">
+		<div class="flex flex-wrap items-start justify-between gap-3">
+			<div>
+				<div class="flex flex-wrap items-center gap-2">
+					<h1 class="font-mono text-2xl font-bold">{ site.ID }</h1>
+					<span id="control--site--state" class={ "rounded-full px-2 py-0.5 text-xs font-medium", stateClass(site.State) }>{ display.Name(site.State) }</span>
+					if inactive(ctx, site) {
+						<span id="control--site--inactive" class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">Inactive</span>
+					}
+					if site.Oversized() {
+						<span id="control--site--over-limit" class="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">Over limit</span>
+					}
 				</div>
+				<p id="control--site--lifecycle" class="mt-1 text-sm text-gray-500">{ lifecycle(site) }</p>
+			</div>
+			<div class="flex flex-wrap items-center gap-2">
+				if url := siteURL(ctx, site.ID); url != "" && site.State == "live" {
+					@footer.NewTabLink("control--site--open", url, "inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium shadow-sm hover:bg-gray-50") {
+						Open Site
+						@icon.ExternalLink(icon.Props{Class: "size-4"})
+					}
+				}
+				if isAdmin(ctx) {
+					<div id="control--site--actions" class="flex flex-wrap gap-2 empty:hidden">
+						@siteActions(site)
+					</div>
+				}
+			</div>
+		</div>
+		@dbSize(site)
+		<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+			@stat.Tile("control--site--last-seen", "Last seen", ago(site.LastSeenAt), icon.Eye)
+			@stat.Tile("control--site--last-write", "Last write", ago(site.LastWriteAt), icon.PenLine)
+			@stat.Tile("control--site--identity-count", "Identities", fmt.Sprint(len(page.Identities)), icon.Users) {
+				<div id="control--site--identity-types" class="text-xs text-gray-500">{ identityTypes(page.Identities) }</div>
 			}
-		</section>
-		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			@SiteIdentities(page.Site.ID, page.Identities)
-		</section>
-		@latest("events", "Latest Events", "/events?site_id="+page.Site.ID) {
-			@control_logs_templ.EventsList("control--site--events--table", page.Events)
+			@stat.Tile("control--site--last-error", "Last error", lastError(page.Errors), icon.TriangleAlert)
+		</div>
+		@stat.Section("Identities", "", "", "") {
+			@SiteIdentities(site.ID, page.Identities)
 		}
-		@latest("errors", "Latest Errors", "/errors?site_id="+page.Site.ID) {
-			@control_logs_templ.ErrorsList("control--site--errors--table", page.Errors)
-		}
+		<div class="grid gap-4 lg:grid-cols-2">
+			@stat.Section("Latest Events", "control--site--events--all", "See all", "/events?site_id="+site.ID) {
+				@control_logs_templ.EventsList("control--site--events--table", page.Events)
+			}
+			@stat.Section("Latest Errors", "control--site--errors--all", "See all", "/errors?site_id="+site.ID) {
+				@control_logs_templ.ErrorsList("control--site--errors--table", page.Errors)
+			}
+		</div>
 		<div id="modal-container"></div>
 	</div>
 }
 
-// latest is a section of a site's latest rows of one kind, linking to all of them
-templ latest(id string, title string, all string) {
-	<section id={ "control--site--" + id } class="rounded-xl border border-gray-200 p-4 shadow-sm">
-		<div class="mb-2 flex items-center justify-between">
-			<h3 class="text-sm font-semibold text-brand-night">{ title }</h3>
-			<a id={ "control--site--" + id + "--all" } href={ templ.SafeURL(all) } hx-get={ all } hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML" class="text-sm text-primary underline">See all</a>
+// dbSize is the site's DB size, large, against its limit, with a bar of how much of the limit it uses
+templ dbSize(site *controlmodels.Site) {
+	<div id="control--site--db" class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+		<div class="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-gray-500">
+			@icon.Database(icon.Props{Class: "size-4"})
+			DB size
 		</div>
-		{ children... }
-	</section>
-}
-
-// siteDetails is what is known of a site, never its data or secrets
-templ siteDetails(site *controlmodels.Site) {
-		<dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-			@siteDetail("State", display.Name(site.State))
-			@siteDetail("Batch", site.Batch)
-			@siteDetail("DB Size Limit (MB)", sizeMB(site.MaxDbSizeKbLimit))
-			@siteDetail("DB Size (MB)", sizeMB(site.EstimatedDbSizeKb))
-			@siteDetail("Created", formatDate(&site.CreatedAt))
-			@siteDetail("Last Seen", formatDate(site.LastSeenAt))
-			@siteDetail("Last Write", formatDate(site.LastWriteAt))
-			@siteDetail("Disabled", formatDate(site.DisabledAt))
-			@siteDetail("Archived", formatDate(site.ArchivedAt))
-			@siteDetail("Deleted", formatDate(site.DeletedAt))
-		</dl>
+		<div class="mt-1 flex flex-wrap items-baseline gap-2">
+			if site.EstimatedDbSizeKb != nil {
+				<span id="control--site--db-size" class="text-5xl font-extrabold tracking-tight tabular-nums">{ sizeMB(site.EstimatedDbSizeKb) }</span>
+				<span class="text-lg text-gray-500">MB</span>
+			} else {
+				<span id="control--site--db-size" class="text-2xl font-bold text-gray-400">Not measured yet</span>
+			}
+			if site.MaxDbSizeKbLimit != nil {
+				<span id="control--site--db-limit" class="text-sm text-gray-500">of its { sizeMB(site.MaxDbSizeKbLimit) } MB limit</span>
+			}
+		</div>
+		if percent, ok := usedPercent(site); ok {
+			<div class="mt-4 h-2 w-full overflow-hidden rounded-full bg-gray-100">
+				<div id="control--site--db-used" class={ "h-full rounded-full", barClass(percent) } style={ fmt.Sprintf("width: %d%%", min(percent, 100)) }></div>
+			</div>
+			<div class="mt-1 text-xs text-gray-500">{ fmt.Sprintf("%d%% of its limit used", percent) }</div>
+		} else if site.EstimatedDbSizeKb == nil {
+			<div class="mt-1 text-xs text-gray-500">The resource check measures each site's DB</div>
+		}
+	</div>
 }
 
 // siteActions are the buttons for what an admin can do to a site: disable it once no one has used it for a while,

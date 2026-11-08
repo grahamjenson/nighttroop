@@ -62,10 +62,17 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   sites and a site's details, with its DB size limit.
 - Sites can be ordered by how long since they were last written to (the first to archive) or by DB size.
 - A site not written to or seen within `DISABLE_AFTER_INACTIVITY_DAYS` is marked inactive.
-- Clicking a site opens its own page, `/sites/{id}`, and the browser's back button returns to the sites. The page shows
-  its details (state, batch, DB size and its limit, when it was created, last seen, last written to, disabled, archived
-  or deleted), its identities, and its latest 10 events and 10 errors, each opening its details, with a link to all of
-  them filtered to the site. An API client asking for `/sites/{id}` gets the site.
+- Clicking a site opens its own page, `/sites/{id}`, laid out like a site's summary, and the browser's back button
+  returns to the sites. An API client asking for `/sites/{id}` gets the site. The page shows:
+  - its ID, a badge of its state, and Inactive or Over limit badges when they apply, with when it was created, its
+    batch, and when it was disabled, archived or deleted;
+  - an Open Site link, in a new tab, while it is live;
+  - its DB size, large, against its limit, with a bar of how much of the limit it uses: amber from 80%, red over it.
+    A size not yet measured says so;
+  - tiles of when it was last seen and last written to, how many identities it has (people and devices), and how
+    long since its last error;
+  - its identities, and its latest 10 events and 10 errors, each opening its details, with a link to all of them
+    filtered to the site.
 - An admin sees the buttons for what can be done to the site on its page, and its page shows the change once done.
 - An admin can create a site at an ID they pick (8 lowercase letters), e.g. a vanity one; a taken ID is refused. Its
   credentials are shown once. An admin can create sites past `MAX_SITES` and while public site creation is off.

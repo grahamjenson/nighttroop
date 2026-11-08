@@ -23,9 +23,8 @@ func canReset(ctx context.Context) bool {
 // SiteIdentities is a site's identities, with buttons for an admin to reset one's password, or its TOTP when it logs in
 // with one, or sign in to the site as it. The new credentials are shown above the table, once.
 templ SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) {
-	<h3 class="text-sm font-semibold text-brand-night">Identities</h3>
 	<div id="control--site--identities--reset"></div>
-	@table.Table(table.Props{ID: "control--site--identities--table", Class: "mt-2 rounded-lg border border-gray-200 text-sm"}) {
+	@table.Table(table.Props{ID: "control--site--identities--table", Class: "rounded-lg border border-gray-200 text-sm"}) {
 		@table.Header() {
 			@table.Row() {
 				@table.Head() {

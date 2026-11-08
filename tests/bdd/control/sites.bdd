@@ -48,14 +48,25 @@ CLICK #control--sites--order-created
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to
 
-// Clicking a site opens its own page: its details, such as its DB size, its identities, and its latest events and
-// errors. The newest site is the one made above, which no one has used.
+// Clicking a site opens its own page, laid out like a site's summary: its state, its DB size against its limit, tiles
+// of when it was last used, its identities and its last error, then its identities, and its latest events and errors.
+// The newest site is the one made above, which no one has used.
 SAVE_TEXT #controlSitesTable>tbody>tr:first-child>td:first-child new_site
 CLICK #controlSitesTable tbody tr >> nth=0
 ASSERT_PATH /sites/{{ .new_site }}
 ASSERT_VISIBLE #control--site--page
-ASSERT_VISIBLE #control--site--details dt >> text=DB Size (MB)
-ASSERT_VISIBLE #control--site--details dt >> text=Last Write
+ASSERT_TEXT_EQUALS #control--site--state Live
+ASSERT_VISIBLE #control--site--inactive
+ASSERT_VISIBLE #control--site--lifecycle >> text=/^Created .* · Batch [a-z]$/
+ASSERT_VISIBLE #control--site--open[target="_blank"]
+// A new site's DB is not measured until the resource check runs
+ASSERT_TEXT_EQUALS #control--site--db-size Not measured yet
+ASSERT_VISIBLE #control--site--db-limit
+ASSERT_TEXT_EQUALS #control--site--last-seen Never
+ASSERT_TEXT_EQUALS #control--site--last-write Never
+ASSERT_TEXT_EQUALS #control--site--identity-count 3
+ASSERT_TEXT_EQUALS #control--site--identity-types 1 person, 2 devices
+ASSERT_TEXT_EQUALS #control--site--last-error None
 ASSERT_VISIBLE #control--site--identities--table td >> text=pwd_phone
 // A site within its DB size limit cannot be truncated, but one no one has used can be disabled
 ASSERT_NOT_VISIBLE #control--site--truncate
@@ -79,7 +90,10 @@ CLICK #controlSitesTable tbody tr >> nth=0
 ASSERT_PATH /sites/{{ .new_site }}
 CLICK #control--site--disable
 ASSERT_TEXT_VISIBLE Site Disabled
-ASSERT_VISIBLE #control--site--details dd >> text=/^Disabled$/
+ASSERT_TEXT_EQUALS #control--site--state Disabled
+ASSERT_VISIBLE #control--site--lifecycle >> text=/ · Disabled /
+// A disabled site is not served, so there is no site to open
+ASSERT_NOT_VISIBLE #control--site--open
 ASSERT_VISIBLE #control--site--events--table td >> text=Site disabled
 SCREENSHOT site_disabled
 
