@@ -68,8 +68,13 @@ ASSERT_TEXT_EQUALS #control--site--identity-count 3
 ASSERT_TEXT_EQUALS #control--site--identity-types 1 person, 2 devices
 ASSERT_TEXT_EQUALS #control--site--last-error None
 ASSERT_VISIBLE #control--site--identities--table td >> text=pwd_phone
-// A site within its DB size limit cannot be truncated, but one no one has used can be disabled
+// Its actions are a grid, each saying what it does: a site within its DB size limit cannot be truncated, and one not
+// disabled cannot be archived, which each say when they are offered, but one no one has used can be disabled
 ASSERT_NOT_VISIBLE #control--site--truncate
+ASSERT_VISIBLE #control--site--action-truncate >> text=Offered while it is over its DB size limit.
+ASSERT_NOT_VISIBLE #control--site--archive
+ASSERT_VISIBLE #control--site--action-archive >> text=Offered once it is disabled.
+ASSERT_VISIBLE #control--site--action-disable >> text=Stops serving the site. Its data is kept.
 ASSERT_VISIBLE #control--site--disable
 // Its latest events include its creation, which opens its details
 ASSERT_VISIBLE #control--site--events--table td >> text=Site created
@@ -99,6 +104,8 @@ SCREENSHOT site_disabled
 
 // A disabled site cannot be disabled again, but can be archived, which needs S3 (not connected in tests)
 ASSERT_NOT_VISIBLE #control--site--disable
+ASSERT_VISIBLE #control--site--action-disable >> text=It is already disabled.
+ASSERT_VISIBLE #control--site--action-open >> text=Only a live site is served.
 ASSERT_VISIBLE #control--site--archive
 CLICK #control--site--archive
 ASSERT_TEXT_VISIBLE a site can only be archived when S3 is connected

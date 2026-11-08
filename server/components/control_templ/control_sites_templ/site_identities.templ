@@ -68,12 +68,17 @@ templ SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) {
 						<span title={ formatDate(identity.LastSeenAt) }>{ display.Ago(identity.LastSeenAt, time.Now()) }</span>
 					}
 					if canReset(ctx) {
-						@table.Cell(table.CellProps{Class: "flex gap-1"}) {
-							@resetButton(siteID, identity, "password", "Password", "Give "+identity.Name+" a new random password? Their old one stops working.")
-							if identity.HasTotp {
-								@resetButton(siteID, identity, "totp", "TOTP", "Give "+identity.Name+" a new TOTP secret? Codes from their authenticator app stop working.")
-							}
-							@assumeButton(siteID, identity)
+						@table.Cell() {
+							// Each action has its own column, so the same action lines up down the table
+							<div class="grid grid-cols-3 gap-1">
+								@resetButton(siteID, identity, "password", "Reset password", "Give "+identity.Name+" a new random password? Their old one stops working.")
+								if identity.HasTotp {
+									@resetButton(siteID, identity, "totp", "Reset TOTP", "Give "+identity.Name+" a new TOTP secret? Codes from their authenticator app stop working.")
+								} else {
+									<span></span>
+								}
+								@assumeButton(siteID, identity)
+							</div>
 						}
 					}
 				}
@@ -100,7 +105,7 @@ templ resetButton(siteID string, identity *controlmodels.SiteIdentity, what stri
 		hx-status:5xx="target:#toaster swap:beforeend"
 	>
 		@button.Button(button.Props{ID: fmt.Sprintf("control--site--identity--%d--reset-%s", identity.ID, what), Type: button.TypeSubmit,
-			Variant: button.VariantOutline, Size: button.SizeSm}) {
+			Variant: button.VariantOutline, Size: button.SizeSm, Class: "w-full"}) {
 			{ label }
 		}
 	</form>
@@ -132,10 +137,10 @@ templ assumeButton(siteID string, identity *controlmodels.SiteIdentity) {
 		action={ templ.SafeURL(fmt.Sprintf("/sites/%s/identities/%d/assume", siteID, identity.ID)) }
 		target="_blank"
 		data-confirm={ "Sign in to the site as " + identity.Name + "? The site's events will show you did." }
-		onsubmit="return confirm(this.dataset.confirm)"
+		onsubmit="return confirm(this.dataset.confirm);"
 	>
 		@button.Button(button.Props{ID: fmt.Sprintf("control--site--identity--%d--assume", identity.ID), Type: button.TypeSubmit,
-			Variant: button.VariantOutline, Size: button.SizeSm}) {
+			Variant: button.VariantOutline, Size: button.SizeSm, Class: "w-full"}) {
 			Sign in as
 		}
 	</form>
