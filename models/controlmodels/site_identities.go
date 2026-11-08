@@ -32,12 +32,20 @@ type SiteIdentityAssume struct {
 	URL  string `json:"url"`
 }
 
-// SitePage is a site's own page in control: its details, its identities, and its latest events and errors
+// SitePage is a site's own page in control: its details, the bytes its DB's tables take, its identities, and its
+// latest events and errors
 type SitePage struct {
 	Site       *Site           `json:"site"`
+	Tables     []*SiteTable    `json:"tables"`
 	Identities []*SiteIdentity `json:"identities"`
 	Events     []*Event        `json:"events"`
 	Errors     []*Error        `json:"errors"`
+}
+
+// SiteTable is a table of a site's DB and the bytes it takes in the file, its indexes with it
+type SiteTable struct {
+	Name  string `json:"name"`
+	Bytes int64  `json:"bytes"`
 }
 
 // HasSecret is whether an encrypted secret is set

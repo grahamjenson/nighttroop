@@ -59,9 +59,15 @@ ASSERT_TEXT_EQUALS #control--site--state Live
 ASSERT_VISIBLE #control--site--inactive
 ASSERT_VISIBLE #control--site--lifecycle >> text=/^Created .* · Batch [a-z]$/
 ASSERT_VISIBLE #control--site--open[target="_blank"]
-// A new site's DB is not measured until the resource check runs
-ASSERT_TEXT_EQUALS #control--site--db-size Not measured yet
+// A new site's DB is measured by its tables before the resource check runs, against its limit. The bar is split into
+// its largest tables, and a key under it names each one, with the rest of them together as Other
+ASSERT_VISIBLE #control--site--db-size >> text=/^\d+\.\d\d$/
 ASSERT_VISIBLE #control--site--db-limit
+ASSERT_TEXT_VISIBLE % of its limit used
+ASSERT_DRAWN #control--site--db-used
+ASSERT_VISIBLE #control--site--db-tables
+ASSERT_VISIBLE #control--site--db-table--glucose_readings
+ASSERT_VISIBLE #control--site--db-table--Other >> text=/MB · \d+%$/
 ASSERT_TEXT_EQUALS #control--site--last-seen Never
 ASSERT_TEXT_EQUALS #control--site--last-write Never
 ASSERT_TEXT_EQUALS #control--site--identity-count 3

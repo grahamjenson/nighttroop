@@ -180,6 +180,34 @@ func (db *DB) Vacuum(ctx context.Context) error {
 	return err
 }
 
+// TableSize is the bytes a table takes in its DB's file, its indexes counted with it
+type TableSize struct {
+	Name  string
+	Bytes int64
+}
+
+// TableSizes are the bytes each table takes in db's file, its indexes counted with it, largest first, from SQLite's
+// dbstat. sqlc cannot generate a query of a virtual table, so it is read here, with the rest of the DB's upkeep. It
+// reads every page of the DB, so it is for an admin looking at one DB, not a page every user opens.
+func (db *DB) TableSizes(ctx context.Context) ([]TableSize, error) {
+	rows, err := db.SQLiteDB.QueryContext(ctx, "SELECT COALESCE(objects.tbl_name, pages.name), SUM(pages.pgsize) "+
+		"FROM (SELECT name, pgsize FROM dbstat WHERE aggregate = TRUE) AS pages "+
+		"LEFT JOIN sqlite_schema AS objects ON objects.name = pages.name GROUP BY 1 ORDER BY 2 DESC, 1")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	sizes := []TableSize{}
+	for rows.Next() {
+		var size TableSize
+		if err := rows.Scan(&size.Name, &size.Bytes); err != nil {
+			return nil, err
+		}
+		sizes = append(sizes, size)
+	}
+	return sizes, rows.Err()
+}
+
 // Schema is the SQL that made each of db's tables, indexes and triggers, so DBs made by the same migrations have the
 // same one. sqlc cannot generate a query of sqlite_master, so it is read here, with the rest of the DB's upkeep.
 func Schema(ctx context.Context, db *sql.DB) (string, error) {

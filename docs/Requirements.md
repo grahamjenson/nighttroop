@@ -79,8 +79,11 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   - its ID, a badge of its state, and Inactive or Over limit badges when they apply, with when it was created, its
     batch, and when it was disabled, archived or deleted;
   - an Open Site link, in a new tab, while it is live;
-  - its DB size, large, against its limit, with a bar of how much of the limit it uses: amber from 80%, red over it.
-    A size not yet measured says so;
+  - its DB size, large, against its limit, with a bar of how much of the limit it uses: amber from 80%, red over it, with
+    a warning icon. Before the resource check measures it, its size is measured by its tables, and with neither it
+    says it is not measured yet;
+  - the bar is split into its five largest tables, indexes counted with their table, darkest first, and the rest as
+    Other, with a key under it naming each one with its size in MB and share of the DB; hovering a part names it too;
   - tiles of when it was last seen and last written to, how many identities it has (people and devices), and how
     long since its last error;
   - its identities, and its latest 10 events and 10 errors, each opening its details, with a link to all of them
