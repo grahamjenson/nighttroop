@@ -11,6 +11,7 @@ import (
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/css"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/display"
 )
 
 const (
@@ -184,7 +185,7 @@ func graph(s *sitemodels.Summary, now int64, location *time.Location) *charts.Sc
 	}
 	var insulin, smbs, carbs []opts.ScatterData
 	for _, d := range s.InsulinDoses {
-		point := opts.ScatterData{Name: value(&d.Dose, "U"), Value: []any{at(d.OccurredAt), insulinHeight}, SymbolRotate: 180}
+		point := opts.ScatterData{Name: display.Value(&d.Dose, "U"), Value: []any{at(d.OccurredAt), insulinHeight}, SymbolRotate: 180}
 		if isSMB(d) {
 			smbs = append(smbs, point)
 		} else {
@@ -193,7 +194,7 @@ func graph(s *sitemodels.Summary, now int64, location *time.Location) *charts.Sc
 	}
 	for _, f := range s.FoodIntakes {
 		if f.Carbs != nil {
-			carbs = append(carbs, opts.ScatterData{Name: value(f.Carbs, "g"), Value: []any{at(f.OccurredAt), carbsHeight}})
+			carbs = append(carbs, opts.ScatterData{Name: display.Value(f.Carbs, "g"), Value: []any{at(f.OccurredAt), carbsHeight}})
 		}
 	}
 	chart.AddSeries("SMB", smbs, marker(brandNight, 7, true)...)

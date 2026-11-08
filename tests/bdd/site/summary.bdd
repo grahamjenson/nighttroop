@@ -63,6 +63,11 @@ ASSERT_NOT_VISIBLE #site--summary--cob >> text="–"
 ASSERT_VISIBLE #site--summary--time-in-range >> text=/^\d+(\.\d)?%$/
 ASSERT_VISIBLE #site--summary--total-daily-dose >> text=/^\d+(\.\d+)? U$/
 ASSERT_NOT_VISIBLE #site--summary--total-daily-dose >> text="0 U"
+// The weeks and months before a new site's have no data, so their daily dose is a dash, as their time in range is,
+// not a 0 U that reads as no insulin
+ASSERT_TEXT_EQUALS #site--summary--total-daily-dose--last-week Last week –
+ASSERT_TEXT_EQUALS #site--summary--total-daily-dose--last-month Last month –
+ASSERT_TEXT_EQUALS #site--summary--time-in-range--last-week Last week –
 // A tile's and a device's units are smaller and grey beside their numbers
 ASSERT_VISIBLE #site--summary--total-daily-dose span.text-gray-500 >> text="U"
 ASSERT_VISIBLE #site--summary--devices dd span.text-gray-500 >> text="%" >> nth=0
