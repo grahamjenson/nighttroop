@@ -145,6 +145,11 @@ func (l *LogsDB) SiteWeekStartChangedEvent(ctx context.Context, siteID string, b
 	l.event(ctx, siteID, events.SiteWeekStartChanged, SiteTimezoneChangedAttributes{By: by, From: from, To: to})
 }
 
+// SummariesRegenerationRequestedEvent records a site's admin asking for its summaries to be built again
+func (l *LogsDB) SummariesRegenerationRequestedEvent(ctx context.Context, siteID string, by string) {
+	l.event(ctx, siteID, events.SummariesRegenerationRequested, SiteArchivedAttributes{By: by})
+}
+
 type SiteTruncatedAttributes struct {
 	By           string `json:"by"`
 	BeforeSizeKB *int64 `json:"before_size_kb"`
@@ -209,10 +214,10 @@ func (l *LogsDB) ConnectorTurnedOffEvent(ctx context.Context, siteID string, con
 
 type ConnectorBackfilledAttributes struct {
 	ConnectorType consts.ConnectorType `json:"connector_type"`
-	From     int64                 `json:"from"`
-	To       int64                 `json:"to"`
-	Records  int                   `json:"records"`
-	Error    *string               `json:"error,omitempty"`
+	From          int64                `json:"from"`
+	To            int64                `json:"to"`
+	Records       int                  `json:"records"`
+	Error         *string              `json:"error,omitempty"`
 }
 
 // ConnectorBackfilledEvent records a site's backfill of the records from from to to, which started at started, the new
@@ -228,7 +233,7 @@ func (l *LogsDB) ConnectorBackfilledEvent(ctx context.Context, siteID string, co
 
 type ConnectorRecordsAddedAttributes struct {
 	ConnectorType consts.ConnectorType `json:"connector_type"`
-	Records  int                   `json:"records"`
+	Records       int                  `json:"records"`
 }
 
 // ConnectorRecordsAddedEvent records a site's sync adding new records, and how many
@@ -315,7 +320,7 @@ func (l *LogsDB) ClientError(ctx context.Context, siteID *string, attributes Cli
 }
 
 type ConnectorErrorAttributes struct {
-	Kind     ErrorKind             `json:"kind"`
+	Kind          ErrorKind            `json:"kind"`
 	ConnectorType consts.ConnectorType `json:"connector_type"`
 }
 

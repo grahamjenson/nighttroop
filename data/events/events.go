@@ -16,25 +16,27 @@ import (
 type Name string
 
 const (
-	SiteCreated       Name = "site_created"
-	SiteDisabled      Name = "site_disabled"
-	SiteDeleted       Name = "site_deleted"
-	SiteArchived      Name = "site_archived"
-	SiteHydrated      Name = "site_hydrated"
-	SiteTruncated     Name = "site_truncated"
-	SiteBatchBackedUp Name = "site_batch_backed_up"
-	ControlBackedUp   Name = "control_backed_up"
-	ConnectorTurnedOff     Name = "connector_turned_off"
+	SiteCreated        Name = "site_created"
+	SiteDisabled       Name = "site_disabled"
+	SiteDeleted        Name = "site_deleted"
+	SiteArchived       Name = "site_archived"
+	SiteHydrated       Name = "site_hydrated"
+	SiteTruncated      Name = "site_truncated"
+	SiteBatchBackedUp  Name = "site_batch_backed_up"
+	ControlBackedUp    Name = "control_backed_up"
+	ConnectorTurnedOff Name = "connector_turned_off"
 	// SiteDBMissing is a live site's DB file missing at start, restored from its batch's backup or left out
 	SiteDBMissing Name = "site_db_missing"
 	// SiteAdminRecovered is the site's backup key being used to give its admin new credentials
-	SiteAdminRecovered Name = "site_admin_recovered"
-	ConnectorBackfilled     Name = "connector_backfilled"
-	ConnectorRecordsAdded          Name = "connector_records_added"
+	SiteAdminRecovered    Name = "site_admin_recovered"
+	ConnectorBackfilled   Name = "connector_backfilled"
+	ConnectorRecordsAdded Name = "connector_records_added"
 	// SiteTimezoneChanged is a site's own timezone changing, its Attributes the timezone it was and is
 	SiteTimezoneChanged Name = "site_timezone_changed"
 	// SiteWeekStartChanged is a site's own week start day changing, its Attributes the day it was and is
 	SiteWeekStartChanged Name = "site_week_start_changed"
+	// SummariesRegenerationRequested is a site's admin asking for its summaries to be built again from its data
+	SummariesRegenerationRequested Name = "summaries_regeneration_requested"
 	// Alarm is an identity's alarms after a check that changed them, its Attributes an alarms.Checked
 	Alarm Name = "alarm"
 	// AlarmCreated, AlarmSnoozed and AlarmDeleted are an identity's alarm becoming active, being snoozed, and stopping
@@ -57,7 +59,7 @@ const (
 
 // Persisted are the events kept in the logs DB. A model change is not, as the site's DB row is its record.
 var Persisted = []Name{SiteCreated, SiteDisabled, SiteDeleted, SiteArchived, SiteHydrated, SiteTruncated, SiteDBMissing, SiteBatchBackedUp, ControlBackedUp,
-	SiteAdminRecovered, IdentityCredentialsChanged, ConnectorTurnedOff, ConnectorBackfilled, ConnectorRecordsAdded, SiteTimezoneChanged, SiteWeekStartChanged, AlarmCreated, AlarmSnoozed, AlarmDeleted, SignedIn, SignInFailed, SignedInByControl, ResourceHigh, ResourceRecovered}
+	SiteAdminRecovered, IdentityCredentialsChanged, ConnectorTurnedOff, ConnectorBackfilled, ConnectorRecordsAdded, SiteTimezoneChanged, SiteWeekStartChanged, SummariesRegenerationRequested, AlarmCreated, AlarmSnoozed, AlarmDeleted, SignedIn, SignInFailed, SignedInByControl, ResourceHigh, ResourceRecovered}
 
 // PersistedNames are the persisted events' names, to pick from
 func PersistedNames() []string {

@@ -170,6 +170,16 @@
         }
       }
     },
+    "/reports/summaries/regenerate": {
+      "post": {
+        "operationId": "RegenerateSummaries",
+        "summary": "Asks for the site's last year of summaries to be built again from its data, by a background job; admins only",
+        "responses": {
+          "202": { "description": "The regeneration is queued", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "type": "object", "properties": { "regenerating": { "type": "boolean" } } } } } } } },
+          "default": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
     "/api/v2/authorization/request/{token}": {
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
       "get": {

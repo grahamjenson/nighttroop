@@ -128,3 +128,24 @@ func TestBuildForgetsSitesNoLongerLive(t *testing.T) {
 	require.Empty(t, r.builder.built)
 	require.Equal(t, 1, r.opened)
 }
+
+// Asking for the summaries to be regenerated builds again each day of the last year with data, and yesterday, and the
+// weeks, fortnights and months of them, leaving out the days with none
+func TestRebuildOnRequestRegeneratesTheLastYear(t *testing.T) {
+	r := newRig(t)
+	ctx, now := t.Context(), time.Now().UTC()
+	read := now.AddDate(0, 0, -40)
+	_, err := r.site.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "old", Mgdl: 120, ReadingType: "sgv", OccurredAt: read.UnixMilli(), CreatedByIdentityName: "phone"})
+	require.NoError(t, err)
+
+	require.NoError(t, r.builder.RebuildOnRequest().Run(ctx, onevent.Fired{Name: events.SummariesRegenerationRequested, SiteID: r.siteID}))
+	require.True(t, r.built(read.Format(time.DateOnly)))
+	require.True(t, r.built(now.AddDate(0, 0, -1).Format(time.DateOnly)))
+	require.False(t, r.built(now.AddDate(0, 0, -50).Format(time.DateOnly)))
+	month, err := r.site.GetSummaryPeriod(ctx, sitedb.GetSummaryPeriodParams{Period: "month", Date: time.Date(read.Year(), read.Month(), 1, 0, 0, 0, 0, time.UTC).Format(time.DateOnly)})
+	require.NoError(t, err)
+	require.Equal(t, int64(1), month.Days)
+	weeks, err := r.site.SearchSummaryPeriods(ctx, sitedb.SearchSummaryPeriodsParams{Period: "week", Limit: 60})
+	require.NoError(t, err)
+	require.Len(t, weeks, 1)
+}

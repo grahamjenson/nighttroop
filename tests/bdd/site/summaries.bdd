@@ -1,0 +1,41 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_PATH /
+
+// The menu's Reports group opens the summaries, a table of each period's kept summaries, which a new site has none of
+CLICK #site--settings-menu
+ASSERT_DRAWN #site--reports--summaries-button
+CLICK #site--reports--summaries-button
+ASSERT_STATUS 200
+ASSERT_PATH /reports/summaries
+ASSERT_TITLE Summaries · Nighttroop
+ASSERT_VISIBLE #site--summaries--day >> text=No days kept yet.
+ASSERT_VISIBLE #site--summaries--month >> text=No months kept yet.
+
+// The virtual connector fills its last 30 minutes, and a backfill the day before it (tests backfill a day)
+CLICK #site--settings-menu
+CLICK #site--settings--connectors-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
+ASSERT_TEXT_VISIBLE Connector Updated
+RUN_BACKGROUND_JOBS
+CLICK #site--settings--virtual-connector--backfill
+ASSERT_TEXT_VISIBLE Backfilling Virtual
+RUN_BACKGROUND_JOBS
+
+// An admin regenerates the summaries, after confirming (the test accepts), which a background job builds again from
+// the site's data, so yesterday is kept, with its numbers, and opens its AGP report
+CLICK #site--settings-menu
+CLICK #site--reports--summaries-button
+CLICK #site--summaries--regenerate
+ASSERT_TEXT_VISIBLE Regenerating summaries
+RUN_BACKGROUND_JOBS
+GOTO /reports/summaries
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--summaries--day tbody tr:has(a[href="/reports/day-{{ date -1 }}"]) td:nth-child(2):text-is("1")
+ASSERT_VISIBLE #site--summaries--day tbody tr:has(a[href="/reports/day-{{ date -1 }}"]) td:nth-child(3) >> text=/^\d+(\.\d)?%$/
+SCREENSHOT summaries
+// The newest day kept is yesterday
+CLICK #site--summaries--day tbody tr:first-child a
+ASSERT_PATH /reports/day-{{ date -1 }}
+ASSERT_TEXT_EQUALS #site--reports--days 1
