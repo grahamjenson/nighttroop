@@ -111,6 +111,19 @@ ASSERT_DRAWN #site--summary--graph >> text=Basal
 // SMBs come every few minutes, so their markers are not labelled
 ASSERT_NOT_VISIBLE #site--summary--graph >> text=0.35U
 
+// The glucose axis is always 0 to 16 mmol/L, whatever the readings, and the targets in force are edged by darker lines,
+// in the legend as Target
+ASSERT_DRAWN #site--summary--graph >> text=/^16$/
+ASSERT_DRAWN #site--summary--graph >> text=Target
+
+// Pointing at a time shows what was then: the time, the nearest reading and when it was, and the basal and targets in
+// force. The virtual connector's temp basal and temp target cover its last 30 minutes, where 90% across the graph points
+HOVER 90% #site--summary--graph svg
+ASSERT_DRAWN #site--summary--graph >> text=/Glucose: [\d.]+ mmol\/L at \d\d:\d\d/
+ASSERT_DRAWN #site--summary--graph >> text=/Basal: 0\.85 U\/hr/
+ASSERT_DRAWN #site--summary--graph >> text=/Target: [\d.]+–[\d.]+ mmol\/L/
+SCREENSHOT summary_hover
+
 // The range buttons show the summary over 6 hours to a week, and back returns to the range before
 CLICK #site--summary--range-48
 ASSERT_STATUS 200

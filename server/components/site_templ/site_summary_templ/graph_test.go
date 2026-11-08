@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-echarts/go-echarts/v2/types"
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/utils/consts"
@@ -67,18 +66,19 @@ func TestGraph(t *testing.T) {
 	require.EqualValues(t, since, xAxes[0].(map[string]any)["min"])
 	require.EqualValues(t, now, xAxes[0].(map[string]any)["max"])
 
-	// The glucose axis runs from 2 mmol/L (just under 40 mg/dL) to the highest reading, with a fifth again above it
-	// for the treatments
+	// The glucose axis runs from 0 to 16 mmol/L whatever the readings, so a high one does not squash the rest: the 20
+	// is drawn past the top, but only 12% of the axis past it, and the glucose is not clipped at the axis
 	glucoseAxis := option["yAxis"].([]any)[glucoseAxis].(map[string]any)
-	require.EqualValues(t, 2, glucoseAxis["min"])
-	require.EqualValues(t, 24, glucoseAxis["max"])
+	require.EqualValues(t, 0, glucoseAxis["min"])
+	require.EqualValues(t, 16, glucoseAxis["max"])
+	over := 16 * 1.12
 
 	// The readings are joined by a thin line, broken where they are more than 15 minutes apart
 	line := []any{}
 	for _, point := range series(option, "Glucose")["data"].([]any) {
 		line = append(line, point.(map[string]any)["value"])
 	}
-	require.Equal(t, []any{[]any{float64(now), 20.0}, []any{float64(now - 5*minute), 6.0}, []any{float64(now - 10*minute), 3.0}, "-", []any{float64(now - 30*minute), 12.0}}, line)
+	require.Equal(t, []any{[]any{float64(now), over}, []any{float64(now - 5*minute), 6.0}, []any{float64(now - 10*minute), 3.0}, "-", []any{float64(now - 30*minute), 12.0}}, line)
 
 	// Readings are split by the summary's low and high alarms, in its units, and each is a dashed line
 	tests := []struct {
@@ -88,7 +88,7 @@ func TestGraph(t *testing.T) {
 	}{
 		{"Low", glucoseLow, []any{3.0}},
 		{"In range", glucoseInRange, []any{6.0}},
-		{"High", glucoseHigh, []any{20.0, 12.0}},
+		{"High", glucoseHigh, []any{over, 12.0}},
 	}
 	for _, test := range tests {
 		s := series(option, test.name)
@@ -113,18 +113,37 @@ func TestGraph(t *testing.T) {
 		require.Equal(t, []any{want[2], want[3]}, area[1].(map[string]any)["coord"])
 	}
 
-	// The basal rises to its rate on its own axis, its highest rate a fifth of the way up and marked, steps to the next
-	// rate, and falls back at the graph's edge
+	// The targets in force are edged by darker lines: the low target as steps, broken where none is in force, then the
+	// high target the same way
+	target := series(option, "Target")
+	require.Equal(t, blue700, target["lineStyle"].(map[string]any)["color"])
+	targetPoints := []any{}
+	for _, point := range target["data"].([]any) {
+		targetPoints = append(targetPoints, point.(map[string]any)["value"])
+	}
+	start := float64(since)
+	require.Equal(t, []any{
+		[]any{start, 5.0}, []any{start + hour, 5.0}, []any{start + hour, 6.0}, []any{start + 2*hour, 6.0}, "-", "-",
+		[]any{start, 7.0}, []any{start + hour, 7.0}, []any{start + hour, 8.0}, []any{start + 2*hour, 8.0}, "-",
+	}, targetPoints)
+
+	// The basal rises to its rate on its own axis, its highest rate as high as 3 mmol/L up the glucose axis and marked,
+	// steps to the next rate, and falls back at the graph's edge
 	basal := series(option, "Basal")
 	require.EqualValues(t, basalAxis, basal["yAxisIndex"])
-	require.EqualValues(t, 10, option["yAxis"].([]any)[basalAxis].(map[string]any)["max"])
+	require.InDelta(t, 2*16.0/3, option["yAxis"].([]any)[basalAxis].(map[string]any)["max"], 0.001)
 	require.EqualValues(t, 2, basal["markLine"].(map[string]any)["data"].([]any)[0].(map[string]any)["yAxis"])
 	points := []any{}
 	for _, point := range basal["data"].([]any) {
 		points = append(points, point.(map[string]any)["value"])
 	}
-	start, step := float64(now)-hour, float64(now-10*time.Minute.Milliseconds())
-	require.Equal(t, []any{[]any{start, 0.0}, []any{start, 1.0}, []any{step, 1.0}, []any{step, 2.0}, []any{float64(now), 2.0}, []any{float64(now), 0.0}}, points)
+	basalStart, step := float64(now)-hour, float64(now-10*time.Minute.Milliseconds())
+	require.Equal(t, []any{[]any{basalStart, 0.0}, []any{basalStart, 1.0}, []any{step, 1.0}, []any{step, 2.0}, []any{float64(now), 2.0}, []any{float64(now), 0.0}}, points)
+
+	// Pointing at a time shows what was then, from the axis, not only on a reading or treatment
+	tooltip := option["tooltip"].(map[string]any)
+	require.Equal(t, "axis", tooltip["trigger"])
+	require.Equal(t, false, tooltip["axisPointer"].(map[string]any)["snap"])
 }
 
 // Treatments a moment apart overlap on a long graph, and ECharts keeps the first of labels drawn over each other, so the
@@ -196,7 +215,17 @@ func TestGraphInTheLocationsTime(t *testing.T) {
 	require.EqualValues(t, now+13*time.Hour.Milliseconds(), axis["max"])
 	point := series(option, "In range")["data"].([]any)[0].(map[string]any)["value"].([]any)
 	require.EqualValues(t, now+13*time.Hour.Milliseconds(), point[0])
-	require.Contains(t, chart.JSFunctions.Fns, types.FuncStr("%MY_ECHARTS%.setOption({useUTC: true});"))
+	setUp := ""
+	for _, fn := range chart.JSFunctions.Fns {
+		setUp += string(fn)
+	}
+	require.Contains(t, setUp, "useUTC: true")
+	// The glucose axis is marked in quarters, so 16 is marked and nothing crowds it
+	require.Contains(t, setUp, "yAxis: [{interval: 4}]")
+	// The glucose is drawn past the axis's top, which go-echarts cannot set
+	for _, id := range []string{"low", "high", "in-range", "glucose"} {
+		require.Contains(t, setUp, "{id: '"+id+"', clip: false}")
+	}
 }
 
 // The key under the graph draws each as the graph does: insulin and SMBs as triangles pointing down, carbs as ones
@@ -208,7 +237,7 @@ func TestGraphLegendDrawsEachAsTheGraphDoes(t *testing.T) {
 	for _, item := range got["legend"].(map[string]any)["data"].([]any) {
 		icons[item.(map[string]any)["name"].(string)] = item.(map[string]any)["icon"]
 	}
-	require.Equal(t, map[string]any{"Insulin": pointingDown, "SMB": pointingDown, "Carbs": pointingUp, "Basal": "rect"}, icons)
+	require.Equal(t, map[string]any{"Insulin": pointingDown, "SMB": pointingDown, "Carbs": pointingUp, "Basal": "rect", "Target": "path://M0,4L12,4L12,6L0,6Z"}, icons)
 	// Each names a series of the graph, so clicking it hides that series
 	for name := range icons {
 		require.NotNil(t, series(got, name), name)
@@ -216,4 +245,47 @@ func TestGraphLegendDrawsEachAsTheGraphDoes(t *testing.T) {
 	// Insulin points down on the graph too, and carbs up
 	require.Equal(t, "triangle", series(got, "Insulin")["symbol"])
 	require.Equal(t, "triangle", series(got, "Carbs")["symbol"])
+}
+
+// The tooltip looks up, for the time pointed at, each reading written as the tables write it, each stretch of a basal
+// and of targets, and each treatment, all in the location's time as the graph draws them
+func TestGraphHoverData(t *testing.T) {
+	mmol := consts.UnitsMMOLL
+	minute := time.Minute.Milliseconds()
+	since := time.Date(2026, 1, 2, 12, 0, 0, 0, time.UTC).UnixMilli()
+	now := since + 3*minute
+	at := func(ms int64) int64 { return ms + 1000 }
+	s := &sitemodels.Summary{
+		Since: since, Units: &mmol,
+		GlucoseReadings: []*sitemodels.SiteCleanGlucoseReading{{SiteGlucoseReading: sitemodels.SiteGlucoseReading{Reading: 6.23, Units: &mmol, OccurredAt: since + minute}}},
+		Minutes: []sitemodels.SummaryMinute{
+			{Basal: new(0.8), LowTarget: new(5.0), HighTarget: new(6.0)},
+			{Basal: new(0.8), LowTarget: new(5.0), HighTarget: new(6.0)},
+			{Basal: new(1.25)},
+			{},
+		},
+		InsulinDoses: []*sitemodels.SiteInsulinDose{{Dose: 2.5, OccurredAt: since + 2*minute}, {Dose: 0.2, DoseType: new("SMB"), OccurredAt: since}},
+		FoodIntakes:  []*sitemodels.SiteFoodIntake{{Carbs: new(15.0), OccurredAt: since + 2*minute}},
+	}
+	script := hoverTooltip(s, now, at)
+	data := strings.SplitN(strings.SplitN(script, "var d = ", 2)[1], ", near", 2)[0]
+	var got hover
+	require.NoError(t, json.Unmarshal([]byte(strings.ReplaceAll(data, "'", `"`)), &got))
+	require.Equal(t, hover{
+		Units:    "mmol/L",
+		Readings: [][]any{{float64(at(since + minute)), "6.2"}},
+		Basal:    [][]any{{float64(at(since)), float64(at(since + 2*minute)), "0.8"}, {float64(at(since + 2*minute)), float64(at(since + 3*minute)), "1.25"}},
+		Target:   [][]any{{float64(at(since)), float64(at(since + 2*minute)), "5.0–6.0"}},
+		Treatments: [][]any{
+			{float64(at(since + 2*minute)), "Insulin: 2.5U"}, {float64(at(since)), "SMB: 0.2U"}, {float64(at(since + 2*minute)), "Carbs: 15g"},
+		},
+	}, got)
+	// The formatter is made once with its data, and reads the time pointed at from the axis
+	require.True(t, strings.HasPrefix(script, "(function () {"))
+	require.Contains(t, script, "axisValue")
+
+	// The page's script has no escaped double quote, which would stop the browser running it and drawing the graph
+	page := graph(s, now, time.UTC).RenderSnippet().Script
+	require.Contains(t, page, "var d = {'units':'mmol/L'")
+	require.NotContains(t, page, `\"`)
 }

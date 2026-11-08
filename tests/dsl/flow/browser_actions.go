@@ -158,6 +158,9 @@ type Click struct {
 	Corner bool
 	// Scroll turns the mouse wheel by this many pixels, down or up when negative, as a user scrolls the page, for SCROLL
 	Scroll *int
+	// Hover moves the mouse over Locator instead of clicking it, this share of the way across it and half way down, for
+	// HOVER, e.g. to point at a time on a graph
+	Hover *float64
 
 	Asserts []BrowserAssert
 
@@ -177,6 +180,9 @@ func (r *Click) ToFlatString() string {
 	}
 	if r.Scroll != nil {
 		return fmt.Sprintf("SCROLL %d", *r.Scroll)
+	}
+	if r.Hover != nil {
+		return fmt.Sprintf("HOVER %g%% %s", *r.Hover*100, r.Locator)
 	}
 	return fmt.Sprintf("CLICK %s", r.Locator)
 }
@@ -277,6 +283,11 @@ func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 		}
 	case r.Corner:
 		err = locator.Click(playwright.LocatorClickOptions{Timeout: playwright.Float(actionWait), Position: &playwright.Position{X: 2, Y: 2}})
+	case r.Hover != nil:
+		var box *playwright.Rect
+		if box, err = locator.BoundingBox(playwright.LocatorBoundingBoxOptions{Timeout: playwright.Float(actionWait)}); err == nil {
+			err = locator.Hover(playwright.LocatorHoverOptions{Timeout: playwright.Float(actionWait), Position: &playwright.Position{X: box.Width * *r.Hover, Y: box.Height / 2}})
+		}
 	default:
 		err = locator.Click(playwright.LocatorClickOptions{Timeout: playwright.Float(actionWait)})
 	}

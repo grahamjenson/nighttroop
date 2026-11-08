@@ -1,6 +1,8 @@
 package site_summary_templ
 
 import (
+	"encoding/json"
+	"fmt"
 	"math"
 	"slices"
 	"strings"
@@ -8,24 +10,23 @@ import (
 
 	"github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/opts"
+	"github.com/go-echarts/go-echarts/v2/types"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/css"
+	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/display"
 )
 
 const (
-	// The glucose axis always shows up to at least this, so a flat day is not stretched
-	minAxisMgdl = 270.0
-	// The glucose axis starts here, as readings below it are rare
-	axisStartMgdl = 40.0
+	// The glucose axis is from 0 to 16 mmol/L (288 mg/dL) whatever the readings, so every day is drawn alike: a
+	// reading above it is drawn past its top, up to overflowShare of the axis more, rather than squashing the rest
+	glucoseTopMgdl, overflowShare = 288.0, 0.12
+	// The basal's highest rate is drawn at 3 mmol/L (54 mg/dL) up the glucose axis
+	basalTopMgdl = 54.0
 	// Everything is drawn on one grid, as Carer draws it: glucose on the left axis, the basal on its own axis along
-	// the bottom, and the treatments on a hidden axis from 0 at the bottom to 1 at the top, in the room left above the
-	// highest reading
+	// the bottom, and the treatments on a hidden axis from 0 at the bottom to 1 at the top
 	glucoseAxis, basalAxis, treatmentAxis = 0, 1, 2
-	// The basal's highest rate is drawn a fifth of the way up, and a fifth again of the glucose axis is room above the
-	// highest reading for the treatments
-	basalShare, treatmentRoom = 5.0, 0.2
 	// Carbs are drawn above insulin, near the top of the treatment axis
 	carbsHeight, insulinHeight = 0.95, 0.87
 	// Readings further apart than this are not joined by the glucose line
@@ -39,9 +40,10 @@ var (
 	glucoseLow     = css.Colour("glucose-low")
 	glucoseHigh    = css.Colour("glucose-high")
 	glucoseInRange = css.Colour("glucose-in-range")
-	blue500    = css.Colour("blue-500")
-	gray200    = css.Colour("gray-200")
-	gray700    = css.Colour("gray-700")
+	blue500        = css.Colour("blue-500")
+	blue700        = css.Colour("blue-700")
+	gray200        = css.Colour("gray-200")
+	gray700        = css.Colour("gray-700")
 )
 
 // pointingDown and pointingUp are the legend's triangles, insulin's and carbs', the same size as each other
@@ -58,6 +60,7 @@ var legend = []map[string]any{
 	{"name": "SMB", "icon": pointingDown},
 	{"name": "Carbs", "icon": pointingUp},
 	{"name": "Basal", "icon": "rect", "itemStyle": map[string]any{"color": "transparent", "borderColor": brandNight, "borderWidth": 2}},
+	{"name": "Target", "icon": "path://M0,4L12,4L12,6L0,6Z", "itemStyle": map[string]any{"color": blue700}},
 }
 
 // glucoseRange is a reading in the summary's units below its low alarm, "Low", above its high alarm, "High", or
@@ -90,13 +93,10 @@ func graph(s *sitemodels.Summary, now int64, location *time.Location) *charts.Sc
 		_, offset := time.UnixMilli(ms).In(location).Zone()
 		return ms + int64(offset)*1000
 	}
-	glucoseMax, basalMax := s.Units.FromMGDL(minAxisMgdl), 1.0
-	for _, r := range s.GlucoseReadings {
-		glucoseMax = max(glucoseMax, r.Reading)
-	}
-	// The glucose axis ends on whole numbers, so its labels are round
-	glucoseMin, glucoseMax := math.Floor(s.Units.FromMGDL(axisStartMgdl)), math.Ceil(glucoseMax)
-	glucoseTop := math.Ceil(glucoseMax + treatmentRoom*(glucoseMax-glucoseMin))
+	// The glucose axis ends on a whole number, 16 or 288, so its labels are round
+	glucoseTop, basalTop, basalMax := math.Round(s.Units.FromMGDL(glucoseTopMgdl)), math.Round(s.Units.FromMGDL(basalTopMgdl)), 1.0
+	// A reading above the axis is drawn past its top, but no further than overflowShare of it, so it stays on the page
+	drawn := func(reading float64) float64 { return min(reading, glucoseTop*(1+overflowShare)) }
 	for _, m := range s.Minutes {
 		if m.Basal != nil {
 			basalMax = max(basalMax, *m.Basal)
@@ -109,21 +109,27 @@ func graph(s *sitemodels.Summary, now int64, location *time.Location) *charts.Sc
 		charts.WithInitializationOpts(opts.Initialization{Renderer: "svg"}),
 		charts.WithAnimation(false),
 		charts.WithLegendOpts(opts.Legend{Show: opts.Bool(true), Bottom: "0", Data: legend}),
-		charts.WithTooltipOpts(opts.Tooltip{Show: opts.Bool(true), Formatter: opts.FuncOpts(tooltip)}),
+		// Pointing at a time shows the glucose, basal, target and treatments then
+		charts.WithTooltipOpts(opts.Tooltip{Show: opts.Bool(true), Trigger: "axis", AxisPointer: &opts.AxisPointer{Type: "line", Snap: opts.Bool(false)},
+			Formatter: opts.FuncOpts(hoverTooltip(s, now, at))}),
 		// Wide enough on the right for the label of a dose or meal given just now, which is drawn right of its marker,
-		// and the basal's highest rate; tall enough at the bottom for the times and the legend
-		charts.WithGridOpts(opts.Grid{Left: "60", Right: "70", Top: "10", Bottom: "56"}),
+		// and the basal's highest rate; tall enough at the top for readings drawn past the axis, and at the bottom for
+		// the times and the legend
+		charts.WithGridOpts(opts.Grid{Left: "60", Right: "70", Top: "40", Bottom: "56"}),
 		charts.WithXAxisOpts(opts.XAxis{
 			Type: "time", Min: since, Max: until,
 			// The first and last labels would be the exact times the summary covers, down to the millisecond
 			AxisLabel: &opts.AxisLabel{ShowMinLabel: opts.Bool(false), ShowMaxLabel: opts.Bool(false)},
 			SplitLine: &opts.SplitLine{Show: opts.Bool(true), LineStyle: &opts.LineStyle{Type: "dashed", Color: gray200}},
 		}),
-		charts.WithYAxisOpts(opts.YAxis{Type: "value", Min: glucoseMin, Max: glucoseTop, SplitLine: &opts.SplitLine{Show: opts.Bool(false)}, AxisLabel: &opts.AxisLabel{ShowMinLabel: opts.Bool(false), ShowMaxLabel: opts.Bool(false)}}),
+		charts.WithYAxisOpts(opts.YAxis{Type: "value", Min: 0, Max: glucoseTop, SplitLine: &opts.SplitLine{Show: opts.Bool(false)}}),
 	)
-	chart.AddJSFuncStrs("%MY_ECHARTS%.setOption({useUTC: true});")
+	// go-echarts has no series' clip or axis interval, so here the glucose is let past the axis's top, and the axis is
+	// marked in quarters, 0, 4, 8, 12 and 16 mmol/L, so its top is marked and none is crowded beside it
+	chart.AddJSFuncStrs(types.FuncStr(fmt.Sprintf("%%MY_ECHARTS%%.setOption({useUTC: true, yAxis: [{interval: %g}], series: [{id: 'low', clip: false}, {id: 'high', clip: false}, {id: 'in-range', clip: false}, {id: 'glucose', clip: false}]});", glucoseTop/4)))
 	chart.ExtendYAxis(
-		opts.YAxis{Type: "value", Min: 0, Max: basalMax * basalShare, Show: opts.Bool(false)},
+		// The basal's highest rate reaches basalTop up the glucose axis
+		opts.YAxis{Type: "value", Min: 0, Max: basalMax * glucoseTop / basalTop, Show: opts.Bool(false)},
 		opts.YAxis{Type: "value", Min: 0, Max: 1, Show: opts.Bool(false)},
 	)
 
@@ -136,7 +142,7 @@ func graph(s *sitemodels.Summary, now int64, location *time.Location) *charts.Sc
 	var lows, highs, inRange []opts.ScatterData
 	var line []opts.LineData
 	for i, r := range s.GlucoseReadings {
-		point := opts.ScatterData{Value: []any{at(r.OccurredAt), r.Reading}}
+		point := opts.ScatterData{Value: []any{at(r.OccurredAt), drawn(r.Reading)}}
 		switch glucoseRange(s, r.Reading) {
 		case "Low":
 			lows = append(lows, point)
@@ -148,25 +154,36 @@ func graph(s *sitemodels.Summary, now int64, location *time.Location) *charts.Sc
 		if i > 0 && s.GlucoseReadings[i-1].OccurredAt-r.OccurredAt > glucoseGapMs {
 			line = append(line, opts.LineData{Value: "-"})
 		}
-		line = append(line, opts.LineData{Value: []any{at(r.OccurredAt), r.Reading}})
+		line = append(line, opts.LineData{Value: []any{at(r.OccurredAt), drawn(r.Reading)}})
 	}
 	targets := []charts.SeriesOpts{
 		charts.WithMarkAreaStyleOpts(opts.MarkAreaStyle{Label: &opts.Label{Show: opts.Bool(false)}}),
 		band(since, until, s.RangeUrgentHigh, s.RangeUrgentLow, brandNight, 0.02),
 		band(since, until, s.RangeHigh, s.RangeLow, brandNight, 0.04),
 	}
+	// The targets in force are a light band, edged by darker lines of the low and high target, each a step as it
+	// changes, broken where there is none
+	var targetLines, highLine []opts.LineData
 	for _, r := range runs(s, now, func(m sitemodels.SummaryMinute) []*float64 { return []*float64{m.LowTarget, m.HighTarget} }) {
-		if r.values[0] != nil && r.values[1] != nil {
-			targets = append(targets, band(at(r.start), at(r.end), *r.values[1], *r.values[0], blue500, 0.2))
+		if r.values[0] == nil || r.values[1] == nil {
+			targetLines, highLine = append(targetLines, opts.LineData{Value: "-"}), append(highLine, opts.LineData{Value: "-"})
+			continue
 		}
+		targets = append(targets, band(at(r.start), at(r.end), *r.values[1], *r.values[0], blue500, 0.1))
+		targetLines = append(targetLines, opts.LineData{Value: []any{at(r.start), *r.values[0]}}, opts.LineData{Value: []any{at(r.end), *r.values[0]}})
+		highLine = append(highLine, opts.LineData{Value: []any{at(r.start), *r.values[1]}}, opts.LineData{Value: []any{at(r.end), *r.values[1]}})
 	}
+	targetLines = append(append(targetLines, opts.LineData{Value: "-"}), highLine...)
 	dashed := func(colour string) charts.SeriesOpts {
 		return charts.WithMarkLineStyleOpts(opts.MarkLineStyle{Symbol: []string{"none", "none"}, Label: &opts.Label{Show: opts.Bool(false)}, LineStyle: &opts.LineStyle{Type: "dashed", Color: colour, Width: 1}})
 	}
 	dot := charts.WithScatterChartOpts(opts.ScatterChart{SymbolSize: 6})
-	chart.AddSeries("Low", lows, dot, charts.WithItemStyleOpts(opts.ItemStyle{Color: glucoseLow}), dashed(glucoseLow), charts.WithMarkLineNameYAxisItemOpts(opts.MarkLineNameYAxisItem{Name: "Low", YAxis: s.RangeLow}))
-	chart.AddSeries("High", highs, dot, charts.WithItemStyleOpts(opts.ItemStyle{Color: glucoseHigh}), dashed(glucoseHigh), charts.WithMarkLineNameYAxisItemOpts(opts.MarkLineNameYAxisItem{Name: "High", YAxis: s.RangeHigh}))
-	chart.AddSeries("In range", inRange, append(targets, dot, charts.WithItemStyleOpts(opts.ItemStyle{Color: glucoseInRange}))...)
+	id := func(id string) charts.SeriesOpts {
+		return charts.WithSeriesOpts(func(s *charts.SingleSeries) { s.Id = id })
+	}
+	chart.AddSeries("Low", lows, id("low"), dot, charts.WithItemStyleOpts(opts.ItemStyle{Color: glucoseLow}), dashed(glucoseLow), charts.WithMarkLineNameYAxisItemOpts(opts.MarkLineNameYAxisItem{Name: "Low", YAxis: s.RangeLow}))
+	chart.AddSeries("High", highs, id("high"), dot, charts.WithItemStyleOpts(opts.ItemStyle{Color: glucoseHigh}), dashed(glucoseHigh), charts.WithMarkLineNameYAxisItemOpts(opts.MarkLineNameYAxisItem{Name: "High", YAxis: s.RangeHigh}))
+	chart.AddSeries("In range", inRange, append(targets, id("in-range"), dot, charts.WithItemStyleOpts(opts.ItemStyle{Color: glucoseInRange}))...)
 
 	// marker is a row of treatments on the treatment axis, labelled with what they were unless faint, as SMBs are
 	// given every few minutes
@@ -222,7 +239,12 @@ func graph(s *sitemodels.Summary, now int64, location *time.Location) *charts.Sc
 		basals = append(basals, opts.LineData{Value: []any{until, 0}})
 	}
 	lines := charts.NewLine()
-	lines.AddSeries("Glucose", line,
+	lines.AddSeries("Target", targetLines,
+		charts.WithLineChartOpts(opts.LineChart{ShowSymbol: opts.Bool(false), ConnectNulls: opts.Bool(false)}),
+		charts.WithLineStyleOpts(opts.LineStyle{Color: blue700, Width: 1.5}),
+		charts.WithItemStyleOpts(opts.ItemStyle{Color: blue700}),
+	)
+	lines.AddSeries("Glucose", line, id("glucose"),
 		charts.WithLineChartOpts(opts.LineChart{ShowSymbol: opts.Bool(false), ConnectNulls: opts.Bool(false)}),
 		charts.WithLineStyleOpts(opts.LineStyle{Color: brandNight, Width: 1, Opacity: opts.Float(0.3)}),
 	)
@@ -269,8 +291,76 @@ func runs(s *sitemodels.Summary, now int64, values func(sitemodels.SummaryMinute
 	return all
 }
 
-// tooltip shows what a reading or treatment is and when it was, in the location's time as the tables show it
-const tooltip = `function (p) {
-	var at = new Date(p.value[0]).toISOString().slice(0, 19).replace('T', ' ');
-	return p.seriesName + ': ' + (p.name || p.value[1]) + '<br/>' + at;
-}`
+// hover is what the tooltip looks up for the time pointed at, in the location's time as the graph draws it: each
+// reading, each stretch of a basal and of targets, and each treatment, with their values written as the tables write
+// them
+type hover struct {
+	Units      string  `json:"units"`
+	Readings   [][]any `json:"readings"`
+	Basal      [][]any `json:"basal"`
+	Target     [][]any `json:"target"`
+	Treatments [][]any `json:"treatments"`
+}
+
+// hoverTooltip is the tooltip shown pointing at a time: the time, the reading nearest it within 5 minutes and when it
+// was, the basal and the targets in force then, and any treatment within 5 minutes
+func hoverTooltip(s *sitemodels.Summary, now int64, at func(int64) int64) string {
+	h := hover{Units: unitsText(s.Units), Readings: [][]any{}, Basal: [][]any{}, Target: [][]any{}, Treatments: [][]any{}}
+	for _, r := range s.GlucoseReadings {
+		h.Readings = append(h.Readings, []any{at(r.OccurredAt), site_data_templ.FormatGlucose(r.Reading, s.Units)})
+	}
+	for _, r := range runs(s, now, func(m sitemodels.SummaryMinute) []*float64 { return []*float64{m.Basal} }) {
+		if r.values[0] != nil {
+			h.Basal = append(h.Basal, []any{at(r.start), at(r.end), display.Value(r.values[0], "")})
+		}
+	}
+	for _, r := range runs(s, now, func(m sitemodels.SummaryMinute) []*float64 { return []*float64{m.LowTarget, m.HighTarget} }) {
+		if r.values[0] != nil && r.values[1] != nil {
+			h.Target = append(h.Target, []any{at(r.start), at(r.end), site_data_templ.FormatGlucose(*r.values[0], s.Units) + "–" + site_data_templ.FormatGlucose(*r.values[1], s.Units)})
+		}
+	}
+	for _, d := range s.InsulinDoses {
+		what := "Insulin"
+		if isSMB(d) {
+			what = "SMB"
+		}
+		h.Treatments = append(h.Treatments, []any{at(d.OccurredAt), what + ": " + display.Value(&d.Dose, "U")})
+	}
+	for _, f := range s.FoodIntakes {
+		if f.Carbs != nil {
+			h.Treatments = append(h.Treatments, []any{at(f.OccurredAt), "Carbs: " + display.Value(f.Carbs, "g")})
+		}
+	}
+	data, _ := json.Marshal(h)
+	// go-echarts writes a function into the page as it is, but leaves a double quote in it escaped, so the data is
+	// written with single quotes; its strings are numbers, units and labels written here, with no quote of either kind
+	return fmt.Sprintf(hoverScript, strings.ReplaceAll(string(data), `"`, `'`))
+}
+
+// hoverScript makes the tooltip's formatter, with the data it looks up made once, not on each move of the pointer
+const hoverScript = `(function () {
+	var d = %s, near = 5 * 60000;
+	function time(t) { return new Date(t).toISOString().slice(11, 16); }
+	function during(runs, t) {
+		for (var i = 0; i < runs.length; i++) {
+			if (runs[i][0] <= t && t < runs[i][1]) return runs[i][2];
+		}
+		return null;
+	}
+	return function (p) {
+		var t = (Array.isArray(p) ? p[0] : p).axisValue;
+		var lines = ['<b>' + new Date(t).toISOString().slice(0, 16).replace('T', ' ') + '</b>'];
+		var reading = null;
+		d.readings.forEach(function (r) {
+			if (Math.abs(r[0] - t) <= near && (reading === null || Math.abs(r[0] - t) < Math.abs(reading[0] - t))) reading = r;
+		});
+		lines.push(reading === null ? 'Glucose: no reading' : 'Glucose: ' + reading[1] + ' ' + d.units + ' at ' + time(reading[0]));
+		var basal = during(d.basal, t), target = during(d.target, t);
+		if (basal !== null) lines.push('Basal: ' + basal + ' U/hr');
+		if (target !== null) lines.push('Target: ' + target + ' ' + d.units);
+		d.treatments.forEach(function (x) {
+			if (Math.abs(x[0] - t) <= near) lines.push(x[1] + ' at ' + time(x[0]));
+		});
+		return lines.join('<br/>');
+	};
+})()`

@@ -272,15 +272,23 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   and temp basals.
 - A graph of glucose with carbs and insulin marked, over 6 hours to a week, drawn on one grid as Carer draws it. A
   site opens on the last 6 hours, and its range buttons choose 6 hours, 24 hours, 48 hours or a week:
+  - The glucose axis is always 0 to 16 mmol/L (288 mg/dL), marked at each quarter, whatever the readings: a reading
+    above 16 is drawn past the axis's top, not stretching it, and its tooltip gives the real reading.
   - The urgent range and the range shaded across it, with the low and high as dashed lines.
-  - The targets in force shaded over them.
+  - The targets in force shaded over them, edged by darker lines of the low and high target, stepping as they change.
   - Readings as dots, coloured low, in range or high, joined by a thin line broken where readings are over 15
     minutes apart.
-  - The basal in force along the bottom, its highest rate labelled on the right.
+  - The basal in force along the bottom, its highest rate reaching 3 mmol/L up the glucose axis and labelled on the
+    right.
   - Carbs as triangles pointing up above insulin as triangles pointing down, each labelled, the latest kept where
     labels overlap; a loop's SMBs are smaller, fainter and not labelled.
-  - A legend of insulin and SMB (triangles pointing down), carbs (pointing up) and basal (an outlined area), each
-    drawn as on the graph, and a tooltip of each reading and treatment.
+  - A legend of insulin and SMB (triangles pointing down), carbs (pointing up), basal (an outlined area) and target
+    (a line), each drawn as on the graph.
+  - Pointing anywhere on the graph shows what was then: the time, the reading nearest it within 5 minutes and when
+    it was, the basal and the targets in force, and any treatment within 5 minutes.
+- Each minute's targets and basal are a temp target's or temp basal's while one is in force, otherwise the profile
+  switch's in force, otherwise the default profile's in force. A default profile or switch from before the summary's
+  hours still counts, and once a temp or a timed switch ends the one under it shows again.
 - Time in range, total daily dose, and the last sensor and site change for today, yesterday, last week and last
   month. A period with no data shows "–" for its time in range and daily dose, not 0; one with data and no insulin
   shows 0 U.

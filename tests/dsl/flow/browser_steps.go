@@ -59,6 +59,22 @@ func ParseBrowserLines(lines []Line) ([]Action, error) {
 				click.Locator, click.Corner = second, true
 			}
 			current = click
+		case "HOVER":
+			// HOVER [x%] <locator> moves the mouse over an element, at its centre or x% of the way across it, so asserts
+			// can check what pointing at it shows, such as a graph's tooltip at a time
+			flush()
+			across, locator := 0.5, second
+			if share, rest, ok := strings.Cut(second, "% "); ok {
+				percent, err := strconv.ParseFloat(share, 64)
+				if err != nil || percent < 0 || percent > 100 {
+					return nil, fmt.Errorf("%s:%d: HOVER's share across is a percentage from 0 to 100", path, lineNumber)
+				}
+				across, locator = percent/100, rest
+			}
+			if locator == "" {
+				return nil, fmt.Errorf("%s:%d: HOVER needs a locator", path, lineNumber)
+			}
+			current = &Click{TestPath: path, TestLine: lineNumber, Asserts: []BrowserAssert{}, Locator: locator, Hover: &across}
 		case "TYPE":
 			flush()
 
