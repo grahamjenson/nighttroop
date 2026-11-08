@@ -15,7 +15,17 @@ type Props struct {
 // Its body scrolls when it is taller than the window, keeping its actions and Close in view.
 // It is a dialog named by its title, which takes the focus when it opens, so Tab goes through its form and a screen
 // reader reads it, and gives the focus back to what opened it, such as a row, when it closes. That is found again by
-// its ID when it was replaced, as an edited row is.
+// its ID when it was replaced, as an edited row is. Tab past its last control, Close, goes round to its first, and
+// Shift+Tab before its first to Close, so the focus never goes to the page behind it.
+// trapTab keeps Tab among the dialog's controls that can be seen, going round from its last to its first and back
+const trapTab = `if (event.key !== 'Tab') return;
+const controls = [...this.querySelectorAll('a[href], button, input, select, textarea, summary, [tabindex="0"]')]
+	.filter(c => !c.disabled && c.type !== 'hidden' && c.getClientRects().length);
+if (!controls.length) return;
+const first = controls[0], last = controls[controls.length - 1];
+if (event.shiftKey && (document.activeElement === first || document.activeElement === this)) { last.focus(); event.preventDefault(); }
+else if (!event.shiftKey && document.activeElement === last) { first.focus(); event.preventDefault(); }`
+
 templ Modal(p Props) {
 	<div
 		id={ p.ID }
@@ -33,6 +43,7 @@ templ Modal(p Props) {
 			aria-labelledby={ p.ID + "--title" }
 			tabindex="-1"
 			autofocus
+			hx-on:keydown={ templ.JSUnsafeFuncCall(trapTab) }
 			class="flex max-h-full w-full max-w-2xl flex-col rounded-lg bg-white shadow-lg outline-none"
 		>
 			<div class="overflow-y-auto px-6 pt-6">
