@@ -14,12 +14,24 @@ import (
 )
 
 // MyAccount is the signed in identity's, or control admin's, own page at path: who it is, and up to most passkeys it
-// adds, on its own address, and removes
-templ MyAccount(name, role string, passkeys []*controldb.Passkey, most int, path string) {
+// adds, on its own address, and removes. A site identity's, with guide, also opens the guide to setting the site up.
+templ MyAccount(name, role string, passkeys []*controldb.Passkey, most int, path string, guide bool) {
 	<div id="site--account" class="mx-auto max-w-5xl space-y-6">
 		@heading.Page("My Account") {
 			You are signed in as { name }, with the { role } role. A passkey signs you in with your fingerprint, face or device PIN, with
 			no password or code. It is named { name }, and nothing about you is asked for or kept.
+		}
+		if guide {
+			<section id="site--account--getting-started" class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 p-4 shadow-sm">
+				<div>
+					<h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Getting Started</h2>
+					<p class="mt-1 text-sm text-gray-500">The guide to setting up the site: getting glucose in, adding people and devices, settings and alarms.</p>
+				</div>
+				@button.Button(button.Props{ID: "site--getting-started-button", Variant: button.VariantOutline, Size: button.SizeSm,
+					Attributes: templ.Attributes{"hx-get": "/getting-started", "hx-target": "#main-content", "hx-push-url": "true", "hx-swap": "innerHTML"}}) {
+					Open the guide
+				}
+			</section>
 		}
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			<div class="mb-2 flex items-center justify-between gap-2">

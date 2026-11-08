@@ -43,7 +43,7 @@ func nsURL(ctx context.Context) string {
 	return ""
 }
 
-// GettingStartedPage is the guide to setting up the site on a page of its own, from the menu
+// GettingStartedPage is the guide to setting up the site on a page of its own, from My Account
 func GettingStartedPage() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -100,7 +100,7 @@ func GettingStarted() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div id=\"site--getting-started\" class=\"space-y-6\"><section class=\"rounded-xl bg-brand-night p-6 text-white shadow-sm\"><h2 class=\"text-2xl font-bold\">Welcome to your Nighttroop site</h2><p class=\"mt-2 max-w-2xl text-white/80\">Here is how to set it up. Once readings arrive the summary shows them here, and this guide is always in the menu at the top right under Getting Started.</p></section><ol class=\"grid gap-4 md:grid-cols-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div id=\"site--getting-started\" class=\"space-y-6\"><section class=\"rounded-xl bg-brand-night p-6 text-white shadow-sm\"><h2 class=\"text-2xl font-bold\">Welcome to your Nighttroop site</h2><p class=\"mt-2 max-w-2xl text-white/80\">Here is how to set it up. Once readings arrive the summary shows them here, and this guide is always on My Account, in the menu at the top right.</p></section><ol class=\"grid gap-4 md:grid-cols-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

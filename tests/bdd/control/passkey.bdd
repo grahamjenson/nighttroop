@@ -12,6 +12,8 @@ ASSERT_STATUS 200
 ASSERT_PATH /account
 ASSERT_TEXT_VISIBLE You are signed in as admin
 ASSERT_VISIBLE #site--account--passkeys >> text=No passkeys yet.
+// Control's account has no site, so no guide to setting one up
+ASSERT_NOT_VISIBLE #site--account--getting-started
 
 // The browser has a passkey authenticator, as a phone has, that verifies the person itself. Adding a passkey, on the
 // control site's own address, lists it

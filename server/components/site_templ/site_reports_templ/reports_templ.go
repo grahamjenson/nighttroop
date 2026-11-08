@@ -54,7 +54,7 @@ func link(period string, date time.Time) string {
 	return ""
 }
 
-// Report is the reports page of a day, week, fortnight or month: its time in range, daily dose and carbs, and its AGP,
+// Report is the AGP report of a day, week, fortnight or month: its time in range, daily dose and carbs, and its AGP,
 // with buttons to the report of another kind of period ending on the same day, and to the period before and after
 func Report(p *sitemodels.SiteSummaryPeriod) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
@@ -74,11 +74,11 @@ func Report(p *sitemodels.SiteSummaryPeriod) templ.Component {
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
 		first, last := days(ctx, p)
-		templ_7745c5c3_Err = heading.Title("Reports").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = heading.Title("AGP").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"site--reports\" class=\"w-full space-y-4 py-4\"><div class=\"flex flex-wrap items-center justify-between gap-2\"><div><h1 class=\"text-2xl font-bold\">Reports</h1><span id=\"site--reports--title\" class=\"text-sm text-gray-500\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"site--reports\" class=\"w-full space-y-4 py-4\"><div class=\"flex flex-wrap items-center justify-between gap-2\"><div><h1 class=\"text-2xl font-bold\">AGP</h1><span id=\"site--reports--title\" class=\"text-sm text-gray-500\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

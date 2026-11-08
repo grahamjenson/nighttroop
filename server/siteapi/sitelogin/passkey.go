@@ -92,7 +92,7 @@ func GETAccount(controlDB *db.ControlDB) http.HandlerFunc {
 			http.Error(w, "Only a user who signs in to the website has an account page", http.StatusForbidden)
 			return
 		}
-		sitecollections.WriteResponse(w, r, siteContext, http.StatusOK, passkeys, site_settings_templ.MyAccount(user.identity.Name, string(user.identity.Role), passkeys, MaxPasskeys, "/settings/account"), true)
+		sitecollections.WriteResponse(w, r, siteContext, http.StatusOK, passkeys, site_settings_templ.MyAccount(user.identity.Name, string(user.identity.Role), passkeys, MaxPasskeys, "/settings/account", true), true)
 	}
 }
 

@@ -3,7 +3,7 @@ ASSERT_PATH /
 
 // The reports open the daily dose report, which a new site has no past days for
 CLICK #site--settings-menu
-CLICK #site--reports-button
+CLICK #site--reports--agp-button
 ASSERT_STATUS 200
 CLICK #site--reports--tdd-button
 ASSERT_STATUS 200
