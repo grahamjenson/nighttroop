@@ -107,12 +107,13 @@ CLICK #site--nav--home
 ASSERT_NEW_URL
 ASSERT_PATH /
 
-// Search lists the pages whose name, group or hub has what is typed, under their hub
+// Search lists the pages whose name, group or hub has what is typed, under their hub, with no hint by their name
 TYPE #site--nav--search push
 ASSERT_VISIBLE #site--nav--search-results >> text="Settings"
 ASSERT_VISIBLE #site--nav--search--settings--push-devices[aria-selected="true"]
 ASSERT_VISIBLE #site--nav--search--settings--push
 ASSERT_COUNT #site--nav--search-results [role=option] 2
+ASSERT_NOT_VISIBLE #site--nav--search--settings--push [data-hint]
 ASSERT_NOT_VISIBLE #site--nav--search-empty
 SCREENSHOT navigation_search
 
@@ -131,6 +132,33 @@ TYPE #site--nav--search zzz
 ASSERT_TEXT_EQUALS #site--nav--search-empty No pages match
 ASSERT_COUNT #site--nav--search-results [role=option] 0
 PRESS Escape
+ASSERT_NOT_VISIBLE #site--nav--search-results
+
+// Search also finds a page by the headings and words on it, showing the one it was found by
+TYPE #site--nav--search nightscout
+ASSERT_VISIBLE #site--nav--search--settings--connectors[aria-selected="true"]
+ASSERT_TEXT_EQUALS #site--nav--search--settings--connectors [data-hint] Nightscout
+ASSERT_COUNT #site--nav--search-results [role=option] 1
+TYPE #site--nav--search low
+ASSERT_VISIBLE #site--nav--search--settings--alarms[aria-selected="true"]
+ASSERT_TEXT_EQUALS #site--nav--search--settings--alarms [data-hint] Low Alarm
+ASSERT_COUNT #site--nav--search-results [role=option] 1
+SCREENSHOT navigation_search_keyword
+
+// and by what people also call it, such as BGL for glucose or bolus for an insulin dose
+TYPE #site--nav--search BGL
+ASSERT_VISIBLE #site--nav--search--data--glucose[aria-selected="true"]
+ASSERT_COUNT #site--nav--search-results [role=option] 1
+TYPE #site--nav--search bolus
+ASSERT_VISIBLE #site--nav--search--data--insulin[aria-selected="true"]
+ASSERT_TEXT_EQUALS #site--nav--search--data--insulin [data-hint] Bolus
+ASSERT_VISIBLE #site--nav--search--presets--food
+ASSERT_COUNT #site--nav--search-results [role=option] 2
+PRESS Enter
+ASSERT_STATUS 200
+ASSERT_NEW_URL
+ASSERT_PATH /data/insulin
+ASSERT_VISIBLE #site--data--insulin-button[aria-current="page"]
 ASSERT_NOT_VISIBLE #site--nav--search-results
 
 // Ctrl+K goes to the search from anywhere, and a click on a result opens it
