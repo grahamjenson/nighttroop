@@ -67,6 +67,11 @@ ASSERT_TEXT_VISIBLE % of its limit used
 ASSERT_DRAWN #control--site--db-used
 ASSERT_VISIBLE #control--site--db-tables
 ASSERT_VISIBLE #control--site--db-table--glucose_readings
+// Hovering a part of the bar names its table in a tooltip over it
+ASSERT_NOT_VISIBLE #control--site--db-part--Other--tooltip
+HOVER #control--site--db-part--Other
+ASSERT_DRAWN #control--site--db-part--Other--tooltip >> text=Other
+SCREENSHOT site_db_part_tooltip
 ASSERT_VISIBLE #control--site--db-table--Other >> text=/MB · \d+%$/
 ASSERT_TEXT_EQUALS #control--site--last-seen Never
 ASSERT_TEXT_EQUALS #control--site--last-write Never

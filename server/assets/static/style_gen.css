@@ -310,8 +310,14 @@
   .right-2 {
     right: calc(var(--spacing) * 2);
   }
+  .bottom-full {
+    bottom: 100%;
+  }
   .left-0 {
     left: calc(var(--spacing) * 0);
+  }
+  .left-1\/2 {
+    left: calc(1 / 2 * 100%);
   }
   .left-2\.5 {
     left: calc(var(--spacing) * 2.5);
@@ -708,6 +714,10 @@
   }
   .origin-left {
     transform-origin: 0;
+  }
+  .-translate-x-1\/2 {
+    --tw-translate-x: calc(calc(1 / 2 * 100%) * -1);
+    translate: var(--tw-translate-x) var(--tw-translate-y);
   }
   .-translate-y-1\/2 {
     --tw-translate-y: calc(calc(1 / 2 * 100%) * -1);
@@ -1722,6 +1732,13 @@
   .select-none {
     -webkit-user-select: none;
     user-select: none;
+  }
+  .group-hover\:block {
+    &:is(:where(.group):hover *) {
+      @media (hover: hover) {
+        display: block;
+      }
+    }
   }
   .group-has-\[\#public--site-info\]\:mt-0 {
     &:is(:where(.group):has(*:is(#public--site-info)) *) {

@@ -495,7 +495,13 @@ templ dbSize(site *controlmodels.Site, tables []*controlmodels.SiteTable) {
 			<div class="mt-4 h-3 w-full rounded-full bg-gray-100">
 				<div id="control--site--db-used" class="flex h-full gap-[2px]" style={ fmt.Sprintf("width: %d%%", barWidth(site)) }>
 					for i, part := range parts {
-						<div id={ "control--site--db-part--" + part.Name } title={ part.Name + ": " + partText(part) } class={ "h-full min-w-[2px]", part.Class, templ.KV("rounded-l-full", i == 0), templ.KV("rounded-r-full", i == len(parts)-1) } style={ fmt.Sprintf("flex: %d 1 0%%", part.Bytes) }></div>
+						<div id={ "control--site--db-part--" + part.Name } aria-label={ part.Name + ": " + partText(part) } class={ "group relative h-full min-w-[2px]", part.Class, templ.KV("rounded-l-full", i == 0), templ.KV("rounded-r-full", i == len(parts)-1) } style={ fmt.Sprintf("flex: %d 1 0%%", part.Bytes) }>
+							// A tooltip naming the table shows over its part on hover, kept inside the bar at its ends
+							<div id={ "control--site--db-part--" + part.Name + "--tooltip" } class={ "pointer-events-none absolute bottom-full z-10 mb-2 hidden whitespace-nowrap rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 shadow-md group-hover:block", templ.KV("left-0", i == 0), templ.KV("right-0", i > 0 && i == len(parts)-1), templ.KV("left-1/2 -translate-x-1/2", i > 0 && i < len(parts)-1) }>
+								<span class="font-mono font-semibold">{ part.Name }</span>
+								<span class="tabular-nums text-gray-500">{ partText(part) }</span>
+							</div>
+						</div>
 					}
 					if len(parts) == 0 {
 						<div class="h-full flex-1 rounded-full bg-brand-night"></div>
