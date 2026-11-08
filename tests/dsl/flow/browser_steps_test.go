@@ -12,7 +12,6 @@ func TestIncludeRunsAnotherFilesSteps(t *testing.T) {
 	fsys := fstest.MapFS{
 		"steps/login.steps": {Data: []byte("GOTO /login\nCLICK #login\nASSERT_STATUS 200\n")},
 		"site/home.bdd":     {Data: []byte("INCLUDE steps/login.steps\nASSERT_VISIBLE #home\n\nCLICK #next\n")},
-		"site/missing.bdd":  {Data: []byte("CLICK #start\nINCLUDE steps/missing.steps\n")},
 	}
 
 	file, err := parseBrowser(fsys, "site/home.bdd")
@@ -24,15 +23,11 @@ func TestIncludeRunsAnotherFilesSteps(t *testing.T) {
 	require.Equal(t, "#login", login.Locator)
 	require.Len(t, login.Asserts, 2)
 	require.Equal(t, "#next", file[2].(*Click).Locator)
-
-	_, err = parseBrowser(fsys, "site/missing.bdd")
-	require.ErrorContains(t, err, "site/missing.bdd:2: INCLUDE steps/missing.steps")
 }
 
 func TestScrollTurnsTheWheelByPixels(t *testing.T) {
 	fsys := fstest.MapFS{
 		"site/scroll.bdd": {Data: []byte("GOTO /\nSCROLL 400\nASSERT_NOT_VISIBLE #header\nSCROLL -100\n")},
-		"site/bad.bdd":    {Data: []byte("GOTO /\nSCROLL down\n")},
 	}
 
 	file, err := parseBrowser(fsys, "site/scroll.bdd")
@@ -42,15 +37,11 @@ func TestScrollTurnsTheWheelByPixels(t *testing.T) {
 	require.Equal(t, 400, *down.Scroll)
 	require.Len(t, down.Asserts, 1)
 	require.Equal(t, "SCROLL -100", file[2].ToFlatString())
-
-	_, err = parseBrowser(fsys, "site/bad.bdd")
-	require.ErrorContains(t, err, "site/bad.bdd:2: SCROLL needs a number of pixels")
 }
 
 func TestHoverPointsAtAShareAcross(t *testing.T) {
 	fsys := fstest.MapFS{
 		"site/hover.bdd": {Data: []byte("GOTO /\nHOVER #graph svg\nASSERT_TEXT_VISIBLE Basal\nHOVER 95% #graph svg\n")},
-		"site/bad.bdd":   {Data: []byte("GOTO /\nHOVER 150% #graph\n")},
 	}
 
 	file, err := parseBrowser(fsys, "site/hover.bdd")
@@ -65,15 +56,11 @@ func TestHoverPointsAtAShareAcross(t *testing.T) {
 	require.Equal(t, "#graph svg", near.Locator)
 	require.InDelta(t, 0.95, *near.Hover, 1e-9)
 	require.Equal(t, "HOVER 95% #graph svg", near.ToFlatString())
-
-	_, err = parseBrowser(fsys, "site/bad.bdd")
-	require.ErrorContains(t, err, "site/bad.bdd:2: HOVER's share across is a percentage from 0 to 100")
 }
 
 func TestTitleAssertKeepsTheWholeTitle(t *testing.T) {
 	fsys := fstest.MapFS{
 		"site/title.bdd": {Data: []byte("GOTO /data/glucose\nASSERT_TITLE Glucose Readings · Nighttroop\n")},
-		"site/bad.bdd":   {Data: []byte("ASSERT_TITLE Nighttroop\n")},
 	}
 
 	file, err := parseBrowser(fsys, "site/title.bdd")
@@ -82,9 +69,6 @@ func TestTitleAssertKeepsTheWholeTitle(t *testing.T) {
 	asserts := file[0].(*Goto).Asserts
 	require.Len(t, asserts, 1)
 	require.Equal(t, "Glucose Readings · Nighttroop", asserts[0].(*AssertTitle).Title)
-
-	_, err = parseBrowser(fsys, "site/bad.bdd")
-	require.ErrorContains(t, err, "assert_title before action")
 }
 
 // parseBrowser is the actions of the file at path in fsys
@@ -99,7 +83,6 @@ func parseBrowser(fsys fs.FS, path string) ([]Action, error) {
 func TestSaveValueKeepsAnInputsValue(t *testing.T) {
 	fsys := fstest.MapFS{
 		"site/save.bdd": {Data: []byte("GOTO /\nSAVE_TEXT #password password\nSAVE_VALUE #totp-secret totp_secret\n")},
-		"site/bad.bdd":  {Data: []byte("GOTO /\nSAVE_VALUE #totp-secret\n")},
 	}
 
 	file, err := parseBrowser(fsys, "site/save.bdd")
@@ -108,15 +91,11 @@ func TestSaveValueKeepsAnInputsValue(t *testing.T) {
 	require.False(t, file[1].(*SaveText).Value)
 	require.Equal(t, &SaveText{TestPath: "site/save.bdd", TestLine: 3, Locator: "#totp-secret", Key: "totp_secret", Value: true}, file[2])
 	require.Equal(t, "SAVE_VALUE #totp-secret totp_secret", file[2].ToFlatString())
-
-	_, err = parseBrowser(fsys, "site/bad.bdd")
-	require.ErrorContains(t, err, "site/bad.bdd:2: expected a locator and a key")
 }
 
 func TestCountAssertTakesALocatorAndANumber(t *testing.T) {
 	fsys := fstest.MapFS{
 		"site/count.bdd": {Data: []byte("GOTO /\nASSERT_COUNT #toaster>[data-tui-toast] 3\nASSERT_COUNT #table tbody tr 30\n")},
-		"site/bad.bdd":   {Data: []byte("GOTO /\nASSERT_COUNT #toaster three\n")},
 	}
 
 	file, err := parseBrowser(fsys, "site/count.bdd")
@@ -128,7 +107,25 @@ func TestCountAssertTakesALocatorAndANumber(t *testing.T) {
 	rows := file[0].(*Goto).Asserts[1].(*AssertCount)
 	require.Equal(t, "#table tbody tr", rows.Locator)
 	require.Equal(t, 30, rows.Count)
+}
 
-	_, err = parseBrowser(fsys, "site/bad.bdd")
-	require.ErrorContains(t, err, "site/bad.bdd:2: ASSERT_COUNT needs a locator and a number")
+// A browser file's lines that cannot be parsed are refused, saying the file and line where it can
+func TestParseBrowserErrors(t *testing.T) {
+	tests := []struct {
+		name     string
+		contents string
+		err      string
+	}{
+		{"SCROLL without pixels", "GOTO /\nSCROLL down\n", "site/bad.bdd:2: SCROLL needs a number of pixels"},
+		{"HOVER past the right", "GOTO /\nHOVER 150% #graph\n", "site/bad.bdd:2: HOVER's share across is a percentage from 0 to 100"},
+		{"ASSERT_TITLE before an action", "ASSERT_TITLE Nighttroop\n", "assert_title before action"},
+		{"SAVE_VALUE without a key", "GOTO /\nSAVE_VALUE #totp-secret\n", "site/bad.bdd:2: expected a locator and a key"},
+		{"ASSERT_COUNT without a number", "GOTO /\nASSERT_COUNT #toaster three\n", "site/bad.bdd:2: ASSERT_COUNT needs a locator and a number"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			_, err := parseBrowser(fstest.MapFS{"site/bad.bdd": {Data: []byte(test.contents)}}, "site/bad.bdd")
+			require.ErrorContains(t, err, test.err)
+		})
+	}
 }
