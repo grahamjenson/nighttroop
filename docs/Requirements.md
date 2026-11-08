@@ -711,7 +711,8 @@ focus back to the row or button that opened it.
   then try again."; a disabled identity cannot sign in.
 - The site login's inputs have no placeholders, and are marked invalid only after a failed attempt, until the next one.
 - Devices use their Nightscout token, as a token, API secret or for a JWT.
-- Changing an identity's password or TOTP signs out its existing sessions.
+- Changing an identity's password or TOTP signs out its existing sessions, and an admin's reset of it, on the site or in
+  control, also removes its passkeys, as for a lost device, so it signs in only with its new credentials.
 - Turning an identity off, deleting it or changing its password or TOTP also ends its open connections: its Socket.IO
   writes are refused at once and its sockets are disconnected within a minute, and its live update streams end within
   30 seconds.

@@ -715,6 +715,9 @@ func (db *ControlDB) ResetSiteIdentityPassword(ctx context.Context, identity *co
 		return nil, fmt.Errorf("cannot generate user password: %w", err)
 	}
 	nsToken, digest, err := db.nightscoutToken(identity.SiteID, identity.Name, identity.Role, password)
+	if err == nil {
+		err = db.deletePasskeys(ctx, identity)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -747,12 +750,21 @@ func (db *ControlDB) ResetSiteIdentityTOTP(ctx context.Context, identity *contro
 	if err != nil {
 		return nil, fmt.Errorf("cannot generate user TOTP: %w", err)
 	}
+	if err := db.deletePasskeys(ctx, identity); err != nil {
+		return nil, err
+	}
 	if _, err := db.Queries.UpdateSiteIdentityTOTP(ctx, controldb.UpdateSiteIdentityTOTPParams{TotpSecretEnc: encTOTPSecret,
 		UpdatedByIdentityName: &by, SiteID: identity.SiteID, ID: identity.ID}); err != nil {
 		return nil, err
 	}
 	db.Logs.IdentityCredentialsChangedEvent(ctx, identity.SiteID, identity.Name, "totp", by)
 	return &IdentityValues{TotpSecret: &totpSecret}, nil
+}
+
+// deletePasskeys removes an identity's passkeys before its password or TOTP is reset, as for a lost or taken device,
+// so it then signs in only with its new credentials; removed first, a reset that then fails leaves it to add them again
+func (db *ControlDB) deletePasskeys(ctx context.Context, identity *controldb.SiteIdentity) error {
+	return db.Queries.DeleteSiteIdentityPasskeys(ctx, controldb.DeleteSiteIdentityPasskeysParams{SiteID: identity.SiteID, IdentityID: identity.ID})
 }
 
 func (db *ControlDB) CreateControlIdentity(ctx context.Context, name string, role consts.ControlRole) (*IdentityValues, error) {

@@ -2318,6 +2318,26 @@ func (m *DeleteSiteIdentityPasskeyParams) SetID(v int64) {
 	m.ID = v
 }
 
+// GetSiteID returns the SiteID value.
+func (m DeleteSiteIdentityPasskeysParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated DeleteSiteIdentityPasskeysParams.
+func (m *DeleteSiteIdentityPasskeysParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetIdentityID returns the IdentityID value.
+func (m DeleteSiteIdentityPasskeysParams) GetIdentityID() int64 {
+	return m.IdentityID
+}
+
+// SetIdentityID sets the IdentityID value and returns the updated DeleteSiteIdentityPasskeysParams.
+func (m *DeleteSiteIdentityPasskeysParams) SetIdentityID(v int64) {
+	m.IdentityID = v
+}
+
 // GetCredentialID returns the CredentialID value.
 func (m GetControlPasskeyParams) GetCredentialID() string {
 	return m.CredentialID

@@ -53,3 +53,7 @@ WHERE control_identity_id IS NOT NULL AND credential_id = sqlc.arg('CredentialID
 -- name: DeleteControlPasskey :exec
 -- A control admin removes one of its own passkeys
 DELETE FROM passkeys WHERE control_identity_id = CAST(sqlc.arg('ControlIdentityID') AS INTEGER) AND id = sqlc.arg('ID');
+
+-- name: DeleteSiteIdentityPasskeys :exec
+-- A reset identity signs in only with its new password or TOTP, so a lost device's passkey works no more
+DELETE FROM passkeys WHERE site_id = CAST(sqlc.arg('SiteID') AS TEXT) AND identity_id = CAST(sqlc.arg('IdentityID') AS INTEGER);
