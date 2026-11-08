@@ -207,7 +207,12 @@ const outsideScript = `el => {
 }`
 
 func (r *AssertVisible) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
-	locator := getLocator(r.Locator, page)
+	// Its locator can use the template, e.g. for a time as it is shown now
+	rendered, err := Render(r.Locator, ctx)
+	if err != nil {
+		t.Fatalf("\n\n%s\n failed to render the locator: %v\n\n", r.ToErrorLine(), err)
+	}
+	locator := getLocator(rendered, page)
 	if locator != nil {
 		waitForVisible(locator)
 	}
