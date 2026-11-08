@@ -138,9 +138,9 @@ templ IdentitesTable(users []*sitemodels.UserIdentity, devices []*sitemodels.Use
 			Nighttroop uses strict role separation to improve security. Each user and device should have its own credentials.
 		}
 		<div class="grid gap-4 md:grid-cols-3">
-			@roleCard("Admin", "border-red-200 bg-red-50 text-red-700", "Manages users and site settings. Logs in with a password and TOTP, recovers only with the initial backup key, and cannot use the Nightscout API.")
-			@roleCard("User", "border-blue-200 bg-blue-50 text-blue-700", "A person using Nighttroop. Users can log in, view reports and use Nightscout features.")
-			@roleCard("Device", "border-green-200 bg-green-50 text-green-700", "A phone, SugarPixel or display. Devices use the Nightscout API but cannot log in. The PWD phone's credentials go into your loop (AAPS, Trio...).")
+			@roleCard("Admin", "Manages users and site settings. Logs in with a password and TOTP, recovers only with the initial backup key, and cannot use the Nightscout API.")
+			@roleCard("User", "A person using Nighttroop. Users can log in, view reports and use Nightscout features.")
+			@roleCard("Device", "A phone, SugarPixel or display. Devices use the Nightscout API but cannot log in. The PWD phone's credentials go into your loop (AAPS, Trio...).")
 		</div>
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			<h2 class="mb-3 text-lg font-semibold">Admins & Users</h2>
@@ -157,9 +157,10 @@ templ IdentitesTable(users []*sitemodels.UserIdentity, devices []*sitemodels.Use
 	</div>
 }
 
-templ roleCard(title string, colors string, description string) {
-	<div class={ "rounded-xl border p-4", colors }>
-		<h2 class="font-semibold">{ title }</h2>
+// roleCard explains a role, in neutral colours, as no role is a warning or an error
+templ roleCard(title string, description string) {
+	<div class="rounded-xl border border-gray-200 p-4">
+		<h2 class="font-semibold text-brand-night">{ title }</h2>
 		<p class="mt-1 text-sm text-gray-700">{ description }</p>
 	</div>
 }
@@ -482,9 +483,10 @@ templ IdentityReset(url string, identity *sitemodels.UserIdentity, signedOut boo
 }
 
 templ credentialsModal(url string, name string, password string, totpSecret *string, nsToken *string, signedOut bool) {
-	<div class="fixed inset-0 bg-black/50 flex items-center justify-center">
+	// Over the sticky header, which is z-40, with room around it on a phone
+	<div id="site--identities--credentials" class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
 		// As tall as the window allows, scrolling when a device's set up steps make it taller
-		<div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md max-h-[calc(100vh-5rem)] overflow-y-auto flex flex-col items-center">
+		<div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md max-h-full overflow-y-auto flex flex-col items-center">
 			if signedOut {
 				<p id="site--identities--signed-out" class="mb-4 text-sm font-medium text-amber-800">You have been signed out. Save these, then sign in again with them.</p>
 			}
@@ -506,7 +508,7 @@ templ savedThese() {
 	<div id="site--identities--saved" class="mt-4 w-full">
 		<div class="flex justify-center">
 			@button.Button(button.Props{
-				Variant: button.VariantDestructive,
+				ID: "site--identities--saved-these",
 				Attributes: templ.Attributes{
 					"hx-on:click": templ.JSUnsafeFuncCall("this.parentElement.hidden = true; this.parentElement.nextElementSibling.hidden = false"),
 				},
@@ -529,8 +531,7 @@ templ savedThese() {
 					Go Back
 				}
 				@button.Button(button.Props{
-					ID:      "site--identities--close",
-					Variant: button.VariantDestructive,
+					ID: "site--identities--close",
 					Attributes: templ.Attributes{
 						"hx-get":    "/empty",
 						"hx-target": "#modal-container",

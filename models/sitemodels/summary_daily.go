@@ -61,11 +61,13 @@ type SummaryDay struct {
 	TimeInRange *float64 `json:"time_in_range"`
 	// TotalDailyDose is the day's insulin doses and the basal in force through it, in U
 	TotalDailyDose float64 `json:"total_daily_dose"`
+	// Days is how many of its days had data, 0 or 1 for a day, so a 0 dose with none is not taken for a real one
+	Days int64 `json:"days"`
 }
 
 // SummaryDayFromPeriod is the summary's day of a summary day, or the mean day of a week or month
 func SummaryDayFromPeriod(row *sitedb.SummaryPeriod) SummaryDay {
-	return SummaryDay{Start: row.StartAt, End: row.EndAt, TimeInRange: row.TimeInRange, TotalDailyDose: row.TotalDailyDose}
+	return SummaryDay{Start: row.StartAt, End: row.EndAt, TimeInRange: row.TimeInRange, TotalDailyDose: row.TotalDailyDose, Days: row.Days}
 }
 
 // NewSummaryDaily is the day named date from start until end, built from readings, doses, food and minutes that may

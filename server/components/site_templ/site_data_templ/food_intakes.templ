@@ -50,12 +50,10 @@ templ FoodIntakesTable(foodIntakes []*sitemodels.SiteFoodIntake, skip int64, lim
 					}
 				}
 				@table.Body() {
-					if len(foodIntakes) == 0 {
-						<tr id="site--food--empty"><td colspan="6" class="p-4 text-sm text-gray-500">No food intakes here.</td></tr>
-					}
 					for _, foodIntake := range foodIntakes {
 						@foodIntakeRow(foodIntake)
 					}
+					@pager.Empty("site--food--empty", 6, "No food intakes here.")
 				}
 			}
 			@pager.Pager(pager.Props{ID: "site--food", Path: "/data/food", Count: len(foodIntakes), Skip: skip, Limit: limit})
@@ -67,7 +65,7 @@ templ FoodIntakesTable(foodIntakes []*sitemodels.SiteFoodIntake, skip int64, lim
 // FoodIntakeNew adds a food intake with all its fields, putting its row at the top of the table
 templ FoodIntakeNew() {
 	@addmodal.Modal(addmodal.Props{ID: "site--food--create", Title: "Add Food Intake", Path: "/data/food", Target: "#foodIntakesTable tbody",
-		EmptyID: "site--food--empty", Submit: "Add Food Intake", Fields: foodIntakeFields})
+		Submit: "Add Food Intake", Fields: foodIntakeFields})
 }
 
 // foodIntakeFields are what a food intake has that a person can type in

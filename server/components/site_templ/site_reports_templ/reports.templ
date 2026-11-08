@@ -9,6 +9,7 @@ import (
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/utils/display"
 )
 
 // periods are what a report can be of
@@ -46,14 +47,6 @@ func link(period string, date time.Time) string {
 	return ""
 }
 
-// value shows an optional number with its unit, or a dash when it is not set
-func value(v *float64, unit string) string {
-	if v == nil {
-		return "–"
-	}
-	return fmt.Sprintf("%g%s", *v, unit)
-}
-
 // Report is the reports page of a day, week, fortnight or month: its time in range, daily dose and carbs, and its AGP,
 // with buttons to the report of another kind of period ending on the same day, and to the period before and after
 templ Report(p *sitemodels.SiteSummaryPeriod) {
@@ -77,9 +70,9 @@ templ Report(p *sitemodels.SiteSummaryPeriod) {
 		</div>
 		<dl class="grid grid-cols-2 gap-3 sm:grid-cols-4">
 			@stat("site--reports--days", "Days with data", fmt.Sprint(p.Days))
-			@stat("site--reports--time-in-range", "Time in range", value(p.TimeInRange, "%"))
-			@stat("site--reports--daily-dose", "Daily dose", value(&p.TotalDailyDose, " U"))
-			@stat("site--reports--daily-carbs", "Daily carbs", value(&p.TotalDailyCarbs, " g"))
+			@stat("site--reports--time-in-range", "Time in range", display.Value(p.TimeInRange, "%"))
+			@stat("site--reports--daily-dose", "Daily dose", display.PerDay(p.Days, p.TotalDailyDose, " U"))
+			@stat("site--reports--daily-carbs", "Daily carbs", display.PerDay(p.Days, p.TotalDailyCarbs, " g"))
 		</dl>
 		<section class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
 			<h2 class="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">Ambulatory glucose profile</h2>
@@ -126,9 +119,9 @@ templ TDDReport(days []*sitemodels.SiteSummaryDaily) {
 		</div>
 		<dl class="grid grid-cols-2 gap-3 sm:grid-cols-4">
 			@stat("site--reports--tdd--days", "Days with insulin", fmt.Sprint(len(days)))
-			@stat("site--reports--tdd--mean", "Daily dose", value(mean, " U"))
-			@stat("site--reports--tdd--lowest", "Lowest", value(lowest, " U"))
-			@stat("site--reports--tdd--highest", "Highest", value(highest, " U"))
+			@stat("site--reports--tdd--mean", "Daily dose", display.Value(mean, " U"))
+			@stat("site--reports--tdd--lowest", "Lowest", display.Value(lowest, " U"))
+			@stat("site--reports--tdd--highest", "Highest", display.Value(highest, " U"))
 		</dl>
 		<section class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
 			<h2 class="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">Total daily dose</h2>

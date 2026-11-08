@@ -53,12 +53,10 @@ templ TempBasalsTable(tempBasals []*sitemodels.SiteTempBasal, skip int64, limit 
 					}
 				}
 				@table.Body() {
-					if len(tempBasals) == 0 {
-						<tr id="site--temp-basal--empty"><td colspan="7" class="p-4 text-sm text-gray-500">No temp basals here.</td></tr>
-					}
 					for _, tempBasal := range tempBasals {
 						@tempBasalRow(tempBasal)
 					}
+					@pager.Empty("site--temp-basal--empty", 7, "No temp basals here.")
 				}
 			}
 			@pager.Pager(pager.Props{ID: "site--temp-basal", Path: "/data/temp-basals", Count: len(tempBasals), Skip: skip, Limit: limit})
@@ -70,7 +68,7 @@ templ TempBasalsTable(tempBasals []*sitemodels.SiteTempBasal, skip int64, limit 
 // TempBasalNew adds a temp basal with all its fields, putting its row at the top of the table
 templ TempBasalNew() {
 	@addmodal.Modal(addmodal.Props{ID: "site--temp-basal--create", Title: "Add Temp Basal", Path: "/data/temp-basals", Target: "#tempBasalsTable tbody",
-		EmptyID: "site--temp-basal--empty", Submit: "Add Temp Basal", Fields: tempBasalFields})
+		Submit: "Add Temp Basal", Fields: tempBasalFields})
 }
 
 // tempBasalFields are what a temp basal has that a person can type in

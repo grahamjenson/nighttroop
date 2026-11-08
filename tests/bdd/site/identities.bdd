@@ -14,6 +14,10 @@ ASSERT_VISIBLE #main-content th >> text=Created >> nth=0
 ASSERT_VISIBLE #identities_table label[for="name-createIdentityFormusersTable"]:has-text("Name")
 ASSERT_VISIBLE #identities_table label[for="select-form-createIdentityFormusersTable"]:has-text("Role")
 ASSERT_VISIBLE #identities_table label[for="name-createIdentityFormdevicesTable"]:has-text("Name")
+// The role cards are neutral, as red, blue and green are for errors, information and success
+ASSERT_VISIBLE #identities_table .border-gray-200>h2.text-brand-night:text-is("Admin")
+ASSERT_VISIBLE #identities_table .border-gray-200>h2.text-brand-night:text-is("Device")
+ASSERT_NOT_VISIBLE #identities_table .bg-red-50
 SCREENSHOT identities
 
 // Adding a user without choosing a role makes a User, not an Admin
@@ -33,6 +37,11 @@ ASSERT_STATUS 201
 ASSERT_TEXT_VISIBLE I Have Saved These
 SCREENSHOT identities_device_created
 
+// The credentials are over the page and its header
+ASSERT_VISIBLE #site--identities--credentials.z-50
+// Saying they are saved is a confirmation, not something to be wary of, so it is the primary button, not red
+ASSERT_VISIBLE #site--identities--saved-these.bg-primary
+
 // Each credential has its own copy button
 ASSERT_VISIBLE #site--identities--created--password + [data-copy-button]
 ASSERT_VISIBLE #site--identities--created--ns-token + [data-copy-button]
@@ -41,6 +50,7 @@ ASSERT_VISIBLE #site--identities--created--ns-token + [data-copy-button]
 CLICK "I Have Saved These"
 ASSERT_VISIBLE #site--identities--saved-warning >> text=never shown again
 ASSERT_VISIBLE #site--identities--created--password
+ASSERT_VISIBLE #site--identities--close.bg-primary
 SCREENSHOT identities_saved_warning
 CLICK #site--identities--saved-back
 ASSERT_NOT_VISIBLE #site--identities--saved-warning

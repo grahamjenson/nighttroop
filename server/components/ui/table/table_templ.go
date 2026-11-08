@@ -268,6 +268,7 @@ func Header(props ...HeaderProps) templ.Component {
 	})
 }
 
+// Body's last shown row has no border, so neither has the row above a pager.Empty row hidden at the bottom
 func Body(props ...BodyProps) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -306,7 +307,7 @@ func Body(props ...BodyProps) templ.Component {
 				var templ_7745c5c3_Var10 string
 				templ_7745c5c3_Var10, templ_7745c5c3_Err = templruntime.NewAttributeExpression(p.ID).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/table/table.templ`, Line: 99, Col: 12}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/table/table.templ`, Line: 100, Col: 12}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 				if templ_7745c5c3_Err != nil {
@@ -321,7 +322,7 @@ func Body(props ...BodyProps) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var11 = []any{utils.TwMerge("[&_tr:last-child]:border-0", p.Class)}
+			var templ_7745c5c3_Var11 = []any{utils.TwMerge("[&_tr:last-child]:border-0 [&_tr:has(+[data-empty])]:border-0", p.Class)}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_ElementWriter, templ_7745c5c3_Var11...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -407,7 +408,7 @@ func Footer(props ...FooterProps) templ.Component {
 				var templ_7745c5c3_Var14 string
 				templ_7745c5c3_Var14, templ_7745c5c3_Err = templruntime.NewAttributeExpression(p.ID).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/table/table.templ`, Line: 115, Col: 12}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/table/table.templ`, Line: 116, Col: 12}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
 				if templ_7745c5c3_Err != nil {
@@ -511,7 +512,7 @@ func Row(props ...RowProps) templ.Component {
 				var templ_7745c5c3_Var18 string
 				templ_7745c5c3_Var18, templ_7745c5c3_Err = templruntime.NewAttributeExpression(p.ID).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/table/table.templ`, Line: 134, Col: 12}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/table/table.templ`, Line: 135, Col: 12}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var18)
 				if templ_7745c5c3_Err != nil {
@@ -632,7 +633,7 @@ func Head(props ...HeadProps) templ.Component {
 				var templ_7745c5c3_Var22 string
 				templ_7745c5c3_Var22, templ_7745c5c3_Err = templruntime.NewAttributeExpression(p.ID).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/table/table.templ`, Line: 166, Col: 12}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/table/table.templ`, Line: 167, Col: 12}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var22)
 				if templ_7745c5c3_Err != nil {
@@ -738,7 +739,7 @@ func Cell(props ...CellProps) templ.Component {
 				var templ_7745c5c3_Var26 string
 				templ_7745c5c3_Var26, templ_7745c5c3_Err = templruntime.NewAttributeExpression(p.ID).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/table/table.templ`, Line: 188, Col: 12}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/table/table.templ`, Line: 189, Col: 12}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var26)
 				if templ_7745c5c3_Err != nil {
@@ -844,7 +845,7 @@ func Caption(props ...CaptionProps) templ.Component {
 				var templ_7745c5c3_Var30 string
 				templ_7745c5c3_Var30, templ_7745c5c3_Err = templruntime.NewAttributeExpression(p.ID).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/table/table.templ`, Line: 210, Col: 12}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/table/table.templ`, Line: 211, Col: 12}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var30)
 				if templ_7745c5c3_Err != nil {

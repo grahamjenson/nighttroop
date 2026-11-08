@@ -46,3 +46,15 @@ CLICK #site--settings-menu
 CLICK #site--settings--settings-button
 ASSERT_STATUS 200
 ASSERT_TEXT_EQUALS #site--settings--identity--units>option[selected] Site setting (mmol/L)
+
+// On a phone another identity's settings are one column under its name, and its save button fits
+WINDOW 390x2800
+CLICK #site--settings-menu
+CLICK #site--settings--identities-button
+CLICK #site--identities--pwd_phone--settings
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--identity-settings--identity--units
+ASSERT_VISIBLE #site--identity-settings--identity--alarm_no_data_minutes
+ASSERT_VISIBLE #site--identity-settings--identity--save
+ASSERT_FITS
+SCREENSHOT identity_settings_phone

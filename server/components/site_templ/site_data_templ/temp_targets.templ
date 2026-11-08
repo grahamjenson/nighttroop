@@ -54,12 +54,10 @@ templ TempTargetsTable(tempTargets []*sitemodels.SiteTempTarget, skip int64, lim
 					}
 				}
 				@table.Body() {
-					if len(tempTargets) == 0 {
-						<tr id="site--temp-target--empty"><td colspan="7" class="p-4 text-sm text-gray-500">No temp targets here.</td></tr>
-					}
 					for _, tempTarget := range tempTargets {
 						@tempTargetRow(tempTarget)
 					}
+					@pager.Empty("site--temp-target--empty", 7, "No temp targets here.")
 				}
 			}
 			@pager.Pager(pager.Props{ID: "site--temp-target", Path: "/data/temp-targets", Count: len(tempTargets), Skip: skip, Limit: limit})
@@ -71,7 +69,7 @@ templ TempTargetsTable(tempTargets []*sitemodels.SiteTempTarget, skip int64, lim
 // TempTargetNew adds a temp target with all its fields, putting its row at the top of the table
 templ TempTargetNew() {
 	@addmodal.Modal(addmodal.Props{ID: "site--temp-target--create", Title: "Add Temp Target", Path: "/data/temp-targets", Target: "#tempTargetsTable tbody",
-		EmptyID: "site--temp-target--empty", Submit: "Add Temp Target", Fields: tempTargetFields(ctx)})
+		Submit: "Add Temp Target", Fields: tempTargetFields(ctx)})
 }
 
 // tempTargetFields are what a temp target has that a person can type in

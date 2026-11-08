@@ -45,7 +45,7 @@ func Login() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, " <div class=\"flex flex-1 flex-col justify-center items-center px-6 py-6 lg:px-8 bg-slate-50\"><div class=\"p-8 login-form-target rounded-lg shadow-2xl w-full max-w-96\"><!-- Form updated with POST method --><form hx-post=\"/login\" hx-target=\"closest .login-form-target\" hx-swap=\"outerHTML\" hx-status:4xx=\"target:#toaster swap:beforeend\" hx-status:5xx=\"target:#toaster swap:beforeend\"><div class=\"text-center mb-6\"><img src=\"/logo.svg\" alt=\"\" class=\"mx-auto mb-3 size-16\"><h2 class=\"font-bold text-2xl\">Nighttroop Login</h2></div><!-- Username -->")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, " <div class=\"flex flex-1 flex-col justify-center items-center px-6 py-6 lg:px-8 bg-slate-50\"><div class=\"p-8 login-form-target rounded-lg shadow-2xl w-full max-w-96\"><!-- Form updated with POST method --><form id=\"site--login--form\" hx-post=\"/login\" hx-target=\"closest .login-form-target\" hx-swap=\"outerHTML\" hx-status:4xx=\"target:#toaster swap:beforeend\" hx-status:5xx=\"target:#toaster swap:beforeend\"><div class=\"text-center mb-6\"><img src=\"/logo.svg\" alt=\"\" class=\"mx-auto mb-3 size-16\"><h2 class=\"font-bold text-2xl\">Nighttroop Login</h2></div><!-- Username -->")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -86,11 +86,10 @@ func Login() templ.Component {
 					return templ_7745c5c3_Err
 				}
 				templ_7745c5c3_Err = input.Input(input.Props{
-					ID:          "site--login--name",
-					Type:        "text",
-					Name:        "name",
-					Placeholder: "admin",
-					Required:    true,
+					ID:       "site--login--name",
+					Type:     "text",
+					Name:     "name",
+					Required: true,
 					Attributes: templ.Attributes{
 						"autocapitalize": "none",
 						"autocorrect":    "off",
@@ -148,12 +147,11 @@ func Login() templ.Component {
 					return templ_7745c5c3_Err
 				}
 				templ_7745c5c3_Err = input.Input(input.Props{
-					ID:          "site--login--password",
-					Type:        "password",
-					Name:        "password",
-					Placeholder: "••••••••",
-					Required:    true,
-					Attributes:  templ.Attributes{"autocomplete": "current-password"},
+					ID:         "site--login--password",
+					Type:       "password",
+					Name:       "password",
+					Required:   true,
+					Attributes: templ.Attributes{"autocomplete": "current-password"},
 				}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -194,7 +192,15 @@ func Login() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</form></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</form>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = invalidAfterError("site--login--form").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -226,7 +232,7 @@ func LoginTOTP() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<div class=\"p-8 login-form-target rounded-lg shadow-2xl w-full max-w-96\"><!-- Form updated with POST method --><form id=\"otp\" hx-post=\"/login/totp\" hx-target=\"body\" hx-swap=\"outerHTML\" hx-status:4xx=\"target:#toaster swap:beforeend\" hx-status:5xx=\"target:#toaster swap:beforeend\" class=\"needs-validation\"><div class=\"text-center mb-6\"><img src=\"/logo.svg\" alt=\"\" class=\"mx-auto mb-3 size-16\"><h2 class=\"font-bold text-2xl\">Nighttroop Login</h2></div><!-- TOTP -->")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<div class=\"p-8 login-form-target rounded-lg shadow-2xl w-full max-w-96\"><!-- Form updated with POST method --><form id=\"otp\" hx-post=\"/login/totp\" hx-target=\"body\" hx-swap=\"outerHTML\" hx-status:4xx=\"target:#toaster swap:beforeend\" hx-status:5xx=\"target:#toaster swap:beforeend\" class=\"needs-validation\"><div class=\"text-center mb-6\"><img src=\"/logo.svg\" alt=\"\" class=\"mx-auto mb-3 size-16\"><h2 class=\"font-bold text-2xl\">Nighttroop Login</h2></div><!-- TOTP -->")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -254,7 +260,7 @@ func LoginTOTP() templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "Verification Code")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "Verification Code")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -346,10 +352,9 @@ func LoginTOTP() templ.Component {
 				return nil
 			})
 			templ_7745c5c3_Err = inputotp.InputOTP(inputotp.Props{
-				ID:       "otp-form",
-				HasError: true,
-				Form:     "otp",
-				Name:     "totp",
+				ID:   "otp-form",
+				Form: "otp",
+				Name: "totp",
 			}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var11), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -366,7 +371,7 @@ func LoginTOTP() templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "Enter the 6-digit TOTP code")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "Enter the 6-digit code from your authenticator app")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -382,7 +387,7 @@ func LoginTOTP() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<div class=\"mt-4\"></div><!-- Submit Button -->")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<div class=\"mt-4\"></div><!-- Submit Button -->")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -398,7 +403,7 @@ func LoginTOTP() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "Log In")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "Log In")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -412,7 +417,54 @@ func LoginTOTP() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</form><script>\n\t\t\t\t// Logs in as soon as the code's last digit is typed or pasted. It waits a tick for the code's slots to\n\t\t\t\t// fill its value, and does not send the same code twice, so a wrong code is not sent again on its own.\n\t\t\t\t(function () {\n\t\t\t\t\tconst form = document.getElementById(\"otp\");\n\t\t\t\t\tconst code = document.getElementById(\"otp-form\");\n\t\t\t\t\tlet sent = \"\";\n\t\t\t\t\tconst sendWhenFull = () => setTimeout(() => {\n\t\t\t\t\t\tif (/^\\d{6}$/.test(code.value) && code.value !== sent) {\n\t\t\t\t\t\t\tsent = code.value;\n\t\t\t\t\t\t\tform.requestSubmit();\n\t\t\t\t\t\t}\n\t\t\t\t\t}, 0);\n\t\t\t\t\tform.addEventListener(\"input\", sendWhenFull);\n\t\t\t\t\tform.addEventListener(\"paste\", sendWhenFull);\n\t\t\t\t})();\n\t\t\t</script></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</form><script>\n\t\t\t\t// Logs in as soon as the code's last digit is typed or pasted. It waits a tick for the code's slots to\n\t\t\t\t// fill its value, and does not send the same code twice, so a wrong code is not sent again on its own.\n\t\t\t\t(function () {\n\t\t\t\t\tconst form = document.getElementById(\"otp\");\n\t\t\t\t\tconst code = document.getElementById(\"otp-form\");\n\t\t\t\t\tlet sent = \"\";\n\t\t\t\t\tconst sendWhenFull = () => setTimeout(() => {\n\t\t\t\t\t\tif (/^\\d{6}$/.test(code.value) && code.value !== sent) {\n\t\t\t\t\t\t\tsent = code.value;\n\t\t\t\t\t\t\tform.requestSubmit();\n\t\t\t\t\t\t}\n\t\t\t\t\t}, 0);\n\t\t\t\t\tform.addEventListener(\"input\", sendWhenFull);\n\t\t\t\t\tform.addEventListener(\"paste\", sendWhenFull);\n\t\t\t\t})();\n\t\t\t</script>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = invalidAfterError("otp").Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+// invalidAfterError marks the form's inputs aria-invalid after a failed login, until it is sent again, so they are not
+// shown as wrong before anything has been tried
+func invalidAfterError(formID string) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<script type=\"text/javascript\">\n\t\t(function () {\n\t\t\tconst form = document.getElementById(")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Var16, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(formID)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_login_templ/login.templ`, Line: 180, Col: 49}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, ");\n\t\t\tconst invalid = (failed) => form.querySelectorAll(\"input:not([type=hidden])\").forEach((input) =>\n\t\t\t\tfailed ? input.setAttribute(\"aria-invalid\", \"true\") : input.removeAttribute(\"aria-invalid\"));\n\t\t\tform.addEventListener(\"htmx:response:error\", () => invalid(true));\n\t\t\tform.addEventListener(\"htmx:before:request\", () => invalid(false));\n\t\t})();\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

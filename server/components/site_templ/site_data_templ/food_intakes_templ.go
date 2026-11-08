@@ -266,17 +266,19 @@ func FoodIntakesTable(foodIntakes []*sitemodels.SiteFoodIntake, skip int64, limi
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				if len(foodIntakes) == 0 {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<tr id=\"site--food--empty\"><td colspan=\"6\" class=\"p-4 text-sm text-gray-500\">No food intakes here.</td></tr>")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-				}
 				for _, foodIntake := range foodIntakes {
 					templ_7745c5c3_Err = foodIntakeRow(foodIntake).Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, " ")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = pager.Empty("site--food--empty", 6, "No food intakes here.").Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
 				}
 				return nil
 			})
@@ -324,7 +326,7 @@ func FoodIntakeNew() templ.Component {
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
 		templ_7745c5c3_Err = addmodal.Modal(addmodal.Props{ID: "site--food--create", Title: "Add Food Intake", Path: "/data/food", Target: "#foodIntakesTable tbody",
-			EmptyID: "site--food--empty", Submit: "Add Food Intake", Fields: foodIntakeFields}).Render(ctx, templ_7745c5c3_Buffer)
+			Submit: "Add Food Intake", Fields: foodIntakeFields}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -492,7 +494,7 @@ func foodIntakeRow(foodIntake *sitemodels.SiteFoodIntake) templ.Component {
 				var templ_7745c5c3_Var21 string
 				templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(formatReadingDate(ctx, foodIntake.OccurredAt))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/food_intakes.templ`, Line: 125, Col: 50}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/food_intakes.templ`, Line: 123, Col: 50}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 				if templ_7745c5c3_Err != nil {
@@ -519,7 +521,7 @@ func foodIntakeRow(foodIntake *sitemodels.SiteFoodIntake) templ.Component {
 				var templ_7745c5c3_Var23 string
 				templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(foodIntake.Carbs))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/food_intakes.templ`, Line: 128, Col: 29}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/food_intakes.templ`, Line: 126, Col: 29}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 				if templ_7745c5c3_Err != nil {
@@ -546,7 +548,7 @@ func foodIntakeRow(foodIntake *sitemodels.SiteFoodIntake) templ.Component {
 				var templ_7745c5c3_Var25 string
 				templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(foodIntake.Name))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/food_intakes.templ`, Line: 131, Col: 28}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/food_intakes.templ`, Line: 129, Col: 28}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 				if templ_7745c5c3_Err != nil {
@@ -573,7 +575,7 @@ func foodIntakeRow(foodIntake *sitemodels.SiteFoodIntake) templ.Component {
 				var templ_7745c5c3_Var27 string
 				templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(foodIntake.Notes))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/food_intakes.templ`, Line: 134, Col: 29}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/food_intakes.templ`, Line: 132, Col: 29}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 				if templ_7745c5c3_Err != nil {
@@ -600,7 +602,7 @@ func foodIntakeRow(foodIntake *sitemodels.SiteFoodIntake) templ.Component {
 				var templ_7745c5c3_Var29 string
 				templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(foodIntake.CreatedByDeviceName))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/food_intakes.templ`, Line: 137, Col: 43}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/food_intakes.templ`, Line: 135, Col: 43}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 				if templ_7745c5c3_Err != nil {
@@ -729,7 +731,7 @@ func FoodIntakeModal(foodIntake *sitemodels.SiteFoodIntake) templ.Component {
 			var templ_7745c5c3_Var34 string
 			templ_7745c5c3_Var34, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/data/food/" + foodIntake.ID).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/food_intakes.templ`, Line: 169, Col: 42}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/food_intakes.templ`, Line: 167, Col: 42}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var34)
 			if templ_7745c5c3_Err != nil {
@@ -742,7 +744,7 @@ func FoodIntakeModal(foodIntake *sitemodels.SiteFoodIntake) templ.Component {
 			var templ_7745c5c3_Var35 string
 			templ_7745c5c3_Var35, templ_7745c5c3_Err = templruntime.NewAttributeExpression("#site--food--" + foodIntake.ID).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/food_intakes.templ`, Line: 170, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/food_intakes.templ`, Line: 168, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var35)
 			if templ_7745c5c3_Err != nil {

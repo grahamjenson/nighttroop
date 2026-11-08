@@ -320,7 +320,7 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config *config.ServerConfig, r *h
 	// Rate Limit login attempts by user and IP
 	allowedToAttempt, _ := httputils.SiteLoginAttemptsWithinRateLimit(config, r, siteContext.SiteID, creds.Name)
 	if !allowedToAttempt {
-		http.Error(w, "Too many login attempts Wait a bit", http.StatusTooManyRequests)
+		http.Error(w, tooManyAttempts, http.StatusTooManyRequests)
 		return
 	}
 
@@ -387,12 +387,15 @@ func loginTheUserAPI(ctx context.Context, controlDB *db.ControlDB, subdomain str
 	return device, nil
 }
 
+// tooManyAttempts is what a login refused by the rate limiter says, on the page and to the API
+const tooManyAttempts = "Too many login attempts. Wait a minute, then try again."
+
 func rateLimitErrorHTMX(w http.ResponseWriter, r *http.Request) {
 	slog.InfoContext(r.Context(), "Identity Login Failed", "stack", errors.LocalStack())
 
 	w.WriteHeader(http.StatusTooManyRequests)
 
-	err := site_login_templ.LoginError("Too many attempts").Render(r.Context(), w)
+	err := site_login_templ.LoginError(tooManyAttempts).Render(r.Context(), w)
 	if err != nil {
 		slog.ErrorContext(r.Context(), "Failed to render login error template", "error", err)
 	}

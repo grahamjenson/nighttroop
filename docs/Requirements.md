@@ -267,7 +267,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   - A legend of insulin and SMB (triangles pointing down), carbs (pointing up) and basal (an outlined area), each
     drawn as on the graph, and a tooltip of each reading and treatment.
 - Time in range, total daily dose, and the last sensor and site change for today, yesterday, last week and last
-  month.
+  month. A period with no data shows "–" for its time in range and daily dose, not 0; one with data and no insulin
+  shows 0 U.
 - Readings are coloured and labelled low, in range or high by the alarm settings; high text is a darker amber than
   the graph's, so it can be read.
 - A latest glucose older than the no data alarm's minutes (20 by default) is grey, with an amber badge saying how
@@ -286,7 +287,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 - Reports, from the menu, show the week with yesterday in it at first, and a report of any day, week, fortnight or
   month from today back a year is at `/reports/{period}-{date}`.
-- A report says which days it covers, and its days with data, time in range, mean daily dose and mean daily carbs.
+- A report says which days it covers, and its days with data, time in range, mean daily dose and mean daily carbs,
+  each "–" when it has no days with data.
 - Its ambulatory glucose profile (AGP) over a day from midnight shades the 5th to 95th and 25th to 75th percentiles,
   with the median as a line, over the range shaded with its low and high dashed. A day's report draws the day's
   glucose over the AGP of the 7 days to it. A report with no glucose says so instead.
@@ -312,7 +314,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 Each kind of data has a page with a table, newest first and paged, where records can be added, viewed, edited and
 deleted (after a confirmation). On a phone, a table wider than the window scrolls sideways in its card, so the page
-does not, and its cells stay on one line, so a time or a value and its unit never break apart; only notes wrap:
+does not, and its cells stay on one line, so a time or a value and its unit never break apart; only notes wrap.
+Adding or deleting a record updates the table's "Showing" count straight away, without a reload, and deleting the
+last one shows the table is empty again, as deleting the last push credential does:
 
 - **Glucose**: CGM and meter readings with trend arrows, in the settings' units (mmol/L or mg/dL), with lows and
   highs coloured as on the summary and marked L or H, read out as Low or High, so they are not shown by colour alone.
@@ -396,6 +400,8 @@ focus back to the row or button that opened it.
 
 - General settings: units, time zone, language, date and time format, week start, insulin and carb defaults.
 - An admin sets the site's settings; each identity can override them for themselves.
+- On a phone the settings, alarms and another identity's settings are one column: each setting's label, then its Site
+  and Yours controls, each named, and the save buttons fit in the window.
 - An admin can **download** a snapshot of the site's DB.
 - An admin can **delete** the site, after a confirmation, which archives it to S3 and signs everyone out.
 - An admin can add, list and delete the site's **push credentials** on Settings, Push Notifications
@@ -670,7 +676,9 @@ focus back to the row or button that opened it.
 - Every TOTP code field, on sign in, setup and the new site's code check, takes only digits; letters typed or pasted
   into it are dropped.
 - The server refuses a TOTP code that is not six digits, like a wrong one.
-- Sign-in attempts are rate limited per identity and IP; a disabled identity cannot sign in.
+- Sign-in attempts are rate limited per identity and IP, and one refused says "Too many login attempts. Wait a minute,
+  then try again."; a disabled identity cannot sign in.
+- The site login's inputs have no placeholders, and are marked invalid only after a failed attempt, until the next one.
 - Devices use their Nightscout token, as a token, API secret or for a JWT.
 - Changing an identity's password or TOTP signs out its existing sessions.
 - Turning an identity off, deleting it or changing its password or TOTP also ends its open connections: its Socket.IO

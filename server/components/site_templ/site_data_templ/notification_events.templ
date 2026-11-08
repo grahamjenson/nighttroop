@@ -50,12 +50,10 @@ templ NotificationEventsTable(events []*sitemodels.SiteNotificationEvent, skip i
 					}
 				}
 				@table.Body() {
-					if len(events) == 0 {
-						<tr id="site--notification--empty"><td colspan="6" class="p-4 text-sm text-gray-500">No notifications here.</td></tr>
-					}
 					for _, event := range events {
 						@notificationEventRow(event)
 					}
+					@pager.Empty("site--notification--empty", 6, "No notifications here.")
 				}
 			}
 			@pager.Pager(pager.Props{ID: "site--notification", Path: "/data/notifications", Count: len(events), Skip: skip, Limit: limit})
@@ -67,7 +65,7 @@ templ NotificationEventsTable(events []*sitemodels.SiteNotificationEvent, skip i
 // NotificationEventNew adds a notification with all its fields, putting its row at the top of the table
 templ NotificationEventNew() {
 	@addmodal.Modal(addmodal.Props{ID: "site--notification--create", Title: "Add Notification", Path: "/data/notifications", Target: "#notificationEventsTable tbody",
-		EmptyID: "site--notification--empty", Submit: "Add Notification", Fields: notificationEventFields})
+		Submit: "Add Notification", Fields: notificationEventFields})
 }
 
 // notificationEventFields are what a notification has that a person can type in

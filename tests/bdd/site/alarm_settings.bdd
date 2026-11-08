@@ -123,3 +123,16 @@ CLICK #site--alarms--identity--save
 ASSERT_STATUS 400
 ASSERT_VISIBLE #toaster [data-tui-toast][data-variant="error"]:has-text("the low must be under the high")
 SCREENSHOT alarm_settings_low_over_high
+
+// On a phone the alarms are one column too, each alarm's site and own controls named, and the save buttons fit
+WINDOW 390x3200
+GOTO /settings/alarms
+ASSERT_STATUS 200
+ASSERT_TEXT_EQUALS #alarm_settings_page>div>div:has(#site--alarms--site--alarm_low_enabled)>span Site
+ASSERT_TEXT_EQUALS #alarm_settings_page>div>div:has(#site--alarms--identity--alarm_low_enabled)>span Yours
+ASSERT_VISIBLE #site--alarms--site--range_low
+ASSERT_VISIBLE #site--alarms--identity--range_low
+ASSERT_VISIBLE #site--alarms--site--save
+ASSERT_VISIBLE #site--alarms--identity--save
+ASSERT_FITS
+SCREENSHOT alarm_settings_phone

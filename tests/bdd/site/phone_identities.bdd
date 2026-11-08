@@ -16,8 +16,13 @@ ASSERT_VISIBLE #createIdentityFormdevicesTable button[type=submit]
 ASSERT_FITS
 SCREENSHOT identities_phone
 
-// A device is added from the wrapped form
+// A device is added from the wrapped form. In a short window its credentials fill the window, scrolling, over the
+// header, so their top can be read
+WINDOW 390x640
 INPUT #name-createIdentityFormdevicesTable kitchen
 CLICK "Add Device"
 ASSERT_STATUS 201
 ASSERT_TEXT_VISIBLE I Have Saved These
+ASSERT_VISIBLE "Save this information in a secure place"
+ASSERT_VISIBLE #site--identities--created--username
+SCREENSHOT credentials_phone

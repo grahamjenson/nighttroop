@@ -93,3 +93,17 @@ CLICK #site--data--glucose-button
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE {{ now "Asia/Kathmandu" "2006-01-02 15:" }}
 SCREENSHOT glucose_in_identity_timezone
+
+// On a phone the settings are one column: each setting's label, then the site's control and the admin's own, each
+// named, and the save buttons fit. The window is tall enough for the whole page, so fitting it checks only its width.
+WINDOW 390x1950
+GOTO /settings
+ASSERT_STATUS 200
+ASSERT_TEXT_EQUALS #settings_page>div>div:has(#site--settings--site--units)>span Site
+ASSERT_TEXT_EQUALS #settings_page>div>div:has(#site--settings--identity--units)>span Yours
+ASSERT_VISIBLE #site--settings--site--units
+ASSERT_VISIBLE #site--settings--identity--units
+ASSERT_VISIBLE #site--settings--site--save
+ASSERT_VISIBLE #site--settings--identity--save
+ASSERT_FITS
+SCREENSHOT settings_phone

@@ -25,6 +25,7 @@ CLICK #site--activity--create--submit
 ASSERT_STATUS 201
 ASSERT_TEXT_VISIBLE Football
 ASSERT_NOT_VISIBLE #site--activity--empty
+ASSERT_TEXT_VISIBLE Showing 1 to 1
 CLICK #site--activity--add
 INPUT #site--activity--create--name Walk
 INPUT #site--activity--create--duration-minutes 30
@@ -73,4 +74,20 @@ SCREENSHOT activity_deleted
 CLICK #site--settings-menu
 CLICK #site--data--activities-button
 ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 1
+
+// Deleting the last activity shows the table is empty again, with no count, without a reload
+CLICK #activitiesTable tbody tr >> nth=0 >> button[title=Delete]
+ASSERT_TEXT_VISIBLE Activity Deleted
+ASSERT_VISIBLE #site--activity--empty
+ASSERT_NOT_VISIBLE #site--activity--showing
+SCREENSHOT activities_empty_after_delete
+// Adding one again hides it and counts the new one
+CLICK #site--activity--add
+INPUT #site--activity--create--name Swim
+INPUT #site--activity--create--duration-minutes 45
+CLICK #site--activity--create--submit
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE Swim
+ASSERT_NOT_VISIBLE #site--activity--empty
 ASSERT_TEXT_VISIBLE Showing 1 to 1

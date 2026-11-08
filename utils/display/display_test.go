@@ -135,3 +135,25 @@ func TestName(t *testing.T) {
 		}
 	}
 }
+
+func TestValueAndPerDay(t *testing.T) {
+	number := func(v float64) *float64 { return &v }
+	tests := []struct {
+		name string
+		got  string
+		want string
+	}{
+		{"no value", Value(nil, " U"), "–"},
+		{"a value", Value(number(12.5), " U"), "12.5 U"},
+		{"rounded to 2 places", Value(number(1.23456), "%"), "1.23%"},
+		{"a real 0", Value(number(0), " U"), "0 U"},
+		{"no days with data", PerDay(0, 0, " U"), "–"},
+		{"days with data and no insulin", PerDay(3, 0, " U"), "0 U"},
+		{"days with data", PerDay(7, 31.256, " g"), "31.26 g"},
+	}
+	for _, test := range tests {
+		if test.got != test.want {
+			t.Errorf("%s: got %q, want %q", test.name, test.got, test.want)
+		}
+	}
+}
