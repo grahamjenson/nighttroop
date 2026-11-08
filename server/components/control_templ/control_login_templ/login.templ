@@ -1,6 +1,7 @@
 package control_login_templ
 
 import (
+	"nighttroop.t1d.nz/server/components/site_templ/site_login_templ"
 	"nighttroop.t1d.nz/server/components/control_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/form"
@@ -107,6 +108,7 @@ templ Login() {
 						Log In
 					}
 				</form>
+				@site_login_templ.PasskeyLogin("control--login")
 				<script>
 					// Logs in as soon as the code's last digit is typed or pasted, once the name and password are in. It
 					// waits a tick for the code's slots to fill its value, and does not send the same code twice, so a

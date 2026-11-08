@@ -41,6 +41,13 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 - A control admin signs in with a username, password and TOTP code, and can sign out. Tab goes from the username to the
   password to the code, skipping the button that shows the password.
+- "Sign in with a passkey" on the control login signs in the control admin whose passkey the browser has, with no
+  name, password or code, as a site's login does. Control passkey sign ins are rate limited per IP, and are sign in
+  events, as a failed one is.
+- Account, under Security in the control menu, says which control admin is signed in, and adds and removes its
+  passkeys as a site's My Account does: on the control site's own address, so each works only there, at most 10, none
+  the browser already has, and named for the admin, with no name, email or device of the person kept. Control admins'
+  and site identities' passkeys are kept in one table, each only ever found, listed or removed as its own owner's.
 - The control login is sent as soon as the code's sixth digit is typed or pasted, once the username and password are in,
   as the site's is; a code typed before them waits for Log In, and a wrong code is said to be wrong and not sent again.
 - A failed control login says, in an error toast, "Wrong name, password or code. Codes change every 30 seconds, so use

@@ -23,3 +23,5 @@ SELECT * FROM control_identities ORDER BY created_at DESC;
 
 -- name: GetControlIdentity :one
 SELECT * FROM control_identities WHERE name = sqlc.arg('Name') LIMIT 1;
+-- name: GetControlIdentityByID :one
+SELECT * FROM control_identities WHERE id = sqlc.arg('ID');

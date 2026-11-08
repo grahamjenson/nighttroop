@@ -12,8 +12,9 @@ import "nighttroop.t1d.nz/server/components/ui/button"
 // passkeyButtonClass is the login's own button's look, outlined so the password login stays the first choice
 const passkeyButtonClass = "w-full py-3 px-4 text-brand-night text-lg font-bold rounded-lg shadow-sm cursor-pointer"
 
-// PasskeyLogin signs in with any of the site's passkeys the browser has, with no name or password typed
-func PasskeyLogin() templ.Component {
+// PasskeyLogin signs in with any of the site's, or control's, passkeys the browser has, with no name or password
+// typed; its elements' IDs start with prefix
+func PasskeyLogin(prefix string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -53,16 +54,29 @@ func PasskeyLogin() templ.Component {
 			return nil
 		})
 		templ_7745c5c3_Err = button.Button(button.Props{
-			ID:         "site--login--passkey",
+			ID:         prefix + "--passkey",
 			Type:       button.TypeButton,
 			Variant:    button.VariantOutline,
 			Class:      passkeyButtonClass,
-			Attributes: templ.Attributes{"data-passkey-begin": "/login/passkey/begin", "data-passkey-finish": "/login/passkey/finish", "data-passkey-error": "site--login--passkey-error"},
+			Attributes: templ.Attributes{"data-passkey-begin": "/login/passkey/begin", "data-passkey-finish": "/login/passkey/finish", "data-passkey-error": prefix + "--passkey-error"},
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<p id=\"site--login--passkey-error\" class=\"mt-2 text-sm text-red-600\"></p>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<p id=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var3 string
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templruntime.NewAttributeExpression(prefix + "--passkey-error").Resolve(ctx)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_login_templ/passkey.templ`, Line: 21, Col: 35}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\" class=\"mt-2 text-sm text-red-600\"></p>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -94,7 +108,7 @@ func PasskeyScript() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<script>\n\t\tfunction passkey(begin, finish, headers, errorID) {\n\t\t\tconst decode = s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));\n\t\t\tconst encode = b => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');\n\t\t\tconst fail = message => document.getElementById(errorID).textContent = message;\n\t\t\tfetch(begin, {method: 'POST', headers}).then(r => r.json()).then(options => {\n\t\t\t\tconst o = options.publicKey;\n\t\t\t\tif (!o) throw new Error(options.error);\n\t\t\t\to.challenge = decode(o.challenge);\n\t\t\t\t(o.excludeCredentials || o.allowCredentials || []).forEach(c => c.id = decode(c.id));\n\t\t\t\tif (o.user) o.user.id = decode(o.user.id);\n\t\t\t\treturn o.user ? navigator.credentials.create({publicKey: o}) : navigator.credentials.get({publicKey: o});\n\t\t\t}).then(credential => {\n\t\t\t\tconst response = {};\n\t\t\t\tfor (const key of ['clientDataJSON', 'attestationObject', 'authenticatorData', 'signature', 'userHandle']) {\n\t\t\t\t\tif (credential.response[key]) response[key] = encode(credential.response[key]);\n\t\t\t\t}\n\t\t\t\tconst body = JSON.stringify({id: credential.id, rawId: encode(credential.rawId), type: credential.type, response});\n\t\t\t\treturn fetch(finish, {method: 'POST', headers: {...headers, 'Content-Type': 'application/json'}, body});\n\t\t\t}).then(r => r.json()).then(done => {\n\t\t\t\tif (!done.redirect) throw new Error(done.error);\n\t\t\t\twindow.location = done.redirect;\n\t\t\t}).catch(e => fail(e.message || 'The passkey did not work.'));\n\t\t}\n\t\tdocument.querySelectorAll('[data-passkey-begin]').forEach(button => button.addEventListener('click', () => {\n\t\t\tpasskey(button.dataset.passkeyBegin, button.dataset.passkeyFinish, {}, button.dataset.passkeyError);\n\t\t}));\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<script>\n\t\tfunction passkey(begin, finish, headers, errorID) {\n\t\t\tconst decode = s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));\n\t\t\tconst encode = b => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');\n\t\t\tconst fail = message => document.getElementById(errorID).textContent = message;\n\t\t\tfetch(begin, {method: 'POST', headers}).then(r => r.json()).then(options => {\n\t\t\t\tconst o = options.publicKey;\n\t\t\t\tif (!o) throw new Error(options.error);\n\t\t\t\to.challenge = decode(o.challenge);\n\t\t\t\t(o.excludeCredentials || o.allowCredentials || []).forEach(c => c.id = decode(c.id));\n\t\t\t\tif (o.user) o.user.id = decode(o.user.id);\n\t\t\t\treturn o.user ? navigator.credentials.create({publicKey: o}) : navigator.credentials.get({publicKey: o});\n\t\t\t}).then(credential => {\n\t\t\t\tconst response = {};\n\t\t\t\tfor (const key of ['clientDataJSON', 'attestationObject', 'authenticatorData', 'signature', 'userHandle']) {\n\t\t\t\t\tif (credential.response[key]) response[key] = encode(credential.response[key]);\n\t\t\t\t}\n\t\t\t\tconst body = JSON.stringify({id: credential.id, rawId: encode(credential.rawId), type: credential.type, response});\n\t\t\t\treturn fetch(finish, {method: 'POST', headers: {...headers, 'Content-Type': 'application/json'}, body});\n\t\t\t}).then(r => r.json()).then(done => {\n\t\t\t\tif (!done.redirect) throw new Error(done.error);\n\t\t\t\twindow.location = done.redirect;\n\t\t\t}).catch(e => fail(e.message || 'The passkey did not work.'));\n\t\t}\n\t\tdocument.querySelectorAll('[data-passkey-begin]').forEach(button => button.addEventListener('click', () => {\n\t\t\tpasskey(button.dataset.passkeyBegin, button.dataset.passkeyFinish, {}, button.dataset.passkeyError);\n\t\t}));\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

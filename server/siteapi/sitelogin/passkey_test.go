@@ -39,7 +39,7 @@ func TestPasskeyKeepsNothingAboutThePerson(t *testing.T) {
 
 	kept, err := controlDB.Queries.GetSiteIdentityPasskey(t.Context(), controldb.GetSiteIdentityPasskeyParams{SiteID: siteID, CredentialID: base64.RawURLEncoding.EncodeToString([]byte("credential"))})
 	require.NoError(t, err)
-	require.Equal(t, admin.ID, kept.IdentityID)
+	require.Equal(t, admin.ID, *kept.IdentityID)
 	require.NotContains(t, kept.CredentialJson, base64.StdEncoding.EncodeToString([]byte("a phone's model")))
 	require.False(t, strings.Contains(kept.CredentialJson, "client data") || strings.Contains(kept.CredentialJson, base64.StdEncoding.EncodeToString([]byte("client data"))))
 
