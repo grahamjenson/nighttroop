@@ -46,5 +46,5 @@ func BackfillHandler(w http.ResponseWriter, r *http.Request) {
 		writeError(w, r, siteContext.AcceptType, apiutils.ErrInternalServerError)
 		return
 	}
-	WriteResponse(w, r, siteContext, http.StatusAccepted, backfill, site_settings_templ.BackfillQueued(connectorType, backfill.From, backfill.To), false)
+	WriteResponse(w, r, siteContext, http.StatusAccepted, backfill, site_settings_templ.BackfillQueued(connectorType, backfill.From, backfill.To, backfill.RecentFrom), false)
 }

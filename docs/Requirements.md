@@ -450,7 +450,9 @@ Connectors are a site's third party integrations, each syncing from one service.
 - Typing the details of a Dexcom, LibreLinkUp or Nightscout source not yet saved ticks its Enable Connector box, as it is easy
   to forget; a click on the box, before or after, is kept, and a saved source's box is never changed.
 - A failing source syncs less often, and says when it failed and why.
-- A working source can be backfilled with the days before its oldest reading.
+- A working source can be backfilled with the days before its oldest reading. A Nightscout or virtual backfill also
+  fetches the last 2 days again, to fill gaps the site missed while it was down, as for a deploy, and its toast says so;
+  Dexcom and LibreLinkUp backfills fetch all they keep, the last 24 and 12 hours.
 - The Connectors page shows how each source has synced, how often, the records it has pulled in, in all, from its syncs
   and backfills, and in its last sync, its backfill and its recent events.
 - The Connectors page updates as each sync or backfill finishes, showing its new errors, stats and events without reloading,
