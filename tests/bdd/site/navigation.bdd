@@ -134,11 +134,14 @@ ASSERT_COUNT #site--nav--search-results [role=option] 0
 PRESS Escape
 ASSERT_NOT_VISIBLE #site--nav--search-results
 
-// Search also finds a page by the headings and words on it, showing the one it was found by
+// Search also finds a page by the headings and words on it, showing the one it was found by (Ctrl+K selects what was
+// searched, so what is typed replaces it)
+PRESS Control+k
 TYPE #site--nav--search nightscout
 ASSERT_VISIBLE #site--nav--search--settings--connectors[aria-selected="true"]
 ASSERT_TEXT_EQUALS #site--nav--search--settings--connectors>[data-hint] Nightscout
 ASSERT_COUNT #site--nav--search-results [role=option] 1
+PRESS Control+k
 TYPE #site--nav--search low
 ASSERT_VISIBLE #site--nav--search--settings--alarms[aria-selected="true"]
 ASSERT_TEXT_EQUALS #site--nav--search--settings--alarms>[data-hint] Low Alarm
@@ -146,9 +149,11 @@ ASSERT_COUNT #site--nav--search-results [role=option] 1
 SCREENSHOT navigation_search_keyword
 
 // and by what people also call it, such as BGL for glucose or bolus for an insulin dose
+PRESS Control+k
 TYPE #site--nav--search BGL
 ASSERT_VISIBLE #site--nav--search--data--glucose[aria-selected="true"]
 ASSERT_COUNT #site--nav--search-results [role=option] 1
+PRESS Control+k
 TYPE #site--nav--search bolus
 ASSERT_VISIBLE #site--nav--search--data--insulin[aria-selected="true"]
 ASSERT_TEXT_EQUALS #site--nav--search--data--insulin>[data-hint] Bolus
