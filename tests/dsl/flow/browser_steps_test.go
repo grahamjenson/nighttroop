@@ -47,6 +47,29 @@ func TestScrollTurnsTheWheelByPixels(t *testing.T) {
 	require.ErrorContains(t, err, "site/bad.bdd:2: SCROLL needs a number of pixels")
 }
 
+func TestHoverPointsAtAShareAcross(t *testing.T) {
+	fsys := fstest.MapFS{
+		"site/hover.bdd": {Data: []byte("GOTO /\nHOVER #graph svg\nASSERT_TEXT_VISIBLE Basal\nHOVER 95% #graph svg\n")},
+		"site/bad.bdd":   {Data: []byte("GOTO /\nHOVER 150% #graph\n")},
+	}
+
+	file, err := parseBrowser(fsys, "site/hover.bdd")
+	require.NoError(t, err)
+	require.Len(t, file, 3)
+	// Without a share, it points at the middle, and asserts after it check what pointing there shows
+	middle := file[1].(*Click)
+	require.Equal(t, "#graph svg", middle.Locator)
+	require.Equal(t, 0.5, *middle.Hover)
+	require.Len(t, middle.Asserts, 1)
+	near := file[2].(*Click)
+	require.Equal(t, "#graph svg", near.Locator)
+	require.InDelta(t, 0.95, *near.Hover, 1e-9)
+	require.Equal(t, "HOVER 95% #graph svg", near.ToFlatString())
+
+	_, err = parseBrowser(fsys, "site/bad.bdd")
+	require.ErrorContains(t, err, "site/bad.bdd:2: HOVER's share across is a percentage from 0 to 100")
+}
+
 func TestTitleAssertKeepsTheWholeTitle(t *testing.T) {
 	fsys := fstest.MapFS{
 		"site/title.bdd": {Data: []byte("GOTO /data/glucose\nASSERT_TITLE Glucose Readings · Nighttroop\n")},
