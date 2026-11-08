@@ -10,6 +10,10 @@ ASSERT_TITLE Reports · Nighttroop
 ASSERT_VISIBLE #site--reports--no-glucose
 ASSERT_TEXT_EQUALS #site--reports--days 0
 ASSERT_TEXT_EQUALS #site--reports--time-in-range –
+// With no days of data its daily dose and carbs are dashes too, not 0 U and 0 g
+ASSERT_TEXT_EQUALS #site--reports--daily-dose –
+ASSERT_TEXT_EQUALS #site--reports--daily-carbs –
+SCREENSHOT report_no_data
 
 // Virtual sync fills the last 30 minutes with readings, treatments and device statuses
 CLICK #site--settings-menu
@@ -27,6 +31,9 @@ GOTO /reports/day-{{ date 0 }}
 ASSERT_STATUS 200
 ASSERT_TEXT_EQUALS #site--reports--days 1
 ASSERT_VISIBLE #site--reports--time-in-range >> text=/^\d+(\.\d)?%$/
+// A day with data has a daily dose and carbs, a real 0 when there were none
+ASSERT_VISIBLE #site--reports--daily-dose >> text=/^\d+(\.\d+)? U$/
+ASSERT_VISIBLE #site--reports--daily-carbs >> text=/^\d+(\.\d+)? g$/
 ASSERT_DRAWN #site--reports--agp svg
 ASSERT_DRAWN #site--reports--agp >> text=5–95%
 ASSERT_DRAWN #site--reports--agp >> text=25–75%

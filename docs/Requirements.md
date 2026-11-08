@@ -253,7 +253,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   - A legend of insulin and SMB (triangles pointing down), carbs (pointing up) and basal (an outlined area), each
     drawn as on the graph, and a tooltip of each reading and treatment.
 - Time in range, total daily dose, and the last sensor and site change for today, yesterday, last week and last
-  month.
+  month. A period with no data shows "–" for its time in range and daily dose, not 0; one with data and no insulin
+  shows 0 U.
 - Readings are coloured and labelled low, in range or high by the alarm settings; high text is a darker amber than
   the graph's, so it can be read.
 - A latest glucose older than the no data alarm's minutes (20 by default) is grey, with an amber badge saying how
@@ -272,7 +273,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 - Reports, from the menu, show the week with yesterday in it at first, and a report of any day, week, fortnight or
   month from today back a year is at `/reports/{period}-{date}`.
-- A report says which days it covers, and its days with data, time in range, mean daily dose and mean daily carbs.
+- A report says which days it covers, and its days with data, time in range, mean daily dose and mean daily carbs,
+  each "–" when it has no days with data.
 - Its ambulatory glucose profile (AGP) over a day from midnight shades the 5th to 95th and 25th to 75th percentiles,
   with the median as a line, over the range shaded with its low and high dashed. A day's report draws the day's
   glucose over the AGP of the 7 days to it. A report with no glucose says so instead.

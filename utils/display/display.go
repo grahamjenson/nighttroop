@@ -5,7 +5,26 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"nighttroop.t1d.nz/utils/consts"
 )
+
+// Value is an optional number with its unit, rounded to 2 places, or a dash when it is not set
+func Value(v *float64, unit string) string {
+	if v == nil {
+		return "–"
+	}
+	return fmt.Sprintf("%g%s", consts.Round(*v, 2), unit)
+}
+
+// PerDay is a period's daily dose or carbs with its unit, or a dash when none of its days had data, so a period with
+// no data does not read as a real 0
+func PerDay(days int64, v float64, unit string) string {
+	if days == 0 {
+		return "–"
+	}
+	return Value(&v, unit)
+}
 
 // Ago is how long before now the time in ms was, as "just now", "5 min ago", "3 h ago" or "2 days ago",
 // or "Never" when there is no time

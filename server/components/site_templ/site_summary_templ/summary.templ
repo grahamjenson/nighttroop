@@ -36,14 +36,6 @@ func arrow(direction *string) string {
 // colours, as the graph colours its dots, but high in the darker amber that can be read as text
 var rangeColours = map[string]string{"Low": "text-glucose-low", "High": "text-glucose-high-text", "": "text-glucose-in-range"}
 
-// value shows an optional number with its unit, or a dash when it is not set
-func value(v *float64, unit string) string {
-	if v == nil {
-		return "–"
-	}
-	return fmt.Sprintf("%g%s", consts.Round(*v, 2), unit)
-}
-
 func unitsText(units *consts.Units) string {
 	if units == nil {
 		return ""
@@ -56,7 +48,7 @@ func loopValue(loop *sitemodels.SiteDeviceStatus, get func(*sitemodels.SiteDevic
 	if loop == nil {
 		return "–"
 	}
-	return value(get(loop), unit)
+	return display.Value(get(loop), unit)
 }
 
 // treatment is one row of the summary's treatments, with Path the data page listing its kind
@@ -76,7 +68,7 @@ func otherTreatments(s *sitemodels.Summary) []treatment {
 		list = append(list, treatment{t.OccurredAt, "Temp Target", "/data/temp-targets", detail})
 	}
 	for _, b := range s.TempBasals {
-		list = append(list, treatment{b.OccurredAt, "Temp Basal", "/data/temp-basals", fmt.Sprintf("%s for %d min", value(b.Rate, " U/hr"), b.DurationMinutes)})
+		list = append(list, treatment{b.OccurredAt, "Temp Basal", "/data/temp-basals", fmt.Sprintf("%s for %d min", display.Value(b.Rate, " U/hr"), b.DurationMinutes)})
 	}
 	sort.SliceStable(list, func(i, j int) bool { return list[i].At > list[j].At })
 	return list
@@ -93,11 +85,11 @@ type intake struct {
 func insulinAndCarbs(s *sitemodels.Summary) []intake {
 	list := []intake{}
 	for _, d := range s.InsulinDoses {
-		list = append(list, intake{At: d.OccurredAt, Insulin: value(&d.Dose, " U"), SMB: isSMB(d)})
+		list = append(list, intake{At: d.OccurredAt, Insulin: display.Value(&d.Dose, " U"), SMB: isSMB(d)})
 	}
 	for _, f := range s.FoodIntakes {
 		if f.Carbs != nil {
-			list = append(list, intake{At: f.OccurredAt, Carbs: value(f.Carbs, " g")})
+			list = append(list, intake{At: f.OccurredAt, Carbs: display.Value(f.Carbs, " g")})
 		}
 	}
 	sort.SliceStable(list, func(i, j int) bool { return list[i].At > list[j].At })
@@ -211,17 +203,17 @@ templ summaryContent(summary *sitemodels.Summary) {
 		@tile("site--summary--phone-battery", "Phone battery", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.DeviceBatteryPercent }, "%"), icon.Smartphone)
 	</div>
 	<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-		@tile("site--summary--time-in-range", "Time in range", value(summary.Today.TimeInRange, "%"), icon.Target) {
-			@previous("site--summary--time-in-range--yesterday", "Yesterday", value(summary.Yesterday.TimeInRange, "%"))
-			@previous("site--summary--time-in-range--last-week", "Last week", value(summary.LastWeek.TimeInRange, "%"))
-			@previous("site--summary--time-in-range--last-fortnight", "Last fortnight", value(summary.LastFortnight.TimeInRange, "%"))
-			@previous("site--summary--time-in-range--last-month", "Last month", value(summary.LastMonth.TimeInRange, "%"))
+		@tile("site--summary--time-in-range", "Time in range", display.Value(summary.Today.TimeInRange, "%"), icon.Target) {
+			@previous("site--summary--time-in-range--yesterday", "Yesterday", display.Value(summary.Yesterday.TimeInRange, "%"))
+			@previous("site--summary--time-in-range--last-week", "Last week", display.Value(summary.LastWeek.TimeInRange, "%"))
+			@previous("site--summary--time-in-range--last-fortnight", "Last fortnight", display.Value(summary.LastFortnight.TimeInRange, "%"))
+			@previous("site--summary--time-in-range--last-month", "Last month", display.Value(summary.LastMonth.TimeInRange, "%"))
 		}
-		@tile("site--summary--total-daily-dose", "Total daily dose", value(&summary.Today.TotalDailyDose, " U"), icon.Droplet) {
-			@previous("site--summary--total-daily-dose--yesterday", "Yesterday", value(&summary.Yesterday.TotalDailyDose, " U"))
-			@previous("site--summary--total-daily-dose--last-week", "Last week", value(&summary.LastWeek.TotalDailyDose, " U"))
-			@previous("site--summary--total-daily-dose--last-fortnight", "Last fortnight", value(&summary.LastFortnight.TotalDailyDose, " U"))
-			@previous("site--summary--total-daily-dose--last-month", "Last month", value(&summary.LastMonth.TotalDailyDose, " U"))
+		@tile("site--summary--total-daily-dose", "Total daily dose", display.PerDay(summary.Today.Days, summary.Today.TotalDailyDose, " U"), icon.Droplet) {
+			@previous("site--summary--total-daily-dose--yesterday", "Yesterday", display.PerDay(summary.Yesterday.Days, summary.Yesterday.TotalDailyDose, " U"))
+			@previous("site--summary--total-daily-dose--last-week", "Last week", display.PerDay(summary.LastWeek.Days, summary.LastWeek.TotalDailyDose, " U"))
+			@previous("site--summary--total-daily-dose--last-fortnight", "Last fortnight", display.PerDay(summary.LastFortnight.Days, summary.LastFortnight.TotalDailyDose, " U"))
+			@previous("site--summary--total-daily-dose--last-month", "Last month", display.PerDay(summary.LastMonth.Days, summary.LastMonth.TotalDailyDose, " U"))
 		}
 		@tile("site--summary--sensor-started", "Sensor started", ago(summary.SensorStartedAt), icon.Activity)
 		@tile("site--summary--site-changed", "Site changed", ago(summary.SiteChangedAt), icon.Bandage)
@@ -357,11 +349,11 @@ templ deviceCard(status *sitemodels.SiteDeviceStatus) {
 			<span class="whitespace-nowrap text-xs text-gray-500" title={ site_data_templ.FormatDate(ctx, status.OccurredAt) }>{ display.RoundedAgo(status.OccurredAt, time.Now()) }</span>
 		</div>
 		<dl class="mt-2 grid grid-cols-3 gap-x-3 gap-y-1 text-sm">
-			@detail("Phone", value(status.DeviceBatteryPercent, "%"))
-			@detail("Reservoir", value(status.PumpReservoir, " U"))
-			@detail("Pump", value(status.PumpBatteryPercent, "%"))
-			@detail("IOB", value(status.LoopIob, " U"))
-			@detail("COB", value(status.LoopCob, " g"))
+			@detail("Phone", display.Value(status.DeviceBatteryPercent, "%"))
+			@detail("Reservoir", display.Value(status.PumpReservoir, " U"))
+			@detail("Pump", display.Value(status.PumpBatteryPercent, "%"))
+			@detail("IOB", display.Value(status.LoopIob, " U"))
+			@detail("COB", display.Value(status.LoopCob, " g"))
 		</dl>
 	</button>
 }
