@@ -720,6 +720,7 @@ Connectors are a site's third party integrations, each syncing from one service.
   serves, so takes no data, until every live site is opened and migrated, and `update.sh` rolls back a release that
   cannot. Its batch is not uploaded without it.
 - Old records' raw JSON is cleared after `TRUNCATE_RECORDS_AFTER_DAYS`.
+- Old device reports' raw JSON is cleared sooner, after `TRUNCATE_DEVICE_REPORTS_RAW_JSON_AFTER_DAYS`.
 - Old device reports' loop configuration and settings are dropped after `TRUNCATE_RECORDS_AFTER_DAYS`, so the
   Nightscout devicestatus API returns them without `configuration`, `loop` or `openaps`; their loop name, IOB, COB and
   predictions are kept.

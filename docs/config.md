@@ -63,6 +63,7 @@ Limits written per minute are rates; their burst is how many can be used at once
 | `DELETE_AFTER_INACTIVITY_MINS` | `10080` (a week) | How long a site that was never used is kept before it is deleted |
 | `DISABLE_AFTER_INACTIVITY_DAYS` | `7` | How long a site goes unwritten or unseen before control can disable it |
 | `TRUNCATE_RECORDS_AFTER_DAYS` | `30` | How old a site's records are before truncating clears their raw JSON |
+| `TRUNCATE_DEVICE_REPORTS_RAW_JSON_AFTER_DAYS` | `2` | How old a site's device reports are before truncating clears their raw JSON, sooner than other records as a loop sends one every 5 minutes |
 | `TRUNCATE_INTERVAL_IN_SECONDS` | `60` | How often the logs DB is trimmed and the jobs are summarised |
 | `LOGS_DB_MAX_ROWS_PER_TABLE` | `100000` | How many of the newest logs, events and errors each logs DB table keeps |
 | `SLOW_QUERY_MS` | `100` | How many milliseconds a DB query (or a transaction waiting for the write lock) runs before it is logged as a `Slow query`, with its DB, its sqlc name, how long it took and how many rows it gave, but never its values; `0` logs none |

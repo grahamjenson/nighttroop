@@ -3,7 +3,6 @@ package db_test
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
@@ -11,6 +10,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"encoding/json"
 
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/db"
@@ -215,6 +216,32 @@ func TestTruncateSite(t *testing.T) {
 
 	_, err = controlDB.TruncateSite(ctx, "not-a-site")
 	require.ErrorContains(t, err, "is not open")
+}
+
+// Device reports' raw JSON is cleared after TruncateDeviceReportsRawJSONAfterDays, sooner than other records'
+func TestTruncateSiteDeviceReports(t *testing.T) {
+	_, controlDB, site := testutils.NewControlDBWithSite(t)
+	ctx, q := t.Context(), site.SiteDB.Queries()
+	require.Equal(t, 2, controlDB.ServerConfig.TruncateDeviceReportsRawJSONAfterDays)
+	raw, daysAgo := `{"device":"loop"}`, func(days int) int64 { return time.Now().AddDate(0, 0, -days).UnixMilli() }
+	for id, days := range map[string]int{"old": 3, "recent": 1} {
+		_, err := q.CreateDeviceReport(ctx, sitedb.CreateDeviceReportParams{ID: id, OccurredAt: daysAgo(days), RawJsonData: &raw, CreatedByIdentityName: "phone"})
+		require.NoError(t, err)
+	}
+	_, err := q.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "reading", Mgdl: 120, ReadingType: "sgv", OccurredAt: daysAgo(3), RawJsonData: &raw, CreatedByIdentityName: "phone"})
+	require.NoError(t, err)
+
+	_, err = controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
+	require.NoError(t, err)
+	old, err := q.GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: "old"})
+	require.NoError(t, err)
+	require.Nil(t, old.RawJsonData, "a 3 day old device report's raw JSON is cleared")
+	recent, err := q.GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: "recent"})
+	require.NoError(t, err)
+	require.Equal(t, raw, *recent.RawJsonData, "a 1 day old device report keeps its raw JSON")
+	reading, err := q.GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: "reading"})
+	require.NoError(t, err)
+	require.Equal(t, raw, *reading.RawJsonData, "a 3 day old reading keeps its raw JSON until TruncateRecordsAfterDays")
 }
 
 // Old device reports drop the loop's configuration and settings, keeping their other attributes; recent ones keep all
