@@ -459,9 +459,12 @@ func (r *Input) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 	if err != nil {
 		return nil, err
 	}
-	// Use this instead of Fill to simulate typing each key sequentially
-	err = locator.PressSequentially(value, playwright.LocatorPressSequentiallyOptions{Timeout: playwright.Float(actionWait)})
-	if err != nil {
+	// Typed a key at a time, not filled, as a person types. actionWait is for the input to be ready: the keys are typed
+	// once it has focus, with no deadline, as a busy runner can take longer than actionWait to type a long value
+	if err = locator.Focus(playwright.LocatorFocusOptions{Timeout: playwright.Float(actionWait)}); err != nil {
+		return nil, err
+	}
+	if err = page.Keyboard().Type(value); err != nil {
 		return nil, err
 	}
 

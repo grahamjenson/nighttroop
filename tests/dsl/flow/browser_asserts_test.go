@@ -273,3 +273,33 @@ func TestStatusAssertChecksThePageNotItsScripts(t *testing.T) {
 	require.True(t, notModified, "the script is answered 304")
 	require.NoError(t, (&BrowserAssertStatus{Code: http.StatusOK}).Execute(t, map[string]any{}, page, resps))
 }
+
+// An input typed into a key at a time takes as long as its keys do, however many there are: actionWait is for the
+// input to be ready, not for typing, which a busy runner can take longer than actionWait to do for a long value
+func TestInputTypesALongValueOnASlowRunner(t *testing.T) {
+	pw, err := playwright.Run()
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = pw.Stop() })
+	browser, err := pw.Chromium.Launch()
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = browser.Close() })
+
+	page, err := browser.NewPage()
+	require.NoError(t, err)
+	page.SetDefaultTimeout(1000)
+	require.NoError(t, page.SetContent(`<html><body><input id="notes"></body></html>`))
+	// A slow CPU, as a runner busy with every package's tests is, so typing the value takes longer than actionWait
+	session, err := page.Context().NewCDPSession(page)
+	require.NoError(t, err)
+	_, err = session.Send("Emulation.setCPUThrottlingRate", map[string]any{"rate": 10})
+	require.NoError(t, err)
+
+	value := strings.Repeat("a", 1100)
+	start := time.Now()
+	_, err = (&Input{Locator: "#notes", Value: value}).Execute(t, page, map[string]any{})
+	t.Logf("typed %d keys in %v", len(value), time.Since(start))
+	require.NoError(t, err)
+	typed, err := page.Locator("#notes").InputValue()
+	require.NoError(t, err)
+	require.Equal(t, value, typed)
+}
