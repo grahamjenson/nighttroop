@@ -184,7 +184,7 @@ func ParseBrowserLines(lines []Line) ([]Action, error) {
 				Code:     statusCode,
 			})
 
-		case "ASSERT_VISIBLE", "ASSERT_DRAWN":
+		case "ASSERT_VISIBLE", "ASSERT_DRAWN", "ASSERT_CONTAINED":
 			if current == nil {
 				return nil, fmt.Errorf("assert_visible before action")
 			}
@@ -193,10 +193,11 @@ func ParseBrowserLines(lines []Line) ([]Action, error) {
 				return nil, fmt.Errorf("current action does not support asserts")
 			}
 			assertable.AddAssert(&AssertVisible{
-				Locator:  second,
-				Drawn:    first == "ASSERT_DRAWN",
-				TestPath: path,
-				TestLine: lineNumber,
+				Locator:   second,
+				Drawn:     first == "ASSERT_DRAWN",
+				Contained: first == "ASSERT_CONTAINED",
+				TestPath:  path,
+				TestLine:  lineNumber,
 			})
 		case "ASSERT_NOT_VISIBLE":
 			if current == nil {

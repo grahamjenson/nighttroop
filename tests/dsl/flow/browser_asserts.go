@@ -138,6 +138,9 @@ type AssertVisible struct {
 	// Drawn is ASSERT_DRAWN, for a mark in a graph that others may be drawn over: it is shown whole inside its
 	// graph, but need not be what a click at its centre would hit
 	Drawn bool
+	// Contained is ASSERT_CONTAINED: as ASSERT_VISIBLE, and wholly inside, side to side, every box it is in, so nothing
+	// too wide pushes it past the edge of its card or form, which the page fitting its window does not show
+	Contained bool
 
 	TestPath string
 	TestLine int
@@ -188,6 +191,21 @@ const insideGraphScript = `el => {
 	return r.left >= g.left && r.right <= g.right && r.top >= g.top && r.bottom <= g.bottom;
 }`
 
+// outsideScript is "" when the element is wholly inside, side to side, each box it is in, or the first box it pokes
+// past and by how much
+const outsideScript = `el => {
+	const r = el.getBoundingClientRect();
+	for (let box = el.parentElement; box !== null && box !== document.body; box = box.parentElement) {
+		const b = box.getBoundingClientRect();
+		const over = Math.max(b.left - r.left, r.right - b.right);
+		if (over > 0.5) {
+			const name = box.id ? "#" + box.id : box.tagName.toLowerCase() + (box.classList.length ? "." + [...box.classList].join(".") : "");
+			return name + " by " + Math.round(over) + "px";
+		}
+	}
+	return "";
+}`
+
 func (r *AssertVisible) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
 	locator := getLocator(r.Locator, page)
 	if locator != nil {
@@ -231,6 +249,15 @@ func (r *AssertVisible) Execute(t *testing.T, ctx map[string]any, page playwrigh
 	}
 	if clickable != true {
 		t.Fatalf("\n\n%s\n assertVisible failed: element is clipped or covered, so a user cannot see or click it: %s\n\n%s\n\n", r.ToErrorLine(), r.Locator, prettyOutput)
+	}
+	if r.Contained {
+		outside, err := locator.Evaluate(outsideScript, nil, playwright.LocatorEvaluateOptions{Timeout: readWait})
+		if err != nil {
+			t.Fatalf("\n\n%s\n failed to check locator is inside the boxes it is in: %v, error: %v\n\n%s\n\n", r.ToErrorLine(), r.Locator, err, prettyOutput)
+		}
+		if outside != "" {
+			t.Fatalf("\n\n%s\n assertContained failed: %s pokes past the edge of %v\n\n%s\n\n", r.ToErrorLine(), r.Locator, outside, prettyOutput)
+		}
 	}
 	return nil
 }
