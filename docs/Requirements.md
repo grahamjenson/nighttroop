@@ -272,12 +272,12 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   hubs, each opening its hub's first page; there is no Summary link. The hub of the page shown is marked, after a page
   opened from a link or tab as well as one loaded in full, and the home icon on the summary.
 - Data has side tabs in groups, like Settings: Readings & treatments (Glucose Readings, Insulin Doses, Food Intakes,
-  Temp Targets, Temp Basals, Profile Switches), Events (Activities, Site & Sensor Changes, Notifications, Event Groups)
-  and Devices (Device Status).
+  Temp Targets, Temp Basals, Profile Switches), Events (Activities, Site & Sensor Changes, Notifications, Event Groups),
+  Devices (Device Status) and Presets (Food Presets, Profiles).
 - Reports has a tab for each report: AGP, TDD and Summaries.
 - Settings has side tabs in groups: This site (General, Alarms), People & devices (Users & Devices, Push Devices),
-  Connections (Connectors, Push Notifications), Presets (Food Presets, Profiles) and Troubleshooting (Events, Errors,
-  Logs). Another identity's settings count as Users & Devices.
+  Connections (Connectors, Push Notifications) and Troubleshooting (Events, Errors, Logs). Another identity's settings
+  count as Users & Devices.
 - A hub's tab for the page shown is marked; each tab keeps its page's own URL, so links, back and forward still work.
 - Only the tabs an identity may open are shown: someone who is not an admin has no Users & Devices, Connectors, Push
   Notifications, Events, Errors or Logs.
@@ -433,7 +433,7 @@ Close or saving) gives the focus back to the row or button that opened it.
 
 ### Presets
 
-- Food Presets and Profiles are in the Settings hub under Presets.
+- Food Presets and Profiles are in the Data hub under Presets, with the data they are used to enter.
 
 - **Food presets**: added in a modal of all their fields, as data is, viewed, edited and deleted.
 - **Profiles**: profile stores uploaded by a loop, with their schedules to read, renamed or deleted.
