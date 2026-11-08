@@ -411,6 +411,9 @@ Connectors are a site's third party integrations, each syncing from one service.
   editor replaces the copy, whoever saved it there, and a new one is added beside it.
 - A Nightscout connector on this server's host, or on a private, local or shared (carrier-grade NAT or Tailscale) address,
   is refused when saved and as it connects.
+- Pasting a Nightscout link with its token, such as `https://site/api/v1?token=...`, `?api_secret=...` or
+  `https://secret@site/api/v1`, into the Nightscout connector's URL splits it into the base URL and the API Secret or
+  Token box.
 
 ### Alarms
 

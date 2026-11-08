@@ -366,6 +366,7 @@ templ LibreConnectorForm(libreConnectorSettings *sitemodels.Connector) {
 }
 
 templ NightscoutConnectorForm(nightscoutConnectorSettings *sitemodels.Connector) {
+	@splitNightscoutURL()
 	<form
 		hx-post="/settings/connectors/nightscout"
 		{ enableOnFirstInput(nightscoutConnectorSettings)... }
@@ -428,10 +429,12 @@ templ NightscoutConnectorForm(nightscoutConnectorSettings *sitemodels.Connector)
 									"autocapitalize": "none",
 									"spellcheck":     "false",
 									"pattern":        "https?://[^/]+",
+									"onchange":       templ.JSUnsafeFuncCall("splitNightscoutURL(this)"),
+									"onpaste":        templ.JSUnsafeFuncCall("setTimeout(() => splitNightscoutURL(this))"),
 								},
 							})
 							@form.Description() {
-								Base URL only (no path or trailing slash)
+								Base URL only. Paste a link with its token, such as .../api/v1?token=..., and it is split into the URL and token
 							}
 						}
 					</div>
@@ -441,7 +444,7 @@ templ NightscoutConnectorForm(nightscoutConnectorSettings *sitemodels.Connector)
 							@form.Label(form.LabelProps{
 								For: "site--settings--nightscout-connector--password",
 							}) {
-								API Secret
+								API Secret or Token
 							}
 							@input.Input(input.Props{
 								ID:       "site--settings--nightscout-connector--password",
@@ -488,6 +491,26 @@ templ NightscoutConnectorForm(nightscoutConnectorSettings *sitemodels.Connector)
 			</div>
 		</div>
 	</form>
+}
+
+var splitNightscoutURLOnce = templ.NewOnceHandle()
+
+// splitNightscoutURL turns a pasted Nightscout link, such as https://site/api/v1?token=..., ?api_secret=... or
+// https://secret@site/api/v1, into its base URL, and puts the token or API secret it carries in the secret's box
+templ splitNightscoutURL() {
+	@splitNightscoutURLOnce.Once() {
+		<script>
+			function splitNightscoutURL(input) {
+				let url;
+				try { url = new URL(input.value.trim()); } catch { return; }
+				if (url.protocol !== "http:" && url.protocol !== "https:") return;
+				const q = url.searchParams;
+				const secret = q.get("token") || q.get("api_secret") || q.get("api-secret") || q.get("secret") || decodeURIComponent(url.username);
+				input.value = url.origin;
+				if (secret) document.getElementById("site--settings--nightscout-connector--password").value = secret;
+			}
+		</script>
+	}
 }
 
 templ VirtualConnectorForm(synSource *sitemodels.Connector) {
