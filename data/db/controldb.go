@@ -431,17 +431,21 @@ func (db *ControlDB) HydrateSite(ctx context.Context, subdomain string, download
 }
 
 // TruncateSite clears the raw JSON a site's DB keeps of what each row older than TruncateRecordsAfterDays was sent,
-// keeping all its data, then shrinks the DB and records its new size, which it returns
+// or for device reports TruncateDeviceReportsRawJSONAfterDays, keeping all its data, then shrinks the DB and records
+// its new size, which it returns
 func (db *ControlDB) TruncateSite(ctx context.Context, subdomain string) (*int64, error) {
 	site := db.sites.get(subdomain)
 	if site == nil {
 		return nil, fmt.Errorf("site %s is not open", subdomain)
 	}
 	q, before := site.Queries(), time.Now().AddDate(0, 0, -db.ServerConfig.TruncateRecordsAfterDays).UnixMilli()
+	reportsBefore := time.Now().AddDate(0, 0, -db.ServerConfig.TruncateDeviceReportsRawJSONAfterDays).UnixMilli()
+	if err := q.ClearDeviceReportsRawJSON(ctx, sitedb.ClearDeviceReportsRawJSONParams{Before: reportsBefore}); err != nil {
+		return nil, fmt.Errorf("cannot clear raw json of site %s: %w", subdomain, err)
+	}
 	for _, clear := range []func(context.Context, int64) error{
 		clearBefore(q.ClearActivitiesRawJSON),
 		clearBefore(q.ClearComponentEventsRawJSON),
-		clearBefore(q.ClearDeviceReportsRawJSON),
 		clearBefore(q.ClearEventGroupsRawJSON),
 		clearBefore(q.ClearFoodIntakesRawJSON),
 		clearBefore(q.ClearFoodPresetsRawJSON),
