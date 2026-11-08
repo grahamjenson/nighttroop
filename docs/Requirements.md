@@ -395,6 +395,8 @@ focus back to the row or button that opened it.
 
 - General settings: units, time zone, language, date and time format, week start, insulin and carb defaults.
 - An admin sets the site's settings; each identity can override them for themselves.
+- On a phone the settings, alarms and another identity's settings are one column: each setting's label, then its Site
+  and Yours controls, each named, and the save buttons fit in the window.
 - An admin can **download** a snapshot of the site's DB.
 - An admin can **delete** the site, after a confirmation, which archives it to S3 and signs everyone out.
 - An admin can add, list and delete the site's **push credentials** on Settings, Push Notifications
