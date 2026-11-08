@@ -52,6 +52,8 @@ var Pages = []Page{
 	{Hub: Data, Group: "Events", Label: "Notifications", Path: "/data/notifications", ID: "site--data--notifications-button", Icon: icon.Bell, Store: "notification_events"},
 	{Hub: Data, Group: "Events", Label: "Event Groups", Path: "/data/event-groups", ID: "site--data--event-groups-button", Icon: icon.Layers, Store: "event_groups"},
 	{Hub: Data, Group: "Devices", Label: "Device Status", Path: "/data/device-status", ID: "site--data--device-status-button", Icon: icon.Smartphone, Store: "device_statuses"},
+	{Hub: Data, Group: "Presets", Label: "Food Presets", Path: "/presets/food", ID: "site--presets--food-button", Icon: icon.Utensils, Store: "food_presets"},
+	{Hub: Data, Group: "Presets", Label: "Profiles", Path: "/presets/profiles", ID: "site--presets--profiles-button", Icon: icon.CalendarClock, Store: "profile_presets"},
 
 	{Hub: Reports, Label: "AGP", Path: "/reports", ID: "site--reports--agp-button", Icon: icon.ChartLine, Store: "summary_periods"},
 	{Hub: Reports, Label: "TDD", Path: "/reports/tdd", ID: "site--reports--tdd-menu-button", Icon: icon.ChartColumn, Store: "summary_daily"},
@@ -66,8 +68,6 @@ var Pages = []Page{
 		Store: "push_registrations", Within: []string{"/settings/push-devices", "/settings/push-registrations"}},
 	{Hub: Settings, Group: "Connections", Label: "Connectors", Path: "/settings/connectors", ID: "site--settings--connectors-button", Icon: icon.Plug, Store: "connector_settings"},
 	{Hub: Settings, Group: "Connections", Label: "Push Notifications", Path: "/settings/push-credentials", ID: "site--settings--push-button", Icon: icon.KeyRound, Store: "push_credentials"},
-	{Hub: Settings, Group: "Presets", Label: "Food Presets", Path: "/presets/food", ID: "site--presets--food-button", Icon: icon.Utensils, Store: "food_presets"},
-	{Hub: Settings, Group: "Presets", Label: "Profiles", Path: "/presets/profiles", ID: "site--presets--profiles-button", Icon: icon.CalendarClock, Store: "profile_presets"},
 	{Hub: Settings, Group: "Troubleshooting", Label: "Events", Path: "/logs/events", ID: "site--logs--events-button", Icon: icon.Activity, Store: "site_events"},
 	{Hub: Settings, Group: "Troubleshooting", Label: "Errors", Path: "/logs/errors", ID: "site--logs--errors-button", Icon: icon.TriangleAlert, Store: "site_errors"},
 	{Hub: Settings, Group: "Troubleshooting", Label: "Logs", Path: "/logs/logs", ID: "site--logs--logs-button", Icon: icon.ScrollText, Store: "site_logs"},

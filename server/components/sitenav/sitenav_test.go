@@ -53,13 +53,12 @@ func TestVisible(t *testing.T) {
 	}
 	admin := &controldb.SiteIdentity{Role: consts.IdentityRoleAdmin}
 	require.Len(t, Visible(admin), len(Pages))
-	require.Len(t, Visible(admin, Data), 11)
+	require.Len(t, Visible(admin, Data), 13)
 	require.Len(t, Visible(admin, Reports), 3)
 	for _, role := range []consts.IdentityRole{consts.IdentityRoleUser, consts.IdentityRoleUserReadOnly, consts.IdentityRoleDeviceRead} {
 		settings := ids(Visible(&controldb.SiteIdentity{Role: role}, Settings))
-		require.Equal(t, []string{"site--settings--settings-button", "site--settings--alarms-button", "site--settings--push-devices-button",
-			"site--presets--food-button", "site--presets--profiles-button"}, settings, role)
-		require.Len(t, Visible(&controldb.SiteIdentity{Role: role}, Data), 11, role)
+		require.Equal(t, []string{"site--settings--settings-button", "site--settings--alarms-button", "site--settings--push-devices-button"}, settings, role)
+		require.Len(t, Visible(&controldb.SiteIdentity{Role: role}, Data), 13, role)
 	}
 	require.Empty(t, Visible(nil))
 }
@@ -70,12 +69,15 @@ func TestGroups(t *testing.T) {
 	for _, group := range Groups(Visible(&controldb.SiteIdentity{Role: consts.IdentityRoleAdmin}, Settings), false) {
 		names = append(names, group.Name)
 	}
-	require.Equal(t, []string{"This site", "People & devices", "Connections", "Presets", "Troubleshooting"}, names)
+	require.Equal(t, []string{"This site", "People & devices", "Connections", "Troubleshooting"}, names)
 	names = nil
 	for _, group := range Groups(Visible(&controldb.SiteIdentity{Role: consts.IdentityRoleAdmin}, Data), false) {
 		names = append(names, group.Name)
 	}
-	require.Equal(t, []string{"Readings & treatments", "Events", "Devices"}, names)
+	require.Equal(t, []string{"Readings & treatments", "Events", "Devices", "Presets"}, names)
+	// Food presets and profiles are with the data they are used to enter, not the site's settings
+	require.Equal(t, Data, At("/presets/food/1").Hub)
+	require.Equal(t, Data, At("/presets/profiles").Hub)
 	names = nil
 	for _, group := range Groups(Pages, true) {
 		names = append(names, group.Name)
