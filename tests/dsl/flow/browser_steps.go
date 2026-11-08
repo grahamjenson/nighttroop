@@ -329,12 +329,13 @@ func ParseBrowserLines(lines []Line) ([]Action, error) {
 			if !ok {
 				return nil, fmt.Errorf("current action does not support asserts")
 			}
-			parts := strings.SplitN(second, " ", 2)
-			count, err := strconv.Atoi(parts[len(parts)-1])
-			if len(parts) != 2 || err != nil {
+			// The number is the last word, so the locator can have spaces, as one inside a table does
+			split := strings.LastIndex(second, " ")
+			count, err := strconv.Atoi(second[split+1:])
+			if split <= 0 || err != nil {
 				return nil, fmt.Errorf("%s:%d: ASSERT_COUNT needs a locator and a number: %q", path, lineNumber, second)
 			}
-			assertable.AddAssert(&AssertCount{Locator: parts[0], Count: count, TestPath: path, TestLine: lineNumber})
+			assertable.AddAssert(&AssertCount{Locator: second[:split], Count: count, TestPath: path, TestLine: lineNumber})
 		case "ASSERT_TITLE":
 			if current == nil {
 				return nil, fmt.Errorf("assert_title before action")
