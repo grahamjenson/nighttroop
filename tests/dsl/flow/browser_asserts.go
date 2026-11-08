@@ -370,12 +370,22 @@ type BrowserAssertStatus struct {
 	TestLine int
 }
 
-func (r *BrowserAssertStatus) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
+// statusResourceTypes are the requests whose status ASSERT_STATUS checks: a page's and htmx's, not the scripts,
+// styles, images and fonts they load, which can come back 304 from the browser's cache, or still be loading from the
+// page before when the action starts
+var statusResourceTypes = map[string]bool{"document": true, "fetch": true, "xhr": true}
 
-	if len(resps) == 0 {
-		t.Fatalf("\n\n%s\n assertStatus failed: response is nil\n\n", r.ToErrorLine())
-	}
+func (r *BrowserAssertStatus) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
+	var checked []playwright.Response
 	for _, resp := range resps {
+		if statusResourceTypes[resp.Request().ResourceType()] {
+			checked = append(checked, resp)
+		}
+	}
+	if len(checked) == 0 {
+		t.Fatalf("\n\n%s\n assertStatus failed: no page or htmx response\n\n", r.ToErrorLine())
+	}
+	for _, resp := range checked {
 		// the body is only read for a failure, as reading a stream's, e.g. an SSE's, waits until it closes
 		if resp.Status() != r.Code {
 			body := ""
