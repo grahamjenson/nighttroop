@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"testing"
 
@@ -57,6 +58,14 @@ func (r *Runner) watch(page playwright.Page, ctx map[string]any) {
 		r.errors.Lock()
 		defer r.errors.Unlock()
 		r.errors.thrown[page] = append(r.errors.thrown[page], err.Error())
+	})
+	// htmx logs an error it caught, such as a request that failed, rather than throwing it, so those count too
+	page.OnConsole(func(message playwright.ConsoleMessage) {
+		if message.Type() == "error" && strings.HasPrefix(message.Text(), "htmx:") {
+			r.errors.Lock()
+			defer r.errors.Unlock()
+			r.errors.thrown[page] = append(r.errors.thrown[page], message.Text())
+		}
 	})
 }
 

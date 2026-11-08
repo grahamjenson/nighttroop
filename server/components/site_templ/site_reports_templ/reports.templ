@@ -51,7 +51,8 @@ func link(period string, date time.Time) string {
 }
 
 // Report is the AGP report of a day, week, fortnight or month: its time in range, daily dose and carbs, and its AGP,
-// with buttons to the report of another kind of period ending on the same day, and to the period before and after
+// with buttons to the period before and after either side of its dates, and to the report of another kind of period
+// ending on the same day
 templ Report(p *sitemodels.SiteSummaryPeriod) {
 	{{ first, last := days(ctx, p) }}
 	@heading.Title("AGP")
@@ -59,16 +60,18 @@ templ Report(p *sitemodels.SiteSummaryPeriod) {
 		<div class="flex flex-wrap items-center justify-between gap-2">
 			<div>
 				<h1 class="text-2xl font-bold">AGP</h1>
-				<span id="site--reports--title" class="text-sm text-gray-500">{ title(ctx, p) }</span>
+				<div class="flex items-center gap-1">
+					@arrowButton("site--reports--previous", link(p.Period, first.AddDate(0, 0, -1)), "Previous "+p.Period) {
+						@icon.ChevronLeft()
+					}
+					<span id="site--reports--title" class="min-w-0 text-sm font-medium tabular-nums text-gray-700">{ title(ctx, p) }</span>
+					@arrowButton("site--reports--next", link(p.Period, time.UnixMilli(p.End).In(first.Location())), "Next "+p.Period) {
+						@icon.ChevronRight()
+					}
+				</div>
 			</div>
 			<div class="flex flex-wrap gap-1">
 				@reportKinds(p.Period, last)
-				@reportButton("site--reports--previous", link(p.Period, first.AddDate(0, 0, -1)), false) {
-					Previous
-				}
-				@reportButton("site--reports--next", link(p.Period, time.UnixMilli(p.End).In(first.Location())), false) {
-					Next
-				}
 			</div>
 		</div>
 		<dl class="grid grid-cols-2 gap-3 sm:grid-cols-4">
