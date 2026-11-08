@@ -78,7 +78,7 @@ ASSERT_TEXT_EQUALS #site--settings--nightscout-connector--status--interval 2 min
 // The Dexcom region looks like the inputs beside it, not greyed out as if it could not be changed
 ASSERT_VISIBLE #site--settings--dexcom-connector--region
 ASSERT_NOT_VISIBLE .bg-gray-100:has(#site--settings--dexcom-connector--region)
-SCREENSHOT sync_first_sync_failed
+SCREENSHOT connector_first_sync_failed
 
 // Deleting a source leaves the page in place, with the source's form rendered unset again
 CLICK #site--settings--nightscout-connector--delete

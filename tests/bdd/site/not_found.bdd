@@ -12,7 +12,7 @@ SCREENSHOT not_found
 // A collection asked for something it cannot do says so
 GOTO /settings/connectors/virtual
 ASSERT_STATUS 405
-ASSERT_TEXT_EQUALS #site--not-found--message sync cannot be read here
+ASSERT_TEXT_EQUALS #site--not-found--message connectors cannot be read here
 
 CLICK #site--not-found--home
 ASSERT_NEW_URL
