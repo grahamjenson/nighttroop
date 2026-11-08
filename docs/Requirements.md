@@ -268,8 +268,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - The header has the logo and a home icon, both opening the summary (`/`), and links to the Data, Reports and Settings
   hubs, each opening its hub's first page; there is no Summary link. The hub of the page shown is marked, after a page
   opened from a link or tab as well as one loaded in full, and the home icon on the summary.
-- Data has a tab for each data page: Glucose Readings, Insulin Doses, Food Intakes, Temp Targets, Temp Basals, Profile
-  Switches, Activities, Site & Sensor Changes, Notifications, Event Groups and Device Status, in a row over the page.
+- Data has side tabs in groups, like Settings: Readings & treatments (Glucose Readings, Insulin Doses, Food Intakes,
+  Temp Targets, Temp Basals, Profile Switches), Events (Activities, Site & Sensor Changes, Notifications, Event Groups)
+  and Devices (Device Status).
 - Reports has a tab for each report: AGP, TDD and Summaries.
 - Settings has side tabs in groups: This site (General, Alarms), People & devices (Users & Devices, Push Devices),
   Connections (Connectors, Push Notifications), Presets (Food Presets, Profiles) and Troubleshooting (Events, Errors,
@@ -281,8 +282,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   their hub, only those the identity may open, or "No pages match".
 - In the search, the arrow keys move through the results, Enter or a click opens one, Escape closes them, and Ctrl+K
   (⌘K on a Mac) goes to the search from anywhere.
-- On a phone the header fits, its hubs' links as icons and its search an icon opening a box across the page; Data's and
-  Reports' tabs scroll sideways on their own, and Settings' tabs wrap above the page, so no page gets wider.
+- On a phone the header fits, its hubs' links as icons and its search an icon opening a box across the page; Reports'
+  tabs scroll sideways on their own, and Data's and Settings' tabs wrap above the page, so no page gets wider.
 - The user menu has only who is signed in, My Account, Getting Started and Logout.
 
 ### Summary

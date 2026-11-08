@@ -29,6 +29,10 @@ ASSERT_VISIBLE #site--nav--data[aria-current="page"]
 ASSERT_NOT_VISIBLE #site--nav--home-icon[aria-current="page"]
 ASSERT_VISIBLE #site--data--glucose-button[aria-current="page"]
 ASSERT_COUNT #site--hub--data nav a 11
+// Data's tabs are on the left, in groups, like Settings'
+ASSERT_VISIBLE #site--hub--data ul[aria-label="Readings & treatments"] #site--data--glucose-button
+ASSERT_VISIBLE #site--hub--data ul[aria-label="Events"] #site--data--activities-button
+ASSERT_VISIBLE #site--hub--data ul[aria-label="Devices"] #site--data--device-status-button
 SCREENSHOT navigation_data_hub
 
 // A tab opens its page, changing the URL and the content, and moves the mark

@@ -27,7 +27,7 @@ var Hubs = []Hub{Data, Reports, Settings}
 // Page is one of a hub's pages
 type Page struct {
 	Hub Hub
-	// Group is where the page is in its hub's side tabs, "" in a hub with a row of tabs
+	// Group is where the page is in its hub's side tabs, as Data's and Settings' are, "" in Reports' row of tabs
 	Group string
 	Label string
 	Path  string
@@ -41,17 +41,17 @@ type Page struct {
 
 // Pages are every page of the hubs, in the order their tabs show them
 var Pages = []Page{
-	{Hub: Data, Label: "Glucose Readings", Path: "/data/glucose", ID: "site--data--glucose-button", Icon: icon.Droplet, Store: "glucose"},
-	{Hub: Data, Label: "Insulin Doses", Path: "/data/insulin", ID: "site--data--insulin-button", Icon: icon.Syringe, Store: "insulin_doses"},
-	{Hub: Data, Label: "Food Intakes", Path: "/data/food", ID: "site--data--food-button", Icon: icon.Utensils, Store: "food"},
-	{Hub: Data, Label: "Temp Targets", Path: "/data/temp-targets", ID: "site--data--temp-targets-button", Icon: icon.Target, Store: "temp_targets"},
-	{Hub: Data, Label: "Temp Basals", Path: "/data/temp-basals", ID: "site--data--temp-basals-button", Icon: icon.Gauge, Store: "temp_basals"},
-	{Hub: Data, Label: "Profile Switches", Path: "/data/profile-switches", ID: "site--data--profile-switches-button", Icon: icon.Repeat, Store: "profile_switches"},
-	{Hub: Data, Label: "Activities", Path: "/data/activities", ID: "site--data--activities-button", Icon: icon.Activity, Store: "activities"},
-	{Hub: Data, Label: "Site & Sensor Changes", Path: "/data/component-events", ID: "site--data--component-events-button", Icon: icon.Wrench, Store: "component_events"},
-	{Hub: Data, Label: "Notifications", Path: "/data/notifications", ID: "site--data--notifications-button", Icon: icon.Bell, Store: "notification_events"},
-	{Hub: Data, Label: "Event Groups", Path: "/data/event-groups", ID: "site--data--event-groups-button", Icon: icon.Layers, Store: "event_groups"},
-	{Hub: Data, Label: "Device Status", Path: "/data/device-status", ID: "site--data--device-status-button", Icon: icon.Smartphone, Store: "device_statuses"},
+	{Hub: Data, Group: "Readings & treatments", Label: "Glucose Readings", Path: "/data/glucose", ID: "site--data--glucose-button", Icon: icon.Droplet, Store: "glucose"},
+	{Hub: Data, Group: "Readings & treatments", Label: "Insulin Doses", Path: "/data/insulin", ID: "site--data--insulin-button", Icon: icon.Syringe, Store: "insulin_doses"},
+	{Hub: Data, Group: "Readings & treatments", Label: "Food Intakes", Path: "/data/food", ID: "site--data--food-button", Icon: icon.Utensils, Store: "food"},
+	{Hub: Data, Group: "Readings & treatments", Label: "Temp Targets", Path: "/data/temp-targets", ID: "site--data--temp-targets-button", Icon: icon.Target, Store: "temp_targets"},
+	{Hub: Data, Group: "Readings & treatments", Label: "Temp Basals", Path: "/data/temp-basals", ID: "site--data--temp-basals-button", Icon: icon.Gauge, Store: "temp_basals"},
+	{Hub: Data, Group: "Readings & treatments", Label: "Profile Switches", Path: "/data/profile-switches", ID: "site--data--profile-switches-button", Icon: icon.Repeat, Store: "profile_switches"},
+	{Hub: Data, Group: "Events", Label: "Activities", Path: "/data/activities", ID: "site--data--activities-button", Icon: icon.Activity, Store: "activities"},
+	{Hub: Data, Group: "Events", Label: "Site & Sensor Changes", Path: "/data/component-events", ID: "site--data--component-events-button", Icon: icon.Wrench, Store: "component_events"},
+	{Hub: Data, Group: "Events", Label: "Notifications", Path: "/data/notifications", ID: "site--data--notifications-button", Icon: icon.Bell, Store: "notification_events"},
+	{Hub: Data, Group: "Events", Label: "Event Groups", Path: "/data/event-groups", ID: "site--data--event-groups-button", Icon: icon.Layers, Store: "event_groups"},
+	{Hub: Data, Group: "Devices", Label: "Device Status", Path: "/data/device-status", ID: "site--data--device-status-button", Icon: icon.Smartphone, Store: "device_statuses"},
 
 	{Hub: Reports, Label: "AGP", Path: "/reports", ID: "site--reports--agp-button", Icon: icon.ChartLine, Store: "summary_periods"},
 	{Hub: Reports, Label: "TDD", Path: "/reports/tdd", ID: "site--reports--tdd-menu-button", Icon: icon.ChartColumn, Store: "summary_daily"},

@@ -72,6 +72,11 @@ func TestGroups(t *testing.T) {
 	}
 	require.Equal(t, []string{"This site", "People & devices", "Connections", "Presets", "Troubleshooting"}, names)
 	names = nil
+	for _, group := range Groups(Visible(&controldb.SiteIdentity{Role: consts.IdentityRoleAdmin}, Data), false) {
+		names = append(names, group.Name)
+	}
+	require.Equal(t, []string{"Readings & treatments", "Events", "Devices"}, names)
+	names = nil
 	for _, group := range Groups(Pages, true) {
 		names = append(names, group.Name)
 	}

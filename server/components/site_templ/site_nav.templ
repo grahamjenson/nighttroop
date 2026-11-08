@@ -96,7 +96,7 @@ templ InHub(path string, content templ.Component, oob bool) {
 	}
 	if page := sitenav.At(path); page != nil {
 		{{ pages := sitenav.Visible(signedIn(ctx), page.Hub) }}
-		if page.Hub == sitenav.Settings {
+		if page.Hub != sitenav.Reports {
 			@sideTabs(page, pages) {
 				@content
 			}
@@ -163,7 +163,7 @@ templ tab(page sitenav.Page, current bool, class string) {
 		}
 		{ navAttributes(page.Path)... }
 	>
-		@page.Icon(icon.Props{Class: "size-4"})
+		@page.Icon(icon.Props{Class: "size-4 shrink-0"})
 		{ page.Label }
 	</a>
 }
