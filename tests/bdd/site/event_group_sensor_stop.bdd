@@ -2,7 +2,7 @@ INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
 // A sensor stopped, as xDrip+ uploads it, is a change of a sensor
-CLICK #site--settings-menu
+CLICK #site--nav--data
 CLICK #site--data--component-events-button
 CLICK #site--component-event--add
 INPUT #site--component-event--create--event-type Sensor Stop
@@ -13,7 +13,7 @@ ASSERT_STATUS 201
 ASSERT_VISIBLE #componentEventsTable >> text="Sensor Stop"
 
 // The Add Event Group menu offers a Sensor Stop, which can have that change
-CLICK #site--settings-menu
+CLICK #site--nav--data
 CLICK #site--data--event-groups-button
 CLICK #site--event-group--add
 // The menu scrolls to show it

@@ -6,18 +6,17 @@ ASSERT_PATH /
 ASSERT_TITLE Summary · Nighttroop
 
 // A page opened from a menu is swapped in by htmx, which names the tab from the page
-CLICK #site--settings-menu
-CLICK #site--data--glucose-button
+CLICK #site--nav--data
 ASSERT_STATUS 200
 ASSERT_PATH /data/glucose
 ASSERT_TITLE Glucose Readings · Nighttroop
 
-CLICK #site--settings-menu
+CLICK #site--nav--settings
 CLICK #site--settings--identities-button
 ASSERT_STATUS 200
 ASSERT_TITLE Users & Devices · Nighttroop
 
-CLICK #site--settings-menu
+CLICK #site--nav--settings
 CLICK #site--settings--alarms-button
 ASSERT_STATUS 200
 ASSERT_TITLE Alarms · Nighttroop

@@ -2,7 +2,7 @@ INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
 // A new site has no event groups
-CLICK #site--settings-menu
+CLICK #site--nav--data
 ASSERT_VISIBLE #site--data--event-groups-button
 CLICK #site--data--event-groups-button
 ASSERT_STATUS 200
@@ -11,7 +11,7 @@ ASSERT_VISIBLE #site--event-group--empty
 SCREENSHOT event_groups_empty
 
 // Virtual connector sends treatments through the Nightscout API, each an event group
-CLICK #site--settings-menu
+CLICK #site--nav--settings
 CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
 CLICK #site--settings--virtual-connector--enable
@@ -20,8 +20,7 @@ ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Connector Updated
 RUN_BACKGROUND_JOBS
 
-CLICK #site--settings-menu
-CLICK #site--data--event-groups-button
+GOTO /data/event-groups
 ASSERT_STATUS 200
 ASSERT_VISIBLE #eventGroupsTable >> text="Temp Basal"
 ASSERT_VISIBLE #eventGroupsTable >> text=0.85 U/hr temp basal for 30 min
@@ -47,11 +46,10 @@ ASSERT_NOT_VISIBLE #eventGroupsTable >> text="Temp Basal"
 SCREENSHOT event_group_deleted
 
 // The deleted group and its temp basal stay gone after a reload
-CLICK #site--settings-menu
-CLICK #site--data--event-groups-button
+GOTO /data/event-groups
 ASSERT_STATUS 200
 ASSERT_NOT_VISIBLE #eventGroupsTable >> text="Temp Basal"
-CLICK #site--settings-menu
+CLICK #site--nav--data
 CLICK #site--data--temp-basals-button
 ASSERT_STATUS 200
 ASSERT_VISIBLE #site--temp-basal--empty

@@ -1,7 +1,7 @@
 INCLUDE steps/new_site_admin.steps
 
 // Virtual connector writes readings between 5.8 and 8.3 mmol/L
-CLICK #site--settings-menu
+CLICK #site--nav--settings
 CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
 CLICK #site--settings--virtual-connector--enable

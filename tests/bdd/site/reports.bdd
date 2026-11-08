@@ -3,7 +3,7 @@ ASSERT_PATH /
 
 // The menu's Reports group opens the AGP report, at first of the week with yesterday in it, which a new site has no
 // glucose for
-CLICK #site--settings-menu
+CLICK #site--nav--reports
 ASSERT_TEXT_EQUALS #site--reports--agp-button AGP
 CLICK #site--reports--agp-button
 ASSERT_STATUS 200
@@ -18,7 +18,7 @@ ASSERT_TEXT_EQUALS #site--reports--daily-carbs –
 SCREENSHOT report_no_data
 
 // The virtual connector fills the last 30 minutes with readings, treatments and device statuses
-CLICK #site--settings-menu
+CLICK #site--nav--settings
 CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
 CLICK #site--settings--virtual-connector--enable

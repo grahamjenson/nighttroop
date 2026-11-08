@@ -259,9 +259,31 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - Toasts show at the top of every page, site and control, newest on top. At most three take space at once: a fourth
   hides the oldest until it times out, so the newest is always seen and the stack never grows further over the page.
 - Every page names the browser's tab after itself, e.g. `Glucose Readings · Nighttroop`, whether it is loaded in full or
-  opened from a menu; a page with no title of its own, such as the login, is named `Nighttroop`.
+  opened from a link or tab; a page with no title of its own, such as the login, is named `Nighttroop`.
 - A page that shows estimated locations, such as the events pages, also links to DB-IP, whose free databases make
   the estimates, in its footer.
+
+### Navigation
+
+- The header has the logo and a home icon, both opening the summary (`/`), and links to the Data, Reports and Settings
+  hubs, each opening its hub's first page; there is no Summary link. The hub of the page shown is marked, after a page
+  opened from a link or tab as well as one loaded in full, and the home icon on the summary.
+- Data has a tab for each data page: Glucose Readings, Insulin Doses, Food Intakes, Temp Targets, Temp Basals, Profile
+  Switches, Activities, Site & Sensor Changes, Notifications, Event Groups and Device Status, in a row over the page.
+- Reports has a tab for each report: AGP, TDD and Summaries.
+- Settings has side tabs in groups: This site (General, Alarms), People & devices (Users & Devices, Push Devices),
+  Connections (Connectors, Push Notifications), Presets (Food Presets, Profiles) and Troubleshooting (Events, Errors,
+  Logs). Another identity's settings count as Users & Devices.
+- A hub's tab for the page shown is marked; each tab keeps its page's own URL, so links, back and forward still work.
+- Only the tabs an identity may open are shown: someone who is not an admin has no Users & Devices, Connectors, Push
+  Notifications, Events, Errors or Logs.
+- The header's search finds a page by its name, group or hub as it is typed, whatever the case, listing them under
+  their hub, only those the identity may open, or "No pages match".
+- In the search, the arrow keys move through the results, Enter or a click opens one, Escape closes them, and Ctrl+K
+  (⌘K on a Mac) goes to the search from anywhere.
+- On a phone the header fits, its hubs' links as icons and its search an icon opening a box across the page; Data's and
+  Reports' tabs scroll sideways on their own, and Settings' tabs wrap above the page, so no page gets wider.
+- The user menu has only who is signed in, My Account, Getting Started and Logout.
 
 ### Summary
 
@@ -310,9 +332,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 ### Reports
 
-- The menu's Reports group has AGP, the AGP report, which shows the week with yesterday in it at first, and a report
+- The Reports hub has AGP, the AGP report, which shows the week with yesterday in it at first, and a report
   of any day, week, fortnight or month from today back a year is at `/reports/{period}-{date}`.
-- The Reports group's Summaries page has a table for each of the kept days (the last 31), weeks, fortnights and months
+- The Reports hub's Summaries page has a table for each of the kept days (the last 31), weeks, fortnights and months
   (the last year): each one's days with data, time in range, daily dose and daily carbs, newest first, each opening
   its AGP report.
 - An admin can regenerate the summaries from the Summaries page, after confirming: a background job builds the last
@@ -325,7 +347,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   glucose over the AGP of the 7 days to it. A report with no glucose says so instead.
 - Day, Week, Fortnight and Month open the report of that kind ending on the report's last day, or today; Previous and
   Next open the one before and after, disabled past today or a year ago. Back and forward move between reports.
-- The menu's Reports group has TDD, and the AGP report's TDD button opens it too: the total daily dose report at
+- The Reports hub has TDD: the total daily dose report at
   `/reports/tdd`, of the week before today at first. Its Week, Fortnight and Month buttons show the 7, 14 or 30 days
   before today (`?range=week`, `fortnight` or `month`; another range is refused), back and forward moving between
   them; today is left out as it is not over. It says which days it covers, dated in the site's timezone.
@@ -344,7 +366,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   AAPS, Trio or xDrip+, or a sync from Dexcom, LibreLinkUp or Nightscout) and adds people and devices; everyone makes
   their settings and sets up alarms.
 - Someone who is not an admin is told the admin sets up the site's data and who can use it.
-- The guide is always on My Account, at the top of the menu, which says what it is and opens it.
+- The guide is always in the user menu, as Getting Started, and on My Account, which says what it is and opens it.
 
 ### Data
 
@@ -407,7 +429,7 @@ Close or saving) gives the focus back to the row or button that opened it.
 
 ### Presets
 
-- Food Presets and Profiles are in the menu under Data.
+- Food Presets and Profiles are in the Settings hub under Presets.
 
 - **Food presets**: added in a modal of all their fields, as data is, viewed, edited and deleted.
 - **Profiles**: profile stores uploaded by a loop, with their schedules to read, renamed or deleted.
@@ -790,9 +812,7 @@ Connectors are a site's third party integrations, each syncing from one service.
 
 ### My Account
 
-- The menu's top row has My Account and Logout beside each other, above Data on the left and Reports, Settings and
-  Logs on the right, so every item fits in a laptop's window without scrolling the menu.
-- My Account, at the top of the menu, says who is signed in and with which role, opens the guide to setting up the
+- My Account, in the user menu, says who is signed in and with which role, opens the guide to setting up the
   site (not on control's), and lists its
   passkeys: when each was added and last used. Only an identity that signs in to the website has it.
 - "Add a passkey" makes one on the site's own address, with the browser's fingerprint, face or PIN check, named for

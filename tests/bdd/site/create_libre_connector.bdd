@@ -22,7 +22,7 @@ TYPE #site--login--otp-1 123123
 ASSERT_NEW_URL
 ASSERT_VISIBLE "Nighttroop"
 
-CLICK #site--settings-menu
+CLICK #site--nav--settings
 ASSERT_VISIBLE #site--settings--connectors-button
 
 CLICK #site--settings--connectors-button
@@ -52,9 +52,7 @@ ASSERT_TEXT_VISIBLE Connector Updated
 RUN_BACKGROUND_JOBS
 
 // The first sync fails, turns syncing off and says why, keeping the details to fix
-CLICK #site--settings-menu
-ASSERT_VISIBLE #site--settings--connectors-button
-CLICK #site--settings--connectors-button
+GOTO /settings/connectors
 ASSERT_STATUS 200
 ASSERT_VISIBLE #site--settings--libre-connector--errors
 ASSERT_TEXT_VISIBLE libre authentication failed: invalid email or password
@@ -70,9 +68,7 @@ CLICK #site--settings--libre-connector--submit
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Connector Updated
 
-CLICK #site--settings-menu
-ASSERT_VISIBLE #site--settings--connectors-button
-CLICK #site--settings--connectors-button
+GOTO /settings/connectors
 ASSERT_STATUS 200
 ASSERT_NOT_VISIBLE #site--settings--libre-connector--errors
 ASSERT_VISIBLE #site--settings--libre-connector--email[value="valid-libre-user@example.com"]

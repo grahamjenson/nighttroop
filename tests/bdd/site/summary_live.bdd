@@ -2,7 +2,7 @@ INCLUDE steps/new_site_admin.steps
 ASSERT_PATH /
 
 // Virtual connector is turned on, but has not run yet
-CLICK #site--settings-menu
+CLICK #site--nav--settings
 CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
 CLICK #site--settings--virtual-connector--enable

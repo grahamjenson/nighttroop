@@ -1,0 +1,299 @@
+package site_templ
+
+import (
+	"context"
+	"strings"
+
+	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/server/components/sitenav"
+	"nighttroop.t1d.nz/server/components/ui/icon"
+	"nighttroop.t1d.nz/utils/httputils"
+)
+
+// signedIn is the identity signed in, or nil before login
+func signedIn(ctx context.Context) *controldb.SiteIdentity {
+	if siteContext := httputils.GetSiteContext(ctx); siteContext != nil {
+		return siteContext.IdentityModel
+	}
+	return nil
+}
+
+// navAttributes open a page as the header's links, the hubs' tabs and the search do: in the main content, with its
+// URL, a quicker click replacing one still loading, so the last one clicked is the page shown
+func navAttributes(path string) templ.Attributes {
+	return templ.Attributes{"hx-get": path, "hx-target": "#main-content", "hx-push-url": "true", "hx-swap": "innerHTML", "hx-sync": "#main-content:replace"}
+}
+
+// hubIcon is the icon of a hub's link in the header, all the link shows on a phone
+func hubIcon(hub sitenav.Hub) templ.Component {
+	switch hub {
+	case sitenav.Data:
+		return icon.Database(icon.Props{Class: "size-4"})
+	case sitenav.Reports:
+		return icon.ChartLine(icon.Props{Class: "size-4"})
+	}
+	return icon.Settings(icon.Props{Class: "size-4"})
+}
+
+func headerLinkClass(current bool) string {
+	if current {
+		return "flex h-8 min-w-8 items-center justify-center gap-1.5 rounded-md bg-white/15 px-2 text-sm font-semibold text-white"
+	}
+	return "flex h-8 min-w-8 items-center justify-center gap-1.5 rounded-md px-2 text-sm text-gray-300 transition hover:bg-white/10 hover:text-white"
+}
+
+// HeaderLinks are the header's home icon and a link to each hub's first page the identity may open, path's hub
+// marked. A page opened in the main content sends them out of band, so the mark follows it.
+templ HeaderLinks(path string, oob bool) {
+	{{ page := sitenav.At(path) }}
+	<nav
+		id="site--nav--links"
+		aria-label="Site"
+		class="flex items-center gap-0.5 sm:gap-1"
+		if oob {
+			hx-swap-oob="true"
+		}
+	>
+		{{ home := path == "/" || path == "/summary" }}
+		<a
+			id="site--nav--home-icon"
+			href="/"
+			aria-label="Home"
+			title="Home"
+			class={ headerLinkClass(home) }
+			if home {
+				aria-current="page"
+			}
+		>
+			@icon.House(icon.Props{Class: "size-4"})
+		</a>
+		for _, hub := range sitenav.Hubs {
+			if pages := sitenav.Visible(signedIn(ctx), hub); len(pages) > 0 {
+				{{ current := page != nil && page.Hub == hub }}
+				<a
+					id={ "site--nav--" + strings.ToLower(string(hub)) }
+					href={ templ.SafeURL(pages[0].Path) }
+					aria-label={ string(hub) }
+					class={ headerLinkClass(current) }
+					if current {
+						aria-current="page"
+					}
+					{ navAttributes(pages[0].Path)... }
+				>
+					@hubIcon(hub)
+					<span class="hidden sm:inline">{ string(hub) }</span>
+				</a>
+			}
+		}
+	</nav>
+}
+
+// InHub is a page's content in its hub's tabs, when it is one of a hub's pages, and when it is opened in the main
+// content (oob), with the header's links marking its hub
+templ InHub(path string, content templ.Component, oob bool) {
+	if oob {
+		@HeaderLinks(path, true)
+	}
+	if page := sitenav.At(path); page != nil {
+		{{ pages := sitenav.Visible(signedIn(ctx), page.Hub) }}
+		if page.Hub == sitenav.Settings {
+			@sideTabs(page, pages) {
+				@content
+			}
+		} else {
+			@topTabs(page, pages) {
+				@content
+			}
+		}
+	} else {
+		@content
+	}
+}
+
+// topTabs are a row of a hub's pages over the page, wrapping in a narrow window, and on a phone scrolling sideways on
+// its own, so the page does not get wider
+templ topTabs(current *sitenav.Page, pages []sitenav.Page) {
+	<div id={ "site--hub--" + strings.ToLower(string(current.Hub)) }>
+		<nav aria-label={ string(current.Hub) + " pages" } class="-mx-4 overflow-x-auto border-b border-gray-200 px-4 pb-2 sm:mx-0 sm:px-0">
+			<ul class="flex gap-1 sm:flex-wrap">
+				for _, page := range pages {
+					<li>
+						@tab(page, page.ID == current.ID, "")
+					</li>
+				}
+			</ul>
+		</nav>
+		{ children... }
+	</div>
+}
+
+// sideTabs are a hub's pages in their groups beside the page, or above it on a phone, where they wrap without their
+// groups' names
+templ sideTabs(current *sitenav.Page, pages []sitenav.Page) {
+	<div id={ "site--hub--" + strings.ToLower(string(current.Hub)) } class="md:flex md:gap-6">
+		<nav aria-label={ string(current.Hub) + " pages" } class="mb-4 flex flex-wrap gap-1 pt-2 md:mb-0 md:block md:w-52 md:shrink-0 md:space-y-4 md:border-r md:border-gray-200 md:pr-4 md:pt-4">
+			for _, group := range sitenav.Groups(pages, false) {
+				<div class="contents md:block">
+					<p class="mb-1 hidden px-3 text-xs font-semibold uppercase tracking-wide text-gray-500 md:block">{ group.Name }</p>
+					<ul aria-label={ group.Name } class="contents md:block md:space-y-0.5">
+						for _, page := range group.Pages {
+							<li>
+								@tab(page, page.ID == current.ID, "border border-gray-200 md:border-transparent")
+							</li>
+						}
+					</ul>
+				</div>
+			}
+		</nav>
+		<div class="min-w-0 flex-1">
+			{ children... }
+		</div>
+	</div>
+}
+
+// tab opens one of a hub's pages, marked when it is the page shown
+templ tab(page sitenav.Page, current bool, class string) {
+	<a
+		id={ page.ID }
+		href={ templ.SafeURL(page.Path) }
+		class={ "flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-1.5 text-sm", class,
+			templ.KV("bg-primary font-semibold text-primary-foreground", current), templ.KV("text-gray-700 hover:bg-gray-100 hover:text-brand-night", !current) }
+		if current {
+			aria-current="page"
+		}
+		{ navAttributes(page.Path)... }
+	>
+		@page.Icon(icon.Props{Class: "size-4"})
+		{ page.Label }
+	</a>
+}
+
+// Search finds a page the identity may open by its name, group or hub as it is typed, opening it as the hubs' tabs
+// do. On a phone, or a narrow window, it is an icon opening a box across the page.
+templ Search() {
+	if pages := sitenav.Visible(signedIn(ctx)); len(pages) > 0 {
+		<button id="site--nav--search-open" type="button" aria-label="Search pages" aria-controls="site--nav--search-box" class="flex size-8 items-center justify-center rounded-md text-gray-300 transition hover:bg-white/10 hover:text-white lg:hidden">
+			@icon.Search(icon.Props{Class: "size-4"})
+		</button>
+		<div id="site--nav--search-box" class="absolute inset-x-0 top-full hidden border-b border-white/10 bg-brand-night p-2 lg:relative lg:inset-auto lg:block lg:w-64 lg:border-0 lg:p-0">
+			<div class="relative">
+				@icon.Search(icon.Props{Class: "pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-gray-400"})
+				<input
+					id="site--nav--search"
+					type="search"
+					role="combobox"
+					aria-label="Search pages"
+					aria-expanded="false"
+					aria-controls="site--nav--search-results"
+					aria-autocomplete="list"
+					autocomplete="off"
+					placeholder="Search pages…"
+					maxlength="64"
+					class="peer h-9 w-full rounded-md border border-white/20 bg-white/10 pl-8 pr-3 text-sm text-white placeholder:text-gray-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold lg:pr-14"
+				/>
+				<kbd class="pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 rounded border border-white/20 px-1.5 text-xs text-gray-400 lg:block lg:peer-focus:hidden">Ctrl K</kbd>
+				<div id="site--nav--search-results" role="listbox" aria-label="Pages" hidden class="absolute inset-x-0 top-full z-50 mt-1 max-h-[70vh] overflow-y-auto rounded-md border border-gray-200 bg-white p-1 text-gray-900 shadow-lg lg:left-auto lg:w-80">
+					for _, group := range sitenav.Groups(pages, true) {
+						<div role="group" aria-label={ group.Name }>
+							<p class="px-2 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-500">{ group.Name }</p>
+							for _, page := range group.Pages {
+								<a
+									id={ page.SearchID() }
+									role="option"
+									aria-selected="false"
+									href={ templ.SafeURL(page.Path) }
+									data-search={ strings.ToLower(page.Label + " " + page.Group + " " + string(page.Hub)) }
+									class="flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-gray-100 aria-selected:bg-gray-100"
+									{ navAttributes(page.Path)... }
+								>
+									@page.Icon(icon.Props{Class: "size-4 text-gray-500"})
+									{ page.Label }
+									if page.Group != "" {
+										<span class="ml-auto text-xs text-gray-500">{ page.Group }</span>
+									}
+								</a>
+							}
+						</div>
+					}
+					<p id="site--nav--search-empty" hidden class="px-2 py-3 text-sm text-gray-500">No pages match</p>
+				</div>
+			</div>
+		</div>
+		@searchScript()
+	}
+}
+
+// searchScript shows the results whose words have all of the search's, moves through them with the arrow keys, opens
+// one with Enter or a click and closes with Escape; Ctrl+K or ⌘K goes to the search from anywhere. A row of tabs
+// scrolling sideways, as on a phone, is scrolled to its marked tab, but the page is not.
+templ searchScript() {
+	<script>
+		(() => {
+			const reveal = () => {
+				const tab = document.querySelector("#main-content nav.overflow-x-auto [aria-current=page]"), row = tab?.closest("nav")
+				if (!tab) return
+				const t = tab.getBoundingClientRect(), r = row.getBoundingClientRect()
+				if (t.left < r.left || t.right > r.right) row.scrollLeft += t.left - r.left - 16
+			}
+			document.addEventListener("DOMContentLoaded", reveal)
+			document.addEventListener("htmx:after:settle", reveal)
+			const byID = (id) => document.getElementById(id)
+			const shown = () => [...byID("site--nav--search-results").querySelectorAll("[role=option]:not([hidden])")]
+			const choose = (option) => {
+				byID("site--nav--search-results").querySelectorAll("[role=option]").forEach((o) => o.setAttribute("aria-selected", o === option))
+				option?.scrollIntoView({block: "nearest"})
+				byID("site--nav--search").setAttribute("aria-activedescendant", option?.id ?? "")
+			}
+			const close = (all) => {
+				byID("site--nav--search-results").hidden = true
+				byID("site--nav--search").setAttribute("aria-expanded", "false")
+				if (all) byID("site--nav--search-box").classList.add("hidden")
+			}
+			const filter = () => {
+				const words = byID("site--nav--search").value.toLowerCase().split(/\s+/).filter(Boolean)
+				if (!words.length) return close(false)
+				const list = byID("site--nav--search-results")
+				list.querySelectorAll("[role=option]").forEach((o) => o.hidden = !words.every((w) => o.dataset.search.includes(w)))
+				list.querySelectorAll("[role=group]").forEach((g) => g.hidden = !g.querySelector("[role=option]:not([hidden])"))
+				byID("site--nav--search-empty").hidden = shown().length > 0
+				list.hidden = false
+				byID("site--nav--search").setAttribute("aria-expanded", "true")
+				choose(shown()[0])
+			}
+			const open = () => {
+				byID("site--nav--search-box").classList.remove("hidden")
+				byID("site--nav--search").focus()
+				byID("site--nav--search").select()
+			}
+			document.addEventListener("input", (e) => e.target.id === "site--nav--search" && filter())
+			document.addEventListener("keydown", (e) => {
+				if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k" && byID("site--nav--search")) {
+					e.preventDefault()
+					return open()
+				}
+				if (e.target.id !== "site--nav--search") return
+				const options = shown(), at = options.findIndex((o) => o.getAttribute("aria-selected") === "true")
+				if ((e.key === "ArrowDown" || e.key === "ArrowUp") && options.length) {
+					e.preventDefault()
+					choose(options[(at + (e.key === "ArrowDown" ? 1 : options.length - 1)) % options.length])
+				} else if (e.key === "Enter") {
+					e.preventDefault()
+					options[at]?.click()
+				} else if (e.key === "Escape") {
+					e.preventDefault()
+					const phone = byID("site--nav--search-open").checkVisibility()
+					close(phone)
+					if (phone) byID("site--nav--search-open").focus()
+				}
+			})
+			document.addEventListener("click", (e) => {
+				if (e.target.closest("#site--nav--search-open")) return open()
+				if (e.target.closest("#site--nav--search-results [role=option]")) {
+					byID("site--nav--search").value = ""
+					return close(true)
+				}
+				if (!e.target.closest("#site--nav--search-box")) close(true)
+			})
+		})()
+	</script>
+}

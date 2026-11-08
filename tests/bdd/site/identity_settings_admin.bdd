@@ -2,7 +2,7 @@ INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
 // An admin opens another identity's settings from its row, such as a device's
-CLICK #site--settings-menu
+CLICK #site--nav--settings
 CLICK #site--settings--identities-button
 ASSERT_STATUS 200
 CLICK #site--identities--pwd_phone--settings
@@ -22,8 +22,7 @@ ASSERT_TEXT_VISIBLE Settings Saved
 SCREENSHOT identity_settings_saved
 
 // They are kept, and the admin's own settings still follow the site
-CLICK #site--settings-menu
-CLICK #site--settings--identities-button
+GOTO /settings/identities
 CLICK #site--identities--pwd_phone--settings
 ASSERT_TEXT_EQUALS #site--identity-settings--identity--units>option[selected] mg/dL
 
@@ -38,17 +37,15 @@ INPUT #site--identity-settings--identity--range_low 80
 CLICK #site--identity-settings--identity--save
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Settings Saved
-CLICK #site--settings-menu
-CLICK #site--settings--identities-button
+GOTO /settings/identities
 CLICK #site--identities--pwd_phone--settings
 ASSERT_VISIBLE #site--identity-settings--identity--range_low[value="80"]
-CLICK #site--settings-menu
-CLICK #site--settings--settings-button
+GOTO /settings
 ASSERT_STATUS 200
 ASSERT_TEXT_EQUALS #site--settings--identity--units>option[selected] Site setting (mmol/L)
 
 // On a phone another identity's settings are one column under its name, and its save button fits
-WINDOW 390x2800
+WINDOW 390x3000
 // Opened by its address, as on a phone the toast from the last save is over the menu until it goes
 GOTO /settings/identities
 CLICK #site--identities--pwd_phone--settings

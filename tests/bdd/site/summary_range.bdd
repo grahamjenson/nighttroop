@@ -3,8 +3,7 @@ ASSERT_PATH /
 
 // A latest reading older than the no data alarm's minutes (20 by default) is grey, with an amber badge saying how long
 // there has been none
-CLICK #site--settings-menu
-CLICK #site--data--glucose-button
+CLICK #site--nav--data
 ASSERT_STATUS 200
 CLICK #site--glucose--add
 INPUT #site--glucose--create--reading 6.4
@@ -19,8 +18,7 @@ ASSERT_VISIBLE #site--summary--glucose--reading.text-gray-400
 SCREENSHOT summary_stale
 
 // A new reading under the low alarm (72 mg/dL by default) is coloured low and says Low, as the graph colours it
-CLICK #site--settings-menu
-CLICK #site--data--glucose-button
+CLICK #site--nav--data
 ASSERT_STATUS 200
 CLICK #site--glucose--add
 INPUT #site--glucose--create--reading 3.2
@@ -38,8 +36,7 @@ SCREENSHOT summary_low
 
 // One over the high alarm (180 mg/dL by default) is coloured high, in a darker amber than the graph's to read as text,
 // and says High
-CLICK #site--settings-menu
-CLICK #site--data--glucose-button
+CLICK #site--nav--data
 ASSERT_STATUS 200
 CLICK #site--glucose--add
 INPUT #site--glucose--create--reading 12.5
@@ -54,8 +51,7 @@ ASSERT_TEXT_EQUALS #site--summary--glucose--range High
 SCREENSHOT summary_high
 
 // One between them is coloured in range, with no word beside it
-CLICK #site--settings-menu
-CLICK #site--data--glucose-button
+CLICK #site--nav--data
 ASSERT_STATUS 200
 CLICK #site--glucose--add
 INPUT #site--glucose--create--reading 6.4

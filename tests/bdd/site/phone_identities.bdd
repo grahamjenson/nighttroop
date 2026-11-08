@@ -2,8 +2,8 @@ INCLUDE steps/new_site_admin.steps
 
 // On a phone the Add User and Add Device forms wrap in their cards, so every input can be seen and tapped, and the
 // page is no wider than the window. The window is tall enough for the whole page, so fitting it checks only its width.
-WINDOW 390x1600
-CLICK #site--settings-menu
+WINDOW 390x1800
+CLICK #site--nav--settings
 CLICK #site--settings--identities-button
 ASSERT_STATUS 200
 ASSERT_PATH /settings/identities

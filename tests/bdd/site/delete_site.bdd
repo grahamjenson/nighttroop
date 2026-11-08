@@ -2,8 +2,7 @@ INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
 // An admin's General settings end with Delete Site, which archives the site and signs everyone out
-CLICK #site--settings-menu
-CLICK #site--settings--settings-button
+CLICK #site--nav--settings
 ASSERT_STATUS 200
 ASSERT_PATH /settings
 ASSERT_VISIBLE #site--settings--delete

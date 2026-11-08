@@ -7,6 +7,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/a-h/templ"
@@ -305,20 +306,31 @@ func SiteContextFor(w http.ResponseWriter, r *http.Request, collectionName strin
 	return siteContext
 }
 
-// WriteResponse sends HTMX the component, a browser the component (in the site's page when fullPage), and anything else the model as JSON
+// WriteResponse sends HTMX the component, a browser the component (in the site's page when fullPage), and anything else
+// the model as JSON. A page, loaded in full or opened in the main content, is in its hub's tabs.
 func WriteResponse(w http.ResponseWriter, r *http.Request, siteContext *httputils.SiteContext, status int, model any, component templ.Component, fullPage bool) {
 	apiutils.WriteStatus(w, siteContext.AcceptType, status)
 	switch siteContext.AcceptType {
 	case httputils.AcceptTypeHTMX:
+		if fullPage && replacesPage(r) {
+			component = site_templ.InHub(r.URL.Path, component, true)
+		}
 		component.Render(r.Context(), w)
 	case httputils.AcceptTypeHTML:
 		if fullPage {
-			component = site_templ.FullPage(component)
+			component = site_templ.FullPage(r.URL.Path, component)
 		}
 		component.Render(r.Context(), w)
 	default:
 		apiutils.WriteModelJSON(w, status, model)
 	}
+}
+
+// replacesPage is whether an HTMX request swaps the whole page in the main content, as the header's links, the hubs'
+// tabs and the pagers do, rather than a part of it, such as a table, a form's answer, a modal or a live update
+func replacesPage(r *http.Request) bool {
+	target := r.Header.Get("HX-Target")
+	return target == "main-content" || strings.HasSuffix(target, "#main-content")
 }
 
 // writeError sends HTMX the error as a toast, which forms add to #toaster, and anything else the error as it writes itself.

@@ -39,8 +39,7 @@ CLICK #site--login-button
 ASSERT_VISIBLE #site--login--otp-1
 TYPE #site--login--otp-1 123123
 ASSERT_NEW_URL
-CLICK #site--settings-menu
-CLICK #site--data--glucose-button
+CLICK #site--nav--data
 CLICK #site--glucose--add
 ASSERT_VISIBLE #site--glucose--create--modal
 INPUT #site--glucose--create--reading-type Meter
