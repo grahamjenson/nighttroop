@@ -1701,8 +1701,9 @@ func backfillConfirm(name string) string {
 	return "Backfill fetches older records from before your oldest glucose reading, a week of them by default. It runs in the background and can take a minute. Continue?"
 }
 
-// BackfillQueued says which records a backfill that has just started will fetch
-func BackfillQueued(sourceType consts.ConnectorType, from int64, to int64) templ.Component {
+// BackfillQueued says which records a backfill that has just started will fetch: from and to, and again from
+// recentFrom, to fill gaps, when it is set
+func BackfillQueued(sourceType consts.ConnectorType, from int64, to int64, recentFrom int64) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1719,9 +1720,13 @@ func BackfillQueued(sourceType consts.ConnectorType, from int64, to int64) templ
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
+		description := "Fetching records from " + backfillTime(from) + " to " + backfillTime(to) + " UTC"
+		if recentFrom > 0 {
+			description += ", and again from " + backfillTime(recentFrom) + " UTC to fill any gaps"
+		}
 		templ_7745c5c3_Err = toast.Toast(toast.Props{
 			Title:         "Backfilling " + strings.ToUpper(string(sourceType)[:1]) + string(sourceType)[1:],
-			Description:   "Fetching records from " + time.UnixMilli(from).UTC().Format("2 Jan 15:04") + " to " + time.UnixMilli(to).UTC().Format("2 Jan 15:04") + " UTC",
+			Description:   description,
 			Variant:       toast.VariantSuccess,
 			Position:      toast.PositionTopCenter,
 			Duration:      8000,
@@ -1734,6 +1739,11 @@ func BackfillQueued(sourceType consts.ConnectorType, from int64, to int64) templ
 		}
 		return nil
 	})
+}
+
+// backfillTime is a time in ms a backfill fetches from or to, as 2 Jan 15:04 in UTC
+func backfillTime(ms int64) string {
+	return time.UnixMilli(ms).UTC().Format("2 Jan 15:04")
 }
 
 func SuccessfulUpdate(model *sitemodels.Connector) templ.Component {

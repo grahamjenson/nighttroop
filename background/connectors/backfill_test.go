@@ -66,14 +66,45 @@ func TestBackfillStartsOneAtATimeAndRecordsWhatItDid(t *testing.T) {
 	require.NotNil(t, events[0].FinishedAt)
 	require.Contains(t, *events[0].Attributes, `"connector_type":"virtual"`)
 
-	// The next backfill starts again, from the oldest reading now in the site
+	// The next backfill starts again, from the day before the oldest reading now in the site, which is within the
+	// recent days it fetches again, so it fetches up to now in one range
 	oldest := readings[len(readings)-1].OccurredAt
 	next, err := BackfillRange(ctx, site.SiteDB, typ, 1)
 	require.NoError(t, err)
-	require.Equal(t, oldest, next.To)
+	require.Equal(t, oldest-24*time.Hour.Milliseconds(), next.From)
+	require.InDelta(t, time.Now().UnixMilli(), next.To, 1000)
+	require.Zero(t, next.RecentTo)
 	require.NoError(t, QueueBackfill(ctx, controlDB, siteID, typ, next))
 	require.Len(t, grabJobs(), 1)
 	require.Equal(t, int64(2), source().TotalBackfills)
+}
+
+// A site down for a while, as for a deploy, misses its connector's records, so a backfill also fetches the recent days
+// again, as well as the days before its oldest reading, leaving the days between them as they are
+func TestBackfillFillsGapsInTheRecentDays(t *testing.T) {
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
+	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.ConnectorTypeVirtual
+	require.NoError(t, q.CreateConnector(ctx, controldb.CreateConnectorParams{SiteID: siteID, Type: typ, Enabled: true}))
+	day, now := 24*time.Hour.Milliseconds(), time.Now().UnixMilli()
+	oldest := now - 5*day
+	_, err := site.SiteDB.Queries().CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "old", Mgdl: 120, ReadingType: "sgv", OccurredAt: oldest, CreatedByIdentityName: "phone"})
+	require.NoError(t, err)
+
+	backfill, err := BackfillRange(ctx, site.SiteDB, typ, 1)
+	require.NoError(t, err)
+	require.Equal(t, BackfillParams{From: oldest - day, To: oldest, RecentFrom: backfill.RecentTo - recentBackfillDays*day, RecentTo: backfill.RecentTo}, backfill)
+	require.InDelta(t, now, backfill.RecentTo, 1000)
+
+	require.NoError(t, QueueBackfill(ctx, controlDB, siteID, typ, backfill))
+	require.NoError(t, SetupConnectorJobManager(cfg, controlDB).RunConnector(ctx, ConnectorJobParams{SiteID: siteID, Type: typ, Backfill: &backfill}))
+	count := func(from, to int64) int {
+		readings, err := site.SiteDB.Queries().SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{DateGTE: &from, DateLT: &to, Limit: 1000})
+		require.NoError(t, err)
+		return len(readings)
+	}
+	require.Equal(t, 24*12, count(oldest-day, oldest), "the day before the oldest reading")
+	require.Zero(t, count(oldest+1, backfill.RecentFrom), "the days between are left as they are")
+	require.InDelta(t, recentBackfillDays*24*12, count(backfill.RecentFrom, backfill.RecentTo+1), 1, "the recent days")
 }
 
 func TestBackfillRangeOfDexcomIsTheLastDay(t *testing.T) {
