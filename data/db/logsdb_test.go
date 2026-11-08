@@ -235,7 +235,7 @@ func TestLogsDBSearchByType(t *testing.T) {
 	logs.SiteCreatedEvent(ctx, site)
 	logs.SiteDisabledEvent(ctx, site, "admin")
 	logs.SyncError(ctx, site, consts.SyncSourceTypeDexcom, errors.New("sync failed"))
-	logs.ServerError(ctx, &site, 500, "GET", "/", "request")
+	logs.ServerError(ctx, &site, 500, "GET", "/", "request", "")
 
 	str := func(s string) *string { return &s }
 	tests := []struct {

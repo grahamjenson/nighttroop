@@ -80,7 +80,19 @@ SCREENSHOT glucose_reading_updated
 CLICK "Meter"
 ASSERT_TEXT_VISIBLE 8.6 mmol/L
 ASSERT_TEXT_VISIBLE Rechecked
-CLICK #site--glucose--details--close
+
+// Notes longer than the database keeps are refused in its own words, which the toast leaves to the Errors page
+INPUT #site--glucose--edit--notes {{ repeat "a" 1100 }}
+CLICK #site--glucose--edit--submit
+ASSERT_STATUS 400
+ASSERT_TEXT_VISIBLE Something went wrong.
+ASSERT_VISIBLE #toaster >> text=Errors page
+ASSERT_NOT_VISIBLE #toaster >> text=CHECK constraint failed
+SCREENSHOT glucose_reading_error_recorded
+CLICK #toaster >> text=Errors page
+ASSERT_PATH /logs/errors
+ASSERT_VISIBLE #siteErrorsTable >> text=CHECK constraint failed
+SCREENSHOT glucose_reading_error_on_errors_page
 
 // Choosing mg/dL shows the same reading in mg/dL
 CLICK #site--settings-menu

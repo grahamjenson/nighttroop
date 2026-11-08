@@ -18,12 +18,15 @@ func TestRecordServerErrors(t *testing.T) {
 		status  int
 		panics  bool
 		site    bool
+		reason  string
 		message string
 	}{
-		{"a panic is recorded, with its site", 0, true, true, "500 Internal Server Error"},
-		{"a 503 is recorded, without a site", http.StatusServiceUnavailable, false, false, "503 Service Unavailable"},
-		{"a 404 is not recorded", http.StatusNotFound, false, true, ""},
-		{"a 200 is not recorded", http.StatusOK, false, true, ""},
+		{"a panic is recorded, with its site", 0, true, true, "", "500 Internal Server Error"},
+		{"a 503 is recorded, without a site", http.StatusServiceUnavailable, false, false, "", "503 Service Unavailable"},
+		{"a 502 is recorded with why, which its page need not say", http.StatusBadGateway, false, true, "Apple refused the push", "502 Bad Gateway: Apple refused the push"},
+		{"a 400 is recorded with why, which its page need not say", http.StatusBadRequest, false, true, "CHECK constraint failed", "400 Bad Request: CHECK constraint failed"},
+		{"a 404 is not recorded", http.StatusNotFound, false, true, "", ""},
+		{"a 200 is not recorded", http.StatusOK, false, true, "", ""},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -34,7 +37,9 @@ func TestRecordServerErrors(t *testing.T) {
 				if test.panics {
 					panic("broken")
 				}
+				SetErrorReason(r.Context(), test.reason)
 				w.WriteHeader(test.status)
+				w.Write([]byte("Something went wrong."))
 			})
 
 			r := httptest.NewRequest(http.MethodGet, "/api/v2/authorization/request/pathtoken123", nil)
@@ -52,7 +57,7 @@ func TestRecordServerErrors(t *testing.T) {
 			require.Len(t, recorded, 1)
 			require.Equal(t, test.message, recorded[0].Message)
 			// The route's pattern is recorded, not the path with its token
-			require.Contains(t, *recorded[0].Attributes, `"kind":"server"`)
+			require.Contains(t, *recorded[0].Attributes, map[bool]string{true: `"kind":"server"`, false: `"kind":"client"`}[test.status != http.StatusBadRequest])
 			require.Contains(t, *recorded[0].Attributes, `"route":"/api/v2/authorization/request/{token}"`)
 			require.NotContains(t, *recorded[0].Attributes, "pathtoken123")
 			if test.site {

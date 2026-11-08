@@ -416,6 +416,11 @@ focus back to the row or button that opened it.
 - An admin sees the site's events (e.g. created, alarms, recoveries, credential changes), errors and logs, filtered
   by type and searched, and its batch's backups. Its errors include its requests refused for what they sent (kind
   `client`), with why, and which identity and app sent them, so the admin can see what a client gets wrong.
+- A toast never shows the server's own words: a server error, or a refusal in the database's words, says "Something
+  went wrong. It has been recorded on the Errors page.", linking an admin there, or that it is recorded for the site's
+  admins to anyone else. The Errors page keeps what went wrong, in full. A refusal written for users shows its reason,
+  without the "Bad or missing request body" or "Constraint check failed" start the API's message has.
+- Toasts show above an open modal, so an error from a form in one can be read and its link clicked.
 - A search of the site's events, errors or logs, or a filter by error kind, looks through only its newest 10,000 of
   each, so no search reads every row a site has; paging without one reaches every row.
 - Each of the site's own events, errors and logs shows the request or background job run it was for; its batch's

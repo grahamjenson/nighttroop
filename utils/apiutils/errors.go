@@ -14,6 +14,10 @@ import (
 type HTTPError struct {
 	Status  int    `json:"status"`
 	Message string `json:"message,omitempty"`
+	// Hint is the part of the message written for users, which a page shows without the message's start
+	Hint string `json:"-"`
+	// Internal is a message in the server's own words, such as the database's, which a page does not show its user
+	Internal bool `json:"-"`
 }
 
 func (e *HTTPError) Error() string {
@@ -66,7 +70,7 @@ var (
 	ErrUnknownContent  = &HTTPError{Status: http.StatusUnsupportedMediaType, Message: "Unknown content type"}
 	ErrBadBody         = &HTTPError{Status: http.StatusBadRequest, Message: "Bad or missing request body"}
 	ErrBadBodyWithHint = func(hint string) *HTTPError {
-		return &HTTPError{Status: http.StatusBadRequest, Message: "Bad or missing request body: " + hint}
+		return &HTTPError{Status: http.StatusBadRequest, Message: "Bad or missing request body: " + hint, Hint: hint}
 	}
 	ErrBadForm = &HTTPError{Status: http.StatusBadRequest, Message: "Bad or missing form data"}
 )
@@ -78,7 +82,11 @@ var (
 	}
 	ErrConstraintCheckFailed         = &HTTPError{Status: http.StatusBadRequest, Message: "Constraint check failed"}
 	ErrConstraintCheckFailedWithHint = func(field string) *HTTPError {
-		return &HTTPError{Status: http.StatusBadRequest, Message: "Constraint check failed: " + field}
+		return &HTTPError{Status: http.StatusBadRequest, Message: "Constraint check failed: " + field, Hint: field}
+	}
+	// ErrDatabaseRefused is the database refusing a value, in its own words, which are kept from users
+	ErrDatabaseRefused = func(err error) *HTTPError {
+		return &HTTPError{Status: http.StatusBadRequest, Message: "Constraint check failed: " + err.Error(), Internal: true}
 	}
 	ErrUniqueConstraintViolation = &HTTPError{Status: http.StatusConflict, Message: "Unique constraint violation"}
 )
@@ -103,7 +111,7 @@ func ErrorFor(err error, what string) *HTTPError {
 	case utilerrors.IsSQLUniqueViolationError(err):
 		return ErrUniqueConstraintViolation
 	case utilerrors.IsSQLConstraintCheck(err):
-		return ErrConstraintCheckFailedWithHint(err.Error())
+		return ErrDatabaseRefused(err)
 	}
 	slog.Error("Error writing "+what, "error", err)
 	return ErrInternalServerError
