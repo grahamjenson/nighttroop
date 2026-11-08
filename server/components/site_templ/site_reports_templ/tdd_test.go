@@ -70,13 +70,67 @@ func date(day string) time.Time {
 	return at
 }
 
-// The report covers the week, fortnight or month before today; anything else is no range
-func TestTDDRangeDays(t *testing.T) {
-	require.Equal(t, 7, TDDRangeDays("week"))
-	require.Equal(t, 14, TDDRangeDays("fortnight"))
-	require.Equal(t, 30, TDDRangeDays("month"))
-	require.Equal(t, 0, TDDRangeDays("year"))
-	require.Equal(t, 0, TDDRangeDays(""))
+// A report ends yesterday unless its end names another day of the past year: today is not over, and older days are not
+// kept
+func TestTDDEnd(t *testing.T) {
+	auckland, err := time.LoadLocation("Pacific/Auckland")
+	require.NoError(t, err)
+	// 11pm UTC on 6 November is already the 7th in Auckland, so yesterday there is the 6th
+	now := time.Date(2026, 11, 6, 23, 0, 0, 0, time.UTC)
+	tests := []struct {
+		end  string
+		want string
+		ok   bool
+	}{
+		{"", "2026-11-06", true},
+		{"2026-11-06", "2026-11-06", true},
+		{"2026-10-01", "2026-10-01", true},
+		{"2025-11-06", "2025-11-06", true},
+		{"2026-11-07", "", false},
+		{"2025-11-05", "", false},
+		{"6 Nov 2026", "", false},
+	}
+	for _, tt := range tests {
+		last, ok := TDDEnd(tt.end, now, auckland)
+		require.Equal(t, tt.ok, ok, tt.end)
+		if ok {
+			require.Equal(t, tt.want, last.Format(time.DateOnly), tt.end)
+			require.Equal(t, auckland, last.Location(), tt.end)
+		}
+	}
+}
+
+// The arrows go back and forward a month, the next no later than yesterday, which has no end query, and none goes past
+// yesterday or before a year ago
+func TestTDDLinks(t *testing.T) {
+	yesterday := date("2026-11-06")
+	tests := []struct {
+		last           string
+		previous, next string
+	}{
+		{"2026-11-06", "/reports/tdd?end=2026-10-07", ""},
+		{"2026-10-07", "/reports/tdd?end=2026-09-07", "/reports/tdd"},
+		{"2026-10-20", "/reports/tdd?end=2026-09-20", "/reports/tdd"},
+		{"2026-09-07", "/reports/tdd?end=2026-08-08", "/reports/tdd?end=2026-10-07"},
+		{"2025-11-20", "", "/reports/tdd?end=2025-12-20"},
+	}
+	for _, tt := range tests {
+		previous, next := tddLinks(date(tt.last), yesterday)
+		require.Equal(t, tt.previous, previous, tt.last)
+		require.Equal(t, tt.next, next, tt.last)
+	}
+}
+
+// The bars fill their days but for a gap of a couple of pixels, however many days there are
+func TestTDDChartBarGaps(t *testing.T) {
+	chart := tddChart(nil, date("2026-10-08"), date("2026-11-06"))
+	chart.Validate()
+	var option map[string]any
+	require.NoError(t, json.Unmarshal([]byte(chart.JSONNotEscaped()), &option))
+	series := option["series"].([]any)[0].(map[string]any)
+	require.Equal(t, "2", series["barCategoryGap"])
+	require.Nil(t, series["barMaxWidth"])
+	require.Len(t, option["xAxis"].([]any)[0].(map[string]any)["data"], TDDDays)
 }
 
 // The table has every day of the report, newest first, each with its daily dose, or none for a day without insulin or
