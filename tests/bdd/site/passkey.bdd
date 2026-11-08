@@ -1,26 +1,23 @@
-// A new site's admin can add a passkey straight after creating the site, and sign in with it alone, with no password
-// or code
-GOTO {{ server_url }}/
-ASSERT_STATUS 200
-CLICK "Create Site"
-ASSERT_STATUS 200
-
-// The link to add a passkey opens the new site, as a passkey is made on the address it signs in to; it is named for
-// the admin, nothing about the person
-CLICK #public--passkey-button
-ASSERT_NEW_URL
-ASSERT_VISIBLE #site--passkey--add >> text=Add a passkey for admin
-SCREENSHOT passkey_add
-// The browser on the site has a passkey authenticator, as a phone has, that verifies the person itself
-VIRTUAL_AUTHENTICATOR
-
-// Adding it signs the admin in, to the summary
-CLICK #site--passkey--add
-ASSERT_NEW_URL
+INCLUDE steps/new_site_admin.steps
 ASSERT_PATH /
-ASSERT_VISIBLE #site--summary
 
-// Signed out, the passkey signs the admin back in, from a button on the login page
+// My Account, in the settings menu, says who is signed in, with no passkeys yet
+CLICK #site--settings-menu
+CLICK #site--settings--account-button
+ASSERT_STATUS 200
+ASSERT_PATH /settings/account
+ASSERT_TITLE My Account · Nighttroop
+ASSERT_TEXT_VISIBLE You are signed in as admin
+ASSERT_VISIBLE #site--account--passkeys >> text=No passkeys yet.
+
+// The browser has a passkey authenticator, as a phone has, that verifies the person itself. Adding a passkey, on the
+// site's own address, lists it
+VIRTUAL_AUTHENTICATOR
+CLICK #site--account--add-passkey
+ASSERT_VISIBLE #site--account--passkeys >> text=Not used yet
+SCREENSHOT my_account
+
+// Signed out, the passkey signs the admin back in with no name, password or code
 CLICK #site--settings-menu
 CLICK #site--settings--logout-button
 ASSERT_NEW_URL
@@ -31,3 +28,12 @@ CLICK #site--login--passkey
 ASSERT_NEW_URL
 ASSERT_PATH /
 ASSERT_VISIBLE #site--summary
+
+// The passkey says it was used, and removing it, as for a lost device (the test accepts the question), leaves none
+CLICK #site--settings-menu
+CLICK #site--settings--account-button
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--account--passkeys >> text=/Last used/
+CLICK #site--account--passkeys button >> text=Remove
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--account--passkeys >> text=No passkeys yet.

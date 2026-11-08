@@ -87,6 +87,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deleteSiteIdentityStmt, err = db.PrepareContext(ctx, deleteSiteIdentity); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteSiteIdentity: %w", err)
 	}
+	if q.deleteSiteIdentityPasskeyStmt, err = db.PrepareContext(ctx, deleteSiteIdentityPasskey); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteSiteIdentityPasskey: %w", err)
+	}
 	if q.deleteSitePushCredentialsStmt, err = db.PrepareContext(ctx, deleteSitePushCredentials); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteSitePushCredentials: %w", err)
 	}
@@ -372,6 +375,11 @@ func (q *Queries) Close() error {
 	if q.deleteSiteIdentityStmt != nil {
 		if cerr := q.deleteSiteIdentityStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteSiteIdentityStmt: %w", cerr)
+		}
+	}
+	if q.deleteSiteIdentityPasskeyStmt != nil {
+		if cerr := q.deleteSiteIdentityPasskeyStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteSiteIdentityPasskeyStmt: %w", cerr)
 		}
 	}
 	if q.deleteSitePushCredentialsStmt != nil {
@@ -729,6 +737,7 @@ type Queries struct {
 	deletePushRegistrationByTokenHashStmt   *sql.Stmt
 	deleteSiteAdminPasskeysStmt             *sql.Stmt
 	deleteSiteIdentityStmt                  *sql.Stmt
+	deleteSiteIdentityPasskeyStmt           *sql.Stmt
 	deleteSitePushCredentialsStmt           *sql.Stmt
 	deleteSitesStmt                         *sql.Stmt
 	deleteSyncSourceStmt                    *sql.Stmt
@@ -815,6 +824,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		deletePushRegistrationByTokenHashStmt:   q.deletePushRegistrationByTokenHashStmt,
 		deleteSiteAdminPasskeysStmt:             q.deleteSiteAdminPasskeysStmt,
 		deleteSiteIdentityStmt:                  q.deleteSiteIdentityStmt,
+		deleteSiteIdentityPasskeyStmt:           q.deleteSiteIdentityPasskeyStmt,
 		deleteSitePushCredentialsStmt:           q.deleteSitePushCredentialsStmt,
 		deleteSitesStmt:                         q.deleteSitesStmt,
 		deleteSyncSourceStmt:                    q.deleteSyncSourceStmt,

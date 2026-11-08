@@ -220,10 +220,6 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   code check. The login button is disabled until a code from the authenticator app matches; a wrong code says so. A
   code is checked as soon as its sixth digit is in, with no click. The check changes nothing, and a recovered site's
   credentials are checked the same way.
-- A new site's last step also offers "Add a passkey for admin": it opens the new site, as a passkey is made on the
-  address it signs in to, with a link good for 15 minutes and only until the admin has a passkey. The link's token is
-  after its #, so it is never sent to the server or kept in its logs; the new site's page sends it itself. Adding the passkey
-  signs the admin in. The passkey is named admin, and no name, email or device of the person is asked for or kept.
 - A new site takes the time zone and language of the browser that created it, and its country's units and formats.
 - Site creation is rate limited per IP and server wide, and refused once the server holds `MAX_SITES`.
 - While a control admin has turned public site creation off, the home page says so instead of offering to create a
@@ -748,6 +744,15 @@ focus back to the row or button that opened it.
 - An identity resets its own password from the settings page, and the admin its own TOTP, which signs them out.
 - Each reset is recorded as an event, with who made it.
 - A lost admin login is recovered with the site's backup key on the recover page.
+
+### My Account
+
+- My Account, at the top of the menu beside Getting Started, says who is signed in and with which role, and lists its
+  passkeys: when each was added and last used. Only an identity that signs in to the website has it.
+- "Add a passkey" makes one on the site's own address, with the browser's fingerprint, face or PIN check, named for
+  the identity (e.g. admin), so no name, email or device of the person is asked for or kept. A passkey the browser
+  already has for the identity is not added again, and an identity has at most 10.
+- "Remove" (after asking) removes one of the identity's own passkeys, as for a lost device, so it signs in no more.
 
 ### Own settings and alarms
 

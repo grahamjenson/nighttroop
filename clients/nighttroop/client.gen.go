@@ -367,9 +367,6 @@ type NsSort = string
 // NsSortDesc defines model for NsSortDesc.
 type NsSortDesc = string
 
-// PasskeyToken defines model for PasskeyToken.
-type PasskeyToken = string
-
 // Skip defines model for Skip.
 type Skip = int64
 
@@ -629,21 +626,6 @@ type ListInsulinDosesParams struct {
 // PasskeyLoginFinishJSONBody defines parameters for PasskeyLoginFinish.
 type PasskeyLoginFinishJSONBody map[string]interface{}
 
-// PasskeyNewBeginParams defines parameters for PasskeyNewBegin.
-type PasskeyNewBeginParams struct {
-	// PasskeyToken The link's token from creating the site
-	PasskeyToken PasskeyToken `json:"Passkey-Token"`
-}
-
-// PasskeyNewFinishJSONBody defines parameters for PasskeyNewFinish.
-type PasskeyNewFinishJSONBody map[string]interface{}
-
-// PasskeyNewFinishParams defines parameters for PasskeyNewFinish.
-type PasskeyNewFinishParams struct {
-	// PasskeyToken The link's token from creating the site
-	PasskeyToken PasskeyToken `json:"Passkey-Token"`
-}
-
 // NsPebbleParams defines parameters for NsPebble.
 type NsPebbleParams struct {
 	// Count How many readings, 1 by default
@@ -652,6 +634,9 @@ type NsPebbleParams struct {
 	// Units mmol or mg/dl, the identity's own units by default
 	Units *string `form:"units,omitempty" json:"units,omitempty"`
 }
+
+// AccountPasskeyFinishJSONBody defines parameters for AccountPasskeyFinish.
+type AccountPasskeyFinishJSONBody map[string]interface{}
 
 // GetSummaryParams defines parameters for GetSummary.
 type GetSummaryParams struct {
@@ -706,8 +691,8 @@ type LoginJSONRequestBody = LoginRequest
 // PasskeyLoginFinishJSONRequestBody defines body for PasskeyLoginFinish for application/json ContentType.
 type PasskeyLoginFinishJSONRequestBody PasskeyLoginFinishJSONBody
 
-// PasskeyNewFinishJSONRequestBody defines body for PasskeyNewFinish for application/json ContentType.
-type PasskeyNewFinishJSONRequestBody PasskeyNewFinishJSONBody
+// AccountPasskeyFinishJSONRequestBody defines body for AccountPasskeyFinish for application/json ContentType.
+type AccountPasskeyFinishJSONRequestBody AccountPasskeyFinishJSONBody
 
 // Getter for additional properties for NsDocument. Returns the specified
 // element and whether it was found
@@ -1538,16 +1523,16 @@ type ClientInterface interface {
 
 	PasskeyLoginFinish(ctx context.Context, body PasskeyLoginFinishJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PasskeyNewBegin request
-	PasskeyNewBegin(ctx context.Context, params *PasskeyNewBeginParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// PasskeyNewFinishWithBody request with any body
-	PasskeyNewFinishWithBody(ctx context.Context, params *PasskeyNewFinishParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	PasskeyNewFinish(ctx context.Context, params *PasskeyNewFinishParams, body PasskeyNewFinishJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// NsPebble request
 	NsPebble(ctx context.Context, params *NsPebbleParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AccountPasskeyBegin request
+	AccountPasskeyBegin(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AccountPasskeyFinishWithBody request with any body
+	AccountPasskeyFinishWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	AccountPasskeyFinish(ctx context.Context, body AccountPasskeyFinishJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// CreateSite request
 	CreateSite(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -2420,44 +2405,44 @@ func (c *Client) PasskeyLoginFinish(ctx context.Context, body PasskeyLoginFinish
 	return c.Client.Do(req)
 }
 
-func (c *Client) PasskeyNewBegin(ctx context.Context, params *PasskeyNewBeginParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPasskeyNewBeginRequest(c.Server, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PasskeyNewFinishWithBody(ctx context.Context, params *PasskeyNewFinishParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPasskeyNewFinishRequestWithBody(c.Server, params, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PasskeyNewFinish(ctx context.Context, params *PasskeyNewFinishParams, body PasskeyNewFinishJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPasskeyNewFinishRequest(c.Server, params, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
 func (c *Client) NsPebble(ctx context.Context, params *NsPebbleParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewNsPebbleRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) AccountPasskeyBegin(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAccountPasskeyBeginRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) AccountPasskeyFinishWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAccountPasskeyFinishRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) AccountPasskeyFinish(ctx context.Context, body AccountPasskeyFinishJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAccountPasskeyFinishRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -5202,99 +5187,6 @@ func NewPasskeyLoginFinishRequestWithBody(server string, contentType string, bod
 	return req, nil
 }
 
-// NewPasskeyNewBeginRequest generates requests for PasskeyNewBegin
-func NewPasskeyNewBeginRequest(server string, params *PasskeyNewBeginParams) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/passkey/new/begin")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-
-		var headerParam0 string
-
-		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "Passkey-Token", runtime.ParamLocationHeader, params.PasskeyToken)
-		if err != nil {
-			return nil, err
-		}
-
-		req.Header.Set("Passkey-Token", headerParam0)
-
-	}
-
-	return req, nil
-}
-
-// NewPasskeyNewFinishRequest calls the generic PasskeyNewFinish builder with application/json body
-func NewPasskeyNewFinishRequest(server string, params *PasskeyNewFinishParams, body PasskeyNewFinishJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPasskeyNewFinishRequestWithBody(server, params, "application/json", bodyReader)
-}
-
-// NewPasskeyNewFinishRequestWithBody generates requests for PasskeyNewFinish with any type of body
-func NewPasskeyNewFinishRequestWithBody(server string, params *PasskeyNewFinishParams, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/passkey/new/finish")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	if params != nil {
-
-		var headerParam0 string
-
-		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "Passkey-Token", runtime.ParamLocationHeader, params.PasskeyToken)
-		if err != nil {
-			return nil, err
-		}
-
-		req.Header.Set("Passkey-Token", headerParam0)
-
-	}
-
-	return req, nil
-}
-
 // NewNsPebbleRequest generates requests for NsPebble
 func NewNsPebbleRequest(server string, params *NsPebbleParams) (*http.Request, error) {
 	var err error
@@ -5356,6 +5248,73 @@ func NewNsPebbleRequest(server string, params *NsPebbleParams) (*http.Request, e
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewAccountPasskeyBeginRequest generates requests for AccountPasskeyBegin
+func NewAccountPasskeyBeginRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/settings/account/passkeys/begin")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewAccountPasskeyFinishRequest calls the generic AccountPasskeyFinish builder with application/json body
+func NewAccountPasskeyFinishRequest(server string, body AccountPasskeyFinishJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAccountPasskeyFinishRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewAccountPasskeyFinishRequestWithBody generates requests for AccountPasskeyFinish with any type of body
+func NewAccountPasskeyFinishRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/settings/account/passkeys/finish")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -5679,16 +5638,16 @@ type ClientWithResponsesInterface interface {
 
 	PasskeyLoginFinishWithResponse(ctx context.Context, body PasskeyLoginFinishJSONRequestBody, reqEditors ...RequestEditorFn) (*PasskeyLoginFinishResponse, error)
 
-	// PasskeyNewBeginWithResponse request
-	PasskeyNewBeginWithResponse(ctx context.Context, params *PasskeyNewBeginParams, reqEditors ...RequestEditorFn) (*PasskeyNewBeginResponse, error)
-
-	// PasskeyNewFinishWithBodyWithResponse request with any body
-	PasskeyNewFinishWithBodyWithResponse(ctx context.Context, params *PasskeyNewFinishParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PasskeyNewFinishResponse, error)
-
-	PasskeyNewFinishWithResponse(ctx context.Context, params *PasskeyNewFinishParams, body PasskeyNewFinishJSONRequestBody, reqEditors ...RequestEditorFn) (*PasskeyNewFinishResponse, error)
-
 	// NsPebbleWithResponse request
 	NsPebbleWithResponse(ctx context.Context, params *NsPebbleParams, reqEditors ...RequestEditorFn) (*NsPebbleResponse, error)
+
+	// AccountPasskeyBeginWithResponse request
+	AccountPasskeyBeginWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*AccountPasskeyBeginResponse, error)
+
+	// AccountPasskeyFinishWithBodyWithResponse request with any body
+	AccountPasskeyFinishWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AccountPasskeyFinishResponse, error)
+
+	AccountPasskeyFinishWithResponse(ctx context.Context, body AccountPasskeyFinishJSONRequestBody, reqEditors ...RequestEditorFn) (*AccountPasskeyFinishResponse, error)
 
 	// CreateSiteWithResponse request
 	CreateSiteWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*CreateSiteResponse, error)
@@ -6984,52 +6943,6 @@ func (r PasskeyLoginFinishResponse) StatusCode() int {
 	return 0
 }
 
-type PasskeyNewBeginResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *PasskeyOptions
-	JSONDefault  *PasskeyError
-}
-
-// Status returns HTTPResponse.Status
-func (r PasskeyNewBeginResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PasskeyNewBeginResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type PasskeyNewFinishResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *PasskeySignedIn
-	JSONDefault  *PasskeyError
-}
-
-// Status returns HTTPResponse.Status
-func (r PasskeyNewFinishResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PasskeyNewFinishResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
 type NsPebbleResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -7047,6 +6960,52 @@ func (r NsPebbleResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r NsPebbleResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type AccountPasskeyBeginResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PasskeyOptions
+	JSONDefault  *PasskeyError
+}
+
+// Status returns HTTPResponse.Status
+func (r AccountPasskeyBeginResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AccountPasskeyBeginResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type AccountPasskeyFinishResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PasskeySignedIn
+	JSONDefault  *PasskeyError
+}
+
+// Status returns HTTPResponse.Status
+func (r AccountPasskeyFinishResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AccountPasskeyFinishResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7731,32 +7690,6 @@ func (c *ClientWithResponses) PasskeyLoginFinishWithResponse(ctx context.Context
 	return ParsePasskeyLoginFinishResponse(rsp)
 }
 
-// PasskeyNewBeginWithResponse request returning *PasskeyNewBeginResponse
-func (c *ClientWithResponses) PasskeyNewBeginWithResponse(ctx context.Context, params *PasskeyNewBeginParams, reqEditors ...RequestEditorFn) (*PasskeyNewBeginResponse, error) {
-	rsp, err := c.PasskeyNewBegin(ctx, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePasskeyNewBeginResponse(rsp)
-}
-
-// PasskeyNewFinishWithBodyWithResponse request with arbitrary body returning *PasskeyNewFinishResponse
-func (c *ClientWithResponses) PasskeyNewFinishWithBodyWithResponse(ctx context.Context, params *PasskeyNewFinishParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PasskeyNewFinishResponse, error) {
-	rsp, err := c.PasskeyNewFinishWithBody(ctx, params, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePasskeyNewFinishResponse(rsp)
-}
-
-func (c *ClientWithResponses) PasskeyNewFinishWithResponse(ctx context.Context, params *PasskeyNewFinishParams, body PasskeyNewFinishJSONRequestBody, reqEditors ...RequestEditorFn) (*PasskeyNewFinishResponse, error) {
-	rsp, err := c.PasskeyNewFinish(ctx, params, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePasskeyNewFinishResponse(rsp)
-}
-
 // NsPebbleWithResponse request returning *NsPebbleResponse
 func (c *ClientWithResponses) NsPebbleWithResponse(ctx context.Context, params *NsPebbleParams, reqEditors ...RequestEditorFn) (*NsPebbleResponse, error) {
 	rsp, err := c.NsPebble(ctx, params, reqEditors...)
@@ -7764,6 +7697,32 @@ func (c *ClientWithResponses) NsPebbleWithResponse(ctx context.Context, params *
 		return nil, err
 	}
 	return ParseNsPebbleResponse(rsp)
+}
+
+// AccountPasskeyBeginWithResponse request returning *AccountPasskeyBeginResponse
+func (c *ClientWithResponses) AccountPasskeyBeginWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*AccountPasskeyBeginResponse, error) {
+	rsp, err := c.AccountPasskeyBegin(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAccountPasskeyBeginResponse(rsp)
+}
+
+// AccountPasskeyFinishWithBodyWithResponse request with arbitrary body returning *AccountPasskeyFinishResponse
+func (c *ClientWithResponses) AccountPasskeyFinishWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AccountPasskeyFinishResponse, error) {
+	rsp, err := c.AccountPasskeyFinishWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAccountPasskeyFinishResponse(rsp)
+}
+
+func (c *ClientWithResponses) AccountPasskeyFinishWithResponse(ctx context.Context, body AccountPasskeyFinishJSONRequestBody, reqEditors ...RequestEditorFn) (*AccountPasskeyFinishResponse, error) {
+	rsp, err := c.AccountPasskeyFinish(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAccountPasskeyFinishResponse(rsp)
 }
 
 // CreateSiteWithResponse request returning *CreateSiteResponse
@@ -9601,15 +9560,48 @@ func ParsePasskeyLoginFinishResponse(rsp *http.Response) (*PasskeyLoginFinishRes
 	return response, nil
 }
 
-// ParsePasskeyNewBeginResponse parses an HTTP response from a PasskeyNewBeginWithResponse call
-func ParsePasskeyNewBeginResponse(rsp *http.Response) (*PasskeyNewBeginResponse, error) {
+// ParseNsPebbleResponse parses an HTTP response from a NsPebbleWithResponse call
+func ParseNsPebbleResponse(rsp *http.Response) (*NsPebbleResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PasskeyNewBeginResponse{
+	response := &NsPebbleResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NsObject
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAccountPasskeyBeginResponse parses an HTTP response from a AccountPasskeyBeginWithResponse call
+func ParseAccountPasskeyBeginResponse(rsp *http.Response) (*AccountPasskeyBeginResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AccountPasskeyBeginResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -9634,15 +9626,15 @@ func ParsePasskeyNewBeginResponse(rsp *http.Response) (*PasskeyNewBeginResponse,
 	return response, nil
 }
 
-// ParsePasskeyNewFinishResponse parses an HTTP response from a PasskeyNewFinishWithResponse call
-func ParsePasskeyNewFinishResponse(rsp *http.Response) (*PasskeyNewFinishResponse, error) {
+// ParseAccountPasskeyFinishResponse parses an HTTP response from a AccountPasskeyFinishWithResponse call
+func ParseAccountPasskeyFinishResponse(rsp *http.Response) (*AccountPasskeyFinishResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PasskeyNewFinishResponse{
+	response := &AccountPasskeyFinishResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -9657,39 +9649,6 @@ func ParsePasskeyNewFinishResponse(rsp *http.Response) (*PasskeyNewFinishRespons
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest PasskeyError
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseNsPebbleResponse parses an HTTP response from a NsPebbleWithResponse call
-func ParseNsPebbleResponse(rsp *http.Response) (*NsPebbleResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &NsPebbleResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest NsObject
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest NsError
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

@@ -14,7 +14,6 @@ import (
 	"nighttroop.t1d.nz/server/components/public_templ"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/config"
-	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/settings"
 )
@@ -100,10 +99,6 @@ func POSTCreateSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig)
 			return
 		}
 
-		passkeyToken, err := config.Security.GeneratePasskeyJWTToken(siteCreateResult.SiteDB.Subdomain, consts.FIRST_ADMIN_NAME)
-		if err != nil {
-			slog.ErrorContext(r.Context(), "Unable to make the new site's passkey link", "error", err)
-		}
 		w.Header().Set("Content-Type", "text/html")
 		w.WriteHeader(http.StatusOK)
 		err = public_templ.CreateSiteInfo(publicmodels.NewSiteInfo{
@@ -115,7 +110,6 @@ func POSTCreateSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig)
 			ReadOnlyNSToken: siteCreateResult.ReadOnlyNSToken,
 			BackupKey:       siteCreateResult.BackupPassword,
 			RecoverURL:      config.RecoverURL(),
-			PasskeyToken:    passkeyToken,
 		}).Render(r.Context(), w)
 		if err != nil {
 			slog.ErrorContext(r.Context(), "Unable to create site", "error", err)
