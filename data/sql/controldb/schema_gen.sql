@@ -92,6 +92,69 @@ CREATE TABLE server_settings (
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32)
 ) STRICT;
 
+CREATE TABLE site_connectors (
+    -- Nightscout/Dexcom
+    site_id TEXT NOT NULL REFERENCES sites(id), -- only for nightscout, dexcom can leave null
+    type TEXT NOT NULL CHECK(type IN ('nightscout', 'dexcom', 'libre', 'virtual')),
+    
+    url_or_username_enc TEXT CHECK(length(url_or_username_enc) <= 256),
+    password_enc TEXT CHECK(length(password_enc) <= 256), -- or ns token
+
+    -- Specific Info
+    region TEXT CHECK(region IN ('US', 'OUS', 'GLOBAL', 'AE', 'AP', 'AU', 'CA', 'DE', 'EU', 'EU2', 'FR', 'JP', 'LA')), -- dexcom US or OUS, or a libre region in consts.LibreRegions
+
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+
+    enabled INTEGER DEFAULT 1, -- 0 or 1 for now, can be used to disable without deleting
+    first_successful_sync_time INTEGER, -- when a sync first worked since the last save; while NULL a failed sync disables the source
+
+    -- BACKFILL, never reset so a source that backfills too much can be slowed or blocked
+    backfill_started_at INTEGER, -- set while a backfill is queued or running; another is refused until it finishes or an hour passes
+    last_backfill_from INTEGER, -- the oldest time the last backfill fetched from
+    last_backfill_to INTEGER, -- and the time it fetched up to
+    last_backfill_finished_at INTEGER,
+    last_backfill_duration INTEGER, -- in ms
+    last_backfill_records INTEGER, -- new records it added
+    last_backfill_error TEXT CHECK(length(last_backfill_error) <= 1024),
+    total_backfills INTEGER NOT NULL DEFAULT 0,
+
+    -- REPORTING
+
+    -- Frequency of syncs used to punish bad servers or behaviour
+    sync_interval_seconds_reason TEXT NOT NULL DEFAULT 'default' CHECK(length(sync_interval_seconds_reason) <= 256), -- reason for the current sync interval, can be default, user_request, error_response, etc. Used to determine if we should change the sync interval after a sync attempt
+    sync_interval_seconds INTEGER NOT NULL DEFAULT 60, -- how often to sync in seconds
+
+    -- Timing of syncs
+    last_attempted_sync INTEGER,
+    last_successful_sync INTEGER,
+    last_failed_sync INTEGER,
+
+    -- Counters
+    total_syncs INTEGER DEFAULT 0,
+    total_successful_syncs INTEGER DEFAULT 0,
+    total_failed_syncs INTEGER DEFAULT 0,
+    total_records INTEGER NOT NULL DEFAULT 0, -- the records its syncs and backfills have added in all
+    last_sync_records INTEGER, -- the records its last successful sync added
+
+    consecutive_successful_syncs INTEGER DEFAULT 0,
+    consecutive_failed_syncs INTEGER DEFAULT 0,
+
+    -- Previous Error Text
+    previous_sync_errors TEXT CHECK(length(previous_sync_errors) <= 5012 AND json_valid(previous_sync_errors)), -- stored to show to user as feedback
+
+    -- Timing EMAs to then determine frequency on
+    total_ema REAL,
+    success_ema REAL, -- https://en.wikipedia.org/wiki/Exponential_smoothing
+    failure_ema REAL,
+    
+    -- Duration of last sync in ms
+    last_sync_duration INTEGER,
+
+    -- Unique contraint of site_id and type
+    UNIQUE(site_id, type)
+) STRICT;
+
 CREATE TABLE site_identities (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     site_id TEXT NOT NULL REFERENCES sites(id),
@@ -196,69 +259,6 @@ CREATE TABLE site_identities (
 
     -- Constraints
     UNIQUE(site_id, name)
-) STRICT;
-
-CREATE TABLE site_sync_sources (
-    -- Nightscout/Dexcom
-    site_id TEXT NOT NULL REFERENCES sites(id), -- only for nightscout, dexcom can leave null
-    type TEXT NOT NULL CHECK(type IN ('nightscout', 'dexcom', 'libre', 'virtual')),
-    
-    url_or_username_enc TEXT CHECK(length(url_or_username_enc) <= 256),
-    password_enc TEXT CHECK(length(password_enc) <= 256), -- or ns token
-
-    -- Specific Info
-    region TEXT CHECK(region IN ('US', 'OUS', 'GLOBAL', 'AE', 'AP', 'AU', 'CA', 'DE', 'EU', 'EU2', 'FR', 'JP', 'LA')), -- dexcom US or OUS, or a libre region in consts.LibreRegions
-
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-
-    enabled INTEGER DEFAULT 1, -- 0 or 1 for now, can be used to disable without deleting
-    first_successful_sync_time INTEGER, -- when a sync first worked since the last save; while NULL a failed sync disables the source
-
-    -- BACKFILL, never reset so a source that backfills too much can be slowed or blocked
-    backfill_started_at INTEGER, -- set while a backfill is queued or running; another is refused until it finishes or an hour passes
-    last_backfill_from INTEGER, -- the oldest time the last backfill fetched from
-    last_backfill_to INTEGER, -- and the time it fetched up to
-    last_backfill_finished_at INTEGER,
-    last_backfill_duration INTEGER, -- in ms
-    last_backfill_records INTEGER, -- new records it added
-    last_backfill_error TEXT CHECK(length(last_backfill_error) <= 1024),
-    total_backfills INTEGER NOT NULL DEFAULT 0,
-
-    -- REPORTING
-
-    -- Frequency of syncs used to punish bad servers or behaviour
-    sync_interval_seconds_reason TEXT NOT NULL DEFAULT 'default' CHECK(length(sync_interval_seconds_reason) <= 256), -- reason for the current sync interval, can be default, user_request, error_response, etc. Used to determine if we should change the sync interval after a sync attempt
-    sync_interval_seconds INTEGER NOT NULL DEFAULT 60, -- how often to sync in seconds
-
-    -- Timing of syncs
-    last_attempted_sync INTEGER,
-    last_successful_sync INTEGER,
-    last_failed_sync INTEGER,
-
-    -- Counters
-    total_syncs INTEGER DEFAULT 0,
-    total_successful_syncs INTEGER DEFAULT 0,
-    total_failed_syncs INTEGER DEFAULT 0,
-    total_records INTEGER NOT NULL DEFAULT 0, -- the records its syncs and backfills have added in all
-    last_sync_records INTEGER, -- the records its last successful sync added
-
-    consecutive_successful_syncs INTEGER DEFAULT 0,
-    consecutive_failed_syncs INTEGER DEFAULT 0,
-
-    -- Previous Error Text
-    previous_sync_errors TEXT CHECK(length(previous_sync_errors) <= 5012 AND json_valid(previous_sync_errors)), -- stored to show to user as feedback
-
-    -- Timing EMAs to then determine frequency on
-    total_ema REAL,
-    success_ema REAL, -- https://en.wikipedia.org/wiki/Exponential_smoothing
-    failure_ema REAL,
-    
-    -- Duration of last sync in ms
-    last_sync_duration INTEGER,
-
-    -- Unique contraint of site_id and type
-    UNIQUE(site_id, type)
 ) STRICT;
 
 CREATE TABLE sites (

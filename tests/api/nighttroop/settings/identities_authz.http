@@ -84,7 +84,7 @@ B {"name": "intruder", "role": "admin"}
 ASSERT_STATUS 403
 
 NAME device_create_sync_forbidden
-POST http://{{ site }}/settings/sync/virtual
+POST http://{{ site }}/settings/connectors/virtual
 H Authorization: Bearer {{ .device_jwt }}
 H Accept: application/json
 B {"enabled": true}

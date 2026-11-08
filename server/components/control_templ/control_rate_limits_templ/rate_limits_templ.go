@@ -24,7 +24,7 @@ var labels = map[string]string{
 	"global": "Every request but the control site's", "control": "The control site's, signed out", "global_ip": "Requests from an IP", "site_create": "Sites created",
 	"site_create_ip": "Sites created from an IP", "login_name": "Logins to a name", "login_ip": "Logins from an IP",
 	"site_unauth": "Requests to a site before signing in", "site_get": "A site's reads", "site_post": "A site's writes",
-	"identity_get": "An identity's reads", "identity_post": "An identity's writes", "site_update_sync": "A site's sync changes",
+	"identity_get": "An identity's reads", "identity_post": "An identity's writes", "site_update_connectors": "A site's connector changes",
 	"site_identity_create": "A site's identities created", "site_download": "A site's downloads", "site_push": "A site's pushes",
 }
 
@@ -32,7 +32,7 @@ var labels = map[string]string{
 var settingLabels = map[string]string{
 	"global": "Every request, and the control site's signed out", "global_ip": "Requests from an IP", "site_create": "Sites created",
 	"site_create_ip": "Sites created from an IP", "login": "Logins to a name, and from an IP", "site_unauth": "Requests to a site before signing in",
-	"site_get": "A site's and an identity's reads", "site_post": "A site's and an identity's writes", "site_update_sync": "A site's sync changes",
+	"site_get": "A site's and an identity's reads", "site_post": "A site's and an identity's writes", "site_update_connectors": "A site's connector changes",
 	"site_identity_create": "A site's identities created", "site_download": "A site's downloads", "site_push": "A site's pushes",
 }
 

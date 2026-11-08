@@ -22,14 +22,14 @@ TYPE #site--login--otp-1 123123
 ASSERT_NEW_URL
 ASSERT_PATH /
 
-// Virtual sync is turned on, but has not run yet
+// Virtual connector is turned on, but has not run yet
 CLICK #site--settings-menu
-CLICK #site--settings--sync-button
+CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
-CLICK #site--settings--virtual-sync--enable
-CLICK #site--settings--virtual-sync--submit
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
 ASSERT_STATUS 200
-ASSERT_TEXT_VISIBLE Sync Updated
+ASSERT_TEXT_VISIBLE Connector Updated
 
 CLICK #site--nav--home
 ASSERT_NEW_URL

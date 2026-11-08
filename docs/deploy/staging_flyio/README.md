@@ -51,7 +51,7 @@ of your own domain:
   - Fly stops it once nothing has used it for a few minutes, and starts it again on the next request. That request
     waits for it to start: a couple of seconds for 500 sites, plus Fly booting the machine. The data stays on the
     volume.
-  - While it is stopped nothing runs: no Dexcom, Libre or Nightscout syncs, virtual sync, deleting inactive sites or
+  - While it is stopped nothing runs: no Dexcom, Libre or Nightscout syncs, the virtual connector, deleting inactive sites or
     resource checks. They run again once it starts. A phone uploading every few minutes, or an open page, keeps it
     running.
   - Measured with 500 sites, it uses about 50 MB with none in use, and 1.5 MB more for each site used in the last 30
@@ -238,7 +238,7 @@ the admin again from the new ones.
   - a new version that changes the databases' migrations wipes everything;
   - when it does, a phone's Nightscout URL and token stop working, so testers create a new site and set their apps up
     again.
-- **Testing with realistic data:** testers can turn on virtual sync in a site's sync settings, instead of syncing a
+- **Testing with realistic data:** testers can turn on the virtual connector on a site's Connectors page, instead of syncing a
   real Dexcom, Libre or Nightscout account.
 - **What is running:** `fly releases --app nighttroop-staging` lists each deploy, newest first. The workflow run on
   the **Actions** tab names its commit.

@@ -1,0 +1,193 @@
+package control_connectors_templ
+
+import (
+	"fmt"
+	"strconv"
+	"time"
+
+	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/modal"
+	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/display"
+)
+
+// formatDate shows an optional time in ms, or a dash when it is not set
+func formatDate(ms *int64) string {
+	if ms == nil {
+		return "-"
+	}
+	return time.UnixMilli(*ms).Format("2006-01-02 15:04:05")
+}
+
+// orDash shows an optional count or duration as a whole number, e.g. 12345, or a dash when it is not set
+func orDash(value *int64) string {
+	if value == nil {
+		return "-"
+	}
+	return strconv.FormatInt(*value, 10)
+}
+
+// averageOrDash shows an optional average to one decimal place, e.g. 12345.7, or a dash when it is not set
+func averageOrDash(value *float64) string {
+	if value == nil {
+		return "-"
+	}
+	return strconv.FormatFloat(*value, 'f', 1, 64)
+}
+
+// state is whether the source is off, was turned off after failing, is failing or is syncing
+func state(source *controlmodels.Connector) string {
+	failing := source.ConsecutiveFailedSyncs != nil && *source.ConsecutiveFailedSyncs > 0
+	switch {
+	case !source.Enabled && failing:
+		return "disabled after failing"
+	case !source.Enabled:
+		return "disabled"
+	case failing:
+		return "failing"
+	}
+	return "syncing"
+}
+
+func stateClass(source *controlmodels.Connector) string {
+	switch state(source) {
+	case "failing":
+		return "font-medium text-red-700"
+	case "disabled after failing":
+		return "font-medium text-amber-800"
+	case "disabled":
+		return "text-gray-500"
+	}
+	return ""
+}
+
+// failedClass makes a source's failed count stand out once it has failed
+func failedClass(source *controlmodels.Connector) string {
+	if source.TotalFailedSyncs != nil && *source.TotalFailedSyncs > 0 {
+		return "font-medium text-red-700"
+	}
+	return ""
+}
+
+// ConnectorsTable shows one page of connectors, the most recently failed first, with buttons to the pages either side
+templ ConnectorsTable(sources []*controlmodels.Connector, skip int64, limit int64) {
+	<div id="connectors_table" class="mx-auto max-w-5xl space-y-6">
+		@heading.Page("Connectors") {
+			Every site's connectors, the most recently failed first. Click a source to see its reports.
+		}
+		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
+			@table.Table(table.Props{ID: "controlConnectorsTable", Class: "rounded-lg border border-gray-200"}) {
+				@table.Header() {
+					@table.Row() {
+						@table.Head() {
+							Site
+						}
+						@table.Head() {
+							Type
+						}
+						@table.Head() {
+							State
+						}
+						@table.Head() {
+							Last Attempted
+						}
+						@table.Head() {
+							Last Success
+						}
+						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
+							Succeeded
+						}
+						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
+							Failed
+						}
+					}
+				}
+				@table.Body() {
+					if len(sources) == 0 {
+						<tr><td colspan="7" class="p-4 text-sm text-gray-500">No connectors here.</td></tr>
+					}
+					for _, source := range sources {
+						@connectorRow(source)
+					}
+				}
+			}
+			@pager.Pager(pager.Props{ID: "control--connectors", Path: "/connectors", Count: len(sources), Skip: skip, Limit: limit})
+		</section>
+		<div id="modal-container"></div>
+	</div>
+}
+
+templ connectorRow(source *controlmodels.Connector) {
+	@table.Row(table.RowProps{
+		Class: "cursor-pointer",
+		Attributes: templ.Attributes{
+			"hx-get":    "/connectors/" + source.ID(),
+			"hx-target": "#modal-container",
+			"hx-swap":   "innerHTML",
+		},
+	}) {
+		@table.Cell() {
+			{ source.SiteID }
+		}
+		@table.Cell() {
+			{ string(source.Type) }
+		}
+		@table.Cell() {
+			<span class={ stateClass(source) }>{ state(source) }</span>
+		}
+		@table.Cell() {
+			<span title={ formatDate(source.LastAttemptedSync) }>{ display.Ago(source.LastAttemptedSync, time.Now()) }</span>
+		}
+		@table.Cell() {
+			<span title={ formatDate(source.LastSuccessfulSync) }>{ display.Ago(source.LastSuccessfulSync, time.Now()) }</span>
+		}
+		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+			{ orDash(source.TotalSuccessfulSyncs) }
+		}
+		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+			<span class={ failedClass(source) }>{ orDash(source.TotalFailedSyncs) }</span>
+		}
+	}
+}
+
+// ConnectorModal shows a connector's reports: when it synced, how often, how long it took and its recent errors
+templ ConnectorModal(source *controlmodels.Connector) {
+	@modal.Modal(modal.Props{ID: "control--connector--details", Title: source.SiteID + " / " + string(source.Type)}) {
+		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+			@connectorDetail("State", state(source))
+			if source.Region != nil {
+				@connectorDetail("Region", *source.Region)
+			}
+			@connectorDetail("Created", formatDate(&source.CreatedAt))
+			@connectorDetail("Updated", formatDate(&source.UpdatedAt))
+			@connectorDetail("First Successful Sync", formatDate(source.FirstSuccessfulSyncTime))
+			@connectorDetail("Sync Interval", fmt.Sprintf("%ds (%s)", source.SyncIntervalSeconds, source.SyncIntervalSecondsReason))
+			@connectorDetail("Last Attempted", formatDate(source.LastAttemptedSync))
+			@connectorDetail("Last Success", formatDate(source.LastSuccessfulSync))
+			@connectorDetail("Last Failure", formatDate(source.LastFailedSync))
+			@connectorDetail("Total Syncs", orDash(source.TotalSyncs))
+			@connectorDetail("Succeeded", orDash(source.TotalSuccessfulSyncs))
+			@connectorDetail("Failed", orDash(source.TotalFailedSyncs))
+			@connectorDetail("Successes In A Row", orDash(source.ConsecutiveSuccessfulSyncs))
+			@connectorDetail("Failures In A Row", orDash(source.ConsecutiveFailedSyncs))
+			@connectorDetail("Last Sync Duration (ms)", orDash(source.LastSyncDuration))
+			@connectorDetail("Total EMA", averageOrDash(source.TotalEma))
+			@connectorDetail("Success EMA", averageOrDash(source.SuccessEma))
+			@connectorDetail("Failure EMA", averageOrDash(source.FailureEma))
+		</dl>
+		<h3 class="mt-4 text-sm font-semibold">Previous Errors</h3>
+		if len(source.PreviousSyncErrors) == 0 {
+			<p class="mt-1 text-sm text-gray-500">No errors.</p>
+		} else {
+			<ul id="control--connector--errors" class="mt-1 max-h-48 list-disc space-y-1 overflow-y-auto pl-5 text-sm text-red-700">
+				for _, e := range source.PreviousSyncErrors {
+					<li class="break-all">{ e }</li>
+				}
+			</ul>
+		}
+	}
+}
+
+var connectorDetail = modal.Detail

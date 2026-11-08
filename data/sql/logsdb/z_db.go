@@ -51,11 +51,11 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.insertLogStmt, err = db.PrepareContext(ctx, insertLog); err != nil {
 		return nil, fmt.Errorf("error preparing query InsertLog: %w", err)
 	}
-	if q.recentSyncErrorsStmt, err = db.PrepareContext(ctx, recentSyncErrors); err != nil {
-		return nil, fmt.Errorf("error preparing query RecentSyncErrors: %w", err)
+	if q.recentConnectorErrorsStmt, err = db.PrepareContext(ctx, recentConnectorErrors); err != nil {
+		return nil, fmt.Errorf("error preparing query RecentConnectorErrors: %w", err)
 	}
-	if q.recentSyncEventsStmt, err = db.PrepareContext(ctx, recentSyncEvents); err != nil {
-		return nil, fmt.Errorf("error preparing query RecentSyncEvents: %w", err)
+	if q.recentConnectorEventsStmt, err = db.PrepareContext(ctx, recentConnectorEvents); err != nil {
+		return nil, fmt.Errorf("error preparing query RecentConnectorEvents: %w", err)
 	}
 	if q.searchErrorsStmt, err = db.PrepareContext(ctx, searchErrors); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchErrors: %w", err)
@@ -134,14 +134,14 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing insertLogStmt: %w", cerr)
 		}
 	}
-	if q.recentSyncErrorsStmt != nil {
-		if cerr := q.recentSyncErrorsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing recentSyncErrorsStmt: %w", cerr)
+	if q.recentConnectorErrorsStmt != nil {
+		if cerr := q.recentConnectorErrorsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing recentConnectorErrorsStmt: %w", cerr)
 		}
 	}
-	if q.recentSyncEventsStmt != nil {
-		if cerr := q.recentSyncEventsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing recentSyncEventsStmt: %w", cerr)
+	if q.recentConnectorEventsStmt != nil {
+		if cerr := q.recentConnectorEventsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing recentConnectorEventsStmt: %w", cerr)
 		}
 	}
 	if q.searchErrorsStmt != nil {
@@ -226,53 +226,53 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db                   DBTX
-	tx                   *sql.Tx
-	getErrorStmt         *sql.Stmt
-	getEventStmt         *sql.Stmt
-	getLogStmt           *sql.Stmt
-	getSiteErrorStmt     *sql.Stmt
-	getSiteEventStmt     *sql.Stmt
-	getSiteLogStmt       *sql.Stmt
-	insertErrorStmt      *sql.Stmt
-	insertEventStmt      *sql.Stmt
-	insertLogStmt        *sql.Stmt
-	recentSyncErrorsStmt *sql.Stmt
-	recentSyncEventsStmt *sql.Stmt
-	searchErrorsStmt     *sql.Stmt
-	searchEventsStmt     *sql.Stmt
-	searchLogsStmt       *sql.Stmt
-	searchSiteErrorsStmt *sql.Stmt
-	searchSiteEventsStmt *sql.Stmt
-	searchSiteLogsStmt   *sql.Stmt
-	trimErrorsStmt       *sql.Stmt
-	trimEventsStmt       *sql.Stmt
-	trimLogsStmt         *sql.Stmt
+	db                        DBTX
+	tx                        *sql.Tx
+	getErrorStmt              *sql.Stmt
+	getEventStmt              *sql.Stmt
+	getLogStmt                *sql.Stmt
+	getSiteErrorStmt          *sql.Stmt
+	getSiteEventStmt          *sql.Stmt
+	getSiteLogStmt            *sql.Stmt
+	insertErrorStmt           *sql.Stmt
+	insertEventStmt           *sql.Stmt
+	insertLogStmt             *sql.Stmt
+	recentConnectorErrorsStmt *sql.Stmt
+	recentConnectorEventsStmt *sql.Stmt
+	searchErrorsStmt          *sql.Stmt
+	searchEventsStmt          *sql.Stmt
+	searchLogsStmt            *sql.Stmt
+	searchSiteErrorsStmt      *sql.Stmt
+	searchSiteEventsStmt      *sql.Stmt
+	searchSiteLogsStmt        *sql.Stmt
+	trimErrorsStmt            *sql.Stmt
+	trimEventsStmt            *sql.Stmt
+	trimLogsStmt              *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                   tx,
-		tx:                   tx,
-		getErrorStmt:         q.getErrorStmt,
-		getEventStmt:         q.getEventStmt,
-		getLogStmt:           q.getLogStmt,
-		getSiteErrorStmt:     q.getSiteErrorStmt,
-		getSiteEventStmt:     q.getSiteEventStmt,
-		getSiteLogStmt:       q.getSiteLogStmt,
-		insertErrorStmt:      q.insertErrorStmt,
-		insertEventStmt:      q.insertEventStmt,
-		insertLogStmt:        q.insertLogStmt,
-		recentSyncErrorsStmt: q.recentSyncErrorsStmt,
-		recentSyncEventsStmt: q.recentSyncEventsStmt,
-		searchErrorsStmt:     q.searchErrorsStmt,
-		searchEventsStmt:     q.searchEventsStmt,
-		searchLogsStmt:       q.searchLogsStmt,
-		searchSiteErrorsStmt: q.searchSiteErrorsStmt,
-		searchSiteEventsStmt: q.searchSiteEventsStmt,
-		searchSiteLogsStmt:   q.searchSiteLogsStmt,
-		trimErrorsStmt:       q.trimErrorsStmt,
-		trimEventsStmt:       q.trimEventsStmt,
-		trimLogsStmt:         q.trimLogsStmt,
+		db:                        tx,
+		tx:                        tx,
+		getErrorStmt:              q.getErrorStmt,
+		getEventStmt:              q.getEventStmt,
+		getLogStmt:                q.getLogStmt,
+		getSiteErrorStmt:          q.getSiteErrorStmt,
+		getSiteEventStmt:          q.getSiteEventStmt,
+		getSiteLogStmt:            q.getSiteLogStmt,
+		insertErrorStmt:           q.insertErrorStmt,
+		insertEventStmt:           q.insertEventStmt,
+		insertLogStmt:             q.insertLogStmt,
+		recentConnectorErrorsStmt: q.recentConnectorErrorsStmt,
+		recentConnectorEventsStmt: q.recentConnectorEventsStmt,
+		searchErrorsStmt:          q.searchErrorsStmt,
+		searchEventsStmt:          q.searchEventsStmt,
+		searchLogsStmt:            q.searchLogsStmt,
+		searchSiteErrorsStmt:      q.searchSiteErrorsStmt,
+		searchSiteEventsStmt:      q.searchSiteEventsStmt,
+		searchSiteLogsStmt:        q.searchSiteLogsStmt,
+		trimErrorsStmt:            q.trimErrorsStmt,
+		trimEventsStmt:            q.trimEventsStmt,
+		trimLogsStmt:              q.trimLogsStmt,
 	}
 }

@@ -33,7 +33,7 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 		r.Get("/", store.Collection("sites").Search) // The dashboard is the list of sites
 		r.Post("/logout", controlapi.POSTLogoutHandler(config))
 
-		// The control plane's collections, each at its route: sites, jobs, job stats and sync sources
+		// The control plane's collections, each at its route: sites, jobs, job stats and connectors
 		store.Routes(r)
 		r.Post("/sites", (&controlcollections.SitesCollection{}).CreateHandler)
 		r.Post("/settings", (&controlcollections.SitesCollection{}).SettingsHandler)

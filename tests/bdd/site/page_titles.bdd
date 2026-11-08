@@ -23,9 +23,9 @@ ASSERT_STATUS 200
 ASSERT_TITLE Alarms · Nighttroop
 
 // A page loaded in full has the same title, before the base's own
-GOTO /settings/sync
+GOTO /settings/connectors
 ASSERT_STATUS 200
-ASSERT_TITLE Sync · Nighttroop
+ASSERT_TITLE Connectors · Nighttroop
 
 // Back on the summary from the logo, the tab is named for it again
 CLICK #site--nav--home

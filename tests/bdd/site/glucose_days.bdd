@@ -1,16 +1,16 @@
 INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
-// Virtual sync writes its last 30 minutes, then a backfill the day before them (tests backfill a day)
+// Virtual connector writes its last 30 minutes, then a backfill the day before them (tests backfill a day)
 CLICK #site--settings-menu
-CLICK #site--settings--sync-button
+CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
-CLICK #site--settings--virtual-sync--enable
-CLICK #site--settings--virtual-sync--submit
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
 ASSERT_STATUS 200
-ASSERT_TEXT_VISIBLE Sync Updated
+ASSERT_TEXT_VISIBLE Connector Updated
 RUN_BACKGROUND_JOBS
-CLICK #site--settings--virtual-sync--backfill
+CLICK #site--settings--virtual-connector--backfill
 ASSERT_TEXT_VISIBLE Backfilling Virtual
 RUN_BACKGROUND_JOBS
 

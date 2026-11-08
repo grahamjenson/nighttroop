@@ -612,7 +612,7 @@
           {
             "type": "object",
             "properties": {
-              "source": { "type": "string", "description": "direct, or the sync that wrote it: nightscout, dexcom, libre or virtual" },
+              "source": { "type": "string", "description": "direct, or the connector that wrote it: nightscout, dexcom, libre or virtual" },
               "diff_per_5m": { "type": "number", "format": "double" }
             }
           }

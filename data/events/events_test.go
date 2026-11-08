@@ -34,6 +34,6 @@ func TestOnlyPersistedEventsAreKept(t *testing.T) {
 	for _, name := range Persisted {
 		require.True(t, Event{Name: name}.IsPersisted(), name)
 	}
-	require.Contains(t, PersistedNames(), "sync_backfilled")
+	require.Contains(t, PersistedNames(), "connector_backfilled")
 	require.False(t, Event{Name: "something_else"}.IsPersisted())
 }

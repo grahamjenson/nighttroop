@@ -60,7 +60,7 @@ func NewSiteStore() *SiteStore {
 	siteStore.registerCollection("presets", &sitepresets.ProfilePresetsCollection{})
 
 	// Settings collections
-	siteStore.registerCollection("settings", &sitesettings.SyncSettingsCollection{})
+	siteStore.registerCollection("settings", &sitesettings.ConnectorSettingsCollection{})
 	siteStore.registerCollection("settings", &sitesettings.IdentitiesCollection{})
 	siteStore.registerCollection("settings", &sitesettings.PushCredentialsCollection{})
 	siteStore.registerCollection("settings", &sitesettings.PushRegistrationsCollection{})

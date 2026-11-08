@@ -13,9 +13,9 @@ ASSERT_NOT_VISIBLE #site--summary--glucose
 SCREENSHOT getting_started
 
 // Each step opens the page it is done on, and the guide is always in the menu to come back to
-CLICK #site--getting-started--sync-link
-ASSERT_PATH /settings/sync
-ASSERT_VISIBLE #site--settings--virtual-sync--enable
+CLICK #site--getting-started--connectors-link
+ASSERT_PATH /settings/connectors
+ASSERT_VISIBLE #site--settings--virtual-connector--enable
 
 CLICK #site--settings-menu
 CLICK #site--getting-started-button

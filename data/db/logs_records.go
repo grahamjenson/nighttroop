@@ -23,14 +23,14 @@ type ErrorKind string
 const (
 	ErrorKindServer          ErrorKind = "server"
 	ErrorKindClient          ErrorKind = "client"
-	ErrorKindSync            ErrorKind = "sync"
+	ErrorKindConnector       ErrorKind = "connector"
 	ErrorKindSiteBatchBackup ErrorKind = "site_batch_backup"
 	ErrorKindControlBackup   ErrorKind = "control_backup"
 )
 
 // ErrorKinds are every error's kind, to pick from
 var ErrorKinds = []string{
-	string(ErrorKindServer), string(ErrorKindClient), string(ErrorKindSync), string(ErrorKindSiteBatchBackup), string(ErrorKindControlBackup),
+	string(ErrorKindServer), string(ErrorKindClient), string(ErrorKindConnector), string(ErrorKindSiteBatchBackup), string(ErrorKindControlBackup),
 }
 
 // LogLevel is how much a log matters
@@ -198,42 +198,42 @@ func (l *LogsDB) ControlBackedUpEvent(ctx context.Context, started time.Time, up
 	l.finishedEvent(ctx, "", "", events.ControlBackedUp, started, ControlBackedUpAttributes{Uploaded: uploaded})
 }
 
-type SyncTurnedOffAttributes struct {
-	SyncType consts.SyncSourceType `json:"sync_type"`
+type ConnectorTurnedOffAttributes struct {
+	ConnectorType consts.ConnectorType `json:"connector_type"`
 }
 
-// SyncTurnedOffEvent records a site's sync source being turned off because its first sync failed
-func (l *LogsDB) SyncTurnedOffEvent(ctx context.Context, siteID string, syncType consts.SyncSourceType) {
-	l.event(ctx, siteID, events.SyncTurnedOff, SyncTurnedOffAttributes{SyncType: syncType})
+// ConnectorTurnedOffEvent records a site's connector being turned off because its first sync failed
+func (l *LogsDB) ConnectorTurnedOffEvent(ctx context.Context, siteID string, connectorType consts.ConnectorType) {
+	l.event(ctx, siteID, events.ConnectorTurnedOff, ConnectorTurnedOffAttributes{ConnectorType: connectorType})
 }
 
-type SyncBackfilledAttributes struct {
-	SyncType consts.SyncSourceType `json:"sync_type"`
+type ConnectorBackfilledAttributes struct {
+	ConnectorType consts.ConnectorType `json:"connector_type"`
 	From     int64                 `json:"from"`
 	To       int64                 `json:"to"`
 	Records  int                   `json:"records"`
 	Error    *string               `json:"error,omitempty"`
 }
 
-// SyncBackfilledEvent records a site's backfill of the records from from to to, which started at started, the new
+// ConnectorBackfilledEvent records a site's backfill of the records from from to to, which started at started, the new
 // records it added and why it stopped early if it did
-func (l *LogsDB) SyncBackfilledEvent(ctx context.Context, siteID string, syncType consts.SyncSourceType, started time.Time, from, to int64, records int, err error) {
-	attributes := SyncBackfilledAttributes{SyncType: syncType, From: from, To: to, Records: records}
+func (l *LogsDB) ConnectorBackfilledEvent(ctx context.Context, siteID string, connectorType consts.ConnectorType, started time.Time, from, to int64, records int, err error) {
+	attributes := ConnectorBackfilledAttributes{ConnectorType: connectorType, From: from, To: to, Records: records}
 	if err != nil {
 		message := truncate(err.Error())
 		attributes.Error = &message
 	}
-	l.finishedEvent(ctx, siteID, "", events.SyncBackfilled, started, attributes)
+	l.finishedEvent(ctx, siteID, "", events.ConnectorBackfilled, started, attributes)
 }
 
-type SyncAddedAttributes struct {
-	SyncType consts.SyncSourceType `json:"sync_type"`
+type ConnectorRecordsAddedAttributes struct {
+	ConnectorType consts.ConnectorType `json:"connector_type"`
 	Records  int                   `json:"records"`
 }
 
-// SyncAddedEvent records a site's sync adding new records, and how many
-func (l *LogsDB) SyncAddedEvent(ctx context.Context, siteID string, syncType consts.SyncSourceType, records int) {
-	l.event(ctx, siteID, events.SyncAdded, SyncAddedAttributes{SyncType: syncType, Records: records})
+// ConnectorRecordsAddedEvent records a site's sync adding new records, and how many
+func (l *LogsDB) ConnectorRecordsAddedEvent(ctx context.Context, siteID string, connectorType consts.ConnectorType, records int) {
+	l.event(ctx, siteID, events.ConnectorRecordsAdded, ConnectorRecordsAddedAttributes{ConnectorType: connectorType, Records: records})
 }
 
 type AlarmAttributes struct {
@@ -314,13 +314,13 @@ func (l *LogsDB) ClientError(ctx context.Context, siteID *string, attributes Cli
 	l.error(ctx, siteID, errors.New(message), attributes)
 }
 
-type SyncErrorAttributes struct {
+type ConnectorErrorAttributes struct {
 	Kind     ErrorKind             `json:"kind"`
-	SyncType consts.SyncSourceType `json:"sync_type"`
+	ConnectorType consts.ConnectorType `json:"connector_type"`
 }
 
-func (l *LogsDB) SyncError(ctx context.Context, siteID string, syncType consts.SyncSourceType, err error) {
-	l.error(ctx, &siteID, err, SyncErrorAttributes{Kind: ErrorKindSync, SyncType: syncType})
+func (l *LogsDB) ConnectorError(ctx context.Context, siteID string, connectorType consts.ConnectorType, err error) {
+	l.error(ctx, &siteID, err, ConnectorErrorAttributes{Kind: ErrorKindConnector, ConnectorType: connectorType})
 }
 
 type SiteBatchBackupErrorAttributes struct {

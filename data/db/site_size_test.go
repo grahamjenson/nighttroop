@@ -100,7 +100,7 @@ func TestSearchSitesOrders(t *testing.T) {
 
 func ptr(v int64) *int64 { return &v }
 
-func TestSearchSyncSourcesFailedFirst(t *testing.T) {
+func TestSearchConnectorsFailedFirst(t *testing.T) {
 	_, controlDB := testutils.NewControlDB(t)
 	ctx, q := t.Context(), controlDB.Queries
 	site, err := controlDB.CreateSite(t.Context())
@@ -108,20 +108,20 @@ func TestSearchSyncSourcesFailedFirst(t *testing.T) {
 	siteID := site.SiteDB.Subdomain
 
 	// Nightscout failed first and Dexcom failed last; Virtual never fails, and was synced most recently
-	for _, sourceType := range []consts.SyncSourceType{consts.SyncSourceTypeVirtual, consts.SyncSourceTypeNightscout, consts.SyncSourceTypeDexcom} {
-		require.NoError(t, q.CreateSyncSource(ctx, controldb.CreateSyncSourceParams{SiteID: siteID, Type: sourceType, Enabled: true}))
+	for _, sourceType := range []consts.ConnectorType{consts.ConnectorTypeVirtual, consts.ConnectorTypeNightscout, consts.ConnectorTypeDexcom} {
+		require.NoError(t, q.CreateConnector(ctx, controldb.CreateConnectorParams{SiteID: siteID, Type: sourceType, Enabled: true}))
 	}
-	for _, sourceType := range []consts.SyncSourceType{consts.SyncSourceTypeNightscout, consts.SyncSourceTypeDexcom} {
-		require.NoError(t, q.UpdateSyncSourceReportsFailure(ctx, controldb.UpdateSyncSourceReportsFailureParams{SiteID: siteID, Type: sourceType, ErrorMessages: errors.ErrorList{"failed"}}))
+	for _, sourceType := range []consts.ConnectorType{consts.ConnectorTypeNightscout, consts.ConnectorTypeDexcom} {
+		require.NoError(t, q.UpdateConnectorReportsFailure(ctx, controldb.UpdateConnectorReportsFailureParams{SiteID: siteID, Type: sourceType, ErrorMessages: errors.ErrorList{"failed"}}))
 		time.Sleep(2 * time.Millisecond)
 	}
-	require.NoError(t, q.UpdateSyncSourceReportsSuccess(ctx, controldb.UpdateSyncSourceReportsSuccessParams{SiteID: siteID, Type: consts.SyncSourceTypeVirtual}))
+	require.NoError(t, q.UpdateConnectorReportsSuccess(ctx, controldb.UpdateConnectorReportsSuccessParams{SiteID: siteID, Type: consts.ConnectorTypeVirtual}))
 
-	sources, err := q.SearchSyncSources(ctx, controldb.SearchSyncSourcesParams{Limit: 10})
+	sources, err := q.SearchConnectors(ctx, controldb.SearchConnectorsParams{Limit: 10})
 	require.NoError(t, err)
-	types := []consts.SyncSourceType{}
+	types := []consts.ConnectorType{}
 	for _, source := range sources {
 		types = append(types, source.Type)
 	}
-	require.Equal(t, []consts.SyncSourceType{consts.SyncSourceTypeDexcom, consts.SyncSourceTypeNightscout, consts.SyncSourceTypeVirtual}, types)
+	require.Equal(t, []consts.ConnectorType{consts.ConnectorTypeDexcom, consts.ConnectorTypeNightscout, consts.ConnectorTypeVirtual}, types)
 }

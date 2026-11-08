@@ -18,7 +18,7 @@ The Service keeps:
 
 1. **User Data** that is sent to a site: such as glucose readings, insulin doses, food, temporary targets and basal rates, profiles, devices and their status, notes, and the settings and alarms of the site and its Users. This User Data is sensitive, and is only used to provide the Service.
 2. **Account Data**: such as each site's address, and the names, roles, settings and sign-in details of the Users and devices of a site. Passwords are stored only as hashes.
-3. **Sync credentials**: such as the usernames, passwords, addresses and tokens of other services (such as Dexcom, LibreLinkUp and Nightscout) a site is set up to sync from. These are encrypted when stored, and are only used to fetch the site's Data.
+3. **Connector credentials**: such as the usernames, passwords, addresses and tokens of other services (such as Dexcom, LibreLinkUp and Nightscout) a site is set up to sync from. These are encrypted when stored, and are only used to fetch the site's Data.
 4. **Usage Data**: such as logs of requests to the Service, including IP addresses, the times of requests and what was requested, and records of the Service's own jobs and errors, such as syncs and backups.
 
 The Service uses one cookie, to keep a User signed in. It does not use advertising or analytics tracking.

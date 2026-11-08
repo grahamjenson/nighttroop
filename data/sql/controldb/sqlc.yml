@@ -25,22 +25,22 @@ overrides:
   go:
     overrides:   
 
-      # Sync Sources   
-      - column: "site_sync_sources.previous_sync_errors"
+      # Connectors
+      - column: "site_connectors.previous_sync_errors"
         go_type:
           import: "nighttroop.t1d.nz/utils/errors"
           type: "ErrorList"
 
-      - column: "site_sync_sources.properties"
+      - column: "site_connectors.properties"
         go_type:
           import: "nighttroop.t1d.nz/data/types"
-          type: "SyncSourceProperties"
+          type: "ConnectorProperties"
 
-      - column: "site_sync_sources.type"
+      - column: "site_connectors.type"
         go_type:
           import: "nighttroop.t1d.nz/utils/consts"
-          type: "SyncSourceType"
-      - column: "site_sync_sources.enabled"
+          type: "ConnectorType"
+      - column: "site_connectors.enabled"
         go_type:
           type: "bool"
 

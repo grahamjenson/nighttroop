@@ -27,7 +27,7 @@ import (
 type CollectionBase[R, M any] interface {
 	// GetName is what the collection is called, which its permissions and errors use
 	GetName() string
-	// GetRoute is where the collection is in its URL, e.g. sync for /settings/sync
+	// GetRoute is where the collection is in its URL, e.g. sync for /settings/connectors
 	GetRoute() string
 	ToModel(row *R, siteContext *httputils.SiteContext) *M
 	GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*R, error)
@@ -53,7 +53,7 @@ type CollectionUpdate[R, M any] interface {
 	UpdateHTMXResponse(model *M) templ.Component
 }
 
-// CollectionUpsert is a collection whose update creates what is not there yet, as each type of sync source has one
+// CollectionUpsert is a collection whose update creates what is not there yet, as each type of connector has one
 type CollectionUpsert[R, M any] interface {
 	CollectionCreate[R, M]
 	CollectionUpdate[R, M]

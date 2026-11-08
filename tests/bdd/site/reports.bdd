@@ -15,14 +15,14 @@ ASSERT_TEXT_EQUALS #site--reports--daily-dose –
 ASSERT_TEXT_EQUALS #site--reports--daily-carbs –
 SCREENSHOT report_no_data
 
-// Virtual sync fills the last 30 minutes with readings, treatments and device statuses
+// The virtual connector fills the last 30 minutes with readings, treatments and device statuses
 CLICK #site--settings-menu
-CLICK #site--settings--sync-button
+CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
-CLICK #site--settings--virtual-sync--enable
-CLICK #site--settings--virtual-sync--submit
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
 ASSERT_STATUS 200
-ASSERT_TEXT_VISIBLE Sync Updated
+ASSERT_TEXT_VISIBLE Connector Updated
 RUN_BACKGROUND_JOBS
 
 // Today's report draws its glucose over the AGP of the 7 days to it, with the range behind them. Today has data, and

@@ -121,8 +121,8 @@ func run() error {
 	// backupJobs := backup.SetupBackupJobs(serverConfig, controlDB, s3Client)
 	// backupJobs.Start()
 
-	// syncJobs := sync.SetupSyncJobs(serverConfig, controlDB)
-	// syncJobs.Start()
+	// connectorJobs := sync.SetupConnectorJobs(serverConfig, controlDB)
+	// connectorJobs.Start()
 	//
 	// HTTP
 	// Run web server.

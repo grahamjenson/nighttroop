@@ -134,7 +134,7 @@ func GettingStarted() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = stepLink("site--getting-started--sync-link", "/settings/sync", "Set up a sync").Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = stepLink("site--getting-started--connectors-link", "/settings/connectors", "Set up a connector").Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

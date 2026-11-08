@@ -22,7 +22,7 @@ func TestLogsDBRecordsBySite(t *testing.T) {
 	logs.Log(ctx, &site, db.LogLevelInfo, "synced", map[string]any{"readings": 3})
 	logs.Log(ctx, nil, db.LogLevelWarn, "server wide", nil)
 	logs.SiteDisabledEvent(ctx, site, "admin")
-	logs.SyncError(ctx, site, consts.SyncSourceTypeDexcom, errors.New("sync failed"))
+	logs.ConnectorError(ctx, site, consts.ConnectorTypeDexcom, errors.New("sync failed"))
 
 	siteLogs, err := logs.Queries.SearchLogs(ctx, logsdb.SearchLogsParams{SiteID: &site, Limit: 10})
 	require.NoError(t, err)
@@ -47,7 +47,7 @@ func TestLogsDBRecordsBySite(t *testing.T) {
 	siteErrors, err := logs.Queries.SearchErrors(ctx, logsdb.SearchErrorsParams{SiteID: &site, Limit: 10})
 	require.NoError(t, err)
 	require.Equal(t, "sync failed", siteErrors[0].Message)
-	require.Equal(t, `{"kind":"sync","sync_type":"dexcom"}`, *siteErrors[0].Attributes)
+	require.Equal(t, `{"kind":"connector","connector_type":"dexcom"}`, *siteErrors[0].Attributes)
 }
 
 // TestLogsDBKeepsWithinLimits checks a long message is cut short and long attributes are replaced, rather than
@@ -129,10 +129,10 @@ func BenchmarkLogsDBTrim(b *testing.B) {
 	const maxRows = 100_000
 	_, controlDB := testutils.NewControlDB(b)
 	ctx, logs := b.Context(), controlDB.Logs
-	site, attributes := "benchsite", map[string]any{"sync_type": "dexcom", "body": strings.Repeat("x", 200)}
+	site, attributes := "benchsite", map[string]any{"connector_type": "dexcom", "body": strings.Repeat("x", 200)}
 	write := func() {
 		logs.Log(ctx, &site, db.LogLevelInfo, "synced", attributes)
-		logs.SyncError(ctx, site, consts.SyncSourceTypeDexcom, errors.New("sync failed"))
+		logs.ConnectorError(ctx, site, consts.ConnectorTypeDexcom, errors.New("sync failed"))
 		logs.SiteDisabledEvent(ctx, site, "admin")
 	}
 	for range maxRows {
@@ -188,7 +188,7 @@ func TestSiteSeesOnlyItsOwnLogs(t *testing.T) {
 	logs.SiteBatchBackedUpEvent(ctx, batch, 2, time.Now(), false)
 	logs.SiteBatchBackedUpEvent(ctx, otherBatch, 3, time.Now(), false)
 	logs.ControlBackedUpEvent(ctx, time.Now(), false)
-	logs.SyncError(ctx, other, consts.SyncSourceTypeDexcom, errors.New("other failed"))
+	logs.ConnectorError(ctx, other, consts.ConnectorTypeDexcom, errors.New("other failed"))
 	logs.SiteBatchBackupError(ctx, batch, errors.New("batch failed"))
 	logs.Log(ctx, &other, db.LogLevelInfo, "other synced", nil)
 
@@ -234,7 +234,7 @@ func TestLogsDBSearchByType(t *testing.T) {
 
 	logs.SiteCreatedEvent(ctx, site)
 	logs.SiteDisabledEvent(ctx, site, "admin")
-	logs.SyncError(ctx, site, consts.SyncSourceTypeDexcom, errors.New("sync failed"))
+	logs.ConnectorError(ctx, site, consts.ConnectorTypeDexcom, errors.New("sync failed"))
 	logs.ServerError(ctx, &site, 500, "GET", "/", "request", "")
 
 	str := func(s string) *string { return &s }
@@ -244,9 +244,9 @@ func TestLogsDBSearchByType(t *testing.T) {
 		eventNames []string
 		errorKinds []string
 	}{
-		{"every type", nil, []string{"site_disabled", "site_created"}, []string{"server", "sync"}},
+		{"every type", nil, []string{"site_disabled", "site_created"}, []string{"server", "connector"}},
 		{"one event name", str("site_created"), []string{"site_created"}, nil},
-		{"one error kind", str("sync"), nil, []string{"sync"}},
+		{"one error kind", str("connector"), nil, []string{"connector"}},
 		{"no such type", str("nope"), nil, nil},
 	}
 	for _, tt := range tests {
@@ -285,7 +285,7 @@ func TestLogsDBSearchText(t *testing.T) {
 	logs.Log(ctx, &site, db.LogLevelInfo, "Something else", nil)
 	logs.SiteDisabledEvent(ctx, site, "admin")
 	logs.SiteBatchBackedUpEvent(ctx, batch, 3, time.Now(), false)
-	logs.SyncError(ctx, site, consts.SyncSourceTypeNightscout, errors.New("Nightscout refused"))
+	logs.ConnectorError(ctx, site, consts.ConnectorTypeNightscout, errors.New("Nightscout refused"))
 
 	str := func(s string) *string { return &s }
 	tests := []struct {

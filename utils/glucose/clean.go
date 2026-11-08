@@ -26,8 +26,8 @@ const (
 	Virtual    = "virtual"
 )
 
-// syncSources are the sources of the readings a sync wrote, by the name it writes them as
-var syncSources = map[string]string{"nightscout_sync": Nightscout, "dexcom_sync": Dexcom, "libre_sync": Libre, "virtual_sync": Virtual}
+// connectors are the sources of the readings a sync wrote, by the name it writes them as
+var connectors = map[string]string{"nightscout_connector": Nightscout, "dexcom_connector": Dexcom, "libre_connector": Libre, "virtual_connector": Virtual}
 
 // priority is the order a reading is kept over the same glucose from other sources in: a meter's, then one reported
 // directly, then each sync's
@@ -35,7 +35,7 @@ var priority = []string{Direct, Nightscout, Dexcom, Libre, Virtual}
 
 // Source is where a reading came from: Direct when a person or device wrote it, or the sync that did
 func Source(row *sitedb.GlucoseReading) string {
-	return cmp.Or(syncSources[row.CreatedByIdentityName], Direct)
+	return cmp.Or(connectors[row.CreatedByIdentityName], Direct)
 }
 
 // rank is how a reading is kept over others of the same glucose, lowest first

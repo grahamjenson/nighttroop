@@ -262,6 +262,122 @@ func ComponentEventToUpdate(source *SiteComponentEvent, context *httputils.SiteC
 	}
 	return sitedbUpdateComponentEventParams
 }
+func ConnectorFromDB(source *controldb.SiteConnector, context *security.SecurityConfig) (*Connector, error) {
+	var pSitemodelsConnector *Connector
+	if source != nil {
+		var sitemodelsConnector Connector
+		sitemodelsConnector.SiteID = (*source).SiteID
+		sitemodelsConnector.Type = constsConnectorTypeToConstsConnectorType((*source).Type)
+		if (*source).Region != nil {
+			xstring := *(*source).Region
+			sitemodelsConnector.Region = &xstring
+		}
+		pString, err := Decrypt((*source).UrlOrUsernameEnc, context)
+		if err != nil {
+			return nil, err
+		}
+		sitemodelsConnector.UrlOrUsername = pString
+		sitemodelsConnector.Password = SetPasswordGarbage()
+		sitemodelsConnector.Enabled = (*source).Enabled
+		sitemodelsConnector.PreviousSyncErrors = errorsErrorListToStringList((*source).PreviousSyncErrors)
+		sitemodelsConnector.SyncIntervalSeconds = (*source).SyncIntervalSeconds
+		sitemodelsConnector.SyncIntervalSecondsReason = (*source).SyncIntervalSecondsReason
+		if (*source).LastAttemptedSync != nil {
+			xint64 := *(*source).LastAttemptedSync
+			sitemodelsConnector.LastAttemptedSync = &xint64
+		}
+		if (*source).LastSuccessfulSync != nil {
+			xint642 := *(*source).LastSuccessfulSync
+			sitemodelsConnector.LastSuccessfulSync = &xint642
+		}
+		if (*source).LastFailedSync != nil {
+			xint643 := *(*source).LastFailedSync
+			sitemodelsConnector.LastFailedSync = &xint643
+		}
+		if (*source).LastSyncDuration != nil {
+			xint644 := *(*source).LastSyncDuration
+			sitemodelsConnector.LastSyncDuration = &xint644
+		}
+		if (*source).TotalSuccessfulSyncs != nil {
+			xint645 := *(*source).TotalSuccessfulSyncs
+			sitemodelsConnector.TotalSuccessfulSyncs = &xint645
+		}
+		if (*source).TotalFailedSyncs != nil {
+			xint646 := *(*source).TotalFailedSyncs
+			sitemodelsConnector.TotalFailedSyncs = &xint646
+		}
+		if (*source).ConsecutiveFailedSyncs != nil {
+			xint647 := *(*source).ConsecutiveFailedSyncs
+			sitemodelsConnector.ConsecutiveFailedSyncs = &xint647
+		}
+		if (*source).LastBackfillFinishedAt != nil {
+			xint648 := *(*source).LastBackfillFinishedAt
+			sitemodelsConnector.LastBackfillFinishedAt = &xint648
+		}
+		if (*source).LastBackfillDuration != nil {
+			xint649 := *(*source).LastBackfillDuration
+			sitemodelsConnector.LastBackfillDuration = &xint649
+		}
+		if (*source).LastBackfillRecords != nil {
+			xint6410 := *(*source).LastBackfillRecords
+			sitemodelsConnector.LastBackfillRecords = &xint6410
+		}
+		if (*source).LastBackfillError != nil {
+			xstring2 := *(*source).LastBackfillError
+			sitemodelsConnector.LastBackfillError = &xstring2
+		}
+		sitemodelsConnector.TotalBackfills = (*source).TotalBackfills
+		sitemodelsConnector.TotalRecords = (*source).TotalRecords
+		if (*source).LastSyncRecords != nil {
+			xint6411 := *(*source).LastSyncRecords
+			sitemodelsConnector.LastSyncRecords = &xint6411
+		}
+		pSitemodelsConnector = &sitemodelsConnector
+	}
+	return pSitemodelsConnector, nil
+}
+func ConnectorToCreate(source *Connector) controldb.CreateConnectorParams {
+	var controldbCreateConnectorParams controldb.CreateConnectorParams
+	if source != nil {
+		controldbCreateConnectorParams.SiteID = (*source).SiteID
+		controldbCreateConnectorParams.Type = constsConnectorTypeToConstsConnectorType((*source).Type)
+		if (*source).UrlOrUsername != nil {
+			xstring := *(*source).UrlOrUsername
+			controldbCreateConnectorParams.UrlOrUsernameEnc = &xstring
+		}
+		if (*source).Password != nil {
+			xstring2 := *(*source).Password
+			controldbCreateConnectorParams.PasswordEnc = &xstring2
+		}
+		if (*source).Region != nil {
+			xstring3 := *(*source).Region
+			controldbCreateConnectorParams.Region = &xstring3
+		}
+		controldbCreateConnectorParams.Enabled = (*source).Enabled
+	}
+	return controldbCreateConnectorParams
+}
+func ConnectorToUpdate(source *Connector) controldb.UpdateConnectorParams {
+	var controldbUpdateConnectorParams controldb.UpdateConnectorParams
+	if source != nil {
+		if (*source).Password != nil {
+			xstring := *(*source).Password
+			controldbUpdateConnectorParams.PasswordEnc = &xstring
+		}
+		controldbUpdateConnectorParams.Enabled = (*source).Enabled
+		if (*source).UrlOrUsername != nil {
+			xstring2 := *(*source).UrlOrUsername
+			controldbUpdateConnectorParams.UrlOrUsernameEnc = &xstring2
+		}
+		if (*source).Region != nil {
+			xstring3 := *(*source).Region
+			controldbUpdateConnectorParams.Region = &xstring3
+		}
+		controldbUpdateConnectorParams.Type = constsConnectorTypeToConstsConnectorType((*source).Type)
+		controldbUpdateConnectorParams.SiteID = (*source).SiteID
+	}
+	return controldbUpdateConnectorParams
+}
 func DeviceStatusFromDB(source *sitedb.DeviceReport) *SiteDeviceStatus {
 	var pSitemodelsSiteDeviceStatus *SiteDeviceStatus
 	if source != nil {
@@ -1594,122 +1710,6 @@ func PushRegistrationFromDB(source *controldb.PushRegistration) *PushRegistratio
 	}
 	return pSitemodelsPushRegistration
 }
-func SyncSourceFromDB(source *controldb.SiteSyncSource, context *security.SecurityConfig) (*SyncSource, error) {
-	var pSitemodelsSyncSource *SyncSource
-	if source != nil {
-		var sitemodelsSyncSource SyncSource
-		sitemodelsSyncSource.SiteID = (*source).SiteID
-		sitemodelsSyncSource.Type = constsSyncSourceTypeToConstsSyncSourceType((*source).Type)
-		if (*source).Region != nil {
-			xstring := *(*source).Region
-			sitemodelsSyncSource.Region = &xstring
-		}
-		pString, err := Decrypt((*source).UrlOrUsernameEnc, context)
-		if err != nil {
-			return nil, err
-		}
-		sitemodelsSyncSource.UrlOrUsername = pString
-		sitemodelsSyncSource.Password = SetPasswordGarbage()
-		sitemodelsSyncSource.Enabled = (*source).Enabled
-		sitemodelsSyncSource.PreviousSyncErrors = errorsErrorListToStringList((*source).PreviousSyncErrors)
-		sitemodelsSyncSource.SyncIntervalSeconds = (*source).SyncIntervalSeconds
-		sitemodelsSyncSource.SyncIntervalSecondsReason = (*source).SyncIntervalSecondsReason
-		if (*source).LastAttemptedSync != nil {
-			xint64 := *(*source).LastAttemptedSync
-			sitemodelsSyncSource.LastAttemptedSync = &xint64
-		}
-		if (*source).LastSuccessfulSync != nil {
-			xint642 := *(*source).LastSuccessfulSync
-			sitemodelsSyncSource.LastSuccessfulSync = &xint642
-		}
-		if (*source).LastFailedSync != nil {
-			xint643 := *(*source).LastFailedSync
-			sitemodelsSyncSource.LastFailedSync = &xint643
-		}
-		if (*source).LastSyncDuration != nil {
-			xint644 := *(*source).LastSyncDuration
-			sitemodelsSyncSource.LastSyncDuration = &xint644
-		}
-		if (*source).TotalSuccessfulSyncs != nil {
-			xint645 := *(*source).TotalSuccessfulSyncs
-			sitemodelsSyncSource.TotalSuccessfulSyncs = &xint645
-		}
-		if (*source).TotalFailedSyncs != nil {
-			xint646 := *(*source).TotalFailedSyncs
-			sitemodelsSyncSource.TotalFailedSyncs = &xint646
-		}
-		if (*source).ConsecutiveFailedSyncs != nil {
-			xint647 := *(*source).ConsecutiveFailedSyncs
-			sitemodelsSyncSource.ConsecutiveFailedSyncs = &xint647
-		}
-		if (*source).LastBackfillFinishedAt != nil {
-			xint648 := *(*source).LastBackfillFinishedAt
-			sitemodelsSyncSource.LastBackfillFinishedAt = &xint648
-		}
-		if (*source).LastBackfillDuration != nil {
-			xint649 := *(*source).LastBackfillDuration
-			sitemodelsSyncSource.LastBackfillDuration = &xint649
-		}
-		if (*source).LastBackfillRecords != nil {
-			xint6410 := *(*source).LastBackfillRecords
-			sitemodelsSyncSource.LastBackfillRecords = &xint6410
-		}
-		if (*source).LastBackfillError != nil {
-			xstring2 := *(*source).LastBackfillError
-			sitemodelsSyncSource.LastBackfillError = &xstring2
-		}
-		sitemodelsSyncSource.TotalBackfills = (*source).TotalBackfills
-		sitemodelsSyncSource.TotalRecords = (*source).TotalRecords
-		if (*source).LastSyncRecords != nil {
-			xint6411 := *(*source).LastSyncRecords
-			sitemodelsSyncSource.LastSyncRecords = &xint6411
-		}
-		pSitemodelsSyncSource = &sitemodelsSyncSource
-	}
-	return pSitemodelsSyncSource, nil
-}
-func SyncSourceToCreate(source *SyncSource) controldb.CreateSyncSourceParams {
-	var controldbCreateSyncSourceParams controldb.CreateSyncSourceParams
-	if source != nil {
-		controldbCreateSyncSourceParams.SiteID = (*source).SiteID
-		controldbCreateSyncSourceParams.Type = constsSyncSourceTypeToConstsSyncSourceType((*source).Type)
-		if (*source).UrlOrUsername != nil {
-			xstring := *(*source).UrlOrUsername
-			controldbCreateSyncSourceParams.UrlOrUsernameEnc = &xstring
-		}
-		if (*source).Password != nil {
-			xstring2 := *(*source).Password
-			controldbCreateSyncSourceParams.PasswordEnc = &xstring2
-		}
-		if (*source).Region != nil {
-			xstring3 := *(*source).Region
-			controldbCreateSyncSourceParams.Region = &xstring3
-		}
-		controldbCreateSyncSourceParams.Enabled = (*source).Enabled
-	}
-	return controldbCreateSyncSourceParams
-}
-func SyncSourceToUpdate(source *SyncSource) controldb.UpdateSyncSourceParams {
-	var controldbUpdateSyncSourceParams controldb.UpdateSyncSourceParams
-	if source != nil {
-		if (*source).Password != nil {
-			xstring := *(*source).Password
-			controldbUpdateSyncSourceParams.PasswordEnc = &xstring
-		}
-		controldbUpdateSyncSourceParams.Enabled = (*source).Enabled
-		if (*source).UrlOrUsername != nil {
-			xstring2 := *(*source).UrlOrUsername
-			controldbUpdateSyncSourceParams.UrlOrUsernameEnc = &xstring2
-		}
-		if (*source).Region != nil {
-			xstring3 := *(*source).Region
-			controldbUpdateSyncSourceParams.Region = &xstring3
-		}
-		controldbUpdateSyncSourceParams.Type = constsSyncSourceTypeToConstsSyncSourceType((*source).Type)
-		controldbUpdateSyncSourceParams.SiteID = (*source).SiteID
-	}
-	return controldbUpdateSyncSourceParams
-}
 func TempBasalFromDB(source *sitedb.TempBasal) *SiteTempBasal {
 	var pSitemodelsSiteTempBasal *SiteTempBasal
 	if source != nil {
@@ -1936,6 +1936,21 @@ func TempTargetToUpdate(source *SiteTempTarget, context *httputils.SiteContext) 
 	}
 	return sitedbUpdateTempTargetParams
 }
+func constsConnectorTypeToConstsConnectorType(source consts.ConnectorType) consts.ConnectorType {
+	var constsConnectorType consts.ConnectorType
+	switch source {
+	case consts.ConnectorTypeDexcom:
+		constsConnectorType = consts.ConnectorTypeDexcom
+	case consts.ConnectorTypeLibre:
+		constsConnectorType = consts.ConnectorTypeLibre
+	case consts.ConnectorTypeNightscout:
+		constsConnectorType = consts.ConnectorTypeNightscout
+	case consts.ConnectorTypeVirtual:
+		constsConnectorType = consts.ConnectorTypeVirtual
+	default: // ignored
+	}
+	return constsConnectorType
+}
 func constsPushAppToConstsPushApp(source consts.PushApp) consts.PushApp {
 	var constsPushApp consts.PushApp
 	switch source {
@@ -1961,21 +1976,6 @@ func constsPushProviderToConstsPushProvider(source consts.PushProvider) consts.P
 	default: // ignored
 	}
 	return constsPushProvider
-}
-func constsSyncSourceTypeToConstsSyncSourceType(source consts.SyncSourceType) consts.SyncSourceType {
-	var constsSyncSourceType consts.SyncSourceType
-	switch source {
-	case consts.SyncSourceTypeDexcom:
-		constsSyncSourceType = consts.SyncSourceTypeDexcom
-	case consts.SyncSourceTypeLibre:
-		constsSyncSourceType = consts.SyncSourceTypeLibre
-	case consts.SyncSourceTypeNightscout:
-		constsSyncSourceType = consts.SyncSourceTypeNightscout
-	case consts.SyncSourceTypeVirtual:
-		constsSyncSourceType = consts.SyncSourceTypeVirtual
-	default: // ignored
-	}
-	return constsSyncSourceType
 }
 func constsUnitsToConstsUnits(source consts.Units) consts.Units {
 	var constsUnits consts.Units

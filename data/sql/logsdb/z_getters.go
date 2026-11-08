@@ -543,62 +543,62 @@ func (m *InsertLogParams) SetCreatedAt(v int64) {
 }
 
 // GetSiteID returns the SiteID value.
-func (m RecentSyncErrorsParams) GetSiteID() *string {
+func (m RecentConnectorErrorsParams) GetSiteID() *string {
 	return m.SiteID
 }
 
-// SetSiteID sets the SiteID value and returns the updated RecentSyncErrorsParams.
-func (m *RecentSyncErrorsParams) SetSiteID(v *string) {
+// SetSiteID sets the SiteID value and returns the updated RecentConnectorErrorsParams.
+func (m *RecentConnectorErrorsParams) SetSiteID(v *string) {
 	m.SiteID = v
 }
 
-// GetSyncType returns the SyncType value.
-func (m RecentSyncErrorsParams) GetSyncType() *string {
-	return m.SyncType
+// GetConnectorType returns the ConnectorType value.
+func (m RecentConnectorErrorsParams) GetConnectorType() *string {
+	return m.ConnectorType
 }
 
-// SetSyncType sets the SyncType value and returns the updated RecentSyncErrorsParams.
-func (m *RecentSyncErrorsParams) SetSyncType(v *string) {
-	m.SyncType = v
+// SetConnectorType sets the ConnectorType value and returns the updated RecentConnectorErrorsParams.
+func (m *RecentConnectorErrorsParams) SetConnectorType(v *string) {
+	m.ConnectorType = v
 }
 
 // GetLimit returns the Limit value.
-func (m RecentSyncErrorsParams) GetLimit() int64 {
+func (m RecentConnectorErrorsParams) GetLimit() int64 {
 	return m.Limit
 }
 
-// SetLimit sets the Limit value and returns the updated RecentSyncErrorsParams.
-func (m *RecentSyncErrorsParams) SetLimit(v int64) {
+// SetLimit sets the Limit value and returns the updated RecentConnectorErrorsParams.
+func (m *RecentConnectorErrorsParams) SetLimit(v int64) {
 	m.Limit = v
 }
 
 // GetSiteID returns the SiteID value.
-func (m RecentSyncEventsParams) GetSiteID() *string {
+func (m RecentConnectorEventsParams) GetSiteID() *string {
 	return m.SiteID
 }
 
-// SetSiteID sets the SiteID value and returns the updated RecentSyncEventsParams.
-func (m *RecentSyncEventsParams) SetSiteID(v *string) {
+// SetSiteID sets the SiteID value and returns the updated RecentConnectorEventsParams.
+func (m *RecentConnectorEventsParams) SetSiteID(v *string) {
 	m.SiteID = v
 }
 
-// GetSyncType returns the SyncType value.
-func (m RecentSyncEventsParams) GetSyncType() *string {
-	return m.SyncType
+// GetConnectorType returns the ConnectorType value.
+func (m RecentConnectorEventsParams) GetConnectorType() *string {
+	return m.ConnectorType
 }
 
-// SetSyncType sets the SyncType value and returns the updated RecentSyncEventsParams.
-func (m *RecentSyncEventsParams) SetSyncType(v *string) {
-	m.SyncType = v
+// SetConnectorType sets the ConnectorType value and returns the updated RecentConnectorEventsParams.
+func (m *RecentConnectorEventsParams) SetConnectorType(v *string) {
+	m.ConnectorType = v
 }
 
 // GetLimit returns the Limit value.
-func (m RecentSyncEventsParams) GetLimit() int64 {
+func (m RecentConnectorEventsParams) GetLimit() int64 {
 	return m.Limit
 }
 
-// SetLimit sets the Limit value and returns the updated RecentSyncEventsParams.
-func (m *RecentSyncEventsParams) SetLimit(v int64) {
+// SetLimit sets the Limit value and returns the updated RecentConnectorEventsParams.
+func (m *RecentConnectorEventsParams) SetLimit(v int64) {
 	m.Limit = v
 }
 

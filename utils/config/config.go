@@ -148,8 +148,8 @@ type ServerConfig struct {
 	SiteGETPerMinuteBurst        int
 	SitePOSTPerMinuteLimit       int
 	SitePOSTPerMinuteBurst       int
-	SiteUpdateSyncPerMinuteLimit int
-	SiteUpdateSyncPerMinuteBurst int
+	SiteUpdateConnectorsPerMinuteLimit int
+	SiteUpdateConnectorsPerMinuteBurst int
 
 	// Each identity create hashes a password with bcrypt
 	SiteIdentityCreatePerMinuteLimit int
@@ -196,9 +196,9 @@ type ServerConfig struct {
 	// ControlBackupRetentionDays is how long S3 keeps a control backup after a newer upload replaces it
 	ControlBackupRetentionDays int
 
-	// Sync Config
-	BackgroundSyncWorkers int
-	SyncIntervalInSeconds int
+	// Connector Config
+	BackgroundConnectorWorkers int
+	ConnectorIntervalInSeconds int
 	// BackfillDays is how far back before a site's oldest glucose reading a backfill fetches records
 	BackfillDays int
 
@@ -363,8 +363,8 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		SiteGETPerMinuteBurst:        configIntSelect(dotenv, "SITE_GET_PER_MINUTE_BURST", SITE_GET_LIMIT*2),
 		SitePOSTPerMinuteLimit:       configIntSelect(dotenv, "SITE_POST_PER_MINUTE_LIMIT", SITE_POST_LIMIT),
 		SitePOSTPerMinuteBurst:       configIntSelect(dotenv, "SITE_POST_PER_MINUTE_BURST", SITE_POST_LIMIT*4),
-		SiteUpdateSyncPerMinuteLimit: configIntSelect(dotenv, "SITE_UPDATE_SYNC_PER_MINUTE_LIMIT", 1), // Stop sites from updating sync settings too much
-		SiteUpdateSyncPerMinuteBurst: configIntSelect(dotenv, "SITE_UPDATE_SYNC_PER_MINUTE_BURST", 4),
+		SiteUpdateConnectorsPerMinuteLimit: configIntSelect(dotenv, "SITE_UPDATE_CONNECTORS_PER_MINUTE_LIMIT", 1), // Stop sites from updating connector settings too much
+		SiteUpdateConnectorsPerMinuteBurst: configIntSelect(dotenv, "SITE_UPDATE_CONNECTORS_PER_MINUTE_BURST", 4),
 
 		SiteIdentityCreatePerMinuteLimit: configIntSelect(dotenv, "SITE_IDENTITY_CREATE_PER_MINUTE_LIMIT", 1), // Stop creating and deleting identities using up the CPU with bcrypt
 		SiteIdentityCreatePerMinuteBurst: configIntSelect(dotenv, "SITE_IDENTITY_CREATE_PER_MINUTE_BURST", 5),
@@ -402,9 +402,9 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		SiteBackupRetentionDays:        configIntSelect(dotenv, "SITE_BACKUP_RETENTION_DAYS", 30),
 		ControlBackupRetentionDays:     configIntSelect(dotenv, "CONTROL_BACKUP_RETENTION_DAYS", 90),
 
-		// Sync Config
-		BackgroundSyncWorkers: configIntSelect(dotenv, "BACKGROUND_SYNC_WORKERS", 5),
-		SyncIntervalInSeconds: configIntSelect(dotenv, "SYNC_INTERVAL_IN_SECONDS", 5), // check syncs every 5 seconds
+		// Connector Config
+		BackgroundConnectorWorkers: configIntSelect(dotenv, "BACKGROUND_CONNECTOR_WORKERS", 5),
+		ConnectorIntervalInSeconds: configIntSelect(dotenv, "CONNECTOR_INTERVAL_IN_SECONDS", 5), // check syncs every 5 seconds
 		BackfillDays:          configIntSelect(dotenv, "BACKFILL_DAYS", 7),
 
 		// Socket.IO Config
@@ -476,9 +476,9 @@ func (config *ServerConfig) IsStaging() bool {
 	return config.Mode == consts.Staging
 }
 
-// VirtualSyncAllowed is whether sites can sync the virtual source's made-up glucose: on a development, test or staging
+// VirtualConnectorAllowed is whether sites can sync the virtual source's made-up glucose: on a development, test or staging
 // server, never in production, where it could be taken for real data
-func (config *ServerConfig) VirtualSyncAllowed() bool {
+func (config *ServerConfig) VirtualConnectorAllowed() bool {
 	return config.IsDevOrTest() || config.IsStaging()
 }
 

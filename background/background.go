@@ -14,7 +14,7 @@ import (
 	"nighttroop.t1d.nz/background/liteq"
 	"nighttroop.t1d.nz/background/onevent"
 	"nighttroop.t1d.nz/background/summarise_jobs"
-	ntsync "nighttroop.t1d.nz/background/sync"
+	"nighttroop.t1d.nz/background/connectors"
 	"nighttroop.t1d.nz/background/trim_logs"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/utils/config"
@@ -32,7 +32,7 @@ type BackGroundManager struct {
 	BackupSiteJobManager    *backup_sites.BackupSiteJobManager
 	BackupControlJobManager *backup_control.BackupControlJobManager
 	SummariseJobManager     *summarise_jobs.TruncateJobManager
-	SyncJobManager          *ntsync.SyncJobManager
+	ConnectorJobManager          *connectors.ConnectorJobManager
 }
 
 func NewBackGroundManager(ctx context.Context, controlDB *db.ControlDB, config *config.ServerConfig, s3c *s3utils.S3Client) *BackGroundManager {
@@ -44,7 +44,7 @@ func NewBackGroundManager(ctx context.Context, controlDB *db.ControlDB, config *
 	backupControlJobManager := backup_control.SetupBackupControlJob(ctx, controlDB, config, s3c)
 	backupSiteJobManager := backup_sites.SetupBackupSiteJob(ctx, controlDB, config, s3c)
 	summariseManager := summarise_jobs.SetupTruncateJobManager(config, controlDB)
-	syncjobManager := ntsync.SetupSyncJobManager(config, controlDB)
+	connectorJobManager := connectors.SetupConnectorJobManager(config, controlDB)
 
 	// Backup Control Jobs
 	backupControlJobManager.SetupCron(cron, queue)
@@ -68,10 +68,10 @@ func NewBackGroundManager(ctx context.Context, controlDB *db.ControlDB, config *
 	summaryDaily := summary_daily.SetupCron(cron, config.Events, controlDB)
 	consumers = append(consumers, onevent.Listen(config.Events, queue, summaryDaily.RebuildOnSettingsChange())...)
 
-	// Sync Jobs
-	syncjobManager.SetupCron(cron, queue)
-	// Sync jobs can be done in parallel by multiple workers
-	consumers = append(consumers, syncjobManager.GetConsumer(queue))
+	// Connector Jobs
+	connectorJobManager.SetupCron(cron, queue)
+	// Connector jobs can be done in parallel by multiple workers
+	consumers = append(consumers, connectorJobManager.GetConsumer(queue))
 
 	return &BackGroundManager{
 		db:                      controlDB,
@@ -82,7 +82,7 @@ func NewBackGroundManager(ctx context.Context, controlDB *db.ControlDB, config *
 		BackupSiteJobManager:    backupSiteJobManager,
 		BackupControlJobManager: backupControlJobManager,
 		SummariseJobManager:     summariseManager,
-		SyncJobManager:          syncjobManager,
+		ConnectorJobManager:          connectorJobManager,
 	}
 }
 

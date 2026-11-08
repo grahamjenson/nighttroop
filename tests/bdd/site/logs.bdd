@@ -47,7 +47,7 @@ CLICK #site--event--details--close
 ASSERT_NOT_VISIBLE #site--event--details
 
 // Events can be filtered to one type, with an option for all of them
-INPUT #site--events--filter--type sync_turned_off
+INPUT #site--events--filter--type connector_turned_off
 CLICK #site--events--filter--submit
 ASSERT_TEXT_VISIBLE No events here.
 ASSERT_NOT_VISIBLE #siteEventsTable >> text=Site created

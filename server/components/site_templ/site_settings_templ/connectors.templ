@@ -1,0 +1,652 @@
+package site_settings_templ
+
+import (
+	"context"
+	"strings"
+	"time"
+
+	"nighttroop.t1d.nz/server/components/ui/checkbox"
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/form"
+	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/server/components/ui/toast"
+	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/httputils"
+)
+
+func findConnector(
+	connectorSettings []*sitemodels.Connector,
+	sourceType consts.ConnectorType,
+) *sitemodels.Connector {
+	for _, ss := range connectorSettings {
+		if ss.Type == sourceType {
+			return ss
+		}
+	}
+	return nil
+}
+
+// virtualConnectorAllowed is whether the server offers virtual connector, which makes up glucose: not in production
+func virtualConnectorAllowed(ctx context.Context) bool {
+	siteContext := httputils.GetSiteContext(ctx)
+	return siteContext != nil && siteContext.Config != nil && siteContext.Config.VirtualConnectorAllowed()
+}
+
+// enableOnFirstInput ticks a new source's Enable Connector as its details are first typed in, as it is easy to forget and
+// then wonder why nothing syncs. A click on the box itself first, or after, is left as it is, and a saved source's
+// box is never changed.
+func enableOnFirstInput(source *sitemodels.Connector) templ.Attributes {
+	if source != nil {
+		return nil
+	}
+	return templ.Attributes{"oninput": templ.JSUnsafeFuncCall("if (this.dataset.enableTouched) return; this.dataset.enableTouched = 'true'; " +
+		"if (event.target.name !== 'enabled') this.querySelector('[name=enabled]').checked = true")}
+}
+
+templ ConnectorSettingsPartial(connectorSettings []*sitemodels.Connector) {
+	<div id="mainForm" class="mx-auto max-w-5xl">
+		@heading.PageBeside("Connectors", connectorsLiveBadge()) {
+			Choose where Nighttroop syncs your glucose data from.
+		}
+		@connectorsLive()
+		@NightscoutConnectorForm(findConnector(connectorSettings, consts.ConnectorTypeNightscout))
+		@DexcomConnectorForm(findConnector(connectorSettings, consts.ConnectorTypeDexcom))
+		@LibreConnectorForm(findConnector(connectorSettings, consts.ConnectorTypeLibre))
+		if virtualConnectorAllowed(ctx) {
+			@VirtualConnectorForm(findConnector(connectorSettings, consts.ConnectorTypeVirtual))
+		}
+	</div>
+}
+
+// connectorsLiveBadge is shown beside the title while the page's stream is connected, and is what connectorsLive listens to
+templ connectorsLiveBadge() {
+	<span
+		id="site--settings--connectors--live"
+		class="hidden text-sm font-medium text-primary"
+		hx-sse:connect="/settings/connectors/events"
+		hx-on::sse:after:connection="this.classList.remove('hidden'); if (this.dataset.connected) htmx.trigger(this, 'reconnected'); this.dataset.connected = 'true'"
+		hx-on::sse:close="this.classList.add('hidden')"
+		hx-on::sse:error="this.classList.add('hidden')"
+	>● Live</span>
+}
+
+// connectorsLive keeps each source's errors and status up to date: the connector settings' stream sends an event as a sync or
+// backfill finishes, and the page is read again, swapping in only the parts marked data-connectors-live, so a form being
+// edited is left as it is. A history the user opened stays open, and the page is read again when the stream
+// reconnects, as changes may have been missed while it was not.
+templ connectorsLive() {
+	<div
+		id="site--settings--connectors--refresh"
+		hx-get="/settings/connectors"
+		hx-trigger="created from:#site--settings--connectors--live delay:1s, updated from:#site--settings--connectors--live delay:1s, deleted from:#site--settings--connectors--live delay:1s, reconnected from:#site--settings--connectors--live"
+		hx-select-oob="[data-connectors-live]"
+		hx-swap="none"
+		hx-on::before:request="this.opened = [...document.querySelectorAll('[data-connectors-live] details[open]')].map(d => d.id)"
+		hx-on::finally:request="(this.opened || []).forEach(id => document.getElementById(id)?.setAttribute('open', ''))"
+	></div>
+}
+
+// ConnectorErrors shows why the last sync failed, e.g. that the first sync failed so syncing was turned off
+templ ConnectorErrors(source *sitemodels.Connector, name string) {
+	<div id={ "site--settings--" + name + "-connector--errors-live" } data-connectors-live>
+		if source != nil && len(source.PreviousSyncErrors) > 0 {
+			<div id={ "site--settings--" + name + "-connector--errors" } class="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+				for _, syncError := range source.PreviousSyncErrors {
+					<p>{ syncError }</p>
+				}
+			</div>
+		}
+	</div>
+}
+
+templ DexcomConnectorForm(dexcomConnectorSettings *sitemodels.Connector) {
+	<form
+		hx-post="/settings/connectors/dexcom"
+		{ enableOnFirstInput(dexcomConnectorSettings)... }
+		hx-target="#toaster"
+		hx-swap="beforeend"
+		hx-status:4xx="target:#toaster swap:beforeend"
+		hx-status:5xx="target:#toaster swap:beforeend"
+		class="mt-4"
+	>
+		<div class="rounded-xl border border-gray-200 shadow-sm">
+			<div class="p-6">
+				<!-- Header -->
+				<div class="mb-4 flex items-center justify-between">
+					<div>
+						<h2 class="text-lg font-semibold">
+							Dexcom Share Connector
+						</h2>
+						<div class="text-sm text-gray-500">
+							Connect your Dexcom Account
+						</div>
+					</div>
+					@form.Item(form.ItemProps{
+						Class: "flex items-start gap-2 justify-center",
+					}) {
+						@checkbox.Checkbox(checkbox.Props{
+							ID:      "site--settings--dexcom-connector--enable",
+							Name:    "enabled",
+							Checked: dexcomConnectorSettings.IsEnabled(),
+							Class:   "h-4 w-4 rounded border-gray-600 bg-white",
+						})
+						@form.Label(form.LabelProps{
+							For:   "site--settings--dexcom-connector--enable",
+							Class: "item-center flex cursor-pointer gap-2",
+						}) {
+							Enable Connector
+						}
+					}
+				</div>
+				@ConnectorErrors(dexcomConnectorSettings, "dexcom")
+				<!-- Fields -->
+				<div class="grid gap-4 md:grid-cols-12">
+					<!-- Username -->
+					<div class="md:col-span-5">
+						@form.Item(form.ItemProps{}) {
+							@form.Label(form.LabelProps{
+								For: "site--settings--dexcom-connector--username",
+							}) {
+								Dexcom Username
+							}
+							@input.Input(input.Props{
+								ID:       "site--settings--dexcom-connector--username",
+								Type:     "text",
+								Name:     "url_or_username",
+								Required: true,
+								Value:    dexcomConnectorSettings.GetUsername(),
+								Attributes: templ.Attributes{
+									"autocomplete":   "new-password",
+									"autocapitalize": "none",
+									"spellcheck":     "false",
+								},
+							})
+						}
+					</div>
+					<!-- Password -->
+					<div class="md:col-span-4">
+						@form.Item(form.ItemProps{}) {
+							@form.Label(form.LabelProps{
+								For: "site--settings--dexcom-connector--password",
+							}) {
+								Dexcom Password
+							}
+							@input.Input(input.Props{
+								ID:       "site--settings--dexcom-connector--password",
+								Type:     "password",
+								Name:     "password",
+								Required: true,
+								Value:    dexcomConnectorSettings.GetPasswordGarbage(),
+								Attributes: templ.Attributes{
+									"onmousedown":               templ.JSUnsafeFuncCall("event.preventDefault(); this.select();"),
+									"data-placeholder-password": "true",
+									"autocomplete":              "new-password",
+								},
+							})
+						}
+					</div>
+					<!-- Region -->
+					<div class="md:col-span-3">
+						@form.Item(form.ItemProps{}) {
+							@form.Label(form.LabelProps{
+								For: "site--settings--dexcom-connector--region",
+							}) {
+								Dexcom Region
+							}
+							<select id="site--settings--dexcom-connector--region" name="region" class="h-9 w-full rounded-md border border-input bg-white px-3 text-sm shadow-xs">
+								<option value="OUS" selected?={ !dexcomConnectorSettings.IsUSARegion() }>Outside the United States</option>
+								<option value="US" selected?={ dexcomConnectorSettings.IsUSARegion() }>United States</option>
+							</select>
+						}
+					</div>
+				</div>
+				<!-- Footer Actions -->
+				<div class="mt-6 flex flex-col gap-3 border-t border-gray-100 pt-4 md:flex-row md:items-center md:justify-between">
+					@button.Button(button.Props{
+						ID:      "site--settings--dexcom-connector--delete",
+						Type:    "button",
+						Variant: button.VariantDestructive,
+						Attributes: templ.Attributes{
+							"hx-include": "none",
+							"hx-delete":  "/settings/connectors/dexcom",
+							"hx-confirm": "Are you sure you want to delete this Dexcom connector?",
+							"hx-target":  "closest form",
+							"hx-swap":    "outerHTML",
+						},
+					}) {
+						Delete
+					}
+					<div class="flex gap-3">
+						@BackfillButton("dexcom")
+						@button.Button(button.Props{
+							ID:   "site--settings--dexcom-connector--submit",
+							Type: button.TypeSubmit,
+						}) {
+							Save
+						}
+					</div>
+				</div>
+				@ConnectorStatus(dexcomConnectorSettings, "dexcom")
+			</div>
+		</div>
+	</form>
+}
+
+templ LibreConnectorForm(libreConnectorSettings *sitemodels.Connector) {
+	<form
+		hx-post="/settings/connectors/libre"
+		{ enableOnFirstInput(libreConnectorSettings)... }
+		hx-target="#toaster"
+		hx-swap="beforeend"
+		hx-status:4xx="target:#toaster swap:beforeend"
+		hx-status:5xx="target:#toaster swap:beforeend"
+		class="mt-4"
+	>
+		<div class="rounded-xl border border-gray-200 shadow-sm">
+			<div class="p-6">
+				<!-- Header -->
+				<div class="mb-4 flex items-center justify-between">
+					<div>
+						<h2 class="text-lg font-semibold">
+							FreeStyle Libre Connector
+						</h2>
+						<div class="text-sm text-gray-500">
+							Connect a LibreLinkUp account that follows you
+						</div>
+					</div>
+					@form.Item(form.ItemProps{
+						Class: "flex items-start gap-2 justify-center",
+					}) {
+						@checkbox.Checkbox(checkbox.Props{
+							ID:      "site--settings--libre-connector--enable",
+							Name:    "enabled",
+							Checked: libreConnectorSettings.IsEnabled(),
+							Class:   "h-4 w-4 rounded border-gray-600 bg-white",
+						})
+						@form.Label(form.LabelProps{
+							For:   "site--settings--libre-connector--enable",
+							Class: "item-center flex cursor-pointer gap-2",
+						}) {
+							Enable Connector
+						}
+					}
+				</div>
+				@ConnectorErrors(libreConnectorSettings, "libre")
+				<!-- Fields -->
+				<div class="grid gap-4 md:grid-cols-12">
+					<div class="md:col-span-5">
+						@form.Item(form.ItemProps{}) {
+							@form.Label(form.LabelProps{
+								For: "site--settings--libre-connector--email",
+							}) {
+								LibreLinkUp Email
+							}
+							@input.Input(input.Props{
+								ID:       "site--settings--libre-connector--email",
+								Type:     "email",
+								Name:     "url_or_username",
+								Required: true,
+								Value:    libreConnectorSettings.GetUsername(),
+								Attributes: templ.Attributes{
+									"autocomplete":   "new-password",
+									"autocapitalize": "none",
+									"spellcheck":     "false",
+								},
+							})
+						}
+					</div>
+					<div class="md:col-span-4">
+						@form.Item(form.ItemProps{}) {
+							@form.Label(form.LabelProps{
+								For: "site--settings--libre-connector--password",
+							}) {
+								LibreLinkUp Password
+							}
+							@input.Input(input.Props{
+								ID:       "site--settings--libre-connector--password",
+								Type:     "password",
+								Name:     "password",
+								Required: true,
+								Value:    libreConnectorSettings.GetPasswordGarbage(),
+								Attributes: templ.Attributes{
+									"onmousedown":               templ.JSUnsafeFuncCall("event.preventDefault(); this.select();"),
+									"data-placeholder-password": "true",
+									"autocomplete":              "new-password",
+								},
+							})
+						}
+					</div>
+					<div class="md:col-span-3">
+						@form.Item(form.ItemProps{}) {
+							@form.Label(form.LabelProps{
+								For: "site--settings--libre-connector--region",
+							}) {
+								LibreLinkUp Region
+							}
+							<select id="site--settings--libre-connector--region" name="region" class="h-9 w-full rounded-md border border-input bg-white px-3 text-sm shadow-xs">
+								for _, region := range consts.LibreRegions {
+									<option value={ region.Code } selected?={ libreConnectorSettings.GetLibreRegion() == region.Code }>{ region.Name }</option>
+								}
+							</select>
+						}
+					</div>
+				</div>
+				<!-- Footer -->
+				<div class="mt-6 flex flex-col gap-3 border-t border-gray-100 pt-4 md:flex-row md:items-center md:justify-between">
+					@button.Button(button.Props{
+						ID:      "site--settings--libre-connector--delete",
+						Type:    "button",
+						Variant: button.VariantDestructive,
+						Attributes: templ.Attributes{
+							"hx-include": "none",
+							"hx-delete":  "/settings/connectors/libre",
+							"hx-confirm": "Are you sure you want to delete this FreeStyle Libre connector?",
+							"hx-target":  "closest form",
+							"hx-swap":    "outerHTML",
+						},
+					}) {
+						Delete
+					}
+					<div class="flex gap-3">
+						@BackfillButton("libre")
+						@button.Button(button.Props{
+							ID:   "site--settings--libre-connector--submit",
+							Type: button.TypeSubmit,
+						}) {
+							Save
+						}
+					</div>
+				</div>
+				@ConnectorStatus(libreConnectorSettings, "libre")
+			</div>
+		</div>
+	</form>
+}
+
+templ NightscoutConnectorForm(nightscoutConnectorSettings *sitemodels.Connector) {
+	<form
+		hx-post="/settings/connectors/nightscout"
+		{ enableOnFirstInput(nightscoutConnectorSettings)... }
+		hx-target="#toaster"
+		hx-swap="beforeend"
+		hx-status:4xx="target:#toaster swap:beforeend"
+		hx-status:5xx="target:#toaster swap:beforeend"
+		class="mt-4"
+	>
+		<div class="rounded-xl border border-gray-200 shadow-sm">
+			<div class="p-6">
+				<!-- Header -->
+				<div class="mb-4 flex items-center justify-between">
+					<div>
+						<h2 class="text-lg font-semibold">
+							Nightscout Connector
+						</h2>
+						<div class="text-sm text-gray-500">
+							Connect your Nightscout instance
+						</div>
+					</div>
+					@form.Item(form.ItemProps{
+						Class: "flex items-start gap-2 justify-center",
+					}) {
+						@checkbox.Checkbox(checkbox.Props{
+							ID:      "site--settings--nightscout-connector--enable",
+							Name:    "enabled",
+							Checked: nightscoutConnectorSettings.IsEnabled(),
+							Class:   "h-4 w-4 rounded border-gray-600 bg-white",
+						})
+						@form.Label(form.LabelProps{
+							For:   "site--settings--nightscout-connector--enable",
+							Class: "item-center flex cursor-pointer gap-2",
+						}) {
+							Enable Connector
+						}
+					}
+				</div>
+				@ConnectorErrors(nightscoutConnectorSettings, "nightscout")
+				<!-- Fields -->
+				<div id="ns-fields" class="grid gap-4 md:grid-cols-12">
+					<!-- URL -->
+					<div class="md:col-span-7">
+						@form.Item(form.ItemProps{}) {
+							@form.Label(form.LabelProps{
+								For: "site--settings--nightscout-connector--url",
+							}) {
+								Nightscout URL
+							}
+							@input.Input(input.Props{
+								ID:          "site--settings--nightscout-connector--url",
+								Type:        "url",
+								Name:        "url_or_username",
+								Placeholder: "https://your-nightscout.herokuapp.com",
+
+								Required: true,
+								Value:    nightscoutConnectorSettings.GetURL(),
+								Attributes: templ.Attributes{
+									"autocomplete":   "new-password",
+									"autocapitalize": "none",
+									"spellcheck":     "false",
+									"pattern":        "https?://[^/]+",
+								},
+							})
+							@form.Description() {
+								Base URL only (no path or trailing slash)
+							}
+						}
+					</div>
+					<!-- API Secret -->
+					<div class="md:col-span-5">
+						@form.Item(form.ItemProps{}) {
+							@form.Label(form.LabelProps{
+								For: "site--settings--nightscout-connector--password",
+							}) {
+								API Secret
+							}
+							@input.Input(input.Props{
+								ID:       "site--settings--nightscout-connector--password",
+								Type:     "password",
+								Name:     "password",
+								Required: true,
+								Value:    nightscoutConnectorSettings.GetPasswordGarbage(),
+								Attributes: templ.Attributes{
+									"onmousedown":               templ.JSUnsafeFuncCall("event.preventDefault(); this.select();"),
+									"data-placeholder-password": "true",
+									"autocomplete":              "new-password",
+								},
+							})
+						}
+					</div>
+				</div>
+				<!-- Footer -->
+				<div class="mt-6 flex flex-col gap-3 border-t border-gray-100 pt-4 md:flex-row md:items-center md:justify-between">
+					@button.Button(button.Props{
+						ID:      "site--settings--nightscout-connector--delete",
+						Type:    "button",
+						Variant: button.VariantDestructive,
+						Attributes: templ.Attributes{
+							"hx-include": "none",
+							"hx-delete":  "/settings/connectors/nightscout",
+							"hx-confirm": "Are you sure you want to delete this Nightscout connector?",
+							"hx-target":  "closest form",
+							"hx-swap":    "outerHTML",
+						},
+					}) {
+						Delete
+					}
+					<div class="flex gap-3">
+						@BackfillButton("nightscout")
+						@button.Button(button.Props{
+							ID:   "site--settings--nightscout-connector--submit",
+							Type: button.TypeSubmit,
+						}) {
+							Save
+						}
+					</div>
+				</div>
+				@ConnectorStatus(nightscoutConnectorSettings, "nightscout")
+			</div>
+		</div>
+	</form>
+}
+
+templ VirtualConnectorForm(synSource *sitemodels.Connector) {
+	<form
+		hx-post="/settings/connectors/virtual"
+		hx-target="#toaster"
+		hx-swap="beforeend"
+		hx-status:4xx="target:#toaster swap:beforeend"
+		hx-status:5xx="target:#toaster swap:beforeend"
+		class="mt-4"
+	>
+		<div class="rounded-xl border border-gray-200 shadow-sm">
+			<div class="p-6">
+				<!-- Header -->
+				<div class="mb-4 flex items-center justify-between">
+					<div>
+						<h2 class="text-lg font-semibold">
+							Virtual Connector
+						</h2>
+						<div class="text-sm text-gray-500">
+							This will create fake data for testing purposes.
+						</div>
+					</div>
+					@form.Item(form.ItemProps{
+						Class: "flex items-start gap-2 justify-center",
+					}) {
+						@checkbox.Checkbox(checkbox.Props{
+							ID:      "site--settings--virtual-connector--enable",
+							Name:    "enabled",
+							Checked: synSource.IsEnabled(),
+							Class:   "h-4 w-4 rounded border-gray-600 bg-white",
+						})
+						@form.Label(form.LabelProps{
+							For:   "site--settings--virtual-connector--enable",
+							Class: "item-center flex cursor-pointer gap-2",
+						}) {
+							Enable Connector
+						}
+					}
+				</div>
+				@ConnectorErrors(synSource, "virtual")
+				<!-- Footer -->
+				<div class="mt-6 flex flex-col gap-3 border-t border-gray-100 pt-4 md:flex-row md:items-center md:justify-between">
+					@button.Button(button.Props{
+						ID:      "site--settings--virtual-connector--delete",
+						Type:    "button",
+						Variant: button.VariantDestructive,
+						Attributes: templ.Attributes{
+							"hx-include": "none",
+							"hx-delete":  "/settings/connectors/virtual",
+							"hx-confirm": "Are you sure you want to delete this Virtual connector?",
+							"hx-target":  "closest form",
+							"hx-swap":    "outerHTML",
+						},
+					}) {
+						Delete
+					}
+					<div class="flex gap-3">
+						@BackfillButton("virtual")
+						@button.Button(button.Props{
+							ID:   "site--settings--virtual-connector--submit",
+							Type: button.TypeSubmit,
+						}) {
+							Save
+						}
+					</div>
+				</div>
+				@ConnectorStatus(synSource, "virtual")
+			</div>
+		</div>
+	</form>
+}
+
+// BackfillButton asks to fetch the named source's older records, saying what it will fetch; it is disabled while its
+// request is sent, and the server starts only one backfill at a time
+templ BackfillButton(name string) {
+	@button.Button(button.Props{
+		ID:      "site--settings--" + name + "-connector--backfill",
+		Type:    "button",
+		Variant: button.VariantOutline,
+		Attributes: templ.Attributes{
+			"hx-include":      "none",
+			"hx-post":         "/settings/connectors/" + name + "/backfill",
+			"hx-confirm":      backfillConfirm(name),
+			"hx-disabled-elt": "this",
+			"hx-sync":         "this:drop",
+			"hx-target":       "#toaster",
+			"hx-swap":         "beforeend",
+			"hx-status:4xx":   "target:#toaster swap:beforeend",
+			"hx-status:5xx":   "target:#toaster swap:beforeend",
+		},
+	}) {
+		Backfill
+	}
+}
+
+func backfillConfirm(name string) string {
+	switch name {
+	case string(consts.ConnectorTypeDexcom):
+		return "Backfill fetches the last 24 hours of readings, which is as far back as Dexcom Share goes. It runs in the background. Continue?"
+	case string(consts.ConnectorTypeLibre):
+		return "Backfill fetches the last 12 hours of readings, which is as far back as LibreLinkUp goes. It runs in the background. Continue?"
+	}
+	return "Backfill fetches older records from before your oldest glucose reading, a week of them by default. It runs in the background and can take a minute. Continue?"
+}
+
+// BackfillQueued says which records a backfill that has just started will fetch
+templ BackfillQueued(sourceType consts.ConnectorType, from int64, to int64) {
+	@toast.Toast(toast.Props{
+		Title:         "Backfilling " + strings.ToUpper(string(sourceType)[:1]) + string(sourceType)[1:],
+		Description:   "Fetching records from " + time.UnixMilli(from).UTC().Format("2 Jan 15:04") + " to " + time.UnixMilli(to).UTC().Format("2 Jan 15:04") + " UTC",
+		Variant:       toast.VariantSuccess,
+		Position:      toast.PositionTopCenter,
+		Duration:      8000,
+		Dismissible:   true,
+		Icon:          true,
+		ShowIndicator: true,
+	})
+}
+
+templ SuccessfulUpdate(model *sitemodels.Connector) {
+	@toast.Toast(toast.Props{
+		Title:         "Success",
+		Description:   "Connector Updated",
+		Variant:       toast.VariantSuccess,
+		Position:      toast.PositionTopCenter,
+		Duration:      5000,
+		Dismissible:   true,
+		Icon:          true,
+		ShowIndicator: true,
+	})
+}
+
+// ConnectorDeleted replaces the deleted source's form with an empty one and shows a toast
+templ ConnectorDeleted(sourceType consts.ConnectorType) {
+	switch sourceType {
+		case consts.ConnectorTypeNightscout:
+			@NightscoutConnectorForm(nil)
+		case consts.ConnectorTypeDexcom:
+			@DexcomConnectorForm(nil)
+		case consts.ConnectorTypeLibre:
+			@LibreConnectorForm(nil)
+		case consts.ConnectorTypeVirtual:
+			@VirtualConnectorForm(nil)
+	}
+	<div hx-swap-oob="beforeend:#toaster">
+		@SuccessfulDelete()
+	</div>
+}
+
+templ SuccessfulDelete() {
+	@toast.Toast(toast.Props{
+		Title:         "Success",
+		Description:   "Connector Deleted",
+		Variant:       toast.VariantSuccess,
+		Position:      toast.PositionTopCenter,
+		Duration:      5000,
+		Dismissible:   true,
+		Icon:          true,
+		ShowIndicator: true,
+	})
+}

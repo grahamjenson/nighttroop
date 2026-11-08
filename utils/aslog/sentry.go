@@ -14,7 +14,7 @@ const sentryExtra = "extra"
 
 // sentryTags are what is logged with an error that Sentry tags its event with, so issues can be searched and counted
 // by them, as every error of one site, identity, request, job or route
-var sentryTags = []string{"site_id", "identity_id", "role", "request_id", "job", "job_id", "sync_type", "batch", "method", "route"}
+var sentryTags = []string{"site_id", "identity_id", "role", "request_id", "job", "job_id", "connector_type", "batch", "method", "route"}
 
 // SentryRoute is the method and route of the request ctx is for, as far as it is routed, for its errors to say where
 // they were; a request's path is not, as it can hold a token

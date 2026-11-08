@@ -1,0 +1,56 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+CLICK #site--settings-menu
+CLICK #site--settings--connectors-button
+ASSERT_STATUS 200
+ASSERT_PATH /settings/connectors
+
+// A sync that is not saved and on cannot be backfilled
+CLICK #site--settings--nightscout-connector--backfill
+ASSERT_TEXT_VISIBLE turn on and save this sync before backfilling it
+ASSERT_VISIBLE #toaster [data-tui-toast][data-variant="error"]:has-text("turn on and save this sync")
+
+// Virtual connector's first run writes its last 30 minutes, all on the first page of 100 readings
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Connector Updated
+RUN_BACKGROUND_JOBS
+
+GOTO /data/glucose?limit=100
+ASSERT_STATUS 200
+ASSERT_VISIBLE #glucoseReadingsTable
+ASSERT_NOT_VISIBLE #site--glucose--next
+
+// Backfilling says what it will fetch, and asking again before it has run starts nothing
+CLICK #site--settings-menu
+CLICK #site--settings--connectors-button
+ASSERT_STATUS 200
+CLICK #site--settings--virtual-connector--backfill
+ASSERT_TEXT_VISIBLE Backfilling Virtual
+ASSERT_TEXT_VISIBLE Fetching records from
+SCREENSHOT connector_backfill_started
+// The toast goes to the toaster, leaving the button as it was
+ASSERT_TEXT_EQUALS #site--settings--virtual-connector--backfill Backfill
+CLICK #site--settings--virtual-connector--backfill
+ASSERT_TEXT_VISIBLE A backfill of this sync is already running
+
+// Once it has run, the day before the first reading (tests backfill a day) fills more pages of readings
+RUN_BACKGROUND_JOBS
+GOTO /data/glucose?limit=100
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--glucose--next
+
+// The Connectors page shows how the virtual connector has synced, how often and why, its backfill, and its recent events
+CLICK #site--settings-menu
+CLICK #site--settings--connectors-button
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--settings--virtual-connector--status
+ASSERT_TEXT_EQUALS #site--settings--virtual-connector--status--last-success just now
+ASSERT_TEXT_EQUALS #site--settings--virtual-connector--status--last-failure Never
+ASSERT_TEXT_EQUALS #site--settings--virtual-connector--status--interval 1 min (Default)
+ASSERT_TEXT_VISIBLE records in
+CLICK #site--settings--virtual-connector--history summary
+ASSERT_TEXT_VISIBLE Connector backfilled
+SCREENSHOT connector_status

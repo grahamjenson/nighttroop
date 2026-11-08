@@ -15,7 +15,7 @@ Limits written per minute are rates; their burst is how many can be used at once
 
 | Variable | Default | Use |
 | --- | --- | --- |
-| `MODE` | `development`, or `test` under `go test` | `development`, `test`, `production` or `staging`. Picks the `.env` file (`staging` reads `.env`, as production does), and dev and test use cheap bcrypt, fixed site names and fixed keys. `staging` runs as production does, but makes its control admin from `STAGING_ADMIN_PASSWORD` and `STAGING_ADMIN_TOTP_SECRET` instead of being set up, and puts a large banner at the top of every page saying it is a test site whose data is frequently wiped. Only `development`, `test` and `staging` offer virtual sync, which makes up glucose |
+| `MODE` | `development`, or `test` under `go test` | `development`, `test`, `production` or `staging`. Picks the `.env` file (`staging` reads `.env`, as production does), and dev and test use cheap bcrypt, fixed site names and fixed keys. `staging` runs as production does, but makes its control admin from `STAGING_ADMIN_PASSWORD` and `STAGING_ADMIN_TOTP_SECRET` instead of being set up, and puts a large banner at the top of every page saying it is a test site whose data is frequently wiped. Only `development`, `test` and `staging` offer the virtual connector, which makes up glucose |
 | `HOST_NAME` | `nt.local.t1d.nz` | The domain sites are subdomains of, e.g. `abc.nt.local.t1d.nz`, used in links and cookies |
 | `HOST_PORT` | `3000` | The port the server listens on. Links to sites, such as the create site page's login, have no port with `HOST_PROTOCOL` `https`, as a proxy takes HTTPS on 443; with `http` they have this port |
 | `MAX_REQUEST_BODY_BYTES` | `4000000` | The largest request body the server reads, above an uploader's largest batch, Juggluco's 5000 readings. A larger body is refused with 413 |
@@ -72,12 +72,12 @@ Limits written per minute are rates; their burst is how many can be used at once
 | `DISK_ALERT_FREE_GB` | `100` | The space free on the DBs' disk, in GB, at or over which the disk never warns, however full it is |
 | `CPU_PEGGED_ALERT_SECONDS` | `20` | How long the server's CPU is at 100% of every core before the control site is warned |
 
-## Sync
+## Connectors
 
 | Variable | Default | Use |
 | --- | --- | --- |
-| `BACKGROUND_SYNC_WORKERS` | `5` | How many syncs run at once |
-| `SYNC_INTERVAL_IN_SECONDS` | `5` | How often the syncs that are due are queued |
+| `BACKGROUND_CONNECTOR_WORKERS` | `5` | How many syncs run at once |
+| `CONNECTOR_INTERVAL_IN_SECONDS` | `5` | How often the syncs that are due are queued |
 | `BACKFILL_DAYS` | `7` | How far back before a site's oldest glucose reading a backfill fetches records |
 
 ## Rate limits
@@ -95,7 +95,7 @@ control DB's server settings and used in place of the env's from then on, until 
 | `SITE_CREATE_IP_PER_MINUTE_LIMIT` / `_BURST` | `0.1` / `1` | Sites created from one IP, one every 10 minutes |
 | `SITE_GET_PER_MINUTE_LIMIT` / `_BURST` | `180` / `360` | A site's authenticated reads |
 | `SITE_POST_PER_MINUTE_LIMIT` / `_BURST` | `60` / `240` | A site's authenticated writes |
-| `SITE_UPDATE_SYNC_PER_MINUTE_LIMIT` / `_BURST` | `1` / `4` | A site's changes to its sync settings |
+| `SITE_UPDATE_CONNECTORS_PER_MINUTE_LIMIT` / `_BURST` | `1` / `4` | A site's changes to its connector settings |
 | `SITE_IDENTITY_CREATE_PER_MINUTE_LIMIT` / `_BURST` | `1` / `5` | A site's new identities and its credential resets, each of which hashes a password with bcrypt or makes a TOTP secret |
 | `SITE_DOWNLOAD_PER_MINUTE_LIMIT` / `_BURST` | `1` / `3` | A site's data downloads, each of which copies its whole DB |
 | `SITE_PUSH_PER_MINUTE_LIMIT` / `_BURST` | `10` / `30` | A site's pushes to its devices' apps, each a request to Apple or Firebase |

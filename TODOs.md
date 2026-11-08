@@ -3,7 +3,7 @@
 ## Alpha Testing
 
 1. Point real deivces at Loop, Trio, AAPS and xDrip+ uploading, follower apps (xDrip+ follower, LoopFollow,
-   Nightguard) reading, and Dexcom and Libre sync
+   Nightguard) reading, and Dexcom and Libre connectors
 1. Automated Testing of the staging, create site, do a bunch of stuff
 
 ## Before Beta Testing

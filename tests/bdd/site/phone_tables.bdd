@@ -1,13 +1,13 @@
 INCLUDE steps/new_site_admin.steps
 
-// Virtual sync fills the tables with readings and device statuses
+// The virtual connector fills the tables with readings and device statuses
 CLICK #site--settings-menu
-CLICK #site--settings--sync-button
+CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
-CLICK #site--settings--virtual-sync--enable
-CLICK #site--settings--virtual-sync--submit
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
 ASSERT_STATUS 200
-ASSERT_TEXT_VISIBLE Sync Updated
+ASSERT_TEXT_VISIBLE Connector Updated
 RUN_BACKGROUND_JOBS
 
 // On a phone a table wider than the window scrolls sideways in its card, so the page is no wider than the window.

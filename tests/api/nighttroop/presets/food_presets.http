@@ -189,7 +189,7 @@ ASSERT_STATUS 404
 // SECTIONS
 //////
 
-// Each section has its own collections, so sync settings are not data
+// Each section has its own collections, so connector settings are not data
 NAME sync_not_data
 GET http://{{ site }}/data/sync
 H Authorization: Bearer {{ jwt }}

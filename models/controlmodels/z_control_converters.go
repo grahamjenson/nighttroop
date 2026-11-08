@@ -12,6 +12,78 @@ import (
 	errors "nighttroop.t1d.nz/utils/errors"
 )
 
+func ConnectorFromDB(source *controldb.SiteConnector) *Connector {
+	var pControlmodelsConnector *Connector
+	if source != nil {
+		var controlmodelsConnector Connector
+		controlmodelsConnector.SiteID = (*source).SiteID
+		controlmodelsConnector.Type = consts.ConnectorType((*source).Type)
+		if (*source).Region != nil {
+			xstring := *(*source).Region
+			controlmodelsConnector.Region = &xstring
+		}
+		controlmodelsConnector.Enabled = (*source).Enabled
+		controlmodelsConnector.CreatedAt = (*source).CreatedAt
+		controlmodelsConnector.UpdatedAt = (*source).UpdatedAt
+		if (*source).FirstSuccessfulSyncTime != nil {
+			xint64 := *(*source).FirstSuccessfulSyncTime
+			controlmodelsConnector.FirstSuccessfulSyncTime = &xint64
+		}
+		controlmodelsConnector.SyncIntervalSecondsReason = (*source).SyncIntervalSecondsReason
+		controlmodelsConnector.SyncIntervalSeconds = (*source).SyncIntervalSeconds
+		if (*source).LastAttemptedSync != nil {
+			xint642 := *(*source).LastAttemptedSync
+			controlmodelsConnector.LastAttemptedSync = &xint642
+		}
+		if (*source).LastSuccessfulSync != nil {
+			xint643 := *(*source).LastSuccessfulSync
+			controlmodelsConnector.LastSuccessfulSync = &xint643
+		}
+		if (*source).LastFailedSync != nil {
+			xint644 := *(*source).LastFailedSync
+			controlmodelsConnector.LastFailedSync = &xint644
+		}
+		if (*source).TotalSyncs != nil {
+			xint645 := *(*source).TotalSyncs
+			controlmodelsConnector.TotalSyncs = &xint645
+		}
+		if (*source).TotalSuccessfulSyncs != nil {
+			xint646 := *(*source).TotalSuccessfulSyncs
+			controlmodelsConnector.TotalSuccessfulSyncs = &xint646
+		}
+		if (*source).TotalFailedSyncs != nil {
+			xint647 := *(*source).TotalFailedSyncs
+			controlmodelsConnector.TotalFailedSyncs = &xint647
+		}
+		if (*source).ConsecutiveSuccessfulSyncs != nil {
+			xint648 := *(*source).ConsecutiveSuccessfulSyncs
+			controlmodelsConnector.ConsecutiveSuccessfulSyncs = &xint648
+		}
+		if (*source).ConsecutiveFailedSyncs != nil {
+			xint649 := *(*source).ConsecutiveFailedSyncs
+			controlmodelsConnector.ConsecutiveFailedSyncs = &xint649
+		}
+		controlmodelsConnector.PreviousSyncErrors = errorsErrorListToStringList((*source).PreviousSyncErrors)
+		if (*source).TotalEma != nil {
+			xfloat64 := *(*source).TotalEma
+			controlmodelsConnector.TotalEma = &xfloat64
+		}
+		if (*source).SuccessEma != nil {
+			xfloat642 := *(*source).SuccessEma
+			controlmodelsConnector.SuccessEma = &xfloat642
+		}
+		if (*source).FailureEma != nil {
+			xfloat643 := *(*source).FailureEma
+			controlmodelsConnector.FailureEma = &xfloat643
+		}
+		if (*source).LastSyncDuration != nil {
+			xint6410 := *(*source).LastSyncDuration
+			controlmodelsConnector.LastSyncDuration = &xint6410
+		}
+		pControlmodelsConnector = &controlmodelsConnector
+	}
+	return pControlmodelsConnector
+}
 func ErrorFromDB(source *logsdb.Error) *Error {
 	var pControlmodelsError *Error
 	if source != nil {
@@ -131,6 +203,14 @@ func LogFromDB(source *logsdb.Log) *Log {
 	}
 	return pControlmodelsLog
 }
+func QueryToSearchConnectors(source *apiquery.Query) controldb.SearchConnectorsParams {
+	var controldbSearchConnectorsParams controldb.SearchConnectorsParams
+	if source != nil {
+		controldbSearchConnectorsParams.Skip = (*source).Skip
+		controldbSearchConnectorsParams.Limit = (*source).Limit
+	}
+	return controldbSearchConnectorsParams
+}
 func QueryToSearchErrors(source *apiquery.Query) logsdb.SearchErrorsParams {
 	var logsdbSearchErrorsParams logsdb.SearchErrorsParams
 	if source != nil {
@@ -235,14 +315,6 @@ func QueryToSearchSites(source *apiquery.Query) controldb.SearchSitesParams {
 	}
 	return controldbSearchSitesParams
 }
-func QueryToSearchSyncSources(source *apiquery.Query) controldb.SearchSyncSourcesParams {
-	var controldbSearchSyncSourcesParams controldb.SearchSyncSourcesParams
-	if source != nil {
-		controldbSearchSyncSourcesParams.Skip = (*source).Skip
-		controldbSearchSyncSourcesParams.Limit = (*source).Limit
-	}
-	return controldbSearchSyncSourcesParams
-}
 func SiteFromDB(source *controldb.Site) *Site {
 	var pControlmodelsSite *Site
 	if source != nil {
@@ -309,78 +381,6 @@ func SiteIdentityFromDB(source *controldb.SiteIdentity) *SiteIdentity {
 		pControlmodelsSiteIdentity = &controlmodelsSiteIdentity
 	}
 	return pControlmodelsSiteIdentity
-}
-func SyncSourceFromDB(source *controldb.SiteSyncSource) *SyncSource {
-	var pControlmodelsSyncSource *SyncSource
-	if source != nil {
-		var controlmodelsSyncSource SyncSource
-		controlmodelsSyncSource.SiteID = (*source).SiteID
-		controlmodelsSyncSource.Type = consts.SyncSourceType((*source).Type)
-		if (*source).Region != nil {
-			xstring := *(*source).Region
-			controlmodelsSyncSource.Region = &xstring
-		}
-		controlmodelsSyncSource.Enabled = (*source).Enabled
-		controlmodelsSyncSource.CreatedAt = (*source).CreatedAt
-		controlmodelsSyncSource.UpdatedAt = (*source).UpdatedAt
-		if (*source).FirstSuccessfulSyncTime != nil {
-			xint64 := *(*source).FirstSuccessfulSyncTime
-			controlmodelsSyncSource.FirstSuccessfulSyncTime = &xint64
-		}
-		controlmodelsSyncSource.SyncIntervalSecondsReason = (*source).SyncIntervalSecondsReason
-		controlmodelsSyncSource.SyncIntervalSeconds = (*source).SyncIntervalSeconds
-		if (*source).LastAttemptedSync != nil {
-			xint642 := *(*source).LastAttemptedSync
-			controlmodelsSyncSource.LastAttemptedSync = &xint642
-		}
-		if (*source).LastSuccessfulSync != nil {
-			xint643 := *(*source).LastSuccessfulSync
-			controlmodelsSyncSource.LastSuccessfulSync = &xint643
-		}
-		if (*source).LastFailedSync != nil {
-			xint644 := *(*source).LastFailedSync
-			controlmodelsSyncSource.LastFailedSync = &xint644
-		}
-		if (*source).TotalSyncs != nil {
-			xint645 := *(*source).TotalSyncs
-			controlmodelsSyncSource.TotalSyncs = &xint645
-		}
-		if (*source).TotalSuccessfulSyncs != nil {
-			xint646 := *(*source).TotalSuccessfulSyncs
-			controlmodelsSyncSource.TotalSuccessfulSyncs = &xint646
-		}
-		if (*source).TotalFailedSyncs != nil {
-			xint647 := *(*source).TotalFailedSyncs
-			controlmodelsSyncSource.TotalFailedSyncs = &xint647
-		}
-		if (*source).ConsecutiveSuccessfulSyncs != nil {
-			xint648 := *(*source).ConsecutiveSuccessfulSyncs
-			controlmodelsSyncSource.ConsecutiveSuccessfulSyncs = &xint648
-		}
-		if (*source).ConsecutiveFailedSyncs != nil {
-			xint649 := *(*source).ConsecutiveFailedSyncs
-			controlmodelsSyncSource.ConsecutiveFailedSyncs = &xint649
-		}
-		controlmodelsSyncSource.PreviousSyncErrors = errorsErrorListToStringList((*source).PreviousSyncErrors)
-		if (*source).TotalEma != nil {
-			xfloat64 := *(*source).TotalEma
-			controlmodelsSyncSource.TotalEma = &xfloat64
-		}
-		if (*source).SuccessEma != nil {
-			xfloat642 := *(*source).SuccessEma
-			controlmodelsSyncSource.SuccessEma = &xfloat642
-		}
-		if (*source).FailureEma != nil {
-			xfloat643 := *(*source).FailureEma
-			controlmodelsSyncSource.FailureEma = &xfloat643
-		}
-		if (*source).LastSyncDuration != nil {
-			xint6410 := *(*source).LastSyncDuration
-			controlmodelsSyncSource.LastSyncDuration = &xint6410
-		}
-		pControlmodelsSyncSource = &controlmodelsSyncSource
-	}
-	return pControlmodelsSyncSource
 }
 func errorsErrorListToStringList(source errors.ErrorList) []string {
 	var stringList []string
