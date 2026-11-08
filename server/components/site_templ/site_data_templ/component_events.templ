@@ -58,12 +58,10 @@ templ ComponentEventsTable(events []*sitemodels.SiteComponentEvent, skip int64, 
 					}
 				}
 				@table.Body() {
-					if len(events) == 0 {
-						<tr id="site--component-event--empty"><td colspan="6" class="p-4 text-sm text-gray-500">No site or sensor changes here.</td></tr>
-					}
 					for _, event := range events {
 						@componentEventRow(event)
 					}
+					@pager.Empty("site--component-event--empty", 6, "No site or sensor changes here.")
 				}
 			}
 			@pager.Pager(pager.Props{ID: "site--component-event", Path: "/data/component-events", Count: len(events), Skip: skip, Limit: limit})
@@ -75,7 +73,7 @@ templ ComponentEventsTable(events []*sitemodels.SiteComponentEvent, skip int64, 
 // ComponentEventNew adds a site or sensor change with all its fields, putting its row at the top of the table
 templ ComponentEventNew() {
 	@addmodal.Modal(addmodal.Props{ID: "site--component-event--create", Title: "Add Change", Path: "/data/component-events", Target: "#componentEventsTable tbody",
-		EmptyID: "site--component-event--empty", Submit: "Add Change", Fields: componentEventFields})
+		Submit: "Add Change", Fields: componentEventFields})
 }
 
 // componentEventFields are what a site or sensor change has that a person can type in

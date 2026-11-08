@@ -47,12 +47,10 @@ templ ProfilePresetsTable(profiles []*sitemodels.SiteProfilePreset, skip int64, 
 					}
 				}
 				@table.Body() {
-					if len(profiles) == 0 {
-						<tr id="presets--profiles--empty"><td colspan="6" class="p-4 text-sm text-gray-500">No profiles here.</td></tr>
-					}
 					for _, profile := range profiles {
 						@profilePresetRow(profile)
 					}
+					@pager.Empty("presets--profiles--empty", 6, "No profiles here.")
 				}
 			}
 			@pager.Pager(pager.Props{ID: "presets--profiles", Path: "/presets/profiles", Count: len(profiles), Skip: skip, Limit: limit})

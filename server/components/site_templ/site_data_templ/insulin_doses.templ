@@ -50,12 +50,10 @@ templ InsulinDosesTable(insulinDoses []*sitemodels.SiteInsulinDose, skip int64, 
 					}
 				}
 				@table.Body() {
-					if len(insulinDoses) == 0 {
-						<tr id="site--insulin--empty"><td colspan="6" class="p-4 text-sm text-gray-500">No insulin doses here.</td></tr>
-					}
 					for _, insulinDose := range insulinDoses {
 						@insulinDoseRow(insulinDose)
 					}
+					@pager.Empty("site--insulin--empty", 6, "No insulin doses here.")
 				}
 			}
 			@pager.Pager(pager.Props{ID: "site--insulin", Path: "/data/insulin", Count: len(insulinDoses), Skip: skip, Limit: limit})
@@ -67,7 +65,7 @@ templ InsulinDosesTable(insulinDoses []*sitemodels.SiteInsulinDose, skip int64, 
 // InsulinDoseNew adds an insulin dose with all its fields, putting its row at the top of the table
 templ InsulinDoseNew() {
 	@addmodal.Modal(addmodal.Props{ID: "site--insulin--create", Title: "Add Insulin Dose", Path: "/data/insulin", Target: "#insulinDosesTable tbody",
-		EmptyID: "site--insulin--empty", Submit: "Add Insulin Dose", Fields: insulinDoseFields})
+		Submit: "Add Insulin Dose", Fields: insulinDoseFields})
 }
 
 // insulinDoseFields are what an insulin dose has that a person can type in

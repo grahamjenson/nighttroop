@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"nighttroop.t1d.nz/server/components/footer"
+	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/testsite"
 	"nighttroop.t1d.nz/server/components/ui/checkbox"
 	"nighttroop.t1d.nz/server/components/ui/copybutton"
@@ -42,6 +43,7 @@ templ Base() {
 			@checkbox.Script()
 			@selectbox.Script()
 			@toast.Script()
+			@pager.Script()
 			<script src="/qrcode.js"></script>
 			<script src="/echarts.min.js"></script>
 		</head>

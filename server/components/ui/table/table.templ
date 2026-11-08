@@ -89,6 +89,7 @@ templ Header(props ...HeaderProps) {
 	</thead>
 }
 
+// Body's last shown row has no border, so neither has the row above a pager.Empty row hidden at the bottom
 templ Body(props ...BodyProps) {
 	{{ var p BodyProps }}
 	if len(props) > 0 {
@@ -98,7 +99,7 @@ templ Body(props ...BodyProps) {
 		if p.ID != "" {
 			id={ p.ID }
 		}
-		class={ utils.TwMerge("[&_tr:last-child]:border-0", p.Class) }
+		class={ utils.TwMerge("[&_tr:last-child]:border-0 [&_tr:has(+[data-empty])]:border-0", p.Class) }
 		{ p.Attributes... }
 	>
 		{ children... }

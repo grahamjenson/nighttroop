@@ -311,7 +311,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 Each kind of data has a page with a table, newest first and paged, where records can be added, viewed, edited and
 deleted (after a confirmation). On a phone, a table wider than the window scrolls sideways in its card, so the page
-does not, and its cells stay on one line, so a time or a value and its unit never break apart; only notes wrap:
+does not, and its cells stay on one line, so a time or a value and its unit never break apart; only notes wrap.
+Adding or deleting a record updates the table's "Showing" count straight away, without a reload, and deleting the
+last one shows the table is empty again, as deleting the last push credential does:
 
 - **Glucose**: CGM and meter readings with trend arrows, in the settings' units (mmol/L or mg/dL), with lows and
   highs coloured as on the summary and marked L or H, read out as Low or High, so they are not shown by colour alone.

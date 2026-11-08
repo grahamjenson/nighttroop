@@ -84,12 +84,10 @@ templ EventGroupsTable(eventGroups []*sitemodels.SiteEventGroup, skip int64, lim
 					}
 				}
 				@table.Body() {
-					if len(eventGroups) == 0 {
-						<tr id="site--event-group--empty"><td colspan="6" class="p-4 text-sm text-gray-500">No event groups here.</td></tr>
-					}
 					for _, eventGroup := range eventGroups {
 						@eventGroupRow(eventGroup)
 					}
+					@pager.Empty("site--event-group--empty", 6, "No event groups here.")
 				}
 			}
 			@pager.Pager(pager.Props{ID: "site--event-group", Path: "/data/event-groups", Count: len(eventGroups), Skip: skip, Limit: limit})
@@ -179,7 +177,7 @@ templ eventGroupAdd() {
 // the kinds its type can have
 func eventGroupForm(ctx context.Context, group *sitemodels.SiteEventGroup, groupType string) addmodal.Props {
 	p := addmodal.Props{ID: "site--event-group--create", Title: "Add " + groupType, Path: "/data/event-groups", Target: "#eventGroupsTable tbody",
-		EmptyID: "site--event-group--empty", Submit: "Add " + groupType}
+		Submit: "Add " + groupType}
 	when, reason, notes := time.Now(), "", ""
 	choices := "/data/event-groups/choices"
 	if group != nil {

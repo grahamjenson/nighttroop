@@ -1832,6 +1832,11 @@
       }
     }
   }
+  .only\:table-row {
+    &:only-child {
+      display: table-row;
+    }
+  }
   .checked\:border-primary {
     &:checked {
       border-color: var(--primary);
@@ -2680,6 +2685,12 @@
     & tr {
       border-bottom-style: var(--tw-border-style);
       border-bottom-width: 1px;
+    }
+  }
+  .\[\&_tr\:has\(\+\[data-empty\]\)\]\:border-0 {
+    & tr:has(+[data-empty]) {
+      border-style: var(--tw-border-style);
+      border-width: 0px;
     }
   }
   .\[\&_tr\:last-child\]\:border-0 {
