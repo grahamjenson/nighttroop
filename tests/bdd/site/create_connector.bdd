@@ -42,6 +42,15 @@ ASSERT_VISIBLE #site--settings--nightscout-connector--password
 ASSERT_VISIBLE #site--settings--nightscout-connector--delete
 ASSERT_VISIBLE #site--settings--nightscout-connector--submit
 
+// A pasted Nightscout link with its token is split into the base URL and the API secret or token, so both boxes are
+// valid without the secret being typed
+ASSERT_TEXT_VISIBLE API Secret or Token
+ASSERT_VISIBLE #site--settings--nightscout-connector--password:invalid
+INPUT #site--settings--nightscout-connector--url https://split-me.test/api/v1/entries.json?token=pasted-token
+CLICK "Connect your Nightscout instance"
+ASSERT_VISIBLE #site--settings--nightscout-connector--password:valid
+SCREENSHOT nightscout_link_split
+
 // Typing a new source's details turns it on, as it is easy to forget; unticking it then keeps it off while typing on
 INPUT #site--settings--nightscout-connector--url         http://will_not_pass_the_test.test
 CLICK #site--settings--nightscout-connector--url
@@ -87,6 +96,19 @@ ASSERT_PATH /settings/connectors
 ASSERT_TITLE Connectors · Nighttroop
 ASSERT_NOT_VISIBLE #site--settings--nightscout-connector--errors
 ASSERT_VISIBLE #site--settings--nightscout-connector--url:not([value*="will_not_pass"])
+
+// A link with api_secret is split the same way, and the base URL is what is saved
+INPUT #site--settings--nightscout-connector--url https://split-me.test/api/v1?api_secret=another-secret
+CLICK "Connect your Nightscout instance"
+CLICK #site--settings--nightscout-connector--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Connector Updated
+CLICK #site--settings-menu
+CLICK #site--settings--connectors-button
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--settings--nightscout-connector--url[value="https://split-me.test"]
+CLICK #site--settings--nightscout-connector--delete
+ASSERT_TEXT_VISIBLE Connector Deleted
 
 // The Dexcom region is picked from a list like the Libre region, starting outside the United States
 ASSERT_VISIBLE #site--settings--dexcom-connector--enable
