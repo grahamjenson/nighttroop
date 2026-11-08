@@ -14,6 +14,7 @@ import (
 	"nighttroop.t1d.nz/background"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server"
+	"nighttroop.t1d.nz/tests/dsl/flow"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/s3utils"
 	"nighttroop.t1d.nz/utils/testutils"
@@ -98,7 +99,8 @@ func runOnOwnServer(t *testing.T, browser playwright.Browser, root string, own o
 	require.NoError(t, err)
 
 	browserContext, err := browser.NewContext(playwright.BrowserNewContextOptions{Locale: playwright.String("en"), TimezoneId: playwright.String("UTC"),
-		ExtraHttpHeaders: map[string]string{"X-Forwarded-For": own.address}})
+		DeviceScaleFactor: playwright.Float(flow.ScreenshotScale),
+		ExtraHttpHeaders:  map[string]string{"X-Forwarded-For": own.address}})
 	require.NoError(t, err)
 	browserContext.SetDefaultTimeout(1000)
 	actionContext := map[string]any{

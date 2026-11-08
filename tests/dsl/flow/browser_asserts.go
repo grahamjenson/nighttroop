@@ -17,6 +17,10 @@ import (
 // package's folder, or the folder a script run is given
 var ScreenshotDir = filepath.Join("..", "..", ".test")
 
+// ScreenshotScale is the device pixels a test's browser draws each CSS pixel with, so screenshots are 3/4 the size of
+// the page, which keeps their text readable in a file about half the size
+const ScreenshotScale = 0.75
+
 func ScreenshotPage(page playwright.Page, foldername string, testPath string, name string) (string, error) {
 	root := filepath.Join(ScreenshotDir, foldername)
 
