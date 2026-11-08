@@ -130,6 +130,10 @@ func ParseBrowserLines(lines []Line) ([]Action, error) {
 				return nil, fmt.Errorf("%s:%d: WINDOW needs a size like 390x844: %q", path, lineNumber, second)
 			}
 			current = &Window{TestPath: path, TestLine: lineNumber, Width: width, Height: height}
+		case "VIRTUAL_AUTHENTICATOR":
+			// VIRTUAL_AUTHENTICATOR gives the page a passkey authenticator, as a phone's, that verifies the person itself
+			flush()
+			current = &VirtualAuthenticator{TestPath: path, TestLine: lineNumber}
 		case "USER_AGENT":
 			// USER_AGENT sends the pages' requests with a User-Agent, as another app would, until one with none
 			flush()

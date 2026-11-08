@@ -693,3 +693,39 @@ func (r *SaveText) Execute(t *testing.T, page playwright.Page, ctx map[string]an
 	ctx[r.Key] = strings.TrimSpace(text)
 	return page, nil
 }
+
+// VirtualAuthenticator gives the page Chrome's virtual authenticator, a platform one keeping passkeys that verifies the
+// person without asking, so a page can make and sign in with passkeys
+type VirtualAuthenticator struct {
+	TestPath string
+	TestLine int
+}
+
+func (r *VirtualAuthenticator) ToFlatString() string {
+	return "VIRTUAL_AUTHENTICATOR"
+}
+
+func (r *VirtualAuthenticator) ToErrorLine(msg string) string {
+	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
+}
+
+func (r *VirtualAuthenticator) PrintAction() {
+	fmt.Println(r.ToFlatString())
+}
+
+func (r *VirtualAuthenticator) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
+	session, err := page.Context().NewCDPSession(page)
+	if err == nil {
+		_, err = session.Send("WebAuthn.enable", map[string]any{})
+	}
+	if err == nil {
+		_, err = session.Send("WebAuthn.addVirtualAuthenticator", map[string]any{"options": map[string]any{
+			"protocol": "ctap2", "transport": "internal", "hasResidentKey": true, "hasUserVerification": true,
+			"isUserVerified": true, "automaticPresenceSimulation": true,
+		}})
+	}
+	if err != nil {
+		return nil, fmt.Errorf("%s", r.ToErrorLine(err.Error()))
+	}
+	return page, nil
+}

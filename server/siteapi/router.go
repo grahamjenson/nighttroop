@@ -29,6 +29,12 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		publicapi.FooterRoutes(r, config)
 		r.With(httputils.AllowedCountriesMiddleware(config)).Post("/login", sitelogin.POSTLogin(controlDB, config))
 		r.With(httputils.AllowedCountriesMiddleware(config)).Post("/login/totp", sitelogin.POSTLoginTOTP(controlDB, config))
+		// A passkey signs an identity in on its own; the link from creating the site adds the admin's first
+		r.With(httputils.AllowedCountriesMiddleware(config)).Post("/login/passkey/begin", sitelogin.POSTPasskeyLoginBegin(config))
+		r.With(httputils.AllowedCountriesMiddleware(config)).Post("/login/passkey/finish", sitelogin.POSTPasskeyLoginFinish(controlDB, config))
+		r.With(httputils.AllowedCountriesMiddleware(config)).Post("/passkey/new", sitelogin.POSTPasskeyNew(controlDB, config))
+		r.With(httputils.AllowedCountriesMiddleware(config)).Post("/passkey/new/begin", sitelogin.POSTPasskeyNewBegin(controlDB, config))
+		r.With(httputils.AllowedCountriesMiddleware(config)).Post("/passkey/new/finish", sitelogin.POSTPasskeyNewFinish(controlDB, config))
 		// A link from control signs a control admin in as one of the site's identities, once
 		r.Get("/login/assume", sitelogin.GETAssume(controlDB, config))
 		// The backup key proves ownership, giving the site's admin new credentials

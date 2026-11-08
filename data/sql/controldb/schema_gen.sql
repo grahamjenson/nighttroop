@@ -2,6 +2,8 @@ CREATE INDEX push_credentials_site ON push_credentials (site_id, provider) WHERE
 
 CREATE INDEX push_registrations_identity ON push_registrations (site_id, identity_id);
 
+CREATE INDEX site_identity_passkeys_identity ON site_identity_passkeys (site_id, identity_id);
+
 CREATE TABLE control_identities (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
 
@@ -180,6 +182,17 @@ CREATE TABLE site_identities (
 
     -- Constraints
     UNIQUE(site_id, name)
+) STRICT;
+
+CREATE TABLE site_identity_passkeys (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    site_id TEXT NOT NULL REFERENCES sites(id),
+    identity_id INTEGER NOT NULL REFERENCES site_identities(id) ON DELETE CASCADE,
+    credential_id TEXT NOT NULL CHECK(length(credential_id) <= 1366), -- base64url of the ID, at most 1023 bytes
+    credential_json TEXT NOT NULL CHECK(length(credential_json) <= 4096 AND json_valid(credential_json)),
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    last_used_at INTEGER,
+    UNIQUE (site_id, credential_id)
 ) STRICT;
 
 CREATE TABLE site_sync_sources (

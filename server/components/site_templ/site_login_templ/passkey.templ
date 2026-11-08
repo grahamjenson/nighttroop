@@ -1,0 +1,86 @@
+package site_login_templ
+
+import (
+	"nighttroop.t1d.nz/server/components/site_templ"
+	"nighttroop.t1d.nz/server/components/ui/button"
+)
+
+// passkeyButtonClass is the login's own button's look, outlined so the password login stays the first choice
+const passkeyButtonClass = "w-full py-3 px-4 text-brand-night text-lg font-bold rounded-lg shadow-sm cursor-pointer"
+
+// PasskeyLogin signs in with any of the site's passkeys the browser has, with no name or password typed
+templ PasskeyLogin() {
+	<div class="mt-4"></div>
+	@button.Button(button.Props{
+		ID:         "site--login--passkey",
+		Type:       button.TypeButton,
+		Variant:    button.VariantOutline,
+		Class:      passkeyButtonClass,
+		Attributes: templ.Attributes{"data-passkey-begin": "/login/passkey/begin", "data-passkey-finish": "/login/passkey/finish", "data-passkey-error": "site--login--passkey-error"},
+	}) {
+		Sign in with a passkey
+	}
+	<p id="site--login--passkey-error" class="mt-2 text-sm text-red-600"></p>
+	@passkeyScript()
+}
+
+// AddPasskey is the page the link from creating a site opens on the new site, as a passkey is made on the address it
+// signs in to. The passkey is named for the identity, as admin, so nothing about the person is given.
+templ AddPasskey(name, token string) {
+	@site_templ.Base() {
+		<div class="flex flex-1 flex-col justify-center items-center px-6 py-6 lg:px-8 bg-slate-50">
+			<div id="site--passkey--new" class="p-8 rounded-lg shadow-2xl w-full max-w-96 text-center">
+				<img src="/logo.svg" alt="" class="mx-auto mb-3 size-16"/>
+				<h2 class="font-bold text-2xl">Add a passkey</h2>
+				<p class="mt-2 text-sm text-gray-500">Sign in as { name } with your fingerprint, face or device PIN, instead of the password and code.</p>
+				<div class="mt-4"></div>
+				@button.Button(button.Props{
+					ID:         "site--passkey--add",
+					Type:       button.TypeButton,
+					Variant:    button.VariantOutline,
+					Class:      passkeyButtonClass,
+					Attributes: templ.Attributes{"data-passkey-begin": "/passkey/new/begin", "data-passkey-finish": "/passkey/new/finish", "data-passkey-error": "site--passkey--error", "data-token": token},
+				}) {
+					Add a passkey for { name }
+				}
+				<p id="site--passkey--error" class="mt-2 text-sm text-red-600"></p>
+			</div>
+		</div>
+		@passkeyScript()
+	}
+}
+
+// passkeyScript makes each button with data-passkey-begin ask the browser for a passkey with the options the server
+// begins with, then send what it made or signed to finish, going to the summary once signed in. WebAuthn's binary
+// fields travel as base64url.
+templ passkeyScript() {
+	<script>
+		function passkey(begin, finish, headers, errorID) {
+			const decode = s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+			const encode = b => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+			const fail = message => document.getElementById(errorID).textContent = message;
+			fetch(begin, {method: 'POST', headers}).then(r => r.json()).then(options => {
+				const o = options.publicKey;
+				if (!o) throw new Error(options.error);
+				o.challenge = decode(o.challenge);
+				(o.excludeCredentials || o.allowCredentials || []).forEach(c => c.id = decode(c.id));
+				if (o.user) o.user.id = decode(o.user.id);
+				return o.user ? navigator.credentials.create({publicKey: o}) : navigator.credentials.get({publicKey: o});
+			}).then(credential => {
+				const response = {};
+				for (const key of ['clientDataJSON', 'attestationObject', 'authenticatorData', 'signature', 'userHandle']) {
+					if (credential.response[key]) response[key] = encode(credential.response[key]);
+				}
+				const body = JSON.stringify({id: credential.id, rawId: encode(credential.rawId), type: credential.type, response});
+				return fetch(finish, {method: 'POST', headers: {...headers, 'Content-Type': 'application/json'}, body});
+			}).then(r => r.json()).then(done => {
+				if (!done.redirect) throw new Error(done.error);
+				window.location = done.redirect;
+			}).catch(e => fail(e.message || 'The passkey did not work.'));
+		}
+		document.querySelectorAll('[data-passkey-begin]').forEach(button => button.addEventListener('click', () => {
+			const headers = button.dataset.token ? {'Passkey-Token': button.dataset.token} : {};
+			passkey(button.dataset.passkeyBegin, button.dataset.passkeyFinish, headers, button.dataset.passkeyError);
+		}));
+	</script>
+}

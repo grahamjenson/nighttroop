@@ -63,6 +63,9 @@ func (db *ControlDB) RecoverSiteAdmin(ctx context.Context, siteID string, backup
 		return nil, ErrBadBackupKey // another use of the same key got there first
 	}
 	reset, err := q.ResetSiteAdminCredentials(ctx, controldb.ResetSiteAdminCredentialsParams{PasswordHash: passwordHash, TotpSecretEnc: totpSecretEnc, SiteID: siteID, Name: name})
+	if err == nil {
+		err = q.DeleteSiteAdminPasskeys(ctx, controldb.DeleteSiteAdminPasskeysParams{SiteID: siteID, Name: name})
+	}
 	if err != nil {
 		return nil, err
 	}

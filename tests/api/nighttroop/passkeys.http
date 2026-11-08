@@ -1,0 +1,41 @@
+INCLUDE steps/new_site.steps
+
+// Signing in with a passkey begins with a challenge for any of the site's passkeys, checked by the person, on the
+// site's own address
+NAME passkey_login_begin
+POST http://{{ site }}/login/passkey/begin
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EXISTS "@publicKey.challenge"
+ASSERT_EXISTS "@publicKey.rpId"
+ASSERT_EQUALS "required" "@publicKey.userVerification"
+
+// Finishing without the challenge's session, or without a passkey, does not sign in
+NAME passkey_login_finish_without_session
+POST http://{{ site }}/login/passkey/finish
+H Accept: application/json
+H Content-Type: application/json
+B {"id": "AAAA", "rawId": "AAAA", "type": "public-key", "response": {}}
+ASSERT_STATUS 401
+ASSERT_EQUALS "That passkey could not sign you in." "@error"
+
+// Adding a passkey needs the link from creating the site; without it, or with a made up one, it is refused
+NAME passkey_new_without_link
+POST http://{{ site }}/passkey/new
+H Content-Type: application/json
+B {}
+ASSERT_STATUS 403
+
+NAME passkey_new_begin_made_up_link
+POST http://{{ site }}/passkey/new/begin
+H Accept: application/json
+H Passkey-Token: not.a.token
+ASSERT_STATUS 403
+ASSERT_EQUALS "This link to add a passkey has expired or been used." "@error"
+
+NAME passkey_new_finish_without_link
+POST http://{{ site }}/passkey/new/finish
+H Accept: application/json
+H Content-Type: application/json
+B {}
+ASSERT_STATUS 403

@@ -193,6 +193,16 @@ type SiteIdentity struct {
 	NotificationsEnabled             *bool
 }
 
+type SiteIdentityPasskey struct {
+	ID             int64
+	SiteID         string
+	IdentityID     int64
+	CredentialID   string
+	CredentialJson string
+	CreatedAt      int64
+	LastUsedAt     *int64
+}
+
 type SiteSyncSource struct {
 	SiteID                     string
 	Type                       consts.SyncSourceType

@@ -20,6 +20,42 @@
         }
       }
     },
+    "/login/passkey/begin": {
+      "post": {
+        "operationId": "PasskeyLoginBegin",
+        "summary": "Begins signing in with any of the site's passkeys: the WebAuthn options for navigator.credentials.get, its challenge kept in a cookie for 5 minutes",
+        "security": [],
+        "responses": { "200": { "$ref": "#/components/responses/PasskeyOptions" }, "default": { "$ref": "#/components/responses/PasskeyError" } }
+      }
+    },
+    "/login/passkey/finish": {
+      "post": {
+        "operationId": "PasskeyLoginFinish",
+        "summary": "Signs in the identity whose passkey signed the challenge, with no password or TOTP, setting the login cookie",
+        "security": [],
+        "requestBody": { "$ref": "#/components/requestBodies/PasskeyCredential" },
+        "responses": { "200": { "$ref": "#/components/responses/PasskeySignedIn" }, "default": { "$ref": "#/components/responses/PasskeyError" } }
+      }
+    },
+    "/passkey/new/begin": {
+      "post": {
+        "operationId": "PasskeyNewBegin",
+        "summary": "Begins adding the admin's first passkey, with the 15 minute link from creating the site: the WebAuthn options for navigator.credentials.create, asking no attestation",
+        "security": [],
+        "parameters": [{ "$ref": "#/components/parameters/PasskeyToken" }],
+        "responses": { "200": { "$ref": "#/components/responses/PasskeyOptions" }, "default": { "$ref": "#/components/responses/PasskeyError" } }
+      }
+    },
+    "/passkey/new/finish": {
+      "post": {
+        "operationId": "PasskeyNewFinish",
+        "summary": "Keeps the admin's first passkey, without the authenticator's model or attestation, and signs the admin in",
+        "security": [],
+        "parameters": [{ "$ref": "#/components/parameters/PasskeyToken" }],
+        "requestBody": { "$ref": "#/components/requestBodies/PasskeyCredential" },
+        "responses": { "200": { "$ref": "#/components/responses/PasskeySignedIn" }, "default": { "$ref": "#/components/responses/PasskeyError" } }
+      }
+    },
     "/login": {
       "post": {
         "operationId": "Login",
@@ -420,6 +456,7 @@
       "nsApiSecret": { "type": "apiKey", "in": "header", "name": "api-secret", "description": "The SHA-1 hex of a device's Nightscout token" }
     },
     "parameters": {
+      "PasskeyToken": { "name": "Passkey-Token", "in": "header", "required": true, "description": "The link's token from creating the site", "schema": { "type": "string" } },
       "Id": { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } },
       "Limit": { "name": "limit", "in": "query", "description": "At most 1000", "schema": { "type": "integer", "format": "int64" } },
       "Skip": { "name": "skip", "in": "query", "schema": { "type": "integer", "format": "int64" } },
@@ -438,6 +475,7 @@
       "NsPermanent": { "name": "permanent", "in": "query", "description": "Deletes the row instead of marking it deleted", "schema": { "type": "boolean" } }
     },
     "requestBodies": {
+      "PasskeyCredential": { "required": true, "content": { "application/json": { "schema": { "type": "object", "description": "The PublicKeyCredential the browser made or signed with, its binary fields in base64url", "additionalProperties": true } } } },
       "GlucoseReadingBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GlucoseReading" } } } },
       "InsulinDoseBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/InsulinDose" } } } },
       "FoodIntakeBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FoodIntake" } } } },
@@ -445,6 +483,9 @@
       "NsDocuments": { "required": true, "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/NsDocument" } } } } }
     },
     "responses": {
+      "PasskeyOptions": { "description": "WebAuthn options, as publicKey, for the browser", "content": { "application/json": { "schema": { "type": "object", "properties": { "publicKey": { "type": "object", "additionalProperties": true } } } } } },
+      "PasskeySignedIn": { "description": "Signed in, with where to go", "content": { "application/json": { "schema": { "type": "object", "properties": { "redirect": { "type": "string" } } } } } },
+      "PasskeyError": { "description": "Why the passkey did not work", "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" } } } } } },
       "Error": { "description": "An error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
       "Deleted": { "description": "Deleted", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string", "description": "deleted" } } } } } },
       "GlucoseReadingResult": { "description": "A reading", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "$ref": "#/components/schemas/GlucoseReading" } } } } } },
