@@ -113,7 +113,7 @@ ASSERT_VISIBLE #site--nav--search-results >> text="Settings"
 ASSERT_VISIBLE #site--nav--search--settings--push-devices[aria-selected="true"]
 ASSERT_VISIBLE #site--nav--search--settings--push
 ASSERT_COUNT #site--nav--search-results [role=option] 2
-ASSERT_NOT_VISIBLE #site--nav--search--settings--push [data-hint]
+ASSERT_NOT_VISIBLE #site--nav--search--settings--push>[data-hint]
 ASSERT_NOT_VISIBLE #site--nav--search-empty
 SCREENSHOT navigation_search
 
@@ -137,11 +137,11 @@ ASSERT_NOT_VISIBLE #site--nav--search-results
 // Search also finds a page by the headings and words on it, showing the one it was found by
 TYPE #site--nav--search nightscout
 ASSERT_VISIBLE #site--nav--search--settings--connectors[aria-selected="true"]
-ASSERT_TEXT_EQUALS #site--nav--search--settings--connectors [data-hint] Nightscout
+ASSERT_TEXT_EQUALS #site--nav--search--settings--connectors>[data-hint] Nightscout
 ASSERT_COUNT #site--nav--search-results [role=option] 1
 TYPE #site--nav--search low
 ASSERT_VISIBLE #site--nav--search--settings--alarms[aria-selected="true"]
-ASSERT_TEXT_EQUALS #site--nav--search--settings--alarms [data-hint] Low Alarm
+ASSERT_TEXT_EQUALS #site--nav--search--settings--alarms>[data-hint] Low Alarm
 ASSERT_COUNT #site--nav--search-results [role=option] 1
 SCREENSHOT navigation_search_keyword
 
@@ -151,7 +151,7 @@ ASSERT_VISIBLE #site--nav--search--data--glucose[aria-selected="true"]
 ASSERT_COUNT #site--nav--search-results [role=option] 1
 TYPE #site--nav--search bolus
 ASSERT_VISIBLE #site--nav--search--data--insulin[aria-selected="true"]
-ASSERT_TEXT_EQUALS #site--nav--search--data--insulin [data-hint] Bolus
+ASSERT_TEXT_EQUALS #site--nav--search--data--insulin>[data-hint] Bolus
 ASSERT_VISIBLE #site--nav--search--presets--food
 ASSERT_COUNT #site--nav--search-results [role=option] 2
 PRESS Enter
