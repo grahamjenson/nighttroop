@@ -115,7 +115,7 @@ func TestSaveValueKeepsAnInputsValue(t *testing.T) {
 
 func TestCountAssertTakesALocatorAndANumber(t *testing.T) {
 	fsys := fstest.MapFS{
-		"site/count.bdd": {Data: []byte("GOTO /\nASSERT_COUNT #toaster>[data-tui-toast] 3\n")},
+		"site/count.bdd": {Data: []byte("GOTO /\nASSERT_COUNT #toaster>[data-tui-toast] 3\nASSERT_COUNT #table tbody tr 30\n")},
 		"site/bad.bdd":   {Data: []byte("GOTO /\nASSERT_COUNT #toaster three\n")},
 	}
 
@@ -124,6 +124,10 @@ func TestCountAssertTakesALocatorAndANumber(t *testing.T) {
 	count := file[0].(*Goto).Asserts[0].(*AssertCount)
 	require.Equal(t, "#toaster>[data-tui-toast]", count.Locator)
 	require.Equal(t, 3, count.Count)
+	// The number is the last word, so the locator can have spaces
+	rows := file[0].(*Goto).Asserts[1].(*AssertCount)
+	require.Equal(t, "#table tbody tr", rows.Locator)
+	require.Equal(t, 30, rows.Count)
 
 	_, err = parseBrowser(fsys, "site/bad.bdd")
 	require.ErrorContains(t, err, "site/bad.bdd:2: ASSERT_COUNT needs a locator and a number")

@@ -106,10 +106,11 @@ func (s *SummaryDailyCollection) DeleteHTMXResponse(*sitemodels.SiteSummaryDaily
 	return templ.NopComponent
 }
 
-// PastSummaryDays are the site's kept days before today, from a year ago, oldest first
-func PastSummaryDays(ctx context.Context, q *sitedb.Queries, location *time.Location, now time.Time) ([]*sitedb.SummaryPeriod, error) {
-	from, to := LocalDate(now, location, -summaryDailyMaxDays), LocalDate(now, location, -1)
-	days, err := q.SearchSummaryPeriods(ctx, sitedb.SearchSummaryPeriodsParams{Period: "day", DateGTE: &from, DateLTE: &to, Limit: summaryDailyMaxDays})
+// PastSummaryDays are the site's kept days of the count days before today, at most a year, oldest first
+func PastSummaryDays(ctx context.Context, q *sitedb.Queries, location *time.Location, now time.Time, count int) ([]*sitedb.SummaryPeriod, error) {
+	count = min(count, summaryDailyMaxDays)
+	from, to := LocalDate(now, location, -count), LocalDate(now, location, -1)
+	days, err := q.SearchSummaryPeriods(ctx, sitedb.SearchSummaryPeriodsParams{Period: "day", DateGTE: &from, DateLTE: &to, Limit: int64(count)})
 	slices.Reverse(days)
 	return days, err
 }

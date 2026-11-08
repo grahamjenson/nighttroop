@@ -99,42 +99,77 @@ templ reportKinds(selected string, last time.Time) {
 			{ kind.Label }
 		}
 	}
-	@reportButton("site--reports--tdd-button", "/reports/tdd", selected == "tdd") {
-		Daily dose
+	@reportButton("site--reports--tdd-button", "/reports/tdd", false) {
+		TDD
 	}
 }
 
-// TDDReport is the reports page of each past day's daily dose as a bar, and their count, mean, lowest and highest
-templ TDDReport(days []*sitemodels.SiteSummaryDaily) {
-	{{ days = dosed(days) }}
-	{{ mean, lowest, highest := tddStats(days) }}
-	@heading.Title("Daily dose")
+// TDDReport is the total daily dose of each day of the week, fortnight or month before today: a bar of each day with
+// insulin, how many days had it and their mean, lowest and highest, and a table of every day's dose, newest first
+templ TDDReport(rangeName string, days []*sitemodels.SiteSummaryDaily) {
+	{{ last := time.Now().In(site_data_templ.Location(ctx)).AddDate(0, 0, -1) }}
+	{{ first := last.AddDate(0, 0, 1-TDDRangeDays(rangeName)) }}
+	{{ withInsulin := dosed(days) }}
+	{{ mean, lowest, highest := tddStats(withInsulin) }}
+	@heading.Title("TDD")
 	<div id="site--reports" class="w-full space-y-4 py-4">
 		<div class="flex flex-wrap items-center justify-between gap-2">
 			<div>
-				<h1 class="text-2xl font-bold">Reports</h1>
-				<span id="site--reports--title" class="text-sm text-gray-500">Daily dose of past days</span>
+				<h1 class="text-2xl font-bold">TDD</h1>
+				<span id="site--reports--title" class="text-sm text-gray-500">Total daily dose, { first.Format("Mon 2 Jan") } to { last.Format("Mon 2 Jan 2006") }</span>
 			</div>
 			<div class="flex flex-wrap gap-1">
-				@reportKinds("tdd", time.Now().In(site_data_templ.Location(ctx)).AddDate(0, 0, -1))
+				for _, r := range tddRanges {
+					@reportButton("site--reports--tdd--range-"+r.Name, "/reports/tdd?range="+r.Name, r.Name == rangeName) {
+						{ r.Label }
+					}
+				}
 			</div>
 		</div>
 		<dl class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-			@stat("site--reports--tdd--days", "Days with insulin", fmt.Sprint(len(days)))
+			@stat("site--reports--tdd--days", "Days with insulin", fmt.Sprint(len(withInsulin)))
 			@stat("site--reports--tdd--mean", "Daily dose", display.Value(mean, " U"))
 			@stat("site--reports--tdd--lowest", "Lowest", display.Value(lowest, " U"))
 			@stat("site--reports--tdd--highest", "Highest", display.Value(highest, " U"))
 		</dl>
 		<section class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
 			<h2 class="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">Total daily dose</h2>
-			if len(days) > 0 {
-				{{ chart := tddChart(days) }}
+			if len(withInsulin) > 0 {
+				{{ chart := tddChart(withInsulin, first, last) }}
 				<div id="site--reports--tdd--chart" class="h-90 w-full text-xs">
 					<div id={ chart.ChartID } class="h-full w-full"></div>
 					@templ.Raw(chart.RenderSnippet().Script)
 				</div>
 			} else {
-				<p id="site--reports--tdd--empty" class="text-sm text-gray-500">No insulin in past days yet.</p>
+				<p id="site--reports--tdd--empty" class="text-sm text-gray-500">No insulin on these days.</p>
+			}
+		</section>
+		<section class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+			<h2 class="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">Each day</h2>
+			@table.Table(table.Props{ID: "site--reports--tdd--table", Class: "rounded-lg border border-gray-200"}) {
+				@table.Header() {
+					@table.Row() {
+						@table.Head() {
+							Day
+						}
+						@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
+							Total daily dose
+						}
+					}
+				}
+				@table.Body() {
+					for _, row := range tddRows(days, first, last) {
+						{{ date, _ := time.Parse(time.DateOnly, row.Date) }}
+						@table.Row(table.RowProps{ID: "site--reports--tdd--day-" + row.Date}) {
+							@table.Cell() {
+								{ date.Format("Mon 2 Jan 2006") }
+							}
+							@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+								{ display.Value(row.Dose, " U") }
+							}
+						}
+					}
+				}
 			}
 		</section>
 	</div>

@@ -323,11 +323,16 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   glucose over the AGP of the 7 days to it. A report with no glucose says so instead.
 - Day, Week, Fortnight and Month open the report of that kind ending on the report's last day, or today; Previous and
   Next open the one before and after, disabled past today or a year ago. Back and forward move between reports.
-- Daily dose, next to the period buttons, opens the daily dose report at `/reports/tdd`: a bar of each kept day before
-  today, back a year, with insulin, oldest first, dated in the site's timezone; today is left out as it is not over.
-- A day with no insulin has no bar and is not counted. Hovering a bar shows its date and daily dose in U.
-- The daily dose report shows how many days have insulin and their mean, lowest and highest daily dose, and says when
-  there are no days with insulin yet. Day, Week, Fortnight and Month open those reports ending yesterday.
+- The menu's Reports group has TDD, and the AGP report's TDD button opens it too: the total daily dose report at
+  `/reports/tdd`, of the week before today at first. Its Week, Fortnight and Month buttons show the 7, 14 or 30 days
+  before today (`?range=week`, `fortnight` or `month`; another range is refused), back and forward moving between
+  them; today is left out as it is not over. It says which days it covers, dated in the site's timezone.
+- It draws a bar of each day's total daily dose, oldest first, on an axis of every day it covers; a day with no
+  insulin has no bar and is not counted. Hovering a bar shows its date and daily dose in U.
+- It shows how many of its days have insulin and their mean, lowest and highest daily dose, and says when none have
+  insulin.
+- Under the bars, a table lists every day it covers, newest first, with its total daily dose in U, or "–" for a day
+  with no insulin.
 
 ### Getting started
 
@@ -780,6 +785,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 
 ### My Account
 
+- The menu's top row has My Account and Logout beside each other, above Data on the left and Reports, Settings and
+  Logs on the right, so every item fits in a laptop's window without scrolling the menu.
 - My Account, at the top of the menu, says who is signed in and with which role, opens the guide to setting up the
   site (not on control's), and lists its
   passkeys: when each was added and last used. Only an identity that signs in to the website has it.
