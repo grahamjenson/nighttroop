@@ -125,3 +125,30 @@ func TestSearchConnectorsFailedFirst(t *testing.T) {
 	}
 	require.Equal(t, []consts.ConnectorType{consts.ConnectorTypeDexcom, consts.ConnectorTypeNightscout, consts.ConnectorTypeVirtual}, types)
 }
+
+// TestRecordSiteSizes checks the resource check keeps each site's DB size, whatever wrote to it, and keeps the last
+// size of a DB in memory, which has none to measure
+func TestRecordSiteSizes(t *testing.T) {
+	_, controlDB, site := testutils.NewControlDBWithSite(t)
+	ctx, siteID := t.Context(), site.SiteDB.Subdomain
+	get := func() *int64 {
+		model, err := controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: siteID})
+		require.NoError(t, err)
+		return model.EstimatedDbSizeKb
+	}
+	onDisk := func(fileBytes int, walBytes int) *db.SiteDB {
+		siteDB := siteDBFiles(t, fileBytes, walBytes)
+		siteDB.Subdomain = siteID
+		return siteDB
+	}
+
+	require.NoError(t, controlDB.RecordSiteSizes(ctx, []*db.SiteDB{onDisk(4096, 0)}))
+	require.Equal(t, ptr(4), get())
+
+	// Grown by a sync, with no request to the site
+	require.NoError(t, controlDB.RecordSiteSizes(ctx, []*db.SiteDB{onDisk(8192, 2048)}))
+	require.Equal(t, ptr(10), get())
+
+	require.NoError(t, controlDB.RecordSiteSizes(ctx, []*db.SiteDB{{DB: &sitedb.DB{InMemory: true}, Subdomain: siteID}}))
+	require.Equal(t, ptr(10), get())
+}

@@ -29,7 +29,7 @@ CREATE TABLE sites (
     
 
     max_db_size_kb_limit INTEGER DEFAULT 3000, -- default 3Mb, can be changed in control plane
-    estimated_db_size_kb INTEGER, -- the site DB's size on disk, measured when its last write is
+    estimated_db_size_kb INTEGER, -- the site DB's size on disk, measured by the resource check and with its last write
     
 
     -- last_seen_at is default null because on creation they have not been seen, will be deleted quickly is not logged in sooner

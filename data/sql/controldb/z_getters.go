@@ -5088,6 +5088,26 @@ func (m *SiteExistsParams) SetID(v string) {
 	m.ID = v
 }
 
+// GetEstimatedDbSizeKb returns the EstimatedDbSizeKb value.
+func (m UpdateSiteDBSizeParams) GetEstimatedDbSizeKb() *int64 {
+	return m.EstimatedDbSizeKb
+}
+
+// SetEstimatedDbSizeKb sets the EstimatedDbSizeKb value and returns the updated UpdateSiteDBSizeParams.
+func (m *UpdateSiteDBSizeParams) SetEstimatedDbSizeKb(v *int64) {
+	m.EstimatedDbSizeKb = v
+}
+
+// GetID returns the ID value.
+func (m UpdateSiteDBSizeParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated UpdateSiteDBSizeParams.
+func (m *UpdateSiteDBSizeParams) SetID(v string) {
+	m.ID = v
+}
+
 // GetLastSeenAt returns the LastSeenAt value.
 func (m UpdateSiteDateFlagsParams) GetLastSeenAt() *int64 {
 	return m.LastSeenAt

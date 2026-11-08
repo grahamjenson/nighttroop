@@ -108,6 +108,11 @@ SET
     estimated_db_size_kb = COALESCE(?, estimated_db_size_kb)
 WHERE id = ?;
 
+-- name: UpdateSiteDBSize :exec
+-- Only a size that changed is written, so measuring every site rewrites none of the ones that did not
+UPDATE sites SET estimated_db_size_kb = sqlc.arg('EstimatedDbSizeKb')
+WHERE id = sqlc.arg('ID') AND estimated_db_size_kb IS NOT sqlc.arg('EstimatedDbSizeKb');
+
 
 -------
 -- DELETE

@@ -261,6 +261,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateRateLimitsStmt, err = db.PrepareContext(ctx, updateRateLimits); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateRateLimits: %w", err)
 	}
+	if q.updateSiteDBSizeStmt, err = db.PrepareContext(ctx, updateSiteDBSize); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateSiteDBSize: %w", err)
+	}
 	if q.updateSiteDateFlagsStmt, err = db.PrepareContext(ctx, updateSiteDateFlags); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSiteDateFlags: %w", err)
 	}
@@ -688,6 +691,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateRateLimitsStmt: %w", cerr)
 		}
 	}
+	if q.updateSiteDBSizeStmt != nil {
+		if cerr := q.updateSiteDBSizeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateSiteDBSizeStmt: %w", cerr)
+		}
+	}
 	if q.updateSiteDateFlagsStmt != nil {
 		if cerr := q.updateSiteDateFlagsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateSiteDateFlagsStmt: %w", cerr)
@@ -851,6 +859,7 @@ type Queries struct {
 	updateControlPasskeyUsedStmt            *sql.Stmt
 	updatePublicSiteCreationStmt            *sql.Stmt
 	updateRateLimitsStmt                    *sql.Stmt
+	updateSiteDBSizeStmt                    *sql.Stmt
 	updateSiteDateFlagsStmt                 *sql.Stmt
 	updateSiteIdentityDateFlagsStmt         *sql.Stmt
 	updateSiteIdentityEnabledStmt           *sql.Stmt
@@ -945,6 +954,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateControlPasskeyUsedStmt:            q.updateControlPasskeyUsedStmt,
 		updatePublicSiteCreationStmt:            q.updatePublicSiteCreationStmt,
 		updateRateLimitsStmt:                    q.updateRateLimitsStmt,
+		updateSiteDBSizeStmt:                    q.updateSiteDBSizeStmt,
 		updateSiteDateFlagsStmt:                 q.updateSiteDateFlagsStmt,
 		updateSiteIdentityDateFlagsStmt:         q.updateSiteIdentityDateFlagsStmt,
 		updateSiteIdentityEnabledStmt:           q.updateSiteIdentityEnabledStmt,
