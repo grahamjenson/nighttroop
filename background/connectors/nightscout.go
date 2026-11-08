@@ -48,7 +48,7 @@ func (b *ConnectorJobManager) syncNightscout(jobInfo *ConnectorJobInfo) (int, er
 	// One small call says which collections have changed, so unchanged ones are not read every sync
 	lastModified, err := nsc.GetLastModified(ctx)
 	if err != nil {
-		return 0, fmt.Errorf("NightscoutConnector Error: %w", err)
+		return 0, fmt.Errorf("Nightscout connector error: %w", err)
 	}
 
 	added := 0
@@ -80,7 +80,7 @@ func (b *ConnectorJobManager) syncNightscout(jobInfo *ConnectorJobInfo) (int, er
 func (b *ConnectorJobManager) syncNightscoutProfile(ctx context.Context, nsc *nightscoutClient, jobInfo *ConnectorJobInfo) (int, error) {
 	profile, err := nsc.GetCurrentProfile(ctx)
 	if err != nil {
-		return 0, fmt.Errorf("NightscoutConnector Error: %w", err)
+		return 0, fmt.Errorf("Nightscout connector error: %w", err)
 	}
 	if profile == nil {
 		return 0, nil
@@ -106,7 +106,7 @@ var nightscoutCollections = []struct {
 func (b *ConnectorJobManager) syncNightscoutCollection(ctx context.Context, nsc *nightscoutClient, jobInfo *ConnectorJobInfo, collection nsutils.Collection, limit int) (int, error) {
 	docs, err := nsc.GetDocuments(ctx, string(collection), time.Now().Add(-20*time.Minute), time.Time{}, limit)
 	if err != nil {
-		return 0, fmt.Errorf("NightscoutConnector Error: %w", err)
+		return 0, fmt.Errorf("Nightscout connector error: %w", err)
 	}
 	return b.createNightscoutDocuments(ctx, jobInfo, collection, docs, false)
 }
