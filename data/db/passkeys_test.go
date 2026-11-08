@@ -51,3 +51,37 @@ func TestPasskeysKeepTheirOwners(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, controlKeys)
 }
+
+// Resetting an identity's password or TOTP, by an admin on the site or in control, removes its passkeys, as for a lost
+// or taken device, so it then signs in only with its new credentials; another identity's are kept
+func TestResettingAnIdentityRemovesItsPasskeys(t *testing.T) {
+	_, controlDB, site := testutils.NewControlDBWithSite(t)
+	ctx, q, siteID := t.Context(), controlDB.Queries, site.SiteDB.Subdomain
+	identity := func(name string) *controldb.SiteIdentity {
+		found, err := q.GetSiteIdentity(ctx, controldb.GetSiteIdentityParams{SiteID: siteID, Name: name})
+		require.NoError(t, err)
+		return found
+	}
+	admin, phone := identity(consts.FIRST_ADMIN_NAME), identity(consts.FIRST_PWD_NAME)
+	add := func(owner *controldb.SiteIdentity, credentialID string) {
+		require.NoError(t, q.CreateSiteIdentityPasskey(ctx, controldb.CreateSiteIdentityPasskeyParams{SiteID: siteID, IdentityID: owner.ID, CredentialID: credentialID, CredentialJson: "{}"}))
+	}
+	count := func(owner *controldb.SiteIdentity) int {
+		passkeys, err := q.ListSiteIdentityPasskeys(ctx, controldb.ListSiteIdentityPasskeysParams{SiteID: siteID, IdentityID: owner.ID})
+		require.NoError(t, err)
+		return len(passkeys)
+	}
+	add(admin, "admin-key")
+	add(phone, "phone-key")
+
+	_, err := controlDB.ResetSiteIdentityPassword(ctx, admin, "control admin")
+	require.NoError(t, err)
+	require.Zero(t, count(admin))
+	require.Equal(t, 1, count(phone))
+
+	add(admin, "admin-key-again")
+	_, err = controlDB.ResetSiteIdentityTOTP(ctx, identity(consts.FIRST_ADMIN_NAME), "control admin")
+	require.NoError(t, err)
+	require.Zero(t, count(admin))
+	require.Equal(t, 1, count(phone))
+}

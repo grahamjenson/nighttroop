@@ -33,7 +33,6 @@
     1. P3: Manage the control admins: list them, reset another's password or TOTP, change their role or delete one
 
 1. Accounts
-    1. P2: Remove an identity's passkeys when an admin resets its password or TOTP, as recovering the site does
     1. Recovering a site's admin without the initial backup key
     1. Recovering a lost control admin login, as setup only runs on a server with no control admin
 

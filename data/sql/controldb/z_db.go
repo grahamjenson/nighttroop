@@ -96,6 +96,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deleteSiteIdentityPasskeyStmt, err = db.PrepareContext(ctx, deleteSiteIdentityPasskey); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteSiteIdentityPasskey: %w", err)
 	}
+	if q.deleteSiteIdentityPasskeysStmt, err = db.PrepareContext(ctx, deleteSiteIdentityPasskeys); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteSiteIdentityPasskeys: %w", err)
+	}
 	if q.deleteSitePushCredentialsStmt, err = db.PrepareContext(ctx, deleteSitePushCredentials); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteSitePushCredentials: %w", err)
 	}
@@ -408,6 +411,11 @@ func (q *Queries) Close() error {
 	if q.deleteSiteIdentityPasskeyStmt != nil {
 		if cerr := q.deleteSiteIdentityPasskeyStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteSiteIdentityPasskeyStmt: %w", cerr)
+		}
+	}
+	if q.deleteSiteIdentityPasskeysStmt != nil {
+		if cerr := q.deleteSiteIdentityPasskeysStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteSiteIdentityPasskeysStmt: %w", cerr)
 		}
 	}
 	if q.deleteSitePushCredentialsStmt != nil {
@@ -788,6 +796,7 @@ type Queries struct {
 	deleteSiteAdminPasskeysStmt             *sql.Stmt
 	deleteSiteIdentityStmt                  *sql.Stmt
 	deleteSiteIdentityPasskeyStmt           *sql.Stmt
+	deleteSiteIdentityPasskeysStmt          *sql.Stmt
 	deleteSitePushCredentialsStmt           *sql.Stmt
 	deleteSitesStmt                         *sql.Stmt
 	deleteSyncSourceStmt                    *sql.Stmt
@@ -881,6 +890,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		deleteSiteAdminPasskeysStmt:             q.deleteSiteAdminPasskeysStmt,
 		deleteSiteIdentityStmt:                  q.deleteSiteIdentityStmt,
 		deleteSiteIdentityPasskeyStmt:           q.deleteSiteIdentityPasskeyStmt,
+		deleteSiteIdentityPasskeysStmt:          q.deleteSiteIdentityPasskeysStmt,
 		deleteSitePushCredentialsStmt:           q.deleteSitePushCredentialsStmt,
 		deleteSitesStmt:                         q.deleteSitesStmt,
 		deleteSyncSourceStmt:                    q.deleteSyncSourceStmt,

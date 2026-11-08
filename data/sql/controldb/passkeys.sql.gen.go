@@ -102,6 +102,21 @@ func (q *Queries) DeleteSiteIdentityPasskey(ctx context.Context, arg DeleteSiteI
 	return err
 }
 
+const deleteSiteIdentityPasskeys = `-- name: DeleteSiteIdentityPasskeys :exec
+DELETE FROM passkeys WHERE site_id = CAST(?1 AS TEXT) AND identity_id = CAST(?2 AS INTEGER)
+`
+
+type DeleteSiteIdentityPasskeysParams struct {
+	SiteID     string
+	IdentityID int64
+}
+
+// A reset identity signs in only with its new password or TOTP, so a lost device's passkey works no more
+func (q *Queries) DeleteSiteIdentityPasskeys(ctx context.Context, arg DeleteSiteIdentityPasskeysParams) error {
+	_, err := q.exec(ctx, q.deleteSiteIdentityPasskeysStmt, deleteSiteIdentityPasskeys, arg.SiteID, arg.IdentityID)
+	return err
+}
+
 const getControlPasskey = `-- name: GetControlPasskey :one
 SELECT id, site_id, identity_id, control_identity_id, credential_id, credential_json, created_at, last_used_at FROM passkeys WHERE control_identity_id IS NOT NULL AND credential_id = ?1
 `
