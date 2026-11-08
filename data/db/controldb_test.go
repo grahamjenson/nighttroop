@@ -3,6 +3,7 @@ package db_test
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
@@ -16,6 +17,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/logsdb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
+	"nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/s3utils"
@@ -213,6 +215,41 @@ func TestTruncateSite(t *testing.T) {
 
 	_, err = controlDB.TruncateSite(ctx, "not-a-site")
 	require.ErrorContains(t, err, "is not open")
+}
+
+// Old device reports drop the loop's configuration and settings, keeping their other attributes; recent ones keep all
+func TestTruncateSiteDeviceReportSettings(t *testing.T) {
+	_, controlDB, site := testutils.NewControlDBWithSite(t)
+	ctx, q := t.Context(), site.SiteDB.Queries()
+	other := types.DeviceReportOther{LoopName: new("loop"), PumpModel: new("omnipod"), ConfigurationSettings: json.RawMessage(`{"a":1}`),
+		LoopSettings: json.RawMessage(`{"iob":{"iob":1.5}}`), LoopPredictionsStartTime: new(int64(1)), LoopPredictionsDefault: json.RawMessage(`[100,110]`)}
+	days := controlDB.ServerConfig.TruncateRecordsAfterDays
+	for id, ago := range map[string]int{"old": days + 1, "recent": days - 1} {
+		_, err := q.CreateDeviceReport(ctx, sitedb.CreateDeviceReportParams{ID: id, OtherAttributes: other, LoopIob: new(1.5),
+			OccurredAt: time.Now().AddDate(0, 0, -ago).UnixMilli(), CreatedByIdentityName: "phone"})
+		require.NoError(t, err)
+	}
+	_, err := q.CreateDeviceReport(ctx, sitedb.CreateDeviceReportParams{ID: "settings-only", OccurredAt: 1, CreatedByIdentityName: "phone",
+		OtherAttributes: types.DeviceReportOther{LoopSettings: json.RawMessage(`{}`)}})
+	require.NoError(t, err)
+	before, err := q.GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: "old"})
+	require.NoError(t, err)
+
+	_, err = controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
+	require.NoError(t, err)
+	old, err := q.GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: "old"})
+	require.NoError(t, err)
+	kept := other
+	kept.ConfigurationSettings, kept.LoopSettings = nil, nil
+	require.Equal(t, kept, old.OtherAttributes, "an old report drops only the loop's configuration and settings")
+	require.Equal(t, 1.5, *old.LoopIob)
+	require.Equal(t, before.UpdatedAt, old.UpdatedAt, "it is not a change for Nightscout's history")
+	recent, err := q.GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: "recent"})
+	require.NoError(t, err)
+	require.Equal(t, other, recent.OtherAttributes, "a recent report keeps everything")
+	settingsOnly, err := q.GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: "settings-only"})
+	require.NoError(t, err)
+	require.Equal(t, types.DeviceReportOther{}, settingsOnly.OtherAttributes)
 }
 
 // At start every live site's DB file is opened, several at once

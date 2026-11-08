@@ -81,6 +81,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.clearDeviceReportsRawJSONStmt, err = db.PrepareContext(ctx, clearDeviceReportsRawJSON); err != nil {
 		return nil, fmt.Errorf("error preparing query ClearDeviceReportsRawJSON: %w", err)
 	}
+	if q.clearDeviceReportsSettingsStmt, err = db.PrepareContext(ctx, clearDeviceReportsSettings); err != nil {
+		return nil, fmt.Errorf("error preparing query ClearDeviceReportsSettings: %w", err)
+	}
 	if q.clearEventGroupsRawJSONStmt, err = db.PrepareContext(ctx, clearEventGroupsRawJSON); err != nil {
 		return nil, fmt.Errorf("error preparing query ClearEventGroupsRawJSON: %w", err)
 	}
@@ -554,6 +557,11 @@ func (q *Queries) Close() error {
 	if q.clearDeviceReportsRawJSONStmt != nil {
 		if cerr := q.clearDeviceReportsRawJSONStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing clearDeviceReportsRawJSONStmt: %w", cerr)
+		}
+	}
+	if q.clearDeviceReportsSettingsStmt != nil {
+		if cerr := q.clearDeviceReportsSettingsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing clearDeviceReportsSettingsStmt: %w", cerr)
 		}
 	}
 	if q.clearEventGroupsRawJSONStmt != nil {
@@ -1239,6 +1247,7 @@ type Queries struct {
 	clearActivitiesRawJSONStmt                  *sql.Stmt
 	clearComponentEventsRawJSONStmt             *sql.Stmt
 	clearDeviceReportsRawJSONStmt               *sql.Stmt
+	clearDeviceReportsSettingsStmt              *sql.Stmt
 	clearEventGroupsRawJSONStmt                 *sql.Stmt
 	clearFoodIntakesRawJSONStmt                 *sql.Stmt
 	clearFoodPresetsRawJSONStmt                 *sql.Stmt
@@ -1389,6 +1398,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		clearActivitiesRawJSONStmt:                  q.clearActivitiesRawJSONStmt,
 		clearComponentEventsRawJSONStmt:             q.clearComponentEventsRawJSONStmt,
 		clearDeviceReportsRawJSONStmt:               q.clearDeviceReportsRawJSONStmt,
+		clearDeviceReportsSettingsStmt:              q.clearDeviceReportsSettingsStmt,
 		clearEventGroupsRawJSONStmt:                 q.clearEventGroupsRawJSONStmt,
 		clearFoodIntakesRawJSONStmt:                 q.clearFoodIntakesRawJSONStmt,
 		clearFoodPresetsRawJSONStmt:                 q.clearFoodPresetsRawJSONStmt,

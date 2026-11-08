@@ -14008,6 +14008,16 @@ func (m *ClearDeviceReportsRawJSONParams) SetBefore(v int64) {
 }
 
 // GetBefore returns the Before value.
+func (m ClearDeviceReportsSettingsParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated ClearDeviceReportsSettingsParams.
+func (m *ClearDeviceReportsSettingsParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetBefore returns the Before value.
 func (m ClearEventGroupsRawJSONParams) GetBefore() int64 {
 	return m.Before
 }

@@ -13,6 +13,13 @@ UPDATE component_events SET raw_json_data = NULL WHERE raw_json_data IS NOT NULL
 -- name: ClearDeviceReportsRawJSON :exec
 UPDATE device_reports SET raw_json_data = NULL WHERE raw_json_data IS NOT NULL AND occurred_at < @before;
 
+-- name: ClearDeviceReportsSettings :exec
+-- The loop's configuration and settings as sent, up to 8 KB each, are dropped from old device reports' other attributes;
+-- the loop's name, IOB, COB and predictions are kept, and other attributes left with none is NULL, as when none came
+UPDATE device_reports SET other_attributes = NULLIF(json_remove(other_attributes, '$.configuration_settings', '$.loop_settings'), '{}')
+WHERE occurred_at < @before
+    AND (json_type(other_attributes, '$.configuration_settings') IS NOT NULL OR json_type(other_attributes, '$.loop_settings') IS NOT NULL);
+
 -- name: ClearEventGroupsRawJSON :exec
 UPDATE event_groups SET raw_json_data = NULL WHERE raw_json_data IS NOT NULL AND occurred_at < @before;
 

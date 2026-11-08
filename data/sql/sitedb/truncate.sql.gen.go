@@ -54,6 +54,23 @@ func (q *Queries) ClearDeviceReportsRawJSON(ctx context.Context, arg ClearDevice
 	return err
 }
 
+const clearDeviceReportsSettings = `-- name: ClearDeviceReportsSettings :exec
+UPDATE device_reports SET other_attributes = NULLIF(json_remove(other_attributes, '$.configuration_settings', '$.loop_settings'), '{}')
+WHERE occurred_at < ?1
+    AND (json_type(other_attributes, '$.configuration_settings') IS NOT NULL OR json_type(other_attributes, '$.loop_settings') IS NOT NULL)
+`
+
+type ClearDeviceReportsSettingsParams struct {
+	Before int64
+}
+
+// The loop's configuration and settings as sent, up to 8 KB each, are dropped from old device reports' other attributes;
+// the loop's name, IOB, COB and predictions are kept, and other attributes left with none is NULL, as when none came
+func (q *Queries) ClearDeviceReportsSettings(ctx context.Context, arg ClearDeviceReportsSettingsParams) error {
+	_, err := q.exec(ctx, q.clearDeviceReportsSettingsStmt, clearDeviceReportsSettings, arg.Before)
+	return err
+}
+
 const clearEventGroupsRawJSON = `-- name: ClearEventGroupsRawJSON :exec
 UPDATE event_groups SET raw_json_data = NULL WHERE raw_json_data IS NOT NULL AND occurred_at < ?1
 `
