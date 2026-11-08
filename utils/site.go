@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"regexp"
+	"strings"
 	"sync"
 
 	"nighttroop.t1d.nz/utils/security"
@@ -41,13 +41,10 @@ func NextSiteSubdomain(usePrecomputedList bool) string {
 	return security.SecureRandomString(SITE_ID_LENGTH, SITE_CHAR_SET)
 }
 
+// SyntacticallyValidateSiteID is whether siteID could be a site's: SITE_ID_LENGTH letters from SITE_CHAR_SET. Every
+// request to a subdomain asks, so it allocates nothing, where compiling a regex each time did.
 func SyntacticallyValidateSiteID(siteID string) bool {
-	if len(siteID) != SITE_ID_LENGTH {
-		return false
-	}
-	// validate with regex that all chars are lowercase a-z
-	re := regexp.MustCompile("^[a-z]+$")
-	return re.MatchString(siteID)
+	return len(siteID) == SITE_ID_LENGTH && strings.Trim(siteID, SITE_CHAR_SET) == ""
 }
 
 func NextID() string {
