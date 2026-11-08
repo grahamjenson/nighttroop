@@ -17,6 +17,7 @@ import (
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -58,14 +59,10 @@ func passkeyUserFor(r *http.Request, controlDB *db.ControlDB, identity *controld
 	return user, err
 }
 
-// passkeyLinkUser is the identity the link from creating its site, in the form's token or the Passkey-Token header,
-// adds the first passkey to: so a link adds only one, and none once the identity has one
+// passkeyLinkUser is the identity the link from creating its site, its token in the Passkey-Token header, adds the
+// first passkey to: so a link adds only one, and none once the identity has one
 func passkeyLinkUser(r *http.Request, controlDB *db.ControlDB, cfg *config.ServerConfig) (passkeyUser, error) {
-	token := r.FormValue("token")
-	if token == "" {
-		token = r.Header.Get("Passkey-Token")
-	}
-	name, err := cfg.Security.VerifyPasskeyJWTToken(token, httputils.GetSiteContext(r.Context()).SiteID)
+	name, err := cfg.Security.VerifyPasskeyJWTToken(r.Header.Get("Passkey-Token"), httputils.GetSiteContext(r.Context()).SiteID)
 	if err != nil {
 		return passkeyUser{}, err
 	}
@@ -80,17 +77,12 @@ func passkeyLinkUser(r *http.Request, controlDB *db.ControlDB, cfg *config.Serve
 	return user, err
 }
 
-// POSTPasskeyNew is the page to add the identity's first passkey, which the link from creating the site opens
-func POSTPasskeyNew(controlDB *db.ControlDB, cfg *config.ServerConfig) http.HandlerFunc {
+// GETPasskeyNew is the page to add the admin's first passkey, which the link from creating the site opens. The link's
+// token is after its #, so never sent here; the page sends it to begin and finish, which check it.
+func GETPasskeyNew() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		user, err := passkeyLinkUser(r, controlDB, cfg)
-		if err != nil {
-			slog.InfoContext(r.Context(), "Passkey link refused", "error", err)
-			http.Error(w, "This link to add a passkey has expired or been used. Sign in instead.", http.StatusForbidden)
-			return
-		}
 		w.Header().Set("Content-Type", "text/html")
-		site_login_templ.AddPasskey(user.identity.Name, r.FormValue("token")).Render(r.Context(), w)
+		site_login_templ.AddPasskey(consts.FIRST_ADMIN_NAME).Render(r.Context(), w)
 	}
 }
 

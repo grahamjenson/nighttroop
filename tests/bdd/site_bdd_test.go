@@ -105,7 +105,8 @@ func runScenarios(t *testing.T, browser playwright.Browser, config *config.Serve
 	require.NoError(t, err)
 	require.NotEmpty(t, defaultJwt) // for the API requests; browser tests still sign in on the login page
 
-	router := server.GetMainHandler(controlDB, config)
+	// Wrapped as main.go wraps it, so a form posting from one of the server's hosts to another is refused here too
+	router := server.WithCrossOriginProtection(server.GetMainHandler(controlDB, config))
 	// Background jobs are run after every action instead of on their timers
 	backgroundJobs := background.NewBackGroundManager(context.Background(), controlDB, config, s3utils.NewS3Client(config))
 

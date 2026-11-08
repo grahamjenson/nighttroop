@@ -187,13 +187,10 @@ func setupSentry(serverConfig *config.ServerConfig) {
 }
 
 func setupHTTP(controlDB *db.ControlDB, serverConfig *config.ServerConfig) *http.Server {
-	// The outer most layer is CORS and CSRF protection
-	// The big caveat is that GET HEAD and OPTIONS requests will not have CSRF protection
-	// SO NO STATE CHANGING IN GET REQUESTS
-	corsCSRFMiddleware := http.NewCrossOriginProtection()
+	// The outer most layer is CORS and CSRF protection, so no state changing in GET requests
 	httpServer := &http.Server{
 		Addr:         fmt.Sprintf(":%d", serverConfig.HostPort),
-		Handler:      corsCSRFMiddleware.Handler(server.GetMainHandler(controlDB, serverConfig)),
+		Handler:      server.WithCrossOriginProtection(server.GetMainHandler(controlDB, serverConfig)),
 		ReadTimeout:  5 * time.Second,  // Max time to read the entire request
 		WriteTimeout: 10 * time.Second, // Max time to write the response
 		IdleTimeout:  120 * time.Second,

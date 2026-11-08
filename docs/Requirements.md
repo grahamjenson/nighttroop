@@ -221,7 +221,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   code is checked as soon as its sixth digit is in, with no click. The check changes nothing, and a recovered site's
   credentials are checked the same way.
 - A new site's last step also offers "Add a passkey for admin": it opens the new site, as a passkey is made on the
-  address it signs in to, with a link good for 15 minutes and only until the admin has a passkey. Adding the passkey
+  address it signs in to, with a link good for 15 minutes and only until the admin has a passkey. The link's token is
+  after its #, so it is never sent to the server or kept in its logs; the new site's page sends it itself. Adding the passkey
   signs the admin in. The passkey is named admin, and no name, email or device of the person is asked for or kept.
 - A new site takes the time zone and language of the browser that created it, and its country's units and formats.
 - Site creation is rate limited per IP and server wide, and refused once the server holds `MAX_SITES`.
