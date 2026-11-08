@@ -2350,6 +2350,11 @@
       height: calc(var(--spacing) * 20);
     }
   }
+  .sm\:w-64 {
+    @media (width >= 40rem) {
+      width: calc(var(--spacing) * 64);
+    }
+  }
   .sm\:w-\[30rem\] {
     @media (width >= 40rem) {
       width: 30rem;

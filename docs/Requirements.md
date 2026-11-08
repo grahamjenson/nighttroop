@@ -74,8 +74,11 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   - its identities, and its latest 10 events and 10 errors, each opening its details, with a link to all of them
     filtered to the site.
 - An admin sees the buttons for what can be done to the site on its page, and its page shows the change once done.
+- On a phone the sites page is no wider than the window: the order buttons, the create form and the public site
+  creation card wrap, and the table scrolls sideways in its card.
 - An admin can create a site at an ID they pick (8 lowercase letters), e.g. a vanity one; a taken ID is refused. Its
   credentials are shown once. An admin can create sites past `MAX_SITES` and while public site creation is off.
+- The new site ID field only lets letters a to z in: capitals typed or pasted are lowered and anything else is dropped.
 - An admin can turn public site creation off, so sites cannot be created from the home page, and back on.
 - A site can be:
   - **disabled**, after a confirmation, so it is no longer served;
@@ -110,6 +113,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 ### Sync sources
 
 - Lists every site's sync sources, the most recently attempted first, with failed counts in red.
+- A source turned off after failing says "disabled after failing" in amber.
+- Counts and durations are whole numbers, e.g. 12345, never 1.234e+04, and the averages (EMAs) have one decimal place.
 - Clicking a source shows its sync reports.
 
 ### Push devices
@@ -255,7 +260,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   - The basal in force along the bottom, its highest rate labelled on the right.
   - Carbs as triangles pointing up above insulin as triangles pointing down, each labelled, the latest kept where
     labels overlap; a loop's SMBs are smaller, fainter and not labelled.
-  - A legend of insulin, SMB, carbs and basal, and a tooltip of each reading and treatment.
+  - A legend of insulin and SMB (triangles pointing down), carbs (pointing up) and basal (an outlined area), each
+    drawn as on the graph, and a tooltip of each reading and treatment.
 - Time in range, total daily dose, and the last sensor and site change for today, yesterday, last week and last
   month.
 - Readings are coloured and labelled low, in range or high by the alarm settings; high text is a darker amber than

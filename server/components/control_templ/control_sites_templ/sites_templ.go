@@ -119,7 +119,7 @@ func SitesTable(sites []*controlmodels.Site, skip int64, limit int64, order stri
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<section class=\"rounded-xl border border-gray-200 p-4 shadow-sm\"><div id=\"control--sites--order\" class=\"mb-4 flex justify-end gap-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<section class=\"rounded-xl border border-gray-200 p-4 shadow-sm\"><div id=\"control--sites--order\" class=\"mb-4 flex flex-wrap justify-end gap-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -454,7 +454,7 @@ func createSiteForm() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<form id=\"control--sites--create\" class=\"flex items-end gap-2 rounded-xl border border-gray-200 p-4 shadow-sm\" hx-post=\"/sites\" hx-target=\"#modal-container\" hx-swap=\"innerHTML\" hx-status:4xx=\"target:#toaster swap:beforeend\" hx-status:5xx=\"target:#toaster swap:beforeend\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<form id=\"control--sites--create\" class=\"flex flex-wrap items-end gap-2 rounded-xl border border-gray-200 p-4 shadow-sm\" hx-post=\"/sites\" hx-target=\"#modal-container\" hx-swap=\"innerHTML\" hx-status:4xx=\"target:#toaster swap:beforeend\" hx-status:5xx=\"target:#toaster swap:beforeend\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -478,6 +478,10 @@ func createSiteForm() templ.Component {
 				Attributes: templ.Attributes{
 					"pattern": fmt.Sprintf("[a-z]{%d}", utils.SITE_ID_LENGTH), "minlength": utils.SITE_ID_LENGTH, "maxlength": utils.SITE_ID_LENGTH,
 					"title": fmt.Sprintf("%d lowercase letters, a to z", utils.SITE_ID_LENGTH), "autocomplete": "off", "spellcheck": "false",
+					"autocapitalize": "none",
+					// Capitals are lowered and anything but a to z is dropped as it is typed or pasted, so only letters
+					// a site ID can have ever go in
+					"oninput": templ.JSUnsafeFuncCall("this.value = this.value.toLowerCase().replace(/[^a-z]/g, '')"),
 				},
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
@@ -485,7 +489,7 @@ func createSiteForm() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = field.Field("control--sites--create--id", fmt.Sprintf("New site ID (%d lowercase letters)", utils.SITE_ID_LENGTH), "w-64").Render(templ.WithChildren(ctx, templ_7745c5c3_Var17), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = field.Field("control--sites--create--id", fmt.Sprintf("New site ID (%d lowercase letters)", utils.SITE_ID_LENGTH), "w-full sm:w-64").Render(templ.WithChildren(ctx, templ_7745c5c3_Var17), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -538,14 +542,14 @@ func PublicSiteCreation(on bool) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<form id=\"control--sites--public-creation\" class=\"flex items-center justify-between gap-4 rounded-xl border border-gray-200 p-4 shadow-sm\" hx-post=\"/settings\" hx-swap=\"outerHTML\" hx-status:4xx=\"target:#toaster swap:beforeend\" hx-status:5xx=\"target:#toaster swap:beforeend\"><input type=\"hidden\" name=\"public_site_creation\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<form id=\"control--sites--public-creation\" class=\"flex flex-wrap items-center justify-between gap-4 rounded-xl border border-gray-200 p-4 shadow-sm\" hx-post=\"/settings\" hx-swap=\"outerHTML\" hx-status:4xx=\"target:#toaster swap:beforeend\" hx-status:5xx=\"target:#toaster swap:beforeend\"><input type=\"hidden\" name=\"public_site_creation\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templruntime.NewAttributeExpression(strconv.FormatBool(!on)).Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 188, Col: 82}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 192, Col: 82}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var20)
 		if templ_7745c5c3_Err != nil {
@@ -768,7 +772,7 @@ func siteRow(site *controlmodels.Site) templ.Component {
 				var templ_7745c5c3_Var29 string
 				templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(site.ID)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 247, Col: 12}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 251, Col: 12}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 				if templ_7745c5c3_Err != nil {
@@ -795,7 +799,7 @@ func siteRow(site *controlmodels.Site) templ.Component {
 				var templ_7745c5c3_Var31 string
 				templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(display.Name(site.State))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 250, Col: 29}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 254, Col: 29}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 				if templ_7745c5c3_Err != nil {
@@ -813,7 +817,7 @@ func siteRow(site *controlmodels.Site) templ.Component {
 					var templ_7745c5c3_Var32 string
 					templ_7745c5c3_Var32, templ_7745c5c3_Err = templruntime.NewAttributeExpression("control--site--" + site.ID + "--inactive").Resolve(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 252, Col: 57}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 256, Col: 57}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var32)
 					if templ_7745c5c3_Err != nil {
@@ -845,7 +849,7 @@ func siteRow(site *controlmodels.Site) templ.Component {
 				var templ_7745c5c3_Var34 string
 				templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(formatDate(&site.CreatedAt))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 256, Col: 32}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 260, Col: 32}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 				if templ_7745c5c3_Err != nil {
@@ -876,7 +880,7 @@ func siteRow(site *controlmodels.Site) templ.Component {
 				var templ_7745c5c3_Var36 string
 				templ_7745c5c3_Var36, templ_7745c5c3_Err = templruntime.NewAttributeExpression(formatDate(site.LastSeenAt)).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 259, Col: 44}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 263, Col: 44}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var36)
 				if templ_7745c5c3_Err != nil {
@@ -889,7 +893,7 @@ func siteRow(site *controlmodels.Site) templ.Component {
 				var templ_7745c5c3_Var37 string
 				templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(site.LastSeenAt, time.Now()))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 259, Col: 89}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 263, Col: 89}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 				if templ_7745c5c3_Err != nil {
@@ -924,7 +928,7 @@ func siteRow(site *controlmodels.Site) templ.Component {
 				var templ_7745c5c3_Var39 string
 				templ_7745c5c3_Var39, templ_7745c5c3_Err = templruntime.NewAttributeExpression(formatDate(site.LastWriteAt)).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 262, Col: 45}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 266, Col: 45}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var39)
 				if templ_7745c5c3_Err != nil {
@@ -937,7 +941,7 @@ func siteRow(site *controlmodels.Site) templ.Component {
 				var templ_7745c5c3_Var40 string
 				templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(site.LastWriteAt, time.Now()))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 262, Col: 91}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 266, Col: 91}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 				if templ_7745c5c3_Err != nil {
@@ -968,7 +972,7 @@ func siteRow(site *controlmodels.Site) templ.Component {
 				var templ_7745c5c3_Var42 string
 				templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(sizeMB(site.EstimatedDbSizeKb))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 265, Col: 35}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 269, Col: 35}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 				if templ_7745c5c3_Err != nil {
@@ -1124,7 +1128,7 @@ func SitePage(page *controlmodels.SitePage) templ.Component {
 		var templ_7745c5c3_Var44 string
 		templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs(site.ID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 366, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 370, Col: 55}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
 		if templ_7745c5c3_Err != nil {
@@ -1177,7 +1181,7 @@ func SitePage(page *controlmodels.SitePage) templ.Component {
 		var templ_7745c5c3_Var47 string
 		templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.JoinStringErrs(display.Name(site.State))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 367, Col: 144}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 371, Col: 144}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var47))
 		if templ_7745c5c3_Err != nil {
@@ -1206,7 +1210,7 @@ func SitePage(page *controlmodels.SitePage) templ.Component {
 		var templ_7745c5c3_Var48 string
 		templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(lifecycle(site))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 375, Col: 89}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 379, Col: 89}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 		if templ_7745c5c3_Err != nil {
@@ -1297,7 +1301,7 @@ func SitePage(page *controlmodels.SitePage) templ.Component {
 			var templ_7745c5c3_Var51 string
 			templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(identityTypes(page.Identities))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 396, Col: 106}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 400, Col: 106}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
 			if templ_7745c5c3_Err != nil {
@@ -1437,7 +1441,7 @@ func dbSize(site *controlmodels.Site) templ.Component {
 			var templ_7745c5c3_Var56 string
 			templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.JoinStringErrs(sizeMB(site.EstimatedDbSizeKb))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 424, Col: 130}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 428, Col: 130}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var56))
 			if templ_7745c5c3_Err != nil {
@@ -1461,7 +1465,7 @@ func dbSize(site *controlmodels.Site) templ.Component {
 			var templ_7745c5c3_Var57 string
 			templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs(sizeMB(site.MaxDbSizeKbLimit))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 430, Col: 107}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 434, Col: 107}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var57))
 			if templ_7745c5c3_Err != nil {
@@ -1510,7 +1514,7 @@ func dbSize(site *controlmodels.Site) templ.Component {
 				var templ_7745c5c3_Var60 string
 				templ_7745c5c3_Var60, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(fmt.Sprintf("width: %d%%", min(percent, 100)))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 435, Col: 141}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 439, Col: 141}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var60))
 				if templ_7745c5c3_Err != nil {
@@ -1537,7 +1541,7 @@ func dbSize(site *controlmodels.Site) templ.Component {
 			var templ_7745c5c3_Var61 string
 			templ_7745c5c3_Var61, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d%% of its limit used", percent))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 437, Col: 91}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 441, Col: 91}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var61))
 			if templ_7745c5c3_Err != nil {
@@ -1588,7 +1592,7 @@ func siteActions(site *controlmodels.Site) templ.Component {
 			var templ_7745c5c3_Var63 string
 			templ_7745c5c3_Var63, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/sites/" + site.ID).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 449, Col: 32}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 453, Col: 32}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var63)
 			if templ_7745c5c3_Err != nil {
@@ -1633,7 +1637,7 @@ func siteActions(site *controlmodels.Site) templ.Component {
 			var templ_7745c5c3_Var65 string
 			templ_7745c5c3_Var65, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/sites/" + site.ID + "/truncate").Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 464, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 468, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var65)
 			if templ_7745c5c3_Err != nil {
@@ -1678,7 +1682,7 @@ func siteActions(site *controlmodels.Site) templ.Component {
 			var templ_7745c5c3_Var67 string
 			templ_7745c5c3_Var67, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/sites/" + site.ID).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 478, Col: 32}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 482, Col: 32}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var67)
 			if templ_7745c5c3_Err != nil {
@@ -1805,7 +1809,7 @@ func siteChanged(site *controlmodels.Site, description string) templ.Component {
 		var templ_7745c5c3_Var72 string
 		templ_7745c5c3_Var72, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/sites/" + site.ID).Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 514, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `control_templ/control_sites_templ/sites.templ`, Line: 518, Col: 34}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var72)
 		if templ_7745c5c3_Err != nil {

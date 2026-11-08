@@ -11,6 +11,7 @@ SAVE_TEXT #public--site-info--backup-key backup_key
 CLICK #public--site-info--recover-link
 ASSERT_PATH /recover
 ASSERT_VISIBLE #public--recover--form
+ASSERT_VISIBLE .text-3xl:text-is("Nighttroop")
 SCREENSHOT recover_form
 
 // A wrong key is refused, saying nothing of why

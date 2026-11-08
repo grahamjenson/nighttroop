@@ -2,6 +2,7 @@
 // said to be wrong, and not sent again on its own.
 GOTO {{ .control_url }}/login
 ASSERT_STATUS 200
+ASSERT_VISIBLE .login-form-target h2:text-is("Nighttroop Login")
 INPUT #name admin
 INPUT #password password
 TYPE #control--login--otp-1 000000

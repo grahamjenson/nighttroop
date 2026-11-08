@@ -69,7 +69,7 @@ templ SitesTable(sites []*controlmodels.Site, skip int64, limit int64, order str
 			@PublicSiteCreation(httputils.GetControlContext(ctx).ControlDB.PublicSiteCreation(ctx))
 		}
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			<div id="control--sites--order" class="mb-4 flex justify-end gap-2">
+			<div id="control--sites--order" class="mb-4 flex flex-wrap justify-end gap-2">
 				for _, siteOrder := range siteOrders {
 					@sitesPageButton("control--sites--order-"+orDefault(siteOrder.order), siteOrder.label, 0, limit, siteOrder.order, siteOrder.order != order)
 				}
@@ -149,14 +149,14 @@ templ sitesPageButton(id string, label string, skip int64, limit int64, order st
 templ createSiteForm() {
 	<form
 		id="control--sites--create"
-		class="flex items-end gap-2 rounded-xl border border-gray-200 p-4 shadow-sm"
+		class="flex flex-wrap items-end gap-2 rounded-xl border border-gray-200 p-4 shadow-sm"
 		hx-post="/sites"
 		hx-target="#modal-container"
 		hx-swap="innerHTML"
 		hx-status:4xx="target:#toaster swap:beforeend"
 		hx-status:5xx="target:#toaster swap:beforeend"
 	>
-		@field.Field("control--sites--create--id", fmt.Sprintf("New site ID (%d lowercase letters)", utils.SITE_ID_LENGTH), "w-64") {
+		@field.Field("control--sites--create--id", fmt.Sprintf("New site ID (%d lowercase letters)", utils.SITE_ID_LENGTH), "w-full sm:w-64") {
 			@input.Input(input.Props{
 				ID:          "control--sites--create--id",
 				Name:        "id",
@@ -165,6 +165,10 @@ templ createSiteForm() {
 				Attributes: templ.Attributes{
 					"pattern": fmt.Sprintf("[a-z]{%d}", utils.SITE_ID_LENGTH), "minlength": utils.SITE_ID_LENGTH, "maxlength": utils.SITE_ID_LENGTH,
 					"title": fmt.Sprintf("%d lowercase letters, a to z", utils.SITE_ID_LENGTH), "autocomplete": "off", "spellcheck": "false",
+					"autocapitalize": "none",
+					// Capitals are lowered and anything but a to z is dropped as it is typed or pasted, so only letters
+					// a site ID can have ever go in
+					"oninput": templ.JSUnsafeFuncCall("this.value = this.value.toLowerCase().replace(/[^a-z]/g, '')"),
 				},
 			})
 		}
@@ -179,7 +183,7 @@ templ createSiteForm() {
 templ PublicSiteCreation(on bool) {
 	<form
 		id="control--sites--public-creation"
-		class="flex items-center justify-between gap-4 rounded-xl border border-gray-200 p-4 shadow-sm"
+		class="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-gray-200 p-4 shadow-sm"
 		hx-post="/settings"
 		hx-swap="outerHTML"
 		hx-status:4xx="target:#toaster swap:beforeend"
