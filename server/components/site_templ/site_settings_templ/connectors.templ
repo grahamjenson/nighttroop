@@ -8,6 +8,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/checkbox"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/form"
 	"nighttroop.t1d.nz/server/components/ui/input"
@@ -632,16 +633,7 @@ templ BackfillQueued(sourceType consts.ConnectorType, from int64, to int64) {
 }
 
 templ SuccessfulUpdate(model *sitemodels.Connector) {
-	@toast.Toast(toast.Props{
-		Title:         "Success",
-		Description:   "Connector Updated",
-		Variant:       toast.VariantSuccess,
-		Position:      toast.PositionTopCenter,
-		Duration:      5000,
-		Dismissible:   true,
-		Icon:          true,
-		ShowIndicator: true,
-	})
+	@successtoast.Toast("Connector Updated")
 }
 
 // ConnectorDeleted replaces the deleted source's form with an empty one and shows a toast
@@ -662,14 +654,5 @@ templ ConnectorDeleted(sourceType consts.ConnectorType) {
 }
 
 templ SuccessfulDelete() {
-	@toast.Toast(toast.Props{
-		Title:         "Success",
-		Description:   "Connector Deleted",
-		Variant:       toast.VariantSuccess,
-		Position:      toast.PositionTopCenter,
-		Duration:      5000,
-		Dismissible:   true,
-		Icon:          true,
-		ShowIndicator: true,
-	})
+	@successtoast.Toast("Connector Deleted")
 }

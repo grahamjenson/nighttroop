@@ -14,6 +14,7 @@ import (
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/checkbox"
 	"nighttroop.t1d.nz/server/components/ui/form"
@@ -205,7 +206,7 @@ func ConnectorErrors(source *sitemodels.Connector, name string) templ.Component 
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templruntime.NewAttributeExpression("site--settings--" + name + "-connector--errors-live").Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 93, Col: 64}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 94, Col: 64}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
 		if templ_7745c5c3_Err != nil {
@@ -223,7 +224,7 @@ func ConnectorErrors(source *sitemodels.Connector, name string) templ.Component 
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templruntime.NewAttributeExpression("site--settings--" + name + "-connector--errors").Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 95, Col: 61}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 96, Col: 61}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 			if templ_7745c5c3_Err != nil {
@@ -241,7 +242,7 @@ func ConnectorErrors(source *sitemodels.Connector, name string) templ.Component 
 				var templ_7745c5c3_Var8 string
 				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(syncError)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 97, Col: 19}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 98, Col: 19}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 				if templ_7745c5c3_Err != nil {
@@ -935,7 +936,7 @@ func LibreConnectorForm(libreConnectorSettings *sitemodels.Connector) templ.Comp
 				var templ_7745c5c3_Var29 string
 				templ_7745c5c3_Var29, templ_7745c5c3_Err = templruntime.NewAttributeExpression(region.Code).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 330, Col: 36}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 331, Col: 36}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var29)
 				if templ_7745c5c3_Err != nil {
@@ -958,7 +959,7 @@ func LibreConnectorForm(libreConnectorSettings *sitemodels.Connector) templ.Comp
 				var templ_7745c5c3_Var30 string
 				templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(region.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 330, Col: 121}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/connectors.templ`, Line: 331, Col: 121}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 				if templ_7745c5c3_Err != nil {
@@ -1751,16 +1752,7 @@ func SuccessfulUpdate(model *sitemodels.Connector) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = toast.Toast(toast.Props{
-			Title:         "Success",
-			Description:   "Connector Updated",
-			Variant:       toast.VariantSuccess,
-			Position:      toast.PositionTopCenter,
-			Duration:      5000,
-			Dismissible:   true,
-			Icon:          true,
-			ShowIndicator: true,
-		}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = successtoast.Toast("Connector Updated").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1841,16 +1833,7 @@ func SuccessfulDelete() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = toast.Toast(toast.Props{
-			Title:         "Success",
-			Description:   "Connector Deleted",
-			Variant:       toast.VariantSuccess,
-			Position:      toast.PositionTopCenter,
-			Duration:      5000,
-			Dismissible:   true,
-			Icon:          true,
-			ShowIndicator: true,
-		}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = successtoast.Toast("Connector Deleted").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

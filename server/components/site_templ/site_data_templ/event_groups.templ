@@ -14,6 +14,7 @@ import (
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/dropdown"
 	"nighttroop.t1d.nz/server/components/ui/icon"
@@ -290,7 +291,7 @@ templ EventGroupUpdated(eventGroup *sitemodels.SiteEventGroup) {
 	@eventGroupRow(eventGroup)
 	<div id="modal-container" hx-swap-oob="innerHTML"></div>
 	<div hx-swap-oob="beforeend:#toaster">
-		@glucoseToast("Event Group Updated")
+		@successtoast.Toast("Event Group Updated")
 	</div>
 }
 
@@ -323,5 +324,5 @@ templ EventGroupModal(eventGroup *sitemodels.SiteEventGroup) {
 }
 
 templ EventGroupDeleted() {
-	@glucoseToast("Event Group Deleted")
+	@successtoast.Toast("Event Group Deleted")
 }

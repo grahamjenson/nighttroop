@@ -16,6 +16,7 @@ import (
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/input"
@@ -515,7 +516,7 @@ func tempBasalRow(tempBasal *sitemodels.SiteTempBasal) templ.Component {
 				var templ_7745c5c3_Var22 string
 				templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(formatReadingDate(ctx, tempBasal.OccurredAt))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_basals.templ`, Line: 125, Col: 49}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_basals.templ`, Line: 126, Col: 49}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 				if templ_7745c5c3_Err != nil {
@@ -542,7 +543,7 @@ func tempBasalRow(tempBasal *sitemodels.SiteTempBasal) templ.Component {
 				var templ_7745c5c3_Var24 string
 				templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(tempBasal.Rate))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_basals.templ`, Line: 128, Col: 27}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_basals.templ`, Line: 129, Col: 27}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 				if templ_7745c5c3_Err != nil {
@@ -569,7 +570,7 @@ func tempBasalRow(tempBasal *sitemodels.SiteTempBasal) templ.Component {
 				var templ_7745c5c3_Var26 string
 				templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(percentOr(tempBasal.Multiplier, "-"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_basals.templ`, Line: 131, Col: 41}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_basals.templ`, Line: 132, Col: 41}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 				if templ_7745c5c3_Err != nil {
@@ -596,7 +597,7 @@ func tempBasalRow(tempBasal *sitemodels.SiteTempBasal) templ.Component {
 				var templ_7745c5c3_Var28 string
 				templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(tempBasal.DurationMinutes))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_basals.templ`, Line: 134, Col: 42}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_basals.templ`, Line: 135, Col: 42}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 				if templ_7745c5c3_Err != nil {
@@ -623,7 +624,7 @@ func tempBasalRow(tempBasal *sitemodels.SiteTempBasal) templ.Component {
 				var templ_7745c5c3_Var30 string
 				templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(tempBasal.Reason))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_basals.templ`, Line: 137, Col: 29}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_basals.templ`, Line: 138, Col: 29}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 				if templ_7745c5c3_Err != nil {
@@ -650,7 +651,7 @@ func tempBasalRow(tempBasal *sitemodels.SiteTempBasal) templ.Component {
 				var templ_7745c5c3_Var32 string
 				templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(tempBasal.CreatedByDeviceName))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_basals.templ`, Line: 140, Col: 42}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_basals.templ`, Line: 141, Col: 42}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 				if templ_7745c5c3_Err != nil {
@@ -779,7 +780,7 @@ func TempBasalModal(tempBasal *sitemodels.SiteTempBasal) templ.Component {
 			var templ_7745c5c3_Var37 string
 			templ_7745c5c3_Var37, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/data/temp-basals/" + tempBasal.ID).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_basals.templ`, Line: 172, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_basals.templ`, Line: 173, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var37)
 			if templ_7745c5c3_Err != nil {
@@ -792,7 +793,7 @@ func TempBasalModal(tempBasal *sitemodels.SiteTempBasal) templ.Component {
 			var templ_7745c5c3_Var38 string
 			templ_7745c5c3_Var38, templ_7745c5c3_Err = templruntime.NewAttributeExpression("#site--temp-basal--" + tempBasal.ID).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_basals.templ`, Line: 173, Col: 51}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/temp_basals.templ`, Line: 174, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var38)
 			if templ_7745c5c3_Err != nil {
@@ -949,7 +950,7 @@ func TempBasalUpdated(tempBasal *sitemodels.SiteTempBasal) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = glucoseToast("Temp Basal Updated").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = successtoast.Toast("Temp Basal Updated").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -978,7 +979,7 @@ func TempBasalDeleted() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = glucoseToast("Temp Basal Deleted").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = successtoast.Toast("Temp Basal Deleted").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

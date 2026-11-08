@@ -9,6 +9,7 @@ import (
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/input"
@@ -207,10 +208,10 @@ templ TempBasalUpdated(tempBasal *sitemodels.SiteTempBasal) {
 	@tempBasalRow(tempBasal)
 	<div id="modal-container" hx-swap-oob="innerHTML"></div>
 	<div hx-swap-oob="beforeend:#toaster">
-		@glucoseToast("Temp Basal Updated")
+		@successtoast.Toast("Temp Basal Updated")
 	</div>
 }
 
 templ TempBasalDeleted() {
-	@glucoseToast("Temp Basal Deleted")
+	@successtoast.Toast("Temp Basal Deleted")
 }

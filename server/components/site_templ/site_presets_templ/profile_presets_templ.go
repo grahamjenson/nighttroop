@@ -14,6 +14,7 @@ import (
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
+	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/input"
@@ -347,7 +348,7 @@ func profilePresetRow(profile *sitemodels.SiteProfilePreset) templ.Component {
 				var templ_7745c5c3_Var16 string
 				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(profile.Name))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_presets_templ/profile_presets.templ`, Line: 75, Col: 25}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_presets_templ/profile_presets.templ`, Line: 76, Col: 25}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 				if templ_7745c5c3_Err != nil {
@@ -398,7 +399,7 @@ func profilePresetRow(profile *sitemodels.SiteProfilePreset) templ.Component {
 				var templ_7745c5c3_Var19 string
 				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(profile.Dia))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_presets_templ/profile_presets.templ`, Line: 83, Col: 24}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_presets_templ/profile_presets.templ`, Line: 84, Col: 24}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 				if templ_7745c5c3_Err != nil {
@@ -425,7 +426,7 @@ func profilePresetRow(profile *sitemodels.SiteProfilePreset) templ.Component {
 				var templ_7745c5c3_Var21 string
 				templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(profile.CreatedByDeviceName))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_presets_templ/profile_presets.templ`, Line: 86, Col: 40}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_presets_templ/profile_presets.templ`, Line: 87, Col: 40}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 				if templ_7745c5c3_Err != nil {
@@ -452,7 +453,7 @@ func profilePresetRow(profile *sitemodels.SiteProfilePreset) templ.Component {
 				var templ_7745c5c3_Var23 string
 				templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(formatDate(ctx, profile.OccurredAt))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_presets_templ/profile_presets.templ`, Line: 89, Col: 40}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_presets_templ/profile_presets.templ`, Line: 90, Col: 40}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 				if templ_7745c5c3_Err != nil {
@@ -582,7 +583,7 @@ func ProfilePresetModal(profile *sitemodels.SiteProfilePreset) templ.Component {
 			var templ_7745c5c3_Var28 string
 			templ_7745c5c3_Var28, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/presets/profiles/" + profile.ID).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_presets_templ/profile_presets.templ`, Line: 122, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_presets_templ/profile_presets.templ`, Line: 123, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var28)
 			if templ_7745c5c3_Err != nil {
@@ -595,7 +596,7 @@ func ProfilePresetModal(profile *sitemodels.SiteProfilePreset) templ.Component {
 			var templ_7745c5c3_Var29 string
 			templ_7745c5c3_Var29, templ_7745c5c3_Err = templruntime.NewAttributeExpression("#presets--profiles--" + profile.ID).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_presets_templ/profile_presets.templ`, Line: 123, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_presets_templ/profile_presets.templ`, Line: 124, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var29)
 			if templ_7745c5c3_Err != nil {
@@ -765,7 +766,7 @@ func ProfilePresetUpdated(profile *sitemodels.SiteProfilePreset) templ.Component
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = presetToast("Profile Renamed").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = successtoast.Toast("Profile Renamed").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -794,7 +795,7 @@ func ProfilePresetDeleted() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = presetToast("Profile Deleted").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = successtoast.Toast("Profile Deleted").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

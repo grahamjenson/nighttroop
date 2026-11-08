@@ -12,9 +12,9 @@ import (
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/table"
-	"nighttroop.t1d.nz/server/components/ui/toast"
 )
 
 // PushDevices is the apps on devices that pushes are sent to, with whose they are and a button to test each: the
@@ -634,16 +634,7 @@ func PushDeviceTested(registration *sitemodels.PushRegistration) templ.Component
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = toast.Toast(toast.Props{
-			Title:         "Success",
-			Description:   "Test push sent to " + string(registration.App),
-			Variant:       toast.VariantSuccess,
-			Position:      toast.PositionTopCenter,
-			Duration:      5000,
-			Dismissible:   true,
-			Icon:          true,
-			ShowIndicator: true,
-		}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = successtoast.Toast("Test push sent to "+string(registration.App)).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

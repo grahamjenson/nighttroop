@@ -16,6 +16,7 @@ import (
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/input"
@@ -464,7 +465,7 @@ func insulinDoseRow(insulinDose *sitemodels.SiteInsulinDose) templ.Component {
 				var templ_7745c5c3_Var20 string
 				templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(formatReadingDate(ctx, insulinDose.OccurredAt))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/insulin_doses.templ`, Line: 112, Col: 51}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/insulin_doses.templ`, Line: 113, Col: 51}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 				if templ_7745c5c3_Err != nil {
@@ -491,7 +492,7 @@ func insulinDoseRow(insulinDose *sitemodels.SiteInsulinDose) templ.Component {
 				var templ_7745c5c3_Var22 string
 				templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(insulinDose.Dose))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/insulin_doses.templ`, Line: 115, Col: 33}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/insulin_doses.templ`, Line: 116, Col: 33}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 				if templ_7745c5c3_Err != nil {
@@ -518,7 +519,7 @@ func insulinDoseRow(insulinDose *sitemodels.SiteInsulinDose) templ.Component {
 				var templ_7745c5c3_Var24 string
 				templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(insulinDose.DoseType))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/insulin_doses.templ`, Line: 118, Col: 33}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/insulin_doses.templ`, Line: 119, Col: 33}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 				if templ_7745c5c3_Err != nil {
@@ -545,7 +546,7 @@ func insulinDoseRow(insulinDose *sitemodels.SiteInsulinDose) templ.Component {
 				var templ_7745c5c3_Var26 string
 				templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(insulinDose.Notes))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/insulin_doses.templ`, Line: 121, Col: 30}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/insulin_doses.templ`, Line: 122, Col: 30}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 				if templ_7745c5c3_Err != nil {
@@ -572,7 +573,7 @@ func insulinDoseRow(insulinDose *sitemodels.SiteInsulinDose) templ.Component {
 				var templ_7745c5c3_Var28 string
 				templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(orDash(insulinDose.CreatedByDeviceName))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/insulin_doses.templ`, Line: 124, Col: 44}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/insulin_doses.templ`, Line: 125, Col: 44}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 				if templ_7745c5c3_Err != nil {
@@ -701,7 +702,7 @@ func InsulinDoseModal(insulinDose *sitemodels.SiteInsulinDose) templ.Component {
 			var templ_7745c5c3_Var33 string
 			templ_7745c5c3_Var33, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/data/insulin/" + insulinDose.ID).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/insulin_doses.templ`, Line: 156, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/insulin_doses.templ`, Line: 157, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var33)
 			if templ_7745c5c3_Err != nil {
@@ -714,7 +715,7 @@ func InsulinDoseModal(insulinDose *sitemodels.SiteInsulinDose) templ.Component {
 			var templ_7745c5c3_Var34 string
 			templ_7745c5c3_Var34, templ_7745c5c3_Err = templruntime.NewAttributeExpression("#site--insulin--" + insulinDose.ID).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/insulin_doses.templ`, Line: 157, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/insulin_doses.templ`, Line: 158, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var34)
 			if templ_7745c5c3_Err != nil {
@@ -879,7 +880,7 @@ func InsulinDoseUpdated(insulinDose *sitemodels.SiteInsulinDose) templ.Component
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = glucoseToast("Insulin Dose Updated").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = successtoast.Toast("Insulin Dose Updated").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -908,7 +909,7 @@ func InsulinDoseDeleted() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = glucoseToast("Insulin Dose Deleted").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = successtoast.Toast("Insulin Dose Deleted").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
