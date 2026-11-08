@@ -430,14 +430,37 @@ func (db *ControlDB) HydrateSite(ctx context.Context, subdomain string, download
 	return nil
 }
 
-// TruncateSite clears the raw JSON a site's DB keeps of what each row older than TruncateRecordsAfterDays was sent,
-// keeping all its data, then shrinks the DB and records its new size, which it returns
+// TruncateSite clears the raw JSON a site's DB keeps, as ClearRawJSON does, then shrinks the DB and records its new
+// size, which it returns
 func (db *ControlDB) TruncateSite(ctx context.Context, subdomain string) (*int64, error) {
 	site := db.sites.get(subdomain)
 	if site == nil {
 		return nil, fmt.Errorf("site %s is not open", subdomain)
 	}
-	q, before := site.Queries(), time.Now().AddDate(0, 0, -db.ServerConfig.TruncateRecordsAfterDays).UnixMilli()
+	if err := db.clearRawJSON(ctx, site); err != nil {
+		return nil, err
+	}
+	if err := site.Vacuum(ctx); err != nil {
+		return nil, fmt.Errorf("cannot vacuum site %s: %w", subdomain, err)
+	}
+	sizeKB := site.EstimatedSizeKB()
+	return sizeKB, db.Queries.UpdateSiteDateFlags(ctx, controldb.UpdateSiteDateFlagsParams{EstimatedDbSizeKb: sizeKB, ID: subdomain})
+}
+
+// ClearRawJSON clears every open site's raw JSON, as the hourly job does, without shrinking their DBs, as SQLite uses
+// the space again for what comes next. It goes on past a site it cannot clear, returning each one's error.
+func (db *ControlDB) ClearRawJSON(ctx context.Context) error {
+	var errs []error
+	for _, site := range db.sites.all() {
+		errs = append(errs, db.clearRawJSON(aslog.WithSite(ctx, site.Subdomain), site))
+	}
+	return errors.Join(errs...)
+}
+
+// clearRawJSON clears the raw JSON a site's DB keeps of what each row older than TruncateRawJSONAfterDays was sent, in
+// every table that keeps it, keeping all its data
+func (db *ControlDB) clearRawJSON(ctx context.Context, site *SiteDB) error {
+	q, before := site.Queries(), time.Now().AddDate(0, 0, -db.ServerConfig.TruncateRawJSONAfterDays).UnixMilli()
 	for _, clear := range []func(context.Context, int64) error{
 		clearBefore(q.ClearActivitiesRawJSON),
 		clearBefore(q.ClearComponentEventsRawJSON),
@@ -454,14 +477,10 @@ func (db *ControlDB) TruncateSite(ctx context.Context, subdomain string) (*int64
 		clearBefore(q.ClearTempTargetsRawJSON),
 	} {
 		if err := clear(ctx, before); err != nil {
-			return nil, fmt.Errorf("cannot clear raw json of site %s: %w", subdomain, err)
+			return fmt.Errorf("cannot clear raw json of site %s: %w", site.Subdomain, err)
 		}
 	}
-	if err := site.Vacuum(ctx); err != nil {
-		return nil, fmt.Errorf("cannot vacuum site %s: %w", subdomain, err)
-	}
-	sizeKB := site.EstimatedSizeKB()
-	return sizeKB, db.Queries.UpdateSiteDateFlags(ctx, controldb.UpdateSiteDateFlagsParams{EstimatedDbSizeKb: sizeKB, ID: subdomain})
+	return nil
 }
 
 // clearBefore calls a query clearing raw JSON with its params, which sqlc makes a type of their own for each query

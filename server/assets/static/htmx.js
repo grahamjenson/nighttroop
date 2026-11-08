@@ -611,7 +611,9 @@ var htmx = (() => {
 
             } catch (error) {
                 ctx.status = "error: " + error;
-                this.#trigger(elt, "htmx:error", { ctx, error })
+                // A request aborted on purpose, as one replaced by a newer click or a history restore, is not an
+                // error; one that timed out is
+                if (error?.name !== "AbortError" || ctx.timedOut) this.#trigger(elt, "htmx:error", { ctx, error })
             } finally {
                 // An extension that took over the response reports when it has
                 // finished delivering. Undefined for a normal request.
@@ -671,7 +673,7 @@ var htmx = (() => {
                 ? this.parseInterval(ctx.request.timeout)
                 : this.config.defaultTimeout;
             if (timeout) {
-                ctx.requestTimeout = setTimeout(() => ctx.request?.abort?.(), timeout);
+                ctx.requestTimeout = setTimeout(() => { ctx.timedOut = true; ctx.request?.abort?.() }, timeout);
             }
         }
 

@@ -4027,6 +4027,46 @@ func (m *SummaryPeriod) SetAgpMgdlJson(v *string) {
 	m.AgpMgdlJson = v
 }
 
+// GetLoopIobJson returns the LoopIobJson value.
+func (m SummaryPeriod) GetLoopIobJson() string {
+	return m.LoopIobJson
+}
+
+// SetLoopIobJson sets the LoopIobJson value and returns the updated SummaryPeriod.
+func (m *SummaryPeriod) SetLoopIobJson(v string) {
+	m.LoopIobJson = v
+}
+
+// GetLoopIobBasalJson returns the LoopIobBasalJson value.
+func (m SummaryPeriod) GetLoopIobBasalJson() string {
+	return m.LoopIobBasalJson
+}
+
+// SetLoopIobBasalJson sets the LoopIobBasalJson value and returns the updated SummaryPeriod.
+func (m *SummaryPeriod) SetLoopIobBasalJson(v string) {
+	m.LoopIobBasalJson = v
+}
+
+// GetLoopIobTreatmentJson returns the LoopIobTreatmentJson value.
+func (m SummaryPeriod) GetLoopIobTreatmentJson() string {
+	return m.LoopIobTreatmentJson
+}
+
+// SetLoopIobTreatmentJson sets the LoopIobTreatmentJson value and returns the updated SummaryPeriod.
+func (m *SummaryPeriod) SetLoopIobTreatmentJson(v string) {
+	m.LoopIobTreatmentJson = v
+}
+
+// GetLoopCobJson returns the LoopCobJson value.
+func (m SummaryPeriod) GetLoopCobJson() string {
+	return m.LoopCobJson
+}
+
+// SetLoopCobJson sets the LoopCobJson value and returns the updated SummaryPeriod.
+func (m *SummaryPeriod) SetLoopCobJson(v string) {
+	m.LoopCobJson = v
+}
+
 // GetCreatedAt returns the CreatedAt value.
 func (m SummaryPeriod) GetCreatedAt() int64 {
 	return m.CreatedAt
@@ -5154,6 +5194,36 @@ func (m DeviceReportsForDeviceParams) GetLimit() int64 {
 
 // SetLimit sets the Limit value and returns the updated DeviceReportsForDeviceParams.
 func (m *DeviceReportsForDeviceParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
+// GetStart returns the Start value.
+func (m DeviceReportsLoopBetweenParams) GetStart() int64 {
+	return m.Start
+}
+
+// SetStart sets the Start value and returns the updated DeviceReportsLoopBetweenParams.
+func (m *DeviceReportsLoopBetweenParams) SetStart(v int64) {
+	m.Start = v
+}
+
+// GetEnd returns the End value.
+func (m DeviceReportsLoopBetweenParams) GetEnd() int64 {
+	return m.End
+}
+
+// SetEnd sets the End value and returns the updated DeviceReportsLoopBetweenParams.
+func (m *DeviceReportsLoopBetweenParams) SetEnd(v int64) {
+	m.End = v
+}
+
+// GetLimit returns the Limit value.
+func (m DeviceReportsLoopBetweenParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated DeviceReportsLoopBetweenParams.
+func (m *DeviceReportsLoopBetweenParams) SetLimit(v int64) {
 	m.Limit = v
 }
 
@@ -14115,6 +14185,46 @@ func (m UpsertSummaryPeriodParams) GetAgpMgdlJson() *string {
 // SetAgpMgdlJson sets the AgpMgdlJson value and returns the updated UpsertSummaryPeriodParams.
 func (m *UpsertSummaryPeriodParams) SetAgpMgdlJson(v *string) {
 	m.AgpMgdlJson = v
+}
+
+// GetLoopIobJson returns the LoopIobJson value.
+func (m UpsertSummaryPeriodParams) GetLoopIobJson() string {
+	return m.LoopIobJson
+}
+
+// SetLoopIobJson sets the LoopIobJson value and returns the updated UpsertSummaryPeriodParams.
+func (m *UpsertSummaryPeriodParams) SetLoopIobJson(v string) {
+	m.LoopIobJson = v
+}
+
+// GetLoopIobBasalJson returns the LoopIobBasalJson value.
+func (m UpsertSummaryPeriodParams) GetLoopIobBasalJson() string {
+	return m.LoopIobBasalJson
+}
+
+// SetLoopIobBasalJson sets the LoopIobBasalJson value and returns the updated UpsertSummaryPeriodParams.
+func (m *UpsertSummaryPeriodParams) SetLoopIobBasalJson(v string) {
+	m.LoopIobBasalJson = v
+}
+
+// GetLoopIobTreatmentJson returns the LoopIobTreatmentJson value.
+func (m UpsertSummaryPeriodParams) GetLoopIobTreatmentJson() string {
+	return m.LoopIobTreatmentJson
+}
+
+// SetLoopIobTreatmentJson sets the LoopIobTreatmentJson value and returns the updated UpsertSummaryPeriodParams.
+func (m *UpsertSummaryPeriodParams) SetLoopIobTreatmentJson(v string) {
+	m.LoopIobTreatmentJson = v
+}
+
+// GetLoopCobJson returns the LoopCobJson value.
+func (m UpsertSummaryPeriodParams) GetLoopCobJson() string {
+	return m.LoopCobJson
+}
+
+// SetLoopCobJson sets the LoopCobJson value and returns the updated UpsertSummaryPeriodParams.
+func (m *UpsertSummaryPeriodParams) SetLoopCobJson(v string) {
+	m.LoopCobJson = v
 }
 
 // GetBefore returns the Before value.

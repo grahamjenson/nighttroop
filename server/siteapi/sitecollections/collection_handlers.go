@@ -425,8 +425,8 @@ func ReportsHandler(get http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-// TDDReportHandler is the TDD report of the week, fortnight or month before today, by its range query, the week
-// without one; a page for people, so it has no JSON
+// TDDReportHandler is the TDD report of the month ending on the day its end query names, yesterday without one; a page
+// for people, so it has no JSON
 func TDDReportHandler(w http.ResponseWriter, r *http.Request) {
 	siteContext := SiteContextFor(w, r, (&sitedata.SummaryDailyCollection{}).GetName(), siteapiutils.ActionSearch)
 	if siteContext == nil {
@@ -436,22 +436,19 @@ func TDDReportHandler(w http.ResponseWriter, r *http.Request) {
 		writeError(w, r, siteContext.AcceptType, apiutils.ErrNotFound)
 		return
 	}
-	rangeName := r.URL.Query().Get("range")
-	if rangeName == "" {
-		rangeName = "week"
-	}
-	count := site_reports_templ.TDDRangeDays(rangeName)
-	if count == 0 {
-		writeError(w, r, siteContext.AcceptType, &apiutils.HTTPError{Status: http.StatusBadRequest, Message: "range is week, fortnight or month"})
+	last, ok := site_reports_templ.TDDEnd(r.URL.Query().Get("end"), time.Now(), siteContext.GetSiteTimezone())
+	if !ok {
+		writeError(w, r, siteContext.AcceptType, &apiutils.HTTPError{Status: http.StatusBadRequest, Message: "end is a day of the past year before today, as 2026-01-31"})
 		return
 	}
-	rows, err := sitedata.PastSummaryDays(r.Context(), siteContext.SiteDB.Queries(), siteContext.GetSiteTimezone(), time.Now(), count)
+	first := last.AddDate(0, 0, 1-site_reports_templ.TDDDays)
+	rows, err := sitedata.SummaryDays(r.Context(), siteContext.SiteDB.Queries(), first.Format(time.DateOnly), last.Format(time.DateOnly))
 	days, herr := apiutils.Searched(rows, err, "summary_daily", apiutils.WithContext(sitemodels.SummaryDailyFromDB, siteContext))
 	if herr != nil {
 		writeError(w, r, siteContext.AcceptType, herr)
 		return
 	}
-	WriteResponse(w, r, siteContext, http.StatusOK, nil, site_reports_templ.TDDReport(rangeName, days), true)
+	WriteResponse(w, r, siteContext, http.StatusOK, nil, site_reports_templ.TDDReport(last, days), true)
 }
 
 // summaryLimits are how many of each period's kept summaries, newest first, the summaries report shows

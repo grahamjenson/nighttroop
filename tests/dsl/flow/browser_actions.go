@@ -158,6 +158,8 @@ type Click struct {
 	Corner bool
 	// Scroll turns the mouse wheel by this many pixels, down or up when negative, as a user scrolls the page, for SCROLL
 	Scroll *int
+	// Quickly are CSS selectors clicked one straight after another, not waiting for each to finish, for CLICK_QUICKLY
+	Quickly []string
 	// Hover moves the mouse over Locator instead of clicking it, this share of the way across it and half way down, for
 	// HOVER, e.g. to point at a time on a graph
 	Hover *float64
@@ -183,6 +185,9 @@ func (r *Click) ToFlatString() string {
 	}
 	if r.Hover != nil {
 		return fmt.Sprintf("HOVER %g%% %s", *r.Hover*100, r.Locator)
+	}
+	if len(r.Quickly) > 0 {
+		return "CLICK_QUICKLY " + strings.Join(r.Quickly, ", ")
 	}
 	return fmt.Sprintf("CLICK %s", r.Locator)
 }
@@ -237,7 +242,7 @@ func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 	prettyOutput := PrettifyHTML(html)
 
 	var locator playwright.Locator
-	if r.History == "" && r.Key == "" && r.Hidden == nil && r.Scroll == nil {
+	if r.History == "" && r.Key == "" && r.Hidden == nil && r.Scroll == nil && len(r.Quickly) == 0 {
 		if locator = getLocator(r.Locator, page); locator == nil {
 			t.Fatalf("Failed to get locator for %s\n\n%s\n\n", r.Locator, prettyOutput)
 		}
@@ -275,6 +280,13 @@ func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 		}`, *r.Hidden)
 	case r.Scroll != nil:
 		err = page.Mouse().Wheel(0, float64(*r.Scroll))
+	case len(r.Quickly) > 0:
+		// Clicked in the page in one go, as quickly as a request can be sent, so each replaces the one before
+		_, err = page.Evaluate(`selectors => selectors.forEach(selector => {
+			const element = document.querySelector(selector);
+			if (!element) throw new Error("CLICK_QUICKLY found no " + selector);
+			element.click();
+		})`, r.Quickly)
 	case r.Text != "":
 		// TYPE's text is filled in like INPUT's value, as a TOTP code made from a site's secret is
 		var text string
@@ -447,9 +459,12 @@ func (r *Input) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 	if err != nil {
 		return nil, err
 	}
-	// Use this instead of Fill to simulate typing each key sequentially
-	err = locator.PressSequentially(value, playwright.LocatorPressSequentiallyOptions{Timeout: playwright.Float(actionWait)})
-	if err != nil {
+	// Typed a key at a time, not filled, as a person types. actionWait is for the input to be ready: the keys are typed
+	// once it has focus, with no deadline, as a busy runner can take longer than actionWait to type a long value
+	if err = locator.Focus(playwright.LocatorFocusOptions{Timeout: playwright.Float(actionWait)}); err != nil {
+		return nil, err
+	}
+	if err = page.Keyboard().Type(value); err != nil {
 		return nil, err
 	}
 

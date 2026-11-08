@@ -10,20 +10,53 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 )
 
-// tddRanges are what the TDD report can cover: the week, fortnight or month before today
-var tddRanges = []struct {
-	Name, Label string
-	Days        int
-}{{"week", "Week", 7}, {"fortnight", "Fortnight", 14}, {"month", "Month", 30}}
+// TDDDays is how many days the TDD report covers, a month, as a week or fortnight is too few to see a pattern in
+const TDDDays = 30
 
-// TDDRangeDays is how many days before today the TDD report's range covers, or 0 when there is no such range
-func TDDRangeDays(name string) int {
-	for _, r := range tddRanges {
-		if r.Name == name {
-			return r.Days
-		}
+// tddYesterday is the newest day a TDD report can end on, as today is not over
+func tddYesterday(now time.Time, location *time.Location) time.Time {
+	y, m, d := now.In(location).AddDate(0, 0, -1).Date()
+	return time.Date(y, m, d, 0, 0, 0, 0, location)
+}
+
+// tddKept is whether a TDD report can end on last: no later than yesterday and no earlier than a year before it, as
+// older days are not kept
+func tddKept(last, yesterday time.Time) bool {
+	return !last.After(yesterday) && !last.Before(yesterday.AddDate(-1, 0, 0))
+}
+
+// TDDEnd is the last day of the TDD report its end query names, as 2026-01-31, or yesterday when it names none, and
+// whether a report can end on it
+func TDDEnd(end string, now time.Time, location *time.Location) (time.Time, bool) {
+	yesterday := tddYesterday(now, location)
+	if end == "" {
+		return yesterday, true
 	}
-	return 0
+	last, err := time.ParseInLocation(time.DateOnly, end, location)
+	return last, err == nil && tddKept(last, yesterday)
+}
+
+// tddLinks are the TDD reports of the month before and after the one ending on last, "" where there is none; the one
+// after ends on yesterday at the latest, the one ending yesterday having no end query
+func tddLinks(last, yesterday time.Time) (previous, next string) {
+	link := func(at time.Time) string {
+		switch {
+		case !tddKept(at, yesterday):
+			return ""
+		case at.Equal(yesterday):
+			return "/reports/tdd"
+		}
+		return "/reports/tdd?end=" + at.Format(time.DateOnly)
+	}
+	previous = link(last.AddDate(0, 0, -TDDDays))
+	if last.Before(yesterday) {
+		after := last.AddDate(0, 0, TDDDays)
+		if after.After(yesterday) {
+			after = yesterday
+		}
+		next = link(after)
+	}
+	return previous, next
 }
 
 // dates are the days from first to last, oldest first
@@ -99,8 +132,9 @@ func tddChart(days []*sitemodels.SiteSummaryDaily, first, last time.Time) *chart
 		charts.WithGridOpts(opts.Grid{Left: "50", Right: "20", Top: "10", Bottom: "30"}),
 		charts.WithYAxisOpts(opts.YAxis{Type: "value", Min: 0, SplitLine: &opts.SplitLine{Show: opts.Bool(true), LineStyle: &opts.LineStyle{Type: "dashed", Color: gray200}}, AxisLabel: &opts.AxisLabel{Formatter: "{value} U"}}),
 	)
-	maxWidth := func(s *charts.SingleSeries) { s.BarMaxWidth = "24" }
-	chart.SetXAxis(dates).AddSeries("Daily dose", bars, charts.WithItemStyleOpts(opts.ItemStyle{Color: brandNight}), maxWidth)
+	// The bars fill their days, but for a gap of a couple of pixels, so a month of them reads at a glance
+	narrowGaps := func(s *charts.SingleSeries) { s.BarCategoryGap = "2" }
+	chart.SetXAxis(dates).AddSeries("Daily dose", bars, charts.WithItemStyleOpts(opts.ItemStyle{Color: brandNight}), narrowGaps)
 	chart.AddJSFuncs("window.addEventListener('resize', function() { %MY_ECHARTS%.resize(); });")
 	return chart
 }

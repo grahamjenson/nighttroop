@@ -57,6 +57,14 @@ LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER
 SELECT * FROM device_reports WHERE id = ? AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL);
 
 
+-- name: DeviceReportsLoopBetween :many
+-- The loop's IOB and COB of the reports from Start until End that have any, newest first, from occurred_at's index, to
+-- summarise a day
+SELECT occurred_at, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob FROM device_reports
+WHERE occurred_at >= sqlc.arg('Start') AND occurred_at < sqlc.arg('End') AND deleted_at IS NULL
+    AND COALESCE(loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob) IS NOT NULL
+ORDER BY occurred_at DESC LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
+
 -- name: DeviceReportAscendingIDs :many
 -- The reports in the dates searched, the oldest first, from occurred_at's index, for a search sorted by date
 SELECT id FROM device_reports

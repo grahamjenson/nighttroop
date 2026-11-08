@@ -66,7 +66,7 @@ func TestNewSummaryDaily(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			day := NewSummaryDaily("1970-01-01", "UTC", start, end, 70, 180, tt.readings, tt.doses, tt.food, tt.minutesSince, tt.minutes)
+			day := NewSummaryDaily("1970-01-01", "UTC", start, end, 70, 180, tt.readings, tt.doses, tt.food, nil, tt.minutesSince, tt.minutes)
 			if day.Period != "day" || day.Date != "1970-01-01" || day.Timezone != "UTC" || day.StartAt != start || day.EndAt != end {
 				t.Errorf("day is a %s %s in %s from %d to %d", day.Period, day.Date, day.Timezone, day.StartAt, day.EndAt)
 			}
@@ -88,6 +88,56 @@ func TestNewSummaryDaily(t *testing.T) {
 				t.Errorf("glucose is %s, want %s", day.GlucoseMgdlJson, want)
 			}
 		})
+	}
+}
+
+// A day's loop IOB and COB are the newest loop report's in each 5 minutes, rounded, null where there was none
+func TestNewSummaryDailyLoop(t *testing.T) {
+	const hour = int64(60 * 60_000)
+	start, end := hour, 2*hour
+	report := func(at int64, iob, basal, treatment, cob *float64) *sitedb.DeviceReportsLoopBetweenRow {
+		return &sitedb.DeviceReportsLoopBetweenRow{OccurredAt: at, LoopIob: iob, LoopIobBasal: basal, LoopIobTreatment: treatment, LoopCob: cob}
+	}
+	// Newest first, as DeviceReportsLoopBetween reads them: two in the first 5 minutes, none in the next, one in the
+	// third without basal or treatment IOB, and one before and one after the day
+	reports := []*sitedb.DeviceReportsLoopBetweenRow{
+		report(end, new(9.0), nil, nil, new(9.0)),
+		report(start+2*SummaryDailySlotMs+1, new(0.5), nil, nil, new(10.0)),
+		report(start+4*60_000, new(2.345), new(0.5), new(1.845), new(30.0)),
+		report(start, new(1.0), new(0.25), new(0.75), new(40.0)),
+		report(start-1, new(9.0), nil, nil, new(9.0)),
+	}
+	day := NewSummaryDaily("1970-01-01", "UTC", start, end, 70, 180, nil, nil, nil, reports, start, nil)
+	tail := strings.Repeat(",null", 9) + "]"
+	for name, got := range map[string][2]string{
+		"iob":           {day.LoopIobJson, "[2.35,null,0.5" + tail},
+		"basal iob":     {day.LoopIobBasalJson, "[0.5,null,null" + tail},
+		"treatment iob": {day.LoopIobTreatmentJson, "[1.85,null,null" + tail},
+		"cob":           {day.LoopCobJson, "[30,null,10" + tail},
+	} {
+		if got[0] != got[1] {
+			t.Errorf("%s is %s, want %s", name, got[0], got[1])
+		}
+	}
+}
+
+// A week's loop IOB and COB at each time of day are the means of its days' then, rounded
+func TestNewSummaryPeriodLoop(t *testing.T) {
+	day := func(withData int64, iob, cob string) *sitedb.SummaryPeriod {
+		return &sitedb.SummaryPeriod{Days: withData, GlucoseMgdlJson: "[]", LoopIobJson: iob, LoopIobBasalJson: iob, LoopIobTreatmentJson: "[]", LoopCobJson: cob}
+	}
+	week := NewSummaryPeriod("week", "2026-10-26", "UTC", 1, 2, []*sitedb.SummaryPeriod{
+		day(1, "[1,null,2.5]", "[10,20]"), day(1, "[2,null,null,-1]", "[null,25]"), day(1, "[1.005]", "[11]"), day(0, "[100]", "[100]")})
+	tail := func(set int) string { return strings.Repeat(",null", 288-set) + "]" }
+	for name, got := range map[string][2]string{
+		"iob":           {week.LoopIobJson, "[1.34,null,2.5,-1" + tail(4)},
+		"basal iob":     {week.LoopIobBasalJson, "[1.34,null,2.5,-1" + tail(4)},
+		"treatment iob": {week.LoopIobTreatmentJson, "[null" + tail(1)},
+		"cob":           {week.LoopCobJson, "[10.5,22.5" + tail(2)},
+	} {
+		if got[0] != got[1] {
+			t.Errorf("%s is %s, want %s", name, got[0], got[1])
+		}
 	}
 }
 

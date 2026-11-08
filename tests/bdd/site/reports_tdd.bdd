@@ -1,20 +1,22 @@
 INCLUDE steps/new_site_admin.steps
 ASSERT_PATH /
 
-// The Reports hub has TDD, the total daily dose of the week before today at first, which a new site has no past
-// days for: its table still lists each of the 7 days, with no dose
+// The Reports hub has TDD, the total daily dose of the month before today, which a new site has no past days for: its
+// table still lists each of the 30 days, with no dose. Its arrows beside the dates go to the month before, and the
+// month after is disabled, as it has not been
 CLICK #site--nav--reports
 CLICK #site--reports--tdd-menu-button
 ASSERT_STATUS 200
 ASSERT_NEW_URL
 ASSERT_PATH /reports/tdd
 ASSERT_TITLE TDD · Nighttroop
-ASSERT_VISIBLE #site--reports--tdd--range-week.bg-primary
+ASSERT_VISIBLE #site--reports--tdd--previous
+ASSERT_DRAWN #site--reports--tdd--next[disabled]
 ASSERT_VISIBLE #site--reports--tdd--empty
 ASSERT_TEXT_EQUALS #site--reports--tdd--days 0
 ASSERT_TEXT_EQUALS #site--reports--tdd--mean –
-ASSERT_COUNT #site--reports--tdd--table tbody tr 7
-ASSERT_COUNT #site--reports--tdd--table tbody td:text-is("–") 7
+ASSERT_COUNT #site--reports--tdd--table tbody tr 30
+ASSERT_COUNT #site--reports--tdd--table tbody td:text-is("–") 30
 
 // The Reports hub opens on AGP, whose tab marks it, and its TDD tab opens TDD again
 CLICK #site--nav--reports
@@ -55,8 +57,8 @@ CLICK #site--settings--site--save
 ASSERT_TEXT_VISIBLE Settings Saved
 RUN_BACKGROUND_JOBS
 
-// The report draws a bar of each day of the week before today with insulin, today left out as it is not over, with their
-// mean, lowest and highest daily dose, and a table of each day's dose, newest first
+// The report draws a bar of each day of the month before today with insulin, today left out as it is not over, a couple
+// of pixels apart, with their mean, lowest and highest daily dose, and a table of each day's dose, newest first
 GOTO /reports/tdd
 ASSERT_STATUS 200
 ASSERT_NOT_VISIBLE #site--reports--tdd--empty
@@ -66,30 +68,36 @@ ASSERT_VISIBLE #site--reports--tdd--days >> text=/^[34]$/
 ASSERT_VISIBLE #site--reports--tdd--mean >> text=/^\d+(\.\d+)? U$/
 ASSERT_VISIBLE #site--reports--tdd--lowest >> text=/^\d+(\.\d+)? U$/
 ASSERT_VISIBLE #site--reports--tdd--highest >> text=/^\d+(\.\d+)? U$/
-ASSERT_COUNT #site--reports--tdd--table tbody tr 7
+ASSERT_COUNT #site--reports--tdd--table tbody tr 30
 ASSERT_VISIBLE #site--reports--tdd--table tbody tr >> nth=0 >> text=/^\d+(\.\d+)? U$/
 SCREENSHOT report_tdd
 
-// The range buttons show the fortnight or the month before today, and back returns to the range before
-CLICK #site--reports--tdd--range-month
+// The arrow before the dates goes to the month before, which the backfilled days are not in, and the one after back,
+// back returning to the month before too
+CLICK #site--reports--tdd--previous
 ASSERT_STATUS 200
 ASSERT_NEW_URL
-ASSERT_VISIBLE #site--reports--tdd--range-month.bg-primary
 ASSERT_COUNT #site--reports--tdd--table tbody tr 30
-ASSERT_DRAWN #site--reports--tdd--chart svg
-SCREENSHOT report_tdd_month
-CLICK #site--reports--tdd--range-fortnight
+ASSERT_VISIBLE #site--reports--tdd--empty
+ASSERT_VISIBLE #site--reports--tdd--next
+SCREENSHOT report_tdd_previous
+CLICK #site--reports--tdd--next
 ASSERT_STATUS 200
-ASSERT_VISIBLE #site--reports--tdd--range-fortnight.bg-primary
-ASSERT_COUNT #site--reports--tdd--table tbody tr 14
+ASSERT_NEW_URL
+ASSERT_PATH /reports/tdd
+ASSERT_NOT_VISIBLE #site--reports--tdd--empty
+ASSERT_DRAWN #site--reports--tdd--next[disabled]
 CLICK_BACK
 ASSERT_STATUS 200
-ASSERT_VISIBLE #site--reports--tdd--range-month.bg-primary
-ASSERT_COUNT #site--reports--tdd--table tbody tr 30
+ASSERT_VISIBLE #site--reports--tdd--empty
+
+// A month ending today, which is not over, or more than a year ago, which is not kept, is refused
+GOTO /reports/tdd?end=2000-01-01
+ASSERT_STATUS 400
 
 // On a phone the report is no wider than the window, its buttons wrapping. The window is tall enough for the whole
 // page, so fitting it checks only its width.
-WINDOW 390x1600
+WINDOW 390x2400
 GOTO /reports/tdd
 ASSERT_STATUS 200
 ASSERT_DRAWN #site--reports--tdd--chart svg

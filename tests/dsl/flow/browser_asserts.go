@@ -617,5 +617,5 @@ func (r *AssertNoPageErrors) Execute(t *testing.T, ctx map[string]any, page play
 }
 
 func (r *AssertNoPageErrors) ToErrorLine() string {
-	return fmt.Sprintf("%s:%d: expected the page to throw no uncaught error", r.TestPath, r.TestLine)
+	return fmt.Sprintf("%s:%d: expected the page to throw no uncaught error, nor htmx to log one", r.TestPath, r.TestLine)
 }

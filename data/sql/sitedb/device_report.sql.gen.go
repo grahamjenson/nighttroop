@@ -331,6 +331,58 @@ func (q *Queries) DeviceReportsForDevice(ctx context.Context, arg DeviceReportsF
 	return items, nil
 }
 
+const deviceReportsLoopBetween = `-- name: DeviceReportsLoopBetween :many
+SELECT occurred_at, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob FROM device_reports
+WHERE occurred_at >= ?1 AND occurred_at < ?2 AND deleted_at IS NULL
+    AND COALESCE(loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob) IS NOT NULL
+ORDER BY occurred_at DESC LIMIT CAST(?3 AS INTEGER)
+`
+
+type DeviceReportsLoopBetweenParams struct {
+	Start int64
+	End   int64
+	Limit int64
+}
+
+type DeviceReportsLoopBetweenRow struct {
+	OccurredAt       int64
+	LoopIob          *float64
+	LoopIobBasal     *float64
+	LoopIobTreatment *float64
+	LoopCob          *float64
+}
+
+// The loop's IOB and COB of the reports from Start until End that have any, newest first, from occurred_at's index, to
+// summarise a day
+func (q *Queries) DeviceReportsLoopBetween(ctx context.Context, arg DeviceReportsLoopBetweenParams) ([]*DeviceReportsLoopBetweenRow, error) {
+	rows, err := q.query(ctx, q.deviceReportsLoopBetweenStmt, deviceReportsLoopBetween, arg.Start, arg.End, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*DeviceReportsLoopBetweenRow
+	for rows.Next() {
+		var i DeviceReportsLoopBetweenRow
+		if err := rows.Scan(
+			&i.OccurredAt,
+			&i.LoopIob,
+			&i.LoopIobBasal,
+			&i.LoopIobTreatment,
+			&i.LoopCob,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getDeviceReport = `-- name: GetDeviceReport :one
 SELECT id, device_battery_percent, is_device_charging, pump_state, pump_reservoir, pump_battery_percent, pump_charging_state, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob, other_attributes, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name FROM device_reports WHERE id = ? AND (CAST(?2 AS BOOL) = TRUE OR deleted_at IS NULL)
 `

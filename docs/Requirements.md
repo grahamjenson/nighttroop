@@ -353,14 +353,17 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - Its ambulatory glucose profile (AGP) over a day from midnight shades the 5th to 95th and 25th to 75th percentiles,
   with the median as a line, over the range shaded with its low and high dashed. A day's report draws the day's
   glucose over the AGP of the 7 days to it. A report with no glucose says so instead.
-- Day, Week, Fortnight and Month open the report of that kind ending on the report's last day, or today; Previous and
-  Next open the one before and after, disabled past today or a year ago. Back and forward move between reports.
-- The Reports hub has TDD: the total daily dose report at
-  `/reports/tdd`, of the week before today at first. Its Week, Fortnight and Month buttons show the 7, 14 or 30 days
-  before today (`?range=week`, `fortnight` or `month`; another range is refused), back and forward moving between
-  them; today is left out as it is not over. It says which days it covers, dated in the site's timezone.
-- It draws a bar of each day's total daily dose, oldest first, on an axis of every day it covers; a day with no
-  insulin has no bar and is not counted. Hovering a bar shows its date and daily dose in U.
+- Day, Week, Fortnight and Month open the report of that kind ending on the report's last day, or today; arrow buttons
+  either side of its dates (‹ and ›), named Previous and Next for a screen reader, open the one before and after, disabled
+  past today or a year ago. Back and forward move between reports.
+- Clicking around the reports quickly shows the last one clicked, logging no error for the pages it replaced.
+- The Reports hub has TDD: the total daily dose report at `/reports/tdd`, of the 30 days before today, today left out
+  as it is not over. It says which days it covers, dated in the site's timezone, with arrow buttons either side (‹ and
+  ›) to the 30 days before and after (`?end=` the last day, as `2026-01-31`); the one after is disabled for the latest
+  month, and the one before past a year ago. A last day after yesterday or more than a year ago is refused. Back and
+  forward move between them.
+- It draws a bar of each day's total daily dose, oldest first, on an axis of every day it covers, the bars a couple of
+  pixels apart; a day with no insulin has no bar and is not counted. Hovering a bar shows its date and daily dose in U.
 - It shows how many of its days have insulin and their mean, lowest and highest daily dose, and says when none have
   insulin.
 - Under the bars, a table lists every day it covers, newest first, with its total daily dose in U, or "–" for a day
@@ -488,7 +491,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   time format setting is offered but not used yet.
 - On a phone the settings, alarms and another identity's settings are one column: each setting's label, then its Site
   and Yours controls, each named, and the save buttons fit in the window.
-- An admin can **download** a snapshot of the site's DB.
+- An admin can **download** the site's data: a zip, `<site>-<date>.zip`, of a snapshot of its DB, `<site>-<date>.sqlite`,
+  so more files can be added beside it later.
 - An admin can **delete** the site, after a confirmation, which archives it to S3 and signs everyone out.
 - An admin can add, list and delete the site's **push credentials** on Settings, Push Notifications
   (`/settings/push-credentials`): an Apple APNs key (team ID, key ID and the `.p8` file pasted in) or a Firebase
@@ -687,6 +691,10 @@ Connectors are a site's third party integrations, each syncing from one service.
   carbs, glucose every 5 minutes, and AGP (the 5th, 25th, 50th, 75th and 95th percentiles each 15 minutes from
   midnight). A day's AGP is of the 7 days to it. A period not kept is built from the kept days in it, and today so
   far while it is not over; a day not kept is built from its data; and neither is kept. Any other id, or a date out of range, is not found.
+- A summary period also has the loop's IOB (`loop_iob`, `loop_iob_basal`, `loop_iob_treatment`) and COB (`loop_cob`)
+  every 5 minutes from midnight: a day's newest loop device report in each 5 minutes, null when there was none, and a
+  week's, fortnight's or month's the mean of its days' at that time of day. A kept day keeps them after its device
+  reports are truncated.
 - The client also calls every Nightscout API v1, v2 and v3 endpoint on a site's Nightscout host, with a device's
   Nightscout token or the JWT it is exchanged for.
 
@@ -719,7 +727,9 @@ Connectors are a site's third party integrations, each syncing from one service.
   stops the start, naming the site in the error, as a site that cannot be opened or migrated does: the server never
   serves, so takes no data, until every live site is opened and migrated, and `update.sh` rolls back a release that
   cannot. Its batch is not uploaded without it.
-- Old records' raw JSON is cleared after `TRUNCATE_RECORDS_AFTER_DAYS`.
+- Each hour, at a fixed minute, every site's raw JSON, kept of what each row was sent, is cleared from rows older than
+  `TRUNCATE_RAW_JSON_AFTER_DAYS` (2 by default), in every table that keeps it, keeping the rows themselves. Truncating a
+  site clears it the same way, then shrinks its DB.
 - Reads and writes are rate limited per site, identity and IP, and live sessions per site are capped.
 - A Nightscout request that fails auth, or needs none, spends its IP's budget on the site
   (`SITE_UNAUTH_PER_MINUTE_LIMIT`); one with a valid token does not, so a device uploading often from one IP is limited

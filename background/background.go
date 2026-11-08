@@ -9,6 +9,7 @@ import (
 	"nighttroop.t1d.nz/background/backup_sites"
 	"nighttroop.t1d.nz/background/check_alarms"
 	"nighttroop.t1d.nz/background/check_resources"
+	"nighttroop.t1d.nz/background/clear_raw_json"
 	"nighttroop.t1d.nz/background/connectors"
 	"nighttroop.t1d.nz/background/cron"
 	"nighttroop.t1d.nz/background/liteq"
@@ -57,6 +58,8 @@ func NewBackGroundManager(ctx context.Context, controlDB *db.ControlDB, config *
 
 	// Trim the logs DB's tables to their newest rows
 	trim_logs.SetupCron(cron, config, controlDB.Logs)
+	// Clear every site's raw JSON older than TRUNCATE_RAW_JSON_AFTER_DAYS, the largest part of its DB
+	clear_raw_json.SetupCron(cron, controlDB)
 
 	// Check each identity's alarms on new readings, and periodically
 	check_alarms.SetupCron(cron, config, controlDB)

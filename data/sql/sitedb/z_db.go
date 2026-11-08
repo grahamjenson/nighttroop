@@ -165,6 +165,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deviceReportsForDeviceStmt, err = db.PrepareContext(ctx, deviceReportsForDevice); err != nil {
 		return nil, fmt.Errorf("error preparing query DeviceReportsForDevice: %w", err)
 	}
+	if q.deviceReportsLoopBetweenStmt, err = db.PrepareContext(ctx, deviceReportsLoopBetween); err != nil {
+		return nil, fmt.Errorf("error preparing query DeviceReportsLoopBetween: %w", err)
+	}
 	if q.eventGroupAscendingIDsStmt, err = db.PrepareContext(ctx, eventGroupAscendingIDs); err != nil {
 		return nil, fmt.Errorf("error preparing query EventGroupAscendingIDs: %w", err)
 	}
@@ -700,6 +703,11 @@ func (q *Queries) Close() error {
 	if q.deviceReportsForDeviceStmt != nil {
 		if cerr := q.deviceReportsForDeviceStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deviceReportsForDeviceStmt: %w", cerr)
+		}
+	}
+	if q.deviceReportsLoopBetweenStmt != nil {
+		if cerr := q.deviceReportsLoopBetweenStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deviceReportsLoopBetweenStmt: %w", cerr)
 		}
 	}
 	if q.eventGroupAscendingIDsStmt != nil {
@@ -1283,6 +1291,7 @@ type Queries struct {
 	deviceReportAscendingIDsStmt                *sql.Stmt
 	deviceReportHistoryIDsStmt                  *sql.Stmt
 	deviceReportsForDeviceStmt                  *sql.Stmt
+	deviceReportsLoopBetweenStmt                *sql.Stmt
 	eventGroupAscendingIDsStmt                  *sql.Stmt
 	eventGroupHistoryIDsStmt                    *sql.Stmt
 	eventsToGroupStmt                           *sql.Stmt
@@ -1435,6 +1444,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		deviceReportAscendingIDsStmt:                q.deviceReportAscendingIDsStmt,
 		deviceReportHistoryIDsStmt:                  q.deviceReportHistoryIDsStmt,
 		deviceReportsForDeviceStmt:                  q.deviceReportsForDeviceStmt,
+		deviceReportsLoopBetweenStmt:                q.deviceReportsLoopBetweenStmt,
 		eventGroupAscendingIDsStmt:                  q.eventGroupAscendingIDsStmt,
 		eventGroupHistoryIDsStmt:                    q.eventGroupHistoryIDsStmt,
 		eventsToGroupStmt:                           q.eventsToGroupStmt,

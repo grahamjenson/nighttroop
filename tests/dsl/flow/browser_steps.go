@@ -46,6 +46,15 @@ func ParseBrowserLines(lines []Line) ([]Action, error) {
 				Locator:  second,
 				Asserts:  []BrowserAssert{},
 			}
+		case "CLICK_QUICKLY":
+			// CLICK_QUICKLY <selector>, <selector>, ... clicks each CSS selector's element straight after the last, not
+			// waiting for what a click asks for, as a person clicking around quickly does, so each request replaces the
+			// one before
+			flush()
+			if second == "" {
+				return nil, fmt.Errorf("%s:%d: CLICK_QUICKLY needs locators", path, lineNumber)
+			}
+			current = &Click{TestPath: path, TestLine: lineNumber, Quickly: strings.Split(second, ", "), Asserts: []BrowserAssert{}}
 		case "CLICK_CORNER", "PRESS":
 			flush()
 
@@ -310,7 +319,7 @@ func ParseBrowserLines(lines []Line) ([]Action, error) {
 				TestLine: lineNumber,
 			})
 		case "ASSERT_NO_PAGE_ERRORS":
-			// ASSERT_NO_PAGE_ERRORS is the page having thrown no uncaught error since the flow went to it
+			// ASSERT_NO_PAGE_ERRORS is the page having thrown no uncaught error, nor htmx logged one, since the flow went to it
 			if current == nil {
 				return nil, fmt.Errorf("assert_no_page_errors before action")
 			}
