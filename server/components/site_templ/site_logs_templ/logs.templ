@@ -13,13 +13,10 @@ import (
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/display"
 )
-
-func formatDate(ms int64) string {
-	return time.UnixMilli(ms).Format("2006-01-02 15:04:05")
-}
 
 // duration is how long an event took, or a dash when it happened at a moment
 func duration(event *sitemodels.SiteEvent) string {
@@ -134,7 +131,7 @@ templ EventsTable(events []*sitemodels.SiteEvent, skip int64, limit int64, event
 							{ about(event) }
 						}
 						@table.Cell() {
-							<span title={ formatDate(event.StartedAt) }>{ display.Ago(&event.StartedAt, time.Now()) }</span>
+							<span title={ site_data_templ.FormatDate(ctx, event.StartedAt) }>{ display.Ago(&event.StartedAt, time.Now()) }</span>
 						}
 						@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 							{ duration(event) }
@@ -149,12 +146,12 @@ templ EventsTable(events []*sitemodels.SiteEvent, skip int64, limit int64, event
 templ EventModal(event *sitemodels.SiteEvent) {
 	// Sign ins are from where DB-IP estimates
 	@footer.DBIPCredit()
-	@modal.Modal(modal.Props{ID: "site--event--details", Title: display.Name(event.Name), Subtitle: formatDate(event.StartedAt)}) {
+	@modal.Modal(modal.Props{ID: "site--event--details", Title: display.Name(event.Name), Subtitle: site_data_templ.FormatDate(ctx, event.StartedAt)}) {
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@detail("For", about(event))
-			@detail("Started", formatDate(event.StartedAt))
+			@detail("Started", site_data_templ.FormatDate(ctx, event.StartedAt))
 			if event.FinishedAt != nil {
-				@detail("Finished", formatDate(*event.FinishedAt))
+				@detail("Finished", site_data_templ.FormatDate(ctx, *event.FinishedAt))
 			}
 			@detail("Duration", duration(event))
 			@idDetails("site--event", event.RequestID, event.JobID)
@@ -188,7 +185,7 @@ templ ErrorsTable(errors []*sitemodels.SiteError, skip int64, limit int64, kind 
 							<span class="block max-w-xl truncate text-red-700">{ e.Message }</span>
 						}
 						@table.Cell() {
-							<span title={ formatDate(e.CreatedAt) }>{ display.Ago(&e.CreatedAt, time.Now()) }</span>
+							<span title={ site_data_templ.FormatDate(ctx, e.CreatedAt) }>{ display.Ago(&e.CreatedAt, time.Now()) }</span>
 						}
 					}
 				}
@@ -198,7 +195,7 @@ templ ErrorsTable(errors []*sitemodels.SiteError, skip int64, limit int64, kind 
 }
 
 templ ErrorModal(e *sitemodels.SiteError) {
-	@modal.Modal(modal.Props{ID: "site--error--details", Title: "Error", Subtitle: formatDate(e.CreatedAt)}) {
+	@modal.Modal(modal.Props{ID: "site--error--details", Title: "Error", Subtitle: site_data_templ.FormatDate(ctx, e.CreatedAt)}) {
 		<p class="mt-2 break-all text-sm text-red-700">{ e.Message }</p>
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@idDetails("site--error", e.RequestID, e.JobID)
@@ -238,7 +235,7 @@ templ LogsTable(logs []*sitemodels.SiteLog, skip int64, limit int64, search *str
 							<span class="block max-w-xl truncate">{ log.Message }</span>
 						}
 						@table.Cell() {
-							<span title={ formatDate(log.CreatedAt) }>{ display.Ago(&log.CreatedAt, time.Now()) }</span>
+							<span title={ site_data_templ.FormatDate(ctx, log.CreatedAt) }>{ display.Ago(&log.CreatedAt, time.Now()) }</span>
 						}
 					}
 				}
@@ -248,7 +245,7 @@ templ LogsTable(logs []*sitemodels.SiteLog, skip int64, limit int64, search *str
 }
 
 templ LogModal(log *sitemodels.SiteLog) {
-	@modal.Modal(modal.Props{ID: "site--log--details", Title: log.Level, Subtitle: formatDate(log.CreatedAt)}) {
+	@modal.Modal(modal.Props{ID: "site--log--details", Title: log.Level, Subtitle: site_data_templ.FormatDate(ctx, log.CreatedAt)}) {
 		<p class="mt-2 break-all text-sm">{ log.Message }</p>
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@idDetails("site--log", log.RequestID, log.JobID)

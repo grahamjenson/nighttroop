@@ -400,6 +400,9 @@ focus back to the row or button that opened it.
 
 - General settings: units, time zone, language, date and time format, week start, insulin and carb defaults.
 - An admin sets the site's settings; each identity can override them for themselves.
+- Every page shows dates in the date format, the identity's, then the site's, then the default (YYYY-MM-DD), and in
+  the timezone chosen the same way; the logs pages too. Times are shown as 24-hour HH:mm:ss everywhere for now: the
+  time format setting is offered but not used yet.
 - On a phone the settings, alarms and another identity's settings are one column: each setting's label, then its Site
   and Yours controls, each named, and the save buttons fit in the window.
 - An admin can **download** a snapshot of the site's DB.

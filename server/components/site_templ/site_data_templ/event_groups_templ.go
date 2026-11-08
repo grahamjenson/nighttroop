@@ -936,9 +936,9 @@ func EventGroupChoices(editing bool, kinds []string, from int64, to int64, choic
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var43 string
-		templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.JoinStringErrs(time.UnixMilli(from).In(Location(ctx)).Format("2006-01-02 15:04"))
+		templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.JoinStringErrs(time.UnixMilli(from).In(Location(ctx)).Format(dateLayout(ctx) + " 15:04"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 255, Col: 103}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 255, Col: 111}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var43))
 		if templ_7745c5c3_Err != nil {
@@ -951,7 +951,7 @@ func EventGroupChoices(editing bool, kinds []string, from int64, to int64, choic
 		var templ_7745c5c3_Var44 string
 		templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs(time.UnixMilli(to).In(Location(ctx)).Format("15:04"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 255, Col: 163}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/event_groups.templ`, Line: 255, Col: 171}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
 		if templ_7745c5c3_Err != nil {
