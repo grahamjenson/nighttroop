@@ -276,11 +276,17 @@ type ServerErrorAttributes struct {
 	Method    string    `json:"method"`
 	Route     string    `json:"route"`
 	RequestID string    `json:"request_id"`
+	Reason    string    `json:"reason,omitempty"`
 }
 
-// ServerError records a response with a 5xx status, by its route's pattern as a path can carry a token
-func (l *LogsDB) ServerError(ctx context.Context, siteID *string, status int, method string, route string, requestID string) {
-	l.error(ctx, siteID, fmt.Errorf("%d %s", status, http.StatusText(status)), ServerErrorAttributes{Kind: ErrorKindServer, Status: status, Method: method, Route: route, RequestID: requestID})
+// ServerError records a response with a 5xx status, with why when known, by its route's pattern as a path can carry
+// a token
+func (l *LogsDB) ServerError(ctx context.Context, siteID *string, status int, method string, route string, requestID string, reason string) {
+	message := fmt.Sprintf("%d %s", status, http.StatusText(status))
+	if reason != "" {
+		message += ": " + reason
+	}
+	l.error(ctx, siteID, errors.New(message), ServerErrorAttributes{Kind: ErrorKindServer, Status: status, Method: method, Route: route, RequestID: requestID, Reason: reason})
 }
 
 // ClientErrorAttributes are what a request refused for what it sent was, and who sent it: its identity, and the app

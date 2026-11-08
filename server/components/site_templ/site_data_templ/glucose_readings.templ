@@ -31,8 +31,18 @@ func Location(ctx context.Context) *time.Location {
 	return time.UTC
 }
 
+// dateLayout is the Go layout of the identity's, site's or default date format
+func dateLayout(ctx context.Context) string {
+	if siteContext := httputils.GetSiteContext(ctx); siteContext != nil {
+		return siteContext.GetSettings().DateLayout()
+	}
+	return time.DateOnly
+}
+
+// formatReadingDate is a time in the settings' timezone and date format. The time format is the same everywhere for
+// now: the time format setting is not used yet.
 func formatReadingDate(ctx context.Context, ms int64) string {
-	return time.UnixMilli(ms).In(Location(ctx)).Format("2006-01-02 15:04:05")
+	return time.UnixMilli(ms).In(Location(ctx)).Format(dateLayout(ctx) + " 15:04:05")
 }
 
 // FormatGlucose and FormatDate show glucose and times the same way on other pages

@@ -1,6 +1,7 @@
 package site_settings_templ
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/toast"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/httputils"
 )
 
 func findSyncSource(
@@ -24,6 +26,12 @@ func findSyncSource(
 		}
 	}
 	return nil
+}
+
+// virtualSyncAllowed is whether the server offers virtual sync, which makes up glucose: not in production
+func virtualSyncAllowed(ctx context.Context) bool {
+	siteContext := httputils.GetSiteContext(ctx)
+	return siteContext != nil && siteContext.Config != nil && siteContext.Config.VirtualSyncAllowed()
 }
 
 // enableOnFirstInput ticks a new source's Enable Sync as its details are first typed in, as it is easy to forget and
@@ -46,7 +54,9 @@ templ SyncSettingsPartial(syncSettings []*sitemodels.SyncSource) {
 		@NightscoutSyncForm(findSyncSource(syncSettings, consts.SyncSourceTypeNightscout))
 		@DexcomSyncForm(findSyncSource(syncSettings, consts.SyncSourceTypeDexcom))
 		@LibreSyncForm(findSyncSource(syncSettings, consts.SyncSourceTypeLibre))
-		@VirtualSyncForm(findSyncSource(syncSettings, consts.SyncSourceTypeVirtual))
+		if virtualSyncAllowed(ctx) {
+			@VirtualSyncForm(findSyncSource(syncSettings, consts.SyncSourceTypeVirtual))
+		}
 	</div>
 }
 

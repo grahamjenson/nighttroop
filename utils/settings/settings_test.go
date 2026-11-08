@@ -109,3 +109,31 @@ func TestFastRiseAndDropMinutes(t *testing.T) {
 		require.NoError(t, minutes.ValidateFunc(settings.MaxAlarmMinutes), minutes.Identifier)
 	}
 }
+
+// Dates are shown in the identity's date format, then the site's, then the default, each as its Go layout
+func TestCombinedSettingsDateLayout(t *testing.T) {
+	tests := []struct {
+		site, identity string
+		layout         string
+	}{
+		{"", "", "2006-01-02"},
+		{"DD/MM/YYYY", "", "02/01/2006"},
+		{"DD/MM/YYYY", "MM/DD/YYYY", "01/02/2006"},
+		{"", "YYYY/MM/DD", "2006/01/02"},
+		{"", "DD-MM-YYYY", "02-01-2006"},
+		{"", "MM-DD-YYYY", "01-02-2006"},
+		{"", "YYYY-MM-DD", "2006-01-02"},
+	}
+	for _, test := range tests {
+		t.Run(test.site+"_"+test.identity, func(t *testing.T) {
+			site, identity := &settings.SettingMap{}, &settings.SettingMap{}
+			for level, format := range map[*settings.SettingMap]string{site: test.site, identity: test.identity} {
+				if format != "" {
+					require.NoError(t, level.SetSettingByName("date_format", format, nil, nil))
+				}
+			}
+			combined := &settings.CombinedSettingsMap{SiteSettingsMap: site, IdentitySettingsMap: identity, DefaultSettingsMap: settings.DefaultSettingsMap}
+			require.Equal(t, test.layout, combined.DateLayout())
+		})
+	}
+}

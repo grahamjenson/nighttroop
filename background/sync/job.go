@@ -155,6 +155,10 @@ func (b *SyncJobManager) SyncSource(ctx context.Context, syncJob SyncJobParams) 
 		slog.ErrorContext(ctx, "workerFunc: No user sync sources found for site")
 		return nil
 	}
+	if syncSource.Type == consts.SyncSourceTypeVirtual && !b.config.VirtualSyncAllowed() {
+		slog.WarnContext(ctx, "The virtual source is not synced on a production server")
+		return nil
+	}
 
 	site, err := b.syncSite(ctx, syncSource.SiteID)
 	if err != nil {
@@ -258,6 +262,9 @@ func (b *SyncJobManager) buildSyncCronFunc(queue *liteq.JobQueue) func(ctx conte
 		}
 
 		for _, source := range syncSources {
+			if source.Type == consts.SyncSourceTypeVirtual && !b.config.VirtualSyncAllowed() {
+				continue
+			}
 
 			syncJob := &SyncJobParams{
 				SiteID: source.SiteID,

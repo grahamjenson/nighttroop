@@ -126,6 +126,7 @@ templ Toast(props ...Props) {
 				if p.Description != "" {
 					<p class="text-sm opacity-90 mt-1">{ p.Description }</p>
 				}
+				{ children... }
 			</span>
 			// Dismiss button
 			if p.Dismissible {

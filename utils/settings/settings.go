@@ -2,6 +2,7 @@ package settings
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -108,6 +109,16 @@ func (m *CombinedSettingsMap) GetTimezone() *string {
 		m.SiteSettingsMap.GetTimezone(),
 		m.DefaultSettingsMap.GetTimezone(),
 	)
+}
+
+// DateLayout is the Go layout of the date format, the identity's, then the site's, then the default, e.g. 02/01/2006
+// for DD/MM/YYYY
+func (m *CombinedSettingsMap) DateLayout() string {
+	format := first(m.IdentitySettingsMap.GetDateFormat(), m.SiteSettingsMap.GetDateFormat(), m.DefaultSettingsMap.GetDateFormat())
+	if format == nil {
+		return time.DateOnly
+	}
+	return strings.NewReplacer("YYYY", "2006", "MM", "01", "DD", "02").Replace(*format)
 }
 
 // GetWeekStartDay is the identity's week start day, then the site's, then the default monday

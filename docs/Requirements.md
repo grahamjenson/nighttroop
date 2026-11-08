@@ -241,8 +241,12 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   gives no medical advice, and its data and alarms may be late, missing or wrong.
 - The create site page, its medical note and footer included, and the site and control login pages fit a laptop's or
   a phone's window, so none of them needs scrolling.
+- A TOTP code's six boxes fit inside their card on a phone, the last one included: they shrink to fit a card narrower
+  than them, as the site and control login cards are on a phone.
 - A staging server (`MODE=staging`) says it is a test site in a large banner at the top of every page, public, site and
   control, warning that its data is frequently wiped.
+- Toasts show at the top of every page, site and control, newest on top. At most three take space at once: a fourth
+  hides the oldest until it times out, so the newest is always seen and the stack never grows further over the page.
 - Every page names the browser's tab after itself, e.g. `Glucose Readings · Nighttroop`, whether it is loaded in full or
   opened from a menu; a page with no title of its own, such as the login, is named `Nighttroop`.
 - A page that shows estimated locations, such as the events pages, also links to DB-IP, whose free databases make
@@ -377,6 +381,8 @@ focus back to the row or button that opened it.
 
 - A site can pull data from **Dexcom** (with its region), **LibreLinkUp** (with its region) or another
   **Nightscout** site, or from **virtual sync**, which makes realistic test data.
+- Virtual sync is only on a development, test or staging server (`MODE`). In production it is not offered on the
+  sync page, saving or turning on one is refused, and one already saved is never synced or backfilled.
 - Saving does not check the details: the first sync does, and turns syncing off and says why if it fails.
 - Typing the details of a Dexcom, LibreLinkUp or Nightscout source not yet saved ticks its Enable Sync, as it is easy
   to forget; a click on the box, before or after, is kept, and a saved source's box is never changed.
@@ -405,6 +411,9 @@ focus back to the row or button that opened it.
 
 - General settings: units, time zone, language, date and time format, week start, insulin and carb defaults.
 - An admin sets the site's settings; each identity can override them for themselves.
+- Every page shows dates in the date format, the identity's, then the site's, then the default (YYYY-MM-DD), and in
+  the timezone chosen the same way; the logs pages too. Times are shown as 24-hour HH:mm:ss everywhere for now: the
+  time format setting is offered but not used yet.
 - On a phone the settings, alarms and another identity's settings are one column: each setting's label, then its Site
   and Yours controls, each named, and the save buttons fit in the window.
 - An admin can **download** a snapshot of the site's DB.
@@ -421,6 +430,11 @@ focus back to the row or button that opened it.
 - An admin sees the site's events (e.g. created, alarms, recoveries, credential changes), errors and logs, filtered
   by type and searched, and its batch's backups. Its errors include its requests refused for what they sent (kind
   `client`), with why, and which identity and app sent them, so the admin can see what a client gets wrong.
+- A toast never shows the server's own words: a server error, or a refusal in the database's words, says "Something
+  went wrong. It has been recorded on the Errors page.", linking an admin there, or that it is recorded for the site's
+  admins to anyone else. The Errors page keeps what went wrong, in full. A refusal written for users shows its reason,
+  without the "Bad or missing request body" or "Constraint check failed" start the API's message has.
+- Toasts show above an open modal, so an error from a form in one can be read and its link clicked.
 - A search of the site's events, errors or logs, or a filter by error kind, looks through only its newest 10,000 of
   each, so no search reads every row a site has; paging without one reaches every row.
 - Each of the site's own events, errors and logs shows the request or background job run it was for; its batch's

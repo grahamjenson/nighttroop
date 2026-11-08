@@ -642,6 +642,9 @@
   .max-w-\[min\(24rem\,calc\(100vw-2rem\)\)\] {
     max-width: min(24rem, calc(100vw - 2rem));
   }
+  .max-w-full {
+    max-width: 100%;
+  }
   .max-w-lg {
     max-width: var(--container-lg);
   }
@@ -2781,7 +2784,7 @@
   top: 0;
   left: 50%;
   translate: -50% 0;
-  z-index: 50;
+  z-index: 60;
   display: flex;
   flex-direction: column-reverse;
   width: 100%;
@@ -2800,6 +2803,9 @@
 }
 #toaster > [data-tui-toast] > * {
   min-height: 0;
+}
+#toaster > [data-tui-toast]:nth-last-child(n+4) {
+  display: none;
 }
 #toaster > [data-tui-toast][style*="opacity: 0"] {
   grid-template-rows: minmax(0, 0fr);

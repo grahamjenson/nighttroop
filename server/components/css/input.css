@@ -75,7 +75,8 @@
     top: 0;
     left: 50%;
     translate: -50% 0;
-    z-index: 50;
+    /* Above a modal, so an error from a form in one can be read and its link clicked */
+    z-index: 60;
     display: flex;
     flex-direction: column-reverse;
     width: 100%;
@@ -96,6 +97,12 @@
 
 #toaster > [data-tui-toast] > * {
     min-height: 0;
+}
+
+/* At most three toasts take space. A fourth hides the oldest until it times out, so a new toast is still shown on
+   top rather than pushing the stack further down over the page. */
+#toaster > [data-tui-toast]:nth-last-child(n+4) {
+    display: none;
 }
 
 #toaster > [data-tui-toast][style*="opacity: 0"] {

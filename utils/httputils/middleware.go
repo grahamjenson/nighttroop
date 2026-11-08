@@ -167,12 +167,33 @@ func DBIPCredited(ctx context.Context) bool {
 	return ok && credit.shown
 }
 
-// RecordServerErrors records each response with a 5xx status in the logs DB's errors, with its site when it has one.
+type errorReasonKey struct{}
+
+// withErrorReason is the request with room for SetErrorReason, and that room, which it shares with an outer one's
+func withErrorReason(r *http.Request) (*http.Request, *string) {
+	if reason, ok := r.Context().Value(errorReasonKey{}).(*string); ok {
+		return r, reason
+	}
+	reason := new(string)
+	return r.WithContext(context.WithValue(r.Context(), errorReasonKey{}, reason)), reason
+}
+
+// SetErrorReason keeps why the request failed, in the server's own words, for its errors page, when its response
+// tells the user something plainer
+func SetErrorReason(ctx context.Context, reason string) {
+	if kept, ok := ctx.Value(errorReasonKey{}).(*string); ok {
+		*kept = reason
+	}
+}
+
+// RecordServerErrors records each response with a 5xx status in the logs DB's errors, with its site when it has one,
+// and why, when the handler said with SetErrorReason.
 // It records the route's pattern rather than the path, as a Nightscout path can carry a token.
 func RecordServerErrors(logs *db.LogsDB) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
+			r, reason := withErrorReason(r)
 			next.ServeHTTP(ww, r)
 			if ww.Status() < http.StatusInternalServerError {
 				return
@@ -185,7 +206,7 @@ func RecordServerErrors(logs *db.LogsDB) func(http.Handler) http.Handler {
 			if routeContext := chi.RouteContext(r.Context()); routeContext != nil {
 				route = routeContext.RoutePattern()
 			}
-			logs.ServerError(context.WithoutCancel(r.Context()), siteID, ww.Status(), r.Method, route, middleware.GetReqID(r.Context()))
+			logs.ServerError(context.WithoutCancel(r.Context()), siteID, ww.Status(), r.Method, route, middleware.GetReqID(r.Context()), clip(*reason))
 		})
 	}
 }

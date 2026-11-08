@@ -1,6 +1,7 @@
 package sitecollections
 
 import (
+	"cmp"
 	"context"
 	"database/sql"
 	"errors"
@@ -19,6 +20,7 @@ import (
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 
 	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -318,14 +320,23 @@ func WriteResponse(w http.ResponseWriter, r *http.Request, siteContext *httputil
 	}
 }
 
-// writeError sends HTMX the error as a toast, which forms add to #toaster, and anything else the error as it writes itself
+// writeError sends HTMX the error as a toast, which forms add to #toaster, and anything else the error as it writes itself.
+// A toast shows only what was written for users: a server error, or one in the server's own words, says it is on the
+// Errors page, which keeps its words.
 func writeError(w http.ResponseWriter, r *http.Request, acceptType httputils.AcceptType, herr *apiutils.HTTPError) {
 	if acceptType != httputils.AcceptTypeHTMX {
 		herr.Write(acceptType, w)
 		return
 	}
+	httputils.SetErrorReason(r.Context(), herr.Message)
 	apiutils.WriteStatus(w, acceptType, herr.Status)
-	site_templ.SiteError(herr.Message).Render(r.Context(), w)
+	if herr.Status >= http.StatusInternalServerError || herr.Internal {
+		siteContext := httputils.GetSiteContext(r.Context())
+		admin := siteContext != nil && siteContext.IdentityModel != nil && siteContext.IdentityModel.Role == consts.IdentityRoleAdmin
+		site_templ.SiteErrorRecorded(admin).Render(r.Context(), w)
+		return
+	}
+	site_templ.SiteError(cmp.Or(herr.Hint, herr.Message)).Render(r.Context(), w)
 }
 
 // get is the model, or nil when there is none

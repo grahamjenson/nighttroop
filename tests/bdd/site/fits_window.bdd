@@ -43,3 +43,28 @@ SCREENSHOT create_site_fits_phone
 GOTO {{ .control_url }}/login
 ASSERT_STATUS 200
 ASSERT_FITS
+// Its code boxes fit inside its card on a phone, the last one included
+ASSERT_CONTAINED .login-form-target [data-tui-inputotp-index="5"]
+SCREENSHOT control_login_fits_phone
+
+// So do a site's, on the login's code step, on a narrower phone. The login opens in a new tab, which is made a
+// phone's size and loaded again
+GOTO {{ server_url}}/
+ASSERT_STATUS 200
+CLICK "Create Site"
+ASSERT_STATUS 200
+INPUT #public--site-info--totp 123123
+CLICK #public--totp-check-button
+ASSERT_VISIBLE #public--totp-checked
+CLICK #public--login-button
+ASSERT_NEW_PAGE
+WINDOW 360x740
+GOTO /login
+ASSERT_STATUS 200
+INPUT #site--login--name admin
+INPUT #site--login--password password
+CLICK #site--login-button
+ASSERT_VISIBLE #site--login--otp-1
+ASSERT_FITS
+ASSERT_CONTAINED .login-form-target [data-tui-inputotp-index="5"]
+SCREENSHOT site_login_code_fits_phone
