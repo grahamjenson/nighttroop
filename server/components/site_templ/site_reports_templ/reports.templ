@@ -9,6 +9,8 @@ import (
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/server/components/ui/toast"
 	"nighttroop.t1d.nz/utils/display"
 )
 
@@ -159,5 +161,71 @@ templ stat(id, label, text string) {
 	<div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
 		<dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">{ label }</dt>
 		<dd id={ id } class="mt-1 text-2xl font-bold tabular-nums text-gray-900">{ text }</dd>
+	</div>
+}
+
+// SummariesReport is the site's kept summaries as tables of their numbers, a table for each period, newest first, each
+// opening its AGP report. An admin can have them all regenerated from the site's data.
+templ SummariesReport(summaries map[string][]*sitemodels.SiteSummaryPeriod, admin bool) {
+	@heading.Title("Summaries")
+	<div id="site--summaries" class="w-full space-y-4 py-4">
+		<div class="flex flex-wrap items-center justify-between gap-2">
+			<div>
+				<h1 class="text-2xl font-bold">Summaries</h1>
+				<span class="text-sm text-gray-500">Each day, week, fortnight and month kept, built from the site's data</span>
+			</div>
+			if admin {
+				@button.Button(button.Props{ID: "site--summaries--regenerate", Variant: button.VariantOutline,
+					Attributes: templ.Attributes{"hx-post": "/reports/summaries/regenerate", "hx-swap": "none", "hx-status:4xx": "target:#toaster swap:beforeend",
+						"hx-confirm": "Regenerate the last year of summaries from the site's data? It runs in the background and takes a minute."}}) {
+					Regenerate summaries
+				}
+			}
+		</div>
+		for _, kind := range periods {
+			<section id={ "site--summaries--" + kind.Period } class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+				<h2 class="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">{ kind.Label }s</h2>
+				@table.Table(table.Props{Class: "rounded-lg border border-gray-200 text-sm"}) {
+					@table.Header() {
+						@table.Row() {
+							@table.Head() {
+								{ kind.Label }
+							}
+							for _, column := range []string{"Days with data", "Time in range", "Daily dose", "Daily carbs"} {
+								@table.Head(table.HeadProps{Class: "text-right"}) {
+									{ column }
+								}
+							}
+						}
+					}
+					@table.Body() {
+						if len(summaries[kind.Period]) == 0 {
+							<tr><td colspan="5" class="p-4 text-gray-500">No { kind.Period }s kept yet.</td></tr>
+						}
+						for _, p := range summaries[kind.Period] {
+							@table.Row() {
+								@table.Cell() {
+									{{ path := link(p.Period, time.UnixMilli(p.Start).In(site_data_templ.Location(ctx))) }}
+									<a class="text-primary underline" href={ templ.SafeURL(path) } hx-get={ path } hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML">{ title(ctx, p) }</a>
+								}
+								for _, value := range []string{fmt.Sprint(p.Days), display.Value(p.TimeInRange, "%"), display.PerDay(p.Days, p.TotalDailyDose, " U"), display.PerDay(p.Days, p.TotalDailyCarbs, " g")} {
+									@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+										{ value }
+									}
+								}
+							}
+						}
+					}
+				}
+			</section>
+		}
+	</div>
+}
+
+// SummariesRegenerating is a toast saying the summaries are being regenerated
+templ SummariesRegenerating() {
+	<div hx-swap-oob="beforeend:#toaster">
+		@toast.Toast(toast.Props{Title: "Regenerating summaries", Description: "The last year of summaries is being built again from the site's data.",
+			Variant: toast.VariantSuccess, Position: toast.PositionTopCenter, Duration: 5000, Dismissible: true, Icon: true})
 	</div>
 }

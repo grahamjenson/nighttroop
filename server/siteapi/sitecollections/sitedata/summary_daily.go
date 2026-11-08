@@ -148,6 +148,37 @@ func RebuildSummaryDailyWeek(ctx context.Context, q *sitedb.Queries, siteContext
 	return BuildLastSummaryPeriods(ctx, q, siteContext, now)
 }
 
+// RebuildSummaryYear deletes all the site's days and periods, and builds again each day of the last year with data,
+// and yesterday, and each whole week, fortnight and month of them with data, as when its admin asks for them to be
+func RebuildSummaryYear(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, now time.Time) error {
+	if _, err := q.DeleteSummaryPeriods(ctx, sitedb.DeleteSummaryPeriodsParams{}); err != nil {
+		return err
+	}
+	location, weekStart := siteContext.GetSiteTimezone(), siteContext.GetSiteWeekStartDay()
+	for days := -summaryDailyMaxDays; days < 0; days++ {
+		day, err := buildSummaryDaily(ctx, q, siteContext, LocalDate(now, location, days), now.UnixMilli())
+		if err == nil && (day.Days > 0 || days == -1) {
+			_, err = upsertSummaryPeriod(ctx, q, day)
+		}
+		if err != nil {
+			return err
+		}
+	}
+	today := PeriodStart("day", now, location, weekStart)
+	for _, period := range SummaryPeriods {
+		for start := PeriodStart(period, now.AddDate(0, 0, -summaryDailyMaxDays), location, weekStart); !PeriodEnd(period, start).After(today); start = PeriodEnd(period, start) {
+			row, _, err := summaryPeriodFrom(ctx, q, period, start)
+			if err == nil && row.Days > 0 {
+				_, err = upsertSummaryPeriod(ctx, q, row)
+			}
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 // RebuildSummaryWeeks deletes all the site's weeks and fortnights, as from a week start day they no longer follow,
 // and builds the last ones again
 func RebuildSummaryWeeks(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, now time.Time) error {

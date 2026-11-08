@@ -85,6 +85,23 @@ func (b *Builder) RebuildOnSettingsChange() onevent.Job {
 	}
 }
 
+// RebuildOnRequest is the job that, when a site's admin asks for its summaries to be built again, builds its last
+// year of days, weeks, fortnights and months again from its data
+func (b *Builder) RebuildOnRequest() onevent.Job {
+	return onevent.Job{
+		Queue:  "RebuildSummaryYear",
+		Filter: func(event events.Event) bool { return event.Name == events.SummariesRegenerationRequested },
+		Run: func(ctx context.Context, fired onevent.Fired) error {
+			defer b.remember(fired.SiteID, nil)
+			siteContext, err := b.site(ctx, fired.SiteID)
+			if err != nil {
+				return err
+			}
+			return sitedata.RebuildSummaryYear(ctx, siteContext.SiteDB.Queries(), siteContext, time.Now())
+		},
+	}
+}
+
 // Build builds each live site's yesterday, last week and last month, in its timezone, that are not yet built,
 // skipping without opening its DB a site already built for its yesterday
 func (b *Builder) Build(ctx context.Context, now time.Time) error {

@@ -1526,6 +1526,9 @@ type ClientInterface interface {
 	// NsPebble request
 	NsPebble(ctx context.Context, params *NsPebbleParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// RegenerateSummaries request
+	RegenerateSummaries(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// AccountPasskeyBegin request
 	AccountPasskeyBegin(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -2407,6 +2410,18 @@ func (c *Client) PasskeyLoginFinish(ctx context.Context, body PasskeyLoginFinish
 
 func (c *Client) NsPebble(ctx context.Context, params *NsPebbleParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewNsPebbleRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RegenerateSummaries(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRegenerateSummariesRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -5252,6 +5267,33 @@ func NewNsPebbleRequest(server string, params *NsPebbleParams) (*http.Request, e
 	return req, nil
 }
 
+// NewRegenerateSummariesRequest generates requests for RegenerateSummaries
+func NewRegenerateSummariesRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/reports/summaries/regenerate")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewAccountPasskeyBeginRequest generates requests for AccountPasskeyBegin
 func NewAccountPasskeyBeginRequest(server string) (*http.Request, error) {
 	var err error
@@ -5640,6 +5682,9 @@ type ClientWithResponsesInterface interface {
 
 	// NsPebbleWithResponse request
 	NsPebbleWithResponse(ctx context.Context, params *NsPebbleParams, reqEditors ...RequestEditorFn) (*NsPebbleResponse, error)
+
+	// RegenerateSummariesWithResponse request
+	RegenerateSummariesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*RegenerateSummariesResponse, error)
 
 	// AccountPasskeyBeginWithResponse request
 	AccountPasskeyBeginWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*AccountPasskeyBeginResponse, error)
@@ -6966,6 +7011,34 @@ func (r NsPebbleResponse) StatusCode() int {
 	return 0
 }
 
+type RegenerateSummariesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON202      *struct {
+		Result *struct {
+			Regenerating *bool `json:"regenerating,omitempty"`
+		} `json:"result,omitempty"`
+		Status *int `json:"status,omitempty"`
+	}
+	JSONDefault *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r RegenerateSummariesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RegenerateSummariesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type AccountPasskeyBeginResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -7697,6 +7770,15 @@ func (c *ClientWithResponses) NsPebbleWithResponse(ctx context.Context, params *
 		return nil, err
 	}
 	return ParseNsPebbleResponse(rsp)
+}
+
+// RegenerateSummariesWithResponse request returning *RegenerateSummariesResponse
+func (c *ClientWithResponses) RegenerateSummariesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*RegenerateSummariesResponse, error) {
+	rsp, err := c.RegenerateSummaries(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRegenerateSummariesResponse(rsp)
 }
 
 // AccountPasskeyBeginWithResponse request returning *AccountPasskeyBeginResponse
@@ -9583,6 +9665,44 @@ func ParseNsPebbleResponse(rsp *http.Response) (*NsPebbleResponse, error) {
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRegenerateSummariesResponse parses an HTTP response from a RegenerateSummariesWithResponse call
+func ParseRegenerateSummariesResponse(rsp *http.Response) (*RegenerateSummariesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RegenerateSummariesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest struct {
+			Result *struct {
+				Regenerating *bool `json:"regenerating,omitempty"`
+			} `json:"result,omitempty"`
+			Status *int `json:"status,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
