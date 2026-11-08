@@ -200,14 +200,15 @@ templ CreateSiteInfo(newsite publicmodels.NewSiteInfo) {
 		}
 		@step("3", "Log in to your site", "With the admin password and a code from the app, or a passkey") {
 			@loginButton("", false)
-			// A passkey is made on the site it signs in to, so this opens the new site, with a link good for 15 minutes
+			// A passkey is made on the site it signs in to, so this opens the new site, with a link good for 15 minutes. It is
+			// a link, as a form posting to another of the server's hosts is refused as cross-origin, and its token is after
+			// the #, which the browser never sends, so no server or log sees it; the new site's page sends it itself.
 			if newsite.PasskeyToken != "" {
-				<form id="public--passkey" method="post" action={ templ.SafeURL(newsite.URL + "/passkey/new") } class="flex justify-center px-6 pb-5">
-					<input type="hidden" name="token" value={ newsite.PasskeyToken }/>
-					@button.Button(button.Props{ID: "public--passkey-button", Type: button.TypeSubmit, Variant: button.VariantOutline}) {
+				<div class="flex justify-center px-6 pb-5">
+					@button.Button(button.Props{ID: "public--passkey-button", Href: newsite.URL + "/passkey/new#" + newsite.PasskeyToken, Variant: button.VariantOutline}) {
 						Add a passkey for admin
 					}
-				</form>
+				</div>
 			}
 		}
 	</div>

@@ -89,7 +89,7 @@ func runOnOwnServer(t *testing.T, browser playwright.Browser, root string, own o
 	values := own.prepare(t, controlDB)
 	backgroundJobs := background.NewBackGroundManager(context.Background(), controlDB, &config, s3utils.NewS3Client(&config))
 
-	ts := httptest.NewServer(server.GetMainHandler(controlDB, &config))
+	ts := httptest.NewServer(server.WithCrossOriginProtection(server.GetMainHandler(controlDB, &config)))
 	t.Cleanup(ts.Close)
 	u, err := url.Parse(ts.URL)
 	require.NoError(t, err)

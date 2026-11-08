@@ -19,11 +19,15 @@ B {"id": "AAAA", "rawId": "AAAA", "type": "public-key", "response": {}}
 ASSERT_STATUS 401
 ASSERT_EQUALS "That passkey could not sign you in." "@error"
 
-// Adding a passkey needs the link from creating the site; without it, or with a made up one, it is refused
-NAME passkey_new_without_link
-POST http://{{ site }}/passkey/new
-H Content-Type: application/json
-B {}
+// The page to add a passkey changes nothing, as the link's token is after its # and never sent, so it is always shown
+NAME passkey_new_page
+GET http://{{ site }}/passkey/new
+ASSERT_STATUS 200
+
+// Adding a passkey needs the link's token from creating the site; without it, or with a made up one, it is refused
+NAME passkey_new_begin_without_link
+POST http://{{ site }}/passkey/new/begin
+H Accept: application/json
 ASSERT_STATUS 403
 
 NAME passkey_new_begin_made_up_link
