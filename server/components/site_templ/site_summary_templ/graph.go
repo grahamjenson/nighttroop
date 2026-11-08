@@ -89,19 +89,69 @@ func isSMB(d *sitemodels.SiteInsulinDose) bool {
 // ECharts shows times in the browser's timezone, or in UTC, so each time is moved by the location's offset
 // from UTC at that time, and drawn in UTC: the axis and tooltips then show the location's time.
 func graph(s *sitemodels.Summary, now int64, location *time.Location) *charts.Scatter {
-	at := func(ms int64) int64 {
+	at := inLocation(location)
+	// The glucose axis ends on a whole number, 16 or 288, so its labels are round
+	glucoseTop, basalMax := math.Round(s.Units.FromMGDL(glucoseTopMgdl)), highestBasal(s)
+	chart := newGraphChart(s, now, at, glucoseTop, basalMax)
+
+	// Readings are red below the range, amber above and the brand colour in it, with its bounds as dashed lines; behind
+	// them the urgent range and the range are shaded across the graph, and each stretch of the same targets over them
+	lows, highs, inRange, glucoseLine := glucosePoints(s, at, glucoseTop)
+	bands, targetLines := targets(s, now, at)
+	dot := charts.WithScatterChartOpts(opts.ScatterChart{SymbolSize: 6})
+	chart.AddSeries("Low", lows, seriesID("low"), dot, charts.WithItemStyleOpts(opts.ItemStyle{Color: glucoseLow}), dashed(glucoseLow), charts.WithMarkLineNameYAxisItemOpts(opts.MarkLineNameYAxisItem{Name: "Low", YAxis: s.RangeLow}))
+	chart.AddSeries("High", highs, seriesID("high"), dot, charts.WithItemStyleOpts(opts.ItemStyle{Color: glucoseHigh}), dashed(glucoseHigh), charts.WithMarkLineNameYAxisItemOpts(opts.MarkLineNameYAxisItem{Name: "High", YAxis: s.RangeHigh}))
+	chart.AddSeries("In range", inRange, append(bands, seriesID("in-range"), dot, charts.WithItemStyleOpts(opts.ItemStyle{Color: glucoseInRange}))...)
+
+	insulin, smbs, carbs := treatmentPoints(s, at)
+	chart.AddSeries("SMB", smbs, marker(brandNight, 7, true)...)
+	chart.AddSeries("Insulin", insulin, marker(brandNight, 10, false)...)
+	chart.AddSeries("Carbs", carbs, marker(amber500, 10, false)...)
+
+	lines := charts.NewLine()
+	lines.AddSeries("Target", targetLines,
+		charts.WithLineChartOpts(opts.LineChart{ShowSymbol: opts.Bool(false), ConnectNulls: opts.Bool(false)}),
+		charts.WithLineStyleOpts(opts.LineStyle{Color: blue700, Width: 1.5}),
+		charts.WithItemStyleOpts(opts.ItemStyle{Color: blue700}),
+	)
+	lines.AddSeries("Glucose", glucoseLine, seriesID("glucose"),
+		charts.WithLineChartOpts(opts.LineChart{ShowSymbol: opts.Bool(false), ConnectNulls: opts.Bool(false)}),
+		charts.WithLineStyleOpts(opts.LineStyle{Color: brandNight, Width: 1, Opacity: opts.Float(0.3)}),
+	)
+	basals := basalSteps(s, now, at)
+	lines.AddSeries("Basal", basals, basalOpts(basals, basalMax)...)
+	chart.Overlap(lines)
+	chart.AddJSFuncs("window.addEventListener('resize', function() { %MY_ECHARTS%.resize(); });")
+	return chart
+}
+
+// localTime is a time in milliseconds moved by its location's offset from UTC then, so drawn in UTC it shows the
+// location's time
+type localTime func(ms int64) int64
+
+// inLocation is each time as location's
+func inLocation(location *time.Location) localTime {
+	return func(ms int64) int64 {
 		_, offset := time.UnixMilli(ms).In(location).Zone()
 		return ms + int64(offset)*1000
 	}
-	// The glucose axis ends on a whole number, 16 or 288, so its labels are round
-	glucoseTop, basalTop, basalMax := math.Round(s.Units.FromMGDL(glucoseTopMgdl)), math.Round(s.Units.FromMGDL(basalTopMgdl)), 1.0
-	// A reading above the axis is drawn past its top, but no further than overflowShare of it, so it stays on the page
-	drawn := func(reading float64) float64 { return min(reading, glucoseTop*(1+overflowShare)) }
+}
+
+// highestBasal is the summary's highest basal rate, at least 1 U/hr, which the basal's axis is scaled to
+func highestBasal(s *sitemodels.Summary) float64 {
+	basalMax := 1.0
 	for _, m := range s.Minutes {
 		if m.Basal != nil {
 			basalMax = max(basalMax, *m.Basal)
 		}
 	}
+	return basalMax
+}
+
+// newGraphChart is the graph's chart with its axes, tooltip, grid and legend, from the summary's start to now, and
+// no series yet
+func newGraphChart(s *sitemodels.Summary, now int64, at localTime, glucoseTop, basalMax float64) *charts.Scatter {
+	basalTop := math.Round(s.Units.FromMGDL(basalTopMgdl))
 	since, until := at(s.Since), at(now)
 
 	chart := charts.NewScatter()
@@ -132,15 +182,14 @@ func graph(s *sitemodels.Summary, now int64, location *time.Location) *charts.Sc
 		opts.YAxis{Type: "value", Min: 0, Max: basalMax * glucoseTop / basalTop, Show: opts.Bool(false)},
 		opts.YAxis{Type: "value", Min: 0, Max: 1, Show: opts.Bool(false)},
 	)
+	return chart
+}
 
-	// band is a shaded area behind the readings from start to end and from high to low
-	band := func(start, end int64, high, low float64, colour string, opacity float32) charts.SeriesOpts {
-		return charts.WithMarkAreaNameCoordItemOpts(opts.MarkAreaNameCoordItem{Coordinate0: []any{start, high}, Coordinate1: []any{end, low}, ItemStyle: &opts.ItemStyle{Color: colour, Opacity: opts.Float(opacity)}})
-	}
-	// Readings are red below the range, amber above and the brand colour in it, with its bounds as dashed lines; behind
-	// them the urgent range and the range are shaded across the graph, and each stretch of the same targets over them
-	var lows, highs, inRange []opts.ScatterData
-	var line []opts.LineData
+// glucosePoints are the readings as dots below, above and in the range, and the line joining them, broken where they
+// are more than glucoseGapMs apart. A reading above the axis is drawn past its top, but no further than overflowShare
+// of it, so it stays on the page.
+func glucosePoints(s *sitemodels.Summary, at localTime, glucoseTop float64) (lows, highs, inRange []opts.ScatterData, line []opts.LineData) {
+	drawn := func(reading float64) float64 { return min(reading, glucoseTop*(1+overflowShare)) }
 	for i, r := range s.GlucoseReadings {
 		point := opts.ScatterData{Value: []any{at(r.OccurredAt), drawn(r.Reading)}}
 		switch glucoseRange(s, r.Reading) {
@@ -156,51 +205,65 @@ func graph(s *sitemodels.Summary, now int64, location *time.Location) *charts.Sc
 		}
 		line = append(line, opts.LineData{Value: []any{at(r.OccurredAt), drawn(r.Reading)}})
 	}
-	targets := []charts.SeriesOpts{
+	return lows, highs, inRange, line
+}
+
+// targets are the bands shaded behind the readings, the urgent range and the range across the graph and over them the
+// targets in force, with the lines of the low and high target. The targets in force are a light band, edged by darker
+// lines of the low and high target, each a step as it changes, broken where there is none.
+func targets(s *sitemodels.Summary, now int64, at localTime) (bands []charts.SeriesOpts, targetLines []opts.LineData) {
+	since, until := at(s.Since), at(now)
+	bands = []charts.SeriesOpts{
 		charts.WithMarkAreaStyleOpts(opts.MarkAreaStyle{Label: &opts.Label{Show: opts.Bool(false)}}),
 		band(since, until, s.RangeUrgentHigh, s.RangeUrgentLow, brandNight, 0.02),
 		band(since, until, s.RangeHigh, s.RangeLow, brandNight, 0.04),
 	}
-	// The targets in force are a light band, edged by darker lines of the low and high target, each a step as it
-	// changes, broken where there is none
-	var targetLines, highLine []opts.LineData
+	var highLine []opts.LineData
 	for _, r := range runs(s, now, func(m sitemodels.SummaryMinute) []*float64 { return []*float64{m.LowTarget, m.HighTarget} }) {
 		if r.values[0] == nil || r.values[1] == nil {
 			targetLines, highLine = append(targetLines, opts.LineData{Value: "-"}), append(highLine, opts.LineData{Value: "-"})
 			continue
 		}
-		targets = append(targets, band(at(r.start), at(r.end), *r.values[1], *r.values[0], blue500, 0.1))
+		bands = append(bands, band(at(r.start), at(r.end), *r.values[1], *r.values[0], blue500, 0.1))
 		targetLines = append(targetLines, opts.LineData{Value: []any{at(r.start), *r.values[0]}}, opts.LineData{Value: []any{at(r.end), *r.values[0]}})
 		highLine = append(highLine, opts.LineData{Value: []any{at(r.start), *r.values[1]}}, opts.LineData{Value: []any{at(r.end), *r.values[1]}})
 	}
-	targetLines = append(append(targetLines, opts.LineData{Value: "-"}), highLine...)
-	dashed := func(colour string) charts.SeriesOpts {
-		return charts.WithMarkLineStyleOpts(opts.MarkLineStyle{Symbol: []string{"none", "none"}, Label: &opts.Label{Show: opts.Bool(false)}, LineStyle: &opts.LineStyle{Type: "dashed", Color: colour, Width: 1}})
-	}
-	dot := charts.WithScatterChartOpts(opts.ScatterChart{SymbolSize: 6})
-	id := func(id string) charts.SeriesOpts {
-		return charts.WithSeriesOpts(func(s *charts.SingleSeries) { s.Id = id })
-	}
-	chart.AddSeries("Low", lows, id("low"), dot, charts.WithItemStyleOpts(opts.ItemStyle{Color: glucoseLow}), dashed(glucoseLow), charts.WithMarkLineNameYAxisItemOpts(opts.MarkLineNameYAxisItem{Name: "Low", YAxis: s.RangeLow}))
-	chart.AddSeries("High", highs, id("high"), dot, charts.WithItemStyleOpts(opts.ItemStyle{Color: glucoseHigh}), dashed(glucoseHigh), charts.WithMarkLineNameYAxisItemOpts(opts.MarkLineNameYAxisItem{Name: "High", YAxis: s.RangeHigh}))
-	chart.AddSeries("In range", inRange, append(targets, id("in-range"), dot, charts.WithItemStyleOpts(opts.ItemStyle{Color: glucoseInRange}))...)
+	return bands, append(append(targetLines, opts.LineData{Value: "-"}), highLine...)
+}
 
-	// marker is a row of treatments on the treatment axis, labelled with what they were unless faint, as SMBs are
-	// given every few minutes
-	marker := func(colour string, size int, faint bool) []charts.SeriesOpts {
-		opacity := float32(1)
-		if faint {
-			opacity = 0.5
-		}
-		return []charts.SeriesOpts{
-			charts.WithScatterChartOpts(opts.ScatterChart{YAxisIndex: treatmentAxis, Symbol: "triangle", SymbolSize: size}),
-			charts.WithItemStyleOpts(opts.ItemStyle{Color: colour, Opacity: opts.Float(opacity)}),
-			charts.WithLabelOpts(opts.Label{Show: opts.Bool(!faint), Position: "right", Formatter: "{b}", Color: gray700}),
-			// Treatments a moment apart would have their labels written over each other
-			charts.WithLabelLayoutOpts(opts.LabelLayout{HideOverlap: opts.Bool(true)}),
-		}
+// band is a shaded area behind the readings from start to end and from high to low
+func band(start, end int64, high, low float64, colour string, opacity float32) charts.SeriesOpts {
+	return charts.WithMarkAreaNameCoordItemOpts(opts.MarkAreaNameCoordItem{Coordinate0: []any{start, high}, Coordinate1: []any{end, low}, ItemStyle: &opts.ItemStyle{Color: colour, Opacity: opts.Float(opacity)}})
+}
+
+// dashed draws a series' mark lines as thin dashed lines of colour, without labels
+func dashed(colour string) charts.SeriesOpts {
+	return charts.WithMarkLineStyleOpts(opts.MarkLineStyle{Symbol: []string{"none", "none"}, Label: &opts.Label{Show: opts.Bool(false)}, LineStyle: &opts.LineStyle{Type: "dashed", Color: colour, Width: 1}})
+}
+
+// seriesID gives a series the ID the chart's script sets its options by
+func seriesID(id string) charts.SeriesOpts {
+	return charts.WithSeriesOpts(func(s *charts.SingleSeries) { s.Id = id })
+}
+
+// marker is a row of treatments on the treatment axis, labelled with what they were unless faint, as SMBs are
+// given every few minutes
+func marker(colour string, size int, faint bool) []charts.SeriesOpts {
+	opacity := float32(1)
+	if faint {
+		opacity = 0.5
 	}
-	var insulin, smbs, carbs []opts.ScatterData
+	return []charts.SeriesOpts{
+		charts.WithScatterChartOpts(opts.ScatterChart{YAxisIndex: treatmentAxis, Symbol: "triangle", SymbolSize: size}),
+		charts.WithItemStyleOpts(opts.ItemStyle{Color: colour, Opacity: opts.Float(opacity)}),
+		charts.WithLabelOpts(opts.Label{Show: opts.Bool(!faint), Position: "right", Formatter: "{b}", Color: gray700}),
+		// Treatments a moment apart would have their labels written over each other
+		charts.WithLabelLayoutOpts(opts.LabelLayout{HideOverlap: opts.Bool(true)}),
+	}
+}
+
+// treatmentPoints are the insulin doses given by hand, a loop's SMBs and the carbs, each labelled with how much
+func treatmentPoints(s *sitemodels.Summary, at localTime) (insulin, smbs, carbs []opts.ScatterData) {
 	for _, d := range s.InsulinDoses {
 		point := opts.ScatterData{Name: display.Value(&d.Dose, "U"), Value: []any{at(d.OccurredAt), insulinHeight}, SymbolRotate: 180}
 		if isSMB(d) {
@@ -214,13 +277,12 @@ func graph(s *sitemodels.Summary, now int64, location *time.Location) *charts.Sc
 			carbs = append(carbs, opts.ScatterData{Name: display.Value(f.Carbs, "g"), Value: []any{at(f.OccurredAt), carbsHeight}})
 		}
 	}
-	chart.AddSeries("SMB", smbs, marker(brandNight, 7, true)...)
-	chart.AddSeries("Insulin", insulin, marker(brandNight, 10, false)...)
-	chart.AddSeries("Carbs", carbs, marker(amber500, 10, false)...)
+	return insulin, smbs, carbs
+}
 
-	// The basal steps to each rate when it comes into force, and falls to nothing where none is in force; its highest
-	// rate, if any is in force, is labelled on the right, where Carer labels it, by a mark line not drawn so it is not
-	// read as glucose
+// basalSteps is the basal's line: it steps to each rate when it comes into force, and falls to nothing where none is
+// in force
+func basalSteps(s *sitemodels.Summary, now int64, at localTime) []opts.LineData {
 	var basals []opts.LineData
 	var last *float64
 	for _, r := range runs(s, now, func(m sitemodels.SummaryMinute) []*float64 { return []*float64{m.Basal} }) {
@@ -236,18 +298,14 @@ func graph(s *sitemodels.Summary, now int64, location *time.Location) *charts.Sc
 		last = rate
 	}
 	if last != nil {
-		basals = append(basals, opts.LineData{Value: []any{until, 0}})
+		basals = append(basals, opts.LineData{Value: []any{at(now), 0}})
 	}
-	lines := charts.NewLine()
-	lines.AddSeries("Target", targetLines,
-		charts.WithLineChartOpts(opts.LineChart{ShowSymbol: opts.Bool(false), ConnectNulls: opts.Bool(false)}),
-		charts.WithLineStyleOpts(opts.LineStyle{Color: blue700, Width: 1.5}),
-		charts.WithItemStyleOpts(opts.ItemStyle{Color: blue700}),
-	)
-	lines.AddSeries("Glucose", line, id("glucose"),
-		charts.WithLineChartOpts(opts.LineChart{ShowSymbol: opts.Bool(false), ConnectNulls: opts.Bool(false)}),
-		charts.WithLineStyleOpts(opts.LineStyle{Color: brandNight, Width: 1, Opacity: opts.Float(0.3)}),
-	)
+	return basals
+}
+
+// basalOpts draw the basal along the bottom on its own axis, shaded beneath. Its highest rate, if any is in force, is
+// labelled on the right, where Carer labels it, by a mark line not drawn so it is not read as glucose.
+func basalOpts(basals []opts.LineData, basalMax float64) []charts.SeriesOpts {
 	basal := []charts.SeriesOpts{
 		charts.WithLineChartOpts(opts.LineChart{YAxisIndex: basalAxis, ShowSymbol: opts.Bool(false)}),
 		charts.WithLineStyleOpts(opts.LineStyle{Color: brandNight, Width: 2}),
@@ -260,10 +318,7 @@ func graph(s *sitemodels.Summary, now int64, location *time.Location) *charts.Sc
 			charts.WithMarkLineNameYAxisItemOpts(opts.MarkLineNameYAxisItem{Name: "Highest basal", YAxis: consts.Round(basalMax, 2)}),
 		)
 	}
-	lines.AddSeries("Basal", basals, basal...)
-	chart.Overlap(lines)
-	chart.AddJSFuncs("window.addEventListener('resize', function() { %MY_ECHARTS%.resize(); });")
-	return chart
+	return basal
 }
 
 // run is a stretch of minutes from start to end with the same values
@@ -304,7 +359,7 @@ type hover struct {
 
 // hoverTooltip is the tooltip shown pointing at a time: the time, the reading nearest it within 5 minutes and when it
 // was, the basal and the targets in force then, and any treatment within 5 minutes
-func hoverTooltip(s *sitemodels.Summary, now int64, at func(int64) int64) string {
+func hoverTooltip(s *sitemodels.Summary, now int64, at localTime) string {
 	h := hover{Units: unitsText(s.Units), Readings: [][]any{}, Basal: [][]any{}, Target: [][]any{}, Treatments: [][]any{}}
 	for _, r := range s.GlucoseReadings {
 		h.Readings = append(h.Readings, []any{at(r.OccurredAt), site_data_templ.FormatGlucose(r.Reading, s.Units)})
