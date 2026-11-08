@@ -16,8 +16,6 @@ type NewSiteInfo struct {
 	BackupKey       string `json:"backup_key"`
 	// RecoverURL is the page the backup key gets a new admin login on
 	RecoverURL string `json:"-"`
-	// PasskeyToken is the link's token to add the new site's admin a passkey, for 15 minutes, on a new site only
-	PasskeyToken string `json:"-"`
 }
 
 // SiteID is the start of the backup key, which is its site's ID then a secret

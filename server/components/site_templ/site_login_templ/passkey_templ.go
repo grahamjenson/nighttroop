@@ -7,10 +7,7 @@ package site_login_templ
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import (
-	"nighttroop.t1d.nz/server/components/site_templ"
-	"nighttroop.t1d.nz/server/components/ui/button"
-)
+import "nighttroop.t1d.nz/server/components/ui/button"
 
 // passkeyButtonClass is the login's own button's look, outlined so the password login stays the first choice
 const passkeyButtonClass = "w-full py-3 px-4 text-brand-night text-lg font-bold rounded-lg shadow-sm cursor-pointer"
@@ -69,7 +66,7 @@ func PasskeyLogin() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = passkeyScript().Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = PasskeyScript().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -77,113 +74,10 @@ func PasskeyLogin() templ.Component {
 	})
 }
 
-// AddPasskey is the page the link from creating a site opens on the new site, as a passkey is made on the address it
-// signs in to. The passkey is named for the identity, as admin, so nothing about the person is given.
-func AddPasskey(name string) templ.Component {
-	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
-			return templ_7745c5c3_CtxErr
-		}
-		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-		if !templ_7745c5c3_IsBuffer {
-			defer func() {
-				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-				if templ_7745c5c3_Err == nil {
-					templ_7745c5c3_Err = templ_7745c5c3_BufErr
-				}
-			}()
-		}
-		ctx = templ.InitializeContext(ctx)
-		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Var4 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-			if !templ_7745c5c3_IsBuffer {
-				defer func() {
-					templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-					if templ_7745c5c3_Err == nil {
-						templ_7745c5c3_Err = templ_7745c5c3_BufErr
-					}
-				}()
-			}
-			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"flex flex-1 flex-col justify-center items-center px-6 py-6 lg:px-8 bg-slate-50\"><div id=\"site--passkey--new\" class=\"p-8 rounded-lg shadow-2xl w-full max-w-96 text-center\"><img src=\"/logo.svg\" alt=\"\" class=\"mx-auto mb-3 size-16\"><h2 class=\"font-bold text-2xl\">Add a passkey</h2><p class=\"mt-2 text-sm text-gray-500\">Sign in as ")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var5 string
-			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(name)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_login_templ/passkey.templ`, Line: 35, Col: 59}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, " with your fingerprint, face or device PIN, instead of the password and code.</p><div class=\"mt-4\"></div>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Var6 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-				templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-				templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-				if !templ_7745c5c3_IsBuffer {
-					defer func() {
-						templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-						if templ_7745c5c3_Err == nil {
-							templ_7745c5c3_Err = templ_7745c5c3_BufErr
-						}
-					}()
-				}
-				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "Add a passkey for ")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var7 string
-				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(name)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_login_templ/passkey.templ`, Line: 44, Col: 29}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				return nil
-			})
-			templ_7745c5c3_Err = button.Button(button.Props{
-				ID:         "site--passkey--add",
-				Type:       button.TypeButton,
-				Variant:    button.VariantOutline,
-				Class:      passkeyButtonClass,
-				Attributes: templ.Attributes{"data-passkey-begin": "/passkey/new/begin", "data-passkey-finish": "/passkey/new/finish", "data-passkey-error": "site--passkey--error", "data-passkey-link": "true"},
-			}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<p id=\"site--passkey--error\" class=\"mt-2 text-sm text-red-600\"></p></div></div>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = passkeyScript().Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			return nil
-		})
-		templ_7745c5c3_Err = site_templ.Base().Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		return nil
-	})
-}
-
-// passkeyScript makes each button with data-passkey-begin ask the browser for a passkey with the options the server
-// begins with, then send what it made or signed to finish, going to the summary once signed in. WebAuthn's binary
+// PasskeyScript makes each button with data-passkey-begin ask the browser for a passkey with the options the server
+// begins with, then send what it made or signed to finish, going where finish says once done. WebAuthn's binary
 // fields travel as base64url.
-func passkeyScript() templ.Component {
+func PasskeyScript() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -200,7 +94,7 @@ func passkeyScript() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<script>\n\t\tfunction passkey(begin, finish, headers, errorID) {\n\t\t\tconst decode = s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));\n\t\t\tconst encode = b => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');\n\t\t\tconst fail = message => document.getElementById(errorID).textContent = message;\n\t\t\tfetch(begin, {method: 'POST', headers}).then(r => r.json()).then(options => {\n\t\t\t\tconst o = options.publicKey;\n\t\t\t\tif (!o) throw new Error(options.error);\n\t\t\t\to.challenge = decode(o.challenge);\n\t\t\t\t(o.excludeCredentials || o.allowCredentials || []).forEach(c => c.id = decode(c.id));\n\t\t\t\tif (o.user) o.user.id = decode(o.user.id);\n\t\t\t\treturn o.user ? navigator.credentials.create({publicKey: o}) : navigator.credentials.get({publicKey: o});\n\t\t\t}).then(credential => {\n\t\t\t\tconst response = {};\n\t\t\t\tfor (const key of ['clientDataJSON', 'attestationObject', 'authenticatorData', 'signature', 'userHandle']) {\n\t\t\t\t\tif (credential.response[key]) response[key] = encode(credential.response[key]);\n\t\t\t\t}\n\t\t\t\tconst body = JSON.stringify({id: credential.id, rawId: encode(credential.rawId), type: credential.type, response});\n\t\t\t\treturn fetch(finish, {method: 'POST', headers: {...headers, 'Content-Type': 'application/json'}, body});\n\t\t\t}).then(r => r.json()).then(done => {\n\t\t\t\tif (!done.redirect) throw new Error(done.error);\n\t\t\t\twindow.location = done.redirect;\n\t\t\t}).catch(e => fail(e.message || 'The passkey did not work.'));\n\t\t}\n\t\tdocument.querySelectorAll('[data-passkey-begin]').forEach(button => button.addEventListener('click', () => {\n\t\t\t// The link's token is after its #, never sent with the page, so the page sends it\n\t\t\tconst headers = button.dataset.passkeyLink ? {'Passkey-Token': location.hash.slice(1)} : {};\n\t\t\tpasskey(button.dataset.passkeyBegin, button.dataset.passkeyFinish, headers, button.dataset.passkeyError);\n\t\t}));\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<script>\n\t\tfunction passkey(begin, finish, headers, errorID) {\n\t\t\tconst decode = s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));\n\t\t\tconst encode = b => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');\n\t\t\tconst fail = message => document.getElementById(errorID).textContent = message;\n\t\t\tfetch(begin, {method: 'POST', headers}).then(r => r.json()).then(options => {\n\t\t\t\tconst o = options.publicKey;\n\t\t\t\tif (!o) throw new Error(options.error);\n\t\t\t\to.challenge = decode(o.challenge);\n\t\t\t\t(o.excludeCredentials || o.allowCredentials || []).forEach(c => c.id = decode(c.id));\n\t\t\t\tif (o.user) o.user.id = decode(o.user.id);\n\t\t\t\treturn o.user ? navigator.credentials.create({publicKey: o}) : navigator.credentials.get({publicKey: o});\n\t\t\t}).then(credential => {\n\t\t\t\tconst response = {};\n\t\t\t\tfor (const key of ['clientDataJSON', 'attestationObject', 'authenticatorData', 'signature', 'userHandle']) {\n\t\t\t\t\tif (credential.response[key]) response[key] = encode(credential.response[key]);\n\t\t\t\t}\n\t\t\t\tconst body = JSON.stringify({id: credential.id, rawId: encode(credential.rawId), type: credential.type, response});\n\t\t\t\treturn fetch(finish, {method: 'POST', headers: {...headers, 'Content-Type': 'application/json'}, body});\n\t\t\t}).then(r => r.json()).then(done => {\n\t\t\t\tif (!done.redirect) throw new Error(done.error);\n\t\t\t\twindow.location = done.redirect;\n\t\t\t}).catch(e => fail(e.message || 'The passkey did not work.'));\n\t\t}\n\t\tdocument.querySelectorAll('[data-passkey-begin]').forEach(button => button.addEventListener('click', () => {\n\t\t\tpasskey(button.dataset.passkeyBegin, button.dataset.passkeyFinish, {}, button.dataset.passkeyError);\n\t\t}));\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

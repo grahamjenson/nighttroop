@@ -50,6 +50,22 @@ func (q *Queries) DeleteSiteAdminPasskeys(ctx context.Context, arg DeleteSiteAdm
 	return err
 }
 
+const deleteSiteIdentityPasskey = `-- name: DeleteSiteIdentityPasskey :exec
+DELETE FROM site_identity_passkeys WHERE site_id = ?1 AND identity_id = ?2 AND id = ?3
+`
+
+type DeleteSiteIdentityPasskeyParams struct {
+	SiteID     string
+	IdentityID int64
+	ID         int64
+}
+
+// An identity removes one of its own passkeys
+func (q *Queries) DeleteSiteIdentityPasskey(ctx context.Context, arg DeleteSiteIdentityPasskeyParams) error {
+	_, err := q.exec(ctx, q.deleteSiteIdentityPasskeyStmt, deleteSiteIdentityPasskey, arg.SiteID, arg.IdentityID, arg.ID)
+	return err
+}
+
 const getSiteIdentityPasskey = `-- name: GetSiteIdentityPasskey :one
 SELECT id, site_id, identity_id, credential_id, credential_json, created_at, last_used_at FROM site_identity_passkeys WHERE site_id = ?1 AND credential_id = ?2
 `

@@ -8,16 +8,18 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"strconv"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
-	"nighttroop.t1d.nz/server/components/site_templ/site_login_templ"
+	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
+	"nighttroop.t1d.nz/server/siteapi/sitecollections"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/config"
-	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -59,58 +61,67 @@ func passkeyUserFor(r *http.Request, controlDB *db.ControlDB, identity *controld
 	return user, err
 }
 
-// passkeyLinkUser is the identity the link from creating its site, its token in the Passkey-Token header, adds the
-// first passkey to: so a link adds only one, and none once the identity has one
-func passkeyLinkUser(r *http.Request, controlDB *db.ControlDB, cfg *config.ServerConfig) (passkeyUser, error) {
-	name, err := cfg.Security.VerifyPasskeyJWTToken(r.Header.Get("Passkey-Token"), httputils.GetSiteContext(r.Context()).SiteID)
-	if err != nil {
-		return passkeyUser{}, err
-	}
-	identity, err := getTheIdentityeModel(controlDB, r, name)
-	if err != nil {
-		return passkeyUser{}, err
+// maxPasskeys is how many passkeys an identity may have, one a device or password manager, so none fills the table
+const maxPasskeys = 10
+
+// accountUser is the signed in identity, one that signs in to the website, with its passkeys, refused when adding one
+// more than the most it may have
+func accountUser(r *http.Request, controlDB *db.ControlDB, adding bool) (passkeyUser, error) {
+	identity := httputils.GetSiteContext(r.Context()).IdentityModel
+	if identity == nil || !can.LoginToWebsite(identity.Role) {
+		return passkeyUser{}, fmt.Errorf("only an identity that signs in to the website has passkeys")
 	}
 	user, err := passkeyUserFor(r, controlDB, identity)
-	if err == nil && len(user.credentials) > 0 {
-		err = fmt.Errorf("%s already has a passkey", name)
+	if err == nil && adding && len(user.credentials) >= maxPasskeys {
+		err = fmt.Errorf("you have %d passkeys, the most you can add; remove one first", maxPasskeys)
 	}
 	return user, err
 }
 
-// GETPasskeyNew is the page to add the admin's first passkey, which the link from creating the site opens. The link's
-// token is after its #, so never sent here; the page sends it to begin and finish, which check it.
-func GETPasskeyNew() http.HandlerFunc {
+// GETAccount is the signed in identity's My Account page: who it is signed in as, and its passkeys to add and remove
+func GETAccount(controlDB *db.ControlDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/html")
-		site_login_templ.AddPasskey(consts.FIRST_ADMIN_NAME).Render(r.Context(), w)
+		siteContext := httputils.GetSiteContext(r.Context())
+		user, err := accountUser(r, controlDB, false)
+		var passkeys []*controldb.SiteIdentityPasskey
+		if err == nil {
+			passkeys, err = controlDB.Queries.ListSiteIdentityPasskeys(r.Context(), controldb.ListSiteIdentityPasskeysParams{SiteID: siteContext.SiteID, IdentityID: user.identity.ID})
+		}
+		if err != nil {
+			slog.InfoContext(r.Context(), "My Account refused", "error", err)
+			http.Error(w, "Only a user who signs in to the website has an account page", http.StatusForbidden)
+			return
+		}
+		sitecollections.WriteResponse(w, r, siteContext, http.StatusOK, passkeys, site_settings_templ.MyAccount(user.identity.Name, string(user.identity.Role), passkeys, maxPasskeys), true)
 	}
 }
 
-// POSTPasskeyNewBegin starts adding the passkey: one the browser finds without a name being typed, checked by the
-// person's fingerprint, face or PIN, and with no attestation, so the authenticator's model is not sent
-func POSTPasskeyNewBegin(controlDB *db.ControlDB, cfg *config.ServerConfig) http.HandlerFunc {
+// POSTAccountPasskeyBegin starts adding the signed in identity a passkey, found without a name typed, checked by the
+// person's fingerprint, face or PIN, with no attestation (the authenticator's model), and not one it already has
+func POSTAccountPasskeyBegin(controlDB *db.ControlDB, cfg *config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		user, err := passkeyLinkUser(r, controlDB, cfg)
+		user, err := accountUser(r, controlDB, true)
 		if err != nil {
-			passkeyError(w, r, http.StatusForbidden, "This link to add a passkey has expired or been used.", err)
+			passkeyError(w, r, http.StatusForbidden, "A passkey cannot be added: "+err.Error()+".", err)
 			return
 		}
 		passkeyBegin(w, r, cfg, func(rp *webauthn.WebAuthn) (any, *webauthn.SessionData, error) {
 			return rp.BeginRegistration(user, webauthn.WithConveyancePreference(protocol.PreferNoAttestation),
+				webauthn.WithExclusions(webauthn.Credentials(user.credentials).CredentialDescriptors()),
 				webauthn.WithAuthenticatorSelection(protocol.AuthenticatorSelection{ResidentKey: protocol.ResidentKeyRequirementRequired, UserVerification: protocol.VerificationRequired}))
 		})
 	}
 }
 
-// POSTPasskeyNewFinish keeps the new passkey, without the authenticator's model, and signs the identity in with it
-func POSTPasskeyNewFinish(controlDB *db.ControlDB, cfg *config.ServerConfig) http.HandlerFunc {
+// POSTAccountPasskeyFinish keeps the signed in identity's new passkey, never the authenticator's model, then My Account
+func POSTAccountPasskeyFinish(controlDB *db.ControlDB, cfg *config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		user, err := passkeyLinkUser(r, controlDB, cfg)
-		if err != nil {
-			passkeyError(w, r, http.StatusForbidden, "This link to add a passkey has expired or been used.", err)
-			return
+		user, err := accountUser(r, controlDB, true)
+		var rp *webauthn.WebAuthn
+		var session webauthn.SessionData
+		if err == nil {
+			rp, session, err = passkeySession(w, r, cfg)
 		}
-		rp, session, err := passkeySession(w, r, cfg)
 		var credential *webauthn.Credential
 		if err == nil {
 			credential, err = rp.FinishRegistration(user, session, r)
@@ -123,7 +134,28 @@ func POSTPasskeyNewFinish(controlDB *db.ControlDB, cfg *config.ServerConfig) htt
 			passkeyError(w, r, http.StatusInternalServerError, "The passkey could not be kept.", err)
 			return
 		}
-		passkeySignIn(w, r, cfg, user.identity)
+		slog.InfoContext(r.Context(), "Passkey added", "identity", user.identity.Name)
+		apiutils.WriteJSON(w, http.StatusOK, map[string]string{"redirect": "/settings/account"})
+	}
+}
+
+// DELETEAccountPasskey removes one of the signed in identity's passkeys, as for a lost device, showing My Account again
+func DELETEAccountPasskey(controlDB *db.ControlDB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user, err := accountUser(r, controlDB, false)
+		var id int64
+		if err == nil {
+			id, err = strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+		}
+		if err == nil {
+			err = controlDB.Queries.DeleteSiteIdentityPasskey(r.Context(), controldb.DeleteSiteIdentityPasskeyParams{SiteID: user.identity.SiteID, IdentityID: user.identity.ID, ID: id})
+		}
+		if err != nil {
+			slog.InfoContext(r.Context(), "Passkey not removed", "error", err)
+			http.Error(w, "The passkey could not be removed", http.StatusBadRequest)
+			return
+		}
+		GETAccount(controlDB)(w, r)
 	}
 }
 

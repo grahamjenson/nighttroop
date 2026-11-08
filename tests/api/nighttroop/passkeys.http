@@ -19,27 +19,21 @@ B {"id": "AAAA", "rawId": "AAAA", "type": "public-key", "response": {}}
 ASSERT_STATUS 401
 ASSERT_EQUALS "That passkey could not sign you in." "@error"
 
-// The page to add a passkey changes nothing, as the link's token is after its # and never sent, so it is always shown
-NAME passkey_new_page
-GET http://{{ site }}/passkey/new
-ASSERT_STATUS 200
-
-// Adding a passkey needs the link's token from creating the site; without it, or with a made up one, it is refused
-NAME passkey_new_begin_without_link
-POST http://{{ site }}/passkey/new/begin
+// A device, which does not sign in to the website, has no account page and adds no passkey
+NAME account_device
+GET http://{{ site }}/settings/account
+H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 403
 
-NAME passkey_new_begin_made_up_link
-POST http://{{ site }}/passkey/new/begin
+NAME account_device_passkey
+POST http://{{ site }}/settings/account/passkeys/begin
+H Authorization: Bearer {{ jwt }}
 H Accept: application/json
-H Passkey-Token: not.a.token
 ASSERT_STATUS 403
-ASSERT_EQUALS "This link to add a passkey has expired or been used." "@error"
 
-NAME passkey_new_finish_without_link
-POST http://{{ site }}/passkey/new/finish
+// Without signing in there is no account page to add a passkey on
+NAME account_signed_out
+POST http://{{ site }}/settings/account/passkeys/begin
 H Accept: application/json
-H Content-Type: application/json
-B {}
-ASSERT_STATUS 403
+ASSERT_STATUS 401

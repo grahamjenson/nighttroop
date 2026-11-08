@@ -23,3 +23,7 @@ WHERE site_identity_passkeys.site_id = sqlc.arg('SiteID') AND site_identity_pass
     SELECT site_identities.id FROM site_identities
     WHERE site_identities.site_id = sqlc.arg('SiteID') AND site_identities.name = sqlc.arg('Name') AND site_identities.role = 'admin'
 );
+
+-- name: DeleteSiteIdentityPasskey :exec
+-- An identity removes one of its own passkeys
+DELETE FROM site_identity_passkeys WHERE site_id = sqlc.arg('SiteID') AND identity_id = sqlc.arg('IdentityID') AND id = sqlc.arg('ID');

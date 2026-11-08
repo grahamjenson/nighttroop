@@ -129,9 +129,13 @@ templ Header() {
 						</div>
 						@dropdown.Separator()
 					}
-					// The guide to setting the site up first, so it is easy to find again
+					// The guide to setting the site up first, so it is easy to find again, beside the identity's own account,
+					// side by side so every item still fits in the menu
 					@dropdown.Group() {
-						@dataMenuItem("site--getting-started-button", "/getting-started", "Getting Started", icon.Rocket(icon.Props{Class: "size-4 mr-2"}))
+						<div class="sm:grid sm:grid-cols-2 sm:gap-x-1">
+							@dataMenuItem("site--getting-started-button", "/getting-started", "Getting Started", icon.Rocket(icon.Props{Class: "size-4 mr-2"}))
+							@dataMenuItem("site--settings--account-button", "/settings/account", "My Account", icon.User(icon.Props{Class: "size-4 mr-2"}))
+						</div>
 					}
 					@dropdown.Separator()
 					// Data on the left, and presets, settings and logout on the right, so every item fits in the window
