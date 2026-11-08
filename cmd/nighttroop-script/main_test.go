@@ -21,7 +21,7 @@ func TestNewSiteScript(t *testing.T) {
 	config, controlDB, _ := testutils.NewControlDBWithSite(t)
 	ts := httptest.NewServer(server.GetMainHandler(controlDB, config))
 	t.Cleanup(ts.Close)
-	run(t, os.DirFS("../../scripts/staging"), "new_site.flow", flow.Client(ts), settings{scheme: "http", host: "localhost"})
+	run(t, os.DirFS("../staging"), "new_site.flow", flow.Client(ts), settings{scheme: "http", host: "localhost"})
 }
 
 // create_site.flow makes a site from the home page and signs in to it with codes made from its TOTP secret, in Chromium
@@ -37,12 +37,12 @@ func TestCreateSiteScript(t *testing.T) {
 	require.NoError(t, err)
 	flow.ScreenshotDir = t.TempDir()
 	host := "localhost:" + u.Port()
-	run(t, os.DirFS("../../scripts/staging"), "create_site.flow", flow.Client(ts), settings{scheme: "http", host: host, timeout: 5 * time.Second})
+	run(t, os.DirFS("../staging"), "create_site.flow", flow.Client(ts), settings{scheme: "http", host: host, timeout: 5 * time.Second})
 }
 
 // Every staging script parses, and none needs a test server's background jobs
 func TestStagingScriptsParse(t *testing.T) {
-	scripts := os.DirFS("../../scripts/staging")
+	scripts := os.DirFS("../staging")
 	paths, err := fs.Glob(scripts, "*.flow")
 	require.NoError(t, err)
 	require.NotEmpty(t, paths)

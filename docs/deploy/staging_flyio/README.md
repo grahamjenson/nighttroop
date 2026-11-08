@@ -63,7 +63,7 @@ of your own domain:
   - The image is the `Dockerfile`'s `staging` target. It starts as root, as Fly mounts the volume owned by root, gives
     `/data` to the server's user, and runs the server as that user.
   - Before the server starts, `try_migrate_or_delete`
-    ([`scripts/try_migrate_or_delete`](../../../scripts/try_migrate_or_delete/try_migrate_or_delete.go)) opens each
+    ([`cmd/try_migrate_or_delete`](../../../cmd/try_migrate_or_delete/try_migrate_or_delete.go)) opens each
     database as the server does: it migrates it, checks its schema is the one the migrations make on a new database,
     and prepares its queries. As there can be thousands of sites, only the first site database's queries are prepared,
     as every other has the same schema.
@@ -114,7 +114,7 @@ fly apps create nighttroop-staging
    - As nothing is kept, losing them loses nothing: make new ones whenever you like.
 
    ```sh
-   fly secrets set --app nighttroop-staging --stage KEY_SETS="$(go run scripts/keysets/create_keysets.go)"
+   fly secrets set --app nighttroop-staging --stage KEY_SETS="$(go run cmd/keysets/create_keysets.go)"
    ```
 
 3. **Choose the control admin's password and TOTP secret, and store them as secrets.**

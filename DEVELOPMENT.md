@@ -72,7 +72,7 @@ go run github.com/mxschmitt/playwright-go/cmd/playwright@v0.6201.0 install chrom
 
 `SCREENSHOT` steps in `tests/bdd` write `tests/screenshots`, which is committed
 and rendered on Linux. On macOS they go to `.test/screenshots` instead; to
-update the committed set run `scripts/screenshots.sh` (needs Docker).
+update the committed set run `cmd/screenshots.sh` (needs Docker).
 
 # Coverage
 

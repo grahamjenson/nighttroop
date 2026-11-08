@@ -1,7 +1,7 @@
 // Command nighttroop-script runs test scripts, .flow files and .http, .sio and .bdd ones, against a Nighttroop server
 // running elsewhere, such as staging: to make sites with real data and check its API, sockets, live updates and pages.
 //
-//	go run ./cmd/nighttroop-script --host staging.nighttroop.nz --root scripts/staging new_site.flow
+//	go run ./cmd/nighttroop-script --host staging.nighttroop.nz --root cmd/staging new_site.flow
 //
 // Each script runs as a test, so -test.v prints each step and -test.run picks the scripts to run. A URL on localhost,
 // or on a host under it such as abcdefgh.ns.localhost, goes to that name under --host. {{ server_url }},

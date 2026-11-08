@@ -7,7 +7,7 @@ it reached in its `schema_migrations` table and only runs the files numbered aft
 ## Until the first production deploy: `000001` can change
 
 Until then each DB's whole schema is its `000001_init_schema.up.sql`, and a schema change edits it. Staging, the only
-server with data, deletes its DBs when one cannot be migrated and prepared (`scripts/try_migrate_or_delete`), so it
+server with data, deletes its DBs when one cannot be migrated and prepared (`cmd/try_migrate_or_delete`), so it
 starts again from the new `000001`. It also deletes them when one's schema (each table, index, trigger and view's SQL
 in `sqlite_master`) is not the one the migrations make on a new DB, so a change that leaves every query working, like
 a changed `CHECK` or even a changed comment in a `CREATE TABLE`, resets staging too, rather than leaving it the old rule.
@@ -20,14 +20,14 @@ some queries or keeps rules, like a `CHECK`, the code no longer expects.
 
 So the first production deploy freezes the migrations: it adds `data/sql/MIGRATIONS_FROZEN`. Once that is on a pull
 request's base branch, CI fails the pull request when it changes, deletes or renames a migration on the base branch
-(`scripts/check_migrations.sh`, which can be run locally the same way). From then on, to change a schema, add the next
+(`cmd/check_migrations.sh`, which can be run locally the same way). From then on, to change a schema, add the next
 migration:
 
 1. Add `data/sql/<db>/migrations/00000N_<what>.up.sql`, numbered after the last, and its `00000N_<what>.down.sql`.
    `go generate` migrates down as a check, so each needs a down file; it can be empty when the change cannot be undone.
    A DB only runs migrations numbered after its version, so one numbered at or before the last on the base branch, as
    when another pull request's migration merged first, would never run on DBs already past it. CI fails a pull
-   request that adds one (`scripts/check_migrations.sh`, frozen or not); renumber it after the last. CI only runs on a
+   request that adds one (`cmd/check_migrations.sh`, frozen or not); renumber it after the last. CI only runs on a
    push, so bring the base branch in, or re-run the check, before merging when another migration merged meanwhile.
 2. Run `go generate ./...`, which applies every migration in order to make `schema_gen.sql` for sqlc. It also checks
    the migrations with rows in (`data/sql/gen/migration_check.go`): at each version it adds rows with every column at
@@ -102,5 +102,5 @@ or copies them into the wrong columns, fails there rather than on a deploy.
 - **Fixing forward after a failed migration**: a new release with a fixed or new migration opens the kept DBs. One the
   failed migration left dirty is forced back to the version before it and migrated again on its own, so nothing needs
   to be done by hand.
-- **Staging** (`scripts/try_migrate_or_delete`) deletes every DB when one cannot be migrated and prepared, or its schema
+- **Staging** (`cmd/try_migrate_or_delete`) deletes every DB when one cannot be migrated and prepared, or its schema
   is not the one the migrations make on a new DB, so it starts empty rather than with only some, or with old rules.

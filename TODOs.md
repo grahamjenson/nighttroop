@@ -69,7 +69,7 @@
     1. P0: At the first production deploy, freeze the migrations: add `data/sql/MIGRATIONS_FROZEN`, so CI refuses a
        change to a migration on main, and add numbered migrations from then on (docs/migrations.md). Then add a test
        that the last release's DBs migrate to the current schema, comparing each DB's `Schema` with a new one's as
-       `scripts/try_migrate_or_delete` does
+       `cmd/try_migrate_or_delete` does
     1. P1: Decide the deploy tools from the gaps in `docs/deploy.md`, which lists each way a deploy can fail and what
        fixes it, starting with a site that stops the start (seeing why, trying a fix on a copy, and restoring,
        forcing back, disabling or deleting it) and a missing control DB starting a new server in setup

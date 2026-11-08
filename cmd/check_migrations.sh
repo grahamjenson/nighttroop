@@ -8,7 +8,7 @@
 # migration's version never runs it again, so a change to one would reach new DBs only, and every DB made before would
 # keep the old schema; see docs/migrations.md. Until then 000001 can still change, as staging starts again from it.
 #
-#   scripts/check_migrations.sh [base]    e.g. scripts/check_migrations.sh origin/main (the default)
+#   cmd/check_migrations.sh [base]    e.g. cmd/check_migrations.sh origin/main (the default)
 set -euo pipefail
 
 base=${1:-origin/main}

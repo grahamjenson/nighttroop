@@ -7,8 +7,8 @@ COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
 RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/nighttroop main.go && \
-    CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/create_keysets scripts/keysets/create_keysets.go && \
-    CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/try_migrate_or_delete ./scripts/try_migrate_or_delete
+    CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/create_keysets cmd/keysets/create_keysets.go && \
+    CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/try_migrate_or_delete ./cmd/try_migrate_or_delete
 
 # DB-IP's free IP to City Lite (CC BY 4.0), this month's or last month's, for the city each sign in is from. If it
 # cannot be downloaded the image is still built, and the server knows only countries, from its built in database.
@@ -42,7 +42,7 @@ ENTRYPOINT ["nighttroop"]
 FROM server AS staging
 USER root
 RUN apk add --no-cache su-exec
-COPY scripts/try_migrate_or_delete/staging_start.sh /usr/local/bin/staging_start
+COPY cmd/try_migrate_or_delete/staging_start.sh /usr/local/bin/staging_start
 ENTRYPOINT ["staging_start"]
 
 # The server, the image built by default

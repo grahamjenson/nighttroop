@@ -67,7 +67,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Check migrations are added after the last and none on the base branch changed
-        run: scripts/check_migrations.sh "origin/${{ github.base_ref }}"
+        run: cmd/check_migrations.sh "origin/${{ github.base_ref }}"
 
   test:
     runs-on: ubuntu-latest
