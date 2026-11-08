@@ -283,6 +283,10 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   Notifications, Events, Errors or Logs.
 - The header's search finds a page by its name, group or hub as it is typed, whatever the case, listing them under
   their hub, only those the identity may open, or "No pages match".
+- The search also finds a page by the headings and words on it, showing the one it was found by next to the page's
+  name: Nightscout or Dexcom finds Connectors, low finds Alarms (Low Alarm), timezone finds General settings.
+- The search also finds a page by what people also call it: BGL or blood sugar finds Glucose Readings, bolus finds
+  Insulin Doses, carbs finds Food Intakes and Food Presets, exercise finds Activities.
 - In the search, the arrow keys move through the results, Enter or a click opens one, Escape closes them, and Ctrl+K
   (⌘K on a Mac) goes to the search from anywhere.
 - On a phone the header fits, its hubs' links as icons and its search an icon opening a box across the page; Reports'
