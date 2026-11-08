@@ -1,12 +1,14 @@
 INCLUDE steps/new_site_admin.steps
 ASSERT_PATH /
 
-// The menu opens the reports, at first of the week with yesterday in it, which a new site has no glucose for
+// The menu's Reports group opens the AGP report, at first of the week with yesterday in it, which a new site has no
+// glucose for
 CLICK #site--settings-menu
-CLICK #site--reports-button
+ASSERT_TEXT_EQUALS #site--reports--agp-button AGP
+CLICK #site--reports--agp-button
 ASSERT_STATUS 200
 ASSERT_PATH /reports
-ASSERT_TITLE Reports · Nighttroop
+ASSERT_TITLE AGP · Nighttroop
 ASSERT_VISIBLE #site--reports--no-glucose
 ASSERT_TEXT_EQUALS #site--reports--days 0
 ASSERT_TEXT_EQUALS #site--reports--time-in-range –

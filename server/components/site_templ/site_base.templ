@@ -129,23 +129,19 @@ templ Header() {
 						</div>
 						@dropdown.Separator()
 					}
-					// The guide to setting the site up first, so it is easy to find again, beside the identity's own account,
-					// side by side so every item still fits in the menu
+					// The identity's own account first, which also has the guide to setting the site up
 					@dropdown.Group() {
-						<div class="sm:grid sm:grid-cols-2 sm:gap-x-1">
-							@dataMenuItem("site--getting-started-button", "/getting-started", "Getting Started", icon.Rocket(icon.Props{Class: "size-4 mr-2"}))
-							@dataMenuItem("site--settings--account-button", "/settings/account", "My Account", icon.User(icon.Props{Class: "size-4 mr-2"}))
-						</div>
+						@dataMenuItem("site--settings--account-button", "/settings/account", "My Account", icon.User(icon.Props{Class: "size-4 mr-2"}))
 					}
 					@dropdown.Separator()
-					// Data on the left, and presets, settings and logout on the right, so every item fits in the window
+					// Data, with its presets, on the left, and reports, settings and logout on the right, so every item fits in
+					// the window
 					<div class="sm:grid sm:grid-cols-2 sm:gap-x-1">
 						<div>
 							@dropdown.Label() {
 								Data
 							}
 							@dropdown.Group() {
-								@dataMenuItem("site--reports-button", "/reports", "Reports", icon.ChartLine(icon.Props{Class: "size-4 mr-2"}))
 								@dataMenuItem("site--data--glucose-button", "/data/glucose", "Glucose Readings", icon.Droplet(icon.Props{Class: "size-4 mr-2"}))
 								@dataMenuItem("site--data--insulin-button", "/data/insulin", "Insulin Doses", icon.Syringe(icon.Props{Class: "size-4 mr-2"}))
 								@dataMenuItem("site--data--food-button", "/data/food", "Food Intakes", icon.Utensils(icon.Props{Class: "size-4 mr-2"}))
@@ -157,16 +153,17 @@ templ Header() {
 								@dataMenuItem("site--data--profile-switches-button", "/data/profile-switches", "Profile Switches", icon.Repeat(icon.Props{Class: "size-4 mr-2"}))
 								@dataMenuItem("site--data--event-groups-button", "/data/event-groups", "Event Groups", icon.Layers(icon.Props{Class: "size-4 mr-2"}))
 								@dataMenuItem("site--data--device-status-button", "/data/device-status", "Device Status", icon.Smartphone(icon.Props{Class: "size-4 mr-2"}))
+								@dataMenuItem("site--presets--food-button", "/presets/food", "Food Presets", icon.Utensils(icon.Props{Class: "size-4 mr-2"}))
+								@dataMenuItem("site--presets--profiles-button", "/presets/profiles", "Profiles", icon.CalendarClock(icon.Props{Class: "size-4 mr-2"}))
 							}
 						</div>
 						<div>
 							@dropdown.Separator(dropdown.SeparatorProps{Class: "sm:hidden"})
 							@dropdown.Label() {
-								Presets
+								Reports
 							}
 							@dropdown.Group() {
-								@dataMenuItem("site--presets--food-button", "/presets/food", "Food Presets", icon.Utensils(icon.Props{Class: "size-4 mr-2"}))
-								@dataMenuItem("site--presets--profiles-button", "/presets/profiles", "Profiles", icon.CalendarClock(icon.Props{Class: "size-4 mr-2"}))
+								@dataMenuItem("site--reports--agp-button", "/reports", "AGP", icon.ChartLine(icon.Props{Class: "size-4 mr-2"}))
 							}
 							@dropdown.Separator()
 							@dropdown.Label() {

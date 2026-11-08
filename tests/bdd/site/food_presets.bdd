@@ -1,9 +1,10 @@
 INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
-// Food presets are in the menu under Presets, and a new site has none
+// Food presets are in the menu under Data, with Profiles, and a new site has none
 CLICK #site--settings-menu
-ASSERT_VISIBLE #site--presets--food-button
+ASSERT_DRAWN #site--presets--food-button
+ASSERT_DRAWN #site--presets--profiles-button
 SCREENSHOT presets_menu
 CLICK #site--presets--food-button
 ASSERT_STATUS 200

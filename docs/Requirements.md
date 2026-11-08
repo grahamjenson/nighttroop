@@ -308,8 +308,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 ### Reports
 
-- Reports, from the menu, show the week with yesterday in it at first, and a report of any day, week, fortnight or
-  month from today back a year is at `/reports/{period}-{date}`.
+- The menu's Reports group has AGP, the AGP report, which shows the week with yesterday in it at first, and a report
+  of any day, week, fortnight or month from today back a year is at `/reports/{period}-{date}`.
 - A report says which days it covers, and its days with data, time in range, mean daily dose and mean daily carbs,
   each "–" when it has no days with data.
 - Its ambulatory glucose profile (AGP) over a day from midnight shades the 5th to 95th and 25th to 75th percentiles,
@@ -331,7 +331,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   AAPS, Trio or xDrip+, or a sync from Dexcom, LibreLinkUp or Nightscout) and adds people and devices; everyone makes
   their settings and sets up alarms.
 - Someone who is not an admin is told the admin sets up the site's data and who can use it.
-- The guide is always at Getting Started, first in the menu.
+- The guide is always on My Account, at the top of the menu, which says what it is and opens it.
 
 ### Data
 
@@ -392,6 +392,8 @@ so Tab goes on to its fields and a screen reader reads its title, and closing it
 focus back to the row or button that opened it.
 
 ### Presets
+
+- Food Presets and Profiles are in the menu under Data.
 
 - **Food presets**: added in a modal of all their fields, as data is, viewed, edited and deleted.
 - **Profiles**: profile stores uploaded by a loop, with their schedules to read, renamed or deleted.
@@ -772,7 +774,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 
 ### My Account
 
-- My Account, at the top of the menu beside Getting Started, says who is signed in and with which role, and lists its
+- My Account, at the top of the menu, says who is signed in and with which role, opens the guide to setting up the
+  site (not on control's), and lists its
   passkeys: when each was added and last used. Only an identity that signs in to the website has it.
 - "Add a passkey" makes one on the site's own address, with the browser's fingerprint, face or PIN check, named for
   the identity (e.g. admin), so no name, email or device of the person is asked for or kept. A passkey the browser

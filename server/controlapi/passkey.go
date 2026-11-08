@@ -71,7 +71,7 @@ func GETAccount(controlDB *db.ControlDB) http.HandlerFunc {
 			return
 		}
 		controlcollections.WriteResponse(w, r, httputils.GetAcceptType(r), http.StatusOK, user.passkeys,
-			site_settings_templ.MyAccount(identity.Name, string(identity.Role), user.passkeys, sitelogin.MaxPasskeys, "/account"))
+			site_settings_templ.MyAccount(identity.Name, string(identity.Role), user.passkeys, sitelogin.MaxPasskeys, "/account", false))
 	}
 }
 
