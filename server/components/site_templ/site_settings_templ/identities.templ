@@ -588,30 +588,9 @@ templ createdUserInfo(url string, username string, password string, totpSecret *
 					@credentialRow("Nightscout Token:", "site--identities--created--ns-token", *nsToken)
 				}
 				if totpSecret != nil {
-					<div class="flex">
-						<div class="flex items-start gap-6">
-							<!-- Left: label + secret -->
-							<div class="flex">
-								<span class="w-28 shrink-0 font-medium text-slate-400 select-none">
-									TOTP Secret:
-								</span>
-							</div>
-							<!-- Right: QR block -->
-							<div class="flex flex-col items-center gap-2">
-								<div id="qrcode" class="p-2 bg-white rounded-lg shadow-sm border border-slate-200"></div>
-								@authenticator.ScanHint("site--identities--created--authenticator")
-							</div>
-						</div>
-						<script type="text/javascript">
-							var qrcode = new QRCode(document.getElementById("qrcode"), {
-								text: "{{ security.TOTPURI(username, url, *totpSecret) }}",
-								width: 128,
-								height: 128,
-								colorDark: "#000000",
-								colorLight: "#ffffff",
-								correctLevel: QRCode.CorrectLevel.H,
-							});
-						</script>
+					<div class="flex items-start">
+						<span class="w-28 shrink-0 font-medium text-slate-400 select-none">TOTP Secret:</span>
+						@authenticator.Secret("site--identities--created", security.TOTPURI(username, url, *totpSecret), *totpSecret, 128)
 					</div>
 				}
 			</div>

@@ -31,12 +31,15 @@ ASSERT_TEXT_VISIBLE Save your credentials somewhere safe
 ASSERT_VISIBLE #public--site-info--password
 ASSERT_VISIBLE #public--site-info--backup-key
 ASSERT_NOT_VISIBLE #public--site-info--ns-token
+// The new TOTP secret is shown as text too, and a code made from it is the one the check expects
+ASSERT_TEXT_EQUALS #public--site-info--totp-text Fake TOTP Secr etFo rDev Only
 SCREENSHOT recovered
 SAVE_TEXT #public--site-info--backup-key new_backup_key
+SAVE_VALUE #public--site-info--totp-value totp_secret
 
 // The admin logs in with them
 // Login is offered once a code from the authenticator app has been checked
-INPUT #public--site-info--totp 123123
+INPUT #public--site-info--totp {{ totp .totp_secret }}
 CLICK #public--totp-check-button
 ASSERT_VISIBLE #public--totp-checked
 CLICK #public--login-button
