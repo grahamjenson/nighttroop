@@ -683,6 +683,10 @@ Connectors are a site's third party integrations, each syncing from one service.
   carbs, glucose every 5 minutes, and AGP (the 5th, 25th, 50th, 75th and 95th percentiles each 15 minutes from
   midnight). A day's AGP is of the 7 days to it. A period not kept is built from the kept days in it, and today so
   far while it is not over; a day not kept is built from its data; and neither is kept. Any other id, or a date out of range, is not found.
+- A summary period also has the loop's IOB (`loop_iob`, `loop_iob_basal`, `loop_iob_treatment`) and COB (`loop_cob`)
+  every 5 minutes from midnight: a day's newest loop device report in each 5 minutes, null when there was none, and a
+  week's, fortnight's or month's the mean of its days' at that time of day. A kept day keeps them after its device
+  reports are truncated.
 - The client also calls every Nightscout API v1, v2 and v3 endpoint on a site's Nightscout host, with a device's
   Nightscout token or the JWT it is exchanged for.
 
