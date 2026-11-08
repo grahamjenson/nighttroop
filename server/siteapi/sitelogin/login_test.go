@@ -103,3 +103,35 @@ func TestLoginTOTPRefusesPreAuthFromBeforeAReset(t *testing.T) {
 		require.Equal(t, !preAuthBeforeReset, signedIn, "pre-auth before the reset: %v, response %d", preAuthBeforeReset, w.Code)
 	}
 }
+
+// A login refused by the rate limiter says to wait a minute and try again, on the page and to the API
+func TestLoginRateLimitedSaysToWait(t *testing.T) {
+	tests := []struct {
+		name        string
+		ip          string
+		contentType string
+		accept      string
+		body        string
+	}{
+		{"json", "198.51.100.1", "application/json", "application/json", `{"name":"phone","password":"pw"}`},
+		{"form", "198.51.100.2", "application/x-www-form-urlencoded", "text/htmx", "name=phone&password=pw"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := httptest.NewRequest("POST", "/login", strings.NewReader(tt.body))
+			r.RemoteAddr = tt.ip + ":1234"
+			r.Header.Set("Content-Type", tt.contentType)
+			r.Header.Set("Accept", tt.accept)
+			ctx := httputils.CreateSiteContext(httputils.WithClientIP(r), testConfig, nil, nil, nil, "limited"+tt.name, tt.ip, httputils.HTTPActionWrite, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
+			r = r.WithContext(ctx)
+			// The one attempt the test config allows is used up
+			allowed, _ := httputils.SiteLoginAttemptsWithinRateLimit(testConfig, r, "limited"+tt.name, "phone")
+			require.True(t, allowed)
+
+			w := httptest.NewRecorder()
+			POSTLogin(nil, testConfig)(w, r)
+			require.Equal(t, http.StatusTooManyRequests, w.Code)
+			require.Contains(t, w.Body.String(), "Too many login attempts. Wait a minute, then try again.")
+		})
+	}
+}

@@ -16,6 +16,7 @@ templ Login() {
 			<div class="p-8 login-form-target rounded-lg shadow-2xl w-full max-w-96">
 				<!-- Form updated with POST method -->
 				<form
+					id="site--login--form"
 					hx-post="/login"
 					hx-target="closest .login-form-target"
 					hx-swap="outerHTML"
@@ -34,11 +35,10 @@ templ Login() {
 							Name
 						}
 						@input.Input(input.Props{
-							ID:          "site--login--name",
-							Type:        "text",
-							Name:        "name",
-							Placeholder: "admin",
-							Required:    true,
+							ID:       "site--login--name",
+							Type:     "text",
+							Name:     "name",
+							Required: true,
 							Attributes: templ.Attributes{
 								"autocapitalize": "none",
 								"autocorrect":    "off",
@@ -56,12 +56,11 @@ templ Login() {
 							Password
 						}
 						@input.Input(input.Props{
-							ID:          "site--login--password",
-							Type:        "password",
-							Name:        "password",
-							Placeholder: "••••••••",
-							Required:    true,
-							Attributes:  templ.Attributes{"autocomplete": "current-password"},
+							ID:         "site--login--password",
+							Type:       "password",
+							Name:       "password",
+							Required:   true,
+							Attributes: templ.Attributes{"autocomplete": "current-password"},
 						})
 					}
 					<div class="mt-4"></div>
@@ -74,6 +73,7 @@ templ Login() {
 						Log In
 					}
 				</form>
+				@invalidAfterError("site--login--form")
 			</div>
 		</div>
 	}
@@ -104,10 +104,9 @@ templ LoginTOTP() {
 						Verification Code
 					}
 					@inputotp.InputOTP(inputotp.Props{
-						ID:       "otp-form",
-						HasError: true,
-						Form:     "otp",
-						Name:     "totp",
+						ID:   "otp-form",
+						Form: "otp",
+						Name: "totp",
 					}) {
 						@inputotp.Group() {
 							@inputotp.Slot(inputotp.SlotProps{
@@ -139,7 +138,7 @@ templ LoginTOTP() {
 						}
 					}
 					@form.Description() {
-						Enter the 6-digit TOTP code
+						Enter the 6-digit code from your authenticator app
 					}
 				}
 				<div class="mt-4"></div>
@@ -169,7 +168,22 @@ templ LoginTOTP() {
 					form.addEventListener("paste", sendWhenFull);
 				})();
 			</script>
+			@invalidAfterError("otp")
 	</div>
+}
+
+// invalidAfterError marks the form's inputs aria-invalid after a failed login, until it is sent again, so they are not
+// shown as wrong before anything has been tried
+templ invalidAfterError(formID string) {
+	<script type="text/javascript">
+		(function () {
+			const form = document.getElementById({{ formID }});
+			const invalid = (failed) => form.querySelectorAll("input:not([type=hidden])").forEach((input) =>
+				failed ? input.setAttribute("aria-invalid", "true") : input.removeAttribute("aria-invalid"));
+			form.addEventListener("htmx:response:error", () => invalid(true));
+			form.addEventListener("htmx:before:request", () => invalid(false));
+		})();
+	</script>
 }
 
 templ LoginError(err string) {
