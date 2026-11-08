@@ -7,6 +7,12 @@ POST http://{{ .ns_site }}/api/v1/entries?token={{ token }}
 B [{"type":"sgv","sgv":120,"date":{{ dayms -1 720 }}},{"type":"sgv","sgv":250,"date":{{ dayms -1 725 }}}]
 ASSERT_STATUS 200
 
+// And Loop's IOB and COB at noon
+NAME post_loop_status
+POST http://{{ .ns_site }}/api/v1/devicestatus?token={{ token }}
+B [{"device":"loop://iPhone","created_at":"{{ daytime -1 720 }}","loop":{"name":"Loop","iob":{"iob":1.5},"cob":{"cob":20}}}]
+ASSERT_STATUS 200
+
 // A day not kept yet is built from its data: its glucose every 5 minutes, and its AGP of the 7 days to it each 15
 // minutes from midnight, the 5th, 25th, 50th, 75th and 95th percentiles, none where there was no glucose
 NAME get_day
@@ -22,6 +28,13 @@ ASSERT_EXISTS "@result.glucose.144"
 ASSERT_LENGTH 96 "@result.agp"
 ASSERT_LENGTH 0 "@result.agp.0"
 ASSERT_LENGTH 5 "@result.agp.48"
+// and the loop's IOB and COB every 5 minutes, null when it did not report, as Loop sends no basal or treatment IOB
+ASSERT_LENGTH 288 "@result.loop_iob"
+ASSERT_EQUALS 1.5 "@result.loop_iob.144"
+ASSERT_EQUALS null "@result.loop_iob.143"
+ASSERT_EQUALS null "@result.loop_iob_basal.144"
+ASSERT_EQUALS null "@result.loop_iob_treatment.144"
+ASSERT_EQUALS 20 "@result.loop_cob.144"
 
 // Today so far is a day too, with no data
 NAME get_today
@@ -63,6 +76,8 @@ H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_EQUALS "week" "@result.period"
 ASSERT_LENGTH 288 "@result.glucose"
+ASSERT_EQUALS 1.5 "@result.loop_iob.144"
+ASSERT_EQUALS 20 "@result.loop_cob.144"
 ASSERT_LENGTH 96 "@result.agp"
 ASSERT_LENGTH 5 "@result.agp.48"
 

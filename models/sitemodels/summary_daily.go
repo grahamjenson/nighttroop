@@ -70,10 +70,11 @@ func SummaryDayFromPeriod(row *sitedb.SummaryPeriod) SummaryDay {
 	return SummaryDay{Start: row.StartAt, End: row.EndAt, TimeInRange: row.TimeInRange, TotalDailyDose: row.TotalDailyDose, Days: row.Days}
 }
 
-// NewSummaryDaily is the day named date from start until end, built from readings, doses, food and minutes that may
-// run outside it. Its time in range is of the readings from low to high mg/dL, its total daily dose is the doses and
-// the basal in force each minute from minutesSince, and its glucose is the newest reading in each 5 minutes.
-func NewSummaryDaily(date, timezone string, start, end int64, low, high float64, readings []*glucose.Clean, doses []*sitedb.InsulinDose, food []*sitedb.FoodIntake, minutesSince int64, minutes []SummaryMinute) *sitedb.SummaryPeriod {
+// NewSummaryDaily is the day named date from start until end, built from readings, doses, food, loop reports and
+// minutes that may run outside it. Its time in range is of the readings from low to high mg/dL, its total daily dose is
+// the doses and the basal in force each minute from minutesSince, its glucose is the newest reading in each 5 minutes,
+// and its loop IOB and COB the newest report's, newest first, in each 5 minutes, rounded to 2 decimals.
+func NewSummaryDaily(date, timezone string, start, end int64, low, high float64, readings []*glucose.Clean, doses []*sitedb.InsulinDose, food []*sitedb.FoodIntake, reports []*sitedb.DeviceReportsLoopBetweenRow, minutesSince int64, minutes []SummaryMinute) *sitedb.SummaryPeriod {
 	day := &sitedb.SummaryPeriod{Period: "day", Date: date, Timezone: timezone, StartAt: start, EndAt: end}
 	within := func(at int64) bool { return at >= start && at < end }
 	slots := make([]*int64, (end-start+SummaryDailySlotMs-1)/SummaryDailySlotMs)
@@ -116,18 +117,47 @@ func NewSummaryDaily(date, timezone string, start, end int64, low, high float64,
 	}
 	glucoseJSON, _ := json.Marshal(slots)
 	day.GlucoseMgdlJson = string(glucoseJSON)
+	loop, taken := [4][]*float64{}, make([]bool, len(slots))
+	for i := range loop {
+		loop[i] = make([]*float64, len(slots))
+	}
+	for _, r := range reports {
+		slot := (r.OccurredAt - start) / SummaryDailySlotMs
+		if !within(r.OccurredAt) || taken[slot] {
+			continue
+		}
+		taken[slot] = true
+		for i, value := range []*float64{r.LoopIob, r.LoopIobBasal, r.LoopIobTreatment, r.LoopCob} {
+			if value != nil {
+				loop[i][slot] = new(consts.Round(*value, 2))
+			}
+		}
+	}
+	for i, column := range loopColumns(day) {
+		loopJSON, _ := json.Marshal(loop[i])
+		*column = string(loopJSON)
+	}
 	return day
+}
+
+// loopColumns are the summary's loop IOB, basal IOB, treatment IOB and COB JSON columns
+func loopColumns(row *sitedb.SummaryPeriod) [4]*string {
+	return [4]*string{&row.LoopIobJson, &row.LoopIobBasalJson, &row.LoopIobTreatmentJson, &row.LoopCobJson}
 }
 
 // NewSummaryPeriod is the period, a week or month named by its first date, from start until end, of its summary days.
 // Only days with data count, so its time in range, daily dose and daily carbs are the means of theirs, and its glucose
-// at each 5 minutes from midnight the mean of the days with a reading then. Its AGP is the percentiles of their glucose
-// in each 15 minutes from midnight.
+// at each 5 minutes from midnight the mean of the days with a reading then, as its loop IOB and COB are, rounded to 2
+// decimals. Its AGP is the percentiles of their glucose in each 15 minutes from midnight.
 func NewSummaryPeriod(period, date, timezone string, start, end int64, days []*sitedb.SummaryPeriod) *sitedb.SummaryPeriod {
 	row := &sitedb.SummaryPeriod{Period: period, Date: date, Timezone: timezone, StartAt: start, EndAt: end}
 	inRange, withRange := 0.0, 0
 	sums, counts := make([]int64, 24*60*60_000/SummaryDailySlotMs), make([]int64, 24*60*60_000/SummaryDailySlotMs)
 	bins := make([][]int64, 24*60*60_000/AGPSlotMs)
+	loopSums, loopCounts := [4][]float64{}, [4][]int64{}
+	for i := range loopSums {
+		loopSums[i], loopCounts[i] = make([]float64, len(sums)), make([]int64, len(sums))
+	}
 	for _, day := range days {
 		if day.Days == 0 {
 			continue
@@ -149,6 +179,16 @@ func NewSummaryPeriod(period, date, timezone string, start, end int64, days []*s
 				bins[bin] = append(bins[bin], *value)
 			}
 		}
+		for i, column := range loopColumns(day) {
+			var values []*float64
+			_ = json.Unmarshal([]byte(*column), &values)
+			for slot, value := range values[:min(len(values), len(sums))] {
+				if value != nil {
+					loopSums[i][slot] += *value
+					loopCounts[i][slot]++
+				}
+			}
+		}
 	}
 	if withRange > 0 {
 		row.TimeInRange = new(consts.Round(inRange/float64(withRange), 1))
@@ -165,6 +205,16 @@ func NewSummaryPeriod(period, date, timezone string, start, end int64, days []*s
 	}
 	glucoseJSON, _ := json.Marshal(slots)
 	row.GlucoseMgdlJson = string(glucoseJSON)
+	for i, column := range loopColumns(row) {
+		means := make([]*float64, len(sums))
+		for slot, count := range loopCounts[i] {
+			if count > 0 {
+				means[slot] = new(consts.Round(loopSums[i][slot]/float64(count), 2))
+			}
+		}
+		loopJSON, _ := json.Marshal(means)
+		*column = string(loopJSON)
+	}
 	agp := make([][]int64, len(bins))
 	for bin, values := range bins {
 		slices.Sort(values)

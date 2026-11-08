@@ -643,8 +643,17 @@
           "total_daily_carbs": { "type": "number", "format": "double" },
           "glucose": { "type": "array", "items": { "type": "number", "format": "double", "nullable": true } },
           "agp": { "type": "array", "items": { "type": "array", "items": { "type": "number", "format": "double" } } },
+          "loop_iob": { "$ref": "#/components/schemas/SummaryLoopSlots" },
+          "loop_iob_basal": { "$ref": "#/components/schemas/SummaryLoopSlots" },
+          "loop_iob_treatment": { "$ref": "#/components/schemas/SummaryLoopSlots" },
+          "loop_cob": { "$ref": "#/components/schemas/SummaryLoopSlots" },
           "units": { "$ref": "#/components/schemas/Units" }
         }
+      },
+      "SummaryLoopSlots": {
+        "type": "array",
+        "description": "The loop's IOB in U or COB in g every 5 minutes from midnight, as glucose is: a day's newest loop device report then, null when there was none, and a week's or month's the mean of its days' then, to 2 decimals",
+        "items": { "type": "number", "format": "double", "nullable": true }
       },
       "Summary": {
         "type": "object",

@@ -9,6 +9,7 @@ import (
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/server/components/ui/toast"
 	"nighttroop.t1d.nz/utils/display"
@@ -59,10 +60,14 @@ templ Report(p *sitemodels.SiteSummaryPeriod) {
 		<div class="flex flex-wrap items-center justify-between gap-2">
 			<div>
 				<h1 class="text-2xl font-bold">AGP</h1>
-				<div class="flex items-center gap-2">
-					@stepButton("site--reports--previous", link(p.Period, first.AddDate(0, 0, -1)), "Previous "+p.Period, "‹")
-					<span id="site--reports--title" class="text-sm text-gray-500">{ title(ctx, p) }</span>
-					@stepButton("site--reports--next", link(p.Period, time.UnixMilli(p.End).In(first.Location())), "Next "+p.Period, "›")
+				<div class="flex items-center gap-1">
+					@arrowButton("site--reports--previous", link(p.Period, first.AddDate(0, 0, -1)), "Previous "+p.Period) {
+						@icon.ChevronLeft()
+					}
+					<span id="site--reports--title" class="min-w-0 text-sm font-medium tabular-nums text-gray-700">{ title(ctx, p) }</span>
+					@arrowButton("site--reports--next", link(p.Period, time.UnixMilli(p.End).In(first.Location())), "Next "+p.Period) {
+						@icon.ChevronRight()
+					}
 				</div>
 			</div>
 			<div class="flex flex-wrap gap-1">
@@ -100,25 +105,25 @@ templ reportKinds(selected string, last time.Time) {
 	}
 }
 
-// TDDReport is the total daily dose of each day of the week, fortnight or month before today: a bar of each day with
-// insulin, how many days had it and their mean, lowest and highest, and a table of every day's dose, newest first
-templ TDDReport(rangeName string, days []*sitemodels.SiteSummaryDaily) {
-	{{ last := time.Now().In(site_data_templ.Location(ctx)).AddDate(0, 0, -1) }}
-	{{ first := last.AddDate(0, 0, 1-TDDRangeDays(rangeName)) }}
+// TDDReport is the total daily dose of each day of the month ending on last: a bar of each day with insulin, how many
+// days had it and their mean, lowest and highest, and a table of every day's dose, newest first, with arrows beside its
+// dates to the month before and after
+templ TDDReport(last time.Time, days []*sitemodels.SiteSummaryDaily) {
+	{{ first := last.AddDate(0, 0, 1-TDDDays) }}
+	{{ previous, next := tddLinks(last, tddYesterday(time.Now(), last.Location())) }}
 	{{ withInsulin := dosed(days) }}
 	{{ mean, lowest, highest := tddStats(withInsulin) }}
 	@heading.Title("TDD")
 	<div id="site--reports" class="w-full space-y-4 py-4">
-		<div class="flex flex-wrap items-center justify-between gap-2">
-			<div>
-				<h1 class="text-2xl font-bold">TDD</h1>
-				<span id="site--reports--title" class="text-sm text-gray-500">Total daily dose, { first.Format("Mon 2 Jan") } to { last.Format("Mon 2 Jan 2006") }</span>
-			</div>
-			<div class="flex flex-wrap gap-1">
-				for _, r := range tddRanges {
-					@reportButton("site--reports--tdd--range-"+r.Name, "/reports/tdd?range="+r.Name, r.Name == rangeName) {
-						{ r.Label }
-					}
+		<div>
+			<h1 class="text-2xl font-bold">TDD</h1>
+			<div class="flex items-center gap-1">
+				@arrowButton("site--reports--tdd--previous", previous, "Previous month") {
+					@icon.ChevronLeft()
+				}
+				<span id="site--reports--title" class="min-w-0 text-sm font-medium tabular-nums text-gray-700">{ first.Format("Mon 2 Jan") } to { last.Format("Mon 2 Jan 2006") }</span>
+				@arrowButton("site--reports--tdd--next", next, "Next month") {
+					@icon.ChevronRight()
 				}
 			</div>
 		</div>
@@ -188,17 +193,16 @@ templ reportButton(id, path string, selected bool) {
 	}
 }
 
-// stepButton opens the report before or after, at path, beside the dates it covers, named by label for a screen reader
-// and as its tooltip, or is disabled when there is none
-templ stepButton(id, path, label, symbol string) {
+// arrowButton opens the report at path, as an icon named by label for a screen reader, or is disabled when there is none
+templ arrowButton(id, path, label string) {
 	@button.Button(button.Props{
 		ID:         id,
-		Variant:    button.VariantOutline,
-		Size:       button.SizeSm,
+		Variant:    button.VariantGhost,
+		Size:       button.SizeIcon,
 		Disabled:   path == "",
-		Attributes: templ.Attributes{"hx-get": path, "hx-target": "#main-content", "hx-push-url": "true", "hx-swap": "innerHTML", "aria-label": label, "title": label},
+		Attributes: templ.Attributes{"aria-label": label, "title": label, "hx-get": path, "hx-target": "#main-content", "hx-push-url": "true", "hx-swap": "innerHTML"},
 	}) {
-		{ symbol }
+		{ children... }
 	}
 }
 
