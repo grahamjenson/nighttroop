@@ -6,6 +6,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/form"
 	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/inputotp"
+	"nighttroop.t1d.nz/server/components/ui/toast"
 )
 
 templ Login() {
@@ -19,8 +20,8 @@ templ Login() {
 					hx-post="/login"
 					hx-target="closest .login-form-target"
 					hx-swap="outerHTML"
-					hx-status:4xx="target:#error-container"
-					hx-status:5xx="target:#error-container"
+					hx-status:4xx="target:#toaster swap:beforeend"
+					hx-status:5xx="target:#toaster swap:beforeend"
 				>
 					<div class="text-center mb-6">
 						<img src="/logo.svg" alt="" class="mx-auto mb-3 size-16"/>
@@ -29,48 +30,45 @@ templ Login() {
 					<!-- Username -->
 					@form.Item(form.ItemProps{}) {
 						@form.Label(form.LabelProps{
-							For: "name",
+							For: "control--login--name",
 						}) {
 							Name
 						}
 						@input.Input(input.Props{
-							ID:          "name",
-							Type:        "text",
-							Name:        "name",
-							Placeholder: "admin",
-							Required:    true,
-							Attributes:  templ.Attributes{"autocomplete": "username", "autocapitalize": "none"},
+							ID:         "control--login--name",
+							Type:       "text",
+							Name:       "name",
+							Required:   true,
+							Attributes: templ.Attributes{"autocomplete": "username", "autocapitalize": "none"},
 						})
 					}
 					<div class="mt-4"></div>
 					<!-- Password -->
 					@form.Item(form.ItemProps{}) {
 						@form.Label(form.LabelProps{
-							For: "password",
+							For: "control--login--password",
 						}) {
 							Password
 						}
 						@input.Input(input.Props{
-							ID:          "password",
-							Type:        "password",
-							Name:        "password",
-							Placeholder: "••••••••",
-							Required:    true,
-							Attributes:  templ.Attributes{"autocomplete": "current-password"},
+							ID:         "control--login--password",
+							Type:       "password",
+							Name:       "password",
+							Required:   true,
+							Attributes: templ.Attributes{"autocomplete": "current-password"},
 						})
 					}
 					<div class="mt-4"></div>
 					@form.Item() {
 						@form.Label(form.LabelProps{
-							For: "otp-form",
+							For: "control--login--otp",
 						}) {
 							Verification Code
 						}
 						@inputotp.InputOTP(inputotp.Props{
-							ID:       "otp-form",
-							HasError: true,
-							Form:     "otp",
-							Name:     "totp",
+							ID:   "control--login--otp",
+							Form: "otp",
+							Name: "totp",
 						}) {
 							@inputotp.Group() {
 								@inputotp.Slot(inputotp.SlotProps{
@@ -112,25 +110,41 @@ templ Login() {
 				<script>
 					// Logs in as soon as the code's last digit is typed or pasted, once the name and password are in. It
 					// waits a tick for the code's slots to fill its value, and does not send the same code twice, so a
-					// wrong code is not sent again on its own.
+					// wrong code is not sent again on its own. After a failed attempt its inputs are marked invalid, until
+					// it is sent again.
 					(function () {
 						const form = document.getElementById("otp");
-						const code = document.getElementById("otp-form");
+						const code = document.getElementById("control--login--otp");
 						const filled = (id) => document.getElementById(id).value !== "";
 						let sent = "";
 						const sendWhenFull = () => setTimeout(() => {
-							if (/^\d{6}$/.test(code.value) && code.value !== sent && filled("name") && filled("password")) {
+							if (/^\d{6}$/.test(code.value) && code.value !== sent && filled("control--login--name") && filled("control--login--password")) {
 								sent = code.value;
 								form.requestSubmit();
 							}
 						}, 0);
 						// Only the code's own slots, so typing the name or password does not send it
-						const slots = document.getElementById("otp-form-container");
+						const slots = document.getElementById("control--login--otp-container");
 						slots.addEventListener("input", sendWhenFull);
 						slots.addEventListener("paste", sendWhenFull);
+						const invalid = (failed) => form.querySelectorAll("input:not([type=hidden])").forEach((input) =>
+							failed ? input.setAttribute("aria-invalid", "true") : input.removeAttribute("aria-invalid"));
+						form.addEventListener("htmx:response:error", () => invalid(true));
+						form.addEventListener("htmx:before:request", () => invalid(false));
 					})();
 				</script>
 			</div>
 		</div>
 	}
+}
+
+// LoginError is a failed login's toast, saying why without saying how far the login got
+templ LoginError(message string) {
+	@toast.Toast(toast.Props{
+		Description: message,
+		Variant:     toast.VariantError,
+		Position:    toast.PositionTopCenter,
+		Dismissible: true,
+		Icon:        true,
+	})
 }

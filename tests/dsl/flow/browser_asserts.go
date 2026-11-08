@@ -400,8 +400,14 @@ type AssertPath struct {
 	TestLine int
 }
 
-// Execute waits up to visibleWait for the page's path, as after a click the browser may still be going to the next page
+// Execute waits up to visibleWait for the page's path, as after a click the browser may still be going to the next
+// page. Its {{ }} values are filled in, e.g. a site ID saved earlier.
 func (r *AssertPath) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
+	want, err := Render(r.URLPath, ctx)
+	if err != nil {
+		t.Fatalf("%s: %v", r.ToErrorLine(), err)
+	}
+	r = &AssertPath{URLPath: want, TestPath: r.TestPath, TestLine: r.TestLine}
 	path := ""
 	for deadline := time.Now().Add(visibleWait * time.Millisecond); ; time.Sleep(50 * time.Millisecond) {
 		parsedURL, err := url.Parse(page.URL())

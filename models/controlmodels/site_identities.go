@@ -32,10 +32,12 @@ type SiteIdentityAssume struct {
 	URL  string `json:"url"`
 }
 
-// SiteInspect is a site's own page in control: its details and its identities
-type SiteInspect struct {
+// SitePage is a site's own page in control: its details, its identities, and its latest events and errors
+type SitePage struct {
 	Site       *Site           `json:"site"`
 	Identities []*SiteIdentity `json:"identities"`
+	Events     []*Event        `json:"events"`
+	Errors     []*Error        `json:"errors"`
 }
 
 // HasSecret is whether an encrypted secret is set

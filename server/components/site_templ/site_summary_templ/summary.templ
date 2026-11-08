@@ -3,14 +3,13 @@ package site_summary_templ
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"sort"
-	"strings"
 	"time"
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
+	"nighttroop.t1d.nz/server/components/stat"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/table"
@@ -104,14 +103,6 @@ func ago(ms *int64) string {
 	return display.RoundedAgo(*ms, time.Now())
 }
 
-// numbersAndUnits splits a tile's text into its numbers and the words between them, as "2", " days ", "1", " hour ago"
-var numbersAndUnits = regexp.MustCompile(`[\d.–]+|[^\d.–]+`)
-
-// isUnit is whether a part of a tile's text is words, not a number or a dash
-func isUnit(part string) bool {
-	return strings.Trim(part, "0123456789.–") != ""
-}
-
 func orDash(v *string) string {
 	if v == nil {
 		return "–"
@@ -197,35 +188,35 @@ templ Summary(summary *sitemodels.Summary) {
 templ summaryContent(summary *sitemodels.Summary) {
 	@glucoseHero(summary)
 	<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-		@tile("site--summary--iob", "Insulin on board", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.LoopIob }, " U"), icon.Syringe)
-		@tile("site--summary--cob", "Carbs on board", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.LoopCob }, " g"), icon.Utensils)
-		@tile("site--summary--reservoir", "Reservoir", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.PumpReservoir }, " U"), icon.Gauge)
-		@tile("site--summary--phone-battery", "Phone battery", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.DeviceBatteryPercent }, "%"), icon.Smartphone)
+		@stat.Tile("site--summary--iob", "Insulin on board", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.LoopIob }, " U"), icon.Syringe)
+		@stat.Tile("site--summary--cob", "Carbs on board", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.LoopCob }, " g"), icon.Utensils)
+		@stat.Tile("site--summary--reservoir", "Reservoir", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.PumpReservoir }, " U"), icon.Gauge)
+		@stat.Tile("site--summary--phone-battery", "Phone battery", loopValue(summary.Loop, func(s *sitemodels.SiteDeviceStatus) *float64 { return s.DeviceBatteryPercent }, "%"), icon.Smartphone)
 	</div>
 	<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-		@tile("site--summary--time-in-range", "Time in range", display.Value(summary.Today.TimeInRange, "%"), icon.Target) {
+		@stat.Tile("site--summary--time-in-range", "Time in range", display.Value(summary.Today.TimeInRange, "%"), icon.Target) {
 			@previous("site--summary--time-in-range--yesterday", "Yesterday", display.Value(summary.Yesterday.TimeInRange, "%"))
 			@previous("site--summary--time-in-range--last-week", "Last week", display.Value(summary.LastWeek.TimeInRange, "%"))
 			@previous("site--summary--time-in-range--last-fortnight", "Last fortnight", display.Value(summary.LastFortnight.TimeInRange, "%"))
 			@previous("site--summary--time-in-range--last-month", "Last month", display.Value(summary.LastMonth.TimeInRange, "%"))
 		}
-		@tile("site--summary--total-daily-dose", "Total daily dose", display.PerDay(summary.Today.Days, summary.Today.TotalDailyDose, " U"), icon.Droplet) {
+		@stat.Tile("site--summary--total-daily-dose", "Total daily dose", display.PerDay(summary.Today.Days, summary.Today.TotalDailyDose, " U"), icon.Droplet) {
 			@previous("site--summary--total-daily-dose--yesterday", "Yesterday", display.PerDay(summary.Yesterday.Days, summary.Yesterday.TotalDailyDose, " U"))
 			@previous("site--summary--total-daily-dose--last-week", "Last week", display.PerDay(summary.LastWeek.Days, summary.LastWeek.TotalDailyDose, " U"))
 			@previous("site--summary--total-daily-dose--last-fortnight", "Last fortnight", display.PerDay(summary.LastFortnight.Days, summary.LastFortnight.TotalDailyDose, " U"))
 			@previous("site--summary--total-daily-dose--last-month", "Last month", display.PerDay(summary.LastMonth.Days, summary.LastMonth.TotalDailyDose, " U"))
 		}
-		@tile("site--summary--sensor-started", "Sensor started", ago(summary.SensorStartedAt), icon.Activity)
-		@tile("site--summary--site-changed", "Site changed", ago(summary.SiteChangedAt), icon.Bandage)
+		@stat.Tile("site--summary--sensor-started", "Sensor started", ago(summary.SensorStartedAt), icon.Activity)
+		@stat.Tile("site--summary--site-changed", "Site changed", ago(summary.SiteChangedAt), icon.Bandage)
 	</div>
 	<section class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
 		@Graph(summary)
 	</section>
 	<div class="grid gap-4 lg:grid-cols-2">
-		@section("Insulin & Carbs", "", "", "") {
+		@stat.Section("Insulin & Carbs", "", "", "") {
 			@insulinCarbsTable(insulinAndCarbs(summary))
 		}
-		@section("Other Treatments", "", "", "") {
+		@stat.Section("Other Treatments", "", "", "") {
 			@treatmentsTable(otherTreatments(summary))
 		}
 	</div>
@@ -279,7 +270,7 @@ templ glucoseHero(summary *sitemodels.Summary) {
 				</div>
 				<div class="mt-1 flex gap-3 text-sm">
 					<span id="site--summary--glucose--ago" class="text-gray-500" title={ site_data_templ.FormatDate(ctx, latest.OccurredAt) }>{ display.RoundedAgo(latest.OccurredAt, time.Now()) }</span>
-					@pageLink("site--summary--all-readings", "/data/glucose", "text-primary underline") {
+					@stat.PageLink("site--summary--all-readings", "/data/glucose", "text-primary underline") {
 						All readings
 					}
 				</div>
@@ -302,32 +293,6 @@ templ glucoseHero(summary *sitemodels.Summary) {
 			</div>
 		}
 	</div>
-}
-
-templ tile(id, label, text string, ic func(...icon.Props) templ.Component) {
-	<div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-		<div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
-			@ic(icon.Props{Class: "size-4"})
-			{ label }
-		</div>
-		<div id={ id } class="mt-1 text-2xl font-bold tabular-nums text-gray-900">
-			@numbers(text, "text-sm font-medium text-gray-500")
-		</div>
-		{ children... }
-	</div>
-}
-
-// numbers shows a value's numbers as they are and its units, as in "0.7 U" or "2 days 1 hour ago", smaller and grey;
-// text with no number, as "just now", is shown as it is
-templ numbers(text, unitClass string) {
-	{{ parts := numbersAndUnits.FindAllString(text, -1) }}
-	for _, part := range parts {
-		if len(parts) > 1 && isUnit(part) {
-			<span class={ unitClass }>{ part }</span>
-		} else {
-			{ part }
-		}
-	}
 }
 
 // previous is a day tile's value for yesterday, or the mean day of last week or month, under today's
@@ -362,43 +327,9 @@ templ detail(label, text string) {
 	<div>
 		<dt class="text-xs text-gray-500">{ label }</dt>
 		<dd class="font-medium tabular-nums">
-			@numbers(text, "text-xs font-normal text-gray-500")
+			@stat.Numbers(text, "text-xs font-normal text-gray-500")
 		</dd>
 	</div>
-}
-
-// pageLink opens another of the site's pages in place of this one, so back returns here
-templ pageLink(id, path, class string) {
-	<a
-		if id != "" {
-			id={ id }
-		}
-		href={ templ.SafeURL(path) }
-		hx-get={ path }
-		hx-target="#main-content"
-		hx-push-url="true"
-		hx-swap="innerHTML"
-		class={ class }
-	>
-		{ children... }
-	</a>
-}
-
-// section is a titled list on the summary, with a link to the page of all its records when it has one
-templ section(title, linkID, linkText, path string) {
-	<section class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-		<div class="mb-2 flex items-baseline justify-between gap-2">
-			<h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">{ title }</h2>
-			if path != "" {
-				@pageLink(linkID, path, "text-sm text-primary underline") {
-					{ linkText }
-				}
-			}
-		</div>
-		<div class="max-h-96 overflow-y-auto">
-			{ children... }
-		</div>
-	</section>
 }
 
 templ treatmentsTable(list []treatment) {
@@ -413,7 +344,7 @@ templ treatmentsTable(list []treatment) {
 						<span title={ site_data_templ.FormatDate(ctx, t.At) }>{ display.RoundedAgo(t.At, time.Now()) }</span>
 					}
 					@table.Cell() {
-						@pageLink("", t.Path, "font-medium text-primary underline") {
+						@stat.PageLink("", t.Path, "font-medium text-primary underline") {
 							{ t.Kind }
 						}
 					}
@@ -455,10 +386,10 @@ templ insulinCarbsTable(list []intake) {
 						if i.SMB {
 							<span class="mr-2 text-xs text-gray-500">SMB</span>
 						}
-						@numbers(i.Insulin, "text-xs font-normal text-gray-500")
+						@stat.Numbers(i.Insulin, "text-xs font-normal text-gray-500")
 					}
 					@table.Cell(table.CellProps{Class: "text-right font-medium tabular-nums"}) {
-						@numbers(i.Carbs, "text-xs font-normal text-gray-500")
+						@stat.Numbers(i.Carbs, "text-xs font-normal text-gray-500")
 					}
 				}
 			}

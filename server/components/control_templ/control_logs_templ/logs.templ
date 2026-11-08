@@ -139,41 +139,46 @@ templ EventsTable(events []*controlmodels.Event, q *apiquery.Query) {
 	@footer.DBIPCredit()
 	@page("events_table", "Events", "What happened to each site and the server, newest first. Click an event to see its details.", "/events", filter.PagePath("/events", q.Type, q.Search, ids(q)...), len(events), q.Skip, q.Limit) {
 		@filter.Filter(filter.Props{ID: "control--events--filter", Path: "/events", All: "All events", Types: dataevents.PersistedNames(), Selected: q.Type, Search: q.Search, IDs: ids(q)})
-		@table.Table(table.Props{ID: "controlEventsTable", Class: "rounded-lg border border-gray-200"}) {
-			@table.Header() {
-				@table.Row() {
-					@table.Head() {
-						Event
-					}
-					@table.Head() {
-						Site
-					}
-					@table.Head() {
-						Started
-					}
-					@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
-						Duration
-					}
+		@EventsList("controlEventsTable", events)
+	}
+}
+
+// EventsList is a table of events, newest first, each opening its details
+templ EventsList(id string, events []*controlmodels.Event) {
+	@table.Table(table.Props{ID: id, Class: "rounded-lg border border-gray-200"}) {
+		@table.Header() {
+			@table.Row() {
+				@table.Head() {
+					Event
+				}
+				@table.Head() {
+					Site
+				}
+				@table.Head() {
+					Started
+				}
+				@table.Head(table.HeadProps{Class: "text-right tabular-nums"}) {
+					Duration
 				}
 			}
-			@table.Body() {
-				if len(events) == 0 {
-					@empty("4", "events")
-				}
-				for _, event := range events {
-					@rowLink(fmt.Sprintf("control--event--%d", event.ID), fmt.Sprintf("/events/%d", event.ID)) {
-						@table.Cell() {
-							{ display.Name(event.Name) }
-						}
-						@table.Cell() {
-							{ orServer(event.SiteID) }
-						}
-						@table.Cell() {
-							<span title={ formatDate(event.StartedAt) }>{ display.Ago(&event.StartedAt, time.Now()) }</span>
-						}
-						@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
-							{ duration(event) }
-						}
+		}
+		@table.Body() {
+			if len(events) == 0 {
+				@empty("4", "events")
+			}
+			for _, event := range events {
+				@rowLink(fmt.Sprintf("control--event--%d", event.ID), fmt.Sprintf("/events/%d", event.ID)) {
+					@table.Cell() {
+						{ display.Name(event.Name) }
+					}
+					@table.Cell() {
+						{ orServer(event.SiteID) }
+					}
+					@table.Cell() {
+						<span title={ formatDate(event.StartedAt) }>{ display.Ago(&event.StartedAt, time.Now()) }</span>
+					}
+					@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
+						{ duration(event) }
 					}
 				}
 			}
@@ -202,35 +207,40 @@ templ EventModal(event *controlmodels.Event) {
 templ ErrorsTable(errors []*controlmodels.Error, q *apiquery.Query) {
 	@page("errors_table", "Errors", "What failed for each site and the server, newest first. Click an error to see its details.", "/errors", filter.PagePath("/errors", q.Type, q.Search, ids(q)...), len(errors), q.Skip, q.Limit) {
 		@filter.Filter(filter.Props{ID: "control--errors--filter", Path: "/errors", All: "All errors", Types: db.ErrorKinds, Selected: q.Type, Search: q.Search, IDs: ids(q)})
-		@table.Table(table.Props{ID: "controlErrorsTable", Class: "rounded-lg border border-gray-200"}) {
-			@table.Header() {
-				@table.Row() {
-					@table.Head() {
-						Error
-					}
-					@table.Head() {
-						Site
-					}
-					@table.Head() {
-						When
-					}
+		@ErrorsList("controlErrorsTable", errors)
+	}
+}
+
+// ErrorsList is a table of errors, newest first, each opening its details
+templ ErrorsList(id string, errors []*controlmodels.Error) {
+	@table.Table(table.Props{ID: id, Class: "rounded-lg border border-gray-200"}) {
+		@table.Header() {
+			@table.Row() {
+				@table.Head() {
+					Error
+				}
+				@table.Head() {
+					Site
+				}
+				@table.Head() {
+					When
 				}
 			}
-			@table.Body() {
-				if len(errors) == 0 {
-					@empty("3", "errors")
-				}
-				for _, e := range errors {
-					@rowLink(fmt.Sprintf("control--error--%d", e.ID), fmt.Sprintf("/errors/%d", e.ID)) {
-						@table.Cell() {
-							<span class="block max-w-md truncate text-red-700">{ e.Message }</span>
-						}
-						@table.Cell() {
-							{ orServer(e.SiteID) }
-						}
-						@table.Cell() {
-							<span title={ formatDate(e.CreatedAt) }>{ display.Ago(&e.CreatedAt, time.Now()) }</span>
-						}
+		}
+		@table.Body() {
+			if len(errors) == 0 {
+				@empty("3", "errors")
+			}
+			for _, e := range errors {
+				@rowLink(fmt.Sprintf("control--error--%d", e.ID), fmt.Sprintf("/errors/%d", e.ID)) {
+					@table.Cell() {
+						<span class="block max-w-md truncate text-red-700">{ e.Message }</span>
+					}
+					@table.Cell() {
+						{ orServer(e.SiteID) }
+					}
+					@table.Cell() {
+						<span title={ formatDate(e.CreatedAt) }>{ display.Ago(&e.CreatedAt, time.Now()) }</span>
 					}
 				}
 			}
