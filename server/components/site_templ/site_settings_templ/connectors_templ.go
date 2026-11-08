@@ -1226,11 +1226,12 @@ func NightscoutConnectorForm(nightscoutConnectorSettings *sitemodels.Connector) 
 
 				Required: true,
 				Value:    nightscoutConnectorSettings.GetURL(),
+				// The browser reads the pattern with the v flag, which needs the / in its class escaped, or drops it
 				Attributes: templ.Attributes{
 					"autocomplete":   "new-password",
 					"autocapitalize": "none",
 					"spellcheck":     "false",
-					"pattern":        "https?://[^/]+",
+					"pattern":        "https?://[^\\/]+",
 					"onchange":       templ.JSUnsafeFuncCall("splitNightscoutURL(this)"),
 					"onpaste":        templ.JSUnsafeFuncCall("setTimeout(() => splitNightscoutURL(this))"),
 				},

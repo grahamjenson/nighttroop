@@ -42,6 +42,14 @@ ASSERT_VISIBLE #site--settings--nightscout-connector--password
 ASSERT_VISIBLE #site--settings--nightscout-connector--delete
 ASSERT_VISIBLE #site--settings--nightscout-connector--submit
 
+// Only a base URL is a Nightscout URL: one with a path is invalid while it is typed, and leaving the box keeps only its
+// base
+INPUT #site--settings--nightscout-connector--url https://has-a-path.test/nightscout
+CLICK #site--settings--nightscout-connector--url
+ASSERT_VISIBLE #site--settings--nightscout-connector--url:invalid
+CLICK "Connect your Nightscout instance"
+ASSERT_VISIBLE #site--settings--nightscout-connector--url:valid
+
 // A pasted Nightscout link with its token is split into the base URL and the API secret or token, so both boxes are
 // valid without the secret being typed
 ASSERT_TEXT_VISIBLE API Secret or Token
