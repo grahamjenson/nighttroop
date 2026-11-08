@@ -10,11 +10,11 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 )
 
-// Sync sources, identities and the site's settings are the admins' alone; an identity's own settings are its own
+// Connectors, identities and the site's settings are the admins' alone; an identity's own settings are its own
 func TestSettingsCollectionPermissions(t *testing.T) {
 	admin := &controldb.SiteIdentity{Role: consts.IdentityRoleAdmin}
 	user := &controldb.SiteIdentity{Role: consts.IdentityRoleUser}
-	for _, collection := range []interface{ GetName() string }{&sitesettings.SyncSettingsCollection{}, &sitesettings.IdentitiesCollection{}, &sitesettings.SettingsCollection{Site: true}} {
+	for _, collection := range []interface{ GetName() string }{&sitesettings.ConnectorSettingsCollection{}, &sitesettings.IdentitiesCollection{}, &sitesettings.SettingsCollection{Site: true}} {
 		for _, action := range []siteapiutils.Action{siteapiutils.ActionSearch, siteapiutils.ActionCreate, siteapiutils.ActionUpdate, siteapiutils.ActionDelete} {
 			require.True(t, siteapiutils.HasPermission(collection.GetName(), action, admin), "%s %s", collection.GetName(), action)
 			require.False(t, siteapiutils.HasPermission(collection.GetName(), action, user), "%s %s", collection.GetName(), action)

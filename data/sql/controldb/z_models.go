@@ -138,6 +138,43 @@ type Site struct {
 	NotificationsEnabled             *bool
 }
 
+type SiteConnector struct {
+	SiteID                     string
+	Type                       consts.ConnectorType
+	UrlOrUsernameEnc           *string
+	PasswordEnc                *string
+	Region                     *string
+	CreatedAt                  int64
+	UpdatedAt                  int64
+	Enabled                    bool
+	FirstSuccessfulSyncTime    *int64
+	BackfillStartedAt          *int64
+	LastBackfillFrom           *int64
+	LastBackfillTo             *int64
+	LastBackfillFinishedAt     *int64
+	LastBackfillDuration       *int64
+	LastBackfillRecords        *int64
+	LastBackfillError          *string
+	TotalBackfills             int64
+	SyncIntervalSecondsReason  string
+	SyncIntervalSeconds        int64
+	LastAttemptedSync          *int64
+	LastSuccessfulSync         *int64
+	LastFailedSync             *int64
+	TotalSyncs                 *int64
+	TotalSuccessfulSyncs       *int64
+	TotalFailedSyncs           *int64
+	TotalRecords               int64
+	LastSyncRecords            *int64
+	ConsecutiveSuccessfulSyncs *int64
+	ConsecutiveFailedSyncs     *int64
+	PreviousSyncErrors         errors.ErrorList
+	TotalEma                   *float64
+	SuccessEma                 *float64
+	FailureEma                 *float64
+	LastSyncDuration           *int64
+}
+
 type SiteIdentity struct {
 	ID                               int64
 	SiteID                           string
@@ -202,43 +239,6 @@ type SiteIdentity struct {
 	AlarmLowReservoirEnabled         *bool
 	AlarmLowReservoirUnits           *int64
 	NotificationsEnabled             *bool
-}
-
-type SiteSyncSource struct {
-	SiteID                     string
-	Type                       consts.SyncSourceType
-	UrlOrUsernameEnc           *string
-	PasswordEnc                *string
-	Region                     *string
-	CreatedAt                  int64
-	UpdatedAt                  int64
-	Enabled                    bool
-	FirstSuccessfulSyncTime    *int64
-	BackfillStartedAt          *int64
-	LastBackfillFrom           *int64
-	LastBackfillTo             *int64
-	LastBackfillFinishedAt     *int64
-	LastBackfillDuration       *int64
-	LastBackfillRecords        *int64
-	LastBackfillError          *string
-	TotalBackfills             int64
-	SyncIntervalSecondsReason  string
-	SyncIntervalSeconds        int64
-	LastAttemptedSync          *int64
-	LastSuccessfulSync         *int64
-	LastFailedSync             *int64
-	TotalSyncs                 *int64
-	TotalSuccessfulSyncs       *int64
-	TotalFailedSyncs           *int64
-	TotalRecords               int64
-	LastSyncRecords            *int64
-	ConsecutiveSuccessfulSyncs *int64
-	ConsecutiveFailedSyncs     *int64
-	PreviousSyncErrors         errors.ErrorList
-	TotalEma                   *float64
-	SuccessEma                 *float64
-	FailureEma                 *float64
-	LastSyncDuration           *int64
 }
 
 type SqliteSequence struct {

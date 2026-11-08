@@ -10,14 +10,14 @@ ASSERT_PATH /data/profile-switches
 ASSERT_VISIBLE #site--profile-switch--empty
 SCREENSHOT profile_switches_empty
 
-// Virtual sync writes a profile switch, with its profile, on its first run
+// Virtual connector writes a profile switch, with its profile, on its first run
 CLICK #site--settings-menu
-CLICK #site--settings--sync-button
+CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
-CLICK #site--settings--virtual-sync--enable
-CLICK #site--settings--virtual-sync--submit
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
 ASSERT_STATUS 200
-ASSERT_TEXT_VISIBLE Sync Updated
+ASSERT_TEXT_VISIBLE Connector Updated
 RUN_BACKGROUND_JOBS
 
 CLICK #site--settings-menu
@@ -58,7 +58,7 @@ ASSERT_TEXT_EQUALS #site--profile-switch--details--carb-ratios>dl>dd 10
 ASSERT_TEXT_EQUALS #site--profile-switch--details--sensitivities>dl>dd 2.8
 ASSERT_TEXT_EQUALS #site--profile-switch--details--targets-low>dl>dd 5.5
 ASSERT_TEXT_EQUALS #site--profile-switch--details--targets-high>dl>dd 6.7
-ASSERT_TEXT_VISIBLE virtual_sync
+ASSERT_TEXT_VISIBLE virtual_connector
 SCREENSHOT profile_switch_details
 
 // The name, multiplier, shift, minutes and notes can be edited

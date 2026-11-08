@@ -134,16 +134,16 @@ DELETE FROM events WHERE id <= (SELECT MAX(newest.id) FROM events newest) - CAST
 -- Deletes all but the newest Keep rows, as TrimLogs does
 DELETE FROM errors WHERE id <= (SELECT MAX(newest.id) FROM errors newest) - CAST(sqlc.arg('Keep') AS INTEGER);
 
--- name: RecentSyncEvents :many
--- The newest events of one of the site's sync sources, by the sync_type the sync events record
+-- name: RecentConnectorEvents :many
+-- The newest events of one of the site's connectors, by the connector_type the sync events record
 SELECT * FROM events
-WHERE site_id = sqlc.arg('SiteID') AND json_extract(attributes, '$.sync_type') = sqlc.arg('SyncType')
+WHERE site_id = sqlc.arg('SiteID') AND json_extract(attributes, '$.connector_type') = sqlc.arg('ConnectorType')
 ORDER BY id DESC
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
 
--- name: RecentSyncErrors :many
--- The newest errors of one of the site's sync sources
+-- name: RecentConnectorErrors :many
+-- The newest errors of one of the site's connectors
 SELECT * FROM errors
-WHERE site_id = sqlc.arg('SiteID') AND json_extract(attributes, '$.kind') = 'sync' AND json_extract(attributes, '$.sync_type') = sqlc.arg('SyncType')
+WHERE site_id = sqlc.arg('SiteID') AND json_extract(attributes, '$.kind') = 'connector' AND json_extract(attributes, '$.connector_type') = sqlc.arg('ConnectorType')
 ORDER BY id DESC
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER);

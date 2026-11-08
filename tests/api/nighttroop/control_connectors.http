@@ -1,0 +1,85 @@
+INCLUDE steps/new_site_admin.steps
+SET site_id {{ .create_new_site.site_subdomain }}
+
+NAME create_virtual_sync
+POST http://{{ site }}/settings/connectors/virtual
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"enabled": true}
+ASSERT_STATUS 200
+
+// A Dexcom source whose first sync fails, as only the test's valid username logs in
+NAME create_failing_dexcom_sync
+POST http://{{ site }}/settings/connectors/dexcom
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"url_or_username": "dex-user", "password": "dex-pass", "region": "US", "enabled": true}
+ASSERT_STATUS 200
+
+RUN_BACKGROUND_JOBS
+
+INCLUDE steps/control_login.steps
+
+// The control API sees every site's connectors, the most recently failed first
+NAME list_connectors
+GET http://control.localhost/connectors
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EXISTS "@result.0.site_id"
+ASSERT_EXISTS "@result.0.type"
+ASSERT_EXISTS "@result.0.last_attempted_sync"
+ASSERT_EXISTS "@result.0.last_failed_sync"
+
+NAME list_connectors_paged
+GET http://control.localhost/connectors?limit=1
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+
+NAME list_connectors_bad_limit
+GET http://control.localhost/connectors?limit=lots
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 400
+
+// One source, by its site::type, with the reports from its first sync
+NAME get_connector
+GET http://control.localhost/connectors/{{ .site_id }}::virtual
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "virtual" "@result.type"
+ASSERT_EQUALS true "@result.enabled"
+ASSERT_EQUALS 1 "@result.total_syncs"
+ASSERT_EQUALS 1 "@result.total_successful_syncs"
+ASSERT_EXISTS "@result.last_successful_sync"
+
+// The Dexcom source's first sync failed, which turned it off
+NAME get_failed_connector
+GET http://control.localhost/connectors/{{ .site_id }}::dexcom
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS false "@result.enabled"
+ASSERT_EQUALS 1 "@result.total_failed_syncs"
+ASSERT_EXISTS "@result.last_failed_sync"
+
+NAME get_unknown_connector
+GET http://control.localhost/connectors/{{ .site_id }}::nightscout
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME get_connector_without_type
+GET http://control.localhost/connectors/{{ .site_id }}
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+// Only signed in control identities can see connectors
+NAME list_connectors_without_login
+GET http://control.localhost/connectors
+H Accept: application/json
+ASSERT_STATUS 401

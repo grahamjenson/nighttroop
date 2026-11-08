@@ -22,22 +22,22 @@ import (
 type SiteConverter interface {
 
 	///////
-	// SYNC SOURCE
+	// CONNECTOR
 	///////
 
 	// goverter:map Password | SetPasswordGarbage
 	// goverter:map UrlOrUsernameEnc UrlOrUsername | Decrypt
 	// goverter:ignore RecentEvents RecentErrors
 	// goverter:context security
-	SyncSourceFromDB(source *controldb.SiteSyncSource, security *security.SecurityConfig) (*SyncSource, error)
+	ConnectorFromDB(source *controldb.SiteConnector, security *security.SecurityConfig) (*Connector, error)
 
 	// goverter:map Password PasswordEnc
 	// goverter:map UrlOrUsername UrlOrUsernameEnc
-	SyncSourceToUpdate(source *SyncSource) controldb.UpdateSyncSourceParams
+	ConnectorToUpdate(source *Connector) controldb.UpdateConnectorParams
 
 	// goverter:map Password PasswordEnc
 	// goverter:map UrlOrUsername UrlOrUsernameEnc
-	SyncSourceToCreate(source *SyncSource) controldb.CreateSyncSourceParams
+	ConnectorToCreate(source *Connector) controldb.CreateConnectorParams
 
 	///////
 	// SITE IDENTITY

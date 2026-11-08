@@ -19,12 +19,12 @@ func reading(t *testing.T, raw string) libremodels.Reading {
 
 func TestReadingToCreate(t *testing.T) {
 	r := reading(t, `{"FactoryTimestamp":"12/30/2022 4:47:40 PM","Timestamp":"12/31/2022 6:32:40 AM","ValueInMgPerDl":115,"TrendArrow":3}`)
-	params := libremodels.ReadingToCreate(r, "libre_sync")
+	params := libremodels.ReadingToCreate(r, "libre_connector")
 	require.Equal(t, "libre-1672418860", params.ID)
 	require.Equal(t, time.Date(2022, 12, 30, 16, 47, 40, 0, time.UTC).UnixMilli(), params.OccurredAt)
 	require.Equal(t, 115.0, params.Mgdl)
 	require.Equal(t, "sgv", params.ReadingType)
-	require.Equal(t, "libre_sync", params.CreatedByIdentityName)
+	require.Equal(t, "libre_connector", params.CreatedByIdentityName)
 	require.Equal(t, int64(13*60+45), *params.UtcOffsetMinutes)
 	require.Equal(t, "Flat", *params.Direction)
 	require.Contains(t, *params.RawJsonData, `"TrendArrow":3`)
@@ -47,7 +47,7 @@ func TestReadingDirections(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.trend, func(t *testing.T) {
 			r := reading(t, `{"FactoryTimestamp":"1/2/2026 3:04:05 PM","Timestamp":"1/2/2026 3:04:05 PM","ValueInMgPerDl":100`+tt.trend+`}`)
-			direction := libremodels.ReadingToCreate(r, "libre_sync").Direction
+			direction := libremodels.ReadingToCreate(r, "libre_connector").Direction
 			if tt.want == "" {
 				require.Nil(t, direction)
 				return
@@ -81,10 +81,10 @@ func TestReadingToCreateDedupesRepeatedReadings(t *testing.T) {
 	first := reading(t, `{"FactoryTimestamp":"12/30/2022 4:47:40 PM","Timestamp":"12/30/2022 5:47:40 PM","ValueInMgPerDl":115}`)
 	next := reading(t, `{"FactoryTimestamp":"12/30/2022 5:02:40 PM","Timestamp":"12/30/2022 6:02:40 PM","ValueInMgPerDl":120}`)
 
-	_, err := queries.CreateGlucoseReading(t.Context(), libremodels.ReadingToCreate(first, "libre_sync"))
+	_, err := queries.CreateGlucoseReading(t.Context(), libremodels.ReadingToCreate(first, "libre_connector"))
 	require.NoError(t, err)
-	_, err = queries.CreateGlucoseReading(t.Context(), libremodels.ReadingToCreate(first, "libre_sync"))
+	_, err = queries.CreateGlucoseReading(t.Context(), libremodels.ReadingToCreate(first, "libre_connector"))
 	require.True(t, utilerrors.IsSQLDuplicateID(err), "second sync of the same reading should be a duplicate, got %v", err)
-	_, err = queries.CreateGlucoseReading(t.Context(), libremodels.ReadingToCreate(next, "libre_sync"))
+	_, err = queries.CreateGlucoseReading(t.Context(), libremodels.ReadingToCreate(next, "libre_connector"))
 	require.NoError(t, err)
 }

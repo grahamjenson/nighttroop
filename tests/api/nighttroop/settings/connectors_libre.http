@@ -1,0 +1,71 @@
+INCLUDE steps/new_site_admin.steps
+
+// Only a known LibreLinkUp region is stored, so a sync never calls a host the user chose
+NAME create_libre_sync_unknown_region
+POST http://{{ site }}/settings/connectors/libre
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"url_or_username": "follower@example.com", "password": "libre-pass", "region": "https://evil.example.com", "enabled": true}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "is not a known region" "@message"
+
+NAME create_libre_sync_dexcom_region
+POST http://{{ site }}/settings/connectors/libre
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"url_or_username": "follower@example.com", "password": "libre-pass", "region": "OUS", "enabled": true}
+ASSERT_STATUS 400
+
+// Without a region it uses the global host, which tells the login the account's region
+NAME create_libre_sync_bad_login
+POST http://{{ site }}/settings/connectors/libre
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"url_or_username": "follower@example.com", "password": "libre-pass", "enabled": true}
+ASSERT_STATUS 200
+
+RUN_BACKGROUND_JOBS
+
+// Saving does not check the details; the first sync does, and turns syncing off when it fails. Libre is the only source
+NAME libre_first_sync_failed
+GET http://{{ site }}/settings/connectors
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "libre" "@result.0.type"
+ASSERT_EQUALS "GLOBAL" "@result.0.region"
+ASSERT_EQUALS false "@result.0.enabled"
+ASSERT_EQUALS "********" "@result.0.password"
+ASSERT_CONTAINS "The first sync failed, so syncing has been turned off" "@result.0.previous_sync_errors.0"
+ASSERT_CONTAINS "libre authentication failed" "@result.0.previous_sync_errors.0"
+
+NAME update_libre_sync_unknown_region
+POST http://{{ site }}/settings/connectors/libre
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"url_or_username": "valid-libre-user@example.com", "region": "api.example.com", "enabled": true}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "is not a known region" "@message"
+
+// The stored password is kept when the placeholder is sent back
+NAME update_libre_sync
+POST http://{{ site }}/settings/connectors/libre
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"url_or_username": "valid-libre-user@example.com", "password": "********", "region": "EU", "enabled": true}
+ASSERT_STATUS 200
+
+NAME libre_connector_saved
+GET http://{{ site }}/settings/connectors
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "valid-libre-user@example.com" "@result.0.url_or_username"
+ASSERT_EQUALS "EU" "@result.0.region"
+ASSERT_EQUALS true "@result.0.enabled"
+
+NAME delete_libre_sync
+DELETE http://{{ site }}/settings/connectors/libre
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200

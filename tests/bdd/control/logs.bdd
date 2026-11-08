@@ -16,7 +16,7 @@ ASSERT_VISIBLE #controlSitesTable
 // so every page in it shows without scrolling it
 CLICK #control--menu
 ASSERT_VISIBLE #control--menu [class~="sm:grid-cols-2"] > div:nth-child(1) #control--usage-button
-ASSERT_VISIBLE #control--menu [class~="sm:grid-cols-2"] > div:nth-child(1) #control--sync-sources-button
+ASSERT_VISIBLE #control--menu [class~="sm:grid-cols-2"] > div:nth-child(1) #control--connectors-button
 ASSERT_VISIBLE #control--menu [class~="sm:grid-cols-2"] > div:nth-child(2) #control--job-stats-button
 ASSERT_VISIBLE #control--menu [class~="sm:grid-cols-2"] > div:nth-child(2) #control--events-button
 ASSERT_VISIBLE #control--menu [class~="sm:grid-cols-2"] > div:nth-child(2) #control--errors-button
@@ -50,7 +50,7 @@ ASSERT_NOT_VISIBLE #control--event--details
 
 // Events can be filtered to one type, with an option for all of them. A sync another scenario on this server made can
 // have been turned off, so the filter is shown by what it leaves out
-INPUT #control--events--filter--type sync_turned_off
+INPUT #control--events--filter--type connector_turned_off
 CLICK #control--events--filter--submit
 ASSERT_NOT_VISIBLE #controlEventsTable >> text=Site created
 INPUT #control--events--filter--type site_created

@@ -10,7 +10,7 @@ import (
 
 // Every event on the server is an Event, sent through one SiteBus under its site's ID, or "" when it is about no one
 // site: a change to a site's models, such as glucose_reading.created, or something done to a site or the server,
-// such as site_created or sync_backfilled. Only the Persisted ones are also kept, in the logs DB's events table.
+// such as site_created or connector_backfilled. Only the Persisted ones are also kept, in the logs DB's events table.
 
 // Name is what happened in an event
 type Name string
@@ -24,13 +24,13 @@ const (
 	SiteTruncated     Name = "site_truncated"
 	SiteBatchBackedUp Name = "site_batch_backed_up"
 	ControlBackedUp   Name = "control_backed_up"
-	SyncTurnedOff     Name = "sync_turned_off"
+	ConnectorTurnedOff     Name = "connector_turned_off"
 	// SiteDBMissing is a live site's DB file missing at start, restored from its batch's backup or left out
 	SiteDBMissing Name = "site_db_missing"
 	// SiteAdminRecovered is the site's backup key being used to give its admin new credentials
 	SiteAdminRecovered Name = "site_admin_recovered"
-	SyncBackfilled     Name = "sync_backfilled"
-	SyncAdded          Name = "sync_added"
+	ConnectorBackfilled     Name = "connector_backfilled"
+	ConnectorRecordsAdded          Name = "connector_records_added"
 	// SiteTimezoneChanged is a site's own timezone changing, its Attributes the timezone it was and is
 	SiteTimezoneChanged Name = "site_timezone_changed"
 	// SiteWeekStartChanged is a site's own week start day changing, its Attributes the day it was and is
@@ -57,7 +57,7 @@ const (
 
 // Persisted are the events kept in the logs DB. A model change is not, as the site's DB row is its record.
 var Persisted = []Name{SiteCreated, SiteDisabled, SiteDeleted, SiteArchived, SiteHydrated, SiteTruncated, SiteDBMissing, SiteBatchBackedUp, ControlBackedUp,
-	SiteAdminRecovered, IdentityCredentialsChanged, SyncTurnedOff, SyncBackfilled, SyncAdded, SiteTimezoneChanged, SiteWeekStartChanged, AlarmCreated, AlarmSnoozed, AlarmDeleted, SignedIn, SignInFailed, SignedInByControl, ResourceHigh, ResourceRecovered}
+	SiteAdminRecovered, IdentityCredentialsChanged, ConnectorTurnedOff, ConnectorBackfilled, ConnectorRecordsAdded, SiteTimezoneChanged, SiteWeekStartChanged, AlarmCreated, AlarmSnoozed, AlarmDeleted, SignedIn, SignInFailed, SignedInByControl, ResourceHigh, ResourceRecovered}
 
 // PersistedNames are the persisted events' names, to pick from
 func PersistedNames() []string {

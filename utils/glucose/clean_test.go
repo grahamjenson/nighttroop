@@ -31,12 +31,12 @@ func TestCleanReadings(t *testing.T) {
 		{"none", nil, []kept{}},
 		{
 			"the same glucose from two syncs is kept from Nightscout over Dexcom",
-			[]*sitedb.GlucoseReading{reading("d", 10, 120, "dexcom_sync"), reading("n", 40, 122, "nightscout_sync")},
+			[]*sitedb.GlucoseReading{reading("d", 10, 120, "dexcom_connector"), reading("n", 40, 122, "nightscout_connector")},
 			[]kept{{"n", Nightscout, []Other{{"d", 120, Dexcom}}}},
 		},
 		{
 			"a reading sent directly is kept over every sync's, and Libre's is kept last of them",
-			[]*sitedb.GlucoseReading{reading("l", 0, 100, "libre_sync"), reading("p", 5, 101, "pwd_phone"), reading("n", 8, 99, "nightscout_sync")},
+			[]*sitedb.GlucoseReading{reading("l", 0, 100, "libre_connector"), reading("p", 5, 101, "pwd_phone"), reading("n", 8, 99, "nightscout_connector")},
 			[]kept{{"p", Direct, []Other{{"n", 99, Nightscout}, {"l", 100, Libre}}}},
 		},
 		{
@@ -46,12 +46,12 @@ func TestCleanReadings(t *testing.T) {
 		},
 		{
 			"readings more than a minute apart are both kept",
-			[]*sitedb.GlucoseReading{reading("a", 0, 100, "dexcom_sync"), reading("b", 61, 100, "nightscout_sync")},
+			[]*sitedb.GlucoseReading{reading("a", 0, 100, "dexcom_connector"), reading("b", 61, 100, "nightscout_connector")},
 			[]kept{{"b", Nightscout, nil}, {"a", Dexcom, nil}},
 		},
 		{
 			"readings more than 10 mg/dL apart, as from two CGMs, are both kept",
-			[]*sitedb.GlucoseReading{reading("a", 0, 100, "dexcom_sync"), reading("b", 10, 111, "libre_sync")},
+			[]*sitedb.GlucoseReading{reading("a", 0, 100, "dexcom_connector"), reading("b", 10, 111, "libre_connector")},
 			[]kept{{"b", Libre, nil}, {"a", Dexcom, nil}},
 		},
 		{
@@ -74,7 +74,7 @@ func TestCleanReadings(t *testing.T) {
 func TestCleanReadingsTrend(t *testing.T) {
 	// Searches give the newest first, and the duplicate is left out of the trend
 	cleaned := CleanReadings([]*sitedb.GlucoseReading{
-		reading("c", 600, 130, "p"), reading("b-copy", 310, 121, "dexcom_sync"), reading("b", 300, 120, "p"), reading("a", 0, 100, "p"),
+		reading("c", 600, 130, "p"), reading("b-copy", 310, 121, "dexcom_connector"), reading("b", 300, 120, "p"), reading("a", 0, 100, "p"),
 	})
 	require.Len(t, cleaned, 3)
 	require.Nil(t, cleaned[2].DiffPer5mMgdl, "the oldest has nothing to change from")

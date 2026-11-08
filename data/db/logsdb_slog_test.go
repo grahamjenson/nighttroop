@@ -51,7 +51,7 @@ func TestSlogLogsAreWrittenWithTheirRequestAndJob(t *testing.T) {
 	require.Len(t, byJob, 1)
 	require.Equal(t, "synced", byJob[0].Message)
 
-	logs.SyncError(request, site, consts.SyncSourceTypeDexcom, errors.New("refused"))
+	logs.ConnectorError(request, site, consts.ConnectorTypeDexcom, errors.New("refused"))
 	logs.SiteCreatedEvent(job, site)
 	errs, err := q.SearchErrors(t.Context(), logsdb.SearchErrorsParams{RequestID: &request42, Limit: 10})
 	require.NoError(t, err)

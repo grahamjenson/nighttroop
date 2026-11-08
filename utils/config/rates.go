@@ -31,7 +31,7 @@ type RateLimiters struct {
 	identityPOSTRateLimiters *lru.Cache[string, *rate.Limiter]
 	sitePOSTRateLimiters     *lru.Cache[string, *rate.Limiter]
 
-	siteUpdateSyncRateLimiters     *lru.Cache[string, *rate.Limiter]
+	siteUpdateConnectorsRateLimiters     *lru.Cache[string, *rate.Limiter]
 	siteIdentityCreateRateLimiters *lru.Cache[string, *rate.Limiter]
 	siteDownloadRateLimiters       *lru.Cache[string, *rate.Limiter]
 	sitePushRateLimiters           *lru.Cache[string, *rate.Limiter]
@@ -69,7 +69,7 @@ func newRateLimiters(config ServerConfig) *RateLimiters {
 		identityPOSTRateLimiters: lruMust(maxSites * maxIdentities * wiggle),
 		sitePOSTRateLimiters:     lruMust(maxSites * wiggle),
 
-		siteUpdateSyncRateLimiters:     lruMust(maxSites * wiggle),
+		siteUpdateConnectorsRateLimiters:     lruMust(maxSites * wiggle),
 		siteIdentityCreateRateLimiters: lruMust(maxSites * wiggle),
 		siteDownloadRateLimiters:       lruMust(maxSites * wiggle),
 		sitePushRateLimiters:           lruMust(maxSites * wiggle),
@@ -150,8 +150,8 @@ func (r *RateLimiters) SitePOSTLimiter(subdomain string) *rate.Limiter {
 	return r.getOrCreateLimiter(r.sitePOSTRateLimiters, subdomain, "site_post")
 }
 
-func (r *RateLimiters) SiteUpdateSyncLimiter(subdomain string) *rate.Limiter {
-	return r.getOrCreateLimiter(r.siteUpdateSyncRateLimiters, subdomain, "site_update_sync")
+func (r *RateLimiters) SiteUpdateConnectorsLimiter(subdomain string) *rate.Limiter {
+	return r.getOrCreateLimiter(r.siteUpdateConnectorsRateLimiters, subdomain, "site_update_connectors")
 }
 
 func (r *RateLimiters) SiteIdentityCreateLimiter(subdomain string) *rate.Limiter {
@@ -241,7 +241,7 @@ func rateDefaults(c ServerConfig) []RateSetting {
 		{Name: "site_unauth", Env: "SITE_UNAUTH_PER_MINUTE", Default: Rate{float64(c.SiteUnauthPerMinuteLimit), c.SiteUnauthPerMinuteBurst}},
 		{Name: "site_get", Env: "SITE_GET_PER_MINUTE", Default: Rate{float64(c.SiteGETPerMinuteLimit), c.SiteGETPerMinuteBurst}},
 		{Name: "site_post", Env: "SITE_POST_PER_MINUTE", Default: Rate{float64(c.SitePOSTPerMinuteLimit), c.SitePOSTPerMinuteBurst}},
-		{Name: "site_update_sync", Env: "SITE_UPDATE_SYNC_PER_MINUTE", Default: Rate{float64(c.SiteUpdateSyncPerMinuteLimit), c.SiteUpdateSyncPerMinuteBurst}},
+		{Name: "site_update_connectors", Env: "SITE_UPDATE_CONNECTORS_PER_MINUTE", Default: Rate{float64(c.SiteUpdateConnectorsPerMinuteLimit), c.SiteUpdateConnectorsPerMinuteBurst}},
 		{Name: "site_identity_create", Env: "SITE_IDENTITY_CREATE_PER_MINUTE", Default: Rate{float64(c.SiteIdentityCreatePerMinuteLimit), c.SiteIdentityCreatePerMinuteBurst}},
 		{Name: "site_download", Env: "SITE_DOWNLOAD_PER_MINUTE", Default: Rate{float64(c.SiteDownloadPerMinuteLimit), c.SiteDownloadPerMinuteBurst}},
 		{Name: "site_push", Env: "SITE_PUSH_PER_MINUTE", Default: Rate{float64(c.SitePushPerMinuteLimit), c.SitePushPerMinuteBurst}},
@@ -311,7 +311,7 @@ func (r *RateLimiters) kinds() []limiterKind {
 		{"site_post", "site", "site_post", r.sitePOSTRateLimiters.Values()},
 		{"identity_get", "identity", "site_get", r.identityGETRateLimiters.Values()},
 		{"identity_post", "identity", "site_post", r.identityPOSTRateLimiters.Values()},
-		{"site_update_sync", "site", "site_update_sync", r.siteUpdateSyncRateLimiters.Values()},
+		{"site_update_connectors", "site", "site_update_connectors", r.siteUpdateConnectorsRateLimiters.Values()},
 		{"site_identity_create", "site", "site_identity_create", r.siteIdentityCreateRateLimiters.Values()},
 		{"site_download", "site", "site_download", r.siteDownloadRateLimiters.Values()},
 		{"site_push", "site", "site_push", r.sitePushRateLimiters.Values()},

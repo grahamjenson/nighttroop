@@ -95,7 +95,7 @@ func responseError(what string, resp *http.Response) error {
 	return fmt.Errorf("%s failed: status=%d body=%q", what, resp.StatusCode, body)
 }
 
-// ErrLoginRefused is Dexcom not knowing the account's username or password, which its owner fixes on the sync page
+// ErrLoginRefused is Dexcom not knowing the account's username or password, which its owner fixes on the Connectors page
 var ErrLoginRefused = errors.New("Dexcom refused the username or password")
 
 // loginRefusedCodes are the codes Dexcom answers a username or password it does not know with

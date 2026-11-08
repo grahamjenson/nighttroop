@@ -107,11 +107,11 @@ func ExtraWritesWithinRateLimit(r *http.Request, n int) bool {
 	return false
 }
 
-func UserUpdateSyncWithinRateLimit(siteContext *SiteContext) (bool, int) {
+func UserUpdateConnectorsWithinRateLimit(siteContext *SiteContext) (bool, int) {
 
 	userSubdomain := siteContext.SiteID
 
-	writeLimiter := siteContext.Config.RateLimiters.SiteUpdateSyncLimiter(userSubdomain)
+	writeLimiter := siteContext.Config.RateLimiters.SiteUpdateConnectorsLimiter(userSubdomain)
 
 	return WithinRateLimitAll(writeLimiter)
 }

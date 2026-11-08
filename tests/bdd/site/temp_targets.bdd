@@ -1,14 +1,14 @@
 INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
-// Virtual sync writes a temp target on its first run
+// Virtual connector writes a temp target on its first run
 CLICK #site--settings-menu
-CLICK #site--settings--sync-button
+CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
-CLICK #site--settings--virtual-sync--enable
-CLICK #site--settings--virtual-sync--submit
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
 ASSERT_STATUS 200
-ASSERT_TEXT_VISIBLE Sync Updated
+ASSERT_TEXT_VISIBLE Connector Updated
 RUN_BACKGROUND_JOBS
 
 CLICK #site--settings-menu
@@ -28,7 +28,7 @@ SCREENSHOT temp_targets
 // Clicking a temp target shows all its details
 CLICK #tempTargetsTable tbody tr >> nth=0
 ASSERT_VISIBLE #site--temp-target--details
-ASSERT_TEXT_VISIBLE virtual_sync
+ASSERT_TEXT_VISIBLE virtual_connector
 SCREENSHOT temp_target_details
 
 CLICK #site--temp-target--details--close

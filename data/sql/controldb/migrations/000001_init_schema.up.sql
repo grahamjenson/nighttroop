@@ -248,10 +248,10 @@ CREATE TABLE site_identities (
     UNIQUE(site_id, name)
 ) STRICT;
 
--- USER SYNC TABLES
+-- CONNECTORS: a site's third party integrations, each syncing from one service
 
 -- This is the table that the site can update and delete from
-CREATE TABLE site_sync_sources (
+CREATE TABLE site_connectors (
     -- Nightscout/Dexcom
     site_id TEXT NOT NULL REFERENCES sites(id), -- only for nightscout, dexcom can leave null
     type TEXT NOT NULL CHECK(type IN ('nightscout', 'dexcom', 'libre', 'virtual')),

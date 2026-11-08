@@ -80,7 +80,7 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		// Actions
 		r.Get("/data/event-groups/choices", sitecollections.EventGroupChoicesHandler)
 		r.Get("/data/event-groups/new", sitecollections.EventGroupNewHandler)
-		r.Post("/settings/sync/{id}/backfill", sitecollections.BackfillHandler)
+		r.Post("/settings/connectors/{id}/backfill", sitecollections.BackfillHandler)
 		r.Get("/settings/push-devices", sitecollections.PushDevicesHandler)
 		r.Get("/settings/account", sitelogin.GETAccount(controlDB))
 		r.Post("/settings/account/passkeys/begin", sitelogin.POSTAccountPasskeyBegin(controlDB, config))

@@ -1,13 +1,13 @@
 INCLUDE steps/new_site_admin.steps
 
-// Virtual sync writes readings between 5.8 and 8.3 mmol/L
+// Virtual connector writes readings between 5.8 and 8.3 mmol/L
 CLICK #site--settings-menu
-CLICK #site--settings--sync-button
+CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
-CLICK #site--settings--virtual-sync--enable
-CLICK #site--settings--virtual-sync--submit
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
 ASSERT_STATUS 200
-ASSERT_TEXT_VISIBLE Sync Updated
+ASSERT_TEXT_VISIBLE Connector Updated
 
 // The admin turns on an urgent high over 5.6 mmol/L for themselves, with their high under it
 GOTO /settings/alarms

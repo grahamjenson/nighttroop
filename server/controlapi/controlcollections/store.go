@@ -26,7 +26,7 @@ func NewControlStore() *ControlStore {
 	store.registerCollection(&ArchivedSitesCollection{})
 	store.registerCollection(&JobStatsCollection{})
 	store.registerCollection(&JobsCollection{})
-	store.registerCollection(&SyncSourcesCollection{})
+	store.registerCollection(&ConnectorsCollection{})
 	store.registerCollection(&LogsCollection{})
 	store.registerCollection(&EventsCollection{})
 	store.registerCollection(&ErrorsCollection{})

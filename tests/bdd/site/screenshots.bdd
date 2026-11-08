@@ -33,33 +33,33 @@ CLICK #site--settings-menu
 ASSERT_TEXT_VISIBLE Signed in as
 ASSERT_VISIBLE #site--data--temp-basals-button
 ASSERT_VISIBLE #site--settings--identities-button
-ASSERT_VISIBLE #site--settings--sync-button
+ASSERT_VISIBLE #site--settings--connectors-button
 ASSERT_VISIBLE #site--settings--logout-button
 SCREENSHOT site_settings_menu
 
-CLICK #site--settings--sync-button
+CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
 ASSERT_NEW_URL
-ASSERT_PATH /settings/sync
+ASSERT_PATH /settings/connectors
 
-ASSERT_VISIBLE #site--settings--nightscout-sync--enable
-ASSERT_VISIBLE #site--settings--nightscout-sync--url
-ASSERT_VISIBLE #site--settings--nightscout-sync--password
-ASSERT_VISIBLE #site--settings--nightscout-sync--delete
-ASSERT_VISIBLE #site--settings--nightscout-sync--submit
+ASSERT_VISIBLE #site--settings--nightscout-connector--enable
+ASSERT_VISIBLE #site--settings--nightscout-connector--url
+ASSERT_VISIBLE #site--settings--nightscout-connector--password
+ASSERT_VISIBLE #site--settings--nightscout-connector--delete
+ASSERT_VISIBLE #site--settings--nightscout-connector--submit
 
-INPUT #site--settings--nightscout-sync--url         http://will_not_pass_the_test.test
-INPUT #site--settings--nightscout-sync--password    not_a_token
+INPUT #site--settings--nightscout-connector--url         http://will_not_pass_the_test.test
+INPUT #site--settings--nightscout-connector--password    not_a_token
 // Typing turned it on; it stays off here, as its details do not work
-CLICK #site--settings--nightscout-sync--enable
+CLICK #site--settings--nightscout-connector--enable
 
-CLICK #site--settings--nightscout-sync--submit
+CLICK #site--settings--nightscout-connector--submit
 ASSERT_STATUS 200
-ASSERT_TEXT_VISIBLE Sync Updated
-CLICK #site--settings--virtual-sync--enable
-CLICK #site--settings--virtual-sync--submit
+ASSERT_TEXT_VISIBLE Connector Updated
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
 ASSERT_STATUS 200
-ASSERT_TEXT_VISIBLE Sync Updated
+ASSERT_TEXT_VISIBLE Connector Updated
 
 CLICK #site--nav--home
 ASSERT_NEW_URL

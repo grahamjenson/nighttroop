@@ -1,0 +1,120 @@
+GOTO {{ server_url}}/
+ASSERT_STATUS           200
+
+CLICK "Create Site"
+ASSERT_STATUS 200
+
+// Login is offered once a code from the authenticator app has been checked
+INPUT #public--site-info--totp 123123
+CLICK #public--totp-check-button
+ASSERT_VISIBLE #public--totp-checked
+CLICK #public--login-button
+ASSERT_NEW_PAGE
+
+INPUT #site--login--name admin
+INPUT #site--login--password password
+
+CLICK #site--login-button
+ASSERT_STATUS 200
+
+ASSERT_VISIBLE #site--login--otp-1
+TYPE #site--login--otp-1 123123
+ASSERT_NEW_URL
+ASSERT_VISIBLE "Nighttroop"
+
+CLICK #site--settings-menu
+ASSERT_VISIBLE #site--settings--connectors-button
+
+CLICK #site--settings--connectors-button
+ASSERT_STATUS 200
+ASSERT_NEW_URL
+ASSERT_PATH /settings/connectors
+
+// A test server offers virtual connector, which makes up glucose; a production server does not, which
+// TestVirtualConnectorIsOnlyOnDevelopmentTestAndStaging checks
+ASSERT_VISIBLE #site--settings--virtual-connector--enable
+ASSERT_VISIBLE #site--settings--virtual-connector--submit
+SCREENSHOT virtual_connector_offered_on_test_server
+
+ASSERT_VISIBLE #site--settings--nightscout-connector--enable
+ASSERT_VISIBLE #site--settings--nightscout-connector--url
+ASSERT_VISIBLE #site--settings--nightscout-connector--password
+ASSERT_VISIBLE #site--settings--nightscout-connector--delete
+ASSERT_VISIBLE #site--settings--nightscout-connector--submit
+
+// Typing a new source's details turns it on, as it is easy to forget; unticking it then keeps it off while typing on
+INPUT #site--settings--nightscout-connector--url         http://will_not_pass_the_test.test
+CLICK #site--settings--nightscout-connector--url
+ASSERT_VISIBLE #site--settings--nightscout-connector--enable:checked
+CLICK #site--settings--nightscout-connector--enable
+ASSERT_VISIBLE #site--settings--nightscout-connector--enable:not(:checked)
+INPUT #site--settings--nightscout-connector--password    not_a_token
+CLICK #site--settings--nightscout-connector--url
+ASSERT_VISIBLE #site--settings--nightscout-connector--enable:not(:checked)
+
+CLICK #site--settings--nightscout-connector--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Connector Updated
+// Turn syncing on with details that do not work: saving no longer checks them,
+// the first sync does, and it turns syncing off and says why
+CLICK #site--settings--nightscout-connector--enable
+CLICK #site--settings--nightscout-connector--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Connector Updated
+
+RUN_BACKGROUND_JOBS
+
+CLICK #site--settings-menu
+ASSERT_VISIBLE #site--settings--connectors-button
+
+CLICK #site--settings--connectors-button
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--settings--nightscout-connector--errors
+ASSERT_TEXT_VISIBLE The first sync failed, so syncing has been turned off
+// Its status says when it failed and that it now syncs less often because of the error
+ASSERT_TEXT_EQUALS #site--settings--nightscout-connector--status--last-success Never
+ASSERT_TEXT_EQUALS #site--settings--nightscout-connector--status--last-failure just now
+ASSERT_TEXT_EQUALS #site--settings--nightscout-connector--status--interval 2 min (Error response)
+// The Dexcom region looks like the inputs beside it, not greyed out as if it could not be changed
+ASSERT_VISIBLE #site--settings--dexcom-connector--region
+ASSERT_NOT_VISIBLE .bg-gray-100:has(#site--settings--dexcom-connector--region)
+SCREENSHOT sync_first_sync_failed
+
+// Deleting a source leaves the page in place, with the source's form rendered unset again
+CLICK #site--settings--nightscout-connector--delete
+ASSERT_TEXT_VISIBLE Connector Deleted
+ASSERT_PATH /settings/connectors
+ASSERT_TITLE Connectors · Nighttroop
+ASSERT_NOT_VISIBLE #site--settings--nightscout-connector--errors
+ASSERT_VISIBLE #site--settings--nightscout-connector--url:not([value*="will_not_pass"])
+
+// The Dexcom region is picked from a list like the Libre region, starting outside the United States
+ASSERT_VISIBLE #site--settings--dexcom-connector--enable
+ASSERT_VISIBLE #site--settings--dexcom-connector--username
+ASSERT_VISIBLE #site--settings--dexcom-connector--password
+ASSERT_VISIBLE #site--settings--dexcom-connector--delete
+ASSERT_VISIBLE #site--settings--dexcom-connector--submit
+ASSERT_VISIBLE #site--settings--dexcom-connector--region:has(option[value="OUS"]:checked)
+
+INPUT #site--settings--dexcom-connector--username valid-dexcom-user
+INPUT #site--settings--dexcom-connector--password dex-pass
+INPUT #site--settings--dexcom-connector--region US
+CLICK #site--settings--dexcom-connector--username
+ASSERT_VISIBLE #site--settings--dexcom-connector--enable:checked
+CLICK #site--settings--dexcom-connector--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Connector Updated
+
+CLICK #site--settings-menu
+ASSERT_VISIBLE #site--settings--connectors-button
+CLICK #site--settings--connectors-button
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--settings--dexcom-connector--username[value="valid-dexcom-user"]
+ASSERT_VISIBLE #site--settings--dexcom-connector--region:has(option[value="US"]:checked)
+SCREENSHOT dexcom_connector_saved
+
+// Deleting renders the Dexcom form unset again, back outside the United States
+CLICK #site--settings--dexcom-connector--delete
+ASSERT_TEXT_VISIBLE Connector Deleted
+ASSERT_VISIBLE #site--settings--dexcom-connector--username:not([value*="valid-dexcom"])
+ASSERT_VISIBLE #site--settings--dexcom-connector--region:has(option[value="OUS"]:checked)

@@ -10,14 +10,14 @@ ASSERT_PATH /data/event-groups
 ASSERT_VISIBLE #site--event-group--empty
 SCREENSHOT event_groups_empty
 
-// Virtual sync sends treatments through the Nightscout API, each an event group
+// Virtual connector sends treatments through the Nightscout API, each an event group
 CLICK #site--settings-menu
-CLICK #site--settings--sync-button
+CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
-CLICK #site--settings--virtual-sync--enable
-CLICK #site--settings--virtual-sync--submit
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
 ASSERT_STATUS 200
-ASSERT_TEXT_VISIBLE Sync Updated
+ASSERT_TEXT_VISIBLE Connector Updated
 RUN_BACKGROUND_JOBS
 
 CLICK #site--settings-menu
@@ -34,7 +34,7 @@ SCREENSHOT event_groups
 CLICK #eventGroupsTable tbody tr:has(td:text-is("Temp Basal"))
 ASSERT_VISIBLE #site--event-group--details
 ASSERT_VISIBLE #site--event-group--events >> text=0.85 U/hr temp basal for 30 min
-ASSERT_TEXT_VISIBLE virtual_sync
+ASSERT_TEXT_VISIBLE virtual_connector
 SCREENSHOT event_group_details
 CLICK #site--event-group--details--close
 ASSERT_NOT_VISIBLE #site--event-group--details

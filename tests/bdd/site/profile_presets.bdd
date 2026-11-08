@@ -10,14 +10,14 @@ ASSERT_PATH /presets/profiles
 ASSERT_VISIBLE #presets--profiles--empty
 SCREENSHOT profiles_empty
 
-// Virtual sync uploads a profile store, as a loop does
+// Virtual connector uploads a profile store, as a loop does
 CLICK #site--settings-menu
-CLICK #site--settings--sync-button
+CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
-CLICK #site--settings--virtual-sync--enable
-CLICK #site--settings--virtual-sync--submit
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
 ASSERT_STATUS 200
-ASSERT_TEXT_VISIBLE Sync Updated
+ASSERT_TEXT_VISIBLE Connector Updated
 RUN_BACKGROUND_JOBS
 
 CLICK #site--settings-menu

@@ -77,7 +77,7 @@ type CleanGlucoseReading struct {
 	Reason      *string  `json:"reason,omitempty"`
 	Rssi        *float64 `json:"rssi,omitempty"`
 
-	// Source direct, or the sync that wrote it: nightscout, dexcom, libre or virtual
+	// Source direct, or the connector that wrote it: nightscout, dexcom, libre or virtual
 	Source                *string  `json:"source,omitempty"`
 	Unfiltered            *float64 `json:"unfiltered,omitempty"`
 	Units                 *Units   `json:"units,omitempty"`

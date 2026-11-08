@@ -1108,6 +1108,346 @@ func (m *Site) SetNotificationsEnabled(v *bool) {
 	m.NotificationsEnabled = v
 }
 
+// GetSiteID returns the SiteID value.
+func (m SiteConnector) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated SiteConnector.
+func (m *SiteConnector) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetType returns the Type value.
+func (m SiteConnector) GetType() consts.ConnectorType {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated SiteConnector.
+func (m *SiteConnector) SetType(v consts.ConnectorType) {
+	m.Type = v
+}
+
+// GetUrlOrUsernameEnc returns the UrlOrUsernameEnc value.
+func (m SiteConnector) GetUrlOrUsernameEnc() *string {
+	return m.UrlOrUsernameEnc
+}
+
+// SetUrlOrUsernameEnc sets the UrlOrUsernameEnc value and returns the updated SiteConnector.
+func (m *SiteConnector) SetUrlOrUsernameEnc(v *string) {
+	m.UrlOrUsernameEnc = v
+}
+
+// GetPasswordEnc returns the PasswordEnc value.
+func (m SiteConnector) GetPasswordEnc() *string {
+	return m.PasswordEnc
+}
+
+// SetPasswordEnc sets the PasswordEnc value and returns the updated SiteConnector.
+func (m *SiteConnector) SetPasswordEnc(v *string) {
+	m.PasswordEnc = v
+}
+
+// GetRegion returns the Region value.
+func (m SiteConnector) GetRegion() *string {
+	return m.Region
+}
+
+// SetRegion sets the Region value and returns the updated SiteConnector.
+func (m *SiteConnector) SetRegion(v *string) {
+	m.Region = v
+}
+
+// GetCreatedAt returns the CreatedAt value.
+func (m SiteConnector) GetCreatedAt() int64 {
+	return m.CreatedAt
+}
+
+// SetCreatedAt sets the CreatedAt value and returns the updated SiteConnector.
+func (m *SiteConnector) SetCreatedAt(v int64) {
+	m.CreatedAt = v
+}
+
+// GetUpdatedAt returns the UpdatedAt value.
+func (m SiteConnector) GetUpdatedAt() int64 {
+	return m.UpdatedAt
+}
+
+// SetUpdatedAt sets the UpdatedAt value and returns the updated SiteConnector.
+func (m *SiteConnector) SetUpdatedAt(v int64) {
+	m.UpdatedAt = v
+}
+
+// GetEnabled returns the Enabled value.
+func (m SiteConnector) GetEnabled() bool {
+	return m.Enabled
+}
+
+// SetEnabled sets the Enabled value and returns the updated SiteConnector.
+func (m *SiteConnector) SetEnabled(v bool) {
+	m.Enabled = v
+}
+
+// GetFirstSuccessfulSyncTime returns the FirstSuccessfulSyncTime value.
+func (m SiteConnector) GetFirstSuccessfulSyncTime() *int64 {
+	return m.FirstSuccessfulSyncTime
+}
+
+// SetFirstSuccessfulSyncTime sets the FirstSuccessfulSyncTime value and returns the updated SiteConnector.
+func (m *SiteConnector) SetFirstSuccessfulSyncTime(v *int64) {
+	m.FirstSuccessfulSyncTime = v
+}
+
+// GetBackfillStartedAt returns the BackfillStartedAt value.
+func (m SiteConnector) GetBackfillStartedAt() *int64 {
+	return m.BackfillStartedAt
+}
+
+// SetBackfillStartedAt sets the BackfillStartedAt value and returns the updated SiteConnector.
+func (m *SiteConnector) SetBackfillStartedAt(v *int64) {
+	m.BackfillStartedAt = v
+}
+
+// GetLastBackfillFrom returns the LastBackfillFrom value.
+func (m SiteConnector) GetLastBackfillFrom() *int64 {
+	return m.LastBackfillFrom
+}
+
+// SetLastBackfillFrom sets the LastBackfillFrom value and returns the updated SiteConnector.
+func (m *SiteConnector) SetLastBackfillFrom(v *int64) {
+	m.LastBackfillFrom = v
+}
+
+// GetLastBackfillTo returns the LastBackfillTo value.
+func (m SiteConnector) GetLastBackfillTo() *int64 {
+	return m.LastBackfillTo
+}
+
+// SetLastBackfillTo sets the LastBackfillTo value and returns the updated SiteConnector.
+func (m *SiteConnector) SetLastBackfillTo(v *int64) {
+	m.LastBackfillTo = v
+}
+
+// GetLastBackfillFinishedAt returns the LastBackfillFinishedAt value.
+func (m SiteConnector) GetLastBackfillFinishedAt() *int64 {
+	return m.LastBackfillFinishedAt
+}
+
+// SetLastBackfillFinishedAt sets the LastBackfillFinishedAt value and returns the updated SiteConnector.
+func (m *SiteConnector) SetLastBackfillFinishedAt(v *int64) {
+	m.LastBackfillFinishedAt = v
+}
+
+// GetLastBackfillDuration returns the LastBackfillDuration value.
+func (m SiteConnector) GetLastBackfillDuration() *int64 {
+	return m.LastBackfillDuration
+}
+
+// SetLastBackfillDuration sets the LastBackfillDuration value and returns the updated SiteConnector.
+func (m *SiteConnector) SetLastBackfillDuration(v *int64) {
+	m.LastBackfillDuration = v
+}
+
+// GetLastBackfillRecords returns the LastBackfillRecords value.
+func (m SiteConnector) GetLastBackfillRecords() *int64 {
+	return m.LastBackfillRecords
+}
+
+// SetLastBackfillRecords sets the LastBackfillRecords value and returns the updated SiteConnector.
+func (m *SiteConnector) SetLastBackfillRecords(v *int64) {
+	m.LastBackfillRecords = v
+}
+
+// GetLastBackfillError returns the LastBackfillError value.
+func (m SiteConnector) GetLastBackfillError() *string {
+	return m.LastBackfillError
+}
+
+// SetLastBackfillError sets the LastBackfillError value and returns the updated SiteConnector.
+func (m *SiteConnector) SetLastBackfillError(v *string) {
+	m.LastBackfillError = v
+}
+
+// GetTotalBackfills returns the TotalBackfills value.
+func (m SiteConnector) GetTotalBackfills() int64 {
+	return m.TotalBackfills
+}
+
+// SetTotalBackfills sets the TotalBackfills value and returns the updated SiteConnector.
+func (m *SiteConnector) SetTotalBackfills(v int64) {
+	m.TotalBackfills = v
+}
+
+// GetSyncIntervalSecondsReason returns the SyncIntervalSecondsReason value.
+func (m SiteConnector) GetSyncIntervalSecondsReason() string {
+	return m.SyncIntervalSecondsReason
+}
+
+// SetSyncIntervalSecondsReason sets the SyncIntervalSecondsReason value and returns the updated SiteConnector.
+func (m *SiteConnector) SetSyncIntervalSecondsReason(v string) {
+	m.SyncIntervalSecondsReason = v
+}
+
+// GetSyncIntervalSeconds returns the SyncIntervalSeconds value.
+func (m SiteConnector) GetSyncIntervalSeconds() int64 {
+	return m.SyncIntervalSeconds
+}
+
+// SetSyncIntervalSeconds sets the SyncIntervalSeconds value and returns the updated SiteConnector.
+func (m *SiteConnector) SetSyncIntervalSeconds(v int64) {
+	m.SyncIntervalSeconds = v
+}
+
+// GetLastAttemptedSync returns the LastAttemptedSync value.
+func (m SiteConnector) GetLastAttemptedSync() *int64 {
+	return m.LastAttemptedSync
+}
+
+// SetLastAttemptedSync sets the LastAttemptedSync value and returns the updated SiteConnector.
+func (m *SiteConnector) SetLastAttemptedSync(v *int64) {
+	m.LastAttemptedSync = v
+}
+
+// GetLastSuccessfulSync returns the LastSuccessfulSync value.
+func (m SiteConnector) GetLastSuccessfulSync() *int64 {
+	return m.LastSuccessfulSync
+}
+
+// SetLastSuccessfulSync sets the LastSuccessfulSync value and returns the updated SiteConnector.
+func (m *SiteConnector) SetLastSuccessfulSync(v *int64) {
+	m.LastSuccessfulSync = v
+}
+
+// GetLastFailedSync returns the LastFailedSync value.
+func (m SiteConnector) GetLastFailedSync() *int64 {
+	return m.LastFailedSync
+}
+
+// SetLastFailedSync sets the LastFailedSync value and returns the updated SiteConnector.
+func (m *SiteConnector) SetLastFailedSync(v *int64) {
+	m.LastFailedSync = v
+}
+
+// GetTotalSyncs returns the TotalSyncs value.
+func (m SiteConnector) GetTotalSyncs() *int64 {
+	return m.TotalSyncs
+}
+
+// SetTotalSyncs sets the TotalSyncs value and returns the updated SiteConnector.
+func (m *SiteConnector) SetTotalSyncs(v *int64) {
+	m.TotalSyncs = v
+}
+
+// GetTotalSuccessfulSyncs returns the TotalSuccessfulSyncs value.
+func (m SiteConnector) GetTotalSuccessfulSyncs() *int64 {
+	return m.TotalSuccessfulSyncs
+}
+
+// SetTotalSuccessfulSyncs sets the TotalSuccessfulSyncs value and returns the updated SiteConnector.
+func (m *SiteConnector) SetTotalSuccessfulSyncs(v *int64) {
+	m.TotalSuccessfulSyncs = v
+}
+
+// GetTotalFailedSyncs returns the TotalFailedSyncs value.
+func (m SiteConnector) GetTotalFailedSyncs() *int64 {
+	return m.TotalFailedSyncs
+}
+
+// SetTotalFailedSyncs sets the TotalFailedSyncs value and returns the updated SiteConnector.
+func (m *SiteConnector) SetTotalFailedSyncs(v *int64) {
+	m.TotalFailedSyncs = v
+}
+
+// GetTotalRecords returns the TotalRecords value.
+func (m SiteConnector) GetTotalRecords() int64 {
+	return m.TotalRecords
+}
+
+// SetTotalRecords sets the TotalRecords value and returns the updated SiteConnector.
+func (m *SiteConnector) SetTotalRecords(v int64) {
+	m.TotalRecords = v
+}
+
+// GetLastSyncRecords returns the LastSyncRecords value.
+func (m SiteConnector) GetLastSyncRecords() *int64 {
+	return m.LastSyncRecords
+}
+
+// SetLastSyncRecords sets the LastSyncRecords value and returns the updated SiteConnector.
+func (m *SiteConnector) SetLastSyncRecords(v *int64) {
+	m.LastSyncRecords = v
+}
+
+// GetConsecutiveSuccessfulSyncs returns the ConsecutiveSuccessfulSyncs value.
+func (m SiteConnector) GetConsecutiveSuccessfulSyncs() *int64 {
+	return m.ConsecutiveSuccessfulSyncs
+}
+
+// SetConsecutiveSuccessfulSyncs sets the ConsecutiveSuccessfulSyncs value and returns the updated SiteConnector.
+func (m *SiteConnector) SetConsecutiveSuccessfulSyncs(v *int64) {
+	m.ConsecutiveSuccessfulSyncs = v
+}
+
+// GetConsecutiveFailedSyncs returns the ConsecutiveFailedSyncs value.
+func (m SiteConnector) GetConsecutiveFailedSyncs() *int64 {
+	return m.ConsecutiveFailedSyncs
+}
+
+// SetConsecutiveFailedSyncs sets the ConsecutiveFailedSyncs value and returns the updated SiteConnector.
+func (m *SiteConnector) SetConsecutiveFailedSyncs(v *int64) {
+	m.ConsecutiveFailedSyncs = v
+}
+
+// GetPreviousSyncErrors returns the PreviousSyncErrors value.
+func (m SiteConnector) GetPreviousSyncErrors() errors.ErrorList {
+	return m.PreviousSyncErrors
+}
+
+// SetPreviousSyncErrors sets the PreviousSyncErrors value and returns the updated SiteConnector.
+func (m *SiteConnector) SetPreviousSyncErrors(v errors.ErrorList) {
+	m.PreviousSyncErrors = v
+}
+
+// GetTotalEma returns the TotalEma value.
+func (m SiteConnector) GetTotalEma() *float64 {
+	return m.TotalEma
+}
+
+// SetTotalEma sets the TotalEma value and returns the updated SiteConnector.
+func (m *SiteConnector) SetTotalEma(v *float64) {
+	m.TotalEma = v
+}
+
+// GetSuccessEma returns the SuccessEma value.
+func (m SiteConnector) GetSuccessEma() *float64 {
+	return m.SuccessEma
+}
+
+// SetSuccessEma sets the SuccessEma value and returns the updated SiteConnector.
+func (m *SiteConnector) SetSuccessEma(v *float64) {
+	m.SuccessEma = v
+}
+
+// GetFailureEma returns the FailureEma value.
+func (m SiteConnector) GetFailureEma() *float64 {
+	return m.FailureEma
+}
+
+// SetFailureEma sets the FailureEma value and returns the updated SiteConnector.
+func (m *SiteConnector) SetFailureEma(v *float64) {
+	m.FailureEma = v
+}
+
+// GetLastSyncDuration returns the LastSyncDuration value.
+func (m SiteConnector) GetLastSyncDuration() *int64 {
+	return m.LastSyncDuration
+}
+
+// SetLastSyncDuration sets the LastSyncDuration value and returns the updated SiteConnector.
+func (m *SiteConnector) SetLastSyncDuration(v *int64) {
+	m.LastSyncDuration = v
+}
+
 // GetID returns the ID value.
 func (m SiteIdentity) GetID() int64 {
 	return m.ID
@@ -1736,346 +2076,6 @@ func (m SiteIdentity) GetNotificationsEnabled() *bool {
 // SetNotificationsEnabled sets the NotificationsEnabled value and returns the updated SiteIdentity.
 func (m *SiteIdentity) SetNotificationsEnabled(v *bool) {
 	m.NotificationsEnabled = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m SiteSyncSource) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetType returns the Type value.
-func (m SiteSyncSource) GetType() consts.SyncSourceType {
-	return m.Type
-}
-
-// SetType sets the Type value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetType(v consts.SyncSourceType) {
-	m.Type = v
-}
-
-// GetUrlOrUsernameEnc returns the UrlOrUsernameEnc value.
-func (m SiteSyncSource) GetUrlOrUsernameEnc() *string {
-	return m.UrlOrUsernameEnc
-}
-
-// SetUrlOrUsernameEnc sets the UrlOrUsernameEnc value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetUrlOrUsernameEnc(v *string) {
-	m.UrlOrUsernameEnc = v
-}
-
-// GetPasswordEnc returns the PasswordEnc value.
-func (m SiteSyncSource) GetPasswordEnc() *string {
-	return m.PasswordEnc
-}
-
-// SetPasswordEnc sets the PasswordEnc value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetPasswordEnc(v *string) {
-	m.PasswordEnc = v
-}
-
-// GetRegion returns the Region value.
-func (m SiteSyncSource) GetRegion() *string {
-	return m.Region
-}
-
-// SetRegion sets the Region value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetRegion(v *string) {
-	m.Region = v
-}
-
-// GetCreatedAt returns the CreatedAt value.
-func (m SiteSyncSource) GetCreatedAt() int64 {
-	return m.CreatedAt
-}
-
-// SetCreatedAt sets the CreatedAt value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetCreatedAt(v int64) {
-	m.CreatedAt = v
-}
-
-// GetUpdatedAt returns the UpdatedAt value.
-func (m SiteSyncSource) GetUpdatedAt() int64 {
-	return m.UpdatedAt
-}
-
-// SetUpdatedAt sets the UpdatedAt value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetUpdatedAt(v int64) {
-	m.UpdatedAt = v
-}
-
-// GetEnabled returns the Enabled value.
-func (m SiteSyncSource) GetEnabled() bool {
-	return m.Enabled
-}
-
-// SetEnabled sets the Enabled value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetEnabled(v bool) {
-	m.Enabled = v
-}
-
-// GetFirstSuccessfulSyncTime returns the FirstSuccessfulSyncTime value.
-func (m SiteSyncSource) GetFirstSuccessfulSyncTime() *int64 {
-	return m.FirstSuccessfulSyncTime
-}
-
-// SetFirstSuccessfulSyncTime sets the FirstSuccessfulSyncTime value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetFirstSuccessfulSyncTime(v *int64) {
-	m.FirstSuccessfulSyncTime = v
-}
-
-// GetBackfillStartedAt returns the BackfillStartedAt value.
-func (m SiteSyncSource) GetBackfillStartedAt() *int64 {
-	return m.BackfillStartedAt
-}
-
-// SetBackfillStartedAt sets the BackfillStartedAt value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetBackfillStartedAt(v *int64) {
-	m.BackfillStartedAt = v
-}
-
-// GetLastBackfillFrom returns the LastBackfillFrom value.
-func (m SiteSyncSource) GetLastBackfillFrom() *int64 {
-	return m.LastBackfillFrom
-}
-
-// SetLastBackfillFrom sets the LastBackfillFrom value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetLastBackfillFrom(v *int64) {
-	m.LastBackfillFrom = v
-}
-
-// GetLastBackfillTo returns the LastBackfillTo value.
-func (m SiteSyncSource) GetLastBackfillTo() *int64 {
-	return m.LastBackfillTo
-}
-
-// SetLastBackfillTo sets the LastBackfillTo value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetLastBackfillTo(v *int64) {
-	m.LastBackfillTo = v
-}
-
-// GetLastBackfillFinishedAt returns the LastBackfillFinishedAt value.
-func (m SiteSyncSource) GetLastBackfillFinishedAt() *int64 {
-	return m.LastBackfillFinishedAt
-}
-
-// SetLastBackfillFinishedAt sets the LastBackfillFinishedAt value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetLastBackfillFinishedAt(v *int64) {
-	m.LastBackfillFinishedAt = v
-}
-
-// GetLastBackfillDuration returns the LastBackfillDuration value.
-func (m SiteSyncSource) GetLastBackfillDuration() *int64 {
-	return m.LastBackfillDuration
-}
-
-// SetLastBackfillDuration sets the LastBackfillDuration value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetLastBackfillDuration(v *int64) {
-	m.LastBackfillDuration = v
-}
-
-// GetLastBackfillRecords returns the LastBackfillRecords value.
-func (m SiteSyncSource) GetLastBackfillRecords() *int64 {
-	return m.LastBackfillRecords
-}
-
-// SetLastBackfillRecords sets the LastBackfillRecords value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetLastBackfillRecords(v *int64) {
-	m.LastBackfillRecords = v
-}
-
-// GetLastBackfillError returns the LastBackfillError value.
-func (m SiteSyncSource) GetLastBackfillError() *string {
-	return m.LastBackfillError
-}
-
-// SetLastBackfillError sets the LastBackfillError value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetLastBackfillError(v *string) {
-	m.LastBackfillError = v
-}
-
-// GetTotalBackfills returns the TotalBackfills value.
-func (m SiteSyncSource) GetTotalBackfills() int64 {
-	return m.TotalBackfills
-}
-
-// SetTotalBackfills sets the TotalBackfills value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetTotalBackfills(v int64) {
-	m.TotalBackfills = v
-}
-
-// GetSyncIntervalSecondsReason returns the SyncIntervalSecondsReason value.
-func (m SiteSyncSource) GetSyncIntervalSecondsReason() string {
-	return m.SyncIntervalSecondsReason
-}
-
-// SetSyncIntervalSecondsReason sets the SyncIntervalSecondsReason value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetSyncIntervalSecondsReason(v string) {
-	m.SyncIntervalSecondsReason = v
-}
-
-// GetSyncIntervalSeconds returns the SyncIntervalSeconds value.
-func (m SiteSyncSource) GetSyncIntervalSeconds() int64 {
-	return m.SyncIntervalSeconds
-}
-
-// SetSyncIntervalSeconds sets the SyncIntervalSeconds value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetSyncIntervalSeconds(v int64) {
-	m.SyncIntervalSeconds = v
-}
-
-// GetLastAttemptedSync returns the LastAttemptedSync value.
-func (m SiteSyncSource) GetLastAttemptedSync() *int64 {
-	return m.LastAttemptedSync
-}
-
-// SetLastAttemptedSync sets the LastAttemptedSync value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetLastAttemptedSync(v *int64) {
-	m.LastAttemptedSync = v
-}
-
-// GetLastSuccessfulSync returns the LastSuccessfulSync value.
-func (m SiteSyncSource) GetLastSuccessfulSync() *int64 {
-	return m.LastSuccessfulSync
-}
-
-// SetLastSuccessfulSync sets the LastSuccessfulSync value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetLastSuccessfulSync(v *int64) {
-	m.LastSuccessfulSync = v
-}
-
-// GetLastFailedSync returns the LastFailedSync value.
-func (m SiteSyncSource) GetLastFailedSync() *int64 {
-	return m.LastFailedSync
-}
-
-// SetLastFailedSync sets the LastFailedSync value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetLastFailedSync(v *int64) {
-	m.LastFailedSync = v
-}
-
-// GetTotalSyncs returns the TotalSyncs value.
-func (m SiteSyncSource) GetTotalSyncs() *int64 {
-	return m.TotalSyncs
-}
-
-// SetTotalSyncs sets the TotalSyncs value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetTotalSyncs(v *int64) {
-	m.TotalSyncs = v
-}
-
-// GetTotalSuccessfulSyncs returns the TotalSuccessfulSyncs value.
-func (m SiteSyncSource) GetTotalSuccessfulSyncs() *int64 {
-	return m.TotalSuccessfulSyncs
-}
-
-// SetTotalSuccessfulSyncs sets the TotalSuccessfulSyncs value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetTotalSuccessfulSyncs(v *int64) {
-	m.TotalSuccessfulSyncs = v
-}
-
-// GetTotalFailedSyncs returns the TotalFailedSyncs value.
-func (m SiteSyncSource) GetTotalFailedSyncs() *int64 {
-	return m.TotalFailedSyncs
-}
-
-// SetTotalFailedSyncs sets the TotalFailedSyncs value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetTotalFailedSyncs(v *int64) {
-	m.TotalFailedSyncs = v
-}
-
-// GetTotalRecords returns the TotalRecords value.
-func (m SiteSyncSource) GetTotalRecords() int64 {
-	return m.TotalRecords
-}
-
-// SetTotalRecords sets the TotalRecords value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetTotalRecords(v int64) {
-	m.TotalRecords = v
-}
-
-// GetLastSyncRecords returns the LastSyncRecords value.
-func (m SiteSyncSource) GetLastSyncRecords() *int64 {
-	return m.LastSyncRecords
-}
-
-// SetLastSyncRecords sets the LastSyncRecords value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetLastSyncRecords(v *int64) {
-	m.LastSyncRecords = v
-}
-
-// GetConsecutiveSuccessfulSyncs returns the ConsecutiveSuccessfulSyncs value.
-func (m SiteSyncSource) GetConsecutiveSuccessfulSyncs() *int64 {
-	return m.ConsecutiveSuccessfulSyncs
-}
-
-// SetConsecutiveSuccessfulSyncs sets the ConsecutiveSuccessfulSyncs value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetConsecutiveSuccessfulSyncs(v *int64) {
-	m.ConsecutiveSuccessfulSyncs = v
-}
-
-// GetConsecutiveFailedSyncs returns the ConsecutiveFailedSyncs value.
-func (m SiteSyncSource) GetConsecutiveFailedSyncs() *int64 {
-	return m.ConsecutiveFailedSyncs
-}
-
-// SetConsecutiveFailedSyncs sets the ConsecutiveFailedSyncs value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetConsecutiveFailedSyncs(v *int64) {
-	m.ConsecutiveFailedSyncs = v
-}
-
-// GetPreviousSyncErrors returns the PreviousSyncErrors value.
-func (m SiteSyncSource) GetPreviousSyncErrors() errors.ErrorList {
-	return m.PreviousSyncErrors
-}
-
-// SetPreviousSyncErrors sets the PreviousSyncErrors value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetPreviousSyncErrors(v errors.ErrorList) {
-	m.PreviousSyncErrors = v
-}
-
-// GetTotalEma returns the TotalEma value.
-func (m SiteSyncSource) GetTotalEma() *float64 {
-	return m.TotalEma
-}
-
-// SetTotalEma sets the TotalEma value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetTotalEma(v *float64) {
-	m.TotalEma = v
-}
-
-// GetSuccessEma returns the SuccessEma value.
-func (m SiteSyncSource) GetSuccessEma() *float64 {
-	return m.SuccessEma
-}
-
-// SetSuccessEma sets the SuccessEma value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetSuccessEma(v *float64) {
-	m.SuccessEma = v
-}
-
-// GetFailureEma returns the FailureEma value.
-func (m SiteSyncSource) GetFailureEma() *float64 {
-	return m.FailureEma
-}
-
-// SetFailureEma sets the FailureEma value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetFailureEma(v *float64) {
-	m.FailureEma = v
-}
-
-// GetLastSyncDuration returns the LastSyncDuration value.
-func (m SiteSyncSource) GetLastSyncDuration() *int64 {
-	return m.LastSyncDuration
-}
-
-// SetLastSyncDuration sets the LastSyncDuration value and returns the updated SiteSyncSource.
-func (m *SiteSyncSource) SetLastSyncDuration(v *int64) {
-	m.LastSyncDuration = v
 }
 
 // GetName returns the Name value.
@@ -3989,6 +3989,386 @@ func (m *UpdateSitesSettingsParams) SetID(v string) {
 }
 
 // GetSiteID returns the SiteID value.
+func (m CreateConnectorParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated CreateConnectorParams.
+func (m *CreateConnectorParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetType returns the Type value.
+func (m CreateConnectorParams) GetType() consts.ConnectorType {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated CreateConnectorParams.
+func (m *CreateConnectorParams) SetType(v consts.ConnectorType) {
+	m.Type = v
+}
+
+// GetUrlOrUsernameEnc returns the UrlOrUsernameEnc value.
+func (m CreateConnectorParams) GetUrlOrUsernameEnc() *string {
+	return m.UrlOrUsernameEnc
+}
+
+// SetUrlOrUsernameEnc sets the UrlOrUsernameEnc value and returns the updated CreateConnectorParams.
+func (m *CreateConnectorParams) SetUrlOrUsernameEnc(v *string) {
+	m.UrlOrUsernameEnc = v
+}
+
+// GetPasswordEnc returns the PasswordEnc value.
+func (m CreateConnectorParams) GetPasswordEnc() *string {
+	return m.PasswordEnc
+}
+
+// SetPasswordEnc sets the PasswordEnc value and returns the updated CreateConnectorParams.
+func (m *CreateConnectorParams) SetPasswordEnc(v *string) {
+	m.PasswordEnc = v
+}
+
+// GetRegion returns the Region value.
+func (m CreateConnectorParams) GetRegion() *string {
+	return m.Region
+}
+
+// SetRegion sets the Region value and returns the updated CreateConnectorParams.
+func (m *CreateConnectorParams) SetRegion(v *string) {
+	m.Region = v
+}
+
+// GetEnabled returns the Enabled value.
+func (m CreateConnectorParams) GetEnabled() bool {
+	return m.Enabled
+}
+
+// SetEnabled sets the Enabled value and returns the updated CreateConnectorParams.
+func (m *CreateConnectorParams) SetEnabled(v bool) {
+	m.Enabled = v
+}
+
+// GetType returns the Type value.
+func (m DeleteConnectorParams) GetType() consts.ConnectorType {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated DeleteConnectorParams.
+func (m *DeleteConnectorParams) SetType(v consts.ConnectorType) {
+	m.Type = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m DeleteConnectorParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated DeleteConnectorParams.
+func (m *DeleteConnectorParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetDurationMs returns the DurationMs value.
+func (m FinishConnectorBackfillParams) GetDurationMs() *int64 {
+	return m.DurationMs
+}
+
+// SetDurationMs sets the DurationMs value and returns the updated FinishConnectorBackfillParams.
+func (m *FinishConnectorBackfillParams) SetDurationMs(v *int64) {
+	m.DurationMs = v
+}
+
+// GetRecords returns the Records value.
+func (m FinishConnectorBackfillParams) GetRecords() *int64 {
+	return m.Records
+}
+
+// SetRecords sets the Records value and returns the updated FinishConnectorBackfillParams.
+func (m *FinishConnectorBackfillParams) SetRecords(v *int64) {
+	m.Records = v
+}
+
+// GetError returns the Error value.
+func (m FinishConnectorBackfillParams) GetError() *string {
+	return m.Error
+}
+
+// SetError sets the Error value and returns the updated FinishConnectorBackfillParams.
+func (m *FinishConnectorBackfillParams) SetError(v *string) {
+	m.Error = v
+}
+
+// GetType returns the Type value.
+func (m FinishConnectorBackfillParams) GetType() consts.ConnectorType {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated FinishConnectorBackfillParams.
+func (m *FinishConnectorBackfillParams) SetType(v consts.ConnectorType) {
+	m.Type = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m FinishConnectorBackfillParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated FinishConnectorBackfillParams.
+func (m *FinishConnectorBackfillParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m GetAllConnectorsForSiteParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated GetAllConnectorsForSiteParams.
+func (m *GetAllConnectorsForSiteParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetType returns the Type value.
+func (m GetConnectorParams) GetType() consts.ConnectorType {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated GetConnectorParams.
+func (m *GetConnectorParams) SetType(v consts.ConnectorType) {
+	m.Type = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m GetConnectorParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated GetConnectorParams.
+func (m *GetConnectorParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetSkip returns the Skip value.
+func (m SearchConnectorsParams) GetSkip() int64 {
+	return m.Skip
+}
+
+// SetSkip sets the Skip value and returns the updated SearchConnectorsParams.
+func (m *SearchConnectorsParams) SetSkip(v int64) {
+	m.Skip = v
+}
+
+// GetLimit returns the Limit value.
+func (m SearchConnectorsParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated SearchConnectorsParams.
+func (m *SearchConnectorsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
+// GetFrom returns the From value.
+func (m StartConnectorBackfillParams) GetFrom() *int64 {
+	return m.From
+}
+
+// SetFrom sets the From value and returns the updated StartConnectorBackfillParams.
+func (m *StartConnectorBackfillParams) SetFrom(v *int64) {
+	m.From = v
+}
+
+// GetTo returns the To value.
+func (m StartConnectorBackfillParams) GetTo() *int64 {
+	return m.To
+}
+
+// SetTo sets the To value and returns the updated StartConnectorBackfillParams.
+func (m *StartConnectorBackfillParams) SetTo(v *int64) {
+	m.To = v
+}
+
+// GetType returns the Type value.
+func (m StartConnectorBackfillParams) GetType() consts.ConnectorType {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated StartConnectorBackfillParams.
+func (m *StartConnectorBackfillParams) SetType(v consts.ConnectorType) {
+	m.Type = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m StartConnectorBackfillParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated StartConnectorBackfillParams.
+func (m *StartConnectorBackfillParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetPasswordEnc returns the PasswordEnc value.
+func (m UpdateConnectorParams) GetPasswordEnc() *string {
+	return m.PasswordEnc
+}
+
+// SetPasswordEnc sets the PasswordEnc value and returns the updated UpdateConnectorParams.
+func (m *UpdateConnectorParams) SetPasswordEnc(v *string) {
+	m.PasswordEnc = v
+}
+
+// GetEnabled returns the Enabled value.
+func (m UpdateConnectorParams) GetEnabled() bool {
+	return m.Enabled
+}
+
+// SetEnabled sets the Enabled value and returns the updated UpdateConnectorParams.
+func (m *UpdateConnectorParams) SetEnabled(v bool) {
+	m.Enabled = v
+}
+
+// GetUrlOrUsernameEnc returns the UrlOrUsernameEnc value.
+func (m UpdateConnectorParams) GetUrlOrUsernameEnc() *string {
+	return m.UrlOrUsernameEnc
+}
+
+// SetUrlOrUsernameEnc sets the UrlOrUsernameEnc value and returns the updated UpdateConnectorParams.
+func (m *UpdateConnectorParams) SetUrlOrUsernameEnc(v *string) {
+	m.UrlOrUsernameEnc = v
+}
+
+// GetRegion returns the Region value.
+func (m UpdateConnectorParams) GetRegion() *string {
+	return m.Region
+}
+
+// SetRegion sets the Region value and returns the updated UpdateConnectorParams.
+func (m *UpdateConnectorParams) SetRegion(v *string) {
+	m.Region = v
+}
+
+// GetType returns the Type value.
+func (m UpdateConnectorParams) GetType() consts.ConnectorType {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated UpdateConnectorParams.
+func (m *UpdateConnectorParams) SetType(v consts.ConnectorType) {
+	m.Type = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m UpdateConnectorParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated UpdateConnectorParams.
+func (m *UpdateConnectorParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetType returns the Type value.
+func (m UpdateConnectorAttemptParams) GetType() consts.ConnectorType {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated UpdateConnectorAttemptParams.
+func (m *UpdateConnectorAttemptParams) SetType(v consts.ConnectorType) {
+	m.Type = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m UpdateConnectorAttemptParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated UpdateConnectorAttemptParams.
+func (m *UpdateConnectorAttemptParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetErrorMessages returns the ErrorMessages value.
+func (m UpdateConnectorReportsFailureParams) GetErrorMessages() errors.ErrorList {
+	return m.ErrorMessages
+}
+
+// SetErrorMessages sets the ErrorMessages value and returns the updated UpdateConnectorReportsFailureParams.
+func (m *UpdateConnectorReportsFailureParams) SetErrorMessages(v errors.ErrorList) {
+	m.ErrorMessages = v
+}
+
+// GetElapsedMs returns the ElapsedMs value.
+func (m UpdateConnectorReportsFailureParams) GetElapsedMs() *int64 {
+	return m.ElapsedMs
+}
+
+// SetElapsedMs sets the ElapsedMs value and returns the updated UpdateConnectorReportsFailureParams.
+func (m *UpdateConnectorReportsFailureParams) SetElapsedMs(v *int64) {
+	m.ElapsedMs = v
+}
+
+// GetType returns the Type value.
+func (m UpdateConnectorReportsFailureParams) GetType() consts.ConnectorType {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated UpdateConnectorReportsFailureParams.
+func (m *UpdateConnectorReportsFailureParams) SetType(v consts.ConnectorType) {
+	m.Type = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m UpdateConnectorReportsFailureParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated UpdateConnectorReportsFailureParams.
+func (m *UpdateConnectorReportsFailureParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetRecords returns the Records value.
+func (m UpdateConnectorReportsSuccessParams) GetRecords() *int64 {
+	return m.Records
+}
+
+// SetRecords sets the Records value and returns the updated UpdateConnectorReportsSuccessParams.
+func (m *UpdateConnectorReportsSuccessParams) SetRecords(v *int64) {
+	m.Records = v
+}
+
+// GetElapsedMs returns the ElapsedMs value.
+func (m UpdateConnectorReportsSuccessParams) GetElapsedMs() *int64 {
+	return m.ElapsedMs
+}
+
+// SetElapsedMs sets the ElapsedMs value and returns the updated UpdateConnectorReportsSuccessParams.
+func (m *UpdateConnectorReportsSuccessParams) SetElapsedMs(v *int64) {
+	m.ElapsedMs = v
+}
+
+// GetType returns the Type value.
+func (m UpdateConnectorReportsSuccessParams) GetType() consts.ConnectorType {
+	return m.Type
+}
+
+// SetType sets the Type value and returns the updated UpdateConnectorReportsSuccessParams.
+func (m *UpdateConnectorReportsSuccessParams) SetType(v consts.ConnectorType) {
+	m.Type = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m UpdateConnectorReportsSuccessParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated UpdateConnectorReportsSuccessParams.
+func (m *UpdateConnectorReportsSuccessParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetSiteID returns the SiteID value.
 func (m AllSiteIdentitiesParams) GetSiteID() string {
 	return m.SiteID
 }
@@ -4406,386 +4786,6 @@ func (m UpdateSiteIdentityTOTPParams) GetID() int64 {
 // SetID sets the ID value and returns the updated UpdateSiteIdentityTOTPParams.
 func (m *UpdateSiteIdentityTOTPParams) SetID(v int64) {
 	m.ID = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m CreateSyncSourceParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated CreateSyncSourceParams.
-func (m *CreateSyncSourceParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetType returns the Type value.
-func (m CreateSyncSourceParams) GetType() consts.SyncSourceType {
-	return m.Type
-}
-
-// SetType sets the Type value and returns the updated CreateSyncSourceParams.
-func (m *CreateSyncSourceParams) SetType(v consts.SyncSourceType) {
-	m.Type = v
-}
-
-// GetUrlOrUsernameEnc returns the UrlOrUsernameEnc value.
-func (m CreateSyncSourceParams) GetUrlOrUsernameEnc() *string {
-	return m.UrlOrUsernameEnc
-}
-
-// SetUrlOrUsernameEnc sets the UrlOrUsernameEnc value and returns the updated CreateSyncSourceParams.
-func (m *CreateSyncSourceParams) SetUrlOrUsernameEnc(v *string) {
-	m.UrlOrUsernameEnc = v
-}
-
-// GetPasswordEnc returns the PasswordEnc value.
-func (m CreateSyncSourceParams) GetPasswordEnc() *string {
-	return m.PasswordEnc
-}
-
-// SetPasswordEnc sets the PasswordEnc value and returns the updated CreateSyncSourceParams.
-func (m *CreateSyncSourceParams) SetPasswordEnc(v *string) {
-	m.PasswordEnc = v
-}
-
-// GetRegion returns the Region value.
-func (m CreateSyncSourceParams) GetRegion() *string {
-	return m.Region
-}
-
-// SetRegion sets the Region value and returns the updated CreateSyncSourceParams.
-func (m *CreateSyncSourceParams) SetRegion(v *string) {
-	m.Region = v
-}
-
-// GetEnabled returns the Enabled value.
-func (m CreateSyncSourceParams) GetEnabled() bool {
-	return m.Enabled
-}
-
-// SetEnabled sets the Enabled value and returns the updated CreateSyncSourceParams.
-func (m *CreateSyncSourceParams) SetEnabled(v bool) {
-	m.Enabled = v
-}
-
-// GetType returns the Type value.
-func (m DeleteSyncSourceParams) GetType() consts.SyncSourceType {
-	return m.Type
-}
-
-// SetType sets the Type value and returns the updated DeleteSyncSourceParams.
-func (m *DeleteSyncSourceParams) SetType(v consts.SyncSourceType) {
-	m.Type = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m DeleteSyncSourceParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated DeleteSyncSourceParams.
-func (m *DeleteSyncSourceParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetDurationMs returns the DurationMs value.
-func (m FinishSyncSourceBackfillParams) GetDurationMs() *int64 {
-	return m.DurationMs
-}
-
-// SetDurationMs sets the DurationMs value and returns the updated FinishSyncSourceBackfillParams.
-func (m *FinishSyncSourceBackfillParams) SetDurationMs(v *int64) {
-	m.DurationMs = v
-}
-
-// GetRecords returns the Records value.
-func (m FinishSyncSourceBackfillParams) GetRecords() *int64 {
-	return m.Records
-}
-
-// SetRecords sets the Records value and returns the updated FinishSyncSourceBackfillParams.
-func (m *FinishSyncSourceBackfillParams) SetRecords(v *int64) {
-	m.Records = v
-}
-
-// GetError returns the Error value.
-func (m FinishSyncSourceBackfillParams) GetError() *string {
-	return m.Error
-}
-
-// SetError sets the Error value and returns the updated FinishSyncSourceBackfillParams.
-func (m *FinishSyncSourceBackfillParams) SetError(v *string) {
-	m.Error = v
-}
-
-// GetType returns the Type value.
-func (m FinishSyncSourceBackfillParams) GetType() consts.SyncSourceType {
-	return m.Type
-}
-
-// SetType sets the Type value and returns the updated FinishSyncSourceBackfillParams.
-func (m *FinishSyncSourceBackfillParams) SetType(v consts.SyncSourceType) {
-	m.Type = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m FinishSyncSourceBackfillParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated FinishSyncSourceBackfillParams.
-func (m *FinishSyncSourceBackfillParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m GetAllSyncSourcesForSiteParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated GetAllSyncSourcesForSiteParams.
-func (m *GetAllSyncSourcesForSiteParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetType returns the Type value.
-func (m GetSyncSourceParams) GetType() consts.SyncSourceType {
-	return m.Type
-}
-
-// SetType sets the Type value and returns the updated GetSyncSourceParams.
-func (m *GetSyncSourceParams) SetType(v consts.SyncSourceType) {
-	m.Type = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m GetSyncSourceParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated GetSyncSourceParams.
-func (m *GetSyncSourceParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetSkip returns the Skip value.
-func (m SearchSyncSourcesParams) GetSkip() int64 {
-	return m.Skip
-}
-
-// SetSkip sets the Skip value and returns the updated SearchSyncSourcesParams.
-func (m *SearchSyncSourcesParams) SetSkip(v int64) {
-	m.Skip = v
-}
-
-// GetLimit returns the Limit value.
-func (m SearchSyncSourcesParams) GetLimit() int64 {
-	return m.Limit
-}
-
-// SetLimit sets the Limit value and returns the updated SearchSyncSourcesParams.
-func (m *SearchSyncSourcesParams) SetLimit(v int64) {
-	m.Limit = v
-}
-
-// GetFrom returns the From value.
-func (m StartSyncSourceBackfillParams) GetFrom() *int64 {
-	return m.From
-}
-
-// SetFrom sets the From value and returns the updated StartSyncSourceBackfillParams.
-func (m *StartSyncSourceBackfillParams) SetFrom(v *int64) {
-	m.From = v
-}
-
-// GetTo returns the To value.
-func (m StartSyncSourceBackfillParams) GetTo() *int64 {
-	return m.To
-}
-
-// SetTo sets the To value and returns the updated StartSyncSourceBackfillParams.
-func (m *StartSyncSourceBackfillParams) SetTo(v *int64) {
-	m.To = v
-}
-
-// GetType returns the Type value.
-func (m StartSyncSourceBackfillParams) GetType() consts.SyncSourceType {
-	return m.Type
-}
-
-// SetType sets the Type value and returns the updated StartSyncSourceBackfillParams.
-func (m *StartSyncSourceBackfillParams) SetType(v consts.SyncSourceType) {
-	m.Type = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m StartSyncSourceBackfillParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated StartSyncSourceBackfillParams.
-func (m *StartSyncSourceBackfillParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetType returns the Type value.
-func (m UpdateSyncReportAttemptParams) GetType() consts.SyncSourceType {
-	return m.Type
-}
-
-// SetType sets the Type value and returns the updated UpdateSyncReportAttemptParams.
-func (m *UpdateSyncReportAttemptParams) SetType(v consts.SyncSourceType) {
-	m.Type = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m UpdateSyncReportAttemptParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated UpdateSyncReportAttemptParams.
-func (m *UpdateSyncReportAttemptParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetPasswordEnc returns the PasswordEnc value.
-func (m UpdateSyncSourceParams) GetPasswordEnc() *string {
-	return m.PasswordEnc
-}
-
-// SetPasswordEnc sets the PasswordEnc value and returns the updated UpdateSyncSourceParams.
-func (m *UpdateSyncSourceParams) SetPasswordEnc(v *string) {
-	m.PasswordEnc = v
-}
-
-// GetEnabled returns the Enabled value.
-func (m UpdateSyncSourceParams) GetEnabled() bool {
-	return m.Enabled
-}
-
-// SetEnabled sets the Enabled value and returns the updated UpdateSyncSourceParams.
-func (m *UpdateSyncSourceParams) SetEnabled(v bool) {
-	m.Enabled = v
-}
-
-// GetUrlOrUsernameEnc returns the UrlOrUsernameEnc value.
-func (m UpdateSyncSourceParams) GetUrlOrUsernameEnc() *string {
-	return m.UrlOrUsernameEnc
-}
-
-// SetUrlOrUsernameEnc sets the UrlOrUsernameEnc value and returns the updated UpdateSyncSourceParams.
-func (m *UpdateSyncSourceParams) SetUrlOrUsernameEnc(v *string) {
-	m.UrlOrUsernameEnc = v
-}
-
-// GetRegion returns the Region value.
-func (m UpdateSyncSourceParams) GetRegion() *string {
-	return m.Region
-}
-
-// SetRegion sets the Region value and returns the updated UpdateSyncSourceParams.
-func (m *UpdateSyncSourceParams) SetRegion(v *string) {
-	m.Region = v
-}
-
-// GetType returns the Type value.
-func (m UpdateSyncSourceParams) GetType() consts.SyncSourceType {
-	return m.Type
-}
-
-// SetType sets the Type value and returns the updated UpdateSyncSourceParams.
-func (m *UpdateSyncSourceParams) SetType(v consts.SyncSourceType) {
-	m.Type = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m UpdateSyncSourceParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated UpdateSyncSourceParams.
-func (m *UpdateSyncSourceParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetErrorMessages returns the ErrorMessages value.
-func (m UpdateSyncSourceReportsFailureParams) GetErrorMessages() errors.ErrorList {
-	return m.ErrorMessages
-}
-
-// SetErrorMessages sets the ErrorMessages value and returns the updated UpdateSyncSourceReportsFailureParams.
-func (m *UpdateSyncSourceReportsFailureParams) SetErrorMessages(v errors.ErrorList) {
-	m.ErrorMessages = v
-}
-
-// GetElapsedMs returns the ElapsedMs value.
-func (m UpdateSyncSourceReportsFailureParams) GetElapsedMs() *int64 {
-	return m.ElapsedMs
-}
-
-// SetElapsedMs sets the ElapsedMs value and returns the updated UpdateSyncSourceReportsFailureParams.
-func (m *UpdateSyncSourceReportsFailureParams) SetElapsedMs(v *int64) {
-	m.ElapsedMs = v
-}
-
-// GetType returns the Type value.
-func (m UpdateSyncSourceReportsFailureParams) GetType() consts.SyncSourceType {
-	return m.Type
-}
-
-// SetType sets the Type value and returns the updated UpdateSyncSourceReportsFailureParams.
-func (m *UpdateSyncSourceReportsFailureParams) SetType(v consts.SyncSourceType) {
-	m.Type = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m UpdateSyncSourceReportsFailureParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated UpdateSyncSourceReportsFailureParams.
-func (m *UpdateSyncSourceReportsFailureParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetRecords returns the Records value.
-func (m UpdateSyncSourceReportsSuccessParams) GetRecords() *int64 {
-	return m.Records
-}
-
-// SetRecords sets the Records value and returns the updated UpdateSyncSourceReportsSuccessParams.
-func (m *UpdateSyncSourceReportsSuccessParams) SetRecords(v *int64) {
-	m.Records = v
-}
-
-// GetElapsedMs returns the ElapsedMs value.
-func (m UpdateSyncSourceReportsSuccessParams) GetElapsedMs() *int64 {
-	return m.ElapsedMs
-}
-
-// SetElapsedMs sets the ElapsedMs value and returns the updated UpdateSyncSourceReportsSuccessParams.
-func (m *UpdateSyncSourceReportsSuccessParams) SetElapsedMs(v *int64) {
-	m.ElapsedMs = v
-}
-
-// GetType returns the Type value.
-func (m UpdateSyncSourceReportsSuccessParams) GetType() consts.SyncSourceType {
-	return m.Type
-}
-
-// SetType sets the Type value and returns the updated UpdateSyncSourceReportsSuccessParams.
-func (m *UpdateSyncSourceReportsSuccessParams) SetType(v consts.SyncSourceType) {
-	m.Type = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m UpdateSyncSourceReportsSuccessParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated UpdateSyncSourceReportsSuccessParams.
-func (m *UpdateSyncSourceReportsSuccessParams) SetSiteID(v string) {
-	m.SiteID = v
 }
 
 // GetJsonEach returns the JsonEach value.

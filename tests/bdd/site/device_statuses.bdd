@@ -10,14 +10,14 @@ ASSERT_PATH /data/device-status
 ASSERT_VISIBLE #site--device-status--empty
 SCREENSHOT device_statuses_empty
 
-// Virtual sync writes a device status every 5 minutes, 6 of them on its first run
+// Virtual connector writes a device status every 5 minutes, 6 of them on its first run
 CLICK #site--settings-menu
-CLICK #site--settings--sync-button
+CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
-CLICK #site--settings--virtual-sync--enable
-CLICK #site--settings--virtual-sync--submit
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
 ASSERT_STATUS 200
-ASSERT_TEXT_VISIBLE Sync Updated
+ASSERT_TEXT_VISIBLE Connector Updated
 RUN_BACKGROUND_JOBS
 
 // Each device shows its latest 3 statuses

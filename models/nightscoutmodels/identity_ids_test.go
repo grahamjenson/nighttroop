@@ -38,7 +38,7 @@ func TestRecordsStoreTheWritersIdentityID(t *testing.T) {
 	require.Equal(t, int64(7), *updated.CreatedByIdentityID)
 
 	// Background jobs write as an identity with no id
-	background, err := q.CreateGlucoseReading(ctx, create(nightscoutmodels.ConverterContext{IdentityName: "virtual_sync"}))
+	background, err := q.CreateGlucoseReading(ctx, create(nightscoutmodels.ConverterContext{IdentityName: "virtual_connector"}))
 	require.NoError(t, err)
 	require.Nil(t, background.CreatedByIdentityID)
 }

@@ -62,7 +62,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - Errors reported to Sentry are under the server's `DEPLOYMENT` (`development` unless set) as their environment, so each
   of several servers, e.g. staging ones, has its own; a staging server on Fly.io is named after its app.
 - An error reported to Sentry can be searched and counted by what it was logged with: tagged with its site, identity,
-  role, request ID, background job and run, sync type, and request method and route (never its path, which can carry a
+  role, request ID, background job and run, connector type, and request method and route (never its path, which can carry a
   token); its identity is its user (`<site>/<id>`, or `control/<id>`, named by the identity's name); and its request's
   method and route are its transaction. Its stack trace ends at the code that logged it, without slog's frames.
 - The banner also says when the server has 90% or more of the sites `MAX_SITES` allows, and when it has them all.
@@ -122,12 +122,12 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - Every run of a cron or queued job logs its name and a `job_id` of its own (a queued one also its `queued_job_id`),
   and its work for a site also the `site_id`, so one run's logs can be found together.
 
-### Sync sources
+### Connectors
 
-- Lists every site's sync sources, the most recently attempted first, with failed counts in red.
-- A source turned off after failing says "disabled after failing" in amber.
+- Lists every site's connectors, the most recently attempted first, with failed counts in red.
+- A connector turned off after failing says "disabled after failing" in amber.
 - Counts and durations are whole numbers, e.g. 12345, never 1.234e+04, and the averages (EMAs) have one decimal place.
-- Clicking a source shows its sync reports.
+- Clicking a connector shows its sync reports.
 
 ### Push devices
 
@@ -190,7 +190,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 ### Rate limits
 
 - The rate limits page lists each kind of rate limiter (every request, the control site's signed out, an IP's, logins,
-  sites created, a site's and an identity's reads and writes, sync changes, identities created, downloads), refreshing
+  sites created, a site's and an identity's reads and writes, connector changes, identities created, downloads), refreshing
   every 10 seconds.
 - Each shows what one is kept for (server, IP, site, identity, login name or IP on a site), its rate a minute and burst,
   how many are kept, how much of its burst the most used one has spent, and how many would refuse a request now.
@@ -292,7 +292,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   does, ● Live shows beside its title.
 - A page's live updates stay connected for up to an hour, not cut off by the 30 second request timeout, so an open
   summary is not read again every 30 seconds.
-- A summary with no readings in its time links to the sync settings.
+- A summary with no readings in its time links to the Connectors page.
 
 ### Reports
 
@@ -384,26 +384,28 @@ focus back to the row or button that opened it.
 - **Food presets**: added in a modal of all their fields, as data is, viewed, edited and deleted.
 - **Profiles**: profile stores uploaded by a loop, with their schedules to read, renamed or deleted.
 
-### Sync
+### Connectors
+
+Connectors are a site's third party integrations, each syncing from one service.
 
 - A site can pull data from **Dexcom** (with its region), **LibreLinkUp** (with its region) or another
-  **Nightscout** site, or from **virtual sync**, which makes realistic test data.
-- Virtual sync is only on a development, test or staging server (`MODE`). In production it is not offered on the
-  sync page, saving or turning on one is refused, and one already saved is never synced or backfilled.
+  **Nightscout** site, or from the **virtual connector**, which makes realistic test data.
+- The virtual connector is only on a development, test or staging server (`MODE`). In production it is not offered on the
+  Connectors page, saving or turning on one is refused, and one already saved is never synced or backfilled.
 - Saving does not check the details: the first sync does, and turns syncing off and says why if it fails.
-- Typing the details of a Dexcom, LibreLinkUp or Nightscout source not yet saved ticks its Enable Sync, as it is easy
+- Typing the details of a Dexcom, LibreLinkUp or Nightscout source not yet saved ticks its Enable Connector box, as it is easy
   to forget; a click on the box, before or after, is kept, and a saved source's box is never changed.
 - A failing source syncs less often, and says when it failed and why.
 - A working source can be backfilled with the days before its oldest reading.
-- The sync page shows how each source has synced, how often, the records it has pulled in, in all, from its syncs
+- The Connectors page shows how each source has synced, how often, the records it has pulled in, in all, from its syncs
   and backfills, and in its last sync, its backfill and its recent events.
-- The sync page updates as each sync or backfill finishes, showing its new errors, stats and events without reloading,
+- The Connectors page updates as each sync or backfill finishes, showing its new errors, stats and events without reloading,
   leaving a form being edited as it is and an opened history open. While it does, ● Live shows beside its title.
-- Sync credentials are encrypted at rest.
-- A Nightscout sync copies the newest readings, treatments and device statuses, and the current profile store
+- Connector credentials are encrypted at rest.
+- A Nightscout connector copies the newest readings, treatments and device statuses, and the current profile store
   whenever the Nightscout's profiles change, however long ago it started; an edit to it in Nightscout's profile
   editor replaces the copy, whoever saved it there, and a new one is added beside it.
-- A Nightscout sync on this server's host, or on a private, local or shared (carrier-grade NAT or Tailscale) address,
+- A Nightscout connector on this server's host, or on a private, local or shared (carrier-grade NAT or Tailscale) address,
   is refused when saved and as it connects.
 
 ### Alarms
@@ -683,7 +685,7 @@ focus back to the row or button that opened it.
 
 ### Roles
 
-| Role | Signs in to the site | Nightscout API | Changes data | Manages identities and sync |
+| Role | Signs in to the site | Nightscout API | Changes data | Manages identities and connectors |
 | --- | --- | --- | --- | --- |
 | Admin | Password and TOTP | No | Yes | Yes |
 | User | Password | Yes | Yes | No |

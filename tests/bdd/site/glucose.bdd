@@ -1,14 +1,14 @@
 INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
-// Virtual sync writes the last 30 minutes of glucose readings, 6 of them, on its first run
+// Virtual connector writes the last 30 minutes of glucose readings, 6 of them, on its first run
 CLICK #site--settings-menu
-CLICK #site--settings--sync-button
+CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
-CLICK #site--settings--virtual-sync--enable
-CLICK #site--settings--virtual-sync--submit
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
 ASSERT_STATUS 200
-ASSERT_TEXT_VISIBLE Sync Updated
+ASSERT_TEXT_VISIBLE Connector Updated
 RUN_BACKGROUND_JOBS
 
 CLICK #site--settings-menu
@@ -26,7 +26,7 @@ SCREENSHOT glucose_readings
 // Clicking a reading shows all its details
 CLICK #glucoseReadingsTable tbody tr >> nth=0
 ASSERT_VISIBLE #site--glucose--details
-ASSERT_TEXT_VISIBLE virtual_sync
+ASSERT_TEXT_VISIBLE virtual_connector
 // Its type and trend read as they do in the table
 ASSERT_VISIBLE #site--glucose--details >> text=Sensor
 ASSERT_NOT_VISIBLE #site--glucose--details >> text=sgv

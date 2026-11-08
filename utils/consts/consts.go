@@ -90,7 +90,7 @@ func (i IdentityRole) GetType() IdentityType {
 
 const KEY_SETS_ENV_KEY = "KEY_SETS"
 
-/// Sync Source Types
+/// Connector Types
 
 type DexcomRegion string
 
@@ -129,7 +129,7 @@ type LibreRegion struct{ Code, Name string }
 // LibreRegionGlobal is the default host, which tells a login to use the account's own region
 const LibreRegionGlobal = "GLOBAL"
 
-// LibreRegions are the only regions a Libre sync calls, so a sync never goes to a host a user or upstream chose
+// LibreRegions are the only regions a Libre connector calls, so a sync never goes to a host a user or upstream chose
 var LibreRegions = []LibreRegion{
 	{LibreRegionGlobal, "Global"}, {"AE", "United Arab Emirates"}, {"AP", "Asia Pacific"}, {"AU", "Australia"},
 	{"CA", "Canada"}, {"DE", "Germany"}, {"EU", "Europe"}, {"EU2", "Europe 2"}, {"FR", "France"},
@@ -141,28 +141,28 @@ func IsLibreRegion(code string) bool {
 	return slices.ContainsFunc(LibreRegions, func(r LibreRegion) bool { return r.Code == code })
 }
 
-type SyncSourceType string
+type ConnectorType string
 
 const (
-	SyncSourceTypeNightscout SyncSourceType = "nightscout"
-	SyncSourceTypeDexcom     SyncSourceType = "dexcom"
-	SyncSourceTypeLibre      SyncSourceType = "libre"
-	SyncSourceTypeVirtual    SyncSourceType = "virtual"
+	ConnectorTypeNightscout ConnectorType = "nightscout"
+	ConnectorTypeDexcom     ConnectorType = "dexcom"
+	ConnectorTypeLibre      ConnectorType = "libre"
+	ConnectorTypeVirtual    ConnectorType = "virtual"
 )
 
-func NewSyncSourceTypeFromString(s string) (SyncSourceType, error) {
+func NewConnectorTypeFromString(s string) (ConnectorType, error) {
 	switch s {
 	case "nightscout":
-		return SyncSourceTypeNightscout, nil
+		return ConnectorTypeNightscout, nil
 	case "dexcom":
-		return SyncSourceTypeDexcom, nil
+		return ConnectorTypeDexcom, nil
 	case "libre":
-		return SyncSourceTypeLibre, nil
+		return ConnectorTypeLibre, nil
 	case "virtual":
-		return SyncSourceTypeVirtual, nil
+		return ConnectorTypeVirtual, nil
 	default:
-		slog.Error("Invalid sync source type provided", "sync_source_type", s)
-		return "", fmt.Errorf("invalid sync source type: %s", s)
+		slog.Error("Invalid connector type provided", "connector_type", s)
+		return "", fmt.Errorf("invalid connector type: %s", s)
 	}
 }
 

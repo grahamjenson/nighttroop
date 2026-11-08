@@ -25,7 +25,7 @@ func TestSiteSearchesFindWhatTheGeneralSearchesFind(t *testing.T) {
 	for i := range 3 {
 		for _, s := range []string{site, other} {
 			logs.Log(ctx, &s, db.LogLevelInfo, fmt.Sprintf("synced %d", i), map[string]any{"readings": i})
-			logs.SyncError(ctx, s, consts.SyncSourceTypeDexcom, fmt.Errorf("sync failed %d", i))
+			logs.ConnectorError(ctx, s, consts.ConnectorTypeDexcom, fmt.Errorf("sync failed %d", i))
 			logs.ServerError(ctx, &s, 500, "GET", "/", "request", "")
 			logs.SiteDisabledEvent(ctx, s, "admin")
 			logs.SiteCreatedEvent(ctx, s)
@@ -51,7 +51,7 @@ func TestSiteSearchesFindWhatTheGeneralSearchesFind(t *testing.T) {
 		{"searched", nil, str("SYNC"), 0, 100},
 		{"searched in attributes", nil, str("readings"), 0, 100},
 		{"searched for nothing there", nil, str("nope"), 0, 100},
-		{"an error kind or event name", str("sync"), nil, 0, 100},
+		{"an error kind or event name", str("connector"), nil, 0, 100},
 		{"an event name", str("site_batch_backed_up"), nil, 0, 100},
 	}
 	for _, tt := range tests {

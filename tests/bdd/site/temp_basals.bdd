@@ -1,14 +1,14 @@
 INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
-// Virtual sync writes a temp basal on its first run
+// Virtual connector writes a temp basal on its first run
 CLICK #site--settings-menu
-CLICK #site--settings--sync-button
+CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
-CLICK #site--settings--virtual-sync--enable
-CLICK #site--settings--virtual-sync--submit
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
 ASSERT_STATUS 200
-ASSERT_TEXT_VISIBLE Sync Updated
+ASSERT_TEXT_VISIBLE Connector Updated
 RUN_BACKGROUND_JOBS
 
 CLICK #site--settings-menu
@@ -24,8 +24,8 @@ SCREENSHOT temp_basals
 // Clicking a temp basal shows all its details
 CLICK #tempBasalsTable tbody tr >> nth=0
 ASSERT_VISIBLE #site--temp-basal--details
-ASSERT_TEXT_VISIBLE virtual_sync
-// Only what it has is listed: virtual sync sets a rate, not a multiplier of the basal
+ASSERT_TEXT_VISIBLE virtual_connector
+// Only what it has is listed: virtual connector sets a rate, not a multiplier of the basal
 ASSERT_VISIBLE #site--temp-basal--details dt:text-is("Device")
 ASSERT_NOT_VISIBLE #site--temp-basal--details dt:text-is("Basal (%)")
 // Its raw data is folded away until asked for

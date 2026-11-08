@@ -21,12 +21,12 @@ You can upload data directly from AAPS/Trio:
 1. Copy the NS URL and Token from the **Site Data**
 2. Copy to PWD phone AAPS/Trio with information 
 
-#### Dexcom/Nightscout/Libre Sync
+#### Dexcom/Nightscout/Libre Connectors
 
-You can also setup a sync to pull data from other service:
+You can also set up a connector to pull data from another service:
 
 1. Login with Admin password and TOTP token from the **Site Data**
-2. In the **Settings Menu** click the Sync settings
+2. In the **Settings Menu** click Connectors
 
 **Dexcom**:
 1. Fill in Dexcom Username and Password

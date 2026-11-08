@@ -571,7 +571,7 @@ func Header() templ.Component {
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = menuItem("control--sync-sources-button", "/sync-sources", "Sync Sources", icon.RefreshCw).Render(ctx, templ_7745c5c3_Buffer)
+					templ_7745c5c3_Err = menuItem("control--connectors-button", "/connectors", "Connectors", icon.Plug).Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}

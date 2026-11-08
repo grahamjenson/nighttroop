@@ -242,22 +242,22 @@ func (q *Queries) InsertLog(ctx context.Context, arg InsertLogParams) error {
 	return err
 }
 
-const recentSyncErrors = `-- name: RecentSyncErrors :many
+const recentConnectorErrors = `-- name: RecentConnectorErrors :many
 SELECT id, site_id, message, attributes, request_id, job_id, created_at FROM errors
-WHERE site_id = ?1 AND json_extract(attributes, '$.kind') = 'sync' AND json_extract(attributes, '$.sync_type') = ?2
+WHERE site_id = ?1 AND json_extract(attributes, '$.kind') = 'connector' AND json_extract(attributes, '$.connector_type') = ?2
 ORDER BY id DESC
 LIMIT CAST(?3 AS INTEGER)
 `
 
-type RecentSyncErrorsParams struct {
-	SiteID   *string
-	SyncType *string
-	Limit    int64
+type RecentConnectorErrorsParams struct {
+	SiteID        *string
+	ConnectorType *string
+	Limit         int64
 }
 
-// The newest errors of one of the site's sync sources
-func (q *Queries) RecentSyncErrors(ctx context.Context, arg RecentSyncErrorsParams) ([]*Error, error) {
-	rows, err := q.query(ctx, q.recentSyncErrorsStmt, recentSyncErrors, arg.SiteID, arg.SyncType, arg.Limit)
+// The newest errors of one of the site's connectors
+func (q *Queries) RecentConnectorErrors(ctx context.Context, arg RecentConnectorErrorsParams) ([]*Error, error) {
+	rows, err := q.query(ctx, q.recentConnectorErrorsStmt, recentConnectorErrors, arg.SiteID, arg.ConnectorType, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
@@ -287,22 +287,22 @@ func (q *Queries) RecentSyncErrors(ctx context.Context, arg RecentSyncErrorsPara
 	return items, nil
 }
 
-const recentSyncEvents = `-- name: RecentSyncEvents :many
+const recentConnectorEvents = `-- name: RecentConnectorEvents :many
 SELECT id, site_id, batch, name, attributes, started_at, finished_at, request_id, job_id FROM events
-WHERE site_id = ?1 AND json_extract(attributes, '$.sync_type') = ?2
+WHERE site_id = ?1 AND json_extract(attributes, '$.connector_type') = ?2
 ORDER BY id DESC
 LIMIT CAST(?3 AS INTEGER)
 `
 
-type RecentSyncEventsParams struct {
-	SiteID   *string
-	SyncType *string
-	Limit    int64
+type RecentConnectorEventsParams struct {
+	SiteID        *string
+	ConnectorType *string
+	Limit         int64
 }
 
-// The newest events of one of the site's sync sources, by the sync_type the sync events record
-func (q *Queries) RecentSyncEvents(ctx context.Context, arg RecentSyncEventsParams) ([]*Event, error) {
-	rows, err := q.query(ctx, q.recentSyncEventsStmt, recentSyncEvents, arg.SiteID, arg.SyncType, arg.Limit)
+// The newest events of one of the site's connectors, by the connector_type the sync events record
+func (q *Queries) RecentConnectorEvents(ctx context.Context, arg RecentConnectorEventsParams) ([]*Event, error) {
+	rows, err := q.query(ctx, q.recentConnectorEventsStmt, recentConnectorEvents, arg.SiteID, arg.ConnectorType, arg.Limit)
 	if err != nil {
 		return nil, err
 	}

@@ -1,13 +1,13 @@
 INCLUDE steps/new_site_admin.steps
 
-// Virtual sync writes the last 30 minutes of glucose readings, 6 of them, on its first run
+// Virtual connector writes the last 30 minutes of glucose readings, 6 of them, on its first run
 CLICK #site--settings-menu
-CLICK #site--settings--sync-button
+CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
-CLICK #site--settings--virtual-sync--enable
-CLICK #site--settings--virtual-sync--submit
+CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--submit
 ASSERT_STATUS 200
-ASSERT_TEXT_VISIBLE Sync Updated
+ASSERT_TEXT_VISIBLE Connector Updated
 RUN_BACKGROUND_JOBS
 
 GOTO /data/glucose
