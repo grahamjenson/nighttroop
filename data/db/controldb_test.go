@@ -196,7 +196,7 @@ func TestTruncateSite(t *testing.T) {
 	reading, err := q.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "reading", Mgdl: 120, ReadingType: "sgv", OccurredAt: 1, RawJsonData: &raw, CreatedByIdentityName: "phone"})
 	require.NoError(t, err)
 	require.NotNil(t, reading.RawJsonData)
-	recent, err := q.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "recent", Mgdl: 130, ReadingType: "sgv", OccurredAt: time.Now().AddDate(0, 0, -controlDB.ServerConfig.TruncateRecordsAfterDays+1).UnixMilli(), RawJsonData: &raw, CreatedByIdentityName: "phone"})
+	recent, err := q.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "recent", Mgdl: 130, ReadingType: "sgv", OccurredAt: time.Now().AddDate(0, 0, -controlDB.ServerConfig.TruncateRawJSONAfterDays+1).UnixMilli(), RawJsonData: &raw, CreatedByIdentityName: "phone"})
 	require.NoError(t, err)
 
 	// The old reading's raw JSON is cleared and the DB shrunk; an in-memory DB has no size to record
@@ -209,36 +209,36 @@ func TestTruncateSite(t *testing.T) {
 	require.Equal(t, float64(120), reading.Mgdl, "the reading itself is kept")
 	recent, err = q.GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: recent.ID})
 	require.NoError(t, err)
-	require.Equal(t, raw, *recent.RawJsonData, "a reading newer than TruncateRecordsAfterDays keeps its raw JSON")
+	require.Equal(t, raw, *recent.RawJsonData, "a reading newer than TruncateRawJSONAfterDays keeps its raw JSON")
 
 	_, err = controlDB.TruncateSite(ctx, "not-a-site")
 	require.ErrorContains(t, err, "is not open")
 }
 
-// Device reports' raw JSON is cleared after TruncateDeviceReportsRawJSONAfterDays, sooner than other records'
-func TestTruncateSiteDeviceReports(t *testing.T) {
+// Every table's raw JSON is cleared once its row is TruncateRawJSONAfterDays old, 2 by default, the device reports' as
+// the rest's, for every open site, keeping the rows
+func TestClearRawJSON(t *testing.T) {
 	_, controlDB, site := testutils.NewControlDBWithSite(t)
 	ctx, q := t.Context(), site.SiteDB.Queries()
-	require.Equal(t, 2, controlDB.ServerConfig.TruncateDeviceReportsRawJSONAfterDays)
+	require.Equal(t, 2, controlDB.ServerConfig.TruncateRawJSONAfterDays)
 	raw, daysAgo := `{"device":"loop"}`, func(days int) int64 { return time.Now().AddDate(0, 0, -days).UnixMilli() }
 	for id, days := range map[string]int{"old": 3, "recent": 1} {
 		_, err := q.CreateDeviceReport(ctx, sitedb.CreateDeviceReportParams{ID: id, OccurredAt: daysAgo(days), RawJsonData: &raw, CreatedByIdentityName: "phone"})
 		require.NoError(t, err)
+		_, err = q.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: id, Mgdl: 120, ReadingType: "sgv", OccurredAt: daysAgo(days), RawJsonData: &raw, CreatedByIdentityName: "phone"})
+		require.NoError(t, err)
 	}
-	_, err := q.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "reading", Mgdl: 120, ReadingType: "sgv", OccurredAt: daysAgo(3), RawJsonData: &raw, CreatedByIdentityName: "phone"})
-	require.NoError(t, err)
 
-	_, err = controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
-	require.NoError(t, err)
-	old, err := q.GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: "old"})
-	require.NoError(t, err)
-	require.Nil(t, old.RawJsonData, "a 3 day old device report's raw JSON is cleared")
-	recent, err := q.GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: "recent"})
-	require.NoError(t, err)
-	require.Equal(t, raw, *recent.RawJsonData, "a 1 day old device report keeps its raw JSON")
-	reading, err := q.GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: "reading"})
-	require.NoError(t, err)
-	require.Equal(t, raw, *reading.RawJsonData, "a 3 day old reading keeps its raw JSON until TruncateRecordsAfterDays")
+	require.NoError(t, controlDB.ClearRawJSON(ctx))
+	for id, cleared := range map[string]bool{"old": true, "recent": false} {
+		report, err := q.GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: id})
+		require.NoError(t, err)
+		reading, err := q.GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: id})
+		require.NoError(t, err)
+		require.Equal(t, cleared, report.RawJsonData == nil, "device report %s", id)
+		require.Equal(t, cleared, reading.RawJsonData == nil, "glucose reading %s", id)
+		require.Equal(t, 120.0, reading.Mgdl, "the reading itself is kept")
+	}
 }
 
 // At start every live site's DB file is opened, several at once
