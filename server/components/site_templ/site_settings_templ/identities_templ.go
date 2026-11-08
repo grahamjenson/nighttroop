@@ -21,6 +21,7 @@ import (
 	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
+	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/copybutton"
 	"nighttroop.t1d.nz/server/components/ui/form"
@@ -28,7 +29,6 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/selectbox"
 	"nighttroop.t1d.nz/server/components/ui/table"
-	"nighttroop.t1d.nz/server/components/ui/toast"
 	"nighttroop.t1d.nz/utils/authclients"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/display"
@@ -2386,16 +2386,7 @@ func IdentityUpdated(identity *sitemodels.UserIdentity) templ.Component {
 		if identity.Enabled {
 			state = "enabled"
 		}
-		templ_7745c5c3_Err = toast.Toast(toast.Props{
-			Title:         "Success",
-			Description:   identity.Name + " " + state,
-			Variant:       toast.VariantSuccess,
-			Position:      toast.PositionTopCenter,
-			Duration:      5000,
-			Dismissible:   true,
-			Icon:          true,
-			ShowIndicator: true,
-		}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = successtoast.Toast(identity.Name+" "+state).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -2420,16 +2411,7 @@ func IdentityDeleted() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = toast.Toast(toast.Props{
-			Title:         "Success",
-			Description:   "Identity Deleted",
-			Variant:       toast.VariantSuccess,
-			Position:      toast.PositionTopCenter,
-			Duration:      5000,
-			Dismissible:   true,
-			Icon:          true,
-			ShowIndicator: true,
-		}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = successtoast.Toast("Identity Deleted").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

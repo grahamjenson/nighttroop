@@ -5,7 +5,6 @@ import (
 
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
-	"nighttroop.t1d.nz/server/components/ui/toast"
 )
 
 // formatDate shows times as the data pages do
@@ -27,16 +26,3 @@ func orEmpty[T any](value *T) string {
 }
 
 var presetDetail = modal.DetailIfSet
-
-templ presetToast(description string) {
-	@toast.Toast(toast.Props{
-		Title:         "Success",
-		Description:   description,
-		Variant:       toast.VariantSuccess,
-		Position:      toast.PositionTopCenter,
-		Duration:      5000,
-		Dismissible:   true,
-		Icon:          true,
-		ShowIndicator: true,
-	})
-}

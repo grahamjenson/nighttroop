@@ -5,9 +5,9 @@ import (
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/table"
-	"nighttroop.t1d.nz/server/components/ui/toast"
 )
 
 // PushDevices is the apps on devices that pushes are sent to, with whose they are and a button to test each: the
@@ -115,15 +115,6 @@ templ pushDeviceStatus(registration *sitemodels.PushRegistration) {
 templ PushDeviceTested(registration *sitemodels.PushRegistration) {
 	@pushDeviceStatus(registration)
 	<div hx-swap-oob="beforeend:#toaster">
-		@toast.Toast(toast.Props{
-			Title:         "Success",
-			Description:   "Test push sent to " + string(registration.App),
-			Variant:       toast.VariantSuccess,
-			Position:      toast.PositionTopCenter,
-			Duration:      5000,
-			Dismissible:   true,
-			Icon:          true,
-			ShowIndicator: true,
-		})
+		@successtoast.Toast("Test push sent to " + string(registration.App))
 	</div>
 }

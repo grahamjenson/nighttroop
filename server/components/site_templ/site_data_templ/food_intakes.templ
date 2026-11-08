@@ -9,6 +9,7 @@ import (
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/input"
@@ -212,10 +213,10 @@ templ FoodIntakeUpdated(foodIntake *sitemodels.SiteFoodIntake) {
 	@foodIntakeRow(foodIntake)
 	<div id="modal-container" hx-swap-oob="innerHTML"></div>
 	<div hx-swap-oob="beforeend:#toaster">
-		@glucoseToast("Food Intake Updated")
+		@successtoast.Toast("Food Intake Updated")
 	</div>
 }
 
 templ FoodIntakeDeleted() {
-	@glucoseToast("Food Intake Deleted")
+	@successtoast.Toast("Food Intake Deleted")
 }

@@ -7,6 +7,7 @@ import (
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/input"
@@ -196,10 +197,10 @@ templ ComponentEventUpdated(event *sitemodels.SiteComponentEvent) {
 	@componentEventRow(event)
 	<div id="modal-container" hx-swap-oob="innerHTML"></div>
 	<div hx-swap-oob="beforeend:#toaster">
-		@glucoseToast("Change Updated")
+		@successtoast.Toast("Change Updated")
 	</div>
 }
 
 templ ComponentEventDeleted() {
-	@glucoseToast("Change Deleted")
+	@successtoast.Toast("Change Deleted")
 }

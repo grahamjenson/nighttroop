@@ -8,6 +8,7 @@ import (
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/table"
@@ -237,5 +238,5 @@ templ DeviceStatusModal(status *sitemodels.SiteDeviceStatus) {
 }
 
 templ DeviceStatusDeleted() {
-	@glucoseToast("Device Status Deleted")
+	@successtoast.Toast("Device Status Deleted")
 }

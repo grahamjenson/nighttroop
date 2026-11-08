@@ -9,6 +9,7 @@ import (
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/input"
@@ -212,10 +213,10 @@ templ ActivityUpdated(activity *sitemodels.SiteActivity) {
 	@activityRow(activity)
 	<div id="modal-container" hx-swap-oob="innerHTML"></div>
 	<div hx-swap-oob="beforeend:#toaster">
-		@glucoseToast("Activity Updated")
+		@successtoast.Toast("Activity Updated")
 	</div>
 }
 
 templ ActivityDeleted() {
-	@glucoseToast("Activity Deleted")
+	@successtoast.Toast("Activity Deleted")
 }

@@ -7,6 +7,7 @@ import (
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
+	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/input"
@@ -161,10 +162,10 @@ templ ProfilePresetUpdated(profile *sitemodels.SiteProfilePreset) {
 	@profilePresetRow(profile)
 	<div id="modal-container" hx-swap-oob="innerHTML"></div>
 	<div hx-swap-oob="beforeend:#toaster">
-		@presetToast("Profile Renamed")
+		@successtoast.Toast("Profile Renamed")
 	</div>
 }
 
 templ ProfilePresetDeleted() {
-	@presetToast("Profile Deleted")
+	@successtoast.Toast("Profile Deleted")
 }

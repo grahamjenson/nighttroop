@@ -1,0 +1,17 @@
+package successtoast
+
+import "nighttroop.t1d.nz/server/components/ui/toast"
+
+// Toast says an action worked, as every page says it: at the top, for five seconds, with a bar of the time left
+templ Toast(description string) {
+	@toast.Toast(toast.Props{
+		Title:         "Success",
+		Description:   description,
+		Variant:       toast.VariantSuccess,
+		Position:      toast.PositionTopCenter,
+		Duration:      5000,
+		Dismissible:   true,
+		Icon:          true,
+		ShowIndicator: true,
+	})
+}

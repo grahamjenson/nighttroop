@@ -8,9 +8,9 @@ import (
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/input"
-	"nighttroop.t1d.nz/server/components/ui/toast"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/settings"
 )
@@ -373,14 +373,5 @@ templ timezoneSuggestions() {
 }
 
 templ SettingsSaved() {
-	@toast.Toast(toast.Props{
-		Title:         "Success",
-		Description:   "Settings Saved",
-		Variant:       toast.VariantSuccess,
-		Position:      toast.PositionTopCenter,
-		Duration:      5000,
-		Dismissible:   true,
-		Icon:          true,
-		ShowIndicator: true,
-	})
+	@successtoast.Toast("Settings Saved")
 }
