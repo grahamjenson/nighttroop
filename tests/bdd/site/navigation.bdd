@@ -151,7 +151,8 @@ ASSERT_VISIBLE #site--data--temp-basals-button[aria-current="page"]
 ASSERT_NOT_VISIBLE #site--nav--search-results
 
 // On a phone the header fits, its hubs' links as icons, and each hub fits, its tabs scrolling on their own
-WINDOW 390x1600
+// (the window is tall enough for the whole page, as CI draws a little taller, so fitting checks only its width)
+WINDOW 390x2000
 GOTO /
 ASSERT_STATUS 200
 ASSERT_VISIBLE #site--nav--settings
