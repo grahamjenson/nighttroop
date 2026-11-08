@@ -56,7 +56,7 @@ func TestSyncThatAddsRecordsRecordsAnEvent(t *testing.T) {
 	require.Len(t, events, 1)
 	var attributes struct {
 		ConnectorType string `json:"connector_type"`
-		Records  int    `json:"records"`
+		Records       int    `json:"records"`
 	}
 	require.NoError(t, json.Unmarshal([]byte(events[0]), &attributes))
 	require.Equal(t, "virtual", attributes.ConnectorType)

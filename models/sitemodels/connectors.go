@@ -5,12 +5,12 @@ import (
 )
 
 type Connector struct {
-	SiteID        string                `json:"site_id"`
+	SiteID        string               `json:"site_id"`
 	Type          consts.ConnectorType `json:"type"`
-	Region        *string               `json:"region"`
-	UrlOrUsername *string               `json:"url_or_username"`
-	Password      *string               `json:"password"`
-	Enabled       bool                  `json:"enabled"`
+	Region        *string              `json:"region"`
+	UrlOrUsername *string              `json:"url_or_username"`
+	Password      *string              `json:"password"`
+	Enabled       bool                 `json:"enabled"`
 	// PreviousSyncErrors are from the last failed sync, shown to the user; cleared when the source is saved
 	PreviousSyncErrors []string `json:"previous_sync_errors,omitempty"`
 

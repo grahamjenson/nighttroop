@@ -144,10 +144,10 @@ type ServerConfig struct {
 	SiteUnauthPerMinuteBurst int
 
 	// Authenticated Rate Limits
-	SiteGETPerMinuteLimit        int
-	SiteGETPerMinuteBurst        int
-	SitePOSTPerMinuteLimit       int
-	SitePOSTPerMinuteBurst       int
+	SiteGETPerMinuteLimit              int
+	SiteGETPerMinuteBurst              int
+	SitePOSTPerMinuteLimit             int
+	SitePOSTPerMinuteBurst             int
 	SiteUpdateConnectorsPerMinuteLimit int
 	SiteUpdateConnectorsPerMinuteBurst int
 
@@ -332,7 +332,7 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 
 		StagingAdminPassword:   configStringSelect(dotenv, "STAGING_ADMIN_PASSWORD", ""),
 		StagingAdminTOTPSecret: configStringSelect(dotenv, "STAGING_ADMIN_TOTP_SECRET", ""),
-		GeoIPDBPath:  configStringSelect(dotenv, "GEOIP_DB_PATH", ""),
+		GeoIPDBPath:            configStringSelect(dotenv, "GEOIP_DB_PATH", ""),
 
 		// security
 		RawKeySets: configStringSelect(dotenv, consts.KEY_SETS_ENV_KEY, ""),
@@ -359,10 +359,10 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 
 		// Authed
 		// Site Rate Limits
-		SiteGETPerMinuteLimit:        configIntSelect(dotenv, "SITE_GET_PER_MINUTE_LIMIT", SITE_GET_LIMIT),
-		SiteGETPerMinuteBurst:        configIntSelect(dotenv, "SITE_GET_PER_MINUTE_BURST", SITE_GET_LIMIT*2),
-		SitePOSTPerMinuteLimit:       configIntSelect(dotenv, "SITE_POST_PER_MINUTE_LIMIT", SITE_POST_LIMIT),
-		SitePOSTPerMinuteBurst:       configIntSelect(dotenv, "SITE_POST_PER_MINUTE_BURST", SITE_POST_LIMIT*4),
+		SiteGETPerMinuteLimit:              configIntSelect(dotenv, "SITE_GET_PER_MINUTE_LIMIT", SITE_GET_LIMIT),
+		SiteGETPerMinuteBurst:              configIntSelect(dotenv, "SITE_GET_PER_MINUTE_BURST", SITE_GET_LIMIT*2),
+		SitePOSTPerMinuteLimit:             configIntSelect(dotenv, "SITE_POST_PER_MINUTE_LIMIT", SITE_POST_LIMIT),
+		SitePOSTPerMinuteBurst:             configIntSelect(dotenv, "SITE_POST_PER_MINUTE_BURST", SITE_POST_LIMIT*4),
 		SiteUpdateConnectorsPerMinuteLimit: configIntSelect(dotenv, "SITE_UPDATE_CONNECTORS_PER_MINUTE_LIMIT", 1), // Stop sites from updating connector settings too much
 		SiteUpdateConnectorsPerMinuteBurst: configIntSelect(dotenv, "SITE_UPDATE_CONNECTORS_PER_MINUTE_BURST", 4),
 
@@ -405,7 +405,7 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		// Connector Config
 		BackgroundConnectorWorkers: configIntSelect(dotenv, "BACKGROUND_CONNECTOR_WORKERS", 5),
 		ConnectorIntervalInSeconds: configIntSelect(dotenv, "CONNECTOR_INTERVAL_IN_SECONDS", 5), // check syncs every 5 seconds
-		BackfillDays:          configIntSelect(dotenv, "BACKFILL_DAYS", 7),
+		BackfillDays:               configIntSelect(dotenv, "BACKFILL_DAYS", 7),
 
 		// Socket.IO Config
 		SocketPingIntervalInSeconds: configIntSelect(dotenv, "SOCKET_PING_INTERVAL_IN_SECONDS", 25), // Nightscout's, which v2 clients expect
