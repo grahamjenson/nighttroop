@@ -15,7 +15,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - A new server has no control admin, so every page goes to `control.<host>/setup` and the APIs answer that it is not
   set up, until the admin is made. Only the health check works.
 - The server prints a one-time setup code to its logs; the setup page asks for it, so only whoever runs the server can
-  set it up. Wrong codes are rate limited.
+  set it up. Wrong codes are rate limited. A wrong setup or TOTP code is said to be wrong in an error toast.
 - The setup page shows the control admin's username, password and TOTP secret (with a QR code) once, and saves the
   admin only when a code from that TOTP secret is entered.
 - Every TOTP QR code (the setup page, a new site's admin, a new or reset identity) scans into an authenticator app as an
@@ -43,6 +43,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   password to the code, skipping the button that shows the password.
 - The control login is sent as soon as the code's sixth digit is typed or pasted, once the username and password are in,
   as the site's is; a code typed before them waits for Log In, and a wrong code is said to be wrong and not sent again.
+- A failed control login says, in an error toast, "Wrong name, password or code. Codes change every 30 seconds, so use
+  the newest one.", or that there were too many login attempts, and marks the inputs invalid until it is sent again.
+  The inputs have no placeholders, and are not marked invalid before then.
 - The control site's header, with its menu, and its status banner show only once the admin has signed in, not on the
   login or setup page.
 - The server's global rate limit does not stop a control admin signing in, or using the control site once signed in,
@@ -64,9 +67,23 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   sites and a site's details, with its DB size limit.
 - Sites can be ordered by how long since they were last written to (the first to archive) or by DB size.
 - A site not written to or seen within `DISABLE_AFTER_INACTIVITY_DAYS` is marked inactive.
-- Clicking a site shows its details.
+- Clicking a site opens its own page, `/sites/{id}`, laid out like a site's summary, and the browser's back button
+  returns to the sites. An API client asking for `/sites/{id}` gets the site. The page shows:
+  - its ID, a badge of its state, and Inactive or Over limit badges when they apply, with when it was created, its
+    batch, and when it was disabled, archived or deleted;
+  - an Open Site link, in a new tab, while it is live;
+  - its DB size, large, against its limit, with a bar of how much of the limit it uses: amber from 80%, red over it.
+    A size not yet measured says so;
+  - tiles of when it was last seen and last written to, how many identities it has (people and devices), and how
+    long since its last error;
+  - its identities, and its latest 10 events and 10 errors, each opening its details, with a link to all of them
+    filtered to the site.
+- An admin sees the buttons for what can be done to the site on its page, and its page shows the change once done.
+- On a phone the sites page is no wider than the window: the order buttons, the create form and the public site
+  creation card wrap, and the table scrolls sideways in its card.
 - An admin can create a site at an ID they pick (8 lowercase letters), e.g. a vanity one; a taken ID is refused. Its
   credentials are shown once. An admin can create sites past `MAX_SITES` and while public site creation is off.
+- The new site ID field only lets letters a to z in: capitals typed or pasted are lowered and anything else is dropped.
 - An admin can turn public site creation off, so sites cannot be created from the home page, and back on.
 - A site can be:
   - **disabled**, after a confirmation, so it is no longer served;
@@ -79,9 +96,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 ### A site's identities
 
-- Each site has its own page, `/sites/{id}/inspect`, linked from its details as "Inspect its identities", with its
-  details and a table of every one of its identities: who they are, whether they use TOTP, and when each was last
-  seen. Secrets are never shown.
+- A site's page has a table of every one of its identities: who they are, whether they use TOTP, and when each was
+  last seen. Secrets are never shown.
 - An admin can reset an identity's password (shown once, with a device's new Nightscout token) or TOTP secret. Each
   reset signs out the identity's existing sessions and is recorded as an event.
 - An admin can sign in to a site as any of its identities with its Sign in as button, after confirming: a new tab opens
@@ -102,6 +118,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 ### Sync sources
 
 - Lists every site's sync sources, the most recently attempted first, with failed counts in red.
+- A source turned off after failing says "disabled after failing" in amber.
+- Counts and durations are whole numbers, e.g. 12345, never 1.234e+04, and the averages (EMAs) have one decimal place.
 - Clicking a source shows its sync reports.
 
 ### Push devices
@@ -246,7 +264,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   - The basal in force along the bottom, its highest rate labelled on the right.
   - Carbs as triangles pointing up above insulin as triangles pointing down, each labelled, the latest kept where
     labels overlap; a loop's SMBs are smaller, fainter and not labelled.
-  - A legend of insulin, SMB, carbs and basal, and a tooltip of each reading and treatment.
+  - A legend of insulin and SMB (triangles pointing down), carbs (pointing up) and basal (an outlined area), each
+    drawn as on the graph, and a tooltip of each reading and treatment.
 - Time in range, total daily dose, and the last sensor and site change for today, yesterday, last week and last
   month.
 - Readings are coloured and labelled low, in range or high by the alarm settings; high text is a darker amber than

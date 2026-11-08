@@ -70,11 +70,6 @@ func (s *SitesCollection) GetRow(ctx context.Context, id string, controlContext 
 	return controlContext.ControlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: id})
 }
 
-// GetHTMXResponse is the site's details, shown in a modal
-func (s *SitesCollection) GetHTMXResponse(model *controlmodels.Site) templ.Component {
-	return control_sites_templ.SiteModal(model)
-}
-
 // UpdateRow disables a live, inactive site, which stops it being served, or archives a disabled one
 func (s *SitesCollection) UpdateRow(ctx context.Context, controlContext *httputils.ControlContext, oldModel *controlmodels.Site, model *controlmodels.Site) (*controldb.Site, error) {
 	var err error

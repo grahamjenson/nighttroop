@@ -28,17 +28,31 @@ func (s *SitesCollection) IdentitiesHandler(w http.ResponseWriter, r *http.Reque
 	WriteResponse(w, r, acceptType, http.StatusOK, identities, control_sites_templ.SiteIdentities(site.ID, identities))
 }
 
-// InspectHandler is a site's own page: its details and every one of its identities, newest first, which an admin can
-// reset or sign in to the site as
-func (s *SitesCollection) InspectHandler(w http.ResponseWriter, r *http.Request) {
-	acceptType := httputils.GetAcceptType(r)
+// sitePageLatest is how many of a site's latest events, and of its errors, its page shows
+const sitePageLatest = 10
+
+// PageHandler is a site's own page: its details, with what an admin can do to it, every one of its identities, newest
+// first, which an admin can reset or sign in to the site as, and its latest events and errors. An API client gets the
+// site.
+func (s *SitesCollection) PageHandler(w http.ResponseWriter, r *http.Request) {
+	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
 	site, identities, herr := s.siteIdentities(r)
+	page := &controlmodels.SitePage{Site: site, Identities: identities}
+	latest := &apiutils.Query{Limit: sitePageLatest}
+	if herr == nil {
+		latest.SiteID = &site.ID
+		rows, err := (&EventsCollection{}).SearchRows(r.Context(), latest, controlContext)
+		page.Events, herr = apiutils.Searched(rows, err, "events", controlmodels.EventFromDB)
+	}
+	if herr == nil {
+		rows, err := (&ErrorsCollection{}).SearchRows(r.Context(), latest, controlContext)
+		page.Errors, herr = apiutils.Searched(rows, err, "errors", controlmodels.ErrorFromDB)
+	}
 	if herr != nil {
 		herr.Write(acceptType, w)
 		return
 	}
-	inspect := &controlmodels.SiteInspect{Site: site, Identities: identities}
-	WriteResponse(w, r, acceptType, http.StatusOK, inspect, control_sites_templ.SiteInspect(inspect))
+	WriteResponse(w, r, acceptType, http.StatusOK, site, control_sites_templ.SitePage(page))
 }
 
 // siteIdentities is the site in the URL and its identities, newest first

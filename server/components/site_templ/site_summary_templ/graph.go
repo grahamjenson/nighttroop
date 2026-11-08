@@ -43,6 +43,22 @@ var (
 	gray700    = css.Colour("gray-700")
 )
 
+// pointingDown and pointingUp are the legend's triangles, insulin's and carbs', the same size as each other
+const (
+	pointingDown = "path://M0,0L2,0L1,2Z"
+	pointingUp   = "path://M1,0L2,2L0,2Z"
+)
+
+// legend is the graph's key, each drawn as it is on the graph: a legend draws its series' symbol unturned, so insulin's
+// triangles, turned to point down, would point up, and the basal, a line without symbols over a shaded area, would be
+// a line through a circle
+var legend = []map[string]any{
+	{"name": "Insulin", "icon": pointingDown},
+	{"name": "SMB", "icon": pointingDown},
+	{"name": "Carbs", "icon": pointingUp},
+	{"name": "Basal", "icon": "rect", "itemStyle": map[string]any{"color": "transparent", "borderColor": brandNight, "borderWidth": 2}},
+}
+
 // glucoseRange is a reading in the summary's units below its low alarm, "Low", above its high alarm, "High", or
 // between them, ""
 func glucoseRange(s *sitemodels.Summary, reading float64) string {
@@ -91,7 +107,7 @@ func graph(s *sitemodels.Summary, now int64, location *time.Location) *charts.Sc
 	chart.SetGlobalOptions(
 		charts.WithInitializationOpts(opts.Initialization{Renderer: "svg"}),
 		charts.WithAnimation(false),
-		charts.WithLegendOpts(opts.Legend{Show: opts.Bool(true), Bottom: "0", Data: []string{"Insulin", "SMB", "Carbs", "Basal"}}),
+		charts.WithLegendOpts(opts.Legend{Show: opts.Bool(true), Bottom: "0", Data: legend}),
 		charts.WithTooltipOpts(opts.Tooltip{Show: opts.Bool(true), Formatter: opts.FuncOpts(tooltip)}),
 		// Wide enough on the right for the label of a dose or meal given just now, which is drawn right of its marker,
 		// and the basal's highest rate; tall enough at the bottom for the times and the legend

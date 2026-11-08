@@ -6,8 +6,8 @@ ASSERT_STATUS 200
 
 GOTO {{ .control_url }}/login
 ASSERT_STATUS 200
-INPUT #name admin
-INPUT #password password
+INPUT #control--login--name admin
+INPUT #control--login--password password
 TYPE #control--login--otp-1 123123
 ASSERT_VISIBLE #control--nav--logo
 
@@ -48,51 +48,69 @@ CLICK #control--sites--order-created
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to
 
-// Clicking a site shows its details
+// Clicking a site opens its own page, laid out like a site's summary: its state, its DB size against its limit, tiles
+// of when it was last used, its identities and its last error, then its identities, and its latest events and errors.
+// The newest site is the one made above, which no one has used.
+SAVE_TEXT #controlSitesTable>tbody>tr:first-child>td:first-child new_site
 CLICK #controlSitesTable tbody tr >> nth=0
-ASSERT_VISIBLE #control--site--details
-ASSERT_TEXT_VISIBLE Last Write
-// A site within its DB size limit cannot be truncated
+ASSERT_PATH /sites/{{ .new_site }}
+ASSERT_VISIBLE #control--site--page
+ASSERT_TEXT_EQUALS #control--site--state Live
+ASSERT_VISIBLE #control--site--inactive
+ASSERT_VISIBLE #control--site--lifecycle >> text=/^Created .* · Batch [a-z]$/
+ASSERT_VISIBLE #control--site--open[target="_blank"]
+// A new site's DB is not measured until the resource check runs
+ASSERT_TEXT_EQUALS #control--site--db-size Not measured yet
+ASSERT_VISIBLE #control--site--db-limit
+ASSERT_TEXT_EQUALS #control--site--last-seen Never
+ASSERT_TEXT_EQUALS #control--site--last-write Never
+ASSERT_TEXT_EQUALS #control--site--identity-count 3
+ASSERT_TEXT_EQUALS #control--site--identity-types 1 person, 2 devices
+ASSERT_TEXT_EQUALS #control--site--last-error None
+ASSERT_VISIBLE #control--site--identities--table td >> text=pwd_phone
+// A site within its DB size limit cannot be truncated, but one no one has used can be disabled
 ASSERT_NOT_VISIBLE #control--site--truncate
-// Its own page, with its identities, is linked from its details
-ASSERT_VISIBLE #control--site--inspect
-SCREENSHOT site_details
-
-CLICK #control--site--details--close
-ASSERT_NOT_VISIBLE #control--site--details
-
-// Escape closes it too, as does pressing beside it, but not pressing inside it
-CLICK #controlSitesTable tbody tr >> nth=0
-ASSERT_VISIBLE #control--site--details
+ASSERT_VISIBLE #control--site--disable
+// Its latest events include its creation, which opens its details
+ASSERT_VISIBLE #control--site--events--table td >> text=Site created
+ASSERT_VISIBLE #control--site--errors--table
+SCREENSHOT site_page
+CLICK #control--site--events--table tbody tr:has-text("Site created")
+ASSERT_VISIBLE #control--event--details
 PRESS Escape
-ASSERT_NOT_VISIBLE #control--site--details
+ASSERT_NOT_VISIBLE #control--event--details
 
-CLICK #controlSitesTable tbody tr >> nth=0
-CLICK #control--site--details dt >> nth=0
-ASSERT_VISIBLE #control--site--details
-CLICK_CORNER #control--site--details
-ASSERT_NOT_VISIBLE #control--site--details
+// The back button returns to the sites
+CLICK_BACK
+ASSERT_PATH /sites
+ASSERT_VISIBLE #controlSitesTable
 
-// Disabling asks first (the test accepts), then updates the site's row
+// Disabling asks first (the test accepts), then shows its page again, disabled, with the event saying so
 CLICK #controlSitesTable tbody tr >> nth=0
+ASSERT_PATH /sites/{{ .new_site }}
 CLICK #control--site--disable
 ASSERT_TEXT_VISIBLE Site Disabled
-ASSERT_NOT_VISIBLE #control--site--details
-ASSERT_VISIBLE #controlSitesTable td >> text=/^Disabled/ >> nth=0
+ASSERT_TEXT_EQUALS #control--site--state Disabled
+ASSERT_VISIBLE #control--site--lifecycle >> text=/ · Disabled /
+// A disabled site is not served, so there is no site to open
+ASSERT_NOT_VISIBLE #control--site--open
+ASSERT_VISIBLE #control--site--events--table td >> text=Site disabled
 SCREENSHOT site_disabled
 
 // A disabled site cannot be disabled again, but can be archived, which needs S3 (not connected in tests)
-CLICK #controlSitesTable tbody tr >> nth=0
-ASSERT_VISIBLE #control--site--details
 ASSERT_NOT_VISIBLE #control--site--disable
 ASSERT_VISIBLE #control--site--archive
-SCREENSHOT site_archive
 CLICK #control--site--archive
 ASSERT_TEXT_VISIBLE a site can only be archived when S3 is connected
 
+// Its events link to all of them, filtered to the site
+CLICK #control--site--events--all
+ASSERT_PATH /events
+ASSERT_VISIBLE #controlEventsTable td >> text=Site disabled
+ASSERT_VISIBLE #control--events--filter--clear
+
 // The archived sites have a page of their own, each with a button to hydrate it, bringing it back live. There are none
 // here, as archiving needs S3
-PRESS Escape
 CLICK #control--menu
 CLICK #control--archived-sites-button
 ASSERT_STATUS 200
@@ -103,3 +121,18 @@ GOTO {{ .control_url }}/archived-sites
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE No archived sites.
 SCREENSHOT archived_sites
+
+// On a phone the sites page is no wider than the window: the order buttons, the create form and the public site
+// creation card wrap, and the table scrolls sideways in its card. The window is tall enough for a page of two sites,
+// as other tests make sites too, so fitting it checks only its width.
+WINDOW 390x1400
+GOTO {{ .control_url }}/sites?limit=2
+ASSERT_STATUS 200
+// The table can be wider than its card, which scrolls it, so its first cell is checked rather than the whole table,
+// whose centre may be scrolled out of view
+ASSERT_VISIBLE #controlSitesTable tbody td >> nth=0
+ASSERT_VISIBLE #control--sites--order-db_size
+ASSERT_VISIBLE #control--sites--create--submit
+ASSERT_VISIBLE #control--sites--public-creation--toggle
+ASSERT_FITS
+SCREENSHOT sites_phone

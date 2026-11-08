@@ -2,6 +2,7 @@ package control_sync_sources_templ
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"nighttroop.t1d.nz/models/controlmodels"
@@ -20,20 +21,31 @@ func formatDate(ms *int64) string {
 	return time.UnixMilli(*ms).Format("2006-01-02 15:04:05")
 }
 
-// orDash shows an optional number, or a dash when it is not set
-func orDash[T int64 | float64](value *T) string {
+// orDash shows an optional count or duration as a whole number, e.g. 12345, or a dash when it is not set
+func orDash(value *int64) string {
 	if value == nil {
 		return "-"
 	}
-	return fmt.Sprintf("%.4g", float64(*value))
+	return strconv.FormatInt(*value, 10)
 }
 
-// state is whether the source is off, failing or syncing
+// averageOrDash shows an optional average to one decimal place, e.g. 12345.7, or a dash when it is not set
+func averageOrDash(value *float64) string {
+	if value == nil {
+		return "-"
+	}
+	return strconv.FormatFloat(*value, 'f', 1, 64)
+}
+
+// state is whether the source is off, was turned off after failing, is failing or is syncing
 func state(source *controlmodels.SyncSource) string {
+	failing := source.ConsecutiveFailedSyncs != nil && *source.ConsecutiveFailedSyncs > 0
 	switch {
+	case !source.Enabled && failing:
+		return "disabled after failing"
 	case !source.Enabled:
 		return "disabled"
-	case source.ConsecutiveFailedSyncs != nil && *source.ConsecutiveFailedSyncs > 0:
+	case failing:
 		return "failing"
 	}
 	return "syncing"
@@ -43,6 +55,8 @@ func stateClass(source *controlmodels.SyncSource) string {
 	switch state(source) {
 	case "failing":
 		return "font-medium text-red-700"
+	case "disabled after failing":
+		return "font-medium text-amber-800"
 	case "disabled":
 		return "text-gray-500"
 	}
@@ -159,9 +173,9 @@ templ SyncSourceModal(source *controlmodels.SyncSource) {
 			@syncSourceDetail("Successes In A Row", orDash(source.ConsecutiveSuccessfulSyncs))
 			@syncSourceDetail("Failures In A Row", orDash(source.ConsecutiveFailedSyncs))
 			@syncSourceDetail("Last Sync Duration (ms)", orDash(source.LastSyncDuration))
-			@syncSourceDetail("Total EMA", orDash(source.TotalEma))
-			@syncSourceDetail("Success EMA", orDash(source.SuccessEma))
-			@syncSourceDetail("Failure EMA", orDash(source.FailureEma))
+			@syncSourceDetail("Total EMA", averageOrDash(source.TotalEma))
+			@syncSourceDetail("Success EMA", averageOrDash(source.SuccessEma))
+			@syncSourceDetail("Failure EMA", averageOrDash(source.FailureEma))
 		</dl>
 		<h3 class="mt-4 text-sm font-semibold">Previous Errors</h3>
 		if len(source.PreviousSyncErrors) == 0 {
