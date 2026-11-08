@@ -161,6 +161,10 @@ templ createSiteForm() {
 				Attributes: templ.Attributes{
 					"pattern": fmt.Sprintf("[a-z]{%d}", utils.SITE_ID_LENGTH), "minlength": utils.SITE_ID_LENGTH, "maxlength": utils.SITE_ID_LENGTH,
 					"title": fmt.Sprintf("%d lowercase letters, a to z", utils.SITE_ID_LENGTH), "autocomplete": "off", "spellcheck": "false",
+					"autocapitalize": "none",
+					// Capitals are lowered and anything but a to z is dropped as it is typed or pasted, so only letters
+					// a site ID can have ever go in
+					"oninput": templ.JSUnsafeFuncCall("this.value = this.value.toLowerCase().replace(/[^a-z]/g, '')"),
 				},
 			})
 		}
