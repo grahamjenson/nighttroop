@@ -46,6 +46,10 @@ func ScreenshotPage(page playwright.Page, foldername string, testPath string, na
 	return filepath.Join(dir, name+".png"), err
 }
 
+// ScreenshotScale is the device scale the BDD browsers draw at: pages lay out as at 1, and a screenshot of a 1280px
+// window is 960px wide, its text still sharp enough to read, so the committed screenshots are smaller
+const ScreenshotScale = 0.75
+
 // /////////////////////
 // ASSERTS
 // //////////////////////

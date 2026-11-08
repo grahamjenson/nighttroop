@@ -20,6 +20,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/sqltiming"
 	"nighttroop.t1d.nz/server"
+	"nighttroop.t1d.nz/tests/dsl/flow"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/s3utils"
@@ -130,7 +131,8 @@ func runScenarios(t *testing.T, browser playwright.Browser, config *config.Serve
 	for _, path := range paths {
 		// Sites take the time zone and language of the browser that creates them, and en names no country, so a
 		// test's site keeps the default units and formats
-		context, err := browser.NewContext(playwright.BrowserNewContextOptions{Locale: playwright.String("en"), TimezoneId: playwright.String("UTC")})
+		context, err := browser.NewContext(playwright.BrowserNewContextOptions{Locale: playwright.String("en"), TimezoneId: playwright.String("UTC"),
+			DeviceScaleFactor: playwright.Float(flow.ScreenshotScale)})
 
 		require.NoError(t, err)
 
