@@ -49,8 +49,8 @@ ASSERT_TEXT_EQUALS #site--settings--identity--units>option[selected] Site settin
 
 // On a phone another identity's settings are one column under its name, and its save button fits
 WINDOW 390x2800
-CLICK #site--settings-menu
-CLICK #site--settings--identities-button
+// Opened by its address, as on a phone the toast from the last save is over the menu until it goes
+GOTO /settings/identities
 CLICK #site--identities--pwd_phone--settings
 ASSERT_STATUS 200
 ASSERT_VISIBLE #site--identity-settings--identity--units
