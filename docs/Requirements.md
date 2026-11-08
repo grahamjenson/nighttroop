@@ -355,12 +355,13 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   glucose over the AGP of the 7 days to it. A report with no glucose says so instead.
 - Day, Week, Fortnight and Month open the report of that kind ending on the report's last day, or today; Previous and
   Next open the one before and after, disabled past today or a year ago. Back and forward move between reports.
-- The Reports hub has TDD: the total daily dose report at
-  `/reports/tdd`, of the week before today at first. Its Week, Fortnight and Month buttons show the 7, 14 or 30 days
-  before today (`?range=week`, `fortnight` or `month`; another range is refused), back and forward moving between
-  them; today is left out as it is not over. It says which days it covers, dated in the site's timezone.
-- It draws a bar of each day's total daily dose, oldest first, on an axis of every day it covers; a day with no
-  insulin has no bar and is not counted. Hovering a bar shows its date and daily dose in U.
+- The Reports hub has TDD: the total daily dose report at `/reports/tdd`, of the 30 days before today, today left out
+  as it is not over. It says which days it covers, dated in the site's timezone, with arrow buttons either side (‹ and
+  ›) to the 30 days before and after (`?end=` the last day, as `2026-01-31`); the one after is disabled for the latest
+  month, and the one before past a year ago. A last day after yesterday or more than a year ago is refused. Back and
+  forward move between them.
+- It draws a bar of each day's total daily dose, oldest first, on an axis of every day it covers, the bars a couple of
+  pixels apart; a day with no insulin has no bar and is not counted. Hovering a bar shows its date and daily dose in U.
 - It shows how many of its days have insulin and their mean, lowest and highest daily dose, and says when none have
   insulin.
 - Under the bars, a table lists every day it covers, newest first, with its total daily dose in U, or "–" for a day
