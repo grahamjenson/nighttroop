@@ -4179,6 +4179,36 @@ func (m *DeleteSiteAdminPasskeysParams) SetName(v string) {
 }
 
 // GetSiteID returns the SiteID value.
+func (m DeleteSiteIdentityPasskeyParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated DeleteSiteIdentityPasskeyParams.
+func (m *DeleteSiteIdentityPasskeyParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetIdentityID returns the IdentityID value.
+func (m DeleteSiteIdentityPasskeyParams) GetIdentityID() int64 {
+	return m.IdentityID
+}
+
+// SetIdentityID sets the IdentityID value and returns the updated DeleteSiteIdentityPasskeyParams.
+func (m *DeleteSiteIdentityPasskeyParams) SetIdentityID(v int64) {
+	m.IdentityID = v
+}
+
+// GetID returns the ID value.
+func (m DeleteSiteIdentityPasskeyParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated DeleteSiteIdentityPasskeyParams.
+func (m *DeleteSiteIdentityPasskeyParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetSiteID returns the SiteID value.
 func (m GetSiteIdentityPasskeyParams) GetSiteID() string {
 	return m.SiteID
 }
