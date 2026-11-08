@@ -29,7 +29,7 @@ func BackfillHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	source, err := siteContext.ControlDB.Queries.GetConnector(r.Context(), controldb.GetConnectorParams{Type: connectorType, SiteID: siteContext.SiteID})
 	if err != nil || source == nil || !source.Enabled {
-		writeError(w, r, siteContext.AcceptType, apiutils.ErrConstraintCheckFailedWithHint("turn on and save this sync before backfilling it"))
+		writeError(w, r, siteContext.AcceptType, apiutils.ErrConstraintCheckFailedWithHint("turn on and save this connector before backfilling it"))
 		return
 	}
 
@@ -38,7 +38,7 @@ func BackfillHandler(w http.ResponseWriter, r *http.Request) {
 		err = connectors.QueueBackfill(r.Context(), siteContext.ControlDB, siteContext.SiteID, connectorType, backfill)
 	}
 	if errors.Is(err, connectors.ErrBackfillRunning) {
-		writeError(w, r, siteContext.AcceptType, &apiutils.HTTPError{Status: http.StatusConflict, Message: "A backfill of this sync is already running"})
+		writeError(w, r, siteContext.AcceptType, &apiutils.HTTPError{Status: http.StatusConflict, Message: "A backfill of this connector is already running"})
 		return
 	}
 	if err != nil {
