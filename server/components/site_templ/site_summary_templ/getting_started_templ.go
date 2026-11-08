@@ -100,7 +100,7 @@ func GettingStarted() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div id=\"site--getting-started\" class=\"space-y-6\"><section class=\"rounded-xl bg-brand-night p-6 text-white shadow-sm\"><h2 class=\"text-2xl font-bold\">Welcome to your Nighttroop site</h2><p class=\"mt-2 max-w-2xl text-white/80\">Here is how to set it up. Once readings arrive the summary shows them here, and this guide is always on My Account, in the menu at the top right.</p></section><ol class=\"grid gap-4 md:grid-cols-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div id=\"site--getting-started\" class=\"space-y-6\"><section class=\"rounded-xl bg-brand-night p-6 text-white shadow-sm\"><h2 class=\"text-2xl font-bold\">Welcome to your Nighttroop site</h2><p class=\"mt-2 max-w-2xl text-white/80\">Here is how to set it up. Once readings arrive the summary shows them here, and this guide is always in the menu under your name, at the top right.</p></section><ol class=\"grid gap-4 md:grid-cols-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -233,7 +233,7 @@ func GettingStarted() templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "Your readings, treatments, presets and logs are all in the menu at the top right.</p></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "Your readings and treatments are under Data at the top of every page, your reports under Reports, and presets, settings and logs under Settings. Search there finds any page by name.</p></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -267,7 +267,7 @@ func step(id, number string, ic func(...icon.Props) templ.Component, title strin
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templruntime.NewAttributeExpression(id).Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/getting_started.templ`, Line: 94, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/getting_started.templ`, Line: 95, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 		if templ_7745c5c3_Err != nil {
@@ -289,7 +289,7 @@ func step(id, number string, ic func(...icon.Props) templ.Component, title strin
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(number + ". ")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/getting_started.templ`, Line: 101, Col: 20}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/getting_started.templ`, Line: 102, Col: 20}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -303,7 +303,7 @@ func step(id, number string, ic func(...icon.Props) templ.Component, title strin
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/getting_started.templ`, Line: 103, Col: 11}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/getting_started.templ`, Line: 104, Col: 11}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -362,7 +362,7 @@ func stepLink(id, path, text string) templ.Component {
 			var templ_7745c5c3_Var14 string
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(text)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/getting_started.templ`, Line: 114, Col: 9}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_summary_templ/getting_started.templ`, Line: 115, Col: 9}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {

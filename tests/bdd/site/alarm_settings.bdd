@@ -1,14 +1,13 @@
 INCLUDE steps/new_site_admin.steps
 
 // The general settings page has no alarms: they have their own page
-CLICK #site--settings-menu
-CLICK #site--settings--settings-button
+CLICK #site--nav--settings
 ASSERT_STATUS 200
 ASSERT_VISIBLE #site--settings--site--units
 ASSERT_NOT_VISIBLE #site--alarms--site--range_low
 
 // The alarms page has the alarms, in sections, each off by default, with the defaults' glucose in the settings' units
-CLICK #site--settings-menu
+CLICK #site--nav--settings
 CLICK #site--settings--alarms-button
 ASSERT_STATUS 200
 ASSERT_PATH /settings/alarms
@@ -125,7 +124,7 @@ ASSERT_VISIBLE #toaster [data-tui-toast][data-variant="error"]:has-text("the low
 SCREENSHOT alarm_settings_low_over_high
 
 // On a phone the alarms are one column too, each alarm's site and own controls named, and the save buttons fit
-WINDOW 390x3200
+WINDOW 390x3400
 GOTO /settings/alarms
 ASSERT_STATUS 200
 ASSERT_TEXT_EQUALS #alarm_settings_page>div>div:has(#site--alarms--site--alarm_low_enabled)>span Site

@@ -1,7 +1,7 @@
 INCLUDE steps/new_site_admin.steps
 
 // The virtual connector fills the tables with readings and device statuses
-CLICK #site--settings-menu
+CLICK #site--nav--settings
 CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
 CLICK #site--settings--virtual-connector--enable
@@ -11,8 +11,8 @@ ASSERT_TEXT_VISIBLE Connector Updated
 RUN_BACKGROUND_JOBS
 
 // On a phone a table wider than the window scrolls sideways in its card, so the page is no wider than the window.
-// The window is tall enough for the whole page, so fitting it checks only its width.
-WINDOW 390x1200
+// The window is tall enough for the whole page, with the Data tabs above it, so fitting it checks only its width.
+WINDOW 390x1500
 GOTO /data/glucose
 ASSERT_STATUS 200
 ASSERT_VISIBLE #glucoseReadingsTable

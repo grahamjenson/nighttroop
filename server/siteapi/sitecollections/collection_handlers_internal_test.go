@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/a-h/templ"
@@ -93,6 +94,42 @@ func TestWriteErrorKeepsTheServersWordsFromToasts(t *testing.T) {
 			for _, hidden := range test.hides {
 				require.NotContains(t, w.Body.String(), hidden)
 			}
+		})
+	}
+}
+
+// A page loaded in full, or opened in the main content, is in its hub's tabs, the latter with the header's links out of
+// band to mark its hub; a part of a page, such as a table, a form's answer or a modal, is not
+func TestWriteResponseWrapsPagesInTheirHub(t *testing.T) {
+	tests := []struct {
+		name     string
+		accept   httputils.AcceptType
+		target   string
+		fullPage bool
+		hub      bool
+		oob      bool
+	}{
+		{"a page loaded in full", httputils.AcceptTypeHTML, "", true, true, false},
+		{"a page opened in the main content", httputils.AcceptTypeHTMX, "main#main-content", true, true, true},
+		{"a table of the page", httputils.AcceptTypeHTMX, "div#glucoseReadingsTable", true, false, false},
+		{"a request with no target", httputils.AcceptTypeHTMX, "", true, false, false},
+		{"a form's answer", httputils.AcceptTypeHTMX, "main#main-content", false, false, false},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			ctx := httputils.CreateSiteContext(context.Background(), nil, nil, nil, nil, "test", "", httputils.HTTPActionRead, test.accept, httputils.ContentTypeJSON)
+			ctx = httputils.SetIdentityModelInSiteContext(ctx, &controldb.SiteIdentity{Role: consts.IdentityRoleAdmin})
+			r := httptest.NewRequest(http.MethodGet, "/data/insulin", nil).WithContext(ctx)
+			if test.target != "" {
+				r.Header.Set("HX-Target", test.target)
+			}
+			w := httptest.NewRecorder()
+			WriteResponse(w, r, httputils.GetSiteContext(ctx), http.StatusOK, nil, templ.Raw(`<p id="page">Insulin</p>`), test.fullPage)
+			body := w.Body.String()
+			require.Contains(t, body, `<p id="page">Insulin</p>`)
+			require.Equal(t, test.hub, strings.Contains(body, `id="site--hub--data"`), body)
+			require.Equal(t, test.hub, strings.Contains(body, `id="site--data--insulin-button"`), body)
+			require.Equal(t, test.oob, strings.Contains(body, `hx-swap-oob="true"`), body)
 		})
 	}
 }

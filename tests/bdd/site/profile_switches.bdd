@@ -2,7 +2,7 @@ INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
 // A new site has no profile switches
-CLICK #site--settings-menu
+CLICK #site--nav--data
 ASSERT_VISIBLE #site--data--profile-switches-button
 CLICK #site--data--profile-switches-button
 ASSERT_STATUS 200
@@ -11,7 +11,7 @@ ASSERT_VISIBLE #site--profile-switch--empty
 SCREENSHOT profile_switches_empty
 
 // Virtual connector writes a profile switch, with its profile, on its first run
-CLICK #site--settings-menu
+CLICK #site--nav--settings
 CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
 CLICK #site--settings--virtual-connector--enable
@@ -20,8 +20,7 @@ ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Connector Updated
 RUN_BACKGROUND_JOBS
 
-CLICK #site--settings-menu
-CLICK #site--data--profile-switches-button
+GOTO /data/profile-switches
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
 ASSERT_TEXT_VISIBLE virtual://nighttroop
@@ -94,8 +93,7 @@ ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
 
 // Deleting asks first (the test accepts), then removes the row without opening its details
-CLICK #site--settings-menu
-CLICK #site--data--profile-switches-button
+GOTO /data/profile-switches
 ASSERT_STATUS 200
 CLICK #profileSwitchesTable tbody tr >> nth=0 >> button[title=Delete]
 ASSERT_TEXT_VISIBLE Profile Switch Deleted
@@ -103,8 +101,7 @@ ASSERT_NOT_VISIBLE #site--profile-switch--details
 SCREENSHOT profile_switch_deleted
 
 // The deleted profile switch stays gone after a reload
-CLICK #site--settings-menu
-CLICK #site--data--profile-switches-button
+GOTO /data/profile-switches
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
 ASSERT_TEXT_VISIBLE Virtual

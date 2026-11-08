@@ -18,14 +18,13 @@ ASSERT_TEXT_VISIBLE Connector Updated
 RUN_BACKGROUND_JOBS
 
 // A snack and a dose given now, for the graph to mark
-CLICK #site--settings-menu
-CLICK #site--data--food-button
+GOTO /data/food
 ASSERT_STATUS 200
 CLICK #site--food--add
 INPUT #site--food--create--carbs 15
 CLICK #site--food--create--submit
 ASSERT_STATUS 201
-CLICK #site--settings-menu
+CLICK #site--nav--data
 CLICK #site--data--insulin-button
 ASSERT_STATUS 200
 CLICK #site--insulin--add
@@ -40,7 +39,7 @@ CLICK #site--insulin--create--submit
 ASSERT_STATUS 201
 
 // A sensor started now
-CLICK #site--settings-menu
+CLICK #site--nav--data
 CLICK #site--data--component-events-button
 ASSERT_STATUS 200
 CLICK #site--component-event--add

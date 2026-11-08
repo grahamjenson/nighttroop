@@ -92,15 +92,12 @@ templ Report(p *sitemodels.SiteSummaryPeriod) {
 	</div>
 }
 
-// reportKinds are buttons to the report of each period ending on last, and to the daily dose report, one selected
+// reportKinds are buttons to the report of each period ending on last, one selected
 templ reportKinds(selected string, last time.Time) {
 	for _, kind := range periods {
 		@reportButton("site--reports--period-"+kind.Period, link(kind.Period, last), kind.Period == selected) {
 			{ kind.Label }
 		}
-	}
-	@reportButton("site--reports--tdd-button", "/reports/tdd", false) {
-		TDD
 	}
 }
 

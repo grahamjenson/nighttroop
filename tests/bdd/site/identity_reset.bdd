@@ -2,7 +2,7 @@ INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
 // An admin resets a device's password from Users & Devices, and stays signed in
-CLICK #site--settings-menu
+CLICK #site--nav--settings
 CLICK #site--settings--identities-button
 ASSERT_PATH /settings/identities
 // The admin's own password and TOTP are reset from the settings page instead
@@ -33,8 +33,7 @@ CLICK "I Have Saved These"
 CLICK #site--identities--close
 
 // The settings page warns that resetting your own password or TOTP signs you out
-CLICK #site--settings-menu
-CLICK #site--settings--settings-button
+CLICK #site--nav--settings
 ASSERT_PATH /settings
 ASSERT_TEXT_VISIBLE Resetting your password or TOTP signs you out
 ASSERT_VISIBLE #site--settings--reset-password
@@ -76,8 +75,7 @@ INPUT #site--login--name carer
 INPUT #site--login--password {{ .carer_password }}
 CLICK #site--login-button
 ASSERT_NEW_URL
-CLICK #site--settings-menu
-CLICK #site--settings--settings-button
+CLICK #site--nav--settings
 ASSERT_TEXT_VISIBLE Resetting your password or TOTP signs you out
 ASSERT_NOT_VISIBLE #site--settings--reset-totp
 CLICK #site--settings--reset-password

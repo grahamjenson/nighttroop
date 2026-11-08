@@ -242,3 +242,34 @@ func TestPageErrorsAreRecorded(t *testing.T) {
 	// Each page's errors are its own
 	require.NoError(t, (&AssertNoPageErrors{}).Execute(t, ctx, quiet, nil))
 }
+
+// A page's status is its own, not that of a script it loads, which the browser's cache can answer 304
+func TestStatusAssertChecksThePageNotItsScripts(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/script.js" {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
+		_, _ = w.Write([]byte(`<html><body><script src="/script.js"></script><h1>Nighttroop</h1></body></html>`))
+	}))
+	t.Cleanup(server.Close)
+	pw, err := playwright.Run()
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = pw.Stop() })
+	browser, err := pw.Chromium.Launch()
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = browser.Close() })
+
+	page, err := browser.NewPage()
+	require.NoError(t, err)
+	var resps []playwright.Response
+	page.On("response", func(resp playwright.Response) { resps = append(resps, resp) })
+	_, err = page.Goto(server.URL, playwright.PageGotoOptions{WaitUntil: playwright.WaitUntilStateNetworkidle})
+	require.NoError(t, err)
+	notModified := false
+	for _, resp := range resps {
+		notModified = notModified || resp.Status() == http.StatusNotModified
+	}
+	require.True(t, notModified, "the script is answered 304")
+	require.NoError(t, (&BrowserAssertStatus{Code: http.StatusOK}).Execute(t, map[string]any{}, page, resps))
+}

@@ -2,7 +2,7 @@ INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
 // A new site has no activities
-CLICK #site--settings-menu
+CLICK #site--nav--data
 ASSERT_VISIBLE #site--data--activities-button
 CLICK #site--data--activities-button
 ASSERT_STATUS 200
@@ -62,8 +62,7 @@ ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
 
 // Deleting asks first (the test accepts), then removes the row without opening its details
-CLICK #site--settings-menu
-CLICK #site--data--activities-button
+GOTO /data/activities
 ASSERT_STATUS 200
 CLICK #activitiesTable tbody tr >> nth=0 >> button[title=Delete]
 ASSERT_TEXT_VISIBLE Activity Deleted
@@ -71,8 +70,7 @@ ASSERT_NOT_VISIBLE #site--activity--details
 SCREENSHOT activity_deleted
 
 // The deleted activity stays gone after a reload
-CLICK #site--settings-menu
-CLICK #site--data--activities-button
+GOTO /data/activities
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
 

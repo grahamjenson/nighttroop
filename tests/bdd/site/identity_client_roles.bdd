@@ -2,7 +2,7 @@ INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
 // A device's client is picked before its role, as a loop's device must be the PWD phone
-CLICK #site--settings-menu
+CLICK #site--nav--settings
 CLICK #site--settings--identities-button
 ASSERT_STATUS 200
 INPUT #name-createIdentityFormdevicesTable trio

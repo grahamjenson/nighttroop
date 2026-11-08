@@ -2,7 +2,7 @@ INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
 // Food and insulin added on their own pages are in no group yet
-CLICK #site--settings-menu
+CLICK #site--nav--data
 CLICK #site--data--food-button
 CLICK #site--food--add
 INPUT #site--food--create--carbs 40
@@ -10,7 +10,7 @@ INPUT #site--food--create--occurred-at 2026-01-02T12:30
 INPUT #site--food--create--name Sandwich
 CLICK #site--food--create--submit
 ASSERT_STATUS 201
-CLICK #site--settings-menu
+CLICK #site--nav--data
 CLICK #site--data--insulin-button
 CLICK #site--insulin--add
 INPUT #site--insulin--create--dose 4
@@ -20,7 +20,7 @@ ASSERT_STATUS 201
 
 // Adding a group picks its type from a menu, then its time, then from the events within an hour of it one of each
 // kind that type can have
-CLICK #site--settings-menu
+CLICK #site--nav--data
 CLICK #site--data--event-groups-button
 ASSERT_VISIBLE #site--event-group--empty
 CLICK #site--event-group--add

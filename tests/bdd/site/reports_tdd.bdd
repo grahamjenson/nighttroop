@@ -1,9 +1,9 @@
 INCLUDE steps/new_site_admin.steps
 ASSERT_PATH /
 
-// The menu's Reports have TDD, the total daily dose of the week before today at first, which a new site has no past
+// The Reports hub has TDD, the total daily dose of the week before today at first, which a new site has no past
 // days for: its table still lists each of the 7 days, with no dose
-CLICK #site--settings-menu
+CLICK #site--nav--reports
 CLICK #site--reports--tdd-menu-button
 ASSERT_STATUS 200
 ASSERT_NEW_URL
@@ -16,18 +16,20 @@ ASSERT_TEXT_EQUALS #site--reports--tdd--mean –
 ASSERT_COUNT #site--reports--tdd--table tbody tr 7
 ASSERT_COUNT #site--reports--tdd--table tbody td:text-is("–") 7
 
-// The AGP report's TDD button opens it too
-CLICK #site--settings-menu
-CLICK #site--reports--agp-button
+// The Reports hub opens on AGP, whose tab marks it, and its TDD tab opens TDD again
+CLICK #site--nav--reports
 ASSERT_STATUS 200
-CLICK #site--reports--tdd-button
+ASSERT_PATH /reports
+ASSERT_VISIBLE #site--reports--agp-button[aria-current="page"]
+CLICK #site--reports--tdd-menu-button
 ASSERT_STATUS 200
 ASSERT_NEW_URL
 ASSERT_PATH /reports/tdd
+ASSERT_VISIBLE #site--reports--tdd-menu-button[aria-current="page"]
 
 // Virtual connector writes its last 30 minutes, then each backfill the day before its oldest reading (tests backfill a
 // day), with doses and the basal in force, so three backfills fill the last three days
-CLICK #site--settings-menu
+CLICK #site--nav--settings
 CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
 CLICK #site--settings--virtual-connector--enable
@@ -46,8 +48,7 @@ ASSERT_TEXT_VISIBLE Backfilling Virtual
 RUN_BACKGROUND_JOBS
 
 // A new timezone builds the last 7 days again, with the backfilled doses in them
-CLICK #site--settings-menu
-CLICK #site--settings--settings-button
+GOTO /settings
 ASSERT_STATUS 200
 INPUT #site--settings--site--timezone Etc/UTC
 CLICK #site--settings--site--save

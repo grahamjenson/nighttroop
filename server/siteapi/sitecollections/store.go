@@ -152,7 +152,7 @@ func answerNotFound(status int, message string) http.HandlerFunc {
 		case httputils.AcceptTypeHTML, httputils.AcceptTypeHTMX:
 			page := site_templ.SiteError(message)
 			if acceptType == httputils.AcceptTypeHTML {
-				page = site_templ.FullPage(site_templ.NotFound(message))
+				page = site_templ.FullPage("", site_templ.NotFound(message))
 			}
 			apiutils.WriteStatus(w, acceptType, status)
 			page.Render(r.Context(), w)
