@@ -12,6 +12,7 @@ import (
 	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/events"
+	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ"
 	"nighttroop.t1d.nz/server/components/site_templ/site_reports_templ"
@@ -439,6 +440,49 @@ func TDDReportHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	WriteResponse(w, r, siteContext, http.StatusOK, nil, site_reports_templ.TDDReport(rangeName, days), true)
+}
+
+// summaryLimits are how many of each period's kept summaries, newest first, the summaries report shows
+var summaryLimits = map[string]int64{"day": 31, "week": 26, "fortnight": 13, "month": 12}
+
+// SummariesReportHandler is the report of the site's kept summaries as tables of their numbers, a page for people, so
+// it has no JSON
+func SummariesReportHandler(w http.ResponseWriter, r *http.Request) {
+	siteContext := SiteContextFor(w, r, (&sitedata.SummaryPeriodsCollection{}).GetName(), siteapiutils.ActionSearch)
+	if siteContext == nil {
+		return
+	}
+	if siteContext.AcceptType != httputils.AcceptTypeHTMX && siteContext.AcceptType != httputils.AcceptTypeHTML {
+		writeError(w, r, siteContext.AcceptType, apiutils.ErrNotFound)
+		return
+	}
+	summaries := map[string][]*sitemodels.SiteSummaryPeriod{}
+	for period, limit := range summaryLimits {
+		rows, err := siteContext.SiteDB.Queries().SearchSummaryPeriods(r.Context(), sitedb.SearchSummaryPeriodsParams{Period: period, Limit: limit})
+		models, herr := apiutils.Searched(rows, err, "summary_periods", apiutils.WithContext(sitemodels.SummaryPeriodFromDB, siteContext))
+		if herr != nil {
+			writeError(w, r, siteContext.AcceptType, herr)
+			return
+		}
+		summaries[period] = models
+	}
+	admin := siteContext.IdentityModel.Role == consts.IdentityRoleAdmin
+	WriteResponse(w, r, siteContext, http.StatusOK, nil, site_reports_templ.SummariesReport(summaries, admin), true)
+}
+
+// RegenerateSummariesHandler asks for the site's summaries to be built again from its data, which a background job
+// does, as a year of them takes a while. Only its admins can, and asking again before it runs asks once.
+func RegenerateSummariesHandler(w http.ResponseWriter, r *http.Request) {
+	siteContext := SiteContextFor(w, r, (&sitedata.SummaryPeriodsCollection{}).GetName(), siteapiutils.ActionSearch)
+	if siteContext == nil {
+		return
+	}
+	if siteContext.IdentityModel.Role != consts.IdentityRoleAdmin {
+		writeError(w, r, siteContext.AcceptType, apiutils.ErrForbidden)
+		return
+	}
+	siteContext.ControlDB.Logs.SummariesRegenerationRequestedEvent(r.Context(), siteContext.SiteID, siteContext.IdentityModel.Name)
+	WriteResponse(w, r, siteContext, http.StatusAccepted, map[string]bool{"regenerating": true}, site_reports_templ.SummariesRegenerating(), false)
 }
 
 func GettingStartedHandler(w http.ResponseWriter, r *http.Request) {

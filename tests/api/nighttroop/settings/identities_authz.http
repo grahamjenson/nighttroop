@@ -117,3 +117,17 @@ H Authorization: Bearer {{ .carer_jwt }}
 H Accept: application/json
 B {"reading": 6.1, "notes": "Finger prick"}
 ASSERT_STATUS 201
+
+// Only admins can have the site's summaries regenerated, which a background job does
+NAME carer_regenerate_summaries_forbidden
+POST http://{{ site }}/reports/summaries/regenerate
+H Authorization: Bearer {{ .carer_jwt }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME admin_regenerate_summaries
+POST http://{{ site }}/reports/summaries/regenerate
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 202
+ASSERT_EQUALS true "@result.regenerating"

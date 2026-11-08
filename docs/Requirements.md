@@ -310,6 +310,12 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 - The menu's Reports group has AGP, the AGP report, which shows the week with yesterday in it at first, and a report
   of any day, week, fortnight or month from today back a year is at `/reports/{period}-{date}`.
+- The Reports group's Summaries page has a table for each of the kept days (the last 31), weeks, fortnights and months
+  (the last year): each one's days with data, time in range, daily dose and daily carbs, newest first, each opening
+  its AGP report.
+- An admin can regenerate the summaries from the Summaries page, after confirming: a background job builds the last
+  year of days with data, and yesterday, and their weeks, fortnights and months, again from the site's data. It is
+  recorded as an event, and asking again before it runs asks once. Others cannot.
 - A report says which days it covers, and its days with data, time in range, mean daily dose and mean daily carbs,
   each "–" when it has no days with data.
 - Its ambulatory glucose profile (AGP) over a day from midnight shades the 5th to 95th and 25th to 75th percentiles,

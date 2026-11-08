@@ -9,12 +9,12 @@ import (
 	"nighttroop.t1d.nz/background/backup_sites"
 	"nighttroop.t1d.nz/background/check_alarms"
 	"nighttroop.t1d.nz/background/check_resources"
-	"nighttroop.t1d.nz/background/summary_daily"
+	"nighttroop.t1d.nz/background/connectors"
 	"nighttroop.t1d.nz/background/cron"
 	"nighttroop.t1d.nz/background/liteq"
 	"nighttroop.t1d.nz/background/onevent"
 	"nighttroop.t1d.nz/background/summarise_jobs"
-	"nighttroop.t1d.nz/background/connectors"
+	"nighttroop.t1d.nz/background/summary_daily"
 	"nighttroop.t1d.nz/background/trim_logs"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/utils/config"
@@ -32,7 +32,7 @@ type BackGroundManager struct {
 	BackupSiteJobManager    *backup_sites.BackupSiteJobManager
 	BackupControlJobManager *backup_control.BackupControlJobManager
 	SummariseJobManager     *summarise_jobs.TruncateJobManager
-	ConnectorJobManager          *connectors.ConnectorJobManager
+	ConnectorJobManager     *connectors.ConnectorJobManager
 }
 
 func NewBackGroundManager(ctx context.Context, controlDB *db.ControlDB, config *config.ServerConfig, s3c *s3utils.S3Client) *BackGroundManager {
@@ -66,7 +66,7 @@ func NewBackGroundManager(ctx context.Context, controlDB *db.ControlDB, config *
 
 	// Build each site's yesterday soon after its midnight, and its last week again when its timezone changes
 	summaryDaily := summary_daily.SetupCron(cron, config.Events, controlDB)
-	consumers = append(consumers, onevent.Listen(config.Events, queue, summaryDaily.RebuildOnSettingsChange())...)
+	consumers = append(consumers, onevent.Listen(config.Events, queue, summaryDaily.RebuildOnSettingsChange(), summaryDaily.RebuildOnRequest())...)
 
 	// Connector Jobs
 	connectorJobManager.SetupCron(cron, queue)
@@ -82,7 +82,7 @@ func NewBackGroundManager(ctx context.Context, controlDB *db.ControlDB, config *
 		BackupSiteJobManager:    backupSiteJobManager,
 		BackupControlJobManager: backupControlJobManager,
 		SummariseJobManager:     summariseManager,
-		ConnectorJobManager:          connectorJobManager,
+		ConnectorJobManager:     connectorJobManager,
 	}
 }
 
