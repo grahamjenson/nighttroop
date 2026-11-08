@@ -157,10 +157,7 @@ templ CreateSiteInfo(newsite publicmodels.NewSiteInfo) {
 				@row("password", "Password", newsite.AdminPassword, false)
 			</dl>
 			<div class="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 px-5 pb-5">
-				<div class="flex flex-col items-center gap-2">
-					<div id="qrcode" class="p-1.5 bg-white rounded-lg border border-slate-200"></div>
-					@authenticator.ScanHint("public--site-info--authenticator")
-				</div>
+				@authenticator.Secret("public--site-info", security.TOTPURI(consts.FIRST_ADMIN_NAME, newsite.URL, newsite.AdminTotpSecret), newsite.AdminTotpSecret, 96)
 				<form
 					id="public--totp-check"
 					class="flex flex-wrap items-center justify-center gap-3"
@@ -186,12 +183,6 @@ templ CreateSiteInfo(newsite publicmodels.NewSiteInfo) {
 				<div id="public--totp-result" class="w-full text-center text-sm empty:hidden"></div>
 			</div>
 			<script type="text/javascript">
-				new QRCode(document.getElementById("qrcode"), {
-					text: "{{ security.TOTPURI(consts.FIRST_ADMIN_NAME, newsite.URL, newsite.AdminTotpSecret) }}",
-					width: 96,
-					height: 96,
-					correctLevel: QRCode.CorrectLevel.M
-				});
 				// A code is only digits, so a letter typed or pasted is dropped, and it is checked as soon as its sixth
 				// digit is in, without a click; the same code is not sent twice on its own, so a wrong one waits for another
 				(function () {

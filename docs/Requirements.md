@@ -22,6 +22,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   account: it holds an `otpauth://totp` URI issued by Nighttroop, for the name at its site's or control plane's host.
 - Under each TOTP QR code it says to scan it with an authenticator app, linking in a new tab to Google Authenticator,
   Microsoft Authenticator and 2FAS.
+- A new site's admin, a recovered site's and a new or reset identity's TOTP QR code is a link, so tapping it on a phone
+  opens its authenticator app, and under it the secret is shown as text, in fours, with a button to copy it bare.
 - A staging server (`MODE=staging`) is never set up: it starts with the control admin `admin` of its
   `STAGING_ADMIN_PASSWORD` and `STAGING_ADMIN_TOTP_SECRET`, made again whenever its data is wiped, and will not start
   without them. Otherwise it runs as production does, its site admins getting their own random credentials.
@@ -195,9 +197,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - Anyone can create a site in one click on the public home page, without an account. It is shown once: its URL, site
   ID, admin password, the phone's Nightscout URL, and the backup key, with a prominent button to copy them all for a
   password manager. The copy has every first identity's credentials: the admin's, and the phone's and the read only
-  device's Nightscout tokens. The TOTP secret and the phone's token are not shown as text: the secret is in the copy,
-  and the token has its own copy button.
-- The new site's admin login is its own step: its username and password, its TOTP secret only as a QR code, and a
+  device's Nightscout tokens. The phone's token is not shown as text, only in the copy and by its own copy button.
+- The new site's admin login is its own step: its username and password, its TOTP secret as a QR code and text, and a
   code check. The login button is disabled until a code from the authenticator app matches; a wrong code says so. A
   code is checked as soon as its sixth digit is in, with no click. The check changes nothing, and a recovered site's
   credentials are checked the same way.

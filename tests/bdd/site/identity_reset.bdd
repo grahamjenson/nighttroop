@@ -49,15 +49,21 @@ ASSERT_TEXT_VISIBLE You have been signed out
 ASSERT_VISIBLE #qrcode[title^="otpauth://totp/Nighttroop:admin@"][title*="?issuer=Nighttroop&secret="]
 ASSERT_VISIBLE #site--identities--created--authenticator >> text=Scan with an authenticator app
 ASSERT_VISIBLE #site--identities--created--authenticator--2fas[target="_blank"]
+// It is also text, in fours, to copy bare, and tapping the QR code opens an authenticator app with it
+ASSERT_TEXT_EQUALS #site--identities--created--totp-text Fake TOTP Secr etFo rDev Only
+ASSERT_VISIBLE #site--identities--created--totp-link[href^="otpauth://totp/Nighttroop:admin@"][href$="secret=FakeTOTPSecretForDevOnly"]
+ASSERT_VISIBLE #site--identities--created--totp-copy
 ASSERT_NOT_VISIBLE #site--identities--created--password
 SCREENSHOT settings_totp_reset
+SAVE_VALUE #site--identities--created--totp-value admin_totp_secret
 CLICK #site--identities--sign-in-again
 ASSERT_PATH /login
 INPUT #site--login--name admin
 INPUT #site--login--password password
 CLICK #site--login-button
 ASSERT_STATUS 200
-TYPE #site--login--otp-1 123123
+// A code made from the secret shown signs in
+TYPE #site--login--otp-1 {{ totp .admin_totp_secret }}
 ASSERT_NEW_URL
 ASSERT_PATH /
 

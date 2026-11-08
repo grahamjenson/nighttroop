@@ -15,10 +15,15 @@ ASSERT_VISIBLE #public--logo
 ASSERT_VISIBLE #public--copy-button
 SCREENSHOT site_created
 
-// The TOTP secret is only the QR code, the phone's token is not shown, only copied, and the copy buttons say when they
-// have copied
+// The TOTP secret is the QR code, and as text in fours under it, the phone's token is not shown, only copied, and the
+// copy buttons say when they have copied
 ASSERT_NOT_VISIBLE #public--site-info--totp-secret
 ASSERT_VISIBLE #qrcode
+ASSERT_TEXT_EQUALS #public--site-info--totp-text Fake TOTP Secr etFo rDev Only
+// Tapping the QR code on a phone opens an authenticator app with the same otpauth:// URI it holds
+ASSERT_VISIBLE #public--site-info--totp-link[href^="otpauth://totp/Nighttroop:admin@"][href$="?issuer=Nighttroop&secret=FakeTOTPSecretForDevOnly"]
+CLICK #public--site-info--totp-copy
+ASSERT_VISIBLE #public--site-info--totp-copy>span[data-copy-icon-check]
 // The QR code holds the otpauth:// URI an authenticator app adds an account from, not the bare secret it can't
 ASSERT_VISIBLE #qrcode[title^="otpauth://totp/Nighttroop:admin@"][title*="?issuer=Nighttroop&secret="]
 // Under it, it says to scan it with an authenticator app, linking to a few in new tabs
@@ -27,6 +32,8 @@ ASSERT_VISIBLE #public--site-info--authenticator--google[target="_blank"]
 ASSERT_VISIBLE #public--site-info--authenticator--microsoft[target="_blank"]
 ASSERT_VISIBLE #public--site-info--authenticator--2fas[target="_blank"]
 ASSERT_NOT_VISIBLE #public--site-info--ns-token
+// What is copied is the secret bare, which the code check takes
+SAVE_VALUE #public--site-info--totp-value totp_secret
 CLICK #public--copy-ns-token
 ASSERT_VISIBLE #public--copy-ns-token>span[data-copy-icon-check]
 CLICK #public--copy-button
@@ -41,7 +48,8 @@ ASSERT_DRAWN #public--login-button[disabled]
 SCREENSHOT totp_check_failed
 PRESS Control+a
 PRESS Backspace
-TYPE #public--site-info--totp 123123
+// A code made from the copied secret is the one the check expects
+TYPE #public--site-info--totp {{ totp .totp_secret }}
 ASSERT_VISIBLE #public--totp-checked
 ASSERT_NOT_VISIBLE #public--login-button[disabled]
 SCREENSHOT totp_checked
