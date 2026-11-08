@@ -329,7 +329,7 @@ func syncSourceWriteError(err error) error {
 	case errors.IsSQLConstraintNotNull(err):
 		return apiutils.ErrMissingRequiredField
 	case errors.IsSQLConstraintCheck(err):
-		return apiutils.ErrConstraintCheckFailedWithHint(err.Error())
+		return apiutils.ErrDatabaseRefused(err)
 	}
 	return apiutils.ErrBadBody
 }

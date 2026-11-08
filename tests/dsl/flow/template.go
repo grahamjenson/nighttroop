@@ -89,6 +89,8 @@ func Render(input string, ctx map[string]any) (string, error) {
 				return time.Now().In(location).Format(layout), nil
 			},
 			// replace is s with each old replaced by new, e.g. {{ replace ".localhost" ".ns.localhost" .site_url }}
+			// repeat is s count times, e.g. for a value longer than a field keeps
+			"repeat": func(s string, count int) string { return strings.Repeat(s, count) },
 			"replace": func(old, new, s string) string {
 				return strings.ReplaceAll(s, old, new)
 			},

@@ -218,6 +218,20 @@ templ SiteError(message string) {
 	})
 }
 
+// SiteErrorRecorded is the toast for an error not written for users, such as the server's: it says it is recorded,
+// with a link to the Errors page, which keeps what went wrong, for an admin, who can see it
+templ SiteErrorRecorded(admin bool) {
+	@toast.Toast(toast.Props{Variant: toast.VariantError, Position: toast.PositionTopCenter, Duration: 5000, Dismissible: true, Icon: true}) {
+		<p class="text-sm opacity-90 mt-1">
+			if admin {
+				Something went wrong. It has been recorded on the <a href="/logs/errors" class="text-primary underline">Errors page</a>.
+			} else {
+				Something went wrong. It has been recorded for the site's admins.
+			}
+		</p>
+	}
+}
+
 // NotFound is the page for an address the site has nothing at, or for something a collection cannot do
 templ NotFound(message string) {
 	<div id="site--not-found" class="mx-auto max-w-xl space-y-4 py-16 text-center">
