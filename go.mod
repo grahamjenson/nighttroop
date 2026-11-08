@@ -13,6 +13,7 @@ require (
 	github.com/getsentry/sentry-go v0.50.0
 	github.com/go-chi/chi/v5 v5.5.0
 	github.com/go-echarts/go-echarts/v2 v2.7.3
+	github.com/go-webauthn/webauthn v0.18.2
 	github.com/golang-migrate/migrate/v4 v4.20.1
 	github.com/gorilla/websocket v1.5.3
 	github.com/hashicorp/golang-lru/v2 v2.0.7
@@ -57,10 +58,15 @@ require (
 	github.com/dustin/go-humanize v1.1.0 // indirect
 	github.com/fatih/color v1.19.0 // indirect
 	github.com/fsnotify/fsnotify v1.10.1 // indirect
+	github.com/fxamacker/cbor/v2 v2.9.4 // indirect
 	github.com/getkin/kin-openapi v0.133.0 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/swag v0.23.0 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
+	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
+	github.com/go-webauthn/x v0.3.1 // indirect
+	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
+	github.com/google/go-tpm v0.9.8 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/jmattheis/goverter v1.11.1 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
@@ -74,13 +80,16 @@ require (
 	github.com/oasdiff/yaml v0.0.0-20250309154309-f31be36b4037 // indirect
 	github.com/oasdiff/yaml3 v0.0.0-20250309153720-d2182401db90 // indirect
 	github.com/perimeterx/marshmallow v1.1.5 // indirect
+	github.com/philhofer/fwd v1.2.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/samber/lo v1.53.0 // indirect
 	github.com/samber/slog-common v0.22.0 // indirect
 	github.com/speakeasy-api/jsonpath v0.6.0 // indirect
 	github.com/speakeasy-api/openapi-overlay v0.10.2 // indirect
+	github.com/tinylib/msgp v1.6.4 // indirect
 	github.com/vmware-labs/yaml-jsonpath v0.3.2 // indirect
 	github.com/woodsbury/decimal128 v1.3.0 // indirect
+	github.com/x448/float16 v0.8.4 // indirect
 	go.mongodb.org/mongo-driver v1.17.10 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/mod v0.42.0 // indirect

@@ -198,8 +198,17 @@ templ CreateSiteInfo(newsite publicmodels.NewSiteInfo) {
 				})();
 			</script>
 		}
-		@step("3", "Log in to your site", "With the admin password and a code from the app") {
+		@step("3", "Log in to your site", "With the admin password and a code from the app, or a passkey") {
 			@loginButton("", false)
+			// A passkey is made on the site it signs in to, so this opens the new site, with a link good for 15 minutes
+			if newsite.PasskeyToken != "" {
+				<form id="public--passkey" method="post" action={ templ.SafeURL(newsite.URL + "/passkey/new") } class="flex justify-center px-6 pb-5">
+					<input type="hidden" name="token" value={ newsite.PasskeyToken }/>
+					@button.Button(button.Props{ID: "public--passkey-button", Type: button.TypeSubmit, Variant: button.VariantOutline}) {
+						Add a passkey for admin
+					}
+				</form>
+			}
 		}
 	</div>
 }

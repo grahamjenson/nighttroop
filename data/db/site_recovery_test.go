@@ -24,13 +24,17 @@ func TestRecoverSiteAdmin(t *testing.T) {
 	_, err := controlDB.RecoverSiteAdmin(ctx, siteID, siteID+":notthekey123")
 	require.ErrorIs(t, err, db.ErrBadBackupKey)
 
-	// A disabled admin is turned back on, with a new password hash
+	// A disabled admin is turned back on, with a new password hash, and its passkeys removed
 	before := admin()
+	require.NoError(t, q.CreateSiteIdentityPasskey(ctx, controldb.CreateSiteIdentityPasskeyParams{SiteID: siteID, IdentityID: before.ID, CredentialID: "lost", CredentialJson: "{}"}))
 	require.NoError(t, q.UpdateSiteIdentityEnabled(ctx, controldb.UpdateSiteIdentityEnabledParams{Enabled: false, SiteID: siteID, ID: before.ID}))
 	recovered, err := controlDB.RecoverSiteAdmin(ctx, siteID, site.BackupPassword)
 	require.NoError(t, err)
 	require.True(t, admin().Enabled)
 	require.NotEqual(t, before.PasswordHash, admin().PasswordHash)
+	passkeys, err := q.ListSiteIdentityPasskeys(ctx, controldb.ListSiteIdentityPasskeysParams{SiteID: siteID, IdentityID: before.ID})
+	require.NoError(t, err)
+	require.Empty(t, passkeys)
 
 	// The key it used works no more, and the one it gave works in its place, making a deleted admin again
 	_, err = controlDB.RecoverSiteAdmin(ctx, siteID, site.BackupPassword)

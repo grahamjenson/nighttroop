@@ -196,6 +196,10 @@ func Login() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
+			templ_7745c5c3_Err = PasskeyLogin().Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 			templ_7745c5c3_Err = invalidAfterError("site--login--form").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -458,7 +462,7 @@ func invalidAfterError(formID string) templ.Component {
 		}
 		templ_7745c5c3_Var16, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(formID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_login_templ/login.templ`, Line: 180, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_login_templ/login.templ`, Line: 181, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
 		if templ_7745c5c3_Err != nil {

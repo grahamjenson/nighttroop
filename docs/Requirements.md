@@ -220,12 +220,15 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   code check. The login button is disabled until a code from the authenticator app matches; a wrong code says so. A
   code is checked as soon as its sixth digit is in, with no click. The check changes nothing, and a recovered site's
   credentials are checked the same way.
+- A new site's last step also offers "Add a passkey for admin": it opens the new site, as a passkey is made on the
+  address it signs in to, with a link good for 15 minutes and only until the admin has a passkey. Adding the passkey
+  signs the admin in. The passkey is named admin, and no name, email or device of the person is asked for or kept.
 - A new site takes the time zone and language of the browser that created it, and its country's units and formats.
 - Site creation is rate limited per IP and server wide, and refused once the server holds `MAX_SITES`.
 - While a control admin has turned public site creation off, the home page says so instead of offering to create a
   site, and creating one is refused.
 - The public **recover page** takes a site's ID and backup key and gives the admin a new password and TOTP and the
-  site a new backup key. The key works once; a wrong key is refused without saying why.
+  site a new backup key, and removes the admin's passkeys, so a lost device's passkey signs in no more. The key works once; a wrong key is refused without saying why.
 - A site that is never used is deleted after `DELETE_AFTER_INACTIVITY_MINS`.
 - Every page's footer links to contact, the terms of service, the privacy policy and the API docs, and each footer link
   opens in a new tab, so the page the user was on stays open.
@@ -674,6 +677,11 @@ focus back to the row or button that opened it.
 ### Signing in
 
 - The admin signs in with a password, then a TOTP code; users with a password.
+- "Sign in with a passkey" on the login page signs in the identity whose passkey the browser has, with no name,
+  password or TOTP code: a passkey is two factors, the device and the person's fingerprint, face or PIN. A passkey only
+  works on its own site's address. It keeps only what checking a sign in needs: its ID, public key, flags and sign
+  count, never the authenticator's model or attestation. A disabled identity's passkey does not sign in, and passkey
+  sign ins are rate limited per IP.
 - The TOTP step only accepts the pre-auth token from this site's own password step.
 - Every TOTP code field, on sign in, setup and the new site's code check, takes only digits; letters typed or pasted
   into it are dropped.

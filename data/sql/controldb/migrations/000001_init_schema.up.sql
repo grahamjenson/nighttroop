@@ -369,6 +369,22 @@ CREATE TABLE push_registrations (
 
 CREATE INDEX push_registrations_identity ON push_registrations (site_id, identity_id);
 
+-- A passkey an identity signs in with. Only what checking a sign in needs is kept: the credential's ID, and in
+-- credential_json its public key, flags and sign count, without the authenticator's model or attestation. No name,
+-- email or device of the person is kept, and the user handle given to the authenticator is made from the IDs.
+CREATE TABLE site_identity_passkeys (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    site_id TEXT NOT NULL REFERENCES sites(id),
+    identity_id INTEGER NOT NULL REFERENCES site_identities(id) ON DELETE CASCADE,
+    credential_id TEXT NOT NULL CHECK(length(credential_id) <= 1366), -- base64url of the ID, at most 1023 bytes
+    credential_json TEXT NOT NULL CHECK(length(credential_json) <= 4096 AND json_valid(credential_json)),
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    last_used_at INTEGER,
+    UNIQUE (site_id, credential_id)
+) STRICT;
+
+CREATE INDEX site_identity_passkeys_identity ON site_identity_passkeys (site_id, identity_id);
+
 -- SERVER SETTINGS
 -- The server's one row of settings, which its control admin changes
 CREATE TABLE server_settings (
