@@ -211,3 +211,34 @@ func TestFitsFindsWhatIsCutOff(t *testing.T) {
 		})
 	}
 }
+
+// The runner records a promise a page rejects with nothing to catch it, as the browser's console shows it, for
+// ASSERT_NO_PAGE_ERRORS, and the assert passes on a page that threw nothing
+func TestPageErrorsAreRecorded(t *testing.T) {
+	pw, err := playwright.Run()
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = pw.Stop() })
+	browser, err := pw.Chromium.Launch()
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = browser.Close() })
+
+	runner, ctx := &Runner{}, map[string]any{}
+	quiet, err := browser.NewPage()
+	require.NoError(t, err)
+	runner.watch(quiet, ctx)
+	require.NoError(t, quiet.SetContent(`<html><body><p>Nothing thrown</p></body></html>`))
+	require.NoError(t, (&AssertNoPageErrors{}).Execute(t, ctx, quiet, nil))
+
+	rejecting, err := browser.NewPage()
+	require.NoError(t, err)
+	runner.watch(rejecting, ctx)
+	require.NoError(t, rejecting.SetContent(`<html><body><script>Promise.reject(new Error("BodyStreamBuffer was aborted"))</script></body></html>`))
+	require.Eventually(t, func() bool {
+		errors := ctx[pageErrorsKey].(*pageErrors)
+		errors.Lock()
+		defer errors.Unlock()
+		return len(errors.thrown[rejecting]) == 1 && strings.Contains(errors.thrown[rejecting][0], "BodyStreamBuffer was aborted")
+	}, 2*time.Second, 50*time.Millisecond)
+	// Each page's errors are its own
+	require.NoError(t, (&AssertNoPageErrors{}).Execute(t, ctx, quiet, nil))
+}

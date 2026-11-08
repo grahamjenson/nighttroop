@@ -68,6 +68,9 @@ ASSERT_NOT_VISIBLE #site--reports--next[disabled]
 CLICK_BACK
 ASSERT_STATUS 200
 ASSERT_DRAWN #site--reports--agp >> text=Median
+// Moving between the reports swaps the page, closing the live alarm updates' stream and opening it again, and that
+// throws nothing a person would see in the browser's console
+ASSERT_NO_PAGE_ERRORS
 
 // A report that is not a period, or is in the future, is not found
 GOTO /reports/year-{{ date 0 }}

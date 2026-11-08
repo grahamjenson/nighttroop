@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -565,4 +566,38 @@ func (r *AssertTitle) Execute(t *testing.T, ctx map[string]any, page playwright.
 
 func (r *AssertTitle) ToErrorLine() string {
 	return fmt.Sprintf("%s:%d: expected title to be %s", r.TestPath, r.TestLine, r.Title)
+}
+
+// //
+// ASSERT NO PAGE ERRORS
+// //
+
+// AssertNoPageErrors checks the page has thrown no uncaught error since the flow went to it, such as a promise
+// rejected with nothing to catch it, which a person only sees in the browser's console
+type AssertNoPageErrors struct {
+	TestPath string
+	TestLine int
+}
+
+// pageErrorSettle is how long the assert waits for an error a step just caused, as a rejected promise is reported a
+// moment after it
+const pageErrorSettle = 300 * time.Millisecond
+
+func (r *AssertNoPageErrors) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
+	time.Sleep(pageErrorSettle)
+	errors, _ := ctx[pageErrorsKey].(*pageErrors)
+	if errors == nil {
+		return nil
+	}
+	errors.Lock()
+	thrown := slices.Clone(errors.thrown[page])
+	errors.Unlock()
+	if len(thrown) > 0 {
+		t.Fatalf("\n\n%s\n assertNoPageErrors failed: the page threw:\n  %s\n\n", r.ToErrorLine(), strings.Join(thrown, "\n  "))
+	}
+	return nil
+}
+
+func (r *AssertNoPageErrors) ToErrorLine() string {
+	return fmt.Sprintf("%s:%d: expected the page to throw no uncaught error", r.TestPath, r.TestLine)
 }
