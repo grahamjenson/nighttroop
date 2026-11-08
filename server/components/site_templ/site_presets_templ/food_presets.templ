@@ -45,12 +45,10 @@ templ FoodPresetsTable(foodPresets []*sitemodels.SiteFoodPreset, skip int64, lim
 					}
 				}
 				@table.Body() {
-					if len(foodPresets) == 0 {
-						<tr id="presets--food--empty"><td colspan="5" class="p-4 text-sm text-gray-500">No food presets here.</td></tr>
-					}
 					for _, foodPreset := range foodPresets {
 						@foodPresetRow(foodPreset)
 					}
+					@pager.Empty("presets--food--empty", 5, "No food presets here.")
 				}
 			}
 			@pager.Pager(pager.Props{ID: "presets--food", Path: "/presets/food", Count: len(foodPresets), Skip: skip, Limit: limit})
@@ -62,7 +60,7 @@ templ FoodPresetsTable(foodPresets []*sitemodels.SiteFoodPreset, skip int64, lim
 // FoodPresetNew adds a food preset with all its fields, putting its row at the top of the table
 templ FoodPresetNew() {
 	@addmodal.Modal(addmodal.Props{ID: "presets--food--create", Title: "Add Food Preset", Path: "/presets/food", Target: "#foodPresetsTable tbody",
-		EmptyID: "presets--food--empty", Submit: "Add Food Preset", Fields: foodPresetFields})
+		Submit: "Add Food Preset", Fields: foodPresetFields})
 }
 
 // foodPresetFields are what a food preset has that a person can type in, as a food intake has, less its time and notes

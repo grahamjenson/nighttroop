@@ -54,6 +54,8 @@ INPUT #site--glucose--create--reading 7.9
 INPUT #site--glucose--create--notes Finger prick
 CLICK #site--glucose--create--submit
 ASSERT_STATUS 201
+// The count under the table counts it straight away, without a reload
+ASSERT_TEXT_VISIBLE Showing 1 to 7
 // It is shown as from a meter, beside the sensor's readings with their trend arrows
 ASSERT_TEXT_VISIBLE Meter
 ASSERT_TEXT_VISIBLE Sensor
@@ -128,6 +130,8 @@ ASSERT_TEXT_VISIBLE Showing 1 to 7
 CLICK #glucoseReadingsTable tbody tr >> nth=0 >> button[title=Delete]
 ASSERT_TEXT_VISIBLE Glucose Reading Deleted
 ASSERT_NOT_VISIBLE #site--glucose--details
+// The count under the table stops counting it straight away, without a reload
+ASSERT_TEXT_VISIBLE Showing 1 to 6
 SCREENSHOT glucose_reading_deleted
 
 // The deleted reading stays gone after a reload

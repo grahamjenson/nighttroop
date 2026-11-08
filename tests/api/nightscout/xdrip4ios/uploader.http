@@ -13,13 +13,18 @@ INCLUDE steps/ns_units_mgdl.steps
 # Readings
 #####
 
+# The reading sent twice keeps one time, as a time made again for the second request may be a second later,
+# and a reading's date cannot be changed
+SET rdg2_ms {{ itime 5 }}
+SET rdg2_at {{ time 5 }}
+
 NAME xdrip4ios_upload_readings
 POST http://{{ site }}/api/v1/entries?token={{ token }}
 H Content-Type: application/json
 H Accept: application/json
 B [
   {"_id": "Xd4iOSrdg01aBcDeFgHiJkLm", "device": "DexcomG7", "date": {{ itime 10 }}, "dateString": "{{ time 10 }}", "type": "sgv", "sgv": 118, "direction": "Flat", "filtered": 118000, "unfiltered": 118000, "noise": 1, "sysTime": "{{ time 10 }}"},
-  {"_id": "Xd4iOSrdg02aBcDeFgHiJkLm", "device": "DexcomG7", "date": {{ itime 5 }}, "dateString": "{{ time 5 }}", "type": "sgv", "sgv": 124, "direction": "FortyFiveUp", "filtered": 124512.5, "unfiltered": 124512.5, "noise": 1, "sysTime": "{{ time 5 }}"}
+  {"_id": "Xd4iOSrdg02aBcDeFgHiJkLm", "device": "DexcomG7", "date": {{ .rdg2_ms }}, "dateString": "{{ .rdg2_at }}", "type": "sgv", "sgv": 124, "direction": "FortyFiveUp", "filtered": 124512.5, "unfiltered": 124512.5, "noise": 1, "sysTime": "{{ .rdg2_at }}"}
 ]
 ASSERT_STATUS 200
 ASSERT_LENGTH 2 "@"
@@ -30,7 +35,7 @@ ASSERT_EQUALS "FortyFiveUp" "@1.direction"
 NAME xdrip4ios_upload_readings_again
 POST http://{{ site }}/api/v1/entries?token={{ token }}
 B [
-  {"_id": "Xd4iOSrdg02aBcDeFgHiJkLm", "device": "DexcomG7", "date": {{ itime 5 }}, "dateString": "{{ time 5 }}", "type": "sgv", "sgv": 124, "direction": "FortyFiveUp", "filtered": 124512.5, "unfiltered": 124512.5, "noise": 1, "sysTime": "{{ time 5 }}"},
+  {"_id": "Xd4iOSrdg02aBcDeFgHiJkLm", "device": "DexcomG7", "date": {{ .rdg2_ms }}, "dateString": "{{ .rdg2_at }}", "type": "sgv", "sgv": 124, "direction": "FortyFiveUp", "filtered": 124512.5, "unfiltered": 124512.5, "noise": 1, "sysTime": "{{ .rdg2_at }}"},
   {"_id": "Xd4iOSrdg03aBcDeFgHiJkLm", "device": "DexcomG7", "date": {{ itime 0 }}, "dateString": "{{ time 0 }}", "type": "sgv", "sgv": 130, "direction": "FortyFiveUp", "filtered": 130000, "unfiltered": 130000, "noise": 1, "sysTime": "{{ time 0 }}"}
 ]
 ASSERT_STATUS 200

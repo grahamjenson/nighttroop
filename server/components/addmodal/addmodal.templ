@@ -49,10 +49,8 @@ type Props struct {
 	Title  string
 	Path   string
 	Target string
-	// EmptyID is the row saying the table is empty, removed once a record is added
-	EmptyID string
-	Submit  string
-	Fields  []Field
+	Submit string
+	Fields []Field
 	// Swap is how the answer goes in Target, afterbegin when empty, e.g. outerHTML to replace an edited row
 	Swap string
 	// Extra is more of the form after its fields, such as inputs loaded for what is typed in them
@@ -86,7 +84,7 @@ templ Form(p Props) {
 		hx-swap={ swap(p) }
 		hx-status:4xx="target:#toaster swap:beforeend"
 		hx-status:5xx="target:#toaster swap:beforeend"
-		{ formHandlers(p.EmptyID)... }
+		{ formHandlers... }
 	>
 		for _, f := range p.Fields {
 			@field(p, f)
@@ -107,13 +105,11 @@ func swap(p Props) string {
 }
 
 // formHandlers leave out the fields left blank, so they are not set rather than empty, then once a record is added,
-// empty the modal container and remove the empty table's row. Only the form's own request closes it, not one of an
-// input's within it, like loading what can be picked.
-func formHandlers(emptyID string) templ.Attributes {
-	return templ.Attributes{
-		"hx-on::config:request": templ.JSUnsafeFuncCall("for (const [name, value] of [...ctx.request.body]) { if (value === '') ctx.request.body.delete(name) }"),
-		"hx-on::after:request":  templ.JSUnsafeFuncCall("if (event.target === this && ctx.response.status < 400) { document.getElementById('modal-container').innerHTML = ''; document.getElementById('" + emptyID + "')?.remove() }"),
-	}
+// empty the modal container. Only the form's own request closes it, not one of an input's within it, like loading what
+// can be picked. A table's pager.Empty row hides itself once a row is added.
+var formHandlers = templ.Attributes{
+	"hx-on::config:request": templ.JSUnsafeFuncCall("for (const [name, value] of [...ctx.request.body]) { if (value === '') ctx.request.body.delete(name) }"),
+	"hx-on::after:request":  templ.JSUnsafeFuncCall("if (event.target === this && ctx.response.status < 400) { document.getElementById('modal-container').innerHTML = '' }"),
 }
 
 // SubmitButton submits the form, from outside it, as in a modal's actions

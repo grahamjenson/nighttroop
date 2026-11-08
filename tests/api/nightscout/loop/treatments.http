@@ -175,13 +175,17 @@ ASSERT_LENGTH 0 "@result"
 # changes, such as ending early. It deletes an override by that UUID.
 ######
 
+# The override sent again when it ends early keeps its time, as one made again may be a second later, and a
+# treatment's time cannot be changed
+SET override_at {{ time 63 }}
+
 NAME loop_create_overrides
 POST http://{{ site }}/api/v1/treatments
 H api-secret: {{ sha1 token }}
 H Content-Type: application/json
 H Accept: application/json
 B [
-    {"_id": "2C7A1F3B-9D8E-4A6B-B5C4-1E2F3A4B5C6D", "created_at": "{{ time 63 }}", "timestamp": "{{ time 63 }}", "enteredBy": "Loop", "eventType": "Temporary Override", "reason": "🏃 Running", "duration": 60, "insulinNeedsScaleFactor": 0.8, "correctionRange": [140, 160]},
+    {"_id": "2C7A1F3B-9D8E-4A6B-B5C4-1E2F3A4B5C6D", "created_at": "{{ .override_at }}", "timestamp": "{{ .override_at }}", "enteredBy": "Loop", "eventType": "Temporary Override", "reason": "🏃 Running", "duration": 60, "insulinNeedsScaleFactor": 0.8, "correctionRange": [140, 160]},
     {"_id": "3D8B2F4C-0E9F-4B7C-86D5-2F3A4B5C6D7E", "created_at": "{{ time 62 }}", "timestamp": "{{ time 62 }}", "enteredBy": "Loop (via remote command)", "eventType": "Temporary Override", "reason": "Custom Override", "durationType": "indefinite", "remoteAddress": "caregiver", "insulinNeedsScaleFactor": 1.2, "correctionRange": [90, 100]}
   ]
 ASSERT_STATUS 200
@@ -205,7 +209,7 @@ POST http://{{ site }}/api/v1/treatments
 H api-secret: {{ sha1 token }}
 H Content-Type: application/json
 H Accept: application/json
-B [{"_id": "2C7A1F3B-9D8E-4A6B-B5C4-1E2F3A4B5C6D", "created_at": "{{ time 63 }}", "timestamp": "{{ time 63 }}", "enteredBy": "Loop", "eventType": "Temporary Override", "reason": "🏃 Running", "duration": 12.483333333333333, "insulinNeedsScaleFactor": 0.8, "correctionRange": [140, 160]}]
+B [{"_id": "2C7A1F3B-9D8E-4A6B-B5C4-1E2F3A4B5C6D", "created_at": "{{ .override_at }}", "timestamp": "{{ .override_at }}", "enteredBy": "Loop", "eventType": "Temporary Override", "reason": "🏃 Running", "duration": 12.483333333333333, "insulinNeedsScaleFactor": 0.8, "correctionRange": [140, 160]}]
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
 ASSERT_EQUALS "2C7A1F3B-9D8E-4A6B-B5C4-1E2F3A4B5C6D" "@0._id"

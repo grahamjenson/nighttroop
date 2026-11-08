@@ -61,12 +61,10 @@ templ ActivitiesTable(activities []*sitemodels.SiteActivity, skip int64, limit i
 					}
 				}
 				@table.Body() {
-					if len(activities) == 0 {
-						<tr id="site--activity--empty"><td colspan="7" class="p-4 text-sm text-gray-500">No activities here.</td></tr>
-					}
 					for _, activity := range activities {
 						@activityRow(activity)
 					}
+					@pager.Empty("site--activity--empty", 7, "No activities here.")
 				}
 			}
 			@pager.Pager(pager.Props{ID: "site--activity", Path: "/data/activities", Count: len(activities), Skip: skip, Limit: limit})
@@ -78,7 +76,7 @@ templ ActivitiesTable(activities []*sitemodels.SiteActivity, skip int64, limit i
 // ActivityNew adds an activity with all its fields, putting its row at the top of the table
 templ ActivityNew() {
 	@addmodal.Modal(addmodal.Props{ID: "site--activity--create", Title: "Add Activity", Path: "/data/activities", Target: "#activitiesTable tbody",
-		EmptyID: "site--activity--empty", Submit: "Add Activity", Fields: activityFields})
+		Submit: "Add Activity", Fields: activityFields})
 }
 
 // activityFields are what an activity has that a person can type in

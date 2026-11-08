@@ -2,6 +2,7 @@ package pager
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"nighttroop.t1d.nz/server/components/ui/button"
@@ -20,11 +21,11 @@ type Props struct {
 // Pager is under a table of one page of rows: which rows it shows, and buttons to the pages either side
 templ Pager(p Props) {
 	<div class="mt-4 flex items-center justify-between text-sm text-gray-500">
-		if p.Count > 0 {
-			<span id={ p.ID + "--showing" }>{ fmt.Sprintf("Showing %d to %d", p.Skip+1, p.Skip+int64(p.Count)) }</span>
-		} else {
-			<span></span>
-		}
+		<span id={ p.ID + "--showing" } data-pager-skip={ strconv.FormatInt(p.Skip, 10) }>
+			if p.Count > 0 {
+				{ fmt.Sprintf("Showing %d to %d", p.Skip+1, p.Skip+int64(p.Count)) }
+			}
+		</span>
 		<div class="flex gap-2">
 			if p.Skip > 0 {
 				@pageButton(p.ID+"--previous", "Previous", pageURL(p.Path, max(p.Skip-p.Limit, 0), p.Limit))
@@ -34,6 +35,34 @@ templ Pager(p Props) {
 			}
 		</div>
 	</div>
+}
+
+// Empty is the last row of a table's body, saying it has no rows. It is always there, shown only while it is the only
+// row, so it goes once a row is added and comes back once the last is deleted.
+templ Empty(id string, columns int, text string) {
+	<tr id={ id } data-empty class="hidden only:table-row"><td colspan={ strconv.Itoa(columns) } class="p-4 text-sm text-gray-500">{ text }</td></tr>
+}
+
+var scriptOnce = templ.NewOnceHandle()
+
+// Script keeps a pager's "Showing" to the rows of the table above it, one with an Empty row, as rows are added or
+// deleted without loading the page again
+templ Script() {
+	@scriptOnce.Once() {
+		<script>
+			(() => {
+				const count = () => document.querySelectorAll("[data-pager-skip]").forEach((showing) => {
+					const body = showing.closest("section")?.querySelector("tbody:has(> [data-empty])")
+					if (!body) return
+					const skip = Number(showing.dataset.pagerSkip), rows = body.querySelectorAll(":scope > tr:not([data-empty])").length
+					const text = rows > 0 ? "Showing " + (skip + 1) + " to " + (skip + rows) : ""
+					if (showing.textContent.trim() !== text) showing.textContent = text
+				})
+				// After the request's own handlers, such as one removing a deleted row
+				for (const name of ["htmx:after:settle", "htmx:after:request"]) document.addEventListener(name, () => setTimeout(count))
+			})()
+		</script>
+	}
 }
 
 templ pageButton(id string, label string, url string) {
