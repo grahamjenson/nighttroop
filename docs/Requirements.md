@@ -328,11 +328,16 @@ last one shows the table is empty again, as deleting the last push credential do
     as the table and its details show them.
   - Above the first page, the last 10 days' glucose are small graphs on the same scale, oldest first, each with the
     range shaded and its time in range; the last is today so far, from its clean readings.
-- **Insulin doses**, with a combo bolus's split as the fractions given at once and over time, 0.7 for 70%
+- **Insulin doses**, with a combo bolus's split as the fractions given at once and over time, 0.7 for 70%, typed in
+  and shown on the site as percents, 0 to 100
 - **Food intakes**
-- **Temp basals**, with the rate given in U/hr and a multiplier of the scheduled basal, 0.5 for half, 0 a zero temp
+- **Temp basals**, with the rate given in U/hr and a multiplier of the scheduled basal, 0.5 for half, 0 a zero temp;
+  the site types it in and shows it as a percent, from 1% to 1100%
 - **Temp targets**, in the settings' units
-- **Profile switches**, with their profile's schedules to read, and a multiplier of its insulin, 1.2 for 120%
+- **Profile switches**, with their profile's schedules to read, and a multiplier of its insulin, 1.2 for 120%; the
+  site types it in and shows it as a percent, from 10% to 500%
+- Every multiplier is labelled with its unit, (%), and explained the same way: "A percent above 0: 100% is as it is,
+  120% is 1.2 times." The API keeps and returns the fraction.
   - A profile switch's details show its profile's basal, carb ratio, sensitivity and target schedules as tables, as
     profiles do, with sensitivities and targets in the settings' units and the units in the headings.
 - **Activities**
