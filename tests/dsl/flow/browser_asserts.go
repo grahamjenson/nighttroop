@@ -456,6 +456,42 @@ func (r *AssertPath) ToErrorLine() string {
 	return fmt.Sprintf("%s:%d: expected path to be %s", r.TestPath, r.TestLine, r.URLPath)
 }
 
+// AssertCount is how many elements the locator finds are visible
+type AssertCount struct {
+	Locator string
+	Count   int
+
+	TestPath string
+	TestLine int
+}
+
+// Execute counts the visible elements once, without waiting, as what it counts, such as toasts, can time out
+func (r *AssertCount) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
+	locator := getLocator(r.Locator, page)
+	if locator == nil {
+		t.Fatalf("\n\n%s\n getLocator returned nil for rawLocator: %v\n\n", r.ToErrorLine(), r.Locator)
+	}
+	all, err := locator.All()
+	if err != nil {
+		t.Fatalf("\n\n%s\n failed to find elements: %v\n\n", r.ToErrorLine(), err)
+	}
+	count := 0
+	for _, element := range all {
+		if visible, err := element.IsVisible(); err == nil && visible {
+			count++
+		}
+	}
+	if count != r.Count {
+		html, _ := page.Content()
+		t.Fatalf("\n\n%s\n assertCount failed: found %d visible\n\n%s\n\n", r.ToErrorLine(), count, PrettifyHTML(html))
+	}
+	return nil
+}
+
+func (r *AssertCount) ToErrorLine() string {
+	return fmt.Sprintf("%s:%d: expected %d visible elements for locator %s", r.TestPath, r.TestLine, r.Count, r.Locator)
+}
+
 // AssertTitle checks the browser tab's title, e.g. ASSERT_TITLE Glucose Readings · Nighttroop
 // AssertFits is the page fitting in the window, wide and high, so none of it needs scrolling to see
 type AssertFits struct {

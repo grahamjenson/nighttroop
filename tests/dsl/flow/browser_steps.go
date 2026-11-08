@@ -299,6 +299,22 @@ func ParseBrowserLines(lines []Line) ([]Action, error) {
 				return nil, fmt.Errorf("current action does not support asserts")
 			}
 			assertable.AddAssert(&AssertFits{TestPath: path, TestLine: lineNumber})
+		case "ASSERT_COUNT":
+			// ASSERT_COUNT is how many elements the locator finds are visible, counted at once, as for toasts that
+			// time out, which a wait would let go
+			if current == nil {
+				return nil, fmt.Errorf("assert_count before action")
+			}
+			assertable, ok := current.(interface{ AddAssert(BrowserAssert) })
+			if !ok {
+				return nil, fmt.Errorf("current action does not support asserts")
+			}
+			parts := strings.SplitN(second, " ", 2)
+			count, err := strconv.Atoi(parts[len(parts)-1])
+			if len(parts) != 2 || err != nil {
+				return nil, fmt.Errorf("%s:%d: ASSERT_COUNT needs a locator and a number: %q", path, lineNumber, second)
+			}
+			assertable.AddAssert(&AssertCount{Locator: parts[0], Count: count, TestPath: path, TestLine: lineNumber})
 		case "ASSERT_TITLE":
 			if current == nil {
 				return nil, fmt.Errorf("assert_title before action")

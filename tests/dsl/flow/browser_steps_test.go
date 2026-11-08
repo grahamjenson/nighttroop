@@ -89,3 +89,19 @@ func TestSaveValueKeepsAnInputsValue(t *testing.T) {
 	_, err = parseBrowser(fsys, "site/bad.bdd")
 	require.ErrorContains(t, err, "site/bad.bdd:2: expected a locator and a key")
 }
+
+func TestCountAssertTakesALocatorAndANumber(t *testing.T) {
+	fsys := fstest.MapFS{
+		"site/count.bdd": {Data: []byte("GOTO /\nASSERT_COUNT #toaster>[data-tui-toast] 3\n")},
+		"site/bad.bdd":   {Data: []byte("GOTO /\nASSERT_COUNT #toaster three\n")},
+	}
+
+	file, err := parseBrowser(fsys, "site/count.bdd")
+	require.NoError(t, err)
+	count := file[0].(*Goto).Asserts[0].(*AssertCount)
+	require.Equal(t, "#toaster>[data-tui-toast]", count.Locator)
+	require.Equal(t, 3, count.Count)
+
+	_, err = parseBrowser(fsys, "site/bad.bdd")
+	require.ErrorContains(t, err, "site/bad.bdd:2: ASSERT_COUNT needs a locator and a number")
+}
