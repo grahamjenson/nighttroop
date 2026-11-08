@@ -39,7 +39,7 @@ Limits written per minute are rates; their burst is how many can be used at once
 
 | Variable | Default | Use |
 | --- | --- | --- |
-| `KEY_SETS` | empty | Required: the server will not start without it, except in test mode, which uses fixed keys. The four keys that encrypt secrets in the DBs and backups, and sign logins. Make them with `scripts/keysets/create_keysets.go`, and keep a copy somewhere safe: backups cannot be read without them |
+| `KEY_SETS` | empty | Required: the server will not start without it, except in test mode, which uses fixed keys. The four keys that encrypt secrets in the DBs and backups, and sign logins. Make them with `cmd/keysets/create_keysets.go`, and keep a copy somewhere safe: backups cannot be read without them |
 
 ## S3 backups
 
@@ -114,7 +114,7 @@ control DB's server settings and used in place of the env's from then on, until 
 
 ## Scripts
 
-These are read only by the scripts in `scripts/keysets`, not the server.
+These are read only by the scripts in `cmd/keysets`, not the server.
 
 | Variable | Use |
 | --- | --- |

@@ -35,7 +35,7 @@ A line `HTTP` or `BROWSE` switches the lines after it:
 `cmd/nighttroop-script` runs scripts against a server running elsewhere, as staging, to make sites with real data and check them:
 
 ```
-go run ./cmd/nighttroop-script --host staging.nighttroop.nz --root scripts/staging -test.v new_site.flow
+go run ./cmd/nighttroop-script --host staging.nighttroop.nz --root cmd/staging -test.v new_site.flow
 ```
 
 - **URLs:** a URL on `localhost`, or a host under it such as `abcdefgh.ns.localhost`, goes to that name under `--host`, over `--scheme` (https by default), so a script runs as written in a test and against staging.
@@ -45,17 +45,17 @@ go run ./cmd/nighttroop-script --host staging.nighttroop.nz --root scripts/stagi
 - **Running tests:** each script runs as a test, so `-test.v` prints every step and its response, and `-test.run` picks which scripts run.
 - **A screenshot of every browser step**, into `allScreenshots`, is taken with `FLOW_STEP_SCREENSHOTS=1`, in a script run or `go test ./tests/bdd/`, to see where a test went wrong. It about doubles a browser test's time, so it is off otherwise, even with `-v`.
 
-`scripts/staging` has three:
+`cmd/staging` has three:
 
 - **`create_site.flow`** creates a site from the home page as a person would: it saves the admin's password and TOTP secret from the page, checks a code made from the secret, signs in with another and screenshots the credentials and the summary:
 
 ```
-go run ./cmd/nighttroop-script --host staging.nighttroop.nz --root scripts/staging --out screenshots create_site.flow
+go run ./cmd/nighttroop-script --host staging.nighttroop.nz --root cmd/staging --out screenshots create_site.flow
 ```
 
 - **`new_site.flow`** makes a site with an hour of readings, a meal bolus and a phone's status, and prints the site's credentials in its `create_site` response.
 - **`sign_in.flow`** signs in to a site's page with them and screenshots its summary:
 
 ```
-SITE=abcdefgh PASSWORD=... TOTP_SECRET=... go run ./cmd/nighttroop-script --host staging.nighttroop.nz --root scripts/staging sign_in.flow
+SITE=abcdefgh PASSWORD=... TOTP_SECRET=... go run ./cmd/nighttroop-script --host staging.nighttroop.nz --root cmd/staging sign_in.flow
 ```
