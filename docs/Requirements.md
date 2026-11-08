@@ -243,6 +243,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   a phone's window, so none of them needs scrolling.
 - A staging server (`MODE=staging`) says it is a test site in a large banner at the top of every page, public, site and
   control, warning that its data is frequently wiped.
+- Toasts show at the top of every page, site and control, newest on top. At most three take space at once: a fourth
+  hides the oldest until it times out, so the newest is always seen and the stack never grows further over the page.
 - Every page names the browser's tab after itself, e.g. `Glucose Readings · Nighttroop`, whether it is loaded in full or
   opened from a menu; a page with no title of its own, such as the login, is named `Nighttroop`.
 - A page that shows estimated locations, such as the events pages, also links to DB-IP, whose free databases make

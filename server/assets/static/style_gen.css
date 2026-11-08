@@ -2801,6 +2801,9 @@
 #toaster > [data-tui-toast] > * {
   min-height: 0;
 }
+#toaster > [data-tui-toast]:nth-last-child(n+4) {
+  display: none;
+}
 #toaster > [data-tui-toast][style*="opacity: 0"] {
   grid-template-rows: minmax(0, 0fr);
   padding-block: 0;

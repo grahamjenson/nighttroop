@@ -22,3 +22,18 @@ CLICK #site--login-button
 ASSERT_STATUS 401
 
 SCREENSHOT stack_toast
+
+// Five failed logins in a row: at most three toasts take space, and the newest is still on top
+CLICK #site--login-button
+ASSERT_STATUS 401
+CLICK #site--login-button
+ASSERT_STATUS 401
+CLICK #site--login-button
+ASSERT_STATUS 401
+CLICK #site--login-button
+ASSERT_STATUS 401
+CLICK #site--login-button
+ASSERT_STATUS 401
+ASSERT_VISIBLE #toaster>[data-tui-toast]:last-child
+ASSERT_COUNT #toaster>[data-tui-toast] 3
+SCREENSHOT toasts_at_most_three
