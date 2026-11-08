@@ -491,7 +491,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   time format setting is offered but not used yet.
 - On a phone the settings, alarms and another identity's settings are one column: each setting's label, then its Site
   and Yours controls, each named, and the save buttons fit in the window.
-- An admin can **download** a snapshot of the site's DB.
+- An admin can **download** the site's data: a zip, `<site>-<date>.zip`, of a snapshot of its DB, `<site>-<date>.sqlite`,
+  so more files can be added beside it later.
 - An admin can **delete** the site, after a confirmation, which archives it to S3 and signs everyone out.
 - An admin can add, list and delete the site's **push credentials** on Settings, Push Notifications
   (`/settings/push-credentials`): an Apple APNs key (team ID, key ID and the `.p8` file pasted in) or a Firebase

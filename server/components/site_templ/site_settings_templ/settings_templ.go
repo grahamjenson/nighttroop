@@ -286,7 +286,7 @@ func resetYourCredentials(identity *controldb.SiteIdentity) templ.Component {
 	})
 }
 
-// downloadData lets an admin download a snapshot of the site's DB, to look through all its data
+// downloadData lets an admin download a zip of the site's data, a snapshot of its DB, to look through all its data
 func downloadData() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -304,7 +304,7 @@ func downloadData() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<section id=\"site--settings--download\" class=\"mx-auto mt-6 max-w-4xl space-y-3 rounded-xl border border-gray-200 p-4 shadow-sm\"><h2 class=\"text-sm font-semibold text-brand-night\">Download Data</h2><p class=\"text-sm text-gray-600\">A copy of all the site's data, as it is now, in one SQLite file, which a SQLite browser can open to look through.</p>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<section id=\"site--settings--download\" class=\"mx-auto mt-6 max-w-4xl space-y-3 rounded-xl border border-gray-200 p-4 shadow-sm\"><h2 class=\"text-sm font-semibold text-brand-night\">Download Data</h2><p class=\"text-sm text-gray-600\">A copy of all the site's data, as it is now, in a zip of a SQLite file, which a SQLite browser can open to look through.</p>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
