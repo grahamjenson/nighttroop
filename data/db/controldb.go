@@ -537,6 +537,16 @@ func dueDateFlags(now int64, lastSeenAt *int64, lastWriteAt *int64, updateLastSe
 	return due(updateLastSeen, lastSeenAt), due(updateLastWrite, lastWriteAt)
 }
 
+// SiteTableSizes are the bytes each table of the site's DB takes, its indexes with it, largest first, or none when its
+// DB is not open here, as an archived site's is not
+func (db *ControlDB) SiteTableSizes(ctx context.Context, subdomain string) ([]sitedb.TableSize, error) {
+	site := db.sites.get(subdomain)
+	if site == nil {
+		return nil, nil
+	}
+	return site.TableSizes(ctx)
+}
+
 // ErrSiteNotFound is a site there is not, or whose DB is not open, as against one that cannot be looked up now
 var ErrSiteNotFound = errors.New("site not found")
 

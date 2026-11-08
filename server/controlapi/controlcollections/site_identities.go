@@ -2,6 +2,7 @@ package controlcollections
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -47,6 +48,16 @@ func (s *SitesCollection) PageHandler(w http.ResponseWriter, r *http.Request) {
 	if herr == nil {
 		rows, err := (&ErrorsCollection{}).SearchRows(r.Context(), latest, controlContext)
 		page.Errors, herr = apiutils.Searched(rows, err, "errors", controlmodels.ErrorFromDB)
+	}
+	// Which tables take its DB's space is only shown, so the page is still shown without it
+	if herr == nil {
+		tables, err := controlContext.ControlDB.SiteTableSizes(r.Context(), site.ID)
+		if err != nil {
+			slog.ErrorContext(r.Context(), "Cannot measure a site's DB tables", "site_id", site.ID, "error", err)
+		}
+		for _, table := range tables {
+			page.Tables = append(page.Tables, &controlmodels.SiteTable{Name: table.Name, Bytes: table.Bytes})
+		}
 	}
 	if herr != nil {
 		herr.Write(acceptType, w)

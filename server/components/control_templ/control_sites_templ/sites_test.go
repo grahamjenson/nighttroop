@@ -3,6 +3,7 @@ package control_sites_templ
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -59,26 +60,47 @@ func TestSizeMB(t *testing.T) {
 // nearing the limit and red over it; a size not measured has no bar
 func TestDBSizeBar(t *testing.T) {
 	size := func(kb int64) *int64 { return &kb }
+	tables := []*controlmodels.SiteTable{{Name: "glucose_readings", Bytes: 3 << 20}, {Name: "treatments", Bytes: 1 << 20}}
 	for _, test := range []struct {
 		name   string
 		sizeKB *int64
+		tables []*controlmodels.SiteTable
 		want   []string
+		bar    bool
 	}{
-		{"half", size(1500), []string{`style="width: 50%;"`, "bg-primary", "50% of its limit used"}},
-		{"nearing it", size(2700), []string{`style="width: 90%;"`, "bg-amber-500", "90% of its limit used"}},
-		{"over it", size(4500), []string{`style="width: 100%;"`, "bg-red-500", "150% of its limit used"}},
-		{"not measured", nil, []string{"Not measured yet"}},
+		{"half", size(1500), tables, []string{`style="width: 50%;"`, "50% of its limit used", `id="control--site--db-table--glucose_readings"`, "3.00 MB · 75%"}, true},
+		{"nearing it", size(2700), nil, []string{`style="width: 90%;"`, "text-amber-800", "90% of its limit used"}, true},
+		{"over it", size(4500), nil, []string{`style="width: 100%;"`, "text-red-600", "150% of its limit used"}, true},
+		{"measured by its tables", nil, tables, []string{">4.00</span>", `style="width: 100%;"`, "136% of its limit used", `id="control--site--db-part--treatments"`}, true},
+		{"not measured", nil, nil, []string{"Not measured yet", "The resource check measures each site's DB"}, false},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			var buf bytes.Buffer
 			site := &controlmodels.Site{ID: "site", State: "live", EstimatedDbSizeKb: test.sizeKB, MaxDbSizeKbLimit: size(3000)}
-			require.NoError(t, dbSize(site).Render(context.Background(), &buf))
+			require.NoError(t, dbSize(site, test.tables).Render(context.Background(), &buf))
 			for _, want := range test.want {
 				require.Contains(t, buf.String(), want)
 			}
-			require.Equal(t, test.sizeKB != nil, bytes.Contains(buf.Bytes(), []byte(`id="control--site--db-used"`)))
+			require.Equal(t, test.bar, bytes.Contains(buf.Bytes(), []byte(`id="control--site--db-used"`)))
+			require.Equal(t, test.tables != nil, bytes.Contains(buf.Bytes(), []byte(`id="control--site--db-tables"`)))
 		})
 	}
+}
+
+// The largest tables are shaded darkest to lightest, by their share of the DB, and the rest are Other
+func TestDBParts(t *testing.T) {
+	tables := []*controlmodels.SiteTable{}
+	for i, bytes := range []int64{40, 20, 15, 10, 5, 6, 4} {
+		tables = append(tables, &controlmodels.SiteTable{Name: fmt.Sprintf("t%d", i), Bytes: bytes})
+	}
+	parts := dbParts(tables)
+	require.Len(t, parts, 6)
+	require.Equal(t, dbPart{"t0", 40, 40, "bg-brand-night"}, parts[0])
+	require.Equal(t, dbPart{"t4", 5, 5, "bg-brand-night/25"}, parts[4])
+	require.Equal(t, dbPart{"Other", 10, 10, "bg-gray-300"}, parts[5])
+	require.Len(t, dbParts(tables[:2]), 2)
+	require.Empty(t, dbParts(nil))
+	require.Empty(t, dbParts([]*controlmodels.SiteTable{{Name: "empty"}}))
 }
 
 // A site's identities are counted as people, admins and users, and devices
