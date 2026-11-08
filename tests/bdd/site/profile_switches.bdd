@@ -46,8 +46,14 @@ SCREENSHOT profile_switches
 CLICK #profileSwitchesTable tbody tr >> nth=1
 ASSERT_VISIBLE #site--profile-switch--details
 ASSERT_TEXT_VISIBLE Virtual at 1×
-ASSERT_VISIBLE #site--profile-switch--details--basal-rates
-ASSERT_VISIBLE #site--profile-switch--details--targets-high
+// Its schedules are tables in the site's units, as profiles show them, so the virtual profile's 100 mg/dL low target is 5.5 mmol/L
+ASSERT_TEXT_VISIBLE Sensitivity (mmol/L/U)
+ASSERT_TEXT_VISIBLE Low Target (mmol/L)
+ASSERT_TEXT_EQUALS #site--profile-switch--details--basal-rates>dl>dd 0.8
+ASSERT_TEXT_EQUALS #site--profile-switch--details--carb-ratios>dl>dd 10
+ASSERT_TEXT_EQUALS #site--profile-switch--details--sensitivities>dl>dd 2.8
+ASSERT_TEXT_EQUALS #site--profile-switch--details--targets-low>dl>dd 5.5
+ASSERT_TEXT_EQUALS #site--profile-switch--details--targets-high>dl>dd 6.7
 ASSERT_TEXT_VISIBLE virtual_sync
 SCREENSHOT profile_switch_details
 

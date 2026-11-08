@@ -71,7 +71,10 @@ func GlucoseScheduleFromJSON(jsonStr *string, siteContext *httputils.SiteContext
 // ProfileSensitivities are a profile's sensitivities, stored in its own units, in the settings' units
 // goverter:context siteContext
 func ProfileSensitivities(source *sitedb.ProfilePreset, siteContext *httputils.SiteContext) []*SiteScheduleValue {
-	return scheduleFromJSON(source.InsulinSensitivitiesJson, func(value float64) float64 {
-		return MgdlToSettingsUnits(source.Units.ToMGDL(value), siteContext)
-	})
+	return SensitivityScheduleFromJSON(source.InsulinSensitivitiesJson, source.Units, siteContext)
+}
+
+// SensitivityScheduleFromJSON is a schedule of sensitivities, stored in the profile's units, in the settings' units
+func SensitivityScheduleFromJSON(jsonStr *string, units *consts.Units, siteContext *httputils.SiteContext) []*SiteScheduleValue {
+	return scheduleFromJSON(jsonStr, func(value float64) float64 { return MgdlToSettingsUnits(units.ToMGDL(value), siteContext) })
 }

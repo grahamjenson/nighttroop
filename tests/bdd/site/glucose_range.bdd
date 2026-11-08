@@ -2,7 +2,7 @@ INCLUDE steps/new_site_admin.steps
 ASSERT_PATH /
 
 // A reading under the low alarm (72 mg/dL by default) is coloured low in the readings table, and says Low on hover,
-// as the summary colours it
+// as the summary colours it. It is marked L too, read out as Low, so it is not shown by colour alone.
 CLICK #site--settings-menu
 CLICK #site--data--glucose-button
 ASSERT_STATUS 200
@@ -11,22 +11,28 @@ INPUT #site--glucose--create--reading 3.2
 CLICK #site--glucose--create--submit
 ASSERT_STATUS 201
 ASSERT_VISIBLE #glucoseReadingsTable td.text-glucose-low[title="Low"] >> text=3.2
+ASSERT_TEXT_EQUALS #glucoseReadingsTable>tbody>tr>td[title="Low"]>span[aria-hidden=true] L
+ASSERT_TEXT_EQUALS #glucoseReadingsTable>tbody>tr>td[title="Low"]>.sr-only Low
 
-// One over the high alarm (180 mg/dL by default) is coloured high and says High
+// One over the high alarm (180 mg/dL by default) is coloured high, in a darker amber than the graphs' to read as
+// text, says High on hover, and is marked H, read out as High
 CLICK #site--glucose--add
 INPUT #site--glucose--create--reading 12.5
 CLICK #site--glucose--create--submit
 ASSERT_STATUS 201
-ASSERT_VISIBLE #glucoseReadingsTable td.text-glucose-high[title="High"] >> text=12.5
+ASSERT_VISIBLE #glucoseReadingsTable td.text-glucose-high-text[title="High"] >> text=12.5
+ASSERT_TEXT_EQUALS #glucoseReadingsTable>tbody>tr>td[title="High"]>span[aria-hidden=true] H
+ASSERT_TEXT_EQUALS #glucoseReadingsTable>tbody>tr>td[title="High"]>.sr-only High
 
-// One between them keeps the table's colour, with no title
+// One between them keeps the table's colour, with no title or mark
 CLICK #site--glucose--add
 INPUT #site--glucose--create--reading 6.4
 CLICK #site--glucose--create--submit
 ASSERT_STATUS 201
 ASSERT_VISIBLE #glucoseReadingsTable td:not([title]) >> text=6.4
 ASSERT_NOT_VISIBLE #glucoseReadingsTable td.text-glucose-low >> text=6.4
-ASSERT_NOT_VISIBLE #glucoseReadingsTable td.text-glucose-high >> text=6.4
+ASSERT_NOT_VISIBLE #glucoseReadingsTable td.text-glucose-high-text >> text=6.4
+ASSERT_NOT_VISIBLE #glucoseReadingsTable td:not([title]) >> span[aria-hidden=true]
 SCREENSHOT glucose_readings_range
 
 // The colours stay after a reload
@@ -34,7 +40,9 @@ CLICK #site--settings-menu
 CLICK #site--data--glucose-button
 ASSERT_STATUS 200
 ASSERT_VISIBLE #glucoseReadingsTable td.text-glucose-low[title="Low"] >> text=3.2
-ASSERT_VISIBLE #glucoseReadingsTable td.text-glucose-high[title="High"] >> text=12.5
+ASSERT_VISIBLE #glucoseReadingsTable td.text-glucose-high-text[title="High"] >> text=12.5
+ASSERT_TEXT_EQUALS #glucoseReadingsTable>tbody>tr>td[title="High"]>span[aria-hidden=true] H
+ASSERT_TEXT_EQUALS #glucoseReadingsTable>tbody>tr>td[title="High"]>.sr-only High
 
 // In mg/dL the same readings are coloured the same
 CLICK #site--settings-menu
@@ -48,5 +56,5 @@ CLICK #site--settings-menu
 CLICK #site--data--glucose-button
 ASSERT_STATUS 200
 ASSERT_VISIBLE #glucoseReadingsTable td.text-glucose-low[title="Low"] >> text=58
-ASSERT_VISIBLE #glucoseReadingsTable td.text-glucose-high[title="High"] >> text=225
+ASSERT_VISIBLE #glucoseReadingsTable td.text-glucose-high-text[title="High"] >> text=225
 ASSERT_VISIBLE #glucoseReadingsTable td:not([title]) >> text=115

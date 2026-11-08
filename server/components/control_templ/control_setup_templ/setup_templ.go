@@ -47,7 +47,7 @@ func Setup() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"flex flex-col items-center px-6 py-12 bg-slate-50\"><div class=\"setup-target p-8 rounded-lg shadow-2xl w-full max-w-lg bg-white\"><form hx-post=\"/setup\" hx-target=\"closest .setup-target\" hx-swap=\"outerHTML\" hx-status:4xx=\"target:#toaster swap:beforeend\" hx-status:5xx=\"target:#toaster swap:beforeend\" class=\"space-y-4\"><div class=\"text-center\"><img src=\"/logo.svg\" alt=\"\" class=\"mx-auto mb-3 size-16\"><h2 class=\"font-bold text-2xl\">Set up NightTroop</h2></div><p class=\"text-sm text-slate-600\">Nothing can be used until the control admin is made. The server printed a setup code to its logs when it started; with Docker, find it with <code class=\"font-mono\">docker compose logs nighttroop</code>.</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"flex flex-col items-center px-6 py-12 bg-slate-50\"><div class=\"setup-target p-8 rounded-lg shadow-2xl w-full max-w-lg bg-white\"><form hx-post=\"/setup\" hx-target=\"closest .setup-target\" hx-swap=\"outerHTML\" hx-status:4xx=\"target:#toaster swap:beforeend\" hx-status:5xx=\"target:#toaster swap:beforeend\" class=\"space-y-4\"><div class=\"text-center\"><img src=\"/logo.svg\" alt=\"\" class=\"mx-auto mb-3 size-16\"><h2 class=\"font-bold text-2xl\">Set up Nighttroop</h2></div><p class=\"text-sm text-slate-600\">Nothing can be used until the control admin is made. The server printed a setup code to its logs when it started; with Docker, find it with <code class=\"font-mono\">docker compose logs nighttroop</code>.</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -353,7 +353,7 @@ func SetupComplete() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div id=\"control--setup--complete\" class=\"setup-target p-8 rounded-lg shadow-2xl w-full max-w-lg bg-white space-y-4 text-center\"><h2 class=\"font-bold text-2xl\">NightTroop is set up</h2><p class=\"text-sm text-slate-600\">Log in with the control admin's login to start creating sites.</p>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div id=\"control--setup--complete\" class=\"setup-target p-8 rounded-lg shadow-2xl w-full max-w-lg bg-white space-y-4 text-center\"><h2 class=\"font-bold text-2xl\">Nighttroop is set up</h2><p class=\"text-sm text-slate-600\">Log in with the control admin's login to start creating sites.</p>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

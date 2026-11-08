@@ -407,7 +407,7 @@ func Header() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<nav class=\"bg-brand-night border-b border-white/10 shadow-sm\"><div class=\"mx-auto max-w-7xl px-4 sm:px-6 lg:px-8\"><div class=\"flex h-16 items-center justify-between\"><!-- Brand --><a href=\"/\" class=\"flex items-center gap-2 text-white font-bold tracking-wide uppercase\"><img id=\"control--nav--logo\" src=\"/logo.svg\" alt=\"\" class=\"size-8\"> NightTroop Control</a><!-- Right side --><div class=\"flex items-center gap-4\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<nav class=\"bg-brand-night border-b border-white/10 shadow-sm\"><div class=\"mx-auto max-w-7xl px-4 sm:px-6 lg:px-8\"><div class=\"flex h-16 items-center justify-between\"><!-- Brand --><a href=\"/\" class=\"flex items-center gap-2 text-white font-bold tracking-wide uppercase\"><img id=\"control--nav--logo\" src=\"/logo.svg\" alt=\"\" class=\"size-8\"> Nighttroop Control</a><!-- Right side --><div class=\"flex items-center gap-4\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

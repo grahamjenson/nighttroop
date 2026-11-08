@@ -1,9 +1,6 @@
 package site_presets_templ
 
 import (
-	"fmt"
-	"strconv"
-
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/heading"
@@ -14,22 +11,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/table"
-	"nighttroop.t1d.nz/utils/consts"
 )
-
-// scheduleTime shows seconds from midnight as a time of day
-func scheduleTime(seconds int64) string {
-	return fmt.Sprintf("%02d:%02d", seconds/3600, seconds%3600/60)
-}
-
-func scheduleValue(value float64) string {
-	return strconv.FormatFloat(value, 'f', -1, 64)
-}
-
-// glucoseValue shows a sensitivity or target as glucose is shown elsewhere in units
-func glucoseValue(units *consts.Units) func(float64) string {
-	return func(value float64) string { return site_data_templ.FormatGlucose(value, units) }
-}
 
 // ProfilePresetsTable shows one page of profiles, newest first, with buttons to the pages either side
 templ ProfilePresetsTable(profiles []*sitemodels.SiteProfilePreset, skip int64, limit int64) {
@@ -153,11 +135,11 @@ templ ProfilePresetModal(profile *sitemodels.SiteProfilePreset) {
 			}
 		</form>
 		<div id="presets--profiles--schedules" class="mt-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-5">
-			@profileSchedule("Basal (U/h)", profile.BasalRates, scheduleValue)
-			@profileSchedule("Carb Ratio (g/U)", profile.CarbRatios, scheduleValue)
-			@profileSchedule("Sensitivity ("+units+"/U)", profile.Sensitivities, glucoseValue(profile.Units))
-			@profileSchedule("Low Target ("+units+")", profile.LowTargets, glucoseValue(profile.Units))
-			@profileSchedule("High Target ("+units+")", profile.HighTargets, glucoseValue(profile.Units))
+			@site_data_templ.ProfileSchedule("presets--profiles--basal-rates", "Basal (U/h)", profile.BasalRates, site_data_templ.ScheduleValue)
+			@site_data_templ.ProfileSchedule("presets--profiles--carb-ratios", "Carb Ratio (g/U)", profile.CarbRatios, site_data_templ.ScheduleValue)
+			@site_data_templ.ProfileSchedule("presets--profiles--sensitivities", "Sensitivity ("+units+"/U)", profile.Sensitivities, site_data_templ.GlucoseValue(profile.Units))
+			@site_data_templ.ProfileSchedule("presets--profiles--targets-low", "Low Target ("+units+")", profile.LowTargets, site_data_templ.GlucoseValue(profile.Units))
+			@site_data_templ.ProfileSchedule("presets--profiles--targets-high", "High Target ("+units+")", profile.HighTargets, site_data_templ.GlucoseValue(profile.Units))
 		</div>
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@presetDetail("Profile Store", profile.ProfileStoreID)
@@ -174,22 +156,6 @@ templ ProfilePresetModal(profile *sitemodels.SiteProfilePreset) {
 			@presetDetail("Updated By", orDash(profile.UpdatedByIdentityName))
 		</dl>
 	}
-}
-
-// profileSchedule lists a schedule's values from each time of day
-templ profileSchedule(title string, schedule []*sitemodels.SiteScheduleValue, format func(float64) string) {
-	<div>
-		<h3 class="mb-1 font-semibold">{ title }</h3>
-		if len(schedule) == 0 {
-			<p class="text-gray-500">-</p>
-		}
-		<dl class="grid grid-cols-2 gap-x-2">
-			for _, value := range schedule {
-				<dt class="text-gray-500">{ scheduleTime(value.Seconds) }</dt>
-				<dd>{ format(value.Value) }</dd>
-			}
-		</dl>
-	</div>
 }
 
 // ProfilePresetUpdated replaces the profile's row, closes its details and shows a toast

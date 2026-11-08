@@ -1,0 +1,40 @@
+package site_data_templ
+
+import (
+	"fmt"
+	"strconv"
+
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/utils/consts"
+)
+
+// scheduleTime shows seconds from midnight as a time of day
+func scheduleTime(seconds int64) string {
+	return fmt.Sprintf("%02d:%02d", seconds/3600, seconds%3600/60)
+}
+
+// ScheduleValue shows a basal rate or carb ratio as it is
+func ScheduleValue(value float64) string {
+	return strconv.FormatFloat(value, 'f', -1, 64)
+}
+
+// GlucoseValue shows a sensitivity or target as glucose is shown elsewhere in units
+func GlucoseValue(units *consts.Units) func(float64) string {
+	return func(value float64) string { return formatGlucose(value, units) }
+}
+
+// ProfileSchedule lists a schedule's values from each time of day, for profiles and profile switches
+templ ProfileSchedule(id string, title string, schedule []*sitemodels.SiteScheduleValue, format func(float64) string) {
+	<div id={ id }>
+		<h3 class="mb-1 font-semibold">{ title }</h3>
+		if len(schedule) == 0 {
+			<p class="text-gray-500">-</p>
+		}
+		<dl class="grid grid-cols-2 gap-x-2">
+			for _, value := range schedule {
+				<dt class="text-gray-500">{ scheduleTime(value.Seconds) }</dt>
+				<dd>{ format(value.Value) }</dd>
+			}
+		</dl>
+	</div>
+}

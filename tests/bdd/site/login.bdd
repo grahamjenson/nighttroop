@@ -2,6 +2,8 @@ GOTO {{ server_url}}/
 ASSERT_STATUS           200
 ASSERT_VISIBLE          "Create Site"
 ASSERT_VISIBLE          #public--logo
+// The brand is spelled Nighttroop, a capital N and the rest lowercase, as everywhere else
+ASSERT_VISIBLE          #public--logo + h1:text-is("Nighttroop")
 ASSERT_TEXT_EQUALS      #public--create-site-button Create Site
 
 SCREENSHOT create_site
@@ -48,6 +50,8 @@ SCREENSHOT totp_checked
 CLICK #public--login-button
 ASSERT_NEW_PAGE
 ASSERT_PATH /login
+ASSERT_VISIBLE .login-form-target h2:text-is("Nighttroop Login")
+SCREENSHOT login
 
 // PUT IN THE WRONG password
 ASSERT_VISIBLE #site--login--name
@@ -72,6 +76,7 @@ CLICK #site--login-button
 ASSERT_STATUS 200
 ASSERT_VISIBLE #site--login--otp-1
 ASSERT_VISIBLE #site--login--otp-1[autocomplete="one-time-code"]
+ASSERT_VISIBLE #otp h2:text-is("Nighttroop Login")
 ASSERT_PATH /login
 
 CLICK #site--login-totp-button
