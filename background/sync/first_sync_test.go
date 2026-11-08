@@ -110,3 +110,24 @@ func TestARefusedDexcomLoginIsAWarning(t *testing.T) {
 	require.Contains(t, buf.String(), `level=WARN msg="error syncing user data"`)
 	require.NotContains(t, buf.String(), "level=ERROR")
 }
+
+// A production server never syncs the virtual source's made-up glucose, though a site has one saved, as a
+// development, test or staging server does
+func TestVirtualSourceIsNotSyncedInProduction(t *testing.T) {
+	for _, mode := range []consts.ServerMode{consts.Production, consts.Test} {
+		t.Run(string(mode), func(t *testing.T) {
+			testCfg, controlDB, site := testutils.NewControlDBWithSite(t)
+			cfg := *testCfg
+			cfg.Mode = mode
+			q, ctx, siteID := controlDB.Queries, t.Context(), site.SiteDB.Subdomain
+			virtual := consts.SyncSourceTypeVirtual
+			require.NoError(t, q.CreateSyncSource(ctx, controldb.CreateSyncSourceParams{SiteID: siteID, Type: virtual,
+				UrlOrUsernameEnc: new("virtual"), PasswordEnc: new("virtual"), Enabled: true}))
+
+			require.NoError(t, sync.SetupSyncJobManager(&cfg, controlDB).SyncSource(ctx, sync.SyncJobParams{SiteID: siteID, Type: virtual}))
+			source, err := q.GetSyncSource(ctx, controldb.GetSyncSourceParams{SiteID: siteID, Type: virtual})
+			require.NoError(t, err)
+			require.Equal(t, mode != consts.Production, source.FirstSuccessfulSyncTime != nil)
+		})
+	}
+}

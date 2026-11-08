@@ -476,6 +476,12 @@ func (config *ServerConfig) IsStaging() bool {
 	return config.Mode == consts.Staging
 }
 
+// VirtualSyncAllowed is whether sites can sync the virtual source's made-up glucose: on a development, test or staging
+// server, never in production, where it could be taken for real data
+func (config *ServerConfig) VirtualSyncAllowed() bool {
+	return config.IsDevOrTest() || config.IsStaging()
+}
+
 func (config *ServerConfig) IsDevOrTest() bool {
 	return config.IsDev() || config.IsTest()
 }
