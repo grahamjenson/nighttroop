@@ -1,0 +1,41 @@
+INCLUDE steps/control_login.steps
+
+// Signing in to control with a passkey begins with a challenge for any of its admins' passkeys, checked by the person
+NAME control_passkey_login_begin
+POST http://control.localhost/login/passkey/begin
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EXISTS "@publicKey.challenge"
+ASSERT_EQUALS "required" "@publicKey.userVerification"
+
+// Finishing without the challenge's session, or without a passkey, does not sign in
+NAME control_passkey_login_finish_without_session
+POST http://control.localhost/login/passkey/finish
+H Accept: application/json
+H Content-Type: application/json
+B {"id": "AAAA", "rawId": "AAAA", "type": "public-key", "response": {}}
+ASSERT_STATUS 401
+ASSERT_EQUALS "That passkey could not sign you in." "@error"
+
+// A signed in control admin's Account lists its passkeys, none yet, and adding one begins on the control site's
+// address, asking no attestation, the authenticator's model
+NAME control_account
+GET http://control.localhost/account
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
+
+NAME control_account_passkey_begin
+POST http://control.localhost/account/passkeys/begin
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "admin" "@publicKey.user.name"
+ASSERT_EQUALS "none" "@publicKey.attestation"
+
+// Signed out, there is no Account to add a passkey on
+NAME control_account_signed_out
+POST http://control.localhost/account/passkeys/begin
+H Accept: application/json
+ASSERT_STATUS 401

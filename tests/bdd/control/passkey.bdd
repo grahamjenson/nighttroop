@@ -1,0 +1,42 @@
+GOTO {{ .control_url }}/login
+ASSERT_STATUS 200
+INPUT #control--login--name admin
+INPUT #control--login--password password
+TYPE #control--login--otp-1 123123
+ASSERT_VISIBLE #control--nav--logo
+
+// Account, under Security in the menu, says which control admin is signed in, with no passkeys yet
+CLICK #control--menu
+CLICK #control--account-button
+ASSERT_STATUS 200
+ASSERT_PATH /account
+ASSERT_TEXT_VISIBLE You are signed in as admin
+ASSERT_VISIBLE #site--account--passkeys >> text=No passkeys yet.
+
+// The browser has a passkey authenticator, as a phone has, that verifies the person itself. Adding a passkey, on the
+// control site's own address, lists it
+VIRTUAL_AUTHENTICATOR
+CLICK #site--account--add-passkey
+ASSERT_VISIBLE #site--account--passkeys >> text=Not used yet
+SCREENSHOT control_account
+
+// Signed out, the passkey signs the control admin back in with no name, password or code
+CLEAR_COOKIE control_token
+GOTO {{ .control_url }}/login
+ASSERT_STATUS 200
+ASSERT_VISIBLE #control--login--passkey
+SCREENSHOT control_login_passkey
+CLICK #control--login--passkey
+ASSERT_NEW_URL
+ASSERT_PATH /
+ASSERT_VISIBLE #control--nav--logo
+
+// It says it was used, and removing it (the test accepts the question) leaves none, so the other tests' control
+// admin signs in with its password as before
+CLICK #control--menu
+CLICK #control--account-button
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--account--passkeys >> text=/Last used/
+CLICK #site--account--passkeys button >> text=Remove
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--account--passkeys >> text=No passkeys yet.

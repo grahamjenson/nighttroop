@@ -38,9 +38,9 @@ func (u passkeyUser) WebAuthnName() string                       { return u.iden
 func (u passkeyUser) WebAuthnDisplayName() string                { return u.identity.Name }
 func (u passkeyUser) WebAuthnCredentials() []webauthn.Credential { return u.credentials }
 
-// relyingParty is WebAuthn for the site, its passkeys bound to the site's own address so each works only there
-func relyingParty(cfg *config.ServerConfig, r *http.Request) (*webauthn.WebAuthn, error) {
-	site, err := url.Parse(cfg.SiteURL(httputils.GetSiteContext(r.Context()).SiteID))
+// relyingParty is WebAuthn for the site or control at origin, its passkeys bound to that address so each works only there
+func relyingParty(origin string) (*webauthn.WebAuthn, error) {
+	site, err := url.Parse(origin)
 	if err != nil {
 		return nil, err
 	}
@@ -61,8 +61,8 @@ func passkeyUserFor(r *http.Request, controlDB *db.ControlDB, identity *controld
 	return user, err
 }
 
-// maxPasskeys is how many passkeys an identity may have, one a device or password manager, so none fills the table
-const maxPasskeys = 10
+// MaxPasskeys is how many passkeys an identity may have, one a device or password manager, so none fills the table
+const MaxPasskeys = 10
 
 // accountUser is the signed in identity, one that signs in to the website, with its passkeys, refused when adding one
 // more than the most it may have
@@ -72,8 +72,8 @@ func accountUser(r *http.Request, controlDB *db.ControlDB, adding bool) (passkey
 		return passkeyUser{}, fmt.Errorf("only an identity that signs in to the website has passkeys")
 	}
 	user, err := passkeyUserFor(r, controlDB, identity)
-	if err == nil && adding && len(user.credentials) >= maxPasskeys {
-		err = fmt.Errorf("you have %d passkeys, the most you can add; remove one first", maxPasskeys)
+	if err == nil && adding && len(user.credentials) >= MaxPasskeys {
+		err = fmt.Errorf("you have %d passkeys, the most you can add; remove one first", MaxPasskeys)
 	}
 	return user, err
 }
@@ -83,7 +83,7 @@ func GETAccount(controlDB *db.ControlDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		siteContext := httputils.GetSiteContext(r.Context())
 		user, err := accountUser(r, controlDB, false)
-		var passkeys []*controldb.SiteIdentityPasskey
+		var passkeys []*controldb.Passkey
 		if err == nil {
 			passkeys, err = controlDB.Queries.ListSiteIdentityPasskeys(r.Context(), controldb.ListSiteIdentityPasskeysParams{SiteID: siteContext.SiteID, IdentityID: user.identity.ID})
 		}
@@ -92,7 +92,7 @@ func GETAccount(controlDB *db.ControlDB) http.HandlerFunc {
 			http.Error(w, "Only a user who signs in to the website has an account page", http.StatusForbidden)
 			return
 		}
-		sitecollections.WriteResponse(w, r, siteContext, http.StatusOK, passkeys, site_settings_templ.MyAccount(user.identity.Name, string(user.identity.Role), passkeys, maxPasskeys), true)
+		sitecollections.WriteResponse(w, r, siteContext, http.StatusOK, passkeys, site_settings_templ.MyAccount(user.identity.Name, string(user.identity.Role), passkeys, MaxPasskeys, "/settings/account"), true)
 	}
 }
 
@@ -102,10 +102,10 @@ func POSTAccountPasskeyBegin(controlDB *db.ControlDB, cfg *config.ServerConfig) 
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := accountUser(r, controlDB, true)
 		if err != nil {
-			passkeyError(w, r, http.StatusForbidden, "A passkey cannot be added: "+err.Error()+".", err)
+			PasskeyError(w, r, http.StatusForbidden, "A passkey cannot be added: "+err.Error()+".", err)
 			return
 		}
-		passkeyBegin(w, r, cfg, func(rp *webauthn.WebAuthn) (any, *webauthn.SessionData, error) {
+		PasskeyBegin(w, r, cfg, siteOrigin(cfg, r), func(rp *webauthn.WebAuthn) (any, *webauthn.SessionData, error) {
 			return rp.BeginRegistration(user, webauthn.WithConveyancePreference(protocol.PreferNoAttestation),
 				webauthn.WithExclusions(webauthn.Credentials(user.credentials).CredentialDescriptors()),
 				webauthn.WithAuthenticatorSelection(protocol.AuthenticatorSelection{ResidentKey: protocol.ResidentKeyRequirementRequired, UserVerification: protocol.VerificationRequired}))
@@ -120,18 +120,18 @@ func POSTAccountPasskeyFinish(controlDB *db.ControlDB, cfg *config.ServerConfig)
 		var rp *webauthn.WebAuthn
 		var session webauthn.SessionData
 		if err == nil {
-			rp, session, err = passkeySession(w, r, cfg)
+			rp, session, err = PasskeySession(w, r, cfg, siteOrigin(cfg, r))
 		}
 		var credential *webauthn.Credential
 		if err == nil {
 			credential, err = rp.FinishRegistration(user, session, r)
 		}
 		if err != nil {
-			passkeyError(w, r, http.StatusBadRequest, "The passkey could not be added.", err)
+			PasskeyError(w, r, http.StatusBadRequest, "The passkey could not be added.", err)
 			return
 		}
 		if err := savePasskey(r, controlDB, credential, user.identity.ID, true); err != nil {
-			passkeyError(w, r, http.StatusInternalServerError, "The passkey could not be kept.", err)
+			PasskeyError(w, r, http.StatusInternalServerError, "The passkey could not be kept.", err)
 			return
 		}
 		slog.InfoContext(r.Context(), "Passkey added", "identity", user.identity.Name)
@@ -163,7 +163,7 @@ func DELETEAccountPasskey(controlDB *db.ControlDB) http.HandlerFunc {
 // person's fingerprint, face or PIN
 func POSTPasskeyLoginBegin(cfg *config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		passkeyBegin(w, r, cfg, func(rp *webauthn.WebAuthn) (any, *webauthn.SessionData, error) {
+		PasskeyBegin(w, r, cfg, siteOrigin(cfg, r), func(rp *webauthn.WebAuthn) (any, *webauthn.SessionData, error) {
 			return rp.BeginDiscoverableLogin(webauthn.WithUserVerification(protocol.VerificationRequired))
 		})
 	}
@@ -175,11 +175,11 @@ func POSTPasskeyLoginFinish(controlDB *db.ControlDB, cfg *config.ServerConfig) h
 	return func(w http.ResponseWriter, r *http.Request) {
 		siteID := httputils.GetSiteContext(r.Context()).SiteID
 		if allowed, _ := httputils.SiteLoginAttemptsWithinRateLimit(cfg, r, siteID, "passkey"); !allowed {
-			passkeyError(w, r, http.StatusTooManyRequests, "Too many sign in attempts, try again later.", nil)
+			PasskeyError(w, r, http.StatusTooManyRequests, "Too many sign in attempts, try again later.", nil)
 			return
 		}
 		var user passkeyUser
-		rp, session, err := passkeySession(w, r, cfg)
+		rp, session, err := PasskeySession(w, r, cfg, siteOrigin(cfg, r))
 		var credential *webauthn.Credential
 		if err == nil {
 			credential, err = rp.FinishDiscoverableLogin(func(rawID, _ []byte) (webauthn.User, error) {
@@ -187,7 +187,7 @@ func POSTPasskeyLoginFinish(controlDB *db.ControlDB, cfg *config.ServerConfig) h
 				if err != nil {
 					return nil, err
 				}
-				identity, err := controlDB.Queries.GetSiteIdentityByID(r.Context(), controldb.GetSiteIdentityByIDParams{SiteID: siteID, ID: passkey.IdentityID})
+				identity, err := controlDB.Queries.GetSiteIdentityByID(r.Context(), controldb.GetSiteIdentityByIDParams{SiteID: siteID, ID: *passkey.IdentityID})
 				if err == nil && !identity.Enabled {
 					err = fmt.Errorf("identity disabled")
 				}
@@ -199,7 +199,7 @@ func POSTPasskeyLoginFinish(controlDB *db.ControlDB, cfg *config.ServerConfig) h
 			}, session, r)
 		}
 		if err != nil {
-			passkeyError(w, r, http.StatusUnauthorized, "That passkey could not sign you in.", err)
+			PasskeyError(w, r, http.StatusUnauthorized, "That passkey could not sign you in.", err)
 			return
 		}
 		if err := savePasskey(r, controlDB, credential, user.identity.ID, false); err != nil {
@@ -209,11 +209,16 @@ func POSTPasskeyLoginFinish(controlDB *db.ControlDB, cfg *config.ServerConfig) h
 	}
 }
 
-// passkeyBegin starts a ceremony: its options to the browser, and its session kept in a cookie for the finish
-func passkeyBegin(w http.ResponseWriter, r *http.Request, cfg *config.ServerConfig, begin func(*webauthn.WebAuthn) (any, *webauthn.SessionData, error)) {
+// siteOrigin is the address of the request's site, which its passkeys are bound to
+func siteOrigin(cfg *config.ServerConfig, r *http.Request) string {
+	return cfg.SiteURL(httputils.GetSiteContext(r.Context()).SiteID)
+}
+
+// PasskeyBegin starts a ceremony at origin: its options to the browser, and its session kept in a cookie for the finish
+func PasskeyBegin(w http.ResponseWriter, r *http.Request, cfg *config.ServerConfig, origin string, begin func(*webauthn.WebAuthn) (any, *webauthn.SessionData, error)) {
 	var options any
 	var session *webauthn.SessionData
-	rp, err := relyingParty(cfg, r)
+	rp, err := relyingParty(origin)
 	if err == nil {
 		options, session, err = begin(rp)
 	}
@@ -225,16 +230,16 @@ func passkeyBegin(w http.ResponseWriter, r *http.Request, cfg *config.ServerConf
 		err = cfg.Security.SetPasskeySessionCookie(w, sessionJSON)
 	}
 	if err != nil {
-		passkeyError(w, r, http.StatusInternalServerError, "A passkey could not be asked for.", err)
+		PasskeyError(w, r, http.StatusInternalServerError, "A passkey could not be asked for.", err)
 		return
 	}
 	apiutils.WriteJSON(w, http.StatusOK, options)
 }
 
-// passkeySession is the session passkeyBegin kept, and WebAuthn for the site to finish it with
-func passkeySession(w http.ResponseWriter, r *http.Request, cfg *config.ServerConfig) (*webauthn.WebAuthn, webauthn.SessionData, error) {
+// PasskeySession is the session PasskeyBegin kept, and WebAuthn at origin to finish it with
+func PasskeySession(w http.ResponseWriter, r *http.Request, cfg *config.ServerConfig, origin string) (*webauthn.WebAuthn, webauthn.SessionData, error) {
 	var session webauthn.SessionData
-	rp, err := relyingParty(cfg, r)
+	rp, err := relyingParty(origin)
 	if err != nil {
 		return nil, session, err
 	}
@@ -245,10 +250,15 @@ func passkeySession(w http.ResponseWriter, r *http.Request, cfg *config.ServerCo
 	return rp, session, err
 }
 
-// savePasskey keeps a new passkey, or a used one's new sign count, never the authenticator's model or attestation
-func savePasskey(r *http.Request, controlDB *db.ControlDB, credential *webauthn.Credential, identityID int64, isNew bool) error {
+// PasskeyJSON is what is kept of a passkey, never the authenticator's model or attestation
+func PasskeyJSON(credential *webauthn.Credential) ([]byte, error) {
 	credential.Authenticator.AAGUID, credential.Attestation = nil, webauthn.CredentialAttestation{}
-	credentialJSON, err := json.Marshal(credential)
+	return json.Marshal(credential)
+}
+
+// savePasskey keeps a site identity's new passkey, or a used one's new sign count
+func savePasskey(r *http.Request, controlDB *db.ControlDB, credential *webauthn.Credential, identityID int64, isNew bool) error {
+	credentialJSON, err := PasskeyJSON(credential)
 	if err != nil {
 		return err
 	}
@@ -263,12 +273,12 @@ func savePasskey(r *http.Request, controlDB *db.ControlDB, credential *webauthn.
 // person's fingerprint, face or PIN, so it is enough on its own
 func passkeySignIn(w http.ResponseWriter, r *http.Request, cfg *config.ServerConfig, identity *controldb.SiteIdentity) {
 	if !can.LoginToWebsite(identity.Role) {
-		passkeyError(w, r, http.StatusForbidden, "This identity cannot sign in to the website.", nil)
+		PasskeyError(w, r, http.StatusForbidden, "This identity cannot sign in to the website.", nil)
 		return
 	}
 	token, expiresAt, err := cfg.Security.GenerateUserJWTToken(identity.SiteID, identity.Name, string(identity.Role))
 	if err != nil {
-		passkeyError(w, r, http.StatusInternalServerError, "You could not be signed in.", err)
+		PasskeyError(w, r, http.StatusInternalServerError, "You could not be signed in.", err)
 		return
 	}
 	cfg.Security.SetUserLoginCookie(w, token, expiresAt)
@@ -278,8 +288,8 @@ func passkeySignIn(w http.ResponseWriter, r *http.Request, cfg *config.ServerCon
 	apiutils.WriteJSON(w, http.StatusOK, map[string]string{"redirect": "/"})
 }
 
-// passkeyError tells the page's script why a passkey did not work, logging what went wrong
-func passkeyError(w http.ResponseWriter, r *http.Request, status int, message string, err error) {
+// PasskeyError tells the page's script why a passkey did not work, logging what went wrong
+func PasskeyError(w http.ResponseWriter, r *http.Request, status int, message string, err error) {
 	slog.InfoContext(r.Context(), "Passkey failed", "message", message, "error", err)
 	apiutils.WriteJSON(w, status, map[string]string{"error": message})
 }

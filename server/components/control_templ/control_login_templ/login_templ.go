@@ -9,6 +9,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"nighttroop.t1d.nz/server/components/control_templ"
+	"nighttroop.t1d.nz/server/components/site_templ/site_login_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/form"
 	"nighttroop.t1d.nz/server/components/ui/input"
@@ -336,7 +337,15 @@ func Login() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</form><script>\n\t\t\t\t\t// Logs in as soon as the code's last digit is typed or pasted, once the name and password are in. It\n\t\t\t\t\t// waits a tick for the code's slots to fill its value, and does not send the same code twice, so a\n\t\t\t\t\t// wrong code is not sent again on its own. After a failed attempt its inputs are marked invalid, until\n\t\t\t\t\t// it is sent again.\n\t\t\t\t\t(function () {\n\t\t\t\t\t\tconst form = document.getElementById(\"otp\");\n\t\t\t\t\t\tconst code = document.getElementById(\"control--login--otp\");\n\t\t\t\t\t\tconst filled = (id) => document.getElementById(id).value !== \"\";\n\t\t\t\t\t\tlet sent = \"\";\n\t\t\t\t\t\tconst sendWhenFull = () => setTimeout(() => {\n\t\t\t\t\t\t\tif (/^\\d{6}$/.test(code.value) && code.value !== sent && filled(\"control--login--name\") && filled(\"control--login--password\")) {\n\t\t\t\t\t\t\t\tsent = code.value;\n\t\t\t\t\t\t\t\tform.requestSubmit();\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t}, 0);\n\t\t\t\t\t\t// Only the code's own slots, so typing the name or password does not send it\n\t\t\t\t\t\tconst slots = document.getElementById(\"control--login--otp-container\");\n\t\t\t\t\t\tslots.addEventListener(\"input\", sendWhenFull);\n\t\t\t\t\t\tslots.addEventListener(\"paste\", sendWhenFull);\n\t\t\t\t\t\tconst invalid = (failed) => form.querySelectorAll(\"input:not([type=hidden])\").forEach((input) =>\n\t\t\t\t\t\t\tfailed ? input.setAttribute(\"aria-invalid\", \"true\") : input.removeAttribute(\"aria-invalid\"));\n\t\t\t\t\t\tform.addEventListener(\"htmx:response:error\", () => invalid(true));\n\t\t\t\t\t\tform.addEventListener(\"htmx:before:request\", () => invalid(false));\n\t\t\t\t\t})();\n\t\t\t\t</script></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</form>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = site_login_templ.PasskeyLogin("control--login").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<script>\n\t\t\t\t\t// Logs in as soon as the code's last digit is typed or pasted, once the name and password are in. It\n\t\t\t\t\t// waits a tick for the code's slots to fill its value, and does not send the same code twice, so a\n\t\t\t\t\t// wrong code is not sent again on its own. After a failed attempt its inputs are marked invalid, until\n\t\t\t\t\t// it is sent again.\n\t\t\t\t\t(function () {\n\t\t\t\t\t\tconst form = document.getElementById(\"otp\");\n\t\t\t\t\t\tconst code = document.getElementById(\"control--login--otp\");\n\t\t\t\t\t\tconst filled = (id) => document.getElementById(id).value !== \"\";\n\t\t\t\t\t\tlet sent = \"\";\n\t\t\t\t\t\tconst sendWhenFull = () => setTimeout(() => {\n\t\t\t\t\t\t\tif (/^\\d{6}$/.test(code.value) && code.value !== sent && filled(\"control--login--name\") && filled(\"control--login--password\")) {\n\t\t\t\t\t\t\t\tsent = code.value;\n\t\t\t\t\t\t\t\tform.requestSubmit();\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t}, 0);\n\t\t\t\t\t\t// Only the code's own slots, so typing the name or password does not send it\n\t\t\t\t\t\tconst slots = document.getElementById(\"control--login--otp-container\");\n\t\t\t\t\t\tslots.addEventListener(\"input\", sendWhenFull);\n\t\t\t\t\t\tslots.addEventListener(\"paste\", sendWhenFull);\n\t\t\t\t\t\tconst invalid = (failed) => form.querySelectorAll(\"input:not([type=hidden])\").forEach((input) =>\n\t\t\t\t\t\t\tfailed ? input.setAttribute(\"aria-invalid\", \"true\") : input.removeAttribute(\"aria-invalid\"));\n\t\t\t\t\t\tform.addEventListener(\"htmx:response:error\", () => invalid(true));\n\t\t\t\t\t\tform.addEventListener(\"htmx:before:request\", () => invalid(false));\n\t\t\t\t\t})();\n\t\t\t\t</script></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

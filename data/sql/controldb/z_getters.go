@@ -139,6 +139,86 @@ func (m *ControlIdentity) SetDeletedAt(v *int64) {
 }
 
 // GetID returns the ID value.
+func (m Passkey) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated Passkey.
+func (m *Passkey) SetID(v int64) {
+	m.ID = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m Passkey) GetSiteID() *string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated Passkey.
+func (m *Passkey) SetSiteID(v *string) {
+	m.SiteID = v
+}
+
+// GetIdentityID returns the IdentityID value.
+func (m Passkey) GetIdentityID() *int64 {
+	return m.IdentityID
+}
+
+// SetIdentityID sets the IdentityID value and returns the updated Passkey.
+func (m *Passkey) SetIdentityID(v *int64) {
+	m.IdentityID = v
+}
+
+// GetControlIdentityID returns the ControlIdentityID value.
+func (m Passkey) GetControlIdentityID() *int64 {
+	return m.ControlIdentityID
+}
+
+// SetControlIdentityID sets the ControlIdentityID value and returns the updated Passkey.
+func (m *Passkey) SetControlIdentityID(v *int64) {
+	m.ControlIdentityID = v
+}
+
+// GetCredentialID returns the CredentialID value.
+func (m Passkey) GetCredentialID() string {
+	return m.CredentialID
+}
+
+// SetCredentialID sets the CredentialID value and returns the updated Passkey.
+func (m *Passkey) SetCredentialID(v string) {
+	m.CredentialID = v
+}
+
+// GetCredentialJson returns the CredentialJson value.
+func (m Passkey) GetCredentialJson() string {
+	return m.CredentialJson
+}
+
+// SetCredentialJson sets the CredentialJson value and returns the updated Passkey.
+func (m *Passkey) SetCredentialJson(v string) {
+	m.CredentialJson = v
+}
+
+// GetCreatedAt returns the CreatedAt value.
+func (m Passkey) GetCreatedAt() int64 {
+	return m.CreatedAt
+}
+
+// SetCreatedAt sets the CreatedAt value and returns the updated Passkey.
+func (m *Passkey) SetCreatedAt(v int64) {
+	m.CreatedAt = v
+}
+
+// GetLastUsedAt returns the LastUsedAt value.
+func (m Passkey) GetLastUsedAt() *int64 {
+	return m.LastUsedAt
+}
+
+// SetLastUsedAt sets the LastUsedAt value and returns the updated Passkey.
+func (m *Passkey) SetLastUsedAt(v *int64) {
+	m.LastUsedAt = v
+}
+
+// GetID returns the ID value.
 func (m PushCredential) GetID() int64 {
 	return m.ID
 }
@@ -1658,76 +1738,6 @@ func (m *SiteIdentity) SetNotificationsEnabled(v *bool) {
 	m.NotificationsEnabled = v
 }
 
-// GetID returns the ID value.
-func (m SiteIdentityPasskey) GetID() int64 {
-	return m.ID
-}
-
-// SetID sets the ID value and returns the updated SiteIdentityPasskey.
-func (m *SiteIdentityPasskey) SetID(v int64) {
-	m.ID = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m SiteIdentityPasskey) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated SiteIdentityPasskey.
-func (m *SiteIdentityPasskey) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetIdentityID returns the IdentityID value.
-func (m SiteIdentityPasskey) GetIdentityID() int64 {
-	return m.IdentityID
-}
-
-// SetIdentityID sets the IdentityID value and returns the updated SiteIdentityPasskey.
-func (m *SiteIdentityPasskey) SetIdentityID(v int64) {
-	m.IdentityID = v
-}
-
-// GetCredentialID returns the CredentialID value.
-func (m SiteIdentityPasskey) GetCredentialID() string {
-	return m.CredentialID
-}
-
-// SetCredentialID sets the CredentialID value and returns the updated SiteIdentityPasskey.
-func (m *SiteIdentityPasskey) SetCredentialID(v string) {
-	m.CredentialID = v
-}
-
-// GetCredentialJson returns the CredentialJson value.
-func (m SiteIdentityPasskey) GetCredentialJson() string {
-	return m.CredentialJson
-}
-
-// SetCredentialJson sets the CredentialJson value and returns the updated SiteIdentityPasskey.
-func (m *SiteIdentityPasskey) SetCredentialJson(v string) {
-	m.CredentialJson = v
-}
-
-// GetCreatedAt returns the CreatedAt value.
-func (m SiteIdentityPasskey) GetCreatedAt() int64 {
-	return m.CreatedAt
-}
-
-// SetCreatedAt sets the CreatedAt value and returns the updated SiteIdentityPasskey.
-func (m *SiteIdentityPasskey) SetCreatedAt(v int64) {
-	m.CreatedAt = v
-}
-
-// GetLastUsedAt returns the LastUsedAt value.
-func (m SiteIdentityPasskey) GetLastUsedAt() *int64 {
-	return m.LastUsedAt
-}
-
-// SetLastUsedAt sets the LastUsedAt value and returns the updated SiteIdentityPasskey.
-func (m *SiteIdentityPasskey) SetLastUsedAt(v *int64) {
-	m.LastUsedAt = v
-}
-
 // GetSiteID returns the SiteID value.
 func (m SiteSyncSource) GetSiteID() string {
 	return m.SiteID
@@ -2156,6 +2166,266 @@ func (m GetControlIdentityParams) GetName() string {
 // SetName sets the Name value and returns the updated GetControlIdentityParams.
 func (m *GetControlIdentityParams) SetName(v string) {
 	m.Name = v
+}
+
+// GetID returns the ID value.
+func (m GetControlIdentityByIDParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated GetControlIdentityByIDParams.
+func (m *GetControlIdentityByIDParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetControlIdentityID returns the ControlIdentityID value.
+func (m CreateControlPasskeyParams) GetControlIdentityID() int64 {
+	return m.ControlIdentityID
+}
+
+// SetControlIdentityID sets the ControlIdentityID value and returns the updated CreateControlPasskeyParams.
+func (m *CreateControlPasskeyParams) SetControlIdentityID(v int64) {
+	m.ControlIdentityID = v
+}
+
+// GetCredentialID returns the CredentialID value.
+func (m CreateControlPasskeyParams) GetCredentialID() string {
+	return m.CredentialID
+}
+
+// SetCredentialID sets the CredentialID value and returns the updated CreateControlPasskeyParams.
+func (m *CreateControlPasskeyParams) SetCredentialID(v string) {
+	m.CredentialID = v
+}
+
+// GetCredentialJson returns the CredentialJson value.
+func (m CreateControlPasskeyParams) GetCredentialJson() string {
+	return m.CredentialJson
+}
+
+// SetCredentialJson sets the CredentialJson value and returns the updated CreateControlPasskeyParams.
+func (m *CreateControlPasskeyParams) SetCredentialJson(v string) {
+	m.CredentialJson = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m CreateSiteIdentityPasskeyParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated CreateSiteIdentityPasskeyParams.
+func (m *CreateSiteIdentityPasskeyParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetIdentityID returns the IdentityID value.
+func (m CreateSiteIdentityPasskeyParams) GetIdentityID() int64 {
+	return m.IdentityID
+}
+
+// SetIdentityID sets the IdentityID value and returns the updated CreateSiteIdentityPasskeyParams.
+func (m *CreateSiteIdentityPasskeyParams) SetIdentityID(v int64) {
+	m.IdentityID = v
+}
+
+// GetCredentialID returns the CredentialID value.
+func (m CreateSiteIdentityPasskeyParams) GetCredentialID() string {
+	return m.CredentialID
+}
+
+// SetCredentialID sets the CredentialID value and returns the updated CreateSiteIdentityPasskeyParams.
+func (m *CreateSiteIdentityPasskeyParams) SetCredentialID(v string) {
+	m.CredentialID = v
+}
+
+// GetCredentialJson returns the CredentialJson value.
+func (m CreateSiteIdentityPasskeyParams) GetCredentialJson() string {
+	return m.CredentialJson
+}
+
+// SetCredentialJson sets the CredentialJson value and returns the updated CreateSiteIdentityPasskeyParams.
+func (m *CreateSiteIdentityPasskeyParams) SetCredentialJson(v string) {
+	m.CredentialJson = v
+}
+
+// GetControlIdentityID returns the ControlIdentityID value.
+func (m DeleteControlPasskeyParams) GetControlIdentityID() int64 {
+	return m.ControlIdentityID
+}
+
+// SetControlIdentityID sets the ControlIdentityID value and returns the updated DeleteControlPasskeyParams.
+func (m *DeleteControlPasskeyParams) SetControlIdentityID(v int64) {
+	m.ControlIdentityID = v
+}
+
+// GetID returns the ID value.
+func (m DeleteControlPasskeyParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated DeleteControlPasskeyParams.
+func (m *DeleteControlPasskeyParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m DeleteSiteAdminPasskeysParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated DeleteSiteAdminPasskeysParams.
+func (m *DeleteSiteAdminPasskeysParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetName returns the Name value.
+func (m DeleteSiteAdminPasskeysParams) GetName() string {
+	return m.Name
+}
+
+// SetName sets the Name value and returns the updated DeleteSiteAdminPasskeysParams.
+func (m *DeleteSiteAdminPasskeysParams) SetName(v string) {
+	m.Name = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m DeleteSiteIdentityPasskeyParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated DeleteSiteIdentityPasskeyParams.
+func (m *DeleteSiteIdentityPasskeyParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetIdentityID returns the IdentityID value.
+func (m DeleteSiteIdentityPasskeyParams) GetIdentityID() int64 {
+	return m.IdentityID
+}
+
+// SetIdentityID sets the IdentityID value and returns the updated DeleteSiteIdentityPasskeyParams.
+func (m *DeleteSiteIdentityPasskeyParams) SetIdentityID(v int64) {
+	m.IdentityID = v
+}
+
+// GetID returns the ID value.
+func (m DeleteSiteIdentityPasskeyParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated DeleteSiteIdentityPasskeyParams.
+func (m *DeleteSiteIdentityPasskeyParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetCredentialID returns the CredentialID value.
+func (m GetControlPasskeyParams) GetCredentialID() string {
+	return m.CredentialID
+}
+
+// SetCredentialID sets the CredentialID value and returns the updated GetControlPasskeyParams.
+func (m *GetControlPasskeyParams) SetCredentialID(v string) {
+	m.CredentialID = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m GetSiteIdentityPasskeyParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated GetSiteIdentityPasskeyParams.
+func (m *GetSiteIdentityPasskeyParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetCredentialID returns the CredentialID value.
+func (m GetSiteIdentityPasskeyParams) GetCredentialID() string {
+	return m.CredentialID
+}
+
+// SetCredentialID sets the CredentialID value and returns the updated GetSiteIdentityPasskeyParams.
+func (m *GetSiteIdentityPasskeyParams) SetCredentialID(v string) {
+	m.CredentialID = v
+}
+
+// GetControlIdentityID returns the ControlIdentityID value.
+func (m ListControlPasskeysParams) GetControlIdentityID() int64 {
+	return m.ControlIdentityID
+}
+
+// SetControlIdentityID sets the ControlIdentityID value and returns the updated ListControlPasskeysParams.
+func (m *ListControlPasskeysParams) SetControlIdentityID(v int64) {
+	m.ControlIdentityID = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m ListSiteIdentityPasskeysParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated ListSiteIdentityPasskeysParams.
+func (m *ListSiteIdentityPasskeysParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetIdentityID returns the IdentityID value.
+func (m ListSiteIdentityPasskeysParams) GetIdentityID() int64 {
+	return m.IdentityID
+}
+
+// SetIdentityID sets the IdentityID value and returns the updated ListSiteIdentityPasskeysParams.
+func (m *ListSiteIdentityPasskeysParams) SetIdentityID(v int64) {
+	m.IdentityID = v
+}
+
+// GetCredentialJson returns the CredentialJson value.
+func (m UpdateControlPasskeyUsedParams) GetCredentialJson() string {
+	return m.CredentialJson
+}
+
+// SetCredentialJson sets the CredentialJson value and returns the updated UpdateControlPasskeyUsedParams.
+func (m *UpdateControlPasskeyUsedParams) SetCredentialJson(v string) {
+	m.CredentialJson = v
+}
+
+// GetCredentialID returns the CredentialID value.
+func (m UpdateControlPasskeyUsedParams) GetCredentialID() string {
+	return m.CredentialID
+}
+
+// SetCredentialID sets the CredentialID value and returns the updated UpdateControlPasskeyUsedParams.
+func (m *UpdateControlPasskeyUsedParams) SetCredentialID(v string) {
+	m.CredentialID = v
+}
+
+// GetCredentialJson returns the CredentialJson value.
+func (m UpdateSiteIdentityPasskeyUsedParams) GetCredentialJson() string {
+	return m.CredentialJson
+}
+
+// SetCredentialJson sets the CredentialJson value and returns the updated UpdateSiteIdentityPasskeyUsedParams.
+func (m *UpdateSiteIdentityPasskeyUsedParams) SetCredentialJson(v string) {
+	m.CredentialJson = v
+}
+
+// GetSiteID returns the SiteID value.
+func (m UpdateSiteIdentityPasskeyUsedParams) GetSiteID() string {
+	return m.SiteID
+}
+
+// SetSiteID sets the SiteID value and returns the updated UpdateSiteIdentityPasskeyUsedParams.
+func (m *UpdateSiteIdentityPasskeyUsedParams) SetSiteID(v string) {
+	m.SiteID = v
+}
+
+// GetCredentialID returns the CredentialID value.
+func (m UpdateSiteIdentityPasskeyUsedParams) GetCredentialID() string {
+	return m.CredentialID
+}
+
+// SetCredentialID sets the CredentialID value and returns the updated UpdateSiteIdentityPasskeyUsedParams.
+func (m *UpdateSiteIdentityPasskeyUsedParams) SetCredentialID(v string) {
+	m.CredentialID = v
 }
 
 // GetSiteID returns the SiteID value.
@@ -4116,166 +4386,6 @@ func (m UpdateSiteIdentityTOTPParams) GetID() int64 {
 // SetID sets the ID value and returns the updated UpdateSiteIdentityTOTPParams.
 func (m *UpdateSiteIdentityTOTPParams) SetID(v int64) {
 	m.ID = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m CreateSiteIdentityPasskeyParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated CreateSiteIdentityPasskeyParams.
-func (m *CreateSiteIdentityPasskeyParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetIdentityID returns the IdentityID value.
-func (m CreateSiteIdentityPasskeyParams) GetIdentityID() int64 {
-	return m.IdentityID
-}
-
-// SetIdentityID sets the IdentityID value and returns the updated CreateSiteIdentityPasskeyParams.
-func (m *CreateSiteIdentityPasskeyParams) SetIdentityID(v int64) {
-	m.IdentityID = v
-}
-
-// GetCredentialID returns the CredentialID value.
-func (m CreateSiteIdentityPasskeyParams) GetCredentialID() string {
-	return m.CredentialID
-}
-
-// SetCredentialID sets the CredentialID value and returns the updated CreateSiteIdentityPasskeyParams.
-func (m *CreateSiteIdentityPasskeyParams) SetCredentialID(v string) {
-	m.CredentialID = v
-}
-
-// GetCredentialJson returns the CredentialJson value.
-func (m CreateSiteIdentityPasskeyParams) GetCredentialJson() string {
-	return m.CredentialJson
-}
-
-// SetCredentialJson sets the CredentialJson value and returns the updated CreateSiteIdentityPasskeyParams.
-func (m *CreateSiteIdentityPasskeyParams) SetCredentialJson(v string) {
-	m.CredentialJson = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m DeleteSiteAdminPasskeysParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated DeleteSiteAdminPasskeysParams.
-func (m *DeleteSiteAdminPasskeysParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetName returns the Name value.
-func (m DeleteSiteAdminPasskeysParams) GetName() string {
-	return m.Name
-}
-
-// SetName sets the Name value and returns the updated DeleteSiteAdminPasskeysParams.
-func (m *DeleteSiteAdminPasskeysParams) SetName(v string) {
-	m.Name = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m DeleteSiteIdentityPasskeyParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated DeleteSiteIdentityPasskeyParams.
-func (m *DeleteSiteIdentityPasskeyParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetIdentityID returns the IdentityID value.
-func (m DeleteSiteIdentityPasskeyParams) GetIdentityID() int64 {
-	return m.IdentityID
-}
-
-// SetIdentityID sets the IdentityID value and returns the updated DeleteSiteIdentityPasskeyParams.
-func (m *DeleteSiteIdentityPasskeyParams) SetIdentityID(v int64) {
-	m.IdentityID = v
-}
-
-// GetID returns the ID value.
-func (m DeleteSiteIdentityPasskeyParams) GetID() int64 {
-	return m.ID
-}
-
-// SetID sets the ID value and returns the updated DeleteSiteIdentityPasskeyParams.
-func (m *DeleteSiteIdentityPasskeyParams) SetID(v int64) {
-	m.ID = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m GetSiteIdentityPasskeyParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated GetSiteIdentityPasskeyParams.
-func (m *GetSiteIdentityPasskeyParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetCredentialID returns the CredentialID value.
-func (m GetSiteIdentityPasskeyParams) GetCredentialID() string {
-	return m.CredentialID
-}
-
-// SetCredentialID sets the CredentialID value and returns the updated GetSiteIdentityPasskeyParams.
-func (m *GetSiteIdentityPasskeyParams) SetCredentialID(v string) {
-	m.CredentialID = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m ListSiteIdentityPasskeysParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated ListSiteIdentityPasskeysParams.
-func (m *ListSiteIdentityPasskeysParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetIdentityID returns the IdentityID value.
-func (m ListSiteIdentityPasskeysParams) GetIdentityID() int64 {
-	return m.IdentityID
-}
-
-// SetIdentityID sets the IdentityID value and returns the updated ListSiteIdentityPasskeysParams.
-func (m *ListSiteIdentityPasskeysParams) SetIdentityID(v int64) {
-	m.IdentityID = v
-}
-
-// GetCredentialJson returns the CredentialJson value.
-func (m UpdateSiteIdentityPasskeyUsedParams) GetCredentialJson() string {
-	return m.CredentialJson
-}
-
-// SetCredentialJson sets the CredentialJson value and returns the updated UpdateSiteIdentityPasskeyUsedParams.
-func (m *UpdateSiteIdentityPasskeyUsedParams) SetCredentialJson(v string) {
-	m.CredentialJson = v
-}
-
-// GetSiteID returns the SiteID value.
-func (m UpdateSiteIdentityPasskeyUsedParams) GetSiteID() string {
-	return m.SiteID
-}
-
-// SetSiteID sets the SiteID value and returns the updated UpdateSiteIdentityPasskeyUsedParams.
-func (m *UpdateSiteIdentityPasskeyUsedParams) SetSiteID(v string) {
-	m.SiteID = v
-}
-
-// GetCredentialID returns the CredentialID value.
-func (m UpdateSiteIdentityPasskeyUsedParams) GetCredentialID() string {
-	return m.CredentialID
-}
-
-// SetCredentialID sets the CredentialID value and returns the updated UpdateSiteIdentityPasskeyUsedParams.
-func (m *UpdateSiteIdentityPasskeyUsedParams) SetCredentialID(v string) {
-	m.CredentialID = v
 }
 
 // GetSiteID returns the SiteID value.

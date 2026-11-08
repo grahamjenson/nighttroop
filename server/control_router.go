@@ -23,6 +23,9 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 	publicapi.FooterRoutes(r, config)
 
 	r.With(httputils.AllowedCountriesMiddleware(config)).Post("/login", controlapi.POSTLogin(controlDB, config))
+	// A control admin's passkey signs it in on its own; it adds them on its Account page
+	r.With(httputils.AllowedCountriesMiddleware(config)).Post("/login/passkey/begin", controlapi.POSTPasskeyLoginBegin(config))
+	r.With(httputils.AllowedCountriesMiddleware(config)).Post("/login/passkey/finish", controlapi.POSTPasskeyLoginFinish(controlDB, config))
 
 	r.Group(func(r chi.Router) {
 		r.Use(controlapi.JWTAuthMiddleware(controlDB, config))
@@ -39,6 +42,10 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 		r.Post("/sites/{id}/identities/{identity}/password", (&controlcollections.SitesCollection{}).ResetPasswordHandler)
 		r.Post("/sites/{id}/identities/{identity}/totp", (&controlcollections.SitesCollection{}).ResetTOTPHandler)
 		r.Post("/sites/{id}/identities/{identity}/assume", (&controlcollections.SitesCollection{}).AssumeHandler(config))
+		r.Get("/account", controlapi.GETAccount(controlDB))
+		r.Post("/account/passkeys/begin", controlapi.POSTAccountPasskeyBegin(controlDB, config))
+		r.Post("/account/passkeys/finish", controlapi.POSTAccountPasskeyFinish(controlDB, config))
+		r.Delete("/account/passkeys/{id}", controlapi.DELETEAccountPasskey(controlDB))
 		r.Get("/usage", controlapi.UsageHandler)
 		r.Get("/rate-limits", controlapi.RateLimitsHandler)
 		r.Post("/rate-limits", controlapi.SetRateLimitsHandler)

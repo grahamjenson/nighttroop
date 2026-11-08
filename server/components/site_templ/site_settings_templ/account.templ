@@ -13,8 +13,9 @@ import (
 	"nighttroop.t1d.nz/utils/display"
 )
 
-// MyAccount is the signed in identity's own page: who it is, and up to most passkeys it adds, on its site, and removes
-templ MyAccount(name, role string, passkeys []*controldb.SiteIdentityPasskey, most int) {
+// MyAccount is the signed in identity's, or control admin's, own page at path: who it is, and up to most passkeys it
+// adds, on its own address, and removes
+templ MyAccount(name, role string, passkeys []*controldb.Passkey, most int, path string) {
 	<div id="site--account" class="mx-auto max-w-5xl space-y-6">
 		@heading.Page("My Account") {
 			You are signed in as { name }, with the { role } role. A passkey signs you in with your fingerprint, face or device PIN, with
@@ -24,7 +25,7 @@ templ MyAccount(name, role string, passkeys []*controldb.SiteIdentityPasskey, mo
 			<div class="mb-2 flex items-center justify-between gap-2">
 				<h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Passkeys</h2>
 				@button.Button(button.Props{ID: "site--account--add-passkey", Type: button.TypeButton, Size: button.SizeSm, Disabled: len(passkeys) >= most,
-					Attributes: templ.Attributes{"data-passkey-begin": "/settings/account/passkeys/begin", "data-passkey-finish": "/settings/account/passkeys/finish", "data-passkey-error": "site--account--passkey-error"}}) {
+					Attributes: templ.Attributes{"data-passkey-begin": path + "/passkeys/begin", "data-passkey-finish": path + "/passkeys/finish", "data-passkey-error": "site--account--passkey-error"}}) {
 					Add a passkey
 				}
 			</div>
@@ -48,7 +49,7 @@ templ MyAccount(name, role string, passkeys []*controldb.SiteIdentityPasskey, mo
 							}
 							@table.Cell(table.CellProps{Class: "text-right"}) {
 								@button.Button(button.Props{ID: fmt.Sprintf("site--account--remove-passkey-%d", passkey.ID), Variant: button.VariantOutline, Size: button.SizeSm,
-									Attributes: templ.Attributes{"hx-delete": fmt.Sprintf("/settings/account/passkeys/%d", passkey.ID), "hx-target": "#site--account",
+									Attributes: templ.Attributes{"hx-delete": fmt.Sprintf("%s/passkeys/%d", path, passkey.ID), "hx-target": "#site--account",
 										"hx-swap": "outerHTML", "hx-confirm": "Remove this passkey? It will no longer sign you in."}}) {
 									Remove
 								}

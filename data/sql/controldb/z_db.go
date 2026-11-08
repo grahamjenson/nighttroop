@@ -54,6 +54,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createControlIdentityStmt, err = db.PrepareContext(ctx, createControlIdentity); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateControlIdentity: %w", err)
 	}
+	if q.createControlPasskeyStmt, err = db.PrepareContext(ctx, createControlPasskey); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateControlPasskey: %w", err)
+	}
 	if q.createPushCredentialStmt, err = db.PrepareContext(ctx, createPushCredential); err != nil {
 		return nil, fmt.Errorf("error preparing query CreatePushCredential: %w", err)
 	}
@@ -71,6 +74,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.deleteAllSiteIdentitiesStmt, err = db.PrepareContext(ctx, deleteAllSiteIdentities); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteAllSiteIdentities: %w", err)
+	}
+	if q.deleteControlPasskeyStmt, err = db.PrepareContext(ctx, deleteControlPasskey); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteControlPasskey: %w", err)
 	}
 	if q.deletePushCredentialStmt, err = db.PrepareContext(ctx, deletePushCredential); err != nil {
 		return nil, fmt.Errorf("error preparing query DeletePushCredential: %w", err)
@@ -123,6 +129,12 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getControlIdentityStmt, err = db.PrepareContext(ctx, getControlIdentity); err != nil {
 		return nil, fmt.Errorf("error preparing query GetControlIdentity: %w", err)
 	}
+	if q.getControlIdentityByIDStmt, err = db.PrepareContext(ctx, getControlIdentityByID); err != nil {
+		return nil, fmt.Errorf("error preparing query GetControlIdentityByID: %w", err)
+	}
+	if q.getControlPasskeyStmt, err = db.PrepareContext(ctx, getControlPasskey); err != nil {
+		return nil, fmt.Errorf("error preparing query GetControlPasskey: %w", err)
+	}
 	if q.getLiveAndDisabledSitesStmt, err = db.PrepareContext(ctx, getLiveAndDisabledSites); err != nil {
 		return nil, fmt.Errorf("error preparing query GetLiveAndDisabledSites: %w", err)
 	}
@@ -174,6 +186,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.hydrateSiteStmt, err = db.PrepareContext(ctx, hydrateSite); err != nil {
 		return nil, fmt.Errorf("error preparing query HydrateSite: %w", err)
 	}
+	if q.listControlPasskeysStmt, err = db.PrepareContext(ctx, listControlPasskeys); err != nil {
+		return nil, fmt.Errorf("error preparing query ListControlPasskeys: %w", err)
+	}
 	if q.listSiteIdentityPasskeysStmt, err = db.PrepareContext(ctx, listSiteIdentityPasskeys); err != nil {
 		return nil, fmt.Errorf("error preparing query ListSiteIdentityPasskeys: %w", err)
 	}
@@ -221,6 +236,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.startSyncSourceBackfillStmt, err = db.PrepareContext(ctx, startSyncSourceBackfill); err != nil {
 		return nil, fmt.Errorf("error preparing query StartSyncSourceBackfill: %w", err)
+	}
+	if q.updateControlPasskeyUsedStmt, err = db.PrepareContext(ctx, updateControlPasskeyUsed); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateControlPasskeyUsed: %w", err)
 	}
 	if q.updatePublicSiteCreationStmt, err = db.PrepareContext(ctx, updatePublicSiteCreation); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdatePublicSiteCreation: %w", err)
@@ -322,6 +340,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createControlIdentityStmt: %w", cerr)
 		}
 	}
+	if q.createControlPasskeyStmt != nil {
+		if cerr := q.createControlPasskeyStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createControlPasskeyStmt: %w", cerr)
+		}
+	}
 	if q.createPushCredentialStmt != nil {
 		if cerr := q.createPushCredentialStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createPushCredentialStmt: %w", cerr)
@@ -350,6 +373,11 @@ func (q *Queries) Close() error {
 	if q.deleteAllSiteIdentitiesStmt != nil {
 		if cerr := q.deleteAllSiteIdentitiesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteAllSiteIdentitiesStmt: %w", cerr)
+		}
+	}
+	if q.deleteControlPasskeyStmt != nil {
+		if cerr := q.deleteControlPasskeyStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteControlPasskeyStmt: %w", cerr)
 		}
 	}
 	if q.deletePushCredentialStmt != nil {
@@ -437,6 +465,16 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getControlIdentityStmt: %w", cerr)
 		}
 	}
+	if q.getControlIdentityByIDStmt != nil {
+		if cerr := q.getControlIdentityByIDStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getControlIdentityByIDStmt: %w", cerr)
+		}
+	}
+	if q.getControlPasskeyStmt != nil {
+		if cerr := q.getControlPasskeyStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getControlPasskeyStmt: %w", cerr)
+		}
+	}
 	if q.getLiveAndDisabledSitesStmt != nil {
 		if cerr := q.getLiveAndDisabledSitesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getLiveAndDisabledSitesStmt: %w", cerr)
@@ -522,6 +560,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing hydrateSiteStmt: %w", cerr)
 		}
 	}
+	if q.listControlPasskeysStmt != nil {
+		if cerr := q.listControlPasskeysStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing listControlPasskeysStmt: %w", cerr)
+		}
+	}
 	if q.listSiteIdentityPasskeysStmt != nil {
 		if cerr := q.listSiteIdentityPasskeysStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing listSiteIdentityPasskeysStmt: %w", cerr)
@@ -600,6 +643,11 @@ func (q *Queries) Close() error {
 	if q.startSyncSourceBackfillStmt != nil {
 		if cerr := q.startSyncSourceBackfillStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing startSyncSourceBackfillStmt: %w", cerr)
+		}
+	}
+	if q.updateControlPasskeyUsedStmt != nil {
+		if cerr := q.updateControlPasskeyUsedStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateControlPasskeyUsedStmt: %w", cerr)
 		}
 	}
 	if q.updatePublicSiteCreationStmt != nil {
@@ -726,12 +774,14 @@ type Queries struct {
 	countSitesByStateStmt                   *sql.Stmt
 	countSitesCreatedStmt                   *sql.Stmt
 	createControlIdentityStmt               *sql.Stmt
+	createControlPasskeyStmt                *sql.Stmt
 	createPushCredentialStmt                *sql.Stmt
 	createSiteStmt                          *sql.Stmt
 	createSiteIdentityStmt                  *sql.Stmt
 	createSiteIdentityPasskeyStmt           *sql.Stmt
 	createSyncSourceStmt                    *sql.Stmt
 	deleteAllSiteIdentitiesStmt             *sql.Stmt
+	deleteControlPasskeyStmt                *sql.Stmt
 	deletePushCredentialStmt                *sql.Stmt
 	deletePushRegistrationStmt              *sql.Stmt
 	deletePushRegistrationByTokenHashStmt   *sql.Stmt
@@ -749,6 +799,8 @@ type Queries struct {
 	getAnySitePushRegistrationStmt          *sql.Stmt
 	getBatchSitesToBackUpStmt               *sql.Stmt
 	getControlIdentityStmt                  *sql.Stmt
+	getControlIdentityByIDStmt              *sql.Stmt
+	getControlPasskeyStmt                   *sql.Stmt
 	getLiveAndDisabledSitesStmt             *sql.Stmt
 	getPushCredentialStmt                   *sql.Stmt
 	getPushRegistrationStmt                 *sql.Stmt
@@ -766,6 +818,7 @@ type Queries struct {
 	getSyncReportsToRunStmt                 *sql.Stmt
 	getSyncSourceStmt                       *sql.Stmt
 	hydrateSiteStmt                         *sql.Stmt
+	listControlPasskeysStmt                 *sql.Stmt
 	listSiteIdentityPasskeysStmt            *sql.Stmt
 	pushCredentialForStmt                   *sql.Stmt
 	recordPushStmt                          *sql.Stmt
@@ -782,6 +835,7 @@ type Queries struct {
 	searchSyncSourcesStmt                   *sql.Stmt
 	siteExistsStmt                          *sql.Stmt
 	startSyncSourceBackfillStmt             *sql.Stmt
+	updateControlPasskeyUsedStmt            *sql.Stmt
 	updatePublicSiteCreationStmt            *sql.Stmt
 	updateRateLimitsStmt                    *sql.Stmt
 	updateSiteDateFlagsStmt                 *sql.Stmt
@@ -813,12 +867,14 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		countSitesByStateStmt:                   q.countSitesByStateStmt,
 		countSitesCreatedStmt:                   q.countSitesCreatedStmt,
 		createControlIdentityStmt:               q.createControlIdentityStmt,
+		createControlPasskeyStmt:                q.createControlPasskeyStmt,
 		createPushCredentialStmt:                q.createPushCredentialStmt,
 		createSiteStmt:                          q.createSiteStmt,
 		createSiteIdentityStmt:                  q.createSiteIdentityStmt,
 		createSiteIdentityPasskeyStmt:           q.createSiteIdentityPasskeyStmt,
 		createSyncSourceStmt:                    q.createSyncSourceStmt,
 		deleteAllSiteIdentitiesStmt:             q.deleteAllSiteIdentitiesStmt,
+		deleteControlPasskeyStmt:                q.deleteControlPasskeyStmt,
 		deletePushCredentialStmt:                q.deletePushCredentialStmt,
 		deletePushRegistrationStmt:              q.deletePushRegistrationStmt,
 		deletePushRegistrationByTokenHashStmt:   q.deletePushRegistrationByTokenHashStmt,
@@ -836,6 +892,8 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getAnySitePushRegistrationStmt:          q.getAnySitePushRegistrationStmt,
 		getBatchSitesToBackUpStmt:               q.getBatchSitesToBackUpStmt,
 		getControlIdentityStmt:                  q.getControlIdentityStmt,
+		getControlIdentityByIDStmt:              q.getControlIdentityByIDStmt,
+		getControlPasskeyStmt:                   q.getControlPasskeyStmt,
 		getLiveAndDisabledSitesStmt:             q.getLiveAndDisabledSitesStmt,
 		getPushCredentialStmt:                   q.getPushCredentialStmt,
 		getPushRegistrationStmt:                 q.getPushRegistrationStmt,
@@ -853,6 +911,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getSyncReportsToRunStmt:                 q.getSyncReportsToRunStmt,
 		getSyncSourceStmt:                       q.getSyncSourceStmt,
 		hydrateSiteStmt:                         q.hydrateSiteStmt,
+		listControlPasskeysStmt:                 q.listControlPasskeysStmt,
 		listSiteIdentityPasskeysStmt:            q.listSiteIdentityPasskeysStmt,
 		pushCredentialForStmt:                   q.pushCredentialForStmt,
 		recordPushStmt:                          q.recordPushStmt,
@@ -869,6 +928,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		searchSyncSourcesStmt:                   q.searchSyncSourcesStmt,
 		siteExistsStmt:                          q.siteExistsStmt,
 		startSyncSourceBackfillStmt:             q.startSyncSourceBackfillStmt,
+		updateControlPasskeyUsedStmt:            q.updateControlPasskeyUsedStmt,
 		updatePublicSiteCreationStmt:            q.updatePublicSiteCreationStmt,
 		updateRateLimitsStmt:                    q.updateRateLimitsStmt,
 		updateSiteDateFlagsStmt:                 q.updateSiteDateFlagsStmt,

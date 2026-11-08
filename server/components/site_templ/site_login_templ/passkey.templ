@@ -5,19 +5,20 @@ import "nighttroop.t1d.nz/server/components/ui/button"
 // passkeyButtonClass is the login's own button's look, outlined so the password login stays the first choice
 const passkeyButtonClass = "w-full py-3 px-4 text-brand-night text-lg font-bold rounded-lg shadow-sm cursor-pointer"
 
-// PasskeyLogin signs in with any of the site's passkeys the browser has, with no name or password typed
-templ PasskeyLogin() {
+// PasskeyLogin signs in with any of the site's, or control's, passkeys the browser has, with no name or password
+// typed; its elements' IDs start with prefix
+templ PasskeyLogin(prefix string) {
 	<div class="mt-4"></div>
 	@button.Button(button.Props{
-		ID:         "site--login--passkey",
+		ID:         prefix + "--passkey",
 		Type:       button.TypeButton,
 		Variant:    button.VariantOutline,
 		Class:      passkeyButtonClass,
-		Attributes: templ.Attributes{"data-passkey-begin": "/login/passkey/begin", "data-passkey-finish": "/login/passkey/finish", "data-passkey-error": "site--login--passkey-error"},
+		Attributes: templ.Attributes{"data-passkey-begin": "/login/passkey/begin", "data-passkey-finish": "/login/passkey/finish", "data-passkey-error": prefix + "--passkey-error"},
 	}) {
 		Sign in with a passkey
 	}
-	<p id="site--login--passkey-error" class="mt-2 text-sm text-red-600"></p>
+	<p id={ prefix + "--passkey-error" } class="mt-2 text-sm text-red-600"></p>
 	@PasskeyScript()
 }
 

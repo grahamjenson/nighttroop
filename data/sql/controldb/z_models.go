@@ -26,6 +26,17 @@ type ControlIdentity struct {
 	DeletedAt             *int64
 }
 
+type Passkey struct {
+	ID                int64
+	SiteID            *string
+	IdentityID        *int64
+	ControlIdentityID *int64
+	CredentialID      string
+	CredentialJson    string
+	CreatedAt         int64
+	LastUsedAt        *int64
+}
+
 type PushCredential struct {
 	ID                    int64
 	SiteID                *string
@@ -191,16 +202,6 @@ type SiteIdentity struct {
 	AlarmLowReservoirEnabled         *bool
 	AlarmLowReservoirUnits           *int64
 	NotificationsEnabled             *bool
-}
-
-type SiteIdentityPasskey struct {
-	ID             int64
-	SiteID         string
-	IdentityID     int64
-	CredentialID   string
-	CredentialJson string
-	CreatedAt      int64
-	LastUsedAt     *int64
 }
 
 type SiteSyncSource struct {

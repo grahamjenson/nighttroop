@@ -78,3 +78,32 @@ func (q *Queries) GetControlIdentity(ctx context.Context, arg GetControlIdentity
 	)
 	return &i, err
 }
+
+const getControlIdentityByID = `-- name: GetControlIdentityByID :one
+SELECT id, name, password_hash, totp_secret_enc, role, created_at, last_seen_at, last_write_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name, deleted_at FROM control_identities WHERE id = ?1
+`
+
+type GetControlIdentityByIDParams struct {
+	ID int64
+}
+
+func (q *Queries) GetControlIdentityByID(ctx context.Context, arg GetControlIdentityByIDParams) (*ControlIdentity, error) {
+	row := q.queryRow(ctx, q.getControlIdentityByIDStmt, getControlIdentityByID, arg.ID)
+	var i ControlIdentity
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.PasswordHash,
+		&i.TotpSecretEnc,
+		&i.Role,
+		&i.CreatedAt,
+		&i.LastSeenAt,
+		&i.LastWriteAt,
+		&i.UpdatedByIdentityID,
+		&i.UpdatedByIdentityName,
+		&i.CreatedByIdentityID,
+		&i.CreatedByIdentityName,
+		&i.DeletedAt,
+	)
+	return &i, err
+}

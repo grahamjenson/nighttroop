@@ -166,14 +166,7 @@ templ Header() {
 										Security
 									}
 									@dropdown.Group() {
-										@dropdown.Item(dropdown.ItemProps{
-											Href: "#",
-										}) {
-											<span class="flex items-center">
-												@icon.UserCog(icon.Props{Class: "size-4 mr-2"})
-												Account
-											</span>
-										}
+										@menuItem("control--account-button", "/account", "Account", icon.UserCog)
 									}
 									@dropdown.Separator()
 									@dropdown.Label() {
