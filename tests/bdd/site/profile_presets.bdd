@@ -1,8 +1,8 @@
 INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
-// Profiles are in the Settings hub under Presets, and a new site has none
-CLICK #site--nav--settings
+// Profiles are in the Data hub under Presets, and a new site has none
+CLICK #site--nav--data
 ASSERT_VISIBLE #site--presets--profiles-button
 CLICK #site--presets--profiles-button
 ASSERT_STATUS 200
