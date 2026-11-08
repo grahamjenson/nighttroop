@@ -18,6 +18,16 @@ ASSERT_TEXT_VISIBLE Showing 1 to 6
 CLICK #site--glucose--add
 ASSERT_VISIBLE #site--glucose--create--modal [role=dialog][aria-modal=true][aria-labelledby="site--glucose--create--modal--title"]:focus
 ASSERT_TEXT_EQUALS #site--glucose--create--modal--title Add Reading
+
+// Tab stays in the modal: Shift+Tab from it goes round to its Close button, and Tab past Close to its first field,
+// never to the page behind it
+PRESS Shift+Tab
+ASSERT_VISIBLE #site--glucose--create--modal--close:focus
+SCREENSHOT modal_tab_wraps_to_close
+PRESS Tab
+ASSERT_VISIBLE #site--glucose--create--reading:focus
+PRESS Shift+Tab
+ASSERT_VISIBLE #site--glucose--create--modal--close:focus
 PRESS Escape
 ASSERT_NOT_VISIBLE #site--glucose--create--modal
 ASSERT_VISIBLE #site--glucose--add:focus
