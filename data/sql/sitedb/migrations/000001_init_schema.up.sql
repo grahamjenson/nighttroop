@@ -575,6 +575,12 @@ CREATE TABLE summary_period (
     total_daily_carbs REAL NOT NULL,
     glucose_mgdl_json TEXT NOT NULL CHECK(length(glucose_mgdl_json) <= 2048 AND json_valid(glucose_mgdl_json)),
     agp_mgdl_json TEXT CHECK(agp_mgdl_json IS NULL OR (length(agp_mgdl_json) <= 4096 AND json_valid(agp_mgdl_json))),
+    -- The loop's IOB (total, basal and treatment) and COB every 5 minutes from midnight, as glucose is: a day's newest
+    -- loop device report in each 5 minutes, null when there was none, and a week's or month's the mean of its days'
+    loop_iob_json TEXT NOT NULL CHECK(length(loop_iob_json) <= 4096 AND json_valid(loop_iob_json)),
+    loop_iob_basal_json TEXT NOT NULL CHECK(length(loop_iob_basal_json) <= 4096 AND json_valid(loop_iob_basal_json)),
+    loop_iob_treatment_json TEXT NOT NULL CHECK(length(loop_iob_treatment_json) <= 4096 AND json_valid(loop_iob_treatment_json)),
+    loop_cob_json TEXT NOT NULL CHECK(length(loop_cob_json) <= 4096 AND json_valid(loop_cob_json)),
 
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
