@@ -52,6 +52,8 @@ var Pages = []Page{
 	{Hub: Data, Group: "Events", Label: "Notifications", Path: "/data/notifications", ID: "site--data--notifications-button", Icon: icon.Bell, Store: "notification_events"},
 	{Hub: Data, Group: "Events", Label: "Event Groups", Path: "/data/event-groups", ID: "site--data--event-groups-button", Icon: icon.Layers, Store: "event_groups"},
 	{Hub: Data, Group: "Devices", Label: "Device Status", Path: "/data/device-status", ID: "site--data--device-status-button", Icon: icon.Smartphone, Store: "device_statuses"},
+	{Hub: Data, Group: "Presets", Label: "Food Presets", Path: "/presets/food", ID: "site--presets--food-button", Icon: icon.Utensils, Store: "food_presets"},
+	{Hub: Data, Group: "Presets", Label: "Profiles", Path: "/presets/profiles", ID: "site--presets--profiles-button", Icon: icon.CalendarClock, Store: "profile_presets"},
 
 	{Hub: Reports, Label: "AGP", Path: "/reports", ID: "site--reports--agp-button", Icon: icon.ChartLine, Store: "summary_periods"},
 	{Hub: Reports, Label: "TDD", Path: "/reports/tdd", ID: "site--reports--tdd-menu-button", Icon: icon.ChartColumn, Store: "summary_daily"},
@@ -66,11 +68,60 @@ var Pages = []Page{
 		Store: "push_registrations", Within: []string{"/settings/push-devices", "/settings/push-registrations"}},
 	{Hub: Settings, Group: "Connections", Label: "Connectors", Path: "/settings/connectors", ID: "site--settings--connectors-button", Icon: icon.Plug, Store: "connector_settings"},
 	{Hub: Settings, Group: "Connections", Label: "Push Notifications", Path: "/settings/push-credentials", ID: "site--settings--push-button", Icon: icon.KeyRound, Store: "push_credentials"},
-	{Hub: Settings, Group: "Presets", Label: "Food Presets", Path: "/presets/food", ID: "site--presets--food-button", Icon: icon.Utensils, Store: "food_presets"},
-	{Hub: Settings, Group: "Presets", Label: "Profiles", Path: "/presets/profiles", ID: "site--presets--profiles-button", Icon: icon.CalendarClock, Store: "profile_presets"},
 	{Hub: Settings, Group: "Troubleshooting", Label: "Events", Path: "/logs/events", ID: "site--logs--events-button", Icon: icon.Activity, Store: "site_events"},
 	{Hub: Settings, Group: "Troubleshooting", Label: "Errors", Path: "/logs/errors", ID: "site--logs--errors-button", Icon: icon.TriangleAlert, Store: "site_errors"},
 	{Hub: Settings, Group: "Troubleshooting", Label: "Logs", Path: "/logs/logs", ID: "site--logs--logs-button", Icon: icon.ScrollText, Store: "site_logs"},
+}
+
+// keywords are the headings and words on a page, by its path, that the search also finds it by, showing the one found
+var keywords = map[string][]string{
+	"/data/glucose":              {"CGM", "Sensor Glucose", "Finger Prick", "Meter", "Trend"},
+	"/data/insulin":              {"Bolus", "Extended Bolus", "Correction"},
+	"/data/food":                 {"Carbs", "Meals", "Snacks"},
+	"/data/temp-targets":         {"Target Range"},
+	"/data/temp-basals":          {"Basal Rate"},
+	"/data/profile-switches":     {"Profile Change"},
+	"/data/activities":           {"Exercise", "Steps", "Heart Rate", "Calories"},
+	"/data/component-events":     {"Cannula", "Pump Site", "Sensor Start", "Transmitter"},
+	"/data/notifications":        {"Announcements", "Severity"},
+	"/data/device-status":        {"Battery", "Reservoir", "IOB", "COB", "Loop", "Uploader"},
+	"/reports":                   {"Ambulatory Glucose Profile", "Time in Range"},
+	"/reports/tdd":               {"Total Daily Dose"},
+	"/reports/summaries":         {"Daily Carbs", "Daily Dose"},
+	"/settings":                  {"Units", "mmol/L", "mg/dL", "Timezone", "Language", "Date Format", "Time Format", "Week Starts On", "Password & TOTP", "Download Data", "Delete Site"},
+	"/settings/alarms":           {"Low Alarm", "Urgent Low Alarm", "Predicted Low Alarm", "High Alarm", "Urgent High Alarm", "Fast Drop Alarm", "Fast Rise Alarm", "No Data Alarm"},
+	"/settings/identities":       {"Admins", "Read Only", "PWD Phone"},
+	"/settings/push-devices":     {"Phones"},
+	"/settings/connectors":       {"Nightscout", "Dexcom", "Libre", "LibreLinkUp", "Virtual", "Backfilling"},
+	"/settings/push-credentials": {"APNs", "Apple", "Firebase", "FCM", "Bundle IDs"},
+	"/presets/food":              {"Carbs", "Fat", "Protein", "Fibre", "Portions", "Pre-bolus"},
+	"/presets/profiles":          {"Basal Rates", "Carb Ratio", "Insulin Sensitivity", "Targets"},
+}
+
+// synonyms are what people also call a word in a page's name, which the search also finds the page by
+var synonyms = map[string][]string{
+	"glucose":    {"bgl", "bg", "blood sugar", "sgv", "mbg"},
+	"insulin":    {"bolus", "dose", "smb", "injection", "shot"},
+	"food":       {"carbs", "carbohydrates", "meal", "snack"},
+	"activities": {"exercise", "workout", "sport"},
+	"alarms":     {"alerts", "hypo", "hyper"},
+	"connectors": {"sync", "integrations", "import", "sources", "cgm"},
+	"users":      {"people", "carers", "caregivers", "family"},
+	"profiles":   {"basal", "isf", "icr"},
+}
+
+// SearchText is what the search finds the page by, in lower case: its name, group, hub, keywords and synonyms
+func (p Page) SearchText() string {
+	words := append([]string{p.Label, p.Group, string(p.Hub)}, keywords[p.Path]...)
+	for _, word := range strings.Fields(strings.ToLower(p.Label)) {
+		words = append(words, synonyms[word]...)
+	}
+	return strings.ToLower(strings.Join(words, " "))
+}
+
+// Hints are the page's keywords, split by "|", one of which the search shows when it found the page by it
+func (p Page) Hints() string {
+	return strings.Join(keywords[p.Path], "|")
 }
 
 // SearchID is the ID of the page's result in the header's search, e.g. site--nav--search--settings--push

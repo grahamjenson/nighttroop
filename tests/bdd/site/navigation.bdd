@@ -20,7 +20,7 @@ ASSERT_VISIBLE #site--settings--logout-button
 ASSERT_COUNT #site--settings-menu [data-tui-dropdown-item] 3
 PRESS Escape
 
-// Data opens its first page, with a tab for each of its 11 pages, the page's marked, as is Data in the header
+// Data opens its first page, with a tab for each of its 13 pages, the page's marked, as is Data in the header
 CLICK #site--nav--data
 ASSERT_STATUS 200
 ASSERT_PATH /data/glucose
@@ -28,11 +28,14 @@ ASSERT_TITLE Glucose Readings · Nighttroop
 ASSERT_VISIBLE #site--nav--data[aria-current="page"]
 ASSERT_NOT_VISIBLE #site--nav--home-icon[aria-current="page"]
 ASSERT_VISIBLE #site--data--glucose-button[aria-current="page"]
-ASSERT_COUNT #site--hub--data nav a 11
+ASSERT_COUNT #site--hub--data nav a 13
 // Data's tabs are on the left, in groups, like Settings'
 ASSERT_VISIBLE #site--hub--data ul[aria-label="Readings & treatments"] #site--data--glucose-button
 ASSERT_VISIBLE #site--hub--data ul[aria-label="Events"] #site--data--activities-button
 ASSERT_VISIBLE #site--hub--data ul[aria-label="Devices"] #site--data--device-status-button
+// Food presets and profiles are with the data they are used to enter
+ASSERT_VISIBLE #site--hub--data ul[aria-label="Presets"] #site--presets--food-button
+ASSERT_VISIBLE #site--hub--data ul[aria-label="Presets"] #site--presets--profiles-button
 SCREENSHOT navigation_data_hub
 
 // A tab opens its page, changing the URL and the content, and moves the mark
@@ -75,9 +78,9 @@ ASSERT_VISIBLE #site--settings--settings-button[aria-current="page"]
 ASSERT_VISIBLE #site--hub--settings nav >> text="This site"
 ASSERT_VISIBLE #site--hub--settings nav >> text="People & devices"
 ASSERT_VISIBLE #site--hub--settings nav >> text="Connections"
-ASSERT_VISIBLE #site--hub--settings nav >> text="Presets"
 ASSERT_VISIBLE #site--hub--settings nav >> text="Troubleshooting"
-ASSERT_COUNT #site--hub--settings nav a 11
+ASSERT_NOT_VISIBLE #site--hub--settings nav >> text="Presets"
+ASSERT_COUNT #site--hub--settings nav a 9
 SCREENSHOT navigation_settings_hub
 CLICK #site--logs--errors-button
 ASSERT_STATUS 200
@@ -107,12 +110,13 @@ CLICK #site--nav--home
 ASSERT_NEW_URL
 ASSERT_PATH /
 
-// Search lists the pages whose name, group or hub has what is typed, under their hub
+// Search lists the pages whose name, group or hub has what is typed, under their hub, with no hint by their name
 TYPE #site--nav--search push
 ASSERT_VISIBLE #site--nav--search-results >> text="Settings"
 ASSERT_VISIBLE #site--nav--search--settings--push-devices[aria-selected="true"]
 ASSERT_VISIBLE #site--nav--search--settings--push
 ASSERT_COUNT #site--nav--search-results [role=option] 2
+ASSERT_NOT_VISIBLE #site--nav--search--settings--push>[data-hint]
 ASSERT_NOT_VISIBLE #site--nav--search-empty
 SCREENSHOT navigation_search
 
@@ -131,6 +135,38 @@ TYPE #site--nav--search zzz
 ASSERT_TEXT_EQUALS #site--nav--search-empty No pages match
 ASSERT_COUNT #site--nav--search-results [role=option] 0
 PRESS Escape
+ASSERT_NOT_VISIBLE #site--nav--search-results
+
+// Search also finds a page by the headings and words on it, showing the one it was found by (Ctrl+K selects what was
+// searched, so what is typed replaces it)
+PRESS Control+k
+TYPE #site--nav--search nightscout
+ASSERT_VISIBLE #site--nav--search--settings--connectors[aria-selected="true"]
+ASSERT_TEXT_EQUALS #site--nav--search--settings--connectors>[data-hint] Nightscout
+ASSERT_COUNT #site--nav--search-results [role=option] 1
+PRESS Control+k
+TYPE #site--nav--search low
+ASSERT_VISIBLE #site--nav--search--settings--alarms[aria-selected="true"]
+ASSERT_TEXT_EQUALS #site--nav--search--settings--alarms>[data-hint] Low Alarm
+ASSERT_COUNT #site--nav--search-results [role=option] 1
+SCREENSHOT navigation_search_keyword
+
+// and by what people also call it, such as BGL for glucose or bolus for an insulin dose
+PRESS Control+k
+TYPE #site--nav--search BGL
+ASSERT_VISIBLE #site--nav--search--data--glucose[aria-selected="true"]
+ASSERT_COUNT #site--nav--search-results [role=option] 1
+PRESS Control+k
+TYPE #site--nav--search bolus
+ASSERT_VISIBLE #site--nav--search--data--insulin[aria-selected="true"]
+ASSERT_TEXT_EQUALS #site--nav--search--data--insulin>[data-hint] Bolus
+ASSERT_VISIBLE #site--nav--search--presets--food
+ASSERT_COUNT #site--nav--search-results [role=option] 2
+PRESS Enter
+ASSERT_STATUS 200
+ASSERT_NEW_URL
+ASSERT_PATH /data/insulin
+ASSERT_VISIBLE #site--data--insulin-button[aria-current="page"]
 ASSERT_NOT_VISIBLE #site--nav--search-results
 
 // Ctrl+K goes to the search from anywhere, and a click on a result opens it
@@ -184,9 +220,9 @@ ASSERT_VISIBLE #site--reports--agp-button[aria-current="page"]
 ASSERT_FITS
 SCREENSHOT navigation_phone_reports
 
-GOTO /presets/food
+GOTO /settings/push-devices
 ASSERT_STATUS 200
-ASSERT_VISIBLE #site--presets--food-button[aria-current="page"]
+ASSERT_VISIBLE #site--settings--push-devices-button[aria-current="page"]
 ASSERT_VISIBLE #site--logs--logs-button
 ASSERT_FITS
 SCREENSHOT navigation_phone_settings
@@ -217,15 +253,13 @@ ASSERT_STATUS 200
 ASSERT_VISIBLE #site--settings--settings-button[aria-current="page"]
 ASSERT_VISIBLE #site--settings--alarms-button
 ASSERT_VISIBLE #site--settings--push-devices-button
-ASSERT_VISIBLE #site--presets--food-button
-ASSERT_VISIBLE #site--presets--profiles-button
 ASSERT_NOT_VISIBLE #site--settings--identities-button
 ASSERT_NOT_VISIBLE #site--settings--connectors-button
 ASSERT_NOT_VISIBLE #site--settings--push-button
 ASSERT_NOT_VISIBLE #site--logs--events-button
 ASSERT_NOT_VISIBLE #site--logs--errors-button
 ASSERT_NOT_VISIBLE #site--logs--logs-button
-ASSERT_COUNT #site--hub--settings nav a 5
+ASSERT_COUNT #site--hub--settings nav a 3
 SCREENSHOT navigation_settings_user
 TYPE #site--nav--search push
 ASSERT_VISIBLE #site--nav--search--settings--push-devices

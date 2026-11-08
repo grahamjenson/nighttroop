@@ -27,20 +27,47 @@ const (
 	dexcomBackfillMinutes = 24 * 60
 	// libreBackfillMinutes is as far back as the LibreLinkUp graph goes
 	libreBackfillMinutes = 12 * 60
+	// recentBackfillDays are the last days a backfill fetches again, to fill gaps the site missed, as while it was down
+	// for a deploy
+	recentBackfillDays = 2
 )
 
-// BackfillParams is when, in ms, a backfill fetches records from and up to
+// BackfillParams is when, in ms, a backfill fetches records from and up to, and the recent days it fetches again,
+// when they are not in that range already
 type BackfillParams struct {
-	From int64
-	To   int64
+	From       int64
+	To         int64
+	RecentFrom int64 `json:",omitempty"`
+	RecentTo   int64 `json:",omitempty"`
+}
+
+// ranges are the backfill's times, from and to, and its recent days when it has them
+func (p BackfillParams) ranges() [][2]time.Time {
+	ranges := [][2]time.Time{{time.UnixMilli(p.From), time.UnixMilli(p.To)}}
+	if p.RecentTo > 0 {
+		ranges = append(ranges, [2]time.Time{time.UnixMilli(p.RecentFrom), time.UnixMilli(p.RecentTo)})
+	}
+	return ranges
+}
+
+// eachRange fetches each of the backfill's ranges, adding up the records it added, until one fails
+func eachRange(backfill BackfillParams, fetch func(from, to time.Time) (int, error)) (int, error) {
+	added := 0
+	for _, r := range backfill.ranges() {
+		records, err := fetch(r[0], r[1])
+		if added += records; err != nil {
+			return added, err
+		}
+	}
+	return added, nil
 }
 
 // ErrBackfillRunning is a backfill asked for while the source has one queued or running
 var ErrBackfillRunning = errors.New("a backfill is already running")
 
 // BackfillRange is what a backfill of the source would fetch now: the backfillDays before the site's oldest glucose
-// reading, or before now when it has none. Dexcom only has the last 24 hours and Libre the last 12, so their backfills
-// fetch those.
+// reading, or before now when it has none, and the recentBackfillDays up to now again, to fill gaps, joined into one
+// range when they meet. Dexcom only has the last 24 hours and Libre the last 12, so their backfills fetch those.
 func BackfillRange(ctx context.Context, siteDB *db.SiteDB, connectorType consts.ConnectorType, backfillDays int) (BackfillParams, error) {
 	now := time.Now().UnixMilli()
 	switch connectorType {
@@ -56,7 +83,13 @@ func BackfillRange(ctx context.Context, siteDB *db.SiteDB, connectorType consts.
 	if oldest == 0 {
 		oldest = now
 	}
-	return BackfillParams{From: oldest - int64(backfillDays)*24*time.Hour.Milliseconds(), To: oldest}, nil
+	backfill := BackfillParams{From: oldest - int64(backfillDays)*24*time.Hour.Milliseconds(), To: oldest}
+	if recent := now - recentBackfillDays*24*time.Hour.Milliseconds(); recent <= oldest {
+		backfill.To = now
+	} else {
+		backfill.RecentFrom, backfill.RecentTo = recent, now
+	}
+	return backfill, nil
 }
 
 // QueueBackfill starts a backfill of the site's source and queues its job, or is ErrBackfillRunning when the source
@@ -88,17 +121,16 @@ func (b *ConnectorJobManager) backfill(jobInfo *ConnectorJobInfo, backfill Backf
 	ctx, cancel := context.WithTimeout(jobInfo.ctx, backfillTimeout)
 	defer cancel()
 
-	from, to := time.UnixMilli(backfill.From), time.UnixMilli(backfill.To)
 	records, err := 0, fmt.Errorf("%s cannot be backfilled", jobInfo.Type)
 	switch jobInfo.Type {
 	case consts.ConnectorTypeNightscout:
-		records, err = b.backfillNightscout(ctx, jobInfo, from, to)
+		records, err = eachRange(backfill, func(from, to time.Time) (int, error) { return b.backfillNightscout(ctx, jobInfo, from, to) })
 	case consts.ConnectorTypeDexcom:
 		records, err = copyDexcomEGVs(ctx, jobInfo, dexcomBackfillMinutes)
 	case consts.ConnectorTypeLibre:
 		records, err = b.copyLibreReadings(ctx, jobInfo)
 	case consts.ConnectorTypeVirtual:
-		records, err = b.backfillVirtual(ctx, jobInfo, from, to)
+		records, err = eachRange(backfill, func(from, to time.Time) (int, error) { return b.backfillVirtual(ctx, jobInfo, from, to) })
 	}
 
 	// Recorded with the sync's own context, as a backfill that ran out of time has none left

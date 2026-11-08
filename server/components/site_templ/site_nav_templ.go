@@ -661,8 +661,9 @@ func tab(page sitenav.Page, current bool, class string) templ.Component {
 	})
 }
 
-// Search finds a page the identity may open by its name, group or hub as it is typed, opening it as the hubs' tabs
-// do. On a phone, or a narrow window, it is an icon opening a box across the page.
+// Search finds a page the identity may open by its name, group, hub, the headings and words on it, or what people also
+// call it, as it is typed, showing the heading or word it was found by, and opening it as the hubs' tabs do. On a
+// phone, or a narrow window, it is an icon opening a box across the page.
 func Search() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -709,7 +710,7 @@ func Search() templ.Component {
 				var templ_7745c5c3_Var28 string
 				templ_7745c5c3_Var28, templ_7745c5c3_Err = templruntime.NewAttributeExpression(group.Name).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_nav.templ`, Line: 197, Col: 47}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_nav.templ`, Line: 198, Col: 47}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var28)
 				if templ_7745c5c3_Err != nil {
@@ -722,7 +723,7 @@ func Search() templ.Component {
 				var templ_7745c5c3_Var29 string
 				templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(group.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_nav.templ`, Line: 198, Col: 105}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_nav.templ`, Line: 199, Col: 105}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 				if templ_7745c5c3_Err != nil {
@@ -744,7 +745,7 @@ func Search() templ.Component {
 						var templ_7745c5c3_Var30 string
 						templ_7745c5c3_Var30, templ_7745c5c3_Err = templruntime.NewAttributeExpression(page.SearchID()).Resolve(ctx)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_nav.templ`, Line: 201, Col: 29}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_nav.templ`, Line: 202, Col: 29}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var30)
 						if templ_7745c5c3_Err != nil {
@@ -757,7 +758,7 @@ func Search() templ.Component {
 						var templ_7745c5c3_Var31 string
 						templ_7745c5c3_Var31, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.SafeURL(page.Path)).ResolveURL(ctx)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_nav.templ`, Line: 204, Col: 40}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_nav.templ`, Line: 205, Col: 40}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var31)
 						if templ_7745c5c3_Err != nil {
@@ -768,15 +769,41 @@ func Search() templ.Component {
 							return templ_7745c5c3_Err
 						}
 						var templ_7745c5c3_Var32 string
-						templ_7745c5c3_Var32, templ_7745c5c3_Err = templruntime.NewAttributeExpression(strings.ToLower(page.Label + " " + page.Group + " " + string(page.Hub))).Resolve(ctx)
+						templ_7745c5c3_Var32, templ_7745c5c3_Err = templruntime.NewAttributeExpression(page.SearchText()).Resolve(ctx)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_nav.templ`, Line: 205, Col: 94}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_nav.templ`, Line: 206, Col: 40}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var32)
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "\" class=\"flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-gray-100 aria-selected:bg-gray-100\"")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "\" data-label=\"")
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+						var templ_7745c5c3_Var33 string
+						templ_7745c5c3_Var33, templ_7745c5c3_Err = templruntime.NewAttributeExpression(strings.ToLower(page.Label)).Resolve(ctx)
+						if templ_7745c5c3_Err != nil {
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_nav.templ`, Line: 207, Col: 49}
+						}
+						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var33)
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, "\" data-hints=\"")
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+						var templ_7745c5c3_Var34 string
+						templ_7745c5c3_Var34, templ_7745c5c3_Err = templruntime.NewAttributeExpression(page.Hints()).Resolve(ctx)
+						if templ_7745c5c3_Err != nil {
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_nav.templ`, Line: 208, Col: 34}
+						}
+						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var34)
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "\" class=\"flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-gray-100 aria-selected:bg-gray-100\"")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
@@ -794,7 +821,7 @@ func Search() templ.Component {
 						}
 						templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, ">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, ">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -802,53 +829,53 @@ func Search() templ.Component {
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, " ")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, " ")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var33 string
-					templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(page.Label)
+					var templ_7745c5c3_Var35 string
+					templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(page.Label)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_nav.templ`, Line: 210, Col: 21}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_nav.templ`, Line: 213, Col: 21}
 					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, " ")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, " <span data-hint hidden class=\"truncate rounded bg-gray-100 px-1.5 text-xs text-gray-600\"></span> ")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					if page.Group != "" {
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, "<span class=\"ml-auto text-xs text-gray-500\">")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "<span class=\"ml-auto text-xs text-gray-500\">")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						var templ_7745c5c3_Var34 string
-						templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(page.Group)
+						var templ_7745c5c3_Var36 string
+						templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(page.Group)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_nav.templ`, Line: 212, Col: 66}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_nav.templ`, Line: 216, Col: 66}
 						}
-						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
+						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, "</span>")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "</span>")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "</a>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "</a>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "</div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "</div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "<p id=\"site--nav--search-empty\" hidden class=\"px-2 py-3 text-sm text-gray-500\">No pages match</p></div></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "<p id=\"site--nav--search-empty\" hidden class=\"px-2 py-3 text-sm text-gray-500\">No pages match</p></div></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -881,7 +908,7 @@ func searchScript() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "<script>\n\t\t(() => {\n\t\t\tconst reveal = () => {\n\t\t\t\tconst tab = document.querySelector(\"#main-content nav.overflow-x-auto [aria-current=page]\"), row = tab?.closest(\"nav\")\n\t\t\t\tif (!tab) return\n\t\t\t\tconst t = tab.getBoundingClientRect(), r = row.getBoundingClientRect()\n\t\t\t\tif (t.left < r.left || t.right > r.right) row.scrollLeft += t.left - r.left - 16\n\t\t\t}\n\t\t\tdocument.addEventListener(\"DOMContentLoaded\", reveal)\n\t\t\tdocument.addEventListener(\"htmx:after:settle\", reveal)\n\t\t\tconst byID = (id) => document.getElementById(id)\n\t\t\tconst shown = () => [...byID(\"site--nav--search-results\").querySelectorAll(\"[role=option]:not([hidden])\")]\n\t\t\tconst choose = (option) => {\n\t\t\t\tbyID(\"site--nav--search-results\").querySelectorAll(\"[role=option]\").forEach((o) => o.setAttribute(\"aria-selected\", o === option))\n\t\t\t\toption?.scrollIntoView({block: \"nearest\"})\n\t\t\t\tbyID(\"site--nav--search\").setAttribute(\"aria-activedescendant\", option?.id ?? \"\")\n\t\t\t}\n\t\t\tconst close = (all) => {\n\t\t\t\tbyID(\"site--nav--search-results\").hidden = true\n\t\t\t\tbyID(\"site--nav--search\").setAttribute(\"aria-expanded\", \"false\")\n\t\t\t\tif (all) byID(\"site--nav--search-box\").classList.add(\"hidden\")\n\t\t\t}\n\t\t\tconst filter = () => {\n\t\t\t\tconst words = byID(\"site--nav--search\").value.toLowerCase().split(/\\s+/).filter(Boolean)\n\t\t\t\tif (!words.length) return close(false)\n\t\t\t\tconst list = byID(\"site--nav--search-results\")\n\t\t\t\tlist.querySelectorAll(\"[role=option]\").forEach((o) => o.hidden = !words.every((w) => o.dataset.search.includes(w)))\n\t\t\t\tlist.querySelectorAll(\"[role=group]\").forEach((g) => g.hidden = !g.querySelector(\"[role=option]:not([hidden])\"))\n\t\t\t\tbyID(\"site--nav--search-empty\").hidden = shown().length > 0\n\t\t\t\tlist.hidden = false\n\t\t\t\tbyID(\"site--nav--search\").setAttribute(\"aria-expanded\", \"true\")\n\t\t\t\tchoose(shown()[0])\n\t\t\t}\n\t\t\tconst open = () => {\n\t\t\t\tbyID(\"site--nav--search-box\").classList.remove(\"hidden\")\n\t\t\t\tbyID(\"site--nav--search\").focus()\n\t\t\t\tbyID(\"site--nav--search\").select()\n\t\t\t}\n\t\t\tdocument.addEventListener(\"input\", (e) => e.target.id === \"site--nav--search\" && filter())\n\t\t\tdocument.addEventListener(\"keydown\", (e) => {\n\t\t\t\tif ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === \"k\" && byID(\"site--nav--search\")) {\n\t\t\t\t\te.preventDefault()\n\t\t\t\t\treturn open()\n\t\t\t\t}\n\t\t\t\tif (e.target.id !== \"site--nav--search\") return\n\t\t\t\tconst options = shown(), at = options.findIndex((o) => o.getAttribute(\"aria-selected\") === \"true\")\n\t\t\t\tif ((e.key === \"ArrowDown\" || e.key === \"ArrowUp\") && options.length) {\n\t\t\t\t\te.preventDefault()\n\t\t\t\t\tchoose(options[(at + (e.key === \"ArrowDown\" ? 1 : options.length - 1)) % options.length])\n\t\t\t\t} else if (e.key === \"Enter\") {\n\t\t\t\t\te.preventDefault()\n\t\t\t\t\toptions[at]?.click()\n\t\t\t\t} else if (e.key === \"Escape\") {\n\t\t\t\t\te.preventDefault()\n\t\t\t\t\tconst phone = byID(\"site--nav--search-open\").checkVisibility()\n\t\t\t\t\tclose(phone)\n\t\t\t\t\tif (phone) byID(\"site--nav--search-open\").focus()\n\t\t\t\t}\n\t\t\t})\n\t\t\tdocument.addEventListener(\"click\", (e) => {\n\t\t\t\tif (e.target.closest(\"#site--nav--search-open\")) return open()\n\t\t\t\tif (e.target.closest(\"#site--nav--search-results [role=option]\")) {\n\t\t\t\t\tbyID(\"site--nav--search\").value = \"\"\n\t\t\t\t\treturn close(true)\n\t\t\t\t}\n\t\t\t\tif (!e.target.closest(\"#site--nav--search-box\")) close(true)\n\t\t\t})\n\t\t})()\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "<script>\n\t\t(() => {\n\t\t\tconst reveal = () => {\n\t\t\t\tconst tab = document.querySelector(\"#main-content nav.overflow-x-auto [aria-current=page]\"), row = tab?.closest(\"nav\")\n\t\t\t\tif (!tab) return\n\t\t\t\tconst t = tab.getBoundingClientRect(), r = row.getBoundingClientRect()\n\t\t\t\tif (t.left < r.left || t.right > r.right) row.scrollLeft += t.left - r.left - 16\n\t\t\t}\n\t\t\tdocument.addEventListener(\"DOMContentLoaded\", reveal)\n\t\t\tdocument.addEventListener(\"htmx:after:settle\", reveal)\n\t\t\tconst byID = (id) => document.getElementById(id)\n\t\t\tconst shown = () => [...byID(\"site--nav--search-results\").querySelectorAll(\"[role=option]:not([hidden])\")]\n\t\t\tconst choose = (option) => {\n\t\t\t\tbyID(\"site--nav--search-results\").querySelectorAll(\"[role=option]\").forEach((o) => o.setAttribute(\"aria-selected\", o === option))\n\t\t\t\toption?.scrollIntoView({block: \"nearest\"})\n\t\t\t\tbyID(\"site--nav--search\").setAttribute(\"aria-activedescendant\", option?.id ?? \"\")\n\t\t\t}\n\t\t\tconst close = (all) => {\n\t\t\t\tbyID(\"site--nav--search-results\").hidden = true\n\t\t\t\tbyID(\"site--nav--search\").setAttribute(\"aria-expanded\", \"false\")\n\t\t\t\tif (all) byID(\"site--nav--search-box\").classList.add(\"hidden\")\n\t\t\t}\n\t\t\tconst filter = () => {\n\t\t\t\tconst words = byID(\"site--nav--search\").value.toLowerCase().split(/\\s+/).filter(Boolean)\n\t\t\t\tif (!words.length) return close(false)\n\t\t\t\tconst list = byID(\"site--nav--search-results\")\n\t\t\t\tlist.querySelectorAll(\"[role=option]\").forEach((o) => {\n\t\t\t\t\to.hidden = !words.every((w) => o.dataset.search.includes(w))\n\t\t\t\t\tconst missing = words.filter((w) => !o.dataset.label.includes(w))\n\t\t\t\t\tconst hint = o.querySelector(\"[data-hint]\")\n\t\t\t\t\thint.textContent = o.dataset.hints.split(\"|\").find((k) => k && missing.some((w) => k.toLowerCase().includes(w))) ?? \"\"\n\t\t\t\t\thint.hidden = !hint.textContent\n\t\t\t\t})\n\t\t\t\tlist.querySelectorAll(\"[role=group]\").forEach((g) => g.hidden = !g.querySelector(\"[role=option]:not([hidden])\"))\n\t\t\t\tbyID(\"site--nav--search-empty\").hidden = shown().length > 0\n\t\t\t\tlist.hidden = false\n\t\t\t\tbyID(\"site--nav--search\").setAttribute(\"aria-expanded\", \"true\")\n\t\t\t\tchoose(shown()[0])\n\t\t\t}\n\t\t\tconst open = () => {\n\t\t\t\tbyID(\"site--nav--search-box\").classList.remove(\"hidden\")\n\t\t\t\tbyID(\"site--nav--search\").focus()\n\t\t\t\tbyID(\"site--nav--search\").select()\n\t\t\t}\n\t\t\tdocument.addEventListener(\"input\", (e) => e.target.id === \"site--nav--search\" && filter())\n\t\t\tdocument.addEventListener(\"keydown\", (e) => {\n\t\t\t\tif ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === \"k\" && byID(\"site--nav--search\")) {\n\t\t\t\t\te.preventDefault()\n\t\t\t\t\treturn open()\n\t\t\t\t}\n\t\t\t\tif (e.target.id !== \"site--nav--search\") return\n\t\t\t\tconst options = shown(), at = options.findIndex((o) => o.getAttribute(\"aria-selected\") === \"true\")\n\t\t\t\tif ((e.key === \"ArrowDown\" || e.key === \"ArrowUp\") && options.length) {\n\t\t\t\t\te.preventDefault()\n\t\t\t\t\tchoose(options[(at + (e.key === \"ArrowDown\" ? 1 : options.length - 1)) % options.length])\n\t\t\t\t} else if (e.key === \"Enter\") {\n\t\t\t\t\te.preventDefault()\n\t\t\t\t\toptions[at]?.click()\n\t\t\t\t} else if (e.key === \"Escape\") {\n\t\t\t\t\te.preventDefault()\n\t\t\t\t\tconst phone = byID(\"site--nav--search-open\").checkVisibility()\n\t\t\t\t\tclose(phone)\n\t\t\t\t\tif (phone) byID(\"site--nav--search-open\").focus()\n\t\t\t\t}\n\t\t\t})\n\t\t\tdocument.addEventListener(\"click\", (e) => {\n\t\t\t\tif (e.target.closest(\"#site--nav--search-open\")) return open()\n\t\t\t\tif (e.target.closest(\"#site--nav--search-results [role=option]\")) {\n\t\t\t\t\tbyID(\"site--nav--search\").value = \"\"\n\t\t\t\t\treturn close(true)\n\t\t\t\t}\n\t\t\t\tif (!e.target.closest(\"#site--nav--search-box\")) close(true)\n\t\t\t})\n\t\t})()\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -1,6 +1,8 @@
 package sitenav
 
 import (
+	"slices"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -53,13 +55,12 @@ func TestVisible(t *testing.T) {
 	}
 	admin := &controldb.SiteIdentity{Role: consts.IdentityRoleAdmin}
 	require.Len(t, Visible(admin), len(Pages))
-	require.Len(t, Visible(admin, Data), 11)
+	require.Len(t, Visible(admin, Data), 13)
 	require.Len(t, Visible(admin, Reports), 3)
 	for _, role := range []consts.IdentityRole{consts.IdentityRoleUser, consts.IdentityRoleUserReadOnly, consts.IdentityRoleDeviceRead} {
 		settings := ids(Visible(&controldb.SiteIdentity{Role: role}, Settings))
-		require.Equal(t, []string{"site--settings--settings-button", "site--settings--alarms-button", "site--settings--push-devices-button",
-			"site--presets--food-button", "site--presets--profiles-button"}, settings, role)
-		require.Len(t, Visible(&controldb.SiteIdentity{Role: role}, Data), 11, role)
+		require.Equal(t, []string{"site--settings--settings-button", "site--settings--alarms-button", "site--settings--push-devices-button"}, settings, role)
+		require.Len(t, Visible(&controldb.SiteIdentity{Role: role}, Data), 13, role)
 	}
 	require.Empty(t, Visible(nil))
 }
@@ -70,16 +71,65 @@ func TestGroups(t *testing.T) {
 	for _, group := range Groups(Visible(&controldb.SiteIdentity{Role: consts.IdentityRoleAdmin}, Settings), false) {
 		names = append(names, group.Name)
 	}
-	require.Equal(t, []string{"This site", "People & devices", "Connections", "Presets", "Troubleshooting"}, names)
+	require.Equal(t, []string{"This site", "People & devices", "Connections", "Troubleshooting"}, names)
 	names = nil
 	for _, group := range Groups(Visible(&controldb.SiteIdentity{Role: consts.IdentityRoleAdmin}, Data), false) {
 		names = append(names, group.Name)
 	}
-	require.Equal(t, []string{"Readings & treatments", "Events", "Devices"}, names)
+	require.Equal(t, []string{"Readings & treatments", "Events", "Devices", "Presets"}, names)
+	// Food presets and profiles are with the data they are used to enter, not the site's settings
+	require.Equal(t, Data, At("/presets/food/1").Hub)
+	require.Equal(t, Data, At("/presets/profiles").Hub)
 	names = nil
 	for _, group := range Groups(Pages, true) {
 		names = append(names, group.Name)
 	}
 	require.Equal(t, []string{"Data", "Reports", "Settings"}, names)
 	require.Equal(t, "site--nav--search--settings--push-devices", At("/settings/push-devices").SearchID())
+}
+
+// Search finds a page by the headings and words on it and by what people also call it, as the header's search
+// matches: every word typed is in the page's search text
+func TestSearchText(t *testing.T) {
+	tests := []struct {
+		query string
+		want  []string
+	}{
+		{"nightscout", []string{"site--settings--connectors-button"}},
+		{"dexcom", []string{"site--settings--connectors-button"}},
+		{"low", []string{"site--settings--alarms-button"}},
+		{"urgent high", []string{"site--settings--alarms-button"}},
+		{"bgl", []string{"site--data--glucose-button"}},
+		{"blood sugar", []string{"site--data--glucose-button"}},
+		{"bolus", []string{"site--data--insulin-button", "site--presets--food-button"}},
+		{"carbs", []string{"site--data--food-button", "site--presets--food-button", "site--reports--summaries-button"}},
+		{"timezone", []string{"site--settings--settings-button"}},
+		{"iob", []string{"site--data--device-status-button"}},
+		{"total daily dose", []string{"site--reports--tdd-menu-button"}},
+		{"exercise", []string{"site--data--activities-button"}},
+		{"push", []string{"site--settings--push-devices-button", "site--settings--push-button"}},
+		{"temp", []string{"site--data--temp-targets-button", "site--data--temp-basals-button"}},
+	}
+	for _, test := range tests {
+		t.Run(test.query, func(t *testing.T) {
+			var got []string
+			for _, page := range Pages {
+				text := page.SearchText()
+				if !slices.ContainsFunc(strings.Fields(test.query), func(word string) bool { return !strings.Contains(text, word) }) {
+					got = append(got, page.ID)
+				}
+			}
+			require.Equal(t, test.want, got)
+		})
+	}
+	// A user who is not an admin finds none of the logs, as no page they may open mentions them
+	for _, page := range Visible(&controldb.SiteIdentity{Role: consts.IdentityRoleUser}) {
+		require.NotContains(t, page.SearchText(), "logs", page.ID)
+	}
+}
+
+// A page's hints are its keywords, and a page with none has none
+func TestHints(t *testing.T) {
+	require.Equal(t, "Nightscout|Dexcom|Libre|LibreLinkUp|Virtual|Backfilling", Page{Path: "/settings/connectors"}.Hints())
+	require.Empty(t, Page{Path: "/data/event-groups"}.Hints())
 }

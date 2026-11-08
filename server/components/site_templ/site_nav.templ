@@ -168,8 +168,9 @@ templ tab(page sitenav.Page, current bool, class string) {
 	</a>
 }
 
-// Search finds a page the identity may open by its name, group or hub as it is typed, opening it as the hubs' tabs
-// do. On a phone, or a narrow window, it is an icon opening a box across the page.
+// Search finds a page the identity may open by its name, group, hub, the headings and words on it, or what people also
+// call it, as it is typed, showing the heading or word it was found by, and opening it as the hubs' tabs do. On a
+// phone, or a narrow window, it is an icon opening a box across the page.
 templ Search() {
 	if pages := sitenav.Visible(signedIn(ctx)); len(pages) > 0 {
 		<button id="site--nav--search-open" type="button" aria-label="Search pages" aria-controls="site--nav--search-box" class="flex size-8 items-center justify-center rounded-md text-gray-300 transition hover:bg-white/10 hover:text-white lg:hidden">
@@ -202,12 +203,15 @@ templ Search() {
 									role="option"
 									aria-selected="false"
 									href={ templ.SafeURL(page.Path) }
-									data-search={ strings.ToLower(page.Label + " " + page.Group + " " + string(page.Hub)) }
+									data-search={ page.SearchText() }
+									data-label={ strings.ToLower(page.Label) }
+									data-hints={ page.Hints() }
 									class="flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-gray-100 aria-selected:bg-gray-100"
 									{ navAttributes(page.Path)... }
 								>
 									@page.Icon(icon.Props{Class: "size-4 text-gray-500"})
 									{ page.Label }
+									<span data-hint hidden class="truncate rounded bg-gray-100 px-1.5 text-xs text-gray-600"></span>
 									if page.Group != "" {
 										<span class="ml-auto text-xs text-gray-500">{ page.Group }</span>
 									}
@@ -253,7 +257,13 @@ templ searchScript() {
 				const words = byID("site--nav--search").value.toLowerCase().split(/\s+/).filter(Boolean)
 				if (!words.length) return close(false)
 				const list = byID("site--nav--search-results")
-				list.querySelectorAll("[role=option]").forEach((o) => o.hidden = !words.every((w) => o.dataset.search.includes(w)))
+				list.querySelectorAll("[role=option]").forEach((o) => {
+					o.hidden = !words.every((w) => o.dataset.search.includes(w))
+					const missing = words.filter((w) => !o.dataset.label.includes(w))
+					const hint = o.querySelector("[data-hint]")
+					hint.textContent = o.dataset.hints.split("|").find((k) => k && missing.some((w) => k.toLowerCase().includes(w))) ?? ""
+					hint.hidden = !hint.textContent
+				})
 				list.querySelectorAll("[role=group]").forEach((g) => g.hidden = !g.querySelector("[role=option]:not([hidden])"))
 				byID("site--nav--search-empty").hidden = shown().length > 0
 				list.hidden = false
