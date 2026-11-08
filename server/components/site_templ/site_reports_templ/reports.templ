@@ -50,7 +50,8 @@ func link(period string, date time.Time) string {
 }
 
 // Report is the AGP report of a day, week, fortnight or month: its time in range, daily dose and carbs, and its AGP,
-// with buttons to the report of another kind of period ending on the same day, and to the period before and after
+// with buttons to the period before and after either side of its dates, and to the report of another kind of period
+// ending on the same day
 templ Report(p *sitemodels.SiteSummaryPeriod) {
 	{{ first, last := days(ctx, p) }}
 	@heading.Title("AGP")
@@ -58,16 +59,14 @@ templ Report(p *sitemodels.SiteSummaryPeriod) {
 		<div class="flex flex-wrap items-center justify-between gap-2">
 			<div>
 				<h1 class="text-2xl font-bold">AGP</h1>
-				<span id="site--reports--title" class="text-sm text-gray-500">{ title(ctx, p) }</span>
+				<div class="flex items-center gap-2">
+					@stepButton("site--reports--previous", link(p.Period, first.AddDate(0, 0, -1)), "Previous "+p.Period, "‹")
+					<span id="site--reports--title" class="text-sm text-gray-500">{ title(ctx, p) }</span>
+					@stepButton("site--reports--next", link(p.Period, time.UnixMilli(p.End).In(first.Location())), "Next "+p.Period, "›")
+				</div>
 			</div>
 			<div class="flex flex-wrap gap-1">
 				@reportKinds(p.Period, last)
-				@reportButton("site--reports--previous", link(p.Period, first.AddDate(0, 0, -1)), false) {
-					Previous
-				}
-				@reportButton("site--reports--next", link(p.Period, time.UnixMilli(p.End).In(first.Location())), false) {
-					Next
-				}
 			</div>
 		</div>
 		<dl class="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -186,6 +185,20 @@ templ reportButton(id, path string, selected bool) {
 		Attributes: templ.Attributes{"hx-get": path, "hx-target": "#main-content", "hx-push-url": "true", "hx-swap": "innerHTML"},
 	}) {
 		{ children... }
+	}
+}
+
+// stepButton opens the report before or after, at path, beside the dates it covers, named by label for a screen reader
+// and as its tooltip, or is disabled when there is none
+templ stepButton(id, path, label, symbol string) {
+	@button.Button(button.Props{
+		ID:         id,
+		Variant:    button.VariantOutline,
+		Size:       button.SizeSm,
+		Disabled:   path == "",
+		Attributes: templ.Attributes{"hx-get": path, "hx-target": "#main-content", "hx-push-url": "true", "hx-swap": "innerHTML", "aria-label": label, "title": label},
+	}) {
+		{ symbol }
 	}
 }
 
