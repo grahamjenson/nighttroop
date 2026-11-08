@@ -671,7 +671,9 @@ focus back to the row or button that opened it.
 - Every TOTP code field, on sign in, setup and the new site's code check, takes only digits; letters typed or pasted
   into it are dropped.
 - The server refuses a TOTP code that is not six digits, like a wrong one.
-- Sign-in attempts are rate limited per identity and IP; a disabled identity cannot sign in.
+- Sign-in attempts are rate limited per identity and IP, and one refused says "Too many login attempts. Wait a minute,
+  then try again."; a disabled identity cannot sign in.
+- The site login's inputs have no placeholders, and are marked invalid only after a failed attempt, until the next one.
 - Devices use their Nightscout token, as a token, API secret or for a JWT.
 - Changing an identity's password or TOTP signs out its existing sessions.
 - Turning an identity off, deleting it or changing its password or TOTP also ends its open connections: its Socket.IO
