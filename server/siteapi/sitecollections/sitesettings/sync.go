@@ -59,6 +59,9 @@ func (s *SyncSettingsCollection) CreateRow(ctx context.Context, collectionTx *si
 		return nil, apiutils.ErrBadBodyWithHint(fmt.Sprintf("Invalid sync source type: %s", *id))
 	}
 	params.Type = sstype
+	if err := checkVirtualSyncAllowed(siteContext, params.Type); err != nil {
+		return nil, err
+	}
 
 	// The virtual source has no upstream; the sync job ignores these values.
 	if params.Type == consts.SyncSourceTypeVirtual {
@@ -119,6 +122,9 @@ func (s *SyncSettingsCollection) UpdateRow(ctx context.Context, collectionTx *si
 	// DO NOT ALLOW THE CLIENT TO SET SITEID OR TYPE
 	params.SiteID = siteContext.SiteID
 	params.Type = oldModel.Type
+	if err := checkVirtualSyncAllowed(siteContext, params.Type); err != nil {
+		return nil, err
+	}
 
 	var err error
 
@@ -317,6 +323,14 @@ func encryptCredentials(security *security.SecurityConfig, credentials ...*strin
 			return apiutils.ErrBadBodyWithHint(fmt.Sprintf("Failed to encrypt sync source credentials: %s", err))
 		}
 		*credential = encrypted
+	}
+	return nil
+}
+
+// checkVirtualSyncAllowed refuses saving the virtual source, which makes up glucose, on a production server
+func checkVirtualSyncAllowed(siteContext *httputils.SiteContext, sstype consts.SyncSourceType) error {
+	if sstype == consts.SyncSourceTypeVirtual && !siteContext.Config.VirtualSyncAllowed() {
+		return apiutils.ErrConstraintCheckFailedWithHint("virtual sync, which makes up glucose, is only on development, test and staging servers")
 	}
 	return nil
 }

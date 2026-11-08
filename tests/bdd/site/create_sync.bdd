@@ -30,6 +30,12 @@ ASSERT_STATUS 200
 ASSERT_NEW_URL
 ASSERT_PATH /settings/sync
 
+// A test server offers virtual sync, which makes up glucose; a production server does not, which
+// TestVirtualSyncIsOnlyOnDevelopmentTestAndStaging checks
+ASSERT_VISIBLE #site--settings--virtual-sync--enable
+ASSERT_VISIBLE #site--settings--virtual-sync--submit
+SCREENSHOT virtual_sync_offered_on_test_server
+
 ASSERT_VISIBLE #site--settings--nightscout-sync--enable
 ASSERT_VISIBLE #site--settings--nightscout-sync--url
 ASSERT_VISIBLE #site--settings--nightscout-sync--password

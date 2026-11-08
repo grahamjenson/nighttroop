@@ -372,6 +372,8 @@ focus back to the row or button that opened it.
 
 - A site can pull data from **Dexcom** (with its region), **LibreLinkUp** (with its region) or another
   **Nightscout** site, or from **virtual sync**, which makes realistic test data.
+- Virtual sync is only on a development, test or staging server (`MODE`). In production it is not offered on the
+  sync page, saving or turning on one is refused, and one already saved is never synced or backfilled.
 - Saving does not check the details: the first sync does, and turns syncing off and says why if it fails.
 - Typing the details of a Dexcom, LibreLinkUp or Nightscout source not yet saved ticks its Enable Sync, as it is easy
   to forget; a click on the box, before or after, is kept, and a saved source's box is never changed.
