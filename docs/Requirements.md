@@ -212,6 +212,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 - Every 5 minutes the server checks its memory (of its container's limit, or else the machine's), the space used on
   its DBs' disk, and how long its CPU stayed at 100% of every core, sampled every 5 seconds.
+- The same check measures each site's DB file and write-ahead log on disk, so a site's DB size counts what its syncs
+  write as well as what its own requests do, and is never smaller than its tables added together.
 - Memory or disk at or over 60% (`MEMORY_ALERT_PERCENT`, `DISK_ALERT_PERCENT`), or the CPU at 100% for 20 seconds or
   more (`CPU_PEGGED_ALERT_SECONDS`), shows in the banner on every control page until a check finds it back under.
 - A disk with 100 GB or more free (`DISK_ALERT_FREE_GB`) never warns, however full it is.

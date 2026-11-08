@@ -3,6 +3,7 @@ package check_resources
 
 import (
 	"context"
+	"errors"
 	"runtime"
 	"time"
 
@@ -24,7 +25,7 @@ func SetupCron(c cron.CronScheduler, cfg *config.ServerConfig, controlDB *db.Con
 }
 
 // Check reads the CPU sampled since the last check, the memory used and the DBs' disk, keeping them in the live DB and
-// recording an event for each that went over its alert level or came back under it
+// recording an event for each that went over its alert level or came back under it, and keeps each site DB's size
 func Check(ctx context.Context, cfg *config.ServerConfig, controlDB *db.ControlDB, now time.Time) error {
 	cpu, pegged := cfg.Usage.TakeCPU()
 	reading := livedb.CreateResourceReadingParams{At: now.UnixMilli(), CPUPercent: cpu, CPUPeggedSeconds: int64(pegged.Seconds())}
@@ -39,5 +40,6 @@ func Check(ctx context.Context, cfg *config.ServerConfig, controlDB *db.ControlD
 	if ok {
 		reading.DiskPercent, reading.DiskTotalBytes = new(100*used/total), new(int64(total))
 	}
-	return controlDB.RecordResources(ctx, reading)
+	// Each site's DB is measured here, as its syncs write to it without a request that would measure it
+	return errors.Join(controlDB.RecordResources(ctx, reading), controlDB.RecordSiteSizes(ctx, controlDB.AllSites()))
 }

@@ -541,6 +541,25 @@ func dueDateFlags(now int64, lastSeenAt *int64, lastWriteAt *int64, updateLastSe
 	return due(updateLastSeen, lastSeenAt), due(updateLastWrite, lastWriteAt)
 }
 
+// RecordSiteSizes measures each site's DB on disk and keeps the sizes that changed, in one transaction, so the sizes
+// shown count what syncs write as well as what the site's own requests do. A DB in memory has no size to keep.
+func (db *ControlDB) RecordSiteSizes(ctx context.Context, sites []*SiteDB) error {
+	tx, err := db.SQLiteDB.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("cannot record site sizes: %w", err)
+	}
+	defer tx.Rollback()
+	q := db.Queries.WithTx(tx)
+	for _, site := range sites {
+		if sizeKB := site.EstimatedSizeKB(); sizeKB != nil {
+			if err := q.UpdateSiteDBSize(ctx, controldb.UpdateSiteDBSizeParams{EstimatedDbSizeKb: sizeKB, ID: site.Subdomain}); err != nil {
+				return fmt.Errorf("cannot record site %s size: %w", site.Subdomain, err)
+			}
+		}
+	}
+	return tx.Commit()
+}
+
 // SiteTableSizes are the bytes each table of the site's DB takes, its indexes with it, largest first, or none when its
 // DB is not open here, as an archived site's is not
 func (db *ControlDB) SiteTableSizes(ctx context.Context, subdomain string) ([]sitedb.TableSize, error) {

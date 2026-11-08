@@ -1469,6 +1469,22 @@ func (q *Queries) SiteExists(ctx context.Context, arg SiteExistsParams) (bool, e
 	return column_1, err
 }
 
+const updateSiteDBSize = `-- name: UpdateSiteDBSize :exec
+UPDATE sites SET estimated_db_size_kb = ?1
+WHERE id = ?2 AND estimated_db_size_kb IS NOT ?1
+`
+
+type UpdateSiteDBSizeParams struct {
+	EstimatedDbSizeKb *int64
+	ID                string
+}
+
+// Only a size that changed is written, so measuring every site rewrites none of the ones that did not
+func (q *Queries) UpdateSiteDBSize(ctx context.Context, arg UpdateSiteDBSizeParams) error {
+	_, err := q.exec(ctx, q.updateSiteDBSizeStmt, updateSiteDBSize, arg.EstimatedDbSizeKb, arg.ID)
+	return err
+}
+
 const updateSiteDateFlags = `-- name: UpdateSiteDateFlags :exec
 UPDATE sites
 SET
