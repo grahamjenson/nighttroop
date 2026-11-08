@@ -2,8 +2,7 @@ INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
 // An admin's General settings have Download Data, a link to a snapshot of the site's DB, to look through its data
-CLICK #site--settings-menu
-CLICK #site--settings--settings-button
+CLICK #site--nav--settings
 ASSERT_STATUS 200
 ASSERT_PATH /settings
 ASSERT_VISIBLE #site--settings--download

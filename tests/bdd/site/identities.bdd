@@ -1,7 +1,7 @@
 INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
-CLICK #site--settings-menu
+CLICK #site--nav--settings
 CLICK #site--settings--identities-button
 ASSERT_STATUS 200
 ASSERT_PATH /settings/identities
@@ -60,8 +60,7 @@ ASSERT_NOT_VISIBLE #site--identities--created--password
 ASSERT_TEXT_VISIBLE kitchen
 
 // Opening the page again lists the new device
-CLICK #site--settings-menu
-CLICK #site--settings--identities-button
+GOTO /settings/identities
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE kitchen
 

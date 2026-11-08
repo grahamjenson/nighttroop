@@ -12,7 +12,7 @@ ASSERT_VISIBLE #site--getting-started--alarms
 ASSERT_NOT_VISIBLE #site--summary--glucose
 SCREENSHOT getting_started
 
-// Each step opens the page it is done on, and the guide is always on My Account, in the menu, to come back to
+// Each step opens the page it is done on, and the guide is always on My Account and in the menu, to come back to
 CLICK #site--getting-started--connectors-link
 ASSERT_PATH /settings/connectors
 ASSERT_VISIBLE #site--settings--virtual-connector--enable

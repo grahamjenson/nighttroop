@@ -2,7 +2,7 @@ INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
 // Virtual connector writes a temp basal on its first run
-CLICK #site--settings-menu
+CLICK #site--nav--settings
 CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
 CLICK #site--settings--virtual-connector--enable
@@ -11,8 +11,7 @@ ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Connector Updated
 RUN_BACKGROUND_JOBS
 
-CLICK #site--settings-menu
-CLICK #site--data--temp-basals-button
+GOTO /data/temp-basals
 ASSERT_STATUS 200
 ASSERT_PATH /data/temp-basals
 ASSERT_VISIBLE #tempBasalsTable
@@ -98,8 +97,7 @@ ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
 
 // Deleting asks first (the test accepts), then removes the row without opening its details
-CLICK #site--settings-menu
-CLICK #site--data--temp-basals-button
+GOTO /data/temp-basals
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 2
 CLICK #tempBasalsTable tbody tr >> nth=0 >> button[title=Delete]
@@ -108,7 +106,6 @@ ASSERT_NOT_VISIBLE #site--temp-basal--details
 SCREENSHOT temp_basal_deleted
 
 // The deleted temp basal stays gone after a reload
-CLICK #site--settings-menu
-CLICK #site--data--temp-basals-button
+GOTO /data/temp-basals
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1

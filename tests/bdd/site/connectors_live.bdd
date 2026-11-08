@@ -1,7 +1,7 @@
 INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
-CLICK #site--settings-menu
+CLICK #site--nav--settings
 CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
 ASSERT_PATH /settings/connectors

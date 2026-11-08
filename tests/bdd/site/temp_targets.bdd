@@ -2,7 +2,7 @@ INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
 // Virtual connector writes a temp target on its first run
-CLICK #site--settings-menu
+CLICK #site--nav--settings
 CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
 CLICK #site--settings--virtual-connector--enable
@@ -11,8 +11,7 @@ ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Connector Updated
 RUN_BACKGROUND_JOBS
 
-CLICK #site--settings-menu
-CLICK #site--data--temp-targets-button
+GOTO /data/temp-targets
 ASSERT_STATUS 200
 ASSERT_PATH /data/temp-targets
 ASSERT_VISIBLE #tempTargetsTable
@@ -87,8 +86,7 @@ ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
 
 // Deleting asks first (the test accepts), then removes the row without opening its details
-CLICK #site--settings-menu
-CLICK #site--data--temp-targets-button
+GOTO /data/temp-targets
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 2
 CLICK #tempTargetsTable tbody tr >> nth=0 >> button[title=Delete]
@@ -97,7 +95,6 @@ ASSERT_NOT_VISIBLE #site--temp-target--details
 SCREENSHOT temp_target_deleted
 
 // The deleted temp target stays gone after a reload
-CLICK #site--settings-menu
-CLICK #site--data--temp-targets-button
+GOTO /data/temp-targets
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1

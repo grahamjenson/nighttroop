@@ -1,8 +1,8 @@
 INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
-// Food presets are in the menu under Data, with Profiles, and a new site has none
-CLICK #site--settings-menu
+// Food presets are in the Settings hub under Presets, with Profiles, and a new site has none
+CLICK #site--nav--settings
 ASSERT_DRAWN #site--presets--food-button
 ASSERT_DRAWN #site--presets--profiles-button
 SCREENSHOT presets_menu
@@ -81,8 +81,7 @@ ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
 
 // Deleting asks first (the test accepts), then removes the row without opening its details
-CLICK #site--settings-menu
-CLICK #site--presets--food-button
+GOTO /presets/food
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 2
 CLICK #foodPresetsTable tbody tr >> nth=0 >> button[title=Delete]
@@ -91,8 +90,7 @@ ASSERT_NOT_VISIBLE #presets--food--details
 SCREENSHOT food_preset_deleted
 
 // The deleted food preset stays gone after a reload
-CLICK #site--settings-menu
-CLICK #site--presets--food-button
+GOTO /presets/food
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
 ASSERT_TEXT_VISIBLE Apple

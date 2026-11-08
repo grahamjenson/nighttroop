@@ -2,7 +2,7 @@ INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
 // A new site has no device statuses
-CLICK #site--settings-menu
+CLICK #site--nav--data
 ASSERT_VISIBLE #site--data--device-status-button
 CLICK #site--data--device-status-button
 ASSERT_STATUS 200
@@ -11,7 +11,7 @@ ASSERT_VISIBLE #site--device-status--empty
 SCREENSHOT device_statuses_empty
 
 // Virtual connector writes a device status every 5 minutes, 6 of them on its first run
-CLICK #site--settings-menu
+CLICK #site--nav--settings
 CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
 CLICK #site--settings--virtual-connector--enable
@@ -21,8 +21,7 @@ ASSERT_TEXT_VISIBLE Connector Updated
 RUN_BACKGROUND_JOBS
 
 // Each device shows its latest 3 statuses
-CLICK #site--settings-menu
-CLICK #site--data--device-status-button
+GOTO /data/device-status
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE virtual://nighttroop
 ASSERT_VISIBLE #deviceStatusTable-0 tbody tr >> nth=2

@@ -2,7 +2,7 @@ INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
 // A new site has no insulin doses
-CLICK #site--settings-menu
+CLICK #site--nav--data
 CLICK #site--data--insulin-button
 ASSERT_STATUS 200
 ASSERT_PATH /data/insulin
@@ -96,8 +96,7 @@ ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
 
 // Deleting asks first (the test accepts), then removes the row without opening its details
-CLICK #site--settings-menu
-CLICK #site--data--insulin-button
+GOTO /data/insulin
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 2
 CLICK #insulinDosesTable tbody tr >> nth=0 >> button[title=Delete]
@@ -106,8 +105,7 @@ ASSERT_NOT_VISIBLE #site--insulin--details
 SCREENSHOT insulin_dose_deleted
 
 // The deleted dose stays gone after a reload
-CLICK #site--settings-menu
-CLICK #site--data--insulin-button
+GOTO /data/insulin
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
 

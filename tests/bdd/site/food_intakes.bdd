@@ -2,7 +2,7 @@ INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
 // A new site has no food intakes
-CLICK #site--settings-menu
+CLICK #site--nav--data
 CLICK #site--data--food-button
 ASSERT_STATUS 200
 ASSERT_PATH /data/food
@@ -84,8 +84,7 @@ ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
 
 // Deleting asks first (the test accepts), then removes the row without opening its details
-CLICK #site--settings-menu
-CLICK #site--data--food-button
+GOTO /data/food
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 2
 CLICK #foodIntakesTable tbody tr >> nth=0 >> button[title=Delete]
@@ -94,8 +93,7 @@ ASSERT_NOT_VISIBLE #site--food--details
 SCREENSHOT food_intake_deleted
 
 // The deleted food intake stays gone after a reload
-CLICK #site--settings-menu
-CLICK #site--data--food-button
+GOTO /data/food
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
 

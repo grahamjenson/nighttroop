@@ -2,7 +2,7 @@ INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
 // A new site has no site or sensor changes
-CLICK #site--settings-menu
+CLICK #site--nav--data
 ASSERT_VISIBLE #site--data--component-events-button
 CLICK #site--data--component-events-button
 ASSERT_STATUS 200
@@ -76,8 +76,7 @@ ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
 
 // Deleting asks first (the test accepts), then removes the row without opening its details
-CLICK #site--settings-menu
-CLICK #site--data--component-events-button
+GOTO /data/component-events
 ASSERT_STATUS 200
 CLICK #componentEventsTable tbody tr >> nth=0 >> button[title=Delete]
 ASSERT_TEXT_VISIBLE Change Deleted
@@ -85,7 +84,6 @@ ASSERT_NOT_VISIBLE #site--component-event--details
 SCREENSHOT component_event_deleted
 
 // The deleted change stays gone after a reload
-CLICK #site--settings-menu
-CLICK #site--data--component-events-button
+GOTO /data/component-events
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1

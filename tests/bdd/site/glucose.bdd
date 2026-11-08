@@ -2,7 +2,7 @@ INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
 // Virtual connector writes the last 30 minutes of glucose readings, 6 of them, on its first run
-CLICK #site--settings-menu
+CLICK #site--nav--settings
 CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
 CLICK #site--settings--virtual-connector--enable
@@ -11,8 +11,7 @@ ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Connector Updated
 RUN_BACKGROUND_JOBS
 
-CLICK #site--settings-menu
-CLICK #site--data--glucose-button
+GOTO /data/glucose
 ASSERT_STATUS 200
 ASSERT_PATH /data/glucose
 ASSERT_VISIBLE #glucoseReadingsTable
@@ -95,15 +94,13 @@ ASSERT_VISIBLE #siteErrorsTable >> text=CHECK constraint failed
 SCREENSHOT glucose_reading_error_on_errors_page
 
 // Choosing mg/dL shows the same reading in mg/dL
-CLICK #site--settings-menu
-CLICK #site--settings--settings-button
+CLICK #site--nav--settings
 ASSERT_STATUS 200
 INPUT #site--settings--identity--units mg/dL
 CLICK #site--settings--identity--save
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Settings Saved
-CLICK #site--settings-menu
-CLICK #site--data--glucose-button
+GOTO /data/glucose
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE mg/dL
 ASSERT_TEXT_VISIBLE 155
@@ -135,8 +132,7 @@ ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
 
 // Deleting asks first (the test accepts), then removes the row without opening its details
-CLICK #site--settings-menu
-CLICK #site--data--glucose-button
+GOTO /data/glucose
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 7
 CLICK #glucoseReadingsTable tbody tr >> nth=0 >> button[title=Delete]
@@ -147,7 +143,6 @@ ASSERT_TEXT_VISIBLE Showing 1 to 6
 SCREENSHOT glucose_reading_deleted
 
 // The deleted reading stays gone after a reload
-CLICK #site--settings-menu
-CLICK #site--data--glucose-button
+GOTO /data/glucose
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 6

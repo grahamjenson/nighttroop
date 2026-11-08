@@ -22,7 +22,7 @@ TYPE #site--login--otp-1 123123
 ASSERT_NEW_URL
 ASSERT_VISIBLE "Nighttroop"
 
-CLICK #site--settings-menu
+CLICK #site--nav--settings
 ASSERT_VISIBLE #site--settings--connectors-button
 
 CLICK #site--settings--connectors-button
@@ -81,10 +81,7 @@ ASSERT_TEXT_VISIBLE Connector Updated
 
 RUN_BACKGROUND_JOBS
 
-CLICK #site--settings-menu
-ASSERT_VISIBLE #site--settings--connectors-button
-
-CLICK #site--settings--connectors-button
+GOTO /settings/connectors
 ASSERT_STATUS 200
 ASSERT_VISIBLE #site--settings--nightscout-connector--errors
 ASSERT_TEXT_VISIBLE The first sync failed, so syncing has been turned off
@@ -111,8 +108,7 @@ CLICK "Connect your Nightscout instance"
 CLICK #site--settings--nightscout-connector--submit
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Connector Updated
-CLICK #site--settings-menu
-CLICK #site--settings--connectors-button
+GOTO /settings/connectors
 ASSERT_STATUS 200
 ASSERT_VISIBLE #site--settings--nightscout-connector--url[value="https://split-me.test"]
 CLICK #site--settings--nightscout-connector--delete
@@ -135,9 +131,7 @@ CLICK #site--settings--dexcom-connector--submit
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Connector Updated
 
-CLICK #site--settings-menu
-ASSERT_VISIBLE #site--settings--connectors-button
-CLICK #site--settings--connectors-button
+GOTO /settings/connectors
 ASSERT_STATUS 200
 ASSERT_VISIBLE #site--settings--dexcom-connector--username[value="valid-dexcom-user"]
 ASSERT_VISIBLE #site--settings--dexcom-connector--region:has(option[value="US"]:checked)

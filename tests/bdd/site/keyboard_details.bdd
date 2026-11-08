@@ -1,7 +1,7 @@
 INCLUDE steps/new_site_admin.steps
 
 // Virtual connector writes the last 30 minutes of glucose readings, 6 of them, on its first run
-CLICK #site--settings-menu
+CLICK #site--nav--settings
 CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
 CLICK #site--settings--virtual-connector--enable

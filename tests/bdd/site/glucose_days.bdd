@@ -2,7 +2,7 @@ INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
 // Virtual connector writes its last 30 minutes, then a backfill the day before them (tests backfill a day)
-CLICK #site--settings-menu
+CLICK #site--nav--settings
 CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
 CLICK #site--settings--virtual-connector--enable
@@ -15,8 +15,7 @@ ASSERT_TEXT_VISIBLE Backfilling Virtual
 RUN_BACKGROUND_JOBS
 
 // A new timezone, at the same midnight, builds the last 7 days again with the backfilled readings in them
-CLICK #site--settings-menu
-CLICK #site--settings--settings-button
+GOTO /settings
 ASSERT_STATUS 200
 INPUT #site--settings--site--timezone Etc/UTC
 CLICK #site--settings--site--save
