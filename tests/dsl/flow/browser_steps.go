@@ -309,6 +309,16 @@ func ParseBrowserLines(lines []Line) ([]Action, error) {
 				TestPath: path,
 				TestLine: lineNumber,
 			})
+		case "ASSERT_NO_PAGE_ERRORS":
+			// ASSERT_NO_PAGE_ERRORS is the page having thrown no uncaught error since the flow went to it
+			if current == nil {
+				return nil, fmt.Errorf("assert_no_page_errors before action")
+			}
+			assertable, ok := current.(interface{ AddAssert(BrowserAssert) })
+			if !ok {
+				return nil, fmt.Errorf("current action does not support asserts")
+			}
+			assertable.AddAssert(&AssertNoPageErrors{TestPath: path, TestLine: lineNumber})
 		case "ASSERT_FITS":
 			// ASSERT_FITS is the whole page fitting in the window, so nothing on it needs scrolling to see
 			if current == nil {

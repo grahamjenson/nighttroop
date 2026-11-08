@@ -147,7 +147,7 @@
             if (!element.isConnected || reconnectRequested) return;
             reconnectRequested = true;
             if (connection.delayCanceller) connection.delayCanceller();
-            connection.reader?.cancel();
+            connection.reader?.cancel()?.catch(() => {});
         };
 
         let paused = false;
@@ -157,7 +157,7 @@
             let visibilityHandler = () => {
                 if (document.hidden) {
                     paused = true;
-                    connection.reader?.cancel();
+                    connection.reader?.cancel()?.catch(() => {});
                 } else if (paused) {
                     paused = false;
                     if (unpauseResolver) unpauseResolver();
@@ -347,7 +347,9 @@
         if (!connection) return;
 
         connection.abortController?.abort();
-        connection.reader?.cancel?.();
+        // Cancelling a stream the abort has ended rejects with an AbortError, a normal end, so it is caught, not
+        // thrown into the console as an uncaught error each time the page swaps
+        connection.reader?.cancel?.()?.catch?.(() => {});
         if (connection.delayCanceller) connection.delayCanceller();
         if (connection.visibilityHandler) {
             document.removeEventListener('visibilitychange', connection.visibilityHandler);

@@ -302,6 +302,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   to the page of that kind.
 - The summary updates live as new data arrives, and catches up after the page has been in the background. While it
   does, ● Live shows beside its title.
+- Moving to another page closes the page's live updates, such as the alarms', without an error in the browser's
+  console.
 - A page's live updates stay connected for up to an hour, not cut off by the 30 second request timeout, so an open
   summary is not read again every 30 seconds.
 - A summary with no readings in its time links to the Connectors page.
