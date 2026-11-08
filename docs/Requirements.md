@@ -720,6 +720,7 @@ Connectors are a site's third party integrations, each syncing from one service.
   serves, so takes no data, until every live site is opened and migrated, and `update.sh` rolls back a release that
   cannot. Its batch is not uploaded without it.
 - Old records' raw JSON is cleared after `TRUNCATE_RECORDS_AFTER_DAYS`.
+- Old device reports' raw JSON is cleared sooner, after `TRUNCATE_DEVICE_REPORTS_RAW_JSON_AFTER_DAYS`.
 - Reads and writes are rate limited per site, identity and IP, and live sessions per site are capped.
 - A Nightscout request that fails auth, or needs none, spends its IP's budget on the site
   (`SITE_UNAUTH_PER_MINUTE_LIMIT`); one with a valid token does not, so a device uploading often from one IP is limited
