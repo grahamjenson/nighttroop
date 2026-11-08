@@ -57,6 +57,10 @@ func (store *ControlStore) registerCollection[R, M any](collection CollectionBas
 		routes.Get = GetHandler(val)
 		added = true
 	}
+	if val, ok := collection.(CollectionPage); ok {
+		routes.Get = val.PageHandler
+		added = true
+	}
 	if val, ok := collection.(CollectionUpdate[R, M]); ok {
 		routes.Update = UpdateHandler(val)
 		added = true

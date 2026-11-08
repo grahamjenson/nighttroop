@@ -7,9 +7,9 @@ ASSERT_VISIBLE #control--nav--logo
 
 // A site's own page lists its details and identities: who they are, whether they log in with TOTP, and when each was
 // last seen. Resetting gives the same development password and TOTP secret in tests, so the shard's site is used.
-GOTO {{ .control_url }}/sites/{{ replace ".ns.localhost" "" .default_site }}/inspect
+GOTO {{ .control_url }}/sites/{{ replace ".ns.localhost" "" .default_site }}
 ASSERT_STATUS 200
-ASSERT_VISIBLE #control--site--inspect-page
+ASSERT_VISIBLE #control--site--page
 ASSERT_VISIBLE #control--site--identities--table
 ASSERT_VISIBLE #control--site--identities--table td >> text=pwd_phone
 ASSERT_VISIBLE #control--site--identities--table td >> text=read_only
@@ -33,7 +33,7 @@ ASSERT_VISIBLE #control--site--identity-reset dt >> text=TOTP secret
 
 // An admin can sign in to the site as one of its identities: asked first (the test accepts), a new tab opens the site
 // signed in as it
-SCREENSHOT site_inspect
+SCREENSHOT site_page
 CLICK #control--site--identities--table tr:has-text("admin") [id$="--assume"]
 ASSERT_NEW_PAGE
 ASSERT_PATH /
