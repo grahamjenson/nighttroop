@@ -47,6 +47,9 @@ func run() error {
 	}
 
 	setupSentry(serverConfig)
+	// Events are sent in the background, so wait for them on the way out: otherwise the errors of a failed start or of
+	// the final backup are lost
+	defer sentry.Flush(2 * time.Second)
 	sqltiming.SetSlowThreshold(time.Duration(serverConfig.SlowQueryMS) * time.Millisecond)
 	sqltiming.SetSamplePercent(serverConfig.QuerySamplePercent)
 
