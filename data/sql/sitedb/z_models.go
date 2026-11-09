@@ -522,6 +522,15 @@ type SummaryPeriod struct {
 	TotalDailyCarbs      float64
 	GlucoseMgdlJson      string
 	AgpMgdlJson          *string
+	GlucoseReadings      int64
+	MeterReadings        int64
+	CgmSlots             int64
+	GlucoseMeanMgdl      *float64
+	GlucoseSdMgdl        *float64
+	TimeVeryLow          *float64
+	TimeLow              *float64
+	TimeHigh             *float64
+	TimeVeryHigh         *float64
 	LoopIobJson          string
 	LoopIobBasalJson     string
 	LoopIobTreatmentJson string

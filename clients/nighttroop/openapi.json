@@ -693,7 +693,7 @@
       },
       "SummaryPeriod": {
         "type": "object",
-        "description": "A period from start until end, named by its first date. Its time in range, daily dose and daily carbs are the means of its days with data, and its glucose the mean of those days every 5 minutes from midnight. Its AGP is each 15 minutes from midnight the 5th, 25th, 50th, 75th and 95th percentiles of its days' glucose, empty when there was none; a day's is of the 7 days to it.",
+        "description": "A period from start until end, named by its first date. Its time in range, daily dose and daily carbs are the means of its days with data, and its glucose the mean of those days every 5 minutes from midnight. Its AGP is each 5 minutes from midnight the 5th, 25th, 50th, 75th and 95th percentiles of its days' glucose in the 15 minutes around it, empty when there was none; a day's is of the 7 days to it. Its glucose readings are all its days', with their mean, standard deviation, coefficient of variation and GMI, and its times very low (below 54 mg/dL), low, in range, high and very high (above 250 mg/dL) add up to 100.",
         "properties": {
           "period": { "type": "string", "enum": ["day", "week", "fortnight", "month"] },
           "date": { "type": "string", "format": "date" },
@@ -710,6 +710,17 @@
           "loop_iob_basal": { "$ref": "#/components/schemas/SummaryLoopSlots" },
           "loop_iob_treatment": { "$ref": "#/components/schemas/SummaryLoopSlots" },
           "loop_cob": { "$ref": "#/components/schemas/SummaryLoopSlots" },
+          "glucose_readings": { "type": "integer", "format": "int64", "description": "Its glucose readings, a meter's and CGMs'" },
+          "meter_readings": { "type": "integer", "format": "int64", "description": "Its glucose readings from a meter" },
+          "mean": { "type": "number", "format": "double", "nullable": true, "description": "The mean of its glucose readings, in units" },
+          "sd": { "type": "number", "format": "double", "nullable": true, "description": "The standard deviation of its glucose readings, in units" },
+          "cv": { "type": "number", "format": "double", "nullable": true, "description": "The coefficient of variation, its standard deviation as a percent of its mean" },
+          "gmi": { "type": "number", "format": "double", "nullable": true, "description": "The glucose management indicator, the HbA1c percent its mean is estimated to give" },
+          "time_very_low": { "type": "number", "format": "double", "nullable": true, "description": "The percent of its readings below 54 mg/dL" },
+          "time_low": { "type": "number", "format": "double", "nullable": true, "description": "The percent of its readings from 54 mg/dL to below the range" },
+          "time_high": { "type": "number", "format": "double", "nullable": true, "description": "The percent of its readings above the range up to 250 mg/dL" },
+          "time_very_high": { "type": "number", "format": "double", "nullable": true, "description": "The percent of its readings above 250 mg/dL" },
+          "cgm_active": { "type": "number", "format": "double", "nullable": true, "description": "The percent of its 5 minutes, up to now, with a CGM reading" },
           "units": { "$ref": "#/components/schemas/Units" }
         }
       },

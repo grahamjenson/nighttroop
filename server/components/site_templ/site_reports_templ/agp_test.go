@@ -41,7 +41,7 @@ func values(s map[string]any) []any {
 
 func TestAGP(t *testing.T) {
 	mmol := consts.UnitsMMOLL
-	// The first 15 minutes have percentiles, the next none
+	// The first 5 minutes have percentiles, the next none
 	week := &sitemodels.SiteSummaryPeriod{Period: "week", Units: &mmol, AGP: [][]float64{{3, 4, 5, 6, 18}, {}}}
 	option := agpOption(t, week)
 
@@ -53,8 +53,8 @@ func TestAGP(t *testing.T) {
 	require.Equal(t, []any{2.0, "-"}, values(agpSeries(option, "25–75%")))
 	require.Equal(t, agpSeries(option, "25th")["stack"], agpSeries(option, "25–75%")["stack"])
 	require.Equal(t, []any{5.0, "-"}, values(agpSeries(option, "Median")))
-	// The second slot is 15 minutes after midnight
-	require.EqualValues(t, 15*60_000, agpSeries(option, "Median")["data"].([]any)[1].(map[string]any)["value"].([]any)[0])
+	// The second slot is 5 minutes after midnight
+	require.EqualValues(t, 5*60_000, agpSeries(option, "Median")["data"].([]any)[1].(map[string]any)["value"].([]any)[0])
 
 	// The axis goes up to the highest 95th percentile, and a week has no glucose line
 	require.EqualValues(t, 18, option["yAxis"].([]any)[0].(map[string]any)["max"])

@@ -1,6 +1,7 @@
 package sitemodels
 
 import (
+	"cmp"
 	"encoding/json"
 	"math"
 	"slices"
@@ -14,8 +15,19 @@ import (
 // SummaryDailySlotMs is how far apart a summary day's glucose values are, in milliseconds
 const SummaryDailySlotMs = int64(5 * 60_000)
 
-// AGPSlotMs is how long each of a week's or month's AGP percentiles is of, and AGPPercentiles are the percentiles
-const AGPSlotMs = int64(15 * 60_000)
+// AGPSlotMs is how far apart a week's or month's AGP percentiles are, each of the readings in the agpWindow slots of
+// glucose around it, and AGPPercentiles are the percentiles
+const (
+	AGPSlotMs = SummaryDailySlotMs
+	agpWindow = 3
+)
+
+// VeryLowMgdl and VeryHighMgdl are the glucose below and above which a reading is very low or very high, rather than
+// low or high, the bounds the international consensus on time in range uses
+const (
+	VeryLowMgdl  = 54.0
+	VeryHighMgdl = 250.0
+)
 
 var AGPPercentiles = []float64{5, 25, 50, 75, 95}
 
@@ -71,7 +83,8 @@ func SummaryDayFromPeriod(row *sitedb.SummaryPeriod) SummaryDay {
 }
 
 // NewSummaryDaily is the day named date from start until end, built from readings, doses, food, loop reports and
-// minutes that may run outside it. Its time in range is of the readings from low to high mg/dL, its total daily dose is
+// minutes that may run outside it. Its time in range is of the readings from low to high mg/dL, and its times very
+// low, low, high and very high of those outside it, with their mean and standard deviation. Its total daily dose is
 // the doses and the basal in force each minute from minutesSince, its glucose is the newest reading in each 5 minutes,
 // and its loop IOB and COB the newest report's, newest first, in each 5 minutes, or else in the 5 minutes before,
 // rounded to 2 decimals.
@@ -79,22 +92,37 @@ func NewSummaryDaily(date, timezone string, start, end int64, low, high float64,
 	day := &sitedb.SummaryPeriod{Period: "day", Date: date, Timezone: timezone, StartAt: start, EndAt: end}
 	within := func(at int64) bool { return at >= start && at < end }
 	slots := make([]*int64, (end-start+SummaryDailySlotMs-1)/SummaryDailySlotMs)
-	count, inRange := 0, 0
+	// bands count the readings very low, low, in range, high and very high
+	bands, sum, squares, cgm := [5]int{}, 0.0, 0.0, make([]bool, len(slots))
 	for _, r := range readings {
 		if !within(r.Row.OccurredAt) {
 			continue
 		}
-		count++
-		if r.Row.Mgdl >= low && r.Row.Mgdl <= high {
-			inRange++
+		bands[rangeBand(r.Row.Mgdl, low, high)]++
+		sum, squares = sum+r.Row.Mgdl, squares+r.Row.Mgdl*r.Row.Mgdl
+		slot := (r.Row.OccurredAt - start) / SummaryDailySlotMs
+		if r.Row.ReadingType == "mbg" {
+			day.MeterReadings++
+		} else {
+			cgm[slot] = true
 		}
 		// Readings are newest first, so a slot keeps its newest
-		if slot := (r.Row.OccurredAt - start) / SummaryDailySlotMs; slots[slot] == nil {
+		if slots[slot] == nil {
 			slots[slot] = new(int64(math.Round(r.Row.Mgdl)))
 		}
 	}
-	if count > 0 {
-		day.TimeInRange = new(consts.Round(100*float64(inRange)/float64(count), 1))
+	for _, r := range bands {
+		day.GlucoseReadings += int64(r)
+	}
+	day.CgmSlots = int64(len(slices.DeleteFunc(cgm, func(read bool) bool { return !read })))
+	if count := float64(day.GlucoseReadings); count > 0 {
+		percents := [5]*float64{}
+		for i, r := range bands {
+			percents[i] = new(consts.Round(100*float64(r)/count, 1))
+		}
+		day.TimeVeryLow, day.TimeLow, day.TimeInRange, day.TimeHigh, day.TimeVeryHigh = percents[0], percents[1], percents[2], percents[3], percents[4]
+		mean := sum / count
+		day.GlucoseMeanMgdl, day.GlucoseSdMgdl = new(consts.Round(mean, 1)), new(consts.Round(math.Sqrt(max(squares/count-mean*mean, 0)), 1))
 	}
 	for _, d := range doses {
 		if within(d.OccurredAt) {
@@ -113,7 +141,7 @@ func NewSummaryDaily(date, timezone string, start, end int64, low, high float64,
 		}
 	}
 	day.TotalDailyCarbs = consts.Round(day.TotalDailyCarbs, 1)
-	if count > 0 || day.TotalDailyDose > 0 || day.TotalDailyCarbs > 0 {
+	if day.GlucoseReadings > 0 || day.TotalDailyDose > 0 || day.TotalDailyCarbs > 0 {
 		day.Days = 1
 	}
 	glucoseJSON, _ := json.Marshal(slots)
@@ -150,18 +178,39 @@ func NewSummaryDaily(date, timezone string, start, end int64, low, high float64,
 	return day
 }
 
+// rangeBand is which of very low, low, in range, high and very high mg/dL is in, the range being from low to high
+func rangeBand(mgdl, low, high float64) int {
+	switch {
+	case mgdl < min(VeryLowMgdl, low):
+		return 0
+	case mgdl < low:
+		return 1
+	case mgdl <= high:
+		return 2
+	case mgdl <= max(VeryHighMgdl, high):
+		return 3
+	}
+	return 4
+}
+
+// timeColumns are the summary's percents of its readings very low, low, in range, high and very high
+func timeColumns(row *sitedb.SummaryPeriod) [5]**float64 {
+	return [5]**float64{&row.TimeVeryLow, &row.TimeLow, &row.TimeInRange, &row.TimeHigh, &row.TimeVeryHigh}
+}
+
 // loopColumns are the summary's loop IOB, basal IOB, treatment IOB and COB JSON columns
 func loopColumns(row *sitedb.SummaryPeriod) [4]*string {
 	return [4]*string{&row.LoopIobJson, &row.LoopIobBasalJson, &row.LoopIobTreatmentJson, &row.LoopCobJson}
 }
 
 // NewSummaryPeriod is the period, a week or month named by its first date, from start until end, of its summary days.
-// Only days with data count, so its time in range, daily dose and daily carbs are the means of theirs, and its glucose
-// at each 5 minutes from midnight the mean of the days with a reading then, as its loop IOB and COB are, rounded to 2
-// decimals. Its AGP is the percentiles of their glucose in each 15 minutes from midnight.
+// Only days with data count, so its times in each range, daily dose and daily carbs are the means of theirs, and its
+// glucose at each 5 minutes from midnight the mean of the days with a reading then, as its loop IOB and COB are,
+// rounded to 2 decimals. Its readings are all its days', with their mean and standard deviation. Its AGP is the
+// percentiles of their glucose in the 15 minutes around each 5 minutes from midnight.
 func NewSummaryPeriod(period, date, timezone string, start, end int64, days []*sitedb.SummaryPeriod) *sitedb.SummaryPeriod {
 	row := &sitedb.SummaryPeriod{Period: period, Date: date, Timezone: timezone, StartAt: start, EndAt: end}
-	inRange, withRange := 0.0, 0
+	times, withRange, sum, squares := [5]float64{}, 0, 0.0, 0.0
 	sums, counts := make([]int64, 24*60*60_000/SummaryDailySlotMs), make([]int64, 24*60*60_000/SummaryDailySlotMs)
 	bins := make([][]int64, 24*60*60_000/AGPSlotMs)
 	loopSums, loopCounts := [4][]float64{}, [4][]int64{}
@@ -176,8 +225,17 @@ func NewSummaryPeriod(period, date, timezone string, start, end int64, days []*s
 		row.TotalDailyDose += day.TotalDailyDose
 		row.TotalDailyCarbs += day.TotalDailyCarbs
 		if day.TimeInRange != nil {
-			inRange += *day.TimeInRange
+			for i, column := range timeColumns(day) {
+				times[i] += *cmp.Or(*column, new(0.0))
+			}
 			withRange++
+		}
+		row.GlucoseReadings += day.GlucoseReadings
+		row.MeterReadings += day.MeterReadings
+		row.CgmSlots += day.CgmSlots
+		if day.GlucoseMeanMgdl != nil && day.GlucoseSdMgdl != nil {
+			n, mean, sd := float64(day.GlucoseReadings), *day.GlucoseMeanMgdl, *day.GlucoseSdMgdl
+			sum, squares = sum+n*mean, squares+n*(sd*sd+mean*mean)
 		}
 		var mgdl []*int64
 		_ = json.Unmarshal([]byte(day.GlucoseMgdlJson), &mgdl)
@@ -185,8 +243,11 @@ func NewSummaryPeriod(period, date, timezone string, start, end int64, days []*s
 			if value != nil {
 				sums[slot] += *value
 				counts[slot]++
-				bin := int64(slot) * SummaryDailySlotMs / AGPSlotMs
-				bins[bin] = append(bins[bin], *value)
+				for bin := slot - agpWindow/2; bin <= slot+agpWindow/2; bin++ {
+					if bin >= 0 && bin < len(bins) {
+						bins[bin] = append(bins[bin], *value)
+					}
+				}
 			}
 		}
 		for i, column := range loopColumns(day) {
@@ -201,7 +262,13 @@ func NewSummaryPeriod(period, date, timezone string, start, end int64, days []*s
 		}
 	}
 	if withRange > 0 {
-		row.TimeInRange = new(consts.Round(inRange/float64(withRange), 1))
+		for i, column := range timeColumns(row) {
+			*column = new(consts.Round(times[i]/float64(withRange), 1))
+		}
+	}
+	if count := float64(row.GlucoseReadings); count > 0 && sum > 0 {
+		mean := sum / count
+		row.GlucoseMeanMgdl, row.GlucoseSdMgdl = new(consts.Round(mean, 1)), new(consts.Round(math.Sqrt(max(squares/count-mean*mean, 0)), 1))
 	}
 	if row.Days > 0 {
 		row.TotalDailyDose = consts.Round(row.TotalDailyDose/float64(row.Days), 2)

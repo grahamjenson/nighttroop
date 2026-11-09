@@ -222,11 +222,11 @@ func TestNewSummaryPeriodAGP(t *testing.T) {
 	day := func(withData int64, glucose string) *sitedb.SummaryPeriod {
 		return &sitedb.SummaryPeriod{Days: withData, GlucoseMgdlJson: glucose}
 	}
-	// agp is the 96 AGP bins, with the percentiles at the bins given and the rest null
-	agp := func(bins map[int][]int64) string {
-		all := make([][]int64, 96)
-		for bin, percentiles := range bins {
-			all[bin] = percentiles
+	// agp is the 288 AGP slots, with the percentiles at the slots given and the rest null
+	agp := func(slots map[int][]int64) string {
+		all := make([][]int64, 288)
+		for slot, percentiles := range slots {
+			all[slot] = percentiles
 		}
 		value, _ := json.Marshal(all)
 		return string(value)
@@ -237,19 +237,61 @@ func TestNewSummaryPeriodAGP(t *testing.T) {
 		want string
 	}{
 		{name: "no days has no percentiles", want: agp(nil)},
-		{name: "one reading is every percentile", days: []*sitedb.SummaryPeriod{day(1, "[120]")}, want: agp(map[int][]int64{0: {120, 120, 120, 120, 120}})},
-		{name: "a bin is the readings of its 15 minutes on every day",
-			days: []*sitedb.SummaryPeriod{day(1, "[100,110,120,200]"), day(1, "[130,null,140]")},
-			// 100, 110, 120, 130, 140 in the first 15 minutes, and 200 in the second
-			want: agp(map[int][]int64{0: {102, 110, 120, 130, 138}, 1: {200, 200, 200, 200, 200}})},
+		{name: "one reading is every percentile of its 5 minutes and those either side",
+			days: []*sitedb.SummaryPeriod{day(1, "[null,120]")}, want: agp(map[int][]int64{0: {120, 120, 120, 120, 120}, 1: {120, 120, 120, 120, 120}, 2: {120, 120, 120, 120, 120}})},
+		{name: "each 5 minutes is the readings of the 15 minutes around it on every day",
+			days: []*sitedb.SummaryPeriod{day(1, "[100,110,120]"), day(1, "[130,null,140]")},
+			// 100, 110 and 130 by the first 5 minutes, all five by the second, 110, 120 and 140 by the third, and 120 and
+			// 140 by the fourth
+			want: agp(map[int][]int64{0: {101, 105, 110, 120, 128}, 1: {102, 110, 120, 130, 138}, 2: {111, 115, 120, 130, 138}, 3: {121, 125, 130, 135, 139}})},
 		{name: "a day without data is left out", days: []*sitedb.SummaryPeriod{day(1, "[100]"), day(0, "[300]")},
-			want: agp(map[int][]int64{0: {100, 100, 100, 100, 100}})},
+			want: agp(map[int][]int64{0: {100, 100, 100, 100, 100}, 1: {100, 100, 100, 100, 100}})},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := NewSummaryPeriod("week", "2026-10-26", "UTC", 1, 2, tt.days).AgpMgdlJson; got == nil || *got != tt.want {
-				t.Errorf("AGP is %v, want %s", got, tt.want)
+				t.Errorf("AGP is %v, want %s", *got, tt.want)
 			}
 		})
+	}
+}
+
+// A day's readings are counted into very low (below 54 mg/dL), low, in range, high and very high (above 250 mg/dL),
+// with their mean and standard deviation, and its meter readings and 5 minutes with a CGM reading counted
+func TestNewSummaryDailyGlucoseStats(t *testing.T) {
+	const slot = SummaryDailySlotMs
+	reading := func(at int64, mgdl float64, readingType string) *glucose.Clean {
+		return &glucose.Clean{Row: &sitedb.GlucoseReading{OccurredAt: at, Mgdl: mgdl, ReadingType: readingType}}
+	}
+	readings := []*glucose.Clean{reading(5*slot, 300, "mbg"), reading(4*slot, 200, "sgv"), reading(3*slot+1, 100, "sgv"),
+		reading(3*slot, 100, "sgv"), reading(1*slot, 60, "sgv"), reading(0, 40, "sgv"), reading(288*slot, 40, "sgv")}
+	day := NewSummaryDaily("1970-01-01", "UTC", 0, 288*slot, 70, 180, readings, nil, nil, nil, 0, nil)
+	got := []any{day.GlucoseReadings, day.MeterReadings, day.CgmSlots, *day.GlucoseMeanMgdl, *day.GlucoseSdMgdl,
+		*day.TimeVeryLow, *day.TimeLow, *day.TimeInRange, *day.TimeHigh, *day.TimeVeryHigh}
+	// 40, 60, 100, 100, 200 and 300 have a mean of 133.3 and a standard deviation of 89.9
+	want := []any{int64(6), int64(1), int64(4), 133.3, 89.9, 16.7, 16.7, 33.3, 16.7, 16.7}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("day's readings, meter readings, CGM slots, mean, SD and times are %v, want %v", got, want)
+	}
+	if empty := NewSummaryDaily("1970-01-01", "UTC", 0, 288*slot, 70, 180, nil, nil, nil, nil, 0, nil); empty.GlucoseMeanMgdl != nil || empty.TimeVeryLow != nil {
+		t.Errorf("a day without readings has a mean of %v and %v very low, want neither", empty.GlucoseMeanMgdl, empty.TimeVeryLow)
+	}
+}
+
+// A week's readings are its days' added up, with the mean and standard deviation of all of them, and its times in each
+// range the means of its days'
+func TestNewSummaryPeriodGlucoseStats(t *testing.T) {
+	day := func(readings, meter, cgm int64, mean, sd float64, times ...float64) *sitedb.SummaryPeriod {
+		return &sitedb.SummaryPeriod{Days: 1, GlucoseMgdlJson: "[]", GlucoseReadings: readings, MeterReadings: meter, CgmSlots: cgm,
+			GlucoseMeanMgdl: &mean, GlucoseSdMgdl: &sd, TimeVeryLow: &times[0], TimeLow: &times[1], TimeInRange: &times[2], TimeHigh: &times[3], TimeVeryHigh: &times[4]}
+	}
+	// 100 twice and 200 twice have a mean of 150 and a standard deviation of 50
+	week := NewSummaryPeriod("week", "2026-10-26", "UTC", 1, 2, []*sitedb.SummaryPeriod{
+		day(2, 1, 2, 100, 0, 10, 20, 70, 0, 0), day(2, 0, 1, 200, 0, 0, 0, 50, 30, 20), {Days: 0, GlucoseMgdlJson: "[]", GlucoseReadings: 9}})
+	got := []any{week.GlucoseReadings, week.MeterReadings, week.CgmSlots, *week.GlucoseMeanMgdl, *week.GlucoseSdMgdl,
+		*week.TimeVeryLow, *week.TimeLow, *week.TimeInRange, *week.TimeHigh, *week.TimeVeryHigh}
+	want := []any{int64(4), int64(1), int64(3), 150.0, 50.0, 5.0, 10.0, 60.0, 15.0, 10.0}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("week's readings, meter readings, CGM slots, mean, SD and times are %v, want %v", got, want)
 	}
 }

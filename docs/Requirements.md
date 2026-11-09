@@ -750,9 +750,15 @@ Connectors are a site's third party integrations, each syncing from one service.
   summary, and list, read, add, edit and delete glucose readings, insulin doses and food intakes.
 - `GET /data/summary-periods/{period}-{date}` reads the day, week, fortnight or month with that date in it, from today
   back a year, in the site's timezone and from its week start day: its days with data, time in range, daily dose and
-  carbs, glucose every 5 minutes, and AGP (the 5th, 25th, 50th, 75th and 95th percentiles each 15 minutes from
-  midnight). A day's AGP is of the 7 days to it. A period not kept is built from the kept days in it, and today so
+  carbs, glucose every 5 minutes, and AGP (the 5th, 25th, 50th, 75th and 95th percentiles of the 15 minutes around
+  each 5 minutes from midnight). A day's AGP is of the 7 days to it. A period not kept is built from the kept days in it, and today so
   far while it is not over; a day not kept is built from its data; and neither is kept. Any other id, or a date out of range, is not found.
+- A summary period also has its glucose readings (`glucose_readings`) and those from a meter (`meter_readings`), their
+  mean (`mean`, in the settings' units), standard deviation (`sd`), coefficient of variation (`cv`, the standard
+  deviation as a percent of the mean) and GMI (`gmi`, 3.31 + 0.02392 × the mean in mg/dL), and the percent of them very
+  low (`time_very_low`, below 54 mg/dL), low (`time_low`), in range, high (`time_high`) and very high
+  (`time_very_high`, above 250 mg/dL), which add up to 100. A week's, fortnight's or month's readings are all its days',
+  and its times the means of its days'. `cgm_active` is the percent of its 5 minutes, up to now, with a CGM reading.
 - A summary period also has the loop's IOB (`loop_iob`, `loop_iob_basal`, `loop_iob_treatment`) and COB (`loop_cob`)
   every 5 minutes from midnight: a day's newest loop device report in each 5 minutes, or else in the 5 minutes before,
   as one is kept only every 10 minutes once an hour old, null when there was none, and a
