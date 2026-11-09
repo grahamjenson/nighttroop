@@ -430,12 +430,15 @@ func (db *ControlDB) HydrateSite(ctx context.Context, subdomain string, download
 	return nil
 }
 
-// TruncateSite shrinks a site's DB, without its free pages, and records its new size, which it returns. It clears
-// nothing for now: what it cleared, the raw JSON each row was sent as, is no longer kept.
+// TruncateSite truncates a site as the job every 10 minutes does, then shrinks its DB, without its free pages, and
+// records its new size, which it returns
 func (db *ControlDB) TruncateSite(ctx context.Context, subdomain string) (*int64, error) {
 	site := db.sites.get(subdomain)
 	if site == nil {
 		return nil, fmt.Errorf("site %s is not open", subdomain)
+	}
+	if err := truncateSite(ctx, site); err != nil {
+		return nil, err
 	}
 	if err := site.Vacuum(ctx); err != nil {
 		return nil, fmt.Errorf("cannot vacuum site %s: %w", subdomain, err)
@@ -444,9 +447,26 @@ func (db *ControlDB) TruncateSite(ctx context.Context, subdomain string) (*int64
 	return sizeKB, db.Queries.UpdateSiteDateFlags(ctx, controldb.UpdateSiteDateFlagsParams{EstimatedDbSizeKb: sizeKB, ID: subdomain})
 }
 
-// TruncateSites is the hourly job truncating every site. It does nothing for now: what it cleared, the raw JSON each
-// row was sent as, is no longer kept.
+// TruncateSites truncates every open site, as the job every 10 minutes does, without shrinking their DBs, as SQLite
+// uses the space again for what comes next. It goes on past a site it cannot truncate, returning each one's error.
 func (db *ControlDB) TruncateSites(ctx context.Context) error {
+	var errs []error
+	for _, site := range db.sites.all() {
+		errs = append(errs, truncateSite(aslog.WithSite(ctx, site.Subdomain), site))
+	}
+	return errors.Join(errs...)
+}
+
+// truncateThinsSince is how far back a truncate looks for device reports to thin, as those before were thinned by an
+// earlier one; a day covers a server down for a while
+const truncateThinsSince = 24 * time.Hour
+
+// truncateSite keeps each device's loop status whole only on its newest report, thinning the others' written lately
+func truncateSite(ctx context.Context, site *SiteDB) error {
+	since := time.Now().Add(-truncateThinsSince).UnixMilli()
+	if err := site.Queries().ThinOldLoopStatuses(ctx, sitedb.ThinOldLoopStatusesParams{Since: since}); err != nil {
+		return fmt.Errorf("cannot truncate site %s: %w", site.Subdomain, err)
+	}
 	return nil
 }
 
