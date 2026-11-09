@@ -5,7 +5,7 @@ sizes) are starting points to argue about, not decisions.
 
 ## The problem
 
-A site keeps everything at the resolution it was sent, forever, in a SQLite DB with a default limit of **3 MB**
+A site keeps everything at the resolution it was sent, forever, in a SQLite DB with a default limit of **20 MB**
 (`sites.max_db_size_kb_limit`). A looping site writes a lot every day:
 
 | Per day, a typical looping site | Rows | Rough size with indexes |
@@ -17,8 +17,10 @@ A site keeps everything at the resolution it was sent, forever, in a SQLite DB w
 | Carbs, manual boluses, notes, site changes | 5–20 | ~5 KB |
 
 These sizes are estimates and should be measured with SQLite's `dbstat` on a real site before we pick numbers. Even so,
-a looping site fills 3 MB in **weeks**, not years. Today only device reports are cut back (see below). Everything else
-grows until a control admin raises the limit or the site is truncated by hand.
+a looping site keeps ~155 KB a day that is never cut back (readings, doses, basals and the rest), plus device reports
+(thinned and deleted after 30 days, ~2 MB at any time). That fills 20 MB in **about 4 months**, or about 2½ with a
+second CGM source. Today only device reports are cut back (see below). Everything else grows until a control admin
+raises the limit or the site is truncated by hand.
 
 ## What we want
 
@@ -44,6 +46,25 @@ Old data does not need to stay in its raw form for these readers:
   reading.
 
 So raw rows matter for days to weeks. Summaries matter for years.
+
+## Budget at 20 MB
+
+With the tiers and record types below, a looping site with one CGM source would roughly hold the following. These are
+the same estimates as above, to be measured.
+
+| Tier | Days | Per day | Total |
+| --- | --- | --- | --- |
+| Full, 0–14 days | 14 | ~250 KB (device reports at full resolution) | ~3.5 MB |
+| Reduced, 14–90 days | 76 | ~70 KB (one reading per glucose, reduced columns, hourly roll-ups, device reports thinned then gone) | ~5.3 MB |
+| Summarised, 90 days – 2 years | 640 | ~12 KB (the day's summary ~7 KB, plus kept events ~5 KB) | ~7.7 MB |
+| **At 2 years** | | | **~16.5 MB** |
+| Archive, each year after | 365 | ~6 KB (the day's summary ~1 KB, plus kept events ~5 KB) | **+~2.2 MB a year** |
+
+So a 20 MB site lasts about 2 years before needing the archive tier, and then a couple more. After the first 2 years
+the growth is mostly the **kept events** (meals, manual boluses and their treatment groups, ~5 KB a day), not the
+summaries. Keeping data "forever" at 20 MB therefore also needs either the events to be thinner after some years
+(e.g. their treatment groups dropped, notes kept), or the day summaries to give way to weeks and months (see Open
+questions).
 
 ## Tiers
 
@@ -270,17 +291,16 @@ history see `isValid: false` and remove their copy.
 The day, week, fortnight and month rows the reports read. Today they are built for up to a year back, and rebuilt on a
 timezone or week-start change and on Regenerate.
 
-A day row is about 6–7 KB today: 288 glucose values, plus 4 IOB/COB arrays of 288. That is ~2.5 MB a year, which on its
-own would fill a 3 MB site. So summaries need their own downsampling to keep data "forever":
+A day row is about 6–7 KB today: 288 glucose values, plus 4 IOB/COB arrays of 288. That is ~2.5 MB a year, an eighth
+of a 20 MB site each year. So summaries need their own downsampling to keep data "forever":
 
 | Age | Day row | Week, fortnight, month rows |
 | --- | --- | --- |
 | 0–2 years | glucose and IOB/COB every 5 min, hourly insulin, basal and carbs, the statistics above (~7 KB) | kept, with AGP |
 | 2 years + | glucose every 15 min, IOB and COB hourly, hourly insulin, basal and carbs, the statistics (~1 KB) | kept, with AGP |
 
-That is ~0.4 MB a year after two years. If that is still too much for 3 MB sites over a decade, the next step would be
-to drop day rows after N years and keep weeks and months with their AGPs and statistics (~0.1 MB a year). See Open
-questions.
+That is ~0.4 MB a year after two years. If that is still too much over a decade or more, the next step would be to drop
+day rows after N years and keep weeks and months with their AGPs and statistics (~0.1 MB a year). See Open questions.
 
 ## Freezing summaries
 
@@ -322,8 +342,9 @@ Once a day's raw rows start to go, its summary can't be built again from them. S
 
 1. **The ages.** Are 2 days (normalise), 14 days (reduce and roll up), 90 days (summarise) and 2 years (downsample)
    right? Should a paid or larger site get longer full-resolution windows?
-2. **Is 3 MB the right limit** if we keep summaries forever? At ~0.4 MB a year after downsampling, 3 MB lasts a few
-   years beyond the first two. Do we raise the default, or drop day rows after N years (keep weeks and months)?
+2. **Lasting at 20 MB.** By the budget above a site reaches ~16.5 MB at 2 years and grows ~2.2 MB a year after, mostly
+   from kept events. After N years, do we thin the events (drop their treatment groups, keep notes), drop day rows for
+   weeks and months, or both? Or, with 20 MB, keep the Full tier longer (30 days costs ~4 MB more)?
 3. **Raw archive to S3.** Should we write each month's raw rows to a compressed file in the site's S3 folder before
    deleting them, so nothing is truly lost? It costs storage and adds a restore path, but "summarised" would then mean
    "off the site DB" rather than "gone".
