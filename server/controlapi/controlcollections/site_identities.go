@@ -32,11 +32,16 @@ func (s *SitesCollection) IdentitiesHandler(w http.ResponseWriter, r *http.Reque
 // sitePageLatest is how many of a site's latest events, and of its errors, its page shows
 const sitePageLatest = 10
 
-// PageHandler is a site's own page: its details, with what an admin can do to it, every one of its identities, newest
-// first, which an admin can reset or sign in to the site as, and its latest events and errors. An API client gets the
-// site.
+// PageHandler is a site's own page: its details, its DB's size measured now and kept on its record, what an admin can
+// do to it, every one of its identities, newest first, which an admin can reset or sign in to the site as, and its
+// latest events and errors. An API client gets the site.
 func (s *SitesCollection) PageHandler(w http.ResponseWriter, r *http.Request) {
 	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
+	// Its DB is measured first, so the size shown is now's, not the last resource check's. The page is still shown
+	// with the size it had when it cannot be.
+	if err := controlContext.ControlDB.RecordSiteSize(r.Context(), chi.URLParam(r, "id")); err != nil {
+		slog.ErrorContext(r.Context(), "Cannot measure a site's DB size", "site_id", chi.URLParam(r, "id"), "error", err)
+	}
 	site, identities, herr := s.siteIdentities(r)
 	page := &controlmodels.SitePage{Site: site, Identities: identities}
 	latest := &apiutils.Query{Limit: sitePageLatest}
