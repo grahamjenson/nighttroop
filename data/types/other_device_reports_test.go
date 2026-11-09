@@ -21,8 +21,8 @@ func TestDeviceReportOther(t *testing.T) {
 		{"only those set", types.DeviceReportOther{PumpClock: &clock, PumpModel: &model},
 			`{"pump_clock":1704067200000,"pump_model":"Omnipod"}`},
 		{"JSON nested as JSON", types.DeviceReportOther{LoopName: &loop, LoopSettings: json.RawMessage(`{"iob":{"iob":3}}`),
-			Override: json.RawMessage(`{"active":false}`), LoopPredictionsDefault: json.RawMessage(`[120,130]`)},
-			`{"override":{"active":false},"loop_name":"loop","loop_settings":{"iob":{"iob":3}},"loop_predictions_default":[120,130]}`},
+			Override: json.RawMessage(`{"active":false}`)},
+			`{"override":{"active":false},"loop_name":"loop","loop_settings":{"iob":{"iob":3}}}`},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			value, err := test.other.Value()

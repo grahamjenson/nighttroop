@@ -183,3 +183,32 @@ func (q *Queries) ClearTempTargetsRawJSON(ctx context.Context, arg ClearTempTarg
 	_, err := q.exec(ctx, q.clearTempTargetsRawJSONStmt, clearTempTargetsRawJSON, arg.Before)
 	return err
 }
+
+const thinDeviceReportsLoopStatus = `-- name: ThinDeviceReportsLoopStatus :exec
+UPDATE device_reports SET other_attributes = json_remove(other_attributes,
+    '$.loop_settings.suggested.consoleLog', '$.loop_settings.suggested.consoleError', '$.loop_settings.suggested.predBGs',
+    '$.loop_settings.enacted.consoleLog', '$.loop_settings.enacted.consoleError', '$.loop_settings.enacted.predBGs',
+    '$.loop_settings.predicted', '$.loop_predictions_start_time', '$.loop_predictions_default', '$.loop_predictions_zt')
+WHERE occurred_at < ?1 AND (
+    json_type(other_attributes, '$.loop_settings.suggested.consoleLog') IS NOT NULL
+    OR json_type(other_attributes, '$.loop_settings.suggested.consoleError') IS NOT NULL
+    OR json_type(other_attributes, '$.loop_settings.suggested.predBGs') IS NOT NULL
+    OR json_type(other_attributes, '$.loop_settings.enacted.consoleLog') IS NOT NULL
+    OR json_type(other_attributes, '$.loop_settings.enacted.consoleError') IS NOT NULL
+    OR json_type(other_attributes, '$.loop_settings.enacted.predBGs') IS NOT NULL
+    OR json_type(other_attributes, '$.loop_settings.predicted') IS NOT NULL
+    OR json_type(other_attributes, '$.loop_predictions_default') IS NOT NULL
+    OR json_type(other_attributes, '$.loop_predictions_zt') IS NOT NULL)
+`
+
+type ThinDeviceReportsLoopStatusParams struct {
+	Before int64
+}
+
+// A loop's status, most of a device report and of a site's DB, keeps its debug output (OpenAPS's consoleLog and
+// consoleError) and predicted glucoses (OpenAPS's predBGs, Loop's predicted) only while the Nightscout web app's retro
+// view can show them, and the predictions kept apart before them; its IOB, COB, reason and the rest are kept
+func (q *Queries) ThinDeviceReportsLoopStatus(ctx context.Context, arg ThinDeviceReportsLoopStatusParams) error {
+	_, err := q.exec(ctx, q.thinDeviceReportsLoopStatusStmt, thinDeviceReportsLoopStatus, arg.Before)
+	return err
+}

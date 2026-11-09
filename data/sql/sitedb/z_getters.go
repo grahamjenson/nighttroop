@@ -14427,3 +14427,13 @@ func (m *ClearTempTargetsRawJSONParams) SetBefore(v int64) {
 	m.Before = v
 }
 
+// GetBefore returns the Before value.
+func (m ThinDeviceReportsLoopStatusParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated ThinDeviceReportsLoopStatusParams.
+func (m *ThinDeviceReportsLoopStatusParams) SetBefore(v int64) {
+	m.Before = v
+}
+

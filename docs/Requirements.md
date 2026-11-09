@@ -750,6 +750,10 @@ Connectors are a site's third party integrations, each syncing from one service.
 - Each hour, at a fixed minute, every site's raw JSON, kept of what each row was sent, is cleared from rows older than
   `TRUNCATE_RAW_JSON_AFTER_DAYS` (2 by default), in every table that keeps it, keeping the rows themselves. Truncating a
   site clears it the same way, then shrinks its DB.
+- A device status's loop status, most of a site's DB with AAPS uploading every 5 minutes, is kept whole only until
+  then too, as long as the Nightscout web app's retro view (48 hours) can show it: after, its debug output (OpenAPS's
+  `consoleLog` and `consoleError`) and predicted glucoses (`predBGs`, Loop's `predicted`) are removed, keeping its IOB,
+  COB, reason and the rest. Its predictions are kept only in it, not again apart from it.
 - Reads and writes are rate limited per site, identity and IP, and live sessions per site are capped.
 - A Nightscout request that fails auth, or needs none, spends its IP's budget on the site
   (`SITE_UNAUTH_PER_MINUTE_LIMIT`); one with a valid token does not, so a device uploading often from one IP is limited

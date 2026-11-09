@@ -143,19 +143,16 @@ CREATE TABLE device_reports (
 
     -- What only some apps send, a JSON object (types.DeviceReportOther) NULL for most reports: the pump's time when it
     -- reported (pump_clock), its manufacturer and model, Loop's override in force (override), and the loop's raw
-    -- settings: which loop it is (loop_name), its status as sent (loop_settings), and its predicted glucoses from when (loop_predictions_start_time, the default predictions being
-    -- iob for openaps and normal for loop, and openaps's zt). The JSON ones are kept as JSON. A field that is not there
-    -- passes its check; the total fits each one's limit added together.
+    -- status: which loop it is (loop_name) and its status as sent (loop_settings), with its predicted glucoses. The JSON
+    -- ones are kept as JSON. A field that is not there passes its check; the total fits each one's limit added together.
+    -- Once a report is TRUNCATE_RAW_JSON_AFTER_DAYS old its status's debug output and predictions are removed.
     other_attributes TEXT CHECK(length(other_attributes) <= 23040 AND json_valid(other_attributes)
         AND json_extract(other_attributes, '$.pump_clock') BETWEEN 0 AND 253402300799999
         AND length(json_extract(other_attributes, '$.pump_manufacturer')) <= 64
         AND length(json_extract(other_attributes, '$.pump_model')) <= 64
         AND length(json_extract(other_attributes, '$.override')) <= 2048
         AND json_extract(other_attributes, '$.loop_name') IN ('openaps', 'loop')
-        AND length(json_extract(other_attributes, '$.loop_settings')) <= 8192
-        AND json_extract(other_attributes, '$.loop_predictions_start_time') BETWEEN 0 AND 253402300799999
-        AND length(json_extract(other_attributes, '$.loop_predictions_default')) <= 2048
-        AND length(json_extract(other_attributes, '$.loop_predictions_zt')) <= 2048),
+        AND length(json_extract(other_attributes, '$.loop_settings')) <= 8192),
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly

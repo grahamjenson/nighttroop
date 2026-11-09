@@ -18,12 +18,13 @@ func rawText(raw json.RawMessage) *string {
 
 // loopColumns are the device report's columns and other attributes a loop's status sets
 type loopColumns struct {
-	Name, Settings, Predictions, PredictionsZt *string
-	IOB, IOBBasal, IOBTreatment, COB           *float64
-	PredictionsStartTime                       *int64
+	Name, Settings                   *string
+	IOB, IOBBasal, IOBTreatment, COB *float64
+	PredictionsStartTime             *int64
 }
 
-// A device status keeps its OpenAPS or Loop settings, IOB, COB and predictions, Loop's over OpenAPS's when it has both
+// A device status keeps its OpenAPS or Loop status as sent, predictions and all, and its IOB and COB, Loop's over
+// OpenAPS's when it has both
 func TestNightscoutToDBCreateDeviceReportLoopColumns(t *testing.T) {
 	openAPS := `{"iob":{"iob":2.5,"basaliob":1},"suggested":{"COB":20,"timestamp":"2024-01-01T00:00:00Z","predBGs":{"IOB":[100,110],"ZT":[90]}}}`
 	loop := `{"iob":{"iob":3},"cob":{"cob":15},"predicted":{"startDate":"2024-01-01T00:05:00Z","values":[120,130]}}`
@@ -34,21 +35,21 @@ func TestNightscoutToDBCreateDeviceReportLoopColumns(t *testing.T) {
 	}{
 		{"none", `{}`, loopColumns{}},
 		{"openaps", `{"openaps":` + openAPS + `}`, loopColumns{
-			Name: ptr("openaps"), Settings: ptr(openAPS), Predictions: ptr("[100,110]"), PredictionsZt: ptr("[90]"),
-			IOB: ptr(2.5), IOBBasal: ptr(1.0), IOBTreatment: ptr(1.5), COB: ptr(20.0), PredictionsStartTime: ptr(int64(1704067200000)),
+			Name: ptr("openaps"), Settings: ptr(openAPS),
+			IOB: ptr(2.5), IOBBasal: ptr(1.0), IOBTreatment: ptr(1.5), COB: ptr(20.0),
 		}},
 		{"openaps without iob or suggested", `{"openaps":{}}`, loopColumns{Name: ptr("openaps"), Settings: ptr("{}")}},
 		{"openaps without basal iob or predictions", `{"openaps":{"iob":{"iob":2},"suggested":{"predBGs":{}}}}`, loopColumns{
 			Name: ptr("openaps"), Settings: ptr(`{"iob":{"iob":2},"suggested":{"predBGs":{}}}`), IOB: ptr(2.0),
 		}},
 		{"loop", `{"loop":` + loop + `}`, loopColumns{
-			Name: ptr("loop"), Settings: ptr(loop), Predictions: ptr("[120,130]"),
-			IOB: ptr(3.0), COB: ptr(15.0), PredictionsStartTime: ptr(int64(1704067500000)),
+			Name: ptr("loop"), Settings: ptr(loop),
+			IOB: ptr(3.0), COB: ptr(15.0),
 		}},
 		{"loop without predictions", `{"loop":{"predicted":{}}}`, loopColumns{Name: ptr("loop"), Settings: ptr(`{"predicted":{}}`)}},
 		{"both", `{"openaps":` + openAPS + `,"loop":{"iob":{"iob":3}}}`, loopColumns{
-			Name: ptr("loop"), Settings: ptr(`{"iob":{"iob":3}}`), Predictions: ptr("[100,110]"), PredictionsZt: ptr("[90]"),
-			IOB: ptr(3.0), IOBBasal: ptr(1.0), IOBTreatment: ptr(1.5), COB: ptr(20.0), PredictionsStartTime: ptr(int64(1704067200000)),
+			Name: ptr("loop"), Settings: ptr(`{"iob":{"iob":3}}`),
+			IOB: ptr(3.0), IOBBasal: ptr(1.0), IOBTreatment: ptr(1.5), COB: ptr(20.0),
 		}},
 	}
 	for _, tt := range tests {
@@ -58,9 +59,8 @@ func TestNightscoutToDBCreateDeviceReportLoopColumns(t *testing.T) {
 			got := NightscoutToDBCreateDeviceReport(status, nightscoutmodels.ConverterContext{})
 			other := got.OtherAttributes
 			require.Equal(t, tt.want, loopColumns{
-				Name: other.LoopName, Settings: rawText(other.LoopSettings), Predictions: rawText(other.LoopPredictionsDefault),
-				PredictionsZt: rawText(other.LoopPredictionsZt), IOB: got.LoopIob, IOBBasal: got.LoopIobBasal,
-				IOBTreatment: got.LoopIobTreatment, COB: got.LoopCob, PredictionsStartTime: other.LoopPredictionsStartTime,
+				Name: other.LoopName, Settings: rawText(other.LoopSettings), IOB: got.LoopIob, IOBBasal: got.LoopIobBasal,
+				IOBTreatment: got.LoopIobTreatment, COB: got.LoopCob,
 			})
 		})
 	}

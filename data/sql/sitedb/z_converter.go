@@ -2818,12 +2818,6 @@ func typesDeviceReportOtherToTypesDeviceReportOther(source types.DeviceReportOth
 		typesDeviceReportOther.LoopName = &xstring3
 	}
 	typesDeviceReportOther.LoopSettings = jsontextValueToJsontextValue(source.LoopSettings)
-	if source.LoopPredictionsStartTime != nil {
-		xint642 := *source.LoopPredictionsStartTime
-		typesDeviceReportOther.LoopPredictionsStartTime = &xint642
-	}
-	typesDeviceReportOther.LoopPredictionsDefault = jsontextValueToJsontextValue(source.LoopPredictionsDefault)
-	typesDeviceReportOther.LoopPredictionsZt = jsontextValueToJsontextValue(source.LoopPredictionsZt)
 	return typesDeviceReportOther
 }
 func typesEventGroupOtherToTypesEventGroupOther(source types.EventGroupOther) types.EventGroupOther {

@@ -229,7 +229,7 @@ func NightscoutToDBCreateDeviceReport(source nightscoutmodels.DeviceStatus, ctx 
 	return createParams
 }
 
-// setOpenAPSColumns keeps an OpenAPS loop's settings, IOB, COB and predictions
+// setOpenAPSColumns keeps an OpenAPS loop's status, with its predictions, and its IOB and COB
 func setOpenAPSColumns(params *sitedb.CreateDeviceReportParams, openAPS *nightscoutmodels.OpenAPSStatus, raw json.RawMessage) {
 	params.OtherAttributes.LoopSettings = raw
 	params.OtherAttributes.LoopName = ptr("openaps")
@@ -242,21 +242,12 @@ func setOpenAPSColumns(params *sitedb.CreateDeviceReportParams, openAPS *nightsc
 		}
 	}
 
-	suggested := openAPS.Suggested
-	if suggested == nil {
-		return
-	}
-	params.LoopCob = suggested.COB.Float64p()
-	if suggested.Timestamp != nil {
-		params.OtherAttributes.LoopPredictionsStartTime = suggested.Timestamp.UnixMillip()
-	}
-	if suggested.PredBGs != nil {
-		setPredictions(&params.OtherAttributes.LoopPredictionsDefault, suggested.PredBGs.IOB)
-		setPredictions(&params.OtherAttributes.LoopPredictionsZt, suggested.PredBGs.ZT)
+	if suggested := openAPS.Suggested; suggested != nil {
+		params.LoopCob = suggested.COB.Float64p()
 	}
 }
 
-// setLoopColumns keeps Loop's settings, IOB, COB and predictions
+// setLoopColumns keeps Loop's status, with its predictions, and its IOB and COB
 func setLoopColumns(params *sitedb.CreateDeviceReportParams, loop *nightscoutmodels.LoopStatus, raw json.RawMessage) {
 	params.OtherAttributes.LoopSettings = raw
 	params.OtherAttributes.LoopName = ptr("loop")
@@ -265,22 +256,5 @@ func setLoopColumns(params *sitedb.CreateDeviceReportParams, loop *nightscoutmod
 	}
 	if loop.COB != nil {
 		params.LoopCob = loop.COB.COB.Float64p()
-	}
-	if predicted := loop.Predicted; predicted != nil {
-		setPredictions(&params.OtherAttributes.LoopPredictionsDefault, predicted.Values)
-		if predicted.StartDate != nil {
-			params.OtherAttributes.LoopPredictionsStartTime = predicted.StartDate.UnixMillip()
-		}
-	}
-}
-
-// setPredictions sets a report's predictions to the predicted glucoses as JSON, and leaves them as they are when none
-// are sent
-func setPredictions(predictions *json.RawMessage, predicted []*types.FlexibleFloat64) {
-	if predicted == nil {
-		return
-	}
-	if out, err := json.Marshal(predicted); err == nil {
-		*predictions = out
 	}
 }
