@@ -4,7 +4,6 @@ package sitedb
 // goverter:output:format function
 // goverter:enum:unknown @ignore
 // goverter:output:file ./z_converter.go
-// goverter:extend .*OtherJSON
 type ToCreateParams interface {
 
 	// EVENTS

@@ -112,7 +112,7 @@ func (c TreatmentCollection) GetDuplicate(q *sitedb.Queries, ctx context.Context
 // ended early with its real duration. One of another type, sent the same as it was, by the hash of its JSON, or
 // stored without that hash, is left as it is.
 func (c TreatmentCollection) Refresh(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Treatment, stored *sitedb.EventGroupsBundle, cc nightscoutmodels.ConverterContext) (*sitedb.EventGroupsBundle, bool, error) {
-	sent, resent := stored.EventGroup.OtherAttributes.SentHash, nightscoutmodels.SentHash(nsModel.SentJSON)
+	sent, resent := stored.EventGroup.SentHash, nightscoutmodels.SentHash(nsModel.SentJSON)
 	if nsModel.EventType.String() != stored.EventGroup.GroupType || sent == nil || resent == nil || *sent == *resent {
 		return stored, false, nil
 	}

@@ -1,6 +1,6 @@
 INCLUDE steps/new_site.steps
 
-// The AAPS switch a profile switch was made from is kept in its other attributes and given back
+// The AAPS switch a profile switch was made from is kept in its own columns and given back
 NAME create_treatment
 POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
 B { "eventType": "Profile Switch", "created_at": "{{ time -5 }}", "app": "AAPS", "profile": "Default(110%)", "percentage": 110, "duration": 30, "originalProfileName": "Default", "originalCustomizedName": "Default (110%)", "originalTimeshift": 3600000, "originalPercentage": 110, "originalDuration": 1800000, "originalEnd": 1767225600000 }

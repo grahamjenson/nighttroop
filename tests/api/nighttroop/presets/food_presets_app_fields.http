@@ -1,6 +1,6 @@
 INCLUDE steps/new_site.steps
 
-// A food's fields beyond its carbs are kept in its food preset's other attributes and given back
+// A food's fields beyond its carbs are kept in its food preset's own columns and given back
 NAME create_food
 POST http://{{ .ns_site }}/api/v1/food?token={{ token }}
 B {"name": "Pizza", "carbs": 45, "foodType": "Takeaway", "category": "Fast Food", "subcategory": "Italian", "fat": 10, "protein": 20, "fibre": 5, "energy": 300, "portions": 2, "preBolus": 10}

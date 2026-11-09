@@ -25,16 +25,16 @@ func DBModelToActivity(source *sitedb.Activity, context *httputils.SiteContext) 
 			typesFlexibleInt64 := types.FlexibleInt64(*(*source).DurationMinutes)
 			nightscoutmodelsActivity.DurationMinutes = &typesFlexibleInt64
 		}
-		if (*source).OtherAttributes.Steps != nil {
-			typesFlexibleInt642 := types.FlexibleInt64(*(*source).OtherAttributes.Steps)
+		if (*source).Steps != nil {
+			typesFlexibleInt642 := types.FlexibleInt64(*(*source).Steps)
 			nightscoutmodelsActivity.Steps = &typesFlexibleInt642
 		}
-		if (*source).OtherAttributes.Calories != nil {
-			typesFlexibleInt643 := types.FlexibleInt64(*(*source).OtherAttributes.Calories)
+		if (*source).Calories != nil {
+			typesFlexibleInt643 := types.FlexibleInt64(*(*source).Calories)
 			nightscoutmodelsActivity.Calories = &typesFlexibleInt643
 		}
-		if (*source).OtherAttributes.HeartRate != nil {
-			typesFlexibleInt644 := types.FlexibleInt64(*(*source).OtherAttributes.HeartRate)
+		if (*source).HeartRate != nil {
+			typesFlexibleInt644 := types.FlexibleInt64(*(*source).HeartRate)
 			nightscoutmodelsActivity.HeartRate = &typesFlexibleInt644
 		}
 		if (*source).Notes != nil {
@@ -108,28 +108,28 @@ func DBModelToEntry(source *sitedb.GlucoseReading, context *httputils.SiteContex
 			nightscoutmodelsEntry.Trend = &typesFlexibleFloat64
 		}
 		nightscoutmodelsEntry.Units = UnitsToValue((*source).Mgdl, context)
-		if (*source).OtherAttributes.Filtered != nil {
-			typesFlexibleFloat642 := types.FlexibleFloat64(*(*source).OtherAttributes.Filtered)
+		if (*source).Filtered != nil {
+			typesFlexibleFloat642 := types.FlexibleFloat64(*(*source).Filtered)
 			nightscoutmodelsEntry.Filtered = &typesFlexibleFloat642
 		}
-		if (*source).OtherAttributes.Unfiltered != nil {
-			typesFlexibleFloat643 := types.FlexibleFloat64(*(*source).OtherAttributes.Unfiltered)
+		if (*source).Unfiltered != nil {
+			typesFlexibleFloat643 := types.FlexibleFloat64(*(*source).Unfiltered)
 			nightscoutmodelsEntry.Unfiltered = &typesFlexibleFloat643
 		}
-		if (*source).OtherAttributes.Rssi != nil {
-			typesFlexibleFloat644 := types.FlexibleFloat64(*(*source).OtherAttributes.Rssi)
+		if (*source).Rssi != nil {
+			typesFlexibleFloat644 := types.FlexibleFloat64(*(*source).Rssi)
 			nightscoutmodelsEntry.RSSI = &typesFlexibleFloat644
 		}
-		if (*source).OtherAttributes.Noise != nil {
-			typesFlexibleFloat645 := types.FlexibleFloat64(*(*source).OtherAttributes.Noise)
+		if (*source).Noise != nil {
+			typesFlexibleFloat645 := types.FlexibleFloat64(*(*source).Noise)
 			nightscoutmodelsEntry.Noise = &typesFlexibleFloat645
 		}
-		if (*source).OtherAttributes.IsCalibration != nil {
-			xbool := *(*source).OtherAttributes.IsCalibration
+		if (*source).IsCalibration != nil {
+			xbool := *(*source).IsCalibration
 			nightscoutmodelsEntry.IsCalibration = &xbool
 		}
-		if (*source).OtherAttributes.SensorMgdlAtPairing != nil {
-			typesFlexibleFloat646 := types.FlexibleFloat64(*(*source).OtherAttributes.SensorMgdlAtPairing)
+		if (*source).SensorMgdlAtPairing != nil {
+			typesFlexibleFloat646 := types.FlexibleFloat64(*(*source).SensorMgdlAtPairing)
 			nightscoutmodelsEntry.SensorMgdlAtPairing = &typesFlexibleFloat646
 		}
 		pTypesDateInt := types.DateInt((*source).OccurredAt)
@@ -168,44 +168,44 @@ func DBModelToFood(source *sitedb.FoodPreset, context *httputils.SiteContext) Fo
 			typesShortString := types.ShortString(*(*source).FoodType)
 			nightscoutmodelsFood.FoodType = &typesShortString
 		}
-		if (*source).OtherAttributes.Category != nil {
-			typesShortString2 := types.ShortString(*(*source).OtherAttributes.Category)
+		if (*source).Category != nil {
+			typesShortString2 := types.ShortString(*(*source).Category)
 			nightscoutmodelsFood.Category = &typesShortString2
 		}
-		if (*source).OtherAttributes.Subcategory != nil {
-			typesShortString3 := types.ShortString(*(*source).OtherAttributes.Subcategory)
+		if (*source).Subcategory != nil {
+			typesShortString3 := types.ShortString(*(*source).Subcategory)
 			nightscoutmodelsFood.Subcategory = &typesShortString3
 		}
 		if (*source).AbsorptionTimeMinutes != nil {
 			typesFlexibleInt64 := types.FlexibleInt64(*(*source).AbsorptionTimeMinutes)
 			nightscoutmodelsFood.AbsorptionTimeMinutes = &typesFlexibleInt64
 		}
-		if (*source).OtherAttributes.PreBolus != nil {
-			typesFlexibleFloat64 := types.FlexibleFloat64(*(*source).OtherAttributes.PreBolus)
+		if (*source).PreBolus != nil {
+			typesFlexibleFloat64 := types.FlexibleFloat64(*(*source).PreBolus)
 			nightscoutmodelsFood.PreBolus = &typesFlexibleFloat64
 		}
 		if (*source).Carbs != nil {
 			typesFlexibleFloat642 := types.FlexibleFloat64(*(*source).Carbs)
 			nightscoutmodelsFood.Carbs = &typesFlexibleFloat642
 		}
-		if (*source).OtherAttributes.Fat != nil {
-			typesFlexibleFloat643 := types.FlexibleFloat64(*(*source).OtherAttributes.Fat)
+		if (*source).Fat != nil {
+			typesFlexibleFloat643 := types.FlexibleFloat64(*(*source).Fat)
 			nightscoutmodelsFood.Fat = &typesFlexibleFloat643
 		}
-		if (*source).OtherAttributes.Protein != nil {
-			typesFlexibleFloat644 := types.FlexibleFloat64(*(*source).OtherAttributes.Protein)
+		if (*source).Protein != nil {
+			typesFlexibleFloat644 := types.FlexibleFloat64(*(*source).Protein)
 			nightscoutmodelsFood.Protein = &typesFlexibleFloat644
 		}
-		if (*source).OtherAttributes.Fibre != nil {
-			typesFlexibleFloat645 := types.FlexibleFloat64(*(*source).OtherAttributes.Fibre)
+		if (*source).Fibre != nil {
+			typesFlexibleFloat645 := types.FlexibleFloat64(*(*source).Fibre)
 			nightscoutmodelsFood.Fibre = &typesFlexibleFloat645
 		}
-		if (*source).OtherAttributes.Energy != nil {
-			typesFlexibleFloat646 := types.FlexibleFloat64(*(*source).OtherAttributes.Energy)
+		if (*source).Energy != nil {
+			typesFlexibleFloat646 := types.FlexibleFloat64(*(*source).Energy)
 			nightscoutmodelsFood.Energy = &typesFlexibleFloat646
 		}
-		if (*source).OtherAttributes.Portions != nil {
-			typesFlexibleFloat647 := types.FlexibleFloat64(*(*source).OtherAttributes.Portions)
+		if (*source).Portions != nil {
+			typesFlexibleFloat647 := types.FlexibleFloat64(*(*source).Portions)
 			nightscoutmodelsFood.Portions = &typesFlexibleFloat647
 		}
 		if (*source).CreatedByDeviceName != nil {

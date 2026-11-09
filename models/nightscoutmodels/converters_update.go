@@ -25,7 +25,6 @@ type UpdateMapConverter interface {
 	// goverter:map UpdatedByIdentityID | AssignUpdatedByID
 	//
 	// goverter:ignore Reason
-	// goverter:map . OtherAttributes | ActivityOtherJSON
 	ActivityToUpdate(source Activity, ctx ConverterContext) sitedb.UpdateActivityParams
 
 	///////
@@ -39,7 +38,7 @@ type UpdateMapConverter interface {
 	//
 	// goverter:ignore Notes Reason
 	// goverter:map Trend Delta
-	// goverter:map . OtherAttributes | EntryOtherJSON
+	// goverter:map RSSI Rssi
 	EntryToUpdate(source Entry, ctx ConverterContext) sitedb.UpdateGlucoseReadingParams
 
 	///////
@@ -50,7 +49,6 @@ type UpdateMapConverter interface {
 	// goverter:map Identifier ID
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
 	// goverter:map UpdatedByIdentityID | AssignUpdatedByID
-	// goverter:map . OtherAttributes | FoodOtherJSON
 	//
 	// goverter:ignore
 	FoodToUpdate(source Food, ctx ConverterContext) sitedb.UpdateFoodPresetParams

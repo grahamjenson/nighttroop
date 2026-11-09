@@ -1,6 +1,6 @@
 INCLUDE steps/new_site.steps
 
-// A treatment's food fields beyond its carbs are kept in its food intake's other attributes and given back
+// A treatment's food fields beyond its carbs are kept in its food intake's own columns and given back
 NAME create_treatment
 POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
 B {"eventType": "Meal Bolus", "created_at": "{{ time 5 }}", "carbs": 45, "foodType": "Pizza", "category": "Fast Food", "subcategory": "Italian", "fat": 10, "protein": 20, "fibre": 5, "energy": 300, "portions": 2, "preBolus": 10}

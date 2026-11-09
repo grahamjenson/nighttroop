@@ -8,13 +8,11 @@ package sitedb
 import (
 	"context"
 	"database/sql"
-
-	"nighttroop.t1d.nz/data/types"
 )
 
 const allInsulinDoses = `-- name: AllInsulinDoses :many
 
-SELECT id, dose, dose_type, other_attributes, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM insulin_doses
+SELECT id, dose, dose_type, split_now, split_ext, automatic, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM insulin_doses
 WHERE (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
@@ -42,7 +40,9 @@ func (q *Queries) AllInsulinDoses(ctx context.Context, arg AllInsulinDosesParams
 			&i.ID,
 			&i.Dose,
 			&i.DoseType,
-			&i.OtherAttributes,
+			&i.SplitNow,
+			&i.SplitExt,
+			&i.Automatic,
 			&i.Notes,
 			&i.Reason,
 			&i.DeletedAt,
@@ -75,7 +75,9 @@ INSERT INTO insulin_doses (
     id,
     dose,
     dose_type,
-    other_attributes,
+    split_now,
+    split_ext,
+    automatic,
 
     notes,
     reason,
@@ -87,15 +89,17 @@ INSERT INTO insulin_doses (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, dose, dose_type, other_attributes, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, dose, dose_type, split_now, split_ext, automatic, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type CreateInsulinDoseParams struct {
 	ID                    string
 	Dose                  float64
 	DoseType              *string
-	OtherAttributes       types.InsulinDoseOther
+	SplitNow              *float64
+	SplitExt              *float64
+	Automatic             *bool
 	Notes                 *string
 	Reason                *string
 	UtcOffsetMinutes      *int64
@@ -114,7 +118,9 @@ func (q *Queries) CreateInsulinDose(ctx context.Context, arg CreateInsulinDosePa
 		arg.ID,
 		arg.Dose,
 		arg.DoseType,
-		arg.OtherAttributes,
+		arg.SplitNow,
+		arg.SplitExt,
+		arg.Automatic,
 		arg.Notes,
 		arg.Reason,
 		arg.UtcOffsetMinutes,
@@ -129,7 +135,9 @@ func (q *Queries) CreateInsulinDose(ctx context.Context, arg CreateInsulinDosePa
 		&i.ID,
 		&i.Dose,
 		&i.DoseType,
-		&i.OtherAttributes,
+		&i.SplitNow,
+		&i.SplitExt,
+		&i.Automatic,
 		&i.Notes,
 		&i.Reason,
 		&i.DeletedAt,
@@ -148,7 +156,7 @@ func (q *Queries) CreateInsulinDose(ctx context.Context, arg CreateInsulinDosePa
 }
 
 const getInsulinDose = `-- name: GetInsulinDose :one
-SELECT id, dose, dose_type, other_attributes, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM insulin_doses WHERE id = ? AND (CAST(?2 AS BOOL) = TRUE OR deleted_at IS NULL)
+SELECT id, dose, dose_type, split_now, split_ext, automatic, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM insulin_doses WHERE id = ? AND (CAST(?2 AS BOOL) = TRUE OR deleted_at IS NULL)
 `
 
 type GetInsulinDoseParams struct {
@@ -163,7 +171,9 @@ func (q *Queries) GetInsulinDose(ctx context.Context, arg GetInsulinDoseParams) 
 		&i.ID,
 		&i.Dose,
 		&i.DoseType,
-		&i.OtherAttributes,
+		&i.SplitNow,
+		&i.SplitExt,
+		&i.Automatic,
 		&i.Notes,
 		&i.Reason,
 		&i.DeletedAt,
@@ -214,7 +224,7 @@ func (q *Queries) InsulinDoseTotals(ctx context.Context) (*InsulinDoseTotalsRow,
 }
 
 const searchInsulinDoses = `-- name: SearchInsulinDoses :many
-SELECT id, dose, dose_type, other_attributes, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM insulin_doses
+SELECT id, dose, dose_type, split_now, split_ext, automatic, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM insulin_doses
 WHERE
     -- The date filters as one range, occurred_at's CHECK where unset, so SQLite reads only that range of its index
     occurred_at BETWEEN MAX(COALESCE(CAST(?1 AS INTEGER), 0), COALESCE(CAST(?2 AS INTEGER) + 1, 0), COALESCE(CAST(?3 AS INTEGER), 0))
@@ -328,7 +338,9 @@ func (q *Queries) SearchInsulinDoses(ctx context.Context, arg SearchInsulinDoses
 			&i.ID,
 			&i.Dose,
 			&i.DoseType,
-			&i.OtherAttributes,
+			&i.SplitNow,
+			&i.SplitExt,
+			&i.Automatic,
 			&i.Notes,
 			&i.Reason,
 			&i.DeletedAt,
@@ -382,27 +394,26 @@ const updateInsulinDose = `-- name: UpdateInsulinDose :one
 UPDATE insulin_doses SET
     dose_type = COALESCE(?1, dose_type),
     dose = COALESCE(?2, dose),
-    -- The fields sent, as JSON (types.OtherJSON), are merged into those kept, so one not sent stays as it is, as a
-    -- column of its own would
-    other_attributes = NULLIF(json_patch(
-        COALESCE(other_attributes, '{}'),
-        COALESCE(CAST(?3 AS TEXT), '{}')
-    ), '{}'),
-    notes = COALESCE(?4, notes),
-    reason = COALESCE(?5, reason),
+    split_now = COALESCE(?3, split_now),
+    split_ext = COALESCE(?4, split_ext),
+    automatic = COALESCE(?5, automatic),
+    notes = COALESCE(?6, notes),
+    reason = COALESCE(?7, reason),
 
     
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_id = ?6,
-    updated_by_identity_name = ?7
-WHERE id = ?8 AND deleted_at IS NULL
-RETURNING id, dose, dose_type, other_attributes, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+    updated_by_identity_id = ?8,
+    updated_by_identity_name = ?9
+WHERE id = ?10 AND deleted_at IS NULL
+RETURNING id, dose, dose_type, split_now, split_ext, automatic, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type UpdateInsulinDoseParams struct {
 	DoseType              *string
 	Dose                  *float64
-	OtherAttributes       *string
+	SplitNow              *float64
+	SplitExt              *float64
+	Automatic             *bool
 	Notes                 *string
 	Reason                *string
 	UpdatedByIdentityID   *int64
@@ -417,7 +428,9 @@ func (q *Queries) UpdateInsulinDose(ctx context.Context, arg UpdateInsulinDosePa
 	row := q.queryRow(ctx, q.updateInsulinDoseStmt, updateInsulinDose,
 		arg.DoseType,
 		arg.Dose,
-		arg.OtherAttributes,
+		arg.SplitNow,
+		arg.SplitExt,
+		arg.Automatic,
 		arg.Notes,
 		arg.Reason,
 		arg.UpdatedByIdentityID,
@@ -429,7 +442,9 @@ func (q *Queries) UpdateInsulinDose(ctx context.Context, arg UpdateInsulinDosePa
 		&i.ID,
 		&i.Dose,
 		&i.DoseType,
-		&i.OtherAttributes,
+		&i.SplitNow,
+		&i.SplitExt,
+		&i.Automatic,
 		&i.Notes,
 		&i.Reason,
 		&i.DeletedAt,

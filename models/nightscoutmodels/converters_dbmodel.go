@@ -27,9 +27,6 @@ type DBModelConverter interface {
 	// goverter:map CreatedByDeviceName Device
 	// goverter:map ID Identifier
 	// goverter:map OccurredAt Date
-	// goverter:map OtherAttributes.Calories Calories
-	// goverter:map OtherAttributes.Steps Steps
-	// goverter:map OtherAttributes.HeartRate HeartRate
 	DBModelToActivity(source *sitedb.Activity, siteContext *httputils.SiteContext) Activity
 
 	///////
@@ -50,12 +47,7 @@ type DBModelConverter interface {
 	// goverter:map . DateString | ModelDateStringFromDateIntAndUTCOffset
 	// goverter:map ReadingType Type
 	// goverter:map Delta Trend
-	// goverter:map OtherAttributes.Noise Noise
-	// goverter:map OtherAttributes.Filtered Filtered
-	// goverter:map OtherAttributes.Unfiltered Unfiltered
-	// goverter:map OtherAttributes.Rssi RSSI
-	// goverter:map OtherAttributes.IsCalibration IsCalibration
-	// goverter:map OtherAttributes.SensorMgdlAtPairing SensorMgdlAtPairing
+	// goverter:map Rssi RSSI
 	DBModelToEntry(source *sitedb.GlucoseReading, siteContext *httputils.SiteContext) Entry
 
 	///////
@@ -87,14 +79,6 @@ type DBModelConverter interface {
 	// goverter:ignore Unit GI HideAfterUse Hidden Position
 	// goverter:map CreatedAt Date
 	// goverter:map . Type | FoodDocumentType
-	// goverter:map OtherAttributes.Category Category
-	// goverter:map OtherAttributes.Subcategory Subcategory
-	// goverter:map OtherAttributes.Fat Fat
-	// goverter:map OtherAttributes.Protein Protein
-	// goverter:map OtherAttributes.Fibre Fibre
-	// goverter:map OtherAttributes.Energy Energy
-	// goverter:map OtherAttributes.Portions Portions
-	// goverter:map OtherAttributes.PreBolus PreBolus
 	DBModelToFood(source *sitedb.FoodPreset, siteContext *httputils.SiteContext) Food
 
 	///////

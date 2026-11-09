@@ -1,7 +1,7 @@
 INCLUDE steps/new_site.steps
 
 // What only some apps send of a sensor or pump change, its sensor's code and transmitter and its pump's ID, serial and
-// type, is kept in its other attributes and given back
+// type, is kept in its own columns and given back
 NAME create_treatment
 POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
 B {"eventType": "Sensor Change", "created_at": "{{ time 5 }}", "sensorCode": "ABC123", "transmitterId": "XYZ789", "pumpId": "PUMP123", "pumpSerial": "SERIAL123", "pumpType": "Omnipod"}

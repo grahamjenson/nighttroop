@@ -1,6 +1,6 @@
 INCLUDE steps/new_site.steps
 
-// What only some apps send of a reading, such as xDrip+'s raw signal, is kept in its other attributes and given back
+// What only some apps send of a reading, such as xDrip+'s raw signal, is kept in its own columns and given back
 NAME create_entry
 POST http://{{ .ns_site }}/api/v1/entries?token={{ token }}
 B {"sgv": 123, "type": "sgv", "device": "xDrip", "filtered": 139.2, "unfiltered": 141.7, "rssi": -62, "noise": 1}

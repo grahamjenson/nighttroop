@@ -5,7 +5,11 @@
 INSERT INTO component_events (
     id,
     event_type,
-    other_attributes,
+    sensor_code,
+    transmitter_id,
+    pump_id,
+    pump_serial,
+    pump_type,
     notes,
     reason,
 
@@ -16,7 +20,23 @@ INSERT INTO component_events (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (
+    sqlc.arg('ID'),
+    sqlc.arg('EventType'),
+    NULLIF(CAST(sqlc.narg('SensorCode') AS TEXT), ''),
+    NULLIF(CAST(sqlc.narg('TransmitterID') AS TEXT), ''),
+    NULLIF(CAST(sqlc.narg('PumpID') AS TEXT), ''),
+    NULLIF(CAST(sqlc.narg('PumpSerial') AS TEXT), ''),
+    NULLIF(CAST(sqlc.narg('PumpType') AS TEXT), ''),
+    sqlc.arg('Notes'),
+    sqlc.arg('Reason'),
+    sqlc.arg('UtcOffsetMinutes'),
+    sqlc.arg('OccurredAt'),
+    sqlc.arg('CreatedByAppName'),
+    sqlc.arg('CreatedByDeviceName'),
+    sqlc.arg('CreatedByIdentityName'),
+    sqlc.arg('CreatedByIdentityID')
+)
 RETURNING *;
 
 --------
@@ -89,12 +109,11 @@ LIMIT 1;
 -- name: UpdateComponentEvent :one
 UPDATE component_events SET
     event_type = COALESCE(sqlc.narg('EventType'), event_type),
-    -- The fields sent, as JSON (types.OtherJSON), are merged into those kept, so one not sent stays as it is, as a
-    -- column of its own would
-    other_attributes = NULLIF(json_patch(
-        COALESCE(other_attributes, '{}'),
-        COALESCE(CAST(sqlc.narg('OtherAttributes') AS TEXT), '{}')
-    ), '{}'),
+    sensor_code = COALESCE(NULLIF(CAST(sqlc.narg('SensorCode') AS TEXT), ''), sensor_code),
+    transmitter_id = COALESCE(NULLIF(CAST(sqlc.narg('TransmitterID') AS TEXT), ''), transmitter_id),
+    pump_id = COALESCE(NULLIF(CAST(sqlc.narg('PumpID') AS TEXT), ''), pump_id),
+    pump_serial = COALESCE(NULLIF(CAST(sqlc.narg('PumpSerial') AS TEXT), ''), pump_serial),
+    pump_type = COALESCE(NULLIF(CAST(sqlc.narg('PumpType') AS TEXT), ''), pump_type),
     notes = COALESCE(sqlc.narg('Notes'), notes),
     reason = COALESCE(sqlc.narg('Reason'), reason),
 

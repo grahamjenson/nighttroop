@@ -7,7 +7,9 @@ INSERT INTO activities (
     name,
     activity_type,
     duration_minutes,
-    other_attributes,
+    calories,
+    steps,
+    heart_rate,
     notes,
     reason, 
 
@@ -18,7 +20,23 @@ INSERT INTO activities (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (
+    sqlc.arg('ID'),
+    sqlc.arg('Name'),
+    sqlc.arg('ActivityType'),
+    sqlc.arg('DurationMinutes'),
+    sqlc.narg('Calories'),
+    sqlc.narg('Steps'),
+    NULLIF(CAST(sqlc.narg('HeartRate') AS INTEGER), 0),
+    sqlc.arg('Notes'),
+    sqlc.arg('Reason'),
+    sqlc.arg('OccurredAt'),
+    sqlc.arg('UtcOffsetMinutes'),
+    sqlc.arg('CreatedByAppName'),
+    sqlc.arg('CreatedByDeviceName'),
+    sqlc.arg('CreatedByIdentityName'),
+    sqlc.arg('CreatedByIdentityID')
+)
 RETURNING *;
 
 --------
@@ -105,12 +123,9 @@ UPDATE activities SET
     name = COALESCE(sqlc.narg('Name'), name),
     activity_type = COALESCE(sqlc.narg('ActivityType'), activity_type),
     duration_minutes = COALESCE(sqlc.narg('DurationMinutes'), duration_minutes),
-    -- The fields sent, as JSON (types.OtherJSON), are merged into those kept, so one not sent stays as it is, as a
-    -- column of its own would
-    other_attributes = NULLIF(json_patch(
-        COALESCE(other_attributes, '{}'),
-        COALESCE(CAST(sqlc.narg('OtherAttributes') AS TEXT), '{}')
-    ), '{}'),
+    calories = COALESCE(sqlc.narg('Calories'), calories),
+    steps = COALESCE(sqlc.narg('Steps'), steps),
+    heart_rate = COALESCE(NULLIF(CAST(sqlc.narg('HeartRate') AS INTEGER), 0), heart_rate),
     notes = COALESCE(sqlc.narg('Notes'), notes),
     reason = COALESCE(sqlc.narg('Reason'), reason),
 

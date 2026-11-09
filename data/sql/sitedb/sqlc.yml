@@ -23,60 +23,27 @@ sql:
 overrides:
   go:
     overrides:
-      - column: "activities.other_attributes"
-        go_type:
-          import: "nighttroop.t1d.nz/data/types"
-          type: "ActivityOther"
-      - column: "activities_vw.other_attributes"
-        go_type:
-          import: "nighttroop.t1d.nz/data/types"
-          type: "ActivityOther"
       - column: "profile_presets.is_default"
         go_type:
           type: "bool"
-      - column: "food_intakes.other_attributes"
+      - column: "glucose_readings.is_calibration"
         go_type:
-          import: "nighttroop.t1d.nz/data/types"
-          type: "FoodIntakeOther"
-      - column: "food_intakes_vw.other_attributes"
+          type: "*bool"
+      - column: "glucose_readings_vw.is_calibration"
         go_type:
-          import: "nighttroop.t1d.nz/data/types"
-          type: "FoodIntakeOther"
-      - column: "component_events.other_attributes"
+          type: "*bool"
+      - column: "insulin_doses.automatic"
         go_type:
-          import: "nighttroop.t1d.nz/data/types"
-          type: "ComponentEventOther"
-      - column: "component_events_vw.other_attributes"
+          type: "*bool"
+      - column: "insulin_doses_vw.automatic"
         go_type:
-          import: "nighttroop.t1d.nz/data/types"
-          type: "ComponentEventOther"
+          type: "*bool"
+      - column: "event_groups.auto_forced"
+        go_type:
+          type: "*bool"
       - column: "device_reports.is_device_charging"
         go_type:
           type: "*bool"
-      - column: "device_reports.other_attributes"
-        go_type:
-          import: "nighttroop.t1d.nz/data/types"
-          type: "DeviceReportOther"
-      - column: "event_groups.other_attributes"
-        go_type:
-          import: "nighttroop.t1d.nz/data/types"
-          type: "EventGroupOther"
-      - column: "glucose_readings.other_attributes"
-        go_type:
-          import: "nighttroop.t1d.nz/data/types"
-          type: "GlucoseReadingOther"
-      - column: "glucose_readings_vw.other_attributes"
-        go_type:
-          import: "nighttroop.t1d.nz/data/types"
-          type: "GlucoseReadingOther"
-      - column: "insulin_doses.other_attributes"
-        go_type:
-          import: "nighttroop.t1d.nz/data/types"
-          type: "InsulinDoseOther"
-      - column: "insulin_doses_vw.other_attributes"
-        go_type:
-          import: "nighttroop.t1d.nz/data/types"
-          type: "InsulinDoseOther"
 
       # units
       - column: "glucose_readings.units"
@@ -100,14 +67,6 @@ overrides:
           import: "nighttroop.t1d.nz/utils/consts"
           type: "Units"
           pointer: true
-      - column: "profile_switches.other_attributes"
-        go_type:
-          import: "nighttroop.t1d.nz/data/types"
-          type: "ProfileSwitchOther"
-      - column: "profile_switches_vw.other_attributes"
-        go_type:
-          import: "nighttroop.t1d.nz/data/types"
-          type: "ProfileSwitchOther"
 
       - column: "profile_presets.units"
         go_type:
@@ -120,8 +79,3 @@ overrides:
           type: "Units"
           pointer: true
 
-      # other attributes
-      - column: "food_presets.other_attributes"
-        go_type:
-          import: "nighttroop.t1d.nz/data/types"
-          type: "FoodPresetOther"
