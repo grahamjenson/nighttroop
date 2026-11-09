@@ -273,7 +273,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   opened from a link or tab as well as one loaded in full, and the home icon on the summary.
 - Data has side tabs in groups, like Settings: Readings & treatments (Glucose Readings, Insulin Doses, Food Intakes,
   Temp Targets, Temp Basals, Profile Switches), Events (Activities, Site & Sensor Changes, Notifications, Event Groups),
-  Devices (Device Status) and Presets (Food Presets, Profiles).
+  Devices (Device Status) and Presets (Food Presets, Profiles, Loop Settings).
 - Reports has a tab for each report: AGP, TDD and Summaries.
 - Settings has side tabs in groups: This site (General, Alarms), People & devices (Users & Devices, Push Devices),
   Connections (Connectors, Push Notifications) and Troubleshooting (Events, Errors, Logs). Another identity's settings
@@ -440,10 +440,16 @@ Close or saving) gives the focus back to the row or button that opened it.
 
 ### Presets
 
-- Food Presets and Profiles are in the Data hub under Presets, with the data they are used to enter.
+- Food Presets, Profiles and Loop Settings are in the Data hub under Presets, with the data they are used to enter.
 
 - **Food presets**: added in a modal of all their fields, as data is, viewed, edited and deleted.
 - **Profiles**: profile stores uploaded by a loop, with their schedules to read, renamed or deleted.
+- **Loop Settings**: each different set of settings a loop app sent, kept once however often it was sent: Loop's from
+  its profiles, Trio's remote settings from its profiles, and AAPS's configuration from its device statuses (an empty
+  one is none sent). Each shows its app, what it came in, its device and when it was first and last seen, newest
+  first; clicking one shows the settings as sent, indented to inspect.
+  - Deleting a set keeps the profiles and device statuses sent with it; the Nightscout API reads them back without it.
+  - The Nightscout API reads each profile and device status back with the settings it was sent with.
 
 ### Connectors
 
