@@ -61,9 +61,10 @@ ASSERT_VISIBLE #site--nav--reports[aria-current="page"]
 ASSERT_NOT_VISIBLE #site--nav--data[aria-current="page"]
 ASSERT_VISIBLE #site--reports--summaries-button[aria-current="page"]
 ASSERT_VISIBLE #site--summaries
+ASSERT_VISIBLE #site--reports--overview-button
 ASSERT_VISIBLE #site--reports--agp-button
 ASSERT_VISIBLE #site--reports--tdd-menu-button
-ASSERT_COUNT #site--hub--reports nav a 3
+ASSERT_COUNT #site--hub--reports nav a 4
 SCREENSHOT navigation_reports_hub
 GOTO /reports/agp
 ASSERT_STATUS 200

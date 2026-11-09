@@ -4,6 +4,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server/assets/static"
+	"nighttroop.t1d.nz/server/components/site_templ/site_reports_templ"
 	"nighttroop.t1d.nz/server/publicapi"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/server/siteapi/sitecollections"
@@ -64,6 +65,9 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		// The AGP report is of a day, week, fortnight or month, the week with yesterday in it at first
 		r.Get("/reports/agp", sitecollections.ReportsHandler(store.Collection("data", "summary-periods").Get))
 		r.Get("/reports/agp/{id}", store.Collection("data", "summary-periods").Get)
+		// The overview report is of a day, week, fortnight or month too, with its days
+		r.Get("/reports/overview", sitecollections.PeriodReportHandler(site_reports_templ.Overview))
+		r.Get("/reports/overview/{id}", sitecollections.PeriodReportHandler(site_reports_templ.Overview))
 		// The daily dose report is its own page
 		r.Get("/reports/tdd", sitecollections.TDDReportHandler)
 
