@@ -12,7 +12,6 @@ type SiteTempTarget struct {
 	InsulinNeedsScaleFactor *float64      `json:"insulin_needs_scale_factor"`
 	Notes                   *string       `json:"notes"`
 	Reason                  *string       `json:"reason"`
-	RawJsonData             *string       `json:"raw_json_data"`
 	UtcOffsetMinutes        *int64        `json:"utc_offset_minutes"`
 	OccurredAt              int64         `json:"occurred_at"`
 	CreatedAt               int64         `json:"created_at"`

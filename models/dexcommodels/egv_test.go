@@ -15,8 +15,8 @@ func TestEGVToCreateDedupesRepeatedReadings(t *testing.T) {
 	_, _, site := testutils.NewControlDBWithSite(t)
 	queries := site.SiteDB.Queries()
 
-	reading := dexcommodels.EGV{Value: 120, SystemTime: time.UnixMilli(1786184674000).UTC(), DisplayTime: time.UnixMilli(1786184674000), RawJson: `{"Value":120}`}
-	next := dexcommodels.EGV{Value: 125, SystemTime: reading.SystemTime.Add(5 * time.Minute), DisplayTime: reading.DisplayTime.Add(5 * time.Minute), RawJson: `{"Value":125}`}
+	reading := dexcommodels.EGV{Value: 120, SystemTime: time.UnixMilli(1786184674000).UTC(), DisplayTime: time.UnixMilli(1786184674000)}
+	next := dexcommodels.EGV{Value: 125, SystemTime: reading.SystemTime.Add(5 * time.Minute), DisplayTime: reading.DisplayTime.Add(5 * time.Minute)}
 
 	_, err := queries.CreateGlucoseReading(t.Context(), dexcommodels.EGVToCreate(reading, "dexcom_connector"))
 	require.NoError(t, err)

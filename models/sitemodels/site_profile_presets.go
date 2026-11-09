@@ -24,7 +24,6 @@ type SiteProfilePreset struct {
 	BasalRates            []*SiteScheduleValue `json:"basal_rates"`
 	LowTargets            []*SiteScheduleValue `json:"low_targets"`
 	HighTargets           []*SiteScheduleValue `json:"high_targets"`
-	RawJsonData           *string              `json:"raw_json_data"`
 	UtcOffsetMinutes      *int64               `json:"utc_offset_minutes"`
 	OccurredAt            int64                `json:"occurred_at"`
 	CreatedAt             int64                `json:"created_at"`

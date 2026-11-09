@@ -62,9 +62,6 @@ func DBModelToActivity(source *sitedb.Activity, context *httputils.SiteContext) 
 			typesFlexibleInt645 := types.FlexibleInt64(*(*source).UtcOffsetMinutes)
 			nightscoutmodelsActivity.UtcOffsetMinutes = &typesFlexibleInt645
 		}
-		if (*source).RawJsonData != nil {
-			nightscoutmodelsActivity.RawJsonData = *(*source).RawJsonData
-		}
 	}
 	return nightscoutmodelsActivity
 }
@@ -89,9 +86,6 @@ func DBModelToDeviceStatus(source *sitedb.DeviceReport, context *httputils.SiteC
 		if (*source).UtcOffsetMinutes != nil {
 			typesFlexibleInt64 := types.FlexibleInt64(*(*source).UtcOffsetMinutes)
 			nightscoutmodelsDeviceStatus.UtcOffsetMinutes = &typesFlexibleInt64
-		}
-		if (*source).RawJsonData != nil {
-			nightscoutmodelsDeviceStatus.RawJsonData = *(*source).RawJsonData
 		}
 	}
 	return nightscoutmodelsDeviceStatus
@@ -159,9 +153,6 @@ func DBModelToEntry(source *sitedb.GlucoseReading, context *httputils.SiteContex
 		nightscoutmodelsEntry.Subject = &pTypesShortString
 		pTypesFlexibleFloat64 := types.FlexibleFloat64((*source).Mgdl)
 		nightscoutmodelsEntry.Mgdl = &pTypesFlexibleFloat64
-		if (*source).RawJsonData != nil {
-			nightscoutmodelsEntry.RawJsonData = *(*source).RawJsonData
-		}
 	}
 	return nightscoutmodelsEntry
 }
@@ -229,9 +220,6 @@ func DBModelToFood(source *sitedb.FoodPreset, context *httputils.SiteContext) Fo
 		nightscoutmodelsFood.Subject = &pTypesShortString2
 		pTypesDateInt := types.DateInt((*source).CreatedAt)
 		nightscoutmodelsFood.Date = &pTypesDateInt
-		if (*source).RawJsonData != nil {
-			nightscoutmodelsFood.RawJsonData = *(*source).RawJsonData
-		}
 	}
 	return nightscoutmodelsFood
 }
@@ -297,9 +285,6 @@ func DBModelToProfileStore(source *sitedb.ProfilePreset, context *httputils.Site
 		if (*source).UtcOffsetMinutes != nil {
 			typesFlexibleInt64 := types.FlexibleInt64(*(*source).UtcOffsetMinutes)
 			nightscoutmodelsProfileStore.UtcOffsetMinutes = &typesFlexibleInt64
-		}
-		if (*source).RawJsonData != nil {
-			nightscoutmodelsProfileStore.RawJsonData = *(*source).RawJsonData
 		}
 	}
 	return nightscoutmodelsProfileStore

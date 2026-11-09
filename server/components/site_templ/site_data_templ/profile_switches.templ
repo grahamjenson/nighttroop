@@ -237,7 +237,6 @@ templ ProfileSwitchModal(profileSwitch *sitemodels.SiteProfileSwitch) {
 			@readingDetail("Updated", formatReadingDate(ctx, profileSwitch.UpdatedAt))
 			@readingDetail("Updated By", orDash(profileSwitch.UpdatedByIdentityName))
 		</dl>
-		@modal.RawJSON("site--profile-switch--details--raw", profileSwitch.RawJsonData)
 	}
 }
 

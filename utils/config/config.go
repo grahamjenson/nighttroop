@@ -177,9 +177,6 @@ type ServerConfig struct {
 	DeleteAfterInactivityMins int
 	// DisableAfterInactivityDays is how long a site goes unwritten or unseen before the control plane can disable it
 	DisableAfterInactivityDays int
-	// TruncateRawJSONAfterDays is how old a site's rows are before the raw JSON kept of what each was sent is cleared,
-	// in every table that keeps it, and device statuses' loop statuses thinned, each hour and when the site is truncated
-	TruncateRawJSONAfterDays int
 
 	// MemoryAlertPercent and DiskAlertPercent are the memory and DB disk used, and CPUPeggedAlertSeconds how long the
 	// CPU is at 100%, at or over which a check of the server's resources warns the control site; disk only warns while
@@ -389,7 +386,6 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		// Archiving limits
 		DeleteAfterInactivityMins:  configIntSelect(dotenv, "DELETE_AFTER_INACTIVITY_MINS", 60*24*7), // 1 week
 		DisableAfterInactivityDays: configIntSelect(dotenv, "DISABLE_AFTER_INACTIVITY_DAYS", 7),
-		TruncateRawJSONAfterDays:   configIntSelect(dotenv, "TRUNCATE_RAW_JSON_AFTER_DAYS", 2),
 
 		// Resource alerts
 		MemoryAlertPercent:    configIntSelect(dotenv, "MEMORY_ALERT_PERCENT", 60),
@@ -711,7 +707,6 @@ func printServerConfig(config ServerConfig) {
 		"MaxIdentitiesPerSite", config.MaxIdentitiesPerSite,
 		"DeleteAfterInactivityMins", config.DeleteAfterInactivityMins,
 		"DisableAfterInactivityDays", config.DisableAfterInactivityDays,
-		"TruncateRawJSONAfterDays", config.TruncateRawJSONAfterDays,
 		"LogsDBMaxRowsPerTable", config.LogsDBMaxRowsPerTable,
 		"ControlBackupIntervalInSeconds", config.ControlBackupIntervalInSeconds,
 		"BatchBackupIntervalInSeconds", config.BatchBackupIntervalInSeconds,

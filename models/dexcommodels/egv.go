@@ -15,7 +15,6 @@ type EGV struct {
 	Value       int
 	SystemTime  time.Time
 	DisplayTime time.Time
-	RawJson     string
 }
 
 func (e EGV) UTCOffsetInMinutes() int {
@@ -30,7 +29,6 @@ func EGVToCreate(e EGV, createdByIdentityName string) sitedb.CreateGlucoseReadin
 		OccurredAt:            e.SystemTime.UnixMilli(),
 		Mgdl:                  float64(e.Value),
 		ReadingType:           "sgv",
-		RawJsonData:           &e.RawJson,
 		CreatedByIdentityName: createdByIdentityName,
 		UtcOffsetMinutes:      new(int64(e.UTCOffsetInMinutes())),
 	}
@@ -54,7 +52,6 @@ func (e *EGV) UnmarshalJSON(data []byte) error {
 	e.Value = r.Value
 	e.SystemTime = systemTime
 	e.DisplayTime = displayTime
-	e.RawJson = string(data)
 
 	return nil
 }

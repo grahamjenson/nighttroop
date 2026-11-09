@@ -27,7 +27,6 @@ func TestReadingToCreate(t *testing.T) {
 	require.Equal(t, "libre_connector", params.CreatedByIdentityName)
 	require.Equal(t, int64(13*60+45), *params.UtcOffsetMinutes)
 	require.Equal(t, "Flat", *params.Direction)
-	require.Contains(t, *params.RawJsonData, `"TrendArrow":3`)
 }
 
 func TestReadingDirections(t *testing.T) {

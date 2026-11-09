@@ -182,7 +182,6 @@ templ NotificationEventModal(event *sitemodels.SiteNotificationEvent) {
 			@readingDetail("Updated", formatReadingDate(ctx, event.UpdatedAt))
 			@readingDetail("Updated By", orDash(event.UpdatedByIdentityName))
 		</dl>
-		@modal.RawJSON("site--notification--details--raw", event.RawJsonData)
 	}
 }
 

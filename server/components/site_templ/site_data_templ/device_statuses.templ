@@ -233,7 +233,6 @@ templ DeviceStatusModal(status *sitemodels.SiteDeviceStatus) {
 			@readingDetail("Created", formatReadingDate(ctx, status.CreatedAt))
 			@readingDetail("Updated", formatReadingDate(ctx, status.UpdatedAt))
 		</dl>
-		@modal.RawJSON("site--device-status--details--raw", status.RawJsonData)
 	}
 }
 

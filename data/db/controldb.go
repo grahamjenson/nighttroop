@@ -430,15 +430,12 @@ func (db *ControlDB) HydrateSite(ctx context.Context, subdomain string, download
 	return nil
 }
 
-// TruncateSite clears the raw JSON a site's DB keeps, as ClearRawJSON does, then shrinks the DB and records its new
-// size, which it returns
+// TruncateSite shrinks a site's DB, without its free pages, and records its new size, which it returns. It clears
+// nothing for now: what it cleared, the raw JSON each row was sent as, is no longer kept.
 func (db *ControlDB) TruncateSite(ctx context.Context, subdomain string) (*int64, error) {
 	site := db.sites.get(subdomain)
 	if site == nil {
 		return nil, fmt.Errorf("site %s is not open", subdomain)
-	}
-	if err := db.clearRawJSON(ctx, site); err != nil {
-		return nil, err
 	}
 	if err := site.Vacuum(ctx); err != nil {
 		return nil, fmt.Errorf("cannot vacuum site %s: %w", subdomain, err)
@@ -447,49 +444,10 @@ func (db *ControlDB) TruncateSite(ctx context.Context, subdomain string) (*int64
 	return sizeKB, db.Queries.UpdateSiteDateFlags(ctx, controldb.UpdateSiteDateFlagsParams{EstimatedDbSizeKb: sizeKB, ID: subdomain})
 }
 
-// ClearRawJSON clears every open site's raw JSON, as the hourly job does, without shrinking their DBs, as SQLite uses
-// the space again for what comes next. It goes on past a site it cannot clear, returning each one's error.
-func (db *ControlDB) ClearRawJSON(ctx context.Context) error {
-	var errs []error
-	for _, site := range db.sites.all() {
-		errs = append(errs, db.clearRawJSON(aslog.WithSite(ctx, site.Subdomain), site))
-	}
-	return errors.Join(errs...)
-}
-
-// clearRawJSON clears the raw JSON a site's DB keeps of what each row older than TruncateRawJSONAfterDays was sent, in
-// every table that keeps it, keeping all its data, and thins those device reports' loop statuses to what is kept of
-// them after the retro view, without their debug output and predictions
-func (db *ControlDB) clearRawJSON(ctx context.Context, site *SiteDB) error {
-	q, before := site.Queries(), time.Now().AddDate(0, 0, -db.ServerConfig.TruncateRawJSONAfterDays).UnixMilli()
-	for _, clear := range []func(context.Context, int64) error{
-		clearBefore(q.ClearActivitiesRawJSON),
-		clearBefore(q.ClearComponentEventsRawJSON),
-		clearBefore(q.ClearDeviceReportsRawJSON),
-		clearBefore(q.ThinDeviceReportsLoopStatus),
-		clearBefore(q.ClearEventGroupsRawJSON),
-		clearBefore(q.ClearFoodIntakesRawJSON),
-		clearBefore(q.ClearFoodPresetsRawJSON),
-		clearBefore(q.ClearGlucoseReadingsRawJSON),
-		clearBefore(q.ClearInsulinDosesRawJSON),
-		clearBefore(q.ClearNotificationEventsRawJSON),
-		clearBefore(q.ClearProfilePresetsRawJSON),
-		clearBefore(q.ClearProfileSwitchesRawJSON),
-		clearBefore(q.ClearTempBasalsRawJSON),
-		clearBefore(q.ClearTempTargetsRawJSON),
-	} {
-		if err := clear(ctx, before); err != nil {
-			return fmt.Errorf("cannot clear raw json of site %s: %w", site.Subdomain, err)
-		}
-	}
+// TruncateSites is the hourly job truncating every site. It does nothing for now: what it cleared, the raw JSON each
+// row was sent as, is no longer kept.
+func (db *ControlDB) TruncateSites(ctx context.Context) error {
 	return nil
-}
-
-// clearBefore calls a query clearing raw JSON with its params, which sqlc makes a type of their own for each query
-func clearBefore[P ~struct{ Before int64 }](clear func(context.Context, P) error) func(context.Context, int64) error {
-	return func(ctx context.Context, before int64) error {
-		return clear(ctx, P(struct{ Before int64 }{before}))
-	}
 }
 
 ////

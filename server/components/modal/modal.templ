@@ -86,16 +86,6 @@ templ DetailIfSet(label string, value string) {
 	}
 }
 
-// RawJSON shows a record's JSON as it was sent, folded away and indented to read
-templ RawJSON(id string, raw *string) {
-	if raw != nil {
-		<details id={ id } class="mt-4 text-sm">
-			<summary class="cursor-pointer text-gray-500">Raw data</summary>
-			<pre class="mt-2 max-h-64 overflow-auto whitespace-pre-wrap break-all rounded bg-gray-50 p-2 text-xs">{ indentJSON(*raw) }</pre>
-		</details>
-	}
-}
-
 // Section heads the details after it in a modal's details list, such as the record's own
 templ Section(title string) {
 	<dt role="heading" aria-level="3" class="col-span-2 mt-3 border-t border-gray-100 pt-3 font-medium text-gray-900">{ title }</dt>

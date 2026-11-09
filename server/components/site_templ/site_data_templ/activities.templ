@@ -200,7 +200,6 @@ templ ActivityModal(activity *sitemodels.SiteActivity) {
 			@readingDetail("Updated", formatReadingDate(ctx, activity.UpdatedAt))
 			@readingDetail("Updated By", orDash(activity.UpdatedByIdentityName))
 		</dl>
-		@modal.RawJSON("site--activity--details--raw", activity.RawJsonData)
 	}
 }
 

@@ -563,8 +563,8 @@ templ siteActions(site *controlmodels.Site) {
 				@actionCard("control--site--action-disable", "Disable", "Stops serving the site. Its data is kept.", unless(inactive(ctx, site), disableWhen(ctx, site)), icon.Ban) {
 					@siteActionForm("/sites/"+site.ID, "disabled", "Disable this site? It will stop being served.", "control--site--disable", "Disable")
 				}
-				@actionCard("control--site--action-truncate", "Truncate", "Clears the raw JSON kept of what its old records were sent. All its data is kept.", unless(site.Oversized(), "Offered while it is over its DB size limit."), icon.Scissors) {
-					@siteActionForm("/sites/"+site.ID+"/truncate", "", "Truncate this site? The raw JSON kept of what its old records were sent is cleared, but all its data is kept.", "control--site--truncate", "Truncate")
+				@actionCard("control--site--action-truncate", "Truncate", "Shrinks its DB to the data it keeps. All its data is kept.", unless(site.Oversized(), "Offered while it is over its DB size limit."), icon.Scissors) {
+					@siteActionForm("/sites/"+site.ID+"/truncate", "", "Truncate this site? Its DB is shrunk, but all its data is kept.", "control--site--truncate", "Truncate")
 				}
 				@actionCard("control--site--action-archive", "Archive", "Uploads its data to S3 and deletes it here.", unless(site.State == "disabled", "Offered once it is disabled."), icon.Archive) {
 					@siteActionForm("/sites/"+site.ID, "archived", "Archive this site? Its data is uploaded to S3 and deleted here.", "control--site--archive", "Archive")

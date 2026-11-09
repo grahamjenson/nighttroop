@@ -8,29 +8,22 @@ import (
 	"github.com/robfig/cron/v3"
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/background/clear_raw_json"
-	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
 // scheduler keeps the jobs added to it, with their specs, to run them straight away
 type scheduler map[string]func(context.Context) error
 
-func (s scheduler) AddFunc(name string, spec string, cmd func(context.Context) error) { s[name+" "+spec] = cmd }
+func (s scheduler) AddFunc(name string, spec string, cmd func(context.Context) error) {
+	s[name+" "+spec] = cmd
+}
 
-// Each hour, at a fixed minute, every site's old raw JSON is cleared
-func TestClearRawJSONCron(t *testing.T) {
-	_, controlDB, site := testutils.NewControlDBWithSite(t)
-	ctx, q := t.Context(), site.SiteDB.Queries()
-	raw := `{"device":"loop"}`
-	_, err := q.CreateDeviceReport(ctx, sitedb.CreateDeviceReportParams{ID: "old", OccurredAt: time.Now().AddDate(0, 0, -3).UnixMilli(), RawJsonData: &raw, CreatedByIdentityName: "phone"})
-	require.NoError(t, err)
-
+// Each hour, at a fixed minute, every site is truncated, which does nothing for now
+func TestTruncateSitesCron(t *testing.T) {
+	_, controlDB, _ := testutils.NewControlDBWithSite(t)
 	jobs := scheduler{}
 	clear_raw_json.SetupCron(jobs, controlDB)
-	require.NoError(t, jobs["ClearRawJSON "+clear_raw_json.Spec](ctx))
-	report, err := q.GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: "old"})
-	require.NoError(t, err)
-	require.Nil(t, report.RawJsonData)
+	require.NoError(t, jobs["TruncateSites "+clear_raw_json.Spec](t.Context()))
 
 	schedule, err := cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow).Parse(clear_raw_json.Spec)
 	require.NoError(t, err)

@@ -23,7 +23,6 @@ type Reading struct {
 	UTCOffsetMinutes int64
 	// TrendArrow is only given on the latest measurement
 	TrendArrow *int
-	RawJson    string
 }
 
 type readingResponse struct {
@@ -54,7 +53,6 @@ func (r *Reading) UnmarshalJSON(data []byte) error {
 	r.FactoryTime = factory
 	r.UTCOffsetMinutes = int64(local.Sub(factory).Round(time.Minute) / time.Minute)
 	r.TrendArrow = resp.TrendArrow
-	r.RawJson = string(data)
 	return nil
 }
 
@@ -65,7 +63,6 @@ func ReadingToCreate(r Reading, createdByIdentityName string) sitedb.CreateGluco
 		OccurredAt:            r.FactoryTime.UnixMilli(),
 		Mgdl:                  r.Mgdl,
 		ReadingType:           "sgv",
-		RawJsonData:           &r.RawJson,
 		CreatedByIdentityName: createdByIdentityName,
 		UtcOffsetMinutes:      &r.UTCOffsetMinutes,
 	}

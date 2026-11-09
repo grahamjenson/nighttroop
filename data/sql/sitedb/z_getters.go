@@ -77,16 +77,6 @@ func (m *ActivitiesVw) SetReason(v *string) {
 	m.Reason = v
 }
 
-// GetRawJsonData returns the RawJsonData value.
-func (m ActivitiesVw) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated ActivitiesVw.
-func (m *ActivitiesVw) SetRawJsonData(v *string) {
-	m.RawJsonData = v
-}
-
 // GetDeletedAt returns the DeletedAt value.
 func (m ActivitiesVw) GetDeletedAt() *int64 {
 	return m.DeletedAt
@@ -267,16 +257,6 @@ func (m *Activity) SetReason(v *string) {
 	m.Reason = v
 }
 
-// GetRawJsonData returns the RawJsonData value.
-func (m Activity) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated Activity.
-func (m *Activity) SetRawJsonData(v *string) {
-	m.RawJsonData = v
-}
-
 // GetDeletedAt returns the DeletedAt value.
 func (m Activity) GetDeletedAt() *int64 {
 	return m.DeletedAt
@@ -437,16 +417,6 @@ func (m *ComponentEvent) SetReason(v *string) {
 	m.Reason = v
 }
 
-// GetRawJsonData returns the RawJsonData value.
-func (m ComponentEvent) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated ComponentEvent.
-func (m *ComponentEvent) SetRawJsonData(v *string) {
-	m.RawJsonData = v
-}
-
 // GetDeletedAt returns the DeletedAt value.
 func (m ComponentEvent) GetDeletedAt() *int64 {
 	return m.DeletedAt
@@ -605,16 +575,6 @@ func (m ComponentEventsVw) GetReason() *string {
 // SetReason sets the Reason value and returns the updated ComponentEventsVw.
 func (m *ComponentEventsVw) SetReason(v *string) {
 	m.Reason = v
-}
-
-// GetRawJsonData returns the RawJsonData value.
-func (m ComponentEventsVw) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated ComponentEventsVw.
-func (m *ComponentEventsVw) SetRawJsonData(v *string) {
-	m.RawJsonData = v
 }
 
 // GetDeletedAt returns the DeletedAt value.
@@ -865,16 +825,6 @@ func (m DeviceReport) GetOtherAttributes() types.DeviceReportOther {
 // SetOtherAttributes sets the OtherAttributes value and returns the updated DeviceReport.
 func (m *DeviceReport) SetOtherAttributes(v types.DeviceReportOther) {
 	m.OtherAttributes = v
-}
-
-// GetRawJsonData returns the RawJsonData value.
-func (m DeviceReport) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated DeviceReport.
-func (m *DeviceReport) SetRawJsonData(v *string) {
-	m.RawJsonData = v
 }
 
 // GetDeletedAt returns the DeletedAt value.
@@ -1147,16 +1097,6 @@ func (m *EventGroup) SetDurationMinutes(v *int64) {
 	m.DurationMinutes = v
 }
 
-// GetRawJsonData returns the RawJsonData value.
-func (m EventGroup) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated EventGroup.
-func (m *EventGroup) SetRawJsonData(v *string) {
-	m.RawJsonData = v
-}
-
 // GetDeletedAt returns the DeletedAt value.
 func (m EventGroup) GetDeletedAt() *int64 {
 	return m.DeletedAt
@@ -1345,16 +1285,6 @@ func (m FoodIntake) GetReason() *string {
 // SetReason sets the Reason value and returns the updated FoodIntake.
 func (m *FoodIntake) SetReason(v *string) {
 	m.Reason = v
-}
-
-// GetRawJsonData returns the RawJsonData value.
-func (m FoodIntake) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated FoodIntake.
-func (m *FoodIntake) SetRawJsonData(v *string) {
-	m.RawJsonData = v
 }
 
 // GetDeletedAt returns the DeletedAt value.
@@ -1547,16 +1477,6 @@ func (m *FoodIntakesVw) SetReason(v *string) {
 	m.Reason = v
 }
 
-// GetRawJsonData returns the RawJsonData value.
-func (m FoodIntakesVw) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated FoodIntakesVw.
-func (m *FoodIntakesVw) SetRawJsonData(v *string) {
-	m.RawJsonData = v
-}
-
 // GetDeletedAt returns the DeletedAt value.
 func (m FoodIntakesVw) GetDeletedAt() *int64 {
 	return m.DeletedAt
@@ -1725,16 +1645,6 @@ func (m FoodPreset) GetOtherAttributes() types.FoodPresetOther {
 // SetOtherAttributes sets the OtherAttributes value and returns the updated FoodPreset.
 func (m *FoodPreset) SetOtherAttributes(v types.FoodPresetOther) {
 	m.OtherAttributes = v
-}
-
-// GetRawJsonData returns the RawJsonData value.
-func (m FoodPreset) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated FoodPreset.
-func (m *FoodPreset) SetRawJsonData(v *string) {
-	m.RawJsonData = v
 }
 
 // GetCreatedAt returns the CreatedAt value.
@@ -1915,16 +1825,6 @@ func (m GlucoseReading) GetReason() *string {
 // SetReason sets the Reason value and returns the updated GlucoseReading.
 func (m *GlucoseReading) SetReason(v *string) {
 	m.Reason = v
-}
-
-// GetRawJsonData returns the RawJsonData value.
-func (m GlucoseReading) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated GlucoseReading.
-func (m *GlucoseReading) SetRawJsonData(v *string) {
-	m.RawJsonData = v
 }
 
 // GetDeletedAt returns the DeletedAt value.
@@ -2137,16 +2037,6 @@ func (m *GlucoseReadingsVw) SetReason(v *string) {
 	m.Reason = v
 }
 
-// GetRawJsonData returns the RawJsonData value.
-func (m GlucoseReadingsVw) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated GlucoseReadingsVw.
-func (m *GlucoseReadingsVw) SetRawJsonData(v *string) {
-	m.RawJsonData = v
-}
-
 // GetDeletedAt returns the DeletedAt value.
 func (m GlucoseReadingsVw) GetDeletedAt() *int64 {
 	return m.DeletedAt
@@ -2317,16 +2207,6 @@ func (m *InsulinDose) SetReason(v *string) {
 	m.Reason = v
 }
 
-// GetRawJsonData returns the RawJsonData value.
-func (m InsulinDose) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated InsulinDose.
-func (m *InsulinDose) SetRawJsonData(v *string) {
-	m.RawJsonData = v
-}
-
 // GetDeletedAt returns the DeletedAt value.
 func (m InsulinDose) GetDeletedAt() *int64 {
 	return m.DeletedAt
@@ -2495,16 +2375,6 @@ func (m InsulinDosesVw) GetReason() *string {
 // SetReason sets the Reason value and returns the updated InsulinDosesVw.
 func (m *InsulinDosesVw) SetReason(v *string) {
 	m.Reason = v
-}
-
-// GetRawJsonData returns the RawJsonData value.
-func (m InsulinDosesVw) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated InsulinDosesVw.
-func (m *InsulinDosesVw) SetRawJsonData(v *string) {
-	m.RawJsonData = v
 }
 
 // GetDeletedAt returns the DeletedAt value.
@@ -2767,16 +2637,6 @@ func (m *NotificationEvent) SetReason(v *string) {
 	m.Reason = v
 }
 
-// GetRawJsonData returns the RawJsonData value.
-func (m NotificationEvent) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated NotificationEvent.
-func (m *NotificationEvent) SetRawJsonData(v *string) {
-	m.RawJsonData = v
-}
-
 // GetDeletedAt returns the DeletedAt value.
 func (m NotificationEvent) GetDeletedAt() *int64 {
 	return m.DeletedAt
@@ -2955,16 +2815,6 @@ func (m NotificationEventsVw) GetReason() *string {
 // SetReason sets the Reason value and returns the updated NotificationEventsVw.
 func (m *NotificationEventsVw) SetReason(v *string) {
 	m.Reason = v
-}
-
-// GetRawJsonData returns the RawJsonData value.
-func (m NotificationEventsVw) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated NotificationEventsVw.
-func (m *NotificationEventsVw) SetRawJsonData(v *string) {
-	m.RawJsonData = v
 }
 
 // GetDeletedAt returns the DeletedAt value.
@@ -3235,16 +3085,6 @@ func (m ProfilePreset) GetRemoteSettingsID() *string {
 // SetRemoteSettingsID sets the RemoteSettingsID value and returns the updated ProfilePreset.
 func (m *ProfilePreset) SetRemoteSettingsID(v *string) {
 	m.RemoteSettingsID = v
-}
-
-// GetRawJsonData returns the RawJsonData value.
-func (m ProfilePreset) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated ProfilePreset.
-func (m *ProfilePreset) SetRawJsonData(v *string) {
-	m.RawJsonData = v
 }
 
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
@@ -3525,16 +3365,6 @@ func (m ProfileSwitch) GetReason() *string {
 // SetReason sets the Reason value and returns the updated ProfileSwitch.
 func (m *ProfileSwitch) SetReason(v *string) {
 	m.Reason = v
-}
-
-// GetRawJsonData returns the RawJsonData value.
-func (m ProfileSwitch) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated ProfileSwitch.
-func (m *ProfileSwitch) SetRawJsonData(v *string) {
-	m.RawJsonData = v
 }
 
 // GetDeletedAt returns the DeletedAt value.
@@ -3825,16 +3655,6 @@ func (m ProfileSwitchesVw) GetReason() *string {
 // SetReason sets the Reason value and returns the updated ProfileSwitchesVw.
 func (m *ProfileSwitchesVw) SetReason(v *string) {
 	m.Reason = v
-}
-
-// GetRawJsonData returns the RawJsonData value.
-func (m ProfileSwitchesVw) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated ProfileSwitchesVw.
-func (m *ProfileSwitchesVw) SetRawJsonData(v *string) {
-	m.RawJsonData = v
 }
 
 // GetDeletedAt returns the DeletedAt value.
@@ -4187,16 +4007,6 @@ func (m *TempBasal) SetReason(v *string) {
 	m.Reason = v
 }
 
-// GetRawJsonData returns the RawJsonData value.
-func (m TempBasal) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated TempBasal.
-func (m *TempBasal) SetRawJsonData(v *string) {
-	m.RawJsonData = v
-}
-
 // GetDeletedAt returns the DeletedAt value.
 func (m TempBasal) GetDeletedAt() *int64 {
 	return m.DeletedAt
@@ -4375,16 +4185,6 @@ func (m TempBasalsVw) GetReason() *string {
 // SetReason sets the Reason value and returns the updated TempBasalsVw.
 func (m *TempBasalsVw) SetReason(v *string) {
 	m.Reason = v
-}
-
-// GetRawJsonData returns the RawJsonData value.
-func (m TempBasalsVw) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated TempBasalsVw.
-func (m *TempBasalsVw) SetRawJsonData(v *string) {
-	m.RawJsonData = v
 }
 
 // GetDeletedAt returns the DeletedAt value.
@@ -4567,16 +4367,6 @@ func (m *TempTarget) SetReason(v *string) {
 	m.Reason = v
 }
 
-// GetRawJsonData returns the RawJsonData value.
-func (m TempTarget) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated TempTarget.
-func (m *TempTarget) SetRawJsonData(v *string) {
-	m.RawJsonData = v
-}
-
 // GetDeletedAt returns the DeletedAt value.
 func (m TempTarget) GetDeletedAt() *int64 {
 	return m.DeletedAt
@@ -4755,16 +4545,6 @@ func (m TempTargetsVw) GetReason() *string {
 // SetReason sets the Reason value and returns the updated TempTargetsVw.
 func (m *TempTargetsVw) SetReason(v *string) {
 	m.Reason = v
-}
-
-// GetRawJsonData returns the RawJsonData value.
-func (m TempTargetsVw) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated TempTargetsVw.
-func (m *TempTargetsVw) SetRawJsonData(v *string) {
-	m.RawJsonData = v
 }
 
 // GetDeletedAt returns the DeletedAt value.
@@ -5065,16 +4845,6 @@ func (m CreateDeviceReportParams) GetOccurredAt() int64 {
 // SetOccurredAt sets the OccurredAt value and returns the updated CreateDeviceReportParams.
 func (m *CreateDeviceReportParams) SetOccurredAt(v int64) {
 	m.OccurredAt = v
-}
-
-// GetRawJsonData returns the RawJsonData value.
-func (m CreateDeviceReportParams) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated CreateDeviceReportParams.
-func (m *CreateDeviceReportParams) SetRawJsonData(v *string) {
-	m.RawJsonData = v
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
@@ -5547,14 +5317,14 @@ func (m *SoftDeleteDeviceReportParams) SetID(v string) {
 	m.ID = v
 }
 
-// GetRawJsonData returns the RawJsonData value.
-func (m UpdateDeviceReportParams) GetRawJsonData() *string {
-	return m.RawJsonData
+// GetOtherAttributes returns the OtherAttributes value.
+func (m UpdateDeviceReportParams) GetOtherAttributes() *string {
+	return m.OtherAttributes
 }
 
-// SetRawJsonData sets the RawJsonData value and returns the updated UpdateDeviceReportParams.
-func (m *UpdateDeviceReportParams) SetRawJsonData(v *string) {
-	m.RawJsonData = v
+// SetOtherAttributes sets the OtherAttributes value and returns the updated UpdateDeviceReportParams.
+func (m *UpdateDeviceReportParams) SetOtherAttributes(v *string) {
+	m.OtherAttributes = v
 }
 
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
@@ -5805,16 +5575,6 @@ func (m CreateActivityParams) GetUtcOffsetMinutes() *int64 {
 // SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated CreateActivityParams.
 func (m *CreateActivityParams) SetUtcOffsetMinutes(v *int64) {
 	m.UtcOffsetMinutes = v
-}
-
-// GetRawJsonData returns the RawJsonData value.
-func (m CreateActivityParams) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated CreateActivityParams.
-func (m *CreateActivityParams) SetRawJsonData(v *string) {
-	m.RawJsonData = v
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
@@ -6297,16 +6057,6 @@ func (m *UpdateActivityParams) SetReason(v *string) {
 	m.Reason = v
 }
 
-// GetRawJsonData returns the RawJsonData value.
-func (m UpdateActivityParams) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated UpdateActivityParams.
-func (m *UpdateActivityParams) SetRawJsonData(v *string) {
-	m.RawJsonData = v
-}
-
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
 func (m UpdateActivityParams) GetUpdatedByIdentityID() *int64 {
 	return m.UpdatedByIdentityID
@@ -6435,16 +6185,6 @@ func (m CreateComponentEventParams) GetOccurredAt() int64 {
 // SetOccurredAt sets the OccurredAt value and returns the updated CreateComponentEventParams.
 func (m *CreateComponentEventParams) SetOccurredAt(v int64) {
 	m.OccurredAt = v
-}
-
-// GetRawJsonData returns the RawJsonData value.
-func (m CreateComponentEventParams) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated CreateComponentEventParams.
-func (m *CreateComponentEventParams) SetRawJsonData(v *string) {
-	m.RawJsonData = v
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
@@ -6827,16 +6567,6 @@ func (m *UpdateComponentEventParams) SetReason(v *string) {
 	m.Reason = v
 }
 
-// GetRawJsonData returns the RawJsonData value.
-func (m UpdateComponentEventParams) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated UpdateComponentEventParams.
-func (m *UpdateComponentEventParams) SetRawJsonData(v *string) {
-	m.RawJsonData = v
-}
-
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
 func (m UpdateComponentEventParams) GetUpdatedByIdentityID() *int64 {
 	return m.UpdatedByIdentityID
@@ -6995,16 +6725,6 @@ func (m CreateFoodIntakeParams) GetOccurredAt() int64 {
 // SetOccurredAt sets the OccurredAt value and returns the updated CreateFoodIntakeParams.
 func (m *CreateFoodIntakeParams) SetOccurredAt(v int64) {
 	m.OccurredAt = v
-}
-
-// GetRawJsonData returns the RawJsonData value.
-func (m CreateFoodIntakeParams) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated CreateFoodIntakeParams.
-func (m *CreateFoodIntakeParams) SetRawJsonData(v *string) {
-	m.RawJsonData = v
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
@@ -7497,16 +7217,6 @@ func (m *UpdateFoodIntakeParams) SetReason(v *string) {
 	m.Reason = v
 }
 
-// GetRawJsonData returns the RawJsonData value.
-func (m UpdateFoodIntakeParams) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated UpdateFoodIntakeParams.
-func (m *UpdateFoodIntakeParams) SetRawJsonData(v *string) {
-	m.RawJsonData = v
-}
-
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
 func (m UpdateFoodIntakeParams) GetUpdatedByIdentityID() *int64 {
 	return m.UpdatedByIdentityID
@@ -7705,16 +7415,6 @@ func (m CreateGlucoseReadingParams) GetOccurredAt() int64 {
 // SetOccurredAt sets the OccurredAt value and returns the updated CreateGlucoseReadingParams.
 func (m *CreateGlucoseReadingParams) SetOccurredAt(v int64) {
 	m.OccurredAt = v
-}
-
-// GetRawJsonData returns the RawJsonData value.
-func (m CreateGlucoseReadingParams) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated CreateGlucoseReadingParams.
-func (m *CreateGlucoseReadingParams) SetRawJsonData(v *string) {
-	m.RawJsonData = v
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
@@ -8297,16 +7997,6 @@ func (m *UpdateGlucoseReadingParams) SetReason(v *string) {
 	m.Reason = v
 }
 
-// GetRawJsonData returns the RawJsonData value.
-func (m UpdateGlucoseReadingParams) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated UpdateGlucoseReadingParams.
-func (m *UpdateGlucoseReadingParams) SetRawJsonData(v *string) {
-	m.RawJsonData = v
-}
-
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
 func (m UpdateGlucoseReadingParams) GetUpdatedByIdentityID() *int64 {
 	return m.UpdatedByIdentityID
@@ -8545,16 +8235,6 @@ func (m CreateEventGroupParams) GetUtcOffsetMinutes() *int64 {
 // SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated CreateEventGroupParams.
 func (m *CreateEventGroupParams) SetUtcOffsetMinutes(v *int64) {
 	m.UtcOffsetMinutes = v
-}
-
-// GetRawJsonData returns the RawJsonData value.
-func (m CreateEventGroupParams) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated CreateEventGroupParams.
-func (m *CreateEventGroupParams) SetRawJsonData(v *string) {
-	m.RawJsonData = v
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
@@ -9637,16 +9317,6 @@ func (m *UpdateEventGroupParams) SetOtherAttributes(v *string) {
 	m.OtherAttributes = v
 }
 
-// GetRawJsonData returns the RawJsonData value.
-func (m UpdateEventGroupParams) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetRawJsonData(v *string) {
-	m.RawJsonData = v
-}
-
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
 func (m UpdateEventGroupParams) GetUpdatedByIdentityID() *int64 {
 	return m.UpdatedByIdentityID
@@ -9785,16 +9455,6 @@ func (m CreateInsulinDoseParams) GetOccurredAt() int64 {
 // SetOccurredAt sets the OccurredAt value and returns the updated CreateInsulinDoseParams.
 func (m *CreateInsulinDoseParams) SetOccurredAt(v int64) {
 	m.OccurredAt = v
-}
-
-// GetRawJsonData returns the RawJsonData value.
-func (m CreateInsulinDoseParams) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated CreateInsulinDoseParams.
-func (m *CreateInsulinDoseParams) SetRawJsonData(v *string) {
-	m.RawJsonData = v
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
@@ -10227,16 +9887,6 @@ func (m *UpdateInsulinDoseParams) SetReason(v *string) {
 	m.Reason = v
 }
 
-// GetRawJsonData returns the RawJsonData value.
-func (m UpdateInsulinDoseParams) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated UpdateInsulinDoseParams.
-func (m *UpdateInsulinDoseParams) SetRawJsonData(v *string) {
-	m.RawJsonData = v
-}
-
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
 func (m UpdateInsulinDoseParams) GetUpdatedByIdentityID() *int64 {
 	return m.UpdatedByIdentityID
@@ -10385,16 +10035,6 @@ func (m CreateNotificationEventParams) GetOccurredAt() int64 {
 // SetOccurredAt sets the OccurredAt value and returns the updated CreateNotificationEventParams.
 func (m *CreateNotificationEventParams) SetOccurredAt(v int64) {
 	m.OccurredAt = v
-}
-
-// GetRawJsonData returns the RawJsonData value.
-func (m CreateNotificationEventParams) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated CreateNotificationEventParams.
-func (m *CreateNotificationEventParams) SetRawJsonData(v *string) {
-	m.RawJsonData = v
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
@@ -10757,16 +10397,6 @@ func (m *UpdateNotificationEventParams) SetReason(v *string) {
 	m.Reason = v
 }
 
-// GetRawJsonData returns the RawJsonData value.
-func (m UpdateNotificationEventParams) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated UpdateNotificationEventParams.
-func (m *UpdateNotificationEventParams) SetRawJsonData(v *string) {
-	m.RawJsonData = v
-}
-
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
 func (m UpdateNotificationEventParams) GetUpdatedByIdentityID() *int64 {
 	return m.UpdatedByIdentityID
@@ -11025,16 +10655,6 @@ func (m CreateProfileSwitchParams) GetOccurredAt() int64 {
 // SetOccurredAt sets the OccurredAt value and returns the updated CreateProfileSwitchParams.
 func (m *CreateProfileSwitchParams) SetOccurredAt(v int64) {
 	m.OccurredAt = v
-}
-
-// GetRawJsonData returns the RawJsonData value.
-func (m CreateProfileSwitchParams) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated CreateProfileSwitchParams.
-func (m *CreateProfileSwitchParams) SetRawJsonData(v *string) {
-	m.RawJsonData = v
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
@@ -11497,16 +11117,6 @@ func (m *UpdateProfileSwitchParams) SetReason(v *string) {
 	m.Reason = v
 }
 
-// GetRawJsonData returns the RawJsonData value.
-func (m UpdateProfileSwitchParams) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated UpdateProfileSwitchParams.
-func (m *UpdateProfileSwitchParams) SetRawJsonData(v *string) {
-	m.RawJsonData = v
-}
-
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
 func (m UpdateProfileSwitchParams) GetUpdatedByIdentityID() *int64 {
 	return m.UpdatedByIdentityID
@@ -11655,16 +11265,6 @@ func (m CreateTempBasalParams) GetOccurredAt() int64 {
 // SetOccurredAt sets the OccurredAt value and returns the updated CreateTempBasalParams.
 func (m *CreateTempBasalParams) SetOccurredAt(v int64) {
 	m.OccurredAt = v
-}
-
-// GetRawJsonData returns the RawJsonData value.
-func (m CreateTempBasalParams) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated CreateTempBasalParams.
-func (m *CreateTempBasalParams) SetRawJsonData(v *string) {
-	m.RawJsonData = v
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
@@ -12067,16 +11667,6 @@ func (m *UpdateTempBasalParams) SetReason(v *string) {
 	m.Reason = v
 }
 
-// GetRawJsonData returns the RawJsonData value.
-func (m UpdateTempBasalParams) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated UpdateTempBasalParams.
-func (m *UpdateTempBasalParams) SetRawJsonData(v *string) {
-	m.RawJsonData = v
-}
-
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
 func (m UpdateTempBasalParams) GetUpdatedByIdentityID() *int64 {
 	return m.UpdatedByIdentityID
@@ -12225,16 +11815,6 @@ func (m CreateTempTargetParams) GetOccurredAt() int64 {
 // SetOccurredAt sets the OccurredAt value and returns the updated CreateTempTargetParams.
 func (m *CreateTempTargetParams) SetOccurredAt(v int64) {
 	m.OccurredAt = v
-}
-
-// GetRawJsonData returns the RawJsonData value.
-func (m CreateTempTargetParams) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated CreateTempTargetParams.
-func (m *CreateTempTargetParams) SetRawJsonData(v *string) {
-	m.RawJsonData = v
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
@@ -12627,16 +12207,6 @@ func (m *UpdateTempTargetParams) SetReason(v *string) {
 	m.Reason = v
 }
 
-// GetRawJsonData returns the RawJsonData value.
-func (m UpdateTempTargetParams) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated UpdateTempTargetParams.
-func (m *UpdateTempTargetParams) SetRawJsonData(v *string) {
-	m.RawJsonData = v
-}
-
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
 func (m UpdateTempTargetParams) GetUpdatedByIdentityID() *int64 {
 	return m.UpdatedByIdentityID
@@ -12855,16 +12425,6 @@ func (m CreateFoodPresetParams) GetOtherAttributes() types.FoodPresetOther {
 // SetOtherAttributes sets the OtherAttributes value and returns the updated CreateFoodPresetParams.
 func (m *CreateFoodPresetParams) SetOtherAttributes(v types.FoodPresetOther) {
 	m.OtherAttributes = v
-}
-
-// GetRawJsonData returns the RawJsonData value.
-func (m CreateFoodPresetParams) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated CreateFoodPresetParams.
-func (m *CreateFoodPresetParams) SetRawJsonData(v *string) {
-	m.RawJsonData = v
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
@@ -13367,16 +12927,6 @@ func (m *UpdateFoodPresetParams) SetOtherAttributes(v *string) {
 	m.OtherAttributes = v
 }
 
-// GetRawJsonData returns the RawJsonData value.
-func (m UpdateFoodPresetParams) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated UpdateFoodPresetParams.
-func (m *UpdateFoodPresetParams) SetRawJsonData(v *string) {
-	m.RawJsonData = v
-}
-
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
 func (m UpdateFoodPresetParams) GetUpdatedByIdentityID() *int64 {
 	return m.UpdatedByIdentityID
@@ -13605,16 +13155,6 @@ func (m CreateProfilePresetParams) GetUtcOffsetMinutes() *int64 {
 // SetUtcOffsetMinutes sets the UtcOffsetMinutes value and returns the updated CreateProfilePresetParams.
 func (m *CreateProfilePresetParams) SetUtcOffsetMinutes(v *int64) {
 	m.UtcOffsetMinutes = v
-}
-
-// GetRawJsonData returns the RawJsonData value.
-func (m CreateProfilePresetParams) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated CreateProfilePresetParams.
-func (m *CreateProfilePresetParams) SetRawJsonData(v *string) {
-	m.RawJsonData = v
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
@@ -14027,16 +13567,6 @@ func (m *UpdateProfilePresetParams) SetName(v *string) {
 	m.Name = v
 }
 
-// GetRawJsonData returns the RawJsonData value.
-func (m UpdateProfilePresetParams) GetRawJsonData() *string {
-	return m.RawJsonData
-}
-
-// SetRawJsonData sets the RawJsonData value and returns the updated UpdateProfilePresetParams.
-func (m *UpdateProfilePresetParams) SetRawJsonData(v *string) {
-	m.RawJsonData = v
-}
-
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
 func (m UpdateProfilePresetParams) GetUpdatedByIdentityID() *int64 {
 	return m.UpdatedByIdentityID
@@ -14315,145 +13845,5 @@ func (m UpsertSummaryPeriodParams) GetLoopCobJson() string {
 // SetLoopCobJson sets the LoopCobJson value and returns the updated UpsertSummaryPeriodParams.
 func (m *UpsertSummaryPeriodParams) SetLoopCobJson(v string) {
 	m.LoopCobJson = v
-}
-
-// GetBefore returns the Before value.
-func (m ClearActivitiesRawJSONParams) GetBefore() int64 {
-	return m.Before
-}
-
-// SetBefore sets the Before value and returns the updated ClearActivitiesRawJSONParams.
-func (m *ClearActivitiesRawJSONParams) SetBefore(v int64) {
-	m.Before = v
-}
-
-// GetBefore returns the Before value.
-func (m ClearComponentEventsRawJSONParams) GetBefore() int64 {
-	return m.Before
-}
-
-// SetBefore sets the Before value and returns the updated ClearComponentEventsRawJSONParams.
-func (m *ClearComponentEventsRawJSONParams) SetBefore(v int64) {
-	m.Before = v
-}
-
-// GetBefore returns the Before value.
-func (m ClearDeviceReportsRawJSONParams) GetBefore() int64 {
-	return m.Before
-}
-
-// SetBefore sets the Before value and returns the updated ClearDeviceReportsRawJSONParams.
-func (m *ClearDeviceReportsRawJSONParams) SetBefore(v int64) {
-	m.Before = v
-}
-
-// GetBefore returns the Before value.
-func (m ClearEventGroupsRawJSONParams) GetBefore() int64 {
-	return m.Before
-}
-
-// SetBefore sets the Before value and returns the updated ClearEventGroupsRawJSONParams.
-func (m *ClearEventGroupsRawJSONParams) SetBefore(v int64) {
-	m.Before = v
-}
-
-// GetBefore returns the Before value.
-func (m ClearFoodIntakesRawJSONParams) GetBefore() int64 {
-	return m.Before
-}
-
-// SetBefore sets the Before value and returns the updated ClearFoodIntakesRawJSONParams.
-func (m *ClearFoodIntakesRawJSONParams) SetBefore(v int64) {
-	m.Before = v
-}
-
-// GetBefore returns the Before value.
-func (m ClearFoodPresetsRawJSONParams) GetBefore() int64 {
-	return m.Before
-}
-
-// SetBefore sets the Before value and returns the updated ClearFoodPresetsRawJSONParams.
-func (m *ClearFoodPresetsRawJSONParams) SetBefore(v int64) {
-	m.Before = v
-}
-
-// GetBefore returns the Before value.
-func (m ClearGlucoseReadingsRawJSONParams) GetBefore() int64 {
-	return m.Before
-}
-
-// SetBefore sets the Before value and returns the updated ClearGlucoseReadingsRawJSONParams.
-func (m *ClearGlucoseReadingsRawJSONParams) SetBefore(v int64) {
-	m.Before = v
-}
-
-// GetBefore returns the Before value.
-func (m ClearInsulinDosesRawJSONParams) GetBefore() int64 {
-	return m.Before
-}
-
-// SetBefore sets the Before value and returns the updated ClearInsulinDosesRawJSONParams.
-func (m *ClearInsulinDosesRawJSONParams) SetBefore(v int64) {
-	m.Before = v
-}
-
-// GetBefore returns the Before value.
-func (m ClearNotificationEventsRawJSONParams) GetBefore() int64 {
-	return m.Before
-}
-
-// SetBefore sets the Before value and returns the updated ClearNotificationEventsRawJSONParams.
-func (m *ClearNotificationEventsRawJSONParams) SetBefore(v int64) {
-	m.Before = v
-}
-
-// GetBefore returns the Before value.
-func (m ClearProfilePresetsRawJSONParams) GetBefore() int64 {
-	return m.Before
-}
-
-// SetBefore sets the Before value and returns the updated ClearProfilePresetsRawJSONParams.
-func (m *ClearProfilePresetsRawJSONParams) SetBefore(v int64) {
-	m.Before = v
-}
-
-// GetBefore returns the Before value.
-func (m ClearProfileSwitchesRawJSONParams) GetBefore() int64 {
-	return m.Before
-}
-
-// SetBefore sets the Before value and returns the updated ClearProfileSwitchesRawJSONParams.
-func (m *ClearProfileSwitchesRawJSONParams) SetBefore(v int64) {
-	m.Before = v
-}
-
-// GetBefore returns the Before value.
-func (m ClearTempBasalsRawJSONParams) GetBefore() int64 {
-	return m.Before
-}
-
-// SetBefore sets the Before value and returns the updated ClearTempBasalsRawJSONParams.
-func (m *ClearTempBasalsRawJSONParams) SetBefore(v int64) {
-	m.Before = v
-}
-
-// GetBefore returns the Before value.
-func (m ClearTempTargetsRawJSONParams) GetBefore() int64 {
-	return m.Before
-}
-
-// SetBefore sets the Before value and returns the updated ClearTempTargetsRawJSONParams.
-func (m *ClearTempTargetsRawJSONParams) SetBefore(v int64) {
-	m.Before = v
-}
-
-// GetBefore returns the Before value.
-func (m ThinDeviceReportsLoopStatusParams) GetBefore() int64 {
-	return m.Before
-}
-
-// SetBefore sets the Before value and returns the updated ThinDeviceReportsLoopStatusParams.
-func (m *ThinDeviceReportsLoopStatusParams) SetBefore(v int64) {
-	m.Before = v
 }
 

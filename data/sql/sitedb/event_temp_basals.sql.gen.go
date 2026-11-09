@@ -12,7 +12,7 @@ import (
 
 const allTempBasals = `-- name: AllTempBasals :many
 
-SELECT id, duration_minutes, rate, multiplier, type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM temp_basals
+SELECT id, duration_minutes, rate, multiplier, type, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM temp_basals
 WHERE (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
@@ -44,7 +44,6 @@ func (q *Queries) AllTempBasals(ctx context.Context, arg AllTempBasalsParams) ([
 			&i.Type,
 			&i.Notes,
 			&i.Reason,
-			&i.RawJsonData,
 			&i.DeletedAt,
 			&i.UtcOffsetMinutes,
 			&i.OccurredAt,
@@ -82,14 +81,13 @@ INSERT INTO temp_basals (
 
     utc_offset_minutes,
     occurred_at,
-    raw_json_data,
     created_by_app_name,
     created_by_device_name,
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, duration_minutes, rate, multiplier, type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, duration_minutes, rate, multiplier, type, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type CreateTempBasalParams struct {
@@ -102,7 +100,6 @@ type CreateTempBasalParams struct {
 	Reason                *string
 	UtcOffsetMinutes      *int64
 	OccurredAt            int64
-	RawJsonData           *string
 	CreatedByAppName      *string
 	CreatedByDeviceName   *string
 	CreatedByIdentityName string
@@ -123,7 +120,6 @@ func (q *Queries) CreateTempBasal(ctx context.Context, arg CreateTempBasalParams
 		arg.Reason,
 		arg.UtcOffsetMinutes,
 		arg.OccurredAt,
-		arg.RawJsonData,
 		arg.CreatedByAppName,
 		arg.CreatedByDeviceName,
 		arg.CreatedByIdentityName,
@@ -138,7 +134,6 @@ func (q *Queries) CreateTempBasal(ctx context.Context, arg CreateTempBasalParams
 		&i.Type,
 		&i.Notes,
 		&i.Reason,
-		&i.RawJsonData,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,
 		&i.OccurredAt,
@@ -155,7 +150,7 @@ func (q *Queries) CreateTempBasal(ctx context.Context, arg CreateTempBasalParams
 }
 
 const getTempBasal = `-- name: GetTempBasal :one
-SELECT id, duration_minutes, rate, multiplier, type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM temp_basals WHERE id = ? AND (CAST(?2 AS BOOL) = TRUE OR deleted_at IS NULL)
+SELECT id, duration_minutes, rate, multiplier, type, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM temp_basals WHERE id = ? AND (CAST(?2 AS BOOL) = TRUE OR deleted_at IS NULL)
 `
 
 type GetTempBasalParams struct {
@@ -174,7 +169,6 @@ func (q *Queries) GetTempBasal(ctx context.Context, arg GetTempBasalParams) (*Te
 		&i.Type,
 		&i.Notes,
 		&i.Reason,
-		&i.RawJsonData,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,
 		&i.OccurredAt,
@@ -203,7 +197,7 @@ func (q *Queries) HardDeleteTempBasal(ctx context.Context, arg HardDeleteTempBas
 }
 
 const searchTempBasals = `-- name: SearchTempBasals :many
-SELECT id, duration_minutes, rate, multiplier, type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM temp_basals
+SELECT id, duration_minutes, rate, multiplier, type, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM temp_basals
 WHERE
     -- The date filters as one range, occurred_at's CHECK where unset, so SQLite reads only that range of its index
     occurred_at BETWEEN MAX(COALESCE(CAST(?1 AS INTEGER), 0), COALESCE(CAST(?2 AS INTEGER) + 1, 0), COALESCE(CAST(?3 AS INTEGER), 0))
@@ -307,7 +301,6 @@ func (q *Queries) SearchTempBasals(ctx context.Context, arg SearchTempBasalsPara
 			&i.Type,
 			&i.Notes,
 			&i.Reason,
-			&i.RawJsonData,
 			&i.DeletedAt,
 			&i.UtcOffsetMinutes,
 			&i.OccurredAt,
@@ -365,15 +358,11 @@ UPDATE temp_basals SET
     notes = COALESCE(?5, notes),
     reason = COALESCE(?6, reason),
 
-    raw_json_data = json_patch(
-        COALESCE(raw_json_data, '{}'),
-        COALESCE(CAST(?7 AS TEXT), '{}')
-    ),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_id = ?8,
-    updated_by_identity_name = ?9
-WHERE id = ?10 AND deleted_at IS NULL
-RETURNING id, duration_minutes, rate, multiplier, type, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+    updated_by_identity_id = ?7,
+    updated_by_identity_name = ?8
+WHERE id = ?9 AND deleted_at IS NULL
+RETURNING id, duration_minutes, rate, multiplier, type, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type UpdateTempBasalParams struct {
@@ -383,7 +372,6 @@ type UpdateTempBasalParams struct {
 	Type                  *string
 	Notes                 *string
 	Reason                *string
-	RawJsonData           *string
 	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
 	ID                    string
@@ -400,7 +388,6 @@ func (q *Queries) UpdateTempBasal(ctx context.Context, arg UpdateTempBasalParams
 		arg.Type,
 		arg.Notes,
 		arg.Reason,
-		arg.RawJsonData,
 		arg.UpdatedByIdentityID,
 		arg.UpdatedByIdentityName,
 		arg.ID,
@@ -414,7 +401,6 @@ func (q *Queries) UpdateTempBasal(ctx context.Context, arg UpdateTempBasalParams
 		&i.Type,
 		&i.Notes,
 		&i.Reason,
-		&i.RawJsonData,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,
 		&i.OccurredAt,

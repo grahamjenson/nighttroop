@@ -200,7 +200,6 @@ templ FoodIntakeModal(foodIntake *sitemodels.SiteFoodIntake) {
 			@readingDetail("Updated", formatReadingDate(ctx, foodIntake.UpdatedAt))
 			@readingDetail("Updated By", orDash(foodIntake.UpdatedByIdentityName))
 		</dl>
-		@modal.RawJSON("site--food--details--raw", foodIntake.RawJsonData)
 	}
 }
 

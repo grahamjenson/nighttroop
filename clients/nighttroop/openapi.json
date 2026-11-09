@@ -586,7 +586,6 @@
           "id": { "type": "string", "readOnly": true },
           "notes": { "type": "string" },
           "reason": { "type": "string" },
-          "raw_json_data": { "type": "string", "readOnly": true },
           "utc_offset_minutes": { "type": "integer", "format": "int64" },
           "occurred_at": { "type": "integer", "format": "int64", "description": "Now, if not sent when creating" },
           "created_at": { "type": "integer", "format": "int64", "readOnly": true },

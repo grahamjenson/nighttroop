@@ -10,6 +10,10 @@ type EventGroupOther struct {
 	AutoForced         *bool   `json:"auto_forced,omitempty"`
 	Reasons            *string `json:"reasons,omitempty"`
 	OriginalDurationMs *int64  `json:"original_duration_ms,omitempty"`
+	// DurationType is Loop's "indefinite", for an override with no end
+	DurationType *string `json:"duration_type,omitempty"`
+	// SentHash is a hash of the JSON it was last sent as, to tell one sent again with changes from one sent the same
+	SentHash *string `json:"sent_hash,omitempty"`
 }
 
 func (o EventGroupOther) Value() (driver.Value, error) { return otherValue(o) }

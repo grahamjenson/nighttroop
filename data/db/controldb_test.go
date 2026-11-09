@@ -3,7 +3,6 @@ package db_test
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
@@ -17,7 +16,6 @@ import (
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/logsdb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
-	"nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/s3utils"
@@ -191,59 +189,25 @@ func TestHydrateSite(t *testing.T) {
 	require.Equal(t, 120.0, reading.Mgdl)
 }
 
+// Truncating a site shrinks its DB, keeping its rows, and clears nothing, as no raw JSON is kept to clear
 func TestTruncateSite(t *testing.T) {
 	_, controlDB, site := testutils.NewControlDBWithSite(t)
 	ctx, q := t.Context(), site.SiteDB.Queries()
-	raw := `{"sgv":120,"device":"phone"}`
-	reading, err := q.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "reading", Mgdl: 120, ReadingType: "sgv", OccurredAt: 1, RawJsonData: &raw, CreatedByIdentityName: "phone"})
-	require.NoError(t, err)
-	require.NotNil(t, reading.RawJsonData)
-	recent, err := q.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "recent", Mgdl: 130, ReadingType: "sgv", OccurredAt: time.Now().AddDate(0, 0, -controlDB.ServerConfig.TruncateRawJSONAfterDays+1).UnixMilli(), RawJsonData: &raw, CreatedByIdentityName: "phone"})
+	_, err := q.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "reading", Mgdl: 120, ReadingType: "sgv", OccurredAt: 1, CreatedByIdentityName: "phone"})
 	require.NoError(t, err)
 
-	// The old reading's raw JSON is cleared and the DB shrunk; an in-memory DB has no size to record
+	// An in-memory DB has no size to record
 	sizeKB, err := controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
 	require.NoError(t, err)
 	require.Nil(t, sizeKB)
-	reading, err = q.GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: "reading"})
+	reading, err := q.GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: "reading"})
 	require.NoError(t, err)
-	require.Nil(t, reading.RawJsonData)
-	require.Equal(t, float64(120), reading.Mgdl, "the reading itself is kept")
-	recent, err = q.GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: recent.ID})
-	require.NoError(t, err)
-	require.Equal(t, raw, *recent.RawJsonData, "a reading newer than TruncateRawJSONAfterDays keeps its raw JSON")
+	require.Equal(t, float64(120), reading.Mgdl, "the reading is kept")
 
 	_, err = controlDB.TruncateSite(ctx, "not-a-site")
 	require.ErrorContains(t, err, "is not open")
 }
 
-// Every table's raw JSON is cleared once its row is TruncateRawJSONAfterDays old, 2 by default, the device reports' as
-// the rest's, for every open site, keeping the rows
-func TestClearRawJSON(t *testing.T) {
-	_, controlDB, site := testutils.NewControlDBWithSite(t)
-	ctx, q := t.Context(), site.SiteDB.Queries()
-	require.Equal(t, 2, controlDB.ServerConfig.TruncateRawJSONAfterDays)
-	raw, daysAgo := `{"device":"loop"}`, func(days int) int64 { return time.Now().AddDate(0, 0, -days).UnixMilli() }
-	for id, days := range map[string]int{"old": 3, "recent": 1} {
-		_, err := q.CreateDeviceReport(ctx, sitedb.CreateDeviceReportParams{ID: id, OccurredAt: daysAgo(days), RawJsonData: &raw, CreatedByIdentityName: "phone"})
-		require.NoError(t, err)
-		_, err = q.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: id, Mgdl: 120, ReadingType: "sgv", OccurredAt: daysAgo(days), RawJsonData: &raw, CreatedByIdentityName: "phone"})
-		require.NoError(t, err)
-	}
-
-	require.NoError(t, controlDB.ClearRawJSON(ctx))
-	for id, cleared := range map[string]bool{"old": true, "recent": false} {
-		report, err := q.GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: id})
-		require.NoError(t, err)
-		reading, err := q.GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: id})
-		require.NoError(t, err)
-		require.Equal(t, cleared, report.RawJsonData == nil, "device report %s", id)
-		require.Equal(t, cleared, reading.RawJsonData == nil, "glucose reading %s", id)
-		require.Equal(t, 120.0, reading.Mgdl, "the reading itself is kept")
-	}
-}
-
-// At start every live site's DB file is opened, several at once
 func TestNewControlDBOpensEverySite(t *testing.T) {
 	cfg := *testutils.GetTestServerConfig()
 	cfg.Mode = consts.Development // DBs in files, so they are there to open again
@@ -482,39 +446,4 @@ func TestRestoredSiteThatCannotOpenStopsTheStart(t *testing.T) {
 	require.NoError(t, err)
 	t.Cleanup(func() { controlDB.Close() })
 	require.ErrorIs(t, controlDB.RestoreMissingSites(ctx, download), db.ErrRestoredSiteCannotOpen)
-}
-
-// A device report's loop status keeps its debug output and predictions only until it is TruncateRawJSONAfterDays old,
-// as the retro view shows them, then is thinned to its IOB, reason and the rest
-func TestClearRawJSONThinsOldLoopStatuses(t *testing.T) {
-	_, controlDB, site := testutils.NewControlDBWithSite(t)
-	ctx, q := t.Context(), site.SiteDB.Queries()
-	daysAgo := func(days int) int64 { return time.Now().AddDate(0, 0, -days).UnixMilli() }
-	status := json.RawMessage(`{"iob":{"iob":1.2},"suggested":{"COB":20,"reason":"COB 20, Dev: 5","predBGs":{"IOB":[120,118]},"consoleLog":["SMB enabled"],"consoleError":["CR: 10"]},"enacted":{"reason":"COB 20, Dev: 5","rate":0.5,"predBGs":{"IOB":[120,118]},"consoleError":["CR: 10"]}}`)
-	loop := json.RawMessage(`{"iob":{"iob":3},"predicted":{"startDate":"2024-01-01T00:05:00Z","values":[120,130]}}`)
-	reports := map[string]struct {
-		loop   string
-		status json.RawMessage
-		days   int
-	}{
-		"old_openaps":    {"openaps", status, 3},
-		"old_loop":       {"loop", loop, 3},
-		"recent_openaps": {"openaps", status, 1},
-	}
-	for id, report := range reports {
-		_, err := q.CreateDeviceReport(ctx, sitedb.CreateDeviceReportParams{ID: id, OccurredAt: daysAgo(report.days), OtherAttributes: types.DeviceReportOther{LoopName: new(report.loop)},
-			LoopStatusJson: new(string(report.status)), LoopIob: new(1.2), CreatedByIdentityName: "phone"})
-		require.NoError(t, err)
-	}
-
-	require.NoError(t, controlDB.ClearRawJSON(ctx))
-	loopStatus := func(id string) string {
-		report, err := q.GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: id})
-		require.NoError(t, err)
-		require.Equal(t, 1.2, *report.LoopIob, "the report's IOB is kept")
-		return *report.LoopStatusJson
-	}
-	require.JSONEq(t, `{"iob":{"iob":1.2},"suggested":{"COB":20,"reason":"COB 20, Dev: 5"},"enacted":{"reason":"COB 20, Dev: 5","rate":0.5}}`, loopStatus("old_openaps"))
-	require.JSONEq(t, `{"iob":{"iob":3}}`, loopStatus("old_loop"))
-	require.JSONEq(t, string(status), loopStatus("recent_openaps"), "a recent status is kept whole, for the retro view")
 }

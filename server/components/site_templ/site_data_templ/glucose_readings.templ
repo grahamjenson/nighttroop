@@ -314,7 +314,6 @@ templ GlucoseReadingModal(reading *sitemodels.SiteGlucoseReading) {
 			@readingDetail("Updated", formatReadingDate(ctx, reading.UpdatedAt))
 			@readingDetail("Updated By", orDash(reading.UpdatedByIdentityName))
 		</dl>
-		@modal.RawJSON("site--glucose--details--raw", reading.RawJsonData)
 	}
 }
 
