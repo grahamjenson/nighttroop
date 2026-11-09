@@ -817,6 +817,76 @@ func (m *DeviceReport) SetLoopStatusJson(v *string) {
 	m.LoopStatusJson = v
 }
 
+// GetLoopName returns the LoopName value.
+func (m DeviceReport) GetLoopName() *string {
+	return m.LoopName
+}
+
+// SetLoopName sets the LoopName value and returns the updated DeviceReport.
+func (m *DeviceReport) SetLoopName(v *string) {
+	m.LoopName = v
+}
+
+// GetPumpClock returns the PumpClock value.
+func (m DeviceReport) GetPumpClock() *int64 {
+	return m.PumpClock
+}
+
+// SetPumpClock sets the PumpClock value and returns the updated DeviceReport.
+func (m *DeviceReport) SetPumpClock(v *int64) {
+	m.PumpClock = v
+}
+
+// GetPumpManufacturer returns the PumpManufacturer value.
+func (m DeviceReport) GetPumpManufacturer() *string {
+	return m.PumpManufacturer
+}
+
+// SetPumpManufacturer sets the PumpManufacturer value and returns the updated DeviceReport.
+func (m *DeviceReport) SetPumpManufacturer(v *string) {
+	m.PumpManufacturer = v
+}
+
+// GetPumpModel returns the PumpModel value.
+func (m DeviceReport) GetPumpModel() *string {
+	return m.PumpModel
+}
+
+// SetPumpModel sets the PumpModel value and returns the updated DeviceReport.
+func (m *DeviceReport) SetPumpModel(v *string) {
+	m.PumpModel = v
+}
+
+// GetOverrideJson returns the OverrideJson value.
+func (m DeviceReport) GetOverrideJson() *string {
+	return m.OverrideJson
+}
+
+// SetOverrideJson sets the OverrideJson value and returns the updated DeviceReport.
+func (m *DeviceReport) SetOverrideJson(v *string) {
+	m.OverrideJson = v
+}
+
+// GetPumpJson returns the PumpJson value.
+func (m DeviceReport) GetPumpJson() *string {
+	return m.PumpJson
+}
+
+// SetPumpJson sets the PumpJson value and returns the updated DeviceReport.
+func (m *DeviceReport) SetPumpJson(v *string) {
+	m.PumpJson = v
+}
+
+// GetUploaderJson returns the UploaderJson value.
+func (m DeviceReport) GetUploaderJson() *string {
+	return m.UploaderJson
+}
+
+// SetUploaderJson sets the UploaderJson value and returns the updated DeviceReport.
+func (m *DeviceReport) SetUploaderJson(v *string) {
+	m.UploaderJson = v
+}
+
 // GetOtherAttributes returns the OtherAttributes value.
 func (m DeviceReport) GetOtherAttributes() types.DeviceReportOther {
 	return m.OtherAttributes
@@ -4688,12 +4758,12 @@ func (m *AllDeviceReportsParams) SetLimit(v int64) {
 }
 
 // GetID returns the ID value.
-func (m ClearDeviceReportLoopStatusParams) GetID() string {
+func (m ClearDeviceReportStatusesParams) GetID() string {
 	return m.ID
 }
 
-// SetID sets the ID value and returns the updated ClearDeviceReportLoopStatusParams.
-func (m *ClearDeviceReportLoopStatusParams) SetID(v string) {
+// SetID sets the ID value and returns the updated ClearDeviceReportStatusesParams.
+func (m *ClearDeviceReportStatusesParams) SetID(v string) {
 	m.ID = v
 }
 
@@ -4825,6 +4895,76 @@ func (m CreateDeviceReportParams) GetLoopStatusJson() *string {
 // SetLoopStatusJson sets the LoopStatusJson value and returns the updated CreateDeviceReportParams.
 func (m *CreateDeviceReportParams) SetLoopStatusJson(v *string) {
 	m.LoopStatusJson = v
+}
+
+// GetLoopName returns the LoopName value.
+func (m CreateDeviceReportParams) GetLoopName() *string {
+	return m.LoopName
+}
+
+// SetLoopName sets the LoopName value and returns the updated CreateDeviceReportParams.
+func (m *CreateDeviceReportParams) SetLoopName(v *string) {
+	m.LoopName = v
+}
+
+// GetPumpClock returns the PumpClock value.
+func (m CreateDeviceReportParams) GetPumpClock() *int64 {
+	return m.PumpClock
+}
+
+// SetPumpClock sets the PumpClock value and returns the updated CreateDeviceReportParams.
+func (m *CreateDeviceReportParams) SetPumpClock(v *int64) {
+	m.PumpClock = v
+}
+
+// GetPumpManufacturer returns the PumpManufacturer value.
+func (m CreateDeviceReportParams) GetPumpManufacturer() *string {
+	return m.PumpManufacturer
+}
+
+// SetPumpManufacturer sets the PumpManufacturer value and returns the updated CreateDeviceReportParams.
+func (m *CreateDeviceReportParams) SetPumpManufacturer(v *string) {
+	m.PumpManufacturer = v
+}
+
+// GetPumpModel returns the PumpModel value.
+func (m CreateDeviceReportParams) GetPumpModel() *string {
+	return m.PumpModel
+}
+
+// SetPumpModel sets the PumpModel value and returns the updated CreateDeviceReportParams.
+func (m *CreateDeviceReportParams) SetPumpModel(v *string) {
+	m.PumpModel = v
+}
+
+// GetOverrideJson returns the OverrideJson value.
+func (m CreateDeviceReportParams) GetOverrideJson() *string {
+	return m.OverrideJson
+}
+
+// SetOverrideJson sets the OverrideJson value and returns the updated CreateDeviceReportParams.
+func (m *CreateDeviceReportParams) SetOverrideJson(v *string) {
+	m.OverrideJson = v
+}
+
+// GetPumpJson returns the PumpJson value.
+func (m CreateDeviceReportParams) GetPumpJson() *string {
+	return m.PumpJson
+}
+
+// SetPumpJson sets the PumpJson value and returns the updated CreateDeviceReportParams.
+func (m *CreateDeviceReportParams) SetPumpJson(v *string) {
+	m.PumpJson = v
+}
+
+// GetUploaderJson returns the UploaderJson value.
+func (m CreateDeviceReportParams) GetUploaderJson() *string {
+	return m.UploaderJson
+}
+
+// SetUploaderJson sets the UploaderJson value and returns the updated CreateDeviceReportParams.
+func (m *CreateDeviceReportParams) SetUploaderJson(v *string) {
+	m.UploaderJson = v
 }
 
 // GetOtherAttributes returns the OtherAttributes value.
@@ -5327,14 +5467,24 @@ func (m *SoftDeleteDeviceReportParams) SetID(v string) {
 	m.ID = v
 }
 
-// GetOtherAttributes returns the OtherAttributes value.
-func (m UpdateDeviceReportParams) GetOtherAttributes() *string {
-	return m.OtherAttributes
+// GetPumpJson returns the PumpJson value.
+func (m UpdateDeviceReportParams) GetPumpJson() *string {
+	return m.PumpJson
 }
 
-// SetOtherAttributes sets the OtherAttributes value and returns the updated UpdateDeviceReportParams.
-func (m *UpdateDeviceReportParams) SetOtherAttributes(v *string) {
-	m.OtherAttributes = v
+// SetPumpJson sets the PumpJson value and returns the updated UpdateDeviceReportParams.
+func (m *UpdateDeviceReportParams) SetPumpJson(v *string) {
+	m.PumpJson = v
+}
+
+// GetUploaderJson returns the UploaderJson value.
+func (m UpdateDeviceReportParams) GetUploaderJson() *string {
+	return m.UploaderJson
+}
+
+// SetUploaderJson sets the UploaderJson value and returns the updated UpdateDeviceReportParams.
+func (m *UpdateDeviceReportParams) SetUploaderJson(v *string) {
+	m.UploaderJson = v
 }
 
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
@@ -13864,6 +14014,16 @@ func (m ClearOldLoopStatusesParams) GetSince() int64 {
 
 // SetSince sets the Since value and returns the updated ClearOldLoopStatusesParams.
 func (m *ClearOldLoopStatusesParams) SetSince(v int64) {
+	m.Since = v
+}
+
+// GetSince returns the Since value.
+func (m ClearOldPumpsParams) GetSince() int64 {
+	return m.Since
+}
+
+// SetSince sets the Since value and returns the updated ClearOldPumpsParams.
+func (m *ClearOldPumpsParams) SetSince(v int64) {
 	m.Since = v
 }
 

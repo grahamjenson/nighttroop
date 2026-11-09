@@ -103,6 +103,13 @@ type DeviceReport struct {
 	LoopCob               *float64
 	ConfigurationID       *string
 	LoopStatusJson        *string
+	LoopName              *string
+	PumpClock             *int64
+	PumpManufacturer      *string
+	PumpModel             *string
+	OverrideJson          *string
+	PumpJson              *string
+	UploaderJson          *string
 	OtherAttributes       types.DeviceReportOther
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64

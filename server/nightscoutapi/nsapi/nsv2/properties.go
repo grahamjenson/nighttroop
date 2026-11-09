@@ -172,8 +172,8 @@ type Direction struct {
 
 func GetSource(dr *sitedb.DeviceReport) Source {
 	source := Source{Mills: &dr.OccurredAt, Device: dr.CreatedByDeviceName}
-	if dr.OtherAttributes.LoopName != nil {
-		source.Source = new(map[string]string{"loop": "Loop", "openaps": "OpenAPS"}[*dr.OtherAttributes.LoopName])
+	if dr.LoopName != nil {
+		source.Source = new(map[string]string{"loop": "Loop", "openaps": "OpenAPS"}[*dr.LoopName])
 	}
 	return source
 }
