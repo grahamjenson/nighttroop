@@ -422,7 +422,8 @@ by side. The site API's search gives the same: its `items`, `skip`, `limit` (50 
   - Adding a reading offers its type as Meter or Sensor and its trend as an arrow with its name (e.g. `↗ FortyFiveUp`),
     as the table and its details show them.
   - Above the first page, the last 10 days' glucose are small graphs on the same scale, oldest first, each with the
-    range shaded and its time in range; the last is today so far, from its clean readings.
+    range shaded and its time in range; the last is today so far, from its clean readings. They are titled "Last N
+    days", or Today on a new site's first day.
 - **Insulin doses**, with a combo bolus's split as the fractions given at once and over time, 0.7 for 70%, typed in
   and shown on the site as percents, 0 to 100
 - **Food intakes**

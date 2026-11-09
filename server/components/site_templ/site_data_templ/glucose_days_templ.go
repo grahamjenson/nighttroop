@@ -72,20 +72,20 @@ func GlucoseDays(days []*sitemodels.SiteSummaryDaily) templ.Component {
 		ctx = templ.ClearChildren(ctx)
 		bottom, top := glucoseDaysAxis(ctx, days)
 		low, high := glucoseRangeBounds(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<section id=\"site--glucose--days\" class=\"rounded-xl border border-gray-200 p-4 shadow-sm\"><h2 class=\"mb-3 text-sm font-semibold text-gray-900\">Last ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<section id=\"site--glucose--days\" class=\"rounded-xl border border-gray-200 p-4 shadow-sm\"><h2 class=\"mb-3 text-sm font-semibold text-gray-900\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var2 string
-		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(len(days)))
+		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(glucoseDaysTitle(len(days)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_days.templ`, Line: 53, Col: 83}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_days.templ`, Line: 53, Col: 84}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, " days</h2><ol class=\"grid grid-cols-2 gap-3 sm:grid-cols-5\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</h2><ol class=\"grid grid-cols-2 gap-3 sm:grid-cols-5\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -276,6 +276,14 @@ func GlucoseDays(days []*sitemodels.SiteSummaryDaily) templ.Component {
 		}
 		return nil
 	})
+}
+
+// glucoseDaysTitle names the days shown: Today for a new site's first day, which has no others, or the last n days
+func glucoseDaysTitle(n int) string {
+	if n == 1 {
+		return "Today"
+	}
+	return fmt.Sprintf("Last %d days", n)
 }
 
 var _ = templruntime.GeneratedTemplate
