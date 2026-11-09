@@ -17,17 +17,17 @@ GET http://{{ site }}/logs/errors?type=client
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 2 "@result"
-ASSERT_EQUALS "400 Bad Request: invalid collection" "@result.0.message"
-ASSERT_EQUALS "client" "@result.0.attributes.kind"
-ASSERT_EQUALS "/api/v1/{collection}" "@result.0.attributes.route"
-ASSERT_CONTAINS "length(direction) <= 16" "@result.1.message"
-ASSERT_EQUALS 400 "@result.1.attributes.status"
-ASSERT_EQUALS "POST" "@result.1.attributes.method"
-ASSERT_EQUALS "pwd_phone" "@result.1.attributes.identity"
-ASSERT_EQUALS "device_pwd_phone" "@result.1.attributes.role"
-ASSERT_EQUALS "AAPS/3.3.1" "@result.1.attributes.client"
-ASSERT_EXISTS "@result.1.request_id"
+ASSERT_LENGTH 2 "@result.items"
+ASSERT_EQUALS "400 Bad Request: invalid collection" "@result.items.0.message"
+ASSERT_EQUALS "client" "@result.items.0.attributes.kind"
+ASSERT_EQUALS "/api/v1/{collection}" "@result.items.0.attributes.route"
+ASSERT_CONTAINS "length(direction) <= 16" "@result.items.1.message"
+ASSERT_EQUALS 400 "@result.items.1.attributes.status"
+ASSERT_EQUALS "POST" "@result.items.1.attributes.method"
+ASSERT_EQUALS "pwd_phone" "@result.items.1.attributes.identity"
+ASSERT_EQUALS "device_pwd_phone" "@result.items.1.attributes.role"
+ASSERT_EQUALS "AAPS/3.3.1" "@result.items.1.attributes.client"
+ASSERT_EXISTS "@result.items.1.request_id"
 
 // The same bad request again within a minute is not recorded again, so a client repeating it cannot fill the errors
 NAME bad_collection_again
@@ -39,4 +39,4 @@ GET http://{{ site }}/logs/errors?type=client
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 2 "@result"
+ASSERT_LENGTH 2 "@result.items"

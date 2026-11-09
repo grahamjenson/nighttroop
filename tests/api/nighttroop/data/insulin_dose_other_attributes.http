@@ -19,9 +19,9 @@ GET http://{{ site }}/data/insulin
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS 0.7 "@result.0.split_now"
-ASSERT_EQUALS 0.3 "@result.0.split_ext"
-SET dose_id {{ dig "read_dose.result.0.id" }}
+ASSERT_EQUALS 0.7 "@result.items.0.split_now"
+ASSERT_EQUALS 0.3 "@result.items.0.split_ext"
+SET dose_id {{ dig "read_dose.result.items.0.id" }}
 
 // Updating one of them leaves the others as they were
 NAME update_split_ext

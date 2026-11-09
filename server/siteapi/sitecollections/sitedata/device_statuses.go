@@ -86,6 +86,17 @@ func (s *DeviceStatusesCollection) SearchRows(ctx context.Context, collectionTx 
 	return rows, nil
 }
 
+// SearchTotals are how many statuses the device the query names sent, and when its earliest and latest were; the
+// latest of each device are not paged, so are not counted
+func (s *DeviceStatusesCollection) SearchTotals(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) (*apiutils.Totals, error) {
+	if query.Device == nil {
+		return nil, nil
+	}
+	return siteapiutils.SearchTotals(ctx, collectionTx, func(q *sitedb.Queries, ctx context.Context) (*sitedb.DeviceReportTotalsRow, error) {
+		return q.DeviceReportTotals(ctx, sitedb.DeviceReportTotalsParams{Device: query.Device})
+	})
+}
+
 func (s *DeviceStatusesCollection) SearchHTMXResponse(models []*sitemodels.SiteDeviceStatus, query *apiutils.Query) templ.Component {
 	if query.Device != nil {
 		return site_data_templ.DeviceStatusHistory(*query.Device, models, query.Skip, query.Limit)

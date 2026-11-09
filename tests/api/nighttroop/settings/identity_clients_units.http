@@ -94,12 +94,12 @@ GET http://{{ site }}/settings/identities
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 7 "@result"
-ASSERT_EQUALS "xdrip4ios" "@result.1.client"
-ASSERT_EQUALS "t1dcarer" "@result.2.client"
-ASSERT_EQUALS "read_only" "@result.4.name"
-ASSERT_EQUALS null "@result.4.client"
-ASSERT_EQUALS "pwd_phone" "@result.5.name"
-ASSERT_EQUALS null "@result.5.client"
-ASSERT_EQUALS "admin" "@result.6.name"
-ASSERT_EQUALS null "@result.6.client"
+ASSERT_LENGTH 7 "@result.items"
+ASSERT_EQUALS "xdrip4ios" "@result.items.1.client"
+ASSERT_EQUALS "t1dcarer" "@result.items.2.client"
+ASSERT_EQUALS "read_only" "@result.items.4.name"
+ASSERT_EQUALS null "@result.items.4.client"
+ASSERT_EQUALS "pwd_phone" "@result.items.5.name"
+ASSERT_EQUALS null "@result.items.5.client"
+ASSERT_EQUALS "admin" "@result.items.6.name"
+ASSERT_EQUALS null "@result.items.6.client"

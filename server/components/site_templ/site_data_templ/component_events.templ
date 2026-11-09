@@ -30,6 +30,7 @@ templ ComponentEventsTable(events []*sitemodels.SiteComponentEvent, skip int64, 
 		@heading.Page("Site & Sensor Changes") {
 			Newest first. Click a change to see all its details.
 		}
+		@searchTotals("site--component-event", "site and sensor changes")
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			@addmodal.Open("site--component-event--add", "/data/component-events/new", "Add Change")
 			@table.Table(table.Props{

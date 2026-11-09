@@ -12,11 +12,11 @@ GET http://{{ site }}/data/component-events
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 2 "@result"
-ASSERT_EQUALS "Site Change" "@result.0.event_type"
-ASSERT_EQUALS "Right thigh" "@result.0.notes"
-ASSERT_EQUALS "Sensor Start" "@result.1.event_type"
-ASSERT_EQUALS "Left arm" "@result.1.notes"
+ASSERT_LENGTH 2 "@result.items"
+ASSERT_EQUALS "Site Change" "@result.items.0.event_type"
+ASSERT_EQUALS "Right thigh" "@result.items.0.notes"
+ASSERT_EQUALS "Sensor Start" "@result.items.1.event_type"
+ASSERT_EQUALS "Left arm" "@result.items.1.notes"
 
 // A bolus that names no pump has no change
 NAME create_ns_bolus
@@ -29,4 +29,4 @@ GET http://{{ site }}/data/component-events
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 2 "@result"
+ASSERT_LENGTH 2 "@result.items"

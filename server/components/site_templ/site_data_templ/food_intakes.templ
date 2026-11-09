@@ -22,6 +22,7 @@ templ FoodIntakesTable(foodIntakes []*sitemodels.SiteFoodIntake, skip int64, lim
 		@heading.Page("Food Intakes") {
 			Newest first. Click a food intake to see all its details.
 		}
+		@searchTotals("site--food", "food intakes")
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			@addmodal.Open("site--food--add", "/data/food/new", "Add Food Intake")
 			@table.Table(table.Props{

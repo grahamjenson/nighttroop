@@ -103,6 +103,11 @@ func (s *TempBasalsCollection) SearchRows(ctx context.Context, collectionTx *sit
 	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).AllTempBasals, siteapiutils.QueryToAllTempBasals(query))
 }
 
+// SearchTotals are how many the search pages through, and when the earliest and latest occurred
+func (s *TempBasalsCollection) SearchTotals(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) (*apiutils.Totals, error) {
+	return siteapiutils.SearchTotals(ctx, collectionTx, (*sitedb.Queries).TempBasalTotals)
+}
+
 func (s *TempBasalsCollection) SearchHTMXResponse(models []*sitemodels.SiteTempBasal, query *apiutils.Query) templ.Component {
 	return site_data_templ.TempBasalsTable(models, query.Skip, query.Limit)
 }

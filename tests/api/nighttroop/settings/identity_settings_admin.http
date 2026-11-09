@@ -5,8 +5,8 @@ GET http://{{ site }}/settings/identities
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS "pwd_phone" "@result.1.name"
-SET pwd_id {{ dig "list_identities.result.1.id" }}
+ASSERT_EQUALS "pwd_phone" "@result.items.1.name"
+SET pwd_id {{ dig "list_identities.result.items.1.id" }}
 
 // The site is in mmol/L, so the phone's Nightscout API is too
 NAME status_mmol

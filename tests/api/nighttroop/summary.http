@@ -14,14 +14,14 @@ GET http://{{ site }}/summary
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS 6 "@result.0.hours"
-ASSERT_EQUALS "mmol/L" "@result.0.units"
-ASSERT_LENGTH 0 "@result.0.glucose_readings"
-ASSERT_LENGTH 0 "@result.0.device_statuses"
+ASSERT_EQUALS 6 "@result.items.0.hours"
+ASSERT_EQUALS "mmol/L" "@result.items.0.units"
+ASSERT_LENGTH 0 "@result.items.0.glucose_readings"
+ASSERT_LENGTH 0 "@result.items.0.device_statuses"
 // Its minutes cover the 6 hours, each null as no profile, temp target or temp basal is in force
-ASSERT_LENGTH 361 "@result.0.minutes"
-ASSERT_EQUALS null "@result.0.minutes.0.low_target"
-ASSERT_EQUALS null "@result.0.minutes.360.basal"
+ASSERT_LENGTH 361 "@result.items.0.minutes"
+ASSERT_EQUALS null "@result.items.0.minutes.0.low_target"
+ASSERT_EQUALS null "@result.items.0.minutes.360.basal"
 
 NAME create_reading_for_summary
 POST http://{{ site }}/data/glucose
@@ -35,9 +35,9 @@ GET http://{{ site }}/summary?hours=6
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS 6 "@result.0.hours"
-ASSERT_LENGTH 1 "@result.0.glucose_readings"
-ASSERT_EQUALS 6.5 "@result.0.glucose_readings.0.reading"
+ASSERT_EQUALS 6 "@result.items.0.hours"
+ASSERT_LENGTH 1 "@result.items.0.glucose_readings"
+ASSERT_EQUALS 6.5 "@result.items.0.glucose_readings.0.reading"
 
 // A temp target is in force in the summary's latest minute, in the settings' units
 NAME create_temp_target_for_summary
@@ -52,10 +52,10 @@ GET http://{{ site }}/summary?hours=6
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 361 "@result.0.minutes"
-ASSERT_EQUALS null "@result.0.minutes.0.low_target"
-ASSERT_EQUALS 5 "@result.0.minutes.360.low_target"
-ASSERT_EQUALS 6 "@result.0.minutes.360.high_target"
+ASSERT_LENGTH 361 "@result.items.0.minutes"
+ASSERT_EQUALS null "@result.items.0.minutes.0.low_target"
+ASSERT_EQUALS 5 "@result.items.0.minutes.360.low_target"
+ASSERT_EQUALS 6 "@result.items.0.minutes.360.high_target"
 
 // A summary goes back at most a week
 NAME summary_at_most_a_week
@@ -63,7 +63,7 @@ GET http://{{ site }}/summary?hours=1000
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS 168 "@result.0.hours"
+ASSERT_EQUALS 168 "@result.items.0.hours"
 
 NAME summary_bad_hours
 GET http://{{ site }}/summary?hours=lots
@@ -79,8 +79,8 @@ GET http://{{ site }}/summary?hours=6
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS 3.996 "@result.0.range_low"
-ASSERT_EQUALS 9.99 "@result.0.range_high"
+ASSERT_EQUALS 3.996 "@result.items.0.range_low"
+ASSERT_EQUALS 9.99 "@result.items.0.range_high"
 
 // The alarms are set through Nightscout, as the site's pages do not show them
 NAME set_identity_units
@@ -107,9 +107,9 @@ GET http://{{ site }}/summary?hours=6
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS "mg/dL" "@result.0.units"
-ASSERT_EQUALS 80 "@result.0.range_low"
-ASSERT_EQUALS 150 "@result.0.range_high"
+ASSERT_EQUALS "mg/dL" "@result.items.0.units"
+ASSERT_EQUALS 80 "@result.items.0.range_low"
+ASSERT_EQUALS 150 "@result.items.0.range_high"
 
 // Today's time in range is the percent of its readings from the low to the high alarm, the 117 mg/dL reading in it.
 // Yesterday has no readings or insulin, and there has been no sensor or site change yet.
@@ -118,12 +118,12 @@ GET http://{{ site }}/summary?hours=6
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS 100 "@result.0.today.time_in_range"
-ASSERT_EQUALS 0 "@result.0.today.total_daily_dose"
-ASSERT_EQUALS null "@result.0.yesterday.time_in_range"
-ASSERT_EQUALS 0 "@result.0.yesterday.total_daily_dose"
-ASSERT_EQUALS null "@result.0.sensor_started_at"
-ASSERT_EQUALS null "@result.0.site_changed_at"
+ASSERT_EQUALS 100 "@result.items.0.today.time_in_range"
+ASSERT_EQUALS 0 "@result.items.0.today.total_daily_dose"
+ASSERT_EQUALS null "@result.items.0.yesterday.time_in_range"
+ASSERT_EQUALS 0 "@result.items.0.yesterday.total_daily_dose"
+ASSERT_EQUALS null "@result.items.0.sensor_started_at"
+ASSERT_EQUALS null "@result.items.0.site_changed_at"
 
 // A low reading takes half today's readings out of range, and a dose is in today's total daily dose
 NAME create_low_reading_for_summary
@@ -160,11 +160,11 @@ GET http://{{ site }}/summary
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS 50 "@result.0.today.time_in_range"
-ASSERT_EQUALS 2.5 "@result.0.today.total_daily_dose"
-ASSERT_EQUALS null "@result.0.yesterday.time_in_range"
-ASSERT_EXISTS "@result.0.sensor_started_at"
-ASSERT_EXISTS "@result.0.site_changed_at"
+ASSERT_EQUALS 50 "@result.items.0.today.time_in_range"
+ASSERT_EQUALS 2.5 "@result.items.0.today.total_daily_dose"
+ASSERT_EQUALS null "@result.items.0.yesterday.time_in_range"
+ASSERT_EXISTS "@result.items.0.sensor_started_at"
+ASSERT_EXISTS "@result.items.0.site_changed_at"
 
 // The summary over 6 hours looks the days up, as it is shorter than them
 NAME summary_short_has_days
@@ -172,5 +172,5 @@ GET http://{{ site }}/summary?hours=6
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS 50 "@result.0.today.time_in_range"
-ASSERT_EQUALS 2.5 "@result.0.today.total_daily_dose"
+ASSERT_EQUALS 50 "@result.items.0.today.time_in_range"
+ASSERT_EQUALS 2.5 "@result.items.0.today.total_daily_dose"

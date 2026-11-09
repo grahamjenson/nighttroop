@@ -141,6 +141,7 @@ templ GlucoseReadingsTable(readings []*sitemodels.SiteGlucoseReading, skip int64
 		@heading.Page("Glucose Readings") {
 			Newest first. Click a reading to see all its details.
 		}
+		@searchTotals("site--glucose", "glucose readings")
 		if skip == 0 {
 			<div id="site--glucose--days-loading" hx-get="/data/summary-daily?limit=10" hx-trigger="load" hx-swap="outerHTML"></div>
 		}

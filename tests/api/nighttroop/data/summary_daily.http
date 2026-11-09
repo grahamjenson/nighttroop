@@ -9,9 +9,9 @@ GET http://{{ site }}/data/summary-daily
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS ".today" "@result.0.date"
-ASSERT_EQUALS null "@result.0.time_in_range"
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS ".today" "@result.items.0.date"
+ASSERT_EQUALS null "@result.items.0.time_in_range"
 
 // Yesterday, in the site's default UTC: a reading in range at noon, one over the range high (180 mg/dL by default) 5 minutes later,
 // a 2 U bolus and 30 g of carbs, and a reading today that is not yesterday's
@@ -58,10 +58,10 @@ GET http://{{ site }}/data/summary-daily
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 2 "@result"
-ASSERT_EQUALS ".today" "@result.0.date"
-ASSERT_EQUALS 0 "@result.0.time_in_range"
-ASSERT_EQUALS ".yesterday" "@result.1.date"
+ASSERT_LENGTH 2 "@result.items"
+ASSERT_EQUALS ".today" "@result.items.0.date"
+ASSERT_EQUALS 0 "@result.items.0.time_in_range"
+ASSERT_EQUALS ".yesterday" "@result.items.1.date"
 
 // Today is only on the first page
 NAME search_summary_days_skip
@@ -69,8 +69,8 @@ GET http://{{ site }}/data/summary-daily?skip=1
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS ".yesterday" "@result.0.date"
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS ".yesterday" "@result.items.0.date"
 
 NAME get_summary_day
 GET http://{{ site }}/data/summary-daily/{{ date -1 }}
@@ -85,9 +85,9 @@ GET http://{{ site }}/summary
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS 50 "@result.0.yesterday.time_in_range"
-ASSERT_EQUALS 2 "@result.0.yesterday.total_daily_dose"
-ASSERT_EQUALS 0 "@result.0.today.time_in_range"
+ASSERT_EQUALS 50 "@result.items.0.yesterday.time_in_range"
+ASSERT_EQUALS 2 "@result.items.0.yesterday.total_daily_dose"
+ASSERT_EQUALS 0 "@result.items.0.today.time_in_range"
 
 // Only a day before today, and within a year, can be built
 NAME build_today_refused
@@ -148,8 +148,8 @@ GET http://{{ site }}/data/summary-daily
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 2 "@result"
-ASSERT_EQUALS "UTC" "@result.1.timezone"
+ASSERT_LENGTH 2 "@result.items"
+ASSERT_EQUALS "UTC" "@result.items.1.timezone"
 
 RUN_BACKGROUND_JOBS
 
@@ -158,6 +158,6 @@ GET http://{{ site }}/data/summary-daily
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 8 "@result"
-ASSERT_EQUALS "Pacific/Auckland" "@result.0.timezone"
-ASSERT_EQUALS "Pacific/Auckland" "@result.7.timezone"
+ASSERT_LENGTH 8 "@result.items"
+ASSERT_EQUALS "Pacific/Auckland" "@result.items.0.timezone"
+ASSERT_EQUALS "Pacific/Auckland" "@result.items.7.timezone"

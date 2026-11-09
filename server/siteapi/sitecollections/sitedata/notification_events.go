@@ -97,6 +97,11 @@ func (s *NotificationEventsCollection) SearchRows(ctx context.Context, collectio
 	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).AllNotificationEvents, siteapiutils.QueryToAllNotificationEvents(query))
 }
 
+// SearchTotals are how many the search pages through, and when the earliest and latest occurred
+func (s *NotificationEventsCollection) SearchTotals(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) (*apiutils.Totals, error) {
+	return siteapiutils.SearchTotals(ctx, collectionTx, (*sitedb.Queries).NotificationEventTotals)
+}
+
 func (s *NotificationEventsCollection) SearchHTMXResponse(models []*sitemodels.SiteNotificationEvent, query *apiutils.Query) templ.Component {
 	return site_data_templ.NotificationEventsTable(models, query.Skip, query.Limit)
 }

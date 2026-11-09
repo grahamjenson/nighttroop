@@ -158,6 +158,26 @@ func (q *Queries) CreateFoodIntake(ctx context.Context, arg CreateFoodIntakePara
 	return &i, err
 }
 
+const foodIntakeTotals = `-- name: FoodIntakeTotals :one
+SELECT COUNT(*) AS total, CAST(COALESCE(MIN(occurred_at), 0) AS INTEGER) AS earliest_at,
+    CAST(COALESCE(MAX(occurred_at), 0) AS INTEGER) AS latest_at
+FROM food_intakes WHERE deleted_at IS NULL
+`
+
+type FoodIntakeTotalsRow struct {
+	Total      int64
+	EarliestAt int64
+	LatestAt   int64
+}
+
+// How many food intakes AllFoodIntakes pages through, and when the earliest and latest occurred, 0 when there are none
+func (q *Queries) FoodIntakeTotals(ctx context.Context) (*FoodIntakeTotalsRow, error) {
+	row := q.queryRow(ctx, q.foodIntakeTotalsStmt, foodIntakeTotals)
+	var i FoodIntakeTotalsRow
+	err := row.Scan(&i.Total, &i.EarliestAt, &i.LatestAt)
+	return &i, err
+}
+
 const getFoodIntake = `-- name: GetFoodIntake :one
 SELECT id, name, food_type, absorption_time_minutes, carbs, other_attributes, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM food_intakes WHERE id = ? AND (CAST(?2 AS BOOL) = TRUE OR deleted_at IS NULL)
 `

@@ -8,12 +8,12 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_EQUALS "application/json" "#Content-Type.0"
-ASSERT_LENGTH 3 "@result"
-ASSERT_EQUALS "device_pwd_phone" "@result.1.role"
-ASSERT_EQUALS false "@result.1.current_identity"
-ASSERT_EQUALS "admin" "@result.2.role"
-ASSERT_EQUALS true "@result.2.current_identity"
-SET self_id {{ dig "list_identities.result.2.id" }}
+ASSERT_LENGTH 3 "@result.items"
+ASSERT_EQUALS "device_pwd_phone" "@result.items.1.role"
+ASSERT_EQUALS false "@result.items.1.current_identity"
+ASSERT_EQUALS "admin" "@result.items.2.role"
+ASSERT_EQUALS true "@result.items.2.current_identity"
+SET self_id {{ dig "list_identities.result.items.2.id" }}
 
 NAME create_device
 POST http://{{ site }}/settings/identities

@@ -127,3 +127,29 @@ func SoftDelete[P ~struct {
 	_, err := SiteQuery(ctx, collectionTx, softDelete, P{UpdatedByIdentityName: &siteContext.IdentityModel.Name, ID: id})
 	return err
 }
+
+// SearchTotals are what a collection's totals query, e.g. (*sitedb.Queries).GlucoseReadingTotals, counts its search
+// matches, without times when it matches none
+func SearchTotals[T ~struct {
+	Total      int64
+	EarliestAt int64
+	LatestAt   int64
+}](ctx context.Context, collectionTx *CollectionTx, totals func(*sitedb.Queries, context.Context) (*T, error)) (*apiutils.Totals, error) {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return nil, err
+	}
+	row, err := totals(q, ctx)
+	if err != nil {
+		return nil, err
+	}
+	counted := struct {
+		Total      int64
+		EarliestAt int64
+		LatestAt   int64
+	}(*row)
+	if counted.Total == 0 {
+		return &apiutils.Totals{}, nil
+	}
+	return &apiutils.Totals{Total: counted.Total, EarliestAt: &counted.EarliestAt, LatestAt: &counted.LatestAt}, nil
+}

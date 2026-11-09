@@ -5,7 +5,7 @@ GET http://{{ site }}/data/profile-switches
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 0 "@result"
+ASSERT_LENGTH 0 "@result.items"
 
 // A profile switch from the Nightscout API is listed, with its profile's schedules
 NAME create_treatment
@@ -18,14 +18,14 @@ GET http://{{ site }}/data/profile-switches
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS "Weekend" "@result.0.name"
-ASSERT_EQUALS 1.1 "@result.0.multiplier"
-ASSERT_EQUALS -60 "@result.0.timeshift"
-ASSERT_EQUALS 60 "@result.0.duration_minutes"
-ASSERT_EQUALS 5 "@result.0.dia"
-ASSERT_CONTAINS "0.8" "@result.0.basal_rates_json"
-SET ns_id {{ dig "list_profile_switches.result.0.id" }}
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "Weekend" "@result.items.0.name"
+ASSERT_EQUALS 1.1 "@result.items.0.multiplier"
+ASSERT_EQUALS -60 "@result.items.0.timeshift"
+ASSERT_EQUALS 60 "@result.items.0.duration_minutes"
+ASSERT_EQUALS 5 "@result.items.0.dia"
+ASSERT_CONTAINS "0.8" "@result.items.0.basal_rates_json"
+SET ns_id {{ dig "list_profile_switches.result.items.0.id" }}
 
 //////
 // CREATE AND UPDATE
@@ -66,16 +66,16 @@ GET http://{{ site }}/data/profile-switches?limit=1
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS "Sick Day" "@result.0.name"
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "Sick Day" "@result.items.0.name"
 
 NAME second_page
 GET http://{{ site }}/data/profile-switches?limit=1&skip=1
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS "Weekend" "@result.0.name"
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "Weekend" "@result.items.0.name"
 
 NAME create_profile_switch_no_name
 POST http://{{ site }}/data/profile-switches
@@ -166,7 +166,7 @@ GET http://{{ site }}/data/profile-switches
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
+ASSERT_LENGTH 1 "@result.items"
 
 NAME delete_unknown_profile_switch
 DELETE http://{{ site }}/data/profile-switches/not-a-profile-switch

@@ -1,11 +1,13 @@
 package pager
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
 
 	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/utils/apiutils"
 )
 
 type Props struct {
@@ -30,7 +32,7 @@ templ Pager(p Props) {
 			if p.Skip > 0 {
 				@pageButton(p.ID+"--previous", "Previous", pageURL(p.Path, max(p.Skip-p.Limit, 0), p.Limit))
 			}
-			if int64(p.Count) == p.Limit {
+			if hasNext(ctx, p) {
 				@pageButton(p.ID+"--next", "Next", pageURL(p.Path, p.Skip+p.Limit, p.Limit))
 			}
 		</div>
@@ -78,6 +80,15 @@ templ pageButton(id string, label string, url string) {
 	}) {
 		{ label }
 	}
+}
+
+// hasNext is whether there are rows after this page: before the total, for a search that counts its rows, or else
+// when the page is full
+func hasNext(ctx context.Context, p Props) bool {
+	if totals := apiutils.TotalsFrom(ctx); totals != nil {
+		return p.Skip+int64(p.Count) < totals.Total
+	}
+	return int64(p.Count) == p.Limit
 }
 
 func pageURL(path string, skip int64, limit int64) string {

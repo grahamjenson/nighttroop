@@ -381,6 +381,26 @@ func (q *Queries) GlucoseReadingHistoryIDs(ctx context.Context, arg GlucoseReadi
 	return items, nil
 }
 
+const glucoseReadingTotals = `-- name: GlucoseReadingTotals :one
+SELECT COUNT(*) AS total, CAST(COALESCE(MIN(occurred_at), 0) AS INTEGER) AS earliest_at,
+    CAST(COALESCE(MAX(occurred_at), 0) AS INTEGER) AS latest_at
+FROM glucose_readings WHERE deleted_at IS NULL
+`
+
+type GlucoseReadingTotalsRow struct {
+	Total      int64
+	EarliestAt int64
+	LatestAt   int64
+}
+
+// How many glucose readings AllGlucoseReadings pages through, and when the earliest and latest occurred, 0 when there are none
+func (q *Queries) GlucoseReadingTotals(ctx context.Context) (*GlucoseReadingTotalsRow, error) {
+	row := q.queryRow(ctx, q.glucoseReadingTotalsStmt, glucoseReadingTotals)
+	var i GlucoseReadingTotalsRow
+	err := row.Scan(&i.Total, &i.EarliestAt, &i.LatestAt)
+	return &i, err
+}
+
 const hardDeleteGlucoseReading = `-- name: HardDeleteGlucoseReading :execresult
 DELETE FROM glucose_readings WHERE id = ?
 `

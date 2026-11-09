@@ -95,6 +95,11 @@ func (s *FoodIntakesCollection) SearchRows(ctx context.Context, collectionTx *si
 	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).AllFoodIntakes, siteapiutils.QueryToAllFoodIntakes(query))
 }
 
+// SearchTotals are how many the search pages through, and when the earliest and latest occurred
+func (s *FoodIntakesCollection) SearchTotals(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) (*apiutils.Totals, error) {
+	return siteapiutils.SearchTotals(ctx, collectionTx, (*sitedb.Queries).FoodIntakeTotals)
+}
+
 func (s *FoodIntakesCollection) SearchHTMXResponse(models []*sitemodels.SiteFoodIntake, query *apiutils.Query) templ.Component {
 	return site_data_templ.FoodIntakesTable(models, query.Skip, query.Limit)
 }

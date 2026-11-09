@@ -13,7 +13,7 @@ GET http://{{ site }}/data/temp-targets
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 0 "@result"
+ASSERT_LENGTH 0 "@result.items"
 
 // A temp target from the Nightscout API is listed
 NAME create_treatment
@@ -26,12 +26,12 @@ GET http://{{ site }}/data/temp-targets
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS 100 "@result.0.low_target"
-ASSERT_EQUALS 120 "@result.0.high_target"
-ASSERT_EQUALS "mg/dL" "@result.0.units"
-ASSERT_EQUALS 60 "@result.0.duration_minutes"
-ASSERT_EQUALS "Exercise" "@result.0.reason"
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS 100 "@result.items.0.low_target"
+ASSERT_EQUALS 120 "@result.items.0.high_target"
+ASSERT_EQUALS "mg/dL" "@result.items.0.units"
+ASSERT_EQUALS 60 "@result.items.0.duration_minutes"
+ASSERT_EQUALS "Exercise" "@result.items.0.reason"
 
 //////
 // CREATE AND UPDATE
@@ -71,16 +71,16 @@ GET http://{{ site }}/data/temp-targets?limit=1
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS 140 "@result.0.low_target"
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS 140 "@result.items.0.low_target"
 
 NAME second_page
 GET http://{{ site }}/data/temp-targets?limit=1&skip=1
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS 100 "@result.0.low_target"
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS 100 "@result.items.0.low_target"
 
 NAME create_temp_target_without_targets
 POST http://{{ site }}/data/temp-targets
@@ -164,7 +164,7 @@ GET http://{{ site }}/data/temp-targets
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
+ASSERT_LENGTH 1 "@result.items"
 
 NAME delete_unknown_temp_target
 DELETE http://{{ site }}/data/temp-targets/not-a-temp-target
@@ -188,9 +188,9 @@ GET http://{{ site }}/data/temp-targets
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS 5.55 "@result.0.low_target"
-ASSERT_EQUALS 6.66 "@result.0.high_target"
-ASSERT_EQUALS "mmol/L" "@result.0.units"
+ASSERT_EQUALS 5.55 "@result.items.0.low_target"
+ASSERT_EQUALS 6.66 "@result.items.0.high_target"
+ASSERT_EQUALS "mmol/L" "@result.items.0.units"
 
 NAME create_temp_target_mmol
 POST http://{{ site }}/data/temp-targets

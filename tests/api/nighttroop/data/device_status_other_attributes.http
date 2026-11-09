@@ -45,7 +45,7 @@ GET http://{{ site }}/summary
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS "loop" "@result.0.loop.loop_name"
+ASSERT_EQUALS "loop" "@result.items.0.loop.loop_name"
 
 // An update leaves them as they were
 NAME update_status

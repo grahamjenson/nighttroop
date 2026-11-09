@@ -347,6 +347,26 @@ func (q *Queries) SoftDeleteTempBasal(ctx context.Context, arg SoftDeleteTempBas
 	return q.exec(ctx, q.softDeleteTempBasalStmt, softDeleteTempBasal, arg.UpdatedByIdentityName, arg.ID)
 }
 
+const tempBasalTotals = `-- name: TempBasalTotals :one
+SELECT COUNT(*) AS total, CAST(COALESCE(MIN(occurred_at), 0) AS INTEGER) AS earliest_at,
+    CAST(COALESCE(MAX(occurred_at), 0) AS INTEGER) AS latest_at
+FROM temp_basals WHERE deleted_at IS NULL
+`
+
+type TempBasalTotalsRow struct {
+	Total      int64
+	EarliestAt int64
+	LatestAt   int64
+}
+
+// How many temp basals AllTempBasals pages through, and when the earliest and latest occurred, 0 when there are none
+func (q *Queries) TempBasalTotals(ctx context.Context) (*TempBasalTotalsRow, error) {
+	row := q.queryRow(ctx, q.tempBasalTotalsStmt, tempBasalTotals)
+	var i TempBasalTotalsRow
+	err := row.Scan(&i.Total, &i.EarliestAt, &i.LatestAt)
+	return &i, err
+}
+
 const updateTempBasal = `-- name: UpdateTempBasal :one
 
 UPDATE temp_basals SET

@@ -346,6 +346,26 @@ func (q *Queries) SoftDeleteTempTarget(ctx context.Context, arg SoftDeleteTempTa
 	return q.exec(ctx, q.softDeleteTempTargetStmt, softDeleteTempTarget, arg.UpdatedByIdentityName, arg.ID)
 }
 
+const tempTargetTotals = `-- name: TempTargetTotals :one
+SELECT COUNT(*) AS total, CAST(COALESCE(MIN(occurred_at), 0) AS INTEGER) AS earliest_at,
+    CAST(COALESCE(MAX(occurred_at), 0) AS INTEGER) AS latest_at
+FROM temp_targets WHERE deleted_at IS NULL
+`
+
+type TempTargetTotalsRow struct {
+	Total      int64
+	EarliestAt int64
+	LatestAt   int64
+}
+
+// How many temp targets AllTempTargets pages through, and when the earliest and latest occurred, 0 when there are none
+func (q *Queries) TempTargetTotals(ctx context.Context) (*TempTargetTotalsRow, error) {
+	row := q.queryRow(ctx, q.tempTargetTotalsStmt, tempTargetTotals)
+	var i TempTargetTotalsRow
+	err := row.Scan(&i.Total, &i.EarliestAt, &i.LatestAt)
+	return &i, err
+}
+
 const updateTempTarget = `-- name: UpdateTempTarget :one
 
 UPDATE temp_targets SET

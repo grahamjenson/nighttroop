@@ -21,13 +21,13 @@ GET http://{{ site }}/data/component-events
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS "ABC123" "@result.0.sensor_code"
-ASSERT_EQUALS "XYZ789" "@result.0.transmitter_id"
-ASSERT_EQUALS "PUMP123" "@result.0.pump_id"
-ASSERT_EQUALS "SERIAL123" "@result.0.pump_serial"
-ASSERT_EQUALS "Omnipod" "@result.0.pump_type"
-SET event_id {{ dig "read_site_events.result.0.id" }}
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "ABC123" "@result.items.0.sensor_code"
+ASSERT_EQUALS "XYZ789" "@result.items.0.transmitter_id"
+ASSERT_EQUALS "PUMP123" "@result.items.0.pump_id"
+ASSERT_EQUALS "SERIAL123" "@result.items.0.pump_serial"
+ASSERT_EQUALS "Omnipod" "@result.items.0.pump_type"
+SET event_id {{ dig "read_site_events.result.items.0.id" }}
 
 // Updating one of them leaves the others as they were
 NAME update_pump_serial

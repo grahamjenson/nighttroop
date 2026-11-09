@@ -5,7 +5,7 @@ GET http://{{ site }}/presets/food
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 0 "@result"
+ASSERT_LENGTH 0 "@result.items"
 
 // Presets are not data, so food intakes stay at /data/food
 NAME food_intakes_not_presets
@@ -13,7 +13,7 @@ GET http://{{ site }}/data/food
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 0 "@result"
+ASSERT_LENGTH 0 "@result.items"
 
 // Food from the Nightscout API is listed
 NAME create_ns_food
@@ -27,9 +27,9 @@ GET http://{{ site }}/presets/food
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS "Apple" "@result.0.name"
-ASSERT_EQUALS 15 "@result.0.carbs"
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "Apple" "@result.items.0.name"
+ASSERT_EQUALS 15 "@result.items.0.carbs"
 
 //////
 // CREATE AND UPDATE
@@ -74,16 +74,16 @@ GET http://{{ site }}/presets/food?limit=1
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS "Toast" "@result.0.name"
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "Toast" "@result.items.0.name"
 
 NAME second_page
 GET http://{{ site }}/presets/food?limit=1&skip=1
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS "Apple" "@result.0.name"
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "Apple" "@result.items.0.name"
 
 NAME create_food_preset_without_name
 POST http://{{ site }}/presets/food
@@ -172,7 +172,7 @@ GET http://{{ site }}/presets/food
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
+ASSERT_LENGTH 1 "@result.items"
 
 NAME ns_deleted_food_preset
 GET http://{{ .ns_site }}/api/v3/food/{{ .created_id }}

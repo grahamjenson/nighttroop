@@ -291,6 +291,17 @@ type Record struct {
 	UtcOffsetMinutes      *int64  `json:"utc_offset_minutes,omitempty"`
 }
 
+// SearchPage A page of a search, newest first. A data collection also counts what its search matches over every page, and when the earliest and latest occurred, in ms, null when it matches none.
+type SearchPage struct {
+	EarliestAt *int64 `json:"earliest_at"`
+	LatestAt   *int64 `json:"latest_at"`
+
+	// Limit 50 unless the request asks for another, at most 1000
+	Limit *int64 `json:"limit,omitempty"`
+	Skip  *int64 `json:"skip,omitempty"`
+	Total *int64 `json:"total,omitempty"`
+}
+
 // Summary The parts of the summary described here; the rest is kept in AdditionalProperties
 type Summary struct {
 	FoodIntakes          *[]FoodIntake          `json:"food_intakes,omitempty"`
@@ -308,8 +319,17 @@ type Summary struct {
 
 // SummaryList defines model for SummaryList.
 type SummaryList struct {
-	Result *[]Summary `json:"result,omitempty"`
-	Status *int       `json:"status,omitempty"`
+	Result *struct {
+		EarliestAt *int64     `json:"earliest_at"`
+		Items      *[]Summary `json:"items,omitempty"`
+		LatestAt   *int64     `json:"latest_at"`
+
+		// Limit 50 unless the request asks for another, at most 1000
+		Limit *int64 `json:"limit,omitempty"`
+		Skip  *int64 `json:"skip,omitempty"`
+		Total *int64 `json:"total,omitempty"`
+	} `json:"result,omitempty"`
+	Status *int `json:"status,omitempty"`
 }
 
 // SummaryLoopSlots The loop's IOB in U or COB in g every 5 minutes from midnight, as glucose is: a day's newest loop device report then, or else in the 5 minutes before, as one is kept only every 10 minutes once an hour old, null when there was none, and a week's or month's the mean of its days' then, to 2 decimals
@@ -407,8 +427,17 @@ type Deleted struct {
 
 // FoodIntakeList defines model for FoodIntakeList.
 type FoodIntakeList struct {
-	Result *[]FoodIntake `json:"result,omitempty"`
-	Status *int          `json:"status,omitempty"`
+	Result *struct {
+		EarliestAt *int64        `json:"earliest_at"`
+		Items      *[]FoodIntake `json:"items,omitempty"`
+		LatestAt   *int64        `json:"latest_at"`
+
+		// Limit 50 unless the request asks for another, at most 1000
+		Limit *int64 `json:"limit,omitempty"`
+		Skip  *int64 `json:"skip,omitempty"`
+		Total *int64 `json:"total,omitempty"`
+	} `json:"result,omitempty"`
+	Status *int `json:"status,omitempty"`
 }
 
 // FoodIntakeResult defines model for FoodIntakeResult.
@@ -419,8 +448,17 @@ type FoodIntakeResult struct {
 
 // GlucoseReadingList defines model for GlucoseReadingList.
 type GlucoseReadingList struct {
-	Result *[]GlucoseReading `json:"result,omitempty"`
-	Status *int              `json:"status,omitempty"`
+	Result *struct {
+		EarliestAt *int64            `json:"earliest_at"`
+		Items      *[]GlucoseReading `json:"items,omitempty"`
+		LatestAt   *int64            `json:"latest_at"`
+
+		// Limit 50 unless the request asks for another, at most 1000
+		Limit *int64 `json:"limit,omitempty"`
+		Skip  *int64 `json:"skip,omitempty"`
+		Total *int64 `json:"total,omitempty"`
+	} `json:"result,omitempty"`
+	Status *int `json:"status,omitempty"`
 }
 
 // GlucoseReadingResult defines model for GlucoseReadingResult.
@@ -431,8 +469,17 @@ type GlucoseReadingResult struct {
 
 // InsulinDoseList defines model for InsulinDoseList.
 type InsulinDoseList struct {
-	Result *[]InsulinDose `json:"result,omitempty"`
-	Status *int           `json:"status,omitempty"`
+	Result *struct {
+		EarliestAt *int64         `json:"earliest_at"`
+		Items      *[]InsulinDose `json:"items,omitempty"`
+		LatestAt   *int64         `json:"latest_at"`
+
+		// Limit 50 unless the request asks for another, at most 1000
+		Limit *int64 `json:"limit,omitempty"`
+		Skip  *int64 `json:"skip,omitempty"`
+		Total *int64 `json:"total,omitempty"`
+	} `json:"result,omitempty"`
+	Status *int `json:"status,omitempty"`
 }
 
 // InsulinDoseResult defines model for InsulinDoseResult.
@@ -443,8 +490,17 @@ type InsulinDoseResult struct {
 
 // LoopSettingsList defines model for LoopSettingsList.
 type LoopSettingsList struct {
-	Result *[]LoopSettings `json:"result,omitempty"`
-	Status *int            `json:"status,omitempty"`
+	Result *struct {
+		EarliestAt *int64          `json:"earliest_at"`
+		Items      *[]LoopSettings `json:"items,omitempty"`
+		LatestAt   *int64          `json:"latest_at"`
+
+		// Limit 50 unless the request asks for another, at most 1000
+		Limit *int64 `json:"limit,omitempty"`
+		Skip  *int64 `json:"skip,omitempty"`
+		Total *int64 `json:"total,omitempty"`
+	} `json:"result,omitempty"`
+	Status *int `json:"status,omitempty"`
 }
 
 // LoopSettingsResult defines model for LoopSettingsResult.

@@ -10,6 +10,9 @@ import (
 // MaxQueryLimit is the most models one query returns, so no request can read a whole table at once
 const MaxQueryLimit = 1000
 
+// DefaultQueryLimit is how many models a query without a limit returns, a page of a table
+const DefaultQueryLimit = 50
+
 // MaxSearchLength is the longest text a search looks for
 const MaxSearchLength = 64
 

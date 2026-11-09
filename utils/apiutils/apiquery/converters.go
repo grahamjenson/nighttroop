@@ -19,12 +19,12 @@ type QueryConverter interface {
 	QueryValuesToQuery(source QueryValues) Query
 }
 
-// GetLimitInt64 defaults a missing or bad limit to MaxQueryLimit, and caps it there
+// GetLimitInt64 defaults a missing or bad limit to DefaultQueryLimit, a page, and caps it at MaxQueryLimit
 func GetLimitInt64(source QueryValues) int64 {
-	if source.Limit == nil || *source.Limit <= 0 || *source.Limit > MaxQueryLimit {
-		return MaxQueryLimit
+	if source.Limit == nil || *source.Limit <= 0 {
+		return DefaultQueryLimit
 	}
-	return source.Limit.Int64()
+	return min(source.Limit.Int64(), MaxQueryLimit)
 }
 
 func GetSkipInt64(source QueryValues) int64 {

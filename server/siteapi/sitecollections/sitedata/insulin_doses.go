@@ -99,6 +99,11 @@ func (s *InsulinDosesCollection) SearchRows(ctx context.Context, collectionTx *s
 	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).AllInsulinDoses, siteapiutils.QueryToAllInsulinDoses(query))
 }
 
+// SearchTotals are how many the search pages through, and when the earliest and latest occurred
+func (s *InsulinDosesCollection) SearchTotals(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) (*apiutils.Totals, error) {
+	return siteapiutils.SearchTotals(ctx, collectionTx, (*sitedb.Queries).InsulinDoseTotals)
+}
+
 func (s *InsulinDosesCollection) SearchHTMXResponse(models []*sitemodels.SiteInsulinDose, query *apiutils.Query) templ.Component {
 	return site_data_templ.InsulinDosesTable(models, query.Skip, query.Limit)
 }

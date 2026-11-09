@@ -8,11 +8,13 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
 
 	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/utils/apiutils"
 )
 
 type Props struct {
@@ -50,7 +52,7 @@ func Pager(p Props) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templruntime.NewAttributeExpression(p.ID + "--showing").Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pager/pager.templ`, Line: 24, Col: 31}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pager/pager.templ`, Line: 26, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 		if templ_7745c5c3_Err != nil {
@@ -63,7 +65,7 @@ func Pager(p Props) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templruntime.NewAttributeExpression(strconv.FormatInt(p.Skip, 10)).Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pager/pager.templ`, Line: 24, Col: 81}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pager/pager.templ`, Line: 26, Col: 81}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 		if templ_7745c5c3_Err != nil {
@@ -77,7 +79,7 @@ func Pager(p Props) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("Showing %d to %d", p.Skip+1, p.Skip+int64(p.Count)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pager/pager.templ`, Line: 26, Col: 70}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pager/pager.templ`, Line: 28, Col: 70}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -94,7 +96,7 @@ func Pager(p Props) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		if int64(p.Count) == p.Limit {
+		if hasNext(ctx, p) {
 			templ_7745c5c3_Err = pageButton(p.ID+"--next", "Next", pageURL(p.Path, p.Skip+p.Limit, p.Limit)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -134,7 +136,7 @@ func Empty(id string, columns int, text string) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templruntime.NewAttributeExpression(id).Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pager/pager.templ`, Line: 43, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pager/pager.templ`, Line: 45, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
 		if templ_7745c5c3_Err != nil {
@@ -147,7 +149,7 @@ func Empty(id string, columns int, text string) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templruntime.NewAttributeExpression(strconv.Itoa(columns)).Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pager/pager.templ`, Line: 43, Col: 91}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pager/pager.templ`, Line: 45, Col: 91}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
@@ -160,7 +162,7 @@ func Empty(id string, columns int, text string) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(text)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pager/pager.templ`, Line: 43, Col: 134}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pager/pager.templ`, Line: 45, Col: 134}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -253,7 +255,7 @@ func pageButton(id string, label string, url string) templ.Component {
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pager/pager.templ`, Line: 79, Col: 9}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pager/pager.templ`, Line: 81, Col: 9}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -276,6 +278,15 @@ func pageButton(id string, label string, url string) templ.Component {
 		}
 		return nil
 	})
+}
+
+// hasNext is whether there are rows after this page: before the total, for a search that counts its rows, or else
+// when the page is full
+func hasNext(ctx context.Context, p Props) bool {
+	if totals := apiutils.TotalsFrom(ctx); totals != nil {
+		return p.Skip+int64(p.Count) < totals.Total
+	}
+	return int64(p.Count) == p.Limit
 }
 
 func pageURL(path string, skip int64, limit int64) string {

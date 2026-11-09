@@ -32,12 +32,12 @@ GET http://{{ site }}/settings/connectors
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS "libre" "@result.0.type"
-ASSERT_EQUALS "GLOBAL" "@result.0.region"
-ASSERT_EQUALS false "@result.0.enabled"
-ASSERT_EQUALS "********" "@result.0.password"
-ASSERT_CONTAINS "The first sync failed, so syncing has been turned off" "@result.0.previous_sync_errors.0"
-ASSERT_CONTAINS "libre authentication failed" "@result.0.previous_sync_errors.0"
+ASSERT_EQUALS "libre" "@result.items.0.type"
+ASSERT_EQUALS "GLOBAL" "@result.items.0.region"
+ASSERT_EQUALS false "@result.items.0.enabled"
+ASSERT_EQUALS "********" "@result.items.0.password"
+ASSERT_CONTAINS "The first sync failed, so syncing has been turned off" "@result.items.0.previous_sync_errors.0"
+ASSERT_CONTAINS "libre authentication failed" "@result.items.0.previous_sync_errors.0"
 
 NAME update_libre_sync_unknown_region
 POST http://{{ site }}/settings/connectors/libre
@@ -60,9 +60,9 @@ GET http://{{ site }}/settings/connectors
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS "valid-libre-user@example.com" "@result.0.url_or_username"
-ASSERT_EQUALS "EU" "@result.0.region"
-ASSERT_EQUALS true "@result.0.enabled"
+ASSERT_EQUALS "valid-libre-user@example.com" "@result.items.0.url_or_username"
+ASSERT_EQUALS "EU" "@result.items.0.region"
+ASSERT_EQUALS true "@result.items.0.enabled"
 
 NAME delete_libre_sync
 DELETE http://{{ site }}/settings/connectors/libre

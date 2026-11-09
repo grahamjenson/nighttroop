@@ -494,6 +494,26 @@ func (q *Queries) EventGroupHistoryIDs(ctx context.Context, arg EventGroupHistor
 	return items, nil
 }
 
+const eventGroupTotals = `-- name: EventGroupTotals :one
+SELECT COUNT(*) AS total, CAST(COALESCE(MIN(occurred_at), 0) AS INTEGER) AS earliest_at,
+    CAST(COALESCE(MAX(occurred_at), 0) AS INTEGER) AS latest_at
+FROM event_groups WHERE deleted_at IS NULL
+`
+
+type EventGroupTotalsRow struct {
+	Total      int64
+	EarliestAt int64
+	LatestAt   int64
+}
+
+// How many event groups AllEventGroups pages through, and when the earliest and latest occurred, 0 when there are none
+func (q *Queries) EventGroupTotals(ctx context.Context) (*EventGroupTotalsRow, error) {
+	row := q.queryRow(ctx, q.eventGroupTotalsStmt, eventGroupTotals)
+	var i EventGroupTotalsRow
+	err := row.Scan(&i.Total, &i.EarliestAt, &i.LatestAt)
+	return &i, err
+}
+
 const eventsToGroup = `-- name: EventsToGroup :many
 WITH params AS (
     SELECT CAST(?1 AS TEXT) AS group_id, CAST(?2 AS INTEGER) AS from_ms,

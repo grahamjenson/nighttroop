@@ -6,10 +6,10 @@ GET http://{{ site }}/summary
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS null "@result.0.last_week.time_in_range"
-ASSERT_EQUALS 0 "@result.0.last_week.total_daily_dose"
-ASSERT_EQUALS null "@result.0.last_fortnight.time_in_range"
-ASSERT_EQUALS null "@result.0.last_month.time_in_range"
+ASSERT_EQUALS null "@result.items.0.last_week.time_in_range"
+ASSERT_EQUALS 0 "@result.items.0.last_week.total_daily_dose"
+ASSERT_EQUALS null "@result.items.0.last_fortnight.time_in_range"
+ASSERT_EQUALS null "@result.items.0.last_month.time_in_range"
 
 // A week ago, always in last week, in the site's default UTC: a reading in range at noon, one over the range high 5
 // minutes later, and a 2 U bolus
@@ -37,8 +37,8 @@ GET http://{{ site }}/summary
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS 50 "@result.0.last_week.time_in_range"
-ASSERT_EQUALS 2 "@result.0.last_week.total_daily_dose"
+ASSERT_EQUALS 50 "@result.items.0.last_week.time_in_range"
+ASSERT_EQUALS 2 "@result.items.0.last_week.total_daily_dose"
 
 // The background job builds and keeps last week, so it stays after its day is deleted
 RUN_BACKGROUND_JOBS
@@ -54,8 +54,8 @@ GET http://{{ site }}/summary
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS 50 "@result.0.last_week.time_in_range"
-ASSERT_EQUALS 2 "@result.0.last_week.total_daily_dose"
+ASSERT_EQUALS 50 "@result.items.0.last_week.time_in_range"
+ASSERT_EQUALS 2 "@result.items.0.last_week.total_daily_dose"
 
 
 // A new week start day deletes the weeks and fortnights, which no longer follow it, so once the jobs run the kept ones
@@ -81,6 +81,6 @@ GET http://{{ site }}/summary
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS null "@result.0.last_week.time_in_range"
-ASSERT_EQUALS 0 "@result.0.last_week.total_daily_dose"
-ASSERT_EQUALS null "@result.0.last_fortnight.time_in_range"
+ASSERT_EQUALS null "@result.items.0.last_week.time_in_range"
+ASSERT_EQUALS 0 "@result.items.0.last_week.total_daily_dose"
+ASSERT_EQUALS null "@result.items.0.last_fortnight.time_in_range"

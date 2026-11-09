@@ -325,6 +325,30 @@ func (q *Queries) DeviceReportHistoryIDs(ctx context.Context, arg DeviceReportHi
 	return items, nil
 }
 
+const deviceReportTotals = `-- name: DeviceReportTotals :one
+SELECT COUNT(*) AS total, CAST(COALESCE(MIN(occurred_at), 0) AS INTEGER) AS earliest_at,
+    CAST(COALESCE(MAX(occurred_at), 0) AS INTEGER) AS latest_at
+FROM device_reports WHERE deleted_at IS NULL AND created_by_device_name = ?1
+`
+
+type DeviceReportTotalsParams struct {
+	Device *string
+}
+
+type DeviceReportTotalsRow struct {
+	Total      int64
+	EarliestAt int64
+	LatestAt   int64
+}
+
+// How many a device's statuses DeviceReportsForDevice pages through, and when the earliest and latest occurred, 0 when there are none
+func (q *Queries) DeviceReportTotals(ctx context.Context, arg DeviceReportTotalsParams) (*DeviceReportTotalsRow, error) {
+	row := q.queryRow(ctx, q.deviceReportTotalsStmt, deviceReportTotals, arg.Device)
+	var i DeviceReportTotalsRow
+	err := row.Scan(&i.Total, &i.EarliestAt, &i.LatestAt)
+	return &i, err
+}
+
 const deviceReportsForDevice = `-- name: DeviceReportsForDevice :many
 SELECT id, device_battery_percent, is_device_charging, pump_state, pump_reservoir, pump_battery_percent, pump_charging_state, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob, configuration_id, loop_status_json, loop_name, pump_clock, pump_manufacturer, pump_model, override_json, pump_json, uploader_json, other_attributes, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name FROM device_reports
 WHERE deleted_at IS NULL AND created_by_device_name = ?1

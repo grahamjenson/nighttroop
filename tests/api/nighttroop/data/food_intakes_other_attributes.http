@@ -26,16 +26,16 @@ GET http://{{ site }}/data/food
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS "Fast Food" "@result.0.category"
-ASSERT_EQUALS "Italian" "@result.0.subcategory"
-ASSERT_EQUALS 10 "@result.0.fat"
-ASSERT_EQUALS 20 "@result.0.protein"
-ASSERT_EQUALS 5 "@result.0.fibre"
-ASSERT_EQUALS 300 "@result.0.energy"
-ASSERT_EQUALS 2 "@result.0.portions"
-ASSERT_EQUALS 10 "@result.0.pre_bolus"
-SET food_id {{ dig "read_site_food.result.0.id" }}
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "Fast Food" "@result.items.0.category"
+ASSERT_EQUALS "Italian" "@result.items.0.subcategory"
+ASSERT_EQUALS 10 "@result.items.0.fat"
+ASSERT_EQUALS 20 "@result.items.0.protein"
+ASSERT_EQUALS 5 "@result.items.0.fibre"
+ASSERT_EQUALS 300 "@result.items.0.energy"
+ASSERT_EQUALS 2 "@result.items.0.portions"
+ASSERT_EQUALS 10 "@result.items.0.pre_bolus"
+SET food_id {{ dig "read_site_food.result.items.0.id" }}
 
 // Updating one of them leaves the others as they were
 NAME update_fat

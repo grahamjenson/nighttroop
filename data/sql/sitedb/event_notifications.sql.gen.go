@@ -196,6 +196,26 @@ func (q *Queries) HardDeleteNotificationEvent(ctx context.Context, arg HardDelet
 	return q.exec(ctx, q.hardDeleteNotificationEventStmt, hardDeleteNotificationEvent, arg.ID)
 }
 
+const notificationEventTotals = `-- name: NotificationEventTotals :one
+SELECT COUNT(*) AS total, CAST(COALESCE(MIN(occurred_at), 0) AS INTEGER) AS earliest_at,
+    CAST(COALESCE(MAX(occurred_at), 0) AS INTEGER) AS latest_at
+FROM notification_events WHERE deleted_at IS NULL
+`
+
+type NotificationEventTotalsRow struct {
+	Total      int64
+	EarliestAt int64
+	LatestAt   int64
+}
+
+// How many notifications AllNotificationEvents pages through, and when the earliest and latest occurred, 0 when there are none
+func (q *Queries) NotificationEventTotals(ctx context.Context) (*NotificationEventTotalsRow, error) {
+	row := q.queryRow(ctx, q.notificationEventTotalsStmt, notificationEventTotals)
+	var i NotificationEventTotalsRow
+	err := row.Scan(&i.Total, &i.EarliestAt, &i.LatestAt)
+	return &i, err
+}
+
 const searchNotificationEvents = `-- name: SearchNotificationEvents :many
 SELECT id, notification_type, title, severity, content, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM notification_events
 WHERE

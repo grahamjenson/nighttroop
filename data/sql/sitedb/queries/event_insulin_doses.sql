@@ -31,6 +31,12 @@ WHERE (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
+-- name: InsulinDoseTotals :one
+-- How many insulin doses AllInsulinDoses pages through, and when the earliest and latest occurred, 0 when there are none
+SELECT COUNT(*) AS total, CAST(COALESCE(MIN(occurred_at), 0) AS INTEGER) AS earliest_at,
+    CAST(COALESCE(MAX(occurred_at), 0) AS INTEGER) AS latest_at
+FROM insulin_doses WHERE deleted_at IS NULL;
+
 
 -- name: GetInsulinDose :one
 SELECT * FROM insulin_doses WHERE id = ? AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL);
