@@ -548,7 +548,7 @@ templ siteActions(site *controlmodels.Site) {
 				}
 			}
 			if isAdmin(ctx) {
-				@actionCard("control--site--action-download-db", "Download DB", "Downloads a copy of its DB as it is now, as one SQLite file. Its admins see that you did, in its events.",
+				@actionCard("control--site--action-download-db", "Download DB", "Downloads the zip of its DB its admins get from Download Data. Its admins see that you did, in its events.",
 					unless(site.State == "live" || site.State == "disabled", "Offered while its DB is here, before it is archived."), icon.Download) {
 					@button.Button(button.Props{
 						ID:         "control--site--download-db",
