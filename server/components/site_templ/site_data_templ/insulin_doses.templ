@@ -19,12 +19,11 @@ import (
 // InsulinDosesTable shows one page of insulin doses, newest first, with buttons to the pages either side
 templ InsulinDosesTable(insulinDoses []*sitemodels.SiteInsulinDose, skip int64, limit int64) {
 	<div id="insulin_doses_table" class="mx-auto max-w-5xl space-y-6">
-		@heading.Page("Insulin Doses") {
+		@heading.PageWith("Insulin Doses", addmodal.Open("site--insulin--add", "/data/insulin/new", "Add Insulin Dose")) {
 			Newest first. Click an insulin dose to see all its details.
 		}
 		@searchTotals("site--insulin", "insulin dose", "insulin doses")
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			@addmodal.Open("site--insulin--add", "/data/insulin/new", "Add Insulin Dose")
 			@table.Table(table.Props{
 				ID:    "insulinDosesTable",
 				Class: "rounded-lg border border-gray-200",

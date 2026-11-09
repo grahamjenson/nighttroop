@@ -19,12 +19,11 @@ import (
 // NotificationEventsTable shows one page of notifications, newest first, with buttons to the pages either side
 templ NotificationEventsTable(events []*sitemodels.SiteNotificationEvent, skip int64, limit int64) {
 	<div id="notification_events_table" class="mx-auto max-w-5xl space-y-6">
-		@heading.Page("Notifications") {
+		@heading.PageWith("Notifications", addmodal.Open("site--notification--add", "/data/notifications/new", "Add Notification")) {
 			Newest first. Click a notification to see all its details.
 		}
 		@searchTotals("site--notification", "notification", "notifications")
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			@addmodal.Open("site--notification--add", "/data/notifications/new", "Add Notification")
 			@table.Table(table.Props{
 				ID:    "notificationEventsTable",
 				Class: "rounded-lg border border-gray-200",

@@ -19,12 +19,11 @@ import (
 // FoodIntakesTable shows one page of food intakes, newest first, with buttons to the pages either side
 templ FoodIntakesTable(foodIntakes []*sitemodels.SiteFoodIntake, skip int64, limit int64) {
 	<div id="food_intakes_table" class="mx-auto max-w-5xl space-y-6">
-		@heading.Page("Food Intakes") {
+		@heading.PageWith("Food Intakes", addmodal.Open("site--food--add", "/data/food/new", "Add Food Intake")) {
 			Newest first. Click a food intake to see all its details.
 		}
 		@searchTotals("site--food", "food intake", "food intakes")
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			@addmodal.Open("site--food--add", "/data/food/new", "Add Food Intake")
 			@table.Table(table.Props{
 				ID:    "foodIntakesTable",
 				Class: "rounded-lg border border-gray-200",
