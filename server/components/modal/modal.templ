@@ -90,3 +90,11 @@ templ DetailIfSet(label string, value string) {
 templ Section(title string) {
 	<dt role="heading" aria-level="3" class="col-span-2 mt-3 border-t border-gray-100 pt-3 font-medium text-gray-900">{ title }</dt>
 }
+
+// Submit is a modal's action submitting its form, by the form's ID, as Save, beside Close at its foot where a modal's
+// actions are looked for, rather than in the middle of its details
+templ Submit(form, label string) {
+	@button.Button(button.Props{ID: form + "--submit", Type: button.TypeSubmit, Form: form}) {
+		{ label }
+	}
+}

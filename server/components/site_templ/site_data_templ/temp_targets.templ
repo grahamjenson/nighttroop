@@ -184,7 +184,7 @@ templ tempTargetRow(tempTarget *sitemodels.SiteTempTarget) {
 }
 
 templ TempTargetModal(tempTarget *sitemodels.SiteTempTarget) {
-	@modal.Modal(modal.Props{ID: "site--temp-target--details", Title: fmt.Sprintf("%s to %s %s for %d minutes", formatGlucose(tempTarget.LowTarget, tempTarget.Units), formatGlucose(tempTarget.HighTarget, tempTarget.Units), orDash(tempTarget.Units), tempTarget.DurationMinutes), Subtitle: formatReadingDate(ctx, tempTarget.OccurredAt)}) {
+	@modal.Modal(modal.Props{ID: "site--temp-target--details", Title: fmt.Sprintf("%s to %s %s for %d minutes", formatGlucose(tempTarget.LowTarget, tempTarget.Units), formatGlucose(tempTarget.HighTarget, tempTarget.Units), orDash(tempTarget.Units), tempTarget.DurationMinutes), Subtitle: formatReadingDate(ctx, tempTarget.OccurredAt), Actions: modal.Submit("site--temp-target--edit", "Save")}) {
 		<form
 			id="site--temp-target--edit"
 			class="mt-4 flex flex-wrap items-end gap-2"
@@ -195,9 +195,6 @@ templ TempTargetModal(tempTarget *sitemodels.SiteTempTarget) {
 			hx-status:5xx="target:#toaster swap:beforeend"
 		>
 			@tempTargetInputs("site--temp-target--edit", formatGlucose(tempTarget.LowTarget, tempTarget.Units), formatGlucose(tempTarget.HighTarget, tempTarget.Units), fmt.Sprint(tempTarget.DurationMinutes), orEmpty(tempTarget.Notes))
-			@button.Button(button.Props{ID: "site--temp-target--edit--submit", Type: button.TypeSubmit}) {
-				Save
-			}
 		</form>
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@readingDetail("Insulin Needs Scale Factor", orDash(tempTarget.InsulinNeedsScaleFactor))

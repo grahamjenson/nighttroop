@@ -162,7 +162,7 @@ templ foodIntakeRow(foodIntake *sitemodels.SiteFoodIntake) {
 }
 
 templ FoodIntakeModal(foodIntake *sitemodels.SiteFoodIntake) {
-	@modal.Modal(modal.Props{ID: "site--food--details", Title: fmt.Sprintf("%s g carbs", orDash(foodIntake.Carbs)), Subtitle: formatReadingDate(ctx, foodIntake.OccurredAt)}) {
+	@modal.Modal(modal.Props{ID: "site--food--details", Title: fmt.Sprintf("%s g carbs", orDash(foodIntake.Carbs)), Subtitle: formatReadingDate(ctx, foodIntake.OccurredAt), Actions: modal.Submit("site--food--edit", "Save")}) {
 		<form
 			id="site--food--edit"
 			class="mt-4 flex flex-wrap items-end gap-2"
@@ -173,9 +173,6 @@ templ FoodIntakeModal(foodIntake *sitemodels.SiteFoodIntake) {
 			hx-status:5xx="target:#toaster swap:beforeend"
 		>
 			@foodIntakeInputs("site--food--edit", orDash(foodIntake.Carbs), orEmpty(foodIntake.Name), orEmpty(foodIntake.Notes))
-			@button.Button(button.Props{ID: "site--food--edit--submit", Type: button.TypeSubmit}) {
-				Save
-			}
 		</form>
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@readingDetail("Name", orDash(foodIntake.Name))
