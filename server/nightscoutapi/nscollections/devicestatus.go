@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
-	datatypes "nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
@@ -65,14 +64,7 @@ func (c DeviceStatusCollection) UpdateModel(q *sitedb.Queries, ctx context.Conte
 	updateParams := nightscoutmodels.DeviceStatusToUpdateDeviceReport(nsModel, uc)
 	updateParams.ID = identifier
 	// An update changes its pump and uploader, kept as sent; its columns are as it was made
-	other := datatypes.DeviceReportOther{}
-	if nsModel.Pump != nil {
-		other.Pump, _ = json.Marshal(nsModel.Pump)
-	}
-	if nsModel.Uploader != nil {
-		other.Uploader, _ = json.Marshal(nsModel.Uploader)
-	}
-	updateParams.OtherAttributes = datatypes.OtherJSON(other)
+	updateParams.PumpJson, updateParams.UploaderJson = jsonp(nsModel.Pump), jsonp(nsModel.Uploader)
 	return q.UpdateDeviceReport(ctx, updateParams)
 }
 
@@ -112,9 +104,8 @@ func DBToNightscoutDeviceStatus(source *sitedb.DeviceReport, siteContext *httput
 	if source.DeviceBatteryPercent != nil {
 		nsModel.UploaderBattery = ptr(types.FlexibleFloat64(*source.DeviceBatteryPercent))
 	}
-	other := source.OtherAttributes
-	if other.Override != nil {
-		nsModel.OverrideRaw = &other.Override
+	if source.OverrideJson != nil {
+		nsModel.OverrideRaw = ptr(json.RawMessage(*source.OverrideJson))
 	}
 
 	/////
@@ -125,11 +116,11 @@ func DBToNightscoutDeviceStatus(source *sitedb.DeviceReport, siteContext *httput
 	// rest, as for one kept before them
 	pump := nightscoutmodels.PumpStatus{}
 	uploader := nightscoutmodels.UploaderStatus{}
-	if other.Pump != nil {
-		_ = json.Unmarshal(other.Pump, &pump)
+	if source.PumpJson != nil {
+		_ = json.Unmarshal([]byte(*source.PumpJson), &pump)
 	}
-	if other.Uploader != nil {
-		_ = json.Unmarshal(other.Uploader, &uploader)
+	if source.UploaderJson != nil {
+		_ = json.Unmarshal([]byte(*source.UploaderJson), &uploader)
 	}
 	// Loop and Trio send the phone's battery and charging in uploader, where LoopFollow reads them
 	if uploader.Battery == nil && source.DeviceBatteryPercent != nil {
@@ -141,11 +132,11 @@ func DBToNightscoutDeviceStatus(source *sitedb.DeviceReport, siteContext *httput
 	if uploader != (nightscoutmodels.UploaderStatus{}) {
 		nsModel.Uploader = &uploader
 	}
-	if pump.Manufacturer == nil && other.PumpManufacturer != nil {
-		pump.Manufacturer = (*types.ShortString)(other.PumpManufacturer)
+	if pump.Manufacturer == nil && source.PumpManufacturer != nil {
+		pump.Manufacturer = (*types.ShortString)(source.PumpManufacturer)
 	}
-	if pump.Model == nil && other.PumpModel != nil {
-		pump.Model = (*types.ShortString)(other.PumpModel)
+	if pump.Model == nil && source.PumpModel != nil {
+		pump.Model = (*types.ShortString)(source.PumpModel)
 	}
 	if pump.Battery == nil && source.PumpBatteryPercent != nil {
 		pump.Battery = &nightscoutmodels.PumpBattery{Percent: ptr(types.FlexibleFloat64(*source.PumpBatteryPercent))}
@@ -153,8 +144,8 @@ func DBToNightscoutDeviceStatus(source *sitedb.DeviceReport, siteContext *httput
 	if pump.Reservoir == nil && source.PumpReservoir != nil {
 		pump.Reservoir = ptr(types.FlexibleFloat64(*source.PumpReservoir))
 	}
-	if pump.Clock == nil && other.PumpClock != nil {
-		pump.Clock = ptr(types.DateStringFromInt64AndUTCOffset(*other.PumpClock, nil))
+	if pump.Clock == nil && source.PumpClock != nil {
+		pump.Clock = ptr(types.DateStringFromInt64AndUTCOffset(*source.PumpClock, nil))
 	}
 	if pump != (nightscoutmodels.PumpStatus{}) {
 		nsModel.Pump = &pump
@@ -170,16 +161,16 @@ func DBToNightscoutDeviceStatus(source *sitedb.DeviceReport, siteContext *httput
 
 	// The loop's status goes back as its openaps or loop object, as it was sent, or, once a newer one came in and it was
 	// cleared, as what was extracted of it, its IOB and COB
-	if other.LoopName != nil {
-		status := extractedLoopStatus(*other.LoopName, source)
+	if source.LoopName != nil {
+		status := extractedLoopStatus(*source.LoopName, source)
 		if source.LoopStatusJson != nil {
 			status = json.RawMessage(*source.LoopStatusJson)
 		}
 		switch {
 		case status == nil:
-		case *other.LoopName == "openaps":
+		case *source.LoopName == "openaps":
 			nsModel.OpenAPSRaw = &status
-		case *other.LoopName == "loop":
+		case *source.LoopName == "loop":
 			nsModel.LoopRaw = &status
 		}
 	}
@@ -236,15 +227,10 @@ func NightscoutToDBCreateDeviceReport(source nightscoutmodels.DeviceStatus, ctx 
 		createParams.IsDeviceCharging = ptr(bool(*source.Uploader.IsCharging))
 	}
 	if source.OverrideRaw != nil {
-		createParams.OtherAttributes.Override = *source.OverrideRaw
+		createParams.OverrideJson = ptr(string(*source.OverrideRaw))
 	}
 	// The pump and uploader are kept as the model reads them, so only their known fields, for those without a column
-	if source.Pump != nil {
-		createParams.OtherAttributes.Pump, _ = json.Marshal(source.Pump)
-	}
-	if source.Uploader != nil {
-		createParams.OtherAttributes.Uploader, _ = json.Marshal(source.Uploader)
-	}
+	createParams.PumpJson, createParams.UploaderJson = jsonp(source.Pump), jsonp(source.Uploader)
 
 	/////
 	// Pumps
@@ -259,10 +245,10 @@ func NightscoutToDBCreateDeviceReport(source nightscoutmodels.DeviceStatus, ctx 
 			createParams.PumpReservoir = ptr(float64(*source.Pump.Reservoir))
 		}
 		if source.Pump.Clock != nil {
-			createParams.OtherAttributes.PumpClock = source.Pump.Clock.UnixMillip()
+			createParams.PumpClock = source.Pump.Clock.UnixMillip()
 		}
-		createParams.OtherAttributes.PumpManufacturer = source.Pump.Manufacturer.Stringp()
-		createParams.OtherAttributes.PumpModel = source.Pump.Model.Stringp()
+		createParams.PumpManufacturer = source.Pump.Manufacturer.Stringp()
+		createParams.PumpModel = source.Pump.Model.Stringp()
 	}
 
 	// Loop's are set last, so a status with both keeps Loop's settings, IOB, COB and predictions over OpenAPS's
@@ -279,7 +265,7 @@ func NightscoutToDBCreateDeviceReport(source nightscoutmodels.DeviceStatus, ctx 
 // setOpenAPSColumns keeps an OpenAPS loop's status, with its predictions, and its IOB and COB
 func setOpenAPSColumns(params *sitedb.CreateDeviceReportParams, openAPS *nightscoutmodels.OpenAPSStatus, raw json.RawMessage) {
 	params.LoopStatusJson = ptr(string(raw))
-	params.OtherAttributes.LoopName = ptr("openaps")
+	params.LoopName = ptr("openaps")
 	if iob := openAPS.IOB; iob != nil {
 		params.LoopIob = iob.IOB.Float64p()
 		params.LoopIobBasal = iob.BasalIOB.Float64p()
@@ -297,11 +283,20 @@ func setOpenAPSColumns(params *sitedb.CreateDeviceReportParams, openAPS *nightsc
 // setLoopColumns keeps Loop's status, with its predictions, and its IOB and COB
 func setLoopColumns(params *sitedb.CreateDeviceReportParams, loop *nightscoutmodels.LoopStatus, raw json.RawMessage) {
 	params.LoopStatusJson = ptr(string(raw))
-	params.OtherAttributes.LoopName = ptr("loop")
+	params.LoopName = ptr("loop")
 	if loop.IOB != nil {
 		params.LoopIob = loop.IOB.IOB.Float64p()
 	}
 	if loop.COB != nil {
 		params.LoopCob = loop.COB.COB.Float64p()
 	}
+}
+
+// jsonp is v as JSON, nil when it is
+func jsonp[T any](v *T) *string {
+	if v == nil {
+		return nil
+	}
+	raw, _ := json.Marshal(v)
+	return ptr(string(raw))
 }

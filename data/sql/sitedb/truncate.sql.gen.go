@@ -33,6 +33,28 @@ func (q *Queries) ClearOldLoopStatuses(ctx context.Context, arg ClearOldLoopStat
 	return err
 }
 
+const clearOldPumps = `-- name: ClearOldPumps :exec
+UPDATE device_reports SET pump_json = NULL
+WHERE device_reports.updated_at >= ?1 AND device_reports.pump_json IS NOT NULL
+    AND device_reports.occurred_at < (
+        SELECT MAX(newest.occurred_at) FROM device_reports AS newest
+        WHERE newest.created_by_device_name IS device_reports.created_by_device_name
+            AND newest.pump_json IS NOT NULL AND newest.deleted_at IS NULL
+    )
+`
+
+type ClearOldPumpsParams struct {
+	Since int64
+}
+
+// A pump as sent, the most of a report after its loop's status, is kept as that is: only on its device's newest report
+// with one, as followers read it from that one. What is worth keeping of the others, their battery, reservoir, clock,
+// manufacturer and model, was extracted into their own columns when they were written.
+func (q *Queries) ClearOldPumps(ctx context.Context, arg ClearOldPumpsParams) error {
+	_, err := q.exec(ctx, q.clearOldPumpsStmt, clearOldPumps, arg.Since)
+	return err
+}
+
 const deleteOldDeviceReports = `-- name: DeleteOldDeviceReports :exec
 DELETE FROM device_reports WHERE occurred_at < ?1
 `

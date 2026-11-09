@@ -4,7 +4,6 @@
 package sitedb
 
 import (
-	jsontext "encoding/json/jsontext"
 	types "nighttroop.t1d.nz/data/types"
 	consts "nighttroop.t1d.nz/utils/consts"
 )
@@ -330,37 +329,72 @@ func DeviceReportToCreate(source DeviceReport) CreateDeviceReportParams {
 		xstring4 := *source.LoopStatusJson
 		sitedbCreateDeviceReportParams.LoopStatusJson = &xstring4
 	}
+	if source.LoopName != nil {
+		xstring5 := *source.LoopName
+		sitedbCreateDeviceReportParams.LoopName = &xstring5
+	}
+	if source.PumpClock != nil {
+		xint64 := *source.PumpClock
+		sitedbCreateDeviceReportParams.PumpClock = &xint64
+	}
+	if source.PumpManufacturer != nil {
+		xstring6 := *source.PumpManufacturer
+		sitedbCreateDeviceReportParams.PumpManufacturer = &xstring6
+	}
+	if source.PumpModel != nil {
+		xstring7 := *source.PumpModel
+		sitedbCreateDeviceReportParams.PumpModel = &xstring7
+	}
+	if source.OverrideJson != nil {
+		xstring8 := *source.OverrideJson
+		sitedbCreateDeviceReportParams.OverrideJson = &xstring8
+	}
+	if source.PumpJson != nil {
+		xstring9 := *source.PumpJson
+		sitedbCreateDeviceReportParams.PumpJson = &xstring9
+	}
+	if source.UploaderJson != nil {
+		xstring10 := *source.UploaderJson
+		sitedbCreateDeviceReportParams.UploaderJson = &xstring10
+	}
 	sitedbCreateDeviceReportParams.OtherAttributes = typesDeviceReportOtherToTypesDeviceReportOther(source.OtherAttributes)
 	if source.UtcOffsetMinutes != nil {
-		xint64 := *source.UtcOffsetMinutes
-		sitedbCreateDeviceReportParams.UtcOffsetMinutes = &xint64
+		xint642 := *source.UtcOffsetMinutes
+		sitedbCreateDeviceReportParams.UtcOffsetMinutes = &xint642
 	}
 	sitedbCreateDeviceReportParams.OccurredAt = source.OccurredAt
 	if source.CreatedByAppName != nil {
-		xstring5 := *source.CreatedByAppName
-		sitedbCreateDeviceReportParams.CreatedByAppName = &xstring5
+		xstring11 := *source.CreatedByAppName
+		sitedbCreateDeviceReportParams.CreatedByAppName = &xstring11
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring6 := *source.CreatedByDeviceName
-		sitedbCreateDeviceReportParams.CreatedByDeviceName = &xstring6
+		xstring12 := *source.CreatedByDeviceName
+		sitedbCreateDeviceReportParams.CreatedByDeviceName = &xstring12
 	}
 	sitedbCreateDeviceReportParams.CreatedByIdentityName = source.CreatedByIdentityName
 	if source.CreatedByIdentityID != nil {
-		xint642 := *source.CreatedByIdentityID
-		sitedbCreateDeviceReportParams.CreatedByIdentityID = &xint642
+		xint643 := *source.CreatedByIdentityID
+		sitedbCreateDeviceReportParams.CreatedByIdentityID = &xint643
 	}
 	return sitedbCreateDeviceReportParams
 }
 func DeviceReportToUpdate(source DeviceReport) UpdateDeviceReportParams {
 	var sitedbUpdateDeviceReportParams UpdateDeviceReportParams
-	sitedbUpdateDeviceReportParams.OtherAttributes = DeviceReportOtherJSON(source.OtherAttributes)
+	if source.PumpJson != nil {
+		xstring := *source.PumpJson
+		sitedbUpdateDeviceReportParams.PumpJson = &xstring
+	}
+	if source.UploaderJson != nil {
+		xstring2 := *source.UploaderJson
+		sitedbUpdateDeviceReportParams.UploaderJson = &xstring2
+	}
 	if source.UpdatedByIdentityID != nil {
 		xint64 := *source.UpdatedByIdentityID
 		sitedbUpdateDeviceReportParams.UpdatedByIdentityID = &xint64
 	}
 	if source.UpdatedByIdentityName != nil {
-		xstring := *source.UpdatedByIdentityName
-		sitedbUpdateDeviceReportParams.UpdatedByIdentityName = &xstring
+		xstring3 := *source.UpdatedByIdentityName
+		sitedbUpdateDeviceReportParams.UpdatedByIdentityName = &xstring3
 	}
 	sitedbUpdateDeviceReportParams.ID = source.ID
 	return sitedbUpdateDeviceReportParams
@@ -1768,16 +1802,6 @@ func constsUnitsToConstsUnits(source consts.Units) consts.Units {
 	}
 	return constsUnits
 }
-func jsontextValueToJsontextValue(source jsontext.Value) jsontext.Value {
-	var jsontextValue jsontext.Value
-	if source != nil {
-		jsontextValue = make(jsontext.Value, len(source))
-		for i := 0; i < len(source); i++ {
-			jsontextValue[i] = source[i]
-		}
-	}
-	return jsontextValue
-}
 func sitedbActivitiesVwToSitedbActivitiesVw(source ActivitiesVw) ActivitiesVw {
 	var sitedbActivitiesVw ActivitiesVw
 	if source.ID != nil {
@@ -2625,25 +2649,7 @@ func typesComponentEventOtherToTypesComponentEventOther(source types.ComponentEv
 }
 func typesDeviceReportOtherToTypesDeviceReportOther(source types.DeviceReportOther) types.DeviceReportOther {
 	var typesDeviceReportOther types.DeviceReportOther
-	if source.PumpClock != nil {
-		xint64 := *source.PumpClock
-		typesDeviceReportOther.PumpClock = &xint64
-	}
-	if source.PumpManufacturer != nil {
-		xstring := *source.PumpManufacturer
-		typesDeviceReportOther.PumpManufacturer = &xstring
-	}
-	if source.PumpModel != nil {
-		xstring2 := *source.PumpModel
-		typesDeviceReportOther.PumpModel = &xstring2
-	}
-	typesDeviceReportOther.Override = jsontextValueToJsontextValue(source.Override)
-	if source.LoopName != nil {
-		xstring3 := *source.LoopName
-		typesDeviceReportOther.LoopName = &xstring3
-	}
-	typesDeviceReportOther.Pump = jsontextValueToJsontextValue(source.Pump)
-	typesDeviceReportOther.Uploader = jsontextValueToJsontextValue(source.Uploader)
+	_ = source
 	return typesDeviceReportOther
 }
 func typesEventGroupOtherToTypesEventGroupOther(source types.EventGroupOther) types.EventGroupOther {

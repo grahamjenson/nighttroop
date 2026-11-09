@@ -103,7 +103,7 @@ var nightscoutCollections = []struct {
 	{nsutils.Entries, 3, 500, createDocuments},
 	{nsutils.Treatments, 20, 200, createDocuments},
 	// An old device status's loop status is of no use, and most of a looping site's DB; its IOB and COB are kept
-	{nsutils.Devicestatus, 10, 50, createWithoutLoopStatus},
+	{nsutils.Devicestatus, 10, 50, createWithoutStatuses},
 }
 
 // syncNightscoutCollection copies a collection's newest documents into the site, returning how many were new
@@ -123,8 +123,8 @@ const (
 	createDocuments saveDocuments = iota
 	// replaceDocuments replaces the site's copy of a document with an _id, so a change to it is copied too
 	replaceDocuments
-	// createWithoutLoopStatus adds each, keeping no loop status of a device report it adds, as a backfill's are old
-	createWithoutLoopStatus
+	// createWithoutStatuses adds each, keeping no loop status or pump of a device report it adds, as a backfill's are old
+	createWithoutStatuses
 )
 
 // createNightscoutDocuments copies documents into the site, returning how many were new. Documents a site refuses,
@@ -160,9 +160,9 @@ func (b *ConnectorJobManager) createNightscoutDocuments(ctx context.Context, job
 			var stored nsutils.Document
 			stored, duplicateFound, herr = collectionStore.Create(ctx, siteContext, doc)
 			// Only a report it made loses its loop status, not one the site already had
-			if herr == nil && !duplicateFound && save == createWithoutLoopStatus {
-				if err := siteContext.SiteDB.Queries().ClearDeviceReportLoopStatus(ctx, sitedb.ClearDeviceReportLoopStatusParams{ID: stored.Identifier()}); err != nil {
-					return added, fmt.Errorf("Nightscout: Failed to clear a backfilled %s's loop status: %w", collection, err)
+			if herr == nil && !duplicateFound && save == createWithoutStatuses {
+				if err := siteContext.SiteDB.Queries().ClearDeviceReportStatuses(ctx, sitedb.ClearDeviceReportStatusesParams{ID: stored.Identifier()}); err != nil {
+					return added, fmt.Errorf("Nightscout: Failed to clear a backfilled %s's loop status and pump: %w", collection, err)
 				}
 			}
 		}

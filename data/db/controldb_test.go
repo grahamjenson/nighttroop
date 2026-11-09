@@ -237,6 +237,33 @@ func TestTruncateClearsOldLoopStatuses(t *testing.T) {
 	require.ErrorContains(t, err, "is not open")
 }
 
+// A pump as sent is kept, like a loop's status, only on its device's newest report with one; the others' are cleared,
+// keeping their pump's battery and reservoir columns
+func TestTruncateClearsOldPumps(t *testing.T) {
+	_, controlDB, site := testutils.NewControlDBWithSite(t)
+	ctx, q := t.Context(), site.SiteDB.Queries()
+	pump := `{"battery":{"percent":60},"reservoir":100,"extended":{"ActiveProfile":"Default"}}`
+	create := func(id string, pump *string, minutesAgo int) {
+		_, err := q.CreateDeviceReport(ctx, sitedb.CreateDeviceReportParams{ID: id, PumpJson: pump, PumpBatteryPercent: new(60.0),
+			OccurredAt: time.Now().Add(-time.Duration(minutesAgo) * time.Minute).UnixMilli(), CreatedByDeviceName: new("aaps"), CreatedByIdentityName: "phone"})
+		require.NoError(t, err)
+	}
+	create("old", &pump, 10)
+	create("newest", &pump, 5)
+	// A newer report without a pump, as the loop's alone, leaves the one before it the newest
+	create("loop-only", nil, 1)
+	report := func(id string) *sitedb.DeviceReport {
+		report, err := q.GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: id})
+		require.NoError(t, err)
+		return report
+	}
+
+	require.NoError(t, controlDB.TruncateSites(ctx))
+	require.Nil(t, report("old").PumpJson, "an older pump is cleared")
+	require.Equal(t, new(60.0), report("old").PumpBatteryPercent, "its battery extracted from it is kept")
+	require.JSONEq(t, pump, *report("newest").PumpJson, "the newest with a pump is kept")
+}
+
 // deviceReportsFixture makes device reports and says which of them thinning keeps
 type deviceReportsFixture struct {
 	t       *testing.T

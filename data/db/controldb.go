@@ -465,11 +465,14 @@ const truncateLooksBack = 24 * time.Hour
 // deviceReportsKeptFor is how long a device report is kept at all
 const deviceReportsKeptFor = 30 * 24 * time.Hour
 
-// truncateSite keeps each device's loop status only on its newest report with one, thins its reports from before the
-// last hour to fewer the older they are, and deletes those over 30 days old, looking at those written since since, 0
-// for all of them
+// truncateSite keeps each device's loop status and pump as sent only on its newest report with each, thins its
+// reports from before the last hour to fewer the older they are, and deletes those over 30 days old, looking at those
+// written since since, 0 for all of them
 func truncateSite(ctx context.Context, site *SiteDB, since int64) error {
 	if err := site.Queries().ClearOldLoopStatuses(ctx, sitedb.ClearOldLoopStatusesParams{Since: since}); err != nil {
+		return fmt.Errorf("cannot truncate site %s: %w", site.Subdomain, err)
+	}
+	if err := site.Queries().ClearOldPumps(ctx, sitedb.ClearOldPumpsParams{Since: since}); err != nil {
 		return fmt.Errorf("cannot truncate site %s: %w", site.Subdomain, err)
 	}
 	now := time.Now()

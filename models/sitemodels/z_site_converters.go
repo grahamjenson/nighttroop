@@ -391,8 +391,8 @@ func DeviceStatusFromDB(source *sitedb.DeviceReport) *SiteDeviceStatus {
 			xstring2 := *(*source).PumpChargingState
 			sitemodelsSiteDeviceStatus.PumpChargingState = &xstring2
 		}
-		if (*source).OtherAttributes.LoopName != nil {
-			xstring3 := *(*source).OtherAttributes.LoopName
+		if (*source).LoopName != nil {
+			xstring3 := *(*source).LoopName
 			sitemodelsSiteDeviceStatus.LoopName = &xstring3
 		}
 		if (*source).LoopIob != nil {

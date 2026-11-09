@@ -14,7 +14,7 @@ import (
 
 const allDeviceReports = `-- name: AllDeviceReports :many
 
-SELECT id, device_battery_percent, is_device_charging, pump_state, pump_reservoir, pump_battery_percent, pump_charging_state, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob, configuration_id, loop_status_json, other_attributes, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name FROM device_reports
+SELECT id, device_battery_percent, is_device_charging, pump_state, pump_reservoir, pump_battery_percent, pump_charging_state, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob, configuration_id, loop_status_json, loop_name, pump_clock, pump_manufacturer, pump_model, override_json, pump_json, uploader_json, other_attributes, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name FROM device_reports
 WHERE (CAST(?1 AS BOOL) IS TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
@@ -52,6 +52,13 @@ func (q *Queries) AllDeviceReports(ctx context.Context, arg AllDeviceReportsPara
 			&i.LoopCob,
 			&i.ConfigurationID,
 			&i.LoopStatusJson,
+			&i.LoopName,
+			&i.PumpClock,
+			&i.PumpManufacturer,
+			&i.PumpModel,
+			&i.OverrideJson,
+			&i.PumpJson,
+			&i.UploaderJson,
 			&i.OtherAttributes,
 			&i.DeletedAt,
 			&i.UtcOffsetMinutes,
@@ -78,18 +85,18 @@ func (q *Queries) AllDeviceReports(ctx context.Context, arg AllDeviceReportsPara
 	return items, nil
 }
 
-const clearDeviceReportLoopStatus = `-- name: ClearDeviceReportLoopStatus :exec
-UPDATE device_reports SET loop_status_json = NULL WHERE id = ?1
+const clearDeviceReportStatuses = `-- name: ClearDeviceReportStatuses :exec
+UPDATE device_reports SET loop_status_json = NULL, pump_json = NULL WHERE id = ?1
 `
 
-type ClearDeviceReportLoopStatusParams struct {
+type ClearDeviceReportStatusesParams struct {
 	ID string
 }
 
-// A device report keeps none of its loop's status, as one a backfill copies, an old one's status being of no use; its
-// IOB and COB columns are kept
-func (q *Queries) ClearDeviceReportLoopStatus(ctx context.Context, arg ClearDeviceReportLoopStatusParams) error {
-	_, err := q.exec(ctx, q.clearDeviceReportLoopStatusStmt, clearDeviceReportLoopStatus, arg.ID)
+// A device report keeps none of its loop's status or pump as sent, as one a backfill copies, an old one's being of no
+// use; its IOB, COB and pump columns are kept
+func (q *Queries) ClearDeviceReportStatuses(ctx context.Context, arg ClearDeviceReportStatusesParams) error {
+	_, err := q.exec(ctx, q.clearDeviceReportStatusesStmt, clearDeviceReportStatuses, arg.ID)
 	return err
 }
 
@@ -109,6 +116,13 @@ INSERT INTO device_reports (
     loop_cob,
     configuration_id,
     loop_status_json,
+    loop_name,
+    pump_clock,
+    pump_manufacturer,
+    pump_model,
+    override_json,
+    pump_json,
+    uploader_json,
 
     other_attributes,
 
@@ -119,8 +133,8 @@ INSERT INTO device_reports (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, device_battery_percent, is_device_charging, pump_state, pump_reservoir, pump_battery_percent, pump_charging_state, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob, configuration_id, loop_status_json, other_attributes, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, device_battery_percent, is_device_charging, pump_state, pump_reservoir, pump_battery_percent, pump_charging_state, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob, configuration_id, loop_status_json, loop_name, pump_clock, pump_manufacturer, pump_model, override_json, pump_json, uploader_json, other_attributes, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name
 `
 
 type CreateDeviceReportParams struct {
@@ -137,6 +151,13 @@ type CreateDeviceReportParams struct {
 	LoopCob               *float64
 	ConfigurationID       *string
 	LoopStatusJson        *string
+	LoopName              *string
+	PumpClock             *int64
+	PumpManufacturer      *string
+	PumpModel             *string
+	OverrideJson          *string
+	PumpJson              *string
+	UploaderJson          *string
 	OtherAttributes       types.DeviceReportOther
 	UtcOffsetMinutes      *int64
 	OccurredAt            int64
@@ -164,6 +185,13 @@ func (q *Queries) CreateDeviceReport(ctx context.Context, arg CreateDeviceReport
 		arg.LoopCob,
 		arg.ConfigurationID,
 		arg.LoopStatusJson,
+		arg.LoopName,
+		arg.PumpClock,
+		arg.PumpManufacturer,
+		arg.PumpModel,
+		arg.OverrideJson,
+		arg.PumpJson,
+		arg.UploaderJson,
 		arg.OtherAttributes,
 		arg.UtcOffsetMinutes,
 		arg.OccurredAt,
@@ -187,6 +215,13 @@ func (q *Queries) CreateDeviceReport(ctx context.Context, arg CreateDeviceReport
 		&i.LoopCob,
 		&i.ConfigurationID,
 		&i.LoopStatusJson,
+		&i.LoopName,
+		&i.PumpClock,
+		&i.PumpManufacturer,
+		&i.PumpModel,
+		&i.OverrideJson,
+		&i.PumpJson,
+		&i.UploaderJson,
 		&i.OtherAttributes,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,
@@ -291,7 +326,7 @@ func (q *Queries) DeviceReportHistoryIDs(ctx context.Context, arg DeviceReportHi
 }
 
 const deviceReportsForDevice = `-- name: DeviceReportsForDevice :many
-SELECT id, device_battery_percent, is_device_charging, pump_state, pump_reservoir, pump_battery_percent, pump_charging_state, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob, configuration_id, loop_status_json, other_attributes, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name FROM device_reports
+SELECT id, device_battery_percent, is_device_charging, pump_state, pump_reservoir, pump_battery_percent, pump_charging_state, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob, configuration_id, loop_status_json, loop_name, pump_clock, pump_manufacturer, pump_model, override_json, pump_json, uploader_json, other_attributes, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name FROM device_reports
 WHERE deleted_at IS NULL AND created_by_device_name = ?1
 ORDER BY occurred_at DESC
 LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
@@ -326,6 +361,13 @@ func (q *Queries) DeviceReportsForDevice(ctx context.Context, arg DeviceReportsF
 			&i.LoopCob,
 			&i.ConfigurationID,
 			&i.LoopStatusJson,
+			&i.LoopName,
+			&i.PumpClock,
+			&i.PumpManufacturer,
+			&i.PumpModel,
+			&i.OverrideJson,
+			&i.PumpJson,
+			&i.UploaderJson,
 			&i.OtherAttributes,
 			&i.DeletedAt,
 			&i.UtcOffsetMinutes,
@@ -405,7 +447,7 @@ func (q *Queries) DeviceReportsLoopBetween(ctx context.Context, arg DeviceReport
 }
 
 const getDeviceReport = `-- name: GetDeviceReport :one
-SELECT id, device_battery_percent, is_device_charging, pump_state, pump_reservoir, pump_battery_percent, pump_charging_state, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob, configuration_id, loop_status_json, other_attributes, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name FROM device_reports WHERE id = ? AND (CAST(?2 AS BOOL) = TRUE OR deleted_at IS NULL)
+SELECT id, device_battery_percent, is_device_charging, pump_state, pump_reservoir, pump_battery_percent, pump_charging_state, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob, configuration_id, loop_status_json, loop_name, pump_clock, pump_manufacturer, pump_model, override_json, pump_json, uploader_json, other_attributes, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name FROM device_reports WHERE id = ? AND (CAST(?2 AS BOOL) = TRUE OR deleted_at IS NULL)
 `
 
 type GetDeviceReportParams struct {
@@ -430,6 +472,13 @@ func (q *Queries) GetDeviceReport(ctx context.Context, arg GetDeviceReportParams
 		&i.LoopCob,
 		&i.ConfigurationID,
 		&i.LoopStatusJson,
+		&i.LoopName,
+		&i.PumpClock,
+		&i.PumpManufacturer,
+		&i.PumpModel,
+		&i.OverrideJson,
+		&i.PumpJson,
+		&i.UploaderJson,
 		&i.OtherAttributes,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,
@@ -447,13 +496,11 @@ func (q *Queries) GetDeviceReport(ctx context.Context, arg GetDeviceReportParams
 }
 
 const getLatestDeviceReportWithPWDInformation = `-- name: GetLatestDeviceReportWithPWDInformation :one
-SELECT id, device_battery_percent, is_device_charging, pump_state, pump_reservoir, pump_battery_percent, pump_charging_state, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob, configuration_id, loop_status_json, other_attributes, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name from device_reports
+SELECT id, device_battery_percent, is_device_charging, pump_state, pump_reservoir, pump_battery_percent, pump_charging_state, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob, configuration_id, loop_status_json, loop_name, pump_clock, pump_manufacturer, pump_model, override_json, pump_json, uploader_json, other_attributes, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name from device_reports
 WHERE 
     deleted_at IS NULL AND 
     occurred_at >= CAST(unixepoch('subsec') * 1000 AS INTEGER) - 1200000 AND
-    -- Only the last 20 minutes' reports are read, from occurred_at's index, so reading the loop's name from the JSON
-    -- is a handful of rows
-    json_extract(other_attributes, '$.loop_name') IS NOT NULL
+    loop_name IS NOT NULL
 ORDER BY occurred_at DESC
 LIMIT 1
 `
@@ -477,6 +524,13 @@ func (q *Queries) GetLatestDeviceReportWithPWDInformation(ctx context.Context) (
 		&i.LoopCob,
 		&i.ConfigurationID,
 		&i.LoopStatusJson,
+		&i.LoopName,
+		&i.PumpClock,
+		&i.PumpManufacturer,
+		&i.PumpModel,
+		&i.OverrideJson,
+		&i.PumpJson,
+		&i.UploaderJson,
 		&i.OtherAttributes,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,
@@ -542,7 +596,7 @@ func (q *Queries) RecentDeviceNames(ctx context.Context, arg RecentDeviceNamesPa
 }
 
 const searchDeviceReports = `-- name: SearchDeviceReports :many
-SELECT id, device_battery_percent, is_device_charging, pump_state, pump_reservoir, pump_battery_percent, pump_charging_state, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob, configuration_id, loop_status_json, other_attributes, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name FROM device_reports
+SELECT id, device_battery_percent, is_device_charging, pump_state, pump_reservoir, pump_battery_percent, pump_charging_state, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob, configuration_id, loop_status_json, loop_name, pump_clock, pump_manufacturer, pump_model, override_json, pump_json, uploader_json, other_attributes, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name FROM device_reports
 WHERE
     -- The date filters as one range, occurred_at's CHECK where unset, so SQLite reads only that range of its index
     occurred_at BETWEEN MAX(COALESCE(CAST(?1 AS INTEGER), 0), COALESCE(CAST(?2 AS INTEGER) + 1, 0), COALESCE(CAST(?3 AS INTEGER), 0))
@@ -636,6 +690,13 @@ func (q *Queries) SearchDeviceReports(ctx context.Context, arg SearchDeviceRepor
 			&i.LoopCob,
 			&i.ConfigurationID,
 			&i.LoopStatusJson,
+			&i.LoopName,
+			&i.PumpClock,
+			&i.PumpManufacturer,
+			&i.PumpModel,
+			&i.OverrideJson,
+			&i.PumpJson,
+			&i.UploaderJson,
 			&i.OtherAttributes,
 			&i.DeletedAt,
 			&i.UtcOffsetMinutes,
@@ -686,21 +747,19 @@ func (q *Queries) SoftDeleteDeviceReport(ctx context.Context, arg SoftDeleteDevi
 const updateDeviceReport = `-- name: UpdateDeviceReport :one
 
 UPDATE device_reports SET
-    -- The fields sent, as JSON (types.OtherJSON), are merged into those kept, as an update changes its pump and
-    -- uploader
-    other_attributes = NULLIF(json_patch(
-        COALESCE(other_attributes, '{}'),
-        COALESCE(CAST(?1 AS TEXT), '{}')
-    ), '{}'),
+    -- An update changes its pump and uploader when it sends them
+    pump_json = COALESCE(?1, pump_json),
+    uploader_json = COALESCE(?2, uploader_json),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_id = ?2,
-    updated_by_identity_name = ?3
-WHERE id = ?4 AND deleted_at IS NULL
-RETURNING id, device_battery_percent, is_device_charging, pump_state, pump_reservoir, pump_battery_percent, pump_charging_state, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob, configuration_id, loop_status_json, other_attributes, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name
+    updated_by_identity_id = ?3,
+    updated_by_identity_name = ?4
+WHERE id = ?5 AND deleted_at IS NULL
+RETURNING id, device_battery_percent, is_device_charging, pump_state, pump_reservoir, pump_battery_percent, pump_charging_state, loop_iob, loop_iob_basal, loop_iob_treatment, loop_cob, configuration_id, loop_status_json, loop_name, pump_clock, pump_manufacturer, pump_model, override_json, pump_json, uploader_json, other_attributes, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name
 `
 
 type UpdateDeviceReportParams struct {
-	OtherAttributes       *string
+	PumpJson              *string
+	UploaderJson          *string
 	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
 	ID                    string
@@ -711,7 +770,8 @@ type UpdateDeviceReportParams struct {
 // ------
 func (q *Queries) UpdateDeviceReport(ctx context.Context, arg UpdateDeviceReportParams) (*DeviceReport, error) {
 	row := q.queryRow(ctx, q.updateDeviceReportStmt, updateDeviceReport,
-		arg.OtherAttributes,
+		arg.PumpJson,
+		arg.UploaderJson,
 		arg.UpdatedByIdentityID,
 		arg.UpdatedByIdentityName,
 		arg.ID,
@@ -731,6 +791,13 @@ func (q *Queries) UpdateDeviceReport(ctx context.Context, arg UpdateDeviceReport
 		&i.LoopCob,
 		&i.ConfigurationID,
 		&i.LoopStatusJson,
+		&i.LoopName,
+		&i.PumpClock,
+		&i.PumpManufacturer,
+		&i.PumpModel,
+		&i.OverrideJson,
+		&i.PumpJson,
+		&i.UploaderJson,
 		&i.OtherAttributes,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,

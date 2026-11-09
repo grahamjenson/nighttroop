@@ -12,7 +12,6 @@ import (
 	"nighttroop.t1d.nz/data/sql/jobsdb"
 	"nighttroop.t1d.nz/data/sql/logsdb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
-	"nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/testutils"
 )
@@ -221,8 +220,8 @@ func TestNightscoutBackfillStopsAtAPageOlderThanItsStart(t *testing.T) {
 	require.Nil(t, s.LastBackfillError, "the backfill stops at the page older than its start")
 }
 
-// A Nightscout backfill copies old device statuses with their IOB and COB, which summaries show, but none of their
-// loop status, which is of no use once old; a status the site already had keeps its own
+// A Nightscout backfill copies old device statuses with their IOB, COB and pump's battery, which summaries show, but
+// none of their loop status or pump as sent, which are of no use once old; a status the site already had keeps its own
 func TestNightscoutBackfillKeepsNoLoopStatus(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.ConnectorTypeNightscout
@@ -234,14 +233,14 @@ func TestNightscoutBackfillKeepsNoLoopStatus(t *testing.T) {
 	threeDaysAgo, twoDaysAgo := time.Now().Add(-72*time.Hour).UnixMilli(), time.Now().Add(-48*time.Hour).UnixMilli()
 	openAPS := map[string]any{"iob": map[string]any{"iob": 1.5, "basaliob": 0.5}, "suggested": map[string]any{"COB": 20, "reason": "COB 20", "predBGs": map[string]any{"IOB": []any{120, 118}}}}
 	nightscout_client.TestDocuments = map[string][]any{"devicestatus": {
-		map[string]any{"device": "openaps://phone", "date": float64(threeDaysAgo), "openaps": openAPS},
+		map[string]any{"device": "openaps://phone", "date": float64(threeDaysAgo), "openaps": openAPS, "pump": map[string]any{"battery": map[string]any{"percent": 60}}},
 		map[string]any{"device": "openaps://phone", "date": float64(twoDaysAgo), "openaps": openAPS},
 	}}
 	t.Cleanup(func() { nightscout_client.TestDocuments = map[string][]any{} })
 	// The site already has the later one, as a sync copied it, with its loop status
 	kept := `{"iob":{"iob":1.5}}`
 	_, err := site.SiteDB.Queries().CreateDeviceReport(ctx, sitedb.CreateDeviceReportParams{ID: "synced", OccurredAt: twoDaysAgo, CreatedByDeviceName: new("openaps://phone"),
-		OtherAttributes: types.DeviceReportOther{LoopName: new("openaps")}, LoopStatusJson: &kept, CreatedByIdentityName: "phone"})
+		LoopName: new("openaps"), LoopStatusJson: &kept, CreatedByIdentityName: "phone"})
 	require.NoError(t, err)
 	require.NoError(t, q.CreateConnector(ctx, controldb.CreateConnectorParams{SiteID: siteID, Type: typ, UrlOrUsernameEnc: enc(nightscout_client.TestValidURL), PasswordEnc: enc("token"), Enabled: true}))
 
@@ -261,5 +260,7 @@ func TestNightscoutBackfillKeepsNoLoopStatus(t *testing.T) {
 	require.Nil(t, backfilled.LoopStatusJson, "a backfilled status keeps no loop status")
 	require.Equal(t, 1.5, *backfilled.LoopIob, "its IOB is kept")
 	require.Equal(t, 20.0, *backfilled.LoopCob, "and its COB")
+	require.Nil(t, backfilled.PumpJson, "it keeps no pump as sent")
+	require.Equal(t, 60.0, *backfilled.PumpBatteryPercent, "but keeps its pump's battery")
 	require.Equal(t, kept, *byDate[twoDaysAgo].LoopStatusJson, "a status the site had keeps its own")
 }

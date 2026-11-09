@@ -12,6 +12,18 @@ WHERE device_reports.updated_at >= @since AND device_reports.loop_status_json IS
             AND newest.loop_status_json IS NOT NULL AND newest.deleted_at IS NULL
     );
 
+-- name: ClearOldPumps :exec
+-- A pump as sent, the most of a report after its loop's status, is kept as that is: only on its device's newest report
+-- with one, as followers read it from that one. What is worth keeping of the others, their battery, reservoir, clock,
+-- manufacturer and model, was extracted into their own columns when they were written.
+UPDATE device_reports SET pump_json = NULL
+WHERE device_reports.updated_at >= @since AND device_reports.pump_json IS NOT NULL
+    AND device_reports.occurred_at < (
+        SELECT MAX(newest.occurred_at) FROM device_reports AS newest
+        WHERE newest.created_by_device_name IS device_reports.created_by_device_name
+            AND newest.pump_json IS NOT NULL AND newest.deleted_at IS NULL
+    );
+
 -- name: ThinOldDeviceReports :exec
 -- A device report every few minutes is kept only for the last hour before Now; then each device keeps, of its
 -- reports, the newest in every 10 minutes until a week old, in every 20 minutes until two weeks old, and in every hour
