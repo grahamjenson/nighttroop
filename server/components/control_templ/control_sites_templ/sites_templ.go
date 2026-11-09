@@ -2001,7 +2001,7 @@ func siteActions(site *controlmodels.Site) templ.Component {
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = actionCard("control--site--action-download-db", "Download DB", "Downloads a copy of its DB as it is now, as one SQLite file. Its admins see that you did, in its events.",
+			templ_7745c5c3_Err = actionCard("control--site--action-download-db", "Download DB", "Downloads the zip of its DB its admins get from Download Data. Its admins see that you did, in its events.",
 				unless(site.State == "live" || site.State == "disabled", "Offered while its DB is here, before it is archived."), icon.Download).Render(templ.WithChildren(ctx, templ_7745c5c3_Var79), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
