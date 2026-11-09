@@ -1407,7 +1407,7 @@ func SitePage(page *controlmodels.SitePage) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = control_logs_templ.EventsList("control--site--events--table", page.Events).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = control_logs_templ.EventsList("control--site--events--table", page.Events, false).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1429,7 +1429,7 @@ func SitePage(page *controlmodels.SitePage) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = control_logs_templ.ErrorsList("control--site--errors--table", page.Errors).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = control_logs_templ.ErrorsList("control--site--errors--table", page.Errors, false).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

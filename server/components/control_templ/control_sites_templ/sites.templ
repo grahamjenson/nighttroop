@@ -460,10 +460,10 @@ templ SitePage(page *controlmodels.SitePage) {
 		}
 		<div class="grid gap-4 lg:grid-cols-2">
 			@stat.Section("Latest Events", "control--site--events--all", "See all", "/events?site_id="+site.ID) {
-				@control_logs_templ.EventsList("control--site--events--table", page.Events)
+				@control_logs_templ.EventsList("control--site--events--table", page.Events, false)
 			}
 			@stat.Section("Latest Errors", "control--site--errors--all", "See all", "/errors?site_id="+site.ID) {
-				@control_logs_templ.ErrorsList("control--site--errors--table", page.Errors)
+				@control_logs_templ.ErrorsList("control--site--errors--table", page.Errors, false)
 			}
 		</div>
 		<div id="modal-container"></div>

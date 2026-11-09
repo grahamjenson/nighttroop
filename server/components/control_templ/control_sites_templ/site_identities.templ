@@ -30,16 +30,17 @@ templ SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) {
 				@table.Head() {
 					Name
 				}
-				@table.Head() {
+				// On a phone only the name, with the rest under it, and the actions fit beside each other
+				@table.Head(table.HeadProps{Class: "hidden sm:table-cell"}) {
 					Role
 				}
-				@table.Head() {
+				@table.Head(table.HeadProps{Class: "hidden sm:table-cell"}) {
 					Enabled
 				}
-				@table.Head() {
+				@table.Head(table.HeadProps{Class: "hidden sm:table-cell"}) {
 					TOTP
 				}
-				@table.Head() {
+				@table.Head(table.HeadProps{Class: "hidden sm:table-cell"}) {
 					Last Seen
 				}
 				if canReset(ctx) {
@@ -54,23 +55,24 @@ templ SiteIdentities(siteID string, identities []*controlmodels.SiteIdentity) {
 				@table.Row(table.RowProps{ID: fmt.Sprintf("control--site--identity--%d", identity.ID)}) {
 					@table.Cell() {
 						<span title={ "Created " + formatDate(&identity.CreatedAt) + " by " + identity.CreatedByIdentityName }>{ identity.Name }</span>
+						<div id={ fmt.Sprintf("control--site--identity--%d--summary", identity.ID) } class="mt-0.5 text-xs text-gray-500 sm:hidden">{ identitySummary(identity) }</div>
 					}
-					@table.Cell() {
+					@table.Cell(table.CellProps{Class: "hidden sm:table-cell"}) {
 						{ display.Name(string(identity.Role)) }
 					}
-					@table.Cell() {
+					@table.Cell(table.CellProps{Class: "hidden sm:table-cell"}) {
 						{ yesNo(identity.Enabled) }
 					}
-					@table.Cell() {
+					@table.Cell(table.CellProps{Class: "hidden sm:table-cell"}) {
 						{ yesNo(identity.HasTotp) }
 					}
-					@table.Cell() {
+					@table.Cell(table.CellProps{Class: "hidden sm:table-cell"}) {
 						<span title={ formatDate(identity.LastSeenAt) }>{ display.Ago(identity.LastSeenAt, time.Now()) }</span>
 					}
 					if canReset(ctx) {
 						@table.Cell() {
-							// Each action has its own column, so the same action lines up down the table
-							<div class="grid grid-cols-3 gap-1">
+							// Each action has its own column, so the same action lines up down the table; on a phone they stack
+							<div class="grid gap-1 sm:grid-cols-3">
 								@resetButton(siteID, identity, "password", "Reset password", "Give "+identity.Name+" a new random password? Their old one stops working.")
 								if identity.HasTotp {
 									@resetButton(siteID, identity, "totp", "Reset TOTP", "Give "+identity.Name+" a new TOTP secret? Codes from their authenticator app stop working.")
@@ -144,4 +146,20 @@ templ assumeButton(siteID string, identity *controlmodels.SiteIdentity) {
 			Sign in as
 		}
 	</form>
+}
+
+// identitySummary is what a phone shows of an identity under its name, for the columns it has no room for: its role,
+// whether it is enabled and has TOTP, and when it was last seen
+func identitySummary(identity *controlmodels.SiteIdentity) string {
+	summary := display.Name(string(identity.Role))
+	if !identity.Enabled {
+		summary += " · disabled"
+	}
+	if identity.HasTotp {
+		summary += " · TOTP"
+	}
+	if seen := display.Ago(identity.LastSeenAt, time.Now()); seen != "Never" {
+		return summary + " · seen " + seen
+	}
+	return summary + " · never seen"
 }

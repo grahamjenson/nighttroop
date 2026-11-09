@@ -163,3 +163,20 @@ ASSERT_VISIBLE #control--sites--create--submit
 ASSERT_VISIBLE #control--sites--public-creation--toggle
 ASSERT_FITS
 SCREENSHOT sites_phone
+
+// On a phone a site's own page is no wider than the window, and every identity's actions can be tapped: its role, TOTP
+// and when it was last seen are under its name rather than columns of their own, and its actions stack. Its latest
+// events and errors leave out the site, as they are all its own. The window is tall enough for all of it, so fitting
+// it checks only its width.
+WINDOW 390x3200
+GOTO {{ .control_url }}/sites/{{ .new_site }}
+ASSERT_STATUS 200
+ASSERT_VISIBLE #control--site--page
+ASSERT_VISIBLE #control--site--identities--table tr:has-text("admin") [id$="--reset-password"]
+ASSERT_VISIBLE #control--site--identities--table tr:has-text("admin") [id$="--reset-totp"]
+ASSERT_VISIBLE #control--site--identities--table tr:has-text("admin") [id$="--assume"]
+ASSERT_VISIBLE #control--site--identities--table tr:has-text("admin") [id$="--summary"]:text-is("Admin · TOTP · never seen")
+ASSERT_NOT_VISIBLE #control--site--identities--table th:text-is("Last Seen")
+ASSERT_NOT_VISIBLE #control--site--events--table th:text-is("Site")
+ASSERT_FITS
+SCREENSHOT site_page_phone
