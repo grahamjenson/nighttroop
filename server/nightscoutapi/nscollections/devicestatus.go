@@ -168,18 +168,52 @@ func DBToNightscoutDeviceStatus(source *sitedb.DeviceReport, siteContext *httput
 		nsModel.ConfigurationRaw = &configuration
 	}
 
-	// The loop's status goes back as its openaps or loop object, as it was sent
-	if other.LoopName != nil && source.LoopStatusJson != nil {
-		status := json.RawMessage(*source.LoopStatusJson)
-		switch *other.LoopName {
-		case "openaps":
+	// The loop's status goes back as its openaps or loop object, as it was sent, or, once a newer one came in and it was
+	// cleared, as what was extracted of it, its IOB and COB
+	if other.LoopName != nil {
+		status := extractedLoopStatus(*other.LoopName, source)
+		if source.LoopStatusJson != nil {
+			status = json.RawMessage(*source.LoopStatusJson)
+		}
+		switch {
+		case status == nil:
+		case *other.LoopName == "openaps":
 			nsModel.OpenAPSRaw = &status
-		case "loop":
+		case *other.LoopName == "loop":
 			nsModel.LoopRaw = &status
 		}
 	}
 
 	return nsModel
+}
+
+// extractedLoopStatus is a loop's status as its IOB and COB columns keep it, where the loop sends them, nil without them
+func extractedLoopStatus(loopName string, source *sitedb.DeviceReport) json.RawMessage {
+	iob, status := map[string]any{}, map[string]any{}
+	if source.LoopIob != nil {
+		iob["iob"] = *source.LoopIob
+	}
+	switch loopName {
+	case "openaps":
+		if source.LoopIobBasal != nil {
+			iob["basaliob"] = *source.LoopIobBasal
+		}
+		if source.LoopCob != nil {
+			status["suggested"] = map[string]any{"COB": *source.LoopCob}
+		}
+	case "loop":
+		if source.LoopCob != nil {
+			status["cob"] = map[string]any{"cob": *source.LoopCob}
+		}
+	}
+	if len(iob) > 0 {
+		status["iob"] = iob
+	}
+	if len(status) == 0 {
+		return nil
+	}
+	raw, _ := json.Marshal(status)
+	return raw
 }
 
 ///////

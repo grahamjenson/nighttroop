@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"nighttroop.t1d.nz/data/sql/sitedb"
+	datatypes "nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/models/nightscoutmodels"
 )
 
@@ -54,6 +56,46 @@ func TestNightscoutToDBCreateDeviceReportLoopColumns(t *testing.T) {
 				Name: other.LoopName, Status: got.LoopStatusJson, IOB: got.LoopIob, IOBBasal: got.LoopIobBasal,
 				IOBTreatment: got.LoopIobTreatment, COB: got.LoopCob,
 			})
+		})
+	}
+}
+
+// A report whose loop status was cleared, once a newer one came in, goes back with what was extracted of it, its IOB
+// and COB, as its openaps or loop object; one kept goes back as it was sent
+func TestDBToNightscoutDeviceStatusLoop(t *testing.T) {
+	sent := `{"iob":{"iob":2.5},"predBGs":{"IOB":[100]}}`
+	tests := []struct {
+		name          string
+		report        sitedb.DeviceReport
+		openAPS, loop string
+	}{
+		{"kept", sitedb.DeviceReport{LoopStatusJson: &sent, OtherAttributes: datatypes.DeviceReportOther{LoopName: ptr("openaps")}}, sent, ""},
+		{"openaps cleared", sitedb.DeviceReport{LoopIob: ptr(2.5), LoopIobBasal: ptr(1.0), LoopCob: ptr(20.0), OtherAttributes: datatypes.DeviceReportOther{LoopName: ptr("openaps")}},
+			`{"iob":{"iob":2.5,"basaliob":1},"suggested":{"COB":20}}`, ""},
+		{"loop cleared", sitedb.DeviceReport{LoopIob: ptr(3.0), LoopCob: ptr(15.0), OtherAttributes: datatypes.DeviceReportOther{LoopName: ptr("loop")}},
+			"", `{"iob":{"iob":3},"cob":{"cob":15}}`},
+		{"cleared with nothing extracted", sitedb.DeviceReport{OtherAttributes: datatypes.DeviceReportOther{LoopName: ptr("loop")}}, "", ""},
+		{"no loop", sitedb.DeviceReport{LoopIob: ptr(1.0)}, "", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := DBToNightscoutDeviceStatus(&tt.report, nil)
+			raw := func(r *json.RawMessage) string {
+				if r == nil {
+					return ""
+				}
+				return string(*r)
+			}
+			if tt.openAPS == "" {
+				require.Nil(t, got.OpenAPSRaw)
+			} else {
+				require.JSONEq(t, tt.openAPS, raw(got.OpenAPSRaw))
+			}
+			if tt.loop == "" {
+				require.Nil(t, got.LoopRaw)
+			} else {
+				require.JSONEq(t, tt.loop, raw(got.LoopRaw))
+			}
 		})
 	}
 }
