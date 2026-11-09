@@ -160,6 +160,9 @@ type Click struct {
 	Scroll *int
 	// Quickly are CSS selectors clicked one straight after another, not waiting for each to finish, for CLICK_QUICKLY
 	Quickly []string
+	// Asks leaves the site's confirm dialog open, for CLICK_ASKS, to check what it asks; a plain CLICK confirms it, as a
+	// person going on with what they clicked does
+	Asks bool
 	// Hover moves the mouse over Locator instead of clicking it, this share of the way across it and half way down, for
 	// HOVER, e.g. to point at a time on a graph
 	Hover *float64
@@ -188,6 +191,9 @@ func (r *Click) ToFlatString() string {
 	}
 	if len(r.Quickly) > 0 {
 		return "CLICK_QUICKLY " + strings.Join(r.Quickly, ", ")
+	}
+	if r.Asks {
+		return "CLICK_ASKS " + r.Locator
 	}
 	return fmt.Sprintf("CLICK %s", r.Locator)
 }
@@ -301,7 +307,7 @@ func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 			err = locator.Hover(playwright.LocatorHoverOptions{Timeout: playwright.Float(actionWait), Position: &playwright.Position{X: box.Width * *r.Hover, Y: box.Height / 2}})
 		}
 	default:
-		err = locator.Click(playwright.LocatorClickOptions{Timeout: playwright.Float(actionWait)})
+		err = clickAndAnswer(page, locator, r.Asks)
 	}
 	if err != nil {
 		t.Fatalf(
@@ -754,4 +760,24 @@ func (r *VirtualAuthenticator) Execute(t *testing.T, page playwright.Page, ctx m
 		return nil, fmt.Errorf("%s", r.ToErrorLine(err.Error()))
 	}
 	return page, nil
+}
+
+// clickAndAnswer clicks locator, and when it asks to be confirmed in the site's confirm dialog waits for the dialog,
+// then confirms it unless asks, which leaves it open to be checked
+func clickAndAnswer(page playwright.Page, locator playwright.Locator, asks bool) error {
+	confirms, err := locator.Evaluate(`element => !!element.closest("[hx-confirm]")`, nil, playwright.LocatorEvaluateOptions{Timeout: playwright.Float(actionWait)})
+	if err != nil {
+		return err
+	}
+	if err := locator.Click(playwright.LocatorClickOptions{Timeout: playwright.Float(actionWait)}); err != nil || confirms != true {
+		if asks && err == nil {
+			return fmt.Errorf("CLICK_ASKS clicked something that asks no confirmation")
+		}
+		return err
+	}
+	dialog := page.Locator("dialog#confirm[open]")
+	if err := dialog.WaitFor(playwright.LocatorWaitForOptions{Timeout: playwright.Float(actionWait)}); err != nil || asks {
+		return err
+	}
+	return page.Locator("#confirm--ok").Click(playwright.LocatorClickOptions{Timeout: playwright.Float(actionWait)})
 }

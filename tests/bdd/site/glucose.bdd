@@ -140,10 +140,20 @@ CLICK #site--glucose--previous
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
 
-// Deleting asks first (the test accepts), then removes the row without opening its details
+// Deleting asks first in the site's own dialog, not the browser's: its question, Cancel and a red Delete
 GOTO /data/glucose
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 7
+CLICK_ASKS #glucoseReadingsTable tbody tr >> nth=0 >> button[title=Delete]
+ASSERT_TEXT_EQUALS #confirm--message Delete this glucose reading?
+ASSERT_TEXT_EQUALS #confirm--ok Delete
+ASSERT_VISIBLE #confirm--cancel
+SCREENSHOT glucose_reading_delete_confirm
+// Cancel keeps it
+CLICK #confirm--cancel
+ASSERT_NOT_VISIBLE #confirm
+ASSERT_TEXT_VISIBLE Showing 1 to 7
+// Confirming deletes it (a plain CLICK confirms), removing the row without opening its details
 CLICK #glucoseReadingsTable tbody tr >> nth=0 >> button[title=Delete]
 ASSERT_TEXT_VISIBLE Glucose Reading Deleted
 ASSERT_NOT_VISIBLE #site--glucose--details

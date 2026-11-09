@@ -1,6 +1,7 @@
 package site_templ
 
 import (
+	"nighttroop.t1d.nz/server/components/confirm"
 	"context"
 
 	"nighttroop.t1d.nz/server/components/footer"
@@ -50,6 +51,7 @@ templ Base() {
 		<body hx-ext="response-targets" class="flex min-h-dvh flex-col">
 			@testsite.Banner()
 			<div id="toaster" class="mb-3"></div>
+			@confirm.Dialog()
 			{ children... }
 			// After the page's own title, so it names the tab only when the page has none, see heading.Page
 			<title>Nighttroop</title>

@@ -46,6 +46,11 @@ func ParseBrowserLines(lines []Line) ([]Action, error) {
 				Locator:  second,
 				Asserts:  []BrowserAssert{},
 			}
+		case "CLICK_ASKS":
+			// CLICK_ASKS <locator> clicks what asks to be confirmed and leaves the site's confirm dialog open, to check what
+			// it asks, then CLICK #confirm--ok or #confirm--cancel answers it; a plain CLICK confirms it
+			flush()
+			current = &Click{TestPath: path, TestLine: lineNumber, Locator: second, Asks: true, Asserts: []BrowserAssert{}}
 		case "CLICK_QUICKLY":
 			// CLICK_QUICKLY <selector>, <selector>, ... clicks each CSS selector's element straight after the last, not
 			// waiting for what a click asks for, as a person clicking around quickly does, so each request replaces the

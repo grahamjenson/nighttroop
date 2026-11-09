@@ -1,6 +1,7 @@
 package control_templ
 
 import (
+	"nighttroop.t1d.nz/server/components/confirm"
 	"fmt"
 
 	"nighttroop.t1d.nz/server/components/footer"
@@ -43,6 +44,7 @@ templ ControlBase() {
 		<body class="min-h-screen flex flex-col">
 			@testsite.Banner()
 			<div id="toaster" class="mb-3"></div>
+			@confirm.Dialog()
 			// The header's menu and the status are for a signed in admin, so the login and setup pages have neither
 			if controlContext := httputils.GetControlContext(ctx); controlContext != nil && controlContext.IdentityModel != nil {
 				@Header()
