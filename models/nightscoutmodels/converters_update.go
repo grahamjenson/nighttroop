@@ -68,7 +68,7 @@ type UpdateMapConverter interface {
 	// goverter:map UpdatedByIdentityName | AssignUpdatedByName
 	// goverter:map UpdatedByIdentityID | AssignUpdatedByID
 	//
-	// goverter:ignore
+	// goverter:ignore OtherAttributes
 	DeviceStatusToUpdateDeviceReport(source DeviceStatus, ctx ConverterContext) sitedb.UpdateDeviceReportParams
 }
 

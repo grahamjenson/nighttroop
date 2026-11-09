@@ -139,18 +139,21 @@ CREATE TABLE device_reports (
     -- the report, which is read back without them.
     configuration_id TEXT CHECK(length(configuration_id) = 64),
 
+    -- The loop's status as sent, its openaps or loop object (which loop_name in other_attributes says), with its IOB,
+    -- COB, reason and predicted glucoses, most of a looping site's DB. Once a report is TRUNCATE_RAW_JSON_AFTER_DAYS old
+    -- its debug output and predictions are removed.
+    loop_status_json TEXT CHECK(length(loop_status_json) <= 8192 AND json_valid(loop_status_json)),
+
     -- What only some apps send, a JSON object (types.DeviceReportOther) NULL for most reports: the pump's time when it
-    -- reported (pump_clock), its manufacturer and model, Loop's override in force (override), and the loop's raw
-    -- status: which loop it is (loop_name) and its status as sent (loop_settings), with its predicted glucoses. The JSON
-    -- ones are kept as JSON. A field that is not there passes its check; the total fits each one's limit added together.
-    -- Once a report is TRUNCATE_RAW_JSON_AFTER_DAYS old its status's debug output and predictions are removed.
+    -- reported (pump_clock), its manufacturer and model, Loop's override in force (override), and which loop it is
+    -- (loop_name). The JSON ones are kept as JSON. A field that is not there passes its check; the total fits each one's
+    -- limit added together.
     other_attributes TEXT CHECK(length(other_attributes) <= 23040 AND json_valid(other_attributes)
         AND json_extract(other_attributes, '$.pump_clock') BETWEEN 0 AND 253402300799999
         AND length(json_extract(other_attributes, '$.pump_manufacturer')) <= 64
         AND length(json_extract(other_attributes, '$.pump_model')) <= 64
         AND length(json_extract(other_attributes, '$.override')) <= 2048
         AND json_extract(other_attributes, '$.loop_name') IN ('openaps', 'loop')
-        AND length(json_extract(other_attributes, '$.loop_settings')) <= 8192
         AND length(json_extract(other_attributes, '$.pump')) <= 4096
         AND length(json_extract(other_attributes, '$.uploader')) <= 1024),
 

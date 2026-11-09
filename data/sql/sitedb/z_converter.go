@@ -326,6 +326,10 @@ func DeviceReportToCreate(source DeviceReport) CreateDeviceReportParams {
 		xstring3 := *source.ConfigurationID
 		sitedbCreateDeviceReportParams.ConfigurationID = &xstring3
 	}
+	if source.LoopStatusJson != nil {
+		xstring4 := *source.LoopStatusJson
+		sitedbCreateDeviceReportParams.LoopStatusJson = &xstring4
+	}
 	sitedbCreateDeviceReportParams.OtherAttributes = typesDeviceReportOtherToTypesDeviceReportOther(source.OtherAttributes)
 	if source.UtcOffsetMinutes != nil {
 		xint64 := *source.UtcOffsetMinutes
@@ -333,12 +337,12 @@ func DeviceReportToCreate(source DeviceReport) CreateDeviceReportParams {
 	}
 	sitedbCreateDeviceReportParams.OccurredAt = source.OccurredAt
 	if source.CreatedByAppName != nil {
-		xstring4 := *source.CreatedByAppName
-		sitedbCreateDeviceReportParams.CreatedByAppName = &xstring4
+		xstring5 := *source.CreatedByAppName
+		sitedbCreateDeviceReportParams.CreatedByAppName = &xstring5
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring5 := *source.CreatedByDeviceName
-		sitedbCreateDeviceReportParams.CreatedByDeviceName = &xstring5
+		xstring6 := *source.CreatedByDeviceName
+		sitedbCreateDeviceReportParams.CreatedByDeviceName = &xstring6
 	}
 	sitedbCreateDeviceReportParams.CreatedByIdentityName = source.CreatedByIdentityName
 	if source.CreatedByIdentityID != nil {
@@ -349,6 +353,7 @@ func DeviceReportToCreate(source DeviceReport) CreateDeviceReportParams {
 }
 func DeviceReportToUpdate(source DeviceReport) UpdateDeviceReportParams {
 	var sitedbUpdateDeviceReportParams UpdateDeviceReportParams
+	sitedbUpdateDeviceReportParams.OtherAttributes = DeviceReportOtherJSON(source.OtherAttributes)
 	if source.UpdatedByIdentityID != nil {
 		xint64 := *source.UpdatedByIdentityID
 		sitedbUpdateDeviceReportParams.UpdatedByIdentityID = &xint64
@@ -2637,7 +2642,6 @@ func typesDeviceReportOtherToTypesDeviceReportOther(source types.DeviceReportOth
 		xstring3 := *source.LoopName
 		typesDeviceReportOther.LoopName = &xstring3
 	}
-	typesDeviceReportOther.LoopSettings = jsontextValueToJsontextValue(source.LoopSettings)
 	typesDeviceReportOther.Pump = jsontextValueToJsontextValue(source.Pump)
 	typesDeviceReportOther.Uploader = jsontextValueToJsontextValue(source.Uploader)
 	return typesDeviceReportOther

@@ -102,6 +102,7 @@ type DeviceReport struct {
 	LoopIobTreatment      *float64
 	LoopCob               *float64
 	ConfigurationID       *string
+	LoopStatusJson        *string
 	OtherAttributes       types.DeviceReportOther
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64

@@ -168,12 +168,14 @@ func DBToNightscoutDeviceStatus(source *sitedb.DeviceReport, siteContext *httput
 		nsModel.ConfigurationRaw = &configuration
 	}
 
-	if other.LoopName != nil && other.LoopSettings != nil {
+	// The loop's status goes back as its openaps or loop object, as it was sent
+	if other.LoopName != nil && source.LoopStatusJson != nil {
+		status := json.RawMessage(*source.LoopStatusJson)
 		switch *other.LoopName {
 		case "openaps":
-			nsModel.OpenAPSRaw = &other.LoopSettings
+			nsModel.OpenAPSRaw = &status
 		case "loop":
-			nsModel.LoopRaw = &other.LoopSettings
+			nsModel.LoopRaw = &status
 		}
 	}
 
@@ -242,7 +244,7 @@ func NightscoutToDBCreateDeviceReport(source nightscoutmodels.DeviceStatus, ctx 
 
 // setOpenAPSColumns keeps an OpenAPS loop's status, with its predictions, and its IOB and COB
 func setOpenAPSColumns(params *sitedb.CreateDeviceReportParams, openAPS *nightscoutmodels.OpenAPSStatus, raw json.RawMessage) {
-	params.OtherAttributes.LoopSettings = raw
+	params.LoopStatusJson = ptr(string(raw))
 	params.OtherAttributes.LoopName = ptr("openaps")
 	if iob := openAPS.IOB; iob != nil {
 		params.LoopIob = iob.IOB.Float64p()
@@ -260,7 +262,7 @@ func setOpenAPSColumns(params *sitedb.CreateDeviceReportParams, openAPS *nightsc
 
 // setLoopColumns keeps Loop's status, with its predictions, and its IOB and COB
 func setLoopColumns(params *sitedb.CreateDeviceReportParams, loop *nightscoutmodels.LoopStatus, raw json.RawMessage) {
-	params.OtherAttributes.LoopSettings = raw
+	params.LoopStatusJson = ptr(string(raw))
 	params.OtherAttributes.LoopName = ptr("loop")
 	if loop.IOB != nil {
 		params.LoopIob = loop.IOB.IOB.Float64p()
