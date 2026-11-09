@@ -538,9 +538,9 @@ Connectors are a site's third party integrations, each syncing from one service.
 
 - General settings: units, time zone, language, date and time format, week start, insulin and carb defaults.
 - An admin sets the site's settings; each identity can override them for themselves.
-- Every page shows dates in the date format, the identity's, then the site's, then the default (YYYY-MM-DD), and in
-  the timezone chosen the same way; the logs pages too. Times are shown as 24-hour HH:mm:ss everywhere for now: the
-  time format setting is offered but not used yet.
+- Every page shows dates in the date format, the identity's, then the site's, then the default (YYYY-MM-DD), times in
+  the time format chosen the same way (24-hour HH:mm:ss by default, or 12-hour, or without seconds), and both in the
+  timezone chosen the same way; the logs pages too.
 - On a phone the settings, alarms and another identity's settings are one column: each setting's label, then its Site
   and Yours controls, each named, and the save buttons fit in the window.
 - An admin can **download** the site's data: a zip, `<site>-<date>.zip`, of a snapshot of its DB, `<site>-<date>.sqlite`,
