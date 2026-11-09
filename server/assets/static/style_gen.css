@@ -3088,6 +3088,16 @@
       }
     }
   }
+  .\[button\:focus-visible_\&\]\:text-red-600 {
+    button:focus-visible & {
+      color: var(--color-red-600);
+    }
+  }
+  .\[button\:hover_\&\]\:text-red-600 {
+    button:hover & {
+      color: var(--color-red-600);
+    }
+  }
 }
 :root {
   color-scheme: light;

@@ -21,6 +21,10 @@ ASSERT_TEXT_VISIBLE mmol/L
 ASSERT_NOT_VISIBLE #site--glucose--next
 ASSERT_NOT_VISIBLE #site--glucose--previous
 SCREENSHOT glucose_readings
+// A row's delete icon is grey, so a table is not a column of red, and turns red as it is pointed at
+ASSERT_VISIBLE #glucoseReadingsTable tbody tr >> nth=0 >> [id$="--delete"]:has(svg.text-gray-400)
+HOVER #glucoseReadingsTable tbody tr >> nth=0 >> [id$="--delete"]
+SCREENSHOT glucose_reading_delete_pointed_at
 
 // Clicking a reading shows all its details
 CLICK #glucoseReadingsTable tbody tr >> nth=0

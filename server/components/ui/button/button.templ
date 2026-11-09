@@ -7,6 +7,10 @@ import (
 	"strings"
 )
 
+// DeleteIconClass is a row's delete icon: grey, so a table of rows is not a column of red, and red only while its
+// button is pointed at or focused
+const DeleteIconClass = "size-4 text-gray-400 [button:hover_&]:text-red-600 [button:focus-visible_&]:text-red-600"
+
 type Variant string
 type Size string
 type Type string
