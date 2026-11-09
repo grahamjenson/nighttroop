@@ -53,20 +53,21 @@ ASSERT_STATUS 200
 ASSERT_VISIBLE #site--data--insulin-button[aria-current="page"]
 ASSERT_VISIBLE #site--nav--data[aria-current="page"]
 
-// Reports has a tab for each report
+// Reports has a tab for each report, opening on the summaries
 CLICK #site--nav--reports
 ASSERT_STATUS 200
 ASSERT_PATH /reports
 ASSERT_VISIBLE #site--nav--reports[aria-current="page"]
 ASSERT_NOT_VISIBLE #site--nav--data[aria-current="page"]
-ASSERT_VISIBLE #site--reports--agp-button[aria-current="page"]
+ASSERT_VISIBLE #site--reports--summaries-button[aria-current="page"]
+ASSERT_VISIBLE #site--summaries
+ASSERT_VISIBLE #site--reports--agp-button
 ASSERT_VISIBLE #site--reports--tdd-menu-button
-ASSERT_VISIBLE #site--reports--summaries-button
 ASSERT_COUNT #site--hub--reports nav a 3
 SCREENSHOT navigation_reports_hub
-GOTO /reports/summaries
+GOTO /reports/agp
 ASSERT_STATUS 200
-ASSERT_VISIBLE #site--reports--summaries-button[aria-current="page"]
+ASSERT_VISIBLE #site--reports--agp-button[aria-current="page"]
 ASSERT_VISIBLE #site--nav--reports[aria-current="page"]
 
 // Settings has side tabs in their groups, every one for an admin
@@ -215,7 +216,7 @@ ASSERT_VISIBLE #site--data--device-status-button[aria-current="page"]
 ASSERT_FITS
 SCREENSHOT navigation_phone_data
 
-GOTO /reports
+GOTO /reports/agp
 ASSERT_STATUS 200
 ASSERT_VISIBLE #site--reports--agp-button[aria-current="page"]
 ASSERT_FITS

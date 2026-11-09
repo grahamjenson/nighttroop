@@ -56,9 +56,11 @@ var Pages = []Page{
 	{Hub: Data, Group: "Presets", Label: "Profiles", Path: "/presets/profiles", ID: "site--presets--profiles-button", Icon: icon.CalendarClock, Store: "profile_presets"},
 	{Hub: Data, Group: "Presets", Label: "Loop Settings", Path: "/presets/loop-settings", ID: "site--presets--loop-settings-button", Icon: icon.Settings2, Store: "loop_settings"},
 
-	{Hub: Reports, Label: "AGP", Path: "/reports", ID: "site--reports--agp-button", Icon: icon.ChartLine, Store: "summary_periods"},
+	// Summaries are first, so the Reports hub opens them
+	{Hub: Reports, Label: "Summaries", Path: "/reports", ID: "site--reports--summaries-button", Icon: icon.Table, Store: "summary_periods",
+		Within: []string{"/reports", "/reports/summaries"}},
+	{Hub: Reports, Label: "AGP", Path: "/reports/agp", ID: "site--reports--agp-button", Icon: icon.ChartLine, Store: "summary_periods"},
 	{Hub: Reports, Label: "TDD", Path: "/reports/tdd", ID: "site--reports--tdd-menu-button", Icon: icon.ChartColumn, Store: "summary_daily"},
-	{Hub: Reports, Label: "Summaries", Path: "/reports/summaries", ID: "site--reports--summaries-button", Icon: icon.Table, Store: "summary_periods"},
 
 	{Hub: Settings, Group: "This site", Label: "General", Path: "/settings", ID: "site--settings--settings-button", Icon: icon.SlidersHorizontal,
 		Store: "identity_settings", Within: []string{"/settings/site", "/settings/identity"}},
@@ -86,9 +88,9 @@ var keywords = map[string][]string{
 	"/data/component-events":     {"Cannula", "Pump Site", "Sensor Start", "Transmitter"},
 	"/data/notifications":        {"Announcements", "Severity"},
 	"/data/device-status":        {"Battery", "Reservoir", "IOB", "COB", "Loop", "Uploader"},
-	"/reports":                   {"Ambulatory Glucose Profile", "Time in Range"},
+	"/reports":                   {"Daily Carbs", "Daily Dose"},
+	"/reports/agp":               {"Ambulatory Glucose Profile", "Time in Range"},
 	"/reports/tdd":               {"Total Daily Dose"},
-	"/reports/summaries":         {"Daily Carbs", "Daily Dose"},
 	"/settings":                  {"Units", "mmol/L", "mg/dL", "Timezone", "Language", "Date Format", "Time Format", "Week Starts On", "Password & TOTP", "Download Data", "Delete Site"},
 	"/settings/alarms":           {"Low Alarm", "Urgent Low Alarm", "Predicted Low Alarm", "High Alarm", "Urgent High Alarm", "Fast Drop Alarm", "Fast Rise Alarm", "No Data Alarm"},
 	"/settings/identities":       {"Admins", "Read Only", "PWD Phone"},

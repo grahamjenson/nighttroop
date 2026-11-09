@@ -54,14 +54,15 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Get("/", store.Collection("data", "summary").Search)
 		r.Get("/summary", store.Collection("data", "summary").Search)
 		r.Get("/getting-started", sitecollections.GettingStartedHandler)
-		// Reports are of a day, week, fortnight or month, the week with yesterday in it at first
-		r.Get("/reports", sitecollections.ReportsHandler(store.Collection("data", "summary-periods").Get))
-		// The daily dose report is its own page; "tdd" names no period, so no period's report is hidden by it
-		r.Get("/reports/tdd", sitecollections.TDDReportHandler)
-		// The kept summaries as tables of their numbers, where an admin can have them built again
+		// The reports open on the kept summaries, as tables of their numbers, where an admin can have them built again
+		r.Get("/reports", sitecollections.SummariesReportHandler)
 		r.Get("/reports/summaries", sitecollections.SummariesReportHandler)
 		r.Post("/reports/summaries/regenerate", sitecollections.RegenerateSummariesHandler)
-		r.Get("/reports/{id}", store.Collection("data", "summary-periods").Get)
+		// The AGP report is of a day, week, fortnight or month, the week with yesterday in it at first
+		r.Get("/reports/agp", sitecollections.ReportsHandler(store.Collection("data", "summary-periods").Get))
+		r.Get("/reports/agp/{id}", store.Collection("data", "summary-periods").Get)
+		// The daily dose report is its own page
+		r.Get("/reports/tdd", sitecollections.TDDReportHandler)
 
 		// The settings and alarms pages show the identity's own settings, and the site's to an admin. Both save to
 		// /settings/site and /settings/identity.

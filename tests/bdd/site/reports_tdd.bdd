@@ -18,11 +18,11 @@ ASSERT_TEXT_EQUALS #site--reports--tdd--mean –
 ASSERT_COUNT #site--reports--tdd--table tbody tr 30
 ASSERT_COUNT #site--reports--tdd--table tbody td:text-is("–") 30
 
-// The Reports hub opens on AGP, whose tab marks it, and its TDD tab opens TDD again
+// The Reports hub opens on the summaries, whose tab marks it, and its TDD tab opens TDD again
 CLICK #site--nav--reports
 ASSERT_STATUS 200
 ASSERT_PATH /reports
-ASSERT_VISIBLE #site--reports--agp-button[aria-current="page"]
+ASSERT_VISIBLE #site--reports--summaries-button[aria-current="page"]
 CLICK #site--reports--tdd-menu-button
 ASSERT_STATUS 200
 ASSERT_NEW_URL
