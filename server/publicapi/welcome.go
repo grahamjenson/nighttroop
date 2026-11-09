@@ -51,6 +51,10 @@ func POSTWelcomeHandler(config *config.ServerConfig) http.HandlerFunc {
 		found, ok := welcomes.Peek(id)
 		var err error
 		if ok && found.siteID == httputils.GetSiteContext(r.Context()).SiteID && welcomes.Remove(id) {
+			// The browser they are shown to can add the admin a passkey, and log in with it
+			if err = config.Security.SetWelcomePasskeyCookie(w, found.siteID); err != nil {
+				slog.ErrorContext(r.Context(), "Unable to let the new site's admin add a passkey", "error", err)
+			}
 			err = public_templ.CreateSiteInfo(found.info).Render(r.Context(), w)
 		} else {
 			err = public_templ.WelcomeGone(config.RecoverURL()).Render(r.Context(), w)

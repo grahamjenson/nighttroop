@@ -245,6 +245,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   code check. The login button is disabled until a code from the authenticator app matches; a wrong code says so. A
   code is checked as soon as its sixth digit is in, with no click. The check changes nothing, and a recovered site's
   credentials are checked the same way.
+- Beside Login, a new site's welcome page offers "Login with passkey", with no authenticator app: it adds the admin a
+  passkey on the site's own address, with the device's fingerprint, face or PIN, and signs the admin in with it. Only
+  the browser the credentials were shown to can, for 15 minutes, once; after that the passkey is added on My Account.
 - A new site takes the time zone and language of the browser that created it, and its country's units and formats.
 - Site creation is rate limited per IP and server wide, and refused once the server holds `MAX_SITES`.
 - While a control admin has turned public site creation off, the home page says so instead of offering to create a

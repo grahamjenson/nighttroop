@@ -20,6 +20,7 @@ import (
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -96,8 +97,7 @@ func GETAccount(controlDB *db.ControlDB) http.HandlerFunc {
 	}
 }
 
-// POSTAccountPasskeyBegin starts adding the signed in identity a passkey, found without a name typed, checked by the
-// person's fingerprint, face or PIN, with no attestation (the authenticator's model), and not one it already has
+// POSTAccountPasskeyBegin starts adding the signed in identity a passkey
 func POSTAccountPasskeyBegin(controlDB *db.ControlDB, cfg *config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := accountUser(r, controlDB, true)
@@ -105,37 +105,98 @@ func POSTAccountPasskeyBegin(controlDB *db.ControlDB, cfg *config.ServerConfig) 
 			PasskeyError(w, r, http.StatusForbidden, "A passkey cannot be added: "+err.Error()+".", err)
 			return
 		}
-		PasskeyBegin(w, r, cfg, siteOrigin(cfg, r), func(rp *webauthn.WebAuthn) (any, *webauthn.SessionData, error) {
-			return rp.BeginRegistration(user, webauthn.WithConveyancePreference(protocol.PreferNoAttestation),
-				webauthn.WithExclusions(webauthn.Credentials(user.credentials).CredentialDescriptors()),
-				webauthn.WithAuthenticatorSelection(protocol.AuthenticatorSelection{ResidentKey: protocol.ResidentKeyRequirementRequired, UserVerification: protocol.VerificationRequired}))
-		})
+		beginAdding(w, r, cfg, user)
 	}
+}
+
+// beginAdding starts adding the identity a passkey, found without a name typed, checked by the person's fingerprint,
+// face or PIN, with no attestation (the authenticator's model), and not one it already has
+func beginAdding(w http.ResponseWriter, r *http.Request, cfg *config.ServerConfig, user passkeyUser) {
+	PasskeyBegin(w, r, cfg, siteOrigin(cfg, r), func(rp *webauthn.WebAuthn) (any, *webauthn.SessionData, error) {
+		return rp.BeginRegistration(user, webauthn.WithConveyancePreference(protocol.PreferNoAttestation),
+			webauthn.WithExclusions(webauthn.Credentials(user.credentials).CredentialDescriptors()),
+			webauthn.WithAuthenticatorSelection(protocol.AuthenticatorSelection{ResidentKey: protocol.ResidentKeyRequirementRequired, UserVerification: protocol.VerificationRequired}))
+	})
+}
+
+// finishAdding is the identity's new passkey from the browser's answer to beginAdding, kept, never the authenticator's
+// model, or an error already written
+func finishAdding(w http.ResponseWriter, r *http.Request, cfg *config.ServerConfig, controlDB *db.ControlDB, user passkeyUser) bool {
+	rp, session, err := PasskeySession(w, r, cfg, siteOrigin(cfg, r))
+	var credential *webauthn.Credential
+	if err == nil {
+		credential, err = rp.FinishRegistration(user, session, r)
+	}
+	if err != nil {
+		PasskeyError(w, r, http.StatusBadRequest, "The passkey could not be added.", err)
+		return false
+	}
+	if err := savePasskey(r, controlDB, credential, user.identity.ID, true); err != nil {
+		PasskeyError(w, r, http.StatusInternalServerError, "The passkey could not be kept.", err)
+		return false
+	}
+	slog.InfoContext(r.Context(), "Passkey added", "identity", user.identity.Name)
+	return true
 }
 
 // POSTAccountPasskeyFinish keeps the signed in identity's new passkey, never the authenticator's model, then My Account
 func POSTAccountPasskeyFinish(controlDB *db.ControlDB, cfg *config.ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := accountUser(r, controlDB, true)
-		var rp *webauthn.WebAuthn
-		var session webauthn.SessionData
-		if err == nil {
-			rp, session, err = PasskeySession(w, r, cfg, siteOrigin(cfg, r))
-		}
-		var credential *webauthn.Credential
-		if err == nil {
-			credential, err = rp.FinishRegistration(user, session, r)
-		}
 		if err != nil {
 			PasskeyError(w, r, http.StatusBadRequest, "The passkey could not be added.", err)
 			return
 		}
-		if err := savePasskey(r, controlDB, credential, user.identity.ID, true); err != nil {
-			PasskeyError(w, r, http.StatusInternalServerError, "The passkey could not be kept.", err)
+		if finishAdding(w, r, cfg, controlDB, user) {
+			apiutils.WriteJSON(w, http.StatusOK, map[string]string{"redirect": "/settings/account"})
+		}
+	}
+}
+
+// welcomeAdmin is the new site's admin, with its passkeys, when this browser was shown the site's credentials on its
+// welcome page in the last 15 minutes
+func welcomeAdmin(r *http.Request, controlDB *db.ControlDB, cfg *config.ServerConfig) (passkeyUser, error) {
+	siteID := httputils.GetSiteContext(r.Context()).SiteID
+	welcomed, err := cfg.Security.WelcomePasskeySite(r)
+	if err == nil && welcomed != siteID {
+		err = fmt.Errorf("the credentials were shown for another site")
+	}
+	var identity *controldb.SiteIdentity
+	if err == nil {
+		identity, err = controlDB.Queries.GetSiteIdentity(r.Context(), controldb.GetSiteIdentityParams{SiteID: siteID, Name: consts.FIRST_ADMIN_NAME})
+	}
+	if err != nil {
+		return passkeyUser{}, err
+	}
+	return passkeyUserFor(r, controlDB, identity)
+}
+
+// POSTWelcomePasskeyBegin starts adding the new site's admin a passkey from its welcome page, by the browser it showed
+// the site's credentials to
+func POSTWelcomePasskeyBegin(controlDB *db.ControlDB, cfg *config.ServerConfig) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user, err := welcomeAdmin(r, controlDB, cfg)
+		if err != nil {
+			PasskeyError(w, r, http.StatusForbidden, "This page can no longer add a passkey; log in, then add one on My Account.", err)
 			return
 		}
-		slog.InfoContext(r.Context(), "Passkey added", "identity", user.identity.Name)
-		apiutils.WriteJSON(w, http.StatusOK, map[string]string{"redirect": "/settings/account"})
+		beginAdding(w, r, cfg, user)
+	}
+}
+
+// POSTWelcomePasskeyFinish keeps the new site's admin's passkey, then signs the admin in with it, as a passkey sign in
+// does; the welcome adds only the one
+func POSTWelcomePasskeyFinish(controlDB *db.ControlDB, cfg *config.ServerConfig) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user, err := welcomeAdmin(r, controlDB, cfg)
+		if err != nil {
+			PasskeyError(w, r, http.StatusForbidden, "This page can no longer add a passkey; log in, then add one on My Account.", err)
+			return
+		}
+		if finishAdding(w, r, cfg, controlDB, user) {
+			cfg.Security.ClearWelcomePasskeyCookie(w)
+			passkeySignIn(w, r, cfg, user.identity)
+		}
 	}
 }
 

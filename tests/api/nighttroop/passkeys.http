@@ -19,6 +19,21 @@ B {"id": "AAAA", "rawId": "AAAA", "type": "public-key", "response": {}}
 ASSERT_STATUS 401
 ASSERT_EQUALS "That passkey could not sign you in." "@error"
 
+// Only the browser a new site's credentials were shown to adds its admin a passkey from its welcome page: without that
+// page's cookie it is refused
+NAME welcome_passkey_begin_without_welcome
+POST http://{{ site }}/welcome/passkey/begin
+H Accept: application/json
+ASSERT_STATUS 403
+ASSERT_EQUALS "This page can no longer add a passkey; log in, then add one on My Account." "@error"
+
+NAME welcome_passkey_finish_without_welcome
+POST http://{{ site }}/welcome/passkey/finish
+H Accept: application/json
+H Content-Type: application/json
+B {"id": "AAAA", "rawId": "AAAA", "type": "public-key", "response": {}}
+ASSERT_STATUS 403
+
 // A device, which does not sign in to the website, has no account page and adds no passkey
 NAME account_device
 GET http://{{ site }}/settings/account

@@ -1008,6 +1008,9 @@
   .border-brand-gold {
     border-color: var(--color-brand-gold);
   }
+  .border-brand-night {
+    border-color: var(--color-brand-night);
+  }
   .border-destructive {
     border-color: var(--destructive);
   }
@@ -1348,6 +1351,9 @@
   }
   .pb-5 {
     padding-bottom: calc(var(--spacing) * 5);
+  }
+  .pb-6 {
+    padding-bottom: calc(var(--spacing) * 6);
   }
   .pl-5 {
     padding-left: calc(var(--spacing) * 5);
