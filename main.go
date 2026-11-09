@@ -37,9 +37,9 @@ func main() {
 	}
 }
 
+// run starts the server: from its config, it restores its DBs from S3, opens the control DB, then runs the background
+// jobs and serves HTTP until it is told to stop, when it shuts down
 func run() error {
-	var err error
-
 	// Make all envars and config in one struct
 	serverConfig, err := config.NewServerConfig()
 	if err != nil {
@@ -57,84 +57,82 @@ func run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 	defer stop()
 
-	//
-	// Try and restore database files from S3 (we should )
-	//
-	s3Client := s3utils.NewS3Client(serverConfig)
-
 	// S3 is off without S3_URL; with it, the server only starts once S3 works
+	s3Client := s3utils.NewS3Client(serverConfig)
 	if err := s3Client.Start(ctx); err != nil {
 		return err
 	}
 
 	// Run some tests to make sure the server is setup properly
-	err = ValidateServer()
-	if err != nil {
+	if err := ValidateServer(); err != nil {
 		return fmt.Errorf("server validation failed: %w", err)
 	}
 
+	if err := restoreFromS3(serverConfig, s3Client); err != nil {
+		return err
+	}
+	controlDB, err := openControlDB(ctx, serverConfig, s3Client)
+	if err != nil {
+		return err
+	}
+
+	backgroundManager := background.NewBackGroundManager(context.Background(), controlDB, serverConfig, s3Client)
+	backgroundManager.Start()
+	defer backgroundManager.Stop()
+
+	fmt.Printf("Starting HTTP server on port %d\n", serverConfig.HostPort)
+	httpServer := setupHTTP(controlDB, serverConfig)
+
+	<-ctx.Done()
+	shutdown(httpServer, backgroundManager, controlDB)
+	return nil
+}
+
+// restoreFromS3 downloads the control DB and every site's files from their backups in S3, where there are any
+func restoreFromS3(serverConfig *config.ServerConfig, s3Client *s3utils.S3Client) error {
 	// Before any restore runs, so none of the staging folders it removes is in use
 	restore.RemoveStaging(serverConfig)
-
-	// This will download all files from S3 if they exist
-	err = restore.TryRestoreControlDB(s3Client)
-	if err != nil {
+	if err := restore.TryRestoreControlDB(s3Client); err != nil {
 		return fmt.Errorf("Failed to restore backups: %w", err)
 	}
-
-	// This will download all files from S3 if they exist
-	err = restore.TryRestoreAllFiles(s3Client)
-	if err != nil {
+	if err := restore.TryRestoreAllFiles(s3Client); err != nil {
 		return fmt.Errorf("Failed to restore backups: %w", err)
 	}
+	return nil
+}
 
-	//
-	// Setup Control DB
-	//
+// openControlDB opens the control DB and every site's, restoring a live site's missing DB from its batch's backup,
+// with an admin to log in with in development and staging, and prints the setup code of a server not yet set up
+func openControlDB(ctx context.Context, serverConfig *config.ServerConfig, s3Client *s3utils.S3Client) (*db.ControlDB, error) {
 	controlDB, err := db.NewControlDB(context.Background(), serverConfig)
 	if err != nil {
-		return fmt.Errorf("cannot create control db: %w", err)
+		return nil, fmt.Errorf("cannot create control db: %w", err)
 	}
 	// A live site whose DB file is missing, though its batch's folder is there, is restored from its batch's backup
 	if err := controlDB.RestoreMissingSites(ctx, s3Client.DownloadFilesFromS3); err != nil {
-		return fmt.Errorf("cannot open restored sites: %w", err)
+		return nil, fmt.Errorf("cannot open restored sites: %w", err)
 	}
 	// Development has an admin to log in with, and staging its configured one; anywhere else a new server is set up
 	// with the code it prints
 	if serverConfig.IsDev() {
 		if err := controlDB.SeedDevAdmin(ctx); err != nil {
-			return fmt.Errorf("cannot create the development admin: %w", err)
+			return nil, fmt.Errorf("cannot create the development admin: %w", err)
 		}
 	}
 	if serverConfig.IsStaging() {
 		if err := controlDB.SeedStagingAdmin(ctx); err != nil {
-			return fmt.Errorf("cannot create the staging admin: %w", err)
+			return nil, fmt.Errorf("cannot create the staging admin: %w", err)
 		}
 	}
 	if code := controlDB.SetupCode(); code != "" {
 		fmt.Printf("######## SET UP NIGHTTROOP ########\nOpen %s and enter the setup code: %s\n###################################\n", serverConfig.SetupURL(), code)
 	}
+	return controlDB, nil
+}
 
-	//
-	// Background jobs
-	//
-	backgroundManager := background.NewBackGroundManager(context.Background(), controlDB, serverConfig, s3Client)
-	backgroundManager.Start()
-	defer backgroundManager.Stop()
-	// backupJobs := backup.SetupBackupJobs(serverConfig, controlDB, s3Client)
-	// backupJobs.Start()
-
-	// connectorJobs := sync.SetupConnectorJobs(serverConfig, controlDB)
-	// connectorJobs.Start()
-	//
-	// HTTP
-	// Run web server.
-	fmt.Printf("Starting HTTP server on port %d\n", serverConfig.HostPort)
-	httpServer := setupHTTP(controlDB, serverConfig)
-
-	// Wait for signal.
-	<-ctx.Done()
-
+// shutdown stops serving HTTP, within 5 seconds, then the background jobs, backs the control DB and the sites up to
+// S3 a last time, and closes the DBs
+func shutdown(httpServer *http.Server, backgroundManager *background.BackGroundManager, controlDB *db.ControlDB) {
 	slog.Info("Received shutdown signal, shutting down gracefully...")
 
 	slog.Info("Shutting down HTTP server...")
@@ -146,8 +144,7 @@ func run() error {
 	slog.Info("HTTP server shutdown complete")
 
 	slog.Info("Stopping background jobs...")
-	backgroundManager.Stop() // Stop background jobs
-
+	backgroundManager.Stop()
 	slog.Info("Stopped background jobs complete")
 
 	slog.Info("Performing final backup to S3...")
@@ -156,14 +153,12 @@ func run() error {
 	if err := backgroundManager.BackupControlJobManager.BackupToS3(finalBackup); err != nil {
 		slog.ErrorContext(finalBackup, "Final control DB backup failed", "error", err)
 	}
-	backgroundManager.BackupSiteJobManager.BackupToS3(finalBackup) // Force a final backup before exiting
+	backgroundManager.BackupSiteJobManager.BackupToS3(finalBackup)
 	slog.Info("Final backup complete")
 
-	// Close control and User dbs
 	slog.Info("Closing Database connections")
 	controlDB.Close()
 	slog.Info("Server shutdown complete")
-	return nil
 }
 
 // setupSentry starts Sentry error reporting and records whether it is working in serverConfig.Status.
