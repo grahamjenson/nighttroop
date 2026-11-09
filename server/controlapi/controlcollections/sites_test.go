@@ -123,3 +123,34 @@ func TestCreateHandlerOverMaxSites(t *testing.T) {
 	require.Equal(t, http.StatusCreated, w.Code, w.Body.String())
 	require.Equal(t, cfg.MaxSites+1, controlDB.GetNSitesDBs())
 }
+
+// An admin downloads a copy of a site's DB, which its admins see in its events; a control identity who is not an admin
+// cannot, nor can a site with no DB here
+func TestDownloadDBHandler(t *testing.T) {
+	_, controlDB, site := testutils.NewControlDBWithSite(t)
+	ctx, siteID := t.Context(), site.SiteDB.Subdomain
+	router := chi.NewRouter()
+	router.Get("/sites/{id}/db", (&SitesCollection{}).DownloadDBHandler)
+	download := func(role consts.ControlRole, id string) *httptest.ResponseRecorder {
+		r := httptest.NewRequest(http.MethodGet, "/sites/"+id+"/db", nil)
+		rctx := httputils.CreateControlContext(r.Context(), controlDB, "", httputils.HTTPActionRead)
+		rctx = httputils.SetAdminControlContext(rctx, &controldb.ControlIdentity{Name: "admin", Role: role}, config.ServerStatus{})
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, r.WithContext(rctx))
+		return w
+	}
+
+	require.Equal(t, http.StatusForbidden, download(consts.ControlRoleRead, siteID).Code)
+	require.Equal(t, http.StatusNotFound, download(consts.ControlRoleAdmin, "nosuchsite").Code)
+
+	w := download(consts.ControlRoleAdmin, siteID)
+	require.Equal(t, http.StatusOK, w.Code, w.Body.String())
+	require.Equal(t, "application/vnd.sqlite3", w.Header().Get("Content-Type"))
+	require.Regexp(t, `^attachment; filename="`+siteID+`-\d{4}-\d\d-\d\dT\d\d-\d\d-\d\dZ\.sqlite"$`, w.Header().Get("Content-Disposition"))
+	require.True(t, strings.HasPrefix(w.Body.String(), "SQLite format 3\x00"), "the download is a SQLite DB")
+
+	events, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &siteID, Limit: 10})
+	require.NoError(t, err)
+	require.Equal(t, "site_db_downloaded_by_control", events[0].Name)
+	require.Equal(t, `{"by":"admin"}`, *events[0].Attributes)
+}

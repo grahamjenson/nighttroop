@@ -533,9 +533,9 @@ templ dbSize(site *controlmodels.Site, tables []*controlmodels.SiteTable) {
 	</div>
 }
 
-// siteActions are a grid of what can be done to the site, each saying what it does: open it, and for an admin, disable
-// it once no one has used it for a while, truncate it while it is over its DB size limit, and archive it once it is
-// disabled. One that cannot be done yet says when it can, in place of its button.
+// siteActions are a grid of what can be done to the site, each saying what it does: open it, and for an admin, download
+// a copy of its DB while it is here, disable it once no one has used it for a while, truncate it while it is over its
+// DB size limit, and archive it once it is disabled. One that cannot be done yet says when it can, in place of its button.
 templ siteActions(site *controlmodels.Site) {
 	<section id="control--site--actions" class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
 		<h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">Actions</h2>
@@ -548,6 +548,18 @@ templ siteActions(site *controlmodels.Site) {
 				}
 			}
 			if isAdmin(ctx) {
+				@actionCard("control--site--action-download-db", "Download DB", "Downloads a copy of its DB as it is now, as one SQLite file. Its admins see that you did, in its events.",
+					unless(site.State == "live" || site.State == "disabled", "Offered while its DB is here, before it is archived."), icon.Download) {
+					@button.Button(button.Props{
+						ID:         "control--site--download-db",
+						Href:       "/sites/" + site.ID + "/db",
+						Variant:    button.VariantOutline,
+						Class:      "w-full",
+						Attributes: templ.Attributes{"download": ""},
+					}) {
+						Download DB
+					}
+				}
 				@actionCard("control--site--action-disable", "Disable", "Stops serving the site. Its data is kept.", unless(inactive(ctx, site), disableWhen(ctx, site)), icon.Ban) {
 					@siteActionForm("/sites/"+site.ID, "disabled", "Disable this site? It will stop being served.", "control--site--disable", "Disable")
 				}

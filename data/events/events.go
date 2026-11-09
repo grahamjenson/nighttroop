@@ -51,6 +51,8 @@ const (
 	SignInFailed Name = "sign_in_failed"
 	// SignedInByControl is a control admin signing in to a site as one of its identities, from the site's details
 	SignedInByControl Name = "signed_in_by_control"
+	// SiteDBDownloadedByControl is a control admin downloading a copy of a site's DB, from the site's page
+	SiteDBDownloadedByControl Name = "site_db_downloaded_by_control"
 	// ResourceHigh and ResourceRecovered are one of the server's resources going over its alert level and coming
 	// back under it, their Attributes a config.ResourceLevel
 	ResourceHigh      Name = "resource_high"
@@ -59,7 +61,7 @@ const (
 
 // Persisted are the events kept in the logs DB. A model change is not, as the site's DB row is its record.
 var Persisted = []Name{SiteCreated, SiteDisabled, SiteDeleted, SiteArchived, SiteHydrated, SiteTruncated, SiteDBMissing, SiteBatchBackedUp, ControlBackedUp,
-	SiteAdminRecovered, IdentityCredentialsChanged, ConnectorTurnedOff, ConnectorBackfilled, ConnectorRecordsAdded, SiteTimezoneChanged, SiteWeekStartChanged, SummariesRegenerationRequested, AlarmCreated, AlarmSnoozed, AlarmDeleted, SignedIn, SignInFailed, SignedInByControl, ResourceHigh, ResourceRecovered}
+	SiteAdminRecovered, IdentityCredentialsChanged, ConnectorTurnedOff, ConnectorBackfilled, ConnectorRecordsAdded, SiteTimezoneChanged, SiteWeekStartChanged, SummariesRegenerationRequested, AlarmCreated, AlarmSnoozed, AlarmDeleted, SignedIn, SignInFailed, SignedInByControl, SiteDBDownloadedByControl, ResourceHigh, ResourceRecovered}
 
 // PersistedNames are the persisted events' names, to pick from
 func PersistedNames() []string {
