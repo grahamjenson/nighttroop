@@ -41,7 +41,7 @@ created, in the same transaction:
    retries, backfills and records arriving out of order all land on the same row, and A, then B, then A again is two
    rows, not three.
 3. It gives back the ID, which the record keeps: `profile_presets.loop_settings_id` and `remote_settings_id`, and
-   `configuration_id` in a device report's `other_attributes`.
+   `device_reports.configuration_id`.
 
 Settings that are empty (`{}`, as AAPS sends in most statuses) or missing are none sent, so the record refers to no
 row. Settings over 8 KB are not kept, and the record is still kept, without them.

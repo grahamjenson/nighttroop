@@ -39,7 +39,7 @@ func (c DeviceStatusCollection) CreateModel(q *sitedb.Queries, ctx context.Conte
 		if err != nil {
 			return nil, err
 		}
-		createParams.OtherAttributes.ConfigurationID = id
+		createParams.ConfigurationID = id
 	}
 
 	return q.CreateDeviceReport(ctx, createParams)
@@ -160,7 +160,7 @@ func DBToNightscoutDeviceStatus(source *sitedb.DeviceReport, siteContext *httput
 	/// Extracting Loop values
 	///////
 	// Its configuration is the loop_settings it refers to, left out when they were deleted
-	if configuration := loopSettingsJSON(context.Background(), siteContext, other.ConfigurationID); configuration != nil {
+	if configuration := loopSettingsJSON(context.Background(), siteContext, source.ConfigurationID); configuration != nil {
 		nsModel.ConfigurationRaw = &configuration
 	}
 

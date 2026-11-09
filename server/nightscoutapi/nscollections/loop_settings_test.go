@@ -76,10 +76,10 @@ func TestDeviceStatusConfigurationFromLoopSettings(t *testing.T) {
 
 	report, err := DeviceStatusCollection{}.CreateModel(q, ctx, status, nightscoutmodels.ConverterContext{IdentityName: "aaps"}, nil)
 	require.NoError(t, err)
-	require.NotNil(t, report.OtherAttributes.ConfigurationID)
+	require.NotNil(t, report.ConfigurationID)
 	require.JSONEq(t, `{"aps":"SMB","insulin":2}`, string(*DBToNightscoutDeviceStatus(report, siteContext).ConfigurationRaw))
 
-	_, err = q.DeleteLoopSettings(ctx, sitedb.DeleteLoopSettingsParams{ID: *report.OtherAttributes.ConfigurationID})
+	_, err = q.DeleteLoopSettings(ctx, sitedb.DeleteLoopSettingsParams{ID: *report.ConfigurationID})
 	require.NoError(t, err)
 	report, err = q.GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: report.ID})
 	require.NoError(t, err)

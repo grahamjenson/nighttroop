@@ -837,6 +837,16 @@ func (m *DeviceReport) SetLoopCob(v *float64) {
 	m.LoopCob = v
 }
 
+// GetConfigurationID returns the ConfigurationID value.
+func (m DeviceReport) GetConfigurationID() *string {
+	return m.ConfigurationID
+}
+
+// SetConfigurationID sets the ConfigurationID value and returns the updated DeviceReport.
+func (m *DeviceReport) SetConfigurationID(v *string) {
+	m.ConfigurationID = v
+}
+
 // GetOtherAttributes returns the OtherAttributes value.
 func (m DeviceReport) GetOtherAttributes() types.DeviceReportOther {
 	return m.OtherAttributes
@@ -4995,6 +5005,16 @@ func (m CreateDeviceReportParams) GetLoopCob() *float64 {
 // SetLoopCob sets the LoopCob value and returns the updated CreateDeviceReportParams.
 func (m *CreateDeviceReportParams) SetLoopCob(v *float64) {
 	m.LoopCob = v
+}
+
+// GetConfigurationID returns the ConfigurationID value.
+func (m CreateDeviceReportParams) GetConfigurationID() *string {
+	return m.ConfigurationID
+}
+
+// SetConfigurationID sets the ConfigurationID value and returns the updated CreateDeviceReportParams.
+func (m *CreateDeviceReportParams) SetConfigurationID(v *string) {
+	m.ConfigurationID = v
 }
 
 // GetOtherAttributes returns the OtherAttributes value.
