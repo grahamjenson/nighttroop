@@ -462,7 +462,8 @@ A record's details, on a data or presets page, edit it in a form whose every inp
 lines on a phone so each input and Save can be seen and tapped.
 
 Without a mouse, Tab reaches each record's row in a table, here and on the control pages, outlined in gold, and Enter
-opens its details; Enter on its delete button deletes it without opening them. A modal takes the focus when it opens,
+opens its details; Enter on its delete button deletes it without opening them. A row's delete icon, here and in
+settings, is grey, and red only while it is pointed at or focused, so a table is not a column of red. A modal takes the focus when it opens,
 so Tab goes on to its fields and a screen reader reads its title; Tab past its Close button goes round to its first
 field, and Shift+Tab from its first field to Close, so the focus never reaches the page behind it. Closing it (Escape,
 Close or saving) gives the focus back to the row or button that opened it.
