@@ -75,6 +75,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.clearDeviceReportLoopStatusStmt, err = db.PrepareContext(ctx, clearDeviceReportLoopStatus); err != nil {
 		return nil, fmt.Errorf("error preparing query ClearDeviceReportLoopStatus: %w", err)
 	}
+	if q.clearOldLoopStatusesStmt, err = db.PrepareContext(ctx, clearOldLoopStatuses); err != nil {
+		return nil, fmt.Errorf("error preparing query ClearOldLoopStatuses: %w", err)
+	}
 	if q.createActivityStmt, err = db.PrepareContext(ctx, createActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateActivity: %w", err)
 	}
@@ -390,9 +393,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.softDeleteTempTargetStmt, err = db.PrepareContext(ctx, softDeleteTempTarget); err != nil {
 		return nil, fmt.Errorf("error preparing query SoftDeleteTempTarget: %w", err)
 	}
-	if q.thinOldLoopStatusesStmt, err = db.PrepareContext(ctx, thinOldLoopStatuses); err != nil {
-		return nil, fmt.Errorf("error preparing query ThinOldLoopStatuses: %w", err)
-	}
 	if q.updateActivityStmt, err = db.PrepareContext(ctx, updateActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateActivity: %w", err)
 	}
@@ -526,6 +526,11 @@ func (q *Queries) Close() error {
 	if q.clearDeviceReportLoopStatusStmt != nil {
 		if cerr := q.clearDeviceReportLoopStatusStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing clearDeviceReportLoopStatusStmt: %w", cerr)
+		}
+	}
+	if q.clearOldLoopStatusesStmt != nil {
+		if cerr := q.clearOldLoopStatusesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing clearOldLoopStatusesStmt: %w", cerr)
 		}
 	}
 	if q.createActivityStmt != nil {
@@ -1053,11 +1058,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing softDeleteTempTargetStmt: %w", cerr)
 		}
 	}
-	if q.thinOldLoopStatusesStmt != nil {
-		if cerr := q.thinOldLoopStatusesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing thinOldLoopStatusesStmt: %w", cerr)
-		}
-	}
 	if q.updateActivityStmt != nil {
 		if cerr := q.updateActivityStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateActivityStmt: %w", cerr)
@@ -1189,6 +1189,7 @@ type Queries struct {
 	allTempBasalsStmt                           *sql.Stmt
 	allTempTargetsStmt                          *sql.Stmt
 	clearDeviceReportLoopStatusStmt             *sql.Stmt
+	clearOldLoopStatusesStmt                    *sql.Stmt
 	createActivityStmt                          *sql.Stmt
 	createComponentEventStmt                    *sql.Stmt
 	createDeviceReportStmt                      *sql.Stmt
@@ -1294,7 +1295,6 @@ type Queries struct {
 	softDeleteProfileSwitchStmt                 *sql.Stmt
 	softDeleteTempBasalStmt                     *sql.Stmt
 	softDeleteTempTargetStmt                    *sql.Stmt
-	thinOldLoopStatusesStmt                     *sql.Stmt
 	updateActivityStmt                          *sql.Stmt
 	updateComponentEventStmt                    *sql.Stmt
 	updateDeviceReportStmt                      *sql.Stmt
@@ -1333,6 +1333,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		allTempBasalsStmt:                           q.allTempBasalsStmt,
 		allTempTargetsStmt:                          q.allTempTargetsStmt,
 		clearDeviceReportLoopStatusStmt:             q.clearDeviceReportLoopStatusStmt,
+		clearOldLoopStatusesStmt:                    q.clearOldLoopStatusesStmt,
 		createActivityStmt:                          q.createActivityStmt,
 		createComponentEventStmt:                    q.createComponentEventStmt,
 		createDeviceReportStmt:                      q.createDeviceReportStmt,
@@ -1438,7 +1439,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		softDeleteProfileSwitchStmt:                 q.softDeleteProfileSwitchStmt,
 		softDeleteTempBasalStmt:                     q.softDeleteTempBasalStmt,
 		softDeleteTempTargetStmt:                    q.softDeleteTempTargetStmt,
-		thinOldLoopStatusesStmt:                     q.thinOldLoopStatusesStmt,
 		updateActivityStmt:                          q.updateActivityStmt,
 		updateComponentEventStmt:                    q.updateComponentEventStmt,
 		updateDeviceReportStmt:                      q.updateDeviceReportStmt,

@@ -548,7 +548,7 @@ templ siteActions(site *controlmodels.Site) {
 				}
 			}
 			if isAdmin(ctx) {
-				@actionCard("control--site--action-download-db", "Download DB", "Downloads a copy of its DB as it is now, as one SQLite file. Its admins see that you did, in its events.",
+				@actionCard("control--site--action-download-db", "Download DB", "Downloads the zip of its DB its admins get from Download Data. Its admins see that you did, in its events.",
 					unless(site.State == "live" || site.State == "disabled", "Offered while its DB is here, before it is archived."), icon.Download) {
 					@button.Button(button.Props{
 						ID:         "control--site--download-db",
@@ -563,8 +563,8 @@ templ siteActions(site *controlmodels.Site) {
 				@actionCard("control--site--action-disable", "Disable", "Stops serving the site. Its data is kept.", unless(inactive(ctx, site), disableWhen(ctx, site)), icon.Ban) {
 					@siteActionForm("/sites/"+site.ID, "disabled", "Disable this site? It will stop being served.", "control--site--disable", "Disable")
 				}
-				@actionCard("control--site--action-truncate", "Truncate", "Keeps the loop's predictions and debug output only on each device's newest status, as every 10 minutes, then shrinks its DB.", unless(site.Oversized(), "Offered while it is over its DB size limit."), icon.Scissors) {
-					@siteActionForm("/sites/"+site.ID+"/truncate", "", "Truncate this site? Its older loop statuses lose their predictions and debug output, then its DB is shrunk.", "control--site--truncate", "Truncate")
+				@actionCard("control--site--action-truncate", "Truncate", "Keeps the loop's status only on each device's newest report, clearing the others' but their IOB and COB, then shrinks its DB.", unless(site.Oversized(), "Offered while it is over its DB size limit."), icon.Scissors) {
+					@siteActionForm("/sites/"+site.ID+"/truncate", "", "Truncate this site? Its older loop statuses are cleared, keeping their IOB and COB, then its DB is shrunk.", "control--site--truncate", "Truncate")
 				}
 				@actionCard("control--site--action-archive", "Archive", "Uploads its data to S3 and deletes it here.", unless(site.State == "disabled", "Offered once it is disabled."), icon.Archive) {
 					@siteActionForm("/sites/"+site.ID, "archived", "Archive this site? Its data is uploaded to S3 and deleted here.", "control--site--archive", "Archive")

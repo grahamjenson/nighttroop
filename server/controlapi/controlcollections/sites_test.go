@@ -1,7 +1,10 @@
 package controlcollections
 
 import (
+	"archive/zip"
+	"bytes"
 	"context"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -124,8 +127,8 @@ func TestCreateHandlerOverMaxSites(t *testing.T) {
 	require.Equal(t, cfg.MaxSites+1, controlDB.GetNSitesDBs())
 }
 
-// An admin downloads a copy of a site's DB, which its admins see in its events; a control identity who is not an admin
-// cannot, nor can a site with no DB here
+// An admin downloads the zip of a site's DB its admins get from Download Data, which its admins see in its events; a
+// control identity who is not an admin cannot, nor can a site with no DB here
 func TestDownloadDBHandler(t *testing.T) {
 	_, controlDB, site := testutils.NewControlDBWithSite(t)
 	ctx, siteID := t.Context(), site.SiteDB.Subdomain
@@ -145,9 +148,18 @@ func TestDownloadDBHandler(t *testing.T) {
 
 	w := download(consts.ControlRoleAdmin, siteID)
 	require.Equal(t, http.StatusOK, w.Code, w.Body.String())
-	require.Equal(t, "application/vnd.sqlite3", w.Header().Get("Content-Type"))
-	require.Regexp(t, `^attachment; filename="`+siteID+`-\d{4}-\d\d-\d\dT\d\d-\d\d-\d\dZ\.sqlite"$`, w.Header().Get("Content-Disposition"))
-	require.True(t, strings.HasPrefix(w.Body.String(), "SQLite format 3\x00"), "the download is a SQLite DB")
+	name := siteID + "-" + time.Now().UTC().Format(time.DateOnly)
+	require.Equal(t, "application/zip", w.Header().Get("Content-Type"))
+	require.Equal(t, `attachment; filename="`+name+`.zip"`, w.Header().Get("Content-Disposition"))
+	archive, err := zip.NewReader(bytes.NewReader(w.Body.Bytes()), int64(w.Body.Len()))
+	require.NoError(t, err)
+	require.Len(t, archive.File, 1)
+	require.Equal(t, name+".sqlite", archive.File[0].Name)
+	entry, err := archive.File[0].Open()
+	require.NoError(t, err)
+	db, err := io.ReadAll(entry)
+	require.NoError(t, err)
+	require.True(t, strings.HasPrefix(string(db), "SQLite format 3\x00"), "the zip holds a SQLite DB")
 
 	events, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &siteID, Limit: 10})
 	require.NoError(t, err)

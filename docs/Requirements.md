@@ -91,8 +91,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - A site's page has an Actions grid of what can be done to it: Open Site, and for an admin Download DB, Disable,
   Truncate and Archive. Each says what it does, and has its button when it can be done, or says when it would be
   offered (e.g. Truncate while over its DB size limit, Archive once disabled). Its page shows the change once done.
-- Download DB (`/sites/{id}/db`) downloads a copy of a live or disabled site's DB as it is now, as one SQLite file named
-  `<site>-<time>.sqlite`, copied consistently while the site is written to. Only a control admin can, it shares the
+- Download DB (`/sites/{id}/db`) downloads the same zip a site's admin gets from Download Data, made by the same code:
+  `<site>-<date>.zip` of a copy of a live or disabled site's DB as it is now, `<site>-<date>.sqlite`, copied
+  consistently while the site is written to. Only a control admin can, it shares the
   site's limit on downloads, and the site records a "Site DB downloaded by control" event, with the admin, which its
   admins see on its Events page. An archived site has no DB here to download.
 - The sites page has the Create a site and Public site creation cards side by side, each saying what it does.
@@ -106,7 +107,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   - **disabled**, after a confirmation, so it is no longer served;
   - **archived** once disabled, uploading it to S3 (needs S3);
   - **hydrated** from the archived sites page, bringing it back live;
-  - **truncated** when over its DB size limit, which truncates it as every 10 minutes, then shrinks its DB.
+  - **truncated** when over its DB size limit, which truncates all its device statuses as every 10 minutes, then
+    shrinks its DB.
 - A site deleted for good, such as one never used after it was made, has its identities deleted, with their passwords,
   TOTP secrets and devices' push tokens, and its push credentials' secrets removed; an archived site keeps them, as it
   can be hydrated.
@@ -496,7 +498,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 - Connector credentials are encrypted at rest.
 - A Nightscout connector copies the newest readings, treatments and device statuses, and the current profile store
   whenever the Nightscout's profiles change, however long ago it started; an edit to it in Nightscout's profile
-  editor replaces the copy, whoever saved it there, and a new one is added beside it.
+  editor replaces the copy, whoever saved it there or whatever identifier its uploader, such as AAPS, gave it, and a
+  new one is added beside it.
 - A Nightscout connector on this server's host, or on a private, local or shared (carrier-grade NAT or Tailscale) address,
   is refused when saved and as it connects.
 - Pasting a Nightscout link with its token, such as `https://site/api/v1?token=...`, `?api_secret=...` or
@@ -762,9 +765,12 @@ Connectors are a site's third party integrations, each syncing from one service.
   what was delivered) from one sent the same, Loop's indefinite duration, and a device status's pump and uploader, for
   the fields without a column that Nightguard shows (AAPS's extended).
 - Every 10 minutes every site is truncated: a device status's loop status, most of a site's DB with AAPS uploading
-  every 5 minutes, is kept whole only on its device's newest status, which followers (LoopFollow, the Nightscout web
-  app) draw their forecast from. The others lose its debug output (OpenAPS's `consoleLog` and `consoleError`) and
-  predicted glucoses (`predBGs`, Loop's `predicted`), keeping its IOB, COB, reason and the rest.
+  every 5 minutes, is kept only on its device's newest status with one, which followers (LoopFollow, the Nightscout
+  web app) draw their forecast and reason from; a newer status without one, as a pump's own, leaves it so. Once a
+  newer one comes in, the others are cleared: their IOB and COB, extracted when they were written, are kept, and the
+  Nightscout API gives them back as their `openaps` or `loop` object. The job looks at the statuses written in the last
+  day; truncating a site looks at them all, so it clears those the job no longer looks at, as a device's newest before
+  it went a day without reporting.
 - Reads and writes are rate limited per site, identity and IP, and live sessions per site are capped.
 - A Nightscout request that fails auth, or needs none, spends its IP's budget on the site
   (`SITE_UNAUTH_PER_MINUTE_LIMIT`); one with a valid token does not, so a device uploading often from one IP is limited

@@ -189,48 +189,48 @@ func TestHydrateSite(t *testing.T) {
 	require.Equal(t, 120.0, reading.Mgdl)
 }
 
-// A loop's status is kept whole only on its device's newest report: the others lose its debug output and predictions,
-// keeping its IOB, COB and reason, for every open site every 10 minutes, and for one site when it is truncated
-func TestTruncateThinsOldLoopStatuses(t *testing.T) {
+// A loop's status is kept only on its device's newest report with one; the others' are cleared, keeping the IOB and
+// COB extracted into their columns: for every open site every 10 minutes, and for one site when it is truncated
+func TestTruncateClearsOldLoopStatuses(t *testing.T) {
 	_, controlDB, site := testutils.NewControlDBWithSite(t)
 	ctx, q := t.Context(), site.SiteDB.Queries()
-	openaps := `{"iob":{"iob":1.2},"suggested":{"COB":20,"reason":"COB 20","predBGs":{"IOB":[120,118]},"consoleLog":["SMB"],"consoleError":["CR: 10"]},"enacted":{"reason":"COB 20","rate":0.5,"predBGs":{"IOB":[120,118]}}}`
-	loop := `{"iob":{"iob":3},"predicted":{"startDate":"2024-01-01T00:05:00Z","values":[120,130]}}`
-	reports := map[string]struct {
-		device, status string
-		minutesAgo     int
-	}{
-		"aaps-old": {"aaps", openaps, 10}, "aaps-newest": {"aaps", openaps, 5},
-		"loop-old": {"loop", loop, 10}, "loop-newest": {"loop", loop, 5},
-	}
-	for id, report := range reports {
-		_, err := q.CreateDeviceReport(ctx, sitedb.CreateDeviceReportParams{ID: id, LoopStatusJson: &report.status,
-			OccurredAt: time.Now().Add(-time.Duration(report.minutesAgo) * time.Minute).UnixMilli(), CreatedByDeviceName: &report.device, CreatedByIdentityName: "phone"})
+	aaps := `{"iob":{"iob":1.2},"suggested":{"COB":20,"reason":"COB 20","predBGs":{"IOB":[120,118]}}}`
+	loop := `{"iob":{"iob":3},"cob":{"cob":12},"predicted":{"startDate":"2024-01-01T00:05:00Z","values":[120,130]}}`
+	create := func(id, device string, status *string, minutesAgo int) {
+		_, err := q.CreateDeviceReport(ctx, sitedb.CreateDeviceReportParams{ID: id, LoopStatusJson: status, LoopIob: new(1.2),
+			OccurredAt: time.Now().Add(-time.Duration(minutesAgo) * time.Minute).UnixMilli(), CreatedByDeviceName: &device, CreatedByIdentityName: "phone"})
 		require.NoError(t, err)
 	}
-	status := func(id string) string {
+	for device, status := range map[string]string{"aaps": aaps, "loop": loop} {
+		create(device+"-old", device, &status, 10)
+		create(device+"-newest", device, &status, 5)
+	}
+	// A newer report of AAPS's phone without a loop status, as a pump's own, leaves the one before it the newest
+	create("aaps-pump-only", "aaps", nil, 1)
+	report := func(id string) *sitedb.DeviceReport {
 		report, err := q.GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: id})
 		require.NoError(t, err)
-		return *report.LoopStatusJson
+		return report
 	}
 
 	require.NoError(t, controlDB.TruncateSites(ctx))
-	require.JSONEq(t, `{"iob":{"iob":1.2},"suggested":{"COB":20,"reason":"COB 20"},"enacted":{"reason":"COB 20","rate":0.5}}`, status("aaps-old"))
-	require.JSONEq(t, `{"iob":{"iob":3}}`, status("loop-old"))
-	require.JSONEq(t, openaps, status("aaps-newest"), "the newest is kept whole")
-	require.JSONEq(t, loop, status("loop-newest"), "each device's newest is kept whole")
+	for device, kept := range map[string]string{"aaps": aaps, "loop": loop} {
+		require.Nil(t, report(device+"-old").LoopStatusJson, "%s's older status is cleared", device)
+		require.Equal(t, new(1.2), report(device+"-old").LoopIob, "%s's IOB extracted from it is kept", device)
+		require.JSONEq(t, kept, *report(device+"-newest").LoopStatusJson, "%s's newest with a loop status is kept", device)
+	}
 
-	// A newer report from the device leaves the one before it to be thinned by the next truncate, here the site's own
-	newer := openaps
-	_, err := q.CreateDeviceReport(ctx, sitedb.CreateDeviceReportParams{ID: "aaps-newer", LoopStatusJson: &newer,
-		OccurredAt: time.Now().UnixMilli(), CreatedByDeviceName: new("aaps"), CreatedByIdentityName: "phone"})
-	require.NoError(t, err)
+	// The job looks only at reports written in the last day; truncating the site looks at them all
+	newer := aaps
+	create("aaps-newer", "aaps", &newer, 0)
+	require.NoError(t, db.TruncateSiteSince(ctx, site.SiteDB, time.Now().Add(time.Hour).UnixMilli()))
+	require.NotNil(t, report("aaps-newest").LoopStatusJson, "a report written before since is not looked at")
 	// An in-memory DB has no size to record
 	sizeKB, err := controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
 	require.NoError(t, err)
 	require.Nil(t, sizeKB)
-	require.NotContains(t, status("aaps-newest"), "predBGs")
-	require.JSONEq(t, openaps, status("aaps-newer"))
+	require.Nil(t, report("aaps-newest").LoopStatusJson)
+	require.JSONEq(t, aaps, *report("aaps-newer").LoopStatusJson)
 
 	_, err = controlDB.TruncateSite(ctx, "not-a-site")
 	require.ErrorContains(t, err, "is not open")

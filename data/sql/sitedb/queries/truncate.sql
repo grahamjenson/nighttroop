@@ -1,23 +1,13 @@
--- name: ThinOldLoopStatuses :exec
--- A loop's status, most of a device report and of a site's DB, is kept whole only on its device's newest report, as
--- followers (LoopFollow, the Nightscout web app) read its predictions from that one. The others lose its debug output
--- (OpenAPS's consoleLog and consoleError) and predicted glucoses (OpenAPS's predBGs, Loop's predicted), keeping its
--- IOB, COB, reason and the rest. Only reports written since Since are looked at, by their updated_at index, as those
--- before were thinned by an earlier run.
-UPDATE device_reports SET loop_status_json = json_remove(loop_status_json,
-    '$.suggested.consoleLog', '$.suggested.consoleError', '$.suggested.predBGs',
-    '$.enacted.consoleLog', '$.enacted.consoleError', '$.enacted.predBGs', '$.predicted')
+-- name: ClearOldLoopStatuses :exec
+-- A loop's status, most of a device report and of a site's DB, is kept only on its device's newest report with one,
+-- as followers (LoopFollow, the Nightscout web app) read its predictions and reason from that one. Once a newer one
+-- comes in, the others are cleared: what is worth keeping of them, the loop's IOB and COB, was extracted into their own
+-- columns when they were written. Only reports written since Since are looked at, by their updated_at index, as those
+-- before were cleared by an earlier run; 0 looks at them all.
+UPDATE device_reports SET loop_status_json = NULL
 WHERE device_reports.updated_at >= @since AND device_reports.loop_status_json IS NOT NULL
     AND device_reports.occurred_at < (
         SELECT MAX(newest.occurred_at) FROM device_reports AS newest
-        WHERE newest.created_by_device_name IS device_reports.created_by_device_name AND newest.deleted_at IS NULL
-    )
-    AND (
-        json_type(device_reports.loop_status_json, '$.suggested.consoleLog') IS NOT NULL
-        OR json_type(device_reports.loop_status_json, '$.suggested.consoleError') IS NOT NULL
-        OR json_type(device_reports.loop_status_json, '$.suggested.predBGs') IS NOT NULL
-        OR json_type(device_reports.loop_status_json, '$.enacted.consoleLog') IS NOT NULL
-        OR json_type(device_reports.loop_status_json, '$.enacted.consoleError') IS NOT NULL
-        OR json_type(device_reports.loop_status_json, '$.enacted.predBGs') IS NOT NULL
-        OR json_type(device_reports.loop_status_json, '$.predicted') IS NOT NULL
+        WHERE newest.created_by_device_name IS device_reports.created_by_device_name
+            AND newest.loop_status_json IS NOT NULL AND newest.deleted_at IS NULL
     );
