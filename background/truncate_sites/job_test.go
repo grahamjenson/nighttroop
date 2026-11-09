@@ -1,4 +1,4 @@
-package clear_raw_json_test
+package truncate_sites_test
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 
 	"github.com/robfig/cron/v3"
 	"github.com/stretchr/testify/require"
-	"nighttroop.t1d.nz/background/clear_raw_json"
+	"nighttroop.t1d.nz/background/truncate_sites"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -18,15 +18,15 @@ func (s scheduler) AddFunc(name string, spec string, cmd func(context.Context) e
 	s[name+" "+spec] = cmd
 }
 
-// Each hour, at a fixed minute, every site is truncated, which does nothing for now
+// Every 10 minutes, at fixed minutes, every site is truncated
 func TestTruncateSitesCron(t *testing.T) {
 	_, controlDB, _ := testutils.NewControlDBWithSite(t)
 	jobs := scheduler{}
-	clear_raw_json.SetupCron(jobs, controlDB)
-	require.NoError(t, jobs["TruncateSites "+clear_raw_json.Spec](t.Context()))
+	truncate_sites.SetupCron(jobs, controlDB)
+	require.NoError(t, jobs["TruncateSites "+truncate_sites.Spec](t.Context()))
 
-	schedule, err := cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow).Parse(clear_raw_json.Spec)
+	schedule, err := cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow).Parse(truncate_sites.Spec)
 	require.NoError(t, err)
 	at := time.Date(2026, 11, 8, 10, 20, 0, 0, time.UTC)
-	require.Equal(t, time.Date(2026, 11, 8, 11, 17, 0, 0, time.UTC), schedule.Next(at))
+	require.Equal(t, time.Date(2026, 11, 8, 10, 30, 0, 0, time.UTC), schedule.Next(at))
 }

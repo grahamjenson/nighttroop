@@ -189,20 +189,48 @@ func TestHydrateSite(t *testing.T) {
 	require.Equal(t, 120.0, reading.Mgdl)
 }
 
-// Truncating a site shrinks its DB, keeping its rows, and clears nothing, as no raw JSON is kept to clear
-func TestTruncateSite(t *testing.T) {
+// A loop's status is kept whole only on its device's newest report: the others lose its debug output and predictions,
+// keeping its IOB, COB and reason, for every open site every 10 minutes, and for one site when it is truncated
+func TestTruncateThinsOldLoopStatuses(t *testing.T) {
 	_, controlDB, site := testutils.NewControlDBWithSite(t)
 	ctx, q := t.Context(), site.SiteDB.Queries()
-	_, err := q.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "reading", Mgdl: 120, ReadingType: "sgv", OccurredAt: 1, CreatedByIdentityName: "phone"})
-	require.NoError(t, err)
+	openaps := `{"iob":{"iob":1.2},"suggested":{"COB":20,"reason":"COB 20","predBGs":{"IOB":[120,118]},"consoleLog":["SMB"],"consoleError":["CR: 10"]},"enacted":{"reason":"COB 20","rate":0.5,"predBGs":{"IOB":[120,118]}}}`
+	loop := `{"iob":{"iob":3},"predicted":{"startDate":"2024-01-01T00:05:00Z","values":[120,130]}}`
+	reports := map[string]struct {
+		device, status string
+		minutesAgo     int
+	}{
+		"aaps-old": {"aaps", openaps, 10}, "aaps-newest": {"aaps", openaps, 5},
+		"loop-old": {"loop", loop, 10}, "loop-newest": {"loop", loop, 5},
+	}
+	for id, report := range reports {
+		_, err := q.CreateDeviceReport(ctx, sitedb.CreateDeviceReportParams{ID: id, LoopStatusJson: &report.status,
+			OccurredAt: time.Now().Add(-time.Duration(report.minutesAgo) * time.Minute).UnixMilli(), CreatedByDeviceName: &report.device, CreatedByIdentityName: "phone"})
+		require.NoError(t, err)
+	}
+	status := func(id string) string {
+		report, err := q.GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: id})
+		require.NoError(t, err)
+		return *report.LoopStatusJson
+	}
 
+	require.NoError(t, controlDB.TruncateSites(ctx))
+	require.JSONEq(t, `{"iob":{"iob":1.2},"suggested":{"COB":20,"reason":"COB 20"},"enacted":{"reason":"COB 20","rate":0.5}}`, status("aaps-old"))
+	require.JSONEq(t, `{"iob":{"iob":3}}`, status("loop-old"))
+	require.JSONEq(t, openaps, status("aaps-newest"), "the newest is kept whole")
+	require.JSONEq(t, loop, status("loop-newest"), "each device's newest is kept whole")
+
+	// A newer report from the device leaves the one before it to be thinned by the next truncate, here the site's own
+	newer := openaps
+	_, err := q.CreateDeviceReport(ctx, sitedb.CreateDeviceReportParams{ID: "aaps-newer", LoopStatusJson: &newer,
+		OccurredAt: time.Now().UnixMilli(), CreatedByDeviceName: new("aaps"), CreatedByIdentityName: "phone"})
+	require.NoError(t, err)
 	// An in-memory DB has no size to record
 	sizeKB, err := controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
 	require.NoError(t, err)
 	require.Nil(t, sizeKB)
-	reading, err := q.GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: "reading"})
-	require.NoError(t, err)
-	require.Equal(t, float64(120), reading.Mgdl, "the reading is kept")
+	require.NotContains(t, status("aaps-newest"), "predBGs")
+	require.JSONEq(t, openaps, status("aaps-newer"))
 
 	_, err = controlDB.TruncateSite(ctx, "not-a-site")
 	require.ErrorContains(t, err, "is not open")
