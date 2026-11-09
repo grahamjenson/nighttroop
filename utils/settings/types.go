@@ -231,24 +231,6 @@ func ValidDeviceNames(names types.DeviceNames) error {
 	return nil
 }
 
-func Min[T cmp.Ordered](min T) func(T) error {
-	return func(value T) error {
-		if value < min {
-			return fmt.Errorf("must be >= %v", min)
-		}
-		return nil
-	}
-}
-
-func Max[T cmp.Ordered](max T) func(T) error {
-	return func(value T) error {
-		if value > max {
-			return fmt.Errorf("must be <= %v", max)
-		}
-		return nil
-	}
-}
-
 func Range[T cmp.Ordered](min, max T) func(T) error {
 	return func(value T) error {
 		if value < min || value > max {

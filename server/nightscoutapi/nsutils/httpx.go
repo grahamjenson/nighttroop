@@ -93,16 +93,6 @@ func writeHeadersForRecords(w http.ResponseWriter, records []Document) {
 	w.Header().Set("ETag", fmt.Sprintf(`W/"%d"`, maxSrvModified))
 }
 
-// ParseIfModifiedSince parses the If-Modified-Since header when present.
-func ParseIfModifiedSince(r *http.Request) (time.Time, bool) {
-	value := strings.TrimSpace(r.Header.Get("If-Modified-Since"))
-	if value == "" {
-		return time.Time{}, false
-	}
-	parsed, err := time.Parse(http.TimeFormat, value)
-	return parsed, err == nil
-}
-
 // ParseIfUnmodifiedSince parses the If-Unmodified-Since header when present.
 func ParseIfUnmodifiedSince(r *http.Request) (time.Time, bool) {
 	value := strings.TrimSpace(r.Header.Get("If-Unmodified-Since"))

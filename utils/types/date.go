@@ -66,9 +66,6 @@ func (d *DateInt) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func DateIntFromTime(t time.Time) DateInt {
-	return DateInt(t.UnixMilli())
-}
 func (d DateInt) Time() time.Time {
 	return time.UnixMilli(int64(d))
 }
@@ -212,12 +209,6 @@ func (d *DateString) MillisUTCOffset() (*DateInt, *FlexibleInt64) {
 
 func (d *DateString) String() string {
 	return string(*d)
-}
-
-func DateStringNow() (*DateString, time.Time) {
-	now := time.Now().UTC()
-	dateString := DateStringFromTime(now)
-	return &dateString, now
 }
 
 func DateStringFromTime(t time.Time) DateString {

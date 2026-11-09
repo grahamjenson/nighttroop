@@ -122,26 +122,6 @@ func (n *SanitizedString) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-type JSONString string
-
-func (s *JSONString) UnmarshalJSON(data []byte) error {
-	var str string
-	if err := json.Unmarshal(data, &str); err != nil {
-		return fmt.Errorf("expected JSON string, got %s", data)
-	}
-
-	if len(str) > 2048 {
-		str = str[:2048]
-	}
-
-	*s = JSONString(str)
-	return nil
-}
-
-func (s *JSONString) String() string {
-	return string(*s)
-}
-
 type LongJSONString string
 
 func (s *LongJSONString) String() string {
