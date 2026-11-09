@@ -235,7 +235,7 @@ func TestLogsDBSearchByType(t *testing.T) {
 	logs.SiteCreatedEvent(ctx, site)
 	logs.SiteDisabledEvent(ctx, site, "admin")
 	logs.ConnectorError(ctx, site, consts.ConnectorTypeDexcom, errors.New("sync failed"))
-	logs.ServerError(ctx, &site, 500, "GET", "/", "request", "")
+	logs.ServerError(ctx, &site, db.ServerErrorAttributes{Status: 500, Method: "GET", Route: "/", RequestID: "request"})
 
 	str := func(s string) *string { return &s }
 	tests := []struct {

@@ -36,6 +36,8 @@ func timeoutUnlessLongLived(next http.Handler) http.Handler {
 func AddStandardMiddleware(router chi.Router, config *config.ServerConfig, controlDB *db.ControlDB) {
 	router.Use(middleware.RequestID)
 	router.Use(withRequestLogAttrs)
+	// Outside the errors' records, so a request that fails is recorded with what it sent
+	router.Use(KeepErrorRequestBodies)
 	if controlDB != nil {
 		// Before the recoverer, so a panic's 500 is recorded too
 		router.Use(RecordServerErrors(controlDB.Logs))
@@ -46,6 +48,7 @@ func AddStandardMiddleware(router chi.Router, config *config.ServerConfig, contr
 			Repanic: true,
 		})
 		router.Use(sentryMiddleware.Handle)
+		router.Use(reportErrorRequestBodies)
 	}
 
 	router.Use(NewLogger(nil))
@@ -187,7 +190,7 @@ func SetErrorReason(ctx context.Context, reason string) {
 }
 
 // RecordServerErrors records each response with a 5xx status in the logs DB's errors, with its site when it has one,
-// and why, when the handler said with SetErrorReason.
+// why, when the handler said with SetErrorReason, and what the request sent, its credentials redacted.
 // It records the route's pattern rather than the path, as a Nightscout path can carry a token.
 func RecordServerErrors(logs *db.LogsDB) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -206,7 +209,8 @@ func RecordServerErrors(logs *db.LogsDB) func(http.Handler) http.Handler {
 			if routeContext := chi.RouteContext(r.Context()); routeContext != nil {
 				route = routeContext.RoutePattern()
 			}
-			logs.ServerError(context.WithoutCancel(r.Context()), siteID, ww.Status(), r.Method, route, middleware.GetReqID(r.Context()), clip(*reason))
+			logs.ServerError(context.WithoutCancel(r.Context()), siteID, db.ServerErrorAttributes{Status: ww.Status(), Method: r.Method, Route: route,
+				RequestID: middleware.GetReqID(r.Context()), Reason: clip(*reason), RequestBody: ErrorRequestBody(r.Context())})
 		})
 	}
 }
