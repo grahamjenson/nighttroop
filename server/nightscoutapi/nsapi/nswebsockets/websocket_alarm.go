@@ -35,7 +35,7 @@ type alarmSubscribeMessage struct {
 // with its API secret or JWT, and when it can read gets its identity's alarms, and can ack them to snooze them
 func (ws *Websocket) onAlarmConnect(socket *socketio.Socket) {
 	var identityID *int64
-	onCredentials(ws, socket, "subscribe", func(message alarmSubscribeMessage) any {
+	onCredentials(ws, socket, "subscribe", func(message alarmSubscribeMessage) (any, bool) {
 		reply, subscribed := ws.subscribeToAlarms(socket, message.AccessToken, message.JWTToken, message.Secret)
 		if identityID != nil {
 			socket.Leave(alarmRoom(*identityID))
@@ -45,7 +45,7 @@ func (ws *Websocket) onAlarmConnect(socket *socketio.Socket) {
 			socket.Join(alarmRoom(*identityID))
 			socket.Join(announcementRoom)
 		}
-		return reply
+		return reply, identityID != nil
 	})
 	socket.On("ack", func(args []json.RawMessage, ack func(...any)) {
 		if identityID != nil {

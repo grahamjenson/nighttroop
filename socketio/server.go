@@ -7,6 +7,7 @@ import (
 	"errors"
 	"net/http"
 	"sync"
+	"time"
 
 	"nighttroop.t1d.nz/socketio/engineio"
 )
@@ -228,6 +229,13 @@ func (s *Socket) Disconnect() {
 	s.conn.disconnect(s, "server namespace disconnect")
 }
 
+// Close disconnects the socket and, when its client has no other socket, closes its session, so it holds none of the
+// server's sessions
+func (s *Socket) Close() {
+	s.Disconnect()
+	s.conn.closeIfEmpty("server close")
+}
+
 func (s *Socket) send(p Packet) error {
 	p.Namespace = s.namespace.name
 	return s.conn.session.Send(p.Encode())
@@ -242,6 +250,10 @@ type conn struct {
 	sockets map[string]*Socket
 }
 
+// connectTimeout is how long a client has to connect to a namespace before its session is closed, Socket.IO's
+// connectTimeout, so a client cannot hold one of the server's sessions without using it
+var connectTimeout = 45 * time.Second
+
 func (s *Server) onEngineConnection(session *engineio.Session) {
 	c := &conn{server: s, session: session, sockets: map[string]*Socket{}}
 	session.OnMessage(c.onMessage)
@@ -249,6 +261,17 @@ func (s *Server) onEngineConnection(session *engineio.Session) {
 	// Socket.IO v2 clients are connected to the default namespace without asking
 	if session.Version() == engineio.V3 {
 		c.connect(DefaultNamespace, nil)
+	}
+	time.AfterFunc(connectTimeout, func() { c.closeIfEmpty("connect timeout") })
+}
+
+// closeIfEmpty closes the session when it has no socket in any namespace
+func (c *conn) closeIfEmpty(reason string) {
+	c.mu.Lock()
+	empty := len(c.sockets) == 0
+	c.mu.Unlock()
+	if empty {
+		c.session.Close(reason)
 	}
 }
 

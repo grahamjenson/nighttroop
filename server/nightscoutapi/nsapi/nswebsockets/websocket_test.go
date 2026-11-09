@@ -230,3 +230,61 @@ func TestSocketAuthorizeWithABadTokenDisconnects(t *testing.T) {
 		client.Close()
 	}
 }
+
+// A site has SocketMaxSessionsPerSite sessions, so a socket not given access within authorizeWithin is closed, rather
+// than a client opening them all and never authorizing, or authorizing with nothing, to keep the site's followers out
+func TestSocketNotGivenAccessIsClosed(t *testing.T) {
+	within := authorizeWithin
+	authorizeWithin = 50 * time.Millisecond
+	t.Cleanup(func() { authorizeWithin = within })
+	tests := []struct {
+		name      string
+		namespace string
+		// event and message are what the client sends as it connects, if anything
+		event   string
+		message map[string]any
+		closed  bool
+	}{
+		{name: "never authorizing", namespace: socketio.DefaultNamespace, closed: true},
+		{name: "authorizing with a wrong API secret", namespace: socketio.DefaultNamespace, event: "authorize", message: map[string]any{"secret": "not the secret"}, closed: true},
+		{name: "never subscribing to /storage", namespace: "/storage", closed: true},
+		{name: "never subscribing to /alarm", namespace: "/alarm", closed: true},
+		{name: "subscribing to /alarm", namespace: "/alarm", event: "subscribe", message: map[string]any{"accessToken": "token"}},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			controlDB, identity := siteIdentity(t)
+			siteCtx := httputils.CreateSiteContext(context.Background(), testConfig, controlDB, nil, nil, identity.SiteID, "127.0.0.1", httputils.HTTPActionRead, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
+			found := func(_ *config.ServerConfig, _ context.Context, token string) (*controldb.SiteIdentity, error) {
+				if token == "token" {
+					return identity, nil
+				}
+				return nil, errors.New("no identity")
+			}
+			ws := NewWebsocket(controlDB, testConfig, nil, found, found)
+			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { ws.ServeHTTP(w, r.WithContext(siteCtx)) }))
+			t.Cleanup(func() {
+				ws.siteServer(identity.SiteID, false).Close()
+				ts.Close()
+			})
+
+			ctx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
+			defer cancel()
+			client, err := socketio.Dial(ctx, ts.URL+"/socket.io/", engineio.V4, nil)
+			require.NoError(t, err)
+			t.Cleanup(func() { client.Close() })
+			require.NoError(t, client.Connect(ctx, test.namespace, nil))
+			if test.event != "" {
+				_, err := client.EmitWithAck(ctx, test.namespace, test.event, test.message)
+				require.NoError(t, err)
+			}
+			select {
+			case <-client.Done():
+				require.True(t, test.closed, "the socket's session was closed")
+			case <-time.After(6 * authorizeWithin):
+				require.False(t, test.closed, "the socket's session stayed open")
+				require.True(t, client.Connected(test.namespace))
+			}
+		})
+	}
+}

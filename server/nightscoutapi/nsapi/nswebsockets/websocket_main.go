@@ -36,7 +36,10 @@ func (ws *Websocket) onConnect(main *socketio.Namespace, socket *socketio.Socket
 	socket.OnDisconnect(func(string) { main.Emit("clients", main.Count()) })
 
 	s := &mainSocket{socket: socket}
-	onCredentials(ws, socket, "authorize", func(message authorizeMessage) any { return ws.handleAuthorize(s, message) })
+	onCredentials(ws, socket, "authorize", func(message authorizeMessage) (any, bool) {
+		reply := ws.handleAuthorize(s, message)
+		return reply, s.auth != nil && (s.auth.Read || s.auth.Write || s.auth.WriteTreatment)
+	})
 	for event, write := range map[string]dbWriter{"dbAdd": ws.dbAdd, "dbUpdate": ws.dbUpdate, "dbUpdateUnset": ws.dbUpdateUnset, "dbRemove": ws.dbRemove} {
 		socket.On(event, func(args []json.RawMessage, ack func(...any)) {
 			acknowledge(ack, ws.handleDBWrite(event, args, s.auth, s.ctx, write))
