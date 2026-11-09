@@ -1,0 +1,27 @@
+package site_data_templ
+
+import (
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
+	"nighttroop.t1d.nz/utils/apiutils"
+)
+
+// searchTotals is the box at the top of a data page: how many its search matches over every page, and when the
+// earliest and latest of them occurred, for a collection that counts them
+templ searchTotals(id, noun string) {
+	if totals := apiutils.TotalsFrom(ctx); totals != nil {
+		<div id={ id + "--totals" } class="rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-500 shadow-sm">
+			<span id={ id + "--total" } class="text-2xl font-bold tabular-nums text-gray-900">
+				{ message.NewPrinter(language.English).Sprint(totals.Total) }
+			</span>
+			if totals.EarliestAt != nil && totals.LatestAt != nil {
+				{ " " + noun + ", from " }
+				<span id={ id + "--earliest" } class="font-medium text-gray-900">{ formatReadingDate(ctx, *totals.EarliestAt) }</span>
+				{ " to " }
+				<span id={ id + "--latest" } class="font-medium text-gray-900">{ formatReadingDate(ctx, *totals.LatestAt) }</span>
+			} else {
+				{ " " + noun }
+			}
+		</div>
+	}
+}

@@ -107,6 +107,7 @@ templ DeviceStatusHistory(device string, statuses []*sitemodels.SiteDeviceStatus
 				All devices
 			}
 		</div>
+		@searchTotals("site--device-status", "statuses")
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			@deviceStatusTable("deviceStatusTable", statuses)
 			@pager.Pager(pager.Props{ID: "site--device-status", Path: "/data/device-status?device=" + url.QueryEscape(device), Count: len(statuses), Skip: skip, Limit: limit})

@@ -40,3 +40,28 @@ GOTO /data/glucose?skip=100
 ASSERT_STATUS 200
 ASSERT_VISIBLE #glucoseReadingsTable
 ASSERT_NOT_VISIBLE #site--glucose--days
+
+// Without a limit the readings are paged 50 at a time, under a box of how many there are over every page, and when
+// the earliest and latest of them were
+GOTO /data/glucose
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 50
+ASSERT_VISIBLE #site--glucose--next
+ASSERT_TEXT_VISIBLE glucose readings, from
+ASSERT_VISIBLE #site--glucose--earliest
+ASSERT_VISIBLE #site--glucose--latest
+ASSERT_VISIBLE #site--glucose--totals
+SCREENSHOT glucose_totals
+
+// The next page is the next 50, under the same totals
+CLICK #site--glucose--next
+ASSERT_TEXT_VISIBLE Showing 51 to 100
+ASSERT_VISIBLE #site--glucose--totals
+ASSERT_VISIBLE #site--glucose--previous
+
+// A page of a collection with nothing in it counts none, with no times
+GOTO /data/activities
+ASSERT_STATUS 200
+ASSERT_TEXT_EQUALS #site--activity--total 0
+ASSERT_TEXT_VISIBLE activities
+ASSERT_NOT_VISIBLE #site--activity--earliest

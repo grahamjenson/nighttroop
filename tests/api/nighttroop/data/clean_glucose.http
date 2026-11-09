@@ -28,19 +28,19 @@ GET http://{{ .site }}/data/clean_glucose
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 2 "@result"
-ASSERT_EQUALS 135 "@result.0.reading"
-ASSERT_EQUALS "mg/dL" "@result.0.units"
-ASSERT_EQUALS 10 "@result.0.diff_per_5m"
-ASSERT_LENGTH 0 "@result.0.others"
-ASSERT_EQUALS 125 "@result.1.reading"
-ASSERT_EQUALS "mbg" "@result.1.reading_type"
-ASSERT_EQUALS "direct" "@result.1.source"
-ASSERT_EQUALS null "@result.1.diff_per_5m"
-ASSERT_LENGTH 1 "@result.1.others"
-ASSERT_EQUALS 120 "@result.1.others.0.reading"
-ASSERT_EQUALS "direct" "@result.1.others.0.source"
-SET merged_id {{ dig "clean_glucose.result.1.others.0.id" }}
+ASSERT_LENGTH 2 "@result.items"
+ASSERT_EQUALS 135 "@result.items.0.reading"
+ASSERT_EQUALS "mg/dL" "@result.items.0.units"
+ASSERT_EQUALS 10 "@result.items.0.diff_per_5m"
+ASSERT_LENGTH 0 "@result.items.0.others"
+ASSERT_EQUALS 125 "@result.items.1.reading"
+ASSERT_EQUALS "mbg" "@result.items.1.reading_type"
+ASSERT_EQUALS "direct" "@result.items.1.source"
+ASSERT_EQUALS null "@result.items.1.diff_per_5m"
+ASSERT_LENGTH 1 "@result.items.1.others"
+ASSERT_EQUALS 120 "@result.items.1.others.0.reading"
+ASSERT_EQUALS "direct" "@result.items.1.others.0.source"
+SET merged_id {{ dig "clean_glucose.result.items.1.others.0.id" }}
 
 // Reading the merged reading by its ID gives the reading it is part of
 NAME get_merged
@@ -56,8 +56,8 @@ GET http://{{ .site }}/summary?hours=1
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 2 "@result.0.glucose_readings"
-ASSERT_EQUALS 10 "@result.0.glucose_readings.0.diff_per_5m"
+ASSERT_LENGTH 2 "@result.items.0.glucose_readings"
+ASSERT_EQUALS 10 "@result.items.0.glucose_readings.0.diff_per_5m"
 
 // A page of them
 NAME clean_glucose_paged
@@ -65,5 +65,5 @@ GET http://{{ .site }}/data/clean_glucose?limit=1&skip=1
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS 125 "@result.0.reading"
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS 125 "@result.items.0.reading"

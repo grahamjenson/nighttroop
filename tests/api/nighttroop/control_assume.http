@@ -56,6 +56,6 @@ GET http://{{ .site }}/logs/events?type=signed_in_by_control
 H Authorization: Bearer {{ .login_admin.token }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS "admin" "@result.0.attributes.identity_name"
-ASSERT_EQUALS "admin" "@result.0.attributes.by"
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "admin" "@result.items.0.attributes.identity_name"
+ASSERT_EQUALS "admin" "@result.items.0.attributes.by"

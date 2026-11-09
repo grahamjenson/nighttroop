@@ -19,13 +19,13 @@ GET http://{{ site }}/logs/events
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS "signed_in" "@result.0.name"
-ASSERT_EQUALS "admin" "@result.0.attributes.identity_name"
-ASSERT_EXISTS "@result.0.attributes.from"
-ASSERT_EQUALS "site_created" "@result.1.name"
-ASSERT_EXISTS "@result.1.started_at"
-ASSERT_EQUALS null "@result.1.batch"
-SET event_id {{ dig "list_events.result.1.id" }}
+ASSERT_EQUALS "signed_in" "@result.items.0.name"
+ASSERT_EQUALS "admin" "@result.items.0.attributes.identity_name"
+ASSERT_EXISTS "@result.items.0.attributes.from"
+ASSERT_EQUALS "site_created" "@result.items.1.name"
+ASSERT_EXISTS "@result.items.1.started_at"
+ASSERT_EQUALS null "@result.items.1.batch"
+SET event_id {{ dig "list_events.result.items.1.id" }}
 
 // A refused sign in is an event too, without the name it tried
 NAME login_wrong_password
@@ -39,8 +39,8 @@ GET http://{{ site }}/logs/events?type=sign_in_failed
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS null "@result.0.attributes.identity_name"
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS null "@result.items.0.attributes.identity_name"
 
 NAME get_event
 GET http://{{ site }}/logs/events/{{ .event_id }}
@@ -54,7 +54,7 @@ GET http://{{ site }}/logs/events?limit=1
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
+ASSERT_LENGTH 1 "@result.items"
 
 // Another site's event cannot be read
 NAME list_other_events

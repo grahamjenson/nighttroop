@@ -32,7 +32,12 @@ func TestSignInsRecordWhereFrom(t *testing.T) {
 		return out
 	}
 	newest := func(out map[string]any) map[string]any {
-		events := out["result"].([]any)
+		// A site's search is a page of them in items; control's is a list
+		result := out["result"]
+		if page, ok := result.(map[string]any); ok {
+			result = page["items"]
+		}
+		events := result.([]any)
 		require.NotEmpty(t, events)
 		return events[0].(map[string]any)["attributes"].(map[string]any)
 	}

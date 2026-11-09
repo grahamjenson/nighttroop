@@ -30,6 +30,7 @@ templ ActivitiesTable(activities []*sitemodels.SiteActivity, skip int64, limit i
 		@heading.Page("Activities") {
 			Newest first. Click an activity to see all its details.
 		}
+		@searchTotals("site--activity", "activities")
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			@addmodal.Open("site--activity--add", "/data/activities/new", "Add Activity")
 			@table.Table(table.Props{

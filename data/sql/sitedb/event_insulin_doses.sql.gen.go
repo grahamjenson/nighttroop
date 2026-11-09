@@ -193,6 +193,26 @@ func (q *Queries) HardDeleteInsulinDose(ctx context.Context, arg HardDeleteInsul
 	return q.exec(ctx, q.hardDeleteInsulinDoseStmt, hardDeleteInsulinDose, arg.ID)
 }
 
+const insulinDoseTotals = `-- name: InsulinDoseTotals :one
+SELECT COUNT(*) AS total, CAST(COALESCE(MIN(occurred_at), 0) AS INTEGER) AS earliest_at,
+    CAST(COALESCE(MAX(occurred_at), 0) AS INTEGER) AS latest_at
+FROM insulin_doses WHERE deleted_at IS NULL
+`
+
+type InsulinDoseTotalsRow struct {
+	Total      int64
+	EarliestAt int64
+	LatestAt   int64
+}
+
+// How many insulin doses AllInsulinDoses pages through, and when the earliest and latest occurred, 0 when there are none
+func (q *Queries) InsulinDoseTotals(ctx context.Context) (*InsulinDoseTotalsRow, error) {
+	row := q.queryRow(ctx, q.insulinDoseTotalsStmt, insulinDoseTotals)
+	var i InsulinDoseTotalsRow
+	err := row.Scan(&i.Total, &i.EarliestAt, &i.LatestAt)
+	return &i, err
+}
+
 const searchInsulinDoses = `-- name: SearchInsulinDoses :many
 SELECT id, dose, dose_type, other_attributes, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM insulin_doses
 WHERE

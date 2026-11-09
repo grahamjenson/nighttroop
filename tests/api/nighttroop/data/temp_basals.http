@@ -5,7 +5,7 @@ GET http://{{ site }}/data/temp-basals
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 0 "@result"
+ASSERT_LENGTH 0 "@result.items"
 
 // A temp basal from the Nightscout API is listed
 NAME create_treatment
@@ -18,9 +18,9 @@ GET http://{{ site }}/data/temp-basals
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS 0.85 "@result.0.rate"
-ASSERT_EQUALS 60 "@result.0.duration_minutes"
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS 0.85 "@result.items.0.rate"
+ASSERT_EQUALS 60 "@result.items.0.duration_minutes"
 
 //////
 // CREATE AND UPDATE
@@ -59,16 +59,16 @@ GET http://{{ site }}/data/temp-basals?limit=1
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS 1.2 "@result.0.rate"
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS 1.2 "@result.items.0.rate"
 
 NAME second_page
 GET http://{{ site }}/data/temp-basals?limit=1&skip=1
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS 0.85 "@result.0.rate"
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS 0.85 "@result.items.0.rate"
 
 NAME create_temp_basal_without_rate
 POST http://{{ site }}/data/temp-basals
@@ -151,7 +151,7 @@ GET http://{{ site }}/data/temp-basals
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
+ASSERT_LENGTH 1 "@result.items"
 
 NAME delete_unknown_temp_basal
 DELETE http://{{ site }}/data/temp-basals/not-a-temp-basal
@@ -172,5 +172,5 @@ GET http://{{ site }}/data/temp-basals
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS 0.5 "@result.0.multiplier"
-ASSERT_EQUALS 0.4 "@result.0.rate"
+ASSERT_EQUALS 0.5 "@result.items.0.multiplier"
+ASSERT_EQUALS 0.4 "@result.items.0.rate"

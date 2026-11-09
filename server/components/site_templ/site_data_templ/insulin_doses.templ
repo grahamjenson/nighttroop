@@ -22,6 +22,7 @@ templ InsulinDosesTable(insulinDoses []*sitemodels.SiteInsulinDose, skip int64, 
 		@heading.Page("Insulin Doses") {
 			Newest first. Click an insulin dose to see all its details.
 		}
+		@searchTotals("site--insulin", "insulin doses")
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			@addmodal.Open("site--insulin--add", "/data/insulin/new", "Add Insulin Dose")
 			@table.Table(table.Props{

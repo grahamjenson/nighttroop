@@ -61,7 +61,8 @@ func TestClient(t *testing.T) {
 
 	doses, err := site.ListInsulinDosesWithResponse(ctx, &nighttroop.ListInsulinDosesParams{Limit: ptr(int64(10))}, auth)
 	require.NoError(t, err)
-	require.Len(t, *doses.JSON200.Result, 1)
+	require.Len(t, *doses.JSON200.Result.Items, 1)
+	require.Equal(t, int64(1), *doses.JSON200.Result.Total, "the search counts what it matches over every page")
 
 	updated, err := site.UpdateInsulinDoseWithResponse(ctx, id, nighttroop.InsulinDose{Notes: ptr("Dinner")}, auth)
 	require.NoError(t, err)
@@ -88,16 +89,16 @@ func TestClient(t *testing.T) {
 
 	readings, err := site.ListGlucoseReadingsWithResponse(ctx, nil, auth)
 	require.NoError(t, err)
-	require.Len(t, *readings.JSON200.Result, 1)
+	require.Len(t, *readings.JSON200.Result.Items, 1)
 	foods, err := site.ListFoodIntakesWithResponse(ctx, nil, auth)
 	require.NoError(t, err)
-	require.Equal(t, "Toast", *(*foods.JSON200.Result)[0].Name)
+	require.Equal(t, "Toast", *(*foods.JSON200.Result.Items)[0].Name)
 
 	// The summary has the reading and the meal, and keeps what the schema does not describe
 	summary, err := site.GetSummaryWithResponse(ctx, &nighttroop.GetSummaryParams{Hours: ptr(int64(6))}, auth)
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, summary.StatusCode(), string(summary.Body))
-	day := (*summary.JSON200.Result)[0]
+	day := (*summary.JSON200.Result.Items)[0]
 	require.Equal(t, int64(6), *day.Hours)
 	require.Len(t, *day.GlucoseReadings, 1)
 	require.Len(t, *day.FoodIntakes, 1)

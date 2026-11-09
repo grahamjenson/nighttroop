@@ -5138,6 +5138,16 @@ func (m *DeviceReportHistoryIDsParams) SetLimit(v int64) {
 }
 
 // GetDevice returns the Device value.
+func (m DeviceReportTotalsParams) GetDevice() *string {
+	return m.Device
+}
+
+// SetDevice sets the Device value and returns the updated DeviceReportTotalsParams.
+func (m *DeviceReportTotalsParams) SetDevice(v *string) {
+	m.Device = v
+}
+
+// GetDevice returns the Device value.
 func (m DeviceReportsForDeviceParams) GetDevice() *string {
 	return m.Device
 }

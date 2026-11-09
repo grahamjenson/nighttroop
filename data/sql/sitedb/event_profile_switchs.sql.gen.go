@@ -268,6 +268,26 @@ func (q *Queries) HardDeleteProfileSwitch(ctx context.Context, arg HardDeletePro
 	return q.exec(ctx, q.hardDeleteProfileSwitchStmt, hardDeleteProfileSwitch, arg.ID)
 }
 
+const profileSwitchTotals = `-- name: ProfileSwitchTotals :one
+SELECT COUNT(*) AS total, CAST(COALESCE(MIN(occurred_at), 0) AS INTEGER) AS earliest_at,
+    CAST(COALESCE(MAX(occurred_at), 0) AS INTEGER) AS latest_at
+FROM profile_switches WHERE deleted_at IS NULL
+`
+
+type ProfileSwitchTotalsRow struct {
+	Total      int64
+	EarliestAt int64
+	LatestAt   int64
+}
+
+// How many profile switches AllProfileSwitches pages through, and when the earliest and latest occurred, 0 when there are none
+func (q *Queries) ProfileSwitchTotals(ctx context.Context) (*ProfileSwitchTotalsRow, error) {
+	row := q.queryRow(ctx, q.profileSwitchTotalsStmt, profileSwitchTotals)
+	var i ProfileSwitchTotalsRow
+	err := row.Scan(&i.Total, &i.EarliestAt, &i.LatestAt)
+	return &i, err
+}
+
 const searchProfileSwitches = `-- name: SearchProfileSwitches :many
 SELECT id, name, duration_minutes, multiplier, timeshift, other_attributes, dia, units, timezone, carbs_hr, delay, carb_ratios_json, insulin_sensitivities_json, basal_rates_json, targets_high_json, targets_low_json, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM profile_switches
 WHERE

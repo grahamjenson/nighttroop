@@ -41,25 +41,25 @@ GET http://{{ site }}/summary?hours=6
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS "mg/dL" "@result.0.units"
-ASSERT_LENGTH 361 "@result.0.minutes"
+ASSERT_EQUALS "mg/dL" "@result.items.0.units"
+ASSERT_LENGTH 361 "@result.items.0.minutes"
 // The switch from before the summary, over the default profile
-ASSERT_EQUALS 140 "@result.0.minutes.10.low_target"
-ASSERT_EQUALS 160 "@result.0.minutes.10.high_target"
-ASSERT_EQUALS 1 "@result.0.minutes.10.basal"
+ASSERT_EQUALS 140 "@result.items.0.minutes.10.low_target"
+ASSERT_EQUALS 160 "@result.items.0.minutes.10.high_target"
+ASSERT_EQUALS 1 "@result.items.0.minutes.10.basal"
 // Once the switch ends, the default profile from two days ago
-ASSERT_EQUALS 100 "@result.0.minutes.200.low_target"
-ASSERT_EQUALS 120 "@result.0.minutes.200.high_target"
-ASSERT_EQUALS 0.5 "@result.0.minutes.200.basal"
+ASSERT_EQUALS 100 "@result.items.0.minutes.200.low_target"
+ASSERT_EQUALS 120 "@result.items.0.minutes.200.high_target"
+ASSERT_EQUALS 0.5 "@result.items.0.minutes.200.basal"
 // The temp basal over the default's basal, with the default's targets
-ASSERT_EQUALS 2 "@result.0.minutes.255.basal"
-ASSERT_EQUALS 100 "@result.0.minutes.255.low_target"
-ASSERT_EQUALS 120 "@result.0.minutes.255.high_target"
+ASSERT_EQUALS 2 "@result.items.0.minutes.255.basal"
+ASSERT_EQUALS 100 "@result.items.0.minutes.255.low_target"
+ASSERT_EQUALS 120 "@result.items.0.minutes.255.high_target"
 // The temp target over the default's targets, with the default's basal
-ASSERT_EQUALS 80 "@result.0.minutes.310.low_target"
-ASSERT_EQUALS 90 "@result.0.minutes.310.high_target"
-ASSERT_EQUALS 0.5 "@result.0.minutes.310.basal"
+ASSERT_EQUALS 80 "@result.items.0.minutes.310.low_target"
+ASSERT_EQUALS 90 "@result.items.0.minutes.310.high_target"
+ASSERT_EQUALS 0.5 "@result.items.0.minutes.310.basal"
 // Once both have ended, the default profile again
-ASSERT_EQUALS 100 "@result.0.minutes.359.low_target"
-ASSERT_EQUALS 120 "@result.0.minutes.359.high_target"
-ASSERT_EQUALS 0.5 "@result.0.minutes.359.basal"
+ASSERT_EQUALS 100 "@result.items.0.minutes.359.low_target"
+ASSERT_EQUALS 120 "@result.items.0.minutes.359.high_target"
+ASSERT_EQUALS 0.5 "@result.items.0.minutes.359.basal"

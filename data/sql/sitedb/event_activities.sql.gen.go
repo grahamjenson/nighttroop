@@ -99,6 +99,26 @@ func (q *Queries) ActivityHistoryIDs(ctx context.Context, arg ActivityHistoryIDs
 	return items, nil
 }
 
+const activityTotals = `-- name: ActivityTotals :one
+SELECT COUNT(*) AS total, CAST(COALESCE(MIN(occurred_at), 0) AS INTEGER) AS earliest_at,
+    CAST(COALESCE(MAX(occurred_at), 0) AS INTEGER) AS latest_at
+FROM activities WHERE deleted_at IS NULL
+`
+
+type ActivityTotalsRow struct {
+	Total      int64
+	EarliestAt int64
+	LatestAt   int64
+}
+
+// How many activities AllActivities pages through, and when the earliest and latest occurred, 0 when there are none
+func (q *Queries) ActivityTotals(ctx context.Context) (*ActivityTotalsRow, error) {
+	row := q.queryRow(ctx, q.activityTotalsStmt, activityTotals)
+	var i ActivityTotalsRow
+	err := row.Scan(&i.Total, &i.EarliestAt, &i.LatestAt)
+	return &i, err
+}
+
 const allActivities = `-- name: AllActivities :many
 
 SELECT id, name, activity_type, duration_minutes, other_attributes, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM activities

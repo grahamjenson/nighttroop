@@ -74,6 +74,11 @@ type CollectionSearch[R, M any] interface {
 	SearchHTMXResponse(models []*M, query *apiutils.Query) templ.Component
 }
 
+// CollectionTotals is a searched collection that counts every row its search matches, over all its pages
+type CollectionTotals interface {
+	SearchTotals(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) (*apiutils.Totals, error)
+}
+
 type CollectionDelete[R, M any] interface {
 	CollectionBase[R, M]
 
@@ -197,12 +202,20 @@ func SearchHandler[R, M any](collection CollectionSearch[R, M]) http.HandlerFunc
 		tx := siteapiutils.NewCollectionTx(r.Context(), siteContext)
 		defer tx.Rollback()
 		models, herr := search(r.Context(), tx, collection, query, siteContext)
+		var totals *apiutils.Totals
+		if counted, ok := collection.(CollectionTotals); ok && herr == nil {
+			var err error
+			totals, err = counted.SearchTotals(r.Context(), tx, query, siteContext)
+			herr = apiutils.ErrorFor(err, collection.GetName())
+		}
 		if herr = tx.Finish(herr); herr != nil {
 			writeError(w, r, siteContext.AcceptType, herr)
 			return
 		}
 
-		WriteResponse(w, r, siteContext, http.StatusOK, models, collection.SearchHTMXResponse(models, query), true)
+		r = r.WithContext(apiutils.WithTotals(r.Context(), totals))
+		result := &apiutils.SearchResult[M]{Items: models, Skip: query.Skip, Limit: query.Limit, Totals: totals}
+		WriteResponse(w, r, siteContext, http.StatusOK, result, collection.SearchHTMXResponse(models, query), true)
 	}
 }
 

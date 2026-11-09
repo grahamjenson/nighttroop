@@ -5,7 +5,7 @@ GET http://{{ site }}/data/component-events
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 0 "@result"
+ASSERT_LENGTH 0 "@result.items"
 
 // A site change from the Nightscout API is listed, with the pump it names
 NAME create_ns_site_change
@@ -18,11 +18,11 @@ GET http://{{ site }}/data/component-events
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS "Site Change" "@result.0.event_type"
-ASSERT_EQUALS "Omnipod" "@result.0.pump_type"
-ASSERT_EQUALS "P123" "@result.0.pump_serial"
-ASSERT_EQUALS "New pod" "@result.0.notes"
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "Site Change" "@result.items.0.event_type"
+ASSERT_EQUALS "Omnipod" "@result.items.0.pump_type"
+ASSERT_EQUALS "P123" "@result.items.0.pump_serial"
+ASSERT_EQUALS "New pod" "@result.items.0.notes"
 
 //////
 // CREATE AND UPDATE
@@ -61,16 +61,16 @@ GET http://{{ site }}/data/component-events?limit=1
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS "Sensor Change" "@result.0.event_type"
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "Sensor Change" "@result.items.0.event_type"
 
 NAME second_page
 GET http://{{ site }}/data/component-events?limit=1&skip=1
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS "Site Change" "@result.0.event_type"
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "Site Change" "@result.items.0.event_type"
 
 NAME create_component_event_no_type
 POST http://{{ site }}/data/component-events
@@ -144,7 +144,7 @@ GET http://{{ site }}/data/component-events
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
+ASSERT_LENGTH 1 "@result.items"
 
 NAME delete_unknown_component_event
 DELETE http://{{ site }}/data/component-events/not-a-component-event

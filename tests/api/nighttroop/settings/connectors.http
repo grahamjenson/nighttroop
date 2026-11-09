@@ -15,8 +15,8 @@ GET http://{{ site }}/settings/connectors
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS false "@result.0.enabled"
-ASSERT_CONTAINS "The first sync failed, so syncing has been turned off" "@result.0.previous_sync_errors.0"
+ASSERT_EQUALS false "@result.items.0.enabled"
+ASSERT_CONTAINS "The first sync failed, so syncing has been turned off" "@result.items.0.previous_sync_errors.0"
 
 NAME create_nightscout_sync
 POST http://{{ site }}/settings/connectors/nightscout
@@ -34,7 +34,7 @@ GET http://{{ site }}/settings/connectors
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS true "@result.0.enabled"
+ASSERT_EQUALS true "@result.items.0.enabled"
 
 NAME update_nightscout_sync_bad_url
 POST http://{{ site }}/settings/connectors/nightscout
@@ -60,7 +60,7 @@ GET http://{{ site }}/settings/connectors
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS true "@result.0.enabled"
+ASSERT_EQUALS true "@result.items.0.enabled"
 
 NAME update_nightscout_sync_keeps_stored_password
 POST http://{{ site }}/settings/connectors/nightscout
@@ -84,8 +84,8 @@ GET http://{{ site }}/settings/connectors
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS false "@result.0.enabled"
-ASSERT_CONTAINS "dexcom authentication failed" "@result.0.previous_sync_errors.0"
+ASSERT_EQUALS false "@result.items.0.enabled"
+ASSERT_CONTAINS "dexcom authentication failed" "@result.items.0.previous_sync_errors.0"
 
 NAME create_dexcom_sync
 POST http://{{ site }}/settings/connectors/dexcom
@@ -166,5 +166,5 @@ GET http://{{ site }}/settings/connectors
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS "nightscout" "@result.1.type"
-ASSERT_EQUALS false "@result.1.enabled"
+ASSERT_EQUALS "nightscout" "@result.items.1.type"
+ASSERT_EQUALS false "@result.items.1.enabled"

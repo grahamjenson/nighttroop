@@ -5,7 +5,7 @@ GET http://{{ site }}/presets/profiles
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 0 "@result"
+ASSERT_LENGTH 0 "@result.items"
 
 // A loop uploads a profile store of two profiles, in mg/dL
 NAME upload_profile_store
@@ -45,20 +45,20 @@ GET http://{{ site }}/presets/profiles
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 2 "@result"
-ASSERT_EQUALS ".store_id" "@result.0.profile_store_id"
-ASSERT_EQUALS "mmol/L" "@result.0.units"
-ASSERT_EQUALS 5 "@result.0.dia"
-ASSERT_EQUALS 10 "@result.0.carb_ratios.0.value"
-ASSERT_EQUALS 4.995 "@result.0.sensitivities.0.value"
-ASSERT_EQUALS 4.995 "@result.0.low_targets.0.value"
-ASSERT_EQUALS 6.993 "@result.0.high_targets.0.value"
-ASSERT_LENGTH 2 "@result.0.basal_rates"
-ASSERT_EQUALS 21600 "@result.0.basal_rates.1.seconds"
-ASSERT_EQUALS 0.7 "@result.0.basal_rates.1.value"
-SET first_id {{ dig "list_profiles.result.0.id" }}
-SET second_id {{ dig "list_profiles.result.1.id" }}
-SET second_name {{ dig "list_profiles.result.1.name" }}
+ASSERT_LENGTH 2 "@result.items"
+ASSERT_EQUALS ".store_id" "@result.items.0.profile_store_id"
+ASSERT_EQUALS "mmol/L" "@result.items.0.units"
+ASSERT_EQUALS 5 "@result.items.0.dia"
+ASSERT_EQUALS 10 "@result.items.0.carb_ratios.0.value"
+ASSERT_EQUALS 4.995 "@result.items.0.sensitivities.0.value"
+ASSERT_EQUALS 4.995 "@result.items.0.low_targets.0.value"
+ASSERT_EQUALS 6.993 "@result.items.0.high_targets.0.value"
+ASSERT_LENGTH 2 "@result.items.0.basal_rates"
+ASSERT_EQUALS 21600 "@result.items.0.basal_rates.1.seconds"
+ASSERT_EQUALS 0.7 "@result.items.0.basal_rates.1.value"
+SET first_id {{ dig "list_profiles.result.items.0.id" }}
+SET second_id {{ dig "list_profiles.result.items.1.id" }}
+SET second_name {{ dig "list_profiles.result.items.1.name" }}
 
 NAME get_profile
 GET http://{{ site }}/presets/profiles/{{ .first_id }}
@@ -148,8 +148,8 @@ GET http://{{ site }}/presets/profiles
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS "Weekend" "@result.0.name"
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "Weekend" "@result.items.0.name"
 
 NAME ns_store_keeps_rest
 GET http://{{ .ns_site }}/api/v3/profiles/{{ .store_id }}

@@ -5,7 +5,7 @@ GET http://{{ site }}/data/event-groups
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 0 "@result"
+ASSERT_LENGTH 0 "@result.items"
 
 // Treatments from the Nightscout API are event groups, each with its events
 NAME create_meal_bolus
@@ -23,22 +23,22 @@ GET http://{{ site }}/data/event-groups
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 2 "@result"
-ASSERT_EQUALS "Temp Basal" "@result.0.group_type"
-ASSERT_EQUALS 0.85 "@result.0.temp_basal.rate"
-ASSERT_EQUALS "Meal Bolus" "@result.1.group_type"
-ASSERT_EQUALS 4 "@result.1.insulin_dose.dose"
-ASSERT_EQUALS 40 "@result.1.food_intake.carbs"
-ASSERT_EQUALS "Lunch" "@result.1.notes"
-SET meal_id {{ dig "list_event_groups.result.1.id" }}
+ASSERT_LENGTH 2 "@result.items"
+ASSERT_EQUALS "Temp Basal" "@result.items.0.group_type"
+ASSERT_EQUALS 0.85 "@result.items.0.temp_basal.rate"
+ASSERT_EQUALS "Meal Bolus" "@result.items.1.group_type"
+ASSERT_EQUALS 4 "@result.items.1.insulin_dose.dose"
+ASSERT_EQUALS 40 "@result.items.1.food_intake.carbs"
+ASSERT_EQUALS "Lunch" "@result.items.1.notes"
+SET meal_id {{ dig "list_event_groups.result.items.1.id" }}
 
 NAME page_event_groups
 GET http://{{ site }}/data/event-groups?limit=1&skip=1
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS "Meal Bolus" "@result.0.group_type"
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "Meal Bolus" "@result.items.0.group_type"
 
 NAME get_event_group
 GET http://{{ site }}/data/event-groups/{{ .meal_id }}
@@ -76,21 +76,21 @@ GET http://{{ site }}/data/event-groups
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
+ASSERT_LENGTH 1 "@result.items"
 
 NAME deleted_insulin_not_listed
 GET http://{{ site }}/data/insulin
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 0 "@result"
+ASSERT_LENGTH 0 "@result.items"
 
 NAME deleted_food_not_listed
 GET http://{{ site }}/data/food
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 0 "@result"
+ASSERT_LENGTH 0 "@result.items"
 
 NAME deleted_treatment_gone_from_nightscout
 GET http://{{ .ns_site }}/api/v1/treatments?token={{ token }}

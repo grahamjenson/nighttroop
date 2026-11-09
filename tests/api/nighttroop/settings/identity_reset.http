@@ -19,10 +19,10 @@ GET http://{{ site }}/settings/identities
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS "pwd_phone" "@result.2.name"
-ASSERT_EQUALS "admin" "@result.3.name"
-SET pwd_id {{ dig "list_identities.result.2.id" }}
-SET admin_id {{ dig "list_identities.result.3.id" }}
+ASSERT_EQUALS "pwd_phone" "@result.items.2.name"
+ASSERT_EQUALS "admin" "@result.items.3.name"
+SET pwd_id {{ dig "list_identities.result.items.2.id" }}
+SET admin_id {{ dig "list_identities.result.items.3.id" }}
 
 // A user cannot reset another identity's credentials, only an admin can
 NAME user_resets_admin_refused
@@ -130,9 +130,9 @@ GET http://{{ site }}/logs/events?type=identity_credentials_changed
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 3 "@result"
-ASSERT_EQUALS "totp" "@result.0.attributes.credentials"
-ASSERT_EQUALS "admin" "@result.0.attributes.by"
-ASSERT_EQUALS "pwd_phone" "@result.1.attributes.identity_name"
-ASSERT_EQUALS "carer" "@result.2.attributes.identity_name"
-ASSERT_EQUALS "carer" "@result.2.attributes.by"
+ASSERT_LENGTH 3 "@result.items"
+ASSERT_EQUALS "totp" "@result.items.0.attributes.credentials"
+ASSERT_EQUALS "admin" "@result.items.0.attributes.by"
+ASSERT_EQUALS "pwd_phone" "@result.items.1.attributes.identity_name"
+ASSERT_EQUALS "carer" "@result.items.2.attributes.identity_name"
+ASSERT_EQUALS "carer" "@result.items.2.attributes.by"

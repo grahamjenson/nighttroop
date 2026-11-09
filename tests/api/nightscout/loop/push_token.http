@@ -26,12 +26,12 @@ GET http://{{ .create_new_site.site_subdomain }}.localhost/settings/push-registr
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS "loop" "@result.0.app"
-ASSERT_EQUALS "apns" "@result.0.provider"
-ASSERT_EQUALS "com.TEAM123456.loopkit.Loop" "@result.0.bundle_id"
-ASSERT_EQUALS false "@result.0.production"
-ASSERT_EQUALS null "@result.0.token"
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "loop" "@result.items.0.app"
+ASSERT_EQUALS "apns" "@result.items.0.provider"
+ASSERT_EQUALS "com.TEAM123456.loopkit.Loop" "@result.items.0.bundle_id"
+ASSERT_EQUALS false "@result.items.0.production"
+ASSERT_EQUALS null "@result.items.0.token"
 
 // Trio has them at the top of its profile, where LoopFollow sends Trio's remote commands; a production build by default
 NAME trio_profile
@@ -55,10 +55,10 @@ GET http://{{ .create_new_site.site_subdomain }}.localhost/settings/push-registr
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 2 "@result"
-ASSERT_EQUALS "trio" "@result.0.app"
-ASSERT_EQUALS "com.TEAM123456.Trio" "@result.0.bundle_id"
-ASSERT_EQUALS true "@result.0.production"
+ASSERT_LENGTH 2 "@result.items"
+ASSERT_EQUALS "trio" "@result.items.0.app"
+ASSERT_EQUALS "com.TEAM123456.Trio" "@result.items.0.bundle_id"
+ASSERT_EQUALS true "@result.items.0.production"
 
 // A token that is not one is not registered, and the profile is still kept
 NAME bad_token_profile
@@ -79,4 +79,4 @@ GET http://{{ .create_new_site.site_subdomain }}.localhost/settings/push-registr
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 2 "@result"
+ASSERT_LENGTH 2 "@result.items"

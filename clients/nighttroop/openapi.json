@@ -530,13 +530,13 @@
       "Error": { "description": "An error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
       "Deleted": { "description": "Deleted", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string", "description": "deleted" } } } } } },
       "GlucoseReadingResult": { "description": "A reading", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "$ref": "#/components/schemas/GlucoseReading" } } } } } },
-      "GlucoseReadingList": { "description": "Readings, newest first", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "type": "array", "items": { "$ref": "#/components/schemas/GlucoseReading" } } } } } } },
+      "GlucoseReadingList": { "description": "Readings, newest first", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "allOf": [{ "$ref": "#/components/schemas/SearchPage" }, { "type": "object", "properties": { "items": { "type": "array", "items": { "$ref": "#/components/schemas/GlucoseReading" } } } }] } } } } } },
       "InsulinDoseResult": { "description": "A dose", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "$ref": "#/components/schemas/InsulinDose" } } } } } },
-      "InsulinDoseList": { "description": "Doses, newest first", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "type": "array", "items": { "$ref": "#/components/schemas/InsulinDose" } } } } } } },
+      "InsulinDoseList": { "description": "Doses, newest first", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "allOf": [{ "$ref": "#/components/schemas/SearchPage" }, { "type": "object", "properties": { "items": { "type": "array", "items": { "$ref": "#/components/schemas/InsulinDose" } } } }] } } } } } },
       "FoodIntakeResult": { "description": "A food intake", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "$ref": "#/components/schemas/FoodIntake" } } } } } },
       "LoopSettingsResult": { "description": "A set of a loop app's settings", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "$ref": "#/components/schemas/LoopSettings" } } } } } },
-      "LoopSettingsList": { "description": "Each set of the loop apps' settings, the last seen first", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "type": "array", "items": { "$ref": "#/components/schemas/LoopSettings" } } } } } } },
-      "FoodIntakeList": { "description": "Food intakes, newest first", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "type": "array", "items": { "$ref": "#/components/schemas/FoodIntake" } } } } } } },
+      "LoopSettingsList": { "description": "Each set of the loop apps' settings, the last seen first", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "allOf": [{ "$ref": "#/components/schemas/SearchPage" }, { "type": "object", "properties": { "items": { "type": "array", "items": { "$ref": "#/components/schemas/LoopSettings" } } } }] } } } } } },
+      "FoodIntakeList": { "description": "Food intakes, newest first", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "allOf": [{ "$ref": "#/components/schemas/SearchPage" }, { "type": "object", "properties": { "items": { "type": "array", "items": { "$ref": "#/components/schemas/FoodIntake" } } } }] } } } } } },
       "NsError": { "description": "A Nightscout error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
       "NsObject": { "description": "A Nightscout response", "content": { "application/json": { "schema": { "type": "object", "additionalProperties": true } } } },
       "NsDocuments": { "description": "Documents, newest first", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/NsDocument" } } } } },
@@ -545,6 +545,17 @@
       "NsV3Documents": { "description": "Documents", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "type": "array", "items": { "$ref": "#/components/schemas/NsDocument" } } } } } } }
     },
     "schemas": {
+      "SearchPage": {
+        "type": "object",
+        "description": "A page of a search, newest first. A data collection also counts what its search matches over every page, and when the earliest and latest occurred, in ms, null when it matches none.",
+        "properties": {
+          "skip": { "type": "integer", "format": "int64" },
+          "limit": { "type": "integer", "format": "int64", "description": "50 unless the request asks for another, at most 1000" },
+          "total": { "type": "integer", "format": "int64" },
+          "earliest_at": { "type": "integer", "format": "int64", "nullable": true },
+          "latest_at": { "type": "integer", "format": "int64", "nullable": true }
+        }
+      },
       "Error": {
         "type": "object",
         "properties": { "status": { "type": "integer" }, "message": { "type": "string" } }
@@ -763,7 +774,7 @@
       },
       "SummaryList": {
         "type": "object",
-        "properties": { "status": { "type": "integer" }, "result": { "type": "array", "items": { "$ref": "#/components/schemas/Summary" } } }
+        "properties": { "status": { "type": "integer" }, "result": { "allOf": [{ "$ref": "#/components/schemas/SearchPage" }, { "type": "object", "properties": { "items": { "type": "array", "items": { "$ref": "#/components/schemas/Summary" } } } }] } }
       }
     }
   }

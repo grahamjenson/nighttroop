@@ -22,6 +22,7 @@ templ TempBasalsTable(tempBasals []*sitemodels.SiteTempBasal, skip int64, limit 
 		@heading.Page("Temp Basals") {
 			Newest first. Click a temp basal to see all its details.
 		}
+		@searchTotals("site--temp-basal", "temp basals")
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			@addmodal.Open("site--temp-basal--add", "/data/temp-basals/new", "Add Temp Basal")
 			@table.Table(table.Props{

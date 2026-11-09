@@ -16,14 +16,14 @@ func TestQueryLimitAndSkip(t *testing.T) {
 		skip  int64
 		err   bool
 	}{
-		{query: "", limit: apiquery.MaxQueryLimit, skip: 0},
+		{query: "", limit: apiquery.DefaultQueryLimit, skip: 0},
 		{query: "limit=20&skip=40", limit: 20, skip: 40},
 		{query: "limit=1000", limit: 1000, skip: 0},
 		{query: "limit=1001", limit: apiquery.MaxQueryLimit, skip: 0},
-		{query: "limit=0", limit: apiquery.MaxQueryLimit, skip: 0},
-		{query: "limit=-5&skip=-5", limit: apiquery.MaxQueryLimit, skip: 0},
+		{query: "limit=0", limit: apiquery.DefaultQueryLimit, skip: 0},
+		{query: "limit=-5&skip=-5", limit: apiquery.DefaultQueryLimit, skip: 0},
 		{query: "limit=20.0&skip=10", limit: 20, skip: 10},
-		{query: "other=1", limit: apiquery.MaxQueryLimit, skip: 0},
+		{query: "other=1", limit: apiquery.DefaultQueryLimit, skip: 0},
 		{query: "limit=lots", err: true},
 		{query: "skip=lots", err: true},
 	}

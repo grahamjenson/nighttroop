@@ -5,7 +5,7 @@ GET http://{{ site }}/data/device-status
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 0 "@result"
+ASSERT_LENGTH 0 "@result.items"
 
 // Four statuses from a phone, one from a pump, and one from a device that stopped reporting 10 days ago
 NAME create_statuses
@@ -24,13 +24,13 @@ GET http://{{ site }}/data/device-status
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 4 "@result"
-ASSERT_EQUALS "phone-a" "@result.0.created_by_device_name"
-ASSERT_EQUALS 90 "@result.0.device_battery_percent"
-ASSERT_EQUALS 80 "@result.2.device_battery_percent"
-ASSERT_EQUALS "pump-b" "@result.3.created_by_device_name"
-ASSERT_EQUALS 120 "@result.3.pump_reservoir"
-SET status_id {{ dig "grouped_statuses.result.0.id" }}
+ASSERT_LENGTH 4 "@result.items"
+ASSERT_EQUALS "phone-a" "@result.items.0.created_by_device_name"
+ASSERT_EQUALS 90 "@result.items.0.device_battery_percent"
+ASSERT_EQUALS 80 "@result.items.2.device_battery_percent"
+ASSERT_EQUALS "pump-b" "@result.items.3.created_by_device_name"
+ASSERT_EQUALS 120 "@result.items.3.pump_reservoir"
+SET status_id {{ dig "grouped_statuses.result.items.0.id" }}
 
 // A device's history pages through all its statuses, however old
 NAME device_history
@@ -38,23 +38,25 @@ GET http://{{ site }}/data/device-status?device=phone-a
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 4 "@result"
+ASSERT_LENGTH 4 "@result.items"
 
 NAME device_history_second_page
 GET http://{{ site }}/data/device-status?device=phone-a&limit=2&skip=2
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 2 "@result"
-ASSERT_EQUALS 80 "@result.0.device_battery_percent"
-ASSERT_EQUALS 75 "@result.1.device_battery_percent"
+ASSERT_LENGTH 2 "@result.items"
+ASSERT_EQUALS 80 "@result.items.0.device_battery_percent"
+ASSERT_EQUALS 75 "@result.items.1.device_battery_percent"
+// A device's history counts only that device's statuses
+ASSERT_EQUALS 4 "@result.total"
 
 NAME old_device_history
 GET http://{{ site }}/data/device-status?device=old-device
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
+ASSERT_LENGTH 1 "@result.items"
 
 NAME get_status
 GET http://{{ site }}/data/device-status/{{ .status_id }}
@@ -92,9 +94,9 @@ GET http://{{ site }}/data/device-status
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 4 "@result"
-ASSERT_EQUALS 85 "@result.0.device_battery_percent"
-ASSERT_EQUALS 75 "@result.2.device_battery_percent"
+ASSERT_LENGTH 4 "@result.items"
+ASSERT_EQUALS 85 "@result.items.0.device_battery_percent"
+ASSERT_EQUALS 75 "@result.items.2.device_battery_percent"
 
 NAME delete_unknown_status
 DELETE http://{{ site }}/data/device-status/not-a-status

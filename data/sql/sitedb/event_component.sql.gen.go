@@ -69,6 +69,26 @@ func (q *Queries) AllComponentEvents(ctx context.Context, arg AllComponentEvents
 	return items, nil
 }
 
+const componentEventTotals = `-- name: ComponentEventTotals :one
+SELECT COUNT(*) AS total, CAST(COALESCE(MIN(occurred_at), 0) AS INTEGER) AS earliest_at,
+    CAST(COALESCE(MAX(occurred_at), 0) AS INTEGER) AS latest_at
+FROM component_events WHERE deleted_at IS NULL
+`
+
+type ComponentEventTotalsRow struct {
+	Total      int64
+	EarliestAt int64
+	LatestAt   int64
+}
+
+// How many component events AllComponentEvents pages through, and when the earliest and latest occurred, 0 when there are none
+func (q *Queries) ComponentEventTotals(ctx context.Context) (*ComponentEventTotalsRow, error) {
+	row := q.queryRow(ctx, q.componentEventTotalsStmt, componentEventTotals)
+	var i ComponentEventTotalsRow
+	err := row.Scan(&i.Total, &i.EarliestAt, &i.LatestAt)
+	return &i, err
+}
+
 const createComponentEvent = `-- name: CreateComponentEvent :one
 INSERT INTO component_events (
     id,
