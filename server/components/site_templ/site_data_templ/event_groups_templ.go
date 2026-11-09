@@ -101,7 +101,7 @@ func EventGroupsTable(eventGroups []*sitemodels.SiteEventGroup, skip int64, limi
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = searchTotals("site--event-group", "event groups").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = searchTotals("site--event-group", "event group", "event groups").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

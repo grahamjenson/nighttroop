@@ -76,7 +76,7 @@ func ProfileSwitchesTable(profileSwitches []*sitemodels.SiteProfileSwitch, skip 
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = searchTotals("site--profile-switch", "profile switches").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = searchTotals("site--profile-switch", "profile switch", "profile switches").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

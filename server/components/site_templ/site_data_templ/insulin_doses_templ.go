@@ -67,7 +67,7 @@ func InsulinDosesTable(insulinDoses []*sitemodels.SiteInsulinDose, skip int64, l
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = searchTotals("site--insulin", "insulin doses").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = searchTotals("site--insulin", "insulin dose", "insulin doses").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

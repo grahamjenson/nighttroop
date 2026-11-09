@@ -75,7 +75,7 @@ func ActivitiesTable(activities []*sitemodels.SiteActivity, skip int64, limit in
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = searchTotals("site--activity", "activities").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = searchTotals("site--activity", "activity", "activities").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

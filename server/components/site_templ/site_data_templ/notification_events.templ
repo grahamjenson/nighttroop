@@ -22,7 +22,7 @@ templ NotificationEventsTable(events []*sitemodels.SiteNotificationEvent, skip i
 		@heading.Page("Notifications") {
 			Newest first. Click a notification to see all its details.
 		}
-		@searchTotals("site--notification", "notifications")
+		@searchTotals("site--notification", "notification", "notifications")
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			@addmodal.Open("site--notification--add", "/data/notifications/new", "Add Notification")
 			@table.Table(table.Props{

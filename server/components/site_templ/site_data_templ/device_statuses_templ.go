@@ -276,7 +276,7 @@ func DeviceStatusHistory(device string, statuses []*sitemodels.SiteDeviceStatus,
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = searchTotals("site--device-status", "statuses").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = searchTotals("site--device-status", "status", "statuses").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

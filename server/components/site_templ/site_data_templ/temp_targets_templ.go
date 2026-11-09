@@ -68,7 +68,7 @@ func TempTargetsTable(tempTargets []*sitemodels.SiteTempTarget, skip int64, limi
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = searchTotals("site--temp-target", "temp targets").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = searchTotals("site--temp-target", "temp target", "temp targets").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

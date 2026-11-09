@@ -232,7 +232,7 @@ func GlucoseReadingsTable(readings []*sitemodels.SiteGlucoseReading, skip int64,
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = searchTotals("site--glucose", "glucose readings").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = searchTotals("site--glucose", "glucose reading", "glucose readings").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
