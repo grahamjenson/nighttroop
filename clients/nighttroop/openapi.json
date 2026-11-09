@@ -37,6 +37,23 @@
         "responses": { "200": { "$ref": "#/components/responses/PasskeySignedIn" }, "default": { "$ref": "#/components/responses/PasskeyError" } }
       }
     },
+    "/welcome/passkey/begin": {
+      "post": {
+        "operationId": "WelcomePasskeyBegin",
+        "summary": "Begins adding a new site's admin a passkey from its welcome page, only by the browser its credentials were shown to in the last 15 minutes: the WebAuthn options for navigator.credentials.create",
+        "security": [],
+        "responses": { "200": { "$ref": "#/components/responses/PasskeyOptions" }, "default": { "$ref": "#/components/responses/PasskeyError" } }
+      }
+    },
+    "/welcome/passkey/finish": {
+      "post": {
+        "operationId": "WelcomePasskeyFinish",
+        "summary": "Keeps the new site's admin's passkey, without the authenticator's model or attestation, and signs the admin in with it, setting the login cookie",
+        "security": [],
+        "requestBody": { "$ref": "#/components/requestBodies/PasskeyCredential" },
+        "responses": { "200": { "$ref": "#/components/responses/PasskeySignedIn" }, "default": { "$ref": "#/components/responses/PasskeyError" } }
+      }
+    },
     "/settings/account/passkeys/begin": {
       "post": {
         "operationId": "AccountPasskeyBegin",

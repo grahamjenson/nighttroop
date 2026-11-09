@@ -697,6 +697,9 @@ type GetSummaryParams struct {
 	Hours *int64 `form:"hours,omitempty" json:"hours,omitempty"`
 }
 
+// WelcomePasskeyFinishJSONBody defines parameters for WelcomePasskeyFinish.
+type WelcomePasskeyFinishJSONBody map[string]interface{}
+
 // NsV1AlexaJSONRequestBody defines body for NsV1Alexa for application/json ContentType.
 type NsV1AlexaJSONRequestBody NsV1AlexaJSONBody
 
@@ -747,6 +750,9 @@ type PasskeyLoginFinishJSONRequestBody PasskeyLoginFinishJSONBody
 
 // AccountPasskeyFinishJSONRequestBody defines body for AccountPasskeyFinish for application/json ContentType.
 type AccountPasskeyFinishJSONRequestBody AccountPasskeyFinishJSONBody
+
+// WelcomePasskeyFinishJSONRequestBody defines body for WelcomePasskeyFinish for application/json ContentType.
+type WelcomePasskeyFinishJSONRequestBody WelcomePasskeyFinishJSONBody
 
 // Getter for additional properties for NsDocument. Returns the specified
 // element and whether it was found
@@ -1605,6 +1611,14 @@ type ClientInterface interface {
 
 	// GetSummary request
 	GetSummary(ctx context.Context, params *GetSummaryParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// WelcomePasskeyBegin request
+	WelcomePasskeyBegin(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// WelcomePasskeyFinishWithBody request with any body
+	WelcomePasskeyFinishWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	WelcomePasskeyFinish(ctx context.Context, body WelcomePasskeyFinishJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) NsV1AdminNotifies(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -2581,6 +2595,42 @@ func (c *Client) CreateSite(ctx context.Context, reqEditors ...RequestEditorFn) 
 
 func (c *Client) GetSummary(ctx context.Context, params *GetSummaryParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetSummaryRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) WelcomePasskeyBegin(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewWelcomePasskeyBeginRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) WelcomePasskeyFinishWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewWelcomePasskeyFinishRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) WelcomePasskeyFinish(ctx context.Context, body WelcomePasskeyFinishJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewWelcomePasskeyFinishRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -5669,6 +5719,73 @@ func NewGetSummaryRequest(server string, params *GetSummaryParams) (*http.Reques
 	return req, nil
 }
 
+// NewWelcomePasskeyBeginRequest generates requests for WelcomePasskeyBegin
+func NewWelcomePasskeyBeginRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/welcome/passkey/begin")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewWelcomePasskeyFinishRequest calls the generic WelcomePasskeyFinish builder with application/json body
+func NewWelcomePasskeyFinishRequest(server string, body WelcomePasskeyFinishJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewWelcomePasskeyFinishRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewWelcomePasskeyFinishRequestWithBody generates requests for WelcomePasskeyFinish with any type of body
+func NewWelcomePasskeyFinishRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/welcome/passkey/finish")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -5940,6 +6057,14 @@ type ClientWithResponsesInterface interface {
 
 	// GetSummaryWithResponse request
 	GetSummaryWithResponse(ctx context.Context, params *GetSummaryParams, reqEditors ...RequestEditorFn) (*GetSummaryResponse, error)
+
+	// WelcomePasskeyBeginWithResponse request
+	WelcomePasskeyBeginWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*WelcomePasskeyBeginResponse, error)
+
+	// WelcomePasskeyFinishWithBodyWithResponse request with any body
+	WelcomePasskeyFinishWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*WelcomePasskeyFinishResponse, error)
+
+	WelcomePasskeyFinishWithResponse(ctx context.Context, body WelcomePasskeyFinishJSONRequestBody, reqEditors ...RequestEditorFn) (*WelcomePasskeyFinishResponse, error)
 }
 
 type NsV1AdminNotifiesResponse struct {
@@ -7441,6 +7566,52 @@ func (r GetSummaryResponse) StatusCode() int {
 	return 0
 }
 
+type WelcomePasskeyBeginResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PasskeyOptions
+	JSONDefault  *PasskeyError
+}
+
+// Status returns HTTPResponse.Status
+func (r WelcomePasskeyBeginResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r WelcomePasskeyBeginResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type WelcomePasskeyFinishResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PasskeySignedIn
+	JSONDefault  *PasskeyError
+}
+
+// Status returns HTTPResponse.Status
+func (r WelcomePasskeyFinishResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r WelcomePasskeyFinishResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 // NsV1AdminNotifiesWithResponse request returning *NsV1AdminNotifiesResponse
 func (c *ClientWithResponses) NsV1AdminNotifiesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*NsV1AdminNotifiesResponse, error) {
 	rsp, err := c.NsV1AdminNotifies(ctx, reqEditors...)
@@ -8160,6 +8331,32 @@ func (c *ClientWithResponses) GetSummaryWithResponse(ctx context.Context, params
 		return nil, err
 	}
 	return ParseGetSummaryResponse(rsp)
+}
+
+// WelcomePasskeyBeginWithResponse request returning *WelcomePasskeyBeginResponse
+func (c *ClientWithResponses) WelcomePasskeyBeginWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*WelcomePasskeyBeginResponse, error) {
+	rsp, err := c.WelcomePasskeyBegin(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseWelcomePasskeyBeginResponse(rsp)
+}
+
+// WelcomePasskeyFinishWithBodyWithResponse request with arbitrary body returning *WelcomePasskeyFinishResponse
+func (c *ClientWithResponses) WelcomePasskeyFinishWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*WelcomePasskeyFinishResponse, error) {
+	rsp, err := c.WelcomePasskeyFinishWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseWelcomePasskeyFinishResponse(rsp)
+}
+
+func (c *ClientWithResponses) WelcomePasskeyFinishWithResponse(ctx context.Context, body WelcomePasskeyFinishJSONRequestBody, reqEditors ...RequestEditorFn) (*WelcomePasskeyFinishResponse, error) {
+	rsp, err := c.WelcomePasskeyFinish(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseWelcomePasskeyFinishResponse(rsp)
 }
 
 // ParseNsV1AdminNotifiesResponse parses an HTTP response from a NsV1AdminNotifiesWithResponse call
@@ -10271,6 +10468,72 @@ func ParseGetSummaryResponse(rsp *http.Response) (*GetSummaryResponse, error) {
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseWelcomePasskeyBeginResponse parses an HTTP response from a WelcomePasskeyBeginWithResponse call
+func ParseWelcomePasskeyBeginResponse(rsp *http.Response) (*WelcomePasskeyBeginResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &WelcomePasskeyBeginResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PasskeyOptions
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest PasskeyError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseWelcomePasskeyFinishResponse parses an HTTP response from a WelcomePasskeyFinishWithResponse call
+func ParseWelcomePasskeyFinishResponse(rsp *http.Response) (*WelcomePasskeyFinishResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &WelcomePasskeyFinishResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PasskeySignedIn
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest PasskeyError
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

@@ -30,6 +30,9 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Get("/welcome", publicapi.GETWelcomeHandler())
 		r.Post("/welcome", publicapi.POSTWelcomeHandler(config))
 		r.Post("/site/totp", publicapi.POSTCheckTOTPHandler(config))
+		// The browser shown them adds the admin a passkey, and signs in with it
+		r.With(httputils.AllowedCountriesMiddleware(config)).Post("/welcome/passkey/begin", sitelogin.POSTWelcomePasskeyBegin(controlDB, config))
+		r.With(httputils.AllowedCountriesMiddleware(config)).Post("/welcome/passkey/finish", sitelogin.POSTWelcomePasskeyFinish(controlDB, config))
 		publicapi.FooterRoutes(r, config)
 		r.With(httputils.AllowedCountriesMiddleware(config)).Post("/login", sitelogin.POSTLogin(controlDB, config))
 		r.With(httputils.AllowedCountriesMiddleware(config)).Post("/login/totp", sitelogin.POSTLoginTOTP(controlDB, config))

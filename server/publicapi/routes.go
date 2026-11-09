@@ -109,6 +109,7 @@ func POSTCreateSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig)
 			ReadOnlyNSToken: siteCreateResult.ReadOnlyNSToken,
 			BackupKey:       siteCreateResult.BackupPassword,
 			RecoverURL:      config.RecoverURL(),
+			Passkey:         true,
 		}))
 		w.WriteHeader(http.StatusOK)
 	}

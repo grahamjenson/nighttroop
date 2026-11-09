@@ -37,8 +37,6 @@
 1. Accounts
     1. Recovering a site's admin without the initial backup key
     1. Recovering a lost control admin login, as setup only runs on a server with no control admin
-    1. P2: "Login with passkey" on a new site's welcome page, beside Login, adding the admin's passkey there and signing
-       in with it, so a new site needs no authenticator app
     1. P4: Show a recovered site's new credentials on its own address, as a new site's are, not on the recover page
 
 1. Security

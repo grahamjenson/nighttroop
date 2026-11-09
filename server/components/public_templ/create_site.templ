@@ -4,6 +4,7 @@ import (
 	"nighttroop.t1d.nz/models/publicmodels"
 	"nighttroop.t1d.nz/server/components/authenticator"
 	"nighttroop.t1d.nz/server/components/footer"
+	"nighttroop.t1d.nz/server/components/site_templ/site_login_templ"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/utils/consts"
@@ -227,6 +228,9 @@ templ CreateSiteInfo(newsite publicmodels.NewSiteInfo) {
 		}
 		@step("3", "Log in to your site", "With the admin password and a code from the app") {
 			@loginButton("", false)
+			if newsite.Passkey {
+				@passkeyLogin()
+			}
 		}
 	</div>
 }
@@ -261,6 +265,27 @@ templ loginButton(url string, oob bool) {
 			Login
 			@icon.ExternalLink(icon.Props{Class: "size-5"})
 		}
+	</div>
+}
+
+// passkeyLogin adds the new site's admin a passkey, this device's fingerprint, face or PIN, and logs in with it, with no
+// authenticator app; it is on the site's own address, which a passkey is made for
+templ passkeyLogin() {
+	<div id="public--passkey-login" class="flex flex-col items-center gap-2 px-6 pb-6">
+		<p class="text-sm text-slate-600">Or log in with a passkey, this device's fingerprint, face or PIN, with no authenticator app.</p>
+		@button.Button(button.Props{
+			ID:         "public--passkey-login-button",
+			Type:       button.TypeButton,
+			Variant:    button.VariantOutline,
+			Size:       button.SizeLg,
+			Class:      "h-14 px-10 rounded-full text-lg font-semibold text-brand-night border-brand-night",
+			Attributes: templ.Attributes{"data-passkey-begin": "/welcome/passkey/begin", "data-passkey-finish": "/welcome/passkey/finish", "data-passkey-error": "public--passkey-error"},
+		}) {
+			@icon.KeyRound(icon.Props{Class: "size-5"})
+			Login with passkey
+		}
+		<p id="public--passkey-error" class="text-sm text-red-700 empty:hidden"></p>
+		@site_login_templ.PasskeyScript()
 	</div>
 }
 
