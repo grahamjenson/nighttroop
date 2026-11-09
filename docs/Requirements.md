@@ -83,8 +83,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
     of how much of the limit it uses: amber from 80%, red over it, with a warning icon. A DB not on disk is measured by
     its tables, and with neither it says it is not measured yet;
   - the bar is split into its five largest tables, indexes counted with their table, darkest first, and the rest as
-    Other, with a key under it naming each one with its size in MB, share of the DB and records in thousands (as
-    `7.9k records`, Other's its tables' together); hovering a part names it too;
+    Other, with a key under it naming each one with its records in thousands, size in MB and share of the DB (as
+    `7.9k · 6.11 MB · 54%`, Other's records its tables' together); hovering a part names it too;
   - tiles of when it was last seen and last written to, how many identities it has (people and devices), and how
     long since its last error;
   - its identities, and its latest 10 events and 10 errors, each opening its details, with a link to all of them

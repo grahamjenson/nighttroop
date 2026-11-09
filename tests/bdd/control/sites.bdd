@@ -76,7 +76,7 @@ ASSERT_NOT_VISIBLE #control--site--db-part--Other--tooltip
 HOVER #control--site--db-part--Other
 ASSERT_DRAWN #control--site--db-part--Other--tooltip >> text=Other
 SCREENSHOT site_db_part_tooltip
-ASSERT_VISIBLE #control--site--db-table--Other >> text=/MB · \d+% · \d+\.\dk records$/
+ASSERT_VISIBLE #control--site--db-table--Other >> text=/\d+\.\dk · \d+\.\d\d MB · \d+%$/
 ASSERT_TEXT_EQUALS #control--site--last-seen Never
 ASSERT_TEXT_EQUALS #control--site--last-write Never
 ASSERT_TEXT_EQUALS #control--site--identity-count 3
