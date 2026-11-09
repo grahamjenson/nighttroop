@@ -137,3 +137,30 @@ func TestCombinedSettingsDateLayout(t *testing.T) {
 		})
 	}
 }
+
+func TestLoadLocation(t *testing.T) {
+	tests := []struct {
+		name, timezone string
+		loads          bool
+	}{
+		{name: "a timezone loads", timezone: "Pacific/Auckland", loads: true},
+		{name: "UTC loads", timezone: "UTC", loads: true},
+		{name: "an unknown timezone does not load", timezone: "Nowhere/Atlantis"},
+		{name: "a path is not a timezone", timezone: "../../etc/passwd"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			first, err := settings.LoadLocation(test.timezone)
+			if !test.loads {
+				require.Error(t, err)
+				require.Nil(t, first)
+				return
+			}
+			require.NoError(t, err)
+			require.Equal(t, test.timezone, first.String())
+			again, err := settings.LoadLocation(test.timezone)
+			require.NoError(t, err)
+			require.Same(t, first, again, "a timezone is loaded once and then kept")
+		})
+	}
+}

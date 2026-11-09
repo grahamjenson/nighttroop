@@ -135,13 +135,23 @@ func (m *CombinedSettingsMap) Location() *time.Location {
 	if name == nil {
 		return time.UTC
 	}
-	if location, ok := locations.Load(*name); ok {
-		return location.(*time.Location)
-	}
-	location, err := time.LoadLocation(*name)
+	location, err := LoadLocation(*name)
 	if err != nil {
 		return time.UTC
 	}
-	locations.Store(*name, location)
 	return location
+}
+
+// LoadLocation is the named timezone, loaded once and then kept, as time.LoadLocation reads its zone file each time.
+// Only a timezone that loads is kept, so there are at most as many as the zone database has.
+func LoadLocation(name string) (*time.Location, error) {
+	if location, ok := locations.Load(name); ok {
+		return location.(*time.Location), nil
+	}
+	location, err := time.LoadLocation(name)
+	if err != nil {
+		return nil, err
+	}
+	locations.Store(name, location)
+	return location, nil
 }
