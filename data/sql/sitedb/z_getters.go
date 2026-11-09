@@ -847,6 +847,16 @@ func (m *DeviceReport) SetConfigurationID(v *string) {
 	m.ConfigurationID = v
 }
 
+// GetLoopStatusJson returns the LoopStatusJson value.
+func (m DeviceReport) GetLoopStatusJson() *string {
+	return m.LoopStatusJson
+}
+
+// SetLoopStatusJson sets the LoopStatusJson value and returns the updated DeviceReport.
+func (m *DeviceReport) SetLoopStatusJson(v *string) {
+	m.LoopStatusJson = v
+}
+
 // GetOtherAttributes returns the OtherAttributes value.
 func (m DeviceReport) GetOtherAttributes() types.DeviceReportOther {
 	return m.OtherAttributes
@@ -5015,6 +5025,16 @@ func (m CreateDeviceReportParams) GetConfigurationID() *string {
 // SetConfigurationID sets the ConfigurationID value and returns the updated CreateDeviceReportParams.
 func (m *CreateDeviceReportParams) SetConfigurationID(v *string) {
 	m.ConfigurationID = v
+}
+
+// GetLoopStatusJson returns the LoopStatusJson value.
+func (m CreateDeviceReportParams) GetLoopStatusJson() *string {
+	return m.LoopStatusJson
+}
+
+// SetLoopStatusJson sets the LoopStatusJson value and returns the updated CreateDeviceReportParams.
+func (m *CreateDeviceReportParams) SetLoopStatusJson(v *string) {
+	m.LoopStatusJson = v
 }
 
 // GetOtherAttributes returns the OtherAttributes value.
