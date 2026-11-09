@@ -169,7 +169,7 @@ templ activityRow(activity *sitemodels.SiteActivity) {
 }
 
 templ ActivityModal(activity *sitemodels.SiteActivity) {
-	@modal.Modal(modal.Props{ID: "site--activity--details", Title: fmt.Sprintf("%s: %s", activity.ActivityType, orDash(activity.Name)), Subtitle: formatReadingDate(ctx, activity.OccurredAt)}) {
+	@modal.Modal(modal.Props{ID: "site--activity--details", Title: fmt.Sprintf("%s: %s", activity.ActivityType, orDash(activity.Name)), Subtitle: formatReadingDate(ctx, activity.OccurredAt), Actions: modal.Submit("site--activity--edit", "Save")}) {
 		<form
 			id="site--activity--edit"
 			class="mt-4 flex flex-wrap items-end gap-2"
@@ -180,9 +180,6 @@ templ ActivityModal(activity *sitemodels.SiteActivity) {
 			hx-status:5xx="target:#toaster swap:beforeend"
 		>
 			@activityInputs("site--activity--edit", orEmpty(activity.Name), numberOrEmpty(activity.DurationMinutes), orEmpty(activity.Notes))
-			@button.Button(button.Props{ID: "site--activity--edit--submit", Type: button.TypeSubmit}) {
-				Save
-			}
 		</form>
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@readingDetail("Minutes", orDash(activity.DurationMinutes))
