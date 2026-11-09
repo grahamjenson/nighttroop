@@ -134,6 +134,9 @@ func (b *ConnectorJobManager) createNightscoutDocuments(ctx context.Context, job
 		var duplicateFound bool
 		var herr *nsutils.HTTPError
 		if identifier, _ := doc["_id"].(string); replace && identifier != "" {
+			// The site's copy is kept by its _id. A v3 client, such as AAPS, also gives it an identifier of its own,
+			// which would refuse every replace after the first as changing the copy's identifier.
+			delete(doc, "identifier")
 			var created bool
 			_, created, herr = collectionStore.Replace(ctx, siteContext, identifier, doc, true)
 			duplicateFound = !created

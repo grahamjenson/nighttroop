@@ -494,7 +494,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 - Connector credentials are encrypted at rest.
 - A Nightscout connector copies the newest readings, treatments and device statuses, and the current profile store
   whenever the Nightscout's profiles change, however long ago it started; an edit to it in Nightscout's profile
-  editor replaces the copy, whoever saved it there, and a new one is added beside it.
+  editor replaces the copy, whoever saved it there or whatever identifier its uploader, such as AAPS, gave it, and a
+  new one is added beside it.
 - A Nightscout connector on this server's host, or on a private, local or shared (carrier-grade NAT or Tailscale) address,
   is refused when saved and as it connects.
 - Pasting a Nightscout link with its token, such as `https://site/api/v1?token=...`, `?api_secret=...` or

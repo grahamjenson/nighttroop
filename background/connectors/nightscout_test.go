@@ -186,7 +186,8 @@ func TestNightscoutConnectorCopiesTheCurrentProfile(t *testing.T) {
 	}
 	startDate := time.Now().Add(-30 * 24 * time.Hour).UTC().Format(time.RFC3339)
 	nightscout_client.TestDocuments = map[string][]any{"profile": {map[string]any{
-		"_id": "6553f1b2c4a1e2d3f4a5b6c7", "defaultProfile": "Default", "startDate": startDate, "created_at": startDate,
+		// AAPS uploads it with a v3 identifier of its own besides its _id
+		"_id": "6553f1b2c4a1e2d3f4a5b6c7", "identifier": "67af5982-d970-53c2-ab2e-6fa9a85c2f1c", "defaultProfile": "Default", "startDate": startDate, "created_at": startDate,
 		"mills": float64(time.Now().Add(-30 * 24 * time.Hour).UnixMilli()), "units": "mg/dl", "srvModified": float64(time.Now().UnixMilli()),
 		// Who saved it on that Nightscout, which the site's copy does not keep, as the sync made it
 		"subject": "admin",
@@ -229,4 +230,9 @@ func TestNightscoutConnectorCopiesTheCurrentProfile(t *testing.T) {
 	require.Len(t, edited, 1)
 	require.Equal(t, stores[0].ProfileStoreID, edited[0].ProfileStoreID)
 	require.JSONEq(t, `[{"time":"00:00","timeAsSeconds":0,"value":0.9}]`, *edited[0].BasalRatesJson)
+
+	// No sync was refused
+	errs, err := controlDB.Logs.Queries.SearchErrors(ctx, logsdb.SearchErrorsParams{SiteID: &siteID, Limit: 10})
+	require.NoError(t, err)
+	require.Empty(t, errs)
 }
