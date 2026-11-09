@@ -88,9 +88,13 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
     long since its last error;
   - its identities, and its latest 10 events and 10 errors, each opening its details, with a link to all of them
     filtered to the site.
-- A site's page has an Actions grid of what can be done to it: Open Site, and for an admin Disable, Truncate and
-  Archive. Each says what it does, and has its button when it can be done, or says when it would be offered (e.g.
-  Truncate while over its DB size limit, Archive once disabled). Its page shows the change once done.
+- A site's page has an Actions grid of what can be done to it: Open Site, and for an admin Download DB, Disable,
+  Truncate and Archive. Each says what it does, and has its button when it can be done, or says when it would be
+  offered (e.g. Truncate while over its DB size limit, Archive once disabled). Its page shows the change once done.
+- Download DB (`/sites/{id}/db`) downloads a copy of a live or disabled site's DB as it is now, as one SQLite file named
+  `<site>-<time>.sqlite`, copied consistently while the site is written to. Only a control admin can, it shares the
+  site's limit on downloads, and the site records a "Site DB downloaded by control" event, with the admin, which its
+  admins see on its Events page. An archived site has no DB here to download.
 - The sites page has the Create a site and Public site creation cards side by side, each saying what it does.
 - On a phone the sites page is no wider than the window: the order buttons, the create form and the public site
   creation card wrap, and the table scrolls sideways in its card.

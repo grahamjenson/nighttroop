@@ -90,6 +90,10 @@ ASSERT_NOT_VISIBLE #control--site--archive
 ASSERT_VISIBLE #control--site--action-archive >> text=Offered once it is disabled.
 ASSERT_VISIBLE #control--site--action-disable >> text=Stops serving the site. Its data is kept.
 ASSERT_VISIBLE #control--site--disable
+// An admin can download a copy of its DB to look into, which its admins see in its events
+ASSERT_VISIBLE #control--site--action-download-db >> text=Its admins see that you did, in its events.
+ASSERT_VISIBLE #control--site--download-db[href$="/db"][download]
+SCREENSHOT site_download_db
 // Its latest events include its creation, which opens its details
 ASSERT_VISIBLE #control--site--events--table td >> text=Site created
 ASSERT_VISIBLE #control--site--errors--table
@@ -120,6 +124,8 @@ SCREENSHOT site_disabled
 ASSERT_NOT_VISIBLE #control--site--disable
 ASSERT_VISIBLE #control--site--action-disable >> text=It is already disabled.
 ASSERT_VISIBLE #control--site--action-open >> text=Only a live site is served.
+// Its DB is still here, so it can still be downloaded
+ASSERT_VISIBLE #control--site--download-db
 ASSERT_VISIBLE #control--site--archive
 CLICK #control--site--archive
 ASSERT_TEXT_VISIBLE a site can only be archived when S3 is connected

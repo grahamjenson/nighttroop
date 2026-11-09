@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
 	"time"
 
 	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/backup"
 
 	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
@@ -182,6 +184,43 @@ func (s *SitesCollection) SettingsHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 	WriteResponse(w, r, acceptType, http.StatusOK, model, control_sites_templ.PublicSiteCreationChanged(model.PublicSiteCreation))
+}
+
+// DownloadDBHandler sends a control admin a copy of a site's DB, as <site>-<time>.sqlite, to look into what it holds. It
+// is copied with SQLite's backup API, so it is consistent while the site is written to, into a temp file deleted once
+// sent. It holds the site's data, so only an admin can, it shares the site's few downloads a minute, and it is recorded
+// as an event the site's own admins see. A site whose DB is not here, as one archived, has none to download.
+func (s *SitesCollection) DownloadDBHandler(w http.ResponseWriter, r *http.Request) {
+	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
+	if controlContext.IdentityModel.Role != consts.ControlRoleAdmin {
+		apiutils.ErrForbidden.Write(acceptType, w)
+		return
+	}
+	siteID := chi.URLParam(r, "id")
+	siteDB, _, err := controlContext.ControlDB.GetSite(r.Context(), siteID)
+	if err != nil {
+		apiutils.ErrNotFound.Write(acceptType, w)
+		return
+	}
+	if allowed, wait := httputils.WithinRateLimitAll(controlContext.ControlDB.ServerConfig.RateLimiters.SiteDownloadLimiter(siteID)); !allowed {
+		apiutils.ErrRateLimitExceeded(wait).Write(acceptType, w)
+		return
+	}
+	file, err := os.CreateTemp("", "control-site-download-*.sqlite")
+	if err == nil {
+		defer os.Remove(file.Name())
+		defer file.Close()
+		err = backup.SqliteBackup(r.Context(), siteDB.SQLiteDB, file.Name())
+	}
+	if err != nil {
+		slog.ErrorContext(r.Context(), "failed to copy a site's DB for a control admin", "error", err)
+		apiutils.ErrInternalServerError.Write(acceptType, w)
+		return
+	}
+	controlContext.ControlDB.Logs.SiteDBDownloadedByControlEvent(r.Context(), siteID, controlContext.IdentityModel.Name)
+	w.Header().Set("Content-Type", "application/vnd.sqlite3")
+	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s-%s.sqlite"`, siteID, time.Now().UTC().Format("2006-01-02T15-04-05Z")))
+	http.ServeContent(w, r, "", time.Now(), file)
 }
 
 // TruncateHandler clears the raw JSON a site over its DB size limit keeps, then shrinks its DB. Only admins can.
