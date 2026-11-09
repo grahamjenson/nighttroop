@@ -56,7 +56,7 @@ templ EventGroupsTable(eventGroups []*sitemodels.SiteEventGroup, skip int64, lim
 		@heading.Page("Event Groups") {
 			Events recorded together, like a meal bolus's food and insulin: Nightscout's treatments. Newest first. Click one to see all its details.
 		}
-		@searchTotals("site--event-group", "event groups")
+		@searchTotals("site--event-group", "event group", "event groups")
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			@eventGroupAdd()
 			@table.Table(table.Props{

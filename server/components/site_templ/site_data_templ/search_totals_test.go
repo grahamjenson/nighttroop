@@ -1,0 +1,36 @@
+package site_data_templ
+
+import (
+	"context"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/require"
+)
+
+// A day in the totals box is Today, Yesterday, its weekday and date this year, or its date and year before
+func TestTotalsDate(t *testing.T) {
+	now := time.Date(2026, 11, 9, 8, 15, 0, 0, time.UTC)
+	tests := []struct {
+		at   time.Time
+		want string
+	}{
+		{at: now, want: "Today"},
+		{at: time.Date(2026, 11, 9, 0, 0, 0, 0, time.UTC), want: "Today"},
+		{at: time.Date(2026, 11, 8, 23, 59, 0, 0, time.UTC), want: "Yesterday"},
+		{at: time.Date(2026, 11, 7, 12, 0, 0, 0, time.UTC), want: "Sat 7 Nov"},
+		{at: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC), want: "Thu 1 Jan"},
+		{at: time.Date(2025, 12, 31, 12, 0, 0, 0, time.UTC), want: "31 Dec 2025"},
+	}
+	for _, test := range tests {
+		t.Run(test.want, func(t *testing.T) {
+			require.Equal(t, test.want, totalsDate(context.Background(), test.at.UnixMilli(), now))
+		})
+	}
+}
+
+func TestCountNoun(t *testing.T) {
+	require.Equal(t, "temp targets", countNoun(0, "temp target", "temp targets"))
+	require.Equal(t, "temp target", countNoun(1, "temp target", "temp targets"))
+	require.Equal(t, "temp targets", countNoun(2, "temp target", "temp targets"))
+}

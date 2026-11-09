@@ -23,7 +23,7 @@ templ TempTargetsTable(tempTargets []*sitemodels.SiteTempTarget, skip int64, lim
 		@heading.Page("Temp Targets") {
 			Newest first. Click a temp target to see all its details.
 		}
-		@searchTotals("site--temp-target", "temp targets")
+		@searchTotals("site--temp-target", "temp target", "temp targets")
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			@addmodal.Open("site--temp-target--add", "/data/temp-targets/new", "Add Temp Target")
 			@table.Table(table.Props{

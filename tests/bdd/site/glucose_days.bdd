@@ -47,9 +47,11 @@ GOTO /data/glucose
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 50
 ASSERT_VISIBLE #site--glucose--next
-ASSERT_TEXT_VISIBLE glucose readings, from
-ASSERT_VISIBLE #site--glucose--earliest
-ASSERT_VISIBLE #site--glucose--latest
+ASSERT_TEXT_VISIBLE glucose readings
+// The earliest and latest are days, without their times: the backfilled day before is Yesterday
+ASSERT_TEXT_EQUALS #site--glucose--earliest Yesterday
+ASSERT_TEXT_EQUALS #site--glucose--latest Today
+ASSERT_VISIBLE #site--glucose--earliest--ago:has-text("day")
 ASSERT_VISIBLE #site--glucose--totals
 SCREENSHOT glucose_totals
 
@@ -65,3 +67,5 @@ ASSERT_STATUS 200
 ASSERT_TEXT_EQUALS #site--activity--total 0
 ASSERT_TEXT_VISIBLE activities
 ASSERT_NOT_VISIBLE #site--activity--earliest
+ASSERT_NOT_VISIBLE #site--activity--latest
+SCREENSHOT activities_totals_empty
