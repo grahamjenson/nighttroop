@@ -50,7 +50,7 @@ templ GlucoseDays(days []*sitemodels.SiteSummaryDaily) {
 	{{ bottom, top := glucoseDaysAxis(ctx, days) }}
 	{{ low, high := glucoseRangeBounds(ctx) }}
 	<section id="site--glucose--days" class="rounded-xl border border-gray-200 p-4 shadow-sm">
-		<h2 class="mb-3 text-sm font-semibold text-gray-900">Last { fmt.Sprint(len(days)) } days</h2>
+		<h2 class="mb-3 text-sm font-semibold text-gray-900">{ glucoseDaysTitle(len(days)) }</h2>
 		<ol class="grid grid-cols-2 gap-3 sm:grid-cols-5">
 			for i, day := range slices.Backward(days) {
 				<li id={ "site--glucose--day--" + day.Date } class="rounded-lg border border-gray-200 p-2">
@@ -72,4 +72,12 @@ templ GlucoseDays(days []*sitemodels.SiteSummaryDaily) {
 			}
 		</ol>
 	</section>
+}
+
+// glucoseDaysTitle names the days shown: Today for a new site's first day, which has no others, or the last n days
+func glucoseDaysTitle(n int) string {
+	if n == 1 {
+		return "Today"
+	}
+	return fmt.Sprintf("Last %d days", n)
 }
