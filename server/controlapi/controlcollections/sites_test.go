@@ -70,7 +70,8 @@ func TestTruncateHandler(t *testing.T) {
 
 	require.Equal(t, http.StatusBadRequest, truncate(consts.ControlRoleAdmin).Code, "a site within its limit is not truncated")
 
-	oversize := int64(5000)
+	// Over a new site's 20 MB limit
+	oversize := int64(25000)
 	require.NoError(t, controlDB.Queries.UpdateSiteDateFlags(ctx, controldb.UpdateSiteDateFlagsParams{EstimatedDbSizeKb: &oversize, ID: siteID}))
 	require.Equal(t, http.StatusForbidden, truncate(consts.ControlRoleRead).Code)
 	require.Equal(t, http.StatusOK, truncate(consts.ControlRoleAdmin).Code)
