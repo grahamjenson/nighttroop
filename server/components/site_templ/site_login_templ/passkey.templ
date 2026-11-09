@@ -16,7 +16,7 @@ templ PasskeyLogin(prefix string) {
 		Class:      passkeyButtonClass,
 		Attributes: templ.Attributes{"data-passkey-begin": "/login/passkey/begin", "data-passkey-finish": "/login/passkey/finish", "data-passkey-error": prefix + "--passkey-error"},
 	}) {
-		Sign in with a passkey
+		Log in with a passkey
 	}
 	<p id={ prefix + "--passkey-error" } class="mt-2 text-sm text-red-600"></p>
 	@PasskeyScript()

@@ -135,7 +135,7 @@ templ componentEventRow(event *sitemodels.SiteComponentEvent) {
 						"hx-status:5xx":        "target:#toaster swap:beforeend",
 					},
 				}) {
-					@icon.Trash2(icon.Props{Class: "size-4 text-red-600"})
+					@icon.Trash2(icon.Props{Class: button.DeleteIconClass})
 				}
 			</div>
 		}
@@ -143,7 +143,7 @@ templ componentEventRow(event *sitemodels.SiteComponentEvent) {
 }
 
 templ ComponentEventModal(event *sitemodels.SiteComponentEvent) {
-	@modal.Modal(modal.Props{ID: "site--component-event--details", Title: event.EventType, Subtitle: formatReadingDate(ctx, event.OccurredAt)}) {
+	@modal.Modal(modal.Props{ID: "site--component-event--details", Title: event.EventType, Subtitle: formatReadingDate(ctx, event.OccurredAt), Actions: modal.Submit("site--component-event--edit", "Save")}) {
 		<form
 			id="site--component-event--edit"
 			class="mt-4 flex flex-wrap items-end gap-2"
@@ -161,9 +161,6 @@ templ ComponentEventModal(event *sitemodels.SiteComponentEvent) {
 			}
 			@field.Field("site--component-event--edit--notes", "Notes", "w-64") {
 				@input.Input(input.Props{ID: "site--component-event--edit--notes", Name: "notes", Placeholder: "Notes", Value: orEmpty(event.Notes)})
-			}
-			@button.Button(button.Props{ID: "site--component-event--edit--submit", Type: button.TypeSubmit}) {
-				Save
 			}
 		</form>
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">

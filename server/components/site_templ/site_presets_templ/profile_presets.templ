@@ -107,7 +107,7 @@ templ profilePresetRow(profile *sitemodels.SiteProfilePreset) {
 						"hx-status:5xx":        "target:#toaster swap:beforeend",
 					},
 				}) {
-					@icon.Trash2(icon.Props{Class: "size-4 text-red-600"})
+					@icon.Trash2(icon.Props{Class: button.DeleteIconClass})
 				}
 			</div>
 		}
@@ -116,7 +116,7 @@ templ profilePresetRow(profile *sitemodels.SiteProfilePreset) {
 
 templ ProfilePresetModal(profile *sitemodels.SiteProfilePreset) {
 	{{ units := orEmpty(profile.Units) }}
-	@modal.Modal(modal.Props{ID: "presets--profiles--details", Title: orDash(profile.Name), Subtitle: formatDate(ctx, profile.OccurredAt)}) {
+	@modal.Modal(modal.Props{ID: "presets--profiles--details", Title: orDash(profile.Name), Subtitle: formatDate(ctx, profile.OccurredAt), Actions: modal.Submit("presets--profiles--edit", "Rename")}) {
 		<form
 			id="presets--profiles--edit"
 			class="mt-4 flex flex-wrap items-end gap-2"
@@ -128,9 +128,6 @@ templ ProfilePresetModal(profile *sitemodels.SiteProfilePreset) {
 		>
 			@field.Field("presets--profiles--edit--name", "Name", "w-64") {
 				@input.Input(input.Props{ID: "presets--profiles--edit--name", Name: "name", Placeholder: "Name", Value: orEmpty(profile.Name), Required: true, Attributes: templ.Attributes{"maxlength": "64"}})
-			}
-			@button.Button(button.Props{ID: "presets--profiles--edit--submit", Type: button.TypeSubmit}) {
-				Rename
 			}
 		</form>
 		<div id="presets--profiles--schedules" class="mt-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-5">

@@ -544,6 +544,9 @@
   .h-10 {
     height: calc(var(--spacing) * 10);
   }
+  .h-11 {
+    height: calc(var(--spacing) * 11);
+  }
   .h-12 {
     height: calc(var(--spacing) * 12);
   }
@@ -2132,6 +2135,13 @@
       }
     }
   }
+  .hover\:text-red-700 {
+    &:hover {
+      @media (hover: hover) {
+        color: var(--color-red-700);
+      }
+    }
+  }
   .hover\:text-slate-900 {
     &:hover {
       @media (hover: hover) {
@@ -3079,6 +3089,16 @@
         border-bottom-style: var(--tw-border-style);
         border-bottom-width: 0px;
       }
+    }
+  }
+  .\[button\:focus-visible_\&\]\:text-red-600 {
+    button:focus-visible & {
+      color: var(--color-red-600);
+    }
+  }
+  .\[button\:hover_\&\]\:text-red-600 {
+    button:hover & {
+      color: var(--color-red-600);
     }
   }
 }

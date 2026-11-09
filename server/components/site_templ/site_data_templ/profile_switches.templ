@@ -183,7 +183,7 @@ templ profileSwitchRow(profileSwitch *sitemodels.SiteProfileSwitch) {
 						"hx-status:5xx":        "target:#toaster swap:beforeend",
 					},
 				}) {
-					@icon.Trash2(icon.Props{Class: "size-4 text-red-600"})
+					@icon.Trash2(icon.Props{Class: button.DeleteIconClass})
 				}
 			</div>
 		}
@@ -193,7 +193,7 @@ templ profileSwitchRow(profileSwitch *sitemodels.SiteProfileSwitch) {
 templ ProfileSwitchModal(profileSwitch *sitemodels.SiteProfileSwitch) {
 	{{ siteContext, units := httputils.GetSiteContext(ctx), glucoseUnits(ctx) }}
 	{{ unitsLabel := orEmpty(units.Stringp()) }}
-	@modal.Modal(modal.Props{ID: "site--profile-switch--details", Title: fmt.Sprintf("%s at %s%%", profileSwitch.Name, percentOr(profileSwitch.Multiplier, "-")), Subtitle: formatReadingDate(ctx, profileSwitch.OccurredAt)}) {
+	@modal.Modal(modal.Props{ID: "site--profile-switch--details", Title: fmt.Sprintf("%s at %s%%", profileSwitch.Name, percentOr(profileSwitch.Multiplier, "-")), Subtitle: formatReadingDate(ctx, profileSwitch.OccurredAt), Actions: modal.Submit("site--profile-switch--edit", "Save")}) {
 		<form
 			id="site--profile-switch--edit"
 			class="mt-4 flex flex-wrap items-end gap-2"
@@ -205,9 +205,6 @@ templ ProfileSwitchModal(profileSwitch *sitemodels.SiteProfileSwitch) {
 			{ addmodal.PercentsToFractions... }
 		>
 			@profileSwitchInputs("site--profile-switch--edit", profileSwitch.Name, percentOr(profileSwitch.Multiplier, "100"), numberOr(profileSwitch.Timeshift, "0"), numberOr(profileSwitch.DurationMinutes, "0"), orEmpty(profileSwitch.Notes))
-			@button.Button(button.Props{ID: "site--profile-switch--edit--submit", Type: button.TypeSubmit}) {
-				Save
-			}
 		</form>
 		<div id="site--profile-switch--details--schedules" class="mt-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-5">
 			@ProfileSchedule("site--profile-switch--details--basal-rates", "Basal (U/h)", sitemodels.ScheduleFromJSON(profileSwitch.BasalRatesJson), ScheduleValue)

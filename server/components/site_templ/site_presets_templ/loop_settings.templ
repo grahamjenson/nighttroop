@@ -121,7 +121,7 @@ templ loopSettingsRow(s *sitemodels.SiteLoopSettings) {
 						"hx-status:5xx":        "target:#toaster swap:beforeend",
 					},
 				}) {
-					@icon.Trash2(icon.Props{Class: "size-4 text-red-600"})
+					@icon.Trash2(icon.Props{Class: button.DeleteIconClass})
 				}
 			</div>
 		}
