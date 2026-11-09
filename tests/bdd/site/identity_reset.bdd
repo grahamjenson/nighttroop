@@ -5,10 +5,16 @@ ASSERT_VISIBLE "Nighttroop"
 CLICK #site--nav--settings
 CLICK #site--settings--identities-button
 ASSERT_PATH /settings/identities
-// The admin's own password and TOTP are reset from the settings page instead
+// Each identity's actions are in its Manage menu, each labelled. The admin's own password and TOTP are reset from the
+// settings page instead, so they are greyed out in its menu
+CLICK #site--identities--admin--manage
+ASSERT_TEXT_VISIBLE Reset password
 ASSERT_DRAWN #site--identities--admin--reset-password[disabled]
 ASSERT_DRAWN #site--identities--admin--reset-totp[disabled]
+SCREENSHOT identity_manage_menu
+PRESS Escape
 // A device has no TOTP to reset
+CLICK #site--identities--pwd_phone--manage
 ASSERT_NOT_VISIBLE #site--identities--pwd_phone--reset-totp
 CLICK #site--identities--pwd_phone--reset-password
 ASSERT_STATUS 200
@@ -19,7 +25,7 @@ SCREENSHOT identity_password_reset
 CLICK "I Have Saved These"
 CLICK #site--identities--close
 ASSERT_NOT_VISIBLE #site--identities--created--password
-ASSERT_VISIBLE #site--identities--pwd_phone--reset-password
+ASSERT_VISIBLE #site--identities--pwd_phone--manage
 
 // Add a user, to sign in as later
 INPUT #name-createIdentityFormusersTable carer

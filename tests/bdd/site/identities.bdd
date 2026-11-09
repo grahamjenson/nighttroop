@@ -72,6 +72,7 @@ ASSERT_TEXT_VISIBLE kitchen enabled
 SCREENSHOT identities_actions
 
 // Deleting asks first (the test accepts), then removes the row
+CLICK #site--identities--kitchen--manage
 CLICK #site--identities--kitchen--delete
 ASSERT_TEXT_VISIBLE Identity Deleted
 ASSERT_NOT_VISIBLE #site--identities--kitchen--enabled

@@ -5,6 +5,7 @@ ASSERT_VISIBLE "Nighttroop"
 CLICK #site--nav--settings
 CLICK #site--settings--identities-button
 ASSERT_STATUS 200
+CLICK #site--identities--pwd_phone--manage
 CLICK #site--identities--pwd_phone--settings
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE pwd_phone's Settings
@@ -23,6 +24,7 @@ SCREENSHOT identity_settings_saved
 
 // They are kept, and the admin's own settings still follow the site
 GOTO /settings/identities
+CLICK #site--identities--pwd_phone--manage
 CLICK #site--identities--pwd_phone--settings
 ASSERT_TEXT_EQUALS #site--identity-settings--identity--units>option[selected] mg/dL
 
@@ -38,6 +40,7 @@ CLICK #site--identity-settings--identity--save
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Settings Saved
 GOTO /settings/identities
+CLICK #site--identities--pwd_phone--manage
 CLICK #site--identities--pwd_phone--settings
 ASSERT_VISIBLE #site--identity-settings--identity--range_low[value="80"]
 GOTO /settings
@@ -48,6 +51,7 @@ ASSERT_TEXT_EQUALS #site--settings--identity--units>option[selected] Site settin
 WINDOW 390x3000
 // Opened by its address, as on a phone the toast from the last save is over the menu until it goes
 GOTO /settings/identities
+CLICK #site--identities--pwd_phone--manage
 CLICK #site--identities--pwd_phone--settings
 ASSERT_STATUS 200
 ASSERT_VISIBLE #site--identity-settings--identity--units

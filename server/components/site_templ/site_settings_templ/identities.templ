@@ -18,6 +18,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/copybutton"
 	"nighttroop.t1d.nz/server/components/ui/form"
+	"nighttroop.t1d.nz/server/components/ui/dropdown"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/selectbox"
@@ -260,7 +261,8 @@ templ recentClients(identity *sitemodels.UserIdentity) {
 	}
 }
 
-// identityActions changes an identity's settings, resets its password or TOTP, turns it on or off, or deletes it. Your own identity cannot be
+// identityActions turns an identity on or off, and has a Manage menu, each of its items labelled, to change its
+// settings, reset its password or TOTP, or delete it. Your own identity cannot be
 // changed here; its password and TOTP are reset from the settings page.
 // The toggle's hx-vals keeps its form from being empty when unchecked, and a failed update flips it back.
 templ identityActions(identity *sitemodels.UserIdentity) {
@@ -284,63 +286,75 @@ templ identityActions(identity *sitemodels.UserIdentity) {
 			/>
 			<span class="h-5 w-9 rounded-full bg-gray-300 transition-colors peer-checked:bg-gray-900 after:absolute after:left-0.5 after:top-0.5 after:size-4 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:after:translate-x-4"></span>
 		</label>
-		@button.Button(button.Props{
-			ID:      id + "--settings",
-			Variant: button.VariantGhost,
-			Size:    button.SizeIcon,
-			Attributes: templ.Attributes{
-				"title":       "Settings",
-				"hx-get":      "/settings/identity-settings/" + strconv.FormatInt(identity.ID, 10),
-				"hx-target":   "#main-content",
-				"hx-push-url": "true",
-				"hx-swap":     "innerHTML",
-			},
-		}) {
-			@icon.UserCog(icon.Props{Class: "size-4"})
-		}
-		@resetButton(button.Props{ID: id + "--reset-password", Variant: button.VariantGhost, Size: button.SizeIcon, Disabled: identity.CurrentIdentity},
-			identity.ID, "password", "Reset password", "Reset "+identity.Name+"'s password? Its old password and Nightscout token stop working, and it is signed out.") {
-			@icon.KeyRound(icon.Props{Class: "size-4"})
-		}
-		if identity.HasTotpSecret {
-			@resetButton(button.Props{ID: id + "--reset-totp", Variant: button.VariantGhost, Size: button.SizeIcon, Disabled: identity.CurrentIdentity},
-				identity.ID, "totp", "Reset TOTP", "Reset "+identity.Name+"'s TOTP? Codes from its old secret stop working, and it is signed out.") {
-				@icon.RotateCcwKey(icon.Props{Class: "size-4"})
+		@dropdown.Dropdown(dropdown.Props{ID: id + "--menu"}) {
+			@dropdown.Trigger() {
+				@button.Button(button.Props{ID: id + "--manage", Variant: button.VariantOutline, Size: button.SizeSm}) {
+					Manage
+					@icon.ChevronDown(icon.Props{Class: "size-4"})
+				}
+			}
+			@dropdown.Content(dropdown.ContentProps{Placement: dropdown.PlacementBottomEnd, Class: "w-48"}) {
+				@dropdown.Item(dropdown.ItemProps{ID: id + "--settings", Attributes: templ.Attributes{
+					"hx-get":      "/settings/identity-settings/" + strconv.FormatInt(identity.ID, 10),
+					"hx-target":   "#main-content",
+					"hx-push-url": "true",
+					"hx-swap":     "innerHTML",
+				}}) {
+					@menuLabel(icon.UserCog, "Settings")
+				}
+				@dropdown.Item(dropdown.ItemProps{ID: id + "--reset-password", Disabled: identity.CurrentIdentity,
+					Attributes: resetAttributes(identity.ID, "password", "Reset "+identity.Name+"'s password? Its old password and Nightscout token stop working, and it is signed out.")}) {
+					@menuLabel(icon.KeyRound, "Reset password")
+				}
+				if identity.HasTotpSecret {
+					@dropdown.Item(dropdown.ItemProps{ID: id + "--reset-totp", Disabled: identity.CurrentIdentity,
+						Attributes: resetAttributes(identity.ID, "totp", "Reset "+identity.Name+"'s TOTP? Codes from its old secret stop working, and it is signed out.")}) {
+						@menuLabel(icon.RotateCcwKey, "Reset TOTP")
+					}
+				}
+				@dropdown.Separator()
+				@dropdown.Item(dropdown.ItemProps{ID: id + "--delete", Disabled: identity.CurrentIdentity, Class: "text-red-600 hover:text-red-700",
+					Attributes: templ.Attributes{
+						"hx-delete":            "/settings/identities/" + strconv.FormatInt(identity.ID, 10),
+						"hx-confirm":           "Delete " + identity.Name + "? Its password and tokens will stop working.",
+						"hx-target":            "#toaster",
+						"hx-swap":              "beforeend",
+						"hx-on::after:request": templ.JSUnsafeFuncCall("if (ctx.response.status < 400) this.closest('tr').remove()"),
+						"hx-status:4xx":        "target:#toaster swap:beforeend",
+						"hx-status:5xx":        "target:#toaster swap:beforeend",
+					}}) {
+					@menuLabel(icon.Trash2, "Delete")
+				}
 			}
 		}
-		@button.Button(button.Props{
-			ID:       id + "--delete",
-			Variant:  button.VariantGhost,
-			Size:     button.SizeIcon,
-			Disabled: identity.CurrentIdentity,
-			Attributes: templ.Attributes{
-				"title":                "Delete",
-				"hx-delete":            "/settings/identities/" + strconv.FormatInt(identity.ID, 10),
-				"hx-confirm":           "Delete " + identity.Name + "? Its password and tokens will stop working.",
-				"hx-target":            "#toaster",
-				"hx-swap":              "beforeend",
-				"hx-on::after:request": templ.JSUnsafeFuncCall("if (ctx.response.status < 400) this.closest('tr').remove()"),
-				"hx-status:4xx":        "target:#toaster swap:beforeend",
-				"hx-status:5xx":        "target:#toaster swap:beforeend",
-			},
-		}) {
-			@icon.Trash2(icon.Props{Class: button.DeleteIconClass})
-		}
 	</div>
+}
+
+// menuLabel is a menu item's icon and words
+templ menuLabel(ic func(...icon.Props) templ.Component, label string) {
+	<span class="flex items-center gap-2">
+		@ic(icon.Props{Class: "size-4"})
+		{ label }
+	</span>
+}
+
+// resetAttributes reset an identity's password or totp after confirming, showing the new one in the page's modal
+func resetAttributes(identityID int64, credential string, confirm string) templ.Attributes {
+	return templ.Attributes{
+		"hx-post":       "/settings/identities/" + strconv.FormatInt(identityID, 10) + "/" + credential,
+		"hx-confirm":    confirm,
+		"hx-target":     "#modal-container",
+		"hx-swap":       "innerHTML",
+		"hx-status:4xx": "target:#toaster swap:beforeend",
+		"hx-status:5xx": "target:#toaster swap:beforeend",
+	}
 }
 
 // resetButton resets an identity's password or totp after confirming, showing the new one in the page's modal
 templ resetButton(props button.Props, identityID int64, credential string, title string, confirm string) {
 	{{
-		props.Attributes = templ.Attributes{
-			"title":         title,
-			"hx-post":       "/settings/identities/" + strconv.FormatInt(identityID, 10) + "/" + credential,
-			"hx-confirm":    confirm,
-			"hx-target":     "#modal-container",
-			"hx-swap":       "innerHTML",
-			"hx-status:4xx": "target:#toaster swap:beforeend",
-			"hx-status:5xx": "target:#toaster swap:beforeend",
-		}
+		props.Attributes = resetAttributes(identityID, credential, confirm)
+		props.Attributes["title"] = title
 	}}
 	@button.Button(props) {
 		{ children... }
