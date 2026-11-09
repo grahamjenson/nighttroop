@@ -14027,6 +14027,26 @@ func (m *ClearOldPumpsParams) SetSince(v int64) {
 	m.Since = v
 }
 
+// GetBefore returns the Before value.
+func (m DeleteOldDeviceReportsParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated DeleteOldDeviceReportsParams.
+func (m *DeleteOldDeviceReportsParams) SetBefore(v int64) {
+	m.Before = v
+}
+
+// GetNow returns the Now value.
+func (m ThinOldDeviceReportsParams) GetNow() int64 {
+	return m.Now
+}
+
+// SetNow sets the Now value and returns the updated ThinOldDeviceReportsParams.
+func (m *ThinOldDeviceReportsParams) SetNow(v int64) {
+	m.Now = v
+}
+
 // GetSince returns the Since value.
 func (m ThinOldDeviceReportsParams) GetSince() int64 {
 	return m.Since
@@ -14035,15 +14055,5 @@ func (m ThinOldDeviceReportsParams) GetSince() int64 {
 // SetSince sets the Since value and returns the updated ThinOldDeviceReportsParams.
 func (m *ThinOldDeviceReportsParams) SetSince(v int64) {
 	m.Since = v
-}
-
-// GetBefore returns the Before value.
-func (m ThinOldDeviceReportsParams) GetBefore() int64 {
-	return m.Before
-}
-
-// SetBefore sets the Before value and returns the updated ThinOldDeviceReportsParams.
-func (m *ThinOldDeviceReportsParams) SetBefore(v int64) {
-	m.Before = v
 }
 

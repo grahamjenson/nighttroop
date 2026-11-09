@@ -779,8 +779,11 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A device status's `pump` as sent, the most of it after its loop status, is truncated the same way: kept only on its
   device's newest status with one, the others keeping their pump's battery, reservoir, clock, manufacturer and model,
   which the Nightscout API gives back as their `pump`.
-- Truncating also thins each device's statuses: all of the last hour are kept, and before it only the newest in each
-  10 minutes, which keeps its newest however old. A deleted status is not removed, so a client syncing deletions sees it.
+- Truncating also thins each device's statuses: all of the last hour are kept, then only the newest in each 10
+  minutes until a week old, in each 20 minutes until two weeks old, and in each hour until 30 days old, which keeps its
+  newest. A deleted status is not removed, so a client syncing deletions sees it. Every status over 30 days old, its
+  device's newest or deleted too, is deleted. The job also thins again the statuses that turned a week or two weeks old
+  in the last day.
 - Reads and writes are rate limited per site, identity and IP, and live sessions per site are capped.
 - A Nightscout request that fails auth, or needs none, spends its IP's budget on the site
   (`SITE_UNAUTH_PER_MINUTE_LIMIT`); one with a valid token does not, so a device uploading often from one IP is limited
