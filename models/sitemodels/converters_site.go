@@ -6,7 +6,6 @@ import (
 
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
-	"nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/authclients"
 	"nighttroop.t1d.nz/utils/consts"
@@ -92,10 +91,6 @@ type SiteConverter interface {
 	// goverter:map Mgdl Reading | MgdlToSettingsUnits
 	// goverter:map Units OriginalUnits
 	// goverter:map Units | ContextUnits
-	// goverter:map OtherAttributes.Noise Noise
-	// goverter:map OtherAttributes.Filtered Filtered
-	// goverter:map OtherAttributes.Unfiltered Unfiltered
-	// goverter:map OtherAttributes.Rssi Rssi
 	GlucoseReadingFromDB(source *sitedb.GlucoseReading, siteContext *httputils.SiteContext) *SiteGlucoseReading
 
 	// goverter:context siteContext
@@ -106,14 +101,16 @@ type SiteConverter interface {
 	// goverter:map OccurredAt | OccurredAtOrNow
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
-	// goverter:map . OtherAttributes | GlucoseReadingOther
+	// The site does not set an AAPS calibration
+	// goverter:ignore IsCalibration SensorMgdlAtPairing
 	GlucoseReadingToCreate(source *SiteGlucoseReading, siteContext *httputils.SiteContext) sitedb.CreateGlucoseReadingParams
 
 	// goverter:context siteContext
 	// goverter:map Reading Mgdl | SettingsUnitsToMgdlOrNil
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
-	// goverter:map . OtherAttributes | GlucoseReadingOtherJSON
+	// The site does not set an AAPS calibration
+	// goverter:ignore IsCalibration SensorMgdlAtPairing
 	GlucoseReadingToUpdate(source *SiteGlucoseReading, siteContext *httputils.SiteContext) sitedb.UpdateGlucoseReadingParams
 
 	///////
@@ -169,9 +166,6 @@ type SiteConverter interface {
 	// ACTIVITIES
 	///////
 
-	// goverter:map OtherAttributes.Calories Calories
-	// goverter:map OtherAttributes.Steps Steps
-	// goverter:map OtherAttributes.HeartRate HeartRate
 	ActivityFromDB(source *sitedb.Activity) *SiteActivity
 
 	// goverter:context siteContext
@@ -179,25 +173,18 @@ type SiteConverter interface {
 	// goverter:map OccurredAt | OccurredAtOrNow
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
-	// goverter:map . OtherAttributes | ActivityOther
 	ActivityToCreate(source *SiteActivity, siteContext *httputils.SiteContext) sitedb.CreateActivityParams
 
 	// goverter:context siteContext
 	// goverter:map ActivityType | StringOrNil
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
-	// goverter:map . OtherAttributes | ActivityOtherJSON
 	ActivityToUpdate(source *SiteActivity, siteContext *httputils.SiteContext) sitedb.UpdateActivityParams
 
 	///////
 	// COMPONENT EVENTS
 	///////
 
-	// goverter:map OtherAttributes.SensorCode SensorCode
-	// goverter:map OtherAttributes.TransmitterID TransmitterID
-	// goverter:map OtherAttributes.PumpID PumpID
-	// goverter:map OtherAttributes.PumpSerial PumpSerial
-	// goverter:map OtherAttributes.PumpType PumpType
 	ComponentEventFromDB(source *sitedb.ComponentEvent) *SiteComponentEvent
 
 	// goverter:context siteContext
@@ -205,14 +192,12 @@ type SiteConverter interface {
 	// goverter:map OccurredAt | OccurredAtOrNow
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
-	// goverter:map . OtherAttributes | ComponentEventOther
 	ComponentEventToCreate(source *SiteComponentEvent, siteContext *httputils.SiteContext) sitedb.CreateComponentEventParams
 
 	// goverter:context siteContext
 	// goverter:map EventType | StringOrNil
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
-	// goverter:map . OtherAttributes | ComponentEventOtherJSON
 	ComponentEventToUpdate(source *SiteComponentEvent, siteContext *httputils.SiteContext) sitedb.UpdateComponentEventParams
 
 	///////
@@ -249,14 +234,14 @@ type SiteConverter interface {
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
 	// goverter:ignore Dia Units Timezone CarbsHr Delay CarbRatiosJson InsulinSensitivitiesJson BasalRatesJson TargetsHighJson TargetsLowJson
 	// The site does not set what AAPS's switch was made from
-	// goverter:ignore OtherAttributes
+	// goverter:ignore OriginalProfileName OriginalCustomizedName OriginalTimeshiftMs OriginalPercentage OriginalDurationMs OriginalEnd
 	ProfileSwitchToCreate(source *SiteProfileSwitch, siteContext *httputils.SiteContext) sitedb.CreateProfileSwitchParams
 
 	// goverter:context siteContext
 	// goverter:map Name | StringOrNil
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
-	// goverter:ignore OtherAttributes
+	// goverter:ignore OriginalProfileName OriginalCustomizedName OriginalTimeshiftMs OriginalPercentage OriginalDurationMs OriginalEnd
 	ProfileSwitchToUpdate(source *SiteProfileSwitch, siteContext *httputils.SiteContext) sitedb.UpdateProfileSwitchParams
 
 	///////
@@ -282,7 +267,7 @@ type SiteConverter interface {
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
 	// The site does not set AAPS's running mode
-	// goverter:ignore EnteredBy OtherAttributes
+	// goverter:ignore EnteredBy Uuid Mode AutoForced Reasons OriginalDurationMs DurationType SentHash
 	EventGroupToCreate(source *SiteEventGroup, siteContext *httputils.SiteContext) sitedb.CreateEventGroupParams
 
 	// goverter:context siteContext
@@ -296,8 +281,6 @@ type SiteConverter interface {
 	// INSULIN DOSES
 	///////
 
-	// goverter:map OtherAttributes.SplitNow SplitNow
-	// goverter:map OtherAttributes.SplitExt SplitExt
 	InsulinDoseFromDB(source *sitedb.InsulinDose) *SiteInsulinDose
 
 	// goverter:context siteContext
@@ -305,28 +288,22 @@ type SiteConverter interface {
 	// goverter:map OccurredAt | OccurredAtOrNow
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
-	// goverter:map . OtherAttributes | InsulinDoseOther
+	// Only a loop's upload says whether a dose was automatic, not the site
+	// goverter:ignore Automatic
 	InsulinDoseToCreate(source *SiteInsulinDose, siteContext *httputils.SiteContext) sitedb.CreateInsulinDoseParams
 
 	// goverter:context siteContext
 	// goverter:map Dose | Float64OrNil
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
-	// goverter:map . OtherAttributes | InsulinDoseOtherJSON
+	// Only a loop's upload says whether a dose was automatic, not the site
+	// goverter:ignore Automatic
 	InsulinDoseToUpdate(source *SiteInsulinDose, siteContext *httputils.SiteContext) sitedb.UpdateInsulinDoseParams
 
 	///////
 	// FOOD INTAKES
 	///////
 
-	// goverter:map OtherAttributes.Category Category
-	// goverter:map OtherAttributes.Subcategory Subcategory
-	// goverter:map OtherAttributes.Fat Fat
-	// goverter:map OtherAttributes.Protein Protein
-	// goverter:map OtherAttributes.Fibre Fibre
-	// goverter:map OtherAttributes.Energy Energy
-	// goverter:map OtherAttributes.Portions Portions
-	// goverter:map OtherAttributes.PreBolus PreBolus
 	FoodIntakeFromDB(source *sitedb.FoodIntake) *SiteFoodIntake
 
 	// goverter:context siteContext
@@ -334,40 +311,28 @@ type SiteConverter interface {
 	// goverter:map OccurredAt | OccurredAtOrNow
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
-	// goverter:map . OtherAttributes | FoodIntakeOther
 	FoodIntakeToCreate(source *SiteFoodIntake, siteContext *httputils.SiteContext) sitedb.CreateFoodIntakeParams
 
 	// goverter:context siteContext
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
-	// goverter:map . OtherAttributes | FoodIntakeOtherJSON
 	FoodIntakeToUpdate(source *SiteFoodIntake, siteContext *httputils.SiteContext) sitedb.UpdateFoodIntakeParams
 
 	///////
 	// FOOD PRESETS
 	///////
 
-	// goverter:map OtherAttributes.Category Category
-	// goverter:map OtherAttributes.Subcategory Subcategory
-	// goverter:map OtherAttributes.Fat Fat
-	// goverter:map OtherAttributes.Protein Protein
-	// goverter:map OtherAttributes.Fibre Fibre
-	// goverter:map OtherAttributes.Energy Energy
-	// goverter:map OtherAttributes.Portions Portions
-	// goverter:map OtherAttributes.PreBolus PreBolus
 	FoodPresetFromDB(source *sitedb.FoodPreset) *SiteFoodPreset
 
 	// goverter:context siteContext
 	// goverter:map ID | NewSiteDataID
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
-	// goverter:map . OtherAttributes | FoodPresetOther
 	FoodPresetToCreate(source *SiteFoodPreset, siteContext *httputils.SiteContext) sitedb.CreateFoodPresetParams
 
 	// goverter:context siteContext
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
-	// goverter:map . OtherAttributes | FoodPresetOtherJSON
 	FoodPresetToUpdate(source *SiteFoodPreset, siteContext *httputils.SiteContext) sitedb.UpdateFoodPresetParams
 
 	///////
@@ -556,16 +521,4 @@ func SettingsUnitsToMgdl(value float64, siteContext *httputils.SiteContext) floa
 // goverter:context siteContext
 func SettingsUnitsToMgdlOrNil(value float64, siteContext *httputils.SiteContext) *float64 {
 	return Float64OrNil(SettingsUnitsToMgdl(value, siteContext))
-}
-
-// GlucoseReadingOther is a reading's CGM fields the site sends, kept in its other attributes. The site does not set
-// AAPS's calibrations. It is written out, as a generated converter cannot be called from this package's own code.
-func GlucoseReadingOther(source *SiteGlucoseReading) types.GlucoseReadingOther {
-	return types.GlucoseReadingOther{Noise: source.Noise, Filtered: source.Filtered, Unfiltered: source.Unfiltered, Rssi: source.Rssi}
-}
-
-// GlucoseReadingOtherJSON is a reading's CGM fields the site sends, as JSON for an update to merge into its other
-// attributes
-func GlucoseReadingOtherJSON(source *SiteGlucoseReading) *string {
-	return types.OtherJSON(GlucoseReadingOther(source))
 }

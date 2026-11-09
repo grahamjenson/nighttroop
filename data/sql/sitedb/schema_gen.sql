@@ -56,12 +56,11 @@ CREATE TABLE activities (
 
     duration_minutes INTEGER CHECK(duration_minutes BETWEEN 0 AND 10080), -- at most a week
 
-    -- What only some apps send, a JSON object (types.ActivityOther) NULL for most activities: what a fitness tracker
-    -- or watch measured of it (calories, steps, heart_rate), such as xDrip+'s. A field that is not there passes its check.
-    other_attributes TEXT CHECK(length(other_attributes) <= 128 AND json_valid(other_attributes)
-        AND json_extract(other_attributes, '$.calories') BETWEEN 0 AND 50000
-        AND json_extract(other_attributes, '$.steps') BETWEEN 0 AND 1000000
-        AND json_extract(other_attributes, '$.heart_rate') BETWEEN 0 AND 300),
+    -- What only some apps send, NULL for most activities: what a fitness tracker or watch measured of it (calories,
+    -- steps, heart_rate), such as xDrip+'s, a heart rate of 0 meaning none and stored as NULL
+    calories INTEGER CHECK(calories BETWEEN 0 AND 50000),
+    steps INTEGER CHECK(steps BETWEEN 0 AND 1000000),
+    heart_rate INTEGER CHECK(heart_rate BETWEEN 0 AND 300),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
@@ -86,15 +85,13 @@ CREATE TABLE component_events (
 
     event_type TEXT NOT NULL CHECK(length(event_type) <= 32), -- same event type as event_group
 
-    -- What only some apps send, a JSON object (types.ComponentEventOther) NULL for most events: a sensor's code and
-    -- transmitter (sensor_code, transmitter_id), and the pump's ID, serial and type (pump_id, pump_serial, pump_type).
-    -- A field that is not there passes its check.
-    other_attributes TEXT CHECK(length(other_attributes) <= 1024 AND json_valid(other_attributes)
-        AND length(json_extract(other_attributes, '$.sensor_code')) <= 64
-        AND length(json_extract(other_attributes, '$.transmitter_id')) <= 64
-        AND length(json_extract(other_attributes, '$.pump_id')) <= 32
-        AND length(json_extract(other_attributes, '$.pump_serial')) <= 32
-        AND length(json_extract(other_attributes, '$.pump_type')) <= 64),
+    -- What only some apps send, NULL for most events: a sensor's code and transmitter (sensor_code, transmitter_id),
+    -- and the pump's ID, serial and type (pump_id, pump_serial, pump_type), as AAPS sends with every treatment
+    sensor_code TEXT CHECK(length(sensor_code) <= 64),
+    transmitter_id TEXT CHECK(length(transmitter_id) <= 64),
+    pump_id TEXT CHECK(length(pump_id) <= 32),
+    pump_serial TEXT CHECK(length(pump_serial) <= 32),
+    pump_type TEXT CHECK(length(pump_type) <= 64),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
@@ -156,8 +153,6 @@ CREATE TABLE device_reports (
     pump_json TEXT CHECK(length(pump_json) <= 4096 AND json_valid(pump_json)),
     uploader_json TEXT CHECK(length(uploader_json) <= 1024 AND json_valid(uploader_json)),
 
-    -- What has no column yet, a JSON object (types.DeviceReportOther), NULL for most reports
-    other_attributes TEXT CHECK(length(other_attributes) <= 4096 AND json_valid(other_attributes)),
 
     -- Default Stuff
 
@@ -194,19 +189,18 @@ CREATE TABLE event_groups (
 
     -- who the app says entered it, as Nightscout keeps it, e.g. loop://iPhone or xdrip
     entered_by TEXT CHECK(length(entered_by) <= 64),
-    -- What only some apps send, a JSON object (types.EventGroupOther) NULL for most treatments: the app's own id for
-    -- it, given back as sent, e.g. xDrip+'s uuid, and AAPS's running mode (an OpenAPS Offline), e.g. DISCONNECTED_PUMP,
-    -- whether the loop forced it (auto_forced) and why (reasons), and how long it was to last in milliseconds, at most
-    -- a year (original_duration_ms). A field that is not there passes its check. entered_by stays a column, as Trio
-    -- filters on it every minute.
-    other_attributes TEXT CHECK(length(other_attributes) <= 2048 AND json_valid(other_attributes)
-        AND length(json_extract(other_attributes, '$.uuid')) <= 64
-        AND length(json_extract(other_attributes, '$.mode')) <= 64
-        AND json_extract(other_attributes, '$.auto_forced') IN (0, 1)
-        AND length(json_extract(other_attributes, '$.reasons')) <= 1024
-        AND json_extract(other_attributes, '$.original_duration_ms') BETWEEN 0 AND 31536000000
-        AND length(json_extract(other_attributes, '$.duration_type')) <= 16
-        AND length(json_extract(other_attributes, '$.sent_hash')) <= 32),
+    -- What only some apps send, NULL for most treatments: the app's own id for it, given back as sent, e.g. xDrip+'s
+    -- uuid, and AAPS's running mode (an OpenAPS Offline), e.g. DISCONNECTED_PUMP, whether the loop forced it
+    -- (auto_forced) and why (reasons), how long it was to last in milliseconds, at most a year (original_duration_ms),
+    -- Loop's "indefinite" for an override with no end (duration_type), and a hash of the JSON it was last sent as, to
+    -- tell one sent again with changes from one sent the same (sent_hash)
+    uuid TEXT CHECK(length(uuid) <= 64),
+    mode TEXT CHECK(length(mode) <= 64),
+    auto_forced INTEGER CHECK(auto_forced IN (0, 1)),
+    reasons TEXT CHECK(length(reasons) <= 1024),
+    original_duration_ms INTEGER CHECK(original_duration_ms BETWEEN 0 AND 31536000000),
+    duration_type TEXT CHECK(length(duration_type) <= 16),
+    sent_hash TEXT CHECK(length(sent_hash) <= 32),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
@@ -237,18 +231,16 @@ CREATE TABLE food_intakes (
 
     carbs REAL CHECK(carbs BETWEEN -1000 AND 1000), -- grams, negative takes back too much
 
-    -- What only some apps send, a JSON object (types.FoodIntakeOther) NULL for most food: Nightscout's food fields,
-    -- its category and subcategory, the grams of fat, protein and fibre, the energy (kcal or kJ), the portions, and
-    -- the minutes bolused before eating (pre_bolus). A field that is not there passes its check.
-    other_attributes TEXT CHECK(length(other_attributes) <= 1024 AND json_valid(other_attributes)
-        AND length(json_extract(other_attributes, '$.category')) <= 64
-        AND length(json_extract(other_attributes, '$.subcategory')) <= 64
-        AND json_extract(other_attributes, '$.fat') BETWEEN -1000 AND 1000
-        AND json_extract(other_attributes, '$.protein') BETWEEN -1000 AND 1000
-        AND json_extract(other_attributes, '$.fibre') BETWEEN -1000 AND 1000
-        AND json_extract(other_attributes, '$.energy') BETWEEN -20000 AND 20000
-        AND json_extract(other_attributes, '$.portions') BETWEEN -1000 AND 1000
-        AND json_extract(other_attributes, '$.pre_bolus') BETWEEN -1440 AND 1440),
+    -- What only some apps send, NULL for most food: Nightscout's food fields, its category and subcategory, the grams
+    -- of fat, protein and fibre, the energy (kcal or kJ), the portions, and the minutes bolused before eating (pre_bolus)
+    category TEXT CHECK(length(category) <= 64),
+    subcategory TEXT CHECK(length(subcategory) <= 64),
+    fat REAL CHECK(fat BETWEEN -1000 AND 1000),
+    protein REAL CHECK(protein BETWEEN -1000 AND 1000),
+    fibre REAL CHECK(fibre BETWEEN -1000 AND 1000),
+    energy REAL CHECK(energy BETWEEN -20000 AND 20000),
+    portions REAL CHECK(portions BETWEEN -1000 AND 1000),
+    pre_bolus REAL CHECK(pre_bolus BETWEEN -1440 AND 1440),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
@@ -278,18 +270,16 @@ CREATE TABLE food_presets (
 
     carbs REAL CHECK(carbs BETWEEN -1000 AND 1000), -- grams, negative takes back too much
 
-    -- What only some apps send, a JSON object (types.FoodPresetOther) NULL for most foods: Nightscout's food fields,
-    -- its category and subcategory, the grams of fat, protein and fibre, the energy (kcal or kJ), the portions, and
-    -- the minutes bolused before eating (pre_bolus). A field that is not there passes its check.
-    other_attributes TEXT CHECK(length(other_attributes) <= 1024 AND json_valid(other_attributes)
-        AND length(json_extract(other_attributes, '$.category')) <= 64
-        AND length(json_extract(other_attributes, '$.subcategory')) <= 64
-        AND json_extract(other_attributes, '$.fat') BETWEEN -1000 AND 1000
-        AND json_extract(other_attributes, '$.protein') BETWEEN -1000 AND 1000
-        AND json_extract(other_attributes, '$.fibre') BETWEEN -1000 AND 1000
-        AND json_extract(other_attributes, '$.energy') BETWEEN -20000 AND 20000
-        AND json_extract(other_attributes, '$.portions') BETWEEN -1000 AND 1000
-        AND json_extract(other_attributes, '$.pre_bolus') BETWEEN -1440 AND 1440),
+    -- What only some apps send, NULL for most foods: Nightscout's food fields, its category and subcategory, the grams
+    -- of fat, protein and fibre, the energy (kcal or kJ), the portions, and the minutes bolused before eating (pre_bolus)
+    category TEXT CHECK(length(category) <= 64),
+    subcategory TEXT CHECK(length(subcategory) <= 64),
+    fat REAL CHECK(fat BETWEEN -1000 AND 1000),
+    protein REAL CHECK(protein BETWEEN -1000 AND 1000),
+    fibre REAL CHECK(fibre BETWEEN -1000 AND 1000),
+    energy REAL CHECK(energy BETWEEN -20000 AND 20000),
+    portions REAL CHECK(portions BETWEEN -1000 AND 1000),
+    pre_bolus REAL CHECK(pre_bolus BETWEEN -1440 AND 1440),
 
     -- Default Stuff
 
@@ -316,17 +306,15 @@ CREATE TABLE glucose_readings (
     delta REAL CHECK(delta BETWEEN -1000 AND 1000),
     direction TEXT CHECK(length(direction) <= 16),
 
-    -- What only some apps send, a JSON object (types.GlucoseReadingOther) NULL for most readings: a CGM's raw signal,
-    -- from xDrip+ and its followers (noise, filtered, unfiltered, rssi; raw values can be in the hundreds of thousands),
-    -- and an mbg AAPS calibrated its sensor with (is_calibration), and the sensor's reading then (sensor_mgdl_at_pairing).
-    -- A field that is not there passes its check.
-    other_attributes TEXT CHECK(length(other_attributes) <= 1024 AND json_valid(other_attributes)
-        AND json_extract(other_attributes, '$.noise') BETWEEN -1000 AND 1000
-        AND json_extract(other_attributes, '$.filtered') BETWEEN 0 AND 10000000
-        AND json_extract(other_attributes, '$.unfiltered') BETWEEN 0 AND 10000000
-        AND json_extract(other_attributes, '$.rssi') BETWEEN -1000 AND 1000
-        AND json_extract(other_attributes, '$.is_calibration') IN (0, 1)
-        AND json_extract(other_attributes, '$.sensor_mgdl_at_pairing') > 0 AND json_extract(other_attributes, '$.sensor_mgdl_at_pairing') <= 1000),
+    -- What only some apps send, NULL for most readings: a CGM's raw signal, from xDrip+ and its followers (noise,
+    -- filtered, unfiltered, rssi; raw values can be in the hundreds of thousands), 0 meaning none and stored as NULL,
+    -- and an mbg AAPS calibrated its sensor with (is_calibration), and the sensor's reading then (sensor_mgdl_at_pairing)
+    noise REAL CHECK(noise BETWEEN -1000 AND 1000),
+    filtered REAL CHECK(filtered BETWEEN 0 AND 10000000),
+    unfiltered REAL CHECK(unfiltered BETWEEN 0 AND 10000000),
+    rssi REAL CHECK(rssi BETWEEN -1000 AND 1000),
+    is_calibration INTEGER CHECK(is_calibration IN (0, 1)),
+    sensor_mgdl_at_pairing REAL CHECK(sensor_mgdl_at_pairing > 0 AND sensor_mgdl_at_pairing <= 1000),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
@@ -353,13 +341,12 @@ CREATE TABLE insulin_doses (
     dose_type TEXT CHECK(length(dose_type) <= 32),
     
 
-    -- What only some apps send, a JSON object (types.InsulinDoseOther) NULL for most doses: a combo bolus's split, the
-    -- fraction given at once (split_now, Nightscout's splitNow / 100) and over time (split_ext, its splitExt / 100), and
-    -- whether a loop gave it (automatic, Loop's, as LoopFollow shows it as an SMB). A field that is not there passes its check.
-    other_attributes TEXT CHECK(length(other_attributes) <= 256 AND json_valid(other_attributes)
-        AND json_extract(other_attributes, '$.split_now') BETWEEN 0 AND 1
-        AND json_extract(other_attributes, '$.split_ext') BETWEEN 0 AND 1
-        AND json_extract(other_attributes, '$.automatic') IN (0, 1)),
+    -- What only some apps send, NULL for most doses: a combo bolus's split, the fraction given at once (split_now,
+    -- Nightscout's splitNow / 100) and over time (split_ext, its splitExt / 100), and whether a loop gave it
+    -- (automatic, Loop's, as LoopFollow shows it as an SMB)
+    split_now REAL CHECK(split_now BETWEEN 0 AND 1),
+    split_ext REAL CHECK(split_ext BETWEEN 0 AND 1),
+    automatic INTEGER CHECK(automatic IN (0, 1)),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
@@ -469,17 +456,15 @@ CREATE TABLE profile_switches (
     multiplier REAL default 1 CHECK(multiplier BETWEEN 0 AND 10), -- times the profile's insulin, Nightscout's percentage / 100
     timeshift INTEGER default 0 CHECK(timeshift BETWEEN -1440 AND 1440), -- in minutes, e.g. 60 means the profile is shifted forward by 1 hour
 
-    -- What only AAPS sends, a JSON object (types.ProfileSwitchOther) NULL for most switches: the AAPS switch it was
-    -- made from, which its followers read an effective profile switch (a Note) by, its name and customized name, its
-    -- timeshift in milliseconds within a day, its percentage, how long it was to last in milliseconds, at most a year,
-    -- and when it ended. A field that is not there passes its check.
-    other_attributes TEXT CHECK(length(other_attributes) <= 1024 AND json_valid(other_attributes)
-        AND length(json_extract(other_attributes, '$.original_profile_name')) <= 64
-        AND length(json_extract(other_attributes, '$.original_customized_name')) <= 64
-        AND json_extract(other_attributes, '$.original_timeshift_ms') BETWEEN -86400000 AND 86400000
-        AND json_extract(other_attributes, '$.original_percentage') BETWEEN 0 AND 1000
-        AND json_extract(other_attributes, '$.original_duration_ms') BETWEEN 0 AND 31536000000
-        AND json_extract(other_attributes, '$.original_end') BETWEEN 0 AND 253402300799999),
+    -- What only AAPS sends, NULL for most switches: the AAPS switch it was made from, which its followers read an
+    -- effective profile switch (a Note) by, its name and customized name, its timeshift in milliseconds within a day,
+    -- its percentage, how long it was to last in milliseconds, at most a year, and when it ended
+    original_profile_name TEXT CHECK(length(original_profile_name) <= 64),
+    original_customized_name TEXT CHECK(length(original_customized_name) <= 64),
+    original_timeshift_ms INTEGER CHECK(original_timeshift_ms BETWEEN -86400000 AND 86400000),
+    original_percentage INTEGER CHECK(original_percentage BETWEEN 0 AND 1000),
+    original_duration_ms INTEGER CHECK(original_duration_ms BETWEEN 0 AND 31536000000),
+    original_end INTEGER CHECK(original_end BETWEEN 0 AND 253402300799999),
 
     -- Profile Stuff
     dia REAL CHECK(dia BETWEEN 0 AND 24), -- in hours

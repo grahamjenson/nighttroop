@@ -1,7 +1,7 @@
 INCLUDE steps/new_site.steps
 
 // What only some apps send of a device status, such as Loop's pump, override, settings and predictions, is kept in its
-// other attributes, its JSON as JSON, and given back
+// own columns, its JSON as JSON, and given back
 NAME create_status
 POST http://{{ .ns_site }}/api/v1/devicestatus?token={{ token }}
 B [{ "device": "loop://iPhone", "created_at": "{{ time 1 }}",

@@ -1,6 +1,6 @@
 INCLUDE steps/new_site.steps
 
-// What a fitness tracker or watch measured of an activity is kept in its other attributes and given back
+// What a fitness tracker or watch measured of an activity is kept in its own columns and given back
 NAME create_activity
 POST http://{{ .ns_site }}/api/v1/activity?token={{ token }}
 B {"activityType": "walking", "created_at": "{{ time 5 }}", "calories": 350, "steps": 4000, "heartRate": 110}

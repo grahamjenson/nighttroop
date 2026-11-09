@@ -79,10 +79,10 @@ func (c EntriesCollection) GetDuplicate(q *sitedb.Queries, ctx context.Context, 
 // xDrip4iOS smooths and rebuilds readings by sending them again without their _id. One of another type, or sent with
 // the values it has, is left as it is.
 func (c EntriesCollection) Refresh(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Entry, stored *sitedb.GlucoseReading, cc nightscoutmodels.ConverterContext) (*sitedb.GlucoseReading, bool, error) {
-	p, sent, other := nightscoutmodels.EntryToUpdate(nsModel, cc), nightscoutmodels.EntryOther(nsModel), stored.OtherAttributes
+	p := nightscoutmodels.EntryToUpdate(nsModel, cc)
 	if nightscoutmodels.SetReadingType(nsModel) != stored.ReadingType || (kept(p.Mgdl, &stored.Mgdl) && kept(p.Delta, stored.Delta) &&
-		kept(p.Direction, stored.Direction) && kept(sent.Noise, other.Noise) && kept(sent.Filtered, other.Filtered) &&
-		kept(sent.Unfiltered, other.Unfiltered) && kept(sent.Rssi, other.Rssi)) {
+		kept(p.Direction, stored.Direction) && kept(signal(p.Noise), stored.Noise) && kept(signal(p.Filtered), stored.Filtered) &&
+		kept(signal(p.Unfiltered), stored.Unfiltered) && kept(signal(p.Rssi), stored.Rssi)) {
 		return stored, false, nil
 	}
 	p.ID = stored.ID
@@ -93,6 +93,15 @@ func (c EntriesCollection) Refresh(q *sitedb.Queries, ctx context.Context, nsMod
 // kept is whether a value sent leaves the stored one as it is, as one not sent does
 func kept[T comparable](sent *T, stored *T) bool {
 	return sent == nil || (stored != nil && *sent == *stored)
+}
+
+// signal is a CGM's raw signal sent, nil for 0, which means it has none and is stored as NULL, as AAPS sends
+// unfiltered for every reading
+func signal(sent *float64) *float64 {
+	if sent != nil && *sent == 0 {
+		return nil
+	}
+	return sent
 }
 
 func (c EntriesCollection) GetModel(q *sitedb.Queries, ctx context.Context, identifier string, includeDeleted bool) (*sitedb.GlucoseReading, error) {

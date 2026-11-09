@@ -8,13 +8,11 @@ package sitedb
 import (
 	"context"
 	"database/sql"
-
-	"nighttroop.t1d.nz/data/types"
 )
 
 const allComponentEvents = `-- name: AllComponentEvents :many
 
-SELECT id, event_type, other_attributes, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name FROM component_events
+SELECT id, event_type, sensor_code, transmitter_id, pump_id, pump_serial, pump_type, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name FROM component_events
 WHERE (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
@@ -41,7 +39,11 @@ func (q *Queries) AllComponentEvents(ctx context.Context, arg AllComponentEvents
 		if err := rows.Scan(
 			&i.ID,
 			&i.EventType,
-			&i.OtherAttributes,
+			&i.SensorCode,
+			&i.TransmitterID,
+			&i.PumpID,
+			&i.PumpSerial,
+			&i.PumpType,
 			&i.Notes,
 			&i.Reason,
 			&i.DeletedAt,
@@ -93,7 +95,11 @@ const createComponentEvent = `-- name: CreateComponentEvent :one
 INSERT INTO component_events (
     id,
     event_type,
-    other_attributes,
+    sensor_code,
+    transmitter_id,
+    pump_id,
+    pump_serial,
+    pump_type,
     notes,
     reason,
 
@@ -104,14 +110,34 @@ INSERT INTO component_events (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, event_type, other_attributes, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name
+VALUES (
+    ?1,
+    ?2,
+    NULLIF(CAST(?3 AS TEXT), ''),
+    NULLIF(CAST(?4 AS TEXT), ''),
+    NULLIF(CAST(?5 AS TEXT), ''),
+    NULLIF(CAST(?6 AS TEXT), ''),
+    NULLIF(CAST(?7 AS TEXT), ''),
+    ?8,
+    ?9,
+    ?10,
+    ?11,
+    ?12,
+    ?13,
+    ?14,
+    ?15
+)
+RETURNING id, event_type, sensor_code, transmitter_id, pump_id, pump_serial, pump_type, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name
 `
 
 type CreateComponentEventParams struct {
 	ID                    string
 	EventType             string
-	OtherAttributes       types.ComponentEventOther
+	SensorCode            *string
+	TransmitterID         *string
+	PumpID                *string
+	PumpSerial            *string
+	PumpType              *string
 	Notes                 *string
 	Reason                *string
 	UtcOffsetMinutes      *int64
@@ -129,7 +155,11 @@ func (q *Queries) CreateComponentEvent(ctx context.Context, arg CreateComponentE
 	row := q.queryRow(ctx, q.createComponentEventStmt, createComponentEvent,
 		arg.ID,
 		arg.EventType,
-		arg.OtherAttributes,
+		arg.SensorCode,
+		arg.TransmitterID,
+		arg.PumpID,
+		arg.PumpSerial,
+		arg.PumpType,
 		arg.Notes,
 		arg.Reason,
 		arg.UtcOffsetMinutes,
@@ -143,7 +173,11 @@ func (q *Queries) CreateComponentEvent(ctx context.Context, arg CreateComponentE
 	err := row.Scan(
 		&i.ID,
 		&i.EventType,
-		&i.OtherAttributes,
+		&i.SensorCode,
+		&i.TransmitterID,
+		&i.PumpID,
+		&i.PumpSerial,
+		&i.PumpType,
 		&i.Notes,
 		&i.Reason,
 		&i.DeletedAt,
@@ -162,7 +196,7 @@ func (q *Queries) CreateComponentEvent(ctx context.Context, arg CreateComponentE
 }
 
 const getComponentEvent = `-- name: GetComponentEvent :one
-SELECT id, event_type, other_attributes, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name FROM component_events WHERE id = ? AND (CAST(?2 AS BOOL) = TRUE OR deleted_at IS NULL)
+SELECT id, event_type, sensor_code, transmitter_id, pump_id, pump_serial, pump_type, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name FROM component_events WHERE id = ? AND (CAST(?2 AS BOOL) = TRUE OR deleted_at IS NULL)
 `
 
 type GetComponentEventParams struct {
@@ -176,7 +210,11 @@ func (q *Queries) GetComponentEvent(ctx context.Context, arg GetComponentEventPa
 	err := row.Scan(
 		&i.ID,
 		&i.EventType,
-		&i.OtherAttributes,
+		&i.SensorCode,
+		&i.TransmitterID,
+		&i.PumpID,
+		&i.PumpSerial,
+		&i.PumpType,
 		&i.Notes,
 		&i.Reason,
 		&i.DeletedAt,
@@ -195,7 +233,7 @@ func (q *Queries) GetComponentEvent(ctx context.Context, arg GetComponentEventPa
 }
 
 const getComponentEventByType = `-- name: GetComponentEventByType :one
-SELECT id, event_type, other_attributes, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name FROM component_events
+SELECT id, event_type, sensor_code, transmitter_id, pump_id, pump_serial, pump_type, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name FROM component_events
 WHERE event_type = ? AND deleted_at IS NULL
 ORDER BY occurred_at DESC
 LIMIT 1
@@ -211,7 +249,11 @@ func (q *Queries) GetComponentEventByType(ctx context.Context, arg GetComponentE
 	err := row.Scan(
 		&i.ID,
 		&i.EventType,
-		&i.OtherAttributes,
+		&i.SensorCode,
+		&i.TransmitterID,
+		&i.PumpID,
+		&i.PumpSerial,
+		&i.PumpType,
 		&i.Notes,
 		&i.Reason,
 		&i.DeletedAt,
@@ -242,7 +284,7 @@ func (q *Queries) HardDeleteComponentEvent(ctx context.Context, arg HardDeleteCo
 }
 
 const searchComponentEvents = `-- name: SearchComponentEvents :many
-SELECT id, event_type, other_attributes, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name FROM component_events
+SELECT id, event_type, sensor_code, transmitter_id, pump_id, pump_serial, pump_type, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name FROM component_events
 WHERE
     -- The date filters as one range, occurred_at's CHECK where unset, so SQLite reads only that range of its index
     occurred_at BETWEEN MAX(COALESCE(CAST(?1 AS INTEGER), 0), COALESCE(CAST(?2 AS INTEGER) + 1, 0), COALESCE(CAST(?3 AS INTEGER), 0))
@@ -340,7 +382,11 @@ func (q *Queries) SearchComponentEvents(ctx context.Context, arg SearchComponent
 		if err := rows.Scan(
 			&i.ID,
 			&i.EventType,
-			&i.OtherAttributes,
+			&i.SensorCode,
+			&i.TransmitterID,
+			&i.PumpID,
+			&i.PumpSerial,
+			&i.PumpType,
 			&i.Notes,
 			&i.Reason,
 			&i.DeletedAt,
@@ -393,25 +439,28 @@ const updateComponentEvent = `-- name: UpdateComponentEvent :one
 
 UPDATE component_events SET
     event_type = COALESCE(?1, event_type),
-    -- The fields sent, as JSON (types.OtherJSON), are merged into those kept, so one not sent stays as it is, as a
-    -- column of its own would
-    other_attributes = NULLIF(json_patch(
-        COALESCE(other_attributes, '{}'),
-        COALESCE(CAST(?2 AS TEXT), '{}')
-    ), '{}'),
-    notes = COALESCE(?3, notes),
-    reason = COALESCE(?4, reason),
+    sensor_code = COALESCE(NULLIF(CAST(?2 AS TEXT), ''), sensor_code),
+    transmitter_id = COALESCE(NULLIF(CAST(?3 AS TEXT), ''), transmitter_id),
+    pump_id = COALESCE(NULLIF(CAST(?4 AS TEXT), ''), pump_id),
+    pump_serial = COALESCE(NULLIF(CAST(?5 AS TEXT), ''), pump_serial),
+    pump_type = COALESCE(NULLIF(CAST(?6 AS TEXT), ''), pump_type),
+    notes = COALESCE(?7, notes),
+    reason = COALESCE(?8, reason),
 
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_id = ?5,
-    updated_by_identity_name = ?6
-WHERE id = ?7 AND deleted_at IS NULL
-RETURNING id, event_type, other_attributes, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name
+    updated_by_identity_id = ?9,
+    updated_by_identity_name = ?10
+WHERE id = ?11 AND deleted_at IS NULL
+RETURNING id, event_type, sensor_code, transmitter_id, pump_id, pump_serial, pump_type, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, updated_by_identity_id, updated_by_identity_name, created_by_app_name, created_by_device_name, created_by_identity_id, created_by_identity_name
 `
 
 type UpdateComponentEventParams struct {
 	EventType             *string
-	OtherAttributes       *string
+	SensorCode            *string
+	TransmitterID         *string
+	PumpID                *string
+	PumpSerial            *string
+	PumpType              *string
 	Notes                 *string
 	Reason                *string
 	UpdatedByIdentityID   *int64
@@ -425,7 +474,11 @@ type UpdateComponentEventParams struct {
 func (q *Queries) UpdateComponentEvent(ctx context.Context, arg UpdateComponentEventParams) (*ComponentEvent, error) {
 	row := q.queryRow(ctx, q.updateComponentEventStmt, updateComponentEvent,
 		arg.EventType,
-		arg.OtherAttributes,
+		arg.SensorCode,
+		arg.TransmitterID,
+		arg.PumpID,
+		arg.PumpSerial,
+		arg.PumpType,
 		arg.Notes,
 		arg.Reason,
 		arg.UpdatedByIdentityID,
@@ -436,7 +489,11 @@ func (q *Queries) UpdateComponentEvent(ctx context.Context, arg UpdateComponentE
 	err := row.Scan(
 		&i.ID,
 		&i.EventType,
-		&i.OtherAttributes,
+		&i.SensorCode,
+		&i.TransmitterID,
+		&i.PumpID,
+		&i.PumpSerial,
+		&i.PumpType,
 		&i.Notes,
 		&i.Reason,
 		&i.DeletedAt,

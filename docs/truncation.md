@@ -98,8 +98,7 @@ the duplicates stay in the DB.
    "the others". A site then holds one reading per glucose. Two days gives connectors and backfills time to fill gaps
    (backfill re-fetches the last 2 days) before we pick the winners.
 2. **Reduce (after 14 days).** Clear on each kept reading:
-   - `other_attributes`, a CGM's raw signal (noise, filtered, unfiltered, rssi), which only xDrip+ calibration uses
-     live;
+   - a CGM's raw signal (`noise`, `filtered`, `unfiltered`, `rssi`), which only xDrip+ calibration uses live;
    - `delta`, `direction` and `units`, as they can be worked out again from neighbouring readings and the stored mg/dL;
    - `created_by_app_name`, `created_by_device_name` and `updated_by_*`.
 
@@ -140,9 +139,9 @@ Manual boluses are a few a day. Automatic doses (AAPS and Trio SMBs, Loop's auto
 
 **Proposal:**
 
-1. **Reduce (after 14 days).** Clear `created_by_app_name`, `created_by_device_name`, `updated_by_*`, and in
-   `other_attributes` keep only `automatic` and the combo bolus split.
-2. **Roll up automatic doses (after 14 days).** Automatic doses (`other_attributes.automatic`, or `dose_type` SMB) for
+1. **Reduce (after 14 days).** Clear `created_by_app_name`, `created_by_device_name`, `updated_by_*`, and keep
+   only `automatic` and the combo bolus split of what only some apps send.
+2. **Roll up automatic doses (after 14 days).** Automatic doses (`automatic`, or `dose_type` SMB) for
    a day are replaced by the day's **hourly insulin**: 24 values of automatic units given in each hour, on the day's
    summary row. The day's total daily dose is unchanged, as it is a sum.
 3. **Manual boluses are kept as rows forever**, reduced. There are few, and each is a decision someone made.
@@ -178,7 +177,7 @@ A few a day.
 **Today:** kept forever.
 
 **Proposal:** **keep as rows forever.** After 14 days, clear app, device and `updated_by_*`. Keep carbs, name, food type,
-absorption time, notes, and the macros (fat, protein, fibre, energy) in `other_attributes`, as they are small and what
+absorption time, notes, and the macros (`fat`, `protein`, `fibre`, `energy`), as they are small and what
 people look back for. Add **hourly carbs** (24 values) to the day's summary row, so charts of old days don't need to
 read rows.
 
@@ -225,8 +224,8 @@ own IDs (`uuid`, `sent_hash`) so the Nightscout API can rebuild the treatment as
 **Proposal:**
 - A group whose members are rolled up or summarised (automatic doses, temp basals, CGM readings) is deleted first, in
   the same transaction.
-- A group whose members are kept (meals, manual boluses, site changes) is kept. After 90 days its `other_attributes`
-  (the app's IDs and hashes) is cleared, keeping `group_type`, `entered_by`, notes and duration.
+- A group whose members are kept (meals, manual boluses, site changes) is kept. After 90 days the app's IDs and hashes
+  (`uuid`, `sent_hash`) are cleared, keeping `group_type`, `entered_by`, notes and duration.
 
 **Lost:**
 - After 90 days: the app's own IDs, so a re-upload of a 90-day-old treatment would not be recognised as a duplicate.

@@ -19,7 +19,18 @@ func ActivityToUpdate(source Activity, context ConverterContext) sitedb.UpdateAc
 		xint64 := FlexibleInt64ToInt64(*source.DurationMinutes)
 		sitedbUpdateActivityParams.DurationMinutes = &xint64
 	}
-	sitedbUpdateActivityParams.OtherAttributes = ActivityOtherJSON(source)
+	if source.Calories != nil {
+		xint642 := FlexibleInt64ToInt64(*source.Calories)
+		sitedbUpdateActivityParams.Calories = &xint642
+	}
+	if source.Steps != nil {
+		xint643 := FlexibleInt64ToInt64(*source.Steps)
+		sitedbUpdateActivityParams.Steps = &xint643
+	}
+	if source.HeartRate != nil {
+		xint644 := FlexibleInt64ToInt64(*source.HeartRate)
+		sitedbUpdateActivityParams.HeartRate = &xint644
+	}
 	if source.Notes != nil {
 		xstring3 := SanitizedStringToString(*source.Notes)
 		sitedbUpdateActivityParams.Notes = &xstring3
@@ -54,7 +65,30 @@ func EntryToUpdate(source Entry, context ConverterContext) sitedb.UpdateGlucoseR
 		xstring := *source.Direction
 		sitedbUpdateGlucoseReadingParams.Direction = &xstring
 	}
-	sitedbUpdateGlucoseReadingParams.OtherAttributes = EntryOtherJSON(source)
+	if source.Noise != nil {
+		xfloat643 := FlexibleFloat64ToFloat64(*source.Noise)
+		sitedbUpdateGlucoseReadingParams.Noise = &xfloat643
+	}
+	if source.Filtered != nil {
+		xfloat644 := FlexibleFloat64ToFloat64(*source.Filtered)
+		sitedbUpdateGlucoseReadingParams.Filtered = &xfloat644
+	}
+	if source.Unfiltered != nil {
+		xfloat645 := FlexibleFloat64ToFloat64(*source.Unfiltered)
+		sitedbUpdateGlucoseReadingParams.Unfiltered = &xfloat645
+	}
+	if source.RSSI != nil {
+		xfloat646 := FlexibleFloat64ToFloat64(*source.RSSI)
+		sitedbUpdateGlucoseReadingParams.Rssi = &xfloat646
+	}
+	if source.IsCalibration != nil {
+		xbool := *source.IsCalibration
+		sitedbUpdateGlucoseReadingParams.IsCalibration = &xbool
+	}
+	if source.SensorMgdlAtPairing != nil {
+		xfloat647 := FlexibleFloat64ToFloat64(*source.SensorMgdlAtPairing)
+		sitedbUpdateGlucoseReadingParams.SensorMgdlAtPairing = &xfloat647
+	}
 	sitedbUpdateGlucoseReadingParams.UpdatedByIdentityID = AssignUpdatedByID(context)
 	sitedbUpdateGlucoseReadingParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
@@ -80,7 +114,38 @@ func FoodToUpdate(source Food, context ConverterContext) sitedb.UpdateFoodPreset
 		xfloat64 := FlexibleFloat64ToFloat64(*source.Carbs)
 		sitedbUpdateFoodPresetParams.Carbs = &xfloat64
 	}
-	sitedbUpdateFoodPresetParams.OtherAttributes = FoodOtherJSON(source)
+	if source.Category != nil {
+		xstring3 := ShortStringToString(*source.Category)
+		sitedbUpdateFoodPresetParams.Category = &xstring3
+	}
+	if source.Subcategory != nil {
+		xstring4 := ShortStringToString(*source.Subcategory)
+		sitedbUpdateFoodPresetParams.Subcategory = &xstring4
+	}
+	if source.Fat != nil {
+		xfloat642 := FlexibleFloat64ToFloat64(*source.Fat)
+		sitedbUpdateFoodPresetParams.Fat = &xfloat642
+	}
+	if source.Protein != nil {
+		xfloat643 := FlexibleFloat64ToFloat64(*source.Protein)
+		sitedbUpdateFoodPresetParams.Protein = &xfloat643
+	}
+	if source.Fibre != nil {
+		xfloat644 := FlexibleFloat64ToFloat64(*source.Fibre)
+		sitedbUpdateFoodPresetParams.Fibre = &xfloat644
+	}
+	if source.Energy != nil {
+		xfloat645 := FlexibleFloat64ToFloat64(*source.Energy)
+		sitedbUpdateFoodPresetParams.Energy = &xfloat645
+	}
+	if source.Portions != nil {
+		xfloat646 := FlexibleFloat64ToFloat64(*source.Portions)
+		sitedbUpdateFoodPresetParams.Portions = &xfloat646
+	}
+	if source.PreBolus != nil {
+		xfloat647 := FlexibleFloat64ToFloat64(*source.PreBolus)
+		sitedbUpdateFoodPresetParams.PreBolus = &xfloat647
+	}
 	sitedbUpdateFoodPresetParams.UpdatedByIdentityID = AssignUpdatedByID(context)
 	sitedbUpdateFoodPresetParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {

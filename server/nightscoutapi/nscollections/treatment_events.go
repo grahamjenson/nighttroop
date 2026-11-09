@@ -263,7 +263,7 @@ var (
 			}
 		},
 		// One a week long is given back as indefinite when it was sent so, as LoopFollow shows Loop's that way, from its
-		// group's other attributes; one changed since to end sooner is not
+		// group's duration_type; one changed since to end sooner is not
 		toTreatment: func(event *sitedb.TempTarget, _ *httputils.SiteContext, treatment *nightscoutmodels.Treatment) {
 			nightscoutmodels.UpdateTempTargetToTreatment(event, treatment)
 			if event == nil || event.DurationMinutes != indefiniteMinutes || treatment.DurationType == nil || *treatment.DurationType != indefinite {

@@ -5,7 +5,6 @@
 package sitedb
 
 import (
-	"nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils/consts"
 )
 
@@ -14,7 +13,9 @@ type ActivitiesVw struct {
 	Name                  *string
 	ActivityType          *string
 	DurationMinutes       *int64
-	OtherAttributes       types.ActivityOther
+	Calories              *int64
+	Steps                 *int64
+	HeartRate             *int64
 	Notes                 *string
 	Reason                *string
 	DeletedAt             *int64
@@ -35,7 +36,9 @@ type Activity struct {
 	Name                  *string
 	ActivityType          string
 	DurationMinutes       *int64
-	OtherAttributes       types.ActivityOther
+	Calories              *int64
+	Steps                 *int64
+	HeartRate             *int64
 	Notes                 *string
 	Reason                *string
 	DeletedAt             *int64
@@ -54,7 +57,11 @@ type Activity struct {
 type ComponentEvent struct {
 	ID                    string
 	EventType             string
-	OtherAttributes       types.ComponentEventOther
+	SensorCode            *string
+	TransmitterID         *string
+	PumpID                *string
+	PumpSerial            *string
+	PumpType              *string
 	Notes                 *string
 	Reason                *string
 	DeletedAt             *int64
@@ -73,7 +80,11 @@ type ComponentEvent struct {
 type ComponentEventsVw struct {
 	ID                    *string
 	EventType             *string
-	OtherAttributes       types.ComponentEventOther
+	SensorCode            *string
+	TransmitterID         *string
+	PumpID                *string
+	PumpSerial            *string
+	PumpType              *string
 	Notes                 *string
 	Reason                *string
 	DeletedAt             *int64
@@ -110,7 +121,6 @@ type DeviceReport struct {
 	OverrideJson          *string
 	PumpJson              *string
 	UploaderJson          *string
-	OtherAttributes       types.DeviceReportOther
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64
 	OccurredAt            int64
@@ -137,7 +147,13 @@ type EventGroup struct {
 	ActivityID            *string
 	NotificationEventID   *string
 	EnteredBy             *string
-	OtherAttributes       types.EventGroupOther
+	Uuid                  *string
+	Mode                  *string
+	AutoForced            *bool
+	Reasons               *string
+	OriginalDurationMs    *int64
+	DurationType          *string
+	SentHash              *string
 	Notes                 *string
 	Reason                *string
 	DurationMinutes       *int64
@@ -160,7 +176,14 @@ type FoodIntake struct {
 	FoodType              *string
 	AbsorptionTimeMinutes *int64
 	Carbs                 *float64
-	OtherAttributes       types.FoodIntakeOther
+	Category              *string
+	Subcategory           *string
+	Fat                   *float64
+	Protein               *float64
+	Fibre                 *float64
+	Energy                *float64
+	Portions              *float64
+	PreBolus              *float64
 	Notes                 *string
 	Reason                *string
 	DeletedAt             *int64
@@ -182,7 +205,14 @@ type FoodIntakesVw struct {
 	FoodType              *string
 	AbsorptionTimeMinutes *int64
 	Carbs                 *float64
-	OtherAttributes       types.FoodIntakeOther
+	Category              *string
+	Subcategory           *string
+	Fat                   *float64
+	Protein               *float64
+	Fibre                 *float64
+	Energy                *float64
+	Portions              *float64
+	PreBolus              *float64
 	Notes                 *string
 	Reason                *string
 	DeletedAt             *int64
@@ -204,7 +234,14 @@ type FoodPreset struct {
 	FoodType              *string
 	AbsorptionTimeMinutes *int64
 	Carbs                 *float64
-	OtherAttributes       types.FoodPresetOther
+	Category              *string
+	Subcategory           *string
+	Fat                   *float64
+	Protein               *float64
+	Fibre                 *float64
+	Energy                *float64
+	Portions              *float64
+	PreBolus              *float64
 	CreatedAt             int64
 	UpdatedAt             int64
 	CreatedByAppName      *string
@@ -223,7 +260,12 @@ type GlucoseReading struct {
 	MeasurementMethod     *string
 	Delta                 *float64
 	Direction             *string
-	OtherAttributes       types.GlucoseReadingOther
+	Noise                 *float64
+	Filtered              *float64
+	Unfiltered            *float64
+	Rssi                  *float64
+	IsCalibration         *bool
+	SensorMgdlAtPairing   *float64
 	Notes                 *string
 	Reason                *string
 	DeletedAt             *int64
@@ -247,7 +289,12 @@ type GlucoseReadingsVw struct {
 	MeasurementMethod     *string
 	Delta                 *float64
 	Direction             *string
-	OtherAttributes       types.GlucoseReadingOther
+	Noise                 *float64
+	Filtered              *float64
+	Unfiltered            *float64
+	Rssi                  *float64
+	IsCalibration         *bool
+	SensorMgdlAtPairing   *float64
 	Notes                 *string
 	Reason                *string
 	DeletedAt             *int64
@@ -267,7 +314,9 @@ type InsulinDose struct {
 	ID                    string
 	Dose                  float64
 	DoseType              *string
-	OtherAttributes       types.InsulinDoseOther
+	SplitNow              *float64
+	SplitExt              *float64
+	Automatic             *bool
 	Notes                 *string
 	Reason                *string
 	DeletedAt             *int64
@@ -287,7 +336,9 @@ type InsulinDosesVw struct {
 	ID                    *string
 	Dose                  *float64
 	DoseType              *string
-	OtherAttributes       types.InsulinDoseOther
+	SplitNow              *float64
+	SplitExt              *float64
+	Automatic             *bool
 	Notes                 *string
 	Reason                *string
 	DeletedAt             *int64
@@ -391,7 +442,12 @@ type ProfileSwitch struct {
 	DurationMinutes          int64
 	Multiplier               *float64
 	Timeshift                *int64
-	OtherAttributes          types.ProfileSwitchOther
+	OriginalProfileName      *string
+	OriginalCustomizedName   *string
+	OriginalTimeshiftMs      *int64
+	OriginalPercentage       *int64
+	OriginalDurationMs       *int64
+	OriginalEnd              *int64
 	Dia                      *float64
 	Units                    *consts.Units
 	Timezone                 *string
@@ -423,7 +479,12 @@ type ProfileSwitchesVw struct {
 	DurationMinutes          *int64
 	Multiplier               *float64
 	Timeshift                *int64
-	OtherAttributes          types.ProfileSwitchOther
+	OriginalProfileName      *string
+	OriginalCustomizedName   *string
+	OriginalTimeshiftMs      *int64
+	OriginalPercentage       *int64
+	OriginalDurationMs       *int64
+	OriginalEnd              *int64
 	Dia                      *float64
 	Units                    *consts.Units
 	Timezone                 *string

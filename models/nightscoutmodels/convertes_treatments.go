@@ -19,7 +19,6 @@ import (
 // goverter:extend ShortStringToString
 // goverter:extend SanitizedStringToString
 // goverter:extend UnitsToUnits
-// goverter:extend nighttroop.t1d.nz/data/sql/sitedb:.*OtherJSON
 type TreatmentsEvenetConverter interface {
 
 	///////
@@ -215,12 +214,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map GroupType EventType
 	// goverter:map CreatedByIdentityName Subject
 	// goverter:map . EnteredBy | EventGroupEnteredBy
-	// goverter:map OtherAttributes.Uuid UUID
-	// goverter:map OtherAttributes.Mode Mode
-	// goverter:map OtherAttributes.AutoForced AutoForced
-	// goverter:map OtherAttributes.Reasons Reasons
-	// goverter:map OtherAttributes.OriginalDurationMs OriginalDurationMs
-	// goverter:map OtherAttributes.DurationType DurationType
+	// goverter:map Uuid UUID
 	// goverter:map CreatedByAppName App
 	// goverter:map CreatedByDeviceName Device
 	// goverter:map OccurredAt Date
@@ -243,23 +237,14 @@ type TreatmentsEvenetConverter interface {
 	//
 	// goverter:map Dose Insulin
 	// goverter:map DoseType Type
-	// goverter:map OtherAttributes.SplitNow SplitNow | MultiplierToPercentage
-	// goverter:map OtherAttributes.SplitExt SplitExt | MultiplierToPercentage
-	// goverter:map OtherAttributes.Automatic Automatic
+	// goverter:map SplitNow SplitNow | MultiplierToPercentage
+	// goverter:map SplitExt SplitExt | MultiplierToPercentage
 	UpdateInsulinDoseToTreatment(source *sitedb.InsulinDose, target *Treatment)
 
 	// goverter:update target
 	// goverter:ignore CreatedAt
 	// goverter:ignoreMissing
 	//
-	// goverter:map OtherAttributes.Category Category
-	// goverter:map OtherAttributes.Subcategory Subcategory
-	// goverter:map OtherAttributes.Fat Fat
-	// goverter:map OtherAttributes.Protein Protein
-	// goverter:map OtherAttributes.Fibre Fibre
-	// goverter:map OtherAttributes.Energy Energy
-	// goverter:map OtherAttributes.Portions Portions
-	// goverter:map OtherAttributes.PreBolus PreBolus
 	UpdateFoodIntakeToTreatment(source *sitedb.FoodIntake, target *Treatment)
 
 	// goverter:update target
@@ -299,23 +284,12 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map . ProfileJSON | ToProfileJSON
 	// goverter:map DurationMinutes DurationInMilliseconds | MinutesToMilliseconds
 	// goverter:map Multiplier Percent | MultiplierToPercentage
-	// goverter:map OtherAttributes.OriginalProfileName OriginalProfileName
-	// goverter:map OtherAttributes.OriginalCustomizedName OriginalCustomizedName
-	// goverter:map OtherAttributes.OriginalTimeshiftMs OriginalTimeshiftMs
-	// goverter:map OtherAttributes.OriginalPercentage OriginalPercentage
-	// goverter:map OtherAttributes.OriginalDurationMs OriginalDurationMs
-	// goverter:map OtherAttributes.OriginalEnd OriginalEnd
 	UpdateProfileSwitchToTreatment(source *sitedb.ProfileSwitch, siteContext *httputils.SiteContext, target *Treatment)
 
 	// goverter:update target
 	// goverter:ignore CreatedAt
 	// goverter:ignoreMissing
 	//
-	// goverter:map OtherAttributes.SensorCode SensorCode
-	// goverter:map OtherAttributes.TransmitterID TransmitterID
-	// goverter:map OtherAttributes.PumpID PumpID
-	// goverter:map OtherAttributes.PumpSerial PumpSerial
-	// goverter:map OtherAttributes.PumpType PumpType
 	UpdateComponentEventToTreatment(source *sitedb.ComponentEvent, target *Treatment)
 
 	// goverter:update target
@@ -323,9 +297,6 @@ type TreatmentsEvenetConverter interface {
 	// goverter:ignoreMissing
 	//
 	// goverter:map DurationMinutes DurationInMilliseconds | MinutesToMilliseconds
-	// goverter:map OtherAttributes.Calories Calories
-	// goverter:map OtherAttributes.Steps Steps
-	// goverter:map OtherAttributes.HeartRate HeartRate
 	UpdateActivityToTreatment(source *sitedb.Activity, target *Treatment)
 
 	//////
@@ -380,7 +351,6 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map Date OccurredAt | OrNow
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
-	// goverter:map . OtherAttributes | TreatmentFoodIntakeOther
 	PartialTreatmentToFoodIntake(source Treatment) sitedb.FoodIntake
 
 	// goverter:ignore ID DeletedAt CreatedAt CreatedByIdentityName CreatedByIdentityID UpdatedAt UpdatedByIdentityName UpdatedByIdentityID
@@ -388,7 +358,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
 	//
-	// goverter:ignore Mgdl Delta Direction OtherAttributes ReadingType
+	// goverter:ignore Mgdl Delta Direction ReadingType Noise Filtered Unfiltered Rssi IsCalibration SensorMgdlAtPairing
 	// goverter:map GlucoseType MeasurementMethod
 	PartialTreatmentToGlucoseReading(source Treatment) sitedb.GlucoseReading
 
@@ -399,7 +369,8 @@ type TreatmentsEvenetConverter interface {
 	//
 	// goverter:map Insulin Dose
 	// goverter:map Type DoseType
-	// goverter:map . OtherAttributes | TreatmentInsulinDoseOther
+	// goverter:map SplitNow SplitNow | PercentageToMultiplier
+	// goverter:map SplitExt SplitExt | PercentageToMultiplier
 	PartialTreatmentToInsulinDose(source Treatment) sitedb.InsulinDose
 
 	// goverter:ignore ID DeletedAt CreatedAt CreatedByIdentityName CreatedByIdentityID UpdatedAt UpdatedByIdentityName UpdatedByIdentityID
@@ -418,7 +389,6 @@ type TreatmentsEvenetConverter interface {
 	//
 	// goverter:ignore Dia Units Timezone CarbsHr Delay CarbRatiosJson InsulinSensitivitiesJson  BasalRatesJson TargetsHighJson TargetsLowJson
 	// goverter:map Percent Multiplier | PercentageToMultiplier
-	// goverter:map . OtherAttributes | TreatmentProfileSwitchOther
 	PartialTreatmentToProfileSwitch(source Treatment) sitedb.ProfileSwitch
 
 	// goverter:ignore ID DeletedAt CreatedAt CreatedByIdentityName CreatedByIdentityID UpdatedAt UpdatedByIdentityName UpdatedByIdentityID
@@ -440,14 +410,12 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map Date OccurredAt | OrNow
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
-	// goverter:map . OtherAttributes | TreatmentComponentEventOther
 	PartialTreatmentToComponentEvent(source Treatment) sitedb.ComponentEvent
 
 	// goverter:ignore ID DeletedAt CreatedAt CreatedByIdentityName CreatedByIdentityID UpdatedAt UpdatedByIdentityName UpdatedByIdentityID
 	// goverter:map Date OccurredAt | OrNow
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
-	// goverter:map . OtherAttributes | TreatmentActivityOther
 	PartialTreatmentToActivity(source Treatment) sitedb.Activity
 
 	// goverter:ignore ID DeletedAt CreatedAt CreatedByIdentityName CreatedByIdentityID UpdatedAt UpdatedByIdentityName UpdatedByIdentityID
@@ -457,7 +425,8 @@ type TreatmentsEvenetConverter interface {
 	//
 	// goverter:ignore GlucoseReadingID InsulinDoseID FoodIntakeID TempBasalID TempTargetID ProfileSwitchID ComponentEventID ActivityID NotificationEventID
 	// goverter:map EventType GroupType
-	// goverter:map . OtherAttributes | TreatmentEventGroupOther
+	// goverter:map UUID Uuid
+	// goverter:map SentJSON SentHash | SentHash
 	TreatmentToEventGroup(source Treatment) sitedb.EventGroup
 }
 

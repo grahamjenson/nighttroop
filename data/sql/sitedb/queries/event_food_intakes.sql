@@ -9,7 +9,14 @@ INSERT INTO food_intakes (
 
     absorption_time_minutes,
     carbs,
-    other_attributes,
+    category,
+    subcategory,
+    fat,
+    protein,
+    fibre,
+    energy,
+    portions,
+    pre_bolus,
 
     notes,
     reason,
@@ -21,7 +28,29 @@ INSERT INTO food_intakes (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (
+    sqlc.arg('ID'),
+    sqlc.arg('Name'),
+    sqlc.arg('FoodType'),
+    sqlc.arg('AbsorptionTimeMinutes'),
+    sqlc.arg('Carbs'),
+    NULLIF(CAST(sqlc.narg('Category') AS TEXT), ''),
+    NULLIF(CAST(sqlc.narg('Subcategory') AS TEXT), ''),
+    sqlc.narg('Fat'),
+    sqlc.narg('Protein'),
+    sqlc.narg('Fibre'),
+    sqlc.narg('Energy'),
+    sqlc.narg('Portions'),
+    sqlc.narg('PreBolus'),
+    sqlc.arg('Notes'),
+    sqlc.arg('Reason'),
+    sqlc.arg('UtcOffsetMinutes'),
+    sqlc.arg('OccurredAt'),
+    sqlc.arg('CreatedByAppName'),
+    sqlc.arg('CreatedByDeviceName'),
+    sqlc.arg('CreatedByIdentityName'),
+    sqlc.arg('CreatedByIdentityID')
+)
 RETURNING *;
 
 --------
@@ -95,12 +124,14 @@ UPDATE food_intakes SET
 
     carbs = COALESCE(sqlc.narg('Carbs'), carbs),
     absorption_time_minutes = COALESCE(sqlc.narg('AbsorptionTimeMinutes'), absorption_time_minutes),
-    -- The fields sent, as JSON (types.OtherJSON), are merged into those kept, so one not sent stays as it is, as a
-    -- column of its own would
-    other_attributes = NULLIF(json_patch(
-        COALESCE(other_attributes, '{}'),
-        COALESCE(CAST(sqlc.narg('OtherAttributes') AS TEXT), '{}')
-    ), '{}'),
+    category = COALESCE(NULLIF(CAST(sqlc.narg('Category') AS TEXT), ''), category),
+    subcategory = COALESCE(NULLIF(CAST(sqlc.narg('Subcategory') AS TEXT), ''), subcategory),
+    fat = COALESCE(sqlc.narg('Fat'), fat),
+    protein = COALESCE(sqlc.narg('Protein'), protein),
+    fibre = COALESCE(sqlc.narg('Fibre'), fibre),
+    energy = COALESCE(sqlc.narg('Energy'), energy),
+    portions = COALESCE(sqlc.narg('Portions'), portions),
+    pre_bolus = COALESCE(sqlc.narg('PreBolus'), pre_bolus),
 
     notes = COALESCE(sqlc.narg('Notes'), notes),
     reason = COALESCE(sqlc.narg('Reason'), reason),

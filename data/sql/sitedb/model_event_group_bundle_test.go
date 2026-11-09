@@ -33,9 +33,6 @@ func fill(v any) {
 			target.SetFloat(1.5 + float64(i))
 		case target.Kind() == reflect.Bool:
 			target.SetBool(true)
-		case target.Kind() == reflect.Struct:
-			// A row's other attributes, a JSON column of its own fields
-			fill(target.Addr().Interface())
 		default:
 			panic("fill cannot set " + target.Kind().String())
 		}

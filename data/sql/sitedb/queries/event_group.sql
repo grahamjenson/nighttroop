@@ -19,7 +19,13 @@ INSERT INTO event_groups (
     reason,
     duration_minutes,
     entered_by,
-    other_attributes,
+    uuid,
+    mode,
+    auto_forced,
+    reasons,
+    original_duration_ms,
+    duration_type,
+    sent_hash,
 
     occurred_at,
     utc_offset_minutes,
@@ -28,7 +34,36 @@ INSERT INTO event_groups (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (
+    sqlc.arg('ID'),
+    sqlc.arg('GroupType'),
+    sqlc.arg('GlucoseReadingID'),
+    sqlc.arg('InsulinDoseID'),
+    sqlc.arg('FoodIntakeID'),
+    sqlc.arg('TempBasalID'),
+    sqlc.arg('TempTargetID'),
+    sqlc.arg('ProfileSwitchID'),
+    sqlc.arg('ComponentEventID'),
+    sqlc.arg('ActivityID'),
+    sqlc.arg('NotificationEventID'),
+    sqlc.arg('Notes'),
+    sqlc.arg('Reason'),
+    sqlc.arg('DurationMinutes'),
+    sqlc.arg('EnteredBy'),
+    NULLIF(CAST(sqlc.narg('Uuid') AS TEXT), ''),
+    NULLIF(CAST(sqlc.narg('Mode') AS TEXT), ''),
+    sqlc.narg('AutoForced'),
+    NULLIF(CAST(sqlc.narg('Reasons') AS TEXT), ''),
+    sqlc.narg('OriginalDurationMs'),
+    NULLIF(CAST(sqlc.narg('DurationType') AS TEXT), ''),
+    NULLIF(CAST(sqlc.narg('SentHash') AS TEXT), ''),
+    sqlc.arg('OccurredAt'),
+    sqlc.arg('UtcOffsetMinutes'),
+    sqlc.arg('CreatedByAppName'),
+    sqlc.arg('CreatedByDeviceName'),
+    sqlc.arg('CreatedByIdentityName'),
+    sqlc.arg('CreatedByIdentityID')
+)
 RETURNING *;
 
 --------
@@ -250,12 +285,13 @@ UPDATE event_groups SET
     notes = COALESCE(sqlc.narg('Notes'), notes),
     reason = COALESCE(sqlc.narg('Reason'), reason),
     entered_by = COALESCE(sqlc.narg('EnteredBy'), entered_by),
-    -- The fields sent, as JSON (types.OtherJSON), are merged into those kept, so one not sent stays as it is, as a
-    -- column of its own would
-    other_attributes = NULLIF(json_patch(
-        COALESCE(other_attributes, '{}'),
-        COALESCE(CAST(sqlc.narg('OtherAttributes') AS TEXT), '{}')
-    ), '{}'),
+    uuid = COALESCE(NULLIF(CAST(sqlc.narg('Uuid') AS TEXT), ''), uuid),
+    mode = COALESCE(NULLIF(CAST(sqlc.narg('Mode') AS TEXT), ''), mode),
+    auto_forced = COALESCE(sqlc.narg('AutoForced'), auto_forced),
+    reasons = COALESCE(NULLIF(CAST(sqlc.narg('Reasons') AS TEXT), ''), reasons),
+    original_duration_ms = COALESCE(sqlc.narg('OriginalDurationMs'), original_duration_ms),
+    duration_type = COALESCE(NULLIF(CAST(sqlc.narg('DurationType') AS TEXT), ''), duration_type),
+    sent_hash = COALESCE(NULLIF(CAST(sqlc.narg('SentHash') AS TEXT), ''), sent_hash),
 
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_id = sqlc.narg('UpdatedByIdentityID'),

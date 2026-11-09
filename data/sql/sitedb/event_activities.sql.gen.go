@@ -8,8 +8,6 @@ package sitedb
 import (
 	"context"
 	"database/sql"
-
-	"nighttroop.t1d.nz/data/types"
 )
 
 const activityAscendingIDs = `-- name: ActivityAscendingIDs :many
@@ -121,7 +119,7 @@ func (q *Queries) ActivityTotals(ctx context.Context) (*ActivityTotalsRow, error
 
 const allActivities = `-- name: AllActivities :many
 
-SELECT id, name, activity_type, duration_minutes, other_attributes, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM activities
+SELECT id, name, activity_type, duration_minutes, calories, steps, heart_rate, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM activities
 WHERE (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
@@ -150,7 +148,9 @@ func (q *Queries) AllActivities(ctx context.Context, arg AllActivitiesParams) ([
 			&i.Name,
 			&i.ActivityType,
 			&i.DurationMinutes,
-			&i.OtherAttributes,
+			&i.Calories,
+			&i.Steps,
+			&i.HeartRate,
 			&i.Notes,
 			&i.Reason,
 			&i.DeletedAt,
@@ -184,7 +184,9 @@ INSERT INTO activities (
     name,
     activity_type,
     duration_minutes,
-    other_attributes,
+    calories,
+    steps,
+    heart_rate,
     notes,
     reason, 
 
@@ -195,8 +197,24 @@ INSERT INTO activities (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, name, activity_type, duration_minutes, other_attributes, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+VALUES (
+    ?1,
+    ?2,
+    ?3,
+    ?4,
+    ?5,
+    ?6,
+    NULLIF(CAST(?7 AS INTEGER), 0),
+    ?8,
+    ?9,
+    ?10,
+    ?11,
+    ?12,
+    ?13,
+    ?14,
+    ?15
+)
+RETURNING id, name, activity_type, duration_minutes, calories, steps, heart_rate, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type CreateActivityParams struct {
@@ -204,7 +222,9 @@ type CreateActivityParams struct {
 	Name                  *string
 	ActivityType          string
 	DurationMinutes       *int64
-	OtherAttributes       types.ActivityOther
+	Calories              *int64
+	Steps                 *int64
+	HeartRate             *int64
 	Notes                 *string
 	Reason                *string
 	OccurredAt            int64
@@ -224,7 +244,9 @@ func (q *Queries) CreateActivity(ctx context.Context, arg CreateActivityParams) 
 		arg.Name,
 		arg.ActivityType,
 		arg.DurationMinutes,
-		arg.OtherAttributes,
+		arg.Calories,
+		arg.Steps,
+		arg.HeartRate,
 		arg.Notes,
 		arg.Reason,
 		arg.OccurredAt,
@@ -240,7 +262,9 @@ func (q *Queries) CreateActivity(ctx context.Context, arg CreateActivityParams) 
 		&i.Name,
 		&i.ActivityType,
 		&i.DurationMinutes,
-		&i.OtherAttributes,
+		&i.Calories,
+		&i.Steps,
+		&i.HeartRate,
 		&i.Notes,
 		&i.Reason,
 		&i.DeletedAt,
@@ -259,7 +283,7 @@ func (q *Queries) CreateActivity(ctx context.Context, arg CreateActivityParams) 
 }
 
 const getActivity = `-- name: GetActivity :one
-SELECT id, name, activity_type, duration_minutes, other_attributes, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM activities WHERE id = ? AND (CAST(?2 AS BOOL) = TRUE OR deleted_at IS NULL)
+SELECT id, name, activity_type, duration_minutes, calories, steps, heart_rate, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM activities WHERE id = ? AND (CAST(?2 AS BOOL) = TRUE OR deleted_at IS NULL)
 `
 
 type GetActivityParams struct {
@@ -275,7 +299,9 @@ func (q *Queries) GetActivity(ctx context.Context, arg GetActivityParams) (*Acti
 		&i.Name,
 		&i.ActivityType,
 		&i.DurationMinutes,
-		&i.OtherAttributes,
+		&i.Calories,
+		&i.Steps,
+		&i.HeartRate,
 		&i.Notes,
 		&i.Reason,
 		&i.DeletedAt,
@@ -318,7 +344,7 @@ func (q *Queries) HardDeleteActivity(ctx context.Context, arg HardDeleteActivity
 }
 
 const searchActivities = `-- name: SearchActivities :many
-SELECT id, name, activity_type, duration_minutes, other_attributes, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM activities
+SELECT id, name, activity_type, duration_minutes, calories, steps, heart_rate, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM activities
 WHERE
     -- The date filters as one range, occurred_at's CHECK where unset, so SQLite reads only that range of its index
     occurred_at BETWEEN MAX(COALESCE(CAST(?1 AS INTEGER), 0), COALESCE(CAST(?2 AS INTEGER) + 1, 0), COALESCE(CAST(?3 AS INTEGER), 0))
@@ -436,7 +462,9 @@ func (q *Queries) SearchActivities(ctx context.Context, arg SearchActivitiesPara
 			&i.Name,
 			&i.ActivityType,
 			&i.DurationMinutes,
-			&i.OtherAttributes,
+			&i.Calories,
+			&i.Steps,
+			&i.HeartRate,
 			&i.Notes,
 			&i.Reason,
 			&i.DeletedAt,
@@ -508,27 +536,26 @@ UPDATE activities SET
     name = COALESCE(?1, name),
     activity_type = COALESCE(?2, activity_type),
     duration_minutes = COALESCE(?3, duration_minutes),
-    -- The fields sent, as JSON (types.OtherJSON), are merged into those kept, so one not sent stays as it is, as a
-    -- column of its own would
-    other_attributes = NULLIF(json_patch(
-        COALESCE(other_attributes, '{}'),
-        COALESCE(CAST(?4 AS TEXT), '{}')
-    ), '{}'),
-    notes = COALESCE(?5, notes),
-    reason = COALESCE(?6, reason),
+    calories = COALESCE(?4, calories),
+    steps = COALESCE(?5, steps),
+    heart_rate = COALESCE(NULLIF(CAST(?6 AS INTEGER), 0), heart_rate),
+    notes = COALESCE(?7, notes),
+    reason = COALESCE(?8, reason),
 
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_id = ?7,
-    updated_by_identity_name = ?8
-WHERE id = ?9 AND deleted_at IS NULL
-RETURNING id, name, activity_type, duration_minutes, other_attributes, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+    updated_by_identity_id = ?9,
+    updated_by_identity_name = ?10
+WHERE id = ?11 AND deleted_at IS NULL
+RETURNING id, name, activity_type, duration_minutes, calories, steps, heart_rate, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type UpdateActivityParams struct {
 	Name                  *string
 	ActivityType          *string
 	DurationMinutes       *int64
-	OtherAttributes       *string
+	Calories              *int64
+	Steps                 *int64
+	HeartRate             *int64
 	Notes                 *string
 	Reason                *string
 	UpdatedByIdentityID   *int64
@@ -544,7 +571,9 @@ func (q *Queries) UpdateActivity(ctx context.Context, arg UpdateActivityParams) 
 		arg.Name,
 		arg.ActivityType,
 		arg.DurationMinutes,
-		arg.OtherAttributes,
+		arg.Calories,
+		arg.Steps,
+		arg.HeartRate,
 		arg.Notes,
 		arg.Reason,
 		arg.UpdatedByIdentityID,
@@ -557,7 +586,9 @@ func (q *Queries) UpdateActivity(ctx context.Context, arg UpdateActivityParams) 
 		&i.Name,
 		&i.ActivityType,
 		&i.DurationMinutes,
-		&i.OtherAttributes,
+		&i.Calories,
+		&i.Steps,
+		&i.HeartRate,
 		&i.Notes,
 		&i.Reason,
 		&i.DeletedAt,

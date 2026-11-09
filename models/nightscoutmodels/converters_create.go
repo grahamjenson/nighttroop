@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
-	datatypes "nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/types"
@@ -38,7 +37,6 @@ type CreateMapConverter interface {
 	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	// goverter:map CreatedByIdentityID | AssignCreatedByID
-	// goverter:map . OtherAttributes | ActivityOther
 	ActivityToCreate(source Activity, ctx ConverterContext) sitedb.CreateActivityParams
 
 	///////
@@ -56,7 +54,7 @@ type CreateMapConverter interface {
 	// goverter:ignore Notes Reason MeasurementMethod
 	// goverter:map . ReadingType | SetReadingType
 	// goverter:map Trend Delta
-	// goverter:map . OtherAttributes | EntryOther
+	// goverter:map RSSI Rssi
 	EntryToCreate(source Entry, ctx ConverterContext) sitedb.CreateGlucoseReadingParams
 
 	///////
@@ -69,7 +67,6 @@ type CreateMapConverter interface {
 	// goverter:map ID                | AssignID
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	// goverter:map CreatedByIdentityID | AssignCreatedByID
-	// goverter:map . OtherAttributes | FoodOther
 	//
 	FoodToCreate(source Food, ctx ConverterContext) sitedb.CreateFoodPresetParams
 
@@ -100,7 +97,7 @@ type CreateMapConverter interface {
 	// goverter:map CreatedByIdentityName  | AssignCreatedByName
 	// goverter:map CreatedByIdentityID | AssignCreatedByID
 	//
-	// goverter:ignore OtherAttributes IsDeviceCharging DeviceBatteryPercent PumpState PumpBatteryPercent PumpChargingState PumpReservoir LoopIob LoopIobBasal LoopIobTreatment LoopCob ConfigurationID LoopStatusJson LoopName PumpClock PumpManufacturer PumpModel OverrideJson PumpJson UploaderJson
+	// goverter:ignore IsDeviceCharging DeviceBatteryPercent PumpState PumpBatteryPercent PumpChargingState PumpReservoir LoopIob LoopIobBasal LoopIobTreatment LoopCob ConfigurationID LoopStatusJson LoopName PumpClock PumpManufacturer PumpModel OverrideJson PumpJson UploaderJson
 	DeviceStatusToCreateDeviceReport(source DeviceStatus, ctx ConverterContext) sitedb.CreateDeviceReportParams
 }
 
@@ -238,18 +235,4 @@ func MultiplierToPercentage(multiplier *float64) *types.FlexibleFloat64 {
 		return nil
 	}
 	return new(types.FlexibleFloat64(consts.Round(*multiplier*100, 3)))
-}
-
-// EntryOther is what only some apps send of an entry, kept in its reading's other attributes. It is written out, not
-// generated, as a generated converter cannot be called from this package's own code, which goverter compiles first.
-func EntryOther(source Entry) datatypes.GlucoseReadingOther {
-	return datatypes.GlucoseReadingOther{Noise: source.Noise.Float64p(), Filtered: source.Filtered.Float64p(),
-		Unfiltered: source.Unfiltered.Float64p(), Rssi: source.RSSI.Float64p(), IsCalibration: source.IsCalibration,
-		SensorMgdlAtPairing: source.SensorMgdlAtPairing.Float64p()}
-}
-
-// EntryOtherJSON is what only some apps send of an entry, as JSON for an update to merge into its reading's other
-// attributes
-func EntryOtherJSON(source Entry) *string {
-	return datatypes.OtherJSON(EntryOther(source))
 }

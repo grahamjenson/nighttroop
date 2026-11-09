@@ -2,7 +2,6 @@
 package sitedb
 
 import (
-	"nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils/consts"
 )
 
@@ -47,14 +46,34 @@ func (m *ActivitiesVw) SetDurationMinutes(v *int64) {
 	m.DurationMinutes = v
 }
 
-// GetOtherAttributes returns the OtherAttributes value.
-func (m ActivitiesVw) GetOtherAttributes() types.ActivityOther {
-	return m.OtherAttributes
+// GetCalories returns the Calories value.
+func (m ActivitiesVw) GetCalories() *int64 {
+	return m.Calories
 }
 
-// SetOtherAttributes sets the OtherAttributes value and returns the updated ActivitiesVw.
-func (m *ActivitiesVw) SetOtherAttributes(v types.ActivityOther) {
-	m.OtherAttributes = v
+// SetCalories sets the Calories value and returns the updated ActivitiesVw.
+func (m *ActivitiesVw) SetCalories(v *int64) {
+	m.Calories = v
+}
+
+// GetSteps returns the Steps value.
+func (m ActivitiesVw) GetSteps() *int64 {
+	return m.Steps
+}
+
+// SetSteps sets the Steps value and returns the updated ActivitiesVw.
+func (m *ActivitiesVw) SetSteps(v *int64) {
+	m.Steps = v
+}
+
+// GetHeartRate returns the HeartRate value.
+func (m ActivitiesVw) GetHeartRate() *int64 {
+	return m.HeartRate
+}
+
+// SetHeartRate sets the HeartRate value and returns the updated ActivitiesVw.
+func (m *ActivitiesVw) SetHeartRate(v *int64) {
+	m.HeartRate = v
 }
 
 // GetNotes returns the Notes value.
@@ -227,14 +246,34 @@ func (m *Activity) SetDurationMinutes(v *int64) {
 	m.DurationMinutes = v
 }
 
-// GetOtherAttributes returns the OtherAttributes value.
-func (m Activity) GetOtherAttributes() types.ActivityOther {
-	return m.OtherAttributes
+// GetCalories returns the Calories value.
+func (m Activity) GetCalories() *int64 {
+	return m.Calories
 }
 
-// SetOtherAttributes sets the OtherAttributes value and returns the updated Activity.
-func (m *Activity) SetOtherAttributes(v types.ActivityOther) {
-	m.OtherAttributes = v
+// SetCalories sets the Calories value and returns the updated Activity.
+func (m *Activity) SetCalories(v *int64) {
+	m.Calories = v
+}
+
+// GetSteps returns the Steps value.
+func (m Activity) GetSteps() *int64 {
+	return m.Steps
+}
+
+// SetSteps sets the Steps value and returns the updated Activity.
+func (m *Activity) SetSteps(v *int64) {
+	m.Steps = v
+}
+
+// GetHeartRate returns the HeartRate value.
+func (m Activity) GetHeartRate() *int64 {
+	return m.HeartRate
+}
+
+// SetHeartRate sets the HeartRate value and returns the updated Activity.
+func (m *Activity) SetHeartRate(v *int64) {
+	m.HeartRate = v
 }
 
 // GetNotes returns the Notes value.
@@ -387,14 +426,54 @@ func (m *ComponentEvent) SetEventType(v string) {
 	m.EventType = v
 }
 
-// GetOtherAttributes returns the OtherAttributes value.
-func (m ComponentEvent) GetOtherAttributes() types.ComponentEventOther {
-	return m.OtherAttributes
+// GetSensorCode returns the SensorCode value.
+func (m ComponentEvent) GetSensorCode() *string {
+	return m.SensorCode
 }
 
-// SetOtherAttributes sets the OtherAttributes value and returns the updated ComponentEvent.
-func (m *ComponentEvent) SetOtherAttributes(v types.ComponentEventOther) {
-	m.OtherAttributes = v
+// SetSensorCode sets the SensorCode value and returns the updated ComponentEvent.
+func (m *ComponentEvent) SetSensorCode(v *string) {
+	m.SensorCode = v
+}
+
+// GetTransmitterID returns the TransmitterID value.
+func (m ComponentEvent) GetTransmitterID() *string {
+	return m.TransmitterID
+}
+
+// SetTransmitterID sets the TransmitterID value and returns the updated ComponentEvent.
+func (m *ComponentEvent) SetTransmitterID(v *string) {
+	m.TransmitterID = v
+}
+
+// GetPumpID returns the PumpID value.
+func (m ComponentEvent) GetPumpID() *string {
+	return m.PumpID
+}
+
+// SetPumpID sets the PumpID value and returns the updated ComponentEvent.
+func (m *ComponentEvent) SetPumpID(v *string) {
+	m.PumpID = v
+}
+
+// GetPumpSerial returns the PumpSerial value.
+func (m ComponentEvent) GetPumpSerial() *string {
+	return m.PumpSerial
+}
+
+// SetPumpSerial sets the PumpSerial value and returns the updated ComponentEvent.
+func (m *ComponentEvent) SetPumpSerial(v *string) {
+	m.PumpSerial = v
+}
+
+// GetPumpType returns the PumpType value.
+func (m ComponentEvent) GetPumpType() *string {
+	return m.PumpType
+}
+
+// SetPumpType sets the PumpType value and returns the updated ComponentEvent.
+func (m *ComponentEvent) SetPumpType(v *string) {
+	m.PumpType = v
 }
 
 // GetNotes returns the Notes value.
@@ -547,14 +626,54 @@ func (m *ComponentEventsVw) SetEventType(v *string) {
 	m.EventType = v
 }
 
-// GetOtherAttributes returns the OtherAttributes value.
-func (m ComponentEventsVw) GetOtherAttributes() types.ComponentEventOther {
-	return m.OtherAttributes
+// GetSensorCode returns the SensorCode value.
+func (m ComponentEventsVw) GetSensorCode() *string {
+	return m.SensorCode
 }
 
-// SetOtherAttributes sets the OtherAttributes value and returns the updated ComponentEventsVw.
-func (m *ComponentEventsVw) SetOtherAttributes(v types.ComponentEventOther) {
-	m.OtherAttributes = v
+// SetSensorCode sets the SensorCode value and returns the updated ComponentEventsVw.
+func (m *ComponentEventsVw) SetSensorCode(v *string) {
+	m.SensorCode = v
+}
+
+// GetTransmitterID returns the TransmitterID value.
+func (m ComponentEventsVw) GetTransmitterID() *string {
+	return m.TransmitterID
+}
+
+// SetTransmitterID sets the TransmitterID value and returns the updated ComponentEventsVw.
+func (m *ComponentEventsVw) SetTransmitterID(v *string) {
+	m.TransmitterID = v
+}
+
+// GetPumpID returns the PumpID value.
+func (m ComponentEventsVw) GetPumpID() *string {
+	return m.PumpID
+}
+
+// SetPumpID sets the PumpID value and returns the updated ComponentEventsVw.
+func (m *ComponentEventsVw) SetPumpID(v *string) {
+	m.PumpID = v
+}
+
+// GetPumpSerial returns the PumpSerial value.
+func (m ComponentEventsVw) GetPumpSerial() *string {
+	return m.PumpSerial
+}
+
+// SetPumpSerial sets the PumpSerial value and returns the updated ComponentEventsVw.
+func (m *ComponentEventsVw) SetPumpSerial(v *string) {
+	m.PumpSerial = v
+}
+
+// GetPumpType returns the PumpType value.
+func (m ComponentEventsVw) GetPumpType() *string {
+	return m.PumpType
+}
+
+// SetPumpType sets the PumpType value and returns the updated ComponentEventsVw.
+func (m *ComponentEventsVw) SetPumpType(v *string) {
+	m.PumpType = v
 }
 
 // GetNotes returns the Notes value.
@@ -887,16 +1006,6 @@ func (m *DeviceReport) SetUploaderJson(v *string) {
 	m.UploaderJson = v
 }
 
-// GetOtherAttributes returns the OtherAttributes value.
-func (m DeviceReport) GetOtherAttributes() types.DeviceReportOther {
-	return m.OtherAttributes
-}
-
-// SetOtherAttributes sets the OtherAttributes value and returns the updated DeviceReport.
-func (m *DeviceReport) SetOtherAttributes(v types.DeviceReportOther) {
-	m.OtherAttributes = v
-}
-
 // GetDeletedAt returns the DeletedAt value.
 func (m DeviceReport) GetDeletedAt() *int64 {
 	return m.DeletedAt
@@ -1127,14 +1236,74 @@ func (m *EventGroup) SetEnteredBy(v *string) {
 	m.EnteredBy = v
 }
 
-// GetOtherAttributes returns the OtherAttributes value.
-func (m EventGroup) GetOtherAttributes() types.EventGroupOther {
-	return m.OtherAttributes
+// GetUuid returns the Uuid value.
+func (m EventGroup) GetUuid() *string {
+	return m.Uuid
 }
 
-// SetOtherAttributes sets the OtherAttributes value and returns the updated EventGroup.
-func (m *EventGroup) SetOtherAttributes(v types.EventGroupOther) {
-	m.OtherAttributes = v
+// SetUuid sets the Uuid value and returns the updated EventGroup.
+func (m *EventGroup) SetUuid(v *string) {
+	m.Uuid = v
+}
+
+// GetMode returns the Mode value.
+func (m EventGroup) GetMode() *string {
+	return m.Mode
+}
+
+// SetMode sets the Mode value and returns the updated EventGroup.
+func (m *EventGroup) SetMode(v *string) {
+	m.Mode = v
+}
+
+// GetAutoForced returns the AutoForced value.
+func (m EventGroup) GetAutoForced() *bool {
+	return m.AutoForced
+}
+
+// SetAutoForced sets the AutoForced value and returns the updated EventGroup.
+func (m *EventGroup) SetAutoForced(v *bool) {
+	m.AutoForced = v
+}
+
+// GetReasons returns the Reasons value.
+func (m EventGroup) GetReasons() *string {
+	return m.Reasons
+}
+
+// SetReasons sets the Reasons value and returns the updated EventGroup.
+func (m *EventGroup) SetReasons(v *string) {
+	m.Reasons = v
+}
+
+// GetOriginalDurationMs returns the OriginalDurationMs value.
+func (m EventGroup) GetOriginalDurationMs() *int64 {
+	return m.OriginalDurationMs
+}
+
+// SetOriginalDurationMs sets the OriginalDurationMs value and returns the updated EventGroup.
+func (m *EventGroup) SetOriginalDurationMs(v *int64) {
+	m.OriginalDurationMs = v
+}
+
+// GetDurationType returns the DurationType value.
+func (m EventGroup) GetDurationType() *string {
+	return m.DurationType
+}
+
+// SetDurationType sets the DurationType value and returns the updated EventGroup.
+func (m *EventGroup) SetDurationType(v *string) {
+	m.DurationType = v
+}
+
+// GetSentHash returns the SentHash value.
+func (m EventGroup) GetSentHash() *string {
+	return m.SentHash
+}
+
+// SetSentHash sets the SentHash value and returns the updated EventGroup.
+func (m *EventGroup) SetSentHash(v *string) {
+	m.SentHash = v
 }
 
 // GetNotes returns the Notes value.
@@ -1327,14 +1496,84 @@ func (m *FoodIntake) SetCarbs(v *float64) {
 	m.Carbs = v
 }
 
-// GetOtherAttributes returns the OtherAttributes value.
-func (m FoodIntake) GetOtherAttributes() types.FoodIntakeOther {
-	return m.OtherAttributes
+// GetCategory returns the Category value.
+func (m FoodIntake) GetCategory() *string {
+	return m.Category
 }
 
-// SetOtherAttributes sets the OtherAttributes value and returns the updated FoodIntake.
-func (m *FoodIntake) SetOtherAttributes(v types.FoodIntakeOther) {
-	m.OtherAttributes = v
+// SetCategory sets the Category value and returns the updated FoodIntake.
+func (m *FoodIntake) SetCategory(v *string) {
+	m.Category = v
+}
+
+// GetSubcategory returns the Subcategory value.
+func (m FoodIntake) GetSubcategory() *string {
+	return m.Subcategory
+}
+
+// SetSubcategory sets the Subcategory value and returns the updated FoodIntake.
+func (m *FoodIntake) SetSubcategory(v *string) {
+	m.Subcategory = v
+}
+
+// GetFat returns the Fat value.
+func (m FoodIntake) GetFat() *float64 {
+	return m.Fat
+}
+
+// SetFat sets the Fat value and returns the updated FoodIntake.
+func (m *FoodIntake) SetFat(v *float64) {
+	m.Fat = v
+}
+
+// GetProtein returns the Protein value.
+func (m FoodIntake) GetProtein() *float64 {
+	return m.Protein
+}
+
+// SetProtein sets the Protein value and returns the updated FoodIntake.
+func (m *FoodIntake) SetProtein(v *float64) {
+	m.Protein = v
+}
+
+// GetFibre returns the Fibre value.
+func (m FoodIntake) GetFibre() *float64 {
+	return m.Fibre
+}
+
+// SetFibre sets the Fibre value and returns the updated FoodIntake.
+func (m *FoodIntake) SetFibre(v *float64) {
+	m.Fibre = v
+}
+
+// GetEnergy returns the Energy value.
+func (m FoodIntake) GetEnergy() *float64 {
+	return m.Energy
+}
+
+// SetEnergy sets the Energy value and returns the updated FoodIntake.
+func (m *FoodIntake) SetEnergy(v *float64) {
+	m.Energy = v
+}
+
+// GetPortions returns the Portions value.
+func (m FoodIntake) GetPortions() *float64 {
+	return m.Portions
+}
+
+// SetPortions sets the Portions value and returns the updated FoodIntake.
+func (m *FoodIntake) SetPortions(v *float64) {
+	m.Portions = v
+}
+
+// GetPreBolus returns the PreBolus value.
+func (m FoodIntake) GetPreBolus() *float64 {
+	return m.PreBolus
+}
+
+// SetPreBolus sets the PreBolus value and returns the updated FoodIntake.
+func (m *FoodIntake) SetPreBolus(v *float64) {
+	m.PreBolus = v
 }
 
 // GetNotes returns the Notes value.
@@ -1517,14 +1756,84 @@ func (m *FoodIntakesVw) SetCarbs(v *float64) {
 	m.Carbs = v
 }
 
-// GetOtherAttributes returns the OtherAttributes value.
-func (m FoodIntakesVw) GetOtherAttributes() types.FoodIntakeOther {
-	return m.OtherAttributes
+// GetCategory returns the Category value.
+func (m FoodIntakesVw) GetCategory() *string {
+	return m.Category
 }
 
-// SetOtherAttributes sets the OtherAttributes value and returns the updated FoodIntakesVw.
-func (m *FoodIntakesVw) SetOtherAttributes(v types.FoodIntakeOther) {
-	m.OtherAttributes = v
+// SetCategory sets the Category value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetCategory(v *string) {
+	m.Category = v
+}
+
+// GetSubcategory returns the Subcategory value.
+func (m FoodIntakesVw) GetSubcategory() *string {
+	return m.Subcategory
+}
+
+// SetSubcategory sets the Subcategory value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetSubcategory(v *string) {
+	m.Subcategory = v
+}
+
+// GetFat returns the Fat value.
+func (m FoodIntakesVw) GetFat() *float64 {
+	return m.Fat
+}
+
+// SetFat sets the Fat value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetFat(v *float64) {
+	m.Fat = v
+}
+
+// GetProtein returns the Protein value.
+func (m FoodIntakesVw) GetProtein() *float64 {
+	return m.Protein
+}
+
+// SetProtein sets the Protein value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetProtein(v *float64) {
+	m.Protein = v
+}
+
+// GetFibre returns the Fibre value.
+func (m FoodIntakesVw) GetFibre() *float64 {
+	return m.Fibre
+}
+
+// SetFibre sets the Fibre value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetFibre(v *float64) {
+	m.Fibre = v
+}
+
+// GetEnergy returns the Energy value.
+func (m FoodIntakesVw) GetEnergy() *float64 {
+	return m.Energy
+}
+
+// SetEnergy sets the Energy value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetEnergy(v *float64) {
+	m.Energy = v
+}
+
+// GetPortions returns the Portions value.
+func (m FoodIntakesVw) GetPortions() *float64 {
+	return m.Portions
+}
+
+// SetPortions sets the Portions value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetPortions(v *float64) {
+	m.Portions = v
+}
+
+// GetPreBolus returns the PreBolus value.
+func (m FoodIntakesVw) GetPreBolus() *float64 {
+	return m.PreBolus
+}
+
+// SetPreBolus sets the PreBolus value and returns the updated FoodIntakesVw.
+func (m *FoodIntakesVw) SetPreBolus(v *float64) {
+	m.PreBolus = v
 }
 
 // GetNotes returns the Notes value.
@@ -1707,14 +2016,84 @@ func (m *FoodPreset) SetCarbs(v *float64) {
 	m.Carbs = v
 }
 
-// GetOtherAttributes returns the OtherAttributes value.
-func (m FoodPreset) GetOtherAttributes() types.FoodPresetOther {
-	return m.OtherAttributes
+// GetCategory returns the Category value.
+func (m FoodPreset) GetCategory() *string {
+	return m.Category
 }
 
-// SetOtherAttributes sets the OtherAttributes value and returns the updated FoodPreset.
-func (m *FoodPreset) SetOtherAttributes(v types.FoodPresetOther) {
-	m.OtherAttributes = v
+// SetCategory sets the Category value and returns the updated FoodPreset.
+func (m *FoodPreset) SetCategory(v *string) {
+	m.Category = v
+}
+
+// GetSubcategory returns the Subcategory value.
+func (m FoodPreset) GetSubcategory() *string {
+	return m.Subcategory
+}
+
+// SetSubcategory sets the Subcategory value and returns the updated FoodPreset.
+func (m *FoodPreset) SetSubcategory(v *string) {
+	m.Subcategory = v
+}
+
+// GetFat returns the Fat value.
+func (m FoodPreset) GetFat() *float64 {
+	return m.Fat
+}
+
+// SetFat sets the Fat value and returns the updated FoodPreset.
+func (m *FoodPreset) SetFat(v *float64) {
+	m.Fat = v
+}
+
+// GetProtein returns the Protein value.
+func (m FoodPreset) GetProtein() *float64 {
+	return m.Protein
+}
+
+// SetProtein sets the Protein value and returns the updated FoodPreset.
+func (m *FoodPreset) SetProtein(v *float64) {
+	m.Protein = v
+}
+
+// GetFibre returns the Fibre value.
+func (m FoodPreset) GetFibre() *float64 {
+	return m.Fibre
+}
+
+// SetFibre sets the Fibre value and returns the updated FoodPreset.
+func (m *FoodPreset) SetFibre(v *float64) {
+	m.Fibre = v
+}
+
+// GetEnergy returns the Energy value.
+func (m FoodPreset) GetEnergy() *float64 {
+	return m.Energy
+}
+
+// SetEnergy sets the Energy value and returns the updated FoodPreset.
+func (m *FoodPreset) SetEnergy(v *float64) {
+	m.Energy = v
+}
+
+// GetPortions returns the Portions value.
+func (m FoodPreset) GetPortions() *float64 {
+	return m.Portions
+}
+
+// SetPortions sets the Portions value and returns the updated FoodPreset.
+func (m *FoodPreset) SetPortions(v *float64) {
+	m.Portions = v
+}
+
+// GetPreBolus returns the PreBolus value.
+func (m FoodPreset) GetPreBolus() *float64 {
+	return m.PreBolus
+}
+
+// SetPreBolus sets the PreBolus value and returns the updated FoodPreset.
+func (m *FoodPreset) SetPreBolus(v *float64) {
+	m.PreBolus = v
 }
 
 // GetCreatedAt returns the CreatedAt value.
@@ -1867,14 +2246,64 @@ func (m *GlucoseReading) SetDirection(v *string) {
 	m.Direction = v
 }
 
-// GetOtherAttributes returns the OtherAttributes value.
-func (m GlucoseReading) GetOtherAttributes() types.GlucoseReadingOther {
-	return m.OtherAttributes
+// GetNoise returns the Noise value.
+func (m GlucoseReading) GetNoise() *float64 {
+	return m.Noise
 }
 
-// SetOtherAttributes sets the OtherAttributes value and returns the updated GlucoseReading.
-func (m *GlucoseReading) SetOtherAttributes(v types.GlucoseReadingOther) {
-	m.OtherAttributes = v
+// SetNoise sets the Noise value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetNoise(v *float64) {
+	m.Noise = v
+}
+
+// GetFiltered returns the Filtered value.
+func (m GlucoseReading) GetFiltered() *float64 {
+	return m.Filtered
+}
+
+// SetFiltered sets the Filtered value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetFiltered(v *float64) {
+	m.Filtered = v
+}
+
+// GetUnfiltered returns the Unfiltered value.
+func (m GlucoseReading) GetUnfiltered() *float64 {
+	return m.Unfiltered
+}
+
+// SetUnfiltered sets the Unfiltered value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetUnfiltered(v *float64) {
+	m.Unfiltered = v
+}
+
+// GetRssi returns the Rssi value.
+func (m GlucoseReading) GetRssi() *float64 {
+	return m.Rssi
+}
+
+// SetRssi sets the Rssi value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetRssi(v *float64) {
+	m.Rssi = v
+}
+
+// GetIsCalibration returns the IsCalibration value.
+func (m GlucoseReading) GetIsCalibration() *bool {
+	return m.IsCalibration
+}
+
+// SetIsCalibration sets the IsCalibration value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetIsCalibration(v *bool) {
+	m.IsCalibration = v
+}
+
+// GetSensorMgdlAtPairing returns the SensorMgdlAtPairing value.
+func (m GlucoseReading) GetSensorMgdlAtPairing() *float64 {
+	return m.SensorMgdlAtPairing
+}
+
+// SetSensorMgdlAtPairing sets the SensorMgdlAtPairing value and returns the updated GlucoseReading.
+func (m *GlucoseReading) SetSensorMgdlAtPairing(v *float64) {
+	m.SensorMgdlAtPairing = v
 }
 
 // GetNotes returns the Notes value.
@@ -2077,14 +2506,64 @@ func (m *GlucoseReadingsVw) SetDirection(v *string) {
 	m.Direction = v
 }
 
-// GetOtherAttributes returns the OtherAttributes value.
-func (m GlucoseReadingsVw) GetOtherAttributes() types.GlucoseReadingOther {
-	return m.OtherAttributes
+// GetNoise returns the Noise value.
+func (m GlucoseReadingsVw) GetNoise() *float64 {
+	return m.Noise
 }
 
-// SetOtherAttributes sets the OtherAttributes value and returns the updated GlucoseReadingsVw.
-func (m *GlucoseReadingsVw) SetOtherAttributes(v types.GlucoseReadingOther) {
-	m.OtherAttributes = v
+// SetNoise sets the Noise value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetNoise(v *float64) {
+	m.Noise = v
+}
+
+// GetFiltered returns the Filtered value.
+func (m GlucoseReadingsVw) GetFiltered() *float64 {
+	return m.Filtered
+}
+
+// SetFiltered sets the Filtered value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetFiltered(v *float64) {
+	m.Filtered = v
+}
+
+// GetUnfiltered returns the Unfiltered value.
+func (m GlucoseReadingsVw) GetUnfiltered() *float64 {
+	return m.Unfiltered
+}
+
+// SetUnfiltered sets the Unfiltered value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetUnfiltered(v *float64) {
+	m.Unfiltered = v
+}
+
+// GetRssi returns the Rssi value.
+func (m GlucoseReadingsVw) GetRssi() *float64 {
+	return m.Rssi
+}
+
+// SetRssi sets the Rssi value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetRssi(v *float64) {
+	m.Rssi = v
+}
+
+// GetIsCalibration returns the IsCalibration value.
+func (m GlucoseReadingsVw) GetIsCalibration() *bool {
+	return m.IsCalibration
+}
+
+// SetIsCalibration sets the IsCalibration value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetIsCalibration(v *bool) {
+	m.IsCalibration = v
+}
+
+// GetSensorMgdlAtPairing returns the SensorMgdlAtPairing value.
+func (m GlucoseReadingsVw) GetSensorMgdlAtPairing() *float64 {
+	return m.SensorMgdlAtPairing
+}
+
+// SetSensorMgdlAtPairing sets the SensorMgdlAtPairing value and returns the updated GlucoseReadingsVw.
+func (m *GlucoseReadingsVw) SetSensorMgdlAtPairing(v *float64) {
+	m.SensorMgdlAtPairing = v
 }
 
 // GetNotes returns the Notes value.
@@ -2247,14 +2726,34 @@ func (m *InsulinDose) SetDoseType(v *string) {
 	m.DoseType = v
 }
 
-// GetOtherAttributes returns the OtherAttributes value.
-func (m InsulinDose) GetOtherAttributes() types.InsulinDoseOther {
-	return m.OtherAttributes
+// GetSplitNow returns the SplitNow value.
+func (m InsulinDose) GetSplitNow() *float64 {
+	return m.SplitNow
 }
 
-// SetOtherAttributes sets the OtherAttributes value and returns the updated InsulinDose.
-func (m *InsulinDose) SetOtherAttributes(v types.InsulinDoseOther) {
-	m.OtherAttributes = v
+// SetSplitNow sets the SplitNow value and returns the updated InsulinDose.
+func (m *InsulinDose) SetSplitNow(v *float64) {
+	m.SplitNow = v
+}
+
+// GetSplitExt returns the SplitExt value.
+func (m InsulinDose) GetSplitExt() *float64 {
+	return m.SplitExt
+}
+
+// SetSplitExt sets the SplitExt value and returns the updated InsulinDose.
+func (m *InsulinDose) SetSplitExt(v *float64) {
+	m.SplitExt = v
+}
+
+// GetAutomatic returns the Automatic value.
+func (m InsulinDose) GetAutomatic() *bool {
+	return m.Automatic
+}
+
+// SetAutomatic sets the Automatic value and returns the updated InsulinDose.
+func (m *InsulinDose) SetAutomatic(v *bool) {
+	m.Automatic = v
 }
 
 // GetNotes returns the Notes value.
@@ -2417,14 +2916,34 @@ func (m *InsulinDosesVw) SetDoseType(v *string) {
 	m.DoseType = v
 }
 
-// GetOtherAttributes returns the OtherAttributes value.
-func (m InsulinDosesVw) GetOtherAttributes() types.InsulinDoseOther {
-	return m.OtherAttributes
+// GetSplitNow returns the SplitNow value.
+func (m InsulinDosesVw) GetSplitNow() *float64 {
+	return m.SplitNow
 }
 
-// SetOtherAttributes sets the OtherAttributes value and returns the updated InsulinDosesVw.
-func (m *InsulinDosesVw) SetOtherAttributes(v types.InsulinDoseOther) {
-	m.OtherAttributes = v
+// SetSplitNow sets the SplitNow value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetSplitNow(v *float64) {
+	m.SplitNow = v
+}
+
+// GetSplitExt returns the SplitExt value.
+func (m InsulinDosesVw) GetSplitExt() *float64 {
+	return m.SplitExt
+}
+
+// SetSplitExt sets the SplitExt value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetSplitExt(v *float64) {
+	m.SplitExt = v
+}
+
+// GetAutomatic returns the Automatic value.
+func (m InsulinDosesVw) GetAutomatic() *bool {
+	return m.Automatic
+}
+
+// SetAutomatic sets the Automatic value and returns the updated InsulinDosesVw.
+func (m *InsulinDosesVw) SetAutomatic(v *bool) {
+	m.Automatic = v
 }
 
 // GetNotes returns the Notes value.
@@ -3307,14 +3826,64 @@ func (m *ProfileSwitch) SetTimeshift(v *int64) {
 	m.Timeshift = v
 }
 
-// GetOtherAttributes returns the OtherAttributes value.
-func (m ProfileSwitch) GetOtherAttributes() types.ProfileSwitchOther {
-	return m.OtherAttributes
+// GetOriginalProfileName returns the OriginalProfileName value.
+func (m ProfileSwitch) GetOriginalProfileName() *string {
+	return m.OriginalProfileName
 }
 
-// SetOtherAttributes sets the OtherAttributes value and returns the updated ProfileSwitch.
-func (m *ProfileSwitch) SetOtherAttributes(v types.ProfileSwitchOther) {
-	m.OtherAttributes = v
+// SetOriginalProfileName sets the OriginalProfileName value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetOriginalProfileName(v *string) {
+	m.OriginalProfileName = v
+}
+
+// GetOriginalCustomizedName returns the OriginalCustomizedName value.
+func (m ProfileSwitch) GetOriginalCustomizedName() *string {
+	return m.OriginalCustomizedName
+}
+
+// SetOriginalCustomizedName sets the OriginalCustomizedName value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetOriginalCustomizedName(v *string) {
+	m.OriginalCustomizedName = v
+}
+
+// GetOriginalTimeshiftMs returns the OriginalTimeshiftMs value.
+func (m ProfileSwitch) GetOriginalTimeshiftMs() *int64 {
+	return m.OriginalTimeshiftMs
+}
+
+// SetOriginalTimeshiftMs sets the OriginalTimeshiftMs value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetOriginalTimeshiftMs(v *int64) {
+	m.OriginalTimeshiftMs = v
+}
+
+// GetOriginalPercentage returns the OriginalPercentage value.
+func (m ProfileSwitch) GetOriginalPercentage() *int64 {
+	return m.OriginalPercentage
+}
+
+// SetOriginalPercentage sets the OriginalPercentage value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetOriginalPercentage(v *int64) {
+	m.OriginalPercentage = v
+}
+
+// GetOriginalDurationMs returns the OriginalDurationMs value.
+func (m ProfileSwitch) GetOriginalDurationMs() *int64 {
+	return m.OriginalDurationMs
+}
+
+// SetOriginalDurationMs sets the OriginalDurationMs value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetOriginalDurationMs(v *int64) {
+	m.OriginalDurationMs = v
+}
+
+// GetOriginalEnd returns the OriginalEnd value.
+func (m ProfileSwitch) GetOriginalEnd() *int64 {
+	return m.OriginalEnd
+}
+
+// SetOriginalEnd sets the OriginalEnd value and returns the updated ProfileSwitch.
+func (m *ProfileSwitch) SetOriginalEnd(v *int64) {
+	m.OriginalEnd = v
 }
 
 // GetDia returns the Dia value.
@@ -3597,14 +4166,64 @@ func (m *ProfileSwitchesVw) SetTimeshift(v *int64) {
 	m.Timeshift = v
 }
 
-// GetOtherAttributes returns the OtherAttributes value.
-func (m ProfileSwitchesVw) GetOtherAttributes() types.ProfileSwitchOther {
-	return m.OtherAttributes
+// GetOriginalProfileName returns the OriginalProfileName value.
+func (m ProfileSwitchesVw) GetOriginalProfileName() *string {
+	return m.OriginalProfileName
 }
 
-// SetOtherAttributes sets the OtherAttributes value and returns the updated ProfileSwitchesVw.
-func (m *ProfileSwitchesVw) SetOtherAttributes(v types.ProfileSwitchOther) {
-	m.OtherAttributes = v
+// SetOriginalProfileName sets the OriginalProfileName value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetOriginalProfileName(v *string) {
+	m.OriginalProfileName = v
+}
+
+// GetOriginalCustomizedName returns the OriginalCustomizedName value.
+func (m ProfileSwitchesVw) GetOriginalCustomizedName() *string {
+	return m.OriginalCustomizedName
+}
+
+// SetOriginalCustomizedName sets the OriginalCustomizedName value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetOriginalCustomizedName(v *string) {
+	m.OriginalCustomizedName = v
+}
+
+// GetOriginalTimeshiftMs returns the OriginalTimeshiftMs value.
+func (m ProfileSwitchesVw) GetOriginalTimeshiftMs() *int64 {
+	return m.OriginalTimeshiftMs
+}
+
+// SetOriginalTimeshiftMs sets the OriginalTimeshiftMs value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetOriginalTimeshiftMs(v *int64) {
+	m.OriginalTimeshiftMs = v
+}
+
+// GetOriginalPercentage returns the OriginalPercentage value.
+func (m ProfileSwitchesVw) GetOriginalPercentage() *int64 {
+	return m.OriginalPercentage
+}
+
+// SetOriginalPercentage sets the OriginalPercentage value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetOriginalPercentage(v *int64) {
+	m.OriginalPercentage = v
+}
+
+// GetOriginalDurationMs returns the OriginalDurationMs value.
+func (m ProfileSwitchesVw) GetOriginalDurationMs() *int64 {
+	return m.OriginalDurationMs
+}
+
+// SetOriginalDurationMs sets the OriginalDurationMs value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetOriginalDurationMs(v *int64) {
+	m.OriginalDurationMs = v
+}
+
+// GetOriginalEnd returns the OriginalEnd value.
+func (m ProfileSwitchesVw) GetOriginalEnd() *int64 {
+	return m.OriginalEnd
+}
+
+// SetOriginalEnd sets the OriginalEnd value and returns the updated ProfileSwitchesVw.
+func (m *ProfileSwitchesVw) SetOriginalEnd(v *int64) {
+	m.OriginalEnd = v
 }
 
 // GetDia returns the Dia value.
@@ -4967,16 +5586,6 @@ func (m *CreateDeviceReportParams) SetUploaderJson(v *string) {
 	m.UploaderJson = v
 }
 
-// GetOtherAttributes returns the OtherAttributes value.
-func (m CreateDeviceReportParams) GetOtherAttributes() types.DeviceReportOther {
-	return m.OtherAttributes
-}
-
-// SetOtherAttributes sets the OtherAttributes value and returns the updated CreateDeviceReportParams.
-func (m *CreateDeviceReportParams) SetOtherAttributes(v types.DeviceReportOther) {
-	m.OtherAttributes = v
-}
-
 // GetUtcOffsetMinutes returns the UtcOffsetMinutes value.
 func (m CreateDeviceReportParams) GetUtcOffsetMinutes() *int64 {
 	return m.UtcOffsetMinutes
@@ -5697,14 +6306,34 @@ func (m *CreateActivityParams) SetDurationMinutes(v *int64) {
 	m.DurationMinutes = v
 }
 
-// GetOtherAttributes returns the OtherAttributes value.
-func (m CreateActivityParams) GetOtherAttributes() types.ActivityOther {
-	return m.OtherAttributes
+// GetCalories returns the Calories value.
+func (m CreateActivityParams) GetCalories() *int64 {
+	return m.Calories
 }
 
-// SetOtherAttributes sets the OtherAttributes value and returns the updated CreateActivityParams.
-func (m *CreateActivityParams) SetOtherAttributes(v types.ActivityOther) {
-	m.OtherAttributes = v
+// SetCalories sets the Calories value and returns the updated CreateActivityParams.
+func (m *CreateActivityParams) SetCalories(v *int64) {
+	m.Calories = v
+}
+
+// GetSteps returns the Steps value.
+func (m CreateActivityParams) GetSteps() *int64 {
+	return m.Steps
+}
+
+// SetSteps sets the Steps value and returns the updated CreateActivityParams.
+func (m *CreateActivityParams) SetSteps(v *int64) {
+	m.Steps = v
+}
+
+// GetHeartRate returns the HeartRate value.
+func (m CreateActivityParams) GetHeartRate() *int64 {
+	return m.HeartRate
+}
+
+// SetHeartRate sets the HeartRate value and returns the updated CreateActivityParams.
+func (m *CreateActivityParams) SetHeartRate(v *int64) {
+	m.HeartRate = v
 }
 
 // GetNotes returns the Notes value.
@@ -6197,14 +6826,34 @@ func (m *UpdateActivityParams) SetDurationMinutes(v *int64) {
 	m.DurationMinutes = v
 }
 
-// GetOtherAttributes returns the OtherAttributes value.
-func (m UpdateActivityParams) GetOtherAttributes() *string {
-	return m.OtherAttributes
+// GetCalories returns the Calories value.
+func (m UpdateActivityParams) GetCalories() *int64 {
+	return m.Calories
 }
 
-// SetOtherAttributes sets the OtherAttributes value and returns the updated UpdateActivityParams.
-func (m *UpdateActivityParams) SetOtherAttributes(v *string) {
-	m.OtherAttributes = v
+// SetCalories sets the Calories value and returns the updated UpdateActivityParams.
+func (m *UpdateActivityParams) SetCalories(v *int64) {
+	m.Calories = v
+}
+
+// GetSteps returns the Steps value.
+func (m UpdateActivityParams) GetSteps() *int64 {
+	return m.Steps
+}
+
+// SetSteps sets the Steps value and returns the updated UpdateActivityParams.
+func (m *UpdateActivityParams) SetSteps(v *int64) {
+	m.Steps = v
+}
+
+// GetHeartRate returns the HeartRate value.
+func (m UpdateActivityParams) GetHeartRate() *int64 {
+	return m.HeartRate
+}
+
+// SetHeartRate sets the HeartRate value and returns the updated UpdateActivityParams.
+func (m *UpdateActivityParams) SetHeartRate(v *int64) {
+	m.HeartRate = v
 }
 
 // GetNotes returns the Notes value.
@@ -6307,14 +6956,54 @@ func (m *CreateComponentEventParams) SetEventType(v string) {
 	m.EventType = v
 }
 
-// GetOtherAttributes returns the OtherAttributes value.
-func (m CreateComponentEventParams) GetOtherAttributes() types.ComponentEventOther {
-	return m.OtherAttributes
+// GetSensorCode returns the SensorCode value.
+func (m CreateComponentEventParams) GetSensorCode() *string {
+	return m.SensorCode
 }
 
-// SetOtherAttributes sets the OtherAttributes value and returns the updated CreateComponentEventParams.
-func (m *CreateComponentEventParams) SetOtherAttributes(v types.ComponentEventOther) {
-	m.OtherAttributes = v
+// SetSensorCode sets the SensorCode value and returns the updated CreateComponentEventParams.
+func (m *CreateComponentEventParams) SetSensorCode(v *string) {
+	m.SensorCode = v
+}
+
+// GetTransmitterID returns the TransmitterID value.
+func (m CreateComponentEventParams) GetTransmitterID() *string {
+	return m.TransmitterID
+}
+
+// SetTransmitterID sets the TransmitterID value and returns the updated CreateComponentEventParams.
+func (m *CreateComponentEventParams) SetTransmitterID(v *string) {
+	m.TransmitterID = v
+}
+
+// GetPumpID returns the PumpID value.
+func (m CreateComponentEventParams) GetPumpID() *string {
+	return m.PumpID
+}
+
+// SetPumpID sets the PumpID value and returns the updated CreateComponentEventParams.
+func (m *CreateComponentEventParams) SetPumpID(v *string) {
+	m.PumpID = v
+}
+
+// GetPumpSerial returns the PumpSerial value.
+func (m CreateComponentEventParams) GetPumpSerial() *string {
+	return m.PumpSerial
+}
+
+// SetPumpSerial sets the PumpSerial value and returns the updated CreateComponentEventParams.
+func (m *CreateComponentEventParams) SetPumpSerial(v *string) {
+	m.PumpSerial = v
+}
+
+// GetPumpType returns the PumpType value.
+func (m CreateComponentEventParams) GetPumpType() *string {
+	return m.PumpType
+}
+
+// SetPumpType sets the PumpType value and returns the updated CreateComponentEventParams.
+func (m *CreateComponentEventParams) SetPumpType(v *string) {
+	m.PumpType = v
 }
 
 // GetNotes returns the Notes value.
@@ -6707,14 +7396,54 @@ func (m *UpdateComponentEventParams) SetEventType(v *string) {
 	m.EventType = v
 }
 
-// GetOtherAttributes returns the OtherAttributes value.
-func (m UpdateComponentEventParams) GetOtherAttributes() *string {
-	return m.OtherAttributes
+// GetSensorCode returns the SensorCode value.
+func (m UpdateComponentEventParams) GetSensorCode() *string {
+	return m.SensorCode
 }
 
-// SetOtherAttributes sets the OtherAttributes value and returns the updated UpdateComponentEventParams.
-func (m *UpdateComponentEventParams) SetOtherAttributes(v *string) {
-	m.OtherAttributes = v
+// SetSensorCode sets the SensorCode value and returns the updated UpdateComponentEventParams.
+func (m *UpdateComponentEventParams) SetSensorCode(v *string) {
+	m.SensorCode = v
+}
+
+// GetTransmitterID returns the TransmitterID value.
+func (m UpdateComponentEventParams) GetTransmitterID() *string {
+	return m.TransmitterID
+}
+
+// SetTransmitterID sets the TransmitterID value and returns the updated UpdateComponentEventParams.
+func (m *UpdateComponentEventParams) SetTransmitterID(v *string) {
+	m.TransmitterID = v
+}
+
+// GetPumpID returns the PumpID value.
+func (m UpdateComponentEventParams) GetPumpID() *string {
+	return m.PumpID
+}
+
+// SetPumpID sets the PumpID value and returns the updated UpdateComponentEventParams.
+func (m *UpdateComponentEventParams) SetPumpID(v *string) {
+	m.PumpID = v
+}
+
+// GetPumpSerial returns the PumpSerial value.
+func (m UpdateComponentEventParams) GetPumpSerial() *string {
+	return m.PumpSerial
+}
+
+// SetPumpSerial sets the PumpSerial value and returns the updated UpdateComponentEventParams.
+func (m *UpdateComponentEventParams) SetPumpSerial(v *string) {
+	m.PumpSerial = v
+}
+
+// GetPumpType returns the PumpType value.
+func (m UpdateComponentEventParams) GetPumpType() *string {
+	return m.PumpType
+}
+
+// SetPumpType sets the PumpType value and returns the updated UpdateComponentEventParams.
+func (m *UpdateComponentEventParams) SetPumpType(v *string) {
+	m.PumpType = v
 }
 
 // GetNotes returns the Notes value.
@@ -6847,14 +7576,84 @@ func (m *CreateFoodIntakeParams) SetCarbs(v *float64) {
 	m.Carbs = v
 }
 
-// GetOtherAttributes returns the OtherAttributes value.
-func (m CreateFoodIntakeParams) GetOtherAttributes() types.FoodIntakeOther {
-	return m.OtherAttributes
+// GetCategory returns the Category value.
+func (m CreateFoodIntakeParams) GetCategory() *string {
+	return m.Category
 }
 
-// SetOtherAttributes sets the OtherAttributes value and returns the updated CreateFoodIntakeParams.
-func (m *CreateFoodIntakeParams) SetOtherAttributes(v types.FoodIntakeOther) {
-	m.OtherAttributes = v
+// SetCategory sets the Category value and returns the updated CreateFoodIntakeParams.
+func (m *CreateFoodIntakeParams) SetCategory(v *string) {
+	m.Category = v
+}
+
+// GetSubcategory returns the Subcategory value.
+func (m CreateFoodIntakeParams) GetSubcategory() *string {
+	return m.Subcategory
+}
+
+// SetSubcategory sets the Subcategory value and returns the updated CreateFoodIntakeParams.
+func (m *CreateFoodIntakeParams) SetSubcategory(v *string) {
+	m.Subcategory = v
+}
+
+// GetFat returns the Fat value.
+func (m CreateFoodIntakeParams) GetFat() *float64 {
+	return m.Fat
+}
+
+// SetFat sets the Fat value and returns the updated CreateFoodIntakeParams.
+func (m *CreateFoodIntakeParams) SetFat(v *float64) {
+	m.Fat = v
+}
+
+// GetProtein returns the Protein value.
+func (m CreateFoodIntakeParams) GetProtein() *float64 {
+	return m.Protein
+}
+
+// SetProtein sets the Protein value and returns the updated CreateFoodIntakeParams.
+func (m *CreateFoodIntakeParams) SetProtein(v *float64) {
+	m.Protein = v
+}
+
+// GetFibre returns the Fibre value.
+func (m CreateFoodIntakeParams) GetFibre() *float64 {
+	return m.Fibre
+}
+
+// SetFibre sets the Fibre value and returns the updated CreateFoodIntakeParams.
+func (m *CreateFoodIntakeParams) SetFibre(v *float64) {
+	m.Fibre = v
+}
+
+// GetEnergy returns the Energy value.
+func (m CreateFoodIntakeParams) GetEnergy() *float64 {
+	return m.Energy
+}
+
+// SetEnergy sets the Energy value and returns the updated CreateFoodIntakeParams.
+func (m *CreateFoodIntakeParams) SetEnergy(v *float64) {
+	m.Energy = v
+}
+
+// GetPortions returns the Portions value.
+func (m CreateFoodIntakeParams) GetPortions() *float64 {
+	return m.Portions
+}
+
+// SetPortions sets the Portions value and returns the updated CreateFoodIntakeParams.
+func (m *CreateFoodIntakeParams) SetPortions(v *float64) {
+	m.Portions = v
+}
+
+// GetPreBolus returns the PreBolus value.
+func (m CreateFoodIntakeParams) GetPreBolus() *float64 {
+	return m.PreBolus
+}
+
+// SetPreBolus sets the PreBolus value and returns the updated CreateFoodIntakeParams.
+func (m *CreateFoodIntakeParams) SetPreBolus(v *float64) {
+	m.PreBolus = v
 }
 
 // GetNotes returns the Notes value.
@@ -7357,14 +8156,84 @@ func (m *UpdateFoodIntakeParams) SetAbsorptionTimeMinutes(v *int64) {
 	m.AbsorptionTimeMinutes = v
 }
 
-// GetOtherAttributes returns the OtherAttributes value.
-func (m UpdateFoodIntakeParams) GetOtherAttributes() *string {
-	return m.OtherAttributes
+// GetCategory returns the Category value.
+func (m UpdateFoodIntakeParams) GetCategory() *string {
+	return m.Category
 }
 
-// SetOtherAttributes sets the OtherAttributes value and returns the updated UpdateFoodIntakeParams.
-func (m *UpdateFoodIntakeParams) SetOtherAttributes(v *string) {
-	m.OtherAttributes = v
+// SetCategory sets the Category value and returns the updated UpdateFoodIntakeParams.
+func (m *UpdateFoodIntakeParams) SetCategory(v *string) {
+	m.Category = v
+}
+
+// GetSubcategory returns the Subcategory value.
+func (m UpdateFoodIntakeParams) GetSubcategory() *string {
+	return m.Subcategory
+}
+
+// SetSubcategory sets the Subcategory value and returns the updated UpdateFoodIntakeParams.
+func (m *UpdateFoodIntakeParams) SetSubcategory(v *string) {
+	m.Subcategory = v
+}
+
+// GetFat returns the Fat value.
+func (m UpdateFoodIntakeParams) GetFat() *float64 {
+	return m.Fat
+}
+
+// SetFat sets the Fat value and returns the updated UpdateFoodIntakeParams.
+func (m *UpdateFoodIntakeParams) SetFat(v *float64) {
+	m.Fat = v
+}
+
+// GetProtein returns the Protein value.
+func (m UpdateFoodIntakeParams) GetProtein() *float64 {
+	return m.Protein
+}
+
+// SetProtein sets the Protein value and returns the updated UpdateFoodIntakeParams.
+func (m *UpdateFoodIntakeParams) SetProtein(v *float64) {
+	m.Protein = v
+}
+
+// GetFibre returns the Fibre value.
+func (m UpdateFoodIntakeParams) GetFibre() *float64 {
+	return m.Fibre
+}
+
+// SetFibre sets the Fibre value and returns the updated UpdateFoodIntakeParams.
+func (m *UpdateFoodIntakeParams) SetFibre(v *float64) {
+	m.Fibre = v
+}
+
+// GetEnergy returns the Energy value.
+func (m UpdateFoodIntakeParams) GetEnergy() *float64 {
+	return m.Energy
+}
+
+// SetEnergy sets the Energy value and returns the updated UpdateFoodIntakeParams.
+func (m *UpdateFoodIntakeParams) SetEnergy(v *float64) {
+	m.Energy = v
+}
+
+// GetPortions returns the Portions value.
+func (m UpdateFoodIntakeParams) GetPortions() *float64 {
+	return m.Portions
+}
+
+// SetPortions sets the Portions value and returns the updated UpdateFoodIntakeParams.
+func (m *UpdateFoodIntakeParams) SetPortions(v *float64) {
+	m.Portions = v
+}
+
+// GetPreBolus returns the PreBolus value.
+func (m UpdateFoodIntakeParams) GetPreBolus() *float64 {
+	return m.PreBolus
+}
+
+// SetPreBolus sets the PreBolus value and returns the updated UpdateFoodIntakeParams.
+func (m *UpdateFoodIntakeParams) SetPreBolus(v *float64) {
+	m.PreBolus = v
 }
 
 // GetNotes returns the Notes value.
@@ -7537,14 +8406,64 @@ func (m *CreateGlucoseReadingParams) SetDirection(v *string) {
 	m.Direction = v
 }
 
-// GetOtherAttributes returns the OtherAttributes value.
-func (m CreateGlucoseReadingParams) GetOtherAttributes() types.GlucoseReadingOther {
-	return m.OtherAttributes
+// GetNoise returns the Noise value.
+func (m CreateGlucoseReadingParams) GetNoise() *float64 {
+	return m.Noise
 }
 
-// SetOtherAttributes sets the OtherAttributes value and returns the updated CreateGlucoseReadingParams.
-func (m *CreateGlucoseReadingParams) SetOtherAttributes(v types.GlucoseReadingOther) {
-	m.OtherAttributes = v
+// SetNoise sets the Noise value and returns the updated CreateGlucoseReadingParams.
+func (m *CreateGlucoseReadingParams) SetNoise(v *float64) {
+	m.Noise = v
+}
+
+// GetFiltered returns the Filtered value.
+func (m CreateGlucoseReadingParams) GetFiltered() *float64 {
+	return m.Filtered
+}
+
+// SetFiltered sets the Filtered value and returns the updated CreateGlucoseReadingParams.
+func (m *CreateGlucoseReadingParams) SetFiltered(v *float64) {
+	m.Filtered = v
+}
+
+// GetUnfiltered returns the Unfiltered value.
+func (m CreateGlucoseReadingParams) GetUnfiltered() *float64 {
+	return m.Unfiltered
+}
+
+// SetUnfiltered sets the Unfiltered value and returns the updated CreateGlucoseReadingParams.
+func (m *CreateGlucoseReadingParams) SetUnfiltered(v *float64) {
+	m.Unfiltered = v
+}
+
+// GetRssi returns the Rssi value.
+func (m CreateGlucoseReadingParams) GetRssi() *float64 {
+	return m.Rssi
+}
+
+// SetRssi sets the Rssi value and returns the updated CreateGlucoseReadingParams.
+func (m *CreateGlucoseReadingParams) SetRssi(v *float64) {
+	m.Rssi = v
+}
+
+// GetIsCalibration returns the IsCalibration value.
+func (m CreateGlucoseReadingParams) GetIsCalibration() *bool {
+	return m.IsCalibration
+}
+
+// SetIsCalibration sets the IsCalibration value and returns the updated CreateGlucoseReadingParams.
+func (m *CreateGlucoseReadingParams) SetIsCalibration(v *bool) {
+	m.IsCalibration = v
+}
+
+// GetSensorMgdlAtPairing returns the SensorMgdlAtPairing value.
+func (m CreateGlucoseReadingParams) GetSensorMgdlAtPairing() *float64 {
+	return m.SensorMgdlAtPairing
+}
+
+// SetSensorMgdlAtPairing sets the SensorMgdlAtPairing value and returns the updated CreateGlucoseReadingParams.
+func (m *CreateGlucoseReadingParams) SetSensorMgdlAtPairing(v *float64) {
+	m.SensorMgdlAtPairing = v
 }
 
 // GetNotes returns the Notes value.
@@ -8137,14 +9056,64 @@ func (m *UpdateGlucoseReadingParams) SetDirection(v *string) {
 	m.Direction = v
 }
 
-// GetOtherAttributes returns the OtherAttributes value.
-func (m UpdateGlucoseReadingParams) GetOtherAttributes() *string {
-	return m.OtherAttributes
+// GetNoise returns the Noise value.
+func (m UpdateGlucoseReadingParams) GetNoise() *float64 {
+	return m.Noise
 }
 
-// SetOtherAttributes sets the OtherAttributes value and returns the updated UpdateGlucoseReadingParams.
-func (m *UpdateGlucoseReadingParams) SetOtherAttributes(v *string) {
-	m.OtherAttributes = v
+// SetNoise sets the Noise value and returns the updated UpdateGlucoseReadingParams.
+func (m *UpdateGlucoseReadingParams) SetNoise(v *float64) {
+	m.Noise = v
+}
+
+// GetFiltered returns the Filtered value.
+func (m UpdateGlucoseReadingParams) GetFiltered() *float64 {
+	return m.Filtered
+}
+
+// SetFiltered sets the Filtered value and returns the updated UpdateGlucoseReadingParams.
+func (m *UpdateGlucoseReadingParams) SetFiltered(v *float64) {
+	m.Filtered = v
+}
+
+// GetUnfiltered returns the Unfiltered value.
+func (m UpdateGlucoseReadingParams) GetUnfiltered() *float64 {
+	return m.Unfiltered
+}
+
+// SetUnfiltered sets the Unfiltered value and returns the updated UpdateGlucoseReadingParams.
+func (m *UpdateGlucoseReadingParams) SetUnfiltered(v *float64) {
+	m.Unfiltered = v
+}
+
+// GetRssi returns the Rssi value.
+func (m UpdateGlucoseReadingParams) GetRssi() *float64 {
+	return m.Rssi
+}
+
+// SetRssi sets the Rssi value and returns the updated UpdateGlucoseReadingParams.
+func (m *UpdateGlucoseReadingParams) SetRssi(v *float64) {
+	m.Rssi = v
+}
+
+// GetIsCalibration returns the IsCalibration value.
+func (m UpdateGlucoseReadingParams) GetIsCalibration() *bool {
+	return m.IsCalibration
+}
+
+// SetIsCalibration sets the IsCalibration value and returns the updated UpdateGlucoseReadingParams.
+func (m *UpdateGlucoseReadingParams) SetIsCalibration(v *bool) {
+	m.IsCalibration = v
+}
+
+// GetSensorMgdlAtPairing returns the SensorMgdlAtPairing value.
+func (m UpdateGlucoseReadingParams) GetSensorMgdlAtPairing() *float64 {
+	return m.SensorMgdlAtPairing
+}
+
+// SetSensorMgdlAtPairing sets the SensorMgdlAtPairing value and returns the updated UpdateGlucoseReadingParams.
+func (m *UpdateGlucoseReadingParams) SetSensorMgdlAtPairing(v *float64) {
+	m.SensorMgdlAtPairing = v
 }
 
 // GetNotes returns the Notes value.
@@ -8377,14 +9346,74 @@ func (m *CreateEventGroupParams) SetEnteredBy(v *string) {
 	m.EnteredBy = v
 }
 
-// GetOtherAttributes returns the OtherAttributes value.
-func (m CreateEventGroupParams) GetOtherAttributes() types.EventGroupOther {
-	return m.OtherAttributes
+// GetUuid returns the Uuid value.
+func (m CreateEventGroupParams) GetUuid() *string {
+	return m.Uuid
 }
 
-// SetOtherAttributes sets the OtherAttributes value and returns the updated CreateEventGroupParams.
-func (m *CreateEventGroupParams) SetOtherAttributes(v types.EventGroupOther) {
-	m.OtherAttributes = v
+// SetUuid sets the Uuid value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetUuid(v *string) {
+	m.Uuid = v
+}
+
+// GetMode returns the Mode value.
+func (m CreateEventGroupParams) GetMode() *string {
+	return m.Mode
+}
+
+// SetMode sets the Mode value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetMode(v *string) {
+	m.Mode = v
+}
+
+// GetAutoForced returns the AutoForced value.
+func (m CreateEventGroupParams) GetAutoForced() *bool {
+	return m.AutoForced
+}
+
+// SetAutoForced sets the AutoForced value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetAutoForced(v *bool) {
+	m.AutoForced = v
+}
+
+// GetReasons returns the Reasons value.
+func (m CreateEventGroupParams) GetReasons() *string {
+	return m.Reasons
+}
+
+// SetReasons sets the Reasons value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetReasons(v *string) {
+	m.Reasons = v
+}
+
+// GetOriginalDurationMs returns the OriginalDurationMs value.
+func (m CreateEventGroupParams) GetOriginalDurationMs() *int64 {
+	return m.OriginalDurationMs
+}
+
+// SetOriginalDurationMs sets the OriginalDurationMs value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetOriginalDurationMs(v *int64) {
+	m.OriginalDurationMs = v
+}
+
+// GetDurationType returns the DurationType value.
+func (m CreateEventGroupParams) GetDurationType() *string {
+	return m.DurationType
+}
+
+// SetDurationType sets the DurationType value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetDurationType(v *string) {
+	m.DurationType = v
+}
+
+// GetSentHash returns the SentHash value.
+func (m CreateEventGroupParams) GetSentHash() *string {
+	return m.SentHash
+}
+
+// SetSentHash sets the SentHash value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetSentHash(v *string) {
+	m.SentHash = v
 }
 
 // GetOccurredAt returns the OccurredAt value.
@@ -9477,14 +10506,74 @@ func (m *UpdateEventGroupParams) SetEnteredBy(v *string) {
 	m.EnteredBy = v
 }
 
-// GetOtherAttributes returns the OtherAttributes value.
-func (m UpdateEventGroupParams) GetOtherAttributes() *string {
-	return m.OtherAttributes
+// GetUuid returns the Uuid value.
+func (m UpdateEventGroupParams) GetUuid() *string {
+	return m.Uuid
 }
 
-// SetOtherAttributes sets the OtherAttributes value and returns the updated UpdateEventGroupParams.
-func (m *UpdateEventGroupParams) SetOtherAttributes(v *string) {
-	m.OtherAttributes = v
+// SetUuid sets the Uuid value and returns the updated UpdateEventGroupParams.
+func (m *UpdateEventGroupParams) SetUuid(v *string) {
+	m.Uuid = v
+}
+
+// GetMode returns the Mode value.
+func (m UpdateEventGroupParams) GetMode() *string {
+	return m.Mode
+}
+
+// SetMode sets the Mode value and returns the updated UpdateEventGroupParams.
+func (m *UpdateEventGroupParams) SetMode(v *string) {
+	m.Mode = v
+}
+
+// GetAutoForced returns the AutoForced value.
+func (m UpdateEventGroupParams) GetAutoForced() *bool {
+	return m.AutoForced
+}
+
+// SetAutoForced sets the AutoForced value and returns the updated UpdateEventGroupParams.
+func (m *UpdateEventGroupParams) SetAutoForced(v *bool) {
+	m.AutoForced = v
+}
+
+// GetReasons returns the Reasons value.
+func (m UpdateEventGroupParams) GetReasons() *string {
+	return m.Reasons
+}
+
+// SetReasons sets the Reasons value and returns the updated UpdateEventGroupParams.
+func (m *UpdateEventGroupParams) SetReasons(v *string) {
+	m.Reasons = v
+}
+
+// GetOriginalDurationMs returns the OriginalDurationMs value.
+func (m UpdateEventGroupParams) GetOriginalDurationMs() *int64 {
+	return m.OriginalDurationMs
+}
+
+// SetOriginalDurationMs sets the OriginalDurationMs value and returns the updated UpdateEventGroupParams.
+func (m *UpdateEventGroupParams) SetOriginalDurationMs(v *int64) {
+	m.OriginalDurationMs = v
+}
+
+// GetDurationType returns the DurationType value.
+func (m UpdateEventGroupParams) GetDurationType() *string {
+	return m.DurationType
+}
+
+// SetDurationType sets the DurationType value and returns the updated UpdateEventGroupParams.
+func (m *UpdateEventGroupParams) SetDurationType(v *string) {
+	m.DurationType = v
+}
+
+// GetSentHash returns the SentHash value.
+func (m UpdateEventGroupParams) GetSentHash() *string {
+	return m.SentHash
+}
+
+// SetSentHash sets the SentHash value and returns the updated UpdateEventGroupParams.
+func (m *UpdateEventGroupParams) SetSentHash(v *string) {
+	m.SentHash = v
 }
 
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
@@ -9577,14 +10666,34 @@ func (m *CreateInsulinDoseParams) SetDoseType(v *string) {
 	m.DoseType = v
 }
 
-// GetOtherAttributes returns the OtherAttributes value.
-func (m CreateInsulinDoseParams) GetOtherAttributes() types.InsulinDoseOther {
-	return m.OtherAttributes
+// GetSplitNow returns the SplitNow value.
+func (m CreateInsulinDoseParams) GetSplitNow() *float64 {
+	return m.SplitNow
 }
 
-// SetOtherAttributes sets the OtherAttributes value and returns the updated CreateInsulinDoseParams.
-func (m *CreateInsulinDoseParams) SetOtherAttributes(v types.InsulinDoseOther) {
-	m.OtherAttributes = v
+// SetSplitNow sets the SplitNow value and returns the updated CreateInsulinDoseParams.
+func (m *CreateInsulinDoseParams) SetSplitNow(v *float64) {
+	m.SplitNow = v
+}
+
+// GetSplitExt returns the SplitExt value.
+func (m CreateInsulinDoseParams) GetSplitExt() *float64 {
+	return m.SplitExt
+}
+
+// SetSplitExt sets the SplitExt value and returns the updated CreateInsulinDoseParams.
+func (m *CreateInsulinDoseParams) SetSplitExt(v *float64) {
+	m.SplitExt = v
+}
+
+// GetAutomatic returns the Automatic value.
+func (m CreateInsulinDoseParams) GetAutomatic() *bool {
+	return m.Automatic
+}
+
+// SetAutomatic sets the Automatic value and returns the updated CreateInsulinDoseParams.
+func (m *CreateInsulinDoseParams) SetAutomatic(v *bool) {
+	m.Automatic = v
 }
 
 // GetNotes returns the Notes value.
@@ -10027,14 +11136,34 @@ func (m *UpdateInsulinDoseParams) SetDose(v *float64) {
 	m.Dose = v
 }
 
-// GetOtherAttributes returns the OtherAttributes value.
-func (m UpdateInsulinDoseParams) GetOtherAttributes() *string {
-	return m.OtherAttributes
+// GetSplitNow returns the SplitNow value.
+func (m UpdateInsulinDoseParams) GetSplitNow() *float64 {
+	return m.SplitNow
 }
 
-// SetOtherAttributes sets the OtherAttributes value and returns the updated UpdateInsulinDoseParams.
-func (m *UpdateInsulinDoseParams) SetOtherAttributes(v *string) {
-	m.OtherAttributes = v
+// SetSplitNow sets the SplitNow value and returns the updated UpdateInsulinDoseParams.
+func (m *UpdateInsulinDoseParams) SetSplitNow(v *float64) {
+	m.SplitNow = v
+}
+
+// GetSplitExt returns the SplitExt value.
+func (m UpdateInsulinDoseParams) GetSplitExt() *float64 {
+	return m.SplitExt
+}
+
+// SetSplitExt sets the SplitExt value and returns the updated UpdateInsulinDoseParams.
+func (m *UpdateInsulinDoseParams) SetSplitExt(v *float64) {
+	m.SplitExt = v
+}
+
+// GetAutomatic returns the Automatic value.
+func (m UpdateInsulinDoseParams) GetAutomatic() *bool {
+	return m.Automatic
+}
+
+// SetAutomatic sets the Automatic value and returns the updated UpdateInsulinDoseParams.
+func (m *UpdateInsulinDoseParams) SetAutomatic(v *bool) {
+	m.Automatic = v
 }
 
 // GetNotes returns the Notes value.
@@ -10727,14 +11856,64 @@ func (m *CreateProfileSwitchParams) SetTimeshift(v *int64) {
 	m.Timeshift = v
 }
 
-// GetOtherAttributes returns the OtherAttributes value.
-func (m CreateProfileSwitchParams) GetOtherAttributes() types.ProfileSwitchOther {
-	return m.OtherAttributes
+// GetOriginalProfileName returns the OriginalProfileName value.
+func (m CreateProfileSwitchParams) GetOriginalProfileName() *string {
+	return m.OriginalProfileName
 }
 
-// SetOtherAttributes sets the OtherAttributes value and returns the updated CreateProfileSwitchParams.
-func (m *CreateProfileSwitchParams) SetOtherAttributes(v types.ProfileSwitchOther) {
-	m.OtherAttributes = v
+// SetOriginalProfileName sets the OriginalProfileName value and returns the updated CreateProfileSwitchParams.
+func (m *CreateProfileSwitchParams) SetOriginalProfileName(v *string) {
+	m.OriginalProfileName = v
+}
+
+// GetOriginalCustomizedName returns the OriginalCustomizedName value.
+func (m CreateProfileSwitchParams) GetOriginalCustomizedName() *string {
+	return m.OriginalCustomizedName
+}
+
+// SetOriginalCustomizedName sets the OriginalCustomizedName value and returns the updated CreateProfileSwitchParams.
+func (m *CreateProfileSwitchParams) SetOriginalCustomizedName(v *string) {
+	m.OriginalCustomizedName = v
+}
+
+// GetOriginalTimeshiftMs returns the OriginalTimeshiftMs value.
+func (m CreateProfileSwitchParams) GetOriginalTimeshiftMs() *int64 {
+	return m.OriginalTimeshiftMs
+}
+
+// SetOriginalTimeshiftMs sets the OriginalTimeshiftMs value and returns the updated CreateProfileSwitchParams.
+func (m *CreateProfileSwitchParams) SetOriginalTimeshiftMs(v *int64) {
+	m.OriginalTimeshiftMs = v
+}
+
+// GetOriginalPercentage returns the OriginalPercentage value.
+func (m CreateProfileSwitchParams) GetOriginalPercentage() *int64 {
+	return m.OriginalPercentage
+}
+
+// SetOriginalPercentage sets the OriginalPercentage value and returns the updated CreateProfileSwitchParams.
+func (m *CreateProfileSwitchParams) SetOriginalPercentage(v *int64) {
+	m.OriginalPercentage = v
+}
+
+// GetOriginalDurationMs returns the OriginalDurationMs value.
+func (m CreateProfileSwitchParams) GetOriginalDurationMs() *int64 {
+	return m.OriginalDurationMs
+}
+
+// SetOriginalDurationMs sets the OriginalDurationMs value and returns the updated CreateProfileSwitchParams.
+func (m *CreateProfileSwitchParams) SetOriginalDurationMs(v *int64) {
+	m.OriginalDurationMs = v
+}
+
+// GetOriginalEnd returns the OriginalEnd value.
+func (m CreateProfileSwitchParams) GetOriginalEnd() *int64 {
+	return m.OriginalEnd
+}
+
+// SetOriginalEnd sets the OriginalEnd value and returns the updated CreateProfileSwitchParams.
+func (m *CreateProfileSwitchParams) SetOriginalEnd(v *int64) {
+	m.OriginalEnd = v
 }
 
 // GetCarbRatiosJson returns the CarbRatiosJson value.
@@ -11257,14 +12436,64 @@ func (m *UpdateProfileSwitchParams) SetTimeshift(v *int64) {
 	m.Timeshift = v
 }
 
-// GetOtherAttributes returns the OtherAttributes value.
-func (m UpdateProfileSwitchParams) GetOtherAttributes() *string {
-	return m.OtherAttributes
+// GetOriginalProfileName returns the OriginalProfileName value.
+func (m UpdateProfileSwitchParams) GetOriginalProfileName() *string {
+	return m.OriginalProfileName
 }
 
-// SetOtherAttributes sets the OtherAttributes value and returns the updated UpdateProfileSwitchParams.
-func (m *UpdateProfileSwitchParams) SetOtherAttributes(v *string) {
-	m.OtherAttributes = v
+// SetOriginalProfileName sets the OriginalProfileName value and returns the updated UpdateProfileSwitchParams.
+func (m *UpdateProfileSwitchParams) SetOriginalProfileName(v *string) {
+	m.OriginalProfileName = v
+}
+
+// GetOriginalCustomizedName returns the OriginalCustomizedName value.
+func (m UpdateProfileSwitchParams) GetOriginalCustomizedName() *string {
+	return m.OriginalCustomizedName
+}
+
+// SetOriginalCustomizedName sets the OriginalCustomizedName value and returns the updated UpdateProfileSwitchParams.
+func (m *UpdateProfileSwitchParams) SetOriginalCustomizedName(v *string) {
+	m.OriginalCustomizedName = v
+}
+
+// GetOriginalTimeshiftMs returns the OriginalTimeshiftMs value.
+func (m UpdateProfileSwitchParams) GetOriginalTimeshiftMs() *int64 {
+	return m.OriginalTimeshiftMs
+}
+
+// SetOriginalTimeshiftMs sets the OriginalTimeshiftMs value and returns the updated UpdateProfileSwitchParams.
+func (m *UpdateProfileSwitchParams) SetOriginalTimeshiftMs(v *int64) {
+	m.OriginalTimeshiftMs = v
+}
+
+// GetOriginalPercentage returns the OriginalPercentage value.
+func (m UpdateProfileSwitchParams) GetOriginalPercentage() *int64 {
+	return m.OriginalPercentage
+}
+
+// SetOriginalPercentage sets the OriginalPercentage value and returns the updated UpdateProfileSwitchParams.
+func (m *UpdateProfileSwitchParams) SetOriginalPercentage(v *int64) {
+	m.OriginalPercentage = v
+}
+
+// GetOriginalDurationMs returns the OriginalDurationMs value.
+func (m UpdateProfileSwitchParams) GetOriginalDurationMs() *int64 {
+	return m.OriginalDurationMs
+}
+
+// SetOriginalDurationMs sets the OriginalDurationMs value and returns the updated UpdateProfileSwitchParams.
+func (m *UpdateProfileSwitchParams) SetOriginalDurationMs(v *int64) {
+	m.OriginalDurationMs = v
+}
+
+// GetOriginalEnd returns the OriginalEnd value.
+func (m UpdateProfileSwitchParams) GetOriginalEnd() *int64 {
+	return m.OriginalEnd
+}
+
+// SetOriginalEnd sets the OriginalEnd value and returns the updated UpdateProfileSwitchParams.
+func (m *UpdateProfileSwitchParams) SetOriginalEnd(v *int64) {
+	m.OriginalEnd = v
 }
 
 // GetNotes returns the Notes value.
@@ -12587,14 +13816,84 @@ func (m *CreateFoodPresetParams) SetCarbs(v *float64) {
 	m.Carbs = v
 }
 
-// GetOtherAttributes returns the OtherAttributes value.
-func (m CreateFoodPresetParams) GetOtherAttributes() types.FoodPresetOther {
-	return m.OtherAttributes
+// GetCategory returns the Category value.
+func (m CreateFoodPresetParams) GetCategory() *string {
+	return m.Category
 }
 
-// SetOtherAttributes sets the OtherAttributes value and returns the updated CreateFoodPresetParams.
-func (m *CreateFoodPresetParams) SetOtherAttributes(v types.FoodPresetOther) {
-	m.OtherAttributes = v
+// SetCategory sets the Category value and returns the updated CreateFoodPresetParams.
+func (m *CreateFoodPresetParams) SetCategory(v *string) {
+	m.Category = v
+}
+
+// GetSubcategory returns the Subcategory value.
+func (m CreateFoodPresetParams) GetSubcategory() *string {
+	return m.Subcategory
+}
+
+// SetSubcategory sets the Subcategory value and returns the updated CreateFoodPresetParams.
+func (m *CreateFoodPresetParams) SetSubcategory(v *string) {
+	m.Subcategory = v
+}
+
+// GetFat returns the Fat value.
+func (m CreateFoodPresetParams) GetFat() *float64 {
+	return m.Fat
+}
+
+// SetFat sets the Fat value and returns the updated CreateFoodPresetParams.
+func (m *CreateFoodPresetParams) SetFat(v *float64) {
+	m.Fat = v
+}
+
+// GetProtein returns the Protein value.
+func (m CreateFoodPresetParams) GetProtein() *float64 {
+	return m.Protein
+}
+
+// SetProtein sets the Protein value and returns the updated CreateFoodPresetParams.
+func (m *CreateFoodPresetParams) SetProtein(v *float64) {
+	m.Protein = v
+}
+
+// GetFibre returns the Fibre value.
+func (m CreateFoodPresetParams) GetFibre() *float64 {
+	return m.Fibre
+}
+
+// SetFibre sets the Fibre value and returns the updated CreateFoodPresetParams.
+func (m *CreateFoodPresetParams) SetFibre(v *float64) {
+	m.Fibre = v
+}
+
+// GetEnergy returns the Energy value.
+func (m CreateFoodPresetParams) GetEnergy() *float64 {
+	return m.Energy
+}
+
+// SetEnergy sets the Energy value and returns the updated CreateFoodPresetParams.
+func (m *CreateFoodPresetParams) SetEnergy(v *float64) {
+	m.Energy = v
+}
+
+// GetPortions returns the Portions value.
+func (m CreateFoodPresetParams) GetPortions() *float64 {
+	return m.Portions
+}
+
+// SetPortions sets the Portions value and returns the updated CreateFoodPresetParams.
+func (m *CreateFoodPresetParams) SetPortions(v *float64) {
+	m.Portions = v
+}
+
+// GetPreBolus returns the PreBolus value.
+func (m CreateFoodPresetParams) GetPreBolus() *float64 {
+	return m.PreBolus
+}
+
+// SetPreBolus sets the PreBolus value and returns the updated CreateFoodPresetParams.
+func (m *CreateFoodPresetParams) SetPreBolus(v *float64) {
+	m.PreBolus = v
 }
 
 // GetCreatedByAppName returns the CreatedByAppName value.
@@ -13087,14 +14386,84 @@ func (m *UpdateFoodPresetParams) SetCarbs(v *float64) {
 	m.Carbs = v
 }
 
-// GetOtherAttributes returns the OtherAttributes value.
-func (m UpdateFoodPresetParams) GetOtherAttributes() *string {
-	return m.OtherAttributes
+// GetCategory returns the Category value.
+func (m UpdateFoodPresetParams) GetCategory() *string {
+	return m.Category
 }
 
-// SetOtherAttributes sets the OtherAttributes value and returns the updated UpdateFoodPresetParams.
-func (m *UpdateFoodPresetParams) SetOtherAttributes(v *string) {
-	m.OtherAttributes = v
+// SetCategory sets the Category value and returns the updated UpdateFoodPresetParams.
+func (m *UpdateFoodPresetParams) SetCategory(v *string) {
+	m.Category = v
+}
+
+// GetSubcategory returns the Subcategory value.
+func (m UpdateFoodPresetParams) GetSubcategory() *string {
+	return m.Subcategory
+}
+
+// SetSubcategory sets the Subcategory value and returns the updated UpdateFoodPresetParams.
+func (m *UpdateFoodPresetParams) SetSubcategory(v *string) {
+	m.Subcategory = v
+}
+
+// GetFat returns the Fat value.
+func (m UpdateFoodPresetParams) GetFat() *float64 {
+	return m.Fat
+}
+
+// SetFat sets the Fat value and returns the updated UpdateFoodPresetParams.
+func (m *UpdateFoodPresetParams) SetFat(v *float64) {
+	m.Fat = v
+}
+
+// GetProtein returns the Protein value.
+func (m UpdateFoodPresetParams) GetProtein() *float64 {
+	return m.Protein
+}
+
+// SetProtein sets the Protein value and returns the updated UpdateFoodPresetParams.
+func (m *UpdateFoodPresetParams) SetProtein(v *float64) {
+	m.Protein = v
+}
+
+// GetFibre returns the Fibre value.
+func (m UpdateFoodPresetParams) GetFibre() *float64 {
+	return m.Fibre
+}
+
+// SetFibre sets the Fibre value and returns the updated UpdateFoodPresetParams.
+func (m *UpdateFoodPresetParams) SetFibre(v *float64) {
+	m.Fibre = v
+}
+
+// GetEnergy returns the Energy value.
+func (m UpdateFoodPresetParams) GetEnergy() *float64 {
+	return m.Energy
+}
+
+// SetEnergy sets the Energy value and returns the updated UpdateFoodPresetParams.
+func (m *UpdateFoodPresetParams) SetEnergy(v *float64) {
+	m.Energy = v
+}
+
+// GetPortions returns the Portions value.
+func (m UpdateFoodPresetParams) GetPortions() *float64 {
+	return m.Portions
+}
+
+// SetPortions sets the Portions value and returns the updated UpdateFoodPresetParams.
+func (m *UpdateFoodPresetParams) SetPortions(v *float64) {
+	m.Portions = v
+}
+
+// GetPreBolus returns the PreBolus value.
+func (m UpdateFoodPresetParams) GetPreBolus() *float64 {
+	return m.PreBolus
+}
+
+// SetPreBolus sets the PreBolus value and returns the updated UpdateFoodPresetParams.
+func (m *UpdateFoodPresetParams) SetPreBolus(v *float64) {
+	m.PreBolus = v
 }
 
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.

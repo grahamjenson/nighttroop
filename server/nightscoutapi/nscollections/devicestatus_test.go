@@ -9,7 +9,7 @@ import (
 	"nighttroop.t1d.nz/models/nightscoutmodels"
 )
 
-// loopColumns are the device report's columns and other attributes a loop's status sets: its name, the status as sent,
+// loopColumns are the device report's columns a loop's status sets: its name, the status as sent,
 // its IOB and COB
 type loopColumns struct {
 	Name, Status                     *string

@@ -254,7 +254,7 @@ func GetUptimeBattery(dr *sitedb.DeviceReport) UptimeBattery {
 func GetBucket(reading *sitedb.GlucoseReading) Bucket {
 	return Bucket{Last: reading.Mgdl, Mean: reading.Mgdl, Mills: reading.OccurredAt, SGVs: []SGV{{
 		ID: reading.ID, Mgdl: reading.Mgdl, Scaled: reading.Mgdl, Mills: reading.OccurredAt, Type: reading.ReadingType,
-		Device: reading.CreatedByDeviceName, Direction: reading.Direction, Noise: reading.OtherAttributes.Noise,
+		Device: reading.CreatedByDeviceName, Direction: reading.Direction, Noise: reading.Noise,
 	}}}
 }
 
