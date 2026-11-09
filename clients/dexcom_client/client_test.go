@@ -92,12 +92,12 @@ func TestFetchEGVsRefusesLargeBodies(t *testing.T) {
 func TestDecodeEGVsRefusesTooManyEGVs(t *testing.T) {
 	egv := `{"WT":"Date(1700000000000)","ST":"Date(1700000000000)","DT":"Date(1700000000000)","Value":100,"Trend":"Flat"}`
 	ok := "[" + strings.Repeat(egv+",", maxEGVs-1) + egv + "]"
-	egvs, err := decodeEGVs([]byte(ok))
+	egvs, err := decodeEGVs([]byte(ok), nil)
 	require.NoError(t, err)
 	require.Len(t, egvs, maxEGVs)
 
 	tooMany := "[" + strings.Repeat(egv+",", maxEGVs) + egv + "]"
-	egvs, err = decodeEGVs([]byte(tooMany))
+	egvs, err = decodeEGVs([]byte(tooMany), nil)
 	require.Error(t, err)
 	require.Nil(t, egvs)
 }

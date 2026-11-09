@@ -2,6 +2,7 @@ package db_test
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"strings"
 	"testing"
@@ -315,6 +316,29 @@ func TestLogsDBSearchText(t *testing.T) {
 			errs, err := logs.Queries.SearchErrors(ctx, logsdb.SearchErrorsParams{SiteID: &site, Search: tt.search, Limit: 10})
 			require.NoError(t, err)
 			require.Len(t, errs, tt.errors)
+		})
+	}
+}
+
+// A refused record is kept on its connector error as JSON, or as the start of its text when it is too long or is not
+// JSON, so it always fits
+func TestRecordJSON(t *testing.T) {
+	tests := []struct {
+		name   string
+		record any
+		want   string
+	}{
+		{"a document is its JSON", map[string]any{"sgv": 120}, `{"sgv":120}`},
+		{"a reading that did not decode is its JSON", json.RawMessage(`{"Value": "high"}`), `{"Value":"high"}`},
+		{"JSON that does not parse is its text", json.RawMessage(`{"Value": `), `{"text":"{\"Value\": ","truncated":false}`},
+		{"a long record is the start of its text", map[string]any{"notes": strings.Repeat("a", 9000)}, `"truncated":true`},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			raw, err := json.Marshal(db.RecordJSON(test.record))
+			require.NoError(t, err)
+			require.Contains(t, string(raw), test.want)
+			require.LessOrEqual(t, len(raw), 9*1024)
 		})
 	}
 }

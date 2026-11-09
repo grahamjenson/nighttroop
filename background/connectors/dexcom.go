@@ -2,6 +2,7 @@ package connectors
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 
@@ -24,6 +25,16 @@ func (b *ConnectorJobManager) syncDexcom(jobInfo *ConnectorJobInfo) (int, error)
 // copyDexcomEGVs copies the last minutes of Dexcom readings into the site, returning how many were new
 func copyDexcomEGVs(ctx context.Context, jobInfo *ConnectorJobInfo, minutes int) (int, error) {
 	client := dexcom_client.NewClient(jobInfo.urlOrUsername, jobInfo.password, consts.NewDexcomRegionFromString(jobInfo.region) == consts.DexcomRegionOther)
+	refused := false
+	refuse := func(err error, record any) {
+		if !refused {
+			refused = true
+			recordRefused(ctx, jobInfo, err, record)
+		}
+	}
+	client.Unreadable = func(raw json.RawMessage, err error) {
+		refuse(fmt.Errorf("Dexcom: cannot read a reading: %w", err), raw)
+	}
 	egvs, err := client.FetchEGVs(ctx, minutes)
 	if err != nil {
 		return 0, fmt.Errorf("Dexcom Error: %w", err)
@@ -36,8 +47,7 @@ func copyDexcomEGVs(ctx context.Context, jobInfo *ConnectorJobInfo, minutes int)
 			if utilerrors.IsSQLDuplicateID(err) {
 				continue
 			}
-			// Probably just non-unique ID
-			slog.ErrorContext(ctx, "Error creating entry in database", "error", err, "id", createParams.ID)
+			refuse(fmt.Errorf("Dexcom: cannot keep a reading: %w", err), e)
 			continue
 		}
 		if res != nil {

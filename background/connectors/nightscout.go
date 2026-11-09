@@ -140,6 +140,9 @@ func (b *ConnectorJobManager) createNightscoutDocuments(ctx context.Context, job
 		} else {
 			_, duplicateFound, herr = collectionStore.Create(ctx, siteContext, doc, false)
 		}
+		if herr != nil && skipped == 0 {
+			recordRefused(ctx, jobInfo, fmt.Errorf("Nightscout: the site refused a %s document: %s", collection, herr.Message), doc)
+		}
 		if herr != nil && herr.Status < http.StatusInternalServerError {
 			skipped, reason = skipped+1, herr.Message
 			continue

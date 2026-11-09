@@ -2,9 +2,11 @@ package db
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"nighttroop.t1d.nz/data/events"
@@ -330,10 +332,34 @@ func (l *LogsDB) ClientError(ctx context.Context, siteID *string, attributes Cli
 type ConnectorErrorAttributes struct {
 	Kind          ErrorKind            `json:"kind"`
 	ConnectorType consts.ConnectorType `json:"connector_type"`
+	// Record is the record the sync could not read, or the site refused, to debug it by
+	Record any `json:"record,omitempty"`
 }
 
 func (l *LogsDB) ConnectorError(ctx context.Context, siteID string, connectorType consts.ConnectorType, err error) {
 	l.error(ctx, &siteID, err, ConnectorErrorAttributes{Kind: ErrorKindConnector, ConnectorType: connectorType})
+}
+
+// connectorRecordBytes is how much of a refused record's JSON is kept on its error
+const connectorRecordBytes = 8 * 1024
+
+// ConnectorRecordError records a record a sync could not read, or the site refused, with the record, as an error of
+// the site's connector
+func (l *LogsDB) ConnectorRecordError(ctx context.Context, siteID string, connectorType consts.ConnectorType, err error, record any) {
+	l.error(ctx, &siteID, err, ConnectorErrorAttributes{Kind: ErrorKindConnector, ConnectorType: connectorType, Record: RecordJSON(record)})
+}
+
+// RecordJSON is a record as JSON, up to connectorRecordBytes, or the start of its text when it is longer or is not
+// JSON, so it fits on an error
+func RecordJSON(record any) any {
+	raw, err := json.Marshal(record)
+	if bytes, ok := record.(json.RawMessage); ok && err != nil {
+		raw = bytes
+	}
+	if err == nil && len(raw) <= connectorRecordBytes {
+		return json.RawMessage(raw)
+	}
+	return map[string]any{"text": strings.ToValidUTF8(string(raw[:min(len(raw), connectorRecordBytes)]), ""), "truncated": len(raw) > connectorRecordBytes}
 }
 
 type SiteBatchBackupErrorAttributes struct {

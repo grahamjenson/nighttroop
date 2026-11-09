@@ -57,6 +57,9 @@ type Client struct {
 	password string
 
 	sessionID string
+
+	// Unreadable is told of each reading Dexcom sent that cannot be read, which is skipped; when nil it is logged
+	Unreadable func(raw json.RawMessage, err error)
 }
 
 // NewClient creates a new Dexcom client.
@@ -200,11 +203,12 @@ func (c *Client) FetchEGVs(ctx context.Context, minutes int) ([]dexcommodels.EGV
 	if err != nil {
 		return nil, err
 	}
-	return decodeEGVs(body)
+	return decodeEGVs(body, c.Unreadable)
 }
 
-// decodeEGVs decodes the EGV array in a Dexcom response body, refusing more than maxEGVs.
-func decodeEGVs(data []byte) ([]dexcommodels.EGV, error) {
+// decodeEGVs decodes the EGV array in a Dexcom response body, refusing more than maxEGVs. Each EGV that cannot be
+// read is skipped, and unreadable is told of it, when it is set.
+func decodeEGVs(data []byte, unreadable func(json.RawMessage, error)) ([]dexcommodels.EGV, error) {
 	var items []json.RawMessage
 	if err := json.Unmarshal(data, &items); err != nil {
 		return nil, fmt.Errorf("error decoding Dexcom response: %w", err)
@@ -218,7 +222,11 @@ func decodeEGVs(data []byte) ([]dexcommodels.EGV, error) {
 	for _, raw := range items {
 		var r dexcommodels.EGV
 		if err := json.Unmarshal(raw, &r); err != nil {
-			slog.Error("Error unmarshalling Dexcom response", "error", err, "raw", string(raw))
+			if unreadable == nil {
+				slog.Error("Error unmarshalling Dexcom response", "error", err, "raw", string(raw))
+			} else {
+				unreadable(raw, err)
+			}
 			continue
 		}
 

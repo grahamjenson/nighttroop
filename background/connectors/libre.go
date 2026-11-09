@@ -2,8 +2,8 @@ package connectors
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"log/slog"
 	"sync"
 
 	"nighttroop.t1d.nz/clients/libre_client"
@@ -58,6 +58,14 @@ func (b *ConnectorJobManager) copyLibreReadings(ctx context.Context, jobInfo *Co
 	lc.Lock()
 	defer lc.Unlock()
 
+	refused := false
+	refuse := func(err error, record any) {
+		if !refused {
+			refused = true
+			recordRefused(ctx, jobInfo, err, record)
+		}
+	}
+	lc.Unreadable = func(raw json.RawMessage, err error) { refuse(fmt.Errorf("Libre: cannot read a reading: %w", err), raw) }
 	readings, err := lc.FetchReadings(ctx)
 	if err != nil {
 		return 0, fmt.Errorf("Libre Error: %w", err)
@@ -70,7 +78,7 @@ func (b *ConnectorJobManager) copyLibreReadings(ctx context.Context, jobInfo *Co
 			added++
 			jobInfo.Site.published(row)
 		} else if !utilerrors.IsSQLDuplicateID(err) {
-			slog.ErrorContext(ctx, "Error creating entry in database", "error", err, "id", createParams.ID)
+			refuse(fmt.Errorf("Libre: cannot keep a reading: %w", err), r)
 		}
 	}
 	return added, nil
