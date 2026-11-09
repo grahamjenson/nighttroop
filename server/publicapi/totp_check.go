@@ -3,6 +3,7 @@ package publicapi
 import (
 	"log/slog"
 	"net/http"
+	"nighttroop.t1d.nz/utils/consts"
 
 	"nighttroop.t1d.nz/server/components/public_templ"
 	"nighttroop.t1d.nz/utils"
@@ -17,7 +18,7 @@ func POSTCheckTOTPHandler(config *config.ServerConfig) http.HandlerFunc {
 		site := r.FormValue("site")
 		var err error
 		if utils.SyntacticallyValidateSiteID(site) && config.Security.TOTPValidate(r.FormValue("totp"), r.FormValue("secret")) {
-			err = public_templ.TOTPChecked(config.SiteURL(site)).Render(r.Context(), w)
+			err = public_templ.TOTPChecked(config.SiteURL(site)+"/login?name="+consts.FIRST_ADMIN_NAME).Render(r.Context(), w)
 		} else {
 			err = public_templ.TOTPCheckFailed().Render(r.Context(), w)
 		}

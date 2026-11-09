@@ -16,7 +16,9 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/toast"
 )
 
-func Login() templ.Component {
+// Login signs in an identity by its name and password, then its TOTP code. A name the link gives, such as the new site's
+// admin from its welcome page, is filled in, so only its password is typed.
+func Login(name string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -89,11 +91,12 @@ func Login() templ.Component {
 					ID:       "site--login--name",
 					Type:     "text",
 					Name:     "name",
+					Value:    name,
 					Required: true,
 					Attributes: templ.Attributes{
 						"autocapitalize": "none",
 						"autocorrect":    "off",
-						"autofocus":      "true",
+						"autofocus":      name == "",
 						"autocomplete":   "username",
 					},
 				}).Render(ctx, templ_7745c5c3_Buffer)
@@ -151,7 +154,7 @@ func Login() templ.Component {
 					Type:       "password",
 					Name:       "password",
 					Required:   true,
-					Attributes: templ.Attributes{"autocomplete": "current-password"},
+					Attributes: templ.Attributes{"autocomplete": "current-password", "autofocus": name != ""},
 				}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -462,7 +465,7 @@ func invalidAfterError(formID string) templ.Component {
 		}
 		templ_7745c5c3_Var16, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(formID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_login_templ/login.templ`, Line: 181, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_login_templ/login.templ`, Line: 184, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
 		if templ_7745c5c3_Err != nil {
