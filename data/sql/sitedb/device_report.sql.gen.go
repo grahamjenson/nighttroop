@@ -78,6 +78,21 @@ func (q *Queries) AllDeviceReports(ctx context.Context, arg AllDeviceReportsPara
 	return items, nil
 }
 
+const clearDeviceReportLoopStatus = `-- name: ClearDeviceReportLoopStatus :exec
+UPDATE device_reports SET loop_status_json = NULL WHERE id = ?1
+`
+
+type ClearDeviceReportLoopStatusParams struct {
+	ID string
+}
+
+// A device report keeps none of its loop's status, as one a backfill copies, an old one's status being of no use; its
+// IOB and COB columns are kept
+func (q *Queries) ClearDeviceReportLoopStatus(ctx context.Context, arg ClearDeviceReportLoopStatusParams) error {
+	_, err := q.exec(ctx, q.clearDeviceReportLoopStatusStmt, clearDeviceReportLoopStatus, arg.ID)
+	return err
+}
+
 const createDeviceReport = `-- name: CreateDeviceReport :one
 INSERT INTO device_reports (
     id,

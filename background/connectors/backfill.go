@@ -166,7 +166,7 @@ func (b *ConnectorJobManager) backfillNightscout(ctx context.Context, jobInfo *C
 				return added, fmt.Errorf("NightscoutBackfill Error: %w", err)
 			}
 			oldest := oldestDate(docs, before)
-			created, err := b.createNightscoutDocuments(ctx, jobInfo, c.collection, docs, false)
+			created, err := b.createNightscoutDocuments(ctx, jobInfo, c.collection, docs, c.backfillSave)
 			added += created
 			if err != nil {
 				return added, err

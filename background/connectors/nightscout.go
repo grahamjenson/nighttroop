@@ -10,6 +10,7 @@ import (
 
 	"nighttroop.t1d.nz/clients/nightscout_client"
 	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 )
 
@@ -86,20 +87,23 @@ func (b *ConnectorJobManager) syncNightscoutProfile(ctx context.Context, nsc *ni
 		return 0, nil
 	}
 	// Nightscout's profile editor saves an edit to the same document, so it replaces the copy of it
-	return b.createNightscoutDocuments(ctx, jobInfo, nsutils.Profile, []map[string]any{profile}, true)
+	return b.createNightscoutDocuments(ctx, jobInfo, nsutils.Profile, []map[string]any{profile}, replaceDocuments)
 }
 
 // nightscoutCollections are what a Nightscout connector reads, and at most how many of each one's newest documents
 // from the last 20 minutes: a few readings, a meal, its boluses and a loop's SMBs and temp basals, or each uploader's
-// statuses. A backfill reads them a page at a time, small enough to stay under the client's response size limit.
+// statuses. A backfill reads them a page at a time, small enough to stay under the client's response size limit, and
+// saves them as backfillSave says.
 var nightscoutCollections = []struct {
 	collection   nsutils.Collection
 	limit        int
 	backfillPage int
+	backfillSave saveDocuments
 }{
-	{nsutils.Entries, 3, 500},
-	{nsutils.Treatments, 20, 200},
-	{nsutils.Devicestatus, 10, 50},
+	{nsutils.Entries, 3, 500, createDocuments},
+	{nsutils.Treatments, 20, 200, createDocuments},
+	// An old device status's loop status is of no use, and most of a looping site's DB; its IOB and COB are kept
+	{nsutils.Devicestatus, 10, 50, createWithoutLoopStatus},
 }
 
 // syncNightscoutCollection copies a collection's newest documents into the site, returning how many were new
@@ -108,13 +112,25 @@ func (b *ConnectorJobManager) syncNightscoutCollection(ctx context.Context, nsc 
 	if err != nil {
 		return 0, fmt.Errorf("Nightscout connector error: %w", err)
 	}
-	return b.createNightscoutDocuments(ctx, jobInfo, collection, docs, false)
+	return b.createNightscoutDocuments(ctx, jobInfo, collection, docs, createDocuments)
 }
+
+// saveDocuments is how createNightscoutDocuments saves the documents it copies
+type saveDocuments int
+
+const (
+	// createDocuments adds each, unless the site has it already
+	createDocuments saveDocuments = iota
+	// replaceDocuments replaces the site's copy of a document with an _id, so a change to it is copied too
+	replaceDocuments
+	// createWithoutLoopStatus adds each, keeping no loop status of a device report it adds, as a backfill's are old
+	createWithoutLoopStatus
+)
 
 // createNightscoutDocuments copies documents into the site, returning how many were new. Documents a site refuses,
 // such as a treatment with an eventType it does not know, are skipped and logged once, so they do not fail every sync.
 // With replace, a document with an _id replaces the site's copy of it, so a change to it is copied too.
-func (b *ConnectorJobManager) createNightscoutDocuments(ctx context.Context, jobInfo *ConnectorJobInfo, collection nsutils.Collection, docs []map[string]any, replace bool) (int, error) {
+func (b *ConnectorJobManager) createNightscoutDocuments(ctx context.Context, jobInfo *ConnectorJobInfo, collection nsutils.Collection, docs []map[string]any, save saveDocuments) (int, error) {
 	// REMOVE WRITE ONLY COLUMNS, which that Nightscout set. Its subject is who saved the document there, not the sync
 	// that copies it here, so a replace would be refused as changing it.
 	for _, doc := range docs {
@@ -133,7 +149,7 @@ func (b *ConnectorJobManager) createNightscoutDocuments(ctx context.Context, job
 	for _, doc := range docs {
 		var duplicateFound bool
 		var herr *nsutils.HTTPError
-		if identifier, _ := doc["_id"].(string); replace && identifier != "" {
+		if identifier, _ := doc["_id"].(string); save == replaceDocuments && identifier != "" {
 			// The site's copy is kept by its _id. A v3 client, such as AAPS, also gives it an identifier of its own,
 			// which would refuse every replace after the first as changing the copy's identifier.
 			delete(doc, "identifier")
@@ -141,7 +157,14 @@ func (b *ConnectorJobManager) createNightscoutDocuments(ctx context.Context, job
 			_, created, herr = collectionStore.Replace(ctx, siteContext, identifier, doc, true)
 			duplicateFound = !created
 		} else {
-			_, duplicateFound, herr = collectionStore.Create(ctx, siteContext, doc)
+			var stored nsutils.Document
+			stored, duplicateFound, herr = collectionStore.Create(ctx, siteContext, doc)
+			// Only a report it made loses its loop status, not one the site already had
+			if herr == nil && !duplicateFound && save == createWithoutLoopStatus {
+				if err := siteContext.SiteDB.Queries().ClearDeviceReportLoopStatus(ctx, sitedb.ClearDeviceReportLoopStatusParams{ID: stored.Identifier()}); err != nil {
+					return added, fmt.Errorf("Nightscout: Failed to clear a backfilled %s's loop status: %w", collection, err)
+				}
+			}
 		}
 		if herr != nil && skipped == 0 {
 			recordRefused(ctx, jobInfo, fmt.Errorf("Nightscout: the site refused a %s document: %s", collection, herr.Message), doc)
