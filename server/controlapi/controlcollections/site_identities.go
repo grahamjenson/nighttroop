@@ -61,7 +61,7 @@ func (s *SitesCollection) PageHandler(w http.ResponseWriter, r *http.Request) {
 			slog.ErrorContext(r.Context(), "Cannot measure a site's DB tables", "site_id", site.ID, "error", err)
 		}
 		for _, table := range tables {
-			page.Tables = append(page.Tables, &controlmodels.SiteTable{Name: table.Name, Bytes: table.Bytes})
+			page.Tables = append(page.Tables, &controlmodels.SiteTable{Name: table.Name, Bytes: table.Bytes, Records: table.Records})
 		}
 	}
 	if herr != nil {

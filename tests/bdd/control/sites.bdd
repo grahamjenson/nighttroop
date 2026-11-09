@@ -63,7 +63,8 @@ ASSERT_VISIBLE #control--site--inactive
 ASSERT_VISIBLE #control--site--lifecycle >> text=/^Created .* · Batch [a-z]$/
 ASSERT_VISIBLE #control--site--open[target="_blank"]
 // A new site's DB is measured by its tables before the resource check runs, against its limit. The bar is split into
-// its largest tables, and a key under it names each one, with the rest of them together as Other
+// its largest tables, and a key under it names each one, with its records in thousands, and the rest of them together
+// as Other
 ASSERT_VISIBLE #control--site--db-size >> text=/^\d+\.\d\d$/
 ASSERT_VISIBLE #control--site--db-limit
 ASSERT_TEXT_VISIBLE % of its limit used
@@ -75,7 +76,7 @@ ASSERT_NOT_VISIBLE #control--site--db-part--Other--tooltip
 HOVER #control--site--db-part--Other
 ASSERT_DRAWN #control--site--db-part--Other--tooltip >> text=Other
 SCREENSHOT site_db_part_tooltip
-ASSERT_VISIBLE #control--site--db-table--Other >> text=/MB · \d+%$/
+ASSERT_VISIBLE #control--site--db-table--Other >> text=/MB · \d+% · \d+\.\dk records$/
 ASSERT_TEXT_EQUALS #control--site--last-seen Never
 ASSERT_TEXT_EQUALS #control--site--last-write Never
 ASSERT_TEXT_EQUALS #control--site--identity-count 3

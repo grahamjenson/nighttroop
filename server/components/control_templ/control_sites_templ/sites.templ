@@ -323,10 +323,12 @@ func usedClass(percent int64) string {
 	return "text-gray-500"
 }
 
-// dbPart is a share of a site's DB: one of its largest tables, or the rest of them together, with its colour
+// dbPart is a share of a site's DB: one of its largest tables, or the rest of them together, with its records and
+// colour
 type dbPart struct {
 	Name    string
 	Bytes   int64
+	Records int64
 	Percent float64
 	Class   string
 }
@@ -341,14 +343,18 @@ func dbParts(tables []*controlmodels.SiteTable) []dbPart {
 	if total <= 0 {
 		return parts
 	}
-	share := func(name string, bytes int64, class string) dbPart {
-		return dbPart{name, bytes, float64(bytes) * 100 / float64(total), class}
+	share := func(name string, tables []*controlmodels.SiteTable, class string) dbPart {
+		bytes, records := totalBytes(tables), int64(0)
+		for _, table := range tables {
+			records += table.Records
+		}
+		return dbPart{Name: name, Bytes: bytes, Records: records, Percent: float64(bytes) * 100 / float64(total), Class: class}
 	}
 	for i, table := range tables {
 		if i == len(partClasses) {
-			return append(parts, share("Other", totalBytes(tables[i:]), "bg-gray-300"))
+			return append(parts, share("Other", tables[i:], "bg-gray-300"))
 		}
-		parts = append(parts, share(table.Name, table.Bytes, partClasses[i]))
+		parts = append(parts, share(table.Name, tables[i:i+1], partClasses[i]))
 	}
 	return parts
 }
@@ -375,6 +381,11 @@ func totalBytes(tables []*controlmodels.SiteTable) int64 {
 // partText is a part's size and share of the DB, as "1.25 MB · 40%"
 func partText(part dbPart) string {
 	return fmt.Sprintf("%.2f MB · %.0f%%", float64(part.Bytes)/1024/1024, part.Percent)
+}
+
+// keyText is a part's size and share of the DB, and its records in thousands, as "1.25 MB · 40% · 7.9k records"
+func keyText(part dbPart) string {
+	return fmt.Sprintf("%s · %.1fk records", partText(part), float64(part.Records)/1000)
 }
 
 // barWidth is how much of the bar the DB fills: its share of its limit, at most all of it, or all of it with no limit
@@ -525,7 +536,7 @@ templ dbSize(site *controlmodels.Site, tables []*controlmodels.SiteTable) {
 					<li id={ "control--site--db-table--" + part.Name } class="flex break-inside-avoid items-center gap-2">
 						<span class={ "size-3 shrink-0 rounded-sm", part.Class }></span>
 						<span class="truncate font-mono text-xs">{ part.Name }</span>
-						<span class="ml-auto shrink-0 text-xs tabular-nums text-gray-500">{ partText(part) }</span>
+						<span class="ml-auto shrink-0 text-xs tabular-nums text-gray-500">{ keyText(part) }</span>
 					</li>
 				}
 			</ul>

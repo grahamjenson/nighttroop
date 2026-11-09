@@ -91,13 +91,15 @@ func TestDBSizeBar(t *testing.T) {
 func TestDBParts(t *testing.T) {
 	tables := []*controlmodels.SiteTable{}
 	for i, bytes := range []int64{40, 20, 15, 10, 5, 6, 4} {
-		tables = append(tables, &controlmodels.SiteTable{Name: fmt.Sprintf("t%d", i), Bytes: bytes})
+		tables = append(tables, &controlmodels.SiteTable{Name: fmt.Sprintf("t%d", i), Bytes: bytes, Records: bytes * 100})
 	}
 	parts := dbParts(tables)
 	require.Len(t, parts, 6)
-	require.Equal(t, dbPart{"t0", 40, 40, "bg-brand-night"}, parts[0])
-	require.Equal(t, dbPart{"t4", 5, 5, "bg-brand-night/25"}, parts[4])
-	require.Equal(t, dbPart{"Other", 10, 10, "bg-gray-300"}, parts[5])
+	require.Equal(t, dbPart{Name: "t0", Bytes: 40, Records: 4000, Percent: 40, Class: "bg-brand-night"}, parts[0])
+	require.Equal(t, dbPart{Name: "t4", Bytes: 5, Records: 500, Percent: 5, Class: "bg-brand-night/25"}, parts[4])
+	// Other's records are its tables' together
+	require.Equal(t, dbPart{Name: "Other", Bytes: 10, Records: 1000, Percent: 10, Class: "bg-gray-300"}, parts[5])
+	require.Equal(t, "0.00 MB · 40% · 4.0k records", keyText(parts[0]))
 	require.Len(t, dbParts(tables[:2]), 2)
 	require.Empty(t, dbParts(nil))
 	require.Empty(t, dbParts([]*controlmodels.SiteTable{{Name: "empty"}}))

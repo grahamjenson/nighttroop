@@ -44,8 +44,9 @@ type SitePage struct {
 
 // SiteTable is a table of a site's DB and the bytes it takes in the file, its indexes with it
 type SiteTable struct {
-	Name  string `json:"name"`
-	Bytes int64  `json:"bytes"`
+	Name    string `json:"name"`
+	Bytes   int64  `json:"bytes"`
+	Records int64  `json:"records"`
 }
 
 // HasSecret is whether an encrypted secret is set
