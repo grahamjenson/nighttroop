@@ -161,6 +161,15 @@ func TestNightscoutConnectorCopiesEntriesTreatmentsAndDeviceStatuses(t *testing.
 	require.Len(t, logs, 1)
 	require.Equal(t, "skipped Nightscout documents the site refused", logs[0].Message)
 	require.Contains(t, *logs[0].Attributes, `"collection":"treatments"`)
+
+	// It is an error of the site's connector too, with the document the site refused, to debug it by
+	errs, err := controlDB.Logs.Queries.SearchErrors(ctx, logsdb.SearchErrorsParams{SiteID: &siteID, Limit: 10})
+	require.NoError(t, err)
+	require.Len(t, errs, 1)
+	require.Contains(t, errs[0].Message, "the site refused a treatments document")
+	require.Contains(t, *errs[0].Attributes, `"kind":"connector"`)
+	require.Contains(t, *errs[0].Attributes, `"record":{`)
+	require.Contains(t, *errs[0].Attributes, `"eventType":"Something Custom"`)
 }
 
 // A profile store is used long after it starts, so the newest is copied whenever the profiles change, however old, as

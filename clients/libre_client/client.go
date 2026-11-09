@@ -57,6 +57,9 @@ type Client struct {
 	token     string
 	accountID string
 	expires   time.Time
+
+	// Unreadable is told of each reading Libre sent that cannot be read, which is skipped; when nil it is logged
+	Unreadable func(raw json.RawMessage, err error)
 }
 
 // NewClient creates a client for the region, one of consts.LibreRegions.
@@ -229,7 +232,11 @@ func (c *Client) FetchReadings(ctx context.Context) ([]libremodels.Reading, erro
 	for i, raw := range append(graph.Data.GraphData, graph.Data.Connection.GlucoseMeasurement) {
 		var r libremodels.Reading
 		if err := json.Unmarshal(raw, &r); err != nil {
-			slog.Error("Error unmarshalling libre reading", "error", err)
+			if c.Unreadable == nil {
+				slog.Error("Error unmarshalling libre reading", "error", err)
+			} else {
+				c.Unreadable(raw, err)
+			}
 			continue
 		}
 		if i < len(graph.Data.GraphData) {

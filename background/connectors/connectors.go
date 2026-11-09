@@ -1,11 +1,13 @@
 package connectors
 
 import (
+	"context"
 	stderrors "errors"
 	"log/slog"
 	"time"
 
 	"nighttroop.t1d.nz/clients/dexcom_client"
+	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/sitemodels"
@@ -109,6 +111,14 @@ func (b *ConnectorJobManager) publishConnector(siteID string, sourceType consts.
 
 // recordSyncFailure stores the failure so the source backs off, and in the logs DB's errors. The message is
 // truncated first: an oversized one would fail the row's CHECK and leave the source retrying every tick.
+// recordRefused records a record a sync could not read, or the site refused, with the record, as an error of the
+// site's connector, and sends it to Sentry with the record, to debug it by. A sync records only its first, so one bad
+// kind of record cannot fill the errors.
+func recordRefused(ctx context.Context, jobInfo *ConnectorJobInfo, err error, record any) {
+	jobInfo.Site.ControlDB.Logs.ConnectorRecordError(ctx, jobInfo.SiteID, jobInfo.Type, err, record)
+	slog.ErrorContext(ctx, "A connector's record was refused", "error", err, "connector_type", jobInfo.Type, "record", db.RecordJSON(record))
+}
+
 func (b *ConnectorJobManager) recordSyncFailure(jobInfo *ConnectorJobInfo, err error, elapsedTimeMS int64) {
 	b.controlDB.Logs.ConnectorError(jobInfo.ctx, jobInfo.SiteID, jobInfo.Type, err)
 	errMsg := errors.Truncate(err.Error())
