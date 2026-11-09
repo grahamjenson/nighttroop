@@ -889,7 +889,9 @@ Connectors are a site's third party integrations, each syncing from one service.
   later be changed for every device of a client; a user and a site's first devices have none.
 - On a phone, the Add User and Add Device forms wrap in their cards, so every input and button can be seen and tapped
   without scrolling sideways.
-- An admin can turn an identity off and on, or delete it; an identity cannot lock itself out.
+- An admin can turn an identity off and on with its row's switch. Its other actions, Settings, Reset password, Reset
+  TOTP and Delete, are in its row's Manage menu, each labelled with its icon, Delete in red apart from the rest; those
+  that do not apply, as resetting or deleting yourself, are greyed out. An identity cannot lock itself out.
 - An admin can change another identity's own settings and alarms from its row, such as a device's units, which its
   Nightscout status gives followers to show glucose in.
 - Another identity's glucose settings are labelled, shown, followed from the site's and typed in its own units, or the

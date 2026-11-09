@@ -93,6 +93,7 @@ ASSERT_NOT_VISIBLE #site--settings--settings-button[aria-current="page"]
 // Another identity's settings count as Users & Devices
 CLICK #site--settings--identities-button
 ASSERT_STATUS 200
+CLICK #site--identities--pwd_phone--manage
 CLICK #site--identities--pwd_phone--settings
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE pwd_phone's Settings
