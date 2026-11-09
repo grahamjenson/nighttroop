@@ -559,7 +559,8 @@ CREATE TABLE profile_presets (
 -- of a week's or month's days with data, as is its time in range. Glucose is in mg/dL every 5 minutes from midnight,
 -- 288 values (276 or 300 for a day the clocks change), null when there was no reading: for a week or month, the
 -- mean of its days' at that time of day. A week or month also has its AGP: the 5th, 25th, 50th, 75th and 95th
--- percentiles of its days' glucose in each 15 minutes from midnight, 96 of them, null when none had a reading then.
+-- percentiles of its days' glucose in the 15 minutes around each 5 minutes from midnight, 288 of them, null when none
+-- had a reading then.
 CREATE TABLE summary_period (
     period TEXT NOT NULL CHECK(period IN ('day', 'week', 'fortnight', 'month')),
     date TEXT NOT NULL CHECK(length(date) = 10),
@@ -572,7 +573,20 @@ CREATE TABLE summary_period (
     total_daily_dose REAL NOT NULL,
     total_daily_carbs REAL NOT NULL,
     glucose_mgdl_json TEXT NOT NULL CHECK(length(glucose_mgdl_json) <= 2048 AND json_valid(glucose_mgdl_json)),
-    agp_mgdl_json TEXT CHECK(agp_mgdl_json IS NULL OR (length(agp_mgdl_json) <= 4096 AND json_valid(agp_mgdl_json))),
+    agp_mgdl_json TEXT CHECK(agp_mgdl_json IS NULL OR (length(agp_mgdl_json) <= 8192 AND json_valid(agp_mgdl_json))),
+    -- A day's glucose readings, those from a meter, and its 5 minutes with a CGM reading, and a period's its days' added
+    -- up. Its glucose mean and standard deviation, in mg/dL, are of its readings, and a period's of all its days'. The
+    -- percent of its readings very low (below 54 mg/dL), low, high and very high (above 250 mg/dL), with time_in_range
+    -- adding up to 100, are a period's the means of its days', as time_in_range is.
+    glucose_readings INTEGER NOT NULL DEFAULT 0 CHECK(glucose_readings >= 0),
+    meter_readings INTEGER NOT NULL DEFAULT 0 CHECK(meter_readings >= 0),
+    cgm_slots INTEGER NOT NULL DEFAULT 0 CHECK(cgm_slots >= 0),
+    glucose_mean_mgdl REAL,
+    glucose_sd_mgdl REAL,
+    time_very_low REAL,
+    time_low REAL,
+    time_high REAL,
+    time_very_high REAL,
     -- The loop's IOB (total, basal and treatment) and COB every 5 minutes from midnight, as glucose is: a day's newest
     -- loop device report in each 5 minutes, null when there was none, and a week's or month's the mean of its days'
     loop_iob_json TEXT NOT NULL CHECK(length(loop_iob_json) <= 4096 AND json_valid(loop_iob_json)),

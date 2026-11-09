@@ -335,15 +335,27 @@ type SummaryList struct {
 // SummaryLoopSlots The loop's IOB in U or COB in g every 5 minutes from midnight, as glucose is: a day's newest loop device report then, or else in the 5 minutes before, as one is kept only every 10 minutes once an hour old, null when there was none, and a week's or month's the mean of its days' then, to 2 decimals
 type SummaryLoopSlots = []float64
 
-// SummaryPeriod A period from start until end, named by its first date. Its time in range, daily dose and daily carbs are the means of its days with data, and its glucose the mean of those days every 5 minutes from midnight. Its AGP is each 15 minutes from midnight the 5th, 25th, 50th, 75th and 95th percentiles of its days' glucose, empty when there was none; a day's is of the 7 days to it.
+// SummaryPeriod A period from start until end, named by its first date. Its time in range, daily dose and daily carbs are the means of its days with data, and its glucose the mean of those days every 5 minutes from midnight. Its AGP is each 5 minutes from midnight the 5th, 25th, 50th, 75th and 95th percentiles of its days' glucose in the 15 minutes around it, empty when there was none; a day's is of the 7 days to it. Its glucose readings are all its days', with their mean, standard deviation, coefficient of variation and GMI, and its times very low (below 54 mg/dL), low, in range, high and very high (above 250 mg/dL) add up to 100.
 type SummaryPeriod struct {
-	Agp  *[][]float64        `json:"agp,omitempty"`
+	Agp *[][]float64 `json:"agp,omitempty"`
+
+	// CgmActive The percent of its 5 minutes, up to now, with a CGM reading
+	CgmActive *float64 `json:"cgm_active"`
+
+	// Cv The coefficient of variation, its standard deviation as a percent of its mean
+	Cv   *float64            `json:"cv"`
 	Date *openapi_types.Date `json:"date,omitempty"`
 
 	// Days How many of its days have data
 	Days    *int64     `json:"days,omitempty"`
 	End     *int64     `json:"end,omitempty"`
 	Glucose *[]float64 `json:"glucose,omitempty"`
+
+	// GlucoseReadings Its glucose readings, a meter's and CGMs'
+	GlucoseReadings *int64 `json:"glucose_readings,omitempty"`
+
+	// Gmi The glucose management indicator, the HbA1c percent its mean is estimated to give
+	Gmi *float64 `json:"gmi"`
 
 	// LoopCob The loop's IOB in U or COB in g every 5 minutes from midnight, as glucose is: a day's newest loop device report then, or else in the 5 minutes before, as one is kept only every 10 minutes once an hour old, null when there was none, and a week's or month's the mean of its days' then, to 2 decimals
 	LoopCob *SummaryLoopSlots `json:"loop_cob,omitempty"`
@@ -355,14 +367,35 @@ type SummaryPeriod struct {
 	LoopIobBasal *SummaryLoopSlots `json:"loop_iob_basal,omitempty"`
 
 	// LoopIobTreatment The loop's IOB in U or COB in g every 5 minutes from midnight, as glucose is: a day's newest loop device report then, or else in the 5 minutes before, as one is kept only every 10 minutes once an hour old, null when there was none, and a week's or month's the mean of its days' then, to 2 decimals
-	LoopIobTreatment *SummaryLoopSlots    `json:"loop_iob_treatment,omitempty"`
-	Period           *SummaryPeriodPeriod `json:"period,omitempty"`
-	Start            *int64               `json:"start,omitempty"`
-	TimeInRange      *float64             `json:"time_in_range"`
-	Timezone         *string              `json:"timezone,omitempty"`
-	TotalDailyCarbs  *float64             `json:"total_daily_carbs,omitempty"`
-	TotalDailyDose   *float64             `json:"total_daily_dose,omitempty"`
-	Units            *Units               `json:"units,omitempty"`
+	LoopIobTreatment *SummaryLoopSlots `json:"loop_iob_treatment,omitempty"`
+
+	// Mean The mean of its glucose readings, in units
+	Mean *float64 `json:"mean"`
+
+	// MeterReadings Its glucose readings from a meter
+	MeterReadings *int64               `json:"meter_readings,omitempty"`
+	Period        *SummaryPeriodPeriod `json:"period,omitempty"`
+
+	// Sd The standard deviation of its glucose readings, in units
+	Sd    *float64 `json:"sd"`
+	Start *int64   `json:"start,omitempty"`
+
+	// TimeHigh The percent of its readings above the range up to 250 mg/dL
+	TimeHigh    *float64 `json:"time_high"`
+	TimeInRange *float64 `json:"time_in_range"`
+
+	// TimeLow The percent of its readings from 54 mg/dL to below the range
+	TimeLow *float64 `json:"time_low"`
+
+	// TimeVeryHigh The percent of its readings above 250 mg/dL
+	TimeVeryHigh *float64 `json:"time_very_high"`
+
+	// TimeVeryLow The percent of its readings below 54 mg/dL
+	TimeVeryLow     *float64 `json:"time_very_low"`
+	Timezone        *string  `json:"timezone,omitempty"`
+	TotalDailyCarbs *float64 `json:"total_daily_carbs,omitempty"`
+	TotalDailyDose  *float64 `json:"total_daily_dose,omitempty"`
+	Units           *Units   `json:"units,omitempty"`
 }
 
 // SummaryPeriodPeriod defines model for SummaryPeriod.Period.
@@ -7313,7 +7346,7 @@ type GetSummaryPeriodResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *struct {
-		// Result A period from start until end, named by its first date. Its time in range, daily dose and daily carbs are the means of its days with data, and its glucose the mean of those days every 5 minutes from midnight. Its AGP is each 15 minutes from midnight the 5th, 25th, 50th, 75th and 95th percentiles of its days' glucose, empty when there was none; a day's is of the 7 days to it.
+		// Result A period from start until end, named by its first date. Its time in range, daily dose and daily carbs are the means of its days with data, and its glucose the mean of those days every 5 minutes from midnight. Its AGP is each 5 minutes from midnight the 5th, 25th, 50th, 75th and 95th percentiles of its days' glucose in the 15 minutes around it, empty when there was none; a day's is of the 7 days to it. Its glucose readings are all its days', with their mean, standard deviation, coefficient of variation and GMI, and its times very low (below 54 mg/dL), low, in range, high and very high (above 250 mg/dL) add up to 100.
 		Result *SummaryPeriod `json:"result,omitempty"`
 		Status *int           `json:"status,omitempty"`
 	}
@@ -10107,7 +10140,7 @@ func ParseGetSummaryPeriodResponse(rsp *http.Response) (*GetSummaryPeriodRespons
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest struct {
-			// Result A period from start until end, named by its first date. Its time in range, daily dose and daily carbs are the means of its days with data, and its glucose the mean of those days every 5 minutes from midnight. Its AGP is each 15 minutes from midnight the 5th, 25th, 50th, 75th and 95th percentiles of its days' glucose, empty when there was none; a day's is of the 7 days to it.
+			// Result A period from start until end, named by its first date. Its time in range, daily dose and daily carbs are the means of its days with data, and its glucose the mean of those days every 5 minutes from midnight. Its AGP is each 5 minutes from midnight the 5th, 25th, 50th, 75th and 95th percentiles of its days' glucose in the 15 minutes around it, empty when there was none; a day's is of the 7 days to it. Its glucose readings are all its days', with their mean, standard deviation, coefficient of variation and GMI, and its times very low (below 54 mg/dL), low, in range, high and very high (above 250 mg/dL) add up to 100.
 			Result *SummaryPeriod `json:"result,omitempty"`
 			Status *int           `json:"status,omitempty"`
 		}

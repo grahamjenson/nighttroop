@@ -24,7 +24,7 @@ func (q *Queries) DeleteSummaryPeriods(ctx context.Context, arg DeleteSummaryPer
 }
 
 const getSummaryPeriod = `-- name: GetSummaryPeriod :one
-SELECT period, date, timezone, start_at, end_at, days, time_in_range, total_daily_dose, total_daily_carbs, glucose_mgdl_json, agp_mgdl_json, loop_iob_json, loop_iob_basal_json, loop_iob_treatment_json, loop_cob_json, created_at, updated_at FROM summary_period WHERE period = ? AND date = ?
+SELECT period, date, timezone, start_at, end_at, days, time_in_range, total_daily_dose, total_daily_carbs, glucose_mgdl_json, agp_mgdl_json, glucose_readings, meter_readings, cgm_slots, glucose_mean_mgdl, glucose_sd_mgdl, time_very_low, time_low, time_high, time_very_high, loop_iob_json, loop_iob_basal_json, loop_iob_treatment_json, loop_cob_json, created_at, updated_at FROM summary_period WHERE period = ? AND date = ?
 `
 
 type GetSummaryPeriodParams struct {
@@ -47,6 +47,15 @@ func (q *Queries) GetSummaryPeriod(ctx context.Context, arg GetSummaryPeriodPara
 		&i.TotalDailyCarbs,
 		&i.GlucoseMgdlJson,
 		&i.AgpMgdlJson,
+		&i.GlucoseReadings,
+		&i.MeterReadings,
+		&i.CgmSlots,
+		&i.GlucoseMeanMgdl,
+		&i.GlucoseSdMgdl,
+		&i.TimeVeryLow,
+		&i.TimeLow,
+		&i.TimeHigh,
+		&i.TimeVeryHigh,
 		&i.LoopIobJson,
 		&i.LoopIobBasalJson,
 		&i.LoopIobTreatmentJson,
@@ -71,7 +80,7 @@ func (q *Queries) HardDeleteSummaryPeriod(ctx context.Context, arg HardDeleteSum
 }
 
 const searchSummaryPeriods = `-- name: SearchSummaryPeriods :many
-SELECT period, date, timezone, start_at, end_at, days, time_in_range, total_daily_dose, total_daily_carbs, glucose_mgdl_json, agp_mgdl_json, loop_iob_json, loop_iob_basal_json, loop_iob_treatment_json, loop_cob_json, created_at, updated_at FROM summary_period
+SELECT period, date, timezone, start_at, end_at, days, time_in_range, total_daily_dose, total_daily_carbs, glucose_mgdl_json, agp_mgdl_json, glucose_readings, meter_readings, cgm_slots, glucose_mean_mgdl, glucose_sd_mgdl, time_very_low, time_low, time_high, time_very_high, loop_iob_json, loop_iob_basal_json, loop_iob_treatment_json, loop_cob_json, created_at, updated_at FROM summary_period
 WHERE
     period = ?1
     AND (CAST(?2 AS TEXT) IS NULL OR date >= ?2)
@@ -115,6 +124,15 @@ func (q *Queries) SearchSummaryPeriods(ctx context.Context, arg SearchSummaryPer
 			&i.TotalDailyCarbs,
 			&i.GlucoseMgdlJson,
 			&i.AgpMgdlJson,
+			&i.GlucoseReadings,
+			&i.MeterReadings,
+			&i.CgmSlots,
+			&i.GlucoseMeanMgdl,
+			&i.GlucoseSdMgdl,
+			&i.TimeVeryLow,
+			&i.TimeLow,
+			&i.TimeHigh,
+			&i.TimeVeryHigh,
 			&i.LoopIobJson,
 			&i.LoopIobBasalJson,
 			&i.LoopIobTreatmentJson,
@@ -137,8 +155,9 @@ func (q *Queries) SearchSummaryPeriods(ctx context.Context, arg SearchSummaryPer
 
 const upsertSummaryPeriod = `-- name: UpsertSummaryPeriod :one
 INSERT INTO summary_period (period, date, timezone, start_at, end_at, days, time_in_range, total_daily_dose, total_daily_carbs, glucose_mgdl_json, agp_mgdl_json,
-    loop_iob_json, loop_iob_basal_json, loop_iob_treatment_json, loop_cob_json)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    loop_iob_json, loop_iob_basal_json, loop_iob_treatment_json, loop_cob_json, glucose_readings, meter_readings, cgm_slots,
+    glucose_mean_mgdl, glucose_sd_mgdl, time_very_low, time_low, time_high, time_very_high)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ON CONFLICT(period, date) DO UPDATE SET
     timezone = excluded.timezone,
     start_at = excluded.start_at,
@@ -153,8 +172,17 @@ ON CONFLICT(period, date) DO UPDATE SET
     loop_iob_basal_json = excluded.loop_iob_basal_json,
     loop_iob_treatment_json = excluded.loop_iob_treatment_json,
     loop_cob_json = excluded.loop_cob_json,
+    glucose_readings = excluded.glucose_readings,
+    meter_readings = excluded.meter_readings,
+    cgm_slots = excluded.cgm_slots,
+    glucose_mean_mgdl = excluded.glucose_mean_mgdl,
+    glucose_sd_mgdl = excluded.glucose_sd_mgdl,
+    time_very_low = excluded.time_very_low,
+    time_low = excluded.time_low,
+    time_high = excluded.time_high,
+    time_very_high = excluded.time_very_high,
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
-RETURNING period, date, timezone, start_at, end_at, days, time_in_range, total_daily_dose, total_daily_carbs, glucose_mgdl_json, agp_mgdl_json, loop_iob_json, loop_iob_basal_json, loop_iob_treatment_json, loop_cob_json, created_at, updated_at
+RETURNING period, date, timezone, start_at, end_at, days, time_in_range, total_daily_dose, total_daily_carbs, glucose_mgdl_json, agp_mgdl_json, glucose_readings, meter_readings, cgm_slots, glucose_mean_mgdl, glucose_sd_mgdl, time_very_low, time_low, time_high, time_very_high, loop_iob_json, loop_iob_basal_json, loop_iob_treatment_json, loop_cob_json, created_at, updated_at
 `
 
 type UpsertSummaryPeriodParams struct {
@@ -173,6 +201,15 @@ type UpsertSummaryPeriodParams struct {
 	LoopIobBasalJson     string
 	LoopIobTreatmentJson string
 	LoopCobJson          string
+	GlucoseReadings      int64
+	MeterReadings        int64
+	CgmSlots             int64
+	GlucoseMeanMgdl      *float64
+	GlucoseSdMgdl        *float64
+	TimeVeryLow          *float64
+	TimeLow              *float64
+	TimeHigh             *float64
+	TimeVeryHigh         *float64
 }
 
 func (q *Queries) UpsertSummaryPeriod(ctx context.Context, arg UpsertSummaryPeriodParams) (*SummaryPeriod, error) {
@@ -192,6 +229,15 @@ func (q *Queries) UpsertSummaryPeriod(ctx context.Context, arg UpsertSummaryPeri
 		arg.LoopIobBasalJson,
 		arg.LoopIobTreatmentJson,
 		arg.LoopCobJson,
+		arg.GlucoseReadings,
+		arg.MeterReadings,
+		arg.CgmSlots,
+		arg.GlucoseMeanMgdl,
+		arg.GlucoseSdMgdl,
+		arg.TimeVeryLow,
+		arg.TimeLow,
+		arg.TimeHigh,
+		arg.TimeVeryHigh,
 	)
 	var i SummaryPeriod
 	err := row.Scan(
@@ -206,6 +252,15 @@ func (q *Queries) UpsertSummaryPeriod(ctx context.Context, arg UpsertSummaryPeri
 		&i.TotalDailyCarbs,
 		&i.GlucoseMgdlJson,
 		&i.AgpMgdlJson,
+		&i.GlucoseReadings,
+		&i.MeterReadings,
+		&i.CgmSlots,
+		&i.GlucoseMeanMgdl,
+		&i.GlucoseSdMgdl,
+		&i.TimeVeryLow,
+		&i.TimeLow,
+		&i.TimeHigh,
+		&i.TimeVeryHigh,
 		&i.LoopIobJson,
 		&i.LoopIobBasalJson,
 		&i.LoopIobTreatmentJson,

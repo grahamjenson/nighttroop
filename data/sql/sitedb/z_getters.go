@@ -4566,6 +4566,96 @@ func (m *SummaryPeriod) SetAgpMgdlJson(v *string) {
 	m.AgpMgdlJson = v
 }
 
+// GetGlucoseReadings returns the GlucoseReadings value.
+func (m SummaryPeriod) GetGlucoseReadings() int64 {
+	return m.GlucoseReadings
+}
+
+// SetGlucoseReadings sets the GlucoseReadings value and returns the updated SummaryPeriod.
+func (m *SummaryPeriod) SetGlucoseReadings(v int64) {
+	m.GlucoseReadings = v
+}
+
+// GetMeterReadings returns the MeterReadings value.
+func (m SummaryPeriod) GetMeterReadings() int64 {
+	return m.MeterReadings
+}
+
+// SetMeterReadings sets the MeterReadings value and returns the updated SummaryPeriod.
+func (m *SummaryPeriod) SetMeterReadings(v int64) {
+	m.MeterReadings = v
+}
+
+// GetCgmSlots returns the CgmSlots value.
+func (m SummaryPeriod) GetCgmSlots() int64 {
+	return m.CgmSlots
+}
+
+// SetCgmSlots sets the CgmSlots value and returns the updated SummaryPeriod.
+func (m *SummaryPeriod) SetCgmSlots(v int64) {
+	m.CgmSlots = v
+}
+
+// GetGlucoseMeanMgdl returns the GlucoseMeanMgdl value.
+func (m SummaryPeriod) GetGlucoseMeanMgdl() *float64 {
+	return m.GlucoseMeanMgdl
+}
+
+// SetGlucoseMeanMgdl sets the GlucoseMeanMgdl value and returns the updated SummaryPeriod.
+func (m *SummaryPeriod) SetGlucoseMeanMgdl(v *float64) {
+	m.GlucoseMeanMgdl = v
+}
+
+// GetGlucoseSdMgdl returns the GlucoseSdMgdl value.
+func (m SummaryPeriod) GetGlucoseSdMgdl() *float64 {
+	return m.GlucoseSdMgdl
+}
+
+// SetGlucoseSdMgdl sets the GlucoseSdMgdl value and returns the updated SummaryPeriod.
+func (m *SummaryPeriod) SetGlucoseSdMgdl(v *float64) {
+	m.GlucoseSdMgdl = v
+}
+
+// GetTimeVeryLow returns the TimeVeryLow value.
+func (m SummaryPeriod) GetTimeVeryLow() *float64 {
+	return m.TimeVeryLow
+}
+
+// SetTimeVeryLow sets the TimeVeryLow value and returns the updated SummaryPeriod.
+func (m *SummaryPeriod) SetTimeVeryLow(v *float64) {
+	m.TimeVeryLow = v
+}
+
+// GetTimeLow returns the TimeLow value.
+func (m SummaryPeriod) GetTimeLow() *float64 {
+	return m.TimeLow
+}
+
+// SetTimeLow sets the TimeLow value and returns the updated SummaryPeriod.
+func (m *SummaryPeriod) SetTimeLow(v *float64) {
+	m.TimeLow = v
+}
+
+// GetTimeHigh returns the TimeHigh value.
+func (m SummaryPeriod) GetTimeHigh() *float64 {
+	return m.TimeHigh
+}
+
+// SetTimeHigh sets the TimeHigh value and returns the updated SummaryPeriod.
+func (m *SummaryPeriod) SetTimeHigh(v *float64) {
+	m.TimeHigh = v
+}
+
+// GetTimeVeryHigh returns the TimeVeryHigh value.
+func (m SummaryPeriod) GetTimeVeryHigh() *float64 {
+	return m.TimeVeryHigh
+}
+
+// SetTimeVeryHigh sets the TimeVeryHigh value and returns the updated SummaryPeriod.
+func (m *SummaryPeriod) SetTimeVeryHigh(v *float64) {
+	m.TimeVeryHigh = v
+}
+
 // GetLoopIobJson returns the LoopIobJson value.
 func (m SummaryPeriod) GetLoopIobJson() string {
 	return m.LoopIobJson
@@ -15384,6 +15474,96 @@ func (m UpsertSummaryPeriodParams) GetLoopCobJson() string {
 // SetLoopCobJson sets the LoopCobJson value and returns the updated UpsertSummaryPeriodParams.
 func (m *UpsertSummaryPeriodParams) SetLoopCobJson(v string) {
 	m.LoopCobJson = v
+}
+
+// GetGlucoseReadings returns the GlucoseReadings value.
+func (m UpsertSummaryPeriodParams) GetGlucoseReadings() int64 {
+	return m.GlucoseReadings
+}
+
+// SetGlucoseReadings sets the GlucoseReadings value and returns the updated UpsertSummaryPeriodParams.
+func (m *UpsertSummaryPeriodParams) SetGlucoseReadings(v int64) {
+	m.GlucoseReadings = v
+}
+
+// GetMeterReadings returns the MeterReadings value.
+func (m UpsertSummaryPeriodParams) GetMeterReadings() int64 {
+	return m.MeterReadings
+}
+
+// SetMeterReadings sets the MeterReadings value and returns the updated UpsertSummaryPeriodParams.
+func (m *UpsertSummaryPeriodParams) SetMeterReadings(v int64) {
+	m.MeterReadings = v
+}
+
+// GetCgmSlots returns the CgmSlots value.
+func (m UpsertSummaryPeriodParams) GetCgmSlots() int64 {
+	return m.CgmSlots
+}
+
+// SetCgmSlots sets the CgmSlots value and returns the updated UpsertSummaryPeriodParams.
+func (m *UpsertSummaryPeriodParams) SetCgmSlots(v int64) {
+	m.CgmSlots = v
+}
+
+// GetGlucoseMeanMgdl returns the GlucoseMeanMgdl value.
+func (m UpsertSummaryPeriodParams) GetGlucoseMeanMgdl() *float64 {
+	return m.GlucoseMeanMgdl
+}
+
+// SetGlucoseMeanMgdl sets the GlucoseMeanMgdl value and returns the updated UpsertSummaryPeriodParams.
+func (m *UpsertSummaryPeriodParams) SetGlucoseMeanMgdl(v *float64) {
+	m.GlucoseMeanMgdl = v
+}
+
+// GetGlucoseSdMgdl returns the GlucoseSdMgdl value.
+func (m UpsertSummaryPeriodParams) GetGlucoseSdMgdl() *float64 {
+	return m.GlucoseSdMgdl
+}
+
+// SetGlucoseSdMgdl sets the GlucoseSdMgdl value and returns the updated UpsertSummaryPeriodParams.
+func (m *UpsertSummaryPeriodParams) SetGlucoseSdMgdl(v *float64) {
+	m.GlucoseSdMgdl = v
+}
+
+// GetTimeVeryLow returns the TimeVeryLow value.
+func (m UpsertSummaryPeriodParams) GetTimeVeryLow() *float64 {
+	return m.TimeVeryLow
+}
+
+// SetTimeVeryLow sets the TimeVeryLow value and returns the updated UpsertSummaryPeriodParams.
+func (m *UpsertSummaryPeriodParams) SetTimeVeryLow(v *float64) {
+	m.TimeVeryLow = v
+}
+
+// GetTimeLow returns the TimeLow value.
+func (m UpsertSummaryPeriodParams) GetTimeLow() *float64 {
+	return m.TimeLow
+}
+
+// SetTimeLow sets the TimeLow value and returns the updated UpsertSummaryPeriodParams.
+func (m *UpsertSummaryPeriodParams) SetTimeLow(v *float64) {
+	m.TimeLow = v
+}
+
+// GetTimeHigh returns the TimeHigh value.
+func (m UpsertSummaryPeriodParams) GetTimeHigh() *float64 {
+	return m.TimeHigh
+}
+
+// SetTimeHigh sets the TimeHigh value and returns the updated UpsertSummaryPeriodParams.
+func (m *UpsertSummaryPeriodParams) SetTimeHigh(v *float64) {
+	m.TimeHigh = v
+}
+
+// GetTimeVeryHigh returns the TimeVeryHigh value.
+func (m UpsertSummaryPeriodParams) GetTimeVeryHigh() *float64 {
+	return m.TimeVeryHigh
+}
+
+// SetTimeVeryHigh sets the TimeVeryHigh value and returns the updated UpsertSummaryPeriodParams.
+func (m *UpsertSummaryPeriodParams) SetTimeVeryHigh(v *float64) {
+	m.TimeVeryHigh = v
 }
 
 // GetSince returns the Since value.

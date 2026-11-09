@@ -13,8 +13,9 @@ POST http://{{ .ns_site }}/api/v1/devicestatus?token={{ token }}
 B [{"device":"loop://iPhone","created_at":"{{ daytime -1 720 }}","loop":{"name":"Loop","iob":{"iob":1.5},"cob":{"cob":20}}}]
 ASSERT_STATUS 200
 
-// A day not kept yet is built from its data: its glucose every 5 minutes, and its AGP of the 7 days to it each 15
-// minutes from midnight, the 5th, 25th, 50th, 75th and 95th percentiles, none where there was no glucose
+// A day not kept yet is built from its data: its glucose every 5 minutes, and its AGP of the 7 days to it each 5
+// minutes from midnight, the 5th, 25th, 50th, 75th and 95th percentiles of the 15 minutes around it, none where there
+// was no glucose
 NAME get_day
 GET http://{{ site }}/data/summary-periods/day-{{ date -1 }}
 H Authorization: Bearer {{ jwt }}
@@ -25,9 +26,22 @@ ASSERT_EQUALS ".yesterday" "@result.date"
 ASSERT_EQUALS 50 "@result.time_in_range"
 ASSERT_LENGTH 288 "@result.glucose"
 ASSERT_EXISTS "@result.glucose.144"
-ASSERT_LENGTH 96 "@result.agp"
+ASSERT_LENGTH 288 "@result.agp"
 ASSERT_LENGTH 0 "@result.agp.0"
-ASSERT_LENGTH 5 "@result.agp.48"
+ASSERT_LENGTH 0 "@result.agp.142"
+ASSERT_LENGTH 5 "@result.agp.143"
+ASSERT_LENGTH 5 "@result.agp.146"
+// Its 2 readings, one in range and one high, as 250 mg/dL is not over the very high bound, with their coefficient of
+// variation and GMI, and its CGM active the 2 of its 288 5 minutes with a reading
+ASSERT_EQUALS 2 "@result.glucose_readings"
+ASSERT_EQUALS 0 "@result.meter_readings"
+ASSERT_EQUALS 0 "@result.time_very_low"
+ASSERT_EQUALS 0 "@result.time_low"
+ASSERT_EQUALS 50 "@result.time_high"
+ASSERT_EQUALS 0 "@result.time_very_high"
+ASSERT_EQUALS 35.1 "@result.cv"
+ASSERT_EQUALS 7.7 "@result.gmi"
+ASSERT_EQUALS 0.7 "@result.cgm_active"
 // and the loop's IOB and COB every 5 minutes, null when it did not report, as Loop sends no basal or treatment IOB
 ASSERT_LENGTH 288 "@result.loop_iob"
 ASSERT_EQUALS 1.5 "@result.loop_iob.144"
@@ -44,6 +58,8 @@ H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_EQUALS null "@result.time_in_range"
 ASSERT_EQUALS 0 "@result.days"
+ASSERT_EQUALS null "@result.cv"
+ASSERT_EQUALS 0 "@result.cgm_active"
 
 // A period not over has today so far in it, though today is not kept: a reading in range at midnight is in this
 // month's AGP
@@ -78,8 +94,8 @@ ASSERT_EQUALS "week" "@result.period"
 ASSERT_LENGTH 288 "@result.glucose"
 ASSERT_EQUALS 1.5 "@result.loop_iob.144"
 ASSERT_EQUALS 20 "@result.loop_cob.144"
-ASSERT_LENGTH 96 "@result.agp"
-ASSERT_LENGTH 5 "@result.agp.48"
+ASSERT_LENGTH 288 "@result.agp"
+ASSERT_LENGTH 5 "@result.agp.144"
 
 NAME get_fortnight
 GET http://{{ site }}/data/summary-periods/fortnight-{{ date -1 }}
@@ -87,7 +103,7 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_EQUALS "fortnight" "@result.period"
-ASSERT_LENGTH 5 "@result.agp.48"
+ASSERT_LENGTH 5 "@result.agp.144"
 
 NAME get_month
 GET http://{{ site }}/data/summary-periods/month-{{ date -1 }}
@@ -95,7 +111,7 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_EQUALS "month" "@result.period"
-ASSERT_LENGTH 5 "@result.agp.48"
+ASSERT_LENGTH 5 "@result.agp.144"
 
 // An id that is not a period and a date, or a date in the future or over a year ago, is not found
 NAME get_not_a_period
