@@ -2598,12 +2598,12 @@ func (m *InsulinDosesVw) SetCreatedByIdentityName(v *string) {
 }
 
 // GetID returns the ID value.
-func (m LoopSetting) GetID() int64 {
+func (m LoopSetting) GetID() string {
 	return m.ID
 }
 
 // SetID sets the ID value and returns the updated LoopSetting.
-func (m *LoopSetting) SetID(v int64) {
+func (m *LoopSetting) SetID(v string) {
 	m.ID = v
 }
 
@@ -2637,14 +2637,24 @@ func (m *LoopSetting) SetSettingsJson(v string) {
 	m.SettingsJson = v
 }
 
-// GetOccurredAt returns the OccurredAt value.
-func (m LoopSetting) GetOccurredAt() int64 {
-	return m.OccurredAt
+// GetFirstSeenAt returns the FirstSeenAt value.
+func (m LoopSetting) GetFirstSeenAt() int64 {
+	return m.FirstSeenAt
 }
 
-// SetOccurredAt sets the OccurredAt value and returns the updated LoopSetting.
-func (m *LoopSetting) SetOccurredAt(v int64) {
-	m.OccurredAt = v
+// SetFirstSeenAt sets the FirstSeenAt value and returns the updated LoopSetting.
+func (m *LoopSetting) SetFirstSeenAt(v int64) {
+	m.FirstSeenAt = v
+}
+
+// GetLastSeenAt returns the LastSeenAt value.
+func (m LoopSetting) GetLastSeenAt() int64 {
+	return m.LastSeenAt
+}
+
+// SetLastSeenAt sets the LastSeenAt value and returns the updated LoopSetting.
+func (m *LoopSetting) SetLastSeenAt(v int64) {
+	m.LastSeenAt = v
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
@@ -3187,24 +3197,24 @@ func (m *ProfilePreset) SetTargetsLowJson(v *string) {
 	m.TargetsLowJson = v
 }
 
-// GetLoopSettingsJson returns the LoopSettingsJson value.
-func (m ProfilePreset) GetLoopSettingsJson() *string {
-	return m.LoopSettingsJson
+// GetLoopSettingsID returns the LoopSettingsID value.
+func (m ProfilePreset) GetLoopSettingsID() *string {
+	return m.LoopSettingsID
 }
 
-// SetLoopSettingsJson sets the LoopSettingsJson value and returns the updated ProfilePreset.
-func (m *ProfilePreset) SetLoopSettingsJson(v *string) {
-	m.LoopSettingsJson = v
+// SetLoopSettingsID sets the LoopSettingsID value and returns the updated ProfilePreset.
+func (m *ProfilePreset) SetLoopSettingsID(v *string) {
+	m.LoopSettingsID = v
 }
 
-// GetRemoteSettingsJson returns the RemoteSettingsJson value.
-func (m ProfilePreset) GetRemoteSettingsJson() *string {
-	return m.RemoteSettingsJson
+// GetRemoteSettingsID returns the RemoteSettingsID value.
+func (m ProfilePreset) GetRemoteSettingsID() *string {
+	return m.RemoteSettingsID
 }
 
-// SetRemoteSettingsJson sets the RemoteSettingsJson value and returns the updated ProfilePreset.
-func (m *ProfilePreset) SetRemoteSettingsJson(v *string) {
-	m.RemoteSettingsJson = v
+// SetRemoteSettingsID sets the RemoteSettingsID value and returns the updated ProfilePreset.
+func (m *ProfilePreset) SetRemoteSettingsID(v *string) {
+	m.RemoteSettingsID = v
 }
 
 // GetRawJsonData returns the RawJsonData value.
@@ -12617,74 +12627,114 @@ func (m *UpdateTempTargetParams) SetID(v string) {
 	m.ID = v
 }
 
+// GetID returns the ID value.
+func (m DeleteLoopSettingsParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated DeleteLoopSettingsParams.
+func (m *DeleteLoopSettingsParams) SetID(v string) {
+	m.ID = v
+}
+
+// GetID returns the ID value.
+func (m GetLoopSettingsParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated GetLoopSettingsParams.
+func (m *GetLoopSettingsParams) SetID(v string) {
+	m.ID = v
+}
+
 // GetApp returns the App value.
-func (m CreateLoopSettingsParams) GetApp() string {
+func (m SearchLoopSettingsParams) GetApp() *string {
 	return m.App
 }
 
-// SetApp sets the App value and returns the updated CreateLoopSettingsParams.
-func (m *CreateLoopSettingsParams) SetApp(v string) {
+// SetApp sets the App value and returns the updated SearchLoopSettingsParams.
+func (m *SearchLoopSettingsParams) SetApp(v *string) {
+	m.App = v
+}
+
+// GetSkip returns the Skip value.
+func (m SearchLoopSettingsParams) GetSkip() int64 {
+	return m.Skip
+}
+
+// SetSkip sets the Skip value and returns the updated SearchLoopSettingsParams.
+func (m *SearchLoopSettingsParams) SetSkip(v int64) {
+	m.Skip = v
+}
+
+// GetLimit returns the Limit value.
+func (m SearchLoopSettingsParams) GetLimit() int64 {
+	return m.Limit
+}
+
+// SetLimit sets the Limit value and returns the updated SearchLoopSettingsParams.
+func (m *SearchLoopSettingsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
+// GetID returns the ID value.
+func (m UpsertLoopSettingsParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated UpsertLoopSettingsParams.
+func (m *UpsertLoopSettingsParams) SetID(v string) {
+	m.ID = v
+}
+
+// GetApp returns the App value.
+func (m UpsertLoopSettingsParams) GetApp() string {
+	return m.App
+}
+
+// SetApp sets the App value and returns the updated UpsertLoopSettingsParams.
+func (m *UpsertLoopSettingsParams) SetApp(v string) {
 	m.App = v
 }
 
 // GetSource returns the Source value.
-func (m CreateLoopSettingsParams) GetSource() string {
+func (m UpsertLoopSettingsParams) GetSource() string {
 	return m.Source
 }
 
-// SetSource sets the Source value and returns the updated CreateLoopSettingsParams.
-func (m *CreateLoopSettingsParams) SetSource(v string) {
+// SetSource sets the Source value and returns the updated UpsertLoopSettingsParams.
+func (m *UpsertLoopSettingsParams) SetSource(v string) {
 	m.Source = v
 }
 
 // GetSettingsJson returns the SettingsJson value.
-func (m CreateLoopSettingsParams) GetSettingsJson() string {
+func (m UpsertLoopSettingsParams) GetSettingsJson() string {
 	return m.SettingsJson
 }
 
-// SetSettingsJson sets the SettingsJson value and returns the updated CreateLoopSettingsParams.
-func (m *CreateLoopSettingsParams) SetSettingsJson(v string) {
+// SetSettingsJson sets the SettingsJson value and returns the updated UpsertLoopSettingsParams.
+func (m *UpsertLoopSettingsParams) SetSettingsJson(v string) {
 	m.SettingsJson = v
 }
 
-// GetOccurredAt returns the OccurredAt value.
-func (m CreateLoopSettingsParams) GetOccurredAt() int64 {
-	return m.OccurredAt
+// GetSeenAt returns the SeenAt value.
+func (m UpsertLoopSettingsParams) GetSeenAt() int64 {
+	return m.SeenAt
 }
 
-// SetOccurredAt sets the OccurredAt value and returns the updated CreateLoopSettingsParams.
-func (m *CreateLoopSettingsParams) SetOccurredAt(v int64) {
-	m.OccurredAt = v
+// SetSeenAt sets the SeenAt value and returns the updated UpsertLoopSettingsParams.
+func (m *UpsertLoopSettingsParams) SetSeenAt(v int64) {
+	m.SeenAt = v
 }
 
 // GetCreatedByDeviceName returns the CreatedByDeviceName value.
-func (m CreateLoopSettingsParams) GetCreatedByDeviceName() *string {
+func (m UpsertLoopSettingsParams) GetCreatedByDeviceName() *string {
 	return m.CreatedByDeviceName
 }
 
-// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated CreateLoopSettingsParams.
-func (m *CreateLoopSettingsParams) SetCreatedByDeviceName(v *string) {
+// SetCreatedByDeviceName sets the CreatedByDeviceName value and returns the updated UpsertLoopSettingsParams.
+func (m *UpsertLoopSettingsParams) SetCreatedByDeviceName(v *string) {
 	m.CreatedByDeviceName = v
-}
-
-// GetApp returns the App value.
-func (m GetLoopSettingsAtParams) GetApp() string {
-	return m.App
-}
-
-// SetApp sets the App value and returns the updated GetLoopSettingsAtParams.
-func (m *GetLoopSettingsAtParams) SetApp(v string) {
-	m.App = v
-}
-
-// GetAt returns the At value.
-func (m GetLoopSettingsAtParams) GetAt() int64 {
-	return m.At
-}
-
-// SetAt sets the At value and returns the updated GetLoopSettingsAtParams.
-func (m *GetLoopSettingsAtParams) SetAt(v int64) {
-	m.At = v
 }
 
 // GetSkip returns the Skip value.
@@ -13477,24 +13527,24 @@ func (m *CreateProfilePresetParams) SetTargetsLowJson(v *string) {
 	m.TargetsLowJson = v
 }
 
-// GetLoopSettingsJson returns the LoopSettingsJson value.
-func (m CreateProfilePresetParams) GetLoopSettingsJson() *string {
-	return m.LoopSettingsJson
+// GetLoopSettingsID returns the LoopSettingsID value.
+func (m CreateProfilePresetParams) GetLoopSettingsID() *string {
+	return m.LoopSettingsID
 }
 
-// SetLoopSettingsJson sets the LoopSettingsJson value and returns the updated CreateProfilePresetParams.
-func (m *CreateProfilePresetParams) SetLoopSettingsJson(v *string) {
-	m.LoopSettingsJson = v
+// SetLoopSettingsID sets the LoopSettingsID value and returns the updated CreateProfilePresetParams.
+func (m *CreateProfilePresetParams) SetLoopSettingsID(v *string) {
+	m.LoopSettingsID = v
 }
 
-// GetRemoteSettingsJson returns the RemoteSettingsJson value.
-func (m CreateProfilePresetParams) GetRemoteSettingsJson() *string {
-	return m.RemoteSettingsJson
+// GetRemoteSettingsID returns the RemoteSettingsID value.
+func (m CreateProfilePresetParams) GetRemoteSettingsID() *string {
+	return m.RemoteSettingsID
 }
 
-// SetRemoteSettingsJson sets the RemoteSettingsJson value and returns the updated CreateProfilePresetParams.
-func (m *CreateProfilePresetParams) SetRemoteSettingsJson(v *string) {
-	m.RemoteSettingsJson = v
+// SetRemoteSettingsID sets the RemoteSettingsID value and returns the updated CreateProfilePresetParams.
+func (m *CreateProfilePresetParams) SetRemoteSettingsID(v *string) {
+	m.RemoteSettingsID = v
 }
 
 // GetOccurredAt returns the OccurredAt value.

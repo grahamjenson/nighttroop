@@ -308,11 +308,12 @@ type InsulinDosesVw struct {
 }
 
 type LoopSetting struct {
-	ID                  int64
+	ID                  string
 	App                 string
 	Source              string
 	SettingsJson        string
-	OccurredAt          int64
+	FirstSeenAt         int64
+	LastSeenAt          int64
 	CreatedByDeviceName *string
 	CreatedAt           int64
 }
@@ -376,8 +377,8 @@ type ProfilePreset struct {
 	BasalRatesJson           *string
 	TargetsHighJson          *string
 	TargetsLowJson           *string
-	LoopSettingsJson         *string
-	RemoteSettingsJson       *string
+	LoopSettingsID           *string
+	RemoteSettingsID         *string
 	RawJsonData              *string
 	UtcOffsetMinutes         *int64
 	OccurredAt               int64

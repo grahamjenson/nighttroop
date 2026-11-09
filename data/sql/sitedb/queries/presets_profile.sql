@@ -20,8 +20,8 @@ INSERT INTO profile_presets (
     targets_high_json,
     targets_low_json,
 
-    loop_settings_json,
-    remote_settings_json,
+    loop_settings_id,
+    remote_settings_id,
     
     occurred_at,
     utc_offset_minutes,

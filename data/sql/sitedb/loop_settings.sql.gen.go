@@ -7,67 +7,117 @@ package sitedb
 
 import (
 	"context"
+	"database/sql"
 )
 
-const createLoopSettings = `-- name: CreateLoopSettings :one
-INSERT INTO loop_settings (app, source, settings_json, occurred_at, created_by_device_name)
-VALUES (?, ?, ?, ?, ?)
-RETURNING id, app, source, settings_json, occurred_at, created_by_device_name, created_at
+const deleteLoopSettings = `-- name: DeleteLoopSettings :execresult
+DELETE FROM loop_settings WHERE id = ?
 `
 
-type CreateLoopSettingsParams struct {
+type DeleteLoopSettingsParams struct {
+	ID string
+}
+
+func (q *Queries) DeleteLoopSettings(ctx context.Context, arg DeleteLoopSettingsParams) (sql.Result, error) {
+	return q.exec(ctx, q.deleteLoopSettingsStmt, deleteLoopSettings, arg.ID)
+}
+
+const getLoopSettings = `-- name: GetLoopSettings :one
+SELECT id, app, source, settings_json, first_seen_at, last_seen_at, created_by_device_name, created_at FROM loop_settings WHERE id = ?
+`
+
+type GetLoopSettingsParams struct {
+	ID string
+}
+
+func (q *Queries) GetLoopSettings(ctx context.Context, arg GetLoopSettingsParams) (*LoopSetting, error) {
+	row := q.queryRow(ctx, q.getLoopSettingsStmt, getLoopSettings, arg.ID)
+	var i LoopSetting
+	err := row.Scan(
+		&i.ID,
+		&i.App,
+		&i.Source,
+		&i.SettingsJson,
+		&i.FirstSeenAt,
+		&i.LastSeenAt,
+		&i.CreatedByDeviceName,
+		&i.CreatedAt,
+	)
+	return &i, err
+}
+
+const searchLoopSettings = `-- name: SearchLoopSettings :many
+SELECT id, app, source, settings_json, first_seen_at, last_seen_at, created_by_device_name, created_at FROM loop_settings
+WHERE CAST(?1 AS TEXT) IS NULL OR app = ?1
+ORDER BY last_seen_at DESC, id
+LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
+`
+
+type SearchLoopSettingsParams struct {
+	App   *string
+	Skip  int64
+	Limit int64
+}
+
+// Each set of settings, the last seen first, of one app or all of them
+func (q *Queries) SearchLoopSettings(ctx context.Context, arg SearchLoopSettingsParams) ([]*LoopSetting, error) {
+	rows, err := q.query(ctx, q.searchLoopSettingsStmt, searchLoopSettings, arg.App, arg.Skip, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*LoopSetting
+	for rows.Next() {
+		var i LoopSetting
+		if err := rows.Scan(
+			&i.ID,
+			&i.App,
+			&i.Source,
+			&i.SettingsJson,
+			&i.FirstSeenAt,
+			&i.LastSeenAt,
+			&i.CreatedByDeviceName,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const upsertLoopSettings = `-- name: UpsertLoopSettings :exec
+INSERT INTO loop_settings (id, app, source, settings_json, first_seen_at, last_seen_at, created_by_device_name)
+VALUES (?1, ?2, ?3, ?4, ?5, ?5, ?6)
+ON CONFLICT(id) DO UPDATE SET
+    first_seen_at = MIN(first_seen_at, excluded.first_seen_at),
+    last_seen_at = MAX(last_seen_at, excluded.last_seen_at)
+`
+
+type UpsertLoopSettingsParams struct {
+	ID                  string
 	App                 string
 	Source              string
 	SettingsJson        string
-	OccurredAt          int64
+	SeenAt              int64
 	CreatedByDeviceName *string
 }
 
-func (q *Queries) CreateLoopSettings(ctx context.Context, arg CreateLoopSettingsParams) (*LoopSetting, error) {
-	row := q.queryRow(ctx, q.createLoopSettingsStmt, createLoopSettings,
+// Keeps a set of an app's settings once, however often it is sent, widening when it was seen to take in this time
+func (q *Queries) UpsertLoopSettings(ctx context.Context, arg UpsertLoopSettingsParams) error {
+	_, err := q.exec(ctx, q.upsertLoopSettingsStmt, upsertLoopSettings,
+		arg.ID,
 		arg.App,
 		arg.Source,
 		arg.SettingsJson,
-		arg.OccurredAt,
+		arg.SeenAt,
 		arg.CreatedByDeviceName,
 	)
-	var i LoopSetting
-	err := row.Scan(
-		&i.ID,
-		&i.App,
-		&i.Source,
-		&i.SettingsJson,
-		&i.OccurredAt,
-		&i.CreatedByDeviceName,
-		&i.CreatedAt,
-	)
-	return &i, err
-}
-
-const getLoopSettingsAt = `-- name: GetLoopSettingsAt :one
-SELECT id, app, source, settings_json, occurred_at, created_by_device_name, created_at FROM loop_settings
-WHERE app = ?1 AND occurred_at <= ?2
-ORDER BY occurred_at DESC, id DESC
-LIMIT 1
-`
-
-type GetLoopSettingsAtParams struct {
-	App string
-	At  int64
-}
-
-// An app's settings in force at a time: its last row at or before it
-func (q *Queries) GetLoopSettingsAt(ctx context.Context, arg GetLoopSettingsAtParams) (*LoopSetting, error) {
-	row := q.queryRow(ctx, q.getLoopSettingsAtStmt, getLoopSettingsAt, arg.App, arg.At)
-	var i LoopSetting
-	err := row.Scan(
-		&i.ID,
-		&i.App,
-		&i.Source,
-		&i.SettingsJson,
-		&i.OccurredAt,
-		&i.CreatedByDeviceName,
-		&i.CreatedAt,
-	)
-	return &i, err
+	return err
 }

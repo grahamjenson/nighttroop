@@ -33,11 +33,13 @@ func (c DeviceStatusCollection) CreateModel(q *sitedb.Queries, ctx context.Conte
 	if overrideIdentifier != nil {
 		createParams.ID = *overrideIdentifier
 	}
-	// AAPS's configuration is kept apart too, only when it changes
+	// AAPS's configuration is kept once in loop_settings, and the report refers to it
 	if nsModel.Configuration != nil {
-		if _, err := recordLoopSettings(q, ctx, aapsApp, fromDeviceStatus, nsModel.Configuration, createParams.OccurredAt, createParams.CreatedByDeviceName); err != nil {
+		id, err := recordLoopSettings(q, ctx, aapsApp, fromDeviceStatus, nsModel.Configuration, createParams.OccurredAt, createParams.CreatedByDeviceName)
+		if err != nil {
 			return nil, err
 		}
+		createParams.OtherAttributes.ConfigurationID = id
 	}
 
 	return q.CreateDeviceReport(ctx, createParams)
@@ -157,8 +159,9 @@ func DBToNightscoutDeviceStatus(source *sitedb.DeviceReport, siteContext *httput
 	///////
 	/// Extracting Loop values
 	///////
-	if other.ConfigurationSettings != nil {
-		nsModel.ConfigurationRaw = &other.ConfigurationSettings
+	// Its configuration is the loop_settings it refers to, left out when they were deleted
+	if configuration := loopSettingsJSON(context.Background(), siteContext, other.ConfigurationID); configuration != nil {
+		nsModel.ConfigurationRaw = &configuration
 	}
 
 	if other.LoopName != nil && other.LoopSettings != nil {
@@ -194,10 +197,6 @@ func NightscoutToDBCreateDeviceReport(source nightscoutmodels.DeviceStatus, ctx 
 	}
 	if source.OverrideRaw != nil {
 		createParams.OtherAttributes.Override = *source.OverrideRaw
-	}
-
-	if source.ConfigurationRaw != nil {
-		createParams.OtherAttributes.ConfigurationSettings = *source.ConfigurationRaw
 	}
 
 	/////

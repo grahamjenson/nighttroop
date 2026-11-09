@@ -39,32 +39,29 @@ func (c ProfileCollection) Validate(nsModel nightscoutmodels.ProfileStore, dbMod
 }
 
 func (c ProfileCollection) CreateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.ProfileStore, cc nightscoutmodels.ConverterContext, overrideIdentifier *string) (*sitedb.ProfilePresetBundle, error) {
-	manyCreateParams := NightscoutToDBCreateProfilePreset(nsModel, cc)
+	// Loop's and Trio's settings are kept once in loop_settings, and each profile refers to them
+	sent := nightscoutmodels.PartialProfileStoreToCreate(nsModel, cc)
+	loopID, err := recordLoopSettings(q, ctx, loopApp, fromProfile, nsModel.LoopSettings, sent.OccurredAt, sent.CreatedByDeviceName)
+	if err != nil {
+		return nil, err
+	}
+	remoteID, err := recordLoopSettings(q, ctx, trioApp, fromProfile, nsModel.RemoteSettings, sent.OccurredAt, sent.CreatedByDeviceName)
+	if err != nil {
+		return nil, err
+	}
 
 	ret := sitedb.ProfilePresetBundle([]*sitedb.ProfilePreset{})
-
-	for _, createParams := range manyCreateParams {
+	for _, createParams := range NightscoutToDBCreateProfilePreset(nsModel, cc) {
 		// A replace keeps the store's identifier, as every preset in it shares it
 		if overrideIdentifier != nil {
 			createParams.ProfileStoreID = *overrideIdentifier
 		}
+		createParams.LoopSettingsID, createParams.RemoteSettingsID = loopID, remoteID
 		dbModel, err := q.CreateProfilePreset(ctx, createParams)
 		if err != nil {
 			return nil, err
 		}
 		ret = append(ret, dbModel)
-	}
-	// Loop's and Trio's settings are kept apart too, each only when it changes
-	sent := nightscoutmodels.PartialProfileStoreToCreate(nsModel, cc)
-	if nsModel.LoopSettings != nil {
-		if _, err := recordLoopSettings(q, ctx, loopApp, fromProfile, nsModel.LoopSettings, sent.OccurredAt, sent.CreatedByDeviceName); err != nil {
-			return nil, err
-		}
-	}
-	if nsModel.RemoteSettings != nil {
-		if _, err := recordLoopSettings(q, ctx, trioApp, fromProfile, nsModel.RemoteSettings, sent.OccurredAt, sent.CreatedByDeviceName); err != nil {
-			return nil, err
-		}
 	}
 	return &ret, nil
 }
@@ -147,6 +144,13 @@ func DBToNightscoutProfileStore(source *sitedb.ProfilePresetBundle, siteContext 
 	profileStore.Store = make(map[types.ShortString]nightscoutmodels.Profile)
 	profileStore.DefaultProfile = ptr(types.ShortString(defaultProfile.Name))
 	profileStore.Units = settingsUnits
+	// Loop's and Trio's settings are the loop_settings it refers to, left out when they were deleted
+	if loop := loopSettingsJSON(context.Background(), siteContext, defaultProfile.LoopSettingsID); loop != nil {
+		profileStore.LoopSettings = nightscoutmodels.JSONToLoopSettings(ptr(string(loop)))
+	}
+	if remote := loopSettingsJSON(context.Background(), siteContext, defaultProfile.RemoteSettingsID); remote != nil {
+		profileStore.RemoteSettings = nightscoutmodels.JSONToRemoteSettings(ptr(string(remote)))
+	}
 
 	for _, p := range realSource {
 		profile := nightscoutmodels.DBModelToProfile(p, siteContext)
@@ -165,19 +169,10 @@ func DBToNightscoutProfileStore(source *sitedb.ProfilePresetBundle, siteContext 
 func NightscoutToDBCreateProfilePreset(source nightscoutmodels.ProfileStore, ctx nightscoutmodels.ConverterContext) []sitedb.CreateProfilePresetParams {
 	createParams := []sitedb.CreateProfilePresetParams{}
 	profileStoreID := nightscoutmodels.AssignID()
-	var loopSettingsJSON, remoteSettingsJSON *string
-	if source.LoopSettings != nil {
-		loopSettingsJSON = TryValueToJSON(source.LoopSettings)
-	}
-	if source.RemoteSettings != nil {
-		remoteSettingsJSON = TryValueToJSON(source.RemoteSettings)
-	}
 	defaultUnits := source.Units
 	for name, profile := range source.Store {
 		createParam := nightscoutmodels.PartialProfileStoreToCreate(source, ctx)
 		createParam.ProfileStoreID = profileStoreID
-		createParam.LoopSettingsJson = loopSettingsJSON
-		createParam.RemoteSettingsJson = remoteSettingsJSON
 		createParam.Name = string(name)
 		createParam.IsDefault = source.DefaultProfile != nil && *source.DefaultProfile == name
 

@@ -113,8 +113,7 @@ type DBModelConverter interface {
 	// goverter:ignore Store
 	// goverter:map OccurredAt Mills
 	// goverter:map Name DefaultProfile
-	// goverter:map LoopSettingsJson LoopSettings | JSONToLoopSettings
-	// goverter:map RemoteSettingsJson RemoteSettings | JSONToRemoteSettings
+	// goverter:ignore LoopSettings RemoteSettings
 	DBModelToProfileStore(source *sitedb.ProfilePreset, siteContext *httputils.SiteContext) ProfileStore
 
 	// goverter:context siteContext

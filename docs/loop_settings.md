@@ -3,79 +3,71 @@
 A loop app's settings, such as Loop's maximum bolus or Trio's remote control keys, change rarely. They come in on
 records that are sent often:
 
-| App  | Sent in                                   | Field                                          |
-|------|-------------------------------------------|------------------------------------------------|
-| Loop | a profile (`/api/v1/profile`)             | `loopSettings`                                 |
-| Trio | a profile                                 | its remote settings, at the top of the profile |
-| AAPS | each device status (`/api/v1/devicestatus`) | `configuration`                              |
+| App  | Sent in                                     | Field                                          | How often                               |
+|------|---------------------------------------------|------------------------------------------------|-----------------------------------------|
+| Loop | a profile (`/api/v1/profile`)               | `loopSettings`                                 | when its therapy settings are saved     |
+| Trio | a profile                                   | its remote settings, at the top of the profile | when a schedule is saved                |
+| AAPS | each device status (`/api/v1/devicestatus`) | `configuration`                                | about hourly, and `{}` in the others    |
 
-Until now they were kept on those records. A profile store copied `loopSettings` and Trio's remote settings onto every
-one of its `profile_presets` rows. Each device report kept AAPS's configuration in `other_attributes`, every 5
-minutes. Each copy is the same until something changes, and there is no way to see when something did.
+They used to be copied onto each record: every `profile_presets` row, and every device report. Now each different set
+is kept once in `loop_settings`, and each record refers to the set it was sent with.
 
 The `openaps` and `loop` objects in a device status are not settings. They are the loop's state at that cycle: its
-IOB, COB, predictions and what it enacted. They change every cycle and stay on `device_reports`.
+IOB, COB, predictions and what it enacted, with the effective ISF, CR and targets of the cycle. They change every
+cycle and stay on `device_reports`.
 
 ## The table
 
-`loop_settings` has a row for each change of an app's settings:
+`loop_settings` has a row for each different set of an app's settings:
 
+- `id`: the SHA-256, in hex, of the app and the settings. The same settings from the same app are always the same
+  row, whenever and however often they are sent.
 - `app`: `loop`, `trio` or `aaps`.
 - `source`: whether they came in a `profile` or a `devicestatus`.
 - `settings_json`: the settings as the app's model writes them. Writing them through the model leaves out unknown
-  fields and puts the known ones in the same order each time, so two uploads of the same settings are the same text.
-- `occurred_at`: when the record they came in was from.
-- `created_by_device_name`: the device the record came from.
-
-An app's settings in force at a time are its last row at or before that time (`GetLoopSettingsAt`).
+  fields and puts the known ones in the same order each time, and Go writes a map's keys sorted, so the same settings
+  are always the same text. A Go upgrade that wrote numbers differently would at worst add a second row for the same
+  settings; it can never mix up two different sets.
+- `first_seen_at` and `last_seen_at`: the earliest and latest times of the records they came in.
+- `created_by_device_name`: the device that first sent them.
 
 ## Writing: extracting them from a Nightscout write
 
-This is done; see `server/nightscoutapi/nscollections/loop_settings.go`.
+`recordLoopSettings` (`server/nightscoutapi/nscollections/loop_settings.go`) runs when a profile or device status is
+created, in the same transaction:
 
-When a profile or device status is created, `recordLoopSettings` takes the app's settings out of it. It compares them
-with the app's settings in force at the record's time. It adds a row only when they differ, and gives back the row
-they are either way.
+1. It writes the app's settings through its model, and works out their ID.
+2. It upserts the row: a new set is added, and a set already kept only widens when it was seen. So repeat uploads,
+   retries, backfills and records arriving out of order all land on the same row, and A, then B, then A again is two
+   rows, not three.
+3. It gives back the ID, which the record keeps: `profile_presets.loop_settings_id` and `remote_settings_id`, and
+   `configuration_id` in a device report's `other_attributes`.
 
-- **A repeat upload** adds nothing.
-- **A change** adds a row from that time.
-- **A change back** adds a row too, so the history shows both changes.
-- **A backfill**, such as a profile from last week sent today, is compared with the settings in force last week, not
-  today's, so it adds a row only when it really differs from that time.
-- **Settings over 8 KB** are not kept, but the record they came in is still kept.
-- **Empty settings**, such as the `configuration: {}` AAPS sends in some statuses, count as none sent, not a change.
+Settings that are empty (`{}`, as AAPS sends in most statuses) or missing are none sent, so the record refers to no
+row. Settings over 8 KB are not kept, and the record is still kept, without them.
 
-It runs in the same transaction as the record, so a failed write keeps neither.
+## Reading: putting the records back together
 
-## Reading: putting the records back together (next)
+A Nightscout read still gives a profile its `loopSettings` and Trio's remote settings, and a device status its
+`configuration`, as they were sent. The converters (`DBToNightscoutProfileStore`, `DBToNightscoutDeviceStatus`) look
+up the row the record refers to by its ID, one primary key lookup for each record that has one.
 
-A Nightscout read must still return a profile with its `loopSettings`, and a device status with its `configuration`,
-as they were sent. That makes them a combination of records again. Guessing which settings were in force at the
-record's time would be wrong in two cases:
+The reference is not a foreign key. A set of settings can be deleted, from the site's Loop Settings page, and the
+records sent with it are kept: they are read back without those settings, as if none had been sent. Nothing else
+changes about them.
 
-- **Sent without settings:** a profile sent without `loopSettings`, after one sent with them, would come back with
-  them.
-- **A later backfill:** a backfill of earlier settings, sent after a profile, would change what that profile reads
-  back.
+## The site
 
-So each record will point at the row it was sent with. `recordLoopSettings` already gives that row:
-
-1. Add `loop_settings_id` (and `remote_settings_id` for Trio) to `profile_presets`, and `loop_settings_id` to
-   `device_reports`. Each is `REFERENCES loop_settings(id)`, set from what `recordLoopSettings` gives back.
-2. Read them back with a `LEFT JOIN loop_settings` in the profile and device report queries, so a read is still one
-   query. The converters (`DBToNightscoutProfileStore`, `DBToNightscoutDeviceStatus`) take the joined JSON where they
-   take the copied JSON today.
-3. Remove the copies: `profile_presets.loop_settings_json` and `remote_settings_json`, and `configuration_settings`
-   in `device_reports.other_attributes`. The migrations are not frozen yet, so this edits `000001`.
-4. Read the newest settings for push notifications (`profile_push.go`) with `GetLoopSettingsAt(app, now)`, rather
-   than from the newest profile.
-
-A record whose settings were too large has no row and reads back without them, as one over the limit is refused now.
+The Data hub's Presets group has a Loop Settings page (`/presets/loop-settings`): each set, the last seen first, with
+its app, what it came in, the device and when it was first and last seen. Clicking one shows the settings as they were
+sent, indented to inspect. A set can be deleted there.
 
 ## Afterwards
 
-- A site page listing each change of each app's settings, with what changed.
-- Deleting all of a site's data deletes its `loop_settings` too. Deleting one profile or device status leaves them, as
-  other records refer to the same rows.
-- Limits: a client that sends different settings on every upload adds a row each time. Uploads are already
-  rate limited, and a row is at most 8 KB, but a cap on rows a day may be worth adding.
+- What changed between two sets, shown on the page.
+- When settings were in force can be read from the records that refer to them, in time order, while those records
+  are kept; `first_seen_at` and `last_seen_at` keep the outline after they are deleted.
+- Sets no record refers to any more could be cleared when a site is truncated. Deleting a site deletes its whole DB,
+  `loop_settings` with it.
+- Limits: a client that sends different settings on every upload adds a row each time. Uploads are already rate
+  limited, and a row is at most 8 KB, but a cap on rows a day may be worth adding.
