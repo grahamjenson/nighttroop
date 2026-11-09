@@ -79,7 +79,7 @@ func TestTruncateHandler(t *testing.T) {
 	events, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &siteID, Limit: 10})
 	require.NoError(t, err)
 	require.Equal(t, "site_truncated", events[0].Name)
-	require.Equal(t, `{"by":"admin","before_size_kb":5000,"after_size_kb":null}`, *events[0].Attributes)
+	require.Equal(t, `{"by":"admin","before_size_kb":25000,"after_size_kb":null}`, *events[0].Attributes)
 }
 
 // TestSettingsHandler checks only an admin can turn public site creation off and on
