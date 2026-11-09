@@ -251,7 +251,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   its address, and opening it again, after that or on another site, says they have been shown and links to the recover
   page.
 - The new site's admin login is its own step: its username and password, its TOTP secret as a QR code and text, and a
-  code check. The Log in button is disabled until a code from the authenticator app matches, saying under it to check a code in step 2 first; a wrong code says so. Its buttons are the shape of its Copy all credentials, not round pills. A
+  code check. The Log in button, which opens the login in a new tab with the admin's name filled in so the credentials stay open, is disabled until a code from the authenticator app matches, saying under it to check a code in step 2 first; a wrong code says so. Its buttons are the shape of its Copy all credentials, not round pills. A
   code is checked as soon as its sixth digit is in, with no click. The check changes nothing, and a recovered site's
   credentials are checked the same way.
 - Beside Log in, a new site's welcome page offers "Log in with a passkey", with no authenticator app: it adds the admin a

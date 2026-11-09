@@ -16,6 +16,8 @@ ASSERT_VISIBLE #public--totp-checked
 CLICK #public--login-button
 ASSERT_NEW_PAGE
 
+// The login it opens has the admin's name filled in, so only its password is typed
+ASSERT_VISIBLE #site--login--name[value="admin"]
 INPUT #site--login--name admin
 INPUT #site--login--password password
 

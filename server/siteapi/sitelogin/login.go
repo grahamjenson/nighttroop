@@ -46,7 +46,7 @@ func GETLoginPageHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//
 		w.Header().Set("Content-Type", "text/html")
-		err := site_login_templ.Login().Render(r.Context(), w)
+		err := site_login_templ.Login(loginName(r)).Render(r.Context(), w)
 		if err != nil {
 			http.Error(w, "Template Error", http.StatusInternalServerError)
 			return
@@ -434,4 +434,16 @@ func identityLoginErrorAPI(w http.ResponseWriter, r *http.Request, usrMsg string
 		usrMsg = "Invalid login attempt"
 	}
 	http.Error(w, usrMsg, http.StatusUnauthorized)
+}
+
+// maxLoginName is the longest an identity's name is, as its table checks
+const maxLoginName = 32
+
+// loginName is the name a login link fills in, such as the new site's admin from its welcome page, at most an
+// identity's name long
+func loginName(r *http.Request) string {
+	if name := r.URL.Query().Get("name"); len(name) <= maxLoginName {
+		return name
+	}
+	return ""
 }
