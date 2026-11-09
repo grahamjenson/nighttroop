@@ -70,7 +70,8 @@ func TestTruncateHandler(t *testing.T) {
 
 	require.Equal(t, http.StatusBadRequest, truncate(consts.ControlRoleAdmin).Code, "a site within its limit is not truncated")
 
-	oversize := int64(5000)
+	// Over a new site's 20 MB limit
+	oversize := int64(25000)
 	require.NoError(t, controlDB.Queries.UpdateSiteDateFlags(ctx, controldb.UpdateSiteDateFlagsParams{EstimatedDbSizeKb: &oversize, ID: siteID}))
 	require.Equal(t, http.StatusForbidden, truncate(consts.ControlRoleRead).Code)
 	require.Equal(t, http.StatusOK, truncate(consts.ControlRoleAdmin).Code)
@@ -78,7 +79,7 @@ func TestTruncateHandler(t *testing.T) {
 	events, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &siteID, Limit: 10})
 	require.NoError(t, err)
 	require.Equal(t, "site_truncated", events[0].Name)
-	require.Equal(t, `{"by":"admin","before_size_kb":5000,"after_size_kb":null}`, *events[0].Attributes)
+	require.Equal(t, `{"by":"admin","before_size_kb":25000,"after_size_kb":null}`, *events[0].Attributes)
 }
 
 // TestSettingsHandler checks only an admin can turn public site creation off and on

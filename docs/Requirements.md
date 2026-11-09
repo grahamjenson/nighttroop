@@ -71,7 +71,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 ### Sites
 
 - The dashboard lists every site, newest first, with its state and DB size in MB, to two places, as do the archived
-  sites and a site's details, with its DB size limit.
+  sites and a site's details, with its DB size limit, 20 MB for a new site.
 - Sites can be ordered by how long since they were last written to (the first to archive) or by DB size.
 - A site not written to or seen within `DISABLE_AFTER_INACTIVITY_DAYS` is marked inactive.
 - Clicking a site opens its own page, `/sites/{id}`, laid out like a site's summary, and the browser's back button
