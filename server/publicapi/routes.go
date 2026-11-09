@@ -99,9 +99,8 @@ func POSTCreateSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig)
 			return
 		}
 
-		w.Header().Set("Content-Type", "text/html")
-		w.WriteHeader(http.StatusOK)
-		err = public_templ.CreateSiteInfo(publicmodels.NewSiteInfo{
+		// The credentials are shown on the new site's own address, where its admin logs in and adds its passkey
+		w.Header().Set("HX-Redirect", welcomeURL(siteCreateResult.SiteDB.Subdomain, publicmodels.NewSiteInfo{
 			URL:             siteCreateResult.SiteDB.URL(),
 			AdminPassword:   siteCreateResult.AdminPassword,
 			AdminTotpSecret: siteCreateResult.TotpSecret,
@@ -110,12 +109,8 @@ func POSTCreateSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig)
 			ReadOnlyNSToken: siteCreateResult.ReadOnlyNSToken,
 			BackupKey:       siteCreateResult.BackupPassword,
 			RecoverURL:      config.RecoverURL(),
-		}).Render(r.Context(), w)
-		if err != nil {
-			slog.ErrorContext(r.Context(), "Unable to create site", "error", err)
-			http.Error(w, "Unable to Create Site", http.StatusInternalServerError)
-		}
-
+		}))
+		w.WriteHeader(http.StatusOK)
 	}
 }
 

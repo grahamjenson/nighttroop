@@ -11,55 +11,82 @@ import (
 	"nighttroop.t1d.nz/utils/security"
 )
 
-// CreateSite is the home page, whose button creates a site when the public can. Once a site is created its two steps
-// are the page: the header shrinks to the logo and name beside each other, and the rest of it is hidden
+// CreateSite is the home page, whose button creates a site when the public can, and opens the new site's welcome page
 templ CreateSite(open bool) {
+	@createPage() {
+		if !open {
+			<p id="public--create-site-off" class="rounded-xl border border-slate-200 bg-white px-6 py-4 text-slate-700 shadow-sm">
+				Creating new sites is turned off on this server for now.
+			</p>
+		} else {
+			@button.Button(button.Props{
+				ID:    "public--create-site-button",
+				Size:  button.SizeLg,
+				Class: "h-14 px-10 rounded-full text-lg font-semibold text-white bg-brand-night hover:bg-brand-night/90 shadow-lg shadow-brand-night/30 hover:shadow-xl transition-all duration-200",
+				Attributes: templ.Attributes{
+					"hx-post":       "/site",
+					"hx-vals":       "js:{timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, language: navigator.language}",
+					"hx-status:4xx": "target:#error-container",
+					"hx-status:5xx": "target:#error-container",
+				},
+			}) {
+				Create Site
+			}
+			<div id="error-container" class="w-full mt-2 empty:hidden"></div>
+		}
+	}
+}
+
+// SiteWelcome is the page on a new site's own address that shows its credentials once. It asks for them with the ID
+// after its #, which only the browser that created the site has, then drops the ID from the address and its history.
+templ SiteWelcome() {
+	@createPage() {
+		<form id="public--welcome" class="public--compact" hx-post="/welcome" hx-trigger="load" hx-target="#panel-content" hx-swap="innerHTML">
+			<input type="hidden" id="public--welcome--id" name="id"/>
+		</form>
+		<script type="text/javascript">
+			document.getElementById("public--welcome--id").value = location.hash.slice(1);
+			history.replaceState(null, "", location.pathname);
+		</script>
+	}
+}
+
+// WelcomeGone is a new site's welcome page whose credentials were already shown, or waited too long to be
+templ WelcomeGone(recoverURL string) {
+	<p id="public--welcome-gone" class="public--compact max-w-xl rounded-xl border border-slate-200 bg-white px-6 py-4 text-slate-700 shadow-sm">
+		These credentials have already been shown, or were not opened in time. The backup key gets a new admin login on the
+		<a id="public--welcome-gone--recover-link" href={ templ.SafeURL(recoverURL) } class="font-medium text-brand-night underline">recover page</a>.
+	</p>
+}
+
+// createPage is the home page's layout, with what its panel shows. Once a site's credentials are there, the panel is
+// the page: the header shrinks to the logo and name beside each other, and the rest of it is hidden.
+templ createPage() {
 	@PublicBase() {
-		<main class="group flex-1 flex flex-col items-center justify-center px-6 py-6 bg-gradient-to-b from-slate-100 via-slate-50 to-white has-[#public--site-info]:justify-start has-[#public--site-info]:py-6">
+		<main class="group flex-1 flex flex-col items-center justify-center px-6 py-6 bg-gradient-to-b from-slate-100 via-slate-50 to-white has-[.public--compact]:justify-start has-[.public--compact]:py-6">
 			<div class="w-full max-w-3xl text-center">
-				<p class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 shadow-sm group-has-[#public--site-info]:hidden">
+				<p class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 shadow-sm group-has-[.public--compact]:hidden">
 					@icon.Rocket(icon.Props{Class: "size-3.5 text-brand-gold"})
 					Free hosting, Nightscout compatible
 					<span class="rounded-full bg-brand-gold px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-night">Alpha</span>
 				</p>
-				<div class="flex flex-col items-center group-has-[#public--site-info]:flex-row group-has-[#public--site-info]:justify-center group-has-[#public--site-info]:gap-3">
-					<img id="public--logo" src="/logo.svg" alt="" class="mt-4 size-16 sm:size-20 group-has-[#public--site-info]:mt-0 group-has-[#public--site-info]:size-10"/>
-					<h1 class="mt-2 text-4xl sm:text-5xl font-extrabold tracking-tight text-slate-900 group-has-[#public--site-info]:mt-0 group-has-[#public--site-info]:text-3xl">Nighttroop</h1>
+				<div class="flex flex-col items-center group-has-[.public--compact]:flex-row group-has-[.public--compact]:justify-center group-has-[.public--compact]:gap-3">
+					<img id="public--logo" src="/logo.svg" alt="" class="mt-4 size-16 sm:size-20 group-has-[.public--compact]:mt-0 group-has-[.public--compact]:size-10"/>
+					<h1 class="mt-2 text-4xl sm:text-5xl font-extrabold tracking-tight text-slate-900 group-has-[.public--compact]:mt-0 group-has-[.public--compact]:text-3xl">Nighttroop</h1>
 				</div>
-				<p class="mt-3 text-base sm:text-lg text-slate-600 max-w-xl mx-auto group-has-[#public--site-info]:hidden">
+				<p class="mt-3 text-base sm:text-lg text-slate-600 max-w-xl mx-auto group-has-[.public--compact]:hidden">
 					Your own Nightscout-compatible site in one click. No servers, no databases, no sign-up. Create a site, save your credentials, and start syncing.
 				</p>
-				<div id="panel-content" class="mt-6 flex flex-col items-center group-has-[#public--site-info]:mt-6">
-					if !open {
-						<p id="public--create-site-off" class="rounded-xl border border-slate-200 bg-white px-6 py-4 text-slate-700 shadow-sm">
-							Creating new sites is turned off on this server for now.
-						</p>
-					} else {
-						@button.Button(button.Props{
-							ID:    "public--create-site-button",
-							Size:  button.SizeLg,
-							Class: "h-14 px-10 rounded-full text-lg font-semibold text-white bg-brand-night hover:bg-brand-night/90 shadow-lg shadow-brand-night/30 hover:shadow-xl transition-all duration-200",
-							Attributes: templ.Attributes{
-								"hx-post":       "/site",
-								"hx-vals":       "js:{timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, language: navigator.language}",
-								"hx-target":     "#panel-content",
-								"hx-swap":       "innerHTML",
-								"hx-status:4xx": "target:#error-container",
-								"hx-status:5xx": "target:#error-container",
-							},
-						}) {
-							Create Site
-						}
-						<div id="error-container" class="w-full mt-2 empty:hidden"></div>
-					}
+				<div id="panel-content" class="mt-6 flex flex-col items-center group-has-[.public--compact]:mt-6">
+					{ children... }
 				</div>
-				<dl id="public--features" class="mt-6 grid gap-2 sm:gap-4 sm:grid-cols-3 text-left group-has-[#public--site-info]:hidden">
+				<dl id="public--features" class="mt-6 grid gap-2 sm:gap-4 sm:grid-cols-3 text-left group-has-[.public--compact]:hidden">
 					@feature(icon.MousePointerClick, "One click", "No account to make. Your site and its credentials are generated instantly.")
 					@feature(icon.ShieldCheck, "Private by default", "Each site is isolated with its own admin login, TOTP and backup key.")
 					@feature(icon.RefreshCw, "Works with your apps", "Upload from AAPS or Trio like you would to Nightscout, or pull from Dexcom, Libre or a Nightscout site.")
 				</dl>
 				if url := httputils.FeedbackURL(ctx); url != "" {
-					<p id="public--feedback" class="mt-4 text-sm text-slate-600 group-has-[#public--site-info]:hidden">
+					<p id="public--feedback" class="mt-4 text-sm text-slate-600 group-has-[.public--compact]:hidden">
 						Nighttroop is in alpha, so tell us what works and what does not:
 						{ " " }
 						@footer.NewTabLink("public--feedback-link", url, "font-medium text-brand-night underline") {
@@ -113,7 +140,7 @@ templ CreateSiteRateLimited(seconds int) {
 }
 
 templ CreateSiteInfo(newsite publicmodels.NewSiteInfo) {
-	<div class="w-full max-w-2xl mx-auto text-left space-y-4">
+	<div class="public--compact w-full max-w-2xl mx-auto text-left space-y-4">
 		@step("1", "Save your credentials somewhere safe", "They are shown once") {
 			<textarea id="public--site-info" hidden>{ newsite.AllInfo() }</textarea>
 			// Copying them all is the one thing to do here, so it is the step's main button

@@ -26,6 +26,10 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		// Before sign in only the IP is known, so an IP spamming logins cannot spend the site's own limit
 		r.Use(httputils.SiteUnauthRateLimitMiddleware(config))
 		r.Get("/login", sitelogin.GETLoginPageHandler())
+		// A new site's credentials are shown once on its own address, which checks the admin's TOTP code too
+		r.Get("/welcome", publicapi.GETWelcomeHandler())
+		r.Post("/welcome", publicapi.POSTWelcomeHandler(config))
+		r.Post("/site/totp", publicapi.POSTCheckTOTPHandler(config))
 		publicapi.FooterRoutes(r, config)
 		r.With(httputils.AllowedCountriesMiddleware(config)).Post("/login", sitelogin.POSTLogin(controlDB, config))
 		r.With(httputils.AllowedCountriesMiddleware(config)).Post("/login/totp", sitelogin.POSTLoginTOTP(controlDB, config))
