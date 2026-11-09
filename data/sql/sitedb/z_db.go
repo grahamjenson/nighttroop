@@ -393,6 +393,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.softDeleteTempTargetStmt, err = db.PrepareContext(ctx, softDeleteTempTarget); err != nil {
 		return nil, fmt.Errorf("error preparing query SoftDeleteTempTarget: %w", err)
 	}
+	if q.thinOldDeviceReportsStmt, err = db.PrepareContext(ctx, thinOldDeviceReports); err != nil {
+		return nil, fmt.Errorf("error preparing query ThinOldDeviceReports: %w", err)
+	}
 	if q.updateActivityStmt, err = db.PrepareContext(ctx, updateActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateActivity: %w", err)
 	}
@@ -1058,6 +1061,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing softDeleteTempTargetStmt: %w", cerr)
 		}
 	}
+	if q.thinOldDeviceReportsStmt != nil {
+		if cerr := q.thinOldDeviceReportsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing thinOldDeviceReportsStmt: %w", cerr)
+		}
+	}
 	if q.updateActivityStmt != nil {
 		if cerr := q.updateActivityStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateActivityStmt: %w", cerr)
@@ -1295,6 +1303,7 @@ type Queries struct {
 	softDeleteProfileSwitchStmt                 *sql.Stmt
 	softDeleteTempBasalStmt                     *sql.Stmt
 	softDeleteTempTargetStmt                    *sql.Stmt
+	thinOldDeviceReportsStmt                    *sql.Stmt
 	updateActivityStmt                          *sql.Stmt
 	updateComponentEventStmt                    *sql.Stmt
 	updateDeviceReportStmt                      *sql.Stmt
@@ -1439,6 +1448,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		softDeleteProfileSwitchStmt:                 q.softDeleteProfileSwitchStmt,
 		softDeleteTempBasalStmt:                     q.softDeleteTempBasalStmt,
 		softDeleteTempTargetStmt:                    q.softDeleteTempTargetStmt,
+		thinOldDeviceReportsStmt:                    q.thinOldDeviceReportsStmt,
 		updateActivityStmt:                          q.updateActivityStmt,
 		updateComponentEventStmt:                    q.updateComponentEventStmt,
 		updateDeviceReportStmt:                      q.updateDeviceReportStmt,

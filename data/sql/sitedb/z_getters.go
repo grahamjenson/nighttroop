@@ -13867,3 +13867,23 @@ func (m *ClearOldLoopStatusesParams) SetSince(v int64) {
 	m.Since = v
 }
 
+// GetSince returns the Since value.
+func (m ThinOldDeviceReportsParams) GetSince() int64 {
+	return m.Since
+}
+
+// SetSince sets the Since value and returns the updated ThinOldDeviceReportsParams.
+func (m *ThinOldDeviceReportsParams) SetSince(v int64) {
+	m.Since = v
+}
+
+// GetBefore returns the Before value.
+func (m ThinOldDeviceReportsParams) GetBefore() int64 {
+	return m.Before
+}
+
+// SetBefore sets the Before value and returns the updated ThinOldDeviceReportsParams.
+func (m *ThinOldDeviceReportsParams) SetBefore(v int64) {
+	m.Before = v
+}
+

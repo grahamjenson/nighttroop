@@ -73,7 +73,8 @@ func SummaryDayFromPeriod(row *sitedb.SummaryPeriod) SummaryDay {
 // NewSummaryDaily is the day named date from start until end, built from readings, doses, food, loop reports and
 // minutes that may run outside it. Its time in range is of the readings from low to high mg/dL, its total daily dose is
 // the doses and the basal in force each minute from minutesSince, its glucose is the newest reading in each 5 minutes,
-// and its loop IOB and COB the newest report's, newest first, in each 5 minutes, rounded to 2 decimals.
+// and its loop IOB and COB the newest report's, newest first, in each 5 minutes, or else in the 5 minutes before,
+// rounded to 2 decimals.
 func NewSummaryDaily(date, timezone string, start, end int64, low, high float64, readings []*glucose.Clean, doses []*sitedb.InsulinDose, food []*sitedb.FoodIntake, reports []*sitedb.DeviceReportsLoopBetweenRow, minutesSince int64, minutes []SummaryMinute) *sitedb.SummaryPeriod {
 	day := &sitedb.SummaryPeriod{Period: "day", Date: date, Timezone: timezone, StartAt: start, EndAt: end}
 	within := func(at int64) bool { return at >= start && at < end }
@@ -130,6 +131,15 @@ func NewSummaryDaily(date, timezone string, start, end int64, low, high float64,
 		for i, value := range []*float64{r.LoopIob, r.LoopIobBasal, r.LoopIobTreatment, r.LoopCob} {
 			if value != nil {
 				loop[i][slot] = new(consts.Round(*value, 2))
+			}
+		}
+	}
+	// Before the last hour a device keeps a report only every 10 minutes, so a report also stands for the 5 minutes
+	// after its own when they have none
+	for slot := len(slots) - 1; slot > 0; slot-- {
+		for i := range loop {
+			if !taken[slot] && taken[slot-1] {
+				loop[i][slot] = loop[i][slot-1]
 			}
 		}
 	}

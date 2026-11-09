@@ -312,7 +312,7 @@ type SummaryList struct {
 	Status *int       `json:"status,omitempty"`
 }
 
-// SummaryLoopSlots The loop's IOB in U or COB in g every 5 minutes from midnight, as glucose is: a day's newest loop device report then, null when there was none, and a week's or month's the mean of its days' then, to 2 decimals
+// SummaryLoopSlots The loop's IOB in U or COB in g every 5 minutes from midnight, as glucose is: a day's newest loop device report then, or else in the 5 minutes before, as one is kept only every 10 minutes once an hour old, null when there was none, and a week's or month's the mean of its days' then, to 2 decimals
 type SummaryLoopSlots = []float64
 
 // SummaryPeriod A period from start until end, named by its first date. Its time in range, daily dose and daily carbs are the means of its days with data, and its glucose the mean of those days every 5 minutes from midnight. Its AGP is each 15 minutes from midnight the 5th, 25th, 50th, 75th and 95th percentiles of its days' glucose, empty when there was none; a day's is of the 7 days to it.
@@ -325,16 +325,16 @@ type SummaryPeriod struct {
 	End     *int64     `json:"end,omitempty"`
 	Glucose *[]float64 `json:"glucose,omitempty"`
 
-	// LoopCob The loop's IOB in U or COB in g every 5 minutes from midnight, as glucose is: a day's newest loop device report then, null when there was none, and a week's or month's the mean of its days' then, to 2 decimals
+	// LoopCob The loop's IOB in U or COB in g every 5 minutes from midnight, as glucose is: a day's newest loop device report then, or else in the 5 minutes before, as one is kept only every 10 minutes once an hour old, null when there was none, and a week's or month's the mean of its days' then, to 2 decimals
 	LoopCob *SummaryLoopSlots `json:"loop_cob,omitempty"`
 
-	// LoopIob The loop's IOB in U or COB in g every 5 minutes from midnight, as glucose is: a day's newest loop device report then, null when there was none, and a week's or month's the mean of its days' then, to 2 decimals
+	// LoopIob The loop's IOB in U or COB in g every 5 minutes from midnight, as glucose is: a day's newest loop device report then, or else in the 5 minutes before, as one is kept only every 10 minutes once an hour old, null when there was none, and a week's or month's the mean of its days' then, to 2 decimals
 	LoopIob *SummaryLoopSlots `json:"loop_iob,omitempty"`
 
-	// LoopIobBasal The loop's IOB in U or COB in g every 5 minutes from midnight, as glucose is: a day's newest loop device report then, null when there was none, and a week's or month's the mean of its days' then, to 2 decimals
+	// LoopIobBasal The loop's IOB in U or COB in g every 5 minutes from midnight, as glucose is: a day's newest loop device report then, or else in the 5 minutes before, as one is kept only every 10 minutes once an hour old, null when there was none, and a week's or month's the mean of its days' then, to 2 decimals
 	LoopIobBasal *SummaryLoopSlots `json:"loop_iob_basal,omitempty"`
 
-	// LoopIobTreatment The loop's IOB in U or COB in g every 5 minutes from midnight, as glucose is: a day's newest loop device report then, null when there was none, and a week's or month's the mean of its days' then, to 2 decimals
+	// LoopIobTreatment The loop's IOB in U or COB in g every 5 minutes from midnight, as glucose is: a day's newest loop device report then, or else in the 5 minutes before, as one is kept only every 10 minutes once an hour old, null when there was none, and a week's or month's the mean of its days' then, to 2 decimals
 	LoopIobTreatment *SummaryLoopSlots    `json:"loop_iob_treatment,omitempty"`
 	Period           *SummaryPeriodPeriod `json:"period,omitempty"`
 	Start            *int64               `json:"start,omitempty"`

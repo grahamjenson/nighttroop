@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -234,6 +235,65 @@ func TestTruncateClearsOldLoopStatuses(t *testing.T) {
 
 	_, err = controlDB.TruncateSite(ctx, "not-a-site")
 	require.ErrorContains(t, err, "is not open")
+}
+
+// A device's reports are all kept for the last hour; before it, it keeps its newest in every 10 minutes, and its
+// newest however old. A deleted report is neither removed nor kept in another's place.
+func TestTruncateThinsOldDeviceReports(t *testing.T) {
+	_, controlDB, site := testutils.NewControlDBWithSite(t)
+	ctx, q := t.Context(), site.SiteDB.Queries()
+	type made struct {
+		device     string
+		occurredAt int64
+		deleted    bool
+	}
+	reports := map[string]made{}
+	create := func(id, device string, minutesAgo int) {
+		occurredAt := time.Now().Add(-time.Duration(minutesAgo) * time.Minute).UnixMilli()
+		_, err := q.CreateDeviceReport(ctx, sitedb.CreateDeviceReportParams{ID: id, OccurredAt: occurredAt, CreatedByDeviceName: &device, CreatedByIdentityName: "phone"})
+		require.NoError(t, err)
+		reports[id] = made{device: device, occurredAt: occurredAt}
+	}
+	// A loop reporting every 5 minutes for 3 hours, and a pump that last reported 4 hours ago
+	for minutesAgo := 2; minutesAgo < 180; minutesAgo += 5 {
+		create(fmt.Sprintf("aaps-%d", minutesAgo), "aaps", minutesAgo)
+	}
+	create("pump", "pump", 240)
+	_, err := q.SoftDeleteDeviceReport(ctx, sitedb.SoftDeleteDeviceReportParams{ID: "aaps-102", UpdatedByIdentityName: new("phone")})
+	require.NoError(t, err)
+	reports["aaps-102"] = made{device: "aaps", occurredAt: reports["aaps-102"].occurredAt, deleted: true}
+
+	// Kept is a report of the last hour, deleted, or the newest of its device's in its 10 minutes not deleted
+	hourAgo := time.Now().Add(-time.Hour).UnixMilli()
+	kept := func(id string) bool {
+		report := reports[id]
+		if report.occurredAt >= hourAgo || report.deleted {
+			return true
+		}
+		for _, other := range reports {
+			if other.device == report.device && !other.deleted && other.occurredAt > report.occurredAt && other.occurredAt/600_000 == report.occurredAt/600_000 {
+				return false
+			}
+		}
+		return true
+	}
+
+	require.NoError(t, controlDB.TruncateSites(ctx))
+	left, err := q.AllDeviceReports(ctx, sitedb.AllDeviceReportsParams{IncludeDeleted: true, Limit: 1000})
+	require.NoError(t, err)
+	remaining := map[string]bool{}
+	for _, report := range left {
+		remaining[report.ID] = true
+	}
+	removed := 0
+	for id := range reports {
+		require.Equal(t, kept(id), remaining[id], id)
+		if !remaining[id] {
+			removed++
+		}
+	}
+	require.Greater(t, removed, 10, "about half the reports from before the last hour are removed")
+	require.True(t, remaining["pump"] && remaining["aaps-2"] && remaining["aaps-57"] && remaining["aaps-102"])
 }
 
 func TestNewControlDBOpensEverySite(t *testing.T) {
