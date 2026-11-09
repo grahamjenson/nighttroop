@@ -219,7 +219,8 @@ func (s *SitesCollection) DownloadDBHandler(w http.ResponseWriter, r *http.Reque
 	}
 }
 
-// TruncateHandler clears the raw JSON a site over its DB size limit keeps, then shrinks its DB. Only admins can.
+// TruncateHandler truncates all of a site's device reports, as the job every 10 minutes does its newest, then shrinks
+// its DB, while its DB is here. Only admins can.
 func (s *SitesCollection) TruncateHandler(w http.ResponseWriter, r *http.Request) {
 	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
 	if controlContext.IdentityModel.Role != consts.ControlRoleAdmin {
@@ -230,8 +231,8 @@ func (s *SitesCollection) TruncateHandler(w http.ResponseWriter, r *http.Request
 	if herr == nil && site == nil {
 		herr = apiutils.ErrNotFound
 	}
-	if herr == nil && !site.Oversized() {
-		herr = apiutils.ErrConstraintCheckFailedWithHint("only a site over its DB size limit can be truncated")
+	if herr == nil && site.State != "live" && site.State != "disabled" {
+		herr = apiutils.ErrConstraintCheckFailedWithHint("only a live or disabled site, whose DB is here, can be truncated")
 	}
 	if herr == nil {
 		started := time.Now()

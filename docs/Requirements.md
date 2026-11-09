@@ -93,7 +93,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   and when it was last seen are a line under its name rather than columns of their own, and its actions stack.
 - A site's page has an Actions grid of what can be done to it: Open Site, and for an admin Download DB, Disable,
   Truncate and Archive. Each says what it does, and has its button when it can be done, or says when it would be
-  offered (e.g. Truncate while over its DB size limit, Archive once disabled). Its page shows the change once done.
+  offered (e.g. Download DB and Truncate while its DB is here, Archive once disabled). Its page shows the change once
+  done.
 - Download DB (`/sites/{id}/db`) downloads the same zip a site's admin gets from Download Data, made by the same code:
   `<site>-<date>.zip` of a copy of a live or disabled site's DB as it is now, `<site>-<date>.sqlite`, copied
   consistently while the site is written to. Only a control admin can, it shares the
@@ -110,8 +111,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   - **disabled**, after a confirmation, so it is no longer served;
   - **archived** once disabled, uploading it to S3 (needs S3);
   - **hydrated** from the archived sites page, bringing it back live;
-  - **truncated** when over its DB size limit, which truncates all its device statuses as every 10 minutes, then
-    shrinks its DB.
+  - **truncated** while live or disabled, however small, which truncates all its device statuses as every 10 minutes
+    does its newest, then shrinks its DB.
 - A site deleted for good, such as one never used after it was made, has its identities deleted, with their passwords,
   TOTP secrets and devices' push tokens, and its push credentials' secrets removed; an archived site keeps them, as it
   can be hydrated.

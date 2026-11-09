@@ -68,18 +68,23 @@ func TestTruncateHandler(t *testing.T) {
 		return w
 	}
 
-	require.Equal(t, http.StatusBadRequest, truncate(consts.ControlRoleAdmin).Code, "a site within its limit is not truncated")
-
-	// Over a new site's 20 MB limit
-	oversize := int64(25000)
-	require.NoError(t, controlDB.Queries.UpdateSiteDateFlags(ctx, controldb.UpdateSiteDateFlagsParams{EstimatedDbSizeKb: &oversize, ID: siteID}))
+	// Any site whose DB is here can be truncated by an admin, within its DB size limit or over it
+	size := int64(1000)
+	require.NoError(t, controlDB.Queries.UpdateSiteDateFlags(ctx, controldb.UpdateSiteDateFlagsParams{EstimatedDbSizeKb: &size, ID: siteID}))
 	require.Equal(t, http.StatusForbidden, truncate(consts.ControlRoleRead).Code)
-	require.Equal(t, http.StatusOK, truncate(consts.ControlRoleAdmin).Code)
+	require.Equal(t, http.StatusOK, truncate(consts.ControlRoleAdmin).Code, "a site within its limit is truncated")
 
 	events, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &siteID, Limit: 10})
 	require.NoError(t, err)
 	require.Equal(t, "site_truncated", events[0].Name)
-	require.Equal(t, `{"by":"admin","before_size_kb":25000,"after_size_kb":null}`, *events[0].Attributes)
+	require.Equal(t, `{"by":"admin","before_size_kb":1000,"after_size_kb":null}`, *events[0].Attributes)
+
+	// An archived site has no DB here to truncate
+	_, err = controlDB.Queries.DisableSite(ctx, controldb.DisableSiteParams{ID: siteID})
+	require.NoError(t, err)
+	_, err = controlDB.Queries.ArchiveSites(ctx, controldb.ArchiveSitesParams{JsonEach: `["` + siteID + `"]`})
+	require.NoError(t, err)
+	require.Equal(t, http.StatusBadRequest, truncate(consts.ControlRoleAdmin).Code, "an archived site is not truncated")
 }
 
 // TestSettingsHandler checks only an admin can turn public site creation off and on
