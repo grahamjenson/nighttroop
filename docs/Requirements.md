@@ -163,6 +163,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   error's are. The same
   one of a site is recorded at most once a minute, and at most 20 of a site's a minute, so a client repeating bad
   requests cannot fill the errors or Sentry. Missing credentials, permissions, records and rate limits are not.
+- A request refused for what it sent, or that failed with a 5xx, keeps the first 8 KB of what it sent on its error, and
+  sends it to Sentry with any error reported while handling it, as `request_body`: its JSON, or its text when it is not
+  JSON (such as JSON that did not parse), with credentials (tokens, secrets, passwords) `REDACTED`, to debug it by.
 - Logs, events and errors can be narrowed to one site, request or background job run by its ID. An event's, error's
   or log's details link to the rows of its request and job.
 - A control admin can download the whole logs DB, as one SQLite file `logs-<time>.sqlite`, with Download Logs DB on
@@ -563,7 +566,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A v1 search by `find[_id]` that finds nothing, such as a deleted treatment, is an empty list, not a 404.
 - A search with a filter on a field or with an operator Nighttroop does not know, a v1 `find[...]` (e.g.
   `find[notes]=x`) or a v3 `field$operator` (e.g. `notes$eq=x`), is an empty list, as nothing would match in
-  Nightscout. Any other parameter, such as xDrip+'s `rr`, is not a filter and is left out.
+  Nightscout. Any other parameter, such as xDrip+'s `rr` or `raw`, is not a filter and is left out, so a document is
+  always as Nighttroop keeps it, never the JSON it was sent as.
 - A v1 `DELETE /api/v1/entries.json` with `find[type]` and `find[date][$gte]`, `find[date][$lte]` or
   `find[date][$in][]`, as xDrip4iOS deletes readings, soft deletes the entries found, at most 1000 each time, saying
   how many in `deletedCount`; any other filter, or none on the date, is a 400, and it needs a token that can delete.

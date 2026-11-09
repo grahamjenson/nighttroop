@@ -1,6 +1,7 @@
 package httputils
 
 import (
+	"cmp"
 	"bytes"
 	"context"
 	"encoding/base64"
@@ -91,14 +92,15 @@ func redactPath(r *http.Request) string {
 	return path
 }
 
-// cappedBuffer keeps the first maxCapturedBody bytes written to it, and whether there were more
+// cappedBuffer keeps the first limit bytes written to it, maxCapturedBody when it has none, and whether there were more
 type cappedBuffer struct {
 	bytes.Buffer
+	limit     int
 	truncated bool
 }
 
 func (b *cappedBuffer) Write(p []byte) (int, error) {
-	if room := maxCapturedBody - b.Len(); len(p) > room {
+	if room := cmp.Or(b.limit, maxCapturedBody) - b.Len(); len(p) > room {
 		b.truncated = true
 		b.Buffer.Write(p[:max(room, 0)])
 		return len(p), nil

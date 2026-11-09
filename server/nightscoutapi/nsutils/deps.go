@@ -2,13 +2,11 @@ package nsutils
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"net/url"
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
-	"nighttroop.t1d.nz/utils/types"
 )
 
 // Identity is the resolved authorization context for a request.
@@ -21,7 +19,7 @@ type Identity struct {
 type Store interface {
 	// Create is obvious it will create a new record in the collection and return it, or an error if it fails.
 	// If duplicate it will return the existing record and a boolean indicating it was a duplicate
-	Create(ctx context.Context, collection Collection, data map[string]any, raw bool) (Document, bool, *HTTPError)
+	Create(ctx context.Context, collection Collection, data map[string]any) (Document, bool, *HTTPError)
 
 	// Get will retrieve a record from the collection by its identifier, or return an error if it fails.
 	Get(ctx context.Context, collection Collection, identifier string, query nsquery.Query) (Document, *HTTPError)
@@ -47,11 +45,11 @@ type Store interface {
 	// Delete old record and insert new one with the same identifier
 	// return    v1 return the recrod as body v3 "body": { "lastModified": 1785972708836, "status": 200 }, on success
 	// v1 if id is not found it is just created, no checks or anything
-	Replace(ctx context.Context, collection Collection, identifier string, data map[string]any, canCreate bool, raw bool) (Document, bool, *HTTPError)
+	Replace(ctx context.Context, collection Collection, identifier string, data map[string]any, canCreate bool) (Document, bool, *HTTPError)
 
 	// patch PATCH
 	// Patch will 404 if no record is founf of that id
-	Patch(ctx context.Context, collection Collection, identifier string, patch map[string]any, raw bool) (Document, *HTTPError)
+	Patch(ctx context.Context, collection Collection, identifier string, patch map[string]any) (Document, *HTTPError)
 }
 
 // ParseQuery translates Nightscout v1 query parameters into the storage query
@@ -133,13 +131,4 @@ func ReadCollectionAndIdentifier(w http.ResponseWriter, r *http.Request, action 
 	}
 	WriteError(w, err)
 	return collection, identity, identifier, false
-}
-
-// RawParam is the request's raw parameter, false when it is missing or not a bool
-func RawParam(r *http.Request) bool {
-	var raw types.FlexibleBool
-	if json.Unmarshal([]byte(r.URL.Query().Get("raw")), &raw) != nil {
-		return false
-	}
-	return raw.Bool()
 }

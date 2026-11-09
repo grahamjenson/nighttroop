@@ -292,16 +292,19 @@ type ServerErrorAttributes struct {
 	Route     string    `json:"route"`
 	RequestID string    `json:"request_id"`
 	Reason    string    `json:"reason,omitempty"`
+	// RequestBody is what the request sent, its credentials redacted, to debug it by
+	RequestBody map[string]any `json:"request_body,omitempty"`
 }
 
 // ServerError records a response with a 5xx status, with why when known, by its route's pattern as a path can carry
 // a token
-func (l *LogsDB) ServerError(ctx context.Context, siteID *string, status int, method string, route string, requestID string, reason string) {
-	message := fmt.Sprintf("%d %s", status, http.StatusText(status))
-	if reason != "" {
-		message += ": " + reason
+func (l *LogsDB) ServerError(ctx context.Context, siteID *string, attributes ServerErrorAttributes) {
+	attributes.Kind = ErrorKindServer
+	message := fmt.Sprintf("%d %s", attributes.Status, http.StatusText(attributes.Status))
+	if attributes.Reason != "" {
+		message += ": " + attributes.Reason
 	}
-	l.error(ctx, siteID, errors.New(message), ServerErrorAttributes{Kind: ErrorKindServer, Status: status, Method: method, Route: route, RequestID: requestID, Reason: reason})
+	l.error(ctx, siteID, errors.New(message), attributes)
 }
 
 // ClientErrorAttributes are what a request refused for what it sent was, and who sent it: its identity, and the app
@@ -316,6 +319,8 @@ type ClientErrorAttributes struct {
 	Identity  string    `json:"identity,omitempty"`
 	Role      string    `json:"role,omitempty"`
 	Client    string    `json:"client,omitempty"`
+	// RequestBody is what the request sent, its credentials redacted, to debug it by
+	RequestBody map[string]any `json:"request_body,omitempty"`
 }
 
 // ClientError records a response refusing a request for what it sent, such as a 400, with why, by its route's

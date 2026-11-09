@@ -135,10 +135,10 @@ func (b *ConnectorJobManager) createNightscoutDocuments(ctx context.Context, job
 		var herr *nsutils.HTTPError
 		if identifier, _ := doc["_id"].(string); replace && identifier != "" {
 			var created bool
-			_, created, herr = collectionStore.Replace(ctx, siteContext, identifier, doc, true, false)
+			_, created, herr = collectionStore.Replace(ctx, siteContext, identifier, doc, true)
 			duplicateFound = !created
 		} else {
-			_, duplicateFound, herr = collectionStore.Create(ctx, siteContext, doc, false)
+			_, duplicateFound, herr = collectionStore.Create(ctx, siteContext, doc)
 		}
 		if herr != nil && skipped == 0 {
 			recordRefused(ctx, jobInfo, fmt.Errorf("Nightscout: the site refused a %s document: %s", collection, herr.Message), doc)

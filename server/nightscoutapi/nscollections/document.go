@@ -1,7 +1,6 @@
 package nscollections
 
 import (
-	"maps"
 	"time"
 
 	"nighttroop.t1d.nz/utils"
@@ -9,12 +8,11 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-// stored is a collection's Nightscout model, or the JSON it was sent as when that is asked for, with the server's
-// fields from its row. It is only made into JSON fields when it is written.
+// stored is a collection's Nightscout model, with the server's fields from its row. It is only made into JSON fields
+// when it is written.
 type stored[NS any] struct {
 	meta
 	model NS
-	raw   map[string]any
 	// unitsLabels are how the identity's settings write units, by Nighttroop's, when they differ
 	unitsLabels map[string]string
 }
@@ -32,23 +30,20 @@ func (m meta) Identifier() string { return m.id }
 func (m meta) Modified() int64    { return m.srvModified }
 func (m meta) OccurredAt() int64  { return m.occurredAt }
 
-// row is a database model as a document's server fields, and the JSON it was sent as
-func row(dbModel SharedDBFields) (meta, *string) {
+// row is a database model as a document's server fields
+func row(dbModel SharedDBFields) meta {
 	m := meta{id: dbModel.GetID(), srvCreated: dbModel.GetCreatedAt(), srvModified: dbModel.GetUpdatedAt(),
 		occurredAt: dbModel.GetOccurredAt(), subject: dbModel.GetCreatedByIdentityName(), deletedAt: dbModel.GetDeletedAt()}
 	if offset := dbModel.GetUtcOffsetMinutes(); offset != nil {
 		m.utcOffset = *offset
 	}
-	return m, dbModel.GetRawJsonData()
+	return m
 }
 
 func (s stored[NS]) Fields(v3 bool) map[string]any {
-	out := maps.Clone(s.raw)
-	if out == nil {
-		out, _ = utils.ToMap(&s.model)
-		if units, ok := out["units"].(string); ok && s.unitsLabels[units] != "" {
-			out["units"] = s.unitsLabels[units]
-		}
+	out, _ := utils.ToMap(&s.model)
+	if units, ok := out["units"].(string); ok && s.unitsLabels[units] != "" {
+		out["units"] = s.unitsLabels[units]
 	}
 	if out == nil {
 		out = map[string]any{}

@@ -26,7 +26,7 @@ func TestSiteSearchesFindWhatTheGeneralSearchesFind(t *testing.T) {
 		for _, s := range []string{site, other} {
 			logs.Log(ctx, &s, db.LogLevelInfo, fmt.Sprintf("synced %d", i), map[string]any{"readings": i})
 			logs.ConnectorError(ctx, s, consts.ConnectorTypeDexcom, fmt.Errorf("sync failed %d", i))
-			logs.ServerError(ctx, &s, 500, "GET", "/", "request", "")
+			logs.ServerError(ctx, &s, db.ServerErrorAttributes{Status: 500, Method: "GET", Route: "/", RequestID: "request"})
 			logs.SiteDisabledEvent(ctx, s, "admin")
 			logs.SiteCreatedEvent(ctx, s)
 		}

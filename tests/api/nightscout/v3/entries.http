@@ -125,25 +125,25 @@ ASSERT_STATUS 200
 // RAW
 //////
 
-// raw shows a record as the JSON it was sent as, keeping fields Nightscout does not know, with the server's fields
+// raw is not a parameter: a document is always as Nighttroop keeps it, without fields Nightscout does not know, and raw
+// is not a filter, so a search with it finds what one without it does
 NAME create_raw_entry_v3
 POST http://{{ site }}/api/v3/entries
 H Authorization: Bearer {{ jwt }}
-B { "sgv": 102, "type": "sgv", "customField": "kept" }
+B { "sgv": 102, "type": "sgv", "customField": "dropped" }
 ASSERT_STATUS 201
 
 NAME get_raw_entry_v3
 GET http://{{ site }}/api/v3/entries/{{ dig "create_raw_entry_v3.result.identifier" }}?raw=true
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_EQUALS "kept" "@result.customField"
 ASSERT_EQUALS 102 "@result.sgv"
+ASSERT_EQUALS null "@result.customField"
 ASSERT_EXISTS "@result.identifier"
-ASSERT_EXISTS "@result.srvModified"
 
 NAME search_raw_entry_v1
 GET http://{{ site }}/api/v1/entries?token={{ token }}&raw=true&find[_id]={{ dig "create_raw_entry_v3.result.identifier" }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
-ASSERT_EQUALS "kept" "@0.customField"
+ASSERT_EQUALS null "@0.customField"
 ASSERT_EXISTS "@0._id"

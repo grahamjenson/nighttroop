@@ -75,12 +75,12 @@ func foundAnd(doc nsutils.Document, flag bool, err *nsutils.HTTPError) (nsutils.
 }
 
 // Return Model that has identifier and srv modified and also a boolean indicating if the record was created (true) or updated (false)
-func (nts *NightTroopAPIStore) Create(ctx context.Context, collection nsutils.Collection, data map[string]any, raw bool) (nsutils.Document, bool, *nsutils.HTTPError) {
+func (nts *NightTroopAPIStore) Create(ctx context.Context, collection nsutils.Collection, data map[string]any) (nsutils.Document, bool, *nsutils.HTTPError) {
 	collectionsStore, siteContext, err := nts.collectionFor(ctx, collection)
 	if err != nil {
 		return nil, false, err
 	}
-	return foundAnd(collectionsStore.Create(ctx, siteContext, data, raw))
+	return foundAnd(collectionsStore.Create(ctx, siteContext, data))
 }
 
 func (nts *NightTroopAPIStore) Get(ctx context.Context, collection nsutils.Collection, identifier string, query nsquery.Query) (nsutils.Document, *nsutils.HTTPError) {
@@ -113,20 +113,20 @@ func (nts *NightTroopAPIStore) History(ctx context.Context, collection nsutils.C
 	return collectionsStore.History(ctx, siteContext, since, query)
 }
 
-func (nts *NightTroopAPIStore) Replace(ctx context.Context, collection nsutils.Collection, identifier string, patch map[string]any, canCreate bool, raw bool) (nsutils.Document, bool, *nsutils.HTTPError) {
+func (nts *NightTroopAPIStore) Replace(ctx context.Context, collection nsutils.Collection, identifier string, patch map[string]any, canCreate bool) (nsutils.Document, bool, *nsutils.HTTPError) {
 	collectionsStore, siteContext, err := nts.collectionFor(ctx, collection)
 	if err != nil {
 		return nil, false, err
 	}
-	return foundAnd(collectionsStore.Replace(ctx, siteContext, identifier, patch, canCreate, raw))
+	return foundAnd(collectionsStore.Replace(ctx, siteContext, identifier, patch, canCreate))
 }
 
-func (nts *NightTroopAPIStore) Patch(ctx context.Context, collection nsutils.Collection, identifier string, patch map[string]any, raw bool) (nsutils.Document, *nsutils.HTTPError) {
+func (nts *NightTroopAPIStore) Patch(ctx context.Context, collection nsutils.Collection, identifier string, patch map[string]any) (nsutils.Document, *nsutils.HTTPError) {
 	collectionsStore, siteContext, err := nts.collectionFor(ctx, collection)
 	if err != nil {
 		return nil, err
 	}
-	return found(collectionsStore.Patch(ctx, siteContext, identifier, patch, raw))
+	return found(collectionsStore.Patch(ctx, siteContext, identifier, patch))
 }
 
 func (nts *NightTroopAPIStore) Delete(ctx context.Context, collection nsutils.Collection, identifier string, permanent bool) *nsutils.HTTPError {
