@@ -152,3 +152,26 @@ func TestRecordSiteSizes(t *testing.T) {
 	require.NoError(t, controlDB.RecordSiteSizes(ctx, []*db.SiteDB{{DB: &sitedb.DB{InMemory: true}, Subdomain: siteID}}))
 	require.Equal(t, ptr(10), get())
 }
+
+// A site's size is measured when asked, as its page in control does, keeping the size of its DB on disk; a site whose
+// DB is in memory, or not open, keeps the size it has
+func TestRecordSiteSize(t *testing.T) {
+	_, controlDB, site := testutils.NewControlDBWithSite(t)
+	ctx, siteID := t.Context(), site.SiteDB.Subdomain
+	get := func() *int64 {
+		model, err := controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: siteID})
+		require.NoError(t, err)
+		return model.EstimatedDbSizeKb
+	}
+
+	require.NoError(t, controlDB.RecordSiteSize(ctx, siteID))
+	require.Nil(t, get(), "a DB in memory has no size")
+
+	onDisk := siteDBFiles(t, 8192, 2048)
+	onDisk.Subdomain = siteID
+	controlDB.OpenSite(onDisk)
+	require.NoError(t, controlDB.RecordSiteSize(ctx, siteID))
+	require.Equal(t, ptr(10), get())
+
+	require.NoError(t, controlDB.RecordSiteSize(ctx, "notopen"))
+}

@@ -575,6 +575,17 @@ func (db *ControlDB) RecordSiteSizes(ctx context.Context, sites []*SiteDB) error
 	return tx.Commit()
 }
 
+// RecordSiteSize measures one site's DB on disk now and keeps its size, as RecordSiteSizes does every site's, so a page
+// showing it shows now's size rather than the last resource check's. A site whose DB is not open here, or is in
+// memory, keeps the size it has.
+func (db *ControlDB) RecordSiteSize(ctx context.Context, subdomain string) error {
+	site := db.sites.get(subdomain)
+	if site == nil {
+		return nil
+	}
+	return db.RecordSiteSizes(ctx, []*SiteDB{site})
+}
+
 // SiteTableSizes are the bytes each table of the site's DB takes, its indexes with it, largest first, or none when its
 // DB is not open here, as an archived site's is not
 func (db *ControlDB) SiteTableSizes(ctx context.Context, subdomain string) ([]sitedb.TableSize, error) {
