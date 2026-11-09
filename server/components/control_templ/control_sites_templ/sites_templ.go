@@ -1140,9 +1140,9 @@ func partText(part dbPart) string {
 	return fmt.Sprintf("%.2f MB · %.0f%%", float64(part.Bytes)/1024/1024, part.Percent)
 }
 
-// keyText is a part's size and share of the DB, and its records in thousands, as "1.25 MB · 40% · 7.9k records"
+// keyText is a part's records in thousands, then its size and share of the DB, as "7.9k · 1.25 MB · 40%"
 func keyText(part dbPart) string {
-	return fmt.Sprintf("%s · %.1fk records", partText(part), float64(part.Records)/1000)
+	return fmt.Sprintf("%.1fk · %s", float64(part.Records)/1000, partText(part))
 }
 
 // barWidth is how much of the bar the DB fills: its share of its limit, at most all of it, or all of it with no limit
