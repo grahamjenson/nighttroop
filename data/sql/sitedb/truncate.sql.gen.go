@@ -9,49 +9,26 @@ import (
 	"context"
 )
 
-const thinOldLoopStatuses = `-- name: ThinOldLoopStatuses :exec
-UPDATE device_reports SET loop_status_json = json_remove(
-    CASE WHEN json_type(device_reports.loop_status_json, '$.iob') = 'array'
-        THEN json_set(device_reports.loop_status_json, '$.iob', json_extract(device_reports.loop_status_json, '$.iob[0]'))
-        ELSE device_reports.loop_status_json END,
-    '$.suggested.consoleLog', '$.suggested.consoleError', '$.suggested.predBGs', '$.suggested.reason',
-    '$.enacted.consoleLog', '$.enacted.consoleError', '$.enacted.predBGs', '$.enacted.reason',
-    '$.iob.iobWithZeroTemp', '$.iob.lastTemp', '$.predicted')
+const clearOldLoopStatuses = `-- name: ClearOldLoopStatuses :exec
+UPDATE device_reports SET loop_status_json = NULL
 WHERE device_reports.updated_at >= ?1 AND device_reports.loop_status_json IS NOT NULL
     AND device_reports.occurred_at < (
         SELECT MAX(newest.occurred_at) FROM device_reports AS newest
         WHERE newest.created_by_device_name IS device_reports.created_by_device_name
             AND newest.loop_status_json IS NOT NULL AND newest.deleted_at IS NULL
     )
-    AND (
-        json_type(device_reports.loop_status_json, '$.suggested.consoleLog') IS NOT NULL
-        OR json_type(device_reports.loop_status_json, '$.suggested.consoleError') IS NOT NULL
-        OR json_type(device_reports.loop_status_json, '$.suggested.predBGs') IS NOT NULL
-        OR json_type(device_reports.loop_status_json, '$.suggested.reason') IS NOT NULL
-        OR json_type(device_reports.loop_status_json, '$.enacted.consoleLog') IS NOT NULL
-        OR json_type(device_reports.loop_status_json, '$.enacted.consoleError') IS NOT NULL
-        OR json_type(device_reports.loop_status_json, '$.enacted.predBGs') IS NOT NULL
-        OR json_type(device_reports.loop_status_json, '$.enacted.reason') IS NOT NULL
-        OR json_type(device_reports.loop_status_json, '$.iob') = 'array'
-        OR json_type(device_reports.loop_status_json, '$.iob.iobWithZeroTemp') IS NOT NULL
-        OR json_type(device_reports.loop_status_json, '$.iob.lastTemp') IS NOT NULL
-        OR json_type(device_reports.loop_status_json, '$.predicted') IS NOT NULL
-    )
 `
 
-type ThinOldLoopStatusesParams struct {
+type ClearOldLoopStatusesParams struct {
 	Since int64
 }
 
-// A loop's status, most of a device report and of a site's DB, is kept whole only on its device's newest report with
-// one, as followers (LoopFollow, the Nightscout web app) read its predictions and reason from that one. The others
-// keep what is read of an old status, its IOB and COB (also in their own columns) and the rest, and lose:
-// - its debug output (OpenAPS's consoleLog and consoleError) and reason, in suggested and enacted, the longest text;
-// - its predicted glucoses (OpenAPS's predBGs, Loop's predicted);
-// - Trio's IOB with a zero temp and last temp, and an oref0 rig's projected IOBs, of which the first, now, is kept.
-// Only reports written since Since are looked at, by their updated_at index, as those before were thinned by an earlier
-// run; 0 looks at them all.
-func (q *Queries) ThinOldLoopStatuses(ctx context.Context, arg ThinOldLoopStatusesParams) error {
-	_, err := q.exec(ctx, q.thinOldLoopStatusesStmt, thinOldLoopStatuses, arg.Since)
+// A loop's status, most of a device report and of a site's DB, is kept only on its device's newest report with one,
+// as followers (LoopFollow, the Nightscout web app) read its predictions and reason from that one. Once a newer one
+// comes in, the others are cleared: what is worth keeping of them, the loop's IOB and COB, was extracted into their own
+// columns when they were written. Only reports written since Since are looked at, by their updated_at index, as those
+// before were cleared by an earlier run; 0 looks at them all.
+func (q *Queries) ClearOldLoopStatuses(ctx context.Context, arg ClearOldLoopStatusesParams) error {
+	_, err := q.exec(ctx, q.clearOldLoopStatusesStmt, clearOldLoopStatuses, arg.Since)
 	return err
 }

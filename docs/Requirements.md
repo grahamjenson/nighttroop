@@ -761,13 +761,12 @@ Connectors are a site's third party integrations, each syncing from one service.
   what was delivered) from one sent the same, Loop's indefinite duration, and a device status's pump and uploader, for
   the fields without a column that Nightguard shows (AAPS's extended).
 - Every 10 minutes every site is truncated: a device status's loop status, most of a site's DB with AAPS uploading
-  every 5 minutes, is kept whole only on its device's newest status with one, which followers (LoopFollow, the
-  Nightscout web app) draw their forecast and reason from; a newer status without one, as a pump's own, leaves it so.
-  The others lose its debug output (OpenAPS's `consoleLog` and `consoleError`), reason, predicted glucoses (`predBGs`,
-  Loop's `predicted`), Trio's `iobWithZeroTemp` and `lastTemp`, and an OpenAPS rig's projected IOBs but the first,
-  keeping its IOB, COB and the rest. The job looks at the statuses written in the last day; truncating a site looks at
-  them all, so it thins those the job no longer looks at, as a device's newest before it went a day without
-  reporting.
+  every 5 minutes, is kept only on its device's newest status with one, which followers (LoopFollow, the Nightscout
+  web app) draw their forecast and reason from; a newer status without one, as a pump's own, leaves it so. Once a
+  newer one comes in, the others are cleared: their IOB and COB, extracted when they were written, are kept, and the
+  Nightscout API gives them back as their `openaps` or `loop` object. The job looks at the statuses written in the last
+  day; truncating a site looks at them all, so it clears those the job no longer looks at, as a device's newest before
+  it went a day without reporting.
 - Reads and writes are rate limited per site, identity and IP, and live sessions per site are capped.
 - A Nightscout request that fails auth, or needs none, spends its IP's budget on the site
   (`SITE_UNAUTH_PER_MINUTE_LIMIT`); one with a valid token does not, so a device uploading often from one IP is limited

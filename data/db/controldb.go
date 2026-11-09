@@ -430,7 +430,7 @@ func (db *ControlDB) HydrateSite(ctx context.Context, subdomain string, download
 	return nil
 }
 
-// TruncateSite truncates a site as the job every 10 minutes does, but looking at all its device reports, so it thins
+// TruncateSite truncates a site as the job every 10 minutes does, but looking at all its device reports, so it clears
 // those the job no longer looks at, such as the newest of a device that then went a day without reporting. It then
 // shrinks its DB, without its free pages, and records its new size, which it returns.
 func (db *ControlDB) TruncateSite(ctx context.Context, subdomain string) (*int64, error) {
@@ -453,19 +453,19 @@ func (db *ControlDB) TruncateSite(ctx context.Context, subdomain string) (*int64
 func (db *ControlDB) TruncateSites(ctx context.Context) error {
 	var errs []error
 	for _, site := range db.sites.all() {
-		errs = append(errs, truncateSite(aslog.WithSite(ctx, site.Subdomain), site, time.Now().Add(-truncateThinsSince).UnixMilli()))
+		errs = append(errs, truncateSite(aslog.WithSite(ctx, site.Subdomain), site, time.Now().Add(-truncateLooksBack).UnixMilli()))
 	}
 	return errors.Join(errs...)
 }
 
-// truncateThinsSince is how far back a truncate looks for device reports to thin, as those before were thinned by an
-// earlier one; a day covers a server down for a while
-const truncateThinsSince = 24 * time.Hour
+// truncateLooksBack is how far back the job looks for device reports to clear, as those before were cleared by an
+// earlier run; a day covers a server down for a while
+const truncateLooksBack = 24 * time.Hour
 
-// truncateSite keeps each device's loop status whole only on its newest report with one, thinning the others' written
-// since since, 0 for all of them
+// truncateSite keeps each device's loop status only on its newest report with one, clearing the others' written since
+// since, 0 for all of them
 func truncateSite(ctx context.Context, site *SiteDB, since int64) error {
-	if err := site.Queries().ThinOldLoopStatuses(ctx, sitedb.ThinOldLoopStatusesParams{Since: since}); err != nil {
+	if err := site.Queries().ClearOldLoopStatuses(ctx, sitedb.ClearOldLoopStatusesParams{Since: since}); err != nil {
 		return fmt.Errorf("cannot truncate site %s: %w", site.Subdomain, err)
 	}
 	return nil

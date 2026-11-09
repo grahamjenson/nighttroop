@@ -13848,12 +13848,12 @@ func (m *UpsertSummaryPeriodParams) SetLoopCobJson(v string) {
 }
 
 // GetSince returns the Since value.
-func (m ThinOldLoopStatusesParams) GetSince() int64 {
+func (m ClearOldLoopStatusesParams) GetSince() int64 {
 	return m.Since
 }
 
-// SetSince sets the Since value and returns the updated ThinOldLoopStatusesParams.
-func (m *ThinOldLoopStatusesParams) SetSince(v int64) {
+// SetSince sets the Since value and returns the updated ClearOldLoopStatusesParams.
+func (m *ClearOldLoopStatusesParams) SetSince(v int64) {
 	m.Since = v
 }
 
