@@ -14,8 +14,8 @@ is kept once in `loop_settings`, and each record refers to the set it was sent w
 
 The `openaps` and `loop` objects in a device status are not settings. They are the loop's state at that cycle: its
 IOB, COB, predictions and what it enacted, with the effective ISF, CR and targets of the cycle. They change every
-cycle and stay on `device_reports`, in `loop_status_json`, kept whole only on each device's newest report: the
-truncate every 10 minutes removes the others' debug output and predictions.
+cycle and stay on `device_reports`, in `loop_status_json`, kept whole only on each device's newest report with one:
+the truncate every 10 minutes removes the others' debug output, reason, predictions and Trio's extra IOBs.
 
 ## The table
 

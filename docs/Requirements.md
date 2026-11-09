@@ -106,7 +106,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   - **disabled**, after a confirmation, so it is no longer served;
   - **archived** once disabled, uploading it to S3 (needs S3);
   - **hydrated** from the archived sites page, bringing it back live;
-  - **truncated** when over its DB size limit, which truncates it as every 10 minutes, then shrinks its DB.
+  - **truncated** when over its DB size limit, which truncates all its device statuses as every 10 minutes, then
+    shrinks its DB.
 - A site deleted for good, such as one never used after it was made, has its identities deleted, with their passwords,
   TOTP secrets and devices' push tokens, and its push credentials' secrets removed; an archived site keeps them, as it
   can be hydrated.
@@ -760,9 +761,13 @@ Connectors are a site's third party integrations, each syncing from one service.
   what was delivered) from one sent the same, Loop's indefinite duration, and a device status's pump and uploader, for
   the fields without a column that Nightguard shows (AAPS's extended).
 - Every 10 minutes every site is truncated: a device status's loop status, most of a site's DB with AAPS uploading
-  every 5 minutes, is kept whole only on its device's newest status, which followers (LoopFollow, the Nightscout web
-  app) draw their forecast from. The others lose its debug output (OpenAPS's `consoleLog` and `consoleError`) and
-  predicted glucoses (`predBGs`, Loop's `predicted`), keeping its IOB, COB, reason and the rest.
+  every 5 minutes, is kept whole only on its device's newest status with one, which followers (LoopFollow, the
+  Nightscout web app) draw their forecast and reason from; a newer status without one, as a pump's own, leaves it so.
+  The others lose its debug output (OpenAPS's `consoleLog` and `consoleError`), reason, predicted glucoses (`predBGs`,
+  Loop's `predicted`), Trio's `iobWithZeroTemp` and `lastTemp`, and an OpenAPS rig's projected IOBs but the first,
+  keeping its IOB, COB and the rest. The job looks at the statuses written in the last day; truncating a site looks at
+  them all, so it thins those the job no longer looks at, as a device's newest before it went a day without
+  reporting.
 - Reads and writes are rate limited per site, identity and IP, and live sessions per site are capped.
 - A Nightscout request that fails auth, or needs none, spends its IP's budget on the site
   (`SITE_UNAUTH_PER_MINUTE_LIMIT`); one with a valid token does not, so a device uploading often from one IP is limited

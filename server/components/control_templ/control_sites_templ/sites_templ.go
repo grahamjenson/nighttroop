@@ -2040,13 +2040,13 @@ func siteActions(site *controlmodels.Site) templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = siteActionForm("/sites/"+site.ID+"/truncate", "", "Truncate this site? Its older loop statuses lose their predictions and debug output, then its DB is shrunk.", "control--site--truncate", "Truncate").Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = siteActionForm("/sites/"+site.ID+"/truncate", "", "Truncate this site? Its older loop statuses lose their predictions, reason and debug output, then its DB is shrunk.", "control--site--truncate", "Truncate").Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = actionCard("control--site--action-truncate", "Truncate", "Keeps the loop's predictions and debug output only on each device's newest status, as every 10 minutes, then shrinks its DB.", unless(site.Oversized(), "Offered while it is over its DB size limit."), icon.Scissors).Render(templ.WithChildren(ctx, templ_7745c5c3_Var82), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = actionCard("control--site--action-truncate", "Truncate", "Keeps the loop's predictions, reason and debug output only on each device's newest status, looking at them all, then shrinks its DB.", unless(site.Oversized(), "Offered while it is over its DB size limit."), icon.Scissors).Render(templ.WithChildren(ctx, templ_7745c5c3_Var82), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
