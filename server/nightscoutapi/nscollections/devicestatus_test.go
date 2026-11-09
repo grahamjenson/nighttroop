@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/sql/sitedb"
-	datatypes "nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/models/nightscoutmodels"
 )
 
@@ -51,9 +50,8 @@ func TestNightscoutToDBCreateDeviceReportLoopColumns(t *testing.T) {
 			var status nightscoutmodels.DeviceStatus
 			require.NoError(t, json.Unmarshal([]byte(tt.status), &status))
 			got := NightscoutToDBCreateDeviceReport(status, nightscoutmodels.ConverterContext{})
-			other := got.OtherAttributes
 			require.Equal(t, tt.want, loopColumns{
-				Name: other.LoopName, Status: got.LoopStatusJson, IOB: got.LoopIob, IOBBasal: got.LoopIobBasal,
+				Name: got.LoopName, Status: got.LoopStatusJson, IOB: got.LoopIob, IOBBasal: got.LoopIobBasal,
 				IOBTreatment: got.LoopIobTreatment, COB: got.LoopCob,
 			})
 		})
@@ -69,12 +67,12 @@ func TestDBToNightscoutDeviceStatusLoop(t *testing.T) {
 		report        sitedb.DeviceReport
 		openAPS, loop string
 	}{
-		{"kept", sitedb.DeviceReport{LoopStatusJson: &sent, OtherAttributes: datatypes.DeviceReportOther{LoopName: ptr("openaps")}}, sent, ""},
-		{"openaps cleared", sitedb.DeviceReport{LoopIob: ptr(2.5), LoopIobBasal: ptr(1.0), LoopCob: ptr(20.0), OtherAttributes: datatypes.DeviceReportOther{LoopName: ptr("openaps")}},
+		{"kept", sitedb.DeviceReport{LoopStatusJson: &sent, LoopName: ptr("openaps")}, sent, ""},
+		{"openaps cleared", sitedb.DeviceReport{LoopIob: ptr(2.5), LoopIobBasal: ptr(1.0), LoopCob: ptr(20.0), LoopName: ptr("openaps")},
 			`{"iob":{"iob":2.5,"basaliob":1},"suggested":{"COB":20}}`, ""},
-		{"loop cleared", sitedb.DeviceReport{LoopIob: ptr(3.0), LoopCob: ptr(15.0), OtherAttributes: datatypes.DeviceReportOther{LoopName: ptr("loop")}},
+		{"loop cleared", sitedb.DeviceReport{LoopIob: ptr(3.0), LoopCob: ptr(15.0), LoopName: ptr("loop")},
 			"", `{"iob":{"iob":3},"cob":{"cob":15}}`},
-		{"cleared with nothing extracted", sitedb.DeviceReport{OtherAttributes: datatypes.DeviceReportOther{LoopName: ptr("loop")}}, "", ""},
+		{"cleared with nothing extracted", sitedb.DeviceReport{LoopName: ptr("loop")}, "", ""},
 		{"no loop", sitedb.DeviceReport{LoopIob: ptr(1.0)}, "", ""},
 	}
 	for _, tt := range tests {

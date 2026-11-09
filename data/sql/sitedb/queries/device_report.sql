@@ -17,6 +17,13 @@ INSERT INTO device_reports (
     loop_cob,
     configuration_id,
     loop_status_json,
+    loop_name,
+    pump_clock,
+    pump_manufacturer,
+    pump_model,
+    override_json,
+    pump_json,
+    uploader_json,
 
     other_attributes,
 
@@ -27,7 +34,7 @@ INSERT INTO device_reports (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -116,9 +123,7 @@ SELECT * from device_reports
 WHERE 
     deleted_at IS NULL AND 
     occurred_at >= CAST(unixepoch('subsec') * 1000 AS INTEGER) - 1200000 AND
-    -- Only the last 20 minutes' reports are read, from occurred_at's index, so reading the loop's name from the JSON
-    -- is a handful of rows
-    json_extract(other_attributes, '$.loop_name') IS NOT NULL
+    loop_name IS NOT NULL
 ORDER BY occurred_at DESC
 LIMIT 1;
 
@@ -130,12 +135,9 @@ LIMIT 1;
 
 -- name: UpdateDeviceReport :one
 UPDATE device_reports SET
-    -- The fields sent, as JSON (types.OtherJSON), are merged into those kept, as an update changes its pump and
-    -- uploader
-    other_attributes = NULLIF(json_patch(
-        COALESCE(other_attributes, '{}'),
-        COALESCE(CAST(sqlc.narg('OtherAttributes') AS TEXT), '{}')
-    ), '{}'),
+    -- An update changes its pump and uploader when it sends them
+    pump_json = COALESCE(sqlc.narg('PumpJson'), pump_json),
+    uploader_json = COALESCE(sqlc.narg('UploaderJson'), uploader_json),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_id = sqlc.narg('UpdatedByIdentityID'),
     updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
@@ -153,10 +155,10 @@ UPDATE device_reports SET
     updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
 WHERE id = sqlc.arg('ID') AND deleted_at IS NULL;
 
--- name: ClearDeviceReportLoopStatus :exec
--- A device report keeps none of its loop's status, as one a backfill copies, an old one's status being of no use; its
--- IOB and COB columns are kept
-UPDATE device_reports SET loop_status_json = NULL WHERE id = sqlc.arg('ID');
+-- name: ClearDeviceReportStatuses :exec
+-- A device report keeps none of its loop's status or pump as sent, as one a backfill copies, an old one's being of no
+-- use; its IOB, COB and pump columns are kept
+UPDATE device_reports SET loop_status_json = NULL, pump_json = NULL WHERE id = sqlc.arg('ID');
 
 -- name: HardDeleteDeviceReport :execresult
 DELETE FROM device_reports WHERE id = ?;

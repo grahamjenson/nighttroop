@@ -72,11 +72,14 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.allTempTargetsStmt, err = db.PrepareContext(ctx, allTempTargets); err != nil {
 		return nil, fmt.Errorf("error preparing query AllTempTargets: %w", err)
 	}
-	if q.clearDeviceReportLoopStatusStmt, err = db.PrepareContext(ctx, clearDeviceReportLoopStatus); err != nil {
-		return nil, fmt.Errorf("error preparing query ClearDeviceReportLoopStatus: %w", err)
+	if q.clearDeviceReportStatusesStmt, err = db.PrepareContext(ctx, clearDeviceReportStatuses); err != nil {
+		return nil, fmt.Errorf("error preparing query ClearDeviceReportStatuses: %w", err)
 	}
 	if q.clearOldLoopStatusesStmt, err = db.PrepareContext(ctx, clearOldLoopStatuses); err != nil {
 		return nil, fmt.Errorf("error preparing query ClearOldLoopStatuses: %w", err)
+	}
+	if q.clearOldPumpsStmt, err = db.PrepareContext(ctx, clearOldPumps); err != nil {
+		return nil, fmt.Errorf("error preparing query ClearOldPumps: %w", err)
 	}
 	if q.createActivityStmt, err = db.PrepareContext(ctx, createActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateActivity: %w", err)
@@ -526,14 +529,19 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing allTempTargetsStmt: %w", cerr)
 		}
 	}
-	if q.clearDeviceReportLoopStatusStmt != nil {
-		if cerr := q.clearDeviceReportLoopStatusStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing clearDeviceReportLoopStatusStmt: %w", cerr)
+	if q.clearDeviceReportStatusesStmt != nil {
+		if cerr := q.clearDeviceReportStatusesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing clearDeviceReportStatusesStmt: %w", cerr)
 		}
 	}
 	if q.clearOldLoopStatusesStmt != nil {
 		if cerr := q.clearOldLoopStatusesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing clearOldLoopStatusesStmt: %w", cerr)
+		}
+	}
+	if q.clearOldPumpsStmt != nil {
+		if cerr := q.clearOldPumpsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing clearOldPumpsStmt: %w", cerr)
 		}
 	}
 	if q.createActivityStmt != nil {
@@ -1196,8 +1204,9 @@ type Queries struct {
 	allProfileSwitchesStmt                      *sql.Stmt
 	allTempBasalsStmt                           *sql.Stmt
 	allTempTargetsStmt                          *sql.Stmt
-	clearDeviceReportLoopStatusStmt             *sql.Stmt
+	clearDeviceReportStatusesStmt               *sql.Stmt
 	clearOldLoopStatusesStmt                    *sql.Stmt
+	clearOldPumpsStmt                           *sql.Stmt
 	createActivityStmt                          *sql.Stmt
 	createComponentEventStmt                    *sql.Stmt
 	createDeviceReportStmt                      *sql.Stmt
@@ -1341,8 +1350,9 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		allProfileSwitchesStmt:                      q.allProfileSwitchesStmt,
 		allTempBasalsStmt:                           q.allTempBasalsStmt,
 		allTempTargetsStmt:                          q.allTempTargetsStmt,
-		clearDeviceReportLoopStatusStmt:             q.clearDeviceReportLoopStatusStmt,
+		clearDeviceReportStatusesStmt:               q.clearDeviceReportStatusesStmt,
 		clearOldLoopStatusesStmt:                    q.clearOldLoopStatusesStmt,
+		clearOldPumpsStmt:                           q.clearOldPumpsStmt,
 		createActivityStmt:                          q.createActivityStmt,
 		createComponentEventStmt:                    q.createComponentEventStmt,
 		createDeviceReportStmt:                      q.createDeviceReportStmt,

@@ -490,8 +490,9 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A working source can be backfilled with the days before its oldest reading. A Nightscout or virtual backfill also
   fetches the last 2 days again, to fill gaps the site missed while it was down, as for a deploy, and its toast says so;
   Dexcom and LibreLinkUp backfills fetch all they keep, the last 24 and 12 hours. A Nightscout backfill keeps the
-  device statuses it adds without their loop status (`openaps` or `loop`), which is of no use once old and most of a
-  looping site's DB, but with their IOB and COB, which the summaries show; a status the site already had is left as it is.
+  device statuses it adds without their loop status (`openaps` or `loop`) or `pump` as sent, which are of no use once old
+  and most of a looping site's DB, but with their IOB and COB, which the summaries show, and their pump's battery,
+  reservoir, clock, manufacturer and model; a status the site already had is left as it is.
 - The Connectors page shows how each source has synced, how often, the records it has pulled in, in all, from its syncs
   and backfills, and in its last sync, its backfill and its recent events.
 - The Connectors page updates as each sync or backfill finishes, showing its new errors, stats and events without reloading,
@@ -773,6 +774,9 @@ Connectors are a site's third party integrations, each syncing from one service.
   Nightscout API gives them back as their `openaps` or `loop` object. The job looks at the statuses written in the last
   day; truncating a site looks at them all, so it clears those the job no longer looks at, as a device's newest before
   it went a day without reporting.
+- A device status's `pump` as sent, the most of it after its loop status, is truncated the same way: kept only on its
+  device's newest status with one, the others keeping their pump's battery, reservoir, clock, manufacturer and model,
+  which the Nightscout API gives back as their `pump`.
 - Truncating also thins each device's statuses: all of the last hour are kept, and before it only the newest in each
   10 minutes, which keeps its newest however old. A deleted status is not removed, so a client syncing deletions sees it.
 - Reads and writes are rate limited per site, identity and IP, and live sessions per site are capped.
