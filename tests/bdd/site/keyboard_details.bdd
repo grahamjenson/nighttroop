@@ -60,9 +60,14 @@ ASSERT_TEXT_VISIBLE Glucose Reading Updated
 ASSERT_NOT_VISIBLE #site--glucose--details
 ASSERT_VISIBLE #glucoseReadingsTable tbody tr:first-child:focus
 
-// Enter on the row's delete button deletes it (the test accepts), without opening its details
+// Enter on the row's delete button asks first, with the focus on Cancel; Tab then Enter on Delete deletes it, without
+// opening its details
 PRESS Tab
 ASSERT_VISIBLE #glucoseReadingsTable tbody tr:first-child button[title=Delete]:focus
+PRESS Enter
+ASSERT_VISIBLE #confirm--cancel:focus
+PRESS Tab
+ASSERT_VISIBLE #confirm--ok:focus
 PRESS Enter
 ASSERT_TEXT_VISIBLE Glucose Reading Deleted
 ASSERT_NOT_VISIBLE #site--glucose--details
