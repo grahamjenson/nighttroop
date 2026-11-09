@@ -228,10 +228,15 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 ### Creating and recovering a site
 
-- Anyone can create a site in one click on the public home page, without an account. It is shown once: its URL, site
-  ID, admin password, the phone's Nightscout URL, and the backup key, with a prominent button to copy them all for a
-  password manager. The copy has every first identity's credentials: the admin's, and the phone's and the read only
-  device's Nightscout tokens. The phone's token is not shown as text, only in the copy and by its own copy button.
+- Anyone can create a site in one click on the public home page, without an account. It opens the new site's own
+  address, `/welcome`, which shows its credentials once: its URL, site ID, admin password, the phone's Nightscout URL,
+  and the backup key, with a prominent button to copy them all for a password manager. The copy has every first
+  identity's credentials: the admin's, and the phone's and the read only device's Nightscout tokens. The phone's token
+  is not shown as text, only in the copy and by its own copy button.
+- The credentials wait on the server, only in memory, for 10 minutes, under an ID after the welcome page's `#` that only
+  the browser that created the site has, so it is never in a request's address or a log. The page drops the ID from
+  its address, and opening it again, after that or on another site, says they have been shown and links to the recover
+  page.
 - The new site's admin login is its own step: its username and password, its TOTP secret as a QR code and text, and a
   code check. The login button is disabled until a code from the authenticator app matches; a wrong code says so. A
   code is checked as soon as its sixth digit is in, with no click. The check changes nothing, and a recovered site's

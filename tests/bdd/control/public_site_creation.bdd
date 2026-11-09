@@ -37,4 +37,7 @@ GOTO {{ server_url }}/
 ASSERT_VISIBLE #public--create-site-button
 CLICK #public--create-site-button
 ASSERT_STATUS 200
+// It opens the new site's own address, which shows its credentials
+ASSERT_PATH /welcome
+ASSERT_VISIBLE #public--copy-button
 ASSERT_VISIBLE #public--site-info--totp
