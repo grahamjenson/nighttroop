@@ -41,7 +41,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 - A control admin signs in with a username, password and TOTP code, and can sign out. Tab goes from the username to the
   password to the code, skipping the button that shows the password.
-- "Sign in with a passkey" on the control login signs in the control admin whose passkey the browser has, with no
+- "Log in with a passkey" on the control login signs in the control admin whose passkey the browser has, with no
   name, password or code, as a site's login does. Control passkey sign ins are rate limited per IP, and are sign in
   events, as a failed one is.
 - Account, under Security in the control menu, says which control admin is signed in, and adds and removes its
@@ -49,7 +49,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   the browser already has, and named for the admin, with no name, email or device of the person kept. Control admins'
   and site identities' passkeys are kept in one table, each only ever found, listed or removed as its own owner's.
 - The control login is sent as soon as the code's sixth digit is typed or pasted, once the username and password are in,
-  as the site's is; a code typed before them waits for Log In, and a wrong code is said to be wrong and not sent again.
+  as the site's is; a code typed before them waits for Log in, and a wrong code is said to be wrong and not sent again.
 - A failed control login says, in an error toast, "Wrong name, password or code. Codes change every 30 seconds, so use
   the newest one.", or that there were too many login attempts, and marks the inputs invalid until it is sent again.
   The inputs have no placeholders, and are not marked invalid before then.
@@ -251,10 +251,10 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   its address, and opening it again, after that or on another site, says they have been shown and links to the recover
   page.
 - The new site's admin login is its own step: its username and password, its TOTP secret as a QR code and text, and a
-  code check. The login button is disabled until a code from the authenticator app matches; a wrong code says so. A
+  code check. The Log in button is disabled until a code from the authenticator app matches, saying under it to check a code in step 2 first; a wrong code says so. Its buttons are the shape of its Copy all credentials, not round pills. A
   code is checked as soon as its sixth digit is in, with no click. The check changes nothing, and a recovered site's
   credentials are checked the same way.
-- Beside Login, a new site's welcome page offers "Login with passkey", with no authenticator app: it adds the admin a
+- Beside Log in, a new site's welcome page offers "Log in with a passkey", with no authenticator app: it adds the admin a
   passkey on the site's own address, with the device's fingerprint, face or PIN, and signs the admin in with it. Only
   the browser the credentials were shown to can, for 15 minutes, once; after that the passkey is added on My Account.
 - A new site takes the time zone and language of the browser that created it, and its country's units and formats.
@@ -843,7 +843,7 @@ Connectors are a site's third party integrations, each syncing from one service.
 ### Signing in
 
 - The admin signs in with a password, then a TOTP code; users with a password.
-- "Sign in with a passkey" on the login page signs in the identity whose passkey the browser has, with no name,
+- "Log in with a passkey" on the login page signs in the identity whose passkey the browser has, with no name,
   password or TOTP code: a passkey is two factors, the device and the person's fingerprint, face or PIN. A passkey only
   works on its own site's address. It keeps only what checking a sign in needs: its ID, public key, flags and sign
   count, never the authenticator's model or attestation. A disabled identity's passkey does not sign in, and passkey
