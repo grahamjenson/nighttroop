@@ -9,6 +9,9 @@ SCREENSHOT public
 // A new site's pages show it too
 CLICK "Create Site"
 ASSERT_STATUS 200
+// It opens the new site's own address, which shows its credentials
+ASSERT_PATH /welcome
+ASSERT_VISIBLE #public--copy-button
 INPUT #public--site-info--totp 123123
 CLICK #public--totp-check-button
 ASSERT_VISIBLE #public--totp-checked

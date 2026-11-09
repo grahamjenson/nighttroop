@@ -5,6 +5,9 @@
 GOTO {{ server_url}}/
 CLICK "Create Site"
 ASSERT_STATUS 200
+// It opens the new site's own address, which shows its credentials
+ASSERT_PATH /welcome
+ASSERT_VISIBLE #public--copy-button
 
 // Login is offered once a code from the authenticator app has been checked
 INPUT #public--site-info--totp 123123
@@ -25,6 +28,9 @@ SAVE_COOKIE pre_auth_token attacker_pre_auth
 GOTO {{ server_url}}/
 CLICK "Create Site"
 ASSERT_STATUS 200
+// It opens the new site's own address, which shows its credentials
+ASSERT_PATH /welcome
+ASSERT_VISIBLE #public--copy-button
 
 // Login is offered once a code from the authenticator app has been checked
 INPUT #public--site-info--totp 123123

@@ -3,6 +3,9 @@ GOTO {{ server_url }}/
 ASSERT_STATUS 200
 CLICK "Create Site"
 ASSERT_STATUS 200
+// It opens the new site's own address, which shows its credentials
+ASSERT_PATH /welcome
+ASSERT_VISIBLE #public--copy-button
 ASSERT_VISIBLE #public--site-info--recover-link
 SCREENSHOT created
 SAVE_TEXT #public--site-info--site-id site_id

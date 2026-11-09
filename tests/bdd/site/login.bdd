@@ -10,6 +10,9 @@ SCREENSHOT create_site
 
 CLICK "Create Site"
 ASSERT_STATUS 200
+// It opens the new site's own address, which shows its credentials
+ASSERT_PATH /welcome
+ASSERT_VISIBLE #public--copy-button
 
 // The new site's two steps are the page, under a smaller logo and name
 ASSERT_NOT_VISIBLE #public--features
