@@ -153,5 +153,10 @@ UPDATE device_reports SET
     updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
 WHERE id = sqlc.arg('ID') AND deleted_at IS NULL;
 
+-- name: ClearDeviceReportLoopStatus :exec
+-- A device report keeps none of its loop's status, as one a backfill copies, an old one's status being of no use; its
+-- IOB and COB columns are kept
+UPDATE device_reports SET loop_status_json = NULL WHERE id = sqlc.arg('ID');
+
 -- name: HardDeleteDeviceReport :execresult
 DELETE FROM device_reports WHERE id = ?;

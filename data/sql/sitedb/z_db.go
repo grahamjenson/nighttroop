@@ -72,6 +72,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.allTempTargetsStmt, err = db.PrepareContext(ctx, allTempTargets); err != nil {
 		return nil, fmt.Errorf("error preparing query AllTempTargets: %w", err)
 	}
+	if q.clearDeviceReportLoopStatusStmt, err = db.PrepareContext(ctx, clearDeviceReportLoopStatus); err != nil {
+		return nil, fmt.Errorf("error preparing query ClearDeviceReportLoopStatus: %w", err)
+	}
 	if q.createActivityStmt, err = db.PrepareContext(ctx, createActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateActivity: %w", err)
 	}
@@ -518,6 +521,11 @@ func (q *Queries) Close() error {
 	if q.allTempTargetsStmt != nil {
 		if cerr := q.allTempTargetsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing allTempTargetsStmt: %w", cerr)
+		}
+	}
+	if q.clearDeviceReportLoopStatusStmt != nil {
+		if cerr := q.clearDeviceReportLoopStatusStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing clearDeviceReportLoopStatusStmt: %w", cerr)
 		}
 	}
 	if q.createActivityStmt != nil {
@@ -1180,6 +1188,7 @@ type Queries struct {
 	allProfileSwitchesStmt                      *sql.Stmt
 	allTempBasalsStmt                           *sql.Stmt
 	allTempTargetsStmt                          *sql.Stmt
+	clearDeviceReportLoopStatusStmt             *sql.Stmt
 	createActivityStmt                          *sql.Stmt
 	createComponentEventStmt                    *sql.Stmt
 	createDeviceReportStmt                      *sql.Stmt
@@ -1323,6 +1332,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		allProfileSwitchesStmt:                      q.allProfileSwitchesStmt,
 		allTempBasalsStmt:                           q.allTempBasalsStmt,
 		allTempTargetsStmt:                          q.allTempTargetsStmt,
+		clearDeviceReportLoopStatusStmt:             q.clearDeviceReportLoopStatusStmt,
 		createActivityStmt:                          q.createActivityStmt,
 		createComponentEventStmt:                    q.createComponentEventStmt,
 		createDeviceReportStmt:                      q.createDeviceReportStmt,

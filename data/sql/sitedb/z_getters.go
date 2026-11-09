@@ -4688,6 +4688,16 @@ func (m *AllDeviceReportsParams) SetLimit(v int64) {
 }
 
 // GetID returns the ID value.
+func (m ClearDeviceReportLoopStatusParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated ClearDeviceReportLoopStatusParams.
+func (m *ClearDeviceReportLoopStatusParams) SetID(v string) {
+	m.ID = v
+}
+
+// GetID returns the ID value.
 func (m CreateDeviceReportParams) GetID() string {
 	return m.ID
 }

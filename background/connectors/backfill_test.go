@@ -12,6 +12,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/jobsdb"
 	"nighttroop.t1d.nz/data/sql/logsdb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
+	"nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/testutils"
 )
@@ -220,31 +221,9 @@ func TestNightscoutBackfillStopsAtAPageOlderThanItsStart(t *testing.T) {
 	require.Nil(t, s.LastBackfillError, "the backfill stops at the page older than its start")
 }
 
-// A backfill reads device statuses from the last hour only, as an old one is of little use and takes up much of a
-// site's DB, and the other collections over all its range
-func TestBackfillFrom(t *testing.T) {
-	now := time.Now()
-	tests := []struct {
-		name     string
-		from, to time.Time
-		within   time.Duration
-		want     time.Time
-		reads    bool
-	}{
-		{"no limit reads all the range", now.Add(-72 * time.Hour), now, 0, now.Add(-72 * time.Hour), true},
-		{"a range up to now reads its last hour", now.Add(-72 * time.Hour), now, time.Hour, now.Add(-time.Hour), true},
-		{"a range within the hour reads it all", now.Add(-30 * time.Minute), now, time.Hour, now.Add(-30 * time.Minute), true},
-		{"a range ending before the hour reads nothing", now.Add(-72 * time.Hour), now.Add(-2 * time.Hour), time.Hour, now.Add(-time.Hour), false},
-	}
-	for _, test := range tests {
-		from, reads := backfillFrom(test.from, test.to, test.within, now)
-		require.Equal(t, test.reads, reads, test.name)
-		require.Equal(t, test.want, from, test.name)
-	}
-}
-
-// A Nightscout backfill of days long gone copies their readings and treatments but not their device statuses
-func TestNightscoutBackfillLeavesOldDeviceStatuses(t *testing.T) {
+// A Nightscout backfill copies old device statuses with their IOB and COB, which summaries show, but none of their
+// loop status, which is of no use once old; a status the site already had keeps its own
+func TestNightscoutBackfillKeepsNoLoopStatus(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.ConnectorTypeNightscout
 	enc := func(s string) *string {
@@ -252,28 +231,35 @@ func TestNightscoutBackfillLeavesOldDeviceStatuses(t *testing.T) {
 		require.NoError(t, err)
 		return &v
 	}
-	threeDaysAgo := float64(time.Now().Add(-72 * time.Hour).UnixMilli())
-	nightscout_client.TestDocuments = map[string][]any{
-		"entries":      {map[string]any{"type": "sgv", "sgv": 140, "date": threeDaysAgo}},
-		"treatments":   {map[string]any{"eventType": "Correction Bolus", "insulin": 2, "date": threeDaysAgo}},
-		"devicestatus": {map[string]any{"device": "openaps://phone", "date": threeDaysAgo, "uploaderBattery": 80}},
-	}
+	threeDaysAgo, twoDaysAgo := time.Now().Add(-72*time.Hour).UnixMilli(), time.Now().Add(-48*time.Hour).UnixMilli()
+	openAPS := map[string]any{"iob": map[string]any{"iob": 1.5, "basaliob": 0.5}, "suggested": map[string]any{"COB": 20, "reason": "COB 20", "predBGs": map[string]any{"IOB": []any{120, 118}}}}
+	nightscout_client.TestDocuments = map[string][]any{"devicestatus": {
+		map[string]any{"device": "openaps://phone", "date": float64(threeDaysAgo), "openaps": openAPS},
+		map[string]any{"device": "openaps://phone", "date": float64(twoDaysAgo), "openaps": openAPS},
+	}}
 	t.Cleanup(func() { nightscout_client.TestDocuments = map[string][]any{} })
+	// The site already has the later one, as a sync copied it, with its loop status
+	kept := `{"iob":{"iob":1.5}}`
+	_, err := site.SiteDB.Queries().CreateDeviceReport(ctx, sitedb.CreateDeviceReportParams{ID: "synced", OccurredAt: twoDaysAgo, CreatedByDeviceName: new("openaps://phone"),
+		OtherAttributes: types.DeviceReportOther{LoopName: new("openaps")}, LoopStatusJson: &kept, CreatedByIdentityName: "phone"})
+	require.NoError(t, err)
 	require.NoError(t, q.CreateConnector(ctx, controldb.CreateConnectorParams{SiteID: siteID, Type: typ, UrlOrUsernameEnc: enc(nightscout_client.TestValidURL), PasswordEnc: enc("token"), Enabled: true}))
 
-	// The days before a site's oldest reading, ending long before the last hour
 	now := time.Now()
-	backfill := BackfillParams{From: now.Add(-7 * 24 * time.Hour).UnixMilli(), To: now.Add(-2 * time.Hour).UnixMilli()}
+	backfill := BackfillParams{From: now.Add(-7 * 24 * time.Hour).UnixMilli(), To: now.Add(-time.Hour).UnixMilli()}
 	require.NoError(t, QueueBackfill(ctx, controlDB, siteID, typ, backfill))
 	require.NoError(t, SetupConnectorJobManager(cfg, controlDB).RunConnector(ctx, ConnectorJobParams{SiteID: siteID, Type: typ, Backfill: &backfill}))
 
-	readings, err := site.SiteDB.Queries().AllGlucoseReadings(ctx, sitedb.AllGlucoseReadingsParams{Limit: 10})
-	require.NoError(t, err)
-	require.Len(t, readings, 1)
 	reports, err := site.SiteDB.Queries().AllDeviceReports(ctx, sitedb.AllDeviceReportsParams{Limit: 10})
 	require.NoError(t, err)
-	require.Empty(t, reports, "an old device status is not backfilled")
-	c, err := q.GetConnector(ctx, controldb.GetConnectorParams{SiteID: siteID, Type: typ})
-	require.NoError(t, err)
-	require.Equal(t, int64(2), *c.LastBackfillRecords)
+	require.Len(t, reports, 2)
+	byDate := map[int64]*sitedb.DeviceReport{}
+	for _, report := range reports {
+		byDate[report.OccurredAt] = report
+	}
+	backfilled := byDate[threeDaysAgo]
+	require.Nil(t, backfilled.LoopStatusJson, "a backfilled status keeps no loop status")
+	require.Equal(t, 1.5, *backfilled.LoopIob, "its IOB is kept")
+	require.Equal(t, 20.0, *backfilled.LoopCob, "and its COB")
+	require.Equal(t, kept, *byDate[twoDaysAgo].LoopStatusJson, "a status the site had keeps its own")
 }
