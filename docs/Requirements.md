@@ -405,7 +405,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 ### Data
 
 Each kind of data has a page with a table, newest first and paged, where records can be added, viewed, edited and
-deleted (after a confirmation). On a phone, a table wider than the window scrolls sideways in its card, so the page
+deleted (after a confirmation). Its Add button, the page's main action, is at the right of its title (below it on a
+phone), as on the presets and push credentials pages. On a phone, a table wider than the window scrolls sideways in its card, so the page
 does not, and its cells stay on one line, so a time or a value and its unit never break apart; only notes wrap.
 Adding or deleting a record updates the table's "Showing" count straight away, without a reload, and deleting the
 last one shows the table is empty again, as deleting the last push credential does. Each page shows 50 records at a

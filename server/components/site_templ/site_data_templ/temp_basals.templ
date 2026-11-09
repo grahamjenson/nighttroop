@@ -19,12 +19,11 @@ import (
 // TempBasalsTable shows one page of temp basals, newest first, with buttons to the pages either side
 templ TempBasalsTable(tempBasals []*sitemodels.SiteTempBasal, skip int64, limit int64) {
 	<div id="temp_basals_table" class="mx-auto max-w-5xl space-y-6">
-		@heading.Page("Temp Basals") {
+		@heading.PageWith("Temp Basals", addmodal.Open("site--temp-basal--add", "/data/temp-basals/new", "Add Temp Basal")) {
 			Newest first. Click a temp basal to see all its details.
 		}
 		@searchTotals("site--temp-basal", "temp basal", "temp basals")
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			@addmodal.Open("site--temp-basal--add", "/data/temp-basals/new", "Add Temp Basal")
 			@table.Table(table.Props{
 				ID:    "tempBasalsTable",
 				Class: "rounded-lg border border-gray-200",
