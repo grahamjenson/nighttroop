@@ -368,7 +368,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - The Reports hub's Summaries page, at `/reports` (and `/reports/summaries`), has a table for each of the kept days
   (the last 31), weeks, fortnights and months (the last year): each one's days with data, time in range, daily dose
   and daily carbs, newest first, each opening its AGP report.
-- An admin can regenerate the summaries from the Summaries page, after confirming: a background job builds the last
+- An admin can regenerate the summaries from below the Summaries page's tables, which says it is for summaries that look wrong, as after changing the timezone, rather than as the page's main action, after confirming: a background job builds the last
   year of days with data, and yesterday, and their weeks, fortnights and months, again from the site's data. It is
   recorded as an event, and asking again before it runs asks once. Others cannot.
 - A report says which days it covers, and its days with data, time in range, mean daily dose and mean daily carbs,
