@@ -111,7 +111,7 @@ func WriteVirtualData(ctx context.Context, store *nightscoutapi.NightTroopAPISto
 		if !ok {
 			return added, fmt.Errorf("virtual: collection %s not found", doc.collection)
 		}
-		_, duplicate, herr := collectionStore.Create(ctx, siteContext, doc.data, false)
+		_, duplicate, herr := collectionStore.Create(ctx, siteContext, doc.data)
 		if herr != nil {
 			return added, fmt.Errorf("virtual: failed to create %s: %s", doc.collection, herr.Error())
 		}

@@ -85,7 +85,7 @@ func (ws *Websocket) dbAdd(ctx context.Context, collection nsutils.Collection, _
 		if _, ok := document["created_at"]; !ok {
 			document["created_at"] = time.Now().UTC().Format(time.RFC3339Nano)
 		}
-		record, _, err := ws.collections[collection].Create(ctx, httputils.GetSiteContext(ctx), document, false)
+		record, _, err := ws.collections[collection].Create(ctx, httputils.GetSiteContext(ctx), document)
 		if err != nil || record == nil {
 			slog.InfoContext(ctx, "Websocket dbAdd refused", "collection", collection, "error", err)
 			continue
@@ -101,7 +101,7 @@ func (ws *Websocket) dbUpdate(ctx context.Context, collection nsutils.Collection
 	if json.Unmarshal(data, &fields) != nil || fields == nil {
 		return ackResult("Invalid data")
 	}
-	if record, err := ws.collections[collection].Patch(ctx, httputils.GetSiteContext(ctx), id, fields, false); err != nil || record == nil {
+	if record, err := ws.collections[collection].Patch(ctx, httputils.GetSiteContext(ctx), id, fields); err != nil || record == nil {
 		slog.InfoContext(ctx, "Websocket dbUpdate refused", "collection", collection, "error", err)
 		return ackResult("Unable to process update")
 	}
@@ -121,7 +121,7 @@ func (ws *Websocket) dbUpdateUnset(ctx context.Context, collection nsutils.Colle
 		for field := range fields {
 			delete(document, field)
 		}
-		_, _, err = ws.collections[collection].Replace(ctx, siteContext, id, document, false, false)
+		_, _, err = ws.collections[collection].Replace(ctx, siteContext, id, document, false)
 	}
 	if err != nil || record == nil {
 		slog.InfoContext(ctx, "Websocket dbUpdateUnset refused", "collection", collection, "error", err)
