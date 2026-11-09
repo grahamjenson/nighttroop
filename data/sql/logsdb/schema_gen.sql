@@ -22,7 +22,7 @@ CREATE TABLE errors (
     id INTEGER PRIMARY KEY,
     site_id TEXT CHECK(length(site_id) <= 32),
     message TEXT NOT NULL CHECK(length(message) <= 1024),
-    attributes TEXT CHECK(length(attributes) <= 4096 AND json_valid(attributes)),
+    attributes TEXT CHECK(length(attributes) <= 16384 AND json_valid(attributes)),
     request_id TEXT CHECK(length(request_id) <= 64),
     job_id TEXT CHECK(length(job_id) <= 32),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))

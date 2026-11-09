@@ -56,7 +56,8 @@ func (b *errorBody) Write(p []byte) (int, error) {
 
 // RecordClientErrors records each request refused for what it sent, such as a 400, in the logs DB's errors, with its
 // site when it has one, and in Sentry as a warning: its route's pattern, why it was refused, as its response said, the
-// identity that sent it and its User-Agent. Why is what the handler said with SetErrorReason, when it did. The same error of a site is recorded at most every clientErrorEvery, and
+// identity that sent it, its User-Agent and what it sent, its credentials redacted. Why is what the handler said with
+// SetErrorReason, when it did. The same error of a site is recorded at most every clientErrorEvery, and
 // at most clientErrorsPerMinute of a site's.
 func RecordClientErrors(logs *db.LogsDB) func(http.Handler) http.Handler {
 	recent, _ := lru.New[string, time.Time](clientErrorsKept)
@@ -72,7 +73,7 @@ func RecordClientErrors(logs *db.LogsDB) func(http.Handler) http.Handler {
 				return
 			}
 			attributes := db.ClientErrorAttributes{Status: ww.Status(), Method: r.Method, Reason: clip(cmp.Or(*reason, errorReason(body.body))),
-				RequestID: middleware.GetReqID(r.Context()), Client: clip(r.UserAgent())}
+				RequestID: middleware.GetReqID(r.Context()), Client: clip(r.UserAgent()), RequestBody: ErrorRequestBody(r.Context())}
 			if routeContext := chi.RouteContext(r.Context()); routeContext != nil {
 				attributes.Route = routeContext.RoutePattern()
 			}

@@ -29,11 +29,13 @@ type LogsDB struct {
 }
 
 // maxMessageLength and maxAttributesLength are the longest message and attributes JSON the tables keep, but for a
-// captured request's, which can be up to maxCaptureLength
+// captured request's, which can be up to maxCaptureLength, and an error's, which can hold the body of the request
+// that failed and can be up to maxErrorAttributesLength
 const (
-	maxMessageLength    = 1024
-	maxAttributesLength = 4096
-	maxCaptureLength    = 262144
+	maxMessageLength         = 1024
+	maxAttributesLength      = 4096
+	maxErrorAttributesLength = 16384
+	maxCaptureLength         = 262144
 )
 
 func NewLogsDB(ctx context.Context, cfg *config.ServerConfig) (*LogsDB, error) {
@@ -112,7 +114,7 @@ func (l *LogsDB) Log(ctx context.Context, siteID *string, level LogLevel, messag
 		attrs = attributes
 	}
 	requestID, jobID := aslog.IDs(ctx)
-	l.record("log", l.Queries.InsertLog(ctx, logsdb.InsertLogParams{SiteID: siteID, Level: string(level), Message: truncate(message), Attributes: attributesJSON(attrs),
+	l.record("log", l.Queries.InsertLog(ctx, logsdb.InsertLogParams{SiteID: siteID, Level: string(level), Message: truncate(message), Attributes: attributesJSON(attrs, maxAttributesLength),
 		RequestID: orNil(requestID), JobID: orNil(jobID), CreatedAt: time.Now().UnixMilli()}))
 }
 
@@ -144,7 +146,7 @@ func (l *LogsDB) publish(ctx context.Context, event events.Event) {
 		finished = new(event.FinishedAt.UnixMilli())
 	}
 	requestID, jobID := aslog.IDs(ctx)
-	l.record("event", l.Queries.InsertEvent(ctx, logsdb.InsertEventParams{SiteID: orNil(event.SiteID), Batch: orNil(event.Batch), Name: string(event.Name), Attributes: attributesJSON(event.Attributes), StartedAt: event.StartedAt.UnixMilli(), FinishedAt: finished,
+	l.record("event", l.Queries.InsertEvent(ctx, logsdb.InsertEventParams{SiteID: orNil(event.SiteID), Batch: orNil(event.Batch), Name: string(event.Name), Attributes: attributesJSON(event.Attributes, maxAttributesLength), StartedAt: event.StartedAt.UnixMilli(), FinishedAt: finished,
 		RequestID: orNil(requestID), JobID: orNil(jobID)}))
 }
 
@@ -170,7 +172,7 @@ func orNil(s string) *string {
 
 func (l *LogsDB) error(ctx context.Context, siteID *string, err error, attributes any) {
 	requestID, jobID := aslog.IDs(ctx)
-	l.record("error", l.Queries.InsertError(ctx, logsdb.InsertErrorParams{SiteID: siteID, Message: truncate(err.Error()), Attributes: attributesJSON(attributes),
+	l.record("error", l.Queries.InsertError(ctx, logsdb.InsertErrorParams{SiteID: siteID, Message: truncate(err.Error()), Attributes: attributesJSON(attributes, maxErrorAttributesLength),
 		RequestID: orNil(requestID), JobID: orNil(jobID)}))
 }
 
@@ -202,13 +204,13 @@ func truncate(message string) string {
 	return strings.ToValidUTF8(message[:maxMessageLength-3], "") + "..."
 }
 
-// attributesJSON is the attributes as JSON, nil when there are none, or a note when they are too long to keep
-func attributesJSON(attributes any) *string {
+// attributesJSON is the attributes as JSON, nil when there are none, or a note when they are longer than maxLength
+func attributesJSON(attributes any, maxLength int) *string {
 	if attributes == nil {
 		return nil
 	}
 	raw, err := json.Marshal(attributes)
-	if err != nil || len(raw) > maxAttributesLength {
+	if err != nil || len(raw) > maxLength {
 		raw = []byte(`{"truncated":true}`)
 	}
 	value := string(raw)

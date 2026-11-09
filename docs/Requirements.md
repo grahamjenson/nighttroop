@@ -163,6 +163,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   error's are. The same
   one of a site is recorded at most once a minute, and at most 20 of a site's a minute, so a client repeating bad
   requests cannot fill the errors or Sentry. Missing credentials, permissions, records and rate limits are not.
+- A request refused for what it sent, or that failed with a 5xx, keeps the first 8 KB of what it sent on its error, and
+  sends it to Sentry with any error reported while handling it, as `request_body`: its JSON, or its text when it is not
+  JSON (such as JSON that did not parse), with credentials (tokens, secrets, passwords) `REDACTED`, to debug it by.
 - Logs, events and errors can be narrowed to one site, request or background job run by its ID. An event's, error's
   or log's details link to the rows of its request and job.
 - A control admin can download the whole logs DB, as one SQLite file `logs-<time>.sqlite`, with Download Logs DB on
