@@ -11,6 +11,9 @@ import (
 	"time"
 )
 
+// downloadWriteTimeout is how long sending a download can take, past the server's usual write timeout
+const downloadWriteTimeout = 10 * time.Minute
+
 // SiteDownload is a snapshot of a site's DB, in a temp file, to send as the site's download: a zip named for the site
 // and the day, with the DB inside, so more files can be added beside it later. A site admin's Download Data and the
 // control site's Download DB both send it, so the two are the same.
@@ -36,6 +39,9 @@ func SnapshotSite(ctx context.Context, db *sql.DB, siteID string) (*SiteDownload
 // Send writes the download, <site>-<date>.zip with <site>-<date>.sqlite inside. The zip is sent as it is made, so an
 // error after it starts cuts the download short rather than answering with an error.
 func (d *SiteDownload) Send(w http.ResponseWriter) error {
+	// The snapshot took part of the server's 10 second write timeout, and a large DB takes longer to send, which would
+	// cut the download short
+	_ = http.NewResponseController(w).SetWriteDeadline(time.Now().Add(downloadWriteTimeout))
 	w.Header().Set("Content-Type", "application/zip")
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s.zip"`, d.name))
 	archive := zip.NewWriter(w)
