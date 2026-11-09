@@ -1,10 +1,8 @@
 package nsutils
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
@@ -81,58 +79,6 @@ func (c Collection) IsTypeString(t string) bool {
 // /
 // Field Processing
 // //
-
-// StringField reads a field as a string when possible.
-func StringField(data map[string]any, key string) (string, bool) {
-	val, ok := data[key]
-	if !ok || val == nil {
-		return "", false
-	}
-	switch typed := val.(type) {
-	case string:
-		return typed, true
-	case json.Number:
-		return typed.String(), true
-	case fmt.Stringer:
-		return typed.String(), true
-	default:
-		return fmt.Sprint(typed), true
-	}
-}
-
-// Int64Field reads a field as an int64 when possible.
-func Int64Field(data map[string]any, key string) (int64, bool, error) {
-	val, ok := data[key]
-	if !ok || val == nil {
-		return 0, false, nil
-	}
-	switch typed := val.(type) {
-	case int:
-		return int64(typed), true, nil
-	case int32:
-		return int64(typed), true, nil
-	case int64:
-		return typed, true, nil
-	case float32:
-		return int64(typed), true, nil
-	case float64:
-		return int64(typed), true, nil
-	case json.Number:
-		num, err := typed.Int64()
-		return num, err == nil, nil
-	case string:
-		if typed == "" {
-			return 0, false, BadOffsetError
-		}
-		num, err := strconv.ParseInt(typed, 10, 64)
-		if err != nil {
-			return 0, false, BadOffsetError
-		}
-		return num, true, nil
-	default:
-		return 0, false, BadOffsetError
-	}
-}
 
 type CollectionAction string
 

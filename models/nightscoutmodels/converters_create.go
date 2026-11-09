@@ -124,11 +124,6 @@ func AssignCreatedByID(ctx ConverterContext) *int64 {
 	return &ctx.IdentityID
 }
 
-func ToDateInt(createdAt int64) *types.DateInt {
-	x := types.DateInt(createdAt)
-	return &x
-}
-
 func OrNow(d *types.DateInt) int64 {
 	if d != nil {
 		return int64(*d)
@@ -141,14 +136,6 @@ func OrNow(d *types.DateInt) int64 {
 // ////
 
 // Treatments
-
-func TempBasalValue(t Treatment) float64 {
-	v := TempBasalValuePtr(t)
-	if v == nil {
-		return 0
-	}
-	return *v
-}
 
 func TempBasalValuePtr(t Treatment) *float64 {
 	if t.Rate != nil {

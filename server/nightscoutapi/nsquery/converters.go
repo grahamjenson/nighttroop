@@ -116,7 +116,3 @@ func GetLimitInt64(source QueryValues) int64 {
 func GetCountGiven(source QueryValues) bool {
 	return source.Limit != nil
 }
-
-func GetSortOrderInt64(source Query) int64 {
-	return source.SortOrder.ToIntVal()
-}

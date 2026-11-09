@@ -158,58 +158,6 @@ func (c SettingsCollection) DeleteQuery(ctx context.Context, siteContext *httput
 	return 0, nsutils.ErrNotImplemented
 }
 
-///////
-// SETTINGS TYPE
-///////
-
-type SettingAny struct {
-	definition SettingDefinitionAny
-	Value      any
-	CreatedAt  int64
-}
-
-type SettingDefinitionAny interface {
-	GetIdentifier() string
-	Parse(any) (any, error)
-	Validate(any) error
-}
-
-func (s *SettingAny) GetID() string {
-	return s.definition.GetIdentifier()
-}
-
-func (s *SettingAny) GetDeletedAt() *int64 {
-	return nil
-}
-
-func (s *SettingAny) GetCreatedAt() int64 {
-	return s.CreatedAt
-}
-
-func (s *SettingAny) GetUpdatedAt() int64 {
-	return s.CreatedAt
-}
-
-func (s *SettingAny) GetOccurredAt() int64 {
-	return s.CreatedAt
-}
-
-func (s *SettingAny) GetCreatedByIdentityName() string {
-	return ""
-}
-
-func (s *SettingAny) GetUtcOffsetMinutes() *int64 {
-	return nil
-}
-
-func (s *SettingAny) GetCreatedByAppName() *string {
-	return ptr("")
-}
-
-func (s *SettingAny) GetCreatedByDeviceName() *string {
-	return ptr("")
-}
-
 func UpdateIndividualSetting(ctx context.Context, siteContext *httputils.SiteContext, identifier string, value any) (*settings.SettingAnyType, *nsutils.HTTPError) {
 	settingsMap := siteContext.GetOwnSettings()
 	identitySettingsMap := settingsMap.IdentitySettingsMap
