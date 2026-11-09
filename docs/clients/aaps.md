@@ -177,6 +177,7 @@ SHA1, as AAPS does.
 | `/api/v2/authorization/debug/check/<permission>` | fixed in #511 (was a 404, which would fail AAPS's status once it showed real permissions) | `auth_v3.http` |
 | `/api/v3/lastModified` | works | `auth_v3.http`, `sync_v3.http` |
 | Entries: create, duplicate, search by date, history with `ETag`, patch, delete, deletion in history | works | `sync_v3.http` |
+| Entries' `filtered` and `unfiltered` of 0, sent with every reading | not kept, as 0 is no raw signal, and left out, which AAPS does not read back | `flow_v3.http` |
 | Entries and treatments in an identity in mmol/L | works: the Nightscout API always gives them in mg/dL | `units/*.http` |
 | First loads over 500 documents | works: a search sorted by date is the oldest first | `first_load_paging.http` |
 | History over 500 documents, and profile history's newest | works: history is the oldest `srvModified` first | `history_paging.http` |
@@ -184,7 +185,7 @@ SHA1, as AAPS does.
 | Temp basal at, over or under 100% (any `percent` from -100), its update | works: `percent`, the change from the basal, is kept as a multiplier of it and returned as sent | `sync_v3.http`, `treatments/temp_basal_percent.http` |
 | Profile switch and effective profile switch `original*` | works: kept with the switch and returned as sent, so a follower reads an effective profile switch as one, not a Note | `sync_v3.http` |
 | Temp basal `type` (e.g. `PUMP_SUSPEND`) | works: kept and returned as sent, so a follower shows a suspended pump as one | `sync_v3.http` |
-| Running mode `mode`, `autoForced`, `reasons`, `originalDuration` | works: kept with the treatment and returned as sent, so a follower reads its mode, not UNKNOWN | `sync_v3.http` |
+| Running mode `mode`, `autoForced`, `reasons`, `originalDuration` | works: kept with the treatment and returned as sent, so a follower reads its mode, not UNKNOWN; an empty `reasons` is not kept and is left out | `sync_v3.http` |
 | Calibrations (`isCalibration`, `sensorMgdlAtPairing`) | works: kept with the mbg and returned as sent, so a follower reads a calibration as one | `sync_v3.http` |
 | Device statuses: create, history with `srvModified` | works | `sync_v3.http`, `flow_v3.http` |
 | Device status `pump.clock`, `pump.status`, `pump.extended` | works: the pump object is read back as sent | `sync_v3.http` |
