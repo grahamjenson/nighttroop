@@ -101,6 +101,7 @@ func (s *ConnectorSettingsCollection) CreateRow(ctx context.Context, collectionT
 		return nil, connectorWriteError(err)
 	}
 
+	model.Type = params.Type // so its response shows the buttons of that connector
 	return model, nil
 }
 
@@ -158,6 +159,7 @@ func (s *ConnectorSettingsCollection) UpdateRow(ctx context.Context, collectionT
 		return nil, connectorWriteError(err)
 	}
 
+	model.Type = params.Type // so its response shows the buttons of that connector
 	return model, nil
 }
 

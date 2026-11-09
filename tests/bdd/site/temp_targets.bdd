@@ -54,6 +54,8 @@ SCREENSHOT temp_target_created
 CLICK #tempTargetsTable tbody tr >> nth=0
 ASSERT_VISIBLE #site--temp-target--details
 ASSERT_TEXT_VISIBLE 7.5 to 9.0 mmol/L for 45 minutes
+// Save is at the modal's foot beside Close, as in the add modal, not in the middle of its details
+ASSERT_VISIBLE #site--temp-target--details div:has(> #site--temp-target--details--close) > #site--temp-target--edit--submit
 SCREENSHOT temp_target_edit
 INPUT #site--temp-target--edit--high 9.5
 INPUT #site--temp-target--edit--notes Run

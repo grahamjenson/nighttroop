@@ -270,7 +270,7 @@ templ glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) {
 						"hx-status:5xx":        "target:#toaster swap:beforeend",
 					},
 				}) {
-					@icon.Trash2(icon.Props{Class: "size-4 text-red-600"})
+					@icon.Trash2(icon.Props{Class: button.DeleteIconClass})
 				}
 			</div>
 		}
@@ -278,7 +278,7 @@ templ glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) {
 }
 
 templ GlucoseReadingModal(reading *sitemodels.SiteGlucoseReading) {
-	@modal.Modal(modal.Props{ID: "site--glucose--details", Title: formatGlucose(reading.Reading, reading.Units) + " " + orDash(reading.Units), Subtitle: formatReadingDate(ctx, reading.OccurredAt)}) {
+	@modal.Modal(modal.Props{ID: "site--glucose--details", Title: formatGlucose(reading.Reading, reading.Units) + " " + orDash(reading.Units), Subtitle: formatReadingDate(ctx, reading.OccurredAt), Actions: modal.Submit("site--glucose--edit", "Save")}) {
 		<form
 			id="site--glucose--edit"
 			class="mt-4 flex flex-wrap items-end gap-2"
@@ -289,9 +289,6 @@ templ GlucoseReadingModal(reading *sitemodels.SiteGlucoseReading) {
 			hx-status:5xx="target:#toaster swap:beforeend"
 		>
 			@glucoseInputs("site--glucose--edit", formatGlucose(reading.Reading, reading.Units), orEmpty(reading.Notes))
-			@button.Button(button.Props{ID: "site--glucose--edit--submit", Type: button.TypeSubmit}) {
-				Save
-			}
 		</form>
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@readingDetail("Type", display.ReadingType(reading.ReadingType))

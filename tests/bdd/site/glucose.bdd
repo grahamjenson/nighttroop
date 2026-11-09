@@ -24,6 +24,10 @@ SCREENSHOT glucose_readings
 // The days above the readings are named in words, never as "Last 1 days"
 ASSERT_VISIBLE #site--glucose--days
 ASSERT_NOT_VISIBLE #site--glucose--days h2:text-is("Last 1 days")
+// A row's delete icon is grey, so a table is not a column of red, and turns red as it is pointed at
+ASSERT_VISIBLE #glucoseReadingsTable tbody tr >> nth=0 >> [id$="--delete"]:has(svg.text-gray-400)
+HOVER #glucoseReadingsTable tbody tr >> nth=0 >> [id$="--delete"]
+SCREENSHOT glucose_reading_delete_pointed_at
 
 // Clicking a reading shows all its details
 CLICK #glucoseReadingsTable tbody tr >> nth=0

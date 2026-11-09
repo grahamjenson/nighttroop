@@ -148,7 +148,7 @@ templ foodPresetRow(foodPreset *sitemodels.SiteFoodPreset) {
 						"hx-status:5xx":        "target:#toaster swap:beforeend",
 					},
 				}) {
-					@icon.Trash2(icon.Props{Class: "size-4 text-red-600"})
+					@icon.Trash2(icon.Props{Class: button.DeleteIconClass})
 				}
 			</div>
 		}
@@ -156,7 +156,7 @@ templ foodPresetRow(foodPreset *sitemodels.SiteFoodPreset) {
 }
 
 templ FoodPresetModal(foodPreset *sitemodels.SiteFoodPreset) {
-	@modal.Modal(modal.Props{ID: "presets--food--details", Title: orDash(foodPreset.Name)}) {
+	@modal.Modal(modal.Props{ID: "presets--food--details", Title: orDash(foodPreset.Name), Actions: modal.Submit("presets--food--edit", "Save")}) {
 		<form
 			id="presets--food--edit"
 			class="mt-4 flex flex-wrap items-end gap-2"
@@ -167,9 +167,6 @@ templ FoodPresetModal(foodPreset *sitemodels.SiteFoodPreset) {
 			hx-status:5xx="target:#toaster swap:beforeend"
 		>
 			@foodPresetInputs("presets--food--edit", orEmpty(foodPreset.Name), orEmpty(foodPreset.Carbs), orEmpty(foodPreset.AbsorptionTimeMinutes))
-			@button.Button(button.Props{ID: "presets--food--edit--submit", Type: button.TypeSubmit}) {
-				Save
-			}
 		</form>
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@presetDetail("Food Type", orDash(foodPreset.FoodType))

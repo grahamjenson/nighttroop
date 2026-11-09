@@ -42,7 +42,9 @@ SCREENSHOT virtual_connector_offered_on_test_server
 ASSERT_VISIBLE #site--settings--nightscout-connector--enable
 ASSERT_VISIBLE #site--settings--nightscout-connector--url
 ASSERT_VISIBLE #site--settings--nightscout-connector--password
-ASSERT_VISIBLE #site--settings--nightscout-connector--delete
+// Not saved yet, it has nothing to delete or backfill
+ASSERT_NOT_VISIBLE #site--settings--nightscout-connector--delete
+ASSERT_NOT_VISIBLE #site--settings--nightscout-connector--backfill
 ASSERT_VISIBLE #site--settings--nightscout-connector--submit
 
 // Only a base URL is a Nightscout URL: one with a path is invalid while it is typed, and leaving the box keeps only its
@@ -104,6 +106,9 @@ ASSERT_PATH /settings/connectors
 ASSERT_TITLE Connectors · Nighttroop
 ASSERT_NOT_VISIBLE #site--settings--nightscout-connector--errors
 ASSERT_VISIBLE #site--settings--nightscout-connector--url:not([value*="will_not_pass"])
+// Unset again, it has no Delete or Backfill until it is saved
+ASSERT_NOT_VISIBLE #site--settings--nightscout-connector--delete
+ASSERT_NOT_VISIBLE #site--settings--nightscout-connector--backfill
 
 // A link with api_secret is split the same way, and the base URL is what is saved
 INPUT #site--settings--nightscout-connector--url https://split-me.test/api/v1?api_secret=another-secret
@@ -121,7 +126,7 @@ ASSERT_TEXT_VISIBLE Connector Deleted
 ASSERT_VISIBLE #site--settings--dexcom-connector--enable
 ASSERT_VISIBLE #site--settings--dexcom-connector--username
 ASSERT_VISIBLE #site--settings--dexcom-connector--password
-ASSERT_VISIBLE #site--settings--dexcom-connector--delete
+ASSERT_NOT_VISIBLE #site--settings--dexcom-connector--delete
 ASSERT_VISIBLE #site--settings--dexcom-connector--submit
 ASSERT_VISIBLE #site--settings--dexcom-connector--region:has(option[value="OUS"]:checked)
 

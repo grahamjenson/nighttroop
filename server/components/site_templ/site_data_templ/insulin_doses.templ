@@ -143,7 +143,7 @@ templ insulinDoseRow(insulinDose *sitemodels.SiteInsulinDose) {
 						"hx-status:5xx":        "target:#toaster swap:beforeend",
 					},
 				}) {
-					@icon.Trash2(icon.Props{Class: "size-4 text-red-600"})
+					@icon.Trash2(icon.Props{Class: button.DeleteIconClass})
 				}
 			</div>
 		}
@@ -151,7 +151,7 @@ templ insulinDoseRow(insulinDose *sitemodels.SiteInsulinDose) {
 }
 
 templ InsulinDoseModal(insulinDose *sitemodels.SiteInsulinDose) {
-	@modal.Modal(modal.Props{ID: "site--insulin--details", Title: fmt.Sprintf("%v units", insulinDose.Dose), Subtitle: formatReadingDate(ctx, insulinDose.OccurredAt)}) {
+	@modal.Modal(modal.Props{ID: "site--insulin--details", Title: fmt.Sprintf("%v units", insulinDose.Dose), Subtitle: formatReadingDate(ctx, insulinDose.OccurredAt), Actions: modal.Submit("site--insulin--edit", "Save")}) {
 		<form
 			id="site--insulin--edit"
 			class="mt-4 flex flex-wrap items-end gap-2"
@@ -162,9 +162,6 @@ templ InsulinDoseModal(insulinDose *sitemodels.SiteInsulinDose) {
 			hx-status:5xx="target:#toaster swap:beforeend"
 		>
 			@insulinDoseInputs("site--insulin--edit", fmt.Sprint(insulinDose.Dose), orEmpty(insulinDose.Notes))
-			@button.Button(button.Props{ID: "site--insulin--edit--submit", Type: button.TypeSubmit}) {
-				Save
-			}
 		</form>
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@readingDetail("Type", orDash(insulinDose.DoseType))
