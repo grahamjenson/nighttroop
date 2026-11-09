@@ -130,13 +130,13 @@ ASSERT_CONTAINS "only a live site can be disabled" "@message"
 // TRUNCATE
 //////
 
-// Only a site over its DB size limit is truncated
+// A site whose DB is here, as this disabled one, is truncated however small it is
 NAME truncate_site_within_limit
 POST http://control.localhost/sites/{{ .site_id }}/truncate
 H Authorization: Bearer {{ .control_jwt }}
 H Accept: application/json
-ASSERT_STATUS 400
-ASSERT_CONTAINS "only a site over its DB size limit can be truncated" "@message"
+ASSERT_STATUS 200
+ASSERT_EQUALS "disabled" "@result.state"
 
 NAME truncate_unknown_site
 POST http://control.localhost/sites/not-a-site/truncate

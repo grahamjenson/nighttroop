@@ -545,8 +545,8 @@ templ dbSize(site *controlmodels.Site, tables []*controlmodels.SiteTable) {
 }
 
 // siteActions are a grid of what can be done to the site, each saying what it does: open it, and for an admin, download
-// a copy of its DB while it is here, disable it once no one has used it for a while, truncate it while it is over its
-// DB size limit, and archive it once it is disabled. One that cannot be done yet says when it can, in place of its button.
+// a copy of its DB or truncate it while it is here, disable it once no one has used it for a while, and archive it once
+// it is disabled. One that cannot be done yet says when it can, in place of its button.
 templ siteActions(site *controlmodels.Site) {
 	<section id="control--site--actions" class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
 		<h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">Actions</h2>
@@ -574,8 +574,9 @@ templ siteActions(site *controlmodels.Site) {
 				@actionCard("control--site--action-disable", "Disable", "Stops serving the site. Its data is kept.", unless(inactive(ctx, site), disableWhen(ctx, site)), icon.Ban) {
 					@siteActionForm("/sites/"+site.ID, "disabled", "Disable this site? It will stop being served.", "control--site--disable", "Disable")
 				}
-				@actionCard("control--site--action-truncate", "Truncate", "Keeps the loop's status only on each device's newest report, clearing the others' but their IOB and COB, then shrinks its DB.", unless(site.Oversized(), "Offered while it is over its DB size limit."), icon.Scissors) {
-					@siteActionForm("/sites/"+site.ID+"/truncate", "", "Truncate this site? Its older loop statuses are cleared, keeping their IOB and COB, then its DB is shrunk.", "control--site--truncate", "Truncate")
+				@actionCard("control--site--action-truncate", "Truncate", "Does now what every 10 minutes does to its newest reports, to all of them: keeps the loop's status and pump only on each device's newest report, and one report every 10 minutes from before the last hour, then shrinks its DB.",
+					unless(site.State == "live" || site.State == "disabled", "Offered while its DB is here, before it is archived."), icon.Scissors) {
+					@siteActionForm("/sites/"+site.ID+"/truncate", "", "Truncate this site? Its older loop statuses and pumps are cleared, keeping their IOB, COB and pump battery, its older reports thinned, then its DB is shrunk.", "control--site--truncate", "Truncate")
 				}
 				@actionCard("control--site--action-archive", "Archive", "Uploads its data to S3 and deletes it here.", unless(site.State == "disabled", "Offered once it is disabled."), icon.Archive) {
 					@siteActionForm("/sites/"+site.ID, "archived", "Archive this site? Its data is uploaded to S3 and deleted here.", "control--site--archive", "Archive")
