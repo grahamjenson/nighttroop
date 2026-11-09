@@ -28,7 +28,7 @@ CREATE TABLE sites (
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     
 
-    max_db_size_kb_limit INTEGER DEFAULT 3000, -- default 3Mb, can be changed in control plane
+    max_db_size_kb_limit INTEGER DEFAULT 20480, -- default 20 MB, can be changed in control plane
     estimated_db_size_kb INTEGER, -- the site DB's size on disk, measured by the resource check and with its last write
     
 
