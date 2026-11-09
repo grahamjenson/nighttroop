@@ -5,11 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"nighttroop.t1d.nz/background/liteq"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/consts"
 	utilerrors "nighttroop.t1d.nz/utils/errors"
 )
@@ -30,6 +32,9 @@ const (
 	// recentBackfillDays are the last days a backfill fetches again, to fill gaps the site missed, as while it was down
 	// for a deploy
 	recentBackfillDays = 2
+	// deviceStatusBackfillAge is as old as a device status a backfill copies: an older one's IOB and COB are of little
+	// use, and they are most of a site's DB
+	deviceStatusBackfillAge = 30 * 24 * time.Hour
 )
 
 // BackfillParams is when, in ms, a backfill fetches records from and up to, and the recent days it fetches again,
@@ -148,14 +153,22 @@ func (b *ConnectorJobManager) backfill(jobInfo *ConnectorJobInfo, backfill Backf
 	return err
 }
 
-// backfillNightscout copies each collection's documents dated from from to to, newest first a page at a time
-func (b *ConnectorJobManager) backfillNightscout(ctx context.Context, jobInfo *ConnectorJobInfo, from, to time.Time) (int, error) {
+// backfillNightscout copies each collection's documents dated from from to to, newest first a page at a time, but no
+// device statuses older than deviceStatusBackfillAge
+func (b *ConnectorJobManager) backfillNightscout(ctx context.Context, jobInfo *ConnectorJobInfo, rangeFrom, to time.Time) (int, error) {
 	nsc := b.nightscoutClientFor(jobInfo)
 	nsc.Lock()
 	defer nsc.Unlock()
 
-	added, pages := 0, 0
+	added, pages, statusCutoff := 0, 0, time.Now().Add(-deviceStatusBackfillAge)
 	for _, c := range nightscoutCollections {
+		from := rangeFrom
+		if c.collection == nsutils.Devicestatus && from.Before(statusCutoff) {
+			from = statusCutoff
+		}
+		if !from.Before(to) {
+			continue
+		}
 		before := to.UnixMilli()
 		for {
 			if pages++; pages > maxBackfillPages {
@@ -165,7 +178,13 @@ func (b *ConnectorJobManager) backfillNightscout(ctx context.Context, jobInfo *C
 			if err != nil {
 				return added, fmt.Errorf("NightscoutBackfill Error: %w", err)
 			}
-			oldest := oldestDate(docs, before)
+			oldest, full := oldestDate(docs, before), len(docs) == c.backfillPage
+			// A Nightscout server can return a device status dated before the range, as its date is not what it filters on
+			if c.collection == nsutils.Devicestatus {
+				docs = slices.DeleteFunc(docs, func(doc map[string]any) bool {
+					return oldestDate([]map[string]any{doc}, before) < statusCutoff.UnixMilli()
+				})
+			}
 			created, err := b.createNightscoutDocuments(ctx, jobInfo, c.collection, docs, c.backfillSave)
 			added += created
 			if err != nil {
@@ -173,7 +192,7 @@ func (b *ConnectorJobManager) backfillNightscout(ctx context.Context, jobInfo *C
 			}
 			// A page reaching back before from has all the range, and the next would ask for documents dated after from
 			// and before its oldest, which none are and which a Nightscout server can search until the backfill times out
-			if len(docs) < c.backfillPage || oldest < from.UnixMilli() {
+			if !full || oldest < from.UnixMilli() {
 				break
 			}
 			// The next page includes the oldest date, so documents sharing it are not missed, unless the whole page had it

@@ -264,3 +264,53 @@ func TestNightscoutBackfillKeepsNoLoopStatus(t *testing.T) {
 	require.Equal(t, 60.0, *backfilled.PumpBatteryPercent, "but keeps its pump's battery")
 	require.Equal(t, kept, *byDate[twoDaysAgo].LoopStatusJson, "a status the site had keeps its own")
 }
+
+// A backfill copies no device status older than 30 days, from a Nightscout, though its server returns one dated
+// before the range, or from the virtual source; it copies a newer one without its loop status or pump as sent
+func TestBackfillCopiesNoDeviceStatusOlderThan30Days(t *testing.T) {
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
+	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.ConnectorTypeNightscout
+	enc := func(s string) *string {
+		v, err := cfg.Security.Encrypt(s)
+		require.NoError(t, err)
+		return &v
+	}
+	daysAgo := func(days int) int64 { return time.Now().Add(-time.Duration(days) * 24 * time.Hour).UnixMilli() }
+	status := func(date int64) map[string]any {
+		return map[string]any{"device": "openaps://phone", "date": float64(date), "openaps": map[string]any{"iob": map[string]any{"iob": 1.5}},
+			"pump": map[string]any{"battery": map[string]any{"percent": 60}}}
+	}
+	nightscout_client.TestDocuments = map[string][]any{
+		"entries":      {map[string]any{"type": "sgv", "sgv": 140, "date": float64(daysAgo(40))}},
+		"devicestatus": {status(daysAgo(3)), status(daysAgo(40))},
+	}
+	t.Cleanup(func() { nightscout_client.TestDocuments = map[string][]any{} })
+	require.NoError(t, q.CreateConnector(ctx, controldb.CreateConnectorParams{SiteID: siteID, Type: typ, UrlOrUsernameEnc: enc(nightscout_client.TestValidURL), PasswordEnc: enc("token"), Enabled: true}))
+
+	backfill := BackfillParams{From: daysAgo(60), To: daysAgo(1)}
+	require.NoError(t, QueueBackfill(ctx, controlDB, siteID, typ, backfill))
+	jobs := SetupConnectorJobManager(cfg, controlDB)
+	require.NoError(t, jobs.RunConnector(ctx, ConnectorJobParams{SiteID: siteID, Type: typ, Backfill: &backfill}))
+	reports, err := site.SiteDB.Queries().AllDeviceReports(ctx, sitedb.AllDeviceReportsParams{Limit: 10})
+	require.NoError(t, err)
+	require.Len(t, reports, 1, "only the device status from the last 30 days is copied")
+	require.Equal(t, daysAgo(3)/1000, reports[0].OccurredAt/1000)
+	require.Nil(t, reports[0].LoopStatusJson, "without its loop status")
+	require.Nil(t, reports[0].PumpJson, "or its pump as sent")
+	require.Equal(t, 1.5, *reports[0].LoopIob, "but with its IOB")
+	readings, err := site.SiteDB.Queries().AllGlucoseReadings(ctx, sitedb.AllGlucoseReadingsParams{Limit: 10})
+	require.NoError(t, err)
+	require.Len(t, readings, 1, "an older reading is still copied")
+
+	// The virtual source's 10 minutes 31 days ago are its readings, without its device statuses
+	connectorSite, err := jobs.connectorSite(ctx, siteID)
+	require.NoError(t, err)
+	_, err = WriteVirtualData(ctx, jobs.nightscoutStore, connectorSite.siteContext(virtualIdentity), time.UnixMilli(daysAgo(31)), 10*time.Minute)
+	require.NoError(t, err)
+	reports, err = site.SiteDB.Queries().AllDeviceReports(ctx, sitedb.AllDeviceReportsParams{Limit: 10})
+	require.NoError(t, err)
+	require.Len(t, reports, 1)
+	readings, err = site.SiteDB.Queries().AllGlucoseReadings(ctx, sitedb.AllGlucoseReadingsParams{Limit: 10})
+	require.NoError(t, err)
+	require.Greater(t, len(readings), 1)
+}

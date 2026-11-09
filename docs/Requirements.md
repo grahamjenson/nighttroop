@@ -71,7 +71,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 ### Sites
 
 - The dashboard lists every site, newest first, with its state and DB size in MB, to two places, as do the archived
-  sites and a site's details, with its DB size limit.
+  sites and a site's details, with its DB size limit, 20 MB for a new site.
 - Sites can be ordered by how long since they were last written to (the first to archive) or by DB size.
 - A site not written to or seen within `DISABLE_AFTER_INACTIVITY_DAYS` is marked inactive.
 - Clicking a site opens its own page, `/sites/{id}`, laid out like a site's summary, and the browser's back button
@@ -495,6 +495,9 @@ Connectors are a site's third party integrations, each syncing from one service.
   device statuses it adds without their loop status (`openaps` or `loop`) or `pump` as sent, which are of no use once old
   and most of a looping site's DB, but with their IOB and COB, which the summaries show, and their pump's battery,
   reservoir, clock, manufacturer and model; a status the site already had is left as it is.
+- A Nightscout or virtual backfill copies no device status older than 30 days, though a Nightscout server returns one,
+  as an old one's IOB and COB are of little use and device statuses are most of a site's DB; its other records are
+  copied however old.
 - The Connectors page shows how each source has synced, how often, the records it has pulled in, in all, from its syncs
   and backfills, and in its last sync, its backfill and its recent events.
 - The Connectors page updates as each sync or backfill finishes, showing its new errors, stats and events without reloading,
