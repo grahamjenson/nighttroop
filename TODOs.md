@@ -5,6 +5,8 @@
 1. Point real deivces at Loop, Trio, AAPS and xDrip+ uploading, follower apps (xDrip+ follower, LoopFollow,
    Nightguard) reading, and Dexcom and Libre connectors
 1. Automated Testing of the staging, create site, do a bunch of stuff
+1. FINISH announcement post
+1. e2e code review. and flatten.
 
 ## Before Beta Testing
 
