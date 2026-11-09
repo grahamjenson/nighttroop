@@ -253,20 +253,27 @@ templ copyButton(id, targetID, label, class string) {
 // loginButton opens the new site's login, disabled until the authenticator's code has been checked; oob swaps it into
 // the page, from a code's check
 templ loginButton(url string, oob bool) {
-	<div id="public--login" class="flex justify-center p-6" { oobAttributes(oob)... }>
+	<div id="public--login" class="flex flex-col items-center gap-2 p-6" { oobAttributes(oob)... }>
 		@button.Button(button.Props{
 			ID:       "public--login-button",
 			Size:     button.SizeLg,
-			Class:    "h-14 px-10 rounded-full text-lg font-semibold text-white bg-brand-night hover:bg-brand-night/90 shadow-lg shadow-brand-night/30 transition-all duration-200",
+			Class:    welcomeButtonClass + " text-white bg-brand-night hover:bg-brand-night/90",
 			Href:     url,
 			Target:   "_blank",
 			Disabled: url == "",
 		}) {
-			Login
-			@icon.ExternalLink(icon.Props{Class: "size-5"})
+			Log in
+			@icon.ExternalLink(icon.Props{Class: "size-4"})
+		}
+		if url == "" {
+			<p id="public--login-hint" class="text-sm text-slate-600">Check a code from your app in step 2 first.</p>
 		}
 	</div>
 }
+
+// welcomeButtonClass is the shape of the welcome page's buttons, the same as its Copy all credentials, rather than
+// round pills of their own
+const welcomeButtonClass = "h-11 px-6 rounded-lg text-base font-semibold"
 
 // passkeyLogin adds the new site's admin a passkey, this device's fingerprint, face or PIN, and logs in with it, with no
 // authenticator app; it is on the site's own address, which a passkey is made for
@@ -278,11 +285,11 @@ templ passkeyLogin() {
 			Type:       button.TypeButton,
 			Variant:    button.VariantOutline,
 			Size:       button.SizeLg,
-			Class:      "h-14 px-10 rounded-full text-lg font-semibold text-brand-night border-brand-night",
+			Class:      welcomeButtonClass + " text-brand-night border-brand-night",
 			Attributes: templ.Attributes{"data-passkey-begin": "/welcome/passkey/begin", "data-passkey-finish": "/welcome/passkey/finish", "data-passkey-error": "public--passkey-error"},
 		}) {
-			@icon.KeyRound(icon.Props{Class: "size-5"})
-			Login with passkey
+			@icon.KeyRound(icon.Props{Class: "size-4"})
+			Log in with a passkey
 		}
 		<p id="public--passkey-error" class="text-sm text-red-700 empty:hidden"></p>
 		@site_login_templ.PasskeyScript()
