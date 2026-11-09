@@ -90,7 +90,10 @@ templ Report(p *sitemodels.SiteSummaryPeriod) {
 					@templ.Raw(chart.RenderSnippet().Script)
 				</div>
 			} else {
-				<p id="site--reports--no-glucose" class="text-sm text-gray-500">No glucose in this { p.Period }.</p>
+				<p id="site--reports--no-glucose" class="text-sm text-gray-500">
+					No glucose in this { p.Period }. Reports are made from whole days, so a day's readings show here the
+					day after.
+				</p>
 			}
 		</section>
 	</div>
@@ -249,7 +252,12 @@ templ SummariesReport(summaries map[string][]*sitemodels.SiteSummaryPeriod, admi
 					}
 					@table.Body() {
 						if len(summaries[kind.Period]) == 0 {
-							<tr><td colspan="5" class="p-4 text-gray-500">No { kind.Period }s kept yet.</td></tr>
+							<tr>
+								<td colspan="5" class="whitespace-normal p-4 text-gray-500">
+									No { kind.Period }s kept yet. Each is made from whole days, so the first shows the day after readings
+									arrive.
+								</td>
+							</tr>
 						}
 						for _, p := range summaries[kind.Period] {
 							@table.Row() {
