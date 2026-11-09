@@ -203,32 +203,7 @@ templ DexcomConnectorForm(dexcomConnectorSettings *sitemodels.Connector) {
 						}
 					</div>
 				</div>
-				<!-- Footer Actions -->
-				<div class="mt-6 flex flex-col gap-3 border-t border-gray-100 pt-4 md:flex-row md:items-center md:justify-between">
-					@button.Button(button.Props{
-						ID:      "site--settings--dexcom-connector--delete",
-						Type:    "button",
-						Variant: button.VariantDestructive,
-						Attributes: templ.Attributes{
-							"hx-include": "none",
-							"hx-delete":  "/settings/connectors/dexcom",
-							"hx-confirm": "Are you sure you want to delete this Dexcom connector?",
-							"hx-target":  "closest form",
-							"hx-swap":    "outerHTML",
-						},
-					}) {
-						Delete
-					}
-					<div class="flex gap-3">
-						@BackfillButton("dexcom")
-						@button.Button(button.Props{
-							ID:   "site--settings--dexcom-connector--submit",
-							Type: button.TypeSubmit,
-						}) {
-							Save
-						}
-					</div>
-				</div>
+				@connectorActions(dexcomConnectorSettings, consts.ConnectorTypeDexcom, false)
 				@ConnectorStatus(dexcomConnectorSettings, "dexcom")
 			</div>
 		</div>
@@ -334,32 +309,7 @@ templ LibreConnectorForm(libreConnectorSettings *sitemodels.Connector) {
 						}
 					</div>
 				</div>
-				<!-- Footer -->
-				<div class="mt-6 flex flex-col gap-3 border-t border-gray-100 pt-4 md:flex-row md:items-center md:justify-between">
-					@button.Button(button.Props{
-						ID:      "site--settings--libre-connector--delete",
-						Type:    "button",
-						Variant: button.VariantDestructive,
-						Attributes: templ.Attributes{
-							"hx-include": "none",
-							"hx-delete":  "/settings/connectors/libre",
-							"hx-confirm": "Are you sure you want to delete this FreeStyle Libre connector?",
-							"hx-target":  "closest form",
-							"hx-swap":    "outerHTML",
-						},
-					}) {
-						Delete
-					}
-					<div class="flex gap-3">
-						@BackfillButton("libre")
-						@button.Button(button.Props{
-							ID:   "site--settings--libre-connector--submit",
-							Type: button.TypeSubmit,
-						}) {
-							Save
-						}
-					</div>
-				</div>
+				@connectorActions(libreConnectorSettings, consts.ConnectorTypeLibre, false)
 				@ConnectorStatus(libreConnectorSettings, "libre")
 			</div>
 		</div>
@@ -463,32 +413,7 @@ templ NightscoutConnectorForm(nightscoutConnectorSettings *sitemodels.Connector)
 						}
 					</div>
 				</div>
-				<!-- Footer -->
-				<div class="mt-6 flex flex-col gap-3 border-t border-gray-100 pt-4 md:flex-row md:items-center md:justify-between">
-					@button.Button(button.Props{
-						ID:      "site--settings--nightscout-connector--delete",
-						Type:    "button",
-						Variant: button.VariantDestructive,
-						Attributes: templ.Attributes{
-							"hx-include": "none",
-							"hx-delete":  "/settings/connectors/nightscout",
-							"hx-confirm": "Are you sure you want to delete this Nightscout connector?",
-							"hx-target":  "closest form",
-							"hx-swap":    "outerHTML",
-						},
-					}) {
-						Delete
-					}
-					<div class="flex gap-3">
-						@BackfillButton("nightscout")
-						@button.Button(button.Props{
-							ID:   "site--settings--nightscout-connector--submit",
-							Type: button.TypeSubmit,
-						}) {
-							Save
-						}
-					</div>
-				</div>
+				@connectorActions(nightscoutConnectorSettings, consts.ConnectorTypeNightscout, false)
 				@ConnectorStatus(nightscoutConnectorSettings, "nightscout")
 			</div>
 		</div>
@@ -554,36 +479,49 @@ templ VirtualConnectorForm(synSource *sitemodels.Connector) {
 					}
 				</div>
 				@ConnectorErrors(synSource, "virtual")
-				<!-- Footer -->
-				<div class="mt-6 flex flex-col gap-3 border-t border-gray-100 pt-4 md:flex-row md:items-center md:justify-between">
-					@button.Button(button.Props{
-						ID:      "site--settings--virtual-connector--delete",
-						Type:    "button",
-						Variant: button.VariantDestructive,
-						Attributes: templ.Attributes{
-							"hx-include": "none",
-							"hx-delete":  "/settings/connectors/virtual",
-							"hx-confirm": "Are you sure you want to delete this Virtual connector?",
-							"hx-target":  "closest form",
-							"hx-swap":    "outerHTML",
-						},
-					}) {
-						Delete
-					}
-					<div class="flex gap-3">
-						@BackfillButton("virtual")
-						@button.Button(button.Props{
-							ID:   "site--settings--virtual-connector--submit",
-							Type: button.TypeSubmit,
-						}) {
-							Save
-						}
-					</div>
-				</div>
+				@connectorActions(synSource, consts.ConnectorTypeVirtual, false)
 				@ConnectorStatus(synSource, "virtual")
 			</div>
 		</div>
 	</form>
+}
+
+// connectorActions are a connector's buttons: Save, and once it is saved, Backfill and a quieter Delete, as one not
+// saved yet has nothing to backfill or delete. Saving swaps them in out of band, as oob, so they show once it is saved.
+templ connectorActions(source *sitemodels.Connector, connectorType consts.ConnectorType, oob bool) {
+	{{ name := string(connectorType) }}
+	<div id={ "site--settings--" + name + "-connector--actions" } { swapOutOfBand(oob)... } class="mt-6 flex flex-col gap-3 border-t border-gray-100 pt-4 md:flex-row md:items-center md:justify-between">
+		<div>
+			if source != nil {
+				@button.Button(button.Props{
+					ID:      "site--settings--" + name + "-connector--delete",
+					Type:    "button",
+					Variant: button.VariantOutline,
+					Class:   "border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700",
+					Attributes: templ.Attributes{
+						"hx-include": "none",
+						"hx-delete":  "/settings/connectors/" + name,
+						"hx-confirm": "Are you sure you want to delete this " + connectorLabel(connectorType) + " connector?",
+						"hx-target":  "closest form",
+						"hx-swap":    "outerHTML",
+					},
+				}) {
+					Delete
+				}
+			}
+		</div>
+		<div class="flex gap-3">
+			if source != nil {
+				@BackfillButton(name)
+			}
+			@button.Button(button.Props{
+				ID:   "site--settings--" + name + "-connector--submit",
+				Type: button.TypeSubmit,
+			}) {
+				Save
+			}
+		</div>
+	</div>
 }
 
 // BackfillButton asks to fetch the named source's older records, saying what it will fetch; it is disabled while its
@@ -645,6 +583,28 @@ func backfillTime(ms int64) string {
 
 templ SuccessfulUpdate(model *sitemodels.Connector) {
 	@successtoast.Toast("Connector Updated")
+	@connectorActions(model, model.Type, true)
+}
+
+// swapOutOfBand swaps an element of a response in by its ID, out of band, when oob
+func swapOutOfBand(oob bool) templ.Attributes {
+	if oob {
+		return templ.Attributes{"hx-swap-oob": "true"}
+	}
+	return templ.Attributes{}
+}
+
+// connectorLabel is what a connector is called in its confirmations
+func connectorLabel(connectorType consts.ConnectorType) string {
+	switch connectorType {
+	case consts.ConnectorTypeDexcom:
+		return "Dexcom"
+	case consts.ConnectorTypeLibre:
+		return "FreeStyle Libre"
+	case consts.ConnectorTypeNightscout:
+		return "Nightscout"
+	}
+	return "Virtual"
 }
 
 // ConnectorDeleted replaces the deleted source's form with an empty one and shows a toast

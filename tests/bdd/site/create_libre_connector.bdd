@@ -38,7 +38,9 @@ ASSERT_VISIBLE #site--settings--libre-connector--enable
 ASSERT_VISIBLE #site--settings--libre-connector--email
 ASSERT_VISIBLE #site--settings--libre-connector--password
 ASSERT_VISIBLE #site--settings--libre-connector--region
-ASSERT_VISIBLE #site--settings--libre-connector--delete
+// Not saved yet, it has nothing to delete or backfill
+ASSERT_NOT_VISIBLE #site--settings--libre-connector--delete
+ASSERT_NOT_VISIBLE #site--settings--libre-connector--backfill
 ASSERT_VISIBLE #site--settings--libre-connector--submit
 
 // Under go test only valid-libre-user@example.com logs in, and LibreLinkUp is never called
