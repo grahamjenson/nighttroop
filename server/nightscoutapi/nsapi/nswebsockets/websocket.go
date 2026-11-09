@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"nighttroop.t1d.nz/data/db"
@@ -34,6 +35,11 @@ const (
 	// maxDeviceStatuses keeps the first dataUpdate small: statuses are large, and clients only show the latest
 	maxDeviceStatuses = 10
 )
+
+// authorizeWithin is how long a socket has to be given access to the site before it is closed. Clients authorize as
+// they connect, so one that has not, or was given nothing, is only holding one of the site's SocketMaxSessionsPerSite
+// sessions from its followers.
+var authorizeWithin = 30 * time.Second
 
 // identityRecheck is how often a socket's identity is read again, so one deleted, disabled or given new credentials
 // stops being sent the site's data
@@ -115,9 +121,16 @@ func acknowledge(ack func(...any), reply any) {
 
 // onCredentials handles a socket's event that checks credentials, as authorize and the subscribes do. A client
 // sends one, so past maxAuthorizeAttempts, or over the site's read limit, the socket is disconnected; otherwise its
-// first argument, decoded as M, is handled and the reply is the ack, unless handling it disconnected the socket.
-func onCredentials[M any](ws *Websocket, socket *socketio.Socket, event string, handle func(message M) any) {
+// first argument, decoded as M, is handled and the reply is the ack, unless handling it disconnected the socket. A
+// socket that handling has not granted access within authorizeWithin is closed.
+func onCredentials[M any](ws *Websocket, socket *socketio.Socket, event string, handle func(message M) (reply any, granted bool)) {
 	attempts := 0
+	var granted atomic.Bool
+	time.AfterFunc(authorizeWithin, func() {
+		if !granted.Load() && socket.Connected() {
+			socket.Close()
+		}
+	})
 	socket.On(event, func(args []json.RawMessage, ack func(...any)) {
 		attempts++
 		if attempts > maxAuthorizeAttempts || !ws.withinReadLimit(socket.Request().Context()) {
@@ -128,7 +141,11 @@ func onCredentials[M any](ws *Websocket, socket *socketio.Socket, event string, 
 		if len(args) > 0 {
 			json.Unmarshal(args[0], &message)
 		}
-		if reply := handle(message); socket.Connected() {
+		reply, ok := handle(message)
+		if ok {
+			granted.Store(true)
+		}
+		if socket.Connected() {
 			acknowledge(ack, reply)
 		}
 	})

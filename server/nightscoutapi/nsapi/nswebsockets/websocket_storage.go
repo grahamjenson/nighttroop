@@ -30,8 +30,9 @@ func (ws *Websocket) onStorageConnect(socket *socketio.Socket) {
 		delete(ws.storage[siteID], socket.ID())
 		ws.mu.Unlock()
 	})
-	onCredentials(ws, socket, "subscribe", func(message storageSubscribeMessage) any {
-		return ws.subscribeToStorage(socket, message.AccessToken, message.Collections)
+	onCredentials(ws, socket, "subscribe", func(message storageSubscribeMessage) (any, bool) {
+		reply := ws.subscribeToStorage(socket, message.AccessToken, message.Collections)
+		return reply, reply["success"] == true
 	})
 }
 

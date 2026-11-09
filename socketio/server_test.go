@@ -254,3 +254,48 @@ func TestProtocolViolationsCloseTheConnection(t *testing.T) {
 		})
 	}
 }
+
+// A session holds one of the server's MaxSessions, so one that connects to no namespace within connectTimeout is
+// closed, and a socket the server closes closes its session only when it is the session's last
+func TestSessionsThatHoldNoSocketAreClosed(t *testing.T) {
+	timeout := connectTimeout
+	connectTimeout = 50 * time.Millisecond
+	t.Cleanup(func() { connectTimeout = timeout })
+	tests := []struct {
+		name string
+		// namespaces are those the client connects to, and close is the one whose socket the server closes
+		namespaces []string
+		close      string
+		closed     bool
+	}{
+		{name: "a session that connects to no namespace is closed", closed: true},
+		{name: "a session with a socket stays open", namespaces: []string{"/"}},
+		{name: "closing a session's only socket closes it", namespaces: []string{"/"}, close: "/", closed: true},
+		{name: "closing one of a session's sockets leaves the other", namespaces: []string{"/", "/alarm"}, close: "/alarm"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			server, url := newTestServer(t)
+			sockets := make(chan *Socket, 2)
+			for _, namespace := range []string{"/", "/alarm"} {
+				server.Of(namespace).OnConnection(func(s *Socket) { sockets <- s })
+			}
+			engine, err := engineio.Dial(context.Background(), url, engineio.V4, nil, nil)
+			require.NoError(t, err)
+			t.Cleanup(func() { engine.Close() })
+			for _, namespace := range test.namespaces {
+				require.NoError(t, engine.Send(Packet{Type: Connect, Namespace: namespace}.Encode()))
+				socket := receive(t, sockets)
+				if socket.Namespace().name == test.close {
+					socket.Close()
+				}
+			}
+			select {
+			case <-engine.Done():
+				require.True(t, test.closed, "the session was closed")
+			case <-time.After(4 * connectTimeout):
+				require.False(t, test.closed, "the session stayed open")
+			}
+		})
+	}
+}

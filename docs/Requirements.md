@@ -622,6 +622,9 @@ Connectors are a site's third party integrations, each syncing from one service.
   notes, as Nightscout's treatment notify does.
 - A Socket.IO `authorize` with a token that is no one's is disconnected unanswered, as Nightscout does; a wrong API
   secret is answered that it can do nothing.
+- A Socket.IO connection that joins no namespace within 45 seconds is closed, and a socket not given access within 30
+  seconds (by an `authorize` that can read or write, or a `/storage` or `/alarm` `subscribe` that succeeds) is closed
+  with its connection, so connections that never sign in cannot hold a site's live sessions from its followers.
 - Glucose is stored in mg/dL and always returned in mg/dL, whatever the identity's or site's units, as Nightscout's
   clients read `sgv`, `mbg`, a treatment's `glucose` and a profile's targets as mg/dL: entries, treatments, profiles
   and their `units`, over HTTP and Socket.IO. It is accepted in the units sent with it, or guessed from its value.
