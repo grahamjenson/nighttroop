@@ -726,7 +726,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   midnight). A day's AGP is of the 7 days to it. A period not kept is built from the kept days in it, and today so
   far while it is not over; a day not kept is built from its data; and neither is kept. Any other id, or a date out of range, is not found.
 - A summary period also has the loop's IOB (`loop_iob`, `loop_iob_basal`, `loop_iob_treatment`) and COB (`loop_cob`)
-  every 5 minutes from midnight: a day's newest loop device report in each 5 minutes, null when there was none, and a
+  every 5 minutes from midnight: a day's newest loop device report in each 5 minutes, or else in the 5 minutes before,
+  as one is kept only every 10 minutes once an hour old, null when there was none, and a
   week's, fortnight's or month's the mean of its days' at that time of day. A kept day keeps them after its device
   reports are truncated.
 - The client also calls every Nightscout API v1, v2 and v3 endpoint on a site's Nightscout host, with a device's
@@ -772,6 +773,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   Nightscout API gives them back as their `openaps` or `loop` object. The job looks at the statuses written in the last
   day; truncating a site looks at them all, so it clears those the job no longer looks at, as a device's newest before
   it went a day without reporting.
+- Truncating also thins each device's statuses: all of the last hour are kept, and before it only the newest in each
+  10 minutes, which keeps its newest however old. A deleted status is not removed, so a client syncing deletions sees it.
 - Reads and writes are rate limited per site, identity and IP, and live sessions per site are capped.
 - A Nightscout request that fails auth, or needs none, spends its IP's budget on the site
   (`SITE_UNAUTH_PER_MINUTE_LIMIT`); one with a valid token does not, so a device uploading often from one IP is limited

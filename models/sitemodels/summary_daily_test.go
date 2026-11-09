@@ -91,7 +91,8 @@ func TestNewSummaryDaily(t *testing.T) {
 	}
 }
 
-// A day's loop IOB and COB are the newest loop report's in each 5 minutes, rounded, null where there was none
+// A day's loop IOB and COB are the newest loop report's in each 5 minutes, or else in the 5 minutes before, as a
+// device keeps one every 10 minutes once an hour old, rounded, null where there was none
 func TestNewSummaryDailyLoop(t *testing.T) {
 	const hour = int64(60 * 60_000)
 	start, end := hour, 2*hour
@@ -108,12 +109,12 @@ func TestNewSummaryDailyLoop(t *testing.T) {
 		report(start-1, new(9.0), nil, nil, new(9.0)),
 	}
 	day := NewSummaryDaily("1970-01-01", "UTC", start, end, 70, 180, nil, nil, nil, reports, start, nil)
-	tail := strings.Repeat(",null", 9) + "]"
+	tail := strings.Repeat(",null", 8) + "]"
 	for name, got := range map[string][2]string{
-		"iob":           {day.LoopIobJson, "[2.35,null,0.5" + tail},
-		"basal iob":     {day.LoopIobBasalJson, "[0.5,null,null" + tail},
-		"treatment iob": {day.LoopIobTreatmentJson, "[1.85,null,null" + tail},
-		"cob":           {day.LoopCobJson, "[30,null,10" + tail},
+		"iob":           {day.LoopIobJson, "[2.35,2.35,0.5,0.5" + tail},
+		"basal iob":     {day.LoopIobBasalJson, "[0.5,0.5,null,null" + tail},
+		"treatment iob": {day.LoopIobTreatmentJson, "[1.85,1.85,null,null" + tail},
+		"cob":           {day.LoopCobJson, "[30,30,10,10" + tail},
 	} {
 		if got[0] != got[1] {
 			t.Errorf("%s is %s, want %s", name, got[0], got[1])

@@ -704,7 +704,7 @@
       },
       "SummaryLoopSlots": {
         "type": "array",
-        "description": "The loop's IOB in U or COB in g every 5 minutes from midnight, as glucose is: a day's newest loop device report then, null when there was none, and a week's or month's the mean of its days' then, to 2 decimals",
+        "description": "The loop's IOB in U or COB in g every 5 minutes from midnight, as glucose is: a day's newest loop device report then, or else in the 5 minutes before, as one is kept only every 10 minutes once an hour old, null when there was none, and a week's or month's the mean of its days' then, to 2 decimals",
         "items": { "type": "number", "format": "double", "nullable": true }
       },
       "Summary": {

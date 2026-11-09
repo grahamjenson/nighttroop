@@ -23,7 +23,6 @@
 
 1. Bad Sites
     1. write entry compression
-    1. write device status compression
     1. write treatments compressions
 
 1. Control UI

@@ -462,11 +462,18 @@ func (db *ControlDB) TruncateSites(ctx context.Context) error {
 // earlier run; a day covers a server down for a while
 const truncateLooksBack = 24 * time.Hour
 
-// truncateSite keeps each device's loop status only on its newest report with one, clearing the others' written since
-// since, 0 for all of them
+// fullDeviceReportsFor is how long each of a device's reports is kept, before it keeps one every 10 minutes
+const fullDeviceReportsFor = time.Hour
+
+// truncateSite keeps each device's loop status only on its newest report with one, and keeps one of its reports
+// every 10 minutes from before the last hour, looking at those written since since, 0 for all of them
 func truncateSite(ctx context.Context, site *SiteDB, since int64) error {
 	if err := site.Queries().ClearOldLoopStatuses(ctx, sitedb.ClearOldLoopStatusesParams{Since: since}); err != nil {
 		return fmt.Errorf("cannot truncate site %s: %w", site.Subdomain, err)
+	}
+	before := time.Now().Add(-fullDeviceReportsFor).UnixMilli()
+	if err := site.Queries().ThinOldDeviceReports(ctx, sitedb.ThinOldDeviceReportsParams{Since: since, Before: before}); err != nil {
+		return fmt.Errorf("cannot thin the device reports of site %s: %w", site.Subdomain, err)
 	}
 	return nil
 }
