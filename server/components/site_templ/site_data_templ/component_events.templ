@@ -184,7 +184,6 @@ templ ComponentEventModal(event *sitemodels.SiteComponentEvent) {
 			@readingDetail("Updated", formatReadingDate(ctx, event.UpdatedAt))
 			@readingDetail("Updated By", orDash(event.UpdatedByIdentityName))
 		</dl>
-		@modal.RawJSON("site--component-event--details--raw", event.RawJsonData)
 	}
 }
 

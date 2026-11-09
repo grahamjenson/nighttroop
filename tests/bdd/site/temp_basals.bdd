@@ -27,13 +27,7 @@ ASSERT_TEXT_VISIBLE virtual_connector
 // Only what it has is listed: virtual connector sets a rate, not a multiplier of the basal
 ASSERT_VISIBLE #site--temp-basal--details dt:text-is("Device")
 ASSERT_NOT_VISIBLE #site--temp-basal--details dt:text-is("Basal (%)")
-// Its raw data is folded away until asked for
-ASSERT_VISIBLE #site--temp-basal--details--raw
-ASSERT_NOT_VISIBLE #site--temp-basal--details--raw pre
 SCREENSHOT temp_basal_details
-CLICK #site--temp-basal--details--raw summary
-ASSERT_VISIBLE #site--temp-basal--details--raw pre
-SCREENSHOT temp_basal_raw_data
 
 CLICK #site--temp-basal--details--close
 ASSERT_NOT_VISIBLE #site--temp-basal--details

@@ -65,9 +65,8 @@ type CleanGlucoseReading struct {
 	Notes                 *string  `json:"notes,omitempty"`
 
 	// OccurredAt Now, if not sent when creating
-	OccurredAt    *int64  `json:"occurred_at,omitempty"`
-	OriginalUnits *Units  `json:"original_units,omitempty"`
-	RawJsonData   *string `json:"raw_json_data,omitempty"`
+	OccurredAt    *int64 `json:"occurred_at,omitempty"`
+	OriginalUnits *Units `json:"original_units,omitempty"`
 
 	// Reading In units
 	Reading *float64 `json:"reading,omitempty"`
@@ -135,7 +134,6 @@ type FoodIntake struct {
 	Portions              *float64 `json:"portions,omitempty"`
 	PreBolus              *float64 `json:"pre_bolus,omitempty"`
 	Protein               *float64 `json:"protein,omitempty"`
-	RawJsonData           *string  `json:"raw_json_data,omitempty"`
 	Reason                *string  `json:"reason,omitempty"`
 	Subcategory           *string  `json:"subcategory,omitempty"`
 	UpdatedAt             *int64   `json:"updated_at,omitempty"`
@@ -158,9 +156,8 @@ type GlucoseReading struct {
 	Notes                 *string  `json:"notes,omitempty"`
 
 	// OccurredAt Now, if not sent when creating
-	OccurredAt    *int64  `json:"occurred_at,omitempty"`
-	OriginalUnits *Units  `json:"original_units,omitempty"`
-	RawJsonData   *string `json:"raw_json_data,omitempty"`
+	OccurredAt    *int64 `json:"occurred_at,omitempty"`
+	OriginalUnits *Units `json:"original_units,omitempty"`
 
 	// Reading In units
 	Reading *float64 `json:"reading,omitempty"`
@@ -191,7 +188,6 @@ type InsulinDose struct {
 
 	// OccurredAt Now, if not sent when creating
 	OccurredAt            *int64   `json:"occurred_at,omitempty"`
-	RawJsonData           *string  `json:"raw_json_data,omitempty"`
 	Reason                *string  `json:"reason,omitempty"`
 	SplitExt              *float64 `json:"split_ext,omitempty"`
 	SplitNow              *float64 `json:"split_now,omitempty"`
@@ -289,7 +285,6 @@ type Record struct {
 
 	// OccurredAt Now, if not sent when creating
 	OccurredAt            *int64  `json:"occurred_at,omitempty"`
-	RawJsonData           *string `json:"raw_json_data,omitempty"`
 	Reason                *string `json:"reason,omitempty"`
 	UpdatedAt             *int64  `json:"updated_at,omitempty"`
 	UpdatedByIdentityName *string `json:"updated_by_identity_name,omitempty"`

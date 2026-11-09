@@ -53,7 +53,6 @@ type Entry struct {
 
 	// Non-JSON values to make mapping easier
 	Mgdl        *types.FlexibleFloat64 `json:"-"`
-	RawJsonData string                 `json:"-"`
 }
 
 func (t *Entry) UnmarshalJSON(data []byte) error {
@@ -71,8 +70,6 @@ func (t *Entry) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	// Raw Value
-	t.RawJsonData = string(data)
 
 	// Identitfiers
 	if t.Identifier == nil {

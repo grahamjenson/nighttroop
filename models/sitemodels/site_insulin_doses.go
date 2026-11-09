@@ -8,7 +8,6 @@ type SiteInsulinDose struct {
 	SplitExt              *float64 `json:"split_ext"` // the fraction of it given over time
 	Notes                 *string  `json:"notes"`
 	Reason                *string  `json:"reason"`
-	RawJsonData           *string  `json:"raw_json_data"`
 	UtcOffsetMinutes      *int64   `json:"utc_offset_minutes"`
 	OccurredAt            int64    `json:"occurred_at"`
 	CreatedAt             int64    `json:"created_at"`

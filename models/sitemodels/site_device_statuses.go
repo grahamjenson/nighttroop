@@ -14,7 +14,6 @@ type SiteDeviceStatus struct {
 	LoopIobBasal          *float64 `json:"loop_iob_basal"`
 	LoopIobTreatment      *float64 `json:"loop_iob_treatment"`
 	LoopCob               *float64 `json:"loop_cob"`
-	RawJsonData           *string  `json:"raw_json_data"`
 	UtcOffsetMinutes      *int64   `json:"utc_offset_minutes"`
 	OccurredAt            int64    `json:"occurred_at"`
 	CreatedAt             int64    `json:"created_at"`

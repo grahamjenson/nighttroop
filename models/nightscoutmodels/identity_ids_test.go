@@ -17,12 +17,8 @@ func TestRecordsStoreTheWritersIdentityID(t *testing.T) {
 	q, ctx := site.SiteDB.Queries(), context.Background()
 	sgv := types.FlexibleFloat64(120)
 	entry := nightscoutmodels.Entry{SGV: &sgv, Mgdl: &sgv}
-	rawJSON := "{}"
-	// The API stores the raw JSON after converting, so the tests do too
 	create := func(cc nightscoutmodels.ConverterContext) sitedb.CreateGlucoseReadingParams {
-		params := nightscoutmodels.EntryToCreate(entry, cc)
-		params.RawJsonData = &rawJSON
-		return params
+		return nightscoutmodels.EntryToCreate(entry, cc)
 	}
 
 	created, err := q.CreateGlucoseReading(ctx, create(nightscoutmodels.ConverterContext{IdentityID: 7, IdentityName: "kitchen"}))
@@ -31,7 +27,7 @@ func TestRecordsStoreTheWritersIdentityID(t *testing.T) {
 	require.Equal(t, "kitchen", created.CreatedByIdentityName)
 
 	update := nightscoutmodels.EntryToUpdate(entry, nightscoutmodels.ConverterContext{IdentityID: 8, IdentityName: "phone"})
-	update.ID, update.RawJsonData = created.ID, &rawJSON
+	update.ID = created.ID
 	updated, err := q.UpdateGlucoseReading(ctx, update)
 	require.NoError(t, err)
 	require.Equal(t, int64(8), *updated.UpdatedByIdentityID)

@@ -195,7 +195,6 @@ templ TempBasalModal(tempBasal *sitemodels.SiteTempBasal) {
 			@readingDetail("Updated", formatReadingDate(ctx, tempBasal.UpdatedAt))
 			@readingDetail("Updated By", orDash(tempBasal.UpdatedByIdentityName))
 		</dl>
-		@modal.RawJSON("site--temp-basal--details--raw", tempBasal.RawJsonData)
 	}
 }
 

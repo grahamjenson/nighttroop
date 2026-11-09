@@ -62,7 +62,6 @@ Limits written per minute are rates; their burst is how many can be used at once
 | `MAX_IDENTITIES_PER_USER` | `10` | The most identities one site can have |
 | `DELETE_AFTER_INACTIVITY_MINS` | `10080` (a week) | How long a site that was never used is kept before it is deleted |
 | `DISABLE_AFTER_INACTIVITY_DAYS` | `7` | How long a site goes unwritten or unseen before control can disable it |
-| `TRUNCATE_RAW_JSON_AFTER_DAYS` | `2` | How old a site's rows are before the raw JSON kept of what each was sent is cleared, in every table that keeps it, and its device statuses' loop status loses its debug output and predictions: each hour, and when a control admin truncates the site. The rows themselves are kept. Under 2, the Nightscout web app's retro view loses the predictions of its last 48 hours |
 | `TRUNCATE_INTERVAL_IN_SECONDS` | `60` | How often the logs DB is trimmed and the jobs are summarised |
 | `LOGS_DB_MAX_ROWS_PER_TABLE` | `100000` | How many of the newest logs, events and errors each logs DB table keeps |
 | `SLOW_QUERY_MS` | `100` | How many milliseconds a DB query (or a transaction waiting for the write lock) runs before it is logged as a `Slow query`, with its DB, its sqlc name, how long it took and how many rows it gave, but never its values; `0` logs none |

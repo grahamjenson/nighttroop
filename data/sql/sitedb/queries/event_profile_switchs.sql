@@ -27,13 +27,12 @@ INSERT INTO profile_switches (
 
     utc_offset_minutes,
     occurred_at,
-    raw_json_data,
     created_by_app_name,
     created_by_device_name,
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -104,10 +103,6 @@ UPDATE profile_switches SET
     notes = COALESCE(sqlc.narg('Notes'), notes),
     reason = COALESCE(sqlc.narg('Reason'), reason),
 
-    raw_json_data = json_patch(
-        COALESCE(raw_json_data, '{}'),
-        COALESCE(CAST(sqlc.narg('RawJsonData') AS TEXT), '{}')
-    ),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_id = sqlc.narg('UpdatedByIdentityID'),
     updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')

@@ -6,7 +6,8 @@ import (
 )
 
 // DeviceReportOther are a device status's other attributes: the pump's clock, manufacturer and model, Loop's override,
-// and the loop's name and its status, with its predictions. The JSON ones are kept as JSON, as sent.
+// the loop's name and its status, with its predictions, and the pump and uploader as sent, for their fields without
+// a column, like AAPS's extended. The JSON ones are kept as JSON.
 type DeviceReportOther struct {
 	PumpClock                *int64          `json:"pump_clock,omitempty"`
 	PumpManufacturer         *string         `json:"pump_manufacturer,omitempty"`
@@ -14,6 +15,8 @@ type DeviceReportOther struct {
 	Override                 json.RawMessage `json:"override,omitempty"`
 	LoopName                 *string         `json:"loop_name,omitempty"`
 	LoopSettings             json.RawMessage `json:"loop_settings,omitempty"`
+	Pump                     json.RawMessage `json:"pump,omitempty"`
+	Uploader                 json.RawMessage `json:"uploader,omitempty"`
 }
 
 func (o DeviceReportOther) Value() (driver.Value, error) { return otherValue(o) }

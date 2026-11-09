@@ -14,7 +14,7 @@ import (
 
 const allFoodPresets = `-- name: AllFoodPresets :many
 
-SELECT id, name, food_type, absorption_time_minutes, carbs, other_attributes, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM food_presets
+SELECT id, name, food_type, absorption_time_minutes, carbs, other_attributes, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM food_presets
 ORDER BY created_at DESC
 LIMIT CAST(?2 AS INTEGER) OFFSET CAST(?1 AS INTEGER)
 `
@@ -43,7 +43,6 @@ func (q *Queries) AllFoodPresets(ctx context.Context, arg AllFoodPresetsParams) 
 			&i.AbsorptionTimeMinutes,
 			&i.Carbs,
 			&i.OtherAttributes,
-			&i.RawJsonData,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.CreatedByAppName,
@@ -76,14 +75,13 @@ INSERT INTO food_presets (
     carbs,
     other_attributes,
 
-    raw_json_data,
     created_by_app_name,
     created_by_device_name,
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, name, food_type, absorption_time_minutes, carbs, other_attributes, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, name, food_type, absorption_time_minutes, carbs, other_attributes, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type CreateFoodPresetParams struct {
@@ -93,7 +91,6 @@ type CreateFoodPresetParams struct {
 	AbsorptionTimeMinutes *int64
 	Carbs                 *float64
 	OtherAttributes       types.FoodPresetOther
-	RawJsonData           *string
 	CreatedByAppName      *string
 	CreatedByDeviceName   *string
 	CreatedByIdentityName string
@@ -111,7 +108,6 @@ func (q *Queries) CreateFoodPreset(ctx context.Context, arg CreateFoodPresetPara
 		arg.AbsorptionTimeMinutes,
 		arg.Carbs,
 		arg.OtherAttributes,
-		arg.RawJsonData,
 		arg.CreatedByAppName,
 		arg.CreatedByDeviceName,
 		arg.CreatedByIdentityName,
@@ -125,7 +121,6 @@ func (q *Queries) CreateFoodPreset(ctx context.Context, arg CreateFoodPresetPara
 		&i.AbsorptionTimeMinutes,
 		&i.Carbs,
 		&i.OtherAttributes,
-		&i.RawJsonData,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CreatedByAppName,
@@ -223,7 +218,7 @@ func (q *Queries) FoodPresetHistoryIDs(ctx context.Context, arg FoodPresetHistor
 }
 
 const getFoodPreset = `-- name: GetFoodPreset :one
-SELECT id, name, food_type, absorption_time_minutes, carbs, other_attributes, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM food_presets WHERE id = ?
+SELECT id, name, food_type, absorption_time_minutes, carbs, other_attributes, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM food_presets WHERE id = ?
 `
 
 type GetFoodPresetParams struct {
@@ -240,7 +235,6 @@ func (q *Queries) GetFoodPreset(ctx context.Context, arg GetFoodPresetParams) (*
 		&i.AbsorptionTimeMinutes,
 		&i.Carbs,
 		&i.OtherAttributes,
-		&i.RawJsonData,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CreatedByAppName,
@@ -283,7 +277,7 @@ func (q *Queries) HardDeleteFoodPresetsByType(ctx context.Context, arg HardDelet
 }
 
 const searchFoodPresets = `-- name: SearchFoodPresets :many
-SELECT id, name, food_type, absorption_time_minutes, carbs, other_attributes, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM food_presets
+SELECT id, name, food_type, absorption_time_minutes, carbs, other_attributes, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM food_presets
 WHERE
     (CAST(?1 AS INTEGER) IS NULL OR created_at >= ?1)
     AND (CAST(?2 AS INTEGER) IS NULL OR created_at <= ?2)
@@ -401,7 +395,6 @@ func (q *Queries) SearchFoodPresets(ctx context.Context, arg SearchFoodPresetsPa
 			&i.AbsorptionTimeMinutes,
 			&i.Carbs,
 			&i.OtherAttributes,
-			&i.RawJsonData,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.CreatedByAppName,
@@ -439,15 +432,11 @@ UPDATE food_presets SET
         COALESCE(CAST(?5 AS TEXT), '{}')
     ), '{}'),
 
-    raw_json_data = json_patch(
-        COALESCE(raw_json_data, '{}'),
-        COALESCE(CAST(?6 AS TEXT), '{}')
-    ),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_id = ?7,
-    updated_by_identity_name = ?8
-WHERE id = ?9
-RETURNING id, name, food_type, absorption_time_minutes, carbs, other_attributes, raw_json_data, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+    updated_by_identity_id = ?6,
+    updated_by_identity_name = ?7
+WHERE id = ?8
+RETURNING id, name, food_type, absorption_time_minutes, carbs, other_attributes, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type UpdateFoodPresetParams struct {
@@ -456,7 +445,6 @@ type UpdateFoodPresetParams struct {
 	AbsorptionTimeMinutes *int64
 	Carbs                 *float64
 	OtherAttributes       *string
-	RawJsonData           *string
 	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
 	ID                    string
@@ -472,7 +460,6 @@ func (q *Queries) UpdateFoodPreset(ctx context.Context, arg UpdateFoodPresetPara
 		arg.AbsorptionTimeMinutes,
 		arg.Carbs,
 		arg.OtherAttributes,
-		arg.RawJsonData,
 		arg.UpdatedByIdentityID,
 		arg.UpdatedByIdentityName,
 		arg.ID,
@@ -485,7 +472,6 @@ func (q *Queries) UpdateFoodPreset(ctx context.Context, arg UpdateFoodPresetPara
 		&i.AbsorptionTimeMinutes,
 		&i.Carbs,
 		&i.OtherAttributes,
-		&i.RawJsonData,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CreatedByAppName,

@@ -66,7 +66,6 @@ CREATE TABLE activities (
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
     reason TEXT CHECK(length(reason) <= 64),
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0 CHECK(utc_offset_minutes BETWEEN -1440 AND 1440),
@@ -100,7 +99,6 @@ CREATE TABLE component_events (
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
     reason TEXT CHECK(length(reason) <= 64),
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0 CHECK(utc_offset_minutes BETWEEN -1440 AND 1440),
@@ -152,10 +150,11 @@ CREATE TABLE device_reports (
         AND length(json_extract(other_attributes, '$.pump_model')) <= 64
         AND length(json_extract(other_attributes, '$.override')) <= 2048
         AND json_extract(other_attributes, '$.loop_name') IN ('openaps', 'loop')
-        AND length(json_extract(other_attributes, '$.loop_settings')) <= 8192),
+        AND length(json_extract(other_attributes, '$.loop_settings')) <= 8192
+        AND length(json_extract(other_attributes, '$.pump')) <= 4096
+        AND length(json_extract(other_attributes, '$.uploader')) <= 1024),
 
     -- Default Stuff
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0 CHECK(utc_offset_minutes BETWEEN -1440 AND 1440),
@@ -200,13 +199,14 @@ CREATE TABLE event_groups (
         AND length(json_extract(other_attributes, '$.mode')) <= 64
         AND json_extract(other_attributes, '$.auto_forced') IN (0, 1)
         AND length(json_extract(other_attributes, '$.reasons')) <= 1024
-        AND json_extract(other_attributes, '$.original_duration_ms') BETWEEN 0 AND 31536000000),
+        AND json_extract(other_attributes, '$.original_duration_ms') BETWEEN 0 AND 31536000000
+        AND length(json_extract(other_attributes, '$.duration_type')) <= 16
+        AND length(json_extract(other_attributes, '$.sent_hash')) <= 32),
 
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
     reason TEXT CHECK(length(reason) <= 64),
     duration_minutes INTEGER CHECK(duration_minutes BETWEEN 0 AND 525600), -- at most a year; this is needed for notes, and is common enough
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0 CHECK(utc_offset_minutes BETWEEN -1440 AND 1440),
@@ -248,7 +248,6 @@ CREATE TABLE food_intakes (
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
     reason TEXT CHECK(length(reason) <= 64),
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0 CHECK(utc_offset_minutes BETWEEN -1440 AND 1440),
@@ -288,7 +287,6 @@ CREATE TABLE food_presets (
         AND json_extract(other_attributes, '$.pre_bolus') BETWEEN -1440 AND 1440),
 
     -- Default Stuff
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly
 
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
@@ -328,7 +326,6 @@ CREATE TABLE glucose_readings (
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
     reason TEXT CHECK(length(reason) <= 64),
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0 CHECK(utc_offset_minutes BETWEEN -1440 AND 1440),
@@ -362,7 +359,6 @@ CREATE TABLE insulin_doses (
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
     reason TEXT CHECK(length(reason) <= 64),
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0 CHECK(utc_offset_minutes BETWEEN -1440 AND 1440),
@@ -400,7 +396,6 @@ CREATE TABLE notification_events (
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
     reason TEXT CHECK(length(reason) <= 64),
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0 CHECK(utc_offset_minutes BETWEEN -1440 AND 1440),
@@ -443,7 +438,6 @@ CREATE TABLE profile_presets (
     remote_settings_id TEXT CHECK(length(remote_settings_id) = 64),
 
     -- Default Stuff
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly
 
     utc_offset_minutes INTEGER DEFAULT 0 CHECK(utc_offset_minutes BETWEEN -1440 AND 1440),
     occurred_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)) CHECK(occurred_at BETWEEN 0 AND 253402300799999), -- before the year 10000, the last a date string can have
@@ -498,7 +492,6 @@ CREATE TABLE profile_switches (
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
     reason TEXT CHECK(length(reason) <= 64),
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0 CHECK(utc_offset_minutes BETWEEN -1440 AND 1440),
@@ -550,7 +543,6 @@ CREATE TABLE temp_basals (
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
     reason TEXT CHECK(length(reason) <= 64),
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0 CHECK(utc_offset_minutes BETWEEN -1440 AND 1440),
@@ -577,7 +569,6 @@ CREATE TABLE temp_targets (
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
     reason TEXT CHECK(length(reason) <= 64),
-    raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly
 
     deleted_at INTEGER,
     utc_offset_minutes INTEGER DEFAULT 0 CHECK(utc_offset_minutes BETWEEN -1440 AND 1440),

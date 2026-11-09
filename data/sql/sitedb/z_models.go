@@ -17,7 +17,6 @@ type ActivitiesVw struct {
 	OtherAttributes       types.ActivityOther
 	Notes                 *string
 	Reason                *string
-	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64
 	OccurredAt            *int64
@@ -39,7 +38,6 @@ type Activity struct {
 	OtherAttributes       types.ActivityOther
 	Notes                 *string
 	Reason                *string
-	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64
 	OccurredAt            int64
@@ -59,7 +57,6 @@ type ComponentEvent struct {
 	OtherAttributes       types.ComponentEventOther
 	Notes                 *string
 	Reason                *string
-	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64
 	OccurredAt            int64
@@ -79,7 +76,6 @@ type ComponentEventsVw struct {
 	OtherAttributes       types.ComponentEventOther
 	Notes                 *string
 	Reason                *string
-	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64
 	OccurredAt            *int64
@@ -107,7 +103,6 @@ type DeviceReport struct {
 	LoopCob               *float64
 	ConfigurationID       *string
 	OtherAttributes       types.DeviceReportOther
-	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64
 	OccurredAt            int64
@@ -138,7 +133,6 @@ type EventGroup struct {
 	Notes                 *string
 	Reason                *string
 	DurationMinutes       *int64
-	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64
 	OccurredAt            int64
@@ -161,7 +155,6 @@ type FoodIntake struct {
 	OtherAttributes       types.FoodIntakeOther
 	Notes                 *string
 	Reason                *string
-	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64
 	OccurredAt            int64
@@ -184,7 +177,6 @@ type FoodIntakesVw struct {
 	OtherAttributes       types.FoodIntakeOther
 	Notes                 *string
 	Reason                *string
-	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64
 	OccurredAt            *int64
@@ -205,7 +197,6 @@ type FoodPreset struct {
 	AbsorptionTimeMinutes *int64
 	Carbs                 *float64
 	OtherAttributes       types.FoodPresetOther
-	RawJsonData           *string
 	CreatedAt             int64
 	UpdatedAt             int64
 	CreatedByAppName      *string
@@ -227,7 +218,6 @@ type GlucoseReading struct {
 	OtherAttributes       types.GlucoseReadingOther
 	Notes                 *string
 	Reason                *string
-	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64
 	OccurredAt            int64
@@ -252,7 +242,6 @@ type GlucoseReadingsVw struct {
 	OtherAttributes       types.GlucoseReadingOther
 	Notes                 *string
 	Reason                *string
-	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64
 	OccurredAt            *int64
@@ -273,7 +262,6 @@ type InsulinDose struct {
 	OtherAttributes       types.InsulinDoseOther
 	Notes                 *string
 	Reason                *string
-	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64
 	OccurredAt            int64
@@ -294,7 +282,6 @@ type InsulinDosesVw struct {
 	OtherAttributes       types.InsulinDoseOther
 	Notes                 *string
 	Reason                *string
-	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64
 	OccurredAt            *int64
@@ -327,7 +314,6 @@ type NotificationEvent struct {
 	Content               *string
 	Notes                 *string
 	Reason                *string
-	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64
 	OccurredAt            int64
@@ -349,7 +335,6 @@ type NotificationEventsVw struct {
 	Content               *string
 	Notes                 *string
 	Reason                *string
-	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64
 	OccurredAt            *int64
@@ -380,7 +365,6 @@ type ProfilePreset struct {
 	TargetsLowJson           *string
 	LoopSettingsID           *string
 	RemoteSettingsID         *string
-	RawJsonData              *string
 	UtcOffsetMinutes         *int64
 	OccurredAt               int64
 	CreatedAt                int64
@@ -412,7 +396,6 @@ type ProfileSwitch struct {
 	TargetsLowJson           *string
 	Notes                    *string
 	Reason                   *string
-	RawJsonData              *string
 	DeletedAt                *int64
 	UtcOffsetMinutes         *int64
 	OccurredAt               int64
@@ -445,7 +428,6 @@ type ProfileSwitchesVw struct {
 	TargetsLowJson           *string
 	Notes                    *string
 	Reason                   *string
-	RawJsonData              *string
 	DeletedAt                *int64
 	UtcOffsetMinutes         *int64
 	OccurredAt               *int64
@@ -487,7 +469,6 @@ type TempBasal struct {
 	Type                  *string
 	Notes                 *string
 	Reason                *string
-	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64
 	OccurredAt            int64
@@ -509,7 +490,6 @@ type TempBasalsVw struct {
 	Type                  *string
 	Notes                 *string
 	Reason                *string
-	RawJsonData           *string
 	DeletedAt             *int64
 	UtcOffsetMinutes      *int64
 	OccurredAt            *int64
@@ -531,7 +511,6 @@ type TempTarget struct {
 	InsulinNeedsScaleFactor *float64
 	Notes                   *string
 	Reason                  *string
-	RawJsonData             *string
 	DeletedAt               *int64
 	UtcOffsetMinutes        *int64
 	OccurredAt              int64
@@ -553,7 +532,6 @@ type TempTargetsVw struct {
 	InsulinNeedsScaleFactor *float64
 	Notes                   *string
 	Reason                  *string
-	RawJsonData             *string
 	DeletedAt               *int64
 	UtcOffsetMinutes        *int64
 	OccurredAt              *int64

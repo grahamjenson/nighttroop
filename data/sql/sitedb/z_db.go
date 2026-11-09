@@ -72,45 +72,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.allTempTargetsStmt, err = db.PrepareContext(ctx, allTempTargets); err != nil {
 		return nil, fmt.Errorf("error preparing query AllTempTargets: %w", err)
 	}
-	if q.clearActivitiesRawJSONStmt, err = db.PrepareContext(ctx, clearActivitiesRawJSON); err != nil {
-		return nil, fmt.Errorf("error preparing query ClearActivitiesRawJSON: %w", err)
-	}
-	if q.clearComponentEventsRawJSONStmt, err = db.PrepareContext(ctx, clearComponentEventsRawJSON); err != nil {
-		return nil, fmt.Errorf("error preparing query ClearComponentEventsRawJSON: %w", err)
-	}
-	if q.clearDeviceReportsRawJSONStmt, err = db.PrepareContext(ctx, clearDeviceReportsRawJSON); err != nil {
-		return nil, fmt.Errorf("error preparing query ClearDeviceReportsRawJSON: %w", err)
-	}
-	if q.clearEventGroupsRawJSONStmt, err = db.PrepareContext(ctx, clearEventGroupsRawJSON); err != nil {
-		return nil, fmt.Errorf("error preparing query ClearEventGroupsRawJSON: %w", err)
-	}
-	if q.clearFoodIntakesRawJSONStmt, err = db.PrepareContext(ctx, clearFoodIntakesRawJSON); err != nil {
-		return nil, fmt.Errorf("error preparing query ClearFoodIntakesRawJSON: %w", err)
-	}
-	if q.clearFoodPresetsRawJSONStmt, err = db.PrepareContext(ctx, clearFoodPresetsRawJSON); err != nil {
-		return nil, fmt.Errorf("error preparing query ClearFoodPresetsRawJSON: %w", err)
-	}
-	if q.clearGlucoseReadingsRawJSONStmt, err = db.PrepareContext(ctx, clearGlucoseReadingsRawJSON); err != nil {
-		return nil, fmt.Errorf("error preparing query ClearGlucoseReadingsRawJSON: %w", err)
-	}
-	if q.clearInsulinDosesRawJSONStmt, err = db.PrepareContext(ctx, clearInsulinDosesRawJSON); err != nil {
-		return nil, fmt.Errorf("error preparing query ClearInsulinDosesRawJSON: %w", err)
-	}
-	if q.clearNotificationEventsRawJSONStmt, err = db.PrepareContext(ctx, clearNotificationEventsRawJSON); err != nil {
-		return nil, fmt.Errorf("error preparing query ClearNotificationEventsRawJSON: %w", err)
-	}
-	if q.clearProfilePresetsRawJSONStmt, err = db.PrepareContext(ctx, clearProfilePresetsRawJSON); err != nil {
-		return nil, fmt.Errorf("error preparing query ClearProfilePresetsRawJSON: %w", err)
-	}
-	if q.clearProfileSwitchesRawJSONStmt, err = db.PrepareContext(ctx, clearProfileSwitchesRawJSON); err != nil {
-		return nil, fmt.Errorf("error preparing query ClearProfileSwitchesRawJSON: %w", err)
-	}
-	if q.clearTempBasalsRawJSONStmt, err = db.PrepareContext(ctx, clearTempBasalsRawJSON); err != nil {
-		return nil, fmt.Errorf("error preparing query ClearTempBasalsRawJSON: %w", err)
-	}
-	if q.clearTempTargetsRawJSONStmt, err = db.PrepareContext(ctx, clearTempTargetsRawJSON); err != nil {
-		return nil, fmt.Errorf("error preparing query ClearTempTargetsRawJSON: %w", err)
-	}
 	if q.createActivityStmt, err = db.PrepareContext(ctx, createActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateActivity: %w", err)
 	}
@@ -426,9 +387,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.softDeleteTempTargetStmt, err = db.PrepareContext(ctx, softDeleteTempTarget); err != nil {
 		return nil, fmt.Errorf("error preparing query SoftDeleteTempTarget: %w", err)
 	}
-	if q.thinDeviceReportsLoopStatusStmt, err = db.PrepareContext(ctx, thinDeviceReportsLoopStatus); err != nil {
-		return nil, fmt.Errorf("error preparing query ThinDeviceReportsLoopStatus: %w", err)
-	}
 	if q.updateActivityStmt, err = db.PrepareContext(ctx, updateActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateActivity: %w", err)
 	}
@@ -557,71 +515,6 @@ func (q *Queries) Close() error {
 	if q.allTempTargetsStmt != nil {
 		if cerr := q.allTempTargetsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing allTempTargetsStmt: %w", cerr)
-		}
-	}
-	if q.clearActivitiesRawJSONStmt != nil {
-		if cerr := q.clearActivitiesRawJSONStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing clearActivitiesRawJSONStmt: %w", cerr)
-		}
-	}
-	if q.clearComponentEventsRawJSONStmt != nil {
-		if cerr := q.clearComponentEventsRawJSONStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing clearComponentEventsRawJSONStmt: %w", cerr)
-		}
-	}
-	if q.clearDeviceReportsRawJSONStmt != nil {
-		if cerr := q.clearDeviceReportsRawJSONStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing clearDeviceReportsRawJSONStmt: %w", cerr)
-		}
-	}
-	if q.clearEventGroupsRawJSONStmt != nil {
-		if cerr := q.clearEventGroupsRawJSONStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing clearEventGroupsRawJSONStmt: %w", cerr)
-		}
-	}
-	if q.clearFoodIntakesRawJSONStmt != nil {
-		if cerr := q.clearFoodIntakesRawJSONStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing clearFoodIntakesRawJSONStmt: %w", cerr)
-		}
-	}
-	if q.clearFoodPresetsRawJSONStmt != nil {
-		if cerr := q.clearFoodPresetsRawJSONStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing clearFoodPresetsRawJSONStmt: %w", cerr)
-		}
-	}
-	if q.clearGlucoseReadingsRawJSONStmt != nil {
-		if cerr := q.clearGlucoseReadingsRawJSONStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing clearGlucoseReadingsRawJSONStmt: %w", cerr)
-		}
-	}
-	if q.clearInsulinDosesRawJSONStmt != nil {
-		if cerr := q.clearInsulinDosesRawJSONStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing clearInsulinDosesRawJSONStmt: %w", cerr)
-		}
-	}
-	if q.clearNotificationEventsRawJSONStmt != nil {
-		if cerr := q.clearNotificationEventsRawJSONStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing clearNotificationEventsRawJSONStmt: %w", cerr)
-		}
-	}
-	if q.clearProfilePresetsRawJSONStmt != nil {
-		if cerr := q.clearProfilePresetsRawJSONStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing clearProfilePresetsRawJSONStmt: %w", cerr)
-		}
-	}
-	if q.clearProfileSwitchesRawJSONStmt != nil {
-		if cerr := q.clearProfileSwitchesRawJSONStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing clearProfileSwitchesRawJSONStmt: %w", cerr)
-		}
-	}
-	if q.clearTempBasalsRawJSONStmt != nil {
-		if cerr := q.clearTempBasalsRawJSONStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing clearTempBasalsRawJSONStmt: %w", cerr)
-		}
-	}
-	if q.clearTempTargetsRawJSONStmt != nil {
-		if cerr := q.clearTempTargetsRawJSONStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing clearTempTargetsRawJSONStmt: %w", cerr)
 		}
 	}
 	if q.createActivityStmt != nil {
@@ -1149,11 +1042,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing softDeleteTempTargetStmt: %w", cerr)
 		}
 	}
-	if q.thinDeviceReportsLoopStatusStmt != nil {
-		if cerr := q.thinDeviceReportsLoopStatusStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing thinDeviceReportsLoopStatusStmt: %w", cerr)
-		}
-	}
 	if q.updateActivityStmt != nil {
 		if cerr := q.updateActivityStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateActivityStmt: %w", cerr)
@@ -1284,19 +1172,6 @@ type Queries struct {
 	allProfileSwitchesStmt                      *sql.Stmt
 	allTempBasalsStmt                           *sql.Stmt
 	allTempTargetsStmt                          *sql.Stmt
-	clearActivitiesRawJSONStmt                  *sql.Stmt
-	clearComponentEventsRawJSONStmt             *sql.Stmt
-	clearDeviceReportsRawJSONStmt               *sql.Stmt
-	clearEventGroupsRawJSONStmt                 *sql.Stmt
-	clearFoodIntakesRawJSONStmt                 *sql.Stmt
-	clearFoodPresetsRawJSONStmt                 *sql.Stmt
-	clearGlucoseReadingsRawJSONStmt             *sql.Stmt
-	clearInsulinDosesRawJSONStmt                *sql.Stmt
-	clearNotificationEventsRawJSONStmt          *sql.Stmt
-	clearProfilePresetsRawJSONStmt              *sql.Stmt
-	clearProfileSwitchesRawJSONStmt             *sql.Stmt
-	clearTempBasalsRawJSONStmt                  *sql.Stmt
-	clearTempTargetsRawJSONStmt                 *sql.Stmt
 	createActivityStmt                          *sql.Stmt
 	createComponentEventStmt                    *sql.Stmt
 	createDeviceReportStmt                      *sql.Stmt
@@ -1402,7 +1277,6 @@ type Queries struct {
 	softDeleteProfileSwitchStmt                 *sql.Stmt
 	softDeleteTempBasalStmt                     *sql.Stmt
 	softDeleteTempTargetStmt                    *sql.Stmt
-	thinDeviceReportsLoopStatusStmt             *sql.Stmt
 	updateActivityStmt                          *sql.Stmt
 	updateComponentEventStmt                    *sql.Stmt
 	updateDeviceReportStmt                      *sql.Stmt
@@ -1440,19 +1314,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		allProfileSwitchesStmt:                      q.allProfileSwitchesStmt,
 		allTempBasalsStmt:                           q.allTempBasalsStmt,
 		allTempTargetsStmt:                          q.allTempTargetsStmt,
-		clearActivitiesRawJSONStmt:                  q.clearActivitiesRawJSONStmt,
-		clearComponentEventsRawJSONStmt:             q.clearComponentEventsRawJSONStmt,
-		clearDeviceReportsRawJSONStmt:               q.clearDeviceReportsRawJSONStmt,
-		clearEventGroupsRawJSONStmt:                 q.clearEventGroupsRawJSONStmt,
-		clearFoodIntakesRawJSONStmt:                 q.clearFoodIntakesRawJSONStmt,
-		clearFoodPresetsRawJSONStmt:                 q.clearFoodPresetsRawJSONStmt,
-		clearGlucoseReadingsRawJSONStmt:             q.clearGlucoseReadingsRawJSONStmt,
-		clearInsulinDosesRawJSONStmt:                q.clearInsulinDosesRawJSONStmt,
-		clearNotificationEventsRawJSONStmt:          q.clearNotificationEventsRawJSONStmt,
-		clearProfilePresetsRawJSONStmt:              q.clearProfilePresetsRawJSONStmt,
-		clearProfileSwitchesRawJSONStmt:             q.clearProfileSwitchesRawJSONStmt,
-		clearTempBasalsRawJSONStmt:                  q.clearTempBasalsRawJSONStmt,
-		clearTempTargetsRawJSONStmt:                 q.clearTempTargetsRawJSONStmt,
 		createActivityStmt:                          q.createActivityStmt,
 		createComponentEventStmt:                    q.createComponentEventStmt,
 		createDeviceReportStmt:                      q.createDeviceReportStmt,
@@ -1558,7 +1419,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		softDeleteProfileSwitchStmt:                 q.softDeleteProfileSwitchStmt,
 		softDeleteTempBasalStmt:                     q.softDeleteTempBasalStmt,
 		softDeleteTempTargetStmt:                    q.softDeleteTempTargetStmt,
-		thinDeviceReportsLoopStatusStmt:             q.thinDeviceReportsLoopStatusStmt,
 		updateActivityStmt:                          q.updateActivityStmt,
 		updateComponentEventStmt:                    q.updateComponentEventStmt,
 		updateDeviceReportStmt:                      q.updateDeviceReportStmt,

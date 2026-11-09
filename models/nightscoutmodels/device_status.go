@@ -39,7 +39,6 @@ type DeviceStatus struct {
 	OpenAPS       *OpenAPSStatus  `json:"-"`
 	Loop          *LoopStatus     `json:"-"`
 	Configuration *map[string]any `json:"-"`
-	RawJsonData   string          `json:"-"`
 }
 
 func (t *DeviceStatus) UnmarshalJSON(data []byte) error {
@@ -55,8 +54,6 @@ func (t *DeviceStatus) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	// Raw Value
-	t.RawJsonData = string(data)
 
 	// Identitfiers
 	if t.Identifier == nil {

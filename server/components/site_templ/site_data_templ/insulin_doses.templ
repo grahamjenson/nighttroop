@@ -181,7 +181,6 @@ templ InsulinDoseModal(insulinDose *sitemodels.SiteInsulinDose) {
 			@readingDetail("Updated", formatReadingDate(ctx, insulinDose.UpdatedAt))
 			@readingDetail("Updated By", orDash(insulinDose.UpdatedByIdentityName))
 		</dl>
-		@modal.RawJSON("site--insulin--details--raw", insulinDose.RawJsonData)
 	}
 }
 

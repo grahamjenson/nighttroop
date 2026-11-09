@@ -118,8 +118,8 @@ type Treatment struct {
 	Programmed *types.FlexibleFloat64 `json:"programmed,omitempty"`
 	Temp       *types.ShortString     `json:"temp,omitempty"`
 
-	// Non-JSON values to make mapping easier
-	RawJsonData string `json:"-"`
+	// SentJSON is the JSON it was sent as, to tell one sent again with changes from one sent the same
+	SentJSON string `json:"-"`
 }
 
 func (t *Treatment) UnmarshalJSON(data []byte) error {
@@ -143,8 +143,7 @@ func (t *Treatment) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	// Raw Value
-	t.RawJsonData = string(data)
+	t.SentJSON = string(data)
 
 	// Identitfiers
 	if t.Identifier == nil {

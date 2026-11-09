@@ -14,7 +14,7 @@ import (
 )
 
 const alarmGlucoseReadings = `-- name: AlarmGlucoseReadings :many
-SELECT id, mgdl, reading_type, units, measurement_method, delta, direction, other_attributes, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings
+SELECT id, mgdl, reading_type, units, measurement_method, delta, direction, other_attributes, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings
 WHERE reading_type = 'sgv' AND deleted_at IS NULL
 AND occurred_at >= (SELECT MAX(occurred_at) FROM glucose_readings WHERE reading_type = 'sgv' AND deleted_at IS NULL)
     - CAST(?1 AS INTEGER) * 60000
@@ -49,7 +49,6 @@ func (q *Queries) AlarmGlucoseReadings(ctx context.Context, arg AlarmGlucoseRead
 			&i.OtherAttributes,
 			&i.Notes,
 			&i.Reason,
-			&i.RawJsonData,
 			&i.DeletedAt,
 			&i.UtcOffsetMinutes,
 			&i.OccurredAt,
@@ -77,7 +76,7 @@ func (q *Queries) AlarmGlucoseReadings(ctx context.Context, arg AlarmGlucoseRead
 
 const allGlucoseReadings = `-- name: AllGlucoseReadings :many
 
-SELECT id, mgdl, reading_type, units, measurement_method, delta, direction, other_attributes, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings 
+SELECT id, mgdl, reading_type, units, measurement_method, delta, direction, other_attributes, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings 
 WHERE (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at DESC
 LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
@@ -113,7 +112,6 @@ func (q *Queries) AllGlucoseReadings(ctx context.Context, arg AllGlucoseReadings
 			&i.OtherAttributes,
 			&i.Notes,
 			&i.Reason,
-			&i.RawJsonData,
 			&i.DeletedAt,
 			&i.UtcOffsetMinutes,
 			&i.OccurredAt,
@@ -156,7 +154,6 @@ INSERT INTO glucose_readings (
     reason,
     utc_offset_minutes,
     occurred_at,
-    raw_json_data,
     created_by_app_name,
     created_by_device_name,
     created_by_identity_name,
@@ -180,10 +177,9 @@ VALUES (
     ?13,
     ?14,
     ?15,
-    ?16,
-    ?17
+    ?16
 )
-RETURNING id, mgdl, reading_type, units, measurement_method, delta, direction, other_attributes, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+RETURNING id, mgdl, reading_type, units, measurement_method, delta, direction, other_attributes, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type CreateGlucoseReadingParams struct {
@@ -199,7 +195,6 @@ type CreateGlucoseReadingParams struct {
 	Reason                *string
 	UtcOffsetMinutes      *int64
 	OccurredAt            int64
-	RawJsonData           *string
 	CreatedByAppName      *string
 	CreatedByDeviceName   *string
 	CreatedByIdentityName string
@@ -223,7 +218,6 @@ func (q *Queries) CreateGlucoseReading(ctx context.Context, arg CreateGlucoseRea
 		arg.Reason,
 		arg.UtcOffsetMinutes,
 		arg.OccurredAt,
-		arg.RawJsonData,
 		arg.CreatedByAppName,
 		arg.CreatedByDeviceName,
 		arg.CreatedByIdentityName,
@@ -241,7 +235,6 @@ func (q *Queries) CreateGlucoseReading(ctx context.Context, arg CreateGlucoseRea
 		&i.OtherAttributes,
 		&i.Notes,
 		&i.Reason,
-		&i.RawJsonData,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,
 		&i.OccurredAt,
@@ -259,7 +252,7 @@ func (q *Queries) CreateGlucoseReading(ctx context.Context, arg CreateGlucoseRea
 
 const getGlucoseReading = `-- name: GetGlucoseReading :one
 
-SELECT id, mgdl, reading_type, units, measurement_method, delta, direction, other_attributes, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings WHERE 
+SELECT id, mgdl, reading_type, units, measurement_method, delta, direction, other_attributes, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings WHERE 
 (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
 AND id = ?2
 `
@@ -286,7 +279,6 @@ func (q *Queries) GetGlucoseReading(ctx context.Context, arg GetGlucoseReadingPa
 		&i.OtherAttributes,
 		&i.Notes,
 		&i.Reason,
-		&i.RawJsonData,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,
 		&i.OccurredAt,
@@ -426,7 +418,7 @@ func (q *Queries) OldestGlucoseReadingAt(ctx context.Context) (int64, error) {
 }
 
 const searchGlucoseReadings = `-- name: SearchGlucoseReadings :many
-SELECT id, mgdl, reading_type, units, measurement_method, delta, direction, other_attributes, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings
+SELECT id, mgdl, reading_type, units, measurement_method, delta, direction, other_attributes, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings
 WHERE
     -- The date filters as one range, occurred_at's CHECK where unset, so SQLite reads only that range of its index
     occurred_at BETWEEN MAX(COALESCE(CAST(?1 AS INTEGER), 0), COALESCE(CAST(?2 AS INTEGER) + 1, 0), COALESCE(CAST(?3 AS INTEGER), 0))
@@ -550,7 +542,6 @@ func (q *Queries) SearchGlucoseReadings(ctx context.Context, arg SearchGlucoseRe
 			&i.OtherAttributes,
 			&i.Notes,
 			&i.Reason,
-			&i.RawJsonData,
 			&i.DeletedAt,
 			&i.UtcOffsetMinutes,
 			&i.OccurredAt,
@@ -632,15 +623,11 @@ UPDATE glucose_readings SET
     reason = COALESCE(?6, reason),
 
 
-    raw_json_data = json_patch(
-        COALESCE(raw_json_data, '{}'),
-        COALESCE(CAST(?7 AS TEXT), '{}')
-    ),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
-    updated_by_identity_id = ?8,
-    updated_by_identity_name = ?9
-WHERE id = ?10 AND deleted_at IS NULL
-RETURNING id, mgdl, reading_type, units, measurement_method, delta, direction, other_attributes, notes, reason, raw_json_data, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
+    updated_by_identity_id = ?7,
+    updated_by_identity_name = ?8
+WHERE id = ?9 AND deleted_at IS NULL
+RETURNING id, mgdl, reading_type, units, measurement_method, delta, direction, other_attributes, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name
 `
 
 type UpdateGlucoseReadingParams struct {
@@ -650,7 +637,6 @@ type UpdateGlucoseReadingParams struct {
 	OtherAttributes       *string
 	Notes                 *string
 	Reason                *string
-	RawJsonData           *string
 	UpdatedByIdentityID   *int64
 	UpdatedByIdentityName *string
 	ID                    string
@@ -667,7 +653,6 @@ func (q *Queries) UpdateGlucoseReading(ctx context.Context, arg UpdateGlucoseRea
 		arg.OtherAttributes,
 		arg.Notes,
 		arg.Reason,
-		arg.RawJsonData,
 		arg.UpdatedByIdentityID,
 		arg.UpdatedByIdentityName,
 		arg.ID,
@@ -684,7 +669,6 @@ func (q *Queries) UpdateGlucoseReading(ctx context.Context, arg UpdateGlucoseRea
 		&i.OtherAttributes,
 		&i.Notes,
 		&i.Reason,
-		&i.RawJsonData,
 		&i.DeletedAt,
 		&i.UtcOffsetMinutes,
 		&i.OccurredAt,

@@ -29,7 +29,6 @@ type Activity struct {
 	// Non-JSON values to make mapping easier
 	Date             *types.DateInt       `json:"date,omitempty"`      // Unix timestamp in milliseconds
 	UtcOffsetMinutes *types.FlexibleInt64 `json:"utcOffset,omitempty"` // Minutes offset from UTC
-	RawJsonData      string               `json:"-"`
 }
 
 func (t *Activity) UnmarshalJSON(data []byte) error {
@@ -50,8 +49,6 @@ func (t *Activity) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	// Raw Value
-	t.RawJsonData = string(data)
 
 	// Identitfiers
 	if t.Identifier == nil {

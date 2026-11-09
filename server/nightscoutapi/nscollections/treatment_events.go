@@ -262,16 +262,12 @@ var (
 				target.LowTargetMgdl = source.HighTarget.Float64()
 			}
 		},
-		// One a week long is given back as indefinite when it was sent so, as LoopFollow shows Loop's that way; only
-		// those are read from the JSON sent, while it is kept
+		// One a week long is given back as indefinite when it was sent so, as LoopFollow shows Loop's that way, from its
+		// group's other attributes; one changed since to end sooner is not
 		toTreatment: func(event *sitedb.TempTarget, _ *httputils.SiteContext, treatment *nightscoutmodels.Treatment) {
 			nightscoutmodels.UpdateTempTargetToTreatment(event, treatment)
-			var sent struct {
-				DurationType *types.ShortString `json:"durationType"`
-			}
-			if event != nil && event.DurationMinutes == indefiniteMinutes && event.RawJsonData != nil &&
-				json.Unmarshal([]byte(*event.RawJsonData), &sent) == nil && sent.DurationType != nil && *sent.DurationType == indefinite {
-				treatment.DurationType = sent.DurationType
+			if event == nil || event.DurationMinutes != indefiniteMinutes || treatment.DurationType == nil || *treatment.DurationType != indefinite {
+				treatment.DurationType = nil
 			}
 		},
 		mergeInto: nightscoutmodels.UpdateToTempTarget,

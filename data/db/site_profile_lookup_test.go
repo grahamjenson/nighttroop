@@ -21,19 +21,18 @@ func BenchmarkProfileLookups(b *testing.B) {
 	tx, err := site.SiteDB.SQLiteDB.BeginTx(ctx, nil)
 	require.NoError(b, err)
 	insert := site.SiteDB.QueriesWithTx(tx)
-	// A day's basal rates, every hour, and the profile as the loop sent it
+	// A day's basal rates, every hour
 	var rates []string
 	for h := range 24 {
 		rates = append(rates, fmt.Sprintf(`{"time":"%02d:00","value":0.85}`, h))
 	}
 	basals := "[" + strings.Join(rates, ",") + "]"
-	raw := `{"basal":` + basals + `,"notes":"` + strings.Repeat("x", 1000) + `"}`
 	// Four uploads a day of a store of three profiles
 	for store := range int64(1500) {
 		for i, name := range []string{"Default", "Exercise", "Sick"} {
 			_, err := insert.CreateProfilePreset(ctx, sitedb.CreateProfilePresetParams{ID: fmt.Sprint("p", store, "-", i),
 				Name: name, ProfileStoreID: fmt.Sprint("s", store), IsDefault: i == 0, BasalRatesJson: &basals,
-				RawJsonData: &raw, OccurredAt: store * 6 * hour, CreatedByIdentityName: "test"})
+				OccurredAt: store * 6 * hour, CreatedByIdentityName: "test"})
 			require.NoError(b, err)
 		}
 	}

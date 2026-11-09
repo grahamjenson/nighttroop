@@ -106,7 +106,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   - **disabled**, after a confirmation, so it is no longer served;
   - **archived** once disabled, uploading it to S3 (needs S3);
   - **hydrated** from the archived sites page, bringing it back live;
-  - **truncated** when over its DB size limit, clearing old records' raw JSON.
+  - **truncated** when over its DB size limit, which shrinks its DB; it clears nothing for now.
 - A site deleted for good, such as one never used after it was made, has its identities deleted, with their passwords,
   TOTP secrets and devices' push tokens, and its push credentials' secrets removed; an archived site keeps them, as it
   can be hydrated.
@@ -751,13 +751,12 @@ Connectors are a site's third party integrations, each syncing from one service.
   stops the start, naming the site in the error, as a site that cannot be opened or migrated does: the server never
   serves, so takes no data, until every live site is opened and migrated, and `update.sh` rolls back a release that
   cannot. Its batch is not uploaded without it.
-- Each hour, at a fixed minute, every site's raw JSON, kept of what each row was sent, is cleared from rows older than
-  `TRUNCATE_RAW_JSON_AFTER_DAYS` (2 by default), in every table that keeps it, keeping the rows themselves. Truncating a
-  site clears it the same way, then shrinks its DB.
-- A device status's loop status, most of a site's DB with AAPS uploading every 5 minutes, is kept whole only until
-  then too, as long as the Nightscout web app's retro view (48 hours) can show it: after, its debug output (OpenAPS's
-  `consoleLog` and `consoleError`) and predicted glucoses (`predBGs`, Loop's `predicted`) are removed, keeping its IOB,
-  COB, reason and the rest. Its predictions are kept only in it, not again apart from it.
+- A site keeps what each record was sent as only in its fields, never the JSON itself. What it needs of the JSON is
+  kept with the record: a hash of a treatment's, to tell one sent again with changes (as Loop sends a dose again with
+  what was delivered) from one sent the same, Loop's indefinite duration, and a device status's pump and uploader, for
+  the fields without a column that Nightguard shows (AAPS's extended).
+- Each hour, at a fixed minute, every site is truncated, which does nothing for now. A device status's loop status is
+  kept whole, with its debug output and predictions.
 - Reads and writes are rate limited per site, identity and IP, and live sessions per site are capped.
 - A Nightscout request that fails auth, or needs none, spends its IP's budget on the site
   (`SITE_UNAUTH_PER_MINUTE_LIMIT`); one with a valid token does not, so a device uploading often from one IP is limited

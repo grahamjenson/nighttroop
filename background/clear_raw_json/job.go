@@ -5,11 +5,11 @@ import (
 	"nighttroop.t1d.nz/data/db"
 )
 
-// Spec is when every site's old raw JSON is cleared: each hour at a fixed minute, so a restart does not put it off as
-// it would an @every interval
+// Spec is when every site is truncated: each hour at a fixed minute, so a restart does not put it off as it would an
+// @every interval
 const Spec = "0 17 * * * *"
 
-// SetupCron clears the raw JSON every site keeps of rows older than TRUNCATE_RAW_JSON_AFTER_DAYS, each hour
+// SetupCron truncates every site each hour, which does nothing for now, as the raw JSON it cleared is no longer kept
 func SetupCron(c cron.CronScheduler, controlDB *db.ControlDB) {
-	c.AddFunc("ClearRawJSON", Spec, controlDB.ClearRawJSON)
+	c.AddFunc("TruncateSites", Spec, controlDB.TruncateSites)
 }

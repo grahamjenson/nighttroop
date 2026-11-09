@@ -109,11 +109,11 @@ func (c TreatmentCollection) GetDuplicate(q *sitedb.Queries, ctx context.Context
 
 // Refresh replaces a treatment sent again with the one sent, as Nightscout upserts a treatment on its created_at and
 // eventType: Loop sends a temp basal or bolus again when it ends with what was delivered, and Trio a temp target that
-// ended early with its real duration. One of another type, sent as it was stored, or whose JSON is no longer kept, as
-// only one still going is sent again, is left as it is.
+// ended early with its real duration. One of another type, sent the same as it was, by the hash of its JSON, or
+// stored without that hash, is left as it is.
 func (c TreatmentCollection) Refresh(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Treatment, stored *sitedb.EventGroupsBundle, cc nightscoutmodels.ConverterContext) (*sitedb.EventGroupsBundle, bool, error) {
-	sent := stored.EventGroup.RawJsonData
-	if nsModel.EventType.String() != stored.EventGroup.GroupType || sent == nil || *sent == nsModel.RawJsonData {
+	sent, resent := stored.EventGroup.OtherAttributes.SentHash, nightscoutmodels.SentHash(nsModel.SentJSON)
+	if nsModel.EventType.String() != stored.EventGroup.GroupType || sent == nil || resent == nil || *sent == *resent {
 		return stored, false, nil
 	}
 	if _, err := hardDeleteEventGroup(ctx, q, stored.EventGroup.ID); err != nil {

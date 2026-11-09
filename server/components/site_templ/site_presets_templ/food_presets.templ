@@ -190,7 +190,6 @@ templ FoodPresetModal(foodPreset *sitemodels.SiteFoodPreset) {
 			@presetDetail("Updated", formatDate(ctx, foodPreset.UpdatedAt))
 			@presetDetail("Updated By", orDash(foodPreset.UpdatedByIdentityName))
 		</dl>
-		@modal.RawJSON("presets--food--details--raw", foodPreset.RawJsonData)
 	}
 }
 

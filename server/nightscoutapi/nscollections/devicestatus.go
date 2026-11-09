@@ -111,21 +111,15 @@ func DBToNightscoutDeviceStatus(source *sitedb.DeviceReport, siteContext *httput
 	// Pump
 	/////
 	// Its fields without a column, like AAPS's extended with the profile and temp basal Nightguard shows, are read
-	// from the JSON it came in, through the model so only known fields go out; the columns, kept once the JSON is
-	// cleared, fill in the rest
-	var raw struct {
-		Pump     *nightscoutmodels.PumpStatus     `json:"pump"`
-		Uploader *nightscoutmodels.UploaderStatus `json:"uploader"`
-	}
+	// from the pump and uploader kept as sent, through the model so only known fields go out; the columns fill in the
+	// rest, as for one kept before them
 	pump := nightscoutmodels.PumpStatus{}
 	uploader := nightscoutmodels.UploaderStatus{}
-	if source.RawJsonData != nil && json.Unmarshal([]byte(*source.RawJsonData), &raw) == nil {
-		if raw.Pump != nil {
-			pump = *raw.Pump
-		}
-		if raw.Uploader != nil {
-			uploader = *raw.Uploader
-		}
+	if other.Pump != nil {
+		_ = json.Unmarshal(other.Pump, &pump)
+	}
+	if other.Uploader != nil {
+		_ = json.Unmarshal(other.Uploader, &uploader)
 	}
 	// Loop and Trio send the phone's battery and charging in uploader, where LoopFollow reads them
 	if uploader.Battery == nil && source.DeviceBatteryPercent != nil {
@@ -197,6 +191,13 @@ func NightscoutToDBCreateDeviceReport(source nightscoutmodels.DeviceStatus, ctx 
 	}
 	if source.OverrideRaw != nil {
 		createParams.OtherAttributes.Override = *source.OverrideRaw
+	}
+	// The pump and uploader are kept as the model reads them, so only their known fields, for those without a column
+	if source.Pump != nil {
+		createParams.OtherAttributes.Pump, _ = json.Marshal(source.Pump)
+	}
+	if source.Uploader != nil {
+		createParams.OtherAttributes.Uploader, _ = json.Marshal(source.Uploader)
 	}
 
 	/////

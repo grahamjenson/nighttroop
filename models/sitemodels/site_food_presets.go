@@ -15,7 +15,6 @@ type SiteFoodPreset struct {
 	Fibre                 *float64 `json:"fibre"`
 	Energy                *float64 `json:"energy"`
 	Portions              *float64 `json:"portions"`
-	RawJsonData           *string  `json:"raw_json_data"`
 	CreatedAt             int64    `json:"created_at"`
 	UpdatedAt             int64    `json:"updated_at"`
 	CreatedByAppName      *string  `json:"created_by_app_name"`

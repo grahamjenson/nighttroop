@@ -24,8 +24,6 @@ func ActivityToUpdate(source Activity, context ConverterContext) sitedb.UpdateAc
 		xstring3 := SanitizedStringToString(*source.Notes)
 		sitedbUpdateActivityParams.Notes = &xstring3
 	}
-	pString := source.RawJsonData
-	sitedbUpdateActivityParams.RawJsonData = &pString
 	sitedbUpdateActivityParams.UpdatedByIdentityID = AssignUpdatedByID(context)
 	sitedbUpdateActivityParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
@@ -35,8 +33,6 @@ func ActivityToUpdate(source Activity, context ConverterContext) sitedb.UpdateAc
 }
 func DeviceStatusToUpdateDeviceReport(source DeviceStatus, context ConverterContext) sitedb.UpdateDeviceReportParams {
 	var sitedbUpdateDeviceReportParams sitedb.UpdateDeviceReportParams
-	pString := source.RawJsonData
-	sitedbUpdateDeviceReportParams.RawJsonData = &pString
 	sitedbUpdateDeviceReportParams.UpdatedByIdentityID = AssignUpdatedByID(context)
 	sitedbUpdateDeviceReportParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
@@ -59,8 +55,6 @@ func EntryToUpdate(source Entry, context ConverterContext) sitedb.UpdateGlucoseR
 		sitedbUpdateGlucoseReadingParams.Direction = &xstring
 	}
 	sitedbUpdateGlucoseReadingParams.OtherAttributes = EntryOtherJSON(source)
-	pString := source.RawJsonData
-	sitedbUpdateGlucoseReadingParams.RawJsonData = &pString
 	sitedbUpdateGlucoseReadingParams.UpdatedByIdentityID = AssignUpdatedByID(context)
 	sitedbUpdateGlucoseReadingParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {
@@ -87,8 +81,6 @@ func FoodToUpdate(source Food, context ConverterContext) sitedb.UpdateFoodPreset
 		sitedbUpdateFoodPresetParams.Carbs = &xfloat64
 	}
 	sitedbUpdateFoodPresetParams.OtherAttributes = FoodOtherJSON(source)
-	pString := source.RawJsonData
-	sitedbUpdateFoodPresetParams.RawJsonData = &pString
 	sitedbUpdateFoodPresetParams.UpdatedByIdentityID = AssignUpdatedByID(context)
 	sitedbUpdateFoodPresetParams.UpdatedByIdentityName = AssignUpdatedByName(context)
 	if source.Identifier != nil {

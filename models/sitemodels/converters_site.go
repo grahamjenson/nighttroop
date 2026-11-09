@@ -113,7 +113,6 @@ type SiteConverter interface {
 	// goverter:map Reading Mgdl | SettingsUnitsToMgdlOrNil
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
-	// goverter:ignore RawJsonData
 	// goverter:map . OtherAttributes | GlucoseReadingOtherJSON
 	GlucoseReadingToUpdate(source *SiteGlucoseReading, siteContext *httputils.SiteContext) sitedb.UpdateGlucoseReadingParams
 
@@ -142,7 +141,6 @@ type SiteConverter interface {
 	// goverter:map LowTarget LowTargetMgdl | SettingsUnitsToMgdlOrNil
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
-	// goverter:ignore RawJsonData
 	TempTargetToUpdate(source *SiteTempTarget, siteContext *httputils.SiteContext) sitedb.UpdateTempTargetParams
 
 	///////
@@ -164,7 +162,7 @@ type SiteConverter interface {
 	// goverter:map DurationMinutes | Int64OrNil
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
-	// goverter:ignore RawJsonData Type
+	// goverter:ignore Type
 	TempBasalToUpdate(source *SiteTempBasal, siteContext *httputils.SiteContext) sitedb.UpdateTempBasalParams
 
 	///////
@@ -188,7 +186,6 @@ type SiteConverter interface {
 	// goverter:map ActivityType | StringOrNil
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
-	// goverter:ignore RawJsonData
 	// goverter:map . OtherAttributes | ActivityOtherJSON
 	ActivityToUpdate(source *SiteActivity, siteContext *httputils.SiteContext) sitedb.UpdateActivityParams
 
@@ -215,7 +212,6 @@ type SiteConverter interface {
 	// goverter:map EventType | StringOrNil
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
-	// goverter:ignore RawJsonData
 	// goverter:map . OtherAttributes | ComponentEventOtherJSON
 	ComponentEventToUpdate(source *SiteComponentEvent, siteContext *httputils.SiteContext) sitedb.UpdateComponentEventParams
 
@@ -238,7 +234,6 @@ type SiteConverter interface {
 	// goverter:map Severity | Int64OrNil
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
-	// goverter:ignore RawJsonData
 	NotificationEventToUpdate(source *SiteNotificationEvent, siteContext *httputils.SiteContext) sitedb.UpdateNotificationEventParams
 
 	///////
@@ -261,7 +256,7 @@ type SiteConverter interface {
 	// goverter:map Name | StringOrNil
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
-	// goverter:ignore RawJsonData OtherAttributes
+	// goverter:ignore OtherAttributes
 	ProfileSwitchToUpdate(source *SiteProfileSwitch, siteContext *httputils.SiteContext) sitedb.UpdateProfileSwitchParams
 
 	///////
@@ -317,7 +312,6 @@ type SiteConverter interface {
 	// goverter:map Dose | Float64OrNil
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
-	// goverter:ignore RawJsonData
 	// goverter:map . OtherAttributes | InsulinDoseOtherJSON
 	InsulinDoseToUpdate(source *SiteInsulinDose, siteContext *httputils.SiteContext) sitedb.UpdateInsulinDoseParams
 
@@ -346,7 +340,6 @@ type SiteConverter interface {
 	// goverter:context siteContext
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
-	// goverter:ignore RawJsonData
 	// goverter:map . OtherAttributes | FoodIntakeOtherJSON
 	FoodIntakeToUpdate(source *SiteFoodIntake, siteContext *httputils.SiteContext) sitedb.UpdateFoodIntakeParams
 
@@ -368,14 +361,12 @@ type SiteConverter interface {
 	// goverter:map ID | NewSiteDataID
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
-	// goverter:ignore RawJsonData
 	// goverter:map . OtherAttributes | FoodPresetOther
 	FoodPresetToCreate(source *SiteFoodPreset, siteContext *httputils.SiteContext) sitedb.CreateFoodPresetParams
 
 	// goverter:context siteContext
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
-	// goverter:ignore RawJsonData
 	// goverter:map . OtherAttributes | FoodPresetOtherJSON
 	FoodPresetToUpdate(source *SiteFoodPreset, siteContext *httputils.SiteContext) sitedb.UpdateFoodPresetParams
 
@@ -395,7 +386,6 @@ type SiteConverter interface {
 	// goverter:context siteContext
 	// goverter:map UpdatedByIdentityID | ContextIdentityID
 	// goverter:map UpdatedByIdentityName | ContextIdentityName
-	// goverter:ignore RawJsonData
 	ProfilePresetToUpdate(source *SiteProfilePreset, siteContext *httputils.SiteContext) sitedb.UpdateProfilePresetParams
 
 	///////

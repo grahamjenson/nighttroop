@@ -220,6 +220,7 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map OtherAttributes.AutoForced AutoForced
 	// goverter:map OtherAttributes.Reasons Reasons
 	// goverter:map OtherAttributes.OriginalDurationMs OriginalDurationMs
+	// goverter:map OtherAttributes.DurationType DurationType
 	// goverter:map CreatedByAppName App
 	// goverter:map CreatedByDeviceName Device
 	// goverter:map OccurredAt Date

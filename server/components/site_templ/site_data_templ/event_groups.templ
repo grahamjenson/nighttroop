@@ -319,7 +319,6 @@ templ EventGroupModal(eventGroup *sitemodels.SiteEventGroup) {
 			@readingDetail("Updated", formatReadingDate(ctx, eventGroup.UpdatedAt))
 			@readingDetail("Updated By", orDash(eventGroup.UpdatedByIdentityName))
 		</dl>
-		@modal.RawJSON("site--event-group--details--raw", eventGroup.RawJsonData)
 	}
 }
 

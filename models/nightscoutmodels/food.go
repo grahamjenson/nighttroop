@@ -42,7 +42,6 @@ type Food struct {
 
 	// Non-JSON values to make mapping easier
 	Date        *types.DateInt `json:"-"` // Unix timestamp in milliseconds
-	RawJsonData string         `json:"-"`
 }
 
 func (t *Food) UnmarshalJSON(data []byte) error {
@@ -58,8 +57,6 @@ func (t *Food) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	// Raw Value
-	t.RawJsonData = string(data)
 
 	// Identitfiers
 	if t.Identifier == nil {

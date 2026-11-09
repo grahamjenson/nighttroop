@@ -33,8 +33,6 @@ func ActivityToCreate(source Activity, context ConverterContext) sitedb.CreateAc
 		xint642 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		sitedbCreateActivityParams.UtcOffsetMinutes = &xint642
 	}
-	pString := source.RawJsonData
-	sitedbCreateActivityParams.RawJsonData = &pString
 	if source.App != nil {
 		xstring4 := ShortStringToString(*source.App)
 		sitedbCreateActivityParams.CreatedByAppName = &xstring4
@@ -55,8 +53,6 @@ func DeviceStatusToCreateDeviceReport(source DeviceStatus, context ConverterCont
 		sitedbCreateDeviceReportParams.UtcOffsetMinutes = &xint64
 	}
 	sitedbCreateDeviceReportParams.OccurredAt = OrNow(source.Date)
-	pString := source.RawJsonData
-	sitedbCreateDeviceReportParams.RawJsonData = &pString
 	if source.App != nil {
 		xstring := ShortStringToString(*source.App)
 		sitedbCreateDeviceReportParams.CreatedByAppName = &xstring
@@ -91,8 +87,6 @@ func EntryToCreate(source Entry, context ConverterContext) sitedb.CreateGlucoseR
 		sitedbCreateGlucoseReadingParams.UtcOffsetMinutes = &xint64
 	}
 	sitedbCreateGlucoseReadingParams.OccurredAt = OrNow(source.Date)
-	pString := source.RawJsonData
-	sitedbCreateGlucoseReadingParams.RawJsonData = &pString
 	if source.App != nil {
 		xstring2 := ShortStringToString(*source.App)
 		sitedbCreateGlucoseReadingParams.CreatedByAppName = &xstring2
@@ -124,8 +118,6 @@ func FoodToCreate(source Food, context ConverterContext) sitedb.CreateFoodPreset
 		sitedbCreateFoodPresetParams.Carbs = &xfloat64
 	}
 	sitedbCreateFoodPresetParams.OtherAttributes = FoodOther(source)
-	pString := source.RawJsonData
-	sitedbCreateFoodPresetParams.RawJsonData = &pString
 	if source.App != nil {
 		xstring2 := ShortStringToString(*source.App)
 		sitedbCreateFoodPresetParams.CreatedByAppName = &xstring2
@@ -146,8 +138,6 @@ func PartialProfileStoreToCreate(source ProfileStore, context ConverterContext) 
 		xint64 := FlexibleInt64ToInt64(*source.UtcOffsetMinutes)
 		sitedbCreateProfilePresetParams.UtcOffsetMinutes = &xint64
 	}
-	pString := source.RawJsonData
-	sitedbCreateProfilePresetParams.RawJsonData = &pString
 	if source.App != nil {
 		xstring := ShortStringToString(*source.App)
 		sitedbCreateProfilePresetParams.CreatedByAppName = &xstring
