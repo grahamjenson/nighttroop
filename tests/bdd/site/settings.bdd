@@ -109,6 +109,19 @@ ASSERT_STATUS 200
 ASSERT_VISIBLE #site--summary--glucose--ago[title^="{{ now "Asia/Kathmandu" "01/02/2006 15:" }}"]
 SCREENSHOT summary_in_identity_date_format
 
+// The admin's own time format is used over the default's: 12-hour without seconds, so a phone's table is narrower
+GOTO /settings
+ASSERT_STATUS 200
+INPUT #site--settings--identity--time_format hh:mm a
+CLICK #site--settings--identity--save
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Settings Saved
+GOTO /data/glucose
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE {{ now "Asia/Kathmandu" "01/02/2006 03:" }}
+ASSERT_VISIBLE #glucoseReadingsTable tbody tr >> nth=0 >> td >> nth=0 >> text=/^\S+ \d\d:\d\d [AP]M$/
+SCREENSHOT glucose_in_identity_time_format
+
 // On a phone the settings are one column: each setting's label, then the site's control and the admin's own, each
 // named, and the save buttons fit. The window is tall enough for the whole page, so fitting it checks only its width.
 WINDOW 390x2150

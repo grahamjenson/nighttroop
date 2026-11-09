@@ -110,6 +110,32 @@ func TestFastRiseAndDropMinutes(t *testing.T) {
 	}
 }
 
+// Times are shown in the identity's time format, then the site's, then the default, each as its Go layout
+func TestCombinedSettingsTimeLayout(t *testing.T) {
+	tests := []struct {
+		site, identity string
+		layout         string
+	}{
+		{"", "", "15:04:05"},
+		{"hh:mm:ss a", "", "03:04:05 PM"},
+		{"hh:mm:ss a", "HH:mm", "15:04"},
+		{"", "hh:mm a", "03:04 PM"},
+		{"", "HH:mm:ss", "15:04:05"},
+	}
+	for _, test := range tests {
+		t.Run(test.site+"_"+test.identity, func(t *testing.T) {
+			site, identity := &settings.SettingMap{}, &settings.SettingMap{}
+			for level, format := range map[*settings.SettingMap]string{site: test.site, identity: test.identity} {
+				if format != "" {
+					require.NoError(t, level.SetSettingByName("time_format", format, nil, nil))
+				}
+			}
+			combined := &settings.CombinedSettingsMap{SiteSettingsMap: site, IdentitySettingsMap: identity, DefaultSettingsMap: settings.DefaultSettingsMap}
+			require.Equal(t, test.layout, combined.TimeLayout())
+		})
+	}
+}
+
 // Dates are shown in the identity's date format, then the site's, then the default, each as its Go layout
 func TestCombinedSettingsDateLayout(t *testing.T) {
 	tests := []struct {

@@ -121,6 +121,19 @@ func (m *CombinedSettingsMap) DateLayout() string {
 	return strings.NewReplacer("YYYY", "2006", "MM", "01", "DD", "02").Replace(*format)
 }
 
+// timeLayouts are the Go layouts of the time formats, e.g. 03:04 PM for hh:mm a
+var timeLayouts = strings.NewReplacer("HH", "15", "hh", "03", "mm", "04", "ss", "05", "a", "PM")
+
+// TimeLayout is the Go layout of the time format, the identity's, then the site's, then the default, e.g. 03:04 PM
+// for hh:mm a
+func (m *CombinedSettingsMap) TimeLayout() string {
+	format := first(m.IdentitySettingsMap.GetTimeFormat(), m.SiteSettingsMap.GetTimeFormat(), m.DefaultSettingsMap.GetTimeFormat())
+	if format == nil {
+		return time.TimeOnly
+	}
+	return timeLayouts.Replace(*format)
+}
+
 // GetWeekStartDay is the identity's week start day, then the site's, then the default monday
 func (m *CombinedSettingsMap) GetWeekStartDay() *string {
 	return first(m.IdentitySettingsMap.GetWeekStartDay(), m.SiteSettingsMap.GetWeekStartDay(), m.DefaultSettingsMap.GetWeekStartDay())
