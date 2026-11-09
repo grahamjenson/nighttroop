@@ -126,19 +126,21 @@ func (db *DB) Vacuum(ctx context.Context) error {
 	return err
 }
 
-// TableSize is the bytes a table takes in its DB's file, its indexes counted with it
+// TableSize is the bytes a table takes in its DB's file, its indexes counted with it, and its records
 type TableSize struct {
-	Name  string
-	Bytes int64
+	Name    string
+	Bytes   int64
+	Records int64
 }
 
-// TableSizes are the bytes each table takes in db's file, its indexes counted with it, largest first, from SQLite's
-// dbstat. sqlc cannot generate a query of a virtual table, so it is read here, with the rest of the DB's upkeep. It
-// reads every page of the DB, so it is for an admin looking at one DB, not a page every user opens.
+// TableSizes are the bytes each table takes in db's file, its indexes counted with it, largest first, and its
+// records, the cells of its own leaf pages, from SQLite's dbstat. sqlc cannot generate a query of a virtual table, so
+// it is read here, with the rest of the DB's upkeep. It reads every page of the DB, so it is for an admin looking at
+// one DB, not a page every user opens.
 func (db *DB) TableSizes(ctx context.Context) ([]TableSize, error) {
-	rows, err := db.SQLiteDB.QueryContext(ctx, "SELECT COALESCE(objects.tbl_name, pages.name), SUM(pages.pgsize) "+
-		"FROM (SELECT name, pgsize FROM dbstat WHERE aggregate = TRUE) AS pages "+
-		"LEFT JOIN sqlite_schema AS objects ON objects.name = pages.name GROUP BY 1 ORDER BY 2 DESC, 1")
+	rows, err := db.SQLiteDB.QueryContext(ctx, "SELECT COALESCE(objects.tbl_name, pages.name), SUM(pages.pgsize), "+
+		"SUM(CASE WHEN pages.pagetype = 'leaf' AND pages.name = COALESCE(objects.tbl_name, pages.name) THEN pages.ncell ELSE 0 END) "+
+		"FROM dbstat AS pages LEFT JOIN sqlite_schema AS objects ON objects.name = pages.name GROUP BY 1 ORDER BY 2 DESC, 1")
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +148,7 @@ func (db *DB) TableSizes(ctx context.Context) ([]TableSize, error) {
 	sizes := []TableSize{}
 	for rows.Next() {
 		var size TableSize
-		if err := rows.Scan(&size.Name, &size.Bytes); err != nil {
+		if err := rows.Scan(&size.Name, &size.Bytes, &size.Records); err != nil {
 			return nil, err
 		}
 		sizes = append(sizes, size)
