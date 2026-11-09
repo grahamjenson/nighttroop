@@ -10,6 +10,9 @@ ASSERT_STATUS 200
 ASSERT_PATH /reports/agp
 ASSERT_TITLE AGP · Nighttroop
 ASSERT_VISIBLE #site--reports--no-glucose
+// It says why a new site's report is empty, and when its readings will show
+ASSERT_VISIBLE #site--reports--no-glucose >> text=show here the day after
+SCREENSHOT agp_new_site
 ASSERT_TEXT_EQUALS #site--reports--days 0
 ASSERT_TEXT_EQUALS #site--reports--time-in-range –
 // With no days of data its daily dose and carbs are dashes too, not 0 U and 0 g
