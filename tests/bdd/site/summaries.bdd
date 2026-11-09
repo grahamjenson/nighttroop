@@ -9,6 +9,8 @@ ASSERT_VISIBLE #site--reports--summaries-button[aria-current="page"]
 ASSERT_TITLE Summaries · Nighttroop
 ASSERT_VISIBLE #site--summaries--day >> text=No days kept yet.
 ASSERT_VISIBLE #site--summaries--month >> text=No months kept yet.
+// Each says when its first will show, as a new site has nothing to show yet
+ASSERT_VISIBLE #site--summaries--day >> text=the first shows the day after readings arrive
 
 // The virtual connector fills its last 30 minutes, and a backfill the day before it (tests backfill a day)
 CLICK #site--nav--settings

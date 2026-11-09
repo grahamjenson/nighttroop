@@ -9,7 +9,9 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/toast"
 )
 
-templ Login() {
+// Login signs in an identity by its name and password, then its TOTP code. A name the link gives, such as the new site's
+// admin from its welcome page, is filled in, so only its password is typed.
+templ Login(name string) {
 	@site_templ.Base() {
 		// It fills the window, so the form is in its middle with nothing to scroll
 		<div class="flex flex-1 flex-col justify-center items-center px-6 py-6 lg:px-8 bg-slate-50">
@@ -38,11 +40,12 @@ templ Login() {
 							ID:       "site--login--name",
 							Type:     "text",
 							Name:     "name",
+							Value:    name,
 							Required: true,
 							Attributes: templ.Attributes{
 								"autocapitalize": "none",
 								"autocorrect":    "off",
-								"autofocus":      "true",
+								"autofocus":      name == "",
 								"autocomplete":   "username",
 							},
 						})
@@ -60,7 +63,7 @@ templ Login() {
 							Type:       "password",
 							Name:       "password",
 							Required:   true,
-							Attributes: templ.Attributes{"autocomplete": "current-password"},
+							Attributes: templ.Attributes{"autocomplete": "current-password", "autofocus": name != ""},
 						})
 					}
 					<div class="mt-4"></div>

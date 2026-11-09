@@ -251,7 +251,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   its address, and opening it again, after that or on another site, says they have been shown and links to the recover
   page.
 - The new site's admin login is its own step: its username and password, its TOTP secret as a QR code and text, and a
-  code check. The Log in button is disabled until a code from the authenticator app matches, saying under it to check a code in step 2 first; a wrong code says so. Its buttons are the shape of its Copy all credentials, not round pills. A
+  code check. The Log in button, which opens the login in a new tab with the admin's name filled in so the credentials stay open, is disabled until a code from the authenticator app matches, saying under it to check a code in step 2 first; a wrong code says so. Its buttons are the shape of its Copy all credentials, not round pills. A
   code is checked as soon as its sixth digit is in, with no click. The check changes nothing, and a recovered site's
   credentials are checked the same way.
 - Beside Log in, a new site's welcome page offers "Log in with a passkey", with no authenticator app: it adds the admin a
@@ -375,7 +375,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   each "–" when it has no days with data.
 - Its ambulatory glucose profile (AGP) over a day from midnight shades the 5th to 95th and 25th to 75th percentiles,
   with the median as a line, over the range shaded with its low and high dashed. A day's report draws the day's
-  glucose over the AGP of the 7 days to it. A report with no glucose says so instead.
+  glucose over the AGP of the 7 days to it. A report with no glucose says so instead, and that reports are made from whole days, so a day's readings show the day after; the summaries' empty tables say the same.
 - Day, Week, Fortnight and Month open the report of that kind ending on the report's last day, or today; arrow buttons
   either side of its dates (‹ and ›), named Previous and Next for a screen reader, open the one before and after, disabled
   past today or a year ago. Back and forward move between reports.
