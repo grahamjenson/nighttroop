@@ -120,6 +120,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deleteLoopSettingsStmt, err = db.PrepareContext(ctx, deleteLoopSettings); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteLoopSettings: %w", err)
 	}
+	if q.deleteOldDeviceReportsStmt, err = db.PrepareContext(ctx, deleteOldDeviceReports); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteOldDeviceReports: %w", err)
+	}
 	if q.deleteSummaryPeriodsStmt, err = db.PrepareContext(ctx, deleteSummaryPeriods); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteSummaryPeriods: %w", err)
 	}
@@ -604,6 +607,11 @@ func (q *Queries) Close() error {
 	if q.deleteLoopSettingsStmt != nil {
 		if cerr := q.deleteLoopSettingsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteLoopSettingsStmt: %w", cerr)
+		}
+	}
+	if q.deleteOldDeviceReportsStmt != nil {
+		if cerr := q.deleteOldDeviceReportsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteOldDeviceReportsStmt: %w", cerr)
 		}
 	}
 	if q.deleteSummaryPeriodsStmt != nil {
@@ -1212,6 +1220,7 @@ type Queries struct {
 	createTempBasalStmt                         *sql.Stmt
 	createTempTargetStmt                        *sql.Stmt
 	deleteLoopSettingsStmt                      *sql.Stmt
+	deleteOldDeviceReportsStmt                  *sql.Stmt
 	deleteSummaryPeriodsStmt                    *sql.Stmt
 	deviceReportAscendingIDsStmt                *sql.Stmt
 	deviceReportHistoryIDsStmt                  *sql.Stmt
@@ -1357,6 +1366,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		createTempBasalStmt:                         q.createTempBasalStmt,
 		createTempTargetStmt:                        q.createTempTargetStmt,
 		deleteLoopSettingsStmt:                      q.deleteLoopSettingsStmt,
+		deleteOldDeviceReportsStmt:                  q.deleteOldDeviceReportsStmt,
 		deleteSummaryPeriodsStmt:                    q.deleteSummaryPeriodsStmt,
 		deviceReportAscendingIDsStmt:                q.deviceReportAscendingIDsStmt,
 		deviceReportHistoryIDsStmt:                  q.deviceReportHistoryIDsStmt,

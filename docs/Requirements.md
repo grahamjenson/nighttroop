@@ -775,8 +775,11 @@ Connectors are a site's third party integrations, each syncing from one service.
   Nightscout API gives them back as their `openaps` or `loop` object. The job looks at the statuses written in the last
   day; truncating a site looks at them all, so it clears those the job no longer looks at, as a device's newest before
   it went a day without reporting.
-- Truncating also thins each device's statuses: all of the last hour are kept, and before it only the newest in each
-  10 minutes, which keeps its newest however old. A deleted status is not removed, so a client syncing deletions sees it.
+- Truncating also thins each device's statuses: all of the last hour are kept, then only the newest in each 10
+  minutes until a week old, in each 20 minutes until two weeks old, and in each hour until 30 days old, which keeps its
+  newest. A deleted status is not removed, so a client syncing deletions sees it. Every status over 30 days old, its
+  device's newest or deleted too, is deleted. The job also thins again the statuses that turned a week or two weeks old
+  in the last day.
 - Reads and writes are rate limited per site, identity and IP, and live sessions per site are capped.
 - A Nightscout request that fails auth, or needs none, spends its IP's budget on the site
   (`SITE_UNAUTH_PER_MINUTE_LIMIT`); one with a valid token does not, so a device uploading often from one IP is limited
