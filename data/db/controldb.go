@@ -458,13 +458,15 @@ func (db *ControlDB) ClearRawJSON(ctx context.Context) error {
 }
 
 // clearRawJSON clears the raw JSON a site's DB keeps of what each row older than TruncateRawJSONAfterDays was sent, in
-// every table that keeps it, keeping all its data
+// every table that keeps it, keeping all its data, and thins those device reports' loop statuses to what is kept of
+// them after the retro view, without their debug output and predictions
 func (db *ControlDB) clearRawJSON(ctx context.Context, site *SiteDB) error {
 	q, before := site.Queries(), time.Now().AddDate(0, 0, -db.ServerConfig.TruncateRawJSONAfterDays).UnixMilli()
 	for _, clear := range []func(context.Context, int64) error{
 		clearBefore(q.ClearActivitiesRawJSON),
 		clearBefore(q.ClearComponentEventsRawJSON),
 		clearBefore(q.ClearDeviceReportsRawJSON),
+		clearBefore(q.ThinDeviceReportsLoopStatus),
 		clearBefore(q.ClearEventGroupsRawJSON),
 		clearBefore(q.ClearFoodIntakesRawJSON),
 		clearBefore(q.ClearFoodPresetsRawJSON),

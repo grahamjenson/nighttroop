@@ -3,6 +3,7 @@ package db_test
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
@@ -16,6 +17,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/logsdb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
+	"nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/s3utils"
@@ -480,4 +482,38 @@ func TestRestoredSiteThatCannotOpenStopsTheStart(t *testing.T) {
 	require.NoError(t, err)
 	t.Cleanup(func() { controlDB.Close() })
 	require.ErrorIs(t, controlDB.RestoreMissingSites(ctx, download), db.ErrRestoredSiteCannotOpen)
+}
+
+// A device report's loop status keeps its debug output and predictions only until it is TruncateRawJSONAfterDays old,
+// as the retro view shows them, then is thinned to its IOB, reason and the rest
+func TestClearRawJSONThinsOldLoopStatuses(t *testing.T) {
+	_, controlDB, site := testutils.NewControlDBWithSite(t)
+	ctx, q := t.Context(), site.SiteDB.Queries()
+	daysAgo := func(days int) int64 { return time.Now().AddDate(0, 0, -days).UnixMilli() }
+	status := json.RawMessage(`{"iob":{"iob":1.2},"suggested":{"COB":20,"reason":"COB 20, Dev: 5","predBGs":{"IOB":[120,118]},"consoleLog":["SMB enabled"],"consoleError":["CR: 10"]},"enacted":{"reason":"COB 20, Dev: 5","rate":0.5,"predBGs":{"IOB":[120,118]},"consoleError":["CR: 10"]}}`)
+	loop := json.RawMessage(`{"iob":{"iob":3},"predicted":{"startDate":"2024-01-01T00:05:00Z","values":[120,130]}}`)
+	reports := map[string]types.DeviceReportOther{
+		"old_openaps":    {LoopName: new("openaps"), LoopSettings: status},
+		"old_loop":       {LoopName: new("loop"), LoopSettings: loop},
+		"recent_openaps": {LoopName: new("openaps"), LoopSettings: status},
+	}
+	for id, other := range reports {
+		days := 3
+		if id == "recent_openaps" {
+			days = 1
+		}
+		_, err := q.CreateDeviceReport(ctx, sitedb.CreateDeviceReportParams{ID: id, OccurredAt: daysAgo(days), OtherAttributes: other, LoopIob: new(1.2), CreatedByIdentityName: "phone"})
+		require.NoError(t, err)
+	}
+
+	require.NoError(t, controlDB.ClearRawJSON(ctx))
+	settings := func(id string) string {
+		report, err := q.GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: id})
+		require.NoError(t, err)
+		require.Equal(t, 1.2, *report.LoopIob, "the report's IOB is kept")
+		return string(report.OtherAttributes.LoopSettings)
+	}
+	require.JSONEq(t, `{"iob":{"iob":1.2},"suggested":{"COB":20,"reason":"COB 20, Dev: 5"},"enacted":{"reason":"COB 20, Dev: 5","rate":0.5}}`, settings("old_openaps"))
+	require.JSONEq(t, `{"iob":{"iob":3}}`, settings("old_loop"))
+	require.JSONEq(t, string(status), settings("recent_openaps"), "a recent status is kept whole, for the retro view")
 }

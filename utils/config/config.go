@@ -178,7 +178,7 @@ type ServerConfig struct {
 	// DisableAfterInactivityDays is how long a site goes unwritten or unseen before the control plane can disable it
 	DisableAfterInactivityDays int
 	// TruncateRawJSONAfterDays is how old a site's rows are before the raw JSON kept of what each was sent is cleared,
-	// in every table that keeps it, each hour and when the site is truncated
+	// in every table that keeps it, and device statuses' loop statuses thinned, each hour and when the site is truncated
 	TruncateRawJSONAfterDays int
 
 	// MemoryAlertPercent and DiskAlertPercent are the memory and DB disk used, and CPUPeggedAlertSeconds how long the
