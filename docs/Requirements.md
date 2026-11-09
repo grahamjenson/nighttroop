@@ -88,7 +88,9 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   - tiles of when it was last seen and last written to, how many identities it has (people and devices), and how
     long since its last error;
   - its identities, and its latest 10 events and 10 errors, each opening its details, with a link to all of them
-    filtered to the site.
+    filtered to the site; the events and errors leave out the site, as they are all its own.
+- On a phone a site's page is no wider than the window, and every identity's actions can be tapped: its role, TOTP
+  and when it was last seen are a line under its name rather than columns of their own, and its actions stack.
 - A site's page has an Actions grid of what can be done to it: Open Site, and for an admin Download DB, Disable,
   Truncate and Archive. Each says what it does, and has its button when it can be done, or says when it would be
   offered (e.g. Truncate while over its DB size limit, Archive once disabled). Its page shows the change once done.
