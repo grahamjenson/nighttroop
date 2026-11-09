@@ -123,9 +123,9 @@ GET http://{{ .create_new_site.site_subdomain }}.localhost/logs/events?type=alar
 H Authorization: Bearer {{ .admin_jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@result"
-ASSERT_EQUALS "nightscout" "@result.0.attributes.by"
-ASSERT_EQUALS "urgent_low" "@result.0.attributes.types.0"
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "nightscout" "@result.items.0.attributes.by"
+ASSERT_EQUALS "urgent_low" "@result.items.0.attributes.types.0"
 
 NAME bye_alarms
 DISCONNECT

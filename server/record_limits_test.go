@@ -74,12 +74,16 @@ func TestNoEndpointReturnsMoreThanASearch(t *testing.T) {
 		if wrapped, ok := result.(map[string]any); ok {
 			result = wrapped["result"]
 		}
+		// and the site API's search a page of them in items
+		if page, ok := result.(map[string]any); ok {
+			result = page["items"]
+		}
 		require.Len(t, result, apiquery.MaxQueryLimit, url)
 	}
 
 	// The clean readings are worked out from the raw ones, and paged the same
 	clean := send("GET", "http://"+subdomain+".localhost/data/clean_glucose?hours="+absurd+"&limit="+absurd, "")
-	require.LessOrEqual(t, len(clean.(map[string]any)["result"].([]any)), apiquery.MaxQueryLimit)
+	require.LessOrEqual(t, len(clean.(map[string]any)["result"].(map[string]any)["items"].([]any)), apiquery.MaxQueryLimit)
 	count := send("GET", ns+"/api/v1/count/entries/where?count="+absurd+"&token="+site.PwdNSToken, "")
 	require.Equal(t, float64(apiquery.MaxQueryLimit), count.(map[string]any)["count"])
 

@@ -20,8 +20,8 @@ GET http://{{ site }}/settings/identities
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS "device_pwd_phone" "@result.1.role"
-SET phone_id {{ dig "list_identities.result.1.id" }}
+ASSERT_EQUALS "device_pwd_phone" "@result.items.1.role"
+SET phone_id {{ dig "list_identities.result.items.1.id" }}
 
 NAME connect
 CONNECT http://{{ .ns_site }}/socket.io/?EIO=3
