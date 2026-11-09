@@ -129,6 +129,12 @@ LIMIT 1;
 
 -- name: UpdateDeviceReport :one
 UPDATE device_reports SET
+    -- The fields sent, as JSON (types.OtherJSON), are merged into those kept, as an update changes its pump and
+    -- uploader
+    other_attributes = NULLIF(json_patch(
+        COALESCE(other_attributes, '{}'),
+        COALESCE(CAST(sqlc.narg('OtherAttributes') AS TEXT), '{}')
+    ), '{}'),
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_id = sqlc.narg('UpdatedByIdentityID'),
     updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')

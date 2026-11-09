@@ -5297,6 +5297,16 @@ func (m *SoftDeleteDeviceReportParams) SetID(v string) {
 	m.ID = v
 }
 
+// GetOtherAttributes returns the OtherAttributes value.
+func (m UpdateDeviceReportParams) GetOtherAttributes() *string {
+	return m.OtherAttributes
+}
+
+// SetOtherAttributes sets the OtherAttributes value and returns the updated UpdateDeviceReportParams.
+func (m *UpdateDeviceReportParams) SetOtherAttributes(v *string) {
+	m.OtherAttributes = v
+}
+
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.
 func (m UpdateDeviceReportParams) GetUpdatedByIdentityID() *int64 {
 	return m.UpdatedByIdentityID

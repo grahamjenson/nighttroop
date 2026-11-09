@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
+	datatypes "nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
@@ -63,6 +64,15 @@ func (c DeviceStatusCollection) Delete(q *sitedb.Queries, ctx context.Context, i
 func (c DeviceStatusCollection) UpdateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.DeviceStatus, identifier string, dbModel *sitedb.DeviceReport, uc nightscoutmodels.ConverterContext) (*sitedb.DeviceReport, error) {
 	updateParams := nightscoutmodels.DeviceStatusToUpdateDeviceReport(nsModel, uc)
 	updateParams.ID = identifier
+	// An update changes its pump and uploader, kept as sent; its columns are as it was made
+	other := datatypes.DeviceReportOther{}
+	if nsModel.Pump != nil {
+		other.Pump, _ = json.Marshal(nsModel.Pump)
+	}
+	if nsModel.Uploader != nil {
+		other.Uploader, _ = json.Marshal(nsModel.Uploader)
+	}
+	updateParams.OtherAttributes = datatypes.OtherJSON(other)
 	return q.UpdateDeviceReport(ctx, updateParams)
 }
 
