@@ -6,6 +6,7 @@ import (
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/settings"
 )
 
 // SummaryMinute is what was in force in a minute of the summary: its targets, in the settings' units, and its basal
@@ -27,15 +28,31 @@ type profile struct {
 	permanent        bool
 }
 
-func newProfile(start int64, minutes int64, timezone *string, low, high, basal *string, location *time.Location) *profile {
+func newProfile(start int64, minutes int64, timezone *string, low, high, basal *string, location *time.Location, schedules schedules) *profile {
 	if timezone != nil {
-		if tz, err := time.LoadLocation(*timezone); err == nil {
+		if tz, err := settings.LoadLocation(*timezone); err == nil {
 			location = tz
 		}
 	}
-	p := &profile{start: start, low: ScheduleFromJSON(low), high: ScheduleFromJSON(high), basal: ScheduleFromJSON(basal), location: location, basalScale: 1, permanent: minutes == 0}
+	p := &profile{start: start, low: schedules.parse(low), high: schedules.parse(high), basal: schedules.parse(basal), location: location, basalScale: 1, permanent: minutes == 0}
 	p.end = start + minutes*60_000
 	return p
+}
+
+// schedules are the schedules parsed by their JSON, as each profile switch most often repeats the same profile's
+type schedules map[string][]*SiteScheduleValue
+
+// parse is the schedule of the JSON, parsed the first time it is seen. Its values are only read, so profiles share it.
+func (s schedules) parse(jsonStr *string) []*SiteScheduleValue {
+	if jsonStr == nil {
+		return ScheduleFromJSON(nil)
+	}
+	schedule, ok := s[*jsonStr]
+	if !ok {
+		schedule = ScheduleFromJSON(jsonStr)
+		s[*jsonStr] = schedule
+	}
+	return schedule
 }
 
 // at is the schedule's value at ms in the profile's time of day, or nil when it has no schedule
@@ -63,11 +80,12 @@ func (p *profile) at(schedule []*SiteScheduleValue, ms int64) *float64 {
 // one, and a temp basal's rate, the U/hr given, is the basal.
 func SummaryMinutes(since, until int64, units *consts.Units, location *time.Location, defaults []*sitedb.ProfilePreset, switches []*sitedb.ProfileSwitch, targets []*SiteTempTarget, basals []*SiteTempBasal) []SummaryMinute {
 	var defaultProfiles, switchProfiles []*profile
+	parsed := schedules{}
 	for _, d := range defaults {
-		defaultProfiles = append(defaultProfiles, newProfile(d.OccurredAt, 0, d.Timezone, d.TargetsLowJson, d.TargetsHighJson, d.BasalRatesJson, location))
+		defaultProfiles = append(defaultProfiles, newProfile(d.OccurredAt, 0, d.Timezone, d.TargetsLowJson, d.TargetsHighJson, d.BasalRatesJson, location, parsed))
 	}
 	for _, s := range switches {
-		p := newProfile(s.OccurredAt, s.DurationMinutes, s.Timezone, s.TargetsLowJson, s.TargetsHighJson, s.BasalRatesJson, location)
+		p := newProfile(s.OccurredAt, s.DurationMinutes, s.Timezone, s.TargetsLowJson, s.TargetsHighJson, s.BasalRatesJson, location, parsed)
 		if s.Multiplier != nil {
 			p.basalScale = *s.Multiplier
 		}

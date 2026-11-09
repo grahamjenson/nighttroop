@@ -197,3 +197,19 @@ func TestBasalAt(t *testing.T) {
 		})
 	}
 }
+
+// BenchmarkBasalAt is a temp basal's percent read through the most profile switches its week can have, each in its
+// own timezone as Nightscout uploaders give them
+func BenchmarkBasalAt(b *testing.B) {
+	at := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC).UnixMilli()
+	timezone := "Pacific/Auckland"
+	basalRates := `[{"time":"00:00","value":0.5,"timeAsSeconds":0},{"time":"02:00","value":0.8,"timeAsSeconds":7200}]`
+	switches := make([]*sitedb.ProfileSwitch, 1000)
+	for i := range switches {
+		switches[i] = &sitedb.ProfileSwitch{OccurredAt: at - int64(len(switches)-i)*60_000, Timezone: &timezone, BasalRatesJson: &basalRates}
+	}
+	b.ReportAllocs()
+	for b.Loop() {
+		BasalAt(at, time.UTC, nil, switches)
+	}
+}
