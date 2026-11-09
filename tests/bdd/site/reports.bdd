@@ -1,13 +1,13 @@
 INCLUDE steps/new_site_admin.steps
 ASSERT_PATH /
 
-// The menu's Reports group opens the AGP report, at first of the week with yesterday in it, which a new site has no
-// glucose for
+// The Reports hub's AGP tab opens the AGP report, at its own address, at first of the week with yesterday in it,
+// which a new site has no glucose for
 CLICK #site--nav--reports
 ASSERT_TEXT_EQUALS #site--reports--agp-button AGP
 CLICK #site--reports--agp-button
 ASSERT_STATUS 200
-ASSERT_PATH /reports
+ASSERT_PATH /reports/agp
 ASSERT_TITLE AGP · Nighttroop
 ASSERT_VISIBLE #site--reports--no-glucose
 ASSERT_TEXT_EQUALS #site--reports--days 0
@@ -29,7 +29,7 @@ RUN_BACKGROUND_JOBS
 
 // Today's report draws its glucose over the AGP of the 7 days to it, with the range behind them. Today has data, and
 // there is no report after it.
-GOTO /reports/day-{{ date 0 }}
+GOTO /reports/agp/day-{{ date 0 }}
 ASSERT_STATUS 200
 ASSERT_TEXT_EQUALS #site--reports--days 1
 ASSERT_VISIBLE #site--reports--time-in-range >> text=/^\d+(\.\d)?%$/
@@ -75,12 +75,12 @@ ASSERT_NO_PAGE_ERRORS
 // Clicking around quickly replaces each page still loading with the next, aborting its request on purpose, which is
 // not an error either, and the last one clicked is shown
 CLICK_QUICKLY #site--reports--tdd-menu-button, #site--reports--agp-button, #site--reports--summaries-button, #site--reports--agp-button
-ASSERT_PATH /reports
+ASSERT_PATH /reports/agp
 ASSERT_VISIBLE #site--reports--title
 ASSERT_NO_PAGE_ERRORS
 
 // A report that is not a period, or is in the future, is not found
-GOTO /reports/year-{{ date 0 }}
+GOTO /reports/agp/year-{{ date 0 }}
 ASSERT_STATUS 404
-GOTO /reports/day-{{ date 1 }}
+GOTO /reports/agp/day-{{ date 1 }}
 ASSERT_STATUS 404

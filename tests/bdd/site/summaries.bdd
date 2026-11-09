@@ -1,12 +1,11 @@
 INCLUDE steps/new_site_admin.steps
 ASSERT_PATH /
 
-// The menu's Reports group opens the summaries, a table of each period's kept summaries, which a new site has none of
+// The Reports hub opens on the summaries, a table of each period's kept summaries, which a new site has none of
 CLICK #site--nav--reports
-ASSERT_DRAWN #site--reports--summaries-button
-CLICK #site--reports--summaries-button
 ASSERT_STATUS 200
-ASSERT_PATH /reports/summaries
+ASSERT_PATH /reports
+ASSERT_VISIBLE #site--reports--summaries-button[aria-current="page"]
 ASSERT_TITLE Summaries · Nighttroop
 ASSERT_VISIBLE #site--summaries--day >> text=No days kept yet.
 ASSERT_VISIBLE #site--summaries--month >> text=No months kept yet.
@@ -25,16 +24,16 @@ RUN_BACKGROUND_JOBS
 
 // An admin regenerates the summaries, after confirming (the test accepts), which a background job builds again from
 // the site's data, so yesterday is kept, with its numbers, and opens its AGP report
-GOTO /reports/summaries
+GOTO /reports
 CLICK #site--summaries--regenerate
 ASSERT_TEXT_VISIBLE Regenerating summaries
 RUN_BACKGROUND_JOBS
-GOTO /reports/summaries
+GOTO /reports
 ASSERT_STATUS 200
-ASSERT_VISIBLE #site--summaries--day tbody tr:has(a[href="/reports/day-{{ date -1 }}"]) td:nth-child(2):text-is("1")
-ASSERT_VISIBLE #site--summaries--day tbody tr:has(a[href="/reports/day-{{ date -1 }}"]) td:nth-child(3) >> text=/^\d+(\.\d)?%$/
+ASSERT_VISIBLE #site--summaries--day tbody tr:has(a[href="/reports/agp/day-{{ date -1 }}"]) td:nth-child(2):text-is("1")
+ASSERT_VISIBLE #site--summaries--day tbody tr:has(a[href="/reports/agp/day-{{ date -1 }}"]) td:nth-child(3) >> text=/^\d+(\.\d)?%$/
 SCREENSHOT summaries
 // The newest day kept is yesterday
 CLICK #site--summaries--day tbody tr:first-child a
-ASSERT_PATH /reports/day-{{ date -1 }}
+ASSERT_PATH /reports/agp/day-{{ date -1 }}
 ASSERT_TEXT_EQUALS #site--reports--days 1

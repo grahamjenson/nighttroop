@@ -45,7 +45,7 @@ func title(ctx context.Context, p *sitemodels.SiteSummaryPeriod) string {
 func link(period string, date time.Time) string {
 	now := time.Now().In(date.Location())
 	if day := date.Format(time.DateOnly); day <= now.Format(time.DateOnly) && day >= now.AddDate(0, 0, -366).Format(time.DateOnly) {
-		return "/reports/" + period + "-" + day
+		return "/reports/agp/" + period + "-" + day
 	}
 	return ""
 }

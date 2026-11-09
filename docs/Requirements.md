@@ -276,7 +276,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - Data has side tabs in groups, like Settings: Readings & treatments (Glucose Readings, Insulin Doses, Food Intakes,
   Temp Targets, Temp Basals, Profile Switches), Events (Activities, Site & Sensor Changes, Notifications, Event Groups),
   Devices (Device Status) and Presets (Food Presets, Profiles, Loop Settings).
-- Reports has a tab for each report: AGP, TDD and Summaries.
+- Reports has a tab for each report: Summaries, AGP and TDD, and opens on Summaries.
 - Settings has side tabs in groups: This site (General, Alarms), People & devices (Users & Devices, Push Devices),
   Connections (Connectors, Push Notifications) and Troubleshooting (Events, Errors, Logs). Another identity's settings
   count as Users & Devices.
@@ -342,11 +342,11 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 ### Reports
 
-- The Reports hub has AGP, the AGP report, which shows the week with yesterday in it at first, and a report
-  of any day, week, fortnight or month from today back a year is at `/reports/{period}-{date}`.
-- The Reports hub's Summaries page has a table for each of the kept days (the last 31), weeks, fortnights and months
-  (the last year): each one's days with data, time in range, daily dose and daily carbs, newest first, each opening
-  its AGP report.
+- The Reports hub has AGP, the AGP report, at `/reports/agp`, which shows the week with yesterday in it at first, and a
+  report of any day, week, fortnight or month from today back a year is at `/reports/agp/{period}-{date}`.
+- The Reports hub's Summaries page, at `/reports` (and `/reports/summaries`), has a table for each of the kept days
+  (the last 31), weeks, fortnights and months (the last year): each one's days with data, time in range, daily dose
+  and daily carbs, newest first, each opening its AGP report.
 - An admin can regenerate the summaries from the Summaries page, after confirming: a background job builds the last
   year of days with data, and yesterday, and their weeks, fortnights and months, again from the site's data. It is
   recorded as an event, and asking again before it runs asks once. Others cannot.
