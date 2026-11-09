@@ -492,28 +492,29 @@ func TestClearRawJSONThinsOldLoopStatuses(t *testing.T) {
 	daysAgo := func(days int) int64 { return time.Now().AddDate(0, 0, -days).UnixMilli() }
 	status := json.RawMessage(`{"iob":{"iob":1.2},"suggested":{"COB":20,"reason":"COB 20, Dev: 5","predBGs":{"IOB":[120,118]},"consoleLog":["SMB enabled"],"consoleError":["CR: 10"]},"enacted":{"reason":"COB 20, Dev: 5","rate":0.5,"predBGs":{"IOB":[120,118]},"consoleError":["CR: 10"]}}`)
 	loop := json.RawMessage(`{"iob":{"iob":3},"predicted":{"startDate":"2024-01-01T00:05:00Z","values":[120,130]}}`)
-	reports := map[string]types.DeviceReportOther{
-		"old_openaps":    {LoopName: new("openaps"), LoopSettings: status},
-		"old_loop":       {LoopName: new("loop"), LoopSettings: loop},
-		"recent_openaps": {LoopName: new("openaps"), LoopSettings: status},
+	reports := map[string]struct {
+		loop   string
+		status json.RawMessage
+		days   int
+	}{
+		"old_openaps":    {"openaps", status, 3},
+		"old_loop":       {"loop", loop, 3},
+		"recent_openaps": {"openaps", status, 1},
 	}
-	for id, other := range reports {
-		days := 3
-		if id == "recent_openaps" {
-			days = 1
-		}
-		_, err := q.CreateDeviceReport(ctx, sitedb.CreateDeviceReportParams{ID: id, OccurredAt: daysAgo(days), OtherAttributes: other, LoopIob: new(1.2), CreatedByIdentityName: "phone"})
+	for id, report := range reports {
+		_, err := q.CreateDeviceReport(ctx, sitedb.CreateDeviceReportParams{ID: id, OccurredAt: daysAgo(report.days), OtherAttributes: types.DeviceReportOther{LoopName: new(report.loop)},
+			LoopStatusJson: new(string(report.status)), LoopIob: new(1.2), CreatedByIdentityName: "phone"})
 		require.NoError(t, err)
 	}
 
 	require.NoError(t, controlDB.ClearRawJSON(ctx))
-	settings := func(id string) string {
+	loopStatus := func(id string) string {
 		report, err := q.GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: id})
 		require.NoError(t, err)
 		require.Equal(t, 1.2, *report.LoopIob, "the report's IOB is kept")
-		return string(report.OtherAttributes.LoopSettings)
+		return *report.LoopStatusJson
 	}
-	require.JSONEq(t, `{"iob":{"iob":1.2},"suggested":{"COB":20,"reason":"COB 20, Dev: 5"},"enacted":{"reason":"COB 20, Dev: 5","rate":0.5}}`, settings("old_openaps"))
-	require.JSONEq(t, `{"iob":{"iob":3}}`, settings("old_loop"))
-	require.JSONEq(t, string(status), settings("recent_openaps"), "a recent status is kept whole, for the retro view")
+	require.JSONEq(t, `{"iob":{"iob":1.2},"suggested":{"COB":20,"reason":"COB 20, Dev: 5"},"enacted":{"reason":"COB 20, Dev: 5","rate":0.5}}`, loopStatus("old_openaps"))
+	require.JSONEq(t, `{"iob":{"iob":3}}`, loopStatus("old_loop"))
+	require.JSONEq(t, string(status), loopStatus("recent_openaps"), "a recent status is kept whole, for the retro view")
 }
