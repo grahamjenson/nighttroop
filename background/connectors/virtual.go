@@ -100,11 +100,16 @@ func VirtualDocuments(end time.Time, span time.Duration) []virtualDoc {
 
 // WriteVirtualData writes the virtual documents for the window into the
 // site through the Nightscout collections, returning how many were new.
-// Collections named in skip are left out.
+// Collections named in skip are left out, as are device statuses older than
+// deviceStatusBackfillAge.
 func WriteVirtualData(ctx context.Context, store *nightscoutapi.NightTroopAPIStore, siteContext *httputils.SiteContext, end time.Time, span time.Duration, skip ...nsutils.Collection) (int, error) {
-	added := 0
+	added, oldestStatus := 0, time.Now().Add(-deviceStatusBackfillAge).UnixMilli()
 	for _, doc := range VirtualDocuments(end, span) {
 		if slices.Contains(skip, doc.collection) {
+			continue
+		}
+		// As a Nightscout backfill copies, no device status older than deviceStatusBackfillAge
+		if date, _ := doc.data["date"].(int64); doc.collection == nsutils.Devicestatus && date < oldestStatus {
 			continue
 		}
 		collectionStore, ok := store.GetStore(doc.collection)
