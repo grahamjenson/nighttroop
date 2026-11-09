@@ -17,11 +17,10 @@ import (
 // FoodPresetsTable shows one page of food presets, newest first, with buttons to the pages either side
 templ FoodPresetsTable(foodPresets []*sitemodels.SiteFoodPreset, skip int64, limit int64) {
 	<div id="food_presets_table" class="mx-auto max-w-5xl space-y-6">
-		@heading.Page("Food Presets") {
+		@heading.PageWith("Food Presets", addmodal.Open("presets--food--add", "/presets/food/new", "Add Food Preset")) {
 			Foods kept to pick from, with what a portion has. Click one to see and edit it.
 		}
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			@addmodal.Open("presets--food--add", "/presets/food/new", "Add Food Preset")
 			@table.Table(table.Props{
 				ID:    "foodPresetsTable",
 				Class: "rounded-lg border border-gray-200",

@@ -69,13 +69,11 @@ type Props struct {
 	Extra templ.Component
 }
 
-// Open is the button opening the add modal at path in #modal-container, above the table
+// Open is the button opening the add modal at path in #modal-container, beside its page's title
 templ Open(id string, path string, label string) {
-	<div class="mb-4 flex justify-end">
-		@button.Button(button.Props{ID: id, Attributes: templ.Attributes{"hx-get": path, "hx-target": "#modal-container", "hx-swap": "innerHTML"}}) {
-			{ label }
-		}
-	</div>
+	@button.Button(button.Props{ID: id, Attributes: templ.Attributes{"hx-get": path, "hx-target": "#modal-container", "hx-swap": "innerHTML"}}) {
+		{ label }
+	}
 }
 
 // Modal adds a record with all its fields, each saying what it is and whether it is required. It closes once the record

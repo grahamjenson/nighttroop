@@ -15,6 +15,17 @@ templ Page(title string) {
 	}
 }
 
+// PageWith is a Page with its action, such as its Add button, at the right of its title, where a page's main action is
+// looked for
+templ PageWith(title string, action templ.Component) {
+	<div class="flex flex-wrap items-start justify-between gap-3">
+		@Page(title) {
+			{ children... }
+		}
+		@action
+	</div>
+}
+
 // PageBeside is a Page with something, such as a Live badge, shown beside its title
 templ PageBeside(title string, beside templ.Component) {
 	@Title(title)

@@ -138,7 +138,7 @@ func percentOr(fraction *float64, unset string) string {
 // GlucoseReadingsTable shows one page of readings, newest first, with buttons to the pages either side
 templ GlucoseReadingsTable(readings []*sitemodels.SiteGlucoseReading, skip int64, limit int64) {
 	<div id="glucose_readings_table" class="mx-auto max-w-5xl space-y-6">
-		@heading.Page("Glucose Readings") {
+		@heading.PageWith("Glucose Readings", addmodal.Open("site--glucose--add", "/data/glucose/new", "Add Reading")) {
 			Newest first. Click a reading to see all its details.
 		}
 		@searchTotals("site--glucose", "glucose reading", "glucose readings")
@@ -146,7 +146,6 @@ templ GlucoseReadingsTable(readings []*sitemodels.SiteGlucoseReading, skip int64
 			<div id="site--glucose--days-loading" hx-get="/data/summary-daily?limit=10" hx-trigger="load" hx-swap="outerHTML"></div>
 		}
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			@addmodal.Open("site--glucose--add", "/data/glucose/new", "Add Reading")
 			@table.Table(table.Props{
 				ID:    "glucoseReadingsTable",
 				Class: "rounded-lg border border-gray-200",

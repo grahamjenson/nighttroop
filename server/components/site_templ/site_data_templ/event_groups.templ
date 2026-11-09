@@ -53,12 +53,11 @@ func eventGroupEvents(group *sitemodels.SiteEventGroup) []string {
 // EventGroupsTable shows one page of event groups, newest first, with buttons to the pages either side
 templ EventGroupsTable(eventGroups []*sitemodels.SiteEventGroup, skip int64, limit int64) {
 	<div id="event_groups_table" class="mx-auto max-w-5xl space-y-6">
-		@heading.Page("Event Groups") {
+		@heading.PageWith("Event Groups", eventGroupAdd()) {
 			Events recorded together, like a meal bolus's food and insulin: Nightscout's treatments. Newest first. Click one to see all its details.
 		}
 		@searchTotals("site--event-group", "event group", "event groups")
 		<section class="rounded-xl border border-gray-200 p-4 shadow-sm">
-			@eventGroupAdd()
 			@table.Table(table.Props{
 				ID:    "eventGroupsTable",
 				Class: "rounded-lg border border-gray-200",
@@ -152,7 +151,7 @@ templ eventGroupRow(eventGroup *sitemodels.SiteEventGroup) {
 
 // eventGroupAdd is a menu of the types of group, each opening the modal to add one of that type
 templ eventGroupAdd() {
-	<div class="mb-4 flex justify-end">
+	<div>
 		@dropdown.Dropdown(dropdown.Props{ID: "site--event-group--add-menu"}) {
 			@dropdown.Trigger() {
 				@button.Button(button.Props{ID: "site--event-group--add"}) {
