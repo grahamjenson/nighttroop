@@ -15,6 +15,7 @@ INSERT INTO device_reports (
     loop_iob_basal,
     loop_iob_treatment,
     loop_cob,
+    configuration_id,
 
     other_attributes,
 
@@ -26,7 +27,7 @@ INSERT INTO device_reports (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------

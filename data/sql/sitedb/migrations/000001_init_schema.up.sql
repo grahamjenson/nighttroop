@@ -426,10 +426,13 @@ CREATE TABLE device_reports (
     loop_iob_treatment REAL CHECK(loop_iob_treatment BETWEEN -1000 AND 1000),
     loop_cob REAL CHECK(loop_cob BETWEEN -1000 AND 2000),
 
+    -- The loop_settings its loop's configuration is (AAPS's), by its ID. Not a foreign key: deleting the settings keeps
+    -- the report, which is read back without them.
+    configuration_id TEXT CHECK(length(configuration_id) = 64),
+
     -- What only some apps send, a JSON object (types.DeviceReportOther) NULL for most reports: the pump's time when it
     -- reported (pump_clock), its manufacturer and model, Loop's override in force (override), and the loop's raw
-    -- settings: which loop it is (loop_name), the loop_settings its configuration is (configuration_id), its status as
-    -- sent (loop_settings), and its predicted glucoses from when (loop_predictions_start_time, the default predictions being
+    -- settings: which loop it is (loop_name), its status as sent (loop_settings), and its predicted glucoses from when (loop_predictions_start_time, the default predictions being
     -- iob for openaps and normal for loop, and openaps's zt). The JSON ones are kept as JSON. A field that is not there
     -- passes its check; the total fits each one's limit added together.
     other_attributes TEXT CHECK(length(other_attributes) <= 23040 AND json_valid(other_attributes)
@@ -438,7 +441,6 @@ CREATE TABLE device_reports (
         AND length(json_extract(other_attributes, '$.pump_model')) <= 64
         AND length(json_extract(other_attributes, '$.override')) <= 2048
         AND json_extract(other_attributes, '$.loop_name') IN ('openaps', 'loop')
-        AND length(json_extract(other_attributes, '$.configuration_id')) = 64
         AND length(json_extract(other_attributes, '$.loop_settings')) <= 8192
         AND json_extract(other_attributes, '$.loop_predictions_start_time') BETWEEN 0 AND 253402300799999
         AND length(json_extract(other_attributes, '$.loop_predictions_default')) <= 2048

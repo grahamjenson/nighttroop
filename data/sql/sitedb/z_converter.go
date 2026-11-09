@@ -346,6 +346,10 @@ func DeviceReportToCreate(source DeviceReport) CreateDeviceReportParams {
 		xfloat647 := *source.LoopCob
 		sitedbCreateDeviceReportParams.LoopCob = &xfloat647
 	}
+	if source.ConfigurationID != nil {
+		xstring3 := *source.ConfigurationID
+		sitedbCreateDeviceReportParams.ConfigurationID = &xstring3
+	}
 	sitedbCreateDeviceReportParams.OtherAttributes = typesDeviceReportOtherToTypesDeviceReportOther(source.OtherAttributes)
 	if source.UtcOffsetMinutes != nil {
 		xint64 := *source.UtcOffsetMinutes
@@ -353,16 +357,16 @@ func DeviceReportToCreate(source DeviceReport) CreateDeviceReportParams {
 	}
 	sitedbCreateDeviceReportParams.OccurredAt = source.OccurredAt
 	if source.RawJsonData != nil {
-		xstring3 := *source.RawJsonData
-		sitedbCreateDeviceReportParams.RawJsonData = &xstring3
+		xstring4 := *source.RawJsonData
+		sitedbCreateDeviceReportParams.RawJsonData = &xstring4
 	}
 	if source.CreatedByAppName != nil {
-		xstring4 := *source.CreatedByAppName
-		sitedbCreateDeviceReportParams.CreatedByAppName = &xstring4
+		xstring5 := *source.CreatedByAppName
+		sitedbCreateDeviceReportParams.CreatedByAppName = &xstring5
 	}
 	if source.CreatedByDeviceName != nil {
-		xstring5 := *source.CreatedByDeviceName
-		sitedbCreateDeviceReportParams.CreatedByDeviceName = &xstring5
+		xstring6 := *source.CreatedByDeviceName
+		sitedbCreateDeviceReportParams.CreatedByDeviceName = &xstring6
 	}
 	sitedbCreateDeviceReportParams.CreatedByIdentityName = source.CreatedByIdentityName
 	if source.CreatedByIdentityID != nil {
@@ -2812,10 +2816,6 @@ func typesDeviceReportOtherToTypesDeviceReportOther(source types.DeviceReportOth
 	if source.LoopName != nil {
 		xstring3 := *source.LoopName
 		typesDeviceReportOther.LoopName = &xstring3
-	}
-	if source.ConfigurationID != nil {
-		xstring4 := *source.ConfigurationID
-		typesDeviceReportOther.ConfigurationID = &xstring4
 	}
 	typesDeviceReportOther.LoopSettings = jsontextValueToJsontextValue(source.LoopSettings)
 	if source.LoopPredictionsStartTime != nil {
