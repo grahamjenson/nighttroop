@@ -486,7 +486,8 @@ Connectors are a site's third party integrations, each syncing from one service.
   debug it by.
 - A working source can be backfilled with the days before its oldest reading. A Nightscout or virtual backfill also
   fetches the last 2 days again, to fill gaps the site missed while it was down, as for a deploy, and its toast says so;
-  Dexcom and LibreLinkUp backfills fetch all they keep, the last 24 and 12 hours.
+  Dexcom and LibreLinkUp backfills fetch all they keep, the last 24 and 12 hours. A Nightscout backfill fetches device
+  statuses from the last hour only, as an old one is of little use and they are most of a looping site's DB.
 - The Connectors page shows how each source has synced, how often, the records it has pulled in, in all, from its syncs
   and backfills, and in its last sync, its backfill and its recent events.
 - The Connectors page updates as each sync or backfill finishes, showing its new errors, stats and events without reloading,

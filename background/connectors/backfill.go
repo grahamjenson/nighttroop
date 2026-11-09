@@ -156,6 +156,10 @@ func (b *ConnectorJobManager) backfillNightscout(ctx context.Context, jobInfo *C
 
 	added, pages := 0, 0
 	for _, c := range nightscoutCollections {
+		from, ok := backfillFrom(from, to, c.backfillWithin, time.Now())
+		if !ok {
+			continue
+		}
 		before := to.UnixMilli()
 		for {
 			if pages++; pages > maxBackfillPages {
@@ -181,6 +185,15 @@ func (b *ConnectorJobManager) backfillNightscout(ctx context.Context, jobInfo *C
 		}
 	}
 	return added, nil
+}
+
+// backfillFrom is when a backfill from from to to reads a collection from: from, or with a within, no earlier than
+// within before now. It is false when that leaves nothing to read, as the range ends before then.
+func backfillFrom(from, to time.Time, within time.Duration, now time.Time) (time.Time, bool) {
+	if within > 0 && from.Before(now.Add(-within)) {
+		from = now.Add(-within)
+	}
+	return from, from.Before(to)
 }
 
 // oldestDate is the oldest date of the documents, or before when none is older

@@ -91,15 +91,19 @@ func (b *ConnectorJobManager) syncNightscoutProfile(ctx context.Context, nsc *ni
 
 // nightscoutCollections are what a Nightscout connector reads, and at most how many of each one's newest documents
 // from the last 20 minutes: a few readings, a meal, its boluses and a loop's SMBs and temp basals, or each uploader's
-// statuses. A backfill reads them a page at a time, small enough to stay under the client's response size limit.
+// statuses. A backfill reads them a page at a time, small enough to stay under the client's response size limit, and
+// only those from the last backfillWithin when it has one.
 var nightscoutCollections = []struct {
-	collection   nsutils.Collection
-	limit        int
-	backfillPage int
+	collection     nsutils.Collection
+	limit          int
+	backfillPage   int
+	backfillWithin time.Duration
 }{
-	{nsutils.Entries, 3, 500},
-	{nsutils.Treatments, 20, 200},
-	{nsutils.Devicestatus, 10, 50},
+	{nsutils.Entries, 3, 500, 0},
+	{nsutils.Treatments, 20, 200, 0},
+	// A device status shows a loop and its devices as they were then, of little use once old, and is most of a
+	// looping site's DB
+	{nsutils.Devicestatus, 10, 50, time.Hour},
 }
 
 // syncNightscoutCollection copies a collection's newest documents into the site, returning how many were new
