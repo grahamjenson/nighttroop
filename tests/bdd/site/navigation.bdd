@@ -28,7 +28,7 @@ ASSERT_TITLE Glucose Readings · Nighttroop
 ASSERT_VISIBLE #site--nav--data[aria-current="page"]
 ASSERT_NOT_VISIBLE #site--nav--home-icon[aria-current="page"]
 ASSERT_VISIBLE #site--data--glucose-button[aria-current="page"]
-ASSERT_COUNT #site--hub--data nav a 13
+ASSERT_COUNT #site--hub--data nav a 14
 // Data's tabs are on the left, in groups, like Settings'
 ASSERT_VISIBLE #site--hub--data ul[aria-label="Readings & treatments"] #site--data--glucose-button
 ASSERT_VISIBLE #site--hub--data ul[aria-label="Events"] #site--data--activities-button
@@ -161,7 +161,8 @@ TYPE #site--nav--search bolus
 ASSERT_VISIBLE #site--nav--search--data--insulin[aria-selected="true"]
 ASSERT_TEXT_EQUALS #site--nav--search--data--insulin>[data-hint] Bolus
 ASSERT_VISIBLE #site--nav--search--presets--food
-ASSERT_COUNT #site--nav--search-results [role=option] 2
+ASSERT_VISIBLE #site--nav--search--presets--loop-settings
+ASSERT_COUNT #site--nav--search-results [role=option] 3
 PRESS Enter
 ASSERT_STATUS 200
 ASSERT_NEW_URL

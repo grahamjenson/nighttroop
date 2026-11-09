@@ -55,12 +55,12 @@ func TestVisible(t *testing.T) {
 	}
 	admin := &controldb.SiteIdentity{Role: consts.IdentityRoleAdmin}
 	require.Len(t, Visible(admin), len(Pages))
-	require.Len(t, Visible(admin, Data), 13)
+	require.Len(t, Visible(admin, Data), 14)
 	require.Len(t, Visible(admin, Reports), 3)
 	for _, role := range []consts.IdentityRole{consts.IdentityRoleUser, consts.IdentityRoleUserReadOnly, consts.IdentityRoleDeviceRead} {
 		settings := ids(Visible(&controldb.SiteIdentity{Role: role}, Settings))
 		require.Equal(t, []string{"site--settings--settings-button", "site--settings--alarms-button", "site--settings--push-devices-button"}, settings, role)
-		require.Len(t, Visible(&controldb.SiteIdentity{Role: role}, Data), 13, role)
+		require.Len(t, Visible(&controldb.SiteIdentity{Role: role}, Data), 14, role)
 	}
 	require.Empty(t, Visible(nil))
 }
@@ -101,7 +101,7 @@ func TestSearchText(t *testing.T) {
 		{"urgent high", []string{"site--settings--alarms-button"}},
 		{"bgl", []string{"site--data--glucose-button"}},
 		{"blood sugar", []string{"site--data--glucose-button"}},
-		{"bolus", []string{"site--data--insulin-button", "site--presets--food-button"}},
+		{"bolus", []string{"site--data--insulin-button", "site--presets--food-button", "site--presets--loop-settings-button"}},
 		{"carbs", []string{"site--data--food-button", "site--presets--food-button", "site--reports--summaries-button"}},
 		{"timezone", []string{"site--settings--settings-button"}},
 		{"iob", []string{"site--data--device-status-button"}},

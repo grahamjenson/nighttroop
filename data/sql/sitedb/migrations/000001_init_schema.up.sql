@@ -428,8 +428,8 @@ CREATE TABLE device_reports (
 
     -- What only some apps send, a JSON object (types.DeviceReportOther) NULL for most reports: the pump's time when it
     -- reported (pump_clock), its manufacturer and model, Loop's override in force (override), and the loop's raw
-    -- settings: which loop it is (loop_name), its configuration and settings as sent (configuration_settings,
-    -- loop_settings), and its predicted glucoses from when (loop_predictions_start_time, the default predictions being
+    -- settings: which loop it is (loop_name), the loop_settings its configuration is (configuration_id), its status as
+    -- sent (loop_settings), and its predicted glucoses from when (loop_predictions_start_time, the default predictions being
     -- iob for openaps and normal for loop, and openaps's zt). The JSON ones are kept as JSON. A field that is not there
     -- passes its check; the total fits each one's limit added together.
     other_attributes TEXT CHECK(length(other_attributes) <= 23040 AND json_valid(other_attributes)
@@ -438,7 +438,7 @@ CREATE TABLE device_reports (
         AND length(json_extract(other_attributes, '$.pump_model')) <= 64
         AND length(json_extract(other_attributes, '$.override')) <= 2048
         AND json_extract(other_attributes, '$.loop_name') IN ('openaps', 'loop')
-        AND length(json_extract(other_attributes, '$.configuration_settings')) <= 8192
+        AND length(json_extract(other_attributes, '$.configuration_id')) = 64
         AND length(json_extract(other_attributes, '$.loop_settings')) <= 8192
         AND json_extract(other_attributes, '$.loop_predictions_start_time') BETWEEN 0 AND 253402300799999
         AND length(json_extract(other_attributes, '$.loop_predictions_default')) <= 2048
@@ -462,6 +462,23 @@ CREATE TABLE device_reports (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
 ) STRICT;
 
+
+-- loop_settings are each different set of a loop app's settings, once, however often they are sent: Loop's
+-- (loopSettings) and Trio's (its remote settings) from their profiles, and AAPS's configuration from its device
+-- statuses. id is the SHA-256 of the app and the settings, in hex, so the same settings are always the same row, and a
+-- profile or device report refers to the row it was sent with by it. That reference is not a foreign key: a row can be
+-- deleted and the records sent with it are kept, read back without them. See docs/loop_settings.md.
+CREATE TABLE loop_settings (
+    id TEXT PRIMARY KEY CHECK(length(id) = 64),
+    app TEXT NOT NULL CHECK(app IN ('loop', 'trio', 'aaps')),
+    source TEXT NOT NULL CHECK(source IN ('profile', 'devicestatus')),
+    settings_json TEXT NOT NULL CHECK(length(settings_json) <= 8192 AND json_valid(settings_json)),
+    first_seen_at INTEGER NOT NULL CHECK(first_seen_at BETWEEN 0 AND 253402300799999),
+    last_seen_at INTEGER NOT NULL CHECK(last_seen_at BETWEEN 0 AND 253402300799999),
+    created_by_device_name TEXT CHECK(length(created_by_device_name) <= 64),
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
+) STRICT;
+CREATE INDEX loop_settings_app_last_seen_at_idx ON loop_settings(app, last_seen_at);
 
 ----------
 -- PRESETS are user defined templates for the event types
@@ -527,8 +544,9 @@ CREATE TABLE profile_presets (
     targets_low_json TEXT CHECK(length(targets_low_json) <= 2048 AND json_valid(targets_low_json)), -- { [high, low] }
 
     -- loop settings
-    loop_settings_json TEXT CHECK(length(loop_settings_json) <= 2048 AND json_valid(loop_settings_json)), -- some loops (e.g. Loop) store settings on the profile
-    remote_settings_json TEXT CHECK(length(remote_settings_json) <= 2048 AND json_valid(remote_settings_json)), -- Trio's remote control settings
+    -- The loop_settings the profile was sent with: Loop's settings, and Trio's remote control settings
+    loop_settings_id TEXT CHECK(length(loop_settings_id) = 64),
+    remote_settings_id TEXT CHECK(length(remote_settings_id) = 64),
 
     -- Default Stuff
     raw_json_data TEXT CHECK(length(raw_json_data) <= 8192  AND json_valid(raw_json_data)), -- This is the largest user derived string, and should be culled quickly

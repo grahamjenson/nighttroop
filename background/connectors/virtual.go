@@ -62,7 +62,9 @@ func VirtualDocuments(end time.Time, span time.Duration) []virtualDoc {
 		{nsutils.Treatments, map[string]any{"eventType": "Temp Basal", "rate": 0.85, "absolute": 0.85, "duration": 30, "date": startMs, "device": VirtualDevice}},
 		{nsutils.Treatments, map[string]any{"eventType": "Temporary Target", "targetBottom": 100, "targetTop": 120, "units": "mg/dL", "duration": 30, "reason": "Virtual", "date": startMs, "device": VirtualDevice}},
 		{nsutils.Treatments, map[string]any{"eventType": "Profile Switch", "profile": "Virtual", "percentage": 100, "duration": 0, "profileJson": string(profileJSON), "date": startMs, "device": VirtualDevice}},
-		{nsutils.Profile, map[string]any{"defaultProfile": "Virtual", "date": startMs, "device": VirtualDevice, "store": map[string]any{"Virtual": profile}}},
+		// Its Loop settings, without where pushes go, so it registers no push device
+		{nsutils.Profile, map[string]any{"defaultProfile": "Virtual", "date": startMs, "device": VirtualDevice, "store": map[string]any{"Virtual": profile},
+			"loopSettings": map[string]any{"dosingEnabled": true, "dosingStrategy": "automaticBolus", "maximumBasalRatePerHour": 3, "maximumBolus": 10, "minimumBGGuard": 80, "preMealTargetRange": []float64{80, 90}}}},
 	}
 	for t := start; !t.After(end); t = t.Add(virtualSlot) {
 		idx := int(t.Unix()/int64(virtualSlot.Seconds())) % len(virtualGlucose)

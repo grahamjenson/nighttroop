@@ -54,6 +54,7 @@ var Pages = []Page{
 	{Hub: Data, Group: "Devices", Label: "Device Status", Path: "/data/device-status", ID: "site--data--device-status-button", Icon: icon.Smartphone, Store: "device_statuses"},
 	{Hub: Data, Group: "Presets", Label: "Food Presets", Path: "/presets/food", ID: "site--presets--food-button", Icon: icon.Utensils, Store: "food_presets"},
 	{Hub: Data, Group: "Presets", Label: "Profiles", Path: "/presets/profiles", ID: "site--presets--profiles-button", Icon: icon.CalendarClock, Store: "profile_presets"},
+	{Hub: Data, Group: "Presets", Label: "Loop Settings", Path: "/presets/loop-settings", ID: "site--presets--loop-settings-button", Icon: icon.Settings2, Store: "loop_settings"},
 
 	{Hub: Reports, Label: "AGP", Path: "/reports", ID: "site--reports--agp-button", Icon: icon.ChartLine, Store: "summary_periods"},
 	{Hub: Reports, Label: "TDD", Path: "/reports/tdd", ID: "site--reports--tdd-menu-button", Icon: icon.ChartColumn, Store: "summary_daily"},
@@ -96,6 +97,7 @@ var keywords = map[string][]string{
 	"/settings/push-credentials": {"APNs", "Apple", "Firebase", "FCM", "Bundle IDs"},
 	"/presets/food":              {"Carbs", "Fat", "Protein", "Fibre", "Portions", "Pre-bolus"},
 	"/presets/profiles":          {"Basal Rates", "Carb Ratio", "Insulin Sensitivity", "Targets"},
+	"/presets/loop-settings":     {"Loop Configuration", "Trio", "AAPS", "Max Bolus", "Max Basal", "Override Presets"},
 }
 
 // synonyms are what people also call a word in a page's name, which the search also finds the page by

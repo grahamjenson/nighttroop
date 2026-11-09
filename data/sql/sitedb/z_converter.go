@@ -1285,13 +1285,13 @@ func ProfilePresetToCreate(source ProfilePreset) CreateProfilePresetParams {
 		xstring6 := *source.TargetsLowJson
 		sitedbCreateProfilePresetParams.TargetsLowJson = &xstring6
 	}
-	if source.LoopSettingsJson != nil {
-		xstring7 := *source.LoopSettingsJson
-		sitedbCreateProfilePresetParams.LoopSettingsJson = &xstring7
+	if source.LoopSettingsID != nil {
+		xstring7 := *source.LoopSettingsID
+		sitedbCreateProfilePresetParams.LoopSettingsID = &xstring7
 	}
-	if source.RemoteSettingsJson != nil {
-		xstring8 := *source.RemoteSettingsJson
-		sitedbCreateProfilePresetParams.RemoteSettingsJson = &xstring8
+	if source.RemoteSettingsID != nil {
+		xstring8 := *source.RemoteSettingsID
+		sitedbCreateProfilePresetParams.RemoteSettingsID = &xstring8
 	}
 	sitedbCreateProfilePresetParams.OccurredAt = source.OccurredAt
 	if source.UtcOffsetMinutes != nil {
@@ -2813,7 +2813,10 @@ func typesDeviceReportOtherToTypesDeviceReportOther(source types.DeviceReportOth
 		xstring3 := *source.LoopName
 		typesDeviceReportOther.LoopName = &xstring3
 	}
-	typesDeviceReportOther.ConfigurationSettings = jsontextValueToJsontextValue(source.ConfigurationSettings)
+	if source.ConfigurationID != nil {
+		xstring4 := *source.ConfigurationID
+		typesDeviceReportOther.ConfigurationID = &xstring4
+	}
 	typesDeviceReportOther.LoopSettings = jsontextValueToJsontextValue(source.LoopSettings)
 	if source.LoopPredictionsStartTime != nil {
 		xint642 := *source.LoopPredictionsStartTime

@@ -217,6 +217,25 @@ type LoginToken struct {
 	Token string `json:"token"`
 }
 
+// LoopSettings A set of a loop app's settings, kept once however often it was sent: Loop's from its profiles, Trio's remote settings from its profiles, and AAPS's configuration from its device statuses
+type LoopSettings struct {
+	// App loop, trio or aaps
+	App                 string  `json:"app"`
+	CreatedAt           int64   `json:"created_at"`
+	CreatedByDeviceName *string `json:"created_by_device_name"`
+	FirstSeenAt         int64   `json:"first_seen_at"`
+
+	// Id The SHA-256 of the app and the settings, in hex
+	Id         string `json:"id"`
+	LastSeenAt int64  `json:"last_seen_at"`
+
+	// Settings As the app sent them
+	Settings map[string]interface{} `json:"settings"`
+
+	// Source What they were sent in: profile or devicestatus
+	Source string `json:"source"`
+}
+
 // NsAuthorization defines model for NsAuthorization.
 type NsAuthorization struct {
 	Exp              *int64      `json:"exp,omitempty"`
@@ -425,6 +444,19 @@ type InsulinDoseList struct {
 type InsulinDoseResult struct {
 	Result *InsulinDose `json:"result,omitempty"`
 	Status *int         `json:"status,omitempty"`
+}
+
+// LoopSettingsList defines model for LoopSettingsList.
+type LoopSettingsList struct {
+	Result *[]LoopSettings `json:"result,omitempty"`
+	Status *int            `json:"status,omitempty"`
+}
+
+// LoopSettingsResult defines model for LoopSettingsResult.
+type LoopSettingsResult struct {
+	// Result A set of a loop app's settings, kept once however often it was sent: Loop's from its profiles, Trio's remote settings from its profiles, and AAPS's configuration from its device statuses
+	Result *LoopSettings `json:"result,omitempty"`
+	Status *int          `json:"status,omitempty"`
 }
 
 // NsDocuments defines model for NsDocuments.
@@ -648,6 +680,13 @@ type NsPebbleParams struct {
 
 	// Units mmol or mg/dl, the identity's own units by default
 	Units *string `form:"units,omitempty" json:"units,omitempty"`
+}
+
+// ListLoopSettingsParams defines parameters for ListLoopSettings.
+type ListLoopSettingsParams struct {
+	// Limit At most 1000
+	Limit *Limit `form:"limit,omitempty" json:"limit,omitempty"`
+	Skip  *Skip  `form:"skip,omitempty" json:"skip,omitempty"`
 }
 
 // AccountPasskeyFinishJSONBody defines parameters for AccountPasskeyFinish.
@@ -1541,6 +1580,15 @@ type ClientInterface interface {
 	// NsPebble request
 	NsPebble(ctx context.Context, params *NsPebbleParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// ListLoopSettings request
+	ListLoopSettings(ctx context.Context, params *ListLoopSettingsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteLoopSettings request
+	DeleteLoopSettings(ctx context.Context, id Id, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetLoopSettings request
+	GetLoopSettings(ctx context.Context, id Id, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// RegenerateSummaries request
 	RegenerateSummaries(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -2425,6 +2473,42 @@ func (c *Client) PasskeyLoginFinish(ctx context.Context, body PasskeyLoginFinish
 
 func (c *Client) NsPebble(ctx context.Context, params *NsPebbleParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewNsPebbleRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListLoopSettings(ctx context.Context, params *ListLoopSettingsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListLoopSettingsRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteLoopSettings(ctx context.Context, id Id, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteLoopSettingsRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetLoopSettings(ctx context.Context, id Id, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetLoopSettingsRequest(c.Server, id)
 	if err != nil {
 		return nil, err
 	}
@@ -5282,6 +5366,139 @@ func NewNsPebbleRequest(server string, params *NsPebbleParams) (*http.Request, e
 	return req, nil
 }
 
+// NewListLoopSettingsRequest generates requests for ListLoopSettings
+func NewListLoopSettingsRequest(server string, params *ListLoopSettingsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/presets/loop-settings")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "limit", runtime.ParamLocationQuery, *params.Limit); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Skip != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "skip", runtime.ParamLocationQuery, *params.Skip); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewDeleteLoopSettingsRequest generates requests for DeleteLoopSettings
+func NewDeleteLoopSettingsRequest(server string, id Id) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/presets/loop-settings/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetLoopSettingsRequest generates requests for GetLoopSettings
+func NewGetLoopSettingsRequest(server string, id Id) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/presets/loop-settings/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewRegenerateSummariesRequest generates requests for RegenerateSummaries
 func NewRegenerateSummariesRequest(server string) (*http.Request, error) {
 	var err error
@@ -5697,6 +5914,15 @@ type ClientWithResponsesInterface interface {
 
 	// NsPebbleWithResponse request
 	NsPebbleWithResponse(ctx context.Context, params *NsPebbleParams, reqEditors ...RequestEditorFn) (*NsPebbleResponse, error)
+
+	// ListLoopSettingsWithResponse request
+	ListLoopSettingsWithResponse(ctx context.Context, params *ListLoopSettingsParams, reqEditors ...RequestEditorFn) (*ListLoopSettingsResponse, error)
+
+	// DeleteLoopSettingsWithResponse request
+	DeleteLoopSettingsWithResponse(ctx context.Context, id Id, reqEditors ...RequestEditorFn) (*DeleteLoopSettingsResponse, error)
+
+	// GetLoopSettingsWithResponse request
+	GetLoopSettingsWithResponse(ctx context.Context, id Id, reqEditors ...RequestEditorFn) (*GetLoopSettingsResponse, error)
 
 	// RegenerateSummariesWithResponse request
 	RegenerateSummariesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*RegenerateSummariesResponse, error)
@@ -7026,6 +7252,75 @@ func (r NsPebbleResponse) StatusCode() int {
 	return 0
 }
 
+type ListLoopSettingsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *LoopSettingsList
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r ListLoopSettingsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListLoopSettingsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteLoopSettingsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Deleted
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteLoopSettingsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteLoopSettingsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetLoopSettingsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *LoopSettingsResult
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r GetLoopSettingsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetLoopSettingsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type RegenerateSummariesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -7785,6 +8080,33 @@ func (c *ClientWithResponses) NsPebbleWithResponse(ctx context.Context, params *
 		return nil, err
 	}
 	return ParseNsPebbleResponse(rsp)
+}
+
+// ListLoopSettingsWithResponse request returning *ListLoopSettingsResponse
+func (c *ClientWithResponses) ListLoopSettingsWithResponse(ctx context.Context, params *ListLoopSettingsParams, reqEditors ...RequestEditorFn) (*ListLoopSettingsResponse, error) {
+	rsp, err := c.ListLoopSettings(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListLoopSettingsResponse(rsp)
+}
+
+// DeleteLoopSettingsWithResponse request returning *DeleteLoopSettingsResponse
+func (c *ClientWithResponses) DeleteLoopSettingsWithResponse(ctx context.Context, id Id, reqEditors ...RequestEditorFn) (*DeleteLoopSettingsResponse, error) {
+	rsp, err := c.DeleteLoopSettings(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteLoopSettingsResponse(rsp)
+}
+
+// GetLoopSettingsWithResponse request returning *GetLoopSettingsResponse
+func (c *ClientWithResponses) GetLoopSettingsWithResponse(ctx context.Context, id Id, reqEditors ...RequestEditorFn) (*GetLoopSettingsResponse, error) {
+	rsp, err := c.GetLoopSettings(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetLoopSettingsResponse(rsp)
 }
 
 // RegenerateSummariesWithResponse request returning *RegenerateSummariesResponse
@@ -9680,6 +10002,105 @@ func ParseNsPebbleResponse(rsp *http.Response) (*NsPebbleResponse, error) {
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest NsError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListLoopSettingsResponse parses an HTTP response from a ListLoopSettingsWithResponse call
+func ParseListLoopSettingsResponse(rsp *http.Response) (*ListLoopSettingsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListLoopSettingsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest LoopSettingsList
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteLoopSettingsResponse parses an HTTP response from a DeleteLoopSettingsWithResponse call
+func ParseDeleteLoopSettingsResponse(rsp *http.Response) (*DeleteLoopSettingsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteLoopSettingsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Deleted
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetLoopSettingsResponse parses an HTTP response from a GetLoopSettingsWithResponse call
+func ParseGetLoopSettingsResponse(rsp *http.Response) (*GetLoopSettingsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetLoopSettingsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest LoopSettingsResult
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

@@ -150,6 +150,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createTempTargetStmt, err = db.PrepareContext(ctx, createTempTarget); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateTempTarget: %w", err)
 	}
+	if q.deleteLoopSettingsStmt, err = db.PrepareContext(ctx, deleteLoopSettings); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteLoopSettings: %w", err)
+	}
 	if q.deleteSummaryPeriodsStmt, err = db.PrepareContext(ctx, deleteSummaryPeriods); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteSummaryPeriods: %w", err)
 	}
@@ -215,6 +218,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.getLatestDeviceReportWithPWDInformationStmt, err = db.PrepareContext(ctx, getLatestDeviceReportWithPWDInformation); err != nil {
 		return nil, fmt.Errorf("error preparing query GetLatestDeviceReportWithPWDInformation: %w", err)
+	}
+	if q.getLoopSettingsStmt, err = db.PrepareContext(ctx, getLoopSettings); err != nil {
+		return nil, fmt.Errorf("error preparing query GetLoopSettings: %w", err)
 	}
 	if q.getMostRecentProfileStoreStmt, err = db.PrepareContext(ctx, getMostRecentProfileStore); err != nil {
 		return nil, fmt.Errorf("error preparing query GetMostRecentProfileStore: %w", err)
@@ -348,6 +354,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.searchInsulinDosesStmt, err = db.PrepareContext(ctx, searchInsulinDoses); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchInsulinDoses: %w", err)
 	}
+	if q.searchLoopSettingsStmt, err = db.PrepareContext(ctx, searchLoopSettings); err != nil {
+		return nil, fmt.Errorf("error preparing query SearchLoopSettings: %w", err)
+	}
 	if q.searchNotificationEventsStmt, err = db.PrepareContext(ctx, searchNotificationEvents); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchNotificationEvents: %w", err)
 	}
@@ -455,6 +464,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.updateTempTargetStmt, err = db.PrepareContext(ctx, updateTempTarget); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateTempTarget: %w", err)
+	}
+	if q.upsertLoopSettingsStmt, err = db.PrepareContext(ctx, upsertLoopSettings); err != nil {
+		return nil, fmt.Errorf("error preparing query UpsertLoopSettings: %w", err)
 	}
 	if q.upsertSummaryPeriodStmt, err = db.PrepareContext(ctx, upsertSummaryPeriod); err != nil {
 		return nil, fmt.Errorf("error preparing query UpsertSummaryPeriod: %w", err)
@@ -674,6 +686,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createTempTargetStmt: %w", cerr)
 		}
 	}
+	if q.deleteLoopSettingsStmt != nil {
+		if cerr := q.deleteLoopSettingsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteLoopSettingsStmt: %w", cerr)
+		}
+	}
 	if q.deleteSummaryPeriodsStmt != nil {
 		if cerr := q.deleteSummaryPeriodsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteSummaryPeriodsStmt: %w", cerr)
@@ -782,6 +799,11 @@ func (q *Queries) Close() error {
 	if q.getLatestDeviceReportWithPWDInformationStmt != nil {
 		if cerr := q.getLatestDeviceReportWithPWDInformationStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getLatestDeviceReportWithPWDInformationStmt: %w", cerr)
+		}
+	}
+	if q.getLoopSettingsStmt != nil {
+		if cerr := q.getLoopSettingsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getLoopSettingsStmt: %w", cerr)
 		}
 	}
 	if q.getMostRecentProfileStoreStmt != nil {
@@ -1004,6 +1026,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing searchInsulinDosesStmt: %w", cerr)
 		}
 	}
+	if q.searchLoopSettingsStmt != nil {
+		if cerr := q.searchLoopSettingsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing searchLoopSettingsStmt: %w", cerr)
+		}
+	}
 	if q.searchNotificationEventsStmt != nil {
 		if cerr := q.searchNotificationEventsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing searchNotificationEventsStmt: %w", cerr)
@@ -1184,6 +1211,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateTempTargetStmt: %w", cerr)
 		}
 	}
+	if q.upsertLoopSettingsStmt != nil {
+		if cerr := q.upsertLoopSettingsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing upsertLoopSettingsStmt: %w", cerr)
+		}
+	}
 	if q.upsertSummaryPeriodStmt != nil {
 		if cerr := q.upsertSummaryPeriodStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing upsertSummaryPeriodStmt: %w", cerr)
@@ -1270,6 +1302,7 @@ type Queries struct {
 	createProfileSwitchStmt                     *sql.Stmt
 	createTempBasalStmt                         *sql.Stmt
 	createTempTargetStmt                        *sql.Stmt
+	deleteLoopSettingsStmt                      *sql.Stmt
 	deleteSummaryPeriodsStmt                    *sql.Stmt
 	deviceReportAscendingIDsStmt                *sql.Stmt
 	deviceReportHistoryIDsStmt                  *sql.Stmt
@@ -1292,6 +1325,7 @@ type Queries struct {
 	getGlucoseReadingStmt                       *sql.Stmt
 	getInsulinDoseStmt                          *sql.Stmt
 	getLatestDeviceReportWithPWDInformationStmt *sql.Stmt
+	getLoopSettingsStmt                         *sql.Stmt
 	getMostRecentProfileStoreStmt               *sql.Stmt
 	getNotificationEventStmt                    *sql.Stmt
 	getProfilePresetStmt                        *sql.Stmt
@@ -1336,6 +1370,7 @@ type Queries struct {
 	searchFoodPresetsStmt                       *sql.Stmt
 	searchGlucoseReadingsStmt                   *sql.Stmt
 	searchInsulinDosesStmt                      *sql.Stmt
+	searchLoopSettingsStmt                      *sql.Stmt
 	searchNotificationEventsStmt                *sql.Stmt
 	searchProfileStoresStmt                     *sql.Stmt
 	searchProfileSwitchesStmt                   *sql.Stmt
@@ -1372,6 +1407,7 @@ type Queries struct {
 	updateProfileSwitchStmt                     *sql.Stmt
 	updateTempBasalStmt                         *sql.Stmt
 	updateTempTargetStmt                        *sql.Stmt
+	upsertLoopSettingsStmt                      *sql.Stmt
 	upsertSummaryPeriodStmt                     *sql.Stmt
 }
 
@@ -1421,6 +1457,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		createProfileSwitchStmt:                     q.createProfileSwitchStmt,
 		createTempBasalStmt:                         q.createTempBasalStmt,
 		createTempTargetStmt:                        q.createTempTargetStmt,
+		deleteLoopSettingsStmt:                      q.deleteLoopSettingsStmt,
 		deleteSummaryPeriodsStmt:                    q.deleteSummaryPeriodsStmt,
 		deviceReportAscendingIDsStmt:                q.deviceReportAscendingIDsStmt,
 		deviceReportHistoryIDsStmt:                  q.deviceReportHistoryIDsStmt,
@@ -1443,6 +1480,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getGlucoseReadingStmt:                       q.getGlucoseReadingStmt,
 		getInsulinDoseStmt:                          q.getInsulinDoseStmt,
 		getLatestDeviceReportWithPWDInformationStmt: q.getLatestDeviceReportWithPWDInformationStmt,
+		getLoopSettingsStmt:                         q.getLoopSettingsStmt,
 		getMostRecentProfileStoreStmt:               q.getMostRecentProfileStoreStmt,
 		getNotificationEventStmt:                    q.getNotificationEventStmt,
 		getProfilePresetStmt:                        q.getProfilePresetStmt,
@@ -1487,6 +1525,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		searchFoodPresetsStmt:                       q.searchFoodPresetsStmt,
 		searchGlucoseReadingsStmt:                   q.searchGlucoseReadingsStmt,
 		searchInsulinDosesStmt:                      q.searchInsulinDosesStmt,
+		searchLoopSettingsStmt:                      q.searchLoopSettingsStmt,
 		searchNotificationEventsStmt:                q.searchNotificationEventsStmt,
 		searchProfileStoresStmt:                     q.searchProfileStoresStmt,
 		searchProfileSwitchesStmt:                   q.searchProfileSwitchesStmt,
@@ -1523,6 +1562,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateProfileSwitchStmt:                     q.updateProfileSwitchStmt,
 		updateTempBasalStmt:                         q.updateTempBasalStmt,
 		updateTempTargetStmt:                        q.updateTempTargetStmt,
+		upsertLoopSettingsStmt:                      q.upsertLoopSettingsStmt,
 		upsertSummaryPeriodStmt:                     q.upsertSummaryPeriodStmt,
 	}
 }

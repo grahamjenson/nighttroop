@@ -277,8 +277,6 @@ func DBModelToProfileStore(source *sitedb.ProfilePreset, context *httputils.Site
 			constsUnits := constsUnitsToConstsUnits(*(*source).Units)
 			nightscoutmodelsProfileStore.Units = &constsUnits
 		}
-		nightscoutmodelsProfileStore.LoopSettings = JSONToLoopSettings((*source).LoopSettingsJson)
-		nightscoutmodelsProfileStore.RemoteSettings = JSONToRemoteSettings((*source).RemoteSettingsJson)
 		if (*source).CreatedByDeviceName != nil {
 			typesShortString := types.ShortString(*(*source).CreatedByDeviceName)
 			nightscoutmodelsProfileStore.Device = &typesShortString

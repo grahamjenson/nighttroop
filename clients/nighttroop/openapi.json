@@ -159,6 +159,25 @@
         "responses": { "200": { "$ref": "#/components/responses/Deleted" }, "default": { "$ref": "#/components/responses/Error" } }
       }
     },
+    "/presets/loop-settings": {
+      "get": {
+        "operationId": "ListLoopSettings",
+        "parameters": [{ "$ref": "#/components/parameters/Limit" }, { "$ref": "#/components/parameters/Skip" }],
+        "responses": { "200": { "$ref": "#/components/responses/LoopSettingsList" }, "default": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/presets/loop-settings/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/Id" }],
+      "get": {
+        "operationId": "GetLoopSettings",
+        "responses": { "200": { "$ref": "#/components/responses/LoopSettingsResult" }, "default": { "$ref": "#/components/responses/Error" } }
+      },
+      "delete": {
+        "operationId": "DeleteLoopSettings",
+        "description": "Deletes the settings for good. The profiles and device statuses sent with them are kept, and read back without them.",
+        "responses": { "200": { "$ref": "#/components/responses/Deleted" }, "default": { "$ref": "#/components/responses/Error" } }
+      }
+    },
     "/data/summary-periods/{id}": {
       "get": {
         "operationId": "GetSummaryPeriod",
@@ -498,6 +517,8 @@
       "InsulinDoseResult": { "description": "A dose", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "$ref": "#/components/schemas/InsulinDose" } } } } } },
       "InsulinDoseList": { "description": "Doses, newest first", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "type": "array", "items": { "$ref": "#/components/schemas/InsulinDose" } } } } } } },
       "FoodIntakeResult": { "description": "A food intake", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "$ref": "#/components/schemas/FoodIntake" } } } } } },
+      "LoopSettingsResult": { "description": "A set of a loop app's settings", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "$ref": "#/components/schemas/LoopSettings" } } } } } },
+      "LoopSettingsList": { "description": "Each set of the loop apps' settings, the last seen first", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "type": "array", "items": { "$ref": "#/components/schemas/LoopSettings" } } } } } } },
       "FoodIntakeList": { "description": "Food intakes, newest first", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "type": "array", "items": { "$ref": "#/components/schemas/FoodIntake" } } } } } } },
       "NsError": { "description": "A Nightscout error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
       "NsObject": { "description": "A Nightscout response", "content": { "application/json": { "schema": { "type": "object", "additionalProperties": true } } } },
@@ -593,6 +614,21 @@
             }
           }
         ]
+      },
+      "LoopSettings": {
+        "type": "object",
+        "description": "A set of a loop app's settings, kept once however often it was sent: Loop's from its profiles, Trio's remote settings from its profiles, and AAPS's configuration from its device statuses",
+        "required": ["id", "app", "source", "settings", "first_seen_at", "last_seen_at", "created_at"],
+        "properties": {
+          "id": { "type": "string", "description": "The SHA-256 of the app and the settings, in hex" },
+          "app": { "type": "string", "description": "loop, trio or aaps" },
+          "source": { "type": "string", "description": "What they were sent in: profile or devicestatus" },
+          "settings": { "type": "object", "additionalProperties": true, "description": "As the app sent them" },
+          "first_seen_at": { "type": "integer", "format": "int64" },
+          "last_seen_at": { "type": "integer", "format": "int64" },
+          "created_by_device_name": { "type": "string", "nullable": true },
+          "created_at": { "type": "integer", "format": "int64" }
+        }
       },
       "FoodIntake": {
         "allOf": [
