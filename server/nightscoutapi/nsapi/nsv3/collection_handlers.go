@@ -63,7 +63,7 @@ func Create(store nsutils.Store) http.HandlerFunc {
 			return
 		}
 
-		record, duplicate, err := store.Create(r.Context(), collection, doc, nsutils.RawParam(r))
+		record, duplicate, err := store.Create(r.Context(), collection, doc)
 		if err != nil {
 			apiutils.WriteJSON(w, http.StatusBadRequest, map[string]any{"status": http.StatusBadRequest, "message": err.Error()})
 			return
@@ -138,7 +138,7 @@ func Replace(store nsutils.Store) http.HandlerFunc {
 			return
 		}
 		// A record changed after If-Unmodified-Since is not replaced, so a client cannot overwrite a change it has not seen
-		record, created, err := store.Replace(nsutils.WithIfUnmodifiedSince(r), collection, identifier, doc, canCreate, nsutils.RawParam(r))
+		record, created, err := store.Replace(nsutils.WithIfUnmodifiedSince(r), collection, identifier, doc, canCreate)
 
 		if err != nil {
 			nsutils.WriteError(w, err)
@@ -166,7 +166,7 @@ func Patch(store nsutils.Store) http.HandlerFunc {
 			return
 		}
 		// A record changed after If-Unmodified-Since is not patched, so a client cannot overwrite a change it has not seen
-		record, err := store.Patch(nsutils.WithIfUnmodifiedSince(r), collection, identifier, doc, nsutils.RawParam(r))
+		record, err := store.Patch(nsutils.WithIfUnmodifiedSince(r), collection, identifier, doc)
 
 		if err != nil {
 			nsutils.WriteError(w, err)

@@ -20,13 +20,13 @@ import (
 
 // CollectionStore is what the Nightscout API does with a collection
 type CollectionStore interface {
-	Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (nsutils.Document, bool, *nsutils.HTTPError)
+	Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (nsutils.Document, bool, *nsutils.HTTPError)
 	Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (nsutils.Document, *nsutils.HTTPError)
 	Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Document, *nsutils.HTTPError)
 	// History is what changed since, deleted too, the oldest change first, as API v3 history
 	History(ctx context.Context, siteContext *httputils.SiteContext, since int64, query nsquery.Query) ([]nsutils.Document, *nsutils.HTTPError)
-	Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool, raw bool) (nsutils.Document, bool, *nsutils.HTTPError)
-	Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, raw bool) (nsutils.Document, *nsutils.HTTPError)
+	Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool) (nsutils.Document, bool, *nsutils.HTTPError)
+	Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (nsutils.Document, *nsutils.HTTPError)
 	Delete(ctx context.Context, siteContext *httputils.SiteContext, identifier string, permanent bool) *nsutils.HTTPError
 	DeleteType(ctx context.Context, siteContext *httputils.SiteContext, typeString string, permanent bool) (int, *nsutils.HTTPError)
 	DeleteQuery(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) (int, *nsutils.HTTPError)
@@ -134,7 +134,6 @@ type SharedDBFields interface {
 	GetCreatedAt() int64
 	GetUpdatedAt() int64
 	GetDeletedAt() *int64
-	GetRawJsonData() *string
 	GetCreatedByAppName() *string
 	GetCreatedByDeviceName() *string
 	GetCreatedByIdentityName() string
@@ -148,22 +147,15 @@ func (c Collection[NS, DM]) Record(model any, siteContext *httputils.SiteContext
 	if !ok || dbModel == nil {
 		return nil, false
 	}
-	return c.document(dbModel, siteContext, false), true
+	return c.document(dbModel, siteContext), true
 }
 
-// document is a database model as this collection's document, as the JSON it was sent as when raw is asked for and
-// that JSON can be read
-func (c Collection[NS, DM]) document(dbModel *DM, siteContext *httputils.SiteContext, raw bool) nsutils.Document {
-	m, rawJSON := row(*dbModel)
-	doc := stored[NS]{meta: m}
-	if raw && rawJSON != nil && json.Unmarshal([]byte(*rawJSON), &doc.raw) == nil && doc.raw != nil {
-		return doc
-	}
-	doc.raw, doc.model, doc.unitsLabels = nil, c.db.ToNS(dbModel, siteContext), unitsLabels(siteContext)
-	return doc
+// document is a database model as this collection's document
+func (c Collection[NS, DM]) document(dbModel *DM, siteContext *httputils.SiteContext) nsutils.Document {
+	return stored[NS]{meta: row(*dbModel), model: c.db.ToNS(dbModel, siteContext), unitsLabels: unitsLabels(siteContext)}
 }
 
-func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (nsutils.Document, bool, *nsutils.HTTPError) {
+func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (nsutils.Document, bool, *nsutils.HTTPError) {
 	m := c.db
 	var nsModel NS
 	err := utils.ConvertViaJSON(data, &nsModel)
@@ -204,10 +196,10 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 	}
 	// One naming its identifier repeats its duplicate only with the same date, as Loop sends a dose again when it ends
 	if duplicateDBModel != nil && (identifier == nil || (nsModel.GetDate() != nil && *nsModel.GetDate() == (*duplicateDBModel).GetOccurredAt())) {
-		return c.repeated(ctx, siteContext, tx, q, nsModel, duplicateDBModel, raw)
+		return c.repeated(ctx, siteContext, tx, q, nsModel, duplicateDBModel)
 	}
 	if duplicateDBModel != nil {
-		return c.document(duplicateDBModel, siteContext, raw), true, nil
+		return c.document(duplicateDBModel, siteContext), true, nil
 	}
 
 	dbModel, err := m.CreateModel(
@@ -228,14 +220,14 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 
 	siteContext.PublishModelChange(events.Created, dbModel)
 	c.afterStored(ctx, siteContext, nsModel)
-	return c.document(dbModel, siteContext, raw), false, nil
+	return c.document(dbModel, siteContext), false, nil
 }
 
 // repeated is the duplicate a create repeats, given the create's values when the collection is a CollectionRefresher
-func (c Collection[NS, DM]) repeated(ctx context.Context, siteContext *httputils.SiteContext, tx *sql.Tx, q *sitedb.Queries, nsModel NS, duplicate *DM, raw bool) (nsutils.Document, bool, *nsutils.HTTPError) {
+func (c Collection[NS, DM]) repeated(ctx context.Context, siteContext *httputils.SiteContext, tx *sql.Tx, q *sitedb.Queries, nsModel NS, duplicate *DM) (nsutils.Document, bool, *nsutils.HTTPError) {
 	refresher, ok := any(c.db).(CollectionRefresher[NS, DM])
 	if !ok {
-		return c.document(duplicate, siteContext, raw), true, nil
+		return c.document(duplicate, siteContext), true, nil
 	}
 	refreshed, changed, err := refresher.Refresh(q, ctx, nsModel, duplicate, converterContext(siteContext))
 	if httpErr := c.stored(refreshed, err, "refresh"); httpErr != nil {
@@ -248,7 +240,7 @@ func (c Collection[NS, DM]) repeated(ctx context.Context, siteContext *httputils
 		siteContext.PublishModelChange(events.Updated, refreshed)
 		c.afterStored(ctx, siteContext, nsModel)
 	}
-	return c.document(refreshed, siteContext, raw), true, nil
+	return c.document(refreshed, siteContext), true, nil
 }
 
 // identifiedDuplicate is the model a create naming its identifier repeats, as in Nightscout, which keeps that
@@ -289,7 +281,7 @@ func (c Collection[NS, DM]) Get(ctx context.Context, siteContext *httputils.Site
 	if dbModel == nil {
 		return nil, nsutils.ErrNotFound
 	}
-	return c.document(dbModel, siteContext, query.Raw), nil
+	return c.document(dbModel, siteContext), nil
 }
 
 func (c Collection[NS, DM]) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Document, *nsutils.HTTPError) {
@@ -302,7 +294,7 @@ func (c Collection[NS, DM]) Search(ctx context.Context, siteContext *httputils.S
 		slog.ErrorContext(ctx, "failed to search the database", "error", err, "collection", c.db.Name())
 		return nil, nsutils.ErrInternal
 	}
-	return c.documents(models, siteContext, query.Raw), nil
+	return c.documents(models, siteContext), nil
 }
 
 // History finds what changed in updated_at's index, then reads each by its primary key, so a page starts from since
@@ -330,14 +322,14 @@ func (c Collection[NS, DM]) History(ctx context.Context, siteContext *httputils.
 		return cmp.Or(cmp.Compare((*a).GetUpdatedAt(), (*b).GetUpdatedAt()), cmp.Compare((*a).GetOccurredAt(), (*b).GetOccurredAt()),
 			cmp.Compare((*a).GetID(), (*b).GetID()))
 	})
-	return c.documents(models, siteContext, query.Raw), nil
+	return c.documents(models, siteContext), nil
 }
 
 // documents are the database models as this collection's documents
-func (c Collection[NS, DM]) documents(models []*DM, siteContext *httputils.SiteContext, raw bool) []nsutils.Document {
+func (c Collection[NS, DM]) documents(models []*DM, siteContext *httputils.SiteContext) []nsutils.Document {
 	docs := make([]nsutils.Document, len(models))
 	for i, model := range models {
-		docs[i] = c.document(model, siteContext, raw)
+		docs[i] = c.document(model, siteContext)
 	}
 	return docs
 }
@@ -486,7 +478,7 @@ func (c Collection[NS, DM]) DeleteQuery(ctx context.Context, siteContext *httput
 	return len(found), nil
 }
 
-func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, data map[string]any, canCreate bool, raw bool) (nsutils.Document, bool, *nsutils.HTTPError) {
+func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, data map[string]any, canCreate bool) (nsutils.Document, bool, *nsutils.HTTPError) {
 	m := c.db
 	var nsModel NS
 	err := utils.ConvertViaJSON(data, &nsModel)
@@ -525,7 +517,7 @@ func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.
 		siteContext.PublishModelChange(events.Updated, dbCreateModel)
 	}
 	c.afterStored(ctx, siteContext, nsModel)
-	return c.document(dbCreateModel, siteContext, raw), creatingNewRecord, nil
+	return c.document(dbCreateModel, siteContext), creatingNewRecord, nil
 }
 
 // removeReplaced is the record a replace takes the place of, deleted for good so its replacement can take its
@@ -570,7 +562,7 @@ func (c Collection[NS, DM]) validateReplace(ctx context.Context, nsModel NS, rep
 	return nil
 }
 
-func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, data map[string]any, raw bool) (nsutils.Document, *nsutils.HTTPError) {
+func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, data map[string]any) (nsutils.Document, *nsutils.HTTPError) {
 	m := c.db
 	patcher, ok := any(m).(CollectionPatcher[NS, DM])
 	if !ok {
@@ -638,7 +630,7 @@ func (c Collection[NS, DM]) Patch(ctx context.Context, siteContext *httputils.Si
 	}
 
 	siteContext.PublishModelChange(events.Updated, dbModel)
-	return c.document(dbModel, siteContext, raw), nil
+	return c.document(dbModel, siteContext), nil
 }
 
 func ValidateInputData(nsModelMap map[string]any) *nsutils.HTTPError {

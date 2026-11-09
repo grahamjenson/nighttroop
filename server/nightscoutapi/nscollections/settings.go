@@ -43,7 +43,7 @@ func settingDocument(source *settings.SettingAnyType) nsutils.Document {
 // You have to pass an identifier along to match with the settings
 // ///
 
-func (c SettingsCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any, raw bool) (nsutils.Document, bool, *nsutils.HTTPError) {
+func (c SettingsCollection) Create(ctx context.Context, siteContext *httputils.SiteContext, data map[string]any) (nsutils.Document, bool, *nsutils.HTTPError) {
 	var nsModel nightscoutmodels.Setting
 	err := utils.ConvertViaJSON(data, &nsModel)
 	if err != nil {
@@ -65,7 +65,7 @@ func (c SettingsCollection) Create(ctx context.Context, siteContext *httputils.S
 	return settingDocument(sm), false, nil
 }
 
-func (c SettingsCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool, raw bool) (nsutils.Document, bool, *nsutils.HTTPError) {
+func (c SettingsCollection) Replace(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, canCreate bool) (nsutils.Document, bool, *nsutils.HTTPError) {
 	if identifier == "" {
 		slog.ErrorContext(ctx, "setting identifier not available", "data", patch, "collection", "settings")
 		return nil, false, nsutils.ErrNotFound
@@ -99,7 +99,7 @@ func (c SettingsCollection) Replace(ctx context.Context, siteContext *httputils.
 	return settingDocument(sm), false, nil
 }
 
-func (c SettingsCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any, raw bool) (nsutils.Document, *nsutils.HTTPError) {
+func (c SettingsCollection) Patch(ctx context.Context, siteContext *httputils.SiteContext, identifier string, patch map[string]any) (nsutils.Document, *nsutils.HTTPError) {
 	if identifier == "" {
 		slog.ErrorContext(ctx, "setting identifier not available", "data", patch, "collection", "settings")
 		return nil, nsutils.ErrNotFound
@@ -108,7 +108,7 @@ func (c SettingsCollection) Patch(ctx context.Context, siteContext *httputils.Si
 		patch["identifier"] = identifier
 	}
 
-	record, _, err := c.Replace(ctx, siteContext, identifier, patch, false, raw)
+	record, _, err := c.Replace(ctx, siteContext, identifier, patch, false)
 	if err != nil {
 		return nil, err
 	}
@@ -208,10 +208,6 @@ func (s *SettingAny) GetCreatedByAppName() *string {
 
 func (s *SettingAny) GetCreatedByDeviceName() *string {
 	return ptr("")
-}
-
-func (s *SettingAny) GetRawJsonData() *string {
-	return nil
 }
 
 func UpdateIndividualSetting(ctx context.Context, siteContext *httputils.SiteContext, identifier string, value any) (*settings.SettingAnyType, *nsutils.HTTPError) {

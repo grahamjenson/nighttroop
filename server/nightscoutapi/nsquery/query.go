@@ -41,7 +41,6 @@ type Query struct {
 
 	IncludeDeleted bool `json:"includeDeleted,omitempty"`
 
-	Raw bool `json:"raw,omitempty"`
 	// Altering Return values or structure
 	// Limits
 	Limit int64 `json:"limit,omitempty"`
@@ -98,7 +97,7 @@ type Query struct {
 
 // DatesOnly is whether the query filters on nothing but the date range, whatever it asks of the documents found
 func (q Query) DatesOnly() bool {
-	q.DateGTE, q.DateGT, q.DateEQ, q.DateLTE, q.DateLT, q.IncludeDeleted, q.Raw = nil, nil, nil, nil, nil, false, false
+	q.DateGTE, q.DateGT, q.DateEQ, q.DateLTE, q.DateLT, q.IncludeDeleted = nil, nil, nil, nil, nil, false
 	q.Limit, q.Skip, q.CountGiven, q.HasFilters, q.SortOrder, q.Fields, q.Envelope = 0, 0, false, false, nil, nil, nil
 	others, err := json.Marshal(q)
 	return err == nil && string(others) == "{}"

@@ -1102,9 +1102,6 @@ func QueryValueToQuery(source QueryValues) Query {
 	if source.IncludeDeleted != nil {
 		nsqueryQuery.IncludeDeleted = typesFlexibleBoolToBool(*source.IncludeDeleted)
 	}
-	if source.Raw != nil {
-		nsqueryQuery.Raw = typesFlexibleBoolToBool(*source.Raw)
-	}
 	nsqueryQuery.Limit = GetLimitInt64(source)
 	nsqueryQuery.Skip = GetSkipInt64(source)
 	nsqueryQuery.CountGiven = GetCountGiven(source)

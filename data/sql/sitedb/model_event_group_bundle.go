@@ -40,10 +40,6 @@ func (model EventGroupsBundle) GetUtcOffsetMinutes() *int64 {
 	return model.EventGroup.UtcOffsetMinutes
 }
 
-func (model EventGroupsBundle) GetRawJsonData() *string {
-	return model.EventGroup.RawJsonData
-}
-
 type EventGroupsBundle struct {
 	EventGroup        EventGroup
 	GlucoseReading    *GlucoseReading

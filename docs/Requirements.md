@@ -559,7 +559,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 - A v1 search by `find[_id]` that finds nothing, such as a deleted treatment, is an empty list, not a 404.
 - A search with a filter on a field or with an operator Nighttroop does not know, a v1 `find[...]` (e.g.
   `find[notes]=x`) or a v3 `field$operator` (e.g. `notes$eq=x`), is an empty list, as nothing would match in
-  Nightscout. Any other parameter, such as xDrip+'s `rr`, is not a filter and is left out.
+  Nightscout. Any other parameter, such as xDrip+'s `rr` or `raw`, is not a filter and is left out, so a document is
+  always as Nighttroop keeps it, never the JSON it was sent as.
 - A v1 `DELETE /api/v1/entries.json` with `find[type]` and `find[date][$gte]`, `find[date][$lte]` or
   `find[date][$in][]`, as xDrip4iOS deletes readings, soft deletes the entries found, at most 1000 each time, saying
   how many in `deletedCount`; any other filter, or none on the date, is a 400, and it needs a token that can delete.

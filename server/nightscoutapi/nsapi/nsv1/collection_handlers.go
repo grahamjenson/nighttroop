@@ -114,9 +114,9 @@ func Create(store nsutils.Store) http.HandlerFunc {
 			var record nsutils.Document
 			var err *nsutils.HTTPError
 			if id, ok := doc["_id"].(string); ok && nsutils.ValidateIdentifierIsntBad(id) == nil {
-				record, _, err = store.Replace(r.Context(), collection, id, doc, true, nsutils.RawParam(r))
+				record, _, err = store.Replace(r.Context(), collection, id, doc, true)
 			} else {
-				record, _, err = store.Create(r.Context(), collection, doc, nsutils.RawParam(r))
+				record, _, err = store.Create(r.Context(), collection, doc)
 			}
 			if err != nil {
 				nsutils.WriteError(w, err)
@@ -232,7 +232,7 @@ func Replace(store nsutils.Store) func(http.ResponseWriter, *http.Request) {
 			return
 		}
 
-		updated, _, herr := store.Replace(r.Context(), collection, identifier, body, canCreate, nsutils.RawParam(r))
+		updated, _, herr := store.Replace(r.Context(), collection, identifier, body, canCreate)
 		if herr != nil {
 			nsutils.WriteError(w, herr)
 			return

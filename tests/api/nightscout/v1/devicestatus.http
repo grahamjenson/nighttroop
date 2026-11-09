@@ -117,7 +117,3 @@ ASSERT_EQUALS 46 "@0.pump.reservoir"
 
 
 
-NAME get_raw_devicestatus_v1
-GET http://{{ site }}/api/v1/devicestatus?token={{ token }}&raw=true
-ASSERT_STATUS 200
-ASSERT_EQUALS false "@1.pump.bolusing"
