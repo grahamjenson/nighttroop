@@ -40,6 +40,15 @@ func glucoseDaysY(value, bottom, top float64) string {
 	return fmt.Sprintf("%.1f", glucoseDaysHeight*(1-display.Scale(value, bottom, top)))
 }
 
+// glucoseDaysMark is how tall a reading's mark is on a day's graph
+const glucoseDaysMark = 3.0
+
+// glucoseDaysMarkY is how far down a day's graph a reading's mark starts, so all of it is inside the graph: a reading at
+// the bottom of the axis, such as a CGM's lowest of 40 mg/dL, sits on the bottom edge rather than below it, unseen
+func glucoseDaysMarkY(value, bottom, top float64) string {
+	return fmt.Sprintf("%.1f", (glucoseDaysHeight-glucoseDaysMark)*(1-display.Scale(value, bottom, top)))
+}
+
 // glucoseDayLabel is a day's weekday and date, or Today for the first, which is today so far
 func glucoseDayLabel(day *sitemodels.SiteSummaryDaily, today bool) string {
 	if today {
@@ -77,7 +86,7 @@ func GlucoseDays(days []*sitemodels.SiteSummaryDaily) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(glucoseDaysTitle(len(days)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_days.templ`, Line: 51, Col: 84}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_days.templ`, Line: 60, Col: 84}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -95,7 +104,7 @@ func GlucoseDays(days []*sitemodels.SiteSummaryDaily) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templruntime.NewAttributeExpression("site--glucose--day--" + day.Date).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_days.templ`, Line: 54, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_days.templ`, Line: 63, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 			if templ_7745c5c3_Err != nil {
@@ -108,7 +117,7 @@ func GlucoseDays(days []*sitemodels.SiteSummaryDaily) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(glucoseDayLabel(day, i == 0))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_days.templ`, Line: 56, Col: 76}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_days.templ`, Line: 65, Col: 76}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -126,7 +135,7 @@ func GlucoseDays(days []*sitemodels.SiteSummaryDaily) templ.Component {
 				var templ_7745c5c3_Var5 string
 				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(display.Percent(day.TimeInRange))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_days.templ`, Line: 58, Col: 104}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_days.templ`, Line: 67, Col: 104}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 				if templ_7745c5c3_Err != nil {
@@ -144,7 +153,7 @@ func GlucoseDays(days []*sitemodels.SiteSummaryDaily) templ.Component {
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templruntime.NewAttributeExpression(fmt.Sprintf("0 0 %d %.0f", max(len(day.Glucose), 1), glucoseDaysHeight)).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_days.templ`, Line: 61, Col: 116}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_days.templ`, Line: 70, Col: 116}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
 			if templ_7745c5c3_Err != nil {
@@ -157,7 +166,7 @@ func GlucoseDays(days []*sitemodels.SiteSummaryDaily) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templruntime.NewAttributeExpression("Glucose on " + day.Date).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_days.templ`, Line: 61, Col: 194}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_days.templ`, Line: 70, Col: 194}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 			if templ_7745c5c3_Err != nil {
@@ -170,7 +179,7 @@ func GlucoseDays(days []*sitemodels.SiteSummaryDaily) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templruntime.NewAttributeExpression(glucoseDaysY(high, bottom, top)).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_days.templ`, Line: 62, Col: 99}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_days.templ`, Line: 71, Col: 99}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 			if templ_7745c5c3_Err != nil {
@@ -183,7 +192,7 @@ func GlucoseDays(days []*sitemodels.SiteSummaryDaily) templ.Component {
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templruntime.NewAttributeExpression(fmt.Sprintf("%.1f", glucoseDaysHeight*(high-low)/(top-bottom))).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_days.templ`, Line: 62, Col: 173}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_days.templ`, Line: 71, Col: 173}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 			if templ_7745c5c3_Err != nil {
@@ -224,7 +233,7 @@ func GlucoseDays(days []*sitemodels.SiteSummaryDaily) templ.Component {
 						var templ_7745c5c3_Var12 string
 						templ_7745c5c3_Var12, templ_7745c5c3_Err = templruntime.NewAttributeExpression(fmt.Sprint(slot)).Resolve(ctx)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_days.templ`, Line: 65, Col: 91}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_days.templ`, Line: 74, Col: 91}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 						if templ_7745c5c3_Err != nil {
@@ -235,15 +244,28 @@ func GlucoseDays(days []*sitemodels.SiteSummaryDaily) templ.Component {
 							return templ_7745c5c3_Err
 						}
 						var templ_7745c5c3_Var13 string
-						templ_7745c5c3_Var13, templ_7745c5c3_Err = templruntime.NewAttributeExpression(glucoseDaysY(*value, bottom, top)).Resolve(ctx)
+						templ_7745c5c3_Var13, templ_7745c5c3_Err = templruntime.NewAttributeExpression(glucoseDaysMarkY(*value, bottom, top)).Resolve(ctx)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_days.templ`, Line: 65, Col: 131}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_days.templ`, Line: 74, Col: 135}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "\" width=\"1.5\" height=\"3\"")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "\" width=\"1.5\" height=\"")
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+						var templ_7745c5c3_Var14 string
+						templ_7745c5c3_Var14, templ_7745c5c3_Err = templruntime.NewAttributeExpression(fmt.Sprint(glucoseDaysMark)).Resolve(ctx)
+						if templ_7745c5c3_Err != nil {
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_data_templ/glucose_days.templ`, Line: 74, Col: 186}
+						}
+						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "\"")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
@@ -257,18 +279,18 @@ func GlucoseDays(days []*sitemodels.SiteSummaryDaily) templ.Component {
 						}
 						templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "></rect>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "></rect>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</svg></li>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</svg></li>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</ol></section>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "</ol></section>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

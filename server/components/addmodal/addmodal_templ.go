@@ -37,9 +37,6 @@ const MultiplierHelp = "A percent above 0: 100% is as it is, 120% is 1.2 times."
 const percentsToFractions = "for (const input of this.querySelectorAll('[data-percent]')) { const value = ctx.request.body.get(input.name); " +
 	"if (value) ctx.request.body.set(input.name, Math.round(value * 100) / 10000) } "
 
-// PercentsToFractions is for a form of its own with Percent inputs, such as a details modal's edit form
-var PercentsToFractions = templ.Attributes{"hx-on::config:request": templ.JSUnsafeFuncCall(percentsToFractions)}
-
 // Field is one of a model's fields in its add modal
 type Field struct {
 	// Name is the model's JSON field, which the input is sent as
@@ -109,7 +106,7 @@ func Open(id string, path string, label string) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 75, Col: 9}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 72, Col: 9}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -170,7 +167,8 @@ func Modal(p Props) templ.Component {
 	})
 }
 
-// Form is the modal's form on its own, to edit a record in its details modal beside a SubmitButton
+// Form is the modal's form on its own, to edit a record in its details modal, with its Edit fields, beside a
+// SubmitButton
 func Form(p Props) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -199,7 +197,7 @@ func Form(p Props) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templruntime.NewAttributeExpression(p.ID).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 90, Col: 11}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 88, Col: 11}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 			if templ_7745c5c3_Err != nil {
@@ -212,7 +210,7 @@ func Form(p Props) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templruntime.NewAttributeExpression(p.Path).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 92, Col: 18}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 90, Col: 18}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 			if templ_7745c5c3_Err != nil {
@@ -225,7 +223,7 @@ func Form(p Props) templ.Component {
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templruntime.NewAttributeExpression(p.Target).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 93, Col: 22}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 91, Col: 22}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 			if templ_7745c5c3_Err != nil {
@@ -238,7 +236,7 @@ func Form(p Props) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templruntime.NewAttributeExpression(swap(p)).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 94, Col: 19}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 92, Col: 19}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 			if templ_7745c5c3_Err != nil {
@@ -248,7 +246,7 @@ func Form(p Props) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.RenderAttributes(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_ElementWriter, "form", formHandlers)
+			templ_7745c5c3_Err = templruntime.RenderAttributes(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_ElementWriter, "form", formHandlers(p))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -301,12 +299,19 @@ func swap(p Props) string {
 	return p.Swap
 }
 
-// formHandlers leave out the fields left blank, so they are not set rather than empty, then once a record is added,
-// empty the modal container. Only the form's own request closes it, not one of an input's within it, like loading what
-// can be picked. A table's pager.Empty row hides itself once a row is added.
-var formHandlers = templ.Attributes{
-	"hx-on::config:request": templ.JSUnsafeFuncCall(percentsToFractions + "for (const [name, value] of [...ctx.request.body]) { if (value === '') ctx.request.body.delete(name) }"),
-	"hx-on::after:request":  templ.JSUnsafeFuncCall("if (event.target === this && ctx.response.status < 400) { document.getElementById('modal-container').innerHTML = '' }"),
+// formHandlers leave out the fields left blank, so they are not set rather than empty, but for a text that started
+// with a value, so emptying it in an edit form clears it. Then once a record is added, empty the modal container; an
+// edit's answer closes its details itself, giving the focus back to its row. Only the form's own request closes it,
+// not one of an input's within it, like loading what can be picked. A table's pager.Empty row hides itself once a row
+// is added.
+func formHandlers(p Props) templ.Attributes {
+	handlers := templ.Attributes{
+		"hx-on::config:request": templ.JSUnsafeFuncCall(percentsToFractions + "for (const [name, value] of [...ctx.request.body]) { if (value === '' && !this.elements[name]?.defaultValue) ctx.request.body.delete(name) }"),
+	}
+	if p.Swap == "" {
+		handlers["hx-on::after:request"] = templ.JSUnsafeFuncCall("if (event.target === this && ctx.response.status < 400) { document.getElementById('modal-container').innerHTML = '' }")
+	}
+	return handlers
 }
 
 // SubmitButton submits the form, from outside it, as in a modal's actions
@@ -342,7 +347,7 @@ func SubmitButton(p Props) templ.Component {
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(p.Submit)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 128, Col: 12}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 133, Col: 12}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -419,7 +424,7 @@ func field(p Props, f Field) templ.Component {
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templruntime.NewAttributeExpression(id).Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 135, Col: 17}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 140, Col: 17}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var17)
 		if templ_7745c5c3_Err != nil {
@@ -432,7 +437,7 @@ func field(p Props, f Field) templ.Component {
 		var templ_7745c5c3_Var18 string
 		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(f.Label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 136, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 141, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 		if templ_7745c5c3_Err != nil {
@@ -466,7 +471,7 @@ func field(p Props, f Field) templ.Component {
 			var templ_7745c5c3_Var19 string
 			templ_7745c5c3_Var19, templ_7745c5c3_Err = templruntime.NewAttributeExpression(id).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 145, Col: 19}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 150, Col: 19}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 			if templ_7745c5c3_Err != nil {
@@ -479,7 +484,7 @@ func field(p Props, f Field) templ.Component {
 			var templ_7745c5c3_Var20 string
 			templ_7745c5c3_Var20, templ_7745c5c3_Err = templruntime.NewAttributeExpression(f.Name).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 145, Col: 35}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 150, Col: 35}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var20)
 			if templ_7745c5c3_Err != nil {
@@ -513,7 +518,7 @@ func field(p Props, f Field) templ.Component {
 				var templ_7745c5c3_Var21 string
 				templ_7745c5c3_Var21, templ_7745c5c3_Err = templruntime.NewAttributeExpression(f.Value).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 150, Col: 29}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 155, Col: 29}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var21)
 				if templ_7745c5c3_Err != nil {
@@ -526,7 +531,7 @@ func field(p Props, f Field) templ.Component {
 				var templ_7745c5c3_Var22 string
 				templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(optionLabel(f, f.Value))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 150, Col: 66}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 155, Col: 66}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 				if templ_7745c5c3_Err != nil {
@@ -545,7 +550,7 @@ func field(p Props, f Field) templ.Component {
 				var templ_7745c5c3_Var23 string
 				templ_7745c5c3_Var23, templ_7745c5c3_Err = templruntime.NewAttributeExpression(option).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 153, Col: 28}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 158, Col: 28}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var23)
 				if templ_7745c5c3_Err != nil {
@@ -568,7 +573,7 @@ func field(p Props, f Field) templ.Component {
 				var templ_7745c5c3_Var24 string
 				templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(optionLabel(f, option))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 153, Col: 87}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 158, Col: 87}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 				if templ_7745c5c3_Err != nil {
@@ -611,7 +616,7 @@ func field(p Props, f Field) templ.Component {
 				var templ_7745c5c3_Var25 string
 				templ_7745c5c3_Var25, templ_7745c5c3_Err = templruntime.NewAttributeExpression(id + "--options").Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 165, Col: 36}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 170, Col: 36}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var25)
 				if templ_7745c5c3_Err != nil {
@@ -629,7 +634,7 @@ func field(p Props, f Field) templ.Component {
 					var templ_7745c5c3_Var26 string
 					templ_7745c5c3_Var26, templ_7745c5c3_Err = templruntime.NewAttributeExpression(option).Resolve(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 167, Col: 29}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 172, Col: 29}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var26)
 					if templ_7745c5c3_Err != nil {
@@ -653,7 +658,7 @@ func field(p Props, f Field) templ.Component {
 		var templ_7745c5c3_Var27 string
 		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(f.Help)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 172, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `addmodal/addmodal.templ`, Line: 177, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 		if templ_7745c5c3_Err != nil {
