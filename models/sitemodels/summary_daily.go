@@ -203,14 +203,19 @@ func loopColumns(row *sitedb.SummaryPeriod) [4]*string {
 	return [4]*string{&row.LoopIobJson, &row.LoopIobBasalJson, &row.LoopIobTreatmentJson, &row.LoopCobJson}
 }
 
-// NewSummaryPeriod is the period, a week or month named by its first date, from start until end, of its summary days.
-// Only days with data count, so its times in each range, daily dose and daily carbs are the means of theirs, and its
-// glucose at each 5 minutes from midnight the mean of the days with a reading then, as its loop IOB and COB are,
+// NewSummaryPeriod is the period, a week or month named by its first date, from start until end, of its summary days,
+// as they are at until. Only days with data count. Its times in each range are of all their readings, so each day's are
+// weighed by its readings and a day of only a few, such as today so far, counts for little. Its daily dose and carbs
+// are the means of its days over by until, as a day not over has had only some of its insulin and food, or of all of
+// them when none is over. Its glucose at each 5 minutes from midnight is the mean of the days with a reading then, as
+// its loop IOB and COB are,
 // rounded to 2 decimals. Its readings are all its days', with their mean and standard deviation. Its AGP is the
 // percentiles of their glucose in the 15 minutes around each 5 minutes from midnight.
-func NewSummaryPeriod(period, date, timezone string, start, end int64, days []*sitedb.SummaryPeriod) *sitedb.SummaryPeriod {
+func NewSummaryPeriod(period, date, timezone string, start, end, until int64, days []*sitedb.SummaryPeriod) *sitedb.SummaryPeriod {
 	row := &sitedb.SummaryPeriod{Period: period, Date: date, Timezone: timezone, StartAt: start, EndAt: end}
-	times, withRange, sum, squares := [5]float64{}, 0, 0.0, 0.0
+	times, weighed, sum, squares := [5]float64{}, 0.0, 0.0, 0.0
+	// dose, carbs and over are the whole days' daily doses, carbs and count, and the same of every day with data
+	dose, carbs, over := [2]float64{}, [2]float64{}, [2]int{}
 	sums, counts := make([]int64, 24*60*60_000/SummaryDailySlotMs), make([]int64, 24*60*60_000/SummaryDailySlotMs)
 	bins := make([][]int64, 24*60*60_000/AGPSlotMs)
 	loopSums, loopCounts := [4][]float64{}, [4][]int64{}
@@ -222,13 +227,17 @@ func NewSummaryPeriod(period, date, timezone string, start, end int64, days []*s
 			continue
 		}
 		row.Days++
-		row.TotalDailyDose += day.TotalDailyDose
-		row.TotalDailyCarbs += day.TotalDailyCarbs
-		if day.TimeInRange != nil {
-			for i, column := range timeColumns(day) {
-				times[i] += *cmp.Or(*column, new(0.0))
+		for i, counts := range []bool{day.EndAt <= until, true} {
+			if counts {
+				dose[i], carbs[i], over[i] = dose[i]+day.TotalDailyDose, carbs[i]+day.TotalDailyCarbs, over[i]+1
 			}
-			withRange++
+		}
+		if day.TimeInRange != nil {
+			weight := float64(max(day.GlucoseReadings, 1))
+			for i, column := range timeColumns(day) {
+				times[i] += weight * *cmp.Or(*column, new(0.0))
+			}
+			weighed += weight
 		}
 		row.GlucoseReadings += day.GlucoseReadings
 		row.MeterReadings += day.MeterReadings
@@ -261,18 +270,18 @@ func NewSummaryPeriod(period, date, timezone string, start, end int64, days []*s
 			}
 		}
 	}
-	if withRange > 0 {
+	if weighed > 0 {
 		for i, column := range timeColumns(row) {
-			*column = new(consts.Round(times[i]/float64(withRange), 1))
+			*column = new(consts.Round(times[i]/weighed, 1))
 		}
 	}
 	if count := float64(row.GlucoseReadings); count > 0 && sum > 0 {
 		mean := sum / count
 		row.GlucoseMeanMgdl, row.GlucoseSdMgdl = new(consts.Round(mean, 1)), new(consts.Round(math.Sqrt(max(squares/count-mean*mean, 0)), 1))
 	}
-	if row.Days > 0 {
-		row.TotalDailyDose = consts.Round(row.TotalDailyDose/float64(row.Days), 2)
-		row.TotalDailyCarbs = consts.Round(row.TotalDailyCarbs/float64(row.Days), 1)
+	if i := map[bool]int{true: 0, false: 1}[over[0] > 0]; over[i] > 0 {
+		row.TotalDailyDose = consts.Round(dose[i]/float64(over[i]), 2)
+		row.TotalDailyCarbs = consts.Round(carbs[i]/float64(over[i]), 1)
 	}
 	slots := make([]*int64, len(sums))
 	for slot, count := range counts {

@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/glucose"
 )
@@ -127,7 +128,7 @@ func TestNewSummaryPeriodLoop(t *testing.T) {
 	day := func(withData int64, iob, cob string) *sitedb.SummaryPeriod {
 		return &sitedb.SummaryPeriod{Days: withData, GlucoseMgdlJson: "[]", LoopIobJson: iob, LoopIobBasalJson: iob, LoopIobTreatmentJson: "[]", LoopCobJson: cob}
 	}
-	week := NewSummaryPeriod("week", "2026-10-26", "UTC", 1, 2, []*sitedb.SummaryPeriod{
+	week := NewSummaryPeriod("week", "2026-10-26", "UTC", 1, 2, 2, []*sitedb.SummaryPeriod{
 		day(1, "[1,null,2.5]", "[10,20]"), day(1, "[2,null,null,-1]", "[null,25]"), day(1, "[1.005]", "[11]"), day(0, "[100]", "[100]")})
 	tail := func(set int) string { return strings.Repeat(",null", 288-set) + "]" }
 	for name, got := range map[string][2]string{
@@ -169,7 +170,7 @@ func TestNewSummaryPeriod(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			period := NewSummaryPeriod("week", "2026-10-26", "UTC", 1, 2, tt.days)
+			period := NewSummaryPeriod("week", "2026-10-26", "UTC", 1, 2, 2, tt.days)
 			if period.Period != "week" || period.Date != "2026-10-26" || period.Timezone != "UTC" || period.StartAt != 1 || period.EndAt != 2 {
 				t.Errorf("period is %s %s in %s from %d to %d", period.Period, period.Date, period.Timezone, period.StartAt, period.EndAt)
 			}
@@ -211,7 +212,7 @@ func TestNewSummaryPeriodGlucose(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewSummaryPeriod("month", "2026-10-01", "UTC", 1, 2, tt.days).GlucoseMgdlJson; got != tt.want {
+			if got := NewSummaryPeriod("month", "2026-10-01", "UTC", 1, 2, 2, tt.days).GlucoseMgdlJson; got != tt.want {
 				t.Errorf("glucose is %s, want %s", got, tt.want)
 			}
 		})
@@ -249,7 +250,7 @@ func TestNewSummaryPeriodAGP(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewSummaryPeriod("week", "2026-10-26", "UTC", 1, 2, tt.days).AgpMgdlJson; got == nil || *got != tt.want {
+			if got := NewSummaryPeriod("week", "2026-10-26", "UTC", 1, 2, 2, tt.days).AgpMgdlJson; got == nil || *got != tt.want {
 				t.Errorf("AGP is %v, want %s", *got, tt.want)
 			}
 		})
@@ -286,7 +287,7 @@ func TestNewSummaryPeriodGlucoseStats(t *testing.T) {
 			GlucoseMeanMgdl: &mean, GlucoseSdMgdl: &sd, TimeVeryLow: &times[0], TimeLow: &times[1], TimeInRange: &times[2], TimeHigh: &times[3], TimeVeryHigh: &times[4]}
 	}
 	// 100 twice and 200 twice have a mean of 150 and a standard deviation of 50
-	week := NewSummaryPeriod("week", "2026-10-26", "UTC", 1, 2, []*sitedb.SummaryPeriod{
+	week := NewSummaryPeriod("week", "2026-10-26", "UTC", 1, 2, 2, []*sitedb.SummaryPeriod{
 		day(2, 1, 2, 100, 0, 10, 20, 70, 0, 0), day(2, 0, 1, 200, 0, 0, 0, 50, 30, 20), {Days: 0, GlucoseMgdlJson: "[]", GlucoseReadings: 9}})
 	got := []any{week.GlucoseReadings, week.MeterReadings, week.CgmSlots, *week.GlucoseMeanMgdl, *week.GlucoseSdMgdl,
 		*week.TimeVeryLow, *week.TimeLow, *week.TimeInRange, *week.TimeHigh, *week.TimeVeryHigh}
@@ -294,4 +295,21 @@ func TestNewSummaryPeriodGlucoseStats(t *testing.T) {
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("week's readings, meter readings, CGM slots, mean, SD and times are %v, want %v", got, want)
 	}
+}
+
+// A week's times in each range are of all its readings, so a day of a few, as today so far, counts for little, and its
+// daily dose and carbs are of its days over, unless none is
+func TestNewSummaryPeriodWeighsDays(t *testing.T) {
+	day := func(end, readings int64, inRange, dose, carbs float64) *sitedb.SummaryPeriod {
+		return &sitedb.SummaryPeriod{Days: 1, EndAt: end, GlucoseReadings: readings, TimeInRange: &inRange, TimeLow: new(100 - inRange),
+			TotalDailyDose: dose, TotalDailyCarbs: carbs, GlucoseMgdlJson: "[]"}
+	}
+	// A whole day of 288 readings all in range, and today so far, not over at 5, of 6 readings all low
+	week := NewSummaryPeriod("week", "2026-10-26", "UTC", 0, 10, 5, []*sitedb.SummaryPeriod{day(1, 288, 100, 40, 200), day(10, 6, 0, 3, 20)})
+	require.Equal(t, 98.0, *week.TimeInRange)
+	require.Equal(t, 2.0, *week.TimeLow)
+	require.Equal(t, []any{int64(2), 40.0, 200.0}, []any{week.Days, week.TotalDailyDose, week.TotalDailyCarbs})
+	// With no day over, its daily dose and carbs are today's so far
+	today := NewSummaryPeriod("week", "2026-10-26", "UTC", 0, 10, 5, []*sitedb.SummaryPeriod{day(10, 6, 0, 3, 20)})
+	require.Equal(t, []any{3.0, 20.0}, []any{today.TotalDailyDose, today.TotalDailyCarbs})
 }
