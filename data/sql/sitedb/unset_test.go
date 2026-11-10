@@ -29,15 +29,15 @@ func TestValuesMeaningNoneAreNotStored(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, &noise, reading.Noise)
 
-	event, err := q.CreateComponentEvent(ctx, sitedb.CreateComponentEventParams{ID: "c", EventType: "Site Change",
+	group, err := q.CreateEventGroup(ctx, sitedb.CreateEventGroupParams{ID: "g", GroupType: "Temp Basal",
 		PumpID: &empty, PumpSerial: &serial, OccurredAt: now, CreatedByIdentityName: "test"})
 	require.NoError(t, err)
-	require.Nil(t, event.PumpID)
-	require.Equal(t, &serial, event.PumpSerial)
+	require.Nil(t, group.PumpID)
+	require.Equal(t, &serial, group.PumpSerial)
 
-	event, err = q.UpdateComponentEvent(ctx, sitedb.UpdateComponentEventParams{ID: "c", PumpSerial: &empty, UpdatedByIdentityName: &by})
+	group, err = q.UpdateEventGroup(ctx, sitedb.UpdateEventGroupParams{ID: "g", PumpSerial: &empty, UpdatedByIdentityName: &by})
 	require.NoError(t, err)
-	require.Equal(t, &serial, event.PumpSerial)
+	require.Equal(t, &serial, group.PumpSerial)
 
 	activity, err := q.CreateActivity(ctx, sitedb.CreateActivityParams{ID: "a", ActivityType: "exercise", HeartRate: &heartRate,
 		OccurredAt: now, CreatedByIdentityName: "test"})

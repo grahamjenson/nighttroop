@@ -18,6 +18,10 @@ type SiteEventGroup struct {
 	CreatedByDeviceName   *string `json:"created_by_device_name"`
 	CreatedByIdentityName string  `json:"created_by_identity_name"`
 	UpdatedByIdentityName *string `json:"updated_by_identity_name"`
+	// The pump the app named, as AAPS does on every treatment; the site does not set it
+	PumpID     *string `json:"pump_id"`
+	PumpSerial *string `json:"pump_serial"`
+	PumpType   *string `json:"pump_type"`
 
 	GlucoseReading      *SiteGlucoseReading `json:"glucose_reading"`
 	InsulinDose         *SiteInsulinDose    `json:"insulin_dose"`
@@ -54,16 +58,16 @@ type SiteEventChoice struct {
 var EventGroupTypeKinds = map[nightscoutmodels.TreatmentEventType][]string{
 	nightscoutmodels.Announcement:      {"glucose_reading_id", "notification_event_id"},
 	nightscoutmodels.BGCheck:           {"glucose_reading_id"},
-	nightscoutmodels.BolusWizard:       {"glucose_reading_id", "insulin_dose_id", "food_intake_id", "component_event_id"},
+	nightscoutmodels.BolusWizard:       {"glucose_reading_id", "insulin_dose_id", "food_intake_id"},
 	nightscoutmodels.CarbCorrection:    {"food_intake_id"},
-	nightscoutmodels.ComboBolus:        {"glucose_reading_id", "insulin_dose_id", "food_intake_id", "component_event_id"},
-	nightscoutmodels.CorrectionBolus:   {"insulin_dose_id", "glucose_reading_id", "component_event_id"},
+	nightscoutmodels.ComboBolus:        {"glucose_reading_id", "insulin_dose_id", "food_intake_id"},
+	nightscoutmodels.CorrectionBolus:   {"insulin_dose_id", "glucose_reading_id"},
 	nightscoutmodels.DADAlert:          {},
 	nightscoutmodels.Exercise:          {"activity_id"},
 	nightscoutmodels.InsulinChange:     {"component_event_id"},
-	nightscoutmodels.MealBolus:         {"glucose_reading_id", "insulin_dose_id", "food_intake_id", "component_event_id"},
+	nightscoutmodels.MealBolus:         {"glucose_reading_id", "insulin_dose_id", "food_intake_id"},
 	nightscoutmodels.Note:              {"glucose_reading_id", "insulin_dose_id", "food_intake_id", "profile_switch_id", "activity_id", "component_event_id"},
-	nightscoutmodels.OpenAPSOffline:    {"component_event_id"},
+	nightscoutmodels.OpenAPSOffline:    {},
 	nightscoutmodels.ProfileSwitch:     {"profile_switch_id"},
 	nightscoutmodels.PumpBatteryChange: {"component_event_id"},
 	nightscoutmodels.Question:          {"notification_event_id"},
@@ -71,17 +75,17 @@ var EventGroupTypeKinds = map[nightscoutmodels.TreatmentEventType][]string{
 	nightscoutmodels.SensorStart:       {"component_event_id"},
 	nightscoutmodels.SensorStop:        {"component_event_id"},
 	nightscoutmodels.SiteChange:        {"component_event_id"},
-	nightscoutmodels.SnackBolus:        {"glucose_reading_id", "insulin_dose_id", "food_intake_id", "component_event_id"},
-	nightscoutmodels.TempBasal:         {"temp_basal_id", "component_event_id"},
+	nightscoutmodels.SnackBolus:        {"glucose_reading_id", "insulin_dose_id", "food_intake_id"},
+	nightscoutmodels.TempBasal:         {"temp_basal_id"},
 	nightscoutmodels.TemporaryTarget:   {"temp_target_id"},
 	nightscoutmodels.TemporaryOverride: {"temp_target_id"},
-	nightscoutmodels.SuspendPump:       {"component_event_id"},
-	nightscoutmodels.ResumePump:        {"component_event_id"},
+	nightscoutmodels.SuspendPump:       {},
+	nightscoutmodels.ResumePump:        {},
 	nightscoutmodels.CannulaFill:       {"component_event_id"},
 	nightscoutmodels.Prime:             {"component_event_id"},
 	nightscoutmodels.ReservoirChange:   {"component_event_id"},
-	nightscoutmodels.Calibration:       {"glucose_reading_id", "component_event_id"},
-	nightscoutmodels.Bolus:             {"insulin_dose_id", "component_event_id"},
+	nightscoutmodels.Calibration:       {"glucose_reading_id"},
+	nightscoutmodels.Bolus:             {"insulin_dose_id"},
 	nightscoutmodels.SMB:               {"insulin_dose_id"},
 	nightscoutmodels.ExternalInsulin:   {"insulin_dose_id"},
 }

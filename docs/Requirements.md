@@ -555,14 +555,15 @@ by side. The site API's search gives the same: its `items`, `skip`, `limit` (50 
 - **Event groups**: the treatments that came in together through the Nightscout API, with their events.
   - An event group can also be added on the site: the Add Event Group menu lists the Nightscout types (e.g. Meal Bolus),
     and each opens a modal for that type with a time and up to one event of each kind that type can have (e.g. a Meal
-    Bolus can have glucose, insulin, food and a site or sensor change, an Exercise only an activity), picked from those
-    within an hour of the time. Changing the time lists the events near it. The events' times, and the window they are
-    picked from, are in the time format, as other times are.
+    Bolus can have glucose, insulin and food, a Site Change only a site or sensor change, an Exercise only an
+    activity), picked from those within an hour of the time. Changing the time lists the events near it. The events'
+    times, and the window they are picked from, are in the time format, as other times are.
   - Adding or editing a group with a kind of event its type cannot have, or of an unknown type, is refused.
   - Clicking a group edits its type, time, notes and events; changing its type offers only the kinds of event the new
     type can have. An event taken out of a group is in no group.
   - An event is in at most one group: events in another group are not offered, and grouping one again is refused.
   - A group added or edited on the site is a Nightscout treatment, with its events.
+  - A group's details show the pump its app named (ID, serial and type), as AAPS does on every treatment.
 - **Device statuses**: each device's latest 3 statuses, and every status a device sent, with each column's unit in its
   header, e.g. Phone battery (%), Reservoir (U), IOB (U) and COB (g).
 
@@ -821,6 +822,9 @@ Connectors are a site's third party integrations, each syncing from one service.
   the minute, such as `find[created_at][$gte]=2026-11-06T04:46`, as some clients send it; to the minute with a zone,
   it is that time in its zone.
 - Loop's and Trio's Suspend Pump and Resume Pump treatments are kept.
+- The pump AAPS names on every treatment, its `pumpId`, `pumpSerial` and `pumpType`, is kept with the treatment and
+  returned as sent; only a sensor, site or pump part change (e.g. `Site Change`, `Insulin Change`) is a site or sensor
+  change, so a temp basal or bolus naming the pump is not listed in Site & Sensor Changes.
 - An activity's `type`, as xDrip+ sends it, is its activity type, a heart rate's `bpm` its heart rate and a motion's
   `class` its name.
 - A device status keeps its pump's clock, manufacturer and model, its uploader's battery, returned in both

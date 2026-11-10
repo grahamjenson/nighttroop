@@ -446,36 +446,6 @@ func (m *ComponentEvent) SetTransmitterID(v *string) {
 	m.TransmitterID = v
 }
 
-// GetPumpID returns the PumpID value.
-func (m ComponentEvent) GetPumpID() *string {
-	return m.PumpID
-}
-
-// SetPumpID sets the PumpID value and returns the updated ComponentEvent.
-func (m *ComponentEvent) SetPumpID(v *string) {
-	m.PumpID = v
-}
-
-// GetPumpSerial returns the PumpSerial value.
-func (m ComponentEvent) GetPumpSerial() *string {
-	return m.PumpSerial
-}
-
-// SetPumpSerial sets the PumpSerial value and returns the updated ComponentEvent.
-func (m *ComponentEvent) SetPumpSerial(v *string) {
-	m.PumpSerial = v
-}
-
-// GetPumpType returns the PumpType value.
-func (m ComponentEvent) GetPumpType() *string {
-	return m.PumpType
-}
-
-// SetPumpType sets the PumpType value and returns the updated ComponentEvent.
-func (m *ComponentEvent) SetPumpType(v *string) {
-	m.PumpType = v
-}
-
 // GetNotes returns the Notes value.
 func (m ComponentEvent) GetNotes() *string {
 	return m.Notes
@@ -644,36 +614,6 @@ func (m ComponentEventsVw) GetTransmitterID() *string {
 // SetTransmitterID sets the TransmitterID value and returns the updated ComponentEventsVw.
 func (m *ComponentEventsVw) SetTransmitterID(v *string) {
 	m.TransmitterID = v
-}
-
-// GetPumpID returns the PumpID value.
-func (m ComponentEventsVw) GetPumpID() *string {
-	return m.PumpID
-}
-
-// SetPumpID sets the PumpID value and returns the updated ComponentEventsVw.
-func (m *ComponentEventsVw) SetPumpID(v *string) {
-	m.PumpID = v
-}
-
-// GetPumpSerial returns the PumpSerial value.
-func (m ComponentEventsVw) GetPumpSerial() *string {
-	return m.PumpSerial
-}
-
-// SetPumpSerial sets the PumpSerial value and returns the updated ComponentEventsVw.
-func (m *ComponentEventsVw) SetPumpSerial(v *string) {
-	m.PumpSerial = v
-}
-
-// GetPumpType returns the PumpType value.
-func (m ComponentEventsVw) GetPumpType() *string {
-	return m.PumpType
-}
-
-// SetPumpType sets the PumpType value and returns the updated ComponentEventsVw.
-func (m *ComponentEventsVw) SetPumpType(v *string) {
-	m.PumpType = v
 }
 
 // GetNotes returns the Notes value.
@@ -1304,6 +1244,36 @@ func (m EventGroup) GetSentHash() *string {
 // SetSentHash sets the SentHash value and returns the updated EventGroup.
 func (m *EventGroup) SetSentHash(v *string) {
 	m.SentHash = v
+}
+
+// GetPumpID returns the PumpID value.
+func (m EventGroup) GetPumpID() *string {
+	return m.PumpID
+}
+
+// SetPumpID sets the PumpID value and returns the updated EventGroup.
+func (m *EventGroup) SetPumpID(v *string) {
+	m.PumpID = v
+}
+
+// GetPumpSerial returns the PumpSerial value.
+func (m EventGroup) GetPumpSerial() *string {
+	return m.PumpSerial
+}
+
+// SetPumpSerial sets the PumpSerial value and returns the updated EventGroup.
+func (m *EventGroup) SetPumpSerial(v *string) {
+	m.PumpSerial = v
+}
+
+// GetPumpType returns the PumpType value.
+func (m EventGroup) GetPumpType() *string {
+	return m.PumpType
+}
+
+// SetPumpType sets the PumpType value and returns the updated EventGroup.
+func (m *EventGroup) SetPumpType(v *string) {
+	m.PumpType = v
 }
 
 // GetNotes returns the Notes value.
@@ -7076,36 +7046,6 @@ func (m *CreateComponentEventParams) SetTransmitterID(v *string) {
 	m.TransmitterID = v
 }
 
-// GetPumpID returns the PumpID value.
-func (m CreateComponentEventParams) GetPumpID() *string {
-	return m.PumpID
-}
-
-// SetPumpID sets the PumpID value and returns the updated CreateComponentEventParams.
-func (m *CreateComponentEventParams) SetPumpID(v *string) {
-	m.PumpID = v
-}
-
-// GetPumpSerial returns the PumpSerial value.
-func (m CreateComponentEventParams) GetPumpSerial() *string {
-	return m.PumpSerial
-}
-
-// SetPumpSerial sets the PumpSerial value and returns the updated CreateComponentEventParams.
-func (m *CreateComponentEventParams) SetPumpSerial(v *string) {
-	m.PumpSerial = v
-}
-
-// GetPumpType returns the PumpType value.
-func (m CreateComponentEventParams) GetPumpType() *string {
-	return m.PumpType
-}
-
-// SetPumpType sets the PumpType value and returns the updated CreateComponentEventParams.
-func (m *CreateComponentEventParams) SetPumpType(v *string) {
-	m.PumpType = v
-}
-
 // GetNotes returns the Notes value.
 func (m CreateComponentEventParams) GetNotes() *string {
 	return m.Notes
@@ -7514,36 +7454,6 @@ func (m UpdateComponentEventParams) GetTransmitterID() *string {
 // SetTransmitterID sets the TransmitterID value and returns the updated UpdateComponentEventParams.
 func (m *UpdateComponentEventParams) SetTransmitterID(v *string) {
 	m.TransmitterID = v
-}
-
-// GetPumpID returns the PumpID value.
-func (m UpdateComponentEventParams) GetPumpID() *string {
-	return m.PumpID
-}
-
-// SetPumpID sets the PumpID value and returns the updated UpdateComponentEventParams.
-func (m *UpdateComponentEventParams) SetPumpID(v *string) {
-	m.PumpID = v
-}
-
-// GetPumpSerial returns the PumpSerial value.
-func (m UpdateComponentEventParams) GetPumpSerial() *string {
-	return m.PumpSerial
-}
-
-// SetPumpSerial sets the PumpSerial value and returns the updated UpdateComponentEventParams.
-func (m *UpdateComponentEventParams) SetPumpSerial(v *string) {
-	m.PumpSerial = v
-}
-
-// GetPumpType returns the PumpType value.
-func (m UpdateComponentEventParams) GetPumpType() *string {
-	return m.PumpType
-}
-
-// SetPumpType sets the PumpType value and returns the updated UpdateComponentEventParams.
-func (m *UpdateComponentEventParams) SetPumpType(v *string) {
-	m.PumpType = v
 }
 
 // GetNotes returns the Notes value.
@@ -9516,6 +9426,36 @@ func (m *CreateEventGroupParams) SetSentHash(v *string) {
 	m.SentHash = v
 }
 
+// GetPumpID returns the PumpID value.
+func (m CreateEventGroupParams) GetPumpID() *string {
+	return m.PumpID
+}
+
+// SetPumpID sets the PumpID value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetPumpID(v *string) {
+	m.PumpID = v
+}
+
+// GetPumpSerial returns the PumpSerial value.
+func (m CreateEventGroupParams) GetPumpSerial() *string {
+	return m.PumpSerial
+}
+
+// SetPumpSerial sets the PumpSerial value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetPumpSerial(v *string) {
+	m.PumpSerial = v
+}
+
+// GetPumpType returns the PumpType value.
+func (m CreateEventGroupParams) GetPumpType() *string {
+	return m.PumpType
+}
+
+// SetPumpType sets the PumpType value and returns the updated CreateEventGroupParams.
+func (m *CreateEventGroupParams) SetPumpType(v *string) {
+	m.PumpType = v
+}
+
 // GetOccurredAt returns the OccurredAt value.
 func (m CreateEventGroupParams) GetOccurredAt() int64 {
 	return m.OccurredAt
@@ -10674,6 +10614,36 @@ func (m UpdateEventGroupParams) GetSentHash() *string {
 // SetSentHash sets the SentHash value and returns the updated UpdateEventGroupParams.
 func (m *UpdateEventGroupParams) SetSentHash(v *string) {
 	m.SentHash = v
+}
+
+// GetPumpID returns the PumpID value.
+func (m UpdateEventGroupParams) GetPumpID() *string {
+	return m.PumpID
+}
+
+// SetPumpID sets the PumpID value and returns the updated UpdateEventGroupParams.
+func (m *UpdateEventGroupParams) SetPumpID(v *string) {
+	m.PumpID = v
+}
+
+// GetPumpSerial returns the PumpSerial value.
+func (m UpdateEventGroupParams) GetPumpSerial() *string {
+	return m.PumpSerial
+}
+
+// SetPumpSerial sets the PumpSerial value and returns the updated UpdateEventGroupParams.
+func (m *UpdateEventGroupParams) SetPumpSerial(v *string) {
+	m.PumpSerial = v
+}
+
+// GetPumpType returns the PumpType value.
+func (m UpdateEventGroupParams) GetPumpType() *string {
+	return m.PumpType
+}
+
+// SetPumpType sets the PumpType value and returns the updated UpdateEventGroupParams.
+func (m *UpdateEventGroupParams) SetPumpType(v *string) {
+	m.PumpType = v
 }
 
 // GetUpdatedByIdentityID returns the UpdatedByIdentityID value.

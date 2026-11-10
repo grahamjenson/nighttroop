@@ -35,9 +35,9 @@ INPUT #site--event-group--create--occurred-at 2026-01-02T12:30
 CLICK #site--event-group--create--reason
 // Its times are in the time format, by default HH:mm:ss
 ASSERT_TEXT_VISIBLE from 2026-01-02 11:30:00 to 13:30:00
-// A meal bolus can have glucose, insulin, food and a site change, but not a temp basal, temp target or activity
+// A meal bolus can have glucose, insulin and food, but not a site change, temp basal, temp target or activity
 ASSERT_VISIBLE #site--event-group--create--glucose-reading-id
-ASSERT_VISIBLE #site--event-group--create--component-event-id
+ASSERT_NOT_VISIBLE #site--event-group--create--component-event-id
 ASSERT_NOT_VISIBLE #site--event-group--create--temp-basal-id
 ASSERT_NOT_VISIBLE #site--event-group--create--temp-target-id
 ASSERT_NOT_VISIBLE #site--event-group--create--activity-id
