@@ -58,20 +58,6 @@ templ page(id string, title string, description string, path string, pagePath st
 	</div>
 }
 
-templ rowLink(id string, path string) {
-	@table.Row(table.RowProps{
-		ID:    id,
-		Class: "cursor-pointer",
-		Attributes: templ.Attributes{
-			"hx-get":    path,
-			"hx-target": "#modal-container",
-			"hx-swap":   "innerHTML",
-		},
-	}) {
-		{ children... }
-	}
-}
-
 templ empty(columns string, what string) {
 	<tr><td colspan={ columns } class="p-4 text-sm text-gray-500">No { what } here.</td></tr>
 }
@@ -124,7 +110,7 @@ templ EventsTable(events []*sitemodels.SiteEvent, skip int64, limit int64, event
 					@empty("4", "events")
 				}
 				for _, event := range events {
-					@rowLink(fmt.Sprintf("site--event--%d", event.ID), fmt.Sprintf("/logs/events/%d", event.ID)) {
+					@table.ModalRow(fmt.Sprintf("site--event--%d", event.ID), fmt.Sprintf("/logs/events/%d", event.ID)) {
 						@table.Cell() {
 							{ display.Name(event.Name) }
 						}
@@ -181,7 +167,7 @@ templ ErrorsTable(errors []*sitemodels.SiteError, skip int64, limit int64, kind 
 					@empty("2", "errors")
 				}
 				for _, e := range errors {
-					@rowLink(fmt.Sprintf("site--error--%d", e.ID), fmt.Sprintf("/logs/errors/%d", e.ID)) {
+					@table.ModalRow(fmt.Sprintf("site--error--%d", e.ID), fmt.Sprintf("/logs/errors/%d", e.ID)) {
 						@table.Cell() {
 							<span class="block max-w-xl truncate text-red-700">{ e.Message }</span>
 						}
@@ -228,7 +214,7 @@ templ LogsTable(logs []*sitemodels.SiteLog, skip int64, limit int64, search *str
 					@empty("3", "logs")
 				}
 				for _, log := range logs {
-					@rowLink(fmt.Sprintf("site--log--%d", log.ID), fmt.Sprintf("/logs/logs/%d", log.ID)) {
+					@table.ModalRow(fmt.Sprintf("site--log--%d", log.ID), fmt.Sprintf("/logs/logs/%d", log.ID)) {
 						@table.Cell() {
 							{ log.Level }
 						}
