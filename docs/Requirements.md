@@ -297,7 +297,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - Data has side tabs in groups, like Settings: Readings & treatments (Glucose Readings, Insulin Doses, Food Intakes,
   Temp Targets, Temp Basals, Profile Switches), Events (Activities, Site & Sensor Changes, Notifications, Event Groups),
   Devices (Device Status) and Presets (Food Presets, Profiles, Loop Settings).
-- Reports has a tab for each report: Summaries, AGP and TDD, and opens on Summaries.
+- Reports has a tab for each report: Summaries, Overview, AGP and TDD, and opens on Summaries.
 - Settings has side tabs in groups: This site (General, Alarms), People & devices (Users & Devices, Push Devices),
   Connections (Connectors, Push Notifications) and Troubleshooting (Events, Errors, Logs). Another identity's settings
   count as Users & Devices.
@@ -363,6 +363,23 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 ### Reports
 
+- The Reports hub has Overview, at `/reports/overview`, which shows the week with yesterday in it at first, and the
+  overview of any day, week, fortnight or month from today back a year is at `/reports/overview/{period}-{date}`, with
+  the same buttons to other periods as the AGP report. Any other id is not found.
+- An overview shows its glucose's average and standard deviation, in the settings' units, and its GMI and coefficient
+  of variation, each "–" with no readings.
+- An overview's time in range is a bar of its very high (above 250 mg/dL), high, in range, low and very low (below
+  54 mg/dL) readings stacked, very high at the top, each beside it with its percent ("<1%" for one under a half), and
+  the target range below it.
+- An overview's sensor usage is its days with data of its days so far (as 6/9), the percent of its time the CGM read,
+  and its meter readings a day.
+- A week's, fortnight's or month's overview names its best whole day, the one with the most time in range (the later
+  of two the same), which opens that day's overview; today is left out, and a day's overview has none.
+- An overview draws its days averaged into one from midnight: a bar of each 15 minutes from its 25th to its 75th
+  percentile, the part above the range high and below the range low in their colours, a dot at each's mean, and the
+  range's bounds as lines labelled with their values, with hours in the settings' time format. A day's is of the 7
+  days to it. One with no glucose says so, and that a day's readings show the day after.
+- An overview shows its daily dose and daily carbs, with a link to the TDD report of the month to its last day.
 - The Reports hub has AGP, the AGP report, at `/reports/agp`, which shows the week with yesterday in it at first, and a
   report of any day, week, fortnight or month from today back a year is at `/reports/agp/{period}-{date}`.
 - The Reports hub's Summaries page, at `/reports` (and `/reports/summaries`), has a table for each of the kept days
@@ -371,11 +388,22 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - An admin can regenerate the summaries from below the Summaries page's tables, which says it is for summaries that look wrong, as after changing the timezone, rather than as the page's main action, after confirming: a background job builds the last
   year of days with data, and yesterday, and their weeks, fortnights and months, again from the site's data. It is
   recorded as an event, and asking again before it runs asks once. Others cannot.
-- A report says which days it covers, and its days with data, time in range, mean daily dose and mean daily carbs,
-  each "–" when it has no days with data.
+- An AGP report says which days it covers, and has its time in ranges against the goals for type 1 and type 2
+  diabetes: a bar of very high, high, in range, low and very low stacked, each with its percent, very high (goal <5%)
+  and high bracketed with their total (goal <25%), in range on its own (goal >70%), and low and very low (goal <1%)
+  bracketed with theirs (goal <4%), with the target range and the very high and very low bounds in the settings' units.
+- An AGP report's glucose metrics are its average glucose (goal under 154 mg/dL), GMI (goal <7%), coefficient of
+  variation (goal ≤36%) and time CGM active (goal >70%), each against its goal, and its days with data, daily dose and
+  daily carbs, each "–" when it has no days with data.
 - Its ambulatory glucose profile (AGP) over a day from midnight shades the 5th to 95th and 25th to 75th percentiles,
-  with the median as a line, over the range shaded with its low and high dashed. A day's report draws the day's
-  glucose over the AGP of the 7 days to it. A report with no glucose says so instead, and that reports are made from whole days, so a day's readings show the day after; the summaries' empty tables say the same.
+  with the median as a line, each in the high colour above the range and the low colour below it, with very low, the
+  range's low and high, very high and its top marked with their values, each percentile named at its line's end (kept
+  apart when close), and hours in the settings' time format. A day's report draws the day's glucose over the AGP of the
+  7 days to it. A report with no glucose says so instead, and that reports are made from whole days, so a day's
+  readings show the day after; the summaries' empty tables say the same.
+- An AGP report's daily glucose profiles are its days as a calendar under their weekdays from the site's week start
+  day, each with its glucose from midnight over the range shaded, coloured above and below it, opening that day's AGP
+  report; a day's report has only its own.
 - Day, Week, Fortnight and Month open the report of that kind ending on the report's last day, or today; arrow buttons
   either side of its dates (‹ and ›), named Previous and Next for a screen reader, open the one before and after, disabled
   past today or a year ago. Back and forward move between reports.

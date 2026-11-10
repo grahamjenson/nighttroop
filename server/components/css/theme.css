@@ -57,9 +57,12 @@
     --color-indigo-500: oklch(58.5% 0.233 277.117);
 
     /* Glucose: below the low alarm, above the high alarm, and between them. High fills graphs; its text is a darker
-       amber (amber-800), as amber-500 text on white is too faint to read. */
+       amber (amber-800), as amber-500 text on white is too faint to read. Very low (below 54 mg/dL) and very high
+       (above 250 mg/dL) are darker still, as the reports draw them beside low and high. */
+    --color-glucose-very-low: oklch(44.4% 0.177 26.899);
     --color-glucose-low: oklch(57.7% 0.245 27.325);
     --color-glucose-high: oklch(76.9% 0.188 70.08);
+    --color-glucose-very-high: oklch(55.3% 0.195 38.402);
     --color-glucose-high-text: oklch(47.3% 0.137 46.201);
     --color-glucose-in-range: #10203F;
 

@@ -18,6 +18,7 @@ func TestAt(t *testing.T) {
 		{"/data/glucose/123", "site--data--glucose-button"},
 		{"/reports", "site--reports--summaries-button"},
 		{"/reports/summaries", "site--reports--summaries-button"},
+		{"/reports/overview/month-2026-11-01", "site--reports--overview-button"},
 		{"/reports/agp", "site--reports--agp-button"},
 		{"/reports/agp/week-2026-11-01", "site--reports--agp-button"},
 		{"/reports/tdd", "site--reports--tdd-menu-button"},
@@ -57,7 +58,7 @@ func TestVisible(t *testing.T) {
 	admin := &controldb.SiteIdentity{Role: consts.IdentityRoleAdmin}
 	require.Len(t, Visible(admin), len(Pages))
 	require.Len(t, Visible(admin, Data), 14)
-	require.Len(t, Visible(admin, Reports), 3)
+	require.Len(t, Visible(admin, Reports), 4)
 	for _, role := range []consts.IdentityRole{consts.IdentityRoleUser, consts.IdentityRoleUserReadOnly, consts.IdentityRoleDeviceRead} {
 		settings := ids(Visible(&controldb.SiteIdentity{Role: role}, Settings))
 		require.Equal(t, []string{"site--settings--settings-button", "site--settings--alarms-button", "site--settings--push-devices-button"}, settings, role)

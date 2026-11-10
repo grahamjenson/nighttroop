@@ -41,71 +41,41 @@ func title(ctx context.Context, p *sitemodels.SiteSummaryPeriod) string {
 	return first.Format("2 Jan") + " – " + last.Format("2 Jan 2006")
 }
 
-// link is the path of the report of period with date in it, from today back a year, or "" for one out of that range
-func link(period string, date time.Time) string {
+// link is the path of the report, as agp, of period with date in it, from today back a year, or "" for one out of that
+// range
+func link(report, period string, date time.Time) string {
 	now := time.Now().In(date.Location())
 	if day := date.Format(time.DateOnly); day <= now.Format(time.DateOnly) && day >= now.AddDate(0, 0, -366).Format(time.DateOnly) {
-		return "/reports/agp/" + period + "-" + day
+		return "/reports/" + report + "/" + period + "-" + day
 	}
 	return ""
 }
 
-// Report is the AGP report of a day, week, fortnight or month: its time in range, daily dose and carbs, and its AGP,
-// with buttons to the period before and after either side of its dates, and to the report of another kind of period
-// ending on the same day
-templ Report(p *sitemodels.SiteSummaryPeriod) {
+// periodHeader is the report's name, as AGP, over its dates, with arrow buttons either side to the period before and
+// after, and buttons to the report of each kind of period ending on its last day
+templ periodHeader(report, name string, p *sitemodels.SiteSummaryPeriod) {
 	{{ first, last := days(ctx, p) }}
-	@heading.Title("AGP")
-	<div id="site--reports" class="w-full space-y-4 py-4">
-		<div class="flex flex-wrap items-center justify-between gap-2">
-			<div>
-				<h1 class="text-2xl font-bold">AGP</h1>
-				<div class="flex items-center gap-1">
-					@arrowButton("site--reports--previous", link(p.Period, first.AddDate(0, 0, -1)), "Previous "+p.Period) {
-						@icon.ChevronLeft()
-					}
-					<span id="site--reports--title" class="min-w-0 text-sm font-medium tabular-nums text-gray-700">{ title(ctx, p) }</span>
-					@arrowButton("site--reports--next", link(p.Period, time.UnixMilli(p.End).In(first.Location())), "Next "+p.Period) {
-						@icon.ChevronRight()
-					}
-				</div>
-			</div>
-			<div class="flex flex-wrap gap-1">
-				@reportKinds(p.Period, last)
+	<div class="flex flex-wrap items-center justify-between gap-2">
+		<div>
+			<h1 class="text-2xl font-bold">{ name }</h1>
+			<div class="flex items-center gap-1">
+				@arrowButton("site--reports--previous", link(report, p.Period, first.AddDate(0, 0, -1)), "Previous "+p.Period) {
+					@icon.ChevronLeft()
+				}
+				<span id="site--reports--title" class="min-w-0 text-sm font-medium tabular-nums text-gray-700">{ title(ctx, p) }</span>
+				@arrowButton("site--reports--next", link(report, p.Period, time.UnixMilli(p.End).In(first.Location())), "Next "+p.Period) {
+					@icon.ChevronRight()
+				}
 			</div>
 		</div>
-		<dl class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-			@stat("site--reports--days", "Days with data", fmt.Sprint(p.Days))
-			@stat("site--reports--time-in-range", "Time in range", display.Value(p.TimeInRange, "%"))
-			@stat("site--reports--daily-dose", "Daily dose", display.PerDay(p.Days, p.TotalDailyDose, " U"))
-			@stat("site--reports--daily-carbs", "Daily carbs", display.PerDay(p.Days, p.TotalDailyCarbs, " g"))
-		</dl>
-		<section class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-			<h2 class="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">Ambulatory glucose profile</h2>
-			if hasGlucose(p) {
-				{{ low, high := site_data_templ.RangeBounds(ctx) }}
-				{{ chart := agp(p, low, high) }}
-				<div id="site--reports--agp" class="h-90 w-full text-xs">
-					<div id={ chart.ChartID } class="h-full w-full"></div>
-					@templ.Raw(chart.RenderSnippet().Script)
-				</div>
-			} else {
-				<p id="site--reports--no-glucose" class="text-sm text-gray-500">
-					No glucose in this { p.Period }. Reports are made from whole days, so a day's readings show here the
-					day after.
-				</p>
+		<div class="flex flex-wrap gap-1">
+			for _, kind := range periods {
+				@reportButton("site--reports--period-"+kind.Period, link(report, kind.Period, last), kind.Period == p.Period) {
+					{ kind.Label }
+				}
 			}
-		</section>
+		</div>
 	</div>
-}
-
-// reportKinds are buttons to the report of each period ending on last, one selected
-templ reportKinds(selected string, last time.Time) {
-	for _, kind := range periods {
-		@reportButton("site--reports--period-"+kind.Period, link(kind.Period, last), kind.Period == selected) {
-			{ kind.Label }
-		}
-	}
 }
 
 // TDDReport is the total daily dose of each day of the month ending on last: a bar of each day with insulin, how many
@@ -253,7 +223,7 @@ templ SummariesReport(summaries map[string][]*sitemodels.SiteSummaryPeriod, admi
 						for _, p := range summaries[kind.Period] {
 							@table.Row() {
 								@table.Cell() {
-									{{ path := link(p.Period, time.UnixMilli(p.Start).In(site_data_templ.Location(ctx))) }}
+									{{ path := link("agp", p.Period, time.UnixMilli(p.Start).In(site_data_templ.Location(ctx))) }}
 									<a class="text-primary underline" href={ templ.SafeURL(path) } hx-get={ path } hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML">{ title(ctx, p) }</a>
 								}
 								for _, value := range []string{fmt.Sprint(p.Days), display.Value(p.TimeInRange, "%"), display.PerDay(p.Days, p.TotalDailyDose, " U"), display.PerDay(p.Days, p.TotalDailyCarbs, " g")} {

@@ -13,11 +13,16 @@ ASSERT_VISIBLE #site--reports--no-glucose
 // It says why a new site's report is empty, and when its readings will show
 ASSERT_VISIBLE #site--reports--no-glucose >> text=show here the day after
 SCREENSHOT agp_new_site
+// With no days of data its metrics are dashes, not 0
 ASSERT_TEXT_EQUALS #site--reports--days 0
-ASSERT_TEXT_EQUALS #site--reports--time-in-range –
-// With no days of data its daily dose and carbs are dashes too, not 0 U and 0 g
+ASSERT_TEXT_EQUALS #site--reports--mean –
+ASSERT_TEXT_EQUALS #site--reports--cv –
 ASSERT_TEXT_EQUALS #site--reports--daily-dose –
 ASSERT_TEXT_EQUALS #site--reports--daily-carbs –
+ASSERT_VISIBLE #site--reports--range-in-range >> text=– In range
+// Its daily glucose profiles are a calendar of its 7 days under their weekdays, empty
+ASSERT_COUNT #site--agp--daily a 7
+ASSERT_COUNT #site--agp--daily .site--agp--glucose 0
 SCREENSHOT report_no_data
 
 // The virtual connector fills the last 30 minutes with readings, treatments and device statuses
@@ -30,47 +35,77 @@ ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Connector Updated
 RUN_BACKGROUND_JOBS
 
-// Today's report draws its glucose over the AGP of the 7 days to it, with the range behind them. Today has data, and
-// there is no report after it.
+// Today's report has its time in each range against their goals: very high and high, and low and very low,
+// bracketed with their totals, and in range on its own
 GOTO /reports/agp/day-{{ date 0 }}
 ASSERT_STATUS 200
+ASSERT_VISIBLE #site--agp--ranges >> text=Goals for type 1 and type 2 diabetes
+ASSERT_VISIBLE #site--reports--range-in-range >> text=/^(\d+%|<1%) In range Goal: >70%$/
+ASSERT_VISIBLE #site--reports--range-very-high >> text=Goal: <5%
+ASSERT_VISIBLE #site--reports--above >> text=/^(\d+%|<1%)$/
+ASSERT_VISIBLE #site--reports--below >> text=/^(\d+%|<1%)$/
+ASSERT_TEXT_EQUALS #site--agp--target Target range: 4.0–10.0 mmol/L
+// and its glucose metrics against theirs, with its days with data, daily dose and carbs, a real 0 when there were none
+ASSERT_VISIBLE #site--reports--mean >> text=/^\d+\.\d$/
+ASSERT_VISIBLE #site--agp--metrics >> text=Goal: <8.5 mmol/L
+ASSERT_VISIBLE #site--reports--gmi >> text=/^\d+\.\d$/
+ASSERT_VISIBLE #site--reports--cv >> text=/^\d+\.\d$/
+ASSERT_VISIBLE #site--reports--cgm-active >> text=/^(\d+%|<1%)$/
 ASSERT_TEXT_EQUALS #site--reports--days 1
-ASSERT_VISIBLE #site--reports--time-in-range >> text=/^\d+(\.\d)?%$/
-// A day with data has a daily dose and carbs, a real 0 when there were none
-ASSERT_VISIBLE #site--reports--daily-dose >> text=/^\d+(\.\d+)? U$/
-ASSERT_VISIBLE #site--reports--daily-carbs >> text=/^\d+(\.\d+)? g$/
-ASSERT_DRAWN #site--reports--agp svg
-ASSERT_DRAWN #site--reports--agp >> text=5–95%
-ASSERT_DRAWN #site--reports--agp >> text=25–75%
-ASSERT_DRAWN #site--reports--agp >> text=Median
-ASSERT_DRAWN #site--reports--agp >> text=Glucose
+ASSERT_VISIBLE #site--reports--daily-dose >> text=/^\d+(\.\d+)?$/
+ASSERT_VISIBLE #site--reports--daily-carbs >> text=/^\d+(\.\d+)?$/
+// It draws its glucose over the AGP of the 7 days to it, each percentile named at its end, and there is no report
+// after it
+ASSERT_DRAWN #site--reports--agp
+ASSERT_DRAWN #site--reports--agp--glucose
+ASSERT_DRAWN #site--reports--agp >> text=95%
+ASSERT_DRAWN #site--reports--agp >> text=50%
+ASSERT_DRAWN #site--reports--agp >> text=5% >> nth=-1
+ASSERT_TEXT_VISIBLE This day's glucose
 ASSERT_DRAWN #site--reports--next[disabled]
+// Its daily profile is itself
+ASSERT_COUNT #site--agp--daily a 1
+ASSERT_DRAWN #site--agp--day-{{ date 0 }} .site--agp--glucose >> nth=1
 SCREENSHOT report_day
 
-// The other periods ending on the same day have today so far in them, with no glucose line of their own
+// The other periods ending on the same day have today so far in them, with no glucose line of their own, and their
+// days in the daily profiles, today's with its glucose
 CLICK #site--reports--period-week
 ASSERT_STATUS 200
 ASSERT_NEW_URL
-ASSERT_DRAWN #site--reports--agp >> text=Median
-ASSERT_NOT_VISIBLE #site--reports--agp >> text=Glucose
+ASSERT_DRAWN #site--reports--agp
+ASSERT_NOT_VISIBLE #site--reports--agp--glucose
+ASSERT_COUNT #site--agp--daily a 7
+ASSERT_DRAWN #site--agp--day-{{ date 0 }} .site--agp--glucose >> nth=1
 SCREENSHOT report_week
 CLICK #site--reports--period-fortnight
 ASSERT_STATUS 200
-ASSERT_DRAWN #site--reports--agp >> text=Median
+ASSERT_DRAWN #site--reports--agp
+ASSERT_COUNT #site--agp--daily a 14
 CLICK #site--reports--period-month
 ASSERT_STATUS 200
-ASSERT_DRAWN #site--reports--agp >> text=Median
+ASSERT_DRAWN #site--reports--agp
 ASSERT_DRAWN #site--reports--next[disabled]
 SCREENSHOT report_month
+SCROLL 1200
+SCREENSHOT report_month_daily
+
+// A day of the daily profiles opens its report: today, the last with glucose
+CLICK #site--agp--daily a:has(.site--agp--glucose) >> nth=-1
+ASSERT_STATUS 200
+ASSERT_PATH /reports/agp/day-{{ date 0 }}
+ASSERT_COUNT #site--agp--daily a 1
 
 // The month before has no glucose, and back returns to this one
+CLICK #site--reports--period-month
+ASSERT_STATUS 200
 CLICK #site--reports--previous
 ASSERT_STATUS 200
 ASSERT_VISIBLE #site--reports--no-glucose
 ASSERT_NOT_VISIBLE #site--reports--next[disabled]
 CLICK_BACK
 ASSERT_STATUS 200
-ASSERT_DRAWN #site--reports--agp >> text=Median
+ASSERT_DRAWN #site--reports--agp
 // Moving between the reports swaps the page, closing the live alarm updates' stream and opening it again, and that
 // throws nothing a person would see in the browser's console
 ASSERT_NO_PAGE_ERRORS
