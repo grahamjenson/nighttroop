@@ -23,7 +23,8 @@ ASSERT_VISIBLE "Nighttroop"
 RUN_BACKGROUND_JOBS
 
 // The site's admin sees its events, and its batch's backups when it has been backed up
-CLICK #site--nav--settings
+CLICK #site--settings-menu
+CLICK #site--nav--menu--logs
 CLICK #site--logs--events-button
 ASSERT_STATUS 200
 ASSERT_PATH /logs/events
@@ -87,13 +88,15 @@ ASSERT_VISIBLE #site--events--filter--search:not([value])
 ASSERT_NOT_VISIBLE #site--events--filter--clear
 
 // Errors and logs have pages of their own
-CLICK #site--nav--settings
+CLICK #site--settings-menu
+CLICK #site--nav--menu--logs
 CLICK #site--logs--errors-button
 ASSERT_PATH /logs/errors
 ASSERT_VISIBLE #siteErrorsTable
 SCREENSHOT errors
 
-CLICK #site--nav--settings
+CLICK #site--settings-menu
+CLICK #site--nav--menu--logs
 CLICK #site--logs--logs-button
 ASSERT_PATH /logs/logs
 ASSERT_VISIBLE #siteLogsTable

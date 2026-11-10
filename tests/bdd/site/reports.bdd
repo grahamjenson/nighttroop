@@ -26,7 +26,8 @@ ASSERT_COUNT #site--agp--daily .site--agp--glucose 0
 SCREENSHOT report_no_data
 
 // The virtual connector fills the last 30 minutes with readings, treatments and device statuses
-CLICK #site--nav--settings
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
 CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
 CLICK #site--settings--virtual-connector--enable

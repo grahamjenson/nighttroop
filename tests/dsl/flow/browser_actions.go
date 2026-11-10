@@ -214,34 +214,9 @@ func (r *Click) AddAssert(assert BrowserAssert) {
 	r.Asserts = append(r.Asserts, assert)
 }
 
-func (r *Click) NeedsResponseOrPage() (bool, bool) {
-	// check for new page first
-	if len(r.Asserts) == 0 {
-		return false, false
-	}
-
-	for _, a := range r.Asserts {
-		// if there is a AssertNewPage assert, we need a new page
-		_, ok := a.(*AssertNewPage)
-		if ok {
-			return false, true
-		}
-	}
-
-	for _, a := range r.Asserts {
-		// if there is a AssertResponse assert, we need a response
-		_, ok := a.(*BrowserAssertStatus)
-		if ok {
-			return true, false
-		}
-	}
-
-	return false, false
-}
-
+// Execute does the action, waits for what its asserts check it caused, then runs them. It returns the new page when
+// the action opened one, so the steps after it carry on there.
 func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
-	context := page.Context()
-
 	html, err := page.Content()
 	if err != nil {
 		return nil, err
@@ -249,29 +224,59 @@ func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 	prettyOutput := PrettifyHTML(html)
 
 	var locator playwright.Locator
-	if r.History == "" && r.Key == "" && r.Hidden == nil && r.Scroll == nil && len(r.Quickly) == 0 {
+	if r.onLocator() {
 		if locator = getLocator(r.Locator, page); locator == nil {
 			t.Fatalf("Failed to get locator for %s\n\n%s\n\n", r.Locator, prettyOutput)
 		}
 	}
 
-	var responses []playwright.Response
-	var requests []playwright.Request
-	var newPages []playwright.Page
+	effects := watchEffects(page)
+	if err := r.perform(page, locator, ctx); err != nil {
+		t.Fatalf(
+			"\n\n CLICK FAILED \n %s: %v \n\n %s \n\n",
+			r.ToErrorLine("Error with CLICK"),
+			prettyOutput,
+			err,
+		)
+	}
+	r.waitForEffects(page, effects)
 
-	context.On("page", func(p playwright.Page) {
-		newPages = append(newPages, p)
+	if page, err = r.followNewPage(t, page, effects, prettyOutput); err != nil {
+		return nil, err
+	}
+	r.checkAsserts(t, ctx, page, effects, prettyOutput)
+	return page, nil
+}
+
+// onLocator is whether the action is done to Locator, rather than to the page as a whole as going back, pressing a
+// key, hiding the page, scrolling and clicking quickly are
+func (r *Click) onLocator() bool {
+	return r.History == "" && r.Key == "" && r.Hidden == nil && r.Scroll == nil && len(r.Quickly) == 0
+}
+
+// clickEffects are what an action caused, captured from the browser for its asserts to check
+type clickEffects struct {
+	responses []playwright.Response
+	newPages  []playwright.Page
+	// oldURL is the page's URL before the action and newURL after it, which differ when it went to a new URL
+	oldURL, newURL string
+}
+
+// watchEffects starts capturing the responses and new pages that page's browser context sees from now on
+func watchEffects(page playwright.Page) *clickEffects {
+	e := &clickEffects{oldURL: page.URL()}
+	page.Context().On("page", func(p playwright.Page) {
+		e.newPages = append(e.newPages, p)
 	})
-
-	context.On("request", func(req playwright.Request) {
-		requests = append(requests, req)
+	page.Context().On("response", func(resp playwright.Response) {
+		e.responses = append(e.responses, resp)
 	})
+	return e
+}
 
-	context.On("response", func(resp playwright.Response) {
-		responses = append(responses, resp)
-	})
-
-	oldURL := page.URL()
+// perform does the one thing this action is for: a CLICK by default, or the action its fields ask for instead
+func (r *Click) perform(page playwright.Page, locator playwright.Locator, ctx map[string]any) error {
+	var err error
 	switch {
 	case r.History == "back":
 		_, err = page.GoBack()
@@ -310,18 +315,12 @@ func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 	default:
 		err = clickAndAnswer(page, locator, r.Asks)
 	}
-	if err != nil {
-		t.Fatalf(
-			"\n\n CLICK FAILED \n %s: %v \n\n %s \n\n",
-			r.ToErrorLine("Error with CLICK"),
-			prettyOutput,
-			err,
-		)
-	}
+	return err
+}
 
-	// We have to wait for the reponses to be captured. An assert that needs a
-	// response, a new page or a new URL keeps waiting (bounded) until it
-	// arrives: on a busy CI runner this can take well over 50ms.
+// waitForEffects waits until each effect the asserts check for has been captured: a response, a new page or a new
+// URL. On a busy CI runner this can take well over 50ms, so it keeps waiting, bounded, until they arrive.
+func (r *Click) waitForEffects(page playwright.Page, e *clickEffects) {
 	time.Sleep(50 * time.Millisecond)
 	needsResponse, needsPage, needsURL := false, false, false
 	for _, a := range r.Asserts {
@@ -335,16 +334,15 @@ func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 		}
 	}
 	for deadline := time.Now().Add(5 * time.Second); time.Now().Before(deadline) &&
-		((needsResponse && len(responses) == 0) || (needsPage && len(newPages) == 0) || (needsURL && page.URL() == oldURL)); {
+		((needsResponse && len(e.responses) == 0) || (needsPage && len(e.newPages) == 0) || (needsURL && page.URL() == e.oldURL)); {
 		time.Sleep(20 * time.Millisecond)
 	}
+	e.newURL = page.URL()
+}
 
-	newURL := false
-	if page.URL() != oldURL {
-		newURL = true
-	}
-
-	if len(newPages) > 1 {
+// followNewPage returns the page the action opened, once it has loaded, or page when it opened none
+func (r *Click) followNewPage(t *testing.T, page playwright.Page, e *clickEffects, prettyOutput string) (playwright.Page, error) {
+	if len(e.newPages) > 1 {
 		t.Fatalf(
 			"\n\n CLICK FAILED \n %s: multiple new pages captured\n\n %s \n\n",
 			r.ToErrorLine("Multiple new pages with CLICK"),
@@ -352,7 +350,7 @@ func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 		)
 	}
 
-	newPage := first(newPages)
+	newPage := first(e.newPages)
 	if newPage != nil {
 		page = newPage
 
@@ -368,22 +366,26 @@ func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 			return nil, err
 		}
 	}
+	return page, nil
+}
 
+// checkAsserts fails the test unless every assert holds for the effects, page being the new page when one opened
+func (r *Click) checkAsserts(t *testing.T, ctx map[string]any, page playwright.Page, e *clickEffects, prettyOutput string) {
 	for _, assert := range r.Asserts {
 		if _, ok := assert.(*AssertNewPage); ok {
-			if newPage == nil {
+			if len(e.newPages) == 0 {
 				t.Fatalf("\n\n%s\n assertNewPage failed: no new page was opened\n\n", r.ToErrorLine("Error with ASSERT"))
 			}
 			continue
 		}
 
 		if _, ok := assert.(*AssertNewURL); ok {
-			if !newURL {
-				t.Fatalf("\n\n%s\n assertNewURL failed: no new URL was opened\n old URL: %s\n new URL: %s\n\n", r.ToErrorLine("Error with ASSERT"), oldURL, page.URL())
+			if e.newURL == e.oldURL {
+				t.Fatalf("\n\n%s\n assertNewURL failed: no new URL was opened\n old URL: %s\n new URL: %s\n\n", r.ToErrorLine("Error with ASSERT"), e.oldURL, page.URL())
 			}
 			continue
 		}
-		err := assert.Execute(t, ctx, page, responses)
+		err := assert.Execute(t, ctx, page, e.responses)
 		if err != nil {
 			t.Fatalf(
 				"\n\n ASSERT FAILED \n %s: %v \n\n %s \n\n",
@@ -393,8 +395,6 @@ func (r *Click) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 			)
 		}
 	}
-
-	return page, nil
 }
 
 func first[T any](slice []T) T {

@@ -99,11 +99,6 @@ func GetHandler[R, M any](collection CollectionGet[R, M]) http.HandlerFunc {
 func UpdateHandler[R, M any](collection CollectionUpdate[R, M]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
-		if controlContext.IdentityModel.Role != consts.ControlRoleAdmin {
-			apiutils.ErrForbidden.Write(acceptType, w)
-			return
-		}
-
 		requestModel, herr := apiutils.ExtractModelFromRequest[M](httputils.GetContentType(r), r)
 		if herr != nil {
 			herr.Write(acceptType, w)
@@ -130,6 +125,17 @@ func UpdateHandler[R, M any](collection CollectionUpdate[R, M]) http.HandlerFunc
 // ////
 // UTILS
 // ////
+
+// AdminOnly refuses a read only control identity, for a route only an admin can use
+func AdminOnly(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if httputils.GetControlContext(r.Context()).IdentityModel.Role != consts.ControlRoleAdmin {
+			apiutils.ErrForbidden.Write(httputils.GetAcceptType(r), w)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
 
 // get is the model, or nil when there is none
 func get[R, M any](ctx context.Context, collection CollectionBase[R, M], id string, controlContext *httputils.ControlContext) (*M, *apiutils.HTTPError) {

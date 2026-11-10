@@ -12,7 +12,7 @@ import (
 )
 
 const countPushCredentials = `-- name: CountPushCredentials :one
-SELECT COUNT(*) FROM push_credentials WHERE site_id IS ?1 AND deleted_at IS NULL
+SELECT COUNT(*) FROM push_credentials WHERE site_id IS ?1
 `
 
 type CountPushCredentialsParams struct {
@@ -53,7 +53,7 @@ INSERT INTO push_credentials (
     ?1, ?2, ?3, ?4, ?5,
     ?6, ?7, ?8, ?9
 )
-RETURNING id, site_id, name, provider, team_or_project_id, key_id, secret_enc, apps_json, bundle_ids_json, created_at, updated_at, created_by_identity_name, deleted_at
+RETURNING id, site_id, name, provider, team_or_project_id, key_id, secret_enc, apps_json, bundle_ids_json, created_at, updated_at, created_by_identity_name
 `
 
 type CreatePushCredentialParams struct {
@@ -97,7 +97,6 @@ func (q *Queries) CreatePushCredential(ctx context.Context, arg CreatePushCreden
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CreatedByIdentityName,
-		&i.DeletedAt,
 	)
 	return &i, err
 }
@@ -171,7 +170,7 @@ func (q *Queries) DeleteSitePushCredentials(ctx context.Context, arg DeleteSiteP
 }
 
 const getAnyPushCredential = `-- name: GetAnyPushCredential :one
-SELECT id, site_id, name, provider, team_or_project_id, key_id, secret_enc, apps_json, bundle_ids_json, created_at, updated_at, created_by_identity_name, deleted_at FROM push_credentials WHERE id = ?1 AND deleted_at IS NULL
+SELECT id, site_id, name, provider, team_or_project_id, key_id, secret_enc, apps_json, bundle_ids_json, created_at, updated_at, created_by_identity_name FROM push_credentials WHERE id = ?1
 `
 
 type GetAnyPushCredentialParams struct {
@@ -195,7 +194,6 @@ func (q *Queries) GetAnyPushCredential(ctx context.Context, arg GetAnyPushCreden
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CreatedByIdentityName,
-		&i.DeletedAt,
 	)
 	return &i, err
 }
@@ -231,8 +229,8 @@ func (q *Queries) GetAnySitePushRegistration(ctx context.Context, arg GetAnySite
 }
 
 const getPushCredential = `-- name: GetPushCredential :one
-SELECT id, site_id, name, provider, team_or_project_id, key_id, secret_enc, apps_json, bundle_ids_json, created_at, updated_at, created_by_identity_name, deleted_at FROM push_credentials
-WHERE id = ?1 AND site_id IS ?2 AND deleted_at IS NULL
+SELECT id, site_id, name, provider, team_or_project_id, key_id, secret_enc, apps_json, bundle_ids_json, created_at, updated_at, created_by_identity_name FROM push_credentials
+WHERE id = ?1 AND site_id IS ?2
 `
 
 type GetPushCredentialParams struct {
@@ -257,7 +255,6 @@ func (q *Queries) GetPushCredential(ctx context.Context, arg GetPushCredentialPa
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CreatedByIdentityName,
-		&i.DeletedAt,
 	)
 	return &i, err
 }
@@ -296,8 +293,8 @@ func (q *Queries) GetPushRegistration(ctx context.Context, arg GetPushRegistrati
 }
 
 const pushCredentialFor = `-- name: PushCredentialFor :one
-SELECT id, site_id, name, provider, team_or_project_id, key_id, secret_enc, apps_json, bundle_ids_json, created_at, updated_at, created_by_identity_name, deleted_at FROM push_credentials
-WHERE (site_id = ?1 OR site_id IS NULL) AND provider = ?2 AND deleted_at IS NULL
+SELECT id, site_id, name, provider, team_or_project_id, key_id, secret_enc, apps_json, bundle_ids_json, created_at, updated_at, created_by_identity_name FROM push_credentials
+WHERE (site_id = ?1 OR site_id IS NULL) AND provider = ?2
   AND instr(apps_json, '"' || CAST(?3 AS TEXT) || '"') > 0
   AND (bundle_ids_json IS NULL OR instr(bundle_ids_json, '"' || CAST(?4 AS TEXT) || '"') > 0)
 ORDER BY site_id IS NULL, id DESC
@@ -335,7 +332,6 @@ func (q *Queries) PushCredentialFor(ctx context.Context, arg PushCredentialForPa
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CreatedByIdentityName,
-		&i.DeletedAt,
 	)
 	return &i, err
 }
@@ -366,8 +362,7 @@ func (q *Queries) RecordPush(ctx context.Context, arg RecordPushParams) error {
 }
 
 const searchAllPushCredentials = `-- name: SearchAllPushCredentials :many
-SELECT id, site_id, name, provider, team_or_project_id, key_id, secret_enc, apps_json, bundle_ids_json, created_at, updated_at, created_by_identity_name, deleted_at FROM push_credentials
-WHERE deleted_at IS NULL
+SELECT id, site_id, name, provider, team_or_project_id, key_id, secret_enc, apps_json, bundle_ids_json, created_at, updated_at, created_by_identity_name FROM push_credentials
 ORDER BY id DESC
 LIMIT CAST(?2 AS INTEGER) OFFSET CAST(?1 AS INTEGER)
 `
@@ -400,7 +395,6 @@ func (q *Queries) SearchAllPushCredentials(ctx context.Context, arg SearchAllPus
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.CreatedByIdentityName,
-			&i.DeletedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -473,8 +467,8 @@ func (q *Queries) SearchAllPushRegistrations(ctx context.Context, arg SearchAllP
 }
 
 const searchPushCredentials = `-- name: SearchPushCredentials :many
-SELECT id, site_id, name, provider, team_or_project_id, key_id, secret_enc, apps_json, bundle_ids_json, created_at, updated_at, created_by_identity_name, deleted_at FROM push_credentials
-WHERE site_id IS ?1 AND deleted_at IS NULL
+SELECT id, site_id, name, provider, team_or_project_id, key_id, secret_enc, apps_json, bundle_ids_json, created_at, updated_at, created_by_identity_name FROM push_credentials
+WHERE site_id IS ?1
 ORDER BY id DESC
 LIMIT CAST(?3 AS INTEGER) OFFSET CAST(?2 AS INTEGER)
 `
@@ -508,7 +502,6 @@ func (q *Queries) SearchPushCredentials(ctx context.Context, arg SearchPushCrede
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.CreatedByIdentityName,
-			&i.DeletedAt,
 		); err != nil {
 			return nil, err
 		}

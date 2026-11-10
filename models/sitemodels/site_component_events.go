@@ -21,9 +21,6 @@ type SiteComponentEvent struct {
 	EventType             string  `json:"event_type"`
 	SensorCode            *string `json:"sensor_code"`
 	TransmitterID         *string `json:"transmitter_id"`
-	PumpID                *string `json:"pump_id"`
-	PumpSerial            *string `json:"pump_serial"`
-	PumpType              *string `json:"pump_type"`
 	Notes                 *string `json:"notes"`
 	Reason                *string `json:"reason"`
 	UtcOffsetMinutes      *int64  `json:"utc_offset_minutes"`

@@ -338,16 +338,6 @@ func (m *PushCredential) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
 }
 
-// GetDeletedAt returns the DeletedAt value.
-func (m PushCredential) GetDeletedAt() *int64 {
-	return m.DeletedAt
-}
-
-// SetDeletedAt sets the DeletedAt value and returns the updated PushCredential.
-func (m *PushCredential) SetDeletedAt(v *int64) {
-	m.DeletedAt = v
-}
-
 // GetID returns the ID value.
 func (m PushRegistration) GetID() int64 {
 	return m.ID

@@ -11,13 +11,14 @@ ASSERT_STATUS 200
 ASSERT_PATH /data/glucose
 ASSERT_TITLE Glucose Readings · Nighttroop
 
-CLICK #site--nav--settings
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
 CLICK #site--settings--identities-button
 ASSERT_STATUS 200
 ASSERT_TITLE Users & Devices · Nighttroop
 
-CLICK #site--nav--settings
-CLICK #site--settings--alarms-button
+CLICK #site--settings-menu
+CLICK #site--nav--menu--alarms
 ASSERT_STATUS 200
 ASSERT_TITLE Alarms · Nighttroop
 

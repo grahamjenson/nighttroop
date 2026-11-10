@@ -255,6 +255,9 @@ templ EventGroupModal(eventGroup *sitemodels.SiteEventGroup) {
 			@readingDetail("Minutes", orDash(eventGroup.DurationMinutes))
 			@readingDetail("Notes", orDash(eventGroup.Notes))
 			@readingDetail("Reason", orDash(eventGroup.Reason))
+			@readingDetail("Pump ID", orDash(eventGroup.PumpID))
+			@readingDetail("Pump Serial", orDash(eventGroup.PumpSerial))
+			@readingDetail("Pump Type", orDash(eventGroup.PumpType))
 			@RecordDetails(Record{ID: eventGroup.ID, UtcOffset: eventGroup.UtcOffsetMinutes, App: eventGroup.CreatedByAppName, Device: eventGroup.CreatedByDeviceName, CreatedBy: eventGroup.CreatedByIdentityName, Created: eventGroup.CreatedAt, Updated: eventGroup.UpdatedAt, UpdatedBy: eventGroup.UpdatedByIdentityName})
 		</dl>
 	}

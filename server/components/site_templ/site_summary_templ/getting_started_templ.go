@@ -233,7 +233,7 @@ func GettingStarted() templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "Your readings and treatments are under Data at the top of every page, your reports under Reports, and presets, settings and logs under Settings. Search there finds any page by name.</p></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "Your readings, treatments and presets are under Data at the top of every page, your reports under Reports, and the site's settings, alarms, and logs and events in the menu under your name. Search there finds any page by name.</p></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

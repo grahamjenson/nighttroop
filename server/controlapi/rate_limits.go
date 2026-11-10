@@ -28,10 +28,6 @@ func RateLimitsHandler(w http.ResponseWriter, r *http.Request) {
 // admins can, and a rate that would refuse every request is refused.
 func SetRateLimitsHandler(w http.ResponseWriter, r *http.Request) {
 	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
-	if controlContext.IdentityModel.Role != consts.ControlRoleAdmin {
-		apiutils.ErrForbidden.Write(acceptType, w)
-		return
-	}
 	limiters := controlContext.ControlDB.ServerConfig.RateLimiters
 	rates, herr := ratesFromRequest(r, limiters.Settings())
 	if herr != nil {

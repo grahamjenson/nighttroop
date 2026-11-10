@@ -57,7 +57,7 @@ func TestTruncateHandler(t *testing.T) {
 	_, controlDB, site := testutils.NewControlDBWithSite(t)
 	ctx, siteID := t.Context(), site.SiteDB.Subdomain
 	router := chi.NewRouter()
-	router.Post("/sites/{id}/truncate", (&SitesCollection{}).TruncateHandler)
+	router.With(AdminOnly).Post("/sites/{id}/truncate", (&SitesCollection{}).TruncateHandler)
 	truncate := func(role consts.ControlRole) *httptest.ResponseRecorder {
 		r := httptest.NewRequest(http.MethodPost, "/sites/"+siteID+"/truncate", nil)
 		r.Header.Set("Accept", "application/json")
@@ -97,7 +97,7 @@ func TestSettingsHandler(t *testing.T) {
 		rctx := httputils.CreateControlContext(r.Context(), controlDB, "", httputils.HTTPActionWrite)
 		rctx = httputils.SetAdminControlContext(rctx, &controldb.ControlIdentity{Name: "admin", Role: role}, config.ServerStatus{})
 		w := httptest.NewRecorder()
-		(&SitesCollection{}).SettingsHandler(w, r.WithContext(rctx))
+		AdminOnly(http.HandlerFunc((&SitesCollection{}).SettingsHandler)).ServeHTTP(w, r.WithContext(rctx))
 		return w
 	}
 
@@ -139,7 +139,7 @@ func TestDownloadDBHandler(t *testing.T) {
 	_, controlDB, site := testutils.NewControlDBWithSite(t)
 	ctx, siteID := t.Context(), site.SiteDB.Subdomain
 	router := chi.NewRouter()
-	router.Get("/sites/{id}/db", (&SitesCollection{}).DownloadDBHandler)
+	router.With(AdminOnly).Get("/sites/{id}/db", (&SitesCollection{}).DownloadDBHandler)
 	download := func(role consts.ControlRole, id string) *httptest.ResponseRecorder {
 		r := httptest.NewRequest(http.MethodGet, "/sites/"+id+"/db", nil)
 		rctx := httputils.CreateControlContext(r.Context(), controlDB, "", httputils.HTTPActionRead)

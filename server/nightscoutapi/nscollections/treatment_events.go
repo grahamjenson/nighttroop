@@ -353,10 +353,10 @@ var (
 		of: func(b *sitedb.EventGroupsBundle) (**string, **sitedb.ComponentEvent) {
 			return &b.EventGroup.ComponentEventID, &b.ComponentEvent
 		},
-		// A change of a sensor, site or pump part always has one, and another treatment has one when it names the pump
+		// A change of a sensor, site or pump part always has one, and no other treatment does: the pump AAPS names on
+		// every treatment is kept on its event group
 		has: func(source nightscoutmodels.Treatment) bool {
-			return slices.Contains(sitemodels.ComponentEventTypes, source.EventType.String()) ||
-				isAssigned(source.PumpID, source.PumpSerial, source.PumpType)
+			return slices.Contains(sitemodels.ComponentEventTypes, source.EventType.String())
 		},
 		partial:     nightscoutmodels.PartialTreatmentToComponentEvent,
 		toTreatment: withoutSite(nightscoutmodels.UpdateComponentEventToTreatment), mergeInto: nightscoutmodels.UpdateToComponentEvent,

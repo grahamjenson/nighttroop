@@ -331,21 +331,22 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 
 ### Navigation
 
-- The header has the logo and a home icon, both opening the summary (`/`), and links to the Data, Reports and Settings
-  hubs, each opening its hub's first page; there is no Summary link. The hub of the page shown is marked, after a page
+- The header has the logo and a home icon, both opening the summary (`/`), and links to the Data and Reports hubs, each
+  opening its hub's first page; there is no Summary or Settings link. The hub of the page shown is marked, after a page
   opened from a link or tab as well as one loaded in full, and the home icon on the summary.
 - Data has side tabs in groups, like Settings: Readings & treatments (Glucose Readings, Insulin Doses, Food Intakes,
   Temp Targets, Temp Basals, Profile Switches), Events (Activities, Site & Sensor Changes, Notifications, Event Groups),
   Devices (Device Status) and Presets (Food Presets, Profiles, Loop Settings).
 - Reports has a tab for each report: Summaries, Overview, AGP and TDD, and opens on Summaries.
-- Settings has side tabs in groups: This site (General, Alarms), People & devices (Users & Devices, Push Devices),
-  Connections (Connectors, Push Notifications) and Troubleshooting (Events, Errors, Logs). Another identity's settings
-  count as Users & Devices.
+- Settings, from the user menu, has side tabs in groups: This site (General), People & devices (Users & Devices, Push
+  Devices) and Connections (Connectors, Push Notifications). Another identity's settings count as Users & Devices.
+- Alarms, from the user menu, is a page of its own (`/settings/alarms`), with no tabs.
+- Logs & Events, from the user menu, has a row of tabs, Events, Errors and Logs, and opens on Events.
 - A hub's tab for the page shown is marked; each tab keeps its page's own URL, so links, back and forward still work.
-- Only the tabs an identity may open are shown: someone who is not an admin has no Users & Devices, Connectors, Push
-  Notifications, Events, Errors or Logs.
+- Only the tabs and menu items an identity may open are shown: someone who is not an admin has no Users & Devices,
+  Connectors or Push Notifications tab, and no Logs & Events in the user menu.
 - The header's search finds a page by its name, group or hub as it is typed, whatever the case, listing them under
-  their hub, only those the identity may open, or "No pages match".
+  their hub (Data, Reports, Settings, Alarms, or Logs & Events), only those the identity may open, or "No pages match".
 - The search also finds a page by the headings and words on it, showing the one it was found by next to the page's
   name: Nightscout or Dexcom finds Connectors, low finds Alarms (Low Alarm), timezone finds General settings.
 - The search also finds a page by what people also call it: BGL or blood sugar finds Glucose Readings, bolus finds
@@ -353,8 +354,10 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - In the search, the arrow keys move through the results, Enter or a click opens one, Escape closes them, and Ctrl+K
   (⌘K on a Mac) goes to the search from anywhere.
 - On a phone the header fits, its hubs' links as icons and its search an icon opening a box across the page; Reports'
-  tabs scroll sideways on their own, and Data's and Settings' tabs wrap above the page, so no page gets wider.
-- The user menu has only who is signed in, My Account, Getting Started and Logout.
+  and Logs & Events' tabs scroll sideways on their own, and Data's and Settings' tabs wrap above the page, so no page
+  gets wider. The user menu is the same as on a computer.
+- The user menu has who is signed in, My Account, Getting Started, then Settings, Alarms, and Logs & Events, each with
+  its icon and marked when its page is shown, and Logout.
 - Every link and button opening a page in place of this one, as the tabs, pagers and filters do, keeps its URL, so back
   returns, and clicking several quickly shows the last one clicked.
 
@@ -509,6 +512,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   their settings and sets up alarms.
 - Someone who is not an admin is told the admin sets up the site's data and who can use it.
 - The guide is always in the user menu, as Getting Started, and on My Account, which says what it is and opens it.
+- The guide ends saying where the rest is: readings, treatments and presets under Data, reports under Reports, and the
+  site's settings, alarms, and logs and events in the user menu.
 
 ### Data
 
@@ -555,14 +560,15 @@ by side. The site API's search gives the same: its `items`, `skip`, `limit` (50 
 - **Event groups**: the treatments that came in together through the Nightscout API, with their events.
   - An event group can also be added on the site: the Add Event Group menu lists the Nightscout types (e.g. Meal Bolus),
     and each opens a modal for that type with a time and up to one event of each kind that type can have (e.g. a Meal
-    Bolus can have glucose, insulin, food and a site or sensor change, an Exercise only an activity), picked from those
-    within an hour of the time. Changing the time lists the events near it. The events' times, and the window they are
-    picked from, are in the time format, as other times are.
+    Bolus can have glucose, insulin and food, a Site Change only a site or sensor change, an Exercise only an
+    activity), picked from those within an hour of the time. Changing the time lists the events near it. The events'
+    times, and the window they are picked from, are in the time format, as other times are.
   - Adding or editing a group with a kind of event its type cannot have, or of an unknown type, is refused.
   - Clicking a group edits its type, time, notes and events; changing its type offers only the kinds of event the new
     type can have. An event taken out of a group is in no group.
   - An event is in at most one group: events in another group are not offered, and grouping one again is refused.
   - A group added or edited on the site is a Nightscout treatment, with its events.
+  - A group's details show the pump its app named (ID, serial and type), as AAPS does on every treatment.
 - **Device statuses**: each device's latest 3 statuses, and every status a device sent, with each column's unit in its
   header, e.g. Phone battery (%), Reservoir (U), IOB (U) and COB (g).
 
@@ -823,6 +829,9 @@ Connectors are a site's third party integrations, each syncing from one service.
   the minute, such as `find[created_at][$gte]=2026-11-06T04:46`, as some clients send it; to the minute with a zone,
   it is that time in its zone.
 - Loop's and Trio's Suspend Pump and Resume Pump treatments are kept.
+- The pump AAPS names on every treatment, its `pumpId`, `pumpSerial` and `pumpType`, is kept with the treatment and
+  returned as sent; only a sensor, site or pump part change (e.g. `Site Change`, `Insulin Change`) is a site or sensor
+  change, so a temp basal or bolus naming the pump is not listed in Site & Sensor Changes.
 - An activity's `type`, as xDrip+ sends it, is its activity type, a heart rate's `bpm` its heart rate and a motion's
   `class` its name.
 - A device status keeps its pump's clock, manufacturer and model, its uploader's battery, returned in both

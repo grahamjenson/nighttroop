@@ -51,11 +51,13 @@
 1. P3: Add event groups (list, get, add, edit, delete and the events to group) to `clients/nighttroop/openapi.json`
    and its client
 1. Performance testing (cost estimate for running full node)
+1. P4: Mark the user menu's button in the header while a page of Settings, Alarms, or Logs & Events is shown, as the
+   header then marks no hub and only the open menu marks it
 1. P4: Leave out of the details modals' lists (`readingDetail` and `presetDetail` rows) the fields their edit forms
    now show, e.g. an insulin dose's split, type, notes and reason, so each is shown once
-1. P3: Make a Nightscout document's fields without JSON: `stored.Fields` (`nscollections/document.go`) marshals each
-   record's model and reads it back as a map (`utils.ToMap`) before the response is marshalled again, about 40% of
-   the CPU of a 288 entry `/api/v1/entries` search
+1. P4: Marshal an entry without `Entry.MarshalJSON` (`models/nightscoutmodels/entries.go`) marshalling it again as
+   an alias and making a `time.FixedZone` for its `dateString`, about a quarter of the CPU of a 288 entry
+   `/api/v1/entries` search now its fields are not read back as a map (`BenchmarkWriteRecordsV1Entries`)
 1. P3: Open a site's DB when it is first used rather than every site's at start, as each still takes ~2ms to open
    and check migrations
 1. P4: Keep which batches were uploaded, and with which sites, across restarts, as the first backup round after a
@@ -77,6 +79,9 @@
        until then
     1. P2: Decide whether Loop's and Trio's device tokens stay in plaintext in their profiles, which every reader of
        the site gets from the Nightscout profile API, as LoopFollow needs them
+    1. P5: Put the control site's push routes (`/push-devices/{id}/test`, `/push-credentials`) behind
+       `controlcollections.AdminOnly` in `server/control_router.go`, as its other admin only routes are, and drop
+       their handlers' own admin checks
 1. Nightscout API:
     1. P4: The Alexa and Google Home intents have Nightscout's bg, delta, iob, cob and uploader battery, but not its
        basal, raw bg, forecast, pump reservoir and battery, CGM status, db size, LastLoop and InsulinRemaining, nor

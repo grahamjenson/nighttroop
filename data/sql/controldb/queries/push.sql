@@ -14,28 +14,27 @@ RETURNING *;
 -- name: GetPushCredential :one
 -- A site's credential, or with no SiteID one for every site
 SELECT * FROM push_credentials
-WHERE id = sqlc.arg('ID') AND site_id IS sqlc.narg('SiteID') AND deleted_at IS NULL;
+WHERE id = sqlc.arg('ID') AND site_id IS sqlc.narg('SiteID');
 
 -- name: SearchPushCredentials :many
 -- A site's credentials, or with no SiteID those for every site, newest first
 SELECT * FROM push_credentials
-WHERE site_id IS sqlc.narg('SiteID') AND deleted_at IS NULL
+WHERE site_id IS sqlc.narg('SiteID')
 ORDER BY id DESC
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 -- name: SearchAllPushCredentials :many
 -- Every site's credentials and those for every site, newest first, for the control site
 SELECT * FROM push_credentials
-WHERE deleted_at IS NULL
 ORDER BY id DESC
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 -- name: GetAnyPushCredential :one
 -- Any site's credential, or one for every site, for the control site
-SELECT * FROM push_credentials WHERE id = sqlc.arg('ID') AND deleted_at IS NULL;
+SELECT * FROM push_credentials WHERE id = sqlc.arg('ID');
 
 -- name: CountPushCredentials :one
-SELECT COUNT(*) FROM push_credentials WHERE site_id IS sqlc.narg('SiteID') AND deleted_at IS NULL;
+SELECT COUNT(*) FROM push_credentials WHERE site_id IS sqlc.narg('SiteID');
 
 -- name: DeletePushCredential :execrows
 -- Deletes it for good, with its secret, so adding and deleting credentials again and again cannot grow the table
@@ -50,7 +49,7 @@ DELETE FROM push_credentials WHERE site_id = sqlc.arg('SiteID');
 -- pushes to the app and allows its bundle ID. Apps and bundle IDs have no quotes, so each is found in its JSON list
 -- as itself in quotes.
 SELECT * FROM push_credentials
-WHERE (site_id = sqlc.arg('SiteID') OR site_id IS NULL) AND provider = sqlc.arg('Provider') AND deleted_at IS NULL
+WHERE (site_id = sqlc.arg('SiteID') OR site_id IS NULL) AND provider = sqlc.arg('Provider')
   AND instr(apps_json, '"' || CAST(sqlc.arg('App') AS TEXT) || '"') > 0
   AND (bundle_ids_json IS NULL OR instr(bundle_ids_json, '"' || CAST(sqlc.arg('BundleID') AS TEXT) || '"') > 0)
 ORDER BY site_id IS NULL, id DESC

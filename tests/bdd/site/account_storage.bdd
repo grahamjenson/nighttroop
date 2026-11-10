@@ -2,7 +2,8 @@ INCLUDE steps/new_site_admin.steps
 ASSERT_PATH /
 
 // The virtual connector writes readings, treatments and device reports, so the site's DB has data to show
-CLICK #site--nav--settings
+CLICK #site--settings-menu
+CLICK #site--nav--menu--settings
 CLICK #site--settings--connectors-button
 ASSERT_STATUS 200
 CLICK #site--settings--virtual-connector--enable

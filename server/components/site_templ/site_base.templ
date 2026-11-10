@@ -95,8 +95,8 @@ templ menuItem(id string, path string, label string, itemIcon templ.Component) {
 	}
 }
 
-// Header goes home from the logo and its home icon, opens the hubs and searches their pages, with a menu of the
-// identity's own account
+// Header goes home from the logo and its home icon, opens the Data and Reports hubs and searches every hub's pages,
+// with a menu of the identity's own account and the hubs of the site's settings, alarms, and logs and events
 templ Header(path string) {
 	<header class="sticky top-0 z-40 border-b border-white/10 bg-brand-night text-white">
 		<div class="relative mx-auto flex h-14 max-w-7xl items-center gap-1 px-4 sm:gap-3 sm:px-6 lg:px-8">
@@ -134,6 +134,7 @@ templ Header(path string) {
 							@menuItem("site--settings--account-button", "/settings/account", "My Account", icon.User(icon.Props{Class: "size-4 mr-2"}))
 							@menuItem("site--settings--getting-started-button", "/getting-started", "Getting Started", icon.BookOpen(icon.Props{Class: "size-4 mr-2"}))
 						}
+						@MenuLinks(path, false)
 						@dropdown.Separator()
 						@dropdown.Item(dropdown.ItemProps{
 							ID:   "site--settings--logout-button",

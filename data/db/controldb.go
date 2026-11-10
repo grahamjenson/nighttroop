@@ -327,7 +327,7 @@ func (db *ControlDB) DeleteSites(ctx context.Context, subdomains []string) error
 
 	slog.Info("Deleting sites", "requested", subdomains, "deleted", deletedSubdomains)
 
-	// Its identities, with their credentials and their devices' push tokens, and its push credentials' secrets go with
+	// Its identities, with their credentials and their devices' push tokens, and its push credentials go with
 	// it; an archived site keeps them, as it can be brought back
 	for _, subdomain := range deletedSubdomains {
 		if err := db.Queries.DeleteSitePushCredentials(ctx, controldb.DeleteSitePushCredentialsParams{SiteID: &subdomain}); err != nil {

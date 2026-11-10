@@ -63,7 +63,7 @@ func (store *ControlStore) registerCollection[R, M any](collection CollectionBas
 		added = true
 	}
 	if val, ok := collection.(CollectionUpdate[R, M]); ok {
-		routes.Update = UpdateHandler(val)
+		routes.Update = AdminOnly(UpdateHandler(val)).ServeHTTP
 		added = true
 	}
 	if !added {
