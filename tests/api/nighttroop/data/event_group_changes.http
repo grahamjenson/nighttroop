@@ -1,0 +1,152 @@
+INCLUDE steps/new_site.steps
+
+// A sensor change from the Nightscout API, with what xDrip+ and AAPS send of it, is an event group with no events, its
+// sensor code, transmitter and pump kept on the group and given back as sent
+NAME create_sensor_change
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B {"eventType": "Sensor Change", "created_at": "{{ time 5 }}", "sensorCode": "ABC123", "transmitterId": "XYZ789", "notes": "Left arm", "pumpId": "PUMP123", "pumpSerial": "SERIAL123", "pumpType": "Omnipod"}
+ASSERT_STATUS 200
+SET treatment_id {{ dig "create_sensor_change.0._id" }}
+
+NAME read_v1
+GET http://{{ .ns_site }}/api/v1/treatments.json?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS "Sensor Change" "@0.eventType"
+ASSERT_EQUALS "ABC123" "@0.sensorCode"
+ASSERT_EQUALS "XYZ789" "@0.transmitterId"
+ASSERT_EQUALS "Left arm" "@0.notes"
+ASSERT_EQUALS "PUMP123" "@0.pumpId"
+ASSERT_EQUALS "SERIAL123" "@0.pumpSerial"
+ASSERT_EQUALS "Omnipod" "@0.pumpType"
+
+NAME read_v3
+GET http://{{ .ns_site }}/api/v3/treatments/{{ .treatment_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Sensor Change" "@result.eventType"
+ASSERT_EQUALS "ABC123" "@result.sensorCode"
+ASSERT_EQUALS "XYZ789" "@result.transmitterId"
+ASSERT_EQUALS "Left arm" "@result.notes"
+
+NAME read_site_group
+GET http://{{ site }}/data/event-groups/{{ .treatment_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "Sensor Change" "@result.group_type"
+ASSERT_EQUALS "ABC123" "@result.sensor_code"
+ASSERT_EQUALS "XYZ789" "@result.transmitter_id"
+ASSERT_EQUALS "Left arm" "@result.notes"
+ASSERT_EQUALS "PUMP123" "@result.pump_id"
+ASSERT_EQUALS null "@result.glucose_reading_id"
+ASSERT_EQUALS null "@result.notification_event_id"
+
+// Nightscout's sensor age is the sensor change's, and without a site change there is no cannula age
+NAME properties_sage
+GET http://{{ .ns_site }}/api/v2/properties/sage,cage?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Sensor Change" "@sage.min"
+ASSERT_EQUALS false "@cage.found"
+
+NAME create_site_change
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B {"eventType": "Site Change", "created_at": "{{ time 125 }}", "enteredBy": "Loop", "notes": "Right thigh"}
+ASSERT_STATUS 200
+
+NAME properties_cage
+GET http://{{ .ns_site }}/api/v2/properties/cage?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS true "@cage.found"
+ASSERT_EQUALS 2 "@cage.age"
+
+// Updating the transmitter through API v3 leaves the sensor code and pump as they were
+NAME update_transmitter
+PATCH http://{{ .ns_site }}/api/v3/treatments/{{ .treatment_id }}
+H Authorization: Bearer {{ jwt }}
+B {"transmitterId": "XYZ456"}
+ASSERT_STATUS 200
+
+NAME read_updated
+GET http://{{ .ns_site }}/api/v1/treatments/{{ .treatment_id }}?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "XYZ456" "@0.transmitterId"
+ASSERT_EQUALS "ABC123" "@0.sensorCode"
+ASSERT_EQUALS "SERIAL123" "@0.pumpSerial"
+
+// A pump ID past its length is refused
+NAME pump_id_too_long
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B {"eventType": "Site Change", "pumpId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+ASSERT_STATUS 400
+
+//////
+// THE SITE
+//////
+
+// The site adds a change as an event group with no events, by whoever is signed in
+NAME site_create_sensor_start
+POST http://{{ site }}/data/event-groups
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"group_type": "Sensor Start", "sensor_code": "1234", "notes": "New sensor", "created_by_identity_name": "someone else"}
+ASSERT_STATUS 201
+ASSERT_EQUALS "Sensor Start" "@result.group_type"
+ASSERT_EQUALS "1234" "@result.sensor_code"
+ASSERT_EQUALS "New sensor" "@result.notes"
+ASSERT_EQUALS "pwd_phone" "@result.created_by_identity_name"
+SET site_change_id {{ .site_create_sensor_start.result.id }}
+
+// Only the fields sent change
+NAME site_update_transmitter
+POST http://{{ site }}/data/event-groups/{{ .site_change_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"transmitter_id": "8G1234"}
+ASSERT_STATUS 200
+ASSERT_EQUALS "8G1234" "@result.transmitter_id"
+ASSERT_EQUALS "1234" "@result.sensor_code"
+ASSERT_EQUALS "New sensor" "@result.notes"
+
+// It is a Nightscout treatment
+NAME site_change_in_nightscout
+GET http://{{ .ns_site }}/api/v1/treatments/{{ .site_change_id }}?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "Sensor Start" "@0.eventType"
+ASSERT_EQUALS "1234" "@0.sensorCode"
+ASSERT_EQUALS "8G1234" "@0.transmitterId"
+
+NAME site_code_too_long
+POST http://{{ site }}/data/event-groups
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"group_type": "Sensor Change", "sensor_code": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+ASSERT_STATUS 400
+
+// A change has no events, so cannot have one
+NAME site_change_with_event
+POST http://{{ site }}/data/event-groups
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"group_type": "Site Change", "insulin_dose_id": "not-a-dose"}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "Site Change cannot have insulin_dose_id" "@message"
+
+// Its form has no events to pick
+NAME site_change_choices
+GET http://{{ site }}/data/event-groups/choices?group_type=Site+Change
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
+
+// Deleting the change takes it out of the Nightscout API too
+NAME site_delete_change
+DELETE http://{{ site }}/data/event-groups/{{ .site_change_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME deleted_change_gone
+GET http://{{ .ns_site }}/api/v1/treatments/{{ .site_change_id }}?token={{ token }}
+ASSERT_STATUS 404

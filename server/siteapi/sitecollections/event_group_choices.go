@@ -43,6 +43,10 @@ func EventGroupChoicesHandler(w http.ResponseWriter, r *http.Request) {
 		writeError(w, r, siteContext.AcceptType, apiutils.ErrBadRequest)
 		return
 	}
+	if len(kinds) == 0 {
+		WriteResponse(w, r, siteContext, http.StatusOK, []*sitemodels.SiteEventChoice{}, site_data_templ.EventGroupNoChoices(params.GroupID != ""), false)
+		return
+	}
 	at := time.Now()
 	if params.OccurredAt != 0 {
 		at = time.UnixMilli(params.OccurredAt)

@@ -511,11 +511,10 @@ ASSERT_EQUALS "Name" "@0.name"
 # 	FoodIntake:     foodIntake,
 # 	ProfileSwitch:  profileSwitch,
 # 	Activity:       activity,
-# 	ComponentEvent: componentEvent,
 # }
 // A minute ago, so it is never taken for put_create_uuid_treatments_v1's Note, which the server dated now: a Note at
-// the same millisecond is a duplicate, and that one lands on a whole second about once in a thousand runs. Only a
-// sensor, site or pump part change keeps a sensor's code and transmitter; every treatment keeps the pump it names
+// the same millisecond is a duplicate, and that one lands on a whole second about once in a thousand runs. Every
+// treatment keeps the sensor code, transmitter and pump it names
 NAME create_full_note_v1
 POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {
@@ -599,8 +598,8 @@ ASSERT_EQUALS "Running" "@0.activityType"
 ASSERT_EQUALS 500 "@0.calories"
 ASSERT_EQUALS 10000 "@0.steps"
 ASSERT_EQUALS 120 "@0.heartRate"
-ASSERT_EQUALS null "@0.sensorCode"
-ASSERT_EQUALS null "@0.transmitterId"
+ASSERT_EQUALS "ABC123" "@0.sensorCode"
+ASSERT_EQUALS "XYZ789" "@0.transmitterId"
 ASSERT_EQUALS "PUMP123" "@0.pumpId"
 ASSERT_EQUALS "SERIAL123" "@0.pumpSerial"
 ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
@@ -728,7 +727,6 @@ ASSERT_EQUALS "lunch" "@0.reason"
 # return site.EventGroupsBundle{
 # 	EventGroup:     eventGroup,
 # 	InsulinDose:    insulinDose,
-# 	ComponentEvent: componentEvent,
 # }
 NAME create_full_bolus_v1
 POST http://{{ site }}/api/v1/treatments?token={{ token }}
@@ -758,8 +756,8 @@ ASSERT_EQUALS 1.2 "@0.insulin"
 ASSERT_EQUALS "Bolus" "@0.type"
 ASSERT_EQUALS 70 "@0.splitNow"
 ASSERT_EQUALS 30 "@0.splitExt"
-ASSERT_EQUALS null "@0.sensorCode"
-ASSERT_EQUALS null "@0.transmitterId"
+ASSERT_EQUALS "ABC123" "@0.sensorCode"
+ASSERT_EQUALS "XYZ789" "@0.transmitterId"
 ASSERT_EQUALS "PUMP123" "@0.pumpId"
 ASSERT_EQUALS "SERIAL123" "@0.pumpSerial"
 ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
@@ -771,7 +769,6 @@ ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
 # 			GlucoseReading: glucoseReading,
 # 			InsulinDose:    insulinDose,
 # 			FoodIntake:     foodIntake,
-# 			ComponentEvent: componentEvent,
 # 		}
 NAME create_full_bolus_wizard_v1
 POST http://{{ site }}/api/v1/treatments?token={{ token }}
@@ -836,8 +833,8 @@ ASSERT_EQUALS 10 "@0.fat"
 ASSERT_EQUALS 5 "@0.fibre"
 ASSERT_EQUALS 300 "@0.energy"
 ASSERT_EQUALS 2 "@0.portions"
-ASSERT_EQUALS null "@0.sensorCode"
-ASSERT_EQUALS null "@0.transmitterId"
+ASSERT_EQUALS "ABC123" "@0.sensorCode"
+ASSERT_EQUALS "XYZ789" "@0.transmitterId"
 ASSERT_EQUALS "PUMP123" "@0.pumpId"
 ASSERT_EQUALS "SERIAL123" "@0.pumpSerial"
 ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
@@ -849,7 +846,6 @@ ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
 # 			GlucoseReading: glucoseReading,
 # 			InsulinDose:    insulinDose,
 # 			FoodIntake:     foodIntake,
-# 			ComponentEvent: componentEvent,
 # 		}
 NAME create_full_combo_bolus_v1
 POST http://{{ site }}/api/v1/treatments?token={{ token }}
@@ -914,8 +910,8 @@ ASSERT_EQUALS 10 "@0.fat"
 ASSERT_EQUALS 5 "@0.fibre"
 ASSERT_EQUALS 300 "@0.energy"
 ASSERT_EQUALS 2 "@0.portions"
-ASSERT_EQUALS null "@0.sensorCode"
-ASSERT_EQUALS null "@0.transmitterId"
+ASSERT_EQUALS "ABC123" "@0.sensorCode"
+ASSERT_EQUALS "XYZ789" "@0.transmitterId"
 ASSERT_EQUALS "PUMP123" "@0.pumpId"
 ASSERT_EQUALS "SERIAL123" "@0.pumpSerial"
 ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
@@ -927,7 +923,6 @@ ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
 # 	EventGroup:     eventGroup,
 # 	InsulinDose:    insulinDose,
 # 	GlucoseReading: glucoseReading,
-# 	ComponentEvent: componentEvent,
 # }
 NAME create_full_correction_bolus_v1
 POST http://{{ site }}/api/v1/treatments?token={{ token }}
@@ -964,8 +959,8 @@ ASSERT_EQUALS 1.2 "@0.insulin"
 ASSERT_EQUALS "Bolus" "@0.type"
 ASSERT_EQUALS 70 "@0.splitNow"
 ASSERT_EQUALS 30 "@0.splitExt"
-ASSERT_EQUALS null "@0.sensorCode"
-ASSERT_EQUALS null "@0.transmitterId"
+ASSERT_EQUALS "ABC123" "@0.sensorCode"
+ASSERT_EQUALS "XYZ789" "@0.transmitterId"
 ASSERT_EQUALS "PUMP123" "@0.pumpId"
 ASSERT_EQUALS "SERIAL123" "@0.pumpSerial"
 ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
@@ -977,7 +972,6 @@ ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
 # 	GlucoseReading: glucoseReading,
 # 	InsulinDose:    insulinDose,
 # 	FoodIntake:     foodIntake,
-# 	ComponentEvent: componentEvent,
 # }
 NAME create_full_meal_bolus_v1
 POST http://{{ site }}/api/v1/treatments?token={{ token }}
@@ -1042,8 +1036,8 @@ ASSERT_EQUALS 10 "@0.fat"
 ASSERT_EQUALS 5 "@0.fibre"
 ASSERT_EQUALS 300 "@0.energy"
 ASSERT_EQUALS 2 "@0.portions"
-ASSERT_EQUALS null "@0.sensorCode"
-ASSERT_EQUALS null "@0.transmitterId"
+ASSERT_EQUALS "ABC123" "@0.sensorCode"
+ASSERT_EQUALS "XYZ789" "@0.transmitterId"
 ASSERT_EQUALS "PUMP123" "@0.pumpId"
 ASSERT_EQUALS "SERIAL123" "@0.pumpSerial"
 ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
@@ -1055,7 +1049,6 @@ ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
 # 	GlucoseReading: glucoseReading,
 # 	InsulinDose:    insulinDose,
 # 	FoodIntake:     foodIntake,
-# 	ComponentEvent: componentEvent,
 # }
 NAME create_full_snack_bolus_v1
 POST http://{{ site }}/api/v1/treatments?token={{ token }}
@@ -1119,8 +1112,8 @@ ASSERT_EQUALS 10 "@0.fat"
 ASSERT_EQUALS 5 "@0.fibre"
 ASSERT_EQUALS 300 "@0.energy"
 ASSERT_EQUALS 2 "@0.portions"
-ASSERT_EQUALS null "@0.sensorCode"
-ASSERT_EQUALS null "@0.transmitterId"
+ASSERT_EQUALS "ABC123" "@0.sensorCode"
+ASSERT_EQUALS "XYZ789" "@0.transmitterId"
 ASSERT_EQUALS "PUMP123" "@0.pumpId"
 ASSERT_EQUALS "SERIAL123" "@0.pumpSerial"
 ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
@@ -1193,7 +1186,6 @@ ASSERT_EQUALS -3 "@0.timeshift"
 # return site.EventGroupsBundle{
 # 	EventGroup:     eventGroup,
 # 	TempBasal:      tempBasal,
-# 	ComponentEvent: componentEvent,
 # }
 NAME create_full_temp_basal_v1
 POST http://{{ site }}/api/v1/treatments?token={{ token }}
@@ -1214,8 +1206,8 @@ ASSERT_EQUALS "Temp Basal" "@0.eventType"
 ASSERT_EXISTS "@0.created_at"
 ASSERT_EQUALS "Temp Basal" "@0.notes"
 ASSERT_EQUALS "reason" "@0.reason"
-ASSERT_EQUALS null "@0.sensorCode"
-ASSERT_EQUALS null "@0.transmitterId"
+ASSERT_EQUALS "ABC123" "@0.sensorCode"
+ASSERT_EQUALS "XYZ789" "@0.transmitterId"
 ASSERT_EQUALS "PUMP123" "@0.pumpId"
 ASSERT_EQUALS "SERIAL123" "@0.pumpSerial"
 ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
@@ -1243,7 +1235,6 @@ ASSERT_EQUALS "reason" "@0.reason"
 # OpenAPSOffline    TreatmentEventType = "OpenAPS Offline"
 # return site.EventGroupsBundle{
 # 	EventGroup:     eventGroup,
-# 	ComponentEvent: componentEvent,
 # }
 NAME create_full_openaps_offline_v1
 POST http://{{ site }}/api/v1/treatments?token={{ token }}
@@ -1265,8 +1256,8 @@ ASSERT_EQUALS "OpenAPS Offline" "@0.eventType"
 ASSERT_EXISTS "@0.created_at"
 ASSERT_EQUALS "OpenAPS Offline" "@0.notes"
 ASSERT_EQUALS "reason" "@0.reason"
-ASSERT_EQUALS null "@0.sensorCode"
-ASSERT_EQUALS null "@0.transmitterId"
+ASSERT_EQUALS "ABC123" "@0.sensorCode"
+ASSERT_EQUALS "XYZ789" "@0.transmitterId"
 ASSERT_EQUALS "PUMP123" "@0.pumpId"
 ASSERT_EQUALS "SERIAL123" "@0.pumpSerial"
 ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
@@ -1275,7 +1266,6 @@ ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
 # PumpBatteryChange TreatmentEventType = "Pump Battery Change"
 # return site.EventGroupsBundle{
 # 	EventGroup:     eventGroup,
-# 	ComponentEvent: componentEvent,
 # }
 NAME create_full_pump_battery_change_v1
 POST http://{{ site }}/api/v1/treatments?token={{ token }}
@@ -1306,7 +1296,6 @@ ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
 # SensorChange      TreatmentEventType = "Sensor Change"
 # return site.EventGroupsBundle{
 # 	EventGroup:     eventGroup,
-# 	ComponentEvent: componentEvent,
 # }
 NAME create_full_sensor_change_v1
 POST http://{{ site }}/api/v1/treatments?token={{ token }}
@@ -1337,7 +1326,6 @@ ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
 # SensorStart       TreatmentEventType = "Sensor Start"
 # return site.EventGroupsBundle{
 # 	EventGroup:     eventGroup,
-# 	ComponentEvent: componentEvent,
 # }
 NAME create_full_sensor_start_v1
 POST http://{{ site }}/api/v1/treatments?token={{ token }}
@@ -1368,7 +1356,6 @@ ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
 # SiteChange        TreatmentEventType = "Site Change"
 # return site.EventGroupsBundle{
 # 	EventGroup:     eventGroup,
-# 	ComponentEvent: componentEvent,
 # }
 NAME create_full_site_change_v1
 POST http://{{ site }}/api/v1/treatments?token={{ token }}
@@ -1399,7 +1386,6 @@ ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
 # InsulinChange     TreatmentEventType = "Insulin Change"
 # return site.EventGroupsBundle{
 # 	EventGroup:     eventGroup,
-# 	ComponentEvent: componentEvent,
 # }
 NAME create_full_insulin_change_v1
 POST http://{{ site }}/api/v1/treatments?token={{ token }}
@@ -1430,7 +1416,6 @@ ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
 # CannulaFill       TreatmentEventType = "Cannula Fill"
 # return site.EventGroupsBundle{
 # 	EventGroup:     eventGroup,
-# 	ComponentEvent: componentEvent,
 # }
 NAME create_full_cannula_fill_v1
 POST http://{{ site }}/api/v1/treatments?token={{ token }}
@@ -1461,7 +1446,6 @@ ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
 # Prime             TreatmentEventType = "Prime"
 # return site.EventGroupsBundle{
 # 	EventGroup:     eventGroup,
-# 	ComponentEvent: componentEvent,
 # }
 NAME create_full_prime_v1
 POST http://{{ site }}/api/v1/treatments?token={{ token }}
@@ -1492,7 +1476,6 @@ ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
 # ReservoirChange   TreatmentEventType = "Reservoir Change"
 # return site.EventGroupsBundle{
 # 	EventGroup:     eventGroup,
-# 	ComponentEvent: componentEvent,
 # }
 NAME create_full_reservoir_change_v1
 POST http://{{ site }}/api/v1/treatments?token={{ token }}
@@ -1525,7 +1508,6 @@ ASSERT_EQUALS "Insulin Pump" "@0.pumpType"
 # return site.EventGroupsBundle{
 # 	EventGroup:     eventGroup,
 # 	GlucoseReading: glucoseReading,
-# 	ComponentEvent: componentEvent,
 # }
 NAME create_full_calibration_v1
 POST http://{{ site }}/api/v1/treatments?token={{ token }}
@@ -1553,8 +1535,8 @@ ASSERT_EQUALS "reason" "@0.reason"
 ASSERT_EQUALS 99.099 "@0.glucose"
 ASSERT_EQUALS "Sensor" "@0.glucoseType"
 ASSERT_EQUALS "mg/dL" "@0.units"
-ASSERT_EQUALS null "@0.sensorCode"
-ASSERT_EQUALS null "@0.transmitterId"
+ASSERT_EQUALS "ABC123" "@0.sensorCode"
+ASSERT_EQUALS "XYZ789" "@0.transmitterId"
 ASSERT_EQUALS "PUMP123" "@0.pumpId"
 ASSERT_EQUALS "SERIAL123" "@0.pumpSerial"
 ASSERT_EQUALS "Insulin Pump" "@0.pumpType"

@@ -21,7 +21,8 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/table"
 )
 
-// eventGroupEvents are the group's events in words, like "4 U insulin", "40 g carbs" and "5.5–6.7 mmol/L temp target for 30 min"
+// eventGroupEvents are the group's events in words, like "4 U insulin", "40 g carbs" and "5.5–6.7 mmol/L temp target for 30 min",
+// and a sensor change's sensor code and transmitter
 func eventGroupEvents(group *sitemodels.SiteEventGroup) []string {
 	events := []string{}
 	if r := group.GlucoseReading; r != nil {
@@ -42,10 +43,16 @@ func eventGroupEvents(group *sitemodels.SiteEventGroup) []string {
 	for _, other := range []struct {
 		id   *string
 		name string
-	}{{group.ProfileSwitchID, "profile switch"}, {group.ComponentEventID, "site or sensor change"}, {group.ActivityID, "activity"}, {group.NotificationEventID, "notification"}} {
+	}{{group.ProfileSwitchID, "profile switch"}, {group.ActivityID, "activity"}, {group.NotificationEventID, "notification"}} {
 		if other.id != nil {
 			events = append(events, other.name)
 		}
+	}
+	if group.SensorCode != nil {
+		events = append(events, "sensor code "+*group.SensorCode)
+	}
+	if group.TransmitterID != nil {
+		events = append(events, "transmitter "+*group.TransmitterID)
 	}
 	return events
 }
@@ -136,8 +143,23 @@ func eventGroupForm(ctx context.Context, group *sitemodels.SiteEventGroup, group
 		p.Fields = []addmodal.Field{{Name: "group_type", Label: "Type", Help: "What kind of treatment it is, as Nightscout calls it.", Required: true, Kind: addmodal.Select, Options: sitemodels.EventGroupTypes, Value: groupType}}
 	}
 	p.Extra = eventGroupChoicesLoader(p.ID, choices, group == nil, groupType)
+	whenHelp := "When it happened. Events within an hour of it can be picked."
+	if len(sitemodels.EventGroupTypeKinds[nightscoutmodels.TreatmentEventType(groupType)]) == 0 {
+		whenHelp = "When it happened."
+	}
+	p.Fields = append(p.Fields, addmodal.Field{Name: "occurred_at", Label: "When", Help: whenHelp, Kind: addmodal.When, Value: when.In(Location(ctx)).Format("2006-01-02T15:04")})
+	// A sensor's start, stop or change can say its code and transmitter
+	if slices.Contains(sensorTypes, groupType) {
+		sensorCode, transmitterID := "", ""
+		if group != nil {
+			sensorCode, transmitterID = orEmpty(group.SensorCode), orEmpty(group.TransmitterID)
+		}
+		p.Fields = append(p.Fields, []addmodal.Field{
+			{Name: "sensor_code", Label: "Sensor code", Help: "The new sensor's calibration code.", Kind: addmodal.Text, Max: "64", Value: sensorCode},
+			{Name: "transmitter_id", Label: "Transmitter ID", Help: "The sensor's transmitter.", Kind: addmodal.Text, Max: "64", Value: transmitterID},
+		}...)
+	}
 	p.Fields = append(p.Fields, []addmodal.Field{
-		{Name: "occurred_at", Label: "When", Help: "When it happened. Events within an hour of it can be picked.", Kind: addmodal.When, Value: when.In(Location(ctx)).Format("2006-01-02T15:04")},
 		{Name: "reason", Label: "Reason", Help: "Why, e.g. lunch or a low.", Kind: addmodal.Text, Max: "64", Value: reason},
 		{Name: "notes", Label: "Notes", Help: "Anything else to remember about it.", Kind: addmodal.Text, Max: "1024", Value: notes},
 	}...)
@@ -161,11 +183,14 @@ templ eventGroupChoicesLoader(formID string, path string, creating bool, groupTy
 	</div>
 }
 
+// sensorTypes are the changes of a sensor, which can have its code and transmitter
+var sensorTypes = []string{nightscoutmodels.SensorStart.String(), nightscoutmodels.SensorStop.String(), nightscoutmodels.SensorChange.String()}
+
 // eventKinds are the kinds of event a group can have one of, by its field for it
 var eventKinds = []struct{ field, label string }{
 	{"glucose_reading_id", "Glucose"}, {"insulin_dose_id", "Insulin"}, {"food_intake_id", "Food"},
 	{"temp_basal_id", "Temp basal"}, {"temp_target_id", "Temp target"}, {"profile_switch_id", "Profile switch"},
-	{"component_event_id", "Site or sensor change"}, {"activity_id", "Activity"}, {"notification_event_id", "Notification"},
+	{"activity_id", "Activity"}, {"notification_event_id", "Notification"},
 }
 
 // eventChoiceLabel is an event's time, in the time format, and what tells it apart, like "12:30:00 40 g carbs, sandwich"
@@ -225,6 +250,15 @@ templ EventGroupChoices(editing bool, kinds []string, from int64, to int64, choi
 	</div>
 }
 
+// EventGroupNoChoices says a type of group, like a change of a sensor, site or pump part, has no events to pick
+templ EventGroupNoChoices(editing bool) {
+	{{ formID := "site--event-group--create" }}
+	if editing {
+		{{ formID = "site--event-group--edit" }}
+	}
+	<p id={ formID + "--no-events" } class="text-sm text-gray-500">This type has no events to pick, just its time and notes.</p>
+}
+
 // EventGroupNew is the modal to add a group of groupType in, putting the group's row at the top of the table
 templ EventGroupNew(groupType string) {
 	@addmodal.Modal(eventGroupForm(ctx, nil, groupType))
@@ -255,6 +289,8 @@ templ EventGroupModal(eventGroup *sitemodels.SiteEventGroup) {
 			@readingDetail("Minutes", orDash(eventGroup.DurationMinutes))
 			@readingDetail("Notes", orDash(eventGroup.Notes))
 			@readingDetail("Reason", orDash(eventGroup.Reason))
+			@readingDetail("Sensor Code", orDash(eventGroup.SensorCode))
+			@readingDetail("Transmitter ID", orDash(eventGroup.TransmitterID))
 			@readingDetail("Pump ID", orDash(eventGroup.PumpID))
 			@readingDetail("Pump Serial", orDash(eventGroup.PumpSerial))
 			@readingDetail("Pump Type", orDash(eventGroup.PumpType))

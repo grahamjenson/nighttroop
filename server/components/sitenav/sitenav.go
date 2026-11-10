@@ -99,7 +99,7 @@ var keywords = map[string][]string{
 	"/data/temp-basals":          {"Basal Rate"},
 	"/data/profile-switches":     {"Profile Change"},
 	"/data/activities":           {"Exercise", "Steps", "Heart Rate", "Calories"},
-	"/data/event-groups":         {"Treatments", "Sensor Change", "Site Change", "Cannula", "Transmitter"},
+	"/data/event-groups":         {"Sensor Change", "Site Change", "Cannula", "Transmitter"},
 	"/data/notifications":        {"Announcements", "Severity"},
 	"/data/device-status":        {"Battery", "Reservoir", "IOB", "COB", "Loop", "Uploader"},
 	"/reports":                   {"Daily Carbs", "Daily Dose"},

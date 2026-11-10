@@ -335,7 +335,7 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   opening its hub's first page; there is no Summary or Settings link. The hub of the page shown is marked, after a page
   opened from a link or tab as well as one loaded in full, and the home icon on the summary.
 - Data has side tabs in groups, like Settings: Readings & treatments (Glucose Readings, Insulin Doses, Food Intakes,
-  Temp Targets, Temp Basals, Profile Switches), Events (Activities, Site & Sensor Changes, Notifications, Event Groups),
+  Temp Targets, Temp Basals, Profile Switches), Events (Activities, Notifications, Event Groups),
   Devices (Device Status) and Presets (Food Presets, Profiles, Loop Settings).
 - Reports has a tab for each report: Summaries, Overview, AGP and TDD, and opens on Summaries.
 - Settings, from the user menu, has side tabs in groups: This site (General), People & devices (Users & Devices, Push
@@ -555,20 +555,25 @@ by side. The site API's search gives the same: its `items`, `skip`, `limit` (50 
   - A profile switch's details show its profile's basal, carb ratio, sensitivity and target schedules as tables, as
     profiles do, with sensitivities and targets in the settings' units and the units in the headings.
 - **Activities**
-- **Site and sensor changes**
 - **Notifications**
 - **Event groups**: the treatments that came in together through the Nightscout API, with their events.
   - An event group can also be added on the site: the Add Event Group menu lists the Nightscout types (e.g. Meal Bolus),
     and each opens a modal for that type with a time and up to one event of each kind that type can have (e.g. a Meal
-    Bolus can have glucose, insulin and food, a Site Change only a site or sensor change, an Exercise only an
-    activity), picked from those within an hour of the time. Changing the time lists the events near it. The events'
+    Bolus can have glucose, insulin and food, an Exercise only an activity), picked from those within an hour of the
+    time. Changing the time lists the events near it. The events'
     times, and the window they are picked from, are in the time format, as other times are.
-  - Adding or editing a group with a kind of event its type cannot have, or of an unknown type, is refused.
+  - Adding or editing a group with a kind of event its type cannot have, or of an unknown type, is refused, as is one
+    with no events, unless it is a change.
+  - Sensor, site and pump part changes (Sensor Start, Sensor Stop, Sensor Change, Site Change, Cannula Fill, Prime,
+    Insulin Change, Reservoir Change, Pump Battery Change) are event groups with no events: the menu lists them, and
+    their modal says there are no events to pick, with just a time, reason and notes, and for a sensor's start, stop
+    or change its sensor code and transmitter ID. There is no separate page for them.
   - Clicking a group edits its type, time, notes and events; changing its type offers only the kinds of event the new
     type can have. An event taken out of a group is in no group.
   - An event is in at most one group: events in another group are not offered, and grouping one again is refused.
   - A group added or edited on the site is a Nightscout treatment, with its events.
-  - A group's details show the pump its app named (ID, serial and type), as AAPS does on every treatment.
+  - A group's details show the pump its app named (ID, serial and type), as AAPS does on every treatment, and a sensor
+    change's sensor code and transmitter ID, which its row's events list too.
 - **Device statuses**: each device's latest 3 statuses, and every status a device sent, with each column's unit in its
   header, e.g. Phone battery (%), Reservoir (U), IOB (U) and COB (g).
 
@@ -829,8 +834,10 @@ Connectors are a site's third party integrations, each syncing from one service.
   it is that time in its zone.
 - Loop's and Trio's Suspend Pump and Resume Pump treatments are kept.
 - The pump AAPS names on every treatment, its `pumpId`, `pumpSerial` and `pumpType`, is kept with the treatment and
-  returned as sent; only a sensor, site or pump part change (e.g. `Site Change`, `Insulin Change`) is a site or sensor
-  change, so a temp basal or bolus naming the pump is not listed in Site & Sensor Changes.
+  returned as sent.
+- A treatment's `sensorCode` and `transmitterId`, as xDrip+ sends with a sensor change, are kept with it and returned
+  as sent. A sensor, site or pump part change (e.g. `Sensor Change`, `Site Change`) is an event group with no events, of
+  its type, which the Nightscout v2 properties' ages (`sage`, `cage`, `iage`, `bage`) and the summary read.
 - An activity's `type`, as xDrip+ sends it, is its activity type, a heart rate's `bpm` its heart rate and a motion's
   `class` its name.
 - A device status keeps its pump's clock, manufacturer and model, its uploader's battery, returned in both
@@ -868,8 +875,8 @@ Connectors are a site's third party integrations, each syncing from one service.
 - Trio's and iAPS's `SMB` and `External Insulin` treatments are kept as insulin doses, with their event type.
 - A Loop bolus's `automatic` comes back as sent, true or false, through API v1 and v3, so LoopFollow shows an
   automatic bolus as an SMB and leaves it out of its bolus stats.
-- xDrip+'s `Sensor Stop` treatments are kept as a site or sensor change, with their event type, so the treatments it
-  uploads after one are kept too; the site can add a Sensor Stop change and a Sensor Stop event group.
+- xDrip+'s `Sensor Stop` treatments are kept as an event group, with their event type, so the treatments it uploads
+  after one are kept too; the site can add a Sensor Stop event group.
 - A profile has `enteredBy`, the identity that uploaded it, as Trio needs it to import one.
 - A treatment's `enteredBy` comes back as sent, e.g. `loop://iPhone` or `Trio`, else the identity that uploaded it.
 - A treatment's `uuid` comes back as sent, as xDrip+ matches its own by it; one sent with no `_id` is its identifier.

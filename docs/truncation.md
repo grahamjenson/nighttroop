@@ -232,7 +232,7 @@ own IDs (`uuid`, `sent_hash`) so the Nightscout API can rebuild the treatment as
   No app we know re-uploads that far back.
 - The Nightscout shape of rolled-up treatments.
 
-### Temp targets, profile switches, activities, notifications, component events
+### Temp targets, profile switches, activities, notifications
 
 These are few a day, and what people look back for: what target or profile was in force, exercise, site and sensor
 changes, and announcements.
@@ -240,9 +240,9 @@ changes, and announcements.
 **Today:** kept forever.
 
 **Proposal:**
-- **Temp targets, activities and component events** (site, sensor, pump and battery changes): **keep as rows
-  forever**. Clear app, device and `updated_by_*` after 14 days. Component events are how sensor and site lifetimes
-  are worked out over years.
+- **Temp targets and activities:** **keep as rows forever**. Clear app, device and `updated_by_*` after 14 days. Site,
+  sensor, pump and battery changes are event groups with no events, kept as site changes are above: they are how
+  sensor and site lifetimes are worked out over years.
 - **Profile switches:** keep, but AAPS sends an "effective profile switch" whenever anything changes, each repeating
   the whole profile's JSON (up to 5 × 2 KB). After 14 days:
   - delete a switch whose profile (basal rates, ratios, sensitivities and targets, after its multiplier and timeshift)
