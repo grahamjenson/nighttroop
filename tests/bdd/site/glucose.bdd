@@ -107,8 +107,8 @@ ASSERT_VISIBLE #site--glucose--edit--reason[value="Before lunch"]
 ASSERT_NOT_VISIBLE #site--glucose--details >> text=Rechecked
 CLICK #site--glucose--details--close
 
-// Choosing mg/dL shows the same reading in mg/dL
-CLICK #site--nav--settings
+// Choosing mg/dL shows the same reading in mg/dL. Settings is opened directly, as the edit's toast covers the menu
+GOTO /settings
 ASSERT_STATUS 200
 INPUT #site--settings--identity--units mg/dL
 CLICK #site--settings--identity--save
