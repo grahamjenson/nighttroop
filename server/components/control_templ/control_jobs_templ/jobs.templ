@@ -8,6 +8,7 @@ import (
 	"nighttroop.t1d.nz/server/components/filter"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
+	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/display"
@@ -75,15 +76,7 @@ templ JobsTable(jobs []*controlmodels.Job, skip int64, limit int64) {
 }
 
 templ jobRow(job *controlmodels.Job) {
-	@table.Row(table.RowProps{
-		ID:    fmt.Sprintf("control--job--%d", job.ID),
-		Class: "cursor-pointer",
-		Attributes: templ.Attributes{
-			"hx-get":    fmt.Sprintf("/jobs/%d", job.ID),
-			"hx-target": "#modal-container",
-			"hx-swap":   "innerHTML",
-		},
-	}) {
+	@table.ModalRow(fmt.Sprintf("control--job--%d", job.ID), fmt.Sprintf("/jobs/%d", job.ID)) {
 		@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {
 			{ fmt.Sprint(job.ID) }
 		}
@@ -142,5 +135,7 @@ templ JobModal(job *controlmodels.Job) {
 // RunLogsLink goes to the logs of a job's run, by the job_id they have, to see why it failed
 templ RunLogsLink(id string, runID string) {
 	{{ link := filter.PagePath("/logs", nil, nil, filter.ID{Name: "job_id", Value: &runID}) }}
-	<a id={ id } href={ templ.SafeURL(link) } hx-get={ link } hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML" class="break-all text-primary underline">{ runID }</a>
+	@nav.Link(id, link, "break-all text-primary underline") {
+		{ runID }
+	}
 }

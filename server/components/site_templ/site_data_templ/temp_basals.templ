@@ -10,8 +10,6 @@ import (
 	"nighttroop.t1d.nz/server/components/modal"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/successtoast"
-	"nighttroop.t1d.nz/server/components/ui/button"
-	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/table"
 )
@@ -110,18 +108,9 @@ templ tempBasalInputs(id string, rate string, duration string, notes string) {
 	}
 }
 
-// tempBasalRow opens the temp basal's details when clicked. The delete button stops its click reaching the row.
+// tempBasalRow opens the temp basal's details when clicked.
 templ tempBasalRow(tempBasal *sitemodels.SiteTempBasal) {
-	{{ id := "site--temp-basal--" + tempBasal.ID }}
-	@table.Row(table.RowProps{
-		ID:    id,
-		Class: "cursor-pointer",
-		Attributes: templ.Attributes{
-			"hx-get":    "/data/temp-basals/" + tempBasal.ID,
-			"hx-target": "#modal-container",
-			"hx-swap":   "innerHTML",
-		},
-	}) {
+	@table.DataRow("site--temp-basal--"+tempBasal.ID, "/data/temp-basals/"+tempBasal.ID, "Delete this temp basal?") {
 		@table.Cell() {
 			{ formatReadingDate(ctx, tempBasal.OccurredAt) }
 		}
@@ -139,28 +128,6 @@ templ tempBasalRow(tempBasal *sitemodels.SiteTempBasal) {
 		}
 		@table.Cell() {
 			{ orDash(tempBasal.CreatedByDeviceName) }
-		}
-		@table.Cell() {
-			<div class="flex justify-end">
-				@button.Button(button.Props{
-					ID:      id + "--delete",
-					Variant: button.VariantGhost,
-					Size:    button.SizeIcon,
-					Attributes: templ.Attributes{
-						"title":                "Delete",
-						"onclick":              templ.JSUnsafeFuncCall("event.stopPropagation()"),
-						"hx-delete":            "/data/temp-basals/" + tempBasal.ID,
-						"hx-confirm":           "Delete this temp basal?",
-						"hx-target":            "#toaster",
-						"hx-swap":              "beforeend",
-						"hx-on::after:request": templ.JSUnsafeFuncCall("if (ctx.response.status < 400) this.closest('tr').remove()"),
-						"hx-status:4xx":        "target:#toaster swap:beforeend",
-						"hx-status:5xx":        "target:#toaster swap:beforeend",
-					},
-				}) {
-					@icon.Trash2(icon.Props{Class: button.DeleteIconClass})
-				}
-			</div>
 		}
 	}
 }

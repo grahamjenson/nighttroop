@@ -16,7 +16,7 @@ func TestEmptyGlucoseLinksToConnectorSettings(t *testing.T) {
 	var buf bytes.Buffer
 	require.NoError(t, glucoseHero(&sitemodels.Summary{}).Render(context.Background(), &buf))
 	html := buf.String()
-	require.Contains(t, html, `id="site--summary--connectors-link" href="/settings/connectors" hx-get="/settings/connectors" hx-target="#main-content"`)
+	require.Contains(t, html, `id="site--summary--connectors-link" href="/settings/connectors" hx-get="/settings/connectors"`)
 	text := strings.Join(strings.Fields(regexp.MustCompile(`<[^>]*>`).ReplaceAllString(html, " ")), " ")
 	require.Contains(t, text, "Upload from your phone, or connect a source in Connectors .")
 }

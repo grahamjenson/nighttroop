@@ -13,6 +13,7 @@ import (
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
+	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/table"
@@ -73,20 +74,6 @@ templ page(id string, title string, description string, path string, pagePath st
 	</div>
 }
 
-templ rowLink(id string, path string) {
-	@table.Row(table.RowProps{
-		ID:    id,
-		Class: "cursor-pointer",
-		Attributes: templ.Attributes{
-			"hx-get":    path,
-			"hx-target": "#modal-container",
-			"hx-swap":   "innerHTML",
-		},
-	}) {
-		{ children... }
-	}
-}
-
 templ empty(columns string, what string) {
 	<tr><td colspan={ columns } class="p-4 text-sm text-gray-500">No { what } here.</td></tr>
 }
@@ -110,7 +97,7 @@ templ idDetail(id string, label string, path string, name string, value *string)
 		{{ link := filter.PagePath(path, nil, nil, filter.ID{Name: name, Value: value}) }}
 		<dt class="text-gray-500">{ label }</dt>
 		<dd class="break-all">
-			<a id={ id } href={ templ.SafeURL(link) } hx-get={ link } hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML" class="text-primary underline">{ *value }</a>
+			<a id={ id } href={ templ.SafeURL(link) } { nav.Attributes(link)... } class="text-primary underline">{ *value }</a>
 		</dd>
 	}
 }
@@ -158,7 +145,7 @@ templ EventsList(id string, events []*controlmodels.Event, withSite bool) {
 				@empty(columns(4, withSite), "events")
 			}
 			for _, event := range events {
-				@rowLink(fmt.Sprintf("control--event--%d", event.ID), fmt.Sprintf("/events/%d", event.ID)) {
+				@table.ModalRow(fmt.Sprintf("control--event--%d", event.ID), fmt.Sprintf("/events/%d", event.ID)) {
 					@table.Cell() {
 						{ display.Name(event.Name) }
 					}
@@ -228,7 +215,7 @@ templ ErrorsList(id string, errors []*controlmodels.Error, withSite bool) {
 				@empty(columns(3, withSite), "errors")
 			}
 			for _, e := range errors {
-				@rowLink(fmt.Sprintf("control--error--%d", e.ID), fmt.Sprintf("/errors/%d", e.ID)) {
+				@table.ModalRow(fmt.Sprintf("control--error--%d", e.ID), fmt.Sprintf("/errors/%d", e.ID)) {
 					@table.Cell() {
 						<span class="block max-w-md truncate text-red-700">{ e.Message }</span>
 					}
@@ -283,7 +270,7 @@ templ LogsTable(logs []*controlmodels.Log, q *apiquery.Query) {
 					@empty("4", "logs")
 				}
 				for _, log := range logs {
-					@rowLink(fmt.Sprintf("control--log--%d", log.ID), fmt.Sprintf("/logs/%d", log.ID)) {
+					@table.ModalRow(fmt.Sprintf("control--log--%d", log.ID), fmt.Sprintf("/logs/%d", log.ID)) {
 						@table.Cell() {
 							{ log.Level }
 						}

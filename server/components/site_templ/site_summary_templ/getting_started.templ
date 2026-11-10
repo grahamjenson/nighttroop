@@ -5,7 +5,7 @@ import (
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/heading"
-	"nighttroop.t1d.nz/server/components/stat"
+	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -111,7 +111,7 @@ templ step(id, number string, ic func(...icon.Props) templ.Component, title stri
 // stepLink opens the page a step is done on, at the bottom of its card
 templ stepLink(id, path, text string) {
 	<div class="mt-auto pt-4">
-		@stat.PageLink(id, path, "inline-flex items-center rounded-lg bg-brand-night px-4 py-2 font-medium text-white hover:bg-brand-night/90") {
+		@nav.Link(id, path, "inline-flex items-center rounded-lg bg-brand-night px-4 py-2 font-medium text-white hover:bg-brand-night/90") {
 			{ text }
 		}
 	</div>

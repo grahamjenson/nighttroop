@@ -106,6 +106,12 @@ ASSERT_NOT_VISIBLE #site--reports--next[disabled]
 CLICK_BACK
 ASSERT_STATUS 200
 ASSERT_DRAWN #site--reports--agp
+// Clicking between the periods quickly replaces each report still loading with the next, so the last one clicked is
+// shown
+ASSERT_COUNT #site--reports--period-week[hx-sync="#main-content:replace"] 1
+CLICK_QUICKLY #site--reports--period-week, #site--reports--period-fortnight, #site--reports--period-day
+ASSERT_PATH /reports/agp/day-{{ date 0 }}
+ASSERT_COUNT #site--agp--daily a 1
 // Moving between the reports swaps the page, closing the live alarm updates' stream and opening it again, and that
 // throws nothing a person would see in the browser's console
 ASSERT_NO_PAGE_ERRORS
