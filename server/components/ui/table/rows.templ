@@ -1,0 +1,49 @@
+// Hand-written rows shared by the list pages, beside the templui table
+package table
+
+import (
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/icon"
+)
+
+// ModalRow opens path in #modal-container when clicked, or on Enter; its children are the cells
+templ ModalRow(id, path string) {
+	@Row(RowProps{ID: id, Class: "cursor-pointer", Attributes: templ.Attributes{"hx-get": path, "hx-target": "#modal-container", "hx-swap": "innerHTML"}}) {
+		{ children... }
+	}
+}
+
+// DeleteCell is a cell with a button, with the given id, deleting path once confirmed. On success it removes its row,
+// and the toast in the response, or an error, goes to #toaster. Its click stops at the button, never opening a ModalRow.
+templ DeleteCell(id, path, confirm string) {
+	@Cell() {
+		<div class="flex justify-end">
+			@button.Button(button.Props{
+				ID:      id,
+				Variant: button.VariantGhost,
+				Size:    button.SizeIcon,
+				Attributes: templ.Attributes{
+					"title":                "Delete",
+					"onclick":              templ.JSUnsafeFuncCall("event.stopPropagation()"),
+					"hx-delete":            path,
+					"hx-confirm":           confirm,
+					"hx-target":            "#toaster",
+					"hx-swap":              "beforeend",
+					"hx-on::after:request": templ.JSUnsafeFuncCall("if (ctx.response.status < 400) this.closest('tr').remove()"),
+					"hx-status:4xx":        "target:#toaster swap:beforeend",
+					"hx-status:5xx":        "target:#toaster swap:beforeend",
+				},
+			}) {
+				@icon.Trash2(icon.Props{Class: button.DeleteIconClass})
+			}
+		</div>
+	}
+}
+
+// DataRow is a ModalRow opening path, with its children then a DeleteCell, id + "--delete", deleting path.
+// They are on one line so templ writes no space between the cells.
+templ DataRow(id, path, confirm string) {
+	@ModalRow(id, path) {
+		{ children... }@DeleteCell(id+"--delete", path, confirm)
+	}
+}

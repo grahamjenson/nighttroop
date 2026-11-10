@@ -7,6 +7,7 @@ import (
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/utils/display"
 )
@@ -198,7 +199,7 @@ templ dailyProfiles(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSum
 					<div class="border-b border-r border-gray-200 bg-gray-50"></div>
 				} else {
 					{{ path := link("agp", "day", day.Date) }}
-					<a id={ "site--agp--day-" + day.Date.Format(time.DateOnly) } class={ "block border-b border-r border-gray-200 p-1 hover:bg-gray-50", templ.KV("col-span-7", p.Period == "day") } href={ templ.SafeURL(path) } hx-get={ path } hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML">
+					<a id={ "site--agp--day-" + day.Date.Format(time.DateOnly) } class={ "block border-b border-r border-gray-200 p-1 hover:bg-gray-50", templ.KV("col-span-7", p.Period == "day") } href={ templ.SafeURL(path) } { nav.Attributes(path)... }>
 						<span class="font-semibold text-gray-900">{ day.Date.Format("2") }</span>
 						if day.Day != nil {
 							@dayGlucose("site--agp--day-"+day.Date.Format(time.DateOnly)+"--", "h-12 w-full", day.Day.Glucose, p.Units, low, high)

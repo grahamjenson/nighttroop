@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/sitenav"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -16,12 +17,6 @@ func signedIn(ctx context.Context) *controldb.SiteIdentity {
 		return siteContext.IdentityModel
 	}
 	return nil
-}
-
-// navAttributes open a page as the header's links, the hubs' tabs and the search do: in the main content, with its
-// URL, a quicker click replacing one still loading, so the last one clicked is the page shown
-func navAttributes(path string) templ.Attributes {
-	return templ.Attributes{"hx-get": path, "hx-target": "#main-content", "hx-push-url": "true", "hx-swap": "innerHTML", "hx-sync": "#main-content:replace"}
 }
 
 // hubIcon is the icon of a hub's link in the header, all the link shows on a phone
@@ -78,7 +73,7 @@ templ HeaderLinks(path string, oob bool) {
 					if current {
 						aria-current="page"
 					}
-					{ navAttributes(pages[0].Path)... }
+					{ nav.Attributes(pages[0].Path)... }
 				>
 					@hubIcon(hub)
 					<span class="hidden sm:inline">{ string(hub) }</span>
@@ -161,7 +156,7 @@ templ tab(page sitenav.Page, current bool, class string) {
 		if current {
 			aria-current="page"
 		}
-		{ navAttributes(page.Path)... }
+		{ nav.Attributes(page.Path)... }
 	>
 		@page.Icon(icon.Props{Class: "size-4 shrink-0"})
 		{ page.Label }
@@ -207,7 +202,7 @@ templ Search() {
 									data-label={ strings.ToLower(page.Label) }
 									data-hints={ page.Hints() }
 									class="flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-gray-100 aria-selected:bg-gray-100"
-									{ navAttributes(page.Path)... }
+									{ nav.Attributes(page.Path)... }
 								>
 									@page.Icon(icon.Props{Class: "size-4 text-gray-500"})
 									{ page.Label }

@@ -7,6 +7,7 @@ import (
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
@@ -78,25 +79,33 @@ func link(report, period string, date time.Time) string {
 templ periodHeader(report, name string, p *sitemodels.SiteSummaryPeriod) {
 	{{ first, last := days(ctx, p) }}
 	<div class="flex flex-wrap items-center justify-between gap-2">
-		<div>
-			<h1 class="text-2xl font-bold">{ name }</h1>
-			<div class="flex items-center gap-1">
-				@arrowButton("site--reports--previous", link(report, p.Period, first.AddDate(0, 0, -1)), "Previous "+p.Period) {
-					@icon.ChevronLeft()
-				}
-				<span id="site--reports--title" class="min-w-0 text-sm font-medium tabular-nums text-gray-700">{ title(ctx, p) }</span>
-				@arrowButton("site--reports--next", next(report, p, time.UnixMilli(p.End).In(first.Location()).AddDate(0, 0, -1)), "Next "+p.Period) {
-					@icon.ChevronRight()
-				}
-			</div>
-		</div>
+		@periodNav(name, "site--reports", "site--reports--title", title(ctx, p), link(report, p.Period, first.AddDate(0, 0, -1)),
+			next(report, p, time.UnixMilli(p.End).In(first.Location()).AddDate(0, 0, -1)), p.Period)
 		<div class="flex flex-wrap gap-1">
 			for _, kind := range periods {
-				@reportButton("site--reports--period-"+kind.Period, link(report, kind.Period, last), kind.Period == p.Period) {
+				@nav.Toggle("site--reports--period-"+kind.Period, link(report, kind.Period, last), button.SizeSm, kind.Period == p.Period) {
 					{ kind.Label }
 				}
 			}
 		</div>
+	</div>
+}
+
+// periodNav is a report's name over the dates it is of, its title, with arrow buttons either side to the period, a
+// unit as month, before and after, then anything else about it
+templ periodNav(name, id, titleID, title, previous, next, unit string) {
+	<div>
+		<h1 class="text-2xl font-bold">{ name }</h1>
+		<div class="flex items-center gap-1">
+			@arrowButton(id+"--previous", previous, "Previous "+unit) {
+				@icon.ChevronLeft()
+			}
+			<span id={ titleID } class="min-w-0 text-sm font-medium tabular-nums text-gray-700">{ title }</span>
+			@arrowButton(id+"--next", next, "Next "+unit) {
+				@icon.ChevronRight()
+			}
+		</div>
+		{ children... }
 	</div>
 }
 
@@ -110,18 +119,7 @@ templ TDDReport(last time.Time, days []*sitemodels.SiteSummaryDaily) {
 	{{ mean, lowest, highest := tddStats(withInsulin) }}
 	@heading.Title("TDD")
 	<div id="site--reports" class="w-full space-y-4 py-4">
-		<div>
-			<h1 class="text-2xl font-bold">TDD</h1>
-			<div class="flex items-center gap-1">
-				@arrowButton("site--reports--tdd--previous", previous, "Previous month") {
-					@icon.ChevronLeft()
-				}
-				<span id="site--reports--title" class="min-w-0 text-sm font-medium tabular-nums text-gray-700">{ first.Format("Mon 2 Jan") } to { last.Format("Mon 2 Jan 2006") }</span>
-				@arrowButton("site--reports--tdd--next", next, "Next month") {
-					@icon.ChevronRight()
-				}
-			</div>
-		</div>
+		@periodNav("TDD", "site--reports--tdd", "site--reports--title", first.Format("Mon 2 Jan")+" to "+last.Format("Mon 2 Jan 2006"), previous, next, "month")
 		<dl class="grid grid-cols-2 gap-3 sm:grid-cols-4">
 			@stat("site--reports--tdd--days", "Days with insulin", fmt.Sprint(len(withInsulin)))
 			@stat("site--reports--tdd--mean", "Daily dose", display.Value(mean, " U"))
@@ -175,31 +173,16 @@ templ TDDReport(last time.Time, days []*sitemodels.SiteSummaryDaily) {
 	</div>
 }
 
-// reportButton opens the report at path, or is disabled when there is none, so back and forward move between them
-templ reportButton(id, path string, selected bool) {
-	{{ variant := button.VariantOutline }}
-	if selected {
-		{{ variant = button.VariantDefault }}
-	}
-	@button.Button(button.Props{
-		ID:         id,
-		Variant:    variant,
-		Size:       button.SizeSm,
-		Disabled:   path == "",
-		Attributes: templ.Attributes{"hx-get": path, "hx-target": "#main-content", "hx-push-url": "true", "hx-swap": "innerHTML"},
-	}) {
-		{ children... }
-	}
-}
-
 // arrowButton opens the report at path, as an icon named by label for a screen reader, or is disabled when there is none
 templ arrowButton(id, path, label string) {
+	{{ attributes := nav.Attributes(path) }}
+	{{ attributes["aria-label"], attributes["title"] = label, label }}
 	@button.Button(button.Props{
 		ID:         id,
 		Variant:    button.VariantGhost,
 		Size:       button.SizeIcon,
 		Disabled:   path == "",
-		Attributes: templ.Attributes{"aria-label": label, "title": label, "hx-get": path, "hx-target": "#main-content", "hx-push-url": "true", "hx-swap": "innerHTML"},
+		Attributes: attributes,
 	}) {
 		{ children... }
 	}
@@ -220,19 +203,9 @@ templ SummariesReport(first time.Time, summaries map[string][]*sitemodels.SiteSu
 	{{ previous, next := summariesLinks(first, time.Now()) }}
 	@heading.Title("Summaries")
 	<div id="site--summaries" class="w-full space-y-4 py-4">
-		<div>
-			<h1 class="text-2xl font-bold">Summaries</h1>
-			<div class="flex items-center gap-1">
-				@arrowButton("site--summaries--previous", previous, "Previous month") {
-					@icon.ChevronLeft()
-				}
-				<span id="site--summaries--month" class="min-w-0 text-sm font-medium tabular-nums text-gray-700">{ first.Format("January 2006") }</span>
-				@arrowButton("site--summaries--next", next, "Next month") {
-					@icon.ChevronRight()
-				}
-			</div>
+		@periodNav("Summaries", "site--summaries", "site--summaries--month", first.Format("January 2006"), previous, next, "month") {
 			<span class="text-sm text-gray-500">The month's days, the weeks and fortnights with a day in it, and its year's months, built from the site's data</span>
-		</div>
+		}
 		for _, kind := range periods {
 			<section id={ "site--summaries--" + kind.Period } class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
 				<h2 class="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">
@@ -271,7 +244,9 @@ templ SummariesReport(first time.Time, summaries map[string][]*sitemodels.SiteSu
 							@table.Row() {
 								@table.Cell() {
 									{{ path := link("agp", p.Period, time.UnixMilli(p.End).In(reportLocation(ctx)).AddDate(0, 0, -1)) }}
-									<a class="text-primary underline" href={ templ.SafeURL(path) } hx-get={ path } hx-target="#main-content" hx-push-url="true" hx-swap="innerHTML">{ title(ctx, p) }</a>
+									@nav.Link("", path, "text-primary underline") {
+										{ title(ctx, p) }
+									}
 								}
 								for _, value := range []string{fmt.Sprint(p.Days), display.Percent(p.TimeInRange), display.PerDay(p.Days, p.TotalDailyDose, " U"), display.PerDay(p.Days, p.TotalDailyCarbs, " g")} {
 									@table.Cell(table.CellProps{Class: "text-right tabular-nums"}) {

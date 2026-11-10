@@ -15,6 +15,7 @@ import (
 	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/modal"
+	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/pager"
 	"nighttroop.t1d.nz/server/components/public_templ"
 	"nighttroop.t1d.nz/server/components/stat"
@@ -61,7 +62,9 @@ templ SitesTable(sites []*controlmodels.Site, skip int64, limit int64, order str
 		<section id="control--sites--list" class="rounded-xl border border-gray-200 p-4 shadow-sm">
 			<div id="control--sites--order" class="mb-4 flex flex-wrap justify-end gap-2">
 				for _, siteOrder := range siteOrders {
-					@sitesPageButton("control--sites--order-"+orDefault(siteOrder.order), siteOrder.label, 0, limit, siteOrder.order, siteOrder.order != order)
+					@nav.Toggle("control--sites--order-"+orDefault(siteOrder.order), pager.PageURL("/sites?order="+siteOrder.order, 0, limit), button.SizeDefault, siteOrder.order == order) {
+						{ siteOrder.label }
+					}
 				}
 			</div>
 			@table.Table(table.Props{ID: "controlSitesTable", Class: "rounded-lg border border-gray-200"}) {
@@ -108,30 +111,6 @@ func orDefault(order string) string {
 		return "created"
 	}
 	return order
-}
-
-// sitesPageButton goes to a page of the sites in an order, outlined unless it is the order shown
-templ sitesPageButton(id string, label string, skip int64, limit int64, order string, outline bool) {
-	{{ variant := button.VariantDefault }}
-	if outline {
-		{{ variant = button.VariantOutline }}
-	}
-	{{ path := fmt.Sprintf("/sites?skip=%d&limit=%d", skip, limit) }}
-	if order != "" {
-		{{ path += "&order=" + order }}
-	}
-	@button.Button(button.Props{
-		ID:      id,
-		Variant: variant,
-		Attributes: templ.Attributes{
-			"hx-get":      path,
-			"hx-target":   "#main-content",
-			"hx-push-url": "true",
-			"hx-swap":     "innerHTML",
-		},
-	}) {
-		{ label }
-	}
 }
 
 // createSiteForm creates a site at an ID an admin picks, such as a vanity one for a special user: 8 lowercase
@@ -225,12 +204,7 @@ templ siteRow(site *controlmodels.Site) {
 	@table.Row(table.RowProps{
 		ID:    "control--site--" + site.ID,
 		Class: "cursor-pointer",
-		Attributes: templ.Attributes{
-			"hx-get":      "/sites/" + site.ID,
-			"hx-target":   "#main-content",
-			"hx-push-url": "true",
-			"hx-swap":     "innerHTML",
-		},
+		Attributes: nav.Attributes("/sites/" + site.ID),
 	}) {
 		@table.Cell() {
 			{ site.ID }

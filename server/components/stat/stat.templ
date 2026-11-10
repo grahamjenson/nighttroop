@@ -4,6 +4,7 @@ import (
 	"regexp"
 	"strings"
 
+	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 )
 
@@ -45,30 +46,13 @@ templ Numbers(text, unitClass string) {
 	}
 }
 
-// PageLink opens another page in place of this one, so back returns here
-templ PageLink(id, path, class string) {
-	<a
-		if id != "" {
-			id={ id }
-		}
-		href={ templ.SafeURL(path) }
-		hx-get={ path }
-		hx-target="#main-content"
-		hx-push-url="true"
-		hx-swap="innerHTML"
-		class={ class }
-	>
-		{ children... }
-	</a>
-}
-
 // Section is a titled list, with a link to the page of all its records when it has one
 templ Section(title, linkID, linkText, path string) {
 	<section class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
 		<div class="mb-2 flex items-baseline justify-between gap-2">
 			<h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">{ title }</h2>
 			if path != "" {
-				@PageLink(linkID, path, "text-sm text-primary underline") {
+				@nav.Link(linkID, path, "text-sm text-primary underline") {
 					{ linkText }
 				}
 			}
