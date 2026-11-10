@@ -15,8 +15,6 @@
     1. P4: Reports: the daily dose report split into bolus and basal, and today so far marked as such
     1. Time below and above range, as well as time in range
     1. Small multiples Daily
-    1. P3: Give an insulin dose's `automatic` in the site API, and draw a Loop bolus with it as an SMB on the summary
-       graph, as Trio's `SMB` treatments are
 
 1. Alarms:
     1. Push notifications to phones, as alarms now only reach an open site page or a Nightscout socket client
