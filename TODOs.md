@@ -59,8 +59,6 @@
 1. Accessibility:
     1. P4: Show an identity's new credentials (`credentialsModal`) in a `modal.Modal`, so it is a dialog that takes
        the focus too
-1. P5: Open control's log links (`control_logs_templ`'s `rowLink`) with `nav.Attributes`, the one link to a page in
-   place of this one still writing its attributes by hand
 1. P4: Show the event group picker's times (`event_groups.templ`'s choices and range) in the time format, as other
    times are, rather than as 24-hour HH:mm
 1. P5: Name the reports header's and TDD title's days with `display.DayLayout` and `display.ShortDayLayout`
