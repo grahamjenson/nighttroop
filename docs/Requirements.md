@@ -350,6 +350,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - Time in range, total daily dose, and the last sensor and site change for today, yesterday, last week and last
   month. A period with no data shows "–" for its time in range and daily dose, not 0; one with data and no insulin
   shows 0 U.
+- A time in range reads the same on the summary, the Summaries page, overviews, AGP reports and the readings' glucose
+  days: a whole percent, "<1%" for one above 0 that rounds to 0, and "–" for none.
 - Readings are coloured and labelled low, in range or high by the alarm settings; high text is a darker amber than
   the graph's, so it can be read.
 - A latest glucose older than the no data alarm's minutes (20 by default) is grey, with an amber badge saying how

@@ -8,6 +8,7 @@ import (
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -197,7 +198,18 @@ func weekStartDay(ctx context.Context) int {
 	return int(time.Monday)
 }
 
+// agpLegend is the AGP graph's key: its percentiles' bands and median, a day's own glucose over them, and the colours
+// above and below the range
+func agpLegend(p *sitemodels.SiteSummaryPeriod) []legendItem {
+	items := []legendItem{{"h-3 w-3 rounded-sm bg-glucose-in-range/20", "5th to 95th percentile"},
+		{"h-3 w-3 rounded-sm bg-glucose-in-range/50", "25th to 75th percentile"}, {"h-1 w-4 rounded-full bg-glucose-in-range", "Median"}}
+	if p.Period == "day" {
+		items = append(items, legendItem{"h-1 w-4 rounded-full bg-brand-gold", "This day's glucose"})
+	}
+	return append(items, legendItem{"h-3 w-3 rounded-sm bg-glucose-high/50", "Above the range"}, legendItem{"h-3 w-3 rounded-sm bg-glucose-low/50", "Below the range"})
+}
+
 // goalGlucose is the AGP's goal for the average glucose, below 154 mg/dL, in the units
 func goalGlucose(units *consts.Units) string {
-	return "<" + glucoseText(new(units.FromMGDL(154)), units) + " " + string(*units)
+	return "<" + display.Glucose(units.FromMGDL(154), units) + " " + display.Units(units)
 }

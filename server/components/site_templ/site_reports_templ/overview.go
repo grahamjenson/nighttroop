@@ -8,21 +8,10 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/models/sitemodels"
-	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/httputils"
 )
-
-// percentText is a percent rounded to a whole one, "<1%" for one above 0 that rounds to 0, and "–" for none
-func percentText(v *float64) string {
-	switch {
-	case v == nil:
-		return "–"
-	case *v > 0 && math.Round(*v) == 0:
-		return "<1%"
-	}
-	return fmt.Sprintf("%.0f%%", math.Round(*v))
-}
 
 // gmiDays and cgmActiveGoal are the days with data a GMI needs, and the percent of the time the CGM must read, for a
 // report's numbers to be reliable, as the international consensus on CGM metrics has them
@@ -83,18 +72,10 @@ func change(now, before *float64, decimals int, unit string) string {
 // decimal place and mg/dL whole
 func glucoseChange(p, previous *sitemodels.SiteSummaryPeriod) string {
 	decimals := 0
-	if *p.Units == consts.UnitsMMOLL {
+	if p.Units != nil && *p.Units == consts.UnitsMMOLL {
 		decimals = 1
 	}
-	return change(p.Mean, previousOf(previous).Mean, decimals, " "+string(*p.Units))
-}
-
-// glucoseText is glucose in the units, mmol/L to one decimal place and mg/dL whole, or "–" for none
-func glucoseText(v *float64, units *consts.Units) string {
-	if v == nil {
-		return "–"
-	}
-	return site_data_templ.FormatGlucose(*v, units)
+	return change(p.Mean, previousOf(previous).Mean, decimals, " "+display.Units(p.Units))
 }
 
 // oneDecimal is a number to one decimal place, or "–" for none
@@ -236,13 +217,13 @@ func (g graph) X(ms float64) float64 {
 
 // Y is how far down the graph glucose is drawn, kept inside it
 func (g graph) Y(value float64) float64 {
-	return g.Bottom - (g.Bottom-g.Top)*(min(max(value, g.Min), g.Max)-g.Min)/(g.Max-g.Min)
+	return g.Bottom - (g.Bottom-g.Top)*display.Scale(value, g.Min, g.Max)
 }
 
 // Ticks are the glucose the graph marks, every 50 mg/dL, or 2.5 mmol/L, from its bottom to its top
 func (g graph) Ticks() []float64 {
 	step := 50.0
-	if *g.Units == consts.UnitsMMOLL {
+	if g.Units != nil && *g.Units == consts.UnitsMMOLL {
 		step = 2.5
 	}
 	var ticks []float64
@@ -273,6 +254,11 @@ func hourLabel(ctx context.Context, hour int) string {
 	}
 	return strings.ToLower(time.Date(2000, 1, 1, hour%24, 0, 0, 0, time.UTC).Format("3PM"))
 }
+
+// overviewLegend is the overview graph's key: its bars above and below the range and between its 25th and 75th
+// percentiles, and its average
+var overviewLegend = []legendItem{{"h-3 w-2 rounded-sm bg-glucose-high", "Above the range"}, {"h-3 w-2 rounded-sm bg-gray-300", "25th to 75th percentile"},
+	{"h-1.5 w-1.5 rounded-full bg-gray-900", "Average"}, {"h-3 w-2 rounded-sm bg-glucose-low", "Below the range"}}
 
 // overviewTop is the highest 75th percentile of the period, so its graph shows all its bars
 func overviewTop(bars []overviewBar) float64 {

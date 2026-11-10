@@ -27,16 +27,16 @@ templ Report(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryDai
 				</div>
 				@rangesWithGoals(p, previous)
 				<ul class="mt-3 space-y-0.5 text-xs text-gray-600">
-					<li id="site--agp--target"><span class="font-semibold">{ "Target range: " }</span>{ site_data_templ.FormatGlucose(low, p.Units) }–{ site_data_templ.FormatGlucose(high, p.Units) } { string(*p.Units) }</li>
-					<li><span class="font-semibold">{ "Very high: " }</span>above { glucoseText(new(p.Units.FromMGDL(sitemodels.VeryHighMgdl)), p.Units) } { string(*p.Units) }</li>
-					<li><span class="font-semibold">{ "Very low: " }</span>below { glucoseText(new(p.Units.FromMGDL(sitemodels.VeryLowMgdl)), p.Units) } { string(*p.Units) }</li>
+					<li id="site--agp--target"><span class="font-semibold">{ "Target range: " }</span>{ display.Glucose(low, p.Units) }–{ display.Glucose(high, p.Units) } { display.Units(p.Units) }</li>
+					<li><span class="font-semibold">{ "Very high: " }</span>above { display.Glucose(p.Units.FromMGDL(sitemodels.VeryHighMgdl), p.Units) } { display.Units(p.Units) }</li>
+					<li><span class="font-semibold">{ "Very low: " }</span>below { display.Glucose(p.Units.FromMGDL(sitemodels.VeryLowMgdl), p.Units) } { display.Units(p.Units) }</li>
 				</ul>
 				<p class="mt-2 text-xs text-gray-500">Each 5% more time in range is clinically beneficial. Each 1% is about 15 minutes a day.</p>
 			</section>
 			<section id="site--agp--metrics" class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
 				<h2 class="mb-1 text-sm font-semibold uppercase tracking-wide text-gray-500">Glucose metrics</h2>
 				<dl class="divide-y divide-gray-200">
-					@metric("site--reports--mean", "Average glucose", "Goal: "+goalGlucose(p.Units), glucoseText(p.Mean, p.Units), string(*p.Units)) {
+					@metric("site--reports--mean", "Average glucose", "Goal: "+goalGlucose(p.Units), display.GlucoseOr(p.Mean, p.Units), display.Units(p.Units)) {
 						@statChange("site--reports--mean", p, glucoseChange(p, previous))
 					}
 					@metric("site--reports--gmi", "Glucose management indicator (GMI)", "Goal: <7%", oneDecimal(p.GMI), "%") {
@@ -45,7 +45,7 @@ templ Report(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryDai
 					@metric("site--reports--cv", "Coefficient of variation", "Goal: ≤36%", oneDecimal(p.CV), "%") {
 						@statChange("site--reports--cv", p, change(p.CV, previousOf(previous).CV, 1, "%"))
 					}
-					@metric("site--reports--cgm-active", "Time CGM active", "Goal: >70%", percentText(p.CGMActive), "") {
+					@metric("site--reports--cgm-active", "Time CGM active", "Goal: >70%", display.Percent(p.CGMActive), "") {
 						@statChange("site--reports--cgm-active", p, change(p.CGMActive, previousOf(previous).CGMActive, 0, "%"))
 					}
 					@metric("site--reports--days", "Days with data", "", fmt.Sprint(p.Days), "")
@@ -67,10 +67,7 @@ templ Report(p *sitemodels.SiteSummaryPeriod, daily []*sitemodels.SiteSummaryDai
 			if hasGlucose(p) {
 				@agpGraph(p, low, high)
 			} else {
-				<p id="site--reports--no-glucose" class="text-sm text-gray-500">
-					No glucose in this { p.Period }. Reports are made from whole days, so a day's readings show here the
-					day after.
-				</p>
+				@noGlucose("site--reports--no-glucose", p.Period)
 			}
 		</section>
 		<section id="site--agp--daily" class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
@@ -105,15 +102,11 @@ templ metric(id, label, goal, value, units string) {
 templ rangesWithGoals(p, previous *sitemodels.SiteSummaryPeriod) {
 	{{ all := bands(p) }}
 	<div id="site--reports--ranges" class="flex gap-4">
-		<div class="flex w-10 shrink-0 flex-col gap-px overflow-hidden rounded-sm bg-gray-100" aria-hidden="true">
-			for _, b := range all {
-				<div class={ b.Class } style={ "height: " + bandHeight(b.Percent) }></div>
-			}
-		</div>
+		@rangeBar("w-10", all)
 		<div class="flex min-w-0 flex-1 flex-col gap-3 text-sm">
 			@rangeGroup("site--reports--above", all[0], all[1], "<5%", sum(p.TimeHigh, p.TimeVeryHigh), "<25%")
 			<div id={ "site--reports--range-" + all[2].ID }>
-				<span class="text-2xl font-semibold tabular-nums">{ percentText(all[2].Percent) }</span>
+				<span class="text-2xl font-semibold tabular-nums">{ display.Percent(all[2].Percent) }</span>
 				<span class="text-lg font-semibold">{ all[2].Label }</span>
 				<span class="block text-xs text-gray-500">Goal: >70%</span>
 				@statChange("site--reports--in-range", p, change(p.TimeInRange, previousOf(previous).TimeInRange, 0, "%"))
@@ -129,7 +122,7 @@ templ rangeGroup(id string, top, bottom band, outerGoal string, total *float64, 
 		<ul class="flex-1 space-y-1">
 			for _, b := range []band{top, bottom} {
 				<li id={ "site--reports--range-" + b.ID }>
-					<span class="tabular-nums">{ percentText(b.Percent) }</span> { b.Label }
+					<span class="tabular-nums">{ display.Percent(b.Percent) }</span> { b.Label }
 					if (b.ID == "very-high" || b.ID == "very-low") {
 						<span class="block text-xs text-gray-500">Goal: { outerGoal }</span>
 					}
@@ -138,7 +131,7 @@ templ rangeGroup(id string, top, bottom band, outerGoal string, total *float64, 
 		</ul>
 		<div class="w-3 shrink-0 rounded-r-md border-y border-r border-gray-400"></div>
 		<div class="flex w-20 shrink-0 flex-col justify-center">
-			<span id={ id } class="text-xl font-semibold tabular-nums">{ percentText(total) }</span>
+			<span id={ id } class="text-xl font-semibold tabular-nums">{ display.Percent(total) }</span>
 			<span class="text-xs text-gray-500">Goal: { goal }</span>
 		</div>
 	</div>
@@ -164,9 +157,9 @@ templ agpGraph(p *sitemodels.SiteSummaryPeriod, low, high float64) {
 			}
 			for i, mark := range agpMarks(g, low, high) {
 				<line class={ templ.KV("stroke-gray-300", i != 1 && i != 2), templ.KV("stroke-glucose-low", i == 1), templ.KV("stroke-glucose-high", i == 2) } stroke-width={ map[bool]string{true: "2", false: "1"}[i == 1 || i == 2] } x1={ f(g.Left) } x2={ f(g.Right) } y1={ f(g.Y(mark)) } y2={ f(g.Y(mark)) }></line>
-				<text class="fill-gray-600" x={ f(g.Left - 6) } y={ f(g.Y(mark) + 4) } text-anchor="end">{ site_data_templ.FormatGlucose(mark, p.Units) }</text>
+				<text class="fill-gray-600" x={ f(g.Left - 6) } y={ f(g.Y(mark) + 4) } text-anchor="end">{ display.Glucose(mark, p.Units) }</text>
 			}
-			<text class="fill-gray-500" x={ f(g.Left - 6) } y="12" text-anchor="end">{ string(*p.Units) }</text>
+			<text class="fill-gray-500" x={ f(g.Left - 6) } y="12" text-anchor="end">{ display.Units(p.Units) }</text>
 			for _, r := range regions {
 				<g clip-path={ "url(#site--reports--agp--" + r.Suffix + ")" }>
 					<path class={ "site--reports--agp--outer " + r.Fill } fill-opacity="0.18" d={ bandPath(g, p.AGP, 0, 4) }></path>
@@ -183,21 +176,10 @@ templ agpGraph(p *sitemodels.SiteSummaryPeriod, low, high float64) {
 					<text class={ "fill-gray-700", templ.KV("font-semibold", i == 2) } x={ f(g.Right + 6) } y={ f(ys[i]) }>{ fmt.Sprintf("%.0f%%", percent) }</text>
 				}
 			}
-			for _, hour := range g.Hours() {
-				<text class={ "fill-gray-600", templ.KV("font-semibold", hour%12 == 0) } x={ f(g.X(float64(hour) * 3_600_000)) } y={ f(g.Bottom + 18) } text-anchor="middle">{ hourLabel(ctx, hour) }</text>
-			}
+			@hourAxis(g, false)
 		</svg>
 	</div>
-	<ul class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600">
-		<li class="flex items-center gap-1.5"><span class="h-3 w-3 rounded-sm bg-glucose-in-range/20"></span>5th to 95th percentile</li>
-		<li class="flex items-center gap-1.5"><span class="h-3 w-3 rounded-sm bg-glucose-in-range/50"></span>25th to 75th percentile</li>
-		<li class="flex items-center gap-1.5"><span class="h-1 w-4 rounded-full bg-glucose-in-range"></span>Median</li>
-		if p.Period == "day" {
-			<li class="flex items-center gap-1.5"><span class="h-1 w-4 rounded-full bg-brand-gold"></span>This day's glucose</li>
-		}
-		<li class="flex items-center gap-1.5"><span class="h-3 w-3 rounded-sm bg-glucose-high/50"></span>Above the range</li>
-		<li class="flex items-center gap-1.5"><span class="h-3 w-3 rounded-sm bg-glucose-low/50"></span>Below the range</li>
-	</ul>
+	@legend(agpLegend(p))
 }
 
 // dailyProfiles are the period's days as a calendar from the site's week start day, each with its glucose from
