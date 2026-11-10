@@ -329,8 +329,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
 - The home page summarises the site: the latest glucose with how long ago it was, the loop's IOB and COB, the
   treatments, and each device's latest status.
 - Under the graph, an Insulin & Carbs table lists each dose and meal's carbs, newest first, with how long ago it was,
-  in an Insulin and a Carbs column; a loop's SMBs are marked SMB. Beside it, Other Treatments lists the temp targets
-  and temp basals.
+  in an Insulin and a Carbs column; a loop's SMBs, Trio's `SMB` doses and Loop's automatic boluses, are marked
+  SMB. Beside it, Other Treatments lists the temp targets and temp basals.
 - A graph of glucose with carbs and insulin marked, over 6 hours to a week, drawn on one grid as Carer draws it. A
   site opens on the last 6 hours, and its range buttons choose 6 hours, 24 hours, 48 hours or a week:
   - The glucose axis is always 0 to 16 mmol/L (288 mg/dL), marked at each quarter, whatever the readings: a reading
@@ -342,7 +342,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   - The basal in force along the bottom, its highest rate reaching 3 mmol/L up the glucose axis and labelled on the
     right. A profile sent without its own timezone has its schedules read in the site's timezone, whoever views it.
   - Carbs as triangles pointing up above insulin as triangles pointing down, each labelled, the latest kept where
-    labels overlap; a loop's SMBs are smaller, fainter and not labelled.
+    labels overlap; a loop's SMBs, Trio's `SMB` doses and Loop's automatic boluses, are smaller, fainter and not
+    labelled.
   - A legend of insulin and SMB (triangles pointing down), carbs (pointing up), basal (an outlined area) and target
     (a line), each drawn as on the graph.
   - Pointing anywhere on the graph shows what was then: the time, the reading nearest it within 5 minutes and when
@@ -487,6 +488,8 @@ by side. The site API's search gives the same: its `items`, `skip`, `limit` (50 
     days", or Today on a new site's first day.
 - **Insulin doses**, with a combo bolus's split as the fractions given at once and over time, 0.7 for 70%, typed in
   and shown on the site as percents, 0 to 100
+  - A dose's `automatic` is whether a loop gave it, true or false as Loop uploaded it and null for apps that do not
+    say; the site API gives it but does not change it, ignoring it on a create or update.
 - **Food intakes**
 - **Temp basals**, with the rate given in U/hr and a multiplier of the scheduled basal, 0.5 for half, 0 a zero temp;
   the site types it in and shows it as a percent, from 1% to 1100%

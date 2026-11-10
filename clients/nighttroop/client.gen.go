@@ -175,6 +175,8 @@ type GlucoseReading struct {
 
 // InsulinDose defines model for InsulinDose.
 type InsulinDose struct {
+	// Automatic Whether a loop gave it, as Loop uploads a bolus; set only by a loop's upload, not the site
+	Automatic             *bool   `json:"automatic"`
 	CreatedAt             *int64  `json:"created_at,omitempty"`
 	CreatedByAppName      *string `json:"created_by_app_name,omitempty"`
 	CreatedByDeviceName   *string `json:"created_by_device_name,omitempty"`
