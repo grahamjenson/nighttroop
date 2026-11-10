@@ -33,7 +33,6 @@
 1. Accounts
     1. Recovering a site's admin without the initial backup key
     1. Recovering a lost control admin login, as setup only runs on a server with no control admin
-    1. P4: Show a recovered site's new credentials on its own address, as a new site's are, not on the recover page
 
 1. Security
     1. Testing deploy with rolling to a new keyset, moving to a new encrypted keyset.

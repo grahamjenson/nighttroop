@@ -264,15 +264,15 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   identity's credentials: the admin's, and the phone's and the read only device's Nightscout tokens. The phone's token
   is not shown as text, only in the copy and by its own copy button.
 - The credentials wait on the server, only in memory, for 10 minutes, under an ID after the welcome page's `#` that only
-  the browser that created the site has, so it is never in a request's address or a log. The page drops the ID from
-  its address, and opening it again, after that or on another site, says they have been shown and links to the recover
-  page.
+  the browser that created (or recovered) the site has, so it is never in a request's address or a log. The page drops
+  the ID from its address, and opening it again, after that or on another site, says they have been shown and links to
+  the recover page.
 - The new site's admin login is its own step: its username and password, its TOTP secret as a QR code and text, and a
   code check. The Log in button, which opens the login in a new tab with the admin's name filled in so the credentials stay open, is disabled until a code from the authenticator app matches, saying under it to check a code in step 2 first; a wrong code says so. Its buttons are the shape of its Copy all credentials, not round pills. A
   code is checked as soon as its sixth digit is in, with no click. The check changes nothing, and a recovered site's
   credentials are checked the same way.
-- Beside Log in, a new site's welcome page offers "Log in with a passkey", with no authenticator app: it adds the admin a
-  passkey on the site's own address, with the device's fingerprint, face or PIN, and signs the admin in with it. Only
+- Beside Log in, a new or recovered site's welcome page offers "Log in with a passkey", with no authenticator app: it
+  adds the admin a passkey on the site's own address, with the device's fingerprint, face or PIN, and signs the admin in with it. Only
   the browser the credentials were shown to can, for 15 minutes, once; after that the passkey is added on My Account.
 - A new site takes the time zone and language of the browser that created it, and its country's units and formats.
 - Site creation is rate limited per IP and server wide, and refused once the server holds `MAX_SITES`.
@@ -280,6 +280,8 @@ Keep this up to date: a PR that adds, changes or removes a feature updates this 
   site, and creating one is refused.
 - The public **recover page** takes a site's ID and backup key and gives the admin a new password and TOTP and the
   site a new backup key, and removes the admin's passkeys, so a lost device's passkey signs in no more. The key works once; a wrong key is refused without saying why.
+- A recovery opens the site's own address, `/welcome`, which shows the new credentials once, as a new site's are, less
+  the phone's and the read only device's tokens, which are left as they were; the recover page never shows them.
 - A site that is never used is deleted after `DELETE_AFTER_INACTIVITY_MINS`.
 - Every page's footer links to contact, the terms of service, the privacy policy and the API docs, and each footer link
   opens in a new tab, so the page the user was on stays open.
