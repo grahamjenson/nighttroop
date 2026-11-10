@@ -5,13 +5,19 @@
     "version": "0.1.0",
     "description": "Nighttroop's JSON API. Each endpoint gives the host it is on: POST /site is on the public host; /api/... is the Nightscout API, on a site's Nightscout host; everything else is on a site's host, with a JWT from POST /login. Times are milliseconds since the epoch, and glucose is in the units of the signed in identity's settings, except on the Nightscout API, which always gives it in mg/dL, as Nightscout does; a Nightscout document says its units in its units field."
   },
+  "tags": [
+    { "name": "Site", "description": "Creating a site, signing in, and its summary, on the public host and a site's host" },
+    { "name": "Data", "description": "A site's records, loop settings and summaries, on a site's host" },
+    { "name": "Settings", "description": "The signed in identity's settings, on a site's host" },
+    { "name": "Nightscout", "description": "The Nightscout API, on a site's Nightscout host, for Nightscout's apps and devices" }
+  ],
   "security": [{ "bearerAuth": [] }],
   "servers": [{ "url": "https://{site_id}.nighttroop.example", "description": "A site's host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
   "paths": {
     "/site": {
       "servers": [{ "url": "https://nighttroop.example", "description": "The public host" }],
       "post": {
-        "operationId": "CreateSite",
+        "operationId": "CreateSite", "tags": ["Site"],
         "summary": "Creates a site, on the public host, and gives its credentials once",
         "security": [],
         "responses": {
@@ -22,7 +28,7 @@
     },
     "/login/passkey/begin": {
       "post": {
-        "operationId": "PasskeyLoginBegin",
+        "operationId": "PasskeyLoginBegin", "tags": ["Site"],
         "summary": "Begins signing in with any of the site's passkeys: the WebAuthn options for navigator.credentials.get, its challenge kept in a cookie for 5 minutes",
         "security": [],
         "responses": { "200": { "$ref": "#/components/responses/PasskeyOptions" }, "default": { "$ref": "#/components/responses/PasskeyError" } }
@@ -30,7 +36,7 @@
     },
     "/login/passkey/finish": {
       "post": {
-        "operationId": "PasskeyLoginFinish",
+        "operationId": "PasskeyLoginFinish", "tags": ["Site"],
         "summary": "Signs in the identity whose passkey signed the challenge, with no password or TOTP, setting the login cookie",
         "security": [],
         "requestBody": { "$ref": "#/components/requestBodies/PasskeyCredential" },
@@ -39,7 +45,7 @@
     },
     "/welcome/passkey/begin": {
       "post": {
-        "operationId": "WelcomePasskeyBegin",
+        "operationId": "WelcomePasskeyBegin", "tags": ["Site"],
         "summary": "Begins adding a new site's admin a passkey from its welcome page, only by the browser its credentials were shown to in the last 15 minutes: the WebAuthn options for navigator.credentials.create",
         "security": [],
         "responses": { "200": { "$ref": "#/components/responses/PasskeyOptions" }, "default": { "$ref": "#/components/responses/PasskeyError" } }
@@ -47,7 +53,7 @@
     },
     "/welcome/passkey/finish": {
       "post": {
-        "operationId": "WelcomePasskeyFinish",
+        "operationId": "WelcomePasskeyFinish", "tags": ["Site"],
         "summary": "Keeps the new site's admin's passkey, without the authenticator's model or attestation, and signs the admin in with it, setting the login cookie",
         "security": [],
         "requestBody": { "$ref": "#/components/requestBodies/PasskeyCredential" },
@@ -56,14 +62,14 @@
     },
     "/settings/account/passkeys/begin": {
       "post": {
-        "operationId": "AccountPasskeyBegin",
+        "operationId": "AccountPasskeyBegin", "tags": ["Settings"],
         "summary": "Begins adding a passkey to the signed in identity, one that signs in to the website, up to 10: the WebAuthn options for navigator.credentials.create, asking no attestation and excluding its passkeys",
         "responses": { "200": { "$ref": "#/components/responses/PasskeyOptions" }, "default": { "$ref": "#/components/responses/PasskeyError" } }
       }
     },
     "/settings/account/passkeys/finish": {
       "post": {
-        "operationId": "AccountPasskeyFinish",
+        "operationId": "AccountPasskeyFinish", "tags": ["Settings"],
         "summary": "Keeps the signed in identity's new passkey, without the authenticator's model or attestation, answering with My Account to go to",
         "requestBody": { "$ref": "#/components/requestBodies/PasskeyCredential" },
         "responses": { "200": { "$ref": "#/components/responses/PasskeySignedIn" }, "default": { "$ref": "#/components/responses/PasskeyError" } }
@@ -71,7 +77,7 @@
     },
     "/login": {
       "post": {
-        "operationId": "Login",
+        "operationId": "Login", "tags": ["Site"],
         "summary": "Signs an admin (with TOTP) or user in, for a JWT",
         "security": [],
         "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginRequest" } } } },
@@ -83,7 +89,7 @@
     },
     "/summary": {
       "get": {
-        "operationId": "GetSummary",
+        "operationId": "GetSummary", "tags": ["Site"],
         "summary": "The site's summary over the last hours (6 by default, a week at most)",
         "parameters": [{ "name": "hours", "in": "query", "schema": { "type": "integer", "format": "int64" } }],
         "responses": {
@@ -94,12 +100,12 @@
     },
     "/data/glucose": {
       "get": {
-        "operationId": "ListGlucoseReadings",
+        "operationId": "ListGlucoseReadings", "tags": ["Data"], "summary": "The site's glucose readings, newest first",
         "parameters": [{ "$ref": "#/components/parameters/Limit" }, { "$ref": "#/components/parameters/Skip" }],
         "responses": { "200": { "$ref": "#/components/responses/GlucoseReadingList" }, "default": { "$ref": "#/components/responses/Error" } }
       },
       "post": {
-        "operationId": "CreateGlucoseReading",
+        "operationId": "CreateGlucoseReading", "tags": ["Data"], "summary": "Adds a glucose reading",
         "requestBody": { "$ref": "#/components/requestBodies/GlucoseReadingBody" },
         "responses": { "201": { "$ref": "#/components/responses/GlucoseReadingResult" }, "default": { "$ref": "#/components/responses/Error" } }
       }
@@ -107,27 +113,27 @@
     "/data/glucose/{id}": {
       "parameters": [{ "$ref": "#/components/parameters/Id" }],
       "get": {
-        "operationId": "GetGlucoseReading",
+        "operationId": "GetGlucoseReading", "tags": ["Data"], "summary": "The glucose reading with the ID",
         "responses": { "200": { "$ref": "#/components/responses/GlucoseReadingResult" }, "default": { "$ref": "#/components/responses/Error" } }
       },
       "post": {
-        "operationId": "UpdateGlucoseReading",
+        "operationId": "UpdateGlucoseReading", "tags": ["Data"], "summary": "Changes the glucose reading with the ID",
         "requestBody": { "$ref": "#/components/requestBodies/GlucoseReadingBody" },
         "responses": { "200": { "$ref": "#/components/responses/GlucoseReadingResult" }, "default": { "$ref": "#/components/responses/Error" } }
       },
       "delete": {
-        "operationId": "DeleteGlucoseReading",
+        "operationId": "DeleteGlucoseReading", "tags": ["Data"], "summary": "Deletes the glucose reading with the ID",
         "responses": { "200": { "$ref": "#/components/responses/Deleted" }, "default": { "$ref": "#/components/responses/Error" } }
       }
     },
     "/data/insulin": {
       "get": {
-        "operationId": "ListInsulinDoses",
+        "operationId": "ListInsulinDoses", "tags": ["Data"], "summary": "The site's insulin doses, newest first",
         "parameters": [{ "$ref": "#/components/parameters/Limit" }, { "$ref": "#/components/parameters/Skip" }],
         "responses": { "200": { "$ref": "#/components/responses/InsulinDoseList" }, "default": { "$ref": "#/components/responses/Error" } }
       },
       "post": {
-        "operationId": "CreateInsulinDose",
+        "operationId": "CreateInsulinDose", "tags": ["Data"], "summary": "Adds an insulin dose",
         "requestBody": { "$ref": "#/components/requestBodies/InsulinDoseBody" },
         "responses": { "201": { "$ref": "#/components/responses/InsulinDoseResult" }, "default": { "$ref": "#/components/responses/Error" } }
       }
@@ -135,27 +141,27 @@
     "/data/insulin/{id}": {
       "parameters": [{ "$ref": "#/components/parameters/Id" }],
       "get": {
-        "operationId": "GetInsulinDose",
+        "operationId": "GetInsulinDose", "tags": ["Data"], "summary": "The insulin dose with the ID",
         "responses": { "200": { "$ref": "#/components/responses/InsulinDoseResult" }, "default": { "$ref": "#/components/responses/Error" } }
       },
       "post": {
-        "operationId": "UpdateInsulinDose",
+        "operationId": "UpdateInsulinDose", "tags": ["Data"], "summary": "Changes the insulin dose with the ID",
         "requestBody": { "$ref": "#/components/requestBodies/InsulinDoseBody" },
         "responses": { "200": { "$ref": "#/components/responses/InsulinDoseResult" }, "default": { "$ref": "#/components/responses/Error" } }
       },
       "delete": {
-        "operationId": "DeleteInsulinDose",
+        "operationId": "DeleteInsulinDose", "tags": ["Data"], "summary": "Deletes the insulin dose with the ID",
         "responses": { "200": { "$ref": "#/components/responses/Deleted" }, "default": { "$ref": "#/components/responses/Error" } }
       }
     },
     "/data/food": {
       "get": {
-        "operationId": "ListFoodIntakes",
+        "operationId": "ListFoodIntakes", "tags": ["Data"], "summary": "The site's food intakes, newest first",
         "parameters": [{ "$ref": "#/components/parameters/Limit" }, { "$ref": "#/components/parameters/Skip" }],
         "responses": { "200": { "$ref": "#/components/responses/FoodIntakeList" }, "default": { "$ref": "#/components/responses/Error" } }
       },
       "post": {
-        "operationId": "CreateFoodIntake",
+        "operationId": "CreateFoodIntake", "tags": ["Data"], "summary": "Adds a food intake",
         "requestBody": { "$ref": "#/components/requestBodies/FoodIntakeBody" },
         "responses": { "201": { "$ref": "#/components/responses/FoodIntakeResult" }, "default": { "$ref": "#/components/responses/Error" } }
       }
@@ -163,22 +169,22 @@
     "/data/food/{id}": {
       "parameters": [{ "$ref": "#/components/parameters/Id" }],
       "get": {
-        "operationId": "GetFoodIntake",
+        "operationId": "GetFoodIntake", "tags": ["Data"], "summary": "The food intake with the ID",
         "responses": { "200": { "$ref": "#/components/responses/FoodIntakeResult" }, "default": { "$ref": "#/components/responses/Error" } }
       },
       "post": {
-        "operationId": "UpdateFoodIntake",
+        "operationId": "UpdateFoodIntake", "tags": ["Data"], "summary": "Changes the food intake with the ID",
         "requestBody": { "$ref": "#/components/requestBodies/FoodIntakeBody" },
         "responses": { "200": { "$ref": "#/components/responses/FoodIntakeResult" }, "default": { "$ref": "#/components/responses/Error" } }
       },
       "delete": {
-        "operationId": "DeleteFoodIntake",
+        "operationId": "DeleteFoodIntake", "tags": ["Data"], "summary": "Deletes the food intake with the ID",
         "responses": { "200": { "$ref": "#/components/responses/Deleted" }, "default": { "$ref": "#/components/responses/Error" } }
       }
     },
     "/presets/loop-settings": {
       "get": {
-        "operationId": "ListLoopSettings",
+        "operationId": "ListLoopSettings", "tags": ["Data"], "summary": "The sets of loop settings the site's records were made with, newest first",
         "parameters": [{ "$ref": "#/components/parameters/Limit" }, { "$ref": "#/components/parameters/Skip" }],
         "responses": { "200": { "$ref": "#/components/responses/LoopSettingsList" }, "default": { "$ref": "#/components/responses/Error" } }
       }
@@ -186,18 +192,18 @@
     "/presets/loop-settings/{id}": {
       "parameters": [{ "$ref": "#/components/parameters/Id" }],
       "get": {
-        "operationId": "GetLoopSettings",
+        "operationId": "GetLoopSettings", "tags": ["Data"], "summary": "The set of loop settings with the ID",
         "responses": { "200": { "$ref": "#/components/responses/LoopSettingsResult" }, "default": { "$ref": "#/components/responses/Error" } }
       },
       "delete": {
-        "operationId": "DeleteLoopSettings",
+        "operationId": "DeleteLoopSettings", "tags": ["Data"], "summary": "Deletes the set of loop settings with the ID",
         "description": "Deletes the settings for good. The profiles and device statuses sent with them are kept, and read back without them.",
         "responses": { "200": { "$ref": "#/components/responses/Deleted" }, "default": { "$ref": "#/components/responses/Error" } }
       }
     },
     "/data/summary-periods/{id}": {
       "get": {
-        "operationId": "GetSummaryPeriod",
+        "operationId": "GetSummaryPeriod", "tags": ["Data"],
         "summary": "A day, week, fortnight or month of the site's data with its AGP, built from its kept days when not kept itself",
         "parameters": [{ "name": "id", "in": "path", "required": true, "description": "The period and a date in it, from today back a year, like week-2026-01-31", "schema": { "type": "string" } }],
         "responses": {
@@ -208,7 +214,7 @@
     },
     "/reports/summaries/regenerate": {
       "post": {
-        "operationId": "RegenerateSummaries",
+        "operationId": "RegenerateSummaries", "tags": ["Data"],
         "summary": "Asks for the site's last year of summaries to be built again from its data, by a background job; admins only",
         "responses": {
           "202": { "description": "The regeneration is queued", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "type": "object", "properties": { "regenerating": { "type": "boolean" } } } } } } } },
@@ -219,7 +225,7 @@
     "/api/v2/authorization/request/{token}": {
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
       "get": {
-        "operationId": "NsV2Authorize",
+        "operationId": "NsV2Authorize", "tags": ["Nightscout"],
         "summary": "Exchanges a device's Nightscout token for a JWT",
         "security": [],
         "parameters": [{ "name": "token", "in": "path", "required": true, "schema": { "type": "string" } }],
@@ -229,7 +235,7 @@
     "/api/v3/authorization/request/{token}": {
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
       "get": {
-        "operationId": "NsV3Authorize",
+        "operationId": "NsV3Authorize", "tags": ["Nightscout"],
         "summary": "Exchanges a device's Nightscout token for a JWT",
         "security": [],
         "parameters": [{ "name": "token", "in": "path", "required": true, "schema": { "type": "string" } }],
@@ -238,24 +244,24 @@
     },
     "/api/v1/status": {
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
-      "get": { "operationId": "NsV1Status", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsObject" } } }
+      "get": { "operationId": "NsV1Status", "tags": ["Nightscout"], "summary": "The site's Nightscout status: its name, version, settings and the API's abilities", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsObject" } } }
     },
     "/api/v1/versions": {
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
-      "get": { "operationId": "NsV1Versions", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsDocuments" } } }
+      "get": { "operationId": "NsV1Versions", "tags": ["Nightscout"], "summary": "The Nightscout API versions the site has", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsDocuments" } } }
     },
     "/api/v1/verifyauth": {
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
-      "get": { "operationId": "NsV1VerifyAuth", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsObject" } } }
+      "get": { "operationId": "NsV1VerifyAuth", "tags": ["Nightscout"], "summary": "Whether the request's API secret, token or JWT is accepted, and what it can do", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsObject" } } }
     },
     "/api/v1/experiments/test": {
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
-      "get": { "operationId": "NsV1ExperimentsTest", "summary": "How Loop checks its API secret: 200 when it can upload treatments", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } } }
+      "get": { "operationId": "NsV1ExperimentsTest", "tags": ["Nightscout"], "summary": "How Loop checks its API secret: 200 when it can upload treatments", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } } }
     },
     "/api/v1/alexa": {
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
       "post": {
-        "operationId": "NsV1Alexa",
+        "operationId": "NsV1Alexa", "tags": ["Nightscout"],
         "summary": "Answers Nightscout's Alexa skill: its glucose, delta, IOB, COB and uploader battery intents",
         "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
         "requestBody": { "content": { "application/json": { "schema": { "type": "object", "additionalProperties": true } } } },
@@ -265,7 +271,7 @@
     "/api/v1/googlehome": {
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
       "post": {
-        "operationId": "NsV1GoogleHome",
+        "operationId": "NsV1GoogleHome", "tags": ["Nightscout"],
         "summary": "Answers Nightscout's Google Home action, through Dialogflow, with the same intents as Alexa",
         "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
         "requestBody": { "content": { "application/json": { "schema": { "type": "object", "additionalProperties": true } } } },
@@ -275,7 +281,7 @@
     "/api/v1/notifications/ack": {
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
       "get": {
-        "operationId": "NsV1AckNotifications",
+        "operationId": "NsV1AckNotifications", "tags": ["Nightscout"],
         "summary": "Snoozes the identity's alarms in a group up to a level, as the /alarm socket's ack does",
         "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
         "parameters": [{ "name": "level", "in": "query", "schema": { "type": "integer" } }, { "name": "group", "in": "query", "schema": { "type": "string" } }, { "name": "time", "in": "query", "description": "How long to snooze for, in milliseconds", "schema": { "type": "integer", "format": "int64" } }],
@@ -284,12 +290,12 @@
     },
     "/api/v1/adminnotifies": {
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
-      "get": { "operationId": "NsV1AdminNotifies", "summary": "Notices for the site's admin, of which there are none", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsObject" } } }
+      "get": { "operationId": "NsV1AdminNotifies", "tags": ["Nightscout"], "summary": "Notices for the site's admin, of which there are none", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsObject" } } }
     },
     "/pebble": {
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
       "get": {
-        "operationId": "NsPebble",
+        "operationId": "NsPebble", "tags": ["Nightscout"],
         "summary": "The newest readings for Pebble and other watch faces, as strings in the units asked for",
         "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
         "parameters": [{ "name": "count", "in": "query", "description": "How many readings, 1 by default", "schema": { "type": "integer", "minimum": 1, "maximum": 1000 } }, { "name": "units", "in": "query", "description": "mmol or mg/dl, the identity's own units by default", "schema": { "type": "string" } }],
@@ -300,27 +306,27 @@
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
       "parameters": [{ "$ref": "#/components/parameters/NsCollection" }],
       "get": {
-        "operationId": "NsV1Search",
+        "operationId": "NsV1Search", "tags": ["Nightscout"], "summary": "Searches a collection, newest first, with Nightscout's find query",
         "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
         "parameters": [{ "$ref": "#/components/parameters/NsCount" }, { "$ref": "#/components/parameters/Skip" }, { "$ref": "#/components/parameters/NsSort" }, { "$ref": "#/components/parameters/NsSortDesc" }, { "$ref": "#/components/parameters/NsFields" }, { "$ref": "#/components/parameters/NsDateGte" }, { "$ref": "#/components/parameters/NsDateLte" }],
         "responses": { "200": { "$ref": "#/components/responses/NsDocuments" }, "default": { "$ref": "#/components/responses/NsError" } }
       },
       "post": {
-        "operationId": "NsV1Create",
+        "operationId": "NsV1Create", "tags": ["Nightscout"],
         "summary": "Creates one document or each in an array, and returns those created",
         "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
         "requestBody": { "$ref": "#/components/requestBodies/NsDocuments" },
         "responses": { "200": { "$ref": "#/components/responses/NsDocuments" }, "default": { "$ref": "#/components/responses/NsError" } }
       },
       "put": {
-        "operationId": "NsV1ReplaceByBody",
+        "operationId": "NsV1ReplaceByBody", "tags": ["Nightscout"],
         "summary": "Replaces the document with the _id in the body",
         "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
         "requestBody": { "$ref": "#/components/requestBodies/NsDocument" },
         "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } }
       },
       "delete": {
-        "operationId": "NsV1DeleteByQuery",
+        "operationId": "NsV1DeleteByQuery", "tags": ["Nightscout"],
         "summary": "Soft deletes the entries a search with the query finds, at most 1000, as xDrip4iOS deletes readings; only entries, and any other filter or one without a date is a 400",
         "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
         "parameters": [{ "$ref": "#/components/parameters/NsFindType" }, { "$ref": "#/components/parameters/NsFindDateGte" }, { "$ref": "#/components/parameters/NsFindDateLte" }, { "$ref": "#/components/parameters/NsFindDateIn" }],
@@ -330,26 +336,26 @@
     "/api/v1/{collection}/current": {
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
       "parameters": [{ "$ref": "#/components/parameters/NsCollection" }],
-      "get": { "operationId": "NsV1Current", "summary": "The newest document, in a list of one; for profile, as in Nightscout, the profile set itself", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsDocuments" }, "default": { "$ref": "#/components/responses/NsError" } } }
+      "get": { "operationId": "NsV1Current", "tags": ["Nightscout"], "summary": "The newest document, in a list of one; for profile, as in Nightscout, the profile set itself", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsDocuments" }, "default": { "$ref": "#/components/responses/NsError" } } }
     },
     "/api/v1/{collection}/{identifier}": {
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
       "parameters": [{ "$ref": "#/components/parameters/NsCollection" }, { "$ref": "#/components/parameters/NsIdentifier" }],
       "get": {
-        "operationId": "NsV1Get",
+        "operationId": "NsV1Get", "tags": ["Nightscout"],
         "summary": "The document with the identifier, or the documents of a type, such as sgv",
         "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
         "parameters": [{ "$ref": "#/components/parameters/NsCount" }, { "$ref": "#/components/parameters/NsFields" }],
         "responses": { "200": { "$ref": "#/components/responses/NsDocuments" }, "default": { "$ref": "#/components/responses/NsError" } }
       },
       "put": {
-        "operationId": "NsV1Replace",
+        "operationId": "NsV1Replace", "tags": ["Nightscout"], "summary": "Replaces the document with the identifier",
         "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
         "requestBody": { "$ref": "#/components/requestBodies/NsDocument" },
         "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } }
       },
       "delete": {
-        "operationId": "NsV1Delete",
+        "operationId": "NsV1Delete", "tags": ["Nightscout"],
         "summary": "Deletes the document with the identifier, or the documents of a type",
         "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
         "parameters": [{ "$ref": "#/components/parameters/NsPermanent" }],
@@ -360,7 +366,7 @@
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
       "parameters": [{ "$ref": "#/components/parameters/NsCollection" }],
       "get": {
-        "operationId": "NsV1Slice",
+        "operationId": "NsV1Slice", "tags": ["Nightscout"], "summary": "The documents whose field starts with the prefix, in a collection's documents of a type",
         "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
         "parameters": [{ "name": "field", "in": "path", "required": true, "schema": { "type": "string" } }, { "name": "type", "in": "path", "required": true, "schema": { "type": "string" } }, { "name": "prefix", "in": "path", "required": true, "schema": { "type": "string" } }, { "$ref": "#/components/parameters/NsCount" }],
         "responses": { "200": { "$ref": "#/components/responses/NsDocuments" }, "default": { "$ref": "#/components/responses/NsError" } }
@@ -370,7 +376,7 @@
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
       "parameters": [{ "$ref": "#/components/parameters/NsCollection" }],
       "get": {
-        "operationId": "NsV1Count",
+        "operationId": "NsV1Count", "tags": ["Nightscout"], "summary": "How many documents in a collection a search finds",
         "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
         "parameters": [{ "$ref": "#/components/parameters/NsDateGte" }, { "$ref": "#/components/parameters/NsDateLte" }],
         "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } }
@@ -379,7 +385,7 @@
     "/api/v1/times/{prefix}": {
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
       "get": {
-        "operationId": "NsV1Times",
+        "operationId": "NsV1Times", "tags": ["Nightscout"],
         "summary": "The entries whose dateString starts with the prefix, such as 2026-10",
         "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
         "parameters": [{ "name": "prefix", "in": "path", "required": true, "schema": { "type": "string" } }, { "$ref": "#/components/parameters/NsCount" }],
@@ -389,16 +395,16 @@
     "/api/v1/echo/{collection}": {
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
       "parameters": [{ "$ref": "#/components/parameters/NsCollection" }],
-      "get": { "operationId": "NsV1Echo", "summary": "How a search of the collection is understood, without running it", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsObject" } } }
+      "get": { "operationId": "NsV1Echo", "tags": ["Nightscout"], "summary": "How a search of the collection is understood, without running it", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsObject" } } }
     },
     "/api/v2/properties": {
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
-      "get": { "operationId": "NsV2Properties", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } } }
+      "get": { "operationId": "NsV2Properties", "tags": ["Nightscout"], "summary": "The site's current values, such as its latest glucose, delta, IOB and COB", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } } }
     },
     "/api/v2/properties/{names}": {
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
       "get": {
-        "operationId": "NsV2PropertiesNamed",
+        "operationId": "NsV2PropertiesNamed", "tags": ["Nightscout"], "summary": "The named current values only",
         "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
         "parameters": [{ "name": "names", "in": "path", "required": true, "description": "Comma separated, such as bgnow,delta", "schema": { "type": "string" } }],
         "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } }
@@ -406,12 +412,12 @@
     },
     "/api/v2/summary": {
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
-      "get": { "operationId": "NsV2Summary", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } } }
+      "get": { "operationId": "NsV2Summary", "tags": ["Nightscout"], "summary": "The site's IOB and COB, and when its sensor and cannula were last changed", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } } }
     },
     "/api/v2/authorization/debug/check/{permission}": {
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
       "get": {
-        "operationId": "NsV2CheckPermission",
+        "operationId": "NsV2CheckPermission", "tags": ["Nightscout"],
         "summary": "Whether the token or JWT has a permission, such as api:settings:create: 200 when it has, 403 when not",
         "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
         "parameters": [{ "name": "permission", "in": "path", "required": true, "schema": { "type": "string" } }],
@@ -420,31 +426,31 @@
     },
     "/api/v3/version": {
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
-      "get": { "operationId": "NsV3Version", "security": [], "responses": { "200": { "$ref": "#/components/responses/NsV3Result" } } }
+      "get": { "operationId": "NsV3Version", "tags": ["Nightscout"], "summary": "The site's Nightscout version and the API's", "security": [], "responses": { "200": { "$ref": "#/components/responses/NsV3Result" } } }
     },
     "/api/v3/status": {
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
-      "get": { "operationId": "NsV3Status", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsV3Result" }, "default": { "$ref": "#/components/responses/NsError" } } }
+      "get": { "operationId": "NsV3Status", "tags": ["Nightscout"], "summary": "The site's Nightscout status and what the token or JWT can do in each collection", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsV3Result" }, "default": { "$ref": "#/components/responses/NsError" } } }
     },
     "/api/v3/test": {
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
-      "get": { "operationId": "NsV3Test", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsV3Result" }, "default": { "$ref": "#/components/responses/NsError" } } }
+      "get": { "operationId": "NsV3Test", "tags": ["Nightscout"], "summary": "Whether the API is up", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsV3Result" }, "default": { "$ref": "#/components/responses/NsError" } } }
     },
     "/api/v3/lastModified": {
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
-      "get": { "operationId": "NsV3LastModified", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsV3Result" }, "default": { "$ref": "#/components/responses/NsError" } } }
+      "get": { "operationId": "NsV3LastModified", "tags": ["Nightscout"], "summary": "When each collection last changed", "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }], "responses": { "200": { "$ref": "#/components/responses/NsV3Result" }, "default": { "$ref": "#/components/responses/NsError" } } }
     },
     "/api/v3/{collection}": {
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
       "parameters": [{ "$ref": "#/components/parameters/NsCollection" }],
       "get": {
-        "operationId": "NsV3Search",
+        "operationId": "NsV3Search", "tags": ["Nightscout"], "summary": "Searches a collection, with API v3's filters, sort, limit and fields",
         "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
         "parameters": [{ "$ref": "#/components/parameters/Limit" }, { "$ref": "#/components/parameters/Skip" }, { "$ref": "#/components/parameters/NsSort" }, { "$ref": "#/components/parameters/NsSortDesc" }, { "$ref": "#/components/parameters/NsFields" }, { "$ref": "#/components/parameters/NsDateGte" }, { "$ref": "#/components/parameters/NsDateLte" }],
         "responses": { "200": { "$ref": "#/components/responses/NsV3Documents" }, "default": { "$ref": "#/components/responses/NsError" } }
       },
       "post": {
-        "operationId": "NsV3Create",
+        "operationId": "NsV3Create", "tags": ["Nightscout"], "summary": "Creates a document, or replaces the one it duplicates",
         "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
         "requestBody": { "$ref": "#/components/requestBodies/NsDocument" },
         "responses": { "200": { "$ref": "#/components/responses/NsV3Document" }, "201": { "$ref": "#/components/responses/NsV3Document" }, "default": { "$ref": "#/components/responses/NsError" } }
@@ -454,7 +460,7 @@
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
       "parameters": [{ "$ref": "#/components/parameters/NsCollection" }],
       "get": {
-        "operationId": "NsV3History",
+        "operationId": "NsV3History", "tags": ["Nightscout"],
         "summary": "The documents changed since a time, the oldest change first, including deletions",
         "description": "The documents with a srvModified at or after since, the oldest srvModified first, then by date, deleted ones with isValid false. The ETag is the newest srvModified, which the next page starts from.",
         "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
@@ -466,25 +472,25 @@
       "servers": [{ "url": "https://{site_id}.ns.nighttroop.example", "description": "A site's Nightscout host", "variables": { "site_id": { "default": "abcdefgh", "description": "The site's ID, the first part of its address" } } }],
       "parameters": [{ "$ref": "#/components/parameters/NsCollection" }, { "$ref": "#/components/parameters/NsIdentifier" }],
       "get": {
-        "operationId": "NsV3Read",
+        "operationId": "NsV3Read", "tags": ["Nightscout"], "summary": "The document with the identifier",
         "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
         "parameters": [{ "$ref": "#/components/parameters/NsFields" }],
         "responses": { "200": { "$ref": "#/components/responses/NsV3Document" }, "default": { "$ref": "#/components/responses/NsError" } }
       },
       "put": {
-        "operationId": "NsV3Replace",
+        "operationId": "NsV3Replace", "tags": ["Nightscout"], "summary": "Replaces the document with the identifier, or creates it",
         "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
         "requestBody": { "$ref": "#/components/requestBodies/NsDocument" },
         "responses": { "200": { "$ref": "#/components/responses/NsV3Document" }, "201": { "$ref": "#/components/responses/NsV3Document" }, "default": { "$ref": "#/components/responses/NsError" } }
       },
       "patch": {
-        "operationId": "NsV3Patch",
+        "operationId": "NsV3Patch", "tags": ["Nightscout"], "summary": "Changes the fields given of the document with the identifier",
         "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
         "requestBody": { "$ref": "#/components/requestBodies/NsDocument" },
         "responses": { "200": { "$ref": "#/components/responses/NsV3Document" }, "default": { "$ref": "#/components/responses/NsError" } }
       },
       "delete": {
-        "operationId": "NsV3Delete",
+        "operationId": "NsV3Delete", "tags": ["Nightscout"], "summary": "Deletes the document with the identifier",
         "security": [{ "bearerAuth": [] }, { "nsToken": [] }, { "nsApiSecret": [] }],
         "parameters": [{ "$ref": "#/components/parameters/NsPermanent" }],
         "responses": { "200": { "$ref": "#/components/responses/NsObject" }, "default": { "$ref": "#/components/responses/NsError" } }
